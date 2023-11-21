@@ -417,14 +417,18 @@ RTCError ValidateBundledPayloadTypes(
   for (const cricket::ContentGroup* bundle_group : bundle_groups) {
     std::map<int, RtpCodecParameters> payload_to_codec_parameters;
     for (const std::string& content_name : bundle_group->content_names()) {
-      const cricket::MediaContentDescription* media_description =
-          description.GetContentDescriptionByName(content_name);
-      if (!media_description) {
+      const ContentInfo* content_description =
+          description.GetContentByName(content_name);
+      if (!content_description) {
         LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
                              "A BUNDLE group contains a MID='" + content_name +
                                  "' matching no m= section.");
       }
-      if (!media_description->has_codecs()) {
+      const cricket::MediaContentDescription* media_description =
+          content_description->media_description();
+      RTC_DCHECK(media_description);
+      if (content_description->rejected || !media_description ||
+          !media_description->has_codecs()) {
         continue;
       }
       const auto type = media_description->type();
@@ -480,13 +484,21 @@ RTCError ValidateBundledRtpHeaderExtensions(
   for (const cricket::ContentGroup* bundle_group : bundle_groups) {
     std::map<int, RtpExtension> id_to_extension;
     for (const std::string& content_name : bundle_group->content_names()) {
-      const cricket::MediaContentDescription* media_description =
-          description.GetContentDescriptionByName(content_name);
-      if (!media_description) {
+      const ContentInfo* content_description =
+          description.GetContentByName(content_name);
+      if (!content_description) {
         LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
                              "A BUNDLE group contains a MID='" + content_name +
                                  "' matching no m= section.");
       }
+      const cricket::MediaContentDescription* media_description =
+          content_description->media_description();
+      RTC_DCHECK(media_description);
+      if (content_description->rejected || !media_description ||
+          !media_description->has_codecs()) {
+        continue;
+      }
+
       for (const auto& extension : media_description->rtp_header_extensions()) {
         auto error =
             FindDuplicateHeaderExtensionIds(extension, id_to_extension);
@@ -502,7 +514,7 @@ RTCError ValidateBundledRtpHeaderExtensions(
 RTCError ValidateRtpHeaderExtensionsForSpecSimulcast(
     const cricket::SessionDescription& description) {
   for (const ContentInfo& content : description.contents()) {
-    if (content.type != MediaProtocolType::kRtp) {
+    if (content.type != MediaProtocolType::kRtp || content.rejected) {
       continue;
     }
     const auto media_description = content.media_description();
@@ -518,6 +530,33 @@ RTCError ValidateRtpHeaderExtensionsForSpecSimulcast(
                            "The media section with MID='" + content.mid() +
                                "' negotiates simulcast but does not negotiate "
                                "the RID RTP header extension.");
+    }
+  }
+  return RTCError::OK();
+}
+
+RTCError ValidateSsrcGroups(const cricket::SessionDescription& description) {
+  for (const ContentInfo& content : description.contents()) {
+    if (content.type != MediaProtocolType::kRtp) {
+      continue;
+    }
+    for (const StreamParams& stream : content.media_description()->streams()) {
+      for (const cricket::SsrcGroup& group : stream.ssrc_groups) {
+        // Validate the number of SSRCs for standard SSRC group semantics such
+        // as FID and FEC-FR and the non-standard SIM group.
+        if ((group.semantics == cricket::kFidSsrcGroupSemantics &&
+             group.ssrcs.size() != 2) ||
+            (group.semantics == cricket::kFecFrSsrcGroupSemantics &&
+             group.ssrcs.size() != 2) ||
+            (group.semantics == cricket::kSimSsrcGroupSemantics &&
+             group.ssrcs.size() > kMaxSimulcastStreams)) {
+          LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
+                               "The media section with MID='" + content.mid() +
+                                   "' has a ssrc-group with semantics " +
+                                   group.semantics +
+                                   " and an unexpected number of SSRCs.");
+        }
+      }
     }
   }
   return RTCError::OK();
@@ -3532,6 +3571,13 @@ RTCError SdpOfferAnswerHandler::ValidateSessionDescription(
   // TODO(bugs.webrtc.org/14782): remove killswitch after rollout.
   if (!error.ok() && !pc_->trials().IsDisabled(
                          "WebRTC-PreventBundleHeaderExtensionIdCollision")) {
+    return error;
+  }
+
+  // TODO(crbug.com/1459124): remove killswitch after rollout.
+  error = ValidateSsrcGroups(*sdesc->description());
+  if (!error.ok() &&
+      !pc_->trials().IsDisabled("WebRTC-PreventSsrcGroupsWithUnexpectedSize")) {
     return error;
   }
 

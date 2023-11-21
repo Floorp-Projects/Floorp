@@ -22,6 +22,7 @@
 #include "api/video/nv12_buffer.h"
 #include "api/video/video_frame.h"
 #include "rtc_base/event.h"
+#include "rtc_base/logging.h"
 #include "rtc_base/rate_statistics.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/metrics.h"
@@ -38,6 +39,7 @@ namespace {
 using ::testing::_;
 using ::testing::ElementsAre;
 using ::testing::Invoke;
+using ::testing::InvokeWithoutArgs;
 using ::testing::Mock;
 using ::testing::Pair;
 using ::testing::Values;
@@ -239,6 +241,50 @@ TEST(FrameCadenceAdapterTest, ForwardsFramesDelayed) {
     time_controller.AdvanceTime(TimeDelta::Seconds(1));
     frame = CreateFrameWithTimestamps(&time_controller);
   }
+}
+
+TEST(FrameCadenceAdapterTest, DelayedProcessingUnderSlightContention) {
+  ZeroHertzFieldTrialEnabler enabler;
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
+  auto adapter = CreateAdapter(enabler, time_controller.GetClock());
+  MockCallback callback;
+  adapter->Initialize(&callback);
+  adapter->SetZeroHertzModeEnabled(
+      FrameCadenceAdapterInterface::ZeroHertzModeParams{});
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 1});
+
+  // Expect frame delivery at 1 sec despite target sequence not running
+  // callbacks for the time skipped.
+  constexpr TimeDelta time_skipped = TimeDelta::Millis(999);
+  EXPECT_CALL(callback, OnFrame).WillOnce(InvokeWithoutArgs([&] {
+    EXPECT_EQ(time_controller.GetClock()->CurrentTime(),
+              Timestamp::Zero() + TimeDelta::Seconds(1));
+  }));
+  adapter->OnFrame(CreateFrame());
+  time_controller.SkipForwardBy(time_skipped);
+  time_controller.AdvanceTime(TimeDelta::Seconds(1) - time_skipped);
+}
+
+TEST(FrameCadenceAdapterTest, DelayedProcessingUnderHeavyContention) {
+  ZeroHertzFieldTrialEnabler enabler;
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
+  auto adapter = CreateAdapter(enabler, time_controller.GetClock());
+  MockCallback callback;
+  adapter->Initialize(&callback);
+  adapter->SetZeroHertzModeEnabled(
+      FrameCadenceAdapterInterface::ZeroHertzModeParams{});
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 1});
+
+  // Expect frame delivery at origin + `time_skipped` when the target sequence
+  // is not running callbacks for the initial 1+ sec.
+  constexpr TimeDelta time_skipped =
+      TimeDelta::Seconds(1) + TimeDelta::Micros(1);
+  EXPECT_CALL(callback, OnFrame).WillOnce(InvokeWithoutArgs([&] {
+    EXPECT_EQ(time_controller.GetClock()->CurrentTime(),
+              Timestamp::Zero() + time_skipped);
+  }));
+  adapter->OnFrame(CreateFrame());
+  time_controller.SkipForwardBy(time_skipped);
 }
 
 TEST(FrameCadenceAdapterTest, RepeatsFramesDelayed) {
@@ -515,6 +561,29 @@ TEST(FrameCadenceAdapterTest, AcceptsUnconfiguredLayerFeedback) {
 
   adapter->UpdateLayerQualityConvergence(2, false);
   adapter->UpdateLayerStatus(2, false);
+}
+
+TEST(FrameCadenceAdapterTest, IgnoresDropInducedCallbacksPostDestruction) {
+  ZeroHertzFieldTrialEnabler enabler;
+  auto callback = std::make_unique<MockCallback>();
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
+  auto queue = time_controller.GetTaskQueueFactory()->CreateTaskQueue(
+      "queue", TaskQueueFactory::Priority::NORMAL);
+  auto adapter = FrameCadenceAdapterInterface::Create(
+      time_controller.GetClock(), queue.get(), enabler);
+  queue->PostTask([&adapter, &callback] {
+    adapter->Initialize(callback.get());
+    adapter->SetZeroHertzModeEnabled(
+        FrameCadenceAdapterInterface::ZeroHertzModeParams{});
+  });
+  time_controller.AdvanceTime(TimeDelta::Zero());
+  constexpr int kMaxFps = 10;
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, kMaxFps});
+  adapter->OnDiscardedFrame();
+  time_controller.AdvanceTime(TimeDelta::Zero());
+  callback = nullptr;
+  queue->PostTask([adapter = std::move(adapter)]() mutable {});
+  time_controller.AdvanceTime(3 * TimeDelta::Seconds(1) / kMaxFps);
 }
 
 class FrameCadenceAdapterSimulcastLayersParamTest
@@ -813,6 +882,70 @@ TEST(FrameCadenceAdapterRealTimeTest, TimestampsDoNotDrift) {
                 event.Set();
               }
             }));
+    adapter->OnFrame(frame);
+  });
+  event.Wait(rtc::Event::kForever);
+  rtc::Event finalized;
+  queue->PostTask([&] {
+    adapter = nullptr;
+    finalized.Set();
+  });
+  finalized.Wait(rtc::Event::kForever);
+}
+
+// TODO(bugs.webrtc.org/15462) Disable ScheduledRepeatAllowsForSlowEncode for
+// TaskQueueLibevent.
+#if defined(WEBRTC_ENABLE_LIBEVENT)
+#define MAYBE_ScheduledRepeatAllowsForSlowEncode \
+  DISABLED_ScheduledRepeatAllowsForSlowEncode
+#else
+#define MAYBE_ScheduledRepeatAllowsForSlowEncode \
+  ScheduledRepeatAllowsForSlowEncode
+#endif
+
+TEST(FrameCadenceAdapterRealTimeTest,
+     MAYBE_ScheduledRepeatAllowsForSlowEncode) {
+  // This regression test must be performed in realtime because of limitations
+  // in GlobalSimulatedTimeController.
+  //
+  // We sleep for a long while (but less than max fps) in the first repeated
+  // OnFrame (frame 2). This should not lead to a belated second repeated
+  // OnFrame (frame 3).
+  auto factory = CreateDefaultTaskQueueFactory();
+  auto queue =
+      factory->CreateTaskQueue("test", TaskQueueFactory::Priority::NORMAL);
+  ZeroHertzFieldTrialEnabler enabler;
+  MockCallback callback;
+  Clock* clock = Clock::GetRealTimeClock();
+  std::unique_ptr<FrameCadenceAdapterInterface> adapter;
+  int frame_counter = 0;
+  rtc::Event event;
+  absl::optional<Timestamp> start_time;
+  queue->PostTask([&] {
+    adapter = CreateAdapter(enabler, clock);
+    adapter->Initialize(&callback);
+    adapter->SetZeroHertzModeEnabled(
+        FrameCadenceAdapterInterface::ZeroHertzModeParams{});
+    adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 2});
+    auto frame = CreateFrame();
+    constexpr int kSleepMs = 400;
+    constexpr TimeDelta kAllowedBelate = TimeDelta::Millis(150);
+    EXPECT_CALL(callback, OnFrame)
+        .WillRepeatedly(InvokeWithoutArgs([&, kAllowedBelate] {
+          ++frame_counter;
+          // Avoid the first OnFrame and sleep on the second.
+          if (frame_counter == 2) {
+            start_time = clock->CurrentTime();
+            SleepMs(kSleepMs);
+          } else if (frame_counter == 3) {
+            TimeDelta diff =
+                clock->CurrentTime() - (*start_time + TimeDelta::Millis(500));
+            RTC_LOG(LS_ERROR)
+                << "Difference in when frame should vs is appearing: " << diff;
+            EXPECT_LT(diff, kAllowedBelate);
+            event.Set();
+          }
+        }));
     adapter->OnFrame(frame);
   });
   event.Wait(rtc::Event::kForever);

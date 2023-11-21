@@ -32,7 +32,7 @@ rtc_source_set("audio_device_default") {
 rtc_source_set("audio_device") {
 if (!build_with_mozilla) { # See Bug 1820869.
   visibility = [ "*" ]
-  public_deps = [
+  public_deps += [  # no-presubmit-check TODO(webrtc:8603)
     ":audio_device_api",
 
     # Deprecated.

@@ -511,6 +511,18 @@ class WebRtcAudioRecord {
     microphoneMute = mute;
   }
 
+  // Sets whether NoiseSuppressor should be enabled or disabled.
+  // Returns true if the enabling was successful, otherwise false is returned (this is also the case
+  // if the NoiseSuppressor effect is not supported).
+  public boolean setNoiseSuppressorEnabled(boolean enabled) {
+    if (!WebRtcAudioEffects.isNoiseSuppressorSupported()) {
+      Logging.e(TAG, "Noise suppressor is not supported.");
+      return false;
+    }
+    Logging.w(TAG, "SetNoiseSuppressorEnabled(" + enabled + ")");
+    return effects.toggleNS(enabled);
+  }
+
   // Releases the native AudioRecord resources.
   private void releaseAudioResources() {
     Logging.d(TAG, "releaseAudioResources");

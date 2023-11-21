@@ -196,6 +196,9 @@ declare_args() {
   rtc_use_h264 =
       proprietary_codecs && !is_android && !is_ios && !(is_win && !is_clang)
 
+  # Enable to use H265
+  rtc_use_h265 = proprietary_codecs
+
   # Enable this flag to make webrtc::Mutex be implemented by absl::Mutex.
   rtc_use_absl_mutex = false
 
@@ -255,6 +258,15 @@ declare_args() {
   # with this string.
   # See the definition of RTC_OBJC_TYPE_PREFIX in the code.
   rtc_objc_prefix = ""
+
+  # Embedders can define dependencies needed by WebRTC. Dependencies can be
+  # configs or targets. This can be defined in their `.gn` file.
+  #
+  # In practise, this is use by Chromium: Targets from
+  # `//third_party/webrtc_overrides` are depending on Chrome's `//base`, but
+  # WebRTC does not declare its public dependencies. See webrtc:8603. Instead
+  # WebRTC is using a global common dependencies.
+  rtc_common_public_deps = []  # no-presubmit-check TODO(webrtc:8603)
 }
 
 if (!build_with_mozilla) {
@@ -394,34 +406,40 @@ rtc_library_impl_config = [ webrtc_root + ":library_impl_config" ]
 
 set_defaults("rtc_test") {
   configs = rtc_add_configs
+  public_deps = rtc_common_public_deps  # no-presubmit-check TODO(webrtc:8603)
   suppressed_configs = []
 }
 
 set_defaults("rtc_library") {
   configs = rtc_add_configs
+  public_deps = rtc_common_public_deps  # no-presubmit-check TODO(webrtc:8603)
   suppressed_configs = []
   absl_deps = []
 }
 
 set_defaults("rtc_source_set") {
   configs = rtc_add_configs
+  public_deps = rtc_common_public_deps  # no-presubmit-check TODO(webrtc:8603)
   suppressed_configs = []
   absl_deps = []
 }
 
 set_defaults("rtc_static_library") {
   configs = rtc_add_configs
+  public_deps = rtc_common_public_deps  # no-presubmit-check TODO(webrtc:8603)
   suppressed_configs = []
   absl_deps = []
 }
 
 set_defaults("rtc_executable") {
   configs = rtc_add_configs
+  public_deps = rtc_common_public_deps  # no-presubmit-check TODO(webrtc:8603)
   suppressed_configs = []
 }
 
 set_defaults("rtc_shared_library") {
   configs = rtc_add_configs
+  public_deps = rtc_common_public_deps  # no-presubmit-check TODO(webrtc:8603)
   suppressed_configs = []
 }
 

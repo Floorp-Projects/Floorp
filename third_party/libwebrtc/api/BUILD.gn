@@ -291,7 +291,7 @@ if (!build_with_mozilla) {
     "dtmf_sender_interface.h",
     "rtp_sender_interface.h",
   ]
-  public_deps = [  # no-presubmit-check TODO(webrtc:8603)
+  public_deps += [  # no-presubmit-check TODO(webrtc:8603)
     # Remove when downstream has been updated
     ":dtmf_sender_interface",
     ":rtp_sender_interface",
@@ -434,6 +434,7 @@ rtc_source_set("async_dns_resolver") {
     "../rtc_base:socket_address",
     "../rtc_base/system:rtc_export",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/functional:any_invocable" ]
 }
 
 rtc_source_set("wrapping_async_dns_resolver") {

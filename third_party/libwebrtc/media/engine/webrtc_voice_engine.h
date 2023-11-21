@@ -227,7 +227,7 @@ class WebRtcVoiceSendChannel final : public MediaChannelUtil,
 
   const AudioOptions& options() const { return options_; }
 
-  bool SetSendParameters(const AudioSenderParameter& params) override;
+  bool SetSenderParameters(const AudioSenderParameter& params) override;
   webrtc::RtpParameters GetRtpSendParameters(uint32_t ssrc) const override;
   webrtc::RTCError SetRtpSendParameters(
       uint32_t ssrc,
@@ -290,7 +290,8 @@ class WebRtcVoiceSendChannel final : public MediaChannelUtil,
 
  private:
   bool SetOptions(const AudioOptions& options);
-  bool SetSendCodecs(const std::vector<AudioCodec>& codecs);
+  bool SetSendCodecs(const std::vector<Codec>& codecs,
+                     absl::optional<Codec> preferred_codec);
   bool SetLocalSource(uint32_t ssrc, AudioSource* source);
   bool MuteStream(uint32_t ssrc, bool mute);
 
@@ -377,8 +378,8 @@ class WebRtcVoiceReceiveChannel final
   void SetInterface(MediaChannelNetworkInterface* iface) override {
     MediaChannelUtil::SetInterface(iface);
   }
-  bool SetRecvParameters(const AudioReceiverParameters& params) override;
-  webrtc::RtpParameters GetRtpReceiveParameters(uint32_t ssrc) const override;
+  bool SetReceiverParameters(const AudioReceiverParameters& params) override;
+  webrtc::RtpParameters GetRtpReceiverParameters(uint32_t ssrc) const override;
   webrtc::RtpParameters GetDefaultRtpReceiveParameters() const override;
 
   void SetPlayout(bool playout) override;

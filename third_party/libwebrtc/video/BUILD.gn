@@ -194,6 +194,32 @@ rtc_library("frame_dumping_decoder") {
   ]
 }
 
+rtc_library("frame_dumping_encoder") {
+  visibility = [ "*" ]
+
+  sources = [
+    "frame_dumping_encoder.cc",
+    "frame_dumping_encoder.h",
+  ]
+
+  deps = [
+    "../api:field_trials_view",
+    "../api:sequence_checker",
+    "../api/video:encoded_frame",
+    "../api/video:encoded_image",
+    "../api/video:video_frame",
+    "../api/video_codecs:video_codecs_api",
+    "../modules/video_coding",
+    "../modules/video_coding:video_codec_interface",
+    "../modules/video_coding:video_coding_utility",
+    "../rtc_base:stringutils",
+    "../rtc_base:timeutils",
+    "../rtc_base/system:file_wrapper",
+  ]
+
+  absl_deps = [ "//third_party/abseil-cpp/absl/algorithm:container" ]
+}
+
 rtc_library("frame_cadence_adapter") {
   visibility = [ "*" ]
   sources = [
@@ -210,6 +236,7 @@ rtc_library("frame_cadence_adapter") {
     "../api/units:timestamp",
     "../api/video:video_frame",
     "../rtc_base:checks",
+    "../rtc_base:event_tracer",
     "../rtc_base:logging",
     "../rtc_base:macromagic",
     "../rtc_base:race_checker",
@@ -251,6 +278,7 @@ rtc_library("video_stream_buffer_controller") {
     "../api/video:video_rtp_headers",
     "../modules/video_coding",
     "../modules/video_coding:frame_helpers",
+    "../modules/video_coding:video_codec_interface",
     "../modules/video_coding/timing:inter_frame_delay_variation_calculator",
     "../modules/video_coding/timing:jitter_estimator",
     "../modules/video_coding/timing:timing_module",
@@ -371,6 +399,7 @@ rtc_library("video_stream_encoder_impl") {
 
   deps = [
     ":frame_cadence_adapter",
+    ":frame_dumping_encoder",
     ":video_stream_encoder_interface",
     "../api:field_trials_view",
     "../api:rtp_parameters",
@@ -418,7 +447,6 @@ rtc_library("video_stream_encoder_impl") {
     "../rtc_base:safe_conversions",
     "../rtc_base:stringutils",
     "../rtc_base:timeutils",
-    "../rtc_base/experiments:alr_experiment",
     "../rtc_base/experiments:balanced_degradation_settings",
     "../rtc_base/experiments:encoder_info_settings",
     "../rtc_base/experiments:field_trial_parser",

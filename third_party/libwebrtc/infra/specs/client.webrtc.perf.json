@@ -19,15 +19,13 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "dimension_sets": [
-            {
-              "android_devices": "1",
-              "device_type": "redfin",
-              "gce": "0",
-              "os": "Android",
-              "pool": "WebRTC-perf"
-            }
-          ],
+          "dimensions": {
+            "android_devices": "1",
+            "device_type": "redfin",
+            "gce": "0",
+            "os": "Android",
+            "pool": "WebRTC-perf"
+          },
           "expiration": 10800,
           "hard_timeout": 10800,
           "idempotent": false,
@@ -54,15 +52,13 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "dimension_sets": [
-            {
-              "android_devices": "1",
-              "device_type": "redfin",
-              "gce": "0",
-              "os": "Android",
-              "pool": "WebRTC-perf"
-            }
-          ],
+          "dimensions": {
+            "android_devices": "1",
+            "device_type": "redfin",
+            "gce": "0",
+            "os": "Android",
+            "pool": "WebRTC-perf"
+          },
           "expiration": 10800,
           "hard_timeout": 10800,
           "idempotent": false,
@@ -92,15 +88,13 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "dimension_sets": [
-            {
-              "android_devices": "1",
-              "device_type": "redfin",
-              "gce": "0",
-              "os": "Android",
-              "pool": "WebRTC-perf"
-            }
-          ],
+          "dimensions": {
+            "android_devices": "1",
+            "device_type": "redfin",
+            "gce": "0",
+            "os": "Android",
+            "pool": "WebRTC-perf"
+          },
           "expiration": 10800,
           "hard_timeout": 10800,
           "idempotent": false,
@@ -127,15 +121,13 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "dimension_sets": [
-            {
-              "android_devices": "1",
-              "device_type": "redfin",
-              "gce": "0",
-              "os": "Android",
-              "pool": "WebRTC-perf"
-            }
-          ],
+          "dimensions": {
+            "android_devices": "1",
+            "device_type": "redfin",
+            "gce": "0",
+            "os": "Android",
+            "pool": "WebRTC-perf"
+          },
           "expiration": 10800,
           "hard_timeout": 10800,
           "idempotent": false,
@@ -171,14 +163,12 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "gce": "1",
-              "os": "Ubuntu-18.04",
-              "pool": "WebRTC-perf"
-            }
-          ],
+          "dimensions": {
+            "cpu": "x86-64",
+            "gce": "1",
+            "os": "Ubuntu-18.04",
+            "pool": "WebRTC-perf"
+          },
           "expiration": 10800,
           "hard_timeout": 10800,
           "idempotent": false,
@@ -209,14 +199,12 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "gce": "1",
-              "os": "Ubuntu-18.04",
-              "pool": "WebRTC-perf"
-            }
-          ],
+          "dimensions": {
+            "cpu": "x86-64",
+            "gce": "1",
+            "os": "Ubuntu-18.04",
+            "pool": "WebRTC-perf"
+          },
           "expiration": 10800,
           "hard_timeout": 10800,
           "idempotent": false,
@@ -246,13 +234,11 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "dimension_sets": [
-            {
-              "gce": "0",
-              "os": "Ubuntu-18.04",
-              "pool": "WebRTC-perf"
-            }
-          ],
+          "dimensions": {
+            "gce": "0",
+            "os": "Ubuntu-18.04",
+            "pool": "WebRTC-perf"
+          },
           "expiration": 10800,
           "hard_timeout": 10800,
           "idempotent": false,
@@ -281,13 +267,11 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "dimension_sets": [
-            {
-              "gce": "0",
-              "os": "Ubuntu-18.04",
-              "pool": "WebRTC-perf"
-            }
-          ],
+          "dimensions": {
+            "gce": "0",
+            "os": "Ubuntu-18.04",
+            "pool": "WebRTC-perf"
+          },
           "expiration": 10800,
           "hard_timeout": 10800,
           "idempotent": false,
@@ -317,14 +301,12 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "gce": "0",
-              "os": "Mac-11",
-              "pool": "WebRTC-perf"
-            }
-          ],
+          "dimensions": {
+            "cpu": "x86-64",
+            "gce": "0",
+            "os": "Mac-11",
+            "pool": "WebRTC-perf"
+          },
           "expiration": 10800,
           "hard_timeout": 10800,
           "idempotent": false,
@@ -353,14 +335,12 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "gce": "0",
-              "os": "Mac-11",
-              "pool": "WebRTC-perf"
-            }
-          ],
+          "dimensions": {
+            "cpu": "x86-64",
+            "gce": "0",
+            "os": "Mac-11",
+            "pool": "WebRTC-perf"
+          },
           "expiration": 10800,
           "hard_timeout": 10800,
           "idempotent": false,
@@ -390,14 +370,12 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "dimension_sets": [
-            {
-              "cpu": "arm64-64-Apple_M1",
-              "gce": "0",
-              "os": "Mac-12",
-              "pool": "WebRTC-perf"
-            }
-          ],
+          "dimensions": {
+            "cpu": "arm64-64-Apple_M1",
+            "gce": "0",
+            "os": "Mac-12",
+            "pool": "WebRTC-perf"
+          },
           "expiration": 10800,
           "hard_timeout": 10800,
           "idempotent": false,
@@ -426,14 +404,12 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "dimension_sets": [
-            {
-              "cpu": "arm64-64-Apple_M1",
-              "gce": "0",
-              "os": "Mac-12",
-              "pool": "WebRTC-perf"
-            }
-          ],
+          "dimensions": {
+            "cpu": "arm64-64-Apple_M1",
+            "gce": "0",
+            "os": "Mac-12",
+            "pool": "WebRTC-perf"
+          },
           "expiration": 10800,
           "hard_timeout": 10800,
           "idempotent": false,
@@ -463,13 +439,11 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "dimension_sets": [
-            {
-              "gce": "0",
-              "os": "Windows-10",
-              "pool": "WebRTC-perf"
-            }
-          ],
+          "dimensions": {
+            "gce": "0",
+            "os": "Windows-10",
+            "pool": "WebRTC-perf"
+          },
           "expiration": 10800,
           "hard_timeout": 10800,
           "idempotent": false,
@@ -498,13 +472,11 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "dimension_sets": [
-            {
-              "gce": "0",
-              "os": "Windows-10",
-              "pool": "WebRTC-perf"
-            }
-          ],
+          "dimensions": {
+            "gce": "0",
+            "os": "Windows-10",
+            "pool": "WebRTC-perf"
+          },
           "expiration": 10800,
           "hard_timeout": 10800,
           "idempotent": false,

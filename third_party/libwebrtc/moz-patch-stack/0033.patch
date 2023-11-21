@@ -27,7 +27,7 @@ index 0caf59a20e..bffb910832 100644
    stats.header_and_padding_bytes_sent =
        call_stats.header_and_padding_bytes_sent;
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index e1e44ef7e4..4c1d056cc5 100644
+index 156177fe71..fbfbf84e14 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
 @@ -55,6 +55,31 @@ constexpr int64_t kMinRetransmissionWindowMs = 30;
@@ -71,7 +71,7 @@ index e1e44ef7e4..4c1d056cc5 100644
    PacketRouter* packet_router_ RTC_GUARDED_BY(&worker_thread_checker_) =
        nullptr;
    const std::unique_ptr<RtpPacketSenderProxy> rtp_packet_pacer_proxy_;
-@@ -384,6 +411,7 @@ ChannelSend::ChannelSend(
+@@ -387,6 +414,7 @@ ChannelSend::ChannelSend(
      const FieldTrialsView& field_trials)
      : ssrc_(ssrc),
        event_log_(rtc_event_log),
@@ -79,7 +79,7 @@ index e1e44ef7e4..4c1d056cc5 100644
        rtp_packet_pacer_proxy_(new RtpPacketSenderProxy()),
        retransmission_rate_limiter_(
            new RateLimiter(clock, kMaxRetransmissionWindowMs)),
-@@ -408,6 +436,8 @@ ChannelSend::ChannelSend(
+@@ -411,6 +439,8 @@ ChannelSend::ChannelSend(
  
    configuration.event_log = event_log_;
    configuration.rtt_stats = rtcp_rtt_stats;
@@ -88,7 +88,7 @@ index e1e44ef7e4..4c1d056cc5 100644
    configuration.retransmission_rate_limiter =
        retransmission_rate_limiter_.get();
    configuration.extmap_allow_mixed = extmap_allow_mixed;
-@@ -668,6 +698,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
+@@ -671,6 +701,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
    RTC_DCHECK_RUN_ON(&worker_thread_checker_);
    CallSendStatistics stats = {0};
    stats.rttMs = GetRTT();

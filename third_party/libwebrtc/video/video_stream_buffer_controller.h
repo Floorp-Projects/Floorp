@@ -17,6 +17,7 @@
 #include "api/task_queue/task_queue_base.h"
 #include "api/video/encoded_frame.h"
 #include "api/video/frame_buffer.h"
+#include "modules/video_coding/include/video_coding_defines.h"
 #include "modules/video_coding/timing/inter_frame_delay_variation_calculator.h"
 #include "modules/video_coding/timing/jitter_estimator.h"
 #include "modules/video_coding/timing/timing.h"

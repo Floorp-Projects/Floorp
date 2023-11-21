@@ -173,7 +173,7 @@ VCMFrameBufferEnum VCMFrameBuffer::InsertPacket(const VCMPacket& packet,
   }
 
   if (packet.is_first_packet_in_frame()) {
-    playout_delay_ = packet.video_header.playout_delay;
+    SetPlayoutDelay(packet.video_header.playout_delay);
   }
 
   if (_sessionInfo.complete()) {

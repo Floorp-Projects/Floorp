@@ -136,10 +136,6 @@ class MediaChannelUtil {
     virtual ~TransportForMediaChannels();
 
     // Implementation of webrtc::Transport
-    bool SendRtp(const uint8_t* packet,
-                 size_t length,
-                 const webrtc::PacketOptions& options) override;
-    bool SendRtcp(const uint8_t* packet, size_t length) override;
     bool SendRtp(rtc::ArrayView<const uint8_t> packet,
                  const webrtc::PacketOptions& options) override;
     bool SendRtcp(rtc::ArrayView<const uint8_t> packet) override;

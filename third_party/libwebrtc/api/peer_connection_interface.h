@@ -1386,6 +1386,9 @@ struct RTC_EXPORT PeerConnectionDependencies final {
   std::unique_ptr<webrtc::AsyncDnsResolverFactoryInterface>
       async_dns_resolver_factory;
   // Deprecated - use async_dns_resolver_factory
+  // Deprecation is in abeyance until Chromium is updated.
+  // TODO(crbug.com/1475925): Deprecate once Chromium is updated
+  // [[deprecated("Use async_dns_resolver_factory")]]
   std::unique_ptr<webrtc::AsyncResolverFactory> async_resolver_factory;
   std::unique_ptr<webrtc::IceTransportFactory> ice_transport_factory;
   std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_generator;

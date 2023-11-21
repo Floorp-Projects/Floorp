@@ -37,6 +37,10 @@ class MockTransformableVideoFrame
               (),
               (const, override));
   MOCK_METHOD(VideoFrameMetadata, Metadata, (), (const, override));
+  MOCK_METHOD(absl::optional<Timestamp>,
+              GetCaptureTimeIdentifier,
+              (),
+              (const, override));
 };
 
 static_assert(!std::is_abstract_v<MockTransformableVideoFrame>, "");

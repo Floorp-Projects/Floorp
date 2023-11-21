@@ -294,8 +294,10 @@ bool ShouldAllowLegacyTLSProtocols() {
 }
 
 OpenSSLStreamAdapter::OpenSSLStreamAdapter(
-    std::unique_ptr<StreamInterface> stream)
+    std::unique_ptr<StreamInterface> stream,
+    absl::AnyInvocable<void(SSLHandshakeError)> handshake_error)
     : stream_(std::move(stream)),
+      handshake_error_(std::move(handshake_error)),
       owner_(rtc::Thread::Current()),
       state_(SSL_NONE),
       role_(SSL_CLIENT),
@@ -938,7 +940,9 @@ int OpenSSLStreamAdapter::ContinueSSL() {
       }
       RTC_DLOG(LS_VERBOSE) << " -- error " << code << ", " << err_code << ", "
                            << ERR_GET_REASON(err_code);
-      SignalSSLHandshakeError(ssl_handshake_err);
+      if (handshake_error_) {
+        handshake_error_(ssl_handshake_err);
+      }
       return (ssl_error != 0) ? ssl_error : -1;
   }
 

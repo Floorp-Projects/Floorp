@@ -598,6 +598,8 @@ absl::optional<Metrics> DcSctpSocket::GetMetrics() const {
       tcb_->capabilities().negotiated_maximum_incoming_streams;
   metrics.negotiated_maximum_incoming_streams =
       tcb_->capabilities().negotiated_maximum_incoming_streams;
+  metrics.rtx_packets_count = tcb_->retransmission_queue().rtx_packets_count();
+  metrics.rtx_bytes_count = tcb_->retransmission_queue().rtx_bytes_count();
 
   return metrics;
 }

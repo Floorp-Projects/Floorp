@@ -50,6 +50,7 @@
 #include "api/stats/rtc_stats.h"
 #include "api/stats/rtc_stats_report.h"
 #include "api/stats/rtcstats_objects.h"
+#include "api/test/mock_async_dns_resolver.h"
 #include "api/test/mock_encoder_selector.h"
 #include "api/transport/rtp/rtp_source.h"
 #include "api/uma_metrics.h"
@@ -1678,23 +1679,29 @@ constexpr int kOnlyLocalPorts = cricket::PORTALLOCATOR_DISABLE_STUN |
 TEST_P(PeerConnectionIntegrationTest,
        IceStatesReachCompletionWithRemoteHostname) {
   auto caller_resolver_factory =
-      std::make_unique<NiceMock<webrtc::MockAsyncResolverFactory>>();
+      std::make_unique<NiceMock<webrtc::MockAsyncDnsResolverFactory>>();
   auto callee_resolver_factory =
-      std::make_unique<NiceMock<webrtc::MockAsyncResolverFactory>>();
-  NiceMock<rtc::MockAsyncResolver> callee_async_resolver;
-  NiceMock<rtc::MockAsyncResolver> caller_async_resolver;
+      std::make_unique<NiceMock<webrtc::MockAsyncDnsResolverFactory>>();
+  auto callee_async_resolver =
+      std::make_unique<NiceMock<MockAsyncDnsResolver>>();
+  auto caller_async_resolver =
+      std::make_unique<NiceMock<MockAsyncDnsResolver>>();
+  // Keep raw pointers to the mock resolvers, for use after init,
+  // where the std::unique_ptr values have been moved away.
+  auto* callee_resolver_ptr = callee_async_resolver.get();
+  auto* caller_resolver_ptr = caller_async_resolver.get();
 
   // This also verifies that the injected AsyncResolverFactory is used by
   // P2PTransportChannel.
   EXPECT_CALL(*caller_resolver_factory, Create())
-      .WillOnce(Return(&caller_async_resolver));
+      .WillOnce(Return(ByMove(std::move(caller_async_resolver))));
   webrtc::PeerConnectionDependencies caller_deps(nullptr);
-  caller_deps.async_resolver_factory = std::move(caller_resolver_factory);
+  caller_deps.async_dns_resolver_factory = std::move(caller_resolver_factory);
 
   EXPECT_CALL(*callee_resolver_factory, Create())
-      .WillOnce(Return(&callee_async_resolver));
+      .WillOnce(Return(ByMove(std::move(callee_async_resolver))));
   webrtc::PeerConnectionDependencies callee_deps(nullptr);
-  callee_deps.async_resolver_factory = std::move(callee_resolver_factory);
+  callee_deps.async_dns_resolver_factory = std::move(callee_resolver_factory);
 
   PeerConnectionInterface::RTCConfiguration config;
   config.bundle_policy = PeerConnectionInterface::kBundlePolicyMaxBundle;
@@ -1703,8 +1710,12 @@ TEST_P(PeerConnectionIntegrationTest,
   ASSERT_TRUE(CreatePeerConnectionWrappersWithConfigAndDeps(
       config, std::move(caller_deps), config, std::move(callee_deps)));
 
-  caller()->SetRemoteAsyncResolver(&callee_async_resolver);
-  callee()->SetRemoteAsyncResolver(&caller_async_resolver);
+  // TEMP NOTE - this is probably bogus since the resolvers have been
+  // moved out of their slots prior to these code lines.
+  RTC_LOG(LS_ERROR) << "callee async resolver is "
+                    << callee_async_resolver.get();
+  caller()->SetRemoteAsyncResolver(callee_resolver_ptr);
+  callee()->SetRemoteAsyncResolver(caller_resolver_ptr);
 
   // Enable hostname candidates with mDNS names.
   caller()->SetMdnsResponder(

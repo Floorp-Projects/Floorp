@@ -12,10 +12,10 @@ Subject: Bug 1766646 - (fix-ae0d117d51) ifdef our Csrc impl vs upstream's
  5 files changed, 20 insertions(+)
 
 diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.cc b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-index 88815b5601..5f32cb7b39 100644
+index b86a7d775c..ea41226abf 100644
 --- a/modules/rtp_rtcp/source/rtp_header_extensions.cc
 +++ b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-@@ -185,6 +185,7 @@ bool AudioLevel::Write(rtc::ArrayView<uint8_t> data,
+@@ -181,6 +181,7 @@ bool AudioLevel::Write(rtc::ArrayView<uint8_t> data,
    return true;
  }
  
@@ -23,7 +23,7 @@ index 88815b5601..5f32cb7b39 100644
  // An RTP Header Extension for Mixer-to-Client Audio Level Indication
  //
  // https://tools.ietf.org/html/rfc6465
-@@ -237,6 +238,7 @@ bool CsrcAudioLevel::Write(rtc::ArrayView<uint8_t> data,
+@@ -230,6 +231,7 @@ bool CsrcAudioLevel::Write(rtc::ArrayView<uint8_t> data,
    }
    return true;
  }
@@ -31,7 +31,7 @@ index 88815b5601..5f32cb7b39 100644
  
  // From RFC 5450: Transmission Time Offsets in RTP Streams.
  //
-@@ -446,6 +448,7 @@ bool PlayoutDelayLimits::Write(rtc::ArrayView<uint8_t> data,
+@@ -423,6 +425,7 @@ bool PlayoutDelayLimits::Write(rtc::ArrayView<uint8_t> data,
    return true;
  }
  
@@ -39,7 +39,7 @@ index 88815b5601..5f32cb7b39 100644
  // CSRCAudioLevel
  //  Sample Audio Level Encoding Using the One-Byte Header Format
  //  Note that the range of len is 1 to 15 which is encoded as 0 to 14
-@@ -484,6 +487,7 @@ bool CsrcAudioLevel::Write(rtc::ArrayView<uint8_t> data,
+@@ -461,6 +464,7 @@ bool CsrcAudioLevel::Write(rtc::ArrayView<uint8_t> data,
    // This extension if used must have at least one audio level
    return csrcAudioLevels.numAudioLevels;
  }
@@ -48,7 +48,7 @@ index 88815b5601..5f32cb7b39 100644
  // Video Content Type.
  //
 diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.h b/modules/rtp_rtcp/source/rtp_header_extensions.h
-index e085f89c03..2b2f75c840 100644
+index fff7db0294..09bd9912e1 100644
 --- a/modules/rtp_rtcp/source/rtp_header_extensions.h
 +++ b/modules/rtp_rtcp/source/rtp_header_extensions.h
 @@ -94,6 +94,7 @@ class AudioLevel {
@@ -111,7 +111,7 @@ index b152cdbd9e..7181b303e1 100644
    }
  }
 diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
-index f3d90e3c0b..bdb79fe8cc 100644
+index f4ba024444..4972aa0802 100644
 --- a/modules/rtp_rtcp/source/rtp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender.cc
 @@ -104,7 +104,9 @@ bool IsNonVolatile(RTPExtensionType type) {

@@ -255,7 +255,7 @@ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
   uint32_t generation() const { return generation_; }
   void set_generation(uint32_t generation) { generation_ = generation; }
 
-  const std::string username_fragment() const;
+  const std::string& username_fragment() const;
   const std::string& password() const { return password_; }
 
   // May be called when this port was initially created by a pooled
@@ -496,12 +496,8 @@ class RTC_EXPORT Port : public PortInterface, public sigslot::has_slots<> {
   // sent through), the other side must send us a STUN binding request that is
   // authenticated with this username_fragment and password.
   // PortAllocatorSession will provide these username_fragment and password.
-  //
-  // Note: we should always use username_fragment() instead of using
-  // `ice_username_fragment_` directly. For the details see the comment on
-  // username_fragment().
-  std::string ice_username_fragment_;
-  std::string password_;
+  std::string ice_username_fragment_ RTC_GUARDED_BY(thread_);
+  std::string password_ RTC_GUARDED_BY(thread_);
   std::vector<Candidate> candidates_ RTC_GUARDED_BY(thread_);
   AddressMap connections_;
   int timeout_delay_;

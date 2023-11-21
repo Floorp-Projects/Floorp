@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "absl/base/attributes.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "rtc_base/ignore_wundef.h"
 
@@ -167,7 +168,8 @@ class Plot {
   void AppendTimeSeriesIfNotEmpty(TimeSeries&& time_series);
 
   // Replaces PythonPlot::Draw()
-  void PrintPythonCode() const;
+  void PrintPythonCode(
+      absl::string_view figure_output_path = absl::string_view()) const;
 
   // Replaces ProtobufPlot::Draw()
   void ExportProtobuf(webrtc::analytics::Chart* chart) const;
@@ -200,7 +202,9 @@ class PlotCollection {
   }
 
   // Replaces PythonPlotCollection::Draw()
-  void PrintPythonCode(bool shared_xaxis) const;
+  void PrintPythonCode(
+      bool shared_xaxis,
+      absl::string_view figure_output_path = absl::string_view()) const;
 
   // Replaces ProtobufPlotCollections::Draw()
   void ExportProtobuf(webrtc::analytics::ChartCollection* collection) const;

@@ -169,7 +169,6 @@ RTPSender::RTPSender(const RtpRtcpInterface::Configuration& config,
       always_send_mid_and_rid_(config.always_send_mid_and_rid),
       ssrc_has_acked_(false),
       rtx_ssrc_has_acked_(false),
-      csrcs_(),
       rtx_(kRtxOff),
       supports_bwe_extension_(false),
       retransmission_rate_limiter_(config.retransmission_rate_limiter) {
@@ -470,22 +469,6 @@ std::vector<std::unique_ptr<RtpPacketToSend>> RTPSender::GeneratePadding(
   return padding_packets;
 }
 
-bool RTPSender::SendToNetwork(std::unique_ptr<RtpPacketToSend> packet) {
-  RTC_DCHECK(packet);
-  auto packet_type = packet->packet_type();
-  RTC_CHECK(packet_type) << "Packet type must be set before sending.";
-
-  if (packet->capture_time() <= Timestamp::Zero()) {
-    packet->set_capture_time(clock_->CurrentTime());
-  }
-
-  std::vector<std::unique_ptr<RtpPacketToSend>> packets;
-  packets.emplace_back(std::move(packet));
-  paced_sender_->EnqueuePackets(std::move(packets));
-
-  return true;
-}
-
 void RTPSender::EnqueuePackets(
     std::vector<std::unique_ptr<RtpPacketToSend>> packets) {
   RTC_DCHECK(!packets.empty());
@@ -512,12 +495,18 @@ size_t RTPSender::ExpectedPerPacketOverhead() const {
   return max_media_packet_header_;
 }
 
-std::unique_ptr<RtpPacketToSend> RTPSender::AllocatePacket() const {
+std::unique_ptr<RtpPacketToSend> RTPSender::AllocatePacket(
+    rtc::ArrayView<const uint32_t> csrcs) {
   MutexLock lock(&send_mutex_);
+  RTC_DCHECK_LE(csrcs.size(), kRtpCsrcSize);
+  if (csrcs.size() > max_num_csrcs_) {
+    max_num_csrcs_ = csrcs.size();
+    UpdateHeaderSizes();
+  }
   auto packet = std::make_unique<RtpPacketToSend>(&rtp_header_extension_map_,
                                                   max_packet_size_);
   packet->SetSsrc(ssrc_);
-  packet->SetCsrcs(csrcs_);
+  packet->SetCsrcs(csrcs);
 
   // Reserve extensions, if registered, RtpSender set in SendToNetwork.
   packet->ReserveExtension<AbsoluteSendTime>();
@@ -613,18 +602,6 @@ void RTPSender::SetMid(absl::string_view mid) {
   UpdateHeaderSizes();
 }
 
-std::vector<uint32_t> RTPSender::Csrcs() const {
-  MutexLock lock(&send_mutex_);
-  return csrcs_;
-}
-
-void RTPSender::SetCsrcs(const std::vector<uint32_t>& csrcs) {
-  RTC_DCHECK_LE(csrcs.size(), kRtpCsrcSize);
-  MutexLock lock(&send_mutex_);
-  csrcs_ = csrcs;
-  UpdateHeaderSizes();
-}
-
 static void CopyHeaderAndExtensionsToRtxPacket(const RtpPacketToSend& packet,
                                                RtpPacketToSend* rtx_packet) {
   // Set the relevant fixed packet headers. The following are not set:
@@ -637,8 +614,7 @@ static void CopyHeaderAndExtensionsToRtxPacket(const RtpPacketToSend& packet,
   // Set the variable fields in the packet header:
   // * CSRCs - must be set before header extensions.
   // * Header extensions - replace Rid header with RepairedRid header.
-  const std::vector<uint32_t> csrcs = packet.Csrcs();
-  rtx_packet->SetCsrcs(csrcs);
+  rtx_packet->SetCsrcs(packet.Csrcs());
   for (int extension_num = kRtpExtensionNone + 1;
        extension_num < kRtpExtensionNumberOfExtensions; ++extension_num) {
     auto extension = static_cast<RTPExtensionType>(extension_num);
@@ -776,7 +752,7 @@ RtpState RTPSender::GetRtxRtpState() const {
 
 void RTPSender::UpdateHeaderSizes() {
   const size_t rtp_header_length =
-      kRtpHeaderLength + sizeof(uint32_t) * csrcs_.size();
+      kRtpHeaderLength + sizeof(uint32_t) * max_num_csrcs_;
 
   max_padding_fec_packet_header_ =
       rtp_header_length + RtpHeaderExtensionSize(kFecOrPaddingExtensionSizes,

@@ -56,7 +56,7 @@ RTCError VerifyCodecPreferences(
                codec.name != cricket::kFlexfecCodecName &&
                absl::c_any_of(recv_codecs,
                               [&codec](const cricket::Codec& recv_codec) {
-                                return recv_codec.MatchesCapability(codec);
+                                return recv_codec.MatchesRtpCodec(codec);
                               });
       })) {
     LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_MODIFICATION,
@@ -70,7 +70,7 @@ RTCError VerifyCodecPreferences(
                codec.name != cricket::kFlexfecCodecName &&
                absl::c_any_of(send_codecs,
                               [&codec](const cricket::Codec& send_codec) {
-                                return send_codec.MatchesCapability(codec);
+                                return send_codec.MatchesRtpCodec(codec);
                               });
       })) {
     LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_MODIFICATION,
@@ -85,12 +85,12 @@ RTCError VerifyCodecPreferences(
   for (const auto& codec_preference : codecs) {
     bool is_recv_codec = absl::c_any_of(
         recv_codecs, [&codec_preference](const cricket::Codec& codec) {
-          return codec.MatchesCapability(codec_preference);
+          return codec.MatchesRtpCodec(codec_preference);
         });
 
     bool is_send_codec = absl::c_any_of(
         send_codecs, [&codec_preference](const cricket::Codec& codec) {
-          return codec.MatchesCapability(codec_preference);
+          return codec.MatchesRtpCodec(codec_preference);
         });
 
     if (!is_recv_codec && !is_send_codec) {
@@ -126,7 +126,7 @@ std::vector<cricket::VideoCodec> MatchCodecPreferences(
 
   for (const auto& codec_preference : codecs) {
     for (const cricket::VideoCodec& send_codec : send_codecs) {
-      if (send_codec.MatchesCapability(codec_preference)) {
+      if (send_codec.MatchesRtpCodec(codec_preference)) {
         result.push_back(send_codec);
       }
     }
@@ -171,9 +171,10 @@ RtpTransceiver::RtpTransceiver(
   RTC_DCHECK(media_type_ == cricket::MEDIA_TYPE_AUDIO ||
              media_type_ == cricket::MEDIA_TYPE_VIDEO);
   RTC_DCHECK_EQ(sender->media_type(), receiver->media_type());
-  if (sender->media_type() == cricket::MEDIA_TYPE_VIDEO)
-    sender->internal()->SetVideoCodecPreferences(
-        media_engine()->video().send_codecs(false));
+  sender->internal()->SetCodecPreferences(
+      sender->media_type() == cricket::MEDIA_TYPE_VIDEO
+          ? media_engine()->video().send_codecs(false)
+          : media_engine()->voice().send_codecs());
   senders_.push_back(sender);
   receivers_.push_back(receiver);
 }
@@ -412,14 +413,15 @@ void RtpTransceiver::AddSender(
   RTC_DCHECK(sender);
   RTC_DCHECK_EQ(media_type(), sender->media_type());
   RTC_DCHECK(!absl::c_linear_search(senders_, sender));
-  if (media_type() == cricket::MEDIA_TYPE_VIDEO) {
-    std::vector<cricket::VideoCodec> send_codecs =
-        media_engine()->video().send_codecs(false);
-    sender->internal()->SetVideoCodecPreferences(
-        codec_preferences_.empty()
-            ? send_codecs
-            : MatchCodecPreferences(codec_preferences_, send_codecs));
-  }
+
+  std::vector<cricket::Codec> send_codecs =
+      media_type() == cricket::MEDIA_TYPE_VIDEO
+          ? media_engine()->video().send_codecs(false)
+          : media_engine()->voice().send_codecs();
+  sender->internal()->SetCodecPreferences(
+      codec_preferences_.empty()
+          ? send_codecs
+          : MatchCodecPreferences(codec_preferences_, send_codecs));
   senders_.push_back(sender);
 }
 
@@ -668,9 +670,10 @@ RTCError RtpTransceiver::SetCodecPreferences(
   // to codecs and abort these steps.
   if (codec_capabilities.empty()) {
     codec_preferences_.clear();
-    if (media_type() == cricket::MEDIA_TYPE_VIDEO)
-      senders_.front()->internal()->SetVideoCodecPreferences(
-          media_engine()->video().send_codecs(false));
+    senders_.front()->internal()->SetCodecPreferences(
+        media_type() == cricket::MEDIA_TYPE_VIDEO
+            ? media_engine()->video().send_codecs(false)
+            : media_engine()->voice().send_codecs());
     return RTCError::OK();
   }
 
@@ -683,24 +686,19 @@ RTCError RtpTransceiver::SetCodecPreferences(
 
   // 6. to 8.
   RTCError result;
+  std::vector<cricket::Codec> recv_codecs, send_codecs;
   if (media_type_ == cricket::MEDIA_TYPE_AUDIO) {
-    result =
-        VerifyCodecPreferences(codecs, media_engine()->voice().send_codecs(),
-                               media_engine()->voice().recv_codecs());
+    send_codecs = media_engine()->voice().send_codecs();
+    recv_codecs = media_engine()->voice().recv_codecs();
   } else if (media_type_ == cricket::MEDIA_TYPE_VIDEO) {
-    std::vector<cricket::Codec> send_codecs =
-        media_engine()->video().send_codecs(context()->use_rtx());
-    result = VerifyCodecPreferences(
-        codecs, send_codecs,
-        media_engine()->video().recv_codecs(context()->use_rtx()));
-
-    if (result.ok()) {
-      senders_.front()->internal()->SetVideoCodecPreferences(
-          MatchCodecPreferences(codecs, send_codecs));
-    }
+    send_codecs = media_engine()->video().send_codecs(context()->use_rtx());
+    recv_codecs = media_engine()->video().recv_codecs(context()->use_rtx());
   }
+  result = VerifyCodecPreferences(codecs, send_codecs, recv_codecs);
 
   if (result.ok()) {
+    senders_.front()->internal()->SetCodecPreferences(
+        MatchCodecPreferences(codecs, send_codecs));
     codec_preferences_ = codecs;
   }
 

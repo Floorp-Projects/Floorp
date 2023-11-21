@@ -14,6 +14,7 @@
 #include <memory>
 #include <utility>
 
+#include "absl/types/optional.h"
 #include "api/sequence_checker.h"
 #include "api/test/video/test_video_track_source.h"
 #include "api/video/video_frame.h"
@@ -27,8 +28,9 @@ class TestVideoCapturerVideoTrackSource : public test::TestVideoTrackSource {
  public:
   TestVideoCapturerVideoTrackSource(
       std::unique_ptr<test::TestVideoCapturer> video_capturer,
-      bool is_screencast)
-      : TestVideoTrackSource(/*remote=*/false),
+      bool is_screencast,
+      absl::optional<std::string> stream_label = absl::nullopt)
+      : TestVideoTrackSource(/*remote=*/false, std::move(stream_label)),
         video_capturer_(std::move(video_capturer)),
         is_screencast_(is_screencast) {
     sequence_checker_.Detach();

@@ -186,11 +186,6 @@ MediaChannelUtil::TransportForMediaChannels::~TransportForMediaChannels() {
   RTC_DCHECK(!network_interface_);
 }
 
-bool MediaChannelUtil::TransportForMediaChannels::SendRtcp(const uint8_t* data,
-                                                           size_t len) {
-  return SendRtcp(rtc::MakeArrayView(data, len));
-}
-
 bool MediaChannelUtil::TransportForMediaChannels::SendRtcp(
     rtc::ArrayView<const uint8_t> packet) {
   auto send = [this, packet = rtc::CopyOnWriteBuffer(
@@ -208,13 +203,6 @@ bool MediaChannelUtil::TransportForMediaChannels::SendRtcp(
     network_thread_->PostTask(SafeTask(network_safety_, std::move(send)));
   }
   return true;
-}
-
-bool MediaChannelUtil::TransportForMediaChannels::SendRtp(
-    const uint8_t* data,
-    size_t len,
-    const webrtc::PacketOptions& options) {
-  return SendRtp(rtc::ArrayView<const uint8_t>(data, len), options);
 }
 
 bool MediaChannelUtil::TransportForMediaChannels::SendRtp(
