@@ -4523,8 +4523,10 @@ void nsWindow::OnMotionNotifyEvent(GdkEventMotion* aEvent) {
     SetCursor(Cursor{cursor});
     // If we set resize cursor on widget level keep it locked and prevent layout
     // to switch it back to default (by synthetic mouse events for instance)
-    // until resize is finished.
-    mWidgetCursorLocked = true;
+    // until resize is finished. This affects PIP windows only.
+    if (mIsPIPWindow) {
+      mWidgetCursorLocked = true;
+    }
     return;
   }
 
