@@ -3,10 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
-
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  loader: "resource://devtools/shared/loader/Loader.sys.mjs",
+});
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
@@ -15,26 +17,19 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIWorkerDebuggerManager"
 );
 
-ChromeUtils.defineLazyGetter(lazy, "Loader", () =>
-  ChromeUtils.importESModule("resource://devtools/shared/loader/Loader.sys.mjs")
-);
-
-ChromeUtils.defineLazyGetter(lazy, "DevToolsUtils", () =>
-  lazy.Loader.require("resource://devtools/shared/DevToolsUtils.js")
-);
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   SessionDataHelpers:
     "resource://devtools/server/actors/watcher/SessionDataHelpers.jsm",
 });
-ChromeUtils.defineESModuleGetters(lazy, {
-  isWindowGlobalPartOfContext:
-    "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs",
-});
+
+XPCOMUtils.defineLazyGetter(lazy, "DevToolsUtils", () =>
+  lazy.loader.require("devtools/shared/DevToolsUtils")
+);
 
 // Name of the attribute into which we save data in `sharedData` object.
 const SHARED_DATA_KEY_NAME = "DevTools:watchedPerWatcher";
 
-export class DevToolsWorkerChild extends JSWindowActorChild {
+export class DevToolsServiceWorkerChild extends JSProcessActorChild {
   constructor() {
     super();
 
@@ -43,7 +38,7 @@ export class DevToolsWorkerChild extends JSWindowActorChild {
     // - connection: the DevToolsServerConnection itself
     // - workers: An array of object containing the following properties:
     //     - dbg: A WorkerDebuggerInstance
-    //     - workerTargetForm: The associated worker target instance form
+    //     - serviceWorkerTargetForm: The associated worker target instance form
     //     - workerThreadServerForwardingPrefix: The prefix used to forward events to the
     //       worker target on the worker thread ().
     // - forwardingPrefix: Prefix used by the JSWindowActorTransport pair to communicate
@@ -52,78 +47,184 @@ export class DevToolsWorkerChild extends JSWindowActorChild {
     //   See WatcherRegistry.getSessionData to see the full list of properties.
     this._connections = new Map();
 
+    this._onConnectionChange = this._onConnectionChange.bind(this);
+
     EventEmitter.decorate(this);
   }
 
+  /**
+   * Called by nsIWorkerDebuggerManager when a worker get created.
+   *
+   * Go through all registered connections (in case we have more than one client connected)
+   * to eventually instantiate a target actor for this worker.
+   *
+   * @param {nsIWorkerDebugger} dbg
+   */
   _onWorkerRegistered(dbg) {
-    if (!this._shouldHandleWorker(dbg)) {
+    // Only consider service workers
+    if (dbg.type !== Ci.nsIWorkerDebugger.TYPE_SERVICE) {
       return;
     }
 
-    for (const [watcherActorID, { connection, forwardingPrefix }] of this
-      ._connections) {
-      this._createWorkerTargetActor({
-        dbg,
-        connection,
-        forwardingPrefix,
-        watcherActorID,
-      });
+    for (const [
+      watcherActorID,
+      { connection, forwardingPrefix, sessionData },
+    ] of this._connections) {
+      if (this._shouldHandleWorker(sessionData.sessionContext, dbg)) {
+        this._createWorkerTargetActor({
+          dbg,
+          connection,
+          forwardingPrefix,
+          watcherActorID,
+        });
+      }
     }
   }
 
+  /**
+   * Called by nsIWorkerDebuggerManager when a worker get destroyed.
+   *
+   * Go through all registered connections (in case we have more than one client connected)
+   * to destroy the related target which may have been created for this worker.
+   *
+   * @param {nsIWorkerDebugger} dbg
+   */
   _onWorkerUnregistered(dbg) {
-    for (const [watcherActorID, { workers, forwardingPrefix }] of this
-      ._connections) {
-      // Check if the worker registration was handled for this watcherActorID.
-      const unregisteredActorIndex = workers.findIndex(worker => {
-        try {
-          // Accessing the WorkerDebugger id might throw (NS_ERROR_UNEXPECTED).
-          return worker.dbg.id === dbg.id;
-        } catch (e) {
-          return false;
-        }
-      });
-      if (unregisteredActorIndex === -1) {
-        continue;
-      }
+    // Only consider service workers
+    if (dbg.type !== Ci.nsIWorkerDebugger.TYPE_SERVICE) {
+      return;
+    }
 
-      const { workerTargetForm, transport } = workers[unregisteredActorIndex];
-      transport.close();
+    for (const [watcherActorID, watcherConnectionData] of this._connections) {
+      this._destroyServiceWorkerTargetForWatcher(
+        watcherActorID,
+        watcherConnectionData,
+        dbg
+      );
+    }
+  }
 
+  /**
+   * To be called when we know a Service Worker target should be destroyed for a specific connection
+   * for which we pass the related "watcher connection data".
+   *
+   * @param {String} watcherActorID
+   *        Watcher actor ID for which we should unregister this service worker.
+   * @param {Object} watcherConnectionData
+   *        The metadata object for a given watcher, stored in the _connections Map.
+   * @param {nsIWorkerDebugger} dbg
+   */
+  _destroyServiceWorkerTargetForWatcher(
+    watcherActorID,
+    watcherConnectionData,
+    dbg
+  ) {
+    const { workers, forwardingPrefix } = watcherConnectionData;
+
+    // Check if the worker registration was handled for this watcher.
+    const unregisteredActorIndex = workers.findIndex(worker => {
       try {
-        this.sendAsyncMessage("DevToolsWorkerChild:workerTargetDestroyed", {
+        // Accessing the WorkerDebugger id might throw (NS_ERROR_UNEXPECTED).
+        return worker.dbg.id === dbg.id;
+      } catch (e) {
+        return false;
+      }
+    });
+
+    // Ignore this worker if it wasn't registered for this watcher.
+    if (unregisteredActorIndex === -1) {
+      return;
+    }
+
+    const { serviceWorkerTargetForm, transport } =
+      workers[unregisteredActorIndex];
+
+    // Remove the entry from this._connection dictionnary
+    workers.splice(unregisteredActorIndex, 1);
+
+    // Close the transport made against the worker thread.
+    transport.close();
+
+    // Note that we do not need to post the "disconnect" message from this destruction codepath
+    // as this method is only called when the worker is unregistered and so,
+    // we can't send any message anyway, and the worker is being destroyed anyway.
+
+    // Also notify the parent process that this worker target got destroyed.
+    // As the worker thread may be already destroyed, it may not have time to send a destroy event.
+    try {
+      this.sendAsyncMessage(
+        "DevToolsServiceWorkerChild:serviceWorkerTargetDestroyed",
+        {
           watcherActorID,
           forwardingPrefix,
-          workerTargetForm,
-        });
-      } catch (e) {
-        return;
-      }
-
-      workers.splice(unregisteredActorIndex, 1);
+          serviceWorkerTargetForm,
+        }
+      );
+    } catch (e) {
+      // Ignore exception which may happen on content process destruction
     }
   }
 
-  onDOMWindowCreated() {
+  /**
+   * Function handling messages sent by DevToolsServiceWorkerParent (part of ProcessActor API).
+   *
+   * @param {Object} message
+   * @param {String} message.name
+   * @param {*} message.data
+   */
+  receiveMessage(message) {
+    switch (message.name) {
+      case "DevToolsServiceWorkerParent:instantiate-already-available": {
+        const { watcherActorID, connectionPrefix, sessionData } = message.data;
+
+        return this._watchWorkerTargets({
+          watcherActorID,
+          parentConnectionPrefix: connectionPrefix,
+          sessionData,
+        });
+      }
+      case "DevToolsServiceWorkerParent:destroy": {
+        const { watcherActorID } = message.data;
+        return this._destroyTargetActors(watcherActorID);
+      }
+      case "DevToolsServiceWorkerParent:addOrSetSessionDataEntry": {
+        const { watcherActorID, type, entries, updateType } = message.data;
+        return this._addOrSetSessionDataEntry(
+          watcherActorID,
+          type,
+          entries,
+          updateType
+        );
+      }
+      case "DevToolsServiceWorkerParent:removeSessionDataEntry": {
+        const { watcherActorID, type, entries } = message.data;
+        return this._removeSessionDataEntry(watcherActorID, type, entries);
+      }
+      case "DevToolsServiceWorkerParent:packet":
+        return this.emit("packet-received", message);
+      default:
+        throw new Error(
+          "Unsupported message in DevToolsServiceWorkerParent: " + message.name
+        );
+    }
+  }
+
+  /**
+   * "chrome-event-target-created" event handler. Supposed to be fired very early when the process starts
+   */
+  observe() {
     const { sharedData } = Services.cpmm;
     const sessionDataByWatcherActor = sharedData.get(SHARED_DATA_KEY_NAME);
     if (!sessionDataByWatcherActor) {
       throw new Error(
-        "Request to instantiate the target(s) for the Worker, but `sharedData` is empty about watched targets"
+        "Request to instantiate the target(s) for the Service Worker, but `sharedData` is empty about watched targets"
       );
     }
 
     // Create one Target actor for each prefix/client which listen to workers
     for (const [watcherActorID, sessionData] of sessionDataByWatcherActor) {
-      const { targets, connectionPrefix, sessionContext } = sessionData;
-      if (
-        targets?.includes("worker") &&
-        lazy.isWindowGlobalPartOfContext(this.manager, sessionContext, {
-          acceptInitialDocument: true,
-          forceAcceptTopLevelTarget: true,
-          acceptSameProcessIframes: true,
-        })
-      ) {
+      const { targets, connectionPrefix } = sessionData;
+      if (targets?.includes("service_worker")) {
         this._watchWorkerTargets({
           watcherActorID,
           parentConnectionPrefix: connectionPrefix,
@@ -134,78 +235,9 @@ export class DevToolsWorkerChild extends JSWindowActorChild {
   }
 
   /**
-   * Function handling messages sent by DevToolsWorkerParent (part of JSWindowActor API).
-   *
-   * @param {Object} message
-   * @param {String} message.name
-   * @param {*} message.data
-   */
-  receiveMessage(message) {
-    // All messages pass `sessionContext` (except packet) and are expected
-    // to match isWindowGlobalPartOfContext result.
-    if (message.name != "DevToolsWorkerParent:packet") {
-      const { browserId } = message.data.sessionContext;
-      // Re-check here, just to ensure that both parent and content processes agree
-      // on what should or should not be watched.
-      if (
-        this.manager.browsingContext.browserId != browserId &&
-        !lazy.isWindowGlobalPartOfContext(
-          this.manager,
-          message.data.sessionContext,
-          {
-            acceptInitialDocument: true,
-          }
-        )
-      ) {
-        throw new Error(
-          "Mismatch between DevToolsWorkerParent and DevToolsWorkerChild  " +
-            (this.manager.browsingContext.browserId == browserId
-              ? "window global shouldn't be notified (isWindowGlobalPartOfContext mismatch)"
-              : `expected browsing context with ID ${browserId}, but got ${this.manager.browsingContext.browserId}`)
-        );
-      }
-    }
-
-    switch (message.name) {
-      case "DevToolsWorkerParent:instantiate-already-available": {
-        const { watcherActorID, connectionPrefix, sessionData } = message.data;
-
-        return this._watchWorkerTargets({
-          watcherActorID,
-          parentConnectionPrefix: connectionPrefix,
-          sessionData,
-        });
-      }
-      case "DevToolsWorkerParent:destroy": {
-        const { watcherActorID } = message.data;
-        return this._destroyTargetActors(watcherActorID);
-      }
-      case "DevToolsWorkerParent:addOrSetSessionDataEntry": {
-        const { watcherActorID, type, entries, updateType } = message.data;
-        return this._addOrSetSessionDataEntry(
-          watcherActorID,
-          type,
-          entries,
-          updateType
-        );
-      }
-      case "DevToolsWorkerParent:removeSessionDataEntry": {
-        const { watcherActorID, type, entries } = message.data;
-        return this._removeSessionDataEntry(watcherActorID, type, entries);
-      }
-      case "DevToolsWorkerParent:packet":
-        return this.emit("packet-received", message);
-      default:
-        throw new Error(
-          "Unsupported message in DevToolsWorkerParent: " + message.name
-        );
-    }
-  }
-
-  /**
    * Instantiate targets for existing workers, watch for worker registration and listen
    * for resources on those workers, for given connection and context. Targets are sent
-   * to the DevToolsWorkerParent via the DevToolsWorkerChild:workerTargetAvailable message.
+   * to the DevToolsServiceWorkerParent via the DevToolsServiceWorkerChild:serviceWorkerTargetAvailable message.
    *
    * @param {Object} options
    * @param {String} options.watcherActorID: The ID of the WatcherActor who requested to
@@ -221,12 +253,43 @@ export class DevToolsWorkerChild extends JSWindowActorChild {
     parentConnectionPrefix,
     sessionData,
   }) {
+    // We might already have been called from observe method if the process was initializing
     if (this._connections.has(watcherActorID)) {
-      throw new Error(
-        "DevToolsWorkerChild _watchWorkerTargets was called more than once" +
-          ` for the same Watcher (Actor ID: "${watcherActorID}")`
-      );
+      // In such case, wait for the promise in order to ensure resolving only after
+      // we notified about the existing targets
+      await this._connections.get(watcherActorID).watchPromise;
+      return;
     }
+
+    // Compute a unique prefix, just for this Service Worker,
+    // which will be used to create a JSWindowActorTransport pair between content and parent processes.
+    // This is slightly hacky as we typicaly compute Prefix and Actor ID via `DevToolsServerConnection.allocID()`,
+    // but here, we can't have access to any DevTools connection as we are really early in the content process startup
+    // WindowGlobalChild's innerWindowId should be unique across processes, so it should be safe?
+    // (this.manager == WindowGlobalChild interface)
+    const forwardingPrefix =
+      parentConnectionPrefix + "serviceWorkerProcess" + this.manager.childID;
+
+    const connection = this._createConnection(forwardingPrefix);
+
+    // This method will be concurrently called from `observe()` and `DevToolsServiceWorkerParent:instantiate-already-available`
+    // When the JSprocessActor initializes itself and when the watcher want to force instantiating existing targets.
+    // Wait for the existing promise when the second call arise.
+    //
+    // Also, _connections has to be populated *before* calling _createWorkerTargetActor,
+    // so create a deferred promise right away.
+    let resolveWatchPromise;
+    const watchPromise = new Promise(
+      resolve => (resolveWatchPromise = resolve)
+    );
+
+    this._connections.set(watcherActorID, {
+      connection,
+      watchPromise,
+      workers: [],
+      forwardingPrefix,
+      sessionData,
+    });
 
     // Listen for new workers that will be spawned.
     if (!this._workerDebuggerListener) {
@@ -237,27 +300,9 @@ export class DevToolsWorkerChild extends JSWindowActorChild {
       lazy.wdm.addListener(this._workerDebuggerListener);
     }
 
-    // Compute a unique prefix, just for this WindowGlobal,
-    // which will be used to create a JSWindowActorTransport pair between content and parent processes.
-    // This is slightly hacky as we typicaly compute Prefix and Actor ID via `DevToolsServerConnection.allocID()`,
-    // but here, we can't have access to any DevTools connection as we are really early in the content process startup
-    // WindowGlobalChild's innerWindowId should be unique across processes, so it should be safe?
-    // (this.manager == WindowGlobalChild interface)
-    const forwardingPrefix =
-      parentConnectionPrefix + "workerGlobal" + this.manager.innerWindowId;
-
-    const connection = this._createConnection(forwardingPrefix);
-
-    this._connections.set(watcherActorID, {
-      connection,
-      workers: [],
-      forwardingPrefix,
-      sessionData,
-    });
-
     const promises = [];
     for (const dbg of lazy.wdm.getWorkerDebuggerEnumerator()) {
-      if (!this._shouldHandleWorker(dbg)) {
+      if (!this._shouldHandleWorker(sessionData.sessionContext, dbg)) {
         continue;
       }
       promises.push(
@@ -270,11 +315,22 @@ export class DevToolsWorkerChild extends JSWindowActorChild {
       );
     }
     await Promise.all(promises);
+    resolveWatchPromise();
   }
 
+  /**
+   * Initialize a DevTools Server and return a new DevToolsServerConnection
+   * using this server in order to communicate to the parent process via
+   * the JSProcessActor message / queries.
+   *
+   * @param String forwardingPrefix
+   *        A unique prefix used to distinguish message coming from distinct service workers.
+   * @return DevToolsServerConnection
+   *        A connection to communicate with the parent process.
+   */
   _createConnection(forwardingPrefix) {
-    const { DevToolsServer } = lazy.Loader.require(
-      "resource://devtools/server/devtools-server.js"
+    const { DevToolsServer } = lazy.loader.require(
+      "devtools/server/devtools-server"
     );
 
     DevToolsServer.init();
@@ -283,6 +339,7 @@ export class DevToolsWorkerChild extends JSWindowActorChild {
     // We are going to spawn a WorkerTargetActor instance in the next few lines,
     // it is going to act like a root actor without being one.
     DevToolsServer.registerActors({ target: true });
+    DevToolsServer.on("connectionchange", this._onConnectionChange);
 
     const connection = DevToolsServer.connectToParentWindowActor(
       this,
@@ -298,13 +355,14 @@ export class DevToolsWorkerChild extends JSWindowActorChild {
    * @param {WorkerDebugger} dbg: The worker debugger we want to check.
    * @returns {Boolean}
    */
-  _shouldHandleWorker(dbg) {
-    // We only want to create targets for non-closed dedicated worker, in the same document
-    return (
-      lazy.DevToolsUtils.isWorkerDebuggerAlive(dbg) &&
-      dbg.type === Ci.nsIWorkerDebugger.TYPE_DEDICATED &&
-      dbg.windowIDs.includes(this.manager.innerWindowId)
-    );
+  _shouldHandleWorker(sessionContext, dbg) {
+    // We only want to create targets for non-closed service worker
+    if (!lazy.DevToolsUtils.isWorkerDebuggerAlive(dbg)) {
+      return false;
+    }
+
+    // TODO: filter out to only include SW matching the browser-element's current domain
+    return dbg.type === Ci.nsIWorkerDebugger.TYPE_SERVICE;
   }
 
   async _createWorkerTargetActor({
@@ -313,22 +371,30 @@ export class DevToolsWorkerChild extends JSWindowActorChild {
     forwardingPrefix,
     watcherActorID,
   }) {
-    // Prevent the debuggee from executing in this worker until the client has
-    // finished attaching to it. This call will throw if the debugger is already "registered"
-    // (i.e. if this is called outside of the register listener)
-    // See https://searchfox.org/mozilla-central/rev/84922363f4014eae684aabc4f1d06380066494c5/dom/workers/nsIWorkerDebugger.idl#55-66
+    // Freeze the worker execution as soon as possible in order to wait for DevTools bootstrap.
+    // We typically want to:
+    //  - startup the Thread Actor,
+    //  - pass the initial session data which includes breakpoints to the worker thread,
+    //  - register the breakpoints,
+    // before release its execution.
+    // `connectToWorker` is going to call setDebuggerReady(true) when all of this is done.
     try {
       dbg.setDebuggerReady(false);
-    } catch (e) {}
+    } catch (e) {
+      // This call will throw if the debugger is already "registered"
+      // (i.e. if this is called outside of the register listener)
+      // See https://searchfox.org/mozilla-central/rev/84922363f4014eae684aabc4f1d06380066494c5/dom/workers/nsIWorkerDebugger.idl#55-66
+    }
 
     const watcherConnectionData = this._connections.get(watcherActorID);
     const { sessionData } = watcherConnectionData;
-    const workerThreadServerForwardingPrefix =
-      connection.allocID("workerTarget");
+    const workerThreadServerForwardingPrefix = connection.allocID(
+      "serviceWorkerTarget"
+    );
 
     // Create the actual worker target actor, in the worker thread.
-    const { connectToWorker } = lazy.Loader.require(
-      "resource://devtools/server/connectors/worker-connector.js"
+    const { connectToWorker } = lazy.loader.require(
+      "devtools/server/connectors/worker-connector"
     );
 
     const onConnectToWorker = connectToWorker(
@@ -344,6 +410,10 @@ export class DevToolsWorkerChild extends JSWindowActorChild {
     try {
       await onConnectToWorker;
     } catch (e) {
+      // connectToWorker is supposed to call setDebuggerReady(true) to release the worker execution.
+      // But if anything goes wrong and an exception is thrown, ensure releasing its execution,
+      // otherwise if devtools is broken, it will freeze the worker indefinitely.
+      //
       // onConnectToWorker can reject if the Worker Debugger is closed; so we only want to
       // resume the debugger if it is not closed (otherwise it can cause crashes).
       if (!dbg.isClosed) {
@@ -355,11 +425,14 @@ export class DevToolsWorkerChild extends JSWindowActorChild {
     const { workerTargetForm, transport } = await onConnectToWorker;
 
     try {
-      this.sendAsyncMessage("DevToolsWorkerChild:workerTargetAvailable", {
-        watcherActorID,
-        forwardingPrefix,
-        workerTargetForm,
-      });
+      this.sendAsyncMessage(
+        "DevToolsServiceWorkerChild:serviceWorkerTargetAvailable",
+        {
+          watcherActorID,
+          forwardingPrefix,
+          serviceWorkerTargetForm: workerTargetForm,
+        }
+      );
     } catch (e) {
       // If there was an error while sending the message, we are not going to use this
       // connection to communicate with the worker.
@@ -368,15 +441,20 @@ export class DevToolsWorkerChild extends JSWindowActorChild {
     }
 
     // Only add data to the connection if we successfully send the
-    // workerTargetAvailable message.
+    // serviceWorkerTargetAvailable message.
     watcherConnectionData.workers.push({
       dbg,
       transport,
-      workerTargetForm,
+      serviceWorkerTargetForm: workerTargetForm,
       workerThreadServerForwardingPrefix,
     });
   }
 
+  /**
+   * Request the service worker threads to destroy all their service worker Targets currently registered for a given Watcher actor.
+   *
+   * @param {String} watcherActorID
+   */
   _destroyTargetActors(watcherActorID) {
     const watcherConnectionData = this._connections.get(watcherActorID);
     this._connections.delete(watcherActorID);
@@ -411,13 +489,49 @@ export class DevToolsWorkerChild extends JSWindowActorChild {
     watcherConnectionData.connection.close();
   }
 
+  /**
+   * Destroy the server once its last connection closes. Note that multiple
+   * worker scripts may be running in parallel and reuse the same server.
+   */
+  _onConnectionChange() {
+    const { DevToolsServer } = lazy.loader.require(
+      "devtools/server/devtools-server"
+    );
+
+    // Only destroy the server if there is no more connections to it. It may be
+    // used to debug another tab running in the same process.
+    if (DevToolsServer.hasConnection() || DevToolsServer.keepAlive) {
+      return;
+    }
+
+    if (this._destroyed) {
+      return;
+    }
+    this._destroyed = true;
+
+    DevToolsServer.off("connectionchange", this._onConnectionChange);
+    DevToolsServer.destroy();
+  }
+
+  /**
+   * Used by DevTools transport layer to communicate with the parent process.
+   *
+   * @param {String} packet
+   * @param {String prefix
+   */
   async sendPacket(packet, prefix) {
-    return this.sendAsyncMessage("DevToolsWorkerChild:packet", {
+    return this.sendAsyncMessage("DevToolsServiceWorkerChild:packet", {
       packet,
       prefix,
     });
   }
 
+  /**
+   * Go through all registered service workers for a given watcher actor
+   * to send them new session data entries.
+   *
+   * See addOrSetSessionDataEntryInWorkerTarget for more info about arguments.
+   */
   async _addOrSetSessionDataEntry(watcherActorID, type, entries, updateType) {
     const watcherConnectionData = this._connections.get(watcherActorID);
     if (!watcherConnectionData) {
@@ -449,6 +563,12 @@ export class DevToolsWorkerChild extends JSWindowActorChild {
     await Promise.all(promises);
   }
 
+  /**
+   * Go through all registered service workers for a given watcher actor
+   * to send them request to clear some session data entries.
+   *
+   * See addOrSetSessionDataEntryInWorkerTarget for more info about arguments.
+   */
   _removeSessionDataEntry(watcherActorID, type, entries) {
     const watcherConnectionData = this._connections.get(watcherActorID);
 
@@ -476,14 +596,6 @@ export class DevToolsWorkerChild extends JSWindowActorChild {
           })
         );
       }
-    }
-  }
-
-  handleEvent({ type }) {
-    // DOMWindowCreated is registered from the WatcherRegistry via `ActorManagerParent.addJSWindowActors`
-    // as a DOM event to be listened to and so is fired by JSWindowActor platform code.
-    if (type == "DOMWindowCreated") {
-      this.onDOMWindowCreated();
     }
   }
 

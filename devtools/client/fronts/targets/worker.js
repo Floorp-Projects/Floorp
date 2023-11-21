@@ -17,6 +17,17 @@ const {
 class WorkerTargetFront extends TargetMixin(
   FrontClassWithSpec(workerTargetSpec)
 ) {
+  get isDedicatedWorker() {
+    return this._type === Ci.nsIWorkerDebugger.TYPE_DEDICATED;
+  }
+
+  get isSharedWorker() {
+    return this._type === Ci.nsIWorkerDebugger.TYPE_SHARED;
+  }
+
+  get isServiceWorker() {
+    return this._type === Ci.nsIWorkerDebugger.TYPE_SERVICE;
+  }
   form(json) {
     this.actorID = json.actor;
 
@@ -26,6 +37,9 @@ class WorkerTargetFront extends TargetMixin(
 
     this._title = json.title;
     this._url = json.url;
+    this._type = json.type;
+    // Expose the WorkerDebugger's `id` so that we can match the target with the descriptor
+    this.id = json.id;
   }
 }
 

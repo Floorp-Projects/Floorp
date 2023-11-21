@@ -13,6 +13,12 @@ add_task(async function () {
   await pushPref("devtools.debugger.threads-visible", true);
   await pushPref("dom.serviceWorkers.enabled", true);
   await pushPref("dom.serviceWorkers.testing.enabled", true);
+
+  // Speed up the destruction of the worker once the registration has been removed
+  // (There is a delay between calling registration's `unregister` method
+  // and the actually destruction of the worker thread)
+  await pushPref("dom.serviceWorkers.idle_timeout", 3000);
+
   const dbg = await initDebugger("doc-service-workers.html");
 
   invokeInTab("registerWorker");

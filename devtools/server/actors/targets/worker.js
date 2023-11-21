@@ -47,6 +47,15 @@ class WorkerTargetActor extends BaseTargetActor {
     this.workerGlobal = workerGlobal;
     this.sessionContext = sessionContext;
 
+    // We don't have access to Ci from worker thread
+    // 2 == nsIWorkerDebugger.TYPE_SERVICE
+    // 1 == nsIWorkerDebugger.TYPE_SHARED
+    if (workerDebuggerData.type == 2) {
+      this.targetType = Targets.TYPES.SERVICE_WORKER;
+    } else if (workerDebuggerData.type == 1) {
+      this.targetType = Targets.TYPES.SHARED_WORKER;
+    }
+
     this._workerDebuggerData = workerDebuggerData;
     this._sourcesManager = null;
     this.workerConsoleApiMessagesDispatchedToMainThread =
