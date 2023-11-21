@@ -54,6 +54,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   window.addEventListener("hashchange", onHashChange);
   window.addEventListener("change-category", function (event) {
     location.hash = event.target.getAttribute("name");
+    window.scrollTo(0, 0);
     recordNavigationTelemetry("category-navigation", event.target);
   });
   window.addEventListener("card-container-view-all", function (event) {
