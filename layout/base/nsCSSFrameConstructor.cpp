@@ -1551,8 +1551,12 @@ void nsCSSFrameConstructor::CreateGeneratedContent(
     }
 
     case Type::String: {
-      RefPtr text = CreateGenConTextNode(
-          aState, NS_ConvertUTF8toUTF16(item.AsString().AsString()), nullptr);
+      const auto string = item.AsString().AsString();
+      if (string.IsEmpty()) {
+        return;
+      }
+      RefPtr text =
+          CreateGenConTextNode(aState, NS_ConvertUTF8toUTF16(string), nullptr);
       aAddChild(text);
       return;
     }
