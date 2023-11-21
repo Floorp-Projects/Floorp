@@ -1,0 +1,46 @@
+[DEFAULT]
+skip-if = ["toolkit == 'android'"] # bug 1730213
+head = "../../unit/head.js head.js"
+firefox-appdir = "browser"
+
+["test_merinoClient.js"]
+
+["test_merinoClient_sessions.js"]
+
+["test_quicksuggest.js"]
+
+["test_quicksuggest_addons.js"]
+
+["test_quicksuggest_dynamicWikipedia.js"]
+
+["test_quicksuggest_impressionCaps.js"]
+
+["test_quicksuggest_mdn.js"]
+
+["test_quicksuggest_merino.js"]
+
+["test_quicksuggest_merinoSessions.js"]
+
+["test_quicksuggest_migrate_v1.js"]
+
+["test_quicksuggest_migrate_v2.js"]
+
+["test_quicksuggest_nonUniqueKeywords.js"]
+
+["test_quicksuggest_offlineDefault.js"]
+
+["test_quicksuggest_pocket.js"]
+
+["test_quicksuggest_positionInSuggestions.js"]
+
+["test_quicksuggest_scoreMap.js"]
+
+["test_quicksuggest_topPicks.js"]
+
+["test_rust_ingest.js"]
+
+["test_suggestionsMap.js"]
+
+["test_weather.js"]
+
+["test_weather_keywords.js"]

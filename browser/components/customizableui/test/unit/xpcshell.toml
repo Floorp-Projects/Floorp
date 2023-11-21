@@ -1,0 +1,6 @@
+[DEFAULT]
+head =  '' # no value from INI
+skip-if = ["toolkit == 'android'"] # bug 1730213
+firefox-appdir = "browser"
+
+["test_unified_extensions_migration.js"]

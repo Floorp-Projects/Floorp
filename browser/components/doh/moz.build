@@ -18,5 +18,5 @@ TESTING_JS_MODULES += [
     "DoHTestUtils.sys.mjs",
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.toml"]
 BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]

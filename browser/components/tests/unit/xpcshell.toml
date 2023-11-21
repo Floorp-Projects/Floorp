@@ -1,0 +1,22 @@
+[DEFAULT]
+head = "head.js"
+firefox-appdir = "browser"
+skip-if = ["toolkit == 'android'"] # bug 1730213
+support-files = ["distribution.ini"]
+
+["test_browserGlue_migration_ctrltab_recently_used_order.js"]
+
+["test_browserGlue_migration_formautofill.js"]
+
+["test_browserGlue_migration_no_errors.js"]
+
+["test_browserGlue_migration_places_xulstore.js"]
+
+["test_browserGlue_migration_remove_pref.js"]
+
+["test_browserGlue_migration_resetDefaults.js"]
+
+["test_distribution.js"]
+run-sequentially = "very high failure rate in parallel"
+
+["test_distribution_cachedexistence.js"]

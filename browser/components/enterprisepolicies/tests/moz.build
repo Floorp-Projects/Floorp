@@ -17,4 +17,4 @@ BROWSER_CHROME_MANIFESTS += [
     "browser/show_home_button/browser.toml",
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["xpcshell/xpcshell.toml"]

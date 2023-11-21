@@ -1,0 +1,75 @@
+[DEFAULT]
+skip-if = ["os == 'android'"] # bug 1730213
+head = "head.js"
+firefox-appdir = "browser"
+tags = "webextensions condprof"
+dupe-manifest = ""
+
+["test_ext_bookmarks.js"]
+skip-if = ["condprof"] # Bug 1769184 - by design for now
+
+["test_ext_browsingData_downloads.js"]
+
+["test_ext_browsingData_passwords.js"]
+skip-if = ["tsan"] # Times out, bug 1612707
+
+["test_ext_browsingData_settings.js"]
+
+["test_ext_chrome_settings_overrides_home.js"]
+
+["test_ext_chrome_settings_overrides_update.js"]
+
+["test_ext_distribution_popup.js"]
+
+["test_ext_history.js"]
+
+["test_ext_homepage_overrides_private.js"]
+
+["test_ext_manifest.js"]
+
+["test_ext_manifest_commands.js"]
+run-sequentially = "very high failure rate in parallel"
+
+["test_ext_manifest_omnibox.js"]
+
+["test_ext_manifest_permissions.js"]
+
+["test_ext_menu_caller.js"]
+
+["test_ext_menu_startup.js"]
+
+["test_ext_normandyAddonStudy.js"]
+
+["test_ext_pageAction_shutdown.js"]
+
+["test_ext_pkcs11_management.js"]
+
+["test_ext_settings_overrides_defaults.js"]
+skip-if = ["condprof"] # Bug 1776135 - by design, modifies search settings at start of test
+support-files = [
+  "data/test/manifest.json",
+  "data/test2/manifest.json",
+]
+
+["test_ext_settings_overrides_search.js"]
+
+["test_ext_settings_overrides_search_mozParam.js"]
+skip-if = ["condprof"] # Bug 1776652
+support-files = ["data/test/manifest.json"]
+
+["test_ext_settings_overrides_shutdown.js"]
+
+["test_ext_settings_validate.js"]
+
+["test_ext_topSites.js"]
+skip-if = ["condprof"] # Bug 1769184 - by design for now
+
+["test_ext_url_overrides_newtab.js"]
+
+["test_ext_url_overrides_newtab_update.js"]
+
+["test_ext_urlbar.js"]
+skip-if = [
+  "tsan", # Unreasonably slow, bug 1612707
+  "condprof", # Bug 1769184 - by design for now
+]

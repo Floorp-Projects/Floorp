@@ -27,4 +27,4 @@ if toolkit == "cocoa":
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Downloads Panel")
 
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.toml"]

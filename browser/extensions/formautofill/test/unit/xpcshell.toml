@@ -1,0 +1,155 @@
+[DEFAULT]
+skip-if = [
+  "os == 'linux' && ccov", # bug 1821945
+  "toolkit == 'android'", # bug 1730213
+]
+firefox-appdir = "browser"
+head = "head.js"
+support-files = ["../fixtures/**"]
+prefs = ["extensions.formautofill.heuristics.visibilityCheckThreshold=0"]
+
+["test_activeStatus.js"]
+
+["test_addressComponent_city.js"]
+head = "head_addressComponent.js"
+
+["test_addressComponent_country.js"]
+head = "head_addressComponent.js"
+
+["test_addressComponent_email.js"]
+head = "head_addressComponent.js"
+
+["test_addressComponent_name.js"]
+head = "head_addressComponent.js"
+
+["test_addressComponent_organization.js"]
+head = "head_addressComponent.js"
+
+["test_addressComponent_postal_code.js"]
+head = "head_addressComponent.js"
+
+["test_addressComponent_state.js"]
+head = "head_addressComponent.js"
+
+["test_addressComponent_street_address.js"]
+head = "head_addressComponent.js"
+
+["test_addressComponent_tel.js"]
+head = "head_addressComponent.js"
+
+["test_addressDataLoader.js"]
+skip-if = ["true"] # bug 1859588
+
+["test_addressRecords.js"]
+skip-if = ["apple_silicon"] # bug 1729554
+
+["test_autofillFormFields.js"]
+skip-if = [
+  "tsan", # Times out, bug 1612707
+  "apple_silicon", # bug 1729554
+]
+
+["test_clearPopulatedForm.js"]
+
+["test_collectFormFields.js"]
+
+["test_createRecords.js"]
+
+["test_creditCardRecords.js"]
+skip-if = [
+  "tsan", # Times out, bug 1612707
+  "apple_silicon", # bug 1729554
+]
+
+["test_extractLabelStrings.js"]
+
+["test_findLabelElements.js"]
+
+["test_getAdaptedProfiles.js"]
+
+["test_getAdaptedProfiles_locales.js"]
+
+["test_getCategoriesFromFieldNames.js"]
+
+["test_getCreditCardLogo.js"]
+
+["test_getFormInputDetails.js"]
+
+["test_getInfo.js"]
+
+["test_getRecords.js"]
+skip-if = [
+  "tsan", # Times out, bug 1612707
+  "apple_silicon", # bug 1729554
+]
+
+["test_isAddressAutofillAvailable.js"]
+
+["test_isCJKName.js"]
+
+["test_isCreditCardAutofillAvailable.js"]
+
+["test_isCreditCardOrAddressFieldType.js"]
+
+["test_known_strings.js"]
+
+["test_markAsAutofillField.js"]
+
+["test_migrateRecords.js"]
+skip-if = ["tsan"] # Times out, bug 1612707
+
+["test_nameUtils.js"]
+
+["test_onFormSubmitted.js"]
+skip-if = ["tsan"] # Times out, bug 1612707
+
+["test_parseAddressFormat.js"]
+
+["test_parseStreetAddress.js"]
+
+["test_phoneNumber.js"]
+
+["test_previewFormFields.js"]
+
+["test_profileAutocompleteResult.js"]
+
+["test_reconcile.js"]
+skip-if = [
+  "tsan", # Times out, bug 1612707
+  "apple_silicon", # bug 1729554
+]
+
+["test_savedFieldNames.js"]
+
+["test_storage_remove.js"]
+skip-if = [
+  "tsan", # Times out, bug 1612707
+  "apple_silicon", # bug 1729554
+]
+
+["test_storage_syncfields.js"]
+
+["test_storage_tombstones.js"]
+skip-if = [
+  "tsan", # Times out, bug 1612707
+  "apple_silicon", # bug 1729554
+]
+
+["test_sync.js"]
+head = "head.js ../../../../../services/sync/tests/unit/head_appinfo.js ../../../../../services/common/tests/unit/head_helpers.js ../../../../../services/sync/tests/unit/head_helpers.js ../../../../../services/sync/tests/unit/head_http_server.js"
+skip-if = ["tsan"] # Times out, bug 1612707
+
+["test_sync_deprecate_credit_card_v4.js"]
+head = "head.js ../../../../../services/sync/tests/unit/head_appinfo.js ../../../../../services/common/tests/unit/head_helpers.js ../../../../../services/sync/tests/unit/head_helpers.js ../../../../../services/sync/tests/unit/head_http_server.js"
+skip-if = [
+  "tsan", # Times out, bug 1612707
+  "apple_silicon", # bug 1729554
+]
+
+["test_toOneLineAddress.js"]
+
+["test_transformFields.js"]
+skip-if = [
+  "tsan", # Times out, bug 1612707
+  "apple_silicon", # bug 1729554
+]

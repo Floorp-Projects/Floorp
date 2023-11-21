@@ -1,0 +1,38 @@
+[DEFAULT]
+head = "head_bookmarks.js"
+firefox-appdir = "browser"
+skip-if = ["toolkit == 'android'"] # bug 1730213
+support-files = [
+  "bookmarks.glue.html",
+  "bookmarks.glue.json",
+  "corruptDB.sqlite",
+  "distribution.ini",
+]
+
+["test_PUIU_batchUpdatesForNode.js"]
+
+["test_PUIU_setCharsetForPage.js"]
+
+["test_PUIU_title_difference_spotter.js"]
+
+["test_browserGlue_bookmarkshtml.js"]
+
+["test_browserGlue_corrupt.js"]
+
+["test_browserGlue_corrupt_nobackup.js"]
+
+["test_browserGlue_corrupt_nobackup_default.js"]
+
+["test_browserGlue_distribution.js"]
+
+["test_browserGlue_migrate.js"]
+
+["test_browserGlue_prefs.js"]
+
+["test_browserGlue_restore.js"]
+
+["test_clearHistory_shutdown.js"]
+
+["test_interactions_blocklist.js"]
+
+["test_invalid_defaultLocation.js"]
