@@ -350,10 +350,10 @@ urlbar-firefox-suggest-contextual-opt-in-title-1 =
 urlbar-firefox-suggest-contextual-opt-in-title-2 =
   Say hello to smarter suggestions
 urlbar-firefox-suggest-contextual-opt-in-description-1 =
-  We’re building a better search experience. When you allow { -vendor-short-name } to process your search queries, we can create more relevant search suggestions for you.
+  We’re building a better search experience. When you allow { -vendor-short-name } to process your search queries, we can create more relevant suggestions from { -brand-short-name } and our partners. Privacy-first, always.
   <a data-l10n-name="learn-more-link">Learn more</a>
 urlbar-firefox-suggest-contextual-opt-in-description-2 =
-  { -firefox-suggest-brand-name } uses your search keywords to make contextual suggestions from { -brand-short-name }.
+  { -firefox-suggest-brand-name } uses your search keywords to make contextual suggestions from { -brand-short-name } and our partners while keeping your privacy in mind.
   <a data-l10n-name="learn-more-link">Learn more</a>
 urlbar-firefox-suggest-contextual-opt-in-allow = Allow suggestions
 urlbar-firefox-suggest-contextual-opt-in-dismiss = Not now
