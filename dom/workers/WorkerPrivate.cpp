@@ -2195,6 +2195,13 @@ void WorkerPrivate::UpdateOverridenLoadGroup(nsILoadGroup* aBaseLoadGroup) {
   mLoadInfo.mInterfaceRequestor->MaybeAddBrowserChild(aBaseLoadGroup);
 }
 
+bool WorkerPrivate::IsOnParentThread() const {
+  if (GetParent()) {
+    return GetParent()->IsOnWorkerThread();
+  }
+  return NS_IsMainThread();
+}
+
 #ifdef DEBUG
 
 void WorkerPrivate::AssertIsOnParentThread() const {

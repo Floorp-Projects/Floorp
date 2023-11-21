@@ -1050,6 +1050,8 @@ class WorkerPrivate final
   nsresult DispatchDebuggerRunnable(
       already_AddRefed<WorkerRunnable> aDebuggerRunnable);
 
+  bool IsOnParentThread() const;
+
 #ifdef DEBUG
   void AssertIsOnParentThread() const;
 
