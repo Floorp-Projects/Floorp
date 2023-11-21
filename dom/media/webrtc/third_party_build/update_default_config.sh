@@ -10,18 +10,25 @@ ERROR_HELP=""
 # Print an Error message if `set -eE` causes the script to exit due to a failed command
 trap 'show_error_msg $LINENO' ERR
 
-if [ "x" = "x$NEW_BUG_NUMBER" ]; then
-  echo "NEW_BUG_NUMBER is not defined.  You should probably have a new bug"
-  echo "number defined for the next fast-forward update.  Then do:"
-  echo "  NEW_BUG_NUMBER={new-bug-number} bash $0"
-  exit
-fi
-
 DEFAULT_CONFIG_PATH=dom/media/webrtc/third_party_build/default_config_env
 
 # use the previous default_config_env to make sure any locally overriden
 # settings don't interfere with the update process.
 MOZ_CONFIG_PATH=$DEFAULT_CONFIG_PATH source dom/media/webrtc/third_party_build/use_config_env.sh
+
+if [ "x" = "x$NEW_BUG_NUMBER" ]; then
+  NEXT_MILESTONE=$(($MOZ_NEXT_LIBWEBRTC_MILESTONE+1))
+  echo ""
+  echo "NEW_BUG_NUMBER is not defined.  Please use the bug number created for"
+  echo "updating the libwebrtc library to version $NEXT_MILESTONE."
+  echo "For more information about creating this bug, see the first step of the"
+  echo "prerequisites section of our wiki:"
+  echo "https://wiki.mozilla.org/Media/WebRTC/libwebrtc_Update_Process#Prerequisites"
+  echo ""
+  echo "  NEW_BUG_NUMBER={v$NEXT_MILESTONE-bug-number} bash $0"
+  echo ""
+  exit
+fi
 
 if [ "x$MOZ_NEXT_LIBWEBRTC_MILESTONE" = "x" ]; then
   echo "MOZ_NEXT_LIBWEBRTC_MILESTONE is not defined, see README.md"
