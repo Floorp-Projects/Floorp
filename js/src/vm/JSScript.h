@@ -1932,9 +1932,6 @@ class JSScript : public js::BaseScript {
   inline void incWarmUpCounter();
   inline void resetWarmUpCounterForGC();
 
-  inline void updateLastICStubCounter();
-  inline uint32_t warmUpCountAtLastICStub() const;
-
   void resetWarmUpCounterToDelayIonCompilation();
 
   unsigned getWarmUpResetCount() const {
