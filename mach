@@ -18,7 +18,8 @@ def load_mach(dir_path, mach_path, args):
     # Defer import of "importlib.util" until after Python version check has happened
     # so that Python 2 usages fail gracefully.
     import importlib.util
-    spec = importlib.util.spec_from_file_location('mach_initialize', mach_path)
+
+    spec = importlib.util.spec_from_file_location("mach_initialize", mach_path)
     mach_initialize = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mach_initialize)
     return mach_initialize.initialize(dir_path, args)
@@ -27,10 +28,10 @@ def load_mach(dir_path, mach_path, args):
 def check_and_get_mach(dir_path, args):
     initialize_paths = (
         # Run Thunderbird's mach_initialize.py if it exists
-        'comm/build/mach_initialize.py',
-        'build/mach_initialize.py',
+        "comm/build/mach_initialize.py",
+        "build/mach_initialize.py",
         # test package initialize
-        'tools/mach_initialize.py',
+        "tools/mach_initialize.py",
     )
     for initialize_path in initialize_paths:
         mach_path = os.path.join(dir_path, initialize_path)
@@ -50,7 +51,8 @@ def find_alternate_python3_executables():
                 [potential_python_binary, "--version"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                encoding="UTF-8")
+                encoding="UTF-8",
+            )
 
             binary_minor_version = int(out.stdout[9:11].strip("."))
 
@@ -81,42 +83,64 @@ def main(args):
     # Ensure we are running Python 3.7+. We run this check as soon as
     # possible to avoid a cryptic import/usage error.
     if sys.version_info < MIN_PYTHON_VERSION:
-        print(f"Python {MIN_PYTHON_VERSION[0]}.{MIN_PYTHON_VERSION[1]}+ is required to run mach.")
+        print(
+            f"Python {MIN_PYTHON_VERSION[0]}.{MIN_PYTHON_VERSION[1]}+ is required to run mach."
+        )
         print("You are running Mach with Python {0}".format(platform.python_version()))
         try_alternate_python3_executables(args)
         if sys.platform.startswith("linux"):
-            print(dedent("""
+            print(
+                dedent(
+                    """
             See https://firefox-source-docs.mozilla.org/setup/linux_build.html#installingpython
             for guidance on how to install Python on your system.
-            """).strip())
+            """
+                ).strip()
+            )
         elif sys.platform.startswith("darwin"):
-            print(dedent("""
+            print(
+                dedent(
+                    """
             See https://firefox-source-docs.mozilla.org/setup/macos_build.html
             for guidance on how to prepare your system to build Firefox. Perhaps
             you need to update Xcode, or install Python using brew?
-            """).strip())
+            """
+                ).strip()
+            )
         elif "MOZILLABUILD" in os.environ and os.environ.get("TERM"):
-            print(dedent("""
+            print(
+                dedent(
+                    """
             Python is provided by MozillaBuild; ensure your MozillaBuild installation is
             up to date. See https://firefox-source-docs.mozilla.org/setup/windows_build.html#install-mozillabuild
             for details.
-            """).strip())
+            """
+                ).strip()
+            )
         elif sys.platform.startswith("win"):
-            print(dedent("""
+            print(
+                dedent(
+                    """
             You probably want to be interacting with Mach from within MozillaBuild, see
             https://firefox-source-docs.mozilla.org/setup/windows_build.html for details.
             
             If you are deliberately using Mach from outside MozillaBuild, then see
             https://firefox-source-docs.mozilla.org/mach/windows-usage-outside-mozillabuild.html#install-python
             for guidance on installing native Python on your system.
-            """).strip())
+            """
+                ).strip()
+            )
         else:
-            print(dedent("""
+            print(
+                dedent(
+                    """
             We do not have specific instructions for your platform on how to
             install Python. You may find Pyenv (https://github.com/pyenv/pyenv)
             helpful, if your system package manager does not provide a way to
             install a recent enough Python 3.
-            """).strip())
+            """
+                ).strip()
+            )
         sys.exit(1)
 
     # XCode python sets __PYVENV_LAUNCHER__, which overrides the executable
@@ -142,13 +166,18 @@ def main(args):
             print()
             print("---")
             print()
-            print(fill(dedent(f"""\
+            print(
+                fill(
+                    dedent(
+                        f"""\
                 Note that you are running Mach with Python
                 {platform.python_version()}, which is higher than the highest
                 known working version of Python for Mach. Consider running Mach
                 with Python {MAX_PYTHON_VERSION_TO_CONSIDER[0]}.{MAX_PYTHON_VERSION_TO_CONSIDER[1]}
                 or lower."""
-            )))
+                    )
+                )
+            )
 
             try:
                 alternative = next(find_alternate_python3_executables())
@@ -164,5 +193,5 @@ def main(args):
             raise
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(sys.argv[1:])
