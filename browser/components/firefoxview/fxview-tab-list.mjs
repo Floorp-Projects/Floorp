@@ -9,6 +9,7 @@ import {
   when,
 } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
+import { escapeRegExp } from "./helpers.mjs";
 
 const NOW_THRESHOLD_MS = 91000;
 const lazy = {};
@@ -548,7 +549,15 @@ export class FxviewTabRow extends MozLitElement {
           id="fxview-tab-row-url"
           ?hidden=${this.compact}
         >
-          ${this.formatURIForDisplay(this.url)}
+          ${when(
+            this.searchQuery,
+            () =>
+              this.#highlightSearchMatches(
+                this.searchQuery,
+                this.formatURIForDisplay(this.url)
+              ),
+            () => this.formatURIForDisplay(this.url)
+          )}
         </span>
         <span
           class="fxview-tab-row-date"
@@ -600,7 +609,7 @@ export class FxviewTabRow extends MozLitElement {
    */
   #highlightSearchMatches(query, string) {
     const fragments = [];
-    const regex = RegExp(this.#escapeRegExp(query), "dgi");
+    const regex = RegExp(escapeRegExp(query), "dgi");
     let prevIndexEnd = 0;
     let result;
     while ((result = regex.exec(string)) !== null) {
@@ -613,11 +622,6 @@ export class FxviewTabRow extends MozLitElement {
     }
     fragments.push(string.substring(prevIndexEnd));
     return fragments;
-  }
-
-  // from MDN...
-  #escapeRegExp(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 }
 

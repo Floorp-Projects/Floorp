@@ -2,7 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { classMap, html } from "chrome://global/content/vendor/lit.all.mjs";
+import {
+  classMap,
+  html,
+  ifDefined,
+  when,
+} from "chrome://global/content/vendor/lit.all.mjs";
+import { isSearchEnabled, searchTabList } from "./helpers.mjs";
 import { ViewPage } from "./viewpage.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/firefoxview/card-container.mjs";
@@ -31,11 +37,18 @@ class RecentlyClosedTabsInView extends ViewPage {
     this.fullyUpdated = false;
     this.maxTabsLength = this.recentBrowsing ? 5 : 25;
     this.recentlyClosedTabs = [];
+    this.searchQuery = "";
+    this.searchResults = null;
   }
+
+  static properties = {
+    searchResults: { type: Array },
+  };
 
   static queries = {
     cardEl: "card-container",
     emptyState: "fxview-empty-state",
+    searchTextbox: "fxview-search-textbox",
     tabList: "fxview-tab-list",
   };
 
@@ -128,6 +141,9 @@ class RecentlyClosedTabsInView extends ViewPage {
       this.maxTabsLength
     );
     this.normalizeRecentlyClosedData();
+    if (this.searchQuery) {
+      this.#updateSearchResults();
+    }
     this.requestUpdate();
   }
 
@@ -274,11 +290,26 @@ class RecentlyClosedTabsInView extends ViewPage {
         rel="stylesheet"
         href="chrome://browser/content/firefoxview/firefoxview-next.css"
       />
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/firefoxview/recentlyclosed.css"
+      />
       <div class="sticky-container bottom-fade" ?hidden=${!this.selectedTab}>
         <h2
           class="page-header heading-large"
           data-l10n-id="firefoxview-recently-closed-header"
         ></h2>
+        ${when(
+          isSearchEnabled(),
+          () => html`<div class="search-container">
+            <fxview-search-textbox
+              .query=${this.searchQuery}
+              data-l10n-id="firefoxview-search-text-box-recentlyclosed"
+              data-l10n-attrs="placeholder"
+              @fxview-search-textbox-query=${this.onSearchQuery}
+            ></fxview-search-textbox>
+          </div>`
+        )}
       </div>
       <div class=${classMap({ "cards-container": this.selectedTab })}>
         <card-container
@@ -298,7 +329,8 @@ class RecentlyClosedTabsInView extends ViewPage {
             ?hidden=${!this.recentlyClosedTabs.length}
             slot="main"
             .maxTabsLength=${this.maxTabsLength}
-            .tabItems=${this.recentlyClosedTabs}
+            .searchQuery=${ifDefined(this.searchResults && this.searchQuery)}
+            .tabItems=${this.searchResults || this.recentlyClosedTabs}
             @fxview-tab-list-secondary-action=${this.onDismissTab}
             @fxview-tab-list-primary-action=${this.onReopenTab}
           ></fxview-tab-list>
@@ -319,6 +351,17 @@ class RecentlyClosedTabsInView extends ViewPage {
           : ""}
       </div>
     `;
+  }
+
+  onSearchQuery(e) {
+    this.searchQuery = e.detail.query;
+    this.#updateSearchResults();
+  }
+
+  #updateSearchResults() {
+    this.searchResults = this.searchQuery
+      ? searchTabList(this.searchQuery, this.recentlyClosedTabs)
+      : null;
   }
 }
 customElements.define("view-recentlyclosed", RecentlyClosedTabsInView);
