@@ -16,8 +16,6 @@
 #include "jit/CacheIRReader.h"
 #include "jit/CompileInfo.h"
 #include "jit/InlineScriptTree.h"
-#include "jit/JitHints.h"
-#include "jit/JitRuntime.h"
 #include "jit/JitScript.h"
 #include "jit/JitSpewer.h"
 #include "jit/JitZone.h"
@@ -777,16 +775,6 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
 
   uint32_t offset = loc.bytecodeToOffset(script_);
 
-  // Set the trial inlining state directly if there is a hint cached from a
-  // previous compilation.
-  if (cx_->runtime()->jitRuntime()->hasJitHintsMap()) {
-    JitHintsMap* jitHints = cx_->runtime()->jitRuntime()->getJitHintsMap();
-    if (jitHints->hasMonomorphicInlineHintAtOffset(script_, offset)) {
-      fallbackStub->setTrialInliningState(
-          TrialInliningState::MonomorphicInlined);
-    }
-  }
-
   // Clear the used-by-transpiler flag on the IC. It can still be set from a
   // previous compilation because we don't clear the flag on every IC when
   // invalidating.
@@ -1100,16 +1088,6 @@ AbortReasonOr<bool> WarpScriptOracle::maybeInlineCall(
     return abort(AbortReason::Alloc);
   }
   fallbackStub->setUsedByTranspiler();
-
-  // Store the location of this monomorphic inline as a hint for future
-  // compilations.
-  if (!isTrialInlined && cx_->runtime()->jitRuntime()->hasJitHintsMap()) {
-    JitHintsMap* jitHints = cx_->runtime()->jitRuntime()->getJitHintsMap();
-    if (!jitHints->addMonomorphicInlineLocation(script_, loc)) {
-      return abort(AbortReason::Alloc);
-    }
-  }
-
   return true;
 }
 
