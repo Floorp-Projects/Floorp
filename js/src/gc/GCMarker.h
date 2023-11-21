@@ -595,7 +595,7 @@ class MOZ_RAII AutoSetMarkColor {
   }
 
   AutoSetMarkColor(GCMarker& marker, CellColor newColor)
-      : AutoSetMarkColor(marker, newColor.asMarkColor()) {}
+      : AutoSetMarkColor(marker, AsMarkColor(newColor)) {}
 
   ~AutoSetMarkColor() { marker_.setMarkColor(initialColor_); }
 };

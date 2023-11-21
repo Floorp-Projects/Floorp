@@ -777,6 +777,19 @@ const char* StateName(JS::Zone::GCState state) {
   MOZ_CRASH("Invalid Zone::GCState enum value");
 }
 
+const char* CellColorName(CellColor color) {
+  switch (color) {
+    case CellColor::White:
+      return "white";
+    case CellColor::Black:
+      return "black";
+    case CellColor::Gray:
+      return "gray";
+    default:
+      MOZ_CRASH("Unexpected cell color");
+  }
+}
+
 } /* namespace gc */
 } /* namespace js */
 
