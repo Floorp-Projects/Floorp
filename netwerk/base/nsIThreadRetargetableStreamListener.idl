@@ -30,10 +30,18 @@ interface nsIThreadRetargetableStreamListener : nsIStreamListener
    */
   void checkListenerChain();
 
-/**
-* Used for sending OMT notifications to listeners to notify them about data stop.
-* After this notification, the listeners could potentially start processing the data OMT.
-*/
-
+   /**
+   * Used for sending OMT notifications to listeners to notify them about data stop.
+   * After this notification, the listeners could potentially start processing the data OMT.
+   *
+   * The ChannelEventQueue implementation ensures that the OnDataFinished is
+   * run on the ODA target thread after the last OnDataAvailable is executed on
+   * the ODA target thread and before OnStopRequest is dispatched to the main thread.
+   * Hence, the following order is guaranteed for the listeners, even with ODA/ODF running off MainThread.
+   * 1. OnStartRequest
+   * 2. OnDataAvailable
+   * 3. OnDataFinished
+   * 4. OnStopRequest
+   */
   void onDataFinished(in nsresult aStatusCode);
 };
