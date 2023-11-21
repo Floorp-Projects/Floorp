@@ -163,16 +163,6 @@ static void WriteJitDumpDebugEntry(uint64_t addr, const char* filename,
   WriteToJitDumpFile(filename, strlen(filename) + 1, lock);
 }
 
-static bool FileExists(const char* filename) {
-  // We don't currently dump external resources to disk.
-  if (strncmp(filename, "http", 4) == 0) {
-    return false;
-  }
-
-  struct stat buf = {};
-  return stat(filename, &buf) == 0;
-}
-
 static void writeJitDumpHeader(AutoLockPerfSpewer& lock) {
   JitDumpHeader header = {};
   header.magic = 0x4A695444;
@@ -829,7 +819,7 @@ void PerfSpewer::saveJitCodeSourceInfo(JSScript* script, JitCode* code,
   }
 
 #ifdef JS_ION_PERF
-  bool perfProfiling = IsPerfProfiling() && FileExists(filename);
+  bool perfProfiling = IsPerfProfiling();
 
   if (perfProfiling) {
     JitDumpDebugRecord debug_record = {};
@@ -947,7 +937,7 @@ void IonICPerfSpewer::saveJitCodeSourceInfo(JSScript* script, JitCode* code,
     return;
   }
 
-  if (!IsPerfProfiling() || !FileExists(filename)) {
+  if (!IsPerfProfiling()) {
     return;
   }
 
