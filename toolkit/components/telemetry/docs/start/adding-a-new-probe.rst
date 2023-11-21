@@ -74,8 +74,6 @@ Most of our data collection happens through :doc:`scalars <../collection/scalars
 
 Both scalars & histograms allow recording by keys. This allows for more flexible, two-level data collection.
 
-Other collections can build on top of scalars & histograms. An example is :doc:`use counters <../collection/use-counters>`, which submit web feature usage through histograms.
-
 We also collect :doc:`environment data <../data/environment>`. This consists of mostly scalar values that capture the “working environment” a Firefox session lives in, and includes e.g. data on hardware, OS, add-ons and some settings. Any data that is part of the "working environment", or needs to split :doc:`subsessions <../concepts/sessions>`, should go into it.
 
 Rich data
