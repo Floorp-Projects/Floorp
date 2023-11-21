@@ -791,6 +791,7 @@ const defaultOptions = {
   }
 };
 ;
+;
 const userOptions = Object.create(null);
 class AppOptions {
   constructor() {
@@ -4970,7 +4971,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '4.0.240';
+    const viewerVersion = '4.0.246';
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -9204,8 +9205,8 @@ PDFPrintServiceFactory.instance = {
 
 
 
-const pdfjsVersion = '4.0.240';
-const pdfjsBuild = 'ffbfd680e';
+const pdfjsVersion = '4.0.246';
+const pdfjsBuild = '086a5921d';
 const AppConstants = null;
 window.PDFViewerApplication = PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;
