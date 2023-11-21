@@ -314,53 +314,12 @@ function assertAbandonmentEvent(expectedAbandonment) {
   );
 }
 
-async function promiseAdImpressionReceived(num) {
-  if (num) {
-    return TestUtils.waitForCondition(() => {
-      let adImpressions = Glean.serp.adImpression.testGetValue() ?? [];
-      return adImpressions.length == num;
-    }, `Should have received ${num} ad impressions.`);
-  }
-  return TestUtils.waitForCondition(() => {
-    let adImpressions = Glean.serp.adImpression.testGetValue() ?? [];
-    return adImpressions.length;
-  }, "Should have received an ad impression.");
+function waitForPageWithAdImpressions() {
+  return TestUtils.topicObserved("reported-page-with-ad-impressions");
 }
 
-async function waitForPageWithAdImpressions() {
-  return new Promise(resolve => {
-    let listener = win => {
-      Services.obs.removeObserver(
-        listener,
-        "reported-page-with-ad-impressions"
-      );
-      resolve();
-    };
-    Services.obs.addObserver(listener, "reported-page-with-ad-impressions");
-  });
-}
-
-async function waitForPageWithCategorizedDomains() {
-  return new Promise(resolve => {
-    let listener = win => {
-      Services.obs.removeObserver(
-        listener,
-        "reported-page-with-categorized-domains"
-      );
-      resolve();
-    };
-    Services.obs.addObserver(
-      listener,
-      "reported-page-with-categorized-domains"
-    );
-  });
-}
-
-async function promiseImpressionReceived() {
-  return TestUtils.waitForCondition(() => {
-    let adImpressions = Glean.serp.adImpression.testGetValue() ?? [];
-    return adImpressions.length;
-  }, "Should have received an ad impression.");
+function waitForPageWithCategorizedDomains() {
+  return TestUtils.topicObserved("reported-page-with-categorized-domains");
 }
 
 registerCleanupFunction(async () => {

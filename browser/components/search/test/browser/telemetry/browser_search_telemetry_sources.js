@@ -109,6 +109,7 @@ async function track_ad_click(
   let expectedWithAdsScalar = `browser.search.withads.${expectedScalarSource}`;
   let expectedAdClicksScalar = `browser.search.adclicks.${expectedScalarSource}`;
 
+  let adImpressionPromise = waitForPageWithAdImpressions();
   let tab = await searchAdsFn();
 
   await assertSearchSourcesTelemetry(
@@ -138,7 +139,7 @@ async function track_ad_click(
   // register ad click events before a click occurs. We don't assert their
   // precise values here because other tests cover that the component
   // categorizations are valid.
-  await promiseAdImpressionReceived();
+  await adImpressionPromise;
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   BrowserTestUtils.synthesizeMouseAtCenter("#ad1", {}, tab.linkedBrowser);

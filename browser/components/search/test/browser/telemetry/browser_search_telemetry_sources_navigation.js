@@ -137,10 +137,11 @@ add_task(async function test_search() {
 });
 
 add_task(async function test_reload() {
+  let adImpressionPromise = waitForPageWithAdImpressions();
   let promise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   tab.linkedBrowser.reload();
   await promise;
-  await promiseWaitForAdLinkCheck();
+  await adImpressionPromise;
 
   await assertSearchSourcesTelemetry(
     {
@@ -178,7 +179,6 @@ add_task(async function test_reload() {
       },
     },
   ]);
-  await promiseAdImpressionReceived();
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   await BrowserTestUtils.synthesizeMouseAtCenter("#ad1", {}, tab.linkedBrowser);
@@ -235,7 +235,9 @@ add_task(async function test_fresh_search() {
   resetTelemetry();
 
   // Load a page via the address bar.
+  let adImpressionPromise = waitForPageWithAdImpressions();
   await loadSearchPage();
+  await adImpressionPromise;
 
   searchUrl = tab.linkedBrowser.url;
 
@@ -262,7 +264,6 @@ add_task(async function test_fresh_search() {
       },
     },
   ]);
-  await promiseAdImpressionReceived(1);
 });
 
 add_task(async function test_click_ad() {
@@ -303,10 +304,11 @@ add_task(async function test_click_ad() {
 });
 
 add_task(async function test_go_back() {
+  let adImpressionPromise = waitForPageWithAdImpressions();
   let promise = BrowserTestUtils.waitForLocationChange(gBrowser, searchUrl);
   tab.linkedBrowser.goBack();
   await promise;
-  await promiseWaitForAdLinkCheck();
+  await adImpressionPromise;
 
   await assertSearchSourcesTelemetry(
     {
@@ -351,7 +353,6 @@ add_task(async function test_go_back() {
       },
     },
   ]);
-  await promiseAdImpressionReceived(2);
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   await BrowserTestUtils.synthesizeMouseAtCenter("#ad1", {}, tab.linkedBrowser);
@@ -421,7 +422,9 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
   });
 
   // Load a SERP once in order to show the search term in the Urlbar.
+  let adImpressionPromise = waitForPageWithAdImpressions();
   await loadSearchPage();
+  await adImpressionPromise;
   await assertSearchSourcesTelemetry(
     {
       "other-Example.urlbar": 1,
@@ -445,10 +448,11 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
       },
     },
   ]);
-  await promiseAdImpressionReceived(1);
 
   // Do another search from the context of the default SERP.
+  adImpressionPromise = waitForPageWithAdImpressions();
   await loadSearchPage();
+  await adImpressionPromise;
   await assertSearchSourcesTelemetry(
     {
       "other-Example.urlbar": 1,
@@ -486,7 +490,6 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
       },
     },
   ]);
-  await promiseAdImpressionReceived(2);
 
   // Click on an ad.
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
