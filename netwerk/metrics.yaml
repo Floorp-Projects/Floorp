@@ -402,3 +402,32 @@ networking:
       - acreskey@mozilla.com
     expires: never
     telemetry_mirror: HTTP_UPLOAD_THROUGHPUT_MBPS_HTTP_3
+
+  residual_cache_folder_count:
+    type: counter
+    description: >
+      Counts how often we find a cache folder that wasn't purged
+      at shutdown by a background task process.
+    bugs:
+      - https://bugzilla.mozilla.org/1848542
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848542
+    notification_emails:
+      - vgosu@mozilla.com
+    expires: 136
+
+  residual_cache_folder_removal:
+    type: labeled_counter
+    description: >
+      Counts how often succeed/fail in removing cache folder
+      that wasn't purged at shutdown
+    bugs:
+      - https://bugzilla.mozilla.org/1848542
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1848542
+    notification_emails:
+      - vgosu@mozilla.com
+    expires: 136
+    labels:
+      - success
+      - failure

@@ -5,6 +5,7 @@
 "use strict";
 
 add_task(async function test_idle_cleanup() {
+  Services.fog.testResetFOG();
   Services.prefs.setBoolPref(
     "network.cache.shutdown_purge_in_background_task",
     true
@@ -32,6 +33,51 @@ add_task(async function test_idle_cleanup() {
     false,
     `Folder ${dir.path} should have been purged by background task`
   );
+  Assert.equal(
+    await Glean.networking.residualCacheFolderCount.testGetValue(),
+    1
+  );
+  Assert.equal(
+    await Glean.networking.residualCacheFolderRemoval.success.testGetValue(),
+    1
+  );
+  Assert.equal(
+    await Glean.networking.residualCacheFolderRemoval.failure.testGetValue(),
+    null
+  );
+
+  // Check that telemetry properly detects folders failing to be deleted when readonly
+  // Making folders readonly only works on windows
+  if (AppConstants.platform == "win") {
+    dir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o744);
+    dir.QueryInterface(Ci.nsILocalFileWin).readOnly = true;
+
+    Services.obs.notifyObservers(null, "idle-daily");
+
+    await BrowserTestUtils.waitForCondition(async () => {
+      return (
+        (await Glean.networking.residualCacheFolderRemoval.failure.testGetValue()) ==
+        1
+      );
+    });
+
+    Assert.equal(
+      await Glean.networking.residualCacheFolderCount.testGetValue(),
+      2
+    );
+    Assert.equal(
+      await Glean.networking.residualCacheFolderRemoval.success.testGetValue(),
+      1
+    );
+    Assert.equal(
+      await Glean.networking.residualCacheFolderRemoval.failure.testGetValue(),
+      1
+    );
+
+    dir.QueryInterface(Ci.nsILocalFileWin).readOnly = false;
+    dir.remove(true);
+  }
+
   Services.prefs.clearUserPref(
     "network.cache.shutdown_purge_in_background_task"
   );
