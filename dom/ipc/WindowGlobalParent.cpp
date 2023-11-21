@@ -26,8 +26,10 @@
 #include "mozilla/dom/MediaController.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/ChromeUtils.h"
+#include "mozilla/dom/UseCounterMetrics.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/Components.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/ServoCSSParser.h"
@@ -1155,6 +1157,7 @@ void WindowGlobalParent::FinishAccumulatingPageUseCounters() {
     }
 
     Telemetry::Accumulate(Telemetry::TOP_LEVEL_CONTENT_DOCUMENTS_DESTROYED, 1);
+    glean::use_counter::top_level_content_documents_destroyed.Add();
 
     bool any = false;
     for (int32_t c = 0; c < eUseCounter_Count; ++c) {
@@ -1170,6 +1173,7 @@ void WindowGlobalParent::FinishAccumulatingPageUseCounters() {
                       Telemetry::GetHistogramName(id), urlForLogging->get());
       }
       Telemetry::Accumulate(id, 1);
+      IncrementUseCounter(uc, /* aIsPage = */ true);
     }
 
     if (!any) {

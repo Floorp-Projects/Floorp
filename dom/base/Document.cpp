@@ -231,6 +231,7 @@
 #include "mozilla/dom/TreeOrderedArrayInlines.h"
 #include "mozilla/dom/TreeWalker.h"
 #include "mozilla/dom/URL.h"
+#include "mozilla/dom/UseCounterMetrics.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/WindowContext.h"
@@ -16140,6 +16141,7 @@ void Document::ReportDocumentUseCounters() {
   // TOP_LEVEL_CONTENT_DOCUMENTS_DESTROYED is recorded in
   // WindowGlobalParent::FinishAccumulatingPageUseCounters.
   Telemetry::Accumulate(Telemetry::CONTENT_DOCUMENTS_DESTROYED, 1);
+  glean::use_counter::content_documents_destroyed.Add();
 
   // Ask all of our resource documents to report their own document use
   // counters.
@@ -16172,6 +16174,7 @@ void Document::ReportDocumentUseCounters() {
                     Telemetry::GetHistogramName(id), urlForLogging->get());
     }
     Telemetry::Accumulate(id, 1);
+    IncrementUseCounter(uc, /* aIsPage = */ false);
   }
 }
 
