@@ -190,38 +190,6 @@
   font-weight: bold;
 }
 
-/* Status panel */
-
-#statuspanel-label {
-  margin: 0;
-  padding: 2px 4px;
-  background-color: -moz-dialog;
-  border: 1px none ThreeDShadow;
-  border-top-style: solid;
-  color: -moz-dialogText;
-  text-shadow: none;
-  color-scheme: light;
-
-  @media (-moz-content-prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
-
-  #statuspanel:not([mirror]) > &:-moz-locale-dir(ltr),
-  #statuspanel[mirror] > &:-moz-locale-dir(rtl) {
-    border-right-style: solid;
-    border-top-right-radius: .3em;
-    margin-right: 1em;
-  }
-
-  #statuspanel:not([mirror]) > &:-moz-locale-dir(rtl),
-  #statuspanel[mirror] > &:-moz-locale-dir(ltr) {
-    border-left-style: solid;
-    border-top-left-radius: .3em;
-    margin-left: 1em;
-  }
-}
-
-
 #UITourHighlight {
   /* Below are some fixes for people without an X compositor on Linux.
      This is why we can't have nice things: */

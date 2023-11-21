@@ -919,53 +919,6 @@ browser[tabmodalPromptShowing], browser[tabDialogShowing] {
   -moz-user-focus: none !important;
 }
 
-/* Status panel */
-
-#statuspanel:not([hidden]) {
-  max-width: calc(100% - 5px);
-  pointer-events: none;
-
-  /* Take a bit more space vertically for the mouse tracker to hit us more
-   * easily */
-  padding-top: 2em;
-
-  position: absolute;
-  bottom: 0;
-  left: 0;
-}
-
-#statuspanel:not([mirror]):-moz-locale-dir(rtl),
-#statuspanel[mirror]:-moz-locale-dir(ltr) {
-  left: auto;
-  right: 0;
-}
-
-#statuspanel[sizelimit] {
-  max-width: 50%;
-}
-
-#statuspanel[type=status] {
-  min-width: min(23em, 33%);
-}
-
-#statuspanel[type=overLink] {
-  transition: opacity 120ms ease-out, visibility 120ms;
-}
-
-#statuspanel:is([type=overLink], [inactive][previoustype=overLink]) {
-  direction: ltr;
-}
-
-#statuspanel[inactive] {
-  transition: none;
-  opacity: 0;
-  visibility: hidden;
-}
-
-#statuspanel[inactive][previoustype=overLink] {
-  transition: opacity 200ms ease-out, visibility 200ms;
-}
-
 /*** Visibility of downloads indicator controls ***/
 
 /* Hide the default icon, show the anchor instead. */
