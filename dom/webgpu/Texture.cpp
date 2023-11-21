@@ -45,17 +45,25 @@ Texture::Texture(Device* const aParent, RawId aId,
   MOZ_RELEASE_ASSERT(aId);
 }
 
-Texture::~Texture() { Cleanup(); }
-
 void Texture::Cleanup() {
-  if (mValid && mParent) {
-    mValid = false;
-    auto bridge = mParent->GetBridge();
-    if (bridge && bridge->IsOpen()) {
-      bridge->SendTextureDrop(mId);
-    }
+  if (!mParent) {
+    return;
   }
+
+  auto bridge = mParent->GetBridge();
+  if (bridge && bridge->IsOpen()) {
+    bridge->SendTextureDrop(mId);
+  }
+
+  // After cleanup is called, no other method should ever be called on the
+  // object so we don't have to null-check mParent in other places.
+  // This serves the purpose of preventing SendTextureDrop from happening
+  // twice. TODO: Does it matter for breaking cycles too? Cleanup is called
+  // by the macros that deal with cycle colleciton.
+  mParent = nullptr;
 }
+
+Texture::~Texture() { Cleanup(); }
 
 already_AddRefed<TextureView> Texture::CreateView(
     const dom::GPUTextureViewDescriptor& aDesc) {
@@ -70,12 +78,10 @@ already_AddRefed<TextureView> Texture::CreateView(
 }
 
 void Texture::Destroy() {
-  // TODO: we don't have to implement it right now, but it's used by the
-  // examples
-
-  // XXX Bug 1860958.
+  auto bridge = mParent->GetBridge();
+  if (bridge && bridge->IsOpen()) {
+    bridge->SendTextureDestroy(mId, mParent->GetId());
+  }
 }
-
-void Texture::ForceDestroy() { Cleanup(); }
 
 }  // namespace mozilla::webgpu
