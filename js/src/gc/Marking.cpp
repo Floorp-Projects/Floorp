@@ -770,12 +770,8 @@ void GCMarker::severWeakDelegate(JSObject* key, JSObject* delegate) {
   MOZ_ASSERT(CurrentThreadIsMainThread());
 
   JS::Zone* zone = delegate->zone();
-  if (!zone->needsIncrementalBarrier()) {
-    MOZ_ASSERT(
-        !zone->gcEphemeronEdges(delegate).get(delegate),
-        "non-collecting zone should not have populated gcEphemeronEdges");
-    return;
-  }
+  MOZ_ASSERT(zone->needsIncrementalBarrier());
+
   auto* p = zone->gcEphemeronEdges(delegate).get(delegate);
   if (!p) {
     return;
@@ -815,23 +811,8 @@ void GCMarker::severWeakDelegate(JSObject* key, JSObject* delegate) {
 void GCMarker::restoreWeakDelegate(JSObject* key, JSObject* delegate) {
   MOZ_ASSERT(CurrentThreadIsMainThread());
 
-  if (!key->zone()->needsIncrementalBarrier()) {
-    // Temporary diagnostic printouts for when this would have asserted.
-    if (key->zone()->gcEphemeronEdges(key).has(key)) {
-      fprintf(stderr, "key zone: %d\n", int(key->zone()->gcState()));
-#ifdef DEBUG
-      key->dump();
-#endif
-      fprintf(stderr, "delegate zone: %d\n", int(delegate->zone()->gcState()));
-#ifdef DEBUG
-      delegate->dump();
-#endif
-    }
-    MOZ_ASSERT(
-        !key->zone()->gcEphemeronEdges(key).has(key),
-        "non-collecting zone should not have populated gcEphemeronEdges");
-    return;
-  }
+  MOZ_ASSERT(key->zone()->needsIncrementalBarrier());
+
   if (!delegate->zone()->needsIncrementalBarrier()) {
     // Normally we should not have added the key -> value edge if the delegate
     // zone is not marking (because the delegate would have been seen as black,
@@ -850,6 +831,7 @@ void GCMarker::restoreWeakDelegate(JSObject* key, JSObject* delegate) {
     // something that ordinarily would not happen.
     return;
   }
+
   auto* p = key->zone()->gcEphemeronEdges(key).get(key);
   if (!p) {
     return;
