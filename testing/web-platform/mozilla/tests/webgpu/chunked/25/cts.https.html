@@ -33,6 +33,16 @@
 </script>
 <script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
 
+<meta name=variant content='?q=webgpu:api,validation,query_set,destroy:twice:*'>
+<meta name=variant content='?q=webgpu:api,validation,query_set,destroy:invalid_queryset:*'>
+<meta name=variant content='?q=webgpu:api,validation,queue,buffer_mapped:writeBuffer:*'>
+<meta name=variant content='?q=webgpu:api,validation,queue,buffer_mapped:copyBufferToBuffer:*'>
+<meta name=variant content='?q=webgpu:api,validation,queue,buffer_mapped:copyBufferToTexture:*'>
+<meta name=variant content='?q=webgpu:api,validation,queue,buffer_mapped:copyTextureToBuffer:*'>
+<meta name=variant content='?q=webgpu:api,validation,queue,buffer_mapped:map_command_recording_order:*'>
+<meta name=variant content='?q=webgpu:api,validation,queue,copyToTexture,CopyExternalImageToTexture:source_image,crossOrigin:*'>
+<meta name=variant content='?q=webgpu:api,validation,queue,copyToTexture,CopyExternalImageToTexture:source_imageBitmap,state:*'>
+<meta name=variant content='?q=webgpu:api,validation,queue,copyToTexture,CopyExternalImageToTexture:source_canvas,state:*'>
 <meta name=variant content='?q=webgpu:api,validation,queue,copyToTexture,CopyExternalImageToTexture:source_offscreenCanvas,state:*'>
 <meta name=variant content='?q=webgpu:api,validation,queue,copyToTexture,CopyExternalImageToTexture:destination_texture,state:*'>
 <meta name=variant content='?q=webgpu:api,validation,queue,copyToTexture,CopyExternalImageToTexture:destination_texture,device_mismatch:*'>
@@ -48,13 +58,3 @@
 <meta name=variant content='?q=webgpu:api,validation,queue,destroyed,buffer:copyTextureToBuffer:*'>
 <meta name=variant content='?q=webgpu:api,validation,queue,destroyed,buffer:setBindGroup:*'>
 <meta name=variant content='?q=webgpu:api,validation,queue,destroyed,buffer:setVertexBuffer:*'>
-<meta name=variant content='?q=webgpu:api,validation,queue,destroyed,buffer:setIndexBuffer:*'>
-<meta name=variant content='?q=webgpu:api,validation,queue,destroyed,buffer:resolveQuerySet:*'>
-<meta name=variant content='?q=webgpu:api,validation,queue,destroyed,query_set:beginOcclusionQuery:*'>
-<meta name=variant content='?q=webgpu:api,validation,queue,destroyed,query_set:writeTimestamp:*'>
-<meta name=variant content='?q=webgpu:api,validation,queue,destroyed,query_set:resolveQuerySet:*'>
-<meta name=variant content='?q=webgpu:api,validation,queue,destroyed,texture:writeTexture:*'>
-<meta name=variant content='?q=webgpu:api,validation,queue,destroyed,texture:copyTextureToTexture:*'>
-<meta name=variant content='?q=webgpu:api,validation,queue,destroyed,texture:copyBufferToTexture:*'>
-<meta name=variant content='?q=webgpu:api,validation,queue,destroyed,texture:copyTextureToBuffer:*'>
-<meta name=variant content='?q=webgpu:api,validation,queue,destroyed,texture:setBindGroup:*'>

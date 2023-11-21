@@ -20,14 +20,14 @@ import { assert, objectEquals } from '../common/util/util.js';
 import { UnitTest } from './unit_test.js';
 
 class ParamsTest extends UnitTest {
-  expectParams<CaseP, SubcaseP>(
+  expectParams<CaseP extends {}, SubcaseP extends {}>(
     act: ParamsBuilderBase<CaseP, SubcaseP>,
     exp: CaseSubcaseIterable<{}, {}>,
     caseFilter: TestParams | null = null
   ): void {
-    const a = Array.from(
-      builderIterateCasesWithSubcases(act, caseFilter)
-    ).map(([caseP, subcases]) => [caseP, subcases ? Array.from(subcases) : undefined]);
+    const a = Array.from(builderIterateCasesWithSubcases(act, caseFilter)).map(
+      ([caseP, subcases]) => [caseP, subcases ? Array.from(subcases) : undefined]
+    );
     const e = Array.from(exp);
     this.expect(
       objectEquals(a, e),

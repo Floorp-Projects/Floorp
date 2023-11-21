@@ -47,17 +47,17 @@ const kPixelValueFloat = 0x66 / 0xff; // 0.4
 const expect = {
   /* prettier-ignore */
   'opaque': new Uint8ClampedArray([
-    0, 0, kPixelValue, 0xff, // blue
-    0, kPixelValue, 0, 0xff, // green
-    kPixelValue, 0, 0, 0xff, // red
-    kPixelValue, kPixelValue, 0, 0xff, // yellow
+           0x00,        0x00, kPixelValue, 0xff, // blue
+           0x00, kPixelValue,        0x00, 0xff, // green
+    kPixelValue,        0x00,        0x00, 0xff, // red
+    kPixelValue, kPixelValue,        0x00, 0xff, // yellow
   ]),
   /* prettier-ignore */
   'premultiplied': new Uint8ClampedArray([
-    0, 0, 0xff, kPixelValue, // blue
-    0, 0xff, 0, kPixelValue, // green
-    0xff, 0, 0, kPixelValue, // red
-    0xff, 0xff, 0, kPixelValue, // yellow
+    0x00, 0x00, 0xff, kPixelValue, // blue
+    0x00, 0xff, 0x00, kPixelValue, // green
+    0xff, 0x00, 0x00, kPixelValue, // red
+    0xff, 0xff, 0x00, kPixelValue, // yellow
   ]),
 };
 
@@ -279,7 +279,7 @@ g.test('offscreenCanvas,snapshot')
     let snapshot: HTMLImageElement | ImageBitmap;
     switch (t.params.snapshotType) {
       case 'convertToBlob': {
-        if (typeof offscreenCanvas.convertToBlob === undefined) {
+        if (typeof offscreenCanvas.convertToBlob === 'undefined') {
           t.skip("Browser doesn't support OffscreenCanvas.convertToBlob");
           return;
         }
@@ -292,7 +292,7 @@ g.test('offscreenCanvas,snapshot')
         break;
       }
       case 'transferToImageBitmap': {
-        if (typeof offscreenCanvas.transferToImageBitmap === undefined) {
+        if (typeof offscreenCanvas.transferToImageBitmap === 'undefined') {
           t.skip("Browser doesn't support OffscreenCanvas.transferToImageBitmap");
           return;
         }

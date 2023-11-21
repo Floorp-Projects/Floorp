@@ -54,7 +54,7 @@ class If extends Directive {
 }
 
 class ElseIf extends If {
-  applyTo(stack: StateStack) {
+  override applyTo(stack: StateStack) {
     assert(stack.length >= 1);
     const { allowsFollowingElse, state: siblingState } = stack.pop()!;
     this.checkDepth(stack);

@@ -13,9 +13,9 @@ Note: The result is not mathematically meaningful when e < 1.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF32 } from '../../../../../util/conversion.js';
+import { TypeF32, TypeF16 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { biasedRange, fullF32Range } from '../../../../../util/math.js';
+import { biasedRange, fullF32Range, fullF16Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
@@ -23,17 +23,27 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-const inputs = [
+const f32_inputs = [
   ...biasedRange(1, 2, 100), // x near 1 can be problematic to implement
   ...fullF32Range(),
+];
+const f16_inputs = [
+  ...biasedRange(1, 2, 100), // x near 1 can be problematic to implement
+  ...fullF16Range(),
 ];
 
 export const d = makeCaseCache('acosh', {
   f32_const: () => {
-    return FP.f32.generateScalarToIntervalCases(inputs, 'finite', ...FP.f32.acoshIntervals);
+    return FP.f32.generateScalarToIntervalCases(f32_inputs, 'finite', ...FP.f32.acoshIntervals);
   },
   f32_non_const: () => {
-    return FP.f32.generateScalarToIntervalCases(inputs, 'unfiltered', ...FP.f32.acoshIntervals);
+    return FP.f32.generateScalarToIntervalCases(f32_inputs, 'unfiltered', ...FP.f32.acoshIntervals);
+  },
+  f16_const: () => {
+    return FP.f16.generateScalarToIntervalCases(f16_inputs, 'finite', ...FP.f16.acoshIntervals);
+  },
+  f16_non_const: () => {
+    return FP.f16.generateScalarToIntervalCases(f16_inputs, 'unfiltered', ...FP.f16.acoshIntervals);
   },
 });
 
@@ -62,4 +72,10 @@ g.test('f16')
   .params(u =>
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
-  .unimplemented();
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('shader-f16');
+  })
+  .fn(async t => {
+    const cases = await d.get(t.params.inputSource === 'const' ? 'f16_const' : 'f16_non_const');
+    await run(t, builtin('acosh'), [TypeF16], TypeF16, t.params, cases);
+  });

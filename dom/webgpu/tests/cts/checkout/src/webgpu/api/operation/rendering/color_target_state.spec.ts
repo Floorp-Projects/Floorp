@@ -397,7 +397,7 @@ g.test('blending,formats')
     t.device.queue.submit([commandEncoder.finish()]);
 
     const expColor = { R: 0.6, G: 0.6, B: 0.6, A: 0.6 };
-    const expTexelView = TexelView.fromTexelsAsColors(format, coords => expColor);
+    const expTexelView = TexelView.fromTexelsAsColors(format, _coords => expColor);
     t.expectTexelViewComparisonIsOkInTexture({ texture: renderTarget }, expTexelView, [1, 1, 1]);
   });
 
@@ -445,7 +445,7 @@ g.test('blend_constant,initial')
     // Check that the initial blend constant is black(0,0,0,0) after setting testPipeline which has
     // a white color buffer data.
     const expColor = { R: 0, G: 0, B: 0, A: 0 };
-    const expTexelView = TexelView.fromTexelsAsColors(format, coords => expColor);
+    const expTexelView = TexelView.fromTexelsAsColors(format, _coords => expColor);
     t.expectTexelViewComparisonIsOkInTexture({ texture: renderTarget }, expTexelView, [
       kSize,
       kSize,
@@ -503,7 +503,7 @@ g.test('blend_constant,setting')
     // Check that the blend constant is the same as the given constant after setting the constant
     // via setBlendConstant.
     const expColor = { R: r, G: g, B: b, A: a };
-    const expTexelView = TexelView.fromTexelsAsColors(format, coords => expColor);
+    const expTexelView = TexelView.fromTexelsAsColors(format, _coords => expColor);
 
     t.expectTexelViewComparisonIsOkInTexture({ texture: renderTarget }, expTexelView, [
       kSize,
@@ -576,7 +576,7 @@ g.test('blend_constant,not_inherited')
 
     // Check that the blend constant is not inherited from the first render pass.
     const expColor = { R: 0, G: 0, B: 0, A: 0 };
-    const expTexelView = TexelView.fromTexelsAsColors(format, coords => expColor);
+    const expTexelView = TexelView.fromTexelsAsColors(format, _coords => expColor);
 
     t.expectTexelViewComparisonIsOkInTexture({ texture: renderTarget }, expTexelView, [
       kSize,
@@ -585,22 +585,7 @@ g.test('blend_constant,not_inherited')
   });
 
 const kColorWriteCombinations: readonly GPUColorWriteFlags[] = [
-  0,
-  1,
-  2,
-  3,
-  4,
-  5,
-  6,
-  7,
-  8,
-  9,
-  10,
-  11,
-  12,
-  13,
-  14,
-  15,
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
 ];
 
 g.test('color_write_mask,channel_work')
@@ -672,7 +657,7 @@ g.test('color_write_mask,channel_work')
     t.device.queue.submit([commandEncoder.finish()]);
 
     const expColor = { R: r, G: g, B: b, A: a };
-    const expTexelView = TexelView.fromTexelsAsColors(format, coords => expColor);
+    const expTexelView = TexelView.fromTexelsAsColors(format, _coords => expColor);
 
     t.expectTexelViewComparisonIsOkInTexture({ texture: renderTarget }, expTexelView, [
       kSize,
@@ -730,7 +715,7 @@ g.test('color_write_mask,blending_disabled')
     t.device.queue.submit([commandEncoder.finish()]);
 
     const expColor = { R: 1, G: 0, B: 0, A: 0 };
-    const expTexelView = TexelView.fromTexelsAsColors(format, coords => expColor);
+    const expTexelView = TexelView.fromTexelsAsColors(format, _coords => expColor);
 
     t.expectTexelViewComparisonIsOkInTexture({ texture: renderTarget }, expTexelView, [
       kSize,
@@ -827,7 +812,7 @@ g.test('blending,clamping')
     }
 
     const expColor = { R: expValue, G: expValue, B: expValue, A: expValue };
-    const expTexelView = TexelView.fromTexelsAsColors(format, coords => expColor);
+    const expTexelView = TexelView.fromTexelsAsColors(format, _coords => expColor);
 
     t.expectTexelViewComparisonIsOkInTexture({ texture: renderTarget }, expTexelView, [1, 1, 1]);
   });

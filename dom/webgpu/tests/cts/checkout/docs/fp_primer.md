@@ -690,6 +690,42 @@ library, or if this turns out to be a significant issue in the future, this
 decision can be revisited.
 
 ## Abstract Float
+
+### Accuracy
+
+For the concrete floating point types (f32 & f16) the accuracy of operations are
+defined in terms of their own type. Specifically for f32, correctly rounded
+refers to the nearest f32 values, and ULP is in terms of the distance between
+f32 values.
+
+AbstractFloat internally is defined as a f64, and this applies for exact and
+correctly rounded accuracies. Thus, correctly rounded refers to the nearest f64
+values. However, AbstractFloat differs for ULP and absolute errors. Reading
+the spec strictly, these all have unbounded accuracies, but it is recommended
+that their accuracies be at least as good as the f32 equivalent.
+
+The difference between f32 and f64 ULP at a specific value X are significant, so
+at least as good as f32 requirement is always less strict than if it was
+calculated in terms of f64. Similarly, for absolute accuracies the interval
+`[x - epsilon, x + epsilon]` is always equal or wider if calculated as f32s
+vs f64s.
+
+If an inherited accuracy is only defined in terms of correctly rounded
+accuracies, then the interval is calculated in terms of f64s. If any of the
+defining accuracies are ULP or absolute errors, then the result falls into the
+unbounded accuracy, but recommended to be at least as good as f32 bucket.
+
+What this means from a CTS implementation is that for these "at least as good as
+f32" error intervals, if the infinitely accurate result is finite for f32, then
+the error interval for f64 is just the f32 interval. If the result is not finite
+for f32, then the accuracy interval is just the unbounded interval.
+
+How this is implemented in the CTS is by having the FPTraits for AbstractFloat
+forward to the f32 implementation for the operations that are tested to be as
+good as f32.
+
+### Implementation
+
 AbstractFloats are a compile time construct that exist in WGSL. They are
 expressible as literal values or the result of operations that return them, but
 a variable cannot be typed as an AbstractFloat. Instead, the variable needs be a
@@ -703,15 +739,18 @@ operations that return AbstractFloats.
 As of the writing of this doc, this second option for testing AbstractFloats
 is the one being pursued in the CTS.
 
-### const_assert
+#### const_assert
+
 The first proposal is to lean on the `const_assert` statement that exists in
 WGSL. For each test case a snippet of code would be written out that has a form
 something like this
+
 ```
 // foo(x) is the operation under test
 const_assert lower < foo(x) // Result was below the acceptance interval
 const_assert upper > foo(x) // Result was above the acceptance interval
 ```
+
 where lower and upper would actually be string replaced with literals for the
 bounds of the acceptance interval when generating the shader text.
 
@@ -733,7 +772,8 @@ indicate something is working, we would be depending on a signal that it isn't
 working, and assuming if we don't receive that signal everything is good, not
 that our signal mechanism was broken.
 
-### Extracting Bits
+#### Extracting Bits
+
 The other proposal that was developed depends on the fact that AbstractFloat is
 spec'd to be a f64 internally. So the CTS could store the result of an operation
 as two 32-bit unsigned integers (or broken up into sign, exponent, and
@@ -827,6 +867,5 @@ shader being run.
 - [binary16 on Wikipedia](https://en.wikipedia.org/wiki/Half-precision_floating-point_format)
 - [IEEE-754 Floating Point Converter](https://www.h-schmidt.net/FloatConverter/IEEE754.html)
 - [IEEE 754 Calculator](http://weitz.de/ieee/)
-- [Keisan High Precision Calculator](https://keisan.casio.com/calculator)
 - [On the definition of ulp(x)](https://hal.inria.fr/inria-00070503/document)
 - [Float Exposed](https://float.exposed/)

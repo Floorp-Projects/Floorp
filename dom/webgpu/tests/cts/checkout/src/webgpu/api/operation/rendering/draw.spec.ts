@@ -54,7 +54,8 @@ class DrawTest extends TextureTestMixin(GPUTest) {
     // |   \
     // |______\
     // Unit triangle shaped like this. 0-1 Y-down.
-    const triangleVertices = /* prettier-ignore */ [
+    /* prettier-ignore */
+    const triangleVertices = [
       0.0, 0.0,
       0.0, 1.0,
       1.0, 1.0,

@@ -30,7 +30,7 @@ export const g = makeTestGroup(ShaderValidationTest);
 
 /**
  * Evaluates the result and information about a call to length(), with a vector
- * formed from @p vec of the element type @p type.
+ * formed from `vec` of the element type `type`.
  */
 function calculate(
   vec: number[],

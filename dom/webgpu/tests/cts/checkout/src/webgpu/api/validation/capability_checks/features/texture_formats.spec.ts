@@ -3,6 +3,7 @@ Tests for capability checking for features enabling optional texture formats.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import { assert } from '../../../../../common/util/util.js';
 import { kAllTextureFormats, kTextureFormatInfo } from '../../../../format_info.js';
 import { kAllCanvasTypes, createCanvas } from '../../../../util/create_elements.js';
@@ -273,6 +274,7 @@ g.test('color_target_state')
   )
   .params(u =>
     u
+      .combine('isAsync', [false, true])
       .combine('format', kOptionalTextureFormats)
       .filter(t => !!kTextureFormatInfo[t.format].colorRender)
       .combine('enable_required_feature', [true, false])
@@ -286,10 +288,12 @@ g.test('color_target_state')
     }
   })
   .fn(t => {
-    const { format, enable_required_feature } = t.params;
+    const { isAsync, format, enable_required_feature } = t.params;
 
-    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
-      t.device.createRenderPipeline({
+    t.doCreateRenderPipelineTest(
+      isAsync,
+      enable_required_feature,
+      {
         layout: 'auto',
         vertex: {
           module: t.device.createShaderModule({
@@ -312,8 +316,9 @@ g.test('color_target_state')
           entryPoint: 'main',
           targets: [{ format }],
         },
-      });
-    });
+      },
+      'TypeError'
+    );
   });
 
 g.test('depth_stencil_state')
@@ -325,6 +330,7 @@ g.test('depth_stencil_state')
   )
   .params(u =>
     u
+      .combine('isAsync', [false, true])
       .combine('format', kOptionalTextureFormats)
       .filter(t => !!(kTextureFormatInfo[t.format].depth || kTextureFormatInfo[t.format].stencil))
       .combine('enable_required_feature', [true, false])
@@ -338,10 +344,12 @@ g.test('depth_stencil_state')
     }
   })
   .fn(t => {
-    const { format, enable_required_feature } = t.params;
+    const { isAsync, format, enable_required_feature } = t.params;
 
-    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
-      t.device.createRenderPipeline({
+    t.doCreateRenderPipelineTest(
+      isAsync,
+      enable_required_feature,
+      {
         layout: 'auto',
         vertex: {
           module: t.device.createShaderModule({
@@ -369,8 +377,9 @@ g.test('depth_stencil_state')
           entryPoint: 'main',
           targets: [{ format: 'rgba8unorm' }],
         },
-      });
-    });
+      },
+      'TypeError'
+    );
   });
 
 g.test('render_bundle_encoder_descriptor_color_format')
@@ -436,4 +445,19 @@ g.test('render_bundle_encoder_descriptor_depth_stencil_format')
         depthStencilFormat: format,
       });
     });
+  });
+
+g.test('check_capability_guarantees')
+  .desc(
+    `check "texture-compression-bc" is supported or both "texture-compression-etc2" and "texture-compression-astc" are supported.`
+  )
+  .fn(async t => {
+    const adapter = await getGPU(t.rec).requestAdapter();
+    assert(adapter !== null);
+
+    const features = adapter.features;
+    t.expect(
+      features.has('texture-compression-bc') ||
+        (features.has('texture-compression-etc2') && features.has('texture-compression-astc'))
+    );
   });

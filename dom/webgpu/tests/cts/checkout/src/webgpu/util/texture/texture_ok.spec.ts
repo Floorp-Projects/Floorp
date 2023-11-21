@@ -48,7 +48,7 @@ g.test('float32')
     t.device.queue.writeTexture({ texture }, new Float32Array([data, data, data, data]), {}, size);
 
     const expColor = { R: 0.6, G: 0.6, B: 0.6, A: 0.6 };
-    const expTexelView = TexelView.fromTexelsAsColors(format, coords => expColor);
+    const expTexelView = TexelView.fromTexelsAsColors(format, _coords => expColor);
 
     const result = await textureContentIsOKByT2B(t, { texture }, size, { expTexelView }, opts);
     t.expect((result === undefined) === _ok, `expected ${_ok}, got ${result === undefined}`);
@@ -87,10 +87,10 @@ g.test('norm')
     let expTexelView;
     switch (mode) {
       case 'bytes':
-        expTexelView = TexelView.fromTexelsAsBytes(format, coords => new Uint8Array([10]));
+        expTexelView = TexelView.fromTexelsAsBytes(format, _coords => new Uint8Array([10]));
         break;
       case 'colors':
-        expTexelView = TexelView.fromTexelsAsColors(format, coords => ({ R: 10 / _maxValue }));
+        expTexelView = TexelView.fromTexelsAsColors(format, _coords => ({ R: 10 / _maxValue }));
         break;
     }
 
@@ -144,7 +144,7 @@ g.test('snorm_min')
         }
         break;
       case 'colors':
-        expTexelView = TexelView.fromTexelsAsColors(format, coords => ({ R: -1 }));
+        expTexelView = TexelView.fromTexelsAsColors(format, _coords => ({ R: -1 }));
         break;
     }
 

@@ -18,13 +18,21 @@ Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { i32, TypeF32, TypeF16, TypeI32, TypeU32, u32 } from '../../../../../util/conversion.js';
+import {
+  i32,
+  TypeF32,
+  TypeF16,
+  TypeI32,
+  TypeU32,
+  u32,
+  TypeAbstractFloat,
+} from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { fullF32Range, fullF16Range } from '../../../../../util/math.js';
+import { fullF32Range, fullF16Range, sparseF64Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, Case, run } from '../../expression.js';
+import { allInputSources, Case, onlyConstInputSource, run } from '../../expression.js';
 
-import { builtin } from './builtin.js';
+import { abstractBuiltin, builtin } from './builtin.js';
 
 /** Generate set of max test cases from list of interesting values */
 function generateTestCases(
@@ -57,6 +65,14 @@ export const d = makeCaseCache('max', {
       fullF16Range(),
       'unfiltered',
       FP.f16.maxInterval
+    );
+  },
+  abstract: () => {
+    return FP.abstract.generateScalarPairToIntervalCases(
+      sparseF64Range(),
+      sparseF64Range(),
+      'unfiltered',
+      FP.abstract.maxInterval
     );
   },
 });
@@ -107,9 +123,21 @@ g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(`abstract float tests`)
   .params(u =>
-    u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
+    u
+      .combine('inputSource', onlyConstInputSource)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
-  .unimplemented();
+  .fn(async t => {
+    const cases = await d.get('abstract');
+    await run(
+      t,
+      abstractBuiltin('max'),
+      [TypeAbstractFloat, TypeAbstractFloat],
+      TypeAbstractFloat,
+      t.params,
+      cases
+    );
+  });
 
 g.test('f32')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')

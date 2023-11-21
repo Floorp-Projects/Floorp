@@ -662,6 +662,58 @@ export const kTexelRepresentationInfo: {
     'rgba32float':           makeFloatInfo(     kRGBA, 32),
   },
   ...{
+    rgb10a2uint: {
+      componentOrder: kRGBA,
+      componentInfo: {
+        R: { dataType: 'uint', bitLength: 10 },
+        G: { dataType: 'uint', bitLength: 10 },
+        B: { dataType: 'uint', bitLength: 10 },
+        A: { dataType: 'uint', bitLength: 2 },
+      },
+      encode: components => {
+        assertInIntegerRange(components.R!, 10, false);
+        assertInIntegerRange(components.G!, 10, false);
+        assertInIntegerRange(components.B!, 10, false);
+        assertInIntegerRange(components.A!, 2, false);
+        return components;
+      },
+      decode: components => {
+        assertInIntegerRange(components.R!, 10, false);
+        assertInIntegerRange(components.G!, 10, false);
+        assertInIntegerRange(components.B!, 10, false);
+        assertInIntegerRange(components.A!, 2, false);
+        return components;
+      },
+      pack: components =>
+        packComponents(
+          kRGBA,
+          components,
+          {
+            R: 10,
+            G: 10,
+            B: 10,
+            A: 2,
+          },
+          'uint'
+        ),
+      unpackBits: (data: Uint8Array) =>
+        unpackComponentsBits(kRGBA, data, { R: 10, G: 10, B: 10, A: 2 }),
+      numberToBits: components => ({
+        R: components.R! & 0x3ff,
+        G: components.G! & 0x3ff,
+        B: components.B! & 0x3ff,
+        A: components.A! & 0x3,
+      }),
+      bitsToNumber: components => {
+        assertInIntegerRange(components.R!, 10, false);
+        assertInIntegerRange(components.G!, 10, false);
+        assertInIntegerRange(components.B!, 10, false);
+        assertInIntegerRange(components.A!, 2, false);
+        return components;
+      },
+      bitsToULPFromZero: components => components,
+      numericRange: null,
+    },
     rgb10a2unorm: {
       componentOrder: kRGBA,
       componentInfo: {

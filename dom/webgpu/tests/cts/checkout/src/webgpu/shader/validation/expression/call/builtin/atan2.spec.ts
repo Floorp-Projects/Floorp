@@ -20,7 +20,7 @@ import { ShaderValidationTest } from '../../../shader_validation_test.js';
 import {
   fullRangeForType,
   kConstantAndOverrideStages,
-  kMinus3PiTo3Pi,
+  kSparseMinus3PiTo3Pi,
   stageSupportsType,
   unique,
   validateConstOrOverrideBuiltinEval,
@@ -42,8 +42,8 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
       .combine('type', keysOf(kValuesTypes))
       .filter(u => stageSupportsType(u.stage, kValuesTypes[u.type]))
       .beginSubcases()
-      .expand('y', u => unique(kMinus3PiTo3Pi, fullRangeForType(kValuesTypes[u.type], 4)))
-      .expand('x', u => unique(kMinus3PiTo3Pi, fullRangeForType(kValuesTypes[u.type], 4)))
+      .expand('y', u => unique(kSparseMinus3PiTo3Pi, fullRangeForType(kValuesTypes[u.type], 4)))
+      .expand('x', u => unique(kSparseMinus3PiTo3Pi, fullRangeForType(kValuesTypes[u.type], 4)))
   )
   .beforeAllSubcases(t => {
     if (elementType(kValuesTypes[t.params.type]) === TypeF16) {

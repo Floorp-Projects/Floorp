@@ -2,7 +2,11 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable no-console */
 
+const timer = require('grunt-timer');
+
 module.exports = function (grunt) {
+  timer.init(grunt);
+
   // Project configuration.
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
@@ -25,6 +29,10 @@ module.exports = function (grunt) {
       validate: {
         cmd: 'node',
         args: ['tools/validate', 'src/webgpu', 'src/stress', 'src/manual', 'src/unittests', 'src/demo'],
+      },
+      'validate-cache': {
+        cmd: 'node',
+        args: ['tools/gen_cache', 'out', 'src/webgpu', '--validate'],
       },
       'generate-wpt-cts-html': {
         cmd: 'node',
@@ -106,17 +114,14 @@ module.exports = function (grunt) {
         cmd: 'node',
         args: ['node_modules/eslint/bin/eslint', 'src/**/*.ts', '--max-warnings=0'],
       },
-      presubmit: {
-        cmd: 'node',
-        args: ['tools/presubmit'],
-      },
       fix: {
         cmd: 'node',
         args: ['node_modules/eslint/bin/eslint', 'src/**/*.ts', '--fix'],
       },
       'autoformat-out-wpt': {
         cmd: 'node',
-        args: ['node_modules/prettier/bin-prettier', '--loglevel=warn', '--write', 'out-wpt/**/*.js'],
+        // MAINTENANCE_TODO(gpuweb/cts#3128): This autoformat step is broken after a dependencies upgrade.
+        args: ['node_modules/prettier/bin/prettier.cjs', '--log-level=warn', '--write', 'out-wpt/**/*.js'],
       },
       tsdoc: {
         cmd: 'node',
@@ -194,14 +199,13 @@ module.exports = function (grunt) {
   registerTaskAndAddToHelp('pre', 'Run all presubmit checks: standalone+wpt+typecheck+unittest+lint', [
     'clean',
     'run:validate',
+    'run:validate-cache',
     'build-standalone',
     'run:generate-listings',
     'build-wpt',
     'run:build-out-node',
-    'run:generate-cache',
     'build-done-message',
     'ts:check',
-    'run:presubmit',
     'run:unittest',
     'run:lint',
     'run:tsdoc-treatWarningsAsErrors',

@@ -1,11 +1,11 @@
 import { ResourceState, GPUTestBase } from '../gpu_test.js';
 
 export const kRenderEncodeTypes = ['render pass', 'render bundle'] as const;
-export type RenderEncodeType = typeof kRenderEncodeTypes[number];
+export type RenderEncodeType = (typeof kRenderEncodeTypes)[number];
 export const kProgrammableEncoderTypes = ['compute pass', ...kRenderEncodeTypes] as const;
-export type ProgrammableEncoderType = typeof kProgrammableEncoderTypes[number];
+export type ProgrammableEncoderType = (typeof kProgrammableEncoderTypes)[number];
 export const kEncoderTypes = ['non-pass', ...kProgrammableEncoderTypes] as const;
-export type EncoderType = typeof kEncoderTypes[number];
+export type EncoderType = (typeof kEncoderTypes)[number];
 
 // Look up the type of the encoder based on `T`. If `T` is a union, this will be too!
 type EncoderByEncoderType<T extends EncoderType> = {

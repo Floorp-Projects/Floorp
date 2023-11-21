@@ -59,11 +59,8 @@ g.test('stencil_clear_value')
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
-    const {
-      stencilFormat,
-      stencilClearValue,
-      applyStencilClearValueAsStencilReferenceValue,
-    } = t.params;
+    const { stencilFormat, stencilClearValue, applyStencilClearValueAsStencilReferenceValue } =
+      t.params;
 
     const kSize = [1, 1, 1] as const;
     const colorFormat = 'rgba8unorm';

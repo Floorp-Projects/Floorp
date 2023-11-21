@@ -50,7 +50,7 @@ How to generate TIMING_LOG_FILES files:
 }
 
 const kHeader = `{
-  "_comment": "SEMI AUTO-GENERATED: Please read tools/merge_listing_times.",
+  "_comment": "SEMI AUTO-GENERATED: Please read docs/adding_timing_metadata.md.",
 `;
 const kFooter = `\
   "_end": ""

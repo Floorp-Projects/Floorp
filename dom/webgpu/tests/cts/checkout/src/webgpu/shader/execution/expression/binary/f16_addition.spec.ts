@@ -12,137 +12,63 @@ import { allInputSources, run } from '../expression.js';
 
 import { binary, compoundBinary } from './binary.js';
 
-const additionVectorScalarInterval = (v: number[], s: number): FPVector => {
+const additionVectorScalarInterval = (v: readonly number[], s: number): FPVector => {
   return FP.f16.toVector(v.map(e => FP.f16.additionInterval(e, s)));
 };
 
-const additionScalarVectorInterval = (s: number, v: number[]): FPVector => {
+const additionScalarVectorInterval = (s: number, v: readonly number[]): FPVector => {
   return FP.f16.toVector(v.map(e => FP.f16.additionInterval(s, e)));
 };
 
 export const g = makeTestGroup(GPUTest);
 
+const scalar_cases = ([true, false] as const)
+  .map(nonConst => ({
+    [`scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
+      return FP.f16.generateScalarPairToIntervalCases(
+        sparseF16Range(),
+        sparseF16Range(),
+        nonConst ? 'unfiltered' : 'finite',
+        FP.f16.additionInterval
+      );
+    },
+  }))
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
+const vector_scalar_cases = ([2, 3, 4] as const)
+  .flatMap(dim =>
+    ([true, false] as const).map(nonConst => ({
+      [`vec${dim}_scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
+        return FP.f16.generateVectorScalarToVectorCases(
+          sparseVectorF16Range(dim),
+          sparseF16Range(),
+          nonConst ? 'unfiltered' : 'finite',
+          additionVectorScalarInterval
+        );
+      },
+    }))
+  )
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
+const scalar_vector_cases = ([2, 3, 4] as const)
+  .flatMap(dim =>
+    ([true, false] as const).map(nonConst => ({
+      [`scalar_vec${dim}_${nonConst ? 'non_const' : 'const'}`]: () => {
+        return FP.f16.generateScalarVectorToVectorCases(
+          sparseF16Range(),
+          sparseVectorF16Range(dim),
+          nonConst ? 'unfiltered' : 'finite',
+          additionScalarVectorInterval
+        );
+      },
+    }))
+  )
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
 export const d = makeCaseCache('binary/f16_addition', {
-  scalar_const: () => {
-    return FP.f16.generateScalarPairToIntervalCases(
-      sparseF16Range(),
-      sparseF16Range(),
-      'finite',
-      FP.f16.additionInterval
-    );
-  },
-  scalar_non_const: () => {
-    return FP.f16.generateScalarPairToIntervalCases(
-      sparseF16Range(),
-      sparseF16Range(),
-      'unfiltered',
-      FP.f16.additionInterval
-    );
-  },
-  vec2_scalar_const: () => {
-    return FP.f16.generateVectorScalarToVectorCases(
-      sparseVectorF16Range(2),
-      sparseF16Range(),
-      'finite',
-      additionVectorScalarInterval
-    );
-  },
-  vec2_scalar_non_const: () => {
-    return FP.f16.generateVectorScalarToVectorCases(
-      sparseVectorF16Range(2),
-      sparseF16Range(),
-      'unfiltered',
-      additionVectorScalarInterval
-    );
-  },
-  vec3_scalar_const: () => {
-    return FP.f16.generateVectorScalarToVectorCases(
-      sparseVectorF16Range(3),
-      sparseF16Range(),
-      'finite',
-      additionVectorScalarInterval
-    );
-  },
-  vec3_scalar_non_const: () => {
-    return FP.f16.generateVectorScalarToVectorCases(
-      sparseVectorF16Range(3),
-      sparseF16Range(),
-      'unfiltered',
-      additionVectorScalarInterval
-    );
-  },
-  vec4_scalar_const: () => {
-    return FP.f16.generateVectorScalarToVectorCases(
-      sparseVectorF16Range(4),
-      sparseF16Range(),
-      'finite',
-      additionVectorScalarInterval
-    );
-  },
-  vec4_scalar_non_const: () => {
-    return FP.f16.generateVectorScalarToVectorCases(
-      sparseVectorF16Range(4),
-      sparseF16Range(),
-      'unfiltered',
-      additionVectorScalarInterval
-    );
-  },
-  scalar_vec2_const: () => {
-    return FP.f16.generateScalarVectorToVectorCases(
-      sparseF16Range(),
-      sparseVectorF16Range(2),
-      'finite',
-      additionScalarVectorInterval
-    );
-  },
-  scalar_vec2_non_const: () => {
-    return FP.f16.generateScalarVectorToVectorCases(
-      sparseF16Range(),
-      sparseVectorF16Range(2),
-      'unfiltered',
-      additionScalarVectorInterval
-    );
-  },
-  scalar_vec3_const: () => {
-    return FP.f16.generateScalarVectorToVectorCases(
-      sparseF16Range(),
-      sparseVectorF16Range(3),
-      'finite',
-      additionScalarVectorInterval
-    );
-  },
-  scalar_vec3_non_const: () => {
-    return FP.f16.generateScalarVectorToVectorCases(
-      sparseF16Range(),
-      sparseVectorF16Range(3),
-      'unfiltered',
-      additionScalarVectorInterval
-    );
-  },
-  scalar_vec4_const: () => {
-    return FP.f16.generateScalarVectorToVectorCases(
-      sparseF16Range(),
-      sparseVectorF16Range(4),
-      'finite',
-      additionScalarVectorInterval
-    );
-  },
-  scalar_vec4_non_const: () => {
-    return FP.f16.generateScalarVectorToVectorCases(
-      sparseF16Range(),
-      sparseVectorF16Range(4),
-      'unfiltered',
-      additionScalarVectorInterval
-    );
-  },
-  subtraction_const: () => {
-    return FP.f16.generateScalarPairToIntervalCases(
-      sparseF16Range(),
-      sparseF16Range(),
-      'finite',
-      FP.f16.subtractionInterval
-    );
-  },
+  ...scalar_cases,
+  ...vector_scalar_cases,
+  ...scalar_vector_cases,
 });
 
 g.test('scalar')

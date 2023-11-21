@@ -1,6 +1,7 @@
 import { keysOf } from '../common/util/data_tables.js';
 import { assert } from '../common/util/util.js';
 
+import { align } from './util/math.js';
 import { ImageCopyType } from './util/texture/layout.js';
 
 //
@@ -52,7 +53,7 @@ function formatTableWithDefaults<Defaults extends {}, Table extends { readonly [
       ? Table[F][K]
       : K extends keyof Defaults
       ? Defaults[K]
-      : typeof kFormatUniversalDefaults[K];
+      : (typeof kFormatUniversalDefaults)[K];
   };
 } {
   return Object.fromEntries(
@@ -407,6 +408,16 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
 
     // plain, mixed component width, 32 bits per texel
 
+    rgb10a2uint: {
+      color: { type: 'uint', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      colorRender: { blend: false, resolve: false, byteCost: 8, alignment: 4 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
     rgb10a2unorm: {
       color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 4 },
       colorRender: { blend: true, resolve: true, byteCost: 8, alignment: 4 },
@@ -1240,3 +1251,23 @@ export function isCompressedTextureFormat(format: GPUTextureFormat) {
 }
 
 export const kFeaturesForFormats = getFeaturesForFormats(kTextureFormats);
+
+/**
+ * Given an array of texture formats return the number of bytes per sample.
+ */
+export function computeBytesPerSampleFromFormats(formats: readonly GPUTextureFormat[]) {
+  let bytesPerSample = 0;
+  for (const format of formats) {
+    const info = kTextureFormatInfo[format];
+    const alignedBytesPerSample = align(bytesPerSample, info.colorRender!.alignment);
+    bytesPerSample = alignedBytesPerSample + info.colorRender!.byteCost;
+  }
+  return bytesPerSample;
+}
+
+/**
+ * Given an array of GPUColorTargetState return the number of bytes per sample
+ */
+export function computeBytesPerSample(targets: GPUColorTargetState[]) {
+  return computeBytesPerSampleFromFormats(targets.map(({ format }) => format));
+}

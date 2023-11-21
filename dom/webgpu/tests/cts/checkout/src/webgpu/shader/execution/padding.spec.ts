@@ -26,7 +26,7 @@ function runShaderTest(t: GPUTest, wgsl: string, expected: Uint32Array): void {
 
   // Allocate a buffer and fill it with 0xdeadbeef words.
   const outputBuffer = t.makeBufferWithContents(
-    new Uint32Array([...iterRange(expected.length, x => 0xdeadbeef)]),
+    new Uint32Array([...iterRange(expected.length, _i => 0xdeadbeef)]),
     GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
   );
   const bindGroup = t.device.createBindGroup({
@@ -78,20 +78,11 @@ g.test('struct_implicit')
       wgsl,
       new Uint32Array([
         // a : u32
-        0x12345678,
-        0xdeadbeef,
-        0xdeadbeef,
-        0xdeadbeef,
+        0x12345678, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
         // b : vec3<u32>
-        0xabcdef01,
-        0xabcdef01,
-        0xabcdef01,
-        0xdeadbeef,
+        0xabcdef01, 0xabcdef01, 0xabcdef01, 0xdeadbeef,
         // c : vec2<u32>
-        0x98765432,
-        0x98765432,
-        0xdeadbeef,
-        0xdeadbeef,
+        0x98765432, 0x98765432, 0xdeadbeef, 0xdeadbeef,
       ])
     );
   });
@@ -127,20 +118,11 @@ g.test('struct_explicit')
       wgsl,
       new Uint32Array([
         // a : u32
-        0x12345678,
-        0xdeadbeef,
-        0xdeadbeef,
-        0xdeadbeef,
+        0x12345678, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
         // @align(16) @size(20) b : u32
-        0xabcdef01,
-        0xdeadbeef,
-        0xdeadbeef,
-        0xdeadbeef,
-        0xdeadbeef,
+        0xabcdef01, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
         // @size(12) c : u32
-        0x98765432,
-        0xdeadbeef,
-        0xdeadbeef,
+        0x98765432, 0xdeadbeef, 0xdeadbeef,
       ])
     );
   });
@@ -197,98 +179,47 @@ g.test('struct_nested')
       new Uint32Array([
         // a3 : S1
         // a3.a1 : u32
-        0x00000000,
-        0xdeadbeef,
-        0xdeadbeef,
-        0xdeadbeef,
+        0x00000000, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
         // a3.b1 : vec3<u32>
-        0x00000000,
-        0x00000000,
-        0x00000000,
-        0xdeadbeef,
+        0x00000000, 0x00000000, 0x00000000, 0xdeadbeef,
         // a3.c1 : vec2<u32>
-        0x00000000,
-        0x00000000,
-        0xdeadbeef,
-        0xdeadbeef,
+        0x00000000, 0x00000000, 0xdeadbeef, 0xdeadbeef,
 
         // b3 : S2
         // b3.a2 : u32
-        0x00000000,
-        0xdeadbeef,
-        0xdeadbeef,
-        0xdeadbeef,
+        0x00000000, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
         // b3.b2 : S1
         // b3.b2.a1 : u32
-        0x00000000,
-        0xdeadbeef,
-        0xdeadbeef,
-        0xdeadbeef,
+        0x00000000, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
         // b3.b2.b1 : vec3<u32>
-        0x00000000,
-        0x00000000,
-        0x00000000,
-        0xdeadbeef,
+        0x00000000, 0x00000000, 0x00000000, 0xdeadbeef,
         // b3.b2.c1 : vec2<u32>
-        0x00000000,
-        0x00000000,
-        0xdeadbeef,
-        0xdeadbeef,
+        0x00000000, 0x00000000, 0xdeadbeef, 0xdeadbeef,
         // b3.c2 : S1
         // b3.c2.a1 : u32
-        0x00000000,
-        0xdeadbeef,
-        0xdeadbeef,
-        0xdeadbeef,
+        0x00000000, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
         // b3.c2.b1 : vec3<u32>
-        0x00000000,
-        0x00000000,
-        0x00000000,
-        0xdeadbeef,
+        0x00000000, 0x00000000, 0x00000000, 0xdeadbeef,
         // b3.c2.c1 : vec2<u32>
-        0x00000000,
-        0x00000000,
-        0xdeadbeef,
-        0xdeadbeef,
+        0x00000000, 0x00000000, 0xdeadbeef, 0xdeadbeef,
 
         // c3 : S2
         // c3.a2 : u32
-        0x00000000,
-        0xdeadbeef,
-        0xdeadbeef,
-        0xdeadbeef,
+        0x00000000, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
         // c3.b2 : S1
         // c3.b2.a1 : u32
-        0x00000000,
-        0xdeadbeef,
-        0xdeadbeef,
-        0xdeadbeef,
+        0x00000000, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
         // c3.b2.b1 : vec3<u32>
-        0x00000000,
-        0x00000000,
-        0x00000000,
-        0xdeadbeef,
+        0x00000000, 0x00000000, 0x00000000, 0xdeadbeef,
         // c3.b2.c1 : vec2<u32>
-        0x00000000,
-        0x00000000,
-        0xdeadbeef,
-        0xdeadbeef,
+        0x00000000, 0x00000000, 0xdeadbeef, 0xdeadbeef,
         // c3.c2 : S1
         // c3.c2.a1 : u32
-        0x00000000,
-        0xdeadbeef,
-        0xdeadbeef,
-        0xdeadbeef,
+        0x00000000, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
         // c3.c2.b1 : vec3<u32>
-        0x00000000,
-        0x00000000,
-        0x00000000,
-        0xdeadbeef,
+        0x00000000, 0x00000000, 0x00000000, 0xdeadbeef,
         // c3.c2.c1 : vec2<u32>
-        0x00000000,
-        0x00000000,
-        0xdeadbeef,
-        0xdeadbeef,
+        0x00000000, 0x00000000, 0xdeadbeef, 0xdeadbeef,
       ])
     );
   });
@@ -321,25 +252,13 @@ g.test('array_of_vec3')
       wgsl,
       new Uint32Array([
         // buffer[0]
-        0x12345678,
-        0x12345678,
-        0x12345678,
-        0xdeadbeef,
+        0x12345678, 0x12345678, 0x12345678, 0xdeadbeef,
         // buffer[1]
-        0xabcdef01,
-        0xabcdef01,
-        0xabcdef01,
-        0xdeadbeef,
+        0xabcdef01, 0xabcdef01, 0xabcdef01, 0xdeadbeef,
         // buffer[2]
-        0x98765432,
-        0x98765432,
-        0x98765432,
-        0xdeadbeef,
+        0x98765432, 0x98765432, 0x98765432, 0xdeadbeef,
         // buffer[2]
-        0x0f0f0f0f,
-        0x0f0f0f0f,
-        0x0f0f0f0f,
-        0xdeadbeef,
+        0x0f0f0f0f, 0x0f0f0f0f, 0x0f0f0f0f, 0xdeadbeef,
       ])
     );
   });
@@ -375,31 +294,13 @@ g.test('array_of_struct')
       wgsl,
       new Uint32Array([
         // buffer[0]
-        0x12345678,
-        0xdeadbeef,
-        0xdeadbeef,
-        0xdeadbeef,
-        0x0f0f0f0f,
-        0x0f0f0f0f,
-        0x0f0f0f0f,
+        0x12345678, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef, 0x0f0f0f0f, 0x0f0f0f0f, 0x0f0f0f0f,
         0xdeadbeef,
         // buffer[1]
-        0xabcdef01,
-        0xdeadbeef,
-        0xdeadbeef,
-        0xdeadbeef,
-        0x7c7c7c7c,
-        0x7c7c7c7c,
-        0x7c7c7c7c,
+        0xabcdef01, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef, 0x7c7c7c7c, 0x7c7c7c7c, 0x7c7c7c7c,
         0xdeadbeef,
         // buffer[2]
-        0x98765432,
-        0xdeadbeef,
-        0xdeadbeef,
-        0xdeadbeef,
-        0x18181818,
-        0x18181818,
-        0x18181818,
+        0x98765432, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef, 0x18181818, 0x18181818, 0x18181818,
         0xdeadbeef,
       ])
     );

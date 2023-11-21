@@ -633,14 +633,8 @@ g.test('copy_contents_from_gpu_context_canvas')
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(t => {
-    const {
-      width,
-      height,
-      canvasType,
-      srcAndDstInSameGPUDevice,
-      srcAlphaMode,
-      dstAlphaMode,
-    } = t.params;
+    const { width, height, canvasType, srcAndDstInSameGPUDevice, srcAlphaMode, dstAlphaMode } =
+      t.params;
 
     const device = srcAndDstInSameGPUDevice ? t.device : t.mismatchedDevice;
     const { canvas: source, expectedSourceData } = t.initSourceWebGPUCanvas({

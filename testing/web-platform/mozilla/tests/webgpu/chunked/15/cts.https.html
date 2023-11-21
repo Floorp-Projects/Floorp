@@ -33,6 +33,16 @@
 </script>
 <script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
 
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:limits,invocations_per_workgroup,each_component:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,identifier:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,uninitialized:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,value,type_error:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,value,validation_error:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,value,validation_error,f16:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,workgroup_size:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,workgroup_size,limits:*'>
+<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,workgroup_size,limits,workgroup_storage_size:*'>
+<meta name=variant content='?q=webgpu:api,validation,createBindGroup:binding_count_mismatch:*'>
 <meta name=variant content='?q=webgpu:api,validation,createBindGroup:binding_must_be_present_in_layout:*'>
 <meta name=variant content='?q=webgpu:api,validation,createBindGroup:binding_must_contain_resource_defined_in_layout:*'>
 <meta name=variant content='?q=webgpu:api,validation,createBindGroup:texture_binding_must_have_correct_usage:*'>
@@ -48,13 +58,3 @@
 <meta name=variant content='?q=webgpu:api,validation,createBindGroup:buffer,effective_buffer_binding_size:*'>
 <meta name=variant content='?q=webgpu:api,validation,createBindGroup:texture,resource_state:*'>
 <meta name=variant content='?q=webgpu:api,validation,createBindGroup:bind_group_layout,device_mismatch:*'>
-<meta name=variant content='?q=webgpu:api,validation,createBindGroup:binding_resources,device_mismatch:*'>
-<meta name=variant content='?q=webgpu:api,validation,createBindGroup:storage_texture,usage:*'>
-<meta name=variant content='?q=webgpu:api,validation,createBindGroup:storage_texture,mip_level_count:*'>
-<meta name=variant content='?q=webgpu:api,validation,createBindGroup:storage_texture,format:*'>
-<meta name=variant content='?q=webgpu:api,validation,createBindGroup:sampler,device_mismatch:*'>
-<meta name=variant content='?q=webgpu:api,validation,createBindGroup:sampler,compare_function_with_binding_type:*'>
-<meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:duplicate_bindings:*'>
-<meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:maximum_binding_limit:*'>
-<meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:visibility:*'>
-<meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:visibility,VERTEX_shader_stage_buffer_type:*'>

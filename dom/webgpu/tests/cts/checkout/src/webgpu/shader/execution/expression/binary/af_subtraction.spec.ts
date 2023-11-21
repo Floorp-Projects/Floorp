@@ -12,18 +12,18 @@ import { onlyConstInputSource, run } from '../expression.js';
 
 import { abstractBinary } from './binary.js';
 
-const subtractionVectorScalarInterval = (v: number[], s: number): FPVector => {
+const subtractionVectorScalarInterval = (v: readonly number[], s: number): FPVector => {
   return FP.abstract.toVector(v.map(e => FP.abstract.subtractionInterval(e, s)));
 };
 
-const subtractionScalarVectorInterval = (s: number, v: number[]): FPVector => {
+const subtractionScalarVectorInterval = (s: number, v: readonly number[]): FPVector => {
   return FP.abstract.toVector(v.map(e => FP.abstract.subtractionInterval(s, e)));
 };
 
 export const g = makeTestGroup(GPUTest);
 
-export const d = makeCaseCache('abstractBinary/af_subtraction', {
-  scalar: () => {
+const scalar_cases = {
+  ['scalar']: () => {
     return FP.abstract.generateScalarPairToIntervalCases(
       sparseF64Range(),
       sparseF64Range(),
@@ -31,54 +31,38 @@ export const d = makeCaseCache('abstractBinary/af_subtraction', {
       FP.abstract.subtractionInterval
     );
   },
-  vec2_scalar: () => {
-    return FP.abstract.generateVectorScalarToVectorCases(
-      sparseVectorF64Range(2),
-      sparseF64Range(),
-      'finite',
-      subtractionVectorScalarInterval
-    );
-  },
-  vec3_scalar: () => {
-    return FP.abstract.generateVectorScalarToVectorCases(
-      sparseVectorF64Range(3),
-      sparseF64Range(),
-      'finite',
-      subtractionVectorScalarInterval
-    );
-  },
-  vec4_scalar: () => {
-    return FP.abstract.generateVectorScalarToVectorCases(
-      sparseVectorF64Range(4),
-      sparseF64Range(),
-      'finite',
-      subtractionVectorScalarInterval
-    );
-  },
-  scalar_vec2: () => {
-    return FP.abstract.generateScalarVectorToVectorCases(
-      sparseF64Range(),
-      sparseVectorF64Range(2),
-      'finite',
-      subtractionScalarVectorInterval
-    );
-  },
-  scalar_vec3: () => {
-    return FP.abstract.generateScalarVectorToVectorCases(
-      sparseF64Range(),
-      sparseVectorF64Range(3),
-      'finite',
-      subtractionScalarVectorInterval
-    );
-  },
-  scalar_vec4: () => {
-    return FP.abstract.generateScalarVectorToVectorCases(
-      sparseF64Range(),
-      sparseVectorF64Range(4),
-      'finite',
-      subtractionScalarVectorInterval
-    );
-  },
+};
+
+const vector_scalar_cases = ([2, 3, 4] as const)
+  .map(dim => ({
+    [`vec${dim}_scalar`]: () => {
+      return FP.abstract.generateVectorScalarToVectorCases(
+        sparseVectorF64Range(dim),
+        sparseF64Range(),
+        'finite',
+        subtractionVectorScalarInterval
+      );
+    },
+  }))
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
+const scalar_vector_cases = ([2, 3, 4] as const)
+  .map(dim => ({
+    [`scalar_vec${dim}`]: () => {
+      return FP.abstract.generateScalarVectorToVectorCases(
+        sparseF64Range(),
+        sparseVectorF64Range(dim),
+        'finite',
+        subtractionScalarVectorInterval
+      );
+    },
+  }))
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
+export const d = makeCaseCache('binary/af_subtraction', {
+  ...scalar_cases,
+  ...vector_scalar_cases,
+  ...scalar_vector_cases,
 });
 
 g.test('scalar')

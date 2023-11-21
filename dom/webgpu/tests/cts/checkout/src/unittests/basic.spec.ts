@@ -8,9 +8,9 @@ import { UnitTest } from './unit_test.js';
 
 export const g = makeTestGroup(UnitTest);
 
-g.test('test,sync').fn(t => {});
+g.test('test,sync').fn(_t => {});
 
-g.test('test,async').fn(async t => {});
+g.test('test,async').fn(async _t => {});
 
 g.test('test_with_params,sync')
   .paramsSimple([{}])

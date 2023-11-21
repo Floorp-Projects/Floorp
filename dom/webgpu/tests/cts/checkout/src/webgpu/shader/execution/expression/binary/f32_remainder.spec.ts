@@ -12,129 +12,63 @@ import { allInputSources, run } from '../expression.js';
 
 import { binary, compoundBinary } from './binary.js';
 
-const remainderVectorScalarInterval = (v: number[], s: number): FPVector => {
+const remainderVectorScalarInterval = (v: readonly number[], s: number): FPVector => {
   return FP.f32.toVector(v.map(e => FP.f32.remainderInterval(e, s)));
 };
 
-const remainderScalarVectorInterval = (s: number, v: number[]): FPVector => {
+const remainderScalarVectorInterval = (s: number, v: readonly number[]): FPVector => {
   return FP.f32.toVector(v.map(e => FP.f32.remainderInterval(s, e)));
 };
 
 export const g = makeTestGroup(GPUTest);
 
+const scalar_cases = ([true, false] as const)
+  .map(nonConst => ({
+    [`scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
+      return FP.f32.generateScalarPairToIntervalCases(
+        sparseF32Range(),
+        sparseF32Range(),
+        nonConst ? 'unfiltered' : 'finite',
+        FP.f32.remainderInterval
+      );
+    },
+  }))
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
+const vector_scalar_cases = ([2, 3, 4] as const)
+  .flatMap(dim =>
+    ([true, false] as const).map(nonConst => ({
+      [`vec${dim}_scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
+        return FP.f32.generateVectorScalarToVectorCases(
+          sparseVectorF32Range(dim),
+          sparseF32Range(),
+          nonConst ? 'unfiltered' : 'finite',
+          remainderVectorScalarInterval
+        );
+      },
+    }))
+  )
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
+const scalar_vector_cases = ([2, 3, 4] as const)
+  .flatMap(dim =>
+    ([true, false] as const).map(nonConst => ({
+      [`scalar_vec${dim}_${nonConst ? 'non_const' : 'const'}`]: () => {
+        return FP.f32.generateScalarVectorToVectorCases(
+          sparseF32Range(),
+          sparseVectorF32Range(dim),
+          nonConst ? 'unfiltered' : 'finite',
+          remainderScalarVectorInterval
+        );
+      },
+    }))
+  )
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
 export const d = makeCaseCache('binary/f32_remainder', {
-  scalar_const: () => {
-    return FP.f32.generateScalarPairToIntervalCases(
-      sparseF32Range(),
-      sparseF32Range(),
-      'finite',
-      FP.f32.remainderInterval
-    );
-  },
-  scalar_non_const: () => {
-    return FP.f32.generateScalarPairToIntervalCases(
-      sparseF32Range(),
-      sparseF32Range(),
-      'unfiltered',
-      FP.f32.remainderInterval
-    );
-  },
-  vec2_scalar_const: () => {
-    return FP.f32.generateVectorScalarToVectorCases(
-      sparseVectorF32Range(2),
-      sparseF32Range(),
-      'finite',
-      remainderVectorScalarInterval
-    );
-  },
-  vec2_scalar_non_const: () => {
-    return FP.f32.generateVectorScalarToVectorCases(
-      sparseVectorF32Range(2),
-      sparseF32Range(),
-      'unfiltered',
-      remainderVectorScalarInterval
-    );
-  },
-  vec3_scalar_const: () => {
-    return FP.f32.generateVectorScalarToVectorCases(
-      sparseVectorF32Range(3),
-      sparseF32Range(),
-      'finite',
-      remainderVectorScalarInterval
-    );
-  },
-  vec3_scalar_non_const: () => {
-    return FP.f32.generateVectorScalarToVectorCases(
-      sparseVectorF32Range(3),
-      sparseF32Range(),
-      'unfiltered',
-      remainderVectorScalarInterval
-    );
-  },
-  vec4_scalar_const: () => {
-    return FP.f32.generateVectorScalarToVectorCases(
-      sparseVectorF32Range(4),
-      sparseF32Range(),
-      'finite',
-      remainderVectorScalarInterval
-    );
-  },
-  vec4_scalar_non_const: () => {
-    return FP.f32.generateVectorScalarToVectorCases(
-      sparseVectorF32Range(4),
-      sparseF32Range(),
-      'unfiltered',
-      remainderVectorScalarInterval
-    );
-  },
-  scalar_vec2_const: () => {
-    return FP.f32.generateScalarVectorToVectorCases(
-      sparseF32Range(),
-      sparseVectorF32Range(2),
-      'finite',
-      remainderScalarVectorInterval
-    );
-  },
-  scalar_vec2_non_const: () => {
-    return FP.f32.generateScalarVectorToVectorCases(
-      sparseF32Range(),
-      sparseVectorF32Range(2),
-      'unfiltered',
-      remainderScalarVectorInterval
-    );
-  },
-  scalar_vec3_const: () => {
-    return FP.f32.generateScalarVectorToVectorCases(
-      sparseF32Range(),
-      sparseVectorF32Range(3),
-      'finite',
-      remainderScalarVectorInterval
-    );
-  },
-  scalar_vec3_non_const: () => {
-    return FP.f32.generateScalarVectorToVectorCases(
-      sparseF32Range(),
-      sparseVectorF32Range(3),
-      'unfiltered',
-      remainderScalarVectorInterval
-    );
-  },
-  scalar_vec4_const: () => {
-    return FP.f32.generateScalarVectorToVectorCases(
-      sparseF32Range(),
-      sparseVectorF32Range(4),
-      'finite',
-      remainderScalarVectorInterval
-    );
-  },
-  scalar_vec4_non_const: () => {
-    return FP.f32.generateScalarVectorToVectorCases(
-      sparseF32Range(),
-      sparseVectorF32Range(4),
-      'unfiltered',
-      remainderScalarVectorInterval
-    );
-  },
+  ...scalar_cases,
+  ...vector_scalar_cases,
+  ...scalar_vector_cases,
 });
 
 g.test('scalar')

@@ -184,12 +184,9 @@ g.test('precision')
           fragmentConstants: { R: 3.14159 } as Record<string, GPUPipelineConstantValue>,
         },
         {
-          expected: { R: 3.141592653589793238, G: 1.0, B: 1.0, A: 1.0 },
+          expected: { R: 3.141592653589793, G: 1.0, B: 1.0, A: 1.0 },
           vertexConstants: {},
-          fragmentConstants: { R: 3.141592653589793238 } as Record<
-            string,
-            GPUPipelineConstantValue
-          >,
+          fragmentConstants: { R: 3.141592653589793 } as Record<string, GPUPipelineConstantValue>,
         },
       ])
   )

@@ -19,13 +19,19 @@ import { Expectation } from '../internal/logging/result.js';
 import { TestCaseRecorder } from '../internal/logging/test_case_recorder.js';
 import { extractPublicParams, Merged, mergeParams } from '../internal/params_utils.js';
 import { compareQueries, Ordering } from '../internal/query/compare.js';
-import { TestQuerySingleCase, TestQueryWithExpectation } from '../internal/query/query.js';
+import {
+  TestQueryMultiFile,
+  TestQueryMultiTest,
+  TestQuerySingleCase,
+  TestQueryWithExpectation,
+} from '../internal/query/query.js';
 import { kPathSeparator } from '../internal/query/separators.js';
 import {
   stringifyPublicParams,
   stringifyPublicParamsUniquely,
 } from '../internal/query/stringify_params.js';
 import { validQueryPart } from '../internal/query/validQueryPart.js';
+import { DeepReadonly } from '../util/types.js';
 import { assert, unreachable } from '../util/util.js';
 
 import { logToWebsocket } from './websocket_logger.js';
@@ -56,13 +62,13 @@ export interface TestGroupBuilder<F extends Fixture> {
   test(name: string): TestBuilderWithName<F>;
 }
 export function makeTestGroup<F extends Fixture>(fixture: FixtureClass<F>): TestGroupBuilder<F> {
-  return new TestGroup((fixture as unknown) as FixtureClass);
+  return new TestGroup(fixture as unknown as FixtureClass);
 }
 
 // Interfaces for running tests
 export interface IterableTestGroup {
   iterate(): Iterable<IterableTest>;
-  validate(): void;
+  validate(fileQuery: TestQueryMultiFile): void;
   /** Returns the file-relative test paths of tests which have >0 cases. */
   collectNonEmptyTests(): { testPath: string[] }[];
 }
@@ -79,12 +85,17 @@ export function makeTestGroupForUnitTesting<F extends Fixture>(
   return new TestGroup(fixture);
 }
 
+/** The maximum allowed length of a test query string. Checked by tools/validate. */
+export const kQueryMaxLength = 375;
+
 /** Parameter name for batch number (see also TestBuilder.batch). */
 const kBatchParamName = 'batch__';
 
-type TestFn<F extends Fixture, P extends {}> = (t: F & { params: P }) => Promise<void> | void;
+type TestFn<F extends Fixture, P extends {}> = (
+  t: F & { params: DeepReadonly<P> }
+) => Promise<void> | void;
 type BeforeAllSubcasesFn<S extends SubcaseBatchState, P extends {}> = (
-  s: S & { params: P }
+  s: S & { params: DeepReadonly<P> }
 ) => Promise<void> | void;
 
 export class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
@@ -124,12 +135,17 @@ export class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
 
     const test = new TestBuilder(parts, this.fixture, testCreationStack);
     this.tests.push(test);
-    return (test as unknown) as TestBuilderWithName<F>;
+    return test as unknown as TestBuilderWithName<F>;
   }
 
-  validate(): void {
+  validate(fileQuery: TestQueryMultiFile): void {
     for (const test of this.tests) {
-      test.validate();
+      const testQuery = new TestQueryMultiTest(
+        fileQuery.suite,
+        fileQuery.filePathParts,
+        test.testPath
+      );
+      test.validate(testQuery);
     }
   }
 
@@ -247,7 +263,7 @@ class TestBuilder<S extends SubcaseBatchState, F extends Fixture> {
     return this;
   }
 
-  specURL(url: string): this {
+  specURL(_url: string): this {
     return this;
   }
 
@@ -284,7 +300,7 @@ class TestBuilder<S extends SubcaseBatchState, F extends Fixture> {
   }
 
   /** Perform various validation/"lint" chenks. */
-  validate(): void {
+  validate(testQuery: TestQueryMultiTest): void {
     const testPathString = this.testPath.join(kPathSeparator);
     assert(this.testFn !== undefined, () => {
       let s = `Test is missing .fn(): ${testPathString}`;
@@ -294,12 +310,30 @@ class TestBuilder<S extends SubcaseBatchState, F extends Fixture> {
       return s;
     });
 
+    assert(
+      testQuery.toString().length <= kQueryMaxLength,
+      () =>
+        `Test query ${testQuery} is too long. Max length is ${kQueryMaxLength} characters. Please shorten names or reduce parameters.`
+    );
+
     if (this.testCases === undefined) {
       return;
     }
 
     const seen = new Set<string>();
     for (const [caseParams, subcases] of builderIterateCasesWithSubcases(this.testCases, null)) {
+      const caseQuery = new TestQuerySingleCase(
+        testQuery.suite,
+        testQuery.filePathParts,
+        testQuery.testPathParts,
+        caseParams
+      ).toString();
+      assert(
+        caseQuery.length <= kQueryMaxLength,
+        () =>
+          `Case query ${caseQuery} is too long. Max length is ${kQueryMaxLength} characters. Please shorten names or reduce parameters.`
+      );
+
       for (const subcaseParams of subcases ?? [{}]) {
         const params = mergeParams(caseParams, subcaseParams);
         assert(this.batchSize === 0 || !(kBatchParamName in params));
@@ -316,7 +350,7 @@ class TestBuilder<S extends SubcaseBatchState, F extends Fixture> {
         const testcaseStringUnique = stringifyPublicParamsUniquely(params);
         assert(
           !seen.has(testcaseStringUnique),
-          `Duplicate public test case params for test ${testPathString}: ${testcaseString}`
+          `Duplicate public test case+subcase params for test ${testPathString}: ${testcaseString}`
         );
         seen.add(testcaseStringUnique);
       }
@@ -491,6 +525,7 @@ class RunCaseSpecific implements RunCase {
       try {
         await inst.init();
         await this.fn(inst as Fixture & { params: {} });
+        rec.passed();
       } finally {
         // Runs as long as constructor succeeded, even if initialization or the test failed.
         await inst.finalize();

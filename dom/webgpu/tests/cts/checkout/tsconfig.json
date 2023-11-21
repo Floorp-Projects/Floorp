@@ -7,18 +7,32 @@
     "noEmit": true,
     /* Strict type-checking options */
     "allowJs": true,
+    "checkJs": false,
     "strict": true,
     /* tsc lint options */
+    "allowUnusedLabels": false,
+    "noImplicitOverride": true,
     "noImplicitReturns": true,
     /* These should be caught by eslint instead */
     "noFallthroughCasesInSwitch": false,
     "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "allowUnreachableCode": true,
+    /* Compiler warnings we intentionally don't use */
+    // - Would be nice, but produces lots of errors that probably aren't worth fixing
+    "noUncheckedIndexedAccess": false,
+    // - We could make our code pass this, but it doesn't seem to provide much value to us
+    "noPropertyAccessFromIndexSignature": false,
+    // - Doesn't work with @webgpu/types right now, also has annoying interactions and limited value
+    "exactOptionalPropertyTypes": false,
     /* Module Options */
     "moduleResolution": "node",
     "esModuleInterop": false,
+    "isolatedModules": true,
     "skipLibCheck": true,
     "target": "es2020"
+    // @tsconfig/strictest is a useful reference for new options:
+    // https://github.com/tsconfig/bases/blob/main/bases/strictest.json
   },
   "include": [
     "src/**/*.ts",

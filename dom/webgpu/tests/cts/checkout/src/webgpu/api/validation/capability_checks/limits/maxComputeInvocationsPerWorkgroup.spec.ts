@@ -1,6 +1,7 @@
+import { GPUTestBase } from '../../../../gpu_test.js';
+
 import {
   kMaximumLimitBaseParams,
-  getDefaultLimit,
   MaximumLimitValueTest,
   MaximumTestValue,
   makeLimitTestGroup,
@@ -75,11 +76,15 @@ function getDeviceLimitToRequest(
   }
 }
 
-function getTestWorkgroupSize(testValueName: MaximumTestValue, requestedLimit: number) {
+function getTestWorkgroupSize(
+  t: GPUTestBase,
+  testValueName: MaximumTestValue,
+  requestedLimit: number
+) {
   const maxDimensions = [
-    getDefaultLimit('maxComputeWorkgroupSizeX'),
-    getDefaultLimit('maxComputeWorkgroupSizeY'),
-    getDefaultLimit('maxComputeWorkgroupSizeZ'),
+    t.getDefaultLimit('maxComputeWorkgroupSizeX'),
+    t.getDefaultLimit('maxComputeWorkgroupSizeY'),
+    t.getDefaultLimit('maxComputeWorkgroupSizeZ'),
   ];
 
   switch (testValueName) {
@@ -91,13 +96,14 @@ function getTestWorkgroupSize(testValueName: MaximumTestValue, requestedLimit: n
 }
 
 function getDeviceLimitToRequestAndValueToTest(
+  t: GPUTestBase,
   limitValueTest: MaximumLimitValueTest,
   testValueName: MaximumTestValue,
   defaultLimit: number,
   maximumLimit: number
 ) {
   const requestedLimit = getDeviceLimitToRequest(limitValueTest, defaultLimit, maximumLimit);
-  const workgroupSize = getTestWorkgroupSize(testValueName, requestedLimit);
+  const workgroupSize = getTestWorkgroupSize(t, testValueName, requestedLimit);
   return {
     requestedLimit,
     workgroupSize,
@@ -115,6 +121,7 @@ g.test('createComputePipeline,at_over')
     const { defaultLimit, adapterLimit: maximumLimit } = t;
 
     const { requestedLimit, workgroupSize } = getDeviceLimitToRequestAndValueToTest(
+      t,
       limitTest,
       testValueName,
       defaultLimit,

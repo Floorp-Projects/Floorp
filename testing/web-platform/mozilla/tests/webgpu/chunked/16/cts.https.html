@@ -33,6 +33,16 @@
 </script>
 <script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
 
+<meta name=variant content='?q=webgpu:api,validation,createBindGroup:binding_resources,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,createBindGroup:storage_texture,usage:*'>
+<meta name=variant content='?q=webgpu:api,validation,createBindGroup:storage_texture,mip_level_count:*'>
+<meta name=variant content='?q=webgpu:api,validation,createBindGroup:storage_texture,format:*'>
+<meta name=variant content='?q=webgpu:api,validation,createBindGroup:sampler,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,createBindGroup:sampler,compare_function_with_binding_type:*'>
+<meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:duplicate_bindings:*'>
+<meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:maximum_binding_limit:*'>
+<meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:visibility:*'>
+<meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:visibility,VERTEX_shader_stage_buffer_type:*'>
 <meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:visibility,VERTEX_shader_stage_storage_texture_access:*'>
 <meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:multisampled_validation:*'>
 <meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:max_dynamic_buffers:*'>
@@ -48,13 +58,3 @@
 <meta name=variant content='?q=webgpu:api,validation,createTexture:zero_size_and_usage:*'>
 <meta name=variant content='?q=webgpu:api,validation,createTexture:dimension_type_and_format_compatibility:*'>
 <meta name=variant content='?q=webgpu:api,validation,createTexture:mipLevelCount,format:*'>
-<meta name=variant content='?q=webgpu:api,validation,createTexture:mipLevelCount,bound_check:*'>
-<meta name=variant content='?q=webgpu:api,validation,createTexture:mipLevelCount,bound_check,bigger_than_integer_bit_width:*'>
-<meta name=variant content='?q=webgpu:api,validation,createTexture:sampleCount,various_sampleCount_with_all_formats:*'>
-<meta name=variant content='?q=webgpu:api,validation,createTexture:sampleCount,valid_sampleCount_with_other_parameter_varies:*'>
-<meta name=variant content='?q=webgpu:api,validation,createTexture:sample_count,1d_2d_array_3d:*'>
-<meta name=variant content='?q=webgpu:api,validation,createTexture:texture_size,default_value_and_smallest_size,uncompressed_format:*'>
-<meta name=variant content='?q=webgpu:api,validation,createTexture:texture_size,default_value_and_smallest_size,compressed_format:*'>
-<meta name=variant content='?q=webgpu:api,validation,createTexture:texture_size,1d_texture:*'>
-<meta name=variant content='?q=webgpu:api,validation,createTexture:texture_size,2d_texture,uncompressed_format:*'>
-<meta name=variant content='?q=webgpu:api,validation,createTexture:texture_size,2d_texture,compressed_format:*'>

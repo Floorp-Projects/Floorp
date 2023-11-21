@@ -33,6 +33,16 @@
 </script>
 <script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
 
+<meta name=variant content='?q=webgpu:api,validation,queue,destroyed,buffer:setIndexBuffer:*'>
+<meta name=variant content='?q=webgpu:api,validation,queue,destroyed,buffer:resolveQuerySet:*'>
+<meta name=variant content='?q=webgpu:api,validation,queue,destroyed,query_set:beginOcclusionQuery:*'>
+<meta name=variant content='?q=webgpu:api,validation,queue,destroyed,query_set:writeTimestamp:*'>
+<meta name=variant content='?q=webgpu:api,validation,queue,destroyed,query_set:resolveQuerySet:*'>
+<meta name=variant content='?q=webgpu:api,validation,queue,destroyed,texture:writeTexture:*'>
+<meta name=variant content='?q=webgpu:api,validation,queue,destroyed,texture:copyTextureToTexture:*'>
+<meta name=variant content='?q=webgpu:api,validation,queue,destroyed,texture:copyBufferToTexture:*'>
+<meta name=variant content='?q=webgpu:api,validation,queue,destroyed,texture:copyTextureToBuffer:*'>
+<meta name=variant content='?q=webgpu:api,validation,queue,destroyed,texture:setBindGroup:*'>
 <meta name=variant content='?q=webgpu:api,validation,queue,destroyed,texture:beginRenderPass:*'>
 <meta name=variant content='?q=webgpu:api,validation,queue,submit:command_buffer,device_mismatch:*'>
 <meta name=variant content='?q=webgpu:api,validation,queue,writeBuffer:buffer_state:*'>
@@ -48,13 +58,3 @@
 <meta name=variant content='?q=webgpu:api,validation,render_pass,attachment_compatibility:render_pass_and_bundle,color_sparse:*'>
 <meta name=variant content='?q=webgpu:api,validation,render_pass,attachment_compatibility:render_pass_and_bundle,depth_format:*'>
 <meta name=variant content='?q=webgpu:api,validation,render_pass,attachment_compatibility:render_pass_and_bundle,sample_count:*'>
-<meta name=variant content='?q=webgpu:api,validation,render_pass,attachment_compatibility:render_pass_and_bundle,device_mismatch:*'>
-<meta name=variant content='?q=webgpu:api,validation,render_pass,attachment_compatibility:render_pass_or_bundle_and_pipeline,color_format:*'>
-<meta name=variant content='?q=webgpu:api,validation,render_pass,attachment_compatibility:render_pass_or_bundle_and_pipeline,color_count:*'>
-<meta name=variant content='?q=webgpu:api,validation,render_pass,attachment_compatibility:render_pass_or_bundle_and_pipeline,color_sparse:*'>
-<meta name=variant content='?q=webgpu:api,validation,render_pass,attachment_compatibility:render_pass_or_bundle_and_pipeline,depth_format:*'>
-<meta name=variant content='?q=webgpu:api,validation,render_pass,attachment_compatibility:render_pass_or_bundle_and_pipeline,depth_stencil_read_only_write_state:*'>
-<meta name=variant content='?q=webgpu:api,validation,render_pass,attachment_compatibility:render_pass_or_bundle_and_pipeline,sample_count:*'>
-<meta name=variant content='?q=webgpu:api,validation,render_pass,render_pass_descriptor:attachments,one_color_attachment:*'>
-<meta name=variant content='?q=webgpu:api,validation,render_pass,render_pass_descriptor:attachments,one_depth_stencil_attachment:*'>
-<meta name=variant content='?q=webgpu:api,validation,render_pass,render_pass_descriptor:attachments,same_size:*'>

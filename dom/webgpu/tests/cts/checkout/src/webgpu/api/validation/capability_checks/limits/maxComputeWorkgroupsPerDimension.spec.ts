@@ -7,7 +7,7 @@ const kCreateComputePipelineTypes = [
   'createComputePipeline',
   'createComputePipelineAsync',
 ] as const;
-type CreateComputePipelineType = typeof kCreateComputePipelineTypes[number];
+type CreateComputePipelineType = (typeof kCreateComputePipelineTypes)[number];
 
 async function createComputePipeline(
   device: GPUDevice,
@@ -76,4 +76,22 @@ g.test('dispatchWorkgroups,at_over')
         buffer.destroy();
       }
     );
+  });
+
+g.test('validate')
+  .desc(
+    `Test that ${limit} <= maxComputeWorkgroupSizeX x maxComputeWorkgroupSizeY x maxComputeWorkgroupSizeZ`
+  )
+  .fn(t => {
+    const { adapter, defaultLimit, adapterLimit } = t;
+    const defaultMaxComputeWorkgroupSizeProduct =
+      t.getDefaultLimit('maxComputeWorkgroupSizeX') *
+      t.getDefaultLimit('maxComputeWorkgroupSizeY') *
+      t.getDefaultLimit('maxComputeWorkgroupSizeZ');
+    const maxComputeWorkgroupSizeProduct =
+      adapter.limits.maxComputeWorkgroupSizeX *
+      adapter.limits.maxComputeWorkgroupSizeY *
+      adapter.limits.maxComputeWorkgroupSizeZ;
+    t.expect(defaultLimit <= defaultMaxComputeWorkgroupSizeProduct);
+    t.expect(adapterLimit <= maxComputeWorkgroupSizeProduct);
   });

@@ -1,6 +1,7 @@
 import { range } from '../../../../../common/util/util.js';
+import { kMaxColorAttachmentsToTest } from '../../../../capability_info.js';
 
-import { kMaximumLimitBaseParams, getDefaultLimit, makeLimitTestGroup } from './limit_utils.js';
+import { kMaximumLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
 
 function getPipelineDescriptor(device: GPUDevice, testValue: number): GPURenderPipelineDescriptor {
   const code = `
@@ -105,9 +106,19 @@ g.test('validate,maxColorAttachmentBytesPerSample')
   .desc(`Test ${limit} against maxColorAttachmentBytesPerSample`)
   .fn(t => {
     const { adapter, defaultLimit, adapterLimit: maximumLimit } = t;
-    const minColorAttachmentBytesPerSample = getDefaultLimit('maxColorAttachmentBytesPerSample');
+    const minColorAttachmentBytesPerSample = t.getDefaultLimit('maxColorAttachmentBytesPerSample');
     // The smallest attachment is 1 byte
     // so make sure maxColorAttachments < maxColorAttachmentBytesPerSample
     t.expect(defaultLimit <= minColorAttachmentBytesPerSample);
     t.expect(maximumLimit <= adapter.limits.maxColorAttachmentBytesPerSample);
+  });
+
+g.test('validate,kMaxColorAttachmentsToTest')
+  .desc(
+    `
+    Tests that kMaxColorAttachmentsToTest is large enough to test the limits of this device
+  `
+  )
+  .fn(t => {
+    t.expect(t.adapter.limits.maxColorAttachments <= kMaxColorAttachmentsToTest);
   });

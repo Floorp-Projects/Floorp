@@ -80,7 +80,8 @@ export function comparePublicParamsPaths(a: TestParams, b: TestParams): Ordering
   const commonKeys = new Set(aKeys.filter(k => k in b));
 
   for (const k of commonKeys) {
-    if (!objectEquals(a[k], b[k])) {
+    // Treat +/-0.0 as different query by distinguishing them in objectEquals
+    if (!objectEquals(a[k], b[k], true)) {
       return Ordering.Unordered;
     }
   }

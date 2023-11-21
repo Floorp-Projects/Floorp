@@ -5,7 +5,7 @@ export const description = `
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { assert, unreachable } from '../../../common/util/util.js';
+import { assert, makeValueTestVariant, unreachable } from '../../../common/util/util.js';
 import {
   allBindingEntries,
   bindingTypeInfo,
@@ -15,7 +15,6 @@ import {
   kBufferBindingTypes,
   kBufferUsages,
   kCompareFunctions,
-  kLimitInfo,
   kSamplerBindingTypes,
   kTextureUsages,
   kTextureViewDimensions,
@@ -467,19 +466,20 @@ g.test('minBindingSize')
       usage: GPUBufferUsage.STORAGE,
     });
 
-    t.expectValidationError(() => {
-      t.device.createBindGroup({
-        layout: bindGroupLayout,
-        entries: [
-          {
-            binding: 0,
-            resource: {
-              buffer: storageBuffer,
+    t.expectValidationError(
+      () => {
+        t.device.createBindGroup({
+          layout: bindGroupLayout,
+          entries: [
+            {
+              binding: 0,
+              resource: { buffer: storageBuffer },
             },
-          },
-        ],
-      });
-    }, minBindingSize !== undefined && size < minBindingSize);
+          ],
+        });
+      },
+      minBindingSize !== undefined && size < minBindingSize
+    );
   });
 
 g.test('buffer,resource_state')
@@ -882,24 +882,20 @@ g.test('buffer,resource_offset')
     u //
       .combine('type', kBufferBindingTypes)
       .beginSubcases()
-      .expand('offset', ({ type }) =>
-        type === 'uniform'
-          ? [
-              kLimitInfo.minUniformBufferOffsetAlignment.default,
-              kLimitInfo.minUniformBufferOffsetAlignment.default * 0.5,
-              kLimitInfo.minUniformBufferOffsetAlignment.default * 1.5,
-              kLimitInfo.minUniformBufferOffsetAlignment.default + 2,
-            ]
-          : [
-              kLimitInfo.minStorageBufferOffsetAlignment.default,
-              kLimitInfo.minStorageBufferOffsetAlignment.default * 0.5,
-              kLimitInfo.minStorageBufferOffsetAlignment.default * 1.5,
-              kLimitInfo.minStorageBufferOffsetAlignment.default + 2,
-            ]
-      )
+      .combine('offsetAddMult', [
+        { add: 0, mult: 0 },
+        { add: 0, mult: 0.5 },
+        { add: 0, mult: 1.5 },
+        { add: 2, mult: 0 },
+      ])
   )
   .fn(t => {
-    const { type, offset } = t.params;
+    const { type, offsetAddMult } = t.params;
+    const minAlignment =
+      t.device.limits[
+        type === 'uniform' ? 'minUniformBufferOffsetAlignment' : 'minStorageBufferOffsetAlignment'
+      ];
+    const offset = makeValueTestVariant(minAlignment, offsetAddMult);
 
     const bindGroupLayout = t.device.createBindGroupLayout({
       entries: [
@@ -911,14 +907,8 @@ g.test('buffer,resource_offset')
       ],
     });
 
-    let usage, isValid;
-    if (type === 'uniform') {
-      usage = GPUBufferUsage.UNIFORM;
-      isValid = offset % kLimitInfo.minUniformBufferOffsetAlignment.default === 0;
-    } else {
-      usage = GPUBufferUsage.STORAGE;
-      isValid = offset % kLimitInfo.minStorageBufferOffsetAlignment.default === 0;
-    }
+    const usage = type === 'uniform' ? GPUBufferUsage.UNIFORM : GPUBufferUsage.STORAGE;
+    const isValid = offset % minAlignment === 0;
 
     const buffer = t.device.createBuffer({
       size: 1024,
@@ -947,22 +937,23 @@ g.test('buffer,resource_binding_size')
       .beginSubcases()
       // Test a size of 1 (for uniform buffer) or 4 (for storage and read-only storage buffer)
       // then values just within and just above the limit.
-      .expand('bindingSize', ({ type }) =>
-        type === 'uniform'
-          ? [
-              1,
-              kLimitInfo.maxUniformBufferBindingSize.default,
-              kLimitInfo.maxUniformBufferBindingSize.default + 1,
-            ]
-          : [
-              4,
-              kLimitInfo.maxStorageBufferBindingSize.default,
-              kLimitInfo.maxStorageBufferBindingSize.default + 4,
-            ]
-      )
+      .combine('bindingSize', [
+        { base: 1, limit: 0 },
+        { base: 0, limit: 1 },
+        { base: 1, limit: 1 },
+      ])
   )
   .fn(t => {
-    const { type, bindingSize } = t.params;
+    const {
+      type,
+      bindingSize: { base, limit },
+    } = t.params;
+    const mult = type === 'uniform' ? 1 : 4;
+    const maxBindingSize =
+      t.device.limits[
+        type === 'uniform' ? 'maxUniformBufferBindingSize' : 'maxStorageBufferBindingSize'
+      ];
+    const bindingSize = base * mult + maxBindingSize * limit;
 
     const bindGroupLayout = t.device.createBindGroupLayout({
       entries: [
@@ -974,17 +965,12 @@ g.test('buffer,resource_binding_size')
       ],
     });
 
-    let usage, isValid;
-    if (type === 'uniform') {
-      usage = GPUBufferUsage.UNIFORM;
-      isValid = bindingSize <= kLimitInfo.maxUniformBufferBindingSize.default;
-    } else {
-      usage = GPUBufferUsage.STORAGE;
-      isValid = bindingSize <= kLimitInfo.maxStorageBufferBindingSize.default;
-    }
+    const usage = type === 'uniform' ? GPUBufferUsage.UNIFORM : GPUBufferUsage.STORAGE;
+    const isValid = bindingSize <= maxBindingSize;
 
+    // MAINTENANCE_TODO: Allocating the max size seems likely to fail. Refactor test.
     const buffer = t.device.createBuffer({
-      size: kLimitInfo.maxStorageBufferBindingSize.default,
+      size: maxBindingSize,
       usage,
     });
 
@@ -1007,26 +993,18 @@ g.test('buffer,effective_buffer_binding_size')
     u
       .combine('type', kBufferBindingTypes)
       .beginSubcases()
-      .expand('offset', ({ type }) =>
-        type === 'uniform'
-          ? [0, kLimitInfo.minUniformBufferOffsetAlignment.default]
-          : [0, kLimitInfo.minStorageBufferOffsetAlignment.default]
-      )
-      .expand('bufferSize', ({ type }) =>
-        type === 'uniform'
-          ? [
-              kLimitInfo.minUniformBufferOffsetAlignment.default + 8,
-              kLimitInfo.minUniformBufferOffsetAlignment.default + 10,
-            ]
-          : [
-              kLimitInfo.minStorageBufferOffsetAlignment.default + 8,
-              kLimitInfo.minStorageBufferOffsetAlignment.default + 10,
-            ]
-      )
+      .combine('offsetMult', [0, 1])
+      .combine('bufferSizeAddition', [8, 10])
       .combine('bindingSize', [undefined, 2, 4, 6])
   )
   .fn(t => {
-    const { type, offset, bufferSize, bindingSize } = t.params;
+    const { type, offsetMult, bufferSizeAddition, bindingSize } = t.params;
+    const minAlignment =
+      t.device.limits[
+        type === 'uniform' ? 'minUniformBufferOffsetAlignment' : 'minStorageBufferOffsetAlignment'
+      ];
+    const offset = minAlignment * offsetMult;
+    const bufferSize = minAlignment + bufferSizeAddition;
 
     const bindGroupLayout = t.device.createBindGroupLayout({
       entries: [

@@ -36,6 +36,18 @@ g.test('empty').fn(t => {
   t.expect(res.status === 'running');
   rec.finish();
 
+  t.expect(res.status === 'notrun');
+  t.expect(res.timems >= 0);
+});
+
+g.test('passed').fn(t => {
+  const mylog = new Logger({ overrideDebugMode: true });
+  const [rec, res] = mylog.record('one');
+
+  rec.start();
+  rec.passed();
+  rec.finish();
+
   t.expect(res.status === 'pass');
   t.expect(res.timems >= 0);
 });
@@ -59,10 +71,24 @@ g.test('skip').fn(t => {
 
   rec.start();
   rec.skipped(new SkipTestCase());
-  rec.debug(new Error('hello'));
   rec.finish();
 
   t.expect(res.status === 'skip');
+  t.expect(res.timems >= 0);
+});
+
+// Tests if there's some skips and at least one pass it's pass.
+g.test('skip_pass').fn(t => {
+  const mylog = new Logger({ overrideDebugMode: true });
+  const [rec, res] = mylog.record('one');
+
+  rec.start();
+  rec.skipped(new SkipTestCase());
+  rec.debug(new Error('hello'));
+  rec.skipped(new SkipTestCase());
+  rec.finish();
+
+  t.expect(res.status === 'pass');
   t.expect(res.timems >= 0);
 });
 

@@ -28,9 +28,9 @@ import {
 import { ValidationTest } from '../../validation_test.js';
 
 const kComputeCmds = ['dispatch', 'dispatchIndirect'] as const;
-type ComputeCmd = typeof kComputeCmds[number];
+type ComputeCmd = (typeof kComputeCmds)[number];
 const kRenderCmds = ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect'] as const;
-type RenderCmd = typeof kRenderCmds[number];
+type RenderCmd = (typeof kRenderCmds)[number];
 
 // Test resource type compatibility in pipeline and bind group
 // [1]: Need to add externalTexture
@@ -488,15 +488,8 @@ g.test('bgl_binding_mismatch')
       .combine('useU32Array', [false, true])
   )
   .fn(t => {
-    const {
-      encoderType,
-      call,
-      callWithZero,
-      bgBindings,
-      plBindings,
-      _success,
-      useU32Array,
-    } = t.params;
+    const { encoderType, call, callWithZero, bgBindings, plBindings, _success, useU32Array } =
+      t.params;
     const visibility =
       encoderType === 'compute pass' ? GPUShaderStage.COMPUTE : GPUShaderStage.VERTEX;
 
@@ -607,14 +600,8 @@ g.test('bgl_resource_type_mismatch')
       .expand('useU32Array', p => (p.bgResourceType === 'uniformBuf' ? [true, false] : [false]))
   )
   .fn(t => {
-    const {
-      encoderType,
-      call,
-      callWithZero,
-      bgResourceType,
-      plResourceType,
-      useU32Array,
-    } = t.params;
+    const { encoderType, call, callWithZero, bgResourceType, plResourceType, useU32Array } =
+      t.params;
 
     const bglEntries: Array<GPUBindGroupLayoutEntry> = [
       t.createBindGroupLayoutEntry(encoderType, bgResourceType, useU32Array),

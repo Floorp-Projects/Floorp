@@ -64,7 +64,8 @@ function gam_sRGB(RGB: Array<number>) {
  * using sRGB's own white, D65 (no chromatic adaptation)
  */
 function lin_sRGB_to_XYZ(rgb: Array<Array<number>>) {
-  const M = /* prettier-ignore */ [
+  /* prettier-ignore */
+  const M = [
     [506752 / 1228815,  87881 / 245763,   12673 /   70218],
     [ 87098 /  409605, 175762 / 245763,   12673 /  175545],
     [  7918 /  409605,  87881 / 737289, 1001167 / 1053270],
@@ -77,7 +78,8 @@ function lin_sRGB_to_XYZ(rgb: Array<Array<number>>) {
  * using sRGB's own white, D65 (no chromatic adaptation)
  */
 function XYZ_to_lin_sRGB(XYZ: Array<Array<number>>) {
-  const M = /* prettier-ignore */ [
+  /* prettier-ignore */
+  const M = [
     [  12831 /   3959,    -329 /    214, -1974 /   3959],
     [-851781 / 878810, 1648619 / 878810, 36519 / 878810],
     [    705 /  12673,   -2585 /  12673,   705 /    667],
@@ -109,7 +111,8 @@ function gam_P3(RGB: Array<number>) {
  * using display-p3's D65 (no chromatic adaptation)
  */
 function lin_P3_to_XYZ(rgb: Array<Array<number>>) {
-  const M = /* prettier-ignore */ [
+  /* prettier-ignore */
+  const M = [
     [608311 / 1250200, 189793 / 714400,  198249 / 1000160],
     [ 35783 /  156275, 247089 / 357200,  198249 / 2500400],
     [     0 /       1,  32229 / 714400, 5220557 / 5000800],
@@ -123,7 +126,8 @@ function lin_P3_to_XYZ(rgb: Array<Array<number>>) {
  * using display-p3's own white, D65 (no chromatic adaptation)
  */
 function XYZ_to_lin_P3(XYZ: Array<Array<number>>) {
-  const M = /* prettier-ignore */ [
+  /* prettier-ignore */
+  const M = [
     [446124 / 178915, -333277 / 357830, -72051 / 178915],
     [-14852 /  17905,   63121 /  35810,    423 /  17905],
     [ 11844 / 330415,  -50337 / 660830, 316169 / 330415],
@@ -139,12 +143,12 @@ function XYZ_to_lin_P3(XYZ: Array<Array<number>>) {
  * https://drafts.csswg.org/css-color/#predefined-to-predefined
  * display-p3 and sRGB share the same white points.
  */
-export function displayP3ToSrgb(pixel: {
+export function displayP3ToSrgb(pixel: { R: number; G: number; B: number; A: number }): {
   R: number;
   G: number;
   B: number;
   A: number;
-}): { R: number; G: number; B: number; A: number } {
+} {
   assert(
     pixel.R !== undefined && pixel.G !== undefined && pixel.B !== undefined,
     'color space conversion requires all of R, G and B components'
@@ -170,12 +174,12 @@ export function displayP3ToSrgb(pixel: {
  * https://drafts.csswg.org/css-color/#predefined-to-predefined
  * display-p3 and sRGB share the same white points.
  */
-export function srgbToDisplayP3(pixel: {
+export function srgbToDisplayP3(pixel: { R: number; G: number; B: number; A: number }): {
   R: number;
   G: number;
   B: number;
   A: number;
-}): { R: number; G: number; B: number; A: number } {
+} {
   assert(
     pixel.R !== undefined && pixel.G !== undefined && pixel.B !== undefined,
     'color space conversion requires all of R, G and B components'

@@ -11,10 +11,10 @@ import { TestGroupTest } from './test_group_test.js';
 import { UnitTest } from './unit_test.js';
 
 class FixtureToTest extends UnitTest {
-  public immediateAsyncExpectation<T>(fn: () => Promise<T>): Promise<T> {
+  public override immediateAsyncExpectation<T>(fn: () => Promise<T>): Promise<T> {
     return super.immediateAsyncExpectation(fn);
   }
-  public eventualAsyncExpectation<T>(fn: (niceStack: Error) => Promise<T>): void {
+  public override eventualAsyncExpectation<T>(fn: (niceStack: Error) => Promise<T>): void {
     super.eventualAsyncExpectation(fn);
   }
 }

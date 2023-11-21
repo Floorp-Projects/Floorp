@@ -12,7 +12,7 @@ function getVarName(i: number) {
 }
 
 class InterStageMatchingValidationTest extends CreateRenderPipelineValidationTest {
-  getVertexStateWithOutputs(outputs: string[]): GPUVertexState {
+  getVertexStateWithOutputs(outputs: readonly string[]): GPUVertexState {
     return {
       module: this.device.createShaderModule({
         code: `
@@ -32,7 +32,7 @@ class InterStageMatchingValidationTest extends CreateRenderPipelineValidationTes
   }
 
   getFragmentStateWithInputs(
-    inputs: string[],
+    inputs: readonly string[],
     hasBuiltinPosition: boolean = false
   ): GPUFragmentState {
     return {

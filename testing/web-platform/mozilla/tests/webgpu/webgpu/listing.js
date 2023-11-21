@@ -154,7 +154,7 @@ export const listing = [
       "command_buffer",
       "queries"
     ],
-    "readme": "TODO: test the behavior of creating/using/resolving queries.\n- pipeline statistics\n  TODO: pipeline statistics queries are removed from core; consider moving tests to another suite.\n- timestamp\n- nested (e.g. timestamp or PS query inside occlusion query), if any such cases are valid. Try\n  writing to the same query set (at same or different indices), if valid. Check results make sense.\n- start a query (all types) with no draw calls"
+    "readme": "TODO: test the behavior of creating/using/resolving queries.\n- timestamp\n- nested (e.g. timestamp inside occlusion query), if any such cases are valid. Try\n  writing to the same query set (at same or different indices), if valid. Check results make sense.\n- start a query (all types) with no draw calls"
   },
   {
     "file": [
@@ -1182,15 +1182,6 @@ export const listing = [
       "validation",
       "encoding",
       "queries",
-      "pipeline_statistics"
-    ]
-  },
-  {
-    "file": [
-      "api",
-      "validation",
-      "encoding",
-      "queries",
       "resolveQuerySet"
     ]
   },
@@ -1706,6 +1697,15 @@ export const listing = [
       "execution",
       "expression",
       "binary",
+      "af_division"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "binary",
       "af_matrix_addition"
     ]
   },
@@ -1725,6 +1725,15 @@ export const listing = [
       "expression",
       "binary",
       "af_multiplication"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "binary",
+      "af_remainder"
     ]
   },
   {
@@ -3159,6 +3168,15 @@ export const listing = [
       "execution",
       "expression",
       "unary",
+      "f16_conversion"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "unary",
       "f32_arithmetic"
     ]
   },
@@ -3301,6 +3319,14 @@ export const listing = [
       "execution",
       "flow_control",
       "while"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "memory_model",
+      "adjacent"
     ]
   },
   {

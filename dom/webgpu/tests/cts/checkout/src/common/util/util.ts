@@ -47,15 +47,29 @@ export function assertOK<T>(value: Error | T): T {
   return value;
 }
 
+/** Options for assertReject, shouldReject, and friends. */
+export type ExceptionCheckOptions = { allowMissingStack?: boolean; message?: string };
+
 /**
  * Resolves if the provided promise rejects; rejects if it does not.
  */
-export async function assertReject(p: Promise<unknown>, msg?: string): Promise<void> {
+export async function assertReject(
+  expectedName: string,
+  p: Promise<unknown>,
+  { allowMissingStack = false, message }: ExceptionCheckOptions = {}
+): Promise<void> {
   try {
     await p;
-    unreachable(msg);
+    unreachable(message);
   } catch (ex) {
-    // Assertion OK
+    // Asserted as expected
+    if (!allowMissingStack) {
+      const m = message ? ` (${message})` : '';
+      assert(
+        ex instanceof Error && typeof ex.stack === 'string',
+        'threw as expected, but missing stack' + m
+      );
+    }
   }
 }
 
@@ -146,7 +160,7 @@ export function assertNotSettledWithinTime(
     const handle = timeout(() => {
       resolve(undefined);
     }, ms);
-    p.finally(() => clearTimeout(handle));
+    void p.finally(() => clearTimeout(handle));
   });
   return Promise.race([rejectWhenSettled, timeoutPromise]);
 }
@@ -182,14 +196,24 @@ export function sortObjectByKey(v: { [k: string]: unknown }): { [k: string]: unk
 
 /**
  * Determines whether two JS values are equal, recursing into objects and arrays.
- * NaN is treated specially, such that `objectEquals(NaN, NaN)`.
+ * NaN is treated specially, such that `objectEquals(NaN, NaN)`. +/-0.0 are treated as equal
+ * by default, but can be opted to be distinguished.
+ * @param x the first JS values that get compared
+ * @param y the second JS values that get compared
+ * @param distinguishSignedZero if set to true, treat 0.0 and -0.0 as unequal. Default to false.
  */
-export function objectEquals(x: unknown, y: unknown): boolean {
+export function objectEquals(
+  x: unknown,
+  y: unknown,
+  distinguishSignedZero: boolean = false
+): boolean {
   if (typeof x !== 'object' || typeof y !== 'object') {
     if (typeof x === 'number' && typeof y === 'number' && Number.isNaN(x) && Number.isNaN(y)) {
       return true;
     }
-    return x === y;
+    // Object.is(0.0, -0.0) is false while (0.0 === -0.0) is true. Other than +/-0.0 and NaN cases,
+    // Object.is works in the same way as ===.
+    return distinguishSignedZero ? Object.is(x, y) : x === y;
   }
   if (x === null || y === null) return x === y;
   if (x.constructor !== y.constructor) return false;
@@ -282,28 +306,27 @@ const TypedArrayBufferViewInstances = [
   new Float64Array(),
 ] as const;
 
-export type TypedArrayBufferView = typeof TypedArrayBufferViewInstances[number];
+export type TypedArrayBufferView = (typeof TypedArrayBufferViewInstances)[number];
 
-export type TypedArrayBufferViewConstructor<
-  A extends TypedArrayBufferView = TypedArrayBufferView
-> = {
-  // Interface copied from Uint8Array, and made generic.
-  readonly prototype: A;
-  readonly BYTES_PER_ELEMENT: number;
+export type TypedArrayBufferViewConstructor<A extends TypedArrayBufferView = TypedArrayBufferView> =
+  {
+    // Interface copied from Uint8Array, and made generic.
+    readonly prototype: A;
+    readonly BYTES_PER_ELEMENT: number;
 
-  new (): A;
-  new (elements: Iterable<number>): A;
-  new (array: ArrayLike<number> | ArrayBufferLike): A;
-  new (buffer: ArrayBufferLike, byteOffset?: number, length?: number): A;
-  new (length: number): A;
+    new (): A;
+    new (elements: Iterable<number>): A;
+    new (array: ArrayLike<number> | ArrayBufferLike): A;
+    new (buffer: ArrayBufferLike, byteOffset?: number, length?: number): A;
+    new (length: number): A;
 
-  from(arrayLike: ArrayLike<number>): A;
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  from(arrayLike: Iterable<number>, mapfn?: (v: number, k: number) => number, thisArg?: any): A;
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): A;
-  of(...items: number[]): A;
-};
+    from(arrayLike: ArrayLike<number>): A;
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    from(arrayLike: Iterable<number>, mapfn?: (v: number, k: number) => number, thisArg?: any): A;
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): A;
+    of(...items: number[]): A;
+  };
 
 export const kTypedArrayBufferViews: {
   readonly [k: string]: TypedArrayBufferViewConstructor;
@@ -336,7 +359,7 @@ interface TypedArrayMap {
 
 type TypedArrayParam<K extends keyof TypedArrayMap> = {
   type: K;
-  data: number[];
+  data: readonly number[];
 };
 
 /**
@@ -377,7 +400,7 @@ export function typedArrayParam<K extends keyof TypedArrayMap>(
 
 export function createTypedArray<K extends keyof TypedArrayMap>(
   type: K,
-  data: number[]
+  data: readonly number[]
 ): TypedArrayMap[K] {
   return new kTypedArrayBufferViews[type](data) as TypedArrayMap[K];
 }
@@ -422,4 +445,32 @@ export function memcpy(
   dst: { dst: ArrayBuffer | TypedArrayBufferView; start?: number }
 ): void {
   subarrayAsU8(dst.dst, dst).set(subarrayAsU8(src.src, src));
+}
+
+/**
+ * Used to create a value that is specified by multiplying some runtime value
+ * by a constant and then adding a constant to it.
+ */
+export interface ValueTestVariant {
+  mult: number;
+  add: number;
+}
+
+/**
+ * Filters out SpecValues that are the same.
+ */
+export function filterUniqueValueTestVariants(valueTestVariants: ValueTestVariant[]) {
+  return new Map<string, ValueTestVariant>(
+    valueTestVariants.map(v => [`m:${v.mult},a:${v.add}`, v])
+  ).values();
+}
+
+/**
+ * Used to create a value that is specified by multiplied some runtime value
+ * by a constant and then adding a constant to it. This happens often in test
+ * with limits that can only be known at runtime and yet we need a way to
+ * add parameters to a test and those parameters must be constants.
+ */
+export function makeValueTestVariant(base: number, variant: ValueTestVariant) {
+  return base * variant.mult + variant.add;
 }

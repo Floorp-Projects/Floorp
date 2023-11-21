@@ -3,7 +3,7 @@ import { range } from '../../../../../common/util/util.js';
 import { kRenderEncoderTypes, kMaximumLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
 
 const kPipelineTypes = ['withoutLocations', 'withLocations'] as const;
-type PipelineType = typeof kPipelineTypes[number];
+type PipelineType = (typeof kPipelineTypes)[number];
 
 function getPipelineDescriptor(
   device: GPUDevice,
@@ -89,4 +89,12 @@ g.test('setVertexBuffer,at_over')
         buffer.destroy();
       }
     );
+  });
+
+g.test('validate,maxBindGroupsPlusVertexBuffers')
+  .desc(`Test that ${limit} <= maxBindGroupsPlusVertexBuffers`)
+  .fn(t => {
+    const { adapter, defaultLimit, adapterLimit } = t;
+    t.expect(defaultLimit <= t.getDefaultLimit('maxBindGroupsPlusVertexBuffers'));
+    t.expect(adapterLimit <= adapter.limits.maxBindGroupsPlusVertexBuffers);
   });

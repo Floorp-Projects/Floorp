@@ -14,6 +14,19 @@ import { makeListing } from './crawl.js';
 // Make sure that makeListing doesn't cache imported spec files. See crawl().
 process.env.STANDALONE_DEV_SERVER = '1';
 
+function usage(rc: number): void {
+  console.error(`\
+Usage:
+  tools/dev_server
+  tools/dev_server 0.0.0.0
+  npm start
+  npm start 0.0.0.0
+
+By default, serves on localhost only. If the argument 0.0.0.0 is passed, serves on all interfaces.
+`);
+  process.exit(rc);
+}
+
 const srcDir = path.resolve(__dirname, '../../');
 
 // Import the project's babel.config.js. We'll use the same config for the runtime compiler.
@@ -92,7 +105,7 @@ watcher.on('change', dirtyCompileCache);
 const app = express();
 
 // Send Chrome Origin Trial tokens
-app.use((req, res, next) => {
+app.use((_req, res, next) => {
   res.header('Origin-Trial', [
     // Token for http://localhost:8080
     'AvyDIV+RJoYs8fn3W6kIrBhWw0te0klraoz04mw/nPb8VTus3w5HCdy+vXqsSzomIH745CT6B5j1naHgWqt/tw8AAABJeyJvcmlnaW4iOiJodHRwOi8vbG9jYWxob3N0OjgwODAiLCJmZWF0dXJlIjoiV2ViR1BVIiwiZXhwaXJ5IjoxNjYzNzE4Mzk5fQ==',
@@ -110,7 +123,7 @@ app.use('/out-wpt', express.static(path.resolve(srcDir, '../out-wpt')));
 app.use('/docs/tsdoc', express.static(path.resolve(srcDir, '../docs/tsdoc')));
 
 // Serve a suite's listing.js file by crawling the filesystem for all tests.
-app.get('/out/:suite/listing.js', async (req, res, next) => {
+app.get('/out/:suite([a-zA-Z0-9_-]+)/listing.js', async (req, res, next) => {
   const suite = req.params['suite'];
 
   if (listingCache.has(suite)) {
@@ -162,28 +175,40 @@ app.get('/out/**/*.js', async (req, res, next) => {
   }
 });
 
-const host = '0.0.0.0';
-const port = 8080;
-// Find an available port, starting at 8080.
-portfinder.getPort({ host, port }, (err, port) => {
-  if (err) {
-    throw err;
+// Serve everything else (not .js) as static, and directories as directory listings.
+app.use('/out', serveIndex(path.resolve(srcDir, '../src')));
+app.use('/out', express.static(path.resolve(srcDir, '../src')));
+
+void (async () => {
+  let host = '127.0.0.1';
+  if (process.argv.length >= 3) {
+    if (process.argv.length !== 3) usage(1);
+    if (process.argv[2] === '0.0.0.0') {
+      host = '0.0.0.0';
+    } else {
+      usage(1);
+    }
   }
+
+  console.log(`Finding an available port on ${host}...`);
+  const kPortFinderStart = 8080;
+  const port = await portfinder.getPortPromise({ host, port: kPortFinderStart });
+
   watcher.on('ready', () => {
     // Listen on the available port.
     app.listen(port, host, () => {
       console.log('Standalone test runner running at:');
-      for (const iface of Object.values(os.networkInterfaces())) {
-        for (const details of iface || []) {
-          if (details.family === 'IPv4') {
-            console.log(`  http://${details.address}:${port}/standalone/`);
+      if (host === '0.0.0.0') {
+        for (const iface of Object.values(os.networkInterfaces())) {
+          for (const details of iface || []) {
+            if (details.family === 'IPv4') {
+              console.log(`  http://${details.address}:${port}/standalone/`);
+            }
           }
         }
+      } else {
+        console.log(`  http://${host}:${port}/standalone/`);
       }
     });
   });
-});
-
-// Serve everything else (not .js) as static, and directories as directory listings.
-app.use('/out', serveIndex(path.resolve(srcDir, '../src')));
-app.use('/out', express.static(path.resolve(srcDir, '../src')));
+})();

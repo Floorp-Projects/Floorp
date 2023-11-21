@@ -428,15 +428,15 @@ g.test('pack2x16float')
 
     // f32 subnormals
     // prettier-ignore
-    { inputs: [kValue.f32.subnormal.positive.max, 1], result: [0x3c000000, 0x3c008000, 0x3c000001] },
+    { inputs: [kValue.f32.positive.subnormal.max, 1], result: [0x3c000000, 0x3c008000, 0x3c000001] },
     // prettier-ignore
-    { inputs: [kValue.f32.subnormal.negative.min, 1], result: [0x3c008001, 0x3c000000, 0x3c008000] },
+    { inputs: [kValue.f32.negative.subnormal.min, 1], result: [0x3c008001, 0x3c000000, 0x3c008000] },
 
     // f16 subnormals
     // prettier-ignore
-    { inputs: [kValue.f16.subnormal.positive.max, 1], result: [0x3c0003ff, 0x3c000000, 0x3c008000] },
+    { inputs: [kValue.f16.positive.subnormal.max, 1], result: [0x3c0003ff, 0x3c000000, 0x3c008000] },
     // prettier-ignore
-    { inputs: [kValue.f16.subnormal.negative.min, 1], result: [0x03c0083ff, 0x3c000000, 0x3c008000] },
+    { inputs: [kValue.f16.negative.subnormal.min, 1], result: [0x03c0083ff, 0x3c000000, 0x3c008000] },
 
     // f16 out of bounds
     { inputs: [kValue.f16.positive.max + 1, 1], result: [undefined] },
@@ -481,8 +481,8 @@ g.test('pack2x16snorm')
     { inputs: [-0.1, -0.5], result: 0xc001f333 },
 
     // Subnormals
-    { inputs: [kValue.f32.subnormal.positive.max, 1], result: 0x7fff0000 },
-    { inputs: [kValue.f32.subnormal.negative.min, 1], result: 0x7fff0000 },
+    { inputs: [kValue.f32.positive.subnormal.max, 1], result: 0x7fff0000 },
+    { inputs: [kValue.f32.negative.subnormal.min, 1], result: 0x7fff0000 },
   ] as const)
   .fn(test => {
     const inputs = test.params.inputs;
@@ -506,7 +506,7 @@ g.test('pack2x16unorm')
     { inputs: [10, 10], result: 0xffffffff },
 
     // Subnormals
-    { inputs: [kValue.f32.subnormal.positive.max, 1], result: 0xffff0000 },
+    { inputs: [kValue.f32.positive.subnormal.max, 1], result: 0xffff0000 },
   ] as const)
   .fn(test => {
     const inputs = test.params.inputs;
@@ -542,8 +542,8 @@ g.test('pack4x8snorm')
     { inputs: [-0.1, -0.5, -0.1, -0.5], result: 0xc1f3c1f3 },
 
     // Subnormals
-    { inputs: [kValue.f32.subnormal.positive.max, 1, 1, 1], result: 0x7f7f7f00 },
-    { inputs: [kValue.f32.subnormal.negative.min, 1, 1, 1], result: 0x7f7f7f00 },
+    { inputs: [kValue.f32.positive.subnormal.max, 1, 1, 1], result: 0x7f7f7f00 },
+    { inputs: [kValue.f32.negative.subnormal.min, 1, 1, 1], result: 0x7f7f7f00 },
   ] as const)
   .fn(test => {
     const inputs = test.params.inputs;
@@ -570,7 +570,7 @@ g.test('pack4x8unorm')
     { inputs: [0.1, 0.5, 0.1, 0.5], result: 0x801a801a },
 
     // Subnormals
-    { inputs: [kValue.f32.subnormal.positive.max, 1, 1, 1], result: 0xffffff00 },
+    { inputs: [kValue.f32.positive.subnormal.max, 1, 1, 1], result: 0xffffff00 },
   ] as const)
   .fn(test => {
     const inputs = test.params.inputs;

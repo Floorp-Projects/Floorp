@@ -56,8 +56,8 @@ const fullscreenQuadWGSL = `
 class TextureSyncTestHelper extends OperationContextHelper {
   private texture: GPUTexture;
 
-  public readonly kTextureSize = [4, 4] as const;
-  public readonly kTextureFormat: EncodableTextureFormat = 'rgba8unorm';
+  public override readonly kTextureSize = [4, 4] as const;
+  public override readonly kTextureFormat: EncodableTextureFormat = 'rgba8unorm';
 
   constructor(
     t: GPUTest,

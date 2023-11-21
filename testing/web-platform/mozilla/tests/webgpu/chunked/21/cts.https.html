@@ -33,6 +33,16 @@
 </script>
 <script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
 
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,setVertexBuffer:offset_and_size_oob:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,state_tracking:all_needed_vertex_buffer_should_be_bound:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,state_tracking:all_needed_index_buffer_should_be_bound:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,state_tracking:vertex_buffers_inherit_from_previous_pipeline:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,render,state_tracking:vertex_buffers_do_not_inherit_between_render_passes:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,setBindGroup:state_and_binding_index:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,setBindGroup:bind_group,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,setBindGroup:dynamic_offsets_passed_but_not_expected:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,setBindGroup:dynamic_offsets_match_expectations_in_pass_encoder:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,setBindGroup:u32array_start_and_length:*'>
 <meta name=variant content='?q=webgpu:api,validation,encoding,cmds,setBindGroup:buffer_dynamic_offsets:*'>
 <meta name=variant content='?q=webgpu:api,validation,encoding,createRenderBundleEncoder:attachment_state,limits,maxColorAttachments:*'>
 <meta name=variant content='?q=webgpu:api,validation,encoding,createRenderBundleEncoder:attachment_state,limits,maxColorAttachmentBytesPerSample,aligned:*'>
@@ -48,13 +58,3 @@
 <meta name=variant content='?q=webgpu:api,validation,encoding,encoder_state:pass_end_invalid_order:*'>
 <meta name=variant content='?q=webgpu:api,validation,encoding,encoder_state:call_after_successful_finish:*'>
 <meta name=variant content='?q=webgpu:api,validation,encoding,encoder_state:pass_end_none:*'>
-<meta name=variant content='?q=webgpu:api,validation,encoding,encoder_state:pass_end_twice,basic:*'>
-<meta name=variant content='?q=webgpu:api,validation,encoding,encoder_state:pass_end_twice,render_pass_invalid:*'>
-<meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:bind_groups_and_pipeline_layout_mismatch:*'>
-<meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:buffer_binding,render_pipeline:*'>
-<meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:sampler_binding,render_pipeline:*'>
-<meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:bgl_binding_mismatch:*'>
-<meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:bgl_visibility_mismatch:*'>
-<meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:bgl_resource_type_mismatch:*'>
-<meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:empty_bind_group_layouts_requires_empty_bind_groups,compute_pass:*'>
-<meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:empty_bind_group_layouts_requires_empty_bind_groups,render_pass:*'>

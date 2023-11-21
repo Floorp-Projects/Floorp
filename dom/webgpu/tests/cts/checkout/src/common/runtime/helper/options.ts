@@ -100,7 +100,7 @@ function getOptionsInfoFromSearchString<Type extends CTSOptions>(
     const parser = info.parser || optionEnabled;
     optionValues[optionName] = parser(camelCaseToSnakeCase(optionName), searchParams);
   }
-  return (optionValues as unknown) as Type;
+  return optionValues as unknown as Type;
 }
 
 /**

@@ -54,7 +54,8 @@
     "@typescript-eslint/no-unnecessary-type-constraint": "warn",
     "@typescript-eslint/no-unused-vars": [
       "warn",
-      { "vars": "all", "args": "none", "varsIgnorePattern": "^_" }
+      // MAINTENANCE_TODO: Enable warnings for args
+      { "vars": "all", "args": "none", "varsIgnorePattern": "^_", "argsIgnorePattern": "^_" }
     ],
     "@typescript-eslint/prefer-as-const": "warn",
     "@typescript-eslint/prefer-for-of": "warn",

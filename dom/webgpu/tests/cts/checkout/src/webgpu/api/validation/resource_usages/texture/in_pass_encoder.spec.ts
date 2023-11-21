@@ -155,9 +155,7 @@ class TextureUsageTracking extends ValidationTest {
     };
   }
 
-  testValidationScope(
-    compute: boolean
-  ): {
+  testValidationScope(compute: boolean): {
     bindGroup0: GPUBindGroup;
     bindGroup1: GPUBindGroup;
     encoder: GPUCommandEncoder;
@@ -1018,15 +1016,8 @@ g.test('bindings_in_bundle')
       )
   )
   .fn(t => {
-    const {
-      binding0InBundle,
-      binding1InBundle,
-      type0,
-      type1,
-      _usage0,
-      _usage1,
-      _sampleCount,
-    } = t.params;
+    const { binding0InBundle, binding1InBundle, type0, type1, _usage0, _usage1, _sampleCount } =
+      t.params;
 
     // Two bindings are attached to the same texture view.
     const usage =
@@ -1274,9 +1265,12 @@ g.test('scope,dispatch')
 
     pass.end();
 
-    t.expectValidationError(() => {
-      encoder.finish();
-    }, dispatch !== 'none' && setBindGroup0 && setBindGroup1);
+    t.expectValidationError(
+      () => {
+        encoder.finish();
+      },
+      dispatch !== 'none' && setBindGroup0 && setBindGroup1
+    );
   });
 
 g.test('scope,basic,render')

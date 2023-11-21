@@ -309,13 +309,8 @@ drawIndexedIndirect as it is GPU-validated.
       .combine('indexFormat', ['uint16', 'uint32'] as GPUIndexFormat[])
   )
   .fn(t => {
-    const {
-      indexFormat,
-      bindingSizeInElements,
-      bufferSizeInElements,
-      drawIndexCount,
-      drawType,
-    } = t.params;
+    const { indexFormat, bindingSizeInElements, bufferSizeInElements, drawIndexCount, drawType } =
+      t.params;
 
     const indexElementSize = indexFormat === 'uint16' ? 2 : 4;
     const bindingSize = bindingSizeInElements * indexElementSize;
@@ -404,27 +399,46 @@ success/error as expected. Such set of buffer parameters should include cases li
     u
       // type of draw call
       .combine('type', ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect'] as const)
-      // the state of vertex step mode vertex buffer bound size
-      .combine('VBSize', ['zero', 'exile', 'enough'] as const)
-      // the state of instance step mode vertex buffer bound size
-      .combine('IBSize', ['zero', 'exile', 'enough'] as const)
+      // VBSize: the state of vertex step mode vertex buffer bound size
+      // IBSize: the state of instance step mode vertex buffer bound size
+      .combineWithParams([
+        { VBSize: 'exact', IBSize: 'exact' },
+        { VBSize: 'zero', IBSize: 'exact' },
+        { VBSize: 'oneTooSmall', IBSize: 'exact' },
+        { VBSize: 'exact', IBSize: 'zero' },
+        { VBSize: 'exact', IBSize: 'oneTooSmall' },
+      ] as const)
+      // the state of array stride
+      .combine('AStride', ['zero', 'exact', 'oversize'] as const)
+      .beginSubcases()
       // should the vertex stride count be zero
       .combine('VStride0', [false, true] as const)
       // should the instance stride count be zero
       .combine('IStride0', [false, true] as const)
-      // the state of array stride
-      .combine('AStride', ['zero', 'exact', 'oversize'] as const)
       // the factor for offset of attributes in vertex layout
       .combine('offset', [0, 1, 2, 7]) // the offset of attribute will be factor * MIN(4, sizeof(vertexFormat))
-      .beginSubcases()
-      .combine('setBufferOffset', [0, 200]) // must be a multiple of 4
+      .combine('setBufferOffset', [200]) // must be a multiple of 4
       .combine('attributeFormat', ['snorm8x2', 'float32', 'float16x4'] as GPUVertexFormat[])
-      .combine('vertexCount', [0, 1, 10000])
-      .combine('firstVertex', [0, 10000])
-      .filter(p => p.VStride0 === (p.firstVertex + p.vertexCount === 0))
-      .combine('instanceCount', [0, 1, 10000])
-      .combine('firstInstance', [0, 10000])
-      .filter(p => p.IStride0 === (p.firstInstance + p.instanceCount === 0))
+      .expandWithParams(p =>
+        p.VStride0
+          ? [{ firstVertex: 0, vertexCount: 0 }]
+          : [
+              { firstVertex: 0, vertexCount: 1 },
+              { firstVertex: 0, vertexCount: 10000 },
+              { firstVertex: 10000, vertexCount: 0 },
+              { firstVertex: 10000, vertexCount: 10000 },
+            ]
+      )
+      .expandWithParams(p =>
+        p.IStride0
+          ? [{ firstInstance: 0, instanceCount: 0 }]
+          : [
+              { firstInstance: 0, instanceCount: 1 },
+              { firstInstance: 0, instanceCount: 10000 },
+              { firstInstance: 10000, instanceCount: 0 },
+              { firstInstance: 10000, instanceCount: 10000 },
+            ]
+      )
       .unless(p => p.vertexCount === 10000 && p.instanceCount === 10000)
   )
   .fn(t => {
@@ -445,7 +459,7 @@ success/error as expected. Such set of buffer parameters should include cases li
     } = t.params;
 
     const attributeFormatInfo = kVertexFormatInfo[attributeFormat];
-    const formatSize = attributeFormatInfo.bytesPerComponent * attributeFormatInfo.componentCount;
+    const formatSize = attributeFormatInfo.byteSize;
     const attributeOffset = attributeOffsetFactor * Math.min(4, formatSize);
     const lastStride = attributeOffset + formatSize;
     let arrayStride = 0;
@@ -459,7 +473,7 @@ success/error as expected. Such set of buffer parameters should include cases li
     }
 
     const calcSetBufferSize = (
-      boundBufferSizeState: 'zero' | 'exile' | 'enough',
+      boundBufferSizeState: 'zero' | 'oneTooSmall' | 'exact',
       strideCount: number
     ): number => {
       let requiredBufferSize: number;
@@ -475,11 +489,11 @@ success/error as expected. Such set of buffer parameters should include cases li
           setBufferSize = 0;
           break;
         }
-        case 'exile': {
+        case 'oneTooSmall': {
           setBufferSize = requiredBufferSize - 1;
           break;
         }
-        case 'enough': {
+        case 'exact': {
           setBufferSize = requiredBufferSize;
           break;
         }
@@ -540,12 +554,8 @@ success/error as expected. Such set of buffer parameters should include cases li
 
           callDraw(t, renderEncoder, drawType, drawParam);
         } else {
-          const {
-            indexFormat,
-            indexCount,
-            firstIndex,
-            indexBufferSize,
-          } = kDefaultParameterForIndexedDraw;
+          const { indexFormat, indexCount, firstIndex, indexBufferSize } =
+            kDefaultParameterForIndexedDraw;
 
           const desc: GPUBufferDescriptor = {
             size: indexBufferSize,
@@ -566,11 +576,11 @@ success/error as expected. Such set of buffer parameters should include cases li
         }
 
         const isVertexBufferOOB =
-          boundVertexBufferSizeState !== 'enough' &&
+          boundVertexBufferSizeState !== 'exact' &&
           drawType === 'draw' && // drawIndirect, drawIndexed, and drawIndexedIndirect do not validate vertex step mode buffer
           !zeroVertexStrideCount; // vertex step mode buffer never OOB if stride count = 0
         const isInstanceBufferOOB =
-          boundInstanceBufferSizeState !== 'enough' &&
+          boundInstanceBufferSizeState !== 'exact' &&
           (drawType === 'draw' || drawType === 'drawIndexed') && // drawIndirect and drawIndexedIndirect do not validate instance step mode buffer
           !zeroInstanceStrideCount; // vertex step mode buffer never OOB if stride count = 0
         const isFinishSuccess = !isVertexBufferOOB && !isInstanceBufferOOB;
@@ -586,6 +596,11 @@ g.test(`buffer_binding_overlap`)
 In this test we test that binding one GPU buffer to multiple vertex buffer slot or both vertex
 buffer slot and index buffer will cause no validation error, with completely/partial overlap.
     - x= all draw types
+
+    TODO: The "Factor" parameters don't necessarily guarantee that we test all configurations
+    of buffers overlapping or not. This test should be refactored to test specific overlap cases,
+    and have fewer total parameterizations.
+    See https://github.com/gpuweb/cts/pull/3122#discussion_r1378623214
 `
   )
   .params(u =>
@@ -609,7 +624,7 @@ buffer slot and index buffer will cause no validation error, with completely/par
     // Compute the array stride for vertex step mode and instance step mode attribute
     const attributeFormat = 'float32x4';
     const attributeFormatInfo = kVertexFormatInfo[attributeFormat];
-    const formatSize = attributeFormatInfo.bytesPerComponent * attributeFormatInfo.componentCount;
+    const formatSize = attributeFormatInfo.byteSize;
     const attributeOffset = 0;
     const lastStride = attributeOffset + formatSize;
     let arrayStride = 0;

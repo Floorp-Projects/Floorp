@@ -1,6 +1,6 @@
 import { TestCaseRecorder } from '../internal/logging/test_case_recorder.js';
 import { JSONWithUndefined } from '../internal/params_utils.js';
-import { assert, unreachable } from '../util/util.js';
+import { assert, ExceptionCheckOptions, unreachable } from '../util/util.js';
 
 export class SkipTestCase extends Error {}
 export class UnexpectedPassError extends Error {}
@@ -150,7 +150,7 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
         o instanceof WebGLRenderingContext ||
         o instanceof WebGL2RenderingContext
       ) {
-        this.objectsToCleanUp.push((o as unknown) as DestroyableObject);
+        this.objectsToCleanUp.push(o as unknown as DestroyableObject);
       }
     }
     return o;
@@ -164,6 +164,13 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
   /** Throws an exception marking the subcase as skipped. */
   skip(msg: string): never {
     throw new SkipTestCase(msg);
+  }
+
+  /** Throws an exception marking the subcase as skipped if condition is true */
+  skipIf(cond: boolean, msg: string | (() => string) = '') {
+    if (cond) {
+      this.skip(typeof msg === 'function' ? msg() : msg);
+    }
   }
 
   /** Log a warning and increase the result status to "Warn". */
@@ -230,16 +237,26 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
   }
 
   /** Expect that the provided promise rejects, with the provided exception name. */
-  shouldReject(expectedName: string, p: Promise<unknown>, msg?: string): void {
+  shouldReject(
+    expectedName: string,
+    p: Promise<unknown>,
+    { allowMissingStack = false, message }: ExceptionCheckOptions = {}
+  ): void {
     this.eventualAsyncExpectation(async niceStack => {
-      const m = msg ? ': ' + msg : '';
+      const m = message ? ': ' + message : '';
       try {
         await p;
         niceStack.message = 'DID NOT REJECT' + m;
         this.rec.expectationFailed(niceStack);
       } catch (ex) {
-        niceStack.message = 'rejected as expected' + m;
         this.expectErrorValue(expectedName, ex, niceStack);
+        if (!allowMissingStack) {
+          if (!(ex instanceof Error && typeof ex.stack === 'string')) {
+            const exMessage = ex instanceof Error ? ex.message : '?';
+            niceStack.message = `rejected as expected, but missing stack (${exMessage})${m}`;
+            this.rec.expectationFailed(niceStack);
+          }
+        }
       }
     });
   }
@@ -250,8 +267,12 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
    *
    * MAINTENANCE_TODO: Change to `string | false` so the exception name is always checked.
    */
-  shouldThrow(expectedError: string | boolean, fn: () => void, msg?: string): void {
-    const m = msg ? ': ' + msg : '';
+  shouldThrow(
+    expectedError: string | boolean,
+    fn: () => void,
+    { allowMissingStack = false, message }: ExceptionCheckOptions = {}
+  ) {
+    const m = message ? ': ' + message : '';
     try {
       fn();
       if (expectedError === false) {
@@ -264,6 +285,11 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
         this.rec.expectationFailed(new Error('threw unexpectedly' + m));
       } else {
         this.expectErrorValue(expectedError, ex, new Error(m));
+        if (!allowMissingStack) {
+          if (!(ex instanceof Error && typeof ex.stack === 'string')) {
+            this.rec.expectationFailed(new Error('threw as expected, but missing stack' + m));
+          }
+        }
       }
     }
   }

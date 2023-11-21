@@ -287,10 +287,16 @@ const kAbstractFloat = new Set([
     .desc(
       `
 Test that valid half floats are accepted, and invalid half floats are rejected
-
-TODO: Need to inject the 'enable fp16' into the shader to enable the parsing.
 `
     )
     .params(u => u.combine('val', new Set([...kValidF16, ...kInvalidF16])).beginSubcases())
-    .unimplemented();
+    .beforeAllSubcases(t => {
+      t.selectDeviceOrSkipTestCase('shader-f16');
+    })
+    .fn(t => {
+      const { val } = t.params;
+      const code = `var test: f16 = ${val};`;
+      const extensionList = ['f16'];
+      t.expectCompileResult(kValidF16.has(val), t.wrapInEntryPoint(code, extensionList));
+    });
 }

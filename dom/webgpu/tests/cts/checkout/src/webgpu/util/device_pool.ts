@@ -1,13 +1,13 @@
 import { SkipTestCase, TestCaseRecorder } from '../../common/framework/fixture.js';
 import { attemptGarbageCollection } from '../../common/util/collect_garbage.js';
-import { getGPU } from '../../common/util/navigator_gpu.js';
+import { getGPU, getDefaultRequestAdapterOptions } from '../../common/util/navigator_gpu.js';
 import {
   assert,
   raceWithRejectOnTimeout,
   assertReject,
   unreachable,
 } from '../../common/util/util.js';
-import { kLimitInfo, kLimits } from '../capability_info.js';
+import { getDefaultLimits, kLimits } from '../capability_info.js';
 
 export interface DeviceProvider {
   readonly device: GPUDevice;
@@ -229,10 +229,16 @@ function canonicalizeDescriptor(
   /** Canonicalized version of the requested limits: in canonical order, with only values which are
    * specified _and_ non-default. */
   const limitsCanonicalized: Record<string, number> = {};
+  // MAINTENANCE_TODO: Remove cast when @webgpu/types includes compatibilityMode
+  const adapterOptions = getDefaultRequestAdapterOptions() as unknown as {
+    compatibilityMode?: boolean;
+  };
+  const featureLevel = adapterOptions?.compatibilityMode ? 'compatibility' : 'core';
+  const defaultLimits = getDefaultLimits(featureLevel);
   if (desc.requiredLimits) {
     for (const limit of kLimits) {
       const requestedValue = desc.requiredLimits[limit];
-      const defaultValue = kLimitInfo[limit].default;
+      const defaultValue = defaultLimits[limit].default;
       // Skip adding a limit to limitsCanonicalized if it is the same as the default.
       if (requestedValue !== undefined && requestedValue !== defaultValue) {
         limitsCanonicalized[limit] = requestedValue;
@@ -372,10 +378,10 @@ class DeviceHolder implements DeviceProvider {
       await this.device.queue.onSubmittedWorkDone();
     }
 
-    await assertReject(
-      this.device.popErrorScope(),
-      'There was an extra error scope on the stack after a test'
-    );
+    await assertReject('OperationError', this.device.popErrorScope(), {
+      allowMissingStack: true,
+      message: 'There was an extra error scope on the stack after a test',
+    });
 
     if (gpuOutOfMemoryError !== null) {
       assert(gpuOutOfMemoryError instanceof GPUOutOfMemoryError);

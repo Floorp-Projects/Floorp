@@ -21,7 +21,7 @@ class ErrorScopeTests extends Fixture {
     return this._device;
   }
 
-  async init(): Promise<void> {
+  override async init(): Promise<void> {
     await super.init();
     const gpu = getGPU(this.rec);
     const adapter = await gpu.requestAdapter();

@@ -14,80 +14,23 @@ import { abstractBinary } from './binary.js';
 
 export const g = makeTestGroup(GPUTest);
 
-export const d = makeCaseCache('abstractBinary/af_matrix_subtraction', {
-  mat2x2: () => {
-    return FP.abstract.generateMatrixPairToMatrixCases(
-      sparseMatrixF64Range(2, 2),
-      sparseMatrixF64Range(2, 2),
-      'finite',
-      FP.abstract.subtractionMatrixMatrixInterval
-    );
-  },
-  mat2x3: () => {
-    return FP.abstract.generateMatrixPairToMatrixCases(
-      sparseMatrixF64Range(2, 3),
-      sparseMatrixF64Range(2, 3),
-      'finite',
-      FP.abstract.subtractionMatrixMatrixInterval
-    );
-  },
-  mat2x4: () => {
-    return FP.abstract.generateMatrixPairToMatrixCases(
-      sparseMatrixF64Range(2, 4),
-      sparseMatrixF64Range(2, 4),
-      'finite',
-      FP.abstract.subtractionMatrixMatrixInterval
-    );
-  },
-  mat3x2: () => {
-    return FP.abstract.generateMatrixPairToMatrixCases(
-      sparseMatrixF64Range(3, 2),
-      sparseMatrixF64Range(3, 2),
-      'finite',
-      FP.abstract.subtractionMatrixMatrixInterval
-    );
-  },
-  mat3x3: () => {
-    return FP.abstract.generateMatrixPairToMatrixCases(
-      sparseMatrixF64Range(3, 3),
-      sparseMatrixF64Range(3, 3),
-      'finite',
-      FP.abstract.subtractionMatrixMatrixInterval
-    );
-  },
-  mat3x4: () => {
-    return FP.abstract.generateMatrixPairToMatrixCases(
-      sparseMatrixF64Range(3, 4),
-      sparseMatrixF64Range(3, 4),
-      'finite',
-      FP.abstract.subtractionMatrixMatrixInterval
-    );
-  },
-  mat4x2: () => {
-    return FP.abstract.generateMatrixPairToMatrixCases(
-      sparseMatrixF64Range(4, 2),
-      sparseMatrixF64Range(4, 2),
-      'finite',
-      FP.abstract.subtractionMatrixMatrixInterval
-    );
-  },
-  mat4x3: () => {
-    return FP.abstract.generateMatrixPairToMatrixCases(
-      sparseMatrixF64Range(4, 3),
-      sparseMatrixF64Range(4, 3),
-      'finite',
-      FP.abstract.subtractionMatrixMatrixInterval
-    );
-  },
-  mat4x4: () => {
-    return FP.abstract.generateMatrixPairToMatrixCases(
-      sparseMatrixF64Range(4, 4),
-      sparseMatrixF64Range(4, 4),
-      'finite',
-      FP.abstract.subtractionMatrixMatrixInterval
-    );
-  },
-});
+// Cases: matCxR
+const mat_cases = ([2, 3, 4] as const)
+  .flatMap(cols =>
+    ([2, 3, 4] as const).map(rows => ({
+      [`mat${cols}x${rows}`]: () => {
+        return FP.abstract.generateMatrixPairToMatrixCases(
+          sparseMatrixF64Range(cols, rows),
+          sparseMatrixF64Range(cols, rows),
+          'finite',
+          FP.abstract.subtractionMatrixMatrixInterval
+        );
+      },
+    }))
+  )
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
+export const d = makeCaseCache('binary/af_matrix_subtraction', mat_cases);
 
 g.test('matrix')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')

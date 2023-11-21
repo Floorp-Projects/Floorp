@@ -14,7 +14,7 @@ export const kShaderStages = ['vertex', 'fragment', 'compute'] as const;
 
 /**
  * declareEntrypoint emits the WGSL to declare an entry point with the name, stage and body.
- * The generated function will have an appropriate return type and return statement, so that @p body
+ * The generated function will have an appropriate return type and return statement, so that `body`
  * does not have to change between stage.
  * @param arg - arg specifies the
  * optional entry point function name, the shader stage, and the body of the
