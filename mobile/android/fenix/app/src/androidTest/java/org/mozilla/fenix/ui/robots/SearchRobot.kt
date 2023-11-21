@@ -6,6 +6,7 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.util.Log
 import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertAny
@@ -48,6 +49,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
+import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.waitForObjects
@@ -80,7 +82,13 @@ class SearchRobot {
         }
     }
 
-    fun verifySearchEngineSuggestionResults(rule: ComposeTestRule, vararg searchSuggestions: String, searchTerm: String) {
+    fun verifySearchEngineSuggestionResults(
+        rule: ComposeTestRule,
+        vararg searchSuggestions: String,
+        searchTerm: String,
+        shouldEditKeyword: Boolean = false,
+        numberOfDeletionSteps: Int = 0,
+    ) {
         rule.waitForIdle()
         for (i in 1..RETRY_COUNT) {
             try {
@@ -99,6 +107,9 @@ class SearchRobot {
                     homeScreen {
                     }.openSearch {
                         typeSearch(searchTerm)
+                        if (shouldEditKeyword) {
+                            deleteSearchKeywordCharacters(numberOfDeletionSteps = numberOfDeletionSteps)
+                        }
                     }
                 }
             }
@@ -284,6 +295,14 @@ class SearchRobot {
                     PositionAssertions.isCompletelyAbove(withId(R.id.keyboard_divider))
                 },
             )
+    }
+
+    fun deleteSearchKeywordCharacters(numberOfDeletionSteps: Int) {
+        for (i in 1..numberOfDeletionSteps) {
+            mDevice.pressDelete()
+            Log.i(Constants.TAG, "deleteSearchKeywordCharacters: Pressed keyboard delete button $i times")
+            mDevice.waitForWindowUpdate(appName, waitingTimeShort)
+        }
     }
 
     class Transition {
