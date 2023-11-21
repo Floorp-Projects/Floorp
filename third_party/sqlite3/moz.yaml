@@ -1,0 +1,49 @@
+schema: 1
+
+bugzilla:
+  product: Toolkit
+  component: Storage
+
+origin:
+  name: SQLite
+  description: >
+    SQLite is a C-language library that implements a small, fast,
+    self-contained, high-reliability, full-featured, SQL database engine.
+  url: https://www.sqlite.org/
+  release: version-3.43.2 (2023-10-10T12:14:04+00:00).
+  revision: version-3.43.2
+  license: Public Domain
+  license-file: LICENSE.md
+  notes: >
+    We have Mozilla specific moz.build and sqlite.symbols in src/ to build the
+    engine. SQLite extensions with similar build files are in ext/.
+    Since this tracks the latest Github tag, if non-versioning tags are added
+    then the update script will fail, and you may have to pass a specific
+    --revision with the appropriate github tag to mach vendor.
+
+vendoring:
+  url: https://github.com/sqlite/sqlite
+  source-hosting: github
+  tracking: tag
+  vendor-directory: third_party/sqlite3/src
+  skip-vendoring-steps:
+    - hg-add
+    - update-moz-build
+  exclude:
+    - "**"
+  include:
+    - LICENSE.md
+    - VERSION
+  keep:
+    - moz.build
+    - sqlite3.c
+    - sqlite3.h
+    - sqlite.symbols
+
+  update-actions:
+    - action: move-file
+      from: '{vendor_dir}/VERSION'
+      to: '{vendor_dir}/VERSION.txt'
+    - action: run-script
+      script: '{yaml_dir}/vendor.sh'
+      cwd: '{yaml_dir}'
