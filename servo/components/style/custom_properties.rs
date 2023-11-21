@@ -930,6 +930,9 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                     if let Some(registration) = custom_registration {
                         let mut input = ParserInput::new(&unparsed_value.css);
                         let mut input = Parser::new(&mut input);
+                        // TODO(bug 1856522): Substitute custom property references in font-*
+                        // declarations before computing registered custom properties containing
+                        // font-relative units.
                         if let Ok(value) = SpecifiedRegisteredValue::compute(
                             &mut input,
                             registration,
