@@ -10,11 +10,16 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
+rust-version = "1.60.0"
 name = "aho-corasick"
-version = "0.7.20"
+version = "1.1.0"
 authors = ["Andrew Gallant <jamslam@gmail.com>"]
-exclude = ["/aho-corasick-debug"]
+exclude = [
+    "/aho-corasick-debug",
+    "/benchmarks",
+    "/tmp",
+]
 autotests = false
 description = "Fast multiple substring searching."
 homepage = "https://github.com/BurntSushi/aho-corasick"
@@ -23,28 +28,47 @@ keywords = [
     "string",
     "search",
     "text",
-    "aho",
+    "pattern",
     "multi",
 ]
 categories = ["text-processing"]
 license = "Unlicense OR MIT"
 repository = "https://github.com/BurntSushi/aho-corasick"
 
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = [
+    "--cfg",
+    "docsrs",
+    "--generate-link-to-definition",
+]
+
 [profile.bench]
-debug = true
+debug = 2
 
 [profile.release]
-debug = true
+debug = 2
 
 [lib]
 name = "aho_corasick"
 
+[dependencies.log]
+version = "0.4.17"
+optional = true
+
 [dependencies.memchr]
 version = "2.4.0"
+optional = true
 default-features = false
 
-[dev-dependencies]
+[dev-dependencies.doc-comment]
+version = "0.3.3"
 
 [features]
-default = ["std"]
-std = ["memchr/std"]
+default = [
+    "std",
+    "perf-literal",
+]
+logging = ["dep:log"]
+perf-literal = ["dep:memchr"]
+std = ["memchr?/std"]

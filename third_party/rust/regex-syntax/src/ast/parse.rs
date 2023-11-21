@@ -2,17 +2,26 @@
 This module provides a regular expression parser.
 */
 
-use std::borrow::Borrow;
-use std::cell::{Cell, RefCell};
-use std::mem;
-use std::result;
+use core::{
+    borrow::Borrow,
+    cell::{Cell, RefCell},
+    mem,
+};
 
-use crate::ast::{self, Ast, Position, Span};
-use crate::either::Either;
+use alloc::{
+    boxed::Box,
+    string::{String, ToString},
+    vec,
+    vec::Vec,
+};
 
-use crate::is_meta_character;
+use crate::{
+    ast::{self, Ast, Position, Span},
+    either::Either,
+    is_escapeable_character, is_meta_character,
+};
 
-type Result<T> = result::Result<T, ast::Error>;
+type Result<T> = core::result::Result<T, ast::Error>;
 
 /// A primitive is an expression with no sub-expressions. This includes
 /// literals, assertions and non-set character classes. This representation
@@ -100,11 +109,11 @@ fn is_hex(c: char) -> bool {
 /// If `first` is true, then `c` is treated as the first character in the
 /// group name (which must be alphabetic or underscore).
 fn is_capture_char(c: char, first: bool) -> bool {
-    c == '_'
-        || (!first
-            && (('0' <= c && c <= '9') || c == '.' || c == '[' || c == ']'))
-        || ('A' <= c && c <= 'Z')
-        || ('a' <= c && c <= 'z')
+    if first {
+        c == '_' || c.is_alphabetic()
+    } else {
+        c == '_' || c == '.' || c == '[' || c == ']' || c.is_alphanumeric()
+    }
 }
 
 /// A builder for a regular expression parser.
@@ -162,7 +171,7 @@ impl ParserBuilder {
     /// constant stack space and moving the call stack to the heap), other
     /// crates may.
     ///
-    /// This limit is not checked until the entire Ast is parsed. Therefore,
+    /// This limit is not checked until the entire AST is parsed. Therefore,
     /// if callers want to put a limit on the amount of heap space used, then
     /// they should impose a limit on the length, in bytes, of the concrete
     /// pattern string. In particular, this is viable since this parser
@@ -220,8 +229,7 @@ impl ParserBuilder {
 /// abstract syntax tree. The size of the tree is proportional to the length
 /// of the regular expression pattern.
 ///
-/// A `Parser` can be configured in more detail via a
-/// [`ParserBuilder`](struct.ParserBuilder.html).
+/// A `Parser` can be configured in more detail via a [`ParserBuilder`].
 #[derive(Clone, Debug)]
 pub struct Parser {
     /// The current position of the parser.
@@ -327,8 +335,7 @@ impl Parser {
     /// The parser can be run with either the `parse` or `parse_with_comments`
     /// methods. The parse methods return an abstract syntax tree.
     ///
-    /// To set configuration options on the parser, use
-    /// [`ParserBuilder`](struct.ParserBuilder.html).
+    /// To set configuration options on the parser, use [`ParserBuilder`].
     pub fn new() -> Parser {
         ParserBuilder::new().build()
     }
@@ -376,7 +383,7 @@ impl<'s, P: Borrow<Parser>> ParserI<'s, P> {
 
     /// Return a reference to the pattern being parsed.
     fn pattern(&self) -> &str {
-        self.pattern.borrow()
+        self.pattern
     }
 
     /// Create a new error with the given span and error type.
@@ -1195,12 +1202,16 @@ impl<'s, P: Borrow<Parser>> ParserI<'s, P> {
             ));
         }
         let inner_span = self.span();
-        if self.bump_if("?P<") {
+        let mut starts_with_p = true;
+        if self.bump_if("?P<") || {
+            starts_with_p = false;
+            self.bump_if("?<")
+        } {
             let capture_index = self.next_capture_index(open_span)?;
-            let cap = self.parse_capture_name(capture_index)?;
+            let name = self.parse_capture_name(capture_index)?;
             Ok(Either::Right(ast::Group {
                 span: open_span,
-                kind: ast::GroupKind::CaptureName(cap),
+                kind: ast::GroupKind::CaptureName { starts_with_p, name },
                 ast: Box::new(Ast::Empty(self.span())),
             }))
         } else if self.bump_if("?") {
@@ -1370,6 +1381,7 @@ impl<'s, P: Borrow<Parser>> ParserI<'s, P> {
             's' => Ok(ast::Flag::DotMatchesNewLine),
             'U' => Ok(ast::Flag::SwapGreed),
             'u' => Ok(ast::Flag::Unicode),
+            'R' => Ok(ast::Flag::CRLF),
             'x' => Ok(ast::Flag::IgnoreWhitespace),
             _ => {
                 Err(self
@@ -1483,7 +1495,14 @@ impl<'s, P: Borrow<Parser>> ParserI<'s, P> {
         if is_meta_character(c) {
             return Ok(Primitive::Literal(ast::Literal {
                 span,
-                kind: ast::LiteralKind::Punctuation,
+                kind: ast::LiteralKind::Meta,
+                c,
+            }));
+        }
+        if is_escapeable_character(c) {
+            return Ok(Primitive::Literal(ast::Literal {
+                span,
+                kind: ast::LiteralKind::Superfluous,
                 c,
             }));
         }
@@ -1501,9 +1520,6 @@ impl<'s, P: Borrow<Parser>> ParserI<'s, P> {
             'n' => special(ast::SpecialLiteralKind::LineFeed, '\n'),
             'r' => special(ast::SpecialLiteralKind::CarriageReturn, '\r'),
             'v' => special(ast::SpecialLiteralKind::VerticalTab, '\x0B'),
-            ' ' if self.ignore_whitespace() => {
-                special(ast::SpecialLiteralKind::Space, ' ')
-            }
             'A' => Ok(Primitive::Assertion(ast::Assertion {
                 span,
                 kind: ast::AssertionKind::StartText,
@@ -1533,9 +1549,6 @@ impl<'s, P: Borrow<Parser>> ParserI<'s, P> {
     /// Assuming the preconditions are met, this routine can never fail.
     #[inline(never)]
     fn parse_octal(&self) -> ast::Literal {
-        use std::char;
-        use std::u32;
-
         assert!(self.parser().octal);
         assert!('0' <= self.char() && self.char() <= '7');
         let start = self.pos();
@@ -1600,9 +1613,6 @@ impl<'s, P: Borrow<Parser>> ParserI<'s, P> {
         &self,
         kind: ast::HexLiteralKind,
     ) -> Result<ast::Literal> {
-        use std::char;
-        use std::u32;
-
         let mut scratch = self.parser().scratch.borrow_mut();
         scratch.clear();
 
@@ -1646,9 +1656,6 @@ impl<'s, P: Borrow<Parser>> ParserI<'s, P> {
         &self,
         kind: ast::HexLiteralKind,
     ) -> Result<ast::Literal> {
-        use std::char;
-        use std::u32;
-
         let mut scratch = self.parser().scratch.borrow_mut();
         scratch.clear();
 
@@ -2146,7 +2153,7 @@ impl<'p, 's, P: Borrow<Parser>> NestLimiter<'p, 's, P> {
         let new = self.depth.checked_add(1).ok_or_else(|| {
             self.p.error(
                 span.clone(),
-                ast::ErrorKind::NestLimitExceeded(::std::u32::MAX),
+                ast::ErrorKind::NestLimitExceeded(u32::MAX),
             )
         })?;
         let limit = self.p.parser().nest_limit;
@@ -2297,10 +2304,13 @@ fn specialize_err<T>(
 
 #[cfg(test)]
 mod tests {
-    use std::ops::Range;
+    use core::ops::Range;
 
-    use super::{Parser, ParserBuilder, ParserI, Primitive};
+    use alloc::format;
+
     use crate::ast::{self, Ast, Position, Span};
+
+    use super::*;
 
     // Our own assert_eq, which has slightly better formatting (but honestly
     // still kind of crappy).
@@ -2414,13 +2424,9 @@ mod tests {
         lit_with(c, span(start..start + c.len_utf8()))
     }
 
-    /// Create a punctuation literal starting at the given position.
-    fn punct_lit(c: char, span: Span) -> Ast {
-        Ast::Literal(ast::Literal {
-            span,
-            kind: ast::LiteralKind::Punctuation,
-            c,
-        })
+    /// Create a meta literal starting at the given position.
+    fn meta_lit(c: char, span: Span) -> Ast {
+        Ast::Literal(ast::Literal { span, kind: ast::LiteralKind::Meta, c })
     }
 
     /// Create a verbatim literal with the given span.
@@ -2704,24 +2710,24 @@ bar
             Ok(concat(
                 0..36,
                 vec![
-                    punct_lit('\\', span(0..2)),
-                    punct_lit('.', span(2..4)),
-                    punct_lit('+', span(4..6)),
-                    punct_lit('*', span(6..8)),
-                    punct_lit('?', span(8..10)),
-                    punct_lit('(', span(10..12)),
-                    punct_lit(')', span(12..14)),
-                    punct_lit('|', span(14..16)),
-                    punct_lit('[', span(16..18)),
-                    punct_lit(']', span(18..20)),
-                    punct_lit('{', span(20..22)),
-                    punct_lit('}', span(22..24)),
-                    punct_lit('^', span(24..26)),
-                    punct_lit('$', span(26..28)),
-                    punct_lit('#', span(28..30)),
-                    punct_lit('&', span(30..32)),
-                    punct_lit('-', span(32..34)),
-                    punct_lit('~', span(34..36)),
+                    meta_lit('\\', span(0..2)),
+                    meta_lit('.', span(2..4)),
+                    meta_lit('+', span(4..6)),
+                    meta_lit('*', span(6..8)),
+                    meta_lit('?', span(8..10)),
+                    meta_lit('(', span(10..12)),
+                    meta_lit(')', span(12..14)),
+                    meta_lit('|', span(14..16)),
+                    meta_lit('[', span(16..18)),
+                    meta_lit(']', span(18..20)),
+                    meta_lit('{', span(20..22)),
+                    meta_lit('}', span(22..24)),
+                    meta_lit('^', span(24..26)),
+                    meta_lit('$', span(26..28)),
+                    meta_lit('#', span(28..30)),
+                    meta_lit('&', span(30..32)),
+                    meta_lit('-', span(32..34)),
+                    meta_lit('~', span(34..36)),
                 ]
             ))
         );
@@ -2799,11 +2805,14 @@ bar
                     flag_set(pat, 0..4, ast::Flag::IgnoreWhitespace, false),
                     Ast::Group(ast::Group {
                         span: span_range(pat, 4..pat.len()),
-                        kind: ast::GroupKind::CaptureName(ast::CaptureName {
-                            span: span_range(pat, 9..12),
-                            name: s("foo"),
-                            index: 1,
-                        }),
+                        kind: ast::GroupKind::CaptureName {
+                            starts_with_p: true,
+                            name: ast::CaptureName {
+                                span: span_range(pat, 9..12),
+                                name: s("foo"),
+                                index: 1,
+                            }
+                        },
                         ast: Box::new(lit_with('a', span_range(pat, 14..15))),
                     }),
                 ]
@@ -2870,22 +2879,11 @@ bar
                     flag_set(pat, 0..4, ast::Flag::IgnoreWhitespace, false),
                     Ast::Literal(ast::Literal {
                         span: span_range(pat, 4..6),
-                        kind: ast::LiteralKind::Special(
-                            ast::SpecialLiteralKind::Space
-                        ),
+                        kind: ast::LiteralKind::Superfluous,
                         c: ' ',
                     }),
                 ]
             ))
-        );
-        // ... but only when `x` mode is enabled.
-        let pat = r"\ ";
-        assert_eq!(
-            parser(pat).parse().unwrap_err(),
-            TestError {
-                span: span_range(pat, 0..2),
-                kind: ast::ErrorKind::EscapeUnrecognized,
-            }
         );
     }
 
@@ -3819,14 +3817,32 @@ bar
     #[test]
     fn parse_capture_name() {
         assert_eq!(
+            parser("(?<a>z)").parse(),
+            Ok(Ast::Group(ast::Group {
+                span: span(0..7),
+                kind: ast::GroupKind::CaptureName {
+                    starts_with_p: false,
+                    name: ast::CaptureName {
+                        span: span(3..4),
+                        name: s("a"),
+                        index: 1,
+                    }
+                },
+                ast: Box::new(lit('z', 5)),
+            }))
+        );
+        assert_eq!(
             parser("(?P<a>z)").parse(),
             Ok(Ast::Group(ast::Group {
                 span: span(0..8),
-                kind: ast::GroupKind::CaptureName(ast::CaptureName {
-                    span: span(4..5),
-                    name: s("a"),
-                    index: 1,
-                }),
+                kind: ast::GroupKind::CaptureName {
+                    starts_with_p: true,
+                    name: ast::CaptureName {
+                        span: span(4..5),
+                        name: s("a"),
+                        index: 1,
+                    }
+                },
                 ast: Box::new(lit('z', 6)),
             }))
         );
@@ -3834,11 +3850,14 @@ bar
             parser("(?P<abc>z)").parse(),
             Ok(Ast::Group(ast::Group {
                 span: span(0..10),
-                kind: ast::GroupKind::CaptureName(ast::CaptureName {
-                    span: span(4..7),
-                    name: s("abc"),
-                    index: 1,
-                }),
+                kind: ast::GroupKind::CaptureName {
+                    starts_with_p: true,
+                    name: ast::CaptureName {
+                        span: span(4..7),
+                        name: s("abc"),
+                        index: 1,
+                    }
+                },
                 ast: Box::new(lit('z', 8)),
             }))
         );
@@ -3847,11 +3866,14 @@ bar
             parser("(?P<a_1>z)").parse(),
             Ok(Ast::Group(ast::Group {
                 span: span(0..10),
-                kind: ast::GroupKind::CaptureName(ast::CaptureName {
-                    span: span(4..7),
-                    name: s("a_1"),
-                    index: 1,
-                }),
+                kind: ast::GroupKind::CaptureName {
+                    starts_with_p: true,
+                    name: ast::CaptureName {
+                        span: span(4..7),
+                        name: s("a_1"),
+                        index: 1,
+                    }
+                },
                 ast: Box::new(lit('z', 8)),
             }))
         );
@@ -3860,11 +3882,14 @@ bar
             parser("(?P<a.1>z)").parse(),
             Ok(Ast::Group(ast::Group {
                 span: span(0..10),
-                kind: ast::GroupKind::CaptureName(ast::CaptureName {
-                    span: span(4..7),
-                    name: s("a.1"),
-                    index: 1,
-                }),
+                kind: ast::GroupKind::CaptureName {
+                    starts_with_p: true,
+                    name: ast::CaptureName {
+                        span: span(4..7),
+                        name: s("a.1"),
+                        index: 1,
+                    }
+                },
                 ast: Box::new(lit('z', 8)),
             }))
         );
@@ -3873,12 +3898,64 @@ bar
             parser("(?P<a[1]>z)").parse(),
             Ok(Ast::Group(ast::Group {
                 span: span(0..11),
-                kind: ast::GroupKind::CaptureName(ast::CaptureName {
-                    span: span(4..8),
-                    name: s("a[1]"),
-                    index: 1,
-                }),
+                kind: ast::GroupKind::CaptureName {
+                    starts_with_p: true,
+                    name: ast::CaptureName {
+                        span: span(4..8),
+                        name: s("a[1]"),
+                        index: 1,
+                    }
+                },
                 ast: Box::new(lit('z', 9)),
+            }))
+        );
+
+        assert_eq!(
+            parser("(?P<a¾>)").parse(),
+            Ok(Ast::Group(ast::Group {
+                span: Span::new(
+                    Position::new(0, 1, 1),
+                    Position::new(9, 1, 9),
+                ),
+                kind: ast::GroupKind::CaptureName {
+                    starts_with_p: true,
+                    name: ast::CaptureName {
+                        span: Span::new(
+                            Position::new(4, 1, 5),
+                            Position::new(7, 1, 7),
+                        ),
+                        name: s("a¾"),
+                        index: 1,
+                    }
+                },
+                ast: Box::new(Ast::Empty(Span::new(
+                    Position::new(8, 1, 8),
+                    Position::new(8, 1, 8),
+                ))),
+            }))
+        );
+        assert_eq!(
+            parser("(?P<名字>)").parse(),
+            Ok(Ast::Group(ast::Group {
+                span: Span::new(
+                    Position::new(0, 1, 1),
+                    Position::new(12, 1, 9),
+                ),
+                kind: ast::GroupKind::CaptureName {
+                    starts_with_p: true,
+                    name: ast::CaptureName {
+                        span: Span::new(
+                            Position::new(4, 1, 5),
+                            Position::new(10, 1, 7),
+                        ),
+                        name: s("名字"),
+                        index: 1,
+                    }
+                },
+                ast: Box::new(Ast::Empty(Span::new(
+                    Position::new(11, 1, 8),
+                    Position::new(11, 1, 8),
+                ))),
             }))
         );
 
@@ -3938,6 +4015,60 @@ bar
                 kind: ast::ErrorKind::GroupNameDuplicate {
                     original: span(4..5),
                 },
+            }
+        );
+        assert_eq!(
+            parser("(?P<5>)").parse().unwrap_err(),
+            TestError {
+                span: span(4..5),
+                kind: ast::ErrorKind::GroupNameInvalid,
+            }
+        );
+        assert_eq!(
+            parser("(?P<5a>)").parse().unwrap_err(),
+            TestError {
+                span: span(4..5),
+                kind: ast::ErrorKind::GroupNameInvalid,
+            }
+        );
+        assert_eq!(
+            parser("(?P<¾>)").parse().unwrap_err(),
+            TestError {
+                span: Span::new(
+                    Position::new(4, 1, 5),
+                    Position::new(6, 1, 6),
+                ),
+                kind: ast::ErrorKind::GroupNameInvalid,
+            }
+        );
+        assert_eq!(
+            parser("(?P<¾a>)").parse().unwrap_err(),
+            TestError {
+                span: Span::new(
+                    Position::new(4, 1, 5),
+                    Position::new(6, 1, 6),
+                ),
+                kind: ast::ErrorKind::GroupNameInvalid,
+            }
+        );
+        assert_eq!(
+            parser("(?P<☃>)").parse().unwrap_err(),
+            TestError {
+                span: Span::new(
+                    Position::new(4, 1, 5),
+                    Position::new(7, 1, 6),
+                ),
+                kind: ast::ErrorKind::GroupNameInvalid,
+            }
+        );
+        assert_eq!(
+            parser("(?P<a☃>)").parse().unwrap_err(),
+            TestError {
+                span: Span::new(
+                    Position::new(5, 1, 6),
+                    Position::new(8, 1, 7),
+                ),
+                kind: ast::ErrorKind::GroupNameInvalid,
             }
         );
     }
@@ -4046,6 +4177,34 @@ bar
                 ],
             })
         );
+        assert_eq!(
+            parser("i-sR:").parse_flags(),
+            Ok(ast::Flags {
+                span: span(0..4),
+                items: vec![
+                    ast::FlagsItem {
+                        span: span(0..1),
+                        kind: ast::FlagsItemKind::Flag(
+                            ast::Flag::CaseInsensitive
+                        ),
+                    },
+                    ast::FlagsItem {
+                        span: span(1..2),
+                        kind: ast::FlagsItemKind::Negation,
+                    },
+                    ast::FlagsItem {
+                        span: span(2..3),
+                        kind: ast::FlagsItemKind::Flag(
+                            ast::Flag::DotMatchesNewLine
+                        ),
+                    },
+                    ast::FlagsItem {
+                        span: span(3..4),
+                        kind: ast::FlagsItemKind::Flag(ast::Flag::CRLF),
+                    },
+                ],
+            })
+        );
 
         assert_eq!(
             parser("isU").parse_flags().unwrap_err(),
@@ -4107,6 +4266,7 @@ bar
         assert_eq!(parser("s").parse_flag(), Ok(ast::Flag::DotMatchesNewLine));
         assert_eq!(parser("U").parse_flag(), Ok(ast::Flag::SwapGreed));
         assert_eq!(parser("u").parse_flag(), Ok(ast::Flag::Unicode));
+        assert_eq!(parser("R").parse_flag(), Ok(ast::Flag::CRLF));
         assert_eq!(parser("x").parse_flag(), Ok(ast::Flag::IgnoreWhitespace));
 
         assert_eq!(
@@ -4178,7 +4338,7 @@ bar
             parser(r"\|").parse_primitive(),
             Ok(Primitive::Literal(ast::Literal {
                 span: span(0..2),
-                kind: ast::LiteralKind::Punctuation,
+                kind: ast::LiteralKind::Meta,
                 c: '|',
             }))
         );
@@ -4229,11 +4389,26 @@ bar
             }))
         );
 
+        // We also support superfluous escapes in most cases now too.
+        for c in ['!', '@', '%', '"', '\'', '/', ' '] {
+            let pat = format!(r"\{}", c);
+            assert_eq!(
+                parser(&pat).parse_primitive(),
+                Ok(Primitive::Literal(ast::Literal {
+                    span: span(0..2),
+                    kind: ast::LiteralKind::Superfluous,
+                    c,
+                }))
+            );
+        }
+
+        // Some superfluous escapes, namely [0-9A-Za-z], are still banned. This
+        // gives flexibility for future evolution.
         assert_eq!(
-            parser(r"\").parse_escape().unwrap_err(),
+            parser(r"\e").parse_escape().unwrap_err(),
             TestError {
-                span: span(0..1),
-                kind: ast::ErrorKind::EscapeUnexpectedEof,
+                span: span(0..2),
+                kind: ast::ErrorKind::EscapeUnrecognized,
             }
         );
         assert_eq!(
@@ -4241,6 +4416,31 @@ bar
             TestError {
                 span: span(0..2),
                 kind: ast::ErrorKind::EscapeUnrecognized,
+            }
+        );
+        // But also, < and > are banned, so that we may evolve them into
+        // start/end word boundary assertions. (Not sure if we will...)
+        assert_eq!(
+            parser(r"\<").parse_escape().unwrap_err(),
+            TestError {
+                span: span(0..2),
+                kind: ast::ErrorKind::EscapeUnrecognized,
+            }
+        );
+        assert_eq!(
+            parser(r"\>").parse_escape().unwrap_err(),
+            TestError {
+                span: span(0..2),
+                kind: ast::ErrorKind::EscapeUnrecognized,
+            }
+        );
+
+        // An unfinished escape is illegal.
+        assert_eq!(
+            parser(r"\").parse_escape().unwrap_err(),
+            TestError {
+                span: span(0..1),
+                kind: ast::ErrorKind::EscapeUnexpectedEof,
             }
         );
     }
@@ -4272,7 +4472,7 @@ bar
                 Ok(Primitive::Literal(ast::Literal {
                     span: span(0..pat.len()),
                     kind: ast::LiteralKind::Octal,
-                    c: ::std::char::from_u32(i).unwrap(),
+                    c: char::from_u32(i).unwrap(),
                 }))
             );
         }
@@ -4347,7 +4547,7 @@ bar
                 Ok(Primitive::Literal(ast::Literal {
                     span: span(0..pat.len()),
                     kind: ast::LiteralKind::HexFixed(ast::HexLiteralKind::X),
-                    c: ::std::char::from_u32(i).unwrap(),
+                    c: char::from_u32(i).unwrap(),
                 }))
             );
         }
@@ -4378,7 +4578,7 @@ bar
     #[test]
     fn parse_hex_four() {
         for i in 0..65536 {
-            let c = match ::std::char::from_u32(i) {
+            let c = match char::from_u32(i) {
                 None => continue,
                 Some(c) => c,
             };
@@ -4442,7 +4642,7 @@ bar
     #[test]
     fn parse_hex_eight() {
         for i in 0..65536 {
-            let c = match ::std::char::from_u32(i) {
+            let c = match char::from_u32(i) {
                 None => continue,
                 Some(c) => c,
             };
@@ -4839,7 +5039,7 @@ bar
                         lit(span(1..2), 'a'),
                         ast::ClassSetItem::Literal(ast::Literal {
                             span: span(2..4),
-                            kind: ast::LiteralKind::Punctuation,
+                            kind: ast::LiteralKind::Meta,
                             c: ']',
                         }),
                     ]
@@ -4857,7 +5057,7 @@ bar
                         lit(span(1..2), 'a'),
                         ast::ClassSetItem::Literal(ast::Literal {
                             span: span(2..4),
-                            kind: ast::LiteralKind::Punctuation,
+                            kind: ast::LiteralKind::Meta,
                             c: '-',
                         }),
                         lit(span(4..5), 'z'),
@@ -5049,7 +5249,7 @@ bar
                     span(1..6),
                     itemset(ast::ClassSetItem::Literal(ast::Literal {
                         span: span(1..3),
-                        kind: ast::LiteralKind::Punctuation,
+                        kind: ast::LiteralKind::Meta,
                         c: '^',
                     })),
                     itemset(lit(span(5..6), '^')),
@@ -5065,7 +5265,7 @@ bar
                     span(1..6),
                     itemset(ast::ClassSetItem::Literal(ast::Literal {
                         span: span(1..3),
-                        kind: ast::LiteralKind::Punctuation,
+                        kind: ast::LiteralKind::Meta,
                         c: '&',
                     })),
                     itemset(lit(span(5..6), '&')),
@@ -5130,7 +5330,7 @@ bar
                         lit(span(1..2), ']'),
                         ast::ClassSetItem::Literal(ast::Literal {
                             span: span(2..4),
-                            kind: ast::LiteralKind::Punctuation,
+                            kind: ast::LiteralKind::Meta,
                             c: '[',
                         }),
                     ]
@@ -5148,7 +5348,7 @@ bar
                         kind: itemset(ast::ClassSetItem::Literal(
                             ast::Literal {
                                 span: span(1..3),
-                                kind: ast::LiteralKind::Punctuation,
+                                kind: ast::LiteralKind::Meta,
                                 c: '[',
                             }
                         )),
