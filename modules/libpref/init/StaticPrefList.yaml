@@ -13653,7 +13653,7 @@
 - name: security.sandbox.gpu.level
   type: int32_t
 #if defined(XP_WIN)
-  value: 2
+  value: 1
 #else
   value: 0
 #endif
