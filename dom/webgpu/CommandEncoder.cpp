@@ -240,8 +240,9 @@ already_AddRefed<CommandBuffer> CommandEncoder::Finish(
   // WebGPUChild::CommandEncoderFinish handles the case where the IPC channel
   // closed.
   RawId id = mBridge->CommandEncoderFinish(mId, mParent->mId, aDesc);
+  RefPtr<CommandEncoder> me(this);
   RefPtr<CommandBuffer> comb =
-      new CommandBuffer(mParent, id, std::move(mTargetContexts));
+      new CommandBuffer(mParent, id, std::move(mTargetContexts), std::move(me));
   return comb.forget();
 }
 

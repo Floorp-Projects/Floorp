@@ -983,11 +983,6 @@ pub extern "C" fn wgpu_server_encoder_drop(global: &Global, self_id: id::Command
 }
 
 #[no_mangle]
-pub extern "C" fn wgpu_server_command_buffer_drop(global: &Global, self_id: id::CommandBufferId) {
-    gfx_select!(self_id => global.command_buffer_drop(self_id));
-}
-
-#[no_mangle]
 pub extern "C" fn wgpu_server_render_bundle_drop(global: &Global, self_id: id::RenderBundleId) {
     gfx_select!(self_id => global.render_bundle_drop(self_id));
 }

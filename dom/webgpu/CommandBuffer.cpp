@@ -16,22 +16,14 @@ GPU_IMPL_CYCLE_COLLECTION(CommandBuffer, mParent)
 GPU_IMPL_JS_WRAP(CommandBuffer)
 
 CommandBuffer::CommandBuffer(Device* const aParent, RawId aId,
-                             nsTArray<WeakPtr<CanvasContext>>&& aTargetContexts)
+                             nsTArray<WeakPtr<CanvasContext>>&& aTargetContexts,
+                             RefPtr<CommandEncoder>&& aEncoder)
     : ChildOf(aParent), mId(aId), mTargetContexts(std::move(aTargetContexts)) {
+  mEncoder = std::move(aEncoder);
   MOZ_RELEASE_ASSERT(aId);
 }
 
-CommandBuffer::~CommandBuffer() { Cleanup(); }
-
-void CommandBuffer::Cleanup() {
-  if (mValid && mParent) {
-    mValid = false;
-    auto bridge = mParent->GetBridge();
-    if (bridge && bridge->IsOpen()) {
-      bridge->SendCommandBufferDrop(mId);
-    }
-  }
-}
+void CommandBuffer::Cleanup() { mEncoder = nullptr; }
 
 Maybe<RawId> CommandBuffer::Commit() {
   if (!mValid) {
