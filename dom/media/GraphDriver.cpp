@@ -589,23 +589,37 @@ void AudioCallbackDriver::Init(const nsCString& aStreamName) {
 
   uint32_t latencyFrames = CubebUtils::GetCubebMTGLatencyInFrames(&output);
 
+  LOG(LogLevel::Debug, ("Minimum latency in frames: %d", latencyFrames));
+
   // Macbook and MacBook air don't have enough CPU to run very low latency
   // MediaTrackGraphs, cap the minimal latency to 512 frames int this case.
   if (IsMacbookOrMacbookAir()) {
     latencyFrames = std::max((uint32_t)512, latencyFrames);
+    LOG(LogLevel::Debug,
+        ("Macbook or macbook air, new latency: %d", latencyFrames));
   }
 
-  // On OSX, having a latency that is lower than 10ms is very common. It's
-  // not very useful when doing voice, because all the WebRTC code deal in 10ms
-  // chunks of audio.  Take the first power of two above 10ms at the current
-  // rate in this case. It's probably 512, for common rates.
-#if defined(XP_MACOSX)
+  // Buffer sizes lower than 10ms are nowadays common. It's not very useful
+  // when doing voice, because all the WebRTC code that does audio input
+  // processing deals in 10ms chunks of audio. Take the first power of two
+  // above 10ms at the current rate in this case. It's probably 512, for common
+  // rates.
   if (mInputDevicePreference == CUBEB_DEVICE_PREF_VOICE) {
     if (latencyFrames < mSampleRate / 100) {
       latencyFrames = mozilla::RoundUpPow2(mSampleRate / 100);
+      LOG(LogLevel::Debug,
+          ("AudioProcessing enabled, new latency %d", latencyFrames));
     }
   }
-#endif
+
+  // It's not useful for the graph to run with a block size lower than the Web
+  // Audio API block size, but increasingly devices report that they can do
+  // audio latencies lower than that.
+  if (latencyFrames < WEBAUDIO_BLOCK_SIZE) {
+    LOG(LogLevel::Debug,
+        ("Latency clamped to %d from %d", WEBAUDIO_BLOCK_SIZE, latencyFrames));
+    latencyFrames = WEBAUDIO_BLOCK_SIZE;
+  }
   LOG(LogLevel::Debug, ("Effective latency in frames: %d", latencyFrames));
 
   input = output;
