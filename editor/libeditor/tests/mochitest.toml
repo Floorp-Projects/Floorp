@@ -470,6 +470,9 @@ skip-if = ["os == 'android'"]
 ["test_middle_click_paste.html"]
 skip-if = ["headless"]
 
+["test_native_key_bindings_in_shadow.html"]
+skip-if = ["os != 'linux' && os != 'mac'"] # Depends on NativeKeyBindings used only on Linux and macOS
+
 ["test_nested_editor.html"]
 
 ["test_new_plaintext_mail_with_plaintext_signature.html"]
