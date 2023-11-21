@@ -15,8 +15,7 @@ fi
 # - `memory`: It doesn't works with target x86_64-apple-darwin
 # - `leak`: Get some errors that are out of our control. See:
 #   https://github.com/mozilla/cubeb-coreaudio-rs/issues/45#issuecomment-591642931
-# - `thread`: It's blocked by #129
-sanitizers=("address")
+sanitizers=("address" "thread")
 for san in "${sanitizers[@]}"
 do
     San="$(tr '[:lower:]' '[:upper:]' <<< ${san:0:1})${san:1}"
