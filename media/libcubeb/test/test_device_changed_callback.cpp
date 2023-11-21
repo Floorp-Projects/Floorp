@@ -11,12 +11,12 @@
 #if !defined(_XOPEN_SOURCE)
 #define _XOPEN_SOURCE 600
 #endif
-#include <stdio.h>
-#include <memory>
 #include "cubeb/cubeb.h"
+#include <memory>
+#include <stdio.h>
 
-//#define ENABLE_NORMAL_LOG
-//#define ENABLE_VERBOSE_LOG
+// #define ENABLE_NORMAL_LOG
+// #define ENABLE_VERBOSE_LOG
 #include "common.h"
 
 #define SAMPLE_FREQUENCY 48000
@@ -26,23 +26,28 @@
 #define OUTPUT_CHANNELS 2
 #define OUTPUT_LAYOUT CUBEB_LAYOUT_STEREO
 
-long data_callback(cubeb_stream * stream, void * user, const void * inputbuffer, void * outputbuffer, long nframes)
+long
+data_callback(cubeb_stream * stream, void * user, const void * inputbuffer,
+              void * outputbuffer, long nframes)
 {
   return 0;
 }
 
-void state_callback(cubeb_stream * stream, void * user, cubeb_state state)
+void
+state_callback(cubeb_stream * stream, void * user, cubeb_state state)
 {
 }
 
-void device_changed_callback(void * user)
+void
+device_changed_callback(void * user)
 {
   fprintf(stderr, "device changed callback\n");
   ASSERT_TRUE(false) << "Error: device changed callback"
                         " called without changing devices";
 }
 
-void test_registering_null_callback_twice(cubeb_stream * stream)
+void
+test_registering_null_callback_twice(cubeb_stream * stream)
 {
   int r = cubeb_stream_register_device_changed_callback(stream, nullptr);
   if (r == CUBEB_ERROR_NOT_SUPPORTED) {
@@ -51,12 +56,15 @@ void test_registering_null_callback_twice(cubeb_stream * stream)
   ASSERT_EQ(r, CUBEB_OK) << "Error registering null device changed callback";
 
   r = cubeb_stream_register_device_changed_callback(stream, nullptr);
-  ASSERT_EQ(r, CUBEB_OK) << "Error registering null device changed callback again";
+  ASSERT_EQ(r, CUBEB_OK)
+      << "Error registering null device changed callback again";
 }
 
-void test_registering_and_unregistering_callback(cubeb_stream * stream)
+void
+test_registering_and_unregistering_callback(cubeb_stream * stream)
 {
-  int r = cubeb_stream_register_device_changed_callback(stream, device_changed_callback);
+  int r = cubeb_stream_register_device_changed_callback(
+      stream, device_changed_callback);
   if (r == CUBEB_ERROR_NOT_SUPPORTED) {
     return;
   }
@@ -75,7 +83,6 @@ TEST(cubeb, device_changed_callbacks)
   int r = CUBEB_OK;
   uint32_t latency_frames = 0;
 
-
   r = common_init(&ctx, "Cubeb duplex example with device change");
   ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb library";
 
@@ -83,8 +90,8 @@ TEST(cubeb, device_changed_callbacks)
     return;
   }
 
-  std::unique_ptr<cubeb, decltype(&cubeb_destroy)>
-    cleanup_cubeb_at_exit(ctx, cubeb_destroy);
+  std::unique_ptr<cubeb, decltype(&cubeb_destroy)> cleanup_cubeb_at_exit(
+      ctx, cubeb_destroy);
 
   /* typical user-case: mono input, stereo output, low latency. */
   input_params.format = STREAM_FORMAT;
@@ -101,9 +108,9 @@ TEST(cubeb, device_changed_callbacks)
   r = cubeb_get_min_latency(ctx, &output_params, &latency_frames);
   ASSERT_EQ(r, CUBEB_OK) << "Could not get minimal latency";
 
-  r = cubeb_stream_init(ctx, &stream, "Cubeb duplex",
-                        NULL, &input_params, NULL, &output_params,
-                        latency_frames, data_callback, state_callback, nullptr);
+  r = cubeb_stream_init(ctx, &stream, "Cubeb duplex", NULL, &input_params, NULL,
+                        &output_params, latency_frames, data_callback,
+                        state_callback, nullptr);
   ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb stream";
 
   test_registering_null_callback_twice(stream);

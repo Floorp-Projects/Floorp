@@ -592,6 +592,8 @@ player_fullduplex_callback(SLBufferQueueItf caller, void * user_ptr)
   long input_frame_count = stm->input_buffer_length / stm->input_frame_size;
   long sample_count = input_frame_count * stm->input_params->channels;
   long frames_needed = stm->queuebuf_len / stm->framesize;
+  uint32_t output_sample_count =
+      stm->output_params->channels * stm->queuebuf_len / stm->framesize;
 
   if (!input_buffer) {
     LOG("Input hole set silent input buffer");
@@ -601,7 +603,7 @@ player_fullduplex_callback(SLBufferQueueItf caller, void * user_ptr)
   input_buffer =
       convert_input_buffer_if_needed(stm, input_buffer, sample_count);
 
-  output_buffer = get_output_buffer(stm, output_buffer, sample_count);
+  output_buffer = get_output_buffer(stm, output_buffer, output_sample_count);
 
   long written = 0;
   // Trigger user callback through resampler
@@ -1507,6 +1509,7 @@ opensl_stream_init(cubeb * ctx, cubeb_stream ** stream,
                    cubeb_state_callback state_callback, void * user_ptr)
 {
   cubeb_stream * stm = nullptr;
+  cubeb_async_log_reset_threads();
 
   assert(ctx);
   if (input_device || output_device) {

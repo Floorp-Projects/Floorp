@@ -5,22 +5,20 @@
  * accompanying file LICENSE for details.
  */
 
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 
-#include "gtest/gtest.h"
 #include "cubeb_ringbuffer.h"
+#include "gtest/gtest.h"
+#include <chrono>
 #include <iostream>
 #include <thread>
-#include <chrono>
 
 /* Generate a monotonically increasing sequence of numbers. */
-template<typename T>
-class sequence_generator
-{
+template <typename T> class sequence_generator {
 public:
-  sequence_generator(size_t channels)
-    : channels(channels)
-  { }
+  sequence_generator(size_t channels) : channels(channels) {}
   void get(T * elements, size_t frames)
   {
     for (size_t i = 0; i < frames; i++) {
@@ -30,44 +28,41 @@ public:
       index_++;
     }
   }
-  void rewind(size_t frames)
-  {
-    index_ -= frames;
-  }
+  void rewind(size_t frames) { index_ -= frames; }
+
 private:
   size_t index_ = 0;
   size_t channels = 0;
 };
 
 /* Checks that a sequence is monotonically increasing. */
-template<typename T>
-class sequence_verifier
-{
-  public:
-  sequence_verifier(size_t channels)
-    : channels(channels)
-  { }
-    void check(T * elements, size_t frames)
-    {
-      for (size_t i = 0; i < frames; i++) {
-        for (size_t c = 0; c < channels; c++) {
-          if (elements[i * channels + c] != static_cast<T>(index_)) {
-            std::cerr << "Element " << i << " is different. Expected "
-              << static_cast<T>(index_) << ", got " << elements[i]
-              << ". (channel count: " << channels << ")." << std::endl;
-            ASSERT_TRUE(false);
-          }
+template <typename T> class sequence_verifier {
+public:
+  sequence_verifier(size_t channels) : channels(channels) {}
+  void check(T * elements, size_t frames)
+  {
+    for (size_t i = 0; i < frames; i++) {
+      for (size_t c = 0; c < channels; c++) {
+        if (elements[i * channels + c] != static_cast<T>(index_)) {
+          std::cerr << "Element " << i << " is different. Expected "
+                    << static_cast<T>(index_) << ", got " << elements[i]
+                    << ". (channel count: " << channels << ")." << std::endl;
+          ASSERT_TRUE(false);
         }
-        index_++;
       }
+      index_++;
     }
-  private:
-    size_t index_ = 0;
-    size_t channels = 0;
+  }
+
+private:
+  size_t index_ = 0;
+  size_t channels = 0;
 };
 
-template<typename T>
-void test_ring(lock_free_audio_ring_buffer<T>& buf, int channels, int capacity_frames)
+template <typename T>
+void
+test_ring(lock_free_audio_ring_buffer<T> & buf, int channels,
+          int capacity_frames)
 {
   std::unique_ptr<T[]> seq(new T[capacity_frames * channels]);
   sequence_generator<T> gen(channels);
@@ -77,7 +72,7 @@ void test_ring(lock_free_audio_ring_buffer<T>& buf, int channels, int capacity_f
 
   const int block_size = 128;
 
-  while(iterations--) {
+  while (iterations--) {
     gen.get(seq.get(), block_size);
     int rv = buf.enqueue(seq.get(), block_size);
     ASSERT_EQ(rv, block_size);
@@ -88,8 +83,10 @@ void test_ring(lock_free_audio_ring_buffer<T>& buf, int channels, int capacity_f
   }
 }
 
-template<typename T>
-void test_ring_multi(lock_free_audio_ring_buffer<T>& buf, int channels, int capacity_frames)
+template <typename T>
+void
+test_ring_multi(lock_free_audio_ring_buffer<T> & buf, int channels,
+                int capacity_frames)
 {
   sequence_verifier<T> checker(channels);
   std::unique_ptr<T[]> out_buffer(new T[capacity_frames * channels]);
@@ -101,7 +98,7 @@ void test_ring_multi(lock_free_audio_ring_buffer<T>& buf, int channels, int capa
     std::unique_ptr<T[]> in_buffer(new T[capacity_frames * channels]);
     sequence_generator<T> gen(channels);
 
-    while(iterations--) {
+    while (iterations--) {
       std::this_thread::yield();
       gen.get(in_buffer.get(), block_size);
       int rv = buf.enqueue(in_buffer.get(), block_size);
@@ -114,7 +111,7 @@ void test_ring_multi(lock_free_audio_ring_buffer<T>& buf, int channels, int capa
 
   int remaining = 1002;
 
-  while(remaining--) {
+  while (remaining--) {
     std::this_thread::yield();
     int rv = buf.dequeue(out_buffer.get(), block_size);
     ASSERT_TRUE(rv <= block_size);
@@ -124,8 +121,9 @@ void test_ring_multi(lock_free_audio_ring_buffer<T>& buf, int channels, int capa
   t.join();
 }
 
-template<typename T>
-void basic_api_test(T& ring)
+template <typename T>
+void
+basic_api_test(T & ring)
 {
   ASSERT_EQ(ring.capacity(), 128);
 
@@ -155,30 +153,32 @@ void basic_api_test(T& ring)
   ASSERT_EQ(ring.available_write(), 128);
 }
 
-void test_reset_api() {
-	const size_t ring_buffer_size = 128;
-	const size_t enqueue_size = ring_buffer_size / 2;
+void
+test_reset_api()
+{
+  const size_t ring_buffer_size = 128;
+  const size_t enqueue_size = ring_buffer_size / 2;
 
-	lock_free_queue<float> ring(ring_buffer_size);
-	std::thread t([=, &ring] {
-		std::unique_ptr<float[]> in_buffer(new float[enqueue_size]);
-		ring.enqueue(in_buffer.get(), enqueue_size);
-	});
+  lock_free_queue<float> ring(ring_buffer_size);
+  std::thread t([=, &ring] {
+    std::unique_ptr<float[]> in_buffer(new float[enqueue_size]);
+    ring.enqueue(in_buffer.get(), enqueue_size);
+  });
 
-	t.join();
+  t.join();
 
-	ring.reset_thread_ids();
+  ring.reset_thread_ids();
 
-	// Enqueue with a different thread. We have reset the thread ID
-	// in the ring buffer, this should work.
-	std::thread t2([=, &ring] {
-		std::unique_ptr<float[]> in_buffer(new float[enqueue_size]);
-		ring.enqueue(in_buffer.get(), enqueue_size);
-	});
+  // Enqueue with a different thread. We have reset the thread ID
+  // in the ring buffer, this should work.
+  std::thread t2([=, &ring] {
+    std::unique_ptr<float[]> in_buffer(new float[enqueue_size]);
+    ring.enqueue(in_buffer.get(), enqueue_size);
+  });
 
-	t2.join();
+  t2.join();
 
-	ASSERT_TRUE(true);
+  ASSERT_TRUE(true);
 }
 
 TEST(cubeb, ring_buffer)
@@ -206,8 +206,8 @@ TEST(cubeb, ring_buffer)
   /* Test mono to 9.1 */
   for (size_t channels = min_channels; channels < max_channels; channels++) {
     /* Use non power-of-two numbers to catch edge-cases. */
-    for (size_t capacity_frames = min_capacity;
-         capacity_frames < max_capacity; capacity_frames+=capacity_increment) {
+    for (size_t capacity_frames = min_capacity; capacity_frames < max_capacity;
+         capacity_frames += capacity_increment) {
       lock_free_audio_ring_buffer<float> ring(channels, capacity_frames);
       test_ring(ring, channels, capacity_frames);
     }
@@ -216,8 +216,8 @@ TEST(cubeb, ring_buffer)
   /* Multi thread testing */
   for (size_t channels = min_channels; channels < max_channels; channels++) {
     /* Use non power-of-two numbers to catch edge-cases. */
-    for (size_t capacity_frames = min_capacity;
-         capacity_frames < max_capacity; capacity_frames+=capacity_increment) {
+    for (size_t capacity_frames = min_capacity; capacity_frames < max_capacity;
+         capacity_frames += capacity_increment) {
       lock_free_audio_ring_buffer<short> ring(channels, capacity_frames);
       test_ring_multi(ring, channels, capacity_frames);
     }
