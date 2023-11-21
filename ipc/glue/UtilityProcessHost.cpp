@@ -35,6 +35,7 @@
 #ifdef MOZ_WMF_CDM_LPAC_SANDBOX
 #  include "GMPServiceParent.h"
 #  include "mozilla/dom/KeySystemNames.h"
+#  include "mozilla/GeckoArgs.h"
 #  include "mozilla/MFMediaEngineUtils.h"
 #  include "mozilla/StaticPrefs_media.h"
 #  include "nsIFile.h"
@@ -111,7 +112,7 @@ bool UtilityProcessHost::Launch(StringVector aExtraOpts) {
 #endif
 
 #ifdef MOZ_WMF_CDM_LPAC_SANDBOX
-  EnsureWidevineL1PathForSandbox();
+  EnsureWidevineL1PathForSandbox(aExtraOpts);
 #endif
 
   mLaunchPhase = LaunchPhase::Waiting;
@@ -360,7 +361,8 @@ MacSandboxType UtilityProcessHost::GetMacSandboxType() {
 #endif
 
 #ifdef MOZ_WMF_CDM_LPAC_SANDBOX
-void UtilityProcessHost::EnsureWidevineL1PathForSandbox() {
+void UtilityProcessHost::EnsureWidevineL1PathForSandbox(
+    StringVector& aExtraOpts) {
   if (mSandbox != SandboxingKind::MF_MEDIA_ENGINE_CDM) {
     return;
   }
@@ -376,9 +378,10 @@ void UtilityProcessHost::EnsureWidevineL1PathForSandbox() {
     return;
   }
 
+  // TODO : install L1 if it's not downloaded yet, and the version change in bug
+  // 1863800.
   static nsString sWidevineL1Path;
   if (sWidevineL1Path.IsEmpty()) {
-    // TODO : install L1 if it's not downloaded yet in bug 1863800.
     nsCOMPtr<nsIFile> pluginFile;
     if (NS_WARN_IF(NS_FAILED(gmps->FindPluginDirectoryForAPI(
             nsCString(kWidevineExperimentAPIName),
@@ -402,6 +405,9 @@ void UtilityProcessHost::EnsureWidevineL1PathForSandbox() {
     WMF_LOG("Store Widevine L1 path=%s",
             NS_ConvertUTF16toUTF8(sWidevineL1Path).get());
   }
+
+  geckoargs::sPluginPath.Put(NS_ConvertUTF16toUTF8(sWidevineL1Path).get(),
+                             aExtraOpts);
   SandboxBroker::EnsureLpacPermsissionsOnDir(sWidevineL1Path);
 }
 

@@ -34,6 +34,8 @@ class MFCDMParent final : public PMFCDMParent {
   MFCDMParent(const nsAString& aKeySystem, RemoteDecoderManagerParent* aManager,
               nsISerialEventTarget* aManagerThread);
 
+  static void SetWidevineL1Path(const char* aPath);
+
   static MFCDMParent* GetCDMById(uint64_t aId) {
     MOZ_ASSERT(sRegisteredCDMs.Contains(aId));
     return sRegisteredCDMs.Get(aId);
@@ -102,6 +104,8 @@ class MFCDMParent final : public PMFCDMParent {
 
   static inline uint64_t sNextId = 1;
   const uint64_t mId;
+
+  static inline BSTR sWidevineL1Path;
 
   RefPtr<MFCDMParent> mIPDLSelfRef;
   Microsoft::WRL::ComPtr<IMFContentDecryptionModuleFactory> mFactory;
