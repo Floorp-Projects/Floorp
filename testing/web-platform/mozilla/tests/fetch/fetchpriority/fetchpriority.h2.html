@@ -10,6 +10,7 @@
   <script type="module">
     import * as scriptTestsData from "./support/script-tests-data.js";
     import * as linkTestsData from "./support/link-tests-data.js";
+    import * as fontfaceTestsData from "./support/font-face-tests-data.js";
 
     const kTopicHttpOnOpeningRequest = "http-on-opening-request";
 
@@ -41,7 +42,7 @@
       return (new Set(fileNames)).size == fileNames.length;
     }
 
-    const kTestGroups = [scriptTestsData, linkTestsData];
+    const kTestGroups = [scriptTestsData, linkTestsData, fontfaceTestsData];
 
     const kSupportFolderName = "support";
 
@@ -67,6 +68,9 @@
 
           assert_true(containsOnlyUniqueFileNames(aTestData.expectedRequests),
             "Test data contains only unique filenames")
+
+          assert_greater_than(httpOnOpeningRequests.length, 0,
+            "Observed HTTP requests should be non-empty");
 
           assert_true(containsOnlyUniqueFileNames(httpOnOpeningRequests),
             "Observed only one HTTP request per filename");
