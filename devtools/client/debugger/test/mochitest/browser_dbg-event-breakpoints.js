@@ -55,6 +55,7 @@ add_task(async function () {
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, findSource(dbg, "eval-test.js").id, 2);
   await resume(dbg);
+  await toggleEventBreakpoint(dbg, "Script", "script.source.firstStatement");
 
   await toggleEventBreakpoint(dbg, "Control", "event.control.focusin");
   await toggleEventBreakpoint(dbg, "Control", "event.control.focusout");
@@ -192,6 +193,24 @@ add_task(async function () {
   // Cleanup - unblackbox the source
   await clickElement(dbg, "blackbox");
   await waitForDispatch(dbg.store, "UNBLACKBOX_WHOLE_SOURCES");
+
+  info(`Check that breakpoint can be set on "beforeUnload" event`);
+  await toggleEventBreakpoint(dbg, "Load", "event.load.beforeunload");
+  let onReload = reload(dbg);
+  await waitForPaused(dbg);
+  assertPausedAtSourceAndLine(dbg, eventBreakpointsSource.id, 78);
+  await resume(dbg);
+  await onReload;
+  await toggleEventBreakpoint(dbg, "Load", "event.load.beforeunload");
+
+  info(`Check that breakpoint can be set on "unload" event`);
+  await toggleEventBreakpoint(dbg, "Load", "event.load.unload");
+  onReload = reload(dbg);
+  await waitForPaused(dbg);
+  assertPausedAtSourceAndLine(dbg, eventBreakpointsSource.id, 83);
+  await resume(dbg);
+  await onReload;
+  await toggleEventBreakpoint(dbg, "Load", "event.load.unload");
 });
 
 add_task(async function checkUnavailableEvents() {
@@ -231,8 +250,15 @@ async function toggleEventBreakpoint(
     dbg.store,
     "UPDATE_EVENT_LISTENERS"
   );
+  const checked = eventCheckbox.checked;
   eventCheckbox.click();
   await onEventListenersUpdate;
+
+  info("Wait for the event breakpoint checkbox to be toggled");
+  // Wait for he UI to be toggled, otherwise, the reducer may not be fully updated
+  await waitFor(() => {
+    return eventCheckbox.checked == !checked;
+  });
 }
 
 async function getEventBreakpointCheckbox(
