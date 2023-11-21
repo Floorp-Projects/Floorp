@@ -1000,10 +1000,12 @@ void nsComputedDOMStyle::Flush(Document& aDocument, FlushType aFlushType) {
   }
 #endif
 
-  aDocument.FlushPendingNotifications(aFlushType);
   if (MOZ_UNLIKELY(&aDocument != mElement->OwnerDoc())) {
-    mElement->OwnerDoc()->FlushPendingNotifications(aFlushType);
+    aDocument.FlushPendingNotifications(aFlushType);
   }
+  // This performs the flush, and also guarantees that content-visibility:
+  // hidden elements get laid out, if needed.
+  mElement->GetPrimaryFrame(aFlushType);
 }
 
 nsIFrame* nsComputedDOMStyle::GetOuterFrame() const {
