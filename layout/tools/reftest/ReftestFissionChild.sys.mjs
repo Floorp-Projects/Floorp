@@ -4,7 +4,7 @@ export class ReftestFissionChild extends JSWindowActorChild {
     originalTargetUri,
     dispatchToSelfAsWell
   ) {
-    if (dispatchToSelfAsWell) {
+    if (dispatchToSelfAsWell && this.contentWindow) {
       let event = new this.contentWindow.CustomEvent(
         "Reftest:MozAfterPaintFromChild",
         { bubbles: true, detail: { rects, originalTargetUri } }
@@ -245,15 +245,18 @@ export class ReftestFissionChild extends JSWindowActorChild {
           return undefined;
         }
 
-        // Transform the rects from fromBrowsingContext to us.
-        // We first translate from the content rect to the border rect of the iframe.
-        let style = this.contentWindow.getComputedStyle(
-          msg.data.fromBrowsingContext.embedderElement
-        );
-        let translate = new DOMMatrixReadOnly().translate(
-          parseFloat(style.paddingLeft) + parseFloat(style.borderLeftWidth),
-          parseFloat(style.paddingTop) + parseFloat(style.borderTopWidth)
-        );
+        let translate = new DOMMatrixReadOnly().translate(0, 0);
+        if (this.contentWindow) {
+          // Transform the rects from fromBrowsingContext to us.
+          // We first translate from the content rect to the border rect of the iframe.
+          let style = this.contentWindow.getComputedStyle(
+            msg.data.fromBrowsingContext.embedderElement
+          );
+          translate = new DOMMatrixReadOnly().translate(
+            parseFloat(style.paddingLeft) + parseFloat(style.borderLeftWidth),
+            parseFloat(style.paddingTop) + parseFloat(style.borderTopWidth)
+          );
+        }
 
         // Then we transform from the iframe to our root frame.
         // We are guaranteed to be the process with the embedderElement for fromBrowsingContext.
