@@ -2360,7 +2360,7 @@ var SessionStoreInternal = {
           // It's possible that a tab switched its privacy state at some point
           // before our flush, so we need to filter again.
           lazy.PrivacyFilter.filterPrivateTabs(winData);
-          this.maybeSaveClosedWindow(winData, isLastWindow);
+          this.maybeSaveClosedWindow(winData, isLastWindow, true);
 
           if (!isLastWindow && winData.closedId > -1) {
             this._addClosedAction(
@@ -2439,7 +2439,7 @@ var SessionStoreInternal = {
    *        to call this method again asynchronously (for example, after
    *        a window flush).
    */
-  maybeSaveClosedWindow(winData, isLastWindow) {
+  maybeSaveClosedWindow(winData, isLastWindow, recordTelemetry = false) {
     // Make sure SessionStore is still running, and make sure that we
     // haven't chosen to forget this window.
     if (
@@ -2498,6 +2498,14 @@ var SessionStoreInternal = {
         }
         if (alreadyStored) {
           this._removeClosedWindow(winIndex);
+          return;
+        }
+        // we only do this after the TabStateFlusher promise resolves in ssi_onClose
+        if (recordTelemetry) {
+          let closedTabsHistogram = Services.telemetry.getHistogramById(
+            "FX_SESSION_RESTORE_CLOSED_TABS_NOT_SAVED"
+          );
+          closedTabsHistogram.add(winData._closedTabs.length);
         }
       }
     }
