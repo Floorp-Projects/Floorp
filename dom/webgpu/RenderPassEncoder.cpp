@@ -318,12 +318,12 @@ void RenderPassEncoder::InsertDebugMarker(const nsAString& aString) {
   }
 }
 
-void RenderPassEncoder::End(ErrorResult& aRv) {
+void RenderPassEncoder::End() {
   if (mValid) {
     mValid = false;
     auto* pass = mPass.forget();
     MOZ_ASSERT(pass);
-    mParent->EndRenderPass(*pass, aRv);
+    mParent->EndRenderPass(*pass);
   }
 }
 
