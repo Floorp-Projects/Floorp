@@ -28,8 +28,7 @@ static LazyLogModule gLCPLogging("LargestContentfulPaint");
 #define LOG(...) MOZ_LOG(gLCPLogging, LogLevel::Debug, (__VA_ARGS__))
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(LargestContentfulPaint, PerformanceEntry,
-                                   mPerformance, mURI, mElement,
-                                   mLCPImageEntryKey)
+                                   mPerformance, mURI, mElement)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LargestContentfulPaint)
 NS_INTERFACE_MAP_END_INHERITING(PerformanceEntry)

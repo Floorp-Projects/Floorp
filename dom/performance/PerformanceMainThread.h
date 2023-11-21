@@ -213,8 +213,6 @@ inline void ImplCycleCollectionTraverse(
     nsCycleCollectionTraversalCallback& aCallback, ImageLCPEntryMap& aField,
     const char* aName, uint32_t aFlags = 0) {
   for (auto& entry : aField) {
-    ImplCycleCollectionTraverse(aCallback, entry.mKey, "ImageLCPEntryMap.mKey",
-                                aCallback.Flags());
     RefPtr<LargestContentfulPaint>* lcpEntry = entry.GetModifiableData();
     ImplCycleCollectionTraverse(aCallback, *lcpEntry, "ImageLCPEntryMap.mData",
                                 aCallback.Flags());
