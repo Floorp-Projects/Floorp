@@ -11,8 +11,8 @@ def read_conf(conf_filename):
     stream = open(conf_filename, "r")
 
     def parse_counters(stream):
-        for line_num, line in enumerate(stream):
-            line = line.rstrip("\n")
+        for line_num, full_line in enumerate(stream):
+            line = full_line.rstrip("\n")
             if not line or line.startswith("//"):
                 # empty line or comment
                 continue
