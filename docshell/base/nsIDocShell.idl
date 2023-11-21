@@ -42,8 +42,8 @@ class ClientSource;
 
 interface nsIURI;
 interface nsIChannel;
-interface nsIContentViewer;
 interface nsIContentSecurityPolicy;
+interface nsIDocumentViewer;
 interface nsIEditor;
 interface nsIEditingSession;
 interface nsIInputStream;
@@ -138,7 +138,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * Content Viewer that is currently loaded for this DocShell.  This may
    * change as the underlying content changes.
    */
-  [infallible] readonly attribute nsIContentViewer contentViewer;
+  [infallible] readonly attribute nsIDocumentViewer contentViewer;
 
   /**
    * Get the id of the outer window that is or will be in this docshell.
@@ -352,7 +352,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * is called for child docshells.  This method will post an event to
    * complete the simulated load after returning to the event loop.
    */
-  void beginRestore(in nsIContentViewer viewer, in boolean top);
+  void beginRestore(in nsIDocumentViewer viewer, in boolean top);
 
   /**
    * Finish firing WebProgressListener notifications and DOM events for

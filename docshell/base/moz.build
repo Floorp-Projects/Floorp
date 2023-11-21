@@ -29,11 +29,11 @@ with Files("nsIScrollObserver.*"):
     BUG_COMPONENT = ("Core", "Panning and Zooming")
 
 XPIDL_SOURCES += [
-    "nsIContentViewer.idl",
     "nsIDocShell.idl",
     "nsIDocShellTreeItem.idl",
     "nsIDocShellTreeOwner.idl",
     "nsIDocumentLoaderFactory.idl",
+    "nsIDocumentViewer.idl",
     "nsIDocumentViewerEdit.idl",
     "nsILoadContext.idl",
     "nsILoadURIDelegate.idl",

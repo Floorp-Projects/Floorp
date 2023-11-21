@@ -13,7 +13,7 @@
 #include "nsCOMPtr.h"
 #include "nsIStreamListener.h"
 #include "nsIObserver.h"
-#include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
 #include "nsWeakReference.h"
 #include "nsSize.h"
 
@@ -129,13 +129,13 @@ class SVGDocumentWrapper final : public nsIStreamListener,
 
   ~SVGDocumentWrapper();
 
-  nsresult SetupViewer(nsIRequest* aRequest, nsIContentViewer** aViewer,
+  nsresult SetupViewer(nsIRequest* aRequest, nsIDocumentViewer** aViewer,
                        nsILoadGroup** aLoadGroup);
   void DestroyViewer();
   void RegisterForXPCOMShutdown();
   void UnregisterForXPCOMShutdown();
 
-  nsCOMPtr<nsIContentViewer> mViewer;
+  nsCOMPtr<nsIDocumentViewer> mViewer;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
   nsCOMPtr<nsIStreamListener> mListener;
   bool mIgnoreInvalidation;

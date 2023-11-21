@@ -17,7 +17,7 @@
 #include "mozilla/dom/SVGSVGElement.h"
 #include "nsICategoryManager.h"
 #include "nsIChannel.h"
-#include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIHttpChannel.h"
 #include "nsIObserverService.h"
@@ -258,7 +258,7 @@ SVGDocumentWrapper::Observe(nsISupports* aSubject, const char* aTopic,
 // This method is largely cribbed from
 // nsExternalResourceMap::PendingLoad::SetupViewer.
 nsresult SVGDocumentWrapper::SetupViewer(nsIRequest* aRequest,
-                                         nsIContentViewer** aViewer,
+                                         nsIDocumentViewer** aViewer,
                                          nsILoadGroup** aLoadGroup) {
   nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
   NS_ENSURE_TRUE(chan, NS_ERROR_UNEXPECTED);
@@ -293,7 +293,7 @@ nsresult SVGDocumentWrapper::SetupViewer(nsIRequest* aRequest,
       do_GetService(contractId.get());
   NS_ENSURE_TRUE(docLoaderFactory, NS_ERROR_NOT_AVAILABLE);
 
-  nsCOMPtr<nsIContentViewer> viewer;
+  nsCOMPtr<nsIDocumentViewer> viewer;
   nsCOMPtr<nsIStreamListener> listener;
   rv = docLoaderFactory->CreateInstance(
       "external-resource", chan, newLoadGroup, nsLiteralCString(IMAGE_SVG_XML),

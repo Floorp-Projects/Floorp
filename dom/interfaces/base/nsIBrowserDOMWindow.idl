@@ -172,7 +172,7 @@ interface nsIBrowserDOMWindow : nsISupports
 
   /**
    * This function is responsible for calling
-   * nsIContentViewer::PermitUnload on each frame in the window. It
+   * nsIDocumentViewer::PermitUnload on each frame in the window. It
    * returns true if closing the window is allowed. See canClose() in
    * BrowserUtils.sys.mjs for a simple implementation of this method.
    */

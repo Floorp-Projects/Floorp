@@ -654,13 +654,13 @@ SessionHistoryEntry::SetReferrerInfo(nsIReferrerInfo* aReferrerInfo) {
 }
 
 NS_IMETHODIMP
-SessionHistoryEntry::GetContentViewer(nsIContentViewer** aContentViewer) {
+SessionHistoryEntry::GetContentViewer(nsIDocumentViewer** aContentViewer) {
   *aContentViewer = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SessionHistoryEntry::SetContentViewer(nsIContentViewer* aContentViewer) {
+SessionHistoryEntry::SetContentViewer(nsIDocumentViewer* aContentViewer) {
   MOZ_CRASH("This lives in the child process");
   return NS_ERROR_FAILURE;
 }

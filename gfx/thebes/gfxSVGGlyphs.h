@@ -16,7 +16,7 @@
 #include "mozilla/SVGContextPaint.h"
 #include "nsRefreshObservers.h"
 
-class nsIContentViewer;
+class nsIDocumentViewer;
 class gfxSVGGlyphs;
 
 namespace mozilla {
@@ -63,7 +63,7 @@ class gfxSVGGlyphsDocument final : public nsAPostRefreshObserver {
   // Weak so as not to create a cycle. mOwner owns us so this can't dangle.
   gfxSVGGlyphs* mOwner;
   RefPtr<mozilla::dom::Document> mDocument;
-  nsCOMPtr<nsIContentViewer> mViewer;
+  nsCOMPtr<nsIDocumentViewer> mViewer;
   RefPtr<mozilla::PresShell> mPresShell;
 
   nsBaseHashtable<nsUint32HashKey, Element*, Element*> mGlyphIdMap;

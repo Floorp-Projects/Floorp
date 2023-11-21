@@ -3591,7 +3591,7 @@ static void PrepareForFullscreenChange(nsIDocShell* aDocShell,
     rd->ScheduleViewManagerFlush();
   }
   if (!aSize.IsEmpty()) {
-    nsCOMPtr<nsIContentViewer> cv;
+    nsCOMPtr<nsIDocumentViewer> cv;
     aDocShell->GetContentViewer(getter_AddRefs(cv));
     if (cv) {
       nsIntRect cvBounds;

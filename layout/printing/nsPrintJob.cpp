@@ -79,7 +79,7 @@ static const char sPrintSettingsServiceContractID[] =
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebBrowserChrome.h"
 #include "mozilla/ReflowInput.h"
-#include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
 #include "nsIDocumentViewerPrint.h"
 
 #include "nsFocusManager.h"
@@ -621,12 +621,12 @@ void nsPrintJob::FirePrintingErrorEvent(nsresult aPrintError) {
     mPrintPreviewCallback = nullptr;
   }
 
-  nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(mDocViewerPrint);
-  if (NS_WARN_IF(!cv)) {
+  nsCOMPtr<nsIDocumentViewer> viewer = do_QueryInterface(mDocViewerPrint);
+  if (NS_WARN_IF(!viewer)) {
     return;
   }
 
-  const RefPtr<Document> doc = cv->GetDocument();
+  const RefPtr<Document> doc = viewer->GetDocument();
   const RefPtr<CustomEvent> event = NS_NewDOMCustomEvent(doc, nullptr, nullptr);
 
   MOZ_ASSERT(event);
@@ -967,8 +967,8 @@ void nsPrintJob::FirePrintPreviewUpdateEvent() {
   // Dispatch the event only while in PrintPreview. When printing, there is no
   // listener bound to this event and therefore no need to dispatch it.
   if (mCreatedForPrintPreview && !mIsDoingPrinting) {
-    nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(mDocViewerPrint);
-    if (Document* document = cv->GetDocument()) {
+    nsCOMPtr<nsIDocumentViewer> viewer = do_QueryInterface(mDocViewerPrint);
+    if (Document* document = viewer->GetDocument()) {
       AsyncEventDispatcher::RunDOMEventWhenSafe(
           *document, u"printPreviewUpdate"_ns, CanBubble::eYes,
           ChromeOnlyDispatch::eYes);
@@ -1183,8 +1183,9 @@ nsresult nsPrintJob::UpdateSelectionAndShrinkPrintObject(
 
 nsView* nsPrintJob::GetParentViewForRoot() {
   if (mIsCreatingPrintPreview) {
-    if (nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(mDocViewerPrint)) {
-      return cv->FindContainerView();
+    if (nsCOMPtr<nsIDocumentViewer> viewer =
+            do_QueryInterface(mDocViewerPrint)) {
+      return viewer->FindContainerView();
     }
   }
   return nullptr;
@@ -1316,11 +1317,12 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
 
   int32_t p2a = aPO->mPresContext->DeviceContext()->AppUnitsPerDevPixel();
   if (documentIsTopLevel && mIsCreatingPrintPreview) {
-    if (nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(mDocViewerPrint)) {
+    if (nsCOMPtr<nsIDocumentViewer> viewer =
+            do_QueryInterface(mDocViewerPrint)) {
       // If we're print-previewing and the top level document, use the bounds
       // from our doc viewer. Page bounds is not what we want.
       nsIntRect bounds;
-      cv->GetBounds(bounds);
+      viewer->GetBounds(bounds);
       adjSize = nsSize(bounds.width * p2a, bounds.height * p2a);
     }
   }
@@ -2051,9 +2053,9 @@ nsresult nsPrintJob::StartPagePrintTimer(const UniquePtr<nsPrintObject>& aPO) {
     // this gives the user more time to press cancel
     int32_t printPageDelay = mPrintSettings->GetPrintPageDelay();
 
-    nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(mDocViewerPrint);
-    NS_ENSURE_TRUE(cv, NS_ERROR_FAILURE);
-    nsCOMPtr<Document> doc = cv->GetDocument();
+    nsCOMPtr<nsIDocumentViewer> viewer = do_QueryInterface(mDocViewerPrint);
+    NS_ENSURE_TRUE(viewer, NS_ERROR_FAILURE);
+    nsCOMPtr<Document> doc = viewer->GetDocument();
     NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
     mPagePrintTimer =
@@ -2092,9 +2094,9 @@ class nsPrintCompletionEvent : public Runnable {
 void nsPrintJob::FirePrintCompletionEvent() {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIRunnable> event = new nsPrintCompletionEvent(mDocViewerPrint);
-  nsCOMPtr<nsIContentViewer> cv = do_QueryInterface(mDocViewerPrint);
-  NS_ENSURE_TRUE_VOID(cv);
-  nsCOMPtr<Document> doc = cv->GetDocument();
+  nsCOMPtr<nsIDocumentViewer> viewer = do_QueryInterface(mDocViewerPrint);
+  NS_ENSURE_TRUE_VOID(viewer);
+  nsCOMPtr<Document> doc = viewer->GetDocument();
   NS_ENSURE_TRUE_VOID(doc);
   NS_ENSURE_SUCCESS_VOID(doc->Dispatch(event.forget()));
 }

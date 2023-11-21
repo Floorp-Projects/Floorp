@@ -180,9 +180,9 @@
 #include "nsDocShellLoadState.h"
 #include "nsHashPropertyBag.h"
 #include "nsIConsoleListener.h"
-#include "nsIContentViewer.h"
 #include "nsICycleCollectorListener.h"
 #include "nsIDocShellTreeOwner.h"
+#include "nsIDocumentViewer.h"
 #include "nsIDragService.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIMemoryInfoDumper.h"
@@ -4445,7 +4445,7 @@ mozilla::ipc::IPCResult ContentChild::RecvDispatchBeforeUnloadToSubtree(
     const MaybeDiscarded<BrowsingContext>& aStartingAt,
     DispatchBeforeUnloadToSubtreeResolver&& aResolver) {
   if (aStartingAt.IsNullOrDiscarded()) {
-    aResolver(nsIContentViewer::eAllowNavigation);
+    aResolver(nsIDocumentViewer::eAllowNavigation);
   } else {
     DispatchBeforeUnloadToSubtree(aStartingAt.get(), std::move(aResolver));
   }
@@ -4474,23 +4474,23 @@ mozilla::ipc::IPCResult ContentChild::RecvInitNextGenLocalStorageEnabled(
 
   aStartingAt->PreOrderWalk([&](dom::BrowsingContext* aBC) {
     if (aBC->GetDocShell()) {
-      nsCOMPtr<nsIContentViewer> contentViewer;
-      aBC->GetDocShell()->GetContentViewer(getter_AddRefs(contentViewer));
-      if (contentViewer &&
-          contentViewer->DispatchBeforeUnload() ==
-              nsIContentViewer::eRequestBlockNavigation &&
+      nsCOMPtr<nsIDocumentViewer> viewer;
+      aBC->GetDocShell()->GetContentViewer(getter_AddRefs(viewer));
+      if (viewer &&
+          viewer->DispatchBeforeUnload() ==
+              nsIDocumentViewer::eRequestBlockNavigation &&
           !resolved) {
         // Send our response as soon as we find any blocker, so that we can show
         // the permit unload prompt as soon as possible, without giving
         // subsequent handlers a chance to delay it.
-        aResolver(nsIContentViewer::eRequestBlockNavigation);
+        aResolver(nsIDocumentViewer::eRequestBlockNavigation);
         resolved = true;
       }
     }
   });
 
   if (!resolved) {
-    aResolver(nsIContentViewer::eAllowNavigation);
+    aResolver(nsIDocumentViewer::eAllowNavigation);
   }
 }
 

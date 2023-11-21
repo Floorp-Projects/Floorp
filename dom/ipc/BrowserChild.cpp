@@ -887,9 +887,9 @@ nsresult BrowserChild::CloneDocumentTreeIntoSelf(
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIContentViewer> cv;
-  ourDocShell->GetContentViewer(getter_AddRefs(cv));
-  if (NS_WARN_IF(!cv)) {
+  nsCOMPtr<nsIDocumentViewer> viewer;
+  ourDocShell->GetContentViewer(getter_AddRefs(viewer));
+  if (NS_WARN_IF(!viewer)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -913,8 +913,8 @@ nsresult BrowserChild::CloneDocumentTreeIntoSelf(
     AutoPrintEventDispatcher dispatcher(*sourceDocument);
     nsAutoScriptBlocker scriptBlocker;
     bool hasInProcessCallbacks = false;
-    clone = sourceDocument->CreateStaticClone(ourDocShell, cv, printSettings,
-                                              &hasInProcessCallbacks);
+    clone = sourceDocument->CreateStaticClone(
+        ourDocShell, viewer, printSettings, &hasInProcessCallbacks);
     if (NS_WARN_IF(!clone)) {
       return NS_ERROR_FAILURE;
     }
@@ -978,9 +978,9 @@ nsresult BrowserChild::UpdateRemotePrintSettings(
 
   bc->PreOrderWalk([&](BrowsingContext* aBc) {
     if (nsCOMPtr<nsIDocShell> inProcess = aBc->GetDocShell()) {
-      nsCOMPtr<nsIContentViewer> cv;
-      inProcess->GetContentViewer(getter_AddRefs(cv));
-      if (NS_WARN_IF(!cv)) {
+      nsCOMPtr<nsIDocumentViewer> viewer;
+      inProcess->GetContentViewer(getter_AddRefs(viewer));
+      if (NS_WARN_IF(!viewer)) {
         return BrowsingContext::WalkFlag::Skip;
       }
       // The CanRunScript analysis is not smart enough to see across
@@ -992,7 +992,7 @@ nsresult BrowserChild::UpdateRemotePrintSettings(
         RefPtr<RemotePrintJobChild> printJob =
             static_cast<RemotePrintJobChild*>(
                 aPrintData.remotePrintJob().AsChild());
-        cv->SetPrintSettingsForSubdocument(printSettings, printJob);
+        viewer->SetPrintSettingsForSubdocument(printSettings, printJob);
       }());
     } else if (RefPtr<BrowserBridgeChild> remoteChild =
                    BrowserBridgeChild::GetFrom(aBc->GetEmbedderElement())) {

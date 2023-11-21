@@ -10,7 +10,7 @@
 #include "ipc/EnumSerializer.h"
 #include "nsCOMPtr.h"
 #include "nsDocShellLoadState.h"
-#include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
 #include "mozilla/ScrollbarPreferences.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 

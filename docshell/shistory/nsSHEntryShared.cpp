@@ -9,7 +9,7 @@
 #include "nsArray.h"
 #include "nsContentUtils.h"
 #include "nsDocShellEditorData.h"
-#include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
 #include "nsISHistory.h"
 #include "mozilla/dom/Document.h"
 #include "nsILayoutHistoryState.h"
@@ -217,7 +217,7 @@ void nsSHEntryShared::DropPresentationState() {
   mEditorData = nullptr;
 }
 
-nsresult nsSHEntryShared::SetContentViewer(nsIContentViewer* aViewer) {
+nsresult nsSHEntryShared::SetContentViewer(nsIDocumentViewer* aViewer) {
   MOZ_ASSERT(!aViewer || !mContentViewer,
              "SHEntryShared already contains viewer");
 
@@ -259,7 +259,7 @@ nsresult nsSHEntryShared::RemoveFromBFCacheSync() {
   RefPtr<nsSHEntryShared> kungFuDeathGrip = this;
 
   // DropPresentationState would clear mContentViewer.
-  nsCOMPtr<nsIContentViewer> viewer = mContentViewer;
+  nsCOMPtr<nsIDocumentViewer> viewer = mContentViewer;
   DropPresentationState();
 
   if (viewer) {
@@ -287,7 +287,7 @@ nsresult nsSHEntryShared::RemoveFromBFCacheAsync() {
   // DropPresentationState would clear mContentViewer & mDocument. Capture and
   // release the references asynchronously so that the document doesn't get
   // nuked mid-mutation.
-  nsCOMPtr<nsIContentViewer> viewer = mContentViewer;
+  nsCOMPtr<nsIDocumentViewer> viewer = mContentViewer;
   RefPtr<dom::Document> document = mDocument;
   RefPtr<nsSHEntryShared> self = this;
   nsresult rv = mDocument->Dispatch(NS_NewRunnableFunction(

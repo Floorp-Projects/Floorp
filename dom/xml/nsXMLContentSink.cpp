@@ -22,7 +22,7 @@
 #include "nsIScriptContext.h"
 #include "nsNameSpaceManager.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
 #include "prtime.h"
 #include "mozilla/Logging.h"
 #include "nsRect.h"
@@ -327,7 +327,7 @@ nsresult nsXMLContentSink::OnDocumentCreated(Document* aSourceDocument,
                                              Document* aResultDocument) {
   aResultDocument->SetDocWriteDisabled(true);
 
-  nsCOMPtr<nsIContentViewer> contentViewer;
+  nsCOMPtr<nsIDocumentViewer> contentViewer;
   mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
   // Make sure that we haven't loaded a new document into the contentviewer
   // after starting the XSLT transform.
@@ -345,7 +345,7 @@ nsresult nsXMLContentSink::OnTransformDone(Document* aSourceDocument,
 
   mDocumentChildren.Clear();
 
-  nsCOMPtr<nsIContentViewer> contentViewer;
+  nsCOMPtr<nsIDocumentViewer> contentViewer;
   mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
 
   RefPtr<Document> originalDocument = mDocument;

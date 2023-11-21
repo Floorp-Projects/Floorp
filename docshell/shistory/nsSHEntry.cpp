@@ -13,8 +13,8 @@
 #include "nsDocShellLoadState.h"
 #include "nsDocShellLoadTypes.h"
 #include "nsIContentSecurityPolicy.h"
-#include "nsIContentViewer.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIDocumentViewer.h"
 #include "nsIInputStream.h"
 #include "nsILayoutHistoryState.h"
 #include "nsIMutableArray.h"
@@ -991,7 +991,7 @@ nsSHEntry::SyncTreesForSubframeNavigation(
 }
 
 void nsSHEntry::EvictContentViewer() {
-  nsCOMPtr<nsIContentViewer> viewer = GetContentViewer();
+  nsCOMPtr<nsIDocumentViewer> viewer = GetContentViewer();
   if (viewer) {
     mShared->NotifyListenersContentViewerEvicted();
     // Drop the presentation state before destroying the viewer, so that
@@ -1003,12 +1003,12 @@ void nsSHEntry::EvictContentViewer() {
 }
 
 NS_IMETHODIMP
-nsSHEntry::SetContentViewer(nsIContentViewer* aViewer) {
+nsSHEntry::SetContentViewer(nsIDocumentViewer* aViewer) {
   return GetState()->SetContentViewer(aViewer);
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetContentViewer(nsIContentViewer** aResult) {
+nsSHEntry::GetContentViewer(nsIDocumentViewer** aResult) {
   *aResult = GetState()->mContentViewer;
   NS_IF_ADDREF(*aResult);
   return NS_OK;

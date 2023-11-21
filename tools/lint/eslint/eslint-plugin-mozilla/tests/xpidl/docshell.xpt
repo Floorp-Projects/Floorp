@@ -394,7 +394,7 @@
               "in"
             ],
             "type": {
-              "name": "nsIContentViewer",
+              "name": "nsIDocumentViewer",
               "tag": "TD_INTERFACE_TYPE"
             }
           }
@@ -834,9 +834,9 @@
         "params": []
       }
     ],
-    "name": "nsIContentViewer",
+    "name": "nsIDocumentViewer",
     "parent": "nsISupports",
-    "uuid": "2da17016-7851-4a45-a7a8-00b360e01595"
+    "uuid": "48118355-e9a5-4452-ab18-59cc426fb817"
   },
   {
     "consts": [
@@ -1299,7 +1299,7 @@
               "out"
             ],
             "type": {
-              "name": "nsIContentViewer",
+              "name": "nsIDocumentViewer",
               "tag": "TD_INTERFACE_TYPE"
             }
           }
@@ -2079,7 +2079,7 @@
               "in"
             ],
             "type": {
-              "name": "nsIContentViewer",
+              "name": "nsIDocumentViewer",
               "tag": "TD_INTERFACE_TYPE"
             }
           },
@@ -4132,7 +4132,7 @@
               "out"
             ],
             "type": {
-              "name": "nsIContentViewer",
+              "name": "nsIDocumentViewer",
               "tag": "TD_INTERFACE_TYPE"
             }
           }
@@ -4177,7 +4177,7 @@
               "out"
             ],
             "type": {
-              "name": "nsIContentViewer",
+              "name": "nsIDocumentViewer",
               "tag": "TD_INTERFACE_TYPE"
             }
           }
