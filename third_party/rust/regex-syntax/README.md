@@ -4,6 +4,7 @@ This crate provides a robust regular expression parser.
 
 [![Build status](https://github.com/rust-lang/regex/workflows/ci/badge.svg)](https://github.com/rust-lang/regex/actions)
 [![Crates.io](https://img.shields.io/crates/v/regex-syntax.svg)](https://crates.io/crates/regex-syntax)
+[![Rust](https://img.shields.io/badge/rust-1.28.0%2B-blue.svg?maxAge=3600)](https://github.com/rust-lang/regex)
 
 
 ### Documentation
@@ -29,12 +30,13 @@ concrete syntax that produced the `Hir`.
 This example shows how to parse a pattern string into its HIR:
 
 ```rust
-use regex_syntax::{hir::Hir, parse};
+use regex_syntax::Parser;
+use regex_syntax::hir::{self, Hir};
 
-let hir = parse("a|b").unwrap();
+let hir = Parser::new().parse("a|b").unwrap();
 assert_eq!(hir, Hir::alternation(vec![
-    Hir::literal("a".as_bytes()),
-    Hir::literal("b".as_bytes()),
+    Hir::literal(hir::Literal::Unicode('a')),
+    Hir::literal(hir::Literal::Unicode('b')),
 ]));
 ```
 
