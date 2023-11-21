@@ -80,12 +80,11 @@ CommandEncoder::CommandEncoder(Device* const aParent,
 CommandEncoder::~CommandEncoder() { Cleanup(); }
 
 void CommandEncoder::Cleanup() {
-  if (!mValid) {
-    return;
-  }
-  mValid = false;
-  if (mBridge->IsOpen()) {
-    mBridge->SendCommandEncoderDrop(mId);
+  if (mValid) {
+    mValid = false;
+    if (mBridge->IsOpen()) {
+      mBridge->SendCommandEncoderDrop(mId);
+    }
   }
 }
 
@@ -94,102 +93,88 @@ void CommandEncoder::CopyBufferToBuffer(const Buffer& aSource,
                                         const Buffer& aDestination,
                                         BufferAddress aDestinationOffset,
                                         BufferAddress aSize) {
-  if (!mBridge->IsOpen()) {
-    return;
+  if (mValid && mBridge->IsOpen()) {
+    ipc::ByteBuf bb;
+    ffi::wgpu_command_encoder_copy_buffer_to_buffer(
+        aSource.mId, aSourceOffset, aDestination.mId, aDestinationOffset, aSize,
+        ToFFI(&bb));
+    mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
   }
-
-  ipc::ByteBuf bb;
-  ffi::wgpu_command_encoder_copy_buffer_to_buffer(
-      aSource.mId, aSourceOffset, aDestination.mId, aDestinationOffset, aSize,
-      ToFFI(&bb));
-  mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
 }
 
 void CommandEncoder::CopyBufferToTexture(
     const dom::GPUImageCopyBuffer& aSource,
     const dom::GPUImageCopyTexture& aDestination,
     const dom::GPUExtent3D& aCopySize) {
-  if (!mBridge->IsOpen()) {
-    return;
-  }
+  if (mValid && mBridge->IsOpen()) {
+    ipc::ByteBuf bb;
+    ffi::WGPUImageDataLayout src_layout = {};
+    CommandEncoder::ConvertTextureDataLayoutToFFI(aSource, &src_layout);
+    ffi::wgpu_command_encoder_copy_buffer_to_texture(
+        aSource.mBuffer->mId, &src_layout, ConvertTextureCopyView(aDestination),
+        ConvertExtent(aCopySize), ToFFI(&bb));
+    mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
 
-  ipc::ByteBuf bb;
-  ffi::WGPUImageDataLayout src_layout = {};
-  CommandEncoder::ConvertTextureDataLayoutToFFI(aSource, &src_layout);
-  ffi::wgpu_command_encoder_copy_buffer_to_texture(
-      aSource.mBuffer->mId, &src_layout, ConvertTextureCopyView(aDestination),
-      ConvertExtent(aCopySize), ToFFI(&bb));
-  mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
-
-  const auto& targetContext = aDestination.mTexture->mTargetContext;
-  if (targetContext) {
-    mTargetContexts.AppendElement(targetContext);
+    const auto& targetContext = aDestination.mTexture->mTargetContext;
+    if (targetContext) {
+      mTargetContexts.AppendElement(targetContext);
+    }
   }
 }
 void CommandEncoder::CopyTextureToBuffer(
     const dom::GPUImageCopyTexture& aSource,
     const dom::GPUImageCopyBuffer& aDestination,
     const dom::GPUExtent3D& aCopySize) {
-  if (!mBridge->IsOpen()) {
-    return;
+  if (mValid && mBridge->IsOpen()) {
+    ipc::ByteBuf bb;
+    ffi::WGPUImageDataLayout dstLayout = {};
+    CommandEncoder::ConvertTextureDataLayoutToFFI(aDestination, &dstLayout);
+    ffi::wgpu_command_encoder_copy_texture_to_buffer(
+        ConvertTextureCopyView(aSource), aDestination.mBuffer->mId, &dstLayout,
+        ConvertExtent(aCopySize), ToFFI(&bb));
+    mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
   }
-
-  ipc::ByteBuf bb;
-  ffi::WGPUImageDataLayout dstLayout = {};
-  CommandEncoder::ConvertTextureDataLayoutToFFI(aDestination, &dstLayout);
-  ffi::wgpu_command_encoder_copy_texture_to_buffer(
-      ConvertTextureCopyView(aSource), aDestination.mBuffer->mId, &dstLayout,
-      ConvertExtent(aCopySize), ToFFI(&bb));
-  mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
 }
 void CommandEncoder::CopyTextureToTexture(
     const dom::GPUImageCopyTexture& aSource,
     const dom::GPUImageCopyTexture& aDestination,
     const dom::GPUExtent3D& aCopySize) {
-  if (!mBridge->IsOpen()) {
-    return;
-  }
+  if (mValid && mBridge->IsOpen()) {
+    ipc::ByteBuf bb;
+    ffi::wgpu_command_encoder_copy_texture_to_texture(
+        ConvertTextureCopyView(aSource), ConvertTextureCopyView(aDestination),
+        ConvertExtent(aCopySize), ToFFI(&bb));
+    mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
 
-  ipc::ByteBuf bb;
-  ffi::wgpu_command_encoder_copy_texture_to_texture(
-      ConvertTextureCopyView(aSource), ConvertTextureCopyView(aDestination),
-      ConvertExtent(aCopySize), ToFFI(&bb));
-  mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
-
-  const auto& targetContext = aDestination.mTexture->mTargetContext;
-  if (targetContext) {
-    mTargetContexts.AppendElement(targetContext);
+    const auto& targetContext = aDestination.mTexture->mTargetContext;
+    if (targetContext) {
+      mTargetContexts.AppendElement(targetContext);
+    }
   }
 }
 
 void CommandEncoder::PushDebugGroup(const nsAString& aString) {
-  if (!mBridge->IsOpen()) {
-    return;
+  if (mValid && mBridge->IsOpen()) {
+    ipc::ByteBuf bb;
+    NS_ConvertUTF16toUTF8 marker(aString);
+    ffi::wgpu_command_encoder_push_debug_group(&marker, ToFFI(&bb));
+    mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
   }
-
-  ipc::ByteBuf bb;
-  NS_ConvertUTF16toUTF8 marker(aString);
-  ffi::wgpu_command_encoder_push_debug_group(&marker, ToFFI(&bb));
-  mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
 }
 void CommandEncoder::PopDebugGroup() {
-  if (!mBridge->IsOpen()) {
-    return;
+  if (mValid && mBridge->IsOpen()) {
+    ipc::ByteBuf bb;
+    ffi::wgpu_command_encoder_pop_debug_group(ToFFI(&bb));
+    mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
   }
-
-  ipc::ByteBuf bb;
-  ffi::wgpu_command_encoder_pop_debug_group(ToFFI(&bb));
-  mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
 }
 void CommandEncoder::InsertDebugMarker(const nsAString& aString) {
-  if (!mBridge->IsOpen()) {
-    return;
+  if (mValid && mBridge->IsOpen()) {
+    ipc::ByteBuf bb;
+    NS_ConvertUTF16toUTF8 marker(aString);
+    ffi::wgpu_command_encoder_insert_debug_marker(&marker, ToFFI(&bb));
+    mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
   }
-
-  ipc::ByteBuf bb;
-  NS_ConvertUTF16toUTF8 marker(aString);
-  ffi::wgpu_command_encoder_insert_debug_marker(&marker, ToFFI(&bb));
-  mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
 }
 
 already_AddRefed<ComputePassEncoder> CommandEncoder::BeginComputePass(
@@ -215,9 +200,10 @@ already_AddRefed<RenderPassEncoder> CommandEncoder::BeginRenderPass(
   return pass.forget();
 }
 
-void CommandEncoder::EndComputePass(ffi::WGPUComputePass& aPass) {
-  if (!mBridge->IsOpen()) {
-    return;
+void CommandEncoder::EndComputePass(ffi::WGPUComputePass& aPass,
+                                    ErrorResult& aRv) {
+  if (!mValid || !mBridge->IsOpen()) {
+    return aRv.ThrowInvalidStateError("Command encoder is not valid");
   }
 
   ipc::ByteBuf byteBuf;
@@ -225,9 +211,10 @@ void CommandEncoder::EndComputePass(ffi::WGPUComputePass& aPass) {
   mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(byteBuf));
 }
 
-void CommandEncoder::EndRenderPass(ffi::WGPURenderPass& aPass) {
-  if (!mBridge->IsOpen()) {
-    return;
+void CommandEncoder::EndRenderPass(ffi::WGPURenderPass& aPass,
+                                   ErrorResult& aRv) {
+  if (!mValid || !mBridge->IsOpen()) {
+    return aRv.ThrowInvalidStateError("Command encoder is not valid");
   }
 
   ipc::ByteBuf byteBuf;
@@ -237,12 +224,13 @@ void CommandEncoder::EndRenderPass(ffi::WGPURenderPass& aPass) {
 
 already_AddRefed<CommandBuffer> CommandEncoder::Finish(
     const dom::GPUCommandBufferDescriptor& aDesc) {
-  // WebGPUChild::CommandEncoderFinish handles the case where the IPC channel
-  // closed.
-  RawId id = mBridge->CommandEncoderFinish(mId, mParent->mId, aDesc);
-  RefPtr<CommandEncoder> me(this);
+  RawId id = 0;
+  if (mValid && mBridge->IsOpen()) {
+    mValid = false;
+    id = mBridge->CommandEncoderFinish(mId, mParent->mId, aDesc);
+  }
   RefPtr<CommandBuffer> comb =
-      new CommandBuffer(mParent, id, std::move(mTargetContexts), std::move(me));
+      new CommandBuffer(mParent, id, std::move(mTargetContexts));
   return comb.forget();
 }
 
