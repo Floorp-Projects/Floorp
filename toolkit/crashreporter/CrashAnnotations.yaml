@@ -369,12 +369,6 @@ HasDeviceTouchScreen:
     desktop as on mobile devices we assume a touch-screen is always present.
   type: boolean
 
-IAccessibleConfig:
-  description: >
-    Set when something is seriously wrong with the IAccessible configuration in
-    the computer's registry. The value is always set to "NoSystemTypeLibOrPS"
-  type: string
-
 InstallTime:
   description: >
     The time when Firefox was installed expressed as seconds since the Epoch
