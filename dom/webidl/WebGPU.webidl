@@ -922,7 +922,6 @@ interface GPUComputePassEncoder {
     [Pref="dom.webgpu.indirect-dispatch.enabled"]
     undefined dispatchWorkgroupsIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
 
-    [Throws]
     undefined end();
 };
 GPUComputePassEncoder includes GPUObjectBase;
@@ -951,7 +950,6 @@ interface GPURenderPassEncoder {
     //undefined endOcclusionQuery();
 
     undefined executeBundles(sequence<GPURenderBundle> bundles);
-    [Throws]
     undefined end();
 };
 GPURenderPassEncoder includes GPUObjectBase;
