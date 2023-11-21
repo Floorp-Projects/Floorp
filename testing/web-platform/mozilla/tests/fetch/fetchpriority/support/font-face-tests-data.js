@@ -13,4 +13,7 @@ export const kTestData = [
     {   testFileName: "load-font-face-from-worker.h2.html",
         expectedRequests: kExpectedRequests
     },
+    {   testFileName: "load-font-face-from-script.h2.html",
+        expectedRequests: kExpectedRequests
+    },
 ];

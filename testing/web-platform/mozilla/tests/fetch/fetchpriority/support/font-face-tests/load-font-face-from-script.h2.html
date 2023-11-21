@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>fetchpriority</title>
+</head>
+<body>
+asdf
+<script>
+  onload = function() {
+    const fontFace = new FontFace("dummy-font", "url(dummy.font)");
+    document.fonts.add(fontFace);
+    fontFace.load();
+    document.fonts.ready.then(() => opener.postMessage("ChildLoaded", "*"));
+  }
+</script>
+</body>
+</html>
