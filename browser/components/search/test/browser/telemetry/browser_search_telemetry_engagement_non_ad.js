@@ -64,7 +64,7 @@ add_task(async function test_click_non_ads_link() {
   );
   await pageLoadPromise;
 
-  assertImpressionEvents([
+  assertSERPTelemetry([
     {
       impression: {
         provider: "example",
@@ -79,6 +79,14 @@ add_task(async function test_click_non_ads_link() {
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
           target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
+        },
+      ],
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "13",
+          ads_visible: "13",
+          ads_hidden: "0",
         },
       ],
     },
@@ -113,7 +121,7 @@ add_task(async function test_click_non_ad_with_no_ads() {
   );
   await browserLoadedPromise;
 
-  assertImpressionEvents([
+  assertSERPTelemetry([
     {
       impression: {
         provider: "example",

@@ -55,6 +55,7 @@ add_task(async function test_track_ad_on_data_attributes() {
     gBrowser,
     getSERPUrl("searchTelemetryAd_dataAttributes.html")
   );
+  await waitForPageWithAdImpressions();
 
   await assertSearchSourcesTelemetry(
     {},
@@ -68,7 +69,7 @@ add_task(async function test_track_ad_on_data_attributes() {
     }
   );
 
-  assertImpressionEvents([
+  assertSERPTelemetry([
     {
       impression: {
         provider: "example-data-attributes",
@@ -79,6 +80,14 @@ add_task(async function test_track_ad_on_data_attributes() {
         is_private: "false",
         shopping_tab_displayed: "false",
       },
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "1",
+          ads_visible: "1",
+          ads_hidden: "0",
+        },
+      ],
     },
   ]);
 
@@ -92,6 +101,7 @@ add_task(async function test_track_ad_on_data_attributes_and_hrefs() {
     gBrowser,
     getSERPUrl("searchTelemetryAd_dataAttributes_href.html")
   );
+  await waitForPageWithAdImpressions();
 
   await assertSearchSourcesTelemetry(
     {},
@@ -105,7 +115,7 @@ add_task(async function test_track_ad_on_data_attributes_and_hrefs() {
     }
   );
 
-  assertImpressionEvents([
+  assertSERPTelemetry([
     {
       impression: {
         provider: "example-data-attributes",
@@ -116,6 +126,14 @@ add_task(async function test_track_ad_on_data_attributes_and_hrefs() {
         is_private: "false",
         shopping_tab_displayed: "false",
       },
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "1",
+          ads_visible: "1",
+          ads_hidden: "0",
+        },
+      ],
     },
   ]);
 
@@ -129,6 +147,7 @@ add_task(async function test_track_no_ad_on_data_attributes_and_hrefs() {
     gBrowser,
     getSERPUrl("searchTelemetryAd_dataAttributes_none.html")
   );
+  await waitForPageWithAdImpressions();
 
   await assertSearchSourcesTelemetry(
     {},
@@ -139,7 +158,7 @@ add_task(async function test_track_no_ad_on_data_attributes_and_hrefs() {
     }
   );
 
-  assertImpressionEvents([
+  assertSERPTelemetry([
     {
       impression: {
         provider: "example-data-attributes",

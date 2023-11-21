@@ -78,12 +78,9 @@ add_task(async function test_source_opened_in_new_tab_via_middle_click() {
     tab1.linkedBrowser
   );
   let tab2 = await tabPromise;
+  await waitForPageWithAdImpressions();
 
-  await TestUtils.waitForCondition(() => {
-    return Glean.serp.impression?.testGetValue()?.length == 2;
-  }, "Should have two impressions.");
-
-  assertImpressionEvents([
+  assertSERPTelemetry([
     {
       impression: {
         provider: "example",
@@ -100,6 +97,14 @@ add_task(async function test_source_opened_in_new_tab_via_middle_click() {
           target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
         },
       ],
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
+          ads_loaded: "1",
+          ads_visible: "1",
+          ads_hidden: "0",
+        },
+      ],
     },
     {
       impression: {
@@ -111,6 +116,14 @@ add_task(async function test_source_opened_in_new_tab_via_middle_click() {
         is_private: "false",
         shopping_tab_displayed: "false",
       },
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
+          ads_loaded: "1",
+          ads_visible: "1",
+          ads_hidden: "0",
+        },
+      ],
     },
   ]);
 
@@ -139,12 +152,9 @@ add_task(async function test_source_opened_in_new_tab_via_target_blank() {
     tab1.linkedBrowser
   );
   let tab2 = await tabPromise;
+  await waitForPageWithAdImpressions();
 
-  await TestUtils.waitForCondition(() => {
-    return Glean.serp.impression?.testGetValue()?.length == 2;
-  }, "Should have two impressions.");
-
-  assertImpressionEvents([
+  assertSERPTelemetry([
     {
       impression: {
         provider: "example",
@@ -161,6 +171,14 @@ add_task(async function test_source_opened_in_new_tab_via_target_blank() {
           target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
         },
       ],
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
+          ads_loaded: "1",
+          ads_visible: "1",
+          ads_hidden: "0",
+        },
+      ],
     },
     {
       impression: {
@@ -172,6 +190,14 @@ add_task(async function test_source_opened_in_new_tab_via_target_blank() {
         is_private: "false",
         shopping_tab_displayed: "false",
       },
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
+          ads_loaded: "1",
+          ads_visible: "1",
+          ads_hidden: "0",
+        },
+      ],
     },
   ]);
 
@@ -214,12 +240,9 @@ add_task(async function test_source_opened_in_new_tab_via_context_menu() {
   contextMenu.activateItem(openLinkInNewTabMenuItem);
 
   let tab2 = await tabPromise;
+  await waitForPageWithAdImpressions();
 
-  await TestUtils.waitForCondition(() => {
-    return Glean.serp.impression?.testGetValue()?.length == 2;
-  }, "Should have two impressions.");
-
-  assertImpressionEvents([
+  assertSERPTelemetry([
     {
       impression: {
         provider: "example",
@@ -236,6 +259,14 @@ add_task(async function test_source_opened_in_new_tab_via_context_menu() {
           target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
         },
       ],
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
+          ads_loaded: "1",
+          ads_visible: "1",
+          ads_hidden: "0",
+        },
+      ],
     },
     {
       impression: {
@@ -247,6 +278,14 @@ add_task(async function test_source_opened_in_new_tab_via_context_menu() {
         is_private: "false",
         shopping_tab_displayed: "false",
       },
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
+          ads_loaded: "1",
+          ads_visible: "1",
+          ads_hidden: "0",
+        },
+      ],
     },
   ]);
 
@@ -268,12 +307,9 @@ add_task(
       tab.linkedBrowser
     );
     await pageLoadPromise;
+    await waitForPageWithAdImpressions();
 
-    await TestUtils.waitForCondition(() => {
-      return Glean.serp.impression?.testGetValue()?.length == 2;
-    }, "Should have two impressions.");
-
-    assertImpressionEvents([
+    assertSERPTelemetry([
       {
         impression: {
           provider: "example",
@@ -290,6 +326,15 @@ add_task(
             target: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
           },
         ],
+        adImpressions: [
+          {
+            component:
+              SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
+            ads_loaded: "1",
+            ads_visible: "1",
+            ads_hidden: "0",
+          },
+        ],
       },
       {
         impression: {
@@ -301,6 +346,15 @@ add_task(
           is_private: "false",
           shopping_tab_displayed: "false",
         },
+        adImpressions: [
+          {
+            component:
+              SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
+            ads_loaded: "1",
+            ads_visible: "1",
+            ads_hidden: "0",
+          },
+        ],
       },
     ]);
 
@@ -322,12 +376,9 @@ add_task(
       tab.linkedBrowser
     );
     await pageLoadPromise;
+    await waitForPageWithAdImpressions();
 
-    await TestUtils.waitForCondition(() => {
-      return Glean.serp.impression?.testGetValue()?.length == 2;
-    }, "Should have two impressions.");
-
-    assertImpressionEvents([
+    assertSERPTelemetry([
       {
         impression: {
           provider: "example",
@@ -344,6 +395,15 @@ add_task(
             target: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
           },
         ],
+        adImpressions: [
+          {
+            component:
+              SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
+            ads_loaded: "1",
+            ads_visible: "1",
+            ads_hidden: "0",
+          },
+        ],
       },
       {
         impression: {
@@ -355,6 +415,15 @@ add_task(
           is_private: "false",
           shopping_tab_displayed: "false",
         },
+        adImpressions: [
+          {
+            component:
+              SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
+            ads_loaded: "1",
+            ads_visible: "1",
+            ads_hidden: "0",
+          },
+        ],
       },
     ]);
 
@@ -385,12 +454,9 @@ add_task(async function test_refinement_button_vs_opened_in_new_tab() {
     tab1.linkedBrowser
   );
   let tab2 = await tabPromise;
+  await waitForPageWithAdImpressions();
 
-  await TestUtils.waitForCondition(() => {
-    return Glean.serp.impression?.testGetValue()?.length == 2;
-  }, "Should have two impressions.");
-
-  assertImpressionEvents([
+  assertSERPTelemetry([
     {
       impression: {
         provider: "example",
@@ -407,6 +473,14 @@ add_task(async function test_refinement_button_vs_opened_in_new_tab() {
           target: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
         },
       ],
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
+          ads_loaded: "1",
+          ads_visible: "1",
+          ads_hidden: "0",
+        },
+      ],
     },
     {
       impression: {
@@ -418,6 +492,14 @@ add_task(async function test_refinement_button_vs_opened_in_new_tab() {
         is_private: "false",
         shopping_tab_displayed: "false",
       },
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
+          ads_loaded: "1",
+          ads_visible: "1",
+          ads_hidden: "0",
+        },
+      ],
     },
   ]);
 

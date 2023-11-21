@@ -84,7 +84,7 @@ add_setup(async function () {
     Services.prefs.clearUserPref("browser.search.log");
     SearchSERPTelemetry.overrideSearchTelemetryForTests();
     Services.telemetry.canRecordExtended = oldCanRecord;
-    Services.telemetry.clearScalars();
+    resetTelemetry();
   });
 });
 
@@ -110,6 +110,7 @@ add_task(async function test_search() {
   Services.fog.testResetFOG();
   // Load a page via the address bar.
   await loadSearchPage();
+  await waitForPageWithAdImpressions();
 
   await assertSearchSourcesTelemetry(
     {
@@ -121,7 +122,7 @@ add_task(async function test_search() {
     }
   );
 
-  assertImpressionEvents([
+  assertSERPTelemetry([
     {
       impression: {
         provider: "example",
@@ -132,6 +133,14 @@ add_task(async function test_search() {
         is_shopping_page: "false",
         is_private: "false",
       },
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "2",
+          ads_visible: "2",
+          ads_hidden: "0",
+        },
+      ],
     },
   ]);
 });
@@ -155,7 +164,7 @@ add_task(async function test_reload() {
     }
   );
 
-  assertImpressionEvents([
+  assertSERPTelemetry([
     {
       impression: {
         provider: "example",
@@ -165,6 +174,17 @@ add_task(async function test_reload() {
         shopping_tab_displayed: "false",
         is_shopping_page: "false",
         is_private: "false",
+      },
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "2",
+          ads_visible: "2",
+          ads_hidden: "0",
+        },
+      ],
+      abandonment: {
+        reason: SearchSERPTelemetryUtils.ABANDONMENTS.NAVIGATION,
       },
     },
     {
@@ -177,6 +197,14 @@ add_task(async function test_reload() {
         is_shopping_page: "false",
         is_private: "false",
       },
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "2",
+          ads_visible: "2",
+          ads_hidden: "0",
+        },
+      ],
     },
   ]);
 
@@ -197,7 +225,7 @@ add_task(async function test_reload() {
     }
   );
 
-  assertImpressionEvents([
+  assertSERPTelemetry([
     {
       impression: {
         provider: "example",
@@ -207,6 +235,17 @@ add_task(async function test_reload() {
         shopping_tab_displayed: "false",
         is_shopping_page: "false",
         is_private: "false",
+      },
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "2",
+          ads_visible: "2",
+          ads_hidden: "0",
+        },
+      ],
+      abandonment: {
+        reason: SearchSERPTelemetryUtils.ABANDONMENTS.NAVIGATION,
       },
     },
     {
@@ -223,6 +262,14 @@ add_task(async function test_reload() {
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
           target: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+        },
+      ],
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "2",
+          ads_visible: "2",
+          ads_hidden: "0",
         },
       ],
     },
@@ -251,7 +298,7 @@ add_task(async function test_fresh_search() {
     }
   );
 
-  assertImpressionEvents([
+  assertSERPTelemetry([
     {
       impression: {
         provider: "example",
@@ -262,6 +309,14 @@ add_task(async function test_fresh_search() {
         is_shopping_page: "false",
         is_private: "false",
       },
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "2",
+          ads_visible: "2",
+          ads_hidden: "0",
+        },
+      ],
     },
   ]);
 });
@@ -282,7 +337,7 @@ add_task(async function test_click_ad() {
     }
   );
 
-  assertImpressionEvents([
+  assertSERPTelemetry([
     {
       impression: {
         provider: "example",
@@ -297,6 +352,14 @@ add_task(async function test_click_ad() {
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
           target: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+        },
+      ],
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "2",
+          ads_visible: "2",
+          ads_hidden: "0",
         },
       ],
     },
@@ -323,7 +386,7 @@ add_task(async function test_go_back() {
     }
   );
 
-  assertImpressionEvents([
+  assertSERPTelemetry([
     {
       impression: {
         provider: "example",
@@ -340,6 +403,14 @@ add_task(async function test_go_back() {
           target: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
         },
       ],
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "2",
+          ads_visible: "2",
+          ads_hidden: "0",
+        },
+      ],
     },
     {
       impression: {
@@ -351,6 +422,14 @@ add_task(async function test_go_back() {
         is_shopping_page: "false",
         is_private: "false",
       },
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "2",
+          ads_visible: "2",
+          ads_hidden: "0",
+        },
+      ],
     },
   ]);
 
@@ -372,7 +451,7 @@ add_task(async function test_go_back() {
     }
   );
 
-  assertImpressionEvents([
+  assertSERPTelemetry([
     {
       impression: {
         provider: "example",
@@ -387,6 +466,14 @@ add_task(async function test_go_back() {
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
           target: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+        },
+      ],
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "2",
+          ads_visible: "2",
+          ads_hidden: "0",
         },
       ],
     },
@@ -404,6 +491,14 @@ add_task(async function test_go_back() {
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
           target: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+        },
+      ],
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "2",
+          ads_visible: "2",
+          ads_hidden: "0",
         },
       ],
     },
@@ -435,7 +530,7 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
     }
   );
 
-  assertImpressionEvents([
+  assertSERPTelemetry([
     {
       impression: {
         provider: "example",
@@ -446,6 +541,14 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
         is_shopping_page: "false",
         is_private: "false",
       },
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "2",
+          ads_visible: "2",
+          ads_hidden: "0",
+        },
+      ],
     },
   ]);
 
@@ -466,7 +569,7 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
     }
   );
 
-  assertImpressionEvents([
+  assertSERPTelemetry([
     {
       impression: {
         provider: "example",
@@ -476,6 +579,17 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
         shopping_tab_displayed: "false",
         is_shopping_page: "false",
         is_private: "false",
+      },
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "2",
+          ads_visible: "2",
+          ads_hidden: "0",
+        },
+      ],
+      abandonment: {
+        reason: SearchSERPTelemetryUtils.ABANDONMENTS.NAVIGATION,
       },
     },
     {
@@ -488,6 +602,14 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
         is_shopping_page: "false",
         is_private: "false",
       },
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "2",
+          ads_visible: "2",
+          ads_hidden: "0",
+        },
+      ],
     },
   ]);
 
@@ -510,7 +632,7 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
     }
   );
 
-  assertImpressionEvents([
+  assertSERPTelemetry([
     {
       impression: {
         provider: "example",
@@ -520,6 +642,17 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
         shopping_tab_displayed: "false",
         is_shopping_page: "false",
         is_private: "false",
+      },
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "2",
+          ads_visible: "2",
+          ads_hidden: "0",
+        },
+      ],
+      abandonment: {
+        reason: SearchSERPTelemetryUtils.ABANDONMENTS.NAVIGATION,
       },
     },
     {
@@ -536,6 +669,14 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
           target: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+        },
+      ],
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "2",
+          ads_visible: "2",
+          ads_hidden: "0",
         },
       ],
     },

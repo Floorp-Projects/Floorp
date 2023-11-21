@@ -190,7 +190,7 @@ function resetTelemetry() {
  * @param {Array} expectedEvents The expected impression events whose keys and
  * values we use to validate the recorded Glean impression events.
  */
-function assertImpressionEvents(expectedEvents) {
+function assertSERPTelemetry(expectedEvents) {
   // A single test might run assertImpressionEvents more than once
   // so the Set needs to be cleared or else the impression event
   // check will throw.
@@ -201,7 +201,7 @@ function assertImpressionEvents(expectedEvents) {
   Assert.equal(
     recordedImpressions.length,
     expectedEvents.length,
-    "Should have the correct number of impressions."
+    "Number of impressions matches expected events."
   );
 
   // Assert the impression events.
@@ -209,12 +209,12 @@ function assertImpressionEvents(expectedEvents) {
     let impressionId = recordedImpressions[idx].extra.impression_id;
     Assert.ok(
       UUID_REGEX.test(impressionId),
-      "Should have an impression_id with a valid UUID."
+      "Impression has an impression_id with a valid UUID."
     );
 
     Assert.ok(
       !impressionIdsSet.has(impressionId),
-      "Should have a unique impression_id."
+      "Impression has a unique impression_id."
     );
 
     impressionIdsSet.add(impressionId);
@@ -226,14 +226,20 @@ function assertImpressionEvents(expectedEvents) {
     Assert.deepEqual(
       recordedImpressions[idx].extra,
       expectedEvent.impression,
-      "Should have matched impression values."
+      "Matching SERP impression values."
     );
 
     // Once the impression check is sufficient, add the impression_id to
-    // each of the expected engagements for later deep equal checks.
+    // each of the expected engagements and ad impressions for deep equal
+    // checks.
     if (expectedEvent.engagements) {
       for (let expectedEngagment of expectedEvent.engagements) {
         expectedEngagment.impression_id = impressionId;
+      }
+    }
+    if (expectedEvent.adImpressions) {
+      for (let adImpression of expectedEvent.adImpressions) {
+        adImpression.impression_id = impressionId;
       }
     }
   }
@@ -246,10 +252,7 @@ function assertImpressionEvents(expectedEvents) {
 
   for (let recordedEngagement of recordedEngagements) {
     let impressionId = recordedEngagement.extra.impression_id;
-    Assert.ok(
-      impressionId,
-      "Should have an engagement event with an impression_id"
-    );
+    Assert.ok(impressionId, "Engagement event has impression_id.");
 
     let arr = idToEngagements.get(impressionId) ?? [];
     arr.push(recordedEngagement.extra);
@@ -266,7 +269,7 @@ function assertImpressionEvents(expectedEvents) {
       Assert.deepEqual(
         recorded,
         expectedEngagements,
-        "Should have matched engagement values."
+        "Matching engagement value."
       );
       totalExpectedEngagements += expectedEngagements.length;
     }
@@ -275,33 +278,78 @@ function assertImpressionEvents(expectedEvents) {
   Assert.equal(
     recordedEngagements.length,
     totalExpectedEngagements,
-    "Should have equal number of engagements."
-  );
-}
-
-function assertAdImpressionEvents(expectedAdImpressions) {
-  let adImpressions = Glean.serp.adImpression.testGetValue() ?? [];
-  let impressions = Glean.serp.impression.testGetValue() ?? [];
-
-  Assert.equal(impressions.length, 1, "Should have a SERP impression event.");
-  Assert.equal(
-    adImpressions.length,
-    expectedAdImpressions.length,
-    "Should have equal number of ad impression events."
+    "Number of engagements"
   );
 
-  expectedAdImpressions = expectedAdImpressions.map(expectedAdImpression => {
-    expectedAdImpression.impression_id = impressions[0].extra.impression_id;
-    return expectedAdImpression;
-  });
+  let recordedAdImpressions = Glean.serp.adImpression.testGetValue() ?? [];
+  let idToAdImpressions = new Map();
+  let totalExpectedAdImpressions = 0;
 
-  for (let [index, expectedAdImpression] of expectedAdImpressions.entries()) {
-    Assert.deepEqual(
-      adImpressions[index]?.extra,
-      expectedAdImpression,
-      "Should have equal values for an ad impression."
-    );
+  // The list of ad impressions are contained in a flat list. Separate them
+  // into arrays organized by impressionId to make it easier to determine if
+  // the page load that matches the expected ads on the page.
+  for (let recordedAdImpression of recordedAdImpressions) {
+    let impressionId = recordedAdImpression.extra.impression_id;
+    Assert.ok(impressionId, "Ad impression has impression_id");
+
+    let arr = idToAdImpressions.get(impressionId) ?? [];
+    arr.push(recordedAdImpression.extra);
+    idToAdImpressions.set(impressionId, arr);
   }
+
+  for (let expectedEvent of expectedEvents) {
+    let impressionId = expectedEvent.impression.impression_id;
+    let expectedAdImpressions = expectedEvent.adImpressions ?? [];
+    if (expectedAdImpressions.length) {
+      let recorded = idToAdImpressions.get(impressionId) ?? {};
+      Assert.deepEqual(
+        recorded,
+        expectedAdImpressions,
+        "Matching ad impression value."
+      );
+    }
+    totalExpectedAdImpressions += expectedAdImpressions.length;
+  }
+
+  Assert.equal(
+    recordedAdImpressions.length,
+    totalExpectedAdImpressions,
+    "Recorded and expected ad impression counts match."
+  );
+
+  // Assert abandonment events.
+  let recordedAbandonments = Glean.serp.abandonment.testGetValue() ?? [];
+  let idTorecordedAbandonments = new Map();
+  let totalExpectedrecordedAbandonments = 0;
+
+  for (let recordedAbandonment of recordedAbandonments) {
+    let impressionId = recordedAbandonment.extra.impression_id;
+    Assert.ok(impressionId, "Ad impression event has an impression_id.");
+
+    let arr = idTorecordedAbandonments.get(impressionId) ?? [];
+    arr.push(idTorecordedAbandonments.extra);
+    idTorecordedAbandonments.set(impressionId, arr);
+  }
+
+  for (let expectedEvent of expectedEvents) {
+    let impressionId = expectedEvent.impression.impression_id;
+    let expectedAbandonment = expectedEvent.abandonment;
+    if (expectedAbandonment) {
+      let recorded = idTorecordedAbandonments.get(impressionId);
+      Assert.deepEqual(
+        recorded,
+        expectedAbandonment,
+        "Abandonment value matches."
+      );
+    }
+    totalExpectedrecordedAbandonments += expectedAbandonment ? 1 : 0;
+  }
+
+  Assert.equal(
+    recordedAbandonments.length,
+    totalExpectedrecordedAbandonments,
+    "Recorded and expected abandonment counts match."
+  );
 }
 
 function assertAbandonmentEvent(expectedAbandonment) {

@@ -122,23 +122,6 @@ async function track_ad_click(
     }
   );
 
-  assertImpressionEvents([
-    {
-      impression: {
-        provider: "example",
-        tagged: "true",
-        partner_code: "ff",
-        source: expectedScalarSource,
-        is_shopping_page: "false",
-        is_private: "false",
-        shopping_tab_displayed: "false",
-      },
-    },
-  ]);
-  // Ad impression data is needed to categorize ads on the page in order to
-  // register ad click events before a click occurs. We don't assert their
-  // precise values here because other tests cover that the component
-  // categorizations are valid.
   await adImpressionPromise;
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
@@ -157,7 +140,7 @@ async function track_ad_click(
     }
   );
 
-  assertImpressionEvents([
+  assertSERPTelemetry([
     {
       impression: {
         provider: "example",
@@ -172,6 +155,14 @@ async function track_ad_click(
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
           target: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+        },
+      ],
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+          ads_loaded: "2",
+          ads_visible: "2",
+          ads_hidden: "0",
         },
       ],
     },
@@ -331,61 +322,6 @@ add_task(async function test_source_searchbar() {
   );
 });
 
-async function checkAboutPage(
-  page,
-  expectedHistogramSource,
-  expectedScalarSource
-) {
-  let tab;
-  await track_ad_click(
-    expectedHistogramSource,
-    expectedScalarSource,
-    async () => {
-      tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-
-      BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, page);
-      await BrowserTestUtils.browserStopped(tab.linkedBrowser, page);
-
-      // Wait for the full load.
-      await SpecialPowers.pushPrefEnv({
-        set: [
-          [
-            "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar",
-            false,
-          ],
-        ],
-      });
-      await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
-        await ContentTaskUtils.waitForCondition(
-          () => content.wrappedJSObject.gContentSearchController.defaultEngine
-        );
-      });
-
-      let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-      await typeInSearchField(
-        tab.linkedBrowser,
-        "test query",
-        "newtab-search-text"
-      );
-      await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, tab.linkedBrowser);
-      await p;
-      return tab;
-    },
-    async () => {
-      BrowserTestUtils.removeTab(tab);
-      await SpecialPowers.popPrefEnv();
-    }
-  );
-}
-
-add_task(async function test_source_about_home() {
-  await checkAboutPage("about:home", "abouthome", "about_home");
-});
-
-add_task(async function test_source_about_newtab() {
-  await checkAboutPage("about:newtab", "newtab", "about_newtab");
-});
-
 add_task(async function test_source_system() {
   let tab;
   await track_ad_click(
@@ -409,74 +345,6 @@ add_task(async function test_source_system() {
       return tab;
     },
     async () => {
-      BrowserTestUtils.removeTab(tab);
-    }
-  );
-});
-
-add_task(async function test_source_webextension_search() {
-  /* global browser */
-  async function background(SEARCH_TERM) {
-    // Search with no tabId
-    browser.search.search({ query: "searchSuggestion", engine: "Example" });
-  }
-
-  let searchExtension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      permissions: ["search", "tabs"],
-    },
-    background,
-    useAddonManager: "temporary",
-  });
-
-  let tab;
-  await track_ad_click(
-    "webextension",
-    "webextension",
-    async () => {
-      let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
-
-      await searchExtension.startup();
-
-      return (tab = await tabPromise);
-    },
-    async () => {
-      await searchExtension.unload();
-      BrowserTestUtils.removeTab(tab);
-    }
-  );
-});
-
-add_task(async function test_source_webextension_query() {
-  async function background(SEARCH_TERM) {
-    // Search with no tabId
-    browser.search.query({
-      text: "searchSuggestion",
-      disposition: "NEW_TAB",
-    });
-  }
-
-  let searchExtension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      permissions: ["search", "tabs"],
-    },
-    background,
-    useAddonManager: "temporary",
-  });
-
-  let tab;
-  await track_ad_click(
-    "webextension",
-    "webextension",
-    async () => {
-      let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
-
-      await searchExtension.startup();
-
-      return (tab = await tabPromise);
-    },
-    async () => {
-      await searchExtension.unload();
       BrowserTestUtils.removeTab(tab);
     }
   );
