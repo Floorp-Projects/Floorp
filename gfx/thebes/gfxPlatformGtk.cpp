@@ -144,14 +144,6 @@ gfxPlatformGtk::~gfxPlatformGtk() {
   gPlatformFTLibrary = nullptr;
 }
 
-void gfxPlatformGtk::InitAcceleration() {
-  gfxPlatform::InitAcceleration();
-
-  if (XRE_IsContentProcess()) {
-    ImportCachedContentDeviceData();
-  }
-}
-
 void gfxPlatformGtk::InitX11EGLConfig() {
   FeatureState& feature = gfxConfig::GetFeature(Feature::X11_EGL);
 #ifdef MOZ_X11
@@ -559,16 +551,23 @@ nsTArray<uint8_t> gfxPlatformGtk::GetPlatformCMSOutputProfileData() {
   }
 
   if (XRE_IsContentProcess()) {
-    auto& cmsOutputProfileData = GetCMSOutputProfileData();
-    // We should have set our profile data when we received our initial
-    // ContentDeviceData.
-    MOZ_ASSERT(cmsOutputProfileData.isSome(),
-               "Should have created output profile data when we received "
-               "initial content device data.");
-    if (cmsOutputProfileData.isSome()) {
-      return cmsOutputProfileData.ref().Clone();
+    MOZ_ASSERT(NS_IsMainThread());
+    // This will be passed in during InitChild so we can avoid sending a
+    // sync message back to the parent during init.
+    const mozilla::gfx::ContentDeviceData* contentDeviceData =
+        GetInitContentDeviceData();
+    if (contentDeviceData) {
+      // On Windows, we assert that the profile isn't empty, but on
+      // Linux it can legitimately be empty if the display isn't
+      // calibrated.  Thus, no assertion here.
+      return contentDeviceData->cmsOutputProfileData().Clone();
     }
-    return nsTArray<uint8_t>();
+
+    // Otherwise we need to ask the parent for the updated color profile
+    mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
+    nsTArray<uint8_t> result;
+    Unused << cc->SendGetOutputColorProfileData(&result);
+    return result;
   }
 
   if (!mIsX11Display) {

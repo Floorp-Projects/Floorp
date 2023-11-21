@@ -65,7 +65,6 @@ class gfxPlatformGtk final : public gfxPlatform {
   static bool CheckVariationFontSupport();
 
  protected:
-  void InitAcceleration() override;
   void InitX11EGLConfig();
   void InitDmabufConfig();
   bool InitVAAPIConfig(bool aForceEnabledByUser);

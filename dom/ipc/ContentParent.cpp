@@ -3380,6 +3380,19 @@ int32_t ContentParent::Pid() const {
   return ReleaseAssertedCast<int32_t>(pid);
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvGetGfxVars(
+    nsTArray<GfxVarUpdate>* aVars) {
+  // Ensure gfxVars is initialized (for xpcshell tests).
+  gfxVars::Initialize();
+
+  *aVars = gfxVars::FetchNonDefaultVars();
+
+  // Now that content has initialized gfxVars, we can start listening for
+  // updates.
+  gfxVars::AddReceiver(this);
+  return IPC_OK();
+}
+
 void ContentParent::OnCompositorUnexpectedShutdown() {
   GPUProcessManager* gpm = GPUProcessManager::Get();
 
@@ -5911,6 +5924,19 @@ mozilla::ipc::IPCResult ContentParent::RecvShutdownProfile(
 mozilla::ipc::IPCResult ContentParent::RecvShutdownPerfStats(
     const nsACString& aPerfStats) {
   PerfStats::StorePerfStats(this, aPerfStats);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvGetGraphicsDeviceInitData(
+    ContentDeviceData* aOut) {
+  gfxPlatform::GetPlatform()->BuildContentDeviceData(aOut);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvGetOutputColorProfileData(
+    nsTArray<uint8_t>* aOutputColorProfileData) {
+  (*aOutputColorProfileData) =
+      gfxPlatform::GetPlatform()->GetPlatformCMSOutputProfileData();
   return IPC_OK();
 }
 
