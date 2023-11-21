@@ -59,6 +59,7 @@ async function track_ad_click(testOrganic) {
   let tagged = testOrganic ? "false" : "true";
   let partnerCode = testOrganic ? "" : "ff";
 
+  let adImpressionPromise = waitForPageWithAdImpressions();
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     getSERPUrl("searchTelemetryAd.html", testOrganic)
@@ -87,7 +88,7 @@ async function track_ad_click(testOrganic) {
       },
     },
   ]);
-  await promiseAdImpressionReceived(1);
+  await adImpressionPromise;
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   BrowserTestUtils.synthesizeMouseAtCenter("#ad1", {}, tab.linkedBrowser);
@@ -125,6 +126,7 @@ async function track_ad_click(testOrganic) {
 
   // Now go back, and click again.
   pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
+  adImpressionPromise = waitForPageWithAdImpressions();
   gBrowser.goBack();
   await pageLoadPromise;
   await promiseWaitForAdLinkCheck();
@@ -171,7 +173,7 @@ async function track_ad_click(testOrganic) {
       },
     },
   ]);
-  await promiseAdImpressionReceived(2);
+  await adImpressionPromise;
 
   pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   BrowserTestUtils.synthesizeMouseAtCenter("#ad1", {}, tab.linkedBrowser);
@@ -241,6 +243,7 @@ add_task(async function test_track_ad_click_organic() {
 add_task(async function test_track_ad_click_with_location_change_other_tab() {
   resetTelemetry();
   const url = getSERPUrl("searchTelemetryAd.html");
+  let adImpressionPromise = waitForPageWithAdImpressions();
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
   await assertSearchSourcesTelemetry(
@@ -264,7 +267,7 @@ add_task(async function test_track_ad_click_with_location_change_other_tab() {
       },
     },
   ]);
-  await promiseAdImpressionReceived();
+  await adImpressionPromise;
 
   const newTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,

@@ -82,13 +82,6 @@ const TEST_PROVIDER_INFO = [
   },
 ];
 
-async function promiseAdImpressionReceived() {
-  return TestUtils.waitForCondition(() => {
-    let adImpressions = Glean.serp.adImpression.testGetValue() ?? [];
-    return adImpressions.length;
-  }, "Should have received an ad impression.");
-}
-
 async function promiseResize(width, height) {
   return TestUtils.waitForCondition(() => {
     return window.outerWidth === width && window.outerHeight === height;
@@ -131,7 +124,7 @@ add_task(async function test_ad_impressions_with_one_carousel() {
   let url = getSERPUrl("searchTelemetryAd_components_carousel.html");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
-  await promiseAdImpressionReceived();
+  await waitForPageWithAdImpressions();
 
   assertAdImpressionEvents([
     {
@@ -162,7 +155,7 @@ add_task(async function test_ad_impressions_with_two_carousels() {
     content.scrollTo(0, el.top + el.height + 100);
   });
 
-  await promiseAdImpressionReceived();
+  await waitForPageWithAdImpressions();
 
   assertAdImpressionEvents([
     {
@@ -184,7 +177,7 @@ add_task(
     );
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
-    await promiseAdImpressionReceived();
+    await waitForPageWithAdImpressions();
 
     assertAdImpressionEvents([
       {
@@ -204,7 +197,7 @@ add_task(async function test_ad_impressions_with_carousels_tabhistory() {
   let url = getSERPUrl("searchTelemetryAd_components_carousel.html");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
-  await promiseAdImpressionReceived();
+  await waitForPageWithAdImpressions();
 
   // Reset telemetry because we care about the telemetry upon going back.
   resetTelemetry();
@@ -223,7 +216,7 @@ add_task(async function test_ad_impressions_with_carousels_tabhistory() {
   tab.linkedBrowser.goBack();
   await pageShowPromise;
 
-  await promiseAdImpressionReceived();
+  await waitForPageWithAdImpressions();
 
   assertAdImpressionEvents([
     {
@@ -242,7 +235,7 @@ add_task(async function test_ad_impressions_with_hidden_carousels() {
   let url = getSERPUrl("searchTelemetryAd_components_carousel_hidden.html");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
-  await promiseAdImpressionReceived();
+  await waitForPageWithAdImpressions();
 
   assertAdImpressionEvents([
     {
@@ -263,7 +256,7 @@ add_task(async function test_ad_impressions_with_carousel_scrolled_left() {
   );
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
-  await promiseAdImpressionReceived();
+  await waitForPageWithAdImpressions();
 
   assertAdImpressionEvents([
     {
@@ -284,7 +277,7 @@ add_task(async function test_ad_impressions_with_carousel_below_the_fold() {
   );
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
-  await promiseAdImpressionReceived();
+  await waitForPageWithAdImpressions();
 
   assertAdImpressionEvents([
     {
@@ -303,7 +296,7 @@ add_task(async function test_ad_impressions_with_text_links() {
   let url = getSERPUrl("searchTelemetryAd_components_text.html");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
-  await promiseAdImpressionReceived();
+  await waitForPageWithAdImpressions();
 
   assertAdImpressionEvents([
     {
@@ -348,7 +341,7 @@ add_task(async function test_ad_visibility() {
     content.scrollTo(0, el.top + el.height + 100);
   });
 
-  await promiseAdImpressionReceived();
+  await waitForPageWithAdImpressions();
 
   assertAdImpressionEvents([
     {
@@ -366,7 +359,7 @@ add_task(async function test_impressions_without_ads() {
   let url = getSERPUrl("searchTelemetryAd_searchbox_with_content.html");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
-  await promiseAdImpressionReceived();
+  await waitForPageWithAdImpressions();
 
   assertAdImpressionEvents([
     {
