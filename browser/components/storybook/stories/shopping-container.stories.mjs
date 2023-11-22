@@ -9,6 +9,10 @@ import "browser/components/shopping/content/shopping-container.mjs";
 // Bug 1845737: These should get imported by ShoppingMessageBar
 window.MozXULElement.insertFTLIfNeeded("browser/shopping.ftl");
 window.MozXULElement.insertFTLIfNeeded("toolkit/branding/brandings.ftl");
+// Mock for Glean
+if (typeof window.Glean == "undefined") {
+  window.Glean = new Proxy(() => {}, { get: () => window.Glean });
+}
 
 export default {
   title: "Domain-specific UI Widgets/Shopping/Shopping Container",
@@ -84,6 +88,7 @@ const Template = ({
   adsEnabled,
   adsEnabledByUser,
   recommendationData,
+  analysisProgress,
 }) => html`
   <style>
     main {
@@ -109,6 +114,7 @@ const Template = ({
       ?adsEnabled=${adsEnabled}
       ?adsEnabledByUser=${adsEnabledByUser}
       .recommendationData=${recommendationData}
+      analysisProgress=${analysisProgress}
     >
     </shopping-container>
   </main>
@@ -154,6 +160,7 @@ UnanalyzedProduct.args = {
 export const NewAnalysisInProgress = Template.bind({});
 NewAnalysisInProgress.args = {
   isAnalysisInProgress: true,
+  analysisProgress: 15,
 };
 
 export const StaleProduct = Template.bind({});
@@ -177,6 +184,7 @@ ReanalysisInProgress.args = {
     highlights: MOCK_HIGHLIGHTS,
   },
   isAnalysisInProgress: true,
+  analysisProgress: 15,
   analysisEvent: {
     type: "ReanalysisRequested",
     productUrl: "https://example.com/ABCD123",
