@@ -24,7 +24,9 @@ pub struct PropertyRegistration {
     /// The initial value. Only missing for universal syntax.
     #[ignore_malloc_size_of = "Arc"]
     pub initial_value: Option<InitialValue>,
-    /// The url data is used to parse the property at computed value-time.
+    /// The url data that is used to parse and compute the registration's initial value. Note that
+    /// it's not the url data that should be used to parse other values. Other values should use
+    /// the data of the style sheet where they came from.
     pub url_data: UrlExtraData,
     /// The source location of this registration, if it comes from a CSS rule.
     pub source_location: SourceLocation,

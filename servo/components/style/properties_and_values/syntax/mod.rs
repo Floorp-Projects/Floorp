@@ -128,7 +128,7 @@ impl Parse for Descriptor {
 }
 
 /// <https://drafts.css-houdini.org/css-properties-values-api-1/#multipliers>
-#[derive(Clone, Copy, Debug, MallocSizeOf, PartialEq)]
+#[derive(Clone, Copy, Debug, MallocSizeOf, PartialEq, ToComputedValue)]
 pub enum Multiplier {
     /// Indicates a space-separated list.
     Space,
