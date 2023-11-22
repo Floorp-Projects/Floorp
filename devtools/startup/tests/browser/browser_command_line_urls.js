@@ -121,7 +121,7 @@ add_task(async function openingWithDevToolsAndKnownSource() {
   });
   is(selectedLocation.source.url, URL_ROOT + "command-line.js");
   is(selectedLocation.line, 5);
-  is(selectedLocation.column, 2);
+  is(selectedLocation.column, 1);
 
   info("Open another URL with only a line");
   const url2 = URL_ROOT + "command-line.js:6";
