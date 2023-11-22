@@ -243,10 +243,8 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
 
 class WebPlatformTestsServeRunner(MozbuildObject):
     def run(self, **kwargs):
-        sys.path.insert(
-            0,
-            os.path.abspath(os.path.join(os.path.dirname(__file__), "tests", "tools")),
-        )
+        sys.path.insert(0, os.path.join(here, "tests"))
+        sys.path.insert(0, os.path.join(here, "tests", "tools"))
         import logging
 
         import manifestupdate
