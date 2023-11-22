@@ -76,7 +76,7 @@ add_task(async function test_cancel_pending_fullscreen_request() {
 
   const element = document.createElement("div");
   document.body.appendChild(element);
-  SpecialPowers.wrap(element).requestFullscreen().then(() => {
+  const promiseFullscree = SpecialPowers.wrap(element).requestFullscreen().then(() => {
     ok(false, "Fullscreen request should be canceled.");
   }, () => {
     ok(true, "Fullscreen request is canceled.");
@@ -91,6 +91,7 @@ add_task(async function test_cancel_pending_fullscreen_request() {
     gotException = true;
   }
   ok(gotException, "Should throw an exception when pending fullscreen request is canceled.");
+  await promiseFullscree;
 
   try {
     window.screen.orientation.unlock();
