@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "wasm-smith"
-version = "0.12.17"
+version = "0.13.0"
 authors = ["Nick Fitzgerald <fitzgen@gmail.com>"]
 exclude = ["/benches/corpus"]
 description = "A WebAssembly test case generator"
@@ -46,14 +46,18 @@ version = "0.2.4"
 
 [dependencies.serde]
 version = "1.0.166"
-features = ["derive"]
+optional = true
+
+[dependencies.serde_derive]
+version = "1.0.166"
 optional = true
 
 [dependencies.wasm-encoder]
-version = "0.33.1"
+version = "0.38.0"
 
 [dependencies.wasmparser]
-version = "0.113.1"
+version = "0.118.0"
+optional = true
 
 [dev-dependencies.criterion]
 version = "0.3.3"
@@ -62,10 +66,14 @@ version = "0.3.3"
 version = "0.8.4"
 features = ["small_rng"]
 
+[dev-dependencies.wasmparser]
+version = "0.118.0"
+
 [features]
 _internal_cli = [
     "serde",
-    "flagset/serde",
+    "serde_derive",
+    "wasmparser",
 ]
 
 [target."cfg(not(target_family = \"wasm\"))".dev-dependencies.libfuzzer-sys]

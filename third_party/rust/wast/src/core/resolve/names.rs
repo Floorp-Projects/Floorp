@@ -293,7 +293,7 @@ impl<'a> Resolver<'a> {
 
     fn resolve_heaptype(&self, ty: &mut HeapType<'a>) -> Result<(), Error> {
         match ty {
-            HeapType::Index(i) => {
+            HeapType::Concrete(i) => {
                 self.resolve(i, Ns::Type)?;
             }
             _ => {}
@@ -520,6 +520,19 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
                     pushed_scope: false,
                 });
                 self.resolve_block_type(bt)?;
+            }
+            TryTable(try_table) => {
+                self.blocks.push(ExprBlock {
+                    label: try_table.block.label,
+                    pushed_scope: false,
+                });
+                self.resolve_block_type(&mut try_table.block)?;
+                for catch in &mut try_table.catches {
+                    if let Some(tag) = catch.kind.tag_index_mut() {
+                        self.resolver.resolve(tag, Ns::Tag)?;
+                    }
+                    self.resolve_label(&mut catch.label)?;
+                }
             }
 
             // On `End` instructions we pop a label from the stack, and for both

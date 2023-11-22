@@ -73,6 +73,20 @@ impl From<TagType> for EntityType {
     }
 }
 
+#[cfg(feature = "wasmparser")]
+impl TryFrom<wasmparser::TypeRef> for EntityType {
+    type Error = ();
+    fn try_from(type_ref: wasmparser::TypeRef) -> Result<Self, Self::Error> {
+        Ok(match type_ref {
+            wasmparser::TypeRef::Func(i) => EntityType::Function(i),
+            wasmparser::TypeRef::Table(t) => EntityType::Table(t.try_into()?),
+            wasmparser::TypeRef::Memory(m) => EntityType::Memory(m.into()),
+            wasmparser::TypeRef::Global(g) => EntityType::Global(g.try_into()?),
+            wasmparser::TypeRef::Tag(t) => EntityType::Tag(t.into()),
+        })
+    }
+}
+
 /// An encoder for the import section of WebAssembly modules.
 ///
 /// # Example

@@ -97,3 +97,15 @@ impl Encode for MemoryType {
         }
     }
 }
+
+#[cfg(feature = "wasmparser")]
+impl From<wasmparser::MemoryType> for MemoryType {
+    fn from(memory_ty: wasmparser::MemoryType) -> Self {
+        MemoryType {
+            minimum: memory_ty.initial,
+            maximum: memory_ty.maximum,
+            memory64: memory_ty.memory64,
+            shared: memory_ty.shared,
+        }
+    }
+}

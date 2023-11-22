@@ -25,6 +25,19 @@ impl Encode for ExportKind {
     }
 }
 
+#[cfg(feature = "wasmparser")]
+impl From<wasmparser::ExternalKind> for ExportKind {
+    fn from(external_kind: wasmparser::ExternalKind) -> Self {
+        match external_kind {
+            wasmparser::ExternalKind::Func => ExportKind::Func,
+            wasmparser::ExternalKind::Table => ExportKind::Table,
+            wasmparser::ExternalKind::Memory => ExportKind::Memory,
+            wasmparser::ExternalKind::Global => ExportKind::Global,
+            wasmparser::ExternalKind::Tag => ExportKind::Tag,
+        }
+    }
+}
+
 /// An encoder for the export section of WebAssembly module.
 ///
 /// # Example
