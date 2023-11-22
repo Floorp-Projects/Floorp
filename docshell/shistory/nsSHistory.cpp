@@ -211,7 +211,7 @@ nsSHistoryObserver::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-void nsSHistory::EvictContentViewerForEntry(nsISHEntry* aEntry) {
+void nsSHistory::EvictDocumentViewerForEntry(nsISHEntry* aEntry) {
   nsCOMPtr<nsIDocumentViewer> viewer = aEntry->GetContentViewer();
   if (viewer) {
     LOG_SHENTRY_SPEC(("Evicting content viewer 0x%p for "
@@ -237,7 +237,7 @@ void nsSHistory::EvictContentViewerForEntry(nsISHEntry* aEntry) {
       // Only destroy non-current frameloader when evicting from the bfcache.
       if (currentFrameLoader != frameLoader) {
         MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
-                ("nsSHistory::EvictContentViewerForEntry "
+                ("nsSHistory::EvictDocumentViewerForEntry "
                  "destroying an nsFrameLoader."));
         NotifyListenersContentViewerEvicted(1);
         she->SetFrameLoader(nullptr);
@@ -1212,7 +1212,7 @@ nsSHistory::EvictAllDocumentViewers() {
   // XXXbz we don't actually do a good job of evicting things as we should, so
   // we might have viewers quite far from mIndex.  So just evict everything.
   for (int32_t i = 0; i < Length(); i++) {
-    EvictContentViewerForEntry(mEntries[i]);
+    EvictDocumentViewerForEntry(mEntries[i]);
   }
 
   return NS_OK;
@@ -1560,14 +1560,14 @@ void nsSHistory::EvictOutOfRangeWindowDocumentViewers(int32_t aIndex) {
     nsCOMPtr<nsIDocumentViewer> viewer = entry->GetContentViewer();
     if (viewer) {
       if (safeViewers.IndexOf(viewer) == -1) {
-        EvictContentViewerForEntry(entry);
+        EvictDocumentViewerForEntry(entry);
       }
     } else if (nsCOMPtr<SessionHistoryEntry> she =
                    do_QueryInterface(mEntries[i])) {
       nsFrameLoader* frameLoader = she->GetFrameLoader();
       if (frameLoader) {
         if (!safeFrameLoaders.Contains(frameLoader)) {
-          EvictContentViewerForEntry(entry);
+          EvictDocumentViewerForEntry(entry);
         }
       }
     }
@@ -1712,7 +1712,7 @@ void nsSHistory::GloballyEvictContentViewers() {
   entries.Sort();
 
   for (int32_t i = entries.Length() - 1; i >= sHistoryMaxTotalViewers; --i) {
-    (entries[i].mSHistory)->EvictContentViewerForEntry(entries[i].mEntry);
+    (entries[i].mSHistory)->EvictDocumentViewerForEntry(entries[i].mEntry);
   }
 }
 
@@ -1750,7 +1750,7 @@ nsSHistory::EvictExpiredContentViewerForEntry(
   }
 
   if (shEntry) {
-    EvictContentViewerForEntry(shEntry);
+    EvictDocumentViewerForEntry(shEntry);
   }
 }
 
