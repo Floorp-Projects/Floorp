@@ -159,7 +159,6 @@ import org.mozilla.fenix.tabhistory.TabHistoryDialogFragment
 import org.mozilla.fenix.tabstray.TabsTrayFragment
 import org.mozilla.fenix.tabstray.TabsTrayFragmentDirections
 import org.mozilla.fenix.theme.DefaultThemeManager
-import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.trackingprotection.TrackingProtectionPanelDialogFragmentDirections
 import org.mozilla.fenix.translations.TranslationsDialogFragmentDirections
 import org.mozilla.fenix.utils.Settings
@@ -182,7 +181,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
     private lateinit var binding: ActivityHomeBinding
     val themeManager by lazy {
-        createThemeManager()
+        DefaultThemeManager(components.appStore.state.mode, this)
     }
 
     private var isVisuallyComplete = false
@@ -1223,10 +1222,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             return inflater
         }
         return super.getSystemService(name)
-    }
-
-    protected open fun createThemeManager(): ThemeManager {
-        return DefaultThemeManager(components.appStore.state.mode, this)
     }
 
     private fun openPopup(webExtensionState: WebExtensionState) {

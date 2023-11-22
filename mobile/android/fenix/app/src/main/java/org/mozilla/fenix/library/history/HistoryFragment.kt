@@ -116,7 +116,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                         onBackPressed = requireActivity().onBackPressedDispatcher::onBackPressed,
                     ),
                     HistoryTelemetryMiddleware(
-                        isInPrivateMode = requireComponents.appStore.state.mode == BrowsingMode.Private,
+                        isInPrivateMode = requireComponents.appStore.state.mode.isPrivate,
                     ),
                     HistorySyncMiddleware(
                         accountManager = requireContext().components.backgroundServices.accountManager,

@@ -29,14 +29,14 @@ import org.mozilla.fenix.tabstray.Page
  * @param navController [NavController] used for navigation.
  * @param tabCounter The [TabCounter] that will be setup with event handlers.
  * @param mode The current [BrowsingMode].
- * @param itemTapped Callback to update the [BrowsingMode].
+ * @param onBrowsingModeChanged Callback to update the [BrowsingMode].
  */
 class TabCounterView(
     private val context: Context,
     private val navController: NavController,
     private val tabCounter: TabCounter,
     private val mode: BrowsingMode,
-    private val itemTapped: (BrowsingMode) -> Unit,
+    private val onBrowsingModeChanged: (BrowsingMode) -> Unit,
 ) {
 
     init {
@@ -103,9 +103,9 @@ class TabCounterView(
      */
     internal fun onItemTapped(item: TabCounterMenu.Item) {
         if (item is TabCounterMenu.Item.NewTab) {
-            itemTapped(BrowsingMode.Normal)
+            onBrowsingModeChanged(BrowsingMode.Normal)
         } else if (item is TabCounterMenu.Item.NewPrivateTab) {
-            itemTapped(BrowsingMode.Private)
+            onBrowsingModeChanged(BrowsingMode.Private)
         }
     }
 }

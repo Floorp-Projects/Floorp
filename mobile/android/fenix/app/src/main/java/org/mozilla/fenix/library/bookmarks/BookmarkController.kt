@@ -99,11 +99,10 @@ class DefaultBookmarkController(
     override fun handleBookmarkTapped(item: BookmarkNode) {
         val fromHomeFragment =
             navController.previousBackStackEntry?.destination?.id == R.id.homeFragment
-        val isPrivate = appStore.state.mode == BrowsingMode.Private
         val flags = EngineSession.LoadUrlFlags.select(EngineSession.LoadUrlFlags.ALLOW_JAVASCRIPT_URL)
         openInNewTabAndShow(
             item.url!!,
-            isPrivate || fromHomeFragment,
+            appStore.state.mode.isPrivate || fromHomeFragment,
             BrowserDirection.FromBookmarks,
             flags,
         )

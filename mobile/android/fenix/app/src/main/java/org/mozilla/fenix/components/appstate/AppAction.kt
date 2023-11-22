@@ -221,6 +221,11 @@ sealed class AppAction : Action {
             val wallpaper: Wallpaper,
             val imageState: Wallpaper.ImageFileState,
         ) : WallpaperAction()
+
+        /**
+         * App should be opened to the home screen in [BrowsingMode.Normal].
+         */
+        object OpenToHome : WallpaperAction()
     }
 
     /**
@@ -289,13 +294,33 @@ sealed class AppAction : Action {
     }
 
     /**
-     * Actions related to the home screen.
+     * Actions dispatched from the Toolbar that affect [AppState].
      */
-    sealed class HomeAction : AppAction() {
+    sealed class ToolbarAction : AppAction() {
         /**
-         * App should be opened to the home screen in [mode].
+         * Handles clicks for new tabs in [BrowsingMode.Normal] from the long-press menu of the Toolbar.
          */
-        data class OpenToHome(val mode: BrowsingMode) : HomeAction()
+        object NewTab : ToolbarAction()
+
+        /**
+         * Handles clicks for new tabs in [BrowsingMode.Private] from the long-press menu of the Toolbar.
+         */
+        object NewPrivateTab : ToolbarAction()
+    }
+
+    /**
+     * Actions dispatched from the Tabs Tray that affect [AppState].
+     */
+    sealed class TabsTrayAction : AppAction() {
+        /**
+         * Handles clicks for new tabs in [BrowsingMode.Normal] from the FAB of the Tabs Tray.
+         */
+        object NewTab : TabsTrayAction()
+
+        /**
+         Handles clicks for new tabs in [BrowsingMode.Private] from the FAB of the Tabs Tray.
+         */
+        object NewPrivateTab : TabsTrayAction()
     }
 
     /**

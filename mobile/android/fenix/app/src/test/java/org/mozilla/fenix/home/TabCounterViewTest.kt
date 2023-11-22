@@ -174,6 +174,6 @@ class TabCounterViewTest {
         navController = navController,
         tabCounter = tabCounter,
         mode = mode,
-        itemTapped = itemTapped,
+        onBrowsingModeChanged = itemTapped,
     )
 }

@@ -10,10 +10,12 @@ import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import mozilla.components.service.pocket.ext.recordNewImpression
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.home.TabsTrayReducer
+import org.mozilla.fenix.components.appstate.home.ToolbarReducer
+import org.mozilla.fenix.components.appstate.home.WallpapersReducer
 import org.mozilla.fenix.components.appstate.shopping.ShoppingStateReducer
 import org.mozilla.fenix.ext.filterOutTab
 import org.mozilla.fenix.ext.getFilteredStories
-import org.mozilla.fenix.home.HomeReducer
 import org.mozilla.fenix.home.intent.IntentReducer
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabState
@@ -213,25 +215,6 @@ internal object AppStoreReducer {
 
         is AppAction.UndoPendingDeletionSet ->
             state.copy(pendingDeletionHistoryItems = state.pendingDeletionHistoryItems - action.historyItems)
-        is AppAction.WallpaperAction.UpdateCurrentWallpaper ->
-            state.copy(
-                wallpaperState = state.wallpaperState.copy(currentWallpaper = action.wallpaper),
-            )
-        is AppAction.WallpaperAction.UpdateAvailableWallpapers ->
-            state.copy(
-                wallpaperState = state.wallpaperState.copy(availableWallpapers = action.wallpapers),
-            )
-        is AppAction.WallpaperAction.UpdateWallpaperDownloadState -> {
-            val wallpapers = state.wallpaperState.availableWallpapers.map {
-                if (it.name == action.wallpaper.name) {
-                    it.copy(assetsFileState = action.imageState)
-                } else {
-                    it
-                }
-            }
-            val wallpaperState = state.wallpaperState.copy(availableWallpapers = wallpapers)
-            state.copy(wallpaperState = wallpaperState)
-        }
         is AppAction.AppLifecycleAction.ResumeAction -> {
             state.copy(isForeground = true)
         }
@@ -244,8 +227,10 @@ internal object AppStoreReducer {
         )
 
         is AppAction.ShoppingAction -> ShoppingStateReducer.reduce(state, action)
-        is AppAction.HomeAction -> HomeReducer.reduce(state, action)
+        is AppAction.WallpaperAction -> WallpapersReducer.reduce(state, action)
         is AppAction.IntentAction -> IntentReducer.reduce(state, action)
+        is AppAction.ToolbarAction -> ToolbarReducer.reduce(state, action)
+        is AppAction.TabsTrayAction -> TabsTrayReducer.reduce(state, action)
     }
 }
 
