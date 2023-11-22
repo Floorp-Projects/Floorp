@@ -292,16 +292,6 @@ Maybe<DeviceRequest> WebGPUChild::AdapterRequestDevice(
   return Some(std::move(request));
 }
 
-RawId WebGPUChild::DeviceCreateBuffer(RawId aSelfId,
-                                      const dom::GPUBufferDescriptor& aDesc,
-                                      ipc::UnsafeSharedMemoryHandle&& aShmem) {
-  RawId bufferId = ffi::wgpu_client_make_buffer_id(mClient.get(), aSelfId);
-  if (!SendCreateBuffer(aSelfId, bufferId, aDesc, std::move(aShmem))) {
-    MOZ_CRASH("IPC failure");
-  }
-  return bufferId;
-}
-
 RawId WebGPUChild::DeviceCreateTexture(
     RawId aSelfId, const dom::GPUTextureDescriptor& aDesc,
     Maybe<layers::RemoteTextureOwnerId> aOwnerId) {
