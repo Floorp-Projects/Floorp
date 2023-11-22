@@ -85,6 +85,7 @@ def read_test_manifests():
     support_files_map - a dict that maps from each support file to a list with
                         test files that require them it
     """
+    setup_globals()
     test_resolver = TestResolver.from_environment(cwd=here)
     file_finder = FileFinder(build.topsrcdir)
     support_files_map = collections.defaultdict(list)
