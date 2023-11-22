@@ -708,13 +708,23 @@ ipc::IPCResult WebGPUParent::RecvBufferDestroy(RawId aBufferId) {
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvTextureDrop(RawId aTextureId) {
-  ffi::wgpu_server_texture_drop(mContext.get(), aTextureId);
-
+void WebGPUParent::RemoveExternalTexture(RawId aTextureId) {
   auto it = mExternalTextures.find(aTextureId);
   if (it != mExternalTextures.end()) {
     mExternalTextures.erase(it);
   }
+}
+
+ipc::IPCResult WebGPUParent::RecvTextureDestroy(RawId aTextureId,
+                                                RawId aDeviceId) {
+  ffi::wgpu_server_texture_destroy(mContext.get(), aTextureId);
+  RemoveExternalTexture(aTextureId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvTextureDrop(RawId aTextureId) {
+  ffi::wgpu_server_texture_drop(mContext.get(), aTextureId);
+  RemoveExternalTexture(aTextureId);
   return IPC_OK();
 }
 
@@ -1171,9 +1181,16 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
       static_cast<uint32_t>(size.height),
       1,
   };
-  ffi::wgpu_server_encoder_copy_texture_to_buffer(
-      mContext.get(), aCommandEncoderId, &texView, bufferId, &bufLayout,
-      &extent);
+
+  {
+    ErrorBuffer error;
+    ffi::wgpu_server_encoder_copy_texture_to_buffer(
+        mContext.get(), aCommandEncoderId, &texView, bufferId, &bufLayout,
+        &extent, error.ToFFI());
+    if (ForwardError(data->mDeviceId, error)) {
+      return IPC_OK();
+    }
+  }
   ffi::WGPUCommandBufferDescriptor commandDesc = {};
   {
     ErrorBuffer error;
