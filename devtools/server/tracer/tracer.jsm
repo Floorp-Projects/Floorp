@@ -291,6 +291,11 @@ class JavaScriptTracer {
       // but if DevTools are closed, stdout is the only way to log the traces.
       if (shouldLogToStdout) {
         const { script } = frame;
+        // NOTE: Debugger.Script.prototype.getOffsetMetadata returns
+        //       columnNumber in 1-based.
+        //       Convert to 0-based, while keeping the wasm's column (1) as is.
+        //       (bug 1863878)
+        const columnBase = script.format === "wasm" ? 0 : 1;
         const { lineNumber, columnNumber } = script.getOffsetMetadata(
           frame.offset
         );
@@ -305,7 +310,9 @@ class JavaScriptTracer {
 
         // Use a special URL, including line and column numbers which Firefox
         // interprets as to be opened in the already opened DevTool's debugger
-        const href = `${script.source.url}:${lineNumber}:${columnNumber}`;
+        const href = `${script.source.url}:${lineNumber}:${
+          columnNumber - columnBase
+        }`;
 
         // Use special characters in order to print working hyperlinks right from the terminal
         // See https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda

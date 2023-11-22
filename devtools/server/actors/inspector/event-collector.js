@@ -968,8 +968,13 @@ class EventCollector {
       if (script) {
         const scriptSource = script.source.text;
 
+        // NOTE: Debugger.Script.prototype.startColumn is 1-based.
+        //       Convert to 0-based, while keeping the wasm's column (1) as is.
+        //       (bug 1863878)
+        const columnBase = script.format === "wasm" ? 0 : 1;
+
         line = script.startLine;
-        column = script.startColumn;
+        column = script.startColumn - columnBase;
         url = script.url;
         const actor = this.targetActor.sourcesManager.getOrCreateSourceActor(
           script.source

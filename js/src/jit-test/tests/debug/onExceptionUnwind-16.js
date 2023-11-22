@@ -18,7 +18,7 @@ dbg.onExceptionUnwind = function (frame, exc) {
             assertEq(frame.older.type, "call");
             const { lineNumber, columnNumber } = frame.script.getOffsetMetadata(frame.offset);
             assertEq(lineNumber, 3);
-            assertEq(columnNumber, 4);
+            assertEq(columnNumber, 5);
 
             const isInCatchScope = frame.script.isInCatchScope(frame.offset);
             assertEq(isInCatchScope, false);
@@ -31,7 +31,7 @@ dbg.onExceptionUnwind = function (frame, exc) {
             assertEq(older.type, "call");
             const { lineNumber, columnNumber } = older.script.getOffsetMetadata(older.offset);
             assertEq(lineNumber, 7);
-            assertEq(columnNumber, 4);
+            assertEq(columnNumber, 5);
 
             const isInCatchScope = older.script.isInCatchScope(older.offset);
             assertEq(isInCatchScope, false);

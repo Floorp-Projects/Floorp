@@ -193,6 +193,11 @@ class SourceActor extends Actor {
       introductionType = "scriptElement";
     }
 
+    // NOTE: Debugger.Source.prototype.startColumn is 1-based.
+    //       Convert to 0-based, while keeping the wasm's column (1) as is.
+    //       (bug 1863878)
+    const columnBase = source.introductionType === "wasm" ? 0 : 1;
+
     return {
       actor: this.actorID,
       extensionName: this.extensionName,
@@ -206,7 +211,7 @@ class SourceActor extends Actor {
       introductionType,
       isInlineSource: this._isInlineSource,
       sourceStartLine: source.startLine,
-      sourceStartColumn: source.startColumn,
+      sourceStartColumn: source.startColumn - columnBase,
       sourceLength: source.text?.length,
     };
   }
@@ -411,10 +416,15 @@ class SourceActor extends Actor {
         return false;
       }
 
+      // NOTE: Debugger.Script.prototype.startColumn is 1-based.
+      //       Convert to 0-based, while keeping the wasm's column (1) as is.
+      //       (bug 1863878)
+      const columnBase = script.format === "wasm" ? 0 : 1;
       if (
         script.startLine > endLine ||
         script.startLine + lineCount <= startLine ||
-        (script.startLine == endLine && script.startColumn > endColumn)
+        (script.startLine == endLine &&
+          script.startColumn - columnBase > endColumn)
       ) {
         return false;
       }
@@ -422,7 +432,7 @@ class SourceActor extends Actor {
       if (
         lineCount == 1 &&
         script.startLine == startLine &&
-        script.startColumn + script.sourceLength <= startColumn
+        script.startColumn - columnBase + script.sourceLength <= startColumn
       ) {
         return false;
       }
@@ -469,20 +479,25 @@ class SourceActor extends Actor {
       end: { line: endLine = Infinity, column: endColumn = Infinity } = {},
     } = query || {};
 
+    // NOTE: Debugger.Script.prototype.startColumn is 1-based.
+    //       Convert to 0-based, while keeping the wasm's column (1) as is.
+    //       (bug 1863878)
+    const columnBase = script.format === "wasm" ? 0 : 1;
+
     const offsets = script.getPossibleBreakpoints();
     for (const { lineNumber, columnNumber } of offsets) {
       if (
         lineNumber < startLine ||
-        (lineNumber === startLine && columnNumber < startColumn) ||
+        (lineNumber === startLine && columnNumber - columnBase < startColumn) ||
         lineNumber > endLine ||
-        (lineNumber === endLine && columnNumber >= endColumn)
+        (lineNumber === endLine && columnNumber - columnBase >= endColumn)
       ) {
         continue;
       }
 
       positions.push({
         line: lineNumber,
-        column: columnNumber,
+        column: columnNumber - columnBase,
       });
     }
   }
@@ -610,6 +625,11 @@ class SourceActor extends Actor {
         script => !actor.hasScript(script)
       );
 
+      // NOTE: Debugger.Script.prototype.getPossibleBreakpoints returns
+      //       columnNumber in 1-based.
+      //       The following code uses columnNumber only for comparing against
+      //       other columnNumber, and we don't need to convert to 0-based.
+
       // This is a line breakpoint, so we add a breakpoint on the first
       // breakpoint on the line.
       const lineMatches = [];
@@ -644,13 +664,19 @@ class SourceActor extends Actor {
       );
 
       for (const script of scripts) {
+        // NOTE: getPossibleBreakpoints's minColumn/maxColumn parameters are
+        //       1-based.
+        //       Convert to 1-based, while keeping the wasm's column (1) as is.
+        //       (bug 1863878)
+        const columnBase = script.format === "wasm" ? 0 : 1;
+
         // Check to see if the script contains a breakpoint position at
         // this line and column.
         const possibleBreakpoint = script
           .getPossibleBreakpoints({
             line,
-            minColumn: column,
-            maxColumn: column + 1,
+            minColumn: column + columnBase,
+            maxColumn: column + columnBase + 1,
           })
           .pop();
 

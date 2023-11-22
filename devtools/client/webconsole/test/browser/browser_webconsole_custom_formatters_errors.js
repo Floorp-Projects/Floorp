@@ -47,7 +47,7 @@ async function testHeaderNotReturningJsonMl(hud) {
   info(`Test for "header" not returning JsonML`);
   await testCustomFormatting(hud, {
     messageText: `Custom formatter failed: devtoolsFormatters[1].header should return an array, got number`,
-    source: "test-console-custom-formatters-errors.html:19:18",
+    source: "test-console-custom-formatters-errors.html:19:19",
   });
 }
 

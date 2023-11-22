@@ -45,8 +45,8 @@ for (var i = 0; i < NumInitializers; ++i) {
 
     // Check the initializer lambda has expected line/column
     assertEq(script.startLine, START + 1 + i);
-    assertEq(script.startColumn, 20);
+    assertEq(script.startColumn, 21);
 
     // Check that source length matches expectations.
-    assertEq(script.startColumn + script.sourceLength + ';'.length, lineText.length);
+    assertEq(script.startColumn + script.sourceLength + ';'.length, lineText.length + 1);
 }

@@ -156,10 +156,14 @@ const previewers = {
       grip.isGenerator = obj.isGeneratorFunction;
 
       if (obj.script) {
+        // NOTE: Debugger.Script.prototype.startColumn is 1-based.
+        //       Convert to 0-based, while keeping the wasm's column (1) as is.
+        //       (bug 1863878)
+        const columnBase = obj.script.format === "wasm" ? 0 : 1;
         grip.location = {
           url: obj.script.url,
           line: obj.script.startLine,
-          column: obj.script.startColumn,
+          column: obj.script.startColumn - columnBase,
         };
       }
 
