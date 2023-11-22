@@ -11578,8 +11578,8 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
     // docshell subtree that disables session history.
     RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
     if (rootSH) {
-      rootSH->LegacySHistory()->EvictContentViewersOrReplaceEntry(newSHEntry,
-                                                                  aReplace);
+      rootSH->LegacySHistory()->EvictDocumentViewersOrReplaceEntry(newSHEntry,
+                                                                   aReplace);
     }
   }
 

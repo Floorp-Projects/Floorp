@@ -273,7 +273,7 @@ interface nsISHistory: nsISupports
 
   [notxpcom] void EnsureCorrectEntryAtCurrIndex(in nsISHEntry aEntry);
 
-  [notxpcom] void EvictContentViewersOrReplaceEntry(in nsISHEntry aNewSHEntry, in bool aReplace);
+  [notxpcom] void EvictDocumentViewersOrReplaceEntry(in nsISHEntry aNewSHEntry, in bool aReplace);
 
   nsISHEntry createEntry();
 
