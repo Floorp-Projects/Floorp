@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "JumpListBuilder.h"
+#include "LegacyJumpListBuilder.h"
 
 #include "nsError.h"
 #include "nsCOMPtr.h"
@@ -39,10 +39,10 @@ namespace widget {
 // defined in WinTaskbar.cpp
 extern const wchar_t* gMozillaJumpListIDGeneric;
 
-Atomic<bool> JumpListBuilder::sBuildingList(false);
+Atomic<bool> LegacyJumpListBuilder::sBuildingList(false);
 const char kPrefTaskbarEnabled[] = "browser.taskbar.lists.enabled";
 
-NS_IMPL_ISUPPORTS(JumpListBuilder, nsIJumpListBuilder, nsIObserver)
+NS_IMPL_ISUPPORTS(LegacyJumpListBuilder, nsILegacyJumpListBuilder, nsIObserver)
 #define TOPIC_PROFILE_BEFORE_CHANGE "profile-before-change"
 #define TOPIC_CLEAR_PRIVATE_DATA "clear-private-data"
 
@@ -52,8 +52,8 @@ class DoneCommitListBuildCallback final : public nsIRunnable {
   NS_DECL_THREADSAFE_ISUPPORTS
 
  public:
-  DoneCommitListBuildCallback(nsIJumpListCommittedCallback* aCallback,
-                              JumpListBuilder* aBuilder)
+  DoneCommitListBuildCallback(nsILegacyJumpListCommittedCallback* aCallback,
+                              LegacyJumpListBuilder* aBuilder)
       : mCallback(aCallback), mBuilder(aBuilder), mResult(false) {}
 
   NS_IMETHOD Run() override {
@@ -82,8 +82,8 @@ class DoneCommitListBuildCallback final : public nsIRunnable {
   }
 
   // These two references MUST be released on the main thread.
-  RefPtr<nsIJumpListCommittedCallback> mCallback;
-  RefPtr<JumpListBuilder> mBuilder;
+  RefPtr<nsILegacyJumpListCommittedCallback> mCallback;
+  RefPtr<LegacyJumpListBuilder> mBuilder;
   bool mResult;
 };
 
@@ -91,8 +91,10 @@ NS_IMPL_ISUPPORTS(DoneCommitListBuildCallback, nsIRunnable);
 
 }  // namespace detail
 
-JumpListBuilder::JumpListBuilder()
-    : mMaxItems(0), mHasCommit(false), mMonitor("JumpListBuilderMonitor") {
+LegacyJumpListBuilder::LegacyJumpListBuilder()
+    : mMaxItems(0),
+      mHasCommit(false),
+      mMonitor("LegacyJumpListBuilderMonitor") {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Instantiate mJumpListMgr in the multithreaded apartment so that proxied
@@ -135,11 +137,11 @@ JumpListBuilder::JumpListBuilder()
   }
 }
 
-JumpListBuilder::~JumpListBuilder() {
+LegacyJumpListBuilder::~LegacyJumpListBuilder() {
   Preferences::RemoveObserver(this, kPrefTaskbarEnabled);
 }
 
-NS_IMETHODIMP JumpListBuilder::SetAppUserModelID(
+NS_IMETHODIMP LegacyJumpListBuilder::SetAppUserModelID(
     const nsAString& aAppUserModelId) {
   ReentrantMonitorAutoEnter lock(mMonitor);
   if (!mJumpListMgr) return NS_ERROR_NOT_AVAILABLE;
@@ -159,7 +161,7 @@ NS_IMETHODIMP JumpListBuilder::SetAppUserModelID(
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListBuilder::GetAvailable(int16_t* aAvailable) {
+NS_IMETHODIMP LegacyJumpListBuilder::GetAvailable(int16_t* aAvailable) {
   *aAvailable = false;
 
   ReentrantMonitorAutoEnter lock(mMonitor);
@@ -168,13 +170,13 @@ NS_IMETHODIMP JumpListBuilder::GetAvailable(int16_t* aAvailable) {
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListBuilder::GetIsListCommitted(bool* aCommit) {
+NS_IMETHODIMP LegacyJumpListBuilder::GetIsListCommitted(bool* aCommit) {
   *aCommit = mHasCommit;
 
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListBuilder::GetMaxListItems(int16_t* aMaxItems) {
+NS_IMETHODIMP LegacyJumpListBuilder::GetMaxListItems(int16_t* aMaxItems) {
   ReentrantMonitorAutoEnter lock(mMonitor);
   if (!mJumpListMgr) return NS_ERROR_NOT_AVAILABLE;
 
@@ -202,8 +204,8 @@ NS_IMETHODIMP JumpListBuilder::GetMaxListItems(int16_t* aMaxItems) {
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListBuilder::InitListBuild(JSContext* aCx,
-                                             Promise** aPromise) {
+NS_IMETHODIMP LegacyJumpListBuilder::InitListBuild(JSContext* aCx,
+                                                   Promise** aPromise) {
   ReentrantMonitorAutoEnter lock(mMonitor);
   if (!mJumpListMgr) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -222,7 +224,8 @@ NS_IMETHODIMP JumpListBuilder::InitListBuild(JSContext* aCx,
 
   nsCOMPtr<nsIRunnable> runnable =
       NewRunnableMethod<StoreCopyPassByRRef<RefPtr<Promise>>>(
-          "InitListBuild", this, &JumpListBuilder::DoInitListBuild, promise);
+          "InitListBuild", this, &LegacyJumpListBuilder::DoInitListBuild,
+          promise);
   nsresult rv = mIOThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -232,7 +235,7 @@ NS_IMETHODIMP JumpListBuilder::InitListBuild(JSContext* aCx,
   return NS_OK;
 }
 
-void JumpListBuilder::DoInitListBuild(RefPtr<Promise>&& aPromise) {
+void LegacyJumpListBuilder::DoInitListBuild(RefPtr<Promise>&& aPromise) {
   // Since we're invoking COM interfaces to talk to the shell on a background
   // thread, we need to be running inside a multithreaded apartment.
   mscom::MTARegion mta;
@@ -285,7 +288,7 @@ void JumpListBuilder::DoInitListBuild(RefPtr<Promise>&& aPromise) {
 }
 
 // Ensures that we have no old ICO files left in the jump list cache
-nsresult JumpListBuilder::RemoveIconCacheForAllItems() {
+nsresult LegacyJumpListBuilder::RemoveIconCacheForAllItems() {
   // Construct the path of our jump list cache
   nsCOMPtr<nsIFile> jumpListCacheDir;
   nsresult rv =
@@ -321,9 +324,10 @@ nsresult JumpListBuilder::RemoveIconCacheForAllItems() {
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray* items,
-                                              const nsAString& catName,
-                                              bool* _retval) {
+NS_IMETHODIMP LegacyJumpListBuilder::AddListToBuild(int16_t aCatType,
+                                                    nsIArray* items,
+                                                    const nsAString& catName,
+                                                    bool* _retval) {
   nsresult rv;
 
   *_retval = false;
@@ -337,7 +341,7 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray* items,
   }
 
   switch (aCatType) {
-    case nsIJumpListBuilder::JUMPLIST_CATEGORY_TASKS: {
+    case nsILegacyJumpListBuilder::JUMPLIST_CATEGORY_TASKS: {
       NS_ENSURE_ARG_POINTER(items);
 
       HRESULT hr;
@@ -351,19 +355,19 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray* items,
       uint32_t length;
       items->GetLength(&length);
       for (uint32_t i = 0; i < length; ++i) {
-        nsCOMPtr<nsIJumpListItem> item = do_QueryElementAt(items, i);
+        nsCOMPtr<nsILegacyJumpListItem> item = do_QueryElementAt(items, i);
         if (!item) continue;
         // Check for separators
         if (IsSeparator(item)) {
           RefPtr<IShellLinkW> link;
-          rv = JumpListSeparator::GetSeparator(link);
+          rv = LegacyJumpListSeparator::GetSeparator(link);
           if (NS_FAILED(rv)) return rv;
           collection->AddObject(link);
           continue;
         }
         // These should all be ShellLinks
         RefPtr<IShellLinkW> link;
-        rv = JumpListShortcut::GetShellLink(item, link, mIOThread);
+        rv = LegacyJumpListShortcut::GetShellLink(item, link, mIOThread);
         if (NS_FAILED(rv)) return rv;
         collection->AddObject(link);
       }
@@ -378,17 +382,17 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray* items,
       if (SUCCEEDED(hr)) *_retval = true;
       return NS_OK;
     } break;
-    case nsIJumpListBuilder::JUMPLIST_CATEGORY_RECENT: {
+    case nsILegacyJumpListBuilder::JUMPLIST_CATEGORY_RECENT: {
       if (SUCCEEDED(jumpListMgr->AppendKnownCategory(KDC_RECENT)))
         *_retval = true;
       return NS_OK;
     } break;
-    case nsIJumpListBuilder::JUMPLIST_CATEGORY_FREQUENT: {
+    case nsILegacyJumpListBuilder::JUMPLIST_CATEGORY_FREQUENT: {
       if (SUCCEEDED(jumpListMgr->AppendKnownCategory(KDC_FREQUENT)))
         *_retval = true;
       return NS_OK;
     } break;
-    case nsIJumpListBuilder::JUMPLIST_CATEGORY_CUSTOMLIST: {
+    case nsILegacyJumpListBuilder::JUMPLIST_CATEGORY_CUSTOMLIST: {
       NS_ENSURE_ARG_POINTER(items);
 
       if (catName.IsEmpty()) return NS_ERROR_INVALID_ARG;
@@ -403,26 +407,27 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray* items,
       uint32_t length;
       items->GetLength(&length);
       for (uint32_t i = 0; i < length; ++i) {
-        nsCOMPtr<nsIJumpListItem> item = do_QueryElementAt(items, i);
+        nsCOMPtr<nsILegacyJumpListItem> item = do_QueryElementAt(items, i);
         if (!item) continue;
         int16_t type;
         if (NS_FAILED(item->GetType(&type))) continue;
         switch (type) {
-          case nsIJumpListItem::JUMPLIST_ITEM_SEPARATOR: {
+          case nsILegacyJumpListItem::JUMPLIST_ITEM_SEPARATOR: {
             RefPtr<IShellLinkW> shellItem;
-            rv = JumpListSeparator::GetSeparator(shellItem);
+            rv = LegacyJumpListSeparator::GetSeparator(shellItem);
             if (NS_FAILED(rv)) return rv;
             collection->AddObject(shellItem);
           } break;
-          case nsIJumpListItem::JUMPLIST_ITEM_LINK: {
+          case nsILegacyJumpListItem::JUMPLIST_ITEM_LINK: {
             RefPtr<IShellItem2> shellItem;
-            rv = JumpListLink::GetShellItem(item, shellItem);
+            rv = LegacyJumpListLink::GetShellItem(item, shellItem);
             if (NS_FAILED(rv)) return rv;
             collection->AddObject(shellItem);
           } break;
-          case nsIJumpListItem::JUMPLIST_ITEM_SHORTCUT: {
+          case nsILegacyJumpListItem::JUMPLIST_ITEM_SHORTCUT: {
             RefPtr<IShellLinkW> shellItem;
-            rv = JumpListShortcut::GetShellLink(item, shellItem, mIOThread);
+            rv = LegacyJumpListShortcut::GetShellLink(item, shellItem,
+                                                      mIOThread);
             if (NS_FAILED(rv)) return rv;
             collection->AddObject(shellItem);
           } break;
@@ -450,7 +455,7 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray* items,
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListBuilder::AbortListBuild() {
+NS_IMETHODIMP LegacyJumpListBuilder::AbortListBuild() {
   ReentrantMonitorAutoEnter lock(mMonitor);
   if (!mJumpListMgr) return NS_ERROR_NOT_AVAILABLE;
 
@@ -465,8 +470,8 @@ NS_IMETHODIMP JumpListBuilder::AbortListBuild() {
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListBuilder::CommitListBuild(
-    nsIJumpListCommittedCallback* aCallback) {
+NS_IMETHODIMP LegacyJumpListBuilder::CommitListBuild(
+    nsILegacyJumpListCommittedCallback* aCallback) {
   ReentrantMonitorAutoEnter lock(mMonitor);
   if (!mJumpListMgr) return NS_ERROR_NOT_AVAILABLE;
 
@@ -478,14 +483,14 @@ NS_IMETHODIMP JumpListBuilder::CommitListBuild(
   // need to do it for this runnable again.
   RefPtr<nsIRunnable> event =
       NewNonOwningRunnableMethod<RefPtr<detail::DoneCommitListBuildCallback>>(
-          "JumpListBuilder::DoCommitListBuild", this,
-          &JumpListBuilder::DoCommitListBuild, std::move(callback));
+          "LegacyJumpListBuilder::DoCommitListBuild", this,
+          &LegacyJumpListBuilder::DoCommitListBuild, std::move(callback));
   Unused << mIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
 
   return NS_OK;
 }
 
-void JumpListBuilder::DoCommitListBuild(
+void LegacyJumpListBuilder::DoCommitListBuild(
     RefPtr<detail::DoneCommitListBuildCallback> aCallback) {
   // Since we're invoking COM interfaces to talk to the shell on a background
   // thread, we need to be running inside a multithreaded apartment.
@@ -516,7 +521,7 @@ void JumpListBuilder::DoCommitListBuild(
   }
 }
 
-NS_IMETHODIMP JumpListBuilder::DeleteActiveList(bool* _retval) {
+NS_IMETHODIMP LegacyJumpListBuilder::DeleteActiveList(bool* _retval) {
   *_retval = false;
 
   ReentrantMonitorAutoEnter lock(mMonitor);
@@ -540,12 +545,12 @@ NS_IMETHODIMP JumpListBuilder::DeleteActiveList(bool* _retval) {
 
 /* internal */
 
-bool JumpListBuilder::IsSeparator(nsCOMPtr<nsIJumpListItem>& item) {
+bool LegacyJumpListBuilder::IsSeparator(nsCOMPtr<nsILegacyJumpListItem>& item) {
   int16_t type;
   item->GetType(&type);
   if (NS_FAILED(item->GetType(&type))) return false;
 
-  if (type == nsIJumpListItem::JUMPLIST_ITEM_SEPARATOR) return true;
+  if (type == nsILegacyJumpListItem::JUMPLIST_ITEM_SEPARATOR) return true;
   return false;
 }
 
@@ -553,7 +558,7 @@ bool JumpListBuilder::IsSeparator(nsCOMPtr<nsIJumpListItem>& item) {
 // avoid unnecessary extra XPCOM incantations. For each object in the input
 // array,  if it's an IShellLinkW, this deletes the cached icon and adds the
 // url param to a list of URLs to be removed from the places database.
-void JumpListBuilder::RemoveIconCacheAndGetJumplistShortcutURIs(
+void LegacyJumpListBuilder::RemoveIconCacheAndGetJumplistShortcutURIs(
     IObjectArray* aObjArray, nsTArray<nsString>& aURISpecs) {
   MOZ_ASSERT(!NS_IsMainThread());
 
@@ -596,7 +601,7 @@ void JumpListBuilder::RemoveIconCacheAndGetJumplistShortcutURIs(
   }
 }
 
-void JumpListBuilder::DeleteIconFromDisk(const nsAString& aPath) {
+void LegacyJumpListBuilder::DeleteIconFromDisk(const nsAString& aPath) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   // Check that we aren't deleting some arbitrary file that is not an icon
@@ -612,9 +617,9 @@ void JumpListBuilder::DeleteIconFromDisk(const nsAString& aPath) {
   }
 }
 
-NS_IMETHODIMP JumpListBuilder::Observe(nsISupports* aSubject,
-                                       const char* aTopic,
-                                       const char16_t* aData) {
+NS_IMETHODIMP LegacyJumpListBuilder::Observe(nsISupports* aSubject,
+                                             const char* aTopic,
+                                             const char16_t* aData) {
   NS_ENSURE_ARG_POINTER(aTopic);
   if (strcmp(aTopic, TOPIC_PROFILE_BEFORE_CHANGE) == 0) {
     nsCOMPtr<nsIObserverService> observerService =

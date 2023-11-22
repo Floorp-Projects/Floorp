@@ -231,7 +231,7 @@
   }
 
 // {73A5946F-608D-454f-9D33-0B8F8C7294B6}
-#define NS_WIN_JUMPLISTBUILDER_CID                  \
+#define NS_WIN_LEGACYJUMPLISTBUILDER_CID            \
   {                                                 \
     0x73a5946f, 0x608d, 0x454f, {                   \
       0x9d, 0x33, 0xb, 0x8f, 0x8c, 0x72, 0x94, 0xb6 \
@@ -239,7 +239,7 @@
   }
 
 // {2B9A1F2C-27CE-45b6-8D4E-755D0E34F8DB}
-#define NS_WIN_JUMPLISTITEM_CID                      \
+#define NS_WIN_LEGACYJUMPLISTITEM_CID                \
   {                                                  \
     0x2b9a1f2c, 0x27ce, 0x45b6, {                    \
       0x8d, 0x4e, 0x75, 0x5d, 0x0e, 0x34, 0xf8, 0xdb \
@@ -247,7 +247,7 @@
   }
 
 // {21F1F13B-F75A-42ad-867A-D91AD694447E}
-#define NS_WIN_JUMPLISTSEPARATOR_CID                 \
+#define NS_WIN_LEGACYJUMPLISTSEPARATOR_CID           \
   {                                                  \
     0x21f1f13b, 0xf75a, 0x42ad, {                    \
       0x86, 0x7a, 0xd9, 0x1a, 0xd6, 0x94, 0x44, 0x7e \
@@ -255,7 +255,7 @@
   }
 
 // {F72C5DC4-5A12-47be-BE28-AB105F33B08F}
-#define NS_WIN_JUMPLISTLINK_CID                      \
+#define NS_WIN_LEGACYJUMPLISTLINK_CID                \
   {                                                  \
     0xf72c5dc4, 0x5a12, 0x47be, {                    \
       0xbe, 0x28, 0xab, 0x10, 0x5f, 0x33, 0xb0, 0x8f \
@@ -263,7 +263,7 @@
   }
 
 // {B16656B2-5187-498f-ABF4-56346126BFDB}
-#define NS_WIN_JUMPLISTSHORTCUT_CID                  \
+#define NS_WIN_LEGACYJUMPLISTSHORTCUT_CID            \
   {                                                  \
     0xb16656b2, 0x5187, 0x498f, {                    \
       0xab, 0xf4, 0x56, 0x34, 0x61, 0x26, 0xbf, 0xdb \
