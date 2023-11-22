@@ -197,7 +197,7 @@ interface nsISHistory: nsISupports
    *                         history, aIndex should be the index history was
    *                         navigated to.
    */
-  void evictOutOfRangeContentViewers(in long aIndex);
+  void evictOutOfRangeDocumentViewers(in long aIndex);
 
   /**
    * Evict the content viewer associated with a bfcache entry that has timed
