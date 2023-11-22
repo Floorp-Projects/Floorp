@@ -301,7 +301,7 @@ static bool AssertParentProcessWithCallerLocationImpl(GlobalObject& aGlobal,
   NS_ENSURE_TRUE(scriptFilename.get(), false);
 
   reason.AppendPrintf(" Called from %s:%d:%d.", scriptFilename.get(), lineNo,
-                      colNo.zeroOriginValue());
+                      colNo.oneOriginValue());
   return false;
 }
 
