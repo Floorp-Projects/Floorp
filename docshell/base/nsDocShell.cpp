@@ -4249,7 +4249,7 @@ nsDocShell::Stop(uint32_t aStopFlags) {
 
   if (nsIWebNavigation::STOP_NETWORK & aStopFlags) {
     // Suspend any timers that were set for this loader.  We'll clear
-    // them out for good in CreateContentViewer.
+    // them out for good in CreateDocumentViewer.
     if (mRefreshURIList) {
       SuspendRefreshURIs();
       mSavedRefreshURIList.swap(mRefreshURIList);
@@ -7074,7 +7074,7 @@ nsDocShell::BeginRestore(nsIDocumentViewer* aContentViewer, bool aTop) {
 
   if (!aTop) {
     // This point corresponds to us having gotten OnStartRequest or
-    // STATE_START, so do the same thing that CreateContentViewer does at
+    // STATE_START, so do the same thing that CreateDocumentViewer does at
     // this point to ensure that unload/pagehide events for this document
     // will fire when it's unloaded again.
     mFiredUnloadEvent = false;
@@ -7248,7 +7248,7 @@ nsresult nsDocShell::RestoreFromHistory() {
   MOZ_ASSERT(mRestorePresentationEvent.IsPending());
   PresentationEventForgetter forgetter(mRestorePresentationEvent);
 
-  // This section of code follows the same ordering as CreateContentViewer.
+  // This section of code follows the same ordering as CreateDocumentViewer.
   if (!mLSHE) {
     return NS_ERROR_FAILURE;
   }
@@ -7508,7 +7508,7 @@ nsresult nsDocShell::RestoreFromHistory() {
                   /* aLocationFlags */ 0);
   }
 
-  // This is the end of our CreateContentViewer() replacement.
+  // This is the end of our CreateDocumentViewer() replacement.
   // Now we simulate a load.  First, we restore the state of the javascript
   // window object.
   nsCOMPtr<nsPIDOMWindowOuter> privWin = GetWindow();
@@ -7711,9 +7711,9 @@ nsresult nsDocShell::RestoreFromHistory() {
   return privWin->FireDelayedDOMEvents(true);
 }
 
-nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
-                                         nsIRequest* aRequest,
-                                         nsIStreamListener** aContentHandler) {
+nsresult nsDocShell::CreateDocumentViewer(const nsACString& aContentType,
+                                          nsIRequest* aRequest,
+                                          nsIStreamListener** aContentHandler) {
   if (DocGroup::TryToLoadIframesInBackground()) {
     ResetToFirstLoad();
   }

@@ -110,7 +110,7 @@ nsresult PrototypeDocumentContentSink::Init(Document* aDoc, nsIURI* aURI,
   mDocument->SetMayStartLayout(false);
 
   // Get the URI.  this should match the uri used for the OnNewURI call in
-  // nsDocShell::CreateContentViewer.
+  // nsDocShell::CreateDocumentViewer.
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(mDocumentURI));
   NS_ENSURE_SUCCESS(rv, rv);
 

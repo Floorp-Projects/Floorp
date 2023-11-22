@@ -164,7 +164,8 @@ nsDSURIContentListener::DoContent(const nsACString& aContentType,
     copy.forget(aContentHandler);
     rv = NS_OK;
   } else {
-    rv = docShell->CreateContentViewer(aContentType, aRequest, aContentHandler);
+    rv =
+        docShell->CreateDocumentViewer(aContentType, aRequest, aContentHandler);
     if (NS_SUCCEEDED(rv) && reuseCV) {
       mExistingJPEGStreamListener = *aContentHandler;
     } else {
