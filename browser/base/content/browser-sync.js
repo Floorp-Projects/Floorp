@@ -1170,8 +1170,10 @@ var gSync = {
         this.openFxAEmailFirstPageFromFxaMenu(panel);
         break;
       case UIState.STATUS_LOGIN_FAILED:
-      case UIState.STATUS_NOT_VERIFIED:
         this.openPrefsFromFxaMenu("sync_settings", panel);
+        break;
+      case UIState.STATUS_NOT_VERIFIED:
+        this.openFxAEmailFirstPage("fxa_app_menu_reverify");
         break;
       case UIState.STATUS_SIGNED_IN:
         this.openFxAManagePageFromFxaMenu(panel);
