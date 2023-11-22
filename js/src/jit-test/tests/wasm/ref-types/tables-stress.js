@@ -20,7 +20,7 @@ for ( let prefix of ['', '(table $prefix 0 32 funcref)']) {
                (br_if $l_break (i32.ge_s (local.get $j) (local.get $i)))
                (local.set $tmp (table.get $tbl (local.get $i)))
                (if (i32.eqz (i32.rem_s (local.get $i) (i32.const 3)))
-                   (local.set $tmp (call $item)))
+                   (then (local.set $tmp (call $item))))
                (table.set $tbl (local.get $i) (table.get $tbl (local.get $j)))
                (table.set $tbl (local.get $j) (local.get $tmp))
                (local.set $i (i32.add (local.get $i) (i32.const 1)))

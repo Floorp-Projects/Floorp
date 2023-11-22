@@ -210,8 +210,8 @@ if (this.wasmSimdAnalysis && wasmCompileMode() == "ion") {
               (memory (export "mem") 1 1)
               (func $f (param v128) (result i32)
                   (if (result i32) (i64x2.all_true (local.get 0))
-                      (i32.const 42)
-                      (i32.const 37)))
+                      (then (i32.const 42))
+                      (else (i32.const 37))))
               (func (export "run") (result i32)
                 (call $f (v128.load (i32.const 16)))))`);
   assertEq(wasmSimdAnalysis(), "simd128-to-scalar-and-branch -> folded");
@@ -222,8 +222,8 @@ if (this.wasmSimdAnalysis && wasmCompileMode() == "ion") {
               (memory (export "mem") 1 1)
               (func $f (param v128) (result i32)
                   (if (result i32) (i32.eqz (i64x2.all_true (local.get 0)))
-                      (i32.const 42)
-                      (i32.const 37)))
+                      (then (i32.const 42))
+                      (else (i32.const 37))))
               (func (export "run") (result i32)
                 (call $f (v128.load (i32.const 16)))))`);
   assertEq(wasmSimdAnalysis(), "simd128-to-scalar-and-branch -> folded");

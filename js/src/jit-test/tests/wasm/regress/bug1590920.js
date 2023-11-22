@@ -7,5 +7,5 @@ let { exports } = new WebAssembly.Instance(new WebAssembly.Module(
               (i32.clz (i32.const 1))
               (if
                 (i32.const 1)
-                (return))))))`)));
+                (then (return)))))))`)));
 exports.g();
