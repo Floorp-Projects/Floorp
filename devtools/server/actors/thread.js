@@ -2254,11 +2254,7 @@ class ThreadActor extends Actor {
           ...content.substring(0, scriptStartOffset).matchAll("\n"),
         ];
         const startLine = 1 + allLineBreaks.length;
-        // NOTE: Debugger.Source.prototype.startColumn is 1-based.
-        //       Create 1-based column here for the following comparison,
-        //       and also the createSource call below.
         const startColumn =
-          1 +
           scriptStartOffset -
           (allLineBreaks.length ? allLineBreaks.at(-1).index - 1 : 0);
 
@@ -2274,7 +2270,6 @@ class ThreadActor extends Actor {
 
         try {
           const global = this.dbg.getDebuggees()[0];
-          // NOTE: Debugger.Object.prototype.createSource takes 1-based column.
           this._addSource(
             global.createSource({
               text,

@@ -210,13 +210,13 @@ bool nsCSPContext::permitsInternal(
       // nonce, and will incorrectly fail the unit tests.
       if (aSendViolationReports) {
         uint32_t lineNumber = 0;
-        uint32_t columnNumber = 1;
+        uint32_t columnNumber = 0;
         nsAutoString spec;
         JSContext* cx = nsContentUtils::GetCurrentJSContext();
         if (cx) {
           nsJSUtils::GetCallingLocation(cx, spec, &lineNumber, &columnNumber);
-          // If GetCallingLocation fails linenumber & columnNumber are set to
-          // (0, 1) anyway so we can skip checking if that is the case.
+          // If GetCallingLocation fails linenumber & columnNumber are set to 0
+          // anyway so we can skip checking if that is the case.
         }
         AsyncReportViolation(
             aTriggeringElement, aCSPEventListener,
@@ -732,13 +732,13 @@ nsCSPContext::GetAllowsNavigateTo(nsIURI* aURI, bool aIsFormSubmission,
 
       // Lines numbers and source file for the violation report
       uint32_t lineNumber = 0;
-      uint32_t columnNumber = 1;
+      uint32_t columnNumber = 0;
       nsAutoCString spec;
       JSContext* cx = nsContentUtils::GetCurrentJSContext();
       if (cx) {
         nsJSUtils::GetCallingLocation(cx, spec, &lineNumber, &columnNumber);
-        // If GetCallingLocation fails linenumber & columnNumber are set to
-        // (0, 1) anyway so we can skip checking if that is the case.
+        // If GetCallingLocation fails linenumber & columnNumber are set to 0
+        // anyway so we can skip checking if that is the case.
       }
 
       // Report the violation
@@ -1848,7 +1848,7 @@ nsCSPContext::GetCSPSandboxFlags(uint32_t* aOutSandboxFlags) {
            NS_ConvertUTF16toUTF8(policy).get()));
 
       AutoTArray<nsString, 1> params = {policy};
-      logToConsole("ignoringReportOnlyDirective", params, u""_ns, u""_ns, 0, 1,
+      logToConsole("ignoringReportOnlyDirective", params, u""_ns, u""_ns, 0, 0,
                    nsIScriptError::warningFlag);
     }
   }

@@ -744,7 +744,7 @@ bool NodeBuilder::newNodeLoc(TokenPos* pos, MutableHandleValue dst) {
   if (!defineProperty(to, "line", val)) {
     return false;
   }
-  val.setNumber(startColumnIndex.oneOriginValue());
+  val.setNumber(startColumnIndex.zeroOriginValue());
   if (!defineProperty(to, "column", val)) {
     return false;
   }
@@ -760,7 +760,7 @@ bool NodeBuilder::newNodeLoc(TokenPos* pos, MutableHandleValue dst) {
   if (!defineProperty(to, "line", val)) {
     return false;
   }
-  val.setNumber(endColumnIndex.oneOriginValue());
+  val.setNumber(endColumnIndex.zeroOriginValue());
   if (!defineProperty(to, "column", val)) {
     return false;
   }

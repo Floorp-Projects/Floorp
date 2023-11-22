@@ -687,7 +687,7 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
   // Check the allowlist for the provided filename. getFilename is a helper
   // function
   nsAutoCString fileName;
-  uint32_t lineNumber = 0, columnNumber = 1;
+  uint32_t lineNumber = 0, columnNumber = 0;
   nsJSUtils::GetCallingLocation(cx, fileName, &lineNumber, &columnNumber);
   if (fileName.IsEmpty()) {
     fileName = "unknown-file"_ns;
@@ -1152,7 +1152,7 @@ void EnforceXFrameOptionsCheck(nsIChannel* aChannel,
                         u""_ns,  // no sourcefile
                         u""_ns,  // no scriptsample
                         0,       // no linenumber
-                        1,       // no columnnumber
+                        0,       // no columnnumber
                         nsIScriptError::warningFlag,
                         "IgnoringSrcBecauseOfDirective"_ns, innerWindowID,
                         privateWindow);

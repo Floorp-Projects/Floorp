@@ -228,14 +228,10 @@ class SourcesManager extends EventEmitter {
    */
   getScriptOffsetLocation(script, offset) {
     const { lineNumber, columnNumber } = script.getOffsetMetadata(offset);
-    // NOTE: Debugger.Source.prototype.startColumn is 1-based.
-    //       Convert to 0-based, while keeping the wasm's column (1) as is.
-    //       (bug 1863878)
-    const columnBase = script.format === "wasm" ? 0 : 1;
     return new SourceLocation(
       this.createSourceActor(script.source),
       lineNumber,
-      columnNumber - columnBase
+      columnNumber
     );
   }
 

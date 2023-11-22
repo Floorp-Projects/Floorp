@@ -355,7 +355,8 @@ static bool FormatFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp,
 
   // print filename, line number and column
   sp.printf("%s [\"%s\":%u:%u]\n", fun ? ")" : "",
-            filename ? filename : "<unknown>", lineno, column.oneOriginValue());
+            filename ? filename : "<unknown>", lineno,
+            column.zeroOriginValue());
 
   // Note: Right now we don't dump the local variables anymore, because
   // that is hard to support across all the JITs etc.

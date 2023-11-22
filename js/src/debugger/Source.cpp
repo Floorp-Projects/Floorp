@@ -363,7 +363,7 @@ class DebuggerSourceGetStartColumnMatcher {
 bool DebuggerSource::CallData::getStartColumn() {
   DebuggerSourceGetStartColumnMatcher matcher;
   JS::LimitedColumnNumberOneOrigin column = referent.match(matcher);
-  args.rval().setNumber(column.oneOriginValue());
+  args.rval().setNumber(column.zeroOriginValue());
   return true;
 }
 

@@ -174,7 +174,7 @@ void nsCSPParser::logWarningErrorToConsole(uint32_t aSeverityFlag,
                             u""_ns,          // aSourceName
                             u""_ns,          // aSourceLine
                             0,               // aLineNumber
-                            1,               // aColumnNumber
+                            0,               // aColumnNumber
                             aSeverityFlag);  // aFlags
 }
 

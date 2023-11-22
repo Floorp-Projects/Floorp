@@ -1177,7 +1177,7 @@ class nsContentUtils {
               contains the error (may be empty).
    *   @param [aLineNumber=0] (Optional) Line number within resource
               containing error.
-   *   @param [aColumnNumber=1] (Optional) Column number within resource
+   *   @param [aColumnNumber=0] (Optional) Column number within resource
               containing error.
               If aURI is null, then aDocument->GetDocumentURI() is used.
    *   @param [aLocationMode] (Optional) Specifies the behavior if
@@ -1187,7 +1187,7 @@ class nsContentUtils {
       const nsAString& aErrorText, uint32_t aErrorFlags,
       const nsACString& aCategory, uint64_t aInnerWindowID,
       nsIURI* aURI = nullptr, const nsString& aSourceLine = u""_ns,
-      uint32_t aLineNumber = 0, uint32_t aColumnNumber = 1,
+      uint32_t aLineNumber = 0, uint32_t aColumnNumber = 0,
       MissingErrorLocationMode aLocationMode = eUSE_CALLING_LOCATION);
 
   /**

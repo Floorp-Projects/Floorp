@@ -29,31 +29,31 @@ function onDebuggerStatement(frame) {
   assertBPCount({ line: 9 }, 1);
   assertBPCount({ line: 10 }, 1);
 
-  assertBPCount({ line: 6, minColumn: 8 }, 3);
-  assertBPCount({ line: 6, maxColumn: 17 }, 3);
-  assertBPCount({ line: 6, minColumn: 8, maxColumn: 17 }, 2);
+  assertBPCount({ line: 6, minColumn: 7 }, 3);
+  assertBPCount({ line: 6, maxColumn: 16 }, 3);
+  assertBPCount({ line: 6, minColumn: 7, maxColumn: 16 }, 2);
   assertBPError({ line: 1, minLine: 1 }, "line", "not allowed alongside 'minLine'/'maxLine'");
   assertBPError({ line: 1, maxLine: 1 }, "line", "not allowed alongside 'minLine'/'maxLine'");
   assertBPError({ line: "1" }, "line", "not an integer");
 
   assertBPCount({ minLine: 9 }, 2);
-  assertBPCount({ minLine: 9, minColumn: 1 }, 2);
-  assertBPCount({ minLine: 9, minColumn: 9 }, 1);
+  assertBPCount({ minLine: 9, minColumn: 0 }, 2);
+  assertBPCount({ minLine: 9, minColumn: 8 }, 1);
   assertBPError({ minLine: "1" }, "minLine", "not an integer");
-  assertBPError({ minColumn: 2 }, "minColumn", "not allowed without 'line' or 'minLine'");
-  assertBPError({ minLine: 1, minColumn: "2" }, "minColumn", "not an integer");
+  assertBPError({ minColumn: 1 }, "minColumn", "not allowed without 'line' or 'minLine'");
+  assertBPError({ minLine: 1, minColumn: "1" }, "minColumn", "not an integer");
 
   assertBPCount({ maxLine: 7 }, 5);
-  assertBPCount({ maxLine: 7, maxColumn: 1 }, 5);
-  assertBPCount({ maxLine: 7, maxColumn: 9 }, 6);
+  assertBPCount({ maxLine: 7, maxColumn: 0 }, 5);
+  assertBPCount({ maxLine: 7, maxColumn: 8 }, 6);
   assertBPError({ maxLine: "1" }, "maxLine", "not an integer");
-  assertBPError({ maxColumn: 2 }, "maxColumn", "not allowed without 'line' or 'maxLine'");
-  assertBPError({ maxLine: 1, maxColumn: "2" }, "maxColumn", "not an integer");
+  assertBPError({ maxColumn: 1 }, "maxColumn", "not allowed without 'line' or 'maxLine'");
+  assertBPError({ maxLine: 1, maxColumn: "1" }, "maxColumn", "not an integer");
 
   assertBPCount({ minLine: 6, maxLine: 8 }, 6);
-  assertBPCount({ minLine: 6, minColumn: 9, maxLine: 8 }, 5);
-  assertBPCount({ minLine: 6, maxLine: 8, maxColumn: 9 }, 7);
-  assertBPCount({ minLine: 6, minColumn: 9, maxLine: 8, maxColumn: 9 }, 6);
+  assertBPCount({ minLine: 6, minColumn: 8, maxLine: 8 }, 5);
+  assertBPCount({ minLine: 6, maxLine: 8, maxColumn: 8 }, 7);
+  assertBPCount({ minLine: 6, minColumn: 8, maxLine: 8, maxColumn: 8 }, 6);
 
   assertBPCount({
     minOffset: fScript.getPossibleBreakpoints({ line: 6 })[3].offset,

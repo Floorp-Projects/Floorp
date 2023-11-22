@@ -378,7 +378,7 @@ EventSourceImpl::EventSourceImpl(EventSource* aEventSource,
       mIsShutDown(false),
       mSharedData(SharedData{aEventSource}, "EventSourceImpl::mSharedData"),
       mScriptLine(0),
-      mScriptColumn(1),
+      mScriptColumn(0),
       mInnerWindowID(0),
       mCookieJarSettings(aCookieJarSettings),
       mTargetThread(NS_GetCurrentThread()) {

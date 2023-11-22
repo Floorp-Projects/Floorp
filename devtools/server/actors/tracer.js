@@ -149,20 +149,8 @@ class TracerActor extends Actor {
     const { lineNumber, columnNumber } = script.getOffsetMetadata(frame.offset);
     const url = script.source.url;
 
-    // NOTE: Debugger.Script.prototype.getOffsetMetadata returns
-    //       columnNumber in 1-based.
-    //       Convert to 0-based, while keeping the wasm's column (1) as is.
-    //       (bug 1863878)
-    const columnBase = script.format === "wasm" ? 0 : 1;
-
     // Ignore blackboxed sources
-    if (
-      this.sourcesManager.isBlackBoxed(
-        url,
-        lineNumber,
-        columnNumber - columnBase
-      )
-    ) {
+    if (this.sourcesManager.isBlackBoxed(url, lineNumber, columnNumber)) {
       return false;
     }
 
@@ -197,7 +185,7 @@ class TracerActor extends Actor {
     this.throttledConsoleMessages.push({
       filename: url,
       lineNumber,
-      columnNumber: columnNumber - columnBase,
+      columnNumber,
       arguments: args,
       styles: CONSOLE_ARGS_STYLES,
       level: "logTrace",

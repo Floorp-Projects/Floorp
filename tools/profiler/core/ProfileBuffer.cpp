@@ -227,7 +227,7 @@ void ProfileBufferCollector::CollectProfilingStackFrame(
         if (aFrame.pc()) {
           JS::LimitedColumnNumberOneOrigin col;
           line = Some(JS_PCToLineNumber(aFrame.script(), aFrame.pc(), &col));
-          column = Some(col.oneOriginValue());
+          column = Some(col.zeroOriginValue());
         }
       }
 

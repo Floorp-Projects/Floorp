@@ -567,7 +567,7 @@ void jit::JitSpewBaselineICStats(JSScript* script, const char* dumpReason) {
     spew->property("op", CodeName(JSOp(*pc)));
     spew->property("pc", pcOffset);
     spew->property("line", line);
-    spew->property("column", column.oneOriginValue());
+    spew->property("column", column.zeroOriginValue());
 
     spew->beginListProperty("counts");
     ICStub* stub = entry.firstStub();

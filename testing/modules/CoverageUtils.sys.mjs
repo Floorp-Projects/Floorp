@@ -51,8 +51,7 @@ CoverageCollector.prototype._getLinesCovered = function () {
         this._allCoverage[scriptName] = {};
       }
 
-      // NOTE: columnNumber is 1-origin.
-      let key = [lineNumber, columnNumber - 1, offset].join("#");
+      let key = [lineNumber, columnNumber, offset].join("#");
       if (!currentCoverage[scriptName][key]) {
         currentCoverage[scriptName][key] = count;
       } else {

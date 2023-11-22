@@ -506,15 +506,10 @@ class NodeActor extends Actor {
       return undefined;
     }
 
-    // NOTE: Debugger.Script.prototype.startColumn is 1-based.
-    //       Convert to 0-based, while keeping the wasm's column (1) as is.
-    //       (bug 1863878)
-    const columnBase = customElementDO.script.format === "wasm" ? 0 : 1;
-
     return {
       url: customElementDO.script.url,
       line: customElementDO.script.startLine,
-      column: customElementDO.script.startColumn - columnBase,
+      column: customElementDO.script.startColumn,
     };
   }
 
