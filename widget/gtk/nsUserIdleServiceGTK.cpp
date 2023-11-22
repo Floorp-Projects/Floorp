@@ -197,8 +197,9 @@ class UserIdleServiceMutter : public UserIdleServiceImpl {
               [this](GUniquePtr<GError>&& aError) {
                 mPollInProgress = false;
                 if (!IsCancelledGError(aError.get())) {
-                  g_warning("Failed to call GetIdletime(): %s\n",
-                            aError->message);
+                  MOZ_LOG(
+                      sIdleLog, LogLevel::Warning,
+                      ("Failed to call GetIdletime(): %s\n", aError->message));
                   mUserIdleServiceGTK->RejectAndTryNextServiceCallback();
                 }
               });
