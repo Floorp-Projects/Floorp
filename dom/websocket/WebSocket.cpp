@@ -134,7 +134,7 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
         mCloseEventCode(nsIWebSocketChannel::CLOSE_ABNORMAL),
         mPort(0),
         mScriptLine(0),
-        mScriptColumn(0),
+        mScriptColumn(1),
         mInnerWindowID(0),
         mPrivateBrowsing(false),
         mIsChromeContext(false),
@@ -229,8 +229,8 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
 
   // Web Socket owner information:
   // - the script file name, UTF8 encoded.
-  // - source code line number and column number where the Web Socket object
-  //   was constructed.
+  // - source code line number and 1-origin column number where the Web Socket
+  //   object was constructed.
   // - the ID of the Web Socket owner window. Note that this may not
   //   be the same as the inner window where the script lives.
   //   e.g within iframes
@@ -1382,7 +1382,7 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
         workerPrivate, webSocketImpl,
         workerPrivate->GlobalScope()->GetClientInfo(), !!aTransportProvider,
         aUrl, protocolArray, nsDependentCString(file.get()), lineno,
-        column.zeroOriginValue());
+        column.oneOriginValue());
     runnable->Dispatch(Canceling, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
@@ -1615,7 +1615,7 @@ nsresult WebSocketImpl::Init(JSContext* aCx, bool aIsSecure,
     if (JS::DescribeScriptedCaller(aCx, &file, &lineno, &column)) {
       mScriptFile = file.get();
       mScriptLine = lineno;
-      mScriptColumn = column.zeroOriginValue();
+      mScriptColumn = column.oneOriginValue();
     }
   }
 
