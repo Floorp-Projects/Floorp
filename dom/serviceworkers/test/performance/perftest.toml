@@ -1,0 +1,14 @@
+[DEFAULT]
+support-files = [
+  "intercepted.txt",
+  "perfutils.js",
+  "sw_cacher.js",
+  "sw_empty.js",
+  "sw_intercept_target.js",
+  "target.txt",
+  "time_fetch.html",
+]
+
+["test_caching.html"]
+["test_fetch.html"]
+["test_registration.html"]

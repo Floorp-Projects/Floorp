@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Service worker performance test: caching</title>
+</head>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="../utils.js"></script>
+<script src="perfutils.js"></script>
+<script>
+
+  "use strict";
+
+  const NO_CACHE = "No cache";
+  const CACHED = "Cached";
+  const NO_CACHE_AGAIN = "No cache again";
+
+  var journal = {};
+  journal[NO_CACHE] = [];
+  journal[CACHED] = [];
+  journal[NO_CACHE_AGAIN] = [];
+
+  const ITERATIONS = 10;
+
+  var perfMetadata = {
+    owner: "DOM LWS",
+    name: "Service Worker Caching",
+    description: "Test service worker caching.",
+    options: {
+      default: {
+        perfherder: true,
+        perfherder_metrics: [
+          // Here, we can't use the constants defined above because perfherder
+          // grabs data from the parse tree.
+          { name: "No cache", unit: "ms", shouldAlert: true },
+          { name: "Cached", unit: "ms", shouldAlert: true },
+          { name: "No cache again", unit: "ms", shouldAlert: true },
+        ],
+        verbose: true,
+        manifest: "perftest.toml",
+        manifest_flavor: "plain",
+      },
+    },
+  };
+
+  add_task(async () => {
+    await SpecialPowers.pushPrefEnv({
+      set: [["dom.serviceWorkers.testing.enabled", true]]
+    });
+  });
+
+  function create_iframe(url) {
+    return new Promise(function(res) {
+      let iframe = document.createElement("iframe");
+      iframe.src = url;
+      iframe.onload = function() { res(iframe) }
+      document.body.appendChild(iframe);
+    });
+  }
+
+  async function time_fetch(journal, iframe, filename) {
+    for (let i = 0; i < ITERATIONS; i++) {
+      let result = await iframe.contentWindow.time_fetch(filename);
+      is(result.status, 200);
+      is(result.data, filename);
+      journal.push(result.elapsed_ms);
+    }
+  }
+
+  add_task(async () => {
+    let reg = await navigator.serviceWorker.register("sw_cacher.js");
+    await waitForState(reg.installing, "activated");
+
+    let iframe = await create_iframe("time_fetch.html");
+
+    await time_fetch(journal[NO_CACHE], iframe, "uncached.txt");
+    await time_fetch(journal[CACHED], iframe, "cached.txt");
+    await time_fetch(journal[NO_CACHE_AGAIN], iframe, "uncached.txt");
+
+    await reg.unregister();
+  });
+
+  add_task(() => {
+    reportMetrics(journal);
+  });
+
+</script>
+<body>
+</body>
+</html>
