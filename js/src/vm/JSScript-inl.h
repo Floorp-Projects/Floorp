@@ -223,6 +223,18 @@ inline uint32_t JSScript::getWarmUpCount() const {
   return warmUpData_.toJitScript()->warmUpCount();
 }
 
+inline void JSScript::updateLastICStubCounter() {
+  if (!hasJitScript()) {
+    return;
+  }
+  jitScript()->updateLastICStubCounter();
+}
+
+inline uint32_t JSScript::warmUpCountAtLastICStub() const {
+  MOZ_ASSERT(hasJitScript());
+  return jitScript()->warmUpCountAtLastICStub();
+}
+
 inline void JSScript::incWarmUpCounter() {
   if (warmUpData_.isWarmUpCount()) {
     warmUpData_.incWarmUpCount();
