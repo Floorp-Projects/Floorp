@@ -27,6 +27,8 @@ class AppRequestInterceptor(
         this.navController = WeakReference(navController)
     }
 
+    override fun interceptsAppInitiatedRequests() = true
+
     override fun onLoadRequest(
         engineSession: EngineSession,
         uri: String,
@@ -37,17 +39,27 @@ class AppRequestInterceptor(
         isDirectNavigation: Boolean,
         isSubframeRequest: Boolean,
     ): RequestInterceptor.InterceptionResponse? {
-        return context.components.services.appLinksInterceptor
-            .onLoadRequest(
-                engineSession,
-                uri,
-                lastUri,
-                hasUserGesture,
-                isSameDomain,
-                isRedirect,
-                isDirectNavigation,
-                isSubframeRequest,
-            )
+        val services = context.components.services
+
+        return services.urlRequestInterceptor.onLoadRequest(
+            engineSession,
+            uri,
+            lastUri,
+            hasUserGesture,
+            isSameDomain,
+            isRedirect,
+            isDirectNavigation,
+            isSubframeRequest,
+        ) ?: services.appLinksInterceptor.onLoadRequest(
+            engineSession,
+            uri,
+            lastUri,
+            hasUserGesture,
+            isSameDomain,
+            isRedirect,
+            isDirectNavigation,
+            isSubframeRequest,
+        )
     }
 
     override fun onErrorRequest(

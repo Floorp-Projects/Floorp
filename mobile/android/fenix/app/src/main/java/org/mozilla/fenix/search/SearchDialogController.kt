@@ -29,11 +29,9 @@ import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Core
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.crashes.CrashListActivity
-import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.telemetryName
-import org.mozilla.fenix.search.awesomebar.AwesomeBarView.Companion.GOOGLE_SEARCH_ENGINE_NAME
 import org.mozilla.fenix.search.toolbar.SearchSelectorInteractor
 import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.settings.SupportUtils
@@ -116,12 +114,6 @@ class SearchDialogController(
 
         val searchEngine = fragmentStore.state.searchEngineSource.searchEngine
         val isDefaultEngine = searchEngine == fragmentStore.state.defaultEngine
-        val additionalHeaders = getAdditionalHeaders(searchEngine)
-        val flags = if (additionalHeaders.isNullOrEmpty()) {
-            LoadUrlFlags.none()
-        } else {
-            LoadUrlFlags.select(LoadUrlFlags.ALLOW_ADDITIONAL_HEADERS)
-        }
 
         activity.openToBrowserAndLoad(
             searchTermOrURL = url,
@@ -129,9 +121,7 @@ class SearchDialogController(
             from = BrowserDirection.FromSearchDialog,
             engine = searchEngine,
             forceSearch = !isDefaultEngine,
-            flags = flags,
             requestDesktopMode = fromHomeScreen && activity.settings().openNextTabInDesktopMode,
-            additionalHeaders = additionalHeaders,
         )
 
         if (url.isUrl() || searchEngine == null) {
@@ -197,12 +187,6 @@ class SearchDialogController(
         clearToolbarFocus()
 
         val searchEngine = fragmentStore.state.searchEngineSource.searchEngine
-        val additionalHeaders = getAdditionalHeaders(searchEngine)
-        val flags = if (additionalHeaders.isNullOrEmpty()) {
-            LoadUrlFlags.none()
-        } else {
-            LoadUrlFlags.select(LoadUrlFlags.ALLOW_ADDITIONAL_HEADERS)
-        }
 
         activity.openToBrowserAndLoad(
             searchTermOrURL = searchTerms,
@@ -210,8 +194,6 @@ class SearchDialogController(
             from = BrowserDirection.FromSearchDialog,
             engine = searchEngine,
             forceSearch = true,
-            flags = flags,
-            additionalHeaders = additionalHeaders,
         )
 
         val searchAccessPoint = when (fragmentStore.state.searchAccessPoint) {
@@ -345,21 +327,5 @@ class SearchDialogController(
             }
             create().withCenterAlignedButtons()
         }
-    }
-
-    private fun getAdditionalHeaders(searchEngine: SearchEngine?): Map<String, String>? {
-        if (searchEngine?.name != GOOGLE_SEARCH_ENGINE_NAME) {
-            return null
-        }
-
-        val value = if (activity.applicationContext.application.isDeviceRamAboveThreshold) {
-            "1"
-        } else {
-            "0"
-        }
-
-        return mapOf(
-            "X-Search-Subdivision" to value,
-        )
     }
 }

@@ -7,6 +7,7 @@ package mozilla.components.concept.engine.request
 import android.content.Intent
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 
 /**
  * Interface for classes that want to intercept load requests to allow custom behavior.
@@ -23,7 +24,21 @@ interface RequestInterceptor {
             val encoding: String = "UTF-8",
         ) : InterceptionResponse()
 
-        data class Url(val url: String) : InterceptionResponse()
+        /**
+         * The intercepted request URL to load.
+         *
+         * @param url The URL of the request.
+         * @param flags The [LoadUrlFlags] to use when loading the provided [url].
+         * @param additionalHeaders The extra headers to use when loading the provided [url].
+         */
+        data class Url(
+            val url: String,
+            val flags: LoadUrlFlags = LoadUrlFlags.select(
+                LoadUrlFlags.EXTERNAL,
+                LoadUrlFlags.LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE,
+            ),
+            val additionalHeaders: Map<String, String>? = null,
+        ) : InterceptionResponse()
 
         data class AppIntent(val appIntent: Intent, val url: String) : InterceptionResponse()
 
