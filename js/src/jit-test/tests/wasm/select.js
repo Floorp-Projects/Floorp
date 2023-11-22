@@ -7,7 +7,7 @@ wasmFailValidateText('(module (func (select (block ) (i32.const 0) (i32.const 0)
 wasmFailValidateText('(module (func (select (return) (i32.const 0) (i32.const 0))) (export "" (func 0)))', unusedValuesError);
 assertEq(wasmEvalText('(module (func (drop (select (return) (i32.const 0) (i32.const 0)))) (export "" (func 0)))').exports[""](), undefined);
 assertEq(wasmEvalText('(module (func (result i32) (i32.add (i32.const 0) (select (return (i32.const 42)) (i32.const 0) (i32.const 0)))) (export "" (func 0)))').exports[""](), 42);
-wasmFailValidateText('(module (func (select (if (result i32) (i32.const 1) (i32.const 0) (f32.const 0)) (i32.const 0) (i32.const 0))) (export "" (func 0)))', mismatchError("f32", "i32"));
+wasmFailValidateText('(module (func (select (if (result i32) (i32.const 1) (then (i32.const 0)) (else (f32.const 0))) (i32.const 0) (i32.const 0))) (export "" (func 0)))', mismatchError("f32", "i32"));
 wasmFailValidateText('(module (func) (func (select (call 0) (call 0) (i32.const 0))) (export "" (func 0)))', emptyStackError);
 
 (function testSideEffects() {
