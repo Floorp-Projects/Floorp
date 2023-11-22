@@ -39,7 +39,7 @@ add_task(async function () {
       `Content-Security-Policy: The page’s settings blocked` +
       ` the loading of a resource at inline (“style-src”).`;
     const VIOLATION_LOCATION_HTML = "test-csp-violation-inline.html:18:1";
-    const VIOLATION_LOCATION_JS = "test-csp-violation-inline.html:14:24";
+    const VIOLATION_LOCATION_JS = "test-csp-violation-inline.html:14:25";
     await navigateTo(TEST_VIOLATION);
     // Triggering the Violation via HTML
     let msg = await waitFor(() => findErrorMessage(hud, CSP_VIOLATION));
@@ -70,7 +70,7 @@ add_task(async function () {
       "https://example.com/browser/devtools/client/webconsole/" +
       "test/browser/test-csp-violation-base-uri.html";
     const CSP_VIOLATION = `Content-Security-Policy: The page’s settings blocked the loading of a resource at https://evil.com/ (“base-uri”).`;
-    const VIOLATION_LOCATION = "test-csp-violation-base-uri.html:15:24";
+    const VIOLATION_LOCATION = "test-csp-violation-base-uri.html:15:25";
     await navigateTo(TEST_VIOLATION);
     let msg = await waitFor(() => findErrorMessage(hud, CSP_VIOLATION));
     ok(msg, "Base-URI validation was Printed");
@@ -95,7 +95,7 @@ add_task(async function () {
       "https://example.com/browser/devtools/client/webconsole/" +
       "test/browser/test-csp-violation-form-action.html";
     const CSP_VIOLATION = `Content-Security-Policy: The page’s settings blocked the loading of a resource at https://evil.com/evil.com (“form-action”).`;
-    const VIOLATION_LOCATION = "test-csp-violation-form-action.html:14:39";
+    const VIOLATION_LOCATION = "test-csp-violation-form-action.html:14:40";
 
     await navigateTo(TEST_VIOLATION);
     const msg = await waitFor(() => findErrorMessage(hud, CSP_VIOLATION));

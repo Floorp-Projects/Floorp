@@ -692,6 +692,8 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
   if (fileName.IsEmpty()) {
     fileName = "unknown-file"_ns;
   }
+  // TODO: Use 1-origin in nsJSUtils::GetCallingLocation.
+  columnNumber += 1;
 
   NS_ConvertUTF8toUTF16 fileNameA(fileName);
   for (const nsLiteralCString& allowlistEntry : evalAllowlist) {
@@ -1152,7 +1154,7 @@ void EnforceXFrameOptionsCheck(nsIChannel* aChannel,
                         u""_ns,  // no sourcefile
                         u""_ns,  // no scriptsample
                         0,       // no linenumber
-                        0,       // no columnnumber
+                        1,       // no columnnumber
                         nsIScriptError::warningFlag,
                         "IgnoringSrcBecauseOfDirective"_ns, innerWindowID,
                         privateWindow);
