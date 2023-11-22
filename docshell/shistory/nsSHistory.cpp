@@ -1208,7 +1208,7 @@ nsSHistory::EvictContentViewersOrReplaceEntry(nsISHEntry* aNewSHEntry,
 }
 
 NS_IMETHODIMP
-nsSHistory::EvictAllContentViewers() {
+nsSHistory::EvictAllDocumentViewers() {
   // XXXbz we don't actually do a good job of evicting things as we should, so
   // we might have viewers quite far from mIndex.  So just evict everything.
   for (int32_t i = 0; i < Length(); i++) {

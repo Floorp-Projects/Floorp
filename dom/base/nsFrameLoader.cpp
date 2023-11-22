@@ -1329,7 +1329,7 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
               aFrameLoader->GetMaybePendingBrowsingContext()) {
         nsCOMPtr<nsISHistory> shistory = bc->Canonical()->GetSessionHistory();
         if (shistory) {
-          shistory->EvictAllContentViewers();
+          shistory->EvictAllDocumentViewers();
         }
       }
     };

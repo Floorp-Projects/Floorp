@@ -1676,11 +1676,11 @@ export class SpecialPowersChild extends JSWindowActorChild {
     this._xpcshellScope = val;
   }
 
-  async evictAllContentViewers() {
+  async evictAllDocumentViewers() {
     if (Services.appinfo.sessionHistoryInParent) {
-      await this.sendQuery("EvictAllContentViewers");
+      await this.sendQuery("EvictAllDocumentViewers");
     } else {
-      this.browsingContext.top.childSessionHistory.legacySHistory.evictAllContentViewers();
+      this.browsingContext.top.childSessionHistory.legacySHistory.evictAllDocumentViewers();
     }
   }
 
