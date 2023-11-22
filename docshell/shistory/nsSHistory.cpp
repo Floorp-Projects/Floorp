@@ -1110,7 +1110,7 @@ nsSHistory::AddSHistoryListener(nsISHistoryListener* aListener) {
 
 void nsSHistory::NotifyListenersContentViewerEvicted(uint32_t aNumEvicted) {
   NotifyListeners(mListeners, [aNumEvicted](auto l) {
-    l->OnContentViewerEvicted(aNumEvicted);
+    l->OnDocumentViewerEvicted(aNumEvicted);
   });
 }
 
