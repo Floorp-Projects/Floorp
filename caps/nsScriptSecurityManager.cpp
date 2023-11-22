@@ -555,7 +555,7 @@ bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
     csp->LogViolationDetails(violationType,
                              nullptr,  // triggering element
                              cspEventListener, fileName, scriptSample, lineNum,
-                             columnNum.zeroOriginValue(), u""_ns, u""_ns);
+                             columnNum.oneOriginValue(), u""_ns, u""_ns);
   }
 
   return evalOK;

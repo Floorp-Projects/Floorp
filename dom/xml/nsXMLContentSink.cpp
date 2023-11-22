@@ -519,7 +519,7 @@ nsresult nsXMLContentSink::CreateElement(
     }
     if (!aNodeInfo->Equals(nsGkAtoms::link, kNameSpaceID_XHTML)) {
       linkStyle->SetLineNumber(aFromParser ? aLineNumber : 0);
-      linkStyle->SetColumnNumber(aFromParser ? aColumnNumber : 0);
+      linkStyle->SetColumnNumber(aFromParser ? aColumnNumber + 1 : 1);
     }
   }
 

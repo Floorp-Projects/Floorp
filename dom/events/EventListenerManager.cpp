@@ -1046,7 +1046,7 @@ nsresult EventListenerManager::SetEventHandler(nsAtom* aName,
           true,    // aParserCreated (true because attribute event handler)
           aElement,
           nullptr,  // nsICSPEventListener
-          aBody, lineNum, columnNum.zeroOriginValue(), &allowsInlineScript);
+          aBody, lineNum, columnNum.oneOriginValue(), &allowsInlineScript);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // return early if CSP wants us to block inline scripts
