@@ -6,8 +6,8 @@
 #define RemoteSpellcheckEngineChild_h_
 
 #include "mozilla/MozPromise.h"
+#include "mozilla/mozSpellChecker.h"
 #include "mozilla/PRemoteSpellcheckEngineChild.h"
-#include "mozSpellChecker.h"
 
 class mozSpellChecker;
 
