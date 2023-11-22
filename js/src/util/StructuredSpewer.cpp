@@ -88,7 +88,7 @@ static bool MatchJSScript(JSScript* script, const char* pattern) {
 
   char signature[2048] = {0};
   SprintfLiteral(signature, "%s:%u:%u", script->filename(), script->lineno(),
-                 script->column().zeroOriginValue());
+                 script->column().oneOriginValue());
 
   // Trivial containment match.
   char* result = strstr(signature, pattern);
@@ -131,7 +131,7 @@ void StructuredSpewer::startObject(JSContext* cx, const JSScript* script,
     json.beginObjectProperty("location");
     json.property("filename", script->filename());
     json.property("line", script->lineno());
-    json.property("column", script->column().zeroOriginValue());
+    json.property("column", script->column().oneOriginValue());
     json.endObject();
   }
 }
