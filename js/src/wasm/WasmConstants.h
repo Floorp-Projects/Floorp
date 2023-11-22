@@ -529,8 +529,8 @@ enum class GcOp {
   BrOnCastFail = 0x19,
 
   // Extern/any coercion operations
-  ExternInternalize = 0x1a,
-  ExternExternalize = 0x1b,
+  AnyConvertExtern = 0x1a,
+  ExternConvertAny = 0x1b,
 
   // I31 operations
   RefI31 = 0x1c,
