@@ -95,6 +95,8 @@ using namespace mozilla;
 static mozilla::LazyLogModule gResistFingerprintingLog(
     "nsResistFingerprinting");
 
+static mozilla::LazyLogModule gFingerprinterDetection("FingerprinterDetection");
+
 #define RESIST_FINGERPRINTINGPROTECTION_OVERRIDE_PREF \
   "privacy.fingerprintingProtection.overrides"
 #define RFP_TIMER_UNCONDITIONAL_VALUE 20
@@ -1401,6 +1403,46 @@ nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
   return NS_OK;
 }
 
+static const char* CanvasFingerprinterToString(
+    ContentBlockingNotifier::CanvasFingerprinter aFingerprinter) {
+  switch (aFingerprinter) {
+    case ContentBlockingNotifier::CanvasFingerprinter::eFingerprintJS:
+      return "FingerprintJS";
+    case ContentBlockingNotifier::CanvasFingerprinter::eAkamai:
+      return "Akamai";
+    case ContentBlockingNotifier::CanvasFingerprinter::eVariant1:
+      return "Variant1";
+    case ContentBlockingNotifier::CanvasFingerprinter::eVariant2:
+      return "Variant2";
+    case ContentBlockingNotifier::CanvasFingerprinter::eVariant3:
+      return "Variant3";
+    case ContentBlockingNotifier::CanvasFingerprinter::eVariant4:
+      return "Variant4";
+    case ContentBlockingNotifier::CanvasFingerprinter::eMaybe:
+      return "Maybe";
+  }
+  return "<error>";
+}
+
+static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
+                               uint32_t& aColumnNum) {
+  aFilename.AssignLiteral("<unknown>");
+
+  JSContext* cx = nsContentUtils::GetCurrentJSContext();
+  if (!cx) {
+    return;
+  }
+
+  JS::AutoFilename scriptFilename;
+  JS::ColumnNumberOneOrigin columnNum;
+  if (JS::DescribeScriptedCaller(cx, &scriptFilename, &aLineNum, &columnNum)) {
+    if (const char* file = scriptFilename.get()) {
+      aFilename = nsDependentCString(file);
+    }
+  }
+  aColumnNum = columnNum.zeroOriginValue();
+}
+
 /* static */ void nsRFPService::MaybeReportCanvasFingerprinter(
     nsTArray<CanvasUsage>& aUses, nsIChannel* aChannel,
     nsACString& aOriginNoSuffix) {
@@ -1484,9 +1526,28 @@ nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
     fingerprinter = Some(ContentBlockingNotifier::CanvasFingerprinter::eMaybe);
   }
 
-  if (!(featureUsage & CanvasFeatureUsage::KnownFingerprintText) &&
-      fingerprinter.isNothing()) {
+  bool knownFingerprintText =
+      bool(featureUsage & CanvasFeatureUsage::KnownFingerprintText);
+  if (!knownFingerprintText && fingerprinter.isNothing()) {
     return;
+  }
+
+  if (MOZ_LOG_TEST(gFingerprinterDetection, LogLevel::Info)) {
+    nsAutoCString filename;
+    uint32_t lineNum = 0;
+    uint32_t columnNum = 0;
+    MaybeCurrentCaller(filename, lineNum, columnNum);
+
+    nsAutoCString origin(aOriginNoSuffix);
+    MOZ_LOG(
+        gFingerprinterDetection, LogLevel::Info,
+        ("Detected a potential canvas fingerprinter on %s in script %s:%d:%d "
+         "(KnownFingerprintText: %s, CanvasFingerprinter: %s)",
+         origin.get(), filename.get(), lineNum, columnNum,
+         knownFingerprintText ? "true" : "false",
+         fingerprinter.isSome()
+             ? CanvasFingerprinterToString(fingerprinter.value())
+             : "<none>"));
   }
 
   ContentBlockingNotifier::OnEvent(
@@ -1500,6 +1561,18 @@ nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
     nsIChannel* aChannel, nsACString& aOriginNoSuffix) {
   if (!aChannel) {
     return;
+  }
+
+  if (MOZ_LOG_TEST(gFingerprinterDetection, LogLevel::Info)) {
+    nsAutoCString filename;
+    uint32_t lineNum = 0;
+    uint32_t columnNum = 0;
+    MaybeCurrentCaller(filename, lineNum, columnNum);
+
+    nsAutoCString origin(aOriginNoSuffix);
+    MOZ_LOG(gFingerprinterDetection, LogLevel::Info,
+            ("Detected a potential font fingerprinter on %s in script %s:%d:%d",
+             origin.get(), filename.get(), lineNum, columnNum));
   }
 
   ContentBlockingNotifier::OnEvent(
