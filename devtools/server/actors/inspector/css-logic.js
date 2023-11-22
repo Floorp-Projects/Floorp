@@ -31,7 +31,6 @@ const nodeConstants = require("resource://devtools/shared/dom-node-constants.js"
 const {
   getBindingElementAndPseudo,
   getCSSStyleRules,
-  l10n,
   hasVisitedState,
   isAgentStylesheet,
   isAuthorStylesheet,
@@ -964,7 +963,6 @@ class CssRule {
       this._selectors = null;
       this.line = InspectorUtils.getRelativeRuleLine(this.domRule);
       this.column = InspectorUtils.getRuleColumn(this.domRule);
-      this.source = this._cssSheet.shortSource + ":" + this.line;
       this.href = this._cssSheet.href;
       this.authorRule = this._cssSheet.authorSheet;
       this.userRule = this._cssSheet.userSheet;
@@ -972,7 +970,6 @@ class CssRule {
     } else if (element) {
       this._selectors = [new CssSelector(this, "@element.style", 0)];
       this.line = -1;
-      this.source = l10n("rule.sourceElement");
       this.href = "#";
       this.authorRule = true;
       this.userRule = false;
@@ -1076,16 +1073,6 @@ class CssSelector {
   }
 
   _matchId = null;
-
-  /**
-   * Retrieve the CssSelector source, which is the source of the CssSheet owning
-   * the selector.
-   *
-   * @return {string} the selector source.
-   */
-  get source() {
-    return this.cssRule.source;
-  }
 
   /**
    * Retrieve the CssSelector source element, which is the source of the CssRule
@@ -1402,16 +1389,6 @@ class CssSelectorInfo {
       // for `@import url(path/to/file.css) layer`)
       rule = rule.parentRule || rule.parentStyleSheet?.ownerRule;
     }
-  }
-
-  /**
-   * Retrieve the CssSelector source, which is the source of the CssSheet owning
-   * the selector.
-   *
-   * @return {string} the selector source.
-   */
-  get source() {
-    return this.selector.source;
   }
 
   /**

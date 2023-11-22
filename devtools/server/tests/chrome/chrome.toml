@@ -43,8 +43,6 @@ support-files = [
 
 ["test_animation-type-longhand.html"]
 
-["test_css-logic-media-queries.html"]
-
 ["test_css-logic-specificity.html"]
 
 ["test_css-logic.html"]
