@@ -9,13 +9,12 @@
 #include "nsIBaseWindow.idl"
 
 interface nsIDocShell;
-interface nsIJumpListBuilder;
 interface nsITaskbarTabPreview;
 interface nsITaskbarWindowPreview;
 interface nsITaskbarPreviewController;
 interface nsITaskbarProgress;
 interface nsITaskbarOverlayIconController;
-interface nsILegacyJumpListBuilder;
+interface nsIJumpListBuilder;
 interface mozIDOMWindow;
 
 /*
@@ -47,7 +46,7 @@ interface mozIDOMWindow;
  * http://msdn.microsoft.com/en-us/library/dd391697%28VS.85%29.aspx
  *
  * Applications may also define custom taskbar jump lists on application shortcuts.
- * See nsILegacyJumpListBuilder for more information.
+ * See nsIJumpListBuilder for more information.
  */
 
 [scriptable, uuid(11751471-9246-4c72-a80f-0c7df765d640)]
@@ -121,23 +120,14 @@ interface nsIWinTaskbar : nsISupports
    */
 
   /**
-   * Retrieve a legacy taskbar jump list builder. This jump list builder backend
-   * is in the process of being phased out.
+   * Retrieve a taskbar jump list builder
    *
    * Fails if a jump list build operation has already been initiated, developers
-   * should make use of a single instance of nsILegacyJumpListBuilder for building lists
+   * should make use of a single instance of nsIJumpListBuilder for building lists
    * within an application.
    *
-   * @throws NS_ERROR_ALREADY_INITIALIZED if an nsILegacyJumpListBuilder instance is
+   * @throw NS_ERROR_ALREADY_INITIALIZED if an nsIJumpListBuilder instance is
    * currently building a list.
-   */
-  nsILegacyJumpListBuilder createLegacyJumpListBuilder(in boolean aPrivateBrowsing);
-
-  /**
-   * Retrieves a Windows Jump List builder. This jump list builder can be used
-   * to asynchronously add, remove, and update items in the Windows Jump List.
-   *
-   * @throws NS_ERROR_UNEXPECTED if the builder failed to be created.
    */
   nsIJumpListBuilder createJumpListBuilder(in boolean aPrivateBrowsing);
 
