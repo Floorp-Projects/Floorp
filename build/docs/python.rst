@@ -11,7 +11,7 @@ related to the build system, Python is typically the first choice.
 Python Requirements
 ===================
 
-The tree requires Python 3.7 or greater to build.
+The tree requires Python 3.8 or greater to build.
 All Python packages not in the Python distribution are included in the
 source tree. So all you should need is a vanilla Python install and you
 should be good to go.

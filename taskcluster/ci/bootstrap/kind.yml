@@ -12,11 +12,6 @@ transforms:
     - gecko_taskgraph.transforms.task:transforms
 
 jobs:
-    debian10:
-        image: debian:buster
-        pre-commands:
-            - apt-get update
-            - apt-get install -y --no-install-recommends curl mercurial python3-pip
     debian11:
         image: debian:bullseye
         pre-commands:
