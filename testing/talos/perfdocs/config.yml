@@ -117,6 +117,24 @@ suites:
                     * ;21;1080p.60fps.mp4_scale_1.1_inclip;6.969;7.222;7.018;6.993;7.045;6.970;6.970;6.807;7.118;6.969;6.997;6.972
                     * ;22;1080p.60fps.mp4_scale_2_startup;6.963;6.947;6.914;6.929;6.979;7.010;7.010245327102808;6.914;6.961;7.028;7.012;6.914
                     * ;23;1080p.60fps.mp4_scale_2_inclip;6.757;6.694;6.672;6.669;6.737;6.831;6.716;6.715;6.832;6.670;6.672;6.759
+            canvas2dvideo: >
+                - contact: :aosmond and gfx
+                - source: `canvas2dvideo <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/canvas2d/benchmarks/video>`__
+                - type: `Page load`_
+                - data: 5 cycles of the entire benchmark, each subtest will have 5 data points (see below)
+                - summarization: Canvas2D video texture update with 1080p video. Measures mean tick time across 100 ticks.
+                    * subtest: `ignore first`_ data point, then take the `median`_ of the remaining 4; `source:
+                        test.py <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/test.py#l522>`__
+                    * suite: `geometric mean`_ of the 4 subtest results.
+                - **Lower is better**
+                - **Example Data**
+                    * 0;Mean tick time across 100 ticks: ;54.6916;49.0534;51.21645;51.239650000000005;52.44295
+                - description:
+                      | This test playbacks a video file and ask Canvas2D to draw video frames as
+                        Canvas2D textures for 100 ticks. It collects the mean tick time across 100
+                        ticks to measure how much time it will spend for a video texture upload
+                        to be a Canvas2D texture (ctx.drawImage). We run it for 5 times and ignore
+                        the first found. Lower results are better.
             cpstartup: >
                 - contact: :mconley, Firefox Desktop Front-end team, Gijs, fqueze, and dthayer
                 - measuring: Time from opening a new tab (which creates a new content process) to having that new content process be ready to load URLs.

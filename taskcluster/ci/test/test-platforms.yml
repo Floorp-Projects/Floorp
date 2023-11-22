@@ -138,6 +138,7 @@ windows10-32-shippable-qr/opt:
     build-signing-label: build-signing-win32-shippable/opt
     test-sets:
         - browsertime
+        - talos-profiling
         - windows-talos
 
 windows10-32-qr/opt:
@@ -216,6 +217,7 @@ windows11-64-2009-hw-ref/opt:
 windows10-64-shippable-qr/opt:
     build-platform: win64-shippable/opt
     test-sets:
+        - talos-profiling
         - windows-talos
         - browsertime
 

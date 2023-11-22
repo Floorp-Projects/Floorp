@@ -88,7 +88,7 @@
       "pagesets_name": "tp5n.zip"
     },
     "webgl": {
-      "tests": ["glterrain", "glvideo", "motionmark_webgl"]
+      "tests": ["canvas2dvideo", "glterrain", "glvideo", "motionmark_webgl"]
     },
     "xperf": {
       "tests": ["tp5n"],

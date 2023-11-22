@@ -270,6 +270,9 @@ class Test_get_config(object):
         cls.argv_damp = "--activeTests damp -e /some/random/path".split()
         cls.argv_glterrain = "--activeTests glterrain -e /some/random/path".split()
         cls.argv_glvideo = "--activeTests glvideo -e /some/random/path".split()
+        cls.argv_canvas2dvideo = (
+            "--activeTests canvas2dvideo -e /some/random/path".split()
+        )
         cls.argv_tp5n = "--activeTests tp5n -e /some/random/path".split()
         cls.argv_tp5o = "--activeTests tp5o -e /some/random/path".split()
         cls.argv_tp5o_webext = "--activeTests tp5o_webext -e /some/random/path".split()
@@ -601,6 +604,29 @@ class Test_get_config(object):
 
         assert test_config["name"] == "glvideo"
         assert test_config["tpmanifest"] != "${talos}/tests/webgl/glvideo.manifest"
+        assert test_config["tpcycles"] == 1
+        assert test_config["tppagecycles"] == 5
+        assert test_config["tploadnocache"] is True
+        assert test_config["tpmozafterpaint"] is False
+        assert test_config["tpchrome"] is False
+        assert test_config["gecko_profile_interval"] == 2
+        assert test_config["gecko_profile_entries"] == 2000000
+        assert "win_counters" not in test_config
+        assert "w7_counters" not in test_config
+        assert "linux_counters" not in test_config
+        assert "mac_counters" not in test_config
+        assert test_config["filters"] is not None
+        assert test_config["unit"] == "ms"
+
+    def test_canvas2dvideo_has_expected_attributes(self):
+        config = get_config(self.argv_canvas2dvideo)
+        test_config = config["tests"][0]
+
+        assert test_config["name"] == "canvas2dvideo"
+        assert (
+            test_config["tpmanifest"]
+            != "${talos}/tests/canvas2d/canvas2dvideo.manifest"
+        )
         assert test_config["tpcycles"] == 1
         assert test_config["tppagecycles"] == 5
         assert test_config["tploadnocache"] is True
