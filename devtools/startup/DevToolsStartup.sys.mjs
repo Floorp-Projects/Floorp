@@ -442,7 +442,13 @@ DevToolsStartup.prototype = {
       }
     }
 
+    // line and column are supposed to be 1-based.
     const { url, line, column } = match.groups;
+
+    // Debugger internal uses 0-based column number.
+    // NOTE: Non-debugger view-source doesn't use column number.
+    const columnOneBased = parseInt(column || 0, 10);
+    const columnZeroBased = columnOneBased > 0 ? columnOneBased - 1 : 0;
 
     // If for any reason the final url is invalid, ignore it
     try {
@@ -481,7 +487,7 @@ DevToolsStartup.prototype = {
     toolbox.viewSourceInDebugger(
       url,
       parseInt(line, 10),
-      parseInt(column || 0, 10),
+      columnZeroBased,
       null,
       "CommandLine"
     );
