@@ -70,6 +70,8 @@
     <string name="preferences_debug_settings_translations" translatable="false">Enable Firefox Translations</string>
     <!-- Label for enabling Firefox Suggest -->
     <string name="preferences_debug_settings_fxsuggest" translatable="false">Enable Firefox Suggest</string>
+    <!-- Label for enabling Felt Privacy -->
+    <string name="preferences_debug_felt_privacy" translatable="false">Enable Felt Privacy</string>
 
     <!-- A secret menu option in the tabs tray for making a tab inactive for testing. -->
     <string name="inactive_tabs_menu_item">Make inactive</string>
