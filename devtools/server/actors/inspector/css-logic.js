@@ -255,13 +255,14 @@ class CssLogic {
 
       // Find import and keyframes rules.
       for (const aDomRule of cssSheet.getCssRules()) {
+        const ruleClassName = ChromeUtils.getClassName(aDomRule);
         if (
-          aDomRule.type == CSSRule.IMPORT_RULE &&
+          ruleClassName === "CSSImportRule" &&
           aDomRule.styleSheet &&
           this.mediaMatches(aDomRule)
         ) {
           this._cacheSheet(aDomRule.styleSheet);
-        } else if (aDomRule.type == CSSRule.KEYFRAMES_RULE) {
+        } else if (ruleClassName === "CSSKeyframesRule") {
           this._keyframesRules.push(aDomRule);
         }
       }
@@ -576,7 +577,7 @@ class CssLogic {
         // through the rules backward.
         for (let i = domRules.length - 1; i >= 0; i--) {
           const domRule = domRules[i];
-          if (domRule.type !== CSSRule.STYLE_RULE) {
+          if (!CSSStyleRule.isInstance(domRule)) {
             continue;
           }
 
@@ -662,7 +663,7 @@ CssLogic.getShortName = function (element) {
  *         An array of string selectors.
  */
 CssLogic.getSelectors = function (domRule, desugared = false) {
-  if (domRule.type !== CSSRule.STYLE_RULE) {
+  if (ChromeUtils.getClassName(domRule) !== "CSSStyleRule") {
     // Return empty array since CSSRule#selectorCount assumes only STYLE_RULE type.
     return [];
   }
