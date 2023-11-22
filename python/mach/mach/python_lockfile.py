@@ -57,7 +57,7 @@ class PoetryHandle:
             "description": "",
             "version": "0",
             "authors": [],
-            "dependencies": {"python": "^3.7"},
+            "dependencies": {"python": "^3.8"},
         }
         poetry_config["dependencies"].update(self._dependencies)
 

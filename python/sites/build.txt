@@ -14,7 +14,6 @@ vendored:third_party/python/aiosignal
 vendored:third_party/python/appdirs
 vendored:third_party/python/arrow
 vendored:third_party/python/async_timeout
-vendored:third_party/python/asynctest
 vendored:third_party/python/binaryornot
 vendored:third_party/python/chardet
 vendored:third_party/python/charset_normalizer
