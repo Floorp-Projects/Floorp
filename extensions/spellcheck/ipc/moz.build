@@ -4,25 +4,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include("/ipc/chromium/chromium-config.mozbuild")
 UNIFIED_SOURCES += [
-    "mozEnglishWordUtils.cpp",
-    "mozInlineSpellChecker.cpp",
-    "mozInlineSpellWordUtil.cpp",
-    "mozPersonalDictionary.cpp",
-    "mozSpellChecker.cpp",
-]
-
-XPCOM_MANIFESTS += [
-    "components.conf",
+    "RemoteSpellCheckEngineChild.cpp",
+    "RemoteSpellCheckEngineParent.cpp",
 ]
 
 FINAL_LIBRARY = "xul"
 
-LOCAL_INCLUDES += [
-    "../ipc",
+include("/ipc/chromium/chromium-config.mozbuild")
+
+IPDL_SOURCES = [
+    "PRemoteSpellcheckEngine.ipdl",
 ]
+
 EXPORTS.mozilla += [
-    "mozInlineSpellChecker.h",
-    "mozSpellChecker.h",
+    "RemoteSpellCheckEngineChild.h",
+    "RemoteSpellCheckEngineParent.h",
 ]

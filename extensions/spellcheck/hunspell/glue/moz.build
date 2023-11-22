@@ -8,8 +8,6 @@ UNIFIED_SOURCES += [
     "hunspell_csutil.cxx",
     "mozHunspell.cpp",
     "mozHunspellRLBoxHost.cpp",
-    "RemoteSpellCheckEngineChild.cpp",
-    "RemoteSpellCheckEngineParent.cpp",
     "RLBoxHunspell.cpp",
 ]
 
@@ -20,7 +18,6 @@ FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
     "!/security/rlbox",
     "../src",
-    "/dom/base",
     "/extensions/spellcheck/src",
 ]
 
@@ -29,11 +26,6 @@ include("common.mozbuild")
 
 HunspellIncludes()
 
-IPDL_SOURCES = [
-    "PRemoteSpellcheckEngine.ipdl",
-]
-
-EXPORTS.mozilla += [
-    "RemoteSpellCheckEngineChild.h",
-    "RemoteSpellCheckEngineParent.h",
+XPCOM_MANIFESTS += [
+    "components.conf",
 ]
