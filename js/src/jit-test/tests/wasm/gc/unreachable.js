@@ -37,8 +37,8 @@ const INSTRUCTIONS = [
   "ref.cast nullexternref",
   "br_on_cast 0 anyref (ref $s)",
   "br_on_cast_fail 0 anyref (ref $s)",
-  "extern.internalize",
-  "extern.externalize",
+  "any.convert_extern",
+  "extern.convert_any",
 ];
 
 for (let instruction of INSTRUCTIONS) {
