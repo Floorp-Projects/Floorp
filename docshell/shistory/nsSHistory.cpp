@@ -221,7 +221,7 @@ void nsSHistory::EvictDocumentViewerForEntry(nsISHEntry* aEntry) {
 
     // Drop the presentation state before destroying the viewer, so that
     // document teardown is able to correctly persist the state.
-    NotifyListenersContentViewerEvicted(1);
+    NotifyListenersDocumentViewerEvicted(1);
     aEntry->SetContentViewer(nullptr);
     aEntry->SyncPresentationState();
     viewer->Destroy();
@@ -239,7 +239,7 @@ void nsSHistory::EvictDocumentViewerForEntry(nsISHEntry* aEntry) {
         MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
                 ("nsSHistory::EvictDocumentViewerForEntry "
                  "destroying an nsFrameLoader."));
-        NotifyListenersContentViewerEvicted(1);
+        NotifyListenersDocumentViewerEvicted(1);
         she->SetFrameLoader(nullptr);
         frameLoader->Destroy();
       }
@@ -1108,7 +1108,7 @@ nsSHistory::AddSHistoryListener(nsISHistoryListener* aListener) {
   return NS_OK;
 }
 
-void nsSHistory::NotifyListenersContentViewerEvicted(uint32_t aNumEvicted) {
+void nsSHistory::NotifyListenersDocumentViewerEvicted(uint32_t aNumEvicted) {
   NotifyListeners(mListeners, [aNumEvicted](auto l) {
     l->OnDocumentViewerEvicted(aNumEvicted);
   });

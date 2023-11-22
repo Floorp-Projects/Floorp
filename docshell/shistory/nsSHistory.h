@@ -170,7 +170,7 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
 
   void WindowIndices(int32_t aIndex, int32_t* aOutStartIndex,
                      int32_t* aOutEndIndex);
-  void NotifyListenersContentViewerEvicted(uint32_t aNumEvicted);
+  void NotifyListenersDocumentViewerEvicted(uint32_t aNumEvicted);
 
   int32_t Length() { return int32_t(mEntries.Length()); }
   int32_t Index() { return mIndex; }
