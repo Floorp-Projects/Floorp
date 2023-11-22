@@ -111,3 +111,8 @@ if CONFIG["MOZ_PLACES"]:
         "PlacesEvent.webidl",
         "PlacesObservers.webidl",
     ]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+    WEBIDL_FILES += [
+        "WindowsJumpListShortcutDescription.webidl",
+    ]
