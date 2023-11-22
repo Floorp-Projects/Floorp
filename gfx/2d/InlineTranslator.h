@@ -166,28 +166,6 @@ class InlineTranslator : public Translator {
   std::string GetError() { return mError; }
 
  protected:
-  // an istream like class for reading from memory
-  struct MemReader {
-    constexpr MemReader(char* aData, size_t aLen)
-        : mData(aData), mEnd(aData + aLen) {}
-    void read(char* s, std::streamsize n) {
-      if (n <= (mEnd - mData)) {
-        memcpy(s, mData, n);
-        mData += n;
-      } else {
-        // We've requested more data than is available
-        // set the Reader into an eof state
-        SetIsBad();
-      }
-    }
-    bool eof() { return mData > mEnd; }
-    bool good() { return !eof(); }
-    void SetIsBad() { mData = mEnd + 1; }
-
-    char* mData;
-    char* mEnd;
-  };
-
   RefPtr<DrawTarget> mBaseDT;
   Matrix mBaseDTTransform;
   nsRefPtrHashtable<nsPtrHashKey<void>, DrawTarget> mDrawTargets;

@@ -47,7 +47,6 @@ class CanvasManagerChild final : public PCanvasManagerChild {
 
   bool IsCanvasActive() { return mActive; }
   void EndCanvasTransaction();
-  void ClearCachedResources();
   void DeactivateCanvas();
 
   RefPtr<layers::CanvasChild> GetCanvasChild();
