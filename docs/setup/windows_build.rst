@@ -18,6 +18,16 @@ Requirements
 -  **Operating System:** Windows 10. It is advisable to have Windows Update be fully
    up-to-date. See :ref:`build_hosts` for more information.
 
+Recommended (For Windows 11 Users)
+----------------------------------
+Setup a `Dev Drive
+<https://learn.microsoft.com/en-us/windows/dev-drive/#how-to-set-up-a-dev-drive>`_.
+
+.. note::
+
+    -  A Dev Drive has been shown to make Firefox builds and VCS operations 5-10% faster.
+    -  This guide assumes no Dev Drive, so all instructions of ``C:\mozilla-source`` should be to your Dev Drive letter instead (eg: ``D:\mozilla-source``), as your ``C:\`` drive can never be a Dev Drive.
+
 1. Install MozillaBuild
 -----------------------
 
