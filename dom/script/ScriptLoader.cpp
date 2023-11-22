@@ -919,8 +919,8 @@ static bool CSPAllowsInlineScript(nsIScriptElement* aElement,
       nsIContentSecurityPolicy::SCRIPT_SRC_ELEM_DIRECTIVE,
       false /* aHasUnsafeHash */, aNonce, parserCreated, element,
       nullptr /* nsICSPEventListener */, u""_ns,
-      aElement->GetScriptLineNumber(), aElement->GetScriptColumnNumber() + 1,
-      &allowInlineScript);
+      aElement->GetScriptLineNumber(),
+      aElement->GetScriptColumnNumber().oneOriginValue(), &allowInlineScript);
   return NS_SUCCEEDED(rv) && allowInlineScript;
 }
 
@@ -2331,8 +2331,7 @@ nsresult ScriptLoader::FillCompileOptionsForRequest(
   if (aRequest->GetScriptLoadContext()->mIsInline &&
       aRequest->GetScriptLoadContext()->GetParserCreated() ==
           FROM_PARSER_NETWORK) {
-    aOptions->setColumn(JS::ColumnNumberOneOrigin::fromZeroOrigin(
-        aRequest->GetScriptLoadContext()->mColumnNo));
+    aOptions->setColumn(aRequest->GetScriptLoadContext()->mColumnNo);
   }
   aOptions->setIsRunOnce(true);
   aOptions->setNoScriptRval(true);
@@ -3416,12 +3415,15 @@ void ScriptLoader::ReportErrorToConsole(ScriptLoadRequest* aRequest,
   nsIScriptElement* element =
       aRequest->GetScriptLoadContext()->GetScriptElement();
   uint32_t lineNo = element ? element->GetScriptLineNumber() : 0;
-  uint32_t columnNo = element ? element->GetScriptColumnNumber() : 0;
+  JS::ColumnNumberOneOrigin columnNo;
+  if (element) {
+    columnNo = element->GetScriptColumnNumber();
+  }
 
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  "Script Loader"_ns, mDocument,
-                                  nsContentUtils::eDOM_PROPERTIES, message,
-                                  params, nullptr, u""_ns, lineNo, columnNo);
+  nsContentUtils::ReportToConsole(
+      nsIScriptError::warningFlag, "Script Loader"_ns, mDocument,
+      nsContentUtils::eDOM_PROPERTIES, message, params, nullptr, u""_ns, lineNo,
+      columnNo.oneOriginValue());
 }
 
 void ScriptLoader::ReportWarningToConsole(
@@ -3430,11 +3432,14 @@ void ScriptLoader::ReportWarningToConsole(
   nsIScriptElement* element =
       aRequest->GetScriptLoadContext()->GetScriptElement();
   uint32_t lineNo = element ? element->GetScriptLineNumber() : 0;
-  uint32_t columnNo = element ? element->GetScriptColumnNumber() : 0;
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  "Script Loader"_ns, mDocument,
-                                  nsContentUtils::eDOM_PROPERTIES, aMessageName,
-                                  aParams, nullptr, u""_ns, lineNo, columnNo);
+  JS::ColumnNumberOneOrigin columnNo;
+  if (element) {
+    columnNo = element->GetScriptColumnNumber();
+  }
+  nsContentUtils::ReportToConsole(
+      nsIScriptError::warningFlag, "Script Loader"_ns, mDocument,
+      nsContentUtils::eDOM_PROPERTIES, aMessageName, aParams, nullptr, u""_ns,
+      lineNo, columnNo.oneOriginValue());
 }
 
 void ScriptLoader::ReportPreloadErrorsToConsole(ScriptLoadRequest* aRequest) {

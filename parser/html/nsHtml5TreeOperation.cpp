@@ -39,6 +39,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsTextNode.h"
+#include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -988,7 +989,8 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(node);
       if (sele) {
         sele->SetScriptLineNumber(aOperation.mLineNumber);
-        sele->SetScriptColumnNumber(aOperation.mColumnNumber);
+        sele->SetScriptColumnNumber(
+            JS::ColumnNumberOneOrigin(aOperation.mColumnNumber));
         sele->FreezeExecutionAttrs(node->OwnerDoc());
       } else {
         MOZ_ASSERT(nsNameSpaceManager::GetInstance()->mSVGDisabled,

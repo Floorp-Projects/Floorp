@@ -7,6 +7,7 @@
 #ifndef nsIScriptElement_h___
 #define nsIScriptElement_h___
 
+#include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin
 #include "js/loader/ScriptKind.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
@@ -158,11 +159,11 @@ class nsIScriptElement : public nsIScriptLoaderObserver {
 
   uint32_t GetScriptLineNumber() { return mLineNumber; }
 
-  void SetScriptColumnNumber(uint32_t aColumnNumber) {
+  void SetScriptColumnNumber(JS::ColumnNumberOneOrigin aColumnNumber) {
     mColumnNumber = aColumnNumber;
   }
 
-  uint32_t GetScriptColumnNumber() { return mColumnNumber; }
+  JS::ColumnNumberOneOrigin GetScriptColumnNumber() { return mColumnNumber; }
 
   void SetIsMalformed() { mMalformed = true; }
 
@@ -299,7 +300,7 @@ class nsIScriptElement : public nsIScriptLoaderObserver {
   /**
    * The start column number of the script.
    */
-  uint32_t mColumnNumber;
+  JS::ColumnNumberOneOrigin mColumnNumber;
 
   /**
    * The "already started" flag per HTML5.
