@@ -8,7 +8,7 @@ from ... import create_console_api_message, recursive_compare
 
 @pytest.mark.asyncio
 async def test_subscribe_to_one_context(
-    bidi_session, subscribe_events, top_context, new_tab, wait_for_event, wait_for_future_safe
+    bidi_session, subscribe_events, top_context, new_tab, wait_for_event
 ):
     # Subscribe for log events to a specific context
     await subscribe_events(events=["log.entryAdded"], contexts=[top_context["context"]])
@@ -29,7 +29,7 @@ async def test_subscribe_to_one_context(
     # Trigger another console event in the observed context
     on_entry_added = wait_for_event("log.entryAdded")
     expected_text = await create_console_api_message(bidi_session, top_context, "text2")
-    await wait_for_future_safe(on_entry_added)
+    await on_entry_added
 
     assert len(events) == 1
     recursive_compare(
@@ -44,7 +44,7 @@ async def test_subscribe_to_one_context(
 
 @pytest.mark.asyncio
 async def test_subscribe_to_one_context_twice(
-    bidi_session, subscribe_events, top_context, wait_for_event, wait_for_future_safe
+    bidi_session, subscribe_events, top_context, wait_for_event
 ):
     # Subscribe twice for log events to a specific context
     await subscribe_events(events=["log.entryAdded"], contexts=[top_context["context"]])
@@ -61,7 +61,7 @@ async def test_subscribe_to_one_context_twice(
     # Trigger a console event in the observed context
     on_entry_added = wait_for_event("log.entryAdded")
     expected_text = await create_console_api_message(bidi_session, top_context, "text2")
-    await wait_for_future_safe(on_entry_added)
+    await on_entry_added
 
     assert len(events) == 1
     recursive_compare(
@@ -78,7 +78,7 @@ async def test_subscribe_to_one_context_twice(
 
 @pytest.mark.asyncio
 async def test_subscribe_to_one_context_and_then_to_all(
-    bidi_session, subscribe_events, top_context, new_tab, wait_for_event, wait_for_future_safe
+    bidi_session, subscribe_events, top_context, new_tab, wait_for_event
 ):
     # Subscribe for log events to a specific context
     await subscribe_events(events=["log.entryAdded"], contexts=[top_context["context"]])
@@ -101,7 +101,7 @@ async def test_subscribe_to_one_context_and_then_to_all(
     # Trigger another console event in the observed context
     on_entry_added = wait_for_event("log.entryAdded")
     expected_text = await create_console_api_message(bidi_session, top_context, "text2")
-    await wait_for_future_safe(on_entry_added)
+    await on_entry_added
 
     assert len(events) == 1
     recursive_compare(
@@ -127,7 +127,7 @@ async def test_subscribe_to_one_context_and_then_to_all(
 
     # Trigger again events in each context
     expected_text = await create_console_api_message(bidi_session, new_tab, "text3")
-    await wait_for_future_safe(on_entry_added)
+    await on_entry_added
 
     assert len(events) == 2
     recursive_compare(
@@ -138,7 +138,7 @@ async def test_subscribe_to_one_context_and_then_to_all(
     )
 
     expected_text = await create_console_api_message(bidi_session, top_context, "text4")
-    await wait_for_future_safe(on_entry_added)
+    await on_entry_added
 
     assert len(events) == 3
     recursive_compare(
@@ -153,7 +153,7 @@ async def test_subscribe_to_one_context_and_then_to_all(
 
 @pytest.mark.asyncio
 async def test_subscribe_to_all_context_and_then_to_one_again(
-    bidi_session, subscribe_events, top_context, new_tab, wait_for_event, wait_for_future_safe
+    bidi_session, subscribe_events, top_context, new_tab, wait_for_event
 ):
     # Subscribe to all contexts
     await subscribe_events(events=["log.entryAdded"])
@@ -171,7 +171,7 @@ async def test_subscribe_to_all_context_and_then_to_one_again(
     # Trigger console event in the context to which we tried to subscribe twice
     on_entry_added = wait_for_event("log.entryAdded")
     await create_console_api_message(bidi_session, top_context, "text1")
-    await wait_for_future_safe(on_entry_added)
+    await on_entry_added
 
     # Make sure we received only one event
     assert len(events) == 1
@@ -183,7 +183,7 @@ async def test_subscribe_to_all_context_and_then_to_one_again(
 async def test_subscribe_to_top_context_with_iframes(
     bidi_session,
     subscribe_events,
-    wait_for_event, wait_for_future_safe,
+    wait_for_event,
     top_context,
     test_page_multiple_frames,
 ):
@@ -211,7 +211,7 @@ async def test_subscribe_to_top_context_with_iframes(
     # Trigger console event in the first iframe
     on_entry_added = wait_for_event("log.entryAdded")
     await create_console_api_message(bidi_session, frame_1, "text1")
-    await wait_for_future_safe(on_entry_added)
+    await on_entry_added
 
     # Make sure we received the event
     assert len(events) == 1
@@ -219,7 +219,7 @@ async def test_subscribe_to_top_context_with_iframes(
     # Trigger console event in the second iframe
     on_entry_added = wait_for_event("log.entryAdded")
     await create_console_api_message(bidi_session, frame_2, "text2")
-    await wait_for_future_safe(on_entry_added)
+    await on_entry_added
 
     # Make sure we received the second event as well
     assert len(events) == 2
@@ -231,7 +231,7 @@ async def test_subscribe_to_top_context_with_iframes(
 async def test_subscribe_to_child_context(
     bidi_session,
     subscribe_events,
-    wait_for_event, wait_for_future_safe,
+    wait_for_event,
     top_context,
     test_page_multiple_frames,
 ):
@@ -259,7 +259,7 @@ async def test_subscribe_to_child_context(
     # Trigger console event in the top context
     on_entry_added = wait_for_event("log.entryAdded")
     await create_console_api_message(bidi_session, top_context, "text1")
-    await wait_for_future_safe(on_entry_added)
+    await on_entry_added
 
     # Make sure we received the event
     assert len(events) == 1
@@ -267,7 +267,7 @@ async def test_subscribe_to_child_context(
     # Trigger console event in the second iframe
     on_entry_added = wait_for_event("log.entryAdded")
     await create_console_api_message(bidi_session, frame_2, "text2")
-    await wait_for_future_safe(on_entry_added)
+    await on_entry_added
 
     # Make sure we received the second event as well
     assert len(events) == 2

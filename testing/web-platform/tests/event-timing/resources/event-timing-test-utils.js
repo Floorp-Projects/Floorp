@@ -3,15 +3,15 @@
 // event handler if |callback| is provided.
 async function clickOnElementAndDelay(id, delay, callback) {
   const element = document.getElementById(id);
-  const pointerdownHandler = () => {
+  const clickHandler = () => {
     mainThreadBusy(delay);
     if (callback) {
       callback();
     }
-    element.removeEventListener("pointerdown", pointerdownHandler);
+    element.removeEventListener("pointerdown", clickHandler);
   };
 
-  element.addEventListener("pointerdown", pointerdownHandler);
+  element.addEventListener("pointerdown", clickHandler);
   await test_driver.click(element);
 }
 

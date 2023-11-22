@@ -94,8 +94,9 @@ const EXPECT_EXCEPTION = exceptionType => auctionResult => {
 
 const EXPECT_PROMISE_ERROR = auctionResult => {
   assert_not_equals(auctionResult, null, "got null instead of expected error");
-  assert_true(auctionResult instanceof TypeError,
-              "did not get expected error type: " + auctionResult);
+  // TODO(morlovich): I suspect this will end up being spec'd differently.
+  assert_true(typeof auctionResult === "string",
+              "did not get expected error: " + auctionResult);
 }
 
 makeTest({

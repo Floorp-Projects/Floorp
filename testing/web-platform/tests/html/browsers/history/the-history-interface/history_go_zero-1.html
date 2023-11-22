@@ -8,6 +8,7 @@
       queue_next();
     } else {
       opener.pages.push(id);
+      opener.start_test_wait();
       if (!opener.gone) {
           history.go(0);
           opener.gone = true;

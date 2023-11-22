@@ -17,7 +17,7 @@ setup(() => {
 //
 // All fetches unaffected by Private Network Access.
 
-promise_test(
+promise_test_parallel(
     t => fencedFrameTest(t, {
       source: {server: Server.HTTPS_LOCAL},
       target: {server: Server.HTTPS_LOCAL},
@@ -25,7 +25,7 @@ promise_test(
     }),
     'local to local: no preflight required.');
 
-promise_test(
+promise_test_parallel(
     t => fencedFrameTest(t, {
       source: {server: Server.HTTPS_LOCAL},
       target: {server: Server.HTTPS_PRIVATE},
@@ -33,7 +33,7 @@ promise_test(
     }),
     'local to private: no preflight required.');
 
-promise_test(
+promise_test_parallel(
     t => fencedFrameTest(t, {
       source: {server: Server.HTTPS_LOCAL},
       target: {server: Server.HTTPS_PUBLIC},
@@ -41,7 +41,7 @@ promise_test(
     }),
     'local to public: no preflight required.');
 
-promise_test(
+promise_test_parallel(
     t => fencedFrameTest(t, {
       source: {server: Server.HTTPS_PRIVATE},
       target: {server: Server.HTTPS_PRIVATE},
@@ -49,7 +49,7 @@ promise_test(
     }),
     'private to private: no preflight required.');
 
-promise_test(
+promise_test_parallel(
     t => fencedFrameTest(t, {
       source: {server: Server.HTTPS_PRIVATE},
       target: {server: Server.HTTPS_PUBLIC},
@@ -57,7 +57,7 @@ promise_test(
     }),
     'private to public: no preflight required.');
 
-promise_test(
+promise_test_parallel(
     t => fencedFrameTest(t, {
       source: {server: Server.HTTPS_PUBLIC},
       target: {server: Server.HTTPS_PUBLIC},
@@ -65,7 +65,7 @@ promise_test(
     }),
     'public to public: no preflight required.');
 
-promise_test(
+promise_test_parallel(
     t => fencedFrameTest(t, {
       source: {
         server: Server.HTTPS_LOCAL,
@@ -76,7 +76,7 @@ promise_test(
     }),
     'treat-as-public-address to public: no preflight required.');
 
-promise_test(
+promise_test_parallel(
     t => fencedFrameTest(t, {
       source: {
         server: Server.HTTPS_LOCAL,

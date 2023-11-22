@@ -167,8 +167,7 @@ enum XRHandedness {
 enum XRTargetRayMode {
   "gaze",
   "tracked-pointer",
-  "screen",
-  "transient-pointer"
+  "screen"
 };
 
 [SecureContext, Exposed=Window]

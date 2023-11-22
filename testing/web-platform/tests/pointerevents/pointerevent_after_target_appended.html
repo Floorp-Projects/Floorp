@@ -190,7 +190,7 @@
   ]);
 
   // Same tests for dispatched compatibility mouse events.
-  addPromiseTestForNewChild("mousedown", "mouse", [
+  addPromiseTestForNewChild("pointerdown", "mouse", [
     "mouseover@parent", "mouseenter@parent",
     "mousedown@parent", "(child-attached)",
     "mouseover@child", "mouseenter@child",
@@ -198,14 +198,15 @@
     "mousedown@child", "mouseup@child",
     "mouseout@child", "mouseleave@child", "mouseleave@parent"
   ]);
-  addPromiseTestForNewChild("mouseup", "mouse", [
+  addPromiseTestForNewChild("pointerup", "mouse", [
     "mouseover@parent", "mouseenter@parent",
     "mousedown@parent", "mouseup@parent", "(child-attached)",
     "mouseover@child", "mouseenter@child",
     "mousedown@child", "mouseup@child",
     "mouseout@child", "mouseleave@child", "mouseleave@parent"
   ]);
-  addPromiseTestForMovedChild("mousedown", "mouse", [
+
+  addPromiseTestForMovedChild("pointerdown", "mouse", [
     "mouseover@child", "mouseenter@parent", "mouseenter@child",
     "mousedown@child", "(child-moved)",
     "mouseover@child", "mouseenter@child",
@@ -213,7 +214,7 @@
     "mousedown@child", "mouseup@child",
     "mouseout@child", "mouseleave@child", "mouseleave@parent"
   ]);
-  addPromiseTestForMovedChild("mouseup", "mouse", [
+  addPromiseTestForMovedChild("pointerup", "mouse", [
     "mouseover@child", "mouseenter@parent", "mouseenter@child",
     "mousedown@child", "mouseup@child", "(child-moved)",
     "mouseover@child", "mouseenter@child",

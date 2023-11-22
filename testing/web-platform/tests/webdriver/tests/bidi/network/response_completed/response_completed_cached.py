@@ -11,7 +11,6 @@ PAGE_EMPTY_TEXT = "/webdriver/tests/bidi/network/support/empty.txt"
 @pytest.mark.asyncio
 async def test_cached(
     wait_for_event,
-    wait_for_future_safe,
     url,
     fetch,
     setup_network_test,
@@ -28,7 +27,7 @@ async def test_cached(
     )
     on_response_completed = wait_for_event("network.responseCompleted")
     await fetch(cached_url)
-    await wait_for_future_safe(on_response_completed)
+    await on_response_completed
 
     assert len(events) == 1
     expected_request = {"method": "GET", "url": cached_url}
@@ -48,7 +47,7 @@ async def test_cached(
 
     on_response_completed = wait_for_event("network.responseCompleted")
     await fetch(cached_url)
-    await wait_for_future_safe(on_response_completed)
+    await on_response_completed
 
     assert len(events) == 2
 
@@ -141,7 +140,7 @@ async def test_cached_redirect(
 
 @pytest.mark.asyncio
 async def test_cached_revalidate(
-    wait_for_event, wait_for_future_safe, url, fetch, setup_network_test
+    bidi_session, wait_for_event, url, fetch, setup_network_test
 ):
     network_events = await setup_network_test(
         events=[
@@ -155,7 +154,7 @@ async def test_cached_revalidate(
     )
     on_response_completed = wait_for_event("network.responseCompleted")
     await fetch(revalidate_url)
-    await wait_for_future_safe(on_response_completed)
+    await on_response_completed
 
     assert len(events) == 1
     expected_request = {"method": "GET", "url": revalidate_url}
@@ -175,7 +174,7 @@ async def test_cached_revalidate(
     # Note that we pass a specific header so that the must-revalidate.py handler
     # can decide to return a 304 without having to use another URL.
     await fetch(revalidate_url, headers={"return-304": "true"})
-    await wait_for_future_safe(on_response_completed)
+    await on_response_completed
 
     assert len(events) == 2
 

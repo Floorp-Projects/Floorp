@@ -1,3 +1,4 @@
+import asyncio
 import pytest
 from tests.support.sync import AsyncPoll
 from webdriver.error import TimeoutException
@@ -8,7 +9,7 @@ USER_PROMPT_CLOSED_EVENT = "browsingContext.userPromptClosed"
 USER_PROMPT_OPENED_EVENT = "browsingContext.userPromptOpened"
 
 
-async def test_unsubscribe(bidi_session, inline, new_tab, wait_for_event, wait_for_future_safe):
+async def test_unsubscribe(bidi_session, inline, new_tab, wait_for_event):
     await bidi_session.session.subscribe(
         events=[USER_PROMPT_CLOSED_EVENT, USER_PROMPT_OPENED_EVENT]
     )
@@ -22,7 +23,7 @@ async def test_unsubscribe(bidi_session, inline, new_tab, wait_for_event, wait_f
     )
 
     # Wait for the alert to open
-    await wait_for_future_safe(on_entry)
+    await on_entry
 
     # Track all received browsingContext.userPromptClosed events in the events array
     events = []
@@ -44,7 +45,7 @@ async def test_unsubscribe(bidi_session, inline, new_tab, wait_for_event, wait_f
 
 
 async def test_subscribe_with_alert(
-    bidi_session, subscribe_events, inline, new_tab, wait_for_event, wait_for_future_safe
+    bidi_session, subscribe_events, inline, new_tab, wait_for_event
 ):
     await subscribe_events(events=[USER_PROMPT_CLOSED_EVENT, USER_PROMPT_OPENED_EVENT])
 
@@ -56,20 +57,20 @@ async def test_subscribe_with_alert(
     )
 
     # Wait for the prompt to open.
-    await wait_for_future_safe(on_prompt_opened)
+    await on_prompt_opened
 
     on_prompt_closed = wait_for_event(USER_PROMPT_CLOSED_EVENT)
 
     await bidi_session.browsing_context.handle_user_prompt(context=new_tab["context"])
 
-    event = await wait_for_future_safe(on_prompt_closed)
+    event = await on_prompt_closed
 
     assert event == {"context": new_tab["context"], "accepted": True}
 
 
 @pytest.mark.parametrize("accept", [True, False])
 async def test_subscribe_with_confirm(
-    bidi_session, subscribe_events, inline, new_tab, wait_for_event, wait_for_future_safe, accept
+    bidi_session, subscribe_events, inline, new_tab, wait_for_event, accept
 ):
     await subscribe_events(events=[USER_PROMPT_CLOSED_EVENT, USER_PROMPT_OPENED_EVENT])
 
@@ -81,7 +82,7 @@ async def test_subscribe_with_confirm(
     )
 
     # Wait for the prompt to open.
-    await wait_for_future_safe(on_prompt_opened)
+    await on_prompt_opened
 
     on_prompt_closed = wait_for_event(USER_PROMPT_CLOSED_EVENT)
 
@@ -89,14 +90,14 @@ async def test_subscribe_with_confirm(
         context=new_tab["context"], accept=accept
     )
 
-    event = await wait_for_future_safe(on_prompt_closed)
+    event = await on_prompt_closed
 
     assert event == {"context": new_tab["context"], "accepted": accept}
 
 
 @pytest.mark.parametrize("accept", [True, False])
 async def test_subscribe_with_prompt(
-    bidi_session, subscribe_events, inline, new_tab, wait_for_event, wait_for_future_safe, accept
+    bidi_session, subscribe_events, inline, new_tab, wait_for_event, accept
 ):
     await subscribe_events(events=[USER_PROMPT_CLOSED_EVENT, USER_PROMPT_OPENED_EVENT])
 
@@ -108,7 +109,7 @@ async def test_subscribe_with_prompt(
     )
 
     # Wait for the prompt to open.
-    await wait_for_future_safe(on_prompt_opened)
+    await on_prompt_opened
 
     on_prompt_closed = wait_for_event(USER_PROMPT_CLOSED_EVENT)
 
@@ -117,7 +118,7 @@ async def test_subscribe_with_prompt(
         context=new_tab["context"], accept=accept, user_text=test_user_text
     )
 
-    event = await wait_for_future_safe(on_prompt_closed)
+    event = await on_prompt_closed
 
     if accept is True:
         assert event == {
@@ -130,7 +131,7 @@ async def test_subscribe_with_prompt(
 
 
 async def test_subscribe_with_prompt_with_defaults(
-    bidi_session, subscribe_events, inline, new_tab, wait_for_event, wait_for_future_safe
+    bidi_session, subscribe_events, inline, new_tab, wait_for_event
 ):
     await subscribe_events(events=[USER_PROMPT_CLOSED_EVENT, USER_PROMPT_OPENED_EVENT])
 
@@ -142,7 +143,7 @@ async def test_subscribe_with_prompt_with_defaults(
     )
 
     # Wait for the prompt to open.
-    await wait_for_future_safe(on_prompt_opened)
+    await on_prompt_opened
 
     on_prompt_closed = wait_for_event(USER_PROMPT_CLOSED_EVENT)
 
@@ -150,14 +151,14 @@ async def test_subscribe_with_prompt_with_defaults(
         context=new_tab["context"]
     )
 
-    event = await wait_for_future_safe(on_prompt_closed)
+    event = await on_prompt_closed
 
     assert event == {"context": new_tab["context"], "accepted": True}
 
 
 @pytest.mark.parametrize("type_hint", ["tab", "window"])
 async def test_subscribe_to_one_context(
-    bidi_session, subscribe_events, inline, wait_for_event, wait_for_future_safe, type_hint
+    bidi_session, subscribe_events, inline, wait_for_event, type_hint
 ):
     new_context = await bidi_session.browsing_context.create(type_hint=type_hint)
 
@@ -188,10 +189,10 @@ async def test_subscribe_to_one_context(
     # Open a prompt in the different context.
     await bidi_session.browsing_context.navigate(
         context=another_new_context["context"],
-        url=inline("<script>window.alert('second tab')</script>"),
+        url=inline(f"<script>window.alert('second tab')</script>"),
     )
 
-    await wait_for_future_safe(on_prompt_opened)
+    await on_prompt_opened
 
     await bidi_session.browsing_context.handle_user_prompt(
         context=another_new_context["context"]
@@ -208,15 +209,15 @@ async def test_subscribe_to_one_context(
     # Open a prompt in the subscribed context.
     await bidi_session.browsing_context.navigate(
         context=new_context["context"],
-        url=inline("<script>window.alert('first tab')</script>"),
+        url=inline(f"<script>window.alert('first tab')</script>"),
     )
 
-    await wait_for_future_safe(on_prompt_opened)
+    await on_prompt_opened
     await bidi_session.browsing_context.handle_user_prompt(
         context=new_context["context"]
     )
 
-    event = await wait_for_future_safe(on_prompt_closed)
+    event = await on_prompt_closed
 
     assert event == {
         "context": new_context["context"],
@@ -235,7 +236,6 @@ async def test_iframe(
     test_origin,
     subscribe_events,
     wait_for_event,
-    wait_for_future_safe,
 ):
     await subscribe_events(events=[USER_PROMPT_CLOSED_EVENT, USER_PROMPT_OPENED_EVENT])
 
@@ -259,12 +259,12 @@ async def test_iframe(
         url=inline("<script>window.alert('in iframe')</script>"),
     )
 
-    await wait_for_future_safe(on_prompt_opened)
+    await on_prompt_opened
 
     await bidi_session.browsing_context.handle_user_prompt(
         context=frame["context"]
     )
 
-    event = await wait_for_future_safe(on_prompt_closed)
+    event = await on_prompt_closed
 
     assert event == {"context": new_tab["context"], "accepted": True}
