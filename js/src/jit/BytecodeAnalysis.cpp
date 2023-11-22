@@ -321,7 +321,7 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
           JitSpew_IonAbort,
           "Disabling Warp support for %s:%d:%d due to Yield being in a loop",
           script_->filename(), script_->lineno(),
-          script_->column().zeroOriginValue());
+          script_->column().oneOriginValue());
       script_->disableIon();
     }
   }
@@ -337,7 +337,7 @@ void BytecodeAnalysis::checkWarpSupport(JSOp op) {
     if (script_->canIonCompile()) {
       JitSpew(JitSpew_IonAbort, "Disabling Warp support for %s:%d:%d due to %s",
               script_->filename(), script_->lineno(),
-              script_->column().zeroOriginValue(), CodeName(op));
+              script_->column().oneOriginValue(), CodeName(op));
       script_->disableIon();
     }
     break;
