@@ -7739,8 +7739,8 @@ nsresult nsDocShell::CreateDocumentViewer(const nsACString& aContentType,
 
   // Instantiate the content viewer object
   nsCOMPtr<nsIDocumentViewer> viewer;
-  nsresult rv = NewContentViewerObj(aContentType, aRequest, mLoadGroup,
-                                    aContentHandler, getter_AddRefs(viewer));
+  nsresult rv = NewDocumentViewerObj(aContentType, aRequest, mLoadGroup,
+                                     aContentHandler, getter_AddRefs(viewer));
 
   if (NS_FAILED(rv)) {
     return rv;
@@ -7994,11 +7994,11 @@ nsresult nsDocShell::CreateDocumentViewer(const nsACString& aContentType,
   return NS_OK;
 }
 
-nsresult nsDocShell::NewContentViewerObj(const nsACString& aContentType,
-                                         nsIRequest* aRequest,
-                                         nsILoadGroup* aLoadGroup,
-                                         nsIStreamListener** aContentHandler,
-                                         nsIDocumentViewer** aViewer) {
+nsresult nsDocShell::NewDocumentViewerObj(const nsACString& aContentType,
+                                          nsIRequest* aRequest,
+                                          nsILoadGroup* aLoadGroup,
+                                          nsIStreamListener** aContentHandler,
+                                          nsIDocumentViewer** aViewer) {
   nsCOMPtr<nsIChannel> aOpenedChannel = do_QueryInterface(aRequest);
 
   nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory =
