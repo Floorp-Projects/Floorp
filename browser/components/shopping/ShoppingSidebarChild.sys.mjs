@@ -160,12 +160,16 @@ export class ShoppingSidebarChild extends RemotePageChild {
     return lazy.optedIn === 1;
   }
 
-  get canFetchAndShowAd() {
+  get adsEnabled() {
     return lazy.adsEnabled;
   }
 
-  get userHasAdsEnabled() {
+  get adsEnabledByUser() {
     return lazy.adsEnabledByUser;
+  }
+
+  get canFetchAndShowAd() {
+    return this.adsEnabled && this.adsEnabledByUser;
   }
 
   optedInStateChanged() {
@@ -177,7 +181,7 @@ export class ShoppingSidebarChild extends RemotePageChild {
 
   adsEnabledByUserChanged() {
     this.sendToContent("adsEnabledByUserChanged", {
-      adsEnabledByUser: this.userHasAdsEnabled,
+      adsEnabledByUser: this.adsEnabledByUser,
     });
 
     this.requestRecommendations(this.#productURI);
@@ -230,8 +234,8 @@ export class ShoppingSidebarChild extends RemotePageChild {
     // Do not clear data however if an analysis was requested via a call-to-action.
     if (!isPolledRequest) {
       this.sendToContent("Update", {
-        adsEnabled: this.canFetchAndShowAd,
-        adsEnabledByUser: this.userHasAdsEnabled,
+        adsEnabled: this.adsEnabled,
+        adsEnabledByUser: this.adsEnabledByUser,
         showOnboarding: !this.canFetchAndShowData,
         data: null,
         recommendationData: null,
@@ -325,8 +329,8 @@ export class ShoppingSidebarChild extends RemotePageChild {
       }
 
       this.sendToContent("Update", {
-        adsEnabled: this.canFetchAndShowAd,
-        adsEnabledByUser: this.userHasAdsEnabled,
+        adsEnabled: this.adsEnabled,
+        adsEnabledByUser: this.adsEnabledByUser,
         showOnboarding: false,
         data,
         productUrl: this.#productURI.spec,
@@ -373,7 +377,7 @@ export class ShoppingSidebarChild extends RemotePageChild {
     return (
       uri.equalsExceptRef(this.#productURI) &&
       this.canFetchAndShowData &&
-      (lazy.adsExposure || (this.canFetchAndShowAd && this.userHasAdsEnabled))
+      (lazy.adsExposure || this.canFetchAndShowAd)
     );
   }
 
@@ -385,8 +389,7 @@ export class ShoppingSidebarChild extends RemotePageChild {
     return (
       uri.equalsExceptRef(this.#productURI) &&
       this.canFetchAndShowData &&
-      this.canFetchAndShowAd &&
-      this.userHasAdsEnabled
+      this.canFetchAndShowAd
     );
   }
 
