@@ -4237,7 +4237,7 @@ void MaybeReportDeprecation(const GlobalObject& aGlobal,
   Nullable<uint32_t> lineNumber;
   Nullable<uint32_t> columnNumber;
   uint32_t line = 0;
-  uint32_t column = 1;
+  uint32_t column = 0;
   if (nsJSUtils::GetCallingLocation(aGlobal.Context(), fileName, &line,
                                     &column)) {
     lineNumber.SetValue(line);

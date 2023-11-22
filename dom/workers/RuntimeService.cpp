@@ -531,7 +531,7 @@ bool ContentSecurityPolicyAllows(JSContext* aCx, JS::RuntimeCode aKind,
 
     RefPtr<LogViolationDetailsRunnable> runnable =
         new LogViolationDetailsRunnable(worker, violationType, fileName,
-                                        lineNum, columnNum.oneOriginValue(),
+                                        lineNum, columnNum.zeroOriginValue(),
                                         scriptSample);
 
     ErrorResult rv;

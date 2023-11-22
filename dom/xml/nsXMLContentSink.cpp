@@ -53,7 +53,6 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/UseCounter.h"
-#include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -488,8 +487,7 @@ nsresult nsXMLContentSink::CreateElement(
       aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_SVG)) {
     if (nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(element)) {
       sele->SetScriptLineNumber(aLineNumber);
-      sele->SetScriptColumnNumber(
-          JS::ColumnNumberOneOrigin::fromZeroOrigin(aColumnNumber));
+      sele->SetScriptColumnNumber(aColumnNumber);
       sele->SetCreatorParser(GetParser());
     } else {
       MOZ_ASSERT(nsNameSpaceManager::GetInstance()->mSVGDisabled,
@@ -521,7 +519,7 @@ nsresult nsXMLContentSink::CreateElement(
     }
     if (!aNodeInfo->Equals(nsGkAtoms::link, kNameSpaceID_XHTML)) {
       linkStyle->SetLineNumber(aFromParser ? aLineNumber : 0);
-      linkStyle->SetColumnNumber(aFromParser ? aColumnNumber + 1 : 1);
+      linkStyle->SetColumnNumber(aFromParser ? aColumnNumber : 0);
     }
   }
 
@@ -1324,7 +1322,7 @@ nsXMLContentSink::ReportError(const char16_t* aErrorText,
   parsererror.Append((char16_t)0xFFFF);
   parsererror.AppendLiteral("parsererror");
 
-  rv = HandleStartElement(parsererror.get(), noAtts, 0, (uint32_t)-1, 0);
+  rv = HandleStartElement(parsererror.get(), noAtts, 0, (uint32_t)-1, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = HandleCharacterData(aErrorText, NS_strlen(aErrorText), false);
@@ -1334,7 +1332,7 @@ nsXMLContentSink::ReportError(const char16_t* aErrorText,
   sourcetext.Append((char16_t)0xFFFF);
   sourcetext.AppendLiteral("sourcetext");
 
-  rv = HandleStartElement(sourcetext.get(), noAtts, 0, (uint32_t)-1, 0);
+  rv = HandleStartElement(sourcetext.get(), noAtts, 0, (uint32_t)-1, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = HandleCharacterData(aSourceText, NS_strlen(aSourceText), false);

@@ -810,7 +810,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
                         u""_ns,  // aSourceFile
                         u""_ns,  // aScriptSample
                         0,       // aLineNumber
-                        1,       // aColumnNumber
+                        0,       // aColumnNumber
                         nsIScriptError::errorFlag, "blockAllMixedContent"_ns,
                         requestingWindow->Id(),
                         !!aLoadInfo->GetOriginAttributes().mPrivateBrowsingId);

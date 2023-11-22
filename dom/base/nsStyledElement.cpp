@@ -181,7 +181,7 @@ void nsStyledElement::ParseStyleAttribute(const nsAString& aValue,
 
   if (!isNativeAnon &&
       !nsStyleUtil::CSPAllowsInlineStyle(this, doc, aMaybeScriptedPrincipal, 0,
-                                         1, aValue, nullptr))
+                                         0, aValue, nullptr))
     return;
 
   if (aForceInDataDoc || !doc->IsLoadedAsData() || GetExistingStyle() ||

@@ -242,7 +242,7 @@ JitCode* JitRuntime::generateEntryTrampolineForScript(JSContext* cx,
     JitSpew(JitSpew_Codegen,
             "# Emitting Interpreter Entry Trampoline for %s (%s:%u:%u)",
             funName ? funName.get() : "*", script->filename(), script->lineno(),
-            script->column().oneOriginValue());
+            script->column().zeroOriginValue());
   }
 
   TempAllocator temp(&cx->tempLifoAlloc());

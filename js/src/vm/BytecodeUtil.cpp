@@ -114,7 +114,7 @@ static bool DecompileArgumentFromStack(JSContext* cx, int formalIndex,
     lineNumber = PCToLineNumber(script, script->offsetToPC(block.offset()),
                                 &columnNumber);
     sp->printf("BB #%" PRIu32 " [%05u,%u,%u]", block.id(), block.offset(),
-               lineNumber, columnNumber.oneOriginValue());
+               lineNumber, columnNumber.zeroOriginValue());
     if (block.description()) {
       sp->printf(" [inlined %s]", block.description());
     }

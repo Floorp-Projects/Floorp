@@ -456,7 +456,7 @@ bool nsFrameMessageManager::GetParamsForMessage(JSContext* aCx,
       do_GetService(NS_CONSOLESERVICE_CONTRACTID));
   if (console) {
     nsAutoString filename;
-    uint32_t lineno = 0, column = 1;
+    uint32_t lineno = 0, column = 0;
     nsJSUtils::GetCallingLocation(aCx, filename, &lineno, &column);
     nsCOMPtr<nsIScriptError> error(
         do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));

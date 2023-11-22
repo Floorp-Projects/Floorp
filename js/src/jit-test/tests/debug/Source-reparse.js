@@ -23,11 +23,7 @@ function g() {
 }
 
 f();
-`, {
-  fileName: "foobar.js",
-  lineNumber: 3,
-  columnNumber: 42,
-});
+`, { fileName: "foobar.js", lineNumber: 3, columnNumber: 42 });
 
 let onNewScriptCalls = 0;
 dbg.onNewScript = script => { onNewScriptCalls++; };

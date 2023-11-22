@@ -7313,7 +7313,7 @@ bool CodeGenerator::generateBody() {
     JitSpew(JitSpew_Codegen, "--------------------------------");
     JitSpew(JitSpew_Codegen, "# block%zu %s:%zu:%u%s:", i,
             filename ? filename : "?", lineNumber,
-            columnNumber.oneOriginValue(),
+            columnNumber.zeroOriginValue(),
             current->mir()->isLoopHeader() ? " (loop header)" : "");
 #endif
 
@@ -14118,7 +14118,7 @@ bool CodeGenerator::generate() {
   JitSpew(JitSpew_Codegen, "# Emitting code for script %s:%u:%u",
           gen->outerInfo().script()->filename(),
           gen->outerInfo().script()->lineno(),
-          gen->outerInfo().script()->column().oneOriginValue());
+          gen->outerInfo().script()->column().zeroOriginValue());
 
   // Initialize native code table with an entry to the start of
   // top-level script.

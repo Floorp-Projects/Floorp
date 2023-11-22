@@ -144,7 +144,7 @@ AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
   JitSpew(JitSpew_IonScripts,
           "Warp %s script %s:%u:%u (%p) (warmup-counter=%" PRIu32 ",%s%s)",
           mode, outerScript_->filename(), outerScript_->lineno(),
-          outerScript_->column().oneOriginValue(),
+          outerScript_->column().zeroOriginValue(),
           static_cast<JSScript*>(outerScript_), outerScript_->getWarmUpCount(),
           outerScript_->isGenerator() ? " isGenerator" : "",
           outerScript_->isAsync() ? " isAsync" : "");
@@ -803,7 +803,7 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
             "fallback stub (entered-count: %" PRIu32
             ") for JSOp::%s @ %s:%u:%u",
             fallbackStub->enteredCount(), CodeName(loc.getOp()),
-            script_->filename(), line, column.oneOriginValue());
+            script_->filename(), line, column.zeroOriginValue());
 
     // If the fallback stub was used but there's no optimized stub, use an IC.
     if (fallbackStub->enteredCount() != 0) {
@@ -828,7 +828,7 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
 
     JitSpew(JitSpew_WarpTranspiler, "Failed to attach for JSOp::%s @ %s:%u:%u",
             CodeName(loc.getOp()), script_->filename(), line,
-            column.oneOriginValue());
+            column.zeroOriginValue());
     return Ok();
   }
 
@@ -866,7 +866,7 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
     JitSpew(JitSpew_WarpTranspiler,
             "multiple active stubs for JSOp::%s @ %s:%u:%u",
             CodeName(loc.getOp()), script_->filename(), line,
-            column.oneOriginValue());
+            column.zeroOriginValue());
     return Ok();
   }
 
@@ -893,7 +893,7 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
       JitSpew(JitSpew_WarpTranspiler,
               "unsupported CacheIR opcode %s for JSOp::%s @ %s:%u:%u",
               CacheIROpNames[size_t(op)], CodeName(loc.getOp()),
-              script_->filename(), line, column.oneOriginValue());
+              script_->filename(), line, column.zeroOriginValue());
       return Ok();
     }
 

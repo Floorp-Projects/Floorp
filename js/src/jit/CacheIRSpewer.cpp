@@ -343,7 +343,7 @@ void CacheIRSpewer::beginCache(const IRGenerator& gen) {
   if (jsbytecode* pc = gen.pc_) {
     JS::LimitedColumnNumberOneOrigin column;
     j.property("line", PCToLineNumber(gen.script_, pc, &column));
-    j.property("column", column.oneOriginValue());
+    j.property("column", column.zeroOriginValue());
     j.formatProperty("pc", "%p", pc);
   }
 }

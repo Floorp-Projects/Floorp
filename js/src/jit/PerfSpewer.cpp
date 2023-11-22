@@ -158,7 +158,7 @@ static void WriteJitDumpDebugEntry(uint64_t addr, const char* filename,
                                    uint32_t lineno,
                                    JS::LimitedColumnNumberOneOrigin colno,
                                    AutoLockPerfSpewer& lock) {
-  JitDumpDebugEntry entry = {addr, lineno, colno.oneOriginValue()};
+  JitDumpDebugEntry entry = {addr, lineno, colno.zeroOriginValue()};
   WriteToJitDumpFile(&entry, sizeof(entry), lock);
   WriteToJitDumpFile(filename, strlen(filename) + 1, lock);
 }
@@ -884,11 +884,11 @@ static UniqueChars GetFunctionDesc(const char* tierName, JSContext* cx,
   if (stubName) {
     return JS_smprintf("%s: %s : %s (%s:%u:%u)", tierName, stubName,
                        funName ? funName.get() : "*", script->filename(),
-                       script->lineno(), script->column().oneOriginValue());
+                       script->lineno(), script->column().zeroOriginValue());
   }
   return JS_smprintf("%s: %s (%s:%u:%u)", tierName,
                      funName ? funName.get() : "*", script->filename(),
-                     script->lineno(), script->column().oneOriginValue());
+                     script->lineno(), script->column().zeroOriginValue());
 }
 
 void PerfSpewer::saveDebugInfo(JSScript* script, JitCode* code,
