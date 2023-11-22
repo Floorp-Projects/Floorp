@@ -4215,7 +4215,7 @@ class nsContinuingTextFrame final : public nsTextFrame {
                                  nsPresContext* aPresContext)
       : nsTextFrame(aStyle, aPresContext, kClassID) {}
 
-  nsTextFrame* mPrevContinuation;
+  nsTextFrame* mPrevContinuation = nullptr;
   nsTextFrame* mFirstContinuation = nullptr;
 };
 
