@@ -460,9 +460,9 @@ var loc = parseAsModule("export { a as b } from 'c'", {
 }).body[0].loc;
 
 assertEq(loc.start.line, 1);
-assertEq(loc.start.column, 0);
+assertEq(loc.start.column, 1);
 assertEq(loc.start.line, 1);
-assertEq(loc.end.column, 26);
+assertEq(loc.end.column, 27);
 
 assertThrowsInstanceOf(function () {
    parseAsModule("function f() { export a }");
