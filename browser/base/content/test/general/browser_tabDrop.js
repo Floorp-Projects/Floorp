@@ -1,3 +1,5 @@
+/* eslint-disable @microsoft/sdl/no-insecure-url */
+
 // TODO (Bug 1680996): Investigate why this test takes a long time.
 requestLongerTimeout(2);
 
@@ -28,7 +30,7 @@ add_task(async function test_setup() {
 });
 
 add_task(async function single_url() {
-  await dropText("mochi.test/first", ["http://mochi.test/first"]);
+  await dropText("example.com/first", ["http://example.com/first"]);
 });
 add_task(async function single_javascript() {
   await dropText("javascript:'bad'", []);
@@ -40,37 +42,37 @@ add_task(async function single_search() {
   await dropText("search this", [ANY_URL]);
 });
 add_task(async function single_url2() {
-  await dropText("mochi.test/second", ["http://mochi.test/second"]);
+  await dropText("example.com/second", ["http://example.com/second"]);
 });
 add_task(async function single_data_url() {
   await dropText("data:text/html,bad", []);
 });
 add_task(async function single_url3() {
-  await dropText("mochi.test/third", ["http://mochi.test/third"]);
+  await dropText("example.com/third", ["http://example.com/third"]);
 });
 
 // Single text/plain item, with multiple links.
 add_task(async function multiple_urls() {
-  await dropText("mochi.test/1\nmochi.test/2", [
-    "http://mochi.test/1",
-    "http://mochi.test/2",
+  await dropText("example.com/1\nexample.com/2", [
+    "http://example.com/1",
+    "http://example.com/2",
   ]);
 });
 add_task(async function multiple_urls_javascript() {
-  await dropText("javascript:'bad1'\nmochi.test/3", []);
+  await dropText("javascript:'bad1'\nexample.com/3", []);
 });
 add_task(async function multiple_urls_data() {
-  await dropText("mochi.test/4\ndata:text/html,bad1", []);
+  await dropText("example.com/4\ndata:text/html,bad1", []);
 });
 
 // Multiple text/plain items, with single and multiple links.
 add_task(async function multiple_items_single_and_multiple_links() {
   await drop(
     [
-      [{ type: "text/plain", data: "mochi.test/5" }],
-      [{ type: "text/plain", data: "mochi.test/6\nmochi.test/7" }],
+      [{ type: "text/plain", data: "example.com/5" }],
+      [{ type: "text/plain", data: "example.com/6\nexample.com/7" }],
     ],
-    ["http://mochi.test/5", "http://mochi.test/6", "http://mochi.test/7"]
+    ["http://example.com/5", "http://example.com/6", "http://example.com/7"]
   );
 });
 
@@ -82,11 +84,11 @@ add_task(async function single_moz_url_multiple_links() {
       [
         {
           type: "text/x-moz-url",
-          data: "mochi.test/8\nTITLE8\nmochi.test/9\nTITLE9",
+          data: "example.com/8\nTITLE8\nexample.com/9\nTITLE9",
         },
       ],
     ],
-    ["http://mochi.test/8", "http://mochi.test/9"]
+    ["http://example.com/8", "http://example.com/9"]
   );
 });
 
@@ -95,11 +97,11 @@ add_task(async function single_item_multiple_types() {
   await drop(
     [
       [
-        { type: "text/plain", data: "mochi.test/10" },
-        { type: "text/x-moz-url", data: "mochi.test/11\nTITLE11" },
+        { type: "text/plain", data: "example.com/10" },
+        { type: "text/x-moz-url", data: "example.com/11\nTITLE11" },
       ],
     ],
-    ["http://mochi.test/11"]
+    ["http://example.com/11"]
   );
 });
 
@@ -107,14 +109,14 @@ add_task(async function single_item_multiple_types() {
 add_task(async function multiple_tabs_under_max() {
   let urls = [];
   for (let i = 0; i < 5; i++) {
-    urls.push("mochi.test/multi" + i);
+    urls.push("example.com/multi" + i);
   }
   await dropText(urls.join("\n"), [
-    "http://mochi.test/multi0",
-    "http://mochi.test/multi1",
-    "http://mochi.test/multi2",
-    "http://mochi.test/multi3",
-    "http://mochi.test/multi4",
+    "http://example.com/multi0",
+    "http://example.com/multi1",
+    "http://example.com/multi2",
+    "http://example.com/multi3",
+    "http://example.com/multi4",
   ]);
 });
 add_task(async function multiple_tabs_over_max_accept() {
@@ -124,14 +126,14 @@ add_task(async function multiple_tabs_over_max_accept() {
 
   let urls = [];
   for (let i = 0; i < 5; i++) {
-    urls.push("mochi.test/accept" + i);
+    urls.push("example.com/accept" + i);
   }
   await dropText(urls.join("\n"), [
-    "http://mochi.test/accept0",
-    "http://mochi.test/accept1",
-    "http://mochi.test/accept2",
-    "http://mochi.test/accept3",
-    "http://mochi.test/accept4",
+    "http://example.com/accept0",
+    "http://example.com/accept1",
+    "http://example.com/accept2",
+    "http://example.com/accept3",
+    "http://example.com/accept4",
   ]);
 
   await confirmPromise;
@@ -145,7 +147,7 @@ add_task(async function multiple_tabs_over_max_cancel() {
 
   let urls = [];
   for (let i = 0; i < 5; i++) {
-    urls.push("mochi.test/cancel" + i);
+    urls.push("example.com/cancel" + i);
   }
   await dropText(urls.join("\n"), []);
 
@@ -167,7 +169,7 @@ async function drop(dragData, expectedURLs) {
   let awaitDrop = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "drop");
 
   let loadedPromises = expectedURLs.map(url =>
-    BrowserTestUtils.waitForNewTab(gBrowser, url, false, true)
+    BrowserTestUtils.waitForNewTab(gBrowser, url, true, true)
   );
 
   // A drop type of "link" onto an existing tab would normally trigger a
