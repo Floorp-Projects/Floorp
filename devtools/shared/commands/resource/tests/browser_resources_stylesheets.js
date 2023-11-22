@@ -80,7 +80,6 @@ const ADDITIONAL_INLINE_RESOURCE = {
     {
       type: "media",
       conditionText: "all",
-      mediaText: "all",
       matches: true,
       line: 1,
       column: 1,
@@ -88,7 +87,6 @@ const ADDITIONAL_INLINE_RESOURCE = {
     {
       type: "media",
       conditionText: "print",
-      mediaText: "print",
       matches: false,
       line: 1,
       column: 37,
@@ -373,13 +371,11 @@ async function testResourceUpdateFeature() {
     {
       type: "media",
       conditionText: "screen",
-      mediaText: "screen",
       matches: true,
     },
     {
       type: "media",
       conditionText: "print",
-      mediaText: "print",
       matches: false,
     },
   ];
@@ -540,7 +536,6 @@ async function testNestedResourceUpdateFeature() {
     {
       type: "media",
       conditionText: "(min-height: 400px)",
-      mediaText: "(min-height: 400px)",
       matches: true,
     },
     {
@@ -606,7 +601,6 @@ async function getStyleSheetResult(tab) {
 
           atRules.push({
             type: "media",
-            mediaText: rule.media.mediaText,
             conditionText: rule.conditionText,
             matches,
           });
@@ -654,7 +648,6 @@ function assertAtRules(atRules, expectedAtRules) {
       "conditionText is correct"
     );
     if (expected.type === "media") {
-      is(atRule.mediaText, expected.mediaText, "mediaText is correct");
       is(atRule.matches, expected.matches, "matches is correct");
     } else if (expected.type === "layer") {
       is(atRule.layerName, expected.layerName, "layerName is correct");

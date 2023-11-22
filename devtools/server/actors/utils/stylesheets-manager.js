@@ -503,7 +503,6 @@ class StyleSheetsManager extends EventEmitter {
    *          - {Integer} ruleCount: The total number of rules in the stylesheet
    *          - {Array<Object>} atRules: An array of object of the following shape:
    *            - type {String}
-   *            - mediaText {String}
    *            - conditionText {String}
    *            - matches {Boolean}: true if the media rule matches the current state of the document
    *            - layerName {String}
@@ -555,7 +554,6 @@ class StyleSheetsManager extends EventEmitter {
 
         atRules.push({
           type: "media",
-          mediaText: rule.media.mediaText,
           conditionText: rule.conditionText,
           matches,
           line: InspectorUtils.getRelativeRuleLine(rule),

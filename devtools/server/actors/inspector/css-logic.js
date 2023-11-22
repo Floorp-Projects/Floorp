@@ -959,20 +959,12 @@ class CssRule {
     this._cssSheet = cssSheet;
     this.domRule = domRule;
 
-    const parentRule = domRule.parentRule;
-    if (parentRule && parentRule.type == CSSRule.MEDIA_RULE) {
-      this.mediaText = parentRule.media.mediaText;
-    }
-
     if (this._cssSheet) {
       // parse domRule.selectorText on call to this.selectors
       this._selectors = null;
       this.line = InspectorUtils.getRelativeRuleLine(this.domRule);
       this.column = InspectorUtils.getRuleColumn(this.domRule);
       this.source = this._cssSheet.shortSource + ":" + this.line;
-      if (this.mediaText) {
-        this.source += " @media " + this.mediaText;
-      }
       this.href = this._cssSheet.href;
       this.authorRule = this._cssSheet.authorSheet;
       this.userRule = this._cssSheet.userSheet;
@@ -990,12 +982,6 @@ class CssRule {
   }
 
   _passId = null;
-
-  mediaText = "";
-
-  get isMediaRule() {
-    return !!this.mediaText;
-  }
 
   /**
    * Check if the parent stylesheet is allowed by the CssLogic.sourceFilter.
