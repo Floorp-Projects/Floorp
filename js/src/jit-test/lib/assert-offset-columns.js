@@ -41,7 +41,7 @@ function assertOffsetColumns(code, expectedBpts, expectedOrdering = null) {
     const { script } = debuggeeFn;
     for (const offset of script.getAllColumnOffsets()) {
         assertEq(offset.lineNumber, 1);
-        assertEq(offset.columnNumber < execCode.length, true);
+        assertEq(offset.columnNumber <= execCode.length, true);
         bpts.add(offset.columnNumber);
 
         script.setBreakpoint(offset.offset, {
@@ -53,7 +53,7 @@ function assertOffsetColumns(code, expectedBpts, expectedOrdering = null) {
     global.f(3);
 
     const actualBpts = Array.from(execCode, (_, i) => {
-        return bpts.has(i) ? "^" : " ";
+        return bpts.has(i + 1) ? "^" : " ";
     }).join("");
 
     if (actualBpts.trimEnd() !== expectedBpts.trimEnd()) {

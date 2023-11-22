@@ -174,7 +174,7 @@ The functions described below may only be called with a ``this`` value referring
   The elements of the array are objects, each of which describes a single entry point, and contains the following properties:
 
   - lineNumber: the line number for which offset is an entry point
-  - columnNumber: the column number for which offset is an entry point
+  - columnNumber: the 1-based column number for which offset is an entry point
   - offset: the bytecode instruction offset of the entry point
 
 
@@ -191,10 +191,10 @@ The functions described below may only be called with a ``this`` value referring
 
   .. code-block:: javascript
 
-    [{ lineNumber: 0, columnNumber: 0, offset: 0 },
-     { lineNumber: 1, columnNumber: 5, offset: 5 },
-     { lineNumber: 1, columnNumber: 10, offset: 20 },
-     { lineNumber: 3, columnNumber: 4, offset: 10 }]
+    [{ lineNumber: 0, columnNumber: 1, offset: 0 },
+     { lineNumber: 1, columnNumber: 6, offset: 5 },
+     { lineNumber: 1, columnNumber: 11, offset: 20 },
+     { lineNumber: 3, columnNumber: 5, offset: 10 }]
 
   **If the instance refers to WebAssembly code**, throw a ``TypeError``.
 
@@ -205,7 +205,7 @@ The functions described below may only be called with a ``this`` value referring
   **If the instance refers to a JSScript**, return an object describing the source code location responsible for the bytecode at *offset* in this script. The object has the following properties:
 
   - lineNumber: the line number for which offset is an entry point
-  - columnNumber: the column number for which offset is an entry point
+  - columnNumber: the 1-based column number for which offset is an entry point
   - isEntryPoint: true if the offset is a column entry point, as would be reported by getAllColumnOffsets(); otherwise false.
 
 
@@ -213,7 +213,7 @@ The functions described below may only be called with a ``this`` value referring
   **If the instance refers to a JSScript**, return ``null`` or an array which contains information about the coverage of all opcodes. The elements of the array are objects, each of which describes a single opcode, and contains the following properties:
 
   - lineNumber: the line number of the current opcode.
-  - columnNumber: the column number of the current opcode.
+  - columnNumber: the 1-based column number of the current opcode.
   - offset: the bytecode instruction offset of the current opcode.
   - count: the number of times the current opcode got executed.
 
