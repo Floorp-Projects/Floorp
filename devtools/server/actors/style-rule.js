@@ -83,6 +83,8 @@ class StyleRuleActor extends Actor {
 
     if (CSSRule.isInstance(item)) {
       this.type = item.type;
+      this.ruleClassName = ChromeUtils.getClassName(item);
+
       this.rawRule = item;
       this._computeRuleIndex();
       if (this.#isRuleSupported() && this.rawRule.parentStyleSheet) {
@@ -93,6 +95,7 @@ class StyleRuleActor extends Actor {
     } else {
       // Fake a rule
       this.type = ELEMENT_STYLE;
+      this.ruleClassName = ELEMENT_STYLE;
       this.rawNode = item;
       this.rawRule = {
         style: item.style,
@@ -238,7 +241,7 @@ class StyleRuleActor extends Actor {
       data.ruleIndex = 0;
     } else {
       data.selector =
-        this.type === CSSRule.KEYFRAME_RULE
+        this.ruleClassName === "CSSKeyframeRule"
           ? this.rawRule.keyText
           : this.rawRule.selectorText;
       // Used to differentiate between changes to rules with identical selectors.
@@ -349,8 +352,8 @@ class StyleRuleActor extends Actor {
     // return a promise.  See bug 1205868.
     form.authoredText = this.authoredText;
 
-    switch (this.type) {
-      case CSSRule.STYLE_RULE:
+    switch (this.ruleClassName) {
+      case "CSSStyleRule":
         form.selectors = CssLogic.getSelectors(this.rawRule);
 
         // Only add the property when there are elements in the array to save up on serialization.
@@ -372,17 +375,17 @@ class StyleRuleActor extends Actor {
         form.cssText = this.rawStyle.cssText || "";
         form.authoredText = this.rawNode.getAttribute("style");
         break;
-      case CSSRule.CHARSET_RULE:
+      case "CSSCharsetRule":
         form.encoding = this.rawRule.encoding;
         break;
-      case CSSRule.IMPORT_RULE:
+      case "CSSImportRule":
         form.href = this.rawRule.href;
         break;
-      case CSSRule.KEYFRAMES_RULE:
+      case "CSSKeyframesRule":
         form.cssText = this.rawRule.cssText;
         form.name = this.rawRule.name;
         break;
-      case CSSRule.KEYFRAME_RULE:
+      case "CSSKeyframeRule":
         form.cssText = this.rawStyle.cssText || "";
         form.keyText = this.rawRule.keyText || "";
         break;

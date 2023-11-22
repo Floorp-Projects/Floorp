@@ -463,7 +463,8 @@ class StyleSheetsManager extends EventEmitter {
     const importedStyleSheets = [];
 
     for (const rule of await this._getCSSRules(styleSheet)) {
-      if (rule.type == CSSRule.IMPORT_RULE) {
+      const ruleClassName = ChromeUtils.getClassName(rule);
+      if (ruleClassName == "CSSImportRule") {
         // With the Gecko style system, the associated styleSheet may be null
         // if it has already been seen because an import cycle for the same
         // URL.  With Stylo, the styleSheet will exist (which is correct per
@@ -485,7 +486,7 @@ class StyleSheetsManager extends EventEmitter {
           rule.styleSheet
         );
         importedStyleSheets.push(...children);
-      } else if (rule.type != CSSRule.CHARSET_RULE) {
+      } else if (ruleClassName != "CSSCharsetRule") {
         // @import rules must precede all others except @charset
         break;
       }
