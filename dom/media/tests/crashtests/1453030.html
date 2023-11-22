@@ -2,20 +2,37 @@
   <head>
     <script>
       let o3;
+
+      var index = localStorage.index_1453030_html || 0;
+      localStorage.index_1453030_html = ++index;
+
       function getDTMF () {
         try { o4 = o2.dtmf } catch(e) { }
         try { o4.insertDTMF("1BC1D55", new Uint32Array([3538134876])[0], new Uint32Array([666182017])[0]) } catch (e) { }
+
+        setTimeout(finish, 0);
+      }
+
+      function finish() {
         try { o3.close(); } catch (e) {}
         document.documentElement.removeAttribute("class");
       }
+      onbeforeunload = function() {
+        try { o3.close(); } catch (e) {}
+      }
 
-      o1 = new RTCPeerConnection({ }, null)
-      window.navigator.mediaDevices.getUserMedia({video: true, fake: true}).then((stream) => {
-        o2 = o1.addTrack(stream.getVideoTracks()[0], stream)
-      }).catch((error) => {})
-      o3 = window.open("datr=0")
-      setTimeout(getDTMF, 400)
-      setTimeout(window.location.reload.bind(window.location), 500);
+      if (index == 1) {
+        o1 = new RTCPeerConnection({ }, null)
+        window.navigator.mediaDevices.getUserMedia({video: true, fake: true}).then((stream) => {
+          o2 = o1.addTrack(stream.getVideoTracks()[0], stream)
+        }).catch((error) => {})
+        o3 = window.open("datr=0")
+        setTimeout(getDTMF, 400)
+        setTimeout(window.location.reload.bind(window.location), 500);
+      } else {
+        delete localStorage["index_1453030_html"];
+      }
+
     </script>
   </head>
 </html>
