@@ -25,7 +25,7 @@ Modifying lint rules will cause `./gradlew detekt` to fail because it breaks the
 1. During development of custom lint rules, run without the daemon `./gradlew --no-daemon detekt`
 1. Restart the gradle daemon between runs: `./gradlew --stop`
 
-The error you'll see if you re-use this invalid gradle daemon is:
+The error you'll see if you reuse this invalid gradle daemon is:
 ```
 Property 'mozilla-detekt-rules' is misspelled or does not exist.
 

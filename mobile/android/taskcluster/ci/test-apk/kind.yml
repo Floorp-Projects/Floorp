@@ -22,7 +22,7 @@ task-defaults:
         external-gradle-dependencies:
             - external-gradle-dependencies.tar.xz
     optimization:
-        skip-unless-changed: [] # Paths are dynamically added by transforms
+        skip-unless-changed: []  # Paths are dynamically added by transforms
     run-on-tasks-for:
         - github-pull-request
         - github-pull-request-untrusted

@@ -35,9 +35,9 @@ internal interface ManifestDao {
     @WorkerThread
     @Query(
         """
-        SELECT * from manifests 
-        WHERE has_share_targets == 1 
-        AND used_at > :deadline 
+        SELECT * from manifests
+        WHERE has_share_targets == 1
+        AND used_at > :deadline
         ORDER BY used_at DESC
     """,
     )

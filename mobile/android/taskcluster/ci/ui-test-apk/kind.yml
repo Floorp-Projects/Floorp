@@ -21,7 +21,7 @@ task-defaults:
         retrigger: true
     include-pull-request-number: true
     optimization:
-        skip-unless-changed: [] # Paths are dynamically added by transforms
+        skip-unless-changed: []  # Paths are dynamically added by transforms
     worker-type: b-android
     worker:
         docker-image: {in-tree: ui-tests}
@@ -212,7 +212,6 @@ tasks:
     screenshots-arm:
         attributes:
             shipping-product: fenix
-        attributes:
             screenshots: true
         description: Run UI screenshots tests to keep them up to date
         run-on-tasks-for: []

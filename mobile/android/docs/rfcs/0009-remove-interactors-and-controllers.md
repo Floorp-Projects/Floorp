@@ -19,7 +19,7 @@ The [definition](../../fenix/docs/architecture-overview.md#interactor) of intera
 
 Historically, the interactor/controller pattern evolved from a Presenter/Controller/View pattern that originated in Android Components. The underlying motivation of that pattern was to separate code presenting the state from the view (Presenters) and the code that updated the state from the view (Controllers).
 
-Generally, the interactor/controller pattern is also intended to move business logic out of classes tied to the Android framework and into classes that are more testable, re-usable, composable, digestible, and which handle a single responsibility. More reading on architecture goals is available [in our Architecture Decisions](../../fenix/docs/Architecture-Decisions.md#goals).
+Generally, the interactor/controller pattern is also intended to move business logic out of classes tied to the Android framework and into classes that are more testable, reusable, composable, digestible, and which handle a single responsibility. More reading on architecture goals is available [in our Architecture Decisions](../../fenix/docs/Architecture-Decisions.md#goals).
 
 These goals are all met reasonably well by the existing pattern, but it also contributes to unnecessary class explosion, general code complexity, and confusion about responsibility for each architectural type. This becomes especially true when wondering how responsibility should be split between interactors and controllers. It seems that interactors are often included as a matter of precedent and not to necessarily facilitate all the goals mentioned above, and this has lead to a large amount passthrough interactors.
 
@@ -74,7 +74,7 @@ setOnClickListener {
 }
 
 // 2. Clicking into `interactor.select` will lead to SelectionInteractor<T>.
-// 3. Searching for implementors of that interface will lead us to another interface, `HistoryInteractor : SelectionInteractor<History>`
+// 3. Searching for implementers of that interface will lead us to another interface, `HistoryInteractor : SelectionInteractor<History>`
 // 4. DefaultHistoryInteractor implements HistoryInteractor
 override fun open(item: History) {
     historyController.handleSelect(item)

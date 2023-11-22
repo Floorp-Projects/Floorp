@@ -157,8 +157,8 @@ class DigitalAssetLinksApiTest {
         val androidStatement = """
         {"statements": [{
             "source": {"web":{"site": "https://mozilla.org"}},
-            "target": {"androidApp":{ 
-                "packageName": "com.mozilla.fenix", 
+            "target": {"androidApp":{
+                "packageName": "com.mozilla.fenix",
                 "certificate": {"sha256Fingerprint": "01:23:45:67:89"}
             }},
             "relation": "delegate_permission/common.handle_all_urls"

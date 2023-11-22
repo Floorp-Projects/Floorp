@@ -43,9 +43,9 @@ task-defaults:
         - github-pull-request
         - github-push
     treeherder:
-            kind: test
-            platform: 'AC-ui-test/opt'
-            tier: 2
+        kind: test
+        platform: 'AC-ui-test/opt'
+        tier: 2
     worker-type: b-android-large
     worker:
         artifacts:

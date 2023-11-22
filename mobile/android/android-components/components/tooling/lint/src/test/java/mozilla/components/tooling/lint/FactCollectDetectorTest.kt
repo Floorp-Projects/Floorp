@@ -42,7 +42,7 @@ class FactCollectDetectorTest {
 
                     import mozilla.components.support.base.facts.Fact
                     import mozilla.components.support.base.facts.collect
-                    
+
                     private fun emitAwesomebarFact(
                         action: Action,
                         item: String,
@@ -83,7 +83,7 @@ class FactCollectDetectorTest {
 
                     import mozilla.components.support.base.facts.Fact
                     import mozilla.components.support.base.facts.collect
-                    
+
                     private fun emitAwesomebarFact(
                         action: Action,
                         item: String,
@@ -117,7 +117,7 @@ class FactCollectDetectorTest {
 
                     import mozilla.components.support.base.facts.Fact
                     import mozilla.components.support.base.facts.collect
-                    
+
                     private fun createFact(
                         action: Action,
                         item: String,
@@ -151,7 +151,7 @@ class FactCollectDetectorTest {
 
                     import mozilla.components.support.base.facts.Fact
                     import mozilla.components.support.base.facts.collect
-                    
+
                     private fun createFact(
                         action: Action,
                         item: String,
@@ -169,7 +169,7 @@ class FactCollectDetectorTest {
                     }
 
                     private fun method(parameter: Fact) {
-                        
+
                     }
                     """,
                 ).indented(),
@@ -193,7 +193,7 @@ class FactCollectDetectorTest {
 
                     class FactSender {
                         private var fact: Fact? = null
-                    
+
                         private fun createFact(
                             action: Action,
                             item: String,

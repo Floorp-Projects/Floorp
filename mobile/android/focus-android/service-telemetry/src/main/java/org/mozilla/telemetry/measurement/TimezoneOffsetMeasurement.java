@@ -39,4 +39,3 @@ public class TimezoneOffsetMeasurement extends TelemetryMeasurement {
         return Calendar.getInstance();
     }
 }
-

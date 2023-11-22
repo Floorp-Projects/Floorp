@@ -41,7 +41,7 @@ class FactCollectDetector : Detector(), SourceCodeScanner {
                 id = "FactCollect",
                 briefDescription = "Fact created but not collected",
                 explanation = """
-                An instance of `Fact` was created but not collected. You must call 
+                An instance of `Fact` was created but not collected. You must call
                 `collect()` on the instance to actually process it.
                 """.trimIndent(),
                 category = Category.CORRECTNESS,

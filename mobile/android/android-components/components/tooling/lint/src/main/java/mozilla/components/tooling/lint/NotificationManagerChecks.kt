@@ -72,7 +72,7 @@ class NotificationManagerChecks : Detector(), Detector.UastScanner {
             "NotifyUsage",
             "NotificationsDelegate should be used instead of NotificationManager.",
             """NotificationsDelegate should be used for showing notifications instead of a NotificationManager
-            or a NotificationManagerCompat. This will allow the app to control requesting the notification permission 
+            or a NotificationManagerCompat. This will allow the app to control requesting the notification permission
             when needed and handling the request result.
             """.trimIndent(),
             Category.MESSAGES,

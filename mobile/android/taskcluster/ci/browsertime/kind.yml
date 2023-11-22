@@ -69,8 +69,8 @@ task-defaults:
             - name: public/test_info/
               path: workspace/build/blobber_upload_dir
               type: directory
-    run-visual-metrics: True
-    chimera: True
+    run-visual-metrics: true
+    chimera: true
     run:
         using: run-task
         checkout: false
@@ -99,7 +99,7 @@ task-defaults:
 
 tasks:
     tp6m:
-        run-with-fission: False # Bug 1816421 disable fission perf tests
+        run-with-fission: false  # Bug 1816421 disable fission perf tests
         page-load-tests:
             - amazon
             - instagram
@@ -123,7 +123,7 @@ tasks:
             - [google-search-restaurants, gsearch-r]
 
     tp6m-hv:
-        run-with-fission: False # Bug 1816421 disable fission perf tests
+        run-with-fission: false  # Bug 1816421 disable fission perf tests
         page-load-tests:
             - google
             - [amazon-search, amazon-s]
@@ -137,37 +137,37 @@ tasks:
         description: "Raptor Speedometer 2.1 Benchmark tests on Fenix"
         subtest-symbol: sp
         test-name: speedometer
-        run-visual-metrics: False
-        chimera: False
+        run-visual-metrics: false
+        chimera: false
 
     speedometer3:
         description: "Raptor Speedometer 3 Benchmark tests on Fenix"
         subtest-symbol: sp3
         test-name: speedometer3
-        run-visual-metrics: False
-        chimera: False
+        run-visual-metrics: false
+        chimera: false
 
     youtube-playback-av1-sfr:
         description: "Raptor YouTube Playback AV1 SFR on Fenix"
         test-name: youtube-playback-av1-sfr
-        run-visual-metrics: False
-        chimera: False
+        run-visual-metrics: false
+        chimera: false
 
     youtube-playback-h264-sfr:
         description: "Raptor YouTube Playback H264 SFR on Fenix"
         test-name: youtube-playback-h264-sfr
-        run-visual-metrics: False
-        chimera: False
+        run-visual-metrics: false
+        chimera: false
 
     youtube-playback-vp9-sfr:
         description: "Raptor YouTube Playback VP9 SFR on Fenix"
-        run-visual-metrics: False
-        chimera: False
+        run-visual-metrics: false
+        chimera: false
         test-name: youtube-playback-vp9-sfr
 
     constant-regression:
         description: "Raptor Perftest Regression Detection Testing"
         subtest-symbol: regress-c
         test-name: constant-regression
-        run-visual-metrics: False
-        chimera: False
+        run-visual-metrics: false
+        chimera: false

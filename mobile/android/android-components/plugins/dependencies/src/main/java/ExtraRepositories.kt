@@ -7,5 +7,3 @@ object ExtraRepositories {
     val mozillaStaging = (ApplicationServicesConfig.channel == ApplicationServicesChannel.STAGING
         || ApplicationServicesConfig.channel == ApplicationServicesChannel.NIGHTLY_STAGING)
 }
-
-

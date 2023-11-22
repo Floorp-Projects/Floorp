@@ -102,7 +102,7 @@ class ContextCompatDetectorTest : LintDetectorTest() {
             |   fun trigger(context: Context, id: Int) {
             |       getDrawable(context, id)
             |   }
-            |   
+            |
             |   fun getDrawable(context: Context, id: Int) {}
             |
             |}""".trimMargin()
@@ -126,7 +126,7 @@ class ContextCompatDetectorTest : LintDetectorTest() {
             |   fun trigger(context: Context, id: Int) {
             |       getColorStateList(context, id)
             |   }
-            |   
+            |
             |   fun getColorStateList(context: Context, id: Int) {}
             |
             |}""".trimMargin()
