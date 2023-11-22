@@ -198,12 +198,7 @@ class nsTextFrame : public nsIFrame {
 
   explicit nsTextFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                        ClassID aID = kClassID)
-      : nsIFrame(aStyle, aPresContext, aID),
-        mNextContinuation(nullptr),
-        mContentOffset(0),
-        mContentLengthHint(0),
-        mAscent(0),
-        mIsSelected(SelectionState::Unknown) {}
+      : nsIFrame(aStyle, aPresContext, aID) {}
 
   NS_DECL_FRAMEARENA_HELPERS(nsTextFrame)
 
@@ -786,7 +781,7 @@ class nsTextFrame : public nsIFrame {
 
   mutable RefPtr<nsFontMetrics> mFontMetrics;
   RefPtr<gfxTextRun> mTextRun;
-  nsTextFrame* mNextContinuation;
+  nsTextFrame* mNextContinuation = nullptr;
   // The key invariant here is that mContentOffset never decreases along
   // a next-continuation chain. And of course mContentOffset is always <= the
   // the text node's content length, and the mContentOffset for the first frame
@@ -796,13 +791,13 @@ class nsTextFrame : public nsIFrame {
   // frame's offset, or the text length if there is no next frame. This means
   // the frames always map the text node without overlapping or leaving any
   // gaps.
-  int32_t mContentOffset;
+  int32_t mContentOffset = 0;
   // This does *not* indicate the length of text currently mapped by the frame;
   // instead it's a hint saying that this frame *wants* to map this much text
   // so if we create a new continuation, this is where that continuation should
   // start.
-  int32_t mContentLengthHint;
-  nscoord mAscent;
+  int32_t mContentLengthHint = 0;
+  nscoord mAscent = 0;
 
   // Cached selection state.
   enum class SelectionState : uint8_t {
@@ -810,7 +805,7 @@ class nsTextFrame : public nsIFrame {
     Selected,
     NotSelected,
   };
-  mutable SelectionState mIsSelected;
+  mutable SelectionState mIsSelected = SelectionState::Unknown;
 
   // Flags used to track whether certain properties are present.
   // (Public to keep MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS happy.)
