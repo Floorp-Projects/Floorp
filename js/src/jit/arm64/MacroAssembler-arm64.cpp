@@ -894,7 +894,7 @@ static void PushOrStoreRegsInMask(MacroAssembler* masm, LiveRegisterSet set,
   // If we're saving to arbitrary memory, check the destination is big enough.
   if (dest) {
     mozilla::DebugOnly<size_t> bytesRequired =
-        masm->PushRegsInMaskSizeInBytes(set);
+        MacroAssembler::PushRegsInMaskSizeInBytes(set);
     MOZ_ASSERT(dest->offset >= 0);
     MOZ_ASSERT(((size_t)dest->offset) >= bytesRequired);
   }
@@ -1037,10 +1037,10 @@ static void PushOrStoreRegsInMask(MacroAssembler* masm, LiveRegisterSet set,
   // Final overrun check.
   if (dest) {
     MOZ_ASSERT(maxExtentInitial - dest->offset ==
-               masm->PushRegsInMaskSizeInBytes(set));
+               MacroAssembler::PushRegsInMaskSizeInBytes(set));
   } else {
     MOZ_ASSERT(masm->framePushed() - maxExtentInitial ==
-               masm->PushRegsInMaskSizeInBytes(set));
+               MacroAssembler::PushRegsInMaskSizeInBytes(set));
   }
 }
 

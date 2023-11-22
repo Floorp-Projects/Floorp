@@ -3353,7 +3353,10 @@ class LWasmCallIndirectAdjunctSafepoint : public LInstructionHelper<0, 0, 0> {
   LWasmCallIndirectAdjunctSafepoint()
       : LInstructionHelper(classOpcode),
         offs_(0),
-        framePushedAtStackMapBase_(0) {}
+        framePushedAtStackMapBase_(0) {
+    // Ensure that the safepoint does not get live registers associated with it.
+    setIsCall();
+  }
 
   CodeOffset safepointLocation() const {
     MOZ_ASSERT(offs_.offset() != 0);

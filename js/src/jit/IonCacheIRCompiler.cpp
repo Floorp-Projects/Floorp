@@ -120,7 +120,8 @@ void CacheRegisterAllocator::saveIonLiveRegisters(MacroAssembler& masm,
   // Step 2. Figure out the size of our live regs.  This is consistent with
   // the fact that we're using storeRegsInMask to generate the save code and
   // PopRegsInMask to generate the restore code.
-  size_t sizeOfLiveRegsInBytes = masm.PushRegsInMaskSizeInBytes(liveRegs);
+  size_t sizeOfLiveRegsInBytes =
+      MacroAssembler::PushRegsInMaskSizeInBytes(liveRegs);
 
   MOZ_ASSERT(sizeOfLiveRegsInBytes > 0);
 

@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled()
+// |jit-test| skip-if: !wasmGcEnabled(); test-also=--gc-zeal=2
 
 // Test array instructions on different valtypes
 
