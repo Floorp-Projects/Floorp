@@ -881,9 +881,9 @@ sync-signedin-login-failure = Please sign in to reconnect { $email }
 
 ##
 
-sync-resend-verification =
-    .label = Resend Verification
-    .accesskey = d
+sync-verify-account =
+    .label = Verify Account
+    .accesskey = V
 
 sync-remove-account =
     .label = Remove Account
@@ -996,16 +996,6 @@ sync-device-name-save =
     .accesskey = v
 
 sync-connect-another-device = Connect another device
-
-## These strings are shown in a desktop notification after the
-## user requests we resend a verification email.
-
-sync-verification-sent-title = Verification Sent
-# Variables:
-#   $email (String): Email address of user's Firefox account.
-sync-verification-sent-body = A verification link has been sent to { $email }.
-sync-verification-not-sent-title = Unable to Send Verification
-sync-verification-not-sent-body = We are unable to send a verification mail at this time, please try again later.
 
 ## Privacy Section
 
