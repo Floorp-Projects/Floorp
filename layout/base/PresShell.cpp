@@ -5381,6 +5381,11 @@ bool PresShell::IsTransparentContainerElement() const {
     return true;
   }
 
+  if (mDocument->IsInitialDocument() &&
+      mDocument->IsLikelyContentInaccessibleTopLevelAboutBlank()) {
+    return true;
+  }
+
   nsIDocShell* docShell = pc->GetDocShell();
   if (!docShell) {
     return false;
