@@ -160,6 +160,20 @@ static void LazyLoadCallback(
   }
 }
 
+static void ContentVisibilityCallback(
+    const Sequence<OwningNonNull<DOMIntersectionObserverEntry>>& aEntries) {
+  for (const auto& entry : aEntries) {
+    entry->Target()->SetVisibleForContentVisibility(entry->IsIntersecting());
+
+    if (RefPtr<Document> doc = entry->Target()->GetComposedDoc()) {
+      if (RefPtr<PresShell> presShell = doc->GetPresShell()) {
+        presShell->ScheduleContentRelevancyUpdate(
+            ContentRelevancyReason::Visible);
+      }
+    }
+  }
+}
+
 static LengthPercentage PrefMargin(float aValue, bool aIsPercentage) {
   return aIsPercentage ? LengthPercentage::FromPercentage(aValue / 100.0f)
                        : LengthPercentage::FromPixels(aValue);
@@ -187,6 +201,25 @@ DOMIntersectionObserver::CreateLazyLoadObserver(Document& aDocument) {
   SET_MARGIN(Bottom, bottom);
   SET_MARGIN(Left, left);
 #undef SET_MARGIN
+
+  return observer.forget();
+}
+
+already_AddRefed<DOMIntersectionObserver>
+DOMIntersectionObserver::CreateContentVisibilityObserver(Document& aDocument) {
+  RefPtr<DOMIntersectionObserver> observer =
+      new DOMIntersectionObserver(aDocument, ContentVisibilityCallback);
+
+  observer->mThresholds.AppendElement(0.0f);
+
+  auto margin = LengthPercentage::FromPercentage(
+      StaticPrefs::layout_css_content_visibility_relevant_content_margin() /
+      100.0f);
+
+  observer->mRootMargin.Get(eSideTop) = margin;
+  observer->mRootMargin.Get(eSideRight) = margin;
+  observer->mRootMargin.Get(eSideBottom) = margin;
+  observer->mRootMargin.Get(eSideLeft) = margin;
 
   return observer.forget();
 }
@@ -315,8 +348,8 @@ static const Document* GetTopLevelContentDocumentInThisProcess(
 static Maybe<nsRect> ComputeTheIntersection(
     nsIFrame* aTarget, nsIFrame* aRoot, const nsRect& aRootBounds,
     const Maybe<nsRect>& aRemoteDocumentVisibleRect,
-    DOMIntersectionObserver::IsForProximityToViewport
-        aIsForProximityToViewport) {
+    DOMIntersectionObserver::IsContentVisibilityObserver
+        aIsContentVisibilityObserver) {
   nsIFrame* target = aTarget;
   // 1. Let intersectionRect be the result of running the
   // getBoundingClientRect() algorithm on the target.
@@ -326,8 +359,8 @@ static Maybe<nsRect> ComputeTheIntersection(
       target, target, nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
   // For content-visibility, we need to observe the overflow clip edge,
   // https://drafts.csswg.org/css-contain-2/#close-to-the-viewport
-  if (aIsForProximityToViewport ==
-      DOMIntersectionObserver::IsForProximityToViewport::Yes) {
+  if (aIsContentVisibilityObserver ==
+      DOMIntersectionObserver::IsContentVisibilityObserver::Yes) {
     const auto& disp = *target->StyleDisplay();
     auto clipAxes = target->ShouldApplyOverflowClipping(&disp);
     if (clipAxes != PhysicalAxes::None) {
@@ -615,7 +648,7 @@ IntersectionInput DOMIntersectionObserver::ComputeInput(
 // (steps 2.1 - 2.5)
 IntersectionOutput DOMIntersectionObserver::Intersect(
     const IntersectionInput& aInput, const Element& aTarget,
-    IsForProximityToViewport aIsForProximityToViewport) {
+    IsContentVisibilityObserver aIsContentVisibilityObserver) {
   const bool isSimilarOrigin = SimilarOrigin(aTarget, aInput.mRootNode) ==
                                BrowsingContextOrigin::Similar;
   nsIFrame* targetFrame = aTarget.GetPrimaryFrame();
@@ -630,9 +663,9 @@ IntersectionOutput DOMIntersectionObserver::Intersect(
   // https://drafts.csswg.org/css-contain/#cv-notes
   //
   // Skip the intersection if the element is hidden, unless this is the
-  // specifically to determine the proximity to the viewport for
+  // DOMIntersectionObserver used specifically to track the visibility of
   // `content-visibility: auto` elements.
-  if (aIsForProximityToViewport == IsForProximityToViewport::No &&
+  if (aIsContentVisibilityObserver == IsContentVisibilityObserver::No &&
       targetFrame->IsHiddenByContentVisibilityOnAnyAncestor()) {
     return {isSimilarOrigin};
   }
@@ -666,7 +699,7 @@ IntersectionOutput DOMIntersectionObserver::Intersect(
   nsRect targetRect = targetFrame->GetBoundingClientRect();
   // For content-visibility, we need to observe the overflow clip edge,
   // https://drafts.csswg.org/css-contain-2/#close-to-the-viewport
-  if (aIsForProximityToViewport == IsForProximityToViewport::Yes) {
+  if (aIsContentVisibilityObserver == IsContentVisibilityObserver::Yes) {
     const auto& disp = *targetFrame->StyleDisplay();
     auto clipAxes = targetFrame->ShouldApplyOverflowClipping(&disp);
     if (clipAxes != PhysicalAxes::None) {
@@ -680,7 +713,7 @@ IntersectionOutput DOMIntersectionObserver::Intersect(
   // intersection algorithm on target and observer’s intersection root.
   Maybe<nsRect> intersectionRect = ComputeTheIntersection(
       targetFrame, aInput.mRootFrame, rootBounds,
-      aInput.mRemoteDocumentVisibleRect, aIsForProximityToViewport);
+      aInput.mRemoteDocumentVisibleRect, aIsContentVisibilityObserver);
 
   return {isSimilarOrigin, rootBounds, targetRect, intersectionRect};
 }
@@ -704,11 +737,20 @@ void DOMIntersectionObserver::Update(Document& aDocument,
                                      DOMHighResTimeStamp time) {
   auto input = ComputeInput(aDocument, mRoot, &mRootMargin);
 
+  // If this observer is used to determine content relevancy for
+  // `content-visiblity: auto` content, then do not skip intersection
+  // for content that is hidden by `content-visibility: auto`.
+  IsContentVisibilityObserver isContentVisibilityObserver =
+      aDocument.GetContentVisibilityObserver() == this
+          ? IsContentVisibilityObserver::Yes
+          : IsContentVisibilityObserver::No;
+
   // 2. For each target in observer’s internal [[ObservationTargets]] slot,
   // processed in the same order that observe() was called on each target:
   for (Element* target : mObservationTargets) {
     // 2.1 - 2.4.
-    IntersectionOutput output = Intersect(input, *target);
+    IntersectionOutput output =
+        Intersect(input, *target, isContentVisibilityObserver);
 
     // 2.5. Let targetArea be targetRect’s area.
     int64_t targetArea = (int64_t)output.mTargetRect.Width() *
@@ -761,8 +803,16 @@ void DOMIntersectionObserver::Update(Document& aDocument,
       }
     }
 
+    // If descendantScrolledIntoView, it means the target is with c-v: auto, and
+    // the content relevancy value has been set to visible before
+    // scrollIntoView. Here, we need to generate entries for them, so that the
+    // content relevancy value could be checked in the callback.
+    const bool temporarilyVisibleForScrolledIntoView =
+        isContentVisibilityObserver == IsContentVisibilityObserver::Yes &&
+        target->TemporarilyVisibleForScrolledIntoViewDescendant();
     // Steps 2.10 - 2.15.
-    if (target->UpdateIntersectionObservation(this, thresholdIndex)) {
+    if (target->UpdateIntersectionObservation(this, thresholdIndex) ||
+        temporarilyVisibleForScrolledIntoView) {
       // See https://github.com/w3c/IntersectionObserver/issues/432 about
       // why we use thresholdIndex > 0 rather than isIntersecting for the
       // entry's isIntersecting value.
@@ -771,6 +821,10 @@ void DOMIntersectionObserver::Update(Document& aDocument,
           output.mIsSimilarOrigin ? Some(output.mRootBounds) : Nothing(),
           output.mTargetRect, output.mIntersectionRect, thresholdIndex > 0,
           intersectionRatio);
+
+      if (temporarilyVisibleForScrolledIntoView) {
+        target->SetTemporarilyVisibleForScrolledIntoViewDescendant(false);
+      }
     }
   }
 }

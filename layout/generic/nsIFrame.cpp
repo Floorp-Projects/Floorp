@@ -766,6 +766,9 @@ void nsIFrame::InitPrimaryFrame() {
   if (StyleDisplay()->ContentVisibility(*this) ==
       StyleContentVisibility::Auto) {
     PresShell()->RegisterContentVisibilityAutoFrame(this);
+    auto* element = Element::FromNodeOrNull(GetContent());
+    MOZ_ASSERT(element);
+    PresContext()->Document()->ObserveForContentVisibility(*element);
   } else if (auto* element = Element::FromNodeOrNull(GetContent())) {
     element->ClearContentRelevancy();
   }
@@ -834,6 +837,13 @@ void nsIFrame::Destroy(DestroyContext& aContext) {
     // AnimationsWithDestroyedFrame only lives during the restyling process.
     if (adf) {
       adf->Put(mContent, mComputedStyle);
+    }
+  }
+
+  if (StyleDisplay()->ContentVisibility(*this) ==
+      StyleContentVisibility::Auto) {
+    if (auto* element = Element::FromNodeOrNull(GetContent())) {
+      PresContext()->Document()->UnobserveForContentVisibility(*element);
     }
   }
 

@@ -2520,6 +2520,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOnloadBlocker)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLazyLoadObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLastRememberedSizeObserver)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContentVisibilityObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMImplementation)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mImageMaps)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOrientationPendingPromise)
@@ -2636,6 +2637,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSecurityInfo)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDisplayDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLazyLoadObserver)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mContentVisibilityObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLastRememberedSizeObserver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFontFaceSet)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReadyForIdle)
@@ -16449,6 +16451,24 @@ DOMIntersectionObserver& Document::EnsureLazyLoadObserver() {
   return *mLazyLoadObserver;
 }
 
+DOMIntersectionObserver& Document::EnsureContentVisibilityObserver() {
+  if (!mContentVisibilityObserver) {
+    mContentVisibilityObserver =
+        DOMIntersectionObserver::CreateContentVisibilityObserver(*this);
+  }
+  return *mContentVisibilityObserver;
+}
+
+void Document::ObserveForContentVisibility(Element& aElement) {
+  EnsureContentVisibilityObserver().Observe(aElement);
+}
+
+void Document::UnobserveForContentVisibility(Element& aElement) {
+  if (mContentVisibilityObserver) {
+    mContentVisibilityObserver->Unobserve(aElement);
+  }
+}
+
 ResizeObserver& Document::EnsureLastRememberedSizeObserver() {
   if (!mLastRememberedSizeObserver) {
     mLastRememberedSizeObserver =
@@ -17161,42 +17181,18 @@ static void FlushLayoutForWholeBrowsingContextTree(Document& aDoc) {
   }
 }
 
-bool Document::HasContentVisibilityAutoElements() const {
-  if (PresShell* presShell = GetPresShell()) {
-    return presShell->HasContentVisibilityAutoFrames();
+void Document::NotifyResizeObservers() {
+  if (mResizeObservers.IsEmpty()) {
+    return;
   }
-  return false;
-}
 
-void Document::DetermineProximityToViewportAndNotifyResizeObservers() {
   uint32_t shallowestTargetDepth = 0;
-  bool initialResetOfScrolledIntoViewFlagsDone = false;
   while (true) {
     // Flush layout, so that any callback functions' style changes / resizes
     // get a chance to take effect. The callback functions may do changes in its
     // sub-documents or ancestors, so flushing layout for the whole browsing
     // context tree makes sure we don't miss anyone.
     FlushLayoutForWholeBrowsingContextTree(*this);
-    if (PresShell* presShell = GetPresShell()) {
-      auto result = presShell->DetermineProximityToViewport();
-      if (result.mHadInitialDetermination) {
-        continue;
-      }
-      if (result.mAnyScrollIntoViewFlag) {
-        // Not defined in the spec: It's possible that some elements with
-        // content-visibility: auto were forced to be visible in order to
-        // perform scrollIntoView() so clear their flags now and restart the
-        // loop.
-        // See https://github.com/w3c/csswg-drafts/issues/9337
-        presShell->ClearTemporarilyVisibleForScrolledIntoViewDescendantFlags();
-        presShell->ScheduleContentRelevancyUpdate(
-            ContentRelevancyReason::Visible);
-        if (!initialResetOfScrolledIntoViewFlagsDone) {
-          initialResetOfScrolledIntoViewFlagsDone = true;
-          continue;
-        }
-      }
-    }
 
     // To avoid infinite resize loop, we only gather all active observations
     // that have the depth of observed target element more than current
@@ -17207,12 +17203,6 @@ void Document::DetermineProximityToViewportAndNotifyResizeObservers() {
       break;
     }
 
-    // nsIFrame::UpdateIsRelevantContent may call ObserveForLastRememberedSize()
-    // so update the relevancy after the observations are gathered, otherwise
-    // the last remembered size observation could be a skipped one.
-    if (PresShell* presShell = GetPresShell()) {
-      presShell->UpdateRelevancyOfContentVisibilityAutoFrames();
-    }
     DebugOnly<uint32_t> oldShallowestTargetDepth = shallowestTargetDepth;
     shallowestTargetDepth = BroadcastAllActiveResizeObservations();
     NS_ASSERTION(oldShallowestTargetDepth < shallowestTargetDepth,
