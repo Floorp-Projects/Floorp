@@ -93,6 +93,152 @@ networking:
     bucket_count: 100
     histogram_type: exponential
 
+  cookie_count_total:
+    type: custom_distribution
+    description: >
+      Reports the total number of cookies in storage
+    range_min: 0
+    range_max: 4000
+    bucket_count: 22
+    histogram_type: exponential
+    unit: integer
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828942
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828942#TDB
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - edgul@mozilla.com
+    expires: 128
+
+  cookie_count_partitioned:
+    type: custom_distribution
+    description: >
+      Reports the number of partitioned cookies in storage
+    range_min: 0
+    range_max: 4000
+    bucket_count: 22
+    histogram_type: exponential
+    unit: integer
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828942
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828942#TDB
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - edgul@mozilla.com
+    expires: 128
+
+  cookie_count_unpartitioned:
+    type: custom_distribution
+    description: >
+      Reports the number of unpartitioned cookies in storage
+    range_min: 0
+    range_max: 4000
+    bucket_count: 22
+    histogram_type: exponential
+    unit: integer
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828942
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828942#TDB
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - edgul@mozilla.com
+    expires: 128
+
+  cookie_count_part_by_key:
+    type: custom_distribution
+    description: >
+      A distribution of the partitioned cookies in storage belonging to
+      a particular cookie key (host + origin attributes)
+    range_min: 1
+    range_max: 220
+    bucket_count: 10
+    histogram_type: exponential
+    unit: integer
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828942
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828942#TDB
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - edgul@mozilla.com
+    expires: 128
+
+  cookie_count_unpart_by_key:
+    type: custom_distribution 
+    description: >
+      A distribution of the unpartitioned cookies in storage belonging to
+      a particular cookie key (host + origin attributes)
+    range_min: 1
+    range_max: 220
+    bucket_count: 10
+    histogram_type: exponential
+    unit: integer
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828942
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828942#TDB
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - edgul@mozilla.com
+    expires: 128
+
+  cookie_purge_max:
+    type: custom_distribution 
+    description: >
+      A distribution of the number of cookies purged across
+      all host + OAs as a result of exceeding the cookie maximum threshold
+      (single purge)
+    range_min: 1
+    range_max: 4000 
+    bucket_count: 22
+    histogram_type: exponential
+    unit: integer
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828942
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828942#TDB
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - edgul@mozilla.com
+    expires: 128
+
+  cookie_purge_entry_max:
+    type: custom_distribution 
+    description: >
+      A distribution of the number of cookies purged for a single
+      host + OA entry as a result of exceeding the maximum threshold
+      for the given host + OA (single purge)
+    range_min: 1
+    range_max: 220
+    bucket_count: 10
+    histogram_type: exponential
+    unit: integer
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828942
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828942#TDB
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - edgul@mozilla.com
+    expires: 128
+
   dns_lookup_time:
     type: timing_distribution
     time_unit: millisecond
