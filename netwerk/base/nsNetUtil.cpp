@@ -2921,7 +2921,7 @@ static bool ShouldSecureUpgradeNoHSTS(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
                         u""_ns,  // aSourceFile
                         u""_ns,  // aScriptSample
                         0,       // aLineNumber
-                        0,       // aColumnNumber
+                        1,       // aColumnNumber
                         nsIScriptError::warningFlag,
                         "upgradeInsecureRequest"_ns, innerWindowId,
                         !!aLoadInfo->GetOriginAttributes().mPrivateBrowsingId);
