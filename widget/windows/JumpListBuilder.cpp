@@ -732,7 +732,27 @@ nsresult JumpListBuilder::GetShellLinkFromDescription(
 
   // Store the rest of the params
   hr = psl->SetPath(aDesc.mPath.get());
-  hr = psl->SetDescription(aDesc.mDescription.get());
+
+  // According to the documentation at [1], the maximum description length is
+  // INFOTIPSIZE, so we copy the const string from the description into a buffer
+  // of that maximum size. However, testing reveals that INFOTIPSIZE is still
+  // sometimes too large. MAX_PATH seems to work instead.
+  //
+  // We truncate to MAX_PATH - 1, since nsAutoString's don't include the null
+  // character in their capacity calculations, but the string for IShellLinkW
+  // description does. So by truncating to MAX_PATH - 1, the full contents of
+  // the truncated nsAutoString will be copied into the IShellLink description
+  // buffer.
+  //
+  // [1]:
+  // https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-ishelllinka-setdescription
+  nsAutoString descriptionCopy(aDesc.mDescription.get());
+  if (descriptionCopy.Length() >= MAX_PATH) {
+    descriptionCopy.Truncate(MAX_PATH - 1);
+  }
+
+  hr = psl->SetDescription(descriptionCopy.get());
+
   if (aDesc.mArguments.WasPassed() && !aDesc.mArguments.Value().IsEmpty()) {
     hr = psl->SetArguments(aDesc.mArguments.Value().get());
   } else {
