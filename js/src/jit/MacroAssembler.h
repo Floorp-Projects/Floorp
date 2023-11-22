@@ -519,7 +519,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // layout.
 
   // The size of the area used by PushRegsInMask.
-  size_t PushRegsInMaskSizeInBytes(LiveRegisterSet set)
+  static size_t PushRegsInMaskSizeInBytes(LiveRegisterSet set)
       DEFINED_ON(arm, arm64, mips32, mips64, loong64, riscv64, wasm32,
                  x86_shared);
 

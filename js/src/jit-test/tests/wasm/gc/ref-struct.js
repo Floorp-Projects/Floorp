@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled()
+// |jit-test| skip-if: !wasmGcEnabled(); test-also=--gc-zeal=2
 
 // We'll be running some binary-format tests shortly.
 

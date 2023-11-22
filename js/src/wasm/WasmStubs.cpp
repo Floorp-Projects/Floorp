@@ -631,7 +631,7 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   masm.PushRegsInMask(NonVolatileRegs);
 
   const unsigned nonVolatileRegsPushSize =
-      masm.PushRegsInMaskSizeInBytes(NonVolatileRegs);
+      MacroAssembler::PushRegsInMaskSizeInBytes(NonVolatileRegs);
 
   MOZ_ASSERT(masm.framePushed() == nonVolatileRegsPushSize);
 

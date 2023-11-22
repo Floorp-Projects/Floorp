@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled()
+// |jit-test| skip-if: !wasmGcEnabled(); test-also=--gc-zeal=2
 
 // This tests a bunch of wasm struct stuff, but not i8 or i16 fields.
 // See structs2.js for i8/i16 field tests.
@@ -704,3 +704,39 @@ function structNewOfManyFields(numFields) {
 }
 
 // FIXME: also check struct.new_default, once it is available in both compilers.
+
+// Exercise stack maps and GC
+{
+  // Zeal will cause us to allocate structs via instance call, requiring live registers
+  // to be spilled, and then GC values traced while on the stack.
+  gczeal(2, 1);
+
+  {
+    const { test } = wasmEvalText(`(module
+      (type $s (struct (field i32)))
+      (func (export "test") (param i32) (result i32)
+        local.get 0
+        (struct.new $s (i32.const 234))
+        (struct.new $s (i32.const 345))
+        drop
+        drop
+      )
+    )`).exports;
+    assertEq(test(123), 123);
+  }
+  {
+    const { test } = wasmEvalText(`(module
+      (type $s (struct (field f32)))
+      (func (export "test") (param f32) (result f32)
+        local.get 0
+        (struct.new $s (f32.const 234))
+        (struct.new $s (f32.const 345))
+        drop
+        drop
+      )
+    )`).exports;
+    assertEq(test(123), 123);
+  }
+
+  gczeal(0);
+}

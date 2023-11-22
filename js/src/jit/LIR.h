@@ -1410,6 +1410,18 @@ struct SafepointNunboxEntry {
       : typeVreg(typeVreg), type(type), payload(payload) {}
 };
 
+enum class WasmSafepointKind : uint8_t {
+  // For wasm call instructions (isCall() == true) where registers are spilled
+  // by register allocation.
+  LirCall,
+  // For wasm instructions (isCall() == false) which will spill/restore live
+  // registers manually in codegen.
+  CodegenCall,
+  // For resumable wasm traps where registers will be spilled by the trap
+  // handler.
+  Trap,
+};
+
 class LSafepoint : public TempObject {
   using SlotEntry = SafepointSlotEntry;
   using NunboxEntry = SafepointNunboxEntry;
@@ -1476,22 +1488,21 @@ class LSafepoint : public TempObject {
   SlotList wasmAnyRefSlots_;
 
   // Wasm only: with what kind of instruction is this LSafepoint associated?
-  // true => wasm trap, false => wasm call.
-  bool isWasmTrap_;
+  WasmSafepointKind wasmSafepointKind_;
 
   // Wasm only: what is the value of masm.framePushed() that corresponds to
   // the lowest-addressed word covered by the StackMap that we will generate
   // from this LSafepoint?  This depends on the instruction:
   //
-  // if isWasmTrap_ == true:
-  //    masm.framePushed() unmodified.  Note that when constructing the
-  //    StackMap we will add entries below this point to take account of
-  //    registers dumped on the stack as a result of the trap.
-  //
-  // if isWasmTrap_ == false:
+  // WasmSafepointKind::LirCall:
   //    masm.framePushed() - StackArgAreaSizeUnaligned(arg types for the call),
   //    because the map does not include the outgoing args themselves, but
   //    it does cover any and all alignment space above them.
+  //
+  // WasmSafepointKind::CodegenCall and WasmSafepointKind::Trap:
+  //    masm.framePushed() unmodified. Note that when constructing the
+  //    StackMap we will add entries below this point to take account of
+  //    registers dumped on the stack.
   uint32_t framePushedAtStackMapBase_;
 
  public:
@@ -1515,7 +1526,7 @@ class LSafepoint : public TempObject {
 #endif
         slotsOrElementsSlots_(alloc),
         wasmAnyRefSlots_(alloc),
-        isWasmTrap_(false),
+        wasmSafepointKind_(WasmSafepointKind::LirCall),
         framePushedAtStackMapBase_(0) {
     assertInvariants();
   }
@@ -1805,9 +1816,12 @@ class LSafepoint : public TempObject {
     osiCallPointOffset_ = osiCallPointOffset;
   }
 
-  bool isWasmTrap() const { return isWasmTrap_; }
-  void setIsWasmTrap() { isWasmTrap_ = true; }
+  WasmSafepointKind wasmSafepointKind() const { return wasmSafepointKind_; }
+  void setWasmSafepointKind(WasmSafepointKind kind) {
+    wasmSafepointKind_ = kind;
+  }
 
+  // See comment on framePushedAtStackMapBase_.
   uint32_t framePushedAtStackMapBase() const {
     return framePushedAtStackMapBase_;
   }

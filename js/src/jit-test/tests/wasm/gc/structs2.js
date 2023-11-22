@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !wasmGcEnabled()
+// |jit-test| skip-if: !wasmGcEnabled(); test-also=--gc-zeal=2
 
 // This tests 8- and 16-bit field accesses for structs.
 
