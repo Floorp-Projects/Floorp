@@ -46,8 +46,18 @@ message-bar::part(icon) {
 
 :host([type=analysis-in-progress]) message-bar::part(icon),
 :host([type=reanalysis-in-progress]) message-bar::part(icon) {
-  --message-bar-icon-url: url("chrome://browser/skin/fxa/fxa-spinner.svg");
-  animation: spin 1s infinite linear;
+  border: 1px solid var(--icon-color);
+  border-radius: 50%;
+}
+
+:host([type=analysis-in-progress]) message-bar::part(icon)::after,
+:host([type=reanalysis-in-progress]) message-bar::part(icon)::after {
+  --message-bar-icon-url: conic-gradient(var(--icon-color-information) var(--analysis-progress-pcent, 0%), transparent var(--analysis-progress-pcent, 0%));
+  border-radius: 50%;
+  margin-block: 1px 0;
+  margin-inline: 1px 0;
+  width: calc(var(--icon-size) - 2px);
+  height: calc(var(--icon-size) - 2px);
 }
 
 :host([type=reanalysis-in-progress]) message-bar::part(container),

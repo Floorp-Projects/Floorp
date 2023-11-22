@@ -40,6 +40,7 @@ export class ShoppingContainer extends MozLitElement {
     adsEnabled: { type: Boolean },
     adsEnabledByUser: { type: Boolean },
     isAnalysisInProgress: { type: Boolean },
+    analysisProgress: { type: Number },
     isOverflow: { type: Boolean },
   };
 
@@ -71,6 +72,7 @@ export class ShoppingContainer extends MozLitElement {
     window.document.addEventListener("adsEnabledByUserChanged", this);
     window.document.addEventListener("scroll", this);
     window.document.addEventListener("UpdateRecommendations", this);
+    window.document.addEventListener("UpdateAnalysisProgress", this);
 
     window.dispatchEvent(
       new CustomEvent("ContentReady", {
@@ -88,6 +90,7 @@ export class ShoppingContainer extends MozLitElement {
     adsEnabled,
     adsEnabledByUser,
     isAnalysisInProgress,
+    analysisProgress,
   }) {
     // If we're not opted in or there's no shopping URL in the main browser,
     // the actor will pass `null`, which means this will clear out any existing
@@ -100,10 +103,15 @@ export class ShoppingContainer extends MozLitElement {
     this.isAnalysisInProgress = isAnalysisInProgress;
     this.adsEnabled = adsEnabled;
     this.adsEnabledByUser = adsEnabledByUser;
+    this.analysisProgress = analysisProgress;
   }
 
   _updateRecommendations({ recommendationData }) {
     this.recommendationData = recommendationData;
+  }
+
+  _updateAnalysisProgress({ progress }) {
+    this.analysisProgress = progress;
   }
 
   handleEvent(event) {
@@ -145,6 +153,9 @@ export class ShoppingContainer extends MozLitElement {
       case "UpdateRecommendations":
         this._updateRecommendations(event.detail);
         break;
+      case "UpdateAnalysisProgress":
+        this._updateAnalysisProgress(event.detail);
+        break;
     }
   }
 
@@ -169,6 +180,7 @@ export class ShoppingContainer extends MozLitElement {
           type=${isReanalysis
             ? "reanalysis-in-progress"
             : "analysis-in-progress"}
+          progress=${this.analysisProgress}
         ></shopping-message-bar>
         ${isReanalysis ? this.getAnalysisDetailsTemplate() : null}`;
     }
@@ -334,6 +346,7 @@ export class ShoppingContainer extends MozLitElement {
       if (this.isAnalysisInProgress) {
         content = html`<shopping-message-bar
           type="analysis-in-progress"
+          progress=${this.analysisProgress}
         ></shopping-message-bar>`;
       } else {
         content = this.getLoadingTemplate();
