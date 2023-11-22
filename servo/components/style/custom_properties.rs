@@ -201,6 +201,8 @@ pub struct VariableValue {
     references: VarOrEnvReferences,
 }
 
+trivial_to_computed_value!(VariableValue);
+
 // For all purposes, we want values to be considered equal if their css text is equal.
 impl PartialEq for VariableValue {
     fn eq(&self, other: &Self) -> bool {
@@ -936,6 +938,7 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                         if let Ok(value) = SpecifiedRegisteredValue::compute(
                             &mut input,
                             registration,
+                            &unparsed_value.url_data,
                             self.computed_context,
                             AllowComputationallyDependent::Yes,
                         ) {
@@ -1499,6 +1502,7 @@ fn substitute_references_in_value_and_apply(
                 if let Ok(value) = SpecifiedRegisteredValue::compute(
                     &mut input,
                     registration,
+                    &computed_value.url_data,
                     computed_context,
                     AllowComputationallyDependent::Yes,
                 ) {
@@ -1621,6 +1625,7 @@ fn substitute_block<'i>(
                                 if let Err(_) = SpecifiedRegisteredValue::compute(
                                     &mut fallback_input,
                                     registration,
+                                    &partial_computed_value.url_data,
                                     computed_context,
                                     AllowComputationallyDependent::Yes,
                                 ) {
@@ -1652,6 +1657,7 @@ fn substitute_block<'i>(
                             if let Ok(fallback) = SpecifiedRegisteredValue::compute(
                                 &mut fallback_input,
                                 registration,
+                                &fallback.url_data,
                                 computed_context,
                                 AllowComputationallyDependent::Yes,
                             ) {
