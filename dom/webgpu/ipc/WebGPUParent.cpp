@@ -466,7 +466,7 @@ WebGPUParent::BufferMapData* WebGPUParent::GetBufferMapData(RawId aBufferId) {
   return &iter->second;
 }
 
-ipc::IPCResult WebGPUParent::RecvCreateBuffer(
+ipc::IPCResult WebGPUParent::RecvDeviceCreateBuffer(
     RawId aDeviceId, RawId aBufferId, dom::GPUBufferDescriptor&& aDesc,
     ipc::UnsafeSharedMemoryHandle&& aShmem) {
   webgpu::StringHelper label(aDesc.mLabel);
