@@ -713,6 +713,9 @@ bool WakeLockTopic::SwitchToNextWakeLockType() {
   return false;
 }
 
+WakeLockListener::WakeLockListener() = default;
+WakeLockListener::~WakeLockListener() = default;
+
 nsresult WakeLockListener::Callback(const nsAString& topic,
                                     const nsAString& state) {
   if (!topic.Equals(u"screen"_ns) && !topic.Equals(u"video-playing"_ns) &&
