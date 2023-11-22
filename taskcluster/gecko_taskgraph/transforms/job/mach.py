@@ -50,8 +50,9 @@ def configure_mach(config, job, taskdesc):
     if python:
         del run["python-version"]
 
-        if worker["os"] == "macosx" and python == 3:
-            python = "/usr/local/bin/python3"
+        if taskdesc.get("use-system-python"):
+            if worker["os"] == "macosx" and python == 3:
+                python = "/usr/local/bin/python3"
 
         python = str(python)
         try:
