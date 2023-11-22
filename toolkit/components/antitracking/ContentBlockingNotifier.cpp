@@ -59,7 +59,7 @@ void ReportUnblockingToConsole(
   MOZ_ASSERT(aPrincipal);
 
   nsAutoString sourceLine;
-  uint32_t lineNumber = 0, columnNumber = 0;
+  uint32_t lineNumber = 0, columnNumber = 1;
   JSContext* cx = nsContentUtils::GetCurrentJSContext();
   if (cx) {
     nsJSUtils::GetCallingLocation(cx, sourceLine, &lineNumber, &columnNumber);
@@ -149,7 +149,7 @@ void ReportBlockingToConsole(uint64_t aWindowID, nsIURI* aURI,
   }
 
   nsAutoString sourceLine;
-  uint32_t lineNumber = 0, columnNumber = 0;
+  uint32_t lineNumber = 0, columnNumber = 1;
   JSContext* cx = nsContentUtils::GetCurrentJSContext();
   if (cx) {
     nsJSUtils::GetCallingLocation(cx, sourceLine, &lineNumber, &columnNumber);

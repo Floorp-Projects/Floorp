@@ -60,7 +60,7 @@ function runTests(extraParams = "") {
     is(report.body.body.message, "TestingDeprecatedInterface is a testing-only interface and this is its testing deprecation message.", "We have a report.body.message");
     is(report.body.body.sourceFile, "https://example.org/tests/dom/reporting/tests/iframe_delivering.html", "report.body.sourceFile");
     is(report.body.body.lineNumber, 40, "report.body.lineNumber");
-    is(report.body.body.columnNumber, 4, "report.body.columnNumber");
+    is(report.body.body.columnNumber, 5, "report.body.columnNumber");
   });
 }
 

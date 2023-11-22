@@ -199,7 +199,7 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
                                intfNameChars);
 
       nsAutoString filename;
-      uint32_t lineno = 0, column = 0;
+      uint32_t lineno = 0, column = 1;
       nsJSUtils::GetCallingLocation(cx, filename, &lineno, &column);
       nsCOMPtr<nsIScriptError> error(
           do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));

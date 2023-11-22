@@ -37,7 +37,7 @@ class TimeoutHandler : public nsISupports {
   virtual void MarkForCC() {}
 
  protected:
-  TimeoutHandler() : mFileName(""), mLineNo(0), mColumn(0) {}
+  TimeoutHandler() : mFileName(""), mLineNo(0), mColumn(1) {}
   explicit TimeoutHandler(JSContext* aCx);
 
   virtual ~TimeoutHandler() = default;
