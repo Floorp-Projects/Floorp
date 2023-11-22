@@ -284,7 +284,7 @@ UniqueChars GeckoProfilerRuntime::allocProfileString(JSContext* cx,
   if (hasName || script->isFunction() || script->isForEval()) {
     lineAndColumnLength =
         SprintfLiteral(lineAndColumnStr, "%u:%u", script->lineno(),
-                       script->column().zeroOriginValue());
+                       script->column().oneOriginValue());
     hasLineAndColumn = true;
   }
 
