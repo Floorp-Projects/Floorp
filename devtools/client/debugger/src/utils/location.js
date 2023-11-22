@@ -27,10 +27,10 @@ export function createLocation({
     sourceActor,
     sourceActorId: sourceActor?.id,
 
-    // `line` is 1-based while `column` is 0-based.
+    // `line` and `column` are 1-based.
     // This data is mostly coming from and driven by
     // JSScript::lineno and JSScript::column
-    // https://searchfox.org/mozilla-central/rev/d81e60336d9f498ad3985491dc17c2b77969ade4/js/src/vm/JSScript.h#1544-1547
+    // https://searchfox.org/mozilla-central/rev/90dce6b0223b4dc17bb10f1125b44f70951585f9/js/src/vm/JSScript.h#1545-1548
     line,
     column,
   };

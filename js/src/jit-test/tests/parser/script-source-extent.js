@@ -38,7 +38,7 @@ function getScriptSourceExtent(source) {
     // to test multi-line sources, this will need to be updated.
     for (let script of scripts) {
         assertEq(script.startLine, 1);
-        assertEq(script.startColumn, script.sourceStart);
+        assertEq(script.startColumn, script.sourceStart + 1);
     }
 
     // Map each found script to a source extent string.

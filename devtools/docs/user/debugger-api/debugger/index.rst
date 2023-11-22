@@ -238,8 +238,6 @@ The functions described below may only be called with a ``this`` value referring
     The script’s ``source`` property must be equal to this value.
   ``line``
     The script must at least partially cover the given source line. If this property is present, the ``url`` property must be present as well.
-  ``column``
-    The script must include given column on the line given by the ``line`` property. If this property is present, the ``url`` and ``line`` properties must both be present as well.
   ``innermost``
     If this property is present and true, the script must be the innermost script covering the given source location; scripts of enclosing code are omitted.
   ``global``
