@@ -7307,6 +7307,14 @@ void LIRGenerator::visitWasmRefIsSubtypeOfConcrete(
          ins);
 }
 
+void LIRGenerator::visitWasmNewStructObject(MWasmNewStructObject* ins) {
+  LWasmNewStructObject* lir = new (alloc())
+      LWasmNewStructObject(useFixed(ins->instance(), InstanceReg),
+                           useRegister(ins->typeDefData()), temp(), temp());
+  define(lir, ins);
+  assignWasmSafepoint(lir);
+}
+
 #ifdef FUZZING_JS_FUZZILLI
 void LIRGenerator::visitFuzzilliHash(MFuzzilliHash* ins) {
   MDefinition* value = ins->getOperand(0);

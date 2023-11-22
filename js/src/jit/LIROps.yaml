@@ -323,6 +323,14 @@
 - name: WasmRefIsSubtypeOfAbstractAndBranch
   gen_boilerplate: false
 
+- name: WasmNewStructObject
+  mir_op: true
+  operands:
+    instance: WordSized
+    typeDefData: WordSized
+  result_type: WordSized
+  num_temps: 2
+
 - name: WasmReinterpret
   gen_boilerplate: false
 

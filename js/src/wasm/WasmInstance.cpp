@@ -2013,6 +2013,10 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
   debugFilter_ = nullptr;
   addressOfNeedsIncrementalBarrier_ =
       cx->compartment()->zone()->addressOfNeedsIncrementalBarrier();
+  addressOfNurseryPosition_ = cx->nursery().addressOfPosition();
+#ifdef JS_GC_ZEAL
+  addressOfGCZealModeBits_ = cx->runtime()->gc.addressOfZealModeBits();
+#endif
 
   // Initialize type definitions in the instance data.
   const SharedTypeContext& types = metadata().types;

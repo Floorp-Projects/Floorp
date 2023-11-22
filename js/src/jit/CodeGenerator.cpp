@@ -17607,6 +17607,96 @@ void CodeGenerator::visitWasmRefIsSubtypeOfConcreteAndBranch(
   masm.jump(onFail);
 }
 
+void CodeGenerator::callWasmStructAllocFun(LInstruction* lir,
+                                           wasm::SymbolicAddress fun,
+                                           Register typeDefData,
+                                           Register output) {
+  masm.Push(InstanceReg);
+  int32_t framePushedAfterInstance = masm.framePushed();
+  saveLive(lir);
+
+  masm.setupWasmABICall();
+  masm.passABIArg(InstanceReg);
+  masm.passABIArg(typeDefData);
+  int32_t instanceOffset = masm.framePushed() - framePushedAfterInstance;
+  CodeOffset offset =
+      masm.callWithABI(wasm::BytecodeOffset(0), fun,
+                       mozilla::Some(instanceOffset), MoveOp::GENERAL);
+  masm.storeCallPointerResult(output);
+
+  markSafepointAt(offset.offset(), lir);
+  lir->safepoint()->setFramePushedAtStackMapBase(framePushedAfterInstance);
+  lir->safepoint()->setWasmSafepointKind(WasmSafepointKind::CodegenCall);
+
+  restoreLive(lir);
+  masm.Pop(InstanceReg);
+#if JS_CODEGEN_ARM64
+  masm.syncStackPtr();
+#endif
+}
+
+// Out-of-line path to allocate wasm GC structs
+class OutOfLineWasmNewStruct : public OutOfLineCodeBase<CodeGenerator> {
+  LInstruction* lir_;
+  wasm::SymbolicAddress fun_;
+  Register typeDefData_;
+  Register output_;
+
+ public:
+  OutOfLineWasmNewStruct(LInstruction* lir, wasm::SymbolicAddress fun,
+                         Register typeDefData, Register output)
+      : lir_(lir), fun_(fun), typeDefData_(typeDefData), output_(output) {}
+
+  void accept(CodeGenerator* codegen) override {
+    codegen->visitOutOfLineWasmNewStruct(this);
+  }
+
+  LInstruction* lir() const { return lir_; }
+  wasm::SymbolicAddress fun() const { return fun_; }
+  Register typeDefData() const { return typeDefData_; }
+  Register output() const { return output_; }
+};
+
+void CodeGenerator::visitOutOfLineWasmNewStruct(OutOfLineWasmNewStruct* ool) {
+  callWasmStructAllocFun(ool->lir(), ool->fun(), ool->typeDefData(),
+                         ool->output());
+  masm.jump(ool->rejoin());
+}
+
+void CodeGenerator::visitWasmNewStructObject(LWasmNewStructObject* lir) {
+  MOZ_ASSERT(gen->compilingWasm());
+
+  MWasmNewStructObject* mir = lir->mir();
+
+  Register typeDefData = ToRegister(lir->typeDefData());
+  Register output = ToRegister(lir->output());
+
+  if (mir->isOutline()) {
+    wasm::SymbolicAddress fun = mir->zeroFields()
+                                    ? wasm::SymbolicAddress::StructNewOOL_true
+                                    : wasm::SymbolicAddress::StructNewOOL_false;
+    callWasmStructAllocFun(lir, fun, typeDefData, output);
+  } else {
+    wasm::SymbolicAddress fun = mir->zeroFields()
+                                    ? wasm::SymbolicAddress::StructNewIL_true
+                                    : wasm::SymbolicAddress::StructNewIL_false;
+
+    Register instance = ToRegister(lir->instance());
+    MOZ_ASSERT(instance == InstanceReg);
+
+    auto ool =
+        new (alloc()) OutOfLineWasmNewStruct(lir, fun, typeDefData, output);
+    addOutOfLineCode(ool, lir->mir());
+
+    Register temp1 = ToRegister(lir->temp0());
+    Register temp2 = ToRegister(lir->temp1());
+    masm.wasmNewStructObject(instance, output, typeDefData, temp1, temp2,
+                             ool->entry(), mir->allocKind(), mir->zeroFields());
+
+    masm.bind(ool->rejoin());
+  }
+}
+
 void CodeGenerator::visitWasmHeapReg(LWasmHeapReg* ins) {
 #ifdef WASM_HAS_HEAPREG
   masm.movePtr(HeapReg, ToRegister(ins->output()));

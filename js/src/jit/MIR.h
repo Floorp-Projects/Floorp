@@ -11512,6 +11512,32 @@ class MWasmRefIsSubtypeOfConcrete : public MBinaryInstruction,
   MDefinition* foldsTo(TempAllocator& alloc) override;
 };
 
+class MWasmNewStructObject : public MBinaryInstruction,
+                             public NoTypePolicy::Data {
+ private:
+  bool isOutline_;
+  bool zeroFields_;
+  gc::AllocKind allocKind_;
+
+  MWasmNewStructObject(MDefinition* instance, MDefinition* typeDefData,
+                       bool isOutline, bool zeroFields, gc::AllocKind allocKind)
+      : MBinaryInstruction(classOpcode, instance, typeDefData),
+        isOutline_(isOutline),
+        zeroFields_(zeroFields),
+        allocKind_(allocKind) {
+    setResultType(MIRType::WasmAnyRef);
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmNewStructObject)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, instance), (1, typeDefData))
+
+  bool isOutline() const { return isOutline_; }
+  bool zeroFields() const { return zeroFields_; }
+  gc::AllocKind allocKind() const { return allocKind_; }
+};
+
 #ifdef FUZZING_JS_FUZZILLI
 class MFuzzilliHash : public MUnaryInstruction, public NoTypePolicy::Data {
   explicit MFuzzilliHash(MDefinition* obj)

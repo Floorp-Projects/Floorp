@@ -601,6 +601,8 @@ static bool IsNurseryAllocEnabled(CompileZone* zone, JS::TraceKind kind) {
   }
 }
 
+// This function handles nursery allocations for JS. For wasm, see
+// MacroAssembler::wasmBumpPointerAllocate.
 void MacroAssembler::bumpPointerAllocate(Register result, Register temp,
                                          Label* fail, CompileZone* zone,
                                          JS::TraceKind traceKind, uint32_t size,
@@ -6418,6 +6420,98 @@ void MacroAssembler::branchObjectIsWasmGcObject(bool isGcObject, Register src,
   and32(Imm32(ShiftedMask), scratch);
   branch32(isGcObject ? Assembler::Equal : Assembler::NotEqual, scratch,
            Imm32(ShiftedKind), label);
+}
+
+void MacroAssembler::wasmNewStructObject(Register instance, Register result,
+                                         Register typeDefData, Register temp1,
+                                         Register temp2, Label* fail,
+                                         gc::AllocKind allocKind,
+                                         bool zeroFields) {
+  // Don't execute the inline path if GC probes are built in.
+#ifdef JS_GC_PROBES
+  jump(fail);
+#endif
+
+#ifdef JS_GC_ZEAL
+  // Don't execute the inline path if gc zeal or tracing are active.
+  loadPtr(Address(instance, wasm::Instance::offsetOfAddressOfGCZealModeBits()),
+          temp1);
+  loadPtr(Address(temp1, 0), temp1);
+  branch32(Assembler::NotEqual, temp1, Imm32(0), fail);
+#endif
+
+  // If the alloc site is long lived, immediately fall back to the OOL path,
+  // which will handle that.
+  loadPtr(Address(typeDefData, wasm::TypeDefInstanceData::offsetOfAllocSite()),
+          temp1);
+  branchTestPtr(Assembler::NonZero,
+                Address(temp1, gc::AllocSite::offsetOfScriptAndState()),
+                Imm32(gc::AllocSite::LONG_LIVED_BIT), fail);
+
+  size_t sizeBytes = gc::Arena::thingSize(allocKind);
+  wasmBumpPointerAllocate(instance, result, typeDefData, temp1, temp2, fail,
+                          sizeBytes);
+  loadPtr(Address(typeDefData, wasm::TypeDefInstanceData::offsetOfShape()),
+          temp1);
+  loadPtr(Address(typeDefData,
+                  wasm::TypeDefInstanceData::offsetOfSuperTypeVector()),
+          temp2);
+  storePtr(temp1, Address(result, WasmStructObject::offsetOfShape()));
+  storePtr(temp2, Address(result, WasmStructObject::offsetOfSuperTypeVector()));
+  storePtr(ImmWord(0),
+           Address(result, WasmStructObject::offsetOfOutlineData()));
+
+  if (zeroFields) {
+    MOZ_ASSERT(sizeBytes % sizeof(void*) == 0);
+    for (size_t i = WasmStructObject::offsetOfInlineData(); i < sizeBytes;
+         i += sizeof(void*)) {
+      storePtr(ImmWord(0), Address(result, i));
+    }
+  }
+}
+
+// This function handles nursery allocations for wasm. For JS, see
+// MacroAssembler::bumpPointerAllocate.
+void MacroAssembler::wasmBumpPointerAllocate(Register instance, Register result,
+                                             Register typeDefData,
+                                             Register temp1, Register temp2,
+                                             Label* fail, uint32_t size) {
+  MOZ_ASSERT(size >= gc::MinCellSize);
+
+  uint32_t totalSize = size + Nursery::nurseryCellHeaderSize();
+  MOZ_ASSERT(totalSize < INT32_MAX, "Nursery allocation too large");
+  MOZ_ASSERT(totalSize % gc::CellAlignBytes == 0);
+
+  int32_t endOffset = Nursery::offsetOfCurrentEndFromPosition();
+
+  // Bail to OOL code if the alloc site needs to be initialized. Keep allocCount
+  // in temp2 for later.
+  computeEffectiveAddress(
+      Address(typeDefData, wasm::TypeDefInstanceData::offsetOfAllocSite()),
+      temp1);
+  load32(Address(temp1, gc::AllocSite::offsetOfNurseryAllocCount()), temp2);
+  branch32(Assembler::Equal, temp2, Imm32(0), fail);
+
+  // Bump allocate in the nursery, bailing if there is not enough room.
+  loadPtr(Address(instance, wasm::Instance::offsetOfAddressOfNurseryPosition()),
+          temp1);
+  loadPtr(Address(temp1, 0), result);
+  addPtr(Imm32(totalSize), result);
+  branchPtr(Assembler::Below, Address(temp1, endOffset), result, fail);
+  storePtr(result, Address(temp1, 0));
+  subPtr(Imm32(size), result);
+
+  // Increment the alloc count in the allocation site and store pointer in the
+  // nursery cell header. See NurseryCellHeader::MakeValue.
+  computeEffectiveAddress(
+      Address(typeDefData, wasm::TypeDefInstanceData::offsetOfAllocSite()),
+      temp1);
+  add32(Imm32(1), temp2);
+  store32(temp2, Address(temp1, gc::AllocSite::offsetOfNurseryAllocCount()));
+  // Because JS::TraceKind::Object is zero, there is no need to explicitly set
+  // it in the nursery cell header.
+  static_assert(int(JS::TraceKind::Object) == 0);
+  storePtr(temp1, Address(result, -js::Nursery::nurseryCellHeaderSize()));
 }
 
 // Unboxing is branchy and contorted because of Spectre mitigations - we don't

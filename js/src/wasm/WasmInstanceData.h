@@ -69,7 +69,7 @@ struct TypeDefInstanceData {
   GCPtr<Shape*> shape;
   const JSClass* clasp;
   // The allocation site for GC types. This is used for pre-tenuring.
-  gc::AllocSite allocSite;
+  alignas(8) gc::AllocSite allocSite;
   gc::AllocKind allocKind;
 
   // This union is only meaningful for structs and arrays, and should
@@ -88,6 +88,16 @@ struct TypeDefInstanceData {
     uint32_t arrayElemSize;
     uint32_t unused;
   };
+
+  static constexpr size_t offsetOfShape() {
+    return offsetof(TypeDefInstanceData, shape);
+  }
+  static constexpr size_t offsetOfSuperTypeVector() {
+    return offsetof(TypeDefInstanceData, superTypeVector);
+  }
+  static constexpr size_t offsetOfAllocSite() {
+    return offsetof(TypeDefInstanceData, allocSite);
+  }
 };
 
 // FuncImportInstanceData describes the region of wasm global memory allocated

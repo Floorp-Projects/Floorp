@@ -118,7 +118,7 @@ class WasmGcObject : public JSObject {
     return *superTypeVector_;
   }
 
-  static size_t offsetOfSuperTypeVector() {
+  static constexpr size_t offsetOfSuperTypeVector() {
     return offsetof(WasmGcObject, superTypeVector_);
   }
 

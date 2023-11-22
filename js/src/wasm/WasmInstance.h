@@ -197,6 +197,13 @@ class alignas(16) Instance {
   // Pointer that should be freed (due to padding before the Instance).
   void* allocatedBase_;
 
+  // Fields from the JS context for memory allocation, stashed on the instance
+  // so it can be accessed from JIT code.
+  const void* addressOfNurseryPosition_;
+#ifdef JS_GC_ZEAL
+  const void* addressOfGCZealModeBits_;
+#endif
+
   // The data must be the last field.  Globals for the module start here
   // and are inline in this structure.  16-byte alignment is required for SIMD
   // data.
@@ -303,6 +310,14 @@ class alignas(16) Instance {
   static constexpr size_t offsetInData(size_t offset) {
     return offsetOfData() + offset;
   }
+  static constexpr size_t offsetOfAddressOfNurseryPosition() {
+    return offsetof(Instance, addressOfNurseryPosition_);
+  }
+#ifdef JS_GC_ZEAL
+  static constexpr size_t offsetOfAddressOfGCZealModeBits() {
+    return offsetof(Instance, addressOfGCZealModeBits_);
+  }
+#endif
 
   JSContext* cx() const { return cx_; }
   void* debugTrapHandler() const { return debugTrapHandler_; }
