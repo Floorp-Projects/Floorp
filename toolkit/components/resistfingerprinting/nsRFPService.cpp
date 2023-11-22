@@ -1440,7 +1440,7 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
       aFilename = nsDependentCString(file);
     }
   }
-  aColumnNum = columnNum.zeroOriginValue();
+  aColumnNum = columnNum.oneOriginValue();
 }
 
 /* static */ void nsRFPService::MaybeReportCanvasFingerprinter(

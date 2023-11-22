@@ -35,7 +35,7 @@ function test_deprecatedInterface() {
         "We have a sourceFile"
       );
       is(report.body.lineNumber, 48, "We have a lineNumber");
-      is(report.body.columnNumber, 23, "We have a columnNumber");
+      is(report.body.columnNumber, 24, "We have a columnNumber");
 
       obs.disconnect();
       resolve();
@@ -87,7 +87,7 @@ function test_deprecatedMethod() {
         "We have a sourceFile"
       );
       is(report.body.lineNumber, 100, "We have a lineNumber");
-      is(report.body.columnNumber, 21, "We have a columnNumber");
+      is(report.body.columnNumber, 22, "We have a columnNumber");
 
       obs.disconnect();
       resolve();
@@ -168,7 +168,7 @@ function test_deprecatedAttribute() {
         "We have a sourceFile"
       );
       is(report.body.lineNumber, 181, "We have a lineNumber");
-      is(report.body.columnNumber, 7, "We have a columnNumber");
+      is(report.body.columnNumber, 8, "We have a columnNumber");
 
       obs.disconnect();
       resolve();
