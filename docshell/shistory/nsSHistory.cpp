@@ -1641,8 +1641,8 @@ void nsSHistory::GloballyEvictContentViewers() {
     //   * history.pushState or hash navigations, in which case a copy of the
     //     content viewer should exist within the range, or
     //
-    //   * bugs which cause us not to call nsSHistory::EvictContentViewers()
-    //     often enough.  Once we do call EvictContentViewers() for the
+    //   * bugs which cause us not to call nsSHistory::EvictDocumentViewers()
+    //     often enough.  Once we do call EvictDocumentViewers() for the
     //     SHistory object in question, we'll do a full search of its history
     //     and evict the out-of-range content viewers, so we don't bother here.
     //

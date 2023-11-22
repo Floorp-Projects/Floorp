@@ -26,7 +26,7 @@ class nsSHEntry : public nsISHEntry, public nsSupportsWeakReference {
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHENTRY
 
-  virtual void EvictContentViewer();
+  virtual void EvictDocumentViewer();
 
   static nsresult Startup();
   static void Shutdown();
