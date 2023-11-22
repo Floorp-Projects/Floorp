@@ -55,6 +55,7 @@ parent:
   async BufferUnmap(RawId deviceId, RawId bufferId, bool flush);
   async BufferDestroy(RawId selfId);
   async BufferDrop(RawId selfId);
+  async TextureDestroy(RawId selfId, RawId deviceId);
   async TextureDrop(RawId selfId);
   async TextureViewDrop(RawId selfId);
   async SamplerDrop(RawId selfId);

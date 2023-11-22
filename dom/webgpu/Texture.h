@@ -56,7 +56,6 @@ class Texture final : public ObjectBase, public ChildOf<Device> {
   already_AddRefed<TextureView> CreateView(
       const dom::GPUTextureViewDescriptor& aDesc);
   void Destroy();
-  void ForceDestroy();
 
   uint32_t Width() const { return mSize.width; }
   uint32_t Height() const { return mSize.height; }
