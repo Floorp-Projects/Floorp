@@ -2,10 +2,7 @@ use super::{
     COMPONENT_SORT, CORE_MODULE_SORT, CORE_SORT, FUNCTION_SORT, INSTANCE_SORT, TYPE_SORT,
     VALUE_SORT,
 };
-use crate::{
-    encode_section, AsComponentExternName, ComponentSection, ComponentSectionId, ComponentTypeRef,
-    Encode,
-};
+use crate::{encode_section, ComponentSection, ComponentSectionId, ComponentTypeRef, Encode};
 
 /// Represents the kind of an export from a WebAssembly component.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -55,12 +52,11 @@ impl Encode for ComponentExportKind {
 /// # Example
 ///
 /// ```rust
-/// use wasm_encoder::{Component, ComponentExportSection, ComponentExportKind, ComponentExternName};
+/// use wasm_encoder::{Component, ComponentExportSection, ComponentExportKind};
 ///
 /// // This exports a function named "foo"
 /// let mut exports = ComponentExportSection::new();
-/// let name = ComponentExternName::Kebab("foo");
-/// exports.export(name, ComponentExportKind::Func, 0, None);
+/// exports.export("foo", ComponentExportKind::Func, 0, None);
 ///
 /// let mut component = Component::new();
 /// component.section(&exports);
@@ -92,12 +88,13 @@ impl ComponentExportSection {
     /// Define an export in the export section.
     pub fn export(
         &mut self,
-        name: impl AsComponentExternName,
+        name: &str,
         kind: ComponentExportKind,
         index: u32,
         ty: Option<ComponentTypeRef>,
     ) -> &mut Self {
-        name.as_component_extern_name().encode(&mut self.bytes);
+        crate::component::imports::push_extern_name_byte(&mut self.bytes, name);
+        name.encode(&mut self.bytes);
         kind.encode(&mut self.bytes);
         index.encode(&mut self.bytes);
         match ty {

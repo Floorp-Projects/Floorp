@@ -44,6 +44,12 @@ enum Subsection {
     Global = 7,
     Element = 8,
     Data = 9,
+
+    // https://github.com/WebAssembly/gc/issues/193
+    Field = 10,
+
+    // https://github.com/WebAssembly/exception-handling/pull/213
+    Tag = 11,
 }
 
 impl NameSection {
@@ -74,7 +80,7 @@ impl NameSection {
         names.encode(&mut self.bytes);
     }
 
-    /// Appends a subsection for the names of locals within functions in the
+    /// Appends a subsection for the names of locals within functions in this
     /// wasm module.
     ///
     /// This section should come after the function name subsection (if present)
@@ -84,7 +90,7 @@ impl NameSection {
         names.encode(&mut self.bytes);
     }
 
-    /// Appends a subsection for the names of labels within functions in the
+    /// Appends a subsection for the names of labels within functions in this
     /// wasm module.
     ///
     /// This section should come after the local name subsection (if present)
@@ -141,9 +147,28 @@ impl NameSection {
 
     /// Appends a subsection for the names of all data in this wasm module.
     ///
-    /// This section should come after the element name subsection (if present).
+    /// This section should come after the element name subsection (if present)
+    /// and before the field subsection (if present).
     pub fn data(&mut self, names: &NameMap) {
         self.subsection_header(Subsection::Data, names.size());
+        names.encode(&mut self.bytes);
+    }
+
+    /// Appends a subsection for the names of fields within types in this
+    /// wasm module.
+    ///
+    /// This section should come after the data name subsection (if present)
+    /// and before the tag subsection (if present).
+    pub fn fields(&mut self, names: &IndirectNameMap) {
+        self.subsection_header(Subsection::Field, names.size());
+        names.encode(&mut self.bytes);
+    }
+
+    /// Appends a subsection for the names of all tags in this wasm module.
+    ///
+    /// This section should come after the field name subsection (if present).
+    pub fn tags(&mut self, names: &NameMap) {
+        self.subsection_header(Subsection::Tag, names.size());
         names.encode(&mut self.bytes);
     }
 

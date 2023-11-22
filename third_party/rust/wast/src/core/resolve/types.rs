@@ -140,7 +140,8 @@ impl<'a> Expander<'a> {
             | Instruction::If(bt)
             | Instruction::Loop(bt)
             | Instruction::Let(LetType { block: bt, .. })
-            | Instruction::Try(bt) => {
+            | Instruction::Try(bt)
+            | Instruction::TryTable(TryTable { block: bt, .. }) => {
                 // No expansion necessary, a type reference is already here.
                 // We'll verify that it's the same as the inline type, if any,
                 // later.

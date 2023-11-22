@@ -393,7 +393,9 @@ pub mod kw {
     custom_keyword!(block);
     custom_keyword!(borrow);
     custom_keyword!(catch);
+    custom_keyword!(catch_ref);
     custom_keyword!(catch_all);
+    custom_keyword!(catch_all_ref);
     custom_keyword!(code);
     custom_keyword!(component);
     custom_keyword!(data);
@@ -404,6 +406,8 @@ pub mod kw {
     custom_keyword!(elem);
     custom_keyword!(end);
     custom_keyword!(tag);
+    custom_keyword!(exn);
+    custom_keyword!(exnref);
     custom_keyword!(export);
     custom_keyword!(r#extern = "extern");
     custom_keyword!(externref);
@@ -525,6 +529,8 @@ pub mod kw {
     custom_keyword!(needed);
     custom_keyword!(export_info = "export-info");
     custom_keyword!(import_info = "import-info");
+    custom_keyword!(thread);
+    custom_keyword!(wait);
 }
 
 /// Common annotations used to parse WebAssembly text files.
