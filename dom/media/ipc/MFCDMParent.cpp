@@ -705,6 +705,65 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
     }
   }
 
+  static auto RequireClearLead = [](const nsString& aKeySystem) {
+    if (aKeySystem.EqualsLiteral(kWidevineExperiment2KeySystemName)) {
+      return true;
+    }
+    return false;
+  };
+
+  // For key system requires clearlead, every codec needs to have clear support.
+  // If not, then we will remove the codec from supported codec.
+  if (RequireClearLead(mKeySystem)) {
+    for (const auto& schme : capabilities.encryptionSchemes()) {
+      nsTArray<KeySystemConfig::EMECodecString> noClearLeadCodecs;
+      for (const auto& codec : supportedVideoCodecs) {
+        nsAutoString additionalFeature(u"encryption-type=");
+        // If we don't specify 'encryption-iv-size', it would use 8 bytes IV as
+        // default [1]. If it's not supported, then we will try 16 bytes later.
+        // Since PlayReady 4.0 [2], 8 and 16 bytes IV are both supported. But
+        // We're not sure if Widevine supports both or not.
+        // [1]
+        // https://learn.microsoft.com/en-us/windows/win32/api/mfmediaengine/nf-mfmediaengine-imfextendeddrmtypesupport-istypesupportedex
+        // [2]
+        // https://learn.microsoft.com/en-us/playready/packaging/content-encryption-modes#initialization-vectors-ivs
+        if (schme == CryptoScheme::Cenc) {
+          additionalFeature.AppendLiteral(u"cenc-clearlead,");
+        } else {
+          additionalFeature.AppendLiteral(u"cbcs-clearlead,");
+        }
+        bool rv =
+            FactorySupports(mFactory, mKeySystem, convertCodecToFourCC(codec),
+                            nsCString(""), additionalFeature, aIsHWSecure);
+        MFCDM_PARENT_LOG("clearlead %s IV 8 bytes %s %s",
+                         CryptoSchemeToString(schme), codec.get(),
+                         rv ? "supported" : "not supported");
+        if (rv) {
+          continue;
+        }
+        // Try 16 bytes IV.
+        additionalFeature.AppendLiteral(u"encryption-iv-size=16,");
+        rv = FactorySupports(mFactory, mKeySystem, convertCodecToFourCC(codec),
+                             nsCString(""), additionalFeature, aIsHWSecure);
+        MFCDM_PARENT_LOG("clearlead %s IV 16 bytes %s %s",
+                         CryptoSchemeToString(schme), codec.get(),
+                         rv ? "supported" : "not supported");
+        // Failed on both, so remove the codec from supported codec.
+        if (!rv) {
+          noClearLeadCodecs.AppendElement(codec);
+        }
+      }
+      for (const auto& codec : noClearLeadCodecs) {
+        MFCDM_PARENT_LOG("%s: -video:%s", __func__, codec.get());
+        capabilities.videoCapabilities().RemoveElementsBy(
+            [&codec](const MFCDMMediaCapability& aCapbilities) {
+              return aCapbilities.contentType() == NS_ConvertUTF8toUTF16(codec);
+            });
+        supportedVideoCodecs.RemoveElement(codec);
+      }
+    }
+  }
+
   // TODO: don't hardcode
   capabilities.initDataTypes().AppendElement(u"keyids");
   capabilities.initDataTypes().AppendElement(u"cenc");
