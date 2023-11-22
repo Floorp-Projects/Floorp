@@ -2242,8 +2242,11 @@ void nsRefreshDriver::UpdateRelevancyOfContentVisibilityAutoFrames() {
   mNeedToUpdateContentRelevancy = false;
 }
 
-void nsRefreshDriver::DetermineProximityToViewportAndNotifyResizeObservers() {
-  AUTO_PROFILER_LABEL_RELEVANT_FOR_JS("Update the rendering: step 14", LAYOUT);
+void nsRefreshDriver::NotifyResizeObservers() {
+  AUTO_PROFILER_LABEL_RELEVANT_FOR_JS("Notify ResizeObserver", LAYOUT);
+  if (!mNeedToUpdateResizeObservers) {
+    return;
+  }
   // NotifyResizeObservers might re-schedule us for next tick.
   mNeedToUpdateResizeObservers = false;
 
@@ -2252,19 +2255,17 @@ void nsRefreshDriver::DetermineProximityToViewportAndNotifyResizeObservers() {
   }
 
   AutoTArray<RefPtr<Document>, 32> documents;
-  if (mPresContext->Document()->HasResizeObservers() ||
-      mPresContext->Document()->HasContentVisibilityAutoElements()) {
+  if (mPresContext->Document()->HasResizeObservers()) {
     documents.AppendElement(mPresContext->Document());
   }
 
   mPresContext->Document()->CollectDescendantDocuments(
       documents, [](const Document* document) -> bool {
-        return document->HasResizeObservers() ||
-               document->HasContentVisibilityAutoElements();
+        return document->HasResizeObservers();
       });
 
   for (const RefPtr<Document>& doc : documents) {
-    MOZ_KnownLive(doc)->DetermineProximityToViewportAndNotifyResizeObservers();
+    MOZ_KnownLive(doc)->NotifyResizeObservers();
   }
 }
 
@@ -2747,6 +2748,15 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
     pm->UpdatePopupPositions(this);
   }
 
+  // Notify resize observers if any, see
+  // https://html.spec.whatwg.org/#update-the-rendering step 14.
+  NotifyResizeObservers();
+  if (MOZ_UNLIKELY(!mPresContext || !mPresContext->GetPresShell())) {
+    // A resize observer callback apparently destroyed our PresContext.
+    StopTimer();
+    return;
+  }
+
   // Update the relevancy of the content of any `content-visibility: auto`
   // elements. The specification says: "Specifically, such changes will
   // take effect between steps 13 and 14 of Update the Rendering step of
@@ -2754,16 +2764,6 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
   // “run the update intersection observations steps”)."
   // https://drafts.csswg.org/css-contain/#cv-notes
   UpdateRelevancyOfContentVisibilityAutoFrames();
-
-  // Step 14 (https://html.spec.whatwg.org/#update-the-rendering).
-  // 1) Initial proximity to the viewport determination for
-  // content-visibility:auto elements and 2) Resize observers notifications.
-  DetermineProximityToViewportAndNotifyResizeObservers();
-  if (MOZ_UNLIKELY(!mPresContext || !mPresContext->GetPresShell())) {
-    // A resize observer callback apparently destroyed our PresContext.
-    StopTimer();
-    return;
-  }
 
   UpdateIntersectionObservations(aNowTime);
 
