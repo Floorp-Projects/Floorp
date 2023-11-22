@@ -28,7 +28,8 @@ interface nsIExpatSink : nsISupports
    *        present in aAtts.
    * @param aAttsCount the number of elements in aAtts.
    * @param aLineNumber the line number of the start tag in the data stream.
-   * @param aColumnNumber the column number of the start tag in the data stream.
+   * @param aColumnNumber the 0-origin column number of the start tag in the
+   *        data stream.
    */
   void HandleStartElement(in wstring aName,
                           [array, size_is(aAttsCount)] in wstring aAtts,
