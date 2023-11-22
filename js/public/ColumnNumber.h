@@ -5,9 +5,15 @@
 
 // [SMDOC] Column numbers
 //
-// Inside SpiderMonkey, column numbers are represented as 32-bit unsigned
-// integers, either with 0-origin or 1-origin. Also, some parts of the engine
-// use the highest bit of a column number as a tag to indicate Wasm frame.
+// Inside SpiderMonkey, column numbers are represented as 1-origin 32-bit
+// unsigned integers. Some parts of the engine use the highest bit of a column
+// number as a tag to indicate Wasm frame.
+//
+// These classes help clarifying the origin of the column number, and also
+// figuring out whether the column number uses the wasm's tag or not, and also
+// help converting between them.
+//
+// Also these classes support converting from 0-origin column number.
 //
 // In a 0-origin context, column 0 is the first character of the line.
 // In a 1-origin context, column 1 is the first character of the line,
@@ -17,15 +23,6 @@
 //           ^              ^
 // 0-origin: 0              15
 // 1-origin: 1              16
-//
-// The column 0 in 1-origin is an invalid sentinel value used in some places,
-// such as differential testing (bug 1848467).
-//
-// These classes help figuring out which origin and tag the column number
-// uses, and also help converting between them.
-//
-// Eventually all SpiderMonkey API and internal use should switch to 1-origin
-// (bug 1144340).
 
 #ifndef js_ColumnNumber_h
 #define js_ColumnNumber_h
@@ -51,7 +48,6 @@ struct WasmFunctionIndex {
   // information can be used to synthesize a proper wasm frame. But when raw
   // column numbers are handed out, we just fix them to the first column to
   // avoid confusion.
-  static constexpr uint32_t DefaultBinarySourceColumnNumberZeroOrigin = 0;
   static constexpr uint32_t DefaultBinarySourceColumnNumberOneOrigin = 1;
 
  private:
@@ -233,12 +229,6 @@ struct MaybeLimitedColumnNumber {
     return value_ >= rhs.value_;
   }
 
-  // Convert between origins.
-  uint32_t zeroOriginValue() const {
-    MOZ_ASSERT(valid());
-
-    return value_ - 1;
-  }
   uint32_t oneOriginValue() const {
     MOZ_ASSERT(valid());
 
@@ -412,11 +402,6 @@ struct TaggedColumnNumberOneOrigin {
     return WasmFunctionIndex(value_ & ~WasmFunctionTag);
   }
 
-  uint32_t zeroOriginValue() const {
-    return isWasmFunctionIndex()
-               ? WasmFunctionIndex::DefaultBinarySourceColumnNumberZeroOrigin
-               : toLimitedColumnNumber().zeroOriginValue();
-  }
   uint32_t oneOriginValue() const {
     return isWasmFunctionIndex()
                ? WasmFunctionIndex::DefaultBinarySourceColumnNumberOneOrigin
