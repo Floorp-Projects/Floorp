@@ -580,9 +580,9 @@ class nsDocShell final : public nsDocLoader,
       bool aTryToSaveOldPresentation = true, bool aCheckPermitUnload = true,
       mozilla::dom::WindowGlobalChild* aActor = nullptr);
 
-  nsresult CreateContentViewer(const nsACString& aContentType,
-                               nsIRequest* aRequest,
-                               nsIStreamListener** aContentHandler);
+  nsresult CreateDocumentViewer(const nsACString& aContentType,
+                                nsIRequest* aRequest,
+                                nsIStreamListener** aContentHandler);
 
   nsresult NewContentViewerObj(const nsACString& aContentType,
                                nsIRequest* aRequest, nsILoadGroup* aLoadGroup,
@@ -1235,7 +1235,7 @@ class nsDocShell final : public nsDocLoader,
   nsCOMPtr<nsIURI> mLoadingURI;
 
   // Set in LoadErrorPage from the method argument and used later
-  // in CreateContentViewer. We have to delay an shistory entry creation
+  // in CreateDocumentViewer. We have to delay an shistory entry creation
   // for which these objects are needed.
   nsCOMPtr<nsIURI> mFailedURI;
   nsCOMPtr<nsIChannel> mFailedChannel;
@@ -1324,7 +1324,7 @@ class nsDocShell final : public nsDocLoader,
 
   bool mIsExecutingOnLoadHandler : 1;
 
-  // Indicates to CreateContentViewer() that it is safe to cache the old
+  // Indicates to CreateDocumentViewer() that it is safe to cache the old
   // presentation of the page, and to SetupNewViewer() that the old viewer
   // should be passed a SHEntry to save itself into.
   // Only used with SHIP disabled.
