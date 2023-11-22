@@ -1610,6 +1610,9 @@ class WorkerPrivate final
   bool mShutdownTasksRun MOZ_GUARDED_BY(mMutex) = false;
 
   bool mCCFlagSaysEligible MOZ_GUARDED_BY(mMutex){true};
+
+  // The flag indicates if the worke is idle for events in the main event loop.
+  bool mWorkerLoopIsIdle MOZ_GUARDED_BY(mMutex){false};
 };
 
 class AutoSyncLoopHolder {

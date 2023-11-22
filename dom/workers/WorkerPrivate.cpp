@@ -3195,7 +3195,11 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
         // an event running for a very long time.
         thread->SetRunningEventDelay(TimeDuration(), TimeStamp());
 
+        mWorkerLoopIsIdle = true;
+
         WaitForWorkerEvents();
+
+        mWorkerLoopIsIdle = false;
       }
 
       auto result = ProcessAllControlRunnablesLocked();
@@ -4355,7 +4359,7 @@ bool WorkerPrivate::IsEligibleForCC() {
   return mMainThreadEventTarget->IsEmpty() &&
          mMainThreadEventTargetForMessaging->IsEmpty() &&
          mMainThreadDebuggeeEventTarget->IsEmpty() && mCCFlagSaysEligible &&
-         !hasShutdownTasks && !hasPendingEvents;
+         !hasShutdownTasks && !hasPendingEvents && mWorkerLoopIsIdle;
 }
 
 void WorkerPrivate::CancelAllTimeouts() {
