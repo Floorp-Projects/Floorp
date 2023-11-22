@@ -248,6 +248,7 @@ export class CookieBannerParent extends JSWindowActorParent {
         presence: rule.presence,
         skipPresenceVisibilityCheck: rule.skipPresenceVisibilityCheck,
         target,
+        isGlobalRule: rule.isGlobalRule,
       };
     });
 
