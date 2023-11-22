@@ -25,8 +25,10 @@ class WakeLockListener final : public nsIDOMMozWakeLockListener {
 
   nsresult Callback(const nsAString& topic, const nsAString& state) override;
 
+  WakeLockListener();
+
  private:
-  ~WakeLockListener() = default;
+  ~WakeLockListener();
 
   // Map of topic names to |WakeLockTopic|s.
   // We assume a small, finite-sized set of topics.
