@@ -141,7 +141,8 @@ void SVGScriptElement::FreezeExecutionAttrs(const Document* aOwnerDoc) {
         nsContentUtils::ReportToConsole(
             nsIScriptError::warningFlag, "SVG"_ns, OwnerDoc(),
             nsContentUtils::eDOM_PROPERTIES, "ScriptSourceInvalidUri", params,
-            nullptr, u""_ns, GetScriptLineNumber(), GetScriptColumnNumber());
+            nullptr, u""_ns, GetScriptLineNumber(),
+            GetScriptColumnNumber().oneOriginValue());
       }
     } else {
       AutoTArray<nsString, 1> params = {isHref ? u"href"_ns : u"xlink:href"_ns};
@@ -149,7 +150,8 @@ void SVGScriptElement::FreezeExecutionAttrs(const Document* aOwnerDoc) {
       nsContentUtils::ReportToConsole(
           nsIScriptError::warningFlag, "SVG"_ns, OwnerDoc(),
           nsContentUtils::eDOM_PROPERTIES, "ScriptSourceEmpty", params, nullptr,
-          u""_ns, GetScriptLineNumber(), GetScriptColumnNumber());
+          u""_ns, GetScriptLineNumber(),
+          GetScriptColumnNumber().oneOriginValue());
     }
 
     // At this point mUri will be null for invalid URLs.
