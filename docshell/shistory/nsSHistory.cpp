@@ -1653,9 +1653,9 @@ void nsSHistory::GloballyEvictDocumentViewers() {
       nsCOMPtr<nsIDocumentViewer> contentViewer = entry->GetContentViewer();
 
       bool found = false;
-      bool hasContentViewerOrFrameLoader = false;
+      bool hasDocumentViewerOrFrameLoader = false;
       if (contentViewer) {
-        hasContentViewerOrFrameLoader = true;
+        hasDocumentViewerOrFrameLoader = true;
         // Because one content viewer might belong to multiple SHEntries, we
         // have to search through shEntries to see if we already know
         // about this content viewer.  If we find the viewer, update its
@@ -1671,7 +1671,7 @@ void nsSHistory::GloballyEvictDocumentViewers() {
         }
       } else if (nsCOMPtr<SessionHistoryEntry> she = do_QueryInterface(entry)) {
         if (RefPtr<nsFrameLoader> frameLoader = she->GetFrameLoader()) {
-          hasContentViewerOrFrameLoader = true;
+          hasDocumentViewerOrFrameLoader = true;
           // Similar search as above but using frameloader.
           for (uint32_t j = 0; j < shEntries.Length(); j++) {
             EntryAndDistance& container = shEntries[j];
@@ -1687,7 +1687,7 @@ void nsSHistory::GloballyEvictDocumentViewers() {
 
       // If we didn't find a EntryAndDistance for this content viewer /
       // frameloader, make a new one.
-      if (hasContentViewerOrFrameLoader && !found) {
+      if (hasDocumentViewerOrFrameLoader && !found) {
         EntryAndDistance container(shist, entry,
                                    DeprecatedAbs(i - shist->mIndex));
         shEntries.AppendElement(container);

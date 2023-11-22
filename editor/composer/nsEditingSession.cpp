@@ -410,7 +410,7 @@ nsresult nsEditingSession::SetupEditorOnWindow(nsPIDOMWindowOuter& aWindow) {
   rv = htmlEditor->SetContentsMIMEType(mimeType);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  MOZ_ASSERT(docShell->HasContentViewer());
+  MOZ_ASSERT(docShell->HasDocumentViewer());
   MOZ_ASSERT(contentViewer->GetDocument());
 
   MOZ_DIAGNOSTIC_ASSERT(commandsUpdater == mComposerCommandsUpdater);

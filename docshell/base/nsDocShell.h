@@ -493,7 +493,7 @@ class nsDocShell final : public nsDocLoader,
   static void ExtractLastVisit(nsIChannel* aChannel, nsIURI** aURI,
                                uint32_t* aChannelRedirectFlags);
 
-  bool HasContentViewer() const { return !!mContentViewer; }
+  bool HasDocumentViewer() const { return !!mContentViewer; }
 
   static uint32_t ComputeURILoaderFlags(
       mozilla::dom::BrowsingContext* aBrowsingContext, uint32_t aLoadType);
