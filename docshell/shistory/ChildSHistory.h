@@ -80,7 +80,7 @@ class ChildSHistory : public nsISupports, public nsWrapperCache {
   /**
    * Evicts all content viewers within the current process.
    */
-  void EvictLocalContentViewers();
+  void EvictLocalDocumentViewers();
 
   // GetLegacySHistory and LegacySHistory have been deprecated. Don't
   // use these, but instead handle the interaction with nsISHistory in
