@@ -81,8 +81,8 @@ function testEqzIf(value, type, trueBranch, falseBranch, expected) {
 			    (local i32)
 			    (local.set 0 (${type}.const ${value}))
 			    (if (${type}.eqz (local.get 0))
-				(local.set 1 (i32.const ${trueBranch}))
-			        (local.set 1 (i32.const ${falseBranch})))
+				(then (local.set 1 (i32.const ${trueBranch})))
+			        (else (local.set 1 (i32.const ${falseBranch}))))
 			    (local.get 1))
 			   (export "f" (func 0)))`).exports["f"];
     assertEq(f(), expected);
@@ -97,8 +97,8 @@ function testCmpIf(value, type, trueBranch, falseBranch, expected) {
 			    (local ${type})
 			    (local i32)
 			    (if (${type}.eq (local.get 0) (${type}.const ${value}))
-				(local.set 1 (i32.const ${trueBranch}))
-			        (local.set 1 (i32.const ${falseBranch})))
+				(then (local.set 1 (i32.const ${trueBranch})))
+			        (else (local.set 1 (i32.const ${falseBranch}))))
 			    (local.get 1))
 			   (export "f" (func 0)))`).exports["f"];
     assertEq(f(), expected);

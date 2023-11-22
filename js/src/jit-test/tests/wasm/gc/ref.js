@@ -38,9 +38,9 @@ var text = `(module
        ;; TODO: eventually also a test with global.get
        ;; blocks and if with result type
        (block (result (ref null $cons))
-        (if (result (ref null $cons)) (i32.eqz (i32.const 0))
-            (unreachable)
-            (ref.null $cons))))
+       (if (result (ref null $cons)) (i32.eqz (i32.const 0))
+        (then (unreachable))
+        (else (ref.null $cons)))))
 
       (func (param (ref null $even)) (result (ref null $odd))
        (ref.null $odd))

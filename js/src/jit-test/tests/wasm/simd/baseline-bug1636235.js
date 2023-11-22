@@ -52,12 +52,14 @@ var ins = wasmEvalText(`
     (func $f (param $k i32) (result v128 v128 v128)
       (block $B2 (result v128 v128 v128)
         (if (local.get $k)
-            (br $B2 (v128.const i32x4 5 6 7 8)
+            (then 
+              (br $B2 (v128.const i32x4 5 6 7 8)
                     (v128.const i32x4 9 10 11 12)
-                    (v128.const i32x4 13 14 15 16))
-            (br $B2 (v128.const i32x4 -5 -6 -7 -8)
+                    (v128.const i32x4 13 14 15 16)))
+            (else
+              (br $B2 (v128.const i32x4 -5 -6 -7 -8)
                     (v128.const i32x4 -9 -10 -11 -12)
-                    (v128.const i32x4 -13 -14 -15 -16)))
+                    (v128.const i32x4 -13 -14 -15 -16))))
         (unreachable))))`);
 
 var mem = new Int32Array(ins.exports.mem.buffer);

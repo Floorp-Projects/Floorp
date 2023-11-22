@@ -42,22 +42,24 @@ function checkInvalid(body, errorMessage) {
                 (local.set $tmp (global.get $k))
                 (global.set $k (i32.add (local.get $tmp) (i32.const 1)))
                 (if (result (ref null $wabbit)) (i32.le_s (local.get $n) (i32.const 2))
-                    (struct.new $wabbit (local.get $tmp) (ref.null $wabbit) (ref.null $wabbit))
-                    (block (result (ref null $wabbit))
+                    (then (struct.new $wabbit (local.get $tmp) (ref.null $wabbit) (ref.null $wabbit)))
+                    (else
+                      (block (result (ref null $wabbit))
                       (struct.new $wabbit
                                   (local.get $tmp)
                                   (call $make (i32.sub (local.get $n) (i32.const 1)))
-                                  (call $make (i32.sub (local.get $n) (i32.const 2)))))))
+                                  (call $make (i32.sub (local.get $n) (i32.const 2))))))))
 
           (func (export "accumulate") (result i32)
                 (call $accum (global.get $g)))
 
           (func $accum (param $w (ref null $wabbit)) (result i32)
                 (if (result i32) (ref.is_null (local.get $w))
-                    (i32.const 0)
-                    (i32.add (struct.get $wabbit 0 (local.get $w))
+                    (then (i32.const 0))
+                    (else
+                      (i32.add (struct.get $wabbit 0 (local.get $w))
                              (i32.sub (call $accum (struct.get $wabbit 1 (local.get $w)))
-                                      (call $accum (struct.get $wabbit 2 (local.get $w)))))))
+                                      (call $accum (struct.get $wabbit 2 (local.get $w))))))))
 
           (func (export "reverse")
                 (call $reverse (global.get $g)))
@@ -65,25 +67,27 @@ function checkInvalid(body, errorMessage) {
           (func $reverse (param $w (ref null $wabbit))
                 (local $tmp (ref null $wabbit))
                 (if (i32.eqz (ref.is_null (local.get $w)))
-                    (block
-                     (struct.set $wabbit 0 (local.get $w) (i32.mul (i32.const 2) (struct.get $wabbit 0 (local.get $w))))
-                     (local.set $tmp (struct.get $wabbit 1 (local.get $w)))
-                     (struct.set $wabbit 1 (local.get $w) (struct.get $wabbit 2 (local.get $w)))
-                     (struct.set $wabbit 2 (local.get $w) (local.get $tmp))
-                     (call $reverse (struct.get $wabbit 1 (local.get $w)))
-                     (call $reverse (struct.get $wabbit 2 (local.get $w))))))
+                    (then
+                      (block
+                        (struct.set $wabbit 0 (local.get $w) (i32.mul (i32.const 2) (struct.get $wabbit 0 (local.get $w))))
+                        (local.set $tmp (struct.get $wabbit 1 (local.get $w)))
+                        (struct.set $wabbit 1 (local.get $w) (struct.get $wabbit 2 (local.get $w)))
+                        (struct.set $wabbit 2 (local.get $w) (local.get $tmp))
+                        (call $reverse (struct.get $wabbit 1 (local.get $w)))
+                        (call $reverse (struct.get $wabbit 2 (local.get $w)))))))
 
           (func (export "print")
                 (call $pr (global.get $g)))
 
           (func $pr (param $w (ref null $wabbit))
                 (if (i32.eqz (ref.is_null (local.get $w)))
-                    (block
-                     (call $print_lp)
-                     (call $print_int (struct.get $wabbit 0 (local.get $w)))
-                     (call $pr (struct.get $wabbit 1 (local.get $w)))
-                     (call $pr (struct.get $wabbit 2 (local.get $w)))
-                     (call $print_rp))))
+                    (then 
+                      (block
+                        (call $print_lp)
+                        (call $print_int (struct.get $wabbit 0 (local.get $w)))
+                        (call $pr (struct.get $wabbit 1 (local.get $w)))
+                        (call $pr (struct.get $wabbit 2 (local.get $w)))
+                        (call $print_rp)))))
          )`);
 
     let s = "";

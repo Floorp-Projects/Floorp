@@ -37,10 +37,10 @@ function build(n, ballast) {
         return `
 (func $f${ballast} (param ${ntimes(ballast, 'i32')}) (result i32)
     (if (result i32) (i32.eqz (global.get $glob))
-        (return ${compute(ballast)})
-        (block (result i32)
+        (then (return ${compute(ballast)}))
+        (else (block (result i32)
           (global.set $glob (i32.sub (global.get $glob) (i32.const 1)))
-          (return_call_indirect (type $ty0) (i32.const 0)))))
+          (return_call_indirect (type $ty0) (i32.const 0))))))
 `;
     default:
         return `

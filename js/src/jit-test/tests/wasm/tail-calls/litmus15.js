@@ -24,7 +24,8 @@ var ins = wasmEvalText(`
 
   (func $o (param i32 i32 i32 i32 i32 i32 i32 i32 i32) (result i32)
     (if (result i32) (i32.eqz (global.get $glob))
-        (i32.or (i32.const 512)
+        (then
+          (i32.or (i32.const 512)
             (i32.or (local.get 0)
                 (i32.or (local.get 1)
                     (i32.or (local.get 2)
@@ -32,10 +33,11 @@ var ins = wasmEvalText(`
                             (i32.or (local.get 4)
                                 (i32.or (local.get 5)
                                     (i32.or (local.get 6)
-                                        (i32.or (local.get 7) (local.get 8))))))))))
-        (block (result i32)
-          (global.set $glob (i32.sub (global.get $glob) (i32.const 1)))
-          (return_call_indirect (type $ty0) (i32.const 0)))))
+                                        (i32.or (local.get 7) (local.get 8)))))))))))
+        (else
+          (block (result i32)
+            (global.set $glob (i32.sub (global.get $glob) (i32.const 1)))
+            (return_call_indirect (type $ty0) (i32.const 0))))))
 
   (func $n (param i32 i32 i32 i32 i32 i32 i32 i32) (result i32)
     (return_call_indirect (type $ty9) (i32.const 256) (local.get 0) (local.get 1) (local.get 2) (local.get 3) (local.get 4) (local.get 5) (local.get 6) (local.get 7) (i32.const 9)))
