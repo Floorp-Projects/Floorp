@@ -109,6 +109,8 @@ class CookiePersistentStorage final : public CookieStorage {
                                           uint16_t aMaxNumberOfCookies,
                                           int64_t aCookiePurgeAge) override;
 
+  void CollectCookieJarSizeData() override;
+
   void DeleteFromDB(mozIStorageBindingParamsArray* aParamsArray);
 
   void MaybeStoreCookiesToDB(mozIStorageBindingParamsArray* aParamsArray);

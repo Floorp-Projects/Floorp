@@ -50,6 +50,9 @@ class CookiePrivateStorage final : public CookieStorage {
   void StoreCookie(const nsACString& aBaseDomain,
                    const OriginAttributes& aOriginAttributes,
                    Cookie* aCookie) override {}
+
+ private:
+  void CollectCookieJarSizeData() override{};
 };
 
 }  // namespace net

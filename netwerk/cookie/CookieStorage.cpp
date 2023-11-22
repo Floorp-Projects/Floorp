@@ -11,9 +11,11 @@
 #include "nsICookieNotification.h"
 #include "CookieStorage.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "nsIMutableArray.h"
 #include "nsTPriorityQueue.h"
 #include "nsIScriptError.h"
+#include "nsIUserIdleService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "prprf.h"
@@ -110,6 +112,10 @@ size_t CookieEntry::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
   return amount;
 }
 
+bool CookieEntry::IsPartitioned() const {
+  return !mOriginAttributes.mPartitionKey.IsEmpty();
+}
+
 // ---------------------------------------------------------------------------
 // CookieStorage
 
@@ -124,6 +130,13 @@ void CookieStorage::Init() {
     prefBranch->AddObserver(kPrefCookiePurgeAge, this, true);
     PrefChanged(prefBranch);
   }
+
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
+  NS_ENSURE_TRUE_VOID(observerService);
+
+  nsresult rv =
+      observerService->AddObserver(this, OBSERVER_TOPIC_IDLE_DAILY, true);
+  NS_ENSURE_SUCCESS_VOID(rv);
 }
 
 size_t CookieStorage::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
@@ -582,6 +595,10 @@ void CookieStorage::AddCookie(nsIConsoleReportCollector* aCRC,
         CreateOrUpdatePurgeList(purgedList, evictedCookie);
         MOZ_ASSERT((*it).entry);
       }
+      uint32_t purgedLength = 0;
+      purgedList->GetLength(&purgedLength);
+      mozilla::glean::networking::cookie_purge_entry_max.AccumulateSamples(
+          {purgedLength});
 
     } else if (mCookieCount >= ADD_TEN_PERCENT(mMaxNumberOfCookies)) {
       int64_t maxAge = aCurrentTimeInUsec - mCookieOldestTime;
@@ -596,6 +613,10 @@ void CookieStorage::AddCookie(nsIConsoleReportCollector* aCRC,
         // eagerly.
         purgedList = PurgeCookies(aCurrentTimeInUsec, mMaxNumberOfCookies,
                                   mCookiePurgeAge);
+        uint32_t purgedLength = 0;
+        purgedList->GetLength(&purgedLength);
+        mozilla::glean::networking::cookie_purge_max.AccumulateSamples(
+            {purgedLength});
       }
     }
   }
@@ -878,6 +899,8 @@ CookieStorage::Observe(nsISupports* aSubject, const char* aTopic,
     if (prefBranch) {
       PrefChanged(prefBranch);
     }
+  } else if (!strcmp(aTopic, OBSERVER_TOPIC_IDLE_DAILY)) {
+    CollectCookieJarSizeData();
   }
 
   return NS_OK;
