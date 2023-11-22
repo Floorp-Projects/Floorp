@@ -44,7 +44,7 @@ let {
   )
   (func (export "castFromExternref") (param externref) (result i32)
     local.get 0
-    any.convert_extern
+    extern.internalize
     ref.test (ref i31)
   )
   (func (export "refI31") (param i32) (result anyref)

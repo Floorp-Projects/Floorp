@@ -8079,15 +8079,15 @@ bool BaseCompiler::emitBrOnCast(bool onSuccess) {
                             sourceType, destType);
 }
 
-bool BaseCompiler::emitAnyConvertExtern() {
-  // any.convert_extern is a no-op because anyref and extern share the same
+bool BaseCompiler::emitExternInternalize() {
+  // extern.internalize is a no-op because anyref and extern share the same
   // representation
   Nothing nothing;
   return iter_.readRefConversion(RefType::extern_(), RefType::any(), &nothing);
 }
 
-bool BaseCompiler::emitExternConvertAny() {
-  // extern.convert_any is a no-op because anyref and extern share the same
+bool BaseCompiler::emitExternExternalize() {
+  // extern.externalize is a no-op because anyref and extern share the same
   // representation
   Nothing nothing;
   return iter_.readRefConversion(RefType::any(), RefType::extern_(), &nothing);
@@ -10275,10 +10275,10 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitBrOnCast(/*onSuccess=*/true));
           case uint32_t(GcOp::BrOnCastFail):
             CHECK_NEXT(emitBrOnCast(/*onSuccess=*/false));
-          case uint16_t(GcOp::AnyConvertExtern):
-            CHECK_NEXT(emitAnyConvertExtern());
-          case uint16_t(GcOp::ExternConvertAny):
-            CHECK_NEXT(emitExternConvertAny());
+          case uint16_t(GcOp::ExternInternalize):
+            CHECK_NEXT(emitExternInternalize());
+          case uint16_t(GcOp::ExternExternalize):
+            CHECK_NEXT(emitExternExternalize());
           default:
             break;
         }  // switch (op.b1)

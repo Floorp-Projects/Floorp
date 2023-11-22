@@ -800,8 +800,8 @@ for ( let [ty128,size] of [['i8x16',1], ['i16x8',2], ['i32x4',4]] ) {
                    (memory (export "mem") 1 1)
                    (func $f (param v128) (result i32)
                        (if (result i32) (${operation} (local.get 0))
-                           (then (i32.const 42))
-                           (else (i32.const 37))))
+                           (i32.const 42)
+                           (i32.const 37)))
                    (func (export "run") (result i32)
                      (call $f (v128.load (i32.const 16)))))`);
         assertEq(wasmSimdAnalysis(), folded ? "simd128-to-scalar-and-branch -> folded" : "none");
@@ -812,8 +812,8 @@ for ( let [ty128,size] of [['i8x16',1], ['i16x8',2], ['i32x4',4]] ) {
                    (memory (export "mem") 1 1)
                    (func $f (param v128) (result i32)
                        (if (result i32) (i32.eqz (${operation} (local.get 0)))
-                           (then (i32.const 42))
-                           (else (i32.const 37))))
+                           (i32.const 42)
+                           (i32.const 37)))
                    (func (export "run") (result i32)
                      (call $f (v128.load (i32.const 16)))))`);
         assertEq(wasmSimdAnalysis(), folded ? "simd128-to-scalar-and-branch -> folded" : "none");

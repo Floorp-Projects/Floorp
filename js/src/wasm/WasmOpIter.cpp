@@ -354,9 +354,9 @@ OpKind wasm::Classify(OpBytes op) {
         case GcOp::BrOnCast:
         case GcOp::BrOnCastFail:
           WASM_GC_OP(OpKind::BrOnCast);
-        case GcOp::AnyConvertExtern:
+        case GcOp::ExternInternalize:
           WASM_GC_OP(OpKind::RefConversion);
-        case GcOp::ExternConvertAny:
+        case GcOp::ExternExternalize:
           WASM_GC_OP(OpKind::RefConversion);
       }
       break;

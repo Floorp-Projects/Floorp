@@ -246,7 +246,6 @@ impl<'a> Encode for HeapType<'a> {
         match self {
             HeapType::Func => e.push(0x70),
             HeapType::Extern => e.push(0x6f),
-            HeapType::Exn => e.push(0x69),
             HeapType::Any => e.push(0x6e),
             HeapType::Eq => e.push(0x6d),
             HeapType::Struct => e.push(0x6b),
@@ -257,8 +256,8 @@ impl<'a> Encode for HeapType<'a> {
             HeapType::None => e.push(0x71),
             // Note that this is encoded as a signed leb128 so be sure to cast
             // to an i64 first
-            HeapType::Concrete(Index::Num(n, _)) => i64::from(*n).encode(e),
-            HeapType::Concrete(Index::Id(n)) => {
+            HeapType::Index(Index::Num(n, _)) => i64::from(*n).encode(e),
+            HeapType::Index(Index::Id(n)) => {
                 panic!("unresolved index in emission: {:?}", n)
             }
         }
@@ -278,11 +277,6 @@ impl<'a> Encode for RefType<'a> {
                 nullable: true,
                 heap: HeapType::Extern,
             } => e.push(0x6f),
-            // The 'exnref' binary abbreviation
-            RefType {
-                nullable: true,
-                heap: HeapType::Exn,
-            } => e.push(0x69),
             // The 'eqref' binary abbreviation
             RefType {
                 nullable: true,
@@ -1031,32 +1025,6 @@ impl Encode for Id<'_> {
     fn encode(&self, dst: &mut Vec<u8>) {
         assert!(!self.is_gensym());
         self.name().encode(dst);
-    }
-}
-
-impl<'a> Encode for TryTable<'a> {
-    fn encode(&self, dst: &mut Vec<u8>) {
-        self.block.encode(dst);
-        self.catches.encode(dst);
-    }
-}
-
-impl<'a> Encode for TryTableCatch<'a> {
-    fn encode(&self, dst: &mut Vec<u8>) {
-        let flag_byte: u8 = match self.kind {
-            TryTableCatchKind::Catch(..) => 0,
-            TryTableCatchKind::CatchRef(..) => 1,
-            TryTableCatchKind::CatchAll => 2,
-            TryTableCatchKind::CatchAllRef => 3,
-        };
-        flag_byte.encode(dst);
-        match self.kind {
-            TryTableCatchKind::Catch(tag) | TryTableCatchKind::CatchRef(tag) => {
-                tag.encode(dst);
-            }
-            TryTableCatchKind::CatchAll | TryTableCatchKind::CatchAllRef => {}
-        }
-        self.label.encode(dst);
     }
 }
 

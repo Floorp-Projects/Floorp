@@ -539,29 +539,11 @@ impl Module {
     /// the caller should generate arbitrary imports.
     fn arbitrary_imports_from_available(&mut self, u: &mut Unstructured) -> Result<bool> {
         let example_module = if let Some(wasm) = self.config.available_imports() {
-            wasm.into_owned()
+            wasm
         } else {
             return Ok(false);
         };
 
-        #[cfg(feature = "wasmparser")]
-        {
-            self._arbitrary_imports_from_available(u, &example_module)?;
-            Ok(true)
-        }
-        #[cfg(not(feature = "wasmparser"))]
-        {
-            let _ = (example_module, u);
-            panic!("support for `available_imports` was disabled at compile time");
-        }
-    }
-
-    #[cfg(feature = "wasmparser")]
-    fn _arbitrary_imports_from_available(
-        &mut self,
-        u: &mut Unstructured,
-        example_module: &[u8],
-    ) -> Result<()> {
         // First, parse the module-by-example to collect the types and imports.
         //
         // `available_types` will map from a signature index (which is the same as the index into
@@ -735,41 +717,7 @@ impl Module {
         self.types.extend(new_types);
         self.imports.extend(new_imports);
 
-        return Ok(());
-
-        /// Convert a wasmparser's `ValType` to a `wasm_encoder::ValType`.
-        fn convert_type(parsed_type: wasmparser::ValType) -> ValType {
-            use wasmparser::ValType::*;
-            match parsed_type {
-                I32 => ValType::I32,
-                I64 => ValType::I64,
-                F32 => ValType::F32,
-                F64 => ValType::F64,
-                V128 => ValType::V128,
-                Ref(ty) => ValType::Ref(convert_reftype(ty)),
-            }
-        }
-
-        fn convert_reftype(ty: wasmparser::RefType) -> RefType {
-            wasm_encoder::RefType {
-                nullable: ty.is_nullable(),
-                heap_type: match ty.heap_type() {
-                    wasmparser::HeapType::Func => HeapType::Func,
-                    wasmparser::HeapType::Extern => HeapType::Extern,
-                    wasmparser::HeapType::Any => HeapType::Any,
-                    wasmparser::HeapType::None => HeapType::None,
-                    wasmparser::HeapType::NoExtern => HeapType::NoExtern,
-                    wasmparser::HeapType::NoFunc => HeapType::NoFunc,
-                    wasmparser::HeapType::Eq => HeapType::Eq,
-                    wasmparser::HeapType::Struct => HeapType::Struct,
-                    wasmparser::HeapType::Array => HeapType::Array,
-                    wasmparser::HeapType::I31 => HeapType::I31,
-                    wasmparser::HeapType::Concrete(i) => {
-                        HeapType::Concrete(i.as_module_index().unwrap())
-                    }
-                },
-            }
-        }
+        Ok(true)
     }
 
     fn type_of(&self, kind: ExportKind, index: u32) -> EntityType {
@@ -1679,6 +1627,38 @@ fn arbitrary_vec_u8(u: &mut Unstructured) -> Result<Vec<u8>> {
     Ok(u.bytes(size)?.to_vec())
 }
 
+/// Convert a wasmparser's `ValType` to a `wasm_encoder::ValType`.
+fn convert_type(parsed_type: wasmparser::ValType) -> ValType {
+    use wasmparser::ValType::*;
+    match parsed_type {
+        I32 => ValType::I32,
+        I64 => ValType::I64,
+        F32 => ValType::F32,
+        F64 => ValType::F64,
+        V128 => ValType::V128,
+        Ref(ty) => ValType::Ref(convert_reftype(ty)),
+    }
+}
+
+fn convert_reftype(ty: wasmparser::RefType) -> RefType {
+    wasm_encoder::RefType {
+        nullable: ty.is_nullable(),
+        heap_type: match ty.heap_type() {
+            wasmparser::HeapType::Func => HeapType::Func,
+            wasmparser::HeapType::Extern => HeapType::Extern,
+            wasmparser::HeapType::Any => HeapType::Any,
+            wasmparser::HeapType::None => HeapType::None,
+            wasmparser::HeapType::NoExtern => HeapType::NoExtern,
+            wasmparser::HeapType::NoFunc => HeapType::NoFunc,
+            wasmparser::HeapType::Eq => HeapType::Eq,
+            wasmparser::HeapType::Struct => HeapType::Struct,
+            wasmparser::HeapType::Array => HeapType::Array,
+            wasmparser::HeapType::I31 => HeapType::I31,
+            wasmparser::HeapType::Indexed(i) => HeapType::Indexed(i.into()),
+        },
+    }
+}
+
 impl EntityType {
     fn size(&self) -> u32 {
         match self {
@@ -1741,7 +1721,7 @@ flags! {
     /// Enumerate the categories of instructions defined in the [WebAssembly
     /// specification](https://webassembly.github.io/spec/core/syntax/instructions.html).
     #[allow(missing_docs)]
-    #[cfg_attr(feature = "_internal_cli", derive(serde_derive::Deserialize))]
+    #[cfg_attr(feature = "_internal_cli", derive(serde::Deserialize))]
     pub enum InstructionKind: u16 {
         Numeric,
         Vector,

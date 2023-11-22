@@ -7646,8 +7646,8 @@ static bool EmitBrOnCast(FunctionCompiler& f, bool onSuccess) {
                           labelType, values);
 }
 
-static bool EmitAnyConvertExtern(FunctionCompiler& f) {
-  // any.convert_extern is a no-op because anyref and extern share the same
+static bool EmitExternInternalize(FunctionCompiler& f) {
+  // extern.internalize is a no-op because anyref and extern share the same
   // representation
   MDefinition* ref;
   if (!f.iter().readRefConversion(RefType::extern_(), RefType::any(), &ref)) {
@@ -7658,8 +7658,8 @@ static bool EmitAnyConvertExtern(FunctionCompiler& f) {
   return true;
 }
 
-static bool EmitExternConvertAny(FunctionCompiler& f) {
-  // extern.convert_any is a no-op because anyref and extern share the same
+static bool EmitExternExternalize(FunctionCompiler& f) {
+  // extern.externalize is a no-op because anyref and extern share the same
   // representation
   MDefinition* ref;
   if (!f.iter().readRefConversion(RefType::any(), RefType::extern_(), &ref)) {
@@ -8322,10 +8322,10 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitRefCast(f, /*nullable=*/false));
           case uint32_t(GcOp::RefCastNull):
             CHECK(EmitRefCast(f, /*nullable=*/true));
-          case uint16_t(GcOp::AnyConvertExtern):
-            CHECK(EmitAnyConvertExtern(f));
-          case uint16_t(GcOp::ExternConvertAny):
-            CHECK(EmitExternConvertAny(f));
+          case uint16_t(GcOp::ExternInternalize):
+            CHECK(EmitExternInternalize(f));
+          case uint16_t(GcOp::ExternExternalize):
+            CHECK(EmitExternExternalize(f));
           default:
             return f.iter().unrecognizedOpcode(&op);
         }  // switch (op.b1)

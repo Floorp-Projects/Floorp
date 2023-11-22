@@ -626,8 +626,8 @@ var OperatorCode;
     OperatorCode[OperatorCode["ref_cast_null"] = 64279] = "ref_cast_null";
     OperatorCode[OperatorCode["br_on_cast"] = 64280] = "br_on_cast";
     OperatorCode[OperatorCode["br_on_cast_fail"] = 64281] = "br_on_cast_fail";
-    OperatorCode[OperatorCode["any_convert_extern"] = 64282] = "any_convert_extern";
-    OperatorCode[OperatorCode["extern_convert_any"] = 64283] = "extern_convert_any";
+    OperatorCode[OperatorCode["extern_internalize"] = 64282] = "extern_internalize";
+    OperatorCode[OperatorCode["extern_externalize"] = 64283] = "extern_externalize";
     OperatorCode[OperatorCode["ref_i31"] = 64284] = "ref_i31";
     OperatorCode[OperatorCode["i31_get_s"] = 64285] = "i31_get_s";
     OperatorCode[OperatorCode["i31_get_u"] = 64286] = "i31_get_u";
@@ -1302,8 +1302,8 @@ exports.OperatorCodeNames = [
     "ref.cast null",
     "br_on_cast",
     "br_on_cast_fail",
-    "any.convert_extern",
-    "extern.convert_any",
+    "extern.internalize",
+    "extern.externalize",
     "ref.i31",
     "i31.get_s",
     "i31.get_u",
@@ -2543,8 +2543,8 @@ var BinaryReader = /** @class */ (function () {
                 refType = this.readHeapType();
                 break;
             case 64271 /* OperatorCode.array_len */:
-            case 64283 /* OperatorCode.extern_convert_any */:
-            case 64282 /* OperatorCode.any_convert_extern */:
+            case 64283 /* OperatorCode.extern_externalize */:
+            case 64282 /* OperatorCode.extern_internalize */:
             case 64284 /* OperatorCode.ref_i31 */:
             case 64285 /* OperatorCode.i31_get_s */:
             case 64286 /* OperatorCode.i31_get_u */:
