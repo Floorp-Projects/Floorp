@@ -1,0 +1,74 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+<html>
+<head>
+<script src="resource://talos-powers/TalosPowersContent.js"></script>
+<script type="text/javascript" src="resource://talos-powers/TalosContentProfiler.js"></script>
+<script language="javascript" type="text/javascript">
+const kTotalTicks = 100;
+var start;
+var canvas = document.createElement("canvas");
+canvas.width = 1920;
+canvas.height = 1080;
+var ctx = canvas.getContext("2d");
+var video;
+video = document.createElement("video");
+video.src = "../../../video/clips/testsrc.1080p.60fps.mp4";
+video.addEventListener("playing", playingListener, true); // loadstart?
+video.loop = true;
+
+function init() {
+  TalosPowersContent.focus(content_focused);
+}
+
+function content_focused() {
+  TalosContentProfiler.subtestStart("canvas2dvideo start", true).then(() => {
+    video.play();
+  });
+}
+
+function playingListener() {
+  video.removeEventListener("playing", playingListener, true);
+  start = performance.now();
+  tick();
+}
+
+var tickCount = 0;
+function tick() {
+  if (tickCount >= kTotalTicks) {
+    var elapsed = performance.now() - start;
+    TalosContentProfiler.subtestEnd("canvas2dvideo", true).then(() => {
+      reportResult(elapsed, kTotalTicks);
+    });
+    return;
+  }
+
+  ctx.drawImage(video, 0, 0);
+  ++tickCount;
+
+  window.setTimeout(tick, 0);
+}
+
+function reportResult(totalTime, totalTicks) {
+  var meanTickTime = totalTime / totalTicks;
+  var desc = "Mean tick time across " + totalTicks + " ticks: ";
+  var text = desc + meanTickTime + " ms\n";
+
+  dump("[talos canvas2dvideo result] " + text);
+
+  if (window.tpRecordTime) {
+    // Within talos - report the results
+    return tpRecordTime(meanTickTime, 0, desc);
+  }
+    // Local run in a plain browser, display the formatted report
+    alert("[talos canvas2dvideo result] " + text);
+
+  return undefined;
+}
+</script>
+
+</head>
+<body id="body" onload="init();">
+</body>
+</html>
