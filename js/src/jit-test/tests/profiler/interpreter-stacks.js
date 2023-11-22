@@ -25,7 +25,7 @@ function testBasic() {
 
     // Test non-function frames.
     assertStack(evaluate("eval(`(function foo() { return readGeckoInterpProfilingStack(); })()`)"),
-                ["testBasic", "@evaluate", "@evaluate line 1 > eval:1:0", "foo"]);
+                ["testBasic", "@evaluate", "@evaluate line 1 > eval:1:1", "foo"]);
 }
 testBasic();
 testBasic();
