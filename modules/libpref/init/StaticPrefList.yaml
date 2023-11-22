@@ -3881,7 +3881,7 @@
 
 - name: dom.workers.importScripts.enforceStrictMimeType
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Is support for modules (new Worker(..., {type: "module"})) enabled for workers?
