@@ -99,12 +99,12 @@ void ComputePassEncoder::InsertDebugMarker(const nsAString& aString) {
   }
 }
 
-void ComputePassEncoder::End(ErrorResult& aRv) {
+void ComputePassEncoder::End() {
   if (mValid) {
     mValid = false;
     auto* pass = mPass.forget();
     MOZ_ASSERT(pass);
-    mParent->EndComputePass(*pass, aRv);
+    mParent->EndComputePass(*pass);
   }
 }
 
