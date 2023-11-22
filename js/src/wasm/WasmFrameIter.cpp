@@ -313,14 +313,28 @@ void** WasmFrameIter::unwoundAddressOfReturnAddress() const {
 bool WasmFrameIter::debugEnabled() const {
   MOZ_ASSERT(!done());
 
-  // Only non-imported functions can have debug frames.
-  //
   // Metadata::debugEnabled is only set if debugging is actually enabled (both
   // requested, and available via baseline compilation), and Tier::Debug code
   // will be available.
-  return code_->metadata().debugEnabled &&
-         codeRange_->funcIndex() >=
-             code_->metadata(Tier::Debug).funcImports.length();
+  if (!code_->metadata().debugEnabled) {
+    return false;
+  }
+
+  // Only non-imported functions can have debug frames.
+  if (codeRange_->funcIndex() <
+      code_->metadata(Tier::Debug).funcImports.length()) {
+    return false;
+  }
+
+#ifdef ENABLE_WASM_TAIL_CALLS
+  // Debug frame is not present at the return stub.
+  const CallSite* site = code_->lookupCallSite((void*)resumePCinCurrentFrame_);
+  if (site && site->kind() == CallSite::ReturnStub) {
+    return false;
+  }
+#endif
+
+  return true;
 }
 
 DebugFrame* WasmFrameIter::debugFrame() const {
