@@ -197,7 +197,7 @@ void nsSHistoryObserver::PrefChanged(const char* aPref, void* aSelf) {
 
 void nsSHistoryObserver::PrefChanged(const char* aPref) {
   nsSHistory::UpdatePrefs();
-  nsSHistory::GloballyEvictContentViewers();
+  nsSHistory::GloballyEvictDocumentViewers();
 }
 
 NS_IMETHODIMP
@@ -1184,7 +1184,7 @@ nsSHistory::EvictOutOfRangeDocumentViewers(int32_t aIndex) {
   // Check our per SHistory object limit in the currently navigated SHistory
   EvictOutOfRangeWindowDocumentViewers(aIndex);
   // Check our total limit across all SHistory objects
-  GloballyEvictContentViewers();
+  GloballyEvictDocumentViewers();
   return NS_OK;
 }
 
@@ -1620,7 +1620,7 @@ class EntryAndDistance {
 }  // namespace
 
 // static
-void nsSHistory::GloballyEvictContentViewers() {
+void nsSHistory::GloballyEvictDocumentViewers() {
   // First, collect from each SHistory object the entries which have a cached
   // content viewer. Associate with each entry its distance from its SHistory's
   // current index.
@@ -1785,7 +1785,7 @@ nsSHistory::RemoveFromExpirationTracker(SHEntrySharedParentState* aEntry) {
 void nsSHistory::GloballyEvictAllDocumentViewers() {
   int32_t maxViewers = sHistoryMaxTotalViewers;
   sHistoryMaxTotalViewers = 0;
-  GloballyEvictContentViewers();
+  GloballyEvictDocumentViewers();
   sHistoryMaxTotalViewers = maxViewers;
 }
 
