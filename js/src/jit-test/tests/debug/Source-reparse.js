@@ -26,7 +26,6 @@ f();
 `, {
   fileName: "foobar.js",
   lineNumber: 3,
-  // NOTE: evaluate function takes 0-origin column number.
   columnNumber: 42,
 });
 
@@ -39,8 +38,7 @@ assertEq(onNewScriptCalls, 0);
 
 assertEq(reparsedScript.url, "foobar.js");
 assertEq(reparsedScript.startLine, 3);
-// NOTE: Debugger uses 1-origin column number.
-assertEq(reparsedScript.startColumn, 43);
+assertEq(reparsedScript.startColumn, 42);
 
 // Test for the same breakpoint positions in the original and reparsed script.
 function getBreakpointPositions(script) {
