@@ -64,5 +64,4 @@ void nsWidgetGtk2ModuleDtor() {
   KeymapWrapper::Shutdown();
   nsGTKToolkit::Shutdown();
   nsAppShellShutdown();
-  WakeLockListener::Shutdown();
 }

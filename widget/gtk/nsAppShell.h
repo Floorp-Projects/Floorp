@@ -15,16 +15,17 @@
 #endif
 #include <glib.h>
 #include "nsBaseAppShell.h"
-#include "nsCOMPtr.h"
 
 class nsAppShell : public nsBaseAppShell {
  public:
-  nsAppShell() : mTag(0) { mPipeFDs[0] = mPipeFDs[1] = 0; }
+  nsAppShell() = default;
 
   // nsBaseAppShell overrides:
   nsresult Init();
-  virtual void ScheduleNativeEventCallback() override;
-  virtual bool ProcessNextNativeEvent(bool mayWait) override;
+  NS_IMETHOD Run() override;
+
+  void ScheduleNativeEventCallback() override;
+  bool ProcessNextNativeEvent(bool mayWait) override;
 
 #ifdef MOZ_ENABLE_DBUS
   void StartDBusListening();
@@ -48,8 +49,8 @@ class nsAppShell : public nsBaseAppShell {
 
   static gboolean EventProcessorCallback(GIOChannel* source,
                                          GIOCondition condition, gpointer data);
-  int mPipeFDs[2];
-  unsigned mTag;
+  int mPipeFDs[2] = {0, 0};
+  unsigned mTag = 0;
 
 #ifdef MOZ_ENABLE_DBUS
   RefPtr<GDBusProxy> mLogin1Proxy;

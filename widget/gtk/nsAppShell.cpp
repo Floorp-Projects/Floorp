@@ -267,6 +267,29 @@ void nsAppShell::StartDBusListening() {
       reinterpret_cast<GAsyncReadyCallback>(DBusConnectClientResponse), this);
 }
 
+mozilla::StaticRefPtr<WakeLockListener> sWakeLockListener;
+
+static void AddScreenWakeLockListener() {
+  nsCOMPtr<nsIPowerManagerService> powerManager =
+      do_GetService(POWERMANAGERSERVICE_CONTRACTID);
+  if (powerManager) {
+    sWakeLockListener = new WakeLockListener();
+    powerManager->AddWakeLockListener(sWakeLockListener);
+  } else {
+    NS_WARNING(
+        "Failed to retrieve PowerManagerService, wakelocks will be broken!");
+  }
+}
+
+static void RemoveScreenWakeLockListener() {
+  nsCOMPtr<nsIPowerManagerService> powerManager =
+      do_GetService(POWERMANAGERSERVICE_CONTRACTID);
+  if (powerManager) {
+    powerManager->RemoveWakeLockListener(sWakeLockListener);
+    sWakeLockListener = nullptr;
+  }
+}
+
 void nsAppShell::StopDBusListening() {
   if (mLogin1Proxy) {
     g_signal_handlers_disconnect_matched(mLogin1Proxy, G_SIGNAL_MATCH_DATA, 0,
@@ -293,22 +316,11 @@ void nsAppShell::StopDBusListening() {
 nsresult nsAppShell::Init() {
   mozilla::hal::Init();
 
-  if (XRE_IsParentProcess()) {
-    nsCOMPtr<nsIPowerManagerService> powerManagerService =
-        do_GetService(POWERMANAGERSERVICE_CONTRACTID);
-
-    if (powerManagerService) {
-      powerManagerService->AddWakeLockListener(
-          WakeLockListener::GetSingleton());
-    } else {
-      NS_WARNING(
-          "Failed to retrieve PowerManagerService, wakelocks will be broken!");
-    }
-
 #ifdef MOZ_ENABLE_DBUS
+  if (XRE_IsParentProcess()) {
     StartDBusListening();
-#endif
   }
+#endif
 
   if (!sPollFunc) {
     sPollFunc = g_main_context_get_poll_func(nullptr);
@@ -406,6 +418,19 @@ failed:
   close(mPipeFDs[1]);
   mPipeFDs[0] = mPipeFDs[1] = 0;
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsAppShell::Run() {
+  if (XRE_IsParentProcess()) {
+    AddScreenWakeLockListener();
+  }
+
+  nsresult rv = nsBaseAppShell::Run();
+
+  if (XRE_IsParentProcess()) {
+    RemoveScreenWakeLockListener();
+  }
+  return rv;
 }
 
 void nsAppShell::ScheduleNativeEventCallback() {
