@@ -204,7 +204,7 @@ interface nsISHistory: nsISupports
    * out.
    */
   [noscript, notxpcom]
-  void evictExpiredContentViewerForEntry(in SHEntrySharedParentStatePtr aEntry);
+  void evictExpiredDocumentViewerForEntry(in SHEntrySharedParentStatePtr aEntry);
 
   /**
    * Evict all the content viewers in this session history
