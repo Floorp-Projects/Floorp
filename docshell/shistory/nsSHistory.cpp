@@ -1739,7 +1739,7 @@ nsresult nsSHistory::FindEntryForBFCache(SHEntrySharedParentState* aEntry,
 }
 
 NS_IMETHODIMP_(void)
-nsSHistory::EvictExpiredContentViewerForEntry(
+nsSHistory::EvictExpiredDocumentViewerForEntry(
     SHEntrySharedParentState* aEntry) {
   int32_t index;
   nsCOMPtr<nsISHEntry> shEntry;

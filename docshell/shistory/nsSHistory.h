@@ -51,7 +51,7 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
     virtual void NotifyExpired(
         mozilla::dom::SHEntrySharedParentState* aObj) override {
       RemoveObject(aObj);
-      mSHistory->EvictExpiredContentViewerForEntry(aObj);
+      mSHistory->EvictExpiredDocumentViewerForEntry(aObj);
     }
 
    private:
