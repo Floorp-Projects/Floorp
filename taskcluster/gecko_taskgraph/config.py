@@ -123,7 +123,7 @@ graph_config_schema = Schema(
                             "release-product", "release-level", str
                         ),
                         Optional("entitlements"): optionally_keyed_by(
-                            "release-level", str
+                            "build-platform", "project", str
                         ),
                         Required("globs"): [str],
                     }
