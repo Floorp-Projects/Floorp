@@ -12,8 +12,8 @@ for (let i = 15; i --> 0;) {
             (local.get ${i + 8})
             (local.get ${i})
         )
-        (local.get ${i + 8})
-        ${tests}
+        (then (local.get ${i + 8}))
+        (else ${tests})
     )`;
 }
 
@@ -33,12 +33,12 @@ assertEq(wasmEvalText(`(module
         (local.set $l (i32.const 0))
         (if
             (local.get $p)
-            (local.set $l
+            (then (local.set $l
                (i32.add
                   (local.get $l)
                   (i32.load8_s (local.get $p))
                )
-            )
+            ))
         )
         (local.set $l
            (i32.add

@@ -17,13 +17,13 @@ for ( let ballast=1; ballast < TailCallBallast; ballast++ ) {
 (module
   (func $odd (export "odd") (param $n i32) (param ${ps}) (param $dummy i32) (result i32)
     (if (result i32) (i32.eqz (local.get $n))
-        (return (i32.or (i32.shl ${sum} (i32.const 1)) (i32.const 0)))
-        (return_call $even (i32.sub (local.get $n) (i32.const 1)) ${es})))
+        (then (return (i32.or (i32.shl ${sum} (i32.const 1)) (i32.const 0))))
+        (else (return_call $even (i32.sub (local.get $n) (i32.const 1)) ${es}))))
 
   (func $even (export "even") (param $n i32) (param ${ps}) (result i32)
     (if (result i32) (i32.eqz (local.get $n))
-        (return (i32.or (i32.shl ${sum} (i32.const 1)) (i32.const 1)))
-        (return_call $odd (i32.sub (local.get $n) (i32.const 1)) ${es} (i32.const 33)))))`;
+        (then (return (i32.or (i32.shl ${sum} (i32.const 1)) (i32.const 1))))
+        (else (return_call $odd (i32.sub (local.get $n) (i32.const 1)) ${es} (i32.const 33))))))`;
 
     let ins = wasmEvalText(text);
     assertEq(ins.exports.even(TailCallIterations, ...vals), (sumv*2) + 1);

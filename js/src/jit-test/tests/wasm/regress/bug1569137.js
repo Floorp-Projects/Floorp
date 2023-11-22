@@ -19,16 +19,18 @@ let { exports: { f } } = wasmEvalText(`
               (i32.const 4883)
                 (i32.const -124)
           )
-          (f64.const 77)
-          (block (result f64)
-           (drop
-             (br_if $label$4
-              (i32.const 4194304)
-              (i32.const -8192)
+          (then (f64.const 77))
+          (else
+           (block (result f64)
+            (drop
+              (br_if $label$4
+                (i32.const 4194304)
+                (i32.const -8192)
+              )
             )
-           )
-           (return
-            (f32.const 4294967296)
+            (return
+              (f32.const 4294967296)
+            )
            )
           )
          )

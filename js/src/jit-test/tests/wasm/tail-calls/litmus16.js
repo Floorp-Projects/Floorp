@@ -38,10 +38,11 @@ function code(n, ballast) {
         return `
 (func $up${ballast} (param ${ntimes(ballast, 'i32')}) (result i32)
     (if (result i32) (i32.eqz (global.get $glob))
-        (return ${compute(ballast)})
-        (block (result i32)
-          (global.set $glob (i32.sub (global.get $glob) (i32.const 1)))
-          (return_call_indirect (type $ty${ballast-1}) ${ntimes(ballast-1,get_local)} (i32.const ${ballast+1})))))`;
+        (then (return ${compute(ballast)}))
+        (else
+            (block (result i32)
+                (global.set $glob (i32.sub (global.get $glob) (i32.const 1)))
+                (return_call_indirect (type $ty${ballast-1}) ${ntimes(ballast-1,get_local)} (i32.const ${ballast+1}))))))`;
     default:
         return `
 (func $up${n} (param ${ntimes(n, 'i32')}) (result i32)

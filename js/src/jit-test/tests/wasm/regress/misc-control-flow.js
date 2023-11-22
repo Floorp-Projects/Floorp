@@ -1,29 +1,29 @@
 wasmFailValidateText(`(module
    (func (param i32) (result i32)
-     (loop (if (i32.const 0) (br 0)) (local.get 0)))
+     (loop (if (i32.const 0) (then (br 0))) (local.get 0)))
    (export "" (func 0))
 )`, /(unused values not explicitly dropped by end of block)|(values remaining on stack at end of block)/);
 
 wasmFailValidateText(`(module
    (func (param i32)
-     (loop (if (i32.const 0) (br 0)) (local.get 0)))
+     (loop (if (i32.const 0) (then (br 0))) (local.get 0)))
    (export "" (func 0))
 )`, /(unused values not explicitly dropped by end of block)|(values remaining on stack at end of block)/);
 
 wasmFailValidateText(`(module
    (func (param i32) (result i32)
-     (loop (if (i32.const 0) (br 0)) (drop (local.get 0))))
+     (loop (if (i32.const 0) (then (br 0))) (drop (local.get 0))))
    (export "" (func 0))
 )`, emptyStackError);
 
 assertEq(wasmEvalText(`(module
    (func (param i32) (result i32)
-     (loop (if (i32.const 0) (br 0))) (local.get 0))
+     (loop (if (i32.const 0) (then (br 0)))) (local.get 0))
    (export "" (func 0))
 )`).exports[""](42), 42);
 
 wasmEvalText(`(module (func $func$0
-      (block (if (i32.const 1) (loop (br_table 0 (br 0)))))
+      (block (if (i32.const 1) (then (loop (br_table 0 (br 0))))))
   )
 )`);
 
@@ -92,10 +92,10 @@ wasmEvalText(`
             (i32.const 43)
             (block $b (result i32)
                 (if (i32.const 1)
-                    (call 0
+                    (then (call 0
                         (block (result i32)
                             (call 0 (i32.const 42))
-                            (br $b (i32.const 10)))))
+                            (br $b (i32.const 10))))))
                 (i32.const 44))))
     (export "foo" (func 4)))
 `, {
@@ -164,13 +164,13 @@ wasmFailValidateText(
    (select
     (if (result f32)
      (i32.const 0)
-     (f32.const 0)
-     (i32.const 0)
+     (then (f32.const 0))
+     (else (i32.const 0))
     )
     (if (result f32)
      (i32.const 0)
-     (f32.const 0)
-     (i32.const 0)
+     (then (f32.const 0))
+     (else (i32.const 0))
     )
     (i32.const 0)
    )
