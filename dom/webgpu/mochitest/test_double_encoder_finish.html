@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <script>
+      ok(
+        SpecialPowers.getBoolPref("dom.webgpu.enabled"),
+        "Pref should be enabled."
+      );
+
+      const func = async function () {
+        const adapter = await navigator.gpu.requestAdapter();
+        const device = await adapter.requestDevice();
+        const encoder = device.createCommandEncoder();
+
+        const command_buffer = encoder.finish();
+        ok(command_buffer !== undefined, "command_buffer !== undefined");
+
+        const invalid_command_buffer = encoder.finish();
+        ok(
+          invalid_command_buffer !== undefined,
+          "invalid_command_buffer !== undefined"
+        );
+      };
+
+      SimpleTest.waitForExplicitFinish();
+      func()
+        .catch(e => ok(false, "Unhandled exception " + e))
+        .finally(() => SimpleTest.finish());
+    </script>
+  </body>
+</html>
