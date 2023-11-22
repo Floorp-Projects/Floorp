@@ -33,14 +33,8 @@ void RenderPipeline::Cleanup() {
     if (bridge && bridge->IsOpen()) {
       bridge->SendRenderPipelineDrop(mId);
       if (mImplicitPipelineLayoutId) {
-        // Bug 1862759: wgpu does not yet guarantee that the implicit pipeline
-        // layout was actually created, and requesting its destruction in such
-        // a case will crash the parent process. Until this is fixed, we leak
-        // all implicit pipeline layouts and bind group layouts.
-        /*
         bridge->SendImplicitLayoutDrop(mImplicitPipelineLayoutId,
                                        mImplicitBindGroupLayoutIds);
-        */
       }
     }
   }
