@@ -76,7 +76,7 @@ add_task(async function test_clicking_global_rules() {
   );
   Services.cookieBanners.insertRule(ruleD);
 
-  await testCMPResultTelemetry({});
+  await testClickResultTelemetry({});
 
   info("The global rule ruleA should handle both test pages with div#banner.");
   await openPageAndVerify({
@@ -86,7 +86,7 @@ add_task(async function test_clicking_global_rules() {
     expected: "OptOut",
   });
 
-  await testCMPResultTelemetry(
+  await testClickResultTelemetry(
     {
       success: 1,
       success_dom_content_loaded: 1,
@@ -103,7 +103,7 @@ add_task(async function test_clicking_global_rules() {
     expected: "OptOut",
   });
 
-  await testCMPResultTelemetry(
+  await testClickResultTelemetry(
     {
       success: 2,
       success_dom_content_loaded: 2,
@@ -122,7 +122,7 @@ add_task(async function test_clicking_global_rules() {
     bannerId: "bannerB",
   });
 
-  await testCMPResultTelemetry(
+  await testClickResultTelemetry(
     {
       success: 2,
       success_dom_content_loaded: 2,
@@ -151,7 +151,7 @@ add_task(async function test_clicking_global_rules() {
 
   await SpecialPowers.popPrefEnv();
 
-  await testCMPResultTelemetry({
+  await testClickResultTelemetry({
     success: 3,
     success_dom_content_loaded: 2,
     fail: 1,
@@ -216,7 +216,7 @@ add_task(async function test_clicking_global_rules_precedence() {
   );
   Services.cookieBanners.insertRule(ruleDomain);
 
-  await testCMPResultTelemetry({});
+  await testClickResultTelemetry({});
 
   info("Test that the domain-specific rule applies, not the global one.");
   await openPageAndVerify({
@@ -228,7 +228,8 @@ add_task(async function test_clicking_global_rules_precedence() {
     expected: "OptIn",
   });
 
-  // Ensure we don't accidentally collect CMP result telemetry when
-  // domain-specific rule applies.
-  await testCMPResultTelemetry({});
+  await testClickResultTelemetry({
+    success: 1,
+    success_dom_content_loaded: 1,
+  });
 });

@@ -113,13 +113,6 @@ nsCookieBannerRule::GetCookiesOptIn(nsTArray<RefPtr<nsICookieRule>>& aCookies) {
 }
 
 NS_IMETHODIMP
-nsCookieBannerRule::GetIsGlobalRule(bool* aIsGlobalRule) {
-  *aIsGlobalRule = mDomains.IsEmpty();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsCookieBannerRule::GetClickRule(nsIClickRule** aClickRule) {
   NS_IF_ADDREF(*aClickRule = mClickRule);
   return NS_OK;
@@ -132,9 +125,8 @@ nsCookieBannerRule::AddClickRule(const nsACString& aPresence,
                                  const nsACString& aHide,
                                  const nsACString& aOptOut,
                                  const nsACString& aOptIn) {
-  mClickRule =
-      MakeRefPtr<nsClickRule>(this, aPresence, aSkipPresenceVisibilityCheck,
-                              aRunContext, aHide, aOptOut, aOptIn);
+  mClickRule = MakeRefPtr<nsClickRule>(aPresence, aSkipPresenceVisibilityCheck,
+                                       aRunContext, aHide, aOptOut, aOptIn);
   return NS_OK;
 }
 

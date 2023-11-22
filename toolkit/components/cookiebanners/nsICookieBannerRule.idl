@@ -28,12 +28,6 @@ interface nsICookieBannerRule : nsISupports {
     readonly attribute Array<nsICookieRule> cookiesOptIn;
 
     /**
-     * Indicates whether this rule is a global rule according to the domains
-     * field. We say this rule is global if the domains field is an empty array.
-     */
-    [infallible] readonly attribute boolean isGlobalRule;
-
-    /**
      * Get the list of cookies associated with this rule.
      * aIsOptOut - Whether to return opt-out cookies (true) or opt-in cookies
      * (false).

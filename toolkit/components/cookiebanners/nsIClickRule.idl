@@ -11,25 +11,18 @@
 [builtinclass, scriptable, uuid(7e104b32-b6db-43f3-b887-573c01acef39)]
 interface nsIClickRule : nsISupports {
   /**
-   * Where the click rule may be executed.
-   * RUN_TOP: Only run in the top window.
-   * RUN_CHILD: Only run in child frames (including nested frames). Not in the
-   * top window.
-   * RUN_ALL: Run in both the top window and any child frames (including nested
-   * frames).
-   */
+  * Where the click rule may be executed.
+  * RUN_TOP: Only run in the top window.
+  * RUN_CHILD: Only run in child frames (including nested frames). Not in the top
+  * window.
+  * RUN_ALL: Run in both the top window and any child frames (including nested
+  * frames).
+  */
   cenum RunContext : 8 {
     RUN_TOP,
     RUN_CHILD,
     RUN_ALL,
   };
-
-  /**
-   * The id for the click rule. For a global rule, the id will be the name of
-   * the CMP. For a per-site rule, the id would be a UUID string. This is the
-   * same id as the nsICookieBannerRule.
-   */
-  [must_use] readonly attribute ACString id;
 
   /**
    * The CSS selector for detecting the presence of the cookie banner.
@@ -43,9 +36,9 @@ interface nsIClickRule : nsISupports {
 
 
   /**
-   * Where the click rule should be executed. See RunContext enum. Defaults to
-   * RUN_TOP.
-   */
+  * Where the click rule should be executed. See RunContext enum. Defaults to
+  * RUN_TOP.
+  */
   [must_use] readonly attribute nsIClickRule_RunContext runContext;
 
   /**
@@ -57,20 +50,15 @@ interface nsIClickRule : nsISupports {
    */
   [must_use] readonly attribute ACString hide;
 
-  /**
+  /*
    * The CSS selector to to select the element to click for the opt-out option
    * for the cookie banner.
    */
   [must_use] readonly attribute ACString optOut;
 
-  /**
+  /*
    * The CSS selector to to select the element to click for the opt-in option
    * for the cookie banner.
    */
   [must_use] readonly attribute ACString optIn;
-
-  /**
-   * Whether or not this click rule is a global rule.
-   */
-  [must_use] readonly attribute boolean isGlobalRule;
 };

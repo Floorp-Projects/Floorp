@@ -6,7 +6,6 @@
 #define mozilla_nsclickrule_h__
 
 #include "nsIClickRule.h"
-#include "nsICookieBannerRule.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -15,14 +14,12 @@ class nsClickRule final : public nsIClickRule {
   NS_DECL_ISUPPORTS
   NS_DECL_NSICLICKRULE
 
-  explicit nsClickRule(nsICookieBannerRule* aCookieBannerRule,
-                       const nsACString& aPresence,
+  explicit nsClickRule(const nsACString& aPresence,
                        const bool aSkipPresenceVisibilityCheck,
                        const nsIClickRule::RunContext aRunContext,
                        const nsACString& aHide, const nsACString& aOptOut,
                        const nsACString& aOptIn)
-      : mCookieBannerRule(aCookieBannerRule),
-        mPresence(aPresence),
+      : mPresence(aPresence),
         mSkipPresenceVisibilityCheck(aSkipPresenceVisibilityCheck),
         mRunContext(aRunContext),
         mHide(aHide),
@@ -32,8 +29,6 @@ class nsClickRule final : public nsIClickRule {
  private:
   ~nsClickRule() = default;
 
-  // The reference to the cookie banner rule that holds this clicking rule.
-  nsCOMPtr<nsICookieBannerRule> mCookieBannerRule;
   nsCString mPresence;
   bool mSkipPresenceVisibilityCheck;
   nsIClickRule::RunContext mRunContext;
