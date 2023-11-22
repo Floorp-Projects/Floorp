@@ -125,8 +125,9 @@ nsCookieBannerRule::AddClickRule(const nsACString& aPresence,
                                  const nsACString& aHide,
                                  const nsACString& aOptOut,
                                  const nsACString& aOptIn) {
-  mClickRule = MakeRefPtr<nsClickRule>(aPresence, aSkipPresenceVisibilityCheck,
-                                       aRunContext, aHide, aOptOut, aOptIn);
+  mClickRule =
+      MakeRefPtr<nsClickRule>(this, aPresence, aSkipPresenceVisibilityCheck,
+                              aRunContext, aHide, aOptOut, aOptIn);
   return NS_OK;
 }
 

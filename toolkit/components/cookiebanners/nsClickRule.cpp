@@ -12,6 +12,13 @@ namespace mozilla {
 NS_IMPL_ISUPPORTS(nsClickRule, nsIClickRule)
 
 NS_IMETHODIMP
+nsClickRule::GetId(nsACString& aId) {
+  MOZ_ASSERT(mCookieBannerRule);
+
+  return mCookieBannerRule->GetId(aId);
+}
+
+NS_IMETHODIMP
 nsClickRule::GetPresence(nsACString& aPresence) {
   aPresence.Assign(mPresence);
   return NS_OK;
