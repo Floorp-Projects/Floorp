@@ -80,6 +80,11 @@ add_task(async function test_server_up() {
 
 add_task(async function test_trr_flags() {
   Services.prefs.setBoolPref("network.trr.fallback-on-zero-response", true);
+  Services.prefs.setIntPref("network.trr.request_timeout_ms", 10000);
+  Services.prefs.setIntPref(
+    "network.trr.request_timeout_mode_trronly_ms",
+    10000
+  );
 
   let httpserv = new HttpServer();
   httpserv.registerPathHandler("/", function handler(metadata, response) {
@@ -122,6 +127,8 @@ add_task(async function test_trr_flags() {
 
   await new Promise(resolve => httpserv.stop(resolve));
   Services.prefs.clearUserPref("network.trr.fallback-on-zero-response");
+  Services.prefs.clearUserPref("network.trr.request_timeout_ms");
+  Services.prefs.clearUserPref("network.trr.request_timeout_mode_trronly_ms");
 });
 
 add_task(test_A_record);
