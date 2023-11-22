@@ -5,7 +5,6 @@ prefs = [
   "dom.webgpu.enabled=true",
   "dom.webgpu.workers.enabled=true",
   "gfx.offscreencanvas.enabled=true",
-  "gfx.webgpu.ignore-blocklist=true",
 ]
 support-files = [
   "worker_wrapper.js",
