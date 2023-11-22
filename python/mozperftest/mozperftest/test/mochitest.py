@@ -151,7 +151,6 @@ class Mochitest(Layer):
         # Bug 1858155 - Attempting to only use one test_path triggers a failure
         # during test execution
         args.test_paths = [str(test.name), str(test.name)]
-        args.keep_open = False
         args.runByManifest = True
         args.manifestFile = manifest
         args.topobjdir = self.topobjdir
@@ -184,8 +183,7 @@ class Mochitest(Layer):
                 status, log_processor = FunctionalTestRunner.test(
                     self.mach_cmd,
                     [str(test)],
-                    self._parse_extra_args(self.get_arg("extra-args"))
-                    + ["--keep-open=False"],
+                    self._parse_extra_args(self.get_arg("extra-args")),
                 )
 
             if status is not None and status != 0:
