@@ -1,10 +1,7 @@
 const STORE_URL = '/speculation-rules/prerender/resources/key-value-store.py';
 
 // Starts prerendering for `url`.
-//
-// `rule_extras` provides additional parameters for the speculation rule used
-// to trigger prerendering.
-function startPrerendering(url, rule_extras = {}) {
+function startPrerendering(url) {
   // Adds <script type="speculationrules"> and specifies a prerender candidate
   // for the given URL.
   // TODO(https://crbug.com/1174978): <script type="speculationrules"> may not
@@ -12,8 +9,7 @@ function startPrerendering(url, rule_extras = {}) {
   // WebDriver API to force prerendering.
   const script = document.createElement('script');
   script.type = 'speculationrules';
-  script.text = JSON.stringify(
-      {prerender: [{source: 'list', urls: [url], ...rule_extras}]});
+  script.text = `{"prerender": [{"source": "list", "urls": ["${url}"] }] }`;
   document.head.appendChild(script);
 }
 
@@ -102,10 +98,7 @@ async function writeValueToServer(key, value) {
 
 // Loads the initiator page, and navigates to the prerendered page after it
 // receives the 'readyToActivate' message.
-//
-// `rule_extras` provides additional parameters for the speculation rule used
-// to trigger prerendering.
-function loadInitiatorPage(rule_extras = {}) {
+function loadInitiatorPage() {
   // Used to communicate with the prerendering page.
   const prerenderChannel = new PrerenderChannel('prerender-channel');
   window.addEventListener('unload', () => {
@@ -128,15 +121,11 @@ function loadInitiatorPage(rule_extras = {}) {
   url.searchParams.append('prerendering', '');
   // Prerender a page that notifies the initiator page of the page's ready to be
   // activated via the 'readyToActivate'.
-  startPrerendering(url.toString(), rule_extras);
+  startPrerendering(url.toString());
 
   // Navigate to the prerendered page after being informed.
   readyToActivate.then(() => {
-    if (rule_extras['target_hint'] === '_blank') {
-      window.open(url.toString(), '_blank', 'noopener');
-    } else {
-      window.location = url.toString();
-    }
+    window.location = url.toString();
   }).catch(e => {
     const testChannel = new PrerenderChannel('test-channel');
     testChannel.postMessage(

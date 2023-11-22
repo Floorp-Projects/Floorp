@@ -8,3 +8,7 @@ interface AmbientLightSensor : Sensor {
   constructor(optional SensorOptions sensorOptions = {});
   readonly attribute double? illuminance;
 };
+
+dictionary AmbientLightReadingValues {
+  required double? illuminance;
+};

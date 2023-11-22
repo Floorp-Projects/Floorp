@@ -3,7 +3,6 @@ from enum import Enum
 from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Union
 
 from ._module import BidiModule, command
-from ..undefined import UNDEFINED, Undefined
 
 
 class ElementOptions(Dict[str, Any]):
@@ -190,16 +189,16 @@ class BrowsingContext(BidiModule):
     @command
     def set_viewport(self,
                      context: str,
-                     viewport: Union[Optional[Mapping[str, Any]], Undefined] = UNDEFINED,
-                     device_pixel_ratio: Union[Optional[float], Undefined] = UNDEFINED) -> Mapping[str, Any]:
+                     viewport: Optional[Mapping[str, Any]] = None,
+                     device_pixel_ratio: Optional[float] = None) -> Mapping[str, Any]:
         params: MutableMapping[str, Any] = {
             "context": context,
         }
 
-        if viewport is not UNDEFINED:
+        if viewport is not None:
             params["viewport"] = viewport
 
-        if device_pixel_ratio is not UNDEFINED:
+        if device_pixel_ratio is not None:
             params["devicePixelRatio"] = device_pixel_ratio
 
         return params

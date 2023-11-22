@@ -31,7 +31,8 @@ createBFCacheTest(async (t, testControls) => {
       mode, fileName, shouldRestoreFromBFCache) {
     await forward();
 
-    assert_true(await createAndReleaseWFS(mode, fileName));
+    assert_equals(
+        await createAndReleaseWFS(mode, fileName), shouldRestoreFromBFCache);
 
     await back(shouldRestoreFromBFCache);
   }

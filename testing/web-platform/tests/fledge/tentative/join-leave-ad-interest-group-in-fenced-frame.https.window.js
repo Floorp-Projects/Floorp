@@ -364,6 +364,7 @@ subsetTest(promise_test, async test => {
       uuid,
       [createSellerReportURL(uuid), createSuccessURL(uuid)]);
 
-  // Check the interest group was left.
-  await runBasicFledgeTestExpectingNoWinner(test, uuid);
+  // Check the interest group was not actually left - component ads are not currently
+  // allowed to leave interest groups, even if same origin.
+  await runBasicFledgeTestExpectingWinner(test, uuid);
 }, 'leaveAdInterestGroup() in component ad fenced frame, no parameters.');

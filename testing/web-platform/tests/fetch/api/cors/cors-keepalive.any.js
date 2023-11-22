@@ -75,10 +75,10 @@ keepaliveCorsBasicTest(
 function keepaliveCorsInUnloadTest(description, origin, method) {
   const evt = 'unload';
   for (const mode of ['no-cors', 'cors']) {
-    for (const disallowCrossOrigin of [false, true]) {
+    for (const disallowOrigin of [false, true]) {
       const desc = `${description} ${method} request in ${evt} [${mode} mode` +
-          (disallowCrossOrigin ? ']' : ', server forbid CORS]');
-      const expectTokenExist = !disallowCrossOrigin || mode === 'no-cors';
+          (disallowOrigin ? `, server forbid CORS]` : `]`);
+      const shouldPass = !disallowOrigin || mode === 'no-cors';
       promise_test(async (test) => {
         const token1 = token();
         const iframe = document.createElement('iframe');
@@ -87,14 +87,14 @@ function keepaliveCorsInUnloadTest(description, origin, method) {
           requestOrigin: origin,
           sendOn: evt,
           mode: mode,
-          disallowCrossOrigin
+          disallowOrigin
         });
         document.body.appendChild(iframe);
         await iframeLoaded(iframe);
         iframe.remove();
         assert_equals(await getTokenFromMessage(), token1);
 
-        assertStashedTokenAsync(desc, token1, {expectTokenExist});
+        assertStashedTokenAsync(desc, token1, {shouldPass});
       }, `${desc}; setting up`);
     }
   }

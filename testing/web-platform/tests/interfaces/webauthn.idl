@@ -7,16 +7,14 @@
 interface PublicKeyCredential : Credential {
     [SameObject] readonly attribute ArrayBuffer              rawId;
     [SameObject] readonly attribute AuthenticatorResponse    response;
-    readonly attribute DOMString?                            authenticatorAttachment;
+    [SameObject] readonly attribute DOMString?               authenticatorAttachment;
     AuthenticationExtensionsClientOutputs getClientExtensionResults();
     static Promise<boolean> isConditionalMediationAvailable();
     PublicKeyCredentialJSON toJSON();
 };
 
 typedef DOMString Base64URLString;
-// The structure of this object will be either
-// RegistrationResponseJSON or AuthenticationResponseJSON
-typedef object PublicKeyCredentialJSON;
+typedef (RegistrationResponseJSON or AuthenticationResponseJSON) PublicKeyCredentialJSON;
 
 dictionary RegistrationResponseJSON {
     required Base64URLString id;
@@ -298,7 +296,6 @@ partial dictionary AuthenticationExtensionsClientInputs {
 
 dictionary CredentialPropertiesOutput {
     boolean rk;
-    USVString authenticatorDisplayName;
 };
 
 partial dictionary AuthenticationExtensionsClientOutputs {

@@ -30,15 +30,14 @@ pytestmark = pytest.mark.asyncio
     "bigint",
 ])
 async def test_primitive_types(
-    bidi_session, subscribe_events, top_context, wait_for_event,
-    wait_for_future_safe, data, remote_value
+    bidi_session, subscribe_events, top_context, wait_for_event, data, remote_value
 ):
     await subscribe_events(events=["log.entryAdded"])
 
     on_entry_added = wait_for_event("log.entryAdded")
     await create_console_api_message_from_string(
         bidi_session, top_context, "log", f"'foo', {data}")
-    event_data = await wait_for_future_safe(on_entry_added)
+    event_data = await on_entry_added
     args = [
         {"type": "string", "value": "foo"},
         {"type": remote_value["type"]},
@@ -193,8 +192,7 @@ async def test_primitive_types(
     ],
 )
 async def test_remote_values(
-    bidi_session, subscribe_events, top_context, wait_for_event,
-    wait_for_future_safe, data, remote_value
+    bidi_session, subscribe_events, top_context, wait_for_event, data, remote_value
 ):
     await subscribe_events(events=["log.entryAdded"])
 
@@ -202,7 +200,7 @@ async def test_remote_values(
     await create_console_api_message_from_string(
         bidi_session, top_context, "log", data
     )
-    event_data = await wait_for_future_safe(on_entry_added)
+    event_data = await on_entry_added
     arg = {"type": remote_value["type"]}
     if "value" in remote_value:
         arg["value"] = remote_value["value"]
@@ -257,8 +255,7 @@ async def test_remote_values(
     ids=["basic", "shadowRoot"],
 )
 async def test_node(
-    bidi_session, subscribe_events, get_test_page, top_context, wait_for_event,
-    wait_for_future_safe, data, expected
+    bidi_session, subscribe_events, get_test_page, top_context, wait_for_event, data, expected
 ):
     await bidi_session.browsing_context.navigate(
         context=top_context["context"], url=get_test_page(), wait="complete"
@@ -269,6 +266,6 @@ async def test_node(
     await create_console_api_message_from_string(
         bidi_session, top_context, "log", data
     )
-    event_data = await wait_for_future_safe(on_entry_added)
+    event_data = await on_entry_added
 
     assert_console_entry(event_data, args=expected)

@@ -26,3 +26,10 @@ interface AbsoluteOrientationSensor : OrientationSensor {
 interface RelativeOrientationSensor : OrientationSensor {
   constructor(optional OrientationSensorOptions sensorOptions = {});
 };
+
+dictionary AbsoluteOrientationReadingValues {
+  required FrozenArray<double>? quaternion;
+};
+
+dictionary RelativeOrientationReadingValues : AbsoluteOrientationReadingValues {
+};

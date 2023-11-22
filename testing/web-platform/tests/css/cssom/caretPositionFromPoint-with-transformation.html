@@ -25,18 +25,14 @@
       return [rect.x + rect.width / 2, rect.y + rect.height / 2];
     };
 
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       frame.srcdoc = source;
       frame.onload = () => {
-        try {
-          const frameDoc = frame.contentDocument;
-          const {offset} = frameDoc.caretPositionFromPoint(
-            ...elementCenter(frameDoc.querySelector("h1"))
-          );
-          resolve(offset);
-        } catch (error) {
-          reject(error);
-        }
+        const frameDoc = frame.contentDocument;
+        const {offset} = frameDoc.caretPositionFromPoint(
+          ...elementCenter(frameDoc.querySelector("h1"))
+        );
+        resolve(offset);
       };
     });
   };

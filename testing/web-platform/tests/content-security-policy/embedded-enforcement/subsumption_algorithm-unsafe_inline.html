@@ -2,12 +2,9 @@
 <html>
 <head>
 <title>Embedded Enforcement: Subsumption Algorithm - 'unsafe-inline' keyword.</title>
-  <meta name="variant" content="?1-8">
-  <meta name="variant" content="?9-last">
   <script src="/resources/testharness.js"></script>
   <script src="/resources/testharnessreport.js"></script>
   <script src="support/testharness-helper.sub.js"></script>
-  <script src="/common/subset-tests.js"></script>
 </head>
 <body>
   <script>
@@ -94,7 +91,7 @@
         "expected": IframeLoad.EXPECT_LOAD },
     ];
     tests.forEach(test => {
-      subsetTest(async_test, t => {
+      async_test(t =>  {
         var url = generateUrlWithPolicies(Host.CROSS_ORIGIN, test.returned_csp_1);
         if (test.returned_csp_2)
           url.searchParams.append("policy2", test.returned_csp_2);

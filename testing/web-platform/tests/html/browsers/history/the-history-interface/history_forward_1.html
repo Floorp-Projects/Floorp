@@ -7,20 +7,22 @@
   var t = async_test();
   started = false;
   pages = []
-  timer = setInterval(
+  timer = null;
+  start_test_wait = t.step_func(
     function() {
-      if (pages.length < 3)
-        return;
-      clearInterval(timer);
-      setTimeout(t.step_func(
+      clearTimeout(timer);
+      timer = setTimeout(t.step_func(
         function() {
-          assert_array_equals(pages, [3, 2, 3], "Pages opened during history navigation");
-          t.done();
+          try {
+            assert_array_equals(pages, [3, 2, 3], "Pages opened during history navigation");
+            t.done();
+          } finally {
+            win.close();
+          }
         }
       ), 500);
-    }, 50);
-  t.step(function() {
-    win = window.open("history_entry.html?urls=history_forward-1.html,history_forward-2.html");
-    t.add_cleanup(function() { win.close(); });
-  });
+    }
+  );
+  t.step(function() {win = window.open("history_entry.html?urls=history_forward-1.html,history_forward-2.html");
+});
 </script>
