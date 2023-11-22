@@ -1189,8 +1189,8 @@ nsSHistory::EvictOutOfRangeDocumentViewers(int32_t aIndex) {
 }
 
 NS_IMETHODIMP_(void)
-nsSHistory::EvictContentViewersOrReplaceEntry(nsISHEntry* aNewSHEntry,
-                                              bool aReplace) {
+nsSHistory::EvictDocumentViewersOrReplaceEntry(nsISHEntry* aNewSHEntry,
+                                               bool aReplace) {
   if (!aReplace) {
     int32_t curIndex;
     GetIndex(&curIndex);
