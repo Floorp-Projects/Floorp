@@ -1,4 +1,4 @@
-// |jit-test| --more-compartments; skip-variant-if: --wasm-test-serialization, true; skip-variant-if: --wasm-compiler=ion, true;
+// |jit-test| --more-compartments; skip-variant-if: --wasm-test-serialization, true; skip-variant-if: --wasm-compiler=ion, true; skip-if: !wasmGcEnabled()
 
 a = newGlobal();
 a.b = this;
