@@ -24,7 +24,6 @@
 #if defined(MOZ_WAYLAND)
 #  include "mozilla/widget/nsWaylandDisplay.h"
 #  include "nsWindow.h"
-#  include "mozilla/dom/power/PowerManagerService.h"
 #endif
 
 #ifdef MOZ_ENABLE_DBUS
@@ -47,8 +46,6 @@ using namespace mozilla;
 using namespace mozilla::widget;
 
 NS_IMPL_ISUPPORTS(WakeLockListener, nsIDOMMozWakeLockListener)
-
-StaticRefPtr<WakeLockListener> WakeLockListener::sSingleton;
 
 #define WAKE_LOCK_LOG(str, ...)                        \
   MOZ_LOG(gLinuxWakeLockLog, mozilla::LogLevel::Debug, \
@@ -714,21 +711,6 @@ bool WakeLockTopic::SwitchToNextWakeLockType() {
     }
   }
   return false;
-}
-
-/* static */
-WakeLockListener* WakeLockListener::GetSingleton(bool aCreate) {
-  if (!sSingleton && aCreate) {
-    sSingleton = new WakeLockListener();
-  }
-  return sSingleton;
-}
-
-/* static */
-void WakeLockListener::Shutdown() {
-  MOZ_LOG(gLinuxWakeLockLog, mozilla::LogLevel::Debug,
-          ("WakeLockListener::Shutdown()"));
-  sSingleton = nullptr;
 }
 
 nsresult WakeLockListener::Callback(const nsAString& topic,
