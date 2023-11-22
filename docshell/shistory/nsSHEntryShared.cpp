@@ -161,7 +161,7 @@ nsSHEntryShared::~nsSHEntryShared() {
   // nsSHistory::Release can cause a crash, so set mSHistory to null explicitly
   // before RemoveFromBFCacheSync.
   mSHistory = nullptr;
-  if (mContentViewer) {
+  if (mDocumentViewer) {
     RemoveFromBFCacheSync();
   }
 }
@@ -187,7 +187,7 @@ void nsSHEntryShared::RemoveFromExpirationTracker() {
 }
 
 void nsSHEntryShared::SyncPresentationState() {
-  if (mContentViewer && mWindowState) {
+  if (mDocumentViewer && mWindowState) {
     // If we have a content viewer and a window state, we should be ok.
     return;
   }
@@ -203,12 +203,12 @@ void nsSHEntryShared::DropPresentationState() {
     mDocument->RemoveMutationObserver(this);
     mDocument = nullptr;
   }
-  if (mContentViewer) {
-    mContentViewer->ClearHistoryEntry();
+  if (mDocumentViewer) {
+    mDocumentViewer->ClearHistoryEntry();
   }
 
   RemoveFromExpirationTracker();
-  mContentViewer = nullptr;
+  mDocumentViewer = nullptr;
   mSticky = true;
   mWindowState = nullptr;
   mViewerBounds.SetRect(0, 0, 0, 0);
@@ -218,20 +218,20 @@ void nsSHEntryShared::DropPresentationState() {
 }
 
 nsresult nsSHEntryShared::SetContentViewer(nsIDocumentViewer* aViewer) {
-  MOZ_ASSERT(!aViewer || !mContentViewer,
+  MOZ_ASSERT(!aViewer || !mDocumentViewer,
              "SHEntryShared already contains viewer");
 
-  if (mContentViewer || !aViewer) {
+  if (mDocumentViewer || !aViewer) {
     DropPresentationState();
   }
 
-  // If we're setting mContentViewer to null, state should already be cleared
+  // If we're setting mDocumentViewer to null, state should already be cleared
   // in the DropPresentationState() call above; If we're setting it to a
   // non-null content viewer, the entry shouldn't have been tracked either.
   MOZ_ASSERT(!GetExpirationState()->IsTracked());
-  mContentViewer = aViewer;
+  mDocumentViewer = aViewer;
 
-  if (mContentViewer) {
+  if (mDocumentViewer) {
     // mSHistory is only set for root entries, but in general bfcache only
     // applies to root entries as well. BFCache for subframe navigation has been
     // disabled since 2005 in bug 304860.
@@ -241,7 +241,7 @@ nsresult nsSHEntryShared::SetContentViewer(nsIDocumentViewer* aViewer) {
 
     // Store observed document in strong pointer in case it is removed from
     // the contentviewer
-    mDocument = mContentViewer->GetDocument();
+    mDocument = mDocumentViewer->GetDocument();
     if (mDocument) {
       mDocument->SetBFCacheEntry(this);
       mDocument->AddMutationObserver(this);
@@ -252,14 +252,14 @@ nsresult nsSHEntryShared::SetContentViewer(nsIDocumentViewer* aViewer) {
 }
 
 nsresult nsSHEntryShared::RemoveFromBFCacheSync() {
-  MOZ_ASSERT(mContentViewer && mDocument, "we're not in the bfcache!");
+  MOZ_ASSERT(mDocumentViewer && mDocument, "we're not in the bfcache!");
 
   // The call to DropPresentationState could drop the last reference, so hold
   // |this| until RemoveDynEntriesForBFCacheEntry finishes.
   RefPtr<nsSHEntryShared> kungFuDeathGrip = this;
 
-  // DropPresentationState would clear mContentViewer.
-  nsCOMPtr<nsIDocumentViewer> viewer = mContentViewer;
+  // DropPresentationState would clear mDocumentViewer.
+  nsCOMPtr<nsIDocumentViewer> viewer = mDocumentViewer;
   DropPresentationState();
 
   if (viewer) {
@@ -277,17 +277,17 @@ nsresult nsSHEntryShared::RemoveFromBFCacheSync() {
 }
 
 nsresult nsSHEntryShared::RemoveFromBFCacheAsync() {
-  MOZ_ASSERT(mContentViewer && mDocument, "we're not in the bfcache!");
+  MOZ_ASSERT(mDocumentViewer && mDocument, "we're not in the bfcache!");
 
   // Check it again to play safe in release builds.
   if (!mDocument) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  // DropPresentationState would clear mContentViewer & mDocument. Capture and
+  // DropPresentationState would clear mDocumentViewer & mDocument. Capture and
   // release the references asynchronously so that the document doesn't get
   // nuked mid-mutation.
-  nsCOMPtr<nsIDocumentViewer> viewer = mContentViewer;
+  nsCOMPtr<nsIDocumentViewer> viewer = mDocumentViewer;
   RefPtr<dom::Document> document = mDocument;
   RefPtr<nsSHEntryShared> self = this;
   nsresult rv = mDocument->Dispatch(NS_NewRunnableFunction(

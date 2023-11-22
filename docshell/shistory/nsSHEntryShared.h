@@ -164,7 +164,7 @@ class SHEntrySharedChildState {
 
   // These members aren't copied by SHEntrySharedChildState::CopyFrom() because
   // they're specific to a particular content viewer.
-  nsCOMPtr<nsIDocumentViewer> mContentViewer;
+  nsCOMPtr<nsIDocumentViewer> mDocumentViewer;
   RefPtr<mozilla::dom::Document> mDocument;
   nsCOMPtr<nsISupports> mWindowState;
   // FIXME Move to parent?
