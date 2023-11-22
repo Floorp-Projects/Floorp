@@ -1,0 +1,36 @@
+schema: 1
+
+bugzilla:
+  product: "Firefox Build System"
+  component: "General"
+
+origin:
+  name: motionmark-benchmark
+  description: graphics benchmark to measure the performance of graphics operations on the web
+
+  url: https://github.com/WebKit/MotionMark
+
+  release: 16e3d4e5ca0b2b2fe408c86fd1707f2a902a5b15 (2017-05-13T02:02:02Z).
+  revision: 16e3d4e5ca0b2b2fe408c86fd1707f2a902a5b15
+
+  license: BSD-2-Clause
+
+vendoring:
+  url: https://github.com/WebKit/MotionMark
+  source-hosting: github
+  tracking: commit
+
+  exclude:
+    - ".*"
+
+  keep:
+    - LICENSE
+
+  update-actions:
+    - action: move-dir
+      from: '{vendor_dir}/MotionMark'
+      to: '{vendor_dir}/'
+
+  patches:
+    - score-tracking.patch
+    - warning.patch

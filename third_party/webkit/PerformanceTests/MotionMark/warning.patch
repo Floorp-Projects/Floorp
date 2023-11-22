@@ -1,0 +1,14 @@
+Backport upstream commit https://github.com/WebKit/MotionMark/commit/1e1931505bd764a8268b65d913b566145a9a3388
+diff --git b/resources/extensions.js a/resources/extensions.js
+index 69fe374ee7ebb..fb9d500877e38 100644
+--- b/resources/extensions.js
++++ a/resources/extensions.js
+@@ -371,7 +371,7 @@ UnitBezier = Utilities.createClass(
+ 
+     sampleY: function(t)
+     {
+-        return ((this._a.y * t + this._b.y) * t + this._c.y) * t;kkkj
++        return ((this._a.y * t + this._b.y) * t + this._c.y) * t;
+     },
+ 
+     sampleDerivativeX: function(t)
