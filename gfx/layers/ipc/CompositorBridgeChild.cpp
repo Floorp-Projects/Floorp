@@ -530,9 +530,7 @@ void CompositorBridgeChild::EndCanvasTransaction() {
 }
 
 void CompositorBridgeChild::ClearCachedResources() {
-  if (auto* cm = gfx::CanvasManagerChild::Get()) {
-    cm->ClearCachedResources();
-  }
+  CanvasChild::ClearCachedResources();
 }
 
 bool CompositorBridgeChild::AllocUnsafeShmem(size_t aSize, ipc::Shmem* aShmem) {

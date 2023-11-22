@@ -13,7 +13,6 @@
 #include "RenderCompositorD3D11SWGL.h"
 #include "ScopedGLHelpers.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/gfx/CanvasManagerParent.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/GpuProcessD3D11TextureMap.h"
 #include "mozilla/layers/TextureD3D11.h"
