@@ -78,11 +78,11 @@ function testAllCasts(types) {
     funcSection += `
       (func (export "new${name}") (result externref)
         struct.new_default \$${name}
-        extern.externalize
+        extern.convert_any
       )
       (func (export "is${name}") (param externref) (result i32)
         local.get 0
-        extern.internalize
+        any.convert_extern
         ref.test (ref \$${name})
       )`;
   }

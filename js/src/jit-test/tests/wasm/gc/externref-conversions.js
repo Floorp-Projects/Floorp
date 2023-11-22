@@ -4,27 +4,27 @@
 wasmValidateText(`(module
 	(func (param externref) (result anyref)
 		local.get 0
-		extern.internalize
+		any.convert_extern
 	)
 	(func (param anyref) (result externref)
 		local.get 0
-		extern.externalize
+		extern.convert_any
 	)
 	(func (param (ref extern)) (result (ref any))
 		local.get 0
-		extern.internalize
+		any.convert_extern
 	)
 	(func (param (ref any)) (result (ref extern))
 		local.get 0
-		extern.externalize
+		extern.convert_any
 	)
 	(func (result (ref any))
 	    unreachable
-	    extern.internalize
+	    any.convert_extern
 	)
 	(func (result (ref extern))
 	    unreachable
-	    extern.externalize
+	    extern.convert_any
 	)
 )`);
 
@@ -32,13 +32,13 @@ wasmValidateText(`(module
 wasmFailValidateText(`(module
 	(func (param externref) (result (ref any))
 		local.get 0
-		extern.internalize
+		any.convert_extern
 	)
 )`, /expected/);
 wasmFailValidateText(`(module
 	(func (param anyref) (result (ref extern))
 		local.get 0
-		extern.externalize
+		extern.convert_any
 	)
 )`, /expected/);
 
@@ -46,8 +46,8 @@ wasmFailValidateText(`(module
 let {roundtripThroughAny} = wasmEvalText(`(module
 	(func (export "roundtripThroughAny") (param externref) (result externref)
 	  local.get 0
-	  extern.internalize
-	  extern.externalize
+	  any.convert_extern
+	  extern.convert_any
 	)
 )`).exports;
 for (let value of WasmExternrefValues) {
@@ -65,8 +65,8 @@ let {testStruct, testArray} = wasmEvalText(`(module
       local.get 0
 	  (ref.eq
 	  	(ref.cast (ref null $struct)
-	  	  (extern.internalize
-	  	    (extern.externalize
+	  	  (any.convert_extern
+	  	    (extern.convert_any
 	  	      local.get 0
 	  	    )
 	  	  )
@@ -80,8 +80,8 @@ let {testStruct, testArray} = wasmEvalText(`(module
       local.get 0
 	  (ref.eq
 	  	(ref.cast (ref null $array)
-	  	  (extern.internalize
-	  	    (extern.externalize
+	  	  (any.convert_extern
+	  	    (extern.convert_any
 	  	      local.get 0
 	  	    )
 	  	  )
