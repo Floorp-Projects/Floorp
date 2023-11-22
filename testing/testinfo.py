@@ -429,10 +429,7 @@ class TestInfoReport(TestInfo):
         # build list of dates with missing data
         while startday < endday:
             nextday = startday + datetime.timedelta(days=1)
-            if (
-                str(nextday) not in testrundata.keys()
-                or testrundata[str(nextday)] == {}
-            ):
+            if not testrundata.get(str(nextday.date()), {}):
                 url = "https://treeherder.mozilla.org/api/groupsummary/"
                 url += "?startdate=%s&enddate=%s" % (
                     startday.date(),
