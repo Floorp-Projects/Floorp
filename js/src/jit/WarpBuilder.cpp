@@ -652,6 +652,10 @@ bool WarpBuilder::buildBody() {
       return false;
     }
 #endif
+    bool wantPreciseLineNumbers = js::jit::PerfEnabled();
+    if (wantPreciseLineNumbers && !hasTerminatedBlock()) {
+      current->updateTrackedSite(newBytecodeSite(loc));
+    }
 
     JSOp op = loc.getOp();
 
@@ -667,11 +671,6 @@ bool WarpBuilder::buildBody() {
 #ifdef DEBUG
     useChecker.checkAfterOp();
 #endif
-
-    bool wantPreciseLineNumbers = js::jit::PerfEnabled();
-    if (wantPreciseLineNumbers && !hasTerminatedBlock()) {
-      current->updateTrackedSite(newBytecodeSite(loc));
-    }
   }
 
   return true;
