@@ -1806,7 +1806,7 @@ mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
   if (!aWindowInit.isInitialDocument() ||
       !NS_IsAboutBlank(aWindowInit.documentURI())) {
     return IPC_FAIL(this,
-                    "Logic in CreateContentViewerForActor currently requires "
+                    "Logic in CreateDocumentViewerForActor currently requires "
                     "actors to be initial about:blank documents");
   }
 
