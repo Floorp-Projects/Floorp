@@ -1,0 +1,168 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Service worker performance test: fetch</title>
+</head>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="../utils.js"></script>
+<script src="perfutils.js"></script>
+<script>
+
+  "use strict";
+
+  const COLD_FETCH = "Cold fetch";
+  const UNDISTURBED_FETCH = "Undisturbed fetch";
+  const INTERCEPTED_FETCH = "Intercepted fetch";
+  const LIBERATED_FETCH = "Liberated fetch";
+  const UNDISTURBED_XHR = "Undisturbed XHR";
+  const INTERCEPTED_XHR = "Intercepted XHR";
+  const LIBERATED_XHR = "Liberated XHR";
+
+  var journal = {};
+  journal[COLD_FETCH] = [];
+  journal[UNDISTURBED_FETCH] = [];
+  journal[INTERCEPTED_FETCH] = [];
+  journal[LIBERATED_FETCH] = [];
+  journal[UNDISTURBED_XHR] = [];
+  journal[INTERCEPTED_XHR] = [];
+  journal[LIBERATED_XHR] = [];
+
+  const ITERATIONS = 10;
+
+  var perfMetadata = {
+    owner: "DOM LWS",
+    name: "Service Worker Fetch",
+    description: "Test cold and warm fetches.",
+    options: {
+      default: {
+        perfherder: true,
+        perfherder_metrics: [
+          // Here, we can't use the constants defined above because perfherder
+          // grabs data from the parse tree.
+          { name: "Cold fetch", unit: "ms", shouldAlert: true },
+          { name: "Undisturbed fetch", unit: "ms", shouldAlert: true },
+          { name: "Intercepted fetch", unit: "ms", shouldAlert: true },
+          { name: "Liberated fetch", unit: "ms", shouldAlert: true },
+          { name: "Undisturbed XHR", unit: "ms", shouldAlert: true },
+          { name: "Intercepted XHR", unit: "ms", shouldAlert: true },
+          { name: "Liberated XHR", unit: "ms", shouldAlert: true },
+        ],
+        verbose: true,
+        manifest: "perftest.toml",
+        manifest_flavor: "plain",
+      },
+    },
+  };
+
+  function create_iframe(url) {
+    return new Promise(function(res) {
+      let iframe = document.createElement("iframe");
+      iframe.src = url;
+      iframe.onload = function() { res(iframe) }
+      document.body.appendChild(iframe);
+    });
+  }
+
+  add_task(async () => {
+    await SpecialPowers.pushPrefEnv({
+      set: [["dom.serviceWorkers.testing.enabled", true]]
+    });
+  });
+
+  /**
+   * Time fetch from a fresh service worker.
+   */
+  add_task(async () => {
+    for (let i = 0; i < ITERATIONS; i++) {
+      let reg = await navigator.serviceWorker.register("sw_intercept_target.js");
+      await waitForState(reg.installing, "activated");
+
+      let iframe = await create_iframe("time_fetch.html");
+
+      let result = await iframe.contentWindow.time_fetch("target.txt");
+      is(result.status, 200);
+      is(result.data, "intercepted\n");
+      journal[COLD_FETCH].push(result.elapsed_ms);
+
+      ok(document.body.removeChild(iframe), "Failed to remove child iframe");
+
+      await reg.unregister();
+    }
+  });
+
+  /**
+   * Time unintercepted fetch, intercepted fetch, then unintercepted
+   * fetch again.
+   */
+  add_task(async () => {
+    let reg = await navigator.serviceWorker.register("sw_intercept_target.js");
+    await waitForState(reg.installing, "activated");
+
+    async function measure(journal, sw_enabled) {
+      await SpecialPowers.pushPrefEnv({
+        set: [["dom.serviceWorkers.enabled", sw_enabled]]
+      });
+
+      let iframe = await create_iframe("time_fetch.html");
+
+      for (let i = 0; i < ITERATIONS; i++) {
+        let result = await iframe.contentWindow.time_fetch("target.txt");
+        is(result.status, 200);
+        is(result.data, sw_enabled ? "intercepted\n" : "target\n");
+        journal.push(result.elapsed_ms);
+      }
+
+      ok(document.body.removeChild(iframe), "Failed to remove child iframe");
+
+      await SpecialPowers.popPrefEnv();
+    }
+
+    await measure(journal[UNDISTURBED_FETCH], false);
+    await measure(journal[INTERCEPTED_FETCH], true);
+    await measure(journal[LIBERATED_FETCH], false);
+
+    await reg.unregister();
+  });
+
+  /**
+   * Time unintercepted XHR, intercepted XHR, then unintercepted
+   * XHR again.
+   */
+  add_task(async () => {
+    let reg = await navigator.serviceWorker.register("sw_intercept_target.js");
+    await waitForState(reg.installing, "activated");
+
+    async function measure(journal, sw_enabled) {
+      await SpecialPowers.pushPrefEnv({
+        set: [["dom.serviceWorkers.enabled", sw_enabled]]
+      });
+
+      let iframe = await create_iframe("time_fetch.html");
+
+      for (let i = 0; i < ITERATIONS; i++) {
+        let result = await iframe.contentWindow.time_xhr("target.txt");
+        is(result.status, 200);
+        is(result.data, sw_enabled ? "intercepted\n" : "target\n");
+        journal.push(result.elapsed_ms);
+      }
+
+      ok(document.body.removeChild(iframe), "Failed to remove child iframe");
+
+      await SpecialPowers.popPrefEnv();
+    }
+
+    await measure(journal[UNDISTURBED_XHR], false);
+    await measure(journal[INTERCEPTED_XHR], true);
+    await measure(journal[LIBERATED_XHR], false);
+
+    await reg.unregister();
+  });
+
+  add_task(() => {
+    reportMetrics(journal);
+  });
+
+</script>
+<body>
+</body>
+</html>
