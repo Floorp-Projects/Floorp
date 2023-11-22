@@ -27,9 +27,6 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 :root {
-  user-select: none;
-  color-scheme: light dark;
-
   --toolbox-non-lwt-bgcolor: -moz-headerbar;
   --toolbox-non-lwt-textcolor: -moz-headerbartext;
   --toolbox-non-lwt-bgcolor-inactive: -moz-headerbarinactive;
@@ -91,51 +88,64 @@
 
   --ext-theme-background-transition: background-color 0.1s cubic-bezier(.17,.67,.83,.67);
 
-  &:where([tabsintitlebar]) {
-    --toolbox-non-lwt-bgcolor: ActiveCaption;
-    --toolbox-non-lwt-textcolor: CaptionText;
-    --toolbox-non-lwt-bgcolor-inactive: InactiveCaption;
-    --toolbox-non-lwt-textcolor-inactive: InactiveCaptionText;
-  }
+  user-select: none;
+  color-scheme: light dark;
+}
 
-  &:-moz-lwtheme {
-    color: var(--lwt-text-color);
+:root:where([tabsintitlebar]) {
+  --toolbox-non-lwt-bgcolor: ActiveCaption;
+  --toolbox-non-lwt-textcolor: CaptionText;
+  --toolbox-non-lwt-bgcolor-inactive: InactiveCaption;
+  --toolbox-non-lwt-textcolor-inactive: InactiveCaptionText;
+}
 
-    --checkbox-border-color: color-mix(in srgb, currentColor 41%, transparent);
-    --link-color: light-dark(rgb(0, 97, 224), rgb(0, 221, 255));
-    --chrome-content-separator-color: rgba(0,0,0,.3);
+:root:-moz-lwtheme {
+  --checkbox-border-color: color-mix(in srgb, currentColor 41%, transparent);
+  --link-color: light-dark(rgb(0, 97, 224), rgb(0, 221, 255));
+  --chrome-content-separator-color: rgba(0,0,0,.3);
 
-    @media not (prefers-contrast) {
-      --focus-outline-color: light-dark(#0061E0, #00DDFF);
-    }
-  }
+  color: var(--lwt-text-color);
+}
 
-  @media (prefers-contrast) {
+@media (prefers-contrast) {
+  :root {
     --urlbar-icon-fill-opacity: 1;
     --checkbox-checked-border-color: var(--checkbox-checked-bgcolor);
   }
+}
 
-  &[uidensity=compact] {
-    --urlbar-min-height: max(26px, 1.4em);
+:root[uidensity=compact] {
+  --urlbar-min-height: max(26px, 1.4em);
+}
+
+:root[uidensity=touch] {
+  --urlbar-min-height: max(34px, 1.4em);
+}
+
+@media not (prefers-contrast) {
+  :root:-moz-lwtheme {
+    --focus-outline-color: light-dark(#0061E0, #00DDFF);
   }
+}
 
-  &[uidensity=touch] {
-    --urlbar-min-height: max(34px, 1.4em);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    /* Increase the contrast of urlbar boxes in dark mode.
-       In practice these are bumped-up --button(-hover)-bgcolor rules */
+/* Increase the contrast of urlbar boxes in dark mode.
+   In practice these are bumped-up --button(-hover)-bgcolor rules */
+@media (prefers-color-scheme: dark) {
+  :root {
     --urlbar-box-bgcolor: color-mix(in srgb, currentColor 16%, transparent);
     --urlbar-box-focus-bgcolor: color-mix(in srgb, currentColor 16%, transparent);
     --urlbar-box-hover-bgcolor: color-mix(in srgb, currentColor 22%, transparent);
   }
+}
 
-  @media (min-resolution: 1.5dppx) {
+@media (min-resolution: 1.5dppx) {
+  :root {
     --tabs-navbar-shadow-size: 0.5px;
   }
+}
 
-  @media (min-resolution: 3dppx) {
+@media (min-resolution: 3dppx) {
+  :root {
     --tabs-navbar-shadow-size: 0.33px;
   }
 }
@@ -196,70 +206,32 @@
 
 #PersonalToolbar {
   padding-inline: 6px;
-
-  :root[uidensity=compact] & {
-    padding-inline: 2px;
-  }
-
-  /* Vertical sliding animation */
-
+  /* For vertical sliding animation: */
   overflow: clip;
   max-height: 4em;
+}
 
-  :root[sessionrestored] &:not(.instant) {
-    transition: min-height 170ms ease-out, max-height 170ms ease-out, var(--ext-theme-background-transition);
+:root[uidensity=compact] #PersonalToolbar {
+  padding-inline: 2px;
+}
 
-    &[collapsed=true] {
-      transition: min-height 170ms ease-out, max-height 170ms ease-out, visibility 170ms linear;
-    }
-  }
+/* Bookmarks toolbar vertical sliding animation */
 
-  &[collapsed=true] {
-    min-height: 0;
-    max-height: 0;
+:root[sessionrestored] #PersonalToolbar:not(.instant) {
+  transition: min-height 170ms ease-out, max-height 170ms ease-out, var(--ext-theme-background-transition);
+}
 
-    &.instant {
-      visibility: collapse;
-    }
-  }
+#PersonalToolbar[collapsed=true] {
+  min-height: 0;
+  max-height: 0;
+}
 
-  /* Bookmarks toolbar empty message */
+:root[sessionrestored] #PersonalToolbar:not(.instant)[collapsed=true] {
+  transition: min-height 170ms ease-out, max-height 170ms ease-out, visibility 170ms linear;
+}
 
-  &[collapsed=false]:not([initialized]) > #personal-toolbar-empty {
-    visibility: hidden;
-  }
-
-  /*
-   * Make the empty bookmarks toolbar message take up no horizontal space.
-   * This avoids two issues:
-   * 1) drag/drop of urls/bookmarks to the toolbar not working, because they
-   *    land on the personal-toolbar-empty element.
-   * 2) buttons in the toolbar moving horizontally while the window opens,
-   *    because the element is first shown at full width and then completely
-   *    hidden.
-   * TODO(emilio): The comment above was never quite true (the message did take
-   * horizontal space, see bug 1812636). Figure out how much of this rule is
-   * really needed.
-   */
-  &[collapsed=false] > #personal-toolbar-empty[nowidth] > #personal-toolbar-empty-description {
-    margin-inline: 0;
-    min-width: 0;
-    white-space: nowrap;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* Bookmarks toolbar in customize mode */
-
-  &[customizing] {
-    outline: 1px dashed;
-    outline-offset: -3px;
-
-    &:empty {
-      /* Avoid the toolbar having no height when there's no items in it */
-      min-height: 22px;
-    }
-  }
+#PersonalToolbar[collapsed=true].instant {
+  visibility: collapse;
 }
 
 /* Bookmarks toolbar only-on-new-tab mode */
@@ -268,27 +240,63 @@
   --bookmarks-toolbar-overlapping-browser-height: max(28px, 2em);
 }
 
-:root[BookmarksToolbarOverlapsBrowser] {
-  #PersonalToolbar {
-    height: var(--bookmarks-toolbar-overlapping-browser-height);
-  }
+:root[BookmarksToolbarOverlapsBrowser] #PersonalToolbar {
+  height: var(--bookmarks-toolbar-overlapping-browser-height);
+}
 
-  #navigator-toolbox {
-    /* Overlap the content area by the height of the bookmarks toolbar so that
-       temporarily showing the toolbar for new tabs doesn't resize the content
-       area for all tabs. */
-    margin-bottom: calc(-1 * var(--bookmarks-toolbar-overlapping-browser-height));
-    z-index: 1;
-  }
+:root[BookmarksToolbarOverlapsBrowser] #navigator-toolbox {
+  /* Overlap the content area by the height of the bookmarks toolbar so that
+     temporarily showing the toolbar for new tabs doesn't resize the content
+     area for all tabs. */
+  margin-bottom: calc(-1 * var(--bookmarks-toolbar-overlapping-browser-height));
+  z-index: 1;
+}
 
-  .newTabBrowserPanel,
-  #sidebar-box {
-    /* Make room for the bookmarks toolbar so that it won't visibly overlap the
-       new tab page and sidebar contents. We do not put this padding on #browser
-       as that would resize the content area for all tabs including background
-       tabs, which is what we explicitly want to avoid doing here. */
-    padding-top: var(--bookmarks-toolbar-overlapping-browser-height);
-  }
+:root[BookmarksToolbarOverlapsBrowser] .newTabBrowserPanel,
+:root[BookmarksToolbarOverlapsBrowser] #sidebar-box {
+  /* Make room for the bookmarks toolbar so that it won't visibly overlap the
+     new tab page and sidebar contents. We do not put this padding on #browser
+     as that would resize the content area for all tabs including background
+     tabs, which is what we explicitly want to avoid doing here. */
+  padding-top: var(--bookmarks-toolbar-overlapping-browser-height);
+}
+
+/* Bookmarks toolbar empty message */
+
+#PersonalToolbar[collapsed=false]:not([initialized]) > #personal-toolbar-empty {
+  visibility: hidden;
+}
+
+/*
+ * Make the empty bookmarks toolbar message take up no horizontal space.
+ * This avoids two issues:
+ * 1) drag/drop of urls/bookmarks to the toolbar not working, because they land
+ *    on the personal-toolbar-empty element.
+ * 2) buttons in the toolbar moving horizontally while the window opens,
+ *    because the element is first shown at full width and then completely
+ *    hidden.
+ * TODO(emilio): The comment above was never quite true (the message did take
+ * horizontal space, see bug 1812636). Figure out how much of this rule is
+ * really needed.
+ */
+#PersonalToolbar[collapsed=false] > #personal-toolbar-empty[nowidth] > #personal-toolbar-empty-description {
+  margin-inline: 0;
+  min-width: 0;
+  white-space: nowrap;
+  position: relative;
+  z-index: 1;
+}
+
+/* Bookmarks toolbar in customize mode */
+
+#PersonalToolbar[customizing] {
+  outline: 1px dashed;
+  outline-offset: -3px;
+}
+
+#PersonalToolbar[customizing]:empty {
+  /* Avoid the toolbar having no height when there's no items in it */
+  min-height: 22px;
 }
 
 /* Bookmarks toolbar drop indicator */
@@ -436,24 +444,24 @@ menupopup::part(drop-indicator) {
   color: var(--toolbar-color);
   color-scheme: var(--toolbar-color-scheme);
   border-top-color: var(--chrome-content-separator-color, ThreeDShadow);
+}
 
-  &:-moz-lwtheme {
-    background-color: var(--lwt-accent-color);
-    background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor)), var(--lwt-additional-images);
-    background-repeat: no-repeat, var(--lwt-background-tiling);
-    background-position: right bottom, var(--lwt-background-alignment);
-    background-position-y: bottom !important;
+.browserContainer > findbar:-moz-lwtheme {
+  background-color: var(--lwt-accent-color);
+  background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor)), var(--lwt-additional-images);
+  background-repeat: no-repeat, var(--lwt-background-tiling);
+  background-position: right bottom, var(--lwt-background-alignment);
+  background-position-y: bottom !important;
+}
 
-    :root:not([lwtheme-image]) &:-moz-window-inactive {
-      background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
-    }
+:root:not([lwtheme-image]) .browserContainer > findbar:-moz-lwtheme:-moz-window-inactive {
+  background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
+}
 
-    :root[lwtheme-image] & {
-      background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor)), var(--lwt-header-image), var(--lwt-additional-images);
-      background-repeat: no-repeat, no-repeat, var(--lwt-background-tiling);
-      background-position: center, right bottom, var(--lwt-background-alignment);
-    }
-  }
+:root[lwtheme-image] .browserContainer > findbar {
+  background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor)), var(--lwt-header-image), var(--lwt-additional-images);
+  background-repeat: no-repeat, no-repeat, var(--lwt-background-tiling);
+  background-position: center, right bottom, var(--lwt-background-alignment);
 }
 
 /* Private browsing indicator */
@@ -461,16 +469,16 @@ menupopup::part(drop-indicator) {
 #private-browsing-indicator-with-label {
   align-items: center;
   margin-inline: 7px;
-
-  :root:not([privatebrowsingmode=temporary]) & {
-    display: none;
-  }
 }
 
 .private-browsing-indicator-icon {
   list-style-image: url("chrome://global/skin/icons/indicator-private-browsing.svg");
   width: 16px;
   height: 16px;
+}
+
+:root:not([privatebrowsingmode=temporary]) #private-browsing-indicator-with-label {
+  display: none;
 }
 
 /* End private browsing indicator */
@@ -528,193 +536,152 @@ menupopup::part(drop-indicator) {
   fill: currentColor;
   fill-opacity: 0.6;
   list-style-image: url(chrome://global/skin/icons/help.svg);
+}
 
-  &:hover {
-    background-color: hsla(0,0%,70%,.2);
-    border-radius: 2px;
-  }
+#cfr-notification-header-image:hover {
+  background-color: hsla(0,0%,70%,.2);
+  border-radius: 2px;
 }
 
 #contextual-feature-recommendation-notification {
   width: 400px;
+}
 
-  .popup-notification-icon {
-    margin-inline-end: 4px;
-  }
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"]:not([hidden]) {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background: radial-gradient(circle farthest-side at top right, var(--short-notification-gradient), var(--short-notification-background));
+  width: unset;
+  max-width: 700px;
+  overflow-wrap: break-word;
+  padding: 4px;
+}
 
-  .cfr-doorhanger-large-icon {
-    width: 64px;
-    height: 64px;
-    margin-inline-end: 12px;
-  }
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"]:-moz-locale-dir(rtl) {
+  background: radial-gradient(circle farthest-side at top left, var(--short-notification-gradient), var(--short-notification-background));
+}
 
-  .cfr-doorhanger-medium-icon {
-    width: 50px;
-    height: 50px;
-    margin-inline-end: 12px;
-  }
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-body-container,
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-footer-container,
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] #cfr-notification-header-link {
+  display: none;
+}
 
-  .popup-notification-body-container {
-    width: 100%;
-    padding-bottom: 2px;
-  }
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] #cfr-notification-header {
+  box-shadow: none;
+}
 
-  popupnotificationcontent {
-    margin-top: 0;
-  }
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] description {
+  font-weight: 400;
+  margin: unset;
+  margin-inline: 12px;
+}
 
-  description {
-    margin-bottom: 0;
-  }
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .panel-footer,
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-header-container {
+  display: inline-flex;
+}
 
-  &[data-notification-bucket="CFR_MILESTONE_MESSAGE"] {
-    &:not([hidden]) {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      background: radial-gradient(circle farthest-side at top right, var(--short-notification-gradient), var(--short-notification-background));
-      width: unset;
-      max-width: 700px;
-      overflow-wrap: break-word;
-      padding: 4px;
-    }
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .panel-footer {
+  float: inline-end;
+  background-color: transparent;
+  flex-direction: row-reverse;
+  /* Override proton-doorhanger default styles that increase the size of the button */
+  margin: 0;
+}
 
-    &:-moz-locale-dir(rtl) {
-      background: radial-gradient(circle farthest-side at top left, var(--short-notification-gradient), var(--short-notification-background));
-    }
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-primary-button {
+  background-color: rgba(216, 216, 216, 0.2);
+  color: white;
+  border: none;
+  border-radius: 2px;
+  margin: 4px;
+  padding: 3px 12px;
+  flex: 1;
+  min-height: 22px;
+}
 
-    .popup-notification-body-container,
-    .popup-notification-footer-container,
-    #cfr-notification-header-link {
-      display: none;
-    }
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-primary-button:after {
+  content: url(chrome://global/skin/icons/arrow-left-12.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+  transform: translateY(2px);
+  float: inline-end;
+}
 
-    #cfr-notification-header {
-      box-shadow: none;
-    }
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"]:-moz-locale-dir(ltr) .popup-notification-primary-button:after {
+  content: url(chrome://global/skin/icons/arrow-right-12.svg);
+}
 
-    description {
-      font-weight: 400;
-      margin: unset;
-      margin-inline: 12px;
-    }
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-primary-button:hover {
+  background-color: rgba(216, 216, 216, 0.4);
+}
 
-    .panel-footer,
-    .popup-notification-header-container {
-      display: inline-flex;
-    }
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-primary-button:active {
+  background-color: rgba(216, 216, 216, 0.5);
+}
 
-    .panel-footer {
-      float: inline-end;
-      background-color: transparent;
-      flex-direction: row-reverse;
-      /* Override proton-doorhanger default styles that increase the size of the button */
-      margin: 0;
-    }
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-secondary-button {
+  margin: 3px;
+  border: none;
+  border-radius: 2px;
+  background-image: url(chrome://global/skin/icons/close.svg);
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 10px;
+  -moz-context-properties: fill;
+  fill: white;
+  min-height: 22px;
+  width: 22px;
+  padding: 0;
+  align-self: center;
+  flex: none;
+  font-size: 0;
+}
 
-    .popup-notification-primary-button {
-      background-color: rgba(216, 216, 216, 0.2);
-      color: white;
-      border: none;
-      border-radius: 2px;
-      margin: 4px;
-      padding: 3px 12px;
-      flex: 1;
-      min-height: 22px;
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-secondary-button:hover {
+  background-color: rgba(216, 216, 216, 0.4);
+}
 
-      &::after {
-        content: url(chrome://global/skin/icons/arrow-left-12.svg);
-        -moz-context-properties: fill;
-        fill: currentColor;
-        transform: translateY(2px);
-        float: inline-end;
-      }
 
-      &:-moz-locale-dir(ltr)::after {
-        content: url(chrome://global/skin/icons/arrow-right-12.svg);
-      }
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-header-container {
+  color: white;
+  max-width: unset;
+}
 
-      &:hover {
-        background-color: rgba(216, 216, 216, 0.4);
-      }
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_SOCIAL_TRACKING_PROTECTION"] {
+  width: 386px;
+}
 
-      &:hover:active {
-        background-color: rgba(216, 216, 216, 0.5);
-      }
-    }
+#contextual-feature-recommendation-notification .popup-notification-icon {
+  margin-inline-end: 4px;
+}
 
-    .popup-notification-secondary-button {
-      margin: 3px;
-      border: none;
-      border-radius: 2px;
-      background-image: url(chrome://global/skin/icons/close.svg);
-      background-color: transparent;
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: 10px;
-      -moz-context-properties: fill;
-      fill: white;
-      min-height: 22px;
-      width: 22px;
-      padding: 0;
-      align-self: center;
-      flex: none;
-      font-size: 0;
+#contextual-feature-recommendation-notification .cfr-doorhanger-large-icon {
+  width: 64px;
+  height: 64px;
+  margin-inline-end: 12px;
+}
 
-      &:hover {
-        background-color: rgba(216, 216, 216, 0.4);
-      }
-    }
+#contextual-feature-recommendation-notification .cfr-doorhanger-medium-icon {
+  width: 50px;
+  height: 50px;
+  margin-inline-end: 12px;
+}
 
-    .popup-notification-header-container {
-      color: white;
-      max-width: unset;
-    }
-  }
+#contextual-feature-recommendation-notification .popup-notification-body-container {
+  width: 100%;
+  padding-bottom: 2px;
+}
 
-  &[data-notification-bucket="CFR_SOCIAL_TRACKING_PROTECTION"] {
-    width: 386px;
-  }
+#contextual-feature-recommendation-notification popupnotificationcontent {
+  margin-top: 0;
+}
 
-  &[data-notification-category="addon_recommendation"] {
-    .popup-notification-description > b {
-      font-weight: 300;
-      padding-inline-start: 5px;
-    }
-
-    #cfr-notification-footer-learn-more-link {
-      margin-inline-start: 5px;
-    }
-
-    #cfr-notification-feature-steps,
-    #cfr-notification-header-image {
-      display: none;
-    }
-
-    #cfr-notification-header-label {
-      margin-block-end: 9px;
-    }
-  }
-
-  &[data-notification-category="icon_and_message"] {
-    /*
-     * `icon_and_message` CFR doorhanger with: icon, title and subtitle.
-     * No panel header is shown
-     */
-    #cfr-notification-header,
-    .popup-notification-footer-container {
-      display: none;
-    }
-
-    .popup-notification-description {
-      font-weight: 600;
-      margin-bottom: 15px;
-    }
-
-    popupnotificationcontent {
-      display: block; /* This forces the subtitle content to wrap */
-    }
-  }
+#contextual-feature-recommendation-notification description {
+  margin-bottom: 0;
 }
 
 #cfr-notification-footer-text-and-addon-info {
@@ -722,20 +689,59 @@ menupopup::part(drop-indicator) {
   padding: 10px var(--arrowpanel-padding);
 }
 
+#contextual-feature-recommendation-notification[data-notification-category="addon_recommendation"] #cfr-notification-feature-steps,
+#contextual-feature-recommendation-notification[data-notification-category="icon_and_message"] .popup-notification-footer-container {
+  display: none;
+}
+
+#contextual-feature-recommendation-notification[data-notification-category="addon_recommendation"] .popup-notification-description > b {
+  font-weight: 300;
+  padding-inline-start: 5px;
+}
+
+#contextual-feature-recommendation-notification[data-notification-category="addon_recommendation"] #cfr-notification-footer-learn-more-link {
+  margin-inline-start: 5px;
+}
+
+#contextual-feature-recommendation-notification[data-notification-category="addon_recommendation"] #cfr-notification-header-image {
+  display: none;
+}
+
+#contextual-feature-recommendation-notification[data-notification-category="addon_recommendation"] #cfr-notification-header-label {
+  margin-block-end: 9px;
+}
+
+/*
+ * `icon_and_message` CFR doorhanger with: icon, title and subtitle.
+ * No panel header is shown
+ */
+#contextual-feature-recommendation-notification[data-notification-category="icon_and_message"] #cfr-notification-header {
+  display: none;
+}
+
+#contextual-feature-recommendation-notification[data-notification-category="icon_and_message"] .popup-notification-description {
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+#contextual-feature-recommendation-notification[data-notification-category="icon_and_message"] popupnotificationcontent {
+  display: block; /* This forces the subtitle content to wrap */
+}
+
 #cfr-notification-feature-steps {
   display: flex;
   flex-direction: column;
   margin-top: 10px;
+}
 
-  li {
-    margin-inline-start: 10px;
-    position: relative;
-    display: list-item;
+#cfr-notification-feature-steps li {
+  margin-inline-start: 10px;
+  position: relative;
+  display: list-item;
+}
 
-    &:not(:last-child) {
-      margin-bottom: 5px;
-    }
-  }
+#cfr-notification-feature-steps li:not(:last-child) {
+  margin-bottom: 5px;
 }
 
 #cfr-notification-footer-text,
@@ -782,26 +788,43 @@ menupopup::part(drop-indicator) {
   flex-grow: 1;
 }
 
+#content-mask {
+  background: rgba(0, 0, 0, 0.5);
+}
+
 /* nhnt11: Workaround to insert a linebreak after the DoH doorhanger's title.
- * The title uses the inline <b> that usually contains the hostname for
+ * The title uses the inline html|b that usually contains the hostname for
  * permission prompts to achieve bold formatting. This is always the 2nd child.
  */
-.popup-notification-description[popupid="doh-first-time"] > b:first-of-type {
+.popup-notification-description[popupid="doh-first-time"] > html|b:first-of-type {
   display: block;
   margin-bottom: 4px; /* matches the margin-bottom on description elements */
 }
 
-/* Sharing tabs warning */
+/* Password Manager Doorhanger */
+
+.ac-dropmarker {
+  appearance: none;
+  justify-self: end;
+  margin-inline-end: 8px;
+  align-self: center;
+  content: url(chrome://global/skin/icons/arrow-down-12.svg);
+  -moz-context-properties: fill;
+  fill: var(--input-color, -moz-DialogText);
+}
+
+.ac-has-end-icon {
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+#sharing-tabs-warning-panel > hbox[type="window"] > vbox > label > #sharing-warning-screen-panel-header,
+#sharing-tabs-warning-panel > hbox[type="screen"] > vbox > label > #sharing-warning-window-panel-header {
+  display: none;
+}
 
 #sharing-tabs-warning-panel {
   max-width: 400px;
-
-  > hbox[type="window"] > vbox > label {
-    > #sharing-warning-screen-panel-header,
-    > #sharing-warning-window-panel-header {
-      display: none;
-    }
-  }
 }
 
 #sharing-warning-proceed-to-tab {
@@ -814,22 +837,20 @@ menupopup::part(drop-indicator) {
   padding: 10px;
   margin-top: 15px;
   margin-bottom: 10px;
-
-  &:hover {
-    background-color: rgb(0,62,170);
-  }
 }
 
-/* webRTC device sharing selector */
+#sharing-warning-proceed-to-tab:hover {
+  background-color: rgb(0,62,170);
+}
 
 .webRTC-selectDevice-selector-container {
   display: flex;
   align-items: center;
+}
 
-  > menulist {
-    flex: 1;
-    min-width: 0;
-  }
+.webRTC-selectDevice-selector-container > menulist {
+  flex: 1;
+  min-width: 0;
 }
 
 #webRTC-selectSpeaker-richlistbox {
@@ -841,6 +862,22 @@ menupopup::part(drop-indicator) {
      available but give enough space for the common case of only a few
      devices.  */
   max-height: 600px;
+}
+
+popupnotificationcontent {
+  margin-block-start: 8px;
+}
+
+.popup-notification-body menulist {
+  margin: 0;
+}
+
+.popup-notification-checkbox {
+  margin-block: 12px 0;
+}
+
+.popup-notification-body-container {
+  padding-block-end: 0;
 }
 
 #webRTC-selectCamera-label,
@@ -868,24 +905,6 @@ menupopup::part(drop-indicator) {
   list-style-image: url("chrome://browser/skin/notification-icons/speaker.svg");
 }
 
-/* TODO: move these to popupnotification.css */
-
-popupnotificationcontent {
-  margin-block-start: 8px;
-}
-
-.popup-notification-body menulist {
-  margin: 0;
-}
-
-.popup-notification-checkbox {
-  margin-block: 12px 0;
-}
-
-.popup-notification-body-container {
-  padding-block-end: 0;
-}
-
 .popup-notification-body :is(description, label:not(.learnMore), checkbox, input) {
   margin-inline: 0;
 }
@@ -898,36 +917,6 @@ popupnotificationcontent {
   outline-offset: -1px;
   background-color: var(--input-bgcolor, Field);
   color: var(--input-color, FieldText);
-}
-
-.popup-notification-body input:focus-visible {
-  outline: 2px solid var(--focus-outline-color);
-}
-
-.popup-notification-description {
-  font-weight: 600;
-  margin-top: 0;
-
-  > b {
-    font-weight: inherit;
-  }
-}
-
-/* Password Manager Doorhanger */
-
-.ac-dropmarker {
-  appearance: none;
-  justify-self: end;
-  margin-inline-end: 8px;
-  align-self: center;
-  content: url(chrome://global/skin/icons/arrow-down-12.svg);
-  -moz-context-properties: fill;
-  fill: var(--input-color, -moz-DialogText);
-}
-
-.ac-has-end-icon {
-  text-overflow: ellipsis;
-  overflow: hidden;
 }
 
 .popup-notification-body input.ac-has-end-icon {
@@ -945,57 +934,68 @@ popupnotificationcontent {
   padding-left: 8px;
 }
 
-.password-notification-label {
-  margin-block-start: 16px;
+.popup-notification-body input:focus-visible {
+  outline: 2px solid var(--focus-outline-color);
+}
 
-  /**
-   * There's already a margin-block-start of 8px on popupnotificationcontent,
-   * so the first label only needs 8px of margin-block-start to match the
-   * spec.
-   */
-  &:first-of-type {
-    margin-block-start: 8px;
-  }
+/**
+ * There's already a margin-block-start of 8px on popupnotificationcontent,
+ * so the first label only needs 8px of margin-block-start to match the
+ * spec.
+ */
+.password-notification-label:first-of-type {
+  margin-block-start: 8px;
+}
+
+.password-notification-label:not(:first-of-type) {
+  margin-block-start: 16px;
 }
 
 #password-notification-visibilityToggle {
   margin-block-start: 14px;
+}
 
-  > .checkbox-label-box > .checkbox-label {
-    opacity: 0.7;
-  }
+#password-notification-visibilityToggle > .checkbox-label-box > .checkbox-label {
+  opacity: 0.7;
+}
+
+.popup-notification-description > b {
+  font-weight: inherit;
+}
+
+.popup-notification-description {
+  font-weight: 600;
+  margin-top: 0;
 }
 
 #tab-notification-deck {
   display: block;
 }
 
-/* Relay Integration */
-
 .relay-integration-header {
   display: flex;
   align-items: center;
   font-size: 2em;
-
-  > div {
-    width: 32px;
-    height: 32px;
-    background-image: url("chrome://browser/content/logos/relay.svg");
-    background-repeat: no-repeat;
-  }
-
-  > span:first-of-type {
-    font-weight: bold;
-    margin-inline-start: 8px;
-  }
-
-  > span:last-of-type {
-    font-weight: normal;
-    white-space: pre;
-  }
 }
 
-.popup-notification-description[popupid="relay-integration-offer-notification"] > div:first-of-type {
+.relay-integration-header > div {
+  width: 32px;
+  height: 32px;
+  background-image: url("chrome://browser/content/logos/relay.svg");
+  background-repeat: no-repeat;
+}
+
+.relay-integration-header > span:first-of-type {
+  font-weight: bold;
+  margin-inline-start: 8px;
+}
+
+.relay-integration-header > span:last-of-type {
+  font-weight: normal;
+  white-space: pre;
+}
+
+.popup-notification-description[popupid="relay-integration-offer-notification"] > html|div:first-of-type {
   font-weight: normal;
   display: grid;
   grid-template-columns: auto;
@@ -1012,93 +1012,107 @@ popupnotificationcontent {
 .reusable-relay-masks {
   display: flex;
   flex-direction: column;
-
-  > button {
-    padding: 4px;
-    margin: 4px;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-
-    > span:first-child {
-      margin-inline-end: 20px;
-    }
-
-    > span:last-child {
-      opacity: 0.6;
-    }
-  }
 }
 
-/* History swipe navigation animation */
+.reusable-relay-masks > button {
+  padding: 4px;
+  margin: 4px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.reusable-relay-masks > button > span:first-child {
+  margin-inline-end: 20px;
+}
+
+.reusable-relay-masks > button > span:last-child {
+  opacity: 0.6;
+}
+
+#historySwipeAnimationPreviousArrow,
+#historySwipeAnimationNextArrow {
+  will-change: transform;
+}
+
+#historySwipeAnimationPreviousArrow:-moz-locale-dir(rtl),
+#historySwipeAnimationNextArrow:-moz-locale-dir(ltr) {
+  transform: scaleX(-1);
+}
+
+#historySwipeAnimationPreviousArrow > svg,
+#historySwipeAnimationNextArrow > svg {
+  margin: auto 0;
+}
 
 #historySwipeAnimationPreviousArrow,
 #historySwipeAnimationNextArrow {
   --swipe-nav-icon-primary-color: SelectedItemText;
   --swipe-nav-icon-accent-color: SelectedItem;
+}
 
-  will-change: transform;
-
-  @media not (prefers-contrast) {
+@media not (prefers-contrast) {
   /* TODO: Should this be in browser-custom-colors to respect system theming on
    * Linux? */
+  #historySwipeAnimationPreviousArrow,
+  #historySwipeAnimationNextArrow {
     --swipe-nav-icon-primary-color: light-dark(#0060DF, #00DDFF);
     --swipe-nav-icon-accent-color: light-dark(#FFFFFF, #000000);
   }
-
-  &:-moz-locale-dir(ltr) {
-    transform: scaleX(-1);
-  }
-
-  > svg {
-    margin: auto 0;
-  }
 }
 
-.swipe-nav-icon {
-  > path {
+/*
+ * Styles for the swipe navigation SVG icon.
+ */
+.swipe-nav-icon path {
+  transition: fill 1s;
+}
+
+@media not (-moz-platform: macos) {
+  /*
+   * Styles for the swipe navigation SVG icon.
+   *
+   * `will-navigate` class name is added to the <svg> element when the user's
+   * swipe gesture reached to the point where history navigation will be
+   * triggered. It's used for triggering three animations, an arrow color change,
+   * a circle color change and a glowing effect outer the circle.
+   */
+  .swipe-nav-icon circle {
+    fill: var(--swipe-nav-icon-accent-color);
+    stroke: var(--swipe-nav-icon-primary-color);
+  }
+
+  .swipe-nav-icon circle:first-of-type {
+    fill: var(--swipe-nav-icon-primary-color);
+    transition: opacity 1s;
+    will-change: opacity; /* a workaround for bug 1804189 */
+    opacity: 0;
+  }
+
+  .swipe-nav-icon.will-navigate > circle:not(:first-of-type) {
+    fill: var(--swipe-nav-icon-primary-color);
+  }
+
+  .swipe-nav-icon circle:not(:first-of-type) {
     transition: fill 1s;
   }
 
-  @media not (-moz-platform: macos) {
-    /*
-     * Styles for the swipe navigation SVG icon.
-     *
-     * `will-navigate` class name is added to the <svg> element when the user's
-     * swipe gesture reached to the point where history navigation will be
-     * triggered. It's used for triggering three animations, an arrow color change,
-     * a circle color change and a glowing effect outer the circle.
-     */
-    > circle {
-      fill: var(--swipe-nav-icon-accent-color);
-      stroke: var(--swipe-nav-icon-primary-color);
-      transition: fill 1s;
+  .swipe-nav-icon.will-navigate > circle:first-of-type {
+    transition-delay: 0.2s;
+    opacity: 0.2;
+  }
 
-      &:first-of-type {
-        fill: var(--swipe-nav-icon-primary-color);
-        transition: opacity 1s;
-        will-change: opacity; /* a workaround for bug 1804189 */
-        opacity: 0;
-      }
-    }
+  .swipe-nav-icon.will-navigate > circle:not(:first-of-type) {
+    fill: var(--swipe-nav-icon-primary-color);
+  }
 
-    &.will-navigate > circle:not(:first-of-type) {
-      fill: var(--swipe-nav-icon-primary-color);
-    }
+  .swipe-nav-icon path {
+    fill: var(--swipe-nav-icon-primary-color);
+  }
 
-    &.will-navigate > circle:first-of-type {
-      transition-delay: 0.2s;
-      opacity: 0.2;
-    }
-
-    > path {
-      fill: var(--swipe-nav-icon-primary-color);
-    }
-
-    &.will-navigate > path {
-      fill: var(--swipe-nav-icon-accent-color);
-      stroke: var(--swipe-nav-icon-accent-color);
-    }
+  .swipe-nav-icon.will-navigate > path {
+    fill: var(--swipe-nav-icon-accent-color);
+    stroke: var(--swipe-nav-icon-accent-color);
   }
 }
 
@@ -1114,24 +1128,18 @@ popupnotificationcontent {
   .swipe-nav-icon-arrow {
     fill: var(--swipe-nav-icon-primary-color);
   }
-
   .swipe-nav-icon-circle {
     fill: var(--swipe-nav-icon-accent-color);
   }
-
-  .swipe-nav-icon.will-navigate {
-    > .swipe-nav-icon-circle-outline,
-    > .swipe-nav-icon-arrow {
-      fill: var(--swipe-nav-icon-accent-color);
-    }
-
-    > .swipe-nav-icon-circle {
-      fill: var(--swipe-nav-icon-primary-color);
-    }
+  .swipe-nav-icon.will-navigate > .swipe-nav-icon-circle-outline,
+  .swipe-nav-icon.will-navigate > .swipe-nav-icon-arrow {
+    fill: var(--swipe-nav-icon-accent-color);
+  }
+  .swipe-nav-icon.will-navigate > .swipe-nav-icon-circle {
+    fill: var(--swipe-nav-icon-primary-color);
   }
 }
 
-/* TODO: move this to toolkit */
 panel toolbarseparator {
   appearance: none;
   min-height: 0;
@@ -1142,7 +1150,6 @@ panel toolbarseparator {
 }
 
 /* Picture-in-Picture panel */
-
 #PictureInPicturePanel {
   width: var(--menu-panel-width-wide);
   font: caption;
@@ -1158,7 +1165,6 @@ panel toolbarseparator {
 }
 
 /* Shopping sidebar */
-
 shopping-sidebar {
   border-inline-start: 1px solid var(--chrome-content-separator-color);
   min-width: 16.92em;
