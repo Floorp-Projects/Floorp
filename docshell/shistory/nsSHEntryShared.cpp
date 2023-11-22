@@ -111,10 +111,10 @@ void SHEntrySharedParentState::CopyFrom(SHEntrySharedParentState* aEntry) {
   mLastTouched = aEntry->mLastTouched;
 }
 
-void dom::SHEntrySharedParentState::NotifyListenersContentViewerEvicted() {
+void dom::SHEntrySharedParentState::NotifyListenersDocumentViewerEvicted() {
   if (nsCOMPtr<nsISHistory> shistory = do_QueryReferent(mSHistory)) {
     RefPtr<nsSHistory> nsshistory = static_cast<nsSHistory*>(shistory.get());
-    nsshistory->NotifyListenersContentViewerEvicted(1);
+    nsshistory->NotifyListenersDocumentViewerEvicted(1);
   }
 }
 

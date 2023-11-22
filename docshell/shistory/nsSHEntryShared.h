@@ -102,7 +102,7 @@ class SHEntrySharedParentState : public SHEntrySharedState {
 
   nsFrameLoader* GetFrameLoader();
 
-  void NotifyListenersContentViewerEvicted();
+  void NotifyListenersDocumentViewerEvicted();
 
   nsExpirationState* GetExpirationState() { return &mExpirationState; }
 

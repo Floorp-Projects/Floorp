@@ -993,7 +993,7 @@ nsSHEntry::SyncTreesForSubframeNavigation(
 void nsSHEntry::EvictDocumentViewer() {
   nsCOMPtr<nsIDocumentViewer> viewer = GetContentViewer();
   if (viewer) {
-    mShared->NotifyListenersContentViewerEvicted();
+    mShared->NotifyListenersDocumentViewerEvicted();
     // Drop the presentation state before destroying the viewer, so that
     // document teardown is able to correctly persist the state.
     SetContentViewer(nullptr);
