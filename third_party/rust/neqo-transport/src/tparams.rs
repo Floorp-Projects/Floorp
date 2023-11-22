@@ -918,19 +918,19 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "v4.is_some() || v6.is_some()")]
     fn preferred_address_neither() {
         _ = PreferredAddress::new(None, None);
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = ".is_unspecified")]
     fn preferred_address_v4_unspecified() {
         _ = PreferredAddress::new(Some(SocketAddrV4::new(Ipv4Addr::from(0), 443)), None);
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "left != right")]
     fn preferred_address_v4_zero_port() {
         _ = PreferredAddress::new(
             Some(SocketAddrV4::new(Ipv4Addr::from(0xc000_0201), 0)),
@@ -939,13 +939,13 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = ".is_unspecified")]
     fn preferred_address_v6_unspecified() {
         _ = PreferredAddress::new(None, Some(SocketAddrV6::new(Ipv6Addr::from(0), 443, 0, 0)));
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "left != right")]
     fn preferred_address_v6_zero_port() {
         _ = PreferredAddress::new(None, Some(SocketAddrV6::new(Ipv6Addr::from(1), 0, 0, 0)));
     }

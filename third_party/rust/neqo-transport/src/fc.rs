@@ -858,7 +858,7 @@ mod test {
         remote_stream_limits(Role::Server, 0, 2);
     }
 
-    #[should_panic]
+    #[should_panic(expected = ".is_allowed")]
     #[test]
     fn remote_stream_limits_asserts_if_limit_exceeded() {
         let mut fc = RemoteStreamLimits::new(2, 1, Role::Client);

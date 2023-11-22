@@ -37,13 +37,13 @@ impl<'a> Decoder<'a> {
     /// # Panics
     /// If the remaining quantity is less than `n`.
     pub fn skip(&mut self, n: usize) {
-        assert!(self.remaining() >= n);
+        assert!(self.remaining() >= n, "insufficient data");
         self.offset += n;
     }
 
     /// Skip helper that panics if `n` is `None` or not able to fit in `usize`.
     fn skip_inner(&mut self, n: Option<u64>) {
-        self.skip(usize::try_from(n.unwrap()).unwrap());
+        self.skip(usize::try_from(n.expect("invalid length")).unwrap());
     }
 
     /// Skip a vector.  Panics if there isn't enough space.
@@ -545,7 +545,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "insufficient data")]
     fn skip_too_much() {
         let enc = Encoder::from_hex("ff");
         let mut dec = enc.as_decoder();
@@ -561,7 +561,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "insufficient data")]
     fn skip_vec_too_much() {
         let enc = Encoder::from_hex("ff1234");
         let mut dec = enc.as_decoder();
@@ -569,7 +569,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "invalid length")]
     fn skip_vec_short_length() {
         let enc = Encoder::from_hex("ff");
         let mut dec = enc.as_decoder();
@@ -584,7 +584,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "insufficient data")]
     fn skip_vvec_too_much() {
         let enc = Encoder::from_hex("0f1234");
         let mut dec = enc.as_decoder();
@@ -592,7 +592,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "invalid length")]
     fn skip_vvec_short_length() {
         let enc = Encoder::from_hex("ff");
         let mut dec = enc.as_decoder();
@@ -611,7 +611,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Varint value too large")]
     fn encoded_length_oob() {
         _ = Encoder::varint_len(1 << 62);
     }
@@ -628,7 +628,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Varint value too large")]
     fn encoded_vvec_length_oob() {
         _ = Encoder::vvec_len(1 << 62);
     }
@@ -752,7 +752,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "assertion failed")]
     fn encode_vec_with_overflow() {
         let mut enc = Encoder::default();
         enc.encode_vec_with(1, |enc_inner| {
