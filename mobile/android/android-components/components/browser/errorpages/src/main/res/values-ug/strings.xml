@@ -49,6 +49,15 @@
     <!-- The document title and heading of the error page shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">بۇ تور بېكەت بىخەتەر ئۇلىنىشنى تەلەپ قىلىدۇ.</string>
 
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>سىز زىيارەت قىلماقچى بولغان بەتنى كۆرسەتكىلى بولمايدۇ، چۈنكى بۇ تور بېكەت بىخەتەر ئۇلىنىشنى تەلەپ قىلىدۇ.</li>
+         <li>مەسىلە تور بېكەتتە بولۇشى مۇمكىن، ئۇنى سىز ھەل قىلالمايسىز.</li>
+         <li>مەسىلىنى تور بېكەت باشقۇرغۇچىسىغا ئۇقتۇرۇپ قويالايسىز.</li>
+      </ul>
+    ]]></string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">ئالىي…</string>
 
