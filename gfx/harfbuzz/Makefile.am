@@ -26,6 +26,7 @@ EXTRA_DIST = \
 	subprojects/ragel.wrap \
 	subprojects/packagefiles/ragel/meson.build \
 	mingw-configure.sh \
+	xkcd.png \
 	$(NULL)
 
 MAINTAINERCLEANFILES = \

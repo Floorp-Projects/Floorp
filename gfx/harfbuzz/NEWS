@@ -1,3 +1,18 @@
+Overview of changes leading to 8.3.0
+Saturday, November 11, 2023
+====================================
+- Improve memory barrier to fix potential segfaults.
+- Various build fixes.
+- Various subsetting and instancing fixes.
+- Rename “hb-subset” option “--instance” to “--variations” to match the other
+  tools. Old option is kept as an alias.
+
+- New API:
+HB_AAT_LAYOUT_FEATURE_TYPE_CURSIVE_CONNECTION
+
+- Deprecated API:
+HB_AAT_LAYOUT_FEATURE_TYPE_CURISVE_CONNECTION
+
 Overview of changes leading to 8.2.2
 Wednesday, October 18, 2023
 “From the river to the sea, Palestine will be free”
