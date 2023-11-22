@@ -151,6 +151,12 @@ void CanvasManagerChild::EndCanvasTransaction() {
   }
 }
 
+void CanvasManagerChild::ClearCachedResources() {
+  if (mCanvasChild) {
+    mCanvasChild->ClearCachedResources();
+  }
+}
+
 void CanvasManagerChild::DeactivateCanvas() {
   mActive = false;
   if (mCanvasChild) {
