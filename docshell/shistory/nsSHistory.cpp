@@ -205,7 +205,7 @@ nsSHistoryObserver::Observe(nsISupports* aSubject, const char* aTopic,
                             const char16_t* aData) {
   if (!strcmp(aTopic, "cacheservice:empty-cache") ||
       !strcmp(aTopic, "memory-pressure")) {
-    nsSHistory::GloballyEvictAllContentViewers();
+    nsSHistory::GloballyEvictAllDocumentViewers();
   }
 
   return NS_OK;
@@ -1782,7 +1782,7 @@ nsSHistory::RemoveFromExpirationTracker(SHEntrySharedParentState* aEntry) {
 // infrequently -- only when the disk or memory cache is cleared.
 
 // static
-void nsSHistory::GloballyEvictAllContentViewers() {
+void nsSHistory::GloballyEvictAllDocumentViewers() {
   int32_t maxViewers = sHistoryMaxTotalViewers;
   sHistoryMaxTotalViewers = 0;
   GloballyEvictContentViewers();
