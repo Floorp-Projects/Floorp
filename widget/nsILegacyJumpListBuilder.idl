@@ -8,13 +8,13 @@
 interface nsIArray;
 
 [scriptable, function, uuid(5131a62a-e99f-4631-9138-751f8aad1ae4)]
-interface nsIJumpListCommittedCallback : nsISupports
+interface nsILegacyJumpListCommittedCallback : nsISupports
 {
   void done(in boolean result);
 };
 
 [scriptable, uuid(1FE6A9CD-2B18-4dd5-A176-C2B32FA4F683)]
-interface nsIJumpListBuilder : nsISupports
+interface nsILegacyJumpListBuilder : nsISupports
 {
   /**
    * JumpLists
@@ -33,13 +33,13 @@ interface nsIJumpListBuilder : nsISupports
    *
    * Users may remove items from jump lists after they are commited. The system
    * tracks removed items between commits. A list of these items is returned by
-   * a call to initListBuild. nsIJumpListBuilder does not filter entries added that
+   * a call to initListBuild. nsILegacyJumpListBuilder does not filter entries added that
    * have been removed since the last commit. To prevent repeatedly adding entries
    * users have removed, applications are encoraged to track removed items
    * internally.
    *
-   * Each list is made up of an array of nsIJumpListItem representing items
-   * such as shortcuts, links, and separators. See nsIJumpListItem for information
+   * Each list is made up of an array of nsILegacyJumpListItem representing items
+   * such as shortcuts, links, and separators. See nsILegacyJumpListItem for information
    * on adding additional jump list types.
    */
 
@@ -119,7 +119,7 @@ interface nsIJumpListBuilder : nsISupports
    * @param aCatType
    *        The type of list to add.
    * @param items
-   *        An array of nsIJumpListItem items to add to the list.
+   *        An array of nsILegacyJumpListItem items to add to the list.
    * @param catName
    *        For custom lists, the title of the list.
    *
@@ -145,7 +145,7 @@ interface nsIJumpListBuilder : nsISupports
    *        Receives one argument, which is true if the operation completed
    *        successfully, otherwise it is false.
    */
-  void commitListBuild([optional] in nsIJumpListCommittedCallback callback);
+  void commitListBuild([optional] in nsILegacyJumpListCommittedCallback callback);
 
   /**
    * Deletes any currently applied taskbar jump list for this application.
