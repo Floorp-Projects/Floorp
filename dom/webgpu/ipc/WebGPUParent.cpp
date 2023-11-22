@@ -466,7 +466,7 @@ WebGPUParent::BufferMapData* WebGPUParent::GetBufferMapData(RawId aBufferId) {
   return &iter->second;
 }
 
-ipc::IPCResult WebGPUParent::RecvDeviceCreateBuffer(
+ipc::IPCResult WebGPUParent::RecvCreateBuffer(
     RawId aDeviceId, RawId aBufferId, dom::GPUBufferDescriptor&& aDesc,
     ipc::UnsafeSharedMemoryHandle&& aShmem) {
   webgpu::StringHelper label(aDesc.mLabel);
@@ -708,23 +708,13 @@ ipc::IPCResult WebGPUParent::RecvBufferDestroy(RawId aBufferId) {
   return IPC_OK();
 }
 
-void WebGPUParent::RemoveExternalTexture(RawId aTextureId) {
+ipc::IPCResult WebGPUParent::RecvTextureDrop(RawId aTextureId) {
+  ffi::wgpu_server_texture_drop(mContext.get(), aTextureId);
+
   auto it = mExternalTextures.find(aTextureId);
   if (it != mExternalTextures.end()) {
     mExternalTextures.erase(it);
   }
-}
-
-ipc::IPCResult WebGPUParent::RecvTextureDestroy(RawId aTextureId,
-                                                RawId aDeviceId) {
-  ffi::wgpu_server_texture_destroy(mContext.get(), aTextureId);
-  RemoveExternalTexture(aTextureId);
-  return IPC_OK();
-}
-
-ipc::IPCResult WebGPUParent::RecvTextureDrop(RawId aTextureId) {
-  ffi::wgpu_server_texture_drop(mContext.get(), aTextureId);
-  RemoveExternalTexture(aTextureId);
   return IPC_OK();
 }
 
@@ -757,6 +747,11 @@ ipc::IPCResult WebGPUParent::RecvCommandEncoderFinish(
 
 ipc::IPCResult WebGPUParent::RecvCommandEncoderDrop(RawId aEncoderId) {
   ffi::wgpu_server_encoder_drop(mContext.get(), aEncoderId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvCommandBufferDrop(RawId aCommandBufferId) {
+  ffi::wgpu_server_command_buffer_drop(mContext.get(), aCommandBufferId);
   return IPC_OK();
 }
 
@@ -1176,16 +1171,9 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
       static_cast<uint32_t>(size.height),
       1,
   };
-
-  {
-    ErrorBuffer error;
-    ffi::wgpu_server_encoder_copy_texture_to_buffer(
-        mContext.get(), aCommandEncoderId, &texView, bufferId, &bufLayout,
-        &extent, error.ToFFI());
-    if (ForwardError(data->mDeviceId, error)) {
-      return IPC_OK();
-    }
-  }
+  ffi::wgpu_server_encoder_copy_texture_to_buffer(
+      mContext.get(), aCommandEncoderId, &texView, bufferId, &bufLayout,
+      &extent);
   ffi::WGPUCommandBufferDescriptor commandDesc = {};
   {
     ErrorBuffer error;

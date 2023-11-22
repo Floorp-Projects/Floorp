@@ -44,7 +44,7 @@ parent:
   async CommandEncoderAction(RawId selfId, RawId aDeviceId, ByteBuf buf);
   async BumpImplicitBindGroupLayout(RawId pipelineId, bool isCompute, uint32_t index, RawId assignId);
 
-  async DeviceCreateBuffer(RawId deviceId, RawId bufferId, GPUBufferDescriptor desc, UnsafeSharedMemoryHandle shm);
+  async CreateBuffer(RawId deviceId, RawId bufferId, GPUBufferDescriptor desc, UnsafeSharedMemoryHandle shm);
 
   async InstanceRequestAdapter(GPURequestAdapterOptions options, RawId[] ids) returns (ByteBuf byteBuf);
   async AdapterRequestDevice(RawId selfId, ByteBuf buf, RawId newId) returns (bool success);
@@ -55,7 +55,6 @@ parent:
   async BufferUnmap(RawId deviceId, RawId bufferId, bool flush);
   async BufferDestroy(RawId selfId);
   async BufferDrop(RawId selfId);
-  async TextureDestroy(RawId selfId, RawId deviceId);
   async TextureDrop(RawId selfId);
   async TextureViewDrop(RawId selfId);
   async SamplerDrop(RawId selfId);
@@ -64,6 +63,7 @@ parent:
 
   async CommandEncoderFinish(RawId selfId, RawId deviceId, GPUCommandBufferDescriptor desc);
   async CommandEncoderDrop(RawId selfId);
+  async CommandBufferDrop(RawId selfId);
   async RenderBundleDrop(RawId selfId);
   async QueueSubmit(RawId selfId, RawId aDeviceId, RawId[] commandBuffers);
   async QueueOnSubmittedWorkDone(RawId selfId) returns (void_t ok);

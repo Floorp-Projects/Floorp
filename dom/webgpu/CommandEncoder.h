@@ -72,8 +72,8 @@ class CommandEncoder final : public ObjectBase, public ChildOf<Device> {
  public:
   const auto& GetDevice() const { return mParent; };
 
-  void EndComputePass(ffi::WGPUComputePass& aPass);
-  void EndRenderPass(ffi::WGPURenderPass& aPass);
+  void EndComputePass(ffi::WGPUComputePass& aPass, ErrorResult& aRv);
+  void EndRenderPass(ffi::WGPURenderPass& aPass, ErrorResult& aRv);
 
   void CopyBufferToBuffer(const Buffer& aSource, BufferAddress aSourceOffset,
                           const Buffer& aDestination,

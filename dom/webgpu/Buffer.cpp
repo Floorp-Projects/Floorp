@@ -58,17 +58,18 @@ Buffer::~Buffer() {
 already_AddRefed<Buffer> Buffer::Create(Device* aDevice, RawId aDeviceId,
                                         const dom::GPUBufferDescriptor& aDesc,
                                         ErrorResult& aRv) {
-  RefPtr<WebGPUChild> actor = aDevice->GetBridge();
-  RawId bufferId =
-      ffi::wgpu_client_make_buffer_id(actor->GetClient(), aDeviceId);
-
-  if (!aDevice->IsBridgeAlive()) {
-    // Create and return an invalid Buffer.
-    RefPtr<Buffer> buffer = new Buffer(aDevice, bufferId, aDesc.mSize, 0,
+  if (aDevice->IsLost()) {
+    // Create and return an invalid Buffer. This Buffer will have id 0 and
+    // won't be sent in any messages to the parent.
+    RefPtr<Buffer> buffer = new Buffer(aDevice, 0, aDesc.mSize, 0,
                                        ipc::WritableSharedMemoryMapping());
-    buffer->mValid = false;
+
+    // Track the invalid Buffer to ensure that ::Drop can untrack it later.
+    aDevice->TrackBuffer(buffer.get());
     return buffer.forget();
   }
+
+  RefPtr<WebGPUChild> actor = aDevice->GetBridge();
 
   auto handle = ipc::UnsafeSharedMemoryHandle();
   auto mapping = ipc::WritableSharedMemoryMapping();
@@ -118,10 +119,10 @@ already_AddRefed<Buffer> Buffer::Create(Device* aDevice, RawId aDeviceId,
     return nullptr;
   }
 
-  actor->SendDeviceCreateBuffer(aDeviceId, bufferId, aDesc, std::move(handle));
+  RawId id = actor->DeviceCreateBuffer(aDeviceId, aDesc, std::move(handle));
 
-  RefPtr<Buffer> buffer = new Buffer(aDevice, bufferId, aDesc.mSize,
-                                     aDesc.mUsage, std::move(mapping));
+  RefPtr<Buffer> buffer =
+      new Buffer(aDevice, id, aDesc.mSize, aDesc.mUsage, std::move(mapping));
   buffer->SetLabel(aDesc.mLabel);
 
   if (aDesc.mMappedAtCreation) {
@@ -158,7 +159,7 @@ void Buffer::Drop() {
 
   GetDevice().UntrackBuffer(this);
 
-  if (GetDevice().IsBridgeAlive()) {
+  if (GetDevice().IsBridgeAlive() && mId) {
     GetDevice().GetBridge()->SendBufferDrop(mId);
   }
 }
