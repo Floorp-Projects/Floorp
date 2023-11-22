@@ -4255,7 +4255,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
    * **browsertime args**: --browsertime.speedometer_iterations=5
-   * **cold**: true
    * **custom data**: true
    * **expected**: pass
    * **expose browser profiler**: true
@@ -4267,7 +4266,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **page timeout**: 600000
    * **repository**: https://github.com/WebKit/Speedometer
    * **repository revision**: 36712deb57d45879f56dd2136f8a6ed8a22d964b
-   * **submetric summary method**: mean
+   * **submetric summary method**: median
    * **subtest lower is better**: true
    * **subtest name filters**: tests/,s3/
    * **subtest unit**: ms
@@ -4598,7 +4597,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: fenix, geckoview, refbrow, chrome-m, cstm-car-m
    * **browsertime args**: --browsertime.speedometer_iterations=5
-   * **cold**: true
    * **custom data**: true
    * **expected**: pass
    * **gecko profile entries**: 14000000
@@ -4609,7 +4607,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **page timeout**: 420000
    * **repository**: https://github.com/WebKit/Speedometer
    * **repository revision**: 36712deb57d45879f56dd2136f8a6ed8a22d964b
-   * **submetric summary method**: mean
+   * **submetric summary method**: median
    * **subtest lower is better**: true
    * **subtest name filters**: tests/,s3/
    * **subtest unit**: ms
