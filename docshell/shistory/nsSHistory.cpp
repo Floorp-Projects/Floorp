@@ -1182,7 +1182,7 @@ nsSHistory::EvictOutOfRangeContentViewers(int32_t aIndex) {
           ("nsSHistory::EvictOutOfRangeContentViewers %i", aIndex));
 
   // Check our per SHistory object limit in the currently navigated SHistory
-  EvictOutOfRangeWindowContentViewers(aIndex);
+  EvictOutOfRangeWindowDocumentViewers(aIndex);
   // Check our total limit across all SHistory objects
   GloballyEvictContentViewers();
   return NS_OK;
@@ -1484,8 +1484,8 @@ nsresult nsSHistory::ReloadCurrentEntry(
                    /* aUserActivation */ false);
 }
 
-void nsSHistory::EvictOutOfRangeWindowContentViewers(int32_t aIndex) {
-  // XXX rename method to EvictContentViewersExceptAroundIndex, or something.
+void nsSHistory::EvictOutOfRangeWindowDocumentViewers(int32_t aIndex) {
+  // XXX rename method to EvictDocumentViewersExceptAroundIndex, or something.
 
   // We need to release all content viewers that are no longer in the range
   //
@@ -1530,7 +1530,7 @@ void nsSHistory::EvictOutOfRangeWindowContentViewers(int32_t aIndex) {
   WindowIndices(aIndex, &startSafeIndex, &endSafeIndex);
 
   LOG(
-      ("EvictOutOfRangeWindowContentViewers(index=%d), "
+      ("EvictOutOfRangeWindowDocumentViewers(index=%d), "
        "Length()=%d. Safe range [%d, %d]",
        aIndex, Length(), startSafeIndex, endSafeIndex));
 
