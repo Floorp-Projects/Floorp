@@ -379,6 +379,6 @@ function createOffsetLookup(code) {
     if (!lineOffsets.hasOwnProperty(line)) {
       throw new Error("Unknown line " + line + " column " + column);
     }
-    return lineOffsets[line] + column;
+    return lineOffsets[line] + column - 1;
   };
 }

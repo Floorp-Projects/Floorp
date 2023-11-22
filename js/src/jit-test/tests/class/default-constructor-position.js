@@ -55,7 +55,7 @@ for (text of source.split("\n")) {
 
   // Check lineno/column.
   assertEq(getStartLine(className), lineno);
-  assertEq(getStartColumn(className), column);
+  assertEq(getStartColumn(className), column + 1);
 
   // Check sourceStart/sourceEnd.
   offset = source.indexOf("class " + className)

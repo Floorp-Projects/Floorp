@@ -55,4 +55,4 @@ C();
 D();
 new E();
 `);
-assertEq(g.log.join(","), "A,pop(8:0),B,pop(14:0),C,pop(20:0),D,pop(26:0),E,pop(27:16),pop(34:4)");
+assertEq(g.log.join(","), "A,pop(8:1),B,pop(14:1),C,pop(20:1),D,pop(26:1),E,pop(27:17),pop(34:5)");

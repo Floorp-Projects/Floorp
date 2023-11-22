@@ -173,37 +173,36 @@ into the system; the entire string is not a valid URL. For
 **If the instance refers to WebAssembly code**, throw a `TypeError`.
 
 ### `startLine`
-**If the instance refers to a `JSScript`**, the number of the line at
+**If the instance refers to a `JSScript`**, the 1-origin number of the line at
 which this script's code starts, within the file or document named by
 `url`.
 
 ### `startColumn`
-**If the instance refers to a `JSScript`**, the zero-indexed number of the
-column at which this script's code starts, within the file or document
-named by `url`.  For functions, this is the start of the function's
-arguments:
+**If the instance refers to a `JSScript`**, the 1-origin column number at
+which this script's code starts, within the file or document named by `url`.
+For functions, this is the start of the function's arguments:
 ```js
 function f() { ... }
-//        ^ start (column 10)
+//        ^ start (column 11)
 let g = x => x*x;
-//      ^ start (column 8)
+//      ^ start (column 9)
 let h = (x) => x*x;
-//      ^ start (column 8)
+//      ^ start (column 9)
 ```
 For default class constructors, it is the start of the `class` keyword:
 ```js
 let MyClass = class { };
-//            ^ start (column 14)
+//            ^ start (column 15)
 ```
 For scripts from other sources, such as `eval` or the `Function`
 constructor, it is typically 0:
 ```js
 let f = new Function("  console.log('hello world');");
-//                    ^ start (column 0, from the string's perspective)
+//                    ^ start (column 1, from the string's perspective)
 ```
 
 ### `lineCount`
-**If the instance refers to a `JSScript`**, the number of lines this
+**If the instance refers to a `JSScript`**, the 1-origin number of lines this
 script's code occupies, within the file or document named by `url`.
 
 ### `source`
@@ -232,7 +231,7 @@ by `source`.
 **If the instance refers to WebAssembly code**, throw a `TypeError`.
 
 ### `mainOffset`
-**If the instance refers to a `JSScript`**, the offset of the main
+**If the instance refers to a `JSScript`**, the 0-origin offset of the main
 entry point of the script, excluding any prologue.
 
 **If the instance refers to WebAssembly code**, throw a `TypeError`.
@@ -267,9 +266,9 @@ children can be reached by walking the tree.
 ### `getPossibleBreakpoints(query)`
 Query for the recommended breakpoint locations available in SpiderMonkey.
 Returns a result array of objects with the following properties:
- * `offset: number` - The offset the breakpoint.
- * `lineNumber: number` - The line number of the breakpoint.
- * `columnNumber: number` - The column number of the breakpoint.
+ * `offset: number` - The 0-origin offset the breakpoint.
+ * `lineNumber: number` - The 1-origin line number of the breakpoint.
+ * `columnNumber: number` - The 1-origin column number of the breakpoint.
  * `isStepStart: boolean` - True if SpiderMonkey recommends that the
    breakpoint be treated as a step location when users of debuggers
    step to the next item. This _roughly_ translates to the start of
@@ -278,13 +277,13 @@ Returns a result array of objects with the following properties:
 The `query` argument can be used to filter the set of breakpoints.
 The `query` object can contain the following properties:
 
- * `minOffset: number` - The inclusive lower bound of `offset` values to include.
- * `maxOffset: number` - The exclusive upper bound of `offset` values to include.
- * `line: number` - Limit to breakpoints on the given line.
- * `minLine: number` - The inclusive lower bound of lines to include.
- * `minColumn: number` - The inclusive lower bound of the line/minLine column to include.
- * `maxLine: number` - The exclusive upper bound of lines to include.
- * `maxColumn: number` - The exclusive upper bound of the line/maxLine column to include.
+ * `minOffset: number` - The inclusive lower bound of `offset` values to include (0-origin).
+ * `maxOffset: number` - The exclusive upper bound of `offset` values to include (0-origin).
+ * `line: number` - Limit to breakpoints on the given line (1-origin).
+ * `minLine: number` - The inclusive lower bound of lines to include (1-origin).
+ * `minColumn: number` - The inclusive lower bound of the line/minLine column to include (1-origin).
+ * `maxLine: number` - The exclusive upper bound of lines to include (1-origin).
+ * `maxColumn: number` - The exclusive upper bound of the line/maxLine column to include (1-origin).
 
 ### `getPossibleBreakpointOffsets(query)`
 Query for the recommended breakpoint locations available in SpiderMonkey.
@@ -292,10 +291,10 @@ Identical to getPossibleBreakpoints except this returns an array of `offset`
 values instead of offset metadata objects.
 
 ### `getOffsetMetadata(offset)`
-Get metadata about a given bytecode offset.
+Get metadata about a given bytecode offset (0-origin).
 Returns an object with the following properties:
-  * `lineNumber: number` - The line number of the breakpoint.
-  * `columnNumber: number` - The column number of the breakpoint.
+  * `lineNumber: number` - The 1-origin line number of the breakpoint.
+  * `columnNumber: number` - The 1-origin column number of the breakpoint.
   * `isBreakpoint: boolean` - True if this offset qualifies as a breakpoint,
     defined using the same semantics used for `getPossibleBreakpoints()`.
   * `isStepStart: boolean` - True if SpiderMonkey recommends that the
@@ -305,8 +304,8 @@ Returns an object with the following properties:
 
 ### `setBreakpoint(offset, handler)`
 **If the instance refers to a `JSScript`**, set a breakpoint at the
-bytecode instruction at <i>offset</i> in this script, reporting hits to
-the `hit` method of <i>handler</i>. If <i>offset</i> is not a valid offset
+bytecode instruction at <i>offset</i> (0-origin) in this script, reporting hits
+to the `hit` method of <i>handler</i>. If <i>offset</i> is not a valid offset
 in this script, throw an error.  Also, even if <i>offset</i> is valid offset
 in this script, some instructions for engine-internal operation (e.g.
 SetAliasedVar in the generator function initialization) don't allow setting
@@ -337,7 +336,7 @@ global's scripts.
 
 ### `getBreakpoints([offset])`
 **If the instance refers to a `JSScript`**, return an array containing the
-handler objects for all the breakpoints set at <i>offset</i> in this
+handler objects for all the breakpoints set at <i>offset</i> (0-origin) in this
 script. If <i>offset</i> is omitted, return the handlers of all
 breakpoints set anywhere in this script. If <i>offset</i> is present, but
 not a valid offset in this script, throw an error.
@@ -347,24 +346,24 @@ not a valid offset in this script, throw an error.
 ### `clearBreakpoint(handler, [offset])`
 **If the instance refers to a `JSScript`**, remove all breakpoints set in
 this [`Debugger`][debugger-object] instance that use <i>handler</i> as
-their handler. If <i>offset</i> is given, remove only those breakpoints
-set at <i>offset</i> that use <i>handler</i>; if <i>offset</i> is not a
-valid offset in this script, throw an error.
+their handler. If <i>offset</i> (0-origin) is given, remove only those
+breakpoints set at <i>offset</i> that use <i>handler</i>; if <i>offset</i> is
+not a valid offset in this script, throw an error.
 
 Note that, if breakpoints using other handler objects are set at the
 same location(s) as <i>handler</i>, they remain in place.
 
 ### `clearAllBreakpoints([offset])`
 **If the instance refers to a `JSScript`**, remove all breakpoints set in
-this script. If <i>offset</i> is present, remove all breakpoints set at
-that offset in this script; if <i>offset</i> is not a valid bytecode
+this script. If <i>offset</i> (0-origin) is present, remove all breakpoints set
+at that offset in this script; if <i>offset</i> is not a valid bytecode
 offset in this script, throw an error.
 
 ### `getEffectfulOffsets()`
 **If the instance refers to a `JSScript`**, return an array
-containing the offsets of all bytecodes in the script which can have direct
-side effects that are visible outside the currently executing frame.  This
-includes, for example, operations that set properties or elements on
+containing the 0-origin offsets of all bytecodes in the script which can have
+direct side effects that are visible outside the currently executing frame.
+This includes, for example, operations that set properties or elements on
 objects, or that may set names in environments created outside the frame.
 
 This doesn't include some instructions for engine-internal operation (e.g.
@@ -378,11 +377,11 @@ contains information about the coverage of all opcodes. The elements of
 the array are objects, each of which describes a single opcode, and
 contains the following properties:
 
- * `lineNumber`: the line number of the current opcode.
+ * `lineNumber`: the 1-origin line number of the current opcode.
 
- * `columnNumber`: the column number of the current opcode.
+ * `columnNumber`: the 1-origin column number of the current opcode.
 
- * `offset`: the bytecode instruction offset of the current opcode.
+ * `offset`: the 0-origin bytecode instruction offset of the current opcode.
 
  * `count`: the number of times the current opcode got executed.
 
@@ -393,8 +392,8 @@ the flag `Debugger.collectCoverageInfo` should be set to `true`.
 **If the instance refers to WebAssembly code**, throw a `TypeError`.
 
 ### `isInCatchScope([offset])`
-**If the instance refers to a `JSScript`**, this is `true` if this offset
-falls within the scope of a try block, and `false` otherwise.
+**If the instance refers to a `JSScript`**, this is `true` if this 0-origin
+offset falls within the scope of a try block, and `false` otherwise.
 
 **If the instance refers to WebAssembly code**, throw a `TypeError`.
 
@@ -407,7 +406,7 @@ in their results.
 
 #### `getAllOffsets()`
 **If the instance refers to a `JSScript`**, return an array <i>L</i>
-describing the relationship between bytecode instruction offsets and
+describing the relationship between bytecode instruction offsets (0-origin) and
 source code positions in this script. <i>L</i> is sparse, and indexed by
 source line number. If a source line number <i>line</i> has no code, then
 <i>L</i> has no <i>line</i> property. If there is code for <i>line</i>,
@@ -426,20 +425,20 @@ for (i=1; i < 10; i++)
 Calling `getAllOffsets()` on that code might yield an array like this:
 
 ```js
-[[0], [5, 20], , [10]]
+[, [0], [16, 75], , [52]]
 ```
 
 This array indicates that:
 
 * the first line's code starts at offset 0 in the script;
 
-* the `for` statement head has two entry points at offsets 5 and 20 (for
+* the `for` statement head has two entry points at offsets 16 and 75 (for
 the initialization, which is performed only once, and the loop test,
 which is performed at the start of each iteration);
 
 * the third line has no code;
 
-* and the fourth line begins at offset 10.
+* and the fourth line begins at offset 52.
 
 **If the instance refers to WebAssembly code**, throw a `TypeError`.
 
@@ -453,11 +452,11 @@ all offsets that are entry points for each (line, column) pair.
 The elements of the array are objects, each of which describes a single
 entry point, and contains the following properties:
 
-* lineNumber: the line number for which offset is an entry point
+* lineNumber: the 1-origin line number for which offset is an entry point
 
-* columnNumber: the column number for which offset is an entry point
+* columnNumber: the 1-origin column number for which offset is an entry point
 
-* offset: the bytecode instruction offset of the entry point
+* offset: the 0-origin bytecode instruction offset of the entry point
 
 For example, suppose we have a script for the following source code:
 
@@ -471,10 +470,12 @@ for (i=1; i < 10; i++)
 Calling `getAllColumnOffsets()` on that code might yield an array like this:
 
 ```js
-[{ lineNumber: 0, columnNumber: 0, offset: 0 },
-  { lineNumber: 1, columnNumber: 5, offset: 5 },
-  { lineNumber: 1, columnNumber: 10, offset: 20 },
-  { lineNumber: 3, columnNumber: 4, offset: 10 }]
+[{ lineNumber: 1, columnNumber: 1, offset: 0 },
+ { lineNumber: 2, columnNumber: 6, offset: 16 },
+ { lineNumber: 2, columnNumber: 11, offset: 28 },
+ { lineNumber: 4, columnNumber: 5, offset: 52 },
+ { lineNumber: 4, columnNumber: 14, offset: 67 },
+ { lineNumber: 2, columnNumber: 19, offset: 75 }]
 ```
 
 **If the instance refers to WebAssembly code**, throw a `TypeError`.
@@ -482,17 +483,17 @@ Calling `getAllColumnOffsets()` on that code might yield an array like this:
 #### `getLineOffsets(line)`
 **If the instance refers to a `JSScript`**, return an array of bytecode
 instruction offsets representing the entry points to source line
-<i>line</i>. If the script contains no executable code at that line, the
-array returned is empty.
+<i>line</i> (1-origin). If the script contains no executable code at that line,
+the array returned is empty.
 
 #### `getOffsetLocation(offset)`
 **If the instance refers to a `JSScript`**, return an object describing the
 source code location responsible for the bytecode at <i>offset</i> in this
 script.  The object has the following properties:
 
-* `lineNumber`: the line number for which offset is an entry point
+* `lineNumber`: the 1-origin line number for which offset is an entry point
 
-* `columnNumber`: the column number for which offset is an entry point
+* `columnNumber`: the 1-origin column number for which offset is an entry point
 
 * `isEntryPoint`: true if the offset is a column entry point, as
   would be reported by getAllColumnOffsets(); otherwise false.
