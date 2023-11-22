@@ -77,6 +77,10 @@ add_task(async function () {
       panel.UI.setActiveSummary(contentStylesheetSummaryEl);
       tabStyleSheetEditor = await onTabStyleSheetEditorSelected;
     }
+
+    info("Wait for sourceEditor to be available");
+    await waitUntil(() => tabStyleSheetEditor.sourceEditor);
+
     const onStyleApplied = tabStyleSheetEditor.once("style-applied");
     tabStyleSheetEditor.sourceEditor.setText(
       tabStyleSheetEditor.sourceEditor.getText() + "\n body {color: red;}"
