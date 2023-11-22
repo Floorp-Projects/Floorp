@@ -112,7 +112,7 @@ CancelChannelRunnable::Run() {
 FetchEvent::FetchEvent(EventTarget* aOwner)
     : ExtendableEvent(aOwner),
       mPreventDefaultLineNumber(0),
-      mPreventDefaultColumnNumber(0),
+      mPreventDefaultColumnNumber(1),
       mWaitToRespond(false) {}
 
 FetchEvent::~FetchEvent() = default;
@@ -771,7 +771,7 @@ void FetchEvent::RespondWith(JSContext* aCx, Promise& aArg, ErrorResult& aRv) {
   // a file:// string here because service workers require http/https.
   nsCString spec;
   uint32_t line = 0;
-  uint32_t column = 0;
+  uint32_t column = 1;
   nsJSUtils::GetCallingLocation(aCx, spec, &line, &column);
 
   SafeRefPtr<InternalRequest> ir = mRequest->GetInternalRequest();
@@ -865,7 +865,7 @@ class WaitUntilHandler final : public PromiseNativeHandler {
       : mWorkerPrivate(aWorkerPrivate),
         mScope(mWorkerPrivate->ServiceWorkerScope()),
         mLine(0),
-        mColumn(0) {
+        mColumn(1) {
     mWorkerPrivate->AssertIsOnWorkerThread();
 
     // Save the location of the waitUntil() call itself as a fallback
