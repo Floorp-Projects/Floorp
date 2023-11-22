@@ -321,7 +321,6 @@ class SettingsSearchTest {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2203312
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1848623")
     @Test
     fun verifyErrorMessagesForInvalidSearchEngineUrlsTest() {
         val customSearchEngine = object {
