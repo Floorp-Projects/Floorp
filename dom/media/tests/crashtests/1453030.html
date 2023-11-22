@@ -30,7 +30,8 @@
         setTimeout(getDTMF, 400)
         setTimeout(window.location.reload.bind(window.location), 500);
       } else {
-        delete localStorage["index_1453030_html"];
+        try { delete localStorage["index_1453030_html"]; } catch (e) {}
+        finish();
       }
 
     </script>
