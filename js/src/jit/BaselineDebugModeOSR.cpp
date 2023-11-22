@@ -206,7 +206,7 @@ static void SpewPatchBaselineFrame(const uint8_t* oldReturnAddress,
   JitSpew(JitSpew_BaselineDebugModeOSR,
           "Patch return %p -> %p on BaselineJS frame (%s:%u:%u) from %s at %s",
           oldReturnAddress, newReturnAddress, script->filename(),
-          script->lineno(), script->column().zeroOriginValue(),
+          script->lineno(), script->column().oneOriginValue(),
           RetAddrEntryKindToString(frameKind), CodeName(JSOp(*pc)));
 }
 
@@ -412,7 +412,7 @@ static bool RecompileBaselineScriptForDebugMode(
 
   JitSpew(JitSpew_BaselineDebugModeOSR, "Recompiling (%s:%u:%u) for %s",
           script->filename(), script->lineno(),
-          script->column().zeroOriginValue(),
+          script->column().oneOriginValue(),
           observing ? "DEBUGGING" : "NORMAL EXECUTION");
 
   AutoKeepJitScripts keepJitScripts(cx);
