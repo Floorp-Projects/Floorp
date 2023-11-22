@@ -838,6 +838,17 @@ cm-csv-import:
       description: Can show CSV Import in about:logins or Migration Wizard
       setPref: "signon.management.page.fileImport.enabled"
 
+# This feature flag mirrors the one used for ios
+# https://github.com/mozilla-mobile/firefox-ios/blob/main/nimbus-features/addressAutofillFeature.yaml
+address-autofill-feature:
+  description: Enabling address autofill feature
+  owner: issozi@mozilla.com
+  hasExposure: false
+  variables:
+    status:
+      type: boolean
+      description: If true, we will allow user to use address autofill
+
 shellService:
   description: "Interface with OS, e.g., pinning and set default"
   owner: desktop-integrations@mozilla.com
