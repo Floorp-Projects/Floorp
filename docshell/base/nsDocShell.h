@@ -584,10 +584,10 @@ class nsDocShell final : public nsDocLoader,
                                 nsIRequest* aRequest,
                                 nsIStreamListener** aContentHandler);
 
-  nsresult NewContentViewerObj(const nsACString& aContentType,
-                               nsIRequest* aRequest, nsILoadGroup* aLoadGroup,
-                               nsIStreamListener** aContentHandler,
-                               nsIDocumentViewer** aViewer);
+  nsresult NewDocumentViewerObj(const nsACString& aContentType,
+                                nsIRequest* aRequest, nsILoadGroup* aLoadGroup,
+                                nsIStreamListener** aContentHandler,
+                                nsIDocumentViewer** aViewer);
 
   already_AddRefed<nsILoadURIDelegate> GetLoadURIDelegate();
 
