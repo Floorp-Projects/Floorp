@@ -69,6 +69,7 @@ skip-if = true
 ["browser_translations_panel_never_translate_site_manual.js"]
 
 ["browser_translations_panel_retry.js"]
+skip-if = ["os == 'linux' && !debug"] # Bug 1863227
 
 ["browser_translations_panel_settings_unsupported_lang.js"]
 
