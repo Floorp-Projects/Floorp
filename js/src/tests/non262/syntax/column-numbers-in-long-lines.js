@@ -84,8 +84,8 @@ const columnsAreCodePoints = (function()
   assertEq(script.type, "Program");
   assertEq(script.loc.start.line, 1);
   assertEq(script.loc.end.line, 1);
-  assertEq(script.loc.start.column, 0);
-  checkColumn(script.loc.end.column, 7, 11);
+  assertEq(script.loc.start.column, 1);
+  checkColumn(script.loc.end.column, 8, 12);
 
   var body = script.body;
   assertEq(body.length, 1);
@@ -94,16 +94,16 @@ const columnsAreCodePoints = (function()
   assertEq(stmt.type, "ExpressionStatement");
   assertEq(stmt.loc.start.line, 1);
   assertEq(stmt.loc.end.line, 1);
-  assertEq(stmt.loc.start.column, 0);
-  checkColumn(stmt.loc.end.column, 7, 11);
+  assertEq(stmt.loc.start.column, 1);
+  checkColumn(stmt.loc.end.column, 8, 12);
 
   var expr = stmt.expression;
   assertEq(expr.type, "Literal");
   assertEq(expr.value, "😱😱😱😱");
   assertEq(expr.loc.start.line, 1);
   assertEq(expr.loc.end.line, 1);
-  assertEq(expr.loc.start.column, 0);
-  checkColumn(expr.loc.end.column, 6, 10);
+  assertEq(expr.loc.start.column, 1);
+  checkColumn(expr.loc.end.column, 7, 11);
 
   var checkResult = columnTypes.join(",");
 
@@ -126,47 +126,47 @@ function testSimple()
   // index of the array within the outer array.
   let simpleCodeArray =
     [
-      'var Q = [[',  // column 0, offset 0
+      'var Q = [[',  // column 1, offset 0
       // REPEAT
-      '"😱😱(x"],["',  // column 10, offset 10
-      '😱😱)x"],["😱',  // column 20, offset 22
-      '😱*x"],["😱😱',  // column 30, offset 35
-      '+x"],["😱😱,',  // column 40, offset 48
-      'x"],["😱😱-x',  // column 50, offset 60
-      '"],["😱😱.x"',  // column 60, offset 72
-      '],["😱😱/x"]',  // column 70, offset 84
-      ',["😱😱0x"],',  // column 80, offset 96
-      '["😱😱1x"],[',  // column 90, offset 108
+      '"😱😱(x"],["',  // column 11, offset 10
+      '😱😱)x"],["😱',  // column 21, offset 22
+      '😱*x"],["😱😱',  // column 31, offset 35
+      '+x"],["😱😱,',  // column 41, offset 48
+      'x"],["😱😱-x',  // column 51, offset 60
+      '"],["😱😱.x"',  // column 61, offset 72
+      '],["😱😱/x"]',  // column 71, offset 84
+      ',["😱😱0x"],',  // column 81, offset 96
+      '["😱😱1x"],[',  // column 91, offset 108
       // REPEAT
-      '"😱😱2x"],["',  // column 100, offset 120 -- chunk limit between "]
-      '😱😱3x"],["😱',  // column 110, offset 132
-      '😱4x"],["😱😱',  // column 120, offset 145
-      '5x"],["😱😱6',  // column 130, offset 158
-      'x"],["😱😱7x',  // column 140, offset 170
-      '"],["😱😱8x"',  // column 150, offset 182
-      '],["😱😱9x"]',  // column 160, offset 194
-      ',["😱😱:x"],',  // column 170, offset 206
-      '["😱😱;x"],[',  // column 180, offset 218
+      '"😱😱2x"],["',  // column 101, offset 120 -- chunk limit between "]
+      '😱😱3x"],["😱',  // column 111, offset 132
+      '😱4x"],["😱😱',  // column 121, offset 145
+      '5x"],["😱😱6',  // column 131, offset 158
+      'x"],["😱😱7x',  // column 141, offset 170
+      '"],["😱😱8x"',  // column 151, offset 182
+      '],["😱😱9x"]',  // column 161, offset 194
+      ',["😱😱:x"],',  // column 171, offset 206
+      '["😱😱;x"],[',  // column 181, offset 218
       // REPEAT
-      '"😱😱<x"],["',  // column 190, offset 230
-      '😱😱=x"],["😱',  // column 200, offset 242
-      '😱>x"],["😱😱',  // column 210, offset 255 -- chunk limit splits first 😱
-      '?x"],["😱😱@',  // column 220, offset 268
-      'x"],["😱😱Ax',  // column 230, offset 280
-      '"],["😱😱Bx"',  // column 240, offset 292
-      '],["😱😱Cx"]',  // column 250, offset 304
-      ',["😱😱Dx"],',  // column 260, offset 316
-      '["😱😱Ex"],[',  // column 270, offset 328
+      '"😱😱<x"],["',  // column 191, offset 230
+      '😱😱=x"],["😱',  // column 201, offset 242
+      '😱>x"],["😱😱',  // column 211, offset 255 -- chunk limit splits first 😱
+      '?x"],["😱😱@',  // column 221, offset 268
+      'x"],["😱😱Ax',  // column 231, offset 280
+      '"],["😱😱Bx"',  // column 241, offset 292
+      '],["😱😱Cx"]',  // column 251, offset 304
+      ',["😱😱Dx"],',  // column 261, offset 316
+      '["😱😱Ex"],[',  // column 271, offset 328
       // REPEAT
-      '"😱😱Fx"],["',  // column 280, offset 340
-      '😱😱Gx"],["😱',  // column 290, offset 352
-      '😱Hx"],["😱😱',  // column 300, offset 365
-      'Ix"],["😱😱J',  // column 310, offset 378 -- chunk limit between ["
-      'x"],["😱😱Kx',  // column 320, offset 390
-      '"],["😱😱Lx"',  // column 330, offset 402
-      '],["😱😱Mx"]',  // column 340, offset 414
-      ',["😱😱Nx"],',  // column 350, offset 426
-      '["😱😱Ox"]];',  // column 360 (10 long), offset 438 (+12 to end)
+      '"😱😱Fx"],["',  // column 281, offset 340
+      '😱😱Gx"],["😱',  // column 291, offset 352
+      '😱Hx"],["😱😱',  // column 301, offset 365
+      'Ix"],["😱😱J',  // column 311, offset 378 -- chunk limit between ["
+      'x"],["😱😱Kx',  // column 321, offset 390
+      '"],["😱😱Lx"',  // column 331, offset 402
+      '],["😱😱Mx"]',  // column 341, offset 414
+      ',["😱😱Nx"],',  // column 351, offset 426
+      '["😱😱Ox"]];',  // column 361 (10 long), offset 438 (+12 to end)
     ];
   let simpleCode = simpleCodeArray.join("");
 
@@ -290,19 +290,19 @@ function testGuaranteedSingleUnit()
   // End one array *outside* the first chunk to test a computation inside a
   // first chunk *after* we know we have a long line and have computed a first
   // chunk.
-  let mixedChunksCode = "var Z = [ [ [],"; // column 0, offset 0
+  let mixedChunksCode = "var Z = [ [ [],"; // column 1, offset 0
   assertEq(mixedChunksCode.length, 15);
   assertEq(lengthInCodePoints(mixedChunksCode), 15);
 
   mixedChunksCode +=
-    " ".repeat(128 - mixedChunksCode.length); // column 15, offset 15
+    " ".repeat(128 - mixedChunksCode.length); // column 16, offset 15
   assertEq(mixedChunksCode.length, 128);
   assertEq(lengthInCodePoints(mixedChunksCode), 128);
 
   // Fill out a second chunk as also single-unit, with an outer array literal
   // that begins in this chunk but finishes in the next (to test column
   // computation in a prior, guaranteed-single-unit chunk).
-  mixedChunksCode += "[" + "[],".repeat(42) + " "; // column 128, offset 128
+  mixedChunksCode += "[" + "[],".repeat(42) + " "; // column 129, offset 128
   assertEq(mixedChunksCode.length, 256);
   assertEq(lengthInCodePoints(mixedChunksCode), 256);
 
@@ -313,7 +313,7 @@ function testGuaranteedSingleUnit()
   // multi-unit code points.  For good measure, make the chunk *end* in the
   // middle of such a code point, so that the relevant chunk limit must be
   // retracted one code unit.
-  mixedChunksCode += "[] ], '" + "😱".repeat(61); // column 256, offset 256
+  mixedChunksCode += "[] ], '" + "😱".repeat(61); // column 257, offset 256
   assertEq(mixedChunksCode.length, 384 + 1);
   assertEq(lengthInCodePoints(mixedChunksCode), 324);
 
@@ -324,7 +324,7 @@ function testGuaranteedSingleUnit()
   // terminator.  The terminator invalidates the column computation cache, so
   // when the outermost array is closed, location info for it will not hit the
   // cache.  Finally, tack on the terminating semicolon for good measure.
-  mixedChunksCode += "' ], '\u2028' ];"; // column 324, offset 385
+  mixedChunksCode += "' ], '\u2028' ];"; // column 325, offset 385
   assertEq(mixedChunksCode.length, 396);
   assertEq(lengthInCodePoints(mixedChunksCode), 335);
 
