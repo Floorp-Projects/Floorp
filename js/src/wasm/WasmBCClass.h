@@ -1692,8 +1692,8 @@ struct BaseCompiler final {
                                         const ResultType& labelType,
                                         RefType sourceType, RefType destType);
   [[nodiscard]] bool emitBrOnCast(bool onSuccess);
-  [[nodiscard]] bool emitExternInternalize();
-  [[nodiscard]] bool emitExternExternalize();
+  [[nodiscard]] bool emitAnyConvertExtern();
+  [[nodiscard]] bool emitExternConvertAny();
 
   // Utility classes/methods to add trap information related to
   // null pointer dereferences/accesses.
