@@ -410,7 +410,7 @@ class nsDocShell final : public nsDocLoader,
 
   // Create a content viewer within this nsDocShell for the given
   // `WindowGlobalChild` actor.
-  nsresult CreateContentViewerForActor(
+  nsresult CreateDocumentViewerForActor(
       mozilla::dom::WindowGlobalChild* aWindowActor);
 
   // Creates a real network channel (not a DocumentChannel) using the specified

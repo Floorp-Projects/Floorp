@@ -159,7 +159,7 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
   docShellTreeOwner->AddChromeListeners();
 
   if (aInitialWindowChild) {
-    docShell->CreateContentViewerForActor(aInitialWindowChild);
+    docShell->CreateDocumentViewerForActor(aInitialWindowChild);
   }
 
   return browser.forget();
