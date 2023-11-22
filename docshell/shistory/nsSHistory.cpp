@@ -1177,9 +1177,9 @@ nsSHistory::NotifyOnHistoryReload(bool* aCanReload) {
 }
 
 NS_IMETHODIMP
-nsSHistory::EvictOutOfRangeContentViewers(int32_t aIndex) {
+nsSHistory::EvictOutOfRangeDocumentViewers(int32_t aIndex) {
   MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
-          ("nsSHistory::EvictOutOfRangeContentViewers %i", aIndex));
+          ("nsSHistory::EvictOutOfRangeDocumentViewers %i", aIndex));
 
   // Check our per SHistory object limit in the currently navigated SHistory
   EvictOutOfRangeWindowDocumentViewers(aIndex);
@@ -1195,7 +1195,7 @@ nsSHistory::EvictContentViewersOrReplaceEntry(nsISHEntry* aNewSHEntry,
     int32_t curIndex;
     GetIndex(&curIndex);
     if (curIndex > -1) {
-      EvictOutOfRangeContentViewers(curIndex);
+      EvictOutOfRangeDocumentViewers(curIndex);
     }
   } else {
     nsCOMPtr<nsISHEntry> rootSHEntry = nsSHistory::GetRootSHEntry(aNewSHEntry);
@@ -1306,11 +1306,11 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
     // disabled everywhere.
 
     frameLoaderOwner->RestoreFrameLoaderFromBFCache(aFrameLoader);
-    // EvictOutOfRangeContentViewers is called here explicitly to
+    // EvictOutOfRangeDocumentViewers is called here explicitly to
     // possibly evict the now in the bfcache document.
     // HistoryCommitIndexAndLength might not have evicted that before the
     // FrameLoader swap.
-    shistory->EvictOutOfRangeContentViewers(indexOfHistoryLoad);
+    shistory->EvictOutOfRangeDocumentViewers(indexOfHistoryLoad);
 
     // The old page can't be stored in the bfcache,
     // destroy the nsFrameLoader.

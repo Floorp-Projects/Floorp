@@ -2067,7 +2067,7 @@ nsDocumentViewer::Show() {
         MOZ_LOG(gPageCacheLog, LogLevel::Verbose,
                 ("About to evict content viewers: prev=%d, loaded=%d",
                  prevIndex, loadedIndex));
-        history->LegacySHistory()->EvictOutOfRangeContentViewers(loadedIndex);
+        history->LegacySHistory()->EvictOutOfRangeDocumentViewers(loadedIndex);
       }
     }
   }

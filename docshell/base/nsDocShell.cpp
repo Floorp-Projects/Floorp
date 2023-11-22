@@ -11245,7 +11245,7 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
   // It's important that this function not run arbitrary scripts after step A
   // and before completing step E.  For example, if a script called
   // history.back() before we completed step E, bfcache might destroy an
-  // active content viewer.  Since EvictOutOfRangeContentViewers at the end of
+  // active content viewer.  Since EvictOutOfRangeDocumentViewers at the end of
   // step E might run script, we can't just put a script blocker around the
   // critical section.
   //

@@ -1508,7 +1508,7 @@ void SessionHistoryEntry::SetFrameLoader(nsFrameLoader* aFrameLoader) {
     if (shistory) {
       int32_t index = 0;
       shistory->GetIndex(&index);
-      shistory->EvictOutOfRangeContentViewers(index);
+      shistory->EvictOutOfRangeDocumentViewers(index);
     }
   }
 }
