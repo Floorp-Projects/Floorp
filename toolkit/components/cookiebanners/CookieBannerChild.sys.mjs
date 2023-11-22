@@ -78,8 +78,6 @@ export class CookieBannerChild extends JSWindowActorChild {
   #observerCleanUpTimer;
   // Indicates whether the page "load" event occurred.
   #didLoad = false;
-  // Indicates whether we are using global rules to handle the banner.
-  #isUsingGlobalRules = false;
 
   // Used to keep track of click telemetry for the current window.
   #telemetryStatus = {
@@ -90,8 +88,6 @@ export class CookieBannerChild extends JSWindowActorChild {
     bannerVisibilityFail: false,
     querySelectorCount: 0,
     querySelectorTimeMS: 0,
-    bannerDetectedAfterCookieInjection: false,
-    detectedCMP: [],
   };
   // For measuring the cookie banner handling duration.
   #gleanBannerHandlingTimer = null;
@@ -252,17 +248,11 @@ export class CookieBannerChild extends JSWindowActorChild {
 
     this.#clickRules = rules;
 
-    // Check if we are using global rules. If we are using a site rule, there
-    // will be one rule has its isGlobalRule property set to false. Otherwise,
-    // we are using global rules if every rule has this property set to true.
-    this.#isUsingGlobalRules = rules.every(rule => rule.isGlobalRule);
-
     if (!this.#isDetectOnly) {
       // Start a timer to measure how long it takes for the banner to appear and
       // be handled.
-      this.#gleanBannerHandlingTimer = this.#isUsingGlobalRules
-        ? Glean.cookieBannersCmp.handleDuration.start()
-        : Glean.cookieBannersClick.handleDuration.start();
+      this.#gleanBannerHandlingTimer =
+        Glean.cookieBannersClick.handleDuration.start();
     }
 
     let { bannerHandled, bannerDetected, matchedRules } =
@@ -273,19 +263,13 @@ export class CookieBannerChild extends JSWindowActorChild {
 
     let dispatchedEventsForCookieInjection =
       this.#dispatchEventsForBannerHandledByInjection();
-    if (dispatchedEventsForCookieInjection) {
-      if (bannerDetected) {
-        // Record the failure that the banner is still present with cookies
-        // injected.
-        this.#telemetryStatus.bannerDetectedAfterCookieInjection = true;
-      } else {
-        // A cookie injection followed by not detecting the banner via querySelector
-        // is a success state. Record that in telemetry.
-        // Note: The success state reported may be invalid in edge cases where both
-        // the cookie injection and the banner detection via query selector fails.
-        this.#telemetryStatus.success = true;
-        this.#telemetryStatus.successStage = "cookie_injected";
-      }
+    // A cookie injection followed by not detecting the banner via querySelector
+    // is a success state. Record that in telemetry.
+    // Note: The success state reported may be invalid in edge cases where both
+    // the cookie injection and the banner detection via query selector fails.
+    if (dispatchedEventsForCookieInjection && !bannerDetected) {
+      this.#telemetryStatus.success = true;
+      this.#telemetryStatus.successStage = "cookie_injected";
     }
 
     // 1. Detected event.
@@ -311,16 +295,9 @@ export class CookieBannerChild extends JSWindowActorChild {
         "Telemetry timer: stop and accumulate",
         this.#gleanBannerHandlingTimer
       );
-
-      if (this.#isUsingGlobalRules) {
-        Glean.cookieBannersCmp.handleDuration.stopAndAccumulate(
-          this.#gleanBannerHandlingTimer
-        );
-      } else {
-        Glean.cookieBannersClick.handleDuration.stopAndAccumulate(
-          this.#gleanBannerHandlingTimer
-        );
-      }
+      Glean.cookieBannersClick.handleDuration.stopAndAccumulate(
+        this.#gleanBannerHandlingTimer
+      );
 
       // Avoid dispatching a duplicate "cookiebannerhandled" event.
       if (!dispatchedEventsForCookieInjection) {
@@ -328,15 +305,9 @@ export class CookieBannerChild extends JSWindowActorChild {
       }
     } else if (!this.#isDetectOnly) {
       // Cancel the timer we didn't handle the banner.
-      if (this.#isUsingGlobalRules) {
-        Glean.cookieBannersCmp.handleDuration.cancel(
-          this.#gleanBannerHandlingTimer
-        );
-      } else {
-        Glean.cookieBannersClick.handleDuration.cancel(
-          this.#gleanBannerHandlingTimer
-        );
-      }
+      Glean.cookieBannersClick.handleDuration.cancel(
+        this.#gleanBannerHandlingTimer
+      );
     }
 
     this.#maybeSendTestMessage();
@@ -436,14 +407,8 @@ export class CookieBannerChild extends JSWindowActorChild {
       return;
     }
 
-    let {
-      success,
-      successStage,
-      currentStage,
-      failReason,
-      bannerDetectedAfterCookieInjection,
-      detectedCMP,
-    } = this.#telemetryStatus;
+    let { success, successStage, currentStage, failReason } =
+      this.#telemetryStatus;
 
     // Check if we got interrupted during an observe.
     if (this.#observerCleanUp && !success) {
@@ -459,16 +424,11 @@ export class CookieBannerChild extends JSWindowActorChild {
       reason = failReason;
     }
 
-    // Select the target result telemetry.
-    let resultTelemetry = this.#isUsingGlobalRules
-      ? Glean.cookieBannersCmp.result
-      : Glean.cookieBannersClick.result;
-
     // Increment general success or failure counter.
-    resultTelemetry[status].add(1);
+    Glean.cookieBannersClick.result[status].add(1);
     // Increment reason counters.
     if (reason) {
-      resultTelemetry[`${status}_${reason}`].add(1);
+      Glean.cookieBannersClick.result[`${status}_${reason}`].add(1);
     } else {
       lazy.logConsole.debug(
         "Could not determine success / fail reason for telemetry."
@@ -509,36 +469,6 @@ export class CookieBannerChild extends JSWindowActorChild {
       querySelectorTimeUS,
       querySelectorTimeMS,
     });
-
-    if (bannerDetectedAfterCookieInjection) {
-      Glean.cookieBanners.cookieInjectionFail.add(1);
-    }
-
-    lazy.logConsole.debug("Submitted cookieInjectionFail telemetry", {
-      bannerDetectedAfterCookieInjection,
-    });
-
-    if (detectedCMP.length) {
-      detectedCMP.forEach(id => {
-        Glean.cookieBannersCmp.detectedCmp[id].add(1);
-      });
-    }
-
-    lazy.logConsole.debug("Submitted detectedCMP telemetry", {
-      detectedCMP,
-    });
-
-    // Record whether the banner was handled by a global rule or a site rule.
-    if (success && reason != "cookie_injected") {
-      Glean.cookieBannersCmp.ratioHandledByCmpRule.addToDenominator(1);
-      if (this.#isUsingGlobalRules) {
-        Glean.cookieBannersCmp.ratioHandledByCmpRule.addToNumerator(1);
-      }
-
-      lazy.logConsole.debug("Submitted handled ratio telemetry", {
-        isUsingGlobalRules: this.#isUsingGlobalRules,
-      });
-    }
   }
 
   /**
@@ -569,15 +499,6 @@ export class CookieBannerChild extends JSWindowActorChild {
       }
 
       return { bannerHandled: false, bannerDetected: false };
-    }
-
-    // Record every detected CMP. Note that our detection mechanism return every
-    // rule if the presence detector matches. So, we could have multiple CMPs
-    // if the page contains elements match presence detector of them.
-    if (this.#isUsingGlobalRules) {
-      rules.forEach(rule => {
-        this.#telemetryStatus.detectedCMP.push(rule.id);
-      });
     }
 
     // No rule with valid button to click. This can happen if we're in

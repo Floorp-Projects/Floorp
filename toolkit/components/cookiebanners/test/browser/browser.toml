@@ -15,8 +15,6 @@ support-files = ["file_banner.html"]
 
 ["browser_bannerClicking_executeOnce.js"]
 
-["browser_bannerClicking_globalRules_telemetry.js"]
-
 ["browser_bannerClicking_globalRules.js"]
 
 ["browser_bannerClicking_runContext.js"]
@@ -58,5 +56,3 @@ support-files = ["file_iframe_banner.html"]
 support-files = ["testCookieHeader.sjs"]
 
 ["browser_cookieinjector_events.js"]
-
-["browser_cookieinjector_telemetry.js"]

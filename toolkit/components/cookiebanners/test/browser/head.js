@@ -375,54 +375,21 @@ function insertTestCookieRules() {
 
 /**
  * Test the Glean.cookieBannersClick.result metric.
- *
  * @param {*} expected - Object mapping labels to counters. Omitted labels are
  * asserted to be in initial state (undefined =^ 0)
  * @param {boolean} [resetFOG] - Whether to reset all FOG telemetry after the
  * method has finished.
  */
-function testClickResultTelemetry(expected, resetFOG = true) {
-  return testClickResultTelemetryInternal(
-    Glean.cookieBannersClick.result,
-    expected,
-    resetFOG
-  );
-}
-
-/**
- * Test the Glean.cookieBannersCmp.result metric.
- *
- * @param {*} expected - Object mapping labels to counters. Omitted labels are
- * asserted to be in initial state (undefined =^ 0)
- * @param {boolean} [resetFOG] - Whether to reset all FOG telemetry after the
- * method has finished.
- */
-function testCMPResultTelemetry(expected, resetFOG = true) {
-  return testClickResultTelemetryInternal(
-    Glean.cookieBannersCmp.result,
-    expected,
-    resetFOG
-  );
-}
-
-/**
- * Test the result metric.
- *
- * @param {Object} targetTelemetry - The target glean interface to run the
- * checks
- * @param {*} expected - Object mapping labels to counters. Omitted labels are
- * asserted to be in initial state (undefined =^ 0)
- * @param {boolean} [resetFOG] - Whether to reset all FOG telemetry after the
- * method has finished.
- */
-async function testClickResultTelemetryInternal(
-  targetTelemetry,
-  expected,
-  resetFOG
-) {
+async function testClickResultTelemetry(expected, resetFOG = true) {
   // TODO: Bug 1805653: Enable tests for Linux.
   if (AppConstants.platform == "linux") {
     ok(true, "Skip click telemetry tests on linux.");
+    return;
+  }
+
+  // TODO: Bug 1813128: Update telemetry to account for global rules.
+  if (Services.prefs.getBoolPref("cookiebanners.service.enableGlobalRules")) {
+    ok(true, "Skip click telemetry when global rules are enabled.");
     return;
   }
 
@@ -448,11 +415,13 @@ async function testClickResultTelemetryInternal(
       let expectedValue = expected[label] ?? null;
       if (doAssert) {
         is(
-          targetTelemetry[label].testGetValue(),
+          Glean.cookieBannersClick.result[label].testGetValue(),
           expectedValue,
           `Counter for label '${label}' has correct state.`
         );
-      } else if (targetTelemetry[label].testGetValue() !== expectedValue) {
+      } else if (
+        Glean.cookieBannersClick.result[label].testGetValue() !== expectedValue
+      ) {
         return false;
       }
     }
