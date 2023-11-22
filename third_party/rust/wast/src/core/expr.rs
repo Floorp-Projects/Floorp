@@ -98,18 +98,18 @@ enum Level<'a> {
     TryArm,
 }
 
-/// Possible states of "what is currently being parsed?" in an `if` expression.
+/// Possible states of "what should be parsed next?" in an `if` expression.
 enum If<'a> {
-    /// Only the `if` instructoin has been parsed, next thing to parse is the
-    /// clause, if any, of the `if` instruction.
-    ///
-    /// This parse ends when `(then ...)` is encountered.
+    /// Only the `if` has been parsed, next thing to parse is the clause, if
+    /// any, of the `if` instruction.
     Clause(Instruction<'a>),
-    /// Currently parsing the `then` block, and afterwards a closing paren is
-    /// required or an `(else ...)` expression.
-    Then,
-    /// Parsing the `else` expression, nothing can come after.
+    /// Next thing to parse is the `then` block
+    Then(Instruction<'a>),
+    /// Next thing to parse is the `else` block
     Else,
+    /// This `if` statement has finished parsing and if anything remains it's a
+    /// syntax error.
+    End,
 }
 
 /// Possible state of "what should be parsed next?" in a `try` expression.
@@ -216,6 +216,9 @@ impl<'a> ExpressionParser<'a> {
                     // items in the `if` statement. Otherwise we're just careful
                     // to terminate with an `end` instruction.
                     Level::If(If::Clause(_)) => {
+                        return Err(parser.error("previous `if` had no clause"));
+                    }
+                    Level::If(If::Then(_)) => {
                         return Err(parser.error("previous `if` had no `then`"));
                     }
                     Level::If(_) => {
@@ -278,16 +281,23 @@ impl<'a> ExpressionParser<'a> {
         })
     }
 
-    /// State transitions with parsing an `if` statement.
+    /// Handles all parsing of an `if` statement.
     ///
     /// The syntactical form of an `if` stament looks like:
     ///
     /// ```wat
-    /// (if ($clause)... (then $then) (else $else))
+    /// (if $clause (then $then) (else $else))
     /// ```
     ///
-    /// THis method is called after a `(` is parsed within the `(if ...` block.
-    /// This determines what to do next.
+    /// but it turns out we practically see a few things in the wild:
+    ///
+    /// * inside the `(if ...)` every sub-thing is surrounded by parens
+    /// * The `then` and `else` keywords are optional
+    /// * The `$then` and `$else` blocks don't need to be surrounded by parens
+    ///
+    /// That's all attempted to be handled here. The part about all sub-parts
+    /// being surrounded by `(` and `)` means that we hook into the `LParen`
+    /// parsing above to call this method there unconditionally.
     ///
     /// Returns `true` if the rest of the arm above should be skipped, or
     /// `false` if we should parse the next item as an instruction (because we
@@ -299,37 +309,53 @@ impl<'a> ExpressionParser<'a> {
             _ => return Ok(false),
         };
 
-        match i {
-            // If the clause is still being parsed then interpret this `(` as a
-            // folded instruction unless it starts with `then`, in which case
-            // this transitions to the `Then` state and a new level has been
-            // reached.
-            If::Clause(if_instr) => {
-                if !parser.peek::<kw::then>()? {
-                    return Ok(false);
-                }
-                parser.parse::<kw::then>()?;
-                let instr = mem::replace(if_instr, Instruction::End(None));
-                self.instrs.push(instr);
-                *i = If::Then;
-                self.stack.push(Level::IfArm);
-                Ok(true)
+        // The first thing parsed in an `if` statement is the clause. If the
+        // clause starts with `then`, however, then we know to skip the clause
+        // and fall through to below.
+        if let If::Clause(if_instr) = i {
+            let instr = mem::replace(if_instr, Instruction::End(None));
+            *i = If::Then(instr);
+            if !parser.peek::<kw::then>()? {
+                return Ok(false);
             }
-
-            // Previously we were parsing the `(then ...)` clause so this next
-            // `(` must be followed by `else`.
-            If::Then => {
-                parser.parse::<kw::r#else>()?;
-                self.instrs.push(Instruction::Else(None));
-                *i = If::Else;
-                self.stack.push(Level::IfArm);
-                Ok(true)
-            }
-
-            // If after a `(else ...` clause is parsed there's another `(` then
-            // that's not syntactically allowed.
-            If::Else => Err(parser.error("unexpected token: too many payloads inside of `(if)`")),
         }
+
+        // All `if` statements are required to have a `then`. This is either the
+        // second s-expr (with or without a leading `then`) or the first s-expr
+        // with a leading `then`. The optionality of `then` isn't strictly what
+        // the text spec says but it matches wabt for now.
+        //
+        // Note that when we see the `then`, that's when we actually add the
+        // original `if` instruction to the stream.
+        if let If::Then(if_instr) = i {
+            let instr = mem::replace(if_instr, Instruction::End(None));
+            self.instrs.push(instr);
+            *i = If::Else;
+            if parser.parse::<Option<kw::then>>()?.is_some() {
+                self.stack.push(Level::IfArm);
+                return Ok(true);
+            }
+            return Ok(false);
+        }
+
+        // effectively the same as the `then` parsing above
+        if let If::Else = i {
+            self.instrs.push(Instruction::Else(None));
+            if parser.parse::<Option<kw::r#else>>()?.is_some() {
+                if parser.is_empty() {
+                    self.instrs.pop();
+                }
+                self.stack.push(Level::IfArm);
+                return Ok(true);
+            }
+            *i = If::End;
+            return Ok(false);
+        }
+
+        // If we made it this far then we're at `If::End` which means that there
+        // were too many s-expressions inside the `(if)` and we don't want to
+        // parse anything else.
+        Err(parser.error("unexpected token: too many payloads inside of `(if)`"))
     }
 
     /// Handles parsing of a `try` statement. A `try` statement is simpler
@@ -649,8 +675,8 @@ instructions! {
         BrOnCastFail(Box<BrOnCastFail<'a>>) : [] : "br_on_cast_fail",
 
         // gc proposal extern/any coercion operations
-        AnyConvertExtern : [0xfb, 0x1a] : "any.convert_extern",
-        ExternConvertAny : [0xfb, 0x1b] : "extern.convert_any",
+        ExternInternalize : [0xfb, 0x1a] : "extern.internalize",
+        ExternExternalize : [0xfb, 0x1b] : "extern.externalize",
 
         I32Const(i32) : [0x41] : "i32.const",
         I64Const(i64) : [0x42] : "i64.const",
@@ -1149,10 +1175,6 @@ instructions! {
         Delegate(Index<'a>) : [0x18] : "delegate",
         CatchAll : [0x19] : "catch_all",
 
-        // Exception handling proposal extension for 'exnref'
-        ThrowRef : [0x0a] : "throw_ref",
-        TryTable(TryTable<'a>) : [0x1f] : "try_table",
-
         // Relaxed SIMD proposal
         I8x16RelaxedSwizzle : [0xfd, 0x100]: "i8x16.relaxed_swizzle",
         I32x4RelaxedTruncF32x4S : [0xfd, 0x101]: "i32x4.relaxed_trunc_f32x4_s",
@@ -1221,79 +1243,6 @@ impl<'a> Parse<'a> for BlockType<'a> {
                 .into(),
         })
     }
-}
-
-#[derive(Debug)]
-#[allow(missing_docs)]
-pub struct TryTable<'a> {
-    pub block: Box<BlockType<'a>>,
-    pub catches: Vec<TryTableCatch<'a>>,
-}
-
-impl<'a> Parse<'a> for TryTable<'a> {
-    fn parse(parser: Parser<'a>) -> Result<Self> {
-        let block = parser.parse()?;
-
-        let mut catches = Vec::new();
-        while parser.peek2::<kw::catch>()?
-            || parser.peek2::<kw::catch_ref>()?
-            || parser.peek2::<kw::catch_all>()?
-            || parser.peek2::<kw::catch_all_ref>()?
-        {
-            catches.push(parser.parens(|p| {
-                let kind = if parser.peek::<kw::catch_ref>()? {
-                    p.parse::<kw::catch_ref>()?;
-                    TryTableCatchKind::CatchRef(p.parse()?)
-                } else if parser.peek::<kw::catch>()? {
-                    p.parse::<kw::catch>()?;
-                    TryTableCatchKind::Catch(p.parse()?)
-                } else if parser.peek::<kw::catch_all>()? {
-                    p.parse::<kw::catch_all>()?;
-                    TryTableCatchKind::CatchAll
-                } else {
-                    p.parse::<kw::catch_all_ref>()?;
-                    TryTableCatchKind::CatchAllRef
-                };
-
-                Ok(TryTableCatch {
-                    kind,
-                    label: p.parse()?,
-                })
-            })?);
-        }
-
-        Ok(TryTable { block, catches })
-    }
-}
-
-#[derive(Debug)]
-#[allow(missing_docs)]
-pub enum TryTableCatchKind<'a> {
-    // Catch a tagged exception, do not capture an exnref.
-    Catch(Index<'a>),
-    // Catch a tagged exception, and capture the exnref.
-    CatchRef(Index<'a>),
-    // Catch any exception, do not capture an exnref.
-    CatchAll,
-    // Catch any exception, and capture the exnref.
-    CatchAllRef,
-}
-
-impl<'a> TryTableCatchKind<'a> {
-    #[allow(missing_docs)]
-    pub fn tag_index_mut(&mut self) -> Option<&mut Index<'a>> {
-        match self {
-            TryTableCatchKind::Catch(tag) | TryTableCatchKind::CatchRef(tag) => Some(tag),
-            TryTableCatchKind::CatchAll | TryTableCatchKind::CatchAllRef => None,
-        }
-    }
-}
-
-#[derive(Debug)]
-#[allow(missing_docs)]
-pub struct TryTableCatch<'a> {
-    pub kind: TryTableCatchKind<'a>,
-    pub label: Index<'a>,
 }
 
 /// Extra information associated with the func.bind instruction.

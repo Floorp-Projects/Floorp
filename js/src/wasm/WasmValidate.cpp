@@ -730,11 +730,11 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
                                     &unusedSourceType, &unusedDestType,
                                     &unusedType, &nothings));
           }
-          case uint16_t(GcOp::AnyConvertExtern): {
+          case uint16_t(GcOp::ExternInternalize): {
             CHECK(iter.readRefConversion(RefType::extern_(), RefType::any(),
                                          &nothing));
           }
-          case uint16_t(GcOp::ExternConvertAny): {
+          case uint16_t(GcOp::ExternExternalize): {
             CHECK(iter.readRefConversion(RefType::any(), RefType::extern_(),
                                          &nothing));
           }

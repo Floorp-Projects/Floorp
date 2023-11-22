@@ -31,7 +31,7 @@ let $0 = instantiate(`(module
     (table.set (i32.const 1) (ref.i31 (i32.const 7)))
     (table.set (i32.const 2) (struct.new_default $$st))
     (table.set (i32.const 3) (array.new_default $$at (i32.const 0)))
-    (table.set (i32.const 4) (any.convert_extern (local.get $$x)))
+    (table.set (i32.const 4) (extern.internalize (local.get $$x)))
     (table.set (i32.const 5) (ref.null i31))
     (table.set (i32.const 6) (ref.null struct))
     (table.set (i32.const 7) (ref.null none))

@@ -1,4 +1,4 @@
-use crate::{encode_section, Encode, HeapType, RefType, Section, SectionId, ValType};
+use crate::{encode_section, Encode, HeapType, Section, SectionId, ValType};
 use std::borrow::Cow;
 
 /// An encoder for the code section.
@@ -520,37 +520,9 @@ pub enum Instruction<'a> {
     RefNull(HeapType),
     RefIsNull,
     RefFunc(u32),
-    RefEq,
     RefAsNonNull,
 
     // GC types instructions.
-    StructNew(u32),
-    StructNewDefault(u32),
-    StructGet(u32, u32),
-    StructGetS(u32, u32),
-    StructGetU(u32, u32),
-    StructSet(u32, u32),
-
-    ArrayNew(u32),
-    ArrayNewDefault(u32),
-    ArrayNewFixed(u32, u32),
-    ArrayNewData(u32, u32),
-    ArrayNewElem(u32, u32),
-    ArrayGet(u32),
-    ArrayGetS(u32),
-    ArrayGetU(u32),
-    ArraySet(u32),
-    ArrayLen,
-    ArrayFill(u32),
-    ArrayCopy(u32, u32),
-    ArrayInitData(u32, u32),
-    ArrayInitElem(u32, u32),
-
-    RefTest(RefType),
-    RefCast(RefType),
-    AnyConvertExtern,
-    ExternConvertAny,
-
     RefI31,
     I31GetS,
     I31GetU,
@@ -1346,170 +1318,20 @@ impl Encode for Instruction<'_> {
                 sink.push(0xd2);
                 f.encode(sink);
             }
-            Instruction::RefEq => sink.push(0xd3),
             Instruction::RefAsNonNull => sink.push(0xd4),
 
             // GC instructions.
-            Instruction::StructNew(type_index) => {
-                sink.push(0xfb);
-                sink.push(0x00);
-                type_index.encode(sink);
-            }
-            Instruction::StructNewDefault(type_index) => {
-                sink.push(0xfb);
-                sink.push(0x01);
-                type_index.encode(sink);
-            }
-            Instruction::StructGet(type_index, field_index) => {
-                sink.push(0xfb);
-                sink.push(0x02);
-                type_index.encode(sink);
-                field_index.encode(sink);
-            }
-            Instruction::StructGetS(type_index, field_index) => {
-                sink.push(0xfb);
-                sink.push(0x03);
-                type_index.encode(sink);
-                field_index.encode(sink);
-            }
-            Instruction::StructGetU(type_index, field_index) => {
-                sink.push(0xfb);
-                sink.push(0x04);
-                type_index.encode(sink);
-                field_index.encode(sink);
-            }
-            Instruction::StructSet(type_index, field_index) => {
-                sink.push(0xfb);
-                sink.push(0x05);
-                type_index.encode(sink);
-                field_index.encode(sink);
-            }
-            Instruction::ArrayNew(type_index) => {
-                sink.push(0xfb);
-                sink.push(0x06);
-                type_index.encode(sink);
-            }
-            Instruction::ArrayNewDefault(type_index) => {
-                sink.push(0xfb);
-                sink.push(0x07);
-                type_index.encode(sink);
-            }
-            Instruction::ArrayNewFixed(type_index, size) => {
-                sink.push(0xfb);
-                sink.push(0x08);
-                type_index.encode(sink);
-                size.encode(sink);
-            }
-            Instruction::ArrayNewData(type_index, data_index) => {
-                sink.push(0xfb);
-                sink.push(0x09);
-                type_index.encode(sink);
-                data_index.encode(sink);
-            }
-            Instruction::ArrayNewElem(type_index, elem_index) => {
-                sink.push(0xfb);
-                sink.push(0x0a);
-                type_index.encode(sink);
-                elem_index.encode(sink);
-            }
-            Instruction::ArrayGet(type_index) => {
-                sink.push(0xfb);
-                sink.push(0x0b);
-                type_index.encode(sink);
-            }
-            Instruction::ArrayGetS(type_index) => {
-                sink.push(0xfb);
-                sink.push(0x0c);
-                type_index.encode(sink);
-            }
-            Instruction::ArrayGetU(type_index) => {
-                sink.push(0xfb);
-                sink.push(0x0d);
-                type_index.encode(sink);
-            }
-            Instruction::ArraySet(type_index) => {
-                sink.push(0xfb);
-                sink.push(0x0e);
-                type_index.encode(sink);
-            }
-            Instruction::ArrayLen => {
-                sink.push(0xfb);
-                sink.push(0x0f);
-            }
-            Instruction::ArrayFill(type_index) => {
-                sink.push(0xfb);
-                sink.push(0x10);
-                type_index.encode(sink);
-            }
-            Instruction::ArrayCopy(dst_type_index, src_type_index) => {
-                sink.push(0xfb);
-                sink.push(0x11);
-                dst_type_index.encode(sink);
-                src_type_index.encode(sink);
-            }
-            Instruction::ArrayInitData(type_index, data_index) => {
-                sink.push(0xfb);
-                sink.push(0x12);
-                type_index.encode(sink);
-                data_index.encode(sink);
-            }
-            Instruction::ArrayInitElem(type_index, elem_index) => {
-                sink.push(0xfb);
-                sink.push(0x13);
-                type_index.encode(sink);
-                elem_index.encode(sink);
-            }
-            Instruction::RefTest(RefType {
-                nullable: false,
-                heap_type,
-            }) => {
-                sink.push(0xfb);
-                sink.push(0x14);
-                heap_type.encode(sink);
-            }
-            Instruction::RefTest(RefType {
-                nullable: true,
-                heap_type,
-            }) => {
-                sink.push(0xfb);
-                sink.push(0x15);
-                heap_type.encode(sink);
-            }
-            Instruction::RefCast(RefType {
-                nullable: false,
-                heap_type,
-            }) => {
-                sink.push(0xfb);
-                sink.push(0x16);
-                heap_type.encode(sink);
-            }
-            Instruction::RefCast(RefType {
-                nullable: true,
-                heap_type,
-            }) => {
-                sink.push(0xfb);
-                sink.push(0x17);
-                heap_type.encode(sink);
-            }
-            Instruction::AnyConvertExtern => {
-                sink.push(0xfb);
-                sink.push(0x1a);
-            }
-            Instruction::ExternConvertAny => {
-                sink.push(0xfb);
-                sink.push(0x1b);
-            }
             Instruction::RefI31 => {
                 sink.push(0xfb);
-                sink.push(0x1c);
+                sink.push(0x1c)
             }
             Instruction::I31GetS => {
                 sink.push(0xfb);
-                sink.push(0x1d);
+                sink.push(0x1d)
             }
             Instruction::I31GetU => {
                 sink.push(0xfb);
-                sink.push(0x1e);
+                sink.push(0x1e)
             }
 
             // Bulk memory instructions.
@@ -3057,94 +2879,6 @@ impl Encode for ConstExpr {
     fn encode(&self, sink: &mut Vec<u8>) {
         sink.extend(&self.bytes);
         Instruction::End.encode(sink);
-    }
-}
-
-/// An error when converting a `wasmparser::ConstExpr` into a
-/// `wasm_encoder::ConstExpr`.
-#[cfg(feature = "wasmparser")]
-#[derive(Debug)]
-pub enum ConstExprConversionError {
-    /// There was an error when parsing the const expression.
-    ParseError(wasmparser::BinaryReaderError),
-
-    /// The const expression is invalid: not actually constant or something like
-    /// that.
-    Invalid,
-
-    /// There was a type reference that was canonicalized and no longer
-    /// references an index into a module's types space, so we cannot encode it
-    /// into a Wasm binary again.
-    CanonicalizedTypeReference,
-}
-
-#[cfg(feature = "wasmparser")]
-impl std::fmt::Display for ConstExprConversionError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::ParseError(_e) => {
-                write!(f, "There was an error when parsing the const expression")
-            }
-            Self::Invalid => write!(f, "The const expression was invalid"),
-            Self::CanonicalizedTypeReference => write!(
-                f,
-                "There was a canonicalized type reference without type index information"
-            ),
-        }
-    }
-}
-
-#[cfg(feature = "wasmparser")]
-impl std::error::Error for ConstExprConversionError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::ParseError(e) => Some(e),
-            Self::Invalid | Self::CanonicalizedTypeReference => None,
-        }
-    }
-}
-
-#[cfg(feature = "wasmparser")]
-impl<'a> TryFrom<wasmparser::ConstExpr<'a>> for ConstExpr {
-    type Error = ConstExprConversionError;
-
-    fn try_from(const_expr: wasmparser::ConstExpr) -> Result<Self, Self::Error> {
-        let mut ops = const_expr.get_operators_reader().into_iter();
-
-        let result = match ops.next() {
-            Some(Ok(wasmparser::Operator::I32Const { value })) => ConstExpr::i32_const(value),
-            Some(Ok(wasmparser::Operator::I64Const { value })) => ConstExpr::i64_const(value),
-            Some(Ok(wasmparser::Operator::F32Const { value })) => {
-                ConstExpr::f32_const(value.bits() as _)
-            }
-            Some(Ok(wasmparser::Operator::F64Const { value })) => {
-                ConstExpr::f64_const(value.bits() as _)
-            }
-            Some(Ok(wasmparser::Operator::V128Const { value })) => {
-                ConstExpr::v128_const(i128::from_le_bytes(*value.bytes()))
-            }
-            Some(Ok(wasmparser::Operator::RefNull { hty })) => ConstExpr::ref_null(
-                HeapType::try_from(hty)
-                    .map_err(|_| ConstExprConversionError::CanonicalizedTypeReference)?,
-            ),
-            Some(Ok(wasmparser::Operator::RefFunc { function_index })) => {
-                ConstExpr::ref_func(function_index)
-            }
-            Some(Ok(wasmparser::Operator::GlobalGet { global_index })) => {
-                ConstExpr::global_get(global_index)
-            }
-
-            // TODO: support the extended-const proposal.
-            Some(Ok(_op)) => return Err(ConstExprConversionError::Invalid),
-
-            Some(Err(e)) => return Err(ConstExprConversionError::ParseError(e)),
-            None => return Err(ConstExprConversionError::Invalid),
-        };
-
-        match (ops.next(), ops.next()) {
-            (Some(Ok(wasmparser::Operator::End)), None) => Ok(result),
-            _ => Err(ConstExprConversionError::Invalid),
-        }
     }
 }
 

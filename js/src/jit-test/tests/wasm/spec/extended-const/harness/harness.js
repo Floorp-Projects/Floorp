@@ -98,7 +98,7 @@ class RefWithType {
 
 // ref.extern values created by spec tests will be JS objects of the form
 // { [externsym]: <number> }. Other externref values are possible to observe
-// if any.convert_extern is used.
+// if extern.externalize is used.
 let externsym = Symbol("externref");
 function externref(s) {
   return { [externsym]: s };
@@ -136,7 +136,7 @@ class ExternRefResult {
 }
 
 // ref.host values created by spectests will be whatever the JS API does to
-// convert the given value to anyref. It should implicitly be like any.convert_extern.
+// convert the given value to anyref. It should implicitly be like extern.internalize.
 function hostref(v) {
   if (!wasmGcEnabled()) {
     throw new Error("ref.host only works when wasm GC is enabled");

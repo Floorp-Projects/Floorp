@@ -31,21 +31,21 @@ let $0 = instantiate(`(module
     (table.set (i32.const 1) (ref.i31 (i32.const 7)))
     (table.set (i32.const 2) (struct.new_default $$st))
     (table.set (i32.const 3) (array.new_default $$at (i32.const 0)))
-    (table.set (i32.const 4) (any.convert_extern (local.get $$x)))
+    (table.set (i32.const 4) (extern.internalize (local.get $$x)))
   )
 
   (func (export "internalize") (param externref) (result anyref)
-    (any.convert_extern (local.get 0))
+    (extern.internalize (local.get 0))
   )
   (func (export "externalize") (param anyref) (result externref)
-    (extern.convert_any (local.get 0))
+    (extern.externalize (local.get 0))
   )
 
   (func (export "externalize-i") (param i32) (result externref)
-    (extern.convert_any (table.get (local.get 0)))
+    (extern.externalize (table.get (local.get 0)))
   )
   (func (export "externalize-ii") (param i32) (result anyref)
-    (any.convert_extern (extern.convert_any (table.get (local.get 0))))
+    (extern.internalize (extern.externalize (table.get (local.get 0))))
   )
 )`);
 

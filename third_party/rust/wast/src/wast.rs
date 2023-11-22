@@ -102,11 +102,6 @@ pub enum WastDirective<'a> {
         span: Span,
         exec: WastExecute<'a>,
     },
-    Thread(WastThread<'a>),
-    Wait {
-        span: Span,
-        thread: Id<'a>,
-    },
 }
 
 impl WastDirective<'_> {
@@ -124,10 +119,8 @@ impl WastDirective<'_> {
             | WastDirective::AssertExhaustion { span, .. }
             | WastDirective::AssertUnlinkable { span, .. }
             | WastDirective::AssertInvalid { span, .. }
-            | WastDirective::AssertException { span, .. }
-            | WastDirective::Wait { span, .. } => *span,
+            | WastDirective::AssertException { span, .. } => *span,
             WastDirective::Invoke(i) => i.span,
-            WastDirective::Thread(t) => t.span,
         }
     }
 }
@@ -198,14 +191,6 @@ impl<'a> Parse<'a> for WastDirective<'a> {
             Ok(WastDirective::AssertException {
                 span,
                 exec: parser.parens(|p| p.parse())?,
-            })
-        } else if l.peek::<kw::thread>()? {
-            Ok(WastDirective::Thread(parser.parse()?))
-        } else if l.peek::<kw::wait>()? {
-            let span = parser.parse::<kw::wait>()?.0;
-            Ok(WastDirective::Wait {
-                span,
-                thread: parser.parse()?,
             })
         } else {
             Err(l.error())
@@ -376,45 +361,5 @@ impl<'a> Parse<'a> for WastRet<'a> {
         } else {
             Ok(WastRet::Component(parser.parse()?))
         }
-    }
-}
-
-#[derive(Debug)]
-#[allow(missing_docs)]
-pub struct WastThread<'a> {
-    pub span: Span,
-    pub name: Id<'a>,
-    pub shared_module: Option<Id<'a>>,
-    pub directives: Vec<WastDirective<'a>>,
-}
-
-impl<'a> Parse<'a> for WastThread<'a> {
-    fn parse(parser: Parser<'a>) -> Result<Self> {
-        parser.depth_check()?;
-        let span = parser.parse::<kw::thread>()?.0;
-        let name = parser.parse()?;
-
-        let shared_module = if parser.peek2::<kw::shared>()? {
-            let name = parser.parens(|p| {
-                p.parse::<kw::shared>()?;
-                p.parens(|p| {
-                    p.parse::<kw::module>()?;
-                    p.parse()
-                })
-            })?;
-            Some(name)
-        } else {
-            None
-        };
-        let mut directives = Vec::new();
-        while !parser.is_empty() {
-            directives.push(parser.parens(|p| p.parse())?);
-        }
-        Ok(WastThread {
-            span,
-            name,
-            shared_module,
-            directives,
-        })
     }
 }

@@ -523,7 +523,6 @@ impl<'a> Resolver<'a> {
                     ValType::Ref(r) => match &mut r.heap {
                         core::HeapType::Func
                         | core::HeapType::Extern
-                        | core::HeapType::Exn
                         | core::HeapType::Any
                         | core::HeapType::Eq
                         | core::HeapType::Array
@@ -532,7 +531,7 @@ impl<'a> Resolver<'a> {
                         | core::HeapType::None
                         | core::HeapType::NoFunc
                         | core::HeapType::NoExtern => {}
-                        core::HeapType::Concrete(id) => {
+                        core::HeapType::Index(id) => {
                             self.resolve_ns(id, Ns::Type)?;
                         }
                     },

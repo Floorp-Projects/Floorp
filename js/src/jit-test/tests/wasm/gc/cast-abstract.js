@@ -69,7 +69,7 @@ const ft3 = { index: 6, name: '$ft3', make: 'ref.func $f3', top: 'funcref' };
 const ft4 = { index: 7, name: '$ft4', make: 'ref.func $f4', top: 'funcref' };
 const nofunc = { name: 'nofunc', none: true, top: 'funcref' };
 
-const extern = { name: 'extern', make: '(extern.convert_any (struct.new_default $s1))', top: 'externref' }
+const extern = { name: 'extern', make: '(extern.externalize (struct.new_default $s1))', top: 'externref' }
 const noextern = { name: 'noextern', none: true, top: 'externref' }
 
 const typeSets = [

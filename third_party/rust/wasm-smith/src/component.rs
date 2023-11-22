@@ -1,8 +1,7 @@
 //! Generation of Wasm
 //! [components](https://github.com/WebAssembly/component-model).
 
-// FIXME(#1000): component support in `wasm-smith` is a work in progress.
-#![allow(unused_variables, dead_code)]
+#![allow(unused_variables, dead_code)] // TODO FITZGEN
 
 use crate::{arbitrary_loop, Config, DefaultConfig};
 use arbitrary::{Arbitrary, Result, Unstructured};
@@ -14,6 +13,7 @@ use std::{
     rc::Rc,
 };
 use wasm_encoder::{ComponentTypeRef, ComponentValType, PrimitiveValType, TypeBounds, ValType};
+use wasmparser::names::KebabString;
 
 mod encode;
 
@@ -123,10 +123,10 @@ struct ComponentContext {
     num_imports: usize,
 
     // The set of names of imports we've generated thus far.
-    import_names: HashSet<String>,
+    import_names: HashSet<KebabString>,
 
     // The set of URLs of imports we've generated thus far.
-    import_urls: HashSet<String>,
+    import_urls: HashSet<KebabString>,
 
     // This component's function index space.
     funcs: Vec<ComponentOrCoreFuncType>,
@@ -427,7 +427,7 @@ impl ComponentBuilder {
                     choices.push(Self::arbitrary_component_section);
                 }
 
-                // FIXME(#1000)
+                // TODO FITZGEN
                 //
                 // choices.push(Self::arbitrary_instance_section);
                 // choices.push(Self::arbitrary_export_section);
@@ -1094,15 +1094,15 @@ impl ComponentBuilder {
     fn arbitrary_instance_type_def(
         &mut self,
         u: &mut Unstructured,
-        exports: &mut HashSet<String>,
-        export_urls: &mut HashSet<String>,
+        exports: &mut HashSet<KebabString>,
+        export_urls: &mut HashSet<KebabString>,
         type_fuel: &mut u32,
     ) -> Result<InstanceTypeDecl> {
         let mut choices: Vec<
             fn(
                 &mut ComponentBuilder,
-                &mut HashSet<String>,
-                &mut HashSet<String>,
+                &mut HashSet<KebabString>,
+                &mut HashSet<KebabString>,
                 &mut Unstructured,
                 &mut u32,
             ) -> Result<InstanceTypeDecl>,
@@ -1497,7 +1497,7 @@ impl ComponentBuilder {
         }
     }
 
-    fn push_import(&mut self, name: String, url: Option<String>, ty: ComponentTypeRef) {
+    fn push_import(&mut self, name: KebabString, url: Option<String>, ty: ComponentTypeRef) {
         let nth = match self.ensure_section(
             |sec| matches!(sec, Section::Import(_)),
             || Section::Import(ImportSection { imports: vec![] }),
@@ -2017,7 +2017,7 @@ enum ComponentTypeDef {
     Alias(Alias),
     Import(Import),
     Export {
-        name: String,
+        name: KebabString,
         url: Option<String>,
         ty: ComponentTypeRef,
     },
@@ -2045,7 +2045,7 @@ enum InstanceTypeDecl {
     Type(Rc<Type>),
     Alias(Alias),
     Export {
-        name: String,
+        name: KebabString,
         url: Option<String>,
         ty: ComponentTypeRef,
     },
@@ -2053,8 +2053,8 @@ enum InstanceTypeDecl {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 struct FuncType {
-    params: Vec<(String, ComponentValType)>,
-    results: Vec<(Option<String>, ComponentValType)>,
+    params: Vec<(KebabString, ComponentValType)>,
+    results: Vec<(Option<KebabString>, ComponentValType)>,
 }
 
 impl FuncType {
@@ -2111,12 +2111,12 @@ enum DefinedType {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 struct RecordType {
-    fields: Vec<(String, ComponentValType)>,
+    fields: Vec<(KebabString, ComponentValType)>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 struct VariantType {
-    cases: Vec<(String, Option<ComponentValType>, Option<u32>)>,
+    cases: Vec<(KebabString, Option<ComponentValType>, Option<u32>)>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -2131,12 +2131,12 @@ struct TupleType {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 struct FlagsType {
-    fields: Vec<String>,
+    fields: Vec<KebabString>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 struct EnumType {
-    variants: Vec<String>,
+    variants: Vec<KebabString>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -2157,7 +2157,7 @@ struct ImportSection {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 struct Import {
-    name: String,
+    name: KebabString,
     url: Option<String>,
     ty: ComponentTypeRef,
 }

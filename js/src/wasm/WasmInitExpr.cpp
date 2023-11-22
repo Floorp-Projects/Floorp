@@ -232,13 +232,13 @@ class MOZ_STACK_CLASS InitExprInterpreter {
                    AnyRef::fromUint32Truncate(value));
   }
 
-  bool evalAnyConvertExtern(JSContext* cx) {
+  bool evalExternInternalize(JSContext* cx) {
     AnyRef ref = stack.back().ref();
     stack.popBack();
     return pushRef(RefType::extern_(), ref);
   }
 
-  bool evalExternConvertAny(JSContext* cx) {
+  bool evalExternExternalize(JSContext* cx) {
     AnyRef ref = stack.back().ref();
     stack.popBack();
     return pushRef(RefType::any(), ref);
@@ -402,11 +402,11 @@ bool InitExprInterpreter::evaluate(JSContext* cx, Decoder& d) {
           case uint32_t(GcOp::RefI31): {
             CHECK(evalI31New(cx));
           }
-          case uint32_t(GcOp::AnyConvertExtern): {
-            CHECK(evalAnyConvertExtern(cx));
+          case uint32_t(GcOp::ExternInternalize): {
+            CHECK(evalExternInternalize(cx));
           }
-          case uint32_t(GcOp::ExternConvertAny): {
-            CHECK(evalExternConvertAny(cx));
+          case uint32_t(GcOp::ExternExternalize): {
+            CHECK(evalExternExternalize(cx));
           }
           default: {
             MOZ_CRASH();
@@ -618,7 +618,7 @@ bool wasm::DecodeConstantExpression(Decoder& d, ModuleEnvironment* env,
             }
             break;
           }
-          case uint32_t(GcOp::AnyConvertExtern): {
+          case uint32_t(GcOp::ExternInternalize): {
             Nothing value;
             if (!iter.readRefConversion(RefType::extern_(), RefType::any(),
                                         &value)) {
@@ -626,7 +626,7 @@ bool wasm::DecodeConstantExpression(Decoder& d, ModuleEnvironment* env,
             }
             break;
           }
-          case uint32_t(GcOp::ExternConvertAny): {
+          case uint32_t(GcOp::ExternExternalize): {
             Nothing value;
             if (!iter.readRefConversion(RefType::any(), RefType::extern_(),
                                         &value)) {
