@@ -17,13 +17,13 @@
 #include <nsIBaseWindow.h>
 #include <nsServiceManagerUtils.h>
 #include "nsIXULAppInfo.h"
-#include "nsIJumpListBuilder.h"
+#include "nsILegacyJumpListBuilder.h"
 #include "nsUXThemeData.h"
 #include "nsWindow.h"
 #include "WinUtils.h"
 #include "TaskbarTabPreview.h"
 #include "TaskbarWindowPreview.h"
-#include "JumpListBuilder.h"
+#include "LegacyJumpListBuilder.h"
 #include "nsWidgetsCID.h"
 #include "nsPIDOMWindow.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -36,7 +36,7 @@
 #include <propkey.h>
 #include <shellapi.h>
 
-static NS_DEFINE_CID(kJumpListBuilderCID, NS_WIN_JUMPLISTBUILDER_CID);
+static NS_DEFINE_CID(kLegacyJumpListBuilderCID, NS_WIN_LEGACYJUMPLISTBUILDER_CID);
 
 namespace {
 
@@ -404,14 +404,14 @@ WinTaskbar::GetOverlayIconController(
 }
 
 NS_IMETHODIMP
-WinTaskbar::CreateJumpListBuilder(bool aPrivateBrowsing,
-                                  nsIJumpListBuilder** aJumpListBuilder) {
+WinTaskbar::CreateLegacyJumpListBuilder(bool aPrivateBrowsing,
+                                  nsILegacyJumpListBuilder** aJumpListBuilder) {
   nsresult rv;
 
-  if (JumpListBuilder::sBuildingList) return NS_ERROR_ALREADY_INITIALIZED;
+  if (LegacyJumpListBuilder::sBuildingList) return NS_ERROR_ALREADY_INITIALIZED;
 
-  nsCOMPtr<nsIJumpListBuilder> builder =
-      do_CreateInstance(kJumpListBuilderCID, &rv);
+  nsCOMPtr<nsILegacyJumpListBuilder> builder =
+      do_CreateInstance(kLegacyJumpListBuilderCID, &rv);
   if (NS_FAILED(rv)) return NS_ERROR_UNEXPECTED;
 
   NS_IF_ADDREF(*aJumpListBuilder = builder);
