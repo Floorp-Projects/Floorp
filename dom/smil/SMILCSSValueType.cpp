@@ -453,7 +453,7 @@ void SMILCSSValueType::ValueFromString(nsCSSPropertyID aPropID,
   }
 
   Document* doc = aTargetElement->GetComposedDoc();
-  if (doc && !nsStyleUtil::CSPAllowsInlineStyle(nullptr, doc, nullptr, 0, 0,
+  if (doc && !nsStyleUtil::CSPAllowsInlineStyle(nullptr, doc, nullptr, 0, 1,
                                                 aString, nullptr)) {
     return;
   }
@@ -490,7 +490,7 @@ SMILValue SMILCSSValueType::ValueFromAnimationValue(
   // and an intermediate CSS value is not likely to be particularly useful
   // in that case, we just use a generic placeholder string instead.
   static const nsLiteralString kPlaceholderText = u"[SVG animation of CSS]"_ns;
-  if (doc && !nsStyleUtil::CSPAllowsInlineStyle(nullptr, doc, nullptr, 0, 0,
+  if (doc && !nsStyleUtil::CSPAllowsInlineStyle(nullptr, doc, nullptr, 0, 1,
                                                 kPlaceholderText, nullptr)) {
     return result;
   }

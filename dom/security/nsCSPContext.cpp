@@ -218,6 +218,8 @@ bool nsCSPContext::permitsInternal(
           // If GetCallingLocation fails linenumber & columnNumber are set to 0
           // anyway so we can skip checking if that is the case.
         }
+        // TODO: Use 1-origin in nsJSUtils::GetCallingLocation.
+        columnNumber += 1;
         AsyncReportViolation(
             aTriggeringElement, aCSPEventListener,
             (aSendContentLocationInViolationReports ? aContentLocation
@@ -559,6 +561,9 @@ void nsCSPContext::reportInlineViolation(
     }
     lineNumber = aLineNumber;
     columnNumber = aColumnNumber;
+  } else {
+    // TODO: Use 1-origin in nsJSUtils::GetCallingLocation.
+    columnNumber += 1;
   }
 
   AsyncReportViolation(aTriggeringElement, aCSPEventListener,
@@ -740,6 +745,8 @@ nsCSPContext::GetAllowsNavigateTo(nsIURI* aURI, bool aIsFormSubmission,
         // If GetCallingLocation fails linenumber & columnNumber are set to 0
         // anyway so we can skip checking if that is the case.
       }
+      // TODO: Use 1-origin in nsJSUtils::GetCallingLocation.
+      columnNumber += 1;
 
       // Report the violation
       nsresult rv = AsyncReportViolation(
@@ -1848,7 +1855,7 @@ nsCSPContext::GetCSPSandboxFlags(uint32_t* aOutSandboxFlags) {
            NS_ConvertUTF16toUTF8(policy).get()));
 
       AutoTArray<nsString, 1> params = {policy};
-      logToConsole("ignoringReportOnlyDirective", params, u""_ns, u""_ns, 0, 0,
+      logToConsole("ignoringReportOnlyDirective", params, u""_ns, u""_ns, 0, 1,
                    nsIScriptError::warningFlag);
     }
   }
