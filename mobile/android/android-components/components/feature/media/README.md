@@ -20,6 +20,11 @@ Expose the service in the `AndroidManifest.xml`:
     android:exported="false" />
 ```
 
+The `AbstractMediaSessionService` also requires extra permissions needed to post notification updates on media changes:
+- `android.permission.POST_NOTIFICATIONS`
+- `android.permission.FOREGROUND_SERVICE`
+- `android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK`
+
 ### Setting up the dependency
 
 Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository](../../../README.md#maven-repository)):
@@ -30,14 +35,17 @@ implementation "org.mozilla.components:feature-media:{latest-version}"
 
 ### Notification: Recording devices
 
-`RecordingDevicesNotificationFeature` can be used to show an ongoing notification when a recording device (camera,
+`RecordingDevicesMiddleware` can be used to show an ongoing notification when a recording device (camera,
 microphone) is used by web content. Notifications will be shown in the "Media" notification channel.
 
 This feature should only be initialized once globally:
 
 ```kotlin
-RecordingDevicesNotificationFeature(applicationContext, sessionManager)
-    .enable()
+BrowserStore(
+  middleware = listOf(
+    RecordingDevicesMiddleware(applicationContext, notificationsDelegate)
+  )
+)
 ```
 
 ## Facts
