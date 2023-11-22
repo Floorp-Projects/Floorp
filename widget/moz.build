@@ -79,8 +79,8 @@ elif toolkit == "gtk":
     ]
 elif toolkit == "windows":
     XPIDL_SOURCES += [
-        "nsIJumpListBuilder.idl",
-        "nsIJumpListItem.idl",
+        "nsILegacyJumpListBuilder.idl",
+        "nsILegacyJumpListItem.idl",
         "nsIPrintSettingsWin.idl",
         "nsITaskbarOverlayIconController.idl",
         "nsITaskbarPreview.idl",

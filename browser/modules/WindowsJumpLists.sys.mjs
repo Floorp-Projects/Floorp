@@ -387,9 +387,9 @@ var Builder = class {
     handlerApp.detailedDescription = description;
     handlerApp.appendParameter(args);
 
-    var item = Cc["@mozilla.org/windows-jumplistshortcut;1"].createInstance(
-      Ci.nsIJumpListShortcut
-    );
+    var item = Cc[
+      "@mozilla.org/windows-legacyjumplistshortcut;1"
+    ].createInstance(Ci.nsILegacyJumpListShortcut);
     item.app = handlerApp;
     item.iconIndex = iconIndex;
     item.faviconPageUri = faviconPageUri;
@@ -533,8 +533,8 @@ export var WinTaskbarJumpList = {
    */
 
   _initTaskbar: function WTBJL__initTaskbar() {
-    var builder = lazy._taskbarService.createJumpListBuilder(false);
-    var pbBuilder = lazy._taskbarService.createJumpListBuilder(true);
+    var builder = lazy._taskbarService.createLegacyJumpListBuilder(false);
+    var pbBuilder = lazy._taskbarService.createLegacyJumpListBuilder(true);
     if (!builder || !builder.available || !pbBuilder || !pbBuilder.available) {
       return false;
     }
