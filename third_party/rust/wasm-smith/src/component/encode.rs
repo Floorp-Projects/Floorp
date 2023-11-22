@@ -2,7 +2,6 @@ use std::borrow::Cow;
 
 use super::*;
 use wasm_encoder::{ComponentExportKind, ComponentOuterAliasKind, ExportKind};
-use wasmparser::names::KebabStr;
 
 impl Component {
     /// Encode this Wasm component into bytes.
@@ -73,7 +72,7 @@ impl ImportSection {
     fn encode(&self, component: &mut wasm_encoder::Component) {
         let mut sec = wasm_encoder::ComponentImportSection::new();
         for imp in &self.imports {
-            sec.import(wasm_encoder::ComponentExternName::Kebab(&imp.name), imp.ty);
+            sec.import(&imp.name, imp.ty);
         }
         component.section(&sec);
     }
@@ -169,9 +168,10 @@ impl Type {
                     f.result(ty);
                 } else {
                     f.results(
-                        func_ty.results.iter().map(|(name, ty)| {
-                            (name.as_deref().map(KebabStr::as_str).unwrap(), *ty)
-                        }),
+                        func_ty
+                            .results
+                            .iter()
+                            .map(|(name, ty)| (name.as_deref().unwrap(), *ty)),
                     );
                 }
             }
@@ -180,10 +180,7 @@ impl Type {
                 for def in &comp_ty.defs {
                     match def {
                         ComponentTypeDef::Import(imp) => {
-                            enc_comp_ty.import(
-                                wasm_encoder::ComponentExternName::Kebab(&imp.name),
-                                imp.ty,
-                            );
+                            enc_comp_ty.import(&imp.name, imp.ty);
                         }
                         ComponentTypeDef::CoreType(ty) => {
                             ty.encode(enc_comp_ty.core_type());
@@ -192,7 +189,7 @@ impl Type {
                             ty.encode(enc_comp_ty.ty());
                         }
                         ComponentTypeDef::Export { name, url: _, ty } => {
-                            enc_comp_ty.export(wasm_encoder::ComponentExternName::Kebab(name), *ty);
+                            enc_comp_ty.export(name, *ty);
                         }
                         ComponentTypeDef::Alias(a) => {
                             enc_comp_ty.alias(translate_alias(a));
@@ -212,7 +209,7 @@ impl Type {
                             ty.encode(enc_inst_ty.ty());
                         }
                         InstanceTypeDecl::Export { name, url: _, ty } => {
-                            enc_inst_ty.export(wasm_encoder::ComponentExternName::Kebab(name), *ty);
+                            enc_inst_ty.export(name, *ty);
                         }
                         InstanceTypeDecl::Alias(a) => {
                             enc_inst_ty.alias(translate_alias(a));

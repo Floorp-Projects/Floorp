@@ -66,6 +66,8 @@ pub enum HeapType<'a> {
     /// A reference to any host value: externref. This is part of the reference
     /// types proposal.
     Extern,
+    /// A reference to a wasm exception. This is part of the exceptions proposal.
+    Exn,
     /// A reference to any reference value: anyref. This is part of the GC
     /// proposal.
     Any,
@@ -84,9 +86,9 @@ pub enum HeapType<'a> {
     NoExtern,
     /// The bottom type of the anyref hierarchy. Part of the GC proposal.
     None,
-    /// A reference to a function, struct, or array: ref T. This is part of the
-    /// GC proposal.
-    Index(Index<'a>),
+    /// A reference to a concrete function, struct, or array type defined by
+    /// Wasm: `ref T`. This is part of the function references and GC proposals.
+    Concrete(Index<'a>),
 }
 
 impl<'a> Parse<'a> for HeapType<'a> {
@@ -98,6 +100,9 @@ impl<'a> Parse<'a> for HeapType<'a> {
         } else if l.peek::<kw::r#extern>()? {
             parser.parse::<kw::r#extern>()?;
             Ok(HeapType::Extern)
+        } else if l.peek::<kw::exn>()? {
+            parser.parse::<kw::exn>()?;
+            Ok(HeapType::Exn)
         } else if l.peek::<kw::r#any>()? {
             parser.parse::<kw::r#any>()?;
             Ok(HeapType::Any)
@@ -123,7 +128,7 @@ impl<'a> Parse<'a> for HeapType<'a> {
             parser.parse::<kw::none>()?;
             Ok(HeapType::None)
         } else if l.peek::<Index>()? {
-            Ok(HeapType::Index(parser.parse()?))
+            Ok(HeapType::Concrete(parser.parse()?))
         } else {
             Err(l.error())
         }
@@ -134,6 +139,7 @@ impl<'a> Peek for HeapType<'a> {
     fn peek(cursor: Cursor<'_>) -> Result<bool> {
         Ok(kw::func::peek(cursor)?
             || kw::r#extern::peek(cursor)?
+            || kw::exn::peek(cursor)?
             || kw::any::peek(cursor)?
             || kw::eq::peek(cursor)?
             || kw::r#struct::peek(cursor)?
@@ -171,6 +177,14 @@ impl<'a> RefType<'a> {
         RefType {
             nullable: true,
             heap: HeapType::Extern,
+        }
+    }
+
+    /// An `exnrefr` as an abbreviation for `(ref null exn)`.
+    pub fn exn() -> Self {
+        RefType {
+            nullable: true,
+            heap: HeapType::Exn,
         }
     }
 
@@ -251,6 +265,9 @@ impl<'a> Parse<'a> for RefType<'a> {
         } else if l.peek::<kw::externref>()? {
             parser.parse::<kw::externref>()?;
             Ok(RefType::r#extern())
+        } else if l.peek::<kw::exnref>()? {
+            parser.parse::<kw::exnref>()?;
+            Ok(RefType::exn())
         } else if l.peek::<kw::anyref>()? {
             parser.parse::<kw::anyref>()?;
             Ok(RefType::any())
@@ -306,6 +323,7 @@ impl<'a> Peek for RefType<'a> {
         Ok(kw::funcref::peek(cursor)?
             || /* legacy */ kw::anyfunc::peek(cursor)?
             || kw::externref::peek(cursor)?
+            || kw::exnref::peek(cursor)?
             || kw::anyref::peek(cursor)?
             || kw::eqref::peek(cursor)?
             || kw::structref::peek(cursor)?

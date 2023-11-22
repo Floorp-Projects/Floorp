@@ -373,6 +373,12 @@ impl ComponentBuilder {
     }
 
     /// Adds a new custom section to this component.
+    pub fn custom_section(&mut self, section: &CustomSection<'_>) {
+        self.flush();
+        self.component.section(section);
+    }
+
+    /// Adds a new custom section to this component.
     pub fn raw_custom_section(&mut self, section: &[u8]) {
         self.flush();
         self.component.section(&RawCustomSection(section));
