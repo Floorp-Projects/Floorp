@@ -210,16 +210,14 @@ bool nsCSPContext::permitsInternal(
       // nonce, and will incorrectly fail the unit tests.
       if (aSendViolationReports) {
         uint32_t lineNumber = 0;
-        uint32_t columnNumber = 0;
+        uint32_t columnNumber = 1;
         nsAutoString spec;
         JSContext* cx = nsContentUtils::GetCurrentJSContext();
         if (cx) {
           nsJSUtils::GetCallingLocation(cx, spec, &lineNumber, &columnNumber);
-          // If GetCallingLocation fails linenumber & columnNumber are set to 0
-          // anyway so we can skip checking if that is the case.
+          // If GetCallingLocation fails linenumber & columnNumber are set to
+          // (0, 1) anyway so we can skip checking if that is the case.
         }
-        // TODO: Use 1-origin in nsJSUtils::GetCallingLocation.
-        columnNumber += 1;
         AsyncReportViolation(
             aTriggeringElement, aCSPEventListener,
             (aSendContentLocationInViolationReports ? aContentLocation
@@ -561,9 +559,6 @@ void nsCSPContext::reportInlineViolation(
     }
     lineNumber = aLineNumber;
     columnNumber = aColumnNumber;
-  } else {
-    // TODO: Use 1-origin in nsJSUtils::GetCallingLocation.
-    columnNumber += 1;
   }
 
   AsyncReportViolation(aTriggeringElement, aCSPEventListener,
@@ -737,16 +732,14 @@ nsCSPContext::GetAllowsNavigateTo(nsIURI* aURI, bool aIsFormSubmission,
 
       // Lines numbers and source file for the violation report
       uint32_t lineNumber = 0;
-      uint32_t columnNumber = 0;
+      uint32_t columnNumber = 1;
       nsAutoCString spec;
       JSContext* cx = nsContentUtils::GetCurrentJSContext();
       if (cx) {
         nsJSUtils::GetCallingLocation(cx, spec, &lineNumber, &columnNumber);
-        // If GetCallingLocation fails linenumber & columnNumber are set to 0
-        // anyway so we can skip checking if that is the case.
+        // If GetCallingLocation fails linenumber & columnNumber are set to
+        // (0, 1) anyway so we can skip checking if that is the case.
       }
-      // TODO: Use 1-origin in nsJSUtils::GetCallingLocation.
-      columnNumber += 1;
 
       // Report the violation
       nsresult rv = AsyncReportViolation(
