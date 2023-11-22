@@ -790,7 +790,13 @@ mac-signing:
                 - deep: false
                   runtime: true
                   force: true
-                  entitlements: security/mac/hardenedruntime/v2/production/browser.xml
+                  entitlements:
+                      by-build-platform:
+                          .*devedition.*: security/mac/hardenedruntime/v2/production/firefoxdeveloperedition.browser.xml
+                          default:
+                              by-project:
+                                  mozilla-central: security/mac/hardenedruntime/v2/production/nightly.browser.xml
+                                  default: security/mac/hardenedruntime/v2/production/firefox.browser.xml
                   globs:
                       - "/Contents/MacOS/firefox-bin"
                       - "/"  # The .app
