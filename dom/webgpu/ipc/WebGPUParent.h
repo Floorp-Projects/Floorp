@@ -56,16 +56,15 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvAdapterDrop(RawId aAdapterId);
   ipc::IPCResult RecvDeviceDestroy(RawId aDeviceId);
   ipc::IPCResult RecvDeviceDrop(RawId aDeviceId);
-  ipc::IPCResult RecvDeviceCreateBuffer(RawId aDeviceId, RawId aBufferId,
-                                        dom::GPUBufferDescriptor&& aDesc,
-                                        ipc::UnsafeSharedMemoryHandle&& aShmem);
+  ipc::IPCResult RecvCreateBuffer(RawId aDeviceId, RawId aBufferId,
+                                  dom::GPUBufferDescriptor&& aDesc,
+                                  ipc::UnsafeSharedMemoryHandle&& aShmem);
   ipc::IPCResult RecvBufferMap(RawId aBufferId, uint32_t aMode,
                                uint64_t aOffset, uint64_t size,
                                BufferMapResolver&& aResolver);
   ipc::IPCResult RecvBufferUnmap(RawId aDeviceId, RawId aBufferId, bool aFlush);
   ipc::IPCResult RecvBufferDestroy(RawId aBufferId);
   ipc::IPCResult RecvBufferDrop(RawId aBufferId);
-  ipc::IPCResult RecvTextureDestroy(RawId aTextureId, RawId aDeviceId);
   ipc::IPCResult RecvTextureDrop(RawId aTextureId);
   ipc::IPCResult RecvTextureViewDrop(RawId aTextureViewId);
   ipc::IPCResult RecvSamplerDrop(RawId aSamplerId);
@@ -169,8 +168,6 @@ class WebGPUParent final : public PWebGPUParent {
   static void MapCallback(ffi::WGPUBufferMapAsyncStatus aStatus,
                           uint8_t* aUserData);
   void DeallocBufferShmem(RawId aBufferId);
-
-  void RemoveExternalTexture(RawId aTextureId);
 
   virtual ~WebGPUParent();
   void MaintainDevices();

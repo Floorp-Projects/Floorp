@@ -983,6 +983,11 @@ pub extern "C" fn wgpu_server_encoder_drop(global: &Global, self_id: id::Command
 }
 
 #[no_mangle]
+pub extern "C" fn wgpu_server_command_buffer_drop(global: &Global, self_id: id::CommandBufferId) {
+    gfx_select!(self_id => global.command_buffer_drop(self_id));
+}
+
+#[no_mangle]
 pub extern "C" fn wgpu_server_render_bundle_drop(global: &Global, self_id: id::RenderBundleId) {
     gfx_select!(self_id => global.render_bundle_drop(self_id));
 }
@@ -995,15 +1000,12 @@ pub unsafe extern "C" fn wgpu_server_encoder_copy_texture_to_buffer(
     dst_buffer: wgc::id::BufferId,
     dst_layout: &crate::ImageDataLayout,
     size: &wgt::Extent3d,
-    mut error_buf: ErrorBuffer,
 ) {
     let destination = wgc::command::ImageCopyBuffer {
         buffer: dst_buffer,
         layout: dst_layout.into_wgt(),
     };
-    if let Err(err) = gfx_select!(self_id => global.command_encoder_copy_texture_to_buffer(self_id, source, &destination, size)) {
-        error_buf.init(err);
-    }
+    gfx_select!(self_id => global.command_encoder_copy_texture_to_buffer(self_id, source, &destination, size)).unwrap();
 }
 
 /// # Safety
@@ -1096,14 +1098,6 @@ pub extern "C" fn wgpu_server_compute_pipeline_drop(
 #[no_mangle]
 pub extern "C" fn wgpu_server_render_pipeline_drop(global: &Global, self_id: id::RenderPipelineId) {
     gfx_select!(self_id => global.render_pipeline_drop(self_id));
-}
-
-#[no_mangle]
-pub extern "C" fn wgpu_server_texture_destroy(
-    global: &Global,
-    self_id: id::TextureId,
-) {
-    let _ = gfx_select!(self_id => global.texture_destroy(self_id));
 }
 
 #[no_mangle]
