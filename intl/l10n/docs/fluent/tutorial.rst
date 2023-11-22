@@ -10,7 +10,7 @@ Fluent for Firefox Developers
 
 
 This tutorial is intended for Firefox engineers already familiar with the previous
-localization systems offered by Gecko - `DTD`_ and  `StringBundle`_ - and assumes
+localization systems offered by Gecko - DTD and StringBundle - and assumes
 prior experience with those systems.
 
 For a more hands-on tutorial of understanding Fluent from the ground up, try
@@ -262,8 +262,6 @@ a JSON object storing variables exposed by the developer to the localizer.
 This is the main channel for the developer to provide additional variables
 to be used in the localization.
 
-Arguments are rarely needed for situations where it’s currently possible to use
-DTD, since such variables would need to be computed from the code at runtime.
 It's worth noting that, when the :code:`l10n-args` are set in
 the runtime code, they are in fact encoded as JSON and stored together with
 :code:`l10n-id` as an attribute of the element.
@@ -737,8 +735,6 @@ and resources that the :js:`Localization` class uses.
 
 
 .. _Fluent: https://projectfluent.org/
-.. _DTD: https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/Tutorial/Localization
-.. _StringBundle: https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/Tutorial/Property_Files
 .. _Firefox Preferences: https://bugzilla.mozilla.org/show_bug.cgi?id=1415730
 .. _Unprivileged Contexts: https://bugzilla.mozilla.org/show_bug.cgi?id=1407418
 .. _System Add-ons: https://bugzilla.mozilla.org/show_bug.cgi?id=1425104
