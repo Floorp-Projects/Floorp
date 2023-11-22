@@ -589,7 +589,7 @@ nsDocShell::GetInterface(const nsIID& aIID, void** aSink) {
              NS_SUCCEEDED(EnsureScriptEnvironment())) {
     return mScriptGlobal->QueryInterface(aIID, aSink);
   } else if (aIID.Equals(NS_GET_IID(Document)) &&
-             NS_SUCCEEDED(EnsureContentViewer())) {
+             NS_SUCCEEDED(EnsureDocumentViewer())) {
     RefPtr<Document> doc = mContentViewer->GetDocument();
     doc.forget(aSink);
     return *aSink ? NS_OK : NS_NOINTERFACE;
@@ -3108,7 +3108,7 @@ nsIScriptGlobalObject* nsDocShell::GetScriptGlobalObject() {
 }
 
 Document* nsDocShell::GetDocument() {
-  NS_ENSURE_SUCCESS(EnsureContentViewer(), nullptr);
+  NS_ENSURE_SUCCESS(EnsureDocumentViewer(), nullptr);
   return mContentViewer->GetDocument();
 }
 
@@ -4280,7 +4280,7 @@ nsDocShell::Stop(uint32_t aStopFlags) {
 NS_IMETHODIMP
 nsDocShell::GetDocument(Document** aDocument) {
   NS_ENSURE_ARG_POINTER(aDocument);
-  NS_ENSURE_SUCCESS(EnsureContentViewer(), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(EnsureDocumentViewer(), NS_ERROR_FAILURE);
 
   RefPtr<Document> doc = mContentViewer->GetDocument();
   if (!doc) {
@@ -6460,7 +6460,7 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
 // nsDocShell: Content Viewer Management
 //*****************************************************************************
 
-nsresult nsDocShell::EnsureContentViewer() {
+nsresult nsDocShell::EnsureDocumentViewer() {
   if (mContentViewer) {
     return NS_OK;
   }
@@ -6498,7 +6498,7 @@ nsresult nsDocShell::EnsureContentViewer() {
                "succeeded!");
     MOZ_ASSERT(doc->IsInitialDocument(), "Document should be initial document");
 
-    // Documents created using EnsureContentViewer may be transient
+    // Documents created using EnsureDocumentViewer may be transient
     // placeholders created by framescripts before content has a
     // chance to load. In some cases, window.open(..., "noopener")
     // will create such a document and then synchronously tear it
@@ -7050,7 +7050,7 @@ nsDocShell::BeginRestore(nsIDocumentViewer* aContentViewer, bool aTop) {
 
   nsresult rv;
   if (!aContentViewer) {
-    rv = EnsureContentViewer();
+    rv = EnsureDocumentViewer();
     NS_ENSURE_SUCCESS(rv, rv);
 
     aContentViewer = mContentViewer;
@@ -9753,7 +9753,7 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
 
     // Make sure we end up with _something_ as the principal no matter
     // what.If this fails, we'll just get a null docViewer and bail.
-    EnsureContentViewer();
+    EnsureDocumentViewer();
     if (!mContentViewer) {
       return nullptr;
     }

@@ -567,7 +567,7 @@ class nsDocShell final : public nsDocLoader,
   // Content Viewer Management
   //
 
-  nsresult EnsureContentViewer();
+  nsresult EnsureDocumentViewer();
 
   // aPrincipal can be passed in if the caller wants. If null is
   // passed in, the about:blank principal will end up being used.
