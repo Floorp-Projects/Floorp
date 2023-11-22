@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html } from "chrome://global/content/vendor/lit.all.mjs";
+import { html, styleMap } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
 // eslint-disable-next-line import/no-unassigned-import
@@ -29,6 +29,7 @@ class ShoppingMessageBar extends MozLitElement {
   static properties = {
     type: { type: String },
     productUrl: { type: String, reflect: true },
+    progress: { type: Number, reflect: true },
   };
 
   static get queries() {
@@ -126,7 +127,11 @@ class ShoppingMessageBar extends MozLitElement {
   }
 
   analysisInProgressTemplate() {
-    return html`<message-bar>
+    return html`<message-bar
+      style=${styleMap({
+        "--analysis-progress-pcent": `${this.progress}%`,
+      })}
+    >
       <article
         id="message-bar-container"
         aria-labelledby="header"
@@ -134,7 +139,10 @@ class ShoppingMessageBar extends MozLitElement {
       >
         <strong
           id="header"
-          data-l10n-id="shopping-message-bar-analysis-in-progress-title2"
+          data-l10n-id="shopping-message-bar-analysis-in-progress-with-amount"
+          data-l10n-args="${JSON.stringify({
+            percentage: Math.round(this.progress),
+          })}"
         ></strong>
         <span
           data-l10n-id="shopping-message-bar-analysis-in-progress-message2"
@@ -144,7 +152,11 @@ class ShoppingMessageBar extends MozLitElement {
   }
 
   reanalysisInProgressTemplate() {
-    return html`<message-bar>
+    return html`<message-bar
+      style=${styleMap({
+        "--analysis-progress-pcent": `${this.progress}%`,
+      })}
+    >
       <article
         id="message-bar-container"
         aria-labelledby="header"
@@ -152,7 +164,10 @@ class ShoppingMessageBar extends MozLitElement {
       >
         <span
           id="header"
-          data-l10n-id="shopping-message-bar-analysis-in-progress-title2"
+          data-l10n-id="shopping-message-bar-analysis-in-progress-with-amount"
+          data-l10n-args="${JSON.stringify({
+            percentage: Math.round(this.progress),
+          })}"
         ></span>
       </article>
     </message-bar>`;

@@ -63,7 +63,8 @@ add_task(async function test_in_progress_analysis_unanalyzed() {
 });
 
 /**
- * Tests that the correct shopping-message-bar component appears after re-requesting analysis for a stale product.
+ * Tests that the correct shopping-message-bar component appears after re-requesting analysis for a stale product,
+ * and that component shows progress percentage.
  */
 add_task(async function test_in_progress_analysis_stale() {
   await BrowserTestUtils.withNewTab(
@@ -105,6 +106,8 @@ add_task(async function test_in_progress_analysis_stale() {
 
           // Mock the response from analysis status being "pending"
           shoppingContainer.isAnalysisInProgress = true;
+          // Mock the analysis status response with progress.
+          shoppingContainer.analysisProgress = 50;
           // Add data back, as it was unset as due to the lack of mock APIs.
           // TODO: Support for the mocks will be added in Bug 1853474.
           shoppingContainer.data = Cu.cloneInto(mockData, content);
@@ -112,10 +115,34 @@ add_task(async function test_in_progress_analysis_stale() {
           await messageBarVisiblePromise;
           await shoppingContainer.updateComplete;
 
+          let shoppingMessageBarEl = shoppingContainer.shoppingMessageBarEl;
           is(
-            shoppingContainer.shoppingMessageBarEl?.getAttribute("type"),
+            shoppingMessageBarEl?.getAttribute("type"),
             "reanalysis-in-progress",
             "shopping-message-bar type should be correct"
+          );
+          is(
+            shoppingMessageBarEl?.getAttribute("progress"),
+            "50",
+            "shopping-message-bar should have progress"
+          );
+
+          let messageBarEl =
+            shoppingMessageBarEl?.shadowRoot.querySelector("message-bar");
+          is(
+            messageBarEl?.getAttribute("style"),
+            "--analysis-progress-pcent: 50%;",
+            "message-bar should have progress set as a CSS variable"
+          );
+
+          let messageBarContainerEl =
+            shoppingMessageBarEl?.shadowRoot.querySelector(
+              "#message-bar-container"
+            );
+          is(
+            messageBarContainerEl.querySelector("#header")?.dataset.l10nArgs,
+            `{"percentage":50}`,
+            "message-bar-container header should have progress set as a l10n arg"
           );
         }
       );
