@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 # flake8: noqa: F821
 
-import logging
-logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
-
 """usage: ./gen-use-table.py IndicSyllabicCategory.txt IndicPositionalCategory.txt ArabicShaping.txt DerivedCoreProperties.txt UnicodeData.txt Blocks.txt Scripts.txt IndicSyllabicCategory-Additional.txt IndicPositionalCategory-Additional.txt
 
 Input files:
@@ -17,6 +14,10 @@ Input files:
 * ms-use/IndicSyllabicCategory-Additional.txt
 * ms-use/IndicPositionalCategory-Additional.txt
 """
+
+import logging
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+
 
 import sys
 
