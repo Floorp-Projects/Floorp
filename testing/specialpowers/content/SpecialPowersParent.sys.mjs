@@ -949,8 +949,8 @@ export class SpecialPowersParent extends JSWindowActorParent {
         case "Wakeup":
           return undefined;
 
-        case "EvictAllContentViewers":
-          this.browsingContext.top.sessionHistory.evictAllContentViewers();
+        case "EvictAllDocumentViewers":
+          this.browsingContext.top.sessionHistory.evictAllDocumentViewers();
           return undefined;
 
         case "getBaselinePrefs":

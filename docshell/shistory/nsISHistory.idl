@@ -209,7 +209,7 @@ interface nsISHistory: nsISupports
   /**
    * Evict all the content viewers in this session history
    */
-  void evictAllContentViewers();
+  void evictAllDocumentViewers();
 
   /**
    * Add a BFCache entry to expiration tracker so it gets evicted on

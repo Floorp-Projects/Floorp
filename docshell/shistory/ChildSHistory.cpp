@@ -237,7 +237,7 @@ void ChildSHistory::RemovePendingHistoryNavigations() {
 
 void ChildSHistory::EvictLocalContentViewers() {
   if (!mozilla::SessionHistoryInParent()) {
-    mHistory->EvictAllContentViewers();
+    mHistory->EvictAllDocumentViewers();
   }
 }
 

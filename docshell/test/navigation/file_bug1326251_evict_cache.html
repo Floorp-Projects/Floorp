@@ -6,7 +6,7 @@
     <script>
       // Evict bfcache and then go back.
       async function evictCache() {
-        await SpecialPowers.evictAllContentViewers();
+        await SpecialPowers.evictAllDocumentViewers();
 
         history.back();
       }
