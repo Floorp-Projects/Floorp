@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.65.0"
 name = "neqo-common"
-version = "0.6.7"
+version = "0.6.8"
 authors = ["Bobby Holley <bobbyholley@gmail.com>"]
 build = "build.rs"
 license = "MIT OR Apache-2.0"

@@ -3780,8 +3780,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-common"
-version = "0.6.7"
-source = "git+https://github.com/mozilla/neqo?tag=v0.6.7#8a3aaa26c97d41a65a0de0cba885667c930ca61d"
+version = "0.6.8"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.8#83735a88217a6b3a6a9d3cd5d9243040c5e41319"
 dependencies = [
  "env_logger",
  "lazy_static",
@@ -3793,8 +3793,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-crypto"
-version = "0.6.7"
-source = "git+https://github.com/mozilla/neqo?tag=v0.6.7#8a3aaa26c97d41a65a0de0cba885667c930ca61d"
+version = "0.6.8"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.8#83735a88217a6b3a6a9d3cd5d9243040c5e41319"
 dependencies = [
  "bindgen 0.64.999",
  "log",
@@ -3807,8 +3807,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.6.7"
-source = "git+https://github.com/mozilla/neqo?tag=v0.6.7#8a3aaa26c97d41a65a0de0cba885667c930ca61d"
+version = "0.6.8"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.8#83735a88217a6b3a6a9d3cd5d9243040c5e41319"
 dependencies = [
  "enumset",
  "lazy_static",
@@ -3825,8 +3825,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-qpack"
-version = "0.6.7"
-source = "git+https://github.com/mozilla/neqo?tag=v0.6.7#8a3aaa26c97d41a65a0de0cba885667c930ca61d"
+version = "0.6.8"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.8#83735a88217a6b3a6a9d3cd5d9243040c5e41319"
 dependencies = [
  "lazy_static",
  "log",
@@ -3839,8 +3839,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-transport"
-version = "0.6.7"
-source = "git+https://github.com/mozilla/neqo?tag=v0.6.7#8a3aaa26c97d41a65a0de0cba885667c930ca61d"
+version = "0.6.8"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.8#83735a88217a6b3a6a9d3cd5d9243040c5e41319"
 dependencies = [
  "indexmap 1.9.3",
  "lazy_static",
