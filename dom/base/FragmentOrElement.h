@@ -238,12 +238,16 @@ class FragmentOrElement : public nsIContent {
     /**
      * Whether the content of this element is relevant for the purposes
      * of `content-visibility: auto.
+     * Reflects 'relevant to the user' concept, see
+     * https://drafts.csswg.org/css-contain/#relevant-to-the-user.
      */
     Maybe<ContentRelevancy> mContentRelevancy;
 
     /**
      * Whether the content of this element is considered visible for
      * the purposes of `content-visibility: auto.
+     * Reflects 'proximity to the viewport' concept, see
+     * https://drafts.csswg.org/css-contain/#proximity-to-the-viewport.
      */
     Maybe<bool> mVisibleForContentVisibility;
 

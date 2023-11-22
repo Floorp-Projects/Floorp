@@ -3708,13 +3708,6 @@ class Document : public nsINode,
   DOMIntersectionObserver* GetLazyLoadObserver() { return mLazyLoadObserver; }
   DOMIntersectionObserver& EnsureLazyLoadObserver();
 
-  DOMIntersectionObserver* GetContentVisibilityObserver() const {
-    return mContentVisibilityObserver;
-  }
-  DOMIntersectionObserver& EnsureContentVisibilityObserver();
-  void ObserveForContentVisibility(Element&);
-  void UnobserveForContentVisibility(Element&);
-
   ResizeObserver* GetLastRememberedSizeObserver() {
     return mLastRememberedSizeObserver;
   }
@@ -3761,7 +3754,16 @@ class Document : public nsINode,
    * Returns whether there is any ResizeObserver that has skipped observations.
    */
   bool HasAnySkippedResizeObservations() const;
-  MOZ_CAN_RUN_SCRIPT void NotifyResizeObservers();
+  /**
+   * Returns whether the document contains any content-visibility: auto element.
+   */
+  bool HasContentVisibilityAutoElements() const;
+  /**
+   * Determine proximity to viewport for content-visibility: auto elements and
+   * notify resize observers.
+   */
+  MOZ_CAN_RUN_SCRIPT void
+  DetermineProximityToViewportAndNotifyResizeObservers();
 
   // Getter for PermissionDelegateHandler. Performs lazy initialization.
   PermissionDelegateHandler* GetPermissionDelegateHandler();
@@ -5118,10 +5120,6 @@ class Document : public nsINode,
   nsTArray<ResizeObserver*> mResizeObservers;
 
   RefPtr<DOMIntersectionObserver> mLazyLoadObserver;
-
-  // Used for detecting when `content-visibility: auto` elements are near
-  // or far from the viewport.
-  RefPtr<DOMIntersectionObserver> mContentVisibilityObserver;
 
   // ResizeObserver for storing and removing the last remembered size.
   // @see {@link https://drafts.csswg.org/css-sizing-4/#last-remembered}
