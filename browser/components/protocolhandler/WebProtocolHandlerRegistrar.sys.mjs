@@ -376,18 +376,31 @@ WebProtocolHandlerRegistrar.prototype = {
       "branding/brand.ftl",
       "browser/webProtocolHandler.ftl",
     ]);
-    let [msg_os_box, msg_os_yes, msg_os_no, msg_box, msg_yes, msg_no] =
-      await l10n.formatValues([
-        { id: "protocolhandler-mailto-os-handler-notificationbox" },
-        { id: "protocolhandler-mailto-os-handler-yes-button" },
-        { id: "protocolhandler-mailto-os-handler-no-button" },
-        {
-          id: "protocolhandler-mailto-handler-notificationbox",
-          args: { url: aURI.prePath },
-        },
-        { id: "protocolhandler-mailto-handler-yes-button" },
-        { id: "protocolhandler-mailto-handler-no-button" },
-      ]);
+    let [
+      msg_os_box,
+      msg_os_yes_confirm,
+      msg_os_yes,
+      msg_os_no,
+      msg_box,
+      msg_yes_confirm,
+      msg_yes,
+      msg_no,
+    ] = await l10n.formatValues([
+      { id: "protocolhandler-mailto-os-handler-notificationbox" },
+      { id: "protocolhandler-mailto-os-handler-yes-confirm" },
+      { id: "protocolhandler-mailto-os-handler-yes-button" },
+      { id: "protocolhandler-mailto-os-handler-no-button" },
+      {
+        id: "protocolhandler-mailto-handler-notificationbox-always",
+        args: { url: aURI.prePath },
+      },
+      {
+        id: "protocolhandler-mailto-handler-yes-confirm",
+        args: { url: aURI.prePath },
+      },
+      { id: "protocolhandler-mailto-handler-yes-button" },
+      { id: "protocolhandler-mailto-handler-no-button" },
+    ]);
 
     // First prompt:
     // Only shown if there is a realistic chance that we can really set the OS
@@ -403,9 +416,7 @@ WebProtocolHandlerRegistrar.prototype = {
           notificationId,
           {
             label: msg_os_box,
-            image: "",
             priority: osDefaultNotificationBox.PRIORITY_INFO_LOW,
-            displayCloseButton: false,
           },
           [
             {
@@ -413,6 +424,15 @@ WebProtocolHandlerRegistrar.prototype = {
               callback: () => {
                 this._setOSDefault(aProtocol);
                 Glean.protocolhandlerMailto.promptClicked.set_os_default.add();
+                osDefaultNotificationBox.appendNotification(
+                  notificationId,
+                  {
+                    label: msg_os_yes_confirm,
+                    priority: osDefaultNotificationBox.PRIORITY_INFO_LOW,
+                  },
+                  []
+                );
+                return false;
               },
             },
             {
@@ -442,9 +462,7 @@ WebProtocolHandlerRegistrar.prototype = {
           notificationId,
           {
             label: msg_box,
-            image: aURI.prePath + "/favicon.ico",
             priority: FxDefaultNotificationBox.PRIORITY_INFO_LOW,
-            displayCloseButton: false,
           },
           [
             {
@@ -455,6 +473,15 @@ WebProtocolHandlerRegistrar.prototype = {
                   this._addLocal(aProtocol, aTitle, aURI.spec)
                 );
                 Glean.protocolhandlerMailto.promptClicked.set_local_default.add();
+                FxDefaultNotificationBox.appendNotification(
+                  notificationId,
+                  {
+                    label: msg_yes_confirm,
+                    priority: FxDefaultNotificationBox.PRIORITY_INFO_LOW,
+                  },
+                  []
+                );
+                return false;
               },
             },
             {
