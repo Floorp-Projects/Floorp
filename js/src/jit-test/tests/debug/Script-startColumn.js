@@ -89,11 +89,11 @@ assertEq(hit, 1);
 const location = { fileName: "column.js", lineNumber: 1, columnNumber: 1 };
 hit = 0;
 g.evaluate(`    debugger;`, location);
-assertEq(column, 2);
+assertEq(column, 1);
 assertEq(hit, 1);
 
 g.evaluate(`var f10 = function () { };`, location);
-test(g.f10, 21);
+test(g.f10, 20);
 
 g.evaluate(`
 var f11 = function () { };

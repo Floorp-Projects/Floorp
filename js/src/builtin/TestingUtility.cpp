@@ -86,10 +86,10 @@ bool js::ParseCompileOptions(JSContext* cx, JS::CompileOptions& options,
     if (!JS::ToInt32(cx, v, &c)) {
       return false;
     }
-    if (c < 0) {
-      c = 0;
+    if (c < 1) {
+      c = 1;
     }
-    options.setColumn(JS::ColumnNumberOneOrigin::fromZeroOrigin(c));
+    options.setColumn(JS::ColumnNumberOneOrigin(c));
   }
 
   if (!JS_GetProperty(cx, opts, "sourceIsLazy", &v)) {
