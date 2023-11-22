@@ -88,6 +88,56 @@ class URLStringUtilsTest {
         assertFalse(isURLLike("www.c-c-  "))
         assertFalse(isURLLike("3-3 "))
 
+        // Valid IPv6 literals correctly recognized as valid.
+        val validIPv6Literals = listOf(
+            "[::]",
+            "[::1]",
+            "[1::]",
+            "[1:2:3:4:5:6:7:8]",
+            "[2001:db8::1.2.3.4]",
+            "[::1]:8080",
+        )
+
+        validIPv6Literals.forEach { url ->
+            assertTrue(isURLLike(url))
+            assertTrue(isURLLike("$url/"))
+            assertTrue(isURLLike("https://$url"))
+            assertTrue(isURLLike("https://$url/"))
+            assertTrue(isURLLike("https:$url"))
+            assertTrue(isURLLike("https:$url/"))
+            assertTrue(isURLLike("http://$url"))
+            assertTrue(isURLLike("http://$url/"))
+            assertTrue(isURLLike("http:$url"))
+            assertTrue(isURLLike("http:$url/"))
+        }
+
+        // Invalid IPv6 literals correctly recognized as invalid.
+        assertFalse(isURLLike("::1"))
+        assertFalse(isURLLike(":::"))
+        assertFalse(isURLLike("[[http://]]"))
+        assertFalse(isURLLike("[[["))
+        assertFalse(isURLLike("[[[:"))
+        assertFalse(isURLLike("[[[:/"))
+        assertFalse(isURLLike("http://]]]"))
+
+        // Invalid IPv6 literals correctly recognized as something else.
+        assertTrue(isURLLike("fe80::"))
+        assertTrue(isURLLike("x:["))
+
+        // Invalid IPv6 literals incorrectly recognized as valid.
+        // We allow these for now, until bug 1685152 is fixed.
+        assertTrue(isURLLike("[:::"))
+        assertTrue(isURLLike("http://[::"))
+        assertTrue(isURLLike("http://[::/path"))
+        assertTrue(isURLLike("http://[::?query"))
+        assertTrue(isURLLike("[[http://banana]]"))
+        assertTrue(isURLLike("http://[[["))
+        assertTrue(isURLLike("[[[::"))
+        assertTrue(isURLLike("[[[::/"))
+        assertTrue(isURLLike("http://[1.2.3]"))
+        assertTrue(isURLLike("https://[1:2:3:4:5:6:7]/"))
+        assertTrue(isURLLike("https://[1:2:3:4:5:6:7:8:9]/"))
+
         // Examples from issues
         assertTrue(isURLLike("https://abc--cba.com/")) // #7096
     }
