@@ -833,3 +833,36 @@ add_task(async function test_product_sendReport_OHTTP() {
   Assert.equal(report.message, "report created", "Report is created.");
   disableOHTTP();
 });
+
+add_task(async function test_product_analysisProgress_event() {
+  let uri = new URL("https://www.walmart.com/ip/926485654");
+  let product = new ShoppingProduct(uri, { allowValidationFailure: false });
+
+  const INITIAL_TIMEOUT = 0;
+  const TIMEOUT = 0;
+  const TRIES = 1;
+
+  if (!product.isProduct()) {
+    return;
+  }
+
+  let analysisProgressEventData;
+  product.on("analysis-progress", (eventName, progress) => {
+    analysisProgressEventData = progress;
+  });
+
+  await product.pollForAnalysisCompleted({
+    url: API_ANALYSIS_IN_PROGRESS,
+    requestSchema: ANALYSIS_STATUS_REQUEST_SCHEMA,
+    responseSchema: ANALYSIS_STATUS_RESPONSE_SCHEMA,
+    pollInitialWait: INITIAL_TIMEOUT,
+    pollTimeout: TIMEOUT,
+    pollAttempts: TRIES,
+  });
+
+  Assert.equal(
+    analysisProgressEventData,
+    50,
+    "Analysis progress event data is emitted"
+  );
+});

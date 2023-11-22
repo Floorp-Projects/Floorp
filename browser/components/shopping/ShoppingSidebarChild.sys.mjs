@@ -60,6 +60,7 @@ export class ShoppingSidebarChild extends RemotePageChild {
     this._destroyed = true;
     super.didDestroy?.();
     gAllActors.delete(this);
+    this.#product?.off("analysis-progress", this.#onAnalysisProgress);
     this.#product?.uninit();
   }
 
@@ -222,6 +223,7 @@ export class ShoppingSidebarChild extends RemotePageChild {
       }
       return currentURI && currentURI == this.#productURI;
     };
+    this.#product?.off("analysis-progress", this.#onAnalysisProgress);
     this.#product?.uninit();
     // We are called either because the URL has changed or because the opt-in
     // state has changed. In both cases, we want to clear out content
@@ -255,6 +257,11 @@ export class ShoppingSidebarChild extends RemotePageChild {
 
       let uri = this.#productURI;
       this.#product = new ShoppingProduct(uri);
+      this.#product.on(
+        "analysis-progress",
+        this.#onAnalysisProgress.bind(this)
+      );
+
       let data;
       let isAnalysisInProgress;
 
@@ -441,5 +448,11 @@ export class ShoppingSidebarChild extends RemotePageChild {
 
   async reportProductAvailable() {
     await this.#product.sendReport();
+  }
+
+  #onAnalysisProgress(eventName, progress) {
+    this.sendToContent("UpdateAnalysisProgress", {
+      progress,
+    });
   }
 }

@@ -23,6 +23,10 @@ let { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
+let { EventEmitter } = ChromeUtils.importESModule(
+  "resource://gre/modules/EventEmitter.sys.mjs"
+);
+
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   HPKEConfigManager: "resource://gre/modules/HPKEConfigManager.sys.mjs",
@@ -104,7 +108,7 @@ function readFromStream(stream, count) {
  * let analysis = await product.requestAnalysis();
  * let recommendations = await product.requestRecommendations();
  */
-export class ShoppingProduct {
+export class ShoppingProduct extends EventEmitter {
   /**
    * Creates a product.
    *
@@ -115,6 +119,8 @@ export class ShoppingProduct {
    *  Should validation failures be allowed or return null
    */
   constructor(url, options = { allowValidationFailure: true }) {
+    super();
+
     this.allowValidationFailure = !!options.allowValidationFailure;
 
     this._abortController = new AbortController();
@@ -700,6 +706,9 @@ export class ShoppingProduct {
       }
       try {
         result = await this.requestAnalysisCreationStatus(undefined, options);
+        if (result?.progress) {
+          this.emit("analysis-progress", result.progress);
+        }
         isFinished =
           result &&
           result.status != "pending" &&
