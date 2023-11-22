@@ -20,6 +20,9 @@ window.MozXULElement = {
 window.RPMSetPref = () => {
   /* NOOP */
 };
+window.RPMGetFormatURLPref = () => {
+  /* NOOP */
+};
 
 /**
  * Wrapper component used to decorate all of our stories by providing access to
