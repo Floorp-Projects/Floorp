@@ -493,7 +493,7 @@ class nsDocShell final : public nsDocLoader,
   static void ExtractLastVisit(nsIChannel* aChannel, nsIURI** aURI,
                                uint32_t* aChannelRedirectFlags);
 
-  bool HasDocumentViewer() const { return !!mContentViewer; }
+  bool HasDocumentViewer() const { return !!mDocumentViewer; }
 
   static uint32_t ComputeURILoaderFlags(
       mozilla::dom::BrowsingContext* aBrowsingContext, uint32_t aLoadType);
@@ -841,13 +841,13 @@ class nsDocShell final : public nsDocLoader,
   // The following methods deal with saving and restoring content viewers
   // in session history.
 
-  // mContentViewer points to the current content viewer associated with
+  // mDocumentViewer points to the current content viewer associated with
   // this docshell. When loading a new document, the content viewer is
   // either destroyed or stored into a session history entry. To make sure
   // that destruction happens in a controlled fashion, a given content viewer
   // is always owned in exactly one of these ways:
   //   1) The content viewer is active and owned by a docshell's
-  //      mContentViewer.
+  //      mDocumentViewer.
   //   2) The content viewer is still being displayed while we begin loading
   //      a new document. The content viewer is owned by the _new_
   //      content viewer's mPreviousViewer, and has a pointer to the
@@ -860,11 +860,11 @@ class nsDocShell final : public nsDocLoader,
   //
   // When restoring a content viewer from session history, open() is called
   // to reattach the document to the window object. The content viewer is
-  // then placed into mContentViewer and removed from the history entry.
-  // (mContentViewer is put into session history as described above, if
+  // then placed into mDocumentViewer and removed from the history entry.
+  // (mDocumentViewer is put into session history as described above, if
   // applicable).
 
-  // Determines whether we can safely cache the current mContentViewer in
+  // Determines whether we can safely cache the current mDocumentViewer in
   // session history. This checks a number of factors such as cache policy,
   // pending requests, and unload handlers.
   // |aLoadType| should be the load type that will replace the current
@@ -1166,7 +1166,7 @@ class nsDocShell final : public nsDocLoader,
   // mBFCachedRefreshURIList.
   nsCOMPtr<nsIMutableArray> mBFCachedRefreshURIList;
   uint64_t mContentWindowID;
-  nsCOMPtr<nsIDocumentViewer> mContentViewer;
+  nsCOMPtr<nsIDocumentViewer> mDocumentViewer;
   nsCOMPtr<nsIWidget> mParentWidget;
   RefPtr<mozilla::dom::ChildSHistory> mSessionHistory;
   nsCOMPtr<nsIWebBrowserFind> mFind;
