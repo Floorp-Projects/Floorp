@@ -65,7 +65,6 @@ use arbitrary::{Result, Unstructured};
 pub use component::{Component, ConfiguredComponent};
 pub use config::{Config, DefaultConfig, SwarmConfig};
 use std::{collections::HashSet, fmt::Write, str};
-use wasmparser::names::{KebabStr, KebabString};
 
 /// Do something an arbitrary number of times.
 ///
@@ -136,9 +135,9 @@ pub(crate) fn unique_string(
 
 pub(crate) fn unique_kebab_string(
     max_size: usize,
-    names: &mut HashSet<KebabString>,
+    names: &mut HashSet<String>,
     u: &mut Unstructured,
-) -> Result<KebabString> {
+) -> Result<String> {
     let size = std::cmp::min(u.arbitrary_len::<u8>()?, max_size);
     let mut name = String::with_capacity(size);
     let mut require_alpha = true;
@@ -173,11 +172,10 @@ pub(crate) fn unique_kebab_string(
         name.push('a');
     }
 
-    while names.contains(KebabStr::new(&name).unwrap()) {
+    while names.contains(&name) {
         write!(&mut name, "{}", names.len()).unwrap();
     }
 
-    let name = KebabString::new(name).unwrap();
     names.insert(name.clone());
 
     Ok(name)
@@ -185,7 +183,7 @@ pub(crate) fn unique_kebab_string(
 
 pub(crate) fn unique_url(
     max_size: usize,
-    names: &mut HashSet<KebabString>,
+    names: &mut HashSet<String>,
     u: &mut Unstructured,
 ) -> Result<String> {
     let path = unique_kebab_string(max_size, names, u)?;

@@ -7,19 +7,77 @@ pub struct SubType {
     pub is_final: bool,
     /// The list of supertype indexes. As of GC MVP, there can be at most one supertype.
     pub supertype_idx: Option<u32>,
-    /// The structural type of the subtype.
-    pub structural_type: StructuralType,
+    /// The composite type of the subtype.
+    pub composite_type: CompositeType,
 }
 
-/// Represents a structural type in a WebAssembly module.
+impl Encode for SubType {
+    fn encode(&self, sink: &mut Vec<u8>) {
+        // We only need to emit a prefix byte before the actual composite type
+        // when either the type is not final or it has a declared super type.
+        if self.supertype_idx.is_some() || !self.is_final {
+            sink.push(if self.is_final { 0x4f } else { 0x50 });
+            self.supertype_idx.encode(sink);
+        }
+        self.composite_type.encode(sink);
+    }
+}
+
+#[cfg(feature = "wasmparser")]
+impl TryFrom<wasmparser::SubType> for SubType {
+    type Error = ();
+
+    fn try_from(sub_ty: wasmparser::SubType) -> Result<Self, Self::Error> {
+        Ok(SubType {
+            is_final: sub_ty.is_final,
+            supertype_idx: sub_ty
+                .supertype_idx
+                .map(|i| i.as_module_index().ok_or(()))
+                .transpose()?,
+            composite_type: sub_ty.composite_type.try_into()?,
+        })
+    }
+}
+
+/// Represents a composite type in a WebAssembly module.
 #[derive(Debug, Clone)]
-pub enum StructuralType {
+pub enum CompositeType {
     /// The type is for a function.
     Func(FuncType),
     /// The type is for an array.
     Array(ArrayType),
     /// The type is for a struct.
     Struct(StructType),
+}
+
+impl Encode for CompositeType {
+    fn encode(&self, sink: &mut Vec<u8>) {
+        match self {
+            CompositeType::Func(ty) => TypeSection::encode_function(
+                sink,
+                ty.params().iter().copied(),
+                ty.results().iter().copied(),
+            ),
+            CompositeType::Array(ArrayType(ty)) => {
+                TypeSection::encode_array(sink, &ty.element_type, ty.mutable)
+            }
+            CompositeType::Struct(ty) => {
+                TypeSection::encode_struct(sink, ty.fields.iter().cloned())
+            }
+        }
+    }
+}
+
+#[cfg(feature = "wasmparser")]
+impl TryFrom<wasmparser::CompositeType> for CompositeType {
+    type Error = ();
+    fn try_from(composite_ty: wasmparser::CompositeType) -> Result<Self, Self::Error> {
+        Ok(match composite_ty {
+            wasmparser::CompositeType::Func(f) => CompositeType::Func(f.try_into()?),
+            wasmparser::CompositeType::Array(a) => CompositeType::Array(a.try_into()?),
+            wasmparser::CompositeType::Struct(s) => CompositeType::Struct(s.try_into()?),
+        })
+    }
 }
 
 /// Represents a type of a function in a WebAssembly module.
@@ -31,9 +89,29 @@ pub struct FuncType {
     len_params: usize,
 }
 
+#[cfg(feature = "wasmparser")]
+impl TryFrom<wasmparser::FuncType> for FuncType {
+    type Error = ();
+    fn try_from(func_ty: wasmparser::FuncType) -> Result<Self, Self::Error> {
+        let mut buf = Vec::with_capacity(func_ty.params().len() + func_ty.results().len());
+        for ty in func_ty.params().iter().chain(func_ty.results()).copied() {
+            buf.push(ty.try_into()?);
+        }
+        Ok(FuncType::from_parts(buf.into(), func_ty.params().len()))
+    }
+}
+
 /// Represents a type of an array in a WebAssembly module.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct ArrayType(pub FieldType);
+
+#[cfg(feature = "wasmparser")]
+impl TryFrom<wasmparser::ArrayType> for ArrayType {
+    type Error = ();
+    fn try_from(array_ty: wasmparser::ArrayType) -> Result<Self, Self::Error> {
+        Ok(ArrayType(array_ty.0.try_into()?))
+    }
+}
 
 /// Represents a type of a struct in a WebAssembly module.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -42,7 +120,22 @@ pub struct StructType {
     pub fields: Box<[FieldType]>,
 }
 
-/// Field type in structural types (structs, arrays).
+#[cfg(feature = "wasmparser")]
+impl TryFrom<wasmparser::StructType> for StructType {
+    type Error = ();
+    fn try_from(struct_ty: wasmparser::StructType) -> Result<Self, Self::Error> {
+        Ok(StructType {
+            fields: struct_ty
+                .fields
+                .iter()
+                .cloned()
+                .map(TryInto::try_into)
+                .collect::<Result<_, _>>()?,
+        })
+    }
+}
+
+/// Field type in composite types (structs, arrays).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct FieldType {
     /// Storage type of the field.
@@ -51,7 +144,18 @@ pub struct FieldType {
     pub mutable: bool,
 }
 
-/// Storage type for structural type fields.
+#[cfg(feature = "wasmparser")]
+impl TryFrom<wasmparser::FieldType> for FieldType {
+    type Error = ();
+    fn try_from(field_ty: wasmparser::FieldType) -> Result<Self, Self::Error> {
+        Ok(FieldType {
+            element_type: field_ty.element_type.try_into()?,
+            mutable: field_ty.mutable,
+        })
+    }
+}
+
+/// Storage type for composite type fields.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub enum StorageType {
     /// The `i8` type.
@@ -60,6 +164,18 @@ pub enum StorageType {
     I16,
     /// A value type.
     Val(ValType),
+}
+
+#[cfg(feature = "wasmparser")]
+impl TryFrom<wasmparser::StorageType> for StorageType {
+    type Error = ();
+    fn try_from(storage_ty: wasmparser::StorageType) -> Result<Self, Self::Error> {
+        Ok(match storage_ty {
+            wasmparser::StorageType::I8 => StorageType::I8,
+            wasmparser::StorageType::I16 => StorageType::I16,
+            wasmparser::StorageType::Val(v) => StorageType::Val(v.try_into()?),
+        })
+    }
 }
 
 /// The type of a core WebAssembly value.
@@ -85,6 +201,21 @@ pub enum ValType {
     Ref(RefType),
 }
 
+#[cfg(feature = "wasmparser")]
+impl TryFrom<wasmparser::ValType> for ValType {
+    type Error = ();
+    fn try_from(val_ty: wasmparser::ValType) -> Result<Self, Self::Error> {
+        Ok(match val_ty {
+            wasmparser::ValType::I32 => ValType::I32,
+            wasmparser::ValType::I64 => ValType::I64,
+            wasmparser::ValType::F32 => ValType::F32,
+            wasmparser::ValType::F64 => ValType::F64,
+            wasmparser::ValType::V128 => ValType::V128,
+            wasmparser::ValType::Ref(r) => ValType::Ref(r.try_into()?),
+        })
+    }
+}
+
 impl FuncType {
     /// Creates a new [`FuncType`] from the given `params` and `results`.
     pub fn new<P, R>(params: P, results: R) -> Self
@@ -95,8 +226,13 @@ impl FuncType {
         let mut buffer = params.into_iter().collect::<Vec<_>>();
         let len_params = buffer.len();
         buffer.extend(results);
+        Self::from_parts(buffer.into(), len_params)
+    }
+
+    #[inline]
+    pub(crate) fn from_parts(params_results: Box<[ValType]>, len_params: usize) -> Self {
         Self {
-            params_results: buffer.into(),
+            params_results,
             len_params,
         }
     }
@@ -191,6 +327,18 @@ impl Encode for RefType {
     }
 }
 
+#[cfg(feature = "wasmparser")]
+impl TryFrom<wasmparser::RefType> for RefType {
+    type Error = ();
+
+    fn try_from(ref_type: wasmparser::RefType) -> Result<Self, Self::Error> {
+        Ok(RefType {
+            nullable: ref_type.is_nullable(),
+            heap_type: ref_type.heap_type().try_into()?,
+        })
+    }
+}
+
 impl From<RefType> for ValType {
     fn from(ty: RefType) -> ValType {
         ValType::Ref(ty)
@@ -202,27 +350,51 @@ impl From<RefType> for ValType {
 pub enum HeapType {
     /// Untyped (any) function.
     Func,
-    /// External heap type.
+
+    /// The abstract external heap type.
     Extern,
-    /// The `any` heap type. The common supertype (a.k.a. top) of all internal types.
+
+    /// The abstract `any` heap type.
+    ///
+    /// The common supertype (a.k.a. top) of all internal types.
     Any,
-    /// The `none` heap type. The common subtype (a.k.a. bottom) of all internal types.
+
+    /// The abstract `none` heap type.
+    ///
+    /// The common subtype (a.k.a. bottom) of all internal types.
     None,
-    /// The `noextern` heap type. The common subtype (a.k.a. bottom) of all external types.
+
+    /// The abstract `noextern` heap type.
+    ///
+    /// The common subtype (a.k.a. bottom) of all external types.
     NoExtern,
-    /// The `nofunc` heap type. The common subtype (a.k.a. bottom) of all function types.
+
+    /// The abstract `nofunc` heap type.
+    ///
+    /// The common subtype (a.k.a. bottom) of all function types.
     NoFunc,
-    /// The `eq` heap type. The common supertype of all referenceable types on which comparison
+
+    /// The abstract `eq` heap type.
+    ///
+    /// The common supertype of all referenceable types on which comparison
     /// (ref.eq) is allowed.
     Eq,
-    /// The `struct` heap type. The common supertype of all struct types.
+
+    /// The abstract `struct` heap type.
+    ///
+    /// The common supertype of all struct types.
     Struct,
-    /// The `array` heap type. The common supertype of all array types.
+
+    /// The abstract `array` heap type.
+    ///
+    /// The common supertype of all array types.
     Array,
-    /// The i31 heap type.
+
+    /// The unboxed `i31` heap type.
     I31,
-    /// User defined type at the given index.
-    Indexed(u32),
+
+    /// A concrete Wasm-defined type at the given index.
+    Concrete(u32),
 }
 
 impl Encode for HeapType {
@@ -240,8 +412,29 @@ impl Encode for HeapType {
             HeapType::I31 => sink.push(0x6C),
             // Note that this is encoded as a signed type rather than unsigned
             // as it's decoded as an s33
-            HeapType::Indexed(i) => i64::from(*i).encode(sink),
+            HeapType::Concrete(i) => i64::from(*i).encode(sink),
         }
+    }
+}
+
+#[cfg(feature = "wasmparser")]
+impl TryFrom<wasmparser::HeapType> for HeapType {
+    type Error = ();
+
+    fn try_from(heap_type: wasmparser::HeapType) -> Result<Self, Self::Error> {
+        Ok(match heap_type {
+            wasmparser::HeapType::Concrete(i) => HeapType::Concrete(i.as_module_index().ok_or(())?),
+            wasmparser::HeapType::Func => HeapType::Func,
+            wasmparser::HeapType::Extern => HeapType::Extern,
+            wasmparser::HeapType::Any => HeapType::Any,
+            wasmparser::HeapType::None => HeapType::None,
+            wasmparser::HeapType::NoExtern => HeapType::NoExtern,
+            wasmparser::HeapType::NoFunc => HeapType::NoFunc,
+            wasmparser::HeapType::Eq => HeapType::Eq,
+            wasmparser::HeapType::Struct => HeapType::Struct,
+            wasmparser::HeapType::Array => HeapType::Array,
+            wasmparser::HeapType::I31 => HeapType::I31,
+        })
     }
 }
 
@@ -291,70 +484,87 @@ impl TypeSection {
         R: IntoIterator<Item = ValType>,
         R::IntoIter: ExactSizeIterator,
     {
+        Self::encode_function(&mut self.bytes, params, results);
+        self.num_added += 1;
+        self
+    }
+
+    fn encode_function<P, R>(sink: &mut Vec<u8>, params: P, results: R)
+    where
+        P: IntoIterator<Item = ValType>,
+        P::IntoIter: ExactSizeIterator,
+        R: IntoIterator<Item = ValType>,
+        R::IntoIter: ExactSizeIterator,
+    {
         let params = params.into_iter();
         let results = results.into_iter();
 
-        self.bytes.push(0x60);
-        params.len().encode(&mut self.bytes);
-        params.for_each(|p| p.encode(&mut self.bytes));
-        results.len().encode(&mut self.bytes);
-        results.for_each(|p| p.encode(&mut self.bytes));
-        self.num_added += 1;
-        self
+        sink.push(0x60);
+        params.len().encode(sink);
+        params.for_each(|p| p.encode(sink));
+        results.len().encode(sink);
+        results.for_each(|p| p.encode(sink));
     }
 
     /// Define an array type in this type section.
     pub fn array(&mut self, ty: &StorageType, mutable: bool) -> &mut Self {
-        self.bytes.push(0x5e);
-        self.field(ty, mutable);
+        Self::encode_array(&mut self.bytes, ty, mutable);
         self.num_added += 1;
         self
     }
 
-    fn field(&mut self, ty: &StorageType, mutable: bool) -> &mut Self {
-        ty.encode(&mut self.bytes);
-        self.bytes.push(mutable as u8);
-        self
+    fn encode_array(sink: &mut Vec<u8>, ty: &StorageType, mutable: bool) {
+        sink.push(0x5e);
+        Self::encode_field(sink, ty, mutable);
+    }
+
+    fn encode_field(sink: &mut Vec<u8>, ty: &StorageType, mutable: bool) {
+        ty.encode(sink);
+        sink.push(mutable as u8);
     }
 
     /// Define a struct type in this type section.
-    pub fn struct_(&mut self, fields: Vec<FieldType>) -> &mut Self {
-        self.bytes.push(0x5f);
-        fields.len().encode(&mut self.bytes);
-        for f in fields.iter() {
-            self.field(&f.element_type, f.mutable);
-        }
+    pub fn struct_<F>(&mut self, fields: F) -> &mut Self
+    where
+        F: IntoIterator<Item = FieldType>,
+        F::IntoIter: ExactSizeIterator,
+    {
+        Self::encode_struct(&mut self.bytes, fields);
         self.num_added += 1;
         self
+    }
+
+    fn encode_struct<F>(sink: &mut Vec<u8>, fields: F)
+    where
+        F: IntoIterator<Item = FieldType>,
+        F::IntoIter: ExactSizeIterator,
+    {
+        let fields = fields.into_iter();
+        sink.push(0x5f);
+        fields.len().encode(sink);
+        for f in fields {
+            Self::encode_field(sink, &f.element_type, f.mutable);
+        }
     }
 
     /// Define an explicit subtype in this type section.
     pub fn subtype(&mut self, ty: &SubType) -> &mut Self {
-        // In the GC spec, supertypes is a vector, not an option.
-        let st = match ty.supertype_idx {
-            Some(idx) => vec![idx],
-            None => vec![],
-        };
-        if ty.is_final {
-            self.bytes.push(0x4e);
-            st.encode(&mut self.bytes);
-        } else if !st.is_empty() {
-            self.bytes.push(0x50);
-            st.encode(&mut self.bytes);
-        }
+        ty.encode(&mut self.bytes);
+        self.num_added += 1;
+        self
+    }
 
-        match &ty.structural_type {
-            StructuralType::Func(ty) => {
-                self.function(ty.params().iter().copied(), ty.results().iter().copied());
-            }
-            StructuralType::Array(ArrayType(ty)) => {
-                self.array(&ty.element_type, ty.mutable);
-            }
-            StructuralType::Struct(ty) => {
-                self.struct_(ty.fields.to_vec());
-            }
-        }
-
+    /// Define an explicit recursion group in this type section.
+    pub fn rec<T>(&mut self, types: T) -> &mut Self
+    where
+        T: IntoIterator<Item = SubType>,
+        T::IntoIter: ExactSizeIterator,
+    {
+        let types = types.into_iter();
+        self.bytes.push(0x4e);
+        types.len().encode(&mut self.bytes);
+        types.for_each(|t| t.encode(&mut self.bytes));
+        self.num_added += 1;
         self
     }
 }
@@ -368,5 +578,34 @@ impl Encode for TypeSection {
 impl Section for TypeSection {
     fn id(&self) -> u8 {
         SectionId::Type.into()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Module;
+
+    #[test]
+    fn func_types_dont_require_wasm_gc() {
+        let mut types = TypeSection::new();
+        types.subtype(&SubType {
+            is_final: true,
+            supertype_idx: None,
+            composite_type: CompositeType::Func(FuncType::new([], [])),
+        });
+
+        let mut module = Module::new();
+        module.section(&types);
+        let wasm_bytes = module.finish();
+
+        let mut validator = wasmparser::Validator::new_with_features(wasmparser::WasmFeatures {
+            gc: false,
+            ..Default::default()
+        });
+
+        validator.validate_all(&wasm_bytes).expect(
+            "Encoding pre Wasm GC type should not accidentally use Wasm GC specific encoding",
+        );
     }
 }
