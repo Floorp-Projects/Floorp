@@ -905,10 +905,7 @@ class NonSyntacticLexicalEnvironmentObject
 // assignments and unqualified bareword assignments. Its parent is always the
 // global lexical environment.
 //
-// This is used in ExecuteInGlobalAndReturnScope and sits in front of the
-// global scope to store 'var' bindings, and to store fresh properties created
-// by assignments to undeclared variables that otherwise would have gone on
-// the global object.
+// See the long "Non-syntactic Environments" comment above.
 class NonSyntacticVariablesObject : public EnvironmentObject {
  public:
   static const JSClass class_;
