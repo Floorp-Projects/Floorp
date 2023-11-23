@@ -27,6 +27,10 @@ const SUPPORTED_ADDON_TYPES = [
   "sitepermission-deprecated",
 ];
 
+// An expanded set of addon types supported when the abuse report hosted on AMO is enabled
+// (based on the "extensions.abuseReport.amoFormEnabled" pref).
+const AMO_SUPPORTED_ADDON_TYPES = [...SUPPORTED_ADDON_TYPES, "dictionary"];
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -45,6 +49,16 @@ XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "AMO_DETAILS_API_URL",
   PREF_AMO_DETAILS_API_URL
+);
+
+// Whether the abuse report feature should open a form hosted by the url
+// derived from the one set on the extensions.abuseReport.amoFormURL pref
+// or use the abuse report panel integrated in Firefox.
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "ABUSE_REPORT_AMO_FORM_ENABLED",
+  "extensions.abuseReport.amoFormEnabled",
+  true
 );
 
 const PRIVATE_REPORT_PROPS = Symbol("privateReportProps");
@@ -99,6 +113,10 @@ async function responseToErrorInfo(response) {
 export const AbuseReporter = {
   _lastReportTimestamp: null,
 
+  get amoFormEnabled() {
+    return lazy.ABUSE_REPORT_AMO_FORM_ENABLED;
+  },
+
   // Error types.
   updateLastReportTimestamp() {
     this._lastReportTimestamp = Date.now();
@@ -119,6 +137,9 @@ export const AbuseReporter = {
   },
 
   isSupportedAddonType(addonType) {
+    if (this.amoFormEnabled) {
+      return AMO_SUPPORTED_ADDON_TYPES.includes(addonType);
+    }
     return SUPPORTED_ADDON_TYPES.includes(addonType);
   },
 
