@@ -90,9 +90,8 @@ div[hidetabs=true] .tabs .tabs-navigation {
   text-align: center;
 }
 
-/* Remove the outline focusring from tabs-menu-item. */
-.tabs .tabs-navigation .tabs-menu-item > a:-moz-focusring {
-  outline: none;
+.tabs .tabs-navigation .tabs-menu-item > a {
+  outline-offset: -2px;
 }
 
 .tabs .tabs-menu-item .tab-badge {
