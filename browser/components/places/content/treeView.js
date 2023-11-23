@@ -473,19 +473,13 @@ PlacesTreeView.prototype = {
    * that node was not found, we look for a node that has the same itemId, uri
    * and time values.
    *
-   * @param {object} aUpdatedContainer
-   *        An ancestor of the node which was removed.  It does not have to be
-   *        its direct parent.
    * @param {object} aOldNode
    *        The node which was removed.
    *
    * @returns {number} the row number of an equivalent node for aOldOne, if one was
    *         found, -1 otherwise.
    */
-  _getNewRowForRemovedNode: function PTV__getNewRowForRemovedNode(
-    aUpdatedContainer,
-    aOldNode
-  ) {
+  _getNewRowForRemovedNode: function PTV__getNewRowForRemovedNode(aOldNode) {
     let parent = aOldNode.parent;
     if (parent) {
       // If the node's parent is still set, the node is not obsolete
@@ -523,13 +517,8 @@ PlacesTreeView.prototype = {
    * @param {Array} aNodesInfo
    *        The persisted selection state as returned by
    *        _getSelectedNodesInRange.
-   * @param {object} aUpdatedContainer
-   *        The container which was updated.
    */
-  _restoreSelection: function PTV__restoreSelection(
-    aNodesInfo,
-    aUpdatedContainer
-  ) {
+  _restoreSelection: function PTV__restoreSelection(aNodesInfo) {
     if (!aNodesInfo.length) {
       return;
     }
@@ -541,7 +530,7 @@ PlacesTreeView.prototype = {
     let scrollToRow = -1;
     for (let i = 0; i < aNodesInfo.length; i++) {
       let nodeInfo = aNodesInfo[i];
-      let row = this._getNewRowForRemovedNode(aUpdatedContainer, nodeInfo.node);
+      let row = this._getNewRowForRemovedNode(nodeInfo.node);
       // Select the found node, if any.
       if (row != -1) {
         selection.rangedSelect(row, row, true);
@@ -894,7 +883,7 @@ PlacesTreeView.prototype = {
 
     // Restore selection.
     if (nodesToReselect.length) {
-      this._restoreSelection(nodesToReselect, aNewParent);
+      this._restoreSelection(nodesToReselect);
       this.selection.selectEventsSuppressed = false;
     }
   },
@@ -1131,7 +1120,7 @@ PlacesTreeView.prototype = {
     this._tree.endUpdateBatch();
 
     // Restore selection.
-    this._restoreSelection(nodesToReselect, aContainer);
+    this._restoreSelection(nodesToReselect);
     this.selection.selectEventsSuppressed = false;
   },
 
