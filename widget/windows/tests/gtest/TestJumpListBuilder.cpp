@@ -126,8 +126,8 @@ MATCHER_P(ShellLinksEq, descs,
     }
 
     // WindowsJumpListShortcutDescription.description
-    wchar_t descBuf[INFOTIPSIZE];
-    hr = link->GetDescription(descBuf, INFOTIPSIZE);
+    wchar_t descBuf[MAX_PATH];
+    hr = link->GetDescription(descBuf, MAX_PATH);
     if (FAILED(hr)) {
       return false;
     }
@@ -270,6 +270,8 @@ class TestingJumpListBackend : public JumpListBackend {
  *   The current JSContext in the execution environment.
  * @param {uint32_t} howMany
  *   The number of WindowsJumpListShortcutDescriptions to generate.
+ * @param {boolean} longDescription
+ *   True if the description should be greater than MAX_PATH (260 characters).
  * @param {nsTArray<WindowsJumpListShortcutDescription>&} aArray
  *   The outparam for the array of generated
  * WindowsJumpListShortcutDescriptions.
@@ -278,16 +280,34 @@ class TestingJumpListBackend : public JumpListBackend {
  *   WindowsJumpListShortcutDescriptions.
  */
 void GenerateWindowsJumpListShortcutDescriptions(
-    JSContext* aCx, uint32_t howMany,
+    JSContext* aCx, uint32_t howMany, bool longDescription,
     nsTArray<WindowsJumpListShortcutDescription>& aArray,
     nsTArray<JS::Value>& aJSValArray) {
   for (uint32_t i = 0; i < howMany; ++i) {
     WindowsJumpListShortcutDescription desc;
-    nsAutoString title(u"Test Task #%i", i);
+    nsAutoString title(u"Test Task #");
+    title.AppendInt(i);
     desc.mTitle = title;
+
     nsAutoString path(u"C:\\Some\\Test\\Path.exe");
     desc.mPath = path;
-    nsAutoString description(u"This is a test description for item: %i", i);
+    nsAutoString description;
+
+    if (longDescription) {
+      description.AppendPrintf(
+          "For item #%i, this is a very very very very VERY VERY very very "
+          "very very very very very very very very very very VERY VERY very "
+          "very very very very very very very very very very very VERY VERY "
+          "very very very very very very very very very very very very VERY "
+          "VERY very very very very very very very very very very very very "
+          "VERY VERY very very very very very very very very very very very "
+          "very VERY VERY very very very very very very very very long test "
+          "description for an item",
+          i);
+    } else {
+      description.AppendPrintf("This is a test description for an item #%i", i);
+    }
+
     desc.mDescription = description;
     desc.mFallbackIconIndex = 0;
 
@@ -357,11 +377,14 @@ TEST(JumpListBuilder, CheckForRemovals)
   RefPtr<StrictMock<TestingJumpListBackend>> testBackend =
       new StrictMock<TestingJumpListBackend>();
   nsAutoString aumid(u"TestApplicationID");
+  // We set up this expectation here because SetAppID will be called soon
+  // after construction of the JumpListBuilder via the background thread.
+  EXPECT_CALL(*testBackend, SetAppID(_)).Times(1);
+
   nsCOMPtr<nsIJumpListBuilder> builder =
       new JumpListBuilder(aumid, testBackend);
   ASSERT_TRUE(builder);
 
-  EXPECT_CALL(*testBackend, SetAppID(_)).Times(1);
   EXPECT_CALL(*testBackend, AbortList()).Times(2);
 
   // Let's prepare BeginList to return a two entry collection of IShellLinks.
@@ -470,6 +493,10 @@ TEST(JumpListBuilder, PopulateJumpListEmpty)
   RefPtr<StrictMock<TestingJumpListBackend>> testBackend =
       new StrictMock<TestingJumpListBackend>();
   nsAutoString aumid(u"TestApplicationID");
+  // We set up this expectation here because SetAppID will be called soon
+  // after construction of the JumpListBuilder via the background thread.
+  EXPECT_CALL(*testBackend, SetAppID(_)).Times(1);
+
   nsCOMPtr<nsIJumpListBuilder> builder =
       new JumpListBuilder(aumid, testBackend);
   ASSERT_TRUE(builder);
@@ -483,7 +510,6 @@ TEST(JumpListBuilder, PopulateJumpListEmpty)
   nsAutoString customTitle(u"");
   nsTArray<JS::Value> customDescJSVals;
 
-  EXPECT_CALL(*testBackend, SetAppID(_)).Times(1);
   EXPECT_CALL(*testBackend, AbortList()).Times(1);
   EXPECT_CALL(*testBackend, BeginList(_, _, _)).Times(1);
   EXPECT_CALL(*testBackend, CommitList()).Times(1);
@@ -519,6 +545,10 @@ TEST(JumpListBuilder, PopulateJumpListOnlyTasks)
   RefPtr<StrictMock<TestingJumpListBackend>> testBackend =
       new StrictMock<TestingJumpListBackend>();
   nsAutoString aumid(u"TestApplicationID");
+  // We set up this expectation here because SetAppID will be called soon
+  // after construction of the JumpListBuilder via the background thread.
+  EXPECT_CALL(*testBackend, SetAppID(_)).Times(1);
+
   nsCOMPtr<nsIJumpListBuilder> builder =
       new JumpListBuilder(aumid, testBackend);
   ASSERT_TRUE(builder);
@@ -530,12 +560,12 @@ TEST(JumpListBuilder, PopulateJumpListOnlyTasks)
 
   nsTArray<JS::Value> taskDescJSVals;
   nsTArray<WindowsJumpListShortcutDescription> taskDescs;
-  GenerateWindowsJumpListShortcutDescriptions(cx, 2, taskDescs, taskDescJSVals);
+  GenerateWindowsJumpListShortcutDescriptions(cx, 2, false, taskDescs,
+                                              taskDescJSVals);
 
   nsAutoString customTitle(u"");
   nsTArray<JS::Value> customDescJSVals;
 
-  EXPECT_CALL(*testBackend, SetAppID(_)).Times(1);
   EXPECT_CALL(*testBackend, AbortList()).Times(1);
   EXPECT_CALL(*testBackend, BeginList(_, _, _)).Times(1);
   EXPECT_CALL(*testBackend, AddUserTasks(ShellLinksEq(&taskDescs))).Times(1);
@@ -574,6 +604,10 @@ TEST(JumpListBuilder, PopulateJumpListOnlyCustomItems)
   RefPtr<StrictMock<TestingJumpListBackend>> testBackend =
       new StrictMock<TestingJumpListBackend>();
   nsAutoString aumid(u"TestApplicationID");
+  // We set up this expectation here because SetAppID will be called soon
+  // after construction of the JumpListBuilder via the background thread.
+  EXPECT_CALL(*testBackend, SetAppID(_)).Times(1);
+
   nsCOMPtr<nsIJumpListBuilder> builder =
       new JumpListBuilder(aumid, testBackend);
   ASSERT_TRUE(builder);
@@ -585,12 +619,12 @@ TEST(JumpListBuilder, PopulateJumpListOnlyCustomItems)
 
   nsTArray<WindowsJumpListShortcutDescription> descs;
   nsTArray<JS::Value> customDescJSVals;
-  GenerateWindowsJumpListShortcutDescriptions(cx, 2, descs, customDescJSVals);
+  GenerateWindowsJumpListShortcutDescriptions(cx, 2, false, descs,
+                                              customDescJSVals);
 
   nsAutoString customTitle(u"My custom title");
   nsTArray<JS::Value> taskDescJSVals;
 
-  EXPECT_CALL(*testBackend, SetAppID(_)).Times(1);
   EXPECT_CALL(*testBackend, AbortList()).Times(1);
   EXPECT_CALL(*testBackend, BeginList(_, _, _)).Times(1);
   EXPECT_CALL(*testBackend, AddUserTasks(_)).Times(0);
@@ -632,6 +666,10 @@ TEST(JumpListBuilder, PopulateJumpList)
   RefPtr<StrictMock<TestingJumpListBackend>> testBackend =
       new StrictMock<TestingJumpListBackend>();
   nsAutoString aumid(u"TestApplicationID");
+  // We set up this expectation here because SetAppID will be called soon
+  // after construction of the JumpListBuilder via the background thread.
+  EXPECT_CALL(*testBackend, SetAppID(_)).Times(1);
+
   nsCOMPtr<nsIJumpListBuilder> builder =
       new JumpListBuilder(aumid, testBackend);
   ASSERT_TRUE(builder);
@@ -643,16 +681,16 @@ TEST(JumpListBuilder, PopulateJumpList)
 
   nsTArray<WindowsJumpListShortcutDescription> taskDescs;
   nsTArray<JS::Value> taskDescJSVals;
-  GenerateWindowsJumpListShortcutDescriptions(cx, 2, taskDescs, taskDescJSVals);
+  GenerateWindowsJumpListShortcutDescriptions(cx, 2, false, taskDescs,
+                                              taskDescJSVals);
 
   nsTArray<WindowsJumpListShortcutDescription> customDescs;
   nsTArray<JS::Value> customDescJSVals;
-  GenerateWindowsJumpListShortcutDescriptions(cx, 2, customDescs,
+  GenerateWindowsJumpListShortcutDescriptions(cx, 2, false, customDescs,
                                               customDescJSVals);
 
   nsAutoString customTitle(u"My custom title");
 
-  EXPECT_CALL(*testBackend, SetAppID(_)).Times(1);
   EXPECT_CALL(*testBackend, AbortList()).Times(1);
   EXPECT_CALL(*testBackend, BeginList(_, _, _)).Times(1);
   EXPECT_CALL(*testBackend, AddUserTasks(ShellLinksEq(&taskDescs))).Times(1);
@@ -688,6 +726,10 @@ TEST(JumpListBuilder, ClearJumpList)
   RefPtr<StrictMock<TestingJumpListBackend>> testBackend =
       new StrictMock<TestingJumpListBackend>();
   nsAutoString aumid(u"TestApplicationID");
+  // We set up this expectation here because SetAppID will be called soon
+  // after construction of the JumpListBuilder via the background thread.
+  EXPECT_CALL(*testBackend, SetAppID(_)).Times(1);
+
   nsCOMPtr<nsIJumpListBuilder> builder =
       new JumpListBuilder(aumid, testBackend);
   ASSERT_TRUE(builder);
@@ -697,7 +739,6 @@ TEST(JumpListBuilder, ClearJumpList)
   JSContext* cx = jsapi.cx();
   RefPtr<Promise> promise;
 
-  EXPECT_CALL(*testBackend, SetAppID(_)).Times(1);
   EXPECT_CALL(*testBackend, AbortList()).Times(0);
   EXPECT_CALL(*testBackend, BeginList(_, _, _)).Times(0);
   EXPECT_CALL(*testBackend, AddUserTasks(_)).Times(0);
@@ -707,6 +748,71 @@ TEST(JumpListBuilder, ClearJumpList)
   EXPECT_CALL(*testBackend, DeleteList(LPCWSTREq(aumid.get()))).Times(1);
 
   nsresult rv = builder->ClearJumpList(cx, getter_AddRefs(promise));
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_TRUE(promise);
+
+  RefPtr<WaitForResolver> resolver = new WaitForResolver();
+  promise->AppendNativeHandler(resolver);
+  JS::Rooted<JS::Value> result(cx);
+  resolver->SpinUntilResolved();
+}
+
+/**
+ * Test that a WindowsJumpListShortcutDescription with a description
+ * longer than MAX_PATH gets truncated to MAX_PATH. This is because a
+ * description longer than MAX_PATH will cause CommitList to fail.
+ */
+TEST(JumpListBuilder, TruncateDescription)
+{
+  RefPtr<StrictMock<TestingJumpListBackend>> testBackend =
+      new StrictMock<TestingJumpListBackend>();
+  nsAutoString aumid(u"TestApplicationID");
+  // We set up this expectation here because SetAppID will be called soon
+  // after construction of the JumpListBuilder via the background thread.
+  EXPECT_CALL(*testBackend, SetAppID(_)).Times(1);
+
+  nsCOMPtr<nsIJumpListBuilder> builder =
+      new JumpListBuilder(aumid, testBackend);
+  ASSERT_TRUE(builder);
+
+  AutoJSAPI jsapi;
+  MOZ_ALWAYS_TRUE(jsapi.Init(xpc::PrivilegedJunkScope()));
+  JSContext* cx = jsapi.cx();
+  RefPtr<Promise> promise;
+
+  nsTArray<WindowsJumpListShortcutDescription> taskDescs;
+  nsTArray<JS::Value> taskDescJSVals;
+  GenerateWindowsJumpListShortcutDescriptions(cx, 2, true, taskDescs,
+                                              taskDescJSVals);
+
+  nsTArray<WindowsJumpListShortcutDescription> customDescs;
+  nsTArray<JS::Value> customDescJSVals;
+  GenerateWindowsJumpListShortcutDescriptions(cx, 2, true, customDescs,
+                                              customDescJSVals);
+  // We expect the long descriptions to be truncated to 260 characters, so
+  // we'll truncate the descriptions here ourselves.
+  for (auto& taskDesc : taskDescs) {
+    taskDesc.mDescription.SetLength(MAX_PATH - 1);
+  }
+  for (auto& customDesc : customDescs) {
+    customDesc.mDescription.SetLength(MAX_PATH - 1);
+  }
+
+  nsAutoString customTitle(u"My custom title");
+
+  EXPECT_CALL(*testBackend, AbortList()).Times(1);
+  EXPECT_CALL(*testBackend, BeginList(_, _, _)).Times(1);
+  EXPECT_CALL(*testBackend, AddUserTasks(ShellLinksEq(&taskDescs))).Times(1);
+
+  EXPECT_CALL(*testBackend, AppendCategory(LPCWSTREq(customTitle.get()),
+                                           ShellLinksEq(&customDescs)))
+      .Times(1);
+  EXPECT_CALL(*testBackend, CommitList()).Times(1);
+  EXPECT_CALL(*testBackend, DeleteList(_)).Times(0);
+
+  nsresult rv =
+      builder->PopulateJumpList(taskDescJSVals, customTitle, customDescJSVals,
+                                cx, getter_AddRefs(promise));
   ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(promise);
 
