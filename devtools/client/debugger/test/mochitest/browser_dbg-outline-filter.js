@@ -9,8 +9,7 @@
 add_task(async function () {
   const dbg = await initDebugger("doc-scripts.html", "long.js");
   await selectSource(dbg, "long.js", 1);
-  findElementWithSelector(dbg, ".outline-tab").click();
-  await waitForElementWithSelector(dbg, ".outline-list");
+  await openOutlinePanel(dbg);
 
   // turn off alphetical sort if active
   const alphabetizeButton = findElementWithSelector(

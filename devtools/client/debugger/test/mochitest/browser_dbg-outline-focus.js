@@ -11,8 +11,7 @@ add_task(async function () {
   const dbg = await initDebugger("doc-sources.html", "long.js");
 
   await selectSource(dbg, "long.js", 1);
-  findElementWithSelector(dbg, ".outline-tab").click();
-  await waitForElementWithSelector(dbg, ".outline-list");
+  await openOutlinePanel(dbg);
 
   is(
     findAllElements(dbg, "outlineItems").length,
@@ -39,8 +38,7 @@ add_task(async function () {
 
   await selectSource(dbg, "simple1.js", 1);
 
-  findElementWithSelector(dbg, ".outline-tab").click();
-  await waitForElementWithSelector(dbg, ".outline-list");
+  await openOutlinePanel(dbg);
 
   assertOutlineItems(dbg, [
     "λmain()",

@@ -9,7 +9,7 @@
 add_task(async function () {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
 
-  findElementWithSelector(dbg, ".outline-tab").click();
+  openOutlinePanel(dbg, false);
 
   is(
     findAllElements(dbg, "outlineItems").length,
@@ -22,13 +22,13 @@ add_task(async function () {
     "The correct message is displayed when there are no outline items"
   );
 
-  findElementWithSelector(dbg, ".sources-tab").click();
+  const sourcesTab = findElementWithSelector(dbg, ".sources-tab a");
+  EventUtils.synthesizeMouseAtCenter(sourcesTab, {}, sourcesTab.ownerGlobal);
   await waitForSourcesInSourceTree(dbg, [], { noExpand: true });
 
   await selectSource(dbg, "simple1.js", 1);
 
-  findElementWithSelector(dbg, ".outline-tab").click();
-  await waitForElementWithSelector(dbg, ".outline-list");
+  await openOutlinePanel(dbg);
 
   assertOutlineItems(dbg, [
     "λmain()",
@@ -78,7 +78,7 @@ add_task(async function () {
   const dbg = await initDebugger("doc-on-load.html", "top-level.js");
   await selectSource(dbg, "top-level.js", 1);
 
-  findElementWithSelector(dbg, ".outline-tab").click();
+  openOutlinePanel(dbg, false);
   await waitFor(
     () =>
       dbg.win.document.querySelector(".outline-pane-info").innerText ==
