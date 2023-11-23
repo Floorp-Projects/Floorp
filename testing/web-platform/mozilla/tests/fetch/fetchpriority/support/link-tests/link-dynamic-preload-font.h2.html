@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>fetchpriority</title>
+</head>
+<body>
+<script>
+  onload = function() {
+    const kData = [
+      { as: "font", href: "dummy.font?1", fetchPriority: "low" },
+      { as: "font", href: "dummy.font?2", fetchPriority: "high" },
+      { as: "font", href: "dummy.font?3", fetchPriority: "auto" },
+      { as: "font", href: "dummy.font?4" },
+    ];
+
+    let allLinkElements = [];
+    for (data of kData) {
+      let linkElement = document.createElement("link");
+      linkElement.rel = "preload";
+      linkElement.as = data.as;
+      linkElement.href = data.href;
+
+      if ("fetchPriority" in data) {
+        linkElement.fetchPriority = data.fetchPriority;
+      }
+
+      allLinkElements.push(linkElement);
+    }
+
+    document.head.append(...allLinkElements)
+
+    opener.postMessage("ChildLoaded", "*");
+  }
+</script>
+</body>
+</html>

@@ -42,7 +42,7 @@ const kExpectedRequestsOfLoadStylesheet = [
     },
 ];
 
-const kExpectedRequestsOfLinkPreload = [
+const kExpectedRequestsOfLinkPreloadFont = [
     {   fileNameAndSuffix: "dummy.font?1",
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
     },
@@ -55,6 +55,8 @@ const kExpectedRequestsOfLinkPreload = [
     {   fileNameAndSuffix: "dummy.font?4",
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
     },
+];
+const kExpectedRequestsOfLinkPreloadImage = [
     {   fileNameAndSuffix: "dummy.image?1",
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
     },
@@ -145,14 +147,14 @@ const kPipeHeaderLinksToStylesheets =
   "|header(Link,<dummy.css?11>; rel=stylesheet; fetchpriority=auto; media=print,True)" +
   "|header(Link,<dummy.css?12>; rel=stylesheet; media=print,True)";
 
-const kPipeHeaderPreloadLinks =
-  // as="font"
+const kPipeHeaderPreloadFontLinks =
   "=header(Link,<dummy.font?1>; rel=preload; as=font; fetchpriority=low,True)" +
   "|header(Link,<dummy.font?2>; rel=preload; as=font; fetchpriority=high,True)" +
   "|header(Link,<dummy.font?3>; rel=preload; as=font; fetchpriority=auto,True)" +
-  "|header(Link,<dummy.font?4>; rel=preload; as=font,True)" +
-  // as="image"
-  "|header(Link,<dummy.image?1>; rel=preload; as=image; fetchpriority=low,True)" +
+  "|header(Link,<dummy.font?4>; rel=preload; as=font,True)";
+
+const kPipeHeaderPreloadImageLinks =
+  "=|header(Link,<dummy.image?1>; rel=preload; as=image; fetchpriority=low,True)" +
   "|header(Link,<dummy.image?2>; rel=preload; as=image; fetchpriority=high,True)" +
   "|header(Link,<dummy.image?3>; rel=preload; as=image; fetchpriority=auto,True)" +
   "|header(Link,<dummy.image?4>; rel=preload; as=image,True)";
@@ -209,8 +211,11 @@ export const kTestData = [
     {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderLinksToStylesheets,
         expectedRequests: kExpectedRequestsOfLoadStylesheet
     },
-    {   testFileName: "link-initial-preload.h2.html",
-        expectedRequests: kExpectedRequestsOfLinkPreload
+    {   testFileName: "link-initial-preload-image.h2.html",
+        expectedRequests: kExpectedRequestsOfLinkPreloadImage
+    },
+    {   testFileName: "link-initial-preload-font.h2.html",
+        expectedRequests: kExpectedRequestsOfLinkPreloadFont
     },
     {   testFileName: "link-initial-preload-fetch.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreloadFetch
@@ -221,8 +226,11 @@ export const kTestData = [
     {   testFileName: "link-initial-preload-style.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreloadStyle
     },
-    {   testFileName: "link-dynamic-preload.h2.html",
-        expectedRequests: kExpectedRequestsOfLinkPreload
+    {   testFileName: "link-dynamic-preload-image.h2.html",
+        expectedRequests: kExpectedRequestsOfLinkPreloadImage
+    },
+    {   testFileName: "link-dynamic-preload-font.h2.html",
+        expectedRequests: kExpectedRequestsOfLinkPreloadFont
     },
     {   testFileName: "link-dynamic-preload-fetch.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreloadFetch
@@ -233,8 +241,11 @@ export const kTestData = [
     {   testFileName: "link-dynamic-preload-style.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreloadStyle
     },
-    {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPreloadLinks,
-        expectedRequests: kExpectedRequestsOfLinkPreload
+    {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPreloadImageLinks,
+        expectedRequests: kExpectedRequestsOfLinkPreloadImage
+    },
+    {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPreloadFontLinks,
+        expectedRequests: kExpectedRequestsOfLinkPreloadFont
     },
     {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPreloadFetchLinks,
         expectedRequests: kExpectedRequestsOfLinkPreloadFetch
