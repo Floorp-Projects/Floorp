@@ -7,11 +7,11 @@ use std::borrow::Borrow;
 use std::borrow::Cow;
 use std::char;
 use std::error::Error;
-use std::fmt;
 use std::io::{self, Write};
 use std::iter::Iterator;
 
 use std::str;
+use thiserror::Error;
 
 impl PrefReaderError {
     fn new(message: String, position: Position, parent: Option<Box<dyn Error>>) -> PrefReaderError {
@@ -20,26 +20,6 @@ impl PrefReaderError {
             position,
             parent,
         }
-    }
-}
-
-impl fmt::Display for PrefReaderError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{} at line {}, column {}",
-            self.message, self.position.line, self.position.column
-        )
-    }
-}
-
-impl Error for PrefReaderError {
-    fn description(&self) -> &str {
-        &self.message
-    }
-
-    fn cause(&self) -> Option<&dyn Error> {
-        self.parent.as_deref()
     }
 }
 
@@ -135,10 +115,12 @@ impl<'a> PrefToken<'a> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
+#[error("{message} at line {}, column {}", .position.line, .position.column)]
 pub struct PrefReaderError {
     message: String,
     position: Position,
+    #[source]
     parent: Option<Box<dyn Error>>,
 }
 

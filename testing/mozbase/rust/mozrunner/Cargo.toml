@@ -16,6 +16,7 @@ repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/ru
 log = "0.4"
 mozprofile = { path = "../mozprofile", version = "0.9" }
 plist = "1.0"
+thiserror = "1"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winreg = "0.10.1"

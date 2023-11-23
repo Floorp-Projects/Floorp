@@ -13,3 +13,4 @@ repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/ru
 
 [dependencies]
 tempfile = "3"
+thiserror = "1"

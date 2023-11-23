@@ -15,3 +15,4 @@ repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/mozbase/ru
 regex = { version = "1", default-features = false, features = ["perf", "std"] }
 rust-ini = "0.10"
 semver = "1.0"
+thiserror = "1"

@@ -3677,6 +3677,7 @@ name = "mozprofile"
 version = "0.9.1"
 dependencies = [
  "tempfile",
+ "thiserror",
 ]
 
 [[package]]
@@ -3687,6 +3688,7 @@ dependencies = [
  "log",
  "mozprofile",
  "plist",
+ "thiserror",
  "winreg",
 ]
 
@@ -3708,6 +3710,7 @@ dependencies = [
  "regex",
  "rust-ini",
  "semver",
+ "thiserror",
 ]
 
 [[package]]
