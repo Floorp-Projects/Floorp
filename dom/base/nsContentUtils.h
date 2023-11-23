@@ -2522,7 +2522,7 @@ class nsContentUtils {
    */
   static bool IsSWFPlayerEnabled();
 
-  enum ContentViewerType {
+  enum DocumentViewerType {
     TYPE_UNSUPPORTED,
     TYPE_CONTENT,
     TYPE_FALLBACK,
@@ -2530,7 +2530,7 @@ class nsContentUtils {
   };
 
   static already_AddRefed<nsIDocumentLoaderFactory> FindInternalDocumentViewer(
-      const nsACString& aType, ContentViewerType* aLoaderType = nullptr);
+      const nsACString& aType, DocumentViewerType* aLoaderType = nullptr);
 
   /**
    * This helper method returns true if the aPattern pattern matches aValue.
