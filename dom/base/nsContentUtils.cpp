@@ -10852,12 +10852,8 @@ bool nsContentUtils::StringifyJSON(JSContext* aCx, JS::Handle<JS::Value> aValue,
     case UndefinedIsNullStringLiteral: {
       aOutStr.Truncate();
       JS::Rooted<JS::Value> value(aCx, aValue);
-      nsAutoString serializedValue;
-      NS_ENSURE_TRUE(JS_Stringify(aCx, &value, nullptr, JS::NullHandleValue,
-                                  JSONCreator, &serializedValue),
-                     false);
-      aOutStr = serializedValue;
-      return true;
+      return JS_Stringify(aCx, &value, nullptr, JS::NullHandleValue,
+                          JSONCreator, &aOutStr);
     }
     case UndefinedIsVoidString: {
       aOutStr.SetIsVoid(true);
