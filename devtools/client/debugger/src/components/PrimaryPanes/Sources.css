@@ -9,11 +9,35 @@
   flex-direction: column;
   overflow: hidden;
   position: relative;
+
+  & * {
+    user-select: none;
+  }
+
+  /* Tabs header */
+  & .tabs-navigation {
+    height: var(--editor-header-height) !important;
+
+    & .tabs-menu {
+      /* override margin set by the Tabs component */
+      margin: 0 !important;
+    }
+
+    & .tab {
+      flex: 1;
+      overflow: hidden;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    & [role="tab"] {
+      padding: 4px 8px;
+      flex: 1;
+    }
+  }
 }
 
-.sources-panel * {
-  user-select: none;
-}
+
 
 /***********************/
 /* Souces Panel layout */

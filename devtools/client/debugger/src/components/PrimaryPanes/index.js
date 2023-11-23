@@ -4,20 +4,21 @@
 
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import { Tab, Tabs, TabList, TabPanels } from "react-aria-components/src/tabs";
 
 import actions from "../../actions";
 import { getSelectedPrimaryPaneTab } from "../../selectors";
 import { prefs } from "../../utils/prefs";
 import { connect } from "../../utils/connect";
 import { primaryPaneTabs } from "../../constants";
-import { formatKeyShortcut } from "../../utils/text";
 
 import Outline from "./Outline";
 import SourcesTree from "./SourcesTree";
 import ProjectSearch from "./ProjectSearch";
 
-const classnames = require("devtools/client/shared/classnames.js");
+const {
+  TabPanel,
+  Tabs,
+} = require("devtools/client/shared/components/tabs/Tabs.js");
 
 import "./Sources.css";
 
@@ -62,69 +63,58 @@ class PrimaryPanes extends Component {
     }
   };
 
-  renderTabList() {
-    return [
-      React.createElement(
-        Tab,
-        {
-          className: classnames("tab sources-tab", {
-            active: this.props.selectedTab === primaryPaneTabs.SOURCES,
-          }),
-          key: "sources-tab",
-        },
-        formatKeyShortcut(L10N.getStr("sources.header"))
-      ),
-      React.createElement(
-        Tab,
-        {
-          className: classnames("tab outline-tab", {
-            active: this.props.selectedTab === primaryPaneTabs.OUTLINE,
-          }),
-          key: "outline-tab",
-        },
-        formatKeyShortcut(L10N.getStr("outline.header"))
-      ),
-      React.createElement(
-        Tab,
-        {
-          className: classnames("tab search-tab", {
-            active: this.props.selectedTab === primaryPaneTabs.PROJECT_SEARCH,
-          }),
-          key: "search-tab",
-        },
-        formatKeyShortcut(L10N.getStr("search.header"))
-      ),
-    ];
-  }
-
   render() {
     const { selectedTab } = this.props;
     return React.createElement(
-      Tabs,
+      "aside",
       {
-        activeIndex: tabs.indexOf(selectedTab),
-        className: "sources-panel",
-        onActivateTab: this.onActivateTab,
+        className: "tab-panel sources-panel",
       },
       React.createElement(
-        TabList,
+        Tabs,
         {
-          className: "source-outline-tabs",
+          activeTab: tabs.indexOf(selectedTab),
+          onAfterChange: this.onActivateTab,
         },
-        this.renderTabList()
-      ),
-      React.createElement(
-        TabPanels,
-        {
-          className: "source-outline-panel",
-          hasFocusableContent: true,
-        },
-        React.createElement(SourcesTree, null),
-        React.createElement(Outline, {
-          alphabetizeOutline: this.state.alphabetizeOutline,
-          onAlphabetizeClick: this.onAlphabetizeClick,
-        }),
-        React.createElement(ProjectSearch, null)
+        React.createElement(
+          TabPanel,
+          {
+            id: "sources-tab",
+            key: `sources-tab${
+              selectedTab === primaryPaneTabs.SOURCES ? "-selected" : ""
+            }`,
+            className: "tab sources-tab",
+            title: L10N.getStr("sources.header"),
+          },
+          React.createElement(SourcesTree, null)
+        ),
+        React.createElement(
+          TabPanel,
+          {
+            id: "outline-tab",
+            key: `outline-tab${
+              selectedTab === primaryPaneTabs.OUTLINE ? "-selected" : ""
+            }`,
+            className: "tab outline-tab",
+            title: L10N.getStr("outline.header"),
+          },
+          React.createElement(Outline, {
+            alphabetizeOutline: this.state.alphabetizeOutline,
+            onAlphabetizeClick: this.onAlphabetizeClick,
+          })
+        ),
+        React.createElement(
+          TabPanel,
+          {
+            id: "search-tab",
+            key: `search-tab${
+              selectedTab === primaryPaneTabs.PROJECT_SEARCH ? "-selected" : ""
+            }`,
+            className: "tab search-tab",
+            title: L10N.getStr("search.header"),
+          },
+          React.createElement(ProjectSearch, null)
+        )
       )
     );
   }

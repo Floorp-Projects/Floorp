@@ -3068,6 +3068,17 @@ async function selectBlackBoxContextMenuItem(dbg, itemName) {
   return wait;
 }
 
+function openOutlinePanel(dbg, waitForOutlineList = true) {
+  const outlineTab = findElementWithSelector(dbg, ".outline-tab a");
+  EventUtils.synthesizeMouseAtCenter(outlineTab, {}, outlineTab.ownerGlobal);
+
+  if (!waitForOutlineList) {
+    return Promise.resolve();
+  }
+
+  return waitForElementWithSelector(dbg, ".outline-list");
+}
+
 // Test empty panel when source has not function or class symbols
 // Test that anonymous functions do not show in the outline panel
 function assertOutlineItems(dbg, expectedItems) {

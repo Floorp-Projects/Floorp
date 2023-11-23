@@ -10,8 +10,7 @@ add_task(async function () {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
 
   await selectSource(dbg, "simple1.js");
-  findElementWithSelector(dbg, ".outline-tab").click();
-  await waitForElementWithSelector(dbg, ".outline-list");
+  await openOutlinePanel(dbg);
   const originalSourceOutlineItems = getItems(dbg);
 
   clickElement(dbg, "prettyPrintButton");
