@@ -5,7 +5,7 @@
 
 loadTestSubscript("head_abuse_report.js");
 
-add_task(async function test_opens_amo_form_in_a_tab() {
+add_setup(async () => {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.abuseReport.amoFormEnabled", true],
@@ -16,13 +16,23 @@ add_task(async function test_opens_amo_form_in_a_tab() {
     ],
   });
 
-  await openAboutAddons();
+  const { AbuseReporter } = ChromeUtils.importESModule(
+    "resource://gre/modules/AbuseReporter.sys.mjs"
+  );
 
   Assert.equal(
-    gManagerWindow.ABUSE_REPORT_AMO_FORM_ENABLED,
+    AbuseReporter.amoFormEnabled,
     true,
-    "Expect AMO abuse report form to be enabled by default"
+    "Expect AMO abuse report form to be enabled"
   );
+
+  // Setting up MockProvider to mock various addon types
+  // as installed.
+  await AbuseReportTestUtils.setup();
+});
+
+add_task(async function test_opens_amo_form_in_a_tab() {
+  await openAboutAddons();
 
   const ADDON_ID = "test-ext@mochitest";
   const expectedUrl = Services.urlFormatter
@@ -47,4 +57,22 @@ add_task(async function test_opens_amo_form_in_a_tab() {
   BrowserTestUtils.removeTab(tab);
   await closeAboutAddons();
   await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_report_button_shown_on_dictionary_addons() {
+  await openAboutAddons("dictionary");
+  await AbuseReportTestUtils.assertReportActionShown(
+    gManagerWindow,
+    EXT_DICTIONARY_ADDON_ID
+  );
+  await closeAboutAddons();
+});
+
+add_task(async function test_report_action_hidden_on_langpack_addons() {
+  await openAboutAddons("locale");
+  await AbuseReportTestUtils.assertReportActionHidden(
+    gManagerWindow,
+    EXT_LANGPACK_ADDON_ID
+  );
+  await closeAboutAddons();
 });

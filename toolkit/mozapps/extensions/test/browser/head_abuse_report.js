@@ -390,9 +390,9 @@ const AbuseReportTestUtils = {
     }
   },
 
-  // Assert that the report action is hidden on the addon card
+  // Assert that the report action visibility on the addon card
   // for the given about:addons windows and extension id.
-  async assertReportActionHidden(gManagerWindow, extId) {
+  async assertReportActionVisibility(gManagerWindow, extId, expectShown) {
     let addonCard = gManagerWindow.document.querySelector(
       `addon-list addon-card[addon-id="${extId}"]`
     );
@@ -400,7 +400,23 @@ const AbuseReportTestUtils = {
 
     let reportButton = addonCard.querySelector("[action=report]");
     ok(reportButton, `Got the report action for ${extId}`);
-    ok(reportButton.hidden, `${extId} report action should be hidden`);
+    Assert.equal(
+      reportButton.hidden,
+      !expectShown,
+      `${extId} report action should be ${expectShown ? "shown" : "hidden"}`
+    );
+  },
+
+  // Assert that the report action is hidden on the addon card
+  // for the given about:addons windows and extension id.
+  assertReportActionHidden(gManagerWindow, extId) {
+    return this.assertReportActionVisibility(gManagerWindow, extId, false);
+  },
+
+  // Assert that the report action is shown on the addon card
+  // for the given about:addons windows and extension id.
+  assertReportActionShown(gManagerWindow, extId) {
+    return this.assertReportActionVisibility(gManagerWindow, extId, true);
   },
 
   // Assert that the report panel is hidden (or closed if the report
