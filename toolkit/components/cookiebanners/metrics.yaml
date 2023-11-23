@@ -195,6 +195,21 @@ cookie.banners:
         description: There is a matching click rule for the reloading domain.
         type: boolean
     telemetry_mirror: Cookie_banner_Reload_Browser
+  cookie_injection_fail:
+    type: counter
+    description: >
+      Counts how often the cookie banner is still shown even if we have injected
+      cookies.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128#c10
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - pbz@mozilla.com
+      - tihuang@mozilla.com
+    expires: 128
 cookie.banners.click:
   handle_duration:
     type: timing_distribution
@@ -321,3 +336,79 @@ cookie.banners.click:
       - pbz@mozilla.com
       - tihuang@mozilla.com
     expires: 124
+cookie.banners.cmp:
+  ratio_handled_by_cmp_rule:
+    type: rate
+    description: >
+      The proportion of cookie banners handled by CMP rules within the total
+      number of cases handled, including those handled by site-specific rules.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128#c10
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - pbz@mozilla.com
+      - tihuang@mozilla.com
+    expires: 128
+  detected_cmp:
+    type: labeled_counter
+    description: >
+      Counts how often a specific cmp has been detected by our cookie banner
+      handling.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128#c10
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - pbz@mozilla.com
+      - tihuang@mozilla.com
+    expires: 128
+  result:
+    type: labeled_counter
+    description: >
+      Given a matching CMP rule, how often do we handle or fail to handle cookie
+      banners, labelled by reason. The 'success' and 'fail' counters count the
+      total numbers independently of the reason counters. Counters are
+      incremented after the content window has been destroyed.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128#c10
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - pbz@mozilla.com
+      - tihuang@mozilla.com
+    expires: 128
+    labels:
+      - success
+      - success_dom_content_loaded
+      - success_mutation_pre_load
+      - success_mutation_post_load
+      - fail
+      - fail_banner_not_found
+      - fail_banner_not_visible
+      - fail_button_not_found
+      - fail_no_rule_for_mode
+      - fail_actor_destroyed
+  handle_duration:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Counts how long it takes to handle cookie banners successfully using CMP
+      rules from DOMContentLoaded until click. This metric is a variant of the
+      cookieBanners.click.handle_duration.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1813128#c10
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - pbz@mozilla.com
+      - tihuang@mozilla.com
+    expires: 128

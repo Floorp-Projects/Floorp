@@ -113,6 +113,13 @@ nsCookieBannerRule::GetCookiesOptIn(nsTArray<RefPtr<nsICookieRule>>& aCookies) {
 }
 
 NS_IMETHODIMP
+nsCookieBannerRule::GetIsGlobalRule(bool* aIsGlobalRule) {
+  *aIsGlobalRule = mDomains.IsEmpty();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsCookieBannerRule::GetClickRule(nsIClickRule** aClickRule) {
   NS_IF_ADDREF(*aClickRule = mClickRule);
   return NS_OK;

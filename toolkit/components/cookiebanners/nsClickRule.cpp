@@ -61,4 +61,14 @@ nsClickRule::GetOptIn(nsACString& aOptIn) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsClickRule::GetIsGlobalRule(bool* aIsGlobalRule) {
+  NS_ENSURE_ARG_POINTER(aIsGlobalRule);
+  MOZ_ASSERT(mCookieBannerRule);
+
+  *aIsGlobalRule = mCookieBannerRule->GetIsGlobalRule();
+
+  return NS_OK;
+}
+
 }  // namespace mozilla
