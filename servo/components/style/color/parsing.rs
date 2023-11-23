@@ -124,9 +124,10 @@ fn parse_alpha_component<'i, 't, P>(
 where
     P: ColorParser<'i>,
 {
+    // Percent reference range for alpha: 0% = 0.0, 100% = 1.0
     let alpha = color_parser
         .parse_number_or_percentage(arguments)?
-        .unit_value();
+        .to_number(1.0);
     Ok(normalize(alpha).clamp(0.0, OPAQUE))
 }
 
@@ -253,10 +254,10 @@ where
         lightness = Some(color_parser.parse_percentage(arguments)? * LIGHTNESS_RANGE);
         Some(parse_legacy_alpha(color_parser, arguments)?)
     } else {
-        saturation = parse_none_or(arguments, |p| color_parser.parse_percentage(p))?
-            .map(|v| v * SATURATION_RANGE);
-        lightness = parse_none_or(arguments, |p| color_parser.parse_percentage(p))?
-            .map(|v| v * LIGHTNESS_RANGE);
+        saturation = parse_none_or(arguments, |p| color_parser.parse_number_or_percentage(p))?
+            .map(|v| v.to_number(SATURATION_RANGE));
+        lightness = parse_none_or(arguments, |p| color_parser.parse_number_or_percentage(p))?
+            .map(|v| v.to_number(LIGHTNESS_RANGE));
         parse_modern_alpha(color_parser, arguments)?
     };
 
@@ -286,13 +287,13 @@ where
         color_parser,
         arguments,
         P::parse_angle_or_number,
-        P::parse_percentage,
-        P::parse_percentage,
+        P::parse_number_or_percentage,
+        P::parse_number_or_percentage,
     )?;
 
     let hue = hue.map(|h| normalize_hue(h.degrees()));
-    let whiteness = whiteness.map(|w| w.clamp(0.0, WHITENESS_RANGE) * WHITENESS_RANGE);
-    let blackness = blackness.map(|b| b.clamp(0.0, BLACKNESS_RANGE) * BLACKNESS_RANGE);
+    let whiteness = whiteness.map(|w| w.to_number(WHITENESS_RANGE).clamp(0.0, WHITENESS_RANGE));
+    let blackness = blackness.map(|b| b.to_number(BLACKNESS_RANGE).clamp(0.0, BLACKNESS_RANGE));
 
     Ok(P::Output::from_hwb(hue, whiteness, blackness, alpha))
 }
@@ -319,9 +320,9 @@ where
         P::parse_number_or_percentage,
     )?;
 
-    let lightness = lightness.map(|l| l.value(lightness_range));
-    let a = a.map(|a| a.value(a_b_range));
-    let b = b.map(|b| b.value(a_b_range));
+    let lightness = lightness.map(|l| l.to_number(lightness_range));
+    let a = a.map(|a| a.to_number(a_b_range));
+    let b = b.map(|b| b.to_number(a_b_range));
 
     Ok(into_color(lightness, a, b, alpha))
 }
@@ -345,8 +346,8 @@ where
         P::parse_angle_or_number,
     )?;
 
-    let lightness = lightness.map(|l| l.value(lightness_range));
-    let chroma = chroma.map(|c| c.value(chroma_range));
+    let lightness = lightness.map(|l| l.to_number(lightness_range));
+    let chroma = chroma.map(|c| c.to_number(chroma_range));
     let hue = hue.map(|h| normalize_hue(h.degrees()));
 
     Ok(into_color(lightness, chroma, hue, alpha))
@@ -377,9 +378,9 @@ where
         P::parse_number_or_percentage,
     )?;
 
-    let c1 = c1.map(|c| c.unit_value());
-    let c2 = c2.map(|c| c.unit_value());
-    let c3 = c3.map(|c| c.unit_value());
+    let c1 = c1.map(|c| c.to_number(1.0));
+    let c2 = c2.map(|c| c.to_number(1.0));
+    let c3 = c3.map(|c| c.to_number(1.0));
 
     Ok(P::Output::from_color_function(
         color_space,
@@ -977,17 +978,9 @@ pub enum NumberOrPercentage {
 }
 
 impl NumberOrPercentage {
-    /// Return the value as a percentage.
-    pub fn unit_value(&self) -> f32 {
-        match *self {
-            NumberOrPercentage::Number { value } => value,
-            NumberOrPercentage::Percentage { unit_value } => unit_value,
-        }
-    }
-
-    /// Return the value as a number with a percentage adjusted to the
-    /// `percentage_basis`.
-    pub fn value(&self, percentage_basis: f32) -> f32 {
+    /// Return the value as a number. Percentages will be adjusted to the range
+    /// [0..percent_basis].
+    pub fn to_number(&self, percentage_basis: f32) -> f32 {
         match *self {
             Self::Number { value } => value,
             Self::Percentage { unit_value } => unit_value * percentage_basis,
