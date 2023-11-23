@@ -25,6 +25,7 @@ const UI_OPEN_STATE = "browser.tabs.firefox-view.ui-state.tab-pickup.open";
 class SyncedTabsInView extends ViewPage {
   constructor() {
     super();
+    this._started = false;
     this.boundObserve = (...args) => this.observe(...args);
     this._currentSetupStateIndex = -1;
     this.errorState = null;
@@ -56,7 +57,13 @@ class SyncedTabsInView extends ViewPage {
   connectedCallback() {
     super.connectedCallback();
     this.addEventListener("click", this);
-    this.ownerDocument.addEventListener("visibilitychange", this);
+  }
+
+  start() {
+    if (this._started) {
+      return;
+    }
+    this._started = true;
     Services.obs.addObserver(this.boundObserve, TOPIC_SETUPSTATE_CHANGED);
     Services.obs.addObserver(this.boundObserve, SYNCED_TABS_CHANGED);
 
@@ -64,15 +71,21 @@ class SyncedTabsInView extends ViewPage {
     this.onVisibilityChange();
   }
 
-  cleanup() {
+  stop() {
+    if (!this._started) {
+      return;
+    }
+    this._started = false;
     TabsSetupFlowManager.updateViewVisibility(this._id, "unloaded");
-    this.ownerDocument?.removeEventListener("visibilitychange", this);
+    this.onVisibilityChange();
+
     Services.obs.removeObserver(this.boundObserve, TOPIC_SETUPSTATE_CHANGED);
     Services.obs.removeObserver(this.boundObserve, SYNCED_TABS_CHANGED);
   }
 
   disconnectedCallback() {
-    this.cleanup();
+    super.disconnectedCallback();
+    this.stop();
   }
 
   handleEvent(event) {
@@ -114,15 +127,19 @@ class SyncedTabsInView extends ViewPage {
     if (event.type == "change") {
       TabsSetupFlowManager.syncOpenTabs(event.target);
     }
-
-    // Returning to fxview seems like a likely time for a device check
-    if (event.type == "visibilitychange") {
-      this.onVisibilityChange();
-    }
   }
+
+  viewVisibleCallback() {
+    this.start();
+  }
+
+  viewHiddenCallback() {
+    this.stop();
+  }
+
   onVisibilityChange() {
-    const isVisible = document.visibilityState == "visible";
     const isOpen = this.open;
+    const isVisible = this.isVisible;
     if (isVisible && isOpen) {
       this.update();
       TabsSetupFlowManager.updateViewVisibility(this._id, "visible");

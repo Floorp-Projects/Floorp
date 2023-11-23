@@ -15,62 +15,56 @@ import "chrome://browser/content/firefoxview/fxview-tab-list.mjs";
 
 import { placeLinkOnClipboard } from "./helpers.mjs";
 
-export class ViewPage extends MozLitElement {
+/**
+ * A base class for content container views displayed on firefox-view.
+ *
+ * @property {boolean} recentBrowsing
+ *   Is part of the recentbrowsing page view
+ * @property {boolean} paused
+ *   No content will be updated and rendered while paused
+ */
+export class ViewPageContent extends MozLitElement {
   static get properties() {
     return {
-      selectedTab: { type: Boolean },
       recentBrowsing: { type: Boolean },
+      paused: { type: Boolean },
     };
   }
-
   constructor() {
     super();
-    this.selectedTab = false;
-    this.recentBrowsing = Boolean(this.closest("VIEW-RECENTBROWSING"));
+    // don't update or render until explicitly un-paused
+    this.paused = true;
   }
 
-  connectedCallback() {
-    super.connectedCallback();
-    this.ownerDocument.addEventListener("visibilitychange", this);
+  get ownerViewPage() {
+    return this.closest("[type='page']") || this;
   }
 
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    this.ownerDocument.removeEventListener("visibilitychange", this);
-  }
-
-  handleEvent(event) {
-    switch (event.type) {
-      case "visibilitychange":
-        if (this.ownerDocument.visibilityState === "visible") {
-          this.viewTabVisibleCallback();
-        } else {
-          this.viewTabHiddenCallback();
-        }
-        break;
+  get isVisible() {
+    if (!this.isConnected || this.ownerDocument.visibilityState != "visible") {
+      return false;
     }
+    return this.ownerViewPage.selectedTab;
   }
 
   /**
-   * Override this function to run a callback whenever Firefox View is visible.
+   * Override this function to run a callback whenever this content is visible.
    */
-  viewTabVisibleCallback() {}
+  viewVisibleCallback() {}
 
   /**
-   * Override this function to run a callback whenever Firefox View is hidden.
+   * Override this function to run a callback whenever this content is hidden.
    */
-  viewTabHiddenCallback() {}
-
-  enter() {
-    this.selectedTab = true;
-  }
-
-  exit() {
-    this.selectedTab = false;
-  }
+  viewHiddenCallback() {}
 
   getWindow() {
     return window.browsingContext.embedderWindowGlobal.browsingContext.window;
+  }
+
+  getBrowserTab() {
+    return this.getWindow().gBrowser.getTabForBrowser(
+      window.browsingContext.embedderElement
+    );
   }
 
   copyLink(e) {
@@ -103,5 +97,74 @@ export class ViewPage extends MozLitElement {
         data_type: event.target.panel.dataset.tabType,
       }
     );
+  }
+
+  shouldUpdate(changedProperties) {
+    return !this.paused && super.shouldUpdate(changedProperties);
+  }
+}
+
+/**
+ * A "page" in firefox view, which may be hidden or shown by the named-deck container or
+ * via the owner document's visibility
+ *
+ * @property {boolean} selectedTab
+ *   Is this page the selected view in the named-deck container
+ */
+export class ViewPage extends ViewPageContent {
+  static get properties() {
+    return {
+      selectedTab: { type: Boolean },
+    };
+  }
+
+  constructor() {
+    super();
+    this.selectedTab = false;
+    this.recentBrowsing = Boolean(this.closest("VIEW-RECENTBROWSING"));
+    this.onVisibilityChange = this.onVisibilityChange.bind(this);
+  }
+
+  onVisibilityChange(event) {
+    if (this.isVisible) {
+      this.paused = false;
+      this.viewVisibleCallback();
+    } else if (
+      this.ownerViewPage.selectedTab &&
+      this.ownerDocument.visibilityState == "hidden"
+    ) {
+      this.paused = true;
+      this.viewHiddenCallback();
+    }
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.ownerDocument.addEventListener(
+      "visibilitychange",
+      this.onVisibilityChange
+    );
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.ownerDocument.removeEventListener(
+      "visibilitychange",
+      this.onVisibilityChange
+    );
+  }
+
+  enter() {
+    this.selectedTab = true;
+    if (this.isVisible) {
+      this.paused = false;
+      this.viewVisibleCallback();
+    }
+  }
+
+  exit() {
+    this.selectedTab = false;
+    this.paused = true;
+    this.viewHiddenCallback();
   }
 }
