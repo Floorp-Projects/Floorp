@@ -182,7 +182,6 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_rules_content_02.js"]
 
 ["browser_rules_copy_styles.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_cssom.js"]
 
@@ -215,7 +214,6 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_rules_edit-property-nested-rules.js"]
 
 ["browser_rules_edit-property-order.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_edit-property-remove_01.js"]
 skip-if = ["verify && debug && os == 'win'"]
@@ -237,10 +235,8 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_rules_edit-property_04.js"]
 
 ["browser_rules_edit-property_05.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_edit-property_06.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_edit-property_07.js"]
 
@@ -304,7 +300,6 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_rules_edit-variable.js"]
 
 ["browser_rules_editable-field-focus_01.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_editable-field-focus_02.js"]
 

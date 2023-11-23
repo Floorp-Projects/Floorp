@@ -81,6 +81,50 @@ add_task(async function () {
     colorSwatchEl,
     "Focused was moved to color swatch"
   );
+
+  info("Press Shift Tab");
+  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
+  is(
+    view.styleDocument.activeElement.textContent,
+    "gold",
+    "Focus is moved back to property value"
+  );
+
+  info("Press Shift Tab again");
+  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
+  is(
+    view.styleDocument.activeElement.textContent,
+    "background-color",
+    "Focus is moved back to property name"
+  );
+
+  info("Press Shift Tab once more");
+  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
+  ok(
+    view.styleDocument.activeElement.matches(
+      "input[type=checkbox].ruleview-enableproperty"
+    ),
+    "Focus is moved to the prop toggle checkbox"
+  );
+  const toggleEl = view.styleDocument.activeElement;
+  ok(toggleEl.checked, "Checkbox is checked by default");
+  is(
+    toggleEl.getAttribute("title"),
+    "Enable background-color property",
+    "checkbox has expected label"
+  );
+
+  info("Press Space to uncheck checkbox");
+  let onRuleViewRefreshed = view.once("ruleview-changed");
+  EventUtils.sendKey("Space");
+  await onRuleViewRefreshed;
+  ok(!toggleEl.checked, "Checkbox is now unchecked");
+
+  info("Press Space to check checkbox back");
+  onRuleViewRefreshed = view.once("ruleview-changed");
+  EventUtils.sendKey("Space");
+  await onRuleViewRefreshed;
+  ok(toggleEl.checked, "Checkbox is checked again");
 });
 
 // The `element` have specific behavior, so we want to test that keyboard navigation

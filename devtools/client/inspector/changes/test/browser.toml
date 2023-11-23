@@ -22,7 +22,6 @@ support-files = [
 ["browser_changes_declaration_add_special_character.js"]
 
 ["browser_changes_declaration_disable.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_changes_declaration_duplicate.js"]
 
@@ -36,7 +35,6 @@ skip-if = ["a11y_checks"] # Bugs 1858041 and 1849028 to investigate intermittent
 ["browser_changes_declaration_remove_ahead.js"]
 
 ["browser_changes_declaration_remove_disabled.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_changes_declaration_rename.js"]
 

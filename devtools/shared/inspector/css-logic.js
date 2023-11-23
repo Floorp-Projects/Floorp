@@ -101,6 +101,8 @@ exports.getCSSAtRuleTypeName = function (cssRule) {
  * @returns {String} A localized version of the given key.
  */
 exports.l10n = name => styleInspectorL10N.getStr(name);
+exports.l10nFormatStr = (name, ...args) =>
+  styleInspectorL10N.getFormatStr(name, ...args);
 
 /**
  * Is the given property sheet an author stylesheet?

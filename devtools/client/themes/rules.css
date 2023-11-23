@@ -421,7 +421,6 @@
     display: inline-block;
     border: 0;
     padding: 0;
-    outline: none;
     background: url("chrome://devtools/skin/images/checkbox.svg") center no-repeat content-box;
     /* Using fill to paint the border, and stroke for the tick */
     -moz-context-properties: fill, stroke;
@@ -484,7 +483,7 @@
   stroke: var(--theme-icon-color);
 }
 
-.ruleview-rule:not(:hover) .ruleview-enableproperty:not(:focus) {
+.ruleview-rule:not(:hover, :focus-within) .ruleview-enableproperty {
   /* Use opacity to hide the checkbox instead of visibility:hidden,
      so that it's possible to focus it with the keyboard. */
   opacity: 0;
