@@ -597,6 +597,36 @@ function navigateToCategory(document, category) {
   navButton.buttonEl.click();
 }
 
+async function navigateToCategoryAndWait(document, category) {
+  info(`navigateToCategoryAndWait, for ${category}`);
+  const navigation = document.querySelector("fxview-category-navigation");
+  const win = document.ownerGlobal;
+  SimpleTest.promiseFocus(win);
+  let navButton = Array.from(navigation.categoryButtons).find(
+    categoryButton => {
+      return categoryButton.name === category;
+    }
+  );
+  const namedDeck = document.querySelector("named-deck");
+
+  await BrowserTestUtils.waitForCondition(
+    () => navButton.getBoundingClientRect().height,
+    `Waiting for ${category} button to be clickable`
+  );
+
+  EventUtils.synthesizeMouseAtCenter(navButton, {}, win);
+
+  await BrowserTestUtils.waitForCondition(() => {
+    let selectedView = Array.from(namedDeck.children).find(
+      child => child.slot == "selected"
+    );
+    return (
+      namedDeck.selectedViewName == category &&
+      selectedView?.getBoundingClientRect().height
+    );
+  }, `Waiting for ${category} to be visible`);
+}
+
 /**
  * Switch to the Firefox View tab.
  *
