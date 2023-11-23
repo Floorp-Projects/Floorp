@@ -47,6 +47,7 @@ categories:
         - build/buildsystem
         - taskcluster
         - tools/moztreedocs
+        - mozbuild/vendor
     testing_doc:
         - testing/automated-testing
         - testing/treeherder-try
