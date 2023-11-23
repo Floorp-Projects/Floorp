@@ -2223,11 +2223,10 @@ static void* chunk_recycle(size_t aSize, size_t aAlignment) {
   MOZ_ASSERT(node->mSize >= leadsize + aSize);
   size_t trailsize = node->mSize - leadsize - aSize;
   void* ret = (void*)((uintptr_t)node->mAddr + leadsize);
-  ChunkType chunk_type = node->mChunkType;
 
   // All recycled chunks are zeroed (because they're purged) before being
   // recycled.
-  MOZ_ASSERT(chunk_type == ZEROED_CHUNK);
+  MOZ_ASSERT(node->mChunkType == ZEROED_CHUNK);
 
   // Remove node from the tree.
   gChunksBySize.Remove(node);
@@ -2250,14 +2249,14 @@ static void* chunk_recycle(size_t aSize, size_t aAlignment) {
       chunks_mtx.Unlock();
       node = ExtentAlloc::alloc();
       if (!node) {
-        chunk_dealloc(ret, aSize, chunk_type);
+        chunk_dealloc(ret, aSize, ZEROED_CHUNK);
         return nullptr;
       }
       chunks_mtx.Lock();
     }
     node->mAddr = (void*)((uintptr_t)(ret) + aSize);
     node->mSize = trailsize;
-    node->mChunkType = chunk_type;
+    node->mChunkType = ZEROED_CHUNK;
     gChunksBySize.Insert(node);
     gChunksByAddress.Insert(node);
     node = nullptr;
