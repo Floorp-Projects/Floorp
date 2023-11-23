@@ -131,7 +131,7 @@ function createTestDocument() {
   // when using document's JS Objects.
   const webNavigation = browser.docShell.QueryInterface(Ci.nsIWebNavigation);
   const system = Services.scriptSecurityManager.getSystemPrincipal();
-  webNavigation.createAboutBlankContentViewer(system, system);
+  webNavigation.createAboutBlankDocumentViewer(system, system);
 
   return webNavigation.document;
 }

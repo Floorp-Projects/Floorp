@@ -2381,7 +2381,7 @@
       },
       {
         "flags": [],
-        "name": "createAboutBlankContentViewer",
+        "name": "createAboutBlankDocumentViewer",
         "params": [
           {
             "flags": [

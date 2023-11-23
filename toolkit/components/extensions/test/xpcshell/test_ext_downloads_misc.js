@@ -1066,7 +1066,7 @@ add_task(async function test_getFileIcon() {
   let docShell = webNav.docShell;
 
   let system = Services.scriptSecurityManager.getSystemPrincipal();
-  docShell.createAboutBlankContentViewer(system, system);
+  docShell.createAboutBlankDocumentViewer(system, system);
 
   let img = webNav.document.createElement("img");
 

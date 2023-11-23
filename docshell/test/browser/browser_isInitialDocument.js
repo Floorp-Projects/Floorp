@@ -278,7 +278,7 @@ add_task(async function windowless_browser() {
   );
 
   const principal = Services.scriptSecurityManager.getSystemPrincipal();
-  browser.docShell.createAboutBlankContentViewer(principal, principal);
+  browser.docShell.createAboutBlankDocumentViewer(principal, principal);
   is(
     browsingContext.currentWindowGlobal.isInitialDocument,
     false,

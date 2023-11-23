@@ -74,7 +74,7 @@ interface nsIRemoteTab : nsISupports
   void transmitPermissionsForPrincipal(in nsIPrincipal aPrincipal);
 
   /**
-   * Similar to `nsIDocShell.createAboutBlankContentViewer` but on a remote
+   * Similar to `nsIDocShell.createAboutBlankDocumentViewer` but on a remote
    * frame.  The docShell must not yet have navigated away from the initial
    * about:blank document when this method is called.
    *
@@ -82,7 +82,7 @@ interface nsIRemoteTab : nsISupports
    * @param aPartitionedPrincipal the partitioned principal to use for the new
    *        document.
    */
-  void createAboutBlankContentViewer(in nsIPrincipal aPrincipal,
+  void createAboutBlankDocumentViewer(in nsIPrincipal aPrincipal,
                                      in nsIPrincipal aPartitionedPrincipal);
 
   cenum NavigationType : 8 {

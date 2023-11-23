@@ -2485,7 +2485,7 @@ void nsDocShell::MaybeCreateInitialClientSource(nsIPrincipal* aPrincipal) {
   }
 
   // Don't recreate the initial client source.  We call this multiple times
-  // when DoChannelLoad() is called before CreateAboutBlankContentViewer.
+  // when DoChannelLoad() is called before CreateAboutBlankDocumentViewer.
   if (mInitialClientSource) {
     return;
   }
@@ -2507,7 +2507,7 @@ void nsDocShell::MaybeCreateInitialClientSource(nsIPrincipal* aPrincipal) {
                            ShouldUsePartitionPrincipalForServiceWorker(this));
 
   // Sometimes there is no principal available when we are called from
-  // CreateAboutBlankContentViewer.  For example, sometimes the principal
+  // CreateAboutBlankDocumentViewer.  For example, sometimes the principal
   // is only extracted from the load context after the document is created
   // in Document::ResetToURI().  Ideally we would do something similar
   // here, but for now lets just avoid the issue by not preallocating the
@@ -6485,7 +6485,7 @@ nsresult nsDocShell::EnsureDocumentViewer() {
     }
   }
 
-  nsresult rv = CreateAboutBlankContentViewer(
+  nsresult rv = CreateAboutBlankDocumentViewer(
       principal, partitionedPrincipal, cspToInheritForAboutBlank, baseURI,
       /* aIsInitialDocument */ true);
 
@@ -6494,7 +6494,7 @@ nsresult nsDocShell::EnsureDocumentViewer() {
   if (NS_SUCCEEDED(rv)) {
     RefPtr<Document> doc(GetDocument());
     MOZ_ASSERT(doc,
-               "Should have doc if CreateAboutBlankContentViewer "
+               "Should have doc if CreateAboutBlankDocumentViewer "
                "succeeded!");
     MOZ_ASSERT(doc->IsInitialDocument(), "Document should be initial document");
 
@@ -6511,7 +6511,7 @@ nsresult nsDocShell::EnsureDocumentViewer() {
   return rv;
 }
 
-nsresult nsDocShell::CreateAboutBlankContentViewer(
+nsresult nsDocShell::CreateAboutBlankDocumentViewer(
     nsIPrincipal* aPrincipal, nsIPrincipal* aPartitionedPrincipal,
     nsIContentSecurityPolicy* aCSP, nsIURI* aBaseURI, bool aIsInitialDocument,
     const Maybe<nsILoadInfo::CrossOriginEmbedderPolicy>& aCOEP,
@@ -6708,11 +6708,12 @@ nsresult nsDocShell::CreateAboutBlankContentViewer(
 }
 
 NS_IMETHODIMP
-nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
-                                          nsIPrincipal* aPartitionedPrincipal,
-                                          nsIContentSecurityPolicy* aCSP) {
-  return CreateAboutBlankContentViewer(aPrincipal, aPartitionedPrincipal, aCSP,
-                                       nullptr, /* aIsInitialDocument */ false);
+nsDocShell::CreateAboutBlankDocumentViewer(nsIPrincipal* aPrincipal,
+                                           nsIPrincipal* aPartitionedPrincipal,
+                                           nsIContentSecurityPolicy* aCSP) {
+  return CreateAboutBlankDocumentViewer(aPrincipal, aPartitionedPrincipal, aCSP,
+                                        nullptr,
+                                        /* aIsInitialDocument */ false);
 }
 
 nsresult nsDocShell::CreateDocumentViewerForActor(
@@ -6721,7 +6722,7 @@ nsresult nsDocShell::CreateDocumentViewerForActor(
 
   // FIXME: WindowGlobalChild should provide the PartitionedPrincipal.
   // FIXME: We may want to support non-initial documents here.
-  nsresult rv = CreateAboutBlankContentViewer(
+  nsresult rv = CreateAboutBlankDocumentViewer(
       aWindowActor->DocumentPrincipal(), aWindowActor->DocumentPrincipal(),
       /* aCsp */ nullptr,
       /* aBaseURI */ nullptr,
@@ -6734,7 +6735,7 @@ nsresult nsDocShell::CreateDocumentViewerForActor(
     RefPtr<Document> doc(GetDocument());
     MOZ_ASSERT(
         doc,
-        "Should have a document if CreateAboutBlankContentViewer succeeded");
+        "Should have a document if CreateAboutBlankDocumentViewer succeeded");
     MOZ_ASSERT(doc->GetOwnerGlobal() == aWindowActor->GetWindowGlobal(),
                "New document should be in the same global as our actor");
     MOZ_ASSERT(doc->IsInitialDocument(),
@@ -9382,8 +9383,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     }
 
     // clear the decks to prevent context bleed-through (bug 298255)
-    rv = CreateAboutBlankContentViewer(nullptr, nullptr, nullptr, nullptr,
-                                       /* aIsInitialDocument */ false);
+    rv = CreateAboutBlankDocumentViewer(nullptr, nullptr, nullptr, nullptr,
+                                        /* aIsInitialDocument */ false);
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }
@@ -12022,7 +12023,7 @@ nsresult nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType,
   rv = aEntry->CreateLoadInfo(getter_AddRefs(loadState));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Calling CreateAboutBlankContentViewer can set mOSHE to null, and if
+  // Calling CreateAboutBlankDocumentViewer can set mOSHE to null, and if
   // that's the only thing holding a ref to aEntry that will cause aEntry to
   // die while we're loading it.  So hold a strong ref to aEntry here, just
   // in case.
@@ -12064,7 +12065,7 @@ nsresult nsDocShell::LoadHistoryEntry(nsDocShellLoadState* aLoadState,
     // Don't cache the presentation if we're going to just reload the
     // current entry. Caching would lead to trying to save the different
     // content viewers in the same nsISHEntry object.
-    rv = CreateAboutBlankContentViewer(
+    rv = CreateAboutBlankDocumentViewer(
         aLoadState->PrincipalToInherit(),
         aLoadState->PartitionedPrincipalToInherit(), nullptr, nullptr,
         /* aIsInitialDocument */ false, Nothing(), !aLoadingCurrentEntry);

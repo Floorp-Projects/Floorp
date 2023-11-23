@@ -246,7 +246,7 @@ function createContentWindow() {
 
   const webnav = Services.appShell.createWindowlessBrowser(false);
 
-  webnav.docShell.createAboutBlankContentViewer(principal, principal);
+  webnav.docShell.createAboutBlankDocumentViewer(principal, principal);
 
   return webnav.document.defaultView;
 }

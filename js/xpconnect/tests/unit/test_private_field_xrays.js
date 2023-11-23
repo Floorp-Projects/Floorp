@@ -5,7 +5,7 @@ add_task(async function () {
 
   let docShell = webnav.docShell;
 
-  docShell.createAboutBlankContentViewer(null, null);
+  docShell.createAboutBlankDocumentViewer(null, null);
 
   let window = webnav.document.defaultView;
 

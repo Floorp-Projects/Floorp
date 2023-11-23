@@ -144,7 +144,7 @@ class ContentPage {
       Ci.nsIWebNavigation
     );
 
-    chromeShell.createAboutBlankContentViewer(system, system);
+    chromeShell.createAboutBlankDocumentViewer(system, system);
     this.windowlessBrowser.browsingContext.useGlobalHistory = false;
     let loadURIOptions = {
       triggeringPrincipal: system,

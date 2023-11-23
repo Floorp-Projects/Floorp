@@ -251,7 +251,7 @@ function openInCurrentTab(targetBrowser, url, uriObj, params) {
   ) {
     // Unless we know for sure we're not inheriting principals,
     // force the about:blank viewer to have the right principal:
-    targetBrowser.createAboutBlankContentViewer(
+    targetBrowser.createAboutBlankDocumentViewer(
       params.originPrincipal,
       params.originStoragePrincipal
     );
