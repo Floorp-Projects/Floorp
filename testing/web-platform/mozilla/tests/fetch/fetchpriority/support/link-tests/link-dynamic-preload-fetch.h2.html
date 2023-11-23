@@ -8,16 +8,10 @@
 <script>
   onload = function() {
     const kData = [
-      // as="font"
-      { as: "font", href: "dummy.font?1", fetchPriority: "low" },
-      { as: "font", href: "dummy.font?2", fetchPriority: "high" },
-      { as: "font", href: "dummy.font?3", fetchPriority: "auto" },
-      { as: "font", href: "dummy.font?4" },
-      // as="image"
-      { as: "image", href: "dummy.image?1", fetchPriority: "low" },
-      { as: "image", href: "dummy.image?2", fetchPriority: "high" },
-      { as: "image", href: "dummy.image?3", fetchPriority: "auto" },
-      { as: "image", href: "dummy.image?4" },
+      { as: "fetch", href: "dummy.txt?1", fetchPriority: "low" },
+      { as: "fetch", href: "dummy.txt?2", fetchPriority: "high" },
+      { as: "fetch", href: "dummy.txt?3", fetchPriority: "auto" },
+      { as: "fetch", href: "dummy.txt?4" },
     ];
 
     let allLinkElements = [];
