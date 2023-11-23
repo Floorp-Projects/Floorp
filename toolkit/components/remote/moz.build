@@ -25,6 +25,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
             "nsUnixRemoteServer.h",
             "RemoteUtils.h",
         ]
+        CXXFLAGS += CONFIG["MOZ_DBUS_CFLAGS"]
     else:
         SOURCES += [
             "nsGTKRemoteServer.cpp",
