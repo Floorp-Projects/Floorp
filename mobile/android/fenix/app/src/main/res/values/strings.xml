@@ -610,6 +610,8 @@
 
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Add-ons</string>
+    <!-- Preference for installing a local add-on -->
+    <string name="preferences_install_local_addon">Install add-on from file</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Notifications</string>
     <!-- Summary for notification preference indicating notifications are allowed -->

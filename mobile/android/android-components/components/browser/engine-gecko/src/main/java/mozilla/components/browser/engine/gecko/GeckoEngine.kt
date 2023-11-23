@@ -233,40 +233,53 @@ class GeckoEngine(
         onSuccess: ((WebExtension) -> Unit),
         onError: ((String, Throwable) -> Unit),
     ): CancellableOperation {
-        val onInstallSuccess: ((org.mozilla.geckoview.WebExtension) -> Unit) = {
-            val installedExtension = GeckoWebExtension(it, runtime)
-            webExtensionDelegate?.onInstalled(installedExtension)
-            installedExtension.registerActionHandler(webExtensionActionHandler)
-            installedExtension.registerTabHandler(webExtensionTabHandler, defaultSettings)
-            onSuccess(installedExtension)
-        }
-
-        val geckoResult = if (url.isResourceUrl()) {
-            runtime.webExtensionController.ensureBuiltIn(url, id).apply {
+        return if (url.isResourceUrl()) {
+            val geckoResult = runtime.webExtensionController.ensureBuiltIn(url, id).apply {
                 then(
                     {
-                        onInstallSuccess(it!!)
+                        onExtensionInstalled(it!!, onSuccess)
                         GeckoResult<Void>()
                     },
                     { throwable ->
-                        onError(id, GeckoWebExtensionException.createWebExtensionException(throwable))
+                        onError(
+                            id,
+                            GeckoWebExtensionException.createWebExtensionException(throwable),
+                        )
                         GeckoResult<Void>()
                     },
                 )
             }
+            geckoResult.asCancellableOperation()
         } else {
-            runtime.webExtensionController.install(url).apply {
-                then(
-                    {
-                        onInstallSuccess(it!!)
-                        GeckoResult<Void>()
-                    },
-                    { throwable ->
-                        onError(id, GeckoWebExtensionException.createWebExtensionException(throwable))
-                        GeckoResult<Void>()
-                    },
-                )
-            }
+            this.installWebExtension(
+                url,
+                onSuccess,
+                onError = { throwable ->
+                    onError(id, throwable)
+                },
+            )
+        }
+    }
+
+    /**
+     * See [Engine.installWebExtension].
+     */
+    override fun installWebExtension(
+        url: String,
+        onSuccess: ((WebExtension) -> Unit),
+        onError: ((Throwable) -> Unit),
+    ): CancellableOperation {
+        val geckoResult = runtime.webExtensionController.install(url).apply {
+            then(
+                {
+                    onExtensionInstalled(it!!, onSuccess)
+                    GeckoResult<Void>()
+                },
+                { throwable ->
+                    onError(GeckoWebExtensionException.createWebExtensionException(throwable))
+                    GeckoResult<Void>()
+                },
+            )
         }
         return geckoResult.asCancellableOperation()
     }
@@ -1232,6 +1245,17 @@ class GeckoEngine(
         } else {
             null
         }
+    }
+
+    private fun onExtensionInstalled(
+        ext: org.mozilla.geckoview.WebExtension,
+        onSuccess: ((WebExtension) -> Unit),
+    ) {
+        val installedExtension = GeckoWebExtension(ext, runtime)
+        webExtensionDelegate?.onInstalled(installedExtension)
+        installedExtension.registerActionHandler(webExtensionActionHandler)
+        installedExtension.registerTabHandler(webExtensionTabHandler, defaultSettings)
+        onSuccess(installedExtension)
     }
 }
 

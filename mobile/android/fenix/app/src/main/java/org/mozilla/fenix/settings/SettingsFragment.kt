@@ -36,6 +36,7 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
+import mozilla.components.feature.addons.ui.AddonFilePicker
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.ktx.android.view.showKeyboard
 import mozilla.components.ui.widgets.withCenterAlignedButtons
@@ -70,6 +71,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     private val args by navArgs<SettingsFragmentArgs>()
     private lateinit var accountUiView: AccountUiView
+    private lateinit var addonFilePicker: AddonFilePicker
     private val profilerViewModel: ProfilerViewModel by activityViewModels()
 
     @VisibleForTesting
@@ -106,6 +108,18 @@ class SettingsFragment : PreferenceFragmentCompat() {
             httpClient = requireComponents.core.client,
             updateFxAAllowDomesticChinaServerMenu = ::updateFxAAllowDomesticChinaServerMenu,
         )
+
+        addonFilePicker = AddonFilePicker(
+            requireContext(),
+            requireComponents.addonManager,
+        ) {
+            Toast.makeText(
+                context,
+                getString(R.string.mozac_feature_addons_failed_to_install_generic),
+                Toast.LENGTH_LONG,
+            ).show()
+        }
+        addonFilePicker.registerForResults(this)
 
         // It's important to update the account UI state in onCreate since that ensures we'll never
         // display an incorrect state in the UI. We take care to not also call it as part of onResume
@@ -386,6 +400,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
             resources.getString(R.string.pref_key_nimbus_experiments) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToNimbusExperimentsFragment()
             }
+            resources.getString(R.string.pref_key_install_local_addon) -> {
+                addonFilePicker.launch()
+                null
+            }
             resources.getString(R.string.pref_key_override_amo_collection) -> {
                 val context = requireContext()
                 val dialogView = LayoutInflater.from(context).inflate(R.layout.amo_collection_override_dialog, null)
@@ -488,6 +506,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 (requireContext().components.core.engine.profiler?.isProfilerActive() != null)
         }
         setupCookieBannerPreference()
+        setupInstallAddonFromFilePreference(requireContext().settings())
         setupAmoCollectionOverridePreference(requireContext().settings())
         setupGeckoLogsPreference(requireContext().settings())
         setupAllowDomesticChinaFxaServerPreference()
@@ -695,6 +714,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     return super.onPreferenceChange(preference, newValue)
                 }
             }
+        }
+    }
+
+    @VisibleForTesting
+    internal fun setupInstallAddonFromFilePreference(settings: Settings) {
+        with(requirePreference<Preference>(R.string.pref_key_install_local_addon)) {
+            isVisible = settings.showSecretDebugMenuThisSession
         }
     }
 

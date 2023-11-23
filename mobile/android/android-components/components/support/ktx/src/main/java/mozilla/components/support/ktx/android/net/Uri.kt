@@ -11,9 +11,12 @@ import android.os.Build
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
 import androidx.annotation.VisibleForTesting
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlin.sanitizeFileName
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStream
 import java.util.UUID
 
 internal val commonPrefixes = listOf("www.", "mobile.", "m.")
@@ -128,6 +131,36 @@ fun Uri.getFileName(contentResolver: ContentResolver): String {
  */
 fun Uri.getFileExtension(contentResolver: ContentResolver): String {
     return MimeTypeMap.getSingleton().getExtensionFromMimeType(contentResolver.getType(this)) ?: ""
+}
+
+/**
+ * Copy the content of [this] [Uri] into a temporary file in the given [dirToCopy]
+ * @return A "file://" [Uri] which contains the content of [this] [Uri].
+ */
+fun Uri.toFileUri(context: Context, dirToCopy: String = "/temps"): Uri {
+    val contentResolver = context.contentResolver
+    val cacheUploadDirectory = File(context.cacheDir, dirToCopy)
+
+    if (!cacheUploadDirectory.exists()) {
+        cacheUploadDirectory.mkdir()
+    }
+
+    val temporalFile = File(cacheUploadDirectory, getFileName(contentResolver))
+    try {
+        contentResolver.openInputStream(this)!!.use { inStream ->
+            copyFile(temporalFile, inStream)
+        }
+    } catch (e: IOException) {
+        Logger("Uri.kt").warn("Could not convert uri to file uri", e)
+    }
+    return Uri.parse("file:///${Uri.encode(temporalFile.absolutePath)}")
+}
+
+@VisibleForTesting
+internal fun copyFile(temporalFile: File, inStream: InputStream): Long {
+    return FileOutputStream(temporalFile).use { outStream ->
+        inStream.copyTo(outStream)
+    }
 }
 
 @VisibleForTesting

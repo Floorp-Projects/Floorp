@@ -57,7 +57,6 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.FilePrompt.Capture.ANY
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.FilePrompt.Capture.NONE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.FilePrompt.Capture.USER
 import org.robolectric.Shadows.shadowOf
-import java.io.FileInputStream
 import java.security.InvalidParameterException
 import java.util.Calendar
 import java.util.Calendar.YEAR
@@ -705,14 +704,13 @@ class GeckoPromptDelegateTest {
         val mockUri: Uri = mock()
 
         doReturn(contentResolver).`when`(context).contentResolver
-        doReturn(mock<FileInputStream>()).`when`(contentResolver).openInputStream(any())
 
         var filePickerRequest: PromptRequest.File = mock()
 
         val promptDelegate = spy(GeckoPromptDelegate(mockSession))
 
         // Prevent the file from being copied
-        doReturn(0L).`when`(promptDelegate).copyFile(any(), any())
+        doReturn(mockUri).`when`(promptDelegate).toFileUri(any(), any())
 
         mockSession.register(
             object : EngineSession.Observer {

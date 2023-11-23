@@ -150,6 +150,12 @@
             android:title="@string/preferences_addons" />
 
         <androidx.preference.Preference
+            android:key="@string/pref_key_install_local_addon"
+            app:iconSpaceReserved="false"
+            app:isPreferenceVisible="false"
+            android:title="@string/preferences_install_local_addon" />
+
+        <androidx.preference.Preference
             android:key="@string/pref_key_override_amo_collection"
             app:iconSpaceReserved="false"
             android:title="@string/preferences_customize_amo_collection" />

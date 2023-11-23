@@ -38,6 +38,29 @@ interface WebExtensionRuntime {
     }
 
     /**
+     * Installs a [WebExtension] from the provided [url] in this engine.
+     *
+     * @param url the url pointing to either a resources path for locating the extension
+     * within the APK file (e.g. resource://android/assets/extensions/my_web_ext) or to a
+     * local (e.g. resource://android/assets/extensions/my_web_ext.xpi) or remote
+     * (e.g. https://addons.mozilla.org/firefox/downloads/file/123/some_web_ext.xpi) XPI file.
+     * @param onSuccess (optional) callback invoked if the extension was installed successfully,
+     * providing access to the [WebExtension] object for bi-directional messaging.
+     * @param onError (optional) callback invoked if there was an error installing the extension.
+     * This callback is invoked with an [UnsupportedOperationException] in case the engine doesn't
+     * have web extension support.
+     */
+    @Suppress("LongParameterList")
+    fun installWebExtension(
+        url: String,
+        onSuccess: ((WebExtension) -> Unit) = { },
+        onError: ((Throwable) -> Unit) = { _ -> },
+    ): CancellableOperation {
+        onError(UnsupportedOperationException("Web extension support is not available in this engine"))
+        return CancellableOperation.Noop()
+    }
+
+    /**
      * Updates the provided [extension] if a new version is available.
      *
      * @param extension the extension to be updated.

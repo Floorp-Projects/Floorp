@@ -145,16 +145,40 @@ class AddonManager(
             id = addon.id,
             url = addon.downloadUrl,
             onSuccess = { ext ->
-                val installedState = toInstalledState(ext)
-                val installedAddon = Addon.newFromWebExtension(ext, installedState)
-                    .copy(iconUrl = addon.iconUrl)
-                addonUpdater.registerForFutureUpdates(installedAddon.id)
-                completePendingAddonAction(pendingAction)
-                onSuccess(installedAddon)
+                onAddonInstalled(ext, pendingAction, onSuccess)
             },
             onError = { id, throwable ->
                 completePendingAddonAction(pendingAction)
                 onError(id, throwable)
+            },
+        )
+    }
+
+    /**
+     * Installs an [Addon] from the provided [url].
+     *
+     *  @param url the url pointing to either a resources path for locating the extension
+     *  within the APK file (e.g. resource://android/assets/extensions/my_web_ext) or to a
+     *  local (e.g. resource://android/assets/extensions/my_web_ext.xpi) or remote
+     *  (e.g. https://addons.mozilla.org/firefox/downloads/file/123/some_web_ext.xpi) XPI file.
+     * @param onSuccess (optional) callback invoked if the addon was installed successfully,
+     * providing access to the [Addon] object.
+     * @param onError (optional) callback invoked if there was an error installing the addon.
+     */
+    fun installAddon(
+        url: String,
+        onSuccess: ((Addon) -> Unit) = { },
+        onError: ((Throwable) -> Unit) = { _ -> },
+    ): CancellableOperation {
+        val pendingAction = addPendingAddonAction()
+        return runtime.installWebExtension(
+            url = url,
+            onSuccess = { ext ->
+                onAddonInstalled(ext, pendingAction, onSuccess)
+            },
+            onError = { throwable ->
+                completePendingAddonAction(pendingAction)
+                onError(throwable)
             },
         )
     }
@@ -404,6 +428,19 @@ class AddonManager(
             it.start()
         }
         return Handler(iconThread.looper).asCoroutineDispatcher("WebExtensionIconDispatcher")
+    }
+
+    private fun onAddonInstalled(
+        ext: WebExtension,
+        pendingAction: CompletableDeferred<Unit>,
+        onSuccess: ((Addon) -> Unit),
+    ) {
+        val installedState = toInstalledState(ext)
+        val installedAddon = Addon.newFromWebExtension(ext, installedState)
+
+        addonUpdater.registerForFutureUpdates(installedAddon.id)
+        completePendingAddonAction(pendingAction)
+        onSuccess(installedAddon)
     }
 
     companion object {
