@@ -5,17 +5,14 @@
 use mozprofile::prefreader::PrefReaderError;
 use mozprofile::profile::Profile;
 use std::collections::HashMap;
-use std::convert::From;
-use std::error::Error;
 use std::ffi::{OsStr, OsString};
-use std::fmt;
 use std::io;
-use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use std::process;
 use std::process::{Child, Command, Stdio};
 use std::thread;
 use std::time;
+use thiserror::Error;
 
 use crate::firefox_args::Arg;
 
@@ -85,43 +82,12 @@ pub trait RunnerProcess {
     fn kill(&mut self) -> io::Result<process::ExitStatus>;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum RunnerError {
-    Io(io::Error),
-    PrefReader(PrefReaderError),
-}
-
-impl fmt::Display for RunnerError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            RunnerError::Io(ref err) => match err.kind() {
-                ErrorKind::NotFound => "no such file or directory".fmt(f),
-                _ => err.fmt(f),
-            },
-            RunnerError::PrefReader(ref err) => err.fmt(f),
-        }
-    }
-}
-
-impl Error for RunnerError {
-    fn cause(&self) -> Option<&dyn Error> {
-        Some(match *self {
-            RunnerError::Io(ref err) => err as &dyn Error,
-            RunnerError::PrefReader(ref err) => err as &dyn Error,
-        })
-    }
-}
-
-impl From<io::Error> for RunnerError {
-    fn from(value: io::Error) -> RunnerError {
-        RunnerError::Io(value)
-    }
-}
-
-impl From<PrefReaderError> for RunnerError {
-    fn from(value: PrefReaderError) -> RunnerError {
-        RunnerError::PrefReader(value)
-    }
+    #[error("IO Error: {0}")]
+    Io(#[from] io::Error),
+    #[error("PrefReader Error: {0}")]
+    PrefReader(#[from] PrefReaderError),
 }
 
 #[derive(Debug)]
