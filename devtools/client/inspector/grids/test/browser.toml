@@ -16,7 +16,6 @@ support-files = [
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_grids_color-in-rules-grid-toggle.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_grids_display-setting-extend-grid-lines.js"]
 
@@ -25,10 +24,8 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_grids_display-setting-show-grid-line-numbers.js"]
 
 ["browser_grids_grid-list-color-picker-on-ESC.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_grids_grid-list-color-picker-on-RETURN.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_grids_grid-list-element-rep.js"]
 
@@ -83,7 +80,6 @@ skip-if = ["verify && os == 'win'"]
 ["browser_grids_number-of-css-grids-telemetry.js"]
 
 ["browser_grids_persist-color-palette.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_grids_restored-after-reload.js"]
 

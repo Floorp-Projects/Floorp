@@ -71,6 +71,7 @@
   cursor: pointer;
   display: inline-block;
   vertical-align: middle;
+  outline-offset: 2px;
 }
 
 .layout-color-value {
