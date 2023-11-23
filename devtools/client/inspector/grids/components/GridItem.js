@@ -14,6 +14,7 @@ const dom = require("resource://devtools/client/shared/vendor/react-dom-factorie
 const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const {
   getFormatStr,
+  getStr,
 } = require("resource://devtools/client/inspector/layout/utils/l10n.js");
 
 loader.lazyGetter(this, "Rep", function () {
@@ -144,6 +145,7 @@ class GridItem extends PureComponent {
             type: "checkbox",
             value: grid.id,
             onChange: this.onGridCheckboxClick,
+            title: getStr("layout.toggleGridHighlighter"),
           }),
           Rep({
             defaultRep: Rep.ElementNode,
