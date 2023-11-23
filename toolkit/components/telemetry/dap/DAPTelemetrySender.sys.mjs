@@ -75,14 +75,15 @@ export const DAPTelemetrySender = new (class {
 
         lazy.NimbusFeatures.dapTelemetry.onUpdate(async (event, reason) => {
           if (typeof this.counters !== "undefined") {
-            await this.sendTestReports(tasks);
+            await this.sendTestReports(tasks, 30 * 1000);
           }
         });
       }
 
       this._asyncShutdownBlocker = async () => {
         lazy.logConsole.debug(`Sending on shutdown.`);
-        await this.sendTestReports(tasks);
+        // Shorter timeout to prevent crashing due to blocking shutdown
+        await this.sendTestReports(tasks, 2 * 1000);
       };
 
       lazy.AsyncShutdown.quitApplicationGranted.addBlocker(
@@ -92,7 +93,7 @@ export const DAPTelemetrySender = new (class {
     }
   }
 
-  async sendTestReports(tasks) {
+  async sendTestReports(tasks, timeout) {
     for (let task of tasks) {
       let measurement;
       if (task.measurement_type == "u8") {
@@ -104,13 +105,13 @@ export const DAPTelemetrySender = new (class {
         measurement[19] += 1;
       }
 
-      await this.sendDAPMeasurement(task, measurement);
+      await this.sendDAPMeasurement(task, measurement, timeout);
     }
   }
 
   async timedSendTestReports(tasks) {
     lazy.logConsole.debug("Sending on timer.");
-    await this.sendTestReports(tasks);
+    await this.sendTestReports(tasks, 30 * 1000);
     lazy.setTimeout(
       () => this.timedSendTestReports(tasks),
       this.timeout_value()
@@ -130,7 +131,7 @@ export const DAPTelemetrySender = new (class {
    * @param {number} measurement
    *   The measured value for which a report is generated.
    */
-  async sendDAPMeasurement(task, measurement) {
+  async sendDAPMeasurement(task, measurement, timeout) {
     task.leader_endpoint = lazy.LEADER;
     if (!task.leader_endpoint) {
       lazy.logConsole.error('Preference "' + PREF_LEADER + '" not set');
@@ -144,9 +145,20 @@ export const DAPTelemetrySender = new (class {
     }
 
     try {
-      let report = await this.generateReport(task, measurement);
+      const controller = new AbortController();
+      lazy.setTimeout(() => controller.abort(), timeout);
+      let report = await this.generateReport(
+        task,
+        measurement,
+        controller.signal
+      );
       Glean.dap.reportGenerationStatus.success.add(1);
-      await this.sendReport(task.leader_endpoint, task.id, report);
+      await this.sendReport(
+        task.leader_endpoint,
+        task.id,
+        report,
+        controller.signal
+      );
     } catch (e) {
       Glean.dap.reportGenerationStatus.failure.add(1);
       lazy.logConsole.error("DAP report generation failed: " + e);
@@ -164,13 +176,15 @@ export const DAPTelemetrySender = new (class {
    * @resolves {Uint8Array} The generated binary report data.
    * @rejects {Error} If an exception is thrown while generating the report.
    */
-  async generateReport(task, measurement) {
+  async generateReport(task, measurement, abortSignal) {
     let [leader_config_bytes, helper_config_bytes] = await Promise.all([
       this.getHpkeConfig(
-        task.leader_endpoint + "/hpke_config?task_id=" + task.id
+        task.leader_endpoint + "/hpke_config?task_id=" + task.id,
+        abortSignal
       ),
       this.getHpkeConfig(
-        task.helper_endpoint + "/hpke_config?task_id=" + task.id
+        task.helper_endpoint + "/hpke_config?task_id=" + task.id,
+        abortSignal
       ),
     ]);
     let task_id = new Uint8Array(
@@ -222,12 +236,13 @@ export const DAPTelemetrySender = new (class {
    * @resolves {Uint8Array} The binary representation of the endpoint configuration.
    * @rejects {Error} If an exception is thrown while fetching the configuration.
    */
-  async getHpkeConfig(endpoint) {
+  async getHpkeConfig(endpoint, abortSignal) {
     // Use HPKEConfigManager to cache config for up to 24 hr. This reduces
     // unecessary requests while limiting how long a stale config can be stuck
     // if a server change is made ungracefully.
     let buffer = await HPKEConfigManager.get(endpoint, {
       maxAge: 24 * 60 * 60 * 1000,
+      abortSignal,
     });
     let hpke_config_bytes = new Uint8Array(buffer);
     return hpke_config_bytes;
@@ -243,13 +258,14 @@ export const DAPTelemetrySender = new (class {
    * @returns Promise
    * @resolves {undefined} Once the attempt to send the report completes, whether or not it was successful.
    */
-  async sendReport(leader_endpoint, task_id, report) {
+  async sendReport(leader_endpoint, task_id, report, abortSignal) {
     const upload_path = leader_endpoint + "/tasks/" + task_id + "/reports";
     try {
       let response = await fetch(upload_path, {
         method: "PUT",
         headers: { "Content-Type": "application/dap-report" },
         body: report,
+        signal: abortSignal,
       });
 
       if (response.status != 200) {

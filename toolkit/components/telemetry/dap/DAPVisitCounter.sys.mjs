@@ -24,7 +24,7 @@ export const DAPVisitCounter = new (class {
   startup() {
     this._asyncShutdownBlocker = async () => {
       lazy.logConsole.debug(`Sending on shutdown.`);
-      await this.send();
+      await this.send(2 * 1000);
     };
 
     lazy.AsyncShutdown.quitApplicationGranted.addBlocker(
@@ -53,7 +53,7 @@ export const DAPVisitCounter = new (class {
 
     lazy.NimbusFeatures.dapTelemetry.onUpdate(async (event, reason) => {
       if (typeof this.counters !== "undefined") {
-        await this.send();
+        await this.send(30 * 1000);
       }
       this.initialize_counters();
     });
@@ -85,7 +85,7 @@ export const DAPVisitCounter = new (class {
 
   async timed_send() {
     lazy.logConsole.debug("Sending on timer.");
-    await this.send();
+    await this.send(30 * 1000);
     lazy.setTimeout(() => this.timed_send(), this.timeout_value());
   }
 
@@ -94,7 +94,7 @@ export const DAPVisitCounter = new (class {
     return MINUTE * (9 + Math.random() * 2); // 9 - 11 minutes
   }
 
-  async send() {
+  async send(timeout) {
     let collected_measurements = new Map();
     for (const counter of this.counters) {
       lazy.logConsole.debug(`Summing up experiment ${counter.experiment.name}`);
@@ -118,7 +118,7 @@ export const DAPVisitCounter = new (class {
         measurement_type: "vecu8",
       };
 
-      await DAPTelemetrySender.sendDAPMeasurement(task, measurement);
+      await DAPTelemetrySender.sendDAPMeasurement(task, measurement, timeout);
     }
   }
 
