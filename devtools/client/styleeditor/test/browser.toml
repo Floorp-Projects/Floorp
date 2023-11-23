@@ -213,7 +213,6 @@ skip-if = ["a11y_checks && debug"] # Bugs 1849028 and 1858041 for causing interm
 ["browser_styleeditor_syncAddRule.js"]
 
 ["browser_styleeditor_syncAlreadyOpen.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_styleeditor_syncEditSelector.js"]
 

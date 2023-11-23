@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { l10n } = require("resource://devtools/shared/inspector/css-logic.js");
+const {
+  l10n,
+  l10nFormatStr,
+} = require("resource://devtools/shared/inspector/css-logic.js");
 const {
   InplaceEditor,
   editableField,
@@ -206,8 +209,7 @@ TextPropertyEditor.prototype = {
     this.enable = createChild(this.container, "input", {
       type: "checkbox",
       class: "ruleview-enableproperty",
-      "aria-labelledby": this.prop.id,
-      tabindex: "-1",
+      title: l10nFormatStr("rule.propertyToggle.label", this.prop.name),
     });
 
     this.nameContainer = createChild(this.container, "span", {
@@ -531,6 +533,10 @@ TextPropertyEditor.prototype = {
 
     const name = this.prop.name;
     this.nameSpan.textContent = name;
+    this.enable.setAttribute(
+      "title",
+      l10nFormatStr("rule.propertyToggle.label", name)
+    );
 
     // Combine the property's value and priority into one string for
     // the value.

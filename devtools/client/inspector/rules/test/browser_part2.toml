@@ -148,13 +148,10 @@ skip-if = [
 ]
 
 ["browser_rules_inactive_css_display-justify.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_inactive_css_flexbox.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_inactive_css_grid.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_inactive_css_inline.js"]
 
