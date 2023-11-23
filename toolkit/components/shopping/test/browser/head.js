@@ -69,6 +69,40 @@ async function promiseSidebarAdsUpdated(sidebar, expectedProduct) {
   });
 }
 
+async function promiseSidebarOpened(sidebar) {
+  let attributePromise = BrowserTestUtils.waitForMutationCondition(
+    sidebar,
+    {
+      attributeFilter: ["closed"],
+    },
+    () => !sidebar.hasAttribute("closed")
+  );
+
+  const sidebarClosingAnimations = sidebar.getAnimations();
+  let animationsPromise = Promise.all(
+    sidebarClosingAnimations.map(animation => animation.finished)
+  );
+
+  await Promise.all([attributePromise, animationsPromise]);
+}
+
+async function promiseSidebarClosed(sidebar) {
+  let attributePromise = BrowserTestUtils.waitForMutationCondition(
+    sidebar,
+    {
+      attributeFilter: ["closed"],
+    },
+    () => sidebar.hasAttribute("closed")
+  );
+
+  const sidebarClosingAnimations = sidebar.getAnimations();
+  let animationsPromise = Promise.all(
+    sidebarClosingAnimations.map(animation => animation.finished)
+  );
+
+  await Promise.all([attributePromise, animationsPromise]);
+}
+
 async function verifyProductInfo(sidebar, expectedProductInfo) {
   await SpecialPowers.spawn(
     sidebar.querySelector("browser"),
