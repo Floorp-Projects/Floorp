@@ -11,20 +11,19 @@
 #include "nsITaskbarPreviewController.h"
 
 #include "mozilla/RefPtr.h"
-#include "mozilla/widget/JumpListBuilder.h"
 #include <nsError.h>
 #include <nsCOMPtr.h>
 #include <nsIWidget.h>
 #include <nsIBaseWindow.h>
 #include <nsServiceManagerUtils.h>
 #include "nsIXULAppInfo.h"
-#include "nsILegacyJumpListBuilder.h"
+#include "nsIJumpListBuilder.h"
 #include "nsUXThemeData.h"
 #include "nsWindow.h"
 #include "WinUtils.h"
 #include "TaskbarTabPreview.h"
 #include "TaskbarWindowPreview.h"
-#include "LegacyJumpListBuilder.h"
+#include "JumpListBuilder.h"
 #include "nsWidgetsCID.h"
 #include "nsPIDOMWindow.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -37,8 +36,7 @@
 #include <propkey.h>
 #include <shellapi.h>
 
-static NS_DEFINE_CID(kLegacyJumpListBuilderCID,
-                     NS_WIN_LEGACYJUMPLISTBUILDER_CID);
+static NS_DEFINE_CID(kJumpListBuilderCID, NS_WIN_JUMPLISTBUILDER_CID);
 
 namespace {
 
@@ -406,14 +404,14 @@ WinTaskbar::GetOverlayIconController(
 }
 
 NS_IMETHODIMP
-WinTaskbar::CreateLegacyJumpListBuilder(
-    bool aPrivateBrowsing, nsILegacyJumpListBuilder** aJumpListBuilder) {
+WinTaskbar::CreateJumpListBuilder(bool aPrivateBrowsing,
+                                  nsIJumpListBuilder** aJumpListBuilder) {
   nsresult rv;
 
-  if (LegacyJumpListBuilder::sBuildingList) return NS_ERROR_ALREADY_INITIALIZED;
+  if (JumpListBuilder::sBuildingList) return NS_ERROR_ALREADY_INITIALIZED;
 
-  nsCOMPtr<nsILegacyJumpListBuilder> builder =
-      do_CreateInstance(kLegacyJumpListBuilderCID, &rv);
+  nsCOMPtr<nsIJumpListBuilder> builder =
+      do_CreateInstance(kJumpListBuilderCID, &rv);
   if (NS_FAILED(rv)) return NS_ERROR_UNEXPECTED;
 
   NS_IF_ADDREF(*aJumpListBuilder = builder);
@@ -422,21 +420,6 @@ WinTaskbar::CreateLegacyJumpListBuilder(
   GenerateAppUserModelID(aumid, aPrivateBrowsing);
   builder->SetAppUserModelID(aumid);
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-WinTaskbar::CreateJumpListBuilder(bool aPrivateBrowsing,
-                                  nsIJumpListBuilder** aJumpListBuilder) {
-  nsAutoString aumid;
-  GenerateAppUserModelID(aumid, aPrivateBrowsing);
-
-  nsCOMPtr<nsIJumpListBuilder> builder = new JumpListBuilder(aumid);
-  if (!builder) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  NS_IF_ADDREF(*aJumpListBuilder = builder);
   return NS_OK;
 }
 

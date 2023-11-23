@@ -4,116 +4,158 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-interface nsIURI;
 
-[scriptable, uuid(5769F08D-0303-4E38-8FE6-86B5473022F6)]
+interface nsIArray;
+
+[scriptable, function, uuid(5131a62a-e99f-4631-9138-751f8aad1ae4)]
+interface nsIJumpListCommittedCallback : nsISupports
+{
+  void done(in boolean result);
+};
+
+[scriptable, uuid(1FE6A9CD-2B18-4dd5-A176-C2B32FA4F683)]
 interface nsIJumpListBuilder : nsISupports
 {
   /**
-   * Returns the local filesystem path for a favicon for a page hosted at
-   * faviconURL if we happen to have written one to disk before. If we have not,
-   * then a background thread retrieves the favicon and will write it to disk
-   * and NS_ERROR_NOT_AVAILABLE will be thrown.
+   * JumpLists
    *
-   * @param {nsIURI} faviconURL
-   *   The URL for the web page for which we would like a filesystem path for
-   *   the favicon.
-   * @returns {AString}
-   *   The local filesystem path for the favicon if it has been cached before.
-   *   If it has not been cached before, this method will throw
-   *   NS_ERROR_NOT_AVAILABLE.
-   * @throws NS_ERROR_NOT_AVAILABLE
-   *   In the event that the favicon has never been cached to disk before.
+   * Jump lists are built and then applied. Modifying an applied jump list is not
+   * permitted. Callers should begin the creation of a new jump list using
+   * initListBuild, add sub lists using addListToBuild, then commit the jump list
+   * using commitListBuild. Lists are built in real-time during the sequence of
+   * build calls, make sure to check for errors on each individual step.
+   *
+   * The default number of allowed items in a jump list is ten. Users can change
+   * the number through system preferences. User may also pin items to jump lists,
+   * which take up additional slots. Applications do not have control over the
+   * number of items allowed in jump lists; excess items added are dropped by the
+   * system. Item insertion priority is defined as first to last added.
+   *
+   * Users may remove items from jump lists after they are commited. The system
+   * tracks removed items between commits. A list of these items is returned by
+   * a call to initListBuild. nsIJumpListBuilder does not filter entries added that
+   * have been removed since the last commit. To prevent repeatedly adding entries
+   * users have removed, applications are encoraged to track removed items
+   * internally.
+   *
+   * Each list is made up of an array of nsIJumpListItem representing items
+   * such as shortcuts, links, and separators. See nsIJumpListItem for information
+   * on adding additional jump list types.
    */
-  AString obtainAndCacheFavicon(in nsIURI faviconURL);
 
   /**
-   * Returns a Promise that resolves with whether or not the Jump List backend
-   * on the background thread is up and running.
-   *
-   * @returns {Promise<boolean>}
-   *   Resolves to true if the backend is ready to accept
-   *   WindowsJumpListShortcutDescriptions. False, otherwise.
-   * @throws NS_ERROR_FAILURE
-   *   If an attempt to communicate with the background thread fails.
+   * List Types
    */
-  [implicit_jscontext]
-  Promise isAvailable();
 
   /**
-   * Asks the Windows Jump List API for any items that might have been removed
-   * by the user from the Jump List UI.
+   * Task List
    *
-   * Important: This should be called prior to any attempt to call
-   * `populateJumpList` to ensure that any passed in
-   * WindowsJumpListShortcutDescriptions do not describe items that the user has
-   * just removed. Failing to do so will cause the Promise returned from
-   * `populateJumpList` to reject. This is a constraint of the underlying win32
-   * API. Please see
-   * https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-icustomdestinationlist-beginlist
-   * for more details.
+   * Tasks are common actions performed by users within the application. A task
+   * can be represented by an application shortcut and associated command line
+   * parameters or a URI. Task lists should generally be static lists that do not
+   * change often, if at all - similar to an application menu.
    *
-   * @returns {Promise<string[], nsresult>}
-   *   On success, will return an array of strings for URLs of history that
-   *   have been removed by the user via the Windows Jump List. These items will
-   *   also have had their cached favicons removed from the disk off of the
-   *   main thread. On failure, this will reject with the nsresult failure code.
-   * @throws NS_ERROR_FAILURE
-   *   If an attempt to communicate with the background thread fails.
+   * Tasks are given the highest priority of all lists when space is limited.
    */
-  [implicit_jscontext]
-  Promise checkForRemovals();
+  const short JUMPLIST_CATEGORY_TASKS = 0;
 
   /**
-   * Writes a new set of items to the Windows Jump List. This occurs
-   * asynchronously, off of the main thread.
+   * Recent or Frequent list
    *
-   * Important: Callers should first call `checkForRemovals` to remove any
-   * browsing history items that the user chose to remove in the Jump List
-   *  Only then should any WindowsJumpListShortcutDescriptions be created
-   * and passed to this method. Any attempt to add
-   * WindowsJumpListShortcutDescriptions matching items that have been removed
-   * by the user will result in the returned Promise rejecting. This is a
-   * constraint of the underlying win32 API. Please see
-   * https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-icustomdestinationlist-beginlist
-   * for more details.
-   *
-   * @param {WindowsJumpListShortcutDescription[]} aTaskDescriptions
-   *   0 or more WindowsJumpListShortcutDescriptions to place items within the
-   *   "tasks" section of the Jump List.
-   * @param {AString} aCustomTitle
-   *   An optional title for a custom sub-list within the Jump List that will be
-   *   populated via aCustomDescriptions. This must be supplied if
-   *   aCustomDescriptions is not empty.
-   * @param {WindowsJumpListShortcutDescription[]} aCustomDescriptions
-   *   0 or more WindowsJumpListShortcutDescriptions to place items within the
-   *   custom section of the Jump List. aCustomTitle must be supplied if this
-   *   array is non-empty.
-   * @returns {Promise<undefined, nsresult>}
-   *   Returns a Promise that resolves if the Jump List was properly written
-   *   to, and rejects otherwise with the nsresult of the failure.
-   * @throws NS_ERROR_INVALID_ARG
-   *   If any of the passed arguments do not meet the requirements set out
-   *   above.
-   * @throws NS_ERROR_FAILURE
-   *   If an attempt to communicate with the background thread fails.
+   * Recent and frequent lists are based on Window's recent document lists. The
+   * lists are generated automatically by Windows. Applications that use recent
+   * or frequent lists should keep document use tracking up to date by calling
+   * the SHAddToRecentDocs shell api.
    */
-  [implicit_jscontext]
-  Promise populateJumpList(
-    in Array<jsval> aTaskDescriptions,
-    in AString aCustomTitle,
-    in Array<jsval> aCustomDescriptions
-  );
+  const short JUMPLIST_CATEGORY_RECENT       = 1;
+  const short JUMPLIST_CATEGORY_FREQUENT     = 2;
 
   /**
-   * Removes all items from the Jump List.
+   * Custom Lists
    *
-   * @returns {Promise<undefined, nsresult>}
-   *   Resolves with undefined on successfully clearing the Jump List. If it
-   *   fails to do so, it will reject with the failure code.
-   * @throws NS_ERROR_FAILURE
-   *   If an attempt to communicate with the background thread fails.
+   * Custom lists can be made up of tasks, links, and separators. The title of
+   * of the list is passed through the optional string parameter of addBuildList.
+   */
+  const short JUMPLIST_CATEGORY_CUSTOMLIST   = 3;
+
+  /**
+   * Indicates whether jump list taskbar features are supported by the current
+   * host.
+   */
+  readonly attribute short available;
+
+  /**
+   * JumpList management
+   *
+   * @throw NS_ERROR_NOT_AVAILABLE on all calls if taskbar functionality
+   * is not supported by the operating system.
+   */
+
+  /**
+   * Indicates if a commit has already occurred in this session.
+   */
+  readonly attribute boolean isListCommitted;
+
+  /**
+   * The maximum number of jump list items the current desktop can support.
+   */
+  readonly attribute short maxListItems;
+
+  /**
+   * Initializes a jump list build and returns a promise with the list of
+   * items the user removed since the last time a jump list was committed.
+   * Removed items can become state after initListBuild is called, lists
+   * should be built in single-shot fasion.
+   *
+   * @returns a promise with the list of items that were removed by the user
+   * since the last commit.
    */
   [implicit_jscontext]
-  Promise clearJumpList();
+  Promise initListBuild();
+
+  /**
+   * Adds a list and if required, a set of items for the list.
+   *
+   * @param aCatType
+   *        The type of list to add.
+   * @param items
+   *        An array of nsIJumpListItem items to add to the list.
+   * @param catName
+   *        For custom lists, the title of the list.
+   *
+   * @returns true if the operation completed successfully.
+   *
+   * @throw NS_ERROR_INVALID_ARG if incorrect parameters are passed for
+   * a particular category or item type.
+   * @throw NS_ERROR_ILLEGAL_VALUE if an item is added that was removed
+   * since the last commit.
+   * @throw NS_ERROR_UNEXPECTED on internal errors.
+   */
+  boolean addListToBuild(in short aCatType, [optional] in nsIArray items, [optional] in AString catName);
+
+  /**
+   * Aborts and clears the current jump list build.
+   */
+  void abortListBuild();
+
+  /**
+   * Commits the current jump list build to the Taskbar.
+   *
+   * @param callback
+   *        Receives one argument, which is true if the operation completed
+   *        successfully, otherwise it is false.
+   */
+  void commitListBuild([optional] in nsIJumpListCommittedCallback callback);
+
+  /**
+   * Deletes any currently applied taskbar jump list for this application.
+   * Common uses would be the enabling of a privacy mode and uninstallation.
+   *
+   * @returns true if the operation completed successfully.
+   *
+   * @throw NS_ERROR_UNEXPECTED on internal errors.
+   */
+  boolean deleteActiveList();
+
+  void setAppUserModelID(in AString aAppUserModelId);
 };
