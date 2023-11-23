@@ -1,7 +1,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 const TEST_URLS = [
   "http://mochi.test:8888/browser/",
   "https://www.example.com/",
@@ -74,17 +76,37 @@ async function prepareClosedData() {
   closedIds.tab5 =
     SessionStore.getClosedTabDataForWindow(privateWin)[0].closedId;
 
+  const testWindow6 = await BrowserTestUtils.openNewBrowserWindow();
+
+  const testWindow7 = await BrowserTestUtils.openNewBrowserWindow();
+  await openAndCloseTab(testWindow7, TEST_URLS[4]);
+
+  let closedTabsHistogram = TelemetryTestUtils.getAndClearHistogram(
+    "FX_SESSION_RESTORE_CLOSED_TABS_NOT_SAVED"
+  );
+
   await BrowserTestUtils.closeWindow(testWindow1);
   closedIds.testWindow1 = SessionStore.getClosedWindowData()[0].closedId;
   await BrowserTestUtils.closeWindow(testWindow2);
+
   closedIds.testWindow2 = SessionStore.getClosedWindowData()[0].closedId;
   await BrowserTestUtils.closeWindow(testWindow3);
+
   closedIds.testWindow3 = SessionStore.getClosedWindowData()[0].closedId;
   await BrowserTestUtils.closeWindow(privateWin);
   Assert.ok(
     closedIds.testWindow2 > closedIds.testWindow1,
     "We got the closedIds in the expected order"
   );
+
+  await BrowserTestUtils.closeWindow(testWindow6);
+  TelemetryTestUtils.assertHistogram(closedTabsHistogram, 0, 1);
+  closedTabsHistogram.clear();
+
+  await BrowserTestUtils.closeWindow(testWindow7);
+  TelemetryTestUtils.assertHistogram(closedTabsHistogram, 1, 1);
+  closedTabsHistogram.clear();
+
   return closedIds;
 }
 
