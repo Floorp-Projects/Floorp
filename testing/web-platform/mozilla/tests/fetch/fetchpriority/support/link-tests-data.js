@@ -81,6 +81,21 @@ const kExpectedRequestsOfLinkPreload = [
     },
 ];
 
+const kExpectedRequestsOfPreloadScript = [
+    {   fileNameAndSuffix: "dummy.js?1",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+    },
+    {   fileNameAndSuffix: "dummy.js?2",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+    },
+    {   fileNameAndSuffix: "dummy.js?3",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+    },
+    {   fileNameAndSuffix: "dummy.js?4",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
+    },
+];
+
 const kExpectedRequestsOfLinkPreloadStyle = [
     {   fileNameAndSuffix: "dummy.css?1",
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
@@ -96,20 +111,7 @@ const kExpectedRequestsOfLinkPreloadStyle = [
     },
 ];
 
-const kExpectedRequestsOfModulepreload = [
-    {   fileNameAndSuffix: "dummy.js?1",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
-    },
-    {   fileNameAndSuffix: "dummy.js?2",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
-    },
-    {   fileNameAndSuffix: "dummy.js?3",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
-    },
-    {   fileNameAndSuffix: "dummy.js?4",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
-    }
-];
+const kExpectedRequestsOfModulepreload = kExpectedRequestsOfPreloadScript;
 
 const kExpectedRequestsOfPrefetch = [
     {   fileNameAndSuffix: "dummy.txt?1",
@@ -155,12 +157,13 @@ const kPipeHeaderPreloadLinks =
   "|header(Link,<dummy.image?1>; rel=preload; as=image; fetchpriority=low,True)" +
   "|header(Link,<dummy.image?2>; rel=preload; as=image; fetchpriority=high,True)" +
   "|header(Link,<dummy.image?3>; rel=preload; as=image; fetchpriority=auto,True)" +
-  "|header(Link,<dummy.image?4>; rel=preload; as=image,True)" +
-  // as="script"
-  "|header(Link,<dummy.script?1>; rel=preload; as=script; fetchpriority=low,True)" +
-  "|header(Link,<dummy.script?2>; rel=preload; as=script; fetchpriority=high,True)" +
-  "|header(Link,<dummy.script?3>; rel=preload; as=script; fetchpriority=auto,True)" +
-  "|header(Link,<dummy.script?4>; rel=preload; as=script,True)";
+  "|header(Link,<dummy.image?4>; rel=preload; as=image,True)";
+
+const kPipeHeaderPreloadScriptLinks =
+  "=header(Link,<dummy.js?1>; rel=preload; as=script; fetchpriority=low,True)" +
+  "|header(Link,<dummy.js?2>; rel=preload; as=script; fetchpriority=high,True)" +
+  "|header(Link,<dummy.js?3>; rel=preload; as=script; fetchpriority=auto,True)" +
+  "|header(Link,<dummy.js?4>; rel=preload; as=script,True)";
 
   const kPipeHeaderPreloadStyleLinks =
   "=header(Link,<dummy.css?1>; rel=preload; as=style; fetchpriority=low,True)" +
@@ -205,17 +208,26 @@ export const kTestData = [
     {   testFileName: "link-initial-preload.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreload
     },
+    {   testFileName: "link-initial-preload-script.h2.html",
+        expectedRequests: kExpectedRequestsOfPreloadScript
+    },
     {   testFileName: "link-initial-preload-style.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreloadStyle
     },
     {   testFileName: "link-dynamic-preload.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreload
     },
+    {   testFileName: "link-dynamic-preload-script.h2.html",
+        expectedRequests: kExpectedRequestsOfPreloadScript
+    },
     {   testFileName: "link-dynamic-preload-style.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreloadStyle
     },
     {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPreloadLinks,
         expectedRequests: kExpectedRequestsOfLinkPreload
+    },
+    {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPreloadScriptLinks,
+        expectedRequests: kExpectedRequestsOfPreloadScript
     },
     {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPreloadStyleLinks,
         expectedRequests: kExpectedRequestsOfLinkPreloadStyle
