@@ -30,12 +30,14 @@
   overflow-y: auto;
   width: 100%;
   flex: 1;
+  outline-offset: -2px;
 }
 
 /* The tree takes the entire horizontal space within the panel content. */
 .panelContent .treeTable {
   width: 100%;
   font-family: var(--monospace-font-family);
+  outline-offset: -2px;
 }
 
 /* Make sure there is a little space between label and value columns. */
