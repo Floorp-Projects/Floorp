@@ -2529,7 +2529,7 @@ class nsContentUtils {
     TYPE_UNKNOWN
   };
 
-  static already_AddRefed<nsIDocumentLoaderFactory> FindInternalContentViewer(
+  static already_AddRefed<nsIDocumentLoaderFactory> FindInternalDocumentViewer(
       const nsACString& aType, ContentViewerType* aLoaderType = nullptr);
 
   /**
