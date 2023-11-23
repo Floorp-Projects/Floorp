@@ -31,6 +31,12 @@ from gecko_taskgraph.util.scriptworker import (
 
 beetmover_description_schema = Schema(
     {
+        # from the loader:
+        Optional("job-from"): str,
+        Optional("name"): str,
+        # from the from_deps transforms:
+        Optional("attributes"): task_description_schema["attributes"],
+        Optional("dependencies"): task_description_schema["dependencies"],
         # depname is used in taskref's to identify the taskID of the unsigned things
         Required("depname", default="build"): str,
         # unique label to describe this beetmover task, defaults to {dep.label}-beetmover
