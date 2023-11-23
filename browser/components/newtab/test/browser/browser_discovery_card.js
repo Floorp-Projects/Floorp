@@ -7,19 +7,21 @@ test_newtab({
       .returns(
         "https://example.com/browser/browser/components/newtab/test/browser/topstories.json"
       );
-    await pushPrefs([
-      "browser.newtabpage.activity-stream.discoverystream.config",
-      JSON.stringify({
-        api_key_pref: "extensions.pocket.oAuthConsumerKey",
-        collapsible: true,
-        enabled: true,
-        personalized: true,
-      }),
-    ]);
-    await pushPrefs([
-      "browser.newtabpage.activity-stream.discoverystream.endpoints",
-      "https://example.com",
-    ]);
+    await pushPrefs(
+      [
+        "browser.newtabpage.activity-stream.discoverystream.config",
+        JSON.stringify({
+          api_key_pref: "extensions.pocket.oAuthConsumerKey",
+          collapsible: true,
+          enabled: true,
+          personalized: true,
+        }),
+      ],
+      [
+        "browser.newtabpage.activity-stream.discoverystream.endpoints",
+        "https://example.com",
+      ]
+    );
   },
   test: async function test_card_render() {
     await ContentTaskUtils.waitForCondition(
