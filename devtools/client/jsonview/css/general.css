@@ -16,10 +16,6 @@ body {
   margin: 0;
 }
 
-*:focus {
-  outline: none !important;
-}
-
 pre {
   background-color: white;
   border: none;

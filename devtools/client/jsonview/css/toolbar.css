@@ -28,6 +28,7 @@
   user-select: none;
   padding: 0 3px;
   border-radius: 2px;
+  outline-offset: -1px;
 }
 
 .toolbar .btn:hover {
