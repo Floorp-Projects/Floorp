@@ -956,13 +956,15 @@ browser[tabmodalPromptShowing], browser[tabDialogShowing] {
   direction: ltr;
 }
 
-#statuspanel[inactive] {
+#statuspanel[inactive],
+:root[inDOMFullscreen] #statuspanel:not([type=overLink]) {
   transition: none;
   opacity: 0;
   visibility: hidden;
 }
 
-#statuspanel[inactive][previoustype=overLink] {
+#statuspanel[inactive][previoustype=overLink],
+:root[inDOMFullscreen] #statuspanel:not([type=overLink])[previoustype=overLink] {
   transition: opacity 200ms ease-out, visibility 200ms;
 }
 
