@@ -410,12 +410,12 @@ nsDOMWindowUtils::UpdateLayerTree() {
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetContentViewerSize(uint32_t* aDisplayWidth,
-                                       uint32_t* aDisplayHeight) {
+nsDOMWindowUtils::GetDocumentViewerSize(uint32_t* aDisplayWidth,
+                                        uint32_t* aDisplayHeight) {
   PresShell* presShell = GetPresShell();
   LayoutDeviceIntSize displaySize;
 
-  if (!presShell || !nsLayoutUtils::GetContentViewerSize(
+  if (!presShell || !nsLayoutUtils::GetDocumentViewerSize(
                         presShell->GetPresContext(), displaySize)) {
     return NS_ERROR_FAILURE;
   }

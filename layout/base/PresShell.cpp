@@ -11449,7 +11449,7 @@ bool PresShell::DetermineFontSizeInflationState() {
     nsPresContext* topContext =
         mPresContext->GetInProcessRootContentDocumentPresContext();
     LayoutDeviceIntSize result;
-    if (!nsLayoutUtils::GetContentViewerSize(topContext, result)) {
+    if (!nsLayoutUtils::GetDocumentViewerSize(topContext, result)) {
       return false;
     }
     displaySize = Some(result);

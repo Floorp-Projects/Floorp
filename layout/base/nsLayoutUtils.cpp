@@ -8321,7 +8321,7 @@ nsRect nsLayoutUtils::GetBoxShadowRectForFrame(nsIFrame* aFrame,
 }
 
 /* static */
-bool nsLayoutUtils::GetContentViewerSize(
+bool nsLayoutUtils::GetDocumentViewerSize(
     const nsPresContext* aPresContext, LayoutDeviceIntSize& aOutSize,
     SubtractDynamicToolbar aSubtractDynamicToolbar) {
   nsCOMPtr<nsIDocShell> docShell = aPresContext->GetDocShell();
@@ -8391,8 +8391,8 @@ bool nsLayoutUtils::UpdateCompositionBoundsForRCDRSF(
   }
 
   LayoutDeviceIntSize contentSize;
-  if (!GetContentViewerSize(aPresContext, contentSize,
-                            shouldSubtractDynamicToolbar)) {
+  if (!GetDocumentViewerSize(aPresContext, contentSize,
+                             shouldSubtractDynamicToolbar)) {
     return false;
   }
   aCompBounds.SizeTo(ViewAs<ParentLayerPixel>(
@@ -10082,7 +10082,7 @@ template <typename SizeType>
   if (RefPtr<MobileViewportManager> MVM =
           aPresContext->PresShell()->GetMobileViewportManager()) {
     displaySize = MVM->DisplaySize();
-  } else if (!nsLayoutUtils::GetContentViewerSize(aPresContext, displaySize)) {
+  } else if (!nsLayoutUtils::GetDocumentViewerSize(aPresContext, displaySize)) {
     return aSize;
   }
 

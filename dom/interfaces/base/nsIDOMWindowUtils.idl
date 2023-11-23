@@ -132,7 +132,7 @@ interface nsIDOMWindowUtils : nsISupports {
   /**
    * Information about the window size in device pixels.
    */
-  void getContentViewerSize(out uint32_t aDisplayWidth, out uint32_t aDisplayHeight);
+  void getDocumentViewerSize(out uint32_t aDisplayWidth, out uint32_t aDisplayHeight);
 
   /**
    * For any scrollable element, this allows you to override the default

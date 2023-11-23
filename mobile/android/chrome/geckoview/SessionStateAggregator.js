@@ -315,7 +315,7 @@ class ScrollPositionListener extends Handler {
     const displaySize = {};
     const width = {},
       height = {};
-    domWindowUtils.getContentViewerSize(width, height);
+    domWindowUtils.getDocumentViewerSize(width, height);
 
     displaySize.width = width.value;
     displaySize.height = height.value;

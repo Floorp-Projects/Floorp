@@ -45,7 +45,7 @@ class GeckoMVMContext final : public MVMContext {
   bool IsResolutionUpdatedByApz() const override;
   LayoutDeviceMargin ScrollbarAreaToExcludeFromCompositionBounds()
       const override;
-  Maybe<LayoutDeviceIntSize> GetContentViewerSize() const override;
+  Maybe<LayoutDeviceIntSize> GetDocumentViewerSize() const override;
   bool AllowZoomingForDocument() const override;
   bool IsInReaderMode() const override;
   bool IsDocumentLoading() const override;
