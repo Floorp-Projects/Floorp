@@ -8,7 +8,7 @@ import {
   map,
   when,
 } from "chrome://global/content/vendor/lit.all.mjs";
-import { ViewPage } from "./viewpage.mjs";
+import { ViewPage, ViewPageContent } from "./viewpage.mjs";
 
 const lazy = {};
 
@@ -39,10 +39,15 @@ class OpenTabsInView extends ViewPage {
   static properties = {
     windows: { type: Map },
   };
+  static queries = {
+    viewCards: { all: "view-opentabs-card" },
+  };
+
   static TAB_ATTRS_TO_WATCH = Object.freeze(["image", "label"]);
 
   constructor() {
     super();
+    this._started = false;
     this.everyWindowCallbackId = `firefoxview-${Services.uuid.generateUUID()}`;
     this.windows = new Map();
     this.currentWindow = this.getWindow();
@@ -53,13 +58,22 @@ class OpenTabsInView extends ViewPage {
     this.devices = [];
   }
 
-  connectedCallback() {
-    super.connectedCallback();
+  start() {
+    if (this._started) {
+      return;
+    }
+    this._started = true;
+
+    Services.obs.addObserver(this.boundObserve, lazy.UIState.ON_UPDATE);
+    Services.obs.addObserver(this.boundObserve, TOPIC_DEVICELIST_UPDATED);
+    Services.obs.addObserver(this.boundObserve, TOPIC_CURRENT_BROWSER_CHANGED);
+
     lazy.EveryWindow.registerCallback(
       this.everyWindowCallbackId,
       win => {
         if (win.gBrowser && this._shouldShowOpenTabs(win) && !win.closed) {
           const { tabContainer } = win.gBrowser;
+          tabContainer.addEventListener("TabSelect", this);
           tabContainer.addEventListener("TabAttrModified", this);
           tabContainer.addEventListener("TabClose", this);
           tabContainer.addEventListener("TabMove", this);
@@ -75,6 +89,7 @@ class OpenTabsInView extends ViewPage {
       win => {
         if (win.gBrowser && this._shouldShowOpenTabs(win)) {
           const { tabContainer } = win.gBrowser;
+          tabContainer.removeEventListener("TabSelect", this);
           tabContainer.removeEventListener("TabAttrModified", this);
           tabContainer.removeEventListener("TabClose", this);
           tabContainer.removeEventListener("TabMove", this);
@@ -86,41 +101,52 @@ class OpenTabsInView extends ViewPage {
         }
       }
     );
-    this._updateOpenTabsList();
-    this.addObserversIfNeeded();
+    // EveryWindow will invoke the callback for existing windows - including this one
+    // So this._updateOpenTabsList will get called for the already-open window
 
     if (this.currentWindow.gSync) {
       this.devices = this.currentWindow.gSync.getSendTabTargets();
     }
+
+    for (let card of this.viewCards) {
+      card.paused = false;
+      card.viewVisibleCallback?.();
+    }
   }
 
   disconnectedCallback() {
+    super.disconnectedCallback();
+    this.stop();
+  }
+
+  stop() {
+    if (!this._started) {
+      return;
+    }
+    this._started = false;
+    this.paused = true;
+
     lazy.EveryWindow.unregisterCallback(this.everyWindowCallbackId);
-    this.removeObserversIfNeeded();
-  }
 
-  addObserversIfNeeded() {
-    if (!this.observerAdded) {
-      Services.obs.addObserver(this.boundObserve, lazy.UIState.ON_UPDATE);
-      Services.obs.addObserver(this.boundObserve, TOPIC_DEVICELIST_UPDATED);
-      Services.obs.addObserver(
-        this.boundObserve,
-        TOPIC_CURRENT_BROWSER_CHANGED
-      );
-      this.observerAdded = true;
+    Services.obs.removeObserver(this.boundObserve, lazy.UIState.ON_UPDATE);
+    Services.obs.removeObserver(this.boundObserve, TOPIC_DEVICELIST_UPDATED);
+    Services.obs.removeObserver(
+      this.boundObserve,
+      TOPIC_CURRENT_BROWSER_CHANGED
+    );
+
+    for (let card of this.viewCards) {
+      card.paused = true;
+      card.viewHiddenCallback?.();
     }
   }
 
-  removeObserversIfNeeded() {
-    if (this.observerAdded) {
-      Services.obs.removeObserver(this.boundObserve, lazy.UIState.ON_UPDATE);
-      Services.obs.removeObserver(this.boundObserve, TOPIC_DEVICELIST_UPDATED);
-      Services.obs.removeObserver(
-        this.boundObserve,
-        TOPIC_CURRENT_BROWSER_CHANGED
-      );
-      this.observerAdded = false;
-    }
+  viewVisibleCallback() {
+    this.start();
+  }
+
+  viewHiddenCallback() {
+    this.stop();
   }
 
   async observe(subject, topic, data) {
@@ -144,9 +170,6 @@ class OpenTabsInView extends ViewPage {
   }
 
   render() {
-    if (!this.selectedTab && !this.recentBrowsing) {
-      return null;
-    }
     if (this.recentBrowsing) {
       return this.getRecentBrowsingTemplate();
     }
@@ -200,6 +223,7 @@ class OpenTabsInView extends ViewPage {
               <view-opentabs-card
                 class=${cardClasses}
                 .tabs=${currentWindowTabs}
+                .paused=${this.paused}
                 data-inner-id="${this.currentWindow.windowGlobalChild
                   .innerWindowId}"
                 data-l10n-id="firefoxview-opentabs-current-window-header"
@@ -216,6 +240,7 @@ class OpenTabsInView extends ViewPage {
             <view-opentabs-card
               class=${cardClasses}
               .tabs=${tabs}
+              .paused=${this.paused}
               data-inner-id="${win.windowGlobalChild.innerWindowId}"
               data-l10n-id="firefoxview-opentabs-window-header"
               data-l10n-args="${JSON.stringify({ winID })}"
@@ -251,6 +276,7 @@ class OpenTabsInView extends ViewPage {
     return html`<view-opentabs-card
       .tabs=${tabs}
       .recentBrowsing=${true}
+      .paused=${this.paused}
       .devices=${this.devices}
     ></view-opentabs-card>`;
   }
@@ -259,6 +285,13 @@ class OpenTabsInView extends ViewPage {
     const win = target.ownerGlobal;
     const tabs = this.windows.get(win);
     switch (type) {
+      case "TabSelect": {
+        // if we're switching away from our tab, we can halt any updates immediately
+        if (detail.previousTab == this.getBrowserTab()) {
+          this.stop();
+        }
+        return;
+      }
       case "TabAttrModified":
         if (
           !detail.changed.some(attr =>
@@ -328,7 +361,7 @@ customElements.define("view-opentabs", OpenTabsInView);
  * @property {string} title
  *   The window title.
  */
-class OpenTabsInViewCard extends ViewPage {
+class OpenTabsInViewCard extends ViewPageContent {
   static properties = {
     showMore: { type: Boolean },
     tabs: { type: Array },
@@ -510,6 +543,18 @@ class OpenTabsInViewCard extends ViewPage {
         window: this.title || "Window 1 (Current)",
       }
     );
+  }
+
+  viewVisibleCallback() {
+    if (this.tabList) {
+      this.tabList.visible = true;
+    }
+  }
+
+  viewHiddenCallback() {
+    if (this.tabList) {
+      this.tabList.visible = false;
+    }
   }
 
   render() {

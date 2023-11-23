@@ -92,7 +92,7 @@
     <main id="pages" role="application" data-l10n-id="firefoxview-page-label">
       <div class="main-container">
         <named-deck>
-          <view-recentbrowsing name="recentbrowsing">
+          <view-recentbrowsing name="recentbrowsing" type="page">
             <div>
               <view-opentabs slot="opentabs"></view-opentabs>
             </div>
@@ -103,10 +103,13 @@
               <view-syncedtabs slot="syncedtabs"></view-syncedtabs>
             </div>
           </view-recentbrowsing>
-          <view-history name="history"></view-history>
-          <view-opentabs name="opentabs"></view-opentabs>
-          <view-recentlyclosed name="recentlyclosed"></view-recentlyclosed>
-          <view-syncedtabs name="syncedtabs"></view-syncedtabs>
+          <view-history name="history" type="page"></view-history>
+          <view-opentabs name="opentabs" type="page"></view-opentabs>
+          <view-recentlyclosed
+            name="recentlyclosed"
+            type="page"
+          ></view-recentlyclosed>
+          <view-syncedtabs name="syncedtabs" type="page"></view-syncedtabs>
         </named-deck>
       </div>
     </main>

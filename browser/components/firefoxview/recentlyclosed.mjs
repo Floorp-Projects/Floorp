@@ -27,6 +27,7 @@ function getWindow() {
 class RecentlyClosedTabsInView extends ViewPage {
   constructor() {
     super();
+    this._started = false;
     this.boundObserve = (...args) => this.observe(...args);
     this.fullyUpdated = false;
     this.maxTabsLength = this.recentBrowsing ? 5 : 25;
@@ -49,55 +50,54 @@ class RecentlyClosedTabsInView extends ViewPage {
     }
   }
 
-  connectedCallback() {
-    super.connectedCallback();
+  start() {
+    if (this._started) {
+      return;
+    }
+    this._started = true;
+    this.paused = false;
     this.updateRecentlyClosedTabs();
-    this.addObserversIfNeeded();
+
+    Services.obs.addObserver(
+      this.boundObserve,
+      SS_NOTIFY_CLOSED_OBJECTS_CHANGED
+    );
+    Services.obs.addObserver(
+      this.boundObserve,
+      SS_NOTIFY_BROWSER_SHUTDOWN_FLUSH
+    );
+  }
+
+  stop() {
+    if (!this._started) {
+      return;
+    }
+    this._started = false;
+
+    Services.obs.removeObserver(
+      this.boundObserve,
+      SS_NOTIFY_CLOSED_OBJECTS_CHANGED
+    );
+    Services.obs.removeObserver(
+      this.boundObserve,
+      SS_NOTIFY_BROWSER_SHUTDOWN_FLUSH
+    );
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    this.removeObserversIfNeeded();
+    this.stop();
   }
 
-  addObserversIfNeeded() {
-    if (!this.observerAdded) {
-      Services.obs.addObserver(
-        this.boundObserve,
-        SS_NOTIFY_CLOSED_OBJECTS_CHANGED
-      );
-      Services.obs.addObserver(
-        this.boundObserve,
-        SS_NOTIFY_BROWSER_SHUTDOWN_FLUSH
-      );
-      this.observerAdded = true;
-    }
+  // We remove all the observers when the instance is not visible to the user
+  viewHiddenCallback() {
+    this.stop();
   }
 
-  removeObserversIfNeeded() {
-    if (this.observerAdded) {
-      Services.obs.removeObserver(
-        this.boundObserve,
-        SS_NOTIFY_CLOSED_OBJECTS_CHANGED
-      );
-      Services.obs.removeObserver(
-        this.boundObserve,
-        SS_NOTIFY_BROWSER_SHUTDOWN_FLUSH
-      );
-      this.observerAdded = false;
-    }
-  }
-
-  // we observe when a tab closes but since this notification fires more frequently and on
-  // all windows, we remove the observer when another tab is selected
-  viewTabHiddenCallback() {
-    this.removeObserversIfNeeded();
-  }
-
-  // we check for changes to the session store once the user return to this tab.
-  viewTabVisibleCallback() {
-    this.addObserversIfNeeded();
-    this.updateRecentlyClosedTabs();
+  // We add observers and check for changes to the session store once the user return to this tab.
+  // or the instance becomes visible to the user
+  viewVisibleCallback() {
+    this.start();
   }
 
   getTabStateValue(tab, key) {
@@ -266,9 +266,6 @@ class RecentlyClosedTabsInView extends ViewPage {
   }
 
   render() {
-    if (!this.selectedTab && !this.recentBrowsing) {
-      return null;
-    }
     return html`
       <link
         rel="stylesheet"

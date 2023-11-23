@@ -11,11 +11,21 @@ class RecentBrowsingInView extends ViewPage {
     this.pageType = "recentbrowsing";
   }
 
-  connectedCallback() {
-    super.connectedCallback();
+  viewVisibleCallback() {
+    for (let child of this.children) {
+      let childView = child.firstElementChild;
+      childView.paused = false;
+      childView.viewVisibleCallback();
+    }
   }
 
-  disconnectedCallback() {}
+  viewHiddenCallback() {
+    for (let child of this.children) {
+      let childView = child.firstElementChild;
+      childView.paused = true;
+      childView.viewHiddenCallback();
+    }
+  }
 
   render() {
     return html`

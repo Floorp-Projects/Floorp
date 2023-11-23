@@ -20,9 +20,8 @@ add_setup(function () {
 async function navigateToOpenTabs(browser) {
   const document = browser.contentDocument;
   if (document.querySelector("named-deck").selectedViewName != "opentabs") {
-    navigateToCategory(document, "opentabs");
+    await navigateToCategoryAndWait(browser.contentDocument, "opentabs");
   }
-  await TestUtils.waitForTick();
 }
 
 function getOpenTabsComponent(browser) {
@@ -79,8 +78,14 @@ add_task(async function open_tab_same_window() {
       gBrowser.visibleTabs[0].linkedBrowser.currentURI.spec,
       "The first item represents the first visible tab"
     );
+    let promiseHidden = BrowserTestUtils.waitForEvent(
+      browser.contentDocument,
+      "visibilitychange"
+    );
+    await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+    await promiseHidden;
   });
-  await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+
   const [originalTab, newTab] = gBrowser.visibleTabs;
 
   await openFirefoxViewTab(window).then(async viewTab => {
@@ -92,7 +97,12 @@ add_task(async function open_tab_same_window() {
     is(tabItems.length, 2, "There are two items.");
     is(tabItems[1].url, TEST_URL, "The newly opened tab appears last.");
 
+    let promiseHidden = BrowserTestUtils.waitForEvent(
+      browser.contentDocument,
+      "visibilitychange"
+    );
     tabItems[0].mainEl.click();
+    await promiseHidden;
   });
 
   await BrowserTestUtils.waitForCondition(
@@ -104,7 +114,14 @@ add_task(async function open_tab_same_window() {
     const browser = viewTab.linkedBrowser;
     const cards = getCards(browser);
     let tabItems = await getRowsForCard(cards[0]);
+
+    let promiseHidden = BrowserTestUtils.waitForEvent(
+      browser.contentDocument,
+      "visibilitychange"
+    );
+
     tabItems[1].mainEl.click();
+    await promiseHidden;
   });
 
   await BrowserTestUtils.waitForCondition(
@@ -128,11 +145,8 @@ add_task(async function open_tab_same_window() {
         return tabItems[0].url === TEST_URL;
       }
     );
-  });
+    await BrowserTestUtils.removeTab(newTab);
 
-  await BrowserTestUtils.removeTab(newTab);
-  await openFirefoxViewTab(window).then(async viewTab => {
-    const browser = viewTab.linkedBrowser;
     const [card] = getCards(browser);
     await TestUtils.waitForCondition(
       async () => (await getRowsForCard(card)).length === 1,
@@ -300,11 +314,11 @@ add_task(async function toggle_show_more_link() {
     is(cards.length, NUMBER_OF_WINDOWS, "There are four windows.");
     lastCard = cards[NUMBER_OF_WINDOWS - 1];
     lastWindow = windows[NUMBER_OF_WINDOWS - 2];
-  });
 
-  for (let i = 0; i < NUMBER_OF_TABS - 1; i++) {
-    await BrowserTestUtils.openNewForegroundTab(lastWindow.gBrowser);
-  }
+    for (let i = 0; i < NUMBER_OF_TABS - 1; i++) {
+      await BrowserTestUtils.openNewForegroundTab(lastWindow.gBrowser);
+    }
+  });
 
   await openFirefoxViewTab(window).then(async viewTab => {
     const browser = viewTab.linkedBrowser;

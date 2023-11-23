@@ -49,6 +49,7 @@ const SEARCH_DEBOUNCE_TIMEOUT_MS = 1000;
 class HistoryInView extends ViewPage {
   constructor() {
     super();
+    this._started = false;
     this.allHistoryItems = new Map();
     this.historyMapByDate = [];
     this.historyMapBySite = [];
@@ -62,10 +63,25 @@ class HistoryInView extends ViewPage {
     this.fullyUpdated = false;
   }
 
+  start() {
+    if (this._started) {
+      return;
+    }
+    this._started = true;
+
+    this.#updateAllHistoryItems();
+    this.placesQuery.observeHistory(data => this.#updateAllHistoryItems(data));
+
+    this.searchTask = new lazy.DeferredTask(
+      () => this.#updateSearchResults(),
+      SEARCH_DEBOUNCE_RATE_MS,
+      SEARCH_DEBOUNCE_TIMEOUT_MS
+    );
+  }
+
   async connectedCallback() {
     super.connectedCallback();
     await this.updateHistoryData();
-    this.placesQuery.observeHistory(data => this.#updateAllHistoryItems(data));
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
       "importHistoryDismissedPref",
@@ -92,23 +108,26 @@ class HistoryInView extends ViewPage {
       // Convert milliseconds to days
       this.profileAge = profileAge / 1000 / 60 / 60 / 24;
     }
-    this.searchTask = new lazy.DeferredTask(
-      () => this.#updateSearchResults(),
-      SEARCH_DEBOUNCE_RATE_MS,
-      SEARCH_DEBOUNCE_TIMEOUT_MS
-    );
+  }
+
+  stop() {
+    if (!this._started) {
+      return;
+    }
+    this._started = false;
+    this.placesQuery.close();
+    if (!this.searchTask.isFinalized) {
+      this.searchTask.finalize();
+    }
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    this.placesQuery.close();
+    this.stop();
     this.migrationWizardDialog?.removeEventListener(
       "MigrationWizard:Close",
       this.migrationWizardDialog
     );
-    if (!this.searchTask.isFinalized) {
-      this.searchTask.finalize();
-    }
   }
 
   async #updateAllHistoryItems(allHistoryItems) {
@@ -137,13 +156,12 @@ class HistoryInView extends ViewPage {
     }
   }
 
-  viewTabVisibleCallback() {
-    this.#updateAllHistoryItems();
-    this.placesQuery.observeHistory(data => this.#updateAllHistoryItems(data));
+  viewVisibleCallback() {
+    this.start();
   }
 
-  viewTabHiddenCallback() {
-    this.placesQuery.close();
+  viewHiddenCallback() {
+    this.stop();
   }
 
   static queries = {
