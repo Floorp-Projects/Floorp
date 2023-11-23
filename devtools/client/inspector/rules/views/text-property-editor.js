@@ -272,7 +272,7 @@ TextPropertyEditor.prototype = {
 
     // Filter button that filters for the current property name and is
     // displayed when the property is overridden by another rule.
-    this.filterProperty = createChild(this.container, "div", {
+    this.filterProperty = createChild(this.container, "button", {
       class: "ruleview-overridden-rule-filter",
       hidden: "",
       title: l10n("rule.filterProperty.title"),
