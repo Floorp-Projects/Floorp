@@ -6611,7 +6611,7 @@ nsresult nsDocShell::CreateAboutBlankContentViewer(
   mFiredUnloadEvent = false;
 
   nsCOMPtr<nsIDocumentLoaderFactory> docFactory =
-      nsContentUtils::FindInternalContentViewer("text/html"_ns);
+      nsContentUtils::FindInternalDocumentViewer("text/html"_ns);
 
   if (docFactory) {
     nsCOMPtr<nsIPrincipal> principal, partitionedPrincipal;
@@ -8002,7 +8002,7 @@ nsresult nsDocShell::NewDocumentViewerObj(const nsACString& aContentType,
   nsCOMPtr<nsIChannel> aOpenedChannel = do_QueryInterface(aRequest);
 
   nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory =
-      nsContentUtils::FindInternalContentViewer(aContentType);
+      nsContentUtils::FindInternalDocumentViewer(aContentType);
   if (!docLoaderFactory) {
     return NS_ERROR_FAILURE;
   }

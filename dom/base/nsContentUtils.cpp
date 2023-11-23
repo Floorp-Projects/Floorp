@@ -7015,8 +7015,8 @@ bool nsContentUtils::IsSystemOrPDFJS(JSContext* aCx, JSObject*) {
 }
 
 already_AddRefed<nsIDocumentLoaderFactory>
-nsContentUtils::FindInternalContentViewer(const nsACString& aType,
-                                          ContentViewerType* aLoaderType) {
+nsContentUtils::FindInternalDocumentViewer(const nsACString& aType,
+                                           ContentViewerType* aLoaderType) {
   if (aLoaderType) {
     *aLoaderType = TYPE_UNSUPPORTED;
   }
