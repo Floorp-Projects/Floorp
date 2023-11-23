@@ -1,9 +1,49 @@
+<html class="reftest-wait">
 <script>
+let pp;
+let documentElements = [];
+documentElements.push(document.documentElement);
+
 window.onload = () => {
+  documentElements.push(document.documentElement);
+
   let o = document.getElementById('a')
   o.parentNode.appendChild(o)
-  window.print()
-  window.requestIdleCallback(() => { document.write('') })
+  pp = SpecialPowers.wrap(self).printPreview();
+  pp?.print()
+  window.requestIdleCallback(() => {
+    documentElements.push(document.documentElement);
+
+    document.write('');
+
+    setTimeout(finish, 100);
+  });
+}
+
+function finish() {
+
+  // The printPreview call above actually opens two print preview windows
+  // because the <embed src='#'> below causes a second one to open. At least
+  // we close the one window we can access, not sure if there is a way to get
+  // ahold of the other window to close it. So this test leaves a window open
+  // after it finishes.
+  try { pp.close(); } catch (e) {}
+
+  if (document.documentElement) {
+    try { document.documentElement.className = ""; } catch (e) {}
+  }
+
+  // The documentElement that the reftest harness looks at to determine if the
+  // test is done is not what document.documentElement points to when this code
+  // is run. So we save all the document.documentElement's we encounter while
+  // running this test and clear all of their class names.
+  for (let de of documentElements) {
+    if (de) {
+      try {
+        de.className = "";
+      } catch (e) {}
+    }
+  }
 }
 </script>
 <style>
@@ -11,3 +51,4 @@ window.onload = () => {
 </style>
 <mark id='a'>
 <embed src='#'>
+</html>
