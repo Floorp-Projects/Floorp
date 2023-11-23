@@ -6410,6 +6410,15 @@ bool GeneralParser<ParseHandler, Unit>::forHeadStart(
 
     parsingLexicalDeclaration = nextTokenContinuesLetDeclaration(next);
     if (!parsingLexicalDeclaration) {
+      // If we end up here, we may have `for (let <reserved word> of/in ...`,
+      // which is not valid.
+      if (next != TokenKind::In && next != TokenKind::Of &&
+          TokenKindIsReservedWord(next)) {
+        tokenStream.consumeKnownToken(next);
+        error(JSMSG_UNEXPECTED_TOKEN_NO_EXPECT, TokenKindToDesc(next));
+        return false;
+      }
+
       anyChars.ungetToken();
       letIsIdentifier = true;
     }
