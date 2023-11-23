@@ -12,6 +12,9 @@ const {
 } = require("resource://devtools/client/shared/vendor/react.js");
 const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
+const {
+  getFormatStr,
+} = require("resource://devtools/client/inspector/layout/utils/l10n.js");
 
 loader.lazyRequireGetter(
   this,
@@ -86,14 +89,14 @@ class FlexContainer extends PureComponent {
           onDOMNodeMouseOut: () => dispatch(unhighlightNode()),
           onDOMNodeMouseOver: () => dispatch(highlightNode(nodeFront)),
         }),
-        dom.div({
+        dom.button({
           className: "layout-color-swatch",
           "data-color": color,
           ref: this.swatchEl,
           style: {
             backgroundColor: color,
           },
-          title: color,
+          title: getFormatStr("layout.colorSwatch.tooltip", color),
         })
       ),
       dom.div(
