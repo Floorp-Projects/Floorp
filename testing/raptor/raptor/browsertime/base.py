@@ -168,7 +168,7 @@ class Browsertime(Perftest):
                     "mac-x86_64": str(
                         pathlib.Path("{}chromedriver-mac-x64", "chromedriver")
                     ),
-                    "mac-arm": str(
+                    "mac-aarch64": str(
                         pathlib.Path("{}chromedriver-mac-arm64", "chromedriver")
                     ),
                     "default": str(
