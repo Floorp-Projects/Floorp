@@ -4046,7 +4046,7 @@ static SamplerThread* NewSamplerThread(PSLockRef aLock, uint32_t aGeneration,
 // This function is the sampler thread.  This implementation is used for all
 // targets.
 void SamplerThread::Run() {
-  PR_SetCurrentThreadName("SamplerThread");
+  NS_SetCurrentThreadName("SamplerThread");
 
   // Features won't change during this SamplerThread's lifetime, so we can read
   // them once and store them locally.
