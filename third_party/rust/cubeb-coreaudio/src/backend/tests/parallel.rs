@@ -1,6 +1,6 @@
 use super::utils::{
-    noop_data_callback, test_audiounit_get_buffer_frame_size, test_get_default_audiounit,
-    test_get_default_device, test_ops_context_operation, PropertyScope, Scope,
+    test_audiounit_get_buffer_frame_size, test_get_default_audiounit, test_get_default_device,
+    test_ops_context_operation, PropertyScope, Scope,
 };
 use super::*;
 use std::thread;
@@ -232,7 +232,7 @@ fn create_streams_by_ops_in_parallel_with_different_latency<F>(
                                         ptr::null_mut()
                                     },
                                     latency_frames,
-                                    Some(noop_data_callback),
+                                    None,            // No data callback.
                                     None,            // No state callback.
                                     ptr::null_mut(), // No user data pointer.
                                 )
@@ -468,7 +468,7 @@ fn create_streams_in_parallel_with_different_latency<F>(
                                 None
                             },
                             latency_frames,
-                            Some(noop_data_callback),
+                            None,            // No data callback.
                             None,            // No state callback.
                             ptr::null_mut(), // No user data pointer.
                         )
