@@ -8,28 +8,66 @@
 <script>
   onload = function() {
     const kData = [
-        { href: "dummy.css?1", fetchPriority: "low"},
-        { href: "dummy.css?2", fetchPriority: "high"},
-        { href: "dummy.css?3", fetchPriority: "auto"},
-        { href: "dummy.css?4"}
+        { href: "dummy.css?1", fetchPriority: "low", isAlternate: false,
+          isMediaPrint: false },
+        { href: "dummy.css?2", fetchPriority: "high", isAlternate: false,
+          isMediaPrint: false  },
+        { href: "dummy.css?3", fetchPriority: "auto", isAlternate: false,
+          isMediaPrint: false } ,
+        { href: "dummy.css?4", isAlternate: false,
+          isMediaPrint: false } ,
+        { href: "dummy.css?5", fetchPriority: "low", isAlternate: true,
+          isMediaPrint: false, title: "5" },
+        { href: "dummy.css?6", fetchPriority: "high", isAlternate: true,
+          isMediaPrint: false, title: "6" },
+        { href: "dummy.css?7", fetchPriority: "auto", isAlternate: true,
+          isMediaPrint: false, title: "7" },
+        { href: "dummy.css?8", isAlternate: true,
+          isMediaPrint: false, title: "8" },
+        { href: "dummy.css?9", fetchPriority: "low", isAlternate: false,
+          isMediaPrint: true  },
+        { href: "dummy.css?10", fetchPriority: "high", isAlternate: false,
+          isMediaPrint: true  },
+        { href: "dummy.css?11", fetchPriority: "auto", isAlternate: false,
+          isMediaPrint: true  },
+        { href: "dummy.css?12", isAlternate: false,
+          isMediaPrint: true  },
     ];
 
+    let loadCounter = 0;
     let allLinkElements = [];
     for (data of kData) {
       let linkElement = document.createElement("link");
-      linkElement.rel = "stylesheet"
+
+      linkElement.rel = data.isAlternate ? "alternate stylesheet" :
+        "stylesheet";
+
+      if (data.isAlternate) {
+        linkElement.title = data.title;
+      }
+
       linkElement.href = data.href;
+
+      // Wait until all elements have been loaded.
+      linkElement.onload = () => {
+        ++loadCounter;
+        if (loadCounter == allLinkElements.length) {
+          opener.postMessage("ChildLoaded", "*");
+        }
+      }
 
       if ("fetchPriority" in data) {
         linkElement.fetchPriority = data.fetchPriority;
+      }
+
+      if (data.isMediaPrint) {
+        linkElement.media = "print";
       }
 
       allLinkElements.push(linkElement);
     }
 
     document.head.append(...allLinkElements)
-
-    opener.postMessage("ChildLoaded", "*");
   }
 </script>
 </body>

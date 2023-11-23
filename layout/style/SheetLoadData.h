@@ -16,6 +16,9 @@
 #include "nsProxyRelease.h"
 
 namespace mozilla {
+namespace dom {
+enum class FetchPriority : uint8_t;
+}  // namespace dom
 class AsyncEventDispatcher;
 class StyleSheet;
 }  // namespace mozilla
@@ -59,7 +62,7 @@ class SheetLoadData final
                 SyncLoad, nsINode* aOwningNode, IsAlternate, MediaMatched,
                 StylePreloadKind, nsICSSLoaderObserver* aObserver,
                 nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo*,
-                const nsAString& aNonce);
+                const nsAString& aNonce, dom::FetchPriority aFetchPriority);
 
   // Data for loading a sheet linked from an @import rule
   SheetLoadData(css::Loader*, nsIURI*, StyleSheet*, SheetLoadData* aParentData,
@@ -67,6 +70,8 @@ class SheetLoadData final
                 nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo*);
 
   // Data for loading a non-document sheet
+  // TODO: does this include sheets linked from a Link header? If so, the fetch
+  //       priority needs to be passed too.
   SheetLoadData(css::Loader*, nsIURI*, StyleSheet*, SyncLoad,
                 UseSystemPrincipal, StylePreloadKind,
                 const Encoding* aPreloadEncoding,
@@ -218,6 +223,8 @@ class SheetLoadData final
 
   // The cryptographic nonce of the load used for CSP checks.
   const nsString mNonce;
+
+  const dom::FetchPriority mFetchPriority;
 
   // The encoding guessed from attributes and the document character set.
   const NotNull<const Encoding*> mGuessedEncoding;

@@ -491,6 +491,8 @@ class Loader final {
   [[nodiscard]] nsresult LoadSheetSyncInternal(SheetLoadData& aLoadData,
                                                SheetState aSheetState);
 
+  void AdjustPriority(const SheetLoadData& aLoadData, nsIChannel* aChannel);
+
   // Only to be called by `LoadSheet`.
   [[nodiscard]] nsresult LoadSheetAsyncInternal(
       SheetLoadData& aLoadData, uint64_t aEarlyHintPreloaderId,

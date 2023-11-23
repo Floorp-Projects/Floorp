@@ -2,17 +2,44 @@ export const kTestFolderName = "link-tests";
 
 const kExpectedRequestsOfLoadStylesheet = [
     {   fileNameAndSuffix: "dummy.css?1",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
-    },
-    {   fileNameAndSuffix: "dummy.css?2",
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
     },
+    {   fileNameAndSuffix: "dummy.css?2",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
+    },
     {   fileNameAndSuffix: "dummy.css?3",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
     },
     {   fileNameAndSuffix: "dummy.css?4",
-        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_NORMAL
-    }
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGHEST
+    },
+    {   fileNameAndSuffix: "dummy.css?5",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+    },
+    {   fileNameAndSuffix: "dummy.css?6",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+    },
+    {   fileNameAndSuffix: "dummy.css?7",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+    },
+    {   fileNameAndSuffix: "dummy.css?8",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+    },
+    // `media=print` doesn't match the environment
+    // (https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#matches-the-environment)
+    // hence all internal priorities should be low.
+    {   fileNameAndSuffix: "dummy.css?9",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+    },
+    {   fileNameAndSuffix: "dummy.css?10",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+    },
+    {   fileNameAndSuffix: "dummy.css?11",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+    },
+    {   fileNameAndSuffix: "dummy.css?12",
+        internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
+    },
 ];
 
 const kExpectedRequestsOfLinkPreload = [
@@ -100,7 +127,15 @@ const kPipeHeaderLinksToStylesheets =
   "=header(Link,<dummy.css?1>; rel=stylesheet; fetchpriority=low,True)" +
   "|header(Link,<dummy.css?2>; rel=stylesheet; fetchpriority=high,True)" +
   "|header(Link,<dummy.css?3>; rel=stylesheet; fetchpriority=auto,True)" +
-  "|header(Link,<dummy.css?4>; rel=stylesheet,True)"
+  "|header(Link,<dummy.css?4>; rel=stylesheet,True)" +
+  "|header(Link,<dummy.css?5>; rel=\"alternate stylesheet\"; title=5; fetchpriority=low,True)" +
+  "|header(Link,<dummy.css?6>; rel=\"alternate stylesheet\"; title=6; fetchpriority=high,True)" +
+  "|header(Link,<dummy.css?7>; rel=\"alternate stylesheet\"; title=7; fetchpriority=auto,True)" +
+  "|header(Link,<dummy.css?8>; rel=\"alternate stylesheet\"; title=8,True)" +
+  "|header(Link,<dummy.css?9>; rel=stylesheet; fetchpriority=low; media=print,True)" +
+  "|header(Link,<dummy.css?10>; rel=stylesheet; fetchpriority=high; media=print,True)" +
+  "|header(Link,<dummy.css?11>; rel=stylesheet; fetchpriority=auto; media=print,True)" +
+  "|header(Link,<dummy.css?12>; rel=stylesheet; media=print,True)";
 
 const kPipeHeaderPreloadLinks =
   // as="fetch"

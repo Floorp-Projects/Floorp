@@ -7,6 +7,7 @@
 #include "XMLStylesheetProcessingInstruction.h"
 
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/FetchPriority.h"
 #include "mozilla/dom/ReferrerInfo.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
@@ -140,6 +141,7 @@ XMLStylesheetProcessingInstruction::GetStyleSheetInfo() {
       alternate ? HasAlternateRel::Yes : HasAlternateRel::No,
       IsInline::No,
       IsExplicitlyEnabled::No,
+      FetchPriority::Auto,
   });
 }
 

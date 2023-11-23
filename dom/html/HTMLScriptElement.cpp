@@ -215,14 +215,7 @@ CORSMode HTMLScriptElement::GetCORSMode() const {
 }
 
 FetchPriority HTMLScriptElement::GetFetchPriority() const {
-  const nsAttrValue* fetchpriorityAttribute =
-      GetParsedAttr(nsGkAtoms::fetchpriority);
-  if (fetchpriorityAttribute) {
-    MOZ_ASSERT(fetchpriorityAttribute->Type() == nsAttrValue::eEnum);
-    return FetchPriority(fetchpriorityAttribute->GetEnumValue());
-  }
-
-  return FetchPriority::Auto;
+  return nsGenericHTMLElement::GetFetchPriority();
 }
 
 mozilla::dom::ReferrerPolicy HTMLScriptElement::GetReferrerPolicy() {

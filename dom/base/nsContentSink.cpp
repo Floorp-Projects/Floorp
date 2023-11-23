@@ -334,15 +334,18 @@ nsresult nsContentSink::ProcessLinkFromHeader(const net::LinkHeader& aHeader,
   }
 
   bool isAlternate = linkTypes & LinkStyle::eALTERNATE;
-  return ProcessStyleLinkFromHeader(aHeader.mHref, isAlternate, aHeader.mTitle,
-                                    aHeader.mIntegrity, aHeader.mType,
-                                    aHeader.mMedia, aHeader.mReferrerPolicy);
+  return ProcessStyleLinkFromHeader(
+      aHeader.mHref, isAlternate, aHeader.mTitle, aHeader.mIntegrity,
+      aHeader.mType, aHeader.mMedia, aHeader.mReferrerPolicy,
+      StaticPrefs::network_fetchpriority_enabled() ? aHeader.mFetchPriority
+                                                   : EmptyString());
 }
 
 nsresult nsContentSink::ProcessStyleLinkFromHeader(
     const nsAString& aHref, bool aAlternate, const nsAString& aTitle,
     const nsAString& aIntegrity, const nsAString& aType,
-    const nsAString& aMedia, const nsAString& aReferrerPolicy) {
+    const nsAString& aMedia, const nsAString& aReferrerPolicy,
+    const nsAString& aFetchPriority) {
   if (aAlternate && aTitle.IsEmpty()) {
     // alternates must have title return without error, for now
     return NS_OK;
@@ -374,6 +377,9 @@ nsresult nsContentSink::ProcessStyleLinkFromHeader(
   nsCOMPtr<nsIReferrerInfo> referrerInfo =
       ReferrerInfo::CreateFromDocumentAndPolicyOverride(mDocument, policy);
 
+  const FetchPriority fetchPriority =
+      nsGenericHTMLElement::ToFetchPriority(aFetchPriority);
+
   Loader::SheetInfo info{
       *mDocument,
       nullptr,
@@ -388,6 +394,7 @@ nsresult nsContentSink::ProcessStyleLinkFromHeader(
       aAlternate ? Loader::HasAlternateRel::Yes : Loader::HasAlternateRel::No,
       Loader::IsInline::No,
       Loader::IsExplicitlyEnabled::No,
+      fetchPriority,
   };
 
   auto loadResultOrErr =

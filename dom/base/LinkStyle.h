@@ -21,6 +21,7 @@ class nsIURI;
 namespace mozilla::dom {
 
 class Document;
+enum class FetchPriority : uint8_t;
 class ShadowRoot;
 
 // https://drafts.csswg.org/cssom/#the-linkstyle-interface
@@ -140,6 +141,7 @@ class LinkStyle {
     nsString mMedia;
     nsString mIntegrity;
     nsString mNonce;
+    const FetchPriority mFetchPriority;
 
     bool mHasAlternateRel;
     bool mIsInline;
@@ -152,7 +154,7 @@ class LinkStyle {
               mozilla::CORSMode, const nsAString& aTitle,
               const nsAString& aMedia, const nsAString& aIntegrity,
               const nsAString& aNonce, HasAlternateRel, IsInline,
-              IsExplicitlyEnabled);
+              IsExplicitlyEnabled, FetchPriority aFetchPriority);
 
     ~SheetInfo();
   };
