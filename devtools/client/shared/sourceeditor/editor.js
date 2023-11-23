@@ -343,23 +343,12 @@ Editor.prototype = {
 
       const onLoad = () => {
         const win = env.contentWindow.wrappedJSObject;
-
-        if (!this.config.themeSwitching) {
-          win.document.documentElement.setAttribute("force-theme", "light");
-        }
-
-        Services.scriptloader.loadSubScript(
-          "chrome://devtools/content/shared/theme-switching.js",
-          win
-        );
         this.container = env;
         this._setup(win.document.body, el.ownerDocument);
-        env.removeEventListener("load", onLoad, true);
-
         resolve();
       };
 
-      env.addEventListener("load", onLoad, true);
+      env.addEventListener("load", onLoad, { capture: true, once: true });
       env.setAttribute("src", CM_IFRAME);
       el.appendChild(env);
 
