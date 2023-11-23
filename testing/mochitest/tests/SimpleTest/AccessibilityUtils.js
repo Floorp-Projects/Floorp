@@ -234,7 +234,11 @@ this.AccessibilityUtils = (function () {
       return false;
     }
     const toolbar = node.closest("toolbar");
-    if (!toolbar || toolbar.getAttribute("keyNav") != "true") {
+    if (
+      !toolbar ||
+      toolbar.getAttribute("keyNav") != "true" ||
+      node.id == "urlbar-go-button"
+    ) {
       return false;
     }
     return node.ownerGlobal.ToolbarKeyboardNavigator._isButton(node);

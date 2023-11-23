@@ -20,7 +20,15 @@ function urlClick(url) {
   gURLBar.focus();
   gURLBar.value = "";
   EventUtils.sendString(url);
+  // We intentionally change this a11y check, because the following click is
+  // send to test the behavior of a purposefully non-focusable image button
+  // using an alternative way of the urlbar search query submission, where
+  // other ways are keyboard accessible (and are tested above).
+  AccessibilityUtils.setEnv({
+    focusableRule: false,
+  });
   EventUtils.synthesizeMouseAtCenter(gURLBar.goButton, {});
+  AccessibilityUtils.resetEnv();
 }
 
 function promiseNewTabSwitched() {
