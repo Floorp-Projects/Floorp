@@ -16,7 +16,7 @@ const KEYMAP_PREF = "devtools.editor.keymap";
 const AUTO_CLOSE = "devtools.editor.autoclosebrackets";
 const AUTOCOMPLETE = "devtools.editor.autocomplete";
 const CARET_BLINK_TIME = "ui.caretBlinkTime";
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 const VALID_KEYMAPS = new Map([
   [
@@ -330,11 +330,8 @@ Editor.prototype = {
       const cm = editors.get(this);
 
       if (!env) {
-        env = el.ownerDocument.createElementNS(el.namespaceURI, "iframe");
-
-        if (el.namespaceURI === XUL_NS) {
-          env.setAttribute("flex", "1");
-        }
+        env = el.ownerDocument.createElementNS(XHTML_NS, "iframe");
+        env.className = "source-editor-frame";
       }
 
       if (cm) {
@@ -349,7 +346,7 @@ Editor.prototype = {
       };
 
       env.addEventListener("load", onLoad, { capture: true, once: true });
-      env.setAttribute("src", CM_IFRAME);
+      env.src = CM_IFRAME;
       el.appendChild(env);
 
       this.once("destroy", () => el.removeChild(env));
