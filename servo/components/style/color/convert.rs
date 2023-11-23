@@ -20,7 +20,7 @@ type Vector = euclid::default::Vector3D<f32>;
 
 /// Normalize hue into [0, 360).
 #[inline]
-fn normalize_hue(hue: f32) -> f32 {
+pub fn normalize_hue(hue: f32) -> f32 {
     hue - 360. * (hue / 360.).floor()
 }
 
@@ -68,6 +68,8 @@ pub fn hsl_to_rgb(from: &ColorComponents) -> ColorComponents {
 
     // Convert missing components to 0.0.
     let ColorComponents(hue, saturation, lightness) = from.map(normalize);
+    let saturation = saturation / 100.0;
+    let lightness = lightness / 100.0;
 
     let t2 = if lightness <= 0.5 {
         lightness * (saturation + 1.0)
@@ -103,7 +105,7 @@ pub fn rgb_to_hsl(from: &ColorComponents) -> ColorComponents {
         0.0
     };
 
-    ColorComponents(hue, saturation, lightness)
+    ColorComponents(hue, saturation * 100.0, lightness * 100.0)
 }
 
 /// Convert from HWB notation to RGB notation.
@@ -113,13 +115,16 @@ pub fn hwb_to_rgb(from: &ColorComponents) -> ColorComponents {
     // Convert missing components to 0.0.
     let ColorComponents(hue, whiteness, blackness) = from.map(normalize);
 
-    if whiteness + blackness > 1.0 {
+    let whiteness = whiteness / 100.0;
+    let blackness = blackness / 100.0;
+
+    if whiteness + blackness >= 1.0 {
         let gray = whiteness / (whiteness + blackness);
         return ColorComponents(gray, gray, gray);
     }
 
     let x = 1.0 - whiteness - blackness;
-    hsl_to_rgb(&ColorComponents(hue, 1.0, 0.5)).map(|v| v * x + whiteness)
+    hsl_to_rgb(&ColorComponents(hue, 100.0, 50.0)).map(|v| v * x + whiteness)
 }
 
 /// Convert from RGB notation to HWB notation.
@@ -133,7 +138,7 @@ pub fn rgb_to_hwb(from: &ColorComponents) -> ColorComponents {
     let whiteness = min;
     let blackness = 1.0 - max;
 
-    ColorComponents(hue, whiteness, blackness)
+    ColorComponents(hue, whiteness * 100.0, blackness * 100.0)
 }
 
 /// Convert from the rectangular orthogonal to the cylindrical polar coordinate
