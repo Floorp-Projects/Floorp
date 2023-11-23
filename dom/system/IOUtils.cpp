@@ -574,11 +574,6 @@ already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
       });
 }
 
-static bool AppendJsonAsUtf8(const char16_t* aData, uint32_t aLen, void* aStr) {
-  nsCString* str = static_cast<nsCString*>(aStr);
-  return AppendUTF16toUTF8(Span<const char16_t>(aData, aLen), *str, fallible);
-}
-
 /* static */
 already_AddRefed<Promise> IOUtils::WriteJSON(GlobalObject& aGlobal,
                                              const nsAString& aPath,
@@ -605,10 +600,9 @@ already_AddRefed<Promise> IOUtils::WriteJSON(GlobalObject& aGlobal,
 
         JSContext* cx = aGlobal.Context();
         JS::Rooted<JS::Value> rootedValue(cx, aValue);
-        nsCString utf8Str;
-
-        if (!JS_Stringify(cx, &rootedValue, nullptr, JS::NullHandleValue,
-                          AppendJsonAsUtf8, &utf8Str)) {
+        nsString string;
+        if (!nsContentUtils::StringifyJSON(cx, aValue, string,
+                                           UndefinedIsNullStringLiteral)) {
           JS::Rooted<JS::Value> exn(cx, JS::UndefinedValue());
           if (JS_GetPendingException(cx, &exn)) {
             JS_ClearPendingException(cx);
@@ -624,8 +618,9 @@ already_AddRefed<Promise> IOUtils::WriteJSON(GlobalObject& aGlobal,
 
         DispatchAndResolve<uint32_t>(
             state->mEventQueue, promise,
-            [file = std::move(file), utf8Str = std::move(utf8Str),
+            [file = std::move(file), string = std::move(string),
              opts = opts.unwrap()]() {
+              NS_ConvertUTF16toUTF8 utf8Str(string);
               return WriteSync(file, AsBytes(Span(utf8Str)), opts);
             });
       });
