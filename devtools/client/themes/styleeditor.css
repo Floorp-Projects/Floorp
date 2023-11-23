@@ -320,3 +320,7 @@ h3 {
     flex: none;
   }
 }
+
+.source-editor-frame {
+  flex: 1;
+}
