@@ -615,7 +615,7 @@ class nsSelectionCommand : public nsIControllerCommand {
                                       nsIDocumentViewerEdit* aEdit,
                                       nsICommandParams* aParams) = 0;
 
-  static nsresult GetContentViewerEditFromContext(
+  static nsresult GetDocumentViewerEditFromContext(
       nsISupports* aContext, nsIDocumentViewerEdit** aEditInterface);
 
   // no member variables, please, we're stateless!
@@ -637,8 +637,8 @@ nsSelectionCommand::IsCommandEnabled(const char* aCommandName,
   *outCmdEnabled = false;
 
   nsCOMPtr<nsIDocumentViewerEdit> documentEdit;
-  GetContentViewerEditFromContext(aCommandContext,
-                                  getter_AddRefs(documentEdit));
+  GetDocumentViewerEditFromContext(aCommandContext,
+                                   getter_AddRefs(documentEdit));
   NS_ENSURE_TRUE(documentEdit, NS_ERROR_NOT_INITIALIZED);
 
   return IsClipboardCommandEnabled(aCommandName, documentEdit, outCmdEnabled);
@@ -648,8 +648,8 @@ NS_IMETHODIMP
 nsSelectionCommand::DoCommand(const char* aCommandName,
                               nsISupports* aCommandContext) {
   nsCOMPtr<nsIDocumentViewerEdit> documentEdit;
-  GetContentViewerEditFromContext(aCommandContext,
-                                  getter_AddRefs(documentEdit));
+  GetDocumentViewerEditFromContext(aCommandContext,
+                                   getter_AddRefs(documentEdit));
   NS_ENSURE_TRUE(documentEdit, NS_ERROR_NOT_INITIALIZED);
 
   return DoClipboardCommand(aCommandName, documentEdit, nullptr);
@@ -667,14 +667,14 @@ nsSelectionCommand::DoCommandParams(const char* aCommandName,
                                     nsICommandParams* aParams,
                                     nsISupports* aCommandContext) {
   nsCOMPtr<nsIDocumentViewerEdit> documentEdit;
-  GetContentViewerEditFromContext(aCommandContext,
-                                  getter_AddRefs(documentEdit));
+  GetDocumentViewerEditFromContext(aCommandContext,
+                                   getter_AddRefs(documentEdit));
   NS_ENSURE_TRUE(documentEdit, NS_ERROR_NOT_INITIALIZED);
 
   return DoClipboardCommand(aCommandName, documentEdit, aParams);
 }
 
-nsresult nsSelectionCommand::GetContentViewerEditFromContext(
+nsresult nsSelectionCommand::GetDocumentViewerEditFromContext(
     nsISupports* aContext, nsIDocumentViewerEdit** aEditInterface) {
   NS_ENSURE_ARG(aEditInterface);
   *aEditInterface = nullptr;
