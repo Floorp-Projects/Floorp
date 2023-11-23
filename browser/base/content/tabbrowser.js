@@ -5143,8 +5143,6 @@
       if (!createLazyBrowser) {
         // Stop the about:blank load.
         newBrowser.stop();
-        // Make sure it has a docshell.
-        newBrowser.docShell;
       }
 
       if (!this.swapBrowsersAndCloseOther(newTab, aTab)) {

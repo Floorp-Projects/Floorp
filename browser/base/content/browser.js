@@ -1757,8 +1757,6 @@ var gBrowserInit = {
 
       // Stop the about:blank load
       gBrowser.stop();
-      // make sure it has a docshell
-      gBrowser.docShell;
 
       // Remove the speculative focus from the urlbar to let the url be formatted.
       gURLBar.removeAttribute("focused");
