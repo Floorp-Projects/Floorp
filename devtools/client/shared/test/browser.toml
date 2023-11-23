@@ -235,6 +235,8 @@ skip-if = [
   "os == 'linux' && !asan && !debug && !swgl && !ccov", # Bug 1721159
 ]
 
+["browser_inplace-editor_focus_closest_editor.js"]
+
 ["browser_inplace-editor_maxwidth.js"]
 skip-if = [
   "apple_catalina", # Bug 1713158

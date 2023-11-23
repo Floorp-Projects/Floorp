@@ -97,70 +97,71 @@ function isKeyIn(key, ...keys) {
  * Changes will be committed when the InlineEditor's input is blurred
  * or dropped when the user presses escape.
  *
- * @param {Object} options
- *    Options for the editable field, including:
- *    {Element} element:
- *      (required) The span to be edited on focus.
- *    {Function} canEdit:
- *       Will be called before creating the inplace editor.  Editor
- *       won't be created if canEdit returns false.
- *    {Function} start:
- *       Will be called when the inplace editor is initialized.
- *    {Function} change:
- *       Will be called when the text input changes.  Will be called
- *       with the current value of the text input.
- *    {Function} done:
- *       Called when input is committed or blurred.  Called with
- *       current value, a boolean telling the caller whether to
- *       commit the change, and the direction of the next element to be
- *       selected. Direction may be one of Services.focus.MOVEFOCUS_FORWARD,
- *       Services.focus.MOVEFOCUS_BACKWARD, or null (no movement).
- *       This function is called before the editor has been torn down.
- *    {Function} destroy:
- *       Called when the editor is destroyed and has been torn down.
- *    {Function} contextMenu:
- *       Called when the user triggers a contextmenu event on the input.
- *    {Object} advanceChars:
- *       This can be either a string or a function.
- *       If it is a string, then if any characters in it are typed,
- *       focus will advance to the next element.
- *       Otherwise, if it is a function, then the function will
- *       be called with three arguments: a key code, the current text,
- *       and the insertion point.  If the function returns true,
- *       then the focus advance takes place.  If it returns false,
- *       then the character is inserted instead.
- *    {Boolean} stopOnReturn:
- *       If true, the return key will not advance the editor to the next
- *       focusable element.
- *    {Boolean} stopOnTab:
- *       If true, the tab key will not advance the editor to the next
- *       focusable element.
- *    {Boolean} stopOnShiftTab:
- *       If true, shift tab will not advance the editor to the previous
- *       focusable element.
- *    {String} trigger: The DOM event that should trigger editing,
- *      defaults to "click"
- *    {Boolean} multiline: Should the editor be a multiline textarea?
- *      defaults to false
- *    {Function or Number} maxWidth:
- *       Should the editor wrap to remain below the provided max width. Only
- *       available if multiline is true. If a function is provided, it will be
- *       called when replacing the element by the inplace input.
- *    {Boolean} trimOutput: Should the returned string be trimmed?
- *      defaults to true
- *    {Boolean} preserveTextStyles: If true, do not copy text-related styles
- *              from `element` to the new input.
- *      defaults to false
- *    {Object} cssProperties: An instance of CSSProperties.
- *    {Object} cssVariables: A Map object containing all CSS variables.
- *    {Number} defaultIncrement: The value by which the input is incremented
- *      or decremented by default (0.1 for properties like opacity and 1 by default)
- *    {Function} getGridLineNames:
- *       Will be called before offering autocomplete sugestions, if the property is
- *       a member of GRID_PROPERTY_NAMES.
- *    {Boolean} showSuggestCompletionOnEmpty:
- *       If true, show the suggestions in case that the current text becomes empty.
- *       Defaults to false.
+ * @param {Object} options: Options for the editable field
+ * @param {Element} options.element:
+ *        (required) The span to be edited on focus.
+ * @param {Function} options.canEdit:
+ *        Will be called before creating the inplace editor.  Editor
+ *        won't be created if canEdit returns false.
+ * @param {Function} options.start:
+ *        Will be called when the inplace editor is initialized.
+ * @param {Function} options.change:
+ *        Will be called when the text input changes.  Will be called
+ *        with the current value of the text input.
+ * @param {Function} options.done:
+ *        Called when input is committed or blurred.  Called with
+ *        current value, a boolean telling the caller whether to
+ *        commit the change, and the direction of the next element to be
+ *        selected. Direction may be one of Services.focus.MOVEFOCUS_FORWARD,
+ *        Services.focus.MOVEFOCUS_BACKWARD, or null (no movement).
+ *        This function is called before the editor has been torn down.
+ * @param {Function} options.destroy:
+ *        Called when the editor is destroyed and has been torn down.
+ * @param {Function} options.contextMenu:
+ *        Called when the user triggers a contextmenu event on the input.
+ * @param {Object} options.advanceChars:
+ *        This can be either a string or a function.
+ *        If it is a string, then if any characters in it are typed,
+ *        focus will advance to the next element.
+ *        Otherwise, if it is a function, then the function will
+ *        be called with three arguments: a key code, the current text,
+ *        and the insertion point.  If the function returns true,
+ *        then the focus advance takes place.  If it returns false,
+ *        then the character is inserted instead.
+ * @param {Boolean} options.stopOnReturn:
+ *        If true, the return key will not advance the editor to the next
+ *        focusable element.
+ * @param {Boolean} options.stopOnTab:
+ *        If true, the tab key will not advance the editor to the next
+ *        focusable element.
+ * @param {Boolean} options.stopOnShiftTab:
+ *        If true, shift tab will not advance the editor to the previous
+ *        focusable element.
+ * @param {String} options.trigger: The DOM event that should trigger editing,
+ *        defaults to "click"
+ * @param {Boolean} options.multiline: Should the editor be a multiline textarea?
+ *        defaults to false
+ * @param {Function or options.Number} maxWidth:
+ *        Should the editor wrap to remain below the provided max width. Only
+ *        available if multiline is true. If a function is provided, it will be
+ *        called when replacing the element by the inplace input.
+ * @param {Boolean} options.trimOutput: Should the returned string be trimmed?
+ *        defaults to true
+ * @param {Boolean} options.preserveTextStyles: If true, do not copy text-related styles
+ *        from `element` to the new input.
+ *        defaults to false
+ * @param {Object} options.cssProperties: An instance of CSSProperties.
+ * @param {Object} options.cssVariables: A Map object containing all CSS variables.
+ * @param {Number} options.defaultIncrement: The value by which the input is incremented
+ *        or decremented by default (0.1 for properties like opacity and 1 by default)
+ * @param {Function} options.getGridLineNames:
+ *        Will be called before offering autocomplete sugestions, if the property is
+ *        a member of GRID_PROPERTY_NAMES.
+ * @param {Boolean} options.showSuggestCompletionOnEmpty:
+ *        If true, show the suggestions in case that the current text becomes empty.
+ *        Defaults to false.
+ * @param {Boolean} options.focusEditableFieldAfterApply
+ * @param {String} options.focusEditableFieldContainerSelector
  */
 function editableField(options) {
   return editableItem(options, function (element, event) {
@@ -295,6 +296,19 @@ function InplaceEditor(options, event) {
       ? false
       : !!options.preserveTextStyles;
   this.showSuggestCompletionOnEmpty = !!options.showSuggestCompletionOnEmpty;
+  this.focusEditableFieldAfterApply =
+    options.focusEditableFieldAfterApply === true;
+  this.focusEditableFieldContainerSelector =
+    options.focusEditableFieldContainerSelector;
+
+  if (
+    this.focusEditableFieldAfterApply &&
+    !this.focusEditableFieldContainerSelector
+  ) {
+    throw new Error(
+      "focusEditableFieldContainerSelector is mandatory when focusEditableFieldAfterApply is true"
+    );
+  }
 
   this._onBlur = this._onBlur.bind(this);
   this._onWindowBlur = this._onWindowBlur.bind(this);
@@ -1292,7 +1306,12 @@ InplaceEditor.prototype = {
       if (direction !== null && focusManager.focusedElement === input) {
         // If the focused element wasn't changed by the done callback,
         // move the focus as requested.
-        const next = moveFocus(this.doc.defaultView, direction);
+        const next = moveFocus(
+          this.doc.defaultView,
+          direction,
+          this.focusEditableFieldAfterApply,
+          this.focusEditableFieldContainerSelector
+        );
 
         // If the next node to be focused has been tagged as an editable
         // node, trigger editing using the configured event
@@ -1854,7 +1873,49 @@ function copyBoxModelStyles(from, to) {
 
 /**
  * Trigger a focus change similar to pressing tab/shift-tab.
+ *
+ * @param {Window} win: The window into which the focus should be moved
+ * @param {Number} direction: See Services.focus.MOVEFOCUS_*
+ * @param {Boolean} focusEditableField: Set to true to move the focus to the previous/next
+ *        editable field. If not set, the focus will be set on the next focusable element.
+ *        The function might still put the focus on a non-editable field, if none is found
+ *        within the element matching focusEditableFieldContainerSelector
+ * @param {String} focusEditableFieldContainerSelector: A CSS selector the editabled element
+ *        we want to focus should be in. This is only used when focusEditableField is set
+ *        to true.
+ *        It's important to pass a boundary otherwise we might hit an infinite loop
+ * @returns {Element} The element that received the focus
  */
-function moveFocus(win, direction) {
-  return focusManager.moveFocus(win, null, direction, 0);
+function moveFocus(
+  win,
+  direction,
+  focusEditableField,
+  focusEditableFieldContainerSelector
+) {
+  if (!focusEditableField) {
+    return focusManager.moveFocus(win, null, direction, 0);
+  }
+
+  if (!win.document.querySelector(focusEditableFieldContainerSelector)) {
+    console.error(
+      focusEditableFieldContainerSelector,
+      "can't be found in document.",
+      `focusEditableFieldContainerSelector should match an existing element`
+    );
+    return focusManager.moveFocus(win, null, direction, 0);
+  }
+
+  // Let's look for the next/previous editable element to focus
+  while (true) {
+    const focusedElement = focusManager.moveFocus(win, null, direction, 0);
+    // The _editable property is set by the InplaceEditor on the target element
+    if (focusedElement._editable) {
+      return focusedElement;
+    }
+
+    // If the focus was moved outside of the container, simply return the focused element
+    if (!focusedElement.closest(focusEditableFieldContainerSelector)) {
+      return focusedElement;
+    }
+  }
 }
