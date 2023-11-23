@@ -526,7 +526,8 @@ RefPtr<XRViewerPose> XRSession::PooledViewerPose(
     pose->Transform()->Update(aTransform);
     pose->SetEmulatedPosition(aEmulatedPosition);
   } else {
-    RefPtr<XRRigidTransform> transform = new XRRigidTransform(this, aTransform);
+    RefPtr<XRRigidTransform> transform =
+        new XRRigidTransform(static_cast<EventTarget*>(this), aTransform);
     nsTArray<RefPtr<XRView>> views;
     if (IsImmersive()) {
       views.AppendElement(new XRView(GetParentObject(), XREye::Left));
@@ -534,7 +535,8 @@ RefPtr<XRViewerPose> XRSession::PooledViewerPose(
     } else {
       views.AppendElement(new XRView(GetParentObject(), XREye::None));
     }
-    pose = new XRViewerPose(this, transform, aEmulatedPosition, views);
+    pose = new XRViewerPose(static_cast<EventTarget*>(this), transform,
+                            aEmulatedPosition, views);
     mViewerPosePool.AppendElement(pose);
   }
 

@@ -30,7 +30,7 @@ JSObject* SpeechRecognitionResult::WrapObject(
 }
 
 nsISupports* SpeechRecognitionResult::GetParentObject() const {
-  return static_cast<DOMEventTargetHelper*>(mParent.get());
+  return static_cast<EventTarget*>(mParent.get());
 }
 
 already_AddRefed<SpeechRecognitionAlternative>

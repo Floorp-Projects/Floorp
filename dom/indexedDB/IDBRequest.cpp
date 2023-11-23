@@ -297,7 +297,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IDBRequest)
   if (aIID.Equals(NS_GET_IID(mozilla::dom::detail::PrivateIDBRequest))) {
-    foundInterface = this;
+    foundInterface = static_cast<EventTarget*>(this);
   } else
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
