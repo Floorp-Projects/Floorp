@@ -462,13 +462,8 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                       nsHtml5AttributeName::ATTR_INTEGRITY);
                   nsHtml5String referrerPolicy = aAttributes->getValue(
                       nsHtml5AttributeName::ATTR_REFERRERPOLICY);
-
-                  // Bug 1839315: get the attribute's value instead.
-                  // Use the empty string and rely on the
-                  // "invalid value default" state being used later.
-                  // Compared to using a non-empty string, this doesn't
-                  // require calling `Release()` for the string.
-                  nsHtml5String fetchPriority = nsHtml5String::EmptyString();
+                  nsHtml5String fetchPriority = aAttributes->getValue(
+                      nsHtml5AttributeName::ATTR_FETCHPRIORITY);
 
                   mSpeculativeLoadQueue.AppendElement()->InitScript(
                       url, charset, type, crossOrigin, media, nonce,

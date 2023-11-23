@@ -665,8 +665,62 @@ void ScriptLoader::PrepareCacheInfoChannel(nsIChannel* aChannel,
   }
 }
 
-static void AdjustPriorityForNonLinkPreloadScripts(
+static void AdjustPriorityAndClassOfServiceForLinkPreloadScripts(
     nsIChannel* aChannel, ScriptLoadRequest* aRequest) {
+  MOZ_ASSERT(aRequest->GetScriptLoadContext()->IsLinkPreloadScript());
+
+  if (!StaticPrefs::network_fetchpriority_enabled()) {
+    // Put it to the group that is not blocked by leaders and doesn't block
+    // follower at the same time.
+    // Giving it a much higher priority will make this request be processed
+    // ahead of other Unblocked requests, but with the same weight as
+    // Leaders. This will make us behave similar way for both http2 and http1.
+    ScriptLoadContext::PrioritizeAsPreload(aChannel);
+    return;
+  }
+
+  if (nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(aChannel)) {
+    cos->AddClassFlags(nsIClassOfService::Unblocked);
+  }
+
+  if (nsCOMPtr<nsISupportsPriority> supportsPriority =
+          do_QueryInterface(aChannel)) {
+    LOG(("Is <link rel=[module]preload"));
+
+    const RequestPriority fetchPriority = aRequest->FetchPriority();
+    // The spec defines the priority to be set in an implementation defined
+    // manner (<https://fetch.spec.whatwg.org/#concept-fetch>, step 15 and
+    // <https://html.spec.whatwg.org/#concept-script-fetch-options-fetch-priority>).
+    // For web-compatibility, the fetch priority mapping from
+    // <https://web.dev/articles/fetch-priority#browser_priority_and_fetchpriority>
+    // is taken.
+    const int32_t supportsPriorityValue = [&]() {
+      switch (fetchPriority) {
+        case RequestPriority::Auto: {
+          return nsISupportsPriority::PRIORITY_HIGH;
+        }
+        case RequestPriority::High: {
+          return nsISupportsPriority::PRIORITY_HIGH;
+        }
+        case RequestPriority::Low: {
+          return nsISupportsPriority::PRIORITY_LOW;
+        }
+        default: {
+          MOZ_ASSERT_UNREACHABLE();
+          return nsISupportsPriority::PRIORITY_NORMAL;
+        }
+      }
+    }();
+
+    LogPriorityMapping(ScriptLoader::gScriptLoaderLog,
+                       ToFetchPriority(fetchPriority), supportsPriorityValue);
+
+    supportsPriority->SetPriority(supportsPriorityValue);
+  }
+}
+
+void AdjustPriorityForNonLinkPreloadScripts(nsIChannel* aChannel,
+                                            ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(!aRequest->GetScriptLoadContext()->IsLinkPreloadScript());
 
   if (!StaticPrefs::network_fetchpriority_enabled()) {
@@ -675,13 +729,14 @@ static void AdjustPriorityForNonLinkPreloadScripts(
 
   if (nsCOMPtr<nsISupportsPriority> supportsPriority =
           do_QueryInterface(aChannel)) {
+    LOG(("Is not <link rel=[module]preload"));
     const RequestPriority fetchPriority = aRequest->FetchPriority();
     // The spec defines the priority to be set in an implementation defined
     // manner (<https://fetch.spec.whatwg.org/#concept-fetch>, step 15 and
     // <https://html.spec.whatwg.org/#concept-script-fetch-options-fetch-priority>).
     // For web-compatibility, the fetch priority mapping from
-    // <https://web.dev/fetch-priority/#browser-priority-and-fetchpriority> is
-    // taken.
+    // <https://web.dev/articles/fetch-priority#browser_priority_and_fetchpriority>
+    // is taken.
     const Maybe<int32_t> supportsPriorityValue = [&]() -> Maybe<int32_t> {
       switch (fetchPriority) {
         case RequestPriority::Auto:
@@ -713,12 +768,9 @@ void ScriptLoader::PrepareRequestPriorityAndRequestDependencies(
     nsIChannel* aChannel, ScriptLoadRequest* aRequest) {
   if (aRequest->GetScriptLoadContext()->IsLinkPreloadScript()) {
     // This is <link rel="preload" as="script"> or <link rel="modulepreload">
-    // initiated speculative load, put it to the group that is not blocked by
-    // leaders and doesn't block follower at the same time. Giving it a much
-    // higher priority will make this request be processed ahead of other
-    // Unblocked requests, but with the same weight as Leaders. This will make
-    // us behave similar way for both http2 and http1.
-    ScriptLoadContext::PrioritizeAsPreload(aChannel);
+    // initiated speculative load
+    // (https://developer.mozilla.org/en-US/docs/Web/Performance/Speculative_loading).
+    AdjustPriorityAndClassOfServiceForLinkPreloadScripts(aChannel, aRequest);
     ScriptLoadContext::AddLoadBackgroundFlag(aChannel);
   } else if (nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(aChannel)) {
     AdjustPriorityForNonLinkPreloadScripts(aChannel, aRequest);
