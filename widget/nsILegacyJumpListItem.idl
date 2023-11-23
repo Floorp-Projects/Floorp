@@ -20,7 +20,7 @@ interface nsIMutableArray;
  */
 
 [scriptable, uuid(ACB8FB3C-E1B0-4044-8A50-E52C3E7C1057)]
-interface nsIJumpListItem : nsISupports
+interface nsILegacyJumpListItem : nsISupports
 {
   const short JUMPLIST_ITEM_EMPTY      = 0; // Empty list item
   const short JUMPLIST_ITEM_SEPARATOR  = 1; // Separator
@@ -42,7 +42,7 @@ interface nsIJumpListItem : nsISupports
    * link: type, uri, title
    * shortcut: type, handler app
    */
-  boolean equals(in nsIJumpListItem item);
+  boolean equals(in nsILegacyJumpListItem item);
 };
 
 /**
@@ -50,7 +50,7 @@ interface nsIJumpListItem : nsISupports
  */
 
 [scriptable, uuid(69A2D5C5-14DC-47da-925D-869E0BD64D27)]
-interface nsIJumpListSeparator : nsIJumpListItem
+interface nsILegacyJumpListSeparator : nsILegacyJumpListItem
 {
   /* nothing needed here */
 };
@@ -63,7 +63,7 @@ interface nsIJumpListSeparator : nsIJumpListItem
  */
 
 [scriptable, uuid(76EA47B1-C797-49b3-9F18-5E740A688524)]
-interface nsIJumpListLink : nsIJumpListItem
+interface nsILegacyJumpListLink : nsILegacyJumpListItem
 {
   /**
    * Set or get the uri for this link item.
@@ -97,7 +97,7 @@ interface nsIJumpListLink : nsIJumpListItem
  */
 
 [scriptable, uuid(CBE3A37C-BCE1-4fec-80A5-5FFBC7F33EEA)]
-interface nsIJumpListShortcut : nsIJumpListItem
+interface nsILegacyJumpListShortcut : nsILegacyJumpListItem
 {
   /**
    * Set or get the handler app for this shortcut item.

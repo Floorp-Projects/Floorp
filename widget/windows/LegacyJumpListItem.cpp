@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "JumpListItem.h"
+#include "LegacyJumpListItem.h"
 
 #include <shellapi.h>
 #include <propvarutil.h>
@@ -17,41 +17,44 @@
 #include "nsComponentManagerUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Preferences.h"
-#include "JumpListBuilder.h"
+#include "LegacyJumpListBuilder.h"
 #include "WinUtils.h"
 
 namespace mozilla {
 namespace widget {
 
 // ISUPPORTS Impl's
-NS_IMPL_ISUPPORTS(JumpListItem, nsIJumpListItem)
+NS_IMPL_ISUPPORTS(LegacyJumpListItem, nsILegacyJumpListItem)
 
-NS_INTERFACE_MAP_BEGIN(JumpListSeparator)
-  NS_INTERFACE_MAP_ENTRY(nsIJumpListSeparator)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIJumpListItem, JumpListItemBase)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, JumpListItemBase)
+NS_INTERFACE_MAP_BEGIN(LegacyJumpListSeparator)
+  NS_INTERFACE_MAP_ENTRY(nsILegacyJumpListSeparator)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsILegacyJumpListItem,
+                                   LegacyJumpListItemBase)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, LegacyJumpListItemBase)
 NS_INTERFACE_MAP_END
-NS_IMPL_ADDREF(JumpListSeparator)
-NS_IMPL_RELEASE(JumpListSeparator)
+NS_IMPL_ADDREF(LegacyJumpListSeparator)
+NS_IMPL_RELEASE(LegacyJumpListSeparator)
 
-NS_INTERFACE_MAP_BEGIN(JumpListLink)
-  NS_INTERFACE_MAP_ENTRY(nsIJumpListLink)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIJumpListItem, JumpListItemBase)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, JumpListItemBase)
+NS_INTERFACE_MAP_BEGIN(LegacyJumpListLink)
+  NS_INTERFACE_MAP_ENTRY(nsILegacyJumpListLink)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsILegacyJumpListItem,
+                                   LegacyJumpListItemBase)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, LegacyJumpListItemBase)
 NS_INTERFACE_MAP_END
-NS_IMPL_ADDREF(JumpListLink)
-NS_IMPL_RELEASE(JumpListLink)
+NS_IMPL_ADDREF(LegacyJumpListLink)
+NS_IMPL_RELEASE(LegacyJumpListLink)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JumpListShortcut)
-  NS_INTERFACE_MAP_ENTRY(nsIJumpListShortcut)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIJumpListItem, JumpListItemBase)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIJumpListShortcut)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LegacyJumpListShortcut)
+  NS_INTERFACE_MAP_ENTRY(nsILegacyJumpListShortcut)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsILegacyJumpListItem,
+                                   LegacyJumpListItemBase)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsILegacyJumpListShortcut)
 NS_INTERFACE_MAP_END
-NS_IMPL_CYCLE_COLLECTING_ADDREF(JumpListShortcut)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(JumpListShortcut)
-NS_IMPL_CYCLE_COLLECTION(JumpListShortcut, mHandlerApp)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(LegacyJumpListShortcut)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(LegacyJumpListShortcut)
+NS_IMPL_CYCLE_COLLECTION(LegacyJumpListShortcut, mHandlerApp)
 
-NS_IMETHODIMP JumpListItemBase::GetType(int16_t* aType) {
+NS_IMETHODIMP LegacyJumpListItemBase::GetType(int16_t* aType) {
   NS_ENSURE_ARG_POINTER(aType);
 
   *aType = mItemType;
@@ -59,12 +62,13 @@ NS_IMETHODIMP JumpListItemBase::GetType(int16_t* aType) {
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListItemBase::Equals(nsIJumpListItem* aItem, bool* aResult) {
+NS_IMETHODIMP LegacyJumpListItemBase::Equals(nsILegacyJumpListItem* aItem,
+                                             bool* aResult) {
   NS_ENSURE_ARG_POINTER(aItem);
 
   *aResult = false;
 
-  int16_t theType = nsIJumpListItem::JUMPLIST_ITEM_EMPTY;
+  int16_t theType = nsILegacyJumpListItem::JUMPLIST_ITEM_EMPTY;
   if (NS_FAILED(aItem->GetType(&theType))) return NS_OK;
 
   // Make sure the types match.
@@ -77,37 +81,37 @@ NS_IMETHODIMP JumpListItemBase::Equals(nsIJumpListItem* aItem, bool* aResult) {
 
 /* link impl. */
 
-NS_IMETHODIMP JumpListLink::GetUri(nsIURI** aURI) {
+NS_IMETHODIMP LegacyJumpListLink::GetUri(nsIURI** aURI) {
   NS_IF_ADDREF(*aURI = mURI);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListLink::SetUri(nsIURI* aURI) {
+NS_IMETHODIMP LegacyJumpListLink::SetUri(nsIURI* aURI) {
   mURI = aURI;
 
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListLink::SetUriTitle(const nsAString& aUriTitle) {
+NS_IMETHODIMP LegacyJumpListLink::SetUriTitle(const nsAString& aUriTitle) {
   mUriTitle.Assign(aUriTitle);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListLink::GetUriTitle(nsAString& aUriTitle) {
+NS_IMETHODIMP LegacyJumpListLink::GetUriTitle(nsAString& aUriTitle) {
   aUriTitle.Assign(mUriTitle);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListLink::GetUriHash(nsACString& aUriHash) {
+NS_IMETHODIMP LegacyJumpListLink::GetUriHash(nsACString& aUriHash) {
   if (!mURI) return NS_ERROR_NOT_AVAILABLE;
 
   return mozilla::widget::FaviconHelper::HashURI(mCryptoHash, mURI, aUriHash);
 }
 
-NS_IMETHODIMP JumpListLink::CompareHash(nsIURI* aUri, bool* aResult) {
+NS_IMETHODIMP LegacyJumpListLink::CompareHash(nsIURI* aUri, bool* aResult) {
   nsresult rv;
 
   if (!mURI) {
@@ -129,20 +133,21 @@ NS_IMETHODIMP JumpListLink::CompareHash(nsIURI* aUri, bool* aResult) {
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListLink::Equals(nsIJumpListItem* aItem, bool* aResult) {
+NS_IMETHODIMP LegacyJumpListLink::Equals(nsILegacyJumpListItem* aItem,
+                                         bool* aResult) {
   NS_ENSURE_ARG_POINTER(aItem);
 
   nsresult rv;
 
   *aResult = false;
 
-  int16_t theType = nsIJumpListItem::JUMPLIST_ITEM_EMPTY;
+  int16_t theType = nsILegacyJumpListItem::JUMPLIST_ITEM_EMPTY;
   if (NS_FAILED(aItem->GetType(&theType))) return NS_OK;
 
   // Make sure the types match.
   if (Type() != theType) return NS_OK;
 
-  nsCOMPtr<nsIJumpListLink> link = do_QueryInterface(aItem, &rv);
+  nsCOMPtr<nsILegacyJumpListLink> link = do_QueryInterface(aItem, &rv);
   if (NS_FAILED(rv)) return rv;
 
   // Check the titles
@@ -168,54 +173,57 @@ NS_IMETHODIMP JumpListLink::Equals(nsIJumpListItem* aItem, bool* aResult) {
 
 /* shortcut impl. */
 
-NS_IMETHODIMP JumpListShortcut::GetApp(nsILocalHandlerApp** aApp) {
+NS_IMETHODIMP LegacyJumpListShortcut::GetApp(nsILocalHandlerApp** aApp) {
   NS_IF_ADDREF(*aApp = mHandlerApp);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListShortcut::SetApp(nsILocalHandlerApp* aApp) {
+NS_IMETHODIMP LegacyJumpListShortcut::SetApp(nsILocalHandlerApp* aApp) {
   mHandlerApp = aApp;
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListShortcut::GetIconIndex(int32_t* aIconIndex) {
+NS_IMETHODIMP LegacyJumpListShortcut::GetIconIndex(int32_t* aIconIndex) {
   NS_ENSURE_ARG_POINTER(aIconIndex);
 
   *aIconIndex = mIconIndex;
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListShortcut::SetIconIndex(int32_t aIconIndex) {
+NS_IMETHODIMP LegacyJumpListShortcut::SetIconIndex(int32_t aIconIndex) {
   mIconIndex = aIconIndex;
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListShortcut::GetFaviconPageUri(nsIURI** aFaviconPageURI) {
+NS_IMETHODIMP LegacyJumpListShortcut::GetFaviconPageUri(
+    nsIURI** aFaviconPageURI) {
   NS_IF_ADDREF(*aFaviconPageURI = mFaviconPageURI);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListShortcut::SetFaviconPageUri(nsIURI* aFaviconPageURI) {
+NS_IMETHODIMP LegacyJumpListShortcut::SetFaviconPageUri(
+    nsIURI* aFaviconPageURI) {
   mFaviconPageURI = aFaviconPageURI;
   return NS_OK;
 }
 
-NS_IMETHODIMP JumpListShortcut::Equals(nsIJumpListItem* aItem, bool* aResult) {
+NS_IMETHODIMP LegacyJumpListShortcut::Equals(nsILegacyJumpListItem* aItem,
+                                             bool* aResult) {
   NS_ENSURE_ARG_POINTER(aItem);
 
   nsresult rv;
 
   *aResult = false;
 
-  int16_t theType = nsIJumpListItem::JUMPLIST_ITEM_EMPTY;
+  int16_t theType = nsILegacyJumpListItem::JUMPLIST_ITEM_EMPTY;
   if (NS_FAILED(aItem->GetType(&theType))) return NS_OK;
 
   // Make sure the types match.
   if (Type() != theType) return NS_OK;
 
-  nsCOMPtr<nsIJumpListShortcut> shortcut = do_QueryInterface(aItem, &rv);
+  nsCOMPtr<nsILegacyJumpListShortcut> shortcut = do_QueryInterface(aItem, &rv);
   if (NS_FAILED(rv)) return rv;
 
   // Check the icon index
@@ -244,7 +252,8 @@ NS_IMETHODIMP JumpListShortcut::Equals(nsIJumpListItem* aItem, bool* aResult) {
 /* internal helpers */
 
 // (static) Creates a ShellLink that encapsulate a separator.
-nsresult JumpListSeparator::GetSeparator(RefPtr<IShellLinkW>& aShellLink) {
+nsresult LegacyJumpListSeparator::GetSeparator(
+    RefPtr<IShellLinkW>& aShellLink) {
   HRESULT hr;
   IShellLinkW* psl;
 
@@ -272,9 +281,9 @@ nsresult JumpListSeparator::GetSeparator(RefPtr<IShellLinkW>& aShellLink) {
 }
 
 // (static) Creates a ShellLink that encapsulate a shortcut to local apps.
-nsresult JumpListShortcut::GetShellLink(nsCOMPtr<nsIJumpListItem>& item,
-                                        RefPtr<IShellLinkW>& aShellLink,
-                                        RefPtr<LazyIdleThread>& aIOThread) {
+nsresult LegacyJumpListShortcut::GetShellLink(
+    nsCOMPtr<nsILegacyJumpListItem>& item, RefPtr<IShellLinkW>& aShellLink,
+    RefPtr<LazyIdleThread>& aIOThread) {
   HRESULT hr;
   IShellLinkW* psl;
   nsresult rv;
@@ -286,10 +295,10 @@ nsresult JumpListShortcut::GetShellLink(nsCOMPtr<nsIJumpListItem>& item,
   int16_t type;
   if (NS_FAILED(item->GetType(&type))) return NS_ERROR_INVALID_ARG;
 
-  if (type != nsIJumpListItem::JUMPLIST_ITEM_SHORTCUT)
+  if (type != nsILegacyJumpListItem::JUMPLIST_ITEM_SHORTCUT)
     return NS_ERROR_INVALID_ARG;
 
-  nsCOMPtr<nsIJumpListShortcut> shortcut = do_QueryInterface(item, &rv);
+  nsCOMPtr<nsILegacyJumpListShortcut> shortcut = do_QueryInterface(item, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsILocalHandlerApp> handlerApp;
@@ -381,8 +390,9 @@ nsresult JumpListShortcut::GetShellLink(nsCOMPtr<nsIJumpListItem>& item,
 
 // If successful fills in the aSame parameter
 // aSame will be true if the path is in our icon cache
-static nsresult IsPathInOurIconCache(nsCOMPtr<nsIJumpListShortcut>& aShortcut,
-                                     wchar_t* aPath, bool* aSame) {
+static nsresult IsPathInOurIconCache(
+    nsCOMPtr<nsILegacyJumpListShortcut>& aShortcut, wchar_t* aPath,
+    bool* aSame) {
   NS_ENSURE_ARG_POINTER(aPath);
   NS_ENSURE_ARG_POINTER(aSame);
 
@@ -417,9 +427,9 @@ static nsresult IsPathInOurIconCache(nsCOMPtr<nsIJumpListShortcut>& aShortcut,
 }
 
 // (static) For a given IShellLink, create and return a populated
-// nsIJumpListShortcut.
-nsresult JumpListShortcut::GetJumpListShortcut(
-    IShellLinkW* pLink, nsCOMPtr<nsIJumpListShortcut>& aShortcut) {
+// nsILegacyJumpListShortcut.
+nsresult LegacyJumpListShortcut::GetJumpListShortcut(
+    IShellLinkW* pLink, nsCOMPtr<nsILegacyJumpListShortcut>& aShortcut) {
   NS_ENSURE_ARG_POINTER(pLink);
 
   nsresult rv;
@@ -495,17 +505,18 @@ nsresult JumpListShortcut::GetJumpListShortcut(
 // (static) ShellItems are used to encapsulate links to things. We currently
 // only support URI links, but more support could be added, such as local file
 // and directory links.
-nsresult JumpListLink::GetShellItem(nsCOMPtr<nsIJumpListItem>& item,
-                                    RefPtr<IShellItem2>& aShellItem) {
+nsresult LegacyJumpListLink::GetShellItem(nsCOMPtr<nsILegacyJumpListItem>& item,
+                                          RefPtr<IShellItem2>& aShellItem) {
   IShellItem2* psi = nullptr;
   nsresult rv;
 
   int16_t type;
   if (NS_FAILED(item->GetType(&type))) return NS_ERROR_INVALID_ARG;
 
-  if (type != nsIJumpListItem::JUMPLIST_ITEM_LINK) return NS_ERROR_INVALID_ARG;
+  if (type != nsILegacyJumpListItem::JUMPLIST_ITEM_LINK)
+    return NS_ERROR_INVALID_ARG;
 
-  nsCOMPtr<nsIJumpListLink> link = do_QueryInterface(item, &rv);
+  nsCOMPtr<nsILegacyJumpListLink> link = do_QueryInterface(item, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> uri;
@@ -547,9 +558,9 @@ nsresult JumpListLink::GetShellItem(nsCOMPtr<nsIJumpListItem>& item,
 }
 
 // (static) For a given IShellItem, create and return a populated
-// nsIJumpListLink.
-nsresult JumpListLink::GetJumpListLink(IShellItem* pItem,
-                                       nsCOMPtr<nsIJumpListLink>& aLink) {
+// nsILegacyJumpListLink.
+nsresult LegacyJumpListLink::GetJumpListLink(
+    IShellItem* pItem, nsCOMPtr<nsILegacyJumpListLink>& aLink) {
   NS_ENSURE_ARG_POINTER(pItem);
 
   // We assume for now these are URI links, but through properties we could

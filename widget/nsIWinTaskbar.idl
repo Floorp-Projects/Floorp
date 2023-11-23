@@ -14,7 +14,7 @@ interface nsITaskbarWindowPreview;
 interface nsITaskbarPreviewController;
 interface nsITaskbarProgress;
 interface nsITaskbarOverlayIconController;
-interface nsIJumpListBuilder;
+interface nsILegacyJumpListBuilder;
 interface mozIDOMWindow;
 
 /*
@@ -46,7 +46,7 @@ interface mozIDOMWindow;
  * http://msdn.microsoft.com/en-us/library/dd391697%28VS.85%29.aspx
  *
  * Applications may also define custom taskbar jump lists on application shortcuts.
- * See nsIJumpListBuilder for more information.
+ * See nsILegacyJumpListBuilder for more information.
  */
 
 [scriptable, uuid(11751471-9246-4c72-a80f-0c7df765d640)]
@@ -120,16 +120,17 @@ interface nsIWinTaskbar : nsISupports
    */
 
   /**
-   * Retrieve a taskbar jump list builder
+   * Retrieve a legacy taskbar jump list builder. This jump list builder backend
+   * is in the process of being phased out.
    *
    * Fails if a jump list build operation has already been initiated, developers
-   * should make use of a single instance of nsIJumpListBuilder for building lists
+   * should make use of a single instance of nsILegacyJumpListBuilder for building lists
    * within an application.
    *
-   * @throw NS_ERROR_ALREADY_INITIALIZED if an nsIJumpListBuilder instance is
+   * @throws NS_ERROR_ALREADY_INITIALIZED if an nsILegacyJumpListBuilder instance is
    * currently building a list.
    */
-  nsIJumpListBuilder createJumpListBuilder(in boolean aPrivateBrowsing);
+  nsILegacyJumpListBuilder createLegacyJumpListBuilder(in boolean aPrivateBrowsing);
 
   /**
    * Application window taskbar group settings
