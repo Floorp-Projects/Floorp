@@ -8,6 +8,7 @@
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/FetchPriority.h"
 #include "mozilla/dom/ReferrerInfo.h"
 #include "nsUnicharUtils.h"
 #include "nsThreadUtils.h"
@@ -178,6 +179,7 @@ Maybe<LinkStyle::SheetInfo> HTMLStyleElement::GetStyleSheetInfo() {
       HasAlternateRel::No,
       IsInline::Yes,
       IsExplicitlyEnabled::No,
+      FetchPriority::Auto,
   });
 }
 

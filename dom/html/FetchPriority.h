@@ -9,15 +9,28 @@
 
 #include <cstdint>
 
-namespace mozilla::dom {
+namespace mozilla {
+class LazyLogModule;
+
+namespace dom {
+
+enum class RequestPriority : uint8_t;
 
 // <https://html.spec.whatwg.org/multipage/urls-and-fetching.html#fetch-priority-attributes>.
 enum class FetchPriority : uint8_t { High, Low, Auto };
+
+FetchPriority ToFetchPriority(RequestPriority aRequestPriority);
+
+// @param aSupportsPriority see <nsISupportsPriority.idl>.
+void LogPriorityMapping(LazyLogModule& aLazyLogModule,
+                        FetchPriority aFetchPriority,
+                        int32_t aSupportsPriority);
 
 extern const char* kFetchPriorityAttributeValueHigh;
 extern const char* kFetchPriorityAttributeValueLow;
 extern const char* kFetchPriorityAttributeValueAuto;
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 #endif  // mozilla_dom_FetchPriority_h

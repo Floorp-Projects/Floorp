@@ -682,26 +682,28 @@ static void AdjustPriorityForNonLinkPreloadScripts(
     // For web-compatibility, the fetch priority mapping from
     // <https://web.dev/fetch-priority/#browser-priority-and-fetchpriority> is
     // taken.
-    switch (fetchPriority) {
-      case RequestPriority::Auto:
-        LOG(("ScriptLoader::%s:, fetchpriority=auto", __FUNCTION__));
-        break;
-      case RequestPriority::Low: {
-        LOG(("ScriptLoader::%s:, fetchpriority=low, setting priority",
-             __FUNCTION__));
-        supportsPriority->SetPriority(nsISupportsPriority::PRIORITY_LOW);
-        break;
+    const Maybe<int32_t> supportsPriorityValue = [&]() -> Maybe<int32_t> {
+      switch (fetchPriority) {
+        case RequestPriority::Auto:
+          return Nothing{};
+        case RequestPriority::Low: {
+          return Some(nsISupportsPriority::PRIORITY_LOW);
+        }
+        case RequestPriority::High: {
+          return Some(nsISupportsPriority::PRIORITY_HIGH);
+        }
+        default: {
+          MOZ_ASSERT_UNREACHABLE();
+          return Nothing{};
+        }
       }
-      case RequestPriority::High: {
-        LOG(("ScriptLoader::%s:, fetchpriority=high, setting priority",
-             __FUNCTION__));
-        supportsPriority->SetPriority(nsISupportsPriority::PRIORITY_HIGH);
-        break;
-      }
-      default: {
-        MOZ_ASSERT_UNREACHABLE();
-        break;
-      }
+    }();
+
+    if (supportsPriorityValue) {
+      LogPriorityMapping(ScriptLoader::gScriptLoaderLog,
+                         ToFetchPriority(fetchPriority),
+                         *supportsPriorityValue);
+      supportsPriority->SetPriority(*supportsPriorityValue);
     }
   }
 }

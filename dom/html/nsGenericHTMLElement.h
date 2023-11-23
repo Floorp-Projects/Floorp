@@ -694,6 +694,8 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   }
 
  protected:
+  mozilla::dom::FetchPriority GetFetchPriority() const;
+
   static void ParseFetchPriority(const nsAString& aValue, nsAttrValue& aResult);
 
  private:
