@@ -264,7 +264,6 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_rules_edit-selector_03.js"]
 
 ["browser_rules_edit-selector_04.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_edit-selector_05.js"]
 
