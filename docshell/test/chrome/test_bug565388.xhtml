@@ -52,7 +52,7 @@ function test() {
                           .getService(Ci.nsIPrincipal);
   var webNav = SpecialPowers.Services.appShell.createWindowlessBrowser(true);
   var docShell = webNav.docShell;
-  docShell.createAboutBlankContentViewer(systemPrincipal, systemPrincipal);
+  docShell.createAboutBlankDocumentViewer(systemPrincipal, systemPrincipal);
   var win = docShell.contentViewer.DOMDocument.defaultView;
 
   progressListener.add(docShell, function(){

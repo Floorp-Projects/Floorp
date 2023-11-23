@@ -3056,7 +3056,7 @@
         // Unless we know for sure we're not inheriting principals,
         // force the about:blank viewer to have the right principal:
         if (!uri || doGetProtocolFlags(uri) & URI_INHERITS_SECURITY_CONTEXT) {
-          browser.createAboutBlankContentViewer(
+          browser.createAboutBlankDocumentViewer(
             originPrincipal,
             originStoragePrincipal
           );

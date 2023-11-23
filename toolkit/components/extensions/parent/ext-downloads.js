@@ -1203,7 +1203,7 @@ this.downloads = class extends ExtensionAPIPersistent {
             Services.appShell.createWindowlessBrowser(true);
           let systemPrincipal =
             Services.scriptSecurityManager.getSystemPrincipal();
-          windowlessBrowser.docShell.createAboutBlankContentViewer(
+          windowlessBrowser.docShell.createAboutBlankDocumentViewer(
             systemPrincipal,
             systemPrincipal
           );

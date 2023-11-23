@@ -1789,9 +1789,9 @@ void nsGlobalWindowOuter::SetInitialPrincipal(
   // Use the subject (or system) principal as the storage principal too until
   // the new window finishes navigating and gets a real storage principal.
   nsDocShell::Cast(GetDocShell())
-      ->CreateAboutBlankContentViewer(aNewWindowPrincipal, aNewWindowPrincipal,
-                                      aCSP, nullptr,
-                                      /* aIsInitialDocument */ true, aCOEP);
+      ->CreateAboutBlankDocumentViewer(aNewWindowPrincipal, aNewWindowPrincipal,
+                                       aCSP, nullptr,
+                                       /* aIsInitialDocument */ true, aCOEP);
 
   if (mDoc) {
     MOZ_ASSERT(mDoc->IsInitialDocument(),

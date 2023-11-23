@@ -688,7 +688,7 @@ child:
 
     async LoadURL(nsDocShellLoadState loadState, ParentShowInfo info);
 
-    async CreateAboutBlankContentViewer(nullable nsIPrincipal principal,
+    async CreateAboutBlankDocumentViewer(nullable nsIPrincipal principal,
                                         nullable nsIPrincipal partitionedPrincipal);
 
     async ResumeLoad(uint64_t pendingSwitchID, ParentShowInfo info);

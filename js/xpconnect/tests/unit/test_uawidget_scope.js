@@ -12,7 +12,7 @@ function getWindowlessBrowser(url) {
   let webnav = Services.appShell.createWindowlessBrowser(false);
 
   let docShell = webnav.docShell;
-  docShell.createAboutBlankContentViewer(principal, principal);
+  docShell.createAboutBlankDocumentViewer(principal, principal);
 
   let document = webnav.document;
   let video = document.createElement("video");

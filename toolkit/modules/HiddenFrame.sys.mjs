@@ -110,7 +110,7 @@ HiddenFrame.prototype = {
     );
     let docShell = this._browser.docShell;
     let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-    docShell.createAboutBlankContentViewer(systemPrincipal, systemPrincipal);
+    docShell.createAboutBlankDocumentViewer(systemPrincipal, systemPrincipal);
     let browsingContext = this._browser.browsingContext;
     browsingContext.useGlobalHistory = false;
     let loadURIOptions = {

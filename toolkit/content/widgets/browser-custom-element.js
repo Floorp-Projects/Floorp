@@ -1228,7 +1228,7 @@
       }
     }
 
-    createAboutBlankContentViewer(aPrincipal, aPartitionedPrincipal) {
+    createAboutBlankDocumentViewer(aPrincipal, aPartitionedPrincipal) {
       let principal = lazy.BrowserUtils.principalWithMatchingOA(
         aPrincipal,
         this.contentPrincipal
@@ -1239,12 +1239,12 @@
       );
 
       if (this.isRemoteBrowser) {
-        this.frameLoader.remoteTab.createAboutBlankContentViewer(
+        this.frameLoader.remoteTab.createAboutBlankDocumentViewer(
           principal,
           partitionedPrincipal
         );
       } else {
-        this.docShell.createAboutBlankContentViewer(
+        this.docShell.createAboutBlankDocumentViewer(
           principal,
           partitionedPrincipal
         );
