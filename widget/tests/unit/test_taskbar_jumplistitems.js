@@ -6,20 +6,20 @@
 // This tests taskbar jump list functionality available on win7 and up.
 
 function test_basics() {
-  var item = Cc["@mozilla.org/windows-legacyjumplistitem;1"].createInstance(
-    Ci.nsILegacyJumpListItem
+  var item = Cc["@mozilla.org/windows-jumplistitem;1"].createInstance(
+    Ci.nsIJumpListItem
   );
 
-  var sep = Cc["@mozilla.org/windows-legacyjumplistseparator;1"].createInstance(
-    Ci.nsILegacyJumpListSeparator
+  var sep = Cc["@mozilla.org/windows-jumplistseparator;1"].createInstance(
+    Ci.nsIJumpListSeparator
   );
 
-  var shortcut = Cc[
-    "@mozilla.org/windows-legacyjumplistshortcut;1"
-  ].createInstance(Ci.nsILegacyJumpListShortcut);
+  var shortcut = Cc["@mozilla.org/windows-jumplistshortcut;1"].createInstance(
+    Ci.nsIJumpListShortcut
+  );
 
-  var link = Cc["@mozilla.org/windows-legacyjumplistlink;1"].createInstance(
-    Ci.nsILegacyJumpListLink
+  var link = Cc["@mozilla.org/windows-jumplistlink;1"].createInstance(
+    Ci.nsIJumpListLink
   );
 
   Assert.ok(!item.equals(sep));
@@ -47,16 +47,16 @@ function test_basics() {
 function test_separator() {
   // separators:
 
-  var item = Cc[
-    "@mozilla.org/windows-legacyjumplistseparator;1"
-  ].createInstance(Ci.nsILegacyJumpListSeparator);
+  var item = Cc["@mozilla.org/windows-jumplistseparator;1"].createInstance(
+    Ci.nsIJumpListSeparator
+  );
 
-  Assert.ok(item.type == Ci.nsILegacyJumpListItem.JUMPLIST_ITEM_SEPARATOR);
+  Assert.ok(item.type == Ci.nsIJumpListItem.JUMPLIST_ITEM_SEPARATOR);
 }
 
 function test_hashes() {
-  var link = Cc["@mozilla.org/windows-legacyjumplistlink;1"].createInstance(
-    Ci.nsILegacyJumpListLink
+  var link = Cc["@mozilla.org/windows-jumplistlink;1"].createInstance(
+    Ci.nsIJumpListLink
   );
   var uri1 = Cc["@mozilla.org/network/simple-uri-mutator;1"]
     .createInstance(Ci.nsIURIMutator)
@@ -108,11 +108,11 @@ function test_hashes() {
 
 function test_links() {
   // links:
-  var link1 = Cc["@mozilla.org/windows-legacyjumplistlink;1"].createInstance(
-    Ci.nsILegacyJumpListLink
+  var link1 = Cc["@mozilla.org/windows-jumplistlink;1"].createInstance(
+    Ci.nsIJumpListLink
   );
-  var link2 = Cc["@mozilla.org/windows-legacyjumplistlink;1"].createInstance(
-    Ci.nsILegacyJumpListLink
+  var link2 = Cc["@mozilla.org/windows-jumplistlink;1"].createInstance(
+    Ci.nsIJumpListLink
   );
 
   var uri1 = Cc["@mozilla.org/network/simple-uri-mutator;1"]
@@ -144,8 +144,8 @@ function test_links() {
 
 function test_shortcuts() {
   // shortcuts:
-  var sc = Cc["@mozilla.org/windows-legacyjumplistshortcut;1"].createInstance(
-    Ci.nsILegacyJumpListShortcut
+  var sc = Cc["@mozilla.org/windows-jumplistshortcut;1"].createInstance(
+    Ci.nsIJumpListShortcut
   );
 
   var handlerApp = Cc[
@@ -178,7 +178,7 @@ function test_shortcuts() {
   }
 }
 
-async function test_legacyjumplist() {
+async function test_jumplist() {
   // Jump lists can't register links unless the application is the default
   // protocol handler for the protocol of the link, so we skip off testing
   // those in these tests. We'll init the jump list for the xpc shell harness,
@@ -196,7 +196,7 @@ async function test_legacyjumplist() {
   // Since we're only testing the general functionality of the JumpListBuilder
   // et. al, we can just test the non-private browsing version.
   // (The only difference between the two at this level is the App User Model ID.)
-  var builder = taskbar.createLegacyJumpListBuilder(false);
+  var builder = taskbar.createJumpListBuilder(false);
 
   Assert.notEqual(builder, null);
 
@@ -215,8 +215,8 @@ async function test_legacyjumplist() {
 
   var items = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
 
-  var sc = Cc["@mozilla.org/windows-legacyjumplistshortcut;1"].createInstance(
-    Ci.nsILegacyJumpListShortcut
+  var sc = Cc["@mozilla.org/windows-jumplistshortcut;1"].createInstance(
+    Ci.nsIJumpListShortcut
   );
 
   var handlerApp = Cc[
@@ -279,4 +279,4 @@ function run_test() {
   run_next_test();
 }
 
-add_task(test_legacyjumplist);
+add_task(test_jumplist);
