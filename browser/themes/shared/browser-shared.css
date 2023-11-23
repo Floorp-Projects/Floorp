@@ -381,7 +381,8 @@ menupopup::part(drop-indicator) {
     direction: ltr;
   }
 
-  &[inactive] {
+  &[inactive],
+  :root[inDOMFullscreen] &:not([type=overLink]) {
     transition: none;
     opacity: 0;
     visibility: hidden;
