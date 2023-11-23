@@ -104,6 +104,14 @@ const gLoggingPresets = {
       description: "about-logging-preset-networking-http3-description",
     },
   },
+  "http3-upload-speed": {
+    modules: "timestamp,neqo_transport::*:3",
+    l10nIds: {
+      label: "about-logging-preset-networking-http3-upload-speed-label",
+      description:
+        "about-logging-preset-networking-http3-upload-speed-description",
+    },
+  },
   "media-playback": {
     modules:
       "HTMLMediaElement:4,HTMLMediaElementEvents:4,cubeb:5,PlatformDecoderModule:5,AudioSink:5,AudioSinkWrapper:5,MediaDecoderStateMachine:4,MediaDecoder:4,MediaFormatReader:5,GMP:5",
