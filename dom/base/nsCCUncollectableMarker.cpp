@@ -170,7 +170,7 @@ static void MarkMessageManagers() {
   }
 }
 
-void MarkContentViewer(nsIDocumentViewer* aViewer, bool aCleanupJS) {
+void MarkDocumentViewer(nsIDocumentViewer* aViewer, bool aCleanupJS) {
   if (!aViewer) {
     return;
   }
@@ -216,7 +216,7 @@ void MarkSHEntry(nsISHEntry* aSHEntry, bool aCleanupJS) {
 
   nsCOMPtr<nsIDocumentViewer> viewer;
   aSHEntry->GetContentViewer(getter_AddRefs(viewer));
-  MarkContentViewer(viewer, aCleanupJS);
+  MarkDocumentViewer(viewer, aCleanupJS);
 
   nsCOMPtr<nsIDocShellTreeItem> child;
   int32_t i = 0;
@@ -242,7 +242,7 @@ void MarkDocShell(nsIDocShellTreeItem* aNode, bool aCleanupJS) {
 
   nsCOMPtr<nsIDocumentViewer> viewer;
   shell->GetContentViewer(getter_AddRefs(viewer));
-  MarkContentViewer(viewer, aCleanupJS);
+  MarkDocumentViewer(viewer, aCleanupJS);
 
   nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(shell);
   RefPtr<ChildSHistory> history = webNav->GetSessionHistory();
