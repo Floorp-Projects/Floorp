@@ -575,7 +575,7 @@ void MobileViewportManager::RefreshVisualViewportSize() {
 
 void MobileViewportManager::UpdateSizesBeforeReflow() {
   if (Maybe<LayoutDeviceIntSize> newDisplaySize =
-          mContext->GetContentViewerSize()) {
+          mContext->GetDocumentViewerSize()) {
     mDisplaySize = *newDisplaySize;
     MVM_LOG("%p: Reflow starting, display size updated to %s\n", this,
             ToString(mDisplaySize).c_str());
@@ -615,7 +615,7 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
 
   Maybe<float> displayWidthChangeRatio;
   if (Maybe<LayoutDeviceIntSize> newDisplaySize =
-          mContext->GetContentViewerSize()) {
+          mContext->GetDocumentViewerSize()) {
     // See the comment in UpdateResolutionForViewportSizeChange for why we're
     // doing this.
     if (mDisplaySize.width > 0) {

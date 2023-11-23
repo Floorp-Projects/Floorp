@@ -203,8 +203,8 @@ static void GetZoom(BrowsingContext* aBrowsingContext,
 
   LayoutDeviceIntSize displaySize;
 
-  if (!nsLayoutUtils::GetContentViewerSize(presShell->GetPresContext(),
-                                           displaySize)) {
+  if (!nsLayoutUtils::GetDocumentViewerSize(presShell->GetPresContext(),
+                                            displaySize)) {
     return;
   }
 

@@ -213,8 +213,8 @@ void ZoomConstraintsClient::RefreshZoomConstraints() {
   }
 
   LayoutDeviceIntSize screenSize;
-  if (!nsLayoutUtils::GetContentViewerSize(mPresShell->GetPresContext(),
-                                           screenSize)) {
+  if (!nsLayoutUtils::GetDocumentViewerSize(mPresShell->GetPresContext(),
+                                            screenSize)) {
     return;
   }
 

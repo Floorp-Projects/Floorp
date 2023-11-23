@@ -72,7 +72,7 @@ class MockMVMContext : public MVMContext {
   LayoutDeviceMargin ScrollbarAreaToExcludeFromCompositionBounds() const {
     return LayoutDeviceMargin();
   }
-  Maybe<LayoutDeviceIntSize> GetContentViewerSize() const {
+  Maybe<LayoutDeviceIntSize> GetDocumentViewerSize() const {
     return Some(mDisplaySize);
   }
   bool AllowZoomingForDocument() const { return true; }

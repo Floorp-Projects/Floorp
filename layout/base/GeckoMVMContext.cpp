@@ -113,11 +113,11 @@ GeckoMVMContext::ScrollbarAreaToExcludeFromCompositionBounds() const {
       mPresShell->GetPresContext()->AppUnitsPerDevPixel());
 }
 
-Maybe<LayoutDeviceIntSize> GeckoMVMContext::GetContentViewerSize() const {
+Maybe<LayoutDeviceIntSize> GeckoMVMContext::GetDocumentViewerSize() const {
   MOZ_ASSERT(mPresShell);
   LayoutDeviceIntSize result;
-  if (nsLayoutUtils::GetContentViewerSize(mPresShell->GetPresContext(),
-                                          result)) {
+  if (nsLayoutUtils::GetDocumentViewerSize(mPresShell->GetPresContext(),
+                                           result)) {
     return Some(result);
   }
   return Nothing();

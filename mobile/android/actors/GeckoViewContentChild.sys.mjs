@@ -90,7 +90,7 @@ export class GeckoViewContentChild extends GeckoViewActorChild {
     const displaySize = {};
     const width = {},
       height = {};
-    domWindowUtils.getContentViewerSize(width, height);
+    domWindowUtils.getDocumentViewerSize(width, height);
 
     displaySize.width = width.value;
     displaySize.height = height.value;

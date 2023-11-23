@@ -2645,7 +2645,7 @@ class nsLayoutUtils {
    * otherwise.
    */
   enum class SubtractDynamicToolbar { No, Yes };
-  static bool GetContentViewerSize(
+  static bool GetDocumentViewerSize(
       const nsPresContext* aPresContext, LayoutDeviceIntSize& aOutSize,
       SubtractDynamicToolbar = SubtractDynamicToolbar::Yes);
 
