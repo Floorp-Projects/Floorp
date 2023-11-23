@@ -16,16 +16,6 @@ const { AbuseReporter } = ChromeUtils.importESModule(
   "resource://gre/modules/AbuseReporter.sys.mjs"
 );
 
-// Whether the abuse report feature should open a form hosted on
-// addons.mozilla.org or use the abuse report panel integrated
-// in Firefox.
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "ABUSE_REPORT_AMO_FORM_ENABLED",
-  "extensions.abuseReport.amoFormEnabled",
-  true
-);
-
 // Message Bars definitions.
 const ABUSE_REPORT_MESSAGE_BARS = {
   // Idle message-bar (used while the submission is still ongoing).
@@ -206,7 +196,7 @@ async function openAbuseReportAMOForm({ addonId, reportEntryPoint }) {
   });
 }
 
-window.openAbuseReport = ABUSE_REPORT_AMO_FORM_ENABLED
+window.openAbuseReport = AbuseReporter.amoFormEnabled
   ? openAbuseReportAMOForm
   : openAbuseReport;
 
