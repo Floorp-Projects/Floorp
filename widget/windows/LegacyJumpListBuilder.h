@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __JumpListBuilder_h__
-#define __JumpListBuilder_h__
+#ifndef __LegacyJumpListBuilder_h__
+#define __LegacyJumpListBuilder_h__
 
 #include <windows.h>
 
@@ -14,9 +14,9 @@
 
 #include "nsString.h"
 
-#include "nsIJumpListBuilder.h"
-#include "nsIJumpListItem.h"
-#include "JumpListItem.h"
+#include "nsILegacyJumpListBuilder.h"
+#include "nsILegacyJumpListItem.h"
+#include "LegacyJumpListItem.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
@@ -31,15 +31,16 @@ namespace detail {
 class DoneCommitListBuildCallback;
 }  // namespace detail
 
-class JumpListBuilder : public nsIJumpListBuilder, public nsIObserver {
-  virtual ~JumpListBuilder();
+class LegacyJumpListBuilder : public nsILegacyJumpListBuilder,
+                              public nsIObserver {
+  virtual ~LegacyJumpListBuilder();
 
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIJUMPLISTBUILDER
+  NS_DECL_NSILEGACYJUMPLISTBUILDER
   NS_DECL_NSIOBSERVER
 
-  JumpListBuilder();
+  LegacyJumpListBuilder();
 
  protected:
   static Atomic<bool> sBuildingList;
@@ -52,7 +53,7 @@ class JumpListBuilder : public nsIJumpListBuilder, public nsIObserver {
   ReentrantMonitor mMonitor;
   nsString mAppUserModelId;
 
-  bool IsSeparator(nsCOMPtr<nsIJumpListItem>& item);
+  bool IsSeparator(nsCOMPtr<nsILegacyJumpListItem>& item);
   void RemoveIconCacheAndGetJumplistShortcutURIs(IObjectArray* aObjArray,
                                                  nsTArray<nsString>& aURISpecs);
   void DeleteIconFromDisk(const nsAString& aPath);
@@ -66,4 +67,4 @@ class JumpListBuilder : public nsIJumpListBuilder, public nsIObserver {
 }  // namespace widget
 }  // namespace mozilla
 
-#endif /* __JumpListBuilder_h__ */
+#endif /* __LegacyJumpListBuilder_h__ */
