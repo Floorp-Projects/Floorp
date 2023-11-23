@@ -13,6 +13,7 @@
 #include "mozilla/dom/CSSImportRule.h"
 #include "mozilla/dom/CSSRuleList.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/FetchPriority.h"
 #include "mozilla/dom/MediaList.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ReferrerInfo.h"
@@ -680,7 +681,7 @@ void StyleSheet::MaybeRejectReplacePromise() {
   mReplacePromise = nullptr;
 }
 
-// https://wicg.github.io/construct-stylesheets/#dom-cssstylesheet-replace
+// https://drafts.csswg.org/cssom/#dom-cssstylesheet-replace
 already_AddRefed<dom::Promise> StyleSheet::Replace(const nsACString& aText,
                                                    ErrorResult& aRv) {
   nsIGlobalObject* globalObject = nullptr;
@@ -725,7 +726,7 @@ already_AddRefed<dom::Promise> StyleSheet::Replace(const nsACString& aText,
       css::Loader::UseSystemPrincipal::No, css::StylePreloadKind::None,
       /* aPreloadEncoding */ nullptr, /* aObserver */ nullptr,
       mConstructorDocument->NodePrincipal(), GetReferrerInfo(),
-      /* aNonce */ u""_ns);
+      /* aNonce */ u""_ns, FetchPriority::Auto);
 
   // In parallel
   // 5.1 Parse aText into rules.

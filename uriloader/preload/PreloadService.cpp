@@ -80,8 +80,7 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
   aLinkElement->GetCrossOrigin(crossOrigin);
   aLinkElement->GetIntegrity(integrity);
   aLinkElement->GetReferrerPolicy(referrerPolicy);
-  // Bug 1839315: get "fetchpriority"'s value from the link element instead,
-  fetchPriority = NS_ConvertUTF8toUTF16(dom::kFetchPriorityAttributeValueAuto);
+  aLinkElement->GetFetchPriority(fetchPriority);
   aLinkElement->GetRel(rel);
 
   nsAutoString nonce;
@@ -117,18 +116,16 @@ void PreloadService::PreloadLinkHeader(
     const nsAString& aAs, const nsAString& aType, const nsAString& aNonce,
     const nsAString& aIntegrity, const nsAString& aSrcset,
     const nsAString& aSizes, const nsAString& aCORS,
-    const nsAString& aReferrerPolicy, uint64_t aEarlyHintPreloaderId) {
+    const nsAString& aReferrerPolicy, uint64_t aEarlyHintPreloaderId,
+    const nsAString& aFetchPriority) {
   if (aPolicyType == nsIContentPolicy::TYPE_INVALID) {
     MOZ_ASSERT_UNREACHABLE("Caller should check");
     return;
   }
 
-  // Bug 1839315: which fetch priority to use here?
-  const nsAutoString fetchPriority =
-      NS_ConvertUTF8toUTF16(dom::kFetchPriorityAttributeValueAuto);
   PreloadOrCoalesce(aURI, aURL, aPolicyType, aAs, aType, u""_ns, aSrcset,
                     aSizes, aNonce, aIntegrity, aCORS, aReferrerPolicy,
-                    fetchPriority,
+                    aFetchPriority,
                     /* aFromHeader = */ true, aEarlyHintPreloaderId);
 }
 
@@ -187,7 +184,7 @@ PreloadService::PreloadOrCoalesceResult PreloadService::PreloadOrCoalesce(
         PreloadReferrerPolicy(aReferrerPolicy), aNonce, aIntegrity,
         aFromHeader ? css::StylePreloadKind::FromLinkRelPreloadHeader
                     : css::StylePreloadKind::FromLinkRelPreloadElement,
-        aEarlyHintPreloaderId);
+        aEarlyHintPreloaderId, aFetchPriority);
     switch (status) {
       case dom::SheetPreloadStatus::AlreadyComplete:
         return {nullptr, /* already_complete = */ true};

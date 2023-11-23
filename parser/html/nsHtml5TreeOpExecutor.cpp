@@ -1233,7 +1233,8 @@ void nsHtml5TreeOpExecutor::PreloadStyle(
     const nsAString& aURL, const nsAString& aCharset,
     const nsAString& aCrossOrigin, const nsAString& aMedia,
     const nsAString& aReferrerPolicy, const nsAString& aNonce,
-    const nsAString& aIntegrity, bool aLinkPreload) {
+    const nsAString& aIntegrity, bool aLinkPreload,
+    const nsAString& aFetchPriority) {
   nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYetAndMediaApplies(aURL, aMedia);
   if (!uri) {
     return;
@@ -1254,7 +1255,7 @@ void nsHtml5TreeOpExecutor::PreloadStyle(
       GetPreloadReferrerPolicy(aReferrerPolicy), aNonce, aIntegrity,
       aLinkPreload ? css::StylePreloadKind::FromLinkRelPreloadElement
                    : css::StylePreloadKind::FromParser,
-      0);
+      0, aFetchPriority);
 }
 
 void nsHtml5TreeOpExecutor::PreloadImage(

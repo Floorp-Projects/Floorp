@@ -2945,7 +2945,8 @@ class Document : public nsINode,
                                   const nsAString& aNonce,
                                   const nsAString& aIntegrity,
                                   css::StylePreloadKind,
-                                  uint64_t aEarlyHintPreloaderId);
+                                  uint64_t aEarlyHintPreloaderId,
+                                  const nsAString& aFetchPriority);
 
   /**
    * Called by the chrome registry to load style sheets.
