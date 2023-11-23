@@ -31,7 +31,7 @@ async function testEditClassSelector(view) {
 
   editor.input.value = "body";
   const onRuleViewChanged = once(view, "ruleview-changed");
-  EventUtils.synthesizeKey("KEY_Enter");
+  EventUtils.synthesizeKey("KEY_Tab");
   await onRuleViewChanged;
 
   // Get the new rule editor that replaced the original
@@ -60,7 +60,7 @@ async function testEditDivSelector(view) {
 
   editor.input.value = "asdf";
   const onRuleViewChanged = once(view, "ruleview-changed");
-  EventUtils.synthesizeKey("KEY_Enter");
+  EventUtils.synthesizeKey("KEY_Tab");
   await onRuleViewChanged;
 
   // Get the new rule editor that replaced the original

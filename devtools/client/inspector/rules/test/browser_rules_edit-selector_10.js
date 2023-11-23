@@ -38,11 +38,6 @@ async function testEditSelector(view) {
   EventUtils.synthesizeKey("KEY_Enter");
   await onRuleViewChanged;
 
-  // Escape the new property editor after editing the selector
-  const onBlur = once(view.styleDocument.activeElement, "blur");
-  EventUtils.synthesizeKey("KEY_Escape", {}, view.styleWindow);
-  await onBlur;
-
   // Get the new rule editor that replaced the original
   ruleEditor = getRuleViewRuleEditor(view, 1);
 

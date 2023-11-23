@@ -48,7 +48,7 @@ add_task(async function () {
   EventUtils.sendString("margin-left", view.styleWindow);
 
   info("Submit the change");
-  let onRuleViewChanged = view.once("ruleview-changed");
+  const onRuleViewChanged = view.once("ruleview-changed");
   EventUtils.synthesizeKey("KEY_Enter");
   await onRuleViewChanged;
 
@@ -56,11 +56,4 @@ add_task(async function () {
     propEditor.container.classList.contains("ruleview-highlight"),
     "margin-left text property is correctly highlighted."
   );
-
-  // After pressing return on the property name, the value has been focused
-  // automatically. Blur it now and wait for the rule-view to refresh to avoid
-  // pending requests.
-  onRuleViewChanged = view.once("ruleview-changed");
-  EventUtils.synthesizeKey("KEY_Escape");
-  await onRuleViewChanged;
 });

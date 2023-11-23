@@ -61,11 +61,6 @@ async function testEditSelector(view, name) {
     getRuleViewRuleEditor(view, 1).element.getAttribute("unmatched"),
     "Rule with " + name + " does not match the current element."
   );
-
-  // Escape the new property editor after editing the selector
-  const onBlur = once(view.styleDocument.activeElement, "blur");
-  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
-  await onBlur;
 }
 
 function checkModifiedElement(view, name) {

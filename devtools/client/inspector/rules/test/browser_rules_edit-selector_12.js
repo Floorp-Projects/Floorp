@@ -23,11 +23,6 @@ add_task(async function () {
   EventUtils.synthesizeKey("KEY_Enter");
   await onRuleViewChanged;
 
-  info("Escape the new property editor after editing the selector");
-  const onBlur = once(view.styleDocument.activeElement, "blur");
-  EventUtils.synthesizeKey("KEY_Escape", {}, view.styleWindow);
-  await onBlur;
-
   info("Check the rules are still displayed correctly");
   is(view._elementStyle.rules.length, 3, "The element still has 3 rules.");
 

@@ -70,18 +70,6 @@ async function modifyRuleViewWidth(value, ruleView, inspector) {
   EventUtils.sendKey("return");
   await onBlur;
   await onStyleChanged;
-
-  info(
-    "Escaping out of the new property field that has been created after " +
-      "the value was edited"
-  );
-  const onNewFieldBlur = once(
-    ruleView.styleDocument.activeElement,
-    "blur",
-    true
-  );
-  EventUtils.sendKey("escape");
-  await onNewFieldBlur;
 }
 
 async function getContainerStyleAttrValue(id, { walker, markup }) {

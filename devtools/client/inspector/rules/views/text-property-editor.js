@@ -317,6 +317,14 @@ TextPropertyEditor.prototype = {
         contentType: InplaceEditor.CONTENT_TYPES.CSS_PROPERTY,
         popup: this.popup,
         cssProperties: this.cssProperties,
+        // (Shift+)Tab will move the focus to the previous/next editable field (so property value
+        // or new selector).
+        focusEditableFieldAfterApply: true,
+        focusEditableFieldContainerSelector: ".ruleview-rule",
+        // We don't want Enter to trigger the next editable field, just to validate
+        // what the user entered, close the editor, and focus the span so the user can
+        // navigate with the keyboard as expected.
+        stopOnReturn: true,
       });
 
       // Auto blur name field on multiple CSS rules get pasted in.
@@ -410,6 +418,14 @@ TextPropertyEditor.prototype = {
           [],
         getGridLineNames: this.getGridlineNames,
         showSuggestCompletionOnEmpty: true,
+        // (Shift+)Tab will move the focus to the previous/next editable field (so property name,
+        // or new property).
+        focusEditableFieldAfterApply: true,
+        focusEditableFieldContainerSelector: ".ruleview-rule",
+        // We don't want Enter to trigger the next editable field, just to validate
+        // what the user entered, close the editor, and focus the span so the user can
+        // navigate with the keyboard as expected.
+        stopOnReturn: true,
       });
     }
   },

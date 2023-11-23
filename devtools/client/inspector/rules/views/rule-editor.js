@@ -326,6 +326,14 @@ RuleEditor.prototype = {
         element: this.selectorText,
         done: this._onSelectorDone,
         cssProperties: this.rule.cssProperties,
+        // (Shift+)Tab will move the focus to the previous/next editable field (so property name,
+        // or new property of the previous rule).
+        focusEditableFieldAfterApply: true,
+        focusEditableFieldContainerSelector: ".ruleview-rule",
+        // We don't want Enter to trigger the next editable field, just to validate
+        // what the user entered, close the editor, and focus the span so the user can
+        // navigate with the keyboard as expected.
+        stopOnReturn: true,
       });
     }
 
@@ -682,7 +690,15 @@ RuleEditor.prototype = {
       });
     }
 
+    let focusedElSelector;
     if (reset) {
+      // If we're going to reset the rule (i.e. if this is the `element` rule),
+      // we want to restore the focus after the rule is populated.
+      // So if this element contains the active element, retrieve its selector for later use.
+      if (this.element.contains(this.doc.activeElement)) {
+        focusedElSelector = CssLogic.findCssSelector(this.doc.activeElement);
+      }
+
       while (this.propertyList.hasChildNodes()) {
         this.propertyList.removeChild(this.propertyList.lastChild);
       }
@@ -696,6 +712,17 @@ RuleEditor.prototype = {
         // If an editor already existed, append it to the bottom now to make sure the
         // order of editors in the DOM follow the order of the rule's properties.
         this.propertyList.appendChild(prop.editor.element);
+      }
+    }
+
+    if (focusedElSelector) {
+      const elementToFocus = this.doc.querySelector(focusedElSelector);
+      if (elementToFocus && this.element.contains(elementToFocus)) {
+        // We need to wait for a tick for the focus to be properly set
+        setTimeout(() => {
+          elementToFocus.focus();
+          this.ruleView.emitForTests("rule-editor-focus-reset");
+        }, 0);
       }
     }
   },
@@ -957,6 +984,11 @@ RuleEditor.prototype = {
       // pseudo-element rules and the like.
       this.element.parentNode.replaceChild(editor.element, this.element);
 
+      // As the rules elements will be replaced, and given that the inplace-editor doesn't
+      // wait for this `done` callback to be resolved, the focus management we do there
+      // will be useless as this specific code will usually happen later (and the focused
+      // element might be replaced).
+      // Because of this, we need to handle setting the focus ourselves from here.
       editor._moveSelectorFocus(direction);
     } catch (err) {
       this.isEditing = false;
@@ -965,8 +997,7 @@ RuleEditor.prototype = {
   },
 
   /**
-   * Handle moving the focus change after a tab or return keypress in the
-   * selector inplace editor.
+   * Handle moving the focus change after a Tab keypress in the selector inplace editor.
    *
    * @param {Number} direction
    *        The move focus direction number.
