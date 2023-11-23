@@ -350,10 +350,12 @@
   background-size: 12px;
   -moz-context-properties: fill;
   fill: var(--theme-icon-dimmed-color);
-}
+  background-color: transparent;
+  border: none;
 
-.ruleview-overridden-rule-filter:hover {
-  fill: var(--theme-icon-color);
+  &:is(:hover, :focus-visible) {
+    fill: var(--theme-icon-color);
+  }
 }
 
 .ruleview-ruleopen {

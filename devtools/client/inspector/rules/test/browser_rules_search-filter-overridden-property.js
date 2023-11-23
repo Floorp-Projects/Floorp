@@ -10,9 +10,11 @@ const TEST_URI = `
   <style type='text/css'>
   #testid {
     width: 100%;
+    color: tomato;
   }
   h1 {
     width: 50%;
+    color: gold;
   }
   </style>
   <h1 id='testid' class='testclass'>Styled Node</h1>
@@ -62,6 +64,7 @@ async function testFilterOverriddenProperty(inspector, ruleView) {
 
   info("Check that the overridden search is applied");
   is(searchField.value, "`width`", "The search field value is width.");
+  ok(searchField.matches(":focus"), "The search field is focused");
 
   rule = getRuleViewRuleEditor(ruleView, 1).rule;
   textPropEditor = getTextProperty(ruleView, 1, { width: "100%" }).editor;
@@ -86,4 +89,31 @@ async function testFilterOverriddenProperty(inspector, ruleView) {
     !textPropEditor.filterProperty.hidden,
     "Overridden search button is not hidden."
   );
+
+  info("Check that overridden search button can be used with the keyboard");
+  const goldColorTextPropertyEditor = getTextProperty(ruleView, 2, {
+    color: "gold",
+  }).editor;
+
+  info("First, focus the gold value span");
+  goldColorTextPropertyEditor.valueSpan.focus();
+
+  info("Check that hiting Tab moves the focus to the override search button");
+  EventUtils.synthesizeKey("KEY_Tab", {}, ruleView.styleWindow);
+  is(
+    ruleView.styleDocument.activeElement,
+    goldColorTextPropertyEditor.filterProperty,
+    "override search button is the active element"
+  );
+  ok(
+    goldColorTextPropertyEditor.filterProperty.matches(
+      ".ruleview-overridden-rule-filter:focus"
+    ),
+    "override search button has expected class and is focused"
+  );
+
+  info("Press enter to active the button");
+  EventUtils.synthesizeKey("KEY_Enter", {}, ruleView.styleWindow);
+  is(searchField.value, "`color`", "The search field value is color.");
+  ok(searchField.matches(":focus"), "The search field is focused");
 }
