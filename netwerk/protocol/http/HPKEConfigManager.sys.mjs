@@ -29,7 +29,7 @@ export class HPKEConfigManager {
 
   static async fetchAndStore(aURL, aOptions = {}) {
     let fetchDate = Date.now();
-    let resp = await fetch(aURL);
+    let resp = await fetch(aURL, { signal: aOptions.abortSignal });
     if (!resp?.ok) {
       throw new Error(
         `Fetching HPKE config from ${aURL} failed with error ${resp.status}`
