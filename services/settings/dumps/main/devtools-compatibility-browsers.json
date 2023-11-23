@@ -1,6 +1,51 @@
 {
   "data": [
     {
+      "name": "Safari",
+      "schema": 1700352303483,
+      "status": "beta",
+      "version": "17.2",
+      "browserid": "safari",
+      "id": "0358e297-4312-4137-87b7-08e6d5f03bb5",
+      "last_modified": 1700557930490
+    },
+    {
+      "name": "Safari on iOS",
+      "schema": 1700352303702,
+      "status": "beta",
+      "version": "17.2",
+      "browserid": "safari_ios",
+      "id": "0709a73b-ba98-4e14-a086-6515bb7fa106",
+      "last_modified": 1700557930487
+    },
+    {
+      "name": "Samsung Internet",
+      "schema": 1700352303815,
+      "status": "current",
+      "version": "23.0",
+      "browserid": "samsunginternet_android",
+      "id": "b6194ce4-1588-4c83-9a7c-54081c540d01",
+      "last_modified": 1700557930484
+    },
+    {
+      "name": "Safari on iOS",
+      "schema": 1700352303644,
+      "status": "current",
+      "version": "17.1",
+      "browserid": "safari_ios",
+      "id": "af9852bc-ad45-481d-a3b5-f8854224f568",
+      "last_modified": 1700557930473
+    },
+    {
+      "name": "Safari",
+      "schema": 1700352303427,
+      "status": "current",
+      "version": "17.1",
+      "browserid": "safari",
+      "id": "d517252f-b545-46e6-ab30-6ff27c72b32a",
+      "last_modified": 1700557930471
+    },
+    {
       "name": "Firefox",
       "schema": 1698797104275,
       "status": "planned",
@@ -235,24 +280,6 @@
       "last_modified": 1698223476280
     },
     {
-      "name": "Safari",
-      "schema": 1696637108964,
-      "status": "beta",
-      "version": "17.1",
-      "browserid": "safari",
-      "id": "d517252f-b545-46e6-ab30-6ff27c72b32a",
-      "last_modified": 1696863920651
-    },
-    {
-      "name": "Safari on iOS",
-      "schema": 1696637109022,
-      "status": "beta",
-      "version": "17.1",
-      "browserid": "safari_ios",
-      "id": "af9852bc-ad45-481d-a3b5-f8854224f568",
-      "last_modified": 1696863920647
-    },
-    {
       "name": "Edge",
       "schema": 1695859508448,
       "status": "planned",
@@ -260,24 +287,6 @@
       "browserid": "edge",
       "id": "52bfc592-a35d-4208-ba7b-0810d88970d0",
       "last_modified": 1695880503554
-    },
-    {
-      "name": "Safari on iOS",
-      "schema": 1695859508984,
-      "status": "current",
-      "version": "17",
-      "browserid": "safari_ios",
-      "id": "d86d2710-e575-435e-b27f-199cb6252b1e",
-      "last_modified": 1695880503536
-    },
-    {
-      "name": "Safari",
-      "schema": 1695859508846,
-      "status": "current",
-      "version": "17",
-      "browserid": "safari",
-      "id": "3e84cb8c-7466-4e59-b5f0-5ca867374529",
-      "last_modified": 1695880503534
     },
     {
       "name": "Node.js",
@@ -296,15 +305,6 @@
       "browserid": "firefox",
       "id": "f8bed161-4be5-435b-9b42-7a7eafd672b7",
       "last_modified": 1692814731149
-    },
-    {
-      "name": "Samsung Internet",
-      "schema": 1690982642139,
-      "status": "current",
-      "version": "22.0",
-      "browserid": "samsunginternet_android",
-      "id": "0f7edb64-99cc-41ee-ae73-ec4edfcef9ab",
-      "last_modified": 1690987664600
     },
     {
       "name": "Opera Android",
@@ -343,5 +343,5 @@
       "last_modified": 1645448267500
     }
   ],
-  "timestamp": 1699453952082
+  "timestamp": 1700557930490
 }
