@@ -1696,6 +1696,10 @@ inline void* MozJemallocPHC::moz_arena_memalign(arena_id_t aArenaId,
 namespace mozilla::phc {
 
 bool IsPHCAllocation(const void* aPtr, AddrInfo* aOut) {
+  if (!maybe_init()) {
+    return false;
+  }
+
   PtrKind pk = gConst->PtrKind(aPtr);
   if (pk.IsNothing()) {
     return false;
@@ -1760,6 +1764,11 @@ bool IsPHCEnabledOnCurrentThread() {
 }
 
 void PHCMemoryUsage(MemoryUsage& aMemoryUsage) {
+  if (!maybe_init()) {
+    aMemoryUsage = MemoryUsage();
+    return;
+  }
+
   aMemoryUsage.mMetadataBytes = metadata_size();
   if (gMut) {
     MutexAutoLock lock(GMut::sMutex);
@@ -1770,15 +1779,23 @@ void PHCMemoryUsage(MemoryUsage& aMemoryUsage) {
 }
 
 void GetPHCStats(PHCStats& aStats) {
-  if (gMut) {
-    MutexAutoLock lock(GMut::sMutex);
-
-    aStats = gMut->GetPageStats(lock);
+  if (!maybe_init()) {
+    aStats = PHCStats();
+    return;
   }
+
+  MutexAutoLock lock(GMut::sMutex);
+
+  aStats = gMut->GetPageStats(lock);
 }
 
 // Enable or Disable PHC at runtime.  If PHC is disabled it will still trap
 // bad uses of previous allocations, but won't track any new allocations.
-void SetPHCState(PHCState aState) { gMut->SetState(aState); }
+void SetPHCState(PHCState aState) {
+  if (!maybe_init()) {
+    return;
+  }
 
+  gMut->SetState(aState);
+}
 }  // namespace mozilla::phc
