@@ -31,24 +31,11 @@ namespace mozilla::dom {
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FetchStreamReader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(FetchStreamReader)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(FetchStreamReader)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FetchStreamReader)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReader)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(FetchStreamReader)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReader)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(FetchStreamReader)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION(FetchStreamReader, mGlobal, mReader)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FetchStreamReader)
   NS_INTERFACE_MAP_ENTRY(nsIOutputStreamCallback)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIOutputStreamCallback)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 /* static */
@@ -106,14 +93,10 @@ nsresult FetchStreamReader::Create(JSContext* aCx, nsIGlobalObject* aGlobal,
 FetchStreamReader::FetchStreamReader(nsIGlobalObject* aGlobal)
     : mGlobal(aGlobal), mOwningEventTarget(mGlobal->SerialEventTarget()) {
   MOZ_ASSERT(aGlobal);
-
-  mozilla::HoldJSObjects(this);
 }
 
 FetchStreamReader::~FetchStreamReader() {
   CloseAndRelease(nullptr, NS_BASE_STREAM_CLOSED);
-
-  mozilla::DropJSObjects(this);
 }
 
 // If a context is provided, an attempt will be made to cancel the reader.  The
