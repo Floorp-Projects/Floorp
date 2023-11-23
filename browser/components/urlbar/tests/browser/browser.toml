@@ -283,11 +283,9 @@ support-files = [
 https_first_disabled = true
 skip-if = [
   "os == 'linux' && bits == 64 && !debug", # Bug 1787020
-  "a11y_checks", # Bugs 1858041 and 1854661 to investigate intermittent a11y_checks results
 ]
 
 ["browser_locationBarExternalLoad.js"]
-fail-if = ["a11y_checks"] # Bug 1854660 clicked element may not be focusable and/or labeled
 
 ["browser_locationchange_urlbar_edit_dos.js"]
 support-files = ["file_urlbar_edit_dos.html"]
