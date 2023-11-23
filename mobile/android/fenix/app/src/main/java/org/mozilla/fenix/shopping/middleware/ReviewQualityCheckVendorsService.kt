@@ -14,6 +14,8 @@ import java.net.URISyntaxException
 private const val AMAZON_COM = "amazon.com"
 private const val BEST_BUY_COM = "bestbuy.com"
 private const val WALMART_COM = "walmart.com"
+private const val AMAZON_DE = "amazon.de"
+private const val AMAZON_FR = "amazon.fr"
 private val defaultVendorsList = enumValues<ProductVendor>().toList()
 
 /**
@@ -57,6 +59,7 @@ class DefaultReviewQualityCheckVendorsService(
                 host.contains(AMAZON_COM) -> createProductVendorsList(ProductVendor.AMAZON)
                 host.contains(BEST_BUY_COM) -> createProductVendorsList(ProductVendor.BEST_BUY)
                 host.contains(WALMART_COM) -> createProductVendorsList(ProductVendor.WALMART)
+                host.contains(AMAZON_DE) || host.contains(AMAZON_FR) -> listOf(ProductVendor.AMAZON)
                 else -> defaultVendorsList
             }
         }

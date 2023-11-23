@@ -15,7 +15,7 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.ProductVendor
 class DefaultReviewQualityCheckVendorsServiceTest {
 
     @Test
-    fun `WHEN selected tab is an amazon page THEN amazon is first in product vendors list`() =
+    fun `WHEN selected tab is an amazon_com page THEN amazon is first in product vendors list`() =
         runTest {
             val tab = createTab(
                 url = "https://www.amazon.com/product",
@@ -121,6 +121,70 @@ class DefaultReviewQualityCheckVendorsServiceTest {
                 id = "test-tab",
             )
 
+            val browserState = BrowserState(
+                tabs = listOf(tab),
+                selectedTabId = tab.id,
+            )
+
+            val tested = DefaultReviewQualityCheckVendorsService(BrowserStore(browserState))
+
+            val actual = tested.productVendors()
+            val expected = listOf(
+                ProductVendor.AMAZON,
+                ProductVendor.BEST_BUY,
+                ProductVendor.WALMART,
+            )
+
+            assertEquals(expected, actual)
+        }
+
+    @Test
+    fun `WHEN selected tab is an amazon_de page THEN amazon is first in product vendors list`() =
+        runTest {
+            val tab = createTab(
+                url = "https://www.amazon.de/product",
+                id = "test-tab",
+            )
+            val browserState = BrowserState(
+                tabs = listOf(tab),
+                selectedTabId = tab.id,
+            )
+
+            val tested = DefaultReviewQualityCheckVendorsService(BrowserStore(browserState))
+
+            val actual = tested.productVendors()
+            val expected = listOf(ProductVendor.AMAZON)
+
+            assertEquals(expected, actual)
+        }
+
+    @Test
+    fun `WHEN selected tab is an amazon_fr page THEN amazon is first in product vendors list`() =
+        runTest {
+            val tab = createTab(
+                url = "https://www.amazon.fr/product",
+                id = "test-tab",
+            )
+            val browserState = BrowserState(
+                tabs = listOf(tab),
+                selectedTabId = tab.id,
+            )
+
+            val tested = DefaultReviewQualityCheckVendorsService(BrowserStore(browserState))
+
+            val actual = tested.productVendors()
+            val expected = listOf(ProductVendor.AMAZON)
+
+            assertEquals(expected, actual)
+        }
+
+    @Test
+    fun `WHEN selected tab is an amazon_in page THEN default product vendors list is returned`() =
+        runTest {
+            val tab = createTab(
+                url = "https://www.amazon.in/product",
+                id = "test-tab",
+            )
             val browserState = BrowserState(
                 tabs = listOf(tab),
                 selectedTabId = tab.id,

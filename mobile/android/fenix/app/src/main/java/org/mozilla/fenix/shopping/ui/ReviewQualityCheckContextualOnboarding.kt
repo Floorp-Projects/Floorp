@@ -35,7 +35,7 @@ import org.mozilla.fenix.shopping.ui.ext.displayName
 import org.mozilla.fenix.shopping.ui.ext.headingResource
 import org.mozilla.fenix.theme.FirefoxTheme
 
-const val PLACEHOLDER_URL = "www.fakespot.com"
+private const val MAX_SUPPORTED_VENDORS_PER_TLD = 3
 
 /**
  * A placeholder UI for review quality check contextual onboarding. The actual UI will be
@@ -97,7 +97,7 @@ fun ReviewQualityCheckContextualOnboarding(
             linkTextStates = listOf(
                 LinkTextState(
                     text = learnMoreText,
-                    url = PLACEHOLDER_URL,
+                    url = "",
                     onClick = {
                         onLearnMoreClick()
                     },
@@ -127,7 +127,7 @@ fun ReviewQualityCheckContextualOnboarding(
             linkTextStates = listOf(
                 LinkTextState(
                     text = privacyPolicyText,
-                    url = PLACEHOLDER_URL,
+                    url = "",
                     onClick = {
                         onPrivacyPolicyClick()
                     },
@@ -144,7 +144,7 @@ fun ReviewQualityCheckContextualOnboarding(
             linkTextStates = listOf(
                 LinkTextState(
                     text = termsOfUseText,
-                    url = PLACEHOLDER_URL,
+                    url = "",
                     onClick = {
                         onTermsOfUseClick()
                     },
@@ -194,13 +194,22 @@ private fun createDescriptionString(
 ) = buildAnnotatedString {
     val retailerNames = retailers.map { it.displayName() }
 
-    val description = stringResource(
-        id = R.string.review_quality_check_contextual_onboarding_description,
-        retailerNames[0],
-        stringResource(R.string.app_name),
-        retailerNames[1],
-        retailerNames[2],
-    )
+    val description = if (retailers.size == MAX_SUPPORTED_VENDORS_PER_TLD) {
+        stringResource(
+            id = R.string.review_quality_check_contextual_onboarding_description,
+            retailerNames[0],
+            stringResource(R.string.app_name),
+            retailerNames[1],
+            retailerNames[2],
+        )
+    } else {
+        stringResource(
+            id = R.string.review_quality_check_contextual_onboarding_description_one_vendor,
+            retailerNames.first(),
+            stringResource(R.string.app_name),
+        )
+    }
+
     append(description)
 
     retailerNames.forEach { retailer ->
