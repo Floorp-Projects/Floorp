@@ -26,7 +26,6 @@
     "codemirror": "^5.28.0",
     "fuzzaldrin-plus": "^0.6.0",
     "react": "16.8.6",
-    "react-aria-components": "^0.0.4",
     "react-dom": "16.8.6",
     "react-redux": "^5.0.7",
     "reselect": "4.1.5",

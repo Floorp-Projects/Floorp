@@ -15,7 +15,6 @@
  */
 
 import * as fuzzaldrinPlus from "fuzzaldrin-plus";
-import * as reactAriaComponentsTabs from "react-aria-components/src/tabs";
 
 // We cannot directly export literals containing special characters
 // (eg. "my-module/Test") which is why they are nested in "vendored".
@@ -23,5 +22,4 @@ import * as reactAriaComponentsTabs from "react-aria-components/src/tabs";
 // !!! Should remain synchronized with .babel/transform-mc.js !!!
 export const vendored = {
   "fuzzaldrin-plus": fuzzaldrinPlus,
-  "react-aria-components/src/tabs": reactAriaComponentsTabs,
 };

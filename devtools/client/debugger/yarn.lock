@@ -6877,11 +6877,6 @@ randomfill@^1.0.3:
     randombytes "^2.0.5"
     safe-buffer "^5.1.0"
 
-react-aria-components@^0.0.4:
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/react-aria-components/-/react-aria-components-0.0.4.tgz#e5e598a7a379f8b940cb7c48a7e51a8407420589"
-  integrity sha512-XYSNnq+3zol/Kc1wQJeNXOwEXiFAb5rtzxVPbCaOzuzfaPcmxTWoS5NOQeWepy2tWj+bAzaZaBqgBbfmhvM2NA==
-
 react-dom@16.8.6:
   version "16.8.6"
   resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-16.8.6.tgz#71d6303f631e8b0097f56165ef608f051ff6e10f"

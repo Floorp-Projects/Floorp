@@ -4,14 +4,14 @@
 
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react"));
+		module.exports = factory();
 	else if(typeof define === 'function' && define.amd)
-		define(["devtools/client/shared/vendor/react-prop-types", "devtools/client/shared/vendor/react"], factory);
+		define([], factory);
 	else {
-		var a = typeof exports === 'object' ? factory(require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react")) : factory(root["devtools/client/shared/vendor/react-prop-types"], root["devtools/client/shared/vendor/react"]);
+		var a = factory();
 		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
 	}
-})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_0__, __WEBPACK_EXTERNAL_MODULE_6__) {
+})(typeof self !== 'undefined' ? self : this, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -78,20 +78,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ })
 /************************************************************************/
 /******/ ({
-
-/***/ 0:
-/***/ (function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_0__;
-
-/***/ }),
-
-/***/ 6:
-/***/ (function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_6__;
-
-/***/ }),
 
 /***/ 607:
 /***/ (function(module, exports) {
@@ -799,205 +785,6 @@ process.umask = function() { return 0; };
 
 /***/ }),
 
-/***/ 710:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-var _propTypes = _interopRequireDefault(__webpack_require__(0));
-var _react = _interopRequireDefault(__webpack_require__(6));
-var _tab = _interopRequireDefault(__webpack_require__(711));
-var _tabList = _interopRequireDefault(__webpack_require__(958));
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-class TabList extends _react.default.Component {
-  constructor(props) {
-    super(props);
-    const childrenCount = _react.default.Children.count(props.children);
-    this.handleKeyPress = this.handleKeyPress.bind(this);
-    this.tabRefs = new Array(childrenCount).fill(0).map(() => /*#__PURE__*/_react.default.createRef());
-    this.handlers = this.getHandlers(props.vertical);
-  }
-  componentDidUpdate(prevProps) {
-    if (prevProps.activeIndex !== this.props.activeIndex) {
-      this.tabRefs[this.props.activeIndex].current.focus();
-    }
-  }
-  getHandlers(vertical) {
-    if (vertical) {
-      return {
-        ArrowDown: this.next.bind(this),
-        ArrowUp: this.previous.bind(this)
-      };
-    }
-    return {
-      ArrowLeft: this.previous.bind(this),
-      ArrowRight: this.next.bind(this)
-    };
-  }
-  wrapIndex(index) {
-    const count = _react.default.Children.count(this.props.children);
-    return (index + count) % count;
-  }
-  handleKeyPress(event) {
-    const handler = this.handlers[event.key];
-    if (handler) {
-      handler();
-    }
-  }
-  previous() {
-    const newIndex = this.wrapIndex(this.props.activeIndex - 1);
-    this.props.onActivateTab(newIndex);
-  }
-  next() {
-    const newIndex = this.wrapIndex(this.props.activeIndex + 1);
-    this.props.onActivateTab(newIndex);
-  }
-  render() {
-    const {
-      accessibleId,
-      activeIndex,
-      children,
-      className,
-      onActivateTab
-    } = this.props;
-    return /*#__PURE__*/_react.default.createElement("ul", {
-      className: className,
-      onKeyUp: this.handleKeyPress,
-      role: "tablist"
-    }, _react.default.Children.map(children, (child, index) => {
-      if (child.type !== _tab.default) {
-        throw new Error('Direct children of a <TabList> must be a <Tab>');
-      }
-      const active = index === activeIndex;
-      const tabRef = this.tabRefs[index];
-      return /*#__PURE__*/_react.default.cloneElement(child, {
-        accessibleId: active ? accessibleId : undefined,
-        active,
-        tabRef,
-        onActivate: () => onActivateTab(index)
-      });
-    }));
-  }
-}
-exports.default = TabList;
-TabList.propTypes = {
-  accessibleId: _propTypes.default.string,
-  activeIndex: _propTypes.default.number,
-  children: _propTypes.default.node,
-  className: _propTypes.default.string,
-  onActivateTab: _propTypes.default.func,
-  vertical: _propTypes.default.bool
-};
-TabList.defaultProps = {
-  accessibleId: undefined,
-  activeIndex: 0,
-  children: null,
-  className: _tabList.default.container,
-  onActivateTab: () => {},
-  vertical: false
-};
-
-/***/ }),
-
-/***/ 711:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = Tab;
-var _propTypes = _interopRequireDefault(__webpack_require__(0));
-var _react = _interopRequireDefault(__webpack_require__(6));
-var _ref = _interopRequireDefault(__webpack_require__(938));
-var _tab = _interopRequireDefault(__webpack_require__(957));
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-function Tab({
-  accessibleId,
-  active,
-  children,
-  className,
-  onActivate,
-  tabRef
-}) {
-  return /*#__PURE__*/_react.default.createElement("li", {
-    "aria-selected": active,
-    className: className,
-    id: accessibleId,
-    onClick: onActivate,
-    onKeyDown: () => {},
-    ref: tabRef,
-    role: "tab",
-    tabIndex: active ? 0 : undefined
-  }, children);
-}
-Tab.propTypes = {
-  accessibleId: _propTypes.default.string,
-  active: _propTypes.default.bool,
-  children: _propTypes.default.node.isRequired,
-  className: _propTypes.default.string,
-  onActivate: _propTypes.default.func,
-  tabRef: _ref.default
-};
-Tab.defaultProps = {
-  accessibleId: undefined,
-  active: false,
-  className: _tab.default.container,
-  onActivate: undefined,
-  tabRef: undefined
-};
-
-/***/ }),
-
-/***/ 712:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = TabPanels;
-var _propTypes = _interopRequireDefault(__webpack_require__(0));
-var _react = _interopRequireDefault(__webpack_require__(6));
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-function TabPanels({
-  accessibleId,
-  activeIndex,
-  children,
-  className,
-  hasFocusableContent
-}) {
-  return /*#__PURE__*/_react.default.createElement("div", {
-    "aria-labelledby": accessibleId,
-    role: "tabpanel",
-    className: className,
-    tabIndex: hasFocusableContent ? undefined : 0
-  }, _react.default.Children.toArray(children)[activeIndex]);
-}
-TabPanels.propTypes = {
-  accessibleId: _propTypes.default.string,
-  activeIndex: _propTypes.default.number,
-  children: _propTypes.default.node.isRequired,
-  className: _propTypes.default.string,
-  hasFocusableContent: _propTypes.default.bool.isRequired
-};
-TabPanels.defaultProps = {
-  accessibleId: undefined,
-  activeIndex: 0,
-  className: null
-};
-
-/***/ }),
-
 /***/ 929:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1017,7 +804,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.vendored = void 0;
 var fuzzaldrinPlus = _interopRequireWildcard(__webpack_require__(931));
-var reactAriaComponentsTabs = _interopRequireWildcard(__webpack_require__(937));
 function _getRequireWildcardCache(e) { if ("function" != typeof WeakMap) return null; var r = new WeakMap(), t = new WeakMap(); return (_getRequireWildcardCache = function (e) { return e ? t : r; })(e); }
 function _interopRequireWildcard(e, r) { if (!r && e && e.__esModule) return e; if (null === e || "object" != typeof e && "function" != typeof e) return { default: e }; var t = _getRequireWildcardCache(r); if (t && t.has(e)) return t.get(e); var n = { __proto__: null }, a = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var u in e) if ("default" !== u && Object.prototype.hasOwnProperty.call(e, u)) { var i = a ? Object.getOwnPropertyDescriptor(e, u) : null; i && (i.get || i.set) ? Object.defineProperty(n, u, i) : n[u] = e[u]; } return n.default = e, t && t.set(e, n), n; }
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -1041,8 +827,7 @@ function _interopRequireWildcard(e, r) { if (!r && e && e.__esModule) return e; 
 // The keys of the vendored object should match the module names
 // !!! Should remain synchronized with .babel/transform-mc.js !!!
 const vendored = exports.vendored = {
-  "fuzzaldrin-plus": fuzzaldrinPlus,
-  "react-aria-components/src/tabs": reactAriaComponentsTabs
+  "fuzzaldrin-plus": fuzzaldrinPlus
 };
 
 /***/ }),
@@ -1442,163 +1227,6 @@ const vendored = exports.vendored = {
 
 }).call(this);
 
-
-/***/ }),
-
-/***/ 937:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-Object.defineProperty(exports, "Tab", {
-  enumerable: true,
-  get: function () {
-    return _tab.default;
-  }
-});
-Object.defineProperty(exports, "TabList", {
-  enumerable: true,
-  get: function () {
-    return _tabList.default;
-  }
-});
-Object.defineProperty(exports, "TabPanels", {
-  enumerable: true,
-  get: function () {
-    return _tabPanels.default;
-  }
-});
-Object.defineProperty(exports, "Tabs", {
-  enumerable: true,
-  get: function () {
-    return _tabs.default;
-  }
-});
-var _tabList = _interopRequireDefault(__webpack_require__(710));
-var _tabPanels = _interopRequireDefault(__webpack_require__(712));
-var _tab = _interopRequireDefault(__webpack_require__(711));
-var _tabs = _interopRequireDefault(__webpack_require__(941));
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/***/ }),
-
-/***/ 938:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-var _propTypes = _interopRequireDefault(__webpack_require__(0));
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-var _default = exports.default = _propTypes.default.object;
-
-/***/ }),
-
-/***/ 941:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-var _propTypes = _interopRequireDefault(__webpack_require__(0));
-var _react = _interopRequireDefault(__webpack_require__(6));
-var _uniqueId = _interopRequireDefault(__webpack_require__(942));
-var _tabList = _interopRequireDefault(__webpack_require__(710));
-var _tabPanels = _interopRequireDefault(__webpack_require__(712));
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-class Tabs extends _react.default.Component {
-  constructor() {
-    super();
-    this.accessibleId = (0, _uniqueId.default)();
-  }
-  render() {
-    const {
-      activeIndex,
-      children,
-      className,
-      onActivateTab
-    } = this.props;
-    const accessibleId = this.accessibleId;
-    return /*#__PURE__*/_react.default.createElement("div", {
-      className: className
-    }, _react.default.Children.map(children, child => {
-      if (!child) {
-        return child;
-      }
-      switch (child.type) {
-        case _tabList.default:
-          return /*#__PURE__*/_react.default.cloneElement(child, {
-            accessibleId,
-            activeIndex,
-            onActivateTab
-          });
-        case _tabPanels.default:
-          return /*#__PURE__*/_react.default.cloneElement(child, {
-            accessibleId,
-            activeIndex
-          });
-        default:
-          return child;
-      }
-    }));
-  }
-}
-exports.default = Tabs;
-Tabs.propTypes = {
-  activeIndex: _propTypes.default.number.isRequired,
-  children: _propTypes.default.node,
-  className: _propTypes.default.string,
-  onActivateTab: _propTypes.default.func
-};
-Tabs.defaultProps = {
-  children: null,
-  className: undefined,
-  onActivateTab: () => {}
-};
-
-/***/ }),
-
-/***/ 942:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = uniqueId;
-let counter = 0;
-function uniqueId() {
-  counter += 1;
-  return `$rac$${counter}`;
-}
-
-/***/ }),
-
-/***/ 957:
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-
-/***/ 958:
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
 
 /***/ })
 
