@@ -79,6 +79,9 @@ const kExpectedRequestsOfLinkPreload = [
     {   fileNameAndSuffix: "dummy.image?4",
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_LOW
     },
+];
+
+const kExpectedRequestsOfLinkPreloadStyle = [
     {   fileNameAndSuffix: "dummy.css?1",
         internalPriority: SpecialPowers.Ci.nsISupportsPriority.PRIORITY_HIGH
     },
@@ -157,9 +160,10 @@ const kPipeHeaderPreloadLinks =
   "|header(Link,<dummy.script?1>; rel=preload; as=script; fetchpriority=low,True)" +
   "|header(Link,<dummy.script?2>; rel=preload; as=script; fetchpriority=high,True)" +
   "|header(Link,<dummy.script?3>; rel=preload; as=script; fetchpriority=auto,True)" +
-  "|header(Link,<dummy.script?4>; rel=preload; as=script,True)" +
-  // as="style"
-  "|header(Link,<dummy.css?1>; rel=preload; as=style; fetchpriority=low,True)" +
+  "|header(Link,<dummy.script?4>; rel=preload; as=script,True)";
+
+  const kPipeHeaderPreloadStyleLinks =
+  "=header(Link,<dummy.css?1>; rel=preload; as=style; fetchpriority=low,True)" +
   "|header(Link,<dummy.css?2>; rel=preload; as=style; fetchpriority=high,True)" +
   "|header(Link,<dummy.css?3>; rel=preload; as=style; fetchpriority=auto,True)" +
   "|header(Link,<dummy.css?4>; rel=preload; as=style,True)";
@@ -201,11 +205,20 @@ export const kTestData = [
     {   testFileName: "link-initial-preload.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreload
     },
+    {   testFileName: "link-initial-preload-style.h2.html",
+        expectedRequests: kExpectedRequestsOfLinkPreloadStyle
+    },
     {   testFileName: "link-dynamic-preload.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreload
     },
+    {   testFileName: "link-dynamic-preload-style.h2.html",
+        expectedRequests: kExpectedRequestsOfLinkPreloadStyle
+    },
     {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPreloadLinks,
         expectedRequests: kExpectedRequestsOfLinkPreload
+    },
+    {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPreloadStyleLinks,
+        expectedRequests: kExpectedRequestsOfLinkPreloadStyle
     },
     {   testFileName: "link-initial-modulepreload.h2.html",
         expectedRequests: kExpectedRequestsOfModulepreload
