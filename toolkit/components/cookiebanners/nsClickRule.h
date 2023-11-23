@@ -33,7 +33,7 @@ class nsClickRule final : public nsIClickRule {
   ~nsClickRule() = default;
 
   // The reference to the cookie banner rule that holds this clicking rule.
-  nsCOMPtr<nsICookieBannerRule> mCookieBannerRule;
+  nsICookieBannerRule* mCookieBannerRule;
   nsCString mPresence;
   bool mSkipPresenceVisibilityCheck;
   nsIClickRule::RunContext mRunContext;
