@@ -362,7 +362,7 @@ SheetLoadData::SheetLoadData(
     UseSystemPrincipal aUseSystemPrincipal, StylePreloadKind aPreloadKind,
     const Encoding* aPreloadEncoding, nsICSSLoaderObserver* aObserver,
     nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo* aReferrerInfo,
-    const nsAString& aNonce)
+    const nsAString& aNonce, FetchPriority aFetchPriority)
     : mLoader(aLoader),
       mEncoding(nullptr),
       mURI(aURI),
@@ -388,7 +388,7 @@ SheetLoadData::SheetLoadData(
       mTriggeringPrincipal(aTriggeringPrincipal),
       mReferrerInfo(aReferrerInfo),
       mNonce(aNonce),
-      mFetchPriority(FetchPriority::Auto),
+      mFetchPriority(aFetchPriority),
       mGuessedEncoding(
           GetFallbackEncoding(*aLoader, nullptr, aPreloadEncoding)),
       mCompatMode(aLoader->CompatMode(aPreloadKind)) {
@@ -2120,7 +2120,7 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheetSync(
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(nullptr);
   return InternalLoadNonDocumentSheet(
       aURL, StylePreloadKind::None, aParsingMode, aUseSystemPrincipal, nullptr,
-      referrerInfo, nullptr, CORS_NONE, u""_ns, u""_ns, 0);
+      referrerInfo, nullptr, CORS_NONE, u""_ns, u""_ns, 0, FetchPriority::Auto);
 }
 
 Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheet(
@@ -2129,19 +2129,21 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheet(
   nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo(nullptr);
   return InternalLoadNonDocumentSheet(
       aURI, StylePreloadKind::None, aParsingMode, aUseSystemPrincipal, nullptr,
-      referrerInfo, aObserver, CORS_NONE, u""_ns, u""_ns, 0);
+      referrerInfo, aObserver, CORS_NONE, u""_ns, u""_ns, 0,
+      FetchPriority::Auto);
 }
 
 Result<RefPtr<StyleSheet>, nsresult> Loader::LoadSheet(
     nsIURI* aURL, StylePreloadKind aPreloadKind,
     const Encoding* aPreloadEncoding, nsIReferrerInfo* aReferrerInfo,
     nsICSSLoaderObserver* aObserver, uint64_t aEarlyHintPreloaderId,
-    CORSMode aCORSMode, const nsAString& aNonce, const nsAString& aIntegrity) {
+    CORSMode aCORSMode, const nsAString& aNonce, const nsAString& aIntegrity,
+    FetchPriority aFetchPriority) {
   LOG(("css::Loader::LoadSheet(aURL, aObserver) api call"));
   return InternalLoadNonDocumentSheet(
       aURL, aPreloadKind, eAuthorSheetFeatures, UseSystemPrincipal::No,
       aPreloadEncoding, aReferrerInfo, aObserver, aCORSMode, aNonce, aIntegrity,
-      aEarlyHintPreloaderId);
+      aEarlyHintPreloaderId, aFetchPriority);
 }
 
 Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
@@ -2149,7 +2151,7 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
     UseSystemPrincipal aUseSystemPrincipal, const Encoding* aPreloadEncoding,
     nsIReferrerInfo* aReferrerInfo, nsICSSLoaderObserver* aObserver,
     CORSMode aCORSMode, const nsAString& aNonce, const nsAString& aIntegrity,
-    uint64_t aEarlyHintPreloaderId) {
+    uint64_t aEarlyHintPreloaderId, FetchPriority aFetchPriority) {
   MOZ_ASSERT(aURL, "Must have a URI to load");
   MOZ_ASSERT(aUseSystemPrincipal == UseSystemPrincipal::No || !aObserver,
              "Shouldn't load system-principal sheets async");
@@ -2180,7 +2182,8 @@ Result<RefPtr<StyleSheet>, nsresult> Loader::InternalLoadNonDocumentSheet(
 
   auto data = MakeRefPtr<SheetLoadData>(
       this, aURL, sheet, SyncLoad(syncLoad), aUseSystemPrincipal, aPreloadKind,
-      aPreloadEncoding, aObserver, triggeringPrincipal, aReferrerInfo, aNonce);
+      aPreloadEncoding, aObserver, triggeringPrincipal, aReferrerInfo, aNonce,
+      aFetchPriority);
   MOZ_ASSERT(data->GetRequestingNode() == mDocument);
   if (state == SheetState::Complete) {
     LOG(("  Sheet already complete"));

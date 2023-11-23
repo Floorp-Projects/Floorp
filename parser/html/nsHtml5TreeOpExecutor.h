@@ -254,7 +254,8 @@ class nsHtml5TreeOpExecutor final
   void PreloadStyle(const nsAString& aURL, const nsAString& aCharset,
                     const nsAString& aCrossOrigin, const nsAString& aMedia,
                     const nsAString& aReferrerPolicy, const nsAString& aNonce,
-                    const nsAString& aIntegrity, bool aLinkPreload);
+                    const nsAString& aIntegrity, bool aLinkPreload,
+                    const nsAString& aFetchPriority);
 
   void PreloadImage(const nsAString& aURL, const nsAString& aCrossOrigin,
                     const nsAString& aMedia, const nsAString& aSrcset,

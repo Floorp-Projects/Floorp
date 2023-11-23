@@ -70,14 +70,12 @@ class SheetLoadData final
                 nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo*);
 
   // Data for loading a non-document sheet
-  // TODO: does this include sheets linked from a Link header? If so, the fetch
-  //       priority needs to be passed too.
   SheetLoadData(css::Loader*, nsIURI*, StyleSheet*, SyncLoad,
                 UseSystemPrincipal, StylePreloadKind,
                 const Encoding* aPreloadEncoding,
                 nsICSSLoaderObserver* aObserver,
                 nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo*,
-                const nsAString& aNonce);
+                const nsAString& aNonce, dom::FetchPriority aFetchPriority);
 
   nsIReferrerInfo* ReferrerInfo() const { return mReferrerInfo; }
 

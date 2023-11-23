@@ -364,9 +364,11 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                     nsHtml5AttributeName::ATTR_REFERRERPOLICY);
                 nsHtml5String media =
                     aAttributes->getValue(nsHtml5AttributeName::ATTR_MEDIA);
+                nsHtml5String fetchPriority = aAttributes->getValue(
+                    nsHtml5AttributeName::ATTR_FETCHPRIORITY);
                 mSpeculativeLoadQueue.AppendElement()->InitStyle(
                     url, charset, crossOrigin, media, referrerPolicy, nonce,
-                    integrity, false);
+                    integrity, false, fetchPriority);
               }
             } else if (rel.LowerCaseEqualsASCII("preconnect")) {
               nsHtml5String url =
@@ -395,6 +397,8 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                     nsHtml5AttributeName::ATTR_REFERRERPOLICY);
                 nsHtml5String media =
                     aAttributes->getValue(nsHtml5AttributeName::ATTR_MEDIA);
+                nsHtml5String fetchPriority = aAttributes->getValue(
+                    nsHtml5AttributeName::ATTR_FETCHPRIORITY);
 
                 // Note that respective speculative loaders for scripts and
                 // styles check all additional attributes to be equal to use the
@@ -406,14 +410,6 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 if (as.LowerCaseEqualsASCII("script")) {
                   nsHtml5String type =
                       aAttributes->getValue(nsHtml5AttributeName::ATTR_TYPE);
-
-                  // Bug 1839315: get the attribute's value instead.
-                  // Use the empty string and rely on the
-                  // "invalid value default" state being used later.
-                  // Compared to using a non-empty string, this doesn't
-                  // require calling `Release()` for the string.
-                  nsHtml5String fetchPriority = nsHtml5String::EmptyString();
-
                   mSpeculativeLoadQueue.AppendElement()->InitScript(
                       url, charset, type, crossOrigin, media, nonce,
                       /* aFetchPriority */ fetchPriority, integrity,
@@ -422,7 +418,7 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 } else if (as.LowerCaseEqualsASCII("style")) {
                   mSpeculativeLoadQueue.AppendElement()->InitStyle(
                       url, charset, crossOrigin, media, referrerPolicy, nonce,
-                      integrity, true);
+                      integrity, true, fetchPriority);
                 } else if (as.LowerCaseEqualsASCII("image")) {
                   nsHtml5String srcset = aAttributes->getValue(
                       nsHtml5AttributeName::ATTR_IMAGESRCSET);

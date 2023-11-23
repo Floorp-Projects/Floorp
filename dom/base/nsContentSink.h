@@ -144,13 +144,15 @@ class nsContentSink : public nsICSSLoaderObserver,
                    const nsAString& aNonce, const nsAString& aIntegrity,
                    const nsAString& aSrcset, const nsAString& aSizes,
                    const nsAString& aCORS, const nsAString& aReferrerPolicy,
-                   uint64_t aEarlyHintPreloaderId);
+                   uint64_t aEarlyHintPreloaderId,
+                   const nsAString& aFetchPriority);
 
   void PreloadModule(const nsAString& aHref, const nsAString& aAs,
                      const nsAString& aMedia, const nsAString& aNonce,
                      const nsAString& aIntegrity, const nsAString& aCORS,
                      const nsAString& aReferrerPolicy,
-                     uint64_t aEarlyHintPreloaderId);
+                     uint64_t aEarlyHintPreloaderId,
+                     const nsAString& aFetchPriority);
 
   // For PrefetchDNS() aHref can either be the usual
   // URI format or of the form "//www.hostname.com" without a scheme.

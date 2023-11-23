@@ -80,7 +80,7 @@ void nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor) {
           mUrlOrSizes, mCharsetOrSrcset, mCrossOrigin, mMedia,
           mReferrerPolicyOrIntegrity, mNonce,
           mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
-          mIsLinkPreload);
+          mIsLinkPreload, mFetchPriority);
       break;
     case eSpeculativeLoadManifest:
       // TODO: remove this

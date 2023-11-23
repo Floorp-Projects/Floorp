@@ -317,14 +317,15 @@ nsresult nsContentSink::ProcessLinkFromHeader(const net::LinkHeader& aHeader,
       PreloadHref(aHeader.mHref, aHeader.mAs, aHeader.mType, aHeader.mMedia,
                   aHeader.mNonce, aHeader.mIntegrity, aHeader.mSrcset,
                   aHeader.mSizes, aHeader.mCrossOrigin, aHeader.mReferrerPolicy,
-                  aEarlyHintPreloaderId);
+                  aEarlyHintPreloaderId, aHeader.mFetchPriority);
     }
 
     if ((linkTypes & LinkStyle::eMODULE_PRELOAD) &&
         mDocument->ScriptLoader()->GetModuleLoader()) {
       PreloadModule(aHeader.mHref, aHeader.mAs, aHeader.mMedia, aHeader.mNonce,
                     aHeader.mIntegrity, aHeader.mCrossOrigin,
-                    aHeader.mReferrerPolicy, aEarlyHintPreloaderId);
+                    aHeader.mReferrerPolicy, aEarlyHintPreloaderId,
+                    aHeader.mFetchPriority);
     }
   }
 
@@ -436,7 +437,8 @@ void nsContentSink::PreloadHref(const nsAString& aHref, const nsAString& aAs,
                                 const nsAString& aSrcset,
                                 const nsAString& aSizes, const nsAString& aCORS,
                                 const nsAString& aReferrerPolicy,
-                                uint64_t aEarlyHintPreloaderId) {
+                                uint64_t aEarlyHintPreloaderId,
+                                const nsAString& aFetchPriority) {
   auto encoding = mDocument->GetDocumentCharacterSet();
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), aHref, encoding, mDocument->GetDocBaseURI());
@@ -462,16 +464,14 @@ void nsContentSink::PreloadHref(const nsAString& aHref, const nsAString& aAs,
 
   mDocument->Preloads().PreloadLinkHeader(
       uri, aHref, policyType, aAs, aType, aNonce, aIntegrity, aSrcset, aSizes,
-      aCORS, aReferrerPolicy, aEarlyHintPreloaderId);
+      aCORS, aReferrerPolicy, aEarlyHintPreloaderId, aFetchPriority);
 }
 
-void nsContentSink::PreloadModule(const nsAString& aHref, const nsAString& aAs,
-                                  const nsAString& aMedia,
-                                  const nsAString& aNonce,
-                                  const nsAString& aIntegrity,
-                                  const nsAString& aCORS,
-                                  const nsAString& aReferrerPolicy,
-                                  uint64_t aEarlyHintPreloaderId) {
+void nsContentSink::PreloadModule(
+    const nsAString& aHref, const nsAString& aAs, const nsAString& aMedia,
+    const nsAString& aNonce, const nsAString& aIntegrity,
+    const nsAString& aCORS, const nsAString& aReferrerPolicy,
+    uint64_t aEarlyHintPreloaderId, const nsAString& aFetchPriority) {
   ModuleLoader* moduleLoader = mDocument->ScriptLoader()->GetModuleLoader();
 
   if (!StaticPrefs::network_modulepreload()) {
@@ -507,7 +507,7 @@ void nsContentSink::PreloadModule(const nsAString& aHref, const nsAString& aAs,
   mDocument->Preloads().PreloadLinkHeader(
       uri, aHref, nsIContentPolicy::TYPE_SCRIPT, u"script"_ns, u"module"_ns,
       aNonce, aIntegrity, u""_ns, u""_ns, aCORS, aReferrerPolicy,
-      aEarlyHintPreloaderId);
+      aEarlyHintPreloaderId, aFetchPriority);
 }
 
 void nsContentSink::PrefetchDNS(const nsAString& aHref) {
