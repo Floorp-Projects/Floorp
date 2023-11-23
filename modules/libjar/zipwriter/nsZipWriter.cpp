@@ -156,7 +156,7 @@ nsresult nsZipWriter::ReadFile(nsIFile* aFile) {
             inputStream->Close();
             return rv;
           }
-          rv = ZW_ReadData(inputStream, field.get(), length);
+          rv = ZW_ReadData(inputStream, field.get(), commentlen);
           if (NS_FAILED(rv)) {
             inputStream->Close();
             return rv;
