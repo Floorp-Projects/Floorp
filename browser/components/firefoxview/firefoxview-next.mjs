@@ -3,25 +3,37 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 let pageList = [];
+let categoryPagesDeck = null;
+let categoryNavigation = null;
+
 const { topChromeWindow } = window.browsingContext;
 
 function onHashChange() {
-  changePage(document.location.hash.substring(1));
+  let page = document.location?.hash.substring(1);
+  if (!page || !pageList.includes(page)) {
+    page = "recentbrowsing";
+  }
+  changePage(page);
 }
 
 function changePage(page) {
-  let navigation = document.querySelector("fxview-category-navigation");
-  if (page && !pageList.includes(page)) {
-    page = "recentbrowsing";
-    document.location.hash = "recentbrowsing";
-  }
-  document.querySelector("named-deck").selectedViewName = page || pageList[0];
-  navigation.currentCategory = page || pageList[0];
-  if (navigation.categoryButtons.includes(document.activeElement)) {
-    let currentCategoryButton = navigation.categoryButtons.find(
+  categoryPagesDeck.selectedViewName = page;
+  categoryNavigation.currentCategory = page;
+  if (categoryNavigation.categoryButtons.includes(document.activeElement)) {
+    let currentCategoryButton = categoryNavigation.categoryButtons.find(
       categoryButton => categoryButton.name === page
     );
-    (currentCategoryButton || navigation.categoryButtons[0]).focus();
+    (currentCategoryButton || categoryNavigation.categoryButtons[0]).focus();
+  }
+}
+
+function onPagesDeckViewChange() {
+  for (const child of categoryPagesDeck.children) {
+    if (child.getAttribute("name") == categoryPagesDeck.selectedViewName) {
+      child.enter();
+    } else {
+      child.exit();
+    }
   }
 }
 
@@ -47,8 +59,11 @@ function recordNavigationTelemetry(source, eventTarget) {
 
 window.addEventListener("DOMContentLoaded", async () => {
   recordEnteredTelemetry();
-  let navigation = document.querySelector("fxview-category-navigation");
-  for (const item of navigation.categoryButtons) {
+
+  categoryNavigation = document.querySelector("fxview-category-navigation");
+  categoryPagesDeck = document.querySelector("named-deck");
+
+  for (const item of categoryNavigation.categoryButtons) {
     pageList.push(item.getAttribute("name"));
   }
   window.addEventListener("hashchange", onHashChange);
@@ -60,31 +75,26 @@ window.addEventListener("DOMContentLoaded", async () => {
   window.addEventListener("card-container-view-all", function (event) {
     recordNavigationTelemetry("view-all", event.originalTarget);
   });
-  if (document.location.hash) {
-    changePage(document.location.hash.substring(1));
-  }
+
+  categoryPagesDeck.addEventListener("view-changed", onPagesDeckViewChange);
+
+  // set the initial state
+  onHashChange();
+  onPagesDeckViewChange();
+
   if (Cu.isInAutomation) {
     Services.obs.notifyObservers(null, "firefoxview-entered");
   }
 });
 
-document
-  .querySelector("named-deck")
-  .addEventListener("view-changed", async event => {
-    for (const child of event.target.children) {
-      if (child.getAttribute("name") == event.target.selectedViewName) {
-        child.enter();
-      } else {
-        child.exit();
-      }
-    }
-  });
-
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
     recordEnteredTelemetry();
     if (Cu.isInAutomation) {
-      Services.obs.notifyObservers(null, "firefoxview-entered");
+      // allow all the component visibilitychange handlers to execute before notifying
+      requestAnimationFrame(() => {
+        Services.obs.notifyObservers(null, "firefoxview-entered");
+      });
     }
   }
 });
@@ -127,7 +137,7 @@ function onCommand(e) {
     null,
     {
       menu_action: item.id,
-      page: location.hash.substring(1) || "recentbrowsing",
+      page: location.hash?.substring(1) || "recentbrowsing",
     }
   );
 }

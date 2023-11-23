@@ -58,14 +58,6 @@ async function historyComponentReady(historyComponent) {
   is(expected, actual, `Total number of cards should be ${expected}`);
 }
 
-async function openFirefoxView(win) {
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#firefox-view-button",
-    { type: "mousedown" },
-    win.browsingContext
-  );
-}
-
 async function historyTelemetry() {
   await TestUtils.waitForCondition(
     () => {
@@ -177,7 +169,7 @@ add_task(async function test_list_ordering() {
     const { document } = browser.contentWindow;
     is(document.location.href, "about:firefoxview-next");
 
-    navigateToCategory(document, "history");
+    await navigateToCategoryAndWait(document, "history");
 
     let historyComponent = document.querySelector("view-history");
     historyComponent.profileAge = 8;
@@ -201,9 +193,14 @@ add_task(async function test_list_ordering() {
       return historyComponent.lists[0].rowEls.length;
     });
     let firstHistoryLink = historyComponent.lists[0].rowEls[0].mainEl;
+    let promiseHidden = BrowserTestUtils.waitForEvent(
+      document,
+      "visibilitychange"
+    );
     await EventUtils.synthesizeMouseAtCenter(firstHistoryLink, {}, content);
     await historyTelemetry();
-    await switchToFxViewTab(browser.ownerGlobal);
+    await promiseHidden;
+    await openFirefoxViewTab(browser.ownerGlobal);
 
     // Test number of cards when sorted by site/domain
     await clearAllParentTelemetryEvents();
@@ -266,7 +263,7 @@ add_task(async function test_empty_states() {
     const { document } = browser.contentWindow;
     is(document.location.href, "about:firefoxview-next");
 
-    navigateToCategory(document, "history");
+    await navigateToCategoryAndWait(document, "history");
 
     let historyComponent = document.querySelector("view-history");
     historyComponent.profileAge = 8;
@@ -354,7 +351,7 @@ add_task(async function test_observers_removed_when_view_is_hidden() {
   );
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    navigateToCategory(document, "history");
+    await navigateToCategoryAndWait(document, "history");
     const historyComponent = document.querySelector("view-history");
     historyComponent.profileAge = 8;
     let visitList = await TestUtils.waitForCondition(() =>
@@ -363,7 +360,12 @@ add_task(async function test_observers_removed_when_view_is_hidden() {
     info("The list should show a visit from the new tab.");
     await TestUtils.waitForCondition(() => visitList.rowEls.length === 1);
 
+    let promiseHidden = BrowserTestUtils.waitForEvent(
+      document,
+      "visibilitychange"
+    );
     await BrowserTestUtils.switchTab(gBrowser, tab);
+    await promiseHidden;
     const { date } = await PlacesUtils.history
       .fetch(NEW_TAB_URL, {
         includeVisits: true,
@@ -377,7 +379,7 @@ add_task(async function test_observers_removed_when_view_is_hidden() {
     );
 
     info("The list should update when Firefox View is visible.");
-    await switchToFxViewTab(browser.ownerGlobal);
+    await openFirefoxViewTab(browser.ownerGlobal);
     visitList = await TestUtils.waitForCondition(() =>
       historyComponent.cards?.[0]?.querySelector("fxview-tab-list")
     );
@@ -399,7 +401,7 @@ add_task(async function test_show_all_history_telemetry() {
     const { document } = browser.contentWindow;
     is(document.location.href, "about:firefoxview-next");
 
-    navigateToCategory(document, "history");
+    await navigateToCategoryAndWait(document, "history");
 
     let historyComponent = document.querySelector("view-history");
     historyComponent.profileAge = 8;
@@ -424,7 +426,7 @@ add_task(async function test_show_all_history_telemetry() {
 add_task(async function test_search_history() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
-    navigateToCategory(document, "history");
+    await navigateToCategoryAndWait(document, "history");
     const historyComponent = document.querySelector("view-history");
     historyComponent.profileAge = 8;
     await historyComponentReady(historyComponent);
