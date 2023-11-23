@@ -371,8 +371,8 @@ function test_newtab(testInfo, browserURL = "about:newtab") {
       await after(contentResult);
     } finally {
       // Clean up for next tests
-      await scopedPopPrefs();
       BrowserTestUtils.removeTab(tab);
+      await scopedPopPrefs();
     }
   };
 
