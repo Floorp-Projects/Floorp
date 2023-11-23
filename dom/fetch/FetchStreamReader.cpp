@@ -54,39 +54,44 @@ nsresult FetchStreamReader::Create(JSContext* aCx, nsIGlobalObject* aGlobal,
   NS_NewPipe2(getter_AddRefs(pipeIn), getter_AddRefs(streamReader->mPipeOut),
               true, true, 0, 0);
 
-  if (!NS_IsMainThread()) {
-    WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
-    MOZ_ASSERT(workerPrivate);
-
-    RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
-        workerPrivate, "FetchStreamReader", [streamReader]() {
-          MOZ_ASSERT(streamReader);
-
-          // mAsyncWaitWorkerRef may keep the (same) StrongWorkerRef alive even
-          // when mWorkerRef has already been nulled out by a previous call to
-          // CloseAndRelease, we can just safely ignore this callback then
-          // (as would the CloseAndRelease do on a second call).
-          if (streamReader->mWorkerRef) {
-            streamReader->CloseAndRelease(
-                streamReader->mWorkerRef->Private()->GetJSContext(),
-                NS_ERROR_DOM_INVALID_STATE_ERR);
-          } else {
-            MOZ_DIAGNOSTIC_ASSERT(streamReader->mAsyncWaitWorkerRef);
-          }
-        });
-
-    if (NS_WARN_IF(!workerRef)) {
-      streamReader->mPipeOut->CloseWithStatus(NS_ERROR_DOM_INVALID_STATE_ERR);
-      return NS_ERROR_DOM_INVALID_STATE_ERR;
-    }
-
-    // These 2 objects create a ref-cycle here that is broken when the stream is
-    // closed or the worker shutsdown.
-    streamReader->mWorkerRef = std::move(workerRef);
-  }
-
   pipeIn.forget(aInputStream);
   streamReader.forget(aStreamReader);
+  return NS_OK;
+}
+
+nsresult FetchStreamReader::MaybeGrabStrongWorkerRef(JSContext* aCx) {
+  if (NS_IsMainThread()) {
+    return NS_OK;
+  }
+
+  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+  MOZ_ASSERT(workerPrivate);
+
+  RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
+      workerPrivate, "FetchStreamReader", [streamReader = RefPtr(this)]() {
+        MOZ_ASSERT(streamReader);
+
+        // mAsyncWaitWorkerRef may keep the (same) StrongWorkerRef alive even
+        // when mWorkerRef has already been nulled out by a previous call to
+        // CloseAndRelease, we can just safely ignore this callback then
+        // (as would the CloseAndRelease do on a second call).
+        if (streamReader->mWorkerRef) {
+          streamReader->CloseAndRelease(
+              streamReader->mWorkerRef->Private()->GetJSContext(),
+              NS_ERROR_DOM_INVALID_STATE_ERR);
+        } else {
+          MOZ_DIAGNOSTIC_ASSERT(streamReader->mAsyncWaitWorkerRef);
+        }
+      });
+
+  if (NS_WARN_IF(!workerRef)) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  // These 2 objects create a ref-cycle here that is broken when the stream is
+  // closed or the worker shutsdown.
+  mWorkerRef = std::move(workerRef);
+
   return NS_OK;
 }
 
@@ -164,6 +169,12 @@ void FetchStreamReader::StartConsuming(JSContext* aCx, ReadableStream* aStream,
                                        ErrorResult& aRv) {
   MOZ_DIAGNOSTIC_ASSERT(!mReader);
   MOZ_DIAGNOSTIC_ASSERT(aStream);
+
+  aRv = MaybeGrabStrongWorkerRef(aCx);
+  if (aRv.Failed()) {
+    CloseAndRelease(aCx, NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
 
   // Step 2: Let reader be the result of getting a reader for body’s stream.
   RefPtr<ReadableStreamDefaultReader> reader = aStream->GetReader(aRv);

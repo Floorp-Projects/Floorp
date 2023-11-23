@@ -60,6 +60,8 @@ class FetchStreamReader final : public nsIOutputStreamCallback {
   explicit FetchStreamReader(nsIGlobalObject* aGlobal);
   ~FetchStreamReader();
 
+  nsresult MaybeGrabStrongWorkerRef(JSContext* aCx);
+
   nsresult WriteBuffer();
 
   // Attempt to copy data from mBuffer into mPipeOut. Returns `true` if data was
