@@ -31,9 +31,6 @@ pref("app.update.timerMinimumDelay", 30); // seconds
 // Use a breakout angle of 45° (bug 1226655)
 pref("apz.axis_lock.breakout_angle", "0.7853982");
 
-// Use "strict" axis locking (bug 1226655)
-pref("apz.axis_lock.mode", 1);
-
 // APZ content response timeout (bug 1247280)
 pref("apz.content_response_timeout", 600);
 
