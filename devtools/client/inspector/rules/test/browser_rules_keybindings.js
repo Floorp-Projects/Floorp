@@ -3,10 +3,90 @@
 
 "use strict";
 
-// Test that focus doesn't leave the style editor when adding a property
-// (bug 719916)
+// Test keyboard navigation in the rule view
 
 add_task(async function () {
+  await addTab(`data:text/html;charset=utf-8,
+    <style>h1 {}</style>
+    <h1>Some header text</h1>`);
+  const { inspector, view } = await openRuleView();
+  await selectNode("h1", inspector);
+
+  info("Getting the ruleclose brace element for the `h1` rule");
+  const brace = view.styleDocument.querySelectorAll(".ruleview-ruleclose")[1];
+
+  info("Focus the new property editable field to create a color property");
+  const ruleEditor = getRuleViewRuleEditor(view, 1);
+  await focusNewRuleViewProperty(ruleEditor);
+  EventUtils.sendString("color");
+
+  info("Typing ENTER to focus the next field: property value");
+  let onFocus = once(brace.parentNode, "focus", true);
+  let onRuleViewChanged = view.once("ruleview-changed");
+
+  EventUtils.sendKey("Return");
+
+  await onFocus;
+  await onRuleViewChanged;
+  ok(true, "The value field was focused");
+
+  info("Entering a property value");
+  EventUtils.sendString("tomato");
+
+  info("Typing Tab again should focus a new property name");
+  onFocus = once(brace.parentNode, "focus", true);
+  onRuleViewChanged = view.once("ruleview-changed");
+  EventUtils.sendKey("Tab");
+  await onFocus;
+  await onRuleViewChanged;
+  ok(true, "The new property name field was focused");
+
+  info(
+    "Filling new property name with background-color and hit Tab to focus value input"
+  );
+  EventUtils.sendString("background-color");
+  onRuleViewChanged = view.once("ruleview-changed");
+  EventUtils.sendKey("Tab");
+  await onRuleViewChanged;
+
+  ok(true, "The value field was focused");
+
+  info("Entering a background color value");
+  EventUtils.sendString("gold");
+
+  info("Typing Enter should close the input and focus the value span");
+  onRuleViewChanged = view.once("ruleview-changed");
+  EventUtils.sendKey("Return");
+  await onRuleViewChanged;
+
+  info("Wait until the swatch for the color is created");
+  const colorSwatchEl = await waitFor(() =>
+    getRuleViewProperty(
+      view,
+      "h1",
+      "background-color"
+    )?.valueSpan?.querySelector(".ruleview-colorswatch")
+  );
+
+  is(
+    view.styleDocument.activeElement.textContent,
+    "gold",
+    "Value span is focused after pressing Enter"
+  );
+
+  info("Type Tab should focus the color swatch");
+  EventUtils.sendKey("Tab");
+  is(
+    view.styleDocument.activeElement,
+    colorSwatchEl,
+    "Focused was moved to color swatch"
+  );
+});
+
+// The `element` have specific behavior, so we want to test that keyboard navigation
+// also works fine on them.
+
+add_task(async function testKeyboardNavigationInElementRule() {
   await addTab("data:text/html;charset=utf-8,<h1>Some header text</h1>");
   const { inspector, view } = await openRuleView();
   await selectNode("h1", inspector);
@@ -22,26 +102,100 @@ add_task(async function () {
   info("Typing ENTER to focus the next field: property value");
   let onFocus = once(brace.parentNode, "focus", true);
   let onRuleViewChanged = view.once("ruleview-changed");
+  let onStyleAttributeMutation = waitForStyleAttributeMutation(view, `color: `);
 
-  EventUtils.sendKey("return");
+  EventUtils.sendKey("Return");
 
   await onFocus;
   await onRuleViewChanged;
+  await onStyleAttributeMutation;
   ok(true, "The value field was focused");
 
   info("Entering a property value");
+  onStyleAttributeMutation = waitForStyleAttributeMutation(
+    view,
+    `color: green;`
+  );
   editor = getCurrentInplaceEditor(view);
   editor.input.value = "green";
 
-  info("Typing ENTER again should focus a new property name");
+  info("Typing Tab again should focus a new property name");
   onFocus = once(brace.parentNode, "focus", true);
   onRuleViewChanged = view.once("ruleview-changed");
-  EventUtils.sendKey("return");
+  EventUtils.sendKey("Tab");
   await onFocus;
   await onRuleViewChanged;
+  await onStyleAttributeMutation;
   ok(true, "The new property name field was focused");
-  getCurrentInplaceEditor(view).input.blur();
+
+  info(
+    "Filling new property name with background-color and hit Tab to focus value input"
+  );
+
+  EventUtils.sendString("background-color");
+
+  onRuleViewChanged = view.once("ruleview-changed");
+  onStyleAttributeMutation = waitForStyleAttributeMutation(
+    view,
+    `background-color:`
+  );
+  EventUtils.sendKey("Tab");
+  await onRuleViewChanged;
+  await onStyleAttributeMutation;
+
+  ok(true, "The value field was focused");
+
+  info("Entering a background color value");
+  onStyleAttributeMutation = waitForStyleAttributeMutation(
+    view,
+    `background-color: tomato;`
+  );
+
+  EventUtils.sendString("tomato", view.styleWindow);
+
+  info("Typing Enter should close the input and focus the value span");
+  const onValueDone = view.once("ruleview-changed");
+  // The element rule is reset when a property is added, which impacts how we deal
+  // with the focused element.
+  const onRuleEditorFocusReset = view.once("rule-editor-focus-reset");
+  EventUtils.sendKey("Return");
+
+  await onValueDone;
+  await onRuleEditorFocusReset;
+  await onStyleAttributeMutation;
+
+  is(
+    view.styleDocument.activeElement,
+    getRuleViewProperty(view, "element", "background-color").valueSpan,
+    `background-color value span ("tomato") is focused after pressing Enter`
+  );
+  is(
+    view.styleDocument.activeElement.textContent,
+    "tomato",
+    `focused element has expected text`
+  );
 });
+
+function waitForStyleAttributeMutation(view, expectedAttributeValue) {
+  return new Promise(r => {
+    view.inspector.walker.on(
+      "mutations",
+      function onWalkerMutations(mutations) {
+        // Wait until we receive a mutation which updates the style attribute
+        // with the expected value.
+        const receivedLastMutation = mutations.find(
+          mut =>
+            mut.attributeName === "style" &&
+            mut.newValue.includes(expectedAttributeValue)
+        );
+        if (receivedLastMutation) {
+          view.inspector.walker.off("mutations", onWalkerMutations);
+          r();
+        }
+      }
+    );
+  });
+}
 
 function getCurrentInplaceEditor(view) {
   return inplaceEditor(view.styleDocument.activeElement);

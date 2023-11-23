@@ -44,7 +44,7 @@ const newAreaTestData = [
   ["r", {}, "rr", !OPEN, !SELECTED, CHANGE],
   ["VK_BACK_SPACE", {}, "r", !OPEN, !SELECTED, CHANGE],
   ["o", {}, "row1-start", OPEN, SELECTED, CHANGE],
-  ["VK_RETURN", {}, "", !OPEN, !SELECTED, CHANGE],
+  ["VK_TAB", {}, "", !OPEN, !SELECTED, CHANGE],
 ];
 
 // Creates a new CSS property value.
@@ -56,7 +56,7 @@ const newRowTestData = [
   ["d", {}, "grid", OPEN, SELECTED, !CHANGE],
   ["-", {}, "grid-area", OPEN, SELECTED, !CHANGE],
   ["r", {}, "grid-row", OPEN, SELECTED, !CHANGE],
-  ["VK_RETURN", {}, "", !OPEN, !SELECTED, !CHANGE],
+  ["VK_TAB", {}, "", !OPEN, !SELECTED, !CHANGE],
   "grid-line-names-updated",
   ["c", {}, "c", !OPEN, !SELECTED, CHANGE],
   ["VK_BACK_SPACE", {}, "", OPEN, !SELECTED, CHANGE],

@@ -64,7 +64,7 @@ async function testCompletion(shortcut, view, editor, expectedValue) {
   info("Commit the suggestion");
   const onChanged = view.once("ruleview-changed");
   const onPopupClosed = once(view.popup, "popup-closed");
-  EventUtils.synthesizeKey("VK_RETURN", {}, view.styleWindow);
+  EventUtils.synthesizeKey("VK_TAB", {}, view.styleWindow);
   await Promise.all([onChanged, onPopupClosed]);
   is(spanEl.textContent, expectedValue, "The value is set correctly");
 }

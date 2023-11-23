@@ -1129,13 +1129,22 @@ async function setProperty(
   ruleView.off("ruleview-changed", onPreviewApplied);
 
   const onValueDone = ruleView.once("ruleview-changed");
-  EventUtils.synthesizeKey("VK_RETURN", {}, ruleView.styleWindow);
+  // In case the popup was opened, wait until it closes
+  let onPopupClosed;
+  if (ruleView.popup?.isOpen) {
+    // it might happen that the popup is still in the process of being opened,
+    // so wait until it's properly opened
+    await ruleView.popup._pendingShowPromise;
+    onPopupClosed = once(ruleView.popup, "popup-closed");
+  }
+
+  EventUtils.synthesizeKey(
+    blurNewProperty ? "VK_RETURN" : "VK_TAB",
+    {},
+    ruleView.styleWindow
+  );
 
   info("Waiting for another ruleview-changed after setting property");
   await onValueDone;
-
-  if (blurNewProperty) {
-    info("Force blur on the active element");
-    ruleView.styleDocument.activeElement.blur();
-  }
+  await onPopupClosed;
 }

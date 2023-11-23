@@ -119,6 +119,12 @@ async function runTestData(inspector, view, data) {
     idRuleEditor = getRuleViewRuleEditor(view, 0);
   }
 
+  if (commitKey === "VK_RETURN") {
+    is(idRuleEditor.isEditing, false, "Selector is not being edited.");
+    is(idRuleEditor.selectorText, activeElement, "Focus is on selector span.");
+    return;
+  }
+
   const rule = idRuleEditor.rule;
   if (rule.textProps.length) {
     is(
