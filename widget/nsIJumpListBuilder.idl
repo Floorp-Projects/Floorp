@@ -1,0 +1,119 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+interface nsIURI;
+
+[scriptable, uuid(5769F08D-0303-4E38-8FE6-86B5473022F6)]
+interface nsIJumpListBuilder : nsISupports
+{
+  /**
+   * Returns the local filesystem path for a favicon for a page hosted at
+   * faviconURL if we happen to have written one to disk before. If we have not,
+   * then a background thread retrieves the favicon and will write it to disk
+   * and NS_ERROR_NOT_AVAILABLE will be thrown.
+   *
+   * @param {nsIURI} faviconURL
+   *   The URL for the web page for which we would like a filesystem path for
+   *   the favicon.
+   * @returns {AString}
+   *   The local filesystem path for the favicon if it has been cached before.
+   *   If it has not been cached before, this method will throw
+   *   NS_ERROR_NOT_AVAILABLE.
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *   In the event that the favicon has never been cached to disk before.
+   */
+  AString obtainAndCacheFavicon(in nsIURI faviconURL);
+
+  /**
+   * Returns a Promise that resolves with whether or not the Jump List backend
+   * on the background thread is up and running.
+   *
+   * @returns {Promise<boolean>}
+   *   Resolves to true if the backend is ready to accept
+   *   WindowsJumpListShortcutDescriptions. False, otherwise.
+   * @throws NS_ERROR_FAILURE
+   *   If an attempt to communicate with the background thread fails.
+   */
+  [implicit_jscontext]
+  Promise isAvailable();
+
+  /**
+   * Asks the Windows Jump List API for any items that might have been removed
+   * by the user from the Jump List UI.
+   *
+   * Important: This should be called prior to any attempt to call
+   * `populateJumpList` to ensure that any passed in
+   * WindowsJumpListShortcutDescriptions do not describe items that the user has
+   * just removed. Failing to do so will cause the Promise returned from
+   * `populateJumpList` to reject. This is a constraint of the underlying win32
+   * API. Please see
+   * https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-icustomdestinationlist-beginlist
+   * for more details.
+   *
+   * @returns {Promise<string[], nsresult>}
+   *   On success, will return an array of strings for URLs of history that
+   *   have been removed by the user via the Windows Jump List. These items will
+   *   also have had their cached favicons removed from the disk off of the
+   *   main thread. On failure, this will reject with the nsresult failure code.
+   * @throws NS_ERROR_FAILURE
+   *   If an attempt to communicate with the background thread fails.
+   */
+  [implicit_jscontext]
+  Promise checkForRemovals();
+
+  /**
+   * Writes a new set of items to the Windows Jump List. This occurs
+   * asynchronously, off of the main thread.
+   *
+   * Important: Callers should first call `checkForRemovals` to remove any
+   * browsing history items that the user chose to remove in the Jump List
+   *  Only then should any WindowsJumpListShortcutDescriptions be created
+   * and passed to this method. Any attempt to add
+   * WindowsJumpListShortcutDescriptions matching items that have been removed
+   * by the user will result in the returned Promise rejecting. This is a
+   * constraint of the underlying win32 API. Please see
+   * https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-icustomdestinationlist-beginlist
+   * for more details.
+   *
+   * @param {WindowsJumpListShortcutDescription[]} aTaskDescriptions
+   *   0 or more WindowsJumpListShortcutDescriptions to place items within the
+   *   "tasks" section of the Jump List.
+   * @param {AString} aCustomTitle
+   *   An optional title for a custom sub-list within the Jump List that will be
+   *   populated via aCustomDescriptions. This must be supplied if
+   *   aCustomDescriptions is not empty.
+   * @param {WindowsJumpListShortcutDescription[]} aCustomDescriptions
+   *   0 or more WindowsJumpListShortcutDescriptions to place items within the
+   *   custom section of the Jump List. aCustomTitle must be supplied if this
+   *   array is non-empty.
+   * @returns {Promise<undefined, nsresult>}
+   *   Returns a Promise that resolves if the Jump List was properly written
+   *   to, and rejects otherwise with the nsresult of the failure.
+   * @throws NS_ERROR_INVALID_ARG
+   *   If any of the passed arguments do not meet the requirements set out
+   *   above.
+   * @throws NS_ERROR_FAILURE
+   *   If an attempt to communicate with the background thread fails.
+   */
+  [implicit_jscontext]
+  Promise populateJumpList(
+    in Array<jsval> aTaskDescriptions,
+    in AString aCustomTitle,
+    in Array<jsval> aCustomDescriptions
+  );
+
+  /**
+   * Removes all items from the Jump List.
+   *
+   * @returns {Promise<undefined, nsresult>}
+   *   Resolves with undefined on successfully clearing the Jump List. If it
+   *   fails to do so, it will reject with the failure code.
+   * @throws NS_ERROR_FAILURE
+   *   If an attempt to communicate with the background thread fails.
+   */
+  [implicit_jscontext]
+  Promise clearJumpList();
+};

@@ -9,6 +9,7 @@
 #include "nsIBaseWindow.idl"
 
 interface nsIDocShell;
+interface nsIJumpListBuilder;
 interface nsITaskbarTabPreview;
 interface nsITaskbarWindowPreview;
 interface nsITaskbarPreviewController;
@@ -131,6 +132,14 @@ interface nsIWinTaskbar : nsISupports
    * currently building a list.
    */
   nsILegacyJumpListBuilder createLegacyJumpListBuilder(in boolean aPrivateBrowsing);
+
+  /**
+   * Retrieves a Windows Jump List builder. This jump list builder can be used
+   * to asynchronously add, remove, and update items in the Windows Jump List.
+   *
+   * @throws NS_ERROR_UNEXPECTED if the builder failed to be created.
+   */
+  nsIJumpListBuilder createJumpListBuilder(in boolean aPrivateBrowsing);
 
   /**
    * Application window taskbar group settings

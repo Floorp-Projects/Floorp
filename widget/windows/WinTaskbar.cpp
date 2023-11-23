@@ -11,6 +11,7 @@
 #include "nsITaskbarPreviewController.h"
 
 #include "mozilla/RefPtr.h"
+#include "mozilla/widget/JumpListBuilder.h"
 #include <nsError.h>
 #include <nsCOMPtr.h>
 #include <nsIWidget.h>
@@ -36,7 +37,8 @@
 #include <propkey.h>
 #include <shellapi.h>
 
-static NS_DEFINE_CID(kLegacyJumpListBuilderCID, NS_WIN_LEGACYJUMPLISTBUILDER_CID);
+static NS_DEFINE_CID(kLegacyJumpListBuilderCID,
+                     NS_WIN_LEGACYJUMPLISTBUILDER_CID);
 
 namespace {
 
@@ -404,8 +406,8 @@ WinTaskbar::GetOverlayIconController(
 }
 
 NS_IMETHODIMP
-WinTaskbar::CreateLegacyJumpListBuilder(bool aPrivateBrowsing,
-                                  nsILegacyJumpListBuilder** aJumpListBuilder) {
+WinTaskbar::CreateLegacyJumpListBuilder(
+    bool aPrivateBrowsing, nsILegacyJumpListBuilder** aJumpListBuilder) {
   nsresult rv;
 
   if (LegacyJumpListBuilder::sBuildingList) return NS_ERROR_ALREADY_INITIALIZED;
@@ -420,6 +422,21 @@ WinTaskbar::CreateLegacyJumpListBuilder(bool aPrivateBrowsing,
   GenerateAppUserModelID(aumid, aPrivateBrowsing);
   builder->SetAppUserModelID(aumid);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WinTaskbar::CreateJumpListBuilder(bool aPrivateBrowsing,
+                                  nsIJumpListBuilder** aJumpListBuilder) {
+  nsAutoString aumid;
+  GenerateAppUserModelID(aumid, aPrivateBrowsing);
+
+  nsCOMPtr<nsIJumpListBuilder> builder = new JumpListBuilder(aumid);
+  if (!builder) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  NS_IF_ADDREF(*aJumpListBuilder = builder);
   return NS_OK;
 }
 
