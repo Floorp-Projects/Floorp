@@ -3294,7 +3294,7 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
       data->mPerformedShutdownAfterLastContentTaskExecuted.Flip();
       if (data->mScope) {
         data->mScope->NoteTerminating();
-        data->mScope->DisconnectEventTargetObjects();
+        data->mScope->DisconnectGlobalTeardownObservers();
         if (data->mScope->GetExistingScheduler()) {
           data->mScope->GetExistingScheduler()->Disconnect();
         }
@@ -5769,7 +5769,7 @@ WorkerGlobalScope* WorkerPrivate::GetOrCreateGlobalScope(JSContext* aCx) {
   // Worker has already in "Canceling", let the WorkerGlobalScope start dying.
   if (data->mCancelBeforeWorkerScopeConstructed) {
     data->mScope->NoteTerminating();
-    data->mScope->DisconnectEventTargetObjects();
+    data->mScope->DisconnectGlobalTeardownObservers();
   }
 
   JS_FireOnNewGlobalObject(aCx, global);

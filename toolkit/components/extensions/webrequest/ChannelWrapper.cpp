@@ -114,7 +114,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(ChannelWrapper::ChannelWrapperStub)
 NS_IMPL_CYCLE_COLLECTION(ChannelWrapper::ChannelWrapperStub, mChannelWrapper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ChannelWrapper::ChannelWrapperStub)
-  NS_INTERFACE_MAP_ENTRY_TEAROFF(ChannelWrapper, mChannelWrapper)
+  NS_INTERFACE_MAP_ENTRY_TEAROFF_AMBIGUOUS(ChannelWrapper, EventTarget,
+                                           mChannelWrapper)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
@@ -1256,7 +1257,7 @@ JSObject* ChannelWrapper::WrapObject(JSContext* aCx,
 NS_IMPL_CYCLE_COLLECTION_CLASS(ChannelWrapper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ChannelWrapper)
-  NS_INTERFACE_MAP_ENTRY(ChannelWrapper)
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(ChannelWrapper)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ChannelWrapper,
