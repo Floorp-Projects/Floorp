@@ -24,8 +24,7 @@ class StrongWorkerRef;
 class FetchStreamReader final : public nsIOutputStreamCallback {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(
-      FetchStreamReader, nsIOutputStreamCallback)
+  NS_DECL_CYCLE_COLLECTION_CLASS(FetchStreamReader)
   NS_DECL_NSIOUTPUTSTREAMCALLBACK
 
   // This creates a nsIInputStream able to retrieve data from the ReadableStream
