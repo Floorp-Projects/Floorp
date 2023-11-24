@@ -328,12 +328,12 @@ nsresult nsXMLContentSink::OnDocumentCreated(Document* aSourceDocument,
                                              Document* aResultDocument) {
   aResultDocument->SetDocWriteDisabled(true);
 
-  nsCOMPtr<nsIDocumentViewer> contentViewer;
-  mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
+  nsCOMPtr<nsIDocumentViewer> viewer;
+  mDocShell->GetDocViewer(getter_AddRefs(viewer));
   // Make sure that we haven't loaded a new document into the contentviewer
   // after starting the XSLT transform.
-  if (contentViewer && contentViewer->GetDocument() == aSourceDocument) {
-    return contentViewer->SetDocumentInternal(aResultDocument, true);
+  if (viewer && viewer->GetDocument() == aSourceDocument) {
+    return viewer->SetDocumentInternal(aResultDocument, true);
   }
   return NS_OK;
 }
@@ -346,21 +346,21 @@ nsresult nsXMLContentSink::OnTransformDone(Document* aSourceDocument,
 
   mDocumentChildren.Clear();
 
-  nsCOMPtr<nsIDocumentViewer> contentViewer;
-  mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
+  nsCOMPtr<nsIDocumentViewer> viewer;
+  mDocShell->GetDocViewer(getter_AddRefs(viewer));
 
   RefPtr<Document> originalDocument = mDocument;
   bool blockingOnload = mIsBlockingOnload;
 
   // Make sure that we haven't loaded a new document into the contentviewer
   // after starting the XSLT transform.
-  if (contentViewer && (contentViewer->GetDocument() == aSourceDocument ||
-                        contentViewer->GetDocument() == aResultDocument)) {
+  if (viewer && (viewer->GetDocument() == aSourceDocument ||
+                 viewer->GetDocument() == aResultDocument)) {
     if (NS_FAILED(aResult)) {
       // Transform failed.
       aResultDocument->SetMayStartLayout(false);
       // We have an error document.
-      contentViewer->SetDocument(aResultDocument);
+      viewer->SetDocument(aResultDocument);
     }
 
     if (!mRunsToCompletion) {

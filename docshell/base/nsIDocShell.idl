@@ -135,10 +135,10 @@ interface nsIDocShell : nsIDocShellTreeItem
   [notxpcom,nostdcall] readonly attribute PresShell eldestPresShell;
 
   /**
-   * Content Viewer that is currently loaded for this DocShell.  This may
+   * Document Viewer that is currently loaded for this DocShell.  This may
    * change as the underlying content changes.
    */
-  [infallible] readonly attribute nsIDocumentViewer contentViewer;
+  [infallible] readonly attribute nsIDocumentViewer docViewer;
 
   /**
    * Get the id of the outer window that is or will be in this docshell.

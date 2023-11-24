@@ -3591,21 +3591,22 @@ static void PrepareForFullscreenChange(nsIDocShell* aDocShell,
     rd->ScheduleViewManagerFlush();
   }
   if (!aSize.IsEmpty()) {
-    nsCOMPtr<nsIDocumentViewer> cv;
-    aDocShell->GetContentViewer(getter_AddRefs(cv));
-    if (cv) {
-      nsIntRect cvBounds;
-      cv->GetBounds(cvBounds);
+    nsCOMPtr<nsIDocumentViewer> viewer;
+    aDocShell->GetDocViewer(getter_AddRefs(viewer));
+    if (viewer) {
+      nsIntRect viewerBounds;
+      viewer->GetBounds(viewerBounds);
       nscoord auPerDev = presShell->GetPresContext()->AppUnitsPerDevPixel();
       if (aOldSize) {
         *aOldSize = LayoutDeviceIntSize::ToAppUnits(
-            LayoutDeviceIntSize::FromUnknownSize(cvBounds.Size()), auPerDev);
+            LayoutDeviceIntSize::FromUnknownSize(viewerBounds.Size()),
+            auPerDev);
       }
       LayoutDeviceIntSize newSize =
           LayoutDeviceIntSize::FromAppUnitsRounded(aSize, auPerDev);
 
-      cvBounds.SizeTo(newSize.width, newSize.height);
-      cv->SetBounds(cvBounds);
+      viewerBounds.SizeTo(newSize.width, newSize.height);
+      viewer->SetBounds(viewerBounds);
     }
   }
 }

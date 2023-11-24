@@ -16,7 +16,7 @@
 
     function openPopup()
     {
-      docviewer = window.docShell.contentViewer;
+      docviewer = window.docShell.docViewer;
       savedzoom = SpecialPowers.getFullZoom(window);
       SpecialPowers.setFullZoom(window, 2);
 

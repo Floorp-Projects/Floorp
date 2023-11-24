@@ -9828,7 +9828,7 @@ Document* Document::Open(const Optional<nsAString>& /* unused */,
     shell->PrepareForNewContentModel();
 
     nsCOMPtr<nsIDocumentViewer> viewer;
-    shell->GetContentViewer(getter_AddRefs(viewer));
+    shell->GetDocViewer(getter_AddRefs(viewer));
     if (viewer) {
       viewer->LoadStart(this);
     }

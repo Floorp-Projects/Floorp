@@ -99,7 +99,7 @@ function test() {
     ConsoleObserver.uninit();
   });
 
-  let window = docShell.contentViewer.DOMDocument.defaultView;
+  let window = docShell.docViewer.DOMDocument.defaultView;
   window.eval(`console.log("${EXPECTED_CONSOLE_MESSAGE_CONTENT}");`);
   chromeWebNav.close();
   chromeWebNav = null;

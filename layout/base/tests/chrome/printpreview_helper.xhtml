@@ -93,13 +93,13 @@ function printpreview(options = {}) {
     document.documentElement.appendChild(browser);
     gPrintPreviewBrowser = browser;
 
-    // Force contentViewer creation and layout.
+    // Force docViewer creation and layout.
     browser.browsingContext.docShell.document;
     browser.getBoundingClientRect();
 
     gPrintPreviewWindow = frameElts[0].contentWindow.printPreview(settings, listener, browser.browsingContext.docShell);
   }
-  gWbp = gPrintPreviewWindow.docShell.contentViewer;
+  gWbp = gPrintPreviewWindow.docShell.docViewer;
   gWbp.QueryInterface(Ci.nsIWebBrowserPrint);
   is(before, 1, "Should have called beforeprint listener!");
   if (!options.hasMozPrintCallback) {

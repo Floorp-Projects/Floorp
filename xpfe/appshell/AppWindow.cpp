@@ -333,7 +333,7 @@ NS_IMETHODIMP AppWindow::SetZLevel(uint32_t aLevel) {
   PersistentAttributesDirty(PersistentAttribute::Misc, Sync);
 
   nsCOMPtr<nsIDocumentViewer> viewer;
-  mDocShell->GetContentViewer(getter_AddRefs(viewer));
+  mDocShell->GetDocViewer(getter_AddRefs(viewer));
   if (viewer) {
     RefPtr<dom::Document> doc = viewer->GetDocument();
     if (doc) {
@@ -2135,7 +2135,7 @@ dom::Element* AppWindow::GetWindowDOMElement() const {
   NS_ENSURE_TRUE(mDocShell, nullptr);
 
   nsCOMPtr<nsIDocumentViewer> viewer;
-  mDocShell->GetContentViewer(getter_AddRefs(viewer));
+  mDocShell->GetDocViewer(getter_AddRefs(viewer));
   NS_ENSURE_TRUE(viewer, nullptr);
 
   const dom::Document* document = viewer->GetDocument();
@@ -2642,7 +2642,7 @@ void AppWindow::IntrinsicallySizeShell(const CSSIntSize& aWindowDiff,
                                        int32_t& aSpecWidth,
                                        int32_t& aSpecHeight) {
   nsCOMPtr<nsIDocumentViewer> viewer;
-  mDocShell->GetContentViewer(getter_AddRefs(viewer));
+  mDocShell->GetDocViewer(getter_AddRefs(viewer));
   if (!viewer) {
     return;
   }
@@ -3315,7 +3315,7 @@ AppWindow::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
   ///////////////////////////////
   if (!gfxPlatform::IsHeadless()) {
     nsCOMPtr<nsIDocumentViewer> viewer;
-    mDocShell->GetContentViewer(getter_AddRefs(viewer));
+    mDocShell->GetDocViewer(getter_AddRefs(viewer));
     if (viewer) {
       RefPtr<Document> menubarDoc = viewer->GetDocument();
       if (menubarDoc) {
@@ -3380,10 +3380,10 @@ bool AppWindow::ExecuteCloseHandler() {
   }
 
   if (eventTarget) {
-    nsCOMPtr<nsIDocumentViewer> contentViewer;
-    mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
-    if (contentViewer) {
-      RefPtr<nsPresContext> presContext = contentViewer->GetPresContext();
+    nsCOMPtr<nsIDocumentViewer> viewer;
+    mDocShell->GetDocViewer(getter_AddRefs(viewer));
+    if (viewer) {
+      RefPtr<nsPresContext> presContext = viewer->GetPresContext();
 
       nsEventStatus status = nsEventStatus_eIgnore;
       WidgetMouseEvent event(true, eClose, nullptr, WidgetMouseEvent::eReal);

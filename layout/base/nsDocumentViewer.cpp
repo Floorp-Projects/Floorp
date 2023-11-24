@@ -1216,10 +1216,8 @@ nsDocumentViewer::PermitUnload(PermitUnloadAction aAction,
         foundOOPListener = true;
       }
     } else if (aBC->GetDocShell()) {
-      nsCOMPtr<nsIDocumentViewer> contentViewer(
-          aBC->GetDocShell()->GetContentViewer());
-      if (contentViewer &&
-          contentViewer->DispatchBeforeUnload() == eRequestBlockNavigation) {
+      nsCOMPtr<nsIDocumentViewer> viewer(aBC->GetDocShell()->GetDocViewer());
+      if (viewer && viewer->DispatchBeforeUnload() == eRequestBlockNavigation) {
         foundBlocker = true;
       }
     }
@@ -1435,7 +1433,7 @@ nsDocumentViewer::PageHide(bool aIsUnload) {
 
 static void AttachContainerRecurse(nsIDocShell* aShell) {
   nsCOMPtr<nsIDocumentViewer> viewer;
-  aShell->GetContentViewer(getter_AddRefs(viewer));
+  aShell->GetDocViewer(getter_AddRefs(viewer));
   if (viewer) {
     viewer->SetIsHidden(false);
     Document* doc = viewer->GetDocument();
@@ -1569,7 +1567,7 @@ static void DetachContainerRecurse(nsIDocShell* aShell) {
   // Unhook this docshell's presentation
   aShell->SynchronizeLayoutHistoryState();
   nsCOMPtr<nsIDocumentViewer> viewer;
-  aShell->GetContentViewer(getter_AddRefs(viewer));
+  aShell->GetDocViewer(getter_AddRefs(viewer));
   if (viewer) {
     if (Document* doc = viewer->GetDocument()) {
       doc->SetContainer(nullptr);
@@ -2179,7 +2177,7 @@ nsDocumentViewer::Hide() {
   if (docShell) {
 #ifdef DEBUG
     nsCOMPtr<nsIDocumentViewer> currentViewer;
-    docShell->GetContentViewer(getter_AddRefs(currentViewer));
+    docShell->GetDocViewer(getter_AddRefs(currentViewer));
     MOZ_ASSERT(currentViewer == this);
 #endif
     nsCOMPtr<nsILayoutHistoryState> layoutState;

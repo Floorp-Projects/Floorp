@@ -214,7 +214,7 @@ nsWebBrowser::GetInterface(const nsIID& aIID, void** aSink) {
 #ifdef NS_PRINTING
     if (aIID.Equals(NS_GET_IID(nsIWebBrowserPrint))) {
       nsCOMPtr<nsIDocumentViewer> viewer;
-      mDocShell->GetContentViewer(getter_AddRefs(viewer));
+      mDocShell->GetDocViewer(getter_AddRefs(viewer));
       if (!viewer) {
         return NS_NOINTERFACE;
       }

@@ -11161,8 +11161,8 @@ void PresShell::MarkFixedFramesForReflow(IntrinsicDirty aIntrinsicDirty) {
 
 static void AppendSubtree(nsIDocShell* aDocShell,
                           nsTArray<nsCOMPtr<nsIDocumentViewer>>& aArray) {
-  if (nsCOMPtr<nsIDocumentViewer> cv = aDocShell->GetContentViewer()) {
-    aArray.AppendElement(cv);
+  if (nsCOMPtr<nsIDocumentViewer> viewer = aDocShell->GetDocViewer()) {
+    aArray.AppendElement(viewer);
   }
 
   int32_t n = aDocShell->GetInProcessChildCount();

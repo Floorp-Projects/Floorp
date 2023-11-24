@@ -233,7 +233,7 @@ function setupPrintMode(contentRootElement) {
   ps.printBGColors = printBackgrounds;
   ps.printBGImages = printBackgrounds;
 
-  docShell.contentViewer.setPageModeForTesting(/* aPageMode */ true, ps);
+  docShell.docViewer.setPageModeForTesting(/* aPageMode */ true, ps);
 }
 
 // Message the parent process to ask it to print the current page to a PDF file.

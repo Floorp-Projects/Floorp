@@ -198,10 +198,10 @@ class StorageActorMock extends EventEmitter {
     const docShell = item
       .QueryInterface(Ci.nsIDocShell)
       .QueryInterface(Ci.nsIDocShellTreeItem);
-    if (!docShell.contentViewer) {
+    if (!docShell.docViewer) {
       return null;
     }
-    const window = docShell.contentViewer.DOMDocument.defaultView;
+    const window = docShell.docViewer.DOMDocument.defaultView;
     if (window.location.href == "about:blank") {
       // Skip out about:blank windows as Gecko creates them multiple times while
       // creating any global.

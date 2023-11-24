@@ -36,7 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1018265
   }
 
   function getDocumentViewer(win) {
-    return win.docShell.contentViewer;
+    return win.docShell.docViewer;
   }
 
   function shouldHaveTwoNonHiddenDocumentViewers() {

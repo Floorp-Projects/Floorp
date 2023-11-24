@@ -33,7 +33,7 @@ async function testCopyPaste(isXHTML) {
 
   var docShell = SpecialPowers.wrap(window).docShell;
 
-  var documentViewer = docShell.contentViewer.QueryInterface(
+  var documentViewer = docShell.docViewer.QueryInterface(
     SpecialPowers.Ci.nsIDocumentViewerEdit
   );
 

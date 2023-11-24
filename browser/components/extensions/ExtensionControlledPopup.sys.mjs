@@ -384,7 +384,7 @@ export class ExtensionControlledPopup {
       // We may have focused a non-remote child window, find the browser window:
       let { rootTreeItem } = focusedWindow.docShell;
       rootTreeItem.QueryInterface(Ci.nsIDocShell);
-      focusedWindow = rootTreeItem.contentViewer.DOMDocument.defaultView;
+      focusedWindow = rootTreeItem.docViewer.DOMDocument.defaultView;
     }
     if (focusedWindow != win) {
       promiseEvent("focus");

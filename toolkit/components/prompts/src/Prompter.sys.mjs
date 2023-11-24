@@ -1142,7 +1142,7 @@ class ModalPrompter {
     }
     if (IS_CONTENT) {
       let docShell = this.browsingContext.docShell;
-      let inPermitUnload = docShell?.contentViewer?.inPermitUnload;
+      let inPermitUnload = docShell?.docViewer?.inPermitUnload;
       args.inPermitUnload = inPermitUnload;
       let eventDetail = Cu.cloneInto(
         {

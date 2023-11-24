@@ -686,7 +686,7 @@ nsresult nsSelectionCommand::GetDocumentViewerEditFromContext(
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocumentViewer> viewer;
-  docShell->GetContentViewer(getter_AddRefs(viewer));
+  docShell->GetDocViewer(getter_AddRefs(viewer));
   nsCOMPtr<nsIDocumentViewerEdit> edit(do_QueryInterface(viewer));
   NS_ENSURE_TRUE(edit, NS_ERROR_FAILURE);
 

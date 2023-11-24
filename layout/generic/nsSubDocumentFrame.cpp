@@ -1128,7 +1128,7 @@ static CallState EndSwapDocShellsForDocument(Document& aDocument) {
   // container view in the new hierarchy.
   if (nsCOMPtr<nsIDocShell> ds = aDocument.GetDocShell()) {
     nsCOMPtr<nsIDocumentViewer> viewer;
-    ds->GetContentViewer(getter_AddRefs(viewer));
+    ds->GetDocViewer(getter_AddRefs(viewer));
     while (viewer) {
       RefPtr<nsPresContext> pc = viewer->GetPresContext();
       if (pc && pc->GetPresShell()) {

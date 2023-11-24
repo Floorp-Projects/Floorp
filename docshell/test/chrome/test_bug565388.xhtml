@@ -53,7 +53,7 @@ function test() {
   var webNav = SpecialPowers.Services.appShell.createWindowlessBrowser(true);
   var docShell = webNav.docShell;
   docShell.createAboutBlankDocumentViewer(systemPrincipal, systemPrincipal);
-  var win = docShell.contentViewer.DOMDocument.defaultView;
+  var win = docShell.docViewer.DOMDocument.defaultView;
 
   progressListener.add(docShell, function(){
     is(win.document.documentURI, "data:application/xhtml+xml;charset=utf-8,<window/>");
