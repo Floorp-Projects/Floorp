@@ -1024,6 +1024,12 @@ size_t GlobalHelperThreadState::maxIonCompilationThreads() const {
   return threadCount;
 }
 
+size_t GlobalHelperThreadState::maxIonFreeThreads() const {
+  // IonFree tasks are low priority. Limit to one thread to help avoid jemalloc
+  // lock contention.
+  return 1;
+}
+
 size_t GlobalHelperThreadState::maxWasmCompilationThreads() const {
   if (IsHelperThreadSimulatingOOM(js::THREAD_TYPE_WASM_COMPILE_TIER1) ||
       IsHelperThreadSimulatingOOM(js::THREAD_TYPE_WASM_COMPILE_TIER2)) {
@@ -1238,7 +1244,8 @@ HelperThreadTask* GlobalHelperThreadState::maybeGetIonFreeTask(
 
 bool GlobalHelperThreadState::canStartIonFreeTask(
     const AutoLockHelperThreadState& lock) {
-  return !ionFreeList(lock).empty();
+  return !ionFreeList(lock).empty() &&
+         checkTaskThreadLimit(THREAD_TYPE_ION_FREE, maxIonFreeThreads(), lock);
 }
 
 jit::IonCompileTask* GlobalHelperThreadState::highestPriorityPendingIonCompile(

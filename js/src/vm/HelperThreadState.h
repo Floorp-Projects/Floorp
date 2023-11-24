@@ -191,6 +191,7 @@ class GlobalHelperThreadState {
                               const AutoLockHelperThreadState& lock) const;
 
   size_t maxIonCompilationThreads() const;
+  size_t maxIonFreeThreads() const;
   size_t maxWasmCompilationThreads() const;
   size_t maxWasmTier2GeneratorThreads() const;
   size_t maxPromiseHelperThreads() const;
