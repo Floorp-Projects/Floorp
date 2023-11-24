@@ -22,6 +22,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/NavigationManager.sys.mjs",
   NavigationListener:
     "chrome://remote/content/shared/listeners/NavigationListener.sys.mjs",
+  PollPromise: "chrome://remote/content/shared/Sync.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
   print: "chrome://remote/content/shared/PDF.sys.mjs",
   ProgressListener: "chrome://remote/content/shared/Navigate.sys.mjs",
@@ -88,6 +89,8 @@ export const OriginType = {
   document: "document",
   viewport: "viewport",
 };
+
+const TIMEOUT_SET_HISTORY_INDEX = 1000;
 
 /**
  * Enum of user prompt types supported by the browsingContext.handleUserPrompt
@@ -1003,7 +1006,7 @@ class BrowsingContextModule extends Module {
    *
    * @throws {InvalidArgumentError}
    *     Raised if an argument is of an invalid type or value.
-   * @throws UnsupportedOperationError
+   * @throws {UnsupportedOperationError}
    *     Raised when the command is called on Android.
    */
   async setViewport(options = {}) {
@@ -1078,6 +1081,64 @@ class BrowsingContextModule extends Module {
         width: targetWidth,
       },
     });
+  }
+
+  /**
+   * Traverses the history of a given context by a given delta.
+   *
+   * @param {object=} options
+   * @param {string} options.context
+   *     Id of the browsing context.
+   * @param {number} options.delta
+   *     The number of steps we have to traverse.
+   *
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   * @throws {NoSuchFrameException}
+   *     When a context is not available.
+   * @throws {NoSuchHistoryEntryError}
+   *     When a requested history entry does not exist.
+   */
+  async traverseHistory(options = {}) {
+    const { context: contextId, delta } = options;
+
+    lazy.assert.string(
+      contextId,
+      `Expected "context" to be a string, got ${contextId}`
+    );
+
+    const context = this.#getBrowsingContext(contextId);
+
+    lazy.assert.integer(delta);
+
+    const sessionHistory = context.sessionHistory;
+    const allSteps = sessionHistory.count;
+    const currentIndex = sessionHistory.index;
+    const targetIndex = currentIndex + delta;
+    const validEntry = targetIndex >= 0 && targetIndex < allSteps;
+
+    if (!validEntry) {
+      throw new lazy.error.NoSuchHistoryEntryError(
+        `History entry with delta ${delta} not found`
+      );
+    }
+
+    context.goToIndex(targetIndex);
+
+    // On some platforms the requested index isn't set immediately.
+    await lazy.PollPromise(
+      (resolve, reject) => {
+        if (sessionHistory.index == targetIndex) {
+          resolve();
+        } else {
+          reject();
+        }
+      },
+      {
+        errorMessage: `History was not updated for index "${targetIndex}"`,
+        timeout: TIMEOUT_SET_HISTORY_INDEX,
+      }
+    );
   }
 
   /**

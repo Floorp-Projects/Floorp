@@ -27,6 +27,7 @@ const ERRORS = new Set([
   "NoSuchElementError",
   "NoSuchFrameError",
   "NoSuchHandleError",
+  "NoSuchHistoryEntryError",
   "NoSuchInterceptError",
   "NoSuchNodeError",
   "NoSuchScriptError",
@@ -586,6 +587,21 @@ class NoSuchHandleError extends WebDriverError {
 }
 
 /**
+ * The entry of the history could not be found.
+ *
+ * @param {string=} message
+ *     Optional string describing error situation.
+ * @param {object=} data
+ *     Additional error data helpful in diagnosing the error.
+ */
+class NoSuchHistoryEntryError extends WebDriverError {
+  constructor(message, data = {}) {
+    super(message, data);
+    this.status = "no such history entry";
+  }
+}
+
+/**
  * Tried to remove an unknown network intercept.
  *
  * @param {string=} message
@@ -803,6 +819,7 @@ const STATUSES = new Map([
   ["no such element", NoSuchElementError],
   ["no such frame", NoSuchFrameError],
   ["no such handle", NoSuchHandleError],
+  ["no such history entry", NoSuchHistoryEntryError],
   ["no such intercept", NoSuchInterceptError],
   ["no such node", NoSuchNodeError],
   ["no such script", NoSuchScriptError],

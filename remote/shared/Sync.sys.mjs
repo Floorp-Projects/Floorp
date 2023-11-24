@@ -238,6 +238,9 @@ export function executeSoon(fn) {
  * @param {Condition} func
  *     Function to run off the main thread.
  * @param {object=} options
+ * @param {string=} options.errorMessage
+ *     Message to use to send a warning if ``timeout`` is over.
+ *     Defaults to `PollPromise timed out`.
  * @param {number=} options.timeout
  *     Desired timeout if wanted.  If 0 or less than the runtime evaluation
  *     time of ``func``, ``func`` is guaranteed to run at least once.
@@ -257,7 +260,12 @@ export function executeSoon(fn) {
  * @throws {RangeError}
  *     If `timeout` or `interval` are not unsigned integers.
  */
-export function PollPromise(func, { timeout = null, interval = 10 } = {}) {
+export function PollPromise(func, options = {}) {
+  const {
+    errorMessage = "PollPromise timed out",
+    interval = 10,
+    timeout = null,
+  } = options;
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
   if (typeof func != "function") {
@@ -311,6 +319,9 @@ export function PollPromise(func, { timeout = null, interval = 10 } = {}) {
     timer.init(evalFn, interval, TYPE_REPEATING_SLACK);
   }).then(
     res => {
+      if (Number.isInteger(timeout)) {
+        lazy.logger.warn(`${errorMessage} after ${timeout} ms`);
+      }
       timer.cancel();
       return res;
     },
