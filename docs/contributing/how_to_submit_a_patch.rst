@@ -224,7 +224,6 @@ reviewed.
 Ask the reviewer to land the patch for you.
 For more details, see :ref:`push_a_change`
 
-If pushing the patch yourself, please follow :ref:`Committing rules and responsibilities`.
 `Lando <https://moz-conduit.readthedocs.io/en/latest/lando-user.html>`__ is used
 to automatically land your code.
 
