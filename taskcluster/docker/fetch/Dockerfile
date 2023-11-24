@@ -22,7 +22,8 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
       python3-pip \
       python3-requests \
       python3-zstandard \
-      unzip
+      unzip \
+    && /usr/local/sbin/clean_packages.sh $DOCKER_IMAGE_PACKAGES
 
 # %include taskcluster/scripts/run-task
 ADD topsrcdir/taskcluster/scripts/run-task /builds/worker/bin/run-task

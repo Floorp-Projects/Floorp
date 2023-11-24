@@ -13,6 +13,7 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
 # %include taskcluster/docker/recipes/ubuntu1804-test-system-setup-base.sh
 ADD topsrcdir/taskcluster/docker/recipes/ubuntu1804-test-system-setup-base.sh /setup/system-setup.sh
 RUN     bash /setup/system-setup.sh
+RUN /usr/local/sbin/clean_packages.sh $DOCKER_IMAGE_PACKAGES
 
 # gnome-keyring-daemon is configured to have the IPC_LOCK capability (to lock pages with secrets in
 # memory), but docker isn't run with that capability granted. So, if we were to try running

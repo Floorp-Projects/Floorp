@@ -31,4 +31,5 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
         jessie \
         /srv/jessie-$arch \
         https://archive.debian.org/debian; \
-    done
+    done && \
+    /usr/local/sbin/clean_packages.sh $DOCKER_IMAGE_PACKAGES
