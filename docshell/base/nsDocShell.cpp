@@ -6756,7 +6756,7 @@ bool nsDocShell::CanSavePresentation(uint32_t aLoadType,
 
   MOZ_ASSERT(!mozilla::SessionHistoryInParent(),
              "mOSHE cannot be non-null with SHIP");
-  nsCOMPtr<nsIDocumentViewer> viewer = mOSHE->GetContentViewer();
+  nsCOMPtr<nsIDocumentViewer> viewer = mOSHE->GetDocumentViewer();
   if (viewer) {
     NS_WARNING("mOSHE already has a content viewer!");
     return false;
@@ -7153,7 +7153,7 @@ nsresult nsDocShell::RestorePresentation(nsISHEntry* aSHEntry,
   NS_ASSERTION(mLoadType & LOAD_CMD_HISTORY,
                "RestorePresentation should only be called for history loads");
 
-  nsCOMPtr<nsIDocumentViewer> viewer = aSHEntry->GetContentViewer();
+  nsCOMPtr<nsIDocumentViewer> viewer = aSHEntry->GetDocumentViewer();
 
   nsAutoCString spec;
   if (MOZ_UNLIKELY(MOZ_LOG_TEST(gPageCacheLog, LogLevel::Debug))) {
@@ -7182,7 +7182,7 @@ nsresult nsDocShell::RestorePresentation(nsISHEntry* aSHEntry,
   if (!::SameCOMIdentity(container, GetAsSupports(this))) {
     MOZ_LOG(gPageCacheLog, LogLevel::Debug,
             ("No valid container, clearing presentation"));
-    aSHEntry->SetContentViewer(nullptr);
+    aSHEntry->SetDocumentViewer(nullptr);
     return NS_ERROR_FAILURE;
   }
 
@@ -7254,7 +7254,7 @@ nsresult nsDocShell::RestoreFromHistory() {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDocumentViewer> viewer = mLSHE->GetContentViewer();
+  nsCOMPtr<nsIDocumentViewer> viewer = mLSHE->GetDocumentViewer();
   if (!viewer) {
     return NS_ERROR_FAILURE;
   }
@@ -7453,7 +7453,7 @@ nsresult nsDocShell::RestoreFromHistory() {
   UniquePtr<nsDocShellEditorData> data(mLSHE->ForgetEditorData());
 
   // Now remove it from the cached presentation.
-  mLSHE->SetContentViewer(nullptr);
+  mLSHE->SetDocumentViewer(nullptr);
   mEODForCurrentDocument = false;
 
   mLSHE->SetEditorData(data.release());

@@ -112,8 +112,8 @@ interface nsISHEntry : nsISupports
     /** Referrer Info*/
     [infallible] attribute nsIReferrerInfo referrerInfo;
 
-    /** Content viewer, for fast restoration of presentation */
-    [infallible] attribute nsIDocumentViewer contentViewer;
+    /** Document viewer, for fast restoration of presentation */
+    [infallible] attribute nsIDocumentViewer documentViewer;
 
     [infallible] readonly attribute boolean isInBFCache;
 
@@ -284,7 +284,7 @@ interface nsISHEntry : nsISupports
     [noscript, notxpcom] void setViewerBounds([const] in nsIntRect bounds);
 
     /**
-     * Saved child docshells corresponding to contentViewer.  The child shells
+     * Saved child docshells corresponding to documentViewer.  The child shells
      * are restored as children of the parent docshell, in this order, when the
      * parent docshell restores a saved presentation.
      */
@@ -304,9 +304,9 @@ interface nsISHEntry : nsISupports
 
     /**
      * Ensure that the cached presentation members are self-consistent.
-     * If either |contentViewer| or |windowState| are null, then all of the
+     * If either |documentViewer| or |windowState| are null, then all of the
      * following members are cleared/reset:
-     *  contentViewer, sticky, windowState, viewerBounds, childShells,
+     *  documentViewer, sticky, windowState, viewerBounds, childShells,
      *  refreshURIList.
      */
     [noscript, notxpcom] void syncPresentationState();

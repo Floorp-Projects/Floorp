@@ -217,7 +217,7 @@ void nsSHEntryShared::DropPresentationState() {
   mEditorData = nullptr;
 }
 
-nsresult nsSHEntryShared::SetContentViewer(nsIDocumentViewer* aViewer) {
+nsresult nsSHEntryShared::SetDocumentViewer(nsIDocumentViewer* aViewer) {
   MOZ_ASSERT(!aViewer || !mDocumentViewer,
              "SHEntryShared already contains viewer");
 

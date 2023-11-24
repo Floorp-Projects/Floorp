@@ -991,24 +991,24 @@ nsSHEntry::SyncTreesForSubframeNavigation(
 }
 
 void nsSHEntry::EvictDocumentViewer() {
-  nsCOMPtr<nsIDocumentViewer> viewer = GetContentViewer();
+  nsCOMPtr<nsIDocumentViewer> viewer = GetDocumentViewer();
   if (viewer) {
     mShared->NotifyListenersDocumentViewerEvicted();
     // Drop the presentation state before destroying the viewer, so that
     // document teardown is able to correctly persist the state.
-    SetContentViewer(nullptr);
+    SetDocumentViewer(nullptr);
     SyncPresentationState();
     viewer->Destroy();
   }
 }
 
 NS_IMETHODIMP
-nsSHEntry::SetContentViewer(nsIDocumentViewer* aViewer) {
-  return GetState()->SetContentViewer(aViewer);
+nsSHEntry::SetDocumentViewer(nsIDocumentViewer* aViewer) {
+  return GetState()->SetDocumentViewer(aViewer);
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetContentViewer(nsIDocumentViewer** aResult) {
+nsSHEntry::GetDocumentViewer(nsIDocumentViewer** aResult) {
   *aResult = GetState()->mDocumentViewer;
   NS_IF_ADDREF(*aResult);
   return NS_OK;

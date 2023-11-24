@@ -212,7 +212,7 @@ nsSHistoryObserver::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 void nsSHistory::EvictDocumentViewerForEntry(nsISHEntry* aEntry) {
-  nsCOMPtr<nsIDocumentViewer> viewer = aEntry->GetContentViewer();
+  nsCOMPtr<nsIDocumentViewer> viewer = aEntry->GetDocumentViewer();
   if (viewer) {
     LOG_SHENTRY_SPEC(("Evicting content viewer 0x%p for "
                       "owning SHEntry 0x%p at %s.",
@@ -222,7 +222,7 @@ void nsSHistory::EvictDocumentViewerForEntry(nsISHEntry* aEntry) {
     // Drop the presentation state before destroying the viewer, so that
     // document teardown is able to correctly persist the state.
     NotifyListenersDocumentViewerEvicted(1);
-    aEntry->SetContentViewer(nullptr);
+    aEntry->SetDocumentViewer(nullptr);
     aEntry->SyncPresentationState();
     viewer->Destroy();
   } else if (nsCOMPtr<SessionHistoryEntry> she = do_QueryInterface(aEntry)) {
@@ -1540,7 +1540,7 @@ void nsSHistory::EvictOutOfRangeWindowDocumentViewers(int32_t aIndex) {
   nsCOMArray<nsIDocumentViewer> safeViewers;
   nsTArray<RefPtr<nsFrameLoader>> safeFrameLoaders;
   for (int32_t i = startSafeIndex; i <= endSafeIndex; i++) {
-    nsCOMPtr<nsIDocumentViewer> viewer = mEntries[i]->GetContentViewer();
+    nsCOMPtr<nsIDocumentViewer> viewer = mEntries[i]->GetDocumentViewer();
     if (viewer) {
       safeViewers.AppendObject(viewer);
     } else if (nsCOMPtr<SessionHistoryEntry> she =
@@ -1557,7 +1557,7 @@ void nsSHistory::EvictOutOfRangeWindowDocumentViewers(int32_t aIndex) {
   // copy of Length(), because the length might change between iterations.)
   for (int32_t i = 0; i < Length(); i++) {
     nsCOMPtr<nsISHEntry> entry = mEntries[i];
-    nsCOMPtr<nsIDocumentViewer> viewer = entry->GetContentViewer();
+    nsCOMPtr<nsIDocumentViewer> viewer = entry->GetDocumentViewer();
     if (viewer) {
       if (safeViewers.IndexOf(viewer) == -1) {
         EvictDocumentViewerForEntry(entry);
@@ -1581,7 +1581,7 @@ class EntryAndDistance {
   EntryAndDistance(nsSHistory* aSHistory, nsISHEntry* aEntry, uint32_t aDist)
       : mSHistory(aSHistory),
         mEntry(aEntry),
-        mViewer(aEntry->GetContentViewer()),
+        mViewer(aEntry->GetDocumentViewer()),
         mLastTouched(mEntry->GetLastTouched()),
         mDistance(aDist) {
     nsCOMPtr<SessionHistoryEntry> she = do_QueryInterface(aEntry);
@@ -1650,11 +1650,11 @@ void nsSHistory::GloballyEvictDocumentViewers() {
     shist->WindowIndices(shist->mIndex, &startIndex, &endIndex);
     for (int32_t i = startIndex; i <= endIndex; i++) {
       nsCOMPtr<nsISHEntry> entry = shist->mEntries[i];
-      nsCOMPtr<nsIDocumentViewer> contentViewer = entry->GetContentViewer();
+      nsCOMPtr<nsIDocumentViewer> viewer = entry->GetDocumentViewer();
 
       bool found = false;
       bool hasDocumentViewerOrFrameLoader = false;
-      if (contentViewer) {
+      if (viewer) {
         hasDocumentViewerOrFrameLoader = true;
         // Because one content viewer might belong to multiple SHEntries, we
         // have to search through shEntries to see if we already know
@@ -1662,7 +1662,7 @@ void nsSHistory::GloballyEvictDocumentViewers() {
         // distance from the SHistory's index and continue.
         for (uint32_t j = 0; j < shEntries.Length(); j++) {
           EntryAndDistance& container = shEntries[j];
-          if (container.mViewer == contentViewer) {
+          if (container.mViewer == viewer) {
             container.mDistance =
                 std::min(container.mDistance, DeprecatedAbs(i - shist->mIndex));
             found = true;
