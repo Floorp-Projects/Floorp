@@ -86,6 +86,13 @@ fn build(sdk_path: Option<&str>, target: &str) {
         }
     }
 
+    #[cfg(feature = "io_kit_audio")]
+    {
+        assert!(target.contains("apple-darwin"));
+        println!("cargo:rustc-link-lib=framework=IOKit");
+        headers.push("IOKit/audio/IOAudioTypes.h");
+    }
+
     #[cfg(feature = "open_al")]
     {
         println!("cargo:rustc-link-lib=framework=OpenAL");

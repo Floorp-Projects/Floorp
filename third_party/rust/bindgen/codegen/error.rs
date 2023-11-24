@@ -14,25 +14,36 @@ pub(crate) enum Error {
 
     /// Function ABI is not supported.
     UnsupportedAbi(&'static str),
+
+    /// The pointer type size does not match the target's pointer size.
+    InvalidPointerSize {
+        ty_name: String,
+        ty_size: usize,
+        ptr_size: usize,
+    },
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(match *self {
+        match self {
             Error::NoLayoutForOpaqueBlob => {
-                "Tried to generate an opaque blob, but had no layout."
+                "Tried to generate an opaque blob, but had no layout.".fmt(f)
             }
             Error::InstantiationOfOpaqueType => {
                 "Instantiation of opaque template type or partial template specialization."
+                    .fmt(f)
             }
             Error::UnsupportedAbi(abi) => {
-                return write!(
+                 write!(
                     f,
                     "{} ABI is not supported by the configured Rust target.",
                     abi
                 )
             }
-        })
+            Error::InvalidPointerSize { ty_name, ty_size, ptr_size } => {
+                write!(f, "The {} pointer type has size {} but the current target's pointer size is {}.", ty_name, ty_size, ptr_size)
+            }
+        }
     }
 }
 
