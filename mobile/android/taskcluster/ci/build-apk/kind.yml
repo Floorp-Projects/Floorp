@@ -304,10 +304,9 @@ tasks:
 
     focus-android-test-debug:
         attributes:
+            code-review: true
             shipping-product: focus
         description: 'Focus Android Test for debugging'
-        attributes:
-            code-review: true
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
         run-on-tasks-for:
@@ -328,12 +327,11 @@ tasks:
 
     fenix-android-test-debug:
         attributes:
+            code-review: true
             shipping-product: fenix
         description: 'Fenix Debug Android Test for debugging'
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
-        attributes:
-            code-review: true
         run-on-tasks-for:
             - github-pull-request
             - github-pull-request-untrusted
@@ -387,12 +385,11 @@ tasks:
     # job.
     fenix-android-test-nightly:
         attributes:
+            nightly: true
             shipping-product: fenix
         description: 'Fenix Nightly Android Test for debugging'
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
-        attributes:
-            nightly: true
         apk-artifact-template:
             # 3 differences here:
             #  * "androidTest/" is added
