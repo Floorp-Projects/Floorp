@@ -203,3 +203,7 @@ class BrowsingContext(BidiModule):
             params["devicePixelRatio"] = device_pixel_ratio
 
         return params
+
+    @command
+    def traverse_history(self, context: str, delta: int) -> Mapping[str, Any]:
+        return {"context": context, "delta": delta}
