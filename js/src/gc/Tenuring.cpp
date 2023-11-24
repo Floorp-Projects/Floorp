@@ -32,6 +32,7 @@
 #include "gc/TraceMethods-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/PlainObject-inl.h"
+#include "vm/StringType-inl.h"
 #ifdef ENABLE_RECORD_TUPLE
 #  include "vm/TupleType.h"
 #endif
@@ -952,10 +953,25 @@ size_t js::gc::TenuringTracer::moveStringToTenured(JSString* dst, JSString* src,
   MOZ_ASSERT(OffsetToChunkEnd(src) >= size);
   js_memcpy(dst, src, size);
 
+  if (!src->hasOutOfLineChars()) {
+    return size;
+  }
+
   if (src->ownsMallocedChars()) {
     void* chars = src->asLinear().nonInlineCharsRaw();
     nursery().removeMallocedBufferDuringMinorGC(chars);
     AddCellMemory(dst, dst->asLinear().allocSize(), MemoryUse::StringContents);
+    return size;
+  }
+
+  // String data is in the nursery and needs to be moved to the malloc heap.
+
+  MOZ_ASSERT(nursery().isInside(src->asLinear().nonInlineCharsRaw()));
+
+  if (src->hasLatin1Chars()) {
+    size += dst->asLinear().maybeMallocCharsOnPromotion<Latin1Char>(&nursery());
+  } else {
+    size += dst->asLinear().maybeMallocCharsOnPromotion<char16_t>(&nursery());
   }
 
   return size;

@@ -587,9 +587,11 @@ class JSString : public js::gc::CellWithLengthAndFlags {
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
-  bool ownsMallocedChars() const {
+  bool hasOutOfLineChars() const {
     return isLinear() && !isInline() && !isDependent() && !isExternal();
   }
+
+  inline bool ownsMallocedChars() const;
 
   /* Encode as many scalar values of the string as UTF-8 as can fit
    * into the caller-provided buffer replacing unpaired surrogates
@@ -946,6 +948,12 @@ class JSLinearString : public JSString {
    * this method.
    */
   inline js::PropertyName* toPropertyName(JSContext* cx);
+
+  // Make sure chars are not in the nursery, mallocing and copying if necessary.
+  // Should only be called during minor GC on a string that has been promoted
+  // to the tenured heap and may still point to nursery-allocated chars.
+  template <typename CharT>
+  inline size_t maybeMallocCharsOnPromotion(js::Nursery* nursery);
 
   inline void finalize(JS::GCContext* gcx);
   inline size_t allocSize() const;
@@ -1912,19 +1920,6 @@ inline bool JSLinearString::isIndex(uint32_t* indexp) const {
   }
 
   return isIndexSlow(indexp);
-}
-
-inline size_t JSLinearString::allocSize() const {
-  MOZ_ASSERT(ownsMallocedChars());
-
-  size_t charSize =
-      hasLatin1Chars() ? sizeof(JS::Latin1Char) : sizeof(char16_t);
-  size_t count = isExtensible() ? asExtensible().capacity() : length();
-  return count * charSize;
-}
-
-inline size_t JSString::allocSize() const {
-  return ownsMallocedChars() ? asLinear().allocSize() : 0;
 }
 
 namespace js {

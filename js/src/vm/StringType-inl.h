@@ -189,6 +189,56 @@ MOZ_ALWAYS_INLINE const JS::Latin1Char* JSString::nonInlineCharsRaw() const {
   return d.s.u2.nonInlineCharsLatin1;
 }
 
+bool JSString::ownsMallocedChars() const {
+  if (!hasOutOfLineChars()) {
+    return false;
+  }
+
+  js::gc::StoreBuffer* sb = storeBuffer();
+  if (!sb) {
+    // Tenured strings always own out-of-line chars.
+    return true;
+  }
+
+  // Return whether the chars are malloced. Note: this allows the data to be in
+  // a different nursery chunk than the Cell itself, at the performance cost of
+  // iterating over all chunks.
+  return !sb->nursery().isInside(asLinear().nonInlineCharsRaw());
+}
+
+template <typename CharT>
+inline size_t JSLinearString::maybeMallocCharsOnPromotion(
+    js::Nursery* nursery) {
+  const void** chars;
+  if constexpr (std::is_same_v<CharT, char16_t>) {
+    chars = reinterpret_cast<const void**>(&d.s.u2.nonInlineCharsTwoByte);
+  } else {
+    chars = reinterpret_cast<const void**>(&d.s.u2.nonInlineCharsLatin1);
+  }
+
+  size_t nbytes = length() * sizeof(CharT);
+  if (nursery->maybeMoveBufferOnPromotion(const_cast<void**>(chars), this,
+                                          nbytes, js::MemoryUse::StringContents,
+                                          js::StringBufferArena) ==
+      js::Nursery::BufferMoved) {
+    return nbytes;
+  }
+
+  return 0;
+}
+inline size_t JSLinearString::allocSize() const {
+  MOZ_ASSERT(ownsMallocedChars());
+
+  size_t charSize =
+      hasLatin1Chars() ? sizeof(JS::Latin1Char) : sizeof(char16_t);
+  size_t count = isExtensible() ? asExtensible().capacity() : length();
+  return count * charSize;
+}
+
+inline size_t JSString::allocSize() const {
+  return ownsMallocedChars() ? asLinear().allocSize() : 0;
+}
+
 inline JSRope::JSRope(JSString* left, JSString* right, size_t length) {
   // JITs expect rope children aren't empty.
   MOZ_ASSERT(!left->empty() && !right->empty());
