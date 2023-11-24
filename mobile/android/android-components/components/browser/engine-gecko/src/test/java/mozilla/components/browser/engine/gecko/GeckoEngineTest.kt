@@ -3199,6 +3199,22 @@ class GeckoEngineTest {
         }
     }
 
+    @Test
+    fun `WHEN Global Privacy Control value is set THEN setGlobalPrivacyControl is getting called on GeckoRuntime`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        whenever(mockRuntime.settings).thenReturn(mock())
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        reset(mockRuntime.settings)
+        engine.settings.globalPrivacyControlEnabled = true
+        verify(mockRuntime.settings).setGlobalPrivacyControl(true)
+
+        reset(mockRuntime.settings)
+        engine.settings.globalPrivacyControlEnabled = false
+        verify(mockRuntime.settings).setGlobalPrivacyControl(false)
+    }
+
     private fun createSocialTrackersLogEntryList(): List<ContentBlockingController.LogEntry> {
         val blockedLogEntry = object : ContentBlockingController.LogEntry() {}
 

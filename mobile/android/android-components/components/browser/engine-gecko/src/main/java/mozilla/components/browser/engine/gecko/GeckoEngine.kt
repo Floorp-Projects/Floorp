@@ -1193,6 +1193,9 @@ class GeckoEngine(
                     Engine.HttpsOnlyMode.ENABLED -> GeckoRuntimeSettings.HTTPS_ONLY
                 }
             }
+        override var globalPrivacyControlEnabled: Boolean
+            get() = runtime.settings.globalPrivacyControl
+            set(value) { runtime.settings.setGlobalPrivacyControl(value) }
     }.apply {
         defaultSettings?.let {
             this.javascriptEnabled = it.javascriptEnabled
@@ -1217,6 +1220,7 @@ class GeckoEngine(
             this.cookieBannerHandlingDetectOnlyMode = it.cookieBannerHandlingDetectOnlyMode
             this.cookieBannerHandlingGlobalRules = it.cookieBannerHandlingGlobalRules
             this.cookieBannerHandlingGlobalRulesSubFrames = it.cookieBannerHandlingGlobalRulesSubFrames
+            this.globalPrivacyControlEnabled = it.globalPrivacyControlEnabled
         }
     }
 

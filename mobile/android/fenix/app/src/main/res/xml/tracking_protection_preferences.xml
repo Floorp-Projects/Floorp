@@ -77,6 +77,10 @@
         android:key="@string/pref_key_tracking_protection_redirect_trackers"
         android:layout="@layout/checkbox_left_preference_etp"
         android:title="@string/etp_redirect_trackers_title" />
+    <androidx.preference.SwitchPreference
+        android:defaultValue="false"
+        android:key="@string/pref_key_privacy_enable_global_privacy_control"
+        android:title="@string/preference_enhanced_tracking_protection_custom_global_privacy_control" />
     <Preference android:layout="@layout/preference_divider" />
     <Preference
         android:icon="@drawable/ic_internet"

@@ -11,6 +11,7 @@ import androidx.preference.CheckBoxPreference
 import androidx.preference.DropDownPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.SwitchPreference
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.HomeActivity
@@ -103,6 +104,16 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         val preferenceExceptions =
             requirePreference<Preference>(R.string.pref_key_tracking_protection_exceptions)
         preferenceExceptions.onPreferenceClickListener = exceptionsClickListener
+
+        requirePreference<SwitchPreference>(R.string.pref_key_privacy_enable_global_privacy_control).apply {
+            onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+                override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                    context.components.core.engine.settings.globalPrivacyControlEnabled = newValue as Boolean
+                    context.components.useCases.sessionUseCases.reload.invoke()
+                    return super.onPreferenceChange(preference, newValue)
+                }
+            }
+        }
     }
 
     private fun bindTrackingProtectionRadio(

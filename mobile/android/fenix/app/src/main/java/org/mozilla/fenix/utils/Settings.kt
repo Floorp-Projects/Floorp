@@ -616,6 +616,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true,
     )
 
+    var shouldEnableGlobalPrivacyControl by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_privacy_enable_global_privacy_control),
+        false,
+    )
+
     var shouldUseCookieBannerPrivateMode by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_cookie_banner_private_mode),
         featureFlag = true,
