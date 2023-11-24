@@ -233,8 +233,8 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   void StrokeText(const nsAString& aText, double aX, double aY,
                   const Optional<double>& aMaxWidth,
                   mozilla::ErrorResult& aError);
-  TextMetrics* MeasureText(const nsAString& aRawText,
-                           mozilla::ErrorResult& aError);
+  UniquePtr<TextMetrics> MeasureText(const nsAString& aRawText,
+                                     mozilla::ErrorResult& aError);
 
   void DrawImage(const CanvasImageSource& aImage, double aDx, double aDy,
                  mozilla::ErrorResult& aError) {
@@ -946,9 +946,11 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
    * Returns a TextMetrics object _only_ if the operation is measure;
    * drawing operations (fill or stroke) always return nullptr.
    */
-  TextMetrics* DrawOrMeasureText(const nsAString& aText, float aX, float aY,
-                                 const Optional<double>& aMaxWidth,
-                                 TextDrawOperation aOp, ErrorResult& aError);
+  UniquePtr<TextMetrics> DrawOrMeasureText(const nsAString& aText, float aX,
+                                           float aY,
+                                           const Optional<double>& aMaxWidth,
+                                           TextDrawOperation aOp,
+                                           ErrorResult& aError);
 
   // A clip or a transform, recorded and restored in order.
   struct ClipState {

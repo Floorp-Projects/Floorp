@@ -22,7 +22,7 @@ class WrapperCachedNonISupportsTestInterface;
 
 class TestFunctions : public NonRefcountedDOMObject {
  public:
-  static TestFunctions* Constructor(GlobalObject& aGlobal);
+  static UniquePtr<TestFunctions> Constructor(GlobalObject& aGlobal);
 
   static void ThrowUncatchableException(GlobalObject& aGlobal,
                                         ErrorResult& aRv);

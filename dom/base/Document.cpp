@@ -239,6 +239,7 @@
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/dom/WorkerDocumentListener.h"
 #include "mozilla/dom/XPathEvaluator.h"
+#include "mozilla/dom/XPathExpression.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/extensions/WebExtensionPolicy.h"
@@ -15892,9 +15893,8 @@ already_AddRefed<Document> Document::Constructor(const GlobalObject& aGlobal,
   return doc.forget();
 }
 
-XPathExpression* Document::CreateExpression(const nsAString& aExpression,
-                                            XPathNSResolver* aResolver,
-                                            ErrorResult& rv) {
+UniquePtr<XPathExpression> Document::CreateExpression(
+    const nsAString& aExpression, XPathNSResolver* aResolver, ErrorResult& rv) {
   return XPathEvaluator()->CreateExpression(aExpression, aResolver, rv);
 }
 

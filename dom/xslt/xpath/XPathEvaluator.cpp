@@ -62,28 +62,26 @@ XPathEvaluator::XPathEvaluator(Document* aDocument)
 
 XPathEvaluator::~XPathEvaluator() = default;
 
-XPathExpression* XPathEvaluator::CreateExpression(const nsAString& aExpression,
-                                                  XPathNSResolver* aResolver,
-                                                  ErrorResult& aRv) {
+UniquePtr<XPathExpression> XPathEvaluator::CreateExpression(
+    const nsAString& aExpression, XPathNSResolver* aResolver,
+    ErrorResult& aRv) {
   nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
   XPathEvaluatorParseContext pContext(aResolver,
                                       !(doc && doc->IsHTMLDocument()));
   return CreateExpression(aExpression, &pContext, doc, aRv);
 }
 
-XPathExpression* XPathEvaluator::CreateExpression(const nsAString& aExpression,
-                                                  nsINode* aResolver,
-                                                  ErrorResult& aRv) {
+UniquePtr<XPathExpression> XPathEvaluator::CreateExpression(
+    const nsAString& aExpression, nsINode* aResolver, ErrorResult& aRv) {
   nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
   XPathEvaluatorParseContext pContext(aResolver,
                                       !(doc && doc->IsHTMLDocument()));
   return CreateExpression(aExpression, &pContext, doc, aRv);
 }
 
-XPathExpression* XPathEvaluator::CreateExpression(const nsAString& aExpression,
-                                                  txIParseContext* aContext,
-                                                  Document* aDocument,
-                                                  ErrorResult& aRv) {
+UniquePtr<XPathExpression> XPathEvaluator::CreateExpression(
+    const nsAString& aExpression, txIParseContext* aContext,
+    Document* aDocument, ErrorResult& aRv) {
   if (!mRecycler) {
     mRecycler = new txResultRecycler;
   }
@@ -100,7 +98,8 @@ XPathExpression* XPathEvaluator::CreateExpression(const nsAString& aExpression,
     return nullptr;
   }
 
-  return new XPathExpression(std::move(expression), mRecycler, aDocument);
+  return MakeUnique<XPathExpression>(std::move(expression), mRecycler,
+                                     aDocument);
 }
 
 bool XPathEvaluator::WrapObject(JSContext* aCx,
@@ -110,8 +109,9 @@ bool XPathEvaluator::WrapObject(JSContext* aCx,
 }
 
 /* static */
-XPathEvaluator* XPathEvaluator::Constructor(const GlobalObject& aGlobal) {
-  return new XPathEvaluator(nullptr);
+UniquePtr<XPathEvaluator> XPathEvaluator::Constructor(
+    const GlobalObject& aGlobal) {
+  return MakeUnique<XPathEvaluator>(nullptr);
 }
 
 already_AddRefed<XPathResult> XPathEvaluator::Evaluate(

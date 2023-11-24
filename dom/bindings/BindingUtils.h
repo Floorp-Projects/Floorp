@@ -3104,10 +3104,15 @@ inline RefPtr<T> StrongOrRawPtr(RefPtr<S>&& aPtr) {
   return std::move(aPtr);
 }
 
-template <class T, class ReturnType = std::conditional_t<IsRefcounted<T>::value,
-                                                         T*, UniquePtr<T>>>
-inline ReturnType StrongOrRawPtr(T* aPtr) {
-  return ReturnType(aPtr);
+template <class T, typename = std::enable_if_t<IsRefcounted<T>::value>>
+inline T* StrongOrRawPtr(T* aPtr) {
+  return aPtr;
+}
+
+template <class T, class S,
+          typename = std::enable_if_t<!IsRefcounted<S>::value>>
+inline UniquePtr<T> StrongOrRawPtr(UniquePtr<S>&& aPtr) {
+  return std::move(aPtr);
 }
 
 template <class T, template <typename> class SmartPtr, class S>

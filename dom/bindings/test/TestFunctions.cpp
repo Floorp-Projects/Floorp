@@ -18,8 +18,8 @@
 namespace mozilla::dom {
 
 /* static */
-TestFunctions* TestFunctions::Constructor(GlobalObject& aGlobal) {
-  return new TestFunctions;
+UniquePtr<TestFunctions> TestFunctions::Constructor(GlobalObject& aGlobal) {
+  return MakeUnique<TestFunctions>();
 }
 
 /* static */
