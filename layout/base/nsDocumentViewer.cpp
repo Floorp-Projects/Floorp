@@ -481,7 +481,7 @@ class nsDocumentShownDispatcher : public Runnable {
 //------------------------------------------------------------------
 
 //------------------------------------------------------------------
-already_AddRefed<nsIDocumentViewer> NS_NewContentViewer() {
+already_AddRefed<nsIDocumentViewer> NS_NewDocumentViewer() {
   RefPtr<nsDocumentViewer> viewer = new nsDocumentViewer();
   return viewer.forget();
 }

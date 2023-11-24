@@ -121,7 +121,7 @@ void Shutdown() {
 
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
 
-already_AddRefed<nsIDocumentViewer> NS_NewContentViewer();
+already_AddRefed<nsIDocumentViewer> NS_NewDocumentViewer();
 nsresult NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult);
 nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
 
@@ -156,7 +156,7 @@ nsresult NS_NewChildProcessMessageManager(nsISupports** aResult);
 
 MAKE_GENERIC_CTOR(nsIFrameTraversal, NS_CreateFrameTraversal)
 
-MAKE_GENERIC_CTOR2(nsIDocumentViewer, NS_NewContentViewer)
+MAKE_GENERIC_CTOR2(nsIDocumentViewer, NS_NewDocumentViewer)
 
 MAKE_CTOR(CreateXMLContentSerializer, nsIContentSerializer,
           NS_NewXMLContentSerializer)

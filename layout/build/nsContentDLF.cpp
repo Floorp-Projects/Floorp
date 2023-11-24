@@ -32,7 +32,7 @@
 
 using mozilla::dom::Document;
 
-already_AddRefed<nsIDocumentViewer> NS_NewContentViewer();
+already_AddRefed<nsIDocumentViewer> NS_NewDocumentViewer();
 
 static const char* const gHTMLTypes[] = {TEXT_HTML, VIEWSOURCE_CONTENT_TYPE,
                                          APPLICATION_XHTML_XML,
@@ -203,11 +203,11 @@ nsContentDLF::CreateInstanceForDocument(nsISupports* aContainer,
                                         nsIDocumentViewer** aContentViewer) {
   MOZ_ASSERT(aDocument);
 
-  nsCOMPtr<nsIDocumentViewer> contentViewer = NS_NewContentViewer();
+  nsCOMPtr<nsIDocumentViewer> viewer = NS_NewDocumentViewer();
 
   // Bind the document to the Content Viewer
-  contentViewer->LoadStart(aDocument);
-  contentViewer.forget(aContentViewer);
+  viewer->LoadStart(aDocument);
+  viewer.forget(aContentViewer);
   return NS_OK;
 }
 
@@ -311,7 +311,7 @@ nsresult nsContentDLF::CreateDocument(
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   // Create the content viewer  XXX: could reuse content viewer here!
-  nsCOMPtr<nsIDocumentViewer> contentViewer = NS_NewContentViewer();
+  nsCOMPtr<nsIDocumentViewer> viewer = NS_NewDocumentViewer();
 
   doc->SetContainer(static_cast<nsDocShell*>(aContainer));
 
@@ -323,8 +323,8 @@ nsresult nsContentDLF::CreateDocument(
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Bind the document to the Content Viewer
-  contentViewer->LoadStart(doc);
-  contentViewer.forget(aContentViewer);
+  viewer->LoadStart(doc);
+  viewer.forget(aContentViewer);
   return NS_OK;
 }
 
