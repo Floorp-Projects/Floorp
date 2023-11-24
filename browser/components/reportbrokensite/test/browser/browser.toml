@@ -17,4 +17,6 @@ support-files = [
 
 ["browser_send_more_info.js"]
 
+["browser_back_buttons.js"]
+
 ["browser_tab_switch_handling.js"]
