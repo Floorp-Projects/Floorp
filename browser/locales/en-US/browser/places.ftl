@@ -66,8 +66,8 @@ places-history =
 places-bookmarks-search =
   .placeholder = Search bookmarks
 
-places-delete-domain-data =
-  .label = Forget About This Site
+places-forget-domain-data =
+  .label = Forget About This Site…
   .accesskey = F
 places-sortby-name =
   .label = Sort By Name
