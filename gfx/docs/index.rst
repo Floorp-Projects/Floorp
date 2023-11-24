@@ -13,6 +13,5 @@ information about graphics and the graphics team at Mozilla.
    RenderingOverview
    LayersHistory
    AsyncPanZoom
-   AdvancedLayers
    Silk
    Moz2D

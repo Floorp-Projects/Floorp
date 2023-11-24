@@ -9,7 +9,6 @@ This is the nascent documentation of the Toolkit code that is shared across Fire
 
    mozapps/extensions/addon-manager/index
    components/backgroundtasks/index
-   crash-reporting/index
    components/crashes/crash-manager/index
    crashreporter/crashreporter/index
    components/featuregates/featuregates/index
