@@ -19,15 +19,13 @@ impl Resampler {
         reclock: ffi::cubeb_resampler_reclock,
     ) -> Self {
         let raw_resampler = unsafe {
-            let in_params = if input_params.is_some() {
-                input_params.as_mut().unwrap() as *mut ffi::cubeb_stream_params
-            } else {
-                ptr::null_mut()
+            let in_params = match &mut input_params {
+                Some(p) => p,
+                None => ptr::null_mut(),
             };
-            let out_params = if output_params.is_some() {
-                output_params.as_mut().unwrap() as *mut ffi::cubeb_stream_params
-            } else {
-                ptr::null_mut()
+            let out_params = match &mut output_params {
+                Some(p) => p,
+                None => ptr::null_mut(),
             };
             ffi::cubeb_resampler_create(
                 stream,

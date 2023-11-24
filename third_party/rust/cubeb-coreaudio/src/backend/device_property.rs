@@ -223,63 +223,54 @@ pub fn get_ranges_of_device_sample_rate(
     }
 }
 
-pub fn get_device_stream_format(
-    id: AudioDeviceID,
-    devtype: DeviceType,
-) -> std::result::Result<AudioStreamBasicDescription, OSStatus> {
+pub fn get_stream_latency(id: AudioStreamID) -> std::result::Result<u32, OSStatus> {
     assert_ne!(id, kAudioObjectUnknown);
 
-    let address = get_property_address(Property::DeviceStreamFormat, devtype);
-    let mut size = mem::size_of::<AudioStreamBasicDescription>();
-    let mut format = AudioStreamBasicDescription::default();
-    let err = audio_object_get_property_data(id, &address, &mut size, &mut format);
-    if err == NO_ERR {
-        Ok(format)
-    } else {
-        Err(err)
-    }
-}
-
-#[allow(clippy::cast_ptr_alignment)] // Allow casting *mut u8 to *mut AudioBufferList
-pub fn get_device_stream_configuration(
-    id: AudioDeviceID,
-    devtype: DeviceType,
-) -> std::result::Result<Vec<AudioBuffer>, OSStatus> {
-    assert_ne!(id, kAudioObjectUnknown);
-
-    let address = get_property_address(Property::DeviceStreamConfiguration, devtype);
-    let mut size: usize = 0;
-    let err = audio_object_get_property_data_size(id, &address, &mut size);
-    if err != NO_ERR {
-        return Err(err);
-    }
-
-    let mut data: Vec<u8> = allocate_array_by_size(size);
-    let ptr = data.as_mut_ptr() as *mut AudioBufferList;
-    let err = audio_object_get_property_data(id, &address, &mut size, ptr);
-    if err != NO_ERR {
-        return Err(err);
-    }
-
-    let list = unsafe { &(*ptr) };
-    let ptr = list.mBuffers.as_ptr() as *const AudioBuffer;
-    let len = list.mNumberBuffers as usize;
-    let buffers = unsafe { slice::from_raw_parts(ptr, len) };
-    Ok(buffers.to_vec())
-}
-
-pub fn get_stream_latency(
-    id: AudioStreamID,
-    devtype: DeviceType,
-) -> std::result::Result<u32, OSStatus> {
-    assert_ne!(id, kAudioObjectUnknown);
-
-    let address = get_property_address(Property::StreamLatency, devtype);
+    let address = get_property_address(
+        Property::StreamLatency,
+        DeviceType::INPUT | DeviceType::OUTPUT,
+    );
     let mut size = mem::size_of::<u32>();
     let mut latency: u32 = 0;
     let err = audio_object_get_property_data(id, &address, &mut size, &mut latency);
     if err == NO_ERR {
         Ok(latency)
+    } else {
+        Err(err)
+    }
+}
+
+pub fn get_stream_terminal_type(id: AudioStreamID) -> std::result::Result<u32, OSStatus> {
+    assert_ne!(id, kAudioObjectUnknown);
+
+    let address = get_property_address(
+        Property::StreamTerminalType,
+        DeviceType::INPUT | DeviceType::OUTPUT,
+    );
+    let mut size = mem::size_of::<u32>();
+    let mut terminal_type: u32 = 0;
+    let err = audio_object_get_property_data(id, &address, &mut size, &mut terminal_type);
+    if err == NO_ERR {
+        Ok(terminal_type)
+    } else {
+        Err(err)
+    }
+}
+
+pub fn get_stream_virtual_format(
+    id: AudioStreamID,
+) -> std::result::Result<AudioStreamBasicDescription, OSStatus> {
+    assert_ne!(id, kAudioObjectUnknown);
+
+    let address = get_property_address(
+        Property::StreamVirtualFormat,
+        DeviceType::INPUT | DeviceType::OUTPUT,
+    );
+    let mut size = mem::size_of::<AudioStreamBasicDescription>();
+    let mut format = AudioStreamBasicDescription::default();
+    let err = audio_object_get_property_data(id, &address, &mut size, &mut format);
+    if err == NO_ERR {
+        Ok(format)
     } else {
         Err(err)
     }
@@ -312,8 +303,6 @@ pub enum Property {
     DeviceSampleRates,
     DeviceSource,
     DeviceSourceName,
-    DeviceStreamConfiguration,
-    DeviceStreamFormat,
     DeviceStreams,
     DeviceUID,
     HardwareDefaultInputDevice,
@@ -321,6 +310,8 @@ pub enum Property {
     HardwareDevices,
     ModelUID,
     StreamLatency,
+    StreamTerminalType,
+    StreamVirtualFormat,
     TransportType,
     ClockDomain,
 }
@@ -337,8 +328,6 @@ impl From<Property> for AudioObjectPropertySelector {
             Property::DeviceSampleRates => kAudioDevicePropertyAvailableNominalSampleRates,
             Property::DeviceSource => kAudioDevicePropertyDataSource,
             Property::DeviceSourceName => kAudioDevicePropertyDataSourceNameForIDCFString,
-            Property::DeviceStreamConfiguration => kAudioDevicePropertyStreamConfiguration,
-            Property::DeviceStreamFormat => kAudioDevicePropertyStreamFormat,
             Property::DeviceStreams => kAudioDevicePropertyStreams,
             Property::DeviceUID => kAudioDevicePropertyDeviceUID,
             Property::HardwareDefaultInputDevice => kAudioHardwarePropertyDefaultInputDevice,
@@ -346,6 +335,8 @@ impl From<Property> for AudioObjectPropertySelector {
             Property::HardwareDevices => kAudioHardwarePropertyDevices,
             Property::ModelUID => kAudioDevicePropertyModelUID,
             Property::StreamLatency => kAudioStreamPropertyLatency,
+            Property::StreamTerminalType => kAudioStreamPropertyTerminalType,
+            Property::StreamVirtualFormat => kAudioStreamPropertyVirtualFormat,
             Property::TransportType => kAudioDevicePropertyTransportType,
             Property::ClockDomain => kAudioDevicePropertyClockDomain,
         }
