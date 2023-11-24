@@ -2535,13 +2535,10 @@
         },
         "partnerCode": "5338192028",
         "environment": {
-          "locales": ["br", "en-US", "fr", "wo"],
+          "locales": ["br", "en-US", "fr", "wo", "fy-NL", "nl"],
           "regions": ["be"]
         }
-      },
-      "variants": [
-        { "environment": { "locales": ["fy-NL", "nl"], "regions": ["be"] } }
-      ]
+      }
     },
     {
       "recordType": "engine",
