@@ -28,6 +28,7 @@ const LOG_METHODS = {
   STDOUT: "stdout",
   CONSOLE: "console",
 };
+const VALID_LOG_METHODS = Object.values(LOG_METHODS);
 
 const CONSOLE_ARGS_STYLES = [
   "color: var(--theme-toolbarbutton-checked-hover-background)",
@@ -35,6 +36,7 @@ const CONSOLE_ARGS_STYLES = [
   "",
   "color: var(--theme-highlight-blue); margin-inline: 2px;",
 ];
+const CONSOLE_ARGS_STYLES_WITH_PREFIX = ["", ...CONSOLE_ARGS_STYLES];
 
 const DOM_EVENT_CONSOLE_ARGS_STYLES = [
   "color: var(--theme-toolbarbutton-checked-hover-background)",
@@ -67,6 +69,43 @@ class TracerActor extends Actor {
 
   getLogMethod() {
     return this.logMethod;
+  }
+
+  /**
+   * Toggle tracing JavaScript.
+   * Meant for the WebConsole command in order to pass advanced
+   * configuration directly to JavaScriptTracer class.
+   *
+   * @param {Object} options
+   *        Options used to configure JavaScriptTracer.
+   *        See `JavaScriptTracer.startTracing`.
+   * @return {Boolean}
+   *         True if the tracer starts, or false if it was stopped.
+   */
+  toggleTracing(options) {
+    if (!this.tracingListener) {
+      if (options.logMethod && !VALID_LOG_METHODS.includes(options.logMethod)) {
+        throw new Error(
+          `Invalid log method '${options.logMethod}'. Only supports: ${VALID_LOG_METHODS}`
+        );
+      }
+      if (options.prefix && typeof options.prefix != "string") {
+        throw new Error("Invalid prefix, only support string type");
+      }
+      this.logMethod = options.logMethod || LOG_METHODS.STDOUT;
+      this.tracingListener = {
+        onTracingFrame: this.onTracingFrame.bind(this),
+        onTracingInfiniteLoop: this.onTracingInfiniteLoop.bind(this),
+      };
+      addTracingListener(this.tracingListener);
+      startTracing({
+        global: this.targetActor.window || this.targetActor.workerGlobal,
+        prefix: options.prefix || "",
+      });
+      return true;
+    }
+    this.stopTracing();
+    return false;
   }
 
   startTracing(logMethod = LOG_METHODS.STDOUT) {
@@ -187,11 +226,15 @@ class TracerActor extends Actor {
     }
 
     const args = [
-      prefix + "—".repeat(depth + 1),
+      "—".repeat(depth + 1),
       frame.implementation,
       "⟶",
       formatedDisplayName,
     ];
+    // Avoid logging an empty string as console.log would expand it to <empty string>
+    if (prefix) {
+      args.unshift(prefix);
+    }
 
     // Create a message object that fits Console Message Watcher expectations
     this.throttledConsoleMessages.push({
@@ -199,7 +242,8 @@ class TracerActor extends Actor {
       lineNumber,
       columnNumber: columnNumber - columnBase,
       arguments: args,
-      styles: CONSOLE_ARGS_STYLES,
+      // As we log different number of arguments with/without prefix, use distinct styles
+      styles: prefix ? CONSOLE_ARGS_STYLES_WITH_PREFIX : CONSOLE_ARGS_STYLES,
       level: "logTrace",
       chromeContext: this.isChromeContext,
       sourceId: script.source.id,

@@ -7,6 +7,10 @@
 
 const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>Test command autocomplete`;
 
+const {
+  WebConsoleCommandsManager,
+} = require("resource://devtools/server/actors/webconsole/commands/manager.js");
+
 add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
@@ -18,13 +22,8 @@ add_task(async function () {
   EventUtils.sendString(":");
   await onAutocompleUpdated;
 
-  const expectedCommands = [
-    ":block",
-    ":help",
-    ":history",
-    ":screenshot",
-    ":unblock",
-  ];
+  const expectedCommands =
+    WebConsoleCommandsManager.getAllColonCommandNames().map(name => `:${name}`);
   ok(
     hasExactPopupLabels(autocompletePopup, expectedCommands),
     "popup contains expected commands"
