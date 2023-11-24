@@ -92,9 +92,6 @@ async function test() {
   // overflow: hidden style in the out-of-process iframe.
   await setup_in_oopif();
 
-  // Wait for a frame to make sure animations are properly started.
-  await observe_styling_in_oopif(1);
-
   let restyleCount = await observe_styling_in_oopif(5);
   is(restyleCount, 0,
      "Animation in an out-of-process iframe which is initially clipped out " +
