@@ -2237,15 +2237,12 @@ class BookmarkObserverRecorder {
               IFNULL(h.hidden, 0) AS hidden,
               IFNULL(h.visit_count, 0) AS visit_count,
               h.last_visit_date,
-              (
-                SELECT GROUP_CONCAT(t.title, ',')
-                FROM moz_bookmarks t
-                LEFT JOIN moz_bookmarks ref ON ref.fk = h.id
-                WHERE t.id = +ref.parent
-                  AND t.parent = (
-                    SELECT id FROM moz_bookmarks
-                    WHERE guid = '${lazy.PlacesUtils.bookmarks.tagsGuid}'
-                  )
+              (SELECT group_concat(pp.title)
+               FROM moz_bookmarks bb
+               JOIN moz_bookmarks pp ON pp.id = bb.parent
+               JOIN moz_bookmarks gg ON gg.id = pp.parent
+               WHERE bb.fk = h.id
+               AND gg.guid = '${lazy.PlacesUtils.bookmarks.tagsGuid}'
               ) AS tags,
               t.guid AS tGuid, t.id AS tId, t.title AS tTitle
        FROM itemsAdded n
@@ -2307,15 +2304,12 @@ class BookmarkObserverRecorder {
               IFNULL(h.frecency, 0) AS frecency, IFNULL(h.hidden, 0) AS hidden,
               IFNULL(h.visit_count, 0) AS visit_count,
               h.last_visit_date,
-              (
-                SELECT GROUP_CONCAT(t.title, ',')
-                FROM moz_bookmarks t
-                LEFT JOIN moz_bookmarks ref ON ref.fk = h.id
-                WHERE t.id = +ref.parent
-                  AND t.parent = (
-                    SELECT id FROM moz_bookmarks
-                    WHERE guid = '${lazy.PlacesUtils.bookmarks.tagsGuid}'
-                  )
+              (SELECT group_concat(pp.title)
+               FROM moz_bookmarks bb
+               JOIN moz_bookmarks pp ON pp.id = bb.parent
+               JOIN moz_bookmarks gg ON gg.id = pp.parent
+               WHERE bb.fk = h.id
+               AND gg.guid = '${lazy.PlacesUtils.bookmarks.tagsGuid}'
               ) AS tags
        FROM itemsMoved c
        JOIN moz_bookmarks b ON b.id = c.itemId
