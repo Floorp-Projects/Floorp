@@ -42,11 +42,6 @@ interface ReviewQualityCheckService {
     suspend fun analysisStatus(): AnalysisStatusDto?
 
     /**
-     * Returns the selected tab url.
-     */
-    fun selectedTabUrl(): String?
-
-    /**
      * Fetches product recommendations related to the product user is browsing in the current tab.
      *
      * @return [ProductRecommendation] if request succeeds, null otherwise.
@@ -125,9 +120,6 @@ class DefaultReviewQualityCheckService(
             }
         }
     }
-
-    override fun selectedTabUrl(): String? =
-        browserStore.state.selectedTab?.content?.url
 
     override suspend fun productRecommendation(shouldRecordAvailableTelemetry: Boolean): ProductRecommendation? =
         withContext(Dispatchers.Main) {

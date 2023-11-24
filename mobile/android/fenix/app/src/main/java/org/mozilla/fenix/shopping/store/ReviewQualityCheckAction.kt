@@ -89,8 +89,14 @@ sealed interface ReviewQualityCheckAction : Action {
 
     /**
      * Triggered as a result of a [NetworkAction] to update the [ProductReviewState].
+     *
+     * @property productReviewState The product review state to update.
+     * @property restoreAnalysis Signals whether the analysis will be restored right after the update.
      */
-    data class UpdateProductReview(val productReviewState: ProductReviewState) : UpdateAction, TelemetryAction
+    data class UpdateProductReview(
+        val productReviewState: ProductReviewState,
+        val restoreAnalysis: Boolean,
+    ) : UpdateAction, TelemetryAction
 
     /**
      * Triggered as a result of a [NetworkAction] to update the [RecommendedProductState].

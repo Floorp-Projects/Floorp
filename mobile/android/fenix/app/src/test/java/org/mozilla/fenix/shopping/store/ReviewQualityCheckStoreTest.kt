@@ -716,23 +716,19 @@ class ReviewQualityCheckStoreTest {
         }
 
     @Test
-    fun `GIVEN that the product was being analysed earlier WHEN needsAnalysis is true THEN state should be restored to reanalysing`() =
+    fun `GIVEN a product analysis WHEN analysis status is in progress or pending THEN state should be updated to reanalysing`() =
         runTest {
             val tested = ReviewQualityCheckStore(
                 middleware = provideReviewQualityCheckMiddleware(
                     reviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(isEnabled = true),
                     reviewQualityCheckService = FakeReviewQualityCheckService(
                         productAnalysis = {
-                            ProductAnalysisTestData.productAnalysis(needsAnalysis = true)
+                            ProductAnalysisTestData.productAnalysis()
                         },
                         reanalysis = AnalysisStatusDto.PENDING,
-                        status = AnalysisStatusDto.COMPLETED,
-                        selectedTabUrl = "pdp",
+                        status = AnalysisStatusDto.IN_PROGRESS,
                     ),
                     networkChecker = FakeNetworkChecker(isConnected = true),
-                    appStore = AppStore(
-                        AppState(shoppingState = ShoppingState(productsInAnalysis = setOf("pdp"))),
-                    ),
                 ),
             )
 
@@ -763,7 +759,7 @@ class ReviewQualityCheckStoreTest {
         }
 
     @Test
-    fun `GIVEN that the product was not being analysed earlier WHEN needsAnalysis is true THEN state should display needs analysis as usual`() =
+    fun `GIVEN a product analysis WHEN analysis status is completed THEN state should display analysis as usual`() =
         runTest {
             val tested = ReviewQualityCheckStore(
                 middleware = provideReviewQualityCheckMiddleware(
@@ -772,18 +768,10 @@ class ReviewQualityCheckStoreTest {
                         productAnalysis = {
                             ProductAnalysisTestData.productAnalysis(needsAnalysis = true)
                         },
-                        reanalysis = AnalysisStatusDto.PENDING,
+                        reanalysis = AnalysisStatusDto.COMPLETED,
                         status = AnalysisStatusDto.COMPLETED,
-                        selectedTabUrl = "pdp",
                     ),
                     networkChecker = FakeNetworkChecker(isConnected = true),
-                    appStore = AppStore(
-                        AppState(
-                            shoppingState = ShoppingState(
-                                productsInAnalysis = setOf("test", "another", "product"),
-                            ),
-                        ),
-                    ),
                 ),
             )
 
@@ -821,34 +809,51 @@ class ReviewQualityCheckStoreTest {
         }
 
     @Test
-    fun `WHEN reanalysis is triggered THEN shopping state should contain the url of the product being analyzed`() =
+    fun `GIVEN a product analysis WHEN analysis status fails THEN state should display analysis as usual`() =
         runTest {
-            val captureActionsMiddleware = CaptureActionsMiddleware<AppState, AppAction>()
-            val appStore = AppStore(middlewares = listOf(captureActionsMiddleware))
             val tested = ReviewQualityCheckStore(
                 middleware = provideReviewQualityCheckMiddleware(
                     reviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(isEnabled = true),
                     reviewQualityCheckService = FakeReviewQualityCheckService(
-                        productAnalysis = { ProductAnalysisTestData.productAnalysis() },
-                        reanalysis = AnalysisStatusDto.PENDING,
-                        status = AnalysisStatusDto.COMPLETED,
-                        selectedTabUrl = "pdp",
+                        productAnalysis = {
+                            ProductAnalysisTestData.productAnalysis()
+                        },
+                        reanalysis = null,
+                        status = null,
                     ),
                     networkChecker = FakeNetworkChecker(isConnected = true),
-                    appStore = appStore,
                 ),
             )
 
+            val observedState = mutableListOf<ReviewQualityCheckState>()
+            tested.observeForever {
+                observedState.add(it)
+            }
+
             tested.waitUntilIdle()
             dispatcher.scheduler.advanceUntilIdle()
             tested.waitUntilIdle()
-            tested.dispatch(ReviewQualityCheckAction.ReanalyzeProduct).joinBlocking()
+            tested.dispatch(ReviewQualityCheckAction.FetchProductAnalysis).joinBlocking()
             tested.waitUntilIdle()
             dispatcher.scheduler.advanceUntilIdle()
 
-            captureActionsMiddleware.assertFirstAction(AppAction.ShoppingAction.AddToProductAnalysed::class) {
-                assertEquals("pdp", it.productPageUrl)
-            }
+            val expected = ReviewQualityCheckState.OptedIn(
+                productReviewState = ProductAnalysisTestData.analysisPresent(),
+                productRecommendationsPreference = false,
+                productRecommendationsExposure = true,
+                productVendor = ProductVendor.BEST_BUY,
+            )
+            assertEquals(expected, tested.state)
+
+            val notExpected = ReviewQualityCheckState.OptedIn(
+                productReviewState = ProductAnalysisTestData.analysisPresent(
+                    analysisStatus = AnalysisStatus.REANALYZING,
+                ),
+                productRecommendationsPreference = false,
+                productRecommendationsExposure = true,
+                productVendor = ProductVendor.BEST_BUY,
+            )
+            assertFalse(observedState.contains(notExpected))
         }
 
     @Test
@@ -1165,7 +1170,6 @@ class ReviewQualityCheckStoreTest {
             ReviewQualityCheckNetworkMiddleware(
                 reviewQualityCheckService = reviewQualityCheckService,
                 networkChecker = networkChecker,
-                appStore = appStore,
                 scope = this.scope,
             ),
         )

@@ -4,13 +4,10 @@
 
 package org.mozilla.fenix.shopping.middleware
 
-import mozilla.components.browser.state.selector.selectedTab
-import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
 import org.mozilla.fenix.GleanMetrics.Shopping
 import org.mozilla.fenix.GleanMetrics.ShoppingSettings
-import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckMiddleware
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
@@ -22,10 +19,7 @@ private const val ACTION_DISABLED = "disabled"
 /**
  * Middleware that captures telemetry events for the review quality check feature.
  */
-class ReviewQualityCheckTelemetryMiddleware(
-    private val browserStore: BrowserStore,
-    private val appStore: AppStore,
-) : ReviewQualityCheckMiddleware {
+class ReviewQualityCheckTelemetryMiddleware : ReviewQualityCheckMiddleware {
 
     override fun invoke(
         context: MiddlewareContext<ReviewQualityCheckState, ReviewQualityCheckAction>,
@@ -108,9 +102,8 @@ class ReviewQualityCheckTelemetryMiddleware(
             }
 
             is ReviewQualityCheckAction.UpdateProductReview -> {
-                val productPageUrl = browserStore.state.selectedTab?.content?.url
                 val state = store.state
-                if (state.isStaleAnalysis() && !isProductInAnalysis(productPageUrl)) {
+                if (state.isStaleAnalysis() && !action.restoreAnalysis) {
                     Shopping.surfaceStaleAnalysisShown.record()
                 }
             }
@@ -167,9 +160,4 @@ class ReviewQualityCheckTelemetryMiddleware(
         this is ReviewQualityCheckState.OptedIn &&
             this.productReviewState is ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent &&
             this.productReviewState.analysisStatus == AnalysisStatus.NEEDS_ANALYSIS
-
-    private fun isProductInAnalysis(
-        productPageUrl: String?,
-    ): Boolean =
-        appStore.state.shoppingState.productsInAnalysis.contains(productPageUrl)
 }

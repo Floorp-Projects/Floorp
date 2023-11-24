@@ -48,38 +48,6 @@ class ShoppingActionTest {
     }
 
     @Test
-    fun `WHEN product analysed is added THEN state should reflect that`() {
-        val store = AppStore()
-
-        store.dispatch(AppAction.ShoppingAction.AddToProductAnalysed("pdp")).joinBlocking()
-
-        val expected = ShoppingState(
-            productsInAnalysis = setOf("pdp"),
-        )
-
-        assertEquals(expected, store.state.shoppingState)
-    }
-
-    @Test
-    fun `WHEN product analysed is removed THEN state should reflect that`() {
-        val store = AppStore(
-            initialState = AppState(
-                shoppingState = ShoppingState(
-                    productsInAnalysis = setOf("pdp"),
-                ),
-            ),
-        )
-
-        store.dispatch(AppAction.ShoppingAction.RemoveFromProductAnalysed("pdp")).joinBlocking()
-
-        val expected = ShoppingState(
-            productsInAnalysis = emptySet(),
-        )
-
-        assertEquals(expected, store.state.shoppingState)
-    }
-
-    @Test
     fun `WHEN product analysis highlights card is expanded THEN state should reflect that`() {
         val store = AppStore(initialState = AppState(shoppingState = ShoppingState()))
 

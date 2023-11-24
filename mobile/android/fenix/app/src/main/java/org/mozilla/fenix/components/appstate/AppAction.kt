@@ -228,17 +228,6 @@ sealed class AppAction : Action {
         data class ShoppingSheetStateUpdated(val expanded: Boolean) : ShoppingAction()
 
         /**
-         * [ShoppingAction] used to add a product to a set of products that are being analysed.
-         */
-        data class AddToProductAnalysed(val productPageUrl: String) : ShoppingAction()
-
-        /**
-         * [ShoppingAction] used to remove a product from the set of products that are being
-         * analysed.
-         */
-        data class RemoveFromProductAnalysed(val productPageUrl: String) : ShoppingAction()
-
-        /**
          * [ShoppingAction] used to update the expansion state of the highlights card.
          */
         data class HighlightsCardExpanded(

@@ -7,14 +7,11 @@ package org.mozilla.fenix.components.appstate.shopping
 /**
  * State for shopping feature that's required to live the lifetime of a session.
  *
- * @property productsInAnalysis Set of product urls that are currently being analysed or were being
- * analysed when the sheet was closed.
  * @property shoppingSheetExpanded Boolean indicating if the shopping sheet is expanded and visible.
  * @property productCardState Map of product url to [CardState] that contains the state of different
  * cards in the shopping sheet.
  */
 data class ShoppingState(
-    val productsInAnalysis: Set<String> = emptySet(),
     val shoppingSheetExpanded: Boolean? = null,
     val productCardState: Map<String, CardState> = emptyMap(),
 ) {

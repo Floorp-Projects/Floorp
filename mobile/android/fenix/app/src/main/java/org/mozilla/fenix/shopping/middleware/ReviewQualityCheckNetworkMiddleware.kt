@@ -6,11 +6,8 @@ package org.mozilla.fenix.shopping.middleware
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import mozilla.components.concept.engine.shopping.ProductAnalysis
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
-import org.mozilla.fenix.components.AppStore
-import org.mozilla.fenix.components.appstate.AppAction.ShoppingAction
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction.FetchProductAnalysis
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction.RetryProductAnalysis
@@ -25,13 +22,11 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductR
  *
  * @param reviewQualityCheckService The service that handles the network requests.
  * @param networkChecker The [NetworkChecker] instance to check the network status.
- * @param appStore The [AppStore] instance to access state and dispatch [ShoppingAction]s.
  * @param scope The [CoroutineScope] that will be used to launch coroutines.
  */
 class ReviewQualityCheckNetworkMiddleware(
     private val reviewQualityCheckService: ReviewQualityCheckService,
     private val networkChecker: NetworkChecker,
-    private val appStore: AppStore,
     private val scope: CoroutineScope,
 ) : ReviewQualityCheckMiddleware {
 
@@ -61,17 +56,19 @@ class ReviewQualityCheckNetworkMiddleware(
         scope.launch {
             when (action) {
                 FetchProductAnalysis, RetryProductAnalysis -> {
-                    val productPageUrl = reviewQualityCheckService.selectedTabUrl()
                     val productAnalysis = reviewQualityCheckService.fetchProductReview()
                     val productReviewState = productAnalysis.toProductReviewState()
-                    store.updateProductReviewState(productReviewState)
 
-                    productPageUrl?.let {
-                        store.restoreAnalysingStateIfRequired(
-                            productPageUrl = productPageUrl,
-                            productReviewState = productReviewState,
-                            productAnalysis = productAnalysis,
-                        )
+                    // Here the ProductReviewState should only updated after the analysis status API
+                    // returns a result. This makes sure that the UI doesn't show the reanalyse
+                    // button in case the product analysis is already in progress on the backend.
+                    if (productReviewState.isAnalysisPresentOrNoAnalysisPresent() &&
+                        reviewQualityCheckService.analysisStatus().isPendingOrInProgress()
+                    ) {
+                        store.updateProductReviewState(productReviewState, true)
+                        store.dispatch(ReviewQualityCheckAction.RestoreReanalysis)
+                    } else {
+                        store.updateProductReviewState(productReviewState)
                     }
 
                     if (productReviewState is ProductReviewState.AnalysisPresent) {
@@ -88,12 +85,6 @@ class ReviewQualityCheckNetworkMiddleware(
                     if (reanalysis == null) {
                         store.updateProductReviewState(ProductReviewState.Error.GenericError)
                         return@launch
-                    }
-
-                    // add product to the set of products that are being analysed
-                    val productPageUrl = reviewQualityCheckService.selectedTabUrl()
-                    productPageUrl?.let {
-                        appStore.dispatch(ShoppingAction.AddToProductAnalysed(it))
                     }
 
                     val status = pollForAnalysisStatus()
@@ -121,11 +112,6 @@ class ReviewQualityCheckNetworkMiddleware(
                         val productReviewState = productAnalysis.toProductReviewState()
                         store.updateProductReviewState(productReviewState)
                     }
-
-                    // remove product from the set of products that are being analysed
-                    productPageUrl?.let {
-                        appStore.dispatch(ShoppingAction.RemoveFromProductAnalysed(it))
-                    }
                 }
 
                 is ReviewQualityCheckAction.RecommendedProductClick -> {
@@ -141,27 +127,15 @@ class ReviewQualityCheckNetworkMiddleware(
 
     private suspend fun pollForAnalysisStatus(): AnalysisStatusDto? =
         retry(
-            predicate = { it == AnalysisStatusDto.PENDING || it == AnalysisStatusDto.IN_PROGRESS },
+            predicate = { it.isPendingOrInProgress() },
             block = { reviewQualityCheckService.analysisStatus() },
         )
 
     private fun Store<ReviewQualityCheckState, ReviewQualityCheckAction>.updateProductReviewState(
         productReviewState: ProductReviewState,
+        restoreAnalysis: Boolean = false,
     ) {
-        dispatch(ReviewQualityCheckAction.UpdateProductReview(productReviewState))
-    }
-
-    private fun Store<ReviewQualityCheckState, ReviewQualityCheckAction>.restoreAnalysingStateIfRequired(
-        productPageUrl: String,
-        productReviewState: ProductReviewState,
-        productAnalysis: ProductAnalysis?,
-    ) {
-        if (productReviewState.isAnalysisPresentOrNoAnalysisPresent() &&
-            productAnalysis?.needsAnalysis == true &&
-            appStore.state.shoppingState.productsInAnalysis.contains(productPageUrl)
-        ) {
-            dispatch(ReviewQualityCheckAction.RestoreReanalysis)
-        }
+        dispatch(ReviewQualityCheckAction.UpdateProductReview(productReviewState, restoreAnalysis))
     }
 
     private fun ProductReviewState.isAnalysisPresentOrNoAnalysisPresent() =
@@ -182,4 +156,7 @@ class ReviewQualityCheckNetworkMiddleware(
             }
         }
     }
+
+    private fun AnalysisStatusDto?.isPendingOrInProgress(): Boolean =
+        this == AnalysisStatusDto.PENDING || this == AnalysisStatusDto.IN_PROGRESS
 }
