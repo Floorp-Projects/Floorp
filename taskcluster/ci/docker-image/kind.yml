@@ -212,7 +212,6 @@ jobs:
     gdb-test:
         symbol: I(gdb)
         parent: debian12-amd64-build
-        definition: gdb-test
     index-task:
         symbol: I(idx)
     funsize-update-generator:

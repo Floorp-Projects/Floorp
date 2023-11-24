@@ -7,10 +7,6 @@ VOLUME /builds/worker/tooltool-cache
 
 ENV XZ_OPT=-T0
 
-ARG TASKCLUSTER_ROOT_URL
-ARG DOCKER_IMAGE_PACKAGES
-RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAGES
-
 # binutils is needed for base toolchain builds. Ideally, it wouldn't be needed.
 # libc6-i386 and lib32gcc1 are needed for wine.
 # libgtk-3-0 are needed to run xpcshell during the build.
