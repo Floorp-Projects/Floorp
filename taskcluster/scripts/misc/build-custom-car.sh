@@ -23,6 +23,10 @@ CUSTOM_CAR_DIR=$PWD
 git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
 export PATH="$PATH:$CUSTOM_CAR_DIR/depot_tools"
 
+# Log the current revision of depot tools for easier tracking in the future
+DEPOT_TOOLS_REV=$(cd depot_tools && git rev-parse HEAD && cd ..)
+echo "Current depot_tools revision: $DEPOT_TOOLS_REV"
+
 # Set up some env variables depending on the target OS
 # Linux is the default case, with minor adjustments for
 # android since it is built with a linux host
@@ -117,6 +121,10 @@ fetch --no-history --nohooks $FETCH_NAME
 gclient config --name src "https://chromium.googlesource.com/chromium/src.git" --custom-var="checkout_pgo_profiles=True" --unmanaged
 
 cd src
+
+# Log the current revision of the chromium src for easier tracking in the future
+CHROMIUM_REV=$(git rev-parse HEAD)
+echo "Current chromium revision: $CHROMIUM_REV"
 
 # Amend gclient file
 if [ "$IS_ANDROID" = true ]; then
