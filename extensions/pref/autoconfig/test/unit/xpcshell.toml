@@ -1,0 +1,29 @@
+[DEFAULT]
+head = ""
+skip-if = [
+  "os == 'android'",
+  "os == 'win' && msix", # Does not work in MSIX builds.
+]
+support-files = [
+  "autoconfig-all.cfg",
+  "autoconfig-latin1.cfg",
+  "autoconfig-utf8.cfg",
+  "autoconfig-chromecheck.cfg",
+  "autoconfig-no-sandbox-check.cfg",
+  "autoconfig.js",
+  "autoconfig-no-sandbox.js",
+]
+
+["test_autoconfig.js"]
+
+["test_autoconfig_custom_path.js"]
+run-if = ["os == 'linux'"]
+
+["test_autoconfig_default_path.js"]
+run-if = ["os == 'linux'"]
+
+["test_autoconfig_no_sandbox.js"]
+run-sequentially = "very high failure rate in parallel"
+
+["test_autoconfig_nonascii.js"]
+run-sequentially = "very high failure rate in parallel"

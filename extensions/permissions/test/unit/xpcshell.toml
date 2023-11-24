@@ -1,0 +1,94 @@
+[DEFAULT]
+head = "head.js"
+
+["test_permmanager_cleardata.js"]
+
+["test_permmanager_default_pref.js"]
+
+["test_permmanager_defaults.js"]
+
+["test_permmanager_expiration.js"]
+skip-if = [
+  "win10_2009", # Bug 1718292
+  "win11_2009", # Bug 1797751
+]
+
+["test_permmanager_getAllByTypeSince.js"]
+
+["test_permmanager_getAllByTypes.js"]
+
+["test_permmanager_getAllForPrincipal.js"]
+
+["test_permmanager_getAllWithTypePrefix.js"]
+
+["test_permmanager_getPermissionObject.js"]
+
+["test_permmanager_idn.js"]
+
+["test_permmanager_ipc.js"]
+# This test is meant to run on a multi process mode
+# and with file urls loaded in their own child process.
+skip-if = ["!e10s"]
+firefox-appdir = "browser"
+
+["test_permmanager_load_invalid_entries.js"]
+skip-if = ["debug == true"]
+
+["test_permmanager_local_files.js"]
+
+["test_permmanager_matches.js"]
+
+["test_permmanager_matchesuri.js"]
+
+["test_permmanager_migrate_10-11.js"]
+skip-if = ["os == 'android'"] # Android doesn't use places
+
+["test_permmanager_migrate_11-12.js"]
+skip-if = ["os == 'android'"] # Android doesn't use places
+
+["test_permmanager_migrate_4-7.js"]
+skip-if = ["os == 'android'"] # Android doesn't use places
+
+["test_permmanager_migrate_4-7_no_history.js"]
+skip-if = [
+  "apple_silicon", # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
+  "os == 'android'"
+]
+
+["test_permmanager_migrate_5-7a.js"]
+skip-if = ["os == 'android'"] # Android doesn't use places
+
+["test_permmanager_migrate_5-7b.js"]
+skip-if = ["os == 'android'"] # Android doesn't use places
+
+["test_permmanager_migrate_6-7a.js"]
+skip-if = ["os == 'android'"] # Android doesn't use places
+
+["test_permmanager_migrate_6-7b.js"]
+skip-if = ["os == 'android'"] # Android doesn't use places
+
+["test_permmanager_migrate_7-8.js"]
+skip-if = ["os == 'android'"] # Android doesn't use places
+
+["test_permmanager_migrate_9-10.js"]
+skip-if = ["os == 'android'"] # Android doesn't use places
+
+["test_permmanager_notifications.js"]
+
+["test_permmanager_oa_strip.js"]
+
+["test_permmanager_remove_add_update.js"]
+
+["test_permmanager_removeall.js"]
+
+["test_permmanager_removebytype.js"]
+
+["test_permmanager_removebytypesince.js"]
+
+["test_permmanager_removepermission.js"]
+
+["test_permmanager_removesince.js"]
+
+["test_permmanager_site_scope.js"]
+
+["test_permmanager_subdomains.js"]

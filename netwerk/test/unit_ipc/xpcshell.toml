@@ -1,0 +1,240 @@
+[DEFAULT]
+head = "head_channels_clone.js ../unit/head_servers.js head_trr_clone.js head_http3_clone.js"
+skip-if = ["socketprocess_networking"]
+# Several tests rely on redirecting to data: URIs, which was allowed for a long
+# time but now forbidden. So we enable it just for these tests.
+prefs = ["network.allow_redirect_to_data=true"]
+support-files = [
+  "child_channel_id.js",
+  "!/netwerk/test/unit/test_XHR_redirects.js",
+  "!/netwerk/test/unit/test_bug528292.js",
+  "!/netwerk/test/unit/test_cache-entry-id.js",
+  "!/netwerk/test/unit/test_cache_jar.js",
+  "!/netwerk/test/unit/test_cacheflags.js",
+  "!/netwerk/test/unit/test_channel_close.js",
+  "!/netwerk/test/unit/test_cookiejars.js",
+  "!/netwerk/test/unit/test_dns_cancel.js",
+  "!/netwerk/test/unit/test_dns_service.js",
+  "!/netwerk/test/unit/test_duplicate_headers.js",
+  "!/netwerk/test/unit/test_event_sink.js",
+  "!/netwerk/test/unit/test_getHost.js",
+  "!/netwerk/test/unit/test_gio_protocol.js",
+  "!/netwerk/test/unit/test_head.js",
+  "!/netwerk/test/unit/test_headers.js",
+  "!/netwerk/test/unit/test_httpsuspend.js",
+  "!/netwerk/test/unit/test_post.js",
+  "!/netwerk/test/unit/test_predictor.js",
+  "!/netwerk/test/unit/test_progress.js",
+  "!/netwerk/test/unit/test_redirect_veto.js",
+  "!/netwerk/test/unit/test_redirect-caching_canceled.js",
+  "!/netwerk/test/unit/test_redirect-caching_failure.js",
+  "!/netwerk/test/unit/test_redirect-caching_passing.js",
+  "!/netwerk/test/unit/test_redirect_canceled.js",
+  "!/netwerk/test/unit/test_redirect_different-protocol.js",
+  "!/netwerk/test/unit/test_redirect_failure.js",
+  "!/netwerk/test/unit/test_redirect_from_script.js",
+  "!/netwerk/test/unit/test_redirect_history.js",
+  "!/netwerk/test/unit/test_redirect_passing.js",
+  "!/netwerk/test/unit/test_reentrancy.js",
+  "!/netwerk/test/unit/test_reply_without_content_type.js",
+  "!/netwerk/test/unit/test_resumable_channel.js",
+  "!/netwerk/test/unit/test_simple.js",
+  "!/netwerk/test/unit/test_trackingProtection_annotateChannels.js",
+  "!/netwerk/test/unit/test_xmlhttprequest.js",
+  "!/netwerk/test/unit/head_channels.js",
+  "!/netwerk/test/unit/head_trr.js",
+  "!/netwerk/test/unit/head_cache2.js",
+  "!/netwerk/test/unit/data/image.png",
+  "!/netwerk/test/unit/data/system_root.lnk",
+  "!/netwerk/test/unit/data/test_psl.txt",
+  "!/netwerk/test/unit/data/test_readline1.txt",
+  "!/netwerk/test/unit/data/test_readline2.txt",
+  "!/netwerk/test/unit/data/test_readline3.txt",
+  "!/netwerk/test/unit/data/test_readline4.txt",
+  "!/netwerk/test/unit/data/test_readline5.txt",
+  "!/netwerk/test/unit/data/test_readline6.txt",
+  "!/netwerk/test/unit/data/test_readline7.txt",
+  "!/netwerk/test/unit/data/test_readline8.txt",
+  "!/netwerk/test/unit/data/signed_win.exe",
+  "!/netwerk/test/unit/test_alt-data_simple.js",
+  "!/netwerk/test/unit/test_alt-data_stream.js",
+  "!/netwerk/test/unit/test_alt-data_closeWithStatus.js",
+  "!/netwerk/test/unit/test_channel_priority.js",
+  "!/netwerk/test/unit/test_multipart_streamconv.js",
+  "!/netwerk/test/unit/test_original_sent_received_head.js",
+  "!/netwerk/test/unit/test_alt-data_cross_process.js",
+  "!/netwerk/test/unit/test_httpcancel.js",
+  "!/netwerk/test/unit/test_trr_httpssvc.js",
+  "!/netwerk/test/unit/test_http3_prio_enabled.js",
+  "!/netwerk/test/unit/test_http3_prio_disabled.js",
+  "!/netwerk/test/unit/test_http3_prio_helpers.js",
+  "!/netwerk/test/unit/http2-ca.pem",
+  "!/netwerk/test/unit/test_orb_empty_header.js",
+  "child_is_proxy_used.js",
+  "child_cookie_header.js",
+  "child_dns_by_type_resolve.js",
+  "child_veto_in_parent.js",
+]
+
+["test_XHR_redirects.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_alt-data_closeWithStatus_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_alt-data_cross_process_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_alt-data_simple_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_alt-data_stream_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_cache-entry-id_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_cache_jar_wrap.js"]
+
+["test_cacheflags_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_channel_close_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_channel_id.js"]
+
+["test_channel_priority_wrap.js"]
+
+["test_chunked_responses_wrap.js"]
+prefs = [
+  "network.allow_raw_sockets_in_content_processes=true",
+ "security.allow_eval_with_system_principal=true",
+]
+
+["test_cookie_header_stripped.js"]
+
+["test_cookiejars_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_dns_by_type_resolve_wrap.js"]
+
+["test_dns_cancel_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_dns_service_wrap.js"]
+
+["test_duplicate_headers_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_event_sink_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_getHost_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_gio_protocol_wrap.js"]
+run-if = ["os == 'linux'"]
+
+["test_head_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_headers_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_http3_prio_disabled_wrap.js"]
+skip-if = [
+  "os == 'android'",
+  "os == 'win' && msix",
+] # https://bugzilla.mozilla.org/show_bug.cgi?id=1807925
+run-sequentially = "http3server"
+
+["test_http3_prio_enabled_wrap.js"]
+skip-if = [
+  "os == 'android'",
+  "os == 'win' && msix",
+] # https://bugzilla.mozilla.org/show_bug.cgi?id=1807925
+run-sequentially = "http3server"
+
+["test_httpcancel_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_httpsuspend_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_is_proxy_used.js"]
+
+["test_multipart_streamconv_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_orb_empty_header_wrap.js"]
+
+["test_original_sent_received_head_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_post_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_predictor_wrap.js"]
+
+["test_progress_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_redirect-caching_canceled_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_redirect-caching_failure_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_redirect-caching_passing_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_redirect_canceled_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_redirect_different-protocol_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_redirect_failure_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+# Do not test the channel.redirectTo() API under e10s until 827269 is resolved
+
+["test_redirect_from_script_wrap.js"]
+skip-if = ["true"]
+
+["test_redirect_history_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_redirect_passing_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_redirect_veto_parent.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+run-sequentially = "doesn't play nice with others."
+
+["test_redirect_veto_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_reentrancy_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_reply_without_content_type_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_resumable_channel_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_simple_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_trackingProtection_annotateChannels_wrap1.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_trackingProtection_annotateChannels_wrap2.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_trr_httpssvc_wrap.js"]
+skip-if = ["os == 'android'"]
+
+["test_xmlhttprequest_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]

@@ -28,7 +28,7 @@ EXTRA_JS_MODULES["netwerk-dns"] += [
     "PublicSuffixList.sys.mjs",
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.toml"]
 
 EXPORTS += [
     "nsEffectiveTLDService.h",

@@ -11,8 +11,8 @@ if CONFIG["ENABLE_TESTS"]:
     DIRS += ["test/gtest"]
 
 XPCSHELL_TESTS_MANIFESTS += [
-    "test/unit/xpcshell.ini",
-    "test/unit_ipc/xpcshell.ini",
+    "test/unit/xpcshell.toml",
+    "test/unit_ipc/xpcshell.toml",
 ]
 
 BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]

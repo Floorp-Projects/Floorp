@@ -1,0 +1,35 @@
+[DEFAULT]
+support-files = [
+  "basic-scan-32-expected.txt",
+  "basic-scan-64-expected.txt",
+  "complete-empty-live-expected.txt",
+  "complete-empty-dark-matter-expected.txt",
+  "complete-empty-cumulative-expected.txt",
+  "complete-full1-live-expected.txt",
+  "complete-full1-dark-matter-expected.txt",
+  "complete-full2-dark-matter-expected.txt",
+  "complete-full2-cumulative-expected.txt",
+  "complete-partial-live-expected.txt",
+  "scan-test.py",
+  "script-max-frames.json",
+  "script-max-frames-8-expected.txt",
+  "script-max-frames-3-expected.txt",
+  "script-max-frames-1-expected.txt",
+  "script-sort-by.json.gz",
+  "script-sort-by-usable-expected.txt",
+  "script-sort-by-req-expected.txt",
+  "script-sort-by-slop-expected.txt",
+  "script-sort-by-num-blocks-expected.txt",
+  "script-ignore-alloc-fns.json",
+  "script-ignore-alloc-fns-expected.txt",
+  "script-diff-live1.json",
+  "script-diff-live2.json",
+  "script-diff-live-expected.txt",
+  "script-diff-dark-matter1.json",
+  "script-diff-dark-matter2.json",
+  "script-diff-dark-matter-expected.txt",
+]
+
+["test_dmd.js"]
+dmd = true
+skip-if = ["!(os=='linux' || os=='mac' || (os=='win' && !pgo))"]

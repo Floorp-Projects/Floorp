@@ -18,4 +18,4 @@ DIRS += ["schemas"]
 
 MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.toml"]
 MOCHITEST_CHROME_MANIFESTS += ["test/mochitest/chrome.toml"]
-XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.toml"]
