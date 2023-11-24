@@ -6,21 +6,20 @@
 import React from "react";
 import { Provider } from "react-redux";
 import configureStore from "redux-mock-store";
-
 import { shallow, mount } from "enzyme";
-import { QuickOpenModal } from "../QuickOpenModal";
 import { getDisplayURL } from "../../utils/sources-tree/getURL";
 import { searchKeys } from "../../constants";
 
-jest.mock("fuzzaldrin-plus", () => {
+// it's important to mock the module before importing the QuickOpenModal
+jest.mock("devtools/client/shared/vendor/fuzzaldrin-plus.js", () => {
   return {
     filter: jest.fn(() => []),
     prepareQuery: jest.fn(() => {}),
     wrap: jest.fn(() => {}),
   };
 });
-
-import { filter } from "fuzzaldrin-plus";
+import { QuickOpenModal } from "../QuickOpenModal";
+const { filter } = require("devtools/client/shared/vendor/fuzzaldrin-plus.js");
 
 function generateModal(propOverrides, renderType = "shallow") {
   const mockStore = configureStore([]);

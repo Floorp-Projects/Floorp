@@ -3,14 +3,11 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const path = require("path");
-const fs = require("fs");
 const { rollup } = require("rollup");
 const nodeResolve = require("@rollup/plugin-node-resolve");
 const commonjs = require("@rollup/plugin-commonjs");
 const injectProcessEnv = require("rollup-plugin-inject-process-env");
 const nodePolyfills = require("rollup-plugin-node-polyfills");
-
-const webpack = require("webpack");
 
 const projectPath = path.resolve(__dirname, "..");
 const bundlePath = path.join(projectPath, "./dist");
@@ -23,18 +20,13 @@ function getEntry(filename) {
 
 /**
  * The `bundle` module will build the following:
- * - vendors.js and vendors.css:
- *     Bundle for all the external packages still used by the Debugger frontend.
- *     Source at devtools/client/debugger/src/vendors.js
  * - parser-worker.js, pretty-print-worker.js, search-worker:
  *     Workers used only by the debugger.
  *     Sources at devtools/client/debugger/src/workers/*
  */
 (async function bundle() {
   const rollupSucceeded = await bundleRollup();
-  const webpackSucceeded = await bundleWebpack();
-  const failed = !rollupSucceeded || !webpackSucceeded;
-  process.exit(failed ? 1 : 0);
+  process.exit(rollupSucceeded ? 0 : 1);
 })();
 
 /**
@@ -90,38 +82,5 @@ async function bundleRollup() {
   }
 
   console.log(`[bundle|rollup] Done bundling`);
-  return success;
-}
-
-/**
- * Generates vendors.js and vendors.css
- * Should be removed in Bug 1826501
- */
-async function bundleWebpack() {
-  let success = true;
-  console.log(`[bundle|webpack] Start bundling…`);
-  process.env.TARGET = "firefox-panel";
-  process.env.OUTPUT_PATH = bundlePath;
-
-  const webpackConfig = require(path.resolve(projectPath, "webpack.config.js"));
-  const webpackCompiler = webpack(webpackConfig);
-
-  const result = await new Promise(resolve => {
-    webpackCompiler.run((error, stats) => resolve(stats));
-  });
-
-  if (result?.hasErrors()) {
-    success = false;
-    console.log(
-      "[bundle|webpack] Something went wrong. The error was written to assets-error.log"
-    );
-
-    fs.writeFileSync(
-      "assets-error.log",
-      JSON.stringify(result.toJson("verbose"), null, 2)
-    );
-  }
-
-  console.log(`[bundle|webpack] Done bundling`);
   return success;
 }
