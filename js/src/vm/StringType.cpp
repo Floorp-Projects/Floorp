@@ -445,7 +445,8 @@ JSExtensibleString& JSLinearString::makeExtensible(size_t capacity) {
 
 template <typename CharT>
 static MOZ_ALWAYS_INLINE bool AllocChars(JSString* str, size_t length,
-                                         CharT** chars, size_t* capacity) {
+                                         CharT** chars,
+                                         size_t* capacity) {
   /*
    * Grow by 12.5% if the buffer is very large. Otherwise, round up to the
    * next power of 2. This is similar to what we do with arrays; see
@@ -1302,9 +1303,11 @@ bool AutoStableStringChars::init(JSContext* cx, JSString* s) {
 
   MOZ_ASSERT(state_ == Uninitialized);
 
-  // If the chars are inline then we need to copy them since they may be moved
-  // by a compacting GC.
-  if (baseIsInline(linearString)) {
+  // Inline and nursery-allocated chars may move during a GC, so copy them
+  // out into a temporary malloced buffer. Note that we cannot update the
+  // string itself with a malloced buffer, because there may be dependent
+  // strings that are using the original chars.
+  if (linearString->hasMovableChars()) {
     return linearString->hasTwoByteChars() ? copyTwoByteChars(cx, linearString)
                                            : copyLatin1Chars(cx, linearString);
   }
@@ -1335,9 +1338,8 @@ bool AutoStableStringChars::initTwoByte(JSContext* cx, JSString* s) {
     return copyAndInflateLatin1Chars(cx, linearString);
   }
 
-  // If the chars are inline then we need to copy them since they may be moved
-  // by a compacting GC.
-  if (baseIsInline(linearString)) {
+  // Copy movable chars since they may be moved by GC (see above).
+  if (linearString->hasMovableChars()) {
     return copyTwoByteChars(cx, linearString);
   }
 
@@ -1348,14 +1350,6 @@ bool AutoStableStringChars::initTwoByte(JSContext* cx, JSString* s) {
 
   s_ = linearString;
   return true;
-}
-
-bool AutoStableStringChars::baseIsInline(Handle<JSLinearString*> linearString) {
-  JSString* base = linearString;
-  while (base->isDependent()) {
-    base = base->asDependent().base();
-  }
-  return base->isInline();
 }
 
 template <typename T>
