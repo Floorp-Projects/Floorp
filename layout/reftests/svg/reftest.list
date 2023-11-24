@@ -564,7 +564,7 @@ pref(layout.css.devPixelsPerPx,"1.0") == svg-blurry-with-subpixel-position.html 
 == use-02.svg pass.svg
 == use-01-extref.svg pass.svg
 == use-02-extref.svg use-02-extref-ref.svg
-== use-extref-dataURI-01.svg pass.svg
+pref(svg.use-element.data-url-href.allowed,true) == use-extref-dataURI-01.svg pass.svg
 == use-children.svg pass.svg
 
 test-pref(svg.use-element.graphics-element-restrictions,0) == use-restrictions.svg use-restrictions-not-restricted-ref.svg
