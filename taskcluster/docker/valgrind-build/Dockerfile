@@ -61,5 +61,7 @@ RUN apt-get update && apt-get install \
     xvfb \
     zlib1g-dbgsym
 
+RUN /usr/local/sbin/clean_packages.sh $DOCKER_IMAGE_PACKAGES
+
 # %include taskcluster/docker/recipes/xvfb.sh
 COPY topsrcdir/taskcluster/docker/recipes/xvfb.sh /builds/worker/scripts/xvfb.sh

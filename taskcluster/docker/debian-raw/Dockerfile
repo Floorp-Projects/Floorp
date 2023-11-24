@@ -9,6 +9,8 @@ CMD ["/bin/bash", "--login"]
 
 # %include taskcluster/docker/recipes/setup_packages.sh
 COPY topsrcdir/taskcluster/docker/recipes/setup_packages.sh /usr/local/sbin/
+# %include taskcluster/docker/recipes/clean_packages.sh
+COPY topsrcdir/taskcluster/docker/recipes/clean_packages.sh /usr/local/sbin/
 
 COPY taskcluster-hack.sh /usr/local/sbin
 COPY snapshot-hack.py /usr/local/sbin

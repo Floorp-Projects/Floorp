@@ -47,7 +47,8 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
       python3-venv \
       vim-tiny \
       xz-utils \
-      zstd
+      zstd \
+    && /usr/local/sbin/clean_packages.sh $DOCKER_IMAGE_PACKAGES
 
 RUN test $(readlink /usr/bin/python3) = python3.6 && ln -sf python3.7 /usr/bin/python3
 

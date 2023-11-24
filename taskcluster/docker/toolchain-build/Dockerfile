@@ -57,6 +57,8 @@ RUN apt-get update && \
       zip \
       zlib1g-dev
 
+RUN /usr/local/sbin/clean_packages.sh $DOCKER_IMAGE_PACKAGES
+
 # mmdebstrap is not available in jessie, but we only need it in the buster-based image.
 # We also want zstd when available.
 RUN apt-get install fakechroot fakeroot mmdebstrap zstd || true
