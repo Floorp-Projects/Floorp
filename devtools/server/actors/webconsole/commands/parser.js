@@ -145,6 +145,13 @@ function parseCommand(tokens) {
     const defaultFlag = COMMAND_DEFAULT_FLAG[command];
     if (token.type === ARG && !args[defaultFlag]) {
       const { value, offset } = collectString(token, tokens, i);
+      // Throw if the command isn't registered in COMMAND_DEFAULT_FLAG
+      // as this command may not expect any argument without an explicit argument name like "-name arg"
+      if (!defaultFlag) {
+        throw new Error(
+          `:${command} command doesn't support unnamed '${value}' argument.`
+        );
+      }
       args[defaultFlag] = getTypedValue(value);
       i = i + offset;
     }

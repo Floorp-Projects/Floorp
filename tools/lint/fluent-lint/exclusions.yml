@@ -158,6 +158,8 @@ CO01:
         - about-debugging-browser-version-too-recent
         # devtools/client/locales/en-US/application.ftl
         - manifest-loaded-devtools-error
+        # devtools/shared/locales/en-US/webconsole-commands.ftl
+        - webconsole-commands-usage-block
         # toolkit/locales/en-US/toolkit/about/aboutAddons.ftl
         - addon-badge-line3
         - recommended-theme-1
