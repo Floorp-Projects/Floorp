@@ -1374,7 +1374,7 @@ options! {
             /// or `-fno-inline-functions` if you are responsible of compiling the library to make
             /// them callable.
             #[cfg_attr(
-                feature = "experimental",
+                features = "experimental",
                 doc = "\nCheck the [`Builder::wrap_static_fns`] method for an alternative."
             )]
             pub fn generate_inline_functions(mut self, doit: bool) -> Self {

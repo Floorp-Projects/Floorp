@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.60.0"
 name = "bindgen"
-version = "0.69.1"
+version = "0.68.1"
 authors = [
     "Jyun-Yan You <jyyou.tw@gmail.com>",
     "Emilio Cobos Álvarez <emilio@crisal.io>",
@@ -41,24 +41,7 @@ repository = "https://github.com/rust-lang/rust-bindgen"
 features = ["experimental"]
 
 [package.metadata.release]
-pre-release-hook = [
-    "../node_modules/doctoc/doctoc.js",
-    "../CHANGELOG.md",
-]
 release = true
-
-[[package.metadata.release.pre-release-replacements]]
-file = "../CHANGELOG.md"
-replace = """
-# Unreleased
-## Added
-## Changed
-## Removed
-## Fixed
-## Security
-
-# {{version}} ({{date}})"""
-search = "# Unreleased"
 
 [lib]
 name = "bindgen"

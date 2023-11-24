@@ -20,10 +20,9 @@ license = "ISC"
 version = "0.8"
 
 [dependencies.coreaudio-sys]
-version = "0.2.14"
+version = "0.2"
 features = [
     "audio_unit",
     "core_audio",
-    "io_kit_audio",
 ]
 default-features = false

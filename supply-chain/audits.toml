@@ -681,11 +681,6 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.66.1 -> 0.68.1"
 
-[[audits.bindgen]]
-who = "Andreas Pehrson <apehrson@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "0.68.1 -> 0.69.1"
-
 [[audits.bit-set]]
 who = "Aria Beingessner <a.beingessner@gmail.com>"
 criteria = "safe-to-deploy"
@@ -885,11 +880,6 @@ delta = "0.2.11 -> 0.2.12"
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.2.12 -> 0.2.13"
-
-[[audits.coreaudio-sys]]
-who = "Andreas Pehrson <apehrson@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "0.2.13 -> 0.2.14"
 
 [[audits.cose]]
 who = "Mathew Hodson <mathew.hodson@gmail.com>"
