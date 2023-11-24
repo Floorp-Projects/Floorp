@@ -506,6 +506,8 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s bu sitenin çerezlerini temizleyip sayfayı tazeleyecek. Tüm çerezlerin temizlenmesi oturumunuzu kapatabilir veya alışveriş sepetlerinizi boşaltabilir.</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">Bunu kapatırsanız %1$s çerezleri temizleyip bu siteyi yeniden yükleyecektir. Bu durumda oturumunuz kapanabilir veya alışveriş sepetleriniz boşalabilir.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s, desteklenen sitelerdeki tüm çerez isteklerini otomatik olarak reddetmeye çalışır.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
@@ -524,6 +526,9 @@
 
     <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
     <string name="cookie_banner_cfr_title">%1$s sizin için çerezleri reddetti</string>
+
+    <!--Message for the cookie banner re-engagement CFR -->
+    <string name="cookie_banner_cfr_message">Bu site dikkatinizi daha az dağıtacak, çerezler sizi daha az izleyecek.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Daha fazla güvenlik için sitelere otomatik olarak HTTPS şifreleme protokolüyle bağlanmaya çalışır.</string>
@@ -2204,6 +2209,8 @@
     <string name="review_quality_check_highlights_title">Öne çıkan son değerlendirmeler</string>
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
     <string name="review_quality_check_explanation_title">Değerlendirme kalitesini nasıl belirliyoruz?</string>
+    <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_explanation_body_reliability">Ürün değerlendirmelerinin güvenilirliğini denetlemek için Mozilla’nın %s yapay zekâ teknolojisini kullanıyoruz. Bu araç yalnızca değerlendirmelerin kalitesini anlamanıza yardımcı olur, ürün kalitesi hakkında yorum yapmaz. </string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
     <string name="review_quality_check_info_review_grade_header"><![CDATA[Her ürünün değerlendirmelerine A’dan F’ye kadar bir <b>harf notu</b> veriyoruz.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
@@ -2238,10 +2245,10 @@
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Daha fazla bilgi alın</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
     <string name="review_quality_check_settings_turn_off">Değerlendirme kontrolcüsünü kapat</string>
+    <!-- Text for title of recommended product section. This is displayed above a product image, suggested as an alternative to the product reviewed. -->
+    <string name="review_quality_check_ad_title" tools:ignore="UnusedResources">İlginizi çekebilir</string>
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">%s reklamı</string>
-    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
-    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources" moz:RemovedIn="119">Değerlendirme kontrolcüsünün altyapısı %s tarafından sağlanmaktadır.</string>
     <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
     <string name="review_quality_check_powered_by_2">Değerlendirme kontrolcüsünün altyapısı %s tarafından sağlanmaktadır</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
@@ -2300,8 +2307,14 @@
     <string name="review_quality_check_no_analysis_link">Değerlendirme kalitesini kontrol et</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">Ürün değerlendirmelerine ilişkin güvenilir kılavuzumuzu deneyin</string>
+    <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description">Yeni bir şey satın almadan önce %1$s sitesindeki ürün değerlendirmelerinin güvenilirliğini görün. Deneysel bir %2$s özelliği olan değerlendirme kontrolcüsü,  tarayıcınızla birlikte geliyor. %3$s ve %4$s ile de uyumlu.</string>
+    <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more">Mozilla %1$s sayesinde önyargılı ve sahte değerlendirmelerden kaçınabilrisiniz. Alışverişlerinizde sizi korumak için yapay zekâ modelimizi sürekli geliştiriyoruz. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Daha fazla bilgi alın</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="121" tools:ignore="UnusedResources">“Evet, deneyeceğim”i seçtiğinizde Mozilla %1$s %2$s ve %3$snı kabul etmiş olursunuz.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2">“Evet, deneyeceğim”i seçtiğinizde %1$s için şunları kabul etmiş olursunuz:</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->

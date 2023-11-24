@@ -789,6 +789,16 @@
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Marketinški podaci</string>
 
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Dijeli osnovne podatke o korištenju s Adjustom, našim dobavljačem mobilnog marketinga</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Studije</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Dozvoljava Mozilla-i da instalira i pokrene studije</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">Sinhronizujte i sačuvajte svoje podatke</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Prijavite se radi ponovnog povezivanja</string>
     <!-- Preference for removing FxA account -->
@@ -814,6 +824,11 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Slijedi temu uređaja</string>
 
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Povucite za osvježavanje</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Skrolujte da sakrijete alatnu traku</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
     <string name="preference_gestures_swipe_toolbar_switch_tabs">Prevucite alatnu traku u stranu da promijenite tabove</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
@@ -835,10 +850,30 @@
     <!-- Option in Library to open History page -->
     <string name="library_history">Historija</string>
 
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Novi tab</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Postavke</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Zatvori</string>
+
+    <!-- Title to show in alert when a lot of tabs are to be opened
+    %d is a placeholder for the number of tabs that will be opened -->
+    <string name="open_all_warning_title">Otvoriti %d tabova?</string>
+    <!-- Message to warn users that a large number of tabs will be opened
+    %s will be replaced by app name. -->
+    <string name="open_all_warning_message">Otvaranje ovoliko tabova može usporiti %s dok se stranice učitavaju. Jeste li sigurni da želite nastaviti?</string>
+    <!-- Dialog button text for confirming open all tabs -->
+    <string name="open_all_warning_confirm">Otvori tabove</string>
+    <!-- Dialog button text for canceling open all tabs -->
+    <string name="open_all_warning_cancel">Otkaži</string>
+
+    <!-- Text to show users they have one page in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_site_1">%d stranica</string>
+    <!-- Text to show users they have multiple pages in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_sites_1">%d stranica</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Nedavno zatvoreni tabovi</string>
@@ -853,6 +888,15 @@
     <!-- Recently closed tabs screen message when there are no recently closed tabs -->
     <string name="recently_closed_empty_message">Nema nedavno zatvorenih tabova</string>
 
+    <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Tabovi</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Prikaz taba</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Lista</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Mreža</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Zatvori tabove</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -863,6 +907,38 @@
     <string name="close_tabs_after_one_week">Nakon jedne sedmice</string>
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Nakon mjesec dana</string>
+
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Automatski zatvaraj otvorene tabove</string>
+
+    <!-- Opening screen -->
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Ekran kod otvaranja aplikacije</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Početna stranica</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Zadnji tab</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Početna stranica nakon četiri sata neaktivnosti</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Zatvori ručno</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Zatvori nakon jednog dana</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Zatvori nakon jedne sedmice</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Zatvori nakon mjesec dana</string>
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">Otvori na početnoj stranici</string>
+
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">Otvori u zadnjem tabu</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">Otvori na početnoj stranici nakon četiri sata</string>
+
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">Premjestite stare tabove u neaktivne</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
