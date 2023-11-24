@@ -17,6 +17,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   MacAttribution: "resource:///modules/MacAttribution.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.importESModule(
@@ -107,7 +108,21 @@ export var AttributionCode = {
           throw ex;
         }
       }
-      file.append("macAttributionData");
+      // Note: this file is in a location that includes the absolute path
+      // to the running install, and the filename includes the update channel.
+      // To ensure consistency regardless of when `attributionFile` is accessed we
+      // explicitly do not include partner IDs that may be part of the full update channel.
+      // These are not necessarily applied when this is first accessed, and we want to
+      // ensure consistency between early and late accesses.
+      // Partner builds never contain attribution information, so this has no known
+      // consequences.
+      // For example:
+      // ~/Library/Caches/Mozilla/updates/Applications/Firefox/macAttributionDataCache-release
+      // This is done to ensure that attribution data is preserved through a
+      // pave over install of an install on the same channel.
+      file.append(
+        "macAttributionDataCache-" + lazy.UpdateUtils.getUpdateChannel(false)
+      );
       return file;
     }
 
