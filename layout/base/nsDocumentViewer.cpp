@@ -1630,7 +1630,7 @@ nsDocumentViewer::Destroy() {
     MOZ_LOG(gPageCacheLog, LogLevel::Debug,
             ("BFCache not allowed, dropping SHEntry"));
     nsCOMPtr<nsISHEntry> shEntry = std::move(mSHEntry);
-    shEntry->SetContentViewer(nullptr);
+    shEntry->SetDocumentViewer(nullptr);
     shEntry->SyncPresentationState();
   }
 
@@ -1688,7 +1688,7 @@ nsDocumentViewer::Destroy() {
 
     MOZ_LOG(gPageCacheLog, LogLevel::Debug,
             ("Storing content viewer into cache entry"));
-    shEntry->SetContentViewer(this);
+    shEntry->SetDocumentViewer(this);
 
     // Always sync the presentation state.  That way even if someone screws up
     // and shEntry has no window state at this point we'll be ok; we just won't

@@ -215,7 +215,7 @@ void MarkSHEntry(nsISHEntry* aSHEntry, bool aCleanupJS) {
   }
 
   nsCOMPtr<nsIDocumentViewer> viewer;
-  aSHEntry->GetContentViewer(getter_AddRefs(viewer));
+  aSHEntry->GetDocumentViewer(getter_AddRefs(viewer));
   MarkDocumentViewer(viewer, aCleanupJS);
 
   nsCOMPtr<nsIDocShellTreeItem> child;

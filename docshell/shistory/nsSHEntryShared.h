@@ -213,7 +213,7 @@ class nsSHEntryShared final : public nsIBFCacheEntry,
   void SyncPresentationState();
   void DropPresentationState();
 
-  nsresult SetContentViewer(nsIDocumentViewer* aViewer);
+  nsresult SetDocumentViewer(nsIDocumentViewer* aViewer);
 };
 
 #endif
