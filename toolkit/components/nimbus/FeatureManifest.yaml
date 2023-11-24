@@ -2001,16 +2001,6 @@ feltPrivacy:
       description: >-
         Enables the reset PBM feature button and confirmation panel.
 
-attribution:
-  description: Prefs related to install attribution
-  hasExposure: false
-  isEarlyStartup: true
-  variables:
-    macosEnabled:
-      type: boolean
-      description: Whether or not macOS attribution data will be processed and sent in Telemetry
-      fallbackPref: browser.attribution.macos.enabled
-
 phc:
   description: Prefs to control the Probabalistic Heap Checker (PHC)
   owner: pbone@mozilla.com
