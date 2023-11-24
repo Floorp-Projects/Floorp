@@ -4,7 +4,7 @@ from ... import get_device_pixel_ratio, get_viewport_dimensions
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("device_pixel_ratio", [1, 2])
+@pytest.mark.parametrize("device_pixel_ratio", [0.5, 2])
 async def test_device_pixel_ratio_only(bidi_session, new_tab, device_pixel_ratio):
     viewport = await get_viewport_dimensions(bidi_session, new_tab)
 
@@ -17,7 +17,7 @@ async def test_device_pixel_ratio_only(bidi_session, new_tab, device_pixel_ratio
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("device_pixel_ratio", [1, 2])
+@pytest.mark.parametrize("device_pixel_ratio", [0.5, 2])
 async def test_device_pixel_ratio_with_viewport(bidi_session, new_tab, device_pixel_ratio):
     test_viewport = {"width": 250, "height": 300}
 
