@@ -1,0 +1,50 @@
+[DEFAULT]
+head = ""
+support-files = [
+  "async_load_tests.js",
+  "bug413512.ico",
+  "bug815359.ico",
+  "image1.png",
+  "image1.webp",
+  "image1quality50.webp",
+  "image1png16x16.jpg",
+  "image1png64x64.jpg",
+  "image2.jpg",
+  "image2jpg16x16-win.png",
+  "image2jpg16x16.png",
+  "image2jpg16x16cropped.jpg",
+  "image2jpg16x16cropped2.jpg",
+  "image2jpg16x32cropped3.jpg",
+  "image2jpg16x32scaled.jpg",
+  "image2jpg32x16cropped4.jpg",
+  "image2jpg32x16scaled.jpg",
+  "image2jpg32x32-win.png",
+  "image2jpg32x32.jpg",
+  "image2jpg32x32.png",
+  "image3.ico",
+  "image3ico16x16.png",
+  "image3ico32x32.png",
+  "image4.gif",
+  "image4gif16x16bmp24bpp.ico",
+  "image4gif16x16bmp32bpp.ico",
+  "image4gif32x32bmp24bpp.ico",
+  "image4gif32x32bmp32bpp.ico",
+  "image_load_helpers.js",
+]
+
+
+["test_async_notification.js"]
+
+["test_async_notification_404.js"]
+
+["test_async_notification_animated.js"]
+
+["test_encoder_apng.js"]
+
+["test_encoder_png.js"]
+
+["test_imgtools.js"]
+
+["test_moz_icon_uri.js"]
+
+["test_private_channel.js"]

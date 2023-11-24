@@ -1,0 +1,5 @@
+[DEFAULT]
+firefox-appdir = "browser"
+run-if = ["os == 'android'"]
+
+["test_ChildCrashHandler.js"]

@@ -10,7 +10,7 @@ EXPORTS.mozilla.ipc += [
     "XPCShellEnvironment.h",
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.toml"]
 
 SOURCES += [
     "TestShellChild.cpp",

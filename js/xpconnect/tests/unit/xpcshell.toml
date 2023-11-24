@@ -1,0 +1,373 @@
+[DEFAULT]
+head = "head.js"
+support-files = [
+  "CatRegistrationComponents.manifest",
+  "CatBackgroundTaskRegistrationComponents.manifest",
+  "bogus_element_type.jsm",
+  "bogus_exports_type.jsm",
+  "bug451678_subscript.js",
+  "TestBlob.jsm",
+  "TestFile.jsm",
+  "environment_script.js",
+  "environment_loadscript.jsm",
+  "environment_checkscript.jsm",
+  "file_simple_script.js",
+  "importer.jsm",
+  "recursive_importA.jsm",
+  "recursive_importB.jsm",
+  "ReturnCodeChild.jsm",
+  "ReturnCodeChild.sys.mjs",
+  "syntax_error.jsm",
+  "uninitialized_lexical.jsm",
+  "es6module.js",
+  "es6import.js",
+  "es6module_throws.js",
+  "es6module_missing_import.js",
+  "es6module_parse_error.js",
+  "es6module_parse_error_in_import.js",
+  "es6module_cycle_a.js",
+  "es6module_cycle_b.js",
+  "es6module_cycle_c.js",
+  "es6module_top_level_await.js",
+  "es6module_devtoolsLoader.js",
+  "es6module_devtoolsLoader.sys.mjs",
+  "es6module_devtoolsLoader_only.js",
+  "esmified-1.sys.mjs",
+  "esmified-2.sys.mjs",
+  "esmified-3.sys.mjs",
+  "esmified-4.sys.mjs",
+  "esmified-5.sys.mjs",
+  "esmified-6.sys.mjs",
+  "esmified-not-exported.sys.mjs",
+  "not-esmified-not-exported.jsm",
+  "esm_lazy-1.sys.mjs",
+  "esm_lazy-2.sys.mjs",
+  "jsm_loaded-1.jsm",
+  "jsm_loaded-2.jsm",
+  "jsm_loaded-3.jsm",
+  "es6module_loaded-1.sys.mjs",
+  "es6module_loaded-2.sys.mjs",
+  "es6module_loaded-3.sys.mjs",
+  "api_script.js",
+  "import_stack.jsm",
+  "import_stack.sys.mjs",
+  "import_stack_static_1.sys.mjs",
+  "import_stack_static_2.sys.mjs",
+  "import_stack_static_3.sys.mjs",
+  "import_stack_static_4.sys.mjs",
+  "es6module_import_error.js",
+  "es6module_import_error2.js",
+  "es6module_dynamic_import.js",
+  "es6module_dynamic_import2.js",
+  "es6module_absolute.js",
+  "es6module_absolute2.js",
+  "envChain.jsm",
+  "envChain_subscript.jsm",
+  "error_export.sys.mjs",
+  "error_import.sys.mjs",
+  "error_other.sys.mjs",
+]
+
+["test_ComponentEnvironment.js"]
+
+["test_FrameScriptEnvironment.js"]
+
+["test_ReadableStream_from.js"]
+
+["test_SubscriptLoaderEnvironment.js"]
+
+["test_SubscriptLoaderJSMEnvironment.js"]
+
+["test_SubscriptLoaderSandboxEnvironment.js"]
+
+["test_URLSearchParams.js"]
+
+["test_allowWaivers.js"]
+
+["test_allowedDomains.js"]
+
+["test_allowedDomainsXHR.js"]
+
+["test_attributes.js"]
+
+["test_blob.js"]
+
+["test_blob2.js"]
+
+["test_bogus_files.js"]
+
+["test_bug267645.js"]
+
+["test_bug408412.js"]
+
+["test_bug451678.js"]
+
+["test_bug604362.js"]
+
+["test_bug677864.js"]
+
+["test_bug711404.js"]
+
+["test_bug742444.js"]
+
+["test_bug778409.js"]
+
+["test_bug780370.js"]
+
+["test_bug809652.js"]
+
+["test_bug809674.js"]
+
+["test_bug813901.js"]
+
+["test_bug845201.js"]
+
+["test_bug845862.js"]
+
+["test_bug849730.js"]
+
+["test_bug851895.js"]
+
+["test_bug853709.js"]
+
+["test_bug856067.js"]
+
+["test_bug867486.js"]
+
+["test_bug868675.js"]
+
+["test_bug872772.js"]
+
+["test_bug885800.js"]
+
+["test_bug930091.js"]
+
+["test_bug976151.js"]
+
+["test_bug1001094.js"]
+
+["test_bug1021312.js"]
+
+["test_bug1033253.js"]
+
+["test_bug1033920.js"]
+
+["test_bug1033927.js"]
+
+["test_bug1034262.js"]
+
+["test_bug1081990.js"]
+
+["test_bug1110546.js"]
+
+["test_bug1131707.js"]
+
+["test_bug1150771.js"]
+
+["test_bug1151385.js"]
+
+["test_bug1170311.js"]
+
+["test_bug1244222.js"]
+
+["test_bug1617527.js"]
+
+["test_bug_442086.js"]
+
+["test_callFunctionWithAsyncStack.js"]
+
+["test_cenums.js"]
+
+["test_compileScript.js"]
+
+["test_components.js"]
+
+["test_crypto.js"]
+
+["test_css.js"]
+
+["test_deepFreezeClone.js"]
+
+["test_defineESModuleGetters.js"]
+
+["test_defineModuleGetter.js"]
+
+["test_envChain_JSM.js"]
+
+["test_envChain_frameScript.js"]
+
+["test_envChain_subscript.js"]
+
+["test_envChain_subscript_in_JSM.js"]
+
+["test_eventSource.js"]
+
+["test_exportFunction.js"]
+
+["test_file.js"]
+skip-if = ["os == 'android' && processor == 'x86_64'"]
+
+["test_file2.js"]
+skip-if = ["os == 'android' && processor == 'x86_64'"]
+
+["test_fileReader.js"]
+
+["test_function_names.js"]
+
+["test_generateQI.js"]
+
+["test_getCallerLocation.js"]
+
+["test_getObjectPrincipal.js"]
+
+["test_import.js"]
+
+["test_import_devtools_loader.js"]
+
+["test_import_es6_modules.js"]
+
+["test_import_fail.js"]
+
+["test_import_from_sandbox.js"]
+
+["test_import_shim.js"]
+
+["test_import_stack.js"]
+skip-if = [
+  "!nightly_build",
+  "!debug",
+]
+
+["test_import_syntax_error.js"]
+
+["test_isModuleLoaded.js"]
+
+["test_isProxy.js"]
+
+["test_js_memory_telemetry.js"]
+
+["test_js_weak_references.js"]
+
+["test_loadedESModules.js"]
+
+["test_localeCompare.js"]
+
+["test_messageChannel.js"]
+
+["test_nuke_sandbox.js"]
+
+["test_nuke_sandbox_event_listeners.js"]
+
+["test_nuke_webextension_wrappers.js"]
+
+["test_onGarbageCollection-01.js"]
+head = "head_ongc.js"
+
+["test_onGarbageCollection-02.js"]
+head = "head_ongc.js"
+
+["test_onGarbageCollection-03.js"]
+head = "head_ongc.js"
+
+["test_onGarbageCollection-04.js"]
+head = "head_ongc.js"
+
+["test_onGarbageCollection-05.js"]
+head = "head_ongc.js"
+
+["test_params.js"]
+
+["test_print_stderr.js"]
+
+["test_private_field_xrays.js"]
+
+["test_promise.js"]
+
+["test_recursive_import.js"]
+
+["test_reflect_parse.js"]
+
+["test_resistFingerprinting_date_now.js"]
+
+["test_resolve_dead_promise.js"]
+
+["test_returncode.js"]
+
+["test_rewrap_dead_wrapper.js"]
+
+["test_rtcIdentityProvider.js"]
+
+["test_sandbox_DOMException.js"]
+
+["test_sandbox_atob.js"]
+
+["test_sandbox_metadata.js"]
+
+["test_sandbox_name.js"]
+
+["test_storage.js"]
+
+["test_structuredClone.js"]
+
+["test_subScriptLoader.js"]
+
+["test_symbols_as_weak_keys.js"]
+
+["test_tearoffs.js"]
+
+["test_textDecoder.js"]
+
+["test_uawidget_scope.js"]
+
+["test_uninitialized_lexical.js"]
+
+["test_unload.js"]
+
+["test_url.js"]
+
+["test_want_components.js"]
+
+["test_wasm_tailcalls_profiler.js"]
+skip-if = [
+  "tsan",
+  "!nightly_build",
+]
+
+["test_watchdog_default.js"]
+head = "head_watchdog.js"
+
+["test_watchdog_disable.js"]
+head = "head_watchdog.js"
+
+["test_watchdog_enable.js"]
+head = "head_watchdog.js"
+
+["test_watchdog_hibernate.js"]
+head = "head_watchdog.js"
+
+["test_watchdog_toggle.js"]
+head = "head_watchdog.js"
+
+["test_weak_keys.js"]
+
+["test_wrapped_js_enumerator.js"]
+
+["test_xpcomutils.js"]
+
+["test_xpcwn_instanceof.js"]
+
+["test_xpcwn_tamperproof.js"]
+
+["test_xray_SavedFrame-02.js"]
+
+["test_xray_SavedFrame.js"]
+
+["test_xray_instanceof.js"]
+
+["test_xray_named_element_access.js"]
+
+["test_xray_regexp.js"]
+
+["test_xrayed_arguments.js"]
+
+["test_xrayed_iterator.js"]

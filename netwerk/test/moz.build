@@ -15,8 +15,8 @@ MOCHITEST_MANIFESTS += ["mochitests/mochitest.toml"]
 
 XPCSHELL_TESTS_MANIFESTS += [
     "unit/node_execute/xpcshell.ini",
-    "unit/xpcshell.ini",
-    "unit_ipc/xpcshell.ini",
+    "unit/xpcshell.toml",
+    "unit_ipc/xpcshell.toml",
 ]
 
 TESTING_JS_MODULES += [

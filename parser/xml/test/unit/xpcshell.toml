@@ -1,0 +1,7 @@
+[DEFAULT]
+head = ""
+support-files = ["results.js"]
+
+["test_sanitizer.js"]
+
+["test_sanitizer_style.js"]

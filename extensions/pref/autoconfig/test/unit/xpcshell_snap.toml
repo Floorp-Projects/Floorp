@@ -1,0 +1,9 @@
+[DEFAULT]
+head = ""
+run-if = ["os == 'linux'"]
+
+["test_autoconfig_snap.js"]
+support-files = [
+  "autoconfig_snap.js",
+  "autoconfig-snap.cfg",
+]

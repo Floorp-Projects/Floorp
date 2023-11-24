@@ -1,0 +1,17 @@
+[DEFAULT]
+head = "../../../../services/common/tests/unit/head_global.js ../../../../services/common/tests/unit/head_helpers.js"
+firefox-appdir = "browser"
+support-files = [
+  "data/**",
+  "!/services/common/tests/unit/head_global.js",
+  "!/services/common/tests/unit/head_helpers.js",
+]
+
+["test_PublicSuffixList.js"]
+tags = "remote-settings"
+
+["test_nsEffectiveTLDService_Reload_DAFSA.js"]
+
+["test_nsEffectiveTLDService_getKnownPublicSuffix.js"]
+
+["test_nsEffectiveTLDService_getSite.js"]

@@ -23,7 +23,7 @@ MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.toml"]
 
 MOCHITEST_CHROME_MANIFESTS += ["test/mochitest/chrome.toml"]
 
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.toml"]
 
 XPIDL_SOURCES += [
     "imgICache.idl",

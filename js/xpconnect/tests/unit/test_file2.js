@@ -11,7 +11,7 @@ add_task(async function() {
   var file = Cc["@mozilla.org/file/directory_service;1"]
              .getService(Ci.nsIProperties)
              .get("CurWorkD", Ci.nsIFile);
-  file.append("xpcshell.ini");
+  file.append("xpcshell.toml");
 
   // should be able to construct a file
   var f1 = await File.createFromFileName(file.path);
@@ -22,8 +22,8 @@ add_task(async function() {
   Assert.ok(f1 instanceof File, "Should be a DOM File");
   Assert.ok(f2 instanceof File, "Should be a DOM File");
 
-  Assert.ok(f1.name == "xpcshell.ini", "Should be the right file");
-  Assert.ok(f2.name == "xpcshell.ini", "Should be the right file");
+  Assert.ok(f1.name == "xpcshell.toml", "Should be the right file");
+  Assert.ok(f2.name == "xpcshell.toml", "Should be the right file");
 
   Assert.ok(f1.type == "", "Should be the right type");
   Assert.ok(f2.type == "", "Should be the right type");

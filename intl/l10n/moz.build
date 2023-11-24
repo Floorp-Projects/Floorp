@@ -49,7 +49,7 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
         "!localization_ffi_generated.h",
     ]
 
-XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell.toml"]
 MOCHITEST_CHROME_MANIFESTS += ["test/mochitest/chrome.toml"]
 
 SPHINX_TREES["/l10n"] = "docs"

@@ -1,0 +1,81 @@
+[DEFAULT]
+head = ""
+skip-if = ["os == 'android'"]
+support-files = [
+  "data/empty",
+  "data/test_bug333423.zip",
+  "data/test_bug336691.zip",
+  "data/test_bug370103.jar",
+  "data/test_bug379841.zip",
+  "data/test_bug589292.zip",
+  "data/test_bug597702.zip",
+  "data/test_bug637286.zip",
+  "data/test_bug658093.zip",
+  "data/test_1801102.jar",
+  "data/test_corrupt.zip",
+  "data/test_corrupt2.zip",
+  "data/test_corrupt3.zip",
+  "data/test_crx_dummy.crx",
+  "data/test_crx_v3_dummy.crx",
+  "data/test_umlaute.zip",
+  "data/uncompressed.zip",
+  "data/test_empty_file.zip",
+]
+
+["test_bug278262.js"]
+
+["test_bug333423.js"]
+
+["test_bug336691.js"]
+
+["test_bug370103.js"]
+
+["test_bug379841.js"]
+
+["test_bug453254.js"]
+
+["test_bug458158.js"]
+
+["test_bug589292.js"]
+
+["test_bug597702.js"]
+
+["test_bug637286.js"]
+
+["test_bug658093.js"]
+
+["test_bug1328865.js"]
+
+["test_bug1550815.js"]
+# recovering from SIGBUS is temporarily disabled by bug 1583735
+skip-if = ["true"]
+
+["test_corrupt_1211262.js"]
+
+["test_corrupt_1801102.js"]
+
+["test_corrupt_536911.js"]
+
+["test_corrupt_541828.js"]
+
+["test_crx.js"]
+
+["test_dirjar_bug525755.js"]
+
+["test_empty_jar_telemetry.js"]
+
+["test_fault_handler.js"]
+head = "../../zipwriter/test/unit/head_zipwriter.js"
+run-if = ["os == 'win'"] # tests windows specific exception handling
+skip-if = ["true"] # Requires elevated priviledges. See bug 1707853 and comments in test
+
+["test_jarchannel.js"]
+skip-if = ["os == 'mac'"]
+
+["test_jarinput_stream_zipreader_reference.js"]
+
+["test_not_found.js"]
+
+["test_umlaute.js"]
+
+["test_uncompressed.js"]

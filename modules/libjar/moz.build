@@ -12,7 +12,7 @@ if CONFIG["MOZ_ZIPWRITER"]:
 
 MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.toml"]
 
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.toml"]
 
 XPIDL_SOURCES += [
     "nsIJARChannel.idl",

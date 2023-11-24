@@ -22,5 +22,5 @@ DEFINES["MOZ_NO_MOZALLOC"] = True
 DisableStlWrapping()
 
 XPCSHELL_TESTS_MANIFESTS += [
-    "xpcshell.ini",
+    "xpcshell.toml",
 ]

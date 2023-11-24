@@ -1,0 +1,10 @@
+[DEFAULT]
+head = "head_libmar.js"
+support-files = ["data/**"]
+skip-if = ["os == 'win' && msix"] # Updates are disabled for MSIX builds
+
+["test_create.js"]
+
+["test_extract.js"]
+
+["test_sign_verify.js"]

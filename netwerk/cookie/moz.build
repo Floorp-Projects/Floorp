@@ -46,7 +46,7 @@ UNIFIED_SOURCES += [
     "CookieStorage.cpp",
 ]
 XPCSHELL_TESTS_MANIFESTS += [
-    "test/unit/xpcshell.ini",
+    "test/unit/xpcshell.toml",
 ]
 
 BROWSER_CHROME_MANIFESTS += [

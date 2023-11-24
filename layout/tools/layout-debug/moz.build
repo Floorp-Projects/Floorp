@@ -6,7 +6,7 @@
 
 DIRS += ["src", "ui"]
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.toml"]
 
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
 
