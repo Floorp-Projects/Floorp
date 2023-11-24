@@ -97,6 +97,7 @@ print.getPrintSettings = function (settings) {
   printSettings.paperSizeUnit = Ci.nsIPrintSettings.kPaperSizeInches;
   printSettings.paperWidth = cmToInches(settings.page.width);
   printSettings.paperHeight = cmToInches(settings.page.height);
+  printSettings.usePageRuleSizeAsPaperSize = true;
 
   printSettings.marginBottom = cmToInches(settings.margin.bottom);
   printSettings.marginLeft = cmToInches(settings.margin.left);
