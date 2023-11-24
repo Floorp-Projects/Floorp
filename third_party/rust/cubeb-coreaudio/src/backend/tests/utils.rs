@@ -2,6 +2,29 @@ use super::*;
 
 // Common Utils
 // ------------------------------------------------------------------------------------------------
+pub extern "C" fn noop_data_callback(
+    stream: *mut ffi::cubeb_stream,
+    _user_ptr: *mut c_void,
+    _input_buffer: *const c_void,
+    output_buffer: *mut c_void,
+    nframes: i64,
+) -> i64 {
+    assert!(!stream.is_null());
+
+    // Feed silence data to output buffer
+    if !output_buffer.is_null() {
+        let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
+        let channels = stm.core_stream_data.output_stream_params.channels();
+        let samples = nframes as usize * channels as usize;
+        let sample_size = cubeb_sample_size(stm.core_stream_data.output_stream_params.format());
+        unsafe {
+            ptr::write_bytes(output_buffer, 0, samples * sample_size);
+        }
+    }
+
+    nframes
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Scope {
     Input,
@@ -189,11 +212,7 @@ fn test_enable_audiounit_in_scope(
 }
 
 pub fn test_get_source_name(device: AudioObjectID, scope: Scope) -> Option<String> {
-    if let Some(source) = test_get_source_data(device, scope) {
-        Some(u32_to_string(source))
-    } else {
-        None
-    }
+    test_get_source_data(device, scope).map(u32_to_string)
 }
 
 pub fn test_get_source_data(device: AudioObjectID, scope: Scope) -> Option<u32> {
@@ -238,8 +257,8 @@ fn u32_to_string(data: u32) -> String {
 }
 
 pub enum DeviceFilter {
-    ExcludeCubebAggregate,
-    IncludeCubebAggregate,
+    ExcludeCubebAggregateAndVPIO,
+    IncludeAll,
 }
 pub fn test_get_all_devices(filter: DeviceFilter) -> Vec<AudioObjectID> {
     let mut devices = Vec::new();
@@ -284,11 +303,12 @@ pub fn test_get_all_devices(filter: DeviceFilter) -> Vec<AudioObjectID> {
     }
 
     match filter {
-        DeviceFilter::ExcludeCubebAggregate => {
+        DeviceFilter::ExcludeCubebAggregateAndVPIO => {
             devices.retain(|&device| {
                 if let Ok(uid) = get_device_global_uid(device) {
                     let uid = uid.into_string();
                     !uid.contains(PRIVATE_AGGREGATE_DEVICE_NAME)
+                        && !uid.contains(VOICEPROCESSING_AGGREGATE_DEVICE_NAME)
                 } else {
                     true
                 }
@@ -301,7 +321,7 @@ pub fn test_get_all_devices(filter: DeviceFilter) -> Vec<AudioObjectID> {
 }
 
 pub fn test_get_devices_in_scope(scope: Scope) -> Vec<AudioObjectID> {
-    let mut devices = test_get_all_devices(DeviceFilter::ExcludeCubebAggregate);
+    let mut devices = test_get_all_devices(DeviceFilter::ExcludeCubebAggregateAndVPIO);
     devices.retain(|device| test_device_in_scope(*device, scope.clone()));
     devices
 }
@@ -323,7 +343,7 @@ pub fn get_devices_info_in_scope(scope: Scope) -> Vec<TestDeviceInfo> {
         infos.push(TestDeviceInfo::new(device, scope.clone()));
         print_info(infos.last().unwrap());
     }
-    println!("");
+    println!();
 
     infos
 }
@@ -605,7 +625,10 @@ pub fn test_set_default_device(
             &device as *const AudioObjectID as *const c_void,
         )
     };
-    if status == NO_ERR {
+    let new_default = test_get_default_device(scope.clone()).unwrap();
+    if new_default == default {
+        Err(-1)
+    } else if status == NO_ERR {
         Ok(default)
     } else {
         Err(status)
@@ -628,8 +651,8 @@ impl TestDeviceSwitcher {
             .position(|device| *device == current)
             .unwrap();
         Self {
-            scope: scope,
-            devices: devices,
+            scope,
+            devices,
             current_device_index: index,
         }
     }
@@ -642,9 +665,19 @@ impl TestDeviceSwitcher {
             "Switch device for {:?}: {} -> {}",
             self.scope, current, next
         );
-        let prev = self.set_device(next).unwrap();
-        assert_eq!(prev, current);
-        self.current_device_index = next_index;
+        match self.set_device(next) {
+            Ok(prev) => {
+                assert_eq!(prev, current);
+                self.current_device_index = next_index;
+            }
+            _ => {
+                self.devices.remove(next_index);
+                if next_index < self.current_device_index {
+                    self.current_device_index -= 1;
+                }
+                self.next();
+            }
+        }
     }
 
     fn set_device(&self, device: AudioObjectID) -> std::result::Result<AudioObjectID, OSStatus> {
@@ -888,8 +921,9 @@ impl TestDevicePlugger {
             );
             CFRelease(device_uid as *const c_void);
 
-            // This device is private to the process creating it.
-            let private_value: i32 = 1;
+            // Make this device NOT private to the process creating it.
+            // On MacOS 14 devicechange events are not triggered when it is private.
+            let private_value: i32 = 0;
             let device_private_key = CFNumberCreate(
                 kCFAllocatorDefault,
                 i64::from(kCFNumberIntType),
@@ -1003,9 +1037,7 @@ impl TestDevicePlugger {
     //       AggregateDevice::get_sub_devices and audiounit_set_aggregate_sub_device_list.
     fn get_sub_devices(scope: Scope) -> Option<CFArrayRef> {
         let device = test_get_default_device(scope);
-        if device.is_none() {
-            return None;
-        }
+        device?;
         let device = device.unwrap();
         let uid = get_device_global_uid(device);
         if uid.is_err() {
@@ -1208,9 +1240,9 @@ pub fn test_get_stream_with_default_data_callback_by_type<F>(
 
 bitflags! {
     pub struct StreamType: u8 {
-        const INPUT = 0b01;
-        const OUTPUT = 0b10;
-        const DUPLEX = Self::INPUT.bits | Self::OUTPUT.bits;
+        const INPUT = 0x01;
+        const OUTPUT = 0x02;
+        const DUPLEX = 0x03;
     }
 }
 
@@ -1252,32 +1284,9 @@ fn test_ops_stream_operation_with_default_data_callback<F>(
         output_device,
         output_stream_params,
         4096, // TODO: Get latency by get_min_latency instead ?
-        Some(data_callback),
+        Some(noop_data_callback),
         Some(state_callback),
         data,
         operation,
     );
-
-    extern "C" fn data_callback(
-        stream: *mut ffi::cubeb_stream,
-        _user_ptr: *mut c_void,
-        _input_buffer: *const c_void,
-        output_buffer: *mut c_void,
-        nframes: i64,
-    ) -> i64 {
-        assert!(!stream.is_null());
-
-        // Feed silence data to output buffer
-        if !output_buffer.is_null() {
-            let stm = unsafe { &mut *(stream as *mut AudioUnitStream) };
-            let channels = stm.core_stream_data.output_stream_params.channels();
-            let samples = nframes as usize * channels as usize;
-            let sample_size = cubeb_sample_size(stm.core_stream_data.output_stream_params.format());
-            unsafe {
-                ptr::write_bytes(output_buffer, 0, samples * sample_size);
-            }
-        }
-
-        nframes
-    }
 }

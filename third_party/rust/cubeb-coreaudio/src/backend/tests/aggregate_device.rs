@@ -42,7 +42,7 @@ fn test_aggregate_set_sub_devices_for_unknown_devices() {
 // application and print out the sub devices of them!
 #[test]
 fn test_aggregate_get_sub_devices() {
-    let devices = test_get_all_devices(DeviceFilter::ExcludeCubebAggregate);
+    let devices = test_get_all_devices(DeviceFilter::ExcludeCubebAggregateAndVPIO);
     for device in devices {
         // `AggregateDevice::get_sub_devices(device)` will return a single-element vector
         // containing `device` itself if it's not an aggregate device. This test assumes devices
@@ -108,7 +108,7 @@ fn test_aggregate_create_blank_device() {
     // TODO: Test this when there is no available devices.
     let plugin = AggregateDevice::get_system_plugin_id().unwrap();
     let device = AggregateDevice::create_blank_device_sync(plugin).unwrap();
-    let devices = test_get_all_devices(DeviceFilter::IncludeCubebAggregate);
+    let devices = test_get_all_devices(DeviceFilter::IncludeAll);
     let device = devices.into_iter().find(|dev| dev == &device).unwrap();
     let uid = get_device_global_uid(device).unwrap().into_string();
     assert!(uid.contains(PRIVATE_AGGREGATE_DEVICE_NAME));

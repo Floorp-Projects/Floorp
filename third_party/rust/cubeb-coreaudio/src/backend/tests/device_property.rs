@@ -282,6 +282,7 @@ fn test_get_device_streams() {
     if let Some(device) = test_get_default_device(Scope::Input) {
         let streams = get_device_streams(device, DeviceType::INPUT).unwrap();
         println!("streams on the input device: {:?}", streams);
+        assert!(!streams.is_empty());
     } else {
         println!("No input device.");
     }
@@ -289,6 +290,7 @@ fn test_get_device_streams() {
     if let Some(device) = test_get_default_device(Scope::Output) {
         let streams = get_device_streams(device, DeviceType::OUTPUT).unwrap();
         println!("streams on the output device: {:?}", streams);
+        assert!(!streams.is_empty());
     } else {
         println!("No output device.");
     }
@@ -350,56 +352,6 @@ fn test_get_ranges_of_device_sample_rate_by_unknown_device() {
     assert!(get_ranges_of_device_sample_rate(kAudioObjectUnknown, DeviceType::INPUT).is_err());
 }
 
-// get_device_stream_format
-// ------------------------------------
-#[test]
-fn test_get_device_stream_format() {
-    if let Some(device) = test_get_default_device(Scope::Input) {
-        let format = get_device_stream_format(device, DeviceType::INPUT).unwrap();
-        println!("input stream format: {:?}", format);
-    } else {
-        println!("No input device.");
-    }
-
-    if let Some(device) = test_get_default_device(Scope::Output) {
-        let format = get_device_stream_format(device, DeviceType::OUTPUT).unwrap();
-        println!("output stream format: {:?}", format);
-    } else {
-        println!("No output device.");
-    }
-}
-
-#[test]
-#[should_panic]
-fn test_get_device_stream_format_by_unknown_device() {
-    assert!(get_device_stream_format(kAudioObjectUnknown, DeviceType::INPUT).is_err());
-}
-
-// get_device_stream_configuration
-// ------------------------------------
-#[test]
-fn test_get_device_stream_configuration() {
-    if let Some(device) = test_get_default_device(Scope::Input) {
-        let buffers = get_device_stream_configuration(device, DeviceType::INPUT).unwrap();
-        println!("input stream config: {:?}", buffers);
-    } else {
-        println!("No input device.");
-    }
-
-    if let Some(device) = test_get_default_device(Scope::Output) {
-        let buffers = get_device_stream_configuration(device, DeviceType::OUTPUT).unwrap();
-        println!("output stream config: {:?}", buffers);
-    } else {
-        println!("No output device.");
-    }
-}
-
-#[test]
-#[should_panic]
-fn test_get_device_stream_configuration_by_unknown_device() {
-    assert!(get_device_stream_configuration(kAudioObjectUnknown, DeviceType::INPUT).is_err());
-}
-
 // get_stream_latency
 // ------------------------------------
 #[test]
@@ -407,7 +359,7 @@ fn test_get_stream_latency() {
     if let Some(device) = test_get_default_device(Scope::Input) {
         let streams = get_device_streams(device, DeviceType::INPUT).unwrap();
         for stream in streams {
-            let latency = get_stream_latency(stream, DeviceType::INPUT).unwrap();
+            let latency = get_stream_latency(stream).unwrap();
             println!("latency of the input stream {} is {}", stream, latency);
         }
     } else {
@@ -417,7 +369,7 @@ fn test_get_stream_latency() {
     if let Some(device) = test_get_default_device(Scope::Output) {
         let streams = get_device_streams(device, DeviceType::OUTPUT).unwrap();
         for stream in streams {
-            let latency = get_stream_latency(stream, DeviceType::OUTPUT).unwrap();
+            let latency = get_stream_latency(stream).unwrap();
             println!("latency of the output stream {} is {}", stream, latency);
         }
     } else {
@@ -428,5 +380,94 @@ fn test_get_stream_latency() {
 #[test]
 #[should_panic]
 fn test_get_stream_latency_by_unknown_device() {
-    assert!(get_stream_latency(kAudioObjectUnknown, DeviceType::INPUT).is_err());
+    assert!(get_stream_latency(kAudioObjectUnknown).is_err());
+}
+
+// get_stream_virtual_format
+// ------------------------------------
+#[test]
+fn test_get_stream_virtual_format() {
+    if let Some(device) = test_get_default_device(Scope::Input) {
+        let streams = get_device_streams(device, DeviceType::INPUT).unwrap();
+        let formats = streams
+            .iter()
+            .map(|s| get_stream_virtual_format(*s))
+            .collect::<Vec<std::result::Result<AudioStreamBasicDescription, OSStatus>>>();
+        println!("input stream formats: {:?}", formats);
+        assert!(!formats.is_empty());
+    } else {
+        println!("No input device.");
+    }
+
+    if let Some(device) = test_get_default_device(Scope::Output) {
+        let streams = get_device_streams(device, DeviceType::OUTPUT).unwrap();
+        let formats = streams
+            .iter()
+            .map(|s| get_stream_virtual_format(*s))
+            .collect::<Vec<std::result::Result<AudioStreamBasicDescription, OSStatus>>>();
+        println!("output stream formats: {:?}", formats);
+        assert!(!formats.is_empty());
+    } else {
+        println!("No output device.");
+    }
+}
+
+#[test]
+#[should_panic]
+fn test_get_stream_virtual_format_by_unknown_stream() {
+    assert!(get_stream_virtual_format(kAudioObjectUnknown).is_err());
+}
+
+// get_stream_terminal_type
+// ------------------------------------
+
+#[test]
+fn test_get_stream_terminal_type() {
+    fn terminal_type_to_device_type(terminal_type: u32) -> Option<DeviceType> {
+        #[allow(non_upper_case_globals)]
+        match terminal_type {
+            kAudioStreamTerminalTypeMicrophone
+            | kAudioStreamTerminalTypeHeadsetMicrophone
+            | kAudioStreamTerminalTypeReceiverMicrophone => Some(DeviceType::INPUT),
+            kAudioStreamTerminalTypeSpeaker
+            | kAudioStreamTerminalTypeHeadphones
+            | kAudioStreamTerminalTypeLFESpeaker
+            | kAudioStreamTerminalTypeReceiverSpeaker => Some(DeviceType::OUTPUT),
+            t if t > INPUT_UNDEFINED && t < OUTPUT_UNDEFINED => Some(DeviceType::INPUT),
+            t if t > OUTPUT_UNDEFINED && t < BIDIRECTIONAL_UNDEFINED => Some(DeviceType::OUTPUT),
+            t => {
+                println!("UNKNOWN TerminalType {:#06x}", t);
+                None
+            }
+        }
+    }
+    if let Some(device) = test_get_default_device(Scope::Input) {
+        let streams = get_device_streams(device, DeviceType::INPUT).unwrap();
+        for stream in streams {
+            assert_eq!(
+                terminal_type_to_device_type(get_stream_terminal_type(stream).unwrap()),
+                Some(DeviceType::INPUT)
+            );
+        }
+    } else {
+        println!("No input device.");
+    }
+
+    if let Some(device) = test_get_default_device(Scope::Output) {
+        let streams = get_device_streams(device, DeviceType::OUTPUT).unwrap();
+        for stream in streams {
+            assert_eq!(
+                terminal_type_to_device_type(get_stream_terminal_type(stream).unwrap()),
+                Some(DeviceType::OUTPUT)
+            );
+        }
+    } else {
+        println!("No output device.");
+    }
+}
+
+#[test]
+#[should_panic]
+fn test_get_stream_terminal_type_by_unknown_stream() {
+    assert!(get_stream_terminal_type(kAudioObjectUnknown).is_err());
 }
