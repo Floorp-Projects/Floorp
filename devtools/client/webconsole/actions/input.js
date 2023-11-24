@@ -362,6 +362,34 @@ function handleHelperResult(response) {
             ])
           );
           break;
+
+        case "traceOutput":
+          const { enabled, logMethod } = helperResult;
+          let message;
+          if (enabled) {
+            if (logMethod == "stdout") {
+              message = l10n.getStr(
+                "webconsole.message.commands.startTracingToStdout"
+              );
+            } else if (logMethod == "console") {
+              message = l10n.getStr(
+                "webconsole.message.commands.startTracingToWebConsole"
+              );
+            } else {
+              throw new Error(`Unsupported tracer log method ${logMethod}`);
+            }
+          } else {
+            message = l10n.getStr("webconsole.message.commands.stopTracing");
+          }
+          dispatch(
+            messagesActions.messagesAdd([
+              {
+                resourceType: ResourceCommand.TYPES.PLATFORM_MESSAGE,
+                message,
+              },
+            ])
+          );
+          break;
       }
     }
 

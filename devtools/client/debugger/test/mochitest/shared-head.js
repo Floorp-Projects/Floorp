@@ -2848,7 +2848,11 @@ async function hasConsoleMessage({ toolbox }, msg) {
   });
 }
 
-function evaluateExpressionInConsole(hud, expression) {
+function evaluateExpressionInConsole(
+  hud,
+  expression,
+  expectedClassName = "result"
+) {
   const seenMessages = new Set(
     JSON.parse(
       hud.ui.outputNode
@@ -2860,7 +2864,7 @@ function evaluateExpressionInConsole(hud, expression) {
     const onNewMessage = messages => {
       for (const message of messages) {
         if (
-          message.node.classList.contains("result") &&
+          message.node.classList.contains(expectedClassName) &&
           !seenMessages.has(message.node.getAttribute("data-message-id"))
         ) {
           hud.ui.off("new-messages", onNewMessage);

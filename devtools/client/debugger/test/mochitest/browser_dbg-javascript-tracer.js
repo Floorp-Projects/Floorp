@@ -177,7 +177,7 @@ add_task(async function testPageKeyShortcut() {
     DevToolsStartup.initialized = false;
   });
 
-  const dbg = await initDebugger("data:text/html,key-shortcut");
+  const dbg = await initDebuggerWithAbsoluteURL("data:text/html,key-shortcut");
 
   const topLevelThread =
     dbg.toolbox.commands.targetCommand.targetFront.threadFront.actorID;

@@ -16,6 +16,7 @@ loader.lazyGetter(this, "l10n", () => {
 });
 const USAGE_STRING_MAPPING = {
   block: "webconsole-commands-usage-block",
+  trace: "webconsole-commands-usage-trace",
   unblock: "webconsole-commands-usage-unblock",
 };
 
@@ -110,7 +111,7 @@ const WebConsoleCommandsManager = {
    * a string starting with ':' character.
    */
   getAllColonCommandNames() {
-    return ["block", "help", "history", "screenshot", "unblock"];
+    return ["block", "help", "history", "screenshot", "unblock", "trace"];
   },
 
   /**
@@ -118,7 +119,7 @@ const WebConsoleCommandsManager = {
    * and can only be used via `:command-name`.
    */
   getColonOnlyCommandNames() {
-    return ["screenshot"];
+    return ["screenshot", "trace"];
   },
 
   /**
@@ -786,4 +787,48 @@ WebConsoleCommandsManager.register({
     };
   },
   validArguments: ["url"],
+});
+
+/*
+ * Toggle JavaScript tracing
+ *
+ * @param object args
+ *        An object with various configuration only valid when starting the tracing.
+ *
+ * @return void
+ */
+WebConsoleCommandsManager.register({
+  name: "trace",
+  command(owner, args) {
+    if (isWorker) {
+      throw new Error(":trace command isn't supported in workers");
+    }
+    // Disable :trace command on worker until this feature is enabled by default
+    if (
+      !Services.prefs.getBoolPref(
+        "devtools.debugger.features.javascript-tracing",
+        false
+      )
+    ) {
+      throw new Error(
+        ":trace requires 'devtools.debugger.features.javascript-tracing' preference to be true"
+      );
+    }
+    const tracerActor =
+      owner.consoleActor.parentActor.getTargetScopedActor("tracer");
+    const logMethod = args.logMethod || "console";
+    // Note that toggleTracing does some sanity checks and will throw meaningful error
+    // when the arguments are wrong.
+    const enabled = tracerActor.toggleTracing({
+      logMethod,
+      prefix: args.prefix || null,
+    });
+
+    owner.helperResult = {
+      type: "traceOutput",
+      enabled,
+      logMethod,
+    };
+  },
+  validArguments: ["logMethod", "prefix"],
 });
