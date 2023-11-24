@@ -170,7 +170,11 @@ class ReportBrokenSiteHelper {
     ok(!button.disabled, "Button is enabled");
     const promises = [];
     if (newView) {
-      promises.push(BrowserTestUtils.waitForEvent(newView, "ViewShown"));
+      if (newView.nodeName == "panel") {
+        promises.push(BrowserTestUtils.waitForEvent(newView, "popupshown"));
+      } else {
+        promises.push(BrowserTestUtils.waitForEvent(newView, "ViewShown"));
+      }
     } else {
       promises.push(BrowserTestUtils.waitForEvent(view, "ViewHiding"));
     }
@@ -217,6 +221,18 @@ class ReportBrokenSiteHelper {
     await this.#assertClickAndViewChanges(this.okayButton, this.sentView);
   }
 
+  async clickBack() {
+    await this.#assertClickAndViewChanges(
+      this.backButton,
+      this.sourceMenu.popup
+    );
+  }
+
+  isBackButtonEnabled() {
+    ok(BrowserTestUtils.is_visible(this.backButton), "Back button is visible");
+    ok(!this.backButton.disabled, "Back button is enabled");
+  }
+
   close() {
     if (this.opened) {
       this.openPanel?.hidePopup(false);
@@ -256,6 +272,10 @@ class ReportBrokenSiteHelper {
     return this.win.document.getElementById(
       "report-broken-site-popup-send-more-info-link"
     );
+  }
+
+  get backButton() {
+    return this.mainView.querySelector(".subviewbutton-back");
   }
 
   get sendButton() {
