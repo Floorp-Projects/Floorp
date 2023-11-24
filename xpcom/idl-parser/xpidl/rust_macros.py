@@ -102,7 +102,7 @@ def print_rust_macros_bindings(idl, fd, relpath):
     fd = rust.AutoIndent(fd)
 
     fd.write(header % {"relpath": relpath})
-    fd.write("{static D: &'static [Interface] = &[\n")
+    fd.write("{static D: &[Interface] = &[\n")
 
     for p in idl.productions:
         if p.kind == "interface":
