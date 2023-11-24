@@ -1468,11 +1468,11 @@ PresShell* nsDocShell::GetEldestPresShell() {
 }
 
 NS_IMETHODIMP
-nsDocShell::GetContentViewer(nsIDocumentViewer** aContentViewer) {
-  NS_ENSURE_ARG_POINTER(aContentViewer);
+nsDocShell::GetContentViewer(nsIDocumentViewer** aDocumentViewer) {
+  NS_ENSURE_ARG_POINTER(aDocumentViewer);
 
-  *aContentViewer = mDocumentViewer;
-  NS_IF_ADDREF(*aContentViewer);
+  *aDocumentViewer = mDocumentViewer;
+  NS_IF_ADDREF(*aDocumentViewer);
   return NS_OK;
 }
 
@@ -5592,7 +5592,7 @@ static bool IsFollowupPartOfMultipart(nsIRequest* aRequest) {
          !firstPart;
 }
 
-nsresult nsDocShell::Embed(nsIDocumentViewer* aContentViewer,
+nsresult nsDocShell::Embed(nsIDocumentViewer* aDocumentViewer,
                            WindowGlobalChild* aWindowActor,
                            bool aIsTransientAboutBlank, bool aPersist,
                            nsIRequest* aRequest, nsIURI* aPreviousURI) {
@@ -5600,7 +5600,7 @@ nsresult nsDocShell::Embed(nsIDocumentViewer* aContentViewer,
   // setting up new document
   PersistLayoutHistoryState();
 
-  nsresult rv = SetupNewViewer(aContentViewer, aWindowActor);
+  nsresult rv = SetupNewViewer(aDocumentViewer, aWindowActor);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // XXX What if SetupNewViewer fails?
@@ -7046,15 +7046,15 @@ nsDocShell::RestorePresentationEvent::Run() {
 }
 
 NS_IMETHODIMP
-nsDocShell::BeginRestore(nsIDocumentViewer* aContentViewer, bool aTop) {
+nsDocShell::BeginRestore(nsIDocumentViewer* aDocumentViewer, bool aTop) {
   MOZ_ASSERT(!mozilla::SessionHistoryInParent());
 
   nsresult rv;
-  if (!aContentViewer) {
+  if (!aDocumentViewer) {
     rv = EnsureDocumentViewer();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    aContentViewer = mDocumentViewer;
+    aDocumentViewer = mDocumentViewer;
   }
 
   // Dispatch events for restoring the presentation.  We try to simulate
@@ -7062,7 +7062,7 @@ nsDocShell::BeginRestore(nsIDocumentViewer* aContentViewer, bool aTop) {
   // the document's channel to the loadgroup to initiate stateChange
   // notifications.
 
-  RefPtr<Document> doc = aContentViewer->GetDocument();
+  RefPtr<Document> doc = aDocumentViewer->GetDocument();
   if (doc) {
     nsIChannel* channel = doc->GetChannel();
     if (channel) {

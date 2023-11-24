@@ -985,7 +985,7 @@ class nsDocShell final : public nsDocLoader,
   nsresult EnsureCommandHandler();
   nsresult RefreshURIFromQueue();
   void RefreshURIToQueue();
-  nsresult Embed(nsIDocumentViewer* aContentViewer,
+  nsresult Embed(nsIDocumentViewer* aDocumentViewer,
                  mozilla::dom::WindowGlobalChild* aWindowActor,
                  bool aIsTransientAboutBlank, bool aPersist,
                  nsIRequest* aRequest, nsIURI* aPreviousURI);
