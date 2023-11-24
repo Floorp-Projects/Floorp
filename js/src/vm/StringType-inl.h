@@ -226,6 +226,7 @@ inline size_t JSLinearString::maybeMallocCharsOnPromotion(
 
   return 0;
 }
+
 inline size_t JSLinearString::allocSize() const {
   MOZ_ASSERT(ownsMallocedChars());
 
@@ -430,6 +431,21 @@ inline js::PropertyName* JSLinearString::toPropertyName(JSContext* cx) {
     return nullptr;
   }
   return atom->asPropertyName();
+}
+
+bool JSLinearString::hasMovableChars() const {
+  const JSLinearString* topBase = this;
+  while (topBase->hasBase()) {
+    topBase = topBase->base();
+  }
+  if (topBase->isInline()) {
+    return true;
+  }
+  if (topBase->isTenured()) {
+    return false;
+  }
+  return topBase->storeBuffer()->nursery().isInside(
+      topBase->nonInlineCharsRaw());
 }
 
 template <js::AllowGC allowGC>

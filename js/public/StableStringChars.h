@@ -32,8 +32,8 @@ class JSLinearString;
 namespace JS {
 
 /**
- * This class provides safe access to a string's chars across a GC. If we ever
- * nursery allocate strings' out of line chars, this class will have to make a
+ * This class provides safe access to a string's chars across a GC. When it
+ * has nursery-allocated out of lines chars, this class will have to make a
  * copy, so it's best to avoid using this class unless you really need it. It's
  * usually more efficient to use the latin1Chars/twoByteChars JSString methods
  * and often the code can be rewritten so that only indexes instead of char
@@ -105,7 +105,6 @@ class MOZ_STACK_CLASS JS_PUBLIC_API AutoStableStringChars final {
   AutoStableStringChars(const AutoStableStringChars& other) = delete;
   void operator=(const AutoStableStringChars& other) = delete;
 
-  bool baseIsInline(Handle<JSLinearString*> linearString);
   template <typename T>
   T* allocOwnChars(JSContext* cx, size_t count);
   bool copyLatin1Chars(JSContext* cx, Handle<JSLinearString*> linearString);
