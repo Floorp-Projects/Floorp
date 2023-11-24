@@ -50,7 +50,7 @@ have a curated set of [good first bugs] you may consider attempting first.
 We have collected a lot of good advice for working on Marionette
 code in our [code style document], which we highly recommend you read.
 
-[ask questions]: index.rst#communication
+[ask questions]: index.rst#Communication
 [mozilla-central]: https://searchfox.org/mozilla-central/source/remote/marionette/
 [Testing :: Marionette]: https://bugzilla.mozilla.org/buglist.cgi?resolution=---&component=Marionette
 [good first bugs]: https://codetribute.mozilla.org/projects/automation?project%3DMarionette

@@ -35,12 +35,14 @@ At the moment we only support another type of MessageHandler, the [WindowGlobalM
 ### Simplified architecture example
 
 Let's imagine a very simple example, with a couple of modules:
-- a root module called "version" with a command returning the current version of the browser
-- a windowglobal module called "location" with a command returning the location of the windowglobal
+
+* a root module called "version" with a command returning the current version of the browser
+
+* a windowglobal module called "location" with a command returning the location of the windowglobal
 
 Suppose the browser has 2 tabs, running in different processes. If the consumer used the "version" module, and the "location" module but only for one of the two tabs, the network will look like:
 
-```
+```text
  parent process                     content process 1
 ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐      ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─
                                      ╔═══════════════════════╗      ┌─────────────┐ │
@@ -60,7 +62,7 @@ Suppose the browser has 2 tabs, running in different processes. If the consumer 
 
 But if the consumer sends another command, to retrieve the location of the other tab, the network will then evolve to:
 
-```
+```text
  parent process                     content process 1
 ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐      ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─
                                      ╔═══════════════════════╗      ┌─────────────┐ │

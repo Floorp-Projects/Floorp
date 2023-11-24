@@ -1,11 +1,10 @@
-Required Preferences for Fission
-================================
+# Required Preferences for Fission
 
 Fission (site isolation for Firefox) introduced some architectural changes that are incompatible with our CDP implementation. To keep using CDP for Firefox, make sure the following preferences are set in the profile before starting Firefox with `--remote-debugging-port`:
 
-  * `fission.bfcacheInParent` should be set to `false`.
+* `fission.bfcacheInParent` should be set to `false`.
 
-  * `fission.webContentIsolationStrategy` should be set to `0`.
+* `fission.webContentIsolationStrategy` should be set to `0`.
 
 Without those preferences, expect issues related to navigation in several domains (Page, Runtime, ...).
 

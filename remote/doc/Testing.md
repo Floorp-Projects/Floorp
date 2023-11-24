@@ -1,39 +1,40 @@
-Testing
-=======
+# Testing
 
 The Remote Protocol has unit- and functional tests located under different folders:
 
-	- CDP: `remote/cdp`
-	- Marionette: `remote/marionette`.
-	- Shared Modules: `remote/shared/`
-  - WebDriver BiDi: `remote/webdriver-bidi`
+* CDP: `remote/cdp/`
+* Marionette: `remote/marionette/`.
+* Shared Modules: `remote/shared/`
+* WebDriver BiDi: `remote/webdriver-bidi/`
 
 You may want to run all the tests under a particular subfolder locally like this:
 
-	% ./mach test remote
+```shell
+% ./mach test remote
+```
 
-
-Unit tests
-----------
+## Unit tests
 
 Because tests are run in parallel and [xpcshell] itself is quite
 chatty, it can sometimes be useful to run the tests in sequence:
 
-	% ./mach xpcshell-test --sequential remote/cdp/test/unit/test_DomainCache.js
+```shell
+% ./mach xpcshell-test --sequential remote/cdp/test/unit/test_DomainCache.js
+```
 
 The unit tests will appear as part of the `X` (for _xpcshell_) jobs
 on Treeherder.
 
 [xpcshell]: /testing/xpcshell/index.rst
 
-
-Browser Chrome Mochitests
--------------------------
+## Browser Chrome Mochitests
 
 We also have a set of functional browser-chrome mochitests located
 under several components, ie. _remote/shared/messagehandler/test/browser_:
 
-	% ./mach mochitest remote/shared/messagehandler/test/browser/browser_*
+```shell
+% ./mach mochitest remote/shared/messagehandler/test/browser/browser_*
+```
 
 The functional tests will appear under the `M` (for _mochitest_)
 category in the `remote` jobs on Treeherder.
@@ -42,7 +43,9 @@ As the functional tests will sporadically pop up new Firefox
 application windows, a helpful tip is to run them in headless
 mode:
 
-	% ./mach mochitest --headless remote/shared/messagehandler/test/browser
+```shell
+% ./mach mochitest --headless remote/shared/messagehandler/test/browser
+```
 
 The `--headless` flag is equivalent to setting the `MOZ_HEADLESS`
 environment variable.  You can additionally use `MOZ_HEADLESS_WIDTH`
@@ -65,40 +68,44 @@ targetDestroyed, and targetInfoChanged events will be received by the client.
 The task function you provide in your test will be called with the
 three arguments `client`, `CDP`, and `tab`:
 
-  - `client` is the connection to the `nsIRemoteAgent` listener,
+* `client` is the connection to the `nsIRemoteAgent` listener,
     and it provides the a client CDP API
 
-  - `CDP` is the CDP client class
+* `CDP` is the CDP client class
 
-  - `tab` is a fresh tab opened for each new test, and is automatically
+* `tab` is a fresh tab opened for each new test, and is automatically
     removed after the test has run
 
 This is what it looks like all put together:
 
-	add_task(async function testName({client, CDP, tab}) {
-	  // test tab is implicitly created for us
-	  info("Current URL: " + tab.linkedBrowser.currentURI.spec);
+```javascript
+add_task(async function testName({client, CDP, tab}) {
+  // test tab is implicitly created for us
+  info("Current URL: " + tab.linkedBrowser.currentURI.spec);
 
-	  // manually connect to a specific target
-	  const { mainProcessTarget } = RemoteAgent.cdp.targetList;
-	  const target = mainProcessTarget.wsDebuggerURL;
-	  const client = await CDP({ target });
+  // manually connect to a specific target
+  const { mainProcessTarget } = RemoteAgent.cdp.targetList;
+  const target = mainProcessTarget.wsDebuggerURL;
+  const client = await CDP({ target });
 
-	  // retrieve the Browser domain, and call getVersion() on it
-	  const { Browser } = client;
-	  const version = await Browser.getVersion();
+  // retrieve the Browser domain, and call getVersion() on it
+  const { Browser } = client;
+  const version = await Browser.getVersion();
 
-           await client.close();
+  await client.close();
 
-	  // tab is implicitly removed
-	});
+  // tab is implicitly removed
+});
+```
 
-You can control the tab creation behaviour with the `createTab`
+You can control the tab creation behavior with the `createTab`
 option to `add_task(taskFunction, options)`:
 
-	add_task(async function testName({client}) {
-	  // tab is not implicitly created
-	}, { createTab: false });
+```javascript
+add_task(async function testName({client}) {
+  // tab is not implicitly created
+}, { createTab: false });
+```
 
 If you want to write an asynchronous test _without_ this implicit
 setup you may instead use `add_plain_task()`, which works exactly like the
@@ -106,23 +113,25 @@ original `add_task()`.
 
 [CDP client]: https://github.com/cyrus-and/chrome-remote-interface
 
-
-Puppeteer tests
----------------
+## Puppeteer tests
 
 In addition to our own Firefox-specific tests, we run the upstream
 [Puppeteer test suite] against our implementation to [track progress]
 towards achieving full [Puppeteer support] in Firefox. The tests are written
-in the behaviour-driven testing framework [Mocha].
+in the behavior-driven testing framework [Mocha].
 
 Puppeteer tests are vendored under _remote/test/puppeteer/_ and are
 run locally like this:
 
-	% ./mach puppeteer-test
+```shell
+% ./mach puppeteer-test
+```
 
 You can also run them against Chrome as:
 
-	% ./mach puppeteer-test --product=chrome
+```shell
+% ./mach puppeteer-test --product=chrome
+```
 
 By default the mach command will automatically install Puppeteer but that's
 only needed for the very first time, or when a new Puppeteer release has been
@@ -142,17 +151,20 @@ _remote/test/puppeteer/json-mocha-reporter.js_
 Check the upstream [Puppeteer test suite] documentation for instructions on
 how to skip tests, run only one test or a subsuite of tests.
 
-Testing on Try
---------------
+## Testing on Try
 
 To schedule all the Remote Protocol tests on try, you can use the
 `remote-protocol` [try preset]:
 
-	mach try --preset remote-protocol
+```shell
+% ./mach try --preset remote-protocol
+```
 
 But you can also schedule tests by selecting relevant jobs yourself:
 
-	mach try fuzzy
+```shell
+% ./mach try fuzzy
+```
 
 [Puppeteer test suite]: https://github.com/puppeteer/puppeteer/blob/master/test/README.md
 [Puppeteer support]: https://bugzilla.mozilla.org/show_bug.cgi?id=puppeteer
