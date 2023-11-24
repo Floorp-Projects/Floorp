@@ -6691,31 +6691,6 @@ nsresult nsContentUtils::WrapNative(JSContext* cx, nsISupports* native,
   return rv;
 }
 
-nsresult nsContentUtils::CreateArrayBuffer(JSContext* aCx,
-                                           const nsACString& aData,
-                                           JSObject** aResult) {
-  if (!aCx) {
-    return NS_ERROR_FAILURE;
-  }
-
-  size_t dataLen = aData.Length();
-  *aResult = JS::NewArrayBuffer(aCx, dataLen);
-  if (!*aResult) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (dataLen > 0) {
-    NS_ASSERTION(JS::IsArrayBufferObject(*aResult), "What happened?");
-    JS::AutoCheckCannotGC nogc;
-    bool isShared;
-    memcpy(JS::GetArrayBufferData(*aResult, &isShared, nogc),
-           aData.BeginReading(), dataLen);
-    MOZ_ASSERT(!isShared);
-  }
-
-  return NS_OK;
-}
-
 void nsContentUtils::StripNullChars(const nsAString& aInStr,
                                     nsAString& aOutStr) {
   // In common cases where we don't have nulls in the

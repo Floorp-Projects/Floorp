@@ -17,6 +17,7 @@
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/Blob.h"
 
 #include "nsError.h"
@@ -302,9 +303,9 @@ nsresult nsDOMDataChannel::DoOnMessageAvailable(const nsACString& aData,
         return NS_ERROR_FAILURE;
       }
     } else if (mBinaryType == DC_BINARY_TYPE_ARRAYBUFFER) {
-      JS::Rooted<JSObject*> arrayBuf(cx);
-      rv = nsContentUtils::CreateArrayBuffer(cx, aData, arrayBuf.address());
-      NS_ENSURE_SUCCESS(rv, rv);
+      ErrorResult error;
+      JS::Rooted<JSObject*> arrayBuf(cx, ArrayBuffer::Create(cx, aData, error));
+      ENSURE_SUCCESS(error, error.StealNSResult());
       jsData.setObject(*arrayBuf);
     } else {
       MOZ_CRASH("Unknown binary type!");

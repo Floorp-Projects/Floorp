@@ -24,6 +24,7 @@
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SerializedStackHolder.h"
+#include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/WorkerPrivate.h"
@@ -2011,10 +2012,9 @@ nsresult WebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
     } else if (mBinaryType == dom::BinaryType::Arraybuffer) {
       messageType = nsIWebSocketEventListener::TYPE_ARRAYBUFFER;
 
-      JS::Rooted<JSObject*> arrayBuf(cx);
-      nsresult rv =
-          nsContentUtils::CreateArrayBuffer(cx, aData, arrayBuf.address());
-      NS_ENSURE_SUCCESS(rv, rv);
+      ErrorResult rv;
+      JS::Rooted<JSObject*> arrayBuf(cx, ArrayBuffer::Create(cx, aData, rv));
+      ENSURE_SUCCESS(rv, rv.StealNSResult());
       jsData.setObject(*arrayBuf);
     } else {
       MOZ_CRASH("Unknown binary type!");

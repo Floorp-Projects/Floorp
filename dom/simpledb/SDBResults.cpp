@@ -15,7 +15,7 @@
 #include "js/TypeDecls.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/MacroForEach.h"
-#include "nsContentUtils.h"
+#include "mozilla/dom/TypedArray.h"
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsTArray.h"
@@ -42,12 +42,9 @@ SDBResult::GetAsArray(nsTArray<uint8_t>& aData) {
 NS_IMETHODIMP
 SDBResult::GetAsArrayBuffer(JSContext* aCx,
                             JS::MutableHandle<JS::Value> _retval) {
-  JS::Rooted<JSObject*> arrayBuffer(aCx);
-  nsresult rv =
-      nsContentUtils::CreateArrayBuffer(aCx, mData, arrayBuffer.address());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  ErrorResult rv;
+  JS::Rooted<JSObject*> arrayBuffer(aCx, ArrayBuffer::Create(aCx, mData, rv));
+  ENSURE_SUCCESS(rv, rv.StealNSResult());
 
   _retval.setObject(*arrayBuffer);
   return NS_OK;

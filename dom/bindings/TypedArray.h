@@ -705,7 +705,7 @@ struct TypedArray : public TypedArray_base<ArrayT> {
                                  Span<const element_type> data,
                                  ErrorResult& error) {
     ArrayT array = CreateCommon(cx, creator, data.Length(), error);
-    if (!error.Failed()) {
+    if (!error.Failed() && !data.IsEmpty()) {
       CopyFrom(cx, data, array);
     }
     return array.asObject();
@@ -714,7 +714,7 @@ struct TypedArray : public TypedArray_base<ArrayT> {
   static inline JSObject* Create(JSContext* cx, Span<const element_type> data,
                                  ErrorResult& error) {
     ArrayT array = CreateCommon(cx, data.Length(), error);
-    if (!error.Failed()) {
+    if (!error.Failed() && !data.IsEmpty()) {
       CopyFrom(cx, data, array);
     }
     return array.asObject();
