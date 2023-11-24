@@ -7,5 +7,4 @@ which are still useful for other projects
 .. toctree::
    :maxdepth: 1
 
-   adjust
    mma
