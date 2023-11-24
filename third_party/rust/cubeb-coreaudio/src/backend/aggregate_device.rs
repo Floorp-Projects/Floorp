@@ -180,7 +180,7 @@ impl AggregateDevice {
         let device = Self::create_blank_device(plugin_id)?;
 
         // Wait until the aggregate is created.
-        let &(ref lock, ref cvar) = &*condvar_pair;
+        let (lock, cvar) = &*condvar_pair;
         let devices = lock.lock().unwrap();
         if !devices.contains(&device) {
             let (devs, timeout_res) = cvar.wait_timeout(devices, waiting_time).unwrap();
@@ -203,7 +203,7 @@ impl AggregateDevice {
         ) -> OSStatus {
             assert_eq!(id, kAudioObjectSystemObject);
             let pair = unsafe { &mut *(data as *mut Arc<(Mutex<Vec<AudioObjectID>>, Condvar)>) };
-            let &(ref lock, ref cvar) = &**pair;
+            let (lock, cvar) = &**pair;
             let mut devices = lock.lock().unwrap();
             *devices = audiounit_get_devices();
             cvar.notify_one();
@@ -339,7 +339,7 @@ impl AggregateDevice {
         Self::set_sub_devices(device_id, input_id, output_id)?;
 
         // Wait until the sub devices are added.
-        let &(ref lock, ref cvar) = &*condvar_pair;
+        let (lock, cvar) = &*condvar_pair;
         let device = lock.lock().unwrap();
         if *device != device_id {
             let (dev, timeout_res) = cvar.wait_timeout(device, waiting_time).unwrap();
@@ -370,7 +370,7 @@ impl AggregateDevice {
             data: *mut c_void,
         ) -> OSStatus {
             let pair = unsafe { &mut *(data as *mut Arc<(Mutex<AudioObjectID>, Condvar)>) };
-            let &(ref lock, ref cvar) = &**pair;
+            let (lock, cvar) = &**pair;
             let mut device = lock.lock().unwrap();
             *device = id;
             cvar.notify_one();
