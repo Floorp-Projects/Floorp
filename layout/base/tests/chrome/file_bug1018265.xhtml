@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1018265
 
   function run() {
     testcontent = document.getElementById("testcontent");
-    shouldHaveTwoNonHiddenContentViewers();
+    shouldHaveTwoNonHiddenDocumentViewers();
     testcontent.setAttribute("src", "foobarpage");
     setTimeout(errorPageLoaded, 2500)
   }
@@ -30,18 +30,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1018265
 
   function didGoBack(e) {
     testcontent.removeEventListener("pageshow", didGoBack, true);
-    shouldHaveTwoNonHiddenContentViewers();
+    shouldHaveTwoNonHiddenDocumentViewers();
     window.arguments[0].done();
     window.close();
   }
 
-  function getContentViewer(win) {
+  function getDocumentViewer(win) {
     return win.docShell.contentViewer;
   }
 
-  function shouldHaveTwoNonHiddenContentViewers() {
-    window.arguments[0].is(getContentViewer(testcontent.contentWindow).isHidden, false, "Top level ContentViewer should not be hidden.");
-    window.arguments[0].is(getContentViewer(testcontent.contentWindow.frames[0]).isHidden, false, " Iframe's ContentViewer should not be hidden.");
+  function shouldHaveTwoNonHiddenDocumentViewers() {
+    window.arguments[0].is(getDocumentViewer(testcontent.contentWindow).isHidden, false, "Top level DocumentViewer should not be hidden.");
+    window.arguments[0].is(getDocumentViewer(testcontent.contentWindow.frames[0]).isHidden, false, " Iframe's DocumentViewer should not be hidden.");
   }
   ]]>
   </script>
