@@ -13,7 +13,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 loader.lazyRequireGetter(
   this,
-  ["getCommandAndArgs", "isCommand"],
+  ["isCommand"],
   "resource://devtools/server/actors/webconsole/commands/parser.js",
   true
 );
@@ -125,25 +125,20 @@ function evalWithDebugger(string, options = {}, webConsole) {
 
   const { dbgGlobal, bindSelf } = getDbgGlobal(options, dbg, webConsole);
 
+  // If the strings starts with a `:`, do not try to evaluate the strings
+  // and instead only call the related command function directly from
+  // the privileged codebase.
   if (isCmd) {
     try {
-      const { command, args } = getCommandAndArgs(string);
-
-      const helpers = WebConsoleCommandsManager.getColonCommandFunction(
+      return WebConsoleCommandsManager.executeCommand(
         webConsole,
         dbgGlobal,
-        string,
         options.selectedNodeActor,
-        command
+        string
       );
-
-      const result = helpers.commandFunc(args);
-
-      return {
-        result,
-        helperResult: helpers.getHelperResult(),
-      };
     } catch (e) {
+      // Catch any exception and return a result similar to the output
+      // of executeCommand to notify the client about this unexpected error.
       return {
         helperResult: {
           type: "exception",
