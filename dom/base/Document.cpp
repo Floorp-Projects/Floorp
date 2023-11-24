@@ -1351,7 +1351,6 @@ Document::Document(const char* aContentType)
       mIsSVGGlyphsDocument(false),
       mInDestructor(false),
       mIsGoingAway(false),
-      mInXBLUpdate(false),
       mStyleSetFilled(false),
       mQuirkSheetAdded(false),
       mContentEditableSheetAdded(false),

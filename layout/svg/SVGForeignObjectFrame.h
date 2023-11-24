@@ -93,8 +93,6 @@ class SVGForeignObjectFrame final : public nsContainerFrame,
   bool IsDisabled() const { return mRect.width <= 0 || mRect.height <= 0; }
 
   UniquePtr<gfxMatrix> mCanvasTM;
-
-  bool mInReflow;
 };
 
 }  // namespace mozilla
