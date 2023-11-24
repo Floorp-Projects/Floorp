@@ -199,6 +199,53 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   MOZ_ALWAYS_INLINE
   uint32_t flags() const { return headerFlagsField(); }
 
+  // Class for temporarily holding character data that will be used for JSString
+  // contents. The data may be allocated in the nursery, the malloc heap, or in
+  // externally owned memory (perhaps on the stack). The class instance must be
+  // passed to the JSString constructor as a MutableHandle, so that if a GC
+  // occurs between the construction of the content and the construction of the
+  // JSString Cell to hold it, the contents can be transparently moved to the
+  // malloc heap before the nursery is reset.
+  template <typename CharT>
+  class OwnedChars {
+    mozilla::Span<CharT> chars_;
+    bool needsFree_;
+    bool isMalloced_;
+
+   public:
+    // needsFree: the chars pointer should be passed to js_free() if OwnedChars
+    // dies while still possessing ownership.
+    //
+    // isMalloced: the chars pointer does not point into the nursery.
+    //
+    // These are not quite the same, since you might have non-nursery characters
+    // that are owned by something else. needsFree implies isMalloced.
+    OwnedChars(CharT* chars, size_t length, bool isMalloced, bool needsFree);
+    OwnedChars(js::UniquePtr<CharT[], JS::FreePolicy>&& chars, size_t length,
+               bool isMalloced);
+    OwnedChars(OwnedChars&&);
+    OwnedChars(const OwnedChars&) = delete;
+    ~OwnedChars() { reset(); }
+
+    explicit operator bool() const { return !chars_.empty(); }
+    mozilla::Span<CharT> span() const { return chars_; }
+    CharT* data() const { return chars_.data(); }
+    size_t length() const { return chars_.Length(); }
+    size_t size() const { return length() * sizeof(CharT); }
+    bool isMalloced() const { return isMalloced_; }
+
+    // Return the data and release ownership to the caller.
+    inline CharT* release();
+    // Discard any owned data.
+    inline void reset();
+    // Move any nursery data into the malloc heap.
+    inline void ensureNonNursery();
+
+    // If we GC with a live OwnedChars, copy the data out of the nursery to a
+    // safely malloced location.
+    void trace(JSTracer* trc) { ensureNonNursery(); }
+  };
+
  protected:
   /* Fields only apply to string types commented on the right. */
   struct Data {
@@ -710,6 +757,38 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   JSString() = default;
 };
 
+namespace js {
+
+template <typename Wrapper, typename CharT>
+class WrappedPtrOperations<JSString::OwnedChars<CharT>, Wrapper> {
+  const JSString::OwnedChars<CharT>& get() const {
+    return static_cast<const Wrapper*>(this)->get();
+  }
+
+ public:
+  explicit operator bool() const { return !!get(); }
+  mozilla::Span<CharT> span() const { return get().span(); }
+  CharT* data() const { return get().data(); }
+  size_t length() const { return get().length(); }
+  size_t size() const { return get().size(); }
+  bool isMalloced() const { return get().isMalloced(); }
+};
+
+template <typename Wrapper, typename CharT>
+class MutableWrappedPtrOperations<JSString::OwnedChars<CharT>, Wrapper>
+    : public WrappedPtrOperations<JSString::OwnedChars<CharT>, Wrapper> {
+  JSString::OwnedChars<CharT>& get() {
+    return static_cast<Wrapper*>(this)->get();
+  }
+
+ public:
+  CharT* release() { return get().release(); }
+  void reset() { get().reset(); }
+  void ensureNonNursery() { get().ensureNonNursery(); }
+};
+
+} /* namespace js */
+
 class JSRope : public JSString {
   friend class js::gc::CellAllocator;
 
@@ -814,6 +893,8 @@ class JSLinearString : public JSString {
 
   JSLinearString(const char16_t* chars, size_t length);
   JSLinearString(const JS::Latin1Char* chars, size_t length);
+  template <typename CharT>
+  explicit inline JSLinearString(JS::MutableHandle<OwnedChars<CharT>> chars);
 
  protected:
   // Used to construct subclasses that do a full initialization themselves.
@@ -835,14 +916,14 @@ class JSLinearString : public JSString {
 
  public:
   template <js::AllowGC allowGC, typename CharT>
-  static inline JSLinearString* new_(
-      JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars,
-      size_t length, js::gc::Heap heap);
+  static inline JSLinearString* new_(JSContext* cx,
+                                     JS::MutableHandle<OwnedChars<CharT>> chars,
+                                     js::gc::Heap heap);
 
   template <js::AllowGC allowGC, typename CharT>
   static inline JSLinearString* newValidLength(
-      JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars,
-      size_t length, js::gc::Heap heap);
+      JSContext* cx, JS::MutableHandle<OwnedChars<CharT>> chars,
+      js::gc::Heap heap);
 
   // Convert a plain linear string to an extensible string. For testing. The
   // caller must ensure that it is a plain or extensible string already, and

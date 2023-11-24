@@ -14,22 +14,44 @@ BEGIN_TEST(testIsInsideNursery) {
   CHECK(!cx->nursery().isInside(cx));
   CHECK(!cx->nursery().isInside((void*)nullptr));
 
-  // Skip test if the nursery is disabled (via env var, for example.)
-  if (!cx->nursery().isEnabled()) {
+  // Skip test if some part of the nursery is disabled (via env var, for
+  // example.)
+  if (!cx->zone()->allocNurseryObjects() ||
+      !cx->zone()->allocNurseryStrings()) {
     return true;
   }
 
   JS_GC(cx);
 
-  JS::RootedObject object(cx, JS_NewPlainObject(cx));
+  JS::Rooted<JSObject*> object(cx, JS_NewPlainObject(cx));
+  const char oolstr[] =
+      "my hands are floppy dark red pieces of liver, large "
+      "enough to exceed the space of an inline string";
+  JS::Rooted<JSString*> string(cx, JS_NewStringCopyZ(cx, oolstr));
 
   /* Objects are initially allocated in the nursery. */
   CHECK(js::gc::IsInsideNursery(object));
+  /* As are strings. */
+  CHECK(js::gc::IsInsideNursery(string));
+  /* And their contents. */
+  {
+    JS::AutoCheckCannotGC nogc;
+    const JS::Latin1Char* strdata =
+        string->asLinear().nonInlineLatin1Chars(nogc);
+    CHECK(cx->nursery().isInside(strdata));
+  }
 
   JS_GC(cx);
 
   /* And are tenured if still live after a GC. */
   CHECK(!js::gc::IsInsideNursery(object));
+  CHECK(!js::gc::IsInsideNursery(string));
+  {
+    JS::AutoCheckCannotGC nogc;
+    const JS::Latin1Char* strdata =
+        string->asLinear().nonInlineLatin1Chars(nogc);
+    CHECK(!cx->nursery().isInside(strdata));
+  }
 
   return true;
 }

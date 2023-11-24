@@ -3550,8 +3550,9 @@ static bool NewString(JSContext* cx, unsigned argc, Value* vp) {
           return nullptr;
         }
         mozilla::PodCopy(news.get(), chars, len);
-        return JSLinearString::newValidLength<CanGC>(cx, std::move(news), len,
-                                                     heap);
+        Rooted<JSString::OwnedChars<CharT>> owned(cx, std::move(news), len,
+                                                  true);
+        return JSLinearString::newValidLength<CanGC, CharT>(cx, &owned, heap);
       };
 
       if (stable.isLatin1()) {
