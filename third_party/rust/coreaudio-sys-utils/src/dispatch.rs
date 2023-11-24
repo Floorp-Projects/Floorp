@@ -22,6 +22,16 @@ impl Queue {
         queue
     }
 
+    #[cfg(debug_assertions)]
+    pub fn debug_assert_is_current(&self) {
+        unsafe {
+            dispatch_assert_queue(self.0);
+        }
+    }
+
+    #[cfg(not(debug_assertions))]
+    pub fn debug_assert_is_current(&self) {}
+
     pub fn run_async<F>(&self, work: F)
     where
         F: Send + FnOnce(),

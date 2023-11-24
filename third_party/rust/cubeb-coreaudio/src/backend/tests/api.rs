@@ -45,8 +45,8 @@ fn test_increase_and_decrease_context_streams() {
     for i in 0..STREAMS {
         join_handles.push(thread::spawn(move || {
             let context = unsafe { &*(context_ptr_value as *const AudioUnitContext) };
-            let global_latency = context.update_latency_by_adding_stream(i);
-            global_latency
+
+            context.update_latency_by_adding_stream(i)
         }));
     }
     let mut latencies = vec![];
@@ -227,10 +227,11 @@ fn test_add_listener_unknown_device() {
             ),
             callback,
         );
-        assert_eq!(
-            stream.add_device_listener(&listener),
-            kAudioHardwareBadObjectError as OSStatus
-        );
+        let mut res: OSStatus = 0;
+        stream
+            .queue
+            .run_sync(|| res = stream.add_device_listener(&listener));
+        assert_eq!(res, kAudioHardwareBadObjectError as OSStatus);
     });
 }
 
@@ -257,8 +258,15 @@ fn test_add_listener_then_remove_system_device() {
             ),
             callback,
         );
-        assert_eq!(stream.add_device_listener(&listener), NO_ERR);
-        assert_eq!(stream.remove_device_listener(&listener), NO_ERR);
+        let mut res: OSStatus = 0;
+        stream
+            .queue
+            .run_sync(|| res = stream.add_device_listener(&listener));
+        assert_eq!(res, NO_ERR);
+        stream
+            .queue
+            .run_sync(|| res = stream.remove_device_listener(&listener));
+        assert_eq!(res, NO_ERR);
     });
 }
 
@@ -283,7 +291,11 @@ fn test_remove_listener_without_adding_any_listener_before_system_device() {
             ),
             callback,
         );
-        assert_eq!(stream.remove_device_listener(&listener), NO_ERR);
+        let mut res: OSStatus = 0;
+        stream
+            .queue
+            .run_sync(|| res = stream.remove_device_listener(&listener));
+        assert_eq!(res, NO_ERR);
     });
 }
 
@@ -308,10 +320,11 @@ fn test_remove_listener_unknown_device() {
             ),
             callback,
         );
-        assert_eq!(
-            stream.remove_device_listener(&listener),
-            kAudioHardwareBadObjectError as OSStatus
-        );
+        let mut res: OSStatus = 0;
+        stream
+            .queue
+            .run_sync(|| res = stream.remove_device_listener(&listener));
+        assert_eq!(res, kAudioHardwareBadObjectError as OSStatus);
     });
 }
 
@@ -700,7 +713,7 @@ fn test_convert_channel_layout() {
         }
         let layout_ref = unsafe { &(*(&layout as *const TestLayout as *const AudioChannelLayout)) };
         assert_eq!(
-            &audiounit_convert_channel_layout(layout_ref),
+            &audiounit_convert_channel_layout(layout_ref).unwrap(),
             expected_layout
         );
     }
@@ -711,7 +724,9 @@ fn test_convert_channel_layout() {
 #[test]
 fn test_get_preferred_channel_layout_output() {
     match test_get_default_audiounit(Scope::Output) {
-        Some(unit) => assert!(!audiounit_get_preferred_channel_layout(unit.get_inner()).is_empty()),
+        Some(unit) => assert!(!audiounit_get_preferred_channel_layout(unit.get_inner())
+            .unwrap()
+            .is_empty()),
         None => println!("No output audiounit for test."),
     }
 }
@@ -721,7 +736,9 @@ fn test_get_preferred_channel_layout_output() {
 #[test]
 fn test_get_current_channel_layout_output() {
     match test_get_default_audiounit(Scope::Output) {
-        Some(unit) => assert!(!audiounit_get_current_channel_layout(unit.get_inner()).is_empty()),
+        Some(unit) => assert!(!audiounit_get_current_channel_layout(unit.get_inner())
+            .unwrap()
+            .is_empty()),
         None => println!("No output audiounit for test."),
     }
 }
@@ -850,7 +867,7 @@ fn test_for_create_audiounit() {
 
         // Check the output scope is enabled.
         if device.flags.contains(device_flags::DEV_OUTPUT) && default_output.is_some() {
-            device.id = default_output.clone().unwrap();
+            device.id = default_output.unwrap();
             let unit = create_audiounit(&device).unwrap();
             assert!(!unit.is_null());
             assert!(test_audiounit_scope_is_enabled(unit, Scope::Output));
@@ -864,7 +881,7 @@ fn test_for_create_audiounit() {
 
         // Check the input scope is enabled.
         if device.flags.contains(device_flags::DEV_INPUT) && default_input.is_some() {
-            let device_id = default_input.clone().unwrap();
+            let device_id = default_input.unwrap();
             device.id = device_id;
             let unit = create_audiounit(&device).unwrap();
             assert!(!unit.is_null());
@@ -1047,8 +1064,12 @@ fn test_get_channel_count_of_inout_type() {
     fn test_channel_count(scope: Scope) {
         if let Some(device) = test_get_default_device(scope.clone()) {
             assert_eq!(
-                get_channel_count(device, DeviceType::INPUT | DeviceType::OUTPUT).unwrap_err(),
-                kAudioHardwareUnknownPropertyError as OSStatus
+                get_channel_count(device, DeviceType::INPUT | DeviceType::OUTPUT),
+                get_channel_count(device, DeviceType::INPUT).map(|c| c + get_channel_count(
+                    device,
+                    DeviceType::OUTPUT
+                )
+                .unwrap_or(0))
             );
         } else {
             println!("No device for {:?}.", scope);
@@ -1366,7 +1387,6 @@ fn test_create_device_info_by_unknown_device() {
 }
 
 #[test]
-#[should_panic]
 fn test_create_device_info_with_unknown_type() {
     test_create_device_info_with_unknown_type_by_scope(Scope::Input);
     test_create_device_info_with_unknown_type_by_scope(Scope::Output);
@@ -1374,8 +1394,6 @@ fn test_create_device_info_with_unknown_type() {
     fn test_create_device_info_with_unknown_type_by_scope(scope: Scope) {
         if let Some(device) = test_get_default_device(scope.clone()) {
             assert!(create_cubeb_device_info(device, DeviceType::UNKNOWN).is_err());
-        } else {
-            panic!("Panic by default: No device for {:?}.", scope);
         }
     }
 }
@@ -1416,23 +1434,6 @@ fn test_create_device_from_hwdev_with_inout_type() {
     }
 }
 
-// is_aggregate_device
-// ------------------------------------
-#[test]
-fn test_is_aggregate_device() {
-    let mut aggregate_name = String::from(PRIVATE_AGGREGATE_DEVICE_NAME);
-    aggregate_name.push_str("_something");
-    let aggregate_name_cstring = CString::new(aggregate_name).unwrap();
-
-    let mut info = ffi::cubeb_device_info::default();
-    info.friendly_name = aggregate_name_cstring.as_ptr();
-    assert!(is_aggregate_device(&info));
-
-    let non_aggregate_name_cstring = CString::new("Hello World!").unwrap();
-    info.friendly_name = non_aggregate_name_cstring.as_ptr();
-    assert!(!is_aggregate_device(&info));
-}
-
 // get_devices_of_type
 // ------------------------------------
 #[test]
@@ -1443,7 +1444,7 @@ fn test_get_devices_of_type() {
     let input_devices = audiounit_get_devices_of_type(DeviceType::INPUT);
     let output_devices = audiounit_get_devices_of_type(DeviceType::OUTPUT);
 
-    let mut expected_all = test_get_all_devices(DeviceFilter::ExcludeCubebAggregate);
+    let mut expected_all = test_get_all_devices(DeviceFilter::ExcludeCubebAggregateAndVPIO);
     expected_all.sort();
     assert_eq!(all_devices, expected_all);
     for device in all_devices.iter() {
