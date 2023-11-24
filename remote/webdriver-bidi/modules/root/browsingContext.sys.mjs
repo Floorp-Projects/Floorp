@@ -1030,25 +1030,37 @@ class BrowsingContextModule extends Module {
         `Browsing Context with id ${contextId} is not top-level`
       );
     }
-    const browser = context.embedderElement;
 
-    if (typeof viewport !== "object") {
-      throw new lazy.error.InvalidArgumentError(
-        `Expected "viewport" to be an object or null, got ${viewport}`
-      );
-    }
+    const browser = context.embedderElement;
+    const currentHeight = browser.clientHeight;
+    const currentWidth = browser.clientWidth;
 
     let targetHeight, targetWidth;
-    if (viewport !== null) {
-      const { height, width } = viewport;
+    if (viewport === undefined) {
+      // Don't modify the viewport's size.
+      targetHeight = currentHeight;
+      targetWidth = currentWidth;
+    } else if (viewport === null) {
+      // Reset viewport to the original dimensions.
+      targetHeight = browser.parentElement.clientHeight;
+      targetWidth = browser.parentElement.clientWidth;
 
+      browser.style.removeProperty("height");
+      browser.style.removeProperty("width");
+    } else {
+      lazy.assert.object(
+        viewport,
+        `Expected "viewport" to be an object, got ${viewport}`
+      );
+
+      const { height, width } = viewport;
       targetHeight = lazy.assert.positiveInteger(
         height,
-        `Expected "height" to be a positive integer, got ${height}`
+        `Expected viewport's "height" to be a positive integer, got ${height}`
       );
       targetWidth = lazy.assert.positiveInteger(
         width,
-        `Expected "width" to be a positive integer, got ${width}`
+        `Expected viewport's "width" to be a positive integer, got ${width}`
       );
 
       if (targetHeight > MAX_WINDOW_SIZE || targetWidth > MAX_WINDOW_SIZE) {
@@ -1059,28 +1071,23 @@ class BrowsingContextModule extends Module {
 
       browser.style.setProperty("height", targetHeight + "px");
       browser.style.setProperty("width", targetWidth + "px");
-    } else {
-      // Reset viewport to the original dimensions
-      targetHeight = browser.parentElement.clientHeight;
-      targetWidth = browser.parentElement.clientWidth;
-
-      browser.style.removeProperty("height");
-      browser.style.removeProperty("width");
     }
 
-    // Wait until the viewport has been resized
-    await this.messageHandler.forwardCommand({
-      moduleName: "browsingContext",
-      commandName: "_awaitViewportDimensions",
-      destination: {
-        type: lazy.WindowGlobalMessageHandler.type,
-        id: context.id,
-      },
-      params: {
-        height: targetHeight,
-        width: targetWidth,
-      },
-    });
+    if (targetHeight !== currentHeight || targetWidth !== currentWidth) {
+      // Wait until the viewport has been resized
+      await this.messageHandler.forwardCommand({
+        moduleName: "browsingContext",
+        commandName: "_awaitViewportDimensions",
+        destination: {
+          type: lazy.WindowGlobalMessageHandler.type,
+          id: context.id,
+        },
+        params: {
+          height: targetHeight,
+          width: targetWidth,
+        },
+      });
+    }
   }
 
   /**
