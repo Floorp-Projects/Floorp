@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_ClonedErrorHolder_h
 #define mozilla_dom_ClonedErrorHolder_h
 
+#include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "nsISupportsImpl.h"
 #include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin
 #include "js/ErrorReport.h"
@@ -23,16 +24,15 @@ class ErrorResult;
 
 namespace dom {
 
-class ClonedErrorHolder final {
-  NS_INLINE_DECL_REFCOUNTING(ClonedErrorHolder)
-
+class ClonedErrorHolder final : public NonRefcountedDOMObject {
  public:
-  static already_AddRefed<ClonedErrorHolder> Constructor(
-      const GlobalObject& aGlobal, JS::Handle<JSObject*> aError,
-      ErrorResult& aRv);
+  static UniquePtr<ClonedErrorHolder> Constructor(const GlobalObject& aGlobal,
+                                                  JS::Handle<JSObject*> aError,
+                                                  ErrorResult& aRv);
 
-  static already_AddRefed<ClonedErrorHolder> Create(
-      JSContext* aCx, JS::Handle<JSObject*> aError, ErrorResult& aRv);
+  static UniquePtr<ClonedErrorHolder> Create(JSContext* aCx,
+                                             JS::Handle<JSObject*> aError,
+                                             ErrorResult& aRv);
 
   enum class Type : uint8_t {
     Uninitialized,
@@ -57,7 +57,6 @@ class ClonedErrorHolder final {
 
  private:
   ClonedErrorHolder();
-  ~ClonedErrorHolder() = default;
 
   void Init(JSContext* aCx, JS::Handle<JSObject*> aError, ErrorResult& aRv);
 

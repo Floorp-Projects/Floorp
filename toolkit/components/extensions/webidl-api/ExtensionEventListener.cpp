@@ -595,14 +595,10 @@ void ExtensionListenerCallPromiseResultHandler::WorkerRunCallback(
     // in case the value is an Error object.
     IgnoredErrorResult rv;
     JS::Rooted<JSObject*> errObj(aCx, &retval.toObject());
-    RefPtr<dom::ClonedErrorHolder> ceh =
+    UniquePtr<dom::ClonedErrorHolder> ceh =
         dom::ClonedErrorHolder::Create(aCx, errObj, rv);
     if (!rv.Failed() && ceh) {
-      JS::Rooted<JSObject*> obj(aCx);
-      // Note: `ToJSValue` cannot be used because ClonedErrorHolder isn't
-      // wrapped cached.
-      Unused << NS_WARN_IF(!ceh->WrapObject(aCx, nullptr, &obj));
-      retval.setObject(*obj);
+      Unused << NS_WARN_IF(!ToJSValue(aCx, std::move(ceh), &retval));
     }
   }
 

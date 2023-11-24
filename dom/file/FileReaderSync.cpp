@@ -36,11 +36,9 @@ using mozilla::dom::GlobalObject;
 using mozilla::dom::Optional;
 
 // static
-already_AddRefed<FileReaderSync> FileReaderSync::Constructor(
+UniquePtr<FileReaderSync> FileReaderSync::Constructor(
     const GlobalObject& aGlobal) {
-  RefPtr<FileReaderSync> frs = new FileReaderSync();
-
-  return frs.forget();
+  return MakeUnique<FileReaderSync>();
 }
 
 bool FileReaderSync::WrapObject(JSContext* aCx,
