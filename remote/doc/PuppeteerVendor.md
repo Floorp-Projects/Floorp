@@ -100,7 +100,7 @@ Once you are happy with the metadata and are ready to submit the sync patch
 up for review, run the Puppeteer test job on try again with `--rebuild 10`
 to check for stability.
 
-[Testing]: ../Testing.md
+[Testing]: Testing.md
 [Puppeteer test suite]: https://github.com/GoogleChrome/puppeteer/tree/master/test
 [install the project]: https://github.com/puppeteer/puppeteer/blob/main/docs/contributing.md#getting-started
 [run tests against both Chromium and Firefox]: https://github.com/puppeteer/puppeteer/blob/main/test/README.md#running-tests

@@ -1,11 +1,8 @@
-Preferences
-===========
+# Preferences
 
 There are a couple of preferences associated with the Remote Agent:
 
-
-Configurable preferences
-------------------------
+## Configurable preferences
 
 ### `remote.active-protocols`
 

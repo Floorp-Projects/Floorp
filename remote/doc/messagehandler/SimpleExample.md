@@ -1,8 +1,10 @@
 # Simple Example
 
 As a tutorial, let's create a very simple example, with a couple of modules:
-- a root (parent process) module to retrieve the current version of the browser
-- a windowglobal (content process) module to retrieve the location of a given tab
+
+* a root (parent process) module to retrieve the current version of the browser
+
+* a windowglobal (content process) module to retrieve the location of a given tab
 
 Some concepts used here will not be explained in details. More documentation should follow to clarify those.
 
@@ -66,8 +68,10 @@ We could simplify the module and simply write `getLocation` to return `this.mess
 ## Register the modules as Firefox modules
 
 Before we register those modules for the MessageHandler framework, we need to register them as Firefox modules first. For the sake of simplicity, we can assume they are added under a new folder `remote/example`:
-- `remote/example/modules/root/version.sys.mjs`
-- `remote/example/modules/windowglobal/location.sys.mjs`
+
+* `remote/example/modules/root/version.sys.mjs`
+
+* `remote/example/modules/windowglobal/location.sys.mjs`
 
 Register them in the jar.mn so that they can be loaded as any other Firefox module.
 
@@ -108,6 +112,7 @@ Now with this, you should be able to create a MessageHandler network and use you
 ## Try it out
 
 For instance, you can open the Browser Console and run the following snippet:
+
 ```javascript
 (async function() {
   const { RootMessageHandlerRegistry } = ChromeUtils.importESModule(

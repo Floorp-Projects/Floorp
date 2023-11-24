@@ -33,7 +33,7 @@ actual bug, yay!
      someone may have answered you in the mean time.
 
   5. If you're having trouble reaching us over Element, you are welcome to send an
-     email to our [mailing list](index.rst#communication) instead. It's a good
+     email to our [mailing list](index.rst#Communication) instead. It's a good
      idea to include your Element nick in your email message.
 
 [Element]: https://chat.mozilla.org

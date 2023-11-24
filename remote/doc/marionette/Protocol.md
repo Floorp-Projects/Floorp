@@ -12,20 +12,22 @@ against [mixing up responses].
 
 Schematic flow of messages:
 
-                 client      server
-                   |            |
-        msgid=1    |----------->|
-                   |  command   |
-                   |            |
-        msgid=2    |<-----------|
-                   |  command   |
-                   |            |
-        msgid=2    |----------->|
-                   |  response  |
-                   |            |
-        msgid=1    |<-----------|
-                   |  response  |
-                   |            |
+```text
+        client      server
+          |            |
+msgid=1    |----------->|
+          |  command   |
+          |            |
+msgid=2    |<-----------|
+          |  command   |
+          |            |
+msgid=2    |----------->|
+          |  response  |
+          |            |
+msgid=1    |<-----------|
+          |  response  |
+          |            |
+```
 
 The protocol consists of a `command` message and the corresponding
 `response` message.  A `response` message must always be sent in
@@ -49,7 +51,9 @@ its execution is already completed.
 The request, or `command` message, is a four element JSON Array as shown
 below, that may originate from either the client- or server remote ends:
 
-    [type, message ID, command, parameters]
+```python
+[type, message ID, command, parameters]
+```
 
 * _type_ must be 0 (integer).  This indicates that the message
   is a `command`.
@@ -69,7 +73,9 @@ below, that may originate from either the client- or server remote ends:
 The response message is also a four element array as shown below,
 and must always be sent after receiving a `command`:
 
-    [type, message ID, error, result]
+```python
+[type, message ID, error, result]
+```
 
 * _type_ must be 1 (integer).  This indicates that the message is a
   `response`.
@@ -92,11 +98,13 @@ individually for each command.
 An error object is a serialisation of JavaScript error types,
 and it is structured like this:
 
-    {
-      "error": "invalid session id",
-      "message": "No active session with ID 1234",
-      "stacktrace": ""
-    }
+```javascript
+{
+  "error": "invalid session id",
+  "message": "No active session with ID 1234",
+  "stacktrace": ""
+}
+```
 
 All the fields of the error object are required, so the stacktrace and
 message fields may be empty strings.  The error field is guaranteed

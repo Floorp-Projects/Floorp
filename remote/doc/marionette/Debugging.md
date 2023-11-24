@@ -13,12 +13,16 @@ you redirect this output stream.  This is convenient if you want to
 Per Unix conventions you can use `-` (dash) to have Firefox write
 its log to stdout instead of file:
 
-    % ./mach marionette-test --gecko-log -
+```shell
+% ./mach marionette-test --gecko-log -
+```
 
 It is common to use this in conjunction with an option to increase
 the Marionette log level:
 
-    % ./mach test --gecko-log - -vv TEST
+```shell
+% ./mach test --gecko-log - -vv TEST
+```
 
 A single `-v` enables debug logging, and a double `-vv` enables
 trace logging.
@@ -38,7 +42,9 @@ more powerful debugging technique than using `dump()` or `console.log()`.
 
 To automatically open the JS debugger for `Mn` tests:
 
-    % ./mach marionette-test --jsdebugger
+```shell
+% ./mach marionette-test --jsdebugger
+```
 
 It will prompt you when to start to allow you time to set your
 breakpoints.  It will also prompt you between each test.
@@ -47,16 +53,20 @@ You can also use the `debugger;` statement anywhere in chrome code
 to add a breakpoint.  In this example, a breakpoint will be added
 whenever the `WebDriver:GetPageSource` command is called:
 
+```javascript
     GeckoDriver.prototype.getPageSource = async function() {
       debugger;
       …
     }
+```
 
 To be prompted at the start of the test run or between tests,
 you can set the `marionette.debugging.clicktostart` preference to
 `true` this way:
 
-    % ./mach marionette-test --setpref='marionette.debugging.clicktostart=true' --jsdebugger
+```shell
+% ./mach marionette-test --setpref='marionette.debugging.clicktostart=true' --jsdebugger
+```
 
 For reference, below is the list of preferences that enables the
 chrome debugger for Marionette.  These are all set implicitly when
