@@ -597,7 +597,8 @@ bool Nursery::moveToNextChunk() {
   return true;
 }
 
-void* js::Nursery::allocateBuffer(Zone* zone, size_t nbytes) {
+void* js::Nursery::allocateBuffer(Zone* zone, size_t nbytes,
+                                  arena_id_t arenaId) {
   MOZ_ASSERT(nbytes > 0);
 
   if (nbytes <= MaxNurseryBufferSize) {
@@ -607,7 +608,7 @@ void* js::Nursery::allocateBuffer(Zone* zone, size_t nbytes) {
     }
   }
 
-  void* buffer = zone->pod_malloc<uint8_t>(nbytes);
+  void* buffer = zone->pod_arena_malloc<uint8_t>(arenaId, nbytes);
   if (buffer && !registerMallocedBuffer(buffer, nbytes)) {
     js_free(buffer);
     return nullptr;
@@ -615,7 +616,8 @@ void* js::Nursery::allocateBuffer(Zone* zone, size_t nbytes) {
   return buffer;
 }
 
-void* js::Nursery::allocateBuffer(Zone* zone, Cell* cell, size_t nbytes) {
+void* js::Nursery::allocateBuffer(Zone* zone, Cell* cell, size_t nbytes,
+                                  arena_id_t arenaId) {
   MOZ_ASSERT(cell);
   MOZ_ASSERT(nbytes > 0);
 
@@ -623,23 +625,24 @@ void* js::Nursery::allocateBuffer(Zone* zone, Cell* cell, size_t nbytes) {
     return zone->pod_malloc<uint8_t>(nbytes);
   }
 
-  return allocateBuffer(zone, nbytes);
+  return allocateBuffer(zone, nbytes, arenaId);
 }
 
-void* js::Nursery::allocateBufferSameLocation(Cell* cell, size_t nbytes) {
+void* js::Nursery::allocateBufferSameLocation(Cell* cell, size_t nbytes,
+                                              arena_id_t arenaId) {
   MOZ_ASSERT(cell);
   MOZ_ASSERT(nbytes > 0);
   MOZ_ASSERT(nbytes <= MaxNurseryBufferSize);
 
   if (!IsInsideNursery(cell)) {
-    return cell->asTenured().zone()->pod_malloc<uint8_t>(nbytes);
+    return cell->asTenured().zone()->pod_arena_malloc<uint8_t>(arenaId, nbytes);
   }
 
   return allocate(nbytes);
 }
 
-void* js::Nursery::allocateZeroedBuffer(
-    Zone* zone, size_t nbytes, arena_id_t arena /*= js::MallocArena*/) {
+void* js::Nursery::allocateZeroedBuffer(Zone* zone, size_t nbytes,
+                                        arena_id_t arena) {
   MOZ_ASSERT(nbytes > 0);
 
   if (nbytes <= MaxNurseryBufferSize) {
@@ -658,8 +661,8 @@ void* js::Nursery::allocateZeroedBuffer(
   return buffer;
 }
 
-void* js::Nursery::allocateZeroedBuffer(
-    Cell* cell, size_t nbytes, arena_id_t arena /*= js::MallocArena*/) {
+void* js::Nursery::allocateZeroedBuffer(Cell* cell, size_t nbytes,
+                                        arena_id_t arena) {
   MOZ_ASSERT(cell);
   MOZ_ASSERT(nbytes > 0);
 
@@ -671,7 +674,8 @@ void* js::Nursery::allocateZeroedBuffer(
 }
 
 void* js::Nursery::reallocateBuffer(Zone* zone, Cell* cell, void* oldBuffer,
-                                    size_t oldBytes, size_t newBytes) {
+                                    size_t oldBytes, size_t newBytes,
+                                    arena_id_t arena) {
   if (!IsInsideNursery(cell)) {
     MOZ_ASSERT(!isInside(oldBuffer));
     return zone->pod_realloc<uint8_t>((uint8_t*)oldBuffer, oldBytes, newBytes);
@@ -697,7 +701,7 @@ void* js::Nursery::reallocateBuffer(Zone* zone, Cell* cell, void* oldBuffer,
     return oldBuffer;
   }
 
-  void* newBuffer = allocateBuffer(zone, newBytes);
+  void* newBuffer = allocateBuffer(zone, newBytes, arena);
   if (newBuffer) {
     PodCopy((uint8_t*)newBuffer, (uint8_t*)oldBuffer, oldBytes);
   }
