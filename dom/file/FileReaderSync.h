@@ -8,7 +8,7 @@
 #define mozilla_dom_filereadersync_h__
 
 #include "mozilla/dom/WorkerCommon.h"
-#include "nsISupports.h"
+#include "mozilla/dom/NonRefcountedDOMObject.h"
 
 class nsIInputStream;
 
@@ -21,13 +21,8 @@ class GlobalObject;
 template <typename>
 class Optional;
 
-class FileReaderSync final {
-  NS_INLINE_DECL_REFCOUNTING(FileReaderSync)
-
+class FileReaderSync final : public NonRefcountedDOMObject {
  private:
-  // Private destructor, to discourage deletion outside of Release():
-  ~FileReaderSync() = default;
-
   nsresult ConvertStream(nsIInputStream* aStream, const char* aCharset,
                          nsAString& aResult);
 
@@ -39,8 +34,7 @@ class FileReaderSync final {
                     uint32_t aBufferSize, uint32_t* aTotalBytesRead);
 
  public:
-  static already_AddRefed<FileReaderSync> Constructor(
-      const GlobalObject& aGlobal);
+  static UniquePtr<FileReaderSync> Constructor(const GlobalObject& aGlobal);
 
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aReflector);

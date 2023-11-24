@@ -12,7 +12,6 @@
 #include "mozilla/dom/Client.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/ClonedErrorHolder.h"
-#include "mozilla/dom/ClonedErrorHolderBinding.h"
 #include "mozilla/dom/ExtensionBrowserBinding.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/WorkerScope.h"
@@ -264,7 +263,7 @@ bool ExtensionAPIRequestStructuredCloneWrite(JSContext* aCx,
   // Try to serialize the object as a CloneErrorHolder, if it fails then
   // the object wasn't an error.
   IgnoredErrorResult rv;
-  RefPtr<dom::ClonedErrorHolder> ceh =
+  UniquePtr<dom::ClonedErrorHolder> ceh =
       dom::ClonedErrorHolder::Create(aCx, aObj, rv);
   if (NS_WARN_IF(rv.Failed()) || !ceh) {
     return false;
@@ -503,14 +502,10 @@ bool RequestWorkerRunnable::HandleAPIRequest(
     // runtime.lastError).
     JS::Rooted<JSObject*> errObj(aCx, &aRetval.toObject());
     IgnoredErrorResult rv;
-    RefPtr<dom::ClonedErrorHolder> ceh =
+    UniquePtr<dom::ClonedErrorHolder> ceh =
         dom::ClonedErrorHolder::Create(aCx, errObj, rv);
     if (!rv.Failed() && ceh) {
-      JS::Rooted<JSObject*> obj(aCx);
-      // Note: `ToJSValue` cannot be used because ClonedErrorHolder isn't
-      // wrapper cached.
-      okSerializedError = ceh->WrapObject(aCx, nullptr, &obj);
-      aRetval.setObject(*obj);
+      okSerializedError = ToJSValue(aCx, std::move(ceh), aRetval);
     } else {
       okSerializedError = false;
     }
