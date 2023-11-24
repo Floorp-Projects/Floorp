@@ -2353,8 +2353,11 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     const bool isScrollable = IsScrollableOverflow();
     if (isScrollable != aNewData.IsScrollableOverflow()) {
       // We may need to construct or destroy a scroll frame as a result of this
-      // change.
-      hint |= nsChangeHint_ScrollbarChange;
+      // change. If we don't, we still need to update our overflow in some cases
+      // (like svg:foreignObject), which ignore the scrollable-ness of our
+      // overflow.
+      hint |= nsChangeHint_ScrollbarChange | nsChangeHint_UpdateOverflow |
+              nsChangeHint_RepaintFrame;
     } else if (isScrollable) {
       if (ScrollbarGenerationChanged(*this, aNewData)) {
         // We might need to reframe in the case of hidden -> non-hidden case
