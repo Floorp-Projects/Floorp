@@ -648,7 +648,7 @@ export class ContextMenuChild extends JSWindowActorChild {
     // Set the event target first as the copy image command needs it to
     // determine what was context-clicked on. Then, update the state of the
     // commands on the context menu.
-    this.docShell.contentViewer
+    this.docShell.docViewer
       .QueryInterface(Ci.nsIDocumentViewerEdit)
       .setCommandNode(aEvent.composedTarget);
     aEvent.composedTarget.ownerGlobal.updateCommands("contentcontextmenu");

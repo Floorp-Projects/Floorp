@@ -1468,7 +1468,7 @@ PresShell* nsDocShell::GetEldestPresShell() {
 }
 
 NS_IMETHODIMP
-nsDocShell::GetContentViewer(nsIDocumentViewer** aDocumentViewer) {
+nsDocShell::GetDocViewer(nsIDocumentViewer** aDocumentViewer) {
   NS_ENSURE_ARG_POINTER(aDocumentViewer);
 
   *aDocumentViewer = mDocumentViewer;
@@ -1585,7 +1585,7 @@ nsDocShell::GetCharset(nsACString& aCharset) {
 NS_IMETHODIMP
 nsDocShell::ForceEncodingDetection() {
   nsCOMPtr<nsIDocumentViewer> viewer;
-  GetContentViewer(getter_AddRefs(viewer));
+  GetDocViewer(getter_AddRefs(viewer));
   if (!viewer) {
     return NS_OK;
   }
@@ -8075,7 +8075,7 @@ nsresult nsDocShell::SetupNewViewer(nsIDocumentViewer* aNewViewer,
       }
     } else {
       // No old content viewer, so get state from parent's content viewer
-      parent->GetContentViewer(getter_AddRefs(oldViewer));
+      parent->GetDocViewer(getter_AddRefs(oldViewer));
     }
 
     if (oldViewer) {
@@ -13220,7 +13220,7 @@ nsresult nsDocShell::CharsetChangeReloadDocument(
     mozilla::NotNull<const mozilla::Encoding*> aEncoding, int32_t aSource) {
   // XXX hack. keep the aCharset and aSource wait to pick it up
   nsCOMPtr<nsIDocumentViewer> viewer;
-  NS_ENSURE_SUCCESS(GetContentViewer(getter_AddRefs(viewer)), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(GetDocViewer(getter_AddRefs(viewer)), NS_ERROR_FAILURE);
   if (viewer) {
     int32_t source;
     Unused << viewer->GetReloadEncodingAndSource(&source);

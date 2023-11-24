@@ -31,9 +31,9 @@ function testWindowlessBrowser(chromePrivileged) {
   let docShell = webNav.docShell;
 
   ok(docShell, "docShell should be defined");
-  ok(docShell.contentViewer.DOMDocument.defaultView, "docShell defaultView should be defined");
+  ok(docShell.docViewer.DOMDocument.defaultView, "docShell defaultView should be defined");
 
-  var win = docShell.contentViewer.DOMDocument.defaultView;
+  var win = docShell.docViewer.DOMDocument.defaultView;
 
   ok(win.screenX == 0, "window.screenX should be 0 in a windowless browser");
   ok(win.screenY == 0, "window.screenY should be 0 in a windowless browser");

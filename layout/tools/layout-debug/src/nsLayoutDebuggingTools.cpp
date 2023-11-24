@@ -35,7 +35,7 @@ using mozilla::dom::Document;
 static already_AddRefed<nsIDocumentViewer> doc_viewer(nsIDocShell* aDocShell) {
   if (!aDocShell) return nullptr;
   nsCOMPtr<nsIDocumentViewer> viewer;
-  aDocShell->GetContentViewer(getter_AddRefs(viewer));
+  aDocShell->GetDocViewer(getter_AddRefs(viewer));
   return viewer.forget();
 }
 
@@ -126,8 +126,8 @@ nsLayoutDebuggingTools::SetPagedMode(bool aPagedMode) {
   printSettings->SetPrintBGColors(true);
   printSettings->SetPrintBGImages(true);
 
-  nsCOMPtr<nsIDocumentViewer> contentViewer(doc_viewer(mDocShell));
-  contentViewer->SetPageModeForTesting(aPagedMode, printSettings);
+  nsCOMPtr<nsIDocumentViewer> docViewer(doc_viewer(mDocShell));
+  docViewer->SetPageModeForTesting(aPagedMode, printSettings);
 
   ForceRefresh();
   return NS_OK;

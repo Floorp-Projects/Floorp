@@ -77,7 +77,7 @@
     var docShell = SpecialPowers.wrap(window).docShell;
 
     // let's copy the node
-    var documentViewer = docShell.contentViewer
+    var documentViewer = docShell.docViewer
                          .QueryInterface(SpecialPowers.Ci.nsIDocumentViewerEdit);
     documentViewer.setCommandNode(node);
     documentViewer.copyImage(documentViewer.COPY_IMAGE_ALL);

@@ -18,7 +18,7 @@ function getSelectDialogDoc() {
       if (childDocShell.busyFlags != Ci.nsIDocShell.BUSY_FLAGS_NONE) {
         continue;
       }
-      var childDoc = childDocShell.contentViewer.DOMDocument;
+      var childDoc = childDocShell.docViewer.DOMDocument;
 
       if (
         childDoc.location.href == "chrome://global/content/selectDialog.xhtml"

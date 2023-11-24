@@ -91,7 +91,7 @@ add_task(async function test_disable_style() {
     await SpecialPowers.spawn(
       tab.linkedBrowser,
       [],
-      () => content.docShell.contentViewer.authorStyleDisabled
+      () => content.docShell.docViewer.authorStyleDisabled
     ),
     "Author style should still be disabled."
   );

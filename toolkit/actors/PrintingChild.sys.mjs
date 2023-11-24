@@ -245,7 +245,7 @@ export class PrintingChild extends JSWindowActorChild {
   }
 
   updateCurrentPage() {
-    let cv = this.docShell.contentViewer;
+    let cv = this.docShell.docViewer;
     cv.QueryInterface(Ci.nsIWebBrowserPrint);
     this.sendAsyncMessage("Printing:Preview:CurrentPage", {
       currentPage: cv.printPreviewCurrentPageNumber,
@@ -253,7 +253,7 @@ export class PrintingChild extends JSWindowActorChild {
   }
 
   navigate(navType, pageNum) {
-    let cv = this.docShell.contentViewer;
+    let cv = this.docShell.docViewer;
     cv.QueryInterface(Ci.nsIWebBrowserPrint);
     cv.printPreviewScrollToPage(navType, pageNum);
   }

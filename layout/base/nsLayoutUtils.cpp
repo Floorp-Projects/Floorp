@@ -8330,7 +8330,7 @@ bool nsLayoutUtils::GetDocumentViewerSize(
   }
 
   nsCOMPtr<nsIDocumentViewer> viewer;
-  docShell->GetContentViewer(getter_AddRefs(viewer));
+  docShell->GetDocViewer(getter_AddRefs(viewer));
   if (!viewer) {
     return false;
   }

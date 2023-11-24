@@ -781,7 +781,7 @@ void nsJSChannel::EvaluateScript() {
     NS_QueryNotificationCallbacks(mStreamChannel, docShell);
     if (docShell) {
       nsCOMPtr<nsIDocumentViewer> viewer;
-      docShell->GetContentViewer(getter_AddRefs(viewer));
+      docShell->GetDocViewer(getter_AddRefs(viewer));
 
       if (viewer) {
         bool okToUnload;

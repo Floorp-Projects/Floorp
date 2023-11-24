@@ -5316,7 +5316,7 @@ auto nsHTMLScrollFrame::GetPageLoadingState() -> LoadingState {
   nsCOMPtr<nsIDocShell> ds = GetContent()->GetComposedDoc()->GetDocShell();
   if (ds) {
     nsCOMPtr<nsIDocumentViewer> viewer;
-    ds->GetContentViewer(getter_AddRefs(viewer));
+    ds->GetDocViewer(getter_AddRefs(viewer));
     if (viewer) {
       loadCompleted = viewer->GetLoadCompleted();
       stopped = viewer->GetIsStopped();

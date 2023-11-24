@@ -250,7 +250,7 @@ const BrowserListener = {
       // Adjust the size of the browser based on its content's preferred size.
       let w = {},
         h = {};
-      docShell.contentViewer.getContentSize(
+      docShell.docViewer.getContentSize(
         this.maxWidth,
         this.maxHeight,
         /* prefWidth = */ 0,

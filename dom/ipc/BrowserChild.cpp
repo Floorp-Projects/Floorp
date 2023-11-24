@@ -888,7 +888,7 @@ nsresult BrowserChild::CloneDocumentTreeIntoSelf(
   }
 
   nsCOMPtr<nsIDocumentViewer> viewer;
-  ourDocShell->GetContentViewer(getter_AddRefs(viewer));
+  ourDocShell->GetDocViewer(getter_AddRefs(viewer));
   if (NS_WARN_IF(!viewer)) {
     return NS_ERROR_FAILURE;
   }
@@ -979,7 +979,7 @@ nsresult BrowserChild::UpdateRemotePrintSettings(
   bc->PreOrderWalk([&](BrowsingContext* aBc) {
     if (nsCOMPtr<nsIDocShell> inProcess = aBc->GetDocShell()) {
       nsCOMPtr<nsIDocumentViewer> viewer;
-      inProcess->GetContentViewer(getter_AddRefs(viewer));
+      inProcess->GetDocViewer(getter_AddRefs(viewer));
       if (NS_WARN_IF(!viewer)) {
         return BrowsingContext::WalkFlag::Skip;
       }

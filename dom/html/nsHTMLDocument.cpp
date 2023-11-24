@@ -393,25 +393,25 @@ nsresult nsHTMLDocument::StartDocumentLoad(
 
   // in this block of code, if we get an error result, we return it
   // but if we get a null pointer, that's perfectly legal for parent
-  // and parentContentViewer
+  // and parentViewer
   nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
   if (docShell) {
     docShell->GetInProcessSameTypeParent(getter_AddRefs(parentAsItem));
   }
 
   nsCOMPtr<nsIDocShell> parent(do_QueryInterface(parentAsItem));
-  nsCOMPtr<nsIDocumentViewer> parentContentViewer;
+  nsCOMPtr<nsIDocumentViewer> parentViewer;
   if (parent) {
-    rv = parent->GetContentViewer(getter_AddRefs(parentContentViewer));
+    rv = parent->GetDocViewer(getter_AddRefs(parentViewer));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   nsCOMPtr<nsIDocumentViewer> viewer;
   if (docShell) {
-    docShell->GetContentViewer(getter_AddRefs(viewer));
+    docShell->GetDocViewer(getter_AddRefs(viewer));
   }
   if (!viewer) {
-    viewer = std::move(parentContentViewer);
+    viewer = std::move(parentViewer);
   }
 
   nsAutoCString urlSpec;

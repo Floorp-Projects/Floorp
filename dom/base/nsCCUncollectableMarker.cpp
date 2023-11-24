@@ -241,7 +241,7 @@ void MarkDocShell(nsIDocShellTreeItem* aNode, bool aCleanupJS) {
   }
 
   nsCOMPtr<nsIDocumentViewer> viewer;
-  shell->GetContentViewer(getter_AddRefs(viewer));
+  shell->GetDocViewer(getter_AddRefs(viewer));
   MarkDocumentViewer(viewer, aCleanupJS);
 
   nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(shell);

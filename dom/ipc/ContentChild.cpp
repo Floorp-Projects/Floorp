@@ -4475,7 +4475,7 @@ mozilla::ipc::IPCResult ContentChild::RecvInitNextGenLocalStorageEnabled(
   aStartingAt->PreOrderWalk([&](dom::BrowsingContext* aBC) {
     if (aBC->GetDocShell()) {
       nsCOMPtr<nsIDocumentViewer> viewer;
-      aBC->GetDocShell()->GetContentViewer(getter_AddRefs(viewer));
+      aBC->GetDocShell()->GetDocViewer(getter_AddRefs(viewer));
       if (viewer &&
           viewer->DispatchBeforeUnload() ==
               nsIDocumentViewer::eRequestBlockNavigation &&

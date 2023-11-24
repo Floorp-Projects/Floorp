@@ -44,7 +44,7 @@ export class PageStyleChild extends JSWindowActorChild {
         if (this.browsingContext.top == this.browsingContext) {
           this.browsingContext.authorStyleDisabledDefault = false;
         }
-        this.docShell.contentViewer.authorStyleDisabled = false;
+        this.docShell.docViewer.authorStyleDisabled = false;
         this._switchStylesheet(msg.data.title);
         break;
       // Sent when "No Style" is chosen.
@@ -52,7 +52,7 @@ export class PageStyleChild extends JSWindowActorChild {
         if (this.browsingContext.top == this.browsingContext) {
           this.browsingContext.authorStyleDisabledDefault = true;
         }
-        this.docShell.contentViewer.authorStyleDisabled = true;
+        this.docShell.docViewer.authorStyleDisabled = true;
         break;
     }
   }

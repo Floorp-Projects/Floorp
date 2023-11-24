@@ -28,7 +28,7 @@ static void GetWindowType(nsIAppWindow* inWindow, nsString& outType);
 
 static Element* GetElementFromDocShell(nsIDocShell* aShell) {
   nsCOMPtr<nsIDocumentViewer> viewer;
-  aShell->GetContentViewer(getter_AddRefs(viewer));
+  aShell->GetDocViewer(getter_AddRefs(viewer));
   if (viewer) {
     RefPtr<Document> doc = viewer->GetDocument();
     if (doc) {

@@ -37,8 +37,8 @@ export class PromptCollection {
       return false;
     }
 
-    let contentViewer = browsingContext?.docShell?.contentViewer;
-    let modalType = contentViewer?.isTabModalPromptAllowed
+    let docViewer = browsingContext?.docShell?.docViewer;
+    let modalType = docViewer?.isTabModalPromptAllowed
       ? Ci.nsIPromptService.MODAL_TYPE_CONTENT
       : Ci.nsIPromptService.MODAL_TYPE_WINDOW;
     let buttonFlags =
@@ -84,10 +84,10 @@ export class PromptCollection {
       return false;
     }
 
-    let contentViewer = browsingContext?.docShell?.contentViewer;
+    let docViewer = browsingContext?.docShell?.docViewer;
 
     if (
-      (contentViewer && !contentViewer.isTabModalPromptAllowed) ||
+      (docViewer && !docViewer.isTabModalPromptAllowed) ||
       !browsingContext.ancestorsAreCurrent
     ) {
       console.error("Can't prompt from inactive content viewer");

@@ -21,7 +21,7 @@ SimpleTest.waitForExplicitFinish();
 
 function doTest()
 {
-  var viewer = window.docShell.contentViewer;
+  var viewer = window.docShell.docViewer;
   viewer.authorStyleDisabled = true;
 
   document.documentElement.getBoundingClientRect();
