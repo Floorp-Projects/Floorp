@@ -6,10 +6,10 @@ import React, { Component } from "react";
 import { div } from "react-dom-factories";
 import PropTypes from "prop-types";
 import { connect } from "../utils/connect";
-import fuzzyAldrin from "fuzzaldrin-plus";
 import { basename } from "../utils/path";
 import { createLocation } from "../utils/location";
 
+const fuzzyAldrin = require("devtools/client/shared/vendor/fuzzaldrin-plus.js");
 const { throttle } = require("devtools/shared/throttle");
 
 import actions from "../actions";
