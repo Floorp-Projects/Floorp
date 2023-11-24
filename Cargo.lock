@@ -432,14 +432,14 @@ dependencies = [
 name = "bindgen"
 version = "0.66.999"
 dependencies = [
- "bindgen 0.68.1",
+ "bindgen 0.69.1",
 ]
 
 [[package]]
 name = "bindgen"
-version = "0.68.1"
+version = "0.69.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "726e4313eb6ec35d2730258ad4e15b547ee75d6afaa1361a922e78e59b7d8078"
+checksum = "9ffcebc3849946a7170a05992aac39da343a90676ab392c51a4280981d6379c2"
 dependencies = [
  "bitflags 2.4.0",
  "cexpr",
@@ -584,7 +584,7 @@ dependencies = [
 name = "builtins-static"
 version = "0.1.0"
 dependencies = [
- "bindgen 0.68.1",
+ "bindgen 0.69.1",
  "mozilla-central-workspace-hack",
  "nom",
  "pkcs11-bindings",
@@ -885,11 +885,11 @@ dependencies = [
 
 [[package]]
 name = "coreaudio-sys"
-version = "0.2.13"
+version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8478e5bdad14dce236b9898ea002eabfa87cbe14f0aa538dbe3b6a4bec4332d"
+checksum = "f3120ebb80a9de008e638ad833d4127d50ea3d3a960ea23ea69bc66d9358a028"
 dependencies = [
- "bindgen 0.68.1",
+ "bindgen 0.69.1",
 ]
 
 [[package]]
@@ -2020,7 +2020,7 @@ name = "gecko-profiler"
 version = "0.1.0"
 dependencies = [
  "bincode",
- "bindgen 0.68.1",
+ "bindgen 0.69.1",
  "lazy_static",
  "mozbuild",
  "profiler-macros",
@@ -2562,7 +2562,7 @@ name = "http3server"
 version = "0.1.1"
 dependencies = [
  "base64 0.21.3",
- "bindgen 0.68.1",
+ "bindgen 0.69.1",
  "cfg-if 1.0.0",
  "http",
  "hyper",
@@ -3632,7 +3632,7 @@ name = "mozilla-central-workspace-hack"
 version = "0.1.0"
 dependencies = [
  "arrayvec",
- "bindgen 0.68.1",
+ "bindgen 0.69.1",
  "bitflags 2.4.0",
  "bytes",
  "chrono",
@@ -5234,7 +5234,7 @@ dependencies = [
  "app_units",
  "arrayvec",
  "atomic_refcell",
- "bindgen 0.68.1",
+ "bindgen 0.69.1",
  "bitflags 2.4.0",
  "byteorder",
  "cssparser",
