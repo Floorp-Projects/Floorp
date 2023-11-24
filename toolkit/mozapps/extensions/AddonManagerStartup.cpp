@@ -30,10 +30,10 @@
 #include "mozilla/Services.h"
 #include "mozilla/Try.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
+#include "mozilla/dom/TypedArray.h"
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAppRunner.h"
-#include "nsContentUtils.h"
 #include "nsChromeRegistry.h"
 #include "nsIDOMWindowUtils.h"  // for nsIJSRAIIHelper
 #include "nsIFileURL.h"
@@ -560,8 +560,8 @@ nsresult AddonManagerStartup::EncodeBlob(JS::Handle<JS::Value> value,
   nsCString lz4;
   MOZ_TRY_VAR(lz4, EncodeLZ4(scData, STRUCTURED_CLONE_MAGIC));
 
-  JS::Rooted<JSObject*> obj(cx);
-  MOZ_TRY(nsContentUtils::CreateArrayBuffer(cx, lz4, &obj.get()));
+  JS::Rooted<JSObject*> obj(cx, dom::ArrayBuffer::Create(cx, lz4, rv));
+  ENSURE_SUCCESS(rv, rv.StealNSResult());
 
   result.set(JS::ObjectValue(*obj));
   return NS_OK;
