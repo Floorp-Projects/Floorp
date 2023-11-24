@@ -29,8 +29,8 @@ SOURCE_DEST="${WORKSPACE}/source"
 # When updating this, please make sure to keep in sync the script for symbol
 # scraping at
 # https://github.com/mozilla/symbol-scrapers/blob/master/firefox-flatpak/script.sh
-FREEDESKTOP_VERSION="22.08"
-FIREFOX_BASEAPP_CHANNEL="22.08"
+FREEDESKTOP_VERSION="23.08"
+FIREFOX_BASEAPP_CHANNEL="23.08"
 
 
 # XXX: these commands are temporarily, there's an upcoming fix in the upstream Docker image
