@@ -3464,9 +3464,9 @@ class Document : public nsINode,
 
   // QuerySelector and QuerySelectorAll already defined on nsINode
 
-  XPathExpression* CreateExpression(const nsAString& aExpression,
-                                    XPathNSResolver* aResolver,
-                                    ErrorResult& rv);
+  UniquePtr<XPathExpression> CreateExpression(const nsAString& aExpression,
+                                              XPathNSResolver* aResolver,
+                                              ErrorResult& rv);
   nsINode* CreateNSResolver(nsINode& aNodeResolver);
   already_AddRefed<XPathResult> Evaluate(
       JSContext* aCx, const nsAString& aExpression, nsINode& aContextNode,

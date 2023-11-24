@@ -21,8 +21,8 @@ class TextEncoder final : public NonRefcountedDOMObject {
  public:
   // The WebIDL constructor.
 
-  static TextEncoder* Constructor(const GlobalObject& aGlobal) {
-    return new TextEncoder();
+  static UniquePtr<TextEncoder> Constructor(const GlobalObject& aGlobal) {
+    return MakeUnique<TextEncoder>();
   }
 
   TextEncoder() = default;

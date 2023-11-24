@@ -61,16 +61,16 @@ class TextDecoder final : public NonRefcountedDOMObject,
                           public TextDecoderCommon {
  public:
   // The WebIDL constructor.
-  static TextDecoder* Constructor(const GlobalObject& aGlobal,
-                                  const nsAString& aEncoding,
-                                  const TextDecoderOptions& aOptions,
-                                  ErrorResult& aRv) {
+  static UniquePtr<TextDecoder> Constructor(const GlobalObject& aGlobal,
+                                            const nsAString& aEncoding,
+                                            const TextDecoderOptions& aOptions,
+                                            ErrorResult& aRv) {
     auto txtDecoder = MakeUnique<TextDecoder>();
     txtDecoder->Init(aEncoding, aOptions, aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
-    return txtDecoder.release();
+    return txtDecoder;
   }
 
   TextDecoder() { MOZ_COUNT_CTOR(TextDecoder); }

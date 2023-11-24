@@ -40,15 +40,17 @@ class XPathEvaluator final : public NonRefcountedDOMObject {
     nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
     return doc;
   }
-  static XPathEvaluator* Constructor(const GlobalObject& aGlobal);
-  XPathExpression* CreateExpression(const nsAString& aExpression,
-                                    XPathNSResolver* aResolver,
-                                    ErrorResult& rv);
-  XPathExpression* CreateExpression(const nsAString& aExpression,
-                                    nsINode* aResolver, ErrorResult& aRv);
-  XPathExpression* CreateExpression(const nsAString& aExpression,
-                                    txIParseContext* aContext,
-                                    Document* aDocument, ErrorResult& aRv);
+  static UniquePtr<XPathEvaluator> Constructor(const GlobalObject& aGlobal);
+  UniquePtr<XPathExpression> CreateExpression(const nsAString& aExpression,
+                                              XPathNSResolver* aResolver,
+                                              ErrorResult& rv);
+  UniquePtr<XPathExpression> CreateExpression(const nsAString& aExpression,
+                                              nsINode* aResolver,
+                                              ErrorResult& aRv);
+  UniquePtr<XPathExpression> CreateExpression(const nsAString& aExpression,
+                                              txIParseContext* aContext,
+                                              Document* aDocument,
+                                              ErrorResult& aRv);
   nsINode* CreateNSResolver(nsINode& aNodeResolver) { return &aNodeResolver; }
   already_AddRefed<XPathResult> Evaluate(
       JSContext* aCx, const nsAString& aExpression, nsINode& aContextNode,

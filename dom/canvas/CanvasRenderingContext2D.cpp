@@ -4179,22 +4179,24 @@ void CanvasRenderingContext2D::FillText(const nsAString& aText, double aX,
     mFillTextCalls++;
   }
 
-  DebugOnly<TextMetrics*> metrics = DrawOrMeasureText(
+  DebugOnly<UniquePtr<TextMetrics>> metrics = DrawOrMeasureText(
       aText, aX, aY, aMaxWidth, TextDrawOperation::FILL, aError);
-  MOZ_ASSERT(!metrics);  // drawing operation never returns TextMetrics
+  MOZ_ASSERT(
+      !metrics.inspect());  // drawing operation never returns TextMetrics
 }
 
 void CanvasRenderingContext2D::StrokeText(const nsAString& aText, double aX,
                                           double aY,
                                           const Optional<double>& aMaxWidth,
                                           ErrorResult& aError) {
-  DebugOnly<TextMetrics*> metrics = DrawOrMeasureText(
+  DebugOnly<UniquePtr<TextMetrics>> metrics = DrawOrMeasureText(
       aText, aX, aY, aMaxWidth, TextDrawOperation::STROKE, aError);
-  MOZ_ASSERT(!metrics);  // drawing operation never returns TextMetrics
+  MOZ_ASSERT(
+      !metrics.inspect());  // drawing operation never returns TextMetrics
 }
 
-TextMetrics* CanvasRenderingContext2D::MeasureText(const nsAString& aRawText,
-                                                   ErrorResult& aError) {
+UniquePtr<TextMetrics> CanvasRenderingContext2D::MeasureText(
+    const nsAString& aRawText, ErrorResult& aError) {
   Optional<double> maxWidth;
   return DrawOrMeasureText(aRawText, 0, 0, maxWidth, TextDrawOperation::MEASURE,
                            aError);
@@ -4553,8 +4555,8 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
   bool mIgnoreSetText = false;
 };
 
-TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
-    const nsAString& aRawText, float aX, float aY,
+UniquePtr<TextMetrics> CanvasRenderingContext2D::DrawOrMeasureText(
+    const nsAString& aText, float aX, float aY,
     const Optional<double>& aMaxWidth, TextDrawOperation aOp,
     ErrorResult& aError) {
   RefPtr<gfxFontGroup> currentFontStyle = GetCurrentFontStyle();
@@ -4567,7 +4569,7 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
   RefPtr<Document> document = presShell ? presShell->GetDocument() : nullptr;
 
   // replace all the whitespace characters with U+0020 SPACE
-  nsAutoString textToDraw(aRawText);
+  nsAutoString textToDraw(aText);
   TextReplaceWhitespaceCharacters(textToDraw);
 
   // According to spec, the API should return an empty array if maxWidth was
@@ -4626,8 +4628,8 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
   if (currentFontStyle->GetStyle()->size == 0.0F) {
     aError = NS_OK;
     if (aOp == TextDrawOperation::MEASURE) {
-      return new TextMetrics(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                             0.0, 0.0);
+      return MakeUnique<TextMetrics>(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                     0.0, 0.0, 0.0, 0.0);
     }
     return nullptr;
   }
@@ -4637,8 +4639,8 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
     // This may not be correct - what should TextMetrics contain in the case of
     // infinite width or height?
     if (aOp == TextDrawOperation::MEASURE) {
-      return new TextMetrics(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                             0.0, 0.0);
+      return MakeUnique<TextMetrics>(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                     0.0, 0.0, 0.0, 0.0);
     }
     return nullptr;
   }
@@ -4805,7 +4807,7 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
     double actualBoundingBoxDescent =
         processor.mBoundingBox.YMost() + baselineAnchor;
     auto baselines = font->GetBaselines(fontOrientation);
-    return new TextMetrics(
+    return MakeUnique<TextMetrics>(
         totalWidth, actualBoundingBoxLeft, actualBoundingBoxRight,
         fontMetrics.maxAscent - baselineAnchor,   // fontBBAscent
         fontMetrics.maxDescent + baselineAnchor,  // fontBBDescent
