@@ -11,7 +11,7 @@ Leaving potential conflicts aside, a patch can make its way into the repository 
 
 ## From Phabricator
 
-Once a review has been approved, someone with enough privileges can request the code be merged, using the [Lando](https://moz-conduit.readthedocs.io/en/latest/lando-user.html) interface. These 'privileges' are "commit level access 3". You get these once you have successfully contributed with a number of patches. See [levelling up](./levelling-up.md) for more details.
+Once a review has been approved, someone with enough privileges can request the code be merged, using the [Lando](https://moz-conduit.readthedocs.io/en/latest/lando-user.html) interface. These 'privileges' are "commit level access 3". You get these once you have successfully contributed with a number of patches. See [levelling up](https://firefox-source-docs.mozilla.org/contributing/levelling-up.html) for more details.
 
 If you don't have the privileges, you can also ask your mentor to land the code. In fact, they might even initiate that for you once the code review is approved.
 
