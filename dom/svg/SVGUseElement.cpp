@@ -60,7 +60,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(SVGUseElement)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SVGUseElement,
                                                 SVGUseElementBase)
-  nsAutoScriptBlocker scriptBlocker;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOriginal)
   tmp->UnlinkSource();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -118,7 +117,6 @@ void SVGUseElement::ProcessAttributeChange(int32_t aNamespaceID,
     if (auto* frame = GetFrame()) {
       frame->HrefChanged();
     }
-    mOriginal = nullptr;
     UnlinkSource();
     TriggerReclone();
   }

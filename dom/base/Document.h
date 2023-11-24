@@ -4684,8 +4684,6 @@ class Document : public nsINode,
   // True if the document has been detached from its content viewer.
   bool mIsGoingAway : 1;
 
-  bool mInXBLUpdate : 1;
-
   // Whether we have filled our style set with all the stylesheets.
   bool mStyleSetFilled : 1;
 
