@@ -16,8 +16,6 @@ job-defaults:
                 default:
                     - marionette/prod_config.py
                     - remove_executables.py
-        extra-options:
-            - --setpref=toolkit.asyncshutdown.log=true
     test-manifest-loader: null  # don't load tests in the taskgraph
     tier:
         by-variant:
