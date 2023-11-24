@@ -533,7 +533,11 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
     }
   }
   bool allocNurseryObjects() const { return allocNurseryObjects_; }
+
+  // Note that this covers both allocating JSStrings themselves in the nursery,
+  // as well as (possibly) the character data.
   bool allocNurseryStrings() const { return allocNurseryStrings_; }
+
   bool allocNurseryBigInts() const { return allocNurseryBigInts_; }
 
   js::gc::Heap minHeapToTenure(JS::TraceKind kind) const {
