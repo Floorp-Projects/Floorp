@@ -13,6 +13,7 @@ development process and source code documentation.
    pocket-guide-shipping-firefox
    editor
    reviews
+   levelling-up
 
 .. toctree::
    :caption: The Mercurial Version Control System
