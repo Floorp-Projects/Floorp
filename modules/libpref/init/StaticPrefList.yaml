@@ -11915,12 +11915,6 @@
   value: 2
   mirror: always
 
-# If true, only use the token once
-- name: network.ssl_tokens_cache_use_only_once
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # The maximum allowed length for a URL - 1MB default.
 - name: network.standard-url.max-length
   type: RelaxedAtomicUint32

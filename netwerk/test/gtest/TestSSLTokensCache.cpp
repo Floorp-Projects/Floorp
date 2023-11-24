@@ -69,27 +69,13 @@ TEST(TestTokensCache, SinglePut)
 {
   mozilla::net::SSLTokensCache::Clear();
   mozilla::Preferences::SetInt("network.ssl_tokens_cache_records_per_entry", 1);
-  mozilla::Preferences::SetBool("network.ssl_tokens_cache_use_only_once",
-                                false);
+  mozilla::Preferences::SetBool("network.ssl_tokens_cache_use_only_once", true);
 
   putToken("anon:www.example.com:443"_ns, 100);
   nsTArray<uint8_t> result;
   mozilla::net::SessionCacheInfo unused;
-  uint64_t id = 0;
   nsresult rv = mozilla::net::SSLTokensCache::Get("anon:www.example.com:443"_ns,
-                                                  result, unused, &id);
-  ASSERT_EQ(rv, NS_OK);
-  ASSERT_EQ(result.Length(), (size_t)100);
-  ASSERT_EQ(id, (uint64_t)1);
-  rv = mozilla::net::SSLTokensCache::Get("anon:www.example.com:443"_ns, result,
-                                         unused, &id);
-  ASSERT_EQ(rv, NS_OK);
-
-  mozilla::Preferences::SetBool("network.ssl_tokens_cache_use_only_once", true);
-  // network.ssl_tokens_cache_use_only_once is true, so the record will be
-  // removed after SSLTokensCache::Get below.
-  rv = mozilla::net::SSLTokensCache::Get("anon:www.example.com:443"_ns, result,
-                                         unused);
+                                                  result, unused);
   ASSERT_EQ(rv, NS_OK);
   rv = mozilla::net::SSLTokensCache::Get("anon:www.example.com:443"_ns, result,
                                          unused);

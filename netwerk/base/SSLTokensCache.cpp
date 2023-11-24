@@ -395,12 +395,10 @@ nsresult SSLTokensCache::GetLocked(const nsACString& aKey,
     if (aTokenId) {
       *aTokenId = rec->mId;
     }
-    if (StaticPrefs::network_ssl_tokens_cache_use_only_once()) {
-      mCacheSize -= rec->Size();
-      cacheEntry->RemoveWithId(rec->mId);
-      if (cacheEntry->RecordCount() == 0) {
-        mTokenCacheRecords.Remove(aKey);
-      }
+    mCacheSize -= rec->Size();
+    cacheEntry->RemoveWithId(rec->mId);
+    if (cacheEntry->RecordCount() == 0) {
+      mTokenCacheRecords.Remove(aKey);
     }
     return NS_OK;
   }
