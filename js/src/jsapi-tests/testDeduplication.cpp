@@ -48,6 +48,12 @@ BEGIN_TEST(testDeduplication_ASSC) {
   JS::RootedString dep2(cx);
   JS::RootedString depdep2(cx);
 
+  if (!cx->nursery().canAllocateStrings()) {
+    // This test requires nursery-allocated strings, so that they will go
+    // through the deduplication pass during minor GC.
+    return true;
+  }
+
   {
     // This test checks the behavior when GC is performed after allocating
     // all the following strings.
@@ -79,8 +85,12 @@ BEGIN_TEST(testDeduplication_ASSC) {
     CHECK(depdep2);
   }
 
-  // Initializing an AutoStableStringChars with `depdep` should prevent the
-  // owner of its chars (`str`) from deduplication.
+  // Initializing an AutoStableStringChars with `depdep` will prevent the
+  // owner of its chars (`str`) from being deduplicated, but only if the
+  // chars are stored in the malloc heap. Force `str` to be nondeduplicatable
+  // unconditionally to avoid depending on the exact set of things that are
+  // enabled.
+  str->setNonDeduplicatable();
   JS::AutoStableStringChars stable(cx);
   CHECK(stable.init(cx, depdep));
 
@@ -104,7 +114,7 @@ BEGIN_TEST(testDeduplication_ASSC) {
   CHECK(SameChars(cx, depdep, str, 20));
   CHECK(!SameChars(cx, depdep, original, 20));
 
-  // `depdep2` should now share chars with both `str` and `original`.
+  // `depdep2` should now share chars with both `str2` and `original`.
   CHECK(SameChars(cx, depdep2, str2, 20));
   CHECK(SameChars(cx, depdep2, original, 20));
 
