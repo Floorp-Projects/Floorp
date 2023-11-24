@@ -71,7 +71,16 @@ impl ToComputedValue for specified::Length {
     fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
         match *self {
             Self::NoCalc(l) => l.to_computed_value(context),
-            Self::Calc(ref calc) => calc.to_computed_value(context).to_length().unwrap(),
+            Self::Calc(ref calc) => {
+                let result = calc.to_computed_value(context);
+                debug_assert!(
+                    result.to_length().is_some(),
+                    "{:?} didn't resolve to a length: {:?}",
+                    calc,
+                    result,
+                );
+                result.to_length().unwrap_or_else(Length::zero)
+            },
         }
     }
 

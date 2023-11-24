@@ -503,8 +503,10 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 }
                 dividend_unit | divisor_unit
             },
-            CalcNode::Sign(_) => {
-                // Result of a sign() is always a number.
+            CalcNode::Sign(ref child) => {
+                // sign() always resolves to a number, but we still need to make sure that the
+                // child units make sense.
+                let _ = child.unit()?;
                 CalcUnits::empty()
             },
         })
@@ -802,12 +804,12 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
         }
     }
 
-    /// Reolve this node into a value.
+    /// Resolve this node into a value.
     pub fn resolve(&self) -> Result<L, ()> {
         self.resolve_map(|l| Ok(l.clone()))
     }
 
-    /// Reolve this node into a value, given a function that maps the leaf values.
+    /// Resolve this node into a value, given a function that maps the leaf values.
     pub fn resolve_map<F>(&self, mut leaf_to_output_fn: F) -> Result<L, ()>
     where
         F: FnMut(&L) -> Result<L, ()>,
