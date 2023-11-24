@@ -7,9 +7,5 @@ VOLUME /builds/worker/tooltool-cache
 
 ENV XZ_OPT=-T0
 
-ARG TASKCLUSTER_ROOT_URL
-ARG DOCKER_IMAGE_PACKAGES
-RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAGES
-
 RUN apt-get update && \
     apt-get install gdb
