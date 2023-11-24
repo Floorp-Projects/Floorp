@@ -47,11 +47,11 @@ DocumentTimeline::DocumentTimeline(Document* aDocument,
       mDocument(aDocument),
       mIsObservingRefreshDriver(false),
       mOriginTime(aOriginTime) {
-  mDocument->Timelines().insertBack(this);
-  // Ensure mLastRefreshDriverTime is valid.
-  if (nsDOMNavigationTiming* timing = mDocument->GetNavigationTiming()) {
-    mLastRefreshDriverTime = timing->GetNavigationStartTimeStamp();
+  if (mDocument) {
+    mDocument->Timelines().insertBack(this);
   }
+  // Ensure mLastRefreshDriverTime is valid.
+  UpdateLastRefreshDriverTime();
 }
 
 DocumentTimeline::~DocumentTimeline() {
@@ -100,28 +100,41 @@ bool DocumentTimeline::TracksWallclockTime() const {
 }
 
 TimeStamp DocumentTimeline::GetCurrentTimeStamp() const {
-  if (nsRefreshDriver* refreshDriver = GetRefreshDriver()) {
-    auto ts = refreshDriver->MostRecentRefresh();
-    if (ts > mLastRefreshDriverTime) {
-      return ts;
-    }
-  }
-  return mLastRefreshDriverTime;
+  nsRefreshDriver* refreshDriver = GetRefreshDriver();
+  return refreshDriver ? refreshDriver->MostRecentRefresh()
+                       : mLastRefreshDriverTime;
 }
 
-bool DocumentTimeline::MaybeUpdateLastRefreshDriverTime(TimeStamp aTime) {
-  // If we don't have a refresh driver and we've never had one use the
-  // timeline's zero time.
-  // It's possible that our refresh driver's timestamp is behind from the
-  // navigation start time because the refresh driver timestamp is sent
-  // through an IPC call whereas the navigation time is set by calling
-  // TimeStamp::Now() directly. Make sure we only advance.
-  if (aTime < mLastRefreshDriverTime) {
-    return false;
+void DocumentTimeline::UpdateLastRefreshDriverTime(TimeStamp aKnownTime) {
+  TimeStamp result = [&] {
+    if (!aKnownTime.IsNull()) {
+      return aKnownTime;
+    }
+    if (auto* rd = GetRefreshDriver()) {
+      return rd->MostRecentRefresh();
+    };
+    return mLastRefreshDriverTime;
+  }();
+
+  if (nsDOMNavigationTiming* timing = mDocument->GetNavigationTiming()) {
+    // If we don't have a refresh driver and we've never had one use the
+    // timeline's zero time.
+    // In addition, it's possible that our refresh driver's timestamp is behind
+    // from the navigation start time because the refresh driver timestamp is
+    // sent through an IPC call whereas the navigation time is set by calling
+    // TimeStamp::Now() directly. In such cases we also use the timeline's zero
+    // time.
+    // Also, let this time represent the current refresh time. This way we'll
+    // save it as the last refresh time and skip looking up navigation start
+    // time each time.
+    if (result.IsNull() || result < timing->GetNavigationStartTimeStamp()) {
+      result = timing->GetNavigationStartTimeStamp();
+    }
   }
 
-  mLastRefreshDriverTime = aTime;
-  return true;
+  if (!result.IsNull()) {
+    mLastRefreshDriverTime = result;
+  }
 }
 
 Nullable<TimeDuration> DocumentTimeline::ToTimelineTime(
@@ -156,26 +169,10 @@ void DocumentTimeline::NotifyAnimationUpdated(Animation& aAnimation) {
   }
 }
 
-void DocumentTimeline::TriggerAllPendingAnimationsNow() {
-  for (Animation* animation : mAnimationOrder) {
-    animation->TryTriggerNow();
-  }
-}
-
-void DocumentTimeline::WillRefresh(TimeStamp aTime) { MaybeTick(aTime); }
-
-void DocumentTimeline::NotifyTimerAdjusted(TimeStamp aTime) {
-  MaybeTick(aTime);
-}
-
-void DocumentTimeline::MaybeTick(TimeStamp aTime) {
-  if (!MaybeUpdateLastRefreshDriverTime(aTime)) {
-    return;
-  }
-
+void DocumentTimeline::MostRecentRefreshTimeUpdated() {
   MOZ_ASSERT(mIsObservingRefreshDriver);
   MOZ_ASSERT(GetRefreshDriver(),
-             "Should be able to reach refresh driver from within the tick");
+             "Should be able to reach refresh driver from within WillRefresh");
 
   nsAutoAnimationMutationBatch mb(mDocument);
 
@@ -201,6 +198,21 @@ void DocumentTimeline::MaybeTick(TimeStamp aTime) {
                "Refresh driver should still be valid at end of WillRefresh");
     UnregisterFromRefreshDriver();
   }
+}
+
+void DocumentTimeline::TriggerAllPendingAnimationsNow() {
+  for (Animation* animation : mAnimationOrder) {
+    animation->TryTriggerNow();
+  }
+}
+
+void DocumentTimeline::WillRefresh(TimeStamp aTime) {
+  UpdateLastRefreshDriverTime();
+  MostRecentRefreshTimeUpdated();
+}
+
+void DocumentTimeline::NotifyTimerAdjusted(TimeStamp aTime) {
+  MostRecentRefreshTimeUpdated();
 }
 
 void DocumentTimeline::ObserveRefreshDriver(nsRefreshDriver* aDriver) {
@@ -229,7 +241,7 @@ void DocumentTimeline::NotifyRefreshDriverCreated(nsRefreshDriver* aDriver) {
     // could perform a paint before the first refresh driver tick happens.  To
     // ensure we're in a consistent state in that case we run the first tick
     // manually.
-    MaybeTick(aDriver->MostRecentRefresh());
+    MostRecentRefreshTimeUpdated();
   }
 }
 

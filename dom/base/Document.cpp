@@ -13515,9 +13515,8 @@ void Document::SetNavigationTiming(nsDOMNavigationTiming* aTiming) {
   // If there's already the DocumentTimeline instance, tell it since the
   // DocumentTimeline is based on both the navigation start time stamp and the
   // refresh driver timestamp.
-  if (mDocumentTimeline && mTiming) {
-    mDocumentTimeline->MaybeUpdateLastRefreshDriverTime(
-        mTiming->GetNavigationStartTimeStamp());
+  if (mDocumentTimeline) {
+    mDocumentTimeline->UpdateLastRefreshDriverTime();
   }
 }
 
