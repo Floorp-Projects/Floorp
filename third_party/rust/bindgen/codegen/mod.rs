@@ -21,6 +21,7 @@ use self::struct_layout::StructLayoutTracker;
 use super::BindgenOptions;
 
 use crate::callbacks::{DeriveInfo, FieldInfo, TypeKind as DeriveTypeKind};
+use crate::codegen::error::Error;
 use crate::ir::analysis::{HasVtable, Sizedness};
 use crate::ir::annotations::{
     Annotations, FieldAccessorKind, FieldVisibilityKind,
@@ -3923,6 +3924,16 @@ impl TryToRustTy for Type {
             }
             TypeKind::Opaque => self.try_to_opaque(ctx, item),
             TypeKind::Pointer(inner) | TypeKind::Reference(inner) => {
+                // Check that this type has the same size as the target's pointer type.
+                let size = self.get_layout(ctx, item).size;
+                if size != ctx.target_pointer_size() {
+                    return Err(Error::InvalidPointerSize {
+                        ty_name: self.name().unwrap_or("unknown").into(),
+                        ty_size: size,
+                        ptr_size: ctx.target_pointer_size(),
+                    });
+                }
+
                 let is_const = ctx.resolve_type(inner).is_const();
 
                 let inner =

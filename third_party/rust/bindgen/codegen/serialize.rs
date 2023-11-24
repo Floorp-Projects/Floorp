@@ -322,21 +322,26 @@ impl<'a> CSerialize<'a> for Type {
                 }
                 write!(writer, ")")?;
 
-                write!(writer, " (")?;
-                serialize_sep(
-                    ", ",
-                    signature.argument_types().iter(),
-                    ctx,
-                    writer,
-                    |(name, type_id), ctx, buf| {
-                        let mut stack = vec![];
-                        if let Some(name) = name {
-                            stack.push(name.clone());
-                        }
-                        type_id.serialize(ctx, (), &mut stack, buf)
-                    },
-                )?;
-                write!(writer, ")")?
+                let args = signature.argument_types();
+                if args.is_empty() {
+                    write!(writer, " (void)")?;
+                } else {
+                    write!(writer, " (")?;
+                    serialize_sep(
+                        ", ",
+                        args.iter(),
+                        ctx,
+                        writer,
+                        |(name, type_id), ctx, buf| {
+                            let mut stack = vec![];
+                            if let Some(name) = name {
+                                stack.push(name.clone());
+                            }
+                            type_id.serialize(ctx, (), &mut stack, buf)
+                        },
+                    )?;
+                    write!(writer, ")")?
+                }
             }
             TypeKind::ResolvedTypeRef(type_id) => {
                 if self.is_const() {
