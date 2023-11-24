@@ -37,7 +37,7 @@ class nsContentDLF final : public nsIDocumentLoaderFactory {
                           nsILoadGroup* aLoadGroup, nsIDocShell* aContainer,
                           DocumentCreator aDocumentCreator,
                           nsIStreamListener** aDocListener,
-                          nsIDocumentViewer** aContentViewer);
+                          nsIDocumentViewer** aDocumentViewer);
 
   /**
    * Create a blank document using the given loadgroup and given

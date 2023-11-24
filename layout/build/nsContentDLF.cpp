@@ -200,14 +200,14 @@ NS_IMETHODIMP
 nsContentDLF::CreateInstanceForDocument(nsISupports* aContainer,
                                         Document* aDocument,
                                         const char* aCommand,
-                                        nsIDocumentViewer** aContentViewer) {
+                                        nsIDocumentViewer** aDocumentViewer) {
   MOZ_ASSERT(aDocument);
 
   nsCOMPtr<nsIDocumentViewer> viewer = NS_NewDocumentViewer();
 
   // Bind the document to the Content Viewer
   viewer->LoadStart(aDocument);
-  viewer.forget(aContentViewer);
+  viewer.forget(aDocumentViewer);
   return NS_OK;
 }
 
@@ -288,7 +288,7 @@ already_AddRefed<Document> nsContentDLF::CreateBlankDocument(
 nsresult nsContentDLF::CreateDocument(
     const char* aCommand, nsIChannel* aChannel, nsILoadGroup* aLoadGroup,
     nsIDocShell* aContainer, nsContentDLF::DocumentCreator aDocumentCreator,
-    nsIStreamListener** aDocListener, nsIDocumentViewer** aContentViewer) {
+    nsIStreamListener** aDocListener, nsIDocumentViewer** aDocumentViewer) {
   MOZ_ASSERT(aDocumentCreator);
 
   nsresult rv = NS_ERROR_FAILURE;
@@ -324,7 +324,7 @@ nsresult nsContentDLF::CreateDocument(
 
   // Bind the document to the Content Viewer
   viewer->LoadStart(doc);
-  viewer.forget(aContentViewer);
+  viewer.forget(aDocumentViewer);
   return NS_OK;
 }
 
