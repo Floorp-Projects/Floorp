@@ -1179,6 +1179,9 @@ impl Writer {
             crate::Literal::F32(value) => Instruction::constant_32bit(type_id, id, value.to_bits()),
             crate::Literal::U32(value) => Instruction::constant_32bit(type_id, id, value),
             crate::Literal::I32(value) => Instruction::constant_32bit(type_id, id, value as u32),
+            crate::Literal::I64(value) => {
+                Instruction::constant_64bit(type_id, id, value as u32, (value >> 32) as u32)
+            }
             crate::Literal::Bool(true) => Instruction::constant_true(type_id, id),
             crate::Literal::Bool(false) => Instruction::constant_false(type_id, id),
         };
@@ -1763,10 +1766,10 @@ impl Writer {
         if let crate::TypeInner::Matrix {
             columns: _,
             rows,
-            width,
+            scalar,
         } = *member_array_subty_inner
         {
-            let byte_stride = Alignment::from(rows) * width as u32;
+            let byte_stride = Alignment::from(rows) * scalar.width as u32;
             self.annotations.push(Instruction::member_decorate(
                 struct_id,
                 index as u32,

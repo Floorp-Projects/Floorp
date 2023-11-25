@@ -1274,6 +1274,9 @@ impl<W: Write> Writer<W> {
                 crate::Literal::I32(value) => {
                     write!(self.out, "{value}")?;
                 }
+                crate::Literal::I64(value) => {
+                    write!(self.out, "{value}L")?;
+                }
                 crate::Literal::Bool(value) => {
                     write!(self.out, "{value}")?;
                 }
@@ -1939,11 +1942,11 @@ impl<W: Write> Writer<W> {
                 crate::TypeInner::Matrix {
                     columns,
                     rows,
-                    width,
+                    scalar,
                 } => {
                     let target_scalar = crate::Scalar {
                         kind,
-                        width: convert.unwrap_or(width),
+                        width: convert.unwrap_or(scalar.width),
                     };
                     put_numeric_type(&mut self.out, target_scalar, &[rows, columns])?;
                     write!(self.out, "(")?;
@@ -2552,10 +2555,9 @@ impl<W: Write> Writer<W> {
             TypeResolution::Value(crate::TypeInner::Matrix {
                 columns,
                 rows,
-                width,
+                scalar,
             }) => {
-                let element = crate::Scalar::float(width);
-                put_numeric_type(&mut self.out, element, &[rows, columns])?;
+                put_numeric_type(&mut self.out, scalar, &[rows, columns])?;
             }
             TypeResolution::Value(ref other) => {
                 log::warn!("Type {:?} isn't a known local", other); //TEMP!
