@@ -914,15 +914,12 @@ impl<'a> ConstantEvaluator<'a> {
             TypeInner::Matrix {
                 columns,
                 rows,
-                width,
+                scalar,
             } => {
                 let vec_ty = self.types.insert(
                     Type {
                         name: None,
-                        inner: TypeInner::Vector {
-                            size: rows,
-                            scalar: crate::Scalar::float(width),
-                        },
+                        inner: TypeInner::Vector { size: rows, scalar },
                     },
                     span,
                 );
@@ -979,28 +976,36 @@ impl<'a> ConstantEvaluator<'a> {
                         Literal::U32(v) => v as i32,
                         Literal::F32(v) => v as i32,
                         Literal::Bool(v) => v as i32,
-                        Literal::F64(_) => return Err(ConstantEvaluatorError::InvalidCastArg),
+                        Literal::F64(_) | Literal::I64(_) => {
+                            return Err(ConstantEvaluatorError::InvalidCastArg)
+                        }
                     }),
                     Sc::U32 => Literal::U32(match literal {
                         Literal::I32(v) => v as u32,
                         Literal::U32(v) => v,
                         Literal::F32(v) => v as u32,
                         Literal::Bool(v) => v as u32,
-                        Literal::F64(_) => return Err(ConstantEvaluatorError::InvalidCastArg),
+                        Literal::F64(_) | Literal::I64(_) => {
+                            return Err(ConstantEvaluatorError::InvalidCastArg)
+                        }
                     }),
                     Sc::F32 => Literal::F32(match literal {
                         Literal::I32(v) => v as f32,
                         Literal::U32(v) => v as f32,
                         Literal::F32(v) => v,
                         Literal::Bool(v) => v as u32 as f32,
-                        Literal::F64(_) => return Err(ConstantEvaluatorError::InvalidCastArg),
+                        Literal::F64(_) | Literal::I64(_) => {
+                            return Err(ConstantEvaluatorError::InvalidCastArg)
+                        }
                     }),
                     Sc::BOOL => Literal::Bool(match literal {
                         Literal::I32(v) => v != 0,
                         Literal::U32(v) => v != 0,
                         Literal::F32(v) => v != 0.0,
                         Literal::Bool(v) => v,
-                        Literal::F64(_) => return Err(ConstantEvaluatorError::InvalidCastArg),
+                        Literal::F64(_) | Literal::I64(_) => {
+                            return Err(ConstantEvaluatorError::InvalidCastArg)
+                        }
                     }),
                     _ => return Err(ConstantEvaluatorError::InvalidCastArg),
                 };
@@ -1018,7 +1023,7 @@ impl<'a> ConstantEvaluator<'a> {
                     TypeInner::Matrix { columns, rows, .. } => TypeInner::Matrix {
                         columns,
                         rows,
-                        width: target.width,
+                        scalar: target,
                     },
                     _ => return Err(ConstantEvaluatorError::InvalidCastArg),
                 };
@@ -1514,7 +1519,7 @@ mod tests {
                 inner: TypeInner::Matrix {
                     columns: VectorSize::Bi,
                     rows: VectorSize::Tri,
-                    width: 4,
+                    scalar: crate::Scalar::F32,
                 },
             },
             Default::default(),
