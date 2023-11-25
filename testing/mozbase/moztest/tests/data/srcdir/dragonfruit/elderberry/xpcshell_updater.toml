@@ -1,0 +1,8 @@
+[DEFAULT]
+support-files = [
+  "data/**",
+  "xpcshell_updater.toml",
+]
+
+["test_xpcshell_C.js"]
+head = "head_updates.js head2.js"

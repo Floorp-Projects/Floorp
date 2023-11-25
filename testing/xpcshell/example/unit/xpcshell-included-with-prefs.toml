@@ -1,0 +1,4 @@
+[DEFAULT]
+prefs = ["dummy.pref.from.test.ancestor='ReplacedParent'"]
+
+["test_prefs_defaults_included.js"]

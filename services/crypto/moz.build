@@ -7,7 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Sync")
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.toml"]
 
 EXTRA_JS_MODULES["services-crypto"] += [
     "modules/jwcrypto.sys.mjs",

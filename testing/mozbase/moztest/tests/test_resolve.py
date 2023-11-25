@@ -55,7 +55,7 @@ def create_tests(topsrcdir):
                 "manifest",
                 defaults.pop(
                     "manifest",
-                    mozpath.join(mozpath.dirname(path), manifest_name + ".ini"),
+                    mozpath.join(mozpath.dirname(path), manifest_name + ".toml"),
                 ),
             )
 
@@ -128,8 +128,8 @@ def all_tests(create_tests):
             (
                 "carrot/test_included.js",
                 {
-                    "ancestor_manifest": "carrot/xpcshell-one.ini",
-                    "manifest": "carrot/xpcshell-shared.ini",
+                    "ancestor_manifest": "carrot/xpcshell-one.toml",
+                    "manifest": "carrot/xpcshell-shared.toml",
                     "flavor": "xpcshell",
                     "stick": "one",
                 },
@@ -137,8 +137,8 @@ def all_tests(create_tests):
             (
                 "carrot/test_included.js",
                 {
-                    "ancestor_manifest": "carrot/xpcshell-two.ini",
-                    "manifest": "carrot/xpcshell-shared.ini",
+                    "ancestor_manifest": "carrot/xpcshell-two.toml",
+                    "manifest": "carrot/xpcshell-shared.toml",
                     "flavor": "xpcshell",
                     "stick": "two",
                 },
@@ -149,7 +149,7 @@ def all_tests(create_tests):
                     "flavor": "xpcshell",
                     "generated-files": "head_update.js",
                     "head": "head_update.js",
-                    "manifest": "dragonfruit/xpcshell.ini",
+                    "manifest": "dragonfruit/xpcshell.toml",
                     "reason": "busted",
                     "run-sequentially": "Launches application.",
                     "skip-if": "os == 'android'",
@@ -161,7 +161,7 @@ def all_tests(create_tests):
                     "flavor": "xpcshell",
                     "generated-files": "head_update.js",
                     "head": "head_update.js head2.js",
-                    "manifest": "dragonfruit/elderberry/xpcshell_updater.ini",
+                    "manifest": "dragonfruit/elderberry/xpcshell_updater.toml",
                     "reason": "don't work",
                     "run-sequentially": "Launches application.",
                     "skip-if": "os == 'android'",
@@ -171,7 +171,7 @@ def all_tests(create_tests):
                 "fig/grape/src/TestInstrumentationA.java",
                 {
                     "flavor": "instrumentation",
-                    "manifest": "fig/grape/instrumentation.ini",
+                    "manifest": "fig/grape/instrumentation.toml",
                     "subsuite": "background",
                 },
             ),
@@ -179,7 +179,7 @@ def all_tests(create_tests):
                 "fig/huckleberry/src/TestInstrumentationB.java",
                 {
                     "flavor": "instrumentation",
-                    "manifest": "fig/huckleberry/instrumentation.ini",
+                    "manifest": "fig/huckleberry/instrumentation.toml",
                     "subsuite": "browser",
                 },
             ),
@@ -187,7 +187,7 @@ def all_tests(create_tests):
                 "juniper/browser_chrome.js",
                 {
                     "flavor": "browser-chrome",
-                    "manifest": "juniper/browser.ini",
+                    "manifest": "juniper/browser.toml",
                     "skip-if": "e10s  # broken",
                 },
             ),
@@ -195,7 +195,7 @@ def all_tests(create_tests):
                 "kiwi/browser_devtools.js",
                 {
                     "flavor": "browser-chrome",
-                    "manifest": "kiwi/browser.ini",
+                    "manifest": "kiwi/browser.toml",
                     "subsuite": "devtools",
                     "tags": "devtools",
                 },
@@ -212,18 +212,18 @@ def defaults(topsrcdir):
         return os.path.normpath(os.path.join(topsrcdir, relpath))
 
     return {
-        (to_abspath("dragonfruit/elderberry/xpcshell_updater.ini")): {
-            "support-files": "\ndata/**\nxpcshell_updater.ini"
+        (to_abspath("dragonfruit/elderberry/xpcshell_updater.toml")): {
+            "support-files": "data/**\nxpcshell_updater.toml"
         },
         (
-            to_abspath("carrot/xpcshell-one.ini"),
-            to_abspath("carrot/xpcshell-shared.ini"),
+            to_abspath("carrot/xpcshell-one.toml"),
+            to_abspath("carrot/xpcshell-shared.toml"),
         ): {
             "head": "head_one.js",
         },
         (
-            to_abspath("carrot/xpcshell-two.ini"),
-            to_abspath("carrot/xpcshell-shared.ini"),
+            to_abspath("carrot/xpcshell-two.toml"),
+            to_abspath("carrot/xpcshell-shared.toml"),
         ): {
             "head": "head_two.js",
         },
@@ -340,12 +340,12 @@ def test_resolve_multiple_paths(resolver):
 
 
 def test_resolve_support_files(resolver):
-    expected_support_files = "\ndata/**\nxpcshell_updater.ini"
+    expected_support_files = "data/**\nxpcshell_updater.toml"
     tests = list(resolver.resolve_tests(paths=["dragonfruit"]))
     assert len(tests) == 2
 
     for test in tests:
-        if test["manifest"].endswith("xpcshell_updater.ini"):
+        if test["manifest"].endswith("xpcshell_updater.toml"):
             assert test["support-files"] == expected_support_files
         else:
             assert "support-files" not in test
@@ -454,18 +454,18 @@ def test_ancestor_manifest_defaults(resolver, topsrcdir, defaults):
     tests = list(resolver._resolve(paths=["carrot/test_included.js"]))
     assert len(tests) == 2
 
-    if tests[0]["ancestor_manifest"] == os.path.join("carrot", "xpcshell-one.ini"):
+    if tests[0]["ancestor_manifest"] == os.path.join("carrot", "xpcshell-one.toml"):
         [testOne, testTwo] = tests
     else:
         [testTwo, testOne] = tests
 
-    assert testOne["ancestor_manifest"] == os.path.join("carrot", "xpcshell-one.ini")
-    assert testOne["manifest_relpath"] == os.path.join("carrot", "xpcshell-shared.ini")
+    assert testOne["ancestor_manifest"] == os.path.join("carrot", "xpcshell-one.toml")
+    assert testOne["manifest_relpath"] == os.path.join("carrot", "xpcshell-shared.toml")
     assert testOne["head"] == "head_one.js"
     assert testOne["stick"] == "one"
 
-    assert testTwo["ancestor_manifest"] == os.path.join("carrot", "xpcshell-two.ini")
-    assert testTwo["manifest_relpath"] == os.path.join("carrot", "xpcshell-shared.ini")
+    assert testTwo["ancestor_manifest"] == os.path.join("carrot", "xpcshell-two.toml")
+    assert testTwo["manifest_relpath"] == os.path.join("carrot", "xpcshell-shared.toml")
     assert testTwo["head"] == "head_two.js"
     assert testTwo["stick"] == "two"
 
