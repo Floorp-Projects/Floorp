@@ -53,7 +53,6 @@
     <string name="menu_remove_from_shortcuts">Böh nibak röt koh</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Pue Nyang Barô</string>
     <string name="menu_settings">Atô</string>
     <string name="menu_about">Bhaih</string>
     <string name="menu_help">Beunantu</string>
@@ -352,6 +351,9 @@
     <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
     <string name="preference_mozilla_telemetry_summary">Meurunoë lom</string>
 
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla geuôseuha keu geupeusaho nyang geupeureulèe mantöng keu geuseudiya dan geupeujroh %1$s keu bandum ureueng.</string>
+
     <!-- In-app link (in settings) to Focus privacy notice. -->
     <string name="preference_privacy_notice">Reusam Privasi</string>
 
@@ -402,7 +404,11 @@
 
     <string name="search_add_error_empty_name">Peutamong nan meusén mita</string>
 
+    <string name="search_add_error_duplicate_name">Meusén mita nyang teupasang ka geungui nan nyan.</string>
+
     <string name="search_add_error_empty_search">Peutamong string mita</string>
+
+    <string name="search_add_error_format">Neuparéksa meunyo string meunita ka pah ngön beuntuk Miseue</string>
 
     <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
     <string name="content_description_clear_input">Peugléh teunamong</string>
@@ -467,6 +473,9 @@
 
     <string name="external_app_prompt_title">Peuhah link lam aplikasi laén</string>
 
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">Droeneuh jeuet neutinggai %1$s keu neupeuhah peunawôt nyoe bak %2$s.</string>
     <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
     <string name="external_app_prompt_no_app_title">Mita saboh app nyang jeuet peuhah link</string>
 
@@ -483,6 +492,9 @@
     <!-- Snackbar action to immediately open the successfully downloaded file. -->
     <string name="download_snackbar_open">Peuhah</string>
 
+    <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
+    <string name="snackbar_added_to_shortcuts">Geutamah u röt koh!</string>
+
     <string name="error_hostLookup_title">Server hana geuteumeung</string>
 
     <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
@@ -497,6 +509,10 @@
 
     <!-- New Onboarding flow first screen button label-->
     <string name="onboarding_first_screen_button_text">Puphôn</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s kön lagèe browser laén</string>
 
     <!-- New Onboarding flow second screen make Focus default browser button label-->
     <string name="onboarding_second_screen_default_browser_button_text">Peujeuet sibagoe browser teutap</string>

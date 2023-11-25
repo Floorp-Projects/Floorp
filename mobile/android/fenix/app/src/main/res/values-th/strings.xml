@@ -352,6 +352,9 @@
     <string name="juno_onboarding_sign_in_title_2">คงการเข้ารหัสเมื่อคุณเปลี่ยนจากอุปกรณ์เครื่องหนึ่งไปยังอีกเครื่องหนึ่ง</string>
     <!-- Description for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">นำแท็บและรหัสผ่านจากอุปกรณ์อื่น ๆ ของคุณเข้ามาเพื่อเรียกดูต่อจากที่คุณค้างไว้</string>
+    <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
+     Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_sign_in_description_2">เมื่อคุณลงชื่อเข้าและซิงค์แล้ว คุณจะปลอดภัยยิ่งขึ้น Firefox จะเข้ารหัสลับรหัสผ่าน ที่คั่นหน้า และอื่น ๆ ของคุณ</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">ลงชื่อเข้า</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -423,6 +426,10 @@
     <string name="preferences_search_engines_suggestions">คำแนะนำจากเครื่องมือค้นหา</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">แถบที่อยู่</string>
+    <!-- Preference Category for settings related to Search address bar -->
+    <string name="preferences_settings_address_bar">การกำหนดลักษณะแถบที่อยู่</string>
+    <!-- Preference Category for settings to Firefox Suggest -->
+    <string name="preference_search_address_bar_fx_suggest">แถบที่อยู่ - Firefox Suggest</string>
     <!-- Preference link to Learn more about Firefox Suggest -->
     <string name="preference_search_learn_about_fx_suggest">เรียนรู้เพิ่มเติมเกี่ยวกับ Firefox Suggest</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -454,6 +461,10 @@
 
     <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
     <string name="preferences_cookie_banner_reduction" moz:RemovedIn="121" tools:ignore="UnusedResources">การลดคุกกี้แบนเนอร์</string>
+    <!-- Label for cookie banner section in quick settings panel. -->
+    <string name="cookie_banner_blocker">ตัวปิดกั้นแบนเนอร์คุกกี้</string>
+    <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction_private_mode">ตัวปิดกั้นแบนเนอร์คุกกี้ในการเรียกดูแบบส่วนตัว</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">ลดคุกกี้แบนเนอร์</string>
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
