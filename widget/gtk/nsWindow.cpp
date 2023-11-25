@@ -405,7 +405,6 @@ nsWindow::nsWindow()
       mHasMappedToplevel(false),
       mRetryPointerGrab(false),
       mPanInProgress(false),
-      mDrawToContainer(false),
       mTitlebarBackdropState(false),
       mIsWaylandPanelWindow(false),
       mIsChildWindow(false),
@@ -5782,8 +5781,7 @@ Window nsWindow::GetX11Window() {
 
 void nsWindow::EnsureGdkWindow() {
   if (!mGdkWindow) {
-    mGdkWindow = gtk_widget_get_window(mDrawToContainer ? GTK_WIDGET(mContainer)
-                                                        : mShell);
+    mGdkWindow = gtk_widget_get_window(GTK_WIDGET(mContainer));
     g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", this);
   }
 }
@@ -5958,7 +5956,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   ConstrainSize(&mBounds.width, &mBounds.height);
   mLastSizeRequest = mBounds.Size();
 
-  GtkWidget* eventWidget = nullptr;
   bool popupNeedsAlphaVisual = mWindowType == WindowType::Popup &&
                                (aInitData && aInitData->mTransparencyMode ==
                                                  TransparencyMode::Transparent);
@@ -6224,40 +6221,23 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   GtkWidget* container = moz_container_new();
   mContainer = MOZ_CONTAINER(container);
 
-  /* There are several cases here:
-   *
-   * 1) We're running on Gtk+ without client side decorations.
-   *    Content is rendered to mShell window and we listen
-   *    to the Gtk+ events on mShell
-   * 2) We're running on Gtk+ and client side decorations
-   *    are drawn by Gtk+ to mShell. Content is rendered to mContainer
-   *    and we listen to the Gtk+ events on mContainer.
-   * 3) We're running on Wayland. All gecko content is rendered
-   *    to mContainer and we listen to the Gtk+ events on mContainer.
-   */
-  mDrawToContainer =
-      GdkIsWaylandDisplay() || mGtkWindowDecoration == GTK_DECORATION_CLIENT;
-  eventWidget = mDrawToContainer ? container : mShell;
-
   // Prevent GtkWindow from painting a background to avoid flickering.
   gtk_widget_set_app_paintable(
-      eventWidget, StaticPrefs::widget_transparent_windows_AtStartup());
+      GTK_WIDGET(mContainer),
+      StaticPrefs::widget_transparent_windows_AtStartup());
 
-  gtk_widget_add_events(eventWidget, kEvents);
+  gtk_widget_add_events(GTK_WIDGET(mContainer), kEvents);
+  gtk_widget_add_events(mShell, GDK_PROPERTY_CHANGE_MASK);
+  gtk_widget_set_app_paintable(
+      mShell, StaticPrefs::widget_transparent_windows_AtStartup());
 
-  if (mDrawToContainer) {
-    gtk_widget_add_events(mShell, GDK_PROPERTY_CHANGE_MASK);
-    gtk_widget_set_app_paintable(
-        mShell, StaticPrefs::widget_transparent_windows_AtStartup());
-  }
   if (mTransparencyBitmapForTitlebar) {
     moz_container_force_default_visual(mContainer);
   }
 
   // If we draw to mContainer window then configure it now because
   // gtk_container_add() realizes the child widget.
-  gtk_widget_set_has_window(container, mDrawToContainer);
-
+  gtk_widget_set_has_window(container, true);
   gtk_container_add(GTK_CONTAINER(mShell), container);
 
   // alwaysontop windows are generally used for peripheral indicators,
@@ -6313,12 +6293,9 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                         DevicePixelsToGdkCoordRoundDown(mBounds.y));
   }
 
-  if (mDrawToContainer) {
-    // Also label mShell toplevel window,
-    // property_notify_event_cb callback also needs to find its way home
-    g_object_set_data(G_OBJECT(GetToplevelGdkWindow()), "nsWindow", this);
-  }
-
+  // Also label mShell toplevel window,
+  // property_notify_event_cb callback also needs to find its way home
+  g_object_set_data(G_OBJECT(GetToplevelGdkWindow()), "nsWindow", this);
   g_object_set_data(G_OBJECT(mContainer), "nsWindow", this);
   g_object_set_data(G_OBJECT(mShell), "nsWindow", this);
 
@@ -6393,14 +6370,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
 #ifdef MOZ_X11
   if (GdkIsX11Display()) {
-    GtkWidget* widgets[] = {GTK_WIDGET(mContainer),
-                            !mDrawToContainer ? mShell : nullptr};
-    for (size_t i = 0; i < ArrayLength(widgets) && widgets[i]; ++i) {
-      // Double buffering is controlled by the window's owning
-      // widget. Disable double buffering for painting directly to the
-      // X Window.
-      gtk_widget_set_double_buffered(widgets[i], FALSE);
-    }
+    gtk_widget_set_double_buffered(GTK_WIDGET(mContainer), FALSE);
   }
 #endif
 #ifdef MOZ_WAYLAND
@@ -6426,23 +6396,23 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   // and propagate up to the first widget that handles the events, so we
   // need only connect on mShell, if it exists, to catch events on its
   // window and windows of mContainer.
-  g_signal_connect(eventWidget, "enter-notify-event",
+  g_signal_connect(mContainer, "enter-notify-event",
                    G_CALLBACK(enter_notify_event_cb), nullptr);
-  g_signal_connect(eventWidget, "leave-notify-event",
+  g_signal_connect(mContainer, "leave-notify-event",
                    G_CALLBACK(leave_notify_event_cb), nullptr);
-  g_signal_connect(eventWidget, "motion-notify-event",
+  g_signal_connect(mContainer, "motion-notify-event",
                    G_CALLBACK(motion_notify_event_cb), nullptr);
-  g_signal_connect(eventWidget, "button-press-event",
+  g_signal_connect(mContainer, "button-press-event",
                    G_CALLBACK(button_press_event_cb), nullptr);
-  g_signal_connect(eventWidget, "button-release-event",
+  g_signal_connect(mContainer, "button-release-event",
                    G_CALLBACK(button_release_event_cb), nullptr);
-  g_signal_connect(eventWidget, "scroll-event", G_CALLBACK(scroll_event_cb),
+  g_signal_connect(mContainer, "scroll-event", G_CALLBACK(scroll_event_cb),
                    nullptr);
   if (gtk_check_version(3, 18, 0) == nullptr) {
-    g_signal_connect(eventWidget, "event", G_CALLBACK(generic_event_cb),
+    g_signal_connect(mContainer, "event", G_CALLBACK(generic_event_cb),
                      nullptr);
   }
-  g_signal_connect(eventWidget, "touch-event", G_CALLBACK(touch_event_cb),
+  g_signal_connect(mContainer, "touch-event", G_CALLBACK(touch_event_cb),
                    nullptr);
 
   LOG("  nsWindow type %d %s\n", int(mWindowType),
@@ -6952,7 +6922,7 @@ gint nsWindow::GetInputRegionMarginInGdkCoords() {
 void nsWindow::SetInputRegion(const InputRegion& aInputRegion) {
   mInputRegion = aInputRegion;
 
-  GdkWindow* window = mDrawToContainer ? GetToplevelGdkWindow() : mGdkWindow;
+  GdkWindow* window = GetToplevelGdkWindow();
   if (!window) {
     return;
   }
@@ -7043,7 +7013,7 @@ void nsWindow::UpdateTopLevelOpaqueRegion() {
     return;
   }
 
-  GdkWindow* window = mDrawToContainer ? GetToplevelGdkWindow() : mGdkWindow;
+  GdkWindow* window = GetToplevelGdkWindow();
   if (!window) {
     return;
   }
@@ -7052,9 +7022,7 @@ void nsWindow::UpdateTopLevelOpaqueRegion() {
   int x = 0;
   int y = 0;
 
-  if (mDrawToContainer) {
-    gdk_window_get_position(mGdkWindow, &x, &y);
-  }
+  gdk_window_get_position(mGdkWindow, &x, &y);
 
   int width = DevicePixelsToGdkCoordRoundDown(mBounds.width);
   int height = DevicePixelsToGdkCoordRoundDown(mBounds.height);
