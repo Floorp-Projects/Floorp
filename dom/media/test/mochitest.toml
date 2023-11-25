@@ -864,6 +864,7 @@ tags = "mtg"
 skip-if = [
   "os == 'android'", # bug 1309814, android(bug 1232305)
   "apple_silicon", # bug 1707737
+  "win11_2009 && !debug", # Bug 1776940
 ]
 
 ["test_mp3_broadcast.html"]
