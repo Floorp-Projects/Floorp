@@ -11,7 +11,7 @@ TEST_DIRS += [
     "mochitest",
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.toml"]
 
 if not CONFIG["MOZ_NO_SMART_CARDS"]:
     XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell-smartcards.ini"]

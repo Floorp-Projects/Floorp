@@ -1,0 +1,20 @@
+[DEFAULT]
+skip-if = ["appname == 'thunderbird'"]
+
+["test_actors.js"]
+
+["test_browser.js"]
+
+["test_cookie.js"]
+
+["test_json.js"]
+
+["test_message.js"]
+
+["test_navigate.js"]
+
+["test_prefs.js"]
+
+["test_sync.js"]
+
+["test_web-reference.js"]

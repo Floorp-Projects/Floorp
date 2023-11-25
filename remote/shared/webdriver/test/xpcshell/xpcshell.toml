@@ -1,0 +1,20 @@
+[DEFAULT]
+head = "head.js"
+
+["test_Actions.js"]
+
+["test_Assert.js"]
+
+["test_Capabilities.js"]
+
+["test_Errors.js"]
+
+["test_NodeCache.js"]
+
+["test_Session.js"]
+
+["test_URLPattern_invalid.js"]
+
+["test_URLPattern_matchURLPattern.js"]
+
+["test_URLPattern_parseURLPattern.js"]

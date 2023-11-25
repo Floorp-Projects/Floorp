@@ -1,0 +1,24 @@
+[DEFAULT]
+head = "head.js"
+
+["test_AppInfo.js"]
+
+["test_ChallengeHeaderParser.js"]
+
+["test_DOM.js"]
+
+["test_Format.js"]
+
+["test_Navigate.js"]
+
+["test_Realm.js"]
+
+["test_RecommendedPreferences.js"]
+
+["test_Stack.js"]
+
+["test_Sync.js"]
+
+["test_TabManager.js"]
+
+["test_UUID.js"]

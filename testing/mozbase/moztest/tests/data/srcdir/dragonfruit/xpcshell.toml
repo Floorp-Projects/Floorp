@@ -1,0 +1,6 @@
+[DEFAULT]
+
+["elderberry/test_xpcshell_C.js"]
+head = "head_update.js"
+
+["include:elderberry/xpcshell_updater.toml"]

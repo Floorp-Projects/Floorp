@@ -1,0 +1,5 @@
+[DEFAULT]
+head = "head_one.js"
+
+["include:xpcshell-shared.toml"]
+stick = "one"

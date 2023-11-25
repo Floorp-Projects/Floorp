@@ -1,0 +1,19 @@
+[DEFAULT]
+head = ""
+support-files = ["prefs_test_common.js"]
+prefs = [
+  "dummy.pref.from.test.ancestor='Ancestor'",
+  "dummy.pref.from.test.manifest=1",
+]
+
+["include:xpcshell-included-with-prefs.toml"]
+
+["test_prefs_defaults.js"]
+
+["test_prefs_defaults_and_file.js"]
+prefs = [
+  "dummy.pref.from.test.file=2",
+  "dummy.pref.from.test.manifest=1337", # overrides manifest
+  "dummy.pref.from.test.duplicate='first'", # Multiple prefs, for additional test coverage over xpcshell.toml
+  "dummy.pref.from.test.duplicate='final'",
+]

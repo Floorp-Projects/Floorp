@@ -11,7 +11,7 @@ MOCHITEST_CHROME_MANIFESTS += ["tests/mochitest/chrome.toml"]
 
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]
 
 EXTRA_JS_MODULES += [
     "Credentials.sys.mjs",
