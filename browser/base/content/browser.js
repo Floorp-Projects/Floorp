@@ -5001,6 +5001,15 @@ var XULBrowserWindow = {
     LinkTargetDisplay.update();
   },
 
+  onEnterDOMFullscreen() {
+    // Clear the status panel.
+    this.hideOverLinkImmediately = true;
+    this.setOverLink("");
+    this.hideOverLinkImmediately = false;
+    this.status = "";
+    this.setDefaultStatus("");
+  },
+
   showTooltip(xDevPix, yDevPix, tooltip, direction, browser) {
     if (
       Cc["@mozilla.org/widget/dragservice;1"]
