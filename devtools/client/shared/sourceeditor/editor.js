@@ -343,6 +343,7 @@ Editor.prototype = {
 
       const onLoad = () => {
         const win = env.contentWindow.wrappedJSObject;
+        env.style.visibility = "";
 
         if (!this.config.themeSwitching) {
           win.document.documentElement.setAttribute("force-theme", "light");
@@ -359,6 +360,7 @@ Editor.prototype = {
         resolve();
       };
 
+      env.style.visibility = "hidden";
       env.addEventListener("load", onLoad, true);
       env.setAttribute("src", CM_IFRAME);
       el.appendChild(env);
