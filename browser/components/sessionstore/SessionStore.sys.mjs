@@ -585,10 +585,13 @@ export var SessionStore = {
       // Floorp injections
       // Remove SSB window state.
       // SSB windows should be not restored, so we don't need to keep their state.
-      if (win.tabs[0].floorpSSB) {
-        aState.windows.splice(i, 1);
-        if (aState.selectedWindow > i) {
-          aState.selectedWindow--;
+      if (win.tabs.entries()) {
+        if (win.tabs[0].floorpSSB) {
+          console.log("SSB window state removed");
+          aState.windows.splice(i, 1);
+          if (aState.selectedWindow > i) {
+            aState.selectedWindow--;
+          }
         }
       }
     }
@@ -1920,7 +1923,10 @@ var SessionStoreInternal = {
     let completionPromise = Promise.resolve();
 
     // Floorp Injections
-    if(aWindow.document.documentElement.getAttribute("FloorpEnableSSBWindow") == "true"){
+    if (
+      aWindow.document.documentElement.getAttribute("FloorpEnableSSBWindow") ==
+      "true"
+    ) {
       return completionPromise;
     }
     // this window was about to be restored - conserve its original data, if any
