@@ -581,6 +581,16 @@ export var SessionStore = {
           aState.selectedWindow--;
         }
       }
+
+      // Floorp injections
+      // Remove SSB window state.
+      // SSB windows should be not restored, so we don't need to keep their state.
+      if (win.tabs[0].floorpSSB) {
+        aState.windows.splice(i, 1);
+        if (aState.selectedWindow > i) {
+          aState.selectedWindow--;
+        }
+      }
     }
   },
 
