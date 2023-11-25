@@ -1048,13 +1048,14 @@ popupnotificationcontent {
     --swipe-nav-icon-accent-color: light-dark(#FFFFFF, #000000);
   }
 
-  &:-moz-locale-dir(ltr) {
-    transform: scaleX(-1);
-  }
-
   > svg {
     margin: auto 0;
   }
+}
+
+#historySwipeAnimationPreviousArrow:-moz-locale-dir(rtl),
+#historySwipeAnimationNextArrow:-moz-locale-dir(ltr) {
+  transform: scaleX(-1);
 }
 
 .swipe-nav-icon {
