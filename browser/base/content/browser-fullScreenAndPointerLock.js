@@ -564,6 +564,8 @@ var FullScreen = {
     }
     document.documentElement.setAttribute("inDOMFullscreen", true);
 
+    XULBrowserWindow.onEnterDOMFullscreen();
+
     if (gFindBarInitialized) {
       gFindBar.close(true);
     }
