@@ -63,12 +63,6 @@
 :root:-moz-lwtheme {
   --toolbar-bgcolor: rgba(255,255,255,.4);
   --toolbar-color: var(--lwt-text-color, inherit);
-
-  --toolbar-field-background-color: rgba(255, 255, 255, 0.8);
-  --toolbar-field-focus-background-color: white;
-  --toolbar-field-color: black;
-  --toolbar-field-focus-color: black;
-  --toolbar-field-border-color: transparent;
 }
 
 @media (prefers-contrast) {

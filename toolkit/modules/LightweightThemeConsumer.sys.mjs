@@ -76,6 +76,7 @@ const toolkitVariableMap = [
     "--toolbar-field-background-color",
     {
       lwtProperty: "toolbar_field",
+      fallbackColor: "rgba(255, 255, 255, 0.8)",
     },
   ],
   [
@@ -94,12 +95,14 @@ const toolkitVariableMap = [
     "--toolbar-field-color",
     {
       lwtProperty: "toolbar_field_text",
+      fallbackColor: "black",
     },
   ],
   [
     "--toolbar-field-border-color",
     {
       lwtProperty: "toolbar_field_border",
+      fallbackColor: "transparent",
     },
   ],
   [
@@ -107,6 +110,7 @@ const toolkitVariableMap = [
     {
       lwtProperty: "toolbar_field_focus",
       fallbackProperty: "toolbar_field",
+      fallbackColor: "white",
       processColor(rgbaChannels, element, propertyOverrides) {
         if (!rgbaChannels) {
           return null;
@@ -130,6 +134,7 @@ const toolkitVariableMap = [
     {
       lwtProperty: "toolbar_field_text_focus",
       fallbackProperty: "toolbar_field_text",
+      fallbackColor: "black",
     },
   ],
   [
@@ -298,6 +303,8 @@ LightweightThemeConsumer.prototype = {
       root.removeAttribute("lwtheme-image");
     }
 
+    let hasTheme = theme.id != DEFAULT_THEME_ID || useDarkTheme;
+
     this._setExperiment(active, themeData.experiment, theme.experimental);
     _setImage(this._win, root, active, "--lwt-header-image", theme.headerURL);
     _setImage(
@@ -307,9 +314,8 @@ LightweightThemeConsumer.prototype = {
       "--lwt-additional-images",
       theme.additionalBackgrounds
     );
-    _setProperties(root, active, theme);
+    _setProperties(root, active, theme, hasTheme);
 
-    let hasTheme = theme.id != DEFAULT_THEME_ID || useDarkTheme;
     if (hasTheme) {
       if (updateGlobalThemeData) {
         _determineToolbarAndContentTheme(
@@ -639,7 +645,7 @@ function _determineIfColorPairIsDark(
   return !_isColorDark(color.r, color.g, color.b);
 }
 
-function _setProperties(root, active, themeData) {
+function _setProperties(root, active, themeData, hasTheme) {
   let propertyOverrides = new Map();
   let doc = root.ownerDocument;
 
@@ -654,6 +660,7 @@ function _setProperties(root, active, themeData) {
       const {
         lwtProperty,
         fallbackProperty,
+        fallbackColor,
         optionalElementID,
         processColor,
         isColor = true,
@@ -666,6 +673,9 @@ function _setProperties(root, active, themeData) {
         val = _cssColorToRGBA(doc, val);
         if (!val && fallbackProperty) {
           val = _cssColorToRGBA(doc, themeData[fallbackProperty]);
+        }
+        if (!val && hasTheme && fallbackColor) {
+          val = _cssColorToRGBA(doc, fallbackColor);
         }
         if (processColor) {
           val = processColor(val, elem, propertyOverrides);
