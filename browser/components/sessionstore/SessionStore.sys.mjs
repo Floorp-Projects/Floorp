@@ -585,7 +585,7 @@ export var SessionStore = {
       // Floorp injections
       // Remove SSB window state.
       // SSB windows should be not restored, so we don't need to keep their state.
-      if (win.tabs.entries()) {
+      if (win.tabs) {
         if (win.tabs[0].floorpSSB) {
           console.log("SSB window state removed");
           aState.windows.splice(i, 1);
