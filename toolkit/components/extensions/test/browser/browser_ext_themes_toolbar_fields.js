@@ -184,3 +184,29 @@ add_task(async function test_support_toolbar_field_brighttext_dark_on_dark() {
 
   await extension.unload();
 });
+
+add_task(async function test_no_explicit_toolbar_field_on_dark_toolbar() {
+  let root = document.documentElement;
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      theme: {
+        colors: {
+          frame: "#000",
+          tab_background_text: "#fff",
+          // Explicitly unset toolbar fields, but they default to light.
+        },
+      },
+    },
+  });
+
+  await extension.startup();
+
+  Assert.equal(
+    root.getAttribute("lwt-toolbar-field"),
+    "light",
+    "toolbar-field color-scheme should be set and light"
+  );
+
+  await extension.unload();
+});
