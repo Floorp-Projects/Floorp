@@ -21,6 +21,7 @@ use std::os::raw::c_void;
 use std::ptr;
 use style::color::mix::ColorInterpolationMethod;
 use style::color::{AbsoluteColor, ColorSpace};
+use style::computed_value_flags::ComputedValueFlags;
 use style::context::ThreadLocalStyleContext;
 use style::context::{CascadeInputs, QuirksMode, SharedStyleContext, StyleContext};
 use style::counter_style;
@@ -8547,8 +8548,9 @@ pub unsafe extern "C" fn Servo_InvalidateForViewportUnits(
     root: &RawGeckoElement,
     dynamic_only: bool,
 ) {
-    let document_data = document_style.borrow();
-    let device = document_data.stylist.device();
+    let mut document_data = document_style.borrow_mut();
+    let ref mut stylist = document_data.stylist;
+    let device = stylist.device();
 
     if !device.used_viewport_size() {
         return;
@@ -8556,6 +8558,14 @@ pub unsafe extern "C" fn Servo_InvalidateForViewportUnits(
 
     if dynamic_only && !device.used_dynamic_viewport_size() {
         return;
+    }
+
+    // If the viewport changed, then initial values containing viewport units need to be recomputed.
+    if stylist
+        .get_custom_property_initial_values_flags()
+        .intersects(ComputedValueFlags::USES_VIEWPORT_UNITS)
+    {
+        stylist.rebuild_initial_values_for_custom_properties();
     }
 
     if style::invalidation::viewport_units::invalidate(GeckoElement(root)) {

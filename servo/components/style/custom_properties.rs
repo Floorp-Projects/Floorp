@@ -864,9 +864,17 @@ pub struct CustomPropertiesBuilder<'a, 'b: 'a> {
 impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
     /// Create a new builder, inheriting from a given custom properties map.
     pub fn new(stylist: &'a Stylist, computed_context: &'a computed::Context<'b>) -> Self {
+        let is_root_element = computed_context.is_root_element();
+
         let inherited = computed_context.inherited_custom_properties();
         let initial_values = stylist.get_custom_property_initial_values();
-        let is_root_element = computed_context.is_root_element();
+
+        // Reuse flags from computing registered custom properties initial values, such as whether
+        // they depend on viewport units.
+        computed_context
+            .style()
+            .add_flags(stylist.get_custom_property_initial_values_flags());
+
         Self {
             seen: PrecomputedHashSet::default(),
             reverted: Default::default(),
