@@ -72,7 +72,7 @@ def env_options():
     return {}
 
 
-def run_info_extras(logger, **kwargs):
+def run_info_extras(**kwargs):
     return {"webkit_port": kwargs["webkit_port"]}
 
 

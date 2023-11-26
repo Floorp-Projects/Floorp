@@ -1,6 +1,5 @@
-// META: script=/resources/testdriver.js
-// META: script=/resources/testdriver-vendor.js
-// META: timeout=long
+//META: script=/resources/testdriver.js
+//META: script=/resources/testdriver-vendor.js
 
 'use strict';
 

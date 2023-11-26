@@ -13,8 +13,7 @@ const params = new URLSearchParams(location.search);
 const isPrerendering = params.has('prerendering');
 
 if (!isPrerendering) {
-  const rule_extras = {'target_hint': getTargetHint()};
-  loadInitiatorPage(rule_extras);
+  loadInitiatorPage();
 } else {
   const sensorName = params.get('sensorName');
   const sensorType = window[sensorName];
