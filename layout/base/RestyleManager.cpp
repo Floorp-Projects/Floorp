@@ -770,7 +770,7 @@ static nsIFrame* GetFrameForChildrenOnlyTransformHint(nsIFrame* aFrame) {
     MOZ_ASSERT(aFrame->IsSVGOuterSVGAnonChildFrame(),
                "Where is the SVGOuterSVGFrame's anon child??");
   }
-  MOZ_ASSERT(aFrame->IsFrameOfType(nsIFrame::eSVG | nsIFrame::eSVGContainer),
+  MOZ_ASSERT(aFrame->IsSVGContainerFrame(),
              "Children-only transforms only expected on SVG frames");
   return aFrame;
 }
@@ -1746,8 +1746,7 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
       hint |= nsChangeHint_RepaintFrame;
     }
 
-    if ((hint & nsChangeHint_UpdateUsesOpacity) &&
-        frame->IsFrameOfType(nsIFrame::eTablePart)) {
+    if ((hint & nsChangeHint_UpdateUsesOpacity) && frame->IsTablePart()) {
       NS_ASSERTION(hint & nsChangeHint_UpdateOpacityLayer,
                    "should only return UpdateUsesOpacity hint "
                    "when also returning UpdateOpacityLayer hint");
@@ -1773,8 +1772,7 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
       // For most frame types, DLBI can detect background position changes,
       // so we only need to schedule a paint.
       hint |= nsChangeHint_SchedulePaint;
-      if (frame->IsFrameOfType(nsIFrame::eTablePart) ||
-          frame->IsFrameOfType(nsIFrame::eMathML)) {
+      if (frame->IsTablePart() || frame->IsMathMLFrame()) {
         // Table parts and MathML frames don't build display items for their
         // backgrounds, so DLBI can't detect background-position changes for
         // these frames. Repaint the whole frame.
@@ -1847,7 +1845,7 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
           // inner svg frame, so update the child overflows.
           nsIFrame* childFrame = hintFrame->PrincipalChildList().FirstChild();
           for (; childFrame; childFrame = childFrame->GetNextSibling()) {
-            MOZ_ASSERT(childFrame->IsFrameOfType(nsIFrame::eSVG),
+            MOZ_ASSERT(childFrame->IsSVGFrame(),
                        "Not expecting non-SVG children");
             if (!CanSkipOverflowUpdates(childFrame)) {
               mOverflowChangedTracker.AddFrame(

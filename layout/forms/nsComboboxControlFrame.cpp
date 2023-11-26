@@ -744,11 +744,6 @@ class nsComboboxDisplayFrame final : public nsBlockFrame {
   }
 #endif
 
-  bool IsFrameOfType(uint32_t aFlags) const final {
-    return nsBlockFrame::IsFrameOfType(aFlags &
-                                       ~(nsIFrame::eReplacedContainsBlock));
-  }
-
   void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
               const ReflowInput& aReflowInput, nsReflowStatus& aStatus) final;
 

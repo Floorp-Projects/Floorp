@@ -342,13 +342,6 @@ class nsTableFrame : public nsContainerFrame {
   ComputedStyle* GetParentComputedStyle(
       nsIFrame** aProviderFrame) const override;
 
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    if (aFlags & eSupportsCSSTransforms) {
-      return false;
-    }
-    return nsContainerFrame::IsFrameOfType(aFlags);
-  }
-
 #ifdef DEBUG_FRAME_DUMP
   /** @see nsIFrame::GetFrameName */
   nsresult GetFrameName(nsAString& aResult) const override;

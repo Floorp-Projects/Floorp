@@ -19,14 +19,6 @@ using namespace mozilla;
 // nsRubyContentFrame Method Implementations
 // ======================================
 
-/* virtual */
-bool nsRubyContentFrame::IsFrameOfType(uint32_t aFlags) const {
-  if (aFlags & eBidiInlineContainer) {
-    return false;
-  }
-  return nsInlineFrame::IsFrameOfType(aFlags);
-}
-
 bool nsRubyContentFrame::IsIntraLevelWhitespace() const {
   auto pseudoType = Style()->GetPseudoType();
   if (pseudoType != PseudoStyleType::rubyBase &&

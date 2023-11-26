@@ -339,8 +339,7 @@ struct InlineBackgroundData {
     if (mBidiEnabled) {
       // Find the line container frame
       mLineContainer = aFrame;
-      while (mLineContainer &&
-             mLineContainer->IsFrameOfType(nsIFrame::eLineParticipant)) {
+      while (mLineContainer && mLineContainer->IsLineParticipant()) {
         mLineContainer = mLineContainer->GetParent();
       }
 

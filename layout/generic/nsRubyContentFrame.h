@@ -15,9 +15,6 @@ class nsRubyContentFrame : public nsInlineFrame {
  public:
   NS_DECL_ABSTRACT_FRAME(nsRubyContentFrame)
 
-  // nsIFrame overrides
-  virtual bool IsFrameOfType(uint32_t aFlags) const override;
-
   // Indicates whether this is an "intra-level whitespace" frame, i.e.
   // an anonymous frame that was created to contain non-droppable
   // whitespaces directly inside a ruby level container. This impacts

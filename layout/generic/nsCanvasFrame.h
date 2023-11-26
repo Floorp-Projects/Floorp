@@ -63,10 +63,6 @@ class nsCanvasFrame final : public nsContainerFrame,
   void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
               const ReflowInput& aReflowInput,
               nsReflowStatus& aStatus) override;
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsContainerFrame::IsFrameOfType(
-        aFlags & ~(nsIFrame::eCanContainOverflowContainers));
-  }
 
   // nsIAnonymousContentCreator
   nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;

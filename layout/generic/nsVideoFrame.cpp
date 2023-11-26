@@ -38,7 +38,20 @@ nsIFrame* NS_NewHTMLVideoFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsVideoFrame(aStyle, aPresShell->GetPresContext());
 }
 
+nsIFrame* NS_NewHTMLAudioFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
+  return new (aPresShell) nsAudioFrame(aStyle, aPresShell->GetPresContext());
+}
+
 NS_IMPL_FRAMEARENA_HELPERS(nsVideoFrame)
+NS_QUERYFRAME_HEAD(nsVideoFrame)
+  NS_QUERYFRAME_ENTRY(nsVideoFrame)
+  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
+NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
+
+NS_IMPL_FRAMEARENA_HELPERS(nsAudioFrame)
+NS_QUERYFRAME_HEAD(nsAudioFrame)
+  NS_QUERYFRAME_ENTRY(nsAudioFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsVideoFrame)
 
 // A matrix to obtain a correct-rotated video frame.
 static Matrix ComputeRotationMatrix(gfxFloat aRotatedWidth,
@@ -71,17 +84,19 @@ static void SwapScaleWidthHeightForRotation(IntSize& aSize,
   }
 }
 
-nsVideoFrame::nsVideoFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
-    : nsContainerFrame(aStyle, aPresContext, kClassID) {
+nsVideoFrame::nsVideoFrame(ComputedStyle* aStyle, nsPresContext* aPc,
+                           ClassID aClassID)
+    : nsContainerFrame(aStyle, aPc, aClassID),
+      mIsAudio(aClassID == nsAudioFrame::kClassID) {
   EnableVisibilityTracking();
 }
 
 nsVideoFrame::~nsVideoFrame() = default;
 
-NS_QUERYFRAME_HEAD(nsVideoFrame)
-  NS_QUERYFRAME_ENTRY(nsVideoFrame)
-  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
-NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
+nsAudioFrame::nsAudioFrame(ComputedStyle* aStyle, nsPresContext* aPc)
+    : nsVideoFrame(aStyle, aPc, kClassID) {}
+
+nsAudioFrame::~nsAudioFrame() = default;
 
 nsresult nsVideoFrame::CreateAnonymousContent(
     nsTArray<ContentInfo>& aElements) {
@@ -517,10 +532,6 @@ void nsVideoFrame::OnVisibilityChange(
   }
 
   nsContainerFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
-}
-
-bool nsVideoFrame::HasVideoElement() const {
-  return static_cast<HTMLMediaElement*>(GetContent())->IsVideo();
 }
 
 bool nsVideoFrame::HasVideoData() const {

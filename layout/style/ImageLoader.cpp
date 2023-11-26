@@ -520,7 +520,7 @@ static void InvalidateImages(nsIFrame* aFrame, imgIRequest* aRequest,
     return;
   }
 
-  if (aFrame->IsFrameOfType(nsIFrame::eTablePart)) {
+  if (aFrame->IsTablePart()) {
     // Tables don't necessarily build border/background display items
     // for the individual table part frames, so IterateRetainedDataFor
     // might not find the right display item.

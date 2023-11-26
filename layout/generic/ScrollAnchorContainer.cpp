@@ -606,8 +606,7 @@ ScrollAnchorContainer::ExamineAnchorCandidate(nsIFrame* aFrame) const {
     return ExamineResult::Exclude;
   }
 
-  const bool isReplaced = aFrame->IsFrameOfType(nsIFrame::eReplaced);
-
+  const bool isReplaced = aFrame->IsReplaced();
   const bool isNonReplacedInline =
       aFrame->StyleDisplay()->IsInlineInsideStyle() && !isReplaced;
 

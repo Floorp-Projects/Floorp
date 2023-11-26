@@ -222,8 +222,7 @@ void nsAbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
                  "ShouldAvoidBreakInside should prevent this from happening");
       nsIFrame* nextFrame = kidFrame->GetNextInFlow();
       if (!kidStatus.IsFullyComplete() &&
-          aDelegatingFrame->IsFrameOfType(
-              nsIFrame::eCanContainOverflowContainers)) {
+          aDelegatingFrame->CanContainOverflowContainers()) {
         // Need a continuation
         if (!nextFrame) {
           nextFrame = aPresContext->PresShell()

@@ -43,10 +43,6 @@ class nsMathMLmtableWrapperFrame final : public nsTableWrapperFrame,
   nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                             int32_t aModType) override;
 
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsTableWrapperFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
-  }
-
  protected:
   explicit nsMathMLmtableWrapperFrame(ComputedStyle* aStyle,
                                       nsPresContext* aPresContext)
@@ -92,10 +88,6 @@ class nsMathMLmtableFrame final : public nsTableFrame {
                    nsIFrame* aOldFrame) override {
     nsTableFrame::RemoveFrame(aContext, aListID, aOldFrame);
     RestyleTable();
-  }
-
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsTableFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
   }
 
   // helper to restyle and reflow the table when a row is changed -- since
@@ -191,14 +183,10 @@ class nsMathMLmtrFrame final : public nsTableRowFrame {
     RestyleTable();
   }
 
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsTableRowFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
-  }
-
   // helper to restyle and reflow the table -- @see nsMathMLmtableFrame.
   void RestyleTable() {
     nsTableFrame* tableFrame = GetTableFrame();
-    if (tableFrame && tableFrame->IsFrameOfType(nsIFrame::eMathML)) {
+    if (tableFrame && tableFrame->IsMathMLFrame()) {
       // relayout the table
       ((nsMathMLmtableFrame*)tableFrame)->RestyleTable();
     }
@@ -233,10 +221,6 @@ class nsMathMLmtdFrame final : public nsTableCellFrame {
   void ProcessBorders(nsTableFrame* aFrame,
                       mozilla::nsDisplayListBuilder* aBuilder,
                       const mozilla::nsDisplayListSet& aLists) override;
-
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsTableCellFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
-  }
 
   LogicalMargin GetBorderWidth(WritingMode aWM) const override;
 
@@ -273,10 +257,6 @@ class nsMathMLmtdInnerFrame final : public nsBlockFrame, public nsMathMLFrame {
   void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
               const ReflowInput& aReflowInput,
               nsReflowStatus& aStatus) override;
-
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsBlockFrame::IsFrameOfType(aFlags & ~nsIFrame::eMathML);
-  }
 
   const nsStyleText* StyleTextForLineLayout() override;
   void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;

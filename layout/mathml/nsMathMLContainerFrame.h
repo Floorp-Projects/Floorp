@@ -65,13 +65,6 @@ class nsMathMLContainerFrame : public nsContainerFrame, public nsMathMLFrame {
   // --------------------------------------------------------------------------
   // Overloaded nsContainerFrame methods -- see documentation in nsIFrame.h
 
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    if (aFlags & (eLineParticipant | eSupportsContainLayoutAndPaint)) {
-      return false;
-    }
-    return nsContainerFrame::IsFrameOfType(aFlags & ~eMathML);
-  }
-
   void AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) override;
 
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
@@ -428,10 +421,6 @@ class nsMathMLmathBlockFrame final : public nsBlockFrame {
     }
   }
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsBlockFrame::IsFrameOfType(aFlags & ~nsIFrame::eMathML);
-  }
-
   // See nsIMathMLFrame.h
   bool IsMrowLike() {
     return mFrames.FirstChild() != mFrames.LastChild() || !mFrames.FirstChild();
@@ -501,10 +490,6 @@ class nsMathMLmathInlineFrame final : public nsInlineFrame,
     if (MOZ_LIKELY(aListID == mozilla::FrameChildListID::Principal)) {
       nsMathMLContainerFrame::ReLayoutChildren(this);
     }
-  }
-
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsInlineFrame::IsFrameOfType(aFlags & ~nsIFrame::eMathML);
   }
 
   bool IsMrowLike() override {

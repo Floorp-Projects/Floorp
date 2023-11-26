@@ -448,8 +448,7 @@ struct ReflowInput : public SizeComputationInput {
   struct Flags {
     Flags() { memset(this, 0, sizeof(*this)); }
 
-    // cached mFrame->IsFrameOfType(nsIFrame::eReplaced) ||
-    //        mFrame->IsFrameOfType(nsIFrame::eReplacedContainsBlock)
+    // cached mFrame->IsReplaced() || mFrame->IsReplacedWithBlock()
     bool mIsReplaced : 1;
 
     // used by tables to communicate special reflow (in process) to handle

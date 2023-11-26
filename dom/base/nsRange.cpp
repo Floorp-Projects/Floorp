@@ -3053,7 +3053,7 @@ static bool IsVisibleAndNotInReplacedElement(nsIFrame* aFrame) {
     if (f->HidesContent()) {
       return false;
     }
-    if (f->IsFrameOfType(nsIFrame::eReplaced) &&
+    if (f->IsReplaced() &&
         !f->GetContent()->IsAnyOfHTMLElements(nsGkAtoms::button,
                                               nsGkAtoms::select) &&
         !f->GetContent()->IsSVGElement()) {

@@ -9575,9 +9575,8 @@ StyleAlignFlags nsGridContainerFrame::CSSAlignmentForAbsPosChild(
     // absolutely-positioned boxes."
     // https://drafts.csswg.org/css-align/#align-abspos
     // https://drafts.csswg.org/css-align/#justify-abspos
-    alignment = aChildRI.mFrame->IsFrameOfType(nsIFrame::eReplaced)
-                    ? StyleAlignFlags::START
-                    : StyleAlignFlags::STRETCH;
+    alignment = aChildRI.mFrame->IsReplaced() ? StyleAlignFlags::START
+                                              : StyleAlignFlags::STRETCH;
   } else if (alignment == StyleAlignFlags::FLEX_START) {
     alignment = StyleAlignFlags::START;
   } else if (alignment == StyleAlignFlags::FLEX_END) {

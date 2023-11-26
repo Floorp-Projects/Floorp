@@ -106,11 +106,11 @@ bool ComputedStyle::IsFixedPosContainingBlock(
   }
   const auto& disp = *StyleDisplay();
   if (disp.IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() &&
-      aContextFrame->IsFrameOfType(nsIFrame::eSupportsContainLayoutAndPaint)) {
+      aContextFrame->SupportsContainLayoutAndPaint()) {
     return true;
   }
   if (disp.IsFixedPosContainingBlockForTransformSupportingFrames() &&
-      aContextFrame->IsFrameOfType(nsIFrame::eSupportsCSSTransforms)) {
+      aContextFrame->SupportsCSSTransforms()) {
     return true;
   }
   return false;

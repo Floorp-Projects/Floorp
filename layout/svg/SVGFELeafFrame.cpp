@@ -41,14 +41,6 @@ class SVGFELeafFrame final : public nsIFrame {
             nsIFrame* aPrevInFlow) override;
 #endif
 
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    if (aFlags & eSupportsContainLayoutAndPaint) {
-      return false;
-    }
-
-    return nsIFrame::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
-  }
-
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(u"SVGFELeaf"_ns, aResult);

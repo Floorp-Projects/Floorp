@@ -682,7 +682,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
      inline box. */
 #define FCDATA_IS_INLINE 0x1000
   /* If FCDATA_IS_LINE_PARTICIPANT is set, the frame is something that will
-     return true for IsFrameOfType(nsIFrame::eLineParticipant) */
+     return true for IsLineParticipant() */
 #define FCDATA_IS_LINE_PARTICIPANT 0x2000
   /* If FCDATA_IS_LINE_BREAK is set, the frame is something that will
      induce a line break boundary before and after itself. */

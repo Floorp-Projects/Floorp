@@ -2910,8 +2910,7 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(
   if (mBackgroundStyle && mBackgroundStyle != mFrame->Style()) {
     // If this changes, then you also need to adjust css::ImageLoader to
     // invalidate mFrame as needed.
-    MOZ_ASSERT(mFrame->IsCanvasFrame() ||
-               mFrame->IsFrameOfType(nsIFrame::eTablePart));
+    MOZ_ASSERT(mFrame->IsCanvasFrame() || mFrame->IsTablePart());
   }
 #endif
 

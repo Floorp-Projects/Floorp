@@ -197,7 +197,7 @@ static EffectOffsets ComputeEffectOffset(
   result.offsetToBoundingBox =
       aParams.builder->ToReferenceFrame(aFrame) -
       SVGIntegrationUtils::GetOffsetToBoundingBox(aFrame);
-  if (!aFrame->IsFrameOfType(nsIFrame::eSVG)) {
+  if (!aFrame->IsSVGFrame()) {
     /* Snap the offset if the reference frame is not a SVG frame,
      * since other frames will be snapped to pixel when rendering. */
     result.offsetToBoundingBox =
@@ -263,8 +263,7 @@ gfxPoint SVGIntegrationUtils::GetOffsetToUserSpaceInDevPx(
 
 /* static */
 nsSize SVGIntegrationUtils::GetContinuationUnionSize(nsIFrame* aNonSVGFrame) {
-  NS_ASSERTION(!aNonSVGFrame->IsFrameOfType(nsIFrame::eSVG),
-               "SVG frames should not get here");
+  NS_ASSERTION(!aNonSVGFrame->IsSVGFrame(), "SVG frames should not get here");
   nsIFrame* firstFrame =
       nsLayoutUtils::FirstContinuationOrIBSplitSibling(aNonSVGFrame);
   return nsLayoutUtils::GetAllInFlowRectsUnion(firstFrame, firstFrame).Size();
@@ -272,8 +271,7 @@ nsSize SVGIntegrationUtils::GetContinuationUnionSize(nsIFrame* aNonSVGFrame) {
 
 /* static */ gfx::Size SVGIntegrationUtils::GetSVGCoordContextForNonSVGFrame(
     nsIFrame* aNonSVGFrame) {
-  NS_ASSERTION(!aNonSVGFrame->IsFrameOfType(nsIFrame::eSVG),
-               "SVG frames should not get here");
+  NS_ASSERTION(!aNonSVGFrame->IsSVGFrame(), "SVG frames should not get here");
   nsIFrame* firstFrame =
       nsLayoutUtils::FirstContinuationOrIBSplitSibling(aNonSVGFrame);
   nsRect r = nsLayoutUtils::GetAllInFlowRectsUnion(firstFrame, firstFrame);
@@ -1193,7 +1191,7 @@ already_AddRefed<gfxDrawable> SVGIntegrationUtils::DrawableFromPaintServer(
     return drawable.forget();
   }
 
-  if (aFrame->IsFrameOfType(nsIFrame::eSVG) &&
+  if (aFrame->IsSVGFrame() &&
       !static_cast<ISVGDisplayableFrame*>(do_QueryFrame(aFrame))) {
     MOZ_ASSERT_UNREACHABLE(
         "We should prevent painting of unpaintable SVG "

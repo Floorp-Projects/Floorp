@@ -74,12 +74,6 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;
 
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    return SVGDisplayContainerFrame::IsFrameOfType(
-        aFlags &
-        ~(eSupportsContainLayoutAndPaint | eReplaced | eReplacedSizing));
-  }
-
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(u"SVGOuterSVG"_ns, aResult);

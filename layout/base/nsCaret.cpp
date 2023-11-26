@@ -58,9 +58,12 @@ static nsIFrame* CheckForTrailingTextFrameRecursive(nsIFrame* aFrame,
                                                     nsIFrame* aStopAtFrame) {
   if (aFrame == aStopAtFrame ||
       ((aFrame->IsTextFrame() &&
-        (static_cast<nsTextFrame*>(aFrame))->IsAtEndOfLine())))
+        (static_cast<nsTextFrame*>(aFrame))->IsAtEndOfLine()))) {
     return aFrame;
-  if (!aFrame->IsFrameOfType(nsIFrame::eLineParticipant)) return nullptr;
+  }
+  if (!aFrame->IsLineParticipant()) {
+    return nullptr;
+  }
 
   for (nsIFrame* f : aFrame->PrincipalChildList()) {
     nsIFrame* r = CheckForTrailingTextFrameRecursive(f, aStopAtFrame);
@@ -70,7 +73,7 @@ static nsIFrame* CheckForTrailingTextFrameRecursive(nsIFrame* aFrame,
 }
 
 static nsLineBox* FindContainingLine(nsIFrame* aFrame) {
-  while (aFrame && aFrame->IsFrameOfType(nsIFrame::eLineParticipant)) {
+  while (aFrame && aFrame->IsLineParticipant()) {
     nsIFrame* parent = aFrame->GetParent();
     nsBlockFrame* blockParent = do_QueryFrame(parent);
     if (blockParent) {

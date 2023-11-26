@@ -38,14 +38,6 @@ class SVGFEContainerFrame final : public nsContainerFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(SVGFEContainerFrame)
 
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    if (aFlags & eSupportsContainLayoutAndPaint) {
-      return false;
-    }
-
-    return nsContainerFrame::IsFrameOfType(aFlags & ~nsIFrame::eSVG);
-  }
-
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(u"SVGFEContainer"_ns, aResult);

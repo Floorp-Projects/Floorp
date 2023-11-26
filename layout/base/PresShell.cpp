@@ -3264,8 +3264,8 @@ static void AccumulateFrameBounds(nsIFrame* aContainerFrame, nsIFrame* aFrame,
     nsIFrame* prevFrame = aFrame;
     nsIFrame* f = aFrame;
 
-    while (f && f->IsFrameOfType(nsIFrame::eLineParticipant) &&
-           !f->IsTransformed() && !f->IsAbsPosContainingBlock()) {
+    while (f && f->IsLineParticipant() && !f->IsTransformed() &&
+           !f->IsAbsPosContainingBlock()) {
       prevFrame = f;
       f = prevFrame->GetParent();
     }

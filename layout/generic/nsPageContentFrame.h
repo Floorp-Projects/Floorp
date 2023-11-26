@@ -31,11 +31,6 @@ class nsPageContentFrame final : public mozilla::ViewportFrame {
               const ReflowInput& aReflowInput,
               nsReflowStatus& aStatus) override;
 
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    return ViewportFrame::IsFrameOfType(
-        aFlags & ~(nsIFrame::eCanContainOverflowContainers));
-  }
-
   const nsAtom* GetPageName() const { return mPageName; }
 
   void SetSharedPageData(nsSharedPageData* aPD) { mPD = aPD; }

@@ -123,10 +123,6 @@ class nsGridContainerFrame final : public nsContainerFrame,
   nscoord GetMinISize(gfxContext* aRenderingContext) override;
   nscoord GetPrefISize(gfxContext* aRenderingContext) override;
   void MarkIntrinsicISizesDirty() override;
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsContainerFrame::IsFrameOfType(
-        aFlags & ~nsIFrame::eCanContainOverflowContainers);
-  }
 
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                         const nsDisplayListSet& aLists) override;

@@ -74,11 +74,6 @@ class nsHTMLCanvasFrame final : public nsContainerFrame {
   virtual mozilla::a11y::AccType AccessibleType() override;
 #endif
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsSplittableFrame::IsFrameOfType(
-        aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedSizing));
-  }
-
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif

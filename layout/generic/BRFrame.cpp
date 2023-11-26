@@ -63,11 +63,6 @@ class BRFrame final : public nsIFrame {
       WritingMode aWM, BaselineSharingGroup aBaselineGroup,
       BaselineExportContext) const override;
 
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsIFrame::IsFrameOfType(
-        aFlags & ~(nsIFrame::eReplaced | nsIFrame::eLineParticipant));
-  }
-
 #ifdef ACCESSIBILITY
   mozilla::a11y::AccType AccessibleType() override;
 #endif

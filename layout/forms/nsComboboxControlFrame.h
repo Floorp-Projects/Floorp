@@ -94,11 +94,6 @@ class nsComboboxControlFrame final : public nsBlockFrame,
 
   void PaintFocus(DrawTarget& aDrawTarget, nsPoint aPt);
 
-  bool IsFrameOfType(uint32_t aFlags) const final {
-    return nsBlockFrame::IsFrameOfType(
-        aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
-  }
-
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) final;
 

@@ -191,14 +191,6 @@ class nsTableColGroupFrame final : public nsContainerFrame {
   void SetContinuousBCBorderWidth(mozilla::LogicalSide aForSide,
                                   BCPixelSize aPixelValue);
 
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    if (aFlags & (eSupportsContainLayoutAndPaint | eSupportsAspectRatio)) {
-      return false;
-    }
-
-    return nsContainerFrame::IsFrameOfType(aFlags & ~(nsIFrame::eTablePart));
-  }
-
   void InvalidateFrame(uint32_t aDisplayItemKey = 0,
                        bool aRebuildDisplayItems = true) override;
   void InvalidateFrameWithRect(const nsRect& aRect,

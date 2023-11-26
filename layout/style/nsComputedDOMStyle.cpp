@@ -881,8 +881,7 @@ bool nsComputedDOMStyle::NeedsToFlushStyle(nsCSSPropertyID aPropID) const {
 static bool IsNonReplacedInline(nsIFrame* aFrame) {
   // FIXME: this should be IsInlineInsideStyle() since width/height
   // doesn't apply to ruby boxes.
-  return aFrame->StyleDisplay()->IsInlineFlow() &&
-         !aFrame->IsFrameOfType(nsIFrame::eReplaced) &&
+  return aFrame->StyleDisplay()->IsInlineFlow() && !aFrame->IsReplaced() &&
          !aFrame->IsFieldSetFrame() && !aFrame->IsBlockFrame() &&
          !aFrame->IsScrollFrame() && !aFrame->IsColumnSetWrapperFrame();
 }

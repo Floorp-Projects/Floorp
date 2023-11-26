@@ -5047,10 +5047,10 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
         }
 
         if (MOZ_UNLIKELY(aFlags & nsLayoutUtils::MIN_INTRINSIC_ISIZE) &&
-            // FIXME: Bug 1715681. Should we use eReplacedSizing instead
-            // because eReplaced is set on some other frames which are
+            // FIXME: Bug 1715681. Should we use HasReplacedSizing instead
+            // because IsReplaced is set on some other frames which are
             // non-replaced elements, e.g. <select>?
-            aFrame->IsFrameOfType(nsIFrame::eReplaced)) {
+            aFrame->IsReplaced()) {
           // This is the 'min-width/height:auto' "transferred size" piece of:
           // https://drafts.csswg.org/css-flexbox-1/#min-size-auto
           // https://drafts.csswg.org/css-grid/#min-size-auto
@@ -5079,8 +5079,7 @@ nscoord nsLayoutUtils::IntrinsicForAxis(
   // then we can drop the check of eSupportsAspectRatio).
   const AspectRatio ar = stylePos->mAspectRatio.ToLayoutRatio();
   if (isInlineAxis && ar && nsIFrame::ToExtremumLength(styleISize) &&
-      aFrame->IsFrameOfType(nsIFrame::eSupportsAspectRatio) &&
-      !inlineSizeFromAspectRatio) {
+      aFrame->SupportsAspectRatio() && !inlineSizeFromAspectRatio) {
     // This 'B' in |styleBSize| means the block size of |aFrame|. We go into
     // this branch only if |aAxis| is the inline axis of |aFrame|.
     const StyleSize& styleBSize =
@@ -8211,8 +8210,7 @@ static bool ShouldInflateFontsForContainer(const nsIFrame* aFrame) {
          // We also want to disable font inflation for containers that have
          // preformatted text.
          // MathML cells need special treatment. See bug 1002526 comment 56.
-         (styleText->WhiteSpaceCanWrap(aFrame) ||
-          aFrame->IsFrameOfType(nsIFrame::eMathML));
+         (styleText->WhiteSpaceCanWrap(aFrame) || aFrame->IsMathMLFrame());
 }
 
 nscoord nsLayoutUtils::InflationMinFontSizeFor(const nsIFrame* aFrame) {
@@ -8668,8 +8666,7 @@ AutoMaybeDisableFontInflation::AutoMaybeDisableFontInflation(nsIFrame* aFrame) {
   // descendants) width, we could probably disable inflation in
   // fewer cases than we currently do.
   // MathML cells need special treatment. See bug 1002526 comment 56.
-  if (aFrame->IsContainerForFontSizeInflation() &&
-      !aFrame->IsFrameOfType(nsIFrame::eMathML)) {
+  if (aFrame->IsContainerForFontSizeInflation() && !aFrame->IsMathMLFrame()) {
     mPresContext = aFrame->PresContext();
     mOldValue = mPresContext->mInflationDisabledForShrinkWrap;
     mPresContext->mInflationDisabledForShrinkWrap = true;
@@ -9538,7 +9535,7 @@ bool nsLayoutUtils::IsInvisibleBreak(nsINode* aNode,
   }
 
   nsContainerFrame* f = frame->GetParent();
-  while (f && f->IsFrameOfType(nsIFrame::eLineParticipant)) {
+  while (f && f->IsLineParticipant()) {
     f = f->GetParent();
   }
   nsBlockFrame* blockAncestor = do_QueryFrame(f);
@@ -9763,7 +9760,7 @@ nsPoint nsLayoutUtils::ComputeOffsetToUserSpace(nsDisplayListBuilder* aBuilder,
   nsPoint offsetToBoundingBox =
       aBuilder->ToReferenceFrame(aFrame) -
       SVGIntegrationUtils::GetOffsetToBoundingBox(aFrame);
-  if (!aFrame->IsFrameOfType(nsIFrame::eSVG)) {
+  if (!aFrame->IsSVGFrame()) {
     // Snap the offset if the reference frame is not a SVG frame, since other
     // frames will be snapped to pixel when rendering.
     offsetToBoundingBox =

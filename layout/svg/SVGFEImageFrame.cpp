@@ -44,14 +44,6 @@ class SVGFEImageFrame final : public nsIFrame {
             nsIFrame* aPrevInFlow) override;
   void Destroy(DestroyContext&) override;
 
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    if (aFlags & eSupportsContainLayoutAndPaint) {
-      return false;
-    }
-
-    return nsIFrame::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
-  }
-
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(u"SVGFEImage"_ns, aResult);

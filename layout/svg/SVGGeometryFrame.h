@@ -65,14 +65,6 @@ class SVGGeometryFrame final : public nsIFrame, public ISVGDisplayableFrame {
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;
 
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    if (aFlags & eSupportsContainLayoutAndPaint) {
-      return false;
-    }
-
-    return nsIFrame::IsFrameOfType(aFlags & ~nsIFrame::eSVG);
-  }
-
   nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                             int32_t aModType) override;
 

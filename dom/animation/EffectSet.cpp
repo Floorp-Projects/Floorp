@@ -49,7 +49,7 @@ EffectSet* EffectSet::GetForFrame(const nsIFrame* aFrame,
   if (aProperties.IsSubsetOf(nsCSSPropertyIDSet::TransformLikeProperties())) {
     // Make sure to return nullptr if we're looking for transform animations on
     // the inner table frame.
-    if (!aFrame->IsFrameOfType(nsIFrame::eSupportsCSSTransforms)) {
+    if (!aFrame->SupportsCSSTransforms()) {
       return nullptr;
     }
     frameToQuery = nsLayoutUtils::GetStyleFrame(aFrame);

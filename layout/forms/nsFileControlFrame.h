@@ -110,11 +110,6 @@ class nsFileControlFrame final : public nsBlockFrame,
                            bool aSupportsMultiple);
   };
 
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsBlockFrame::IsFrameOfType(
-        aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
-  }
-
   /**
    * The text box input.
    * @see nsFileControlFrame::CreateAnonymousContent

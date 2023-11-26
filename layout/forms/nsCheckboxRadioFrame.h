@@ -27,11 +27,6 @@ class nsCheckboxRadioFrame final : public nsAtomicContainerFrame,
                                 nsPresContext* aPresContext);
 
   // nsIFrame replacements
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsAtomicContainerFrame::IsFrameOfType(
-        aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
-  }
-
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
 

@@ -144,7 +144,7 @@ bool SVGUtils::AnyOuterSVGIsCallingReflowSVG(nsIFrame* aFrame) {
 }
 
 void SVGUtils::ScheduleReflowSVG(nsIFrame* aFrame) {
-  MOZ_ASSERT(aFrame->IsFrameOfType(nsIFrame::eSVG), "Passed bad frame!");
+  MOZ_ASSERT(aFrame->IsSVGFrame(), "Passed bad frame!");
 
   // If this is triggered, the callers should be fixed to call us before
   // ReflowSVG is called. If we try to mark dirty bits on frames while we're
@@ -183,8 +183,7 @@ void SVGUtils::ScheduleReflowSVG(nsIFrame* aFrame) {
       }
       f->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
       f = f->GetParent();
-      MOZ_ASSERT(f->IsFrameOfType(nsIFrame::eSVG),
-                 "IsSVGOuterSVGFrame check above not valid!");
+      MOZ_ASSERT(f->IsSVGFrame(), "IsSVGOuterSVGFrame check above not valid!");
     }
 
     outerSVGFrame = static_cast<SVGOuterSVGFrame*>(f);
@@ -209,8 +208,7 @@ void SVGUtils::ScheduleReflowSVG(nsIFrame* aFrame) {
 }
 
 bool SVGUtils::NeedsReflowSVG(const nsIFrame* aFrame) {
-  MOZ_ASSERT(aFrame->IsFrameOfType(nsIFrame::eSVG),
-             "SVG uses bits differently!");
+  MOZ_ASSERT(aFrame->IsSVGFrame(), "SVG uses bits differently!");
 
   // The flags we test here may change, hence why we have this separate
   // function.
@@ -342,7 +340,7 @@ gfxMatrix SVGUtils::GetCanvasTM(nsIFrame* aFrame) {
     return containerFrame->GetCanvasTM();
   }
 
-  MOZ_ASSERT(aFrame->GetParent()->IsFrameOfType(nsIFrame::eSVGContainer));
+  MOZ_ASSERT(aFrame->GetParent()->IsSVGContainerFrame());
 
   auto* parent = static_cast<SVGContainerFrame*>(aFrame->GetParent());
   auto* content = static_cast<SVGElement*>(aFrame->GetContent());
@@ -383,12 +381,11 @@ void SVGUtils::NotifyChildrenOfSVGChange(nsIFrame* aFrame, uint32_t aFlags) {
     if (SVGFrame) {
       SVGFrame->NotifySVGChanged(aFlags);
     } else {
-      NS_ASSERTION(
-          kid->IsFrameOfType(nsIFrame::eSVG) || kid->IsInSVGTextSubtree(),
-          "SVG frame expected");
+      NS_ASSERTION(kid->IsSVGFrame() || kid->IsInSVGTextSubtree(),
+                   "SVG frame expected");
       // recurse into the children of container frames e.g. <clipPath>, <mask>
       // in case they have child frames with transformation matrices
-      if (kid->IsFrameOfType(nsIFrame::eSVG)) {
+      if (kid->IsSVGFrame()) {
         NotifyChildrenOfSVGChange(kid, aFlags);
       }
     }

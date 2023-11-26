@@ -76,7 +76,7 @@ static bool IsAtomicElement(nsIFrame* aFrame, LayoutFrameType aFrameType) {
              "unexpected block frame");
   MOZ_ASSERT(aFrameType != LayoutFrameType::Placeholder,
              "unexpected placeholder frame");
-  return !aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
+  return !aFrame->IsLineParticipant();
 }
 
 static bool IsFullyClipped(nsTextFrame* aFrame, nscoord aLeft, nscoord aRight,

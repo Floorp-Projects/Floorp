@@ -104,7 +104,7 @@ static bool ShouldZoomToElement(
         // Replaced elements are suitable zoom targets because they act like
         // inline-blocks instead of inline. (textarea's are the specific reason
         // we do this)
-        !frame->IsFrameOfType(nsIFrame::eReplaced)) {
+        !frame->IsReplaced()) {
       return false;
     }
   }
@@ -190,7 +190,7 @@ static CSSRect AddVMargin(const CSSRect& aRect, const CSSCoord& aMargin,
 
 static bool IsReplacedElement(const nsCOMPtr<dom::Element>& aElement) {
   if (nsIFrame* frame = aElement->GetPrimaryFrame()) {
-    if (frame->IsFrameOfType(nsIFrame::eReplaced)) {
+    if (frame->IsReplaced()) {
       return true;
     }
   }
