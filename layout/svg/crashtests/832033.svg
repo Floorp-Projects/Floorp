@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+<line marker-end="url(#m1)"/>
+<script>
+
+window.addEventListener("load", function() {
+    document.getElementsByTagName("line")[0].setAttribute("id", "m1");
+}, false);
+
+</script>
+</svg>
+
