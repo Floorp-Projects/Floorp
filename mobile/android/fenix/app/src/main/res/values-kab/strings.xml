@@ -73,6 +73,22 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Title for info card on private homescreen in True Private Browsing Mode. -->
     <string name="felt_privacy_desc_card_title">Ur ttaǧǧa ara akk later ɣef yibenk-a</string>
 
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle" moz:removedIn="120" tools:ignore="UnusedResources">%1$s itekkes inagan n tuqqna, azray, akked yisefka n yismal web mi ara tmedleḍ akk isfuyla usligen. %2$s</string>
+
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle_2">%1$s itekkes inagan n tuqqna, azray, akked yisefka n yismal web mi ara tmedleḍ akk accaren usligen. %2$s</string>
+    <!-- Clickable portion of the explanation for private browsing that links the user to our
+        about privacy page.
+        This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
+    <string name="felt_privacy_info_card_subtitle_link_text">Anwa i izemren ad iwali armud-iw?</string>
+
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Senker iccer uslig uḍfir s yiwen usiti kan.</string>
@@ -94,6 +110,11 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="tcp_cfr_message">Tamahilt-nneɣ n tbaḍnit iǧehden aṭas akka ar tura iɛezzel ineḍfaren gar yismal.</string>
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Issin ugar ɣef ummesten asemday mgal inagan n tuqqna</string>
+
+
+    <!-- Private browsing erase action "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the erase private browsing feature. -->
+    <string name="erase_action_cfr_message">Sit dagi i usenker n tɣimit tamaynut. Kkes azray-ik·im, inagan n tuqqna — kullec.</string>
 
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
@@ -324,6 +345,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox izewwir deg yimdanen uqbel idrimen, yekkat ɣef tudert-ik tabaḍnit s usewḥel n yineḍfaren n gar yismal.\n\Issin ugar deg Tasertit-nneɣ tbaḍnit.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2">Iminig-nneɣ tettallit yiwet n tkebbanit ur nettnadi ɣef tedrimt, tessewḥal tikebbaniyin ara ak-iḍefren deg web.\n\nIssin ugar ɣef tsertit-nneɣ n tbaḍnit.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">tasertit n tbaḍnit</string>
@@ -361,6 +384,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Mačči tura</string>
 
+    <!-- Title for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Ɛreḍ iwiǧit n unadi n Firefox</string>
     <!-- Text for the button to add search widget on the device used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_add_search_widget_positive_button" tools:ignore="UnusedResources">Rnu awiǧit n Firefox</string>
@@ -399,12 +425,16 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_search">Nadi</string>
     <!-- Preference for settings related to Search engines -->
     <string name="preferences_search_engines">Nadi imseddayen n unadi</string>
+    <!-- Preference for settings related to Search engines suggestions-->
+    <string name="preferences_search_engines_suggestions">Isumar seg yimseddayen n unadi</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">Afeggag n tansa</string>
     <!-- Preference Category for settings related to Search address bar -->
     <string name="preferences_settings_address_bar">Ismenyifen i ufeggag n tansiwin</string>
     <!-- Preference Category for settings to Firefox Suggest -->
     <string name="preference_search_address_bar_fx_suggest">Afeggag n tansiwin - Firefox isumer</string>
+    <!-- Preference link to Learn more about Firefox Suggest -->
+    <string name="preference_search_learn_about_fx_suggest">Issin ugar ɣef Firefox Suggest</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Mudd tazmilt deg Google Play</string>
     <!-- Preference linking to about page for Fenix
@@ -463,9 +493,13 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="reduce_cookie_banner_unsupported_site">Asmel-a ur yettusefrak ara akka tura</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Rmed asenqes n yiɣerracen n yinagan n tuqqna i %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">Rmed amsewḥel n yiɣerracen n yinagan n tuqqna i %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Sens asenqes n yiɣerracen n yinagan n tuqqna i %1$s?</string>
 
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">Sens amsewḥel n yiɣerracen n yinagan n tuqqna i %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s ur yezmir ara ad yagi issutar n trusi n yinagan n tuqqna s wudem awurman ɣef usmel-a. Tzemreḍ ad tazneḍ assuter i tallalt n usmel-a ɣer sdat.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
@@ -484,6 +518,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
     <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Sireg</string>
+
+    <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
+    <string name="cookie_banner_cfr_title">%1$s yugi inagan n tuqqna i kečč</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Ɛreḍ ad teqqneḍ s wudem awurman ɣer yismal s useqdec n uneggaf n uwgelhen HTTPS i tɣellist ɛlayen.</string>
@@ -515,6 +552,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_override_sync_tokenserver">Sagen aeddac n umtawi</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
     <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Amiḍan Firefox/Aqeddac n umtawi ittwasnifel, Ffeɣ seg usnas akken ad iddu usnifel…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Aqeddac i umtawi neɣ amiḍan n Mozilla yettwasenfel, Ffeɣ seg usnas akken ad iddu usnifel…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Amiḍan</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -564,9 +603,16 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Tacaṛt tawurmant n URLs</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">Isumar sɣur imendaden</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">Mudd tallalt i %1$s s uskan n yisumar i d-yettuwellhen sya ɣer da</string>
     <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
          The first parameter is the name of the application. -->
     <string name="preferences_show_nonsponsored_suggestions">Isumar n %1$s</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">Awi isumar seg web yeqqnen ɣer unadi-k·m</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Ldi iseɣwan deg isnasen</string>
 
@@ -665,6 +711,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
     <string name="addon_ga_message_title" tools:ignore="UnusedResources">Izegrar imaynuten llan tura</string>
+    <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
+    <string name="addon_ga_message_body" tools:ignore="UnusedResources">Snirem ugar n 100 yisiɣzaf imaynuten ara ak·akem-yeǧǧen ad tsagneḍ Firefox.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
     <string name="addon_ga_message_button" tools:ignore="UnusedResources">Snirem izegrar</string>
 
@@ -687,6 +735,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">Sefrek amiḍan</string>
+    <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
+    <string name="preferences_manage_account_summary">Senfel awal-ik·im uffir, sefrek alqaḍ n yisefka neɣ kkes amiḍan-ik·im</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Mtawi tura</string>
     <!-- Preference category for sync -->
@@ -2182,6 +2232,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="review_quality_check_ad_title" tools:ignore="UnusedResources">Ugar n tamawt</string>
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">Adellel sɣur %s</string>
+    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
+    <string name="review_quality_check_powered_by_2">Amsenqad n tamawt yella-d s lmendad n %s</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s s Mozilla</string>
     <!-- Text for title of warning card informing the user that the current analysis is outdated. -->
@@ -2192,6 +2244,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="review_quality_check_no_reviews_warning_title">Ulac ddeqs n tamiwin akka tura</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Afaris ulac-it</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">Mmel tuɣalin n ufaris deg tawsa</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">Mmel tuɣalin n ufaris deg tawsa</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">Adenqed n tɣara n yilɣa</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
@@ -2200,10 +2256,16 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="review_quality_check_analysis_in_progress_warning_body">Aya yezmer ad yeṭṭef 60 tsinin.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Tanemmirt ɣef tuzna n uneqqis!</string>
+    <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_title">Ur nezmir ara ad nsenqed tamawin-a</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Talɣut i d-iteddun</string>
+    <!-- Title for info card displayed to the user when analysis finished updating. -->
+    <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">Aslaḍ yezga</string>
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Awi-t</string>
+    <!-- Title for error card displayed to the user when an error occurred. -->
+    <string name="review_quality_check_generic_error_title">Ulac talɣut i yellan akka tura</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
     <string name="review_quality_check_no_connection_title">Ulac tuqqna ɣer uzeṭṭa</string>
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
@@ -2212,6 +2274,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="review_quality_check_no_analysis_title">Ulac talɣut ɣef yilɣa-a akka ar tura</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
     <string name="review_quality_check_no_analysis_link">Senqed tɣara n yilɣa</string>
+    <!-- Headline for review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_title">Ɛreḍ amnir-nneɣ yettwamanen i timawin n ufaris</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Issin ugar</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
@@ -2226,6 +2290,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="review_quality_check_contextual_onboarding_primary_button_text">Ih, ɛreḍ tikkelt niḍen </string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_secondary_button_text">Mačči tura</string>
+    <!-- Text for the first CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_first_cfr_message">Senqed ma ad tamneḍ tamawin ɣef ufaris-a — send ad t-taɣeḍ.</string>
     <!-- Text displayed in the first CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">Ɛreḍ amsenqad n tamawt</string>
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
@@ -2249,6 +2315,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Text for highlights card shipping category header. Reviews shown under this header should refer the product's shipping. -->
     <string name="review_quality_check_highlights_type_shipping">Tanemzagt</string>
+    <!-- Text for highlights card packaging and appearance category header. Reviews shown under this header should refer the product's packaging and appearance. -->
+    <string name="review_quality_check_highlights_type_packaging_appearance">Akemmus d urwas</string>
     <!-- Text for highlights card competitiveness category header. Reviews shown under this header should refer the product's competitiveness. -->
     <string name="review_quality_check_highlights_type_competitiveness">Amḥizwer</string>
 

@@ -129,16 +129,16 @@
     <!-- Federated Credential Management prompts -->
     <!--Content description for the Account picture in the Select Account FedCM prompt -->
     <string name="mozac_feature_prompts_account_picture">ანგარიშის სურათი</string>
-    <!-- Title of the Identity Credential provider dialog choose. -->
+    <!-- Title of the Identity Credential provider dialog chooser. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">აირჩიეთ შესვლის უზრუნველმყოფი</string>
-    <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account" moz:removedIn="119" tools:ignore="UnusedResources">ანგარიშის არჩევა</string>
     <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
     <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">შესვლისთვის გამოიყენეთ %1$s-ანგარიში</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">გამოიყენეთ %1$s ანგარიშის უზრუნველმყოფად</string>
     <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[შესვლისთვის როცა %1$s გამოიყენება %2$s ანგარიშით, ექვემდებარება მათს <a href="%3$s">პირადულობის დებულებასა</a> და <a href="%4$s">მომსახურების პირობებს</a>]]></string>
-    <!-- Title of the Identity Credential provider dialog choose. -->
+    <!-- Text for the positive button of the Identity Credential dialogs. -->
     <string name="mozac_feature_prompts_identity_credentials_continue">განაგრძეთ</string>
+    <!-- Text for the cancel button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_cancel">გაუქმება</string>
 </resources>

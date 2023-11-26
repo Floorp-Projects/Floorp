@@ -82,6 +82,14 @@
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">ئۇلىنالمىدى</string>
 
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>تور بېكەتنى ۋاقتىنچە ئىشلەتكىلى بولمايدۇ ياكى مۇلازىمىتىر ئالدىراش بولۇشى مۇمكىن. سەل تۇرۇپ قايتا سىناڭ.</li>
+        <li>ئەگەر ھېچقانداق بەتنى يۈكلىيەلمىسىڭىز، ئۈسكۈنىڭىزنىڭ سانلىق مەلۇمات تورى ياكى Wi-Fi ئۇلىنىشىنى تەكشۈرۈڭ.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">كۈتۈلمىگەن مۇلازىمېتىر ئىنكاسى</string>
     <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->

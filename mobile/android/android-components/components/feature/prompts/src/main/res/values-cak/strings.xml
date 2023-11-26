@@ -127,4 +127,20 @@
     <string name="mozac_feature_prompts_collapse_address_content_description">Kek\'ol ri chilab\'en ochochib\'äl</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">Kenuk\'samajïx taq ochochib\'äl</string>
+
+    <!-- Federated Credential Management prompts -->
+    <!--Content description for the Account picture in the Select Account FedCM prompt -->
+    <string name="mozac_feature_prompts_account_picture">Ruwachib\'al rub\'i\' taqoya\'l</string>
+    <!-- Title of the Identity Credential provider dialog chooser. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Ticha\' jun ruya\'oj rutikirib\'al moloj</string>
+    <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">Titikirisäx moloj rik\'in jun rub\'i\' rutaqoya\'l %1$s</string>
+    <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">Tokisäx %1$s achi\'el ya\'öl rutikirib\'al moloj</string>
+    <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[Tatikirisaj moloj pa %1$s rik\'in jun rub\'i\' rutaq\'oya\'l %2$s ruximon ri\' rik\'in ri <a href="%3$s">Runa\'ojil ichinanem</a> chuqa\' <a href="%4$s">Rutzijol Samak</a>]]></string>
+    <!-- Text for the positive button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_continue">Titikïr chik el</string>
+    <!-- Text for the cancel button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_cancel">Tiq\'at</string>
 </resources>

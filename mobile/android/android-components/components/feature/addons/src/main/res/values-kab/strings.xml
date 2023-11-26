@@ -200,8 +200,6 @@
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s ur yezmir ara ad yebded acku ur imṣaḍa ara d %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted_1">%1$s ur yezmir ara ad yebded acku yella wugur meqqren n tɣellist akked urkad.</string>
-    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">%1$s ur yezmir ara ad yebded acku yella wugur meqqren n tɣellist akked urkad</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">Irmed akken iwata %1$s</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
@@ -248,4 +246,8 @@
     <string name="mozac_feature_addons_status_learn_more">Issin ugar</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_blocklisted">%1$s yensa ssebba n wuguren n tɣellist neɣ n uqeɛɛed.</string>
-    </resources>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">Azegrir %1$s yegguma ad yettusenqed d aɣellsan, dayen yensa.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">Azegrir %1$s ur yemṣada ara akked lqem-ik·im n %2$s (lqem %3$s).</string>
+</resources>

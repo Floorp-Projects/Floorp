@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">Tetamäx ch\'aqa\' chik chi kij ri taq ya\'öl q\'ij</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Kejqalem</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">Ch\'aqa\' chik chi rij re tz\'aqat re\'</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Taq nuk\'ulem</string>
     <!-- Indicates the add-on is enabled. -->
@@ -116,10 +118,18 @@
     <string name="mozac_feature_addons_remove">Tiyuj</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">¿La nitz\'aqatisäx %1$s?</string>
+    <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_title">%1$s nuk\'utuj rutz\'aqat taq ya\'oj q\'ij.</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_permissions_dialog_subtitle">Najowäx chi naya\' q\'ij richin:</string>
+    <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_subtitle">Nrajo\':</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">Titz\'aqatisäx</string>
+    <!-- This is a button to allow the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_allow">Tiya\' q\'ij</string>
+    <!-- This is a button to deny the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_deny">Tixutüx</string>
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">Tiq\'at</string>
     <!-- Accessibility content description to install add-on button. -->
@@ -134,6 +144,14 @@
     <string name="mozac_feature_addons_addons">Taq tz\'aqat</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
     <string name="mozac_feature_addons_addons_manager">Kinuk\'samajel taq Tz\'aqat</string>
+    <!-- The title of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_title_text">Echupun jumej ri taq tz\'aqat</string>
+    <!-- The content of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_content_text">Jun o ka\'i\' oxi\' taq tz\'aqat xkiq\'ät kisamaj, ri nub\'än chi man jikil ta ri q\'inoj.</string>
+    <!-- Button to re-enable the add-ons in the "crash" notification -->
+    <string name="mozac_feature_addons_manager_notification_restart_button">Ketzij chik ri taq tz\'aqat</string>
+    <!-- Button in the add-ons manager that opens AMO in a tab -->
+    <string name="mozac_feature_addons_find_more_addons_button_text">Kekanöx ch\'aqa\' chik taq tz\'aqat</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">Tiya\' q\'ij</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
@@ -172,6 +190,18 @@
     <string name="mozac_feature_addons_successfully_installed">Ütz xyak ri %1$s</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">Xsach toq xyak ri %1$s</string>
+    <!-- Text shown after failing to install an add-on for which we don't have its name. -->
+    <string name="mozac_feature_addons_failed_to_install_generic">Xsach toq niyak re tz\'aqat re\'.</string>
+    <!-- Text shown when attempting to install an add-on and a network error happened. -->
+    <string name="mozac_feature_addons_failed_to_install_network_error">Man xqasäx ta re tz\'aqat re ruma man pa rub\'eyal taq ri rokem.</string>
+    <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_failed_to_install_corrupt_error">Man xyak ta kan re tz\'aqat xa ke xa man ütz ta.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error">Man xyak ta kan re jun rutz\'aqat re\' ruma chi man nik\'on ta.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">Man xyak ta ri %1$s ruma man nuk\'äm ta ri\' rik\'in %2$s %3$s.</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted_1">%1$s man xyak ta ruma jikil chi xtuya\' k\'ayewal pa ruwi\' rutzil o rujikomal.</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">Ütz xtzij ri %1$s</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
@@ -214,4 +244,12 @@
     <string name="mozac_feature_addons_installed_dialog_description">Tijaq pa k\'utsamaj</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">Ütz, Xq\'ax pa nuwi\'</string>
-    </resources>
+    <!-- "Learn more" link displayed below an add-on status message. -->
+    <string name="mozac_feature_addons_status_learn_more">Tetamäx ch\'aqa\' chik</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_blocklisted">Xchup ri %1$s ruma k\'ayewal pa ruwi\' jikomal chuqa\' rutzil.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">Man xjikib\'äx ri %1$s chi jikil ruma ri\' toq xchup.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">Man nuk\'äm ta ri\' ri %1$s rik\'in ri ruwäch %2$s (ruwäch %3$s).</string>
+</resources>
