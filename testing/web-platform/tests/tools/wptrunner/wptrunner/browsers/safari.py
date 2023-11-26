@@ -69,7 +69,7 @@ def env_options():
     return {}
 
 
-def run_info_extras(logger, **kwargs):
+def run_info_extras(**kwargs):
     webdriver_binary = kwargs["webdriver_binary"]
     rv = {}
 

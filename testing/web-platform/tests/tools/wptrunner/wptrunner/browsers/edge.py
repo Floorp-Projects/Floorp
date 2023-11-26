@@ -95,7 +95,7 @@ class EdgeBrowser(WebDriverBrowser):
         return [self.webdriver_binary, f"--port={self.port}"] + self.webdriver_args
 
 
-def run_info_extras(logger, **kwargs):
+def run_info_extras(**kwargs):
     osReleaseCommand = r"(Get-ItemProperty 'HKLM:\Software\Microsoft\Windows NT\CurrentVersion').ReleaseId"
     osBuildCommand = r"(Get-ItemProperty 'HKLM:\Software\Microsoft\Windows NT\CurrentVersion').BuildLabEx"
     try:
