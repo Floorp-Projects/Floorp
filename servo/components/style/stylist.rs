@@ -7,6 +7,7 @@
 use crate::applicable_declarations::{
     ApplicableDeclarationBlock, ApplicableDeclarationList, CascadePriority,
 };
+use crate::computed_value_flags::ComputedValueFlags;
 use crate::context::{CascadeInputs, QuirksMode};
 use crate::custom_properties::{ComputedCustomProperties, CustomPropertiesMap};
 use crate::dom::TElement;
@@ -553,6 +554,9 @@ pub struct Stylist {
     /// Initial values for registered custom properties.
     initial_values_for_custom_properties: ComputedCustomProperties,
 
+    /// Flags set from computing registered custom property initial values.
+    initial_values_for_custom_properties_flags: ComputedValueFlags,
+
     /// The total number of times the stylist has been rebuilt.
     num_rebuilds: usize,
 }
@@ -642,6 +646,7 @@ impl Stylist {
             rule_tree: RuleTree::new(),
             script_custom_properties: Default::default(),
             initial_values_for_custom_properties: Default::default(),
+            initial_values_for_custom_properties_flags: Default::default(),
             num_rebuilds: 0,
         }
     }
@@ -689,11 +694,17 @@ impl Stylist {
         &self.initial_values_for_custom_properties
     }
 
+    /// Returns flags set from computing the registered custom property initial values.
+    pub fn get_custom_property_initial_values_flags(&self) -> ComputedValueFlags {
+        self.initial_values_for_custom_properties_flags
+    }
+
     /// Rebuild custom properties with their registered initial values.
     /// https://drafts.css-houdini.org/css-properties-values-api-1/#determining-registration
     pub fn rebuild_initial_values_for_custom_properties(&mut self) {
         let mut inherited_map = CustomPropertiesMap::default();
         let mut non_inherited_map = CustomPropertiesMap::default();
+        let initial_values_flags;
         {
             let mut seen_names = PrecomputedHashSet::default();
             let mut rule_cache_conditions = RuleCacheConditions::default();
@@ -730,7 +741,9 @@ impl Stylist {
                     }
                 }
             }
+            initial_values_flags = context.builder.flags();
         }
+        self.initial_values_for_custom_properties_flags = initial_values_flags;
         self.initial_values_for_custom_properties = ComputedCustomProperties {
             inherited: if inherited_map.is_empty() {
                 None
