@@ -260,14 +260,6 @@ class nsTableColFrame final : public nsSplittableFrame {
   void SetFinalISize(nscoord aFinalISize) { mFinalISize = aFinalISize; }
   nscoord GetFinalISize() { return mFinalISize; }
 
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    if (aFlags & (eSupportsContainLayoutAndPaint | eSupportsAspectRatio)) {
-      return false;
-    }
-
-    return nsSplittableFrame::IsFrameOfType(aFlags & ~(nsIFrame::eTablePart));
-  }
-
   void InvalidateFrame(uint32_t aDisplayItemKey = 0,
                        bool aRebuildDisplayItems = true) override;
   void InvalidateFrameWithRect(const nsRect& aRect,

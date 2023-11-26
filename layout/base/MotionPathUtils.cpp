@@ -38,7 +38,7 @@ CSSPoint MotionPathUtils::ComputeAnchorPointAdjustment(const nsIFrame& aFrame) {
     return {};
   }
 
-  if (aFrame.IsFrameOfType(nsIFrame::eSVGContainer)) {
+  if (aFrame.IsSVGContainerFrame()) {
     nsRect boxRect = nsLayoutUtils::ComputeSVGReferenceRect(
         const_cast<nsIFrame*>(&aFrame), StyleGeometryBox::FillBox);
     return CSSPoint::FromAppUnits(boxRect.TopLeft());

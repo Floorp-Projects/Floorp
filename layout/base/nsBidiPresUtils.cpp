@@ -598,7 +598,7 @@ static bool IsBidiSplittable(nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame);
   // Bidi inline containers should be split, unless they're line frames.
   LayoutFrameType frameType = aFrame->Type();
-  return (aFrame->IsFrameOfType(nsIFrame::eBidiInlineContainer) &&
+  return (aFrame->IsBidiInlineContainer() &&
           frameType != LayoutFrameType::Line) ||
          frameType == LayoutFrameType::Text;
 }
@@ -607,7 +607,7 @@ static bool IsBidiSplittable(nsIFrame* aFrame) {
 static bool IsBidiLeaf(const nsIFrame* aFrame) {
   nsIFrame* kid = aFrame->PrincipalChildList().FirstChild();
   if (kid) {
-    if (aFrame->IsFrameOfType(nsIFrame::eBidiInlineContainer) ||
+    if (aFrame->IsBidiInlineContainer() ||
         RubyUtils::IsRubyBox(aFrame->Type())) {
       return false;
     }
@@ -1209,8 +1209,7 @@ void nsBidiPresUtils::TraverseFrames(nsIFrame* aCurrentFrame,
     char16_t controlChar = 0;
     char16_t overrideChar = 0;
     LayoutFrameType frameType = frame->Type();
-    if (frame->IsFrameOfType(nsIFrame::eBidiInlineContainer) ||
-        RubyUtils::IsRubyBox(frameType)) {
+    if (frame->IsBidiInlineContainer() || RubyUtils::IsRubyBox(frameType)) {
       if (!frame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
         nsContainerFrame* c = static_cast<nsContainerFrame*>(frame);
         MOZ_ASSERT(c == do_QueryFrame(frame),

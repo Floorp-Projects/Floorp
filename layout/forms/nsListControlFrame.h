@@ -88,11 +88,6 @@ class nsListControlFrame final : public nsHTMLScrollFrame,
 
   mozilla::dom::HTMLOptionElement* GetCurrentOption() const;
 
-  bool IsFrameOfType(uint32_t aFlags) const final {
-    return nsHTMLScrollFrame::IsFrameOfType(
-        aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
-  }
-
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const final;
 #endif

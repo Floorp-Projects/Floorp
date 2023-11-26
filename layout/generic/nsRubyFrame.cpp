@@ -44,14 +44,6 @@ nsContainerFrame* NS_NewRubyFrame(PresShell* aPresShell,
 // nsRubyFrame Method Implementations
 // ==================================
 
-/* virtual */
-bool nsRubyFrame::IsFrameOfType(uint32_t aFlags) const {
-  if (aFlags & eBidiInlineContainer) {
-    return false;
-  }
-  return nsInlineFrame::IsFrameOfType(aFlags);
-}
-
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsRubyFrame::GetFrameName(nsAString& aResult) const {
   return MakeFrameName(u"Ruby"_ns, aResult);
@@ -86,7 +78,7 @@ void nsRubyFrame::AddInlinePrefISize(gfxContext* aRenderingContext,
 static nsRubyBaseContainerFrame* FindRubyBaseContainerAncestor(
     nsIFrame* aFrame) {
   for (nsIFrame* ancestor = aFrame->GetParent();
-       ancestor && ancestor->IsFrameOfType(nsIFrame::eLineParticipant);
+       ancestor && ancestor->IsLineParticipant();
        ancestor = ancestor->GetParent()) {
     if (ancestor->IsRubyBaseContainerFrame()) {
       return static_cast<nsRubyBaseContainerFrame*>(ancestor);

@@ -171,12 +171,11 @@ bool nsImageRenderer::PrepareImage() {
           paintElement ? paintElement->GetPrimaryFrame() : nullptr;
       // If there's no referenced frame, or the referenced frame is
       // non-displayable SVG, then we have nothing valid to paint.
-      if (!paintServerFrame ||
-          (paintServerFrame->IsFrameOfType(nsIFrame::eSVG) &&
-           !static_cast<SVGPaintServerFrame*>(
-               do_QueryFrame(paintServerFrame)) &&
-           !static_cast<ISVGDisplayableFrame*>(
-               do_QueryFrame(paintServerFrame)))) {
+      if (!paintServerFrame || (paintServerFrame->IsSVGFrame() &&
+                                !static_cast<SVGPaintServerFrame*>(
+                                    do_QueryFrame(paintServerFrame)) &&
+                                !static_cast<ISVGDisplayableFrame*>(
+                                    do_QueryFrame(paintServerFrame)))) {
         mPrepareResult = ImgDrawResult::BAD_IMAGE;
         return false;
       }
@@ -238,7 +237,7 @@ CSSSizeOrRatio nsImageRenderer::ComputeIntrinsicSize() {
       //     when fixing this!
       if (mPaintServerFrame) {
         // SVG images have no intrinsic size
-        if (!mPaintServerFrame->IsFrameOfType(nsIFrame::eSVG)) {
+        if (!mPaintServerFrame->IsSVGFrame()) {
           // The intrinsic image size for a generic nsIFrame paint server is
           // the union of the border-box rects of all of its continuations,
           // rounded to device pixels.

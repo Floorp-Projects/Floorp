@@ -44,12 +44,6 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
 
   NS_DECL_QUERYFRAME
 
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsAtomicContainerFrame::IsFrameOfType(
-        aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedSizing |
-                   nsIFrame::eReplacedContainsBlock));
-  }
-
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;
 

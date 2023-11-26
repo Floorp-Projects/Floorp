@@ -105,19 +105,17 @@ void SVGContainerFrame::ReflowSVGNonDisplayText(nsIFrame* aContainer) {
     return;
   }
   MOZ_ASSERT(aContainer->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY) ||
-                 !aContainer->IsFrameOfType(nsIFrame::eSVG),
+                 !aContainer->IsSVGFrame(),
              "it is wasteful to call ReflowSVGNonDisplayText on a container "
              "frame that is not NS_FRAME_IS_NONDISPLAY or not SVG");
   for (nsIFrame* kid : aContainer->PrincipalChildList()) {
     LayoutFrameType type = kid->Type();
     if (type == LayoutFrameType::SVGText) {
       static_cast<SVGTextFrame*>(kid)->ReflowSVGNonDisplayText();
-    } else {
-      if (kid->IsFrameOfType(nsIFrame::eSVG | nsIFrame::eSVGContainer) ||
-          type == LayoutFrameType::SVGForeignObject ||
-          !kid->IsFrameOfType(nsIFrame::eSVG)) {
-        ReflowSVGNonDisplayText(kid);
-      }
+    } else if (kid->IsSVGContainerFrame() ||
+               type == LayoutFrameType::SVGForeignObject ||
+               !kid->IsSVGFrame()) {
+      ReflowSVGNonDisplayText(kid);
     }
   }
 }
@@ -348,8 +346,7 @@ void SVGDisplayContainerFrame::ReflowSVG() {
       // SVGTextFrames.  We need to cause those to get reflowed in
       // case they are the target of a rendering observer.
       MOZ_ASSERT(
-          kid->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY) ||
-              !kid->IsFrameOfType(nsIFrame::eSVG),
+          kid->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY) || !kid->IsSVGFrame(),
           "expected kid to be a NS_FRAME_IS_NONDISPLAY frame or not SVG");
       if (kid->HasAnyStateBits(NS_FRAME_IS_DIRTY)) {
         SVGContainerFrame* container = do_QueryFrame(kid);

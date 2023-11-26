@@ -97,7 +97,7 @@ void nsMathMLFrame::GetEmbellishDataFrom(nsIFrame* aFrame,
   aEmbellishData.leadingSpace = 0;
   aEmbellishData.trailingSpace = 0;
 
-  if (aFrame && aFrame->IsFrameOfType(nsIFrame::eMathML)) {
+  if (aFrame && aFrame->IsMathMLFrame()) {
     nsIMathMLFrame* mathMLFrame = do_QueryFrame(aFrame);
     if (mathMLFrame) {
       mathMLFrame->GetEmbellishData(aEmbellishData);
@@ -116,7 +116,7 @@ void nsMathMLFrame::GetPresentationDataFrom(
 
   nsIFrame* frame = aFrame;
   while (frame) {
-    if (frame->IsFrameOfType(nsIFrame::eMathML)) {
+    if (frame->IsMathMLFrame()) {
       nsIMathMLFrame* mathMLFrame = do_QueryFrame(frame);
       if (mathMLFrame) {
         mathMLFrame->GetPresentationData(aPresentationData);

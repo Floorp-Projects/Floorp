@@ -118,8 +118,11 @@ nsPageContentFrame* NS_NewPageContentFrame(
 nsIFrame* NS_NewPageBreakFrame(mozilla::PresShell* aPresShell,
                                mozilla::ComputedStyle* aStyle);
 class nsFirstLetterFrame;
-nsFirstLetterFrame* NS_NewFirstLetterFrame(mozilla::PresShell* aPresShell,
-                                           mozilla::ComputedStyle* aStyle);
+nsFirstLetterFrame* NS_NewFirstLetterFrame(mozilla::PresShell*,
+                                           mozilla::ComputedStyle*);
+class nsFirstLetterFrame;
+nsFirstLetterFrame* NS_NewFloatingFirstLetterFrame(mozilla::PresShell*,
+                                                   mozilla::ComputedStyle*);
 class nsFirstLineFrame;
 nsFirstLineFrame* NS_NewFirstLineFrame(mozilla::PresShell* aPresShell,
                                        mozilla::ComputedStyle* aStyle);

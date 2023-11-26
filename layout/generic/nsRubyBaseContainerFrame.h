@@ -29,7 +29,6 @@ class nsRubyBaseContainerFrame final : public nsContainerFrame {
   NS_DECL_QUERYFRAME
 
   // nsIFrame overrides
-  virtual bool IsFrameOfType(uint32_t aFlags) const override;
   virtual bool CanContinueTextRun() const override;
   virtual void AddInlineMinISize(gfxContext* aRenderingContext,
                                  InlineMinISizeData* aData) override;

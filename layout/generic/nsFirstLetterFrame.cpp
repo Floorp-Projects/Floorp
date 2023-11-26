@@ -33,11 +33,22 @@ nsFirstLetterFrame* NS_NewFirstLetterFrame(PresShell* aPresShell,
       nsFirstLetterFrame(aStyle, aPresShell->GetPresContext());
 }
 
+nsFirstLetterFrame* NS_NewFloatingFirstLetterFrame(PresShell* aPresShell,
+                                                   ComputedStyle* aStyle) {
+  return new (aPresShell)
+      nsFloatingFirstLetterFrame(aStyle, aPresShell->GetPresContext());
+}
+
 NS_IMPL_FRAMEARENA_HELPERS(nsFirstLetterFrame)
 
 NS_QUERYFRAME_HEAD(nsFirstLetterFrame)
   NS_QUERYFRAME_ENTRY(nsFirstLetterFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
+
+NS_IMPL_FRAMEARENA_HELPERS(nsFloatingFirstLetterFrame)
+NS_QUERYFRAME_HEAD(nsFloatingFirstLetterFrame)
+  NS_QUERYFRAME_ENTRY(nsFloatingFirstLetterFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsFirstLetterFrame)
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsFirstLetterFrame::GetFrameName(nsAString& aResult) const {

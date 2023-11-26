@@ -3,22 +3,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-# Leaf constants to pass to Frame's leafness argument.
-LEAF = "Leaf"
-NOT_LEAF = "NotLeaf"
-DYNAMIC_LEAF = "DynamicLeaf"
-
-
 class FrameClass:
     def __init__(self, cls):
         self.cls = cls
 
 
 class Frame(FrameClass):
-    def __init__(self, cls, ty, leafness):
+    def __init__(self, cls, ty, flags):
         FrameClass.__init__(self, cls)
         self.ty = ty
-        self.leafness = leafness
+        self.flags = flags
         self.is_concrete = True
 
 

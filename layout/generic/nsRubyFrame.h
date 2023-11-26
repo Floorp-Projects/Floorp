@@ -29,7 +29,6 @@ class nsRubyFrame final : public nsInlineFrame {
   NS_DECL_QUERYFRAME
 
   // nsIFrame overrides
-  virtual bool IsFrameOfType(uint32_t aFlags) const override;
   virtual void AddInlineMinISize(gfxContext* aRenderingContext,
                                  InlineMinISizeData* aData) override;
   virtual void AddInlinePrefISize(gfxContext* aRenderingContext,

@@ -62,10 +62,6 @@ class nsFieldSetFrame final : public nsContainerFrame {
                    nsIFrame* aOldFrame) override;
 #endif
 
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsContainerFrame::IsFrameOfType(
-        aFlags & ~nsIFrame::eCanContainOverflowContainers);
-  }
   nsIScrollableFrame* GetScrollTargetFrame() const override;
 
   // Return the block wrapper around our kids.

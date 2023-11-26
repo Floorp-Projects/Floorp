@@ -520,6 +520,43 @@ struct MOZ_RAII FrameDestroyContext {
   AutoTArray<RefPtr<nsIContent>, 100> mAnonymousContent;
 };
 
+/**
+ * Bit-flags specific to a given layout class id.
+ */
+enum class LayoutFrameClassFlags : uint16_t {
+  None = 0,
+  Leaf = 1 << 0,
+  LeafDynamic = 1 << 1,
+  MathML = 1 << 2,
+  SVG = 1 << 3,
+  SVGContainer = 1 << 4,
+  BidiInlineContainer = 1 << 5,
+  // The frame is for a replaced element, such as an image
+  Replaced = 1 << 6,
+  // Frame that contains a block but looks like a replaced element from the
+  // outside.
+  ReplacedContainsBlock = 1 << 7,
+  // A replaced element that has replaced-element sizing characteristics (i.e.,
+  // like images or iframes), as opposed to inline-block sizing characteristics
+  // (like form controls).
+  ReplacedSizing = 1 << 8,
+  // A frame that participates in inline reflow, i.e., one that requires
+  // ReflowInput::mLineLayout.
+  LineParticipant = 1 << 9,
+  // Whether this frame is a table part (but not a table or table wrapper).
+  TablePart = 1 << 10,
+  CanContainOverflowContainers = 1 << 11,
+  // Whether the frame supports CSS transforms.
+  SupportsCSSTransforms = 1 << 12,
+  // Whether this frame class supports 'contain: layout' and 'contain: paint'
+  // (supporting one is equivalent to supporting the other).
+  SupportsContainLayoutAndPaint = 1 << 13,
+  // Whether this frame class supports the `aspect-ratio` property.
+  SupportsAspectRatio = 1 << 14,
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(LayoutFrameClassFlags)
+
 }  // namespace mozilla
 
 /**
@@ -577,6 +614,8 @@ class nsIFrame : public nsQueryFrame {
   typedef mozilla::SmallPointerArray<nsDisplayItem> DisplayItemArray;
 
   typedef nsQueryFrame::ClassID ClassID;
+
+  using ClassFlags = mozilla::LayoutFrameClassFlags;
 
  protected:
   using ChildList = mozilla::FrameChildList;
@@ -3277,6 +3316,60 @@ class nsIFrame : public nsQueryFrame {
     return sLayoutFrameTypes[uint8_t(mClass)];
   }
 
+  /**
+   * Get the type flags of the frame.
+   *
+   * @see mozilla::LayoutFrameType
+   */
+  ClassFlags GetClassFlags() const {
+    MOZ_ASSERT(uint8_t(mClass) < mozilla::ArrayLength(sLayoutFrameClassFlags));
+    return sLayoutFrameClassFlags[uint8_t(mClass)];
+  }
+
+  bool HasAnyClassFlag(ClassFlags aFlag) const {
+    return bool(GetClassFlags() & aFlag);
+  }
+
+  /**
+   * Is this a leaf frame?  Frames that want the frame constructor to be able to
+   * construct kids for them should return false, all others should return true.
+   *
+   * Note that returning true here does not mean that the frame _can't_ have
+   * kids. It could still have kids created via nsIAnonymousContentCreator.
+   *
+   * Returning true indicates that "normal" (non-anonymous, CSS generated
+   * content, etc) children should not be constructed.
+   */
+  bool IsLeaf() const {
+    auto bits = GetClassFlags();
+    if (MOZ_UNLIKELY(bits & ClassFlags::LeafDynamic)) {
+      return IsLeafDynamic();
+    }
+    return bool(bits & ClassFlags::Leaf);
+  }
+  virtual bool IsLeafDynamic() const { return false; }
+
+#define CLASS_FLAG_METHOD(name_, flag_) \
+  bool name_() const { return HasAnyClassFlag(ClassFlags::flag_); }
+#define CLASS_FLAG_METHOD0(name_) CLASS_FLAG_METHOD(name_, name_)
+
+  CLASS_FLAG_METHOD(IsMathMLFrame, MathML);
+  CLASS_FLAG_METHOD(IsSVGFrame, SVG);
+  CLASS_FLAG_METHOD(IsSVGContainerFrame, SVGContainer);
+  CLASS_FLAG_METHOD(IsBidiInlineContainer, BidiInlineContainer);
+  CLASS_FLAG_METHOD(IsLineParticipant, LineParticipant);
+  CLASS_FLAG_METHOD(IsReplaced, Replaced);
+  CLASS_FLAG_METHOD(IsReplacedWithBlock, ReplacedContainsBlock);
+  CLASS_FLAG_METHOD(HasReplacedSizing, ReplacedSizing);
+  CLASS_FLAG_METHOD(IsTablePart, TablePart);
+  CLASS_FLAG_METHOD0(CanContainOverflowContainers)
+  CLASS_FLAG_METHOD0(SupportsCSSTransforms);
+  CLASS_FLAG_METHOD0(SupportsContainLayoutAndPaint)
+  CLASS_FLAG_METHOD0(SupportsAspectRatio)
+
+#undef CLASS_FLAG_METHOD
+#undef CLASS_FLAG_METHOD0
+
 #ifdef __GNUC__
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wtype-limits"
@@ -3330,63 +3423,6 @@ class nsIFrame : public nsQueryFrame {
                                       mozilla::RelativeTo aStopAtAncestor,
                                       nsIFrame** aOutAncestor,
                                       uint32_t aFlags = 0) const;
-
-  /**
-   * Bit-flags to pass to IsFrameOfType()
-   */
-  enum {
-    eMathML = 1 << 0,
-    eSVG = 1 << 1,
-    eSVGContainer = 1 << 2,
-    eBidiInlineContainer = 1 << 3,
-    // the frame is for a replaced element, such as an image
-    eReplaced = 1 << 4,
-    // Frame that contains a block but looks like a replaced element
-    // from the outside
-    eReplacedContainsBlock = 1 << 5,
-    // A frame that participates in inline reflow, i.e., one that
-    // requires ReflowInput::mLineLayout.
-    eLineParticipant = 1 << 6,
-    eCanContainOverflowContainers = 1 << 7,
-    eTablePart = 1 << 8,
-    eSupportsCSSTransforms = 1 << 9,
-
-    // A replaced element that has replaced-element sizing
-    // characteristics (i.e., like images or iframes), as opposed to
-    // inline-block sizing characteristics (like form controls).
-    eReplacedSizing = 1 << 10,
-
-    // Does this frame class support 'contain: layout' and
-    // 'contain:paint' (supporting one is equivalent to supporting the
-    // other).
-    eSupportsContainLayoutAndPaint = 1 << 11,
-
-    // Does this frame class support `aspect-ratio` property.
-    eSupportsAspectRatio = 1 << 12,
-
-    // These are to allow nsIFrame::Init to assert that IsFrameOfType
-    // implementations all call the base class method.  They are only
-    // meaningful in DEBUG builds.
-    eDEBUGAllFrames = 1 << 30,
-    eDEBUGNoFrames = 1 << 31
-  };
-
-  /**
-   * API for doing a quick check if a frame is of a given
-   * type. Returns true if the frame matches ALL flags passed in.
-   *
-   * Implementations should always override with inline virtual
-   * functions that call the base class's IsFrameOfType method.
-   */
-  virtual bool IsFrameOfType(uint32_t aFlags) const {
-    return !(aFlags & ~(
-#ifdef DEBUG
-                          nsIFrame::eDEBUGAllFrames |
-#endif
-                          nsIFrame::eSupportsCSSTransforms |
-                          nsIFrame::eSupportsContainLayoutAndPaint |
-                          nsIFrame::eSupportsAspectRatio));
-  }
 
   /**
    * Return true if this frame's preferred size property or max size property
@@ -3471,26 +3507,6 @@ class nsIFrame : public nsQueryFrame {
    * Note that very few frames are, so default to false.
    */
   virtual bool IsFloatContainingBlock() const { return false; }
-
-  /**
-   * Is this a leaf frame?  Frames that want the frame constructor to be able
-   * to construct kids for them should return false, all others should return
-   * true.  Note that returning true here does not mean that the frame _can't_
-   * have kids.  It could still have kids created via
-   * nsIAnonymousContentCreator.  Returning true indicates that "normal"
-   * (non-anonymous, CSS generated content, etc) children should not be
-   * constructed.
-   */
-  bool IsLeaf() const {
-    MOZ_ASSERT(uint8_t(mClass) < mozilla::ArrayLength(sFrameClassBits));
-    FrameClassBits bits = sFrameClassBits[uint8_t(mClass)];
-    if (MOZ_UNLIKELY(bits & eFrameClassBitsDynamicLeaf)) {
-      return IsLeafDynamic();
-    }
-    return bits & eFrameClassBitsLeaf;
-  }
-
-  virtual bool IsLeafDynamic() const { return false; }
 
   /**
    * Marks all display items created by this frame as needing a repaint,
@@ -5361,28 +5377,18 @@ class nsIFrame : public nsQueryFrame {
                           const nsStyleEffects* aStyleEffects,
                           mozilla::EffectSet* aEffectSet = nullptr) const;
 
-  // Maps mClass to LayoutFrameType.
-  static const mozilla::LayoutFrameType sLayoutFrameTypes[
+  static constexpr size_t kFrameClassCount =
 #define FRAME_ID(...) 1 +
 #define ABSTRACT_FRAME_ID(...)
 #include "mozilla/FrameIdList.h"
 #undef FRAME_ID
 #undef ABSTRACT_FRAME_ID
-      0];
+      0;
 
-  enum FrameClassBits {
-    eFrameClassBitsNone = 0x0,
-    eFrameClassBitsLeaf = 0x1,
-    eFrameClassBitsDynamicLeaf = 0x2,
-  };
-  // Maps mClass to IsLeaf() flags.
-  static const FrameClassBits sFrameClassBits[
-#define FRAME_ID(...) 1 +
-#define ABSTRACT_FRAME_ID(...)
-#include "mozilla/FrameIdList.h"
-#undef FRAME_ID
-#undef ABSTRACT_FRAME_ID
-      0];
+  // Maps mClass to LayoutFrameType.
+  static const mozilla::LayoutFrameType sLayoutFrameTypes[kFrameClassCount];
+  // Maps mClass to LayoutFrameTypeFlags.
+  static const ClassFlags sLayoutFrameClassFlags[kFrameClassCount];
 
 #ifdef DEBUG_FRAME_DUMP
  public:

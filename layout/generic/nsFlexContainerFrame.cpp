@@ -1306,9 +1306,8 @@ StyleAlignFlags nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
       // absolutely-positioned boxes, and behaves as 'stretch' on all other
       // absolutely-positioned boxes."
       // https://drafts.csswg.org/css-align/#align-abspos
-      alignment = aChildRI.mFrame->IsFrameOfType(nsIFrame::eReplaced)
-                      ? StyleAlignFlags::START
-                      : StyleAlignFlags::STRETCH;
+      alignment = aChildRI.mFrame->IsReplaced() ? StyleAlignFlags::START
+                                                : StyleAlignFlags::STRETCH;
     }
   }
 
@@ -1573,7 +1572,7 @@ static nscoord PartiallyResolveAutoMinSize(
   // through the aspect ratio (if the item is replaced, and it has an aspect
   // ratio and a definite cross size).
   if (const auto& aspectRatio = aFlexItem.GetAspectRatio();
-      aFlexItem.Frame()->IsFrameOfType(nsIFrame::eReplaced) && aspectRatio &&
+      aFlexItem.Frame()->IsReplaced() && aspectRatio &&
       aFlexItem.IsCrossSizeDefinite(aItemReflowInput)) {
     // We have a usable aspect ratio. (not going to divide by 0)
     nscoord transferredSizeSuggestion = aspectRatio.ComputeRatioDependentSize(

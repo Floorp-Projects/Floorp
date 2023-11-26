@@ -527,9 +527,8 @@ void SVGTextPathObserver::OnRenderingChange() {
     return;
   }
 
-  MOZ_ASSERT(
-      frame->IsFrameOfType(nsIFrame::eSVG) || frame->IsInSVGTextSubtree(),
-      "SVG frame expected");
+  MOZ_ASSERT(frame->IsSVGFrame() || frame->IsInSVGTextSubtree(),
+             "SVG frame expected");
 
   MOZ_ASSERT(frame->GetContent()->IsSVGElement(nsGkAtoms::textPath),
              "expected frame for a <textPath> element");
@@ -601,7 +600,7 @@ void SVGMarkerObserver::OnRenderingChange() {
     return;
   }
 
-  MOZ_ASSERT(frame->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
+  MOZ_ASSERT(frame->IsSVGFrame(), "SVG frame expected");
 
   // Don't need to request ReflowFrame if we're being reflowed.
   // Because mRect for SVG frames includes the bounds of any markers
@@ -1814,8 +1813,8 @@ void SVGObserverUtils::InvalidateRenderingObservers(nsIFrame* aFrame) {
 
   // Check ancestor SVG containers. The root frame cannot be of type
   // eSVGContainer so we don't have to check f for null here.
-  for (nsIFrame* f = aFrame->GetParent();
-       f->IsFrameOfType(nsIFrame::eSVGContainer); f = f->GetParent()) {
+  for (nsIFrame* f = aFrame->GetParent(); f->IsSVGContainerFrame();
+       f = f->GetParent()) {
     if (auto* element = Element::FromNode(f->GetContent())) {
       if (auto* observers = GetObserverSet(element)) {
         observers->InvalidateAll();

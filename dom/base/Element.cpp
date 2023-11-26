@@ -1036,8 +1036,7 @@ nsRect Element::GetClientAreaRect() {
       // The display check is OK even though we're not looking at the style
       // frame, because the style frame only differs from "frame" for tables,
       // and table wrappers have the same display as the table itself.
-      (!frame->StyleDisplay()->IsInlineFlow() ||
-       frame->IsFrameOfType(nsIFrame::eReplaced))) {
+      (!frame->StyleDisplay()->IsInlineFlow() || frame->IsReplaced())) {
     // Special case code to make client area work even when there isn't
     // a scroll view, see bug 180552, bug 227567.
     return frame->GetPaddingRect() - frame->GetPositionIgnoringScrolling();

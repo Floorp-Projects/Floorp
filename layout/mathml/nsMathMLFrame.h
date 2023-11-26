@@ -132,9 +132,10 @@ class nsMathMLFrame : public nsIMathMLFrame {
                             float aFontSizeInflation);
 
   static eMathMLFrameType GetMathMLFrameTypeFor(nsIFrame* aFrame) {
-    if (aFrame->IsFrameOfType(nsIFrame::eMathML)) {
-      nsIMathMLFrame* mathMLFrame = do_QueryFrame(aFrame);
-      if (mathMLFrame) return mathMLFrame->GetMathMLFrameType();
+    if (aFrame->IsMathMLFrame()) {
+      if (nsIMathMLFrame* mathMLFrame = do_QueryFrame(aFrame)) {
+        return mathMLFrame->GetMathMLFrameType();
+      }
     }
     return eMathMLFrameType_UNKNOWN;
   }

@@ -157,9 +157,8 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
     : SizeComputationInput(aFrame, aParentReflowInput.mRenderingContext),
       mParentReflowInput(&aParentReflowInput),
       mFloatManager(aParentReflowInput.mFloatManager),
-      mLineLayout(mFrame->IsFrameOfType(nsIFrame::eLineParticipant)
-                      ? aParentReflowInput.mLineLayout
-                      : nullptr),
+      mLineLayout(mFrame->IsLineParticipant() ? aParentReflowInput.mLineLayout
+                                              : nullptr),
       mBreakType(aParentReflowInput.mBreakType),
       mPercentBSizeObserver(
           (aParentReflowInput.mPercentBSizeObserver &&
@@ -371,8 +370,7 @@ void ReflowInput::Init(nsPresContext* aPresContext,
     return;
   }
 
-  mFlags.mIsReplaced = mFrame->IsFrameOfType(nsIFrame::eReplaced) ||
-                       mFrame->IsFrameOfType(nsIFrame::eReplacedContainsBlock);
+  mFlags.mIsReplaced = mFrame->IsReplaced() || mFrame->IsReplacedWithBlock();
 
   InitConstraints(aPresContext, aContainingBlockSize, aBorder, aPadding, type);
 
@@ -449,13 +447,13 @@ void ReflowInput::Init(nsPresContext* aPresContext,
     SetAvailableBSize(NS_UNCONSTRAINEDSIZE);
   }
 
-  LAYOUT_WARN_IF_FALSE((mStyleDisplay->IsInlineOutsideStyle() &&
-                        !mFrame->IsFrameOfType(nsIFrame::eReplaced)) ||
-                           type == LayoutFrameType::Text ||
-                           ComputedISize() != NS_UNCONSTRAINEDSIZE,
-                       "have unconstrained inline-size; this should only "
-                       "result from very large sizes, not attempts at "
-                       "intrinsic inline-size calculation");
+  LAYOUT_WARN_IF_FALSE(
+      (mStyleDisplay->IsInlineOutsideStyle() && !mFrame->IsReplaced()) ||
+          type == LayoutFrameType::Text ||
+          ComputedISize() != NS_UNCONSTRAINEDSIZE,
+      "have unconstrained inline-size; this should only "
+      "result from very large sizes, not attempts at "
+      "intrinsic inline-size calculation");
 }
 
 static bool MightBeContainingBlockFor(nsIFrame* aMaybeContainingBlock,
@@ -796,7 +794,7 @@ void ReflowInput::InitDynamicReflowRoot() {
 }
 
 bool ReflowInput::ShouldApplyAutomaticMinimumOnBlockAxis() const {
-  MOZ_ASSERT(!mFrame->IsFrameOfType(nsIFrame::eReplacedSizing));
+  MOZ_ASSERT(!mFrame->HasReplacedSizing());
   return mFlags.mIsBSizeSetByAspectRatio &&
          !mStyleDisplay->IsScrollableOverflow() &&
          mStylePosition->MinBSize(GetWritingMode()).IsAuto();
@@ -1542,7 +1540,7 @@ bool ReflowInput::IsInlineSizeComputableByBlockSizeAndAspectRatio(
 
   // We don't have to compute the inline size by aspect-ratio and the resolved
   // block size (from insets) for replaced elements.
-  if (mFrame->IsFrameOfType(nsIFrame::eReplaced)) {
+  if (mFrame->IsReplaced()) {
     return false;
   }
 

@@ -628,7 +628,7 @@ class nsContainerFrame : public nsSplittableFrame {
     MOZ_ASSERT(aOverflowContainers.NotEmpty(), "Shouldn't set an empty list!");
     MOZ_ASSERT(!GetProperty(OverflowContainersProperty()),
                "Shouldn't override existing list!");
-    MOZ_ASSERT(IsFrameOfType(nsIFrame::eCanContainOverflowContainers),
+    MOZ_ASSERT(CanContainOverflowContainers(),
                "This type of frame can't have overflow containers!");
     auto* list = new (PresShell()) nsFrameList(std::move(aOverflowContainers));
     SetProperty(OverflowContainersProperty(), list);
@@ -640,7 +640,7 @@ class nsContainerFrame : public nsSplittableFrame {
                "Shouldn't set an empty list!");
     MOZ_ASSERT(!GetProperty(ExcessOverflowContainersProperty()),
                "Shouldn't override existing list!");
-    MOZ_ASSERT(IsFrameOfType(nsIFrame::eCanContainOverflowContainers),
+    MOZ_ASSERT(CanContainOverflowContainers(),
                "This type of frame can't have overflow containers!");
     auto* list =
         new (PresShell()) nsFrameList(std::move(aExcessOverflowContainers));

@@ -77,14 +77,12 @@ bool nsStyleDisplay::IsFloating(const nsIFrame* aContextFrame) const {
 bool nsStyleDisplay::HasTransform(const nsIFrame* aContextFrame) const {
   NS_ASSERTION(aContextFrame->StyleDisplay() == this,
                "unexpected aContextFrame");
-  return HasTransformStyle() &&
-         aContextFrame->IsFrameOfType(nsIFrame::eSupportsCSSTransforms);
+  return HasTransformStyle() && aContextFrame->SupportsCSSTransforms();
 }
 
 bool nsStyleDisplay::HasPerspective(const nsIFrame* aContextFrame) const {
   MOZ_ASSERT(aContextFrame->StyleDisplay() == this, "unexpected aContextFrame");
-  return HasPerspectiveStyle() &&
-         aContextFrame->IsFrameOfType(nsIFrame::eSupportsCSSTransforms);
+  return HasPerspectiveStyle() && aContextFrame->SupportsCSSTransforms();
 }
 
 bool nsStyleDisplay::

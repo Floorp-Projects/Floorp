@@ -124,7 +124,7 @@ static FontUsageKind FrameFontUsage(nsIFrame* aFrame,
 // TODO(emilio): Can we use the restyle-hint machinery instead of this?
 static void ScheduleReflow(PresShell* aPresShell, nsIFrame* aFrame) {
   nsIFrame* f = aFrame;
-  if (f->IsFrameOfType(nsIFrame::eSVG) || f->IsInSVGTextSubtree()) {
+  if (f->IsSVGFrame() || f->IsInSVGTextSubtree()) {
     // SVG frames (and the non-SVG descendants of an SVGTextFrame) need special
     // reflow handling.  We need to search upwards for the first displayed
     // SVGOuterSVGFrame or non-SVG frame, which is the frame we can call

@@ -115,11 +115,6 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   mozilla::a11y::AccType AccessibleType() override;
 #endif
 
-  bool IsFrameOfType(uint32_t aFlags) const final {
-    return nsAtomicContainerFrame::IsFrameOfType(
-        aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedSizing));
-  }
-
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override;
   void List(FILE* out = stderr, const char* aPrefix = "",
