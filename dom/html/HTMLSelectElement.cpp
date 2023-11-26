@@ -19,6 +19,7 @@
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/MappedDeclarationsBuilder.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Unused.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentList.h"
 #include "nsContentUtils.h"
@@ -165,6 +166,7 @@ void HTMLSelectElement::SetCustomValidity(const nsAString& aError) {
   UpdateValidityElementStates(true);
 }
 
+// https://html.spec.whatwg.org/multipage/input.html#dom-input-showpicker
 void HTMLSelectElement::ShowPicker(ErrorResult& aRv) {
   // Step 1. If this is not mutable, then throw an "InvalidStateError"
   // DOMException.
@@ -173,8 +175,8 @@ void HTMLSelectElement::ShowPicker(ErrorResult& aRv) {
   }
 
   // Step 2. If this's relevant settings object's origin is not same origin with
-  // this's relevant settings object's top-level origin, [...], then throw a
-  // "SecurityError" DOMException.
+  // this's relevant settings object's top-level origin, and this is a select
+  // element, [...], then throw a "SecurityError" DOMException.
   nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
   WindowGlobalChild* windowGlobalChild =
       window ? window->GetWindowGlobalChild() : nullptr;
@@ -191,11 +193,19 @@ void HTMLSelectElement::ShowPicker(ErrorResult& aRv) {
         "Call was blocked due to lack of user activation.");
   }
 
-  // Step 4. Show the picker, if applicable, for this.
+  // Step 4. If this is a select element, and this is not being rendered, then
+  // throw a "NotSupportedError" DOMException.
+
+  // Flush frames so that IsRendered returns up-to-date results.
+  Unused << GetPrimaryFrame(FlushType::Frames);
+  if (!IsRendered()) {
+    return aRv.ThrowNotSupportedError("This select isn't being rendered.");
+  }
+
+  // Step 5. Show the picker, if applicable, for this.
   if (IsCombobox() && !OpenInParentProcess()) {
     RefPtr<Document> doc = OwnerDoc();
-    RefPtr<Element> select = this;
-    nsContentUtils::DispatchChromeEvent(doc, select, u"mozshowdropdown"_ns,
+    nsContentUtils::DispatchChromeEvent(doc, this, u"mozshowdropdown"_ns,
                                         CanBubble::eYes, Cancelable::eNo);
   }
 }
