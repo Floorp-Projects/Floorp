@@ -45,7 +45,7 @@ class CheckedIncrement {
     }
     mMaxIncrement -= diff;
     mValue = end;
-  };
+  }
 
   void rewind(T pos) {
     size_t diff = mValue - pos;
