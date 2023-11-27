@@ -511,6 +511,12 @@ void InputToReadableStreamAlgorithms::ReleaseObjects() {
   mPullPromise = nullptr;
 }
 
+nsIInputStream* InputToReadableStreamAlgorithms::MaybeGetInputStreamIfUnread() {
+  MOZ_ASSERT(!mStream->Disturbed(),
+             "Should be only called on non-disturbed streams");
+  return mInput->GetInputStream();
+}
+
 void InputToReadableStreamAlgorithms::ErrorPropagation(JSContext* aCx,
                                                        ReadableStream* aStream,
                                                        nsresult aError) {

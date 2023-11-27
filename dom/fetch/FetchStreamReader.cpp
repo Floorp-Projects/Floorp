@@ -169,6 +169,10 @@ void FetchStreamReader::StartConsuming(JSContext* aCx, ReadableStream* aStream,
                                        ErrorResult& aRv) {
   MOZ_DIAGNOSTIC_ASSERT(!mReader);
   MOZ_DIAGNOSTIC_ASSERT(aStream);
+  MOZ_ASSERT(!aStream->MaybeGetInputStreamIfUnread(),
+             "FetchStreamReader is for JS streams but we got a stream based on "
+             "nsIInputStream here. Extract nsIInputStream and read it instead "
+             "to reduce overhead.");
 
   aRv = MaybeGrabStrongWorkerRef(aCx);
   if (aRv.Failed()) {

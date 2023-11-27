@@ -59,7 +59,9 @@ class UnderlyingSourceAlgorithmsBase : public nsISupports {
   // from closed(canceled)/errored streams, without waiting for GC.
   virtual void ReleaseObjects() {}
 
-  // Fetch wants to special-case nsIInputStream-based streams
+  // Can be used to read chunks directly via nsIInputStream to skip JS-related
+  // overhead, if this readable stream is a wrapper of a native stream.
+  // Currently used by Fetch helper functions e.g. new Response(stream).text()
   virtual nsIInputStream* MaybeGetInputStreamIfUnread() { return nullptr; }
 
   // https://streams.spec.whatwg.org/#other-specs-rs-create
@@ -198,6 +200,8 @@ class InputStreamHolder final : public nsIInputStreamCallback,
     return mInput->CloseWithStatus(aStatus);
   }
 
+  nsIAsyncInputStream* GetInputStream() { return mInput; }
+
  private:
   ~InputStreamHolder();
 
@@ -240,6 +244,8 @@ class InputToReadableStreamAlgorithms final
       ErrorResult& aRv) override;
 
   void ReleaseObjects() override;
+
+  nsIInputStream* MaybeGetInputStreamIfUnread() override;
 
  private:
   ~InputToReadableStreamAlgorithms() {
