@@ -19,6 +19,7 @@
 #include "SimpleMap.h"
 #include "VPXDecoder.h"
 #include "VideoUtils.h"
+#include "mozilla/fallible.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/java/CodecProxyWrappers.h"
@@ -1019,7 +1020,11 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDataDecoder::Decode(
   MOZ_ASSERT(GetState() != State::SHUTDOWN);
   MOZ_ASSERT(aSample != nullptr);
   jni::ByteBuffer::LocalRef bytes = jni::ByteBuffer::New(
-      const_cast<uint8_t*>(aSample->Data()), aSample->Size());
+      const_cast<uint8_t*>(aSample->Data()), aSample->Size(), fallible);
+  if (!bytes) {
+    return DecodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__), __func__);
+  }
 
   SetState(State::DRAINABLE);
   MOZ_ASSERT(aSample->Size() <= INT32_MAX);
