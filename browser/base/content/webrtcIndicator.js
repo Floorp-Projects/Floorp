@@ -12,11 +12,6 @@ const { showStreamSharingMenu, webrtcUI } = ChromeUtils.importESModule(
   "resource:///modules/webrtcUI.sys.mjs"
 );
 
-ChromeUtils.defineESModuleGetters(this, {
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
-  MacOSWebRTCStatusbarIndicator: "resource:///modules/webrtcUI.sys.mjs",
-});
-
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "gScreenManager",
