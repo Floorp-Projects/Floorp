@@ -776,6 +776,9 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
         if "windows7" in platform or "windows10-32" in platform:
             return False
 
+        if "tp6-bench" in try_name:
+            return False
+
         # Desktop selection
         if "android" not in platform:
             # Select some browsertime tasks as desktop smoke-tests
