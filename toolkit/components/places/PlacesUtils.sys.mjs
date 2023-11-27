@@ -1671,7 +1671,15 @@ export var PlacesUtils = {
                 descendants.guid, b2.position, b2.title, b2.dateAdded,
                 b2.lastModified
          FROM moz_bookmarks b2
-         JOIN descendants ON b2.parent = descendants.id AND b2.id <> :tags_folder)
+         JOIN descendants ON b2.parent = descendants.id AND b2.id <> :tags_folder),
+       tagged(place_id, tags) AS (
+         SELECT b.fk, group_concat(p.title)
+         FROM moz_bookmarks b
+         JOIN moz_bookmarks p ON p.id = b.parent
+         JOIN moz_bookmarks g ON g.id = p.parent
+         WHERE g.guid = '${PlacesUtils.bookmarks.tagsGuid}'
+         GROUP BY b.fk
+       )
        SELECT d.level, d.id, d.guid, d.parent, d.parentGuid, d.type,
               d.position AS [index], IFNULL(d.title, '') AS title, d.dateAdded,
               d.lastModified, h.url, (SELECT icon_url FROM moz_icons i
@@ -1679,11 +1687,7 @@ export var PlacesUtils = {
                       JOIN moz_pages_w_icons pi ON page_id = pi.id
                       WHERE pi.page_url_hash = hash(h.url) AND pi.page_url = h.url
                       ORDER BY width DESC LIMIT 1) AS iconUri,
-              (SELECT GROUP_CONCAT(t.title, ',')
-               FROM moz_bookmarks b2
-               JOIN moz_bookmarks t ON t.id = +b2.parent AND t.parent = :tags_folder
-               WHERE b2.fk = h.id
-              ) AS tags,
+              (SELECT tags FROM tagged WHERE place_id = h.id) AS tags,
               (SELECT a.content FROM moz_annos a
                JOIN moz_anno_attributes n ON a.anno_attribute_id = n.id
                WHERE place_id = h.id AND n.name = :charset_anno

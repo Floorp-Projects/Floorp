@@ -185,26 +185,18 @@ static Maybe<nsCString> GetSimpleBookmarksQueryParent(
     const RefPtr<nsNavHistoryQueryOptions>& aOptions);
 static void ParseSearchTermsFromQuery(const RefPtr<nsNavHistoryQuery>& aQuery,
                                       nsTArray<nsString>* aTerms);
-void GetTagsSqlFragment(int64_t aTagsFolder, const nsACString& aRelation,
-                        const uint16_t aQueryType, nsACString& _sqlFragment) {
+nsLiteralCString GetTagsSqlFragment(const uint16_t aQueryType) {
   if (aQueryType != nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS) {
-    _sqlFragment.AssignLiteral("null");
-  } else {
-    // This subquery DOES NOT order tags for performance reasons.
-    _sqlFragment.Assign(
-        nsLiteralCString("(SELECT GROUP_CONCAT(t_t.title, ',') "
-                         "FROM moz_bookmarks b_t "
-                         "JOIN moz_bookmarks t_t ON t_t.id = +b_t.parent  "
-                         "WHERE b_t.fk = ") +
-        aRelation +
-        nsLiteralCString(" "
-                         "AND t_t.parent = ") +
-        nsPrintfCString("%" PRId64, aTagsFolder) +
-        nsLiteralCString(" "
-                         ")"));
+    return "WITH tagged(place_id, tags) AS (VALUES(NULL, NULL)) "_ns;
   }
-
-  _sqlFragment.AppendLiteral(" AS tags ");
+  return "WITH tagged(place_id, tags) AS ( "
+         "  SELECT b.fk, group_concat(p.title) "
+         "  FROM moz_bookmarks b "
+         "  JOIN moz_bookmarks p ON p.id = b.parent "
+         "  JOIN moz_bookmarks g ON g.id = p.parent "
+         "  WHERE g.guid = " SQL_QUOTE(TAGS_ROOT_GUID)
+         "  GROUP BY b.fk "
+         ") "_ns;
 }
 
 nsresult FetchInfo(const RefPtr<mozilla::places::Database>& aDB,
@@ -978,53 +970,44 @@ nsresult PlacesSQLQueryBuilder::Select() {
 nsresult PlacesSQLQueryBuilder::SelectAsURI() {
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-  nsAutoCString tagsSqlFragment;
 
   switch (mQueryType) {
     case nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY: {
-      GetTagsSqlFragment(history->GetTagsFolder(), "h.id"_ns, mQueryType,
-                         tagsSqlFragment);
-      mQueryString = nsLiteralCString(
-                         "SELECT h.id, h.url, h.title AS page_title, "
-                         "h.rev_host, h.visit_count, "
-                         "h.last_visit_date, null, null, null, null, null, ") +
-                     tagsSqlFragment +
-                     nsLiteralCString(
-                         ", h.frecency, h.hidden, h.guid, null, null, null "
-                         ", null, null, null, null, null, null, null "
-                         "FROM moz_places h "
-                         // WHERE 1 is a no-op since additonal conditions will
-                         // start with AND.
-                         "WHERE 1 "
-                         "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
-                         "{ADDITIONAL_CONDITIONS} ");
+      mQueryString =
+          GetTagsSqlFragment(mQueryType) +
+          "SELECT h.id, h.url, h.title AS page_title, h.rev_host, "
+          "  h.visit_count, h.last_visit_date, null, null, null, null, null, "
+          "  (SELECT tags FROM tagged WHERE place_id = h.id) AS tags, "
+          "  h.frecency, h.hidden, h.guid, null, null, null, "
+          "  null, null, null, null, null, null, null "
+          "FROM moz_places h "
+          // WHERE 1 is a no-op since additonal conditions will
+          // start with AND.
+          "WHERE 1 "
+          "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
+          "{ADDITIONAL_CONDITIONS} "_ns;
       break;
     }
     case nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS: {
-      GetTagsSqlFragment(history->GetTagsFolder(), "b.fk"_ns, mQueryType,
-                         tagsSqlFragment);
       mQueryString =
-          nsLiteralCString(
-              "SELECT b.fk, h.url, b.title AS page_title, "
-              "h.rev_host, h.visit_count, h.last_visit_date, null, b.id, "
-              "b.dateAdded, b.lastModified, b.parent, ") +
-          tagsSqlFragment +
-          nsLiteralCString(
-              ", h.frecency, h.hidden, h.guid,"
-              "null, null, null, b.guid, b.position, b.type, b.fk "
-              ", t.guid, t.id, t.title "
-              "FROM moz_bookmarks b "
-              "JOIN moz_places h ON b.fk = h.id "
-              "LEFT JOIN moz_bookmarks t ON t.guid = target_folder_guid(h.url) "
-              "WHERE NOT EXISTS "
-              "(SELECT id FROM moz_bookmarks "
-              "WHERE id = b.parent AND parent = ") +
+          GetTagsSqlFragment(mQueryType) +
+          "SELECT b.fk, h.url, b.title AS page_title, "
+          "  h.rev_host, h.visit_count, h.last_visit_date, null, b.id, "
+          "  b.dateAdded, b.lastModified, b.parent, "
+          "  (SELECT tags FROM tagged WHERE place_id = h.id) AS tags, "
+          "  h.frecency, h.hidden, h.guid, null, null, null, b.guid, "
+          "  b.position, b.type, b.fk, t.guid, t.id, t.title "
+          "FROM moz_bookmarks b "
+          "JOIN moz_places h ON b.fk = h.id "
+          "LEFT JOIN moz_bookmarks t ON t.guid = target_folder_guid(h.url) "
+          "WHERE NOT EXISTS "
+          "(SELECT id FROM moz_bookmarks "
+          "WHERE id = b.parent AND parent = "_ns +
           nsPrintfCString("%" PRId64, history->GetTagsFolder()) +
-          nsLiteralCString(
-              ") "
-              "AND NOT h.url_hash BETWEEN hash('place', 'prefix_lo') AND "
-              "hash('place', 'prefix_hi') "
-              "{ADDITIONAL_CONDITIONS}");
+          ") "
+          "AND NOT h.url_hash BETWEEN hash('place', 'prefix_lo') "
+          "                       AND hash('place', 'prefix_hi') "
+          "{ADDITIONAL_CONDITIONS}"_ns;
       break;
     }
     default: {
@@ -1035,27 +1018,19 @@ nsresult PlacesSQLQueryBuilder::SelectAsURI() {
 }
 
 nsresult PlacesSQLQueryBuilder::SelectAsVisit() {
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
-  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-  nsAutoCString tagsSqlFragment;
-  GetTagsSqlFragment(history->GetTagsFolder(), "h.id"_ns, mQueryType,
-                     tagsSqlFragment);
   mQueryString =
-      nsLiteralCString(
-          "SELECT h.id, h.url, h.title AS page_title, h.rev_host, "
-          "h.visit_count, "
-          "v.visit_date, null, null, null, null, null, ") +
-      tagsSqlFragment +
-      nsLiteralCString(
-          ", h.frecency, h.hidden, h.guid, "
-          "v.id, v.from_visit, v.visit_type "
-          ", null, null, null, null, null, null, null "
-          "FROM moz_places h "
-          "JOIN moz_historyvisits v ON h.id = v.place_id "
-          // WHERE 1 is a no-op since additonal conditions will start with AND.
-          "WHERE 1 "
-          "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
-          "{ADDITIONAL_CONDITIONS} ");
+      GetTagsSqlFragment(mQueryType) +
+      "SELECT h.id, h.url, h.title AS page_title, h.rev_host, h.visit_count, "
+      "  v.visit_date, null, null, null, null, null, "
+      "  (SELECT tags FROM tagged WHERE place_id = h.id) AS tags, "
+      "  h.frecency, h.hidden, h.guid, v.id, v.from_visit, v.visit_type, "
+      "  null, null, null, null, null, null, null "
+      "FROM moz_places h "
+      "JOIN moz_historyvisits v ON h.id = v.place_id "
+      // WHERE 1 is a no-op since additonal conditions will start with AND.
+      "WHERE 1 "
+      "{QUERY_OPTIONS_VISITS} {QUERY_OPTIONS_PLACES} "
+      "{ADDITIONAL_CONDITIONS} "_ns;
 
   return NS_OK;
 }
@@ -1370,13 +1345,9 @@ nsresult PlacesSQLQueryBuilder::SelectAsRoots() {
         "(null, 'place:parent=" MOBILE_ROOT_GUID
         "', :MobileBookmarksFolderTitle, null, null, null, "
         "null, null, 0, 0, null, null, null, null, "
-        "'" MOBILE_BOOKMARKS_VIRTUAL_GUID
-        "', null, "
-        "null, null, null, null, null, null, "
-        "'" MOBILE_ROOT_GUID
-        "', "
-        "(SELECT id FROM moz_bookmarks WHERE guid='" MOBILE_ROOT_GUID
-        "'), "
+        SQL_QUOTE(MOBILE_BOOKMARKS_VIRTUAL_GUID) ", null, "
+        "null, null, null, null, null, null, " SQL_QUOTE(MOBILE_ROOT_GUID) ", "
+        "(SELECT id FROM moz_bookmarks WHERE guid = " SQL_QUOTE(MOBILE_ROOT_GUID) "), "
         ":MobileBookmarksFolderTitle)");
   }
 
@@ -1386,29 +1357,20 @@ nsresult PlacesSQLQueryBuilder::SelectAsRoots() {
           "VALUES(null, 'place:parent=" TOOLBAR_ROOT_GUID
           "', :BookmarksToolbarFolderTitle, null, null, null, "
           "null, null, 0, 0, null, null, null, null, 'toolbar____v', null, "
-          "null, null, null, null, null, null, "
-          "'" TOOLBAR_ROOT_GUID
-          "', "
-          "(SELECT id FROM moz_bookmarks WHERE guid='" TOOLBAR_ROOT_GUID
-          "'), "
+          "null, null, null, null, null, null, " SQL_QUOTE(TOOLBAR_ROOT_GUID) ", "
+          "(SELECT id FROM moz_bookmarks WHERE guid = " SQL_QUOTE(TOOLBAR_ROOT_GUID) "), "
           ":BookmarksToolbarFolderTitle), "
           "(null, 'place:parent=" MENU_ROOT_GUID
           "', :BookmarksMenuFolderTitle, null, null, null, "
           "null, null, 0, 0, null, null, null, null, 'menu_______v', null, "
-          "null, null, null, null, null, null, "
-          "'" MENU_ROOT_GUID
-          "', "
-          "(SELECT id FROM moz_bookmarks WHERE guid='" MENU_ROOT_GUID
-          "'), "
+          "null, null, null, null, null, null, " SQL_QUOTE(MENU_ROOT_GUID) ", "
+          "(SELECT id FROM moz_bookmarks WHERE guid = " SQL_QUOTE(MENU_ROOT_GUID) "), "
           ":BookmarksMenuFolderTitle), "
           "(null, 'place:parent=" UNFILED_ROOT_GUID
           "', :OtherBookmarksFolderTitle, null, null, null, "
           "null, null, 0, 0, null, null, null, null, 'unfiled____v', null, "
-          "null, null, null, null, null, null, "
-          "'" UNFILED_ROOT_GUID
-          "', "
-          "(SELECT id FROM moz_bookmarks WHERE guid='" UNFILED_ROOT_GUID
-          "'), "
+          "null, null, null, null, null, null, " SQL_QUOTE(UNFILED_ROOT_GUID) ", "
+          "(SELECT id FROM moz_bookmarks WHERE guid = " SQL_QUOTE(UNFILED_ROOT_GUID) "), "
           ":OtherBookmarksFolderTitle)") +
       mobileString + ")"_ns;
 
@@ -1642,10 +1604,6 @@ nsresult nsNavHistory::ConstructQueryString(
           sortingMode <= nsINavHistoryQueryOptions::SORT_BY_FRECENCY_DESCENDING,
       "Invalid sortingMode found while building query!");
 
-  nsAutoCString tagsSqlFragment;
-  GetTagsSqlFragment(GetTagsFolder(), "h.id"_ns, aOptions->QueryType(),
-                     tagsSqlFragment);
-
   if (IsOptimizableHistoryQuery(
           aQuery, aOptions,
           nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING) ||
@@ -1655,24 +1613,21 @@ nsresult nsNavHistory::ConstructQueryString(
     // Generate an optimized query for the history menu and the old most visited
     // bookmark that was inserted into profiles.
     queryString =
-        nsLiteralCString(
-            "SELECT h.id, h.url, h.title AS page_title, h.rev_host, "
-            "h.visit_count, h.last_visit_date, "
-            "null, null, null, null, null, ") +
-        tagsSqlFragment +
-        nsLiteralCString(
-            ", h.frecency, h.hidden, h.guid, null, null, null"
-            ", null, null, null, null, null, null, null "
-            "FROM moz_places h "
-            "WHERE h.hidden = 0 "
-            "AND EXISTS (SELECT id FROM moz_historyvisits WHERE place_id = "
-            "h.id "
-            "AND visit_type NOT IN ") +
+        GetTagsSqlFragment(aOptions->QueryType()) +
+        "SELECT h.id, h.url, h.title AS page_title, h.rev_host, "
+        "  h.visit_count, h.last_visit_date, null, null, null, null, null, "
+        "  (SELECT tags FROM tagged WHERE place_id = h.id) AS tags, "
+        "  h.frecency, h.hidden, h.guid, null, null, null, "
+        "  null, null, null, null, null, null, null "
+        "FROM moz_places h "
+        "WHERE h.hidden = 0 "
+        "AND EXISTS (SELECT id FROM moz_historyvisits WHERE place_id = "
+        "h.id "
+        "AND visit_type NOT IN "_ns +
         nsPrintfCString("(0,%d,%d) ", nsINavHistoryService::TRANSITION_EMBED,
                         nsINavHistoryService::TRANSITION_FRAMED_LINK) +
-        nsLiteralCString(
-            "LIMIT 1) "
-            "{QUERY_OPTIONS} ");
+        "LIMIT 1) "
+        "{QUERY_OPTIONS} "_ns;
 
     queryString.AppendLiteral("ORDER BY ");
     if (sortingMode == nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING)
