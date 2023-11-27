@@ -57,6 +57,8 @@
 #define TAGS_ROOT_GUID "tags________"
 #define MOBILE_ROOT_GUID "mobile______"
 
+#define SQL_QUOTE(text) "'" text "'"
+
 class mozIStorageValueArray;
 class nsIAutoCompleteController;
 class nsIEffectiveTLDService;
