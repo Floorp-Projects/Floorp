@@ -889,6 +889,13 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   const mozilla::gfx::ContentDeviceData* GetInitContentDeviceData();
 
   /**
+   * If inside a child process and have ever received a
+   * SetXPCOMProcessAttributes message, this contains the cmsOutputProfileData
+   * from that message.
+   */
+  mozilla::Maybe<nsTArray<uint8_t>>& GetCMSOutputProfileData();
+
+  /**
    * Increase the global device counter after a device has been removed/reset.
    */
   void BumpDeviceCounter();
