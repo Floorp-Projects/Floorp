@@ -340,6 +340,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders collapsed top-level window 
                     >
                       <button
                         className="arrow"
+                        title="Expand"
                       />
                     </ArrowExpander>
                     <span
@@ -852,6 +853,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
                     >
                       <button
                         className="arrow expanded"
+                        title="Collapse"
                       />
                     </ArrowExpander>
                     <span
@@ -1078,6 +1080,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders sub-level window 1`] = `
                     >
                       <button
                         className="arrow"
+                        title="Expand"
                       />
                     </ArrowExpander>
                     <span
@@ -1457,6 +1460,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
                     >
                       <button
                         className="arrow"
+                        title="Expand"
                       />
                     </ArrowExpander>
                     <span
@@ -1878,6 +1882,7 @@ exports[`ObjectInspector - dimTopLevelWindow renders window as expected when dim
                     >
                       <button
                         className="arrow expanded"
+                        title="Collapse"
                       />
                     </ArrowExpander>
                     <span
