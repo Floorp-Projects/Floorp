@@ -14,6 +14,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AMBrowserExtensionsImport: "resource://gre/modules/AddonManager.sys.mjs",
+  AbuseReporter: "resource://gre/modules/AbuseReporter.sys.mjs",
   ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.sys.mjs",
   OriginControls: "resource://gre/modules/ExtensionPermissions.sys.mjs",
@@ -1096,6 +1097,18 @@ var BrowserAddonUI = {
   async reportAddon(addonId, reportEntryPoint) {
     let addon = addonId && (await AddonManager.getAddonByID(addonId));
     if (!addon) {
+      return;
+    }
+
+    // Do not open an additional about:addons tab if the abuse report should be
+    // opened in its own tab.
+    if (lazy.AbuseReporter.amoFormEnabled) {
+      const amoUrl = lazy.AbuseReporter.getAMOFormURL({ addonId });
+      window.openTrustedLinkIn(amoUrl, "tab", {
+        // Make sure the newly open tab is going to be focused, independently
+        // from general user prefs.
+        forceForeground: true,
+      });
       return;
     }
 

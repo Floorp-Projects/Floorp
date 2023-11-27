@@ -117,6 +117,12 @@ export const AbuseReporter = {
     return lazy.ABUSE_REPORT_AMO_FORM_ENABLED;
   },
 
+  getAMOFormURL({ addonId }) {
+    return Services.urlFormatter
+      .formatURLPref("extensions.abuseReport.amoFormURL")
+      .replace(/%addonID%/g, addonId);
+  },
+
   // Error types.
   updateLastReportTimestamp() {
     this._lastReportTimestamp = Date.now();
