@@ -298,7 +298,7 @@ bool IPCFuzzController::ObserveIPCMessage(mozilla::ipc::NodeChannel* channel,
       channel->mBlockSendRecv = true;
     }
     return true;
-  } else if (aMessage.type() == mIPCTriggerMsg && !Nyx::instance().started()) {
+  } else if (aMessage.type() == mIPCTriggerMsg) {
     MOZ_FUZZING_NYX_PRINT("DEBUG: Ready message detected.\n");
 
     if (!haveTargetNodeName && !!getenv("MOZ_FUZZ_PROTOID_FILTER")) {
@@ -332,19 +332,22 @@ bool IPCFuzzController::ObserveIPCMessage(mozilla::ipc::NodeChannel* channel,
 
     // The ready message indicates the right node name for us to work with
     // and we should only ever receive it once.
-    if (!haveTargetNodeName) {
-      targetNodeName = channel->GetName();
-      haveTargetNodeName = true;
-
-      // We can also use this message as the base template for other messages
-      if (!this->sampleHeader.initLengthUninitialized(
-              sizeof(IPC::Message::Header))) {
-        MOZ_FUZZING_NYX_ABORT("sampleHeader.initLengthUninitialized failed\n");
-      }
-
-      memcpy(sampleHeader.begin(), aMessage.header(),
-             sizeof(IPC::Message::Header));
+    if (haveTargetNodeName) {
+      MOZ_FUZZING_NYX_PRINT("ERROR: Received ready signal twice?!\n");
+      return false;
     }
+
+    targetNodeName = channel->GetName();
+    haveTargetNodeName = true;
+
+    // We can also use this message as the base template for other messages
+    if (!this->sampleHeader.initLengthUninitialized(
+            sizeof(IPC::Message::Header))) {
+      MOZ_FUZZING_NYX_ABORT("sampleHeader.initLengthUninitialized failed\n");
+    }
+
+    memcpy(sampleHeader.begin(), aMessage.header(),
+           sizeof(IPC::Message::Header));
   } else if (haveTargetNodeName && targetNodeName != channel->GetName()) {
     // Not our node, no need to observe
     return true;
@@ -584,12 +587,7 @@ bool IPCFuzzController::MakeTargetDecision(
   } else if (isPreserveHeader) {
     // In preserveHeaderMode, we need to find an actor that matches the
     // requested message type instead of any random actor.
-    uint16_t maybeProtocolId = *type >> 16;
-    if (maybeProtocolId >= IPCMessageStart::LastMsgIndex) {
-      // Not a valid protocol.
-      return false;
-    }
-    ProtocolId wantedProtocolId = static_cast<ProtocolId>(maybeProtocolId);
+    ProtocolId wantedProtocolId = static_cast<ProtocolId>(*type >> 16);
     std::vector<uint32_t> allowedIndices;
     for (uint32_t i = 0; i < actors.size(); ++i) {
       if (actors[i].second == wantedProtocolId) {
@@ -1001,48 +999,7 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
         [msg = std::move(msg),
          nodeChannel =
              RefPtr{IPCFuzzController::instance().nodeChannel}]() mutable {
-          int32_t msgType = msg->header()->type;
-
-          // By default, we sync on the target thread of the receiving actor.
-          bool syncOnIOThread = false;
-
-          switch (msgType) {
-            case DATA_PIPE_CLOSED_MESSAGE_TYPE:
-            case DATA_PIPE_BYTES_CONSUMED_MESSAGE_TYPE:
-            case ACCEPT_INVITE_MESSAGE_TYPE:
-            case REQUEST_INTRODUCTION_MESSAGE_TYPE:
-            case INTRODUCE_MESSAGE_TYPE:
-            case BROADCAST_MESSAGE_TYPE:
-              // This set of special messages will not be routed to actors and
-              // therefore we won't see these as stopped messages later. These
-              // messages are either used by NodeChannel, DataPipe or
-              // MessageChannel without creating MessageTasks. As such, the best
-              // we can do is synchronize on this thread. We do this by
-              // emulating the MessageTaskStart/Stop behavior that normal event
-              // messages have.
-              syncOnIOThread = true;
-            default:
-              // Synchronization will happen in MessageChannel. Note that this
-              // also applies to certain special message types, as long as they
-              // are received by actors and not intercepted earlier.
-              break;
-          }
-
-          if (syncOnIOThread) {
-            mozilla::fuzzing::IPCFuzzController::instance()
-                .OnMessageTaskStart();
-          }
-
           nodeChannel->OnMessageReceived(std::move(msg));
-
-          if (syncOnIOThread) {
-            mozilla::fuzzing::IPCFuzzController::instance().OnMessageTaskStop();
-
-            // Don't continue for now after sending such a special message.
-            // It can cause ports to go away and further messages can time out.
-            Nyx::instance().release(
-                IPCFuzzController::instance().getMessageStopCount());
-          }
         }));
 #endif
 
@@ -1126,10 +1083,6 @@ void IPCFuzzController::SynchronizeOnMessageExecution(
 
 static void dumpIPCMessageToFile(const UniquePtr<IPC::Message>& aMsg,
                                  uint32_t aDumpCount, bool aUseNyx = false) {
-  if (Nyx::instance().is_replay()) {
-    return;
-  }
-
   std::stringstream dumpFilename;
   std::string msgName(IPC::StringFromIPCMessageType(aMsg->type()));
   std::replace(msgName.begin(), msgName.end(), ':', '_');
@@ -1234,6 +1187,10 @@ UniquePtr<IPC::Message> IPCFuzzController::replaceIPCMessage(
 
   char* ipcMsgData = buffer.begin();
 
+  // Copy the header of the original message
+  memcpy(ipcMsgData, aMsg->header(), sizeof(IPC::Message::Header));
+  IPC::Message::Header* ipchdr = (IPC::Message::Header*)ipcMsgData;
+
   //                        //
   // *** Snapshot Point *** //
   //                        //
@@ -1268,10 +1225,6 @@ UniquePtr<IPC::Message> IPCFuzzController::replaceIPCMessage(
   }
 
   buffer.shrinkTo(bufsize);
-
-  // Copy the header of the original message
-  memcpy(ipcMsgData, aMsg->header(), sizeof(IPC::Message::Header));
-  IPC::Message::Header* ipchdr = (IPC::Message::Header*)ipcMsgData;
 
   size_t ipcMsgLen = buffer.length();
   ipchdr->payload_size = ipcMsgLen - sizeof(IPC::Message::Header);
