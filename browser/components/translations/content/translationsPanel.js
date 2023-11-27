@@ -1454,51 +1454,38 @@ var TranslationsPanel = new (class {
   }
 
   /**
-   * Chain together the handleEvent calls so that they always run sequentially to guard
-   * against race conditions.
+   * Update the view to show an error.
    *
-   * @type {Promise<void>}
+   * @param {TranslationParent} actor
    */
-  handleEventChain = Promise.resolve();
-
-  /**
-   * Handle the chaining
-   *
-   * @param {CustomEvent} event
-   */
-  handleEvent = event => {
-    // The events are handled asynchronously, and chained together. Because of this,
-    // the handleEventImpl code may not be firing for an actor that is part of the
-    // current gBrowser. Get a reference to the translations actor associated with this
-    // event, and then any methods called from here need to reference this actor.
-    // This will prevent race conditions in the handler.
-    let actor;
-    try {
-      actor =
-        event.target.browsingContext.currentWindowGlobal.getActor(
-          "Translations"
-        );
-    } catch {}
-
-    if (actor) {
-      this.handleEventChain = this.handleEventChain
-        .catch(() => {})
-        .then(() => this.handleEventImpl(event, actor));
-    } else {
-      this.console?.error(
-        `Unable to get Translations actor for event "${event.type}"`,
-        event
-      );
+  async #showEngineError(actor) {
+    const { button } = this.buttonElements;
+    await this.#ensureLangListsBuilt();
+    if (!this.#isShowingDefaultView()) {
+      await this.#showDefaultView(actor).catch(e => {
+        this.console?.error(e);
+      });
     }
-    return this.handleEventChain;
-  };
+    this.elements.error.hidden = false;
+    this.#showError({
+      message: "translations-panel-error-translating",
+    });
+    const targetButton = button.hidden ? this.elements.appMenuButton : button;
+
+    // Re-open the menu on an error.
+    await this.#openPanelPopup(targetButton, {
+      autoShow: true,
+      viewName: "errorView",
+      maintainFlow: true,
+    });
+  }
 
   /**
    * Set the state of the translations button in the URL bar.
    *
    * @param {CustomEvent} event
    */
-  async handleEventImpl(event, actor) {
+  handleEvent = event => {
     switch (event.type) {
       case "TranslationsParent:OfferTranslation": {
         if (Services.wm.getMostRecentBrowserWindow()?.gBrowser === gBrowser) {
@@ -1507,12 +1494,13 @@ var TranslationsPanel = new (class {
         break;
       }
       case "TranslationsParent:LanguageState": {
+        const { actor } = event.detail;
         const {
           detectedLanguages,
           requestedTranslationPair,
           error,
           isEngineReady,
-        } = event.detail;
+        } = actor.languageState;
 
         const { button, buttonLocale, buttonCircleArrows } =
           this.buttonElements;
@@ -1532,7 +1520,7 @@ var TranslationsPanel = new (class {
           // Make sure to use the language state that is passed by the event.detail, and
           // don't read it from the actor here, as it's possible the actor isn't available
           // via the gBrowser.selectedBrowser.
-          this.#updateViewFromTranslationStatus(event.detail);
+          this.#updateViewFromTranslationStatus(actor.languageState);
         }
 
         if (
@@ -1544,7 +1532,7 @@ var TranslationsPanel = new (class {
           error ||
           // Finally check that we can translate this language.
           (hasSupportedLanguage &&
-            (await TranslationsParent.getIsTranslationsEngineSupported()))
+            TranslationsParent.getIsTranslationsEngineSupported())
         ) {
           // Keep track if the button was originally hidden, because it will be shown now.
           const wasButtonHidden = button.hidden;
@@ -1621,26 +1609,9 @@ var TranslationsPanel = new (class {
           case null:
             break;
           case "engine-load-failure":
-            await this.#ensureLangListsBuilt();
-            if (!this.#isShowingDefaultView()) {
-              await this.#showDefaultView(actor).catch(e => {
-                this.console?.error(e);
-              });
-            }
-            this.elements.error.hidden = false;
-            this.#showError({
-              message: "translations-panel-error-translating",
-            });
-            const targetButton = button.hidden
-              ? this.elements.appMenuButton
-              : button;
-
-            // Re-open the menu on an error.
-            await this.#openPanelPopup(targetButton, {
-              autoShow: true,
-              viewName: "errorView",
-              maintainFlow: true,
-            });
+            this.#showEngineError(actor).catch(viewError =>
+              this.console.error(viewError)
+            );
             break;
           default:
             console.error("Unknown translation error", error);
@@ -1648,7 +1619,7 @@ var TranslationsPanel = new (class {
         break;
       }
     }
-  }
+  };
 })();
 
 XPCOMUtils.defineLazyPreferenceGetter(
