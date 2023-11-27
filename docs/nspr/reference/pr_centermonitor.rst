@@ -52,6 +52,6 @@ by another thread and waits for that thread to exit before continuing.
 
 .. note::
 
-   **Note**: :ref:`PR_CEnterMonitor` and :ref:`PR_CExitMonitor` must be
+   :ref:`PR_CEnterMonitor` and :ref:`PR_CExitMonitor` must be
    paired--that is, there must be an exit for every entry--or the object
    will never become available for any other thread.

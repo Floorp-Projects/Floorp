@@ -34,7 +34,7 @@ The function has the following parameters:
 
 .. note::
 
-   **NOTE**: The constants PR_RDWR and friends are not in any interface
+   The constants PR_RDWR and friends are not in any interface
    (`bug 433295 <https://bugzilla.mozilla.org/show_bug.cgi?id=433295>`__).
    Thus they cannot be used in JavaScript, you have to use the octal
    constants (see `File I/O Snippets </en/Code_snippets:File_I/O>`__).

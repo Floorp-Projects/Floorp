@@ -28,5 +28,5 @@ The currently running thread may discover its own identity by calling
 
 .. note::
 
-   **Note**: This is the only safe way to establish the identity of a
+   This is the only safe way to establish the identity of a
    thread. Creation and enumeration are both subject to race conditions.

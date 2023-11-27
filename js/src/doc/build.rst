@@ -71,7 +71,7 @@ to do your build:
 
 .. note::
 
-   **Note**: If you are on Mac and baldrdash fails to compile with something similar to
+   If you are on Mac and baldrdash fails to compile with something similar to
 
    ::
 

@@ -46,7 +46,7 @@ This call is needed only if you attached the thread using
 
 .. note::
 
-   **Note**: As of NSPR release v3.0, :ref:`PR_AttachThread` and
+   As of NSPR release v3.0, :ref:`PR_AttachThread` and
    :ref:`PR_DetachThread` are obsolete. A native thread not created by NSPR
    is automatically attached the first time it calls an NSPR function,
    and automatically detached when it exits.
