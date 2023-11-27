@@ -10,11 +10,6 @@ import {
   pemToDER,
 } from "chrome://global/content/certviewer/certDecoder.mjs";
 
-window.addEventListener("load", console.log);
-window.addEventListener("load", console.log, true);
-document.addEventListener("load", console.log);
-document.addEventListener("load", console.log, true);
-
 const formatter = new Intl.DateTimeFormat();
 
 const HOST_NAME = getHostName();
