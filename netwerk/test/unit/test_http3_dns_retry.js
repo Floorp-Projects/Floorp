@@ -47,6 +47,7 @@ add_setup(async function setup() {
     "network.http.http3.retry_different_ip_family",
     true
   );
+  Services.prefs.setBoolPref("network.dns.get-ttl", false);
 
   certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
     true
@@ -62,6 +63,7 @@ add_setup(async function setup() {
     );
     Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
     Services.prefs.clearUserPref("network.http.http3.block_loopback_ipv6_addr");
+    Services.prefs.clearUserPref("network.dns.get-ttl");
     if (trrServer) {
       await trrServer.stop();
     }
