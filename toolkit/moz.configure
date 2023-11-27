@@ -703,9 +703,11 @@ def wmf(value, target, _):
         return True
 
 
-@depends(c_compiler, when=wmf)
-def wmfmediaengine(c_compiler):
-    return c_compiler and c_compiler.type == "clang-cl"
+@depends(artifact_builds, c_compiler, when=wmf)
+def wmfmediaengine(artifact_builds, c_compiler):
+    if c_compiler:
+        return c_compiler.type == "clang-cl"
+    return bool(artifact_builds)
 
 
 set_config("MOZ_WMF", wmf)
