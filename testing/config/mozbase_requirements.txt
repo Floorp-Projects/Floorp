@@ -30,4 +30,3 @@ requests==2.22.0; sys_platform != 'darwin'
 pyyaml==5.1.2; sys_platform != 'darwin'
 structlog==15.2.0; sys_platform != 'darwin'
 toml==0.10.2
-tomlkit==0.11.8

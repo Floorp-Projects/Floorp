@@ -29,7 +29,6 @@ def read_ini(
     separators=None,
     strict=True,
     handle_defaults=True,
-    document=False,
 ):
     """
     read an .ini file and return a list of [(section, values)]
@@ -178,7 +177,7 @@ def read_ini(
     if handle_defaults:
         # merge combined defaults into each section
         sections = [(i, combine_fields(defaults, j)) for i, j in sections]
-    return sections, defaults, None
+    return sections, defaults
 
 
 def combine_fields(global_vars, local_vars):

@@ -19,7 +19,6 @@ pyflakes==0.6.1
 pylint==0.27.0
 simplejson==2.1.1
 toml==0.10.2
-tomlkit==0.11.8
 unittest2==0.5.1
 virtualenv==1.5.1
 wsgiref==0.1.2

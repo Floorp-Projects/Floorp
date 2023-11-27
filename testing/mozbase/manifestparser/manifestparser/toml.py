@@ -6,51 +6,21 @@ import io
 import os
 import re
 
+import toml
+
 from .ini import combine_fields
 
 __all__ = ["read_toml"]
-
-
-def parse_toml_str(contents):
-    """
-    Parse TOML contents using toml
-    """
-    import toml
-
-    error = None
-    manifest = None
-    try:
-        manifest = toml.loads(contents)
-    except toml.TomlDecodeError as pe:
-        error = str(pe)
-    return error, manifest
-
-
-def parse_tomlkit_str(contents):
-    """
-    Parse TOML contents using tomlkit
-    """
-    import tomlkit
-    from tomlkit.exceptions import TOMLKitError
-
-    error = None
-    manifest = None
-    try:
-        manifest = tomlkit.parse(contents)
-    except TOMLKitError as pe:
-        error = str(pe)
-    return error, manifest
 
 
 def read_toml(
     fp,
     defaults=None,
     default="DEFAULT",
-    _comments=None,
-    _separators=None,
+    comments=None,
+    separators=None,
     strict=True,
     handle_defaults=True,
-    document=False,
 ):
     """
     read a .toml file and return a list of [(section, values)]
@@ -61,12 +31,13 @@ def read_toml(
     - separators : strings that denote key, value separation in order
     - strict : whether to be strict about parsing
     - handle_defaults : whether to incorporate defaults into each section
-    - document: read TOML with tomlkit and return source in test["document"]
     """
 
     # variables
     defaults = defaults or {}
     default_section = {}
+    comments = comments or ("#",)
+    separators = separators or ("=", ":")
     sections = []
     if isinstance(fp, str):
         filename = fp
@@ -78,12 +49,11 @@ def read_toml(
     contents = fp.read()
     inline_comment_rx = re.compile(r"\s#.*$")
 
-    if document:  # Use tomlkit to parse the file contents
-        error, manifest = parse_tomlkit_str(contents)
-    else:
-        error, manifest = parse_toml_str(contents)
-    if error:
-        raise IOError(f"Error parsing TOML manifest file {filename}: {error}")
+    # Use tomlkit to parse the file contents
+    try:
+        manifest = toml.loads(contents)
+    except toml.TomlDecodeError as pe:
+        raise IOError(f"Error parsing TOML manifest file {filename}: {pe}")
 
     # handle each section of the manifest
     for section in manifest.keys():
@@ -132,129 +102,4 @@ def read_toml(
         # merge combined defaults into each section
         sections = [(i, combine_fields(defaults, j)) for i, j in sections]
 
-    if not document:
-        manifest = None
-    return sections, defaults, manifest
-
-
-def alphabetize_toml_str(manifest):
-    """
-    Will take a TOMLkit manifest document (i.e. from a previous invocation
-    of read_toml(..., document=True) and accessing the document
-    from mp.source_documents[filename]) and return it as a string
-    in sorted order by section (i.e. test file name, taking bug ids into consideration).
-    """
-    import re
-
-    from tomlkit import document, dumps, table
-    from tomlkit.items import KeyType, SingleKey
-
-    preamble = ""
-    for k, v in manifest.body:
-        if k is None:
-            preamble += v.as_string()
-        else:
-            break
-    new_manifest = document()
-    if "DEFAULT" in manifest:
-        new_manifest.add("DEFAULT", manifest["DEFAULT"])
-    else:
-        new_manifest.add("DEFAULT", table())
-    sections = [k for k in manifest.keys() if k != "DEFAULT"]
-    regex = r"^([A-Za-z0-9_./-]*)([Bb][Uu][Gg])([-_]*)([0-9]+)([A-Za-z0-9_./-]*)$"
-    rx = re.compile(regex)
-
-    def keyfn(k):
-        name: str = str(k)
-        m = rx.findall(name)
-        if len(m) == 1 and len(m[0]) == 5:
-            prefix = m[0][0]  # text before "Bug"
-            bug = m[0][1]  # the word "Bug"
-            underbar = m[0][2]  # underbar or dash (optional)
-            num = m[0][3]  # the bug id
-            suffix = m[0][4]  # text after the bug id
-            name = f"{prefix}{bug.lower()}{underbar}{int(num):09d}{suffix}"
-            return name
-        return name
-
-    sections = sorted(sections, key=keyfn)
-    for k in sections:
-        if k.find('"') >= 0:
-            section = k
-        else:
-            section = SingleKey(k, KeyType.Basic)
-        new_manifest.add(section, manifest[k])
-    manifest_str = dumps(new_manifest)
-    # tomlkit fixups
-    manifest_str = preamble + manifest_str.replace('"",]', "]")
-    while manifest_str.endswith("\n\n"):
-        manifest_str = manifest_str[:-1]
-    return manifest_str
-
-
-def add_skip_if(manifest, filename, condition, bug=None):
-    """
-    Will take a TOMLkit manifest document (i.e. from a previous invocation
-    of read_toml(..., document=True) and accessing the document
-    from mp.source_documents[filename]) and return it as a string
-    in sorted order by section (i.e. test file name, taking bug ids into consideration).
-    """
-    from tomlkit import array
-    from tomlkit.items import Comment, String
-
-    if filename not in manifest:
-        raise Exception(f"TOML manifest does not contain section: {filename}")
-    keyvals = manifest[filename]
-    first = None
-    first_comment = ""
-    skip_if = None
-    if "skip-if" in keyvals:
-        skip_if = keyvals["skip-if"]
-        if len(skip_if) == 1:
-            for e in skip_if._iter_items():
-                if not first:
-                    first = e
-                else:
-                    c = e.as_string()
-                    if c != ",":
-                        first_comment += c
-            if skip_if.trivia is not None:
-                first_comment += skip_if.trivia.comment[2:]
-    mp_array = array()
-    if skip_if is None:  # add the first one line entry to the table
-        mp_array.add_line(condition, indent="", add_comma=False, newline=False)
-        if bug is not None:
-            mp_array.comment(bug)
-        skip_if = {"skip-if": mp_array}
-        keyvals.update(skip_if)
-    else:
-        if first is not None:
-            if first_comment is not None:
-                mp_array.add_line(first, indent="  ", comment=first_comment)
-            else:
-                mp_array.add_line(first, indent="  ")
-        if len(skip_if) > 1:
-            e_condition = None
-            e_comment = None
-            for e in skip_if._iter_items():
-                if isinstance(e, String):
-                    if e_condition is not None:
-                        if e_comment is not None:
-                            mp_array.add_line(
-                                e_condition, indent="  ", comment=e_comment
-                            )
-                            e_comment = None
-                        else:
-                            mp_array.add_line(e_condition, indent="  ")
-                    if len(e) > 0:
-                        e_condition = e
-                elif isinstance(e, Comment):
-                    e_comment = e.as_string()[3:]
-        if bug is not None:
-            mp_array.add_line(condition, indent="  ", comment=bug)
-        else:
-            mp_array.add_line(condition, indent="  ")
-        mp_array.add_line("", indent="")  # fixed in write_toml_str
-        skip_if = {"skip-if": mp_array}
-        del keyvals["skip-if"]
-        keyvals.update(skip_if)
+    return sections, defaults

@@ -10,7 +10,6 @@ import os
 import sys
 from optparse import OptionParser
 
-from .logger import Logger
 from .manifestparser import ManifestParser, convert
 
 
@@ -65,7 +64,6 @@ class CLICommand(object):
 
     def __init__(self, parser):
         self._parser = parser  # master parser
-        self.logger = Logger()
 
     def parser(self):
         return OptionParser(
@@ -73,14 +71,10 @@ class CLICommand(object):
         )
 
 
-class CopyCLI(CLICommand):
-    """
-    To copy tests and manifests from a source
-    """
-
+class Copy(CLICommand):
     usage = "%prog [options] copy manifest directory -tag1 -tag2 --key1=value1 --key2=value2 ..."
 
-    def __call__(self, global_options, args):
+    def __call__(self, options, args):
         # parse the arguments
         try:
             kwargs, tags, args = parse_args(args)
@@ -90,9 +84,8 @@ class CopyCLI(CLICommand):
         # make sure we have some manifests, otherwise it will
         # be quite boring
         if not len(args) == 2:
-            self.logger.error("missing arguments: manifest directory")
-            HelpCLI(self._parser)(global_options, ["copy"])
-            return 1
+            HelpCLI(self._parser)(options, ["copy"])
+            return
 
         # read the manifests
         # TODO: should probably ensure these exist here
@@ -101,7 +94,6 @@ class CopyCLI(CLICommand):
 
         # print the resultant query
         manifests.copy(args[1], None, *tags, **kwargs)
-        return 0
 
 
 class CreateCLI(CLICommand):
@@ -132,15 +124,14 @@ class CreateCLI(CLICommand):
         )
         return parser
 
-    def __call__(self, global_options, args):
+    def __call__(self, _options, args):
         parser = self.parser()
         options, args = parser.parse_args(args)
 
         # need some directories
         if not len(args):
-            self.logger.error("missing arguments: directory ...")
             parser.print_usage()
-            return 1
+            return
 
         # add the directories to the manifest
         for arg in args:
@@ -154,7 +145,35 @@ class CreateCLI(CLICommand):
             )
         if manifest:
             print(manifest)
-        return 0
+
+
+class WriteCLI(CLICommand):
+    """
+    write a manifest based on a query
+    """
+
+    usage = "%prog [options] write manifest <manifest> -tag1 -tag2 --key1=value1 --key2=value2 ..."
+
+    def __call__(self, options, args):
+        # parse the arguments
+        try:
+            kwargs, tags, args = parse_args(args)
+        except ParserError as e:
+            self._parser.error(str(e))
+
+        # make sure we have some manifests, otherwise it will
+        # be quite boring
+        if not args:
+            HelpCLI(self._parser)(options, ["write"])
+            return
+
+        # read the manifests
+        # TODO: should probably ensure these exist here
+        manifests = ManifestParser()
+        manifests.read(*args)
+
+        # print the resultant query
+        manifests.write(global_tags=tags, global_kwargs=kwargs)
 
 
 class HelpCLI(CLICommand):
@@ -164,7 +183,7 @@ class HelpCLI(CLICommand):
 
     usage = "%prog [options] help [command]"
 
-    def __call__(self, global_options, args):
+    def __call__(self, options, args):
         if len(args) == 1 and args[0] in commands:
             commands[args[0]](self._parser).parser().print_help()
         else:
@@ -191,9 +210,8 @@ class UpdateCLI(CLICommand):
         # make sure we have some manifests, otherwise it will
         # be quite boring
         if not len(args) == 2:
-            self.logger.error("missing arguments: manifest directory")
             HelpCLI(self._parser)(options, ["update"])
-            return 1
+            return
 
         # read the manifests
         # TODO: should probably ensure these exist here
@@ -202,43 +220,10 @@ class UpdateCLI(CLICommand):
 
         # print the resultant query
         manifests.update(args[1], None, *tags, **kwargs)
-        return 0
-
-
-class WriteCLI(CLICommand):
-    """
-    write a manifest based on a query
-    """
-
-    usage = "%prog [options] write manifest <manifest> -tag1 -tag2 --key1=value1 --key2=value2 ..."
-
-    def __call__(self, options, args):
-        # parse the arguments
-        try:
-            kwargs, tags, args = parse_args(args)
-        except ParserError as e:
-            self._parser.error(str(e))
-
-        # make sure we have some manifests, otherwise it will
-        # be quite boring
-        if not args:
-            self.logger.error("missing arguments: manifest ...")
-            HelpCLI(self._parser)(options, ["write"])
-            return 1
-
-        # read the manifests
-        # TODO: should probably ensure these exist here
-        manifests = ManifestParser()
-        manifests.read(*args)
-
-        # print the resultant query
-        manifests.write(global_tags=tags, global_kwargs=kwargs)
-        return 0
 
 
 # command -> class mapping
 commands = {
-    "copy": CopyCLI,
     "create": CreateCLI,
     "help": HelpCLI,
     "update": UpdateCLI,
@@ -263,10 +248,10 @@ def main(args=sys.argv[1:]):
     )
     parser.disable_interspersed_args()
 
-    global_options, args = parser.parse_args(args)
+    options, args = parser.parse_args(args)
 
     if not args:
-        HelpCLI(parser)(global_options, args)
+        HelpCLI(parser)(options, args)
         parser.exit()
 
     # get the command
@@ -276,11 +261,10 @@ def main(args=sys.argv[1:]):
             "Command must be one of %s (you gave '%s')"
             % (", ".join(sorted(commands.keys())), command)
         )
-        return 1
 
     handler = commands[command](parser)
-    return handler(global_options, args[1:])
+    handler(options, args[1:])
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

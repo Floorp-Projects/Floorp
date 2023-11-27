@@ -23,7 +23,6 @@ dependencies = [
     "pylint",
     "pyflakes",
     "toml",
-    "tomlkit",
 ]
 try:
     import json
