@@ -260,12 +260,14 @@ class NetworkModule extends Module {
     this.#subscribedEvents = new Set();
 
     this.#networkListener = new lazy.NetworkListener();
+    this.#networkListener.on("auth-required", this.#onAuthRequired);
     this.#networkListener.on("before-request-sent", this.#onBeforeRequestSent);
     this.#networkListener.on("response-completed", this.#onResponseEvent);
     this.#networkListener.on("response-started", this.#onResponseEvent);
   }
 
   destroy() {
+    this.#networkListener.off("auth-required", this.#onAuthRequired);
     this.#networkListener.off("before-request-sent", this.#onBeforeRequestSent);
     this.#networkListener.off("response-completed", this.#onResponseEvent);
     this.#networkListener.off("response-started", this.#onResponseEvent);
@@ -481,6 +483,77 @@ class NetworkModule extends Module {
 
     return navigation ? navigation.navigationId : null;
   }
+
+  #onAuthRequired = (name, data) => {
+    const {
+      authCallbacks,
+      contextId,
+      isNavigationRequest,
+      redirectCount,
+      requestData,
+      responseData,
+      timestamp,
+    } = data;
+
+    try {
+      const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
+      if (!browsingContext) {
+        // Do not emit events if the context id does not match any existing
+        // browsing context.
+        return;
+      }
+
+      const protocolEventName = "network.authRequired";
+
+      // Process the navigation to create potentially missing navigation ids
+      // before the early return below.
+      const navigation = this.#getNavigationId(
+        protocolEventName,
+        isNavigationRequest,
+        browsingContext,
+        requestData.url
+      );
+
+      const isListening = this.messageHandler.eventsDispatcher.hasListener(
+        protocolEventName,
+        { contextId }
+      );
+      if (!isListening) {
+        // If there are no listeners subscribed to this event and this context,
+        // bail out.
+        return;
+      }
+
+      const baseParameters = this.#processNetworkEvent(protocolEventName, {
+        contextId,
+        navigation,
+        redirectCount,
+        requestData,
+        timestamp,
+      });
+
+      const authRequiredEvent = this.#serializeNetworkEvent({
+        ...baseParameters,
+        response: responseData,
+      });
+
+      const authChallenges = this.#extractChallenges(responseData);
+      // authChallenges should never be null for a request which triggered an
+      // authRequired event.
+      authRequiredEvent.response.authChallenges = authChallenges;
+
+      this.emitEvent(
+        protocolEventName,
+        authRequiredEvent,
+        this.#getContextInfo(browsingContext)
+      );
+    } finally {
+      // Bug 1852223: Until we handle intercepted requests in the authRequired
+      // phase, we should always forward the auth prompt notification so that it
+      // can be handled by the browser.
+      authCallbacks.forwardAuthPrompt();
+    }
+  };
 
   #onBeforeRequestSent = (name, data) => {
     const {
@@ -804,6 +877,7 @@ class NetworkModule extends Module {
 
   static get supportedEvents() {
     return [
+      "network.authRequired",
       "network.beforeRequestSent",
       "network.responseCompleted",
       "network.responseStarted",
