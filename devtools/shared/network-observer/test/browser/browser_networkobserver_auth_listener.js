@@ -234,6 +234,9 @@ add_task(async function testAuthRequestWithWrongCredentialsListener() {
   await BrowserTestUtils.waitForCondition(() => events.length >= 1);
   is(events.length, 1, "Received the expected number of network events");
 
+  // Wait for authPrompt to be handled
+  await BrowserTestUtils.waitForCondition(() => events[0].hasAuthPrompt);
+
   // The auth prompt should not be displayed since the authentication was
   // fulfilled.
   ok(
