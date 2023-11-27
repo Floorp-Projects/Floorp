@@ -12,8 +12,9 @@
 }
 
 #unanalyzed-product-icon {
-  width: 264px;
-  height: 290px;
+  max-width: 264px;
+  max-height: 290px;
+  width: 100%;
   content: url("chrome://browser/content/shopping/assets/unanalyzedLight.avif");
 
   @media (prefers-color-scheme: dark) {
