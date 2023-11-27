@@ -1,0 +1,35 @@
+[
+  {
+    "id": "dwOJ8M9ERSmk6oI2KXg6hg",
+    "label": "test-windows11-64-2009-qr/opt-mochitest-browser-chrome-3",
+    "duration": 1653761,
+    "result": "failed",
+    "state": "completed",
+    "classification": "not classified",
+    "classification_note": null,
+    "tags": {
+      "createdForUser": "ci@mozilla.org",
+      "kind": "test",
+      "label": "test-windows11-64-2009-qr/opt-mochitest-browser-chrome-3",
+      "os": "windows",
+      "retrigger": "true",
+      "test-type": "mochitest",
+      "tests_grouped": "1",
+      "worker-implementation": "generic-worker"
+    },
+    "tier": 1,
+    "results": [
+      {
+        "group": "browser/base/content/test/performance/browser.toml",
+        "ok": false,
+        "duration": 63094
+      }
+    ],
+    "errors": null,
+    "failure_types": {
+      "browser/base/content/test/performance/browser.toml": [
+        ["browser/base/content/test/performance/browser_startup.js", "generic"]
+      ]
+    }
+  }
+]
