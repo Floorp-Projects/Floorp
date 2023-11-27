@@ -1,43 +1,49 @@
----
-base_repository: https://hg.mozilla.org/mozilla-central
-build_date: 1509164545
+app_version: '120.0'
+backstop: true
+base_ref: default
+base_repository: https://hg.mozilla.org/mozilla-unified
+base_rev: 3754b381e2fe9455a74abec4a11ba211bf8ba62f
+build_date: 1700142353
 build_number: 1
-app_version: "60.0"
-version: "60.0"
-next_version: null
-filters:
-    - target_tasks_method
-head_ref: 196059cada7070ab1e35db83a22b60389bd0c794
-head_repository: https://hg.mozilla.org/releases/mozilla-release
-head_rev: 196059cada7070ab1e35db83a22b60389bd0c794
-hg_branch: default
-level: "3"
-message: " "
-# morph_templates: {}
-moz_build_date: "20171028042225"
-optimize_target_tasks: false
-owner: xquan@mozilla.com
-project: mozilla-release
-pushdate: 1509164545
-pushlog_id: "8069"
-release_eta: ""
-release_history: {}
-release_enable_partners: false
-release_partners: []
-release_partner_build_number: 1
-release_partner_config: null
-release_enable_emefree: false
-# target_task_labels: []
-target_tasks_method: mozilla_release_tasks
 do_not_optimize: []
-try_mode: null
-try_task_config: {}
+enable_always_target:
+  - docker-image
 existing_tasks: {}
-try_options:
-release_type: "release"
+filters:
+  - target_tasks_method
+head_ref: 5ae4969c2b0450edbe68bd94b613f1f30f8a3fcb
+head_repository: https://hg.mozilla.org/releases/mozilla-release
+head_rev: 5ae4969c2b0450edbe68bd94b613f1f30f8a3fcb
+head_tag: ''
+hg_branch: default
+level: '3'
+message: ''
+moz_build_date: '20231116134553'
+next_version: null
+optimize_strategies: null
+optimize_target_tasks: true
+owner: user@example.com
+phabricator_diff: null
+project: mozilla-release
+pushdate: 1700142353
+pushlog_id: '3240'
+release_enable_emefree: false
+release_enable_partner_attribution: false
+release_enable_partner_repack: false
+release_eta: ''
+release_history: {}
+release_partner_build_number: 1
+release_partner_config: {}
+release_partners: []
 release_product: null
+release_type: release
+repository_type: hg
 required_signoffs: []
 signoff_urls: {}
-phabricator_diff:
+target_tasks_method: mozilla_release_tasks
 tasks_for: hg-push
 test_manifest_loader: default
+try_mode: null
+try_options: null
+try_task_config: {}
+version: '120.0'

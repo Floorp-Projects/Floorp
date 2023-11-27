@@ -1,41 +1,49 @@
----
+app_version: 122.0a1
+backstop: true
+base_ref: default
 base_repository: https://hg.mozilla.org/mozilla-unified
-build_date: 1509302065
+base_rev: ef0b50d89a7f6107932087c2c1adc2f6fd9ab06a
+build_date: 1700646764
 build_number: 1
-app_version: 60.0a1
-version: 60.0a1
-next_version: null
 do_not_optimize: []
+enable_always_target:
+  - docker-image
 existing_tasks: {}
 filters:
-    - target_tasks_method
-head_ref: c83100c88242aba3593102b99ece7f8073f93177
+  - target_tasks_method
+head_ref: ed20a8b98a8f2d8593dbbbd9b5df993e3e91433f
 head_repository: https://hg.mozilla.org/mozilla-central
-head_rev: c83100c88242aba3593102b99ece7f8073f93177
+head_rev: ed20a8b98a8f2d8593dbbbd9b5df993e3e91433f
+head_tag: ''
 hg_branch: default
-level: "3"
-message: " "
-moz_build_date: "20171029183425"
+level: '3'
+message: ''
+moz_build_date: '20231122095244'
+next_version: null
+optimize_strategies: null
 optimize_target_tasks: true
-owner: ffxbld@noreply.mozilla.org
+owner: user@example.com
+phabricator_diff: null
 project: mozilla-central
-pushdate: 1509302065
-pushlog_id: "32768"
-release_eta: ""
-release_history: {}
-release_enable_partners: false
-release_partners: []
-release_partner_build_number: 1
-release_partner_config: null
+pushdate: 1700646764
+pushlog_id: '41359'
 release_enable_emefree: false
-target_tasks_method: default
+release_enable_partner_attribution: false
+release_enable_partner_repack: false
+release_eta: ''
+release_history: {}
+release_partner_build_number: 1
+release_partner_config: {}
+release_partners: []
+release_product: null
+release_type: nightly
+repository_type: hg
+required_signoffs: []
+signoff_urls: {}
+target_tasks_method: mozilla_central_tasks
 tasks_for: hg-push
+test_manifest_loader: default
 try_mode: null
 try_options: null
 try_task_config: {}
-release_type: "nightly"
-release_product: null
-required_signoffs: []
-signoff_urls: {}
-phabricator_diff:
-test_manifest_loader: default
+version: 122.0a1
