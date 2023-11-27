@@ -1001,7 +1001,48 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
         [msg = std::move(msg),
          nodeChannel =
              RefPtr{IPCFuzzController::instance().nodeChannel}]() mutable {
+          int32_t msgType = msg->header()->type;
+
+          // By default, we sync on the target thread of the receiving actor.
+          bool syncOnIOThread = false;
+
+          switch (msgType) {
+            case DATA_PIPE_CLOSED_MESSAGE_TYPE:
+            case DATA_PIPE_BYTES_CONSUMED_MESSAGE_TYPE:
+            case ACCEPT_INVITE_MESSAGE_TYPE:
+            case REQUEST_INTRODUCTION_MESSAGE_TYPE:
+            case INTRODUCE_MESSAGE_TYPE:
+            case BROADCAST_MESSAGE_TYPE:
+              // This set of special messages will not be routed to actors and
+              // therefore we won't see these as stopped messages later. These
+              // messages are either used by NodeChannel, DataPipe or
+              // MessageChannel without creating MessageTasks. As such, the best
+              // we can do is synchronize on this thread. We do this by
+              // emulating the MessageTaskStart/Stop behavior that normal event
+              // messages have.
+              syncOnIOThread = true;
+            default:
+              // Synchronization will happen in MessageChannel. Note that this
+              // also applies to certain special message types, as long as they
+              // are received by actors and not intercepted earlier.
+              break;
+          }
+
+          if (syncOnIOThread) {
+            mozilla::fuzzing::IPCFuzzController::instance()
+                .OnMessageTaskStart();
+          }
+
           nodeChannel->OnMessageReceived(std::move(msg));
+
+          if (syncOnIOThread) {
+            mozilla::fuzzing::IPCFuzzController::instance().OnMessageTaskStop();
+
+            // Don't continue for now after sending such a special message.
+            // It can cause ports to go away and further messages can time out.
+            Nyx::instance().release(
+                IPCFuzzController::instance().getMessageStopCount());
+          }
         }));
 #endif
 
