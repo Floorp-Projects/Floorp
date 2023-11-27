@@ -457,11 +457,7 @@ const PanelUI = {
       viewNode.classList.add("cui-widget-panelview", "PanelUI-subView");
 
       let viewShown = false;
-      let panelRemover = event => {
-        // Avoid bubbled events triggering the panel closing.
-        if (event.target != tempPanel) {
-          return;
-        }
+      let panelRemover = () => {
         viewNode.classList.remove("cui-widget-panelview");
         if (viewShown) {
           CustomizableUI.removePanelCloseListeners(tempPanel);
