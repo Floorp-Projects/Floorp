@@ -374,7 +374,15 @@ class ElementStyle {
       if (!computedProp.overridden && computedProp.textProp.enabled) {
         taken.set(computedProp.name, computedProp);
 
-        if (isCssVariable(computedProp.name)) {
+        // At this point, we can get CSS variable from "inherited" rules.
+        // When this is a registered custom property with `inherits` set to false,
+        // the text prop is "invisible" (i.e. not shown in the rule view).
+        // In such case, we don't want to get the value in the Map, and we'll rather
+        // get the initial value from the registered property definition.
+        if (
+          isCssVariable(computedProp.name) &&
+          !computedProp.textProp.invisible
+        ) {
           variables.set(computedProp.name, computedProp.value);
         }
       }
