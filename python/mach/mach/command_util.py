@@ -5,6 +5,7 @@
 import argparse
 import ast
 import errno
+import shlex
 import sys
 import types
 import uuid
@@ -347,7 +348,8 @@ class DetermineCommandVenvAction(argparse.Action):
 
         if command in aliases:
             alias = aliases[command]
-            command = alias
+            arg_string = shlex.split(alias)
+            command = arg_string.pop(0)
 
         setattr(namespace, "command_name", command)
 
