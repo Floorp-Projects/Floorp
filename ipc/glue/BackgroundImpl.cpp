@@ -186,7 +186,7 @@ class ParentImpl final : public BackgroundParentImpl {
 
   // Forwarded from BackgroundParent.
   static void KillHardAsync(PBackgroundParent* aBackgroundActor,
-                            const char* aReason);
+                            const nsACString& aReason);
 
   // Forwarded from BackgroundParent.
   static bool AllocStarter(ContentParent* aContent,
@@ -659,7 +659,7 @@ uint64_t BackgroundParent::GetChildID(PBackgroundParent* aBackgroundActor) {
 
 // static
 void BackgroundParent::KillHardAsync(PBackgroundParent* aBackgroundActor,
-                                     const char* aReason) {
+                                     const nsACString& aReason) {
   ParentImpl::KillHardAsync(aBackgroundActor, aReason);
 }
 
@@ -768,7 +768,7 @@ uint64_t ParentImpl::GetChildID(PBackgroundParent* aBackgroundActor) {
 
 // static
 void ParentImpl::KillHardAsync(PBackgroundParent* aBackgroundActor,
-                               const char* aReason) {
+                               const nsACString& aReason) {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aBackgroundActor);
@@ -779,15 +779,16 @@ void ParentImpl::KillHardAsync(PBackgroundParent* aBackgroundActor,
   MOZ_ASSERT(handle);
 
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(
-      NS_NewRunnableFunction("ParentImpl::KillHardAsync",
-                             [handle = std::move(handle), aReason]() {
-                               mozilla::AssertIsOnMainThread();
+      NS_NewRunnableFunction(
+          "ParentImpl::KillHardAsync",
+          [handle = std::move(handle), reason = nsCString{aReason}]() {
+            mozilla::AssertIsOnMainThread();
 
-                               if (RefPtr<ContentParent> contentParent =
-                                       handle->GetContentParent()) {
-                                 contentParent->KillHard(aReason);
-                               }
-                             }),
+            if (RefPtr<ContentParent> contentParent =
+                    handle->GetContentParent()) {
+              contentParent->KillHard(reason.get());
+            }
+          }),
       NS_DISPATCH_NORMAL));
 
   // After we've scheduled killing of the remote process, also ensure we induce
