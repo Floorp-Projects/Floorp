@@ -2225,7 +2225,7 @@ function getClientCssProperties() {
     normalizeCssData,
   } = require("resource://devtools/client/fronts/css-properties.js");
   return new CssProperties(
-    normalizeCssData({ properties: generateCssProperties() })
+    normalizeCssData({ properties: generateCssProperties(document) })
   );
 }
 

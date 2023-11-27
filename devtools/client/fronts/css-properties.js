@@ -24,17 +24,12 @@ loader.lazyRequireGetter(
   "resource://devtools/shared/css/constants.js",
   true
 );
-
-/**
- * Build up a regular expression that matches a CSS variable token. This is an
- * ident token that starts with two dashes "--".
- *
- * https://www.w3.org/TR/css-syntax-3/#ident-token-diagram
- */
-var NON_ASCII = "[^\\x00-\\x7F]";
-var ESCAPE = "\\\\[^\n\r]";
-var VALID_CHAR = ["[_a-z0-9-]", NON_ASCII, ESCAPE].join("|");
-var IS_VARIABLE_TOKEN = new RegExp(`^--(${VALID_CHAR})*$`, "i");
+loader.lazyRequireGetter(
+  this,
+  "isCssVariable",
+  "resource://devtools/shared/inspector/css-logic.js",
+  true
+);
 
 /**
  * The CssProperties front provides a mechanism to have a one-time asynchronous
@@ -102,10 +97,7 @@ CssProperties.prototype = {
    * @return {Boolean}
    */
   isInherited(property) {
-    return (
-      (this.properties[property] && this.properties[property].isInherited) ||
-      isCssVariable(property)
-    );
+    return this.properties[property]?.isInherited;
   },
 
   /**
@@ -166,16 +158,6 @@ CssProperties.prototype = {
 };
 
 /**
- * Check that this is a CSS variable.
- *
- * @param {String} input
- * @return {Boolean}
- */
-function isCssVariable(input) {
-  return !!input.match(IS_VARIABLE_TOKEN);
-}
-
-/**
  * Even if the target has the cssProperties actor, the returned data may not be in the
  * same shape or have all of the data we need. This normalizes the data and fills in
  * any missing information like color values.
@@ -215,7 +197,6 @@ function reattachCssColorValues(db) {
 
 module.exports = {
   CssPropertiesFront,
-  isCssVariable,
   CssProperties,
   normalizeCssData,
 };

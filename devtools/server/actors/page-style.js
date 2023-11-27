@@ -550,9 +550,10 @@ class PageStyleActor extends Actor {
   }
 
   _hasInheritedProps(style) {
-    return Array.prototype.some.call(style, prop => {
-      return InspectorUtils.isInheritedProperty(prop);
-    });
+    const doc = this.inspector.targetActor.window.document;
+    return Array.prototype.some.call(style, prop =>
+      InspectorUtils.isInheritedProperty(doc, prop)
+    );
   }
 
   async isPositionEditable(node) {
@@ -755,6 +756,8 @@ class PageStyleActor extends Actor {
 
     const rules = [];
 
+    const doc = this.inspector.targetActor.window.document;
+
     // getCSSStyleRules returns ordered from least-specific to
     // most-specific.
     for (let i = domRules.length - 1; i >= 0; i--) {
@@ -772,7 +775,7 @@ class PageStyleActor extends Actor {
         // Don't include inherited rules if none of its properties
         // are inheritable.
         const hasInherited = [...domRule.style].some(prop =>
-          InspectorUtils.isInheritedProperty(prop)
+          InspectorUtils.isInheritedProperty(doc, prop)
         );
         if (!hasInherited) {
           continue;
