@@ -823,66 +823,6 @@ var gTests = [
   },
 
   {
-    desc: "test showPermissionPanel",
-    run: async function checkShowPermissionPanel() {
-      if (!USING_LEGACY_INDICATOR) {
-        // The indicator only links to the permission panel for the
-        // legacy indicator.
-        return;
-      }
-
-      let observerPromise = expectObserverCalled("getUserMedia:request");
-      let promise = promisePopupNotificationShown("webRTC-shareDevices");
-      await promiseRequestDevice(false, true);
-      await promise;
-      await observerPromise;
-      checkDeviceSelectors(["camera"]);
-
-      let indicator = promiseIndicatorWindow();
-      let observerPromise1 = expectObserverCalled(
-        "getUserMedia:response:allow"
-      );
-      let observerPromise2 = expectObserverCalled("recording-device-events");
-      await promiseMessage("ok", () => {
-        PopupNotifications.panel.firstElementChild.button.click();
-      });
-      await observerPromise1;
-      await observerPromise2;
-      Assert.deepEqual(
-        await getMediaCaptureState(),
-        { video: true },
-        "expected camera to be shared"
-      );
-
-      await indicator;
-      await checkSharingUI({ video: true });
-
-      ok(permissionPopupHidden(), "permission panel should be hidden");
-      if (IS_MAC) {
-        let activeStreams = webrtcUI.getActiveStreams(true, false, false);
-        webrtcUI.showSharingDoorhanger(activeStreams[0]);
-      } else {
-        let win = Services.wm.getMostRecentWindow(
-          "Browser:WebRTCGlobalIndicator"
-        );
-
-        let elt = win.document.getElementById("audioVideoButton");
-        EventUtils.synthesizeMouseAtCenter(elt, {}, win);
-      }
-
-      await TestUtils.waitForCondition(
-        () => !permissionPopupHidden(),
-        "wait for permission panel to open"
-      );
-      ok(!permissionPopupHidden(), "permission panel should be open");
-
-      gPermissionPanel._permissionPopup.hidePopup();
-
-      await closeStream();
-    },
-  },
-
-  {
     desc: "'Always Allow' disabled on http pages",
     run: async function checkNoAlwaysOnHttp() {
       // Load an http page instead of the https version.

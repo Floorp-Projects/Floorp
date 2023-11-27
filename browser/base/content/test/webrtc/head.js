@@ -11,11 +11,6 @@ const PREF_FOCUS_SOURCE = "media.getusermedia.window.focus_source.enabled";
 const STATE_CAPTURE_ENABLED = Ci.nsIMediaManagerService.STATE_CAPTURE_ENABLED;
 const STATE_CAPTURE_DISABLED = Ci.nsIMediaManagerService.STATE_CAPTURE_DISABLED;
 
-const USING_LEGACY_INDICATOR = Services.prefs.getBoolPref(
-  "privacy.webrtc.legacyGlobalIndicator",
-  false
-);
-
 const ALLOW_SILENCING_NOTIFICATIONS = Services.prefs.getBoolPref(
   "privacy.webrtc.allowSilencingNotifications",
   false
@@ -26,9 +21,7 @@ const SHOW_GLOBAL_MUTE_TOGGLES = Services.prefs.getBoolPref(
   false
 );
 
-const INDICATOR_PATH = USING_LEGACY_INDICATOR
-  ? "chrome://browser/content/webrtcLegacyIndicator.xhtml"
-  : "chrome://browser/content/webrtcIndicator.xhtml";
+const INDICATOR_PATH = "chrome://browser/content/webrtcIndicator.xhtml";
 
 const IS_MAC = AppConstants.platform == "macosx";
 
@@ -62,11 +55,6 @@ function whenDelayedStartupFinished(aWindow) {
 
 function promiseIndicatorWindow() {
   let startTime = performance.now();
-
-  // We don't show the legacy indicator window on Mac.
-  if (USING_LEGACY_INDICATOR && IS_MAC) {
-    return Promise.resolve();
-  }
 
   return new Promise(resolve => {
     Services.obs.addObserver(function obs(win) {
@@ -148,10 +136,6 @@ async function assertWebRTCIndicatorStatus(expected) {
     );
   }
 
-  if (USING_LEGACY_INDICATOR && IS_MAC) {
-    return;
-  }
-
   if (!expected) {
     let win = Services.wm.getMostRecentWindow("Browser:WebRTCGlobalIndicator");
     if (win) {
@@ -192,11 +176,7 @@ async function assertWebRTCIndicatorStatus(expected) {
       });
     }
 
-    if (
-      !USING_LEGACY_INDICATOR &&
-      expected.screen &&
-      expected.screen.startsWith("Window")
-    ) {
+    if (expected.screen && expected.screen.startsWith("Window")) {
       // These tests were originally written to express window sharing by
       // having expected.screen start with "Window". This meant that the
       // legacy indicator is expected to have the "sharingscreen" attribute
@@ -210,7 +190,7 @@ async function assertWebRTCIndicatorStatus(expected) {
       expected.window = true;
     }
 
-    if (!USING_LEGACY_INDICATOR && !SHOW_GLOBAL_MUTE_TOGGLES) {
+    if (!SHOW_GLOBAL_MUTE_TOGGLES) {
       expected.video = false;
       expected.audio = false;
 
@@ -226,11 +206,7 @@ async function assertWebRTCIndicatorStatus(expected) {
     for (let item of ["video", "audio", "screen", "window", "browserwindow"]) {
       let expectedValue;
 
-      if (USING_LEGACY_INDICATOR) {
-        expectedValue = expected && expected[item] ? "true" : "";
-      } else {
-        expectedValue = expected && expected[item] ? "true" : null;
-      }
+      expectedValue = expected && expected[item] ? "true" : null;
 
       is(
         docElt.getAttribute("sharing" + item),
@@ -558,9 +534,9 @@ async function getMediaCaptureState() {
   if (screen != Ci.nsIMediaManagerService.STATE_NOCAPTURE) {
     result.screen = "Screen";
   } else if (window != Ci.nsIMediaManagerService.STATE_NOCAPTURE) {
-    result.screen = "Window";
+    result.window = true;
   } else if (browser != Ci.nsIMediaManagerService.STATE_NOCAPTURE) {
-    result.screen = "Browser";
+    result.browserwindow = true;
   }
 
   ChromeUtils.addProfilerMarker("getMediaCaptureState", {
