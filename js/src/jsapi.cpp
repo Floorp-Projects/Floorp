@@ -1408,7 +1408,10 @@ JS_PUBLIC_API bool JS_UpdateWeakPointerAfterGCUnbarriered(JSTracer* trc,
 
 JS_PUBLIC_API void JS_SetGCParameter(JSContext* cx, JSGCParamKey key,
                                      uint32_t value) {
-  MOZ_ALWAYS_TRUE(cx->runtime()->gc.setParameter(cx, key, value));
+  // Bug 1742118: JS_SetGCParameter has no way to return an error
+  // The GC ignores invalid values internally but this is not reported to the
+  // caller.
+  (void)cx->runtime()->gc.setParameter(cx, key, value);
 }
 
 JS_PUBLIC_API void JS_ResetGCParameter(JSContext* cx, JSGCParamKey key) {
