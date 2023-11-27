@@ -57,6 +57,9 @@ support-files = [
   "crossorigin.png^headers^",
 ]
 
+["browser_favicon_empty_data.js"]
+support-files = ["blank.html"]
+
 ["browser_favicon_load.js"]
 https_first_disabled = true
 support-files = [
