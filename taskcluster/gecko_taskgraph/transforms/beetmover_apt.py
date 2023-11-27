@@ -21,8 +21,7 @@ transforms = TransformSequence()
 def beetmover_apt(config, tasks):
     product = (
         "firefox"
-        if not config.params["release_type"]  # try
-        or config.params["release_type"] == "nightly"
+        if config.params["release_type"] == "nightly"
         else config.params["release_product"]
     )
     filtered_tasks = filter_beetmover_apt_tasks(config, tasks, product)
