@@ -5,7 +5,12 @@ Distributed sccache (sccache-dist)
 ==================================
 
 `sccache <https://github.com/mozilla/sccache>`_ is a ccache-like tool written in
-Rust by Mozilla.
+Rust by Mozilla and many contributors.
+
+sccache-dist, its distributed variant, elevates this functionality by enabling
+the distribution and caching of Rust compilations across multiple machines.
+Please consider using sccache-dist when you have several machines
+compiling Firefox on the same network.
 
 The steps for setting up your machine as an sccache-dist server are detailed below.
 
