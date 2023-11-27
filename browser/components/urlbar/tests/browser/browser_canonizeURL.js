@@ -15,6 +15,12 @@ add_task(async function checkCtrlWorks() {
     await UrlbarTestUtils.formHistory.clear();
   });
 
+  // We do not want schemeless HTTPS-First interfering with this test,
+  // that interaction is already tested in dom/security/test/https-first/browser_schemeless.js
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.security.https_first_schemeless", false]],
+  });
+
   let defaultEngine = await Services.search.getDefault();
   let testcases = [
     ["example", "https://www.example.com/", { ctrlKey: true }],
@@ -157,7 +163,7 @@ add_task(async function autofill() {
   await PlacesUtils.history.clear();
   await PlacesTestUtils.addVisits([
     {
-      uri: "http://example.com/",
+      uri: "https://example.com/",
       transition: PlacesUtils.history.TRANSITIONS.TYPED,
     },
   ]);
@@ -165,7 +171,7 @@ add_task(async function autofill() {
   let testcases = [
     ["ex", "https://www.ex.com/", { ctrlKey: true }],
     // Check that a direct load is not overwritten by a previous canonization.
-    ["ex", "http://example.com/", {}],
+    ["ex", "https://example.com/", {}],
     // search alias
     ["@goo", "https://www.goo.com/", { ctrlKey: true }],
   ];
