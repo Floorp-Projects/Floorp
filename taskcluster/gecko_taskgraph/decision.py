@@ -54,6 +54,7 @@ PER_PROJECT_PARAMETERS = {
     "try": {
         "enable_always_target": True,
         "target_tasks_method": "try_tasks",
+        "release_type": "nightly",
     },
     "kaios-try": {
         "target_tasks_method": "try_tasks",
