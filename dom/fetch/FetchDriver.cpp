@@ -365,6 +365,9 @@ FetchDriver::~FetchDriver() {
   // We assert this since even on failures, we should call
   // FailWithNetworkError().
   MOZ_ASSERT(mResponseAvailableCalled);
+  if (mObserver) {
+    mObserver = nullptr;
+  }
 }
 
 already_AddRefed<PreloaderBase> FetchDriver::FindPreload(nsIURI* aURI) {
@@ -991,7 +994,9 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest) {
   }
 
   if (!mChannel) {
-    MOZ_ASSERT(!mObserver);
+    // if the request is aborted, we remove the mObserver reference in
+    // OnStopRequest or ~FetchDriver()
+    MOZ_ASSERT_IF(!mAborted, !mObserver);
     return NS_BINDING_ABORTED;
   }
 
@@ -1366,7 +1371,11 @@ FetchDriver::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInputStream,
                              uint64_t aOffset, uint32_t aCount) {
   // NB: This can be called on any thread!  But we're guaranteed that it is
   // called between OnStartRequest and OnStopRequest, so we don't need to worry
-  // about races.
+  // about races for accesses in OnStartRequest, OnStopRequest and
+  // member functions accessed before opening the channel.
+  // However, we have a possibility of a race from FetchDriverAbortActions.
+  // Hence, we need to ensure that we are not modifying any members accessed by
+  // FetchDriver::FetchDriverAbortActions
 
   if (!mPipeOutputStream) {
     // We ignore the body for HEAD/CONNECT requests.
@@ -1440,6 +1449,14 @@ FetchDriver::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
 
   MOZ_DIAGNOSTIC_ASSERT(!mOnStopRequestCalled);
   mOnStopRequestCalled = true;
+
+  if (mObserver && mAborted) {
+    // fetch request was aborted.
+    // We have already sent the observer
+    // notification that request has been aborted in FetchDriverAbortActions.
+    // Remove the observer reference and don't push anymore notifications.
+    mObserver = nullptr;
+  }
 
   // main data loading is going to finish, breaking the reference cycle.
   RefPtr<AlternativeDataStreamListener> altDataListener =
@@ -1789,7 +1806,10 @@ void FetchDriver::FetchDriverAbortActions(AbortSignalImpl* aSignalImpl) {
       reason.set(aSignalImpl->RawReason());
     }
     mObserver->OnResponseEnd(FetchDriverObserver::eAborted, reason);
-    mObserver = nullptr;
+    // As a part of cleanup, we are not removing the mObserver reference as it
+    // could race with mObserver access in OnDataAvailable when it runs OMT.
+    // We will be removing the reference in the OnStopRequest which guaranteed
+    // to run after cancelling the channel.
   }
 
   if (mChannel) {
