@@ -361,8 +361,10 @@ void InspectorUtils::GetAllStyleSheetCSSStyleRules(
 
 /* static */
 bool InspectorUtils::IsInheritedProperty(GlobalObject& aGlobalObject,
+                                         Document& aDocument,
                                          const nsACString& aPropertyName) {
-  return Servo_Property_IsInherited(&aPropertyName);
+  return Servo_Property_IsInherited(aDocument.EnsureStyleSet().RawData(),
+                                    &aPropertyName);
 }
 
 /* static */

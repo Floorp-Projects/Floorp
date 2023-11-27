@@ -1333,14 +1333,27 @@ pub unsafe extern "C" fn Servo_Property_IsShorthand(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_Property_IsInherited(prop_name: &nsACString) -> bool {
+pub unsafe extern "C" fn Servo_Property_IsInherited(
+    per_doc_data: &PerDocumentStyleData,
+    prop_name: &nsACString,
+) -> bool {
     let prop_name = prop_name.as_str_unchecked();
     let prop_id = match PropertyId::parse_enabled_for_all_content(prop_name) {
         Ok(id) => id,
         Err(_) => return false,
     };
     let longhand_id = match prop_id {
-        PropertyId::Custom(_) => return true,
+        PropertyId::Custom(property_name) => {
+            // let's check if the custom property is registered so we can check the
+            // property definition `inherits` value.
+            let stylist = &per_doc_data.borrow().stylist;
+            if let Some(registration) = stylist.get_custom_property_registration(&property_name) {
+                return registration.inherits();
+            }
+
+            // unregistered custom properties always inherits
+            return true;
+        },
         PropertyId::Longhand(id) | PropertyId::LonghandAlias(id, _) => id,
         PropertyId::Shorthand(id) | PropertyId::ShorthandAlias(id, _) => {
             id.longhands().next().unwrap()

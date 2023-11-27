@@ -26,7 +26,7 @@ namespace InspectorUtils {
   // Useful for DevTools as this is faster than in JS where we'd have a lot of
   // proxy access overhead building the same list.
   sequence<CSSRule> getAllStyleSheetCSSStyleRules(CSSStyleSheet sheet);
-  boolean isInheritedProperty(UTF8String property);
+  boolean isInheritedProperty(Document document, UTF8String property);
   sequence<DOMString> getCSSPropertyNames(optional PropertyNamesOptions options = {});
   sequence<PropertyPref> getCSSPropertyPrefs();
   [Throws] sequence<DOMString> getCSSValuesForProperty(UTF8String property);

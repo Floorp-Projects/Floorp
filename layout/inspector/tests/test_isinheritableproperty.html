@@ -7,22 +7,69 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=699592
   <title>Test for InspectorUtils::isInheritedProperty</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    @property --css-registered-inherits {
+      syntax: "*";
+      inherits: true;
+    }
+    @property --css-registered-no-inherits {
+      syntax: "*";
+      inherits: false;
+    }
+  </style>
+  <script>
+    CSS.registerProperty({
+      name: "--js-registered-inherits",
+      syntax: "*",
+      inherits: true,
+    });
+    CSS.registerProperty({
+      name: "--js-registered-no-inherits",
+      syntax: "*",
+      inherits: false,
+    });
+  </script>
 </head>
 <body>
 <pre id="test">
 <script type="application/javascript">
 
-const InspectorUtils = SpecialPowers.InspectorUtils;
-
 function do_test() {
-  is(InspectorUtils.isInheritedProperty("font-size"), true, "font-size is inherited.");
+  const isInherited = (name) =>
+    SpecialPowers.InspectorUtils.isInheritedProperty(document, name);
 
-  is(InspectorUtils.isInheritedProperty("min-width"), false, "min-width is not inherited.");
+  is(isInherited("font-size"), true, "font-size is inherited.");
+  is(isInherited("min-width"), false, "min-width is not inherited.");
 
-  is(InspectorUtils.isInheritedProperty("font"), true, "shorthand font property is inherited.");
+  is(isInherited("font"), true, "shorthand font property is inherited.");
 
-  is(InspectorUtils.isInheritedProperty("border"), false, "shorthand border property not inherited.");
-  is(InspectorUtils.isInheritedProperty("garbage"), false, "Unknown property isn't inherited.");
+  is(isInherited("border"), false, "shorthand border property not inherited.");
+  is(isInherited("garbage"), false, "Unknown property isn't inherited.");
+
+  info("Checking isInheritedProperty result on custom properties");
+  is(isInherited("--unregistered-var"),true,
+    "Unregistered custom property is inherited."
+  );
+  is(
+    isInherited("--css-registered-inherits"),
+    true,
+    "Returns true for @property that inherits"
+  );
+  is(
+    isInherited("--css-registered-no-inherits"),
+    false,
+    "Returns false for @property that does not inherits"
+  );
+  is(
+    isInherited("--js-registered-inherits"),
+    true,
+    "Returns true for property registered in JS that inherits"
+  );
+  is(
+    isInherited("--js-registered-no-inherits"),
+    false,
+    "Returns false for property registered in JS that does not inherits"
+  );
 
   SimpleTest.finish();
 }
