@@ -540,12 +540,21 @@ class NodeBuilder {
 
   [[nodiscard]] bool classDefinition(bool expr, HandleValue name,
                                      HandleValue heritage, HandleValue block,
+#ifdef ENABLE_DECORATORS
+                                     HandleValue decorators,
+#endif
                                      TokenPos* pos, MutableHandleValue dst);
   [[nodiscard]] bool classMembers(NodeVector& members, MutableHandleValue dst);
   [[nodiscard]] bool classMethod(HandleValue name, HandleValue body,
+#ifdef ENABLE_DECORATORS
+                                 HandleValue decorators,
+#endif
                                  PropKind kind, bool isStatic, TokenPos* pos,
                                  MutableHandleValue dst);
   [[nodiscard]] bool classField(HandleValue name, HandleValue initializer,
+#ifdef ENABLE_DECORATORS
+                                HandleValue decorators,
+#endif
                                 TokenPos* pos, MutableHandleValue dst);
   [[nodiscard]] bool staticClassBlock(HandleValue body, TokenPos* pos,
                                       MutableHandleValue dst);
@@ -1313,8 +1322,11 @@ bool NodeBuilder::function(ASTType type, TokenPos* pos, HandleValue id,
                  "async", isAsyncVal, "expression", isExpressionVal, dst);
 }
 
-bool NodeBuilder::classMethod(HandleValue name, HandleValue body, PropKind kind,
-                              bool isStatic, TokenPos* pos,
+bool NodeBuilder::classMethod(HandleValue name, HandleValue body,
+#ifdef ENABLE_DECORATORS
+                              HandleValue decorators,
+#endif
+                              PropKind kind, bool isStatic, TokenPos* pos,
                               MutableHandleValue dst) {
   RootedValue kindName(cx);
   if (!atomValue(kind == PROP_INIT     ? "method"
@@ -1326,12 +1338,23 @@ bool NodeBuilder::classMethod(HandleValue name, HandleValue body, PropKind kind,
 
   RootedValue isStaticVal(cx, BooleanValue(isStatic));
   return newNode(AST_CLASS_METHOD, pos, "name", name, "body", body, "kind",
-                 kindName, "static", isStaticVal, dst);
+                 kindName, "static", isStaticVal,
+#ifdef ENABLE_DECORATORS
+                 "decorators", decorators,
+#endif
+                 dst);
 }
 
 bool NodeBuilder::classField(HandleValue name, HandleValue initializer,
+#ifdef ENABLE_DECORATORS
+                             HandleValue decorators,
+#endif
                              TokenPos* pos, MutableHandleValue dst) {
-  return newNode(AST_CLASS_FIELD, pos, "name", name, "init", initializer, dst);
+  return newNode(AST_CLASS_FIELD, pos, "name", name, "init", initializer,
+#ifdef ENABLE_DECORATORS
+                 "decorators", decorators,
+#endif
+                 dst);
 }
 
 bool NodeBuilder::staticClassBlock(HandleValue body, TokenPos* pos,
@@ -1345,9 +1368,15 @@ bool NodeBuilder::classMembers(NodeVector& members, MutableHandleValue dst) {
 
 bool NodeBuilder::classDefinition(bool expr, HandleValue name,
                                   HandleValue heritage, HandleValue block,
+#ifdef ENABLE_DECORATORS
+                                  HandleValue decorators,
+#endif
                                   TokenPos* pos, MutableHandleValue dst) {
   ASTType type = expr ? AST_CLASS_EXPR : AST_CLASS_STMT;
   return newNode(type, pos, "id", name, "superClass", heritage, "body", block,
+#ifdef ENABLE_DECORATORS
+                 "decorators", decorators,
+#endif
                  dst);
 }
 
@@ -2141,6 +2170,22 @@ bool ASTSerializer::classDefinition(ClassNode* pn, bool expr,
   RootedValue className(cx, MagicValue(JS_SERIALIZE_NO_NODE));
   RootedValue heritage(cx);
   RootedValue classBody(cx);
+#ifdef ENABLE_DECORATORS
+  NodeVector classDecorators(cx);
+  RootedValue classDecoratorsArray(cx);
+  TokenPos decoratorPos;
+  bool decoratorsParsed = true;
+  if (pn->decorators()) {
+    decoratorPos.begin = pn->decorators()->head()->pn_pos.begin;
+    decoratorPos.end = pn->decorators()->last()->pn_pos.end;
+    decoratorsParsed =
+        expressions(pn->decorators(), classDecorators) &&
+        builder.sequenceExpression(classDecorators, &decoratorPos,
+                                   &classDecoratorsArray);
+  } else {
+    classDecoratorsArray.setMagic(JS_SERIALIZE_NO_NODE);
+  }
+#endif
 
   if (ClassNames* names = pn->names()) {
     if (!identifier(names->innerBinding(), &className)) {
@@ -2150,7 +2195,13 @@ bool ASTSerializer::classDefinition(ClassNode* pn, bool expr,
 
   return optExpression(pn->heritage(), &heritage) &&
          statement(pn->memberList(), &classBody) &&
+#ifdef ENABLE_DECORATORS
+         decoratorsParsed &&
+#endif
          builder.classDefinition(expr, className, heritage, classBody,
+#ifdef ENABLE_DECORATORS
+                                 classDecoratorsArray,
+#endif
                                  &pn->pn_pos, dst);
 }
 
@@ -2444,13 +2495,35 @@ bool ASTSerializer::classMethod(ClassMethod* classMethod,
     default:
       LOCAL_NOT_REACHED("unexpected object-literal property");
   }
+#ifdef ENABLE_DECORATORS
+  NodeVector methodDecorators(cx);
+  RootedValue methodDecoratorsArray(cx);
+  TokenPos decoratorPos;
+  bool decoratorsParsed = true;
+  if (classMethod->decorators()) {
+    decoratorPos.begin = classMethod->decorators()->head()->pn_pos.begin;
+    decoratorPos.end = classMethod->decorators()->last()->pn_pos.end;
+    decoratorsParsed =
+        expressions(classMethod->decorators(), methodDecorators) &&
+        builder.sequenceExpression(methodDecorators, &decoratorPos,
+                                   &methodDecoratorsArray);
+  } else {
+    methodDecoratorsArray.setMagic(JS_SERIALIZE_NO_NODE);
+  }
+#endif
 
   RootedValue key(cx), val(cx);
   bool isStatic = classMethod->isStatic();
   return propertyName(&classMethod->name(), &key) &&
          expression(&classMethod->method(), &val) &&
-         builder.classMethod(key, val, kind, isStatic, &classMethod->pn_pos,
-                             dst);
+#ifdef ENABLE_DECORATORS
+         decoratorsParsed &&
+#endif
+         builder.classMethod(key, val,
+#ifdef ENABLE_DECORATORS
+                             methodDecoratorsArray,
+#endif
+                             kind, isStatic, &classMethod->pn_pos, dst);
 }
 
 bool ASTSerializer::classField(ClassField* classField, MutableHandleValue dst) {
@@ -2466,6 +2539,22 @@ bool ASTSerializer::classField(ClassField* classField, MutableHandleValue dst) {
                          .kid()
                          ->as<BinaryNode>()
                          .right();
+#ifdef ENABLE_DECORATORS
+  NodeVector fieldDecorators(cx);
+  RootedValue fieldDecoratorsArray(cx);
+  TokenPos decoratorPos;
+  bool decoratorsParsed = true;
+  if (classField->decorators()) {
+    decoratorPos.begin = classField->decorators()->head()->pn_pos.begin;
+    decoratorPos.end = classField->decorators()->last()->pn_pos.end;
+    decoratorsParsed =
+        expressions(classField->decorators(), fieldDecorators) &&
+        builder.sequenceExpression(fieldDecorators, &decoratorPos,
+                                   &fieldDecoratorsArray);
+  } else {
+    fieldDecoratorsArray.setMagic(JS_SERIALIZE_NO_NODE);
+  }
+#endif
   // RawUndefinedExpr is the node we use for "there is no initializer". If one
   // writes, literally, `x = undefined;`, it will not be a RawUndefinedExpr
   // node, but rather a variable reference.
@@ -2478,7 +2567,14 @@ bool ASTSerializer::classField(ClassField* classField, MutableHandleValue dst) {
     val.setNull();
   }
   return propertyName(&classField->name(), &key) &&
-         builder.classField(key, val, &classField->pn_pos, dst);
+#ifdef ENABLE_DECORATORS
+         decoratorsParsed &&
+#endif
+         builder.classField(key, val,
+#ifdef ENABLE_DECORATORS
+                            fieldDecoratorsArray,
+#endif
+                            &classField->pn_pos, dst);
 }
 
 bool ASTSerializer::staticClassBlock(StaticClassBlock* staticClassBlock,

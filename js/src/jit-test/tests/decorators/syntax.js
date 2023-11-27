@@ -111,3 +111,62 @@ assertThrowsInstanceOf(() => Reflect.parse("class c {@implements x}"), SyntaxErr
 assertThrowsInstanceOf(() => Reflect.parse("class c {@foo().bar.prop x}"), SyntaxError);
 assertThrowsInstanceOf(() => Reflect.parse("class c {@foo.bar().prop x}"), SyntaxError);
 assertThrowsInstanceOf(() => Reflect.parse("class c {@foo.bar().prop() x}"), SyntaxError);
+
+// assert we have the right syntax tree
+const syntax = Reflect.parse("class c {}");
+assertEq(syntax.type, "Program");
+assertEq(syntax.body.length, 1);
+assertEq(syntax.body[0].type, "ClassStatement");
+assertEq(syntax.body[0].id.type, "Identifier");
+assertEq(syntax.body[0].id.name, "c");
+assertEq(syntax.body[0].decorators, null);
+
+// assert decrorators on a class
+const syntax2 = Reflect.parse("@dec @dec2 class c {}");
+assertEq(syntax2.type, "Program");
+assertEq(syntax2.body.length, 1);
+assertEq(syntax2.body[0].decorators.type, "SequenceExpression");
+assertEq(syntax2.body[0].decorators.expressions.length, 2);
+assertEq(syntax2.body[0].decorators.expressions[0].type, "Identifier");
+assertEq(syntax2.body[0].decorators.expressions[0].name, "dec");
+assertEq(syntax2.body[0].decorators.expressions[1].type, "Identifier");
+assertEq(syntax2.body[0].decorators.expressions[1].name, "dec2");
+
+// assert decorators on class fields
+const syntax3 = Reflect.parse("class c {@dec1 @dec2 field = false;}");
+assertEq(syntax3.type, "Program");
+assertEq(syntax3.body.length, 1);
+assertEq(syntax3.body[0].decorators, null);
+assertEq(syntax3.body[0].body[0].type, "ClassField");
+assertEq(syntax3.body[0].body[0].decorators.type, "SequenceExpression");
+assertEq(syntax3.body[0].body[0].decorators.expressions.length, 2);
+assertEq(syntax3.body[0].body[0].decorators.expressions[0].type, "Identifier");
+assertEq(syntax3.body[0].body[0].decorators.expressions[0].name, "dec1");
+assertEq(syntax3.body[0].body[0].decorators.expressions[1].type, "Identifier");
+assertEq(syntax3.body[0].body[0].decorators.expressions[1].name, "dec2");
+
+// assert decorators on accessors
+const syntax4 = Reflect.parse("class c {@dec1 @dec2 accessor field = false;}");
+assertEq(syntax3.type, "Program");
+assertEq(syntax3.body.length, 1);
+assertEq(syntax3.body[0].decorators, null);
+assertEq(syntax3.body[0].body[0].type, "ClassField");
+assertEq(syntax3.body[0].body[0].decorators.type, "SequenceExpression");
+assertEq(syntax3.body[0].body[0].decorators.expressions.length, 2);
+assertEq(syntax3.body[0].body[0].decorators.expressions[0].type, "Identifier");
+assertEq(syntax3.body[0].body[0].decorators.expressions[0].name, "dec1");
+assertEq(syntax3.body[0].body[0].decorators.expressions[1].type, "Identifier");
+assertEq(syntax3.body[0].body[0].decorators.expressions[1].name, "dec2");
+
+// assert decorators on methods
+const syntax5 = Reflect.parse("class c {@dec1 @dec2 method() {};}");
+assertEq(syntax5.type, "Program");
+assertEq(syntax5.body.length, 1);
+assertEq(syntax5.body[0].decorators, null);
+assertEq(syntax5.body[0].body[0].type, "ClassMethod");
+assertEq(syntax5.body[0].body[0].decorators.type, "SequenceExpression");
+assertEq(syntax5.body[0].body[0].decorators.expressions.length, 2);
+assertEq(syntax5.body[0].body[0].decorators.expressions[0].type, "Identifier");
+assertEq(syntax5.body[0].body[0].decorators.expressions[0].name, "dec1");
+assertEq(syntax5.body[0].body[0].decorators.expressions[1].type, "Identifier");
+assertEq(syntax5.body[0].body[0].decorators.expressions[1].name, "dec2");
