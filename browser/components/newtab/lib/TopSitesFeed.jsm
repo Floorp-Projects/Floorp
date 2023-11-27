@@ -279,7 +279,9 @@ class ContileIntegration {
     }
     try {
       let url = Services.prefs.getStringPref(CONTILE_ENDPOINT_PREF);
-      const response = await fetch(url, { credentials: "omit" });
+      const response = await this._topSitesFeed.fetch(url, {
+        credentials: "omit",
+      });
       if (!response.ok) {
         lazy.log.warn(
           `Contile endpoint returned unexpected status: ${response.status}`
@@ -797,6 +799,14 @@ class TopSitesFeed {
     }
 
     return false;
+  }
+
+  /**
+   * This thin wrapper around global.fetch makes it easier for us to write
+   * automated tests that simulate responses from this fetch.
+   */
+  fetch(...args) {
+    return fetch(...args);
   }
 
   /**
