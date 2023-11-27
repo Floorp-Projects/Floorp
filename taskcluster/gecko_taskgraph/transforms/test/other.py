@@ -297,10 +297,15 @@ def setup_browsertime(config, tasks):
             "by-test-platform": {
                 "android.*": ["browsertime", "linux64-geckodriver", "linux64-node-16"],
                 "linux.*": ["browsertime", "linux64-geckodriver", "linux64-node-16"],
-                "macosx.*": [
+                "macosx1015.*": [
                     "browsertime",
                     "macosx64-geckodriver",
                     "macosx64-node-16",
+                ],
+                "macosx1300.*": [
+                    "browsertime",
+                    "macosx64-aarch64-geckodriver",
+                    "macosx64-aarch64-node-16"
                 ],
                 "windows.*aarch64.*": [
                     "browsertime",

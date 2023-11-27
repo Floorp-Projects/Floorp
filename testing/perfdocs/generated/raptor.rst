@@ -4482,6 +4482,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-benchmark-chrome-speedometer3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-benchmark-firefox-speedometer3**
         - ✅
         - ✅
@@ -4825,6 +4830,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-benchmark-chrome-speedometer3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-benchmark-firefox-speedometer3**
         - ✅
         - ✅
