@@ -68,9 +68,15 @@ job-defaults:
                 win.*:
                     - win32-minidump-stackwalk
                     - win32-fix-stacks
-                macosx.*:
+                macosx1015.*:
                     - macosx64-minidump-stackwalk
                     - macosx64-fix-stacks
+                macosx1100.*:
+                    - macosx64-aarch64-minidump-stackwalk
+                    - macosx64-aarch64-fix-stacks
+                macosx1300.*:
+                    - macosx64-aarch64-minidump-stackwalk
+                    - macosx64-aarch64-fix-stacks
                 android-em-7.*:
                     - android-system-image-x86_64-linux
                     - android-avd-x86_64-linux
