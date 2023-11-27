@@ -93,8 +93,13 @@ export class _ExperimentManager {
    */
   createTargetingContext() {
     let context = {
-      isFirstStartup: lazy.FirstStartup.state === lazy.FirstStartup.IN_PROGRESS,
       ...this.extraContext,
+
+      isFirstStartup: lazy.FirstStartup.state === lazy.FirstStartup.IN_PROGRESS,
+
+      get currentDate() {
+        return new Date();
+      },
     };
     Object.defineProperty(context, "activeExperiments", {
       get: async () => {
