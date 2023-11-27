@@ -9,7 +9,6 @@
 
 #include "XMLHttpRequest.h"
 #include "XMLHttpRequestString.h"
-#include "mozilla/WeakPtr.h"
 #include "mozilla/dom/BodyExtractor.h"
 #include "mozilla/dom/TypedArray.h"
 
@@ -24,8 +23,7 @@ class SendRunnable;
 class StrongWorkerRef;
 class WorkerPrivate;
 
-class XMLHttpRequestWorker final : public SupportsWeakPtr,
-                                   public XMLHttpRequest {
+class XMLHttpRequestWorker final : public XMLHttpRequest {
  public:
   // This defines the xhr.response value.
   struct ResponseData {
@@ -62,7 +60,6 @@ class XMLHttpRequestWorker final : public SupportsWeakPtr,
   RefPtr<XMLHttpRequestUpload> mUpload;
   WorkerPrivate* mWorkerPrivate;
   RefPtr<StrongWorkerRef> mWorkerRef;
-  RefPtr<XMLHttpRequestWorker> mPinnedSelfRef;
   RefPtr<Proxy> mProxy;
 
   XMLHttpRequestResponseType mResponseType;
