@@ -14,7 +14,7 @@ from mozlint.pathutils import expand_exclusions
 
 def in_sorted_list(l, x):
     i = bisect.bisect_left(l, x)
-    return l[i] == x
+    return i < len(l) and l[i] == x
 
 
 def handle_clippy_msg(config, line, log, base_path, files):
