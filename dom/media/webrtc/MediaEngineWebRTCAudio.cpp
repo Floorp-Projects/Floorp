@@ -323,15 +323,8 @@ void MediaEngineWebRTCMicrophoneSource::SetTrack(
   mTrack = aTrack->AsAudioProcessingTrack();
   mPrincipal = aPrincipal;
 
-#if defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
-  // XXX: It would be great to have a way to ensure this doesn't ride the
-  //      trains, but that causes nightlyasrelease bustage. No shiny things for
-  //      us.
-  mInputProcessing = MakeAndAddRef<AudioInputProcessing>(1);
-#else
   mInputProcessing =
       MakeAndAddRef<AudioInputProcessing>(mDeviceMaxChannelCount);
-#endif
 
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       __func__, [track = mTrack, processing = mInputProcessing]() mutable {
