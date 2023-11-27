@@ -140,7 +140,7 @@
 
 #protections-popup .panel-header > h1 > span {
   /* The protections popup panel header text needs a different calculation because it contains an info button.
-   * icon-full-width and icon-margin are included twice to compensate for the margin-inline-start of the text,
+   * icon-full-width is included twice to compensate for the margin-inline-start of the text,
    * used to center it even if the header includes a info button. See .panel-header-with-info-button */
   max-width: calc(var(--popup-width)
                   - var(--arrowpanel-menuitem-margin-inline) * 2
