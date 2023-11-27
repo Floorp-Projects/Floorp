@@ -131,7 +131,7 @@ Parallel compilation
 
 .. note::
 
-   **Note**: The build system automatically makes an intelligent guess
+   The build system automatically makes an intelligent guess
    for how many CPU cores to use when building. The option below is
    typically not needed.
 
@@ -163,7 +163,7 @@ Browser (Firefox)
 
    .. note::
 
-      **Note**: This is the default
+      This is the default
 
 Mail (Thunderbird)
    .. code::
@@ -238,7 +238,7 @@ Optimization
 
    .. note::
 
-      **Note**: This is enabled by default
+      This is enabled by default
 
 ``ac_add_options --enable-optimize=-O2``
    Chooses particular compiler optimization options. In most cases, this

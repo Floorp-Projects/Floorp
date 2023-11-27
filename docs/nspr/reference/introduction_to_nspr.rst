@@ -239,7 +239,7 @@ be monitored to ensure that neither ``v1`` nor ``v2`` are in flux.
 
 .. note::
 
-   **Note**: Evaluation of the invariant expression is a conceptual
+   Evaluation of the invariant expression is a conceptual
    requirement and is rarely done in practice. It is valuable to
    formally define the expression during design, write it down, and
    adhere to it. It is also useful to implement the expression during
