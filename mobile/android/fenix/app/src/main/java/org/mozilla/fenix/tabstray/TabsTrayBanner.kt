@@ -419,6 +419,7 @@ private fun MultiSelectBanner(
         IconButton(
             onClick = onSaveToCollectionsClick,
             modifier = Modifier.testTag(TabsTrayTestTag.collectionsButton),
+            enabled = selectedTabCount > 0,
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_tab_collection),
