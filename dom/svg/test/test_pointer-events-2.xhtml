@@ -29,6 +29,7 @@ function pass() {
   let originX = div.offsetLeft;
   let originY = div.offsetTop;
   let circle = document.getElementById("circle");
+  let path = document.getElementById('path');
 
   let elementFromPoint = document.elementFromPoint(originX + 55, originY + 55);
   is(elementFromPoint, circle, 'Over circle stroke with pointer-events="all"');
@@ -37,8 +38,7 @@ function pass() {
   is(elementFromPoint, circle, "Over foreignObject, outside clip path");
 
   elementFromPoint = document.elementFromPoint(originX + 225, originY + 75);
-  // XXX disabled. See See https://bugzilla.mozilla.org/show_bug.cgi?id=580983#c116
-  // is(elementFromPoint, path, 'Over foreignObject, inside clip path');
+  is(elementFromPoint, path, 'Over foreignObject, inside clip path');
 }
 
 ]]>
@@ -52,7 +52,7 @@ function pass() {
   <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" id="svg">
     <defs>
       <clipPath id="clip">
-        <rect x="20" y="20" width="30" height="30"/>
+        <rect x="220" y="50" width="30" height="30"/>
       </clipPath>
     </defs>
     <rect id="bad" width="100%" height="100%" fill="blue"/>
