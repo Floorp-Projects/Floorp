@@ -9,8 +9,8 @@ const { ActivityStreamMessageChannel } = ChromeUtils.import(
 const { ActivityStreamStorage } = ChromeUtils.import(
   "resource://activity-stream/lib/ActivityStreamStorage.jsm"
 );
-const { Prefs } = ChromeUtils.import(
-  "resource://activity-stream/lib/ActivityStreamPrefs.jsm"
+const { Prefs } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs"
 );
 const { reducers } = ChromeUtils.importESModule(
   "resource://activity-stream/common/Reducers.sys.mjs"

@@ -45,14 +45,12 @@ You can see an example in [this patch](https://github.com/mozilla/activity-strea
 
 ## Reading, setting, and observing preferences from `.jsm`s
 
-To read/set/observe Activity Stream preferences, construct a `Prefs` instance found in `lib/ActivityStreamPrefs.jsm`.
+To read/set/observe Activity Stream preferences, construct a `Prefs` instance found in `lib/ActivityStreamPrefs.sys.mjs`.
 
 ```js
 // Import Prefs
-ChromeUtils.defineModuleGetter(
-  this,
-  "Prefs",
-  "resource://activity-stream/lib/ActivityStreamPrefs.jsm"
+const { Prefs } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs"
 );
 
 // Create an instance

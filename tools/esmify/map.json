@@ -294,7 +294,6 @@
   "resource://activity-stream/lib/AboutPreferences.jsm": "browser/components/newtab/lib/AboutPreferences.jsm",
   "resource://activity-stream/lib/ActivityStream.jsm": "browser/components/newtab/lib/ActivityStream.jsm",
   "resource://activity-stream/lib/ActivityStreamMessageChannel.jsm": "browser/components/newtab/lib/ActivityStreamMessageChannel.jsm",
-  "resource://activity-stream/lib/ActivityStreamPrefs.jsm": "browser/components/newtab/lib/ActivityStreamPrefs.jsm",
   "resource://activity-stream/lib/ActivityStreamStorage.jsm": "browser/components/newtab/lib/ActivityStreamStorage.jsm",
   "resource://activity-stream/lib/CFRMessageProvider.jsm": "browser/components/newtab/lib/CFRMessageProvider.jsm",
   "resource://activity-stream/lib/CFRPageActions.jsm": "browser/components/newtab/lib/CFRPageActions.jsm",
