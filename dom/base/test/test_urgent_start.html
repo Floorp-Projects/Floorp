@@ -31,12 +31,6 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-// Disable mixed-content upgrading as this test is expecting an HTTP load
-Services.prefs.setBoolPref(
-  "security.mixed_content.upgrade_display_content",
-  false
-);
-
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTest);
 
@@ -262,8 +256,13 @@ function endCheck() {
   return Promise.resolve();
 }
 
-function runTest() {
-  return SpecialPowers.pushPrefEnv({"set": [["network.http.rcwn.enabled", false]]})
+function runTest() {// Disable mixed-content upgrading as this test is expecting an HTTP load
+  return SpecialPowers.pushPrefEnv(
+    {"set": [
+      ["security.mixed_content.upgrade_display_content", false],
+      ["network.http.rcwn.enabled", false],
+    ]}
+    )
     .then(executeTest)
     .then(endCheck)
     .catch(aError => ok(false, "Some test failed with error " + aError))
