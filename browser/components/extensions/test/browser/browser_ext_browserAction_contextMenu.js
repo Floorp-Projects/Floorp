@@ -595,20 +595,6 @@ async function browseraction_contextmenu_report_extension_helper() {
 
     ok(!reportExtension.hidden, "Report extension should be visibile");
 
-    // When running in customizing mode "about:addons" will load in a new tab,
-    // otherwise it will replace the existing blank tab.
-    const onceAboutAddonsTab = customizing
-      ? BrowserTestUtils.waitForNewTab(gBrowser, "about:addons")
-      : BrowserTestUtils.waitForCondition(() => {
-          if (AbuseReporter.amoFormEnabled) {
-            // When opening the abuse report form in a new tab this
-            // waitForCondition would fail because the currently selected
-            // tab is expected to be the one for the abuse report form.
-            return true;
-          }
-          return gBrowser.currentURI.spec === "about:addons";
-        }, "Wait an about:addons tab to be opened");
-
     let aboutAddonsBrowser;
 
     if (AbuseReporter.amoFormEnabled) {
@@ -620,29 +606,34 @@ async function browseraction_contextmenu_report_extension_helper() {
         gBrowser,
         reportURL,
         /* waitForLoad */ false,
-        // Do not expect it to be the next tab opened
-        /* waitForAnyTab */ true
+        // Expect it to be the next tab opened
+        /* waitForAnyTab */ false
       );
       await closeChromeContextMenu(menuId, reportExtension);
-      await onceAboutAddonsTab;
       const reportTab = await promiseReportTab;
       // Remove the report tab and expect the selected tab
       // to become the about:addons tab.
       BrowserTestUtils.removeTab(reportTab);
       is(
         gBrowser.selectedBrowser.currentURI.spec,
-        "about:addons",
-        "Got about:addons tab selected"
+        "about:blank",
+        "Expect about:addons tab to not have been opened (amoFormEnabled=true)"
       );
-      aboutAddonsBrowser = gBrowser.selectedBrowser;
     } else {
+      // When running in customizing mode "about:addons" will load in a new tab,
+      // otherwise it will replace the existing blank tab.
+      const onceAboutAddonsTab = customizing
+        ? BrowserTestUtils.waitForNewTab(gBrowser, "about:addons")
+        : BrowserTestUtils.waitForCondition(() => {
+            return gBrowser.currentURI.spec === "about:addons";
+          }, "Wait an about:addons tab to be opened");
       await closeChromeContextMenu(menuId, reportExtension);
       await onceAboutAddonsTab;
       const browser = gBrowser.selectedBrowser;
       is(
         browser.currentURI.spec,
         "about:addons",
-        "Got about:addons tab selected"
+        "Got about:addons tab selected (amoFormEnabled=false)"
       );
       // Do not wait for the about:addons tab to be loaded if its
       // document is already readyState==complete.
@@ -666,7 +657,7 @@ async function browseraction_contextmenu_report_extension_helper() {
       );
       gBrowser.removeTab(gBrowser.selectedTab);
       await customizationReady;
-    } else {
+    } else if (aboutAddonsBrowser) {
       info("Navigate the about:addons tab to about:blank");
       BrowserTestUtils.startLoadingURIString(aboutAddonsBrowser, "about:blank");
       await BrowserTestUtils.browserLoaded(aboutAddonsBrowser);
