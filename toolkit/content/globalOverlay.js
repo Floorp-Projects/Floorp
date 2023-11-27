@@ -7,6 +7,8 @@ function closeWindow(aClose, aPromptFunction, aSource) {
     "resource://gre/modules/AppConstants.sys.mjs"
   );
 
+  console.error("Hello from closeWindow");
+
   // Closing the last window doesn't quit the application on OS X.
   if (AppConstants.platform != "macosx") {
     var windowCount = 0;
