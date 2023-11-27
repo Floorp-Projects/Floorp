@@ -4981,7 +4981,16 @@ var XULBrowserWindow = {
     StatusPanel.update();
   },
 
-  setOverLink(url) {
+  /**
+   * Tells the UI what link we are currently over.
+   *
+   * @param {String} url
+   *   The URL of the link.
+   * @param {Object} [options]
+   *   This is an extension of nsIXULBrowserWindow for JS callers, will be
+   *   passed on to LinkTargetDisplay.
+   */
+  setOverLink(url, options = undefined) {
     if (url) {
       url = Services.textToSubURI.unEscapeURIForUI(url);
 
@@ -4998,16 +5007,14 @@ var XULBrowserWindow = {
     }
 
     this.overLink = url;
-    LinkTargetDisplay.update();
+    LinkTargetDisplay.update(options);
   },
 
   onEnterDOMFullscreen() {
     // Clear the status panel.
-    this.hideOverLinkImmediately = true;
-    this.setOverLink("");
-    this.hideOverLinkImmediately = false;
     this.status = "";
     this.setDefaultStatus("");
+    this.setOverLink("", { hideStatusPanelImmediately: true });
   },
 
   showTooltip(xDevPix, yDevPix, tooltip, direction, browser) {
@@ -5207,9 +5214,7 @@ var XULBrowserWindow = {
       return;
     }
 
-    this.hideOverLinkImmediately = true;
-    this.setOverLink("");
-    this.hideOverLinkImmediately = false;
+    this.setOverLink("", { hideStatusPanelImmediately: true });
 
     let isSameDocument =
       aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT;
@@ -5595,7 +5600,7 @@ var LinkTargetDisplay = {
     ));
   },
 
-  update() {
+  update({ hideStatusPanelImmediately = false } = {}) {
     if (
       this._contextMenu.state == "open" ||
       this._contextMenu.state == "showing"
@@ -5610,7 +5615,7 @@ var LinkTargetDisplay = {
     window.removeEventListener("mousemove", this, true);
 
     if (!XULBrowserWindow.overLink) {
-      if (XULBrowserWindow.hideOverLinkImmediately) {
+      if (hideStatusPanelImmediately) {
         this._hide();
       } else {
         this._timer = setTimeout(this._hide.bind(this), this.DELAY_HIDE);
