@@ -59,6 +59,40 @@ extensions:
       - technical
     telemetry_mirror: EXTENSIONS_STARTUPCACHE_LOAD_TIME
 
+  startup_cache_read_errors:
+    type: labeled_counter
+    expires: never
+    description: |
+      The number of times an unexpected error has been raised while reading
+      the extensions StartupCache file.
+    lifetime: application
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1767336/
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1767336#c7
+    data_sensitivity:
+      - technical
+    telemetry_mirror: EXTENSIONS_STARTUPCACHE_READ_ERRORS
+
+  startup_cache_write_bytelength:
+    type: quantity
+    unit: bytes
+    expires: never
+    description: |
+       The amount of bytes written to the extensions StartupCache file.
+    lifetime: application
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1767336/
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1767336#c7
+    data_sensitivity:
+      - technical
+    telemetry_mirror: EXTENSIONS_STARTUPCACHE_WRITE_BYTELENGTH
+
   process_event:
     type: labeled_counter
     expires: never
@@ -66,7 +100,7 @@ extensions:
       Counters for how many times the extension process has crashed or been created.
       The labels with "_fg" / "_bg" suffixes are only recorded in Android builds,
       while the "created" and "crashed" labels are recorded on both Desktop and Android
-      builds. 
+      builds.
     lifetime: application
     notification_emails:
       - addons-dev-internal@mozilla.com
