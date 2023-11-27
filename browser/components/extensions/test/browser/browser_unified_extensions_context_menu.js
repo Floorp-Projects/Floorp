@@ -144,6 +144,18 @@ async function assertMoveContextMenuItems(
   await closeChromeContextMenu(contextMenu.id, null, win);
 }
 
+add_setup(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["extensions.abuseReport.enabled", true],
+      [
+        "extensions.abuseReport.amoFormURL",
+        "https://example.org/%LOCALE%/%APP%/feedback/addon/%addonID%/",
+      ],
+    ],
+  });
+});
+
 add_task(async function test_context_menu() {
   const [extension] = createExtensions([{ name: "an extension" }]);
   await extension.startup();
@@ -267,6 +279,8 @@ add_task(
     await closeExtensionsPanel();
 
     await extension.unload();
+
+    await SpecialPowers.popPrefEnv();
   }
 );
 
@@ -337,57 +351,98 @@ add_task(async function test_manage_extension() {
 });
 
 add_task(async function test_report_extension() {
-  SpecialPowers.pushPrefEnv({
-    set: [["extensions.abuseReport.enabled", true]],
+  function runReportTest(extension) {
+    return BrowserTestUtils.withNewTab({ gBrowser }, async () => {
+      // Open the extension panel, then open the context menu for the extension.
+      await openExtensionsPanel();
+      const contextMenu = await openUnifiedExtensionsContextMenu(extension.id);
+
+      const reportButton = contextMenu.querySelector(
+        ".unified-extensions-context-menu-report-extension"
+      );
+      ok(reportButton, "expected report button");
+
+      // Click the "report extension" context menu item, and wait until the menu is
+      // closed and about:addons is open with the "abuse report dialog".
+      const hidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
+
+      if (AbuseReporter.amoFormEnabled) {
+        const reportURL = Services.urlFormatter
+          .formatURLPref("extensions.abuseReport.amoFormURL")
+          .replace("%addonID%", extension.id);
+
+        const promiseReportTab = BrowserTestUtils.waitForNewTab(
+          gBrowser,
+          reportURL,
+          /* waitForLoad */ false,
+          // Do not expect it to be the next tab opened
+          /* waitForAnyTab */ true
+        );
+        contextMenu.activateItem(reportButton);
+        const [reportTab] = await Promise.all([promiseReportTab, hidden]);
+        // Remove the report tab and expect the selected tab
+        // to become the about:addons tab.
+        BrowserTestUtils.removeTab(reportTab);
+        is(
+          gBrowser.selectedBrowser.currentURI.spec,
+          "about:addons",
+          "Got about:addons tab selected"
+        );
+        return;
+      }
+
+      const abuseReportOpen = BrowserTestUtils.waitForCondition(
+        () => AbuseReporter.getOpenDialog(),
+        "wait for the abuse report dialog to have been opened"
+      );
+      contextMenu.activateItem(reportButton);
+      const [reportDialogWindow] = await Promise.all([abuseReportOpen, hidden]);
+
+      const reportDialogParams =
+        reportDialogWindow.arguments[0].wrappedJSObject;
+      is(
+        reportDialogParams.report.addon.id,
+        extension.id,
+        "abuse report dialog has the expected addon id"
+      );
+      is(
+        reportDialogParams.report.reportEntryPoint,
+        "unified_context_menu",
+        "abuse report dialog has the expected reportEntryPoint"
+      );
+
+      let promiseClosedWindow = waitClosedWindow();
+      reportDialogWindow.close();
+      // Wait for the report dialog window to be completely closed
+      // (to prevent an intermittent failure due to a race between
+      // the dialog window being closed and the test tasks that follows
+      // opening the unified extensions button panel to not lose the
+      // focus and be suddently closed before the task has done with
+      // its assertions, see Bug 1782304).
+      await promiseClosedWindow;
+    });
+  }
+
+  const [ext] = createExtensions([{ name: "an extension" }]);
+  await ext.startup();
+
+  info("Test report with amoFormEnabled=true");
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.abuseReport.amoFormEnabled", true]],
   });
+  await runReportTest(ext);
+  await SpecialPowers.popPrefEnv();
 
-  const [extension] = createExtensions([{ name: "an extension" }]);
-  await extension.startup();
+  info("Test report with amoFormEnabled=false");
 
-  await BrowserTestUtils.withNewTab({ gBrowser }, async () => {
-    // Open the extension panel, then open the context menu for the extension.
-    await openExtensionsPanel();
-    const contextMenu = await openUnifiedExtensionsContextMenu(extension.id);
-
-    const reportButton = contextMenu.querySelector(
-      ".unified-extensions-context-menu-report-extension"
-    );
-    ok(reportButton, "expected report button");
-
-    // Click the "report extension" context menu item, and wait until the menu is
-    // closed and about:addons is open with the "abuse report dialog".
-    const hidden = BrowserTestUtils.waitForEvent(contextMenu, "popuphidden");
-    const abuseReportOpen = BrowserTestUtils.waitForCondition(
-      () => AbuseReporter.getOpenDialog(),
-      "wait for the abuse report dialog to have been opened"
-    );
-    contextMenu.activateItem(reportButton);
-    const [reportDialogWindow] = await Promise.all([abuseReportOpen, hidden]);
-
-    const reportDialogParams = reportDialogWindow.arguments[0].wrappedJSObject;
-    is(
-      reportDialogParams.report.addon.id,
-      extension.id,
-      "abuse report dialog has the expected addon id"
-    );
-    is(
-      reportDialogParams.report.reportEntryPoint,
-      "unified_context_menu",
-      "abuse report dialog has the expected reportEntryPoint"
-    );
-
-    let promiseClosedWindow = waitClosedWindow();
-    reportDialogWindow.close();
-    // Wait for the report dialog window to be completely closed
-    // (to prevent an intermittent failure due to a race between
-    // the dialog window being closed and the test tasks that follows
-    // opening the unified extensions button panel to not lose the
-    // focus and be suddently closed before the task has done with
-    // its assertions, see Bug 1782304).
-    await promiseClosedWindow;
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.abuseReport.amoFormEnabled", false]],
   });
+  await runReportTest(ext);
+  await SpecialPowers.popPrefEnv();
 
-  await extension.unload();
+  await ext.unload();
 });
 
 add_task(async function test_remove_extension() {
@@ -706,7 +761,12 @@ add_task(async function test_contextmenu_reorder_extensions() {
     { name: "ext2", browser_action: {} },
     { name: "ext3", browser_action: {} },
   ]);
-  await Promise.all([ext1.startup(), ext2.startup(), ext3.startup()]);
+  // Start the test extensions in sequence to reduce chance of
+  // intermittent failures when asserting the order of the
+  // entries in the panel in the rest of this test task.
+  await ext1.startup();
+  await ext2.startup();
+  await ext3.startup();
 
   await openExtensionsPanel();
 

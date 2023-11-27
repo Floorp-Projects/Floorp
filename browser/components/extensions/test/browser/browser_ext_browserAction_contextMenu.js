@@ -67,11 +67,20 @@ const UNIFIED_CONTEXT_MENU = "unified-extensions-context-menu";
 
 loadTestSubscript("head_unified_extensions.js");
 
-add_task(async function test_setup() {
+add_setup(async function test_setup() {
   CustomizableUI.addWidgetToArea("home-button", "nav-bar");
   registerCleanupFunction(() =>
     CustomizableUI.removeWidgetFromArea("home-button")
   );
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "extensions.abuseReport.amoFormURL",
+        "https://example.org/%LOCALE%/%APP%/feedback/addon/%addonID%/",
+      ],
+    ],
+  });
 });
 
 async function browseraction_popup_contextmenu_helper() {
@@ -576,7 +585,7 @@ async function browseraction_contextmenu_report_extension_helper() {
     info(`Open browserAction context menu in ${menuId}`);
     let menu = await openContextMenu(menuId, buttonId);
 
-    info(`Choosing 'Report Extension' in ${menuId} should show confirm dialog`);
+    info(`Choosing 'Report Extension' in ${menuId}`);
 
     let usingUnifiedContextMenu = menuId == UNIFIED_CONTEXT_MENU;
     let reportItemQuery = usingUnifiedContextMenu
@@ -591,27 +600,60 @@ async function browseraction_contextmenu_report_extension_helper() {
     const onceAboutAddonsTab = customizing
       ? BrowserTestUtils.waitForNewTab(gBrowser, "about:addons")
       : BrowserTestUtils.waitForCondition(() => {
+          if (AbuseReporter.amoFormEnabled) {
+            // When opening the abuse report form in a new tab this
+            // waitForCondition would fail because the currently selected
+            // tab is expected to be the one for the abuse report form.
+            return true;
+          }
           return gBrowser.currentURI.spec === "about:addons";
         }, "Wait an about:addons tab to be opened");
 
-    await closeChromeContextMenu(menuId, reportExtension);
-    await onceAboutAddonsTab;
+    let aboutAddonsBrowser;
 
-    const browser = gBrowser.selectedBrowser;
-    is(
-      browser.currentURI.spec,
-      "about:addons",
-      "Got about:addons tab selected"
-    );
+    if (AbuseReporter.amoFormEnabled) {
+      const reportURL = Services.urlFormatter
+        .formatURLPref("extensions.abuseReport.amoFormURL")
+        .replace("%addonID%", id);
 
-    // Do not wait for the about:addons tab to be loaded if its
-    // document is already readyState==complete.
-    // This prevents intermittent timeout failures while running
-    // this test in optimized builds.
-    if (browser.contentDocument?.readyState != "complete") {
-      await BrowserTestUtils.browserLoaded(browser);
+      const promiseReportTab = BrowserTestUtils.waitForNewTab(
+        gBrowser,
+        reportURL,
+        /* waitForLoad */ false,
+        // Do not expect it to be the next tab opened
+        /* waitForAnyTab */ true
+      );
+      await closeChromeContextMenu(menuId, reportExtension);
+      await onceAboutAddonsTab;
+      const reportTab = await promiseReportTab;
+      // Remove the report tab and expect the selected tab
+      // to become the about:addons tab.
+      BrowserTestUtils.removeTab(reportTab);
+      is(
+        gBrowser.selectedBrowser.currentURI.spec,
+        "about:addons",
+        "Got about:addons tab selected"
+      );
+      aboutAddonsBrowser = gBrowser.selectedBrowser;
+    } else {
+      await closeChromeContextMenu(menuId, reportExtension);
+      await onceAboutAddonsTab;
+      const browser = gBrowser.selectedBrowser;
+      is(
+        browser.currentURI.spec,
+        "about:addons",
+        "Got about:addons tab selected"
+      );
+      // Do not wait for the about:addons tab to be loaded if its
+      // document is already readyState==complete.
+      // This prevents intermittent timeout failures while running
+      // this test in optimized builds.
+      if (browser.contentDocument?.readyState != "complete") {
+        await BrowserTestUtils.browserLoaded(browser);
+      }
+      await testReportDialog(usingUnifiedContextMenu);
+      aboutAddonsBrowser = browser;
     }
-    await testReportDialog(usingUnifiedContextMenu);
 
     // Close the new about:addons tab when running in customize mode,
     // or cancel the abuse report if the about:addons page has been
@@ -626,8 +668,8 @@ async function browseraction_contextmenu_report_extension_helper() {
       await customizationReady;
     } else {
       info("Navigate the about:addons tab to about:blank");
-      BrowserTestUtils.startLoadingURIString(browser, "about:blank");
-      await BrowserTestUtils.browserLoaded(browser);
+      BrowserTestUtils.startLoadingURIString(aboutAddonsBrowser, "about:blank");
+      await BrowserTestUtils.browserLoaded(aboutAddonsBrowser);
     }
 
     return menu;
@@ -641,7 +683,6 @@ async function browseraction_contextmenu_report_extension_helper() {
     customizing: false,
     testContextMenu,
   });
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   info("Run tests in customize mode");
   await runTestContextMenu({
@@ -651,6 +692,27 @@ async function browseraction_contextmenu_report_extension_helper() {
   });
 
   await extension.unload();
+
+  // Opening the about:addons page will reuse an about:blank tab if it was
+  // a new tab that was never navigated, otherwise opens in a new tab when
+  // the test is triggering the report action (then we navigate it to
+  // about:blank). Here we cleanup all the blank tabs lets behind but one
+  // (otherwise the window running the test will be closed and the test
+  // would be failing with a timeout).
+  info("Cleanup about:blank tabs");
+  while (gBrowser.visibleTabs.length > 1) {
+    is(
+      gBrowser.selectedBrowser.currentURI.spec,
+      "about:blank",
+      "Expect an about:blank tab"
+    );
+    const promiseRemovedTab = BrowserTestUtils.waitForEvent(
+      gBrowser.selectedTab,
+      "TabClose"
+    );
+    BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    await promiseRemovedTab;
+  }
 }
 
 /**
@@ -681,8 +743,23 @@ add_task(async function test_unified_extensions_ui() {
   await browseraction_popup_image_contextmenu_helper();
   await browseraction_contextmenu_manage_extension_helper();
   await browseraction_contextmenu_remove_extension_helper();
-  await browseraction_contextmenu_report_extension_helper();
   await test_no_toolbar_pinning_on_builtin_helper();
+});
+
+add_task(async function test_report_amoFormEnabled() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.abuseReport.amoFormEnabled", true]],
+  });
+  await browseraction_contextmenu_report_extension_helper();
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_report_amoFormDisabled() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.abuseReport.amoFormEnabled", false]],
+  });
+  await browseraction_contextmenu_report_extension_helper();
+  await SpecialPowers.popPrefEnv();
 });
 
 /**
