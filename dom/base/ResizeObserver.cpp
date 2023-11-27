@@ -531,14 +531,12 @@ static void LastRememberedSizeCallback(
       continue;
     }
     nsIFrame* frame = target->GetPrimaryFrame();
-    if (!frame) {
+    if (!frame || frame->HidesContent()) {
       aObserver.Unobserve(*target);
       continue;
     }
     MOZ_ASSERT(!frame->IsLineParticipant() || frame->IsReplaced(),
                "Should have unobserved non-replaced inline.");
-    MOZ_ASSERT(!frame->HidesContent(),
-               "Should have unobserved element skipping its contents.");
     const nsStylePosition* stylePos = frame->StylePosition();
     const WritingMode wm = frame->GetWritingMode();
     bool canUpdateBSize = stylePos->ContainIntrinsicBSize(wm).HasAuto();

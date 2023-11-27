@@ -1748,10 +1748,24 @@ class PresShell final : public nsStubDocumentObserver,
   void RegisterContentVisibilityAutoFrame(nsIFrame* aFrame) {
     mContentVisibilityAutoFrames.Insert(aFrame);
   }
+  bool HasContentVisibilityAutoFrames() const {
+    return !mContentVisibilityAutoFrames.IsEmpty();
+  }
 
   void UpdateRelevancyOfContentVisibilityAutoFrames();
   void ScheduleContentRelevancyUpdate(ContentRelevancyReason aReason);
   void UpdateContentRelevancyImmediately(ContentRelevancyReason aReason);
+
+  // Determination of proximity to the viewport.
+  // Refer to "update the rendering: step 14", see
+  // https://html.spec.whatwg.org/#update-the-rendering
+  struct ProximityToViewportResult {
+    bool mHadInitialDetermination = false;
+    bool mAnyScrollIntoViewFlag = false;
+  };
+  ProximityToViewportResult DetermineProximityToViewport();
+
+  void ClearTemporarilyVisibleForScrolledIntoViewDescendantFlags() const;
 
  private:
   ~PresShell();
