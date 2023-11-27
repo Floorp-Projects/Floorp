@@ -97,7 +97,7 @@ However, this should only be used as the last possible option.
 
 .. note::
 
-   Note: You **must** make sure to stop the server (the last line above)
+   You **must** make sure to stop the server (the last line above)
    before your test completes. Failure to do so will result in the
    "XPConnect is being called on a scope without a Components property"
    assertion, which will cause your test to fail in debug builds, and

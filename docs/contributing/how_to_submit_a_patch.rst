@@ -210,7 +210,7 @@ reviewed.
 
 .. note::
 
-   Note: Be sure to build the application with the patch applied. This
+   Be sure to build the application with the patch applied. This
    ensures it runs as expected, passing automated tests, and/or runs
    through the `try
    server <https://wiki.mozilla.org/Build:TryServerAsBranch>`__. In the
