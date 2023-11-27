@@ -2130,8 +2130,6 @@ pref("privacy.userContext.newTabContainerOnLeftClick.enabled", false);
 // Set to true to allow the user to silence all notifications when
 // sharing the screen.
 pref("privacy.webrtc.allowSilencingNotifications", true);
-// Set to true to use the legacy WebRTC global indicator
-pref("privacy.webrtc.legacyGlobalIndicator", false);
 pref("privacy.webrtc.hideGlobalIndicator", false);
 
 // Set to true to add toggles to the WebRTC indicator for globally

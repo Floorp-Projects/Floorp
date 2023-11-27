@@ -91,12 +91,6 @@ export var webrtcUI = {
 
       XPCOMUtils.defineLazyPreferenceGetter(
         this,
-        "useLegacyGlobalIndicator",
-        "privacy.webrtc.legacyGlobalIndicator",
-        true
-      );
-      XPCOMUtils.defineLazyPreferenceGetter(
-        this,
         "deviceGracePeriodTimeoutMs",
         "privacy.webrtc.deviceGracePeriodTimeoutMs"
       );
@@ -876,10 +870,7 @@ export var webrtcUI = {
         }
       }
     } else if (gIndicatorWindow) {
-      if (
-        !webrtcUI.useLegacyGlobalIndicator &&
-        gIndicatorWindow.closingInternally
-      ) {
+      if (gIndicatorWindow.closingInternally) {
         // Before calling .close(), we call .closingInternally() to allow us to
         // differentiate between situations where the indicator closes because
         // we no longer want to show the indicator (this case), and cases where
@@ -979,35 +970,16 @@ export var webrtcUI = {
 };
 
 function getGlobalIndicator() {
-  if (!webrtcUI.useLegacyGlobalIndicator) {
-    const INDICATOR_CHROME_URI =
-      "chrome://browser/content/webrtcIndicator.xhtml";
-    let features = "chrome,titlebar=no,alwaysontop,minimizable,dialog";
+  const INDICATOR_CHROME_URI = "chrome://browser/content/webrtcIndicator.xhtml";
+  let features = "chrome,titlebar=no,alwaysontop,minimizable,dialog";
 
-    return Services.ww.openWindow(
-      null,
-      INDICATOR_CHROME_URI,
-      "_blank",
-      features,
-      null
-    );
-  }
-
-  if (AppConstants.platform != "macosx") {
-    const LEGACY_INDICATOR_CHROME_URI =
-      "chrome://browser/content/webrtcLegacyIndicator.xhtml";
-    const features = "chrome,dialog=yes,titlebar=no,popup=yes";
-
-    return Services.ww.openWindow(
-      null,
-      LEGACY_INDICATOR_CHROME_URI,
-      "_blank",
-      features,
-      null
-    );
-  }
-
-  return new MacOSWebRTCStatusbarIndicator();
+  return Services.ww.openWindow(
+    null,
+    INDICATOR_CHROME_URI,
+    "_blank",
+    features,
+    null
+  );
 }
 
 /**
