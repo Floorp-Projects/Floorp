@@ -1417,10 +1417,12 @@ export var PanelView = class extends AssociatedToNode {
       }
       if (!this.node.getAttribute("mainview")) {
         if (value) {
-          if (headerInfoButton && !headerBackButton) {
-            // If we're not in a mainview and an info button is present,
-            // that means the panel header is a custom one and a back
-            // button should be added, if not already present.
+          let headerWantsBackButton =
+            headerInfoButton || header.hasAttribute("wants-back-button");
+          if (headerWantsBackButton && !headerBackButton) {
+            // If we're not in a mainview and an info button is present, or the
+            // panel says that it wants one, that means the panel header is a
+            // custom one and a back button should be added, if not already present.
             header.prepend(this.createHeaderBackButton());
           }
           // Set the header title based on the value given.

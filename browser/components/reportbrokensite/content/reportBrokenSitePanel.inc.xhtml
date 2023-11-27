@@ -20,18 +20,17 @@
            data-l10n-attrs="title"
            hidden="true"
            showheader="true">
-  <!-- We need to have a panel-header for the main/help menu, and some element
-       inside of the header needs a .panel-info-button class for the back button
-       to be shown when opened from the appmenu or protections panel, as per
-       https://searchfox.org/mozilla-central/source/browser/components/customizableui/PanelMultiView.sys.mjs#1423
+  <!-- Once bug 1864957 is fixed, the wants-back-button attribute here
+       should probably be removed, as well as in PanelMultiView.sys.mjs.
   -->
-  <box class="panel-header">
-    <html:h1 role="heading" aria-level="1" class="panel-info-button">
+  <box class="panel-header" wants-back-button="true">
+    <html:h1 role="heading" aria-level="1">
       <html:span data-l10n-id="report-broken-site-mainview-title"/>
     </html:h1>
   </box>
   <toolbarseparator></toolbarseparator>
   <vbox id="report-broken-site-panel-container"
+        class="panel-subview-body"
         role="alertdialog"
         aria-labelledby="report-broken-site-panel-intro">
     <html:p data-l10n-id="report-broken-site-panel-intro"/>
@@ -54,7 +53,7 @@
            data-l10n-id="report-broken-site-panel-reason-optional-label"/>
     <menulist id="report-broken-site-popup-reason"
               allow-arrow-navigation="true"
-              class="plain">
+              size="medium">
       <menupopup>
         <menuitem id="report-broken-site-popup-reason-choose"
                   data-l10n-id="report-broken-site-panel-reason-choose"/>
@@ -83,18 +82,21 @@
     <html:textarea id="report-broken-site-popup-description"
                    allow-arrow-navigation="true"
                    rows="8"></html:textarea>
-    <html:a id="report-broken-site-popup-send-more-info-link"
-            href="#"
-            data-l10n-id="report-broken-site-panel-send-more-info-link"/>
-    <html:moz-button-group class="panel-footer">
-      <button id="report-broken-site-popup-cancel-button"
-              class="footer-button"
-              data-l10n-id="report-broken-site-panel-button-cancel"/>
-      <button id="report-broken-site-popup-send-button"
-              class="footer-button primary"
-              data-l10n-id="report-broken-site-panel-button-send"/>
-    </html:moz-button-group>
+    <hbox>
+      <html:a id="report-broken-site-popup-send-more-info-link"
+              href="#"
+              data-l10n-id="report-broken-site-panel-send-more-info-link"/>
+    </hbox>
   </vbox>
+  <html:moz-button-group class="panel-footer">
+    <button id="report-broken-site-popup-cancel-button"
+            class="footer-button"
+            data-l10n-id="report-broken-site-panel-button-cancel"/>
+    <button id="report-broken-site-popup-send-button"
+            class="footer-button"
+            default="true"
+            data-l10n-id="report-broken-site-panel-button-send"/>
+  </html:moz-button-group>
 </panelview>
 
 <panelview id="report-broken-site-popup-reportSentView"
@@ -104,17 +106,20 @@
            data-l10n-attrs="title"
            hidden="true"
            showheader="true">
-  <box class="panel-header">
+  <box class="panel-header panel-header-with-additional-element">
+    <image class="checkmark-icon additional-element-on-inline-start"></image>
     <html:h1 role="alert" aria-level="1">
       <html:span data-l10n-id="report-broken-site-panel-report-sent-label"/>
     </html:h1>
   </box>
-  <vbox class="panel-subview-body subview-subheader">
-    <html:p data-l10n-id="report-broken-site-panel-report-sent-text"/>
-    <html:moz-button-group class="panel-footer">
-      <button id="report-broken-site-popup-okay-button"
-              class="footer-button primary"
-              data-l10n-id="report-broken-site-panel-button-okay"/>
-    </html:moz-button-group>
+  <vbox class="panel-subview-body">
+    <html:p data-l10n-id="report-broken-site-panel-report-sent-text"
+            class="subview-subheader"/>
   </vbox>
+  <html:moz-button-group class="panel-footer">
+    <button id="report-broken-site-popup-okay-button"
+            class="footer-button"
+            default="true"
+            data-l10n-id="report-broken-site-panel-button-okay"/>
+  </html:moz-button-group>
 </panelview>
