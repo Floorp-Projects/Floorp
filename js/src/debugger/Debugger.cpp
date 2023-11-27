@@ -4200,6 +4200,15 @@ bool Debugger::setHookImpl(JSContext* cx, const CallArgs& args, Debugger& dbg,
                               JSMSG_NOT_CALLABLE_OR_UNDEFINED);
     return false;
   }
+
+  // Disallow simultaneous activation of OnEnterFrame and code coverage support;
+  // as they both use the execution observer flag. See Bug 1608891.
+  if (dbg.collectCoverageInfo && which == Hook::OnEnterFrame) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_DEBUG_EXCLUSIVE_FRAME_COVERAGE);
+    return false;
+  }
+
   uint32_t slot = JSSLOT_DEBUG_HOOK_START + std::underlying_type_t<Hook>(which);
   RootedValue oldHook(cx, dbg.object->getReservedSlot(slot));
   dbg.object->setReservedSlot(slot, args[0]);
@@ -4407,6 +4416,17 @@ bool Debugger::CallData::setCollectCoverageInfo() {
   if (!args.requireAtLeast(cx, "Debugger.set collectCoverageInfo", 1)) {
     return false;
   }
+
+  // Disallow simultaneous activation of OnEnterFrame and code coverage support;
+  // as they both use the execution observer flag. See Bug 1608891.
+  uint32_t slot = JSSLOT_DEBUG_HOOK_START +
+                  std::underlying_type_t<Hook>(Hook::OnEnterFrame);
+  if (!dbg->object->getReservedSlot(slot).isUndefined()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_DEBUG_EXCLUSIVE_FRAME_COVERAGE);
+    return false;
+  }
+
   dbg->collectCoverageInfo = ToBoolean(args[0]);
 
   IsObserving observing = dbg->collectCoverageInfo ? Observing : NotObserving;
