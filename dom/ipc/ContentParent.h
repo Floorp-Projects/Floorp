@@ -972,8 +972,6 @@ class ContentParent final : public PContentParent,
   bool DeallocPWebBrowserPersistDocumentParent(
       PWebBrowserPersistDocumentParent* aActor);
 
-  mozilla::ipc::IPCResult RecvGetGfxVars(nsTArray<GfxVarUpdate>* aVars);
-
   mozilla::ipc::IPCResult RecvSetClipboard(const IPCTransferable& aTransferable,
                                            const int32_t& aWhichClipboard);
 
