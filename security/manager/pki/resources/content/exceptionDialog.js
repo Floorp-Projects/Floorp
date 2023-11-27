@@ -294,17 +294,6 @@ function addException() {
   var overrideService = Cc["@mozilla.org/security/certoverride;1"].getService(
     Ci.nsICertOverrideService
   );
-  var flags = 0;
-  if (gSecInfo.isUntrusted) {
-    flags |= overrideService.ERROR_UNTRUSTED;
-  }
-  if (gSecInfo.isDomainMismatch) {
-    flags |= overrideService.ERROR_MISMATCH;
-  }
-  if (gSecInfo.isNotValidAtThisTime) {
-    flags |= overrideService.ERROR_TIME;
-  }
-
   var permanentCheckbox = document.getElementById("permanent");
   var shouldStorePermanently =
     permanentCheckbox.checked && !inPrivateBrowsingMode();
@@ -314,7 +303,6 @@ function addException() {
     uri.port,
     {},
     gCert,
-    flags,
     !shouldStorePermanently
   );
 
