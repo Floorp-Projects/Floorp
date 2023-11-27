@@ -14,6 +14,7 @@ import configparser
 import json
 import os
 import time
+import webbrowser
 from dataclasses import (
     dataclass,
     field,
@@ -233,6 +234,11 @@ class Auth0Config:
 
         auth_msg = f"Auth0 token validation required at: {device_code_data['verification_uri_complete']}"
         build.notify(auth_msg)
+
+        try:
+            webbrowser.open(device_code_data['verification_uri_complete'])
+        except webbrowser.Error:
+            print("Could not automatically open the web browser.")
 
         device_code_lifetime_s = device_code_data["expires_in"]
 
