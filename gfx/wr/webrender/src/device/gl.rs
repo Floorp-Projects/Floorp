@@ -1415,6 +1415,28 @@ fn parse_mali_version(version_string: &str) -> Option<(u32, u32, u32)> {
     Some((v, r, p))
 }
 
+/// Returns whether this GPU belongs to the Mali Midgard family
+fn is_mali_midgard(renderer_name: &str) -> bool {
+    renderer_name.starts_with("Mali-T")
+}
+
+/// Returns whether this GPU belongs to the Mali Bifrost family
+fn is_mali_bifrost(renderer_name: &str) -> bool {
+    renderer_name == "Mali-G31"
+        || renderer_name == "Mali-G51"
+        || renderer_name == "Mali-G71"
+        || renderer_name == "Mali-G52"
+        || renderer_name == "Mali-G72"
+        || renderer_name == "Mali-G76"
+}
+
+/// Returns whether this GPU belongs to the Mali Valhall family
+fn is_mali_valhall(renderer_name: &str) -> bool {
+    // As new Valhall GPUs may be released in the future we match all Mali-G models, apart from
+    // Bifrost models (of which we don't expect any new ones to be released)
+    renderer_name.starts_with("Mali-G") && !is_mali_bifrost(renderer_name)
+}
+
 impl Device {
     pub fn new(
         mut gl: Rc<dyn gl::Gl>,
@@ -1734,13 +1756,8 @@ impl Device {
         // variety of Mali GPUs. As a precaution avoid doing so on all Midgard and Bifrost GPUs.
         // Valhall (eg Mali-Gx7 onwards) appears to be unnaffected. See bug 1691955, bug 1558374,
         // and bug 1663355.
-        let supports_render_target_partial_update = !(renderer_name.starts_with("Mali-T")
-            || renderer_name == "Mali-G31"
-            || renderer_name == "Mali-G51"
-            || renderer_name == "Mali-G71"
-            || renderer_name == "Mali-G52"
-            || renderer_name == "Mali-G72"
-            || renderer_name == "Mali-G76");
+        let supports_render_target_partial_update =
+            !is_mali_midgard(&renderer_name) && !is_mali_bifrost(&renderer_name);
 
         let supports_shader_storage_object = match gl.get_type() {
             // see https://www.g-truc.net/post-0734.html
@@ -1793,7 +1810,7 @@ impl Device {
         // On Mali-Txxx devices we have observed crashes during draw calls when rendering
         // to an alpha target immediately after using glClear to clear regions of it.
         // Using a shader to clear the regions avoids the crash. See bug 1638593.
-        let supports_alpha_target_clears = !renderer_name.starts_with("Mali-T");
+        let supports_alpha_target_clears = !is_mali_midgard(&renderer_name);
 
         // On Adreno 4xx devices with older drivers we have seen render tasks to alpha targets have
         // no effect unless the target is fully cleared prior to rendering. See bug 1714227.
@@ -1820,10 +1837,7 @@ impl Device {
         // On Mali Valhall devices with a driver version v1.r36p0 we have seen that invalidating
         // render targets can result in image corruption, perhaps due to subsequent reuses of the
         // render target not correctly reinitializing them to a valid state. See bug 1787520.
-        if renderer_name.starts_with("Mali-G77")
-            || renderer_name.starts_with("Mali-G78")
-            || renderer_name.starts_with("Mali-G710")
-        {
+        if is_mali_valhall(&renderer_name) {
             match parse_mali_version(&version_string) {
                 Some(version) if version >= (1, 36, 0) => supports_render_target_invalidate = false,
                 _ => {}
