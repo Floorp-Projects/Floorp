@@ -2094,10 +2094,8 @@ StartupCache = {
     let data = new Uint8Array(lazy.aomStartup.encodeBlob(this._data));
     await this._ensureDirectoryPromise;
     await IOUtils.write(this.file, data, { tmpPath: `${this.file}.tmp` });
-    Services.telemetry.scalarSet(
-      "extensions.startupCache.write_byteLength",
-      data.byteLength
-    );
+
+    Glean.extensions.startupCacheWriteBytelength.set(data.byteLength);
   },
 
   save() {
@@ -2132,12 +2130,8 @@ StartupCache = {
       if (!DOMException.isInstance(e) || e.name !== "NotFoundError") {
         Cu.reportError(e);
       }
-
-      Services.telemetry.keyedScalarAdd(
-        "extensions.startupCache.read_errors",
-        lazy.getErrorNameForTelemetry(e),
-        1
-      );
+      let error = lazy.getErrorNameForTelemetry(e);
+      Glean.extensions.startupCacheReadErrors[error].add(1);
     }
 
     this._data = result;

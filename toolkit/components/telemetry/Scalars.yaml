@@ -1561,7 +1561,7 @@ extensions.startupCache:
       - 1767336
     description: >
       The amount of bytes writted into the Extensions StartupCache file.
-    expires: never
+    expires: "128"
     kind: uint
     notification_emails:
       - addons-dev-internal@mozilla.com
@@ -1576,7 +1576,7 @@ extensions.startupCache:
     description: >
       The amount of times an unexpected error has been raised while
       reading the Extensions StartupCache file
-    expires: never
+    expires: "128"
     kind: uint
     keyed: true
     notification_emails:
