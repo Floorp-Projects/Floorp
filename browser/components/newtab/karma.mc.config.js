@@ -148,6 +148,16 @@ module.exports = function (config) {
               functions: 75,
               branches: 84,
             },
+            /**
+             * TopStoresFeed.jsm is not tested in automation and is slated
+             * for eventual removal.
+             */
+            "lib/TopStoriesFeed.jsm": {
+              statements: 0,
+              lines: 0,
+              functions: 0,
+              branches: 0,
+            },
             "lib/*.jsm": {
               statements: 100,
               lines: 100,
