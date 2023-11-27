@@ -30,7 +30,9 @@ add_task(async function () {
   const REQUEST_DATA = [
     {
       method: "GET",
-      uri: URL + "service-workers/test/200",
+      uri:
+        URL +
+        "service-workers/sjs_content-type-test-server.sjs?sts=304&fmt=html",
       details: {
         status: 200,
         statusText: "OK (service worker)",
@@ -38,7 +40,7 @@ add_task(async function () {
         type: "plain",
         fullMimeType: "text/plain; charset=UTF-8",
       },
-      stackFunctions: ["doXHR", "performRequests"],
+      stackFunctions: ["performRequests"],
     },
   ];
 

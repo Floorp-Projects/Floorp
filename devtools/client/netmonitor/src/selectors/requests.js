@@ -123,7 +123,7 @@ const getDisplayedRequestsSummary = createSelector(
 
         if (
           typeof item.transferredSize == "number" &&
-          !(item.fromCache || item.status === "304")
+          !(item.fromCache || item.fromServiceWorker || item.status === "304")
         ) {
           totals.transferredSize += item.transferredSize;
         }
