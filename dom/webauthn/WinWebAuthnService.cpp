@@ -8,6 +8,7 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/Unused.h"
 
@@ -24,6 +25,7 @@ namespace mozilla::dom {
 namespace {
 StaticRWLock gWinWebAuthnModuleLock;
 
+static bool gWinWebAuthnModuleUnusable = false;
 static HMODULE gWinWebAuthnModule = 0;
 
 static decltype(WebAuthNIsUserVerifyingPlatformAuthenticatorAvailable)*
@@ -58,16 +60,34 @@ nsresult WinWebAuthnService::EnsureWinWebAuthnModuleLoaded() {
   {
     StaticAutoReadLock lock(gWinWebAuthnModuleLock);
     if (gWinWebAuthnModule) {
+      // The module is already loaded.
       return NS_OK;
+    }
+    if (gWinWebAuthnModuleUnusable) {
+      // A previous attempt to load the module failed.
+      return NS_ERROR_NOT_AVAILABLE;
     }
   }
 
   StaticAutoWriteLock lock(gWinWebAuthnModuleLock);
   if (gWinWebAuthnModule) {
+    // Another thread successfully loaded the module while we were waiting.
     return NS_OK;
+  }
+  if (gWinWebAuthnModuleUnusable) {
+    // Another thread failed to load the module while we were waiting.
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   gWinWebAuthnModule = LoadLibrarySystem32(L"webauthn.dll");
+  auto markModuleUnusable = MakeScopeExit([]() {
+    if (gWinWebAuthnModule) {
+      FreeLibrary(gWinWebAuthnModule);
+      gWinWebAuthnModule = 0;
+    }
+    gWinWebAuthnModuleUnusable = true;
+  });
+
   if (!gWinWebAuthnModule) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -108,9 +128,10 @@ nsresult WinWebAuthnService::EnsureWinWebAuthnModuleLoaded() {
         gWinWebauthnFreeAssertion && gWinWebauthnGetCancellationId &&
         gWinWebauthnCancelCurrentOperation && gWinWebauthnGetErrorName &&
         gWinWebauthnGetApiVersionNumber)) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
+  markModuleUnusable.release();
   return NS_OK;
 }
 
