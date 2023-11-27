@@ -139,15 +139,15 @@ void BackgroundParentImpl::ProcessingError(Result aCode, const char* aReason) {
   }
 
   // Other errors are big deals.
+  nsDependentCString reason(aReason);
   if (BackgroundParent::IsOtherProcessActor(this)) {
 #ifndef FUZZING
-    BackgroundParent::KillHardAsync(this, aReason);
+    BackgroundParent::KillHardAsync(this, reason);
 #endif
     if (CanSend()) {
       GetIPCChannel()->InduceConnectionError();
     }
   } else {
-    nsDependentCString reason(aReason);
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::ipc_channel_error, reason);
 
