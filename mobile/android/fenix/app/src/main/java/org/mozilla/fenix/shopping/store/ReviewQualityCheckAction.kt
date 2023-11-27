@@ -56,7 +56,7 @@ sealed interface ReviewQualityCheckAction : Action {
     /**
      * Triggered when the user has enabled or disabled product recommendations.
      */
-    object ToggleProductRecommendation : PreferencesMiddlewareAction, UpdateAction
+    object ToggleProductRecommendation : PreferencesMiddlewareAction, UpdateAction, TelemetryAction
 
     /**
      * Triggered as a result of a [OptIn] or [Init] whe user has opted in for shopping experience.
@@ -132,7 +132,7 @@ sealed interface ReviewQualityCheckAction : Action {
     data class RecommendedProductClick(
         val productAid: String,
         val productUrl: String,
-    ) : NavigationMiddlewareAction, NetworkAction
+    ) : NavigationMiddlewareAction, NetworkAction, TelemetryAction
 
     /**
      * Triggered when the user views the recommended product.
@@ -141,7 +141,7 @@ sealed interface ReviewQualityCheckAction : Action {
      */
     data class RecommendedProductImpression(
         val productAid: String,
-    ) : NetworkAction
+    ) : NetworkAction, TelemetryAction
 
     /**
      * Triggered when the user clicks on learn more link on the explainer card.

@@ -333,4 +333,58 @@ class ReviewQualityCheckTelemetryMiddlewareTest {
 
         assertNull(Shopping.surfaceStaleAnalysisShown.testGetValue())
     }
+
+    @Test
+    fun `WHEN a product recommendation is visible for more than one and a half seconds THEN ad impression telemetry probe is sent`() {
+        store.dispatch(ReviewQualityCheckAction.RecommendedProductImpression("")).joinBlocking()
+        store.waitUntilIdle()
+
+        assertNotNull(Shopping.surfaceAdsImpression.testGetValue())
+    }
+
+    @Test
+    fun `WHEN a product recommendation is clicked THEN the ad clicked telemetry probe is sent`() {
+        store.dispatch(ReviewQualityCheckAction.RecommendedProductClick("", "")).joinBlocking()
+        store.waitUntilIdle()
+
+        assertNotNull(Shopping.surfaceAdsClicked.testGetValue())
+    }
+
+    @Test
+    fun `GIVEN the user has opted in WHEN the user switches product recommendations on THEN send enabled product recommendations toggled telemetry probe`() {
+        val tested = ReviewQualityCheckStore(
+            initialState = ReviewQualityCheckState.OptedIn(
+                productRecommendationsPreference = false,
+                productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
+                isHighlightsExpanded = false,
+            ),
+            middleware = listOf(
+                ReviewQualityCheckTelemetryMiddleware(browserStore, appStore),
+            ),
+        )
+        tested.waitUntilIdle()
+        tested.dispatch(ReviewQualityCheckAction.ToggleProductRecommendation).joinBlocking()
+        tested.waitUntilIdle()
+
+        assertNotNull(Shopping.SurfaceAdsSettingToggledExtra("enabled"))
+    }
+
+    @Test
+    fun `GIVEN the user has opted in WHEN the user switches product recommendations off THEN send disabled product recommendations toggled telemetry probe`() {
+        val tested = ReviewQualityCheckStore(
+            initialState = ReviewQualityCheckState.OptedIn(
+                productRecommendationsPreference = true,
+                productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
+                isHighlightsExpanded = false,
+            ),
+            middleware = listOf(
+                ReviewQualityCheckTelemetryMiddleware(browserStore, appStore),
+            ),
+        )
+        tested.waitUntilIdle()
+        tested.dispatch(ReviewQualityCheckAction.ToggleProductRecommendation).joinBlocking()
+        tested.waitUntilIdle()
+
+        assertNotNull(Shopping.SurfaceAdsSettingToggledExtra("disabled"))
+    }
 }

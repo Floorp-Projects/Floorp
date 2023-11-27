@@ -863,6 +863,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             componentOptedOut.set(!settings.isReviewQualityCheckEnabled)
             nimbusDisabledShopping.set(!FxNimbus.features.shoppingExperience.value().enabled)
             userHasOnboarded.set(settings.reviewQualityCheckOptInTimeInMillis != 0L)
+            disabledAds.set(!settings.isReviewQualityCheckProductRecommendationsEnabled)
         }
     }
 
