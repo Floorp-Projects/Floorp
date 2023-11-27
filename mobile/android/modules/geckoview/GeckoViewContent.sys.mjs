@@ -27,6 +27,7 @@ export class GeckoViewContent extends GeckoViewModule {
       "GeckoView:SendImpressionAttributionEvent",
       "GeckoView:RequestAnalysis",
       "GeckoView:RequestRecommendations",
+      "GeckoView:ReportBackInStock",
       "GeckoView:ScrollBy",
       "GeckoView:ScrollTo",
       "GeckoView:SetActive",
@@ -256,6 +257,9 @@ export class GeckoViewContent extends GeckoViewModule {
       case "GeckoView:RequestRecommendations":
         this._requestRecommendations(aData, aCallback);
         break;
+      case "GeckoView:ReportBackInStock":
+        this._reportBackInStock(aData, aCallback);
+        break;
       case "GeckoView:IsPdfJs":
         aCallback.onSuccess(this.isPdfJs);
         break;
@@ -378,7 +382,6 @@ export class GeckoViewContent extends GeckoViewModule {
 
   async _requestAnalysis(aData, aCallback) {
     if (
-      Cu.isInAutomation &&
       Services.prefs.getBoolPref("geckoview.shopping.mock_test_response", false)
     ) {
       const analysis = {
@@ -413,7 +416,6 @@ export class GeckoViewContent extends GeckoViewModule {
 
   async _requestCreateAnalysis(aData, aCallback) {
     if (
-      Cu.isInAutomation &&
       Services.prefs.getBoolPref("geckoview.shopping.mock_test_response", false)
     ) {
       const status = "pending";
@@ -436,7 +438,6 @@ export class GeckoViewContent extends GeckoViewModule {
 
   async _requestAnalysisCreationStatus(aData, aCallback) {
     if (
-      Cu.isInAutomation &&
       Services.prefs.getBoolPref("geckoview.shopping.mock_test_response", false)
     ) {
       const status = "in_progress";
@@ -483,7 +484,6 @@ export class GeckoViewContent extends GeckoViewModule {
   async _sendAttributionEvent(aEvent, aData, aCallback) {
     let result;
     if (
-      Cu.isInAutomation &&
       Services.prefs.getBoolPref("geckoview.shopping.mock_test_response", false)
     ) {
       result = { TEST_AID: "TEST_AID_RESPONSE" };
@@ -503,7 +503,6 @@ export class GeckoViewContent extends GeckoViewModule {
 
   async _requestRecommendations(aData, aCallback) {
     if (
-      Cu.isInAutomation &&
       Services.prefs.getBoolPref("geckoview.shopping.mock_test_response", false)
     ) {
       const recommendations = [
@@ -534,6 +533,28 @@ export class GeckoViewContent extends GeckoViewModule {
         return;
       }
       aCallback.onSuccess({ recommendations });
+    }
+  }
+
+  async _reportBackInStock(aData, aCallback) {
+    if (
+      Services.prefs.getBoolPref("geckoview.shopping.mock_test_response", false)
+    ) {
+      const message = "report created";
+      aCallback.onSuccess(message);
+      return;
+    }
+    const url = Services.io.newURI(aData.url);
+    if (!lazy.isProductURL(url)) {
+      aCallback.onError(`Cannot reportBackInStock on a non-product url.`);
+    } else {
+      const product = new lazy.ShoppingProduct(url);
+      const message = await product.sendReport();
+      if (!message) {
+        aCallback.onError(`Reporting back in stock returned null.`);
+        return;
+      }
+      aCallback.onSuccess(message.message);
     }
   }
 

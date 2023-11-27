@@ -15,6 +15,9 @@ exclude: true
 
 ## v122
 - ⚠️ Removed [`onGetNimbusFeature`][115.5], please use `ExperimentDelegate.onGetExperimentFeature` instead.
+- Added [`GeckoSession.reportBackInStock`][122.1] for reporting a Shopping product is back in stock.
+
+[122.1]: {{javadoc_uri}}/GeckoSession.html#reportBackInStock(String)
 
 ## v121
 - Added runtime controller functions. [`RuntimeTranslation`][121.1] has options for retrieving translation languages and managing language models.
@@ -1479,4 +1482,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 4096311f0fe200c9c2ede63aaaf2a685834d89da
+[api-version]: c1902d61b73f96de2b6bc4b797760295a740267b

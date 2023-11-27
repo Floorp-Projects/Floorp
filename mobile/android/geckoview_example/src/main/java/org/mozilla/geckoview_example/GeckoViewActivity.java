@@ -1317,6 +1317,9 @@ public class GeckoViewActivity extends AppCompatActivity
       case R.id.poll_shopping_analysis_status:
         pollForAnalysisCompleted(session, mCurrentUri);
         break;
+      case R.id.report_back_in_stock:
+        reportBackInStock(session, mCurrentUri);
+        break;
       case R.id.translate:
         translate(session);
         break;
@@ -2448,6 +2451,16 @@ public class GeckoViewActivity extends AppCompatActivity
         status -> {
           Log.d(LOGTAG, "Shopping Analysis Status: " + status);
           return status;
+        });
+  }
+
+  public void reportBackInStock(@NonNull final GeckoSession session, @NonNull final String url) {
+    Log.d(LOGTAG, "Report shopping product is back in stock");
+    GeckoResult<String> result = session.reportBackInStock(url);
+    result.map(
+        message -> {
+          Log.d(LOGTAG, "Shopping Analysis back in stock status: " + message);
+          return message;
         });
   }
 
