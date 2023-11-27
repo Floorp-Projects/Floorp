@@ -79,8 +79,9 @@ ListElementSelectionState::ListElementSelectionState(HTMLEditor& aHTMLEditor,
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   {
     AutoRangeArray extendedSelectionRanges(aHTMLEditor.SelectionRef());
-    extendedSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
-        EditSubAction::eCreateOrChangeList, *editingHostOrRoot);
+    extendedSelectionRanges.ExtendRangesToWrapLines(
+        EditSubAction::eCreateOrChangeList,
+        BlockInlineCheck::UseHTMLDefaultStyle, *editingHostOrRoot);
     nsresult rv = extendedSelectionRanges.CollectEditTargetNodes(
         aHTMLEditor, arrayOfContents, EditSubAction::eCreateOrChangeList,
         AutoRangeArray::CollectNonEditableNodes::No);
@@ -159,8 +160,9 @@ ListItemElementSelectionState::ListItemElementSelectionState(
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   {
     AutoRangeArray extendedSelectionRanges(aHTMLEditor.SelectionRef());
-    extendedSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
-        EditSubAction::eCreateOrChangeList, *editingHostOrRoot);
+    extendedSelectionRanges.ExtendRangesToWrapLines(
+        EditSubAction::eCreateOrChangeList,
+        BlockInlineCheck::UseHTMLDefaultStyle, *editingHostOrRoot);
     nsresult rv = extendedSelectionRanges.CollectEditTargetNodes(
         aHTMLEditor, arrayOfContents, EditSubAction::eCreateOrChangeList,
         AutoRangeArray::CollectNonEditableNodes::No);
@@ -304,8 +306,9 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
       }
     }
     AutoRangeArray extendedSelectionRanges(aHTMLEditor.SelectionRef());
-    extendedSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
-        EditSubAction::eSetOrClearAlignment, *editingHostOrRoot);
+    extendedSelectionRanges.ExtendRangesToWrapLines(
+        EditSubAction::eSetOrClearAlignment,
+        BlockInlineCheck::UseHTMLDefaultStyle, *editingHostOrRoot);
 
     AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
     nsresult rv = extendedSelectionRanges.CollectEditTargetNodes(
@@ -654,11 +657,11 @@ nsresult ParagraphStateAtSelection::CollectEditableFormatNodesInSelection(
     nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents) {
   {
     AutoRangeArray extendedSelectionRanges(aHTMLEditor.SelectionRef());
-    extendedSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
+    extendedSelectionRanges.ExtendRangesToWrapLines(
         aFormatBlockMode == FormatBlockMode::HTMLFormatBlockCommand
             ? EditSubAction::eFormatBlockForHTMLCommand
             : EditSubAction::eCreateOrRemoveBlock,
-        aEditingHost);
+        BlockInlineCheck::UseHTMLDefaultStyle, aEditingHost);
     nsresult rv = extendedSelectionRanges.CollectEditTargetNodes(
         aHTMLEditor, aArrayOfContents,
         aFormatBlockMode == FormatBlockMode::HTMLFormatBlockCommand
