@@ -25,7 +25,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "isCssVariable",
-  "resource://devtools/client/fronts/css-properties.js",
+  "resource://devtools/shared/inspector/css-logic.js",
   true
 );
 

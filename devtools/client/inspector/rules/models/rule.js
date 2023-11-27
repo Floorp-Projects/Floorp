@@ -577,7 +577,11 @@ class Rule {
       // However, we must keep all properties in order for rule
       // rewriting to work properly.  So, compute the "invisible"
       // property here.
-      const invisible = this.inherited && !this.cssProperties.isInherited(name);
+      const inherits = prop.isCustomProperty
+        ? prop.inherits
+        : this.cssProperties.isInherited(name);
+      const invisible = this.inherited && !inherits;
+
       const value = store.userProperties.getProperty(
         this.domRule,
         name,

@@ -487,7 +487,7 @@ class CssLogic {
   /**
    * Check if the highlighted element or it's parents have matched selectors.
    *
-   * @param {array} aProperties The list of properties you want to check if they
+   * @param {Array} properties: The list of properties you want to check if they
    * have matched selectors or not.
    * @return {object} An object that tells for each property if it has matched
    * selectors or not. Object keys are property names and values are booleans.
@@ -509,7 +509,10 @@ class CssLogic {
           rule.getPropertyValue(property) &&
           (status == STATUS.MATCHED ||
             (status == STATUS.PARENT_MATCH &&
-              InspectorUtils.isInheritedProperty(property)))
+              InspectorUtils.isInheritedProperty(
+                this.viewedDocument,
+                property
+              )))
         ) {
           result[property] = true;
           return false;
@@ -1291,8 +1294,9 @@ class CssPropertyInfo {
    * Process a matched CssSelector object.
    *
    * @private
-   * @param {CssSelector} selector the matched CssSelector object.
-   * @param {STATUS} status the CssSelector match status.
+   * @param {CssSelector} selector: the matched CssSelector object.
+   * @param {STATUS} status: the CssSelector match status.
+   * @param {Int} distance: See CssLogic._buildMatchedRules for definition.
    */
   _processMatchedSelector(selector, status, distance) {
     const cssRule = selector.cssRule;
@@ -1301,7 +1305,10 @@ class CssPropertyInfo {
       value &&
       (status == STATUS.MATCHED ||
         (status == STATUS.PARENT_MATCH &&
-          InspectorUtils.isInheritedProperty(this.property)))
+          InspectorUtils.isInheritedProperty(
+            this._cssLogic.viewedDocument,
+            this.property
+          )))
     ) {
       const selectorInfo = new CssSelectorInfo(
         selector,

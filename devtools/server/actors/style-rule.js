@@ -451,6 +451,24 @@ class StyleRuleActor extends Actor {
           `${decl.name}:initial`,
           supportsOptions
         );
+
+        if (SharedCssLogic.isCssVariable(decl.name)) {
+          decl.isCustomProperty = true;
+          // We only compute `inherits` for css variable declarations.
+          // For "regular" declaration, we use `CssPropertiesFront.isInherited`,
+          // which doesn't depend on the state of the document (a given property will
+          // always have the same isInherited value).
+          // CSS variables on the other hand can be registered custom properties (e.g.,
+          // `@property`/`CSS.registerProperty`), with a `inherits` definition that can
+          // be true or false.
+          // As such custom properties can be registered at any time during the page
+          // lifecycle, we always recompute the `inherits` information for CSS variables.
+          decl.inherits = InspectorUtils.isInheritedProperty(
+            this.pageStyle.inspector.window.document,
+            decl.name
+          );
+        }
+
         return decl;
       });
 
