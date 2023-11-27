@@ -64,7 +64,6 @@ BROWSER_CHROME_MANIFESTS += [
     "content/test/webextensions/browser.toml",
     "content/test/webrtc/browser.toml",
     "content/test/webrtc/gracePeriod/browser.toml",
-    "content/test/webrtc/legacyIndicator/browser.toml",
     "content/test/zoom/browser.toml",
 ]
 

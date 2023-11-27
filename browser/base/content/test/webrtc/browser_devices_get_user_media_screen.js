@@ -398,7 +398,7 @@ var gTests = [
       await observerPromise2;
       Assert.deepEqual(
         await getMediaCaptureState(),
-        { screen: "Window" },
+        { window: true },
         "expected screen to be shared"
       );
 
@@ -651,67 +651,6 @@ var gTests = [
       verifyTabSharingPopup(["screen"]);
 
       await reloadAndAssertClosedStreams();
-    },
-  },
-
-  {
-    desc: "test showControlCenter from screen icon",
-    run: async function checkShowControlCenter() {
-      if (!USING_LEGACY_INDICATOR) {
-        info(
-          "Skipping since this test doesn't apply to the new global sharing " +
-            "indicator."
-        );
-        return;
-      }
-      let observerPromise = expectObserverCalled("getUserMedia:request");
-      let promise = promisePopupNotificationShown("webRTC-shareDevices");
-      await promiseRequestDevice(false, true, null, "screen");
-      await promise;
-      await observerPromise;
-      checkDeviceSelectors(["screen"]);
-      let menulist = document.getElementById("webRTC-selectWindow-menulist");
-      menulist.getItemAtIndex(menulist.itemCount - 1).doCommand();
-
-      let observerPromise1 = expectObserverCalled(
-        "getUserMedia:response:allow"
-      );
-      let observerPromise2 = expectObserverCalled("recording-device-events");
-      let indicator = promiseIndicatorWindow();
-      await promiseMessage("ok", () => {
-        PopupNotifications.panel.firstElementChild.button.click();
-      });
-      await observerPromise1;
-      await observerPromise2;
-      Assert.deepEqual(
-        await getMediaCaptureState(),
-        { screen: "Screen" },
-        "expected screen to be shared"
-      );
-      await indicator;
-      await checkSharingUI({ screen: "Screen" });
-      verifyTabSharingPopup(["screen"]);
-
-      ok(permissionPopupHidden(), "control center should be hidden");
-      if (IS_MAC) {
-        let activeStreams = webrtcUI.getActiveStreams(false, false, true);
-        webrtcUI.showSharingDoorhanger(activeStreams[0]);
-      } else {
-        let win = Services.wm.getMostRecentWindow(
-          "Browser:WebRTCGlobalIndicator"
-        );
-        let elt = win.document.getElementById("screenShareButton");
-        EventUtils.synthesizeMouseAtCenter(elt, {}, win);
-      }
-      await TestUtils.waitForCondition(
-        () => !permissionPopupHidden(),
-        "wait for control center to open"
-      );
-      ok(!permissionPopupHidden(), "control center should be open");
-
-      gPermissionPanel._permissionPopup.hidePopup();
-
-      await closeStream();
     },
   },
 
