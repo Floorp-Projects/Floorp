@@ -20,7 +20,7 @@ add_setup(async function () {
   // Add one bookmark we'll use below.
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    url: "http://example.com/bookmark",
+    url: "https://example.com/bookmark",
   });
   registerCleanupFunction(async () => {
     await PlacesUtils.bookmarks.eraseEverything();
@@ -83,7 +83,7 @@ add_task(async function localNoHeuristic() {
   );
   Assert.equal(
     result.url,
-    "http://example.com/bookmark",
+    "https://example.com/bookmark",
     "Result URL is our bookmark URL"
   );
   Assert.ok(!result.heuristic, "Result should not be heuristic");
@@ -129,7 +129,7 @@ add_task(async function localAutofill() {
     );
     Assert.equal(
       result.url,
-      "http://example.com/",
+      "https://example.com/",
       "Result URL is our bookmark's origin"
     );
     Assert.ok(result.heuristic, "Result should be heuristic");
@@ -148,7 +148,7 @@ add_task(async function localAutofill() {
     );
     Assert.equal(
       result.url,
-      "http://example.com/bookmark",
+      "https://example.com/bookmark",
       "Result URL is our bookmark URL"
     );
 
@@ -158,7 +158,7 @@ add_task(async function localAutofill() {
     await loadPromise;
     Assert.equal(
       gBrowser.currentURI.spec,
-      "http://example.com/",
+      "https://example.com/",
       "Bookmark's origin should have loaded"
     );
   });
