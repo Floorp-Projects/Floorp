@@ -1260,6 +1260,8 @@ inline void ImplCycleCollectionTraverse(
   template aResultType EditorRawDOMRangeInTexts::aMethodName(__VA_ARGS__) const
 template <typename EditorDOMPointType>
 class EditorDOMRangeBase final {
+  using SelfType = EditorDOMRangeBase<EditorDOMPointType>;
+
  public:
   using PointType = EditorDOMPointType;
 
@@ -1438,6 +1440,17 @@ class EditorDOMRangeBase final {
       return nullptr;
     }
     return range.forget();
+  }
+
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const SelfType& aRange) {
+    if (aRange.Collapsed()) {
+      aStream << "{ mStart=mEnd=" << aRange.mStart << " }";
+    } else {
+      aStream << "{ mStart=" << aRange.mStart << ", mEnd=" << aRange.mEnd
+              << " }";
+    }
+    return aStream;
   }
 
  private:

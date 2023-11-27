@@ -27,6 +27,8 @@
 #include "nsRange.h"
 #include "nsString.h"
 
+#include <ostream>
+
 namespace mozilla {
 
 using namespace dom;
@@ -124,6 +126,21 @@ HTMLEditor::CharPointType HTMLEditor::GetCharPointType(
   }
   return aPoint.IsCharNBSP() ? CharPointType::NoBreakingSpace
                              : CharPointType::VisibleChar;
+}
+
+/******************************************************************************
+ * Logging utils
+ ******************************************************************************/
+
+inline std::ostream& operator<<(
+    std::ostream& aStream,
+    const HTMLEditor::PreserveWhiteSpaceStyle aPreserveWhiteSpaceStyle) {
+  aStream << "PreserveWhiteSpaceStyle::"
+          << (aPreserveWhiteSpaceStyle ==
+                      HTMLEditor::PreserveWhiteSpaceStyle::No
+                  ? "No"
+                  : "Yes");
+  return aStream;
 }
 
 }  // namespace mozilla
