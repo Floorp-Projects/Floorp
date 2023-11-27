@@ -443,6 +443,13 @@ iframe {
   background-color: var(--theme-body-background);
   color: var(--theme-body-color);
   flex-grow: 1;
+
+  &::placeholder {
+    /* override UA style */
+    opacity: 1;
+    /* Set a dimmed color that still gives us enough contrast  */
+    color: var(--theme-text-color-alt);
+  }
 }
 
 .devtools-searchinput,
