@@ -320,6 +320,8 @@ tags = "fullscreen"
 
 ["browser_panel_locationSpecific.js"]
 
+["browser_panel_menulist.js"]
+
 ["browser_panel_toggle.js"]
 
 ["browser_proton_moreTools_panel.js"]
