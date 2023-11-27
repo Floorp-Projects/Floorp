@@ -405,6 +405,7 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
           *TopLevelEditSubActionDataRef().mChangedRange);
       if (changedRange.IsPositioned() &&
           changedRange.EnsureNotInNativeAnonymousSubtree()) {
+        bool isBlockLevelSubAction = false;
         switch (GetTopLevelEditSubAction()) {
           case EditSubAction::eInsertText:
           case EditSubAction::eInsertTextComingFromIME:
@@ -424,19 +425,40 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
             }
             break;
           }
+          case EditSubAction::eCreateOrChangeList:
+          case EditSubAction::eCreateOrChangeDefinitionListItem:
+          case EditSubAction::eRemoveList:
+          case EditSubAction::eFormatBlockForHTMLCommand:
+          case EditSubAction::eCreateOrRemoveBlock:
+          case EditSubAction::eIndent:
+          case EditSubAction::eOutdent:
+          case EditSubAction::eSetOrClearAlignment:
+          case EditSubAction::eSetPositionToAbsolute:
+          case EditSubAction::eSetPositionToStatic:
+          case EditSubAction::eDecreaseZIndex:
+          case EditSubAction::eIncreaseZIndex:
+            isBlockLevelSubAction = true;
+            [[fallthrough]];
           default: {
-            if (Element* editingHost = ComputeEditingHost()) {
-              if (RefPtr<nsRange> extendedChangedRange = AutoRangeArray::
-                      CreateRangeWrappingStartAndEndLinesContainingBoundaries(
-                          changedRange, GetTopLevelEditSubAction(),
-                          *editingHost)) {
-                MOZ_ASSERT(extendedChangedRange->IsPositioned());
-                // Use extended range temporarily.
-                TopLevelEditSubActionDataRef().mChangedRange =
-                    std::move(extendedChangedRange);
-              }
+            Element* editingHost = ComputeEditingHost();
+            if (MOZ_UNLIKELY(!editingHost)) {
               break;
             }
+            RefPtr<nsRange> extendedChangedRange = AutoRangeArray::
+                CreateRangeWrappingStartAndEndLinesContainingBoundaries(
+                    changedRange, GetTopLevelEditSubAction(),
+                    isBlockLevelSubAction
+                        ? BlockInlineCheck::UseHTMLDefaultStyle
+                        : BlockInlineCheck::UseComputedDisplayOutsideStyle,
+                    *editingHost);
+            if (!extendedChangedRange) {
+              break;
+            }
+            MOZ_ASSERT(extendedChangedRange->IsPositioned());
+            // Use extended range temporarily.
+            TopLevelEditSubActionDataRef().mChangedRange =
+                std::move(extendedChangedRange);
+            break;
           }
         }
       }
@@ -3602,8 +3624,9 @@ nsresult HTMLEditor::AutoListElementCreator::
   //       a bug.
   AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
 
-  extendedRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
-      EditSubAction::eCreateOrChangeList, aEditingHost);
+  extendedRanges.ExtendRangesToWrapLines(EditSubAction::eCreateOrChangeList,
+                                         BlockInlineCheck::UseHTMLDefaultStyle,
+                                         aEditingHost);
   Result<EditorDOMPoint, nsresult> splitResult =
       extendedRanges.SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
           aHTMLEditor, BlockInlineCheck::UseHTMLDefaultStyle, aEditingHost);
@@ -4507,9 +4530,9 @@ nsresult HTMLEditor::RemoveListAtSelectionAsSubAction(
 
     {
       AutoRangeArray extendedSelectionRanges(SelectionRef());
-      extendedSelectionRanges
-          .ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
-              EditSubAction::eCreateOrChangeList, aEditingHost);
+      extendedSelectionRanges.ExtendRangesToWrapLines(
+          EditSubAction::eCreateOrChangeList,
+          BlockInlineCheck::UseHTMLDefaultStyle, aEditingHost);
       Result<EditorDOMPoint, nsresult> splitResult =
           extendedSelectionRanges
               .SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
@@ -4619,11 +4642,11 @@ HTMLEditor::FormatBlockContainerWithTransaction(
   AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
-  aSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
+  aSelectionRanges.ExtendRangesToWrapLines(
       aFormatBlockMode == FormatBlockMode::HTMLFormatBlockCommand
           ? EditSubAction::eFormatBlockForHTMLCommand
           : EditSubAction::eCreateOrRemoveBlock,
-      aEditingHost);
+      BlockInlineCheck::UseHTMLDefaultStyle, aEditingHost);
   Result<EditorDOMPoint, nsresult> splitResult =
       aSelectionRanges
           .SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
@@ -5166,8 +5189,9 @@ nsresult HTMLEditor::HandleCSSIndentAroundRanges(AutoRangeArray& aRanges,
   if (arrayOfContents.IsEmpty()) {
     {
       AutoRangeArray extendedRanges(aRanges);
-      extendedRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
-          EditSubAction::eIndent, aEditingHost);
+      extendedRanges.ExtendRangesToWrapLines(
+          EditSubAction::eIndent, BlockInlineCheck::UseHTMLDefaultStyle,
+          aEditingHost);
       Result<EditorDOMPoint, nsresult> splitResult =
           extendedRanges
               .SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
@@ -5472,8 +5496,9 @@ nsresult HTMLEditor::HandleHTMLIndentAroundRanges(AutoRangeArray& aRanges,
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   {
     AutoRangeArray extendedRanges(aRanges);
-    extendedRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
-        EditSubAction::eIndent, aEditingHost);
+    extendedRanges.ExtendRangesToWrapLines(
+        EditSubAction::eIndent, BlockInlineCheck::UseHTMLDefaultStyle,
+        aEditingHost);
     Result<EditorDOMPoint, nsresult> splitResult =
         extendedRanges
             .SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
@@ -5982,8 +6007,9 @@ HTMLEditor::HandleOutdentAtSelectionInternal(const Element& aEditingHost) {
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   {
     AutoRangeArray extendedSelectionRanges(SelectionRef());
-    extendedSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
-        EditSubAction::eOutdent, aEditingHost);
+    extendedSelectionRanges.ExtendRangesToWrapLines(
+        EditSubAction::eOutdent, BlockInlineCheck::UseHTMLDefaultStyle,
+        aEditingHost);
     nsresult rv = extendedSelectionRanges.CollectEditTargetNodes(
         *this, arrayOfContents, EditSubAction::eOutdent,
         AutoRangeArray::CollectNonEditableNodes::Yes);
@@ -7011,8 +7037,9 @@ nsresult HTMLEditor::AlignContentsAtRanges(AutoRangeArray& aRanges,
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   {
     AutoRangeArray extendedRanges(aRanges);
-    extendedRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
-        EditSubAction::eSetOrClearAlignment, aEditingHost);
+    extendedRanges.ExtendRangesToWrapLines(
+        EditSubAction::eSetOrClearAlignment,
+        BlockInlineCheck::UseHTMLDefaultStyle, aEditingHost);
     Result<EditorDOMPoint, nsresult> splitResult =
         extendedRanges
             .SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
@@ -11435,8 +11462,9 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   {
     AutoRangeArray extendedSelectionRanges(SelectionRef());
-    extendedSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
-        EditSubAction::eSetPositionToAbsolute, aEditingHost);
+    extendedSelectionRanges.ExtendRangesToWrapLines(
+        EditSubAction::eSetPositionToAbsolute,
+        BlockInlineCheck::UseHTMLDefaultStyle, aEditingHost);
     Result<EditorDOMPoint, nsresult> splitResult =
         extendedSelectionRanges
             .SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(

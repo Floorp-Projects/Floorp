@@ -5115,7 +5115,8 @@ HTMLEditor::AutoMoveOneLineHandler::CanMoveOrDeleteSomethingInLine(
   RefPtr<nsRange> oneLineRange =
       AutoRangeArray::CreateRangeWrappingStartAndEndLinesContainingBoundaries(
           aPointInHardLine, aPointInHardLine,
-          EditSubAction::eMergeBlockContents, aEditingHost);
+          EditSubAction::eMergeBlockContents,
+          BlockInlineCheck::UseComputedDisplayOutsideStyle, aEditingHost);
   if (!oneLineRange || oneLineRange->Collapsed() ||
       !oneLineRange->IsPositioned() ||
       !oneLineRange->GetStartContainer()->IsContent() ||
@@ -5244,8 +5245,9 @@ nsresult HTMLEditor::AutoMoveOneLineHandler::Prepare(
           mDestInclusiveAncestorBlock);
 
   AutoRangeArray rangesToWrapTheLine(aPointInHardLine);
-  rangesToWrapTheLine.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
-      EditSubAction::eMergeBlockContents, aEditingHost);
+  rangesToWrapTheLine.ExtendRangesToWrapLines(
+      EditSubAction::eMergeBlockContents,
+      BlockInlineCheck::UseComputedDisplayOutsideStyle, aEditingHost);
   MOZ_ASSERT(rangesToWrapTheLine.Ranges().Length() <= 1u);
   mLineRange = EditorDOMRange(rangesToWrapTheLine.FirstRangeRef());
 
