@@ -88,11 +88,8 @@ bool FrontendContext::allocateOwnedPool() {
 }
 
 bool FrontendContext::hadErrors() const {
-  if (maybeCx_) {
-    if (maybeCx_->isExceptionPending()) {
-      return true;
-    }
-  }
+  // All errors must be reported to FrontendContext.
+  MOZ_ASSERT_IF(maybeCx_, !maybeCx_->isExceptionPending());
 
   return errors_.hadErrors();
 }
@@ -119,11 +116,7 @@ void FrontendContext::onOutOfMemory() { addPendingOutOfMemory(); }
 void FrontendContext::onOverRecursed() { errors_.overRecursed = true; }
 
 void FrontendContext::recoverFromOutOfMemory() {
-  // TODO: Remove this branch once error report directly against JSContext is
-  //       removed from the frontend code.
-  if (maybeCx_) {
-    maybeCx_->recoverFromOutOfMemory();
-  }
+  MOZ_ASSERT_IF(maybeCx_, !maybeCx_->isThrowingOutOfMemory());
 
   errors_.outOfMemory = false;
 }
