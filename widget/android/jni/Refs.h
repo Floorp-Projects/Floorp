@@ -976,6 +976,24 @@ class ByteBuffer : public ObjectBase<ByteBuffer, jobject> {
     return ret;
   }
 
+  static LocalRef New(void* data, size_t capacity, const fallible_t&) {
+    JNIEnv* const env = GetEnvForThread();
+    const jobject result = env->NewDirectByteBuffer(data, jlong(capacity));
+    if (env->ExceptionCheck()) {
+      if (!IsOOMException(env)) {
+        // This exception isn't excepted due not to OOM. This is unrecoverable
+        // error.
+        MOZ_CATCH_JNI_EXCEPTION(env);
+      }
+#ifdef MOZ_CHECK_JNI
+      env->ExceptionDescribe();
+#endif
+      env->ExceptionClear();
+      return LocalRef::Adopt(env, nullptr);
+    }
+    return LocalRef::Adopt(env, result);
+  }
+
   void* Address() {
     void* const ret = Env()->GetDirectBufferAddress(Instance());
     MOZ_CATCH_JNI_EXCEPTION(Env());
