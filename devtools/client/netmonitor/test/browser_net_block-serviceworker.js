@@ -31,13 +31,17 @@ add_task(async function () {
 
   info("Open the request blocking panel and block service-workers request");
   store.dispatch(Actions.toggleRequestBlockingPanel());
-  await addBlockedRequest("service-workers", monitor);
+
+  info("Block the image request from the service worker");
+  await addBlockedRequest("service-workers/test-image.png", monitor);
+
+  await clearNetworkEvents(monitor);
 
   info("Performing the service worker request again");
   await performRequests(monitor, tab, 1);
 
   // Wait till there are four resources rendered in the results
-  await waitForDOMIfNeeded(document, ".request-list-item", 2);
+  await waitForDOMIfNeeded(document, ".request-list-item", 4);
 
   const requestItems = document.querySelectorAll(".request-list-item");
   ok(
@@ -45,8 +49,8 @@ add_task(async function () {
     "The first service worker request was not blocked"
   );
   ok(
-    checkRequestListItemBlocked(requestItems[1]),
-    "The second service worker request was blocked"
+    checkRequestListItemBlocked(requestItems[requestItems.length - 1]),
+    "The last service worker request was blocked"
   );
 
   info("Unregistering the service worker...");
