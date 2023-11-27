@@ -473,10 +473,20 @@ nsresult nsMenuBarX::Paint() {
   [mNativeMenu insertItem:appMenuItem atIndex:0];
   [appMenuItem release];
 
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   RemoveProblematicMenuItems(mNativeMenu);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // Set menu bar and event target.
   NSApp.mainMenu = mNativeMenu;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
   SetSystemHelpMenu();
   nsMenuBarX::sLastGeckoMenuBarPainted = this;
 
