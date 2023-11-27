@@ -1377,7 +1377,7 @@ nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
 #  pragma clang diagnostic pop
 #endif
 
-  for (uint8_t i = 0; i <= numNoises; i++) {
+  while (numNoises--) {
     // Choose which RGB channel to add a noise. The pixel data is in either
     // the BGRA or the ARGB format depending on the endianess. To choose the
     // color channel we need to add the offset according the endianess.
