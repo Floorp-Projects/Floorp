@@ -126,6 +126,7 @@ int32_t VideoCaptureModulePipeWire::StartCapture(
   RTC_LOG(LS_VERBOSE) << "Creating new PipeWire stream for node " << node_id_;
 
   PipeWireThreadLoopLock thread_loop_lock(session_->pw_main_loop_);
+  RTC_CHECK_RUNS_SERIALIZED(&pipewire_checker_);
   pw_properties* reuse_props =
       pw_properties_new_string("pipewire.client.reuse=1");
   stream_ = pw_stream_new(session_->pw_core_, "camera-stream", reuse_props);
@@ -178,6 +179,7 @@ int32_t VideoCaptureModulePipeWire::StopCapture() {
   RTC_DCHECK_RUN_ON(&api_checker_);
 
   PipeWireThreadLoopLock thread_loop_lock(session_->pw_main_loop_);
+  RTC_CHECK_RUNS_SERIALIZED(&pipewire_checker_);
   if (stream_) {
     pw_stream_destroy(stream_);
     stream_ = nullptr;
@@ -210,14 +212,14 @@ void VideoCaptureModulePipeWire::OnStreamParamChanged(
   VideoCaptureModulePipeWire* that =
       static_cast<VideoCaptureModulePipeWire*>(data);
   RTC_DCHECK(that);
-  RTC_CHECK_RUNS_SERIALIZED(&that->capture_checker_);
+  RTC_CHECK_RUNS_SERIALIZED(&that->pipewire_checker_);
 
   if (format && id == SPA_PARAM_Format)
     that->OnFormatChanged(format);
 }
 
 void VideoCaptureModulePipeWire::OnFormatChanged(const struct spa_pod* format) {
-  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+  RTC_CHECK_RUNS_SERIALIZED(&pipewire_checker_);
 
   uint32_t media_type, media_subtype;
 
@@ -359,7 +361,7 @@ static VideoRotation VideorotationFromPipeWireTransform(uint32_t transform) {
 }
 
 void VideoCaptureModulePipeWire::ProcessBuffers() {
-  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+  RTC_CHECK_RUNS_SERIALIZED(&pipewire_checker_);
 
   while (pw_buffer* buffer = pw_stream_dequeue_buffer(stream_)) {
     struct spa_meta_header* h;
