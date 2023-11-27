@@ -16,6 +16,7 @@
 #include "EditorDOMPoint.h"
 #include "EditorUtils.h"
 #include "HTMLEditHelpers.h"
+#include "HTMLEditorInlines.h"
 #include "HTMLEditUtils.h"
 #include "WSRunObject.h"
 
@@ -28,6 +29,7 @@
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorForwards.h"
 #include "mozilla/InternalMutationEvent.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/SelectionState.h"
@@ -66,6 +68,8 @@ using LeafNodeType = HTMLEditUtils::LeafNodeType;
 using ScanLineBreak = HTMLEditUtils::ScanLineBreak;
 using TableBoundary = HTMLEditUtils::TableBoundary;
 using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
+
+static LazyLogModule gOneLineMoverLog("AutoMoveOneLineHandler");
 
 template Result<CaretPoint, nsresult>
 HTMLEditor::DeleteTextAndTextNodesWithTransaction(
@@ -5192,7 +5196,18 @@ nsresult HTMLEditor::AutoMoveOneLineHandler::Prepare(
   MOZ_ASSERT(aPointInHardLine.IsInContentNode());
   MOZ_ASSERT(mPointToInsert.IsSetAndValid());
 
+  MOZ_LOG(gOneLineMoverLog, LogLevel::Info,
+          ("Prepare(aHTMLEditor=%p, aPointInHardLine=%s, aEditingHost=%s), "
+           "mPointToInsert=%s, mMoveToEndOfContainer=%s",
+           &aHTMLEditor, ToString(aPointInHardLine).c_str(),
+           ToString(aEditingHost).c_str(), ToString(mPointToInsert).c_str(),
+           ForceMoveToEndOfContainer() ? "MoveToEndOfContainer::Yes"
+                                       : "MoveToEndOfContainer::No"));
+
   if (NS_WARN_IF(mPointToInsert.IsInNativeAnonymousSubtree())) {
+    MOZ_LOG(
+        gOneLineMoverLog, LogLevel::Error,
+        ("Failed because mPointToInsert was in a native anonymous subtree"));
     return Err(NS_ERROR_INVALID_ARG);
   }
 
@@ -5233,6 +5248,24 @@ nsresult HTMLEditor::AutoMoveOneLineHandler::Prepare(
       EditSubAction::eMergeBlockContents, aEditingHost);
   MOZ_ASSERT(rangesToWrapTheLine.Ranges().Length() <= 1u);
   mLineRange = EditorDOMRange(rangesToWrapTheLine.FirstRangeRef());
+
+  MOZ_LOG(gOneLineMoverLog, LogLevel::Info,
+          ("mSrcInclusiveAncestorBlock=%s, mDestInclusiveAncestorBlock=%s, "
+           "mMovingToParentBlock=%s, mTopmostSrcAncestorBlockInDestBlock=%s, "
+           "mPreserveWhiteSpaceStyle=%s, mLineRange=%s",
+           mSrcInclusiveAncestorBlock
+               ? ToString(*mSrcInclusiveAncestorBlock).c_str()
+               : "nullptr",
+           mDestInclusiveAncestorBlock
+               ? ToString(*mDestInclusiveAncestorBlock).c_str()
+               : "nullptr",
+           mMovingToParentBlock ? "true" : "false",
+           mTopmostSrcAncestorBlockInDestBlock
+               ? ToString(*mTopmostSrcAncestorBlockInDestBlock).c_str()
+               : "nullptr",
+           ToString(mPreserveWhiteSpaceStyle).c_str(),
+           ToString(mLineRange).c_str()));
+
   return NS_OK;
 }
 
@@ -5340,6 +5373,11 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
   EditorDOMPoint pointToInsert(NextInsertionPointRef());
   MOZ_ASSERT(pointToInsert.IsInContentNode());
 
+  MOZ_LOG(
+      gOneLineMoverLog, LogLevel::Info,
+      ("Run(aHTMLEditor=%p, aEditingHost=%s), pointToInsert=%s", &aHTMLEditor,
+       ToString(aEditingHost).c_str(), ToString(pointToInsert).c_str()));
+
   EditorDOMPoint pointToPutCaret;
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   {
@@ -5353,10 +5391,14 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
             aEditingHost, arrayOfContents);
     if (MOZ_UNLIKELY(splitAtLineEdgesResult.isErr())) {
       NS_WARNING("AutoMoveOneLineHandler::SplitToMakeTheLineIsolated() failed");
+      MOZ_LOG(gOneLineMoverLog, LogLevel::Error,
+              ("Run: SplitToMakeTheLineIsolated() failed"));
       return splitAtLineEdgesResult.propagateErr();
     }
     splitAtLineEdgesResult.unwrap().MoveCaretPointTo(
         pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
+    MOZ_LOG(gOneLineMoverLog, LogLevel::Verbose,
+            ("Run: pointToPutCaret=%s", ToString(pointToPutCaret).c_str()));
 
     Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
         aHTMLEditor.MaybeSplitElementsAtEveryBRElement(
@@ -5365,14 +5407,20 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
       NS_WARNING(
           "HTMLEditor::MaybeSplitElementsAtEveryBRElement(EditSubAction::"
           "eMergeBlockContents) failed");
+      MOZ_LOG(gOneLineMoverLog, LogLevel::Error,
+              ("Run: MaybeSplitElementsAtEveryBRElement() failed"));
       return splitAtBRElementsResult.propagateErr();
     }
     if (splitAtBRElementsResult.inspect().IsSet()) {
       pointToPutCaret = splitAtBRElementsResult.unwrap();
     }
+    MOZ_LOG(gOneLineMoverLog, LogLevel::Verbose,
+            ("Run: pointToPutCaret=%s", ToString(pointToPutCaret).c_str()));
   }
 
   if (!pointToInsert.IsSetAndValid()) {
+    MOZ_LOG(gOneLineMoverLog, LogLevel::Error,
+            ("Run: Failed because pointToInsert pointed invalid position"));
     return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
@@ -5381,11 +5429,16 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
     nsresult rv = aHTMLEditor.CollapseSelectionTo(pointToPutCaret);
     if (NS_FAILED(rv)) {
       NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+      MOZ_LOG(gOneLineMoverLog, LogLevel::Error,
+              ("Run: Failed because of "
+               "aHTMLEditor.CollapseSelectionTo(pointToPutCaret) failure"));
       return Err(rv);
     }
   }
 
   if (arrayOfContents.IsEmpty()) {
+    MOZ_LOG(gOneLineMoverLog, LogLevel::Info,
+            ("Run: Did nothing because of no content to be moved"));
     return MoveNodeResult::IgnoredResult(std::move(pointToInsert));
   }
 
@@ -5397,6 +5450,12 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
   MoveNodeResult moveContentsInLineResult =
       MoveNodeResult::IgnoredResult(pointToInsert);
   for (const OwningNonNull<nsIContent>& content : arrayOfContents) {
+    MOZ_LOG(gOneLineMoverLog, LogLevel::Info,
+            ("Run: content=%s, pointToInsert=%s, movedContentRange=%s, "
+             "mPointToInsert=%s",
+             ToString(content.ref()).c_str(), ToString(pointToInsert).c_str(),
+             ToString(movedContentRange).c_str(),
+             ToString(mPointToInsert).c_str()));
     {
       AutoEditorDOMRangeChildrenInvalidator lockOffsets(movedContentRange);
       AutoTrackDOMRange trackMovedContentRange(aHTMLEditor.RangeUpdaterRef(),
@@ -5405,12 +5464,16 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
       // new container, and then, remove the (probably) empty block element.
       if (HTMLEditUtils::IsBlockElement(
               content, BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
+        MOZ_LOG(gOneLineMoverLog, LogLevel::Info,
+                ("Run: Unwrapping children of content because of a block"));
         Result<MoveNodeResult, nsresult> moveChildrenResult =
             aHTMLEditor.MoveChildrenWithTransaction(
                 MOZ_KnownLive(*content->AsElement()), pointToInsert,
                 mPreserveWhiteSpaceStyle, RemoveIfCommentNode::Yes);
         if (MOZ_UNLIKELY(moveChildrenResult.isErr())) {
           NS_WARNING("HTMLEditor::MoveChildrenWithTransaction() failed");
+          MOZ_LOG(gOneLineMoverLog, LogLevel::Error,
+                  ("Run: MoveChildrenWithTransaction() failed"));
           moveContentsInLineResult.IgnoreCaretPointSuggestion();
           return moveChildrenResult;
         }
@@ -5419,12 +5482,18 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
         nsresult rv =
             aHTMLEditor.DeleteNodeWithTransaction(MOZ_KnownLive(content));
         if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+          MOZ_LOG(gOneLineMoverLog, LogLevel::Error,
+                  ("Run: Aborted because DeleteNodeWithTransaction() caused "
+                   "destroying the editor"));
           moveContentsInLineResult.IgnoreCaretPointSuggestion();
           return Err(NS_ERROR_EDITOR_DESTROYED);
         }
-        NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rv),
-            "EditorBase::DeleteNodeWithTransaction() failed, but ignored");
+        if (NS_FAILED(rv)) {
+          NS_WARNING(
+              "EditorBase::DeleteNodeWithTransaction() failed, but ignored");
+          MOZ_LOG(gOneLineMoverLog, LogLevel::Warning,
+                  ("Run: Failed to delete content but the error was ignored"));
+        }
       }
       // If the moving content is a comment node or an empty inline node, we
       // don't want it to appear in the dist paragraph.
@@ -5443,13 +5512,26 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
         if (!emptyContent) {
           emptyContent = content;
         }
+        MOZ_LOG(gOneLineMoverLog, LogLevel::Info,
+                ("Run: Deleting content because of %s%s",
+                 content->IsComment() ? "a comment node"
+                 : content->IsText()  ? "an empty text node"
+                                      : "an empty inline container",
+                 content != emptyContent
+                     ? nsPrintfCString(" (deleting topmost empty ancestor: %s)",
+                                       ToString(*emptyContent).c_str())
+                           .get()
+                     : ""));
         nsresult rv = aHTMLEditor.DeleteNodeWithTransaction(*emptyContent);
         if (NS_FAILED(rv)) {
           NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
+          MOZ_LOG(gOneLineMoverLog, LogLevel::Error,
+                  ("Run: DeleteNodeWithTransaction() failed"));
           moveContentsInLineResult.IgnoreCaretPointSuggestion();
           return Err(rv);
         }
       } else {
+        MOZ_LOG(gOneLineMoverLog, LogLevel::Info, ("Run: Moving content"));
         // MOZ_KnownLive due to bug 1620312
         Result<MoveNodeResult, nsresult> moveNodeOrChildrenResult =
             aHTMLEditor.MoveNodeOrChildrenWithTransaction(
@@ -5457,14 +5539,22 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
                 RemoveIfCommentNode::Yes);
         if (MOZ_UNLIKELY(moveNodeOrChildrenResult.isErr())) {
           NS_WARNING("HTMLEditor::MoveNodeOrChildrenWithTransaction() failed");
+          MOZ_LOG(gOneLineMoverLog, LogLevel::Error,
+                  ("Run: MoveNodeOrChildrenWithTransaction() failed"));
           moveContentsInLineResult.IgnoreCaretPointSuggestion();
           return moveNodeOrChildrenResult;
         }
         moveContentsInLineResult |= moveNodeOrChildrenResult.inspect();
       }
     }
+    MOZ_LOG(gOneLineMoverLog, LogLevel::Info,
+            ("Run: movedContentRange=%s, mPointToInsert=%s",
+             ToString(movedContentRange).c_str(),
+             ToString(mPointToInsert).c_str()));
     moveContentsInLineResult.MarkAsHandled();
     if (NS_WARN_IF(!movedContentRange.IsPositioned())) {
+      MOZ_LOG(gOneLineMoverLog, LogLevel::Error,
+              ("Run: Failed because movedContentRange was not positioned"));
       return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
     }
     // For backward compatibility, we should move contents to end of the
@@ -5474,6 +5564,8 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
       MOZ_ASSERT(pointToInsert.IsSet());
       MOZ_ASSERT(movedContentRange.StartRef().EqualsOrIsBefore(pointToInsert));
       movedContentRange.SetEnd(pointToInsert);
+      MOZ_LOG(gOneLineMoverLog, LogLevel::Debug,
+              ("Run: Updated movedContentRange end to next insertion point"));
     }
     // And also if pointToInsert has been made invalid with removing preceding
     // children, we should move the content to the end of the container.
@@ -5483,6 +5575,9 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
       mPointToInsert.SetToEndOf(mPointToInsert.GetContainer());
       pointToInsert = NextInsertionPointRef();
       movedContentRange.SetEnd(pointToInsert);
+      MOZ_LOG(gOneLineMoverLog, LogLevel::Debug,
+              ("Run: Updated mPointToInsert to end of container and updated "
+               "movedContentRange"));
     } else {
       MOZ_DIAGNOSTIC_ASSERT(
           moveContentsInLineResult.NextInsertionPointRef().IsSet());
@@ -5494,6 +5589,11 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
         MOZ_ASSERT(
             movedContentRange.StartRef().EqualsOrIsBefore(pointToInsert));
         movedContentRange.SetEnd(pointToInsert);
+        MOZ_LOG(gOneLineMoverLog, LogLevel::Debug,
+                ("Run: Updated mPointToInsert and updated movedContentRange"));
+      } else {
+        MOZ_LOG(gOneLineMoverLog, LogLevel::Debug,
+                ("Run: Updated only mPointToInsert"));
       }
     }
   }
@@ -5502,6 +5602,10 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
   // And also if we're not moving content into a block, we can quit right now.
   if (moveContentsInLineResult.Ignored() ||
       MOZ_UNLIKELY(!mDestInclusiveAncestorBlock)) {
+    MOZ_LOG(gOneLineMoverLog, LogLevel::Info,
+            (moveContentsInLineResult.Ignored()
+                 ? "Run: Did nothing for any children"
+                 : "Run: Finished (not dest block)"));
     return moveContentsInLineResult;
   }
 
@@ -5510,6 +5614,10 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
   // mutation event listeners.
   if (MOZ_UNLIKELY(!movedContentRange.IsPositioned() ||
                    movedContentRange.Collapsed())) {
+    MOZ_LOG(gOneLineMoverLog, LogLevel::Info,
+            (!movedContentRange.IsPositioned()
+                 ? "Run: Finished (Couldn't track moved line)"
+                 : "Run: Finished (Moved line was empty)"));
     return moveContentsInLineResult;
   }
 
@@ -5519,9 +5627,13 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
     NS_WARNING(
         "AutoMoveOneLineHandler::"
         "DeleteUnnecessaryTrailingLineBreakInMovedLineEnd() failed");
+    MOZ_LOG(gOneLineMoverLog, LogLevel::Error,
+            ("Run: DeleteUnnecessaryTrailingLineBreakInMovedLineEnd() failed"));
     moveContentsInLineResult.IgnoreCaretPointSuggestion();
     return Err(rv);
   }
+
+  MOZ_LOG(gOneLineMoverLog, LogLevel::Info, ("Run: Finished"));
   return moveContentsInLineResult;
 }
 

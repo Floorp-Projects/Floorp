@@ -1909,6 +1909,9 @@ class HTMLEditor final : public EditorBase,
    *                            because it requires additional scan.
    */
   enum class PreserveWhiteSpaceStyle { No, Yes };
+  friend std::ostream& operator<<(
+      std::ostream& aStream,
+      const PreserveWhiteSpaceStyle aPreserveWhiteSpaceStyle);
   enum class RemoveIfCommentNode { No, Yes };
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<MoveNodeResult, nsresult>
   MoveNodeOrChildrenWithTransaction(
