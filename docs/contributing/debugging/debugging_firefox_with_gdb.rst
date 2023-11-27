@@ -63,6 +63,31 @@ allowing to attach a debugger.
    ...
    ...
 
+Attaching gdb to Firefox might fail on Linux distributions that enable common
+kernel hardening features such as the Yama security module. If you encounter the
+following error when attaching:
+
+.. code:: bash
+
+   $ gdb --pid <pid>
+   ...
+   ...
+
+   Attaching to process <pid>
+   ptrace: Operation not permitted.
+
+Check the contents of `/proc/sys/kernel/yama/ptrace_scope`. If  it set to `1`
+you won't be able to attach to processes, set it to `0` from a root shell:
+
+.. code:: bash
+
+  \# echo 0 > /proc/sys/kernel/yama/ptrace_scope
+
+If you still can't attach check your setup carefully. Do not, under any
+circumstances, run gdb as root. Since gdb can execute arbitrary code and spawn
+shells it can be extremely dangerous to use it with root permissions.
+
+
 Advanced gdb configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -70,7 +95,8 @@ The preferred method, is using the
 :ref:`mach` command-line tool to run the
 debugger, which can bypass several optional defaults. Use "mach help
 run" to get more details. If inside the source directory, you would use
-"./mach". Please note that :ref:`mach is aware of mozconfigs <mach_and_mozconfigs>`.
+"./mach". Please note that
+:ref:`mach is aware of mozconfigs <Configuring Build Options>`.
 
 .. code:: bash
 
@@ -181,8 +207,8 @@ How can I debug race conditions
 Try :ref:`rr <Debugging Firefox with rr>` first. If this doesn't work, good
 luck, maybe try :ref:`logging <Gecko Logging>` or sprinkling assertions.
 
-I keep getting a SIG32, or SIGSEGV in JS/JIT code under gdb even though there is no crash when gdb is not attached.  How do I fix it?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+I keep getting a SIGSYS, or SIGSEGV in JS/JIT code under gdb even though there is no crash when gdb is not attached.  How do I fix it?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Allow gdb to read mozilla-central's .gdbinit, located at `build/.gdbinit`. In
 your own `.gdbinit`, add the line:
@@ -210,6 +236,19 @@ the libraries you want to debug.
 
 When using ``debuginfod``, the correct information will be downloaded
 automatically when needed (and subsequently cached).
+
+If you're not sure what to use, there's a federated debuginfod server that
+provides debug information for most mainstream distributions. You can use it
+by adding the following line to your ``.gdbinit`` file:
+
+  .. code::
+
+    set debuginfod urls "https://debuginfod.elfutils.org/"
+
+Keep in mind that it might take a while to download debug information the
+very first time. This queries all the servers of multiple distributions
+sequentially and debug information tends to be large. It will be cached for the
+next run though.
 
 Fedora
 ^^^^^^
@@ -257,7 +296,7 @@ See also
 ~~~~~~~~~
 
 
--  `Mike Conley's blog post https://mikeconley.ca/blog/2014/04/25/electrolysis-debugging-child-processes-of-content-for-make-benefit-glorious-browser-of-firefox`
+-  `Mike Conley's blog post <https://mikeconley.ca/blog/2014/04/25/electrolysis-debugging-child-processes-of-content-for-make-benefit-glorious-browser-of-firefox>`__
 -  `Performance tools <https://wiki.mozilla.org/Performance:Tools>`__
 -  `Fun with
    gdb <https://blog.mozilla.com/sfink/2011/02/22/fun-with-gdb/>`__ by
