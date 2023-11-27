@@ -25,7 +25,11 @@ def get_graph_from_spec(tmpdir_factory):
         f"--parameters={PARAMS_DIR}",
         f"--output-file={outdir}/graph.json",
     ]
-    subprocess.run(cmd, cwd=GECKO)
+    # unset MOZ_AUTOMATION so we don't attempt to optimize out the graph
+    # entirely as having already run
+    env = os.environ.copy()
+    env.pop("MOZ_AUTOMATION", None)
+    subprocess.run(cmd, cwd=GECKO, env=env)
     assert len(outdir.listdir()) > 0
 
     def inner(param_spec):
