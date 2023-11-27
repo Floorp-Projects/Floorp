@@ -43,7 +43,9 @@ pylru==1.0.9
 python-hglib==2.4
 pyyaml==6.0.1
 redo==2.0.3
-requests==2.31.0
+# Cannot exceed requests 2.28.2 until https://github.com/msabramo/requests-unixsocket/pull/69 is merged in or forked
+# and we upgrade requests-unixsocket, otherwise ./mach taskcluster-load-image will break
+requests==2.28.2
 requests-unixsocket==0.2.0
 responses==0.10.6
 rsa==3.1.4
