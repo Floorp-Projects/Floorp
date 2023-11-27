@@ -30,18 +30,30 @@ add_task(async function () {
 
   const [arrayOi, objectOi] = objectInspectors;
 
+  let arrayOiArrowButton = arrayOi.querySelector(".arrow");
+  is(
+    arrayOiArrowButton.getAttribute("title"),
+    "Expand",
+    "Toggle button has expected title when node is collapsed"
+  );
+
   info("Expanding the array object inspector");
 
   let onArrayOiMutation = waitForNodeMutation(arrayOi, {
     childList: true,
   });
-
-  arrayOi.querySelector(".arrow").click();
+  arrayOiArrowButton.click();
   await onArrayOiMutation;
 
+  arrayOiArrowButton = arrayOi.querySelector(".arrow");
   ok(
     arrayOi.querySelector(".arrow").classList.contains("expanded"),
-    "The arrow of the root node of the tree is expanded after clicking on it"
+    "Toggle button of the root node of the tree is expanded after clicking on it"
+  );
+  is(
+    arrayOiArrowButton.getAttribute("title"),
+    "Collapse",
+    "Toggle button has expected title when node is expanded"
   );
 
   let arrayOiNodes = arrayOi.querySelectorAll(".node");

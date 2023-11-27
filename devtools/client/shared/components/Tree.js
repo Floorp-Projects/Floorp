@@ -9,6 +9,22 @@ const { Component, createFactory } = React;
 const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
 const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 
+// Localized strings for (devtools/client/locales/en-US/components.properties)
+loader.lazyGetter(this, "L10N_COMPONENTS", function () {
+  const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
+  return new LocalizationHelper(
+    "devtools/client/locales/components.properties"
+  );
+});
+
+loader.lazyGetter(this, "EXPAND_LABEL", function () {
+  return L10N_COMPONENTS.getStr("treeNode.expandButtonTitle");
+});
+
+loader.lazyGetter(this, "COLLAPSE_LABEL", function () {
+  return L10N_COMPONENTS.getStr("treeNode.collapseButtonTitle");
+});
+
 // depth
 const AUTO_EXPAND_DEPTH = 0;
 
@@ -43,11 +59,14 @@ class ArrowExpander extends Component {
     const { expanded } = this.props;
 
     const classNames = ["arrow"];
+    const title = expanded ? COLLAPSE_LABEL : EXPAND_LABEL;
+
     if (expanded) {
       classNames.push("expanded");
     }
     return dom.button({
       className: classNames.join(" "),
+      title,
     });
   }
 }
