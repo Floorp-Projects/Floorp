@@ -82,7 +82,7 @@ class InspectorUtils {
   // Utilities for working with CSS properties
   //
   // Returns true if the string names a property that is inherited by default.
-  static bool IsInheritedProperty(GlobalObject& aGlobal,
+  static bool IsInheritedProperty(GlobalObject& aGlobal, Document& aDocument,
                                   const nsACString& aPropertyName);
 
   // Get a list of all our supported property names.  Optionally
