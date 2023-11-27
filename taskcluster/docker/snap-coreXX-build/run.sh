@@ -59,6 +59,14 @@ if [ -d "/builds/worker/patches/${BRANCH}/" ]; then
 fi
 
 if [ "${TRY}" = "1" ]; then
+  # don't remove hg source, and don't force changeset so we get correct stamp
+  # still force repo because the try clone is from mozilla-unified but the
+  # generated link does not work
+  sed -ri 's|rm -rf .hg||g' snapcraft.yaml
+  # shellcheck disable=SC2016
+  sed -ri 's|MOZ_SOURCE_REPO=\$\{REPO\}|MOZ_SOURCE_REPO=${GECKO_HEAD_REPOSITORY}|g' snapcraft.yaml
+  # shellcheck disable=SC2016
+  sed -ri 's|MOZ_SOURCE_CHANGESET=\$\{REVISION\}|MOZ_SOURCE_CHANGESET=${REVISION}|g' snapcraft.yaml
   # shellcheck disable=SC2016
   sed -ri 's|hg clone --stream \$REPO -u \$REVISION|cp -r \$SNAPCRAFT_PROJECT_DIR/gecko/. |g' snapcraft.yaml
 fi
