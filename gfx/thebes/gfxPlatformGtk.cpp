@@ -225,11 +225,16 @@ void gfxPlatformGtk::InitDmabufConfig() {
                          "FEATURE_FAILURE_REQUIRES_EGL"_ns);
   }
 
-  nsAutoCString drmRenderDevice;
-  gfxInfo->GetDrmRenderDevice(drmRenderDevice);
-  gfxVars::SetDrmRenderDevice(drmRenderDevice);
+  if (!gfxVars::WebglUseHardware()) {
+    feature.Disable(FeatureStatus::Blocklisted,
+                    "Blocklisted with forced software rendering", failureId);
+  }
 
   if (feature.IsEnabled()) {
+    nsAutoCString drmRenderDevice;
+    gfxInfo->GetDrmRenderDevice(drmRenderDevice);
+    gfxVars::SetDrmRenderDevice(drmRenderDevice);
+
     if (!GetDMABufDevice()->IsEnabled(failureId)) {
       feature.ForceDisable(FeatureStatus::Failed, "Failed to configure",
                            failureId);

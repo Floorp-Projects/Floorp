@@ -171,10 +171,13 @@ static std::shared_ptr<EglDisplay> GetAndInitDisplay(
 
 #ifdef MOZ_WIDGET_GTK
 static std::shared_ptr<EglDisplay> GetAndInitDeviceDisplay(
-    GLLibraryEGL& egl, const StaticMutexAutoLock& aProofOfLock) {
+    GLLibraryEGL& egl, const StaticMutexAutoLock& aProofOfLock,
+    bool useDrmRenderDevice) {
   nsAutoCString drmRenderDevice(gfx::gfxVars::DrmRenderDevice());
-  if (drmRenderDevice.IsEmpty() ||
-      !egl.IsExtensionSupported(EGLLibExtension::EXT_platform_device) ||
+  if (!useDrmRenderDevice) {
+    drmRenderDevice = "";
+  }
+  if (!egl.IsExtensionSupported(EGLLibExtension::EXT_platform_device) ||
       !egl.IsExtensionSupported(EGLLibExtension::EXT_device_enumeration)) {
     return nullptr;
   }
@@ -195,8 +198,9 @@ static std::shared_ptr<EglDisplay> GetAndInitDeviceDisplay(
   for (const auto& device : devices) {
     const char* renderNodeString =
         egl.fQueryDeviceStringEXT(device, LOCAL_EGL_DRM_RENDER_NODE_FILE_EXT);
-    if (renderNodeString &&
-        strcmp(renderNodeString, drmRenderDevice.get()) == 0) {
+    // We are looking for a specific device, skip others
+    if (strcmp(renderNodeString ? renderNodeString : "",
+               drmRenderDevice.get()) == 0) {
       const EGLAttrib attrib_list[] = {LOCAL_EGL_NONE};
       display = egl.fGetPlatformDisplay(LOCAL_EGL_PLATFORM_DEVICE_EXT, device,
                                         attrib_list);
@@ -892,28 +896,36 @@ std::shared_ptr<EglDisplay> GLLibraryEGL::CreateDisplayLocked(
       }
     }
   } else {
-    void* nativeDisplay = EGL_DEFAULT_DISPLAY;
 #ifdef MOZ_WIDGET_GTK
-    if (!gdk_display_get_default()) {
-      ret = GetAndInitDeviceDisplay(*this, aProofOfLock);
-      if (!ret) {
-        ret = GetAndInitSurfacelessDisplay(*this, aProofOfLock);
-      }
-    }
+    // Check if we allow hardware rendering for WebGL
+    if (gfx::gfxVars::WebglUseHardware()) {
+      // Initialize the display the normal way
+      if (gdk_display_get_default()) {
+        void* nativeDisplay = EGL_DEFAULT_DISPLAY;
 #  ifdef MOZ_WAYLAND
-    else if (widget::GdkIsWaylandDisplay()) {
-      // Wayland does not support EGL_DEFAULT_DISPLAY
-      nativeDisplay = widget::WaylandDisplayGetWLDisplay();
-      if (!nativeDisplay) {
-        NS_WARNING("Failed to get wl_display.");
-        return nullptr;
-      }
-    }
+        if (widget::GdkIsWaylandDisplay()) {
+          // Wayland does not support EGL_DEFAULT_DISPLAY
+          nativeDisplay = widget::WaylandDisplayGetWLDisplay();
+          if (!nativeDisplay) {
+            NS_WARNING("Failed to get wl_display.");
+            return nullptr;
+          }
+        }
 #  endif
-#endif
-    if (!ret) {
-      ret = GetAndInitDisplay(*this, nativeDisplay, aProofOfLock);
+        ret = GetAndInitDisplay(*this, nativeDisplay, aProofOfLock);
+      } else {
+        // Enumerate EGL devices to find the chosen drm render device
+        ret = GetAndInitDeviceDisplay(*this, aProofOfLock, true);
+        // Try a mesa surfaceless display
+        if (!ret) {
+          ret = GetAndInitSurfacelessDisplay(*this, aProofOfLock);
+        }
+      }
+    } else {
+      // Initialize a swrast egl device such as llvmpipe
+      ret = GetAndInitDeviceDisplay(*this, aProofOfLock, false);
     }
+#endif
   }
 
   if (!ret) {
