@@ -229,14 +229,14 @@ already_AddRefed<IPCWorkerRef> IPCWorkerRef::Create(
   if (!ref->HoldWorker(Canceling)) {
     return nullptr;
   }
-  ref->mWorkerPrivate->AdjustNonblockingCCBackgroundActorCount(1);
+  ref->SetActorCount(1);
   ref->mCallback = std::move(aCallback);
 
   return ref.forget();
 }
 
 IPCWorkerRef::IPCWorkerRef(WorkerPrivate* aWorkerPrivate, const char* aName)
-    : WorkerRef(aWorkerPrivate, aName, false), mActorCount(1) {}
+    : WorkerRef(aWorkerPrivate, aName, false), mActorCount(0) {}
 
 IPCWorkerRef::~IPCWorkerRef() {
   NS_ASSERT_OWNINGTHREAD(IPCWorkerRef);
