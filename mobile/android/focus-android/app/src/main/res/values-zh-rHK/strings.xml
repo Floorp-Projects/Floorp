@@ -762,6 +762,10 @@
     <string name="tip_disable_tracking_protection">網站係咪出現問題？\n
     試下關閉追蹤保護</string>
 
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[一按即跳到你最常用嘅網站%1$s 功能表 > 加入去主畫面]]></string>
+
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">以新 tab 開啟連結\n
