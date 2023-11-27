@@ -415,7 +415,6 @@ class GCRuntime {
   bool isWaitingOnBackgroundTask() const;
 
   void lockGC() { lock.lock(); }
-  bool tryLockGC() { return lock.tryLock(); }
   void unlockGC() { lock.unlock(); }
 
 #ifdef DEBUG
