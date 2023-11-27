@@ -383,11 +383,19 @@ add_task(async function test_report_extension() {
         // Remove the report tab and expect the selected tab
         // to become the about:addons tab.
         BrowserTestUtils.removeTab(reportTab);
-        is(
-          gBrowser.selectedBrowser.currentURI.spec,
-          "about:addons",
-          "Got about:addons tab selected"
-        );
+        if (AbuseReporter.amoFormEnabled) {
+          is(
+            gBrowser.selectedBrowser.currentURI.spec,
+            "about:blank",
+            "Expect about:addons tab to have not been opened (amoFormEnabled=true)"
+          );
+        } else {
+          is(
+            gBrowser.selectedBrowser.currentURI.spec,
+            "about:addons",
+            "Got about:addons tab selected (amoFormEnabled=false)"
+          );
+        }
         return;
       }
 
