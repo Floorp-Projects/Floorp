@@ -412,7 +412,7 @@ class GlobalHelperThreadState {
  public:
   bool submitTask(wasm::UniqueTier2GeneratorTask task);
   bool submitTask(wasm::CompileTask* task, wasm::CompileMode mode);
-  bool submitTask(UniquePtr<jit::IonFreeTask> task,
+  bool submitTask(UniquePtr<jit::IonFreeTask>&& task,
                   const AutoLockHelperThreadState& lock);
   bool submitTask(jit::IonCompileTask* task,
                   const AutoLockHelperThreadState& locked);
