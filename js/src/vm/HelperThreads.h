@@ -13,8 +13,10 @@
 
 #include "mozilla/Variant.h"
 
+#include "js/AllocPolicy.h"
 #include "js/shadow/Zone.h"
 #include "js/UniquePtr.h"
+#include "js/Vector.h"
 #include "threading/LockGuard.h"
 #include "threading/Mutex.h"
 #include "wasm/WasmConstants.h"
@@ -49,6 +51,7 @@ class GCRuntime;
 namespace jit {
 class IonCompileTask;
 class IonFreeTask;
+using IonFreeCompileTasks = Vector<IonCompileTask*, 8, SystemAllocPolicy>;
 }  // namespace jit
 
 namespace wasm {
@@ -140,14 +143,20 @@ bool StartOffThreadPromiseHelperTask(PromiseHelperTask* task);
 bool StartOffThreadIonCompile(jit::IonCompileTask* task,
                               const AutoLockHelperThreadState& lock);
 
-/*
- * Schedule deletion of Ion compilation data.
- */
-bool StartOffThreadIonFree(jit::IonCompileTask* task,
-                           const AutoLockHelperThreadState& lock);
-
 void FinishOffThreadIonCompile(jit::IonCompileTask* task,
                                const AutoLockHelperThreadState& lock);
+
+// RAII class to submit an IonFreeTask for a list of Ion compilation tasks.
+class MOZ_RAII AutoStartIonFreeTask {
+  jit::IonFreeCompileTasks tasks_;
+
+ public:
+  ~AutoStartIonFreeTask();
+
+  [[nodiscard]] bool appendCompileTask(jit::IonCompileTask* task) {
+    return tasks_.append(task);
+  }
+};
 
 struct ZonesInState {
   JSRuntime* runtime;
