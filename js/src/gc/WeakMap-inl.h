@@ -110,7 +110,7 @@ WeakMap<K, V>::WeakMap(JS::Zone* zone, JSObject* memOf)
 
   zone->gcWeakMapList().insertFront(this);
   if (zone->gcState() > Zone::Prepare) {
-    mapColor = CellColor::Black;
+    setMapColor(CellColor::Black);
   }
 }
 
@@ -122,8 +122,8 @@ WeakMap<K, V>::WeakMap(JS::Zone* zone, JSObject* memOf)
 // delegates) where future changes to their mark color would require marking the
 // value (or the key).
 template <class K, class V>
-bool WeakMap<K, V>::markEntry(GCMarker* marker, K& key, V& value,
-                              bool populateWeakKeysTable) {
+bool WeakMap<K, V>::markEntry(GCMarker* marker, gc::CellColor mapColor, K& key,
+                              V& value, bool populateWeakKeysTable) {
 #ifdef DEBUG
   MOZ_ASSERT(IsMarked(mapColor));
   if (marker->isParallelMarking()) {
@@ -188,7 +188,8 @@ bool WeakMap<K, V>::markEntry(GCMarker* marker, K& key, V& value,
         tenuredValue = &cellValue->asTenured();
       }
 
-      if (!this->addImplicitEdges(keyCell, delegate, tenuredValue)) {
+      if (!this->addImplicitEdges(AsMarkColor(mapColor), keyCell, delegate,
+                                  tenuredValue)) {
         marker->abortLinearWeakMarking();
       }
     }
@@ -205,21 +206,8 @@ void WeakMap<K, V>::trace(JSTracer* trc) {
 
   if (trc->isMarkingTracer()) {
     MOZ_ASSERT(trc->weakMapAction() == JS::WeakMapTraceAction::Expand);
-    auto* marker = GCMarker::fromTracer(trc);
-
-    // Lock if we are marking in parallel to synchronize updates to:
-    //  - the weak map's color
-    //  - the ephemeron edges table
-    mozilla::Maybe<AutoLockGC> lock;
-    if (marker->isParallelMarking()) {
-      lock.emplace(marker->runtime());
-    }
-
-    // Don't downgrade the map color from black to gray. This can happen when a
-    // barrier pushes the map object onto the black mark stack when it's
-    // already present on the gray mark stack, which is marked later.
-    if (mapColor < AsCellColor(marker->markColor())) {
-      mapColor = AsCellColor(marker->markColor());
+    GCMarker* marker = GCMarker::fromTracer(trc);
+    if (markMap(marker->markColor())) {
       (void)markEntries(marker);
     }
     return;
@@ -249,13 +237,14 @@ bool WeakMap<K, V>::markEntries(GCMarker* marker) {
   // (and keys with delegates) as required for the new color and populate the
   // ephemeron edges if we're in incremental marking mode.
 
-#ifdef DEBUG
+  // Lock during parallel marking to synchronize updates to the ephemeron edges
+  // table.
+  mozilla::Maybe<AutoLockGC> lock;
   if (marker->isParallelMarking()) {
-    marker->runtime()->gc.assertCurrentThreadHasLockedGC();
+    lock.emplace(marker->runtime());
   }
-#endif
 
-  MOZ_ASSERT(IsMarked(mapColor));
+  MOZ_ASSERT(IsMarked(mapColor()));
   bool markedAny = false;
 
   // If we don't populate the weak keys table now then we do it when we enter
@@ -263,8 +252,12 @@ bool WeakMap<K, V>::markEntries(GCMarker* marker) {
   bool populateWeakKeysTable =
       marker->incrementalWeakMapMarkingEnabled || marker->isWeakMarking();
 
+  // Read the atomic color into a local variable so the compiler doesn't load it
+  // every time.
+  gc::CellColor mapColor = this->mapColor();
+
   for (Enum e(*this); !e.empty(); e.popFront()) {
-    if (markEntry(marker, e.front().mutableKey(), e.front().value(),
+    if (markEntry(marker, mapColor, e.front().mutableKey(), e.front().value(),
                   populateWeakKeysTable)) {
       markedAny = true;
     }

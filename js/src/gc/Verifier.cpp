@@ -1057,10 +1057,10 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
   Zone* valueZone = value->zoneFromAnyThread();
   MOZ_ASSERT(valueZone == zone || valueZone->isAtomsZone());
 
-  if (object && object->color() != map->mapColor) {
+  if (object && object->color() != map->mapColor()) {
     fprintf(stderr, "WeakMap object is marked differently to the map\n");
     fprintf(stderr, "(map %p is %s, object %p is %s)\n", map,
-            CellColorName(map->mapColor), object,
+            CellColorName(map->mapColor()), object,
             CellColorName(object->color()));
     ok = false;
   }
@@ -1081,10 +1081,10 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
   CellColor valueColor = effectiveColor(value, valueZone);
   CellColor keyColor = effectiveColor(key, keyZone);
 
-  if (valueColor < std::min(map->mapColor, keyColor)) {
+  if (valueColor < std::min(map->mapColor(), keyColor)) {
     fprintf(stderr, "WeakMap value is less marked than map and key\n");
     fprintf(stderr, "(map %p is %s, key %p is %s, value %p is %s)\n", map,
-            CellColorName(map->mapColor), key, CellColorName(keyColor), value,
+            CellColorName(map->mapColor()), key, CellColorName(keyColor), value,
             CellColorName(valueColor));
 #  ifdef DEBUG
     fprintf(stderr, "Key:\n");
@@ -1106,10 +1106,10 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
   }
 
   CellColor delegateColor = effectiveColor(delegate, delegate->zone());
-  if (keyColor < std::min(map->mapColor, delegateColor)) {
+  if (keyColor < std::min(map->mapColor(), delegateColor)) {
     fprintf(stderr, "WeakMap key is less marked than map or delegate\n");
     fprintf(stderr, "(map %p is %s, delegate %p is %s, key %p is %s)\n", map,
-            CellColorName(map->mapColor), delegate,
+            CellColorName(map->mapColor()), delegate,
             CellColorName(delegateColor), key, CellColorName(keyColor));
     ok = false;
   }

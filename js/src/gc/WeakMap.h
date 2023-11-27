@@ -7,6 +7,7 @@
 #ifndef gc_WeakMap_h
 #define gc_WeakMap_h
 
+#include "mozilla/Atomics.h"
 #include "mozilla/LinkedList.h"
 
 #include "gc/Barrier.h"
@@ -151,12 +152,18 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   // We have a key that, if it or its delegate is marked, may lead to a WeakMap
   // value getting marked. Insert it or its delegate (if any) into the
   // appropriate zone's gcEphemeronEdges or gcNurseryEphemeronEdges.
-  [[nodiscard]] bool addImplicitEdges(gc::Cell* key, gc::Cell* delegate,
+  [[nodiscard]] bool addImplicitEdges(gc::MarkColor mapColor, gc::Cell* key,
+                                      gc::Cell* delegate,
                                       gc::TenuredCell* value);
-  [[nodiscard]] bool addEphemeronTableEntries(gc::Cell* key, gc::Cell* value,
+  [[nodiscard]] bool addEphemeronTableEntries(gc::MarkColor mapColor,
+                                              gc::Cell* key, gc::Cell* value,
                                               gc::Cell* maybeValue);
 
   virtual bool markEntries(GCMarker* marker) = 0;
+
+  gc::CellColor mapColor() const { return gc::CellColor(uint32_t(mapColor_)); }
+  void setMapColor(gc::CellColor newColor) { mapColor_ = uint32_t(newColor); }
+  bool markMap(gc::MarkColor markColor);
 
 #ifdef JS_GC_ZEAL
   virtual bool checkMarking() const = 0;
@@ -173,7 +180,7 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
 
   // Whether this object has been marked during garbage collection and which
   // color it was marked.
-  gc::CellColor mapColor;
+  mozilla::Atomic<uint32_t, mozilla::Relaxed> mapColor_;
 
   friend class JS::Zone;
 };
@@ -269,8 +276,8 @@ class WeakMap
   }
 #endif
 
-  bool markEntry(GCMarker* marker, Key& key, Value& value,
-                 bool populateWeakKeysTable);
+  bool markEntry(GCMarker* marker, gc::CellColor mapColor, Key& key,
+                 Value& value, bool populateWeakKeysTable);
 
   void trace(JSTracer* trc) override;
 
