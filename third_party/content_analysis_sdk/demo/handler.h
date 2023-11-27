@@ -8,6 +8,7 @@
 #include <time.h>
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -29,14 +30,15 @@ class Handler : public content_analysis::sdk::AgentEventHandler {
  public:
   using Event = content_analysis::sdk::ContentAnalysisEvent;
 
-  Handler(unsigned long delay, const std::string& print_data_file_path,
+  Handler(std::vector<unsigned long>&& delays, const std::string& print_data_file_path,
           RegexArray&& toBlock = RegexArray(),
           RegexArray&& toWarn = RegexArray(),
           RegexArray&& toReport = RegexArray()) :
       toBlock_(std::move(toBlock)), toWarn_(std::move(toWarn)), toReport_(std::move(toReport)),
-      delay_(delay), print_data_file_path_(print_data_file_path) {}
+      delays_(std::move(delays)), print_data_file_path_(print_data_file_path) {}
 
-  unsigned long delay() { return delay_; }
+  const std::vector<unsigned long> delays() { return delays_; }
+  size_t nextDelayIndex() const { return nextDelayIndex_; }
 
  protected:
   // Analyzes one request from Google Chrome and responds back to the browser
@@ -112,8 +114,10 @@ class Handler : public content_analysis::sdk::AgentEventHandler {
     stream << std::endl;
 
     // If a delay is specified, wait that much.
-    if (delay_ > 0) {
-      std::this_thread::sleep_for(std::chrono::seconds(delay_));
+    size_t nextDelayIndex = nextDelayIndex_.fetch_add(1);
+    unsigned long delay = delays_[nextDelayIndex % delays_.size()];
+    if (delay > 0) {
+      std::this_thread::sleep_for(std::chrono::seconds(delay));
     }
 
     // Send the response back to Google Chrome.
@@ -364,7 +368,8 @@ class Handler : public content_analysis::sdk::AgentEventHandler {
   RegexArray toWarn_;
   RegexArray toReport_;
 
-  unsigned long delay_;
+  std::vector<unsigned long> delays_;
+  std::atomic<size_t> nextDelayIndex_;
   std::string print_data_file_path_;
 };
 
@@ -372,8 +377,11 @@ class Handler : public content_analysis::sdk::AgentEventHandler {
 // any requests that have the keyword "block" in their data
 class QueuingHandler : public Handler {
  public:
-  QueuingHandler(unsigned long threads, unsigned long delay, const std::string& print_data_file_path)
-      : Handler(delay, print_data_file_path)  {
+  QueuingHandler(unsigned long threads, std::vector<unsigned long>&& delays, const std::string& print_data_file_path,
+    RegexArray&& toBlock = RegexArray(),
+          RegexArray&& toWarn = RegexArray(),
+          RegexArray&& toReport = RegexArray())
+      : Handler(std::move(delays), print_data_file_path, std::move(toBlock), std::move(toWarn), std::move(toReport))  {
     StartBackgroundThreads(threads);
   }
 
@@ -409,7 +417,7 @@ class QueuingHandler : public Handler {
       aout.stream()  << std::endl << "----------" << std::endl;
       aout.stream() << "Thread: " << std::this_thread::get_id() << std::endl;
       aout.stream() << "Delaying request processing for "
-                    << handler->delay() << "s" << std::endl << std::endl;
+                    << handler->delays()[handler->nextDelayIndex() % handler->delays().size()] << "s" << std::endl << std::endl;
       aout.flush();
 
       handler->AnalyzeContent(aout.stream(), std::move(event));
