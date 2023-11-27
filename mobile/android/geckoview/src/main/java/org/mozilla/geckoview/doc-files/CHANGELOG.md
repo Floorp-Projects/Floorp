@@ -13,6 +13,9 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v122
+- ⚠️ Removed [`onGetNimbusFeature`][115.5], please use `ExperimentDelegate.onGetExperimentFeature` instead.
+
 ## v121
 - Added runtime controller functions. [`RuntimeTranslation`][121.1] has options for retrieving translation languages and managing language models.
 - Added support for controlling `cookiebanners.service.enableGlobalRules` and `cookiebanners.service.enableGlobalRules.subFrames` via [`GeckoSession.ContentDelegate.cookieBannerGlobalRulesEnabled`][121.2] and [`GeckoSession.ContentDelegate.cookieBannerGlobalRulesSubFramesEnabled`][121.3].
@@ -1476,4 +1479,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 28fe00d99fd6e91f9fdada76d88865ec64494bc4
+[api-version]: 4096311f0fe200c9c2ede63aaaf2a685834d89da
