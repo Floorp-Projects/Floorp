@@ -30,6 +30,13 @@ typealias FxaUnauthorizedException = mozilla.appservices.fxaclient.FxaException.
 typealias FxaOriginMismatchException = mozilla.appservices.fxaclient.FxaException.OriginMismatch
 
 /**
+ * Thrown if the application attempts to complete an OAuth flow when no OAuth flow has been
+ * initiated. This may indicate a user who navigated directly to the OAuth `redirect_uri` for the
+ * application.
+ */
+typealias FxaNoExistingAuthFlow = mozilla.appservices.fxaclient.FxaException.NoExistingAuthFlow
+
+/**
  * Thrown when the Rust library hits an unexpected error that isn't a panic.
  * This may indicate library misuse, network errors, etc.
  */
@@ -47,6 +54,7 @@ fun FxaException.shouldPropagate(): Boolean {
         is FxaUnauthorizedException,
         is FxaUnspecifiedException,
         is FxaOriginMismatchException,
+        is FxaNoExistingAuthFlow,
         -> false
         // Throw on newly encountered exceptions.
         // If they're actually recoverable and you see them in crash reports, update this check.
