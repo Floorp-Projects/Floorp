@@ -134,16 +134,8 @@ export const GeckoViewTranslationsSettings = {
 
     switch (aEvent) {
       case "GeckoView:Translations:IsTranslationEngineSupported": {
-        lazy.TranslationsParent.getIsTranslationsEngineSupported().then(
-          function (value) {
-            aCallback.onSuccess(value);
-          },
-          function (error) {
-            // Bug 1853055 will add named error states.
-            aCallback.onError(
-              `An issue occurred while checking the translations engine: ${error}`
-            );
-          }
+        aCallback.onSuccess(
+          lazy.TranslationsParent.getIsTranslationsEngineSupported()
         );
         return;
       }
