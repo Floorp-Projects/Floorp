@@ -38,7 +38,7 @@ AsyncImagePipelineManager::AsyncImagePipeline::AsyncImagePipeline(
     : mInitialised(false),
       mIsChanged(false),
       mUseExternalImage(false),
-      mRotation(VideoInfo::Rotation::kDegree_0),
+      mRotation(wr::WrRotation::Degree0),
       mFilter(wr::ImageRendering::Auto),
       mMixBlendMode(wr::MixBlendMode::Normal),
       mDLBuilder(aPipelineId, aBackend) {}
@@ -195,7 +195,7 @@ void AsyncImagePipelineManager::RemoveAsyncImagePipeline(
 
 void AsyncImagePipelineManager::UpdateAsyncImagePipeline(
     const wr::PipelineId& aPipelineId, const LayoutDeviceRect& aScBounds,
-    const VideoInfo::Rotation aRotation, const wr::ImageRendering& aFilter,
+    const wr::WrRotation aRotation, const wr::ImageRendering& aFilter,
     const wr::MixBlendMode& aMixBlendMode) {
   if (mDestroyed) {
     return;
@@ -384,20 +384,6 @@ void AsyncImagePipelineManager::ApplyAsyncImagesOfImageBridge(
   }
 }
 
-wr::WrRotation ToWrRotation(VideoInfo::Rotation aRotation) {
-  switch (aRotation) {
-    case VideoInfo::Rotation::kDegree_0:
-      return wr::WrRotation::Degree0;
-    case VideoInfo::Rotation::kDegree_90:
-      return wr::WrRotation::Degree90;
-    case VideoInfo::Rotation::kDegree_180:
-      return wr::WrRotation::Degree180;
-    case VideoInfo::Rotation::kDegree_270:
-      return wr::WrRotation::Degree270;
-  }
-  return wr::WrRotation::Degree0;
-}
-
 void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
     const wr::Epoch& aEpoch, const wr::PipelineId& aPipelineId,
     AsyncImagePipeline* aPipeline, wr::TransactionBuilder& aSceneBuilderTxn,
@@ -439,7 +425,7 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
   computedTransform.scale_from = {
       float(aPipeline->mCurrentTexture->GetSize().width),
       float(aPipeline->mCurrentTexture->GetSize().height)};
-  computedTransform.rotation = ToWrRotation(aPipeline->mRotation);
+  computedTransform.rotation = aPipeline->mRotation;
   // We don't have a frame / per-frame key here, but we can use the pipeline id
   // and the key kind to create a unique stable key.
   computedTransform.key = wr::SpatialKey(

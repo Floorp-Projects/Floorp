@@ -187,7 +187,7 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
         auto mixBlendMode = wr::MixBlendMode::Normal;
         aManager->WrBridge()->AddWebRenderParentCommand(
             OpUpdateAsyncImagePipeline(data->GetPipelineId().value(), scBounds,
-                                       VideoInfo::Rotation::kDegree_0, filter,
+                                       wr::WrRotation::Degree0, filter,
                                        mixBlendMode));
         break;
       }

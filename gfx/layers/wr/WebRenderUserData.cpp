@@ -194,7 +194,7 @@ already_AddRefed<ImageClient> WebRenderImageData::GetImageClient() {
 void WebRenderImageData::CreateAsyncImageWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder, ImageContainer* aContainer,
     const StackingContextHelper& aSc, const LayoutDeviceRect& aBounds,
-    const LayoutDeviceRect& aSCBounds, VideoInfo::Rotation aRotation,
+    const LayoutDeviceRect& aSCBounds, wr::WrRotation aRotation,
     const wr::ImageRendering& aFilter, const wr::MixBlendMode& aMixBlendMode,
     bool aIsBackfaceVisible) {
   MOZ_ASSERT(aContainer->IsAsync());

@@ -25,13 +25,13 @@ using mozilla::wr::FontInstanceKey from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::FontKey from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::BlobImageKey from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::WrRotation from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::gfx::MaybeIntSize from "mozilla/gfx/Point.h";
 using mozilla::LayoutDeviceRect from "Units.h";
 using mozilla::LayoutDeviceSize from "Units.h";
 using mozilla::ImageIntRect from "Units.h";
 using mozilla::gfx::Rect from "mozilla/gfx/Rect.h";
-using mozilla::VideoInfo::Rotation from "MediaInfo.h";
 using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 
@@ -75,7 +75,7 @@ struct OpReleaseTextureOfImage {
 struct OpUpdateAsyncImagePipeline {
   PipelineId pipelineId;
   LayoutDeviceRect scBounds;
-  Rotation rotation;
+  WrRotation rotation;
   ImageRendering filter;
   MixBlendMode mixBlendMode;
 };
