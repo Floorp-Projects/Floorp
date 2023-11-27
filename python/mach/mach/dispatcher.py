@@ -3,10 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
-import difflib
 import shlex
 import sys
 from operator import itemgetter
+
+from mach.command_util import suggest_command
 
 from .base import NoCommandError, UnknownCommandError, UnrecognizedArgumentError
 
@@ -132,7 +133,7 @@ class CommandAction(argparse.Action):
 
         if command not in self._mach_registrar.command_handlers:
             # Try to find similar commands, may raise UnknownCommandError.
-            command = self._suggest_command(command)
+            command = suggest_command(command)
 
         handler = self._mach_registrar.command_handlers.get(command)
 
@@ -448,27 +449,6 @@ class CommandAction(argparse.Action):
         parser.print_help()
         print("")
         c_parser.print_help()
-
-    def _suggest_command(self, command):
-        names = [h.name for h in self._mach_registrar.command_handlers.values()]
-        # We first try to look for a valid command that is very similar to the given command.
-        suggested_commands = difflib.get_close_matches(command, names, cutoff=0.8)
-        # If we find more than one matching command, or no command at all,
-        # we give command suggestions instead (with a lower matching threshold).
-        # All commands that start with the given command (for instance:
-        # 'mochitest-plain', 'mochitest-chrome', etc. for 'mochitest-')
-        # are also included.
-        if len(suggested_commands) != 1:
-            suggested_commands = set(
-                difflib.get_close_matches(command, names, cutoff=0.5)
-            )
-            suggested_commands |= {cmd for cmd in names if cmd.startswith(command)}
-            raise UnknownCommandError(command, "run", suggested_commands)
-        sys.stderr.write(
-            "We're assuming the '%s' command is '%s' and we're "
-            "executing it for you.\n\n" % (command, suggested_commands[0])
-        )
-        return suggested_commands[0]
 
 
 class NoUsageFormatter(argparse.HelpFormatter):
