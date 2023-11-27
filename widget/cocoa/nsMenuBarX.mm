@@ -463,15 +463,18 @@ nsresult nsMenuBarX::Paint() {
 
   // We have to keep the same menu item for the Application menu so we keep
   // passing it along.
-  NSMenu* outgoingMenu = NSApp.mainMenu;
+  NSMenu* outgoingMenu = [NSApp.mainMenu retain];
   NS_ASSERTION(
       outgoingMenu.numberOfItems > 0,
       "Main menu does not have any items, something is terribly wrong!");
 
   NSMenuItem* appMenuItem = [[outgoingMenu itemAtIndex:0] retain];
   [outgoingMenu removeItemAtIndex:0];
-  [mNativeMenu insertItem:appMenuItem atIndex:0];
+  if (appMenuItem) {
+    [mNativeMenu insertItem:appMenuItem atIndex:0];
+  }
   [appMenuItem release];
+  [outgoingMenu release];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
