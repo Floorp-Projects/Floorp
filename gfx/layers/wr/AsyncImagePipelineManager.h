@@ -104,7 +104,7 @@ class AsyncImagePipelineManager final {
 
   void UpdateAsyncImagePipeline(const wr::PipelineId& aPipelineId,
                                 const LayoutDeviceRect& aScBounds,
-                                VideoInfo::Rotation aRotation,
+                                wr::WrRotation aRotation,
                                 const wr::ImageRendering& aFilter,
                                 const wr::MixBlendMode& aMixBlendMode);
   void ApplyAsyncImagesOfImageBridge(wr::TransactionBuilder& aSceneBuilderTxn,
@@ -191,8 +191,7 @@ class AsyncImagePipelineManager final {
   struct AsyncImagePipeline {
     AsyncImagePipeline(wr::PipelineId aPipelineId,
                        layers::WebRenderBackend aBackend);
-    void Update(const LayoutDeviceRect& aScBounds,
-                VideoInfo::Rotation aRotation,
+    void Update(const LayoutDeviceRect& aScBounds, wr::WrRotation aRotation,
                 const wr::ImageRendering& aFilter,
                 const wr::MixBlendMode& aMixBlendMode) {
       mIsChanged |= !mScBounds.IsEqualEdges(aScBounds) ||
@@ -208,7 +207,7 @@ class AsyncImagePipelineManager final {
     bool mIsChanged;
     bool mUseExternalImage;
     LayoutDeviceRect mScBounds;
-    VideoInfo::Rotation mRotation;
+    wr::WrRotation mRotation;
     wr::ImageRendering mFilter;
     wr::MixBlendMode mMixBlendMode;
     RefPtr<WebRenderImageHost> mImageHost;

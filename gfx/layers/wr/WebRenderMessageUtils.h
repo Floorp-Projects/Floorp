@@ -197,6 +197,12 @@ struct ParamTraits<mozilla::wr::WebRenderError>
                                       mozilla::wr::WebRenderError::Sentinel> {};
 
 template <>
+struct ParamTraits<mozilla::wr::WrRotation>
+    : public ContiguousEnumSerializer<mozilla::wr::WrRotation,
+                                      mozilla::wr::WrRotation::Degree0,
+                                      mozilla::wr::WrRotation::Sentinel> {};
+
+template <>
 struct ParamTraits<mozilla::wr::MemoryReport>
     : public PlainOldDataSerializer<mozilla::wr::MemoryReport> {};
 
