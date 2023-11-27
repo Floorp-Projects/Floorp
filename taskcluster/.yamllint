@@ -1,6 +1,7 @@
 ---
 ignore: |
   *node_modules*
+  **/test/params/
 
 extends: default
 
