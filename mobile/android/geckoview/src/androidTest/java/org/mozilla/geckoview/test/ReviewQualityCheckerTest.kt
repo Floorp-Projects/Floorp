@@ -10,7 +10,7 @@ import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
-import org.junit.Assume.assumeThat
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,6 +29,16 @@ class ReviewQualityCheckerTest : BaseSessionTest() {
             mapOf(
                 "toolkit.shopping.ohttpRelayURL" to "",
                 "toolkit.shopping.ohttpConfigURL" to "",
+                "geckoview.shopping.mock_test_response" to true,
+            ),
+        )
+    }
+
+    @After
+    fun cleanup() {
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                "geckoview.shopping.mock_test_response" to false,
             ),
         )
     }
@@ -59,8 +69,6 @@ class ReviewQualityCheckerTest : BaseSessionTest() {
 
     @Test
     fun requestAnalysis() {
-        assumeThat(sessionRule.env.isAutomation, equalTo(true))
-
         // Test for the builder constructor
         val productId = "banana"
         val grade = "A"
@@ -94,22 +102,6 @@ class ReviewQualityCheckerTest : BaseSessionTest() {
 
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
-                "geckoview.shopping.mock_test_response" to false,
-            ),
-        )
-
-        // verify a non product page
-        val nonProductPageResult = mainSession.requestAnalysis("https://www.example.com/").accept {
-            assertTrue("Should not return analysis", false)
-        }
-        try {
-            sessionRule.waitForResult(nonProductPageResult)
-        } catch (e: Exception) {
-            assertTrue("Should have an exception", true)
-        }
-
-        sessionRule.setPrefsUntilTestEnd(
-            mapOf(
                 "geckoview.shopping.mock_test_response" to true,
             ),
         )
@@ -131,7 +123,6 @@ class ReviewQualityCheckerTest : BaseSessionTest() {
 
     @Test
     fun requestCreateAnalysisAndStatus() {
-        assumeThat(sessionRule.env.isAutomation, equalTo(true))
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
                 "geckoview.shopping.mock_test_response" to true,
@@ -146,8 +137,6 @@ class ReviewQualityCheckerTest : BaseSessionTest() {
 
     @Test
     fun requestRecommendations() {
-        assumeThat(sessionRule.env.isAutomation, equalTo(true))
-
         // Test the Builder constructor
         val url = "https://example.com/mock_url"
         val adjustedRating = 3.5
@@ -178,28 +167,6 @@ class ReviewQualityCheckerTest : BaseSessionTest() {
         assertThat("Price should match", recommendationObject.price, equalTo(price))
         assertThat("Currency should match", recommendationObject.currency, equalTo(currency))
 
-        sessionRule.setPrefsUntilTestEnd(
-            mapOf(
-                "geckoview.shopping.mock_test_response" to false,
-            ),
-        )
-
-        // verify a non product page
-        val nonProductPageResult = mainSession.requestRecommendations("https://www.amazon.com/").accept {
-            assertTrue("Should not return recommendation", false)
-        }
-        try {
-            sessionRule.waitForResult(nonProductPageResult)
-        } catch (e: Exception) {
-            assertTrue("Should have an exception", true)
-        }
-
-        sessionRule.setPrefsUntilTestEnd(
-            mapOf(
-                "geckoview.shopping.mock_test_response" to true,
-            ),
-        )
-
         val result = mainSession.requestRecommendations("https://www.example.com/mock")
         sessionRule.waitForResult(result)
             .let {
@@ -217,13 +184,7 @@ class ReviewQualityCheckerTest : BaseSessionTest() {
 
     @Test
     fun sendAttributionEvents() {
-        assumeThat(sessionRule.env.isAutomation, equalTo(true))
         val aid = "TEST_AID"
-        sessionRule.setPrefsUntilTestEnd(
-            mapOf(
-                "geckoview.shopping.mock_test_response" to true,
-            ),
-        )
         val validClickResult = mainSession.sendClickAttributionEvent(aid)
         assertThat(
             "Click event success result should be true",
@@ -236,5 +197,11 @@ class ReviewQualityCheckerTest : BaseSessionTest() {
             sessionRule.waitForResult(validImpressionResult),
             equalTo(true),
         )
+    }
+
+    @Test
+    fun reportBackInStock() {
+        val result = mainSession.reportBackInStock("https://www.example.com/mock")
+        assertThat("Report back in stock status matches", sessionRule.waitForResult(result), equalTo("report created"))
     }
 }

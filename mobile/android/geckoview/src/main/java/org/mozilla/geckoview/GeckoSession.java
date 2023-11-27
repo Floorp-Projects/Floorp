@@ -3086,6 +3086,20 @@ public class GeckoSession {
             });
   }
 
+  /**
+   * Report that a product is back in stock.
+   *
+   * @param url The URL of the product page.
+   * @return a {@link GeckoResult} result of whether reporting a product is back in stock was
+   *     successful.
+   */
+  @AnyThread
+  public @NonNull GeckoResult<String> reportBackInStock(@NonNull final String url) {
+    final GeckoBundle bundle = new GeckoBundle(1);
+    bundle.putString("url", url);
+    return mEventDispatcher.queryString("GeckoView:ReportBackInStock", bundle);
+  }
+
   // This is the GeckoDisplay acquired via acquireDisplay(), if any.
   private GeckoDisplay mDisplay;
 

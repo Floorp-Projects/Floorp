@@ -1021,6 +1021,7 @@ package org.mozilla.geckoview {
     method @UiThread public void releaseDisplay(@NonNull GeckoDisplay);
     method @AnyThread public void reload();
     method @AnyThread public void reload(int);
+    method @AnyThread @NonNull public GeckoResult<String> reportBackInStock(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<GeckoSession.ReviewAnalysis> requestAnalysis(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<String> requestAnalysisCreationStatus(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<String> requestCreateAnalysis(@NonNull String);
