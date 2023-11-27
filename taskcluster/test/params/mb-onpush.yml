@@ -1,43 +1,49 @@
----
-base_repository: https://hg.mozilla.org/mozilla-central
-build_date: 1509164545
+app_version: '121.0'
+backstop: true
+base_ref: default
+base_repository: https://hg.mozilla.org/mozilla-unified
+base_rev: ae7ec6bbf12f4bf101eb93a4eec56237e2c94711
+build_date: 1700644744
 build_number: 1
-app_version: 60.0a1
-version: 60.0a1
-next_version: null
-filters:
-    - target_tasks_method
-head_ref: 196059cada7070ab1e35db83a22b60389bd0c794
-head_repository: https://hg.mozilla.org/releases/mozilla-beta
-head_rev: 196059cada7070ab1e35db83a22b60389bd0c794
-hg_branch: default
-level: "3"
-message: " "
-# morph_templates: {}
-moz_build_date: "20171028042225"
-optimize_target_tasks: false
-owner: xquan@mozilla.com
-project: mozilla-beta
-pushdate: 1509164545
-pushlog_id: "8069"
-release_eta: ""
-release_history: {}
-release_enable_partners: false
-release_partners: []
-release_partner_build_number: 1
-release_partner_config: null
-release_enable_emefree: false
-# target_task_labels: []
-target_tasks_method: mozilla_beta_tasks
 do_not_optimize: []
-try_mode: null
-try_task_config: {}
+enable_always_target:
+  - docker-image
 existing_tasks: {}
-try_options:
-release_type: "beta"
+filters:
+  - target_tasks_method
+head_ref: 850029a700cfcd62c70e1153778fcac0c0accbd5
+head_repository: https://hg.mozilla.org/releases/mozilla-beta
+head_rev: 850029a700cfcd62c70e1153778fcac0c0accbd5
+head_tag: ''
+hg_branch: default
+level: '3'
+message: ''
+moz_build_date: '20231122091904'
+next_version: null
+optimize_strategies: null
+optimize_target_tasks: true
+owner: user@example.com
+phabricator_diff: null
+project: mozilla-beta
+pushdate: 1700644744
+pushlog_id: '18566'
+release_enable_emefree: false
+release_enable_partner_attribution: false
+release_enable_partner_repack: false
+release_eta: ''
+release_history: {}
+release_partner_build_number: 1
+release_partner_config: {}
+release_partners: []
 release_product: null
+release_type: beta
+repository_type: hg
 required_signoffs: []
 signoff_urls: {}
-phabricator_diff:
+target_tasks_method: mozilla_beta_tasks
 tasks_for: hg-push
 test_manifest_loader: default
+try_mode: null
+try_options: null
+try_task_config: {}
+version: 121.0b2
