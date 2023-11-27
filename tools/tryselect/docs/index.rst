@@ -21,6 +21,13 @@ Another very useful Try command is ``./mach try auto``, which will automatically
 that are mostly likely to be affected by your changes.
 See the :doc:`selectors page <selectors/index>` to view all the other ways to select which tasks to push.
 
+It is possible to set environment variables, notably :doc:`MOZ_LOG </xpcom/logging>`, when pushing to
+try:
+
+.. code-block:: shell
+
+   ./mach try fuzzy --env MOZ_LOG=cubeb:4
+
 Resolving "<Try build> is damaged and can't be opened" error
 ------------------------------------------------------------
 
