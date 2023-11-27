@@ -634,10 +634,10 @@ open class FxaAccountManager(
                     }
                 }
                 val finalize = suspend {
-                    withRetries(logger, MAX_NETWORK_RETRIES) { finalizeDevice(via.authData.authType) }
+                    withServiceRetries(logger, MAX_NETWORK_RETRIES) { finalizeDevice(via.authData.authType) }
                 }
                 // If we can't 'complete', we won't run 'finalize' due to short-circuiting.
-                if (completeAuth() is Result.Failure || finalize() is Result.Failure) {
+                if (completeAuth() is Result.Failure || finalize() !is ServiceResult.Ok) {
                     resetAccount()
                     Event.Progress.FailedToCompleteAuth
                 } else {
