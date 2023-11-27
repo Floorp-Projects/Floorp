@@ -41,14 +41,18 @@ function onDebuggerStatement(frame) {
   assertBPCount({ minLine: 9, minColumn: 9 }, 1);
   assertBPError({ minLine: "1" }, "minLine", "not an integer");
   assertBPError({ minColumn: 2 }, "minColumn", "not allowed without 'line' or 'minLine'");
-  assertBPError({ minLine: 1, minColumn: "2" }, "minColumn", "not an integer");
+  assertBPError({ minLine: 1, minColumn: "2" }, "minColumn", "not a positive integer");
+  assertBPError({ minLine: 1, minColumn: 0 }, "minColumn", "not a positive integer");
+  assertBPError({ minLine: 1, minColumn: -1 }, "minColumn", "not a positive integer");
 
   assertBPCount({ maxLine: 7 }, 5);
   assertBPCount({ maxLine: 7, maxColumn: 1 }, 5);
   assertBPCount({ maxLine: 7, maxColumn: 9 }, 6);
   assertBPError({ maxLine: "1" }, "maxLine", "not an integer");
   assertBPError({ maxColumn: 2 }, "maxColumn", "not allowed without 'line' or 'maxLine'");
-  assertBPError({ maxLine: 1, maxColumn: "2" }, "maxColumn", "not an integer");
+  assertBPError({ maxLine: 1, maxColumn: "2" }, "maxColumn", "not a positive integer");
+  assertBPError({ maxLine: 1, maxColumn: 0 }, "maxColumn", "not a positive integer");
+  assertBPError({ maxLine: 1, maxColumn: -1 }, "maxColumn", "not a positive integer");
 
   assertBPCount({ minLine: 6, maxLine: 8 }, 6);
   assertBPCount({ minLine: 6, minColumn: 9, maxLine: 8 }, 5);

@@ -727,7 +727,15 @@ class DebuggerScript::GetPossibleBreakpointsMatcher {
   }
   bool parseColumnValue(HandleValue value,
                         JS::LimitedColumnNumberOneOrigin* result) {
-    return parseIntValueImpl(value, result->addressOfValueForTranscode());
+    uint32_t tmp;
+    if (!parseIntValueImpl(value, &tmp)) {
+      return false;
+    }
+    if (tmp == 0) {
+      return false;
+    }
+    *result->addressOfValueForTranscode() = tmp;
+    return true;
   }
   bool parseSizeTValue(HandleValue value, size_t* result) {
     return parseIntValueImpl(value, result);
@@ -857,7 +865,7 @@ class DebuggerScript::GetPossibleBreakpointsMatcher {
       if (!parseColumnValue(minColumnValue, &minColumn)) {
         JS_ReportErrorNumberASCII(
             cx_, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
-            "getPossibleBreakpoints' 'minColumn'", "not an integer");
+            "getPossibleBreakpoints' 'minColumn'", "not a positive integer");
         return false;
       }
     }
@@ -883,7 +891,7 @@ class DebuggerScript::GetPossibleBreakpointsMatcher {
       if (!parseColumnValue(maxColumnValue, &maxColumn)) {
         JS_ReportErrorNumberASCII(
             cx_, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
-            "getPossibleBreakpoints' 'maxColumn'", "not an integer");
+            "getPossibleBreakpoints' 'maxColumn'", "not a positive integer");
         return false;
       }
     }
