@@ -45,6 +45,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FxAccountsConfig: "resource://gre/modules/FxAccountsConfig.sys.mjs",
   FxAccountsDevice: "resource://gre/modules/FxAccountsDevice.sys.mjs",
   FxAccountsKeys: "resource://gre/modules/FxAccountsKeys.sys.mjs",
+  FxAccountsOAuth: "resource://gre/modules/FxAccountsOAuth.sys.mjs",
   FxAccountsProfile: "resource://gre/modules/FxAccountsProfile.sys.mjs",
   FxAccountsTelemetry: "resource://gre/modules/FxAccountsTelemetry.sys.mjs",
 });
@@ -827,6 +828,14 @@ FxAccountsInternal.prototype = {
       this._device = new lazy.FxAccountsDevice(this);
     }
     return this._device;
+  },
+
+  _oauth: null,
+  get oauth() {
+    if (!this._oauth) {
+      this._oauth = new lazy.FxAccountsOAuth();
+    }
+    return this._oauth;
   },
 
   _telemetry: null,

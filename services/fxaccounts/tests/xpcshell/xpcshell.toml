@@ -28,6 +28,8 @@ support-files = [
 
 ["test_loginmgr_storage.js"]
 
+["test_oauth_flow.js"]
+
 ["test_oauth_token_storage.js"]
 
 ["test_oauth_tokens.js"]
