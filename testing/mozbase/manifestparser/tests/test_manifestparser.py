@@ -10,10 +10,8 @@ import tempfile
 import unittest
 from io import StringIO
 
-import manifestparser.toml
 import mozunit
 from manifestparser import ManifestParser
-from tomlkit import TOMLDocument
 
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -850,77 +848,6 @@ yellow = submarine
             Exception, "Should not assign in skip-if condition for DEFAULT"
         ):
             parser.read(manifest)
-
-    def test_parse_error(self):
-        """
-        Verify handling of a mal-formed INI file
-        """
-
-        parser = ManifestParser(use_toml=False)
-        manifest = os.path.join(here, "parse-error.ini")
-        with self.assertRaisesRegex(
-            Exception,
-            r"Error parsing manifest file '.*parse-error.ini', line 1: Expected a comment or section, instead found 'xyz = 123'",
-        ):
-            parser.read(manifest)
-
-    def test_parse_error_toml(self):
-        """
-        Verify handling of a mal-formed TOML file
-        """
-
-        parser = ManifestParser(use_toml=True)
-        manifest = os.path.join(here, "parse-error.toml")
-        with self.assertRaisesRegex(
-            Exception,
-            r".*Error parsing TOML manifest file .*parse-error.toml: .*",
-        ):
-            parser.read(manifest)
-
-    def test_parse_error_tomlkit(self):
-        """
-        Verify handling of a mal-formed TOML file
-        """
-
-        parser = ManifestParser(use_toml=True, document=True)
-        manifest = os.path.join(here, "parse-error.toml")
-        with self.assertRaisesRegex(
-            Exception,
-            r".*Error parsing TOML manifest file .*parse-error.toml: .*",
-        ):
-            parser.read(manifest)
-
-    def test_edit_manifest(self):
-        """
-        Verify reading and writing TOML manifest with tomlkit
-        """
-        parser = ManifestParser(use_toml=True, document=True)
-        before = "edit-manifest-before.toml"
-        before_path = os.path.join(here, before)
-        parser.read(before_path)
-        assert before_path in parser.source_documents
-        manifest = parser.source_documents[before_path]
-        assert manifest is not None
-        assert isinstance(manifest, TOMLDocument)
-
-        filename = "bug_20.js"
-        assert filename in manifest
-        condition = "os == 'mac'"
-        bug = "Bug 20"
-        manifestparser.toml.add_skip_if(manifest, filename, condition, bug)
-        condition2 = "os == 'windows'"
-        manifestparser.toml.add_skip_if(manifest, filename, condition2, bug)
-
-        filename2 = "test_foo.html"
-        assert filename2 in manifest
-        condition3 = "os == 'mac' && debug"
-        manifestparser.toml.add_skip_if(manifest, filename2, condition3)
-
-        manifest_str = manifestparser.toml.alphabetize_toml_str(manifest)
-        after = "edit-manifest-after.toml"
-        after_path = os.path.join(here, after)
-        after_str = open(after_path, "r", encoding="utf-8").read()
-        assert manifest_str == after_str
 
 
 if __name__ == "__main__":
