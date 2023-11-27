@@ -8,6 +8,8 @@ with Files("*cppunittest*"):
 with Files("remote*"):
     BUG_COMPONENT = ("GeckoView", "General")
 
+PYTHON_UNITTEST_MANIFESTS += ["test/python.toml"]
+
 SPHINX_TREES["/testing"] = "docs"
 
 DIRS += ["mozbase"]

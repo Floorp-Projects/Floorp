@@ -1,0 +1,10 @@
+[
+  {
+    "classification": "intermittent",
+    "failures": 1,
+    "label": "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-7",
+    "manifest": "browser/components/urlbar/tests/browser-updateResults/browser.toml",
+    "path": "browser/components/urlbar/tests/browser-updateResults/browser_suggestedIndex_10_url_10_search.js",
+    "totalruns": 3
+  }
+]
