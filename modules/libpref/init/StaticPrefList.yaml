@@ -3725,7 +3725,7 @@
 # with a fallback
 - name: dom.security.https_first_schemeless
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 - name: dom.security.unexpected_system_load_telemetry_enabled
