@@ -43,7 +43,7 @@ import org.mozilla.fenix.onboarding.WidgetPinnedReceiver.WidgetPinnedState
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
- * A screen for displaying juno onboarding.
+ * A screen for displaying onboarding.
  *
  * @param pagesToDisplay List of pages to be displayed in onboarding pager ui.
  * @param onMakeFirefoxDefaultClick Invoked when positive button on default browser page is clicked.
@@ -61,7 +61,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  */
 @Composable
 @Suppress("LongParameterList", "LongMethod")
-fun JunoOnboardingScreen(
+fun OnboardingScreen(
     pagesToDisplay: List<OnboardingPageUiData>,
     onMakeFirefoxDefaultClick: () -> Unit,
     onSkipDefaultClick: () -> Unit,
@@ -116,7 +116,7 @@ fun JunoOnboardingScreen(
         }
     }
 
-    JunoOnboardingContent(
+    OnboardingContent(
         pagesToDisplay = pagesToDisplay,
         pagerState = pagerState,
         onMakeFirefoxDefaultClick = {
@@ -162,7 +162,7 @@ fun JunoOnboardingScreen(
 
 @Composable
 @Suppress("LongParameterList")
-private fun JunoOnboardingContent(
+private fun OnboardingContent(
     pagesToDisplay: List<OnboardingPageUiData>,
     pagerState: PagerState,
     onMakeFirefoxDefaultClick: () -> Unit,
@@ -241,10 +241,10 @@ private class DisableForwardSwipeNestedScrollConnection(
 
 @LightDarkPreview
 @Composable
-private fun JunoOnboardingScreenPreview() {
+private fun OnboardingScreenPreview() {
     val pageCount = defaultPreviewPages().size
     FirefoxTheme {
-        JunoOnboardingContent(
+        OnboardingContent(
             pagesToDisplay = defaultPreviewPages(),
             pagerState = rememberPagerState(initialPage = 0) {
                 pageCount

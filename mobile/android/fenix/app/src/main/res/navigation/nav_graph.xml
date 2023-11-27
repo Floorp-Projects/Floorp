@@ -34,8 +34,8 @@
         app:popUpToInclusive="false" />
 
     <action
-        android:id="@+id/action_global_juno_onboarding"
-        app:destination="@id/junoOnboardingFragment"
+        android:id="@+id/action_global_onboarding"
+        app:destination="@id/onboardingFragment"
         app:popUpTo="@id/startupFragment"
         app:popUpToInclusive="true" />
 
@@ -187,12 +187,12 @@
     </fragment>
 
     <fragment
-        android:id="@+id/junoOnboardingFragment"
-        android:name="org.mozilla.fenix.onboarding.JunoOnboardingFragment">
+        android:id="@+id/onboardingFragment"
+        android:name="org.mozilla.fenix.onboarding.OnboardingFragment">
         <action
             android:id="@+id/action_home"
             app:destination="@id/homeFragment"
-            app:popUpTo="@id/junoOnboardingFragment"
+            app:popUpTo="@id/onboardingFragment"
             app:popUpToInclusive="true" />
     </fragment>
 

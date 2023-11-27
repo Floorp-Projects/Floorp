@@ -33,8 +33,8 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.nimbus.FxNimbus
-import org.mozilla.fenix.onboarding.view.JunoOnboardingScreen
 import org.mozilla.fenix.onboarding.view.OnboardingPageUiData
+import org.mozilla.fenix.onboarding.view.OnboardingScreen
 import org.mozilla.fenix.onboarding.view.sequencePosition
 import org.mozilla.fenix.onboarding.view.telemetrySequenceId
 import org.mozilla.fenix.onboarding.view.toPageUiData
@@ -43,9 +43,9 @@ import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.gecko.search.SearchWidgetProvider
 
 /**
- * Fragment displaying the juno onboarding flow.
+ * Fragment displaying the onboarding flow.
  */
-class JunoOnboardingFragment : Fragment() {
+class OnboardingFragment : Fragment() {
 
     private val pagesToDisplay by lazy {
         pagesToDisplay(
@@ -53,7 +53,7 @@ class JunoOnboardingFragment : Fragment() {
             canShowAddWidgetCard(),
         )
     }
-    private val telemetryRecorder by lazy { JunoOnboardingTelemetryRecorder() }
+    private val telemetryRecorder by lazy { OnboardingTelemetryRecorder() }
     private val pinAppWidgetReceiver = WidgetPinnedReceiver()
 
     @SuppressLint("SourceLockedOrientationActivity")
@@ -98,7 +98,7 @@ class JunoOnboardingFragment : Fragment() {
     @Suppress("LongMethod")
     private fun ScreenContent() {
         val context = LocalContext.current
-        JunoOnboardingScreen(
+        OnboardingScreen(
             pagesToDisplay = pagesToDisplay,
             onMakeFirefoxDefaultClick = {
                 activity?.openSetDefaultBrowserOption(useCustomTab = true)
@@ -127,8 +127,8 @@ class JunoOnboardingFragment : Fragment() {
             },
             onSignInButtonClick = {
                 findNavController().nav(
-                    id = R.id.junoOnboardingFragment,
-                    directions = JunoOnboardingFragmentDirections.actionGlobalTurnOnSync(
+                    id = R.id.onboardingFragment,
+                    directions = OnboardingFragmentDirections.actionGlobalTurnOnSync(
                         entrypoint = FenixFxAEntryPoint.NewUserOnboarding,
                     ),
                 )
@@ -203,8 +203,8 @@ class JunoOnboardingFragment : Fragment() {
     private fun onFinish(sequenceId: String, sequencePosition: String) {
         requireComponents.fenixOnboarding.finish()
         findNavController().nav(
-            id = R.id.junoOnboardingFragment,
-            directions = JunoOnboardingFragmentDirections.actionHome(),
+            id = R.id.onboardingFragment,
+            directions = OnboardingFragmentDirections.actionHome(),
         )
         telemetryRecorder.onOnboardingComplete(
             sequenceId = sequenceId,
@@ -224,8 +224,7 @@ class JunoOnboardingFragment : Fragment() {
         showNotificationPage: Boolean,
         showAddWidgetPage: Boolean,
     ): List<OnboardingPageUiData> {
-        val junoOnboardingFeature = FxNimbus.features.junoOnboarding.value()
-        val jexlConditions = junoOnboardingFeature.conditions
+        val jexlConditions = FxNimbus.features.junoOnboarding.value().conditions
         val jexlHelper = requireContext().components.analytics.messagingStorage.helper
 
         return FxNimbus.features.junoOnboarding.value().cards.values.toPageUiData(

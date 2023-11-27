@@ -14,11 +14,11 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import mozilla.components.support.utils.PendingIntentUtils
-import org.mozilla.fenix.onboarding.view.JunoOnboardingScreen
+import org.mozilla.fenix.onboarding.view.OnboardingScreen
 
 /**
  * Receiver required to catch callback from Launcher when prompted
- * to add search widget from the Juno Onboarding.
+ * to add search widget from Onboarding.
  */
 class WidgetPinnedReceiver : BroadcastReceiver() {
 
@@ -44,7 +44,7 @@ class WidgetPinnedReceiver : BroadcastReceiver() {
 
     /**
      * Object containing boolean that updates behavior of Add Search Widget
-     * card from [JunoOnboardingScreen].
+     * card from [OnboardingScreen].
      * - True if widget added successfully and app resumed from launcher add widget dialog.
      * - False if dialog opened but widget was not added.
      */

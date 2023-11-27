@@ -20,7 +20,7 @@ import org.mozilla.fenix.nimbus.JunoOnboarding
 import org.mozilla.fenix.nimbus.OnboardingCardData
 import org.mozilla.fenix.nimbus.OnboardingCardType
 
-class JunoOnboardingMapperTest {
+class OnboardingMapperTest {
 
     @get:Rule
     val activityTestRule =

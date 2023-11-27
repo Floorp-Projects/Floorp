@@ -8,9 +8,9 @@ import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.onboarding.view.OnboardingPageUiData
 
 /**
- * Abstraction responsible for recording telemetry events for JunoOnboarding.
+ * Abstraction responsible for recording telemetry events for Onboarding.
  */
-class JunoOnboardingTelemetryRecorder {
+class OnboardingTelemetryRecorder {
 
     /**
      * Records "onboarding_completed" telemetry event.

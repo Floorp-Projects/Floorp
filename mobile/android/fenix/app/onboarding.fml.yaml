@@ -2,7 +2,7 @@
 features:
 
   juno-onboarding:
-    description: A feature that shows juno onboarding flow.
+    description: A feature that shows the onboarding flow.
 
     variables:
       conditions:

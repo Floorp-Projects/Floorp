@@ -295,14 +295,14 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             it.start()
         }
 
-        if (settings().shouldShowJunoOnboarding(
+        if (settings().shouldShowOnboarding(
                 hasUserBeenOnboarded = components.fenixOnboarding.userHasBeenOnboarded(),
                 isLauncherIntent = intent.toSafeIntent().isLauncherIntent,
             )
         ) {
             // Unless activity is recreated due to config change, navigate to onboarding
             if (savedInstanceState == null) {
-                navHost.navController.navigate(NavGraphDirections.actionGlobalJunoOnboarding())
+                navHost.navController.navigate(NavGraphDirections.actionGlobalOnboarding())
             }
         } else {
             lifecycleScope.launch(IO) {

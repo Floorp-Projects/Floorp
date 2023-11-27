@@ -10,7 +10,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.settings.SupportUtils
 
-class JunoOnboardingMapperTest {
+class OnboardingMapperTest {
 
     @Test
     fun `GIVEN a default browser page WHEN mapToOnboardingPageState is called THEN creates the expected OnboardingPageState`() {

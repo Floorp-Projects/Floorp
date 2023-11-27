@@ -828,10 +828,10 @@ class SettingsTest {
     }
 
     @Test
-    fun `GIVEN hasUserBeenOnboarded is false and isLauncherIntent is false THEN shouldShowJunoOnboarding returns false`() {
+    fun `GIVEN hasUserBeenOnboarded is false and isLauncherIntent is false THEN shouldShowOnboarding returns false`() {
         val settings = spyk(settings)
 
-        val actual = settings.shouldShowJunoOnboarding(
+        val actual = settings.shouldShowOnboarding(
             hasUserBeenOnboarded = false,
             isLauncherIntent = false,
         )
@@ -840,10 +840,10 @@ class SettingsTest {
     }
 
     @Test
-    fun `GIVEN hasUserBeenOnboarded is true THEN shouldShowJunoOnboarding returns false`() {
+    fun `GIVEN hasUserBeenOnboarded is true THEN shouldShowOnboarding returns false`() {
         val settings = spyk(settings)
 
-        val actual = settings.shouldShowJunoOnboarding(
+        val actual = settings.shouldShowOnboarding(
             hasUserBeenOnboarded = true,
             isLauncherIntent = true,
         )
@@ -852,10 +852,10 @@ class SettingsTest {
     }
 
     @Test
-    fun `GIVEN hasUserBeenOnboarded is false and isLauncherIntent is true THEN shouldShowJunoOnboarding returns true`() {
+    fun `GIVEN hasUserBeenOnboarded is false and isLauncherIntent is true THEN shouldShowOnboarding returns true`() {
         val settings = spyk(settings)
 
-        val actual = settings.shouldShowJunoOnboarding(
+        val actual = settings.shouldShowOnboarding(
             hasUserBeenOnboarded = false,
             isLauncherIntent = true,
         )

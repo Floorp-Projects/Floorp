@@ -1033,7 +1033,7 @@ onboarding:
   set_to_default_card:
     type: event
     description: |
-      User viewed juno onboarding set to default card.
+      User viewed onboarding set to default card.
     extra_keys:
       element_type:
         type: string
@@ -1067,7 +1067,7 @@ onboarding:
   sign_in_card:
     type: event
     description: |
-      User viewed juno onboarding sign in card.
+      User viewed onboarding sign in card.
     extra_keys:
       element_type:
         type: string
@@ -1101,7 +1101,7 @@ onboarding:
   turn_on_notifications_card:
     type: event
     description: |
-      User viewed juno onboarding notification permission card.
+      User viewed onboarding notification permission card.
     extra_keys:
       element_type:
         type: string
@@ -1135,7 +1135,7 @@ onboarding:
   set_to_default:
     type: event
     description: |
-      User tapped on set to default button in juno onboarding.
+      User tapped on set to default button in onboarding.
     extra_keys:
       element_type:
         type: string
@@ -1169,7 +1169,7 @@ onboarding:
   skip_default:
     type: event
     description: |
-      User tapped on skip set to default button in juno onboarding.
+      User tapped on skip set to default button in onboarding.
     extra_keys:
       element_type:
         type: string
@@ -1203,7 +1203,7 @@ onboarding:
   sign_in:
     type: event
     description: |
-      User tapped on sign in button in juno onboarding.
+      User tapped on sign in button in onboarding.
     extra_keys:
       element_type:
         type: string
@@ -1237,7 +1237,7 @@ onboarding:
   skip_sign_in:
     type: event
     description: |
-      User tapped on skip sign in button in juno onboarding.
+      User tapped on skip sign in button in onboarding.
     extra_keys:
       element_type:
         type: string
@@ -1271,7 +1271,7 @@ onboarding:
   turn_on_notifications:
     type: event
     description: |
-      User tapped on turn on notifications button in juno onboarding.
+      User tapped on turn on notifications button in onboarding.
     extra_keys:
       element_type:
         type: string
@@ -1305,7 +1305,7 @@ onboarding:
   skip_turn_on_notifications:
     type: event
     description: |
-      User tapped on skip turn on notification button in juno onboarding.
+      User tapped on skip turn on notification button in onboarding.
     extra_keys:
       element_type:
         type: string
@@ -1339,7 +1339,7 @@ onboarding:
   add_search_widget_card:
     type: event
     description: |
-      User viewed juno onboarding add search widget card.
+      User viewed onboarding add search widget card.
     extra_keys:
       element_type:
         type: string
@@ -1373,7 +1373,7 @@ onboarding:
   add_search_widget:
     type: event
     description: |
-      User tapped on Add Firefox Widget in juno onboarding.
+      User tapped on Add Firefox Widget in onboarding.
     extra_keys:
       element_type:
         type: string
@@ -1407,7 +1407,7 @@ onboarding:
   skip_add_search_widget:
     type: event
     description: |
-      User tapped on skip add search widget button in juno onboarding.
+      User tapped on skip add search widget button in onboarding.
     extra_keys:
       element_type:
         type: string
@@ -1441,7 +1441,7 @@ onboarding:
   privacy_policy:
     type: event
     description: |
-      User tapped on privacy policy link in juno onboarding.
+      User tapped on privacy policy link in onboarding.
     extra_keys:
       element_type:
         type: string
@@ -1475,7 +1475,7 @@ onboarding:
   completed:
     type: event
     description: |
-      User completed the juno onboarding.
+      User completed onboarding.
     extra_keys:
       sequence_position:
         type: string
