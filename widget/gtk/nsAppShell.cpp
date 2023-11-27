@@ -159,6 +159,28 @@ nsAppShell::~nsAppShell() {
   if (mPipeFDs[1]) close(mPipeFDs[1]);
 }
 
+mozilla::StaticRefPtr<WakeLockListener> sWakeLockListener;
+static void AddScreenWakeLockListener() {
+  nsCOMPtr<nsIPowerManagerService> powerManager =
+      do_GetService(POWERMANAGERSERVICE_CONTRACTID);
+  if (powerManager) {
+    sWakeLockListener = new WakeLockListener();
+    powerManager->AddWakeLockListener(sWakeLockListener);
+  } else {
+    NS_WARNING(
+        "Failed to retrieve PowerManagerService, wakelocks will be broken!");
+  }
+}
+
+static void RemoveScreenWakeLockListener() {
+  nsCOMPtr<nsIPowerManagerService> powerManager =
+      do_GetService(POWERMANAGERSERVICE_CONTRACTID);
+  if (powerManager) {
+    powerManager->RemoveWakeLockListener(sWakeLockListener);
+    sWakeLockListener = nullptr;
+  }
+}
+
 #ifdef MOZ_ENABLE_DBUS
 void nsAppShell::DBusSessionSleepCallback(GDBusProxy* aProxy,
                                           gchar* aSenderName,
@@ -265,29 +287,6 @@ void nsAppShell::StartDBusListening() {
       "org.freedesktop.timedate1", "/org/freedesktop/timedate1",
       "org.freedesktop.DBus.Properties", mTimedate1ProxyCancellable,
       reinterpret_cast<GAsyncReadyCallback>(DBusConnectClientResponse), this);
-}
-
-mozilla::StaticRefPtr<WakeLockListener> sWakeLockListener;
-
-static void AddScreenWakeLockListener() {
-  nsCOMPtr<nsIPowerManagerService> powerManager =
-      do_GetService(POWERMANAGERSERVICE_CONTRACTID);
-  if (powerManager) {
-    sWakeLockListener = new WakeLockListener();
-    powerManager->AddWakeLockListener(sWakeLockListener);
-  } else {
-    NS_WARNING(
-        "Failed to retrieve PowerManagerService, wakelocks will be broken!");
-  }
-}
-
-static void RemoveScreenWakeLockListener() {
-  nsCOMPtr<nsIPowerManagerService> powerManager =
-      do_GetService(POWERMANAGERSERVICE_CONTRACTID);
-  if (powerManager) {
-    powerManager->RemoveWakeLockListener(sWakeLockListener);
-    sWakeLockListener = nullptr;
-  }
 }
 
 void nsAppShell::StopDBusListening() {
