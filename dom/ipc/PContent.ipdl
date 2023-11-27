@@ -1139,9 +1139,6 @@ parent:
                           bool hasValidUserGestureActivation);
     async ExtProtocolChannelConnectParent(uint64_t registrarId);
 
-    // PrefService message
-    sync GetGfxVars() returns (GfxVarUpdate[] vars);
-
     sync SyncMessage(nsString aMessage, ClonedMessageData aData)
       returns (StructuredCloneData[] retval);
 

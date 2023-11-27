@@ -47,17 +47,12 @@ void gfxVars::Initialize() {
   sVarList = new nsTArray<gfxVars::VarBase*>();
   sInstance = new gfxVars;
 
-  // Note the GPU process is not handled here - it cannot send sync
-  // messages, so instead the initial data is pushed down.
-  if (XRE_IsContentProcess()) {
-    MOZ_ASSERT(gGfxVarInitUpdates,
-               "Initial updates should be provided in content process");
-    if (!gGfxVarInitUpdates) {
-      // No provided initial updates, sync-request them from parent.
-      nsTArray<GfxVarUpdate> initUpdates;
-      dom::ContentChild::GetSingleton()->SendGetGfxVars(&initUpdates);
-      gGfxVarInitUpdates = new nsTArray<GfxVarUpdate>(std::move(initUpdates));
-    }
+  // Content processes should have gotten a call to SetValuesForInitialize,
+  // which will have set gGfxVarInitUpdates.
+  MOZ_ASSERT_IF(XRE_IsContentProcess(), gGfxVarInitUpdates);
+
+  if (gGfxVarInitUpdates) {
+    // Apply any updates from gGfxVarInitUpdates.
     for (const auto& varUpdate : *gGfxVarInitUpdates) {
       ApplyUpdate(varUpdate);
     }
