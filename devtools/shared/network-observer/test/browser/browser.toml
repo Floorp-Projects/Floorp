@@ -7,6 +7,7 @@ support-files = [
   "gzipped.sjs",
   "override.html",
   "override.js",
+  "sjs_network-auth-listener-test-server.sjs",
   "sjs_network-observer-test-server.sjs",
 ]
 
@@ -15,6 +16,8 @@ skip-if = [
   "http3", # Bug 1829298
   "http2",
 ]
+
+["browser_networkobserver_auth_listener.js"]
 
 ["browser_networkobserver_invalid_constructor.js"]
 
