@@ -144,6 +144,14 @@ gfxPlatformGtk::~gfxPlatformGtk() {
   gPlatformFTLibrary = nullptr;
 }
 
+void gfxPlatformGtk::InitAcceleration() {
+  gfxPlatform::InitAcceleration();
+
+  if (XRE_IsContentProcess()) {
+    ImportCachedContentDeviceData();
+  }
+}
+
 void gfxPlatformGtk::InitX11EGLConfig() {
   FeatureState& feature = gfxConfig::GetFeature(Feature::X11_EGL);
 #ifdef MOZ_X11

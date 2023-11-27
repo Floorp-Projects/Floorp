@@ -467,10 +467,10 @@ bool gfxPlatform::Initialized() { return !!gPlatform; }
 /* static */
 void gfxPlatform::InitChild(const ContentDeviceData& aData) {
   MOZ_ASSERT(XRE_IsContentProcess());
-  MOZ_RELEASE_ASSERT(!gPlatform,
-                     "InitChild() should be called before first GetPlatform()");
+  MOZ_ASSERT(!gPlatform,
+             "InitChild() should be called before first GetPlatform()");
   // Make the provided initial ContentDeviceData available to the init
-  // routines, so they don't have to do a sync request from the parent.
+  // routines.
   gContentDeviceInitData = &aData;
   Init();
   gContentDeviceInitData = nullptr;
@@ -3869,20 +3869,16 @@ void gfxPlatform::DisableGPUProcess() {
   gfxVars::SetRemoteCanvasEnabled(false);
 }
 
-void gfxPlatform::FetchAndImportContentDeviceData() {
+void gfxPlatform::ImportCachedContentDeviceData() {
   MOZ_ASSERT(XRE_IsContentProcess());
 
-  if (gContentDeviceInitData) {
-    ImportContentDeviceData(*gContentDeviceInitData);
+  // Import the content device data if we've got some waiting.
+  if (!gContentDeviceInitData) {
     return;
   }
 
-  mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
-
-  mozilla::gfx::ContentDeviceData data;
-  cc->SendGetGraphicsDeviceInitData(&data);
-
-  ImportContentDeviceData(data);
+  ImportContentDeviceData(*gContentDeviceInitData);
+  gContentDeviceInitData = nullptr;
 }
 
 void gfxPlatform::ImportContentDeviceData(
