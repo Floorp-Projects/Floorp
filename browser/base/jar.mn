@@ -90,10 +90,6 @@ browser.jar:
 *       content/browser/hiddenWindowMac.xhtml         (content/hiddenWindowMac.xhtml)
         content/browser/nonbrowser-mac.js             (content/nonbrowser-mac.js)
 #endif
-#ifndef XP_MACOSX
-*       content/browser/webrtcLegacyIndicator.xhtml   (content/webrtcLegacyIndicator.xhtml)
-        content/browser/webrtcLegacyIndicator.js      (content/webrtcLegacyIndicator.js)
-#endif
         content/browser/webrtcIndicator.xhtml         (content/webrtcIndicator.xhtml)
         content/browser/webrtcIndicator.js            (content/webrtcIndicator.js)
 # the following files are browser-specific overrides
