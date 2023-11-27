@@ -355,6 +355,7 @@ checkbox {
 
 #updateDeck > hbox > label {
   flex: 1;
+  margin-inline-end: 5px !important;
 }
 
 .manualLink {
@@ -899,10 +900,6 @@ dialog > .sync-engines-list + hbox {
   width: 20px;
   height: 20px;
   vertical-align: text-bottom;
-}
-
-#updateDeck > hbox > label {
-  margin-inline-end: 5px ! important;
 }
 
 .update-throbber {
