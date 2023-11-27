@@ -174,12 +174,18 @@ class CommonBackend(BuildBackend):
             return False
 
         elif isinstance(obj, GeneratedFile):
-            if obj.required_during_compile or obj.required_before_compile:
-                for f in itertools.chain(
-                    obj.required_before_compile, obj.required_during_compile
-                ):
-                    fullpath = ObjDirPath(obj._context, "!" + f).full_path
-                    self._handle_generated_sources([fullpath])
+            for f in obj.outputs:
+                if f == "cbindgen-metadata.json":
+                    # FIXME (bug 1865785)
+                    #
+                    # The content of cbindgen-metadata.json is not sorted and
+                    # the order is not consistent across multiple runs.
+                    #
+                    # Exclude this file in order to avoid breaking the
+                    # taskcluster/ci/diffoscope/reproducible.yml jobs.
+                    continue
+                fullpath = ObjDirPath(obj._context, "!" + f).full_path
+                self._handle_generated_sources([fullpath])
             return False
 
         elif isinstance(obj, Exports):
