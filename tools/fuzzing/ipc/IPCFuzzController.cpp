@@ -587,7 +587,12 @@ bool IPCFuzzController::MakeTargetDecision(
   } else if (isPreserveHeader) {
     // In preserveHeaderMode, we need to find an actor that matches the
     // requested message type instead of any random actor.
-    ProtocolId wantedProtocolId = static_cast<ProtocolId>(*type >> 16);
+    uint16_t maybeProtocolId = *type >> 16;
+    if (maybeProtocolId >= IPCMessageStart::LastMsgIndex) {
+      // Not a valid protocol.
+      return false;
+    }
+    ProtocolId wantedProtocolId = static_cast<ProtocolId>(maybeProtocolId);
     std::vector<uint32_t> allowedIndices;
     for (uint32_t i = 0; i < actors.size(); ++i) {
       if (actors[i].second == wantedProtocolId) {
