@@ -18,175 +18,173 @@
 </div>
 
 <pre id="test">
-Test autocomplete on an HTTPS page using upgraded HTTP logins
-
 <script class="testbody" type="text/javascript">
-  const originSecure = "https://" + window.location.host;
-  const originNonSecure = "http://" + window.location.host;
-  const iframe = document.getElementsByTagName("iframe")[0];
-  let iframeDoc, hostname;
+const originSecure = "https://" + window.location.host;
+const originNonSecure = "http://" + window.location.host;
+const iframe = document.getElementsByTagName("iframe")[0];
+let iframeDoc, hostname;
 
-  // Restore the form to the default state.
-  function restoreForm() {
-    return SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
-      this.content.document.getElementById("form-basic-password").focus();
-      this.content.document.getElementById("form-basic-username").value = "";
-      this.content.document.getElementById("form-basic-password").value = "";
-      this.content.document.getElementById("form-basic-username").focus();
+// Restore the form to the default state.
+function restoreForm() {
+  return SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
+    this.content.document.getElementById("form-basic-password").focus();
+    this.content.document.getElementById("form-basic-username").value = "";
+    this.content.document.getElementById("form-basic-password").value = "";
+    this.content.document.getElementById("form-basic-username").focus();
+  });
+}
+
+const HTTPS_FORM_URL = originSecure + "/tests/toolkit/components/passwordmgr/test/mochitest/form_basic.html";
+
+async function setup(formUrl = HTTPS_FORM_URL) {
+  await SpecialPowers.pushPrefEnv({"set": [["signon.schemeUpgrades", true]]});
+
+  let processedPromise = promiseFormsProcessed();
+  iframe.src = formUrl;
+  await new Promise(resolve => {
+    iframe.addEventListener("load", function() {
+      resolve();
+    }, {once: true});
+  });
+
+  await processedPromise;
+
+  hostname = await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
+    return this.content.document.documentURIObject.host;
+  });
+}
+
+add_setup(async () => {
+  await setStoredLoginsAsync(
+    // We have two actual HTTPS to avoid autofill before the schemeUpgrades pref flips to true.
+    [originSecure, originSecure, null, "name", "pass", "uname", "pword"],
+    [originSecure, originSecure, null, "name1", "pass1", "uname", "pword"],
+
+    // Same as above but HTTP instead of HTTPS (to test de-duping)
+    [originNonSecure, originNonSecure, null, "name1", "pass1", "uname", "pword"],
+
+    // Different HTTP login to upgrade with secure formActionOrigin
+    [originNonSecure, originSecure, null, "name2", "passHTTPtoHTTPS", "uname", "pword"]
+  );
+});
+
+add_task(async function setup_https_frame() {
+  await setup(HTTPS_FORM_URL);
+});
+
+add_task(async function test_empty_first_entry() {
+  // Make sure initial form is empty.
+  await checkLoginFormInFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "", "form-basic-password", "");
+  // Trigger autocomplete popup
+  await restoreForm();
+  let popupState = await getPopupState();
+  is(popupState.open, false, "Check popup is initially closed");
+  let autocompleteItems = await popupBy();
+  popupState = await getPopupState();
+  is(popupState.selectedIndex, -1, "Check no entries are selected");
+  checkAutoCompleteResults(autocompleteItems, ["name", "name1", "name2"], hostname, "initial");
+
+  // Check first entry
+  let index0Promise = notifySelectedIndex(0);
+  synthesizeKey("KEY_ArrowDown");
+  await index0Promise;
+  await checkLoginFormInFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "", "form-basic-password", ""); // value shouldn't update
+  synthesizeKey("KEY_Enter");
+  await promiseFormsProcessedInSameProcess();
+  await checkLoginFormInFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "name", "form-basic-password", "pass");
+});
+
+add_task(async function test_empty_second_entry() {
+  await restoreForm();
+  await popupBy();
+  synthesizeKey("KEY_ArrowDown"); // first
+  synthesizeKey("KEY_ArrowDown"); // second
+  synthesizeKey("KEY_Enter");
+  await promiseFormsProcessedInSameProcess();
+  await checkLoginFormInFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "name1", "form-basic-password", "pass1");
+});
+
+add_task(async function test_search() {
+  await restoreForm();
+  let results = await popupBy(async () => {
+    // We need to blur for the autocomplete controller to notice the forced value below.
+    await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
+      let uname = this.content.document.getElementById("form-basic-username");
+      uname.blur();
+      uname.value = "name";
+      uname.focus();
     });
-  }
 
-  // toolkit/components/passwordmgr/test/browser/form_basic.html gets copied
-  // to `mochitest/` folder during test infra setup
-  const FORM_URL = origin + "/tests/toolkit/components/passwordmgr/test/mochitest/form_basic.html";
-
-  add_setup(async () => {
-    await setStoredLoginsDuringTest(
-      // We have two actual HTTPS to avoid autofill before the schemeUpgrades pref flips to true.
-      [originSecure, originSecure, null, "name", "pass", "uname", "pword"],
-      [originSecure, originSecure, null, "name1", "pass1", "uname", "pword"],
-
-      // Same as above but HTTP instead of HTTPS (to test de-duping)
-      [originNonSecure, originNonSecure, null, "name1", "pass1", "uname", "pword"],
-
-      // Different HTTP login to upgrade with secure formActionOrigin
-      [originNonSecure, originSecure, null, "name2", "passHTTPtoHTTPS", "uname", "pword"]
-    );
-
-    await SpecialPowers.pushPrefEnv({"set": [["signon.schemeUpgrades", true]]});
-
-    info("setup form with " + FORM_URL);
-
-    iframe.src = FORM_URL;
-    await new Promise(resolve => {
-      iframe.addEventListener("load", function() {
-        resolve();
-      }, {once: true});
-    });
-
-    const autofillResult = await formAutofillResult("form-basic");
-    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
-
-    hostname = await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
-      return this.content.document.documentURIObject.host;
-    });
+    sendChar("1");
+    synthesizeKey("KEY_ArrowDown"); // open
   });
+  checkAutoCompleteResults(results, ["name1"], hostname, "check result deduping for 'name1'");
+  synthesizeKey("KEY_ArrowDown"); // first
+  synthesizeKey("KEY_Enter");
+  await promiseFormsProcessedInSameProcess();
+  await checkLoginFormInFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "name1", "form-basic-password", "pass1");
 
-  add_named_task("empty first entry", async () => {
-    // Make sure initial form is empty.
-    await checkLoginFormInFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "", "form-basic-password", "");
-    // Trigger autocomplete popup
-    await restoreForm();
-    let popupState = await getPopupState();
-    is(popupState.open, false, "Check popup is initially closed");
-    let autocompleteItems = await popupBy();
-    popupState = await getPopupState();
-    is(popupState.selectedIndex, -1, "Check no entries are selected");
-    checkAutoCompleteResults(autocompleteItems, ["name", "name1", "name2"], hostname, "initial");
+  let popupState = await getPopupState();
+  is(popupState.open, false, "Check popup is now closed");
+});
 
-    // Check first entry
-    let index0Promise = notifySelectedIndex(0);
-    synthesizeKey("KEY_ArrowDown");
-    await index0Promise;
-    await checkLoginFormInFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "", "form-basic-password", ""); // value shouldn't update
-    synthesizeKey("KEY_Enter");
-    const autofillResult = await formAutofillResult("form-basic");
-    is(autofillResult, "filled", "form has been filled");
-    await checkLoginFormInFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "name", "form-basic-password", "pass");
-  });
+add_task(async function test_delete_first_entry() {
+  await restoreForm();
+  await popupBy();
 
-  add_named_task("empty second entry", async () => {
-    await restoreForm();
-    await popupBy();
-    synthesizeKey("KEY_ArrowDown"); // first
-    synthesizeKey("KEY_ArrowDown"); // second
-    synthesizeKey("KEY_Enter");
-    const autofillResult = await formAutofillResult("form-basic");
-    is(autofillResult, "filled", "form has been filled");
-    await checkLoginFormInFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "name1", "form-basic-password", "pass1");
-  });
+  let index0Promise = notifySelectedIndex(0);
+  synthesizeKey("KEY_ArrowDown");
+  await index0Promise;
 
-  add_named_task("search", async () => {
-    await restoreForm();
-    let results = await popupBy(async () => {
-      // We need to blur for the autocomplete controller to notice the forced value below.
-      await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
-        let uname = this.content.document.getElementById("form-basic-username");
-        uname.blur();
-        uname.value = "name";
-        uname.focus();
-      });
+  let deletionPromise = promiseStorageChanged(["removeLogin"]);
+  // On OS X, shift-backspace and shift-delete work, just delete does not.
+  // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
+  synthesizeKey("KEY_Delete", {shiftKey: true});
+  await deletionPromise;
+  await checkLoginFormInFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "", "form-basic-password", "");
 
-      sendChar("1");
-      synthesizeKey("KEY_ArrowDown"); // open
-    });
-    checkAutoCompleteResults(results, ["name1"], hostname, "check result deduping for 'name1'");
-    synthesizeKey("KEY_ArrowDown"); // first
-    synthesizeKey("KEY_Enter");
-    const autofillResult = await formAutofillResult("form-basic");
-    is(autofillResult, "filled", "form has been filled");
-    await checkLoginFormInFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "name1", "form-basic-password", "pass1");
+  let results = await notifyMenuChanged(3, "name1");
 
-    let popupState = await getPopupState();
-    is(popupState.open, false, "Check popup is now closed");
-  });
+  checkAutoCompleteResults(results, ["name1", "name2"], hostname, "two logins should remain after deleting the first");
+  let popupState = await getPopupState();
+  is(popupState.open, true, "Check popup stays open after deleting");
+  synthesizeKey("KEY_Escape");
+  popupState = await getPopupState();
+  is(popupState.open, false, "Check popup closed upon ESC");
+});
 
-  add_named_task("delete first entry", async () => {
-    await restoreForm();
-    await popupBy();
+add_task(async function test_delete_duplicate_entry() {
+  await restoreForm();
+  await popupBy();
 
-    let index0Promise = notifySelectedIndex(0);
-    synthesizeKey("KEY_ArrowDown");
-    await index0Promise;
+  let index0Promise = notifySelectedIndex(0);
+  synthesizeKey("KEY_ArrowDown");
+  await index0Promise;
 
-    let deletionPromise = promiseStorageChanged(["removeLogin"]);
-    // On OS X, shift-backspace and shift-delete work, just delete does not.
-    // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
-    synthesizeKey("KEY_Delete", {shiftKey: true});
-    await deletionPromise;
-    await checkLoginFormInFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "", "form-basic-password", "");
+  let deletionPromise = promiseStorageChanged(["removeLogin"]);
+  // On OS X, shift-backspace and shift-delete work, just delete does not.
+  // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
+  synthesizeKey("KEY_Delete", {shiftKey: true});
+  await deletionPromise;
+  await checkLoginFormInFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "", "form-basic-password", "");
 
-    let results = await notifyMenuChanged(3, "name1");
+  is(await LoginManager.countLogins(originNonSecure, originNonSecure, null), 1,
+     "Check that the HTTP login remains");
+  is(await LoginManager.countLogins(originSecure, originSecure, null), 0,
+     "Check that the HTTPS login was deleted");
 
-    checkAutoCompleteResults(results, ["name1", "name2"], hostname, "two logins should remain after deleting the first");
-    let popupState = await getPopupState();
-    is(popupState.open, true, "Check popup stays open after deleting");
-    synthesizeKey("KEY_Escape");
-    popupState = await getPopupState();
-    is(popupState.open, false, "Check popup closed upon ESC");
-  });
+  // Two menu items should remain as the HTTPS login should have been deleted but
+  // the HTTP would remain.
+  let results = await notifyMenuChanged(2, "name2");
 
-  add_named_task("delete duplicate entry", async () => {
-    await restoreForm();
-    await popupBy();
+  checkAutoCompleteResults(results, ["name2"], hostname, "one login should remain after deleting the HTTPS name1");
+  let popupState = await getPopupState();
+  is(popupState.open, true, "Check popup stays open after deleting");
+  synthesizeKey("KEY_Escape");
+  popupState = await getPopupState();
+  is(popupState.open, false, "Check popup closed upon ESC");
+});
 
-    let index0Promise = notifySelectedIndex(0);
-    synthesizeKey("KEY_ArrowDown");
-    await index0Promise;
-
-    let deletionPromise = promiseStorageChanged(["removeLogin"]);
-    // On OS X, shift-backspace and shift-delete work, just delete does not.
-    // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
-    synthesizeKey("KEY_Delete", {shiftKey: true});
-    await deletionPromise;
-    await checkLoginFormInFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "", "form-basic-password", "");
-
-    is(await LoginManager.countLogins(originNonSecure, originNonSecure, null), 1,
-       "Check that the HTTP login remains");
-    is(await LoginManager.countLogins(originSecure, originSecure, null), 0,
-       "Check that the HTTPS login was deleted");
-
-    // Two menu items should remain as the HTTPS login should have been deleted but
-    // the HTTP would remain.
-    let results = await notifyMenuChanged(2, "name2");
-
-    checkAutoCompleteResults(results, ["name2"], hostname, "one login should remain after deleting the HTTPS name1");
-    let popupState = await getPopupState();
-    is(popupState.open, true, "Check popup stays open after deleting");
-    synthesizeKey("KEY_Escape");
-    popupState = await getPopupState();
-    is(popupState.open, false, "Check popup closed upon ESC");
-  });
 </script>
 </pre>
 </body>

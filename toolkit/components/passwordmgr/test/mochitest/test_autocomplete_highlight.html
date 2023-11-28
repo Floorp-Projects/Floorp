@@ -13,84 +13,74 @@
 <p id="display"></p>
 <div id="content"></div>
 <pre id="test">
-Highlighting autofill fields in the test form
-
-Fields that have been filled in automatically are highlighted by the pseudo class `:autofill`.
-This test ensures that this pseudo-class is applied to filled-in fields and is also cleaned up afterwards.
-
-<template id="form1-template">
-  <form id="form1" action="https://autocomplete">
-    <input type="text" name="uname">
-    <input type="password" name="pword">
-    <button type="submit" name="submit">Submit</button>
-  </form>
-</template>
-
 <script>
-  const formTemplate = document.getElementById("form1-template");
+const { ContentTaskUtils } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/ContentTaskUtils.sys.mjs"
+);
 
-  add_setup(async () => {
-    await setStoredLoginsDuringTest(
-      [location.origin, "https://autocomplete", null, "user1", "pass1"],
-      [location.origin, "https://autocomplete", null, "user2", "pass2"]
-    );
-    listenForUnexpectedPopupShown();
+add_setup(async () => {
+  await setStoredLoginsAsync(
+    [location.origin, "https://autocomplete", null, "user1", "pass1", "", ""],
+    [location.origin, "https://autocomplete", null, "user2", "pass2", "", ""]
+  );
+});
+
+add_task(async function test_field_highlight_on_autocomplete() {
+  const form = createLoginForm({
+    action: "https://autocomplete"
   });
 
-  add_named_task("field highlight on autocomplete", async () => {
-    const form = setContentForTask(formTemplate);
+  await openPopupOn(form.uname);
+  synthesizeKey("KEY_ArrowDown");
+  await synthesizeKey("KEY_Enter");
 
-    const autofillResult = await formAutofillResult(form.id);
-    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
+  await ContentTaskUtils.waitForCondition(() => {
+    return form.uname.matches(":autofill")
+  }, "Highlight was successfully applied to the username field on username autocomplete");
 
-    await openPopupOn(form.uname);
-    synthesizeKey("KEY_ArrowDown");
-    await synthesizeKey("KEY_Enter");
+  ok(form.pword.matches(":autofill"),
+     "Highlight was successfully applied to the password field on username autocomplete");
 
-    const autofillResult1 = await formAutofillResult(form.id);
-    is(autofillResult1, "filled", "form has been filled");
+  // Clear existing highlight on login fields. We check by pressing the tab key after backspace
+  // (by shifting focus to the next element) because the tab key was known to cause a bug where the
+  // highlight is applied once again. See Bug 1526522.
+  form.uname.focus();
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("KEY_Tab");
+  ok(!form.uname.matches(":autofill"),
+     "Highlight was successfully removed on the username field");
 
-    ok(form.uname.matches(":autofill"),
-       "Highlight was successfully applied to the username field on username autocomplete");
-    ok(form.pword.matches(":autofill"),
-       "Highlight was successfully applied to the password field on username autocomplete");
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("KEY_Tab");
+  ok(!form.pword.matches(":autofill"),
+     "Highlight was successfully removed on the password field");
 
-    // Clear existing highlight on login fields. We check by pressing the tab key after backspace
-    // (by shifting focus to the next element) because the tab key was known to cause a bug where the
-    // highlight is applied once again. See Bug 1526522.
-    form.uname.focus();
-    synthesizeKey("KEY_Backspace");
-    synthesizeKey("KEY_Tab");
-    const autofillResult2 = await formAutofillResult(form.id);
-    is(autofillResult2, "no_saved_logins", "form has not been filled due to no saved logins (which is a questionable reason in this case btw)");
-    ok(!form.uname.matches(":autofill"),
-       "Highlight was successfully removed on the username field");
+  // Clear login fields.
+  form.uname.value = "";
+  form.pword.value = "";
 
-    synthesizeKey("KEY_Backspace");
-    synthesizeKey("KEY_Tab");
-    ok(!form.pword.matches(":autofill"),
-       "Highlight was successfully removed on the password field");
+  // Test password field autocomplete.
+  await openPopupOn(form.pword);
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_Enter");
 
-    // Clear login fields.
-    form.reset();
+  await ContentTaskUtils.waitForCondition(() => {
+    return form.pword.matches(":autofill");
+  }, "Highlight was successfully applied to the password field on password autocomplete");
 
-    // Test password field autocomplete.
-    await openPopupOn(form.pword);
-    synthesizeKey("KEY_ArrowDown");
-    synthesizeKey("KEY_Enter");
+  // Clear existing highlight on the password field. We check by pressing the tab key after backspace
+  // (by shifting focus to the next element) because the tab key was known to cause a bug where the
+  // highlight is applied once again. See Bug 1526522.
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("KEY_Tab");
 
-    ok(form.pword.matches(":autofill"),
-       "Highlight was successfully applied to the password field on password autocomplete");
+  ok(!form.pword.matches(":autofill"),
+     "Highlight was successfully removed on the password field");
 
-    // Clear existing highlight on the password field. We check by pressing the tab key after backspace
-    // (by shifting focus to the next element) because the tab key was known to cause a bug where the
-    // highlight is applied once again. See Bug 1526522.
-    synthesizeKey("KEY_Backspace");
-    synthesizeKey("KEY_Tab");
-
-    ok(!form.pword.matches(":autofill"),
-       "Highlight was successfully removed on the password field");
-  });
+  // Clear login fields.
+  form.uname.value = "";
+  form.pword.value = "";
+});
 </script>
 </body>
 </html>
