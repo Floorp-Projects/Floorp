@@ -1011,6 +1011,10 @@ const TargetingGetters = {
       height: window?.screen.availHeight,
     };
   },
+
+  get archBits() {
+    return AppConstants.archBits;
+  },
 };
 
 const ASRouterTargeting = {
