@@ -35,6 +35,7 @@ class RecentlyClosedTabsInView extends ViewPage {
     super();
     this._started = false;
     this.boundObserve = (...args) => this.observe(...args);
+    this.firstUpdateComplete = false;
     this.fullyUpdated = false;
     this.maxTabsLength = this.recentBrowsing ? 5 : 25;
     this.recentlyClosedTabs = [];
@@ -236,8 +237,20 @@ class RecentlyClosedTabsInView extends ViewPage {
     this.fullyUpdated = false;
   }
 
+  firstUpdated() {
+    this.firstUpdateComplete = true;
+  }
+
   updated() {
     this.fullyUpdated = true;
+  }
+
+  async scheduleUpdate() {
+    // Only defer initial update
+    if (!this.firstUpdateComplete) {
+      await new Promise(resolve => setTimeout(resolve));
+    }
+    super.scheduleUpdate();
   }
 
   emptyMessageTemplate() {
@@ -321,31 +334,32 @@ class RecentlyClosedTabsInView extends ViewPage {
             slot="header"
             data-l10n-id="firefoxview-recently-closed-header"
           ></h3>
-          <fxview-tab-list
-            class="with-dismiss-button"
-            ?hidden=${!this.recentlyClosedTabs.length}
-            slot="main"
-            .maxTabsLength=${this.maxTabsLength}
-            .searchQuery=${ifDefined(this.searchResults && this.searchQuery)}
-            .tabItems=${this.searchResults || this.recentlyClosedTabs}
-            @fxview-tab-list-secondary-action=${this.onDismissTab}
-            @fxview-tab-list-primary-action=${this.onReopenTab}
-          ></fxview-tab-list>
-          ${this.recentBrowsing
-            ? html`
-                <div slot="main" ?hidden=${this.recentlyClosedTabs.length}>
-                  ${this.emptyMessageTemplate()}
-                </div>
+          ${when(
+            this.recentlyClosedTabs.length,
+            () =>
+              html`
+                <fxview-tab-list
+                  class="with-dismiss-button"
+                  slot="main"
+                  .maxTabsLength=${this.maxTabsLength}
+                  .searchQuery=${ifDefined(
+                    this.searchResults && this.searchQuery
+                  )}
+                  .tabItems=${this.searchResults || this.recentlyClosedTabs}
+                  @fxview-tab-list-secondary-action=${this.onDismissTab}
+                  @fxview-tab-list-primary-action=${this.onReopenTab}
+                ></fxview-tab-list>
               `
-            : ""}
+          )}
+          ${when(
+            this.recentBrowsing && !this.recentlyClosedTabs.length,
+            () => html` <div slot="main">${this.emptyMessageTemplate()}</div> `
+          )}
         </card-container>
-        ${this.selectedTab
-          ? html`
-              <div ?hidden=${this.recentlyClosedTabs.length}>
-                ${this.emptyMessageTemplate()}
-              </div>
-            `
-          : ""}
+        ${when(
+          this.selectedTab && !this.recentlyClosedTabs.length,
+          () => html` <div>${this.emptyMessageTemplate()}</div> `
+        )}
       </div>
     `;
   }
