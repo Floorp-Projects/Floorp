@@ -2343,10 +2343,18 @@ export class UrlbarView {
         row?.toggleAttribute("selected", true);
       }
     }
+
+    let result = row?.result;
+    let provider = lazy.UrlbarProvidersManager.getProvider(
+      result?.providerName
+    );
+    if (provider) {
+      provider.tryMethod("onBeforeSelection", result, element);
+    }
+
     this.#setAccessibleFocus(setAccessibleFocus && element);
     this.#selectedElement = element;
 
-    let result = row?.result;
     if (updateInput) {
       let urlOverride = null;
       if (element?.classList?.contains("urlbarView-button")) {
@@ -2358,9 +2366,6 @@ export class UrlbarView {
       this.input.setResultForCurrentValue(result);
     }
 
-    let provider = lazy.UrlbarProvidersManager.getProvider(
-      result?.providerName
-    );
     if (provider) {
       provider.tryMethod("onSelection", result, element);
     }
