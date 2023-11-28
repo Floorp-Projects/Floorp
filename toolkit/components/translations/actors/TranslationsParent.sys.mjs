@@ -1404,6 +1404,38 @@ export class TranslationsParent extends JSWindowActorParent {
   /** @type {Promise<WasmRecord> | null} */
   static #bergamotWasmRecord = null;
 
+  /** @type {boolean} */
+  static #lookForLocalWasmBuild = true;
+
+  /**
+   * This is used to load a local copy of the Bergamot translations engine, if it exists.
+   * From a local build of Firefox:
+   *
+   * 1. Run the python script:
+   *   ./toolkit/components/translations/bergamot-translator/build-bergamot.py --debug
+   *
+   * 2. Uncomment the .wasm file in: toolkit/components/translations/jar.mn
+   * 3. Run: ./mach build
+   * 4. Run: ./mach run
+   */
+  static async #maybeFetchLocalBergamotWasmArrayBuffer() {
+    if (TranslationsParent.#lookForLocalWasmBuild) {
+      // Attempt to get a local copy of the translator. Most likely this will be a 404.
+      try {
+        const response = await fetch(
+          "chrome://global/content/translations/bergamot-translator-worker.wasm"
+        );
+        const arrayBuffer = response.arrayBuffer();
+        lazy.console.log(`Using a local copy of Bergamot.`);
+        return arrayBuffer;
+      } catch {
+        // Only attempt to fetch once, if it fails don't try again.
+        TranslationsParent.#lookForLocalWasmBuild = false;
+      }
+    }
+    return null;
+  }
+
   /**
    * Bergamot is the translation engine that has been compiled to wasm. It is shipped
    * to the user via Remote Settings.
@@ -1416,6 +1448,13 @@ export class TranslationsParent extends JSWindowActorParent {
   static async #getBergamotWasmArrayBuffer() {
     const start = Date.now();
     const client = TranslationsParent.#getTranslationsWasmRemoteClient();
+
+    const localCopy =
+      await TranslationsParent.#maybeFetchLocalBergamotWasmArrayBuffer();
+    if (localCopy) {
+      return localCopy;
+    }
+
     if (!TranslationsParent.#bergamotWasmRecord) {
       // Place the records into a promise to prevent any races.
       TranslationsParent.#bergamotWasmRecord = (async () => {
