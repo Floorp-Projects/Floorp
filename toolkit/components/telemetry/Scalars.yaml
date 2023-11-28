@@ -1514,11 +1514,12 @@ extensions.quarantinedDomains:
   listsize:
     bug_numbers:
       - 1840615
+      - 1866196
     description: >
       Number of domains listed in the quarantined domains list pref for the client during
       this session.
     kind: uint
-    expires: "123"
+    expires: "130"
     notification_emails:
       - addons-dev-internal@mozilla.com
     products:
@@ -1529,10 +1530,11 @@ extensions.quarantinedDomains:
   listhash:
     bug_numbers:
       - 1841683
+      - 1866196
     description: >
       SHA1 cryptographic hash of the quarantined domains string pref.
     kind: string
-    expires: "123"
+    expires: "130"
     notification_emails:
       - addons-dev-internal@mozilla.com
     products:
@@ -1543,11 +1545,12 @@ extensions.quarantinedDomains:
   remotehash:
     bug_numbers:
       - 1840615
+      - 1866196
     description: >
       SHA1 cryptographic hash of the quarantined domains string pref as it was
       set based on the value got synced from the RemoteSettings collection.
     kind: string
-    expires: "123"
+    expires: "130"
     notification_emails:
       - addons-dev-internal@mozilla.com
     products:
