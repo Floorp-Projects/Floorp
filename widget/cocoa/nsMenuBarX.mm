@@ -536,7 +536,7 @@ void nsMenuBarX::MenuChildChangedVisibility(const MenuChild& aChild,
   NSMenuItem* item = child->NativeNSMenuItem();
   if (aIsVisible) {
     NSInteger insertionPoint = CalculateNativeInsertionPoint(child);
-    [mNativeMenu insertItem:child->NativeNSMenuItem() atIndex:insertionPoint];
+    [mNativeMenu insertItem:item atIndex:insertionPoint];
   } else if ([mNativeMenu indexOfItem:item] != -1) {
     [mNativeMenu removeItem:item];
   }
