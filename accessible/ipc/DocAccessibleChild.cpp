@@ -381,10 +381,11 @@ bool DocAccessibleChild::SendCaretMoveEvent(const uint64_t& aID,
                                             const int32_t& aOffset,
                                             const bool& aIsSelectionCollapsed,
                                             const bool& aIsAtEndOfLine,
-                                            const int32_t& aGranularity) {
-  return PDocAccessibleChild::SendCaretMoveEvent(aID, GetCaretRectFor(aID),
-                                                 aOffset, aIsSelectionCollapsed,
-                                                 aIsAtEndOfLine, aGranularity);
+                                            const int32_t& aGranularity,
+                                            bool aFromUser) {
+  return PDocAccessibleChild::SendCaretMoveEvent(
+      aID, GetCaretRectFor(aID), aOffset, aIsSelectionCollapsed, aIsAtEndOfLine,
+      aGranularity, aFromUser);
 }
 
 #if !defined(XP_WIN)

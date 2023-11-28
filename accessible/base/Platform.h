@@ -99,7 +99,8 @@ void PlatformFocusEvent(Accessible* aTarget,
                         const LayoutDeviceIntRect& aCaretRect);
 void PlatformCaretMoveEvent(Accessible* aTarget, int32_t aOffset,
                             bool aIsSelectionCollapsed, int32_t aGranularity,
-                            const LayoutDeviceIntRect& aCaretRect);
+                            const LayoutDeviceIntRect& aCaretRect,
+                            bool aFromUser);
 void PlatformTextChangeEvent(Accessible* aTarget, const nsAString& aStr,
                              int32_t aStart, uint32_t aLen, bool aIsInsert,
                              bool aFromUser);
