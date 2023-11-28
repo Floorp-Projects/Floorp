@@ -597,6 +597,10 @@ nsresult MathMLElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   return PostHandleEventForLinks(aVisitor);
 }
 
+void MathMLElement::ActivationBehavior(EventChainPostVisitor& aVisitor) {
+  ActivationBehaviorForLinks(aVisitor);
+}
+
 NS_IMPL_ELEMENT_CLONE(MathMLElement)
 
 void MathMLElement::SetIncrementScriptLevel(bool aIncrementScriptLevel,
