@@ -36,10 +36,10 @@
         /* harmony export */
       });
       let _document$querySelect;
-
       /* This Source Code Form is subject to the terms of the Mozilla Public
        * License, v. 2.0. If a copy of the MPL was not distributed with this file,
        * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
       // If the container has a "page" data attribute, then this is
       // a Spotlight modal or Feature Callout. Otherwise, this is
       // about:welcome and we should return the current page.
@@ -53,25 +53,24 @@
         handleUserAction(action) {
           return window.AWSendToParent("SPECIAL_ACTION", action);
         },
-
         sendImpressionTelemetry(messageId, context) {
           let _window;
           let _window$AWSendEventTe;
-
           (_window$AWSendEventTe = (_window = window).AWSendEventTelemetry) ===
             null || _window$AWSendEventTe === void 0
             ? void 0
             : _window$AWSendEventTe.call(_window, {
                 event: "IMPRESSION",
-                event_context: { ...context, page },
+                event_context: {
+                  ...context,
+                  page,
+                },
                 message_id: messageId,
               });
         },
-
         sendActionTelemetry(messageId, elementId, eventName = "CLICK_BUTTON") {
           let _window$AWSendEventTe2;
           let _window2;
-
           const ping = {
             event: eventName,
             event_context: {
@@ -85,7 +84,6 @@
             ? void 0
             : _window$AWSendEventTe2.call(_window2, ping);
         },
-
         sendDismissTelemetry(messageId, elementId) {
           // Don't send DISMISS telemetry in spotlight modals since they already send
           // their own equivalent telemetry.
@@ -93,15 +91,12 @@
             this.sendActionTelemetry(messageId, elementId, "DISMISS");
           }
         },
-
         async fetchFlowParams(metricsFlowUri) {
           let flowParams;
-
           try {
             const response = await fetch(metricsFlowUri, {
               credentials: "omit",
             });
-
             if (response.status === 200) {
               const { deviceId, flowId, flowBeginTime } = await response.json();
               flowParams = {
@@ -115,10 +110,8 @@
           } catch (e) {
             flowParams = null;
           }
-
           return flowParams;
         },
-
         sendEvent(type, detail) {
           document.dispatchEvent(
             new CustomEvent(`AWPage:${type}`, {
@@ -127,7 +120,6 @@
             })
           );
         },
-
         getLoadingStrategyFor(url) {
           return url !== null && url !== void 0 && url.startsWith("http")
             ? "lazy"
@@ -219,15 +211,14 @@
       /* harmony import */ let _MultiStageProtonScreen__WEBPACK_IMPORTED_MODULE_3__ =
         __webpack_require__(6);
       /* harmony import */ let _LanguageSwitcher__WEBPACK_IMPORTED_MODULE_4__ =
-        __webpack_require__(11);
-      /* harmony import */ let _asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_5__ =
-        __webpack_require__(19);
+        __webpack_require__(10);
+      /* harmony import */ let _newtab_content_src_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_5__ =
+        __webpack_require__(18);
       /* This Source Code Form is subject to the terms of the Mozilla Public
        * License, v. 2.0. If a copy of the MPL was not distributed with this file,
        * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
       // Amount of milliseconds for all transitions to complete (including delays).
-
       const TRANSITION_OUT_TIME = 1000;
       const LANGUAGE_MISMATCH_SCREEN_ID = "AW_LANGUAGE_MISMATCH";
       const MultiStageAboutWelcome = props => {
@@ -246,13 +237,14 @@
             // If we want to load index from history state, we don't want to send impression yet
             if (!didMount) {
               return;
-            } // On about:welcome first load, screensVisited should be empty
-
+            }
+            // On about:welcome first load, screensVisited should be empty
             let screensVisited = didFilter.current
               ? screens.slice(0, index)
               : [];
             let upcomingScreens = defaultScreens
-              .filter(s => !screensVisited.find(v => v.id === s.id)) // Filter out Language Mismatch screen from upcoming
+              .filter(s => !screensVisited.find(v => v.id === s.id))
+              // Filter out Language Mismatch screen from upcoming
               // screens if screens set from useLanguageSwitcher hook
               // has filtered language screen
               .filter(
@@ -265,9 +257,10 @@
             let filteredScreens = screensVisited.concat(
               (await window.AWEvaluateScreenTargeting(upcomingScreens)) ??
                 upcomingScreens
-            ); // Use existing screen for the filtered screen to carry over any modification
-            // e.g. if AW_LANGUAGE_MISMATCH exists, use it from existing screens
+            );
 
+            // Use existing screen for the filtered screen to carry over any modification
+            // e.g. if AW_LANGUAGE_MISMATCH exists, use it from existing screens
             setScreens(
               filteredScreens.map(
                 filtered => screens.find(s => s.id === filtered.id) ?? filtered
@@ -277,7 +270,6 @@
             const screenInitials = filteredScreens
               .map(({ id }) => {
                 let _id$split$;
-
                 return id === null || id === void 0
                   ? void 0
                   : (_id$split$ = id.split("_")[1]) === null ||
@@ -285,13 +277,12 @@
                   ? void 0
                   : _id$split$[0];
               })
-              .join(""); // Send impression ping when respective screen first renders
-
+              .join("");
+            // Send impression ping when respective screen first renders
             filteredScreens.forEach((screen, order) => {
               if (index === order) {
                 let _window;
                 let _window$AWAddScreenIm;
-
                 _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendImpressionTelemetry(
                   `${props.message_id}_${order}_${screen.id}_${screenInitials}`
                 );
@@ -301,12 +292,14 @@
                   ? void 0
                   : _window$AWAddScreenIm.call(_window, screen);
               }
-            }); // Remember that a new screen has loaded for browser navigation
+            });
 
+            // Remember that a new screen has loaded for browser navigation
             if (props.updateHistory && index > window.history.state) {
               window.history.pushState(index, "");
-            } // Remember the previous screen index so we can animate the transition
+            }
 
+            // Remember the previous screen index so we can animate the transition
             setPreviousOrder(index);
           })();
         }, [index, didMount]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -324,9 +317,10 @@
               );
             }
           })();
-        }, [metricsFlowUri]); // Allow "in" style to render to actually transition towards regular state,
-        // which also makes using browser back/forward navigation skip transitions.
+        }, [metricsFlowUri]);
 
+        // Allow "in" style to render to actually transition towards regular state,
+        // which also makes using browser back/forward navigation skip transitions.
         const [transition, setTransition] = (0,
         react__WEBPACK_IMPORTED_MODULE_0__.useState)(
           props.transitions ? "in" : ""
@@ -337,16 +331,19 @@
               requestAnimationFrame(() => setTransition(""))
             );
           }
-        }, [transition]); // Transition to next screen, opening about:home on last screen button CTA
+        }, [transition]);
 
+        // Transition to next screen, opening about:home on last screen button CTA
         const handleTransition = () => {
           // Only handle transitioning out from a screen once.
           if (transition === "out") {
             return;
-          } // Start transitioning things "out" immediately when moving forwards.
+          }
 
-          setTransition(props.transitions ? "out" : ""); // Actually move forwards after all transitions finish.
+          // Start transitioning things "out" immediately when moving forwards.
+          setTransition(props.transitions ? "out" : "");
 
+          // Actually move forwards after all transitions finish.
           setTimeout(
             () => {
               if (index < screens.length - 1) {
@@ -359,13 +356,11 @@
             props.transitions ? TRANSITION_OUT_TIME : 0
           );
         };
-
         (0, react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
           // When about:welcome loads (on refresh or pressing back button
           // from about:home), ensure history state usEffect runs before
           // useEffect hook that send impression telemetry
           setDidMount(true);
-
           if (props.updateHistory) {
             // Switch to the screen tracked in state (null for initial state)
             // or last screen index if a user navigates by pressing back
@@ -374,7 +369,6 @@
               if (transition === "out") {
                 return;
               }
-
               setTransition(props.transitions ? "out" : "");
               setTimeout(
                 () => {
@@ -383,32 +377,33 @@
                 },
                 props.transitions ? TRANSITION_OUT_TIME : 0
               );
-            }; // Handle page load, e.g., going back to about:welcome from about:home
+            };
 
+            // Handle page load, e.g., going back to about:welcome from about:home
             const { state } = window.history;
-
             if (state) {
               setScreenIndex(Math.min(state, screens.length - 1));
               setPreviousOrder(Math.min(state, screens.length - 1));
-            } // Watch for browser back/forward button navigation events
+            }
 
+            // Watch for browser back/forward button navigation events
             window.addEventListener("popstate", handler);
             return () => window.removeEventListener("popstate", handler);
           }
-
           return false;
         }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
         // Save the active multi select state for each screen as an object keyed by
         // screen id. Each screen id has an array containing checkbox ids used in
         // handleAction to update MULTI_ACTION data. This allows us to remember the
         // state of each screen's multi select checkboxes when navigating back and
         // forth between screens, while also allowing a message to have more than one
         // multi select screen.
-
         const [activeMultiSelects, setActiveMultiSelects] = (0,
-        react__WEBPACK_IMPORTED_MODULE_0__.useState)({}); // Get the active theme so the rendering code can make it selected
-        // by default.
+        react__WEBPACK_IMPORTED_MODULE_0__.useState)({});
 
+        // Get the active theme so the rendering code can make it selected
+        // by default.
         const [activeTheme, setActiveTheme] = (0,
         react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
         const [initialTheme, setInitialTheme] = (0,
@@ -452,7 +447,6 @@
               const isLastScreen = screen === screens[screens.length - 1];
               const totalNumberOfScreens = screens.length;
               const isSingleScreen = totalNumberOfScreens === 1;
-
               const setActiveMultiSelect = valueOrFn =>
                 setActiveMultiSelects(prevState => ({
                   ...prevState,
@@ -461,7 +455,6 @@
                       ? valueOrFn(prevState[screen.id])
                       : valueOrFn,
                 }));
-
               return index === order
                 ? /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
                     WelcomeScreen,
@@ -504,7 +497,6 @@
         let _props$content$second;
         let _props$content$second2;
         let _props$content$tiles;
-
         const targetElement = props.position
           ? `secondary_button_${props.position}`
           : `secondary_button`;
@@ -525,14 +517,11 @@
           _props$content$second2 === void 0
             ? void 0
             : _props$content$second2.style) === "primary";
-
         if (isTextLink) {
           buttonStyling += " text-link";
         }
-
         if (isPrimary) {
           let _props$content$second3;
-
           buttonStyling =
             (_props$content$second3 = props.content.secondary_button) !==
               null &&
@@ -541,7 +530,6 @@
               ? `primary arrow-icon`
               : `primary`;
         }
-
         return /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
           "div",
           {
@@ -577,7 +565,6 @@
       };
       const StepsIndicator = props => {
         let steps = [];
-
         for (let i = 0; i < props.totalNumberOfScreens; i++) {
           let className = `${i === props.order ? "current" : ""} ${
             i < props.order ? "complete" : ""
@@ -593,7 +580,6 @@
             )
           );
         }
-
         return steps;
       };
       const ProgressBar = ({ step, previousStep, totalNumberOfScreens }) => {
@@ -606,7 +592,6 @@
           // the screen's entire DOM tree will be re-rendered.
           setProgress(step / totalNumberOfScreens);
         }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
         return /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
           "div",
           {
@@ -627,26 +612,28 @@
 
         handleOpenURL(action, flowParams, UTMTerm) {
           let { type, data } = action;
-
           if (type === "SHOW_FIREFOX_ACCOUNTS") {
             let params = {
-              ..._asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_5__.BASE_PARAMS,
+              ..._newtab_content_src_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_5__.BASE_PARAMS,
               utm_term: `${UTMTerm}-screen`,
             };
-
             if (action.addFlowParams && flowParams) {
-              params = { ...params, ...flowParams };
+              params = {
+                ...params,
+                ...flowParams,
+              };
             }
-
-            data = { ...data, extraParams: params };
+            data = {
+              ...data,
+              extraParams: params,
+            };
           } else if (type === "OPEN_URL") {
             let url = new URL(data.args);
             (0,
-            _asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_5__.addUtmParams)(
+            _newtab_content_src_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_5__.addUtmParams)(
               url,
               `${UTMTerm}-screen`
             );
-
             if (action.addFlowParams && flowParams) {
               url.searchParams.append("device_id", flowParams.deviceId);
               url.searchParams.append("flow_id", flowParams.flowId);
@@ -655,10 +642,11 @@
                 flowParams.flowBeginTime
               );
             }
-
-            data = { ...data, args: url.toString() };
+            data = {
+              ...data,
+              args: url.toString(),
+            };
           }
-
           return _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.handleUserAction(
             {
               type,
@@ -677,32 +665,29 @@
             props.content[value] ||
             props.content.tiles ||
             props.content.languageSwitcher;
-
           if (!(targetContent && targetContent.action)) {
             return;
-          } // Send telemetry before waiting on actions
-
+          }
+          // Send telemetry before waiting on actions
           _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(
             props.messageId,
             source,
             event.name
-          ); // Send additional telemetry if a messaging surface like feature callout is
+          );
+
+          // Send additional telemetry if a messaging surface like feature callout is
           // dismissed via the dismiss button. Other causes of dismissal will be
           // handled separately by the messaging surface's own code.
-
           if (value === "dismiss_button" && !event.name) {
             _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendDismissTelemetry(
               props.messageId,
               source
             );
           }
-
           let { action } = targetContent;
           action = JSON.parse(JSON.stringify(action));
-
           if (action.collectSelect) {
             let _action$data;
-
             // Populate MULTI_ACTION data actions property with selected checkbox
             // actions from tiles data
             if (action.type !== "MULTI_ACTION") {
@@ -711,7 +696,6 @@
               );
               action.type = "MULTI_ACTION";
             }
-
             if (
               !Array.isArray(
                 (_action$data = action.data) === null || _action$data === void 0
@@ -725,16 +709,16 @@
               action.data = {
                 actions: [],
               };
-            } // Prepend the multi-select actions to the CTA's actions array, but keep
+            }
+
+            // Prepend the multi-select actions to the CTA's actions array, but keep
             // the actions in the same order they appear in. This way the CTA action
             // can go last, after the multi-select actions are processed. For example,
             // 1. checkbox action 1
             // 2. checkbox action 2
             // 3. radio action
             // 4. CTA action (which perhaps depends on the radio action)
-
             let multiSelectActions = [];
-
             for (const checkbox of ((_props$content = props.content) === null ||
             _props$content === void 0
               ? void 0
@@ -745,9 +729,7 @@
               var _props$content;
               var _props$content$tiles2;
               var _this$props$activeMul;
-
               let checkboxAction;
-
               if (
                 (_this$props$activeMul = this.props.activeMultiSelect) !==
                   null &&
@@ -758,23 +740,20 @@
               } else {
                 checkboxAction = checkbox.uncheckedAction;
               }
-
               if (checkboxAction) {
                 multiSelectActions.push(checkboxAction);
               }
             }
+            action.data.actions.unshift(...multiSelectActions);
 
-            action.data.actions.unshift(...multiSelectActions); // Send telemetry with selected checkbox ids
-
+            // Send telemetry with selected checkbox ids
             _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(
               props.messageId,
               props.activeMultiSelect,
               "SELECT_CHECKBOX"
             );
           }
-
           let actionResult;
-
           if (["OPEN_URL", "SHOW_FIREFOX_ACCOUNTS"].includes(action.type)) {
             actionResult = await this.handleOpenURL(
               action,
@@ -786,19 +765,17 @@
               await _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.handleUserAction(
                 action
               );
-
             if (action.type === "FXA_SIGNIN_FLOW") {
               _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(
                 props.messageId,
                 actionResult ? "sign_in" : "sign_in_cancel",
                 "FXA_SIGNIN_FLOW"
               );
-            } // Wait until migration closes to complete the action
-
+            }
+            // Wait until migration closes to complete the action
             const hasMigrate = a => {
               let _a$data;
               let _a$data$actions;
-
               return (
                 a.type === "SHOW_MIGRATION_WIZARD" ||
                 (a.type === "MULTI_ACTION" &&
@@ -810,7 +787,6 @@
                     : _a$data$actions.some(hasMigrate)))
               );
             };
-
             if (hasMigrate(action)) {
               await window.AWWaitForMigrationClose();
               _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(
@@ -818,8 +794,9 @@
                 "migrate_close"
               );
             }
-          } // A special tiles.action.theme value indicates we should use the event's value vs provided value.
+          }
 
+          // A special tiles.action.theme value indicates we should use the event's value vs provided value.
           if (action.theme) {
             let themeToUse =
               action.theme === "<event>"
@@ -827,22 +804,22 @@
                 : this.props.initialTheme || action.theme;
             this.props.setActiveTheme(themeToUse);
             window.AWSelectTheme(themeToUse);
-          } // If the action has persistActiveTheme: true, we set the initial theme to the currently active theme
-          // so that it can be reverted to in the event that the user navigates away from the screen
+          }
 
+          // If the action has persistActiveTheme: true, we set the initial theme to the currently active theme
+          // so that it can be reverted to in the event that the user navigates away from the screen
           if (action.persistActiveTheme) {
             this.props.setInitialTheme(this.props.activeTheme);
-          } // `navigate` and `dismiss` can be true/false/undefined, or they can be a
+          }
+
+          // `navigate` and `dismiss` can be true/false/undefined, or they can be a
           // string "actionResult" in which case we should use the actionResult
           // (boolean resolved by handleUserAction)
-
           const shouldDoBehavior = behavior =>
             behavior === "actionResult" ? actionResult : behavior;
-
           if (shouldDoBehavior(action.navigate)) {
             props.navigate();
           }
-
           if (shouldDoBehavior(action.dismiss)) {
             window.AWFinish();
           }
@@ -914,6 +891,7 @@
         "whiteSpace",
       ];
       const ZAP_SIZE_THRESHOLD = 160;
+
       /**
        * Based on the .text prop, localizes an inner element if a string_id
        * is provided, OR renders plain text, OR hides it if nothing is provided.
@@ -943,7 +921,6 @@
           /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createRef();
         (0, react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
           const { current } = zapRef;
-
           if (current) {
             requestAnimationFrame(() =>
               current === null || current === void 0
@@ -956,12 +933,14 @@
                   )
             );
           }
-        }); // Skip rendering of children with no text.
+        });
 
+        // Skip rendering of children with no text.
         if (!text) {
           return null;
-        } // Allow augmenting existing child container properties.
+        }
 
+        // Allow augmenting existing child container properties.
         const props = {
           children: [],
           className: "",
@@ -969,17 +948,17 @@
           ...(children === null || children === void 0
             ? void 0
             : children.props),
-        }; // Support nested Localized by starting with their children.
-
+        };
+        // Support nested Localized by starting with their children.
         const textNodes = Array.isArray(props.children)
           ? props.children
-          : [props.children]; // Pick desired fluent or raw/plain text to render.
+          : [props.children];
 
+        // Pick desired fluent or raw/plain text to render.
         if (text.string_id) {
           // Set the key so React knows not to reuse when switching to plain text.
           props.key = text.string_id;
           props["data-l10n-id"] = text.string_id;
-
           if (text.args) {
             props["data-l10n-args"] = JSON.stringify(text.args);
           }
@@ -987,8 +966,9 @@
           textNodes.push(text.raw);
         } else if (typeof text === "string") {
           textNodes.push(text);
-        } // Add zap style and content in a way that allows fluent to insert too.
+        }
 
+        // Add zap style and content in a way that allows fluent to insert too.
         if (text.zap) {
           props.className += " welcomeZap";
           textNodes.push(
@@ -1003,11 +983,11 @@
             )
           );
         }
-
         if (text.aria_label) {
           props["aria-label"] = text.aria_label;
-        } // Apply certain configurable styles.
+        }
 
+        // Apply certain configurable styles.
         CONFIGURABLE_STYLES.forEach(style => {
           if (text[style] !== undefined) {
             props.style[style] = text[style];
@@ -1020,7 +1000,8 @@
               "span",
               null
             ),
-          props, // Conditionally pass in as void elements can't accept empty array.
+          props,
+          // Conditionally pass in as void elements can't accept empty array.
           textNodes.length ? textNodes : null
         );
       };
@@ -1050,32 +1031,30 @@
         __webpack_require__(5);
       /* harmony import */ let _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__ =
         __webpack_require__(3);
-      /* harmony import */ let _MRColorways__WEBPACK_IMPORTED_MODULE_3__ =
+      /* harmony import */ let _MobileDownloads__WEBPACK_IMPORTED_MODULE_3__ =
         __webpack_require__(7);
-      /* harmony import */ let _MobileDownloads__WEBPACK_IMPORTED_MODULE_4__ =
+      /* harmony import */ let _MultiSelect__WEBPACK_IMPORTED_MODULE_4__ =
         __webpack_require__(8);
-      /* harmony import */ let _MultiSelect__WEBPACK_IMPORTED_MODULE_5__ =
+      /* harmony import */ let _Themes__WEBPACK_IMPORTED_MODULE_5__ =
         __webpack_require__(9);
-      /* harmony import */ let _Themes__WEBPACK_IMPORTED_MODULE_6__ =
-        __webpack_require__(10);
-      /* harmony import */ let _MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_7__ =
+      /* harmony import */ let _MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_6__ =
         __webpack_require__(4);
-      /* harmony import */ let _LanguageSwitcher__WEBPACK_IMPORTED_MODULE_8__ =
+      /* harmony import */ let _LanguageSwitcher__WEBPACK_IMPORTED_MODULE_7__ =
+        __webpack_require__(10);
+      /* harmony import */ let _CTAParagraph__WEBPACK_IMPORTED_MODULE_8__ =
         __webpack_require__(11);
-      /* harmony import */ let _CTAParagraph__WEBPACK_IMPORTED_MODULE_9__ =
+      /* harmony import */ let _HeroImage__WEBPACK_IMPORTED_MODULE_9__ =
         __webpack_require__(12);
-      /* harmony import */ let _HeroImage__WEBPACK_IMPORTED_MODULE_10__ =
+      /* harmony import */ let _OnboardingVideo__WEBPACK_IMPORTED_MODULE_10__ =
         __webpack_require__(13);
-      /* harmony import */ let _OnboardingVideo__WEBPACK_IMPORTED_MODULE_11__ =
+      /* harmony import */ let _AdditionalCTA__WEBPACK_IMPORTED_MODULE_11__ =
         __webpack_require__(14);
-      /* harmony import */ let _AdditionalCTA__WEBPACK_IMPORTED_MODULE_12__ =
+      /* harmony import */ let _EmbeddedMigrationWizard__WEBPACK_IMPORTED_MODULE_12__ =
         __webpack_require__(15);
-      /* harmony import */ let _EmbeddedMigrationWizard__WEBPACK_IMPORTED_MODULE_13__ =
+      /* harmony import */ let _AddonsPicker__WEBPACK_IMPORTED_MODULE_13__ =
         __webpack_require__(16);
-      /* harmony import */ let _AddonsPicker__WEBPACK_IMPORTED_MODULE_14__ =
+      /* harmony import */ let _LinkParagraph__WEBPACK_IMPORTED_MODULE_14__ =
         __webpack_require__(17);
-      /* harmony import */ let _LinkParagraph__WEBPACK_IMPORTED_MODULE_15__ =
-        __webpack_require__(18);
       /* This Source Code Form is subject to the terms of the Mozilla Public
        * License, v. 2.0. If a copy of the MPL was not distributed with this file,
        * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1094,7 +1073,6 @@
             }, 20000);
             return () => clearTimeout(timer);
           }
-
           return () => {};
         }, [autoAdvance, handleAction, order]);
         return /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
@@ -1134,7 +1112,6 @@
         let _content$primary_butt3;
         let _content$primary_butt4;
         let _content$primary_butt5;
-
         const { content, addonName, activeMultiSelect } = props;
         const defaultValue =
           (_content$checkbox = content.checkbox) === null ||
@@ -1155,23 +1132,22 @@
         (0, react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
           if (shouldFocusButton) {
             let _buttonRef$current;
-
             (_buttonRef$current = buttonRef.current) === null ||
             _buttonRef$current === void 0
               ? void 0
               : _buttonRef$current.focus();
           }
         }, [shouldFocusButton]);
-
         if (
           !content.primary_button &&
           !content.secondary_button &&
           !content.additional_button
         ) {
           return null;
-        } // If we have a multi-select screen, we want to disable the primary button
-        // until the user has selected at least one item.
+        }
 
+        // If we have a multi-select screen, we want to disable the primary button
+        // until the user has selected at least one item.
         const isPrimaryDisabled = primaryDisabledValue =>
           primaryDisabledValue === "hasActiveMultiSelect"
             ? !(
@@ -1180,7 +1156,6 @@
                   : activeMultiSelect.length) > 0
               )
             : primaryDisabledValue;
-
         return /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
           "div",
           {
@@ -1217,7 +1192,8 @@
                   _content$primary_butt4.has_arrow_icon
                     ? " arrow-icon"
                     : ""
-                }`, // Whether or not the checkbox is checked determines which action
+                }`,
+                // Whether or not the checkbox is checked determines which action
                 // should be handled. By setting value here, we indicate to
                 // this.handleAction() where in the content tree it should take
                 // the action to execute from.
@@ -1239,7 +1215,7 @@
           ),
           content.additional_button
             ? /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                _AdditionalCTA__WEBPACK_IMPORTED_MODULE_12__.AdditionalCTA,
+                _AdditionalCTA__WEBPACK_IMPORTED_MODULE_11__.AdditionalCTA,
                 {
                   content,
                   handleAction: props.handleAction,
@@ -1279,7 +1255,7 @@
             : null,
           content.secondary_button
             ? /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                _MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_7__.SecondaryCTA,
+                _MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_6__.SecondaryCTA,
                 {
                   content,
                   handleAction: props.handleAction,
@@ -1302,15 +1278,12 @@
           isAddonsPicker
         ) {
           const screenClass = `screen-${this.props.order % 2 !== 0 ? 1 : 2}`;
-
           if (isVideoOnboarding) {
             return "with-video";
           }
-
           if (isAddonsPicker) {
             return "addons-picker";
           }
-
           return `${isFirstScreen ? `dialog-initial` : ``} ${
             isLastScreen ? `dialog-last` : ``
           } ${includeNoodles ? `with-noodles` : ``} ${screenClass}`;
@@ -1325,7 +1298,9 @@
                 className: "inline-icon-container",
                 alignment: alignment ?? "center",
               },
-              this.renderPicture({ ...rest }),
+              this.renderPicture({
+                ...rest,
+              }),
               /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
                 _MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized,
                 {
@@ -1340,7 +1315,6 @@
               )
             );
           }
-
           return /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
             _MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized,
             {
@@ -1382,10 +1356,8 @@
                 return "lazy";
               }
             }
-
             return "eager";
           }
-
           return /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
             "picture",
             {
@@ -1461,7 +1433,7 @@
               content.tiles.type === "addons-picker" &&
               content.tiles.data
               ? /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                  _AddonsPicker__WEBPACK_IMPORTED_MODULE_14__.AddonsPicker,
+                  _AddonsPicker__WEBPACK_IMPORTED_MODULE_13__.AddonsPicker,
                   {
                     content,
                     message_id: this.props.messageId,
@@ -1470,22 +1442,10 @@
                 )
               : null,
             content.tiles &&
-              content.tiles.type === "colorway" &&
-              content.tiles.colorways
-              ? /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                  _MRColorways__WEBPACK_IMPORTED_MODULE_3__.Colorways,
-                  {
-                    content,
-                    activeTheme: this.props.activeTheme,
-                    handleAction: this.props.handleAction,
-                  }
-                )
-              : null,
-            content.tiles &&
               content.tiles.type === "theme" &&
               content.tiles.data
               ? /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                  _Themes__WEBPACK_IMPORTED_MODULE_6__.Themes,
+                  _Themes__WEBPACK_IMPORTED_MODULE_5__.Themes,
                   {
                     content,
                     activeTheme: this.props.activeTheme,
@@ -1497,7 +1457,7 @@
               content.tiles.type === "mobile_downloads" &&
               content.tiles.data
               ? /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                  _MobileDownloads__WEBPACK_IMPORTED_MODULE_4__.MobileDownloads,
+                  _MobileDownloads__WEBPACK_IMPORTED_MODULE_3__.MobileDownloads,
                   {
                     data: content.tiles.data,
                     handleAction: this.props.handleAction,
@@ -1508,7 +1468,7 @@
               content.tiles.type === "multiselect" &&
               content.tiles.data
               ? /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                  _MultiSelect__WEBPACK_IMPORTED_MODULE_5__.MultiSelect,
+                  _MultiSelect__WEBPACK_IMPORTED_MODULE_4__.MultiSelect,
                   {
                     content,
                     activeMultiSelect: this.props.activeMultiSelect,
@@ -1519,7 +1479,7 @@
               : null,
             content.tiles && content.tiles.type === "migration-wizard"
               ? /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                  _EmbeddedMigrationWizard__WEBPACK_IMPORTED_MODULE_13__.EmbeddedMigrationWizard,
+                  _EmbeddedMigrationWizard__WEBPACK_IMPORTED_MODULE_12__.EmbeddedMigrationWizard,
                   {
                     handleAction: this.props.handleAction,
                   }
@@ -1568,7 +1528,7 @@
         renderLanguageSwitcher() {
           return this.props.content.languageSwitcher
             ? /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                _LanguageSwitcher__WEBPACK_IMPORTED_MODULE_8__.LanguageSwitcher,
+                _LanguageSwitcher__WEBPACK_IMPORTED_MODULE_7__.LanguageSwitcher,
                 {
                   content: this.props.content,
                   handleAction: this.props.handleAction,
@@ -1604,7 +1564,6 @@
 
         renderStepsIndicator() {
           let _content$steps_indica;
-
           const currentStep = (this.props.order ?? 0) + 1;
           const previousStep = (this.props.previousOrder ?? -1) + 1;
           const { content, totalNumberOfScreens: total } = this.props;
@@ -1631,7 +1590,7 @@
             },
             content.progress_bar
               ? /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                  _MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_7__.ProgressBar,
+                  _MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_6__.ProgressBar,
                   {
                     step: currentStep,
                     previousStep,
@@ -1639,7 +1598,7 @@
                   }
                 )
               : /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                  _MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_7__.StepsIndicator,
+                  _MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_6__.StepsIndicator,
                   {
                     order: this.props.order,
                     totalNumberOfScreens: total,
@@ -1680,7 +1639,7 @@
             ),
             content.hero_image
               ? /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                  _HeroImage__WEBPACK_IMPORTED_MODULE_10__.HeroImage,
+                  _HeroImage__WEBPACK_IMPORTED_MODULE_9__.HeroImage,
                   {
                     url: content.hero_image.url,
                   }
@@ -1722,13 +1681,12 @@
 
         renderOrderedContent(content) {
           const elements = [];
-
           for (const item of content) {
             switch (item.type) {
               case "text":
                 elements.push(
                   /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                    _LinkParagraph__WEBPACK_IMPORTED_MODULE_15__.LinkParagraph,
+                    _LinkParagraph__WEBPACK_IMPORTED_MODULE_14__.LinkParagraph,
                     {
                       text_content: item,
                       handleAction: this.props.handleAction,
@@ -1736,7 +1694,6 @@
                   )
                 );
                 break;
-
               case "image":
                 elements.push(
                   this.renderPicture({
@@ -1751,7 +1708,6 @@
                 );
             }
           }
-
           return /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
             react__WEBPACK_IMPORTED_MODULE_0___default().Fragment,
             null,
@@ -1764,7 +1720,6 @@
           let _content$tiles2;
           let _this$props$appAndSys;
           let _this$props$messageId;
-
           const {
             autoAdvance,
             content,
@@ -1777,8 +1732,8 @@
             ariaRole,
             aboveButtonStepsIndicator,
           } = this.props;
-          const includeNoodles = content.has_noodles; // The default screen position is "center"
-
+          const includeNoodles = content.has_noodles;
+          // The default screen position is "center"
           const isCenterPosition =
             content.position === "center" || !content.position;
           const hideStepsIndicator =
@@ -1790,9 +1745,9 @@
             forceHideStepsIndicator;
           const textColorClass = content.text_color
             ? `${content.text_color}-text`
-            : ""; // Assign proton screen style 'screen-1' or 'screen-2' to centered screens
+            : "";
+          // Assign proton screen style 'screen-1' or 'screen-2' to centered screens
           // by checking if screen order is even or odd.
-
           const screenClassName = isCenterPosition
             ? this.getScreenClassName(
                 isFirstScreen,
@@ -1840,7 +1795,7 @@
               },
               content.secondary_button_top
                 ? /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                    _MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_7__.SecondaryCTA,
+                    _MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_6__.SecondaryCTA,
                     {
                       content,
                       handleAction: this.props.handleAction,
@@ -1931,7 +1886,7 @@
                       : null,
                     content.cta_paragraph
                       ? /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                          _CTAParagraph__WEBPACK_IMPORTED_MODULE_9__.CTAParagraph,
+                          _CTAParagraph__WEBPACK_IMPORTED_MODULE_8__.CTAParagraph,
                           {
                             content: content.cta_paragraph,
                             handleAction: this.props.handleAction,
@@ -1941,7 +1896,7 @@
                   ),
                   content.video_container
                     ? /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                        _OnboardingVideo__WEBPACK_IMPORTED_MODULE_11__.OnboardingVideo,
+                        _OnboardingVideo__WEBPACK_IMPORTED_MODULE_10__.OnboardingVideo,
                         {
                           content: content.video_container,
                           handleAction: this.props.handleAction,
@@ -1991,277 +1946,6 @@
       /***/
     },
     /* 7 */
-    /***/ (
-      __unused_webpack_module,
-      __webpack_exports__,
-      __webpack_require__
-    ) => {
-      __webpack_require__.r(__webpack_exports__);
-      /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-        /* harmony export */ ColorwayDescription: () =>
-          /* binding */ ColorwayDescription,
-        /* harmony export */ computeColorWay: () =>
-          /* binding */ computeColorWay,
-        /* harmony export */ computeVariationIndex: () =>
-          /* binding */ computeVariationIndex,
-        /* harmony export */ Colorways: () => /* binding */ Colorways,
-        /* harmony export */
-      });
-      /* harmony import */ let react__WEBPACK_IMPORTED_MODULE_0__ =
-        __webpack_require__(1);
-      /* harmony import */ let react__WEBPACK_IMPORTED_MODULE_0___default =
-        /*#__PURE__*/ __webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-      /* harmony import */ let _MSLocalized__WEBPACK_IMPORTED_MODULE_1__ =
-        __webpack_require__(5);
-      /* This Source Code Form is subject to the terms of the Mozilla Public
-       * License, v. 2.0. If a copy of the MPL was not distributed with this file,
-       * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-      const ColorwayDescription = props => {
-        const { colorway } = props;
-
-        if (!colorway) {
-          return null;
-        }
-
-        const { label, description } = colorway;
-        return /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-          _MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized,
-          {
-            text: description,
-          },
-          /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-            "div",
-            {
-              className: "colorway-text",
-              "data-l10n-args": JSON.stringify({
-                colorwayName: label,
-              }),
-            }
-          )
-        );
-      }; // Return colorway as "default" for default theme variations Automatic, Light, Dark,
-      // Alpenglow theme and legacy colorways which is not supported in Colorway picker.
-      // For themes other then default, theme names exist in
-      // format colorway-variationId inside LIGHT_WEIGHT_THEMES in AboutWelcomeParent
-
-      function computeColorWay(themeName, systemVariations) {
-        return !themeName ||
-          themeName === "alpenglow" ||
-          systemVariations.includes(themeName)
-          ? "default"
-          : themeName.split("-")[0];
-      } // Set variationIndex based off activetheme value e.g. 'light', 'expressionist-soft'
-
-      function computeVariationIndex(
-        themeName,
-        systemVariations,
-        variations,
-        defaultVariationIndex
-      ) {
-        // Check if themeName is in systemVariations, if yes choose variationIndex by themeName
-        let index = systemVariations.findIndex(theme => theme === themeName);
-
-        if (index >= 0) {
-          return index;
-        } // If themeName is one of the colorways, select variation index from colorways
-
-        let variation =
-          themeName === null || themeName === void 0
-            ? void 0
-            : themeName.split("-")[1];
-        index = variations.findIndex(element => element === variation);
-
-        if (index >= 0) {
-          return index;
-        }
-
-        return defaultVariationIndex;
-      }
-      function Colorways(props) {
-        let {
-          colorways,
-          darkVariation,
-          defaultVariationIndex,
-          systemVariations,
-          variations,
-        } = props.content.tiles;
-        let hasReverted = false; // Active theme id from JSON e.g. "expressionist"
-
-        const activeId = computeColorWay(props.activeTheme, systemVariations);
-        const [colorwayId, setState] = (0,
-        react__WEBPACK_IMPORTED_MODULE_0__.useState)(activeId);
-        const [variationIndex, setVariationIndex] = (0,
-        react__WEBPACK_IMPORTED_MODULE_0__.useState)(defaultVariationIndex);
-
-        function revertToDefaultTheme() {
-          if (hasReverted) {
-            return;
-          } // Spoofing an event with current target value of "navigate_away"
-          // helps the handleAction method to read the colorways theme as "revert"
-          // which causes the initial theme to be activated.
-          // The "navigate_away" action is set in content in the colorways screen JSON config.
-          // Any value in the JSON for theme will work, provided it is not `<event>`.
-
-          const event = {
-            currentTarget: {
-              value: "navigate_away",
-            },
-          };
-          props.handleAction(event);
-          hasReverted = true;
-        } // Revert to default theme if the user navigates away from the page or spotlight modal
-        // before clicking on the primary button to officially set theme.
-
-        (0, react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-          addEventListener("beforeunload", revertToDefaultTheme);
-          addEventListener("pagehide", revertToDefaultTheme);
-          return () => {
-            removeEventListener("beforeunload", revertToDefaultTheme);
-            removeEventListener("pagehide", revertToDefaultTheme);
-          };
-        }); // Update state any time activeTheme changes.
-
-        (0, react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-          setState(computeColorWay(props.activeTheme, systemVariations));
-          setVariationIndex(
-            computeVariationIndex(
-              props.activeTheme,
-              systemVariations,
-              variations,
-              defaultVariationIndex
-            )
-          ); // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, [props.activeTheme]); //select a random colorway
-
-        (0, react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-          //We don't want the default theme to be selected
-          const randomIndex =
-            Math.floor(Math.random() * (colorways.length - 1)) + 1;
-          const randomColorwayId = colorways[randomIndex].id; // Change the variation to be the dark variation if configured and dark.
-          // Additional colorway changes will remain dark while system is unchanged.
-
-          if (
-            darkVariation !== undefined &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches
-          ) {
-            variations[variationIndex] = variations[darkVariation];
-          }
-
-          const value = `${randomColorwayId}-${variations[variationIndex]}`;
-          props.handleAction({
-            currentTarget: {
-              value,
-            },
-          }); // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, []);
-        return /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-          "div",
-          {
-            className: "tiles-theme-container",
-          },
-          /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-            "div",
-            null,
-            /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-              "fieldset",
-              {
-                className: "tiles-theme-section",
-              },
-              /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                _MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized,
-                {
-                  text: props.content.subtitle,
-                },
-                /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                  "legend",
-                  {
-                    className: "sr-only",
-                  }
-                )
-              ),
-              colorways.map(({ id, label, tooltip }) =>
-                /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                  _MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized,
-                  {
-                    key: id + label,
-                    text: typeof tooltip === "object" ? tooltip : {},
-                  },
-                  /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                    "label",
-                    {
-                      className: "theme",
-                      title: label,
-                      "data-l10n-args": JSON.stringify({
-                        colorwayName: label,
-                      }),
-                    },
-                    /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                      _MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized,
-                      {
-                        text: typeof tooltip === "object" ? tooltip : {},
-                      },
-                      /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                        "span",
-                        {
-                          className: "sr-only colorway label",
-                          id: `${id}-label`,
-                          "data-l10n-args": JSON.stringify({
-                            colorwayName: tooltip,
-                          }),
-                        }
-                      )
-                    ),
-                    /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                      _MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized,
-                      {
-                        text: typeof label === "object" ? label : {},
-                      },
-                      /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                        "input",
-                        {
-                          type: "radio",
-                          "data-colorway": id,
-                          name: "theme",
-                          value:
-                            id === "default"
-                              ? systemVariations[variationIndex]
-                              : `${id}-${variations[variationIndex]}`,
-                          checked: colorwayId === id,
-                          className: "sr-only input",
-                          onClick: props.handleAction,
-                          "data-l10n-args": JSON.stringify({
-                            colorwayName: label,
-                          }),
-                          "aria-labelledby": `${id}-label`,
-                        }
-                      )
-                    ),
-                    /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-                      "div",
-                      {
-                        className: `icon colorway ${
-                          colorwayId === id ? "selected" : ""
-                        } ${id}`,
-                      }
-                    )
-                  )
-                )
-              )
-            )
-          ),
-          /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
-            ColorwayDescription,
-            {
-              colorway: colorways.find(colorway => colorway.id === activeId),
-            }
-          )
-        );
-      }
-
-      /***/
-    },
-    /* 8 */
     /***/ (
       __unused_webpack_module,
       __webpack_exports__,
@@ -2388,7 +2072,7 @@
 
       /***/
     },
-    /* 9 */
+    /* 8 */
     /***/ (
       __unused_webpack_module,
       __webpack_exports__,
@@ -2441,12 +2125,10 @@
         "outlineOffset",
         "boxShadow",
       ];
-
       function getValidStyle(style, validStyles, allowVars) {
         if (!style) {
           return null;
         }
-
         return Object.keys(style)
           .filter(
             key =>
@@ -2457,7 +2139,6 @@
             return obj;
           }, {});
       }
-
       const MultiSelect = ({
         content,
         activeMultiSelect,
@@ -2470,7 +2151,6 @@
           const newActiveMultiSelect = [];
           Object.keys(refs.current).forEach(key => {
             let _refs$current$key;
-
             if (
               (_refs$current$key = refs.current[key]) !== null &&
               _refs$current$key !== void 0 &&
@@ -2484,9 +2164,10 @@
         const containerStyle = (0, react__WEBPACK_IMPORTED_MODULE_0__.useMemo)(
           () => getValidStyle(content.tiles.style, MULTI_SELECT_STYLES, true),
           [content.tiles.style]
-        ); // When screen renders for first time, update state
-        // with checkbox ids that has defaultvalue true
+        );
 
+        // When screen renders for first time, update state
+        // with checkbox ids that has defaultvalue true
         (0, react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
           if (!activeMultiSelect) {
             let newActiveMultiSelect = [];
@@ -2553,7 +2234,7 @@
 
       /***/
     },
-    /* 10 */
+    /* 9 */
     /***/ (
       __unused_webpack_module,
       __webpack_exports__,
@@ -2662,7 +2343,7 @@
 
       /***/
     },
-    /* 11 */
+    /* 10 */
     /***/ (
       __unused_webpack_module,
       __webpack_exports__,
@@ -2693,7 +2374,6 @@
        * than the actual language switcher component, as it needs to preemptively fetch
        * and install langpacks for the user if there is a language mismatch screen.
        */
-
       function useLanguageSwitcher(
         appAndSystemLocaleInfo,
         screens,
@@ -2703,13 +2383,13 @@
         const languageMismatchScreenIndex = screens.findIndex(
           ({ id }) => id === "AW_LANGUAGE_MISMATCH"
         );
-        const screen = screens[languageMismatchScreenIndex]; // Ensure fluent messages have the negotiatedLanguage args set, as they are rendered
+        const screen = screens[languageMismatchScreenIndex];
+
+        // Ensure fluent messages have the negotiatedLanguage args set, as they are rendered
         // before the negotiatedLanguage is known. If the arg isn't present then Firefox will
         // crash in development mode.
-
         (0, react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
           let _screen$content;
-
           if (
             screen !== null &&
             screen !== void 0 &&
@@ -2728,9 +2408,10 @@
               }
             }
           }
-        }, [screen]); // If there is a mismatch, then Firefox can negotiate a better langpack to offer
-        // the user.
+        }, [screen]);
 
+        // If there is a mismatch, then Firefox can negotiate a better langpack to offer
+        // the user.
         const [negotiatedLanguage, setNegotiatedLanguage] = (0,
         react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
         (0, react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(
@@ -2738,18 +2419,15 @@
             if (!appAndSystemLocaleInfo) {
               return;
             }
-
             if (appAndSystemLocaleInfo.matchType !== "language-mismatch") {
               // There is no language mismatch, so there is no need to negotiate a langpack.
               return;
             }
-
             (async () => {
               const { langPack, langPackDisplayName } =
                 await window.AWNegotiateLangPackForLanguageMismatch(
                   appAndSystemLocaleInfo
                 );
-
               if (langPack) {
                 setNegotiatedLanguage({
                   langPackDisplayName,
@@ -2774,6 +2452,7 @@
           },
           [appAndSystemLocaleInfo]
         );
+
         /**
          * @type {
          *  "before-installation"
@@ -2783,7 +2462,6 @@
          *  | "none-available"
          * }
          */
-
         const [langPackInstallPhase, setLangPackInstallPhase] = (0,
         react__WEBPACK_IMPORTED_MODULE_0__.useState)("before-installation");
         (0, react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(
@@ -2792,7 +2470,6 @@
               // There are no negotiated languages to download yet.
               return;
             }
-
             setLangPackInstallPhase("installing");
             window
               .AWEnsureLangPackInstalled(
@@ -2832,7 +2509,6 @@
               if (screenIndex > languageMismatchScreenIndex) {
                 setScreenIndex(screenIndex - 1);
               }
-
               setLanguageFilteredScreens(
                 screens.filter(s => s.id !== "AW_LANGUAGE_MISMATCH")
               );
@@ -2858,13 +2534,13 @@
           languageFilteredScreens,
         };
       }
+
       /**
        * The language switcher is a separate component as it needs to perform some asynchronous
        * network actions such as retrieving the list of langpacks available, and downloading
        * a new langpack. On a fast connection, this won't be noticeable, but on slow or unreliable
        * internet this may fail for a user.
        */
-
       function LanguageSwitcher(props) {
         const {
           content,
@@ -2874,8 +2550,9 @@
           messageId,
         } = props;
         const [isAwaitingLangpack, setIsAwaitingLangpack] = (0,
-        react__WEBPACK_IMPORTED_MODULE_0__.useState)(false); // Determine the status of the langpack installation.
+        react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
 
+        // Determine the status of the langpack installation.
         (0, react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
           if (isAwaitingLangpack && langPackInstallPhase !== "installing") {
             window.AWSetRequestedLocales(
@@ -2903,16 +2580,16 @@
         let showWaitingScreen = false;
         let showPreloadingScreen = false;
         let showReadyScreen = false;
-
         if (isAwaitingLangpack && langPackInstallPhase !== "installed") {
           showWaitingScreen = true;
         } else if (langPackInstallPhase === "before-installation") {
           showPreloadingScreen = true;
         } else {
           showReadyScreen = true;
-        } // Use {display: "none"} rather than if statements to prevent layout thrashing with
-        // the localized text elements rendering as blank, then filling in the text.
+        }
 
+        // Use {display: "none"} rather than if statements to prevent layout thrashing with
+        // the localized text elements rendering as blank, then filling in the text.
         return /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
           "div",
           {
@@ -3097,7 +2774,7 @@
 
       /***/
     },
-    /* 12 */
+    /* 11 */
     /***/ (
       __unused_webpack_module,
       __webpack_exports__,
@@ -3120,11 +2797,9 @@
 
       const CTAParagraph = props => {
         const { content, handleAction } = props;
-
         if (!(content !== null && content !== void 0 && content.text)) {
           return null;
         }
-
         return /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
           "h2",
           {
@@ -3167,7 +2842,7 @@
 
       /***/
     },
-    /* 13 */
+    /* 12 */
     /***/ (
       __unused_webpack_module,
       __webpack_exports__,
@@ -3190,11 +2865,9 @@
 
       const HeroImage = props => {
         const { height, url, alt } = props;
-
         if (!url) {
           return null;
         }
-
         return /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
           "div",
           {
@@ -3222,7 +2895,7 @@
 
       /***/
     },
-    /* 14 */
+    /* 13 */
     /***/ (
       __unused_webpack_module,
       __webpack_exports__,
@@ -3245,7 +2918,6 @@
       const OnboardingVideo = props => {
         const vidUrl = props.content.video_url;
         const autoplay = props.content.autoPlay;
-
         const handleVideoAction = event => {
           props.handleAction({
             currentTarget: {
@@ -3253,7 +2925,6 @@
             },
           });
         };
-
         return /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
           "div",
           null,
@@ -3281,7 +2952,7 @@
 
       /***/
     },
-    /* 15 */
+    /* 14 */
     /***/ (
       __unused_webpack_module,
       __webpack_exports__,
@@ -3306,9 +2977,7 @@
         let _content$additional_b;
         let _content$additional_b4;
         let _content$additional_b5;
-
         let buttonStyle = "";
-
         if (
           !(
             (_content$additional_b = content.additional_button) !== null &&
@@ -3320,7 +2989,6 @@
         } else {
           let _content$additional_b2;
           let _content$additional_b3;
-
           buttonStyle =
             ((_content$additional_b2 = content.additional_button) === null ||
             _content$additional_b2 === void 0
@@ -3332,7 +3000,6 @@
               ? void 0
               : _content$additional_b3.style;
         }
-
         return /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
           _MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized,
           {
@@ -3360,7 +3027,7 @@
 
       /***/
     },
-    /* 16 */
+    /* 15 */
     /***/ (
       __unused_webpack_module,
       __webpack_exports__,
@@ -3391,7 +3058,6 @@
               source: "primary_button",
             });
           };
-
           const handleClose = () => {
             handleAction({
               currentTarget: {
@@ -3399,7 +3065,6 @@
               },
             });
           };
-
           const { current } = ref;
           current === null || current === void 0
             ? void 0
@@ -3425,7 +3090,6 @@
                 );
           };
         }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
         return /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
           "migration-wizard",
           {
@@ -3438,7 +3102,7 @@
 
       /***/
     },
-    /* 17 */
+    /* 16 */
     /***/ (
       __unused_webpack_module,
       __webpack_exports__,
@@ -3463,23 +3127,19 @@
 
       const AddonsPicker = props => {
         const { content } = props;
-
         if (!content) {
           return null;
         }
-
         function handleAction(event) {
           const { message_id } = props;
           let { action, source_id } =
             content.tiles.data[event.currentTarget.value];
           let { type, data } = action;
-
           if (type === "INSTALL_ADDON_FROM_URL") {
             if (!data) {
               return;
             }
           }
-
           _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_1__.AboutWelcomeUtils.handleUserAction(
             {
               type,
@@ -3491,7 +3151,6 @@
             source_id
           );
         }
-
         return /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
           "div",
           {
@@ -3576,7 +3235,7 @@
 
       /***/
     },
-    /* 18 */
+    /* 17 */
     /***/ (
       __unused_webpack_module,
       __webpack_exports__,
@@ -3599,13 +3258,15 @@
 
       const LinkParagraph = props => {
         let _text_content$link_ke;
-
         const { text_content, handleAction } = props;
         const handleParagraphAction = (0,
         react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(
           event => {
             if (event.target.closest("a")) {
-              handleAction({ ...event, currentTarget: event.target });
+              handleAction({
+                ...event,
+                currentTarget: event.target,
+              });
             }
           },
           [handleAction]
@@ -3645,7 +3306,8 @@
                       value: link,
                       role: "link",
                       className: "text-link",
-                      "data-l10n-name": link, // must pass in tabIndex when no href is provided
+                      "data-l10n-name": link,
+                      // must pass in tabIndex when no href is provided
                       tabIndex: "0",
                     },
                     " "
@@ -3657,7 +3319,7 @@
 
       /***/
     },
-    /* 19 */
+    /* 18 */
     /***/ (
       __unused_webpack_module,
       __webpack_exports__,
@@ -3681,33 +3343,30 @@
         utm_campaign: "firstrun",
         utm_medium: "referral",
       };
+
       /**
        * Takes in a url as a string or URL object and returns a URL object with the
        * utm_* parameters added to it. If a URL object is passed in, the paraemeters
        * are added to it (the return value can be ignored in that case as it's the
        * same object).
        */
-
       function addUtmParams(url, utmTerm) {
         let returnUrl = url;
-
         if (typeof returnUrl === "string") {
           returnUrl = new URL(url);
         }
-
         for (let [key, value] of Object.entries(BASE_PARAMS)) {
           if (!returnUrl.searchParams.has(key)) {
             returnUrl.searchParams.append(key, value);
           }
         }
-
         returnUrl.searchParams.append("utm_term", utmTerm);
         return returnUrl;
       }
 
       /***/
     },
-    /* 20 */
+    /* 19 */
     /***/ (
       __unused_webpack_module,
       __webpack_exports__,
@@ -3726,8 +3385,8 @@
         __webpack_require__(3);
       /* harmony import */ let _MultiStageProtonScreen__WEBPACK_IMPORTED_MODULE_2__ =
         __webpack_require__(6);
-      /* harmony import */ let _asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_3__ =
-        __webpack_require__(19);
+      /* harmony import */ let _newtab_content_src_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_3__ =
+        __webpack_require__(18);
       /* This Source Code Form is subject to the terms of the Mozilla Public
        * License, v. 2.0. If a copy of the MPL was not distributed with this file,
        * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -3759,26 +3418,31 @@
           const { content, message_id, url, utm_term } = this.props;
           let { action, source_id } = content[event.currentTarget.value];
           let { type, data } = action;
-
           if (type === "INSTALL_ADDON_FROM_URL") {
             if (!data) {
               return;
-            } // Set add-on url in action.data.url property from JSON
-
-            data = { ...data, url };
+            }
+            // Set add-on url in action.data.url property from JSON
+            data = {
+              ...data,
+              url,
+            };
           } else if (type === "SHOW_FIREFOX_ACCOUNTS") {
             let params = {
-              ..._asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_3__.BASE_PARAMS,
+              ..._newtab_content_src_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_3__.BASE_PARAMS,
               utm_term: `aboutwelcome-${utm_term}-screen`,
             };
-
             if (action.addFlowParams && this.state.flowParams) {
-              params = { ...params, ...this.state.flowParams };
+              params = {
+                ...params,
+                ...this.state.flowParams,
+              };
             }
-
-            data = { ...data, extraParams: params };
+            data = {
+              ...data,
+              extraParams: params,
+            };
           }
-
           _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_1__.AboutWelcomeUtils.handleUserAction(
             {
               type,
@@ -3793,13 +3457,10 @@
 
         render() {
           let _this$props$themeScre;
-
           const { content, type } = this.props;
-
           if (!content) {
             return null;
           }
-
           if (
             content !== null &&
             content !== void 0 &&
@@ -3808,9 +3469,10 @@
             content.primary_button.label.string_id = type.includes("theme")
               ? "return-to-amo-add-theme-label"
               : "mr1-return-to-amo-add-extension-label";
-          } // For experiments, when needed below rendered UI allows settings hard coded strings
-          // directly inside JSON except for ReturnToAMOText which picks add-on name and icon from fluent string
+          }
 
+          // For experiments, when needed below rendered UI allows settings hard coded strings
+          // directly inside JSON except for ReturnToAMOText which picks add-on name and icon from fluent string
           return /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
             "div",
             {
@@ -3965,24 +3627,23 @@
     /* harmony import */ let _components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_3__ =
       __webpack_require__(4);
     /* harmony import */ let _components_ReturnToAMO__WEBPACK_IMPORTED_MODULE_4__ =
-      __webpack_require__(20);
+      __webpack_require__(19);
     function _extends() {
-      _extends =
-        Object.assign ||
-        function (target) {
-          for (let i = 1; i < arguments.length; i++) {
-            let source = arguments[i];
-            for (let key in source) {
-              if (Object.prototype.hasOwnProperty.call(source, key)) {
-                target[key] = source[key];
+      _extends = Object.assign
+        ? Object.assign.bind()
+        : function (target) {
+            for (let i = 1; i < arguments.length; i++) {
+              let source = arguments[i];
+              for (let key in source) {
+                if (Object.prototype.hasOwnProperty.call(source, key)) {
+                  target[key] = source[key];
+                }
               }
             }
-          }
-          return target;
-        };
+            return target;
+          };
       return _extends.apply(this, arguments);
     }
-
     /* This Source Code Form is subject to the terms of the Mozilla Public
      * License, v. 2.0. If a copy of the MPL was not distributed with this file,
      * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -4000,7 +3661,6 @@
       async fetchFxAFlowUri() {
         let _window;
         let _window$AWGetFxAMetri;
-
         this.setState({
           metricsFlowUri: await ((_window$AWGetFxAMetri = (_window = window)
             .AWGetFxAMetricsFlowURI) === null ||
@@ -4014,7 +3674,6 @@
         if (!this.props.skipFxA) {
           this.fetchFxAFlowUri();
         }
-
         if (document.location.href === "about:welcome") {
           // Record impression with performance data after allowing the page to load
           const recordImpression = domState => {
@@ -4033,7 +3692,6 @@
               }
             );
           };
-
           if (document.readyState === "complete") {
             // Page might have already triggered a load event because it waited for async data,
             // e.g., attribution, so the dom load timing could be of a empty content
@@ -4043,9 +3701,10 @@
             window.addEventListener("load", () => recordImpression("load"), {
               once: true,
             });
-          } // Captures user has seen about:welcome by setting
-          // firstrun.didSeeAboutWelcome pref to true and capturing welcome UI unique messageId
+          }
 
+          // Captures user has seen about:welcome by setting
+          // firstrun.didSeeAboutWelcome pref to true and capturing welcome UI unique messageId
           window.AWSendToParent(
             "SET_WELCOME_MESSAGE_SEEN",
             this.props.messageId
@@ -4055,7 +3714,6 @@
 
       render() {
         const { props } = this;
-
         if (props.template === "return_to_amo") {
           return /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
             _components_ReturnToAMO__WEBPACK_IMPORTED_MODULE_4__.ReturnToAMO,
@@ -4070,7 +3728,6 @@
             }
           );
         }
-
         return /*#__PURE__*/ react__WEBPACK_IMPORTED_MODULE_0___default().createElement(
           _components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_3__.MultiStageAboutWelcome,
           {
@@ -4087,29 +3744,26 @@
           }
         );
       }
-    } // Computes messageId and UTMTerm info used in telemetry
+    }
 
+    // Computes messageId and UTMTerm info used in telemetry
     function ComputeTelemetryInfo(welcomeContent, experimentId, branchId) {
       let messageId =
         welcomeContent.template === "return_to_amo"
           ? `RTAMO_DEFAULT_WELCOME_${welcomeContent.type.toUpperCase()}`
           : "DEFAULT_ID";
       let UTMTerm = "aboutwelcome-default";
-
       if (welcomeContent.id) {
         messageId = welcomeContent.id.toUpperCase();
       }
-
       if (experimentId && branchId) {
         UTMTerm = `aboutwelcome-${experimentId}-${branchId}`.toLowerCase();
       }
-
       return {
         messageId,
         UTMTerm,
       };
     }
-
     async function retrieveRenderContent() {
       // Feature config includes RTAMO attribution data if exists
       // else below data in order specified
@@ -4128,7 +3782,6 @@
         UTMTerm,
       };
     }
-
     async function mount() {
       let {
         featureConfig: aboutWelcomeProps,
@@ -4149,7 +3802,6 @@
         document.getElementById("multi-stage-message-root")
       );
     }
-
     performance.mark("mount");
     mount();
   })();

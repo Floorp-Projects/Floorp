@@ -7,7 +7,6 @@ browser.jar:
 % content activity-stream %content/activity-stream/ contentaccessible=yes
   res/activity-stream/lib/ (./lib/*)
   res/activity-stream/common/ (./common/*)
-  res/activity-stream/aboutwelcome/aboutwelcome.bundle.js (./aboutwelcome/content/aboutwelcome.bundle.js)
   res/activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json (./content-src/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json)
   res/activity-stream/schemas/MessagingExperiment.schema.json (./content-src/asrouter/schemas/MessagingExperiment.schema.json)
   res/activity-stream/vendor/Redux.sys.mjs (./vendor/Redux.sys.mjs)

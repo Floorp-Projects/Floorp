@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React from "react";
-import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
+import { AboutWelcomeUtils } from "../lib/aboutwelcome-utils";
 
 export const HeroImage = props => {
   const { height, url, alt } = props;

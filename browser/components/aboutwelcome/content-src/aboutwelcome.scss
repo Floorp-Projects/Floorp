@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 @use 'sass:math';
 @import 'chrome://global/skin/design-system/tokens-brand.css';
-@import '../styles/feature-callout';
-@import '../styles/shopping';
+@import '../../newtab/content-src/styles/feature-callout';
+@import '../../newtab/content-src/styles/shopping';
 
 /* stylelint-disable max-nesting-depth */
 

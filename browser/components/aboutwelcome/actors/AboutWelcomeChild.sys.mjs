@@ -38,6 +38,7 @@ export class AboutWelcomeChild extends JSWindowActorChild {
 
   /**
    * Send event that can be handled by the page
+   *
    * @param {{type: string, data?: any}} action
    */
   sendToPage(action) {
@@ -227,6 +228,7 @@ export class AboutWelcomeChild extends JSWindowActorChild {
 
   /**
    * Send Event Telemetry
+   *
    * @param {object} eventData
    */
   AWSendEventTelemetry(eventData) {
@@ -240,6 +242,7 @@ export class AboutWelcomeChild extends JSWindowActorChild {
 
   /**
    * Send message that can be handled by AboutWelcomeParent.jsm
+   *
    * @param {string} type
    * @param {any=} data
    * @returns {Promise<unknown>}

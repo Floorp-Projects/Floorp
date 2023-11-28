@@ -4,7 +4,7 @@
 
 import React from "react";
 import ReactDOM from "react-dom";
-import { AboutWelcomeUtils } from "../lib/aboutwelcome-utils";
+import { AboutWelcomeUtils } from "./lib/aboutwelcome-utils";
 import { MultiStageAboutWelcome } from "./components/MultiStageAboutWelcome";
 import { ReturnToAMO } from "./components/ReturnToAMO";
 
