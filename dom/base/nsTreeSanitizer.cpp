@@ -11,7 +11,6 @@
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StyleSheetInlines.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
@@ -2479,39 +2478,40 @@ static int32_t ConvertNamespaceString(const nsAString& aNamespace,
   return kNameSpaceID_Unknown;
 }
 
-UniquePtr<nsTreeSanitizer::ElementNameSet> nsTreeSanitizer::ConvertElements(
+nsTreeSanitizer::ElementNameSet nsTreeSanitizer::ConvertElements(
     const nsTArray<OwningStringOrSanitizerElementNamespace>& aElements,
     mozilla::ErrorResult& aRv) {
-  auto set = MakeUnique<ElementNameSet>(aElements.Length());
+  ElementNameSet set(aElements.Length());
+
   for (const auto& entry : aElements) {
     if (entry.IsString()) {
       RefPtr<nsAtom> nameAtom = NS_AtomizeMainThread(entry.GetAsString());
       // The default namespace for elements is HTML.
       ElementName elemName(kNameSpaceID_XHTML, std::move(nameAtom));
-      set->Insert(elemName);
+      set.Insert(elemName);
     } else {
       const auto& elemNamespace = entry.GetAsSanitizerElementNamespace();
 
       int32_t namespaceID =
           ConvertNamespaceString(elemNamespace.mNamespace, false, aRv);
       if (aRv.Failed()) {
-        return {};
+        break;
       }
-
       RefPtr<nsAtom> nameAtom = NS_AtomizeMainThread(elemNamespace.mName);
       ElementName elemName(namespaceID, std::move(nameAtom));
-      set->Insert(elemName);
+      set.Insert(elemName);
     }
   }
+
   return set;
 }
 
-UniquePtr<nsTreeSanitizer::ElementsToAttributesMap>
+nsTreeSanitizer::ElementsToAttributesMap
 nsTreeSanitizer::ConvertElementsWithAttributes(
     const nsTArray<OwningStringOrSanitizerElementNamespaceWithAttributes>&
         aElements,
     mozilla::ErrorResult& aRv) {
-  auto map = MakeUnique<ElementsToAttributesMap>();
+  ElementsToAttributesMap map;
 
   for (const auto& entry : aElements) {
     if (entry.IsString()) {
@@ -2519,7 +2519,7 @@ nsTreeSanitizer::ConvertElementsWithAttributes(
       // The default namespace for elements is HTML.
       ElementName elemName(kNameSpaceID_XHTML, std::move(nameAtom));
       // No explicit list of attributes to allow/remove.
-      map->InsertOrUpdate(elemName, ElementWithAttributes{});
+      map.InsertOrUpdate(elemName, ElementWithAttributes{});
     } else {
       const auto& elemNamespace =
           entry.GetAsSanitizerElementNamespaceWithAttributes();
@@ -2527,57 +2527,57 @@ nsTreeSanitizer::ConvertElementsWithAttributes(
       ElementWithAttributes elemWithAttributes;
 
       if (elemNamespace.mAttributes.WasPassed()) {
-        elemWithAttributes.mAttributes =
-            ConvertAttributes(elemNamespace.mAttributes.Value(), aRv);
+        elemWithAttributes.mAttributes.emplace(
+            ConvertAttributes(elemNamespace.mAttributes.Value(), aRv));
         if (aRv.Failed()) {
-          return {};
+          break;
         }
       }
 
       if (elemNamespace.mRemoveAttributes.WasPassed()) {
-        elemWithAttributes.mRemoveAttributes =
-            ConvertAttributes(elemNamespace.mRemoveAttributes.Value(), aRv);
+        elemWithAttributes.mRemoveAttributes.emplace(
+            ConvertAttributes(elemNamespace.mRemoveAttributes.Value(), aRv));
         if (aRv.Failed()) {
-          return {};
+          break;
         }
       }
 
       int32_t namespaceID =
           ConvertNamespaceString(elemNamespace.mNamespace, false, aRv);
       if (aRv.Failed()) {
-        return {};
+        break;
       }
 
       RefPtr<nsAtom> nameAtom = NS_AtomizeMainThread(elemNamespace.mName);
       ElementName elemName(namespaceID, std::move(nameAtom));
 
-      map->InsertOrUpdate(elemName, std::move(elemWithAttributes));
+      map.InsertOrUpdate(elemName, std::move(elemWithAttributes));
     }
   }
 
   return map;
 }
 
-UniquePtr<nsTreeSanitizer::AttributeNameSet> nsTreeSanitizer::ConvertAttributes(
+nsTreeSanitizer::AttributeNameSet nsTreeSanitizer::ConvertAttributes(
     const nsTArray<OwningStringOrSanitizerAttributeNamespace>& aAttributes,
     ErrorResult& aRv) {
-  auto set = MakeUnique<AttributeNameSet>(aAttributes.Length());
+  AttributeNameSet set(aAttributes.Length());
   for (const auto& entry : aAttributes) {
     if (entry.IsString()) {
       RefPtr<nsAtom> nameAtom = NS_AtomizeMainThread(entry.GetAsString());
       // The default namespace for attributes is the "null" namespace.
       AttributeName attrName(kNameSpaceID_None, std::move(nameAtom));
-      set->Insert(attrName);
+      set.Insert(attrName);
     } else {
       const auto& attrNamespace = entry.GetAsSanitizerAttributeNamespace();
       int32_t namespaceID =
           ConvertNamespaceString(attrNamespace.mNamespace, true, aRv);
       if (aRv.Failed()) {
-        return {};
+        break;
       }
       RefPtr<nsAtom> attrAtom = NS_AtomizeMainThread(attrNamespace.mName);
       AttributeName attrName(namespaceID, std::move(attrAtom));
-      set->Insert(attrName);
+      set.Insert(attrName);
     }
   }
   return set;
@@ -2606,36 +2606,38 @@ void nsTreeSanitizer::WithWebSanitizerOptions(
   }
 
   if (aOptions.mElements.WasPassed()) {
-    mElements = ConvertElementsWithAttributes(aOptions.mElements.Value(), aRv);
+    mElements.emplace(
+        ConvertElementsWithAttributes(aOptions.mElements.Value(), aRv));
     if (aRv.Failed()) {
       return;
     }
   }
 
   if (aOptions.mRemoveElements.WasPassed()) {
-    mRemoveElements = ConvertElements(aOptions.mRemoveElements.Value(), aRv);
+    mRemoveElements.emplace(
+        ConvertElements(aOptions.mRemoveElements.Value(), aRv));
     if (aRv.Failed()) {
       return;
     }
   }
 
   if (aOptions.mReplaceWithChildrenElements.WasPassed()) {
-    mReplaceWithChildrenElements =
-        ConvertElements(aOptions.mReplaceWithChildrenElements.Value(), aRv);
+    mReplaceWithChildrenElements.emplace(
+        ConvertElements(aOptions.mReplaceWithChildrenElements.Value(), aRv));
     if (aRv.Failed()) {
       return;
     }
   }
 
   if (aOptions.mAttributes.WasPassed()) {
-    mAttributes = ConvertAttributes(aOptions.mAttributes.Value(), aRv);
+    mAttributes.emplace(ConvertAttributes(aOptions.mAttributes.Value(), aRv));
     if (aRv.Failed()) {
       return;
     }
   }
 
   if (aOptions.mRemoveAttributes.WasPassed()) {
-    mRemoveAttributes =
-        ConvertAttributes(aOptions.mRemoveAttributes.Value(), aRv);
+    mRemoveAttributes.emplace(
+        ConvertAttributes(aOptions.mRemoveAttributes.Value(), aRv));
   }
 }

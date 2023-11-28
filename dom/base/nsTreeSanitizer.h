@@ -11,7 +11,7 @@
 #include "nsIPrincipal.h"
 #include "nsTArray.h"
 #include "nsTHashSet.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/dom/NameSpaceConstants.h"
 #include "mozilla/dom/SanitizerBinding.h"
 
@@ -179,8 +179,8 @@ class nsTreeSanitizer {
 
   class ElementWithAttributes {
    public:
-    mozilla::UniquePtr<AttributeNameSet> mAttributes;
-    mozilla::UniquePtr<AttributeNameSet> mRemoveAttributes;
+    mozilla::Maybe<AttributeNameSet> mAttributes;
+    mozilla::Maybe<AttributeNameSet> mRemoveAttributes;
   };
 
   using ElementsToAttributesMap =
@@ -299,19 +299,18 @@ class nsTreeSanitizer {
   static bool MatchesAttributeName(AttributeNameSet& aNames, int32_t aNamespace,
                                    nsAtom* aLocalName);
 
-  static mozilla::UniquePtr<ElementNameSet> ConvertElements(
+  static ElementNameSet ConvertElements(
       const nsTArray<mozilla::dom::OwningStringOrSanitizerElementNamespace>&
           aElements,
       mozilla::ErrorResult& aRv);
 
-  static mozilla::UniquePtr<ElementsToAttributesMap>
-  ConvertElementsWithAttributes(
+  static ElementsToAttributesMap ConvertElementsWithAttributes(
       const nsTArray<
           mozilla::dom::OwningStringOrSanitizerElementNamespaceWithAttributes>&
           aElements,
       mozilla::ErrorResult& aRv);
 
-  static mozilla::UniquePtr<AttributeNameSet> ConvertAttributes(
+  static AttributeNameSet ConvertAttributes(
       const nsTArray<mozilla::dom::OwningStringOrSanitizerAttributeNamespace>&
           aAttributes,
       mozilla::ErrorResult& aRv);
@@ -401,19 +400,19 @@ class nsTreeSanitizer {
 
   // An allow-list of elements to keep, with potentially associated lists of
   // attributes to keep/remove.
-  mozilla::UniquePtr<ElementsToAttributesMap> mElements;
+  mozilla::Maybe<ElementsToAttributesMap> mElements;
 
   // A deny-list of elements to remove. (aka prune)
-  mozilla::UniquePtr<ElementNameSet> mRemoveElements;
+  mozilla::Maybe<ElementNameSet> mRemoveElements;
 
   // A deny-list of elements to replace with children. (aka flatten)
-  mozilla::UniquePtr<ElementNameSet> mReplaceWithChildrenElements;
+  mozilla::Maybe<ElementNameSet> mReplaceWithChildrenElements;
 
   // An allow-list of attributes to keep.
-  mozilla::UniquePtr<AttributeNameSet> mAttributes;
+  mozilla::Maybe<AttributeNameSet> mAttributes;
 
   // A deny-list of attributes to remove.
-  mozilla::UniquePtr<AttributeNameSet> mRemoveAttributes;
+  mozilla::Maybe<AttributeNameSet> mRemoveAttributes;
 };
 
 #endif  // nsTreeSanitizer_h_
