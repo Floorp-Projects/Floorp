@@ -1,0 +1,11 @@
+[DEFAULT]
+head = "head.js"
+support-files = ""
+
+["test_basic.js"]
+
+["test_failing_console_listener.js"]
+
+["test_formatting.js"]
+
+["test_reportForServiceWorkerScope.js"]

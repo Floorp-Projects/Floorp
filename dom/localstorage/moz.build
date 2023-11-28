@@ -11,7 +11,7 @@ MOCHITEST_MANIFESTS += ["test/mochitest.toml"]
 
 BROWSER_CHROME_MANIFESTS += ["test/browser.toml"]
 
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.toml"]
 
 TEST_HARNESS_FILES.xpcshell.dom.localstorage.test.unit += [
     "test/unit/databaseShadowing-shared.js",

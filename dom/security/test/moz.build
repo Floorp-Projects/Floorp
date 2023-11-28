@@ -8,7 +8,7 @@ with Files("cors/**"):
     BUG_COMPONENT = ("Core", "Networking")
 
 XPCSHELL_TESTS_MANIFESTS += [
-    "unit/xpcshell.ini",
+    "unit/xpcshell.toml",
 ]
 
 TEST_DIRS += [

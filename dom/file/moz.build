@@ -55,7 +55,7 @@ LOCAL_INCLUDES += [
 
 MOCHITEST_MANIFESTS += ["tests/mochitest.toml"]
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.toml"]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 

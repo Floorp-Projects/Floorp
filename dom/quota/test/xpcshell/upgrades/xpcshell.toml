@@ -1,0 +1,75 @@
+[DEFAULT]
+head = "head.js"
+support-files = [
+  "cacheVersion1_profile.json",
+  "cacheVersion1_profile.zip",
+  "indexedDBAndPersistentStorageDirectory_profile.json",
+  "indexedDBAndPersistentStorageDirectory_profile.zip",
+  "indexedDBDirectory_flatOriginDirectories_profile.json",
+  "indexedDBDirectory_flatOriginDirectories_profile.zip",
+  "indexedDBDirectory_profile.json",
+  "indexedDBDirectory_profile.zip",
+  "localStorageArchive1upgrade_profile.zip",
+  "localStorageArchive4upgrade_profile.zip",
+  "localStorageArchiveDowngrade_profile.zip",
+  "persistentAndDefaultStorageDirectory_profile.json",
+  "persistentAndDefaultStorageDirectory_profile.zip",
+  "persistentStorageDirectory_flatOriginDirectories_profile.json",
+  "persistentStorageDirectory_flatOriginDirectories_profile.zip",
+  "persistentStorageDirectory_originDirectories_profile.json",
+  "persistentStorageDirectory_originDirectories_profile.zip",
+  "persistentStorageDirectory_profile.json",
+  "persistentStorageDirectory_profile.zip",
+  "version0_0_profile.json",
+  "version0_0_profile.zip",
+  "version1_0_appsData_profile.json",
+  "version1_0_appsData_profile.zip",
+  "version1_0_idb_profile.json",
+  "version1_0_idb_profile.zip",
+  "version1_0_morgueDirectory_profile.json",
+  "version1_0_morgueDirectory_profile.zip",
+  "version1_0_obsoleteOriginAttributes_profile.json",
+  "version1_0_obsoleteOriginAttributes_profile.zip",
+  "version2_0_profile.json",
+  "version2_0_profile.zip",
+  "version2_1_profile.json",
+  "version2_1_profile.zip",
+  "version2_2_profile.json",
+  "version2_2_profile.zip",
+]
+
+["test_localStorageArchive1upgrade.js"]
+
+["test_localStorageArchive4upgrade.js"]
+
+["test_localStorageArchiveDowngrade.js"]
+
+["test_upgradeCacheFrom1.js"]
+
+["test_upgradeFromFlatOriginDirectories.js"]
+
+["test_upgradeFromIndexedDBDirectory.js"]
+
+["test_upgradeFromIndexedDBDirectory_removeOldDirectory.js"]
+
+["test_upgradeFromPersistentStorageDirectory.js"]
+
+["test_upgradeFromPersistentStorageDirectory_removeOldDirectory.js"]
+
+["test_upgradeFromPersistentStorageDirectory_upgradeOriginDirectories.js"]
+
+["test_upgradeStorageFrom0_0.js"]
+
+["test_upgradeStorageFrom1_0_idb.js"]
+
+["test_upgradeStorageFrom1_0_removeAppsData.js"]
+
+["test_upgradeStorageFrom1_0_removeMorgueDirectory.js"]
+
+["test_upgradeStorageFrom1_0_stripObsoleteOriginAttributes.js"]
+
+["test_upgradeStorageFrom2_0.js"]
+
+["test_upgradeStorageFrom2_1.js"]
+
+["test_upgradeStorageFrom2_2.js"]

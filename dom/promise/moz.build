@@ -39,4 +39,4 @@ MOCHITEST_MANIFESTS += ["tests/mochitest.toml"]
 
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.toml"]
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.toml"]

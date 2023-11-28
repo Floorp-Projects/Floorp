@@ -1,0 +1,32 @@
+[DEFAULT]
+head = "head.js"
+skip-if = ["os == 'android'"]
+support-files = ""
+
+["bug-1387503-1.js"]
+prefs = ["security.allow_parent_unrestricted_js_loads=true"]
+
+["bug-1503406.js"]
+
+["bug-1773237.js"]
+
+["dom_stream_prototype_test.js"]
+
+["fetch.js"]
+
+["large-pipeto.js"]
+skip-if = [
+  "os == 'win'",
+  "tsan", # Causes claim expired errors; see Bug 1770170.
+]
+run-sequentially = "very high failure rate in parallel"
+
+["proper-realm-cancel.js"]
+
+["proper-realm-pull.js"]
+
+["response.js"]
+
+["subclassing.js"]
+
+["too-big-array-buffer.js"]

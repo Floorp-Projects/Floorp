@@ -9,7 +9,7 @@ MOCHITEST_MANIFESTS += [
 ]
 
 XPCSHELL_TESTS_MANIFESTS += [
-    "xpcshell.ini",
+    "xpcshell.toml",
 ]
 
 TESTING_JS_MODULES.dom.fs.test.common += [

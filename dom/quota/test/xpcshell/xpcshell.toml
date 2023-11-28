@@ -1,0 +1,100 @@
+[DEFAULT]
+head = "head.js"
+tags = "condprof"
+support-files = [
+  "basics_profile.zip",
+  "clearStoragesForOriginPrefix_profile.json",
+  "clearStoragesForOriginPrefix_profile.zip",
+  "clearStoragesForPrincipal_profile.zip",
+  "clearStoragesForPrivateBrowsing_profile.json",
+  "clearStoragesForPrivateBrowsing_profile.zip",
+  "createLocalStorage_profile.zip",
+  "defaultStorageDirectory_shared.json",
+  "defaultStorageDirectory_shared.zip",
+  "getUsage_profile.zip",
+  "groupMismatch_profile.zip",
+  "indexedDBDirectory_shared.json",
+  "indexedDBDirectory_shared.zip",
+  "originMismatch_profile.json",
+  "originMismatch_profile.zip",
+  "persistentStorageDirectory_shared.json",
+  "persistentStorageDirectory_shared.zip",
+  "removeLocalStorage1_profile.zip",
+  "removeLocalStorage2_profile.zip",
+  "tempMetadataCleanup_profile.zip",
+  "unknownFiles_profile.zip",
+]
+
+["make_unknownFiles.js"]
+skip-if = ["true"] # Only used for recreating unknownFiles_profile.zip
+
+["make_unsetLastAccessTime.js"]
+skip-if = ["true"] # Only used for recreating unsetLastAccessTime_profile.zip
+
+["test_allowListFiles.js"]
+
+["test_bad_origin_directory.js"]
+
+["test_basics.js"]
+
+["test_clearStoragesForOriginAttributesPattern.js"]
+
+["test_clearStoragesForOriginPrefix.js"]
+
+["test_clearStoragesForPrincipal.js"]
+
+["test_clearStoragesForPrivateBrowsing.js"]
+
+["test_createLocalStorage.js"]
+
+["test_estimateOrigin.js"]
+
+["test_getUsage.js"]
+
+["test_groupMismatch.js"]
+skip-if = ["true"] # The group is now always empty, so metadata can't differ anymore.
+
+["test_initTemporaryStorage.js"]
+skip-if = ["condprof"] # frequent perma fail, then goes away.
+
+["test_initializePersistentClient.js"]
+
+["test_initializeTemporaryClient.js"]
+
+["test_listOrigins.js"]
+
+["test_originEndsWithDot.js"]
+
+["test_originMismatch.js"]
+
+["test_originWithCaret.js"]
+
+["test_orpahnedQuotaObject.js"]
+
+["test_persist.js"]
+
+["test_persist_eviction.js"]
+
+["test_persist_globalLimit.js"]
+
+["test_persist_groupLimit.js"]
+
+["test_removeLocalStorage.js"]
+
+["test_simpledb.js"]
+
+["test_specialOrigins.js"]
+
+["test_storagePressure.js"]
+skip-if = ["condprof"]
+
+["test_tempMetadataCleanup.js"]
+
+["test_unaccessedOrigins.js"]
+
+["test_unknownFiles.js"]
+
+["test_unsetLastAccessTime.js"]
+support-files = ["unsetLastAccessTime_profile.zip"]
+
+["test_validOrigins.js"]

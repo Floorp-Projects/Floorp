@@ -11,10 +11,10 @@ BROWSER_CHROME_MANIFESTS += ["browser/browser.toml"]
 MOCHITEST_MANIFESTS += ["mochitest/mochitest.toml"]
 
 XPCSHELL_TESTS_MANIFESTS += [
-    "xpcshell/caching/xpcshell.ini",
-    "xpcshell/telemetry/xpcshell.ini",
-    "xpcshell/upgrades/xpcshell.ini",
-    "xpcshell/xpcshell.ini",
+    "xpcshell/caching/xpcshell.toml",
+    "xpcshell/telemetry/xpcshell.toml",
+    "xpcshell/upgrades/xpcshell.toml",
+    "xpcshell/xpcshell.toml",
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.browser.dom.quota.test.common += [

@@ -1,0 +1,17 @@
+[DEFAULT]
+head = "head.js"
+support-files = [
+  "version0_0_make_it_unusable.zip",
+  "version0_0_profile.zip",
+  "version1_0_make_it_unusable.zip",
+  "version1_0_profile.zip",
+  "version2_0_make_it_unusable.zip",
+  "version2_0_profile.zip",
+  "version2_1_make_it_unusable.zip",
+  "version2_1_profile.zip",
+  "version2_2_make_it_unusable.zip",
+  "version2_2_profile.zip",
+]
+
+["test_qm_first_initialization_attempt.js"]
+skip-if = ["appname == 'thunderbird'"]
