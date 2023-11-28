@@ -320,6 +320,10 @@ export class ScreenshotsOverlay {
   }
 
   handleEvent(event) {
+    if (event.button > 0) {
+      return;
+    }
+
     switch (event.type) {
       case "click":
         this.handleClick(event);
