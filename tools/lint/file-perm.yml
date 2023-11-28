@@ -33,6 +33,7 @@ file-perm:
         - .xhtml
         - .xml
         - .xul
+        - .yaml
         - .yml
     support-files:
         - 'tools/lint/file-perm/**'

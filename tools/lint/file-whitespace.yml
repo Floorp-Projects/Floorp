@@ -157,6 +157,8 @@ file-whitespace:
         - .rst
         - .toml
         - .webidl
+        - .yaml
+        - .yml
         - .xhtml
     support-files:
         - 'tools/lint/file-whitespace/**'
