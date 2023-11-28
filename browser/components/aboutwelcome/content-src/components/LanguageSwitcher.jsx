@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Localized } from "./MSLocalized";
-import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
+import { AboutWelcomeUtils } from "../lib/aboutwelcome-utils";
 
 /**
  * The language switcher implements a hook that should be placed at a higher level

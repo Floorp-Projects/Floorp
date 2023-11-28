@@ -6,9 +6,9 @@ import React from "react";
 import {
   AboutWelcomeUtils,
   DEFAULT_RTAMO_CONTENT,
-} from "../../lib/aboutwelcome-utils";
+} from "../lib/aboutwelcome-utils";
 import { MultiStageProtonScreen } from "./MultiStageProtonScreen";
-import { BASE_PARAMS } from "../../asrouter/templates/FirstRun/addUtmParams";
+import { BASE_PARAMS } from "../../../newtab/content-src/asrouter/templates/FirstRun/addUtmParams";
 
 export class ReturnToAMO extends React.PureComponent {
   constructor(props) {

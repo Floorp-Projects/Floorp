@@ -1,0 +1,45 @@
+# This file compiles to package.json scripts.
+# When you add or modify anything, you *MUST* run:
+#      npm run yamscripts
+# to compile your changes.
+
+scripts:
+  # bundle: Build all assets for activity stream
+  bundle:
+    welcomeBundle: webpack-cli --config webpack.aboutwelcome.config.js
+    welcomeCss: sass content-src:content --no-source-map
+
+  # watchmc:  Automatically rebuild when files are changed. NOTE: Includes sourcemaps, do not use for profiling/perf testing.
+  watchmc:
+    _parallel: true
+    welcomeBundle: =>bundle:welcomeBundle -- --env development -w
+    welcomeCss: =>bundle:welcomeCss -- --source-map --embed-sources --embed-source-map -w
+
+  testmc:
+    lint: =>lint
+    build: =>bundle:welcomeBundle
+    unit: karma start karma.mc.config.js
+
+  tddmc: karma start karma.mc.config.js --tdd
+
+  debugcoverage: open logs/coverage/lcov-report/index.html
+
+  # lint: Run various linters with mach or local dev dependencies
+  lint:
+    codespell: (cd $npm_package_config_mc_root && ./mach lint -l codespell $npm_package_config_welcome_path)
+    eslint: (cd $npm_package_config_mc_root && ./mach lint -l eslint $npm_package_config_welcome_path)
+    l10n: (cd $npm_package_config_mc_root && ./mach lint -l l10n --warnings soft browser/locales/en-US/browser/newtab)
+    license: (cd $npm_package_config_mc_root && ./mach lint -l license $npm_package_config_welcome_path)
+    stylelint: (cd $npm_package_config_mc_root && ./mach lint -l stylelint $npm_package_config_welcome_path)
+
+  # test: Run all tests once
+  test: =>testmc
+
+  # tdd: Run content tests continuously
+  tdd: =>tddmc
+
+  fix:
+    # Note that since we're currently running eslint-plugin-prettier,
+    # running fix:eslint will also reformat changed JS files using prettier.
+    eslint: =>lint:eslint -- --fix
+    stylelint: =>lint:stylelint -- --fix

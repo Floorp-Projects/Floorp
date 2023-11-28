@@ -4,7 +4,7 @@
 
 import React from "react";
 import { Localized } from "./MSLocalized";
-import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
+import { AboutWelcomeUtils } from "../lib/aboutwelcome-utils";
 
 export const MarketplaceButtons = props => {
   return (
