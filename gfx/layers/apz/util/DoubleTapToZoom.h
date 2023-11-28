@@ -46,6 +46,21 @@ struct ZoomTarget {
   Maybe<CSSPoint> documentRelativePointerPosition;
 };
 
+struct DoubleTapToZoomMetrics {
+  // The visual viewport rect of the top-level content document.
+  CSSRect mVisualViewport;
+  // The scrollable rect of the root scroll container of the top-level content
+  // document.
+  CSSRect mRootScrollableRect;
+
+  bool operator==(const DoubleTapToZoomMetrics& aOther) const {
+    return mVisualViewport == aOther.mVisualViewport &&
+           mRootScrollableRect == aOther.mRootScrollableRect;
+  }
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const DoubleTapToZoomMetrics& aUpdate);
+};
+
 /**
  * For a double tap at |aPoint|, return a ZoomTarget struct with contains a rect
  * to which the browser should zoom in response (see ZoomTarget definition for
@@ -54,7 +69,7 @@ struct ZoomTarget {
  */
 ZoomTarget CalculateRectToZoomTo(
     const RefPtr<mozilla::dom::Document>& aRootContentDocument,
-    const CSSPoint& aPoint);
+    const CSSPoint& aPoint, const DoubleTapToZoomMetrics& aMetrics);
 
 }  // namespace layers
 }  // namespace mozilla

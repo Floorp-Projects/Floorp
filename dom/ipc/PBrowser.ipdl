@@ -54,6 +54,7 @@ using mozilla::ScreenIntPoint from "Units.h";
 using mozilla::ScreenRect from "Units.h";
 using struct mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
 using struct mozilla::layers::ZoomConstraints from "mozilla/layers/ZoomConstraints.h";
+using struct mozilla::layers::DoubleTapToZoomMetrics from "mozilla/layers/DoubleTapToZoom.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::GeckoContentController_TapType from "mozilla/layers/GeckoContentControllerTypes.h";
 using mozilla::layers::ScrollableLayerGuid::ViewID from "mozilla/layers/ScrollableLayerGuid.h";
@@ -804,10 +805,12 @@ child:
     [Priority=input]
     async HandleTap(GeckoContentController_TapType aType, LayoutDevicePoint point,
                     Modifiers aModifiers, ScrollableLayerGuid aGuid,
-                    uint64_t aInputBlockId);
+                    uint64_t aInputBlockId,
+                    DoubleTapToZoomMetrics? aMetrics);
     async NormalPriorityHandleTap(GeckoContentController_TapType aType, LayoutDevicePoint point,
                                   Modifiers aModifiers, ScrollableLayerGuid aGuid,
-                                  uint64_t aInputBlockId);
+                                  uint64_t aInputBlockId,
+                                  DoubleTapToZoomMetrics? aMetrics);
 
     [Compress, Priority=input]
     async RealTouchMoveEvent(WidgetTouchEvent aEvent,
