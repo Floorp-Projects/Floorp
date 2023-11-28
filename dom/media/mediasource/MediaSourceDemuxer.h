@@ -88,17 +88,16 @@ class MediaSourceDemuxer : public MediaDataDemuxer,
   }
 
   RefPtr<TaskQueue> mTaskQueue;
-  nsTArray<RefPtr<MediaSourceTrackDemuxer>> mDemuxers;
-
+  // Accessed on mTaskQueue or from destructor
   nsTArray<RefPtr<TrackBuffersManager>> mSourceBuffers;
-
   MozPromiseHolder<InitPromise> mInitPromise;
 
   // Monitor to protect members below across multiple threads.
-  mutable Monitor mMonitor MOZ_UNANNOTATED;
-  RefPtr<TrackBuffersManager> mAudioTrack;
-  RefPtr<TrackBuffersManager> mVideoTrack;
-  MediaInfo mInfo;
+  mutable Monitor mMonitor;
+  nsTArray<RefPtr<MediaSourceTrackDemuxer>> mDemuxers MOZ_GUARDED_BY(mMonitor);
+  RefPtr<TrackBuffersManager> mAudioTrack MOZ_GUARDED_BY(mMonitor);
+  RefPtr<TrackBuffersManager> mVideoTrack MOZ_GUARDED_BY(mMonitor);
+  MediaInfo mInfo MOZ_GUARDED_BY(mMonitor);
 };
 
 class MediaSourceTrackDemuxer
