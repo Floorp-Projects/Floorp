@@ -89,18 +89,20 @@ function createNetworkEventOwner(event) {
  * Wait for network events matching the provided URL, until the count reaches
  * the provided expected count.
  *
- * @param {string} expectedUrl
- *     The URL which should be monitored by the NetworkObserver.
+ * @param {string|null} expectedUrl
+ *     The URL which should be monitored by the NetworkObserver.If set to null watch for
+ *      all requests
  * @param {number} expectedRequestsCount
  *     How many different events (requests) are expected.
  * @returns {Promise}
  *     A promise which will resolve with an array of network event owners, when
  *     the expected event count is reached.
  */
-async function waitForNetworkEvents(expectedUrl, expectedRequestsCount) {
+async function waitForNetworkEvents(expectedUrl = null, expectedRequestsCount) {
   const events = [];
   const networkObserver = new NetworkObserver({
-    ignoreChannelFunction: channel => channel.URI.spec !== expectedUrl,
+    ignoreChannelFunction: channel =>
+      expectedUrl ? channel.URI.spec !== expectedUrl : false,
     onNetworkEvent: () => {
       info("waitForNetworkEvents received a new event");
       const owner = createNetworkEventOwner();

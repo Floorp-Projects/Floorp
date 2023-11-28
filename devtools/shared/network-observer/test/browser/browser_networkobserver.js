@@ -14,7 +14,7 @@ add_task(async function testSingleRequest() {
 
   const onNetworkEvents = waitForNetworkEvents(REQUEST_URL, 1);
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [REQUEST_URL], _url => {
-    content.wrappedJSObject.sendRequest(_url);
+    content.wrappedJSObject.fetch(_url);
   });
 
   const events = await onNetworkEvents;
@@ -34,7 +34,7 @@ add_task(async function testMultipleRequests() {
     [REQUEST_URL, EXPECTED_REQUESTS_COUNT],
     (_url, _count) => {
       for (let i = 0; i < _count; i++) {
-        content.wrappedJSObject.sendRequest(_url);
+        content.wrappedJSObject.fetch(_url);
       }
     }
   );
@@ -62,7 +62,7 @@ add_task(async function testOnNetworkEventArguments() {
   });
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [REQUEST_URL], _url => {
-    content.wrappedJSObject.sendRequest(_url);
+    content.wrappedJSObject.fetch(_url);
   });
 
   const args = await onNetworkEvent;
