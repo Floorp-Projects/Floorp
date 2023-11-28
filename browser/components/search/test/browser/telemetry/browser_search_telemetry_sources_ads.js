@@ -82,7 +82,7 @@ add_task(async function test_simple_search_page_visit() {
         shopping_tab_displayed: "false",
       },
       abandonment: {
-        reason: SearchSERPTelemetryUtils.ABANDONMENTS.NAVIGATION,
+        reason: SearchSERPTelemetryUtils.ABANDONMENTS.TAB_CLOSE,
       },
     },
   ]);
@@ -125,7 +125,7 @@ add_task(async function test_simple_search_page_visit_telemetry() {
         shopping_tab_displayed: "false",
       },
       abandonment: {
-        reason: SearchSERPTelemetryUtils.ABANDONMENTS.NAVIGATION,
+        reason: SearchSERPTelemetryUtils.ABANDONMENTS.TAB_CLOSE,
       },
     },
   ]);
@@ -161,7 +161,7 @@ add_task(async function test_follow_on_visit() {
         shopping_tab_displayed: "false",
       },
       abandonment: {
-        reason: SearchSERPTelemetryUtils.ABANDONMENTS.NAVIGATION,
+        reason: SearchSERPTelemetryUtils.ABANDONMENTS.TAB_CLOSE,
       },
     },
     {
@@ -175,7 +175,7 @@ add_task(async function test_follow_on_visit() {
         shopping_tab_displayed: "false",
       },
       abandonment: {
-        reason: SearchSERPTelemetryUtils.ABANDONMENTS.NAVIGATION,
+        reason: SearchSERPTelemetryUtils.ABANDONMENTS.TAB_CLOSE,
       },
     },
   ]);

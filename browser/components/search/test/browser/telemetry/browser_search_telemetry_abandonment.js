@@ -54,13 +54,26 @@ add_task(async function test_tab_close() {
     getSERPUrl("searchTelemetry.html")
   );
 
+  await waitForPageWithAdImpressions();
+
   BrowserTestUtils.removeTab(tab);
 
-  assertAbandonmentEvent({
-    abandonment: {
-      reason: SearchSERPTelemetryUtils.ABANDONMENTS.TAB_CLOSE,
+  assertSERPTelemetry([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+      },
+      abandonment: {
+        reason: SearchSERPTelemetryUtils.ABANDONMENTS.TAB_CLOSE,
+      },
     },
-  });
+  ]);
 });
 
 add_task(async function test_window_close() {
@@ -75,14 +88,26 @@ add_task(async function test_window_close() {
   );
   BrowserTestUtils.startLoadingURIString(otherWindow.gBrowser, serpUrl);
   await browserLoadedPromise;
+  await waitForPageWithAdImpressions();
 
   await BrowserTestUtils.closeWindow(otherWindow);
 
-  assertAbandonmentEvent({
-    abandonment: {
-      reason: SearchSERPTelemetryUtils.ABANDONMENTS.WINDOW_CLOSE,
+  assertSERPTelemetry([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+      },
+      abandonment: {
+        reason: SearchSERPTelemetryUtils.ABANDONMENTS.WINDOW_CLOSE,
+      },
     },
-  });
+  ]);
 });
 
 add_task(async function test_navigation_via_urlbar() {
@@ -92,6 +117,8 @@ add_task(async function test_navigation_via_urlbar() {
     gBrowser,
     getSERPUrl("searchTelemetry.html")
   );
+  await waitForPageWithAdImpressions();
+
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(
     gBrowser,
     false,
@@ -100,11 +127,22 @@ add_task(async function test_navigation_via_urlbar() {
   BrowserTestUtils.startLoadingURIString(gBrowser, "https://www.example.com");
   await browserLoadedPromise;
 
-  assertAbandonmentEvent({
-    abandonment: {
-      reason: SearchSERPTelemetryUtils.ABANDONMENTS.NAVIGATION,
+  assertSERPTelemetry([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+      },
+      abandonment: {
+        reason: SearchSERPTelemetryUtils.ABANDONMENTS.NAVIGATION,
+      },
     },
-  });
+  ]);
 
   BrowserTestUtils.removeTab(tab);
 });
