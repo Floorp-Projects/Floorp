@@ -30,7 +30,8 @@ class AccessibleWrap : public LocalAccessible {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual bool PivotTo(int32_t aGranularity, bool aForward, bool aInclusive);
 
-  void ExploreByTouch(float aX, float aY);
+  static Accessible* ExploreByTouch(Accessible* aAccessible, float aX,
+                                    float aY);
 
   static uint32_t GetFlags(role aRole, uint64_t aState, uint8_t aActionCount);
 

@@ -26,7 +26,6 @@ interface nsIAccessiblePivot : nsISupports
   const PivotMoveReason REASON_PREV = 2;
   const PivotMoveReason REASON_FIRST = 3;
   const PivotMoveReason REASON_LAST = 4;
-  const PivotMoveReason REASON_POINT = 5;
 
   /**
    * Move pivot to next object, from current position or given anchor,

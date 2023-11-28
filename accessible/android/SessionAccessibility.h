@@ -11,17 +11,11 @@
 #include "nsAppShell.h"
 #include "nsThreadUtils.h"
 #include "nsWindow.h"
-#include "AccessibleWrap.h"
 
 namespace mozilla {
 namespace a11y {
 
-class AccessibleWrap;
-class AccAttributes;
 class Accessible;
-class RemoteAccessible;
-class RootAccessibleWrap;
-class BatchData;
 
 class SessionAccessibility final
     : public java::SessionAccessibility::NativeProvider::Natives<

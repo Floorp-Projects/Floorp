@@ -12,8 +12,8 @@
 #include "nsThreadUtils.h"
 #include "AccAttributes.h"
 #include "AccessibilityEvent.h"
+#include "DocAccessibleWrap.h"
 #include "JavaBuiltins.h"
-#include "RootAccessibleWrap.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsViewManager.h"
@@ -192,15 +192,30 @@ bool SessionAccessibility::Pivot(int32_t aID, int32_t aGranularity,
 }
 
 void SessionAccessibility::ExploreByTouch(int32_t aID, float aX, float aY) {
-  auto gvAccessor(mWindow.Access());
-  if (gvAccessor) {
-    if (nsWindow* gkWindow = gvAccessor->GetNsWindow()) {
-      WidgetMouseEvent hittest(true, eMouseExploreByTouch, gkWindow,
-                               WidgetMouseEvent::eReal);
-      hittest.mRefPoint = LayoutDeviceIntPoint::Floor(aX, aY);
-      hittest.mInputSource = dom::MouseEvent_Binding::MOZ_SOURCE_TOUCH;
-      hittest.mFlags.mOnlyChromeDispatch = true;
-      gkWindow->DispatchInputEvent(&hittest);
+  MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
+  MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
+  RefPtr<SessionAccessibility> self(this);
+  if (Accessible* origin = GetAccessibleByID(aID)) {
+    if (origin->IsLocal()) {
+      nsAppShell::PostEvent([this, self, aID, aX, aY] {
+        MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
+        if (Accessible* origin = GetAccessibleByID(aID)) {
+          if (Accessible* result =
+                  AccessibleWrap::ExploreByTouch(origin, aX, aY)) {
+            SendHoverEnterEvent(result);
+          }
+        }
+      });
+    } else {
+      if (Accessible* result = AccessibleWrap::ExploreByTouch(origin, aX, aY)) {
+        int32_t resultID = AccessibleWrap::GetVirtualViewID(result);
+        nsAppShell::PostEvent([this, self, resultID] {
+          MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
+          if (Accessible* result = GetAccessibleByID(resultID)) {
+            SendHoverEnterEvent(result);
+          }
+        });
+      }
     }
   }
 }

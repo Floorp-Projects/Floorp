@@ -14,22 +14,7 @@ class PresShell;
 
 namespace a11y {
 
-/**
- * Android specific functionality for the node at a root of the accessibility
- * tree: see the RootAccessible superclass for further details.
- */
-class RootAccessibleWrap : public RootAccessible {
- public:
-  RootAccessibleWrap(dom::Document* aDocument, PresShell* aPresShell);
-  virtual ~RootAccessibleWrap();
-
-  // nsIDOMEventListener
-  NS_DECL_NSIDOMEVENTLISTENER
-
- protected:
-  virtual nsresult AddEventListeners() override;
-  virtual nsresult RemoveEventListeners() override;
-};
+using RootAccessibleWrap = RootAccessible;
 
 }  // namespace a11y
 }  // namespace mozilla
