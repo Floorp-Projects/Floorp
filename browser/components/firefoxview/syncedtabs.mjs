@@ -554,7 +554,7 @@ class SyncedTabsInView extends ViewPage {
 
   async getSyncedTabData() {
     this.devices = await lazy.SyncedTabs.getTabClients();
-    let tabs = await lazy.SyncedTabs.createRecentTabsList(this.devices, 50, {
+    let tabs = await lazy.SyncedTabs.getRecentTabs(50, {
       removeAllDupes: false,
       removeDeviceDupes: true,
     });
