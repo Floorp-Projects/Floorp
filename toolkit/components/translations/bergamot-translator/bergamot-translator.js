@@ -30,8 +30,8 @@ function loadBergamot(Module) {
   var scriptDirectory = "";
 
   function locateFile(path) {
-    if (Module["locateFile"]) {
-      return Module["locateFile"](path, scriptDirectory);
+    if (Module.locateFile) {
+      return Module.locateFile(path, scriptDirectory);
     }
     return scriptDirectory + path;
   }
@@ -53,14 +53,14 @@ function loadBergamot(Module) {
       scriptDirectory = "";
     }
     {
-      read_ = (url) => {
+      read_ = url => {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", url, false);
         xhr.send(null);
         return xhr.responseText;
       };
       if (ENVIRONMENT_IS_WORKER) {
-        readBinary = (url) => {
+        readBinary = url => {
           var xhr = new XMLHttpRequest();
           xhr.open("GET", url, false);
           xhr.responseType = "arraybuffer";
@@ -83,35 +83,43 @@ function loadBergamot(Module) {
         xhr.send(null);
       };
     }
-    setWindowTitle = (title) => (document.title = title);
+    setWindowTitle = title => (document.title = title);
   } else {
   }
 
-  var out = Module["print"] || console.log.bind(console);
+  var out = Module.print || console.log.bind(console);
 
-  var err = Module["printErr"] || console.warn.bind(console);
+  var err = Module.printErr || console.warn.bind(console);
 
   Object.assign(Module, moduleOverrides);
 
   moduleOverrides = null;
 
-  if (Module["arguments"]) arguments_ = Module["arguments"];
+  if (Module.arguments) {
+    arguments_ = Module.arguments;
+  }
 
-  if (Module["thisProgram"]) thisProgram = Module["thisProgram"];
+  if (Module.thisProgram) {
+    thisProgram = Module.thisProgram;
+  }
 
-  if (Module["quit"]) quit_ = Module["quit"];
+  if (Module.quit) {
+    quit_ = Module.quit;
+  }
 
   var tempRet0 = 0;
 
-  var setTempRet0 = (value) => {
+  var setTempRet0 = value => {
     tempRet0 = value;
   };
 
   var wasmBinary;
 
-  if (Module["wasmBinary"]) wasmBinary = Module["wasmBinary"];
+  if (Module.wasmBinary) {
+    wasmBinary = Module.wasmBinary;
+  }
 
-  var noExitRuntime = Module["noExitRuntime"] || true;
+  var noExitRuntime = Module.noExitRuntime || true;
 
   if (typeof WebAssembly != "object") {
     abort("no native wasm support detected");
@@ -135,40 +143,39 @@ function loadBergamot(Module) {
   function UTF8ArrayToString(heapOrArray, idx, maxBytesToRead) {
     var endIdx = idx + maxBytesToRead;
     var endPtr = idx;
-    while (heapOrArray[endPtr] && !(endPtr >= endIdx)) ++endPtr;
+    while (heapOrArray[endPtr] && !(endPtr >= endIdx)) {
+      ++endPtr;
+    }
     if (endPtr - idx > 16 && heapOrArray.buffer && UTF8Decoder) {
       return UTF8Decoder.decode(heapOrArray.subarray(idx, endPtr));
-    } else {
-      var str = "";
-      while (idx < endPtr) {
-        var u0 = heapOrArray[idx++];
-        if (!(u0 & 128)) {
-          str += String.fromCharCode(u0);
-          continue;
-        }
-        var u1 = heapOrArray[idx++] & 63;
-        if ((u0 & 224) == 192) {
-          str += String.fromCharCode(((u0 & 31) << 6) | u1);
-          continue;
-        }
-        var u2 = heapOrArray[idx++] & 63;
-        if ((u0 & 240) == 224) {
-          u0 = ((u0 & 15) << 12) | (u1 << 6) | u2;
-        } else {
-          u0 =
-            ((u0 & 7) << 18) |
-            (u1 << 12) |
-            (u2 << 6) |
-            (heapOrArray[idx++] & 63);
-        }
-        if (u0 < 65536) {
-          str += String.fromCharCode(u0);
-        } else {
-          var ch = u0 - 65536;
-          str += String.fromCharCode(55296 | (ch >> 10), 56320 | (ch & 1023));
-        }
+    }
+    var str = "";
+    while (idx < endPtr) {
+      var u0 = heapOrArray[idx++];
+      if (!(u0 & 128)) {
+        str += String.fromCharCode(u0);
+        continue;
+      }
+      var u1 = heapOrArray[idx++] & 63;
+      if ((u0 & 224) == 192) {
+        str += String.fromCharCode(((u0 & 31) << 6) | u1);
+        continue;
+      }
+      var u2 = heapOrArray[idx++] & 63;
+      if ((u0 & 240) == 224) {
+        u0 = ((u0 & 15) << 12) | (u1 << 6) | u2;
+      } else {
+        u0 =
+          ((u0 & 7) << 18) | (u1 << 12) | (u2 << 6) | (heapOrArray[idx++] & 63);
+      }
+      if (u0 < 65536) {
+        str += String.fromCharCode(u0);
+      } else {
+        var ch = u0 - 65536;
+        str += String.fromCharCode(55296 | (ch >> 10), 56320 | (ch & 1023));
       }
     }
+
     return str;
   }
 
@@ -177,7 +184,9 @@ function loadBergamot(Module) {
   }
 
   function stringToUTF8Array(str, heap, outIdx, maxBytesToWrite) {
-    if (!(maxBytesToWrite > 0)) return 0;
+    if (!(maxBytesToWrite > 0)) {
+      return 0;
+    }
     var startIdx = outIdx;
     var endIdx = outIdx + maxBytesToWrite - 1;
     for (var i = 0; i < str.length; ++i) {
@@ -187,19 +196,27 @@ function loadBergamot(Module) {
         u = (65536 + ((u & 1023) << 10)) | (u1 & 1023);
       }
       if (u <= 127) {
-        if (outIdx >= endIdx) break;
+        if (outIdx >= endIdx) {
+          break;
+        }
         heap[outIdx++] = u;
       } else if (u <= 2047) {
-        if (outIdx + 1 >= endIdx) break;
+        if (outIdx + 1 >= endIdx) {
+          break;
+        }
         heap[outIdx++] = 192 | (u >> 6);
         heap[outIdx++] = 128 | (u & 63);
       } else if (u <= 65535) {
-        if (outIdx + 2 >= endIdx) break;
+        if (outIdx + 2 >= endIdx) {
+          break;
+        }
         heap[outIdx++] = 224 | (u >> 12);
         heap[outIdx++] = 128 | ((u >> 6) & 63);
         heap[outIdx++] = 128 | (u & 63);
       } else {
-        if (outIdx + 3 >= endIdx) break;
+        if (outIdx + 3 >= endIdx) {
+          break;
+        }
         heap[outIdx++] = 240 | (u >> 18);
         heap[outIdx++] = 128 | ((u >> 12) & 63);
         heap[outIdx++] = 128 | ((u >> 6) & 63);
@@ -218,12 +235,18 @@ function loadBergamot(Module) {
     var len = 0;
     for (var i = 0; i < str.length; ++i) {
       var u = str.charCodeAt(i);
-      if (u >= 55296 && u <= 57343)
+      if (u >= 55296 && u <= 57343) {
         u = (65536 + ((u & 1023) << 10)) | (str.charCodeAt(++i) & 1023);
-      if (u <= 127) ++len;
-      else if (u <= 2047) len += 2;
-      else if (u <= 65535) len += 3;
-      else len += 4;
+      }
+      if (u <= 127) {
+        ++len;
+      } else if (u <= 2047) {
+        len += 2;
+      } else if (u <= 65535) {
+        len += 3;
+      } else {
+        len += 4;
+      }
     }
     return len;
   }
@@ -235,26 +258,31 @@ function loadBergamot(Module) {
     var endPtr = ptr;
     var idx = endPtr >> 1;
     var maxIdx = idx + maxBytesToRead / 2;
-    while (!(idx >= maxIdx) && HEAPU16[idx]) ++idx;
+    while (!(idx >= maxIdx) && HEAPU16[idx]) {
+      ++idx;
+    }
     endPtr = idx << 1;
     if (endPtr - ptr > 32 && UTF16Decoder) {
       return UTF16Decoder.decode(HEAPU8.subarray(ptr, endPtr));
-    } else {
-      var str = "";
-      for (var i = 0; !(i >= maxBytesToRead / 2); ++i) {
-        var codeUnit = HEAP16[(ptr + i * 2) >> 1];
-        if (codeUnit == 0) break;
-        str += String.fromCharCode(codeUnit);
-      }
-      return str;
     }
+    var str = "";
+    for (var i = 0; !(i >= maxBytesToRead / 2); ++i) {
+      var codeUnit = HEAP16[(ptr + i * 2) >> 1];
+      if (codeUnit == 0) {
+        break;
+      }
+      str += String.fromCharCode(codeUnit);
+    }
+    return str;
   }
 
   function stringToUTF16(str, outPtr, maxBytesToWrite) {
     if (maxBytesToWrite === undefined) {
       maxBytesToWrite = 2147483647;
     }
-    if (maxBytesToWrite < 2) return 0;
+    if (maxBytesToWrite < 2) {
+      return 0;
+    }
     maxBytesToWrite -= 2;
     var startPtr = outPtr;
     var numCharsToWrite =
@@ -277,7 +305,9 @@ function loadBergamot(Module) {
     var str = "";
     while (!(i >= maxBytesToRead / 4)) {
       var utf32 = HEAP32[(ptr + i * 4) >> 2];
-      if (utf32 == 0) break;
+      if (utf32 == 0) {
+        break;
+      }
       ++i;
       if (utf32 >= 65536) {
         var ch = utf32 - 65536;
@@ -293,7 +323,9 @@ function loadBergamot(Module) {
     if (maxBytesToWrite === undefined) {
       maxBytesToWrite = 2147483647;
     }
-    if (maxBytesToWrite < 4) return 0;
+    if (maxBytesToWrite < 4) {
+      return 0;
+    }
     var startPtr = outPtr;
     var endPtr = startPtr + maxBytesToWrite - 4;
     for (var i = 0; i < str.length; ++i) {
@@ -305,7 +337,9 @@ function loadBergamot(Module) {
       }
       HEAP32[outPtr >> 2] = codeUnit;
       outPtr += 4;
-      if (outPtr + 4 > endPtr) break;
+      if (outPtr + 4 > endPtr) {
+        break;
+      }
     }
     HEAP32[outPtr >> 2] = 0;
     return outPtr - startPtr;
@@ -315,7 +349,9 @@ function loadBergamot(Module) {
     var len = 0;
     for (var i = 0; i < str.length; ++i) {
       var codeUnit = str.charCodeAt(i);
-      if (codeUnit >= 55296 && codeUnit <= 57343) ++i;
+      if (codeUnit >= 55296 && codeUnit <= 57343) {
+        ++i;
+      }
       len += 4;
     }
     return len;
@@ -324,7 +360,9 @@ function loadBergamot(Module) {
   function allocateUTF8(str) {
     var size = lengthBytesUTF8(str) + 1;
     var ret = _malloc(size);
-    if (ret) stringToUTF8Array(str, HEAP8, ret, size);
+    if (ret) {
+      stringToUTF8Array(str, HEAP8, ret, size);
+    }
     return ret;
   }
 
@@ -336,27 +374,29 @@ function loadBergamot(Module) {
     for (var i = 0; i < str.length; ++i) {
       HEAP8[buffer++ >> 0] = str.charCodeAt(i);
     }
-    if (!dontAddNull) HEAP8[buffer >> 0] = 0;
+    if (!dontAddNull) {
+      HEAP8[buffer >> 0] = 0;
+    }
   }
 
   var buffer, HEAP8, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPU32, HEAPF32, HEAPF64;
 
   function updateGlobalBufferAndViews(buf) {
     buffer = buf;
-    Module["HEAP8"] = HEAP8 = new Int8Array(buf);
-    Module["HEAP16"] = HEAP16 = new Int16Array(buf);
-    Module["HEAP32"] = HEAP32 = new Int32Array(buf);
-    Module["HEAPU8"] = HEAPU8 = new Uint8Array(buf);
-    Module["HEAPU16"] = HEAPU16 = new Uint16Array(buf);
-    Module["HEAPU32"] = HEAPU32 = new Uint32Array(buf);
-    Module["HEAPF32"] = HEAPF32 = new Float32Array(buf);
-    Module["HEAPF64"] = HEAPF64 = new Float64Array(buf);
+    Module.HEAP8 = HEAP8 = new Int8Array(buf);
+    Module.HEAP16 = HEAP16 = new Int16Array(buf);
+    Module.HEAP32 = HEAP32 = new Int32Array(buf);
+    Module.HEAPU8 = HEAPU8 = new Uint8Array(buf);
+    Module.HEAPU16 = HEAPU16 = new Uint16Array(buf);
+    Module.HEAPU32 = HEAPU32 = new Uint32Array(buf);
+    Module.HEAPF32 = HEAPF32 = new Float32Array(buf);
+    Module.HEAPF64 = HEAPF64 = new Float64Array(buf);
   }
 
-  var INITIAL_MEMORY = Module["INITIAL_MEMORY"] || 16777216;
+  var INITIAL_MEMORY = Module.INITIAL_MEMORY || 16777216;
 
-  if (Module["wasmMemory"]) {
-    wasmMemory = Module["wasmMemory"];
+  if (Module.wasmMemory) {
+    wasmMemory = Module.wasmMemory;
   } else {
     wasmMemory = new WebAssembly.Memory({
       initial: INITIAL_MEMORY / 65536,
@@ -387,11 +427,12 @@ function loadBergamot(Module) {
   }
 
   function preRun() {
-    if (Module["preRun"]) {
-      if (typeof Module["preRun"] == "function")
-        Module["preRun"] = [Module["preRun"]];
-      while (Module["preRun"].length) {
-        addOnPreRun(Module["preRun"].shift());
+    if (Module.preRun) {
+      if (typeof Module.preRun == "function") {
+        Module.preRun = [Module.preRun];
+      }
+      while (Module.preRun.length) {
+        addOnPreRun(Module.preRun.shift());
       }
     }
     callRuntimeCallbacks(__ATPRERUN__);
@@ -403,11 +444,12 @@ function loadBergamot(Module) {
   }
 
   function postRun() {
-    if (Module["postRun"]) {
-      if (typeof Module["postRun"] == "function")
-        Module["postRun"] = [Module["postRun"]];
-      while (Module["postRun"].length) {
-        addOnPostRun(Module["postRun"].shift());
+    if (Module.postRun) {
+      if (typeof Module.postRun == "function") {
+        Module.postRun = [Module.postRun];
+      }
+      while (Module.postRun.length) {
+        addOnPostRun(Module.postRun.shift());
       }
     }
     callRuntimeCallbacks(__ATPOSTRUN__);
@@ -433,15 +475,15 @@ function loadBergamot(Module) {
 
   function addRunDependency(id) {
     runDependencies++;
-    if (Module["monitorRunDependencies"]) {
-      Module["monitorRunDependencies"](runDependencies);
+    if (Module.monitorRunDependencies) {
+      Module.monitorRunDependencies(runDependencies);
     }
   }
 
   function removeRunDependency(id) {
     runDependencies--;
-    if (Module["monitorRunDependencies"]) {
-      Module["monitorRunDependencies"](runDependencies);
+    if (Module.monitorRunDependencies) {
+      Module.monitorRunDependencies(runDependencies);
     }
     if (runDependencies == 0) {
       if (runDependencyWatcher !== null) {
@@ -456,14 +498,14 @@ function loadBergamot(Module) {
     }
   }
 
-  Module["preloadedImages"] = {};
+  Module.preloadedImages = {};
 
-  Module["preloadedAudios"] = {};
+  Module.preloadedAudios = {};
 
   function abort(what) {
     {
-      if (Module["onAbort"]) {
-        Module["onAbort"](what);
+      if (Module.onAbort) {
+        Module.onAbort(what);
       }
     }
     what = "Aborted(" + what + ")";
@@ -496,9 +538,8 @@ function loadBergamot(Module) {
       }
       if (readBinary) {
         return readBinary(file);
-      } else {
-        throw "both async and sync fetching of the wasm failed";
       }
+      throw "both async and sync fetching of the wasm failed";
     } catch (err) {
       abort(err);
     }
@@ -511,12 +552,12 @@ function loadBergamot(Module) {
           credentials: "same-origin",
         })
           .then(function (response) {
-            if (!response["ok"]) {
+            if (!response.ok) {
               throw (
                 "failed to load wasm binary file at '" + wasmBinaryFile + "'"
               );
             }
-            return response["arrayBuffer"]();
+            return response.arrayBuffer();
           })
           .catch(function () {
             return getBinary(wasmBinaryFile);
@@ -536,15 +577,15 @@ function loadBergamot(Module) {
     };
     function receiveInstance(instance, module) {
       var exports = instance.exports;
-      Module["asm"] = exports;
-      wasmTable = Module["asm"]["__indirect_function_table"];
-      addOnInit(Module["asm"]["__wasm_call_ctors"]);
+      Module.asm = exports;
+      wasmTable = Module.asm.__indirect_function_table;
+      addOnInit(Module.asm.__wasm_call_ctors);
       exportAsmFunctions(exports);
       removeRunDependency("wasm-instantiate");
     }
     addRunDependency("wasm-instantiate");
     function receiveInstantiationResult(result) {
-      receiveInstance(result["instance"]);
+      receiveInstance(result.instance);
     }
     function instantiateArrayBuffer(receiver) {
       return getBinaryPromise()
@@ -576,13 +617,12 @@ function loadBergamot(Module) {
             return instantiateArrayBuffer(receiveInstantiationResult);
           });
         });
-      } else {
-        return instantiateArrayBuffer(receiveInstantiationResult);
       }
+      return instantiateArrayBuffer(receiveInstantiationResult);
     }
-    if (Module["instantiateWasm"]) {
+    if (Module.instantiateWasm) {
       try {
-        var exports = Module["instantiateWasm"](info, receiveInstance);
+        var exports = Module.instantiateWasm(info, receiveInstance);
         return exports;
       } catch (e) {
         err("Module.instantiateWasm callback failed with error: " + e);
@@ -594,7 +634,7 @@ function loadBergamot(Module) {
   }
 
   function callRuntimeCallbacks(callbacks) {
-    while (callbacks.length > 0) {
+    while (callbacks.length) {
       var callback = callbacks.shift();
       if (typeof callback == "function") {
         callback(Module);
@@ -633,8 +673,9 @@ function loadBergamot(Module) {
   function getWasmTableEntry(funcPtr) {
     var func = wasmTableMirror[funcPtr];
     if (!func) {
-      if (funcPtr >= wasmTableMirror.length)
+      if (funcPtr >= wasmTableMirror.length) {
         wasmTableMirror.length = funcPtr + 1;
+      }
       wasmTableMirror[funcPtr] = func = wasmTable.get(funcPtr);
     }
     return func;
@@ -742,7 +783,7 @@ function loadBergamot(Module) {
 
   var SYSCALLS = {
     buffers: [null, [], []],
-    printChar: function (stream, curr) {
+    printChar(stream, curr) {
       var buffer = SYSCALLS.buffers[stream];
       if (curr === 0 || curr === 10) {
         (stream === 1 ? out : err)(UTF8ArrayToString(buffer, 0));
@@ -752,16 +793,16 @@ function loadBergamot(Module) {
       }
     },
     varargs: undefined,
-    get: function () {
+    get() {
       SYSCALLS.varargs += 4;
       var ret = HEAP32[(SYSCALLS.varargs - 4) >> 2];
       return ret;
     },
-    getStr: function (ptr) {
+    getStr(ptr) {
       var ret = UTF8ToString(ptr);
       return ret;
     },
-    get64: function (low, high) {
+    get64(low, high) {
       return low;
     },
   };
@@ -813,7 +854,7 @@ function loadBergamot(Module) {
   }
 
   function simpleReadValueFromPointer(pointer) {
-    return this["fromWireType"](HEAPU32[pointer >> 2]);
+    return this.fromWireType(HEAPU32[pointer >> 2]);
   }
 
   var awaitingDependencies = {};
@@ -861,9 +902,8 @@ function loadBergamot(Module) {
     errorClass.prototype.toString = function () {
       if (this.message === undefined) {
         return this.name;
-      } else {
-        return this.name + ": " + this.message;
       }
+      return this.name + ": " + this.message;
     };
     return errorClass;
   }
@@ -923,9 +963,9 @@ function loadBergamot(Module) {
     var rawDestructor = reg.rawDestructor;
     var fieldRecords = reg.fields;
     var fieldTypes = fieldRecords
-      .map((field) => field.getterReturnType)
-      .concat(fieldRecords.map((field) => field.setterArgumentType));
-    whenDependentTypesAreResolved([structType], fieldTypes, (fieldTypes) => {
+      .map(field => field.getterReturnType)
+      .concat(fieldRecords.map(field => field.setterArgumentType));
+    whenDependentTypesAreResolved([structType], fieldTypes, fieldTypes => {
       var fields = {};
       fieldRecords.forEach((field, i) => {
         var fieldName = field.fieldName;
@@ -936,15 +976,15 @@ function loadBergamot(Module) {
         var setter = field.setter;
         var setterContext = field.setterContext;
         fields[fieldName] = {
-          read: (ptr) => {
-            return getterReturnType["fromWireType"](getter(getterContext, ptr));
+          read: ptr => {
+            return getterReturnType.fromWireType(getter(getterContext, ptr));
           },
           write: (ptr, o) => {
             var destructors = [];
             setter(
               setterContext,
               ptr,
-              setterArgumentType["toWireType"](destructors, o)
+              setterArgumentType.toWireType(destructors, o)
             );
             runDestructors(destructors);
           },
@@ -953,7 +993,7 @@ function loadBergamot(Module) {
       return [
         {
           name: reg.name,
-          fromWireType: function (ptr) {
+          fromWireType(ptr) {
             var rv = {};
             for (var i in fields) {
               rv[i] = fields[i].read(ptr);
@@ -961,7 +1001,7 @@ function loadBergamot(Module) {
             rawDestructor(ptr);
             return rv;
           },
-          toWireType: function (destructors, o) {
+          toWireType(destructors, o) {
             for (var fieldName in fields) {
               if (!(fieldName in o)) {
                 throw new TypeError('Missing field:  "' + fieldName + '"');
@@ -1051,16 +1091,15 @@ function loadBergamot(Module) {
     if (registeredTypes.hasOwnProperty(rawType)) {
       if (options.ignoreDuplicateRegistrations) {
         return;
-      } else {
-        throwBindingError("Cannot register type '" + name + "' twice");
       }
+      throwBindingError("Cannot register type '" + name + "' twice");
     }
     registeredTypes[rawType] = registeredInstance;
     delete typeDependencies[rawType];
     if (awaitingDependencies.hasOwnProperty(rawType)) {
       var callbacks = awaitingDependencies[rawType];
       delete awaitingDependencies[rawType];
-      callbacks.forEach((cb) => cb());
+      callbacks.forEach(cb => cb());
     }
   }
 
@@ -1068,15 +1107,15 @@ function loadBergamot(Module) {
     var shift = getShiftFromSize(size);
     name = readLatin1String(name);
     registerType(rawType, {
-      name: name,
-      fromWireType: function (wt) {
+      name,
+      fromWireType(wt) {
         return !!wt;
       },
-      toWireType: function (destructors, o) {
+      toWireType(destructors, o) {
         return o ? trueValue : falseValue;
       },
       argPackAdvance: 8,
-      readValueFromPointer: function (pointer) {
+      readValueFromPointer(pointer) {
         var heap;
         if (size === 1) {
           heap = HEAP8;
@@ -1087,7 +1126,7 @@ function loadBergamot(Module) {
         } else {
           throw new TypeError("Unknown boolean type size: " + name);
         }
-        return this["fromWireType"](heap[pointer >> shift]);
+        return this.fromWireType(heap[pointer >> shift]);
       },
       destructorFunction: null,
     });
@@ -1190,7 +1229,7 @@ function loadBergamot(Module) {
     while (deletionQueue.length) {
       var obj = deletionQueue.pop();
       obj.$$.deleteScheduled = false;
-      obj["delete"]();
+      obj.delete();
     }
   }
 
@@ -1204,10 +1243,10 @@ function loadBergamot(Module) {
   }
 
   function init_embind() {
-    Module["getInheritedInstanceCount"] = getInheritedInstanceCount;
-    Module["getLiveInheritedInstances"] = getLiveInheritedInstances;
-    Module["flushPendingDeletes"] = flushPendingDeletes;
-    Module["setDelayFunction"] = setDelayFunction;
+    Module.getInheritedInstanceCount = getInheritedInstanceCount;
+    Module.getLiveInheritedInstances = getLiveInheritedInstances;
+    Module.flushPendingDeletes = flushPendingDeletes;
+    Module.setDelayFunction = setDelayFunction;
   }
 
   var registeredInstances = {};
@@ -1263,12 +1302,11 @@ function loadBergamot(Module) {
       if (0 === registeredInstance.$$.count.value) {
         registeredInstance.$$.ptr = rawPointer;
         registeredInstance.$$.smartPtr = ptr;
-        return registeredInstance["clone"]();
-      } else {
-        var rv = registeredInstance["clone"]();
-        this.destructor(ptr);
-        return rv;
+        return registeredInstance.clone();
       }
+      var rv = registeredInstance.clone();
+      this.destructor(ptr);
+      return rv;
     }
     function makeDefaultHandle() {
       if (this.isSmartPointer) {
@@ -1278,12 +1316,11 @@ function loadBergamot(Module) {
           smartPtrType: this,
           smartPtr: ptr,
         });
-      } else {
-        return makeClassHandle(this.registeredClass.instancePrototype, {
-          ptrType: this,
-          ptr: ptr,
-        });
       }
+      return makeClassHandle(this.registeredClass.instancePrototype, {
+        ptrType: this,
+        ptr,
+      });
     }
     var actualType = this.registeredClass.getActualType(rawPointer);
     var registeredPointerRecord = registeredPointers[actualType];
@@ -1311,34 +1348,33 @@ function loadBergamot(Module) {
         smartPtrType: this,
         smartPtr: ptr,
       });
-    } else {
-      return makeClassHandle(toType.registeredClass.instancePrototype, {
-        ptrType: toType,
-        ptr: dp,
-      });
     }
+    return makeClassHandle(toType.registeredClass.instancePrototype, {
+      ptrType: toType,
+      ptr: dp,
+    });
   }
 
   function attachFinalizer(handle) {
     if ("undefined" === typeof FinalizationRegistry) {
-      attachFinalizer = (handle) => handle;
+      attachFinalizer = handle => handle;
       return handle;
     }
-    finalizationRegistry = new FinalizationRegistry((info) => {
+    finalizationRegistry = new FinalizationRegistry(info => {
       releaseClassHandle(info.$$);
     });
-    attachFinalizer = (handle) => {
+    attachFinalizer = handle => {
       var $$ = handle.$$;
       var hasSmartPtr = !!$$.smartPtr;
       if (hasSmartPtr) {
         var info = {
-          $$: $$,
+          $$,
         };
         finalizationRegistry.register(handle, info, handle);
       }
       return handle;
     };
-    detachFinalizer = (handle) => finalizationRegistry.unregister(handle);
+    detachFinalizer = handle => finalizationRegistry.unregister(handle);
     return attachFinalizer(handle);
   }
 
@@ -1349,18 +1385,17 @@ function loadBergamot(Module) {
     if (this.$$.preservePointerOnDelete) {
       this.$$.count.value += 1;
       return this;
-    } else {
-      var clone = attachFinalizer(
-        Object.create(Object.getPrototypeOf(this), {
-          $$: {
-            value: shallowCopyInternalPointer(this.$$),
-          },
-        })
-      );
-      clone.$$.count.value += 1;
-      clone.$$.deleteScheduled = false;
-      return clone;
     }
+    var clone = attachFinalizer(
+      Object.create(Object.getPrototypeOf(this), {
+        $$: {
+          value: shallowCopyInternalPointer(this.$$),
+        },
+      })
+    );
+    clone.$$.count.value += 1;
+    clone.$$.deleteScheduled = false;
+    return clone;
   }
 
   function ClassHandle_delete() {
@@ -1398,11 +1433,11 @@ function loadBergamot(Module) {
   }
 
   function init_ClassHandle() {
-    ClassHandle.prototype["isAliasOf"] = ClassHandle_isAliasOf;
-    ClassHandle.prototype["clone"] = ClassHandle_clone;
-    ClassHandle.prototype["delete"] = ClassHandle_delete;
-    ClassHandle.prototype["isDeleted"] = ClassHandle_isDeleted;
-    ClassHandle.prototype["deleteLater"] = ClassHandle_deleteLater;
+    ClassHandle.prototype.isAliasOf = ClassHandle_isAliasOf;
+    ClassHandle.prototype.clone = ClassHandle_clone;
+    ClassHandle.prototype.delete = ClassHandle_delete;
+    ClassHandle.prototype.isDeleted = ClassHandle_isDeleted;
+    ClassHandle.prototype.deleteLater = ClassHandle_deleteLater;
   }
 
   function ClassHandle() {}
@@ -1529,9 +1564,8 @@ function loadBergamot(Module) {
           destructors.push(this.rawDestructor, ptr);
         }
         return ptr;
-      } else {
-        return 0;
       }
+      return 0;
     }
     if (!handle.$$) {
       throwBindingError(
@@ -1583,11 +1617,11 @@ function loadBergamot(Module) {
           if (handle.$$.smartPtrType === this) {
             ptr = handle.$$.smartPtr;
           } else {
-            var clonedHandle = handle["clone"]();
+            var clonedHandle = handle.clone();
             ptr = this.rawShare(
               ptr,
               Emval.toHandle(function () {
-                clonedHandle["delete"]();
+                clonedHandle.delete();
               })
             );
             if (destructors !== null) {
@@ -1648,20 +1682,18 @@ function loadBergamot(Module) {
 
   function RegisteredPointer_deleteObject(handle) {
     if (handle !== null) {
-      handle["delete"]();
+      handle.delete();
     }
   }
 
   function init_RegisteredPointer() {
     RegisteredPointer.prototype.getPointee = RegisteredPointer_getPointee;
     RegisteredPointer.prototype.destructor = RegisteredPointer_destructor;
-    RegisteredPointer.prototype["argPackAdvance"] = 8;
-    RegisteredPointer.prototype["readValueFromPointer"] =
+    RegisteredPointer.prototype.argPackAdvance = 8;
+    RegisteredPointer.prototype.readValueFromPointer =
       simpleReadValueFromPointer;
-    RegisteredPointer.prototype["deleteObject"] =
-      RegisteredPointer_deleteObject;
-    RegisteredPointer.prototype["fromWireType"] =
-      RegisteredPointer_fromWireType;
+    RegisteredPointer.prototype.deleteObject = RegisteredPointer_deleteObject;
+    RegisteredPointer.prototype.fromWireType = RegisteredPointer_fromWireType;
   }
 
   function RegisteredPointer(
@@ -1690,14 +1722,14 @@ function loadBergamot(Module) {
     this.rawDestructor = rawDestructor;
     if (!isSmartPointer && registeredClass.baseClass === undefined) {
       if (isConst) {
-        this["toWireType"] = constNoSmartPtrRawPointerToWireType;
+        this.toWireType = constNoSmartPtrRawPointerToWireType;
         this.destructorFunction = null;
       } else {
-        this["toWireType"] = nonConstNoSmartPtrRawPointerToWireType;
+        this.toWireType = nonConstNoSmartPtrRawPointerToWireType;
         this.destructorFunction = null;
       }
     } else {
-      this["toWireType"] = genericPointerToWireType;
+      this.toWireType = genericPointerToWireType;
     }
   }
 
@@ -2010,11 +2042,11 @@ function loadBergamot(Module) {
       invokerFuncArgs.length = isClassMethodFunc ? 2 : 1;
       invokerFuncArgs[0] = cppTargetFunc;
       if (isClassMethodFunc) {
-        thisWired = argTypes[1]["toWireType"](destructors, this);
+        thisWired = argTypes[1].toWireType(destructors, this);
         invokerFuncArgs[1] = thisWired;
       }
       for (var i = 0; i < expectedArgCount; ++i) {
-        argsWired[i] = argTypes[i + 2]["toWireType"](destructors, arguments[i]);
+        argsWired[i] = argTypes[i + 2].toWireType(destructors, arguments[i]);
         invokerFuncArgs.push(argsWired[i]);
       }
       var rv = cppInvokerFunc.apply(null, invokerFuncArgs);
@@ -2030,7 +2062,7 @@ function loadBergamot(Module) {
           }
         }
         if (returns) {
-          return argTypes[0]["fromWireType"](rv);
+          return argTypes[0].fromWireType(rv);
         }
       }
       return onDone(rv);
@@ -2145,18 +2177,18 @@ function loadBergamot(Module) {
   }
 
   function init_emval() {
-    Module["count_emval_handles"] = count_emval_handles;
-    Module["get_first_emval"] = get_first_emval;
+    Module.count_emval_handles = count_emval_handles;
+    Module.get_first_emval = get_first_emval;
   }
 
   var Emval = {
-    toValue: (handle) => {
+    toValue: handle => {
       if (!handle) {
         throwBindingError("Cannot use deleted val. handle = " + handle);
       }
       return emval_handle_array[handle].value;
     },
-    toHandle: (value) => {
+    toHandle: value => {
       switch (value) {
         case undefined:
           return 1;
@@ -2176,7 +2208,7 @@ function loadBergamot(Module) {
             : emval_handle_array.length;
           emval_handle_array[handle] = {
             refcount: 1,
-            value: value,
+            value,
           };
           return handle;
         }
@@ -2187,13 +2219,13 @@ function loadBergamot(Module) {
   function __embind_register_emval(rawType, name) {
     name = readLatin1String(name);
     registerType(rawType, {
-      name: name,
-      fromWireType: function (handle) {
+      name,
+      fromWireType(handle) {
         var rv = Emval.toValue(handle);
         __emval_decref(handle);
         return rv;
       },
-      toWireType: function (destructors, value) {
+      toWireType(destructors, value) {
         return Emval.toHandle(value);
       },
       argPackAdvance: 8,
@@ -2209,21 +2241,20 @@ function loadBergamot(Module) {
     var t = typeof v;
     if (t === "object" || t === "array" || t === "function") {
       return v.toString();
-    } else {
-      return "" + v;
     }
+    return "" + v;
   }
 
   function floatReadValueFromPointer(name, shift) {
     switch (shift) {
       case 2:
         return function (pointer) {
-          return this["fromWireType"](HEAPF32[pointer >> 2]);
+          return this.fromWireType(HEAPF32[pointer >> 2]);
         };
 
       case 3:
         return function (pointer) {
-          return this["fromWireType"](HEAPF64[pointer >> 3]);
+          return this.fromWireType(HEAPF64[pointer >> 3]);
         };
 
       default:
@@ -2235,11 +2266,11 @@ function loadBergamot(Module) {
     var shift = getShiftFromSize(size);
     name = readLatin1String(name);
     registerType(rawType, {
-      name: name,
-      fromWireType: function (value) {
+      name,
+      fromWireType(value) {
         return value;
       },
-      toWireType: function (destructors, value) {
+      toWireType(destructors, value) {
         return value;
       },
       argPackAdvance: 8,
@@ -2294,10 +2325,10 @@ function loadBergamot(Module) {
       maxRange = 4294967295;
     }
     var shift = getShiftFromSize(size);
-    var fromWireType = (value) => value;
+    var fromWireType = value => value;
     if (minRange === 0) {
       var bitshift = 32 - 8 * size;
-      fromWireType = (value) => (value << bitshift) >>> bitshift;
+      fromWireType = value => (value << bitshift) >>> bitshift;
     }
     var isUnsignedType = name.includes("unsigned");
     var checkAssertions = (value, toTypeName) => {};
@@ -2314,9 +2345,9 @@ function loadBergamot(Module) {
       };
     }
     registerType(primitiveType, {
-      name: name,
-      fromWireType: fromWireType,
-      toWireType: toWireType,
+      name,
+      fromWireType,
+      toWireType,
       argPackAdvance: 8,
       readValueFromPointer: integerReadValueFromPointer(
         name,
@@ -2350,7 +2381,7 @@ function loadBergamot(Module) {
     registerType(
       rawType,
       {
-        name: name,
+        name,
         fromWireType: decodeMemoryView,
         argPackAdvance: 8,
         readValueFromPointer: decodeMemoryView,
@@ -2410,8 +2441,8 @@ function loadBergamot(Module) {
     name = readLatin1String(name);
     var stdStringIsUTF8 = name === "std::string";
     registerType(rawType, {
-      name: name,
-      fromWireType: function (value) {
+      name,
+      fromWireType(value) {
         var length = HEAPU32[value >> 2];
         var str;
         if (stdStringIsUTF8) {
@@ -2440,7 +2471,7 @@ function loadBergamot(Module) {
         _free(value);
         return str;
       },
-      toWireType: function (destructors, value) {
+      toWireType(destructors, value) {
         if (value instanceof ArrayBuffer) {
           value = new Uint8Array(value);
         }
@@ -2466,22 +2497,20 @@ function loadBergamot(Module) {
         HEAPU32[ptr >> 2] = length;
         if (stdStringIsUTF8 && valueIsOfTypeString) {
           stringToUTF8(value, ptr + 4, length + 1);
+        } else if (valueIsOfTypeString) {
+          for (var i = 0; i < length; ++i) {
+            var charCode = value.charCodeAt(i);
+            if (charCode > 255) {
+              _free(ptr);
+              throwBindingError(
+                "String has UTF-16 code units that do not fit in 8 bits"
+              );
+            }
+            HEAPU8[ptr + 4 + i] = charCode;
+          }
         } else {
-          if (valueIsOfTypeString) {
-            for (var i = 0; i < length; ++i) {
-              var charCode = value.charCodeAt(i);
-              if (charCode > 255) {
-                _free(ptr);
-                throwBindingError(
-                  "String has UTF-16 code units that do not fit in 8 bits"
-                );
-              }
-              HEAPU8[ptr + 4 + i] = charCode;
-            }
-          } else {
-            for (var i = 0; i < length; ++i) {
-              HEAPU8[ptr + 4 + i] = value[i];
-            }
+          for (var i = 0; i < length; ++i) {
+            HEAPU8[ptr + 4 + i] = value[i];
           }
         }
         if (destructors !== null) {
@@ -2491,7 +2520,7 @@ function loadBergamot(Module) {
       },
       argPackAdvance: 8,
       readValueFromPointer: simpleReadValueFromPointer,
-      destructorFunction: function (ptr) {
+      destructorFunction(ptr) {
         _free(ptr);
       },
     });
@@ -2514,8 +2543,8 @@ function loadBergamot(Module) {
       shift = 2;
     }
     registerType(rawType, {
-      name: name,
-      fromWireType: function (value) {
+      name,
+      fromWireType(value) {
         var length = HEAPU32[value >> 2];
         var HEAP = getHeap();
         var str;
@@ -2537,7 +2566,7 @@ function loadBergamot(Module) {
         _free(value);
         return str;
       },
-      toWireType: function (destructors, value) {
+      toWireType(destructors, value) {
         if (!(typeof value == "string")) {
           throwBindingError(
             "Cannot pass non-string to C++ string type " + name
@@ -2554,7 +2583,7 @@ function loadBergamot(Module) {
       },
       argPackAdvance: 8,
       readValueFromPointer: simpleReadValueFromPointer,
-      destructorFunction: function (ptr) {
+      destructorFunction(ptr) {
         _free(ptr);
       },
     });
@@ -2596,12 +2625,12 @@ function loadBergamot(Module) {
   ) {
     structRegistrations[structType].fields.push({
       fieldName: readLatin1String(fieldName),
-      getterReturnType: getterReturnType,
+      getterReturnType,
       getter: embind__requireFunction(getterSignature, getter),
-      getterContext: getterContext,
-      setterArgumentType: setterArgumentType,
+      getterContext,
+      setterArgumentType,
       setter: embind__requireFunction(setterSignature, setter),
-      setterContext: setterContext,
+      setterContext,
     });
   }
 
@@ -2609,12 +2638,12 @@ function loadBergamot(Module) {
     name = readLatin1String(name);
     registerType(rawType, {
       isVoid: true,
-      name: name,
+      name,
       argPackAdvance: 0,
-      fromWireType: function () {
+      fromWireType() {
         return undefined;
       },
-      toWireType: function (destructors, o) {
+      toWireType(destructors, o) {
         return undefined;
       },
     });
@@ -2657,8 +2686,8 @@ function loadBergamot(Module) {
     var args = new Array(argCount);
     for (var i = 0; i < argCount; ++i) {
       var type = types[i];
-      args[i] = type["readValueFromPointer"](argv);
-      argv += type["argPackAdvance"];
+      args[i] = type.readValueFromPointer(argv);
+      argv += type.argPackAdvance;
     }
     var rv = handle.apply(undefined, args);
     return Emval.toHandle(rv);
@@ -2672,7 +2701,7 @@ function loadBergamot(Module) {
 
   function __emval_take_value(type, argv) {
     type = requireRegisteredType(type, "_emval_take_value");
-    var v = type["readValueFromPointer"](argv);
+    var v = type.readValueFromPointer(argv);
     return Emval.toHandle(v);
   }
 
@@ -2730,7 +2759,9 @@ function loadBergamot(Module) {
   }
 
   function __tzset_js(timezone, daylight, tzname) {
-    if (__tzset_js.called) return;
+    if (__tzset_js.called) {
+      return;
+    }
     __tzset_js.called = true;
     _tzset_impl(timezone, daylight, tzname);
   }
@@ -2810,8 +2841,11 @@ function loadBergamot(Module) {
         _: getExecutableName(),
       };
       for (var x in ENV) {
-        if (ENV[x] === undefined) delete env[x];
-        else env[x] = ENV[x];
+        if (ENV[x] === undefined) {
+          delete env[x];
+        } else {
+          env[x] = ENV[x];
+        }
       }
       var strings = [];
       for (var x in env) {
@@ -2879,17 +2913,17 @@ function loadBergamot(Module) {
   function getRandomDevice() {
     if (
       typeof crypto == "object" &&
-      typeof crypto["getRandomValues"] == "function"
+      typeof crypto.getRandomValues == "function"
     ) {
       var randomBuffer = new Uint8Array(1);
       return function () {
         crypto.getRandomValues(randomBuffer);
         return randomBuffer[0];
       };
-    } else
-      return function () {
-        abort("randomDevice");
-      };
+    }
+    return function () {
+      abort("randomDevice");
+    };
   }
 
   function _getentropy(buffer, size) {
@@ -3080,12 +3114,10 @@ function loadBergamot(Module) {
       if (compareByDay(firstWeekStartThisYear, thisDate) <= 0) {
         if (compareByDay(firstWeekStartNextYear, thisDate) <= 0) {
           return thisDate.getFullYear() + 1;
-        } else {
-          return thisDate.getFullYear();
         }
-      } else {
-        return thisDate.getFullYear() - 1;
+        return thisDate.getFullYear();
       }
+      return thisDate.getFullYear() - 1;
     }
     var EXPANSION_RULES_2 = {
       "%a": function (date) {
@@ -3121,8 +3153,11 @@ function loadBergamot(Module) {
       },
       "%I": function (date) {
         var twelveHour = date.tm_hour;
-        if (twelveHour == 0) twelveHour = 12;
-        else if (twelveHour > 12) twelveHour -= 12;
+        if (twelveHour == 0) {
+          twelveHour = 12;
+        } else if (twelveHour > 12) {
+          twelveHour -= 12;
+        }
         return leadingNulls(twelveHour, 2);
       },
       "%j": function (date) {
@@ -3149,9 +3184,8 @@ function loadBergamot(Module) {
       "%p": function (date) {
         if (date.tm_hour >= 0 && date.tm_hour < 12) {
           return "AM";
-        } else {
-          return "PM";
         }
+        return "PM";
       },
       "%S": function (date) {
         return leadingNulls(date.tm_sec, 2);
@@ -3182,7 +3216,9 @@ function loadBergamot(Module) {
           }
         } else if (val == 53) {
           var jan1 = (date.tm_wday + 371 - date.tm_yday) % 7;
-          if (jan1 != 4 && (jan1 != 3 || !__isLeapYear(date.tm_year))) val = 1;
+          if (jan1 != 4 && (jan1 != 3 || !__isLeapYear(date.tm_year))) {
+            val = 1;
+          }
         }
         return leadingNulls(val, 2);
       },
@@ -3235,11 +3271,11 @@ function loadBergamot(Module) {
     return _strftime(s, maxsize, format, tm);
   }
 
-  InternalError = Module["InternalError"] = extendError(Error, "InternalError");
+  InternalError = Module.InternalError = extendError(Error, "InternalError");
 
   embind_init_charCodes();
 
-  BindingError = Module["BindingError"] = extendError(Error, "BindingError");
+  BindingError = Module.BindingError = extendError(Error, "BindingError");
 
   init_ClassHandle();
 
@@ -3247,7 +3283,7 @@ function loadBergamot(Module) {
 
   init_RegisteredPointer();
 
-  UnboundTypeError = Module["UnboundTypeError"] = extendError(
+  UnboundTypeError = Module.UnboundTypeError = extendError(
     Error,
     "UnboundTypeError"
   );
@@ -3263,7 +3299,9 @@ function loadBergamot(Module) {
       0,
       u8array.length
     );
-    if (dontAddNull) u8array.length = numBytesWritten;
+    if (dontAddNull) {
+      u8array.length = numBytesWritten;
+    }
     return u8array;
   }
 
@@ -3340,8 +3378,12 @@ function loadBergamot(Module) {
   }
 
   dependenciesFulfilled = function runCaller() {
-    if (!calledRun) run();
-    if (!calledRun) dependenciesFulfilled = runCaller;
+    if (!calledRun) {
+      run();
+    }
+    if (!calledRun) {
+      dependenciesFulfilled = runCaller;
+    }
   };
 
   function run(args) {
@@ -3354,19 +3396,25 @@ function loadBergamot(Module) {
       return;
     }
     function doRun() {
-      if (calledRun) return;
+      if (calledRun) {
+        return;
+      }
       calledRun = true;
-      Module["calledRun"] = true;
-      if (ABORT) return;
+      Module.calledRun = true;
+      if (ABORT) {
+        return;
+      }
       initRuntime();
-      if (Module["onRuntimeInitialized"]) Module["onRuntimeInitialized"]();
+      if (Module.onRuntimeInitialized) {
+        Module.onRuntimeInitialized();
+      }
       postRun();
     }
-    if (Module["setStatus"]) {
-      Module["setStatus"]("Running...");
+    if (Module.setStatus) {
+      Module.setStatus("Running...");
       setTimeout(function () {
         setTimeout(function () {
-          Module["setStatus"]("");
+          Module.setStatus("");
         }, 1);
         doRun();
       }, 1);
@@ -3375,7 +3423,7 @@ function loadBergamot(Module) {
     }
   }
 
-  Module["run"] = run;
+  Module.run = run;
 
   function exit(status, implicit) {
     EXITSTATUS = status;
@@ -3385,17 +3433,20 @@ function loadBergamot(Module) {
   function procExit(code) {
     EXITSTATUS = code;
     if (!keepRuntimeAlive()) {
-      if (Module["onExit"]) Module["onExit"](code);
+      if (Module.onExit) {
+        Module.onExit(code);
+      }
       ABORT = true;
     }
     quit_(code, new ExitStatus(code));
   }
 
-  if (Module["preInit"]) {
-    if (typeof Module["preInit"] == "function")
-      Module["preInit"] = [Module["preInit"]];
-    while (Module["preInit"].length > 0) {
-      Module["preInit"].pop()();
+  if (Module.preInit) {
+    if (typeof Module.preInit == "function") {
+      Module.preInit = [Module.preInit];
+    }
+    while (Module.preInit.length) {
+      Module.preInit.pop()();
     }
   }
 
