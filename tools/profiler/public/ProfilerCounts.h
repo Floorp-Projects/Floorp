@@ -18,6 +18,7 @@
 
 #else
 
+#  include "mozilla/Assertions.h"
 #  include "mozilla/Atomics.h"
 
 class BaseProfilerCount;
