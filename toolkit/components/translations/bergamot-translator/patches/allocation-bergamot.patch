@@ -1,0 +1,26 @@
+commit dfa705777729fd084f0187a90f9712eb76ea9209
+parent 05a87784973b6e1cc591f1f1a9a05c5873d9971e
+Author: Greg Tatum <tatum.creative@gmail.com>
+Date:   Tue Nov 7 10:57:07 2023 -0600
+
+    Change allocation strategy
+    
+    This fixes an issue where the memory would grow to 500mb by pre-allocating large
+    workspaces. For some reason the "workspace" configuration for the Wasm build wasn't
+    fixing this, but hard-coding the value does. Perhaps the configuration file in Bergamot
+    is not working correctly, or it was just a mistake on the author's part. Empirically
+    this value keeps memory from growing too rapidly, and does not degrade Wasm performance.
+
+diff --git a/src/translator/translation_model.cpp b/src/translator/translation_model.cpp
+index 3f91ebb..61a299f 100644
+--- a/src/translator/translation_model.cpp
++++ b/src/translator/translation_model.cpp
+@@ -59,7 +59,7 @@ void TranslationModel::loadBackend(size_t idx) {
+   graph->setDefaultElementType(typeFromString(prec[0]));
+   graph->setDevice(device_);
+   graph->getBackend()->configureDevice(options_);
+-  graph->reserveWorkspaceMB(options_->get<size_t>("workspace"));
++  graph->reserveWorkspaceMB(5);
+ 
+   // Marian Model: Load from memoryBundle or shortList
+   if (memory_.model.size() > 0 &&

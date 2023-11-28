@@ -493,19 +493,19 @@ class BergamotUtils {
    *
    * https://github.com/mozilla/bergamot-translator/
    *
-   * @param {ArrayBuffer} wasmBinary
+   * @param {ArrayBuffer} wasm
    * @returns {Promise<Bergamot>}
    */
-  static initializeWasm(wasmBinary) {
+  static initializeWasm(wasm) {
     return new Promise((resolve, reject) => {
       /** @type {number} */
       let start = performance.now();
 
       /** @type {Bergamot} */
       const bergamot = loadBergamot({
-        // This is the amount of memory that a simple run of Bergamot uses, in byte.
-        INITIAL_MEMORY: 459_276_288,
-        preRun: [],
+        // This is the amount of memory that a simple run of Bergamot uses, in bytes.
+        INITIAL_MEMORY: 234_291_200,
+        print: log,
         onAbort() {
           reject(new Error("Error loading Bergamot wasm module."));
         },
@@ -519,7 +519,7 @@ class BergamotUtils {
           await Promise.resolve();
           resolve(bergamot);
         },
-        wasmBinary,
+        wasm,
       });
     });
   }

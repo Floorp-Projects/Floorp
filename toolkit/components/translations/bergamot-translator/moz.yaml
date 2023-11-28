@@ -16,15 +16,15 @@ origin:
 
   # Full URL for the package's homepage/etc
   # Usually different from repository url
-  url: https://github.com/mozilla/bergamot-translator/
+  url: https://github.com/browsermt/bergamot-translator.git
 
   # Human-readable identifier for this version/release
   # Generally "version NNN", "tag SSS", "bookmark SSS"
-  release: v0.4.4
+  release: v0.4.5
 
   # Revision to pull in
   # Must be a long or short commit SHA (long preferred)
-  revision: 5ae1b1ebb3fa9a3eabed8a64ca6798154bd486eb
+  revision: 05a87784973b6e1cc591f1f1a9a05c5873d9971e
 
   # The package's license, where possible using the mnemonic from
   # https://spdx.org/licenses/
