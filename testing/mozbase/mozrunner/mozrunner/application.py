@@ -5,7 +5,7 @@
 import os
 import posixpath
 from abc import ABCMeta, abstractmethod
-from shutil import which
+from distutils.spawn import find_executable
 
 import six
 from mozdevice import ADBDeviceFactory
@@ -51,7 +51,7 @@ class RemoteContext(object):
     @property
     def bindir(self):
         if self._bindir is None:
-            paths = [which("emulator")]
+            paths = [find_executable("emulator")]
             paths = [p for p in paths if p is not None if os.path.isfile(p)]
             if not paths:
                 self._bindir = ""
@@ -88,7 +88,7 @@ class RemoteContext(object):
             paths.insert(0, os.path.abspath(self.bindir))
             os.environ["PATH"] = os.pathsep.join(paths)
 
-        return which(binary)
+        return find_executable(binary)
 
     @abstractmethod
     def stop_application(self):
