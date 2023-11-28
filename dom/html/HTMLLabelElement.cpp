@@ -9,7 +9,9 @@
  */
 #include "HTMLLabelElement.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/HTMLLabelElementBinding.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "nsFocusManager.h"
@@ -65,17 +67,34 @@ void HTMLLabelElement::Focus(const FocusOptions& aOptions,
   }
 }
 
-nsresult HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
+bool HTMLLabelElement::CheckHandleEventPreconditions(
+    EventChainVisitor& aVisitor) {
+  return !mHandlingEvent &&
+         aVisitor.mEventStatus != nsEventStatus_eConsumeDoDefault &&
+         aVisitor.mPresContext &&
+         !aVisitor.mEvent->mFlags.mMultipleActionsPrevented;
+}
+
+void HTMLLabelElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
-  if (mHandlingEvent ||
-      (!(mouseEvent && mouseEvent->IsLeftClickEvent()) &&
-       aVisitor.mEvent->mMessage != eMouseDown) ||
-      aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
-      !aVisitor.mPresContext ||
-      // Don't handle the event if it's already been handled by another label
-      aVisitor.mEvent->mFlags.mMultipleActionsPrevented) {
+
+  if (CheckHandleEventPreconditions(aVisitor) && mouseEvent &&
+      mouseEvent->IsLeftClickEvent()) {
+    aVisitor.mWantsActivationBehavior = true;
+  }
+
+  nsGenericHTMLElement::GetEventTargetParent(aVisitor);
+}
+
+nsresult HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
+  if (!CheckHandleEventPreconditions(aVisitor)) {
     return NS_OK;
   }
+  if (aVisitor.mEvent->mMessage != eMouseDown) {
+    return NS_OK;
+  }
+  WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
+  MOZ_ASSERT(mouseEvent);
 
   nsCOMPtr<Element> target =
       do_QueryInterface(aVisitor.mEvent->GetOriginalDOMEventTarget());
@@ -104,77 +123,95 @@ nsresult HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
       }
       break;
 
-    case eMouseClick:
-      if (mouseEvent->IsLeftClickEvent()) {
-        LayoutDeviceIntPoint* mouseDownPoint =
-            static_cast<LayoutDeviceIntPoint*>(
-                GetProperty(nsGkAtoms::labelMouseDownPtProperty));
-
-        bool dragSelect = false;
-        if (mouseDownPoint) {
-          LayoutDeviceIntPoint dragDistance = *mouseDownPoint;
-          RemoveProperty(nsGkAtoms::labelMouseDownPtProperty);
-
-          dragDistance -= mouseEvent->mRefPoint;
-          const int CLICK_DISTANCE = 2;
-          dragSelect = dragDistance.x > CLICK_DISTANCE ||
-                       dragDistance.x < -CLICK_DISTANCE ||
-                       dragDistance.y > CLICK_DISTANCE ||
-                       dragDistance.y < -CLICK_DISTANCE;
-        }
-        // Don't click the for-content if we did drag-select text or if we
-        // have a kbd modifier (which adjusts a selection).
-        if (dragSelect || mouseEvent->IsShift() || mouseEvent->IsControl() ||
-            mouseEvent->IsAlt() || mouseEvent->IsMeta()) {
-          break;
-        }
-        // Only set focus on the first click of multiple clicks to prevent
-        // to prevent immediate de-focus.
-        if (mouseEvent->mClickCount <= 1) {
-          if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
-            // Use FLAG_BYMOVEFOCUS here so that the label is scrolled to.
-            // Also, within HTMLInputElement::PostHandleEvent, inputs will
-            // be selected only when focused via a key or when the navigation
-            // flag is used and we want to select the text on label clicks as
-            // well.
-            // If the label has been clicked by the user, we also want to
-            // pass FLAG_BYMOUSE so that we get correct focus ring behavior,
-            // but we don't want to pass FLAG_BYMOUSE if this click event was
-            // caused by the user pressing an accesskey.
-            bool byMouse = (mouseEvent->mInputSource !=
-                            MouseEvent_Binding::MOZ_SOURCE_KEYBOARD);
-            bool byTouch = (mouseEvent->mInputSource ==
-                            MouseEvent_Binding::MOZ_SOURCE_TOUCH);
-            fm->SetFocus(content,
-                         nsIFocusManager::FLAG_BYMOVEFOCUS |
-                             (byMouse ? nsIFocusManager::FLAG_BYMOUSE : 0) |
-                             (byTouch ? nsIFocusManager::FLAG_BYTOUCH : 0));
-          }
-        }
-        // Dispatch a new click event to |content|
-        //    (For compatibility with IE, we do only left click.  If
-        //    we wanted to interpret the HTML spec very narrowly, we
-        //    would do nothing.  If we wanted to do something
-        //    sensible, we might send more events through like
-        //    this.)  See bug 7554, bug 49897, and bug 96813.
-        nsEventStatus status = aVisitor.mEventStatus;
-        // Ok to use aVisitor.mEvent as parameter because DispatchClickEvent
-        // will actually create a new event.
-        EventFlags eventFlags;
-        eventFlags.mMultipleActionsPrevented = true;
-        DispatchClickEvent(aVisitor.mPresContext, mouseEvent, content, false,
-                           &eventFlags, &status);
-        // Do we care about the status this returned?  I don't think we do...
-        // Don't run another <label> off of this click
-        mouseEvent->mFlags.mMultipleActionsPrevented = true;
-      }
-      break;
-
     default:
       break;
   }
   mHandlingEvent = false;
   return NS_OK;
+}
+
+void HTMLLabelElement::ActivationBehavior(EventChainPostVisitor& aVisitor) {
+  if (!CheckHandleEventPreconditions(aVisitor)) {
+    return;
+  }
+  WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
+  MOZ_ASSERT(mouseEvent && mouseEvent->IsLeftClickEvent());
+
+  nsCOMPtr<Element> target =
+      do_QueryInterface(aVisitor.mEvent->GetOriginalDOMEventTarget());
+  if (nsContentUtils::IsInInteractiveHTMLContent(target, this)) {
+    return;
+  }
+
+  // Strong ref because event dispatch is going to happen.
+  RefPtr<Element> content = GetLabeledElement();
+
+  if (!content || content->IsDisabled()) {
+    return;
+  }
+
+  mHandlingEvent = true;
+
+  LayoutDeviceIntPoint* mouseDownPoint = static_cast<LayoutDeviceIntPoint*>(
+      GetProperty(nsGkAtoms::labelMouseDownPtProperty));
+
+  bool dragSelect = false;
+  if (mouseDownPoint) {
+    LayoutDeviceIntPoint dragDistance = *mouseDownPoint;
+    RemoveProperty(nsGkAtoms::labelMouseDownPtProperty);
+
+    dragDistance -= mouseEvent->mRefPoint;
+    const int CLICK_DISTANCE = 2;
+    dragSelect =
+        dragDistance.x > CLICK_DISTANCE || dragDistance.x < -CLICK_DISTANCE ||
+        dragDistance.y > CLICK_DISTANCE || dragDistance.y < -CLICK_DISTANCE;
+  }
+  // Don't click the for-content if we did drag-select text or if we
+  // have a kbd modifier (which adjusts a selection).
+  if (dragSelect || mouseEvent->IsShift() || mouseEvent->IsControl() ||
+      mouseEvent->IsAlt() || mouseEvent->IsMeta()) {
+    mHandlingEvent = false;
+    return;
+  }
+  // Only set focus on the first click of multiple clicks to prevent
+  // to prevent immediate de-focus.
+  if (mouseEvent->mClickCount <= 1) {
+    if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
+      // Use FLAG_BYMOVEFOCUS here so that the label is scrolled to.
+      // Also, within HTMLInputElement::PostHandleEvent, inputs will
+      // be selected only when focused via a key or when the navigation
+      // flag is used and we want to select the text on label clicks as
+      // well.
+      // If the label has been clicked by the user, we also want to
+      // pass FLAG_BYMOUSE so that we get correct focus ring behavior,
+      // but we don't want to pass FLAG_BYMOUSE if this click event was
+      // caused by the user pressing an accesskey.
+      bool byMouse =
+          (mouseEvent->mInputSource != MouseEvent_Binding::MOZ_SOURCE_KEYBOARD);
+      bool byTouch =
+          (mouseEvent->mInputSource == MouseEvent_Binding::MOZ_SOURCE_TOUCH);
+      fm->SetFocus(content, nsIFocusManager::FLAG_BYMOVEFOCUS |
+                                (byMouse ? nsIFocusManager::FLAG_BYMOUSE : 0) |
+                                (byTouch ? nsIFocusManager::FLAG_BYTOUCH : 0));
+    }
+  }
+  // Dispatch a new click event to |content|
+  //    (For compatibility with IE, we do only left click.  If
+  //    we wanted to interpret the HTML spec very narrowly, we
+  //    would do nothing.  If we wanted to do something
+  //    sensible, we might send more events through like
+  //    this.)  See bug 7554, bug 49897, and bug 96813.
+  nsEventStatus status = aVisitor.mEventStatus;
+  // Ok to use aVisitor.mEvent as parameter because DispatchClickEvent
+  // will actually create a new event.
+  EventFlags eventFlags;
+  eventFlags.mMultipleActionsPrevented = true;
+  DispatchClickEvent(aVisitor.mPresContext, mouseEvent, content, false,
+                     &eventFlags, &status);
+  // Do we care about the status this returned?  I don't think we do...
+  mouseEvent->mFlags.mMultipleActionsPrevented = true;
+
+  mHandlingEvent = false;
 }
 
 Result<bool, nsresult> HTMLLabelElement::PerformAccesskey(
