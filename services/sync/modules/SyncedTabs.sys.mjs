@@ -300,10 +300,6 @@ export var SyncedTabs = {
     return this._internal.syncTabs(force);
   },
 
-  createRecentTabsList(clients, maxCount, extraParams) {
-    return this._internal._createRecentTabsList(clients, maxCount, extraParams);
-  },
-
   sortTabClientsByLastUsed(clients) {
     // First sort the list of tabs for each client. Note that
     // this module promises that the objects it returns are never
@@ -342,6 +338,6 @@ export var SyncedTabs = {
   // lastUsed value, and filtered for duplicate URLs
   async getRecentTabs(maxCount, extraParams) {
     let clients = await this.getTabClients();
-    return this._internal.createRecentTabsList(clients, maxCount, extraParams);
+    return this._internal._createRecentTabsList(clients, maxCount, extraParams);
   },
 };
