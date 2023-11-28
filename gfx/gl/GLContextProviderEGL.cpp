@@ -1129,70 +1129,54 @@ RefPtr<GLContextEGL> GLContextEGL::CreateWithoutSurface(
     const std::shared_ptr<EglDisplay> egl, const GLContextCreateDesc& desc,
     nsACString* const out_failureId) {
   const auto WithUseGles = [&](const bool useGles) -> RefPtr<GLContextEGL> {
-    if (egl->IsExtensionSupported(EGLExtension::KHR_no_config_context) &&
-        egl->IsExtensionSupported(EGLExtension::KHR_surfaceless_context)) {
-      // These extensions have been supported by mesa and nvidia drivers
-      // since 2014 or earlier, this is the preferred code path
-      auto fullDesc = GLContextDesc{desc};
-      fullDesc.isOffscreen = true;
-      RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(
-          egl, fullDesc, EGL_NO_CONFIG, EGL_NO_SURFACE, useGles, EGL_NO_CONFIG,
-          out_failureId);
-      if (!gl) {
-        NS_WARNING("Failed to create GLContext without surface");
-        return nullptr;
-      }
-      return gl;
-    } else {
-      const EGLConfig surfaceConfig = ChooseConfig(*egl, desc, useGles);
-      if (surfaceConfig == EGL_NO_CONFIG) {
-        *out_failureId = "FEATURE_FAILURE_EGL_NO_CONFIG"_ns;
-        NS_WARNING("Failed to find a compatible config.");
-        return nullptr;
-      }
-
-      if (GLContext::ShouldSpew()) {
-        egl->DumpEGLConfig(surfaceConfig);
-      }
-      const EGLConfig contextConfig =
-          egl->IsExtensionSupported(EGLExtension::KHR_no_config_context)
-              ? nullptr
-              : surfaceConfig;
-
-      auto dummySize = mozilla::gfx::IntSize{16, 16};
-      EGLSurface surface = nullptr;
-#ifdef MOZ_WAYLAND
-      if (GdkIsWaylandDisplay()) {
-        surface = GLContextEGL::CreateWaylandOffscreenSurface(
-            *egl, surfaceConfig, dummySize);
-      } else
-#endif
-      {
-        surface = GLContextEGL::CreatePBufferSurfaceTryingPowerOfTwo(
-            *egl, surfaceConfig, LOCAL_EGL_NONE, dummySize);
-      }
-      if (!surface) {
-        *out_failureId = "FEATURE_FAILURE_EGL_POT"_ns;
-        NS_WARNING("Failed to create PBuffer for context!");
-        return nullptr;
-      }
-
-      auto fullDesc = GLContextDesc{desc};
-      fullDesc.isOffscreen = true;
-      RefPtr<GLContextEGL> gl =
-          GLContextEGL::CreateGLContext(egl, fullDesc, surfaceConfig, surface,
-                                        useGles, contextConfig, out_failureId);
-      if (!gl) {
-        NS_WARNING("Failed to create GLContext from PBuffer");
-        egl->fDestroySurface(surface);
-#if defined(MOZ_WAYLAND)
-        DeleteWaylandOffscreenGLSurface(surface);
-#endif
-        return nullptr;
-      }
-
-      return gl;
+    const EGLConfig surfaceConfig = ChooseConfig(*egl, desc, useGles);
+    if (surfaceConfig == EGL_NO_CONFIG) {
+      *out_failureId = "FEATURE_FAILURE_EGL_NO_CONFIG"_ns;
+      NS_WARNING("Failed to find a compatible config.");
+      return nullptr;
     }
+
+    if (GLContext::ShouldSpew()) {
+      egl->DumpEGLConfig(surfaceConfig);
+    }
+    const EGLConfig contextConfig =
+        egl->IsExtensionSupported(EGLExtension::KHR_no_config_context)
+            ? nullptr
+            : surfaceConfig;
+
+    auto dummySize = mozilla::gfx::IntSize{16, 16};
+    EGLSurface surface = nullptr;
+#ifdef MOZ_WAYLAND
+    if (GdkIsWaylandDisplay()) {
+      surface = GLContextEGL::CreateWaylandOffscreenSurface(*egl, surfaceConfig,
+                                                            dummySize);
+    } else
+#endif
+    {
+      surface = GLContextEGL::CreatePBufferSurfaceTryingPowerOfTwo(
+          *egl, surfaceConfig, LOCAL_EGL_NONE, dummySize);
+    }
+    if (!surface) {
+      *out_failureId = "FEATURE_FAILURE_EGL_POT"_ns;
+      NS_WARNING("Failed to create PBuffer for context!");
+      return nullptr;
+    }
+
+    auto fullDesc = GLContextDesc{desc};
+    fullDesc.isOffscreen = true;
+    RefPtr<GLContextEGL> gl =
+        GLContextEGL::CreateGLContext(egl, fullDesc, surfaceConfig, surface,
+                                      useGles, contextConfig, out_failureId);
+    if (!gl) {
+      NS_WARNING("Failed to create GLContext from PBuffer");
+      egl->fDestroySurface(surface);
+#if defined(MOZ_WAYLAND)
+      DeleteWaylandOffscreenGLSurface(surface);
+#endif
+      return nullptr;
+    }
+
+    return gl;
   };
 
   bool preferGles;
