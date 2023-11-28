@@ -93,6 +93,8 @@ skip-if = [
 ["browser_multistage_spotlight_telemetry.js"]
 skip-if = ["verify"] # bug 1834620 - order of events not stable
 
+["browser_newtab_glean.js"]
+
 ["browser_newtab_header.js"]
 
 ["browser_newtab_last_LinkMenu.js"]

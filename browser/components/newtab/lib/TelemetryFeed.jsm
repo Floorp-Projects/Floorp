@@ -48,6 +48,14 @@ XPCOMUtils.defineLazyGetter(
   "Telemetry",
   () => new lazy.AboutWelcomeTelemetry()
 );
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "handoffToAwesomebarPrefValue",
+  "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar",
+  false,
+  (preference, previousValue, new_value) =>
+    Glean.newtabHandoffPreference.enabled.set(new_value)
+);
 
 const ACTIVITY_STREAM_ID = "activity-stream";
 const DOMWINDOW_OPENED_TOPIC = "domwindowopened";
@@ -168,6 +176,9 @@ class TelemetryFeed {
     );
     Services.telemetry.scalarSet("deletion.request.context_id", lazy.contextId);
     Glean.newtab.locale.set(Services.locale.appLocaleAsBCP47);
+    Glean.newtabHandoffPreference.enabled.set(
+      lazy.handoffToAwesomebarPrefValue
+    );
   }
 
   handleEvent(event) {
