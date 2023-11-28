@@ -235,7 +235,7 @@
  */
 
 .urlbarView-title-separator.urlbarView-dynamic-contextualSearch-separator {
-  visibility: visible !important /* override .urlbarView-title-separator rules */;
+  display: block !important /* override .urlbarView-title-separator rules */;
 }
 
 .urlbarView-dynamic-contextualSearch-description {
