@@ -544,6 +544,7 @@ const {
   CMapCompressionType,
   createValidAbsoluteUrl,
   DOMSVGFactory,
+  DrawLayer,
   FeatureTest,
   fetchData,
   getDocument,
@@ -559,6 +560,7 @@ const {
   noContextMenu,
   normalizeUnicode,
   OPS,
+  Outliner,
   PasswordResponses,
   PDFDataRangeTransport,
   PDFDateString,
@@ -7565,7 +7567,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '4.0.246';
+    const viewerVersion = '4.0.275';
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -9240,7 +9242,6 @@ class SecondaryToolbar {
 ;// CONCATENATED MODULE: ./web/toolbar.js
 
 
-const PAGE_NUMBER_LOADING_INDICATOR = "visiblePageIsLoading";
 class Toolbar {
   constructor(options, eventBus) {
     this.toolbar = options.container;
@@ -9468,7 +9469,7 @@ class Toolbar {
     const {
       pageNumber
     } = this.items;
-    pageNumber.classList.toggle(PAGE_NUMBER_LOADING_INDICATOR, loading);
+    pageNumber.classList.toggle("loading", loading);
   }
 }
 
@@ -12259,8 +12260,8 @@ PDFPrintServiceFactory.instance = {
 
 
 
-const pdfjsVersion = '4.0.246';
-const pdfjsBuild = '086a5921d';
+const pdfjsVersion = '4.0.275';
+const pdfjsBuild = '4bf7ff202';
 const AppConstants = null;
 window.PDFViewerApplication = PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;
