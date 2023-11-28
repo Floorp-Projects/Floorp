@@ -7,6 +7,7 @@
 #ifndef ScrollbarActivity_h___
 #define ScrollbarActivity_h___
 
+#include "mozilla/Assertions.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
 
@@ -61,7 +62,9 @@ namespace layout {
 class ScrollbarActivity final : public nsIDOMEventListener {
  public:
   explicit ScrollbarActivity(nsIScrollbarMediator* aScrollableFrame)
-      : mScrollableFrame(aScrollableFrame) {}
+      : mScrollableFrame(aScrollableFrame) {
+    MOZ_ASSERT(mScrollableFrame);
+  }
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
@@ -98,7 +101,7 @@ class ScrollbarActivity final : public nsIDOMEventListener {
   dom::Element* GetHorizontalScrollbar() { return GetScrollbarContent(false); }
   dom::Element* GetVerticalScrollbar() { return GetScrollbarContent(true); }
 
-  nsIScrollbarMediator* mScrollableFrame;
+  nsIScrollbarMediator* const mScrollableFrame;
   nsCOMPtr<dom::EventTarget> mHorizontalScrollbar;  // null while inactive
   nsCOMPtr<dom::EventTarget> mVerticalScrollbar;    // null while inactive
   nsCOMPtr<nsITimer> mFadeTimer;
