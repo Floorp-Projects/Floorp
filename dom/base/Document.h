@@ -3756,10 +3756,6 @@ class Document : public nsINode,
    */
   bool HasAnySkippedResizeObservations() const;
   /**
-   * Returns whether the document contains any content-visibility: auto element.
-   */
-  bool HasContentVisibilityAutoElements() const;
-  /**
    * Determine proximity to viewport for content-visibility: auto elements and
    * notify resize observers.
    */
