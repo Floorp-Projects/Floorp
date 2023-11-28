@@ -189,13 +189,6 @@ export var AppConstants = Object.freeze({
     "other",
 #endif
 
-  archBits:
-#ifdef HAVE_64BIT_BUILD
-    64,
-#else
-    32,
-#endif
-
   isPlatformAndVersionAtLeast(platform, version) {
     let platformVersion = Services.sysinfo.getProperty("version");
     return platform == this.platform &&

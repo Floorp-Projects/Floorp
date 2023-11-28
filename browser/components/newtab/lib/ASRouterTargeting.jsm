@@ -1011,23 +1011,6 @@ const TargetingGetters = {
       height: window?.screen.availHeight,
     };
   },
-
-  get archBits() {
-    return AppConstants.archBits;
-  },
-
-  get memoryMB() {
-    let memory = null;
-    try {
-      memory = Services.sysinfo.getProperty("memsize", null);
-    } catch (_e) {
-      // getProperty can throw if the memsize does not exist
-    }
-    if (memory) {
-      memory = Number(memory) / 1024 / 1024;
-    }
-    return memory;
-  },
 };
 
 const ASRouterTargeting = {
