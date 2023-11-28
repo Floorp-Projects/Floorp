@@ -159,6 +159,8 @@ function asyncGetClipboardData(aClipboardType) {
       clipboard.asyncGetData(
         ["text/plain", "text/html", "image/png"],
         aClipboardType,
+        null,
+        SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal(),
         {
           QueryInterface: SpecialPowers.ChromeUtils.generateQI([
             "nsIAsyncClipboardGetCallback",

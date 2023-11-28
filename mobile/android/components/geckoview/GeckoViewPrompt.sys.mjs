@@ -9,6 +9,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   GeckoViewPrompter: "resource://gre/modules/GeckoViewPrompter.sys.mjs",
+  GeckoViewClipboardPermission:
+    "resource://gre/modules/GeckoViewClipboardPermission.sys.mjs",
 });
 
 const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewPrompt");
@@ -419,6 +421,9 @@ export class PromptFactory {
   }
   asyncPromptAuth() {
     return this.callProxy("asyncPromptAuth", arguments);
+  }
+  confirmUserPaste() {
+    return lazy.GeckoViewClipboardPermission.confirmUserPaste(...arguments);
   }
 }
 

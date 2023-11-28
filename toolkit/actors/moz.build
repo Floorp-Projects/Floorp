@@ -46,8 +46,6 @@ FINAL_TARGET_FILES.actors += [
     "BackgroundThumbnailsChild.sys.mjs",
     "BrowserElementChild.sys.mjs",
     "BrowserElementParent.sys.mjs",
-    "ClipboardReadPasteChild.sys.mjs",
-    "ClipboardReadPasteParent.sys.mjs",
     "ContentMetaChild.sys.mjs",
     "ContentMetaParent.sys.mjs",
     "ControllersChild.sys.mjs",

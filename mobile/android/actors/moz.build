@@ -10,8 +10,6 @@ FINAL_TARGET_FILES.actors += [
     "ContentDelegateParent.sys.mjs",
     "GeckoViewAutoFillChild.sys.mjs",
     "GeckoViewAutoFillParent.sys.mjs",
-    "GeckoViewClipboardPermissionChild.sys.mjs",
-    "GeckoViewClipboardPermissionParent.sys.mjs",
     "GeckoViewContentChild.sys.mjs",
     "GeckoViewContentParent.sys.mjs",
     "GeckoViewExperimentDelegateParent.sys.mjs",

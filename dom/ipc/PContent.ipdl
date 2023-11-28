@@ -1224,7 +1224,9 @@ parent:
     sync GetExternalClipboardFormats(int32_t aWhichClipboard, bool aPlainTextOnly) returns (nsCString[] aTypes);
 
     // Requests getting data from clipboard.
-    async GetClipboardAsync(nsCString[] aTypes, int32_t aWhichClipboard)
+    async GetClipboardAsync(nsCString[] aTypes, int32_t aWhichClipboard,
+                            MaybeDiscardedWindowContext aRequestingWindowContext,
+                            nsIPrincipal aRequestingPrincipal)
         returns (PClipboardReadRequestOrError aClipboardReadRequest);
 
     // Clears the clipboard.

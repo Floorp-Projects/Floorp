@@ -170,8 +170,10 @@ NS_IMETHODIMP AsyncGetClipboardDataProxy::GetData(
 
 NS_IMETHODIMP nsClipboardProxy::AsyncGetData(
     const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
+    mozilla::dom::WindowContext* aRequestingWindowContext,
+    nsIPrincipal* aRequestingPrincipal,
     nsIAsyncClipboardGetCallback* aCallback) {
-  if (!aCallback || aFlavorList.IsEmpty()) {
+  if (!aCallback || !aRequestingPrincipal || aFlavorList.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -182,7 +184,9 @@ NS_IMETHODIMP nsClipboardProxy::AsyncGetData(
   }
 
   ContentChild::GetSingleton()
-      ->SendGetClipboardAsync(aFlavorList, aWhichClipboard)
+      ->SendGetClipboardAsync(aFlavorList, aWhichClipboard,
+                              aRequestingWindowContext,
+                              WrapNotNull(aRequestingPrincipal))
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           /* resolve */

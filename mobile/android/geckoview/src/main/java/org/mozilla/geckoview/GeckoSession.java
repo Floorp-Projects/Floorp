@@ -567,6 +567,9 @@ public class GeckoSession {
           } else if ("GeckoView:FocusRequest".equals(event)) {
             delegate.onFocusRequest(GeckoSession.this);
           } else if ("GeckoView:DOMWindowClose".equals(event)) {
+            if (getSelectionActionDelegate() != null) {
+              getSelectionActionDelegate().onDismissClipboardPermissionRequest(GeckoSession.this);
+            }
             delegate.onCloseRequest(GeckoSession.this);
           } else if ("GeckoView:FullScreenEnter".equals(event)) {
             delegate.onFullScreen(GeckoSession.this, true);
@@ -982,6 +985,9 @@ public class GeckoSession {
             final EventCallback callback) {
           Log.d(LOGTAG, "handleMessage " + event + " uri=" + message.getString("uri"));
           if ("GeckoView:PageStart".equals(event)) {
+            if (getSelectionActionDelegate() != null) {
+              getSelectionActionDelegate().onDismissClipboardPermissionRequest(GeckoSession.this);
+            }
             delegate.onPageStart(GeckoSession.this, message.getString("uri"));
           } else if ("GeckoView:PageStop".equals(event)) {
             delegate.onPageStop(GeckoSession.this, message.getBoolean("success"));
@@ -2627,6 +2633,8 @@ public class GeckoSession {
    */
   @AnyThread
   public void setFocused(final boolean focused) {
+    mEventDispatcher.dispatch("GeckoView:DismissClipboardPermissionRequest", null);
+
     final GeckoBundle msg = new GeckoBundle(1);
     msg.putBoolean("focused", focused);
     mEventDispatcher.dispatch("GeckoView:SetFocused", msg);

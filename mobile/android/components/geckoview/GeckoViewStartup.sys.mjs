@@ -82,24 +82,6 @@ const JSWINDOWACTORS = {
     allFrames: true,
     messageManagerGroups: ["browsers"],
   },
-  GeckoViewClipboardPermission: {
-    parent: {
-      esModuleURI:
-        "resource:///actors/GeckoViewClipboardPermissionParent.sys.mjs",
-    },
-    child: {
-      esModuleURI:
-        "resource:///actors/GeckoViewClipboardPermissionChild.sys.mjs",
-      events: {
-        MozClipboardReadPaste: {},
-        deactivate: { mozSystemGroup: true },
-        mousedown: { capture: true, mozSystemGroup: true },
-        mozvisualscroll: { mozSystemGroup: true },
-        pagehide: { capture: true, mozSystemGroup: true },
-      },
-    },
-    allFrames: true,
-  },
   GeckoViewPdfjs: {
     parent: {
       esModuleURI: "resource://pdf.js/GeckoViewPdfjsParent.sys.mjs",

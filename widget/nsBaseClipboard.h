@@ -22,7 +22,12 @@ static mozilla::LazyLogModule sWidgetClipboardLog("WidgetClipboard");
 
 class nsITransferable;
 class nsIClipboardOwner;
+class nsIPrincipal;
 class nsIWidget;
+
+namespace mozilla::dom {
+class WindowContext;
+}  // namespace mozilla::dom
 
 /**
  * A base clipboard class for all platform, so that they can share the same
@@ -46,6 +51,8 @@ class nsBaseClipboard : public nsIClipboard {
                      int32_t aWhichClipboard) override final;
   NS_IMETHOD AsyncGetData(
       const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
+      mozilla::dom::WindowContext* aRequestingWindowContext,
+      nsIPrincipal* aRequestingPrincipal,
       nsIAsyncClipboardGetCallback* aCallback) override final;
   NS_IMETHOD EmptyClipboard(int32_t aWhichClipboard) override final;
   NS_IMETHOD HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
@@ -53,6 +60,10 @@ class nsBaseClipboard : public nsIClipboard {
                                     bool* aOutResult) override final;
   NS_IMETHOD IsClipboardTypeSupported(int32_t aWhichClipboard,
                                       bool* aRetval) override final;
+
+  void AsyncGetDataInternal(const nsTArray<nsCString>& aFlavorList,
+                            int32_t aClipboardType,
+                            nsIAsyncClipboardGetCallback* aCallback);
 
   using GetDataCallback = mozilla::MoveOnlyFunction<void(nsresult)>;
   using HasMatchingFlavorsCallback = mozilla::MoveOnlyFunction<void(
@@ -182,6 +193,11 @@ class nsBaseClipboard : public nsIClipboard {
       int32_t aClipboardType);
   nsresult GetDataFromClipboardCache(nsITransferable* aTransferable,
                                      int32_t aClipboardType);
+
+  void RequestUserConfirmation(int32_t aClipboardType,
+                               const nsTArray<nsCString>& aFlavorList,
+                               mozilla::dom::WindowContext* aWindowContext,
+                               nsIAsyncClipboardGetCallback* aCallback);
 
   // Track the pending request for each clipboard type separately. And only need
   // to track the latest request for each clipboard type as the prior pending

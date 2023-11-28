@@ -15,6 +15,7 @@ EXTRA_JS_MODULES += [
     "GeckoViewAutocomplete.sys.mjs",
     "GeckoViewAutofill.sys.mjs",
     "GeckoViewChildModule.sys.mjs",
+    "GeckoViewClipboardPermission.sys.mjs",
     "GeckoViewConsole.sys.mjs",
     "GeckoViewContent.sys.mjs",
     "GeckoViewContentBlocking.sys.mjs",

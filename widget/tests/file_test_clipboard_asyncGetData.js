@@ -37,17 +37,23 @@ clipboardTypes.forEach(function (type) {
 
     writeRandomStringToClipboard("text/plain", type);
     let request = await new Promise(resolve => {
-      clipboard.asyncGetData(["text/html"], type, {
-        QueryInterface: SpecialPowers.ChromeUtils.generateQI([
-          "nsIAsyncClipboardGetCallback",
-        ]),
-        // nsIAsyncClipboardGetCallback
-        onSuccess: SpecialPowers.wrapCallback(function (
-          aAsyncGetClipboardData
-        ) {
-          resolve(aAsyncGetClipboardData);
-        }),
-      });
+      clipboard.asyncGetData(
+        ["text/html"],
+        type,
+        null,
+        SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal(),
+        {
+          QueryInterface: SpecialPowers.ChromeUtils.generateQI([
+            "nsIAsyncClipboardGetCallback",
+          ]),
+          // nsIAsyncClipboardGetCallback
+          onSuccess: SpecialPowers.wrapCallback(function (
+            aAsyncGetClipboardData
+          ) {
+            resolve(aAsyncGetClipboardData);
+          }),
+        }
+      );
     });
     isDeeply(request.flavorList, [], "Check flavorList");
   });

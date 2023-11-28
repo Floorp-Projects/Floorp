@@ -142,7 +142,7 @@ add_task(async function test_dismissing_paste_button() {
     await mutatedReadResultFromContentElement.then(value => {
       is(
         value,
-        "Rejected: The user dismissed the 'Paste' button.",
+        "Rejected: Clipboard read operation is not allowed.",
         "`navigator.clipboard.read()` rejected after dismissing the 'Paste' button"
       );
     });
