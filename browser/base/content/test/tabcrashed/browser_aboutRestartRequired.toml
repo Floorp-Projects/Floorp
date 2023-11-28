@@ -1,6 +1,6 @@
 [DEFAULT]
 run-if = ["crashreporter"]
-skip-if = ["!debug"]
+skip-if = ["!debug", "artifact"]
 
 support-files = ["head.js"]
 prefs = [
