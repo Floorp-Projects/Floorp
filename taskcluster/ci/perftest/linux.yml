@@ -118,6 +118,7 @@ domcount:
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
             --output $MOZ_FETCHES_DIR/../artifacts
 
+# We'd like not to have to specify each test separately here.  See bug 1865852.
 service-worker:
     description: Run service worker tests
     treeherder:
@@ -131,6 +132,16 @@ service-worker:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
             cd $MOZ_FETCHES_DIR &&
+            python3 python/mozperftest/mozperftest/runner.py
+            dom/serviceworkers/test/performance/test_caching.html
+            --mochitest-binary ${MOZ_FETCHES_DIR}/firefox/firefox-bin
+            --flavor mochitest
+            --output $MOZ_FETCHES_DIR/../artifacts &&
+            python3 python/mozperftest/mozperftest/runner.py
+            dom/serviceworkers/test/performance/test_fetch.html
+            --mochitest-binary ${MOZ_FETCHES_DIR}/firefox/firefox-bin
+            --flavor mochitest
+            --output $MOZ_FETCHES_DIR/../artifacts &&
             python3 python/mozperftest/mozperftest/runner.py
             dom/serviceworkers/test/performance/test_registration.html
             --mochitest-binary ${MOZ_FETCHES_DIR}/firefox/firefox-bin

@@ -36,6 +36,36 @@ try-browsertime:
             --browsertime-node ${MOZ_FETCHES_DIR}/node/node.exe
             --output $MOZ_FETCHES_DIR/../artifacts
 
+# We'd like not to have to specify each test separately here.  See bug 1865852.
+service-worker:
+    description: Run service worker tests
+    treeherder:
+        symbol: perftest(win-sw)
+        tier: 2
+    attributes:
+        batch: false
+        cron: false
+    run-on-projects: [autoland, mozilla-central]
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3.exe python/mozperftest/mozperftest/runner.py
+            dom/serviceworkers/test/performance/test_caching.html
+            --mochitest-binary ${MOZ_FETCHES_DIR}/firefox/firefox.exe
+            --flavor mochitest
+            --output $MOZ_FETCHES_DIR/../artifacts &&
+            python3.exe python/mozperftest/mozperftest/runner.py
+            dom/serviceworkers/test/performance/test_fetch.html
+            --mochitest-binary ${MOZ_FETCHES_DIR}/firefox/firefox.exe
+            --flavor mochitest
+            --output $MOZ_FETCHES_DIR/../artifacts &&
+            python3.exe python/mozperftest/mozperftest/runner.py
+            dom/serviceworkers/test/performance/test_registration.html
+            --mochitest-binary ${MOZ_FETCHES_DIR}/firefox/firefox.exe
+            --flavor mochitest
+            --output $MOZ_FETCHES_DIR/../artifacts
+
 domcount:
     description: Run DOM test
     treeherder:
