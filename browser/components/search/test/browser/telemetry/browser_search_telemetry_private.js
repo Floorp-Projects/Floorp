@@ -101,7 +101,7 @@ add_task(async function load_2_pbm_serps_and_1_non_pbm_serp() {
         shopping_tab_displayed: "false",
       },
       abandonment: {
-        reason: SearchSERPTelemetryUtils.ABANDONMENTS.NAVIGATION,
+        reason: SearchSERPTelemetryUtils.ABANDONMENTS.TAB_CLOSE,
       },
       adImpressions: [
         {

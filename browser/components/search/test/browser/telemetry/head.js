@@ -230,8 +230,8 @@ function assertSERPTelemetry(expectedEvents) {
     );
 
     // Once the impression check is sufficient, add the impression_id to
-    // each of the expected engagements and ad impressions for deep equal
-    // checks.
+    // each of the expected engagements, ad impressions, and abandonments for
+    // deep equal checks.
     if (expectedEvent.engagements) {
       for (let expectedEngagment of expectedEvent.engagements) {
         expectedEngagment.impression_id = impressionId;
@@ -241,6 +241,9 @@ function assertSERPTelemetry(expectedEvents) {
       for (let adImpression of expectedEvent.adImpressions) {
         adImpression.impression_id = impressionId;
       }
+    }
+    if (expectedEvent.abandonment) {
+      expectedEvent.abandonment.impression_id = impressionId;
     }
   }
 
@@ -324,11 +327,8 @@ function assertSERPTelemetry(expectedEvents) {
 
   for (let recordedAbandonment of recordedAbandonments) {
     let impressionId = recordedAbandonment.extra.impression_id;
-    Assert.ok(impressionId, "Ad impression event has an impression_id.");
-
-    let arr = idTorecordedAbandonments.get(impressionId) ?? [];
-    arr.push(idTorecordedAbandonments.extra);
-    idTorecordedAbandonments.set(impressionId, arr);
+    Assert.ok(impressionId, "Abandonment event has an impression_id.");
+    idTorecordedAbandonments.set(impressionId, recordedAbandonment.extra);
   }
 
   for (let expectedEvent of expectedEvents) {
@@ -339,7 +339,7 @@ function assertSERPTelemetry(expectedEvents) {
       Assert.deepEqual(
         recorded,
         expectedAbandonment,
-        "Abandonment value matches."
+        "Matching abandonment value."
       );
     }
     totalExpectedrecordedAbandonments += expectedAbandonment ? 1 : 0;
@@ -349,16 +349,6 @@ function assertSERPTelemetry(expectedEvents) {
     recordedAbandonments.length,
     totalExpectedrecordedAbandonments,
     "Recorded and expected abandonment counts match."
-  );
-}
-
-function assertAbandonmentEvent(expectedAbandonment) {
-  let recordedAbandonment = Glean.serp.abandonment.testGetValue() ?? [];
-
-  Assert.equal(
-    recordedAbandonment[0].extra.reason,
-    expectedAbandonment.abandonment.reason,
-    "Should have the correct abandonment reason."
   );
 }
 
