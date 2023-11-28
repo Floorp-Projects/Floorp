@@ -242,6 +242,7 @@ treeherder:
         'wc': 'webcompat'
         'Boot': 'Bootstrap'
         'Attr-L10n': 'Build Attribution'
+        'android-l10n': 'Import strings from android-l10n repo'
 
         # The below symbols are from firefox-android (fenix/focus/android-components)
         'buildconfig': 'Make sure the content of .buildconfig.yml matches what gradle knows about its projects'

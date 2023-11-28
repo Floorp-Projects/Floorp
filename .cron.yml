@@ -399,3 +399,11 @@ jobs:
           - mozilla-central
           - oak
       when: []  # hook only
+
+    - name: android-l10n-import
+      job:
+          type: decision-task
+          treeherder-symbol: android-l10n-import
+          target-tasks-method: android-l10n-import
+      run-on-projects: [oak]
+      when: []  # hook only
