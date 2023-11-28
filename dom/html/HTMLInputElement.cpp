@@ -131,16 +131,15 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Input)
 namespace mozilla::dom {
 
 // First bits are needed for the control type.
-#define NS_OUTER_ACTIVATE_EVENT (1 << 9)
+// (1 << 9 is unused)
 #define NS_ORIGINAL_CHECKED_VALUE (1 << 10)
 // (1 << 11 is unused)
 #define NS_ORIGINAL_INDETERMINATE_VALUE (1 << 12)
 #define NS_PRE_HANDLE_BLUR_EVENT (1 << 13)
 #define NS_IN_SUBMIT_CLICK (1 << 15)
-#define NS_CONTROL_TYPE(bits)                                              \
-  ((bits) & ~(NS_OUTER_ACTIVATE_EVENT | NS_ORIGINAL_CHECKED_VALUE |        \
-              NS_ORIGINAL_INDETERMINATE_VALUE | NS_PRE_HANDLE_BLUR_EVENT | \
-              NS_IN_SUBMIT_CLICK))
+#define NS_CONTROL_TYPE(bits)                                               \
+  ((bits) & ~(NS_ORIGINAL_CHECKED_VALUE | NS_ORIGINAL_INDETERMINATE_VALUE | \
+              NS_PRE_HANDLE_BLUR_EVENT | NS_IN_SUBMIT_CLICK))
 
 // whether textfields should be selected once focused:
 //  -1: no, 1: yes, 0: uninitialized
@@ -3122,9 +3121,6 @@ bool HTMLInputElement::CheckActivationBehaviorPreconditions(
           ((mouseEvent && mouseEvent->IsLeftClickEvent()) ||
            (aVisitor.mEvent->mMessage == eLegacyDOMActivate &&
             !mInInternalActivate));
-      if (outerActivateEvent) {
-        aVisitor.mItemFlags |= NS_OUTER_ACTIVATE_EVENT;
-      }
       return outerActivateEvent;
     }
     default:
@@ -3989,16 +3985,6 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
         }
         default:
           break;
-      }
-
-      // Bug 1459231: Temporarily needed till links respect activation target
-      // Then also remove NS_OUTER_ACTIVATE_EVENT
-      if ((aVisitor.mItemFlags & NS_OUTER_ACTIVATE_EVENT) &&
-          (mType == FormControlType::InputReset ||
-           mType == FormControlType::InputSubmit ||
-           mType == FormControlType::InputImage) &&
-          mForm) {
-        aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
       }
     }
   }  // if

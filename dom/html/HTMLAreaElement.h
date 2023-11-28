@@ -41,6 +41,8 @@ class HTMLAreaElement final : public nsGenericHTMLElement,
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
   MOZ_CAN_RUN_SCRIPT
   nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
+  MOZ_CAN_RUN_SCRIPT
+  void ActivationBehavior(EventChainPostVisitor& aVisitor) override;
 
   void GetLinkTarget(nsAString& aTarget) override;
   already_AddRefed<nsIURI> GetHrefURI() const override;
