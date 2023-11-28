@@ -1032,6 +1032,9 @@ browser/components/pocket/content/panels/js/main.bundle.js
 browser/components/newtab/data/
 browser/components/newtab/logs/
 
+# Ignore about:welcome files
+browser/components/aboutwelcome/logs/
+
 # The only file in browser/locales/ is pre-processed.
 browser/locales/
 # Generated data files
@@ -1443,6 +1446,7 @@ xpcom/io/crc32c.c
 ##############################################################################
 
 .gradle/
+browser/components/aboutwelcome/content/aboutwelcome.bundle.js
 browser/components/newtab/content-src/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json
 browser/components/newtab/content-src/asrouter/schemas/MessagingExperiment.schema.json
 browser/components/newtab/logs/

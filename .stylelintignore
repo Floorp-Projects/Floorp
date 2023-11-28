@@ -25,6 +25,7 @@ obj*/
 # These files are generated in some way.
 browser/components/pocket/content/panels/css/main.compiled.css
 browser/components/newtab/**/*.css
+browser/components/aboutwelcome/**/*.css
 
 # Note that the debugger has its own stylelint setup, but that currently
 # produces errors. Bug 1831302 tracks making this better

@@ -232,6 +232,7 @@ module.exports = {
         "browser/base/content/**",
         "browser/components/Browser*",
         "browser/components/aboutlogins/**",
+        "browser/components/aboutwelcome/**",
         "browser/components/attribution/**",
         "browser/components/customizableui/**",
         "browser/components/downloads/**",
