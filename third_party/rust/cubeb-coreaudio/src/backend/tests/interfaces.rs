@@ -262,6 +262,18 @@ fn test_ops_context_register_device_collection_changed_twice(devtype: u32) {
             },
             ffi::CUBEB_ERROR_INVALID_PARAMETER
         );
+        // Unregister
+        assert_eq!(
+            unsafe {
+                OPS.register_device_collection_changed.unwrap()(
+                    context_ptr,
+                    devtype,
+                    None,
+                    ptr::null_mut(),
+                )
+            },
+            ffi::CUBEB_OK
+        );
     });
 }
 

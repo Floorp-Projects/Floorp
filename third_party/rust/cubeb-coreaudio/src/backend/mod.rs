@@ -1350,14 +1350,6 @@ fn convert_uint32_into_string(data: u32) -> CString {
     CString::new(buffer).unwrap_or(empty)
 }
 
-fn get_device_source_string(
-    id: AudioDeviceID,
-    devtype: DeviceType,
-) -> std::result::Result<CString, OSStatus> {
-    let data = get_device_source(id, devtype)?;
-    Ok(convert_uint32_into_string(data))
-}
-
 fn get_channel_count(
     devid: AudioObjectID,
     devtype: DeviceType,
@@ -2334,6 +2326,11 @@ impl ContextOps for AudioUnitContext {
 
 impl Drop for AudioUnitContext {
     fn drop(&mut self) {
+        let devices = self.devices.lock().unwrap();
+        assert!(
+            devices.input.changed_callback.is_none() && devices.output.changed_callback.is_none()
+        );
+
         {
             let controller = self.latency_controller.lock().unwrap();
             // Disabling this assert for bug 1083664 -- we seem to leak a stream
@@ -2346,15 +2343,10 @@ impl Drop for AudioUnitContext {
                 );
             }
         }
-
         // Make sure all the pending (device-collection-changed-callback) tasks
         // in queue are done, and cancel all the tasks appended after `drop` is executed.
         let queue = self.serial_queue.clone();
-        queue.run_final(|| {
-            // Unregister the callback if necessary.
-            self.remove_devices_changed_listener(DeviceType::INPUT);
-            self.remove_devices_changed_listener(DeviceType::OUTPUT);
-        });
+        queue.run_final(|| {});
     }
 }
 
@@ -4074,50 +4066,8 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
     fn set_name(&mut self, _: &CStr) -> Result<()> {
         Err(Error::not_supported())
     }
-    #[cfg(target_os = "ios")]
     fn current_device(&mut self) -> Result<&DeviceRef> {
-        Err(not_supported())
-    }
-    #[cfg(not(target_os = "ios"))]
-    fn current_device(&mut self) -> Result<&DeviceRef> {
-        let output_device = match get_default_device(DeviceType::OUTPUT) {
-            None => {
-                cubeb_log!("Could not get default output device");
-                return Err(Error::error());
-            }
-            Some(id) => id,
-        };
-        let output_name =
-            get_device_source_string(output_device, DeviceType::OUTPUT).map_err(|e| {
-                cubeb_log!(
-                    "Could not get device source string for default output device. Error: {}",
-                    e
-                );
-                Error::error()
-            })?;
-
-        let input_device = match get_default_device(DeviceType::INPUT) {
-            None => {
-                cubeb_log!("Could not get default input device");
-                return Err(Error::error());
-            }
-            Some(id) => id,
-        };
-        let input_name =
-            get_device_source_string(input_device, DeviceType::INPUT).map_err(|e| {
-                cubeb_log!(
-                    "Could not get device source string for default input device. Error: {}",
-                    e
-                );
-                Error::error()
-            })?;
-
-        let mut device: Box<ffi::cubeb_device> = Box::default();
-
-        device.input_name = input_name.into_raw();
-        device.output_name = output_name.into_raw();
-
-        Ok(unsafe { DeviceRef::from_ptr(Box::into_raw(device)) })
+        Err(Error::not_supported())
     }
     #[cfg(target_os = "ios")]
     fn device_destroy(&mut self, device: &DeviceRef) -> Result<()> {
