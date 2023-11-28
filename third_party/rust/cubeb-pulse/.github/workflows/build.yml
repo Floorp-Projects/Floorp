@@ -24,7 +24,7 @@ jobs:
       run: rustup toolchain install ${{ matrix.rust }} --profile minimal --component rustfmt clippy
 
     - name: Install Dependencies (Linux)
-      run: sudo apt-get install libpulse-dev
+      run: sudo apt-get update && sudo apt-get install libpulse-dev
 
     - name: Check format
       shell: bash

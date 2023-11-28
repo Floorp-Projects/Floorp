@@ -412,6 +412,7 @@ impl Into<ffi::pa_seek_mode_t> for SeekMode {
 }
 
 bitflags! {
+    #[derive(Debug, Clone, Copy)]
     pub struct SinkFlags: u32 {
         const HW_VOLUME_CTRL = ffi::PA_SINK_HW_VOLUME_CTRL;
         const LATENCY = ffi::PA_SINK_LATENCY;
