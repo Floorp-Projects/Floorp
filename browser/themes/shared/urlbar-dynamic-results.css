@@ -25,7 +25,8 @@
     }
   }
 
-  .urlbarView-results[wrap] > & {
+  .urlbarView-results[wrap] > &,
+  .search-one-offs[wrap] > .urlbarView-quickSuggestContextualOptIn-one-off-container > & {
     display: block;
     text-align: end;
 
