@@ -28,7 +28,7 @@ task-defaults:
     worker-type: b-android
     worker:
         docker-image: {in-tree: base}
-        max-run-time: 600
+        max-run-time: 180
     requires: all-resolved
     run:
         command:
