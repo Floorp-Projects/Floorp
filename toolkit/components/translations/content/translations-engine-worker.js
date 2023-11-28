@@ -493,10 +493,10 @@ class BergamotUtils {
    *
    * https://github.com/mozilla/bergamot-translator/
    *
-   * @param {ArrayBuffer} wasm
+   * @param {ArrayBuffer} wasmBinary
    * @returns {Promise<Bergamot>}
    */
-  static initializeWasm(wasm) {
+  static initializeWasm(wasmBinary) {
     return new Promise((resolve, reject) => {
       /** @type {number} */
       let start = performance.now();
@@ -519,7 +519,7 @@ class BergamotUtils {
           await Promise.resolve();
           resolve(bergamot);
         },
-        wasm,
+        wasmBinary,
       });
     });
   }
