@@ -171,6 +171,27 @@ class ProviderQuickSuggestContextualOptIn extends UrlbarProvider {
     };
   }
 
+  onBeforeSelection(result, element) {
+    if (element.getAttribute("name") == "learn_more") {
+      this.#a11yAlertRow(element.closest(".urlbarView-row"));
+    }
+  }
+
+  #a11yAlertRow(row) {
+    let alertText = row.querySelector(
+      ".urlbarView-dynamic-quickSuggestContextualOptIn-title"
+    ).textContent;
+    let decription = row
+      .querySelector(
+        ".urlbarView-dynamic-quickSuggestContextualOptIn-description"
+      )
+      .cloneNode(true);
+    // Remove the "Learn More" link.
+    decription.firstElementChild?.remove();
+    alertText += ". " + decription.textContent;
+    row.ownerGlobal.A11yUtils.announce({ raw: alertText });
+  }
+
   onEngagement(state, queryContext, details, controller) {
     let { result } = details;
     if (result?.providerName != this.name) {
