@@ -53,10 +53,14 @@ job-defaults:
                             - win64-custom-car
                             - win64-minidump-stackwalk
                             - win64-fix-stacks
-                        macos.*:
+                        macosx1015.*:
                             - macosx64-custom-car
                             - macosx64-minidump-stackwalk
                             - macosx64-fix-stacks
+                        macosx1300.*:
+                            - macosx-arm64-custom-car
+                            - macosx64-aarch64-minidump-stackwalk
+                            - macosx64-aarch64-fix-stacks
                         default: []
                 default:
                     by-test-platform:
@@ -300,7 +304,6 @@ browsertime-benchmark:
             by-test-platform:
                 macosx1300.*shippable.*:
                     by-app:
-                        custom-car: []
                         chromium: []
                         safari: []  # Bug 1848400 safari perma-fails on osx1300
                         default:
@@ -362,6 +365,10 @@ browsertime-benchmark:
     treeherder-symbol: Btime()
     tier:
         by-app:
+            custom-car:
+                by-test-platform:
+                    macosx1300.*shippable.*: 3
+                    default: 2
             firefox:
                 by-subtest:
                     motionmark-animometer:
