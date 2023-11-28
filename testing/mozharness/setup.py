@@ -19,7 +19,7 @@ dependencies = [
     "virtualenv",
     "mock",
     "coverage",
-    "nose",
+    "pynose",
     "pylint",
     "pyflakes",
     "toml",
