@@ -152,6 +152,10 @@ class ShoppingSidebarManagerClass {
       return;
     }
 
+    if (!window.gBrowser) {
+      return;
+    }
+
     let document = window.document;
 
     if (!this.isActive) {
@@ -322,10 +326,12 @@ class ShoppingSidebarManagerClass {
         if (!this.enabled) {
           return;
         }
+        let { gBrowser } = event.target.ownerGlobal.top;
+        if (!gBrowser) {
+          return;
+        }
         this.updateSidebarVisibilityForWindow(event.target.ownerGlobal.top);
-        this._updateBCActiveness(
-          event.target.ownerGlobal.top.gBrowser.selectedBrowser
-        );
+        this._updateBCActiveness(gBrowser.selectedBrowser);
       }
     }
   }
