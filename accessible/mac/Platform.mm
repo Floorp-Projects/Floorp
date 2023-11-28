@@ -121,7 +121,8 @@ void PlatformFocusEvent(Accessible* aTarget,
 
 void PlatformCaretMoveEvent(Accessible* aTarget, int32_t aOffset,
                             bool aIsSelectionCollapsed, int32_t aGranularity,
-                            const LayoutDeviceIntRect& aCaretRect) {
+                            const LayoutDeviceIntRect& aCaretRect,
+                            bool aFromUser) {
   mozAccessible* wrapper = GetNativeFromGeckoAccessible(aTarget);
   MOXTextMarkerDelegate* delegate = [MOXTextMarkerDelegate
       getOrCreateForDoc:nsAccUtils::DocumentFor(aTarget)];
