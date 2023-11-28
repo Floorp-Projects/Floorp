@@ -87,8 +87,9 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
     this._on_popupshowing();
   }
 
+  #queryContext;
   onQueryStarted(queryContext) {
-    this.queryContext = queryContext;
+    this.#queryContext = queryContext;
   }
 
   onQueryFinished(queryContext) {
@@ -105,7 +106,7 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
   #buildQuickSuggestOptIn(queryContext) {
     let provider = this.#quickSuggestOptInProvider;
     if (
-      !provider.shouldDisplayContextualOptIn(queryContext) ||
+      !provider._shouldDisplayContextualOptIn(queryContext) ||
       provider.isActive(queryContext)
     ) {
       if (this.#quickSuggestOptInContainer) {
@@ -200,7 +201,6 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
     if (this.#isQuickSuggestOptInElement(element)) {
       this.#quickSuggestOptInProvider._handleCommand(
         element,
-        this.queryContext,
         this.view.controller,
         null,
         this.#quickSuggestOptInContainer
@@ -554,8 +554,8 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
   }
 
   _on_rebuild() {
-    if (this.queryContext) {
-      this.#buildQuickSuggestOptIn(this.queryContext);
+    if (this.#queryContext) {
+      this.#buildQuickSuggestOptIn(this.#queryContext);
     }
   }
 }
