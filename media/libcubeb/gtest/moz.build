@@ -4,27 +4,31 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-UNIFIED_SOURCES += [
-#  '../test/test_duplex.cpp', # DISABLED: See bug 1314514.
-#  '../test/test_record.cpp', # DISABLED: See bug 1314514.
-#  '../test/test_overload_callback.cpp', # DISABLED: Times out in automation.
-  '../test/test_tone.cpp',
-  '../test/test_triple_buffer.cpp',
-  '../test/test_utils.cpp'
-]
-
-if CONFIG['MOZ_PULSEAUDIO'] or CONFIG['OS_TARGET'] in ('Darwin', 'WINNT'):
-  UNIFIED_SOURCES += [
-    '../test/test_resampler.cpp',
-  ]
-
-if CONFIG['OS_TARGET'] != 'Android':
-  UNIFIED_SOURCES += [
+SOURCES += [
     '../test/test_audio.cpp',
+    '../test/test_callback_ret.cpp',
+    '../test/test_devices.cpp',
+    '../test/test_duplex.cpp',
     '../test/test_latency.cpp',
     '../test/test_logging.cpp',
-    '../test/test_sanity.cpp'
-  ]
+    '../test/test_overload_callback.cpp',
+    '../test/test_record.cpp',
+    '../test/test_resampler.cpp',
+    '../test/test_ring_array.cpp',
+    '../test/test_ring_buffer.cpp',
+    '../test/test_sanity.cpp',
+    '../test/test_tone.cpp',
+    '../test/test_triple_buffer.cpp',
+    '../test/test_utils.cpp'
+]
+
+# Loopback stream is only implemented in the WASAPI backend. It fails in debug.
+if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['MOZ_DEBUG']:
+    SOURCES += [  '../test/test_loopback.cpp' ]
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1864888
+if CONFIG['OS_ARCH'] != 'Linux':
+    SOURCES += [ '../test/test_device_changed_callback.cpp' ]
 
 LOCAL_INCLUDES += [
     '../include',
