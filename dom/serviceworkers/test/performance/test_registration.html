@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Service worker performance test: registration</title>
+</head>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="../utils.js"></script>
+<script src="perfutils.js"></script>
+<script>
+
+  "use strict";
+
+  const REGISTRATION = "Registration";
+  const ACTIVATION = "Activation";
+  const UNREGISTRATION = "Unregistration";
+
+  var journal = [];
+  journal[REGISTRATION] = [];
+  journal[ACTIVATION] = [];
+  journal[UNREGISTRATION] = [];
+
+  const ITERATIONS = 10;
+
+  var perfMetadata = {
+    owner: "DOM LWS",
+    name: "Service Worker Registration",
+    description: "Test registration, activation, and unregistration.",
+    options: {
+      default: {
+        perfherder: true,
+        perfherder_metrics: [
+          // Here, we can't use the constants defined above because perfherder
+          // grabs data from the parse tree.
+          { name: "Registration", unit: "ms", shouldAlert: true },
+          { name: "Activation", unit: "ms", shouldAlert: true },
+          { name: "Unregistration", unit: "ms", shouldAlert: true },
+        ],
+        verbose: true,
+        manifest: "perftest.toml",
+        manifest_flavor: "plain",
+      },
+    },
+  };
+
+  function create_iframe(url) {
+    return new Promise(function(res) {
+      let iframe = document.createElement("iframe");
+      iframe.src = url;
+      iframe.onload = function() { res(iframe) }
+      document.body.appendChild(iframe);
+    });
+  }
+
+  add_task(async () => {
+    await SpecialPowers.pushPrefEnv({
+      set: [["dom.serviceWorkers.testing.enabled", true]]
+    });
+
+    async function measure() {
+      let begin_ts = performance.now();
+      let reg = await navigator.serviceWorker.register("sw_empty.js");
+      let reg_ts = performance.now();
+      await waitForState(reg.installing, "activated");
+      let act_ts = performance.now();
+      await reg.unregister();
+      let unreg_ts = performance.now();
+
+      journal[REGISTRATION].push(reg_ts - begin_ts);
+      journal[ACTIVATION].push(act_ts - reg_ts);
+      journal[UNREGISTRATION].push(unreg_ts - act_ts);
+    }
+
+    for (let i = 0; i < ITERATIONS; i++) {
+      await measure();
+    }
+
+    await SpecialPowers.popPrefEnv();
+
+    ok(true);
+  });
+
+  add_task(() => {
+    reportMetrics(journal);
+  });
+
+</script>
+<body>
+</body>
+</html>
