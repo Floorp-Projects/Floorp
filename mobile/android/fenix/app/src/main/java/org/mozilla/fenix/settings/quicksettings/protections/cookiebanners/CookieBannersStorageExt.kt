@@ -36,10 +36,10 @@ suspend fun CookieBannersStorage.getCookieBannerUIMode(
 
         val hasException = withContext(Dispatchers.IO) {
             hasException(tab.content.url, tab.content.private)
-        }
+        } ?: return CookieBannerUIMode.HIDE
 
         if (hasException) {
-            CookieBannerUIMode.SITE_NOT_SUPPORTED
+            CookieBannerUIMode.DISABLE
         } else {
             withContext(Dispatchers.Main) {
                 tab.isCookieBannerSupported()

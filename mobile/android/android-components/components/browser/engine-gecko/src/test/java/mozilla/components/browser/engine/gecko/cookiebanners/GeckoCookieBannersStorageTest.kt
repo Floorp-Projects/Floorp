@@ -6,6 +6,7 @@ package mozilla.components.browser.engine.gecko.cookiebanners
 
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -79,6 +80,18 @@ class GeckoCookieBannersStorageTest {
         }
 
     @Test
+    fun `GIVEN error WHEN querying an exception THEN return null`() =
+        runTest {
+            val uri = "https://www.mozilla.org"
+
+            doReturn(null).`when`(geckoStorage)
+                .queryExceptionInGecko(uri = uri, privateBrowsing = false)
+
+            val result = geckoStorage.findExceptionFor(uri = uri, privateBrowsing = false)
+            assertNull(result)
+        }
+
+    @Test
     fun `GIVEN uri and browsing mode WHEN checking for an exception THEN indicate if it has exceptions`() =
         runTest {
             val uri = "https://www.mozilla.org"
@@ -88,7 +101,7 @@ class GeckoCookieBannersStorageTest {
 
             var result = geckoStorage.hasException(uri = uri, privateBrowsing = false)
 
-            assertFalse(result)
+            assertFalse(result!!)
 
             Mockito.reset(geckoStorage)
 
@@ -97,7 +110,20 @@ class GeckoCookieBannersStorageTest {
 
             result = geckoStorage.hasException(uri = uri, privateBrowsing = false)
 
-            assertTrue(result)
+            assertTrue(result!!)
+        }
+
+    @Test
+    fun `GIVEN an error WHEN checking for an exception THEN indicate if that an error happened`() =
+        runTest {
+            val uri = "https://www.mozilla.org"
+
+            doReturn(null).`when`(geckoStorage)
+                .queryExceptionInGecko(uri = uri, privateBrowsing = false)
+
+            val result = geckoStorage.hasException(uri = uri, privateBrowsing = false)
+
+            assertNull(result)
         }
 
     @Test

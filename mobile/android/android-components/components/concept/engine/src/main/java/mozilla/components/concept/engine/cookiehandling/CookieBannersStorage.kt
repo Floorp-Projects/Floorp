@@ -44,18 +44,19 @@ interface CookieBannersStorage {
      * Find a [CookieBannerHandlingMode] that matches the given [uri] and browsing mode.
      * @param uri the [uri] to be used as filter in the search.
      * @param privateBrowsing Indicates if given [uri] should be in private browsing or not.
-     * @return the [CookieBannerHandlingMode] for the provided [uri] and browsing mode.
+     * @return the [CookieBannerHandlingMode] for the provided [uri] and browsing mode,
+     * if an error occurs null will be returned.
      */
-    suspend fun findExceptionFor(uri: String, privateBrowsing: Boolean): CookieBannerHandlingMode
+    suspend fun findExceptionFor(uri: String, privateBrowsing: Boolean): CookieBannerHandlingMode?
 
     /**
      * Indicates if the given [uri] and browsing mode has the [CookieBannerHandlingMode.DISABLED] mode.
      * @param uri the [uri] to be used as filter in the search.
      * @param privateBrowsing Indicates if given [uri] should be in private browsing or not.
      * @return A [Boolean] indicating if the [CookieBannerHandlingMode] has been updated, from the
-     * default value.
+     * default value, if an error occurs null will be returned.
      */
-    suspend fun hasException(uri: String, privateBrowsing: Boolean): Boolean
+    suspend fun hasException(uri: String, privateBrowsing: Boolean): Boolean?
 
     /**
      * Remove any [CookieBannerHandlingMode] exception that has been applied to the given [uri] and

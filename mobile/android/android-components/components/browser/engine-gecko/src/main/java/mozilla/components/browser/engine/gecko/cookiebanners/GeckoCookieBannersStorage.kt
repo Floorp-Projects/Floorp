@@ -49,12 +49,17 @@ class GeckoCookieBannersStorage(
     override suspend fun findExceptionFor(
         uri: String,
         privateBrowsing: Boolean,
-    ): CookieBannerHandlingMode {
+    ): CookieBannerHandlingMode? {
         return queryExceptionInGecko(uri, privateBrowsing)
     }
 
-    override suspend fun hasException(uri: String, privateBrowsing: Boolean): Boolean {
-        return findExceptionFor(uri, privateBrowsing) == DISABLED
+    override suspend fun hasException(uri: String, privateBrowsing: Boolean): Boolean? {
+        val result = findExceptionFor(uri, privateBrowsing)
+        return if (result != null) {
+            result == DISABLED
+        } else {
+            null
+        }
     }
 
     override suspend fun removeException(uri: String, privateBrowsing: Boolean) {
@@ -95,7 +100,7 @@ class GeckoCookieBannersStorage(
     internal suspend fun queryExceptionInGecko(
         uri: String,
         privateBrowsing: Boolean,
-    ): CookieBannerHandlingMode {
+    ): CookieBannerHandlingMode? {
         return try {
             withContext(mainScope.coroutineContext) {
                 geckoStorage.getCookieBannerModeForDomain(uri, privateBrowsing).await()
@@ -109,7 +114,7 @@ class GeckoCookieBannersStorage(
             val disabledErrors = listOf("NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS", "NS_ERROR_HOST_IS_IP_ADDRESS")
             if (disabledErrors.any { (e.message ?: "").contains(it) }) {
                 Logger("GeckoCookieBannersStorage").error("Unable to query cookie banners exception", e)
-                DISABLED
+                null
             } else {
                 throw e
             }

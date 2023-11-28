@@ -44,7 +44,7 @@ data class CookieBannerReducerState(
     val shouldShowCookieBannerItem: Boolean = false,
     val isCookieBannerDetected: Boolean = false,
     val showSnackBarForSiteToReport: Boolean = false,
-    val cookieBannerReducerStatus: CookieBannerReducerStatus = CookieBannerReducerStatus.NoException,
+    val cookieBannerReducerStatus: CookieBannerReducerStatus? = CookieBannerReducerStatus.NoException,
     val siteToReport: String = "",
 ) : State
 
@@ -65,7 +65,7 @@ sealed class CookieBannerReducerAction : Action {
     ) : CookieBannerReducerAction()
 
     data class UpdateCookieBannerReducerStatus(
-        val cookieBannerReducerStatus: CookieBannerReducerStatus,
+        val cookieBannerReducerStatus: CookieBannerReducerStatus?,
     ) : CookieBannerReducerAction()
 
     data class RequestReportSite(

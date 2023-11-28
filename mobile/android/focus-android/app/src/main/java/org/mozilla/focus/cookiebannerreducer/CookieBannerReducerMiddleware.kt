@@ -126,7 +126,15 @@ class CookieBannerReducerMiddleware(
             val hasException =
                 cookieBannersStorage.hasException(currentTab.content.url, true)
             withContext(Dispatchers.Main) {
-                if (!hasException) {
+                if (hasException == null) {
+                    // An error occurred while querying the exception, let's hide the item.
+                    context.store.dispatch(
+                        CookieBannerReducerAction.UpdateCookieBannerReducerStatus(
+                            null,
+                        ),
+                    )
+                    return@withContext
+                } else if (!hasException) {
                     showUnsupportedSiteIfNeeded(context)
                 } else {
                     showExceptionStatus(context, true)
