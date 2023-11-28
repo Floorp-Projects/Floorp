@@ -16,6 +16,7 @@ import org.mozilla.fenix.components.appstate.AppAction.ShoppingAction.InfoCardEx
 import org.mozilla.fenix.components.appstate.AppAction.ShoppingAction.SettingsCardExpanded
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.shopping.ShoppingState.CardState
+import org.mozilla.fenix.shopping.ShoppingExperienceFeature
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckMiddleware
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
@@ -29,12 +30,14 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn
  * @param reviewQualityCheckVendorsService The [ReviewQualityCheckVendorsService] instance for
  * getting the list of product vendors.
  * @param appStore The [AppStore] instance for dispatching [ShoppingAction]s.
+ * @param shoppingExperienceFeature The [ShoppingExperienceFeature] instance to get feature flags.
  * @param scope The [CoroutineScope] to use for launching coroutines.
  */
 class ReviewQualityCheckPreferencesMiddleware(
     private val reviewQualityCheckPreferences: ReviewQualityCheckPreferences,
     private val reviewQualityCheckVendorsService: ReviewQualityCheckVendorsService,
     private val appStore: AppStore,
+    private val shoppingExperienceFeature: ShoppingExperienceFeature,
     private val scope: CoroutineScope,
 ) : ReviewQualityCheckMiddleware {
 
@@ -75,6 +78,8 @@ class ReviewQualityCheckPreferencesMiddleware(
 
                         ReviewQualityCheckAction.OptInCompleted(
                             isProductRecommendationsEnabled = isProductRecommendationsEnabled,
+                            productRecommendationsExposure =
+                            shoppingExperienceFeature.isProductRecommendationsExposureEnabled,
                             productVendor = reviewQualityCheckVendorsService.productVendor(),
                             isHighlightsExpanded = savedCardState.isHighlightsExpanded,
                             isInfoExpanded = savedCardState.isInfoExpanded,
@@ -95,6 +100,8 @@ class ReviewQualityCheckPreferencesMiddleware(
                     store.dispatch(
                         ReviewQualityCheckAction.OptInCompleted(
                             isProductRecommendationsEnabled = isProductRecommendationsEnabled,
+                            productRecommendationsExposure =
+                            shoppingExperienceFeature.isProductRecommendationsExposureEnabled,
                             productVendor = reviewQualityCheckVendorsService.productVendor(),
                             isHighlightsExpanded = false,
                             isInfoExpanded = false,

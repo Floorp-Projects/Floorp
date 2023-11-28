@@ -34,6 +34,7 @@ class ReviewQualityCheckBottomSheetStateFeatureTest {
         store.dispatch(
             ReviewQualityCheckAction.OptInCompleted(
                 isProductRecommendationsEnabled = true,
+                productRecommendationsExposure = true,
                 productVendor = ReviewQualityCheckState.ProductVendor.WALMART,
                 isHighlightsExpanded = false,
                 isInfoExpanded = false,

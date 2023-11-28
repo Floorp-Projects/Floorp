@@ -405,11 +405,16 @@ features:
         description: if true, recommended products feature is enabled to be shown to the user based on their preference.
         type: Boolean
         default: false
+      product-recommendations-exposure:
+        description: if true, we want to record recommended products inventory for opted-in users, even if product recommendations are disabled.
+        type: Boolean
+        default: false
     defaults:
       - channel: developer
         value:
           enabled: true
           product-recommendations: true
+          product-recommendations-exposure: true
 
   print:
     description: A feature for printing from the share or browser menu.

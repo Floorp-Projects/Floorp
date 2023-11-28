@@ -48,6 +48,7 @@ private fun mapStateForUpdateAction(
             if (state is ReviewQualityCheckState.OptedIn) {
                 state.copy(
                     productRecommendationsPreference = action.isProductRecommendationsEnabled,
+                    productRecommendationsExposure = action.productRecommendationsExposure,
                     isHighlightsExpanded = action.isHighlightsExpanded,
                     isInfoExpanded = action.isInfoExpanded,
                     isSettingsExpanded = action.isSettingsExpanded,
@@ -55,6 +56,7 @@ private fun mapStateForUpdateAction(
             } else {
                 ReviewQualityCheckState.OptedIn(
                     productRecommendationsPreference = action.isProductRecommendationsEnabled,
+                    productRecommendationsExposure = action.productRecommendationsExposure,
                     productVendor = action.productVendor,
                     isHighlightsExpanded = action.isHighlightsExpanded,
                     isInfoExpanded = action.isInfoExpanded,

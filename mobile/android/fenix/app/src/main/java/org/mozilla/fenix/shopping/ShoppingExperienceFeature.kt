@@ -15,6 +15,11 @@ interface ShoppingExperienceFeature {
      * Returns true if the shopping experience feature is enabled.
      */
     val isEnabled: Boolean
+
+    /**
+     * Returns true if product recommendations exposure nimbus flag is enabled.
+     */
+    val isProductRecommendationsExposureEnabled: Boolean
 }
 
 /**
@@ -24,4 +29,7 @@ class DefaultShoppingExperienceFeature : ShoppingExperienceFeature {
 
     override val isEnabled
         get() = FxNimbus.features.shoppingExperience.value().enabled
+
+    override val isProductRecommendationsExposureEnabled: Boolean
+        get() = FxNimbus.features.shoppingExperience.value().productRecommendationsExposure
 }

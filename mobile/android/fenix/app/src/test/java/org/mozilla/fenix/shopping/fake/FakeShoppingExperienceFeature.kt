@@ -8,8 +8,12 @@ import org.mozilla.fenix.shopping.ShoppingExperienceFeature
 
 class FakeShoppingExperienceFeature(
     private val enabled: Boolean = true,
+    private val productRecommendationsExposureEnabled: Boolean = true,
 ) : ShoppingExperienceFeature {
 
     override val isEnabled: Boolean
         get() = enabled
+
+    override val isProductRecommendationsExposureEnabled: Boolean
+        get() = productRecommendationsExposureEnabled
 }

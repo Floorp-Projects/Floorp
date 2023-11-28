@@ -63,6 +63,7 @@ sealed interface ReviewQualityCheckAction : Action {
      *
      * @property isProductRecommendationsEnabled Reflects the user preference update to display
      * recommended product. Null when product recommendations feature is disabled.
+     * @property productRecommendationsExposure Whether product recommendations exposure is enabled.
      * @property productVendor The vendor of the product.
      * @property isHighlightsExpanded Whether the highlights card should be expanded.
      * @property isInfoExpanded Whether the info card should be expanded.
@@ -70,6 +71,7 @@ sealed interface ReviewQualityCheckAction : Action {
      */
     data class OptInCompleted(
         val isProductRecommendationsEnabled: Boolean?,
+        val productRecommendationsExposure: Boolean,
         val productVendor: ReviewQualityCheckState.ProductVendor,
         val isHighlightsExpanded: Boolean,
         val isInfoExpanded: Boolean,

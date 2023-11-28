@@ -170,10 +170,15 @@ class ReviewQualityCheckNetworkMiddleware(
     private suspend fun Store<ReviewQualityCheckState, ReviewQualityCheckAction>.updateRecommendedProductState() {
         val currentState = state
         if (currentState is ReviewQualityCheckState.OptedIn &&
-            currentState.productRecommendationsPreference == true
+            (currentState.productRecommendationsExposure || (currentState.productRecommendationsPreference == true))
         ) {
-            reviewQualityCheckService.productRecommendation().toRecommendedProductState().also {
-                dispatch(UpdateRecommendedProduct(it))
+            val productRecommendation = reviewQualityCheckService.productRecommendation(
+                currentState.productRecommendationsPreference ?: false,
+            )
+            if (currentState.productRecommendationsPreference == true) {
+                productRecommendation.toRecommendedProductState().also {
+                    dispatch(UpdateRecommendedProduct(it))
+                }
             }
         }
     }

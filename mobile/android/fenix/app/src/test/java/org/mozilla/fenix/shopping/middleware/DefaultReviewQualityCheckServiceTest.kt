@@ -12,17 +12,29 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.shopping.ProductAnalysis
+import mozilla.components.concept.engine.shopping.ProductRecommendation
+import mozilla.components.service.glean.testing.GleanTestRule
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.Shopping
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.shopping.ProductAnalysisTestData
+import org.mozilla.fenix.shopping.ProductRecommendationTestData
 
+@RunWith(FenixRobolectricTestRunner::class)
 class DefaultReviewQualityCheckServiceTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
+
+    @get:Rule
+    val gleanTestRule = GleanTestRule(testContext)
 
     @Test
     fun `GIVEN fetch is called WHEN onResult is invoked with the expected type THEN product analysis returns the same data`() =
@@ -110,4 +122,121 @@ class DefaultReviewQualityCheckServiceTest {
 
         assertEquals(expected, actual)
     }
+
+    @Test
+    fun `GIVEN product recommendations is called WHEN onResult is invoked with the result THEN recommendations returns the data and exposure is called`() =
+        runTest {
+            val engineSession = mockk<EngineSession>()
+            val expected = ProductRecommendationTestData.productRecommendation()
+            val productRecommendations = listOf(expected)
+
+            every {
+                engineSession.requestProductRecommendations(any(), any(), any())
+            }.answers {
+                secondArg<(List<ProductRecommendation>) -> Unit>().invoke(productRecommendations)
+            }
+
+            val tab = createTab(
+                url = "https://www.shopping.org/product",
+                id = "test-tab",
+                engineSession = engineSession,
+            )
+            val browserState = BrowserState(
+                tabs = listOf(tab),
+                selectedTabId = tab.id,
+            )
+
+            val tested = DefaultReviewQualityCheckService(BrowserStore(browserState))
+
+            val actual = tested.productRecommendation(false)
+
+            assertEquals(expected, actual)
+            assertNotNull(Shopping.adsExposure.testGetValue())
+        }
+
+    @Test
+    fun `GIVEN product recommendations is called WHEN onResult is invoked with a empty list and telemetry should be recorded THEN recommendations returns null and no ads available event is called`() =
+        runTest {
+            val engineSession = mockk<EngineSession>()
+
+            every {
+                engineSession.requestProductRecommendations(any(), any(), any())
+            }.answers {
+                secondArg<(List<ProductRecommendation>) -> Unit>().invoke(emptyList())
+            }
+
+            val tab = createTab(
+                url = "https://www.shopping.org/product",
+                id = "test-tab",
+                engineSession = engineSession,
+            )
+            val browserState = BrowserState(
+                tabs = listOf(tab),
+                selectedTabId = tab.id,
+            )
+
+            val tested = DefaultReviewQualityCheckService(BrowserStore(browserState))
+
+            val actual = tested.productRecommendation(true)
+
+            assertNull(actual)
+            assertNotNull(Shopping.surfaceNoAdsAvailable.testGetValue())
+        }
+
+    @Test
+    fun `GIVEN product recommendations is called WHEN onResult is invoked with a empty list and telemetry should not be recorded THEN recommendations returns null and no ads available event is not called`() =
+        runTest {
+            val engineSession = mockk<EngineSession>()
+
+            every {
+                engineSession.requestProductRecommendations(any(), any(), any())
+            }.answers {
+                secondArg<(List<ProductRecommendation>) -> Unit>().invoke(emptyList())
+            }
+
+            val tab = createTab(
+                url = "https://www.shopping.org/product",
+                id = "test-tab",
+                engineSession = engineSession,
+            )
+            val browserState = BrowserState(
+                tabs = listOf(tab),
+                selectedTabId = tab.id,
+            )
+
+            val tested = DefaultReviewQualityCheckService(BrowserStore(browserState))
+
+            val actual = tested.productRecommendation(false)
+
+            assertNull(actual)
+            assertNull(Shopping.surfaceNoAdsAvailable.testGetValue())
+        }
+
+    @Test
+    fun `GIVEN product recommendations is called WHEN onException is invoked THEN recommendations returns null`() =
+        runTest {
+            val engineSession = mockk<EngineSession>()
+
+            every {
+                engineSession.requestProductRecommendations(any(), any(), any())
+            }.answers {
+                thirdArg<(Throwable) -> Unit>().invoke(RuntimeException())
+            }
+
+            val tab = createTab(
+                url = "https://www.shopping.org/product",
+                id = "test-tab",
+                engineSession = engineSession,
+            )
+            val browserState = BrowserState(
+                tabs = listOf(tab),
+                selectedTabId = tab.id,
+            )
+
+            val tested = DefaultReviewQualityCheckService(BrowserStore(browserState))
+
+            val actual = tested.productRecommendation(false)
+
+            assertNull(actual)
+        }
 }

@@ -41,6 +41,7 @@ sealed interface ReviewQualityCheckState : State {
      * @property productRecommendationsPreference User preference whether to show product
      * recommendations. True if product recommendations should be shown. Null indicates that product
      * recommendations are disabled.
+     * @property productRecommendationsExposure Whether product recommendations exposure is enabled.
      * @property productVendor The vendor of the product.
      * @property isSettingsExpanded Whether or not the settings card is expanded.
      * @property isInfoExpanded Whether or not the info card is expanded.
@@ -49,6 +50,7 @@ sealed interface ReviewQualityCheckState : State {
     data class OptedIn(
         val productReviewState: ProductReviewState = ProductReviewState.Loading,
         val productRecommendationsPreference: Boolean?,
+        val productRecommendationsExposure: Boolean,
         val productVendor: ProductVendor,
         val isSettingsExpanded: Boolean = false,
         val isInfoExpanded: Boolean = false,

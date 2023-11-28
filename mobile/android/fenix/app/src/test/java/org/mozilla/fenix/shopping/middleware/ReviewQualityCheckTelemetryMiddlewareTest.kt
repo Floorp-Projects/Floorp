@@ -11,7 +11,7 @@ import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -67,8 +67,8 @@ class ReviewQualityCheckTelemetryMiddlewareTest {
 
         assertNotNull(Shopping.surfaceClosed.testGetValue())
         val event = Shopping.surfaceClosed.testGetValue()!!
-        Assert.assertEquals(1, event.size)
-        Assert.assertEquals(BottomSheetDismissSource.CLICK_OUTSIDE.sourceName, event.single().extra?.getValue("source"))
+        assertEquals(1, event.size)
+        assertEquals(BottomSheetDismissSource.CLICK_OUTSIDE.sourceName, event.single().extra?.getValue("source"))
     }
 
     @Test
@@ -78,8 +78,8 @@ class ReviewQualityCheckTelemetryMiddlewareTest {
 
         assertNotNull(Shopping.surfaceDisplayed.testGetValue())
         val event = Shopping.surfaceDisplayed.testGetValue()!!
-        Assert.assertEquals(1, event.size)
-        Assert.assertEquals(BottomSheetViewState.HALF_VIEW.state, event.single().extra?.getValue("view"))
+        assertEquals(1, event.size)
+        assertEquals(BottomSheetViewState.HALF_VIEW.state, event.single().extra?.getValue("view"))
     }
 
     @Test
@@ -127,6 +127,7 @@ class ReviewQualityCheckTelemetryMiddlewareTest {
         val tested = ReviewQualityCheckStore(
             initialState = ReviewQualityCheckState.OptedIn(
                 productRecommendationsPreference = true,
+                productRecommendationsExposure = true,
                 productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
                 isHighlightsExpanded = false,
             ),
@@ -146,6 +147,7 @@ class ReviewQualityCheckTelemetryMiddlewareTest {
         val tested = ReviewQualityCheckStore(
             initialState = ReviewQualityCheckState.OptedIn(
                 productRecommendationsPreference = true,
+                productRecommendationsExposure = true,
                 productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
                 isHighlightsExpanded = true,
             ),
@@ -165,6 +167,7 @@ class ReviewQualityCheckTelemetryMiddlewareTest {
         val tested = ReviewQualityCheckStore(
             initialState = ReviewQualityCheckState.OptedIn(
                 productRecommendationsPreference = true,
+                productRecommendationsExposure = true,
                 productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
                 isSettingsExpanded = false,
             ),
@@ -184,6 +187,7 @@ class ReviewQualityCheckTelemetryMiddlewareTest {
         val tested = ReviewQualityCheckStore(
             initialState = ReviewQualityCheckState.OptedIn(
                 productRecommendationsPreference = true,
+                productRecommendationsExposure = true,
                 productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
                 isSettingsExpanded = true,
             ),
@@ -261,6 +265,7 @@ class ReviewQualityCheckTelemetryMiddlewareTest {
                     analysisStatus = AnalysisPresent.AnalysisStatus.UP_TO_DATE,
                 ),
                 productRecommendationsPreference = false,
+                productRecommendationsExposure = true,
                 productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
             ),
             middleware = listOf(
@@ -318,6 +323,7 @@ class ReviewQualityCheckTelemetryMiddlewareTest {
                     analysisStatus = AnalysisPresent.AnalysisStatus.NEEDS_ANALYSIS,
                 ),
                 productRecommendationsPreference = false,
+                productRecommendationsExposure = true,
                 productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
             ),
             middleware = listOf(
@@ -355,6 +361,7 @@ class ReviewQualityCheckTelemetryMiddlewareTest {
         val tested = ReviewQualityCheckStore(
             initialState = ReviewQualityCheckState.OptedIn(
                 productRecommendationsPreference = false,
+                productRecommendationsExposure = true,
                 productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
                 isHighlightsExpanded = false,
             ),
@@ -366,7 +373,7 @@ class ReviewQualityCheckTelemetryMiddlewareTest {
         tested.dispatch(ReviewQualityCheckAction.ToggleProductRecommendation).joinBlocking()
         tested.waitUntilIdle()
 
-        assertNotNull(Shopping.SurfaceAdsSettingToggledExtra("enabled"))
+        assertEquals("enabled", Shopping.surfaceAdsSettingToggled.testGetValue()!!.first().extra!!["action"])
     }
 
     @Test
@@ -374,6 +381,7 @@ class ReviewQualityCheckTelemetryMiddlewareTest {
         val tested = ReviewQualityCheckStore(
             initialState = ReviewQualityCheckState.OptedIn(
                 productRecommendationsPreference = true,
+                productRecommendationsExposure = true,
                 productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
                 isHighlightsExpanded = false,
             ),
@@ -385,6 +393,6 @@ class ReviewQualityCheckTelemetryMiddlewareTest {
         tested.dispatch(ReviewQualityCheckAction.ToggleProductRecommendation).joinBlocking()
         tested.waitUntilIdle()
 
-        assertNotNull(Shopping.SurfaceAdsSettingToggledExtra("disabled"))
+        assertEquals("disabled", Shopping.surfaceAdsSettingToggled.testGetValue()!!.first().extra!!["action"])
     }
 }
