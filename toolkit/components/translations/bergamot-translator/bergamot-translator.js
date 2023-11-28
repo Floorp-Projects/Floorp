@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function loadBergamot(Module) {
-  var BERGAMOT_VERSION_FULL = "v0.4.4+5ae1b1e";
+  var BERGAMOT_VERSION_FULL = "v0.4.5+05a8778";
   null;
 
   var Module = typeof Module != "undefined" ? Module : {};
@@ -382,6 +382,9 @@ function loadBergamot(Module) {
   var buffer, HEAP8, HEAPU8, HEAP16, HEAPU16, HEAP32, HEAPU32, HEAPF32, HEAPF64;
 
   function updateGlobalBufferAndViews(buf) {
+    const mb = (buf.byteLength / 1_000_000).toFixed();
+    Module.print(`Growing wasm buffer to ${mb}MB (${buf.byteLength} bytes).`);
+
     buffer = buf;
     Module.HEAP8 = HEAP8 = new Int8Array(buf);
     Module.HEAP16 = HEAP16 = new Int16Array(buf);
@@ -993,7 +996,7 @@ function loadBergamot(Module) {
       return [
         {
           name: reg.name,
-          fromWireType(ptr) {
+          fromWireType: function (ptr) {
             var rv = {};
             for (var i in fields) {
               rv[i] = fields[i].read(ptr);
@@ -1001,7 +1004,7 @@ function loadBergamot(Module) {
             rawDestructor(ptr);
             return rv;
           },
-          toWireType(destructors, o) {
+          toWireType: function (destructors, o) {
             for (var fieldName in fields) {
               if (!(fieldName in o)) {
                 throw new TypeError('Missing field:  "' + fieldName + '"');
@@ -1108,14 +1111,14 @@ function loadBergamot(Module) {
     name = readLatin1String(name);
     registerType(rawType, {
       name,
-      fromWireType(wt) {
+      fromWireType: function (wt) {
         return !!wt;
       },
-      toWireType(destructors, o) {
+      toWireType: function (destructors, o) {
         return o ? trueValue : falseValue;
       },
       argPackAdvance: 8,
-      readValueFromPointer(pointer) {
+      readValueFromPointer: function (pointer) {
         var heap;
         if (size === 1) {
           heap = HEAP8;
@@ -2220,12 +2223,12 @@ function loadBergamot(Module) {
     name = readLatin1String(name);
     registerType(rawType, {
       name,
-      fromWireType(handle) {
+      fromWireType: function (handle) {
         var rv = Emval.toValue(handle);
         __emval_decref(handle);
         return rv;
       },
-      toWireType(destructors, value) {
+      toWireType: function (destructors, value) {
         return Emval.toHandle(value);
       },
       argPackAdvance: 8,
@@ -2267,10 +2270,10 @@ function loadBergamot(Module) {
     name = readLatin1String(name);
     registerType(rawType, {
       name,
-      fromWireType(value) {
+      fromWireType: function (value) {
         return value;
       },
-      toWireType(destructors, value) {
+      toWireType: function (destructors, value) {
         return value;
       },
       argPackAdvance: 8,
@@ -2346,8 +2349,8 @@ function loadBergamot(Module) {
     }
     registerType(primitiveType, {
       name,
-      fromWireType,
-      toWireType,
+      fromWireType: fromWireType,
+      toWireType: toWireType,
       argPackAdvance: 8,
       readValueFromPointer: integerReadValueFromPointer(
         name,
@@ -2442,7 +2445,7 @@ function loadBergamot(Module) {
     var stdStringIsUTF8 = name === "std::string";
     registerType(rawType, {
       name,
-      fromWireType(value) {
+      fromWireType: function (value) {
         var length = HEAPU32[value >> 2];
         var str;
         if (stdStringIsUTF8) {
@@ -2471,7 +2474,7 @@ function loadBergamot(Module) {
         _free(value);
         return str;
       },
-      toWireType(destructors, value) {
+      toWireType: function (destructors, value) {
         if (value instanceof ArrayBuffer) {
           value = new Uint8Array(value);
         }
@@ -2544,7 +2547,7 @@ function loadBergamot(Module) {
     }
     registerType(rawType, {
       name,
-      fromWireType(value) {
+      fromWireType: function (value) {
         var length = HEAPU32[value >> 2];
         var HEAP = getHeap();
         var str;
@@ -2566,7 +2569,7 @@ function loadBergamot(Module) {
         _free(value);
         return str;
       },
-      toWireType(destructors, value) {
+      toWireType: function (destructors, value) {
         if (!(typeof value == "string")) {
           throwBindingError(
             "Cannot pass non-string to C++ string type " + name
@@ -2640,10 +2643,10 @@ function loadBergamot(Module) {
       isVoid: true,
       name,
       argPackAdvance: 0,
-      fromWireType() {
+      fromWireType: function () {
         return undefined;
       },
-      toWireType(destructors, o) {
+      toWireType: function (destructors, o) {
         return undefined;
       },
     });
@@ -3485,7 +3488,7 @@ function loadBergamot(Module) {
         return fallbackGemm(GEMM_TO_FALLBACK_FUNCTIONS_MAP);
       }
     }
-    console.log(`Using optimized gemm (${OPTIMIZED_GEMM}) implementation`);
+    Module.print(`Using optimized gemm (${OPTIMIZED_GEMM}) implementation`);
     return optimizedGemmModuleExports;
   }
 
@@ -3499,9 +3502,8 @@ function loadBergamot(Module) {
       fallbackGemmModuleExports[key] = (...a) =>
         Module[FALLBACK_GEMM][gemmToFallbackFunctionsMap[key]](...a);
     }
-    console.log(`Using fallback gemm implementation`);
+    Module.print(`Using fallback gemm implementation`);
     return fallbackGemmModuleExports;
   }
-
   return Module;
 }
