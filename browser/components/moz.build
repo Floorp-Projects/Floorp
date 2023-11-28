@@ -29,6 +29,7 @@ with Files("controlcenter/**"):
 DIRS += [
     "about",
     "aboutlogins",
+    "aboutwelcome",
     "attribution",
     "contentanalysis",
     "contextualidentity",

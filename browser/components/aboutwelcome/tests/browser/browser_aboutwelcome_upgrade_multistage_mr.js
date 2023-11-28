@@ -55,7 +55,7 @@ add_setup(async () => {
  * @param {Array} screensToTest
  *    A list of which screen ids to be displayed
  *
- * @returns Promise<Window>
+ * @returns {Promise<Window>}
  *    Resolves to the window global object for the dialog once it has been
  *    opened
  */

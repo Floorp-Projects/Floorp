@@ -21,7 +21,8 @@ add_task(function initSandbox() {
  *
  * The returned function flushes the spy of all of the matching button click events, and
  * returns the events.
- * @returns {() => TelemetryEvents[]}
+ *
+ * @returns {function(): TelemetryEvents[]}
  */
 async function spyOnTelemetryButtonClicks(browser) {
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
