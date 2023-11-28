@@ -13,6 +13,7 @@ import mozilla.components.concept.engine.history.HistoryItem
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.shopping.ProductAnalysis
+import mozilla.components.concept.engine.shopping.ProductAnalysisStatus
 import mozilla.components.concept.engine.shopping.ProductRecommendation
 import mozilla.components.concept.engine.translate.TranslationOptions
 import mozilla.components.concept.engine.window.WindowRequest
@@ -1034,7 +1035,7 @@ open class DummyEngineSession : EngineSession() {
 
     override fun requestAnalysisStatus(
         url: String,
-        onResult: (String) -> Unit,
+        onResult: (ProductAnalysisStatus) -> Unit,
         onException: (Throwable) -> Unit,
     ) {}
 

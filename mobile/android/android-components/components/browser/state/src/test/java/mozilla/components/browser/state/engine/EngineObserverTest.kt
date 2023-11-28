@@ -39,6 +39,7 @@ import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.shopping.ProductAnalysis
+import mozilla.components.concept.engine.shopping.ProductAnalysisStatus
 import mozilla.components.concept.engine.shopping.ProductRecommendation
 import mozilla.components.concept.engine.translate.TranslationOperation
 import mozilla.components.concept.engine.translate.TranslationOptions
@@ -101,7 +102,7 @@ class EngineObserverTest {
             ) {}
             override fun requestAnalysisStatus(
                 url: String,
-                onResult: (String) -> Unit,
+                onResult: (ProductAnalysisStatus) -> Unit,
                 onException: (Throwable) -> Unit,
             ) {}
             override fun sendClickAttributionEvent(
@@ -212,7 +213,7 @@ class EngineObserverTest {
             ) {}
             override fun requestAnalysisStatus(
                 url: String,
-                onResult: (String) -> Unit,
+                onResult: (ProductAnalysisStatus) -> Unit,
                 onException: (Throwable) -> Unit,
             ) {}
             override fun sendClickAttributionEvent(
@@ -320,7 +321,7 @@ class EngineObserverTest {
             ) {}
             override fun requestAnalysisStatus(
                 url: String,
-                onResult: (String) -> Unit,
+                onResult: (ProductAnalysisStatus) -> Unit,
                 onException: (Throwable) -> Unit,
             ) {}
             override fun sendClickAttributionEvent(

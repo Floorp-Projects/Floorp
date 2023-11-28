@@ -110,7 +110,7 @@ class DefaultReviewQualityCheckService(
                 tab.engineState.engineSession?.requestAnalysisStatus(
                     url = tab.content.url,
                     onResult = {
-                        continuation.resume(it.asEnumOrDefault(AnalysisStatusDto.OTHER))
+                        continuation.resume(it.status.asEnumOrDefault(AnalysisStatusDto.OTHER))
                     },
                     onException = {
                         logger.error("Error fetching analysis status", it)

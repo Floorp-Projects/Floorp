@@ -2744,9 +2744,16 @@ class GeckoEngineSessionTest {
         var onExceptionCalled = false
 
         val mUrl = "https://m.example.com"
-        val geckoResult = GeckoResult<String?>()
-        geckoResult.complete("COMPLETED")
-        whenever(geckoSession.requestAnalysisCreationStatus(mUrl))
+        val geckoResult = GeckoResult<GeckoSession.AnalysisStatusResponse>()
+
+        val status = "in_progress"
+        val progress = 90.9
+        val analysisObject = GeckoSession.AnalysisStatusResponse.Builder(status)
+            .progress(progress)
+            .build()
+
+        geckoResult.complete(analysisObject)
+        whenever(geckoSession.requestAnalysisStatus(mUrl))
             .thenReturn(geckoResult)
 
         engineSession.requestAnalysisStatus(
