@@ -2712,10 +2712,9 @@ export class UrlbarView {
   }
 
   #enableOrDisableRowWrap() {
-    this.#rows.toggleAttribute(
-      "wrap",
-      getBoundsWithoutFlushing(this.input.textbox).width < 650
-    );
+    let wrap = getBoundsWithoutFlushing(this.input.textbox).width < 650;
+    this.#rows.toggleAttribute("wrap", wrap);
+    this.oneOffSearchButtons.container.toggleAttribute("wrap", wrap);
   }
 
   /**
