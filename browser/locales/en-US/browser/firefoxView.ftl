@@ -19,6 +19,9 @@ firefoxview-close-button =
   .title = Close
   .aria-label = Close
 
+firefoxview-empty-state-icon =
+  .alt = Attention:
+
 # Used instead of the localized relative time when a timestamp is within a minute or so of now
 firefoxview-just-now-timestamp = Just now
 

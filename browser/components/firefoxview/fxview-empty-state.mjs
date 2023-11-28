@@ -89,8 +89,10 @@ class FxviewEmptyState extends MozLitElement {
                class="header"
                ?hidden=${!this.headerLabel}
              >
-                 <img class="icon info" ?hidden=${!this
-                   .headerIconUrl} src=${ifDefined(this.headerIconUrl)}></img>
+                 <img class="icon info"
+                   data-l10n-id="firefoxview-empty-state-icon"
+                   ?hidden=${!this.headerIconUrl}
+                   src=${ifDefined(this.headerIconUrl)}></img>
                  <span
                    data-l10n-id="${this.headerLabel}"
                    data-l10n-args="${JSON.stringify(this.headerArgs)}">
