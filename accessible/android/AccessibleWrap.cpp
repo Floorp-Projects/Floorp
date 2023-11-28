@@ -121,26 +121,6 @@ Accessible* AccessibleWrap::DoPivot(Accessible* aAccessible,
   return nullptr;
 }
 
-bool AccessibleWrap::PivotTo(int32_t aGranularity, bool aForward,
-                             bool aInclusive) {
-  Accessible* result = DoPivot(this, aGranularity, aForward, aInclusive);
-  if (result) {
-    MOZ_ASSERT(result->IsLocal());
-    // Dispatch a virtual cursor change event that will be turned into an
-    // android accessibility focused changed event in the parent.
-    PivotMoveReason reason = aForward ? nsIAccessiblePivot::REASON_NEXT
-                                      : nsIAccessiblePivot::REASON_PREV;
-    LocalAccessible* localResult = result->AsLocal();
-    RefPtr<AccEvent> event = new AccVCChangeEvent(
-        localResult->Document(), this, localResult, reason, eFromUserInput);
-    nsEventShell::FireEvent(event);
-
-    return true;
-  }
-
-  return false;
-}
-
 Accessible* AccessibleWrap::ExploreByTouch(Accessible* aAccessible, float aX,
                                            float aY) {
   Accessible* root;

@@ -24,8 +24,6 @@ const nsIAccessibleScrollingEvent = Ci.nsIAccessibleScrollingEvent;
 const nsIAccessibleTextChangeEvent = Ci.nsIAccessibleTextChangeEvent;
 const nsIAccessibleTextSelectionChangeEvent =
   Ci.nsIAccessibleTextSelectionChangeEvent;
-const nsIAccessibleVirtualCursorChangeEvent =
-  Ci.nsIAccessibleVirtualCursorChangeEvent;
 const nsIAccessibleObjectAttributeChangedEvent =
   Ci.nsIAccessibleObjectAttributeChangedEvent;
 const nsIAccessibleAnnouncementEvent = Ci.nsIAccessibleAnnouncementEvent;

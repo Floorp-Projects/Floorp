@@ -183,45 +183,40 @@ interface nsIAccessibleEvent : nsISupports
   const unsigned long EVENT_OBJECT_ATTRIBUTE_CHANGED = 0x0022;
 
   /**
-   * A cursorable's virtual cursor has changed.
-   */
-  const unsigned long EVENT_VIRTUALCURSOR_CHANGED = 0x0023;
-
-  /**
    * An object's text Value has changed.
    */
-  const unsigned long EVENT_TEXT_VALUE_CHANGE = 0x0024;
+  const unsigned long EVENT_TEXT_VALUE_CHANGE = 0x0023;
 
   /**
    * An accessible's viewport is scrolling.
    */
-  const unsigned long EVENT_SCROLLING = 0x0025;
+  const unsigned long EVENT_SCROLLING = 0x0024;
 
   /**
    * An accessible is making an explicit announcement.
    */
-  const unsigned long EVENT_ANNOUNCEMENT = 0x0026;
+  const unsigned long EVENT_ANNOUNCEMENT = 0x0025;
 
   /**
    * A live region has been introduced. Mac only.
    */
-  const unsigned long EVENT_LIVE_REGION_ADDED = 0x0027;
+  const unsigned long EVENT_LIVE_REGION_ADDED = 0x0026;
 
   /**
    * A live region has been removed (aria-live attribute changed). Mac Only.
    */
-  const unsigned long EVENT_LIVE_REGION_REMOVED = 0x0028;
+  const unsigned long EVENT_LIVE_REGION_REMOVED = 0x0027;
 
   /**
    * A reorder event that has been coalesced into a mutation
    * of an ancestor's subtree.
    */
-  const unsigned long EVENT_INNER_REORDER = 0x0029;
+  const unsigned long EVENT_INNER_REORDER = 0x0028;
 
   /**
    * Help make sure event map does not get out-of-line.
    */
-  const unsigned long EVENT_LAST_ENTRY = 0x002A;
+  const unsigned long EVENT_LAST_ENTRY = 0x0029;
 
   /**
    * The type of event, based on the enumerated event values

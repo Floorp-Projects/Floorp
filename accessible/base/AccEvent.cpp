@@ -161,21 +161,6 @@ AccSelChangeEvent::AccSelChangeEvent(LocalAccessible* aWidget,
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// AccVCChangeEvent
-////////////////////////////////////////////////////////////////////////////////
-
-AccVCChangeEvent::AccVCChangeEvent(LocalAccessible* aAccessible,
-                                   LocalAccessible* aOldAccessible,
-                                   LocalAccessible* aNewAccessible,
-                                   int16_t aReason,
-                                   EIsFromUserInput aIsFromUserInput)
-    : AccEvent(::nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED, aAccessible,
-               aIsFromUserInput),
-      mOldAccessible(aOldAccessible),
-      mNewAccessible(aNewAccessible),
-      mReason(aReason) {}
-
 already_AddRefed<nsIAccessibleEvent> a11y::MakeXPCEvent(AccEvent* aEvent) {
   DocAccessible* doc = aEvent->Document();
   LocalAccessible* acc = aEvent->GetAccessible();
@@ -237,15 +222,6 @@ already_AddRefed<nsIAccessibleEvent> a11y::MakeXPCEvent(AccEvent* aEvent) {
 
     xpEvent = new xpcAccTextSelectionChangeEvent(
         type, ToXPC(acc), ToXPCDocument(doc), node, fromUser, xpcRanges);
-    return xpEvent.forget();
-  }
-
-  if (eventGroup & (1 << AccEvent::eVirtualCursorChangeEvent)) {
-    AccVCChangeEvent* vcc = downcast_accEvent(aEvent);
-    xpEvent = new xpcAccVirtualCursorChangeEvent(
-        type, ToXPC(acc), ToXPCDocument(doc), node, fromUser,
-        ToXPC(vcc->OldAccessible()), ToXPC(vcc->NewAccessible()),
-        vcc->Reason());
     return xpEvent.forget();
   }
 

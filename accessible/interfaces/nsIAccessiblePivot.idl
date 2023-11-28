@@ -20,13 +20,6 @@ interface nsIAccessibleTraversalRule;
 [scriptable, uuid(81fe5144-059b-42db-bd3a-f6ce3158d5e9)]
 interface nsIAccessiblePivot : nsISupports
 {
-  // XXX: These are here for the VC changed event that has yet to go away.
-  const PivotMoveReason REASON_NONE = 0;
-  const PivotMoveReason REASON_NEXT = 1;
-  const PivotMoveReason REASON_PREV = 2;
-  const PivotMoveReason REASON_FIRST = 3;
-  const PivotMoveReason REASON_LAST = 4;
-
   /**
    * Move pivot to next object, from current position or given anchor,
    * complying to given traversal rule.
