@@ -1029,7 +1029,7 @@ fn process(
 
             qinfo!("Setting timeout of {:?} for {}", new_timeout, server);
             if new_timeout > Duration::from_secs(1) {
-                new_timeout = Duration::from_secs(1);
+                new_timeout = Duration::from_millis(500);
             }
             *svr_timeout = Some(timer.set_timeout(new_timeout, inx));
             false
