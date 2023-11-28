@@ -190,15 +190,11 @@ class ReportBrokenSiteHelper {
     );
   }
 
-  waitForSendMoreInfoTab() {
-    return BrowserTestUtils.waitForNewTab(
+  async clickSendMoreInfo() {
+    const newTabPromise = BrowserTestUtils.waitForNewTab(
       this.win.gBrowser,
       NEW_REPORT_ENDPOINT_TEST_URL
     );
-  }
-
-  async clickSendMoreInfo() {
-    const newTabPromise = this.waitForSendMoreInfoTab();
     EventUtils.synthesizeMouseAtCenter(this.sendMoreInfoLink, {}, this.win);
     const newTab = await newTabPromise;
     const receivedData = await SpecialPowers.spawn(
@@ -437,10 +433,6 @@ class MenuHelper {
     this.win = win;
   }
 
-  get showsBackButton() {
-    return true;
-  }
-
   get reportBrokenSite() {}
 
   get reportSiteIssue() {}
@@ -566,7 +558,7 @@ class AppMenuHelpSubmenuHelper extends MenuHelper {
 
     const appMenuHelpSubview =
       this.win.document.getElementById("PanelUI-helpView");
-    await BrowserTestUtils.waitForEvent(appMenuHelpSubview, "ViewShown");
+    await BrowserTestUtils.waitForEvent(appMenuHelpSubview, "ViewShowing");
   }
 
   async close() {
@@ -578,10 +570,6 @@ class AppMenuHelpSubmenuHelper extends MenuHelper {
 
 class HelpMenuHelper extends MenuHelper {
   menuDescription = "Help Menu";
-
-  get showsBackButton() {
-    return false;
-  }
 
   get reportBrokenSite() {
     return this.win.PanelMultiView.getViewNode(
@@ -600,21 +588,38 @@ class HelpMenuHelper extends MenuHelper {
   get popup() {
     return this.win.PanelMultiView.getViewNode(
       this.win.document,
-      "PanelUI-helpView"
-    );
-  }
-
-  get helpMenu() {
-    return this.win.PanelMultiView.getViewNode(
-      this.win.document,
       "menu_HelpPopup"
     );
   }
 
+  async open() {
+    const popup = this.popup;
+    const promise = BrowserTestUtils.waitForEvent(popup, "popupshown");
+
+    // This event-faking method was copied from browser_title_case_menus.js so
+    // this can be tested on MacOS (where the actual menus cannot be opened in
+    // tests, but we only need the help menu to populate itself).
+    popup.dispatchEvent(new MouseEvent("popupshowing", { bubbles: true }));
+    popup.dispatchEvent(new MouseEvent("popupshown", { bubbles: true }));
+
+    await promise;
+  }
+
+  async close() {
+    const popup = this.popup;
+    const promise = BrowserTestUtils.waitForEvent(popup, "popuphidden");
+
+    // (Also copied from browser_title_case_menus.js)
+    // Just for good measure, we'll fire the popuphiding/popuphidden events
+    // after we close the menupopups.
+    popup.dispatchEvent(new MouseEvent("popuphiding", { bubbles: true }));
+    popup.dispatchEvent(new MouseEvent("popuphidden", { bubbles: true }));
+
+    await promise;
+  }
+
   async openReportBrokenSite() {
-    // We can't actually open the Help menu properly in testing, so the best
-    // we can do to open its Report Broken Site panel is to force its DOM to be
-    // prepared, and then soft-click the Report Broken Site menuitem to open it.
+    // since we can't open the help menu on all OSes, we just directly open RBS instead.
     await this.open();
     const shownPromise = BrowserTestUtils.waitForEvent(
       this.win,
@@ -622,35 +627,14 @@ class HelpMenuHelper extends MenuHelper {
       true,
       e => e.target.classList.contains("report-broken-site-view")
     );
-    this.reportBrokenSite.click();
+    ReportBrokenSite.open({
+      sourceEvent: {
+        target: this.reportBrokenSite,
+      },
+      view: this.win,
+    });
     await shownPromise;
     return new ReportBrokenSiteHelper(this);
-  }
-
-  async open() {
-    const { helpMenu } = this;
-    const promise = BrowserTestUtils.waitForEvent(helpMenu, "popupshown");
-
-    // This event-faking method was copied from browser_title_case_menus.js.
-    // We can't actually open the Help menu in testing, but this lets us
-    // force its DOM to be properly built.
-    helpMenu.dispatchEvent(new MouseEvent("popupshowing", { bubbles: true }));
-    helpMenu.dispatchEvent(new MouseEvent("popupshown", { bubbles: true }));
-
-    await promise;
-  }
-
-  async close() {
-    const { helpMenu } = this;
-    const promise = BrowserTestUtils.waitForEvent(helpMenu, "popuphidden");
-
-    // (Also copied from browser_title_case_menus.js)
-    // Just for good measure, we'll fire the popuphiding/popuphidden events
-    // after we close the menupopups.
-    helpMenu.dispatchEvent(new MouseEvent("popuphiding", { bubbles: true }));
-    helpMenu.dispatchEvent(new MouseEvent("popuphidden", { bubbles: true }));
-
-    await promise;
   }
 }
 
