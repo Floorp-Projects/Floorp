@@ -4,7 +4,10 @@
 
 /* eslint no-shadow: error, mozilla/no-aArgs: error */
 
-import { SearchEngine } from "resource://gre/modules/SearchEngine.sys.mjs";
+import {
+  SearchEngine,
+  EngineURL,
+} from "resource://gre/modules/SearchEngine.sys.mjs";
 
 const lazy = {};
 
@@ -17,15 +20,19 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * search configuration.
  */
 export class AppProvidedSearchEngine extends SearchEngine {
+  static URL_TYPE_MAP = new Map([
+    ["search", lazy.SearchUtils.URL_TYPE.SEARCH],
+    ["suggestions", lazy.SearchUtils.URL_TYPE.SUGGEST_JSON],
+    ["trending", lazy.SearchUtils.URL_TYPE.TRENDING_JSON],
+  ]);
+
   /**
-   * @param {object} options
-   *   The options object
-   * @param {object} [options.details]
-   *   An object that simulates the engine object from the config.
+   * @param {object} config
+   *   The engine config from Remote Settings.
    */
-  constructor({ details } = {}) {
-    let extensionId = details?.config.webExtension.id;
-    let id = extensionId + details?.locale;
+  constructor(config) {
+    let extensionId = config.identifier;
+    let id = config.identifier;
 
     super({
       loadPath: "[app]" + extensionId,
@@ -34,18 +41,9 @@ export class AppProvidedSearchEngine extends SearchEngine {
     });
 
     this._extensionID = extensionId;
-    this._locale = details?.locale;
+    this._locale = "default";
 
-    if (details) {
-      if (!details.config.webExtension.id) {
-        throw Components.Exception(
-          "Empty extensionID passed to _createAndAddEngine!",
-          Cr.NS_ERROR_INVALID_ARG
-        );
-      }
-
-      this.#init(details.locale, details.config);
-    }
+    this.#init(config);
   }
 
   /**
@@ -156,32 +154,14 @@ export class AppProvidedSearchEngine extends SearchEngine {
   /**
    * Initializes the engine.
    *
-   * @param {string} locale
-   *   The locale that is being used for this engine.
-   * @param {object} [config]
+   * @param {object} [engineConfig]
    *   The search engine configuration for application provided engines.
    */
-  #init(locale, config) {
-    let searchProvider;
-    if (locale != "default") {
-      searchProvider = config.webExtension.searchProvider[locale];
-    } else if (locale == "default" && config.webExtension.default_locale) {
-      searchProvider =
-        config.webExtension.searchProvider[config.webExtension.default_locale];
-    } else {
-      searchProvider = config.webExtension;
-    }
+  #init(engineConfig) {
+    this._telemetryId = engineConfig.identifier;
 
-    // We only set _telemetryId for app-provided engines. See also telemetryId
-    // getter.
-    if (config.telemetryId) {
-      this._telemetryId = config.telemetryId;
-    } else {
-      let telemetryId = this.id.split("@")[0];
-      if (locale != lazy.SearchUtils.DEFAULT_TAG) {
-        telemetryId += "-" + locale;
-      }
-      this._telemetryId = telemetryId;
+    if (engineConfig.telemetrySuffix) {
+      this._telemetryId += `-${engineConfig.telemetrySuffix}`;
     }
 
     // Set the main icon URL for the engine.
@@ -209,13 +189,88 @@ export class AppProvidedSearchEngine extends SearchEngine {
     //   }
     // }
 
-    this._initWithDetails(
-      {
-        ...searchProvider,
-        //iconURL,
-        description: config.webExtension.description,
-      },
-      config
+    // this._initWithDetails(config);
+
+    // this._orderHint = config.orderHint; // TODO add order hint in searchEngineSelector for sorting engines.
+    // this._sendAttributionRequest = config.sendAttributionRequest ?? false; // TODO check if we need to this?
+    // if (details.iconURL) {
+    //   this._setIcon(details.iconURL, true);
+    // }
+
+    this._name = engineConfig.name.trim();
+    this._definedAliases =
+      engineConfig.aliases?.map(alias => `@${alias}`) ?? [];
+
+    for (const [type, urlData] of Object.entries(engineConfig.urls)) {
+      this.#setUrl(type, urlData, engineConfig.partnerCode);
+    }
+  }
+
+  /**
+   * This sets the urls for the search engine based on the supplied parameters.
+   *
+   * @param {string} type
+   *   The type of url. This could be a url for search, suggestions, or trending.
+   * @param {object} urlData
+   *   The url data contains the template/base url and url params.
+   * @param {string} partnerCode
+   *   The partner code associated with the search engine.
+   */
+  #setUrl(type, urlData, partnerCode) {
+    let urlType = AppProvidedSearchEngine.URL_TYPE_MAP.get(type);
+
+    if (!urlType) {
+      console.warn("unexpected engine url type.", type);
+      return;
+    }
+
+    let engineURL = new EngineURL(
+      urlType,
+      urlData.method || "GET",
+      urlData.base
     );
+
+    if (urlData.params) {
+      for (const param of urlData.params) {
+        switch (true) {
+          case "value" in param:
+            engineURL.addParam(
+              param.name,
+              param.value == "{partnerCode}" ? partnerCode : param.value
+            );
+            break;
+          case "experimentConfig" in param:
+            engineURL._addMozParam({
+              name: param.name,
+              pref: param.experimentConfig,
+              condition: "pref",
+            });
+            break;
+          case "searchAccessPoint" in param:
+            for (const [key, value] of Object.entries(
+              param.searchAccessPoint
+            )) {
+              engineURL.addParam(param.name, value, key);
+            }
+            break;
+        }
+      }
+    }
+
+    if (
+      !("searchTermParamName" in urlData) &&
+      !urlData.base.includes("{searchTerms}")
+    ) {
+      throw new Error("Search terms missing from engine URL.");
+    }
+
+    if ("searchTermParamName" in urlData) {
+      // The search term parameter is always added last, which will add it to the
+      // end of the URL. This is because in the past we have seen users trying to
+      // modify their searches by altering the end of the URL.
+      engineURL.addParam(urlData.searchTermParamName, "{searchTerms}");
+    }
+
+    this._urls.push(engineURL);
   }
 }

@@ -2398,14 +2398,28 @@ export class SearchService {
 
   #setDefaultAndOrdersFromSelector(engines, privateDefault) {
     const defaultEngine = engines[0];
+    if (!lazy.SearchUtils.newSearchConfigEnabled) {
+      this._searchDefault = {
+        id: defaultEngine.webExtension.id,
+        locale: defaultEngine.webExtension.locale,
+      };
+      if (privateDefault) {
+        this.#searchPrivateDefault = {
+          id: privateDefault.webExtension.id,
+          locale: privateDefault.webExtension.locale,
+        };
+      }
+      return;
+    }
+
     this._searchDefault = {
-      id: defaultEngine.webExtension.id,
-      locale: defaultEngine.webExtension.locale,
+      id: defaultEngine.identifier,
+      locale: "default",
     };
     if (privateDefault) {
       this.#searchPrivateDefault = {
-        id: privateDefault.webExtension.id,
-        locale: privateDefault.webExtension.locale,
+        id: privateDefault.identifier,
+        locale: "default",
       };
     }
   }
@@ -3586,12 +3600,13 @@ export class SearchService {
    */
   async _makeEngineFromConfig(config) {
     lazy.logConsole.debug("_makeEngineFromConfig:", config);
-    let locale =
-      "locale" in config.webExtension
-        ? config.webExtension.locale
-        : lazy.SearchUtils.DEFAULT_TAG;
 
     if (!lazy.SearchUtils.newSearchConfigEnabled) {
+      let locale =
+        "locale" in config.webExtension
+          ? config.webExtension.locale
+          : lazy.SearchUtils.DEFAULT_TAG;
+
       let engine = new lazy.AddonSearchEngine({
         isAppProvided: true,
         details: {
@@ -3606,12 +3621,7 @@ export class SearchService {
       return engine;
     }
 
-    return new lazy.AppProvidedSearchEngine({
-      details: {
-        locale,
-        config,
-      },
-    });
+    return new lazy.AppProvidedSearchEngine(config);
   }
 
   /**
