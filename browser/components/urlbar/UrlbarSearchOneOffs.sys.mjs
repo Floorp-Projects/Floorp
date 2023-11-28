@@ -188,12 +188,16 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
     this.#quickSuggestOptInProvider._recordGlean("impression");
   }
 
-  #handleQuickSuggestOptInCommand(element) {
-    if (
+  #isQuickSuggestOptInElement(element) {
+    return (
       this.#quickSuggestOptInContainer &&
       element.compareDocumentPosition(this.#quickSuggestOptInContainer) &
         Node.DOCUMENT_POSITION_CONTAINS
-    ) {
+    );
+  }
+
+  #handleQuickSuggestOptInCommand(element) {
+    if (this.#isQuickSuggestOptInElement(element)) {
       this.#quickSuggestOptInProvider._handleCommand(
         element,
         this.queryContext,
@@ -241,6 +245,10 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
   set selectedButton(button) {
     if (this.selectedButton == button) {
       return;
+    }
+
+    if (this.#isQuickSuggestOptInElement(button)) {
+      this.#quickSuggestOptInProvider.onBeforeSelection(null, button);
     }
 
     super.selectedButton = button;
