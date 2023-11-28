@@ -323,11 +323,6 @@ button.text-link .button-text {
   background-color: -moz-Combobox;
 }
 
-/* Full width separator in select */
-#ContentSelectDropdown menuseparator {
-  padding-inline: 0;
-}
-
 /* Indent options in optgroups */
 .contentSelectDropdown-ingroup .menu-iconic-text {
   padding-inline-start: 2em;

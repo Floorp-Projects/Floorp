@@ -477,8 +477,6 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState {
   void appendToCurrentNodeAndPushElementMayFoster(
       nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes,
       nsIContentHandle* form);
-  void appendVoidElementToCurrent(nsHtml5ElementName* elementName,
-                                  nsHtml5HtmlAttributes* attributes);
   void appendVoidElementToCurrentMayFoster(nsHtml5ElementName* elementName,
                                            nsHtml5HtmlAttributes* attributes,
                                            nsIContentHandle* form);

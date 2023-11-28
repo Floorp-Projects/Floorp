@@ -1759,18 +1759,6 @@ starttagloop:
             attributes = nullptr;
             NS_HTML5_BREAK(starttagloop);
           }
-          case HR: {
-            if (isCurrent(nsGkAtoms::option)) {
-              pop();
-            }
-            if (isCurrent(nsGkAtoms::optgroup)) {
-              pop();
-            }
-            appendVoidElementToCurrent(elementName, attributes);
-            selfClosing = false;
-            attributes = nullptr;
-            NS_HTML5_BREAK(starttagloop);
-          }
           default: {
             errStrayStartTag(name);
             NS_HTML5_BREAK(starttagloop);
@@ -4321,18 +4309,6 @@ void nsHtml5TreeBuilder::appendToCurrentNodeAndPushElementMayFoster(
   }
   nsHtml5StackNode* node = createStackNode(elementName, elt);
   push(node);
-}
-
-void nsHtml5TreeBuilder::appendVoidElementToCurrent(
-    nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes) {
-  nsAtom* popName = elementName->getName();
-  nsIContentHandle* currentNode = nodeFromStackWithBlinkCompat(currentPtr);
-  nsIContentHandle* elt =
-      createElement(kNameSpaceID_XHTML, popName, attributes, currentNode,
-                    htmlCreator(elementName->getHtmlCreator()));
-  appendElement(elt, currentNode);
-  elementPushed(kNameSpaceID_XHTML, popName, elt);
-  elementPopped(kNameSpaceID_XHTML, popName, elt);
 }
 
 void nsHtml5TreeBuilder::appendVoidElementToCurrentMayFoster(
