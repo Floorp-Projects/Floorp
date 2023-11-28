@@ -1699,3 +1699,11 @@ add_task(async function check_archBits() {
   is(typeof bits, "number", "archBits should be a number");
   ok(bits === 32 || bits === 64, "archBits is either 32 or 64");
 });
+
+add_task(async function check_memoryMB() {
+  const memory = ASRouterTargeting.Environment.memoryMB;
+  is(typeof memory, "number", "Memory is a number");
+  // To make sure we get a sensible number we verify that whatever system
+  // runs this unit test it has between 500MB and 1TB of RAM.
+  ok(memory > 500 && memory < 5_000_000);
+});
