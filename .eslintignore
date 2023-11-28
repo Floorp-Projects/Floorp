@@ -55,7 +55,6 @@ browser/components/pocket/content/panels/js/main.bundle.js
 !browser/components/storybook/.storybook/*.js
 
 # Ignore newtab files
-browser/components/newtab/aboutwelcome/content/aboutwelcome.bundle.js
 browser/components/newtab/data/
 browser/components/newtab/logs/
 

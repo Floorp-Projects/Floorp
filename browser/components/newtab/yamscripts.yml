@@ -8,8 +8,6 @@ scripts:
   bundle:
     webpack: webpack-cli --config webpack.system-addon.config.js
     css: sass content-src/styles:css --no-source-map
-    welcomeBundle: webpack-cli --config webpack.aboutwelcome.config.js
-    welcomeCss: sass content-src/aboutwelcome:aboutwelcome/content --no-source-map
     html: rimraf prerendered && node ./bin/render-activity-stream-html.js
 
   # buildmc: Used to do stuff when this code was in GitHub, now just an
@@ -22,8 +20,6 @@ scripts:
     _parallel: true
     webpack: =>bundle:webpack -- --env development -w
     css: =>bundle:css -- --source-map --embed-sources --embed-source-map --load-path=content-src -w
-    welcomeBundle: =>bundle:welcomeBundle -- --env development -w
-    welcomeCss: =>bundle:welcomeCss -- --source-map --embed-sources --embed-source-map -w
 
   testmc:
     lint: =>lint
