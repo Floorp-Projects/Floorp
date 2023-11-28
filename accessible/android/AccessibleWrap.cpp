@@ -173,19 +173,29 @@ bool AccessibleWrap::PivotTo(int32_t aGranularity, bool aForward,
   return false;
 }
 
-void AccessibleWrap::ExploreByTouch(float aX, float aY) {
-  a11y::Pivot pivot(RootAccessible());
-  TraversalRule rule;
-
-  Accessible* maybeResult = pivot.AtPoint(aX, aY, rule);
-  LocalAccessible* result = maybeResult ? maybeResult->AsLocal() : nullptr;
-
-  if (result && result != this) {
-    RefPtr<AccEvent> event =
-        new AccVCChangeEvent(result->Document(), this, result,
-                             nsIAccessiblePivot::REASON_POINT, eFromUserInput);
-    nsEventShell::FireEvent(event);
+Accessible* AccessibleWrap::ExploreByTouch(Accessible* aAccessible, float aX,
+                                           float aY) {
+  Accessible* root;
+  if (LocalAccessible* local = aAccessible->AsLocal()) {
+    root = local->RootAccessible();
+  } else {
+    // If this is a RemoteAccessible, provide the top level
+    // remote doc as the pivot root for thread safety reasons.
+    DocAccessibleParent* doc = aAccessible->AsRemote()->Document();
+    while (doc && !doc->IsTopLevel()) {
+      doc = doc->ParentDoc();
+    }
+    MOZ_ASSERT(doc, "Failed to get top level DocAccessibleParent");
+    root = doc;
   }
+  a11y::Pivot pivot(root);
+  TraversalRule rule(java::SessionAccessibility::HTML_GRANULARITY_DEFAULT,
+                     aAccessible->IsLocal());
+  Accessible* result = pivot.AtPoint(aX, aY, rule);
+  if (result == aAccessible) {
+    return nullptr;
+  }
+  return result;
 }
 
 static TextLeafPoint ToTextLeafPoint(Accessible* aAccessible, int32_t aOffset) {

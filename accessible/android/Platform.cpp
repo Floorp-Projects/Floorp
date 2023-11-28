@@ -186,11 +186,7 @@ void a11y::PlatformVirtualCursorChangeEvent(Accessible* aTarget,
     return;
   }
 
-  if (aReason == nsIAccessiblePivot::REASON_POINT) {
-    sessionAcc->SendHoverEnterEvent(aNewPosition);
-  } else {
-    sessionAcc->SendAccessibilityFocusedEvent(aNewPosition);
-  }
+  sessionAcc->SendAccessibilityFocusedEvent(aNewPosition);
 }
 
 void a11y::PlatformScrollingEvent(Accessible* aTarget, uint32_t aEventType,
