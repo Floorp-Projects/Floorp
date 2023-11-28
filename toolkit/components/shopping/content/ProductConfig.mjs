@@ -103,7 +103,7 @@ const ProductConfig = {
   amazon: {
     productIdFromURLRegex:
       /(?:[\/]|$|%2F)(?<productId>[A-Z0-9]{10})(?:[\/]|$|\#|\?|%2F)/,
-    validTLDs: ["com"],
+    validTLDs: ["com", "de", "fr"],
   },
   walmart: {
     productIdFromURLRegex:
