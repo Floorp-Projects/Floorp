@@ -509,6 +509,27 @@ class SystemEngineSession(
         throw UnsupportedOperationException("Translate restore support is not available in this engine")
     }
 
+    /**
+     * See [EngineSession.getNeverTranslateSiteSetting]
+     */
+    override fun getNeverTranslateSiteSetting(
+        onResult: (Boolean) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {
+        throw UnsupportedOperationException("Getting the site's translate setting is not available in this engine.")
+    }
+
+    /**
+     * See [EngineSession.setNeverTranslateSiteSetting]
+     */
+    override fun setNeverTranslateSiteSetting(
+        setting: Boolean,
+        onResult: () -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {
+        throw UnsupportedOperationException("Setting the site's translate setting is not available in this engine")
+    }
+
     override fun hasCookieBannerRuleForSession(
         onResult: (Boolean) -> Unit,
         onException: (Throwable) -> Unit,

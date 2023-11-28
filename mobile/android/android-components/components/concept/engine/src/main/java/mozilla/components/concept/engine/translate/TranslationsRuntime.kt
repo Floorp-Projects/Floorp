@@ -106,4 +106,70 @@ interface TranslationsRuntime {
         onSuccess: (List<String>) -> Unit,
         onError: (Throwable) -> Unit,
     ): Unit = onError(UnsupportedOperationException(unsupportedError))
+
+    /**
+     * Retrieves the user preference on whether they would like translations to offer to translate
+     * on supported pages.
+     *
+     * @return The current translation offer preference value.
+     */
+    fun getTranslationsOfferPopup(): Boolean = throw UnsupportedOperationException(unsupportedError)
+
+    /**
+     * Sets the user preference on whether they would like translations to offer to translate
+     * on supported pages.
+     *
+     * @param offer The popup preference. True if the user would like to receive a popup
+     * recommendation to translate. False if they do not want translations suggestions.
+     */
+    fun setTranslationsOfferPopup(offer: Boolean): Unit =
+        throw UnsupportedOperationException(unsupportedError)
+
+    /**
+     * Gets the user preference on whether to offer, always translate, or never translate for a
+     * given BCP 47 language code. Note, when offer is set, this means the user has not specified
+     * an option or has else opted for default behavior.
+     *
+     * @param languageCode The BCP 47 language code to check the preference for.
+     * @param onSuccess Callback invoked if the operation completed successfully with the
+     * corresponding language setting.
+     * @param onError Callback invoked if an issue occurred.
+     */
+    fun getLanguageSetting(
+        languageCode: String,
+        onSuccess: (LanguageSetting) -> Unit,
+        onError: (Throwable) -> Unit,
+    ): Unit = onError(UnsupportedOperationException(unsupportedError))
+
+    /**
+     * Sets the user preference on whether to offer, always translate, or never translate for a
+     * given BCP 47 language code.
+     *
+     * @param languageCode The BCP 47 language code to check the preference for.
+     * @param languageSetting The language setting for the language.
+     * @param onSuccess Callback invoked if the operation completed successfully with the
+     * corresponding language setting.
+     * @param onError Callback invoked if an issue occurred.
+     */
+    fun setLanguageSetting(
+        languageCode: String,
+        languageSetting: LanguageSetting,
+        onSuccess: () -> Unit,
+        onError: (Throwable) -> Unit,
+    ): Unit = onError(UnsupportedOperationException(unsupportedError))
+
+    /**
+     * Gets the user preference on whether to offer, always translate, or never translate for all
+     * supported languages. Note, when offer is set, this means the user has not specified
+     * an option or has else opted for default behavior.
+     *
+     * @param onSuccess Callback invoked if the operation completed successfully with the
+     * corresponding setting in a map of key of BCP 47 language code and value of LanguageSetting
+     * preference.
+     * @param onError Callback invoked if an issue occurred.
+     */
+    fun getLanguageSettings(
+        onSuccess: (Map<String, LanguageSetting>) -> Unit,
+        onError: (Throwable) -> Unit,
+    ): Unit = onError(UnsupportedOperationException(unsupportedError))
 }

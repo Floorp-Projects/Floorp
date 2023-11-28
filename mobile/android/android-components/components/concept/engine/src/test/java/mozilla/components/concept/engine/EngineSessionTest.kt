@@ -1058,6 +1058,17 @@ open class DummyEngineSession : EngineSession() {
 
     override fun requestTranslationRestore() {}
 
+    override fun getNeverTranslateSiteSetting(
+        onResult: (Boolean) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {}
+
+    override fun setNeverTranslateSiteSetting(
+        setting: Boolean,
+        onResult: () -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {}
+
     override fun findAll(text: String) {}
 
     override fun findNext(forward: Boolean) {}

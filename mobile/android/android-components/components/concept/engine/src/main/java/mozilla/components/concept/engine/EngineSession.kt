@@ -987,6 +987,23 @@ abstract class EngineSession(
     abstract fun requestTranslationRestore()
 
     /**
+     * Requests the [EngineSession] retrieve the current site's never translate preference.
+     */
+    abstract fun getNeverTranslateSiteSetting(
+        onResult: (Boolean) -> Unit,
+        onException: (Throwable) -> Unit,
+    )
+
+    /**
+     * Requests the [EngineSession] to set the current site's never translate preference.
+     */
+    abstract fun setNeverTranslateSiteSetting(
+        setting: Boolean,
+        onResult: () -> Unit,
+        onException: (Throwable) -> Unit,
+    )
+
+    /**
      * Finds and highlights all occurrences of the provided String and highlights them asynchronously.
      *
      * @param text the String to search for

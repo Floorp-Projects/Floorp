@@ -44,6 +44,7 @@ import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.serviceworker.ServiceWorkerDelegate
 import mozilla.components.concept.engine.translate.Language
 import mozilla.components.concept.engine.translate.LanguageModel
+import mozilla.components.concept.engine.translate.LanguageSetting
 import mozilla.components.concept.engine.translate.ModelManagementOptions
 import mozilla.components.concept.engine.translate.TranslationSupport
 import mozilla.components.concept.engine.translate.TranslationsRuntime
@@ -832,6 +833,101 @@ class GeckoEngine(
                     onError(translationsUnexpectedNull())
                 }
 
+                GeckoResult<Void>()
+            },
+            { throwable ->
+                onError(throwable)
+                GeckoResult<Void>()
+            },
+        )
+    }
+
+    /**
+     * See [Engine.getTranslationsOfferPopup].
+     */
+    override fun getTranslationsOfferPopup(): Boolean {
+        return runtime.settings.translationsOfferPopup
+    }
+
+    /**
+     * See [Engine.setTranslationsOfferPopup].
+     */
+    override fun setTranslationsOfferPopup(offer: Boolean) {
+        runtime.settings.translationsOfferPopup = offer
+    }
+
+    /**
+     * See [Engine.getLanguageSetting].
+     */
+    override fun getLanguageSetting(
+        languageCode: String,
+        onSuccess: (LanguageSetting) -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        TranslationsController.RuntimeTranslation.getLanguageSetting(languageCode).then(
+            {
+                if (it != null) {
+                    try {
+                        onSuccess(LanguageSetting.fromValue(it))
+                    } catch (e: IllegalArgumentException) {
+                        onError(e)
+                    }
+                } else {
+                    onError(translationsUnexpectedNull())
+                }
+
+                GeckoResult<Void>()
+            },
+            { throwable ->
+                onError(throwable)
+                GeckoResult<Void>()
+            },
+        )
+    }
+
+    /**
+     * See [Engine.setLanguageSetting].
+     */
+    override fun setLanguageSetting(
+        languageCode: String,
+        languageSetting: LanguageSetting,
+        onSuccess: () -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        TranslationsController.RuntimeTranslation.setLanguageSettings(languageCode, languageSetting.toString()).then(
+            {
+                onSuccess()
+                GeckoResult<Void>()
+            },
+            { throwable ->
+                onError(throwable)
+                GeckoResult<Void>()
+            },
+        )
+    }
+
+    /**
+     * See [Engine.getLanguageSettings].
+     */
+    override fun getLanguageSettings(
+        onSuccess: (Map<String, LanguageSetting>) -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        TranslationsController.RuntimeTranslation.getLanguageSettings().then(
+            {
+                if (it != null) {
+                    try {
+                        val result = mutableMapOf<String, LanguageSetting>()
+                        it.forEach { item ->
+                            result[item.key] = LanguageSetting.fromValue(item.value)
+                        }
+                        onSuccess(result)
+                    } catch (e: IllegalArgumentException) {
+                        onError(e)
+                    }
+                } else {
+                    onError(translationsUnexpectedNull())
+                }
                 GeckoResult<Void>()
             },
             { throwable ->
