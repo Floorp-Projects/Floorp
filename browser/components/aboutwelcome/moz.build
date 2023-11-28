@@ -15,3 +15,5 @@ FINAL_TARGET_FILES.actors += [
     "actors/AboutWelcomeChild.sys.mjs",
     "actors/AboutWelcomeParent.sys.mjs",
 ]
+
+JAR_MANIFESTS += ["jar.mn"]
