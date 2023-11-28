@@ -3,8 +3,8 @@
 // http://rust-lang.org/COPYRIGHT.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// https://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
@@ -14,7 +14,8 @@ use std::ops::RangeFrom;
 use std::os::raw;
 use std::os::windows::prelude::*;
 
-pub struct RegistryKey(Repr);
+/// Must never be `HKEY_PERFORMANCE_DATA`.
+pub(crate) struct RegistryKey(Repr);
 
 type HKEY = *mut u8;
 type DWORD = u32;
@@ -29,7 +30,8 @@ type REGSAM = u32;
 
 const ERROR_SUCCESS: DWORD = 0;
 const ERROR_NO_MORE_ITEMS: DWORD = 259;
-const HKEY_LOCAL_MACHINE: HKEY = 0x80000002 as HKEY;
+// Sign-extend into 64 bits if needed.
+const HKEY_LOCAL_MACHINE: HKEY = 0x80000002u32 as i32 as isize as HKEY;
 const REG_SZ: DWORD = 1;
 const KEY_READ: DWORD = 0x20019;
 const KEY_WOW64_32KEY: DWORD = 0x200;
@@ -66,8 +68,11 @@ extern "system" {
 
 struct OwnedKey(HKEY);
 
+/// Note: must not encode `HKEY_PERFORMANCE_DATA` or one of its subkeys.
 enum Repr {
-    Const(HKEY),
+    /// `HKEY_LOCAL_MACHINE`.
+    LocalMachine,
+    /// A subkey of `HKEY_LOCAL_MACHINE`.
     Owned(OwnedKey),
 }
 
@@ -79,16 +84,17 @@ pub struct Iter<'a> {
 unsafe impl Sync for Repr {}
 unsafe impl Send for Repr {}
 
-pub static LOCAL_MACHINE: RegistryKey = RegistryKey(Repr::Const(HKEY_LOCAL_MACHINE));
+pub(crate) const LOCAL_MACHINE: RegistryKey = RegistryKey(Repr::LocalMachine);
 
 impl RegistryKey {
     fn raw(&self) -> HKEY {
         match self.0 {
-            Repr::Const(val) => val,
+            Repr::LocalMachine => HKEY_LOCAL_MACHINE,
             Repr::Owned(ref val) => val.0,
         }
     }
 
+    /// Open a sub-key of `self`.
     pub fn open(&self, key: &OsStr) -> io::Result<RegistryKey> {
         let key = key.encode_wide().chain(Some(0)).collect::<Vec<_>>();
         let mut ret = 0 as *mut _;
@@ -140,9 +146,13 @@ impl RegistryKey {
             }
 
             // The length here is the length in bytes, but we're using wide
-            // characters so we need to be sure to halve it for the capacity
+            // characters so we need to be sure to halve it for the length
             // passed in.
-            let mut v = Vec::with_capacity(len as usize / 2);
+            assert!(len % 2 == 0, "impossible wide string size: {} bytes", len);
+            let vlen = len as usize / 2;
+            // Defensively initialized, see comment about
+            // `HKEY_PERFORMANCE_DATA` below.
+            let mut v = vec![0u16; vlen];
             let err = RegQueryValueExW(
                 self.raw(),
                 name.as_ptr(),
@@ -151,17 +161,34 @@ impl RegistryKey {
                 v.as_mut_ptr() as *mut _,
                 &mut len,
             );
+            // We don't check for `ERROR_MORE_DATA` (which would if the value
+            // grew between the first and second call to `RegQueryValueExW`),
+            // both because it's extremely unlikely, and this is a bit more
+            // defensive more defensive against weird types of registry keys.
             if err != ERROR_SUCCESS as LONG {
                 return Err(io::Error::from_raw_os_error(err as i32));
             }
-            v.set_len(len as usize / 2);
-
+            // The length is allowed to change, but should still be even, as
+            // well as smaller.
+            assert!(len % 2 == 0, "impossible wide string size: {} bytes", len);
+            // If the length grew but returned a success code, it *probably*
+            // indicates we're `HKEY_PERFORMANCE_DATA` or a subkey(?). We
+            // consider this UB, since those keys write "undefined" or
+            // "unpredictable" values to len, and need to use a completely
+            // different loop structure. This should be impossible (and enforce
+            // it in the API to the best of our ability), but to mitigate the
+            // damage we do some smoke-checks on the len, and ensure `v` has
+            // been fully initialized (rather than trusting the result of
+            // `RegQueryValueExW`).
+            let actual_len = len as usize / 2;
+            assert!(actual_len <= v.len());
+            v.truncate(actual_len);
             // Some registry keys may have a terminating nul character, but
             // we're not interested in that, so chop it off if it's there.
-            if v[v.len() - 1] == 0 {
+            if !v.is_empty() && v[v.len() - 1] == 0 {
                 v.pop();
             }
-            Ok(OsString::from_wide(&v))
+            return Ok(OsString::from_wide(&v));
         }
     }
 }
