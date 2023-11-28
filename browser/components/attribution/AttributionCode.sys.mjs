@@ -64,12 +64,10 @@ export var AttributionCode = {
    * Wrapper to pull campaign IDs from MSIX builds.
    * This function solely exists to make it easy to mock out for tests.
    */
-  async msixCampaignId() {
-    const windowsPackageManager = Cc[
-      "@mozilla.org/windows-package-manager;1"
-    ].createInstance(Ci.nsIWindowsPackageManager);
-
-    return windowsPackageManager.campaignId();
+  get msixCampaignId() {
+    return Cc["@mozilla.org/windows-package-manager;1"]
+      .createInstance(Ci.nsIWindowsPackageManager)
+      .getCampaignId();
   },
 
   /**
@@ -348,7 +346,7 @@ export var AttributionCode = {
           )}`
         );
         let encoder = new TextEncoder();
-        bytes = encoder.encode(encodeURIComponent(await this.msixCampaignId()));
+        bytes = encoder.encode(encodeURIComponent(this.msixCampaignId));
       } else {
         bytes = await AttributionIOUtils.read(attributionFile.path);
       }
