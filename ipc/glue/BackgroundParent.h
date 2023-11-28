@@ -78,7 +78,7 @@ class BackgroundParent final {
   static uint64_t GetChildID(PBackgroundParent* aBackgroundActor);
 
   static void KillHardAsync(PBackgroundParent* aBackgroundActor,
-                            const char* aReason);
+                            const nsACString& aReason);
 
  private:
   // Only called by ContentParent for cross-process actors.
