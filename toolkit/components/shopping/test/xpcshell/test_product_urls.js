@@ -83,6 +83,30 @@ add_task(function test_product_fromUrl() {
     },
     "Protocol is not checked"
   );
+
+  Assert.deepEqual(
+    ShoppingProduct.fromURL(new URL("https://amazon.fr/product/dp/ABCDEFG123")),
+    {
+      host: "amazon.fr",
+      sitename: "amazon",
+      tld: "fr",
+      id: "ABCDEFG123",
+      valid: true,
+    },
+    "Valid French Product Url returns a full result object"
+  );
+
+  Assert.deepEqual(
+    ShoppingProduct.fromURL(new URL("https://amazon.de/product/dp/ABCDEFG123")),
+    {
+      host: "amazon.de",
+      sitename: "amazon",
+      tld: "de",
+      id: "ABCDEFG123",
+      valid: true,
+    },
+    "Valid German Product Url returns a full result object"
+  );
 });
 
 add_task(function test_product_isProduct() {
