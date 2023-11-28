@@ -5,17 +5,171 @@
 
 #include "nsBaseClipboard.h"
 
+#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
+#include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/Services.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_widget.h"
+#include "nsContentUtils.h"
 #include "nsIClipboardOwner.h"
+#include "nsIPromptService.h"
 #include "nsError.h"
 #include "nsXPCOM.h"
 
 using mozilla::GenericPromise;
 using mozilla::LogLevel;
 using mozilla::UniquePtr;
+using mozilla::dom::BrowsingContext;
+using mozilla::dom::CanonicalBrowsingContext;
 using mozilla::dom::ClipboardCapabilities;
+using mozilla::dom::Document;
 
 static const int32_t kGetAvailableFlavorsRetryCount = 5;
+
+namespace {
+
+struct ClipboardGetRequest {
+  ClipboardGetRequest(const nsTArray<nsCString>& aFlavorList,
+                      nsIAsyncClipboardGetCallback* aCallback)
+      : mFlavorList(aFlavorList.Clone()), mCallback(aCallback) {}
+
+  const nsTArray<nsCString> mFlavorList;
+  const nsCOMPtr<nsIAsyncClipboardGetCallback> mCallback;
+};
+
+class UserConfirmationRequest final
+    : public mozilla::dom::PromiseNativeHandler {
+ public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(UserConfirmationRequest)
+
+  UserConfirmationRequest(int32_t aClipboardType,
+                          Document* aRequestingChromeDocument,
+                          nsBaseClipboard* aClipboard)
+      : mClipboardType(aClipboardType),
+        mRequestingChromeDocument(aRequestingChromeDocument),
+        mClipboard(aClipboard) {
+    MOZ_ASSERT(
+        mClipboard->nsIClipboard::IsClipboardTypeSupported(aClipboardType));
+  }
+
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        mozilla::ErrorResult& aRv) override;
+
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        mozilla::ErrorResult& aRv) override;
+
+  bool IsEqual(int32_t aClipboardType,
+               Document* aRequestingChromeDocument) const {
+    return ClipboardType() == aClipboardType &&
+           RequestingChromeDocument() == aRequestingChromeDocument;
+  }
+
+  int32_t ClipboardType() const { return mClipboardType; }
+
+  Document* RequestingChromeDocument() const {
+    return mRequestingChromeDocument;
+  }
+
+  void AddClipboardGetRequest(const nsTArray<nsCString>& aFlavorList,
+                              nsIAsyncClipboardGetCallback* aCallback) {
+    MOZ_ASSERT(!aFlavorList.IsEmpty());
+    MOZ_ASSERT(aCallback);
+    mPendingClipboardGetRequests.AppendElement(
+        mozilla::MakeUnique<ClipboardGetRequest>(aFlavorList, aCallback));
+  }
+
+  void RejectPendingClipboardGetRequests(nsresult aError) {
+    MOZ_ASSERT(NS_FAILED(aError));
+    auto requests = std::move(mPendingClipboardGetRequests);
+    for (const auto& request : requests) {
+      MOZ_ASSERT(request);
+      MOZ_ASSERT(request->mCallback);
+      request->mCallback->OnError(aError);
+    }
+  }
+
+  void ProcessPendingClipboardGetRequests() {
+    auto requests = std::move(mPendingClipboardGetRequests);
+    for (const auto& request : requests) {
+      MOZ_ASSERT(request);
+      MOZ_ASSERT(!request->mFlavorList.IsEmpty());
+      MOZ_ASSERT(request->mCallback);
+      mClipboard->AsyncGetDataInternal(request->mFlavorList, mClipboardType,
+                                       request->mCallback);
+    }
+  }
+
+  nsTArray<UniquePtr<ClipboardGetRequest>>& GetPendingClipboardGetRequests() {
+    return mPendingClipboardGetRequests;
+  }
+
+ private:
+  ~UserConfirmationRequest() = default;
+
+  const int32_t mClipboardType;
+  RefPtr<Document> mRequestingChromeDocument;
+  const RefPtr<nsBaseClipboard> mClipboard;
+  // Track the pending read requests that wait for user confirmation.
+  nsTArray<UniquePtr<ClipboardGetRequest>> mPendingClipboardGetRequests;
+};
+
+NS_IMPL_CYCLE_COLLECTION(UserConfirmationRequest, mRequestingChromeDocument)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(UserConfirmationRequest)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(UserConfirmationRequest)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(UserConfirmationRequest)
+
+static mozilla::StaticRefPtr<UserConfirmationRequest> sUserConfirmationRequest;
+
+void UserConfirmationRequest::ResolvedCallback(JSContext* aCx,
+                                               JS::Handle<JS::Value> aValue,
+                                               mozilla::ErrorResult& aRv) {
+  MOZ_DIAGNOSTIC_ASSERT(sUserConfirmationRequest == this);
+  sUserConfirmationRequest = nullptr;
+
+  JS::Rooted<JSObject*> detailObj(aCx, &aValue.toObject());
+  nsCOMPtr<nsIPropertyBag2> propBag;
+  nsresult rv = mozilla::dom::UnwrapArg<nsIPropertyBag2>(
+      aCx, detailObj, getter_AddRefs(propBag));
+  if (NS_FAILED(rv)) {
+    RejectPendingClipboardGetRequests(rv);
+    return;
+  }
+
+  bool result = false;
+  rv = propBag->GetPropertyAsBool(u"ok"_ns, &result);
+  if (NS_FAILED(rv)) {
+    RejectPendingClipboardGetRequests(rv);
+    return;
+  }
+
+  if (!result) {
+    RejectPendingClipboardGetRequests(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+    return;
+  }
+
+  ProcessPendingClipboardGetRequests();
+}
+
+void UserConfirmationRequest::RejectedCallback(JSContext* aCx,
+                                               JS::Handle<JS::Value> aValue,
+                                               mozilla::ErrorResult& aRv) {
+  MOZ_DIAGNOSTIC_ASSERT(sUserConfirmationRequest == this);
+  sUserConfirmationRequest = nullptr;
+  RejectPendingClipboardGetRequests(NS_ERROR_FAILURE);
+}
+
+}  // namespace
 
 NS_IMPL_ISUPPORTS(nsBaseClipboard::AsyncSetClipboardData,
                   nsIAsyncSetClipboardData)
@@ -322,10 +476,12 @@ void nsBaseClipboard::MaybeRetryGetAvailableFlavors(
 
 NS_IMETHODIMP nsBaseClipboard::AsyncGetData(
     const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
+    mozilla::dom::WindowContext* aRequestingWindowContext,
+    nsIPrincipal* aRequestingPrincipal,
     nsIAsyncClipboardGetCallback* aCallback) {
   MOZ_CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
 
-  if (!aCallback || aFlavorList.IsEmpty()) {
+  if (!aCallback || !aRequestingPrincipal || aFlavorList.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -335,11 +491,37 @@ NS_IMETHODIMP nsBaseClipboard::AsyncGetData(
     return NS_ERROR_FAILURE;
   }
 
+  // We want to disable security check for automated tests that have the pref
+  // set to true, or extension that have clipboard read permission.
+  if (mozilla::StaticPrefs::
+          dom_events_testing_asyncClipboard_DoNotUseDirectly() ||
+      nsContentUtils::PrincipalHasPermission(*aRequestingPrincipal,
+                                             nsGkAtoms::clipboardRead)) {
+    AsyncGetDataInternal(aFlavorList, aWhichClipboard, aCallback);
+    return NS_OK;
+  }
+
+  // TODO: enable showing the "Paste" button in this case; see bug 1773681.
+  if (aRequestingPrincipal->GetIsAddonOrExpandedAddonPrincipal()) {
+    MOZ_CLIPBOARD_LOG("%s: Addon without read permission.", __FUNCTION__);
+    return aCallback->OnError(NS_ERROR_FAILURE);
+  }
+
+  RequestUserConfirmation(aWhichClipboard, aFlavorList,
+                          aRequestingWindowContext, aCallback);
+  return NS_OK;
+}
+
+void nsBaseClipboard::AsyncGetDataInternal(
+    const nsTArray<nsCString>& aFlavorList, int32_t aClipboardType,
+    nsIAsyncClipboardGetCallback* aCallback) {
+  MOZ_ASSERT(nsIClipboard::IsClipboardTypeSupported(aClipboardType));
+
   if (mozilla::StaticPrefs::widget_clipboard_use_cached_data_enabled()) {
     // If we were the last ones to put something on the native clipboard, then
     // just use the cached transferable. Otherwise clear it because it isn't
     // relevant any more.
-    if (auto* clipboardCache = GetClipboardCacheIfValid(aWhichClipboard)) {
+    if (auto* clipboardCache = GetClipboardCacheIfValid(aClipboardType)) {
       nsITransferable* cachedTransferable = clipboardCache->GetTransferable();
       MOZ_ASSERT(cachedTransferable);
 
@@ -363,10 +545,10 @@ NS_IMETHODIMP nsBaseClipboard::AsyncGetData(
         // XXX Do we need to check system clipboard for the flavors that cannot
         // be found in cache?
         auto asyncGetClipboardData = mozilla::MakeRefPtr<AsyncGetClipboardData>(
-            aWhichClipboard, clipboardCache->GetSequenceNumber(),
+            aClipboardType, clipboardCache->GetSequenceNumber(),
             std::move(results), true, this);
         aCallback->OnSuccess(asyncGetClipboardData);
-        return NS_OK;
+        return;
       }
     }
 
@@ -374,9 +556,8 @@ NS_IMETHODIMP nsBaseClipboard::AsyncGetData(
     // for things other people put on the system clipboard.
   }
 
-  MaybeRetryGetAvailableFlavors(aFlavorList, aWhichClipboard, aCallback,
+  MaybeRetryGetAvailableFlavors(aFlavorList, aClipboardType, aCallback,
                                 kGetAvailableFlavorsRetryCount);
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(int32_t aWhichClipboard) {
@@ -537,6 +718,65 @@ void nsBaseClipboard::ClearClipboardCache(int32_t aClipboardType) {
   const mozilla::UniquePtr<ClipboardCache>& cache = mCaches[aClipboardType];
   MOZ_ASSERT(cache);
   cache->Clear();
+}
+
+void nsBaseClipboard::RequestUserConfirmation(
+    int32_t aClipboardType, const nsTArray<nsCString>& aFlavorList,
+    mozilla::dom::WindowContext* aWindowContext,
+    nsIAsyncClipboardGetCallback* aCallback) {
+  MOZ_ASSERT(nsIClipboard::IsClipboardTypeSupported(aClipboardType));
+  MOZ_ASSERT(aCallback);
+
+  if (!aWindowContext) {
+    aCallback->OnError(NS_ERROR_FAILURE);
+    return;
+  }
+
+  CanonicalBrowsingContext* cbc =
+      CanonicalBrowsingContext::Cast(aWindowContext->GetBrowsingContext());
+  if (!cbc) {
+    aCallback->OnError(NS_ERROR_FAILURE);
+    return;
+  }
+
+  RefPtr<CanonicalBrowsingContext> chromeTop = cbc->TopCrossChromeBoundary();
+  Document* chromeDoc = chromeTop ? chromeTop->GetDocument() : nullptr;
+  if (!chromeDoc) {
+    aCallback->OnError(NS_ERROR_FAILURE);
+    return;
+  }
+
+  // If there is a pending user confirmation request, check if we could reuse
+  // it. If not, reject the request.
+  if (sUserConfirmationRequest) {
+    if (sUserConfirmationRequest->IsEqual(aClipboardType, chromeDoc)) {
+      sUserConfirmationRequest->AddClipboardGetRequest(aFlavorList, aCallback);
+      return;
+    }
+
+    aCallback->OnError(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+    return;
+  }
+
+  nsresult rv = NS_ERROR_FAILURE;
+  nsCOMPtr<nsIPromptService> promptService =
+      do_GetService("@mozilla.org/prompter;1", &rv);
+  if (NS_FAILED(rv)) {
+    aCallback->OnError(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+    return;
+  }
+
+  RefPtr<mozilla::dom::Promise> promise;
+  if (NS_FAILED(promptService->ConfirmUserPaste(aWindowContext->Canonical(),
+                                                getter_AddRefs(promise)))) {
+    aCallback->OnError(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+    return;
+  }
+
+  sUserConfirmationRequest =
+      new UserConfirmationRequest(aClipboardType, chromeDoc, this);
+  sUserConfirmationRequest->AddClipboardGetRequest(aFlavorList, aCallback);
+  promise->AppendNativeHandler(sUserConfirmationRequest);
 }
 
 NS_IMPL_ISUPPORTS(nsBaseClipboard::AsyncGetClipboardData,

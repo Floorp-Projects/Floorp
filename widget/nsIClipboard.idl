@@ -11,6 +11,8 @@
 
 interface nsIArray;
 
+webidl WindowContext;
+
 [scriptable, builtinclass, uuid(801e2318-c8fa-11ed-afa1-0242ac120002)]
 interface nsIAsyncSetClipboardData : nsISupports {
   /**
@@ -166,6 +168,8 @@ interface nsIClipboard : nsISupports
      */
     void asyncGetData(in Array<ACString> aFlavorList,
                       in long aWhichClipboard,
+                      in WindowContext aRequestingWindowContext,
+                      in nsIPrincipal aRequestingPrincipal,
                       in nsIAsyncClipboardGetCallback aCallback);
 
    /**

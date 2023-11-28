@@ -41,9 +41,6 @@ class Clipboard : public DOMEventTargetHelper {
                                       nsIPrincipal& aSubjectPrincipal,
                                       ErrorResult& aRv);
 
-  // See documentation of the corresponding .webidl file.
-  void OnUserReactedToPasteMenuPopup(bool aAllowed);
-
   static LogModule* GetClipboardLog();
 
   // Check if the Clipboard.readText API should be enabled for this context.
@@ -71,62 +68,13 @@ class Clipboard : public DOMEventTargetHelper {
   static bool IsTestingPrefEnabledOrHasReadPermission(
       nsIPrincipal& aSubjectPrincipal);
 
-  void CheckReadPermissionAndHandleRequest(Promise& aPromise,
-                                           nsIPrincipal& aSubjectPrincipal,
-                                           ReadRequestType aType);
-
-  void HandleReadRequestWhichRequiresPasteButton(Promise& aPromise,
-                                                 ReadRequestType aType);
-
   already_AddRefed<Promise> ReadHelper(nsIPrincipal& aSubjectPrincipal,
                                        ReadRequestType aType, ErrorResult& aRv);
 
   ~Clipboard();
 
-  class ReadRequest final {
-   public:
-    ReadRequest(Promise& aPromise, ReadRequestType aType,
-                nsPIDOMWindowInner& aOwner)
-        : mType(aType), mPromise(&aPromise), mOwner(&aOwner) {}
-
-    // Clears the request too.
-    void Answer();
-
-    void MaybeRejectWithNotAllowedError(const nsACString& aMessage);
-
-   private:
-    ReadRequestType mType;
-    // Not cycle-collected, because it's nulled when the request is answered or
-    // destructed.
-    RefPtr<Promise> mPromise;
-    RefPtr<nsPIDOMWindowInner> mOwner;
-  };
-
-  AutoTArray<UniquePtr<ReadRequest>, 1> mReadRequests;
-
-  class TransientUserPasteState final {
-   public:
-    enum class Value {
-      Initial,
-      WaitingForUserReactionToPasteMenuPopup,
-      TransientlyForbiddenByUser,
-      TransientlyAllowedByUser,
-    };
-
-    // @param aWindowContext requires valid transient user gesture activation.
-    Value RefreshAndGet(WindowContext& aWindowContext);
-
-    void OnStartWaitingForUserReactionToPasteMenuPopup(
-        const TimeStamp& aUserGestureStart);
-    void OnUserReactedToPasteMenuPopup(bool aAllowed);
-
-   private:
-    TimeStamp mUserGestureStart;
-
-    Value mValue = Value::Initial;
-  };
-
-  TransientUserPasteState mTransientUserPasteState;
+  void RequestRead(Promise* aPromise, ReadRequestType aType,
+                   nsPIDOMWindowInner* aOwner, nsIPrincipal& aPrincipal);
 };
 
 }  // namespace mozilla::dom

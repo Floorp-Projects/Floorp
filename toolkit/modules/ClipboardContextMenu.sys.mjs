@@ -2,26 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const kMenuPopupId = "clipboardReadPasteMenuPopup";
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  PromptUtils: "resource://gre/modules/PromptUtils.sys.mjs",
+});
 
-// Exchanges messages with the child actor and handles events from the
-// pasteMenuHandler.
-export class ClipboardReadPasteParent extends JSWindowActorParent {
-  constructor() {
-    super();
-
-    this._menupopup = null;
-    this._menuitem = null;
-    this._delayTimer = null;
-    this._pasteMenuItemClicked = false;
-    this._lastBeepTime = 0;
-  }
-
-  didDestroy() {
-    if (this._menupopup) {
-      this._menupopup.hidePopup(true);
-    }
-  }
+export var ClipboardContextMenu = {
+  MENU_POPUP_ID: "clipboardReadPasteMenuPopup",
 
   // EventListener interface.
   handleEvent(aEvent) {
@@ -39,12 +26,15 @@ export class ClipboardReadPasteParent extends JSWindowActorParent {
         break;
       }
     }
-  }
+  },
+
+  _pasteMenuItemClicked: false,
 
   onCommand() {
+    // onPopupHiding is responsible for returning result by calling onComplete
+    // function.
     this._pasteMenuItemClicked = true;
-    this.sendAsyncMessage("ClipboardReadPaste:PasteMenuItemClicked");
-  }
+  },
 
   onPopupHiding() {
     // Remove the listeners before potentially sending the async message
@@ -53,14 +43,21 @@ export class ClipboardReadPasteParent extends JSWindowActorParent {
     this._clearDelayTimer();
     this._stopWatchingForSpammyActivation();
 
-    if (this._pasteMenuItemClicked) {
-      // A message was already sent. Reset the state to handle further
-      // click/dismiss events properly.
-      this._pasteMenuItemClicked = false;
-    } else {
-      this.sendAsyncMessage("ClipboardReadPaste:PasteMenuItemDismissed");
-    }
-  }
+    this._menupopup = null;
+    this._menuitem = null;
+
+    let propBag = lazy.PromptUtils.objectToPropBag({
+      ok: this._pasteMenuItemClicked,
+    });
+    this._pendingRequest.resolve(propBag);
+
+    // A result has already been responded to. Reset the state to properly
+    // handle further click or dismiss events.
+    this._pasteMenuItemClicked = false;
+    this._pendingRequest = null;
+  },
+
+  _lastBeepTime: 0,
 
   onKeyDown(aEvent) {
     if (!this._menuitem.disabled) {
@@ -78,25 +75,50 @@ export class ClipboardReadPasteParent extends JSWindowActorParent {
       }
       this._refreshDelayTimer();
     }
-  }
+  },
 
-  // For JSWindowActorParent.
-  receiveMessage(value) {
-    if (value.name == "ClipboardReadPaste:ShowMenupopup") {
-      if (!this._menupopup) {
-        this._menupopup = this._getMenupopup();
-        this._menuitem = this._menupopup.firstElementChild;
+  _menupopup: null,
+  _menuitem: null,
+  _pendingRequest: null,
+
+  confirmUserPaste(aWindowContext) {
+    return new Promise((resolve, reject) => {
+      if (!aWindowContext) {
+        reject(
+          Components.Exception("Null window context.", Cr.NS_ERROR_INVALID_ARG)
+        );
+        return;
       }
 
-      this._addMenupopupEventListeners();
+      let { document } = aWindowContext.browsingContext.topChromeWindow;
+      if (!document) {
+        reject(
+          Components.Exception(
+            "Unable to get chrome document.",
+            Cr.NS_ERROR_FAILURE
+          )
+        );
+        return;
+      }
 
-      const browser = this.browsingContext.top.embedderElement;
-      const window = browser.ownerGlobal;
-      const windowUtils = window.windowUtils;
+      if (this._pendingRequest) {
+        reject(
+          Components.Exception(
+            "There is an ongoing request.",
+            Cr.NS_ERROR_FAILURE
+          )
+        );
+        return;
+      }
+
+      this._pendingRequest = { resolve, reject };
+      this._menupopup = this._getMenupopup(document);
+      this._menuitem = this._menupopup.firstElementChild;
+      this._addMenupopupEventListeners();
 
       let mouseXInCSSPixels = {};
       let mouseYInCSSPixels = {};
-      windowUtils.getLastOverWindowPointerLocationInCSSPixels(
+      document.ownerGlobal.windowUtils.getLastOverWindowPointerLocationInCSSPixels(
         mouseXInCSSPixels,
         mouseYInCSSPixels
       );
@@ -121,19 +143,19 @@ export class ClipboardReadPasteParent extends JSWindowActorParent {
         true /* isContextMenu */
       );
 
-      this._refreshDelayTimer();
-    }
-  }
+      this._refreshDelayTimer(document);
+    });
+  },
 
   _addMenupopupEventListeners() {
     this._menupopup.addEventListener("command", this);
     this._menupopup.addEventListener("popuphiding", this);
-  }
+  },
 
   _removeMenupopupEventListeners() {
     this._menupopup.removeEventListener("command", this);
     this._menupopup.removeEventListener("popuphiding", this);
-  }
+  },
 
   _createMenupopup(aChromeDoc) {
     let menuitem = aChromeDoc.createXULElement("menuitem");
@@ -141,36 +163,34 @@ export class ClipboardReadPasteParent extends JSWindowActorParent {
     aChromeDoc.l10n.setAttributes(menuitem, "text-action-paste");
 
     let menupopup = aChromeDoc.createXULElement("menupopup");
-    menupopup.id = kMenuPopupId;
+    menupopup.id = this.MENU_POPUP_ID;
     menupopup.appendChild(menuitem);
     return menupopup;
-  }
+  },
 
-  _getMenupopup() {
-    let browser = this.browsingContext.top.embedderElement;
-    let window = browser.ownerGlobal;
-    let chromeDoc = window.document;
-
-    let menupopup = chromeDoc.getElementById(kMenuPopupId);
+  _getMenupopup(aChromeDoc) {
+    let menupopup = aChromeDoc.getElementById(this.MENU_POPUP_ID);
     if (menupopup == null) {
-      menupopup = this._createMenupopup(chromeDoc);
+      menupopup = this._createMenupopup(aChromeDoc);
       const parent =
-        chromeDoc.querySelector("popupset") || chromeDoc.documentElement;
+        aChromeDoc.querySelector("popupset") || aChromeDoc.documentElement;
       parent.appendChild(menupopup);
     }
 
     return menupopup;
-  }
+  },
 
   _startWatchingForSpammyActivation() {
     let doc = this._menuitem.ownerDocument;
     Services.els.addSystemEventListener(doc, "keydown", this, true);
-  }
+  },
 
   _stopWatchingForSpammyActivation() {
     let doc = this._menuitem.ownerDocument;
     Services.els.removeSystemEventListener(doc, "keydown", this, true);
-  }
+  },
+
+  _delayTimer: null,
 
   _clearDelayTimer() {
     if (this._delayTimer) {
@@ -178,7 +198,7 @@ export class ClipboardReadPasteParent extends JSWindowActorParent {
       window.clearTimeout(this._delayTimer);
       this._delayTimer = null;
     }
-  }
+  },
 
   _refreshDelayTimer() {
     this._clearDelayTimer();
@@ -190,5 +210,5 @@ export class ClipboardReadPasteParent extends JSWindowActorParent {
       this._stopWatchingForSpammyActivation();
       this._delayTimer = null;
     }, delay);
-  }
-}
+  },
+};

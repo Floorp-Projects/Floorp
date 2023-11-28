@@ -70,7 +70,7 @@ add_task(async function test_background_async_clipboard_no_permissions() {
     });
     browser.test.assertRejects(
       clipboardRead(),
-      (err) => err === undefined,
+      "Clipboard read request was blocked due to lack of user activation.",
       "Read should be denied without permission"
     );
     browser.test.assertRejects(
@@ -85,7 +85,7 @@ add_task(async function test_background_async_clipboard_no_permissions() {
     );
     browser.test.assertRejects(
       clipboardReadText(),
-      (err) => err === undefined,
+      "Clipboard read request was blocked due to lack of user activation.",
       "ReadText should be denied without permission"
     );
     browser.test.sendMessage("ready");
@@ -107,7 +107,7 @@ add_task(async function test_contentscript_async_clipboard_no_permission() {
     });
     browser.test.assertRejects(
       clipboardRead(),
-      (err) => err === undefined,
+      "Clipboard read request was blocked due to lack of user activation.",
       "Read should be denied without permission"
     );
     browser.test.assertRejects(
@@ -122,7 +122,7 @@ add_task(async function test_contentscript_async_clipboard_no_permission() {
     );
     browser.test.assertRejects(
       clipboardReadText(),
-      (err) => err === undefined,
+      "Clipboard read request was blocked due to lack of user activation.",
       "ReadText should be denied without permission"
     );
     browser.test.sendMessage("ready");

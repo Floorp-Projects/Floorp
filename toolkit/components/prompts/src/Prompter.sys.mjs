@@ -7,6 +7,11 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 // This is redefined below, for strange and unfortunate reasons.
 import { PromptUtils } from "resource://gre/modules/PromptUtils.sys.mjs";
 
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  ClipboardContextMenu: "resource://gre/modules/ClipboardContextMenu.sys.mjs",
+});
+
 const {
   MODAL_TYPE_TAB,
   MODAL_TYPE_CONTENT,
@@ -651,6 +656,19 @@ Prompter.prototype = {
   asyncPromptAuth(browsingContext, modalType, ...promptArgs) {
     let p = this.pickPrompter({ browsingContext, modalType, async: true });
     return p.promptAuth(...promptArgs);
+  },
+
+  /**
+   * Displays a contextmenu to get user confirmation for clipboard read. Only
+   * one context menu can be opened at a time.
+   *
+   * @param {WindowContext} windowContext - The window context that initiates
+   *        the clipboard operation.
+   * @returns {Promise<nsIPropertyBag<{ ok: Boolean }>>}
+   *          A promise which resolves when the contextmenu is dismissed.
+   */
+  confirmUserPaste() {
+    return lazy.ClipboardContextMenu.confirmUserPaste(...arguments);
   },
 };
 
