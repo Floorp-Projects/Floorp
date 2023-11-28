@@ -1,6 +1,6 @@
 import React from "react";
 import { mount } from "enzyme";
-import { LinkParagraph } from "../../../content-src/aboutwelcome/components/LinkParagraph";
+import { LinkParagraph } from "content-src/components/LinkParagraph";
 
 describe("LinkParagraph component", () => {
   let sandbox;

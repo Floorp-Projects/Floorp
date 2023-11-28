@@ -1,6 +1,6 @@
 import React from "react";
 import { shallow } from "enzyme";
-import { CTAParagraph } from "content-src/aboutwelcome/components/CTAParagraph";
+import { CTAParagraph } from "content-src/components/CTAParagraph";
 
 describe("CTAParagraph component", () => {
   let sandbox;

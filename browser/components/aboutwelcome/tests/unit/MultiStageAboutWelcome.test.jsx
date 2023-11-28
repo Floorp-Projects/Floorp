@@ -1,15 +1,15 @@
-import { GlobalOverrider } from "test/unit/utils";
+import { GlobalOverrider } from "newtab/test/unit/utils";
 import {
   MultiStageAboutWelcome,
   SecondaryCTA,
   StepsIndicator,
   ProgressBar,
   WelcomeScreen,
-} from "content-src/aboutwelcome/components/MultiStageAboutWelcome";
-import { Themes } from "content-src/aboutwelcome/components/Themes";
+} from "content-src/components/MultiStageAboutWelcome";
+import { Themes } from "content-src/components/Themes";
 import React from "react";
 import { shallow, mount } from "enzyme";
-import { AboutWelcomeDefaults } from "aboutwelcome/lib/AboutWelcomeDefaults.jsm";
+import { AboutWelcomeDefaults } from "modules/AboutWelcomeDefaults.jsm";
 import { AboutWelcomeUtils } from "content-src/lib/aboutwelcome-utils";
 
 describe("MultiStageAboutWelcome module", () => {

@@ -8,7 +8,7 @@ const { AboutWelcomeTelemetry } = ChromeUtils.import(
   "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm"
 );
 const { AWScreenUtils } = ChromeUtils.import(
-  "resource://activity-stream/lib/AWScreenUtils.jsm"
+  "resource://activity-stream/aboutwelcome/lib/AWScreenUtils.jsm"
 );
 const { InternalTestingProfileMigrator } = ChromeUtils.importESModule(
   "resource:///modules/InternalTestingProfileMigrator.sys.mjs"

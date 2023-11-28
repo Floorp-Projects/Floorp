@@ -1,6 +1,6 @@
 import React from "react";
 import { mount } from "enzyme";
-import { MultiSelect } from "content-src/aboutwelcome/components/MultiSelect";
+import { MultiSelect } from "content-src/components/MultiSelect";
 
 describe("Multistage AboutWelcome module", () => {
   let sandbox;

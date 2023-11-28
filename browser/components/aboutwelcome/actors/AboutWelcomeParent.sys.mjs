@@ -22,7 +22,8 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
     "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm",
   AboutWelcomeDefaults:
     "resource://activity-stream/aboutwelcome/lib/AboutWelcomeDefaults.jsm",
-  AWScreenUtils: "resource://activity-stream/lib/AWScreenUtils.jsm",
+  AWScreenUtils:
+    "resource://activity-stream/aboutwelcome/lib/AWScreenUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {

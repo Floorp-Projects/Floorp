@@ -1,5 +1,5 @@
-import { HelpText } from "content-src/aboutwelcome/components/HelpText";
-import { Localized } from "content-src/aboutwelcome/components/MSLocalized";
+import { HelpText } from "content-src/components/HelpText";
+import { Localized } from "content-src/components/MSLocalized";
 import React from "react";
 import { shallow } from "enzyme";
 
