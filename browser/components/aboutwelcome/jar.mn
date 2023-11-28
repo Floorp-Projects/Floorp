@@ -6,3 +6,4 @@ browser.jar:
   res/activity-stream/aboutwelcome/lib/ (./modules/*)
   content/activity-stream/aboutwelcome/aboutwelcome.css (./content/aboutwelcome.css)
   res/activity-stream/aboutwelcome/aboutwelcome.html (./content/aboutwelcome.html)
+  res/activity-stream/aboutwelcome/aboutwelcome.bundle.js (./content/aboutwelcome.bundle.js)

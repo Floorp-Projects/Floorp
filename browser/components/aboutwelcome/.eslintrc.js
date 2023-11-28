@@ -19,7 +19,7 @@ module.exports = {
   overrides: [
     {
       // Only mark the files as modules which are actually modules.
-      files: ["content-src/**", "test/schemas/**", "test/unit/**"],
+      files: ["content-src/**"],
       parserOptions: {
         sourceType: "module",
       },
@@ -27,14 +27,12 @@ module.exports = {
     {
       // These files use fluent-dom to insert content
       files: [
-        "content-src/asrouter/templates/OnboardingMessage/**",
-        "content-src/asrouter/templates/FirstRun/**",
-        "content-src/components/TopSites/**",
-        "content-src/components/MoreRecommendations/MoreRecommendations.jsx",
-        "content-src/components/CollapsibleSection/CollapsibleSection.jsx",
-        "content-src/components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState.jsx",
-        "content-src/components/DiscoveryStreamComponents/DSPrivacyModal/DSPrivacyModal.jsx",
-        "content-src/components/CustomizeMenu/**",
+        "content-src/components/Zap.jsx",
+        "content-src/components/MultiStageAboutWelcome.jsx",
+        "content-src/components/MultiStageScreen.jsx",
+        "content-src/components/MultiStageProtonScreen.jsx",
+        "content-src/components/MultiSelect.jsx",
+        "content-src/components/ReturnToAMO.jsx",
       ],
       rules: {
         "jsx-a11y/anchor-has-content": "off",
@@ -44,14 +42,7 @@ module.exports = {
       },
     },
     {
-      files: [
-        "bin/**",
-        "content-src/**",
-        "./*.js",
-        "loaders/**",
-        "tools/**",
-        "test/unit/**",
-      ],
+      files: ["./*.js", "content-src/**"],
       env: {
         node: true,
       },
@@ -59,13 +50,13 @@ module.exports = {
     {
       // Use a configuration that's appropriate for modules, workers and
       // non-production files.
-      files: ["*.jsm", "lib/cache.worker.js", "test/**"],
+      files: ["tests/**"],
       rules: {
         "no-implicit-globals": "off",
       },
     },
     {
-      files: ["content-src/**", "test/unit/**"],
+      files: ["content-src/**"],
       rules: {
         // Disallow commonjs in these directories.
         "import/no-commonjs": 2,
@@ -74,20 +65,7 @@ module.exports = {
       },
     },
     {
-      // These tests simulate the browser environment.
-      files: "test/unit/**",
-      env: {
-        browser: true,
-        mocha: true,
-      },
-      globals: {
-        assert: true,
-        chai: true,
-        sinon: true,
-      },
-    },
-    {
-      files: "test/**",
+      files: "tests/**",
       rules: {
         "func-name-matching": 0,
         "lines-between-class-members": 0,
