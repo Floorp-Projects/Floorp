@@ -59,6 +59,12 @@ CHROMIUM_INFO = {
         "result": "chromium-mac.tar.bz2",
         "chromedriver": "chromedriver_mac64.zip",
     },
+    "mac-arm": {
+        "platform": "Mac_Arm",
+        "chromium": "chrome-mac.zip",
+        "result": "chromium-mac-arm.tar.bz2",
+        "chromedriver": "chromedriver_mac64.zip",
+    },
 }
 
 

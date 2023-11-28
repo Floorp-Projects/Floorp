@@ -30,3 +30,9 @@ mac-chromium:
     fetch:
         platform: mac
         artifact-name: chromium-mac.tar.bz2
+
+mac-chromium-arm:
+    description: 'MacOSX ARM Chromium Fetch'
+    fetch:
+        platform: mac-arm
+        artifact-name: chromium-mac-arm.tar.bz2
