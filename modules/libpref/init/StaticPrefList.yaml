@@ -2414,7 +2414,7 @@
 # Whether the LargestContentfulPaint API will be gathered and returned by performance observer*
 - name: dom.enable_largest_contentful_paint
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether performance.GetEntries* will contain an entry for the active document
