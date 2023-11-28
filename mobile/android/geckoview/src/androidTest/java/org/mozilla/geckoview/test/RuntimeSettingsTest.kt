@@ -250,4 +250,120 @@ class RuntimeSettingsTest : BaseSessionTest() {
         mainSession.loadUri("about:config")
         mainSession.waitForPageStop()
     }
+
+    @Test
+    fun globalPrivacyControlEnabling() {
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        val geckoRuntimeSettings = sessionRule.runtime.settings
+
+        geckoRuntimeSettings.setGlobalPrivacyControl(true)
+
+        val gpcValue = mainSession.evaluateJS(
+            "window.navigator.globalPrivacyControl",
+        )
+
+        assertThat(
+            "Global Privacy Control should now be enabled",
+            gpcValue,
+            equalTo(true),
+        )
+
+        assertThat(
+            "Global Privacy Control runtime settings should now be enabled in normal tabs",
+            geckoRuntimeSettings.globalPrivacyControl,
+            equalTo(true),
+        )
+
+        assertThat(
+            "Global Privacy Control runtime settings should still be enabled in private tabs",
+            geckoRuntimeSettings.globalPrivacyControlPrivateMode,
+            equalTo(true),
+        )
+
+        val globalPrivacyControl =
+            (sessionRule.getPrefs("privacy.globalprivacycontrol.enabled").get(0)) as Boolean
+        val globalPrivacyControlPrivateMode =
+            (sessionRule.getPrefs("privacy.globalprivacycontrol.pbmode.enabled").get(0)) as Boolean
+        val globalPrivacyControlFunctionality = (
+            sessionRule.getPrefs("privacy.globalprivacycontrol.functionality.enabled").get(0)
+            ) as Boolean
+
+        assertThat(
+            "Global Privacy Control should be enabled in normal tabs",
+            globalPrivacyControl,
+            equalTo(true),
+        )
+
+        assertThat(
+            "Global Privacy Control should still be in private tabs",
+            globalPrivacyControlPrivateMode,
+            equalTo(true),
+        )
+
+        assertThat(
+            "Global Privacy Control Functionality flag should be enabled",
+            globalPrivacyControlFunctionality,
+            equalTo(true),
+        )
+    }
+
+    @Test
+    fun globalPrivacyControlDisabling() {
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        val geckoRuntimeSettings = sessionRule.runtime.settings
+
+        geckoRuntimeSettings.setGlobalPrivacyControl(false)
+
+        val gpcValue = mainSession.evaluateJS(
+            "window.navigator.globalPrivacyControl",
+        )
+
+        assertThat(
+            "Global Privacy Control should now be disabled in normal mode",
+            gpcValue,
+            equalTo(false),
+        )
+
+        assertThat(
+            "Global Privacy Control runtime settings should now be enabled in normal tabs",
+            geckoRuntimeSettings.globalPrivacyControl,
+            equalTo(false),
+        )
+
+        assertThat(
+            "Global Privacy Control runtime settings should still be enabled in private tabs",
+            geckoRuntimeSettings.globalPrivacyControlPrivateMode,
+            equalTo(true),
+        )
+
+        val globalPrivacyControl =
+            (sessionRule.getPrefs("privacy.globalprivacycontrol.enabled").get(0)) as Boolean
+        val globalPrivacyControlPrivateMode =
+            (sessionRule.getPrefs("privacy.globalprivacycontrol.pbmode.enabled").get(0)) as Boolean
+        val globalPrivacyControlFunctionality = (
+            sessionRule.getPrefs("privacy.globalprivacycontrol.functionality.enabled").get(0)
+            ) as Boolean
+
+        assertThat(
+            "Global Privacy Control should be enabled in normal tabs",
+            globalPrivacyControl,
+            equalTo(false),
+        )
+
+        assertThat(
+            "Global Privacy Control should still be enabled in private tabs",
+            globalPrivacyControlPrivateMode,
+            equalTo(true),
+        )
+
+        assertThat(
+            "Global Privacy Control Functionality flag should still be enabled",
+            globalPrivacyControlFunctionality,
+            equalTo(true),
+        )
+    }
 }
