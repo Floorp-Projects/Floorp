@@ -46,8 +46,6 @@ EXTRA_JS_MODULES += [
 ]
 
 FINAL_TARGET_FILES.actors += [
-    "aboutwelcome/AboutWelcomeChild.sys.mjs",
-    "aboutwelcome/AboutWelcomeParent.sys.mjs",
     "actors/ASRouterChild.sys.mjs",
     "actors/ASRouterParent.sys.mjs",
 ]

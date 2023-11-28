@@ -10,3 +10,8 @@ with Files("**"):
 BROWSER_CHROME_MANIFESTS += [
     "tests/browser/browser.toml",
 ]
+
+FINAL_TARGET_FILES.actors += [
+    "actors/AboutWelcomeChild.sys.mjs",
+    "actors/AboutWelcomeParent.sys.mjs",
+]
