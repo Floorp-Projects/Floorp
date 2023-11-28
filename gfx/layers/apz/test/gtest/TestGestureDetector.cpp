@@ -232,7 +232,7 @@ TEST_F(APZCGestureDetectorTester, Pan_With_Tap) {
 TEST_F(APZCGestureDetectorTester, SecondTapIsFar_Bug1586496) {
   // Test that we receive two single-tap events when two tap gestures are
   // close in time but far in distance.
-  EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, _, 0, apzc->GetGuid(), _, _))
+  EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, _, 0, apzc->GetGuid(), _))
       .Times(2);
 
   TimeDuration brief =
@@ -281,8 +281,7 @@ class APZCFlingStopTester : public APZCGestureDetectorTester {
 
     // Deliver a tap to abort the fling. Ensure that we get a SingleTap
     // call out of it if and only if the fling is slow.
-    EXPECT_CALL(*mcc,
-                HandleTap(TapType::eSingleTap, _, 0, apzc->GetGuid(), _, _))
+    EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, _, 0, apzc->GetGuid(), _))
         .Times(tapCallsExpected);
     Tap(apzc, ScreenIntPoint(10, 10), 0);
     while (mcc->RunThroughDelayedTasks())
@@ -385,7 +384,7 @@ TEST_F(APZCGestureDetectorTester, ShortPress) {
     EXPECT_CALL(check, Call("pre-tap"));
     EXPECT_CALL(check, Call("post-tap"));
     EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, LayoutDevicePoint(10, 10),
-                                0, apzc->GetGuid(), _, _))
+                                0, apzc->GetGuid(), _))
         .Times(1);
   }
 
@@ -408,7 +407,7 @@ TEST_F(APZCGestureDetectorTester, MediumPress) {
     EXPECT_CALL(check, Call("pre-tap"));
     EXPECT_CALL(check, Call("post-tap"));
     EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, LayoutDevicePoint(10, 10),
-                                0, apzc->GetGuid(), _, _))
+                                0, apzc->GetGuid(), _))
         .Times(1);
   }
 
@@ -447,14 +446,14 @@ class APZCLongPressTester : public APZCGestureDetectorTester {
       EXPECT_CALL(check, Call("preHandleLongTap"));
       blockId++;
       EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, LayoutDevicePoint(10, 10),
-                                  0, apzc->GetGuid(), blockId, _))
+                                  0, apzc->GetGuid(), blockId))
           .Times(1);
       EXPECT_CALL(check, Call("postHandleLongTap"));
 
       EXPECT_CALL(check, Call("preHandleLongTapUp"));
       EXPECT_CALL(*mcc,
                   HandleTap(TapType::eLongTapUp, LayoutDevicePoint(10, 10), 0,
-                            apzc->GetGuid(), _, _))
+                            apzc->GetGuid(), _))
           .Times(1);
       EXPECT_CALL(check, Call("postHandleLongTapUp"));
     }
@@ -513,7 +512,7 @@ class APZCLongPressTester : public APZCGestureDetectorTester {
       blockId++;
       EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap,
                                   LayoutDevicePoint(touchX, touchStartY), 0,
-                                  apzc->GetGuid(), blockId, _))
+                                  apzc->GetGuid(), blockId))
           .Times(1);
       EXPECT_CALL(check, Call("postHandleLongTap"));
     }
@@ -539,7 +538,7 @@ class APZCLongPressTester : public APZCGestureDetectorTester {
 
     EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap,
                                 LayoutDevicePoint(touchX, touchEndY), 0,
-                                apzc->GetGuid(), _, _))
+                                apzc->GetGuid(), _))
         .Times(0);
     result = TouchUp(apzc, ScreenIntPoint(touchX, touchEndY), mcc->Time());
     EXPECT_EQ(nsEventStatus_eConsumeDoDefault, result.GetStatus());
@@ -570,10 +569,10 @@ TEST_F(APZCGestureDetectorTester, DoubleTap) {
   apzc->GetFrameMetrics().SetIsRootContent(true);
 
   EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, LayoutDevicePoint(10, 10), 0,
-                              apzc->GetGuid(), _, _))
+                              apzc->GetGuid(), _))
       .Times(0);
   EXPECT_CALL(*mcc, HandleTap(TapType::eDoubleTap, LayoutDevicePoint(10, 10), 0,
-                              apzc->GetGuid(), _, _))
+                              apzc->GetGuid(), _))
       .Times(1);
 
   uint64_t blockIds[2];
@@ -591,13 +590,13 @@ TEST_F(APZCGestureDetectorTester, DoubleTapNotZoomable) {
   MakeApzcUnzoomable();
 
   EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, LayoutDevicePoint(10, 10), 0,
-                              apzc->GetGuid(), _, _))
+                              apzc->GetGuid(), _))
       .Times(1);
   EXPECT_CALL(*mcc, HandleTap(TapType::eSecondTap, LayoutDevicePoint(10, 10), 0,
-                              apzc->GetGuid(), _, _))
+                              apzc->GetGuid(), _))
       .Times(1);
   EXPECT_CALL(*mcc, HandleTap(TapType::eDoubleTap, LayoutDevicePoint(10, 10), 0,
-                              apzc->GetGuid(), _, _))
+                              apzc->GetGuid(), _))
       .Times(0);
 
   uint64_t blockIds[2];
@@ -615,10 +614,10 @@ TEST_F(APZCGestureDetectorTester, DoubleTapPreventDefaultFirstOnly) {
   MakeApzcZoomable();
 
   EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, LayoutDevicePoint(10, 10), 0,
-                              apzc->GetGuid(), _, _))
+                              apzc->GetGuid(), _))
       .Times(1);
   EXPECT_CALL(*mcc, HandleTap(TapType::eDoubleTap, LayoutDevicePoint(10, 10), 0,
-                              apzc->GetGuid(), _, _))
+                              apzc->GetGuid(), _))
       .Times(0);
 
   uint64_t blockIds[2];
@@ -636,10 +635,10 @@ TEST_F(APZCGestureDetectorTester, DoubleTapPreventDefaultBoth) {
   MakeApzcZoomable();
 
   EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, LayoutDevicePoint(10, 10), 0,
-                              apzc->GetGuid(), _, _))
+                              apzc->GetGuid(), _))
       .Times(0);
   EXPECT_CALL(*mcc, HandleTap(TapType::eDoubleTap, LayoutDevicePoint(10, 10), 0,
-                              apzc->GetGuid(), _, _))
+                              apzc->GetGuid(), _))
       .Times(0);
 
   uint64_t blockIds[2];
@@ -658,7 +657,7 @@ TEST_F(APZCGestureDetectorTester, TapFollowedByPinch) {
   MakeApzcZoomable();
 
   EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, LayoutDevicePoint(10, 10), 0,
-                              apzc->GetGuid(), _, _))
+                              apzc->GetGuid(), _))
       .Times(1);
 
   Tap(apzc, ScreenIntPoint(10, 10), TimeDuration::FromMilliseconds(100));
@@ -686,7 +685,7 @@ TEST_F(APZCGestureDetectorTester, TapFollowedByMultipleTouches) {
   MakeApzcZoomable();
 
   EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, LayoutDevicePoint(10, 10), 0,
-                              apzc->GetGuid(), _, _))
+                              apzc->GetGuid(), _))
       .Times(1);
 
   Tap(apzc, ScreenIntPoint(10, 10), TimeDuration::FromMilliseconds(100));
@@ -720,7 +719,7 @@ TEST_F(APZCGestureDetectorTester, LongPressInterruptedByWheel) {
   // co-exist, the wheel block shouldn't interrupt the long-press detection.
   // But more importantly, this shouldn't crash, which is what it did at one
   // point in time.
-  EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, _, _, _, _, _)).Times(1);
+  EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, _, _, _, _)).Times(1);
 
   APZEventResult result = TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time());
   uint64_t touchBlockId = result.mInputBlockId;
@@ -740,7 +739,7 @@ TEST_F(APZCGestureDetectorTester, TapTimeoutInterruptedByWheel) {
   // tap should still be dispatched because it completes fully before the wheel
   // block arrived.
   EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, LayoutDevicePoint(10, 10), 0,
-                              apzc->GetGuid(), _, _))
+                              apzc->GetGuid(), _))
       .Times(1);
 
   // We make the APZC zoomable so the gesture detector needs to wait to
@@ -776,7 +775,7 @@ TEST_F(APZCGestureDetectorTester, LongPressWithInputQueueDelay) {
     InSequence s;
     EXPECT_CALL(check, Call("pre long-tap dispatch"));
     EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, LayoutDevicePoint(10, 10), 0,
-                                apzc->GetGuid(), _, _))
+                                apzc->GetGuid(), _))
         .Times(1);
     EXPECT_CALL(check, Call("post long-tap dispatch"));
   }
@@ -810,7 +809,7 @@ TEST_F(APZCGestureDetectorTester, LongPressWithInputQueueDelay2) {
     InSequence s;
     EXPECT_CALL(check, Call("pre long-tap dispatch"));
     EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, LayoutDevicePoint(10, 10), 0,
-                                apzc->GetGuid(), _, _))
+                                apzc->GetGuid(), _))
         .Times(1);
     EXPECT_CALL(check, Call("post long-tap dispatch"));
   }
@@ -838,7 +837,7 @@ TEST_F(APZCGestureDetectorTester, LongPressWithInputQueueDelay3) {
     InSequence s;
     EXPECT_CALL(check, Call("pre long-tap dispatch"));
     EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, LayoutDevicePoint(10, 10), 0,
-                                apzc->GetGuid(), _, _))
+                                apzc->GetGuid(), _))
         .Times(1);
     EXPECT_CALL(check, Call("post long-tap dispatch"));
   }

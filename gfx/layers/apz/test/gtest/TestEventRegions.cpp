@@ -99,25 +99,22 @@ TEST_F(APZEventRegionsTesterMock, HitRegionImmediateResponse) {
   MockFunction<void(std::string checkPointName)> check;
   {
     InSequence s;
-    EXPECT_CALL(*mcc,
-                HandleTap(TapType::eSingleTap, _, _, left->GetGuid(), _, _))
+    EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, _, _, left->GetGuid(), _))
         .Times(1);
     EXPECT_CALL(check, Call("Tapped on left"));
     EXPECT_CALL(*mcc,
-                HandleTap(TapType::eSingleTap, _, _, bottom->GetGuid(), _, _))
+                HandleTap(TapType::eSingleTap, _, _, bottom->GetGuid(), _))
         .Times(1);
     EXPECT_CALL(check, Call("Tapped on bottom"));
-    EXPECT_CALL(*mcc,
-                HandleTap(TapType::eSingleTap, _, _, root->GetGuid(), _, _))
+    EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, _, _, root->GetGuid(), _))
         .Times(1);
     EXPECT_CALL(check, Call("Tapped on root"));
     EXPECT_CALL(check, Call("Tap pending on d-t-c region"));
     EXPECT_CALL(*mcc,
-                HandleTap(TapType::eSingleTap, _, _, bottom->GetGuid(), _, _))
+                HandleTap(TapType::eSingleTap, _, _, bottom->GetGuid(), _))
         .Times(1);
     EXPECT_CALL(check, Call("Tapped on bottom again"));
-    EXPECT_CALL(*mcc,
-                HandleTap(TapType::eSingleTap, _, _, left->GetGuid(), _, _))
+    EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, _, _, left->GetGuid(), _))
         .Times(1);
     EXPECT_CALL(check, Call("Tapped on left this time"));
   }
@@ -171,7 +168,7 @@ TEST_F(APZEventRegionsTesterMock, HitRegionAccumulatesChildren) {
   // content controller, which indicates the input events got routed correctly
   // to the APZC.
   EXPECT_CALL(*mcc,
-              HandleTap(TapType::eSingleTap, _, _, rootApzc->GetGuid(), _, _))
+              HandleTap(TapType::eSingleTap, _, _, rootApzc->GetGuid(), _))
       .Times(1);
   QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
   Tap(manager, ScreenIntPoint(10, 160), TimeDuration::FromMilliseconds(100));
@@ -193,7 +190,7 @@ TEST_F(APZEventRegionsTesterMock, Bug1117712) {
   // But now we tell the APZ that really it hit layers[2], and expect the tap
   // to be delivered at the correct coordinates.
   EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, LayoutDevicePoint(55, 5), 0,
-                              apzc2->GetGuid(), _, _))
+                              apzc2->GetGuid(), _))
       .Times(1);
 
   nsTArray<ScrollableLayerGuid> targets;
