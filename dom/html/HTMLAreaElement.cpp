@@ -49,10 +49,6 @@ nsresult HTMLAreaElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   return PostHandleEventForAnchors(aVisitor);
 }
 
-void HTMLAreaElement::ActivationBehavior(EventChainPostVisitor& aVisitor) {
-  ActivationBehaviorForAnchors(aVisitor);
-}
-
 void HTMLAreaElement::GetLinkTarget(nsAString& aTarget) {
   GetAttr(nsGkAtoms::target, aTarget);
   if (aTarget.IsEmpty()) {

@@ -8,7 +8,6 @@
 #define DOM_SVG_SVGAELEMENT_H_
 
 #include "Link.h"
-#include "mozilla/Attributes.h"
 #include "nsDOMTokenList.h"
 #include "SVGAnimatedString.h"
 #include "mozilla/dom/AnchorAreaFormRelValues.h"
@@ -47,8 +46,6 @@ class SVGAElement final : public SVGAElementBase,
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
   MOZ_CAN_RUN_SCRIPT
   nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
-  MOZ_CAN_RUN_SCRIPT
-  void ActivationBehavior(EventChainPostVisitor& aVisitor) override;
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // nsIContent

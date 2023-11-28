@@ -68,10 +68,6 @@ nsresult SVGAElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   return PostHandleEventForLinks(aVisitor);
 }
 
-void SVGAElement::ActivationBehavior(EventChainPostVisitor& aVisitor) {
-  ActivationBehaviorForLinks(aVisitor);
-}
-
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGAElement)
 
 //----------------------------------------------------------------------
