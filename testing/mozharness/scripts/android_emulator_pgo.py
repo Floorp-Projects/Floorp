@@ -25,6 +25,7 @@ from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_opt
 
 PAGES = [
     "js-input/webkit/PerformanceTests/Speedometer/index.html",
+    "js-input/webkit/PerformanceTests/Speedometer3/index.html?startAutomatically=true",
     "blueprint/sample.html",
     "blueprint/forms.html",
     "blueprint/grid.html",
@@ -255,8 +256,8 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
             for page in PAGES:
                 driver.navigate("http://%s:%d/%s" % (IP, PORT, page))
                 timeout = 2
-                if "Speedometer/index.html" in page:
-                    # The Speedometer test actually runs many tests internally in
+                if "Speedometer" in page:
+                    # The Speedometer[23] test actually runs many tests internally in
                     # javascript, so it needs extra time to run through them. The
                     # emulator doesn't get very far through the whole suite, but
                     # this extra time at least lets some of them process.
