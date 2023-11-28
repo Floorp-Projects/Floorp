@@ -27,9 +27,6 @@ class AccessibleWrap : public LocalAccessible {
 
   virtual bool DoAction(uint8_t aIndex) const override;
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual bool PivotTo(int32_t aGranularity, bool aForward, bool aInclusive);
-
   static Accessible* ExploreByTouch(Accessible* aAccessible, float aX,
                                     float aY);
 

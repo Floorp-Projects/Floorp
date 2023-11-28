@@ -110,11 +110,6 @@ void PlatformSelectionEvent(Accessible* aTarget, Accessible* aWidget,
                             uint32_t aType);
 
 #if defined(ANDROID)
-void PlatformVirtualCursorChangeEvent(Accessible* aTarget,
-                                      Accessible* aOldPosition,
-                                      Accessible* aNewPosition, int16_t aReason,
-                                      bool aFromUser);
-
 void PlatformScrollingEvent(Accessible* aTarget, uint32_t aEventType,
                             uint32_t aScrollX, uint32_t aScrollY,
                             uint32_t aMaxScrollX, uint32_t aMaxScrollY);

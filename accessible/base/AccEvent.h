@@ -102,7 +102,6 @@ class AccEvent {
     eCaretMoveEvent,
     eTextSelChangeEvent,
     eSelectionChangeEvent,
-    eVirtualCursorChangeEvent,
     eObjectAttrChangedEvent,
     eScrollingEvent,
     eAnnouncementEvent,
@@ -439,35 +438,6 @@ class AccSelChangeEvent : public AccEvent {
   AccSelChangeEvent* mPackedEvent;
 
   friend class EventQueue;
-};
-
-/**
- * Accessible virtual cursor change event.
- */
-class AccVCChangeEvent : public AccEvent {
- public:
-  AccVCChangeEvent(LocalAccessible* aAccessible,
-                   LocalAccessible* aOldAccessible,
-                   LocalAccessible* aNewAccessible, int16_t aReason,
-                   EIsFromUserInput aIsFromUserInput = eFromUserInput);
-
-  virtual ~AccVCChangeEvent() {}
-
-  // AccEvent
-  static const EventGroup kEventGroup = eVirtualCursorChangeEvent;
-  virtual unsigned int GetEventGroups() const override {
-    return AccEvent::GetEventGroups() | (1U << eVirtualCursorChangeEvent);
-  }
-
-  // AccVCChangeEvent
-  LocalAccessible* OldAccessible() const { return mOldAccessible; }
-  LocalAccessible* NewAccessible() const { return mNewAccessible; }
-  int32_t Reason() const { return mReason; }
-
- private:
-  RefPtr<LocalAccessible> mOldAccessible;
-  RefPtr<LocalAccessible> mNewAccessible;
-  int16_t mReason;
 };
 
 /**
