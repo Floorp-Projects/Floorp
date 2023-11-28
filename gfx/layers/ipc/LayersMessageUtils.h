@@ -1114,11 +1114,13 @@ struct ParamTraits<mozilla::layers::DoubleTapToZoomMetrics> {
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mVisualViewport);
     WriteParam(aWriter, aParam.mRootScrollableRect);
+    WriteParam(aWriter, aParam.mTransformMatrix);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return (ReadParam(aReader, &aResult->mVisualViewport) &&
-            ReadParam(aReader, &aResult->mRootScrollableRect));
+            ReadParam(aReader, &aResult->mRootScrollableRect) &&
+            ReadParam(aReader, &aResult->mTransformMatrix));
   }
 };
 
