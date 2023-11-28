@@ -82,7 +82,7 @@ add_task(async function testAuthRequestWithoutListener() {
   const onAuthPrompt = waitForAuthPrompt(tab);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [AUTH_URL], _url => {
-    content.wrappedJSObject.sendRequest(_url);
+    content.wrappedJSObject.fetch(_url);
   });
 
   info("Wait for a network event to be created");
@@ -128,7 +128,7 @@ add_task(async function testAuthRequestWithForwardingListener() {
   const onAuthPrompt = waitForAuthPrompt(tab);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [AUTH_URL], _url => {
-    content.wrappedJSObject.sendRequest(_url);
+    content.wrappedJSObject.fetch(_url);
   });
 
   info("Wait for a network event to be received");
@@ -175,7 +175,7 @@ add_task(async function testAuthRequestWithCancellingListener() {
   networkObserver.setAuthPromptListenerEnabled(true);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [AUTH_URL], _url => {
-    content.wrappedJSObject.sendRequest(_url);
+    content.wrappedJSObject.fetch(_url);
   });
 
   info("Wait for a network event to be received");
@@ -227,7 +227,7 @@ add_task(async function testAuthRequestWithWrongCredentialsListener() {
   networkObserver.setAuthPromptListenerEnabled(true);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [AUTH_URL], _url => {
-    content.wrappedJSObject.sendRequest(_url);
+    content.wrappedJSObject.fetch(_url);
   });
 
   info("Wait for all network events to be received");
@@ -277,7 +277,7 @@ add_task(async function testAuthRequestWithCredentialsListener() {
   networkObserver.setAuthPromptListenerEnabled(true);
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [AUTH_URL], _url => {
-    content.wrappedJSObject.sendRequest(_url);
+    content.wrappedJSObject.fetch(_url);
   });
 
   // TODO: At the moment, providing credentials will result in additional

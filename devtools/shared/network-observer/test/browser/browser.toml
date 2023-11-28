@@ -3,10 +3,12 @@ tags = "devtools"
 subsuite = "devtools"
 support-files = [
   "head.js",
+  "doc_network-observer-missing-service-worker.html",
   "doc_network-observer.html",
   "gzipped.sjs",
   "override.html",
   "override.js",
+  "serviceworker.js",
   "sjs_network-auth-listener-test-server.sjs",
   "sjs_network-observer-test-server.sjs",
 ]
@@ -22,3 +24,6 @@ skip-if = [
 ["browser_networkobserver_invalid_constructor.js"]
 
 ["browser_networkobserver_override.js"]
+
+["browser_networkobserver_serviceworker.js"]
+fail-if = true # Disabled until Bug 1267119 and Bug 1246289

@@ -13,13 +13,37 @@
   <body>
     <p>Network Observer test page</p>
     <script type="text/javascript">
+      /* exported registerServiceWorker, unregisterServiceWorker */
       "use strict";
 
-      window.sendRequest = url => {
-        const xhr = new XMLHttpRequest();
-        xhr.open("GET", url, true);
-        xhr.send(null);
-      }
+        let swRegistration;
+
+        function registerServiceWorker() {
+          const sw = navigator.serviceWorker;
+          return sw.register("serviceworker.js")
+            .then(registration => {
+              swRegistration = registration;
+              console.log("Registered, scope is:", registration.scope);
+              return sw.ready;
+            }).then(() => {
+              // wait until the page is controlled
+              return new Promise(resolve => {
+                if (sw.controller) {
+                  resolve();
+                } else {
+                  sw.addEventListener("controllerchange", function () {
+                    resolve();
+                  }, { once: true });
+                }
+              });
+            }).catch(err => {
+              console.error("Registration failed");
+            });
+        }
+
+        function unregisterServiceWorker() {
+          return swRegistration.unregister();
+        }
     </script>
   </body>
 </html>
