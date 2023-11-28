@@ -163,6 +163,11 @@ impl PulseContext {
     pub fn destroy(&mut self) {
         self.context_destroy();
 
+        assert!(
+            self.input_collection_changed_callback.is_none()
+                && self.output_collection_changed_callback.is_none()
+        );
+
         if !self.mainloop.is_null() {
             self.mainloop.stop();
         }
@@ -488,11 +493,7 @@ impl ContextOps for PulseContext {
         debug_assert!(!collection.as_ptr().is_null());
         unsafe {
             let coll = &mut *collection.as_ptr();
-            let mut devices = Vec::from_raw_parts(
-                coll.device as *mut ffi::cubeb_device_info,
-                coll.count,
-                coll.count,
-            );
+            let mut devices = Vec::from_raw_parts(coll.device, coll.count, coll.count);
             for dev in &mut devices {
                 if !dev.group_id.is_null() {
                     let _ = CString::from_raw(dev.group_id as *mut _);

@@ -16,7 +16,7 @@ authors = ["Dan Glastonbury <dglastonbury@mozilla.com>"]
 license = "ISC"
 
 [dependencies]
-bitflags = "1.2.0"
+bitflags = "2"
 
 [dependencies.pulse-ffi]
 path = "../pulse-ffi"

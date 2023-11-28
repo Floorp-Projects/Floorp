@@ -10,7 +10,6 @@ mod stream;
 
 pub use self::context::PulseContext;
 use self::intern::Intern;
-pub use self::stream::Device;
 pub use self::stream::PulseStream;
 use std::ffi::CStr;
 use std::os::raw::c_char;
