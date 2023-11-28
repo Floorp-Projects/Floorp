@@ -1,0 +1,41 @@
+diff --git a/test/test_duplex.cpp b/test/test_duplex.cpp
+--- a/test/test_duplex.cpp
++++ b/test/test_duplex.cpp
+@@ -13,16 +13,18 @@
+ #endif
+ #include "cubeb/cubeb.h"
+ #include <atomic>
+ #include <math.h>
+ #include <memory>
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
++#include "mozilla/gtest/MozHelpers.h"
++
+ // #define ENABLE_NORMAL_LOG
+ // #define ENABLE_VERBOSE_LOG
+ #include "common.h"
+ 
+ #define SAMPLE_FREQUENCY 48000
+ #define STREAM_FORMAT CUBEB_SAMPLE_FLOAT32LE
+ #define INPUT_CHANNELS 1
+ #define INPUT_LAYOUT CUBEB_LAYOUT_MONO
+@@ -201,16 +203,18 @@ TEST(cubeb, duplex_collection_change)
+   ASSERT_EQ(r, CUBEB_OK);
+ }
+ 
+ TEST(cubeb, duplex_collection_change_no_unregister)
+ {
+   cubeb * ctx;
+   int r;
+ 
++  mozilla::gtest::DisableCrashReporter();
++
+   r = common_init(&ctx, "Cubeb duplex example with collection change");
+   ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb library";
+ 
+   /* This test needs an available input device, skip it if this host does not
+    * have one. */
+   if (!can_run_audio_input_test(ctx)) {
+     cubeb_destroy(ctx);
+     return;
