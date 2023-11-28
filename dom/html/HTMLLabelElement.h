@@ -45,9 +45,13 @@ class HTMLLabelElement final : public nsGenericHTMLElement {
                      const mozilla::dom::CallerType aCallerType,
                      ErrorResult& aError) override;
 
-  // nsIContent
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  // EventTarget
+  void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
   virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
+  MOZ_CAN_RUN_SCRIPT
+  void ActivationBehavior(EventChainPostVisitor& aVisitor) override;
+
+  // Element
   MOZ_CAN_RUN_SCRIPT
   virtual Result<bool, nsresult> PerformAccesskey(
       bool aKeyCausesActivation, bool aIsTrustedEvent) override;
@@ -65,6 +69,9 @@ class HTMLLabelElement final : public nsGenericHTMLElement {
 
   // XXX It would be nice if we could use an event flag instead.
   bool mHandlingEvent;
+
+ private:
+  inline bool CheckHandleEventPreconditions(EventChainVisitor& aVisitor);
 };
 
 }  // namespace dom
