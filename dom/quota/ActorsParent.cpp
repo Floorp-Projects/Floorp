@@ -2764,9 +2764,8 @@ nsresult QuotaManager::LoadQuota() {
             QM_TRY_INSPECT(const auto& metadata,
                            LoadFullOriginMetadataWithRestore(directory));
 
-            QM_TRY(OkIf(fullOriginMetadata.mLastAccessTime ==
-                        metadata.mLastAccessTime),
-                   Err(NS_ERROR_FAILURE));
+            QM_WARNONLY_TRY(OkIf(fullOriginMetadata.mLastAccessTime ==
+                                 metadata.mLastAccessTime));
 
             QM_TRY(OkIf(fullOriginMetadata.mPersisted == metadata.mPersisted),
                    Err(NS_ERROR_FAILURE));
