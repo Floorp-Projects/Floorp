@@ -627,6 +627,11 @@ const TEST_GLOBAL = {
         set() {},
       },
     },
+    newtabHandoffPreference: {
+      enabled: {
+        set() {},
+      },
+    },
     pocket: {
       enabled: {
         set() {},

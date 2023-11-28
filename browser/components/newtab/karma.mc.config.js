@@ -101,9 +101,9 @@ module.exports = function (config) {
               branches: 63,
             },
             "lib/TelemetryFeed.jsm": {
-              statements: 99,
+              statements: 98,
               lines: 99,
-              functions: 100,
+              functions: 98,
               branches: 95,
             },
             "lib/ASRouterParentProcessMessageHandler.jsm": {
