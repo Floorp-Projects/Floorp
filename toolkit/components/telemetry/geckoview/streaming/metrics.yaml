@@ -2057,5 +2057,5 @@ fog.validation:
     notification_emails:
       - pmcmanis@mozilla.com
       - glean-team@mozilla.com
-    expires: never 
+    expires: never
     gecko_datapoint: GVSV_AUDIO_STREAM_INITS

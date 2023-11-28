@@ -187,7 +187,7 @@ fog.validation:
     type: quantity
     unit: int
     description: |
-      Primary display pixel height, recorded alongside the GeckoView Streaming 
+      Primary display pixel height, recorded alongside the GeckoView Streaming
       API for the purposes of Validation (hence GVSV).
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1858954
@@ -205,7 +205,7 @@ fog.validation:
     type: quantity
     unit: int
     description: |
-      Primary display pixel width, recorded alongside the GeckoView Streaming 
+      Primary display pixel width, recorded alongside the GeckoView Streaming
       API for the purposes of Validation (hence GVSV).
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1858954
@@ -265,8 +265,8 @@ fog.validation:
     type: timing_distribution
     time_unit: millisecond
     description: >
-      Glean equivalent to the Geckoview Stream gfx Composite Time metric. 
-      Represents The time taken to composite a frame. Differs between 
+      Glean equivalent to the Geckoview Stream gfx Composite Time metric.
+      Represents The time taken to composite a frame. Differs between
       non-webrender and webrender, see the non-validation version for more
       details.
     data_sensitivity:

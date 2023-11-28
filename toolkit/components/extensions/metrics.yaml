@@ -415,7 +415,7 @@ extensions.counters:
       description: |
         Number of times an event page hit the idle timeout and results in one of the labels.
       # Keep these labels in sync with the ones in WEBEXT_BROWSERACTION_POPUP_PRELOAD_RESULT_COUNT
-      # as defined in Histograms.json 
+      # as defined in Histograms.json
       labels:
         - popupShown
         - clearAfterHover
@@ -446,7 +446,7 @@ extensions.counters:
       description: |
         Number of times an event page hit the idle timeout and results in one of the labels.
       # Keep these labels in sync with the ones in WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT
-      # as defined in Histograms.json 
+      # as defined in Histograms.json
       labels:
         - suspend
         - reset_other
@@ -567,7 +567,7 @@ extensions.timing:
         - addons-dev-internal@mozilla.com
       bugs:
         - https://bugzilla.mozilla.org/1353171
-        - https://bugzilla.mozilla.org/1489524 
+        - https://bugzilla.mozilla.org/1489524
         - https://bugzilla.mozilla.org/1820158
       data_reviews:
         - https://bugzilla.mozilla.org/show_bug.cgi?id=1820158#c8

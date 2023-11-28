@@ -2033,4 +2033,3 @@ mailto:
         application and another prompt to set the current site as default
         webmail site in Firefox.
       fallbackPref: browser.mailto.dualPrompt.os
-

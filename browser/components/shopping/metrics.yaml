@@ -133,10 +133,10 @@ shopping:
     extra_keys:
       action:
         description: >
-          Whether the button was used to expand or collapse the quality 
+          Whether the button was used to expand or collapse the quality
           explainer card.
           Possible values are `expanded` and `collapsed`.
-        type: string    
+        type: string
 
   surface_settings_expand_clicked:
     type: event
@@ -181,7 +181,7 @@ shopping:
       source:
         description: >
           The source of the close event. For example, whether the shopping
-          sidebar was closed with the close button or the icon in the 
+          sidebar was closed with the close button or the icon in the
           address bar.
         type: string
 
@@ -324,7 +324,7 @@ shopping:
     type: event
     description: |
       Review reliability was not available for display in the shopping side
-      bar. This metric does not contain any information about the product 
+      bar. This metric does not contain any information about the product
       the user is viewing.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1849243
@@ -343,7 +343,7 @@ shopping:
     type: event
     description: |
       The user clicked to analyze reviews in the case the reliability rating
-      was not available for display in the shopping side bar. This metric 
+      was not available for display in the shopping side bar. This metric
       does not contain any information about the product the user is viewing.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1849244
@@ -364,7 +364,7 @@ shopping:
       The user clicked the 'Learn More' link in the Shopping onboarding
       experience.
     bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1851820 
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1851820
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1851820#c2
     data_sensitivity:
