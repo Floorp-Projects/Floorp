@@ -24,8 +24,6 @@ skip-if = ["os == 'mac'"]
 
 ["test_moz_button_group.html"]
 
-["test_moz_card.html"]
-
 ["test_moz_five_star.html"]
 
 ["test_moz_label.html"]
