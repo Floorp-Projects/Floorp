@@ -21,17 +21,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(PlacesEvent)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-already_AddRefed<PlacesEvent> PlacesEvent::Constructor(
-    const GlobalObject& aGlobal, PlacesEventType aType, ErrorResult& rv) {
-  RefPtr<PlacesEvent> event = new PlacesEvent(aType);
-  return event.forget();
-}
-
 nsISupports* PlacesEvent::GetParentObject() const { return nullptr; }
-
-JSObject* PlacesEvent::WrapObject(JSContext* aCx,
-                                  JS::Handle<JSObject*> aGivenProto) {
-  return PlacesEvent_Binding::Wrap(aCx, this, aGivenProto);
-}
 
 }  // namespace mozilla::dom
