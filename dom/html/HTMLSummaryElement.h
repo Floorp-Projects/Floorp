@@ -28,7 +28,9 @@ class HTMLSummaryElement final : public nsGenericHTMLElement {
 
   nsresult Clone(NodeInfo*, nsINode** aResult) const override;
 
+  void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
   nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
+  void ActivationBehavior(EventChainPostVisitor& aVisitor) override;
 
   bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                        int32_t* aTabIndex) override;
@@ -48,6 +50,9 @@ class HTMLSummaryElement final : public nsGenericHTMLElement {
 
   JSObject* WrapNode(JSContext* aCx,
                      JS::Handle<JSObject*> aGivenProto) override;
+
+ private:
+  inline bool CheckHandleEventPreconditions(EventChainVisitor& aVisitor);
 };
 
 }  // namespace mozilla::dom

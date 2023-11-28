@@ -14,6 +14,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
 #include "nsFocusManager.h"
+#include "nsGenericHTMLElement.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Summary)
 
@@ -23,49 +24,58 @@ HTMLSummaryElement::~HTMLSummaryElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLSummaryElement)
 
+void HTMLSummaryElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
+  if (WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent()) {
+    aVisitor.mWantsActivationBehavior = mouseEvent->IsLeftClickEvent();
+  }
+
+  nsGenericHTMLElement::GetEventTargetParent(aVisitor);
+}
+
+bool HTMLSummaryElement::CheckHandleEventPreconditions(
+    EventChainVisitor& aVisitor) {
+  if (!aVisitor.mPresContext ||
+      aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
+      !IsMainSummary()) {
+    return false;
+  }
+
+  nsCOMPtr<Element> target =
+      do_QueryInterface(aVisitor.mEvent->GetOriginalDOMEventTarget());
+  return !nsContentUtils::IsInInteractiveHTMLContent(target, this);
+}
+
 nsresult HTMLSummaryElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   nsresult rv = NS_OK;
-  if (!aVisitor.mPresContext) {
+  if (!CheckHandleEventPreconditions(aVisitor)) {
     return rv;
   }
 
-  if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault) {
-    return rv;
-  }
-
-  if (!IsMainSummary()) {
-    return rv;
-  }
-
-  WidgetEvent* const event = aVisitor.mEvent;
-  nsCOMPtr<Element> target =
-      do_QueryInterface(event->GetOriginalDOMEventTarget());
-  if (nsContentUtils::IsInInteractiveHTMLContent(target, this)) {
-    return NS_OK;
-  }
-
-  if (event->HasMouseEventMessage()) {
-    WidgetMouseEvent* mouseEvent = event->AsMouseEvent();
-
-    if (mouseEvent->IsLeftClickEvent()) {
-      RefPtr<HTMLDetailsElement> details = GetDetails();
-      MOZ_ASSERT(details,
-                 "Expected to find details since this is the main summary!");
-
-      // When dispatching a synthesized mouse click event to a details element
-      // with 'display: none', both Chrome and Safari do not toggle the 'open'
-      // attribute. We had tried to be compatible with this behavior, but found
-      // more inconsistency in test cases in bug 1245424. So we stop doing that.
-      details->ToggleOpen();
-      aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-      return NS_OK;
-    }
-  }  // event->HasMouseEventMessage()
-
-  if (event->HasKeyEventMessage() && event->IsTrusted()) {
+  if (aVisitor.mEvent->HasKeyEventMessage() && aVisitor.mEvent->IsTrusted()) {
     HandleKeyboardActivation(aVisitor);
   }
   return rv;
+}
+
+void HTMLSummaryElement::ActivationBehavior(EventChainPostVisitor& aVisitor) {
+  if (!CheckHandleEventPreconditions(aVisitor)) {
+    return;
+  }
+
+  DebugOnly<WidgetMouseEvent*> mouseEvent = aVisitor.mEvent->AsMouseEvent();
+  MOZ_ASSERT(mouseEvent && mouseEvent->IsLeftClickEvent(),
+             "ActivationBehavior should only be called for left click.");
+
+  RefPtr<HTMLDetailsElement> details = GetDetails();
+  MOZ_ASSERT(details,
+             "Expected to find details since this is the main summary!");
+
+  // When dispatching a synthesized mouse click event to a details element
+  // with 'display: none', both Chrome and Safari do not toggle the 'open'
+  // attribute. We had tried to be compatible with this behavior, but found
+  // more inconsistency in test cases in bug 1245424. So we stop doing that.
+  details->ToggleOpen();
+  aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
 }
 
 bool HTMLSummaryElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
