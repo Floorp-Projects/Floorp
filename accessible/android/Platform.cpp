@@ -146,10 +146,23 @@ void a11y::PlatformCaretMoveEvent(Accessible* aTarget, int32_t aOffset,
                                   bool aFromUser) {
   RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
-
-  if (sessionAcc) {
-    sessionAcc->SendTextSelectionChangedEvent(aTarget, aOffset);
+  if (!sessionAcc) {
+    return;
   }
+
+  if (!aTarget->IsDoc() && !aFromUser && !aIsSelectionCollapsed) {
+    // Pivot to the caret's position if it has an expanded selection.
+    // This is used mostly for find in page.
+    Accessible* leaf = TextLeafPoint::GetCaret(aTarget).ActualizeCaret().mAcc;
+    MOZ_ASSERT(leaf);
+    if (Accessible* result = AccessibleWrap::DoPivot(
+            leaf, java::SessionAccessibility::HTML_GRANULARITY_DEFAULT, true,
+            true)) {
+      sessionAcc->SendAccessibilityFocusedEvent(result);
+    }
+  }
+
+  sessionAcc->SendTextSelectionChangedEvent(aTarget, aOffset);
 }
 
 void a11y::PlatformTextChangeEvent(Accessible* aTarget, const nsAString& aStr,
