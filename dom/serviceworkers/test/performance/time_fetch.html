@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script>
+
+  "use strict";
+
+  async function time_fetch(url) {
+    let start = performance.now();
+    let res = await fetch(url);
+    let elapsed = performance.now() - start;
+
+    return {
+      elapsed_ms : elapsed,
+      status : res.status,
+      data : await res.text()
+    };
+  }
+
+  async function time_xhr(url) {
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", url, false);
+    let start = performance.now();
+    xhr.send();
+    let elapsed = performance.now() - start;
+
+    return {
+      elapsed_ms : elapsed,
+      status : xhr.status,
+      data : xhr.responseText
+    }
+  }
+
+</script>
+</head>
+<body>
+</body>
+</html>
