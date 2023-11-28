@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100,initial-scale=0.4"/>
+  <title>Tests that double tap to zoom doesn't work on touch-action: manipulation element in an iframe</title>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+  iframe {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    border: none;
+  }
+  </style>
+
+  <script>
+
+async function test() {
+  let useTouchpad = (location.search == "?touchpad");
+  let iframeURL =
+    SimpleTest.getTestFileURL("helper_doubletap_zoom_touch_action_manipulation_subframe.html")
+    .replace(window.location.origin, "https://example.com/");
+
+  let iframe = document.querySelector("iframe");
+  const iframeLoadPromise = promiseOneEvent(iframe, "load", null);
+  iframe.src = iframeURL;
+  await iframeLoadPromise;
+
+  await SpecialPowers.spawn(iframe, [], async () => {
+    await content.wrappedJSObject.waitUntilApzStable();
+  });
+
+  var resolution = await getResolution();
+  ok(resolution > 0,
+     "The initial_resolution is " + resolution + ", which is some sane value");
+
+  // Activate the root scroller in the iframe, otherwise the next touch event
+  // will be handled by the root content APZC incorrectly on non-Fission
+  // environments.
+  await SpecialPowers.spawn(iframe, [], async () => {
+    await SpecialPowers.DOMWindowUtils.setDisplayPortForElement(
+        0, 0, 500, 500, content.document.documentElement, 1);
+    await content.wrappedJSObject.promiseApzFlushedRepaints();
+  });
+
+  await SpecialPowers.spawn(iframe, [useTouchpad], async (aUseTouchpad) => {
+    await content.wrappedJSObject.synthesizeDoubleTap(
+      content.document.querySelector("div"), 20, 20, aUseTouchpad);
+  });
+
+  for (let i = 0; i < 10; i++) {
+    await promiseFrame();
+  }
+
+  // Flush state just in case.
+  await promiseApzFlushedRepaints();
+
+  var prev_resolution = resolution;
+  resolution = await getResolution();
+  if (!useTouchpad) {
+    is(resolution, prev_resolution, "No zoom should happen on touchscreen");
+  } else {
+    isnot(resolution, prev_resolution, "Zoom should happen on touchpad");
+  }
+
+  // Send another tap event outside of the area where
+  // `touch-action: manipulation` is specified so that it will create a new
+  // touch block to avoid bug 1848062 on Mac.
+  await synthesizeNativeTap(iframe, 600, 600);
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body>
+<iframe width="500" height="500"></iframe>
+</body>
+</html>
