@@ -8,6 +8,7 @@
 #define mozilla_layers_DoubleTapToZoom_h
 
 #include "Units.h"
+#include "mozilla/gfx/Matrix.h"
 
 template <class T>
 class RefPtr;
@@ -52,10 +53,16 @@ struct DoubleTapToZoomMetrics {
   // The scrollable rect of the root scroll container of the top-level content
   // document.
   CSSRect mRootScrollableRect;
+  // If double-tap-to-zoom happens inside an OOP iframe, this transform matrix
+  // is the matrix converting the coordinates relative to layout viewport origin
+  // of the OOP iframe to the document origin of the top level content document.
+  // If not, this is the identity matrix.
+  CSSToCSSMatrix4x4 mTransformMatrix;
 
   bool operator==(const DoubleTapToZoomMetrics& aOther) const {
     return mVisualViewport == aOther.mVisualViewport &&
-           mRootScrollableRect == aOther.mRootScrollableRect;
+           mRootScrollableRect == aOther.mRootScrollableRect &&
+           mTransformMatrix == aOther.mTransformMatrix;
   }
   friend std::ostream& operator<<(std::ostream& aStream,
                                   const DoubleTapToZoomMetrics& aUpdate);

@@ -3163,12 +3163,27 @@ nsEventStatus AsyncPanZoomController::OnDoubleTap(
   APZC_LOG_DETAIL("got a double-tap in state %s\n", this,
                   ToString(mState).c_str());
 
+  MOZ_ASSERT(IsRootForLayersId(),
+             "This function should be called for the root content APZC or "
+             "OOPIF root APZC");
+
+  CSSToCSSMatrix4x4 transformToRootContentApzc;
   RefPtr<AsyncPanZoomController> rootContentApzc;
   if (IsRootContent()) {
     rootContentApzc = RefPtr{this};
   } else {
     if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
       rootContentApzc = treeManagerLocal->FindZoomableApzc(this);
+      if (rootContentApzc) {
+        MOZ_ASSERT(rootContentApzc->GetLayersId() != GetLayersId());
+        MOZ_ASSERT(this == treeManagerLocal->FindRootApzcFor(GetLayersId()));
+        transformToRootContentApzc =
+            treeManagerLocal->GetOopifToRootContentTransform(this);
+
+        CSSPoint rootScrollPosition = rootContentApzc->GetLayoutScrollOffset();
+        transformToRootContentApzc.PostTranslate(rootScrollPosition.x,
+                                                 rootScrollPosition.y, 0);
+      }
     }
   }
 
@@ -3187,7 +3202,8 @@ nsEventStatus AsyncPanZoomController::OnDoubleTap(
             TapType::eDoubleTap, *geckoScreenPoint, aEvent.modifiers, GetGuid(),
             GetCurrentTouchBlock() ? GetCurrentTouchBlock()->GetBlockId() : 0,
             Some(DoubleTapToZoomMetrics{rootContentApzc->GetVisualViewport(),
-                                        rootContentApzc->GetScrollableRect()}));
+                                        rootContentApzc->GetScrollableRect(),
+                                        transformToRootContentApzc}));
       }
     }
     return nsEventStatus_eConsumeNoDefault;
