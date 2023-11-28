@@ -53,7 +53,14 @@ DistributionCustomizer.prototype = {
         PREF_CACHED_FILE_APPVERSION,
         "unknown"
       );
-      if (knownForVersion == AppConstants.MOZ_APP_VERSION) {
+      // StartupCacheInfo isn't available in xpcshell tests.
+      if (
+        knownForVersion == AppConstants.MOZ_APP_VERSION &&
+        (Cu.isInAutomation ||
+          Cc["@mozilla.org/startupcacheinfo;1"].getService(
+            Ci.nsIStartupCacheInfo
+          ).FoundDiskCacheOnInit)
+      ) {
         return Services.prefs.getBoolPref(PREF_CACHED_FILE_EXISTENCE);
       }
     }
