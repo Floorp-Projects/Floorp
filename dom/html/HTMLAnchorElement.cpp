@@ -146,10 +146,6 @@ nsresult HTMLAnchorElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   return PostHandleEventForAnchors(aVisitor);
 }
 
-void HTMLAnchorElement::ActivationBehavior(EventChainPostVisitor& aVisitor) {
-  ActivationBehaviorForAnchors(aVisitor);
-}
-
 void HTMLAnchorElement::GetLinkTarget(nsAString& aTarget) {
   GetAttr(nsGkAtoms::target, aTarget);
   if (aTarget.IsEmpty()) {

@@ -3132,8 +3132,6 @@ void Element::GetEventTargetParentForLinks(EventChainPreVisitor& aVisitor) {
     case eFocus:
     case eMouseOut:
     case eBlur:
-    case eMouseClick:
-    case eLegacyDOMActivate:
       break;
     default:
       return;
@@ -3182,15 +3180,6 @@ void Element::GetEventTargetParentForLinks(EventChainPreVisitor& aVisitor) {
       }
       break;
     }
-
-    case eLegacyDOMActivate:
-      aVisitor.mWantsActivationBehavior = true;
-      break;
-    case eMouseClick:
-      if (WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent()) {
-        aVisitor.mWantsActivationBehavior = mouseEvent->IsLeftClickEvent();
-      }
-      break;
 
     default:
       // switch not in sync with the optimization switch earlier in this
@@ -3242,7 +3231,9 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
   // IMPORTANT: this switch and the switch below it must be kept in sync!
   switch (aVisitor.mEvent->mMessage) {
     case eMouseDown:
+    case eMouseClick:
     case eMouseAuxClick:
+    case eLegacyDOMActivate:
     case eKeyPress:
       break;
     default:
@@ -3307,10 +3298,64 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
       }
     } break;
 
+    case eMouseClick: {
+      WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
+      if (mouseEvent->IsLeftClickEvent()) {
+        if (!mouseEvent->IsControl() && !mouseEvent->IsMeta() &&
+            !mouseEvent->IsAlt() && !mouseEvent->IsShift()) {
+          if (OwnerDoc()->MayHaveDOMActivateListeners()) {
+            // The default action is simply to dispatch DOMActivate.
+            // But dispatch that only if needed.
+            nsEventStatus status = nsEventStatus_eIgnore;
+            // DOMActivate event should be trusted since the activation is
+            // actually occurred even if the cause is an untrusted click event.
+            InternalUIEvent actEvent(true, eLegacyDOMActivate, mouseEvent);
+            actEvent.mDetail = 1;
+            rv = EventDispatcher::Dispatch(this, aVisitor.mPresContext,
+                                           &actEvent, nullptr, &status);
+            if (NS_SUCCEEDED(rv)) {
+              aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+            }
+          } else {
+            if (nsCOMPtr<nsIURI> absURI = GetHrefURI()) {
+              // If you modify this code, tweak also the code handling
+              // eLegacyDOMActivate.
+              nsAutoString target;
+              GetLinkTarget(target);
+              nsContentUtils::TriggerLink(this, absURI, target,
+                                          /* click */ true,
+                                          mouseEvent->IsTrusted());
+            }
+            // Since we didn't dispatch DOMActivate because there were no
+            // listeners, do still set mEventStatus as if it was dispatched
+            // successfully.
+            aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+          }
+        }
+
+        DispatchChromeOnlyLinkClickEvent(aVisitor);
+      }
+      break;
+    }
     case eMouseAuxClick: {
       DispatchChromeOnlyLinkClickEvent(aVisitor);
       break;
     }
+    case eLegacyDOMActivate: {
+      // If you modify this code, tweak also the code handling
+      // eMouseClick.
+      if (aVisitor.mEvent->mOriginalTarget == this) {
+        if (nsCOMPtr<nsIURI> absURI = GetHrefURI()) {
+          nsAutoString target;
+          GetLinkTarget(target);
+          const InternalUIEvent* activeEvent = aVisitor.mEvent->AsUIEvent();
+          MOZ_ASSERT(activeEvent);
+          nsContentUtils::TriggerLink(this, absURI, target, /* click */ true,
+                                      activeEvent->IsTrustable());
+          aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+        }
+      }
+    } break;
 
     case eKeyPress: {
       WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
@@ -3332,61 +3377,6 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
   }
 
   return rv;
-}
-
-void Element::ActivationBehaviorForLinks(EventChainPostVisitor& aVisitor) {
-  // Make sure we meet the preconditions before continuing
-  if (!IsLink()) {
-    return;
-  }
-
-  if (aVisitor.mEvent->mMessage == eLegacyDOMActivate) {
-    if (aVisitor.mEvent->mOriginalTarget != this) {
-      return;
-    }
-  } else {
-    WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
-    MOZ_ASSERT(mouseEvent && mouseEvent->IsLeftClickEvent());
-    DispatchChromeOnlyLinkClickEvent(aVisitor);
-
-    if (mouseEvent->IsControl() || mouseEvent->IsMeta() ||
-        mouseEvent->IsAlt() || mouseEvent->IsShift()) {
-      return;
-    }
-
-    if (OwnerDoc()->MayHaveDOMActivateListeners()) {
-      // The default action is simply to dispatch DOMActivate.
-      // But dispatch that only if needed.
-      nsEventStatus status = nsEventStatus_eIgnore;
-      // DOMActivate event should be trusted since the activation is
-      // actually occurred even if the cause is an untrusted click event.
-      InternalUIEvent actEvent(true, eLegacyDOMActivate, mouseEvent);
-      actEvent.mDetail = 1;
-      nsresult rv = EventDispatcher::Dispatch(this, aVisitor.mPresContext,
-                                              &actEvent, nullptr, &status);
-      if (NS_SUCCEEDED(rv)) {
-        aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-      }
-      return;
-    }
-  }
-
-  bool trusted;
-  if (aVisitor.mEvent->mMessage == eLegacyDOMActivate) {
-    const InternalUIEvent* activeEvent = aVisitor.mEvent->AsUIEvent();
-    MOZ_ASSERT(activeEvent);
-    trusted = activeEvent->IsTrustable();
-  } else {
-    trusted = aVisitor.mEvent->IsTrusted();
-  }
-
-  if (nsCOMPtr<nsIURI> absURI = GetHrefURI()) {
-    nsAutoString target;
-    GetLinkTarget(target);
-    nsContentUtils::TriggerLink(this, absURI, target, /* click */ true,
-                                trusted);
-    aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-  }
 }
 
 void Element::GetLinkTarget(nsAString& aTarget) { aTarget.Truncate(); }

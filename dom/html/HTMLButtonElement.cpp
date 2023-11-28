@@ -33,6 +33,7 @@
 #include "mozAutoDocUpdate.h"
 
 #define NS_IN_SUBMIT_CLICK (1 << 0)
+#define NS_OUTER_ACTIVATE_EVENT (1 << 1)
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Button)
 
@@ -170,6 +171,7 @@ void HTMLButtonElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
         !mInInternalActivate && aVisitor.mEvent->mOriginalTarget == this));
 
   if (outerActivateEvent) {
+    aVisitor.mItemFlags |= NS_OUTER_ACTIVATE_EVENT;
     aVisitor.mWantsActivationBehavior = true;
   }
 
@@ -223,6 +225,14 @@ nsresult HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
     WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
     if (keyEvent && keyEvent->IsTrusted()) {
       HandleKeyboardActivation(aVisitor);
+    }
+
+    // Bug 1459231: Temporarily needed till links respect activation target
+    // Then also remove NS_OUTER_ACTIVATE_EVENT
+    if ((aVisitor.mItemFlags & NS_OUTER_ACTIVATE_EVENT) && mForm &&
+        (mType == FormControlType::ButtonReset ||
+         mType == FormControlType::ButtonSubmit)) {
+      aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
     }
   }
 

@@ -2035,12 +2035,6 @@ class Element : public FragmentOrElement {
   MOZ_CAN_RUN_SCRIPT
   nsresult PostHandleEventForLinks(EventChainPostVisitor& aVisitor);
 
-  /**
-   * Handle activation behavior for link click event
-   */
-  MOZ_CAN_RUN_SCRIPT
-  void ActivationBehaviorForLinks(EventChainPostVisitor& aVisitor);
-
  public:
   /**
    * Check if this element is a link. This matches the CSS definition of the

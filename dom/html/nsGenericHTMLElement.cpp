@@ -625,15 +625,6 @@ nsresult nsGenericHTMLElement::PostHandleEventForAnchors(
   return PostHandleEventForLinks(aVisitor);
 }
 
-void nsGenericHTMLElement::ActivationBehaviorForAnchors(
-    EventChainPostVisitor& aVisitor) {
-  if (!CheckHandleEventForAnchorsPreconditions(aVisitor)) {
-    return;
-  }
-
-  return ActivationBehaviorForLinks(aVisitor);
-}
-
 bool nsGenericHTMLElement::IsHTMLLink(nsIURI** aURI) const {
   MOZ_ASSERT(aURI, "Must provide aURI out param");
 
