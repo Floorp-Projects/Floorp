@@ -18,8 +18,8 @@ BROWSER_CHROME_MANIFESTS += ["test/browser.toml"]
 MOCHITEST_CHROME_MANIFESTS += ["test/chrome.toml"]
 
 XPCSHELL_TESTS_MANIFESTS += [
-    "test/unit/xpcshell-child-process.ini",
-    "test/unit/xpcshell-parent-process.ini",
+    "test/unit/xpcshell-child-process.toml",
+    "test/unit/xpcshell-parent-process.toml",
 ]
 
 TEST_DIRS += ["test/gtest"]

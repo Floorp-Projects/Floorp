@@ -69,4 +69,4 @@ LOCAL_INCLUDES += [
 # MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
 # ROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 
-XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.toml"]

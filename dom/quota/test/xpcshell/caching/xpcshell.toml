@@ -1,0 +1,16 @@
+[DEFAULT]
+head = "head.js"
+support-files = [
+  "groupMismatch_profile.zip",
+  "removedOrigin_profile.zip",
+]
+
+["make_unsetLastAccessTime.js"]
+skip-if = ["true"] # Only used for recreating unsetLastAccessTime_profile.zip
+
+["test_groupMismatch.js"]
+
+["test_removedOrigin.js"]
+
+["test_unsetLastAccessTime.js"]
+support-files = ["unsetLastAccessTime_profile.zip"]

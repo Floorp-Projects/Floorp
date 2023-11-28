@@ -1,0 +1,16 @@
+[DEFAULT]
+head = "head.js"
+
+["test_basics.js"]
+
+["test_basics_worker.js"]
+
+["test_fileSystemDirectoryHandle.js"]
+
+["test_fileSystemDirectoryHandle_worker.js"]
+
+["test_syncAccessHandle_worker.js"]
+
+["test_writableFileStream.js"]
+
+["test_writableFileStream_worker.js"]

@@ -1,0 +1,97 @@
+[DEFAULT]
+head = "head.js"
+tags = "condprof"
+support-files = [
+  "archive_profile.zip",
+  "corruptedDatabase_profile.zip",
+  "corruptedDatabase_missingUsageFile_profile.zip",
+  "groupMismatch_profile.zip",
+  "migration_profile.zip",
+  "schema3upgrade_profile.zip",
+  "schema4upgrade_profile.zip",
+  "stringLength2_profile.zip",
+  "stringLength_profile.zip",
+  "usageAfterMigration_profile.zip",
+]
+
+["make_migration_emptyValue.js"]
+skip-if = ["true"] # Only used for recreating migration_emptyValue_profile.zip
+
+["test_archive.js"]
+
+["test_clientValidation.js"]
+
+["test_corruptedDatabase.js"]
+
+["test_databaseShadowing1.js"]
+prefs = ["dom.storage.shadow_writes=true"]
+run-sequentially = "test_databaseShadowing2.js depends on a file produced by this test"
+
+["test_databaseShadowing2.js"]
+run-sequentially = "this test depends on a file produced by test_databaseShadowing1.js"
+
+["test_databaseShadowing_clearOrigin1.js"]
+prefs = ["dom.storage.shadow_writes=true"]
+run-sequentially = "test_databaseShadowing_clearOrigin2.js depends on a file produced by this test"
+
+["test_databaseShadowing_clearOrigin2.js"]
+run-sequentially = "this test depends on a file produced by test_databaseShadowing_clearOrigin1.js"
+
+["test_databaseShadowing_clearOriginsByPattern1.js"]
+prefs = ["dom.storage.shadow_writes=true"]
+run-sequentially = "test_databaseShadowing_clearOriginsByPattern2.js depends on a file produced by this test"
+
+["test_databaseShadowing_clearOriginsByPattern2.js"]
+run-sequentially = "this test depends on a file produced by test_databaseShadowing_clearOriginsByPattern1.js"
+
+["test_databaseShadowing_clearOriginsByPrefix1.js"]
+prefs = ["dom.storage.shadow_writes=true"]
+run-sequentially = "test_databaseShadowing_clearOriginsByPrefix2.js depends on a file produced by this test"
+
+["test_databaseShadowing_clearOriginsByPrefix2.js"]
+run-sequentially = "this test depends on a file produced by test_databaseShadowing_clearOriginsByPrefix1.js"
+
+["test_eviction.js"]
+
+["test_flushing.js"]
+
+["test_groupLimit.js"]
+
+["test_groupMismatch.js"]
+
+["test_largeItems.js"]
+
+["test_lsng_enabled.js"]
+
+["test_migration.js"]
+
+["test_migration_emptyValue.js"]
+support-files = ["migration_emptyValue_profile.zip",]
+
+["test_old_lsng_pref.js"]
+
+["test_orderingAfterRemoveAdd.js"]
+
+["test_originInit.js"]
+
+["test_preloading.js"]
+
+["test_schema3upgrade.js"]
+
+["test_schema4upgrade.js"]
+
+["test_snapshotting.js"]
+skip-if = ["tsan"] # Unreasonably slow, bug 1612707
+requesttimeoutfactor = 4
+
+["test_stringLength.js"]
+
+["test_stringLength2.js"]
+
+["test_unicodeCharacters.js"]
+
+["test_uri_encoding_edge_cases.js"]
+
+["test_usage.js"]
+
+["test_usageAfterMigration.js"]

@@ -1,0 +1,16 @@
+[DEFAULT]
+head = ""
+skip-if = [
+  "os == 'android'",
+  "socketprocess_networking",
+]
+support-files = [
+  "!/dom/base/test/unit/test_bug553888.js",
+  "!/dom/base/test/unit/test_xhr_document.js",
+]
+
+["test_bug553888_wrap.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
+
+["test_xhr_document_ipc.js"]
+prefs = ["network.allow_raw_sockets_in_content_processes=true"]
