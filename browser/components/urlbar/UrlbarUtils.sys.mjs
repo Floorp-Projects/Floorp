@@ -1439,6 +1439,8 @@ export var UrlbarUtils = {
             return "site_specific_contextual_search";
           case "UrlbarProviderQuickSuggest":
             return this._getQuickSuggestTelemetryType(result);
+          case "UrlbarProviderQuickSuggestContextualOptIn":
+            return "fxsuggest_data_sharing_opt_in";
           case "Weather":
             return "weather";
         }
