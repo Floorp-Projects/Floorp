@@ -21,7 +21,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AWScreenUtils: "resource://activity-stream/lib/AWScreenUtils.jsm",
+  AWScreenUtils:
+    "resource://activity-stream/aboutwelcome/lib/AWScreenUtils.jsm",
 });
 
 // Message to be updated based on finalized MR designs

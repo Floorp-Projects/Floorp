@@ -1,6 +1,6 @@
 import React from "react";
 import { mount } from "enzyme";
-import { OnboardingVideo } from "content-src/aboutwelcome/components/OnboardingVideo";
+import { OnboardingVideo } from "content-src/components/OnboardingVideo";
 
 describe("OnboardingVideo component", () => {
   let sandbox;

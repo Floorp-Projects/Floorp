@@ -1,4 +1,4 @@
-import { Localized } from "content-src/aboutwelcome/components/MSLocalized";
+import { Localized } from "content-src/components/MSLocalized";
 import React from "react";
 import { shallow } from "enzyme";
 

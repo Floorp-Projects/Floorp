@@ -1,6 +1,6 @@
 import React from "react";
 import { shallow } from "enzyme";
-import { HeroImage } from "content-src/aboutwelcome/components/HeroImage";
+import { HeroImage } from "content-src/components/HeroImage";
 
 describe("HeroImage component", () => {
   const imageUrl = "https://example.com";

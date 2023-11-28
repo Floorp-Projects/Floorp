@@ -1,7 +1,7 @@
 import React from "react";
 import { shallow, mount } from "enzyme";
-import { GlobalOverrider } from "test/unit/utils";
-import { MobileDownloads } from "content-src/aboutwelcome/components/MobileDownloads";
+import { GlobalOverrider } from "newtab/test/unit/utils";
+import { MobileDownloads } from "content-src/components/MobileDownloads";
 
 describe("Multistage AboutWelcome MobileDownloads module", () => {
   let globals;

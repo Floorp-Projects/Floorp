@@ -30,6 +30,7 @@ const AWScreenUtils = {
   /**
    * Given a JEXL expression, returns the evaluation of the expression or returns
    * true if the expression did not evaluate successfully
+   *
    * @param {string} targeting - The JEXL expression that will be evaluated
    * @returns {boolean}
    */
