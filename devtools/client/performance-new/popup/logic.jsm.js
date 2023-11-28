@@ -288,19 +288,6 @@ function addPopupEventHandlers(state, elements, view) {
     view.updatePresets();
   });
 
-  addHandler(elements.presetsMenuList, "popuphidden", event => {
-    // Changing a preset makes the popup autohide, this handler stops the
-    // propagation of that event, so that only the menulist's popup closes,
-    // and not the rest of the popup.
-    event.stopPropagation();
-  });
-
-  addHandler(elements.presetsMenuList, "click", event => {
-    // Clicking on a preset makes the popup autohide, this preventDefault stops
-    // the CustomizableUI from closing the popup.
-    event.preventDefault();
-  });
-
   addHandler(elements.presetsEditSettings, "click", () => {
     elements.window.openTrustedLinkIn("about:profiling", "tab");
     view.hidePopup();
