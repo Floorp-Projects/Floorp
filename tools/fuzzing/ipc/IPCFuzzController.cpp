@@ -1088,6 +1088,10 @@ void IPCFuzzController::SynchronizeOnMessageExecution(
 
 static void dumpIPCMessageToFile(const UniquePtr<IPC::Message>& aMsg,
                                  uint32_t aDumpCount, bool aUseNyx = false) {
+  if (Nyx::instance().is_replay()) {
+    return;
+  }
+
   std::stringstream dumpFilename;
   std::string msgName(IPC::StringFromIPCMessageType(aMsg->type()));
   std::replace(msgName.begin(), msgName.end(), ':', '_');
