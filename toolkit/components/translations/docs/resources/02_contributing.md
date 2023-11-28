@@ -14,7 +14,6 @@ to provide helpful information regarding contributing to Firefox Translations.
       - [Non-Breaking Changes](#non-breaking-changes)
       - [Breaking Changes](#breaking-changes)
 - [Language Identification](#language-identification)
-- [Building Bergamot](#building-bergamot)
 
 ---
 ## Source Code
@@ -128,11 +127,6 @@ switching one third-party library for another in the compiled source code, while
 Translations currently uses the [CLD2] language detector.
 
 We have previously experimented with using the [fastText] language detector, but we opted to use [CLD2] due to complications with [fastText] [WASM] runtime performance. The benefit of the [CLD2] language detector is that it already exists in the Firefox source tree. In the future, we would still like to explore moving to a more modern language detector such as [CLD3], or perhaps something else.
-
----
-## Building Bergamot
-
-TODO
 
 
 <!-- Hyperlinks -->
