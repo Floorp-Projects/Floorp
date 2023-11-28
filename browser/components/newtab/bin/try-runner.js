@@ -12,7 +12,7 @@
  */
 
 const { execFileSync } = require("child_process");
-const { readFileSync } = require("fs");
+const { readFileSync, writeFileSync } = require("fs");
 const path = require("path");
 const { pathToFileURL } = require("url");
 const chalk = require("chalk");
@@ -83,11 +83,17 @@ const tests = {
       "activity-stream-windows.css": {
         path: path.join("css", "activity-stream-windows.css"),
       },
+      // This should get split out to its own try-runner eventually (bug 1866170).
       "About:welcome bundle": {
-        path: path.join("aboutwelcome", "content", "aboutwelcome.bundle.js"),
+        path: path.join(
+          "../",
+          "aboutwelcome",
+          "content",
+          "aboutwelcome.bundle.js"
+        ),
       },
       "aboutwelcome.css": {
-        path: path.join("aboutwelcome", "content", "aboutwelcome.css"),
+        path: path.join("../", "aboutwelcome", "content", "aboutwelcome.css"),
       },
     };
     const errors = [];
@@ -97,7 +103,14 @@ const tests = {
       item.before = readFileSync(item.path, item.encoding || "utf8");
     }
 
-    let bundleExitCode = execOut(npmCommand, ["run", "bundle"]).exitCode;
+    let newtabBundleExitCode = execOut(npmCommand, ["run", "bundle"]).exitCode;
+
+    // Until we split out the try runner for about:welcome out into its own
+    // script, we manually run its bundle script.
+    let cwd = process.cwd();
+    process.chdir("../aboutwelcome");
+    let welcomeBundleExitCode = execOut(npmCommand, ["run", "bundle"]).exitCode;
+    process.chdir(cwd);
 
     for (const name of Object.keys(items)) {
       const item = items[name];
@@ -108,8 +121,12 @@ const tests = {
       }
     }
 
-    if (bundleExitCode !== 0) {
-      errors.push("npm:bundle did not run successfully");
+    if (newtabBundleExitCode !== 0) {
+      errors.push("newtab npm:bundle did not run successfully");
+    }
+
+    if (welcomeBundleExitCode !== 0) {
+      errors.push("about:welcome npm:bundle did not run successfully");
     }
 
     logErrors("bundles", errors);
@@ -117,7 +134,7 @@ const tests = {
   },
 
   karma() {
-    logStart("karma");
+    logStart(`karma ${process.cwd()}`);
 
     const errors = [];
     const { exitCode, out } = execOut(npmCommand, [
@@ -163,7 +180,7 @@ const tests = {
       errors.push(...coverage.map(line => line.match(/Coverage.+/)[0]));
     }
 
-    logErrors("karma", errors);
+    logErrors(`karma ${process.cwd()}`, errors);
 
     console.log("-----karma stdout below this line---");
     console.log(out);
@@ -173,8 +190,26 @@ const tests = {
     return errors.length === 0 && !exitCode;
   },
 
+  welcomekarma() {
+    let cwd = process.cwd();
+    process.chdir("../aboutwelcome");
+    const result = this.karma();
+    process.chdir(cwd);
+    return result;
+  },
+
   zipCodeCoverage() {
     logStart("zipCodeCoverage");
+
+    const newtabCoveragePath = "logs/coverage/lcov.info";
+    const welcomeCoveragePath = "../aboutwelcome/logs/coverage/lcov.info";
+
+    let newtabCoverage = readFileSync(newtabCoveragePath, "utf8");
+    const welcomeCoverage = readFileSync(welcomeCoveragePath, "utf8");
+
+    newtabCoverage = `${newtabCoverage}${welcomeCoverage}`;
+    writeFileSync(newtabCoveragePath, newtabCoverage, "utf8");
+
     const { exitCode, out } = execOut("zip", [
       "-j",
       "logs/coverage/code-coverage-grcov",
@@ -238,6 +273,8 @@ async function main() {
     coverage: "karma",
     cov: "karma",
     zip: "zipCodeCoverage",
+    welcomecoverage: "welcomekarma",
+    welcomecov: "welcomekarma",
   };
 
   const inputs = [...cli.input, ...cli.flags.test].map(input =>
