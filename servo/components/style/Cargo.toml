@@ -76,7 +76,7 @@ to_shmem_derive = {path = "../to_shmem_derive"}
 time = "0.1"
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 uluru = "3.0"
-unicode-bidi = "0.3"
+unicode-bidi = { version = "0.3", default-features = false }
 unicode-segmentation = "1.0"
 void = "1.0.2"
 gecko-profiler = { path = "../../../tools/profiler/rust-api" }
