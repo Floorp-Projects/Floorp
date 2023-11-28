@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<script src="apz_test_native_event_utils.js"></script>
+<script src="apz_test_utils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<style>
+.container {
+  background-color: #eee;
+  width: 200px;
+  height: 50px;
+  border: 1px dotted black;
+  overflow: visible;
+}
+</style>
+<div class="container"></div>
+<script>
+  let text = "";
+  for (let i = 0; i < 200; i++) {
+    text += "Text text text text text text text text text text text text text text text text\n";
+  }
+  text += '<div id="target" style="width: 100%; height: 10px; background-color: red; position: relative; top: -20px; z-index: -1"></div>';
+  document.querySelector(".container").innerHTML = text;
+
+  // Silence SimpleTest warning about missing assertions by having it wait
+  // indefinitely. We don't need to give it an explicit finish because the
+  // entire window this test runs in will be closed after the main browser test
+  // finished.
+  SimpleTest.waitForExplicitFinish();
+</script>
+</html>
