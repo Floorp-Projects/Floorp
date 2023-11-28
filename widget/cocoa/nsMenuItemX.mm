@@ -97,10 +97,22 @@ nsMenuItemX::nsMenuItemX(nsMenuX* aParent, const nsString& aLabel,
 
   mIsVisible = !nsMenuUtilsX::NodeIsHiddenOrCollapsed(mContent);
 
-  // All menu items share the same target and action, and are differentiated
-  // be a unique (representedObject, tag) pair.
-  mNativeMenuItem.target = nsMenuBarX::sNativeEventTarget;
-  mNativeMenuItem.action = @selector(menuItemHit:);
+  // All menu items other than the "Copy" menu item share the same target and
+  // action, and are differentiated be a unique (representedObject, tag) pair.
+  // The "Copy" menu item is a special case that requires a macOS-default
+  // action of `copy:` and a default target in order for the "Edit" menu to be
+  // populated with OS-provided menu items such as the Emoji picker,
+  // especially in multi-language environments (see bug 1478347). Our
+  // application delegate implements `copy:` by simply forwarding it to
+  // [nsMenuBarX::sNativeEventTarget menuItemHit:].
+  if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id,
+                                         u"menu_copy"_ns, eCaseMatters)) {
+    mNativeMenuItem.action = @selector(copy:);
+  } else {
+    mNativeMenuItem.action = @selector(menuItemHit:);
+    mNativeMenuItem.target = nsMenuBarX::sNativeEventTarget;
+  }
+
   mNativeMenuItem.representedObject = mMenuGroupOwner->GetRepresentedObject();
   mNativeMenuItem.tag = mMenuGroupOwner->RegisterForCommand(this);
 
