@@ -2251,17 +2251,23 @@ void nsRefreshDriver::DetermineProximityToViewportAndNotifyResizeObservers() {
     return;
   }
 
+  auto ShouldCollect = [](const Document* aDocument) {
+    PresShell* ps = aDocument->GetPresShell();
+    if (!ps || !ps->DidInitialize()) {
+      // If there's no shell or it didn't initialize, then we'll run this code
+      // when the pres shell does the initial reflow.
+      return false;
+    }
+    return ps->HasContentVisibilityAutoFrames() ||
+           aDocument->HasResizeObservers();
+  };
+
   AutoTArray<RefPtr<Document>, 32> documents;
-  if (mPresContext->Document()->HasResizeObservers() ||
-      mPresContext->Document()->HasContentVisibilityAutoElements()) {
+  if (ShouldCollect(mPresContext->Document())) {
     documents.AppendElement(mPresContext->Document());
   }
-
-  mPresContext->Document()->CollectDescendantDocuments(
-      documents, [](const Document* document) -> bool {
-        return document->HasResizeObservers() ||
-               document->HasContentVisibilityAutoElements();
-      });
+  mPresContext->Document()->CollectDescendantDocuments(documents,
+                                                       ShouldCollect);
 
   for (const RefPtr<Document>& doc : documents) {
     MOZ_KnownLive(doc)->DetermineProximityToViewportAndNotifyResizeObservers();

@@ -17148,7 +17148,8 @@ void Document::ScheduleResizeObserversNotification() const {
 }
 
 static void FlushLayoutForWholeBrowsingContextTree(Document& aDoc) {
-  if (BrowsingContext* bc = aDoc.GetBrowsingContext()) {
+  BrowsingContext* bc = aDoc.GetBrowsingContext();
+  if (bc && bc->GetExtantDocument() == &aDoc) {
     RefPtr<BrowsingContext> top = bc->Top();
     top->PreOrderWalk([](BrowsingContext* aCur) {
       if (Document* doc = aCur->GetExtantDocument()) {
@@ -17156,16 +17157,10 @@ static void FlushLayoutForWholeBrowsingContextTree(Document& aDoc) {
       }
     });
   } else {
-    // If there is no browsing context, we just flush this document itself.
+    // If there is no browsing context, or we're not the current document of the
+    // browsing context, then we just flush this document itself.
     aDoc.FlushPendingNotifications(FlushType::Layout);
   }
-}
-
-bool Document::HasContentVisibilityAutoElements() const {
-  if (PresShell* presShell = GetPresShell()) {
-    return presShell->HasContentVisibilityAutoFrames();
-  }
-  return false;
 }
 
 void Document::DetermineProximityToViewportAndNotifyResizeObservers() {
