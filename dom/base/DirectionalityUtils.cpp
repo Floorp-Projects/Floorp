@@ -719,6 +719,12 @@ Directionality RecomputeDirectionality(Element* aElement, bool aNotify) {
   return dir;
 }
 
+// Whether the element establishes its own directionality and the one of its
+// descendants.
+static inline bool IsBoundary(const Element& aElement) {
+  return aElement.HasValidDir() || aElement.HasDirAuto();
+}
+
 static void SetDirectionalityOnDescendantsInternal(nsINode* aNode,
                                                    Directionality aDir,
                                                    bool aNotify) {
@@ -729,14 +735,18 @@ static void SetDirectionalityOnDescendantsInternal(nsINode* aNode,
   }
 
   for (nsIContent* child = aNode->GetFirstChild(); child;) {
-    if (!child->IsElement()) {
+    auto* element = Element::FromNode(child);
+    if (!element) {
       child = child->GetNextNode(aNode);
       continue;
     }
 
-    Element* element = child->AsElement();
-    if (element->HasValidDir() || element->HasDirAuto() ||
-        element->GetAssignedSlot()) {
+    if (IsBoundary(*element) || element->GetAssignedSlot() ||
+        element->GetDirectionality() == aDir) {
+      // If the element is a directionality boundary, or it's assigned to a slot
+      // (in which case it doesn't inherit the directionality from its direct
+      // parent), or already has the right directionality, then we can skip the
+      // whole subtree.
       child = child->GetNextNonChildNode(aNode);
       continue;
     }
@@ -745,13 +755,9 @@ static void SetDirectionalityOnDescendantsInternal(nsINode* aNode,
     }
 
     if (auto* slot = HTMLSlotElement::FromNode(child)) {
-      const nsTArray<RefPtr<nsINode>>& assignedNodes = slot->AssignedNodes();
-      for (uint32_t i = 0; i < assignedNodes.Length(); ++i) {
-        nsINode* node = assignedNodes[i];
-        Element* assignedElement =
-            node->IsElement() ? node->AsElement() : nullptr;
-        if (assignedElement && !assignedElement->HasValidDir() &&
-            !assignedElement->HasDirAuto()) {
+      for (const RefPtr<nsINode>& assignedNode : slot->AssignedNodes()) {
+        auto* assignedElement = Element::FromNode(*assignedNode);
+        if (assignedElement && !IsBoundary(*assignedElement)) {
           assignedElement->SetDirectionality(aDir, aNotify);
           SetDirectionalityOnDescendantsInternal(assignedElement, aDir,
                                                  aNotify);
@@ -760,7 +766,6 @@ static void SetDirectionalityOnDescendantsInternal(nsINode* aNode,
     }
 
     element->SetDirectionality(aDir, aNotify);
-
     child = child->GetNextNode(aNode);
   }
 }
