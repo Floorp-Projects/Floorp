@@ -78,7 +78,7 @@ mv fzf /usr/local/bin
 
 cd /setup
 
-pip3 install --require-hashes -r /tmp/codespell_requirements.txt
+pip3 install --break-system-packages --require-hashes -r /tmp/codespell_requirements.txt
 
 ###
 # tox Setup
@@ -86,7 +86,7 @@ pip3 install --require-hashes -r /tmp/codespell_requirements.txt
 
 cd /setup
 
-pip3 install --require-hashes -r /tmp/tox_requirements.txt
+pip3 install --break-system-packages --require-hashes -r /tmp/tox_requirements.txt
 
 cd /
 rm -rf /setup

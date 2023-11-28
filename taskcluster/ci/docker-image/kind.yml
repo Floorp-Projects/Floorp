@@ -133,7 +133,7 @@ jobs:
             - deb12-valgrind
     lint:
         symbol: I(lnt)
-        parent: debian11-base
+        parent: debian12-base
     # Neither the debian11-raw nor the debian11-packages images can have
     # packages dependencies.
     debian11-raw:
