@@ -11,6 +11,8 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/EffectsInfo.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Document.h"
@@ -104,14 +106,33 @@ static CSSRect GetBoundingContentRect(
     const nsIScrollableFrame* aRootScrollFrame,
     const DoubleTapToZoomMetrics& aMetrics,
     mozilla::Maybe<CSSRect>* aOutNearestScrollClip = nullptr) {
+  CSSRect result = nsLayoutUtils::GetBoundingContentRect(
+      aElement, aRootScrollFrame, aOutNearestScrollClip);
   if (aInProcessRootContentDocument->IsTopLevelContentDocument()) {
-    return nsLayoutUtils::GetBoundingContentRect(aElement, aRootScrollFrame,
-                                                 aOutNearestScrollClip);
+    return result;
   }
 
   nsIFrame* frame = aElement->GetPrimaryFrame();
   if (!frame) {
     return CSSRect();
+  }
+
+  // If the nearest scroll frame is |aRootScrollFrame|,
+  // nsLayoutUtils::GetBoundingContentRect doesn't set |aOutNearestScrollClip|,
+  // thus in the cases of OOP iframs, we need to use the visible rect of the
+  // iframe as the nearest scroll clip.
+  if (aOutNearestScrollClip && aOutNearestScrollClip->isNothing()) {
+    if (dom::BrowserChild* browserChild =
+            dom::BrowserChild::GetFrom(frame->PresShell())) {
+      const dom::EffectsInfo& effectsInfo = browserChild->GetEffectsInfo();
+      if (effectsInfo.IsVisible()) {
+        *aOutNearestScrollClip =
+            effectsInfo.mVisibleRect.map([&aMetrics](const nsRect& aRect) {
+              return aMetrics.mTransformMatrix.TransformBounds(
+                  CSSRect::FromAppUnits(aRect));
+            });
+      }
+    }
   }
 
   // In the case of an element inside an OOP iframe, |aMetrics.mTransformMatrix|
@@ -301,6 +322,15 @@ ZoomTarget CalculateRectToZoomTo(
                    res == nsLayoutUtils::NONINVERTIBLE_TRANSFORM);
         if (res == nsLayoutUtils::TRANSFORM_SUCCEEDED) {
           CSSRect overflowRectCSS = CSSRect::FromAppUnits(overflowRect);
+
+          // In the case of OOP iframes, above |overflowRectCSS| in the iframe
+          // documents coords, we need to convert it into the top level coords.
+          if (!aInProcessRootContentDocument->IsTopLevelContentDocument()) {
+            overflowRectCSS.MoveBy(
+                CSSPoint::FromAppUnits(-rootScrollFrame->GetScrollPosition()));
+            overflowRectCSS =
+                aMetrics.mTransformMatrix.TransformBounds(overflowRectCSS);
+          }
           if (nearestScrollClip.isSome()) {
             overflowRectCSS = nearestScrollClip->Intersect(overflowRectCSS);
           }
