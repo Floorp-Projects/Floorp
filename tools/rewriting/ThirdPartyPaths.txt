@@ -179,7 +179,8 @@ toolkit/components/normandy/vendor/
 toolkit/components/passwordmgr/PasswordRulesParser.sys.mjs
 toolkit/components/protobuf/
 toolkit/components/translation/cld2/
-toolkit/components/translations/bergamot-translator
+toolkit/components/translations/bergamot-translator/thirdparty
+toolkit/components/translations/bergamot-translator/bergamot-translator.js
 toolkit/components/url-classifier/chromium/
 toolkit/components/utils/mozjexl.js
 toolkit/components/viaduct/fetch_msg_types.pb.cc

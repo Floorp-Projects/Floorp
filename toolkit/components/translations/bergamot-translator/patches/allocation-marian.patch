@@ -1,0 +1,25 @@
+commit 31a05b47381a5b22b57fe9af7805fa40a5c5e384
+parent 11c6ae7c46be21ef96ed10c60f28022fa968939f
+Author: Greg Tatum <tatum.creative@gmail.com>
+Date:   Mon Nov 6 14:01:32 2023 -0600
+
+    Change allocation strategy for tensors
+    
+    When tensors grow, they would pre-emptively allocate large amounts of memory, and
+    would allocate ~500mb of memory for a single translation. Adjusting this value
+    down appears to fix this issue. Empirically this value keeps memory from growing too
+    rapidly, and does not degrade Wasm performance.
+
+diff --git a/src/tensors/tensor_allocator.h b/src/tensors/tensor_allocator.h
+index e3bc79f9..66f8e44d 100644
+--- a/src/tensors/tensor_allocator.h
++++ b/src/tensors/tensor_allocator.h
+@@ -13,7 +13,7 @@ class TensorAllocator {
+ private:
+   const size_t CHUNK = 128;
+   const size_t MBYTE = 1024 * 1024;
+-  const size_t GROW = CHUNK * MBYTE;
++  const size_t GROW = MBYTE;
+   const size_t ALIGN = 256;
+ 
+   Ptr<Backend> backend_;
