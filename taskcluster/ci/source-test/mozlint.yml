@@ -472,8 +472,9 @@ file-whitespace:
             - '**/*.rst'
             - '**/*.toml'
             - '**/*.webidl'
+            - '**/*.yaml'
+            - '**/*.yml'
             - '**/*.xhtml'
-            - 'tools/lint/file-whitespace.yml'
 
 
 file-perm:
@@ -517,8 +518,8 @@ file-perm:
             - '**/*.xhtml'
             - '**/*.xml'
             - '**/*.xul'
+            - '**/*.yaml'
             - '**/*.yml'
-            - 'tools/lint/file-perm.yml'
 
 
 perfdocs-verify:
