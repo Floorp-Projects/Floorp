@@ -29,6 +29,9 @@ newtab-unit-tests:
             cd /builds/worker/checkouts/gecko &&
             rm -rf node_modules &&
             npm ci &&
+            cd /builds/worker/checkouts/gecko/browser/components/aboutwelcome &&
+            rm -rf node_modules &&
+            npm ci &&
             cd /builds/worker/checkouts/gecko/browser/components/newtab &&
             rm -rf node_modules &&
             npm ci &&
@@ -36,6 +39,7 @@ newtab-unit-tests:
     when:
         files-changed:
             - "browser/components/newtab/**"
+            - "browser/components/aboutwelcome/**"
 
 newtab-unit-tests-ccov:
     description: newtab unit tests code coverage
@@ -66,11 +70,19 @@ newtab-unit-tests-ccov:
             cd /builds/worker/checkouts/gecko &&
             rm -rf node_modules &&
             npm ci &&
+            cd /builds/worker/checkouts/gecko/browser/components/aboutwelcome &&
+            rm -rf node_modules &&
+            npm ci &&
             cd /builds/worker/checkouts/gecko/browser/components/newtab &&
             rm -rf node_modules &&
             npm ci &&
             node bin/try-runner.js
+    # This should only run on mozilla-central, as the bot will only parse mozilla-central
+    # coverage anyways.
     run-on-projects: ["mozilla-central"]
+    # Note the lack of a "when" rule here. This is to avoid seeing fluctuating
+    # coverage on coverage.moz.tools / searchfox depending on whether the latest
+    # push contained patches touching these files or not.
 
 devtools-tests:
     description: devtools node-based tests (for instance jest)
