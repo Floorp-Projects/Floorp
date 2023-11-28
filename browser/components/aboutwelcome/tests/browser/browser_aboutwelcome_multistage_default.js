@@ -541,6 +541,7 @@ add_task(async function test_AWMultistage_can_restore_theme() {
       this.id = id;
       this.isActive = isActive;
     }
+
     enable() {
       for (let addon of fakeAddons) {
         addon.isActive = false;
