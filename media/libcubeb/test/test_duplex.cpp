@@ -18,8 +18,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "mozilla/gtest/MozHelpers.h"
-
 // #define ENABLE_NORMAL_LOG
 // #define ENABLE_VERBOSE_LOG
 #include "common.h"
@@ -207,8 +205,6 @@ TEST(cubeb, duplex_collection_change_no_unregister)
 {
   cubeb * ctx;
   int r;
-
-  mozilla::gtest::DisableCrashReporter();
 
   r = common_init(&ctx, "Cubeb duplex example with collection change");
   ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb library";
