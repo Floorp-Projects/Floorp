@@ -50,6 +50,11 @@ const TELEMETRY_EVENTS_FILTER = {
   object: "storageLocal",
 };
 
+add_setup(async function setup() {
+  do_get_profile();
+  Services.fog.initializeFOG();
+});
+
 async function createExtensionJSONFileWithData(extensionId, data) {
   await ExtensionStorage.set(extensionId, data);
   const jsonFile = await ExtensionStorage.getFile(extensionId);
@@ -88,12 +93,29 @@ function assertMigrationHistogramCount(category, expectedCount) {
   );
 }
 
+// Note: for consistency with telemetry event format, this function also
+// expects the addon_id to be passed in the event.value property.
+function assertMigrateResultGleanEvents(expectedEvents) {
+  let glean = Glean.extensionsData.migrateResult.testGetValue() ?? [];
+  equal(glean.length, expectedEvents.length, "Correct number of events.");
+
+  expectedEvents.forEach((expected, i) =>
+    Assert.deepEqual(
+      glean[i].extra,
+      { addon_id: expected.value, ...expected.extra },
+      "Correct addon_id and event extra properties."
+    )
+  );
+  Services.fog.testResetFOG();
+}
+
 function assertTelemetryEvents(expectedEvents) {
   TelemetryTestUtils.assertEvents(expectedEvents, {
     category: EVENT_CATEGORY,
     method: EVENT_METHOD,
     object: EVENT_OBJECT,
   });
+  assertMigrateResultGleanEvents(expectedEvents);
 }
 
 add_setup(async function setup() {
@@ -156,6 +178,7 @@ add_task(async function test_no_migration_for_newly_installed_extensions() {
   // Verify that no data migration have been needed on the newly installed
   // extension, by asserting that no telemetry events has been collected.
   await TelemetryTestUtils.assertEvents([], TELEMETRY_EVENTS_FILTER);
+  assertMigrateResultGleanEvents([]);
 });
 
 // Test that the data migration is still running for a newly installed extension
@@ -196,21 +219,19 @@ add_task(async function test_data_migration_on_keep_storage_on_uninstall() {
   await extension.unload();
 
   // Verify that the expected telemetry has been recorded.
-  await TelemetryTestUtils.assertEvents(
-    [
-      {
-        method: "migrateResult",
-        value: EXTENSION_ID,
-        extra: {
-          backend: "IndexedDB",
-          data_migrated: "y",
-          has_jsonfile: "y",
-          has_olddata: "y",
-        },
-      },
-    ],
-    TELEMETRY_EVENTS_FILTER
-  );
+  let expected = {
+    method: "migrateResult",
+    value: EXTENSION_ID,
+    extra: {
+      backend: "IndexedDB",
+      data_migrated: "y",
+      has_jsonfile: "y",
+      has_olddata: "y",
+    },
+  };
+
+  await TelemetryTestUtils.assertEvents([expected], TELEMETRY_EVENTS_FILTER);
+  assertMigrateResultGleanEvents([expected]);
 
   Services.prefs.clearUserPref(LEAVE_STORAGE_PREF);
 });
@@ -687,18 +708,16 @@ add_task(async function test_migration_aborted_on_shutdown() {
     { backendEnabled: false },
     "Expect migration to have been aborted"
   );
-  TelemetryTestUtils.assertEvents(
-    [
-      {
-        value: EXTENSION_ID,
-        extra: {
-          backend: "JSONFile",
-          error_name: "DataMigrationAbortedError",
-        },
-      },
-    ],
-    TELEMETRY_EVENTS_FILTER
-  );
+  let expected = {
+    value: EXTENSION_ID,
+    extra: {
+      backend: "JSONFile",
+      error_name: "DataMigrationAbortedError",
+    },
+  };
+
+  TelemetryTestUtils.assertEvents([expected], TELEMETRY_EVENTS_FILTER);
+  assertMigrateResultGleanEvents([expected]);
 });
 
 add_task(async function test_storage_local_data_migration_clear_pref() {
@@ -771,18 +790,15 @@ async function test_quota_exceeded_while_migrating_data() {
   );
   await extension.unload();
 
-  TelemetryTestUtils.assertEvents(
-    [
-      {
-        value: EXT_ID,
-        extra: {
-          backend: "JSONFile",
-          error_name: "QuotaExceededError",
-        },
-      },
-    ],
-    TELEMETRY_EVENTS_FILTER
-  );
+  let expected = {
+    value: EXT_ID,
+    extra: {
+      backend: "JSONFile",
+      error_name: "QuotaExceededError",
+    },
+  };
+  TelemetryTestUtils.assertEvents([expected], TELEMETRY_EVENTS_FILTER);
+  assertMigrateResultGleanEvents([expected]);
 
   Services.prefs.clearUserPref("dom.quotaManager.temporaryStorage.fixedLimit");
   await promiseQuotaManagerServiceClear();

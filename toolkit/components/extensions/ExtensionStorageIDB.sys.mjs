@@ -136,13 +136,22 @@ var ErrorsTelemetry = {
         extra.error_name = this.getErrorName(error);
       }
 
+      let addon_id = lazy.getTrimmedString(extensionId);
       Services.telemetry.recordEvent(
         "extensions.data",
         "migrateResult",
         "storageLocal",
-        lazy.getTrimmedString(extensionId),
+        addon_id,
         extra
       );
+      Glean.extensionsData.migrateResult.record({
+        addon_id,
+        backend: extra.backend,
+        data_migrated: extra.data_migrated,
+        has_jsonfile: extra.has_jsonfile,
+        has_olddata: extra.has_olddata,
+        error_name: extra.error_name,
+      });
     } catch (err) {
       // Report any telemetry error on the browser console, but
       // we treat it as a non-fatal error and we don't re-throw
@@ -165,14 +174,21 @@ var ErrorsTelemetry = {
    */
   recordStorageLocalError({ extensionId, storageMethod, error }) {
     this.lazyInit();
+    let addon_id = lazy.getTrimmedString(extensionId);
+    let error_name = this.getErrorName(error);
 
     Services.telemetry.recordEvent(
       "extensions.data",
       "storageLocalError",
       storageMethod,
-      lazy.getTrimmedString(extensionId),
-      { error_name: this.getErrorName(error) }
+      addon_id,
+      { error_name }
     );
+    Glean.extensionsData.storageLocalError.record({
+      addon_id,
+      method: storageMethod,
+      error_name,
+    });
   },
 };
 

@@ -444,4 +444,15 @@ add_task(async function test_telemetry_storage_local_unexpected_error() {
     category: "extensions.data",
     method: "storageLocalError",
   });
+
+  let glean = Glean.extensionsData.storageLocalError.testGetValue() ?? [];
+  equal(glean.length, expectedEvents.length, "Correct number of events.");
+
+  for (let i = 0; i < expectedEvents.length; i++) {
+    let event = expectedEvents[i];
+    equal(glean[i].extra.addon_id, event.value, "Correct addon_id.");
+    equal(glean[i].extra.method, event.object, "Correct method.");
+    equal(glean[i].extra.error_name, event.extra.error_name, "Correct error.");
+  }
+  Services.fog.testResetFOG();
 });
