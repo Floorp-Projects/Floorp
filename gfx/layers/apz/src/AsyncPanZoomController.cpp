@@ -1230,19 +1230,11 @@ nsEventStatus AsyncPanZoomController::HandleGestureEvent(
           rv = OnSingleTapConfirmed(tapGestureInput);
           break;
         case TapGestureInput::TAPGESTURE_DOUBLE:
-          // This means that double tapping on an oop iframe "works" in that we
-          // don't try (and fail) to zoom the oop iframe. But it also means it
-          // is impossible to zoom to some content inside that oop iframe.
-          // Instead the best we can do is zoom to the oop iframe itself. This
-          // is consistent with what Chrome and Safari currently do. Allowing
-          // zooming to content inside an oop iframe would be decently
-          // complicated and it doesn't seem worth it. Bug 1715179 is on file
-          // for this.
           if (!IsRootContent()) {
             if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
-              if (RefPtr<AsyncPanZoomController> root =
-                      treeManagerLocal->FindZoomableApzc(this)) {
-                rv = root->OnDoubleTap(tapGestureInput);
+              if (AsyncPanZoomController* apzc =
+                      treeManagerLocal->FindRootApzcFor(GetLayersId())) {
+                rv = apzc->OnDoubleTap(tapGestureInput);
               }
             }
             break;
@@ -3193,7 +3185,7 @@ nsEventStatus AsyncPanZoomController::OnDoubleTap(
 
   RefPtr<GeckoContentController> controller = GetGeckoContentController();
   if (controller) {
-    if (ZoomConstraintsAllowDoubleTapZoom() &&
+    if (rootContentApzc->ZoomConstraintsAllowDoubleTapZoom() &&
         (!GetCurrentTouchBlock() ||
          GetCurrentTouchBlock()->TouchActionAllowsDoubleTapZoom())) {
       if (Maybe<LayoutDevicePoint> geckoScreenPoint =

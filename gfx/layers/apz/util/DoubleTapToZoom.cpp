@@ -100,11 +100,11 @@ static dom::Element* GetNearbyTableCell(
 // level content document coordinates.
 static CSSRect GetBoundingContentRect(
     const dom::Element* aElement,
-    const RefPtr<dom::Document>& aRootContentDocument,
+    const RefPtr<dom::Document>& aInProcessRootContentDocument,
     const nsIScrollableFrame* aRootScrollFrame,
     const DoubleTapToZoomMetrics& aMetrics,
     mozilla::Maybe<CSSRect>* aOutNearestScrollClip = nullptr) {
-  if (aRootContentDocument->IsTopLevelContentDocument()) {
+  if (aInProcessRootContentDocument->IsTopLevelContentDocument()) {
     return nsLayoutUtils::GetBoundingContentRect(aElement, aRootScrollFrame,
                                                  aOutNearestScrollClip);
   }
@@ -124,7 +124,7 @@ static CSSRect GetBoundingContentRect(
 
 static bool ShouldZoomToElement(
     const nsCOMPtr<dom::Element>& aElement,
-    const RefPtr<dom::Document>& aRootContentDocument,
+    const RefPtr<dom::Document>& aInProcessRootContentDocument,
     nsIScrollableFrame* aRootScrollFrame,
     const DoubleTapToZoomMetrics& aMetrics) {
   if (nsIFrame* frame = aElement->GetPrimaryFrame()) {
@@ -139,7 +139,7 @@ static bool ShouldZoomToElement(
   // Trying to zoom to the html element will just end up scrolling to the start
   // of the document, return false and we'll run out of elements and just
   // zoomout (without scrolling to the start).
-  if (aElement->OwnerDoc() == aRootContentDocument &&
+  if (aElement->OwnerDoc() == aInProcessRootContentDocument &&
       aElement->IsHTMLElement(nsGkAtoms::html)) {
     return false;
   }
@@ -153,8 +153,8 @@ static bool ShouldZoomToElement(
   // don't want to zoom to them. This heuristic is quite naive and leaves a lot
   // to be desired.
   if (dom::Element* tableCell = GetNearbyTableCell(aElement)) {
-    CSSRect rect = GetBoundingContentRect(tableCell, aRootContentDocument,
-                                          aRootScrollFrame, aMetrics);
+    CSSRect rect = GetBoundingContentRect(
+        tableCell, aInProcessRootContentDocument, aRootScrollFrame, aMetrics);
     if (rect.width < 0.3 * aMetrics.mRootScrollableRect.width) {
       return false;
     }
@@ -235,15 +235,15 @@ static bool HasNonPassiveWheelListenerOnAncestor(nsIContent* aContent) {
 }
 
 ZoomTarget CalculateRectToZoomTo(
-    const RefPtr<dom::Document>& aRootContentDocument, const CSSPoint& aPoint,
-    const DoubleTapToZoomMetrics& aMetrics) {
+    const RefPtr<dom::Document>& aInProcessRootContentDocument,
+    const CSSPoint& aPoint, const DoubleTapToZoomMetrics& aMetrics) {
   // Ensure the layout information we get is up-to-date.
-  aRootContentDocument->FlushPendingNotifications(FlushType::Layout);
+  aInProcessRootContentDocument->FlushPendingNotifications(FlushType::Layout);
 
   // An empty rect as return value is interpreted as "zoom out".
   const CSSRect zoomOut;
 
-  RefPtr<PresShell> presShell = aRootContentDocument->GetPresShell();
+  RefPtr<PresShell> presShell = aInProcessRootContentDocument->GetPresShell();
   if (!presShell) {
     return ZoomTarget{zoomOut, CantZoomOutBehavior::ZoomIn};
   }
@@ -255,7 +255,7 @@ ZoomTarget CalculateRectToZoomTo(
   }
 
   CSSPoint documentRelativePoint =
-      aRootContentDocument->IsTopLevelContentDocument()
+      aInProcessRootContentDocument->IsTopLevelContentDocument()
           ? CSSPoint::FromAppUnits(ViewportUtils::VisualToLayout(
                 CSSPoint::ToAppUnits(aPoint), presShell)) +
                 CSSPoint::FromAppUnits(rootScrollFrame->GetScrollPosition())
@@ -272,7 +272,7 @@ ZoomTarget CalculateRectToZoomTo(
           ? CantZoomOutBehavior::Nothing
           : CantZoomOutBehavior::ZoomIn;
 
-  while (element && !ShouldZoomToElement(element, aRootContentDocument,
+  while (element && !ShouldZoomToElement(element, aInProcessRootContentDocument,
                                          rootScrollFrame, aMetrics)) {
     element = element->GetFlattenedTreeParentElement();
   }
@@ -284,8 +284,8 @@ ZoomTarget CalculateRectToZoomTo(
 
   Maybe<CSSRect> nearestScrollClip;
   CSSRect rect =
-      GetBoundingContentRect(element, aRootContentDocument, rootScrollFrame,
-                             aMetrics, &nearestScrollClip);
+      GetBoundingContentRect(element, aInProcessRootContentDocument,
+                             rootScrollFrame, aMetrics, &nearestScrollClip);
 
   // In some cases, like overflow: visible and overflowing content, the bounding
   // client rect of the targeted element won't contain the point the user double
