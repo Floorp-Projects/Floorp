@@ -175,7 +175,7 @@ networking:
     expires: 128
 
   cookie_count_unpart_by_key:
-    type: custom_distribution 
+    type: custom_distribution
     description: >
       A distribution of the unpartitioned cookies in storage belonging to
       a particular cookie key (host + origin attributes)
@@ -196,13 +196,13 @@ networking:
     expires: 128
 
   cookie_purge_max:
-    type: custom_distribution 
+    type: custom_distribution
     description: >
       A distribution of the number of cookies purged across
       all host + OAs as a result of exceeding the cookie maximum threshold
       (single purge)
     range_min: 1
-    range_max: 4000 
+    range_max: 4000
     bucket_count: 22
     histogram_type: exponential
     unit: integer
@@ -218,7 +218,7 @@ networking:
     expires: 128
 
   cookie_purge_entry_max:
-    type: custom_distribution 
+    type: custom_distribution
     description: >
       A distribution of the number of cookies purged for a single
       host + OA entry as a result of exceeding the maximum threshold
