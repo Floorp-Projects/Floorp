@@ -396,7 +396,7 @@ partial interface Element {
 
 // Sanitizer API, https://wicg.github.io/sanitizer-api/
 dictionary SetHTMLOptions {
-  Sanitizer sanitizer;
+  SanitizerConfig sanitizer;
 };
 
 partial interface Element {

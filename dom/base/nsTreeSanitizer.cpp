@@ -1587,18 +1587,18 @@ bool nsTreeSanitizer::MustFlattenForSanitizerAPI(int32_t aNamespace,
 
   // Step 6. If element matches any name in config["blockElements"]: Return
   // block.
-  if (mBlockElements &&
-      MatchesElementName(*mBlockElements, aNamespace, aLocal)) {
+  if (mReplaceWithChildrenElements &&
+      MatchesElementName(*mReplaceWithChildrenElements, aNamespace, aLocal)) {
     return true;
   }
 
   // Step 7. Let allow list be null.
   // Step 8. If "allowElements" exists in config:
   // Step 8.1. Then : Set allow list to config["allowElements"].
-  if (mAllowElements) {
+  if (mElements) {
     // Step 9. If element does not match any name in allow list:
     // Return block.
-    if (!MatchesElementName(*mAllowElements, aNamespace, aLocal)) {
+    if (!mElements->Contains(ElementName(aNamespace, aLocal))) {
       return true;
     }
   } else {
@@ -1761,7 +1761,8 @@ bool nsTreeSanitizer::MustPruneForSanitizerAPI(int32_t aNamespace,
   }
 
   // Step 5. If element matches any name in config["dropElements"]: Return drop.
-  if (mDropElements && MatchesElementName(*mDropElements, aNamespace, aLocal)) {
+  if (mRemoveElements &&
+      MatchesElementName(*mRemoveElements, aNamespace, aLocal)) {
     return true;
   }
 
@@ -1971,39 +1972,10 @@ bool nsTreeSanitizer::MatchesElementName(ElementNameSet& aNames,
   return aNames.Contains(ElementName(aNamespace, aLocalName));
 }
 
-// https://wicg.github.io/sanitizer-api/#attribute-match-list
-bool nsTreeSanitizer::MatchesAttributeMatchList(
-    AttributesToElementsMap& aMatchList, Element& aElement,
-    int32_t aAttrNamespace, nsAtom* aAttrLocalName) {
-  // Step 1. If attribute’s local name does not match the attribute match list
-  // list’s key and if the key is not "*": Return false.
-  ElementNameSet* names;
-  if (auto lookup =
-          aMatchList.Lookup(AttributeName(aAttrNamespace, aAttrLocalName))) {
-    names = lookup->get();
-  } else {
-    return false;
-  }
-
-  // Step 2. Let element be the attribute’s Element.
-  // Step 3. Let element name be element’s local name.
-  // Step 4. If element is a in either the SVG or MathML namespaces (i.e., it’s
-  // a foreign element), then prefix element name with the appropriate namespace
-  // designator plus a whitespace character.
-
-  // TODO: This is spec text is going to change.
-  int32_t namespaceID = aElement.NodeInfo()->NamespaceID();
-  RefPtr<nsAtom> nameAtom = aElement.NodeInfo()->NameAtom();
-
-  // Step 5. If list’s value does not contain element name and value is not
-  // ["*"]: Return false.
-  // Step 6. Return true.
-
-  // nullptr means star (*), i.e. any element.
-  if (!names) {
-    return true;
-  }
-  return MatchesElementName(*names, namespaceID, nameAtom);
+bool nsTreeSanitizer::MatchesAttributeName(AttributeNameSet& aNames,
+                                           int32_t aNamespace,
+                                           nsAtom* aLocalName) {
+  return aNames.Contains(AttributeName(aNamespace, aLocalName));
 }
 
 // https://wicg.github.io/sanitizer-api/#sanitize-action-for-an-attribute
@@ -2024,21 +1996,44 @@ bool nsTreeSanitizer::MustDropAttribute(Element* aElement,
     return true;
   }
 
+  // TODO(not specified yet): An element to attributes mapping that is
+  // considered before the attributes/removeAttributes lists that apply to
+  // everything.
+  if (mElements) {
+    int32_t namespaceID = aElement->NodeInfo()->NamespaceID();
+    RefPtr<nsAtom> nameAtom = aElement->NodeInfo()->NameAtom();
+
+    if (auto entry = mElements->Lookup(ElementName(namespaceID, nameAtom))) {
+      if (entry->mRemoveAttributes &&
+          MatchesAttributeName(*entry->mRemoveAttributes, aAttrNamespace,
+                               aAttrLocalName)) {
+        return true;
+      }
+
+      if (entry->mAttributes) {
+        if (!MatchesAttributeName(*entry->mAttributes, aAttrNamespace,
+                                  aAttrLocalName)) {
+          return true;
+        }
+        // Fall-through to the removeAttributes/attributes lists below.
+      }
+    }
+  }
+
   // Step 4. If attribute matches any attribute match list in config’s attribute
   // drop list: Return drop.
-  if (mDropAttributes &&
-      MatchesAttributeMatchList(*mDropAttributes, *aElement, aAttrNamespace,
-                                aAttrLocalName)) {
+  if (mRemoveAttributes &&
+      MatchesAttributeName(*mRemoveAttributes, aAttrNamespace,
+                           aAttrLocalName)) {
     return true;
   }
 
   // Step 5. If attribute allow list exists in config:
-  if (mAllowAttributes) {
+  if (mAttributes) {
     // Step 5.1. Then let allow list be |config|["allowAttributes"].
     // Step 6. If attribute does not match any attribute match list in allow
     // list: Return drop.
-    if (!MatchesAttributeMatchList(*mAllowAttributes, *aElement, aAttrNamespace,
-                                   aAttrLocalName)) {
+    if (!MatchesAttributeName(*mAttributes, aAttrNamespace, aAttrLocalName)) {
       return true;
     }
   } else {
@@ -2462,6 +2457,12 @@ void nsTreeSanitizer::ReleaseStatics() {
 static int32_t ConvertNamespaceString(const nsAString& aNamespace,
                                       bool aForAttribute,
                                       mozilla::ErrorResult& aRv) {
+  if (aNamespace.IsVoid()) {
+    // NOTE: Currently this ?should? never match any elements, only
+    // attributes.
+    return kNameSpaceID_None;
+  }
+
   int32_t namespaceID = nsNameSpaceManager::GetInstance()->GetNameSpaceID(
       aNamespace, /* aInChromeDoc */ false);
   if (namespaceID == kNameSpaceID_XHTML || namespaceID == kNameSpaceID_MathML ||
@@ -2502,45 +2503,84 @@ UniquePtr<nsTreeSanitizer::ElementNameSet> nsTreeSanitizer::ConvertElements(
       set->Insert(elemName);
     }
   }
-
   return set;
 }
 
-UniquePtr<nsTreeSanitizer::ElementNameSet> nsTreeSanitizer::ConvertElements(
-    const OwningStarOrStringOrSanitizerElementNamespaceSequence& aElements,
+UniquePtr<nsTreeSanitizer::ElementsToAttributesMap>
+nsTreeSanitizer::ConvertElementsWithAttributes(
+    const nsTArray<OwningStringOrSanitizerElementNamespaceWithAttributes>&
+        aElements,
     mozilla::ErrorResult& aRv) {
-  if (aElements.IsStar()) {
-    return nullptr;
-  }
-  return ConvertElements(
-      aElements.GetAsStringOrSanitizerElementNamespaceSequence(), aRv);
-}
+  auto map = MakeUnique<ElementsToAttributesMap>();
 
-UniquePtr<nsTreeSanitizer::AttributesToElementsMap>
-nsTreeSanitizer::ConvertAttributes(
-    const nsTArray<SanitizerAttribute>& aAttributes, ErrorResult& aRv) {
-  auto map = MakeUnique<AttributesToElementsMap>();
+  for (const auto& entry : aElements) {
+    if (entry.IsString()) {
+      RefPtr<nsAtom> nameAtom = NS_AtomizeMainThread(entry.GetAsString());
+      // The default namespace for elements is HTML.
+      ElementName elemName(kNameSpaceID_XHTML, std::move(nameAtom));
+      // No explicit list of attributes to allow/remove.
+      map->InsertOrUpdate(elemName, ElementWithAttributes{});
+    } else {
+      const auto& elemNamespace =
+          entry.GetAsSanitizerElementNamespaceWithAttributes();
 
-  for (const auto& entry : aAttributes) {
-    // The default namespace for attributes is the "null" namespace.
-    int32_t namespaceID = kNameSpaceID_None;
-    if (!entry.mNamespace.IsVoid()) {
-      namespaceID = ConvertNamespaceString(entry.mNamespace, true, aRv);
+      ElementWithAttributes elemWithAttributes;
+
+      if (elemNamespace.mAttributes.WasPassed()) {
+        elemWithAttributes.mAttributes =
+            ConvertAttributes(elemNamespace.mAttributes.Value(), aRv);
+        if (aRv.Failed()) {
+          return {};
+        }
+      }
+
+      if (elemNamespace.mRemoveAttributes.WasPassed()) {
+        elemWithAttributes.mRemoveAttributes =
+            ConvertAttributes(elemNamespace.mRemoveAttributes.Value(), aRv);
+        if (aRv.Failed()) {
+          return {};
+        }
+      }
+
+      int32_t namespaceID =
+          ConvertNamespaceString(elemNamespace.mNamespace, false, aRv);
       if (aRv.Failed()) {
         return {};
       }
-    }
-    RefPtr<nsAtom> attrAtom = NS_AtomizeMainThread(entry.mName);
-    AttributeName attrName(namespaceID, std::move(attrAtom));
 
-    UniquePtr<ElementNameSet> elements = ConvertElements(entry.mElements, aRv);
-    if (aRv.Failed()) {
-      return {};
+      RefPtr<nsAtom> nameAtom = NS_AtomizeMainThread(elemNamespace.mName);
+      ElementName elemName(namespaceID, std::move(nameAtom));
+
+      map->InsertOrUpdate(elemName, std::move(elemWithAttributes));
     }
-    map->InsertOrUpdate(attrName, std::move(elements));
   }
 
   return map;
+}
+
+UniquePtr<nsTreeSanitizer::AttributeNameSet> nsTreeSanitizer::ConvertAttributes(
+    const nsTArray<OwningStringOrSanitizerAttributeNamespace>& aAttributes,
+    ErrorResult& aRv) {
+  auto set = MakeUnique<AttributeNameSet>(aAttributes.Length());
+  for (const auto& entry : aAttributes) {
+    if (entry.IsString()) {
+      RefPtr<nsAtom> nameAtom = NS_AtomizeMainThread(entry.GetAsString());
+      // The default namespace for attributes is the "null" namespace.
+      AttributeName attrName(kNameSpaceID_None, std::move(nameAtom));
+      set->Insert(attrName);
+    } else {
+      const auto& attrNamespace = entry.GetAsSanitizerAttributeNamespace();
+      int32_t namespaceID =
+          ConvertNamespaceString(attrNamespace.mNamespace, true, aRv);
+      if (aRv.Failed()) {
+        return {};
+      }
+      RefPtr<nsAtom> attrAtom = NS_AtomizeMainThread(attrNamespace.mName);
+      AttributeName attrName(namespaceID, std::move(attrAtom));
+      set->Insert(attrName);
+    }
+  }
+  return set;
 }
 
 void nsTreeSanitizer::WithWebSanitizerOptions(
@@ -2555,46 +2595,47 @@ void nsTreeSanitizer::WithWebSanitizerOptions(
 
   mIsForSanitizerAPI = true;
 
-  if (aOptions.mAllowComments.WasPassed()) {
-    mAllowComments = aOptions.mAllowComments.Value();
+  if (aOptions.mComments.WasPassed()) {
+    mAllowComments = aOptions.mComments.Value();
   }
-  if (aOptions.mAllowCustomElements.WasPassed()) {
-    mAllowCustomElements = aOptions.mAllowCustomElements.Value();
+  if (aOptions.mCustomElements.WasPassed()) {
+    mAllowCustomElements = aOptions.mCustomElements.Value();
   }
-  if (aOptions.mAllowUnknownMarkup.WasPassed()) {
-    mAllowUnknownMarkup = aOptions.mAllowUnknownMarkup.Value();
+  if (aOptions.mUnknownMarkup.WasPassed()) {
+    mAllowUnknownMarkup = aOptions.mUnknownMarkup.Value();
   }
 
-  if (aOptions.mAllowElements.WasPassed()) {
-    mAllowElements = ConvertElements(aOptions.mAllowElements.Value(), aRv);
+  if (aOptions.mElements.WasPassed()) {
+    mElements = ConvertElementsWithAttributes(aOptions.mElements.Value(), aRv);
     if (aRv.Failed()) {
       return;
     }
   }
 
-  if (aOptions.mBlockElements.WasPassed()) {
-    mBlockElements = ConvertElements(aOptions.mBlockElements.Value(), aRv);
+  if (aOptions.mRemoveElements.WasPassed()) {
+    mRemoveElements = ConvertElements(aOptions.mRemoveElements.Value(), aRv);
     if (aRv.Failed()) {
       return;
     }
   }
 
-  if (aOptions.mDropElements.WasPassed()) {
-    mDropElements = ConvertElements(aOptions.mDropElements.Value(), aRv);
+  if (aOptions.mReplaceWithChildrenElements.WasPassed()) {
+    mReplaceWithChildrenElements =
+        ConvertElements(aOptions.mReplaceWithChildrenElements.Value(), aRv);
     if (aRv.Failed()) {
       return;
     }
   }
 
-  if (aOptions.mAllowAttributes.WasPassed()) {
-    mAllowAttributes =
-        ConvertAttributes(aOptions.mAllowAttributes.Value(), aRv);
+  if (aOptions.mAttributes.WasPassed()) {
+    mAttributes = ConvertAttributes(aOptions.mAttributes.Value(), aRv);
     if (aRv.Failed()) {
       return;
     }
   }
 
-  if (aOptions.mDropAttributes.WasPassed()) {
-    mDropAttributes = ConvertAttributes(aOptions.mDropAttributes.Value(), aRv);
+  if (aOptions.mRemoveAttributes.WasPassed()) {
+    mRemoveAttributes =
+        ConvertAttributes(aOptions.mRemoveAttributes.Value(), aRv);
   }
 }
