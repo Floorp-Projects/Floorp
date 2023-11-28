@@ -135,7 +135,7 @@ class RemoteProcessMonitor:
                         self.last_test_seen = "Last test finished"
                     elif message.get("action") == "log":
                         line = message["message"].strip()
-                        m = re.match(".*:\s*(\d*)", line)
+                        m = re.match(r".*:\s*(\d*)", line)
                         if m:
                             try:
                                 val = int(m.group(1))
