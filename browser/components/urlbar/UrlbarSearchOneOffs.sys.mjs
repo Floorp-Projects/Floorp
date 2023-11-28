@@ -94,6 +94,13 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
 
   onQueryFinished(queryContext) {
     this.#buildQuickSuggestOptIn(queryContext);
+
+    if (
+      this.#quickSuggestOptInContainer &&
+      !this.#quickSuggestOptInContainer.hidden
+    ) {
+      this.#quickSuggestOptInProvider._recordGlean("impression");
+    }
   }
 
   #quickSuggestOptInContainer;
@@ -185,8 +192,6 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
         ? "urlbar-firefox-suggest-contextual-opt-in-description-2"
         : "urlbar-firefox-suggest-contextual-opt-in-description-1"
     );
-
-    this.#quickSuggestOptInProvider._recordGlean("impression");
   }
 
   #isQuickSuggestOptInElement(element) {
