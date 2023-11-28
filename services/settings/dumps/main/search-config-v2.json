@@ -3675,8 +3675,7 @@
         "classification": "unknown",
         "urls": {
           "search": {
-            "base": "https://dict.leo.org/englisch-deutsch/{searchTerms}",
-            "searchTermParamName": ""
+            "base": "https://dict.leo.org/englisch-deutsch/{searchTerms}"
           },
           "suggestions": {
             "base": "https://dict.leo.org/dictQuery/m-query/conf/ende/query.conf/strlist.json",
