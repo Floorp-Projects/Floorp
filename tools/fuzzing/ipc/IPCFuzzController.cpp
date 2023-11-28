@@ -298,7 +298,7 @@ bool IPCFuzzController::ObserveIPCMessage(mozilla::ipc::NodeChannel* channel,
       channel->mBlockSendRecv = true;
     }
     return true;
-  } else if (aMessage.type() == mIPCTriggerMsg) {
+  } else if (aMessage.type() == mIPCTriggerMsg && !Nyx::instance().started()) {
     MOZ_FUZZING_NYX_PRINT("DEBUG: Ready message detected.\n");
 
     if (!haveTargetNodeName && !!getenv("MOZ_FUZZ_PROTOID_FILTER")) {
@@ -332,22 +332,19 @@ bool IPCFuzzController::ObserveIPCMessage(mozilla::ipc::NodeChannel* channel,
 
     // The ready message indicates the right node name for us to work with
     // and we should only ever receive it once.
-    if (haveTargetNodeName) {
-      MOZ_FUZZING_NYX_PRINT("ERROR: Received ready signal twice?!\n");
-      return false;
+    if (!haveTargetNodeName) {
+      targetNodeName = channel->GetName();
+      haveTargetNodeName = true;
+
+      // We can also use this message as the base template for other messages
+      if (!this->sampleHeader.initLengthUninitialized(
+              sizeof(IPC::Message::Header))) {
+        MOZ_FUZZING_NYX_ABORT("sampleHeader.initLengthUninitialized failed\n");
+      }
+
+      memcpy(sampleHeader.begin(), aMessage.header(),
+             sizeof(IPC::Message::Header));
     }
-
-    targetNodeName = channel->GetName();
-    haveTargetNodeName = true;
-
-    // We can also use this message as the base template for other messages
-    if (!this->sampleHeader.initLengthUninitialized(
-            sizeof(IPC::Message::Header))) {
-      MOZ_FUZZING_NYX_ABORT("sampleHeader.initLengthUninitialized failed\n");
-    }
-
-    memcpy(sampleHeader.begin(), aMessage.header(),
-           sizeof(IPC::Message::Header));
   } else if (haveTargetNodeName && targetNodeName != channel->GetName()) {
     // Not our node, no need to observe
     return true;
