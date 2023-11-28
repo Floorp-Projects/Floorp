@@ -2218,6 +2218,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="review_quality_check_highlights_title">Tamuɣli s wazal-is seg yilɣa imaynuten</string>
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
     <string name="review_quality_check_explanation_title">Amek ara nettguccul alɣu n tɣara</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Nettwali iwellihen-a ttwamanent.</string>
+    <!-- Description explaining grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_C">Nettwali iwellihen sdukklen iwellihen inaflasen d yiwellihen arinaflasen.</string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Issin ugar ɣef %s.</string>
     <!-- Text for title of settings section. -->
