@@ -8,7 +8,6 @@
 #define mozilla_layers_DoubleTapToZoom_h
 
 #include "Units.h"
-#include "mozilla/gfx/Matrix.h"
 
 template <class T>
 class RefPtr;
@@ -47,37 +46,15 @@ struct ZoomTarget {
   Maybe<CSSPoint> documentRelativePointerPosition;
 };
 
-struct DoubleTapToZoomMetrics {
-  // The visual viewport rect of the top-level content document.
-  CSSRect mVisualViewport;
-  // The scrollable rect of the root scroll container of the top-level content
-  // document.
-  CSSRect mRootScrollableRect;
-  // If double-tap-to-zoom happens inside an OOP iframe, this transform matrix
-  // is the matrix converting the coordinates relative to layout viewport origin
-  // of the OOP iframe to the document origin of the top level content document.
-  // If not, this is the identity matrix.
-  CSSToCSSMatrix4x4 mTransformMatrix;
-
-  bool operator==(const DoubleTapToZoomMetrics& aOther) const {
-    return mVisualViewport == aOther.mVisualViewport &&
-           mRootScrollableRect == aOther.mRootScrollableRect &&
-           mTransformMatrix == aOther.mTransformMatrix;
-  }
-  friend std::ostream& operator<<(std::ostream& aStream,
-                                  const DoubleTapToZoomMetrics& aUpdate);
-};
-
 /**
  * For a double tap at |aPoint|, return a ZoomTarget struct with contains a rect
  * to which the browser should zoom in response (see ZoomTarget definition for
  * more details). An empty rect means the browser should zoom out. |aDocument|
- * should be the in-process root content document for the content that was
- * tapped.
+ * should be the root content document for the content that was tapped.
  */
 ZoomTarget CalculateRectToZoomTo(
-    const RefPtr<mozilla::dom::Document>& aInProcessRootContentDocument,
-    const CSSPoint& aPoint, const DoubleTapToZoomMetrics& aMetrics);
+    const RefPtr<mozilla::dom::Document>& aRootContentDocument,
+    const CSSPoint& aPoint);
 
 }  // namespace layers
 }  // namespace mozilla

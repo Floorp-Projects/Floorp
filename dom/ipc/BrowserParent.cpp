@@ -2228,10 +2228,11 @@ void BrowserParent::SendRealTouchMoveEvent(
   MOZ_ASSERT(!ret || aEvent.HasBeenPostedToRemoteProcess());
 }
 
-bool BrowserParent::SendHandleTap(
-    TapType aType, const LayoutDevicePoint& aPoint, Modifiers aModifiers,
-    const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId,
-    const Maybe<DoubleTapToZoomMetrics>& aDoubleTapToZoomMetrics) {
+bool BrowserParent::SendHandleTap(TapType aType,
+                                  const LayoutDevicePoint& aPoint,
+                                  Modifiers aModifiers,
+                                  const ScrollableLayerGuid& aGuid,
+                                  uint64_t aInputBlockId) {
   if (mIsDestroyed || !mIsReadyToHandleInputEvents) {
     return false;
   }
@@ -2247,12 +2248,12 @@ bool BrowserParent::SendHandleTap(
     }
   }
   return Manager()->IsInputPriorityEventEnabled()
-             ? PBrowserParent::SendHandleTap(
-                   aType, TransformParentToChild(aPoint), aModifiers, aGuid,
-                   aInputBlockId, aDoubleTapToZoomMetrics)
+             ? PBrowserParent::SendHandleTap(aType,
+                                             TransformParentToChild(aPoint),
+                                             aModifiers, aGuid, aInputBlockId)
              : PBrowserParent::SendNormalPriorityHandleTap(
                    aType, TransformParentToChild(aPoint), aModifiers, aGuid,
-                   aInputBlockId, aDoubleTapToZoomMetrics);
+                   aInputBlockId);
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvSyncMessage(

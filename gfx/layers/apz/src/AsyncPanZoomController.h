@@ -1280,17 +1280,6 @@ class AsyncPanZoomController {
     return Metrics().GetZoom();
   }
 
-  CSSRect GetVisualViewport() const {
-    MOZ_ASSERT(IsRootContent());
-    RecursiveMutexAutoLock lock(mRecursiveMutex);
-    return Metrics().GetVisualViewport();
-  }
-
-  CSSPoint GetLayoutScrollOffset() const {
-    RecursiveMutexAutoLock lock(mRecursiveMutex);
-    return Metrics().GetLayoutScrollOffset();
-  }
-
   // Returns the delta for the given InputData.
   ParentLayerPoint GetDeltaForEvent(const InputData& aEvent) const;
 

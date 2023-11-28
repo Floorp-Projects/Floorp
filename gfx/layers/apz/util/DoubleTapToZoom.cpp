@@ -11,8 +11,6 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/EffectsInfo.h"
-#include "mozilla/dom/BrowserChild.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Document.h"
@@ -24,7 +22,6 @@
 #include "nsStyleConsts.h"
 #include "mozilla/ViewportUtils.h"
 #include "mozilla/EventListenerManager.h"
-#include "mozilla/layers/APZUtils.h"
 
 namespace mozilla {
 namespace layers {
@@ -98,56 +95,10 @@ static dom::Element* GetNearbyTableCell(
   return nullptr;
 }
 
-// A utility function returns the given |aElement| rectangle relative to the top
-// level content document coordinates.
-static CSSRect GetBoundingContentRect(
-    const dom::Element* aElement,
-    const RefPtr<dom::Document>& aInProcessRootContentDocument,
-    const nsIScrollableFrame* aRootScrollFrame,
-    const DoubleTapToZoomMetrics& aMetrics,
-    mozilla::Maybe<CSSRect>* aOutNearestScrollClip = nullptr) {
-  CSSRect result = nsLayoutUtils::GetBoundingContentRect(
-      aElement, aRootScrollFrame, aOutNearestScrollClip);
-  if (aInProcessRootContentDocument->IsTopLevelContentDocument()) {
-    return result;
-  }
-
-  nsIFrame* frame = aElement->GetPrimaryFrame();
-  if (!frame) {
-    return CSSRect();
-  }
-
-  // If the nearest scroll frame is |aRootScrollFrame|,
-  // nsLayoutUtils::GetBoundingContentRect doesn't set |aOutNearestScrollClip|,
-  // thus in the cases of OOP iframs, we need to use the visible rect of the
-  // iframe as the nearest scroll clip.
-  if (aOutNearestScrollClip && aOutNearestScrollClip->isNothing()) {
-    if (dom::BrowserChild* browserChild =
-            dom::BrowserChild::GetFrom(frame->PresShell())) {
-      const dom::EffectsInfo& effectsInfo = browserChild->GetEffectsInfo();
-      if (effectsInfo.IsVisible()) {
-        *aOutNearestScrollClip =
-            effectsInfo.mVisibleRect.map([&aMetrics](const nsRect& aRect) {
-              return aMetrics.mTransformMatrix.TransformBounds(
-                  CSSRect::FromAppUnits(aRect));
-            });
-      }
-    }
-  }
-
-  // In the case of an element inside an OOP iframe, |aMetrics.mTransformMatrix|
-  // includes the translation information about the root layout scroll offset,
-  // thus we use nsIFrame::GetBoundingClientRect rather than
-  // nsLayoutUtils::GetBoundingContent.
-  return aMetrics.mTransformMatrix.TransformBounds(
-      CSSRect::FromAppUnits(frame->GetBoundingClientRect()));
-}
-
 static bool ShouldZoomToElement(
     const nsCOMPtr<dom::Element>& aElement,
-    const RefPtr<dom::Document>& aInProcessRootContentDocument,
-    nsIScrollableFrame* aRootScrollFrame,
-    const DoubleTapToZoomMetrics& aMetrics) {
+    const RefPtr<dom::Document>& aRootContentDocument,
+    nsIScrollableFrame* aRootScrollFrame, const FrameMetrics& aMetrics) {
   if (nsIFrame* frame = aElement->GetPrimaryFrame()) {
     if (frame->StyleDisplay()->IsInlineFlow() &&
         // Replaced elements are suitable zoom targets because they act like
@@ -160,7 +111,7 @@ static bool ShouldZoomToElement(
   // Trying to zoom to the html element will just end up scrolling to the start
   // of the document, return false and we'll run out of elements and just
   // zoomout (without scrolling to the start).
-  if (aElement->OwnerDoc() == aInProcessRootContentDocument &&
+  if (aElement->OwnerDoc() == aRootContentDocument &&
       aElement->IsHTMLElement(nsGkAtoms::html)) {
     return false;
   }
@@ -174,9 +125,9 @@ static bool ShouldZoomToElement(
   // don't want to zoom to them. This heuristic is quite naive and leaves a lot
   // to be desired.
   if (dom::Element* tableCell = GetNearbyTableCell(aElement)) {
-    CSSRect rect = GetBoundingContentRect(
-        tableCell, aInProcessRootContentDocument, aRootScrollFrame, aMetrics);
-    if (rect.width < 0.3 * aMetrics.mRootScrollableRect.width) {
+    CSSRect rect =
+        nsLayoutUtils::GetBoundingContentRect(tableCell, aRootScrollFrame);
+    if (rect.width < 0.3 * aMetrics.GetScrollableRect().width) {
       return false;
     }
   }
@@ -215,23 +166,25 @@ static bool RectHasAlmostSameZoomLevel(const CSSRect& aRect,
 }  // namespace
 
 static CSSRect AddHMargin(const CSSRect& aRect, const CSSCoord& aMargin,
-                          const CSSRect& aRootScrollableRect) {
+                          const FrameMetrics& aMetrics) {
   CSSRect rect =
-      CSSRect(std::max(aRootScrollableRect.X(), aRect.X() - aMargin), aRect.Y(),
-              aRect.Width() + 2 * aMargin, aRect.Height());
+      CSSRect(std::max(aMetrics.GetScrollableRect().X(), aRect.X() - aMargin),
+              aRect.Y(), aRect.Width() + 2 * aMargin, aRect.Height());
   // Constrict the rect to the screen's right edge
-  rect.SetWidth(std::min(rect.Width(), aRootScrollableRect.XMost() - rect.X()));
+  rect.SetWidth(
+      std::min(rect.Width(), aMetrics.GetScrollableRect().XMost() - rect.X()));
   return rect;
 }
 
 static CSSRect AddVMargin(const CSSRect& aRect, const CSSCoord& aMargin,
-                          const CSSRect& aRootScrollableRect) {
+                          const FrameMetrics& aMetrics) {
   CSSRect rect =
-      CSSRect(aRect.X(), std::max(aRootScrollableRect.Y(), aRect.Y() - aMargin),
+      CSSRect(aRect.X(),
+              std::max(aMetrics.GetScrollableRect().Y(), aRect.Y() - aMargin),
               aRect.Width(), aRect.Height() + 2 * aMargin);
   // Constrict the rect to the screen's bottom edge
   rect.SetHeight(
-      std::min(rect.Height(), aRootScrollableRect.YMost() - rect.Y()));
+      std::min(rect.Height(), aMetrics.GetScrollableRect().YMost() - rect.Y()));
   return rect;
 }
 
@@ -256,15 +209,14 @@ static bool HasNonPassiveWheelListenerOnAncestor(nsIContent* aContent) {
 }
 
 ZoomTarget CalculateRectToZoomTo(
-    const RefPtr<dom::Document>& aInProcessRootContentDocument,
-    const CSSPoint& aPoint, const DoubleTapToZoomMetrics& aMetrics) {
+    const RefPtr<dom::Document>& aRootContentDocument, const CSSPoint& aPoint) {
   // Ensure the layout information we get is up-to-date.
-  aInProcessRootContentDocument->FlushPendingNotifications(FlushType::Layout);
+  aRootContentDocument->FlushPendingNotifications(FlushType::Layout);
 
   // An empty rect as return value is interpreted as "zoom out".
   const CSSRect zoomOut;
 
-  RefPtr<PresShell> presShell = aInProcessRootContentDocument->GetPresShell();
+  RefPtr<PresShell> presShell = aRootContentDocument->GetPresShell();
   if (!presShell) {
     return ZoomTarget{zoomOut, CantZoomOutBehavior::ZoomIn};
   }
@@ -276,11 +228,9 @@ ZoomTarget CalculateRectToZoomTo(
   }
 
   CSSPoint documentRelativePoint =
-      aInProcessRootContentDocument->IsTopLevelContentDocument()
-          ? CSSPoint::FromAppUnits(ViewportUtils::VisualToLayout(
-                CSSPoint::ToAppUnits(aPoint), presShell)) +
-                CSSPoint::FromAppUnits(rootScrollFrame->GetScrollPosition())
-          : aMetrics.mTransformMatrix.TransformPoint(aPoint);
+      CSSPoint::FromAppUnits(ViewportUtils::VisualToLayout(
+          CSSPoint::ToAppUnits(aPoint), presShell)) +
+      CSSPoint::FromAppUnits(rootScrollFrame->GetScrollPosition());
 
   nsCOMPtr<dom::Element> element = ElementFromPoint(presShell, aPoint);
   if (!element) {
@@ -293,8 +243,11 @@ ZoomTarget CalculateRectToZoomTo(
           ? CantZoomOutBehavior::Nothing
           : CantZoomOutBehavior::ZoomIn;
 
-  while (element && !ShouldZoomToElement(element, aInProcessRootContentDocument,
-                                         rootScrollFrame, aMetrics)) {
+  FrameMetrics metrics =
+      nsLayoutUtils::CalculateBasicFrameMetrics(rootScrollFrame);
+
+  while (element && !ShouldZoomToElement(element, aRootContentDocument,
+                                         rootScrollFrame, metrics)) {
     element = element->GetFlattenedTreeParentElement();
   }
 
@@ -303,10 +256,12 @@ ZoomTarget CalculateRectToZoomTo(
                       Some(documentRelativePoint)};
   }
 
+  CSSPoint visualScrollOffset = metrics.GetVisualScrollOffset();
+  CSSRect compositedArea(visualScrollOffset,
+                         metrics.CalculateCompositedSizeInCssPixels());
   Maybe<CSSRect> nearestScrollClip;
-  CSSRect rect =
-      GetBoundingContentRect(element, aInProcessRootContentDocument,
-                             rootScrollFrame, aMetrics, &nearestScrollClip);
+  CSSRect rect = nsLayoutUtils::GetBoundingContentRect(element, rootScrollFrame,
+                                                       &nearestScrollClip);
 
   // In some cases, like overflow: visible and overflowing content, the bounding
   // client rect of the targeted element won't contain the point the user double
@@ -322,15 +277,6 @@ ZoomTarget CalculateRectToZoomTo(
                    res == nsLayoutUtils::NONINVERTIBLE_TRANSFORM);
         if (res == nsLayoutUtils::TRANSFORM_SUCCEEDED) {
           CSSRect overflowRectCSS = CSSRect::FromAppUnits(overflowRect);
-
-          // In the case of OOP iframes, above |overflowRectCSS| in the iframe
-          // documents coords, we need to convert it into the top level coords.
-          if (!aInProcessRootContentDocument->IsTopLevelContentDocument()) {
-            overflowRectCSS.MoveBy(
-                CSSPoint::FromAppUnits(-rootScrollFrame->GetScrollPosition()));
-            overflowRectCSS =
-                aMetrics.mTransformMatrix.TransformBounds(overflowRectCSS);
-          }
           if (nearestScrollClip.isSome()) {
             overflowRectCSS = nearestScrollClip->Intersect(overflowRectCSS);
           }
@@ -353,12 +299,12 @@ ZoomTarget CalculateRectToZoomTo(
   // the height of the |rect| so that it has the same aspect ratio as
   // the root frame.  The clipped |rect| is centered on the y value of
   // the touch point. This allows tall narrow elements to be zoomed.
-  if (!rect.IsEmpty() && aMetrics.mVisualViewport.Width() > 0.0f &&
-      aMetrics.mVisualViewport.Height() > 0.0f) {
+  if (!rect.IsEmpty() && compositedArea.Width() > 0.0f &&
+      compositedArea.Height() > 0.0f) {
     // Calculate the height of the rect if it had the same aspect ratio as
-    // aMetrics.mVisualViewport.
-    const float widthRatio = rect.Width() / aMetrics.mVisualViewport.Width();
-    float targetHeight = aMetrics.mVisualViewport.Height() * widthRatio;
+    // compositedArea.
+    const float widthRatio = rect.Width() / compositedArea.Width();
+    float targetHeight = compositedArea.Height() * widthRatio;
 
     // We don't want to cut off the top or bottoms of replaced elements that are
     // square or wider in aspect ratio.
@@ -368,16 +314,16 @@ ZoomTarget CalculateRectToZoomTo(
         // If the target rect is at most 1.1x away from being square or wider
         // aspect ratio
         rect.Height() < 1.1 * rect.Width() &&
-        // and our aMetrics.mVisualViewport is wider than it is tall
-        aMetrics.mVisualViewport.Width() >= aMetrics.mVisualViewport.Height()) {
+        // and our compositedArea is wider than it is tall
+        compositedArea.Width() >= compositedArea.Height()) {
       heightConstrained = true;
-      // Expand the width of the rect so that it fills aMetrics.mVisualViewport
-      // so that if we are already zoomed to this element then the
-      // IsRectZoomedIn call below returns true so that we zoom out. This won't
-      // change what we actually zoom to as we are just making the rect the same
-      // aspect ratio as aMetrics.mVisualViewport.
-      float targetWidth = rect.Height() * aMetrics.mVisualViewport.Width() /
-                          aMetrics.mVisualViewport.Height();
+      // Expand the width of the rect so that it fills compositedArea so that if
+      // we are already zoomed to this element then the IsRectZoomedIn call
+      // below returns true so that we zoom out. This won't change what we
+      // actually zoom to as we are just making the rect the same aspect ratio
+      // as compositedArea.
+      float targetWidth =
+          rect.Height() * compositedArea.Width() / compositedArea.Height();
       MOZ_ASSERT(targetWidth > rect.Width());
       if (targetWidth > rect.Width()) {
         rect.x -= (targetWidth - rect.Width()) / 2;
@@ -388,7 +334,7 @@ ZoomTarget CalculateRectToZoomTo(
 
     } else if (targetHeight < rect.Height()) {
       // Trim the height so that the target rect has the same aspect ratio as
-      // aMetrics.mVisualViewport, centering it around the user tap point.
+      // compositedArea, centering it around the user tap point.
       float newY = documentRelativePoint.y - (targetHeight * 0.5f);
       if ((newY + targetHeight) > rect.YMost()) {
         rect.MoveByY(rect.Height() - targetHeight);
@@ -400,41 +346,30 @@ ZoomTarget CalculateRectToZoomTo(
   }
 
   const CSSCoord margin = 15;
-  rect = AddHMargin(rect, margin, aMetrics.mRootScrollableRect);
+  rect = AddHMargin(rect, margin, metrics);
 
   if (heightConstrained) {
-    rect = AddVMargin(rect, margin, aMetrics.mRootScrollableRect);
+    rect = AddVMargin(rect, margin, metrics);
   }
 
   // If the rect is already taking up most of the visible area and is
   // stretching the width of the page, then we want to zoom out instead.
-  if (RectHasAlmostSameZoomLevel(rect, aMetrics.mVisualViewport)) {
+  if (RectHasAlmostSameZoomLevel(rect, compositedArea)) {
     return ZoomTarget{zoomOut, cantZoomOutBehavior, Nothing(),
                       Some(documentRelativePoint)};
   }
 
-  elementBoundingRect =
-      AddHMargin(elementBoundingRect, margin, aMetrics.mRootScrollableRect);
+  elementBoundingRect = AddHMargin(elementBoundingRect, margin, metrics);
 
   // Unlike rect, elementBoundingRect is the full height of the element we are
   // zooming to. If we zoom to it without a margin it can look a weird, so give
   // it a vertical margin.
-  elementBoundingRect =
-      AddVMargin(elementBoundingRect, margin, aMetrics.mRootScrollableRect);
+  elementBoundingRect = AddVMargin(elementBoundingRect, margin, metrics);
 
   rect.Round();
   elementBoundingRect.Round();
-
   return ZoomTarget{rect, cantZoomOutBehavior, Some(elementBoundingRect),
                     Some(documentRelativePoint)};
-}
-
-std::ostream& operator<<(std::ostream& aStream,
-                         const DoubleTapToZoomMetrics& aMetrics) {
-  aStream << "{ vv=" << aMetrics.mVisualViewport
-          << ", rscr=" << aMetrics.mRootScrollableRect
-          << ", transform=" << aMetrics.mTransformMatrix << " }";
-  return aStream;
 }
 
 }  // namespace layers
