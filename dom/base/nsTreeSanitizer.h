@@ -28,8 +28,10 @@ enum class StyleSanitizationKind : uint8_t;
 namespace mozilla::dom {
 class DocumentFragment;
 class Element;
-class OwningStringOrSanitizerElementNameNamespace;
-struct SanitizerAttribute;
+
+class OwningStringOrSanitizerAttributeNamespace;
+class OwningStringOrSanitizerElementNamespace;
+class OwningStringOrSanitizerElementNamespaceWithAttributes;
 }  // namespace mozilla::dom
 
 /**
@@ -173,9 +175,16 @@ class nsTreeSanitizer {
   using AttributeName = NamespaceAtom;
 
   using ElementNameSet = nsTHashSet<ElementName>;
-  // nullptr value (ElementNameSet) means all elements (*).
-  using AttributesToElementsMap =
-      nsTHashMap<AttributeName, mozilla::UniquePtr<ElementNameSet>>;
+  using AttributeNameSet = nsTHashSet<AttributeName>;
+
+  class ElementWithAttributes {
+   public:
+    mozilla::UniquePtr<AttributeNameSet> mAttributes;
+    mozilla::UniquePtr<AttributeNameSet> mRemoveAttributes;
+  };
+
+  using ElementsToAttributesMap =
+      nsTHashMap<ElementName, ElementWithAttributes>;
 
   void SanitizeChildren(nsINode* aRoot);
 
@@ -287,23 +296,24 @@ class nsTreeSanitizer {
 
   static bool MatchesElementName(ElementNameSet& aNames, int32_t aNamespace,
                                  nsAtom* aLocalName);
-  static bool MatchesAttributeMatchList(AttributesToElementsMap& aMatchList,
-                                        mozilla::dom::Element& aElement,
-                                        int32_t aAttrNamespace,
-                                        nsAtom* aAttrLocalName);
+  static bool MatchesAttributeName(AttributeNameSet& aNames, int32_t aNamespace,
+                                   nsAtom* aLocalName);
 
   static mozilla::UniquePtr<ElementNameSet> ConvertElements(
       const nsTArray<mozilla::dom::OwningStringOrSanitizerElementNamespace>&
           aElements,
       mozilla::ErrorResult& aRv);
 
-  static mozilla::UniquePtr<ElementNameSet> ConvertElements(
-      const mozilla::dom::OwningStarOrStringOrSanitizerElementNamespaceSequence&
+  static mozilla::UniquePtr<ElementsToAttributesMap>
+  ConvertElementsWithAttributes(
+      const nsTArray<
+          mozilla::dom::OwningStringOrSanitizerElementNamespaceWithAttributes>&
           aElements,
       mozilla::ErrorResult& aRv);
 
-  static mozilla::UniquePtr<AttributesToElementsMap> ConvertAttributes(
-      const nsTArray<mozilla::dom::SanitizerAttribute>& aAttributes,
+  static mozilla::UniquePtr<AttributeNameSet> ConvertAttributes(
+      const nsTArray<mozilla::dom::OwningStringOrSanitizerAttributeNamespace>&
+          aAttributes,
       mozilla::ErrorResult& aRv);
 
   /**
@@ -389,20 +399,21 @@ class nsTreeSanitizer {
   bool mAllowCustomElements = false;
   bool mAllowUnknownMarkup = false;
 
-  // An allow-list of elements to keep.
-  mozilla::UniquePtr<ElementNameSet> mAllowElements;
+  // An allow-list of elements to keep, with potentially associated lists of
+  // attributes to keep/remove.
+  mozilla::UniquePtr<ElementsToAttributesMap> mElements;
 
-  // A deny-list of elements to block. (aka flatten)
-  mozilla::UniquePtr<ElementNameSet> mBlockElements;
+  // A deny-list of elements to remove. (aka prune)
+  mozilla::UniquePtr<ElementNameSet> mRemoveElements;
 
-  // A deny-list of elements to drop. (aka prune)
-  mozilla::UniquePtr<ElementNameSet> mDropElements;
+  // A deny-list of elements to replace with children. (aka flatten)
+  mozilla::UniquePtr<ElementNameSet> mReplaceWithChildrenElements;
 
   // An allow-list of attributes to keep.
-  mozilla::UniquePtr<AttributesToElementsMap> mAllowAttributes;
+  mozilla::UniquePtr<AttributeNameSet> mAttributes;
 
-  // A deny-list of attributes to drop.
-  mozilla::UniquePtr<AttributesToElementsMap> mDropAttributes;
+  // A deny-list of attributes to remove.
+  mozilla::UniquePtr<AttributeNameSet> mRemoveAttributes;
 };
 
 #endif  // nsTreeSanitizer_h_

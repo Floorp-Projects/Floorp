@@ -4949,43 +4949,46 @@ void Element::SetHTML(const nsAString& aInnerHTML,
                                          true, -1, getter_AddRefs(fragment));
   }
 
-  if (!aError.Failed()) {
-    // Suppress assertion about node removal mutation events that can't have
-    // listeners anyway, because no one has had the chance to register
-    // mutation listeners on the fragment that comes from the parser.
-    nsAutoScriptBlockerSuppressNodeRemoved scriptBlocker;
-
-    int32_t oldChildCount = static_cast<int32_t>(target->GetChildCount());
-
-    RefPtr<Sanitizer> sanitizer;
-    if (!aOptions.mSanitizer.WasPassed()) {
-      nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
-      if (!global) {
-        aError.ThrowInvalidStateError("Missing owner global.");
-        return;
-      }
-      sanitizer = Sanitizer::New(global, {}, aError);
-      if (aError.Failed()) {
-        return;
-      }
-    } else {
-      sanitizer = &aOptions.mSanitizer.Value();
-    }
-
-    sanitizer->SanitizeFragment(fragment, aError);
-    if (aError.Failed()) {
-      return;
-    }
-
-    target->AppendChild(*fragment, aError);
-    if (aError.Failed()) {
-      return;
-    }
-
-    mb.NodesAdded();
-    nsContentUtils::FireMutationEventsForDirectParsing(doc, target,
-                                                       oldChildCount);
+  if (aError.Failed()) {
+    return;
   }
+
+  // Suppress assertion about node removal mutation events that can't have
+  // listeners anyway, because no one has had the chance to register
+  // mutation listeners on the fragment that comes from the parser.
+  nsAutoScriptBlockerSuppressNodeRemoved scriptBlocker;
+
+  int32_t oldChildCount = static_cast<int32_t>(target->GetChildCount());
+
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
+  if (!global) {
+    aError.ThrowInvalidStateError("Missing owner global.");
+    return;
+  }
+
+  RefPtr<Sanitizer> sanitizer;
+  if (aOptions.mSanitizer.WasPassed()) {
+    sanitizer = Sanitizer::New(global, aOptions.mSanitizer.Value(), aError);
+  } else {
+    sanitizer = Sanitizer::New(global, {}, aError);
+  }
+  if (aError.Failed()) {
+    return;
+  }
+
+  sanitizer->SanitizeFragment(fragment, aError);
+  if (aError.Failed()) {
+    return;
+  }
+
+  target->AppendChild(*fragment, aError);
+  if (aError.Failed()) {
+    return;
+  }
+
+  mb.NodesAdded();
+  nsContentUtils::FireMutationEventsForDirectParsing(doc, target,
+                                                     oldChildCount);
 }
 
 bool Element::Translate() const {
