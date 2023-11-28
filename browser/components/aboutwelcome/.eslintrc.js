@@ -19,7 +19,7 @@ module.exports = {
   overrides: [
     {
       // Only mark the files as modules which are actually modules.
-      files: ["content-src/**"],
+      files: ["content-src/**", "tests/unit/**"],
       parserOptions: {
         sourceType: "module",
       },
@@ -42,7 +42,7 @@ module.exports = {
       },
     },
     {
-      files: ["./*.js", "content-src/**"],
+      files: ["./*.js", "content-src/**", "tests/unit/**"],
       env: {
         node: true,
       },
@@ -50,18 +50,31 @@ module.exports = {
     {
       // Use a configuration that's appropriate for modules, workers and
       // non-production files.
-      files: ["tests/**"],
+      files: ["modules/*.jsm", "tests/**"],
       rules: {
         "no-implicit-globals": "off",
       },
     },
     {
-      files: ["content-src/**"],
+      files: ["content-src/**", "tests/unit/**"],
       rules: {
         // Disallow commonjs in these directories.
         "import/no-commonjs": 2,
         // Allow JSX with arrow functions.
         "react/jsx-no-bind": 0,
+      },
+    },
+    {
+      // These tests simulate the browser environment.
+      files: "tests/unit/**",
+      env: {
+        browser: true,
+        mocha: true,
+      },
+      globals: {
+        assert: true,
+        chai: true,
+        sinon: true,
       },
     },
     {
