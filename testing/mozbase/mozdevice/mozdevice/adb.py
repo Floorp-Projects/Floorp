@@ -15,7 +15,7 @@ import sys
 import tempfile
 import time
 import traceback
-from shutil import copytree
+from distutils import dir_util
 from threading import Thread
 
 import six
@@ -2983,7 +2983,7 @@ class ADBDevice(ADBCommand):
             temp_parent = tempfile.mkdtemp()
             remote_name = os.path.basename(remote)
             new_local = os.path.join(temp_parent, remote_name)
-            copytree(local, new_local)
+            dir_util.copy_tree(local, new_local)
             local = new_local
             # See do_sync_push in
             # https://android.googlesource.com/platform/system/core/+/master/adb/file_sync_client.cpp
@@ -3136,7 +3136,7 @@ class ADBDevice(ADBCommand):
                     self.rm(intermediate, recursive=True, force=True, timeout=timeout)
         finally:
             if copy_required:
-                copytree(local, original_local, dirs_exist_ok=True)
+                dir_util.copy_tree(local, original_local)
                 shutil.rmtree(temp_parent)
 
     def get_file(self, remote, offset=None, length=None, timeout=None):
