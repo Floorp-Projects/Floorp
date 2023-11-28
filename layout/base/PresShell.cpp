@@ -3316,13 +3316,6 @@ static bool ComputeNeedToScroll(WhenToScroll aWhenToScroll, nscoord aLineSize,
       // The caller wants the frame as visible as possible
       return true;
     case WhenToScroll::IfNotVisible:
-      if (aLineSize > (aRectMax - aRectMin)) {
-        // If the line size is greater than the size of the rect
-        // to scroll into view, do not use the line size to determine
-        // if we need to scroll.
-        aLineSize = 0;
-      }
-
       // Scroll only if no part of the frame is visible in this view.
       return aRectMax - aLineSize <= aViewMin ||
              aRectMin + aLineSize >= aViewMax;
