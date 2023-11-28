@@ -305,6 +305,9 @@ fn test_plug_and_unplug_device_in_scope(scope: Scope) {
             notifier.notify(counts);
         }
     }
+
+    context.register_device_collection_changed(DeviceType::OUTPUT, None, ptr::null_mut());
+    context.register_device_collection_changed(DeviceType::INPUT, None, ptr::null_mut());
 }
 
 // Switch default devices used by the active streams, to test device changed callback
