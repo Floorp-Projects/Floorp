@@ -1196,10 +1196,6 @@ UniquePtr<IPC::Message> IPCFuzzController::replaceIPCMessage(
 
   char* ipcMsgData = buffer.begin();
 
-  // Copy the header of the original message
-  memcpy(ipcMsgData, aMsg->header(), sizeof(IPC::Message::Header));
-  IPC::Message::Header* ipchdr = (IPC::Message::Header*)ipcMsgData;
-
   //                        //
   // *** Snapshot Point *** //
   //                        //
@@ -1234,6 +1230,10 @@ UniquePtr<IPC::Message> IPCFuzzController::replaceIPCMessage(
   }
 
   buffer.shrinkTo(bufsize);
+
+  // Copy the header of the original message
+  memcpy(ipcMsgData, aMsg->header(), sizeof(IPC::Message::Header));
+  IPC::Message::Header* ipchdr = (IPC::Message::Header*)ipcMsgData;
 
   size_t ipcMsgLen = buffer.length();
   ipchdr->payload_size = ipcMsgLen - sizeof(IPC::Message::Header);
