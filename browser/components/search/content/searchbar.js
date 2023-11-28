@@ -15,6 +15,7 @@
     FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
     SearchSuggestionController:
       "resource://gre/modules/SearchSuggestionController.sys.mjs",
+    UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   });
 
   /**
@@ -425,6 +426,13 @@
         "searchbar",
         details
       );
+
+      // Record when the user uses the search bar
+      lazy.UrlbarPrefs.set(
+        "browser.search.widget.lastUsed",
+        new Date().toISOString()
+      );
+
       // null parameter below specifies HTML response for search
       let params = {
         postData: submission.postData,
