@@ -36,13 +36,14 @@ const MouseEvents = {
     {},
     {
       get: (target, name) =>
-        async function (x, y, selector = ":root") {
+        async function (x, y, options = {}) {
           if (name === "click") {
-            this.down(x, y);
-            this.up(x, y);
+            this.down(x, y, options);
+            this.up(x, y, options);
           } else {
-            await safeSynthesizeMouseEventInContentPage(selector, x, y, {
+            await safeSynthesizeMouseEventInContentPage(":root", x, y, {
               type: "mouse" + name,
+              ...options,
             });
           }
         },

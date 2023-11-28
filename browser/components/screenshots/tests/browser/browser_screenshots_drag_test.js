@@ -478,3 +478,71 @@ add_task(async function resizeAllCorners() {
     }
   );
 });
+
+/**
+ * This function tests clicking the overlay with the different mouse buttons
+ */
+add_task(async function test_otherMouseButtons() {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_PAGE,
+    },
+    async browser => {
+      let helper = new ScreenshotsHelper(browser);
+      helper.triggerUIFromToolbar();
+
+      await helper.waitForOverlay();
+
+      await helper.dragOverlay(10, 10, 100, 100);
+
+      // click outside overlay
+      mouse.click(200, 200, { button: 1 });
+      mouse.click(200, 200, { button: 2 });
+
+      await TestUtils.waitForTick();
+
+      await helper.waitForStateChange("selected");
+      let state = await helper.getOverlayState();
+      Assert.equal(
+        state,
+        "selected",
+        "The state is still in the selected state"
+      );
+
+      mouse.click(200, 200);
+
+      await helper.waitForStateChange("crosshairs");
+      state = await helper.getOverlayState();
+      Assert.equal(state, "crosshairs", "The state is in the crosshairs state");
+
+      mouse.down(10, 10, { button: 1 });
+      mouse.move(100, 100, { button: 1 });
+      mouse.up(100, 100, { button: 1 });
+
+      await TestUtils.waitForTick();
+
+      await helper.waitForStateChange("crosshairs");
+      state = await helper.getOverlayState();
+      Assert.equal(
+        state,
+        "crosshairs",
+        "The state is still in the crosshairs state"
+      );
+
+      mouse.down(10, 10, { button: 2 });
+      mouse.move(100, 100, { button: 2 });
+      mouse.up(100, 100, { button: 2 });
+
+      await TestUtils.waitForTick();
+
+      await helper.waitForStateChange("crosshairs");
+      state = await helper.getOverlayState();
+      Assert.equal(
+        state,
+        "crosshairs",
+        "The state is still in the crosshairs state"
+      );
+    }
+  );
+});
