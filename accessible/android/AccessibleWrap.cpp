@@ -65,25 +65,6 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       static_cast<DocAccessibleWrap*>(accessible->Document());
   if (doc) {
     switch (aEvent->GetEventType()) {
-      case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED: {
-        if (accessible != aEvent->Document() && !aEvent->IsFromUserInput()) {
-          AccCaretMoveEvent* caretEvent = downcast_accEvent(aEvent);
-          HyperTextAccessible* ht = AsHyperText();
-          // Pivot to the caret's position if it has an expanded selection.
-          // This is used mostly for find in page.
-          if ((ht && ht->SelectionCount())) {
-            DOMPoint point =
-                AsHyperText()->OffsetToDOMPoint(caretEvent->GetCaretOffset());
-            if (LocalAccessible* newPos =
-                    doc->GetAccessibleOrContainer(point.node)) {
-              static_cast<AccessibleWrap*>(newPos)->PivotTo(
-                  java::SessionAccessibility::HTML_GRANULARITY_DEFAULT, true,
-                  true);
-            }
-          }
-        }
-        break;
-      }
       case nsIAccessibleEvent::EVENT_SCROLLING_START: {
         accessible->PivotTo(
             java::SessionAccessibility::HTML_GRANULARITY_DEFAULT, true, true);
