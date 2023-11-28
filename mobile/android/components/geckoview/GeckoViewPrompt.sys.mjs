@@ -101,8 +101,6 @@ export class PromptFactory {
         } else if (win.HTMLOptionElement.isInstance(child)) {
           item.label = child.label || child.text;
           item.selected = child.selected;
-        } else if (win.HTMLHRElement.isInstance(child)) {
-          item.separator = true;
         } else {
           continue;
         }
