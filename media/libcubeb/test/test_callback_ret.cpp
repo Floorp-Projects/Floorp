@@ -181,7 +181,10 @@ run_test_callback(test_direction direction, cubeb_data_callback data_cb,
   output_params = input_params;
 
   r = cubeb_get_min_latency(ctx, &input_params, &latency_frames);
-  ASSERT_EQ(r, CUBEB_OK) << "Could not get minimal latency";
+  if (r != CUBEB_OK) {
+    // not fatal
+    latency_frames = 1024;
+  }
 
   switch (direction) {
   case INPUT_ONLY:

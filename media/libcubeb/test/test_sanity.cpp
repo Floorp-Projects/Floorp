@@ -564,7 +564,11 @@ TEST(cubeb, stream_position)
 
   r = cubeb_stream_get_position(stream, &position);
   ASSERT_EQ(r, CUBEB_OK);
-  ASSERT_EQ(position, last_position);
+  // The OpenSL backend performs client-side interpolation for its position and
+  // its drain implementation isn't very accurate.
+  if (strcmp(cubeb_get_backend_id(ctx), "opensl")) {
+    ASSERT_EQ(position, last_position);
+  }
 
   cubeb_stream_destroy(stream);
   cubeb_destroy(ctx);
