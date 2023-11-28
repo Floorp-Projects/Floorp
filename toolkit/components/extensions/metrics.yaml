@@ -272,6 +272,84 @@ extensions.apis.dnr:
       - technical
     telemetry_mirror: EXTENSIONS_APIS_DNR_EVALUATE_RULES_COUNT_MAX
 
+extensions.data:
+
+  migrate_result:
+    type: event
+    description: |
+      These events are sent when an extension is migrating its data to the new
+      IndexedDB backend.
+    bugs:
+      - https://bugzilla.mozilla.org/1470213
+      - https://bugzilla.mozilla.org/1553297
+      - https://bugzilla.mozilla.org/1590736
+      - https://bugzilla.mozilla.org/1630596
+      - https://bugzilla.mozilla.org/1672570
+      - https://bugzilla.mozilla.org/1714251
+      - https://bugzilla.mozilla.org/1749878
+      - https://bugzilla.mozilla.org/1781974
+      - https://bugzilla.mozilla.org/1817100
+      - https://bugzilla.mozilla.org/1861295
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1470213#c15
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    extra_keys:
+      addon_id:
+        description: Id of the addon.
+        type: string
+      backend:
+        description: The selected backend ("JSONFile" / "IndexedDB").
+        type: string
+      data_migrated:
+        description: The old extension data has been migrated ("y" / "n").
+        type: string
+      error_name:
+        description: |
+          A DOMException error name if any ("OtherError" for unknown errors).
+          The error has been fatal if the `backend` extra key is "JSONFile",
+          otherwise it is a non fatal error which didn't prevented the
+          extension from switching to the IndexedDB backend.
+        type: string
+      has_jsonfile:
+        description: The extension has a JSONFile ("y" / "n").
+        type: string
+      has_olddata:
+        description: Extension had some data stored in JSONFile ("y" / "n").
+        type: string
+    expires: 132
+
+  storage_local_error:
+    type: event
+    description: |
+      These events are collected when an extension triggers an unexpected error
+      while running a storage.local API call (e.g. because of some underlying
+      QuotaManager and/or IndexedDB error).
+    bugs:
+      - https://bugzilla.mozilla.org/1606903
+      - https://bugzilla.mozilla.org/1649948
+      - https://bugzilla.mozilla.org/1689255
+      - https://bugzilla.mozilla.org/1730038
+      - https://bugzilla.mozilla.org/1763523
+      - https://bugzilla.mozilla.org/1811148
+      - https://bugzilla.mozilla.org/1861297
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1606903#c3
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    extra_keys:
+      addon_id:
+        description: Id of the addon.
+        type: string
+      method:
+        description: The storage.local API method name.
+        type: string
+      error_name:
+        description: |
+          A DOMException error name if any ("OtherError" for unknown errors).
+        type: string
+    expires: 132
+
 extensions.quarantined_domains:
 
   listsize:
