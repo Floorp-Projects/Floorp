@@ -32,3 +32,5 @@ fail-if = ["a11y_checks"] # Bug 1854233 select may not be labeled
 ["browser_selectpopup_width.js"]
 
 ["browser_selectpopup_xhtml.js"]
+
+["browser_selectpopup_hr.js"]
