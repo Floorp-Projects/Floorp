@@ -573,6 +573,8 @@ support-files = ["slow-page.sjs"]
 
 ["browser_switchToTab_chiclet.js"]
 
+["browser_switchToTab_closed_tab.js"]
+
 ["browser_switchToTab_closes_newtab.js"]
 
 ["browser_switchToTab_fullUrl_repeatedKeydown.js"]

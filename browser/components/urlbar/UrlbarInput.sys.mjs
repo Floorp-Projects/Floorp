@@ -24,6 +24,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarEventBufferer: "resource:///modules/UrlbarEventBufferer.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarQueryContext: "resource:///modules/UrlbarUtils.sys.mjs",
+  UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
@@ -1070,7 +1071,7 @@ export class UrlbarInput {
 
         let switched = this.window.switchToTabHavingURI(
           Services.io.newURI(url),
-          false,
+          true,
           loadOpts,
           lazy.UrlbarPrefs.get("switchTabs.searchAllContainers")
             ? result.payload.userContextId
@@ -1085,6 +1086,18 @@ export class UrlbarInput {
           // the load. Just reportError it.
           lazy.UrlbarUtils.addToInputHistory(url, searchString).catch(
             console.error
+          );
+        }
+
+        // TODO (Bug 1865757): We should not show a "switchtotab" result for
+        // tabs that are not currently open. Find out why tabs are not being
+        // properly unregistered when they are being closed.
+        if (!switched) {
+          console.error(`Tried to switch to non existant tab: ${url}`);
+          lazy.UrlbarProviderOpenTabs.unregisterOpenTab(
+            url,
+            result.payload.userContextId,
+            this.isPrivate
           );
         }
 
