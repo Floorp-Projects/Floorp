@@ -1107,6 +1107,21 @@ struct ParamTraits<mozilla::layers::ZoomTarget> {
   }
 };
 
+template <>
+struct ParamTraits<mozilla::layers::DoubleTapToZoomMetrics> {
+  typedef mozilla::layers::DoubleTapToZoomMetrics paramType;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mVisualViewport);
+    WriteParam(aWriter, aParam.mRootScrollableRect);
+  }
+
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return (ReadParam(aReader, &aResult->mVisualViewport) &&
+            ReadParam(aReader, &aResult->mRootScrollableRect));
+  }
+};
+
 #define IMPL_PARAMTRAITS_BY_SERDE(type_)                                    \
   template <>                                                               \
   struct ParamTraits<mozilla::type_> {                                      \

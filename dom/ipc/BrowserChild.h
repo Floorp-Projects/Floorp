@@ -548,13 +548,15 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvHandleTap(
       const layers::GeckoContentController_TapType& aType,
       const LayoutDevicePoint& aPoint, const Modifiers& aModifiers,
-      const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId);
+      const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId,
+      const Maybe<DoubleTapToZoomMetrics>& aDoubleTapToZoomMetrics);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvNormalPriorityHandleTap(
       const layers::GeckoContentController_TapType& aType,
       const LayoutDevicePoint& aPoint, const Modifiers& aModifiers,
-      const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId);
+      const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId,
+      const Maybe<DoubleTapToZoomMetrics>& aDoubleTapToZoomMetrics);
 
   bool UpdateFrame(const layers::RepaintRequest& aRequest);
   void NotifyAPZStateChange(
@@ -597,19 +599,19 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   GetChildToParentConversionMatrix() const;
 
   // Returns the portion of the visible rect of this remote document in the
-  // top browser window coordinate system.  This is the result of being clipped
-  // by all ancestor viewports.
+  // top browser window coordinate system.  This is the result of being
+  // clipped by all ancestor viewports.
   Maybe<ScreenRect> GetTopLevelViewportVisibleRectInBrowserCoords() const;
 
-  // Similar to above GetTopLevelViewportVisibleRectInBrowserCoords(), but in
-  // this out-of-process document's coordinate system.
+  // Similar to above GetTopLevelViewportVisibleRectInBrowserCoords(), but
+  // in this out-of-process document's coordinate system.
   Maybe<LayoutDeviceRect> GetTopLevelViewportVisibleRectInSelfCoords() const;
 
   // Prepare to dispatch all coalesced mousemove events. We'll move all data
   // in mCoalescedMouseData to a nsDeque; then we start processing them. We
-  // can't fetch the coalesced event one by one and dispatch it because we may
-  // reentry the event loop and access to the same hashtable. It's called when
-  // dispatching some mouse events other than mousemove.
+  // can't fetch the coalesced event one by one and dispatch it because we
+  // may reentry the event loop and access to the same hashtable. It's
+  // called when dispatching some mouse events other than mousemove.
   void FlushAllCoalescedMouseData();
   void ProcessPendingCoalescedMouseDataAndDispatchEvents();
 
@@ -632,18 +634,18 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 #ifdef XP_WIN
   // Check if the window this BrowserChild is associated with supports
   // protected media (EME) or not.
-  // Returns a promise the will resolve true if the window supports protected
-  // media or false if it does not. The promise will be rejected with an
-  // ResponseRejectReason if the IPC needed to do the check fails. Callers
-  // should treat the reject case as if the window does not support protected
-  // media to ensure robust handling.
+  // Returns a promise the will resolve true if the window supports
+  // protected media or false if it does not. The promise will be rejected
+  // with an ResponseRejectReason if the IPC needed to do the check fails.
+  // Callers should treat the reject case as if the window does not support
+  // protected media to ensure robust handling.
   RefPtr<IsWindowSupportingProtectedMediaPromise>
   DoesWindowSupportProtectedMedia();
 #endif
 
-  // Notify the content blocking event in the parent process. This sends an IPC
-  // message to the BrowserParent in the parent. The BrowserParent will find the
-  // top-level WindowGlobalParent and notify the event from it.
+  // Notify the content blocking event in the parent process. This sends an
+  // IPC message to the BrowserParent in the parent. The BrowserParent will
+  // find the top-level WindowGlobalParent and notify the event from it.
   void NotifyContentBlockingEvent(
       uint32_t aEvent, nsIChannel* aChannel, bool aBlocked,
       const nsACString& aTrackingOrigin,
@@ -680,7 +682,8 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
  private:
   void HandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
-                       const ScrollableLayerGuid& aGuid);
+                       const ScrollableLayerGuid& aGuid,
+                       const DoubleTapToZoomMetrics& aMetrics);
 
   void ActorDestroy(ActorDestroyReason why) override;
 
@@ -805,14 +808,15 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   CSSSize mUnscaledInnerSize;
 
-  // Store the end time of the handling of the last repeated keydown/keypress
-  // event so that in case event handling takes time, some repeated events can
-  // be skipped to not flood child process.
+  // Store the end time of the handling of the last repeated
+  // keydown/keypress event so that in case event handling takes time, some
+  // repeated events can be skipped to not flood child process.
   mozilla::TimeStamp mRepeatedKeyEventTime;
 
-  // Similar to mRepeatedKeyEventTime, store the end time (from parent process)
-  // of handling the last repeated wheel event so that in case event handling
-  // takes time, some repeated events can be skipped to not flood child process.
+  // Similar to mRepeatedKeyEventTime, store the end time (from parent
+  // process) of handling the last repeated wheel event so that in case
+  // event handling takes time, some repeated events can be skipped to not
+  // flood child process.
   mozilla::TimeStamp mLastWheelProcessedTimeFromParent;
   mozilla::TimeDuration mLastWheelProcessingDuration;
 

@@ -12,6 +12,7 @@
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZCTreeManagerParent.h"  // for APZCTreeManagerParent
 #include "mozilla/layers/APZThreadUtils.h"
+#include "mozilla/layers/DoubleTapToZoom.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/MatrixMessage.h"
 #include "mozilla/gfx/GPUProcessManager.h"
@@ -61,11 +62,10 @@ void RemoteContentController::RequestContentRepaint(
   }
 }
 
-void RemoteContentController::HandleTapOnMainThread(TapType aTapType,
-                                                    LayoutDevicePoint aPoint,
-                                                    Modifiers aModifiers,
-                                                    ScrollableLayerGuid aGuid,
-                                                    uint64_t aInputBlockId) {
+void RemoteContentController::HandleTapOnMainThread(
+    TapType aTapType, LayoutDevicePoint aPoint, Modifiers aModifiers,
+    ScrollableLayerGuid aGuid, uint64_t aInputBlockId,
+    const Maybe<DoubleTapToZoomMetrics>& aDoubleTapToZoomMetrics) {
   MOZ_LOG(sApzRemoteLog, LogLevel::Debug,
           ("HandleTapOnMainThread(%d)", (int)aTapType));
   MOZ_ASSERT(NS_IsMainThread());
@@ -73,46 +73,49 @@ void RemoteContentController::HandleTapOnMainThread(TapType aTapType,
   dom::BrowserParent* tab =
       dom::BrowserParent::GetBrowserParentFromLayersId(aGuid.mLayersId);
   if (tab) {
-    tab->SendHandleTap(aTapType, aPoint, aModifiers, aGuid, aInputBlockId);
+    tab->SendHandleTap(aTapType, aPoint, aModifiers, aGuid, aInputBlockId,
+                       aDoubleTapToZoomMetrics);
   }
 }
 
 void RemoteContentController::HandleTapOnCompositorThread(
     TapType aTapType, LayoutDevicePoint aPoint, Modifiers aModifiers,
-    ScrollableLayerGuid aGuid, uint64_t aInputBlockId) {
+    ScrollableLayerGuid aGuid, uint64_t aInputBlockId,
+    const Maybe<DoubleTapToZoomMetrics>& aDoubleTapToZoomMetrics) {
   MOZ_ASSERT(XRE_IsGPUProcess());
   MOZ_ASSERT(mCompositorThread->IsOnCurrentThread());
 
-  // The raw pointer to APZCTreeManagerParent is ok here because we are on the
-  // compositor thread.
+  // The raw pointer to APZCTreeManagerParent is ok here because we are on
+  // the compositor thread.
   APZCTreeManagerParent* apzctmp =
       CompositorBridgeParent::GetApzcTreeManagerParentForRoot(aGuid.mLayersId);
   if (apzctmp) {
     Unused << apzctmp->SendHandleTap(aTapType, aPoint, aModifiers, aGuid,
-                                     aInputBlockId);
+                                     aInputBlockId, aDoubleTapToZoomMetrics);
   }
 }
 
-void RemoteContentController::HandleTap(TapType aTapType,
-                                        const LayoutDevicePoint& aPoint,
-                                        Modifiers aModifiers,
-                                        const ScrollableLayerGuid& aGuid,
-                                        uint64_t aInputBlockId) {
+void RemoteContentController::HandleTap(
+    TapType aTapType, const LayoutDevicePoint& aPoint, Modifiers aModifiers,
+    const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId,
+    const Maybe<DoubleTapToZoomMetrics>& aDoubleTapToZoomMetrics) {
   MOZ_LOG(sApzRemoteLog, LogLevel::Debug, ("HandleTap(%d)", (int)aTapType));
   APZThreadUtils::AssertOnControllerThread();
 
   if (XRE_GetProcessType() == GeckoProcessType_GPU) {
     if (mCompositorThread->IsOnCurrentThread()) {
       HandleTapOnCompositorThread(aTapType, aPoint, aModifiers, aGuid,
-                                  aInputBlockId);
+                                  aInputBlockId, aDoubleTapToZoomMetrics);
     } else {
       // We have to send messages from the compositor thread
       mCompositorThread->Dispatch(
           NewRunnableMethod<TapType, LayoutDevicePoint, Modifiers,
-                            ScrollableLayerGuid, uint64_t>(
+                            ScrollableLayerGuid, uint64_t,
+                            Maybe<DoubleTapToZoomMetrics>>(
               "layers::RemoteContentController::HandleTapOnCompositorThread",
               this, &RemoteContentController::HandleTapOnCompositorThread,
-              aTapType, aPoint, aModifiers, aGuid, aInputBlockId));
+              aTapType, aPoint, aModifiers, aGuid, aInputBlockId,
+              aDoubleTapToZoomMetrics));
     }
     return;
   }
@@ -120,7 +123,8 @@ void RemoteContentController::HandleTap(TapType aTapType,
   MOZ_ASSERT(XRE_IsParentProcess());
 
   if (NS_IsMainThread()) {
-    HandleTapOnMainThread(aTapType, aPoint, aModifiers, aGuid, aInputBlockId);
+    HandleTapOnMainThread(aTapType, aPoint, aModifiers, aGuid, aInputBlockId,
+                          aDoubleTapToZoomMetrics);
   } else {
     // We must be on Android, running on the Java UI thread
 #ifndef MOZ_WIDGET_ANDROID
@@ -128,18 +132,19 @@ void RemoteContentController::HandleTap(TapType aTapType,
 #else
     // We don't want to get the BrowserParent or call
     // BrowserParent::SendHandleTap() from a non-main thread, so we need to
-    // redispatch to the main thread. However, we should use the same mechanism
-    // that the Android widget uses when dispatching input events to Gecko,
-    // which is nsAppShell::PostEvent. Note in particular that using
-    // NS_DispatchToMainThread would post to a different message loop, and
-    // introduces the possibility of this tap event getting processed out of
-    // order with respect to the touch events that synthesized it.
+    // redispatch to the main thread. However, we should use the same
+    // mechanism that the Android widget uses when dispatching input events
+    // to Gecko, which is nsAppShell::PostEvent. Note in particular that
+    // using NS_DispatchToMainThread would post to a different message loop,
+    // and introduces the possibility of this tap event getting processed
+    // out of order with respect to the touch events that synthesized it.
     mozilla::jni::DispatchToGeckoPriorityQueue(
         NewRunnableMethod<TapType, LayoutDevicePoint, Modifiers,
-                          ScrollableLayerGuid, uint64_t>(
+                          ScrollableLayerGuid, uint64_t,
+                          Maybe<DoubleTapToZoomMetrics>>(
             "layers::RemoteContentController::HandleTapOnMainThread", this,
             &RemoteContentController::HandleTapOnMainThread, aTapType, aPoint,
-            aModifiers, aGuid, aInputBlockId));
+            aModifiers, aGuid, aInputBlockId, aDoubleTapToZoomMetrics));
 #endif
   }
 }
@@ -150,8 +155,8 @@ void RemoteContentController::NotifyPinchGestureOnCompositorThread(
     Modifiers aModifiers) {
   MOZ_ASSERT(mCompositorThread->IsOnCurrentThread());
 
-  // The raw pointer to APZCTreeManagerParent is ok here because we are on the
-  // compositor thread.
+  // The raw pointer to APZCTreeManagerParent is ok here because we are on
+  // the compositor thread.
   APZCTreeManagerParent* apzctmp =
       CompositorBridgeParent::GetApzcTreeManagerParentForRoot(aGuid.mLayersId);
   if (apzctmp) {
@@ -189,9 +194,9 @@ void RemoteContentController::NotifyPinchGesture(
     return;
   }
 
-  // If we're in the parent process, handle it directly. We don't have a handle
-  // to the widget though, so we fish out the ChromeProcessController and
-  // delegate to that instead.
+  // If we're in the parent process, handle it directly. We don't have a
+  // handle to the widget though, so we fish out the ChromeProcessController
+  // and delegate to that instead.
   if (XRE_IsParentProcess()) {
     MOZ_ASSERT(NS_IsMainThread());
     RefPtr<GeckoContentController> rootController =
@@ -351,12 +356,13 @@ void RemoteContentController::NotifyAsyncScrollbarDragInitiated(
     ScrollDirection aDirection) {
   if (!mCompositorThread->IsOnCurrentThread()) {
     // We have to send messages from the compositor thread
-    mCompositorThread->Dispatch(NewRunnableMethod<uint64_t,
-                                                  ScrollableLayerGuid::ViewID,
-                                                  ScrollDirection>(
-        "layers::RemoteContentController::NotifyAsyncScrollbarDragInitiated",
-        this, &RemoteContentController::NotifyAsyncScrollbarDragInitiated,
-        aDragBlockId, aScrollId, aDirection));
+    mCompositorThread->Dispatch(
+        NewRunnableMethod<uint64_t, ScrollableLayerGuid::ViewID,
+                          ScrollDirection>(
+            "layers::RemoteContentController::"
+            "NotifyAsyncScrollbarDragInitiated",
+            this, &RemoteContentController::NotifyAsyncScrollbarDragInitiated,
+            aDragBlockId, aScrollId, aDirection));
     return;
   }
 
@@ -431,8 +437,8 @@ void RemoteContentController::CancelAutoscrollCrossProcess(
     return;
   }
 
-  // The raw pointer to APZCTreeManagerParent is ok here because we are on the
-  // compositor thread.
+  // The raw pointer to APZCTreeManagerParent is ok here because we are on
+  // the compositor thread.
   if (APZCTreeManagerParent* parent =
           CompositorBridgeParent::GetApzcTreeManagerParentForRoot(
               aGuid.mLayersId)) {
@@ -455,7 +461,8 @@ void RemoteContentController::NotifyScaleGestureCompleteInProcess(
 
   if (!NS_IsMainThread()) {
     NS_DispatchToMainThread(NewRunnableMethod<ScrollableLayerGuid, float>(
-        "layers::RemoteContentController::NotifyScaleGestureCompleteInProcess",
+        "layers::RemoteContentController::"
+        "NotifyScaleGestureCompleteInProcess",
         this, &RemoteContentController::NotifyScaleGestureCompleteInProcess,
         aGuid, aScale));
     return;
@@ -484,8 +491,8 @@ void RemoteContentController::NotifyScaleGestureCompleteCrossProcess(
     return;
   }
 
-  // The raw pointer to APZCTreeManagerParent is ok here because we are on the
-  // compositor thread.
+  // The raw pointer to APZCTreeManagerParent is ok here because we are on
+  // the compositor thread.
   if (APZCTreeManagerParent* parent =
           CompositorBridgeParent::GetApzcTreeManagerParentForRoot(
               aGuid.mLayersId)) {
@@ -507,8 +514,8 @@ void RemoteContentController::Destroy() {
 }
 
 mozilla::ipc::IPCResult RemoteContentController::RecvDestroy() {
-  // The actor on the other side is about to get destroyed, so let's not send
-  // it any more messages.
+  // The actor on the other side is about to get destroyed, so let's not
+  // send it any more messages.
   mCanSend = false;
   return IPC_OK();
 }

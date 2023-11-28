@@ -20,6 +20,7 @@ class BrowserChild;
 namespace layers {
 
 class APZChild;
+struct DoubleTapToZoomMetrics;
 
 /**
  * ContentProcessController is a GeckoContentController for a BrowserChild, and
@@ -45,7 +46,8 @@ class ContentProcessController final : public GeckoContentController {
 
   void HandleTap(TapType aType, const LayoutDevicePoint& aPoint,
                  Modifiers aModifiers, const ScrollableLayerGuid& aGuid,
-                 uint64_t aInputBlockId) override;
+                 uint64_t aInputBlockId,
+                 const Maybe<DoubleTapToZoomMetrics>& aMetrics) override;
 
   void NotifyPinchGesture(PinchGestureInput::PinchGestureType aType,
                           const ScrollableLayerGuid& aGuid,
