@@ -20,6 +20,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
 });
 
+ChromeUtils.defineLazyGetter(lazy, "logger", () =>
+  UrlbarUtils.getLogger({ prefix: "Provider.OpenTabs" })
+);
+
 const PRIVATE_USER_CONTEXT_ID = -1;
 
 /**
@@ -124,6 +128,11 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
    * @param {boolean} isInPrivateWindow In private browsing window or not
    */
   static async registerOpenTab(url, userContextId, isInPrivateWindow) {
+    lazy.logger.info("Registering openTab: ", {
+      url,
+      userContextId,
+      isInPrivateWindow,
+    });
     userContextId = UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
       userContextId,
       isInPrivateWindow
@@ -144,6 +153,11 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
    * @param {boolean} isInPrivateWindow In private browsing window or not
    */
   static async unregisterOpenTab(url, userContextId, isInPrivateWindow) {
+    lazy.logger.info("Unregistering openTab: ", {
+      url,
+      userContextId,
+      isInPrivateWindow,
+    });
     userContextId = UrlbarProviderOpenTabs.getUserContextIdForOpenPagesTable(
       userContextId,
       isInPrivateWindow

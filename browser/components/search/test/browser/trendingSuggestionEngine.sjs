@@ -34,7 +34,7 @@ function writeResponse(params, resp) {
   if (params?.richsuggestions) {
     data.push([]);
     data.push({
-      "google:suggestdetail": data[1].map(s => ({
+      "google:suggestdetail": data[1].map(() => ({
         a: "Extended title",
         dc: "#FFFFFF",
         i: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
