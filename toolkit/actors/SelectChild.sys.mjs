@@ -382,16 +382,42 @@ function uniqueStylesIndex(cs, uniqueStyles) {
 function buildOptionListForChildren(node, uniqueStyles) {
   let result = [];
 
+  let lastWasHR = false;
   for (let child of node.children) {
     let className = ChromeUtils.getClassName(child);
     let isOption = className == "HTMLOptionElement";
     let isOptGroup = className == "HTMLOptGroupElement";
-    if (!isOption && !isOptGroup) {
+    let isHR = className == "HTMLHRElement";
+    if (!isOption && !isOptGroup && !isHR) {
       continue;
     }
     if (child.hidden) {
       continue;
     }
+
+    let cs = getComputedStyles(child);
+
+    if (isHR) {
+      // https://html.spec.whatwg.org/#the-select-element-2
+      // "Each sequence of one or more child hr element siblings may be rendered as a single separator."
+      if (lastWasHR) {
+        continue;
+      }
+
+      const defaultHRStyle = node.ownerGlobal.getDefaultComputedStyle(child);
+      let info = {
+        index: child.index,
+        display: cs.display,
+        isHR,
+        styleIndex: uniqueStylesIndex(cs, uniqueStyles),
+        defaultHRStyle: supportedStyles(defaultHRStyle, ["color"]),
+      };
+      result.push(info);
+
+      lastWasHR = true;
+      continue;
+    }
+    lastWasHR = false;
 
     // The option code-path should match HTMLOptionElement::GetRenderedLabel.
     let textContent = isOptGroup
@@ -401,7 +427,6 @@ function buildOptionListForChildren(node, uniqueStyles) {
       textContent = "";
     }
 
-    let cs = getComputedStyles(child);
     let info = {
       index: child.index,
       isOptGroup,
