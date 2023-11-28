@@ -69,6 +69,13 @@ if [[ $(uname -s) == "Darwin" ]]; then
   # Ensure we don't use ARM64 profdata with this unique sub string
   PGO_SUBSTR="chrome-mac-main"
 
+  # Temporary hacky way for now while we build this on intel workers.
+  # Afterwards we can replace it with a $(uname -m) == "arm64" check.
+  # Bug 1858740
+  if [[ "$ARTIFACT_NAME" == *"macosx_arm"* ]]; then
+    PGO_SUBSTR="chrome-mac-arm-main"
+  fi
+
   # macOS final build folder is different than linux/win
   FINAL_BIN_PATH="src/out/Default/Chromium.app"
 fi
