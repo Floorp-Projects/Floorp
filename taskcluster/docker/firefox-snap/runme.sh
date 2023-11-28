@@ -74,7 +74,7 @@ done
 cp -v "$SCRIPT_DIRECTORY/tmpdir" "$SOURCE_DEST"
 
 # Generate snapcraft manifest
-sed -e "s/@VERSION@/${VERSION}/g" -e "s/@BUILD_NUMBER@/${BUILD_NUMBER}/g" ${PRODUCT}.snapcraft.yaml.in > "${WORKSPACE}/snapcraft.yaml"
+sed -e "s/@VERSION@/${VERSION}/g" -e "s/@BUILD_NUMBER@/${BUILD_NUMBER}/g" "${PRODUCT}.snapcraft.yaml.in" > "${WORKSPACE}/snapcraft.yaml"
 cd "${WORKSPACE}"
 
 # Make sure snapcraft knows we're building amd64, even though we may not be on this arch.
