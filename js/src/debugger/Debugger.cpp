@@ -2552,15 +2552,8 @@ bool DebugAPI::onTrap(JSContext* cx) {
         continue;
       }
 
-      // There are two reasons we have to check whether dbg is debugging
-      // global.
-      //
-      // One is just that one breakpoint handler can disable other Debuggers
-      // or remove debuggees.
-      //
-      // The other has to do with non-compile-and-go scripts, which have no
-      // specific global--until they are executed. Only now do we know which
-      // global the script is running against.
+      // We have to check whether dbg is debugging this global here: a
+      // breakpoint handler can disable other Debuggers or remove debuggees.
       Debugger* dbg = bp->debugger;
       if (dbg->debuggees.has(global)) {
         EnterDebuggeeNoExecute nx(cx, *dbg, adjqi);
