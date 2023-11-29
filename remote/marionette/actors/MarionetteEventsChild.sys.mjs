@@ -7,7 +7,6 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  event: "chrome://remote/content/marionette/event.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
 });
 
@@ -66,16 +65,6 @@ export class MarionetteEventsChild extends JSWindowActorChild {
           type,
           windowId: this.innerWindowId,
         });
-        break;
-
-      // Listen for click event to indicate one click has happened, so actions
-      // code can send dblclick event
-      case "click":
-        lazy.event.DoubleClickTracker.setClick();
-        break;
-      case "dblclick":
-      case "unload":
-        lazy.event.DoubleClickTracker.resetClick();
         break;
     }
   }
