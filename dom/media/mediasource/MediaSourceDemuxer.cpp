@@ -145,7 +145,6 @@ already_AddRefed<MediaTrackDemuxer> MediaSourceDemuxer::GetTrackDemuxer(
   RefPtr<MediaSourceTrackDemuxer> e =
       new MediaSourceTrackDemuxer(this, aType, manager);
   DDLINKCHILD("track demuxer", e.get());
-  MonitorAutoLock mon(mMonitor);
   mDemuxers.AppendElement(e);
   return e.forget();
 }
@@ -195,8 +194,6 @@ void MediaSourceDemuxer::DoDetachSourceBuffer(
       [&aSourceBuffer](const RefPtr<TrackBuffersManager> aLinkedSourceBuffer) {
         return aLinkedSourceBuffer == aSourceBuffer;
       });
-
-  RefPtr<MediaSourceTrackDemuxer> demuxer;
   {
     MonitorAutoLock mon(mMonitor);
     if (aSourceBuffer == mAudioTrack) {
@@ -205,27 +202,13 @@ void MediaSourceDemuxer::DoDetachSourceBuffer(
     if (aSourceBuffer == mVideoTrack) {
       mVideoTrack = nullptr;
     }
+  }
 
-    struct MatchTrackDemuxerManager {
-      bool Equals(MediaSourceTrackDemuxer* demuxer,
-                  TrackBuffersManager* manager) const {
-        return demuxer->HasManager(manager);
-      }
-    };
-
-    size_t index =
-        mDemuxers.IndexOf(aSourceBuffer.get(), 0, MatchTrackDemuxerManager());
-    if (index != mDemuxers.NoIndex) {
-      demuxer = std::move(mDemuxers[index]);
-      mDemuxers.RemoveElementAt(index);
+  for (auto& demuxer : mDemuxers) {
+    if (demuxer->HasManager(aSourceBuffer)) {
+      demuxer->DetachManager();
     }
-    MOZ_ASSERT(
-        !mDemuxers.Contains(aSourceBuffer.get(), MatchTrackDemuxerManager()));
   }
-  if (demuxer) {
-    demuxer->DetachManager();
-  }
-
   ScanSourceBuffersForContent();
 }
 
