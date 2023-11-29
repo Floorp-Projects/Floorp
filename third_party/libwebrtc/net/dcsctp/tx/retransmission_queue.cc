@@ -573,6 +573,10 @@ void RetransmissionQueue::PrepareResetStream(StreamID stream_id) {
 bool RetransmissionQueue::HasStreamsReadyToBeReset() const {
   return send_queue_.HasStreamsReadyToBeReset();
 }
+std::vector<StreamID> RetransmissionQueue::BeginResetStreams() {
+  outstanding_data_.BeginResetStreams();
+  return send_queue_.GetStreamsReadyToBeReset();
+}
 void RetransmissionQueue::CommitResetStreams() {
   send_queue_.CommitResetStreams();
 }

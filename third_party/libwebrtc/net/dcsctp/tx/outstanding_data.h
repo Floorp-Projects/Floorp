@@ -22,6 +22,7 @@
 #include "net/dcsctp/packet/chunk/sack_chunk.h"
 #include "net/dcsctp/packet/data.h"
 #include "net/dcsctp/public/types.h"
+#include "rtc_base/containers/flat_set.h"
 
 namespace dcsctp {
 
@@ -158,6 +159,10 @@ class OutstandingData {
   // Sets the next TSN to be used. This is used in handover.
   void ResetSequenceNumbers(UnwrappedTSN next_tsn,
                             UnwrappedTSN last_cumulative_tsn);
+
+  // Called when an outgoing stream reset is sent, marking the last assigned TSN
+  // as a breakpoint that a FORWARD-TSN shouldn't cross.
+  void BeginResetStreams();
 
  private:
   // A fragmented message's DATA chunk while in the retransmission queue, and
@@ -345,6 +350,10 @@ class OutstandingData {
   std::set<UnwrappedTSN> to_be_fast_retransmitted_;
   // Data chunks that are to be retransmitted.
   std::set<UnwrappedTSN> to_be_retransmitted_;
+  // Wben a stream reset has begun, the "next TSN to assign" is added to this
+  // set, and removed when the cum-ack TSN reaches it. This is used to limit a
+  // FORWARD-TSN to reset streams past a "stream reset last assigned TSN".
+  webrtc::flat_set<UnwrappedTSN> stream_reset_breakpoint_tsns_;
 };
 }  // namespace dcsctp
 #endif  // NET_DCSCTP_TX_OUTSTANDING_DATA_H_
