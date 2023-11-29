@@ -1382,20 +1382,52 @@ void SendStatisticsProxy::FrameCountUpdated(const FrameCounts& frame_counts,
   stats->frame_counts = frame_counts;
 }
 
-void SendStatisticsProxy::OnSendPacket(uint32_t ssrc, Timestamp capture_time) {
-  [[maybe_unused]] TimeDelta send_delay = clock_->CurrentTime() - capture_time;
-  // TODO(danilchap): Calculate average and max send_delay per ssrc over last
-  // second, Use that measurement instead of whatever is received in
-  // SendSideDelayUpdated below.
+void SendStatisticsProxy::Trackers::AddSendDelay(Timestamp now,
+                                                 TimeDelta send_delay) {
+  // Add the new measurement.
+  send_delays.push_back({.when = now, .send_delay = send_delay});
+  send_delay_sum += send_delay;
+  if (send_delay_max == nullptr || *send_delay_max <= send_delay) {
+    send_delay_max = &send_delays.back().send_delay;
+  }
+
+  // Remove old. No need to check for emptiness because newly added entry would
+  // never be too old.
+  while (now - send_delays.front().when > TimeDelta::Seconds(1)) {
+    send_delay_sum -= send_delays.front().send_delay;
+    if (send_delay_max == &send_delays.front().send_delay) {
+      send_delay_max = nullptr;
+    }
+    send_delays.pop_front();
+  }
+
+  // Check if max value was pushed out from the queue as too old.
+  if (send_delay_max == nullptr) {
+    send_delay_max = &send_delays.front().send_delay;
+    for (const SendDelayEntry& entry : send_delays) {
+      // Use '>=' rather than '>' to prefer latest maximum as it would be pushed
+      // out later and thus trigger less recalculations.
+      if (entry.send_delay >= *send_delay_max) {
+        send_delay_max = &entry.send_delay;
+      }
+    }
+  }
 }
 
-void SendStatisticsProxy::SendSideDelayUpdated(int avg_delay_ms,
-                                               int max_delay_ms,
-                                               uint32_t ssrc) {
+void SendStatisticsProxy::OnSendPacket(uint32_t ssrc, Timestamp capture_time) {
+  Timestamp now = clock_->CurrentTime();
+
   MutexLock lock(&mutex_);
   VideoSendStream::StreamStats* stats = GetStatsEntry(ssrc);
   if (!stats)
     return;
+
+  Trackers& track = trackers_[ssrc];
+  track.AddSendDelay(now, now - capture_time);
+
+  int64_t avg_delay_ms = (track.send_delay_sum / track.send_delays.size()).ms();
+  int64_t max_delay_ms = track.send_delay_max->ms();
+
   stats->avg_delay_ms = avg_delay_ms;
   stats->max_delay_ms = max_delay_ms;
 
