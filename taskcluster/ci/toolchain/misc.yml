@@ -221,6 +221,7 @@ macosx64-custom-car:
             is_official_build=true,
             symbol_level=0,
             target_cpu="x64",
+            use_v8_context_snapshot=false,
             v8_symbol_level=0
         ]
         toolchain-artifact: public/build/car_macosx.tar.zst
@@ -287,6 +288,7 @@ android-custom-car:
             target_os="android",
             is_android=true,
             is_high_end_android=true,
+            use_v8_context_snapshot=false,
             v8_symbol_level=0
         ]
         toolchain-artifact: public/build/car_android.tar.zst
@@ -314,6 +316,7 @@ linux64-custom-car:
             is_official_build=true,
             symbol_level=0,
             target_cpu="x64",
+            use_v8_context_snapshot=false,
             v8_symbol_level=0
         ]
         toolchain-artifact: public/build/car_linux.tar.zst
