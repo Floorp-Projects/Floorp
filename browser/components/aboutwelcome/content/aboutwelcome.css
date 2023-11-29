@@ -1946,7 +1946,6 @@ html {
   text-align: initial;
   transition: var(--transition);
   z-index: 1;
-  overflow: hidden;
 }
 .onboardingContainer .multi-select-container .checkbox-container {
   display: flex;
