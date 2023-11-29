@@ -40,6 +40,7 @@ import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.toolbar.BrowserToolbarView
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.ext.application
@@ -54,6 +55,7 @@ import org.mozilla.fenix.utils.Settings
 class BrowserFragmentTest {
 
     private lateinit var store: BrowserStore
+    private lateinit var appStore: AppStore
     private lateinit var testTab: TabSessionState
     private lateinit var browserFragment: BrowserFragment
     private lateinit var view: View
@@ -95,6 +97,8 @@ class BrowserFragmentTest {
         testTab = createTab(url = "https://mozilla.org")
         store = BrowserStore()
         every { context.components.core.store } returns store
+        appStore = AppStore()
+        every { context.components.appStore } returns appStore
 
         mockkObject(FeatureFlags)
     }
@@ -102,24 +106,6 @@ class BrowserFragmentTest {
     @After
     fun tearDown() {
         unmockkObject(FeatureFlags)
-    }
-
-    @Test
-    fun `GIVEN fragment is added WHEN selected tab changes THEN theme is updated`() {
-        browserFragment.observeTabSelection(store)
-        verify(exactly = 0) { browserFragment.updateThemeForSession(testTab) }
-
-        addAndSelectTab(testTab)
-        verify(exactly = 1) { browserFragment.updateThemeForSession(testTab) }
-    }
-
-    @Test
-    fun `GIVEN fragment is removing WHEN selected tab changes THEN theme is not updated`() {
-        every { browserFragment.isRemoving } returns true
-        browserFragment.observeTabSelection(store)
-
-        addAndSelectTab(testTab)
-        verify(exactly = 0) { browserFragment.updateThemeForSession(testTab) }
     }
 
     @Test

@@ -97,6 +97,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
 import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.appstate.bindings.BrowserStoreBinding
 import org.mozilla.fenix.components.metrics.BreadcrumbsRecorder
 import org.mozilla.fenix.components.metrics.GrowthDataWorker
 import org.mozilla.fenix.components.metrics.fonts.FontEnumerationWorker
@@ -221,14 +222,14 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
     private val externalSourceIntentProcessors by lazy {
         listOf(
-            HomeDeepLinkIntentProcessor(this),
+            HomeDeepLinkIntentProcessor(this, components.appStore),
             SpeechProcessingIntentProcessor(this, components.core.store),
             AssistIntentProcessor(),
             StartSearchIntentProcessor(),
             OpenBrowserIntentProcessor(this, ::getIntentSessionId),
             OpenSpecificTabIntentProcessor(this),
             OpenPasswordManagerIntentProcessor(),
-            ReEngagementIntentProcessor(this, settings()),
+            ReEngagementIntentProcessor(this, settings(), components.appStore),
         )
     }
 
@@ -391,6 +392,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             extensionsProcessDisabledPromptObserver,
             serviceWorkerSupport,
             webExtensionPromptFeature,
+            BrowserStoreBinding(components.core.store, components.appStore),
         )
 
         if (shouldAddToRecentsScreen(intent)) {

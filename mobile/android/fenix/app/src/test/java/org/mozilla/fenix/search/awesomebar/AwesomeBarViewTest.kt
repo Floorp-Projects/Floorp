@@ -38,7 +38,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Core.Companion
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -49,6 +51,7 @@ import org.mozilla.fenix.utils.Settings
 @RunWith(FenixRobolectricTestRunner::class)
 class AwesomeBarViewTest {
     private var activity: HomeActivity = mockk(relaxed = true)
+    private var appStore = AppStore()
     private lateinit var awesomeBarView: AwesomeBarView
 
     @Before
@@ -65,6 +68,7 @@ class AwesomeBarViewTest {
         every { any<Activity>().components.core.client } returns mockk()
         every { any<Activity>().components.backgroundServices.syncedTabsStorage } returns mockk()
         every { any<Activity>().components.core.store.state.search } returns mockk(relaxed = true)
+        every { any<Activity>().components.appStore } returns appStore
         every { any<Activity>().getColorFromAttr(any()) } returns 0
         every { AwesomeBarView.Companion.getDrawable(any(), any()) } returns mockk<VectorDrawable>(relaxed = true) {
             every { intrinsicWidth } returns 10
@@ -769,7 +773,6 @@ class AwesomeBarViewTest {
         val settings: Settings = mockk(relaxed = true)
         val url = Uri.parse("https://www.test.com")
         every { activity.settings() } returns settings
-        every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
         val state = getSearchProviderState(
             showSessionSuggestionsForCurrentEngine = false,
             searchEngineSource = SearchEngineSource.Shortcut(
@@ -815,7 +818,6 @@ class AwesomeBarViewTest {
         val settings: Settings = mockk(relaxed = true)
         val url = Uri.parse("https://www.test.com")
         every { activity.settings() } returns settings
-        every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
         val state = getSearchProviderState(
             showAllSessionSuggestions = false,
             searchEngineSource = SearchEngineSource.Shortcut(
@@ -834,9 +836,10 @@ class AwesomeBarViewTest {
 
     @Test
     fun `GIVEN private browsing mode and needing to show tabs suggestions WHEN configuring providers THEN don't add the tabs provider`() {
+        val appStore = AppStore(AppState(mode = BrowsingMode.Private))
         val settings: Settings = mockk(relaxed = true)
         every { activity.settings() } returns settings
-        every { activity.browsingModeManager.mode } returns BrowsingMode.Private
+        every { any<Activity>().components.appStore } returns appStore
         val state = getSearchProviderState(
             searchEngineSource = SearchEngineSource.Shortcut(mockk(relaxed = true)),
         )
@@ -851,7 +854,6 @@ class AwesomeBarViewTest {
         val settings: Settings = mockk(relaxed = true)
         val url = Uri.parse("https://www.test.com")
         every { activity.settings() } returns settings
-        every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
         val state = getSearchProviderState(
             showSyncedTabsSuggestionsForCurrentEngine = false,
             searchEngineSource = SearchEngineSource.Shortcut(
@@ -874,7 +876,6 @@ class AwesomeBarViewTest {
         val settings: Settings = mockk(relaxed = true)
         val url = Uri.parse("https://www.test.com")
         every { activity.settings() } returns settings
-        every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
         val state = getSearchProviderState(
             showAllSyncedTabsSuggestions = false,
             searchEngineSource = SearchEngineSource.Shortcut(
@@ -920,7 +921,6 @@ class AwesomeBarViewTest {
         val settings: Settings = mockk(relaxed = true)
         val url = Uri.parse("https://www.test.com")
         every { activity.settings() } returns settings
-        every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
         val state = getSearchProviderState(
             showBookmarksSuggestionsForCurrentEngine = false,
             searchEngineSource = SearchEngineSource.Shortcut(
@@ -966,7 +966,6 @@ class AwesomeBarViewTest {
         val settings: Settings = mockk(relaxed = true)
         val url = Uri.parse("https://www.test.com")
         every { activity.settings() } returns settings
-        every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
         val state = getSearchProviderState(
             showAllBookmarkSuggestions = false,
             searchEngineSource = SearchEngineSource.Shortcut(
@@ -1001,7 +1000,6 @@ class AwesomeBarViewTest {
         val settings: Settings = mockk(relaxed = true)
         val url = Uri.parse("https://www.test.com")
         every { activity.settings() } returns settings
-        every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
         val state = getSearchProviderState(
             searchEngineSource = SearchEngineSource.Default(
                 mockk(relaxed = true) {
@@ -1076,7 +1074,6 @@ class AwesomeBarViewTest {
     fun `GIVEN a search from the default engine with no suggestions asked WHEN configuring providers THEN add only search engine suggestion provider`() {
         val settings: Settings = mockk(relaxed = true)
         every { activity.settings() } returns settings
-        every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
         val state = getSearchProviderState(
             showHistorySuggestionsForCurrentEngine = false,
             showSearchShortcuts = false,

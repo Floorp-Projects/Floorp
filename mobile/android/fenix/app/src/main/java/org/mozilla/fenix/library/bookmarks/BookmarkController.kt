@@ -24,6 +24,7 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.ext.bookmarkStorage
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -77,6 +78,7 @@ class DefaultBookmarkController(
     private val clipboardManager: ClipboardManager?,
     private val scope: CoroutineScope,
     private val store: BookmarkFragmentStore,
+    private val appStore: AppStore,
     private val sharedViewModel: BookmarksSharedViewModel,
     private val tabsUseCases: TabsUseCases?,
     private val loadBookmarkNode: suspend (String, Boolean) -> BookmarkNode?,
@@ -97,13 +99,12 @@ class DefaultBookmarkController(
     override fun handleBookmarkTapped(item: BookmarkNode) {
         val fromHomeFragment =
             navController.previousBackStackEntry?.destination?.id == R.id.homeFragment
-        val isPrivate = activity.browsingModeManager.mode == BrowsingMode.Private
+        val isPrivate = appStore.state.mode == BrowsingMode.Private
         val flags = EngineSession.LoadUrlFlags.select(EngineSession.LoadUrlFlags.ALLOW_JAVASCRIPT_URL)
         openInNewTabAndShow(
             item.url!!,
             isPrivate || fromHomeFragment,
             BrowserDirection.FromBookmarks,
-            activity.browsingModeManager.mode,
             flags,
         )
     }
@@ -195,8 +196,6 @@ class DefaultBookmarkController(
                         startLoading = load,
                     )
                 }
-                activity.browsingModeManager.mode =
-                    BrowsingMode.fromBoolean(mode == BrowsingMode.Private)
                 showTabTray(mode.isPrivate)
             }
 
@@ -264,20 +263,15 @@ class DefaultBookmarkController(
         searchTermOrURL: String,
         newTab: Boolean,
         from: BrowserDirection,
-        mode: BrowsingMode,
         flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none(),
     ) {
-        with(activity) {
-            browsingModeManager.mode = mode
-            openToBrowserAndLoad(searchTermOrURL, newTab, from, flags = flags)
-        }
+        activity.openToBrowserAndLoad(searchTermOrURL, newTab, from, flags = flags)
     }
 
     private fun openInNewTab(
         url: String,
         mode: BrowsingMode,
     ) {
-        activity.browsingModeManager.mode = BrowsingMode.fromBoolean(mode == BrowsingMode.Private)
         tabsUseCases?.addTab?.invoke(url, private = (mode == BrowsingMode.Private))
     }
 

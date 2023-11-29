@@ -13,6 +13,8 @@ import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.shopping.ShoppingStateReducer
 import org.mozilla.fenix.ext.filterOutTab
 import org.mozilla.fenix.ext.getFilteredStories
+import org.mozilla.fenix.home.HomeReducer
+import org.mozilla.fenix.home.intent.IntentReducer
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTabState
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
@@ -25,6 +27,7 @@ import org.mozilla.fenix.messaging.state.MessagingReducer
 internal object AppStoreReducer {
     @Suppress("LongMethod")
     fun reduce(state: AppState, action: AppAction): AppState = when (action) {
+        is AppAction.OpenTabInBrowser -> state.copy(mode = action.mode)
         is AppAction.UpdateInactiveExpanded ->
             state.copy(inactiveTabsExpanded = action.expanded)
         is AppAction.UpdateFirstFrameDrawn -> {
@@ -239,6 +242,8 @@ internal object AppStoreReducer {
         )
 
         is AppAction.ShoppingAction -> ShoppingStateReducer.reduce(state, action)
+        is AppAction.HomeAction -> HomeReducer.reduce(state, action)
+        is AppAction.IntentAction -> IntentReducer.reduce(state, action)
     }
 }
 

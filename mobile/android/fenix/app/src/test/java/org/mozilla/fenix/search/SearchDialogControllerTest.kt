@@ -46,7 +46,9 @@ import org.mozilla.fenix.GleanMetrics.UnifiedSearch
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.Core
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -76,6 +78,7 @@ class SearchDialogControllerTest {
 
     private lateinit var middleware: CaptureActionsMiddleware<BrowserState, BrowserAction>
     private lateinit var browserStore: BrowserStore
+    private lateinit var appStore: AppStore
 
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
@@ -88,6 +91,7 @@ class SearchDialogControllerTest {
         browserStore = BrowserStore(
             middleware = listOf(middleware),
         )
+        appStore = AppStore()
         every { store.state.tabId } returns "test-tab-id"
         every { store.state.searchEngineSource.searchEngine } returns searchEngine
         every { searchEngine.name } returns ""
@@ -510,7 +514,7 @@ class SearchDialogControllerTest {
     fun handleSearchShortcutEngineSelected() {
         val searchEngine: SearchEngine = mockk(relaxed = true)
         val browsingMode = BrowsingMode.Private
-        every { activity.browsingModeManager.mode } returns browsingMode
+        appStore = AppStore(AppState(mode = browsingMode))
 
         var focusToolbarInvoked = false
         createController(
@@ -707,6 +711,7 @@ class SearchDialogControllerTest {
         return SearchDialogController(
             activity = activity,
             store = browserStore,
+            appStore = appStore,
             tabsUseCases = TabsUseCases(browserStore),
             fragmentStore = store,
             navController = navController,

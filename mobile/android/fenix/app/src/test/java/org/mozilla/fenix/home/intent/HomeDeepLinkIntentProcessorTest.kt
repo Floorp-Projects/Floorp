@@ -14,6 +14,7 @@ import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.Job
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.engine.EngineSession
 import org.junit.Assert.assertFalse
@@ -26,7 +27,9 @@ import org.mozilla.fenix.BuildConfig.DEEP_LINK_SCHEME
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.SupportUtils
 import org.robolectric.annotation.Config
@@ -34,6 +37,7 @@ import org.robolectric.annotation.Config
 @RunWith(FenixRobolectricTestRunner::class)
 class HomeDeepLinkIntentProcessorTest {
     private lateinit var activity: HomeActivity
+    private lateinit var appStore: AppStore
     private lateinit var navController: NavController
     private lateinit var out: Intent
     private lateinit var processorHome: HomeDeepLinkIntentProcessor
@@ -41,9 +45,10 @@ class HomeDeepLinkIntentProcessorTest {
     @Before
     fun setup() {
         activity = mockk(relaxed = true)
+        appStore = mockk(relaxed = true)
         navController = mockk(relaxed = true)
         out = mockk()
-        processorHome = HomeDeepLinkIntentProcessor(activity)
+        processorHome = HomeDeepLinkIntentProcessor(activity, appStore)
     }
 
     @Test
@@ -191,9 +196,11 @@ class HomeDeepLinkIntentProcessorTest {
 
     @Test
     fun `process enable_private_browsing deep link`() {
+        every { appStore.dispatch(any()) } returns Job()
+
         assertTrue(processorHome.process(testIntent("enable_private_browsing"), navController, out))
 
-        verify { activity.browsingModeManager.mode = BrowsingMode.Private }
+        verify { appStore.dispatch(AppAction.IntentAction.EnterPrivateBrowsing) }
         verify { navController.navigate(NavGraphDirections.actionGlobalHome()) }
         verify { out wasNot Called }
     }
@@ -228,7 +235,7 @@ class HomeDeepLinkIntentProcessorTest {
 
     @Test
     fun `process invalid open deep link`() {
-        val invalidProcessor = HomeDeepLinkIntentProcessor(activity)
+        val invalidProcessor = HomeDeepLinkIntentProcessor(activity, mockk())
 
         assertTrue(invalidProcessor.process(testIntent("open"), navController, out))
 

@@ -4,10 +4,11 @@
 
 package org.mozilla.fenix.library.downloads
 
-import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-
 interface DownloadController {
-    fun handleOpen(item: DownloadItem, mode: BrowsingMode? = null)
+    /**
+     * Handle opening a [DownloadItem].
+     */
+    fun handleOpen(item: DownloadItem)
     fun handleSelect(item: DownloadItem)
     fun handleDeselect(item: DownloadItem)
     fun handleBackPressed(): Boolean
@@ -17,12 +18,12 @@ interface DownloadController {
 
 class DefaultDownloadController(
     private val store: DownloadFragmentStore,
-    private val openToFileManager: (item: DownloadItem, mode: BrowsingMode?) -> Unit,
+    private val openToFileManager: (item: DownloadItem) -> Unit,
     private val invalidateOptionsMenu: () -> Unit,
     private val deleteDownloadItems: (Set<DownloadItem>) -> Unit,
 ) : DownloadController {
-    override fun handleOpen(item: DownloadItem, mode: BrowsingMode?) {
-        openToFileManager(item, mode)
+    override fun handleOpen(item: DownloadItem) {
+        openToFileManager(item)
     }
 
     override fun handleSelect(item: DownloadItem) {

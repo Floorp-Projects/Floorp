@@ -99,6 +99,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
                 clipboardManager = requireContext().getSystemService(),
                 scope = viewLifecycleOwner.lifecycleScope,
                 store = bookmarkStore,
+                appStore = requireComponents.appStore,
                 sharedViewModel = sharedViewModel,
                 tabsUseCases = activity?.components?.useCases?.tabsUseCases,
                 loadBookmarkNode = ::loadBookmarkNode,

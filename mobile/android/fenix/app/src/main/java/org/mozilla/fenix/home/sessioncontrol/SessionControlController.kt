@@ -276,7 +276,7 @@ class DefaultSessionControlController(
             TopSites.openInPrivateTab.record(NoExtras())
         }
         with(activity) {
-            browsingModeManager.mode = BrowsingMode.Private
+            appStore.dispatch(AppAction.ModeChange(BrowsingMode.Private))
             openToBrowserAndLoad(
                 searchTermOrURL = topSite.url,
                 newTab = true,
@@ -464,7 +464,7 @@ class DefaultSessionControlController(
     }
 
     override fun handleShowWallpapersOnboardingDialog(state: WallpaperState): Boolean {
-        return if (activity.browsingModeManager.mode.isPrivate) {
+        return if (appStore.state.mode.isPrivate) {
             false
         } else {
             state.availableWallpapers.filter { wallpaper ->
@@ -504,7 +504,7 @@ class DefaultSessionControlController(
         registerCollectionStorageObserver()
 
         val tabIds = store.state
-            .getNormalOrPrivateTabs(private = activity.browsingModeManager.mode.isPrivate)
+            .getNormalOrPrivateTabs(private = appStore.state.mode.isPrivate)
             .map { session -> session.id }
             .toList()
             .toTypedArray()

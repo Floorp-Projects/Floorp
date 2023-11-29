@@ -8,9 +8,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import mozilla.components.support.ktx.android.content.getColorFromAttr
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.setToolbarColors
 
@@ -32,8 +30,6 @@ abstract class LibraryPageFragment<T> : Fragment() {
                     tabsUseCases.addTab.invoke(url, private = private)
                 }
         }
-
-        (activity as HomeActivity).browsingModeManager.mode = BrowsingMode.fromBoolean(private)
     }
 
     override fun onDetach() {

@@ -24,6 +24,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.databinding.FragmentInstalledAddOnDetailsBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -158,6 +159,7 @@ class InstalledAddonDetailsFragmentTest {
         every { selectOrAddTab.invoke(any(), any(), any(), any(), any()) } returns "some-tab-id"
         every { useCases.selectOrAddTab } returns selectOrAddTab
         every { testContext.components.useCases.tabsUseCases } returns useCases
+        every { testContext.components.appStore.state.mode } returns BrowsingMode.Normal
         // We create the `binding` instance and bind the UI here because `onCreateView()` checks a late init variable
         // and we cannot easily mock it to skip the check.
         fragment.setBindingAndBindUI(
@@ -192,21 +194,22 @@ class InstalledAddonDetailsFragmentTest {
         val addon = mockAddon()
         every { fragment.addon } returns addon
         val homeActivity = mockk<HomeActivity>(relaxed = true)
-        every { homeActivity.browsingModeManager.mode.isPrivate } returns true
         every { fragment.activity } returns homeActivity
         val useCases = mockk<TabsUseCases>()
         val selectOrAddTab = mockk<TabsUseCases.SelectOrAddUseCase>()
         every { selectOrAddTab.invoke(any(), any(), any(), any(), any()) } returns "some-tab-id"
         every { useCases.selectOrAddTab } returns selectOrAddTab
         every { testContext.components.useCases.tabsUseCases } returns useCases
+        every { testContext.components.appStore.state.mode } returns BrowsingMode.Private
         // We create the `binding` instance and bind the UI here because `onCreateView()` checks a late init variable
         // and we cannot easily mock it to skip the check.
+        val binding = FragmentInstalledAddOnDetailsBinding.inflate(
+            LayoutInflater.from(testContext),
+            mockk(relaxed = true),
+            false,
+        )
         fragment.setBindingAndBindUI(
-            FragmentInstalledAddOnDetailsBinding.inflate(
-                LayoutInflater.from(testContext),
-                mockk(relaxed = true),
-                false,
-            ),
+            binding,
         )
         val navController = mockk<NavController>(relaxed = true)
         Navigation.setViewNavController(fragment.binding.root, navController)

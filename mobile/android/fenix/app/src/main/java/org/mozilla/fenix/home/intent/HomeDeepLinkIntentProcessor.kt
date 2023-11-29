@@ -17,7 +17,8 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.GlobalDirections
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.ext.alreadyOnDestination
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
 
@@ -26,6 +27,7 @@ import org.mozilla.fenix.ext.openSetDefaultBrowserOption
  */
 class HomeDeepLinkIntentProcessor(
     private val activity: HomeActivity,
+    private val appStore: AppStore,
 ) : HomeIntentProcessor {
     private val logger = Logger("DeepLinkIntentProcessor")
 
@@ -76,7 +78,7 @@ class HomeDeepLinkIntentProcessor(
     private fun handleDeepLinkSideEffects(deepLink: Uri) {
         when (deepLink.host) {
             "enable_private_browsing" -> {
-                activity.browsingModeManager.mode = BrowsingMode.Private
+                appStore.dispatch(AppAction.IntentAction.EnterPrivateBrowsing)
             }
             "make_default_browser" -> {
                 activity.openSetDefaultBrowserOption(

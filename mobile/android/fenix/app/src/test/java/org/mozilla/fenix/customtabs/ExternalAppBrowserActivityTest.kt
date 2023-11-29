@@ -63,7 +63,6 @@ class ExternalAppBrowserActivityTest {
         every { activity.components.settings.shouldReturnToBrowser } returns true
         every { activity.openToBrowser(any(), any()) } returns Unit
 
-        activity.browsingModeManager = browsingModeManager
         activity.navigateToBrowserOnColdStart()
 
         verify(exactly = 0) { activity.openToBrowser(BrowserDirection.FromGlobal, null) }

@@ -15,6 +15,8 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.onboarding.ReEngagementNotificationWorker
 import org.mozilla.fenix.onboarding.ReEngagementNotificationWorker.Companion.isReEngagementNotificationIntent
@@ -30,6 +32,7 @@ import org.mozilla.fenix.utils.Settings
 class ReEngagementIntentProcessor(
     private val activity: HomeActivity,
     private val settings: Settings,
+    private val appStore: AppStore,
 ) : HomeIntentProcessor {
 
     override fun process(intent: Intent, navController: NavController, out: Intent): Boolean {
@@ -46,7 +49,7 @@ class ReEngagementIntentProcessor(
                         navController.nav(null, directions, options)
                     }
                     else -> {
-                        activity.browsingModeManager.mode = BrowsingMode.Private
+                        appStore.dispatch(AppAction.OpenTabInBrowser(BrowsingMode.Private))
                         activity.openToBrowserAndLoad(
                             ReEngagementNotificationWorker.NOTIFICATION_TARGET_URL,
                             newTab = true,
