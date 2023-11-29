@@ -217,14 +217,13 @@ bool HasTransportCc(const Codec& codec);
 
 // Returns the first codec in `supported_codecs` that matches `codec`, or
 // nullptr if no codec matches.
-const VideoCodec* FindMatchingCodec(
-    const std::vector<VideoCodec>& supported_codecs,
-    const VideoCodec& codec);
+const Codec* FindMatchingVideoCodec(const std::vector<Codec>& supported_codecs,
+                                    const Codec& codec);
 
 // Returns all codecs in `supported_codecs` that matches `codec`.
-std::vector<const VideoCodec*> FindAllMatchingCodecs(
-    const std::vector<VideoCodec>& supported_codecs,
-    const VideoCodec& codec);
+std::vector<const Codec*> FindAllMatchingCodecs(
+    const std::vector<Codec>& supported_codecs,
+    const Codec& codec);
 
 RTC_EXPORT void AddH264ConstrainedBaselineProfileToSupportedFormats(
     std::vector<webrtc::SdpVideoFormat>* supported_formats);

@@ -2679,7 +2679,7 @@ bool WebRtcVideoReceiveChannel::GetChangedReceiverParameters(
                                         /*is_decoder_factory=*/true,
                                         /*include_rtx=*/true, call_->trials());
     for (const VideoCodecSettings& mapped_codec : mapped_codecs) {
-      if (!FindMatchingCodec(local_supported_codecs, mapped_codec.codec)) {
+      if (!FindMatchingVideoCodec(local_supported_codecs, mapped_codec.codec)) {
         RTC_LOG(LS_ERROR) << "GetChangedReceiverParameters called with "
                              "unsupported video codec: "
                           << mapped_codec.codec.ToString();

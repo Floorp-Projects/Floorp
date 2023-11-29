@@ -440,12 +440,11 @@ static void AddSimulcastToMediaDescription(
 // Adds a StreamParams for each SenderOptions in `sender_options` to
 // content_description.
 // `current_params` - All currently known StreamParams of any media type.
-template <class C>
 static bool AddStreamParams(const std::vector<SenderOptions>& sender_options,
                             const std::string& rtcp_cname,
                             UniqueRandomIdGenerator* ssrc_generator,
                             StreamParamsVec* current_streams,
-                            MediaContentDescriptionImpl<C>* content_description,
+                            MediaContentDescription* content_description,
                             const webrtc::FieldTrialsView& field_trials) {
   // SCTP streams are not negotiated using SDP/ContentDescriptions.
   if (IsSctpProtocol(content_description->protocol())) {
@@ -712,18 +711,18 @@ static bool CreateContentOffer(
   }
   return true;
 }
-template <class C>
+
 static bool CreateMediaContentOffer(
     const MediaDescriptionOptions& media_description_options,
     const MediaSessionOptions& session_options,
-    const std::vector<C>& codecs,
+    const std::vector<Codec>& codecs,
     const SecurePolicy& secure_policy,
     const CryptoParamsVec* current_cryptos,
     const std::vector<std::string>& crypto_suites,
     const RtpHeaderExtensions& rtp_extensions,
     UniqueRandomIdGenerator* ssrc_generator,
     StreamParamsVec* current_streams,
-    MediaContentDescriptionImpl<C>* offer,
+    MediaContentDescription* offer,
     const webrtc::FieldTrialsView& field_trials) {
   offer->AddCodecs(codecs);
   if (!AddStreamParams(media_description_options.sender_options,
@@ -1365,17 +1364,16 @@ static void StripCNCodecs(AudioCodecs* audio_codecs) {
                       audio_codecs->end());
 }
 
-template <class C>
 static bool SetCodecsInAnswer(
-    const MediaContentDescriptionImpl<C>* offer,
-    const std::vector<C>& local_codecs,
+    const MediaContentDescription* offer,
+    const std::vector<Codec>& local_codecs,
     const MediaDescriptionOptions& media_description_options,
     const MediaSessionOptions& session_options,
     UniqueRandomIdGenerator* ssrc_generator,
     StreamParamsVec* current_streams,
-    MediaContentDescriptionImpl<C>* answer,
+    MediaContentDescription* answer,
     const webrtc::FieldTrialsView& field_trials) {
-  std::vector<C> negotiated_codecs;
+  std::vector<Codec> negotiated_codecs;
   NegotiateCodecs(local_codecs, offer->codecs(), &negotiated_codecs,
                   media_description_options.codec_preferences.empty(),
                   &field_trials);
