@@ -139,16 +139,11 @@ struct MediaSessionOptions {
 // of the various fields to determine the proper result.
 class MediaSessionDescriptionFactory {
  public:
-  // Simple constructor that does not set any configuration for the factory.
-  // When using this constructor, the methods below can be used to set the
-  // configuration.
+  // This constructor automatically sets up the factory to get its configuration
+  // from the specified MediaEngine (when provided).
   // The TransportDescriptionFactory and the UniqueRandomIdGenerator are not
   // owned by MediaSessionDescriptionFactory, so they must be kept alive by the
   // user of this class.
-  MediaSessionDescriptionFactory(const TransportDescriptionFactory* factory,
-                                 rtc::UniqueRandomIdGenerator* ssrc_generator);
-  // This helper automatically sets up the factory to get its configuration
-  // from the specified MediaEngine
   MediaSessionDescriptionFactory(cricket::MediaEngineInterface* media_engine,
                                  bool rtx_enabled,
                                  rtc::UniqueRandomIdGenerator* ssrc_generator,

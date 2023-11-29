@@ -438,8 +438,8 @@ class MediaSessionDescriptionFactoryTest : public ::testing::Test {
   MediaSessionDescriptionFactoryTest()
       : tdf1_(field_trials),
         tdf2_(field_trials),
-        f1_(&tdf1_, &ssrc_generator1),
-        f2_(&tdf2_, &ssrc_generator2) {
+        f1_(nullptr, false, &ssrc_generator1, &tdf1_),
+        f2_(nullptr, false, &ssrc_generator2, &tdf2_) {
     f1_.set_audio_codecs(MAKE_VECTOR(kAudioCodecs1),
                          MAKE_VECTOR(kAudioCodecs1));
     f1_.set_video_codecs(MAKE_VECTOR(kVideoCodecs1),
@@ -4589,8 +4589,8 @@ class MediaProtocolTest : public ::testing::TestWithParam<const char*> {
   MediaProtocolTest()
       : tdf1_(field_trials_),
         tdf2_(field_trials_),
-        f1_(&tdf1_, &ssrc_generator1),
-        f2_(&tdf2_, &ssrc_generator2) {
+        f1_(nullptr, false, &ssrc_generator1, &tdf1_),
+        f2_(nullptr, false, &ssrc_generator2, &tdf2_) {
     f1_.set_audio_codecs(MAKE_VECTOR(kAudioCodecs1),
                          MAKE_VECTOR(kAudioCodecs1));
     f1_.set_video_codecs(MAKE_VECTOR(kVideoCodecs1),
@@ -4654,7 +4654,7 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestSetAudioCodecs) {
   webrtc::test::ScopedKeyValueConfig field_trials;
   TransportDescriptionFactory tdf(field_trials);
   UniqueRandomIdGenerator ssrc_generator;
-  MediaSessionDescriptionFactory sf(&tdf, &ssrc_generator);
+  MediaSessionDescriptionFactory sf(nullptr, false, &ssrc_generator, &tdf);
   std::vector<AudioCodec> send_codecs = MAKE_VECTOR(kAudioCodecs1);
   std::vector<AudioCodec> recv_codecs = MAKE_VECTOR(kAudioCodecs2);
 
@@ -4726,7 +4726,7 @@ void TestAudioCodecsOffer(RtpTransceiverDirection direction) {
   webrtc::test::ScopedKeyValueConfig field_trials;
   TransportDescriptionFactory tdf(field_trials);
   UniqueRandomIdGenerator ssrc_generator;
-  MediaSessionDescriptionFactory sf(&tdf, &ssrc_generator);
+  MediaSessionDescriptionFactory sf(nullptr, false, &ssrc_generator, &tdf);
   const std::vector<AudioCodec> send_codecs = MAKE_VECTOR(kAudioCodecs1);
   const std::vector<AudioCodec> recv_codecs = MAKE_VECTOR(kAudioCodecs2);
   const std::vector<AudioCodec> sendrecv_codecs =
@@ -4829,8 +4829,10 @@ void TestAudioCodecsAnswer(RtpTransceiverDirection offer_direction,
   TransportDescriptionFactory offer_tdf(field_trials);
   TransportDescriptionFactory answer_tdf(field_trials);
   UniqueRandomIdGenerator ssrc_generator1, ssrc_generator2;
-  MediaSessionDescriptionFactory offer_factory(&offer_tdf, &ssrc_generator1);
-  MediaSessionDescriptionFactory answer_factory(&answer_tdf, &ssrc_generator2);
+  MediaSessionDescriptionFactory offer_factory(nullptr, false, &ssrc_generator1,
+                                               &offer_tdf);
+  MediaSessionDescriptionFactory answer_factory(nullptr, false,
+                                                &ssrc_generator2, &answer_tdf);
 
   offer_factory.set_audio_codecs(
       VectorFromIndices(kOfferAnswerCodecs, kOfferSendCodecs),

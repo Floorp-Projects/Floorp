@@ -1566,17 +1566,13 @@ bool MediaSessionOptions::HasMediaDescription(MediaType type) const {
 }
 
 MediaSessionDescriptionFactory::MediaSessionDescriptionFactory(
-    const TransportDescriptionFactory* transport_desc_factory,
-    rtc::UniqueRandomIdGenerator* ssrc_generator)
-    : ssrc_generator_(ssrc_generator),
-      transport_desc_factory_(transport_desc_factory) {}
-
-MediaSessionDescriptionFactory::MediaSessionDescriptionFactory(
     cricket::MediaEngineInterface* media_engine,
     bool rtx_enabled,
     rtc::UniqueRandomIdGenerator* ssrc_generator,
     const TransportDescriptionFactory* transport_desc_factory)
-    : MediaSessionDescriptionFactory(transport_desc_factory, ssrc_generator) {
+    : ssrc_generator_(ssrc_generator),
+      transport_desc_factory_(transport_desc_factory) {
+  RTC_CHECK(transport_desc_factory_);
   if (media_engine) {
     audio_send_codecs_ = media_engine->voice().send_codecs();
     audio_recv_codecs_ = media_engine->voice().recv_codecs();
@@ -2227,10 +2223,6 @@ RTCError MediaSessionDescriptionFactory::AddTransportOffer(
     const SessionDescription* current_desc,
     SessionDescription* offer_desc,
     IceCredentialsIterator* ice_credentials) const {
-  if (!transport_desc_factory_) {
-    LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
-                         "Missing transport description factory");
-  }
   const TransportDescription* current_tdesc =
       GetTransportDescription(content_name, current_desc);
   std::unique_ptr<TransportDescription> new_tdesc(
@@ -2252,9 +2244,6 @@ MediaSessionDescriptionFactory::CreateTransportAnswer(
     const SessionDescription* current_desc,
     bool require_transport_attributes,
     IceCredentialsIterator* ice_credentials) const {
-  if (!transport_desc_factory_) {
-    return nullptr;
-  }
   const TransportDescription* offer_tdesc =
       GetTransportDescription(content_name, offer_desc);
   const TransportDescription* current_tdesc =
