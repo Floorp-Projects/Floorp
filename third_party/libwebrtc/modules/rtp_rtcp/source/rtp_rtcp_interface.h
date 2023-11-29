@@ -278,7 +278,7 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
   // Returns the FlexFEC SSRC, if there is one.
   virtual absl::optional<uint32_t> FlexfecSsrc() const = 0;
 
-  // Sets sending status. Sends kRtcpByeCode when going from true to false.
+  // Sets sending status.
   // Returns -1 on failure else 0.
   virtual int32_t SetSendingStatus(bool sending) = 0;
 

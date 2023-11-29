@@ -71,10 +71,10 @@ index 36e117af55..7fc541585c 100644
    absl::optional<TimeDelta> AverageRtt() const;
    absl::optional<TimeDelta> LastRtt() const;
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-index 83690f160c..a63067141d 100644
+index 18508a4554..cca9a40250 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-@@ -500,11 +500,11 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
+@@ -499,11 +499,11 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
  }
  
  // Received RTCP report.
@@ -141,7 +141,7 @@ index a9d18ec44a..54ca61a705 100644
    // A snapshot of the most recent Report Block with additional data of
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index 889b099abd..2614461b2e 100644
+index 5a4809b534..046edd289f 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 @@ -392,10 +392,11 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
