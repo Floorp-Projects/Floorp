@@ -567,7 +567,13 @@ void RtpVideoStreamReceiver2::OnReceivedPayloadData(
           // Assume frequency is the same one for all video frames.
           kVideoPayloadTypeFrequency,
           rtp_packet.GetExtension<AbsoluteCaptureTimeExtension>()));
-
+  if (packet_info.absolute_capture_time().has_value()) {
+    packet_info.set_local_capture_clock_offset(
+        capture_clock_offset_updater_.ConvertsToTimeDela(
+            capture_clock_offset_updater_.AdjustEstimatedCaptureClockOffset(
+                packet_info.absolute_capture_time()
+                    ->estimated_capture_clock_offset)));
+  }
   RTPVideoHeader& video_header = packet->video_header;
   video_header.rotation = kVideoRotation_0;
   video_header.content_type = VideoContentType::UNSPECIFIED;
