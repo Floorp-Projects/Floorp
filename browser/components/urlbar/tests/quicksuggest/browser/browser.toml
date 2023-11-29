@@ -52,4 +52,7 @@ tags = "search-telemetry"
 ["browser_telemetry_weather.js"]
 tags = "search-telemetry"
 
+["browser_telemetry_gleanEmptyStrings.js"]
+tags = "search-telemetry"
+
 ["browser_weather.js"]

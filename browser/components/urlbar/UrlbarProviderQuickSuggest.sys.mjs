@@ -734,7 +734,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
       valuesByGleanKey = { ...defaultValuesByGleanKey, ...valuesByGleanKey };
       for (let [gleanKey, value] of Object.entries(valuesByGleanKey)) {
         let glean = Glean.quickSuggest[gleanKey];
-        if (value !== undefined) {
+        if (value !== undefined && value !== "") {
           glean.set(value);
         }
       }
