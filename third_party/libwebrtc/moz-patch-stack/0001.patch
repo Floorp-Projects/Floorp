@@ -1,195 +1,176 @@
-From: Michael Froman <mjfroman@mac.com>
-Date: Wed, 29 Nov 2023 17:00:04 -0600
-Subject: (tmp-cherry-pick) Revert "Use loss based bwe v2 in the start phase."
- (4aa2b40ffe)
+From: Harald Alvestrand <hta@webrtc.org>
+Date: Tue, 26 Sep 2023 19:38:19 +0000
+Subject: (cherry-pick-branch-heads/5993) [M118] Fire MaybeSignalReadyToSend in
+ a PostTask when recursive
 
-This reverts commit b6c7ddd6a137e187fa459255488da3b70b0a6c24.
+Speculative fix. Writing the test for it is more complex.
 
-Reason for revert: broken unit test
+(cherry picked from commit 83894d384763c613e548e6352838406e6e0c2fc1)
 
-Original change's description:
-> Use loss based bwe v2 in the start phase.
->
-> TESTED=manual before:screen/ANtkMApoYczA2V5; after:screen/9kBoSvYKzKZR4sK
->
-> Bug: webrtc:12707
-> Change-Id: Ic156e363625c4b7476011059f3cd95641972091c
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/320840
-> Commit-Queue: Diep Bui <diepbp@webrtc.org>
-> Reviewed-by: Per Kjellander <perkj@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#40789}
-
-Bug: webrtc:12707
-Change-Id: Ibde45436934707b8e0084aa496dc249bc1c78ab2
-No-Presubmit: true
-No-Tree-Checks: true
-No-Try: true
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/321180
-Commit-Queue: Diep Bui <diepbp@webrtc.org>
+Bug: chromium:1483874
+Change-Id: Icfaf1524b0499c609010753e0b6f3cadbd0e98f9
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/321480
 Reviewed-by: Per Kjellander <perkj@webrtc.org>
-Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Cr-Commit-Position: refs/heads/main@{#40790}
+Commit-Queue: Harald Alvestrand <hta@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#40820}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/322124
+Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5993@{#3}
+Cr-Branched-From: 5afcec093c1403fe9e3872706d04671cbc6d2983-refs/heads/main@{#40703}
 ---
- .../goog_cc/loss_based_bwe_v2.cc              | 18 +++---------
- .../goog_cc/loss_based_bwe_v2.h               |  8 +-----
- .../goog_cc/loss_based_bwe_v2_test.cc         | 28 -------------------
- .../goog_cc/send_side_bandwidth_estimation.cc |  6 ++--
- 4 files changed, 9 insertions(+), 51 deletions(-)
+ pc/BUILD.gn                       |  1 +
+ pc/rtp_transport.cc               | 10 ++++++++++
+ pc/rtp_transport.h                |  4 ++++
+ pc/rtp_transport_unittest.cc      | 28 ++++++++++++++++++++++++++++
+ pc/test/rtp_transport_test_util.h | 10 ++++++++++
+ 5 files changed, 53 insertions(+)
 
-diff --git a/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc b/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
-index b58f0f7520..3ad910bdb1 100644
---- a/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
-+++ b/modules/congestion_controller/goog_cc/loss_based_bwe_v2.cc
-@@ -136,10 +136,6 @@ bool LossBasedBweV2::IsReady() const {
-          num_observations_ > 0;
- }
- 
--bool LossBasedBweV2::ReadyToUseInStartPhase() const {
--  return IsReady() && config_->use_in_start_phase;
--}
--
- LossBasedBweV2::Result LossBasedBweV2::GetLossBasedResult() const {
-   Result result;
-   result.state = current_state_;
-@@ -242,12 +238,9 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
-   SetProbeBitrate(probe_bitrate);
- 
-   if (!IsValid(current_estimate_.loss_limited_bandwidth)) {
--    if (!IsValid(delay_based_estimate)) {
--      RTC_LOG(LS_WARNING) << "The delay based estimate must be finite: "
--                        << ToString(delay_based_estimate);
--      return;
--    }
--    current_estimate_.loss_limited_bandwidth = delay_based_estimate;
-+    RTC_LOG(LS_VERBOSE)
-+        << "The estimator must be initialized before it can be used.";
-+    return;
-   }
- 
-   ChannelParameters best_candidate = current_estimate_;
-@@ -423,7 +416,6 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
-                                                   TimeDelta::Seconds(10));
-   FieldTrialParameter<bool> not_use_acked_rate_in_alr("NotUseAckedRateInAlr",
-                                                       false);
--  FieldTrialParameter<bool> use_in_start_phase("UseInStartPhase", false);
-   if (key_value_config) {
-     ParseFieldTrial({&enabled,
-                      &bandwidth_rampup_upper_bound_factor,
-@@ -461,8 +453,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
-                      &high_loss_rate_threshold,
-                      &bandwidth_cap_at_high_loss_rate,
-                      &slope_of_bwe_high_loss_func,
--                     &not_use_acked_rate_in_alr,
--                     &use_in_start_phase},
-+                     &not_use_acked_rate_in_alr},
-                     key_value_config->Lookup("WebRTC-Bwe-LossBasedBweV2"));
-   }
- 
-@@ -525,7 +516,6 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
-   config->probe_integration_enabled = probe_integration_enabled.Get();
-   config->probe_expiration = probe_expiration.Get();
-   config->not_use_acked_rate_in_alr = not_use_acked_rate_in_alr.Get();
--  config->use_in_start_phase = use_in_start_phase.Get();
- 
-   return config;
- }
-diff --git a/modules/congestion_controller/goog_cc/loss_based_bwe_v2.h b/modules/congestion_controller/goog_cc/loss_based_bwe_v2.h
-index cd49d05c97..649e7652bb 100644
---- a/modules/congestion_controller/goog_cc/loss_based_bwe_v2.h
-+++ b/modules/congestion_controller/goog_cc/loss_based_bwe_v2.h
-@@ -57,13 +57,11 @@ class LossBasedBweV2 {
-   // initialized with a BWE and then has received enough `PacketResult`s.
-   bool IsReady() const;
- 
--  // Returns true if loss based BWE is ready to be used in the start phase.
--  bool ReadyToUseInStartPhase() const;
--
-   // Returns `DataRate::PlusInfinity` if no BWE can be calculated.
-   Result GetLossBasedResult() const;
- 
-   void SetAcknowledgedBitrate(DataRate acknowledged_bitrate);
-+  void SetBandwidthEstimate(DataRate bandwidth_estimate);
-   void SetMinMaxBitrate(DataRate min_bitrate, DataRate max_bitrate);
-   void UpdateBandwidthEstimate(
-       rtc::ArrayView<const PacketResult> packet_results,
-@@ -72,9 +70,6 @@ class LossBasedBweV2 {
-       absl::optional<DataRate> probe_bitrate,
-       bool in_alr);
- 
--  // For unit testing only.
--  void SetBandwidthEstimate(DataRate bandwidth_estimate);
--
-  private:
-   struct ChannelParameters {
-     double inherent_loss = 0.0;
-@@ -119,7 +114,6 @@ class LossBasedBweV2 {
-     bool probe_integration_enabled = false;
-     TimeDelta probe_expiration = TimeDelta::Zero();
-     bool not_use_acked_rate_in_alr = false;
--    bool use_in_start_phase = false;
-   };
- 
-   struct Derivatives {
-diff --git a/modules/congestion_controller/goog_cc/loss_based_bwe_v2_test.cc b/modules/congestion_controller/goog_cc/loss_based_bwe_v2_test.cc
-index ca8596fe98..bdd7498392 100644
---- a/modules/congestion_controller/goog_cc/loss_based_bwe_v2_test.cc
-+++ b/modules/congestion_controller/goog_cc/loss_based_bwe_v2_test.cc
-@@ -1530,34 +1530,6 @@ TEST_P(LossBasedBweV2Test, BackOffToAckedRateIfNotInAlr) {
-       acked_rate);
- }
- 
--TEST_P(LossBasedBweV2Test, NotReadyToUseInStartPhase) {
--  ExplicitKeyValueConfig key_value_config(
--      "WebRTC-Bwe-LossBasedBweV2/"
--      "Enabled:true,UseInStartPhase:true/");
--  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
--  // Make sure that the estimator is not ready to use in start phase because of
--  // lacking TWCC feedback.
--  EXPECT_FALSE(loss_based_bandwidth_estimator.ReadyToUseInStartPhase());
--}
--
--TEST_P(LossBasedBweV2Test,
--       ReadyToUseInStartPhase) {
--  ExplicitKeyValueConfig key_value_config(
--      "WebRTC-Bwe-LossBasedBweV2/"
--      "Enabled:true,ObservationDurationLowerBound:200ms,UseInStartPhase:true/");
--  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
--  std::vector<PacketResult> enough_feedback =
--      CreatePacketResultsWithReceivedPackets(
--          /*first_packet_timestamp=*/Timestamp::Zero());
--
--  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
--      enough_feedback, /*delay_based_estimate=*/DataRate::KilobitsPerSec(600),
--      BandwidthUsage::kBwNormal,
--      /*probe_estimate=*/absl::nullopt,
--      /*upper_link_capacity=*/DataRate::PlusInfinity(), /*in_alr=*/false);
--  EXPECT_TRUE(loss_based_bandwidth_estimator.ReadyToUseInStartPhase());
--}
--
- INSTANTIATE_TEST_SUITE_P(LossBasedBweV2Tests,
-                          LossBasedBweV2Test,
-                          ::testing::Bool());
-diff --git a/modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.cc b/modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.cc
-index 31024662ff..9f97c065c9 100644
---- a/modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.cc
-+++ b/modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.cc
-@@ -492,8 +492,7 @@ void SendSideBandwidthEstimation::UpdateEstimate(Timestamp at_time) {
- 
-   // We trust the REMB and/or delay-based estimate during the first 2 seconds if
-   // we haven't had any packet loss reported, to allow startup bitrate probing.
--  if (last_fraction_loss_ == 0 && IsInStartPhase(at_time) &&
--      !loss_based_bandwidth_estimator_v2_.ReadyToUseInStartPhase()) {
-+  if (last_fraction_loss_ == 0 && IsInStartPhase(at_time)) {
-     DataRate new_bitrate = current_target_;
-     // TODO(srte): We should not allow the new_bitrate to be larger than the
-     // receiver limit here.
-@@ -504,6 +503,9 @@ void SendSideBandwidthEstimation::UpdateEstimate(Timestamp at_time) {
-     if (LossBasedBandwidthEstimatorV1Enabled()) {
-       loss_based_bandwidth_estimator_v1_.Initialize(new_bitrate);
-     }
-+    if (LossBasedBandwidthEstimatorV2Enabled()) {
-+      loss_based_bandwidth_estimator_v2_.SetBandwidthEstimate(new_bitrate);
+diff --git a/pc/BUILD.gn b/pc/BUILD.gn
+index 2da703e869..3e237445ef 100644
+--- a/pc/BUILD.gn
++++ b/pc/BUILD.gn
+@@ -444,6 +444,7 @@ rtc_source_set("rtp_transport") {
+     ":rtp_transport_internal",
+     ":session_description",
+     "../api:array_view",
++    "../api/task_queue:pending_task_safety_flag",
+     "../api/units:timestamp",
+     "../call:rtp_receiver",
+     "../call:video_stream_api",
+diff --git a/pc/rtp_transport.cc b/pc/rtp_transport.cc
+index 32bdf99ec4..653b51fd9e 100644
+--- a/pc/rtp_transport.cc
++++ b/pc/rtp_transport.cc
+@@ -285,8 +285,18 @@ void RtpTransport::MaybeSignalReadyToSend() {
+   bool ready_to_send =
+       rtp_ready_to_send_ && (rtcp_ready_to_send_ || rtcp_mux_enabled_);
+   if (ready_to_send != ready_to_send_) {
++    if (processing_ready_to_send_) {
++      // Delay ReadyToSend processing until current operation is finished.
++      // Note that this may not cause a signal, since ready_to_send may
++      // have a new value by the time this executes.
++      TaskQueueBase::Current()->PostTask(
++          SafeTask(safety_.flag(), [this] { MaybeSignalReadyToSend(); }));
++      return;
 +    }
+     ready_to_send_ = ready_to_send;
++    processing_ready_to_send_ = true;
+     SendReadyToSend(ready_to_send);
++    processing_ready_to_send_ = false;
+   }
+ }
  
-     if (new_bitrate != current_target_) {
-       min_bitrate_history_.clear();
+diff --git a/pc/rtp_transport.h b/pc/rtp_transport.h
+index 1afcb5ee3d..456c91c370 100644
+--- a/pc/rtp_transport.h
++++ b/pc/rtp_transport.h
+@@ -17,6 +17,7 @@
+ #include <string>
+ 
+ #include "absl/types/optional.h"
++#include "api/task_queue/pending_task_safety_flag.h"
+ #include "call/rtp_demuxer.h"
+ #include "call/video_receive_stream.h"
+ #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
+@@ -137,6 +138,9 @@ class RtpTransport : public RtpTransportInternal {
+ 
+   // Used for identifying the MID for RtpDemuxer.
+   RtpHeaderExtensionMap header_extension_map_;
++  // Guard against recursive "ready to send" signals
++  bool processing_ready_to_send_ = false;
++  ScopedTaskSafety safety_;
+ };
+ 
+ }  // namespace webrtc
+diff --git a/pc/rtp_transport_unittest.cc b/pc/rtp_transport_unittest.cc
+index ca748ae9a6..5b6a8309e0 100644
+--- a/pc/rtp_transport_unittest.cc
++++ b/pc/rtp_transport_unittest.cc
+@@ -10,12 +10,16 @@
+ 
+ #include "pc/rtp_transport.h"
+ 
++#include <utility>
++
+ #include "p2p/base/fake_packet_transport.h"
+ #include "pc/test/rtp_transport_test_util.h"
+ #include "rtc_base/buffer.h"
+ #include "rtc_base/containers/flat_set.h"
++#include "rtc_base/gunit.h"
+ #include "rtc_base/third_party/sigslot/sigslot.h"
+ #include "test/gtest.h"
++#include "test/run_loop.h"
+ 
+ namespace webrtc {
+ 
+@@ -321,4 +325,28 @@ TEST(RtpTransportTest, DontSignalUnhandledRtpPayloadType) {
+   transport.UnregisterRtpDemuxerSink(&observer);
+ }
+ 
++TEST(RtpTransportTest, RecursiveSetSendDoesNotCrash) {
++  const int kShortTimeout = 100;
++  test::RunLoop loop;
++  RtpTransport transport(kMuxEnabled);
++  rtc::FakePacketTransport fake_rtp("fake_rtp");
++  transport.SetRtpPacketTransport(&fake_rtp);
++  TransportObserver observer(&transport);
++  observer.SetActionOnReadyToSend([&](bool ready) {
++    const rtc::PacketOptions options;
++    const int flags = 0;
++    rtc::CopyOnWriteBuffer rtp_data(kRtpData, kRtpLen);
++    transport.SendRtpPacket(&rtp_data, options, flags);
++  });
++  // The fake RTP will have no destination, so will return -1.
++  fake_rtp.SetError(ENOTCONN);
++  fake_rtp.SetWritable(true);
++  // At this point, only the initial ready-to-send is observed.
++  EXPECT_TRUE(observer.ready_to_send());
++  EXPECT_EQ(observer.ready_to_send_signal_count(), 1);
++  // After the wait, the ready-to-send false is observed.
++  EXPECT_EQ_WAIT(observer.ready_to_send_signal_count(), 2, kShortTimeout);
++  EXPECT_FALSE(observer.ready_to_send());
++}
++
+ }  // namespace webrtc
+diff --git a/pc/test/rtp_transport_test_util.h b/pc/test/rtp_transport_test_util.h
+index 29ffad8539..593ee002c9 100644
+--- a/pc/test/rtp_transport_test_util.h
++++ b/pc/test/rtp_transport_test_util.h
+@@ -11,6 +11,8 @@
+ #ifndef PC_TEST_RTP_TRANSPORT_TEST_UTIL_H_
+ #define PC_TEST_RTP_TRANSPORT_TEST_UTIL_H_
+ 
++#include <utility>
++
+ #include "call/rtp_packet_sink_interface.h"
+ #include "modules/rtp_rtcp/source/rtp_packet_received.h"
+ #include "pc/rtp_transport_internal.h"
+@@ -65,6 +67,9 @@ class TransportObserver : public RtpPacketSinkInterface {
+   }
+ 
+   void OnReadyToSend(bool ready) {
++    if (action_on_ready_to_send_) {
++      action_on_ready_to_send_(ready);
++    }
+     ready_to_send_signal_count_++;
+     ready_to_send_ = ready;
+   }
+@@ -73,6 +78,10 @@ class TransportObserver : public RtpPacketSinkInterface {
+ 
+   int ready_to_send_signal_count() { return ready_to_send_signal_count_; }
+ 
++  void SetActionOnReadyToSend(absl::AnyInvocable<void(bool)> action) {
++    action_on_ready_to_send_ = std::move(action);
++  }
++
+  private:
+   bool ready_to_send_ = false;
+   int rtp_count_ = 0;
+@@ -81,6 +90,7 @@ class TransportObserver : public RtpPacketSinkInterface {
+   int ready_to_send_signal_count_ = 0;
+   rtc::CopyOnWriteBuffer last_recv_rtp_packet_;
+   rtc::CopyOnWriteBuffer last_recv_rtcp_packet_;
++  absl::AnyInvocable<void(bool)> action_on_ready_to_send_;
+ };
+ 
+ }  // namespace webrtc
