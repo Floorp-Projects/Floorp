@@ -66,8 +66,7 @@ RtpSenderObservers CreateObservers(
     StreamDataCountersCallback* rtp_stats,
     BitrateStatisticsObserver* bitrate_observer,
     FrameCountObserver* frame_count_observer,
-    RtcpPacketTypeCounterObserver* rtcp_type_observer,
-    SendSideDelayObserver* send_delay_observer) {
+    RtcpPacketTypeCounterObserver* rtcp_type_observer) {
   RtpSenderObservers observers;
   observers.rtcp_rtt_stats = nullptr;
   observers.intra_frame_callback = intra_frame_callback;
@@ -77,7 +76,6 @@ RtpSenderObservers CreateObservers(
   observers.bitrate_observer = bitrate_observer;
   observers.frame_count_observer = frame_count_observer;
   observers.rtcp_type_observer = rtcp_type_observer;
-  observers.send_delay_observer = send_delay_observer;
   observers.send_packet_observer = nullptr;
   return observers;
 }
@@ -145,8 +143,7 @@ class RtpVideoSenderTestFixture {
         time_controller_.GetClock(), suspended_ssrcs, suspended_payload_states,
         config_.rtp, config_.rtcp_report_interval_ms, &transport_,
         CreateObservers(&encoder_feedback_, &stats_proxy_, &stats_proxy_,
-                        &stats_proxy_, frame_count_observer, &stats_proxy_,
-                        &stats_proxy_),
+                        &stats_proxy_, frame_count_observer, &stats_proxy_),
         &transport_controller_, &event_log_, &retransmission_rate_limiter_,
         std::make_unique<FecControllerDefault>(time_controller_.GetClock()),
         nullptr, CryptoOptions{}, frame_transformer,

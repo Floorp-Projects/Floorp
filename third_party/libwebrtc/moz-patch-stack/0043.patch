@@ -170,7 +170,7 @@ index a1fc204e7c..01ac7e0ba4 100644
  
      // Transport for outgoing packets (RTCP).
 diff --git a/modules/rtp_rtcp/include/rtp_rtcp_defines.h b/modules/rtp_rtcp/include/rtp_rtcp_defines.h
-index 6804ac3e2e..d5b08ea03d 100644
+index 249cf835ba..de85abd4ae 100644
 --- a/modules/rtp_rtcp/include/rtp_rtcp_defines.h
 +++ b/modules/rtp_rtcp/include/rtp_rtcp_defines.h
 @@ -173,6 +173,14 @@ class NetworkLinkRtcpObserver {
@@ -255,7 +255,7 @@ index e748b257e8..36e117af55 100644
    RtcpLossNotificationObserver* const rtcp_loss_notification_observer_;
    NetworkStateEstimateObserver* const network_state_estimate_observer_;
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index af0fc8ac8b..5a4809b534 100644
+index 0bdd389795..2c56dccd2a 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 @@ -74,6 +74,9 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {

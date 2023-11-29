@@ -101,7 +101,6 @@ RtpSenderObservers CreateObservers(RtcpRttStats* call_stats,
   observers.bitrate_observer = stats_proxy;
   observers.frame_count_observer = stats_proxy;
   observers.rtcp_type_observer = stats_proxy;
-  observers.send_delay_observer = nullptr;
   observers.send_packet_observer = send_packet_observer;
   return observers;
 }

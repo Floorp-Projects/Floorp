@@ -98,7 +98,6 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
     VideoFecGenerator* fec_generator = nullptr;
 
     BitrateStatisticsObserver* send_bitrate_observer = nullptr;
-    SendSideDelayObserver* send_side_delay_observer = nullptr;
     RtcEventLog* event_log = nullptr;
     SendPacketObserver* send_packet_observer = nullptr;
     RateLimiter* retransmission_rate_limiter = nullptr;
