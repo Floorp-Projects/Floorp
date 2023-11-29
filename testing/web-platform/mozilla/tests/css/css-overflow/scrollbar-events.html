@@ -50,5 +50,7 @@ promise_test(async function(t) {
   }
   await promise;
   await new Promise(r => requestAnimationFrame(r));
+  // FIXME: This doesn't seem to be done automatically by the test harness in WPT
+  await SpecialPowers.popPrefEnv();
 });
 </script>
