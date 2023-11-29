@@ -48,7 +48,8 @@
     'swarming': {
       'dimensions': {
         'os': 'iOS-16.6',
-        'pool': 'chrome.tests'
+        'pool': 'chrome.tests',
+        'device_status': 'available'
       }
     }
   },
@@ -59,6 +60,7 @@
         'os': 'iOS-15.7.8',
         'pool': 'WebRTC',
         'id': 'mac-254-e504',
+        'device_status': 'available'
       },
     },
   },
