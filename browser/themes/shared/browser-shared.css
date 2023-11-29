@@ -1083,7 +1083,7 @@ shopping-sidebar {
   /* `--shopping-sidebar-width` and `--shopping-sidebar-width-translate-x`
    * have the same default values, but they should still be separate vars
    * (see shopping-sidebar.js). */
-  --shopping-sidebar-width: 26.67em;
+  --shopping-sidebar-width: 320px;
   --shopping-sidebar-width-translate-x: var(--shopping-sidebar-width);
 
   border-inline-start: 1px solid var(--chrome-content-separator-color);
