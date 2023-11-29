@@ -97,6 +97,8 @@ class AudioConfig {
 
     static ChannelLayout SMPTEDefault(const ChannelLayout& aChannelLayout);
     static ChannelLayout SMPTEDefault(ChannelMap aMap);
+    // Convert a channel map to a human readable string for debugging purposes.
+    static nsCString ChannelMapToString(const ChannelMap aChannelMap);
 
     static constexpr ChannelMap UNKNOWN_MAP = 0;
 

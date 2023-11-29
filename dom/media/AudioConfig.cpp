@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioConfig.h"
+#include "nsString.h"
+#include <array>
 
 namespace mozilla {
 
@@ -222,6 +224,46 @@ ChannelLayout AudioConfig::ChannelLayout::SMPTEDefault(ChannelMap aMap) {
     i++;
   }
   return ChannelLayout(channels, layout.Elements());
+}
+
+nsCString AudioConfig::ChannelLayout::ChannelMapToString(
+    const ChannelMap aChannelMap) {
+  nsCString rv;
+
+  constexpr const std::array CHANNEL_NAME = {"Front left",
+                                             "Front right",
+                                             "Front center",
+                                             "Low frequency",
+                                             "Back left",
+                                             "Back right",
+                                             "Front left of center",
+                                             "Front right of center",
+                                             "Back center",
+                                             "Side left",
+                                             "Side right",
+                                             "Top center",
+                                             "Top front left",
+                                             "Top front center",
+                                             "Top front right",
+                                             "Top back left",
+                                             "Top back center",
+                                             "Top back right"};
+
+  rv.AppendPrintf("0x%08x", aChannelMap);
+  rv.Append("[");
+  bool empty = true;
+  for (size_t i = 0; i < CHANNEL_NAME.size(); i++) {
+    if (aChannelMap & (1 << i)) {
+      if (!empty) {
+        rv.Append("|");
+      }
+      empty = false;
+      rv.Append(CHANNEL_NAME[i]);
+    }
+  }
+  rv.Append("]");
+
+  return rv;
 }
 
 bool AudioConfig::ChannelLayout::MappingTable(const ChannelLayout& aOther,
