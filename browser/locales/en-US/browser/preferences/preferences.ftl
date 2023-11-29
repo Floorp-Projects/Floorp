@@ -762,9 +762,9 @@ search-separate-default-engine =
 search-suggestions-header = Search Suggestions
 search-suggestions-desc = Choose how suggestions from search engines appear.
 
-search-suggestions-option =
-    .label = Provide search suggestions
-    .accesskey = s
+search-show-suggestions-option =
+    .label = Show search suggestions
+    .accesskey = S
 
 search-show-suggestions-url-bar-option =
     .label = Show search suggestions in address bar results
