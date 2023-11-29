@@ -212,7 +212,7 @@ class MediaSessionConduit {
   class SourceKey {
    public:
     explicit SourceKey(const webrtc::RtpSource& aSource)
-        : SourceKey(aSource.timestamp_ms(), aSource.source_id()) {}
+        : SourceKey(aSource.timestamp().ms(), aSource.source_id()) {}
 
     SourceKey(uint32_t aTimestamp, uint32_t aSrc)
         : mLibwebrtcTimestampMs(aTimestamp), mSrc(aSrc) {}

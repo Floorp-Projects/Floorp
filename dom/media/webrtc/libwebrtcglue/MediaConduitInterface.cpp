@@ -99,7 +99,7 @@ void MediaSessionConduit::UpdateRtpSources(
     // here so that things seem consistent to js.
     domEntry.mTimestamp = dom::RTCStatsTimestamp::FromRealtime(
                               GetTimestampMaker(),
-                              webrtc::Timestamp::Millis(source.timestamp_ms()) -
+                              webrtc::Timestamp::Millis(source.timestamp().ms()) -
                                   webrtc::TimeDelta::Micros(500))
                               .ToDom();
     domEntry.mRtpTimestamp = source.rtp_timestamp();
