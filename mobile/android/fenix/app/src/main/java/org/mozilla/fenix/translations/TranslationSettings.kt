@@ -25,7 +25,7 @@ import org.mozilla.fenix.compose.list.TextListItem
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
- * Firefox Translation settings fragment compose view.
+ * Translation Settings Fragment.
  *
  * @param translationSwitchList list of [TranslationSwitchItem]s to display.
  * @param onAutomaticTranslationClicked Invoked when the user clicks on the "Automatic Translation" button.

@@ -1949,6 +1949,15 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Indicates that the user does not want warned of a translations
+     * model download while in data saver mode and using mobile data.
+     */
+    var ignoreTranslationsDataSaverWarning by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_ignore_translations_data_saver_warning),
+        default = false,
+    )
+
+    /**
      * Indicates if the user is shown new redesigned Toolbar UI.
      */
     var enableRedesignToolbar by lazyFeatureFlagPreference(

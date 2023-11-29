@@ -23,7 +23,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 import java.util.Locale
 
 /**
- * Firefox Preferences Automatic Translate preference screen.
+ * Automatic Translate preference screen.
  *
  * @param automaticTranslationListPreferences List of [AutomaticTranslationItemPreference]s to display.
  * @param onItemClick Invoked when the user clicks on the a item from the list.

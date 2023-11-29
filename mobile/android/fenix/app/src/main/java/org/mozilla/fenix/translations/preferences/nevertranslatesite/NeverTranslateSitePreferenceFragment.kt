@@ -16,7 +16,7 @@ import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
- * A fragment displaying the Firefox Preference never translate site items list.
+ * A fragment displaying never translate site items list.
  */
 class NeverTranslateSitePreferenceFragment : Fragment() {
     override fun onResume() {

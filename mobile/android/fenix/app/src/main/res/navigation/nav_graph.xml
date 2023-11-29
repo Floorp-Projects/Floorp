@@ -1454,10 +1454,6 @@
                 app:destination="@id/neverTranslateSitePreferenceFragment" />
         </fragment>
         <fragment
-            android:id="@+id/downloadLanguagesPreferenceFragment"
-            android:name="org.mozilla.fenix.translations.preferences.downloadlanguages.DownloadLanguagesPreferenceFragment">
-        </fragment>
-        <fragment
             android:id="@+id/automaticTranslationPreferenceFragment"
             android:name="org.mozilla.fenix.translations.preferences.automatic.AutomaticTranslationPreferenceFragment">
             <action
@@ -1484,6 +1480,28 @@
             <argument
                 android:name="websiteUrl"
                 app:argType="string" />
+        </dialog>
+        <fragment
+            android:id="@+id/downloadLanguagesPreferenceFragment"
+            android:name="org.mozilla.fenix.translations.preferences.downloadlanguages.DownloadLanguagesPreferenceFragment">
+            <action
+                android:id="@+id/action_downloadLanguagesPreference_to_downloadLanguagesDialogPreference"
+                app:destination="@id/downloadLanguagesDialogPreferenceFragment" />
+        </fragment>
+        <dialog
+            android:id="@+id/downloadLanguagesDialogPreferenceFragment"
+            android:name="org.mozilla.fenix.translations.preferences.downloadlanguages.LanguageDialogPreferenceFragment">
+            <argument
+                android:name="downloadLanguageItemStatePreference"
+                app:argType="org.mozilla.fenix.translations.preferences.downloadlanguages.DownloadLanguageItemStatePreference" />
+            <argument
+                android:name="languageNamePreference"
+                app:argType="string"
+                app:nullable="false" />
+            <argument
+                android:name="itemFileSizePreference"
+                app:argType="long"
+                app:nullable="false" />
         </dialog>
     </navigation>
 </navigation>

@@ -26,7 +26,7 @@ import org.mozilla.fenix.compose.list.TextListItem
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
- * Firefox Preference: Never Translate Site preference screen.
+ * Never Translate Site preference screen.
  *
  * @param neverTranslateSiteListPreferences List of [NeverTranslateSiteListItemPreference]s to display.
  * @param onItemClick Invoked when the user clicks on the a item from the list.

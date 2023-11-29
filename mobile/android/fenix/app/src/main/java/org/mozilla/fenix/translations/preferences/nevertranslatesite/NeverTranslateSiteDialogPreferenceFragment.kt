@@ -16,7 +16,7 @@ import androidx.navigation.fragment.navArgs
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
- * A dialog fragment displaying the Firefox Preference: never translate site item.
+ * A dialog fragment displaying never translate site item.
  */
 class NeverTranslateSiteDialogPreferenceFragment : DialogFragment() {
 

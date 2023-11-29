@@ -18,7 +18,7 @@ import org.mozilla.fenix.compose.button.TextButton
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
- * Firefox Preference: Never Translate Dialog compose view.
+ * Never Translate Dialog
  *
  * @param websiteUrl Title of the dialog that should be display.
  * @param onConfirmDelete Invoked when the user clicks on the "Delete" dialog button.

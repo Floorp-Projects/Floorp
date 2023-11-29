@@ -15,7 +15,7 @@ import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
- * A fragment displaying the Firefox Preference Automatic Translation Options screen.
+ * A fragment displaying Automatic Translation Options screen.
  */
 class AutomaticTranslationOptionsPreferenceFragment : Fragment() {
     private val args by navArgs<AutomaticTranslationOptionsPreferenceFragmentArgs>()

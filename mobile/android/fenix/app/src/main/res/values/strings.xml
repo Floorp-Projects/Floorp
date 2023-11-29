@@ -2305,6 +2305,39 @@
     <!-- Content description (not visible, for screen readers etc.): For a language list item that is selected. -->
     <string name="download_languages_item_content_description_selected_state">Selected</string>
 
+    <!-- Title for the dialog used by the translations feature to confirm deleting a language.
+    The dialog will be presented when the user requests deletion of a language.
+    The first parameter is the name of the language, for example, "Spanish" and the second parameter is the size in kilobytes or megabytes of the language file. -->
+    <string name="delete_language_file_dialog_title">Delete %1$s (%2$s)?</string>
+    <!-- Additional information for the dialog used by the translations feature to confirm deleting a language. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="delete_language_file_dialog_message">If you delete this language, %1$s will download partial languages to your cache as you translate.</string>
+    <!-- Title for the dialog used by the translations feature to confirm deleting all languages file.
+    The dialog will be presented when the user requests deletion of all languages file.
+    The first parameter is the size in kilobytes or megabytes of the language file. -->
+    <string name="delete_language_all_languages_file_dialog_title">Delete all languages (%1$s)?</string>
+    <!-- Additional information for the dialog used by the translations feature to confirm deleting all languages file. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="delete_language_all_languages_file_dialog_message">If you delete all languages, %1$s will download partial languages to your cache as you translate.</string>
+    <!-- Button text on the dialog used by the translations feature to confirm deleting a language. -->
+    <string name="delete_language_file_dialog_positive_button_text">Delete</string>
+    <!-- Button text on the dialog used by the translations feature to cancel deleting a language. -->
+    <string name="delete_language_file_dialog_negative_button_text">Cancel</string>
+
+    <!-- Title for the data saving mode warning dialog used by the translations feature.
+    This dialog will be presented when the user attempts to download a language or perform
+    a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
+    The first parameter is the size in kilobytes or megabytes of the language file.-->
+    <string name="download_language_file_dialog_title">Download while in data saving mode (%1$s)?</string>
+    <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
+    <string name="download_language_file_dialog_message_all_languages">We download partial languages to your cache to keep translations private.</string>
+    <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
+    <string name="download_language_file_dialog_checkbox_text">Always download in data saving mode</string>
+    <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
+    <string name="download_language_file_dialog_positive_button_text">Download</string>
+    <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file and perform a translation. -->
+    <string name="download_language_file_dialog_positive_button_text_all_languages">Download and translate</string>
+    <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to cancel the action and not perform a download of the language file. -->
+    <string name="download_language_file_dialog_negative_button_text">Cancel</string>
+
     <!-- Debug drawer -->
     <!-- The title of the Tab Tools feature in the Debug Drawer. -->
     <string name="debug_drawer_tab_tools_title" tools:ignore="UnusedResources">Tab Tools</string>
