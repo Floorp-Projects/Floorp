@@ -400,6 +400,19 @@ const VideoCodec* FindMatchingCodec(
   return nullptr;
 }
 
+std::vector<const VideoCodec*> FindAllMatchingCodecs(
+    const std::vector<VideoCodec>& supported_codecs,
+    const VideoCodec& codec) {
+  std::vector<const VideoCodec*> result;
+  webrtc::SdpVideoFormat sdp(codec.name, codec.params);
+  for (const VideoCodec& supported_codec : supported_codecs) {
+    if (sdp.IsSameCodec({supported_codec.name, supported_codec.params})) {
+      result.push_back(&supported_codec);
+    }
+  }
+  return result;
+}
+
 // If a decoder supports any H264 profile, it is implicitly assumed to also
 // support constrained base line even though it's not explicitly listed.
 void AddH264ConstrainedBaselineProfileToSupportedFormats(

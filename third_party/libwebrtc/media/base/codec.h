@@ -214,9 +214,15 @@ bool HasNack(const Codec& codec);
 bool HasRemb(const Codec& codec);
 bool HasRrtr(const Codec& codec);
 bool HasTransportCc(const Codec& codec);
+
 // Returns the first codec in `supported_codecs` that matches `codec`, or
 // nullptr if no codec matches.
 const VideoCodec* FindMatchingCodec(
+    const std::vector<VideoCodec>& supported_codecs,
+    const VideoCodec& codec);
+
+// Returns all codecs in `supported_codecs` that matches `codec`.
+std::vector<const VideoCodec*> FindAllMatchingCodecs(
     const std::vector<VideoCodec>& supported_codecs,
     const VideoCodec& codec);
 
