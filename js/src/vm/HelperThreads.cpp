@@ -477,15 +477,12 @@ bool js::HasOffThreadIonCompile(Zone* zone) {
   }
 
   JSRuntime* rt = zone->runtimeFromMainThread();
-  if (rt->hasJitRuntime()) {
-    jit::IonCompileTask* task =
-        rt->jitRuntime()->ionLazyLinkList(rt).getFirst();
-    while (task) {
-      if (task->script()->zone() == zone) {
-        return true;
-      }
-      task = task->getNext();
+  jit::IonCompileTask* task = rt->jitRuntime()->ionLazyLinkList(rt).getFirst();
+  while (task) {
+    if (task->script()->zone() == zone) {
+      return true;
     }
+    task = task->getNext();
   }
 
   return false;
