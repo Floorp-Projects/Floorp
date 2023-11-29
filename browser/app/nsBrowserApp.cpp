@@ -431,10 +431,6 @@ int main(int argc, char* argv[], char* envp[]) {
   mozilla::CreateAndStorePreXULSkeletonUI(GetModuleHandle(nullptr), argc, argv);
 #endif
 
-#if defined(XP_UNIX)
-  setenv("MOZ_ENABLE_APPSHELL_SIG_HANDLER", "1", true);
-#endif
-
   nsresult rv = InitXPCOMGlue(LibLoadingStrategy::ReadAhead);
   if (NS_FAILED(rv)) {
     return 255;
