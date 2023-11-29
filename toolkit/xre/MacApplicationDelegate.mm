@@ -255,29 +255,31 @@ void ProcessPendingGetURLAppleEvents() {
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification*)notification {
-  if (sLaunchStatus == LaunchStatus::ProcessingURLs) {
-    // We are in an inner `run` loop that we are spinning in order to get
-    // URLs that were requested while launching. `application:openURLs:` will
-    // have been called by this point and we will have finished reconstructing
-    // the command line. We now stop the app loop for the rest of startup to be
-    // processed and will call `run` again when the main event loop should
-    // start.
-    [NSApp stop:self];
+  dispatch_async(dispatch_get_main_queue(), ^{
+    if (sLaunchStatus == LaunchStatus::ProcessingURLs) {
+      // We are in an inner `run` loop that we are spinning in order to get
+      // URLs that were requested while launching. `application:openURLs:` will
+      // have been called by this point and we will have finished reconstructing
+      // the command line. We now stop the app loop for the rest of startup to
+      // be processed and will call `run` again when the main event loop should
+      // start.
+      [NSApp stop:self];
 
-    // Send a bogus event so that the internal "app stopped" flag is processed.
-    // Since we aren't calling this from a responder, we need to post an event
-    // to have the loop iterate and respond to the stopped flag.
-    [NSApp postEvent:[NSEvent otherEventWithType:NSEventTypeApplicationDefined
-                                        location:NSMakePoint(0, 0)
-                                   modifierFlags:0
-                                       timestamp:0
-                                    windowNumber:0
-                                         context:NULL
-                                         subtype:kEventSubtypeNone
-                                           data1:0
-                                           data2:0]
-             atStart:NO];
-  }
+      // Send a bogus event so that the internal "app stopped" flag is
+      // processed. Since we aren't calling this from a responder, we need to
+      // post an event to have the loop iterate and respond to the stopped flag.
+      [NSApp postEvent:[NSEvent otherEventWithType:NSEventTypeApplicationDefined
+                                          location:NSMakePoint(0, 0)
+                                     modifierFlags:0
+                                         timestamp:0
+                                      windowNumber:0
+                                           context:NULL
+                                           subtype:kEventSubtypeNone
+                                             data1:0
+                                             data2:0]
+               atStart:NO];
+    }
+  });
 }
 
 // If we don't handle applicationShouldTerminate:, a call to [NSApp terminate:]
