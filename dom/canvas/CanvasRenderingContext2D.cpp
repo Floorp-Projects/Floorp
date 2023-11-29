@@ -5209,19 +5209,19 @@ SurfaceFromElementResult CanvasRenderingContext2D::CachedSurfaceFromElement(
 }
 
 static void SwapScaleWidthHeightForRotation(gfx::Rect& aRect,
-                                            VideoInfo::Rotation aDegrees) {
-  if (aDegrees == VideoInfo::Rotation::kDegree_90 ||
-      aDegrees == VideoInfo::Rotation::kDegree_270) {
+                                            VideoRotation aDegrees) {
+  if (aDegrees == VideoRotation::kDegree_90 ||
+      aDegrees == VideoRotation::kDegree_270) {
     std::swap(aRect.width, aRect.height);
   }
 }
 
 static Matrix ComputeRotationMatrix(gfxFloat aRotatedWidth,
                                     gfxFloat aRotatedHeight,
-                                    VideoInfo::Rotation aDegrees) {
+                                    VideoRotation aDegrees) {
   Matrix shiftVideoCenterToOrigin;
-  if (aDegrees == VideoInfo::Rotation::kDegree_90 ||
-      aDegrees == VideoInfo::Rotation::kDegree_270) {
+  if (aDegrees == VideoRotation::kDegree_90 ||
+      aDegrees == VideoRotation::kDegree_270) {
     shiftVideoCenterToOrigin =
         Matrix::Translation(-aRotatedHeight / 2.0, -aRotatedWidth / 2.0);
   } else {
@@ -5513,7 +5513,7 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
       return;
     }
 
-    VideoInfo::Rotation rotationDeg = VideoInfo::Rotation::kDegree_0;
+    VideoRotation rotationDeg = VideoRotation::kDegree_0;
     if (HTMLVideoElement* video = HTMLVideoElement::FromNodeOrNull(element)) {
       rotationDeg = video->RotationDegrees();
     }
@@ -5521,7 +5521,7 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
     gfx::Rect destRect(aDx, aDy, aDw, aDh);
 
     Matrix transform;
-    if (rotationDeg != VideoInfo::Rotation::kDegree_0) {
+    if (rotationDeg != VideoRotation::kDegree_0) {
       Matrix preTransform = ComputeRotationMatrix(aDw, aDh, rotationDeg);
       transform = preTransform * Matrix::Translation(aDx, aDy);
 

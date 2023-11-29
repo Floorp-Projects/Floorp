@@ -9,6 +9,7 @@
 #include <string.h>  // for memcpy, memset
 
 #include "GLImages.h"    // for SurfaceTextureImage
+#include "MediaInfo.h"   // VideoInfo::Rotation
 #include "YCbCrUtils.h"  // for YCbCr conversions
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"  // for gfxPlatform
@@ -181,6 +182,7 @@ ImageContainer::ImageContainer(Mode flag)
       mPaintCount(0),
       mDroppedImageCount(0),
       mImageFactory(new ImageFactory()),
+      mRotation(VideoRotation::kDegree_0),
       mRecycleBin(new BufferRecycleBin()),
       mIsAsync(flag == ASYNCHRONOUS),
       mCurrentProducerID(-1) {
@@ -196,6 +198,7 @@ ImageContainer::ImageContainer(const CompositableHandle& aHandle)
       mPaintCount(0),
       mDroppedImageCount(0),
       mImageFactory(nullptr),
+      mRotation(VideoRotation::kDegree_0),
       mRecycleBin(nullptr),
       mIsAsync(true),
       mAsyncContainerHandle(aHandle),

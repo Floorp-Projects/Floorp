@@ -77,10 +77,10 @@ struct ParamTraits<mozilla::TrackInfo::TrackType>
           mozilla::TrackInfo::TrackType::kTextTrack> {};
 
 template <>
-struct ParamTraits<mozilla::VideoInfo::Rotation>
+struct ParamTraits<mozilla::VideoRotation>
     : public ContiguousEnumSerializerInclusive<
-          mozilla::VideoInfo::Rotation, mozilla::VideoInfo::Rotation::kDegree_0,
-          mozilla::VideoInfo::Rotation::kDegree_270> {};
+          mozilla::VideoRotation, mozilla::VideoRotation::kDegree_0,
+          mozilla::VideoRotation::kDegree_270> {};
 
 template <>
 struct ParamTraits<mozilla::MediaByteBuffer>

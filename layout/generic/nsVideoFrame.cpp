@@ -56,10 +56,10 @@ NS_QUERYFRAME_TAIL_INHERITING(nsVideoFrame)
 // A matrix to obtain a correct-rotated video frame.
 static Matrix ComputeRotationMatrix(gfxFloat aRotatedWidth,
                                     gfxFloat aRotatedHeight,
-                                    VideoInfo::Rotation aDegrees) {
+                                    VideoRotation aDegrees) {
   Matrix shiftVideoCenterToOrigin;
-  if (aDegrees == VideoInfo::Rotation::kDegree_90 ||
-      aDegrees == VideoInfo::Rotation::kDegree_270) {
+  if (aDegrees == VideoRotation::kDegree_90 ||
+      aDegrees == VideoRotation::kDegree_270) {
     shiftVideoCenterToOrigin =
         Matrix::Translation(-aRotatedHeight / 2.0, -aRotatedWidth / 2.0);
   } else {
@@ -75,9 +75,9 @@ static Matrix ComputeRotationMatrix(gfxFloat aRotatedWidth,
 }
 
 static void SwapScaleWidthHeightForRotation(IntSize& aSize,
-                                            VideoInfo::Rotation aDegrees) {
-  if (aDegrees == VideoInfo::Rotation::kDegree_90 ||
-      aDegrees == VideoInfo::Rotation::kDegree_270) {
+                                            VideoRotation aDegrees) {
+  if (aDegrees == VideoRotation::kDegree_90 ||
+      aDegrees == VideoRotation::kDegree_270) {
     int32_t tmpWidth = aSize.width;
     aSize.width = aSize.height;
     aSize.height = tmpWidth;
@@ -649,7 +649,7 @@ class nsDisplayVideo : public nsPaintedDisplayItem {
       return;
     }
 
-    VideoInfo::Rotation rotationDeg = element->RotationDegrees();
+    VideoRotation rotationDeg = element->RotationDegrees();
     Matrix preTransform = ComputeRotationMatrix(
         destGFXRect.Width(), destGFXRect.Height(), rotationDeg);
     Matrix transform =
