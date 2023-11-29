@@ -647,6 +647,10 @@ const defaultOptions = {
     value: false,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
+  enableHighlightEditor: {
+    value: false,
+    kind: OptionKind.VIEWER + OptionKind.PREFERENCE
+  },
   enablePermissions: {
     value: false,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
@@ -3273,6 +3277,8 @@ const NullL10n = null;
 
 class AnnotationEditorLayerBuilder {
   #annotationLayer = null;
+  #drawLayer = null;
+  #textLayer = null;
   #uiManager;
   constructor(options) {
     this.pageDiv = options.pageDiv;
@@ -3284,6 +3290,8 @@ class AnnotationEditorLayerBuilder {
     this._cancelled = false;
     this.#uiManager = options.uiManager;
     this.#annotationLayer = options.annotationLayer || null;
+    this.#textLayer = options.textLayer || null;
+    this.#drawLayer = options.drawLayer || null;
   }
   async render(viewport, intent = "display") {
     if (intent !== "display") {
@@ -3315,7 +3323,9 @@ class AnnotationEditorLayerBuilder {
       pageIndex: this.pdfPage.pageNumber - 1,
       l10n: this.l10n,
       viewport: clonedViewport,
-      annotationLayer: this.#annotationLayer
+      annotationLayer: this.#annotationLayer,
+      textLayer: this.#textLayer,
+      drawLayer: this.#drawLayer
     });
     const parameters = {
       viewport: clonedViewport,
@@ -3473,6 +3483,37 @@ class AnnotationLayerBuilder {
       }
       section.inert = disableFormElements;
     }
+  }
+}
+
+;// CONCATENATED MODULE: ./web/draw_layer_builder.js
+
+class DrawLayerBuilder {
+  #drawLayer = null;
+  constructor(options) {
+    this.pageIndex = options.pageIndex;
+  }
+  async render(intent = "display") {
+    if (intent !== "display" || this.#drawLayer || this._cancelled) {
+      return;
+    }
+    this.#drawLayer = new DrawLayer({
+      pageIndex: this.pageIndex
+    });
+  }
+  cancel() {
+    this._cancelled = true;
+    if (!this.#drawLayer) {
+      return;
+    }
+    this.#drawLayer.destroy();
+    this.#drawLayer = null;
+  }
+  setParent(parent) {
+    this.#drawLayer?.setParent(parent);
+  }
+  getDrawLayer() {
+    return this.#drawLayer;
   }
 }
 
@@ -4183,6 +4224,7 @@ class XfaLayerBuilder {
 
 
 
+
 const MAX_CANVAS_PIXELS = compatibilityParams.maxCanvasPixels || 16777216;
 const DEFAULT_LAYER_PROPERTIES = null;
 class PDFPageView {
@@ -4231,6 +4273,7 @@ class PDFPageView {
     this.zoomLayer = null;
     this.xfaLayer = null;
     this.structTreeLayer = null;
+    this.drawLayer = null;
     const div = document.createElement("div");
     div.className = "page";
     div.setAttribute("data-page-number", this.id);
@@ -4334,6 +4377,13 @@ class PDFPageView {
         pageNumber: this.id,
         error
       });
+    }
+  }
+  async #renderDrawLayer() {
+    try {
+      await this.drawLayer.render("display");
+    } catch (ex) {
+      console.error(`#renderDrawLayer: "${ex}".`);
     }
   }
   async #renderXfaLayer() {
@@ -4604,6 +4654,10 @@ class PDFPageView {
       this._annotationCanvasMap = null;
     }
     if (this.annotationEditorLayer && (!keepAnnotationEditorLayer || !this.annotationEditorLayer.div)) {
+      if (this.drawLayer) {
+        this.drawLayer.cancel();
+        this.drawLayer = null;
+      }
       this.annotationEditorLayer.cancel();
       this.annotationEditorLayer = null;
     }
@@ -4648,6 +4702,9 @@ class PDFPageView {
       this.#renderAnnotationLayer();
     }
     if (redrawAnnotationEditorLayer && this.annotationEditorLayer) {
+      if (this.drawLayer) {
+        this.#renderDrawLayer();
+      }
       this.#renderAnnotationEditorLayer();
     }
     if (redrawXfaLayer && this.xfaLayer) {
@@ -4825,20 +4882,27 @@ class PDFPageView {
       if (this.annotationLayer) {
         await this.#renderAnnotationLayer();
       }
+      const {
+        annotationEditorUIManager
+      } = this.#layerProperties;
+      if (!annotationEditorUIManager) {
+        return;
+      }
+      this.drawLayer ||= new DrawLayerBuilder({
+        pageIndex: this.id
+      });
+      await this.#renderDrawLayer();
+      this.drawLayer.setParent(canvasWrapper);
       if (!this.annotationEditorLayer) {
-        const {
-          annotationEditorUIManager
-        } = this.#layerProperties;
-        if (!annotationEditorUIManager) {
-          return;
-        }
         this.annotationEditorLayer = new AnnotationEditorLayerBuilder({
           uiManager: annotationEditorUIManager,
           pageDiv: div,
           pdfPage,
           l10n,
           accessibilityManager: this._accessibilityManager,
-          annotationLayer: this.annotationLayer?.annotationLayer
+          annotationLayer: this.annotationLayer?.annotationLayer,
+          textLayer: this.textLayer,
+          drawLayer: this.drawLayer.getDrawLayer()
         });
       }
       this.#renderAnnotationEditorLayer();
@@ -4973,7 +5037,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '4.0.275';
+    const viewerVersion = '4.0.283';
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -6779,6 +6843,10 @@ const PDFViewerApplication = {
         if (!isOffscreenCanvasSupported) {
           appConfig.toolbar?.editorStampButton?.classList.add("hidden");
         }
+        const editorHighlightButton = appConfig.toolbar?.editorHighlightButton;
+        if (editorHighlightButton && AppOptions.get("enableHighlightEditor")) {
+          editorHighlightButton.hidden = false;
+        }
         this.annotationEditorParams = new AnnotationEditorParams(appConfig.annotationEditorParams, eventBus);
       } else {
         for (const id of ["editorModeButtons", "editorModeSeparator"]) {
@@ -8565,6 +8633,7 @@ class BasePreferences {
     "defaultZoomDelay": 400,
     "defaultZoomValue": "",
     "disablePageLabels": false,
+    "enableHighlightEditor": false,
     "enablePermissions": false,
     "enablePrintAutoRotate": true,
     "enableScripting": true,
@@ -8724,23 +8793,6 @@ class L10n {
 
 ;
 class FirefoxCom {
-  static requestSync(action, data) {
-    const request = document.createTextNode("");
-    document.documentElement.append(request);
-    const sender = new CustomEvent("pdf.js.message", {
-      bubbles: true,
-      cancelable: false,
-      detail: {
-        action,
-        data,
-        sync: true
-      }
-    });
-    request.dispatchEvent(sender);
-    const response = sender.detail.response;
-    request.remove();
-    return response;
-  }
   static requestAsync(action, data) {
     return new Promise(resolve => {
       this.request(action, data, resolve);
@@ -8764,7 +8816,6 @@ class FirefoxCom {
       detail: {
         action,
         data,
-        sync: false,
         responseExpected: !!callback
       }
     });
@@ -8956,7 +9007,7 @@ class FirefoxComDataRangeTransport extends PDFDataRangeTransport {
     });
   }
   abort() {
-    FirefoxCom.requestSync("abortLoading", null);
+    FirefoxCom.request("abortLoading", null);
   }
 }
 class FirefoxScripting {
@@ -9025,7 +9076,7 @@ class FirefoxExternalServices extends DefaultExternalServices {
           break;
       }
     });
-    FirefoxCom.requestSync("initPassiveLoading", null);
+    FirefoxCom.request("initPassiveLoading", null);
   }
   static reportTelemetry(data) {
     FirefoxCom.request("reportTelemetry", JSON.stringify(data));
@@ -9207,8 +9258,8 @@ PDFPrintServiceFactory.instance = {
 
 
 
-const pdfjsVersion = '4.0.275';
-const pdfjsBuild = '4bf7ff202';
+const pdfjsVersion = '4.0.283';
+const pdfjsBuild = '59cf2ee5a';
 const AppConstants = null;
 window.PDFViewerApplication = PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;
