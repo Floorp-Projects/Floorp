@@ -576,7 +576,6 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
   }
   bandwidth_estimation_->UpdateLossBasedEstimator(
       report, result.delay_detector_state, probe_bitrate,
-      estimate_ ? estimate_->link_capacity_upper : DataRate::PlusInfinity(),
       alr_start_time.has_value());
   if (result.updated) {
     // Update the estimate in the ProbeController, in case we want to probe.

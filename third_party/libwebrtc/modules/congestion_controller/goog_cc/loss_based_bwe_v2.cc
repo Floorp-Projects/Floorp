@@ -217,10 +217,8 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
     DataRate delay_based_estimate,
     BandwidthUsage delay_detector_state,
     absl::optional<DataRate> probe_bitrate,
-    DataRate upper_link_capacity,
     bool in_alr) {
   delay_based_estimate_ = delay_based_estimate;
-  upper_link_capacity_ = upper_link_capacity;
   if (!IsEnabled()) {
     RTC_LOG(LS_WARNING)
         << "The estimator must be enabled before it can be used.";

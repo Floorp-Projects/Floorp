@@ -68,7 +68,6 @@ class LossBasedBweV2 {
       DataRate delay_based_estimate,
       BandwidthUsage delay_detector_state,
       absl::optional<DataRate> probe_bitrate,
-      DataRate upper_link_capacity,
       bool in_alr);
 
  private:
@@ -199,7 +198,6 @@ class LossBasedBweV2 {
   LossBasedState current_state_ = LossBasedState::kDelayBasedEstimate;
   DataRate probe_bitrate_ = DataRate::PlusInfinity();
   DataRate delay_based_estimate_ = DataRate::PlusInfinity();
-  DataRate upper_link_capacity_ = DataRate::PlusInfinity();
   Timestamp last_probe_timestamp_ = Timestamp::MinusInfinity();
 };
 
