@@ -234,7 +234,7 @@ class LocalSymbolicationService {
       module,
     };
     return getResultFromWorker(
-      "resource://devtools/client/performance-new/shared/symbolication-worker.js",
+      "resource://devtools/client/performance-new/shared/symbolication.worker.js",
       initialMessage
     );
   }
@@ -258,7 +258,7 @@ class LocalSymbolicationService {
       module,
     };
     return getResultFromWorker(
-      "resource://devtools/client/performance-new/shared/symbolication-worker.js",
+      "resource://devtools/client/performance-new/shared/symbolication.worker.js",
       initialMessage
     );
   }

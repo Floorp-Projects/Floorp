@@ -52,8 +52,8 @@ DevToolsModules(
     "census-tree-node.js",
     "CensusUtils.js",
     "DominatorTreeNode.js",
+    "HeapAnalyses.worker.js",
     "HeapAnalysesClient.js",
-    "HeapAnalysesWorker.js",
     "HeapSnapshotFileUtils.js",
     "shortest-paths.js",
 )
