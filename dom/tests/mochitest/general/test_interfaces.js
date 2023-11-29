@@ -776,7 +776,7 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "KeyframeEffect", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "LargestContentfulPaint", insecureContext: true, nightly: true },
+  { name: "LargestContentfulPaint", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Location", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
