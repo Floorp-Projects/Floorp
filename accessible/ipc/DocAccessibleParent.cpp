@@ -439,8 +439,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvStateChangeEvent(
 mozilla::ipc::IPCResult DocAccessibleParent::RecvCaretMoveEvent(
     const uint64_t& aID, const LayoutDeviceIntRect& aCaretRect,
     const int32_t& aOffset, const bool& aIsSelectionCollapsed,
-    const bool& aIsAtEndOfLine, const int32_t& aGranularity,
-    const bool& aFromUser) {
+    const bool& aIsAtEndOfLine, const int32_t& aGranularity) {
   ACQUIRE_ANDROID_LOCK
   if (mShutdown) {
     return IPC_OK();
@@ -464,7 +463,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvCaretMoveEvent(
   }
 
   PlatformCaretMoveEvent(proxy, aOffset, aIsSelectionCollapsed, aGranularity,
-                         aCaretRect, aFromUser);
+                         aCaretRect);
 
   if (!nsCoreUtils::AccEventObserversExist()) {
     return IPC_OK();
@@ -541,6 +540,45 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvSelectionEvent(
   xpcAccessibleDocument* xpcDoc = GetAccService()->GetXPCDocument(this);
   RefPtr<xpcAccEvent> event =
       new xpcAccEvent(aType, xpcTarget, xpcDoc, nullptr, false);
+  nsCoreUtils::DispatchAccEvent(std::move(event));
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult DocAccessibleParent::RecvVirtualCursorChangeEvent(
+    const uint64_t& aID, const uint64_t& aOldPositionID,
+    const uint64_t& aNewPositionID, const int16_t& aReason,
+    const bool& aFromUser) {
+  ACQUIRE_ANDROID_LOCK
+  if (mShutdown) {
+    return IPC_OK();
+  }
+
+  RemoteAccessible* target = GetAccessible(aID);
+  RemoteAccessible* oldPosition = GetAccessible(aOldPositionID);
+  RemoteAccessible* newPosition = GetAccessible(aNewPositionID);
+
+  if (!target) {
+    NS_ERROR("no proxy for event!");
+    return IPC_OK();
+  }
+
+#if defined(ANDROID)
+  PlatformVirtualCursorChangeEvent(target, oldPosition, newPosition, aReason,
+                                   aFromUser);
+#endif
+
+  if (!nsCoreUtils::AccEventObserversExist()) {
+    return IPC_OK();
+  }
+
+  xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
+  RefPtr<xpcAccVirtualCursorChangeEvent> event =
+      new xpcAccVirtualCursorChangeEvent(
+          nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED,
+          GetXPCAccessible(target), doc, nullptr, aFromUser,
+          GetXPCAccessible(oldPosition), GetXPCAccessible(newPosition),
+          aReason);
   nsCoreUtils::DispatchAccEvent(std::move(event));
 
   return IPC_OK();

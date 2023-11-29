@@ -12,7 +12,6 @@
 #include "nsIAccessibleEvent.h"
 #include "nsIAccessiblePivot.h"
 #include "nsIStringBundle.h"
-#include "TextLeafRange.h"
 
 #define ROLE_STRINGS_URL "chrome://global/locale/AccessFu.properties"
 
@@ -96,13 +95,6 @@ void a11y::PlatformEvent(Accessible* aTarget, uint32_t aEventType) {
     case nsIAccessibleEvent::EVENT_REORDER:
       sessionAcc->SendWindowContentChangedEvent();
       break;
-    case nsIAccessibleEvent::EVENT_SCROLLING_START:
-      if (Accessible* result = AccessibleWrap::DoPivot(
-              aTarget, java::SessionAccessibility::HTML_GRANULARITY_DEFAULT,
-              true, true)) {
-        sessionAcc->SendAccessibilityFocusedEvent(result);
-      }
-      break;
     default:
       break;
   }
@@ -150,27 +142,13 @@ void a11y::PlatformFocusEvent(Accessible* aTarget,
 void a11y::PlatformCaretMoveEvent(Accessible* aTarget, int32_t aOffset,
                                   bool aIsSelectionCollapsed,
                                   int32_t aGranularity,
-                                  const LayoutDeviceIntRect& aCaretRect,
-                                  bool aFromUser) {
+                                  const LayoutDeviceIntRect& aCaretRect) {
   RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
-  if (!sessionAcc) {
-    return;
-  }
 
-  if (!aTarget->IsDoc() && !aFromUser && !aIsSelectionCollapsed) {
-    // Pivot to the caret's position if it has an expanded selection.
-    // This is used mostly for find in page.
-    Accessible* leaf = TextLeafPoint::GetCaret(aTarget).ActualizeCaret().mAcc;
-    MOZ_ASSERT(leaf);
-    if (Accessible* result = AccessibleWrap::DoPivot(
-            leaf, java::SessionAccessibility::HTML_GRANULARITY_DEFAULT, true,
-            true)) {
-      sessionAcc->SendAccessibilityFocusedEvent(result);
-    }
+  if (sessionAcc) {
+    sessionAcc->SendTextSelectionChangedEvent(aTarget, aOffset);
   }
-
-  sessionAcc->SendTextSelectionChangedEvent(aTarget, aOffset);
 }
 
 void a11y::PlatformTextChangeEvent(Accessible* aTarget, const nsAString& aStr,
@@ -192,6 +170,24 @@ void a11y::PlatformShowHideEvent(Accessible* aTarget, Accessible* aParent,
 }
 
 void a11y::PlatformSelectionEvent(Accessible*, Accessible*, uint32_t) {}
+
+void a11y::PlatformVirtualCursorChangeEvent(Accessible* aTarget,
+                                            Accessible* aOldPosition,
+                                            Accessible* aNewPosition,
+                                            int16_t aReason, bool aFromUser) {
+  if (!aNewPosition || !aFromUser) {
+    return;
+  }
+
+  RefPtr<SessionAccessibility> sessionAcc =
+      SessionAccessibility::GetInstanceFor(aTarget);
+
+  if (!sessionAcc) {
+    return;
+  }
+
+  sessionAcc->SendAccessibilityFocusedEvent(aNewPosition);
+}
 
 void a11y::PlatformScrollingEvent(Accessible* aTarget, uint32_t aEventType,
                                   uint32_t aScrollX, uint32_t aScrollY,
