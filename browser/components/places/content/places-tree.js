@@ -145,6 +145,8 @@
         // eslint-disable-next-line no-self-assign
         this.place = this.place;
       }
+
+      window.addEventListener("unload", this.disconnectedCallback);
     }
 
     get controller() {
@@ -840,7 +842,9 @@
     }
 
     destroyContextMenu(aPopup) {}
+
     disconnectedCallback() {
+      window.removeEventListener("unload", this.disconnectedCallback);
       // Unregister the controller before unlinking the view, otherwise it
       // may still try to update commands on a view with a null result.
       if (this._controller) {
@@ -850,11 +854,8 @@
 
       if (this.view) {
         this.view.uninit();
+        this.view = null;
       }
-      // view.setTree(null) will be called upon unsetting the view, which
-      // breaks the reference cycle between the PlacesTreeView and result.
-      // See the "setTree" method of PlacesTreeView in treeView.js.
-      this.view = null;
     }
   }
 
