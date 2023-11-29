@@ -196,10 +196,12 @@ class RtpRtcpModule : public RtcpPacketTypeCounterObserver,
     counter_map_[ssrc] = packet_counter;
   }
 
-  void OnSendPacket(uint16_t packet_id,
+  void OnSendPacket(absl::optional<uint16_t> packet_id,
                     Timestamp capture_time,
                     uint32_t ssrc) override {
-    last_sent_packet_.emplace(packet_id, capture_time, ssrc);
+    if (packet_id.has_value()) {
+      last_sent_packet_.emplace(*packet_id, capture_time, ssrc);
+    }
   }
 
   absl::optional<SentPacket> last_sent_packet() const {

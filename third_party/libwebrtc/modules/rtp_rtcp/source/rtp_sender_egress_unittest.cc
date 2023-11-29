@@ -36,6 +36,7 @@ namespace {
 
 using ::testing::_;
 using ::testing::AllOf;
+using ::testing::Eq;
 using ::testing::Field;
 using ::testing::InSequence;
 using ::testing::NiceMock;
@@ -57,7 +58,10 @@ enum : int {
 
 class MockSendPacketObserver : public SendPacketObserver {
  public:
-  MOCK_METHOD(void, OnSendPacket, (uint16_t, Timestamp, uint32_t), (override));
+  MOCK_METHOD(void,
+              OnSendPacket,
+              (absl::optional<uint16_t>, Timestamp, uint32_t),
+              (override));
 };
 
 class MockTransportFeedbackObserver : public TransportFeedbackObserver {
@@ -421,10 +425,18 @@ TEST_F(RtpSenderEgressTest, OnSendPacketUpdated) {
   const uint16_t kTransportSequenceNumber = 1;
   EXPECT_CALL(
       send_packet_observer_,
-      OnSendPacket(kTransportSequenceNumber, clock_->CurrentTime(), kSsrc));
+      OnSendPacket(Eq(kTransportSequenceNumber), clock_->CurrentTime(), kSsrc));
   std::unique_ptr<RtpPacketToSend> packet = BuildRtpPacket();
   packet->SetExtension<TransportSequenceNumber>(kTransportSequenceNumber);
   sender->SendPacket(std::move(packet), PacedPacketInfo());
+}
+
+TEST_F(RtpSenderEgressTest, OnSendPacketUpdatedWithoutTransportSequenceNumber) {
+  std::unique_ptr<RtpSenderEgress> sender = CreateRtpSenderEgress();
+
+  EXPECT_CALL(send_packet_observer_,
+              OnSendPacket(Eq(absl::nullopt), clock_->CurrentTime(), kSsrc));
+  sender->SendPacket(BuildRtpPacket(), PacedPacketInfo());
 }
 
 TEST_F(RtpSenderEgressTest, OnSendPacketNotUpdatedForRetransmits) {
@@ -882,16 +894,16 @@ TEST_F(RtpSenderEgressTest, SendPacketUpdatesStats) {
   EXPECT_CALL(send_side_delay_observer,
               SendSideDelayUpdated(kDiffMs, kDiffMs, kFlexFecSsrc));
 
-  EXPECT_CALL(send_packet_observer_, OnSendPacket(1, capture_time, kSsrc));
+  EXPECT_CALL(send_packet_observer_, OnSendPacket(Eq(1), capture_time, kSsrc));
 
   sender->SendPacket(std::move(video_packet), PacedPacketInfo());
 
   // Send packet observer not called for padding/retransmissions.
-  EXPECT_CALL(send_packet_observer_, OnSendPacket(2, _, _)).Times(0);
+  EXPECT_CALL(send_packet_observer_, OnSendPacket(Eq(2), _, _)).Times(0);
   sender->SendPacket(std::move(rtx_packet), PacedPacketInfo());
 
   EXPECT_CALL(send_packet_observer_,
-              OnSendPacket(3, capture_time, kFlexFecSsrc));
+              OnSendPacket(Eq(3), capture_time, kFlexFecSsrc));
   sender->SendPacket(std::move(fec_packet), PacedPacketInfo());
 
   time_controller_.AdvanceTime(TimeDelta::Zero());
