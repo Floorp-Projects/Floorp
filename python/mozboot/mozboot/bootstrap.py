@@ -633,10 +633,21 @@ def update_git_tools(git: Optional[Path], root_state_dir: Path):
     if sys.platform.startswith(("win32", "msys")):
         cinnabar_exe = cinnabar_exe.with_suffix(".exe")
 
-    # Previously, this script would do a full clone of the git-cinnabar
-    # repository. It now only downloads prebuilt binaries, so if we are
-    # updating from an old setup, remove the repository and start over.
-    if (cinnabar_dir / ".git").exists():
+    # Older versions of git-cinnabar can't do self-update. So if we start
+    # from such a version, we remove it and start over.
+    # The first version that supported self-update is also the first version
+    # that wasn't a python script, so we can just look for a hash-bang.
+    # Or, on Windows, the .exe didn't exist.
+    start_over = cinnabar_dir.exists() and not cinnabar_exe.exists()
+    if cinnabar_exe.exists():
+        try:
+            with cinnabar_exe.open("rb") as fh:
+                start_over = fh.read(2) == b"#!"
+        except Exception:
+            # If we couldn't read the binary, let's just try to start over.
+            start_over = True
+
+    if start_over:
         # git sets pack files read-only, which causes problems removing
         # them on Windows. To work around that, we use an error handler
         # on rmtree that retries to remove the file after chmod'ing it.
