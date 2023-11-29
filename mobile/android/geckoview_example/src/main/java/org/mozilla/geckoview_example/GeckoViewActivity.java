@@ -2435,10 +2435,11 @@ public class GeckoViewActivity extends AppCompatActivity
 
   public void requestAnalysisCreationStatus(
       @NonNull final GeckoSession session, @NonNull final String url) {
-    GeckoResult<String> result = session.requestAnalysisCreationStatus(url);
+    GeckoResult<GeckoSession.AnalysisStatusResponse> result = session.requestAnalysisStatus(url);
     result.map(
         status -> {
-          Log.d(LOGTAG, "Shopping Analysis Status: " + status);
+          Log.d(LOGTAG, "Shopping Analysis Status: " + status.status);
+          Log.d(LOGTAG, "Shopping Analysis Status Progress: " + status.progress);
           return status;
         });
   }

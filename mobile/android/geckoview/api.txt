@@ -1024,6 +1024,7 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public GeckoResult<String> reportBackInStock(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<GeckoSession.ReviewAnalysis> requestAnalysis(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<String> requestAnalysisCreationStatus(@NonNull String);
+    method @AnyThread @NonNull public GeckoResult<GeckoSession.AnalysisStatusResponse> requestAnalysisStatus(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<String> requestCreateAnalysis(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<List<GeckoSession.Recommendation>> requestRecommendations(@NonNull String);
     method @AnyThread public void restoreState(@NonNull GeckoSession.SessionState);
@@ -1071,6 +1072,19 @@ package org.mozilla.geckoview {
     field public static final int PRIORITY_DEFAULT = 0;
     field public static final int PRIORITY_HIGH = 1;
     field @Nullable protected GeckoSession.Window mWindow;
+  }
+
+  @AnyThread public static class GeckoSession.AnalysisStatusResponse {
+    ctor protected AnalysisStatusResponse(@NonNull GeckoSession.AnalysisStatusResponse.Builder);
+    field @NonNull public final Double progress;
+    field @NonNull public final String status;
+  }
+
+  public static class GeckoSession.AnalysisStatusResponse.Builder {
+    ctor public Builder(@NonNull String);
+    method @AnyThread @NonNull public GeckoSession.AnalysisStatusResponse build();
+    method @AnyThread @NonNull public GeckoSession.AnalysisStatusResponse.Builder progress(@NonNull Double);
+    method @AnyThread @NonNull public GeckoSession.AnalysisStatusResponse.Builder status(@NonNull String);
   }
 
   @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.ClipboardPermissionType {

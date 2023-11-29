@@ -3030,6 +3030,22 @@ public class GeckoSession {
   }
 
   /**
+   * Request the status of the current analysis of product's reviews for a given product URL.
+   *
+   * @param url The URL of the product page.
+   * @return a {@link GeckoResult} result of status of analysis.
+   */
+  @AnyThread
+  public @NonNull GeckoResult<AnalysisStatusResponse> requestAnalysisStatus(
+      @NonNull final String url) {
+    final GeckoBundle bundle = new GeckoBundle(1);
+    bundle.putString("url", url);
+    return mEventDispatcher
+        .queryBundle("GeckoView:RequestAnalysisStatus", bundle)
+        .map(statusBundle -> new AnalysisStatusResponse(statusBundle.getBundle("status")));
+  }
+
+  /**
    * Poll for the status of the current analysis of product's reviews for a given product URL.
    *
    * @param url The URL of the product page.
@@ -4123,6 +4139,79 @@ public class GeckoSession {
       @AnyThread
       public @NonNull Recommendation build() {
         return new Recommendation(this);
+      }
+    }
+  }
+
+  /** Contains information about a product's analysis status response. */
+  @AnyThread
+  public static class AnalysisStatusResponse {
+    /** Status of the analysis. */
+    @NonNull public final String status;
+
+    /** Indicates the progress of the analysis. */
+    @NonNull public final Double progress;
+
+    /* package */ AnalysisStatusResponse(@NonNull final GeckoBundle message) {
+      status = message.getString("status");
+      progress = message.getDoubleObject("progress", 0.0);
+    }
+
+    /**
+     * Initialize AnalysisStatusResponse with a builder object
+     *
+     * @param builder A AnalysisStatusResponse.Builder instance
+     */
+    protected AnalysisStatusResponse(final @NonNull Builder builder) {
+      status = builder.mStatus;
+      progress = builder.mProgress;
+    }
+
+    /** This is a Builder used by AnalysisStatusResponse class */
+    public static class Builder {
+      /* package */ String mStatus = "";
+      /* package */ Double mProgress = 0.0;
+
+      /**
+       * Construct a Builder instance with the specified AnalysisStatusResponse status.
+       *
+       * @param status A status String.
+       */
+      public Builder(final @NonNull String status) {
+        status(status);
+      }
+
+      /**
+       * Set the status.
+       *
+       * @param status A status String.
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull AnalysisStatusResponse.Builder status(final @NonNull String status) {
+        mStatus = status;
+        return this;
+      }
+
+      /**
+       * Set the progress.
+       *
+       * @param progress Indicates the progress of the analysis.
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull AnalysisStatusResponse.Builder progress(final @NonNull Double progress) {
+        mProgress = progress;
+        return this;
+      }
+
+      /**
+       * @return A {@link AnalysisStatusResponse} constructed with the values from this Builder
+       *     instance.
+       */
+      @AnyThread
+      public @NonNull AnalysisStatusResponse build() {
+        return new AnalysisStatusResponse(this);
       }
     }
   }
