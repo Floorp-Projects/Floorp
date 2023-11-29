@@ -40,6 +40,31 @@ The policy for field trials is:
     necessary, but should not be pushed back indefinitely.
 -   A field trial must be associated with a bug that
     -   reserves the field trial key,
-    -   is open,
-    -   is assigned to an owner, and
-    -   has the end date specified.
+    -   is open, and
+    -   is assigned to an owner.
+
+## Creating a field trial
+
+Before creating a new field trial, make sure to read the [policy](#policy).
+
+Either create a new or reuse an existing bug and make it is open and assigned to
+the correct owner. Take note of the bug ID. Next, decide how long you need the
+field trial to last. It should be rare to have field trials lasting more than 12
+months.
+
+Using this information, add a new entry to `ACTIVE_FIELD_TRIALS` in
+`experiments/field_trials.py`. You may not add new items to
+`POLICY_EXEMPT_FIELD_TRIALS` since it is reserved for field trials that were
+created before the policy was in place.
+
+## Removing a field trial
+
+Any field trial that has expired or otherwise is not needed anymore may be
+removed by following these steps:
+
+-   Remove all references from the code base. You can find these by, e.g.
+    grepping for the field trial key.
+-   Clean up potential glue code that might have been added.
+-   Remove the field trial from `ACTIVE_FIELD_TRIALS` in
+    `experiments/field_trials.py`.
+-   If all work is finished, also close the associated bug.
