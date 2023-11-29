@@ -45,21 +45,19 @@
     padding-inline: 16px 12px;
   }
 
-  toolbarbutton {
+  .address-capture-icon-button {
     width: 32px;
     height: 32px;
     border: 0;
     border-radius: 4px;
     margin: 0;
     padding: 0;
-
-    > .toolbarbutton-icon {
-      width: 32px;
-      height: 32px;
-      border: 0;
-      border-radius: 4px;
-      padding: 8px;
-    }
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-position: center;
+    -moz-context-properties: fill;
+    fill: currentColor;
+    margin-inline-start: auto;
 
     &:hover {
       background-color: var(--panel-item-hover-bgcolor);
@@ -67,6 +65,20 @@
       &:active {
         background-color: var(--panel-item-active-bgcolor);
       }
+    }
+
+    &:focus-visible {
+      outline: var(--focus-outline);
+      outline-offset: var(--focus-outline-offset);
+      border-radius: 1px;
+    }
+
+    &#address-capture-edit-address-button {
+      background-image: url("chrome://browser/skin/formautofill/icon-address-edit.svg");
+    }
+
+    &#address-capture-menu-button {
+      background-image: url("chrome://browser/skin/formautofill/icon-doorhanger-menu.svg");
     }
   }
 
@@ -127,21 +139,6 @@
 
 .address-update-text-diff-removed {
   text-decoration: line-through;
-}
-
-#address-capture-edit-address-button {
-  list-style-image: url("chrome://browser/skin/formautofill/icon-address-edit.svg");
-  -moz-context-properties: fill;
-  fill: currentColor;
-  margin-inline-start: auto;
-}
-
-#address-capture-menu-button {
-  list-style-image: url("chrome://browser/skin/formautofill/icon-doorhanger-menu.svg");
-  -moz-context-properties: fill;
-  fill: currentColor;
-
-  margin-inline-start: auto;
 }
 
 .address-capture-img-address {
