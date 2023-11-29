@@ -1098,6 +1098,11 @@ SSL_CTX* OpenSSLStreamAdapter::SetupSSLContext() {
     }
   }
 
+#ifdef OPENSSL_IS_BORINGSSL
+  SSL_CTX_set_permute_extensions(
+      ctx, webrtc::field_trial::IsEnabled("WebRTC-PermuteTlsClientHello"));
+#endif
+
   return ctx;
 }
 
