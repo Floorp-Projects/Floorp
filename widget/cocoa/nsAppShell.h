@@ -27,7 +27,6 @@ class nsAvailableMemoryWatcherBase;
 // Subclass of NSApplication for filtering out certain events.
 @interface GeckoNSApplication : NSApplication {
 }
-@property(readonly) BOOL didLaunch;
 @end
 
 @class AppShellDelegate;
