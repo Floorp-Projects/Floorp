@@ -1,40 +1,56 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Tue, 14 Feb 2023 03:27:00 +0000
-Subject: Bug 1816173 - pt12 - add shim config for
- third_party/libwebrtc/testing/{gmock|gtest} r=ng
+Date: Thu, 28 Sep 2023 14:12:00 +0000
+Subject: Bug 1832465 - remove libXtst usage from libwebrtc.
+ r=ng,webrtc-reviewers
 
-We don't vendor third_party/libwebrtc/third_party/gmock
-                third_party/libwebrtc/third_party/gtest, so:
-- add BUILD.gn to avoid scattered BUILD.gn changes
-
-Differential Revision: https://phabricator.services.mozilla.com/D169674
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/4ea9d2db79c42a144235e45c47c71adf1dd01fdc
+Differential Revision: https://phabricator.services.mozilla.com/D189386
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0ec1b33b95dbb2d39355f28b2812fe25b4ad9f20
 ---
- testing/gmock/BUILD.gn | 5 +++++
- testing/gtest/BUILD.gn | 5 +++++
- 2 files changed, 10 insertions(+)
- create mode 100644 testing/gmock/BUILD.gn
- create mode 100644 testing/gtest/BUILD.gn
+ modules/desktop_capture/BUILD.gn                      | 3 +++
+ modules/desktop_capture/linux/x11/shared_x_display.cc | 4 ++++
+ 2 files changed, 7 insertions(+)
 
-diff --git a/testing/gmock/BUILD.gn b/testing/gmock/BUILD.gn
-new file mode 100644
-index 0000000000..a2a1efdea9
---- /dev/null
-+++ b/testing/gmock/BUILD.gn
-@@ -0,0 +1,5 @@
-+import("//third_party/libaom/options.gni")
-+import("../../webrtc.gni")
-+
-+rtc_library("gmock") {
-+}
-diff --git a/testing/gtest/BUILD.gn b/testing/gtest/BUILD.gn
-new file mode 100644
-index 0000000000..c9c2703c37
---- /dev/null
-+++ b/testing/gtest/BUILD.gn
-@@ -0,0 +1,5 @@
-+import("//third_party/libaom/options.gni")
-+import("../../webrtc.gni")
-+
-+rtc_library("gtest") {
-+}
+diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
+index dcc1b3c6ac..0634e0e9c4 100644
+--- a/modules/desktop_capture/BUILD.gn
++++ b/modules/desktop_capture/BUILD.gn
+@@ -384,6 +384,9 @@ rtc_library("desktop_capture") {
+       "Xrandr",
+       "Xtst",
+     ]
++    if (build_with_mozilla) {
++      libs -= [ "Xtst" ]
++    }
+   }
+ 
+   if (!is_win && !is_mac && !rtc_use_x11_extensions && !rtc_use_pipewire &&
+diff --git a/modules/desktop_capture/linux/x11/shared_x_display.cc b/modules/desktop_capture/linux/x11/shared_x_display.cc
+index d690b0e2ba..3f3617b074 100644
+--- a/modules/desktop_capture/linux/x11/shared_x_display.cc
++++ b/modules/desktop_capture/linux/x11/shared_x_display.cc
+@@ -11,7 +11,9 @@
+ #include "modules/desktop_capture/linux/x11/shared_x_display.h"
+ 
+ #include <X11/Xlib.h>
++#if !defined(WEBRTC_MOZILLA_BUILD)
+ #include <X11/extensions/XTest.h>
++#endif
+ 
+ #include <algorithm>
+ 
+@@ -95,6 +97,7 @@ void SharedXDisplay::ProcessPendingXEvents() {
+ }
+ 
+ void SharedXDisplay::IgnoreXServerGrabs() {
++#if !defined(WEBRTC_MOZILLA_BUILD)
+   int test_event_base = 0;
+   int test_error_base = 0;
+   int major = 0;
+@@ -103,6 +106,7 @@ void SharedXDisplay::IgnoreXServerGrabs() {
+                           &minor)) {
+     XTestGrabControl(display(), true);
+   }
++#endif
+ }
+ 
+ }  // namespace webrtc

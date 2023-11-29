@@ -1,29 +1,24 @@
-From: Jan-Ivar Bruaroey <jib@mozilla.com>
-Date: Wed, 28 Jun 2023 20:45:00 -0400
-Subject: Bug 1839451 - (fix-0f43da2248) Keep mozilla's
- RTCPReceiver::RemoteRTCPSenderInfo function working.
+From: Byron Campen <docfaraday@gmail.com>
+Date: Fri, 7 Apr 2023 20:28:00 +0000
+Subject: Bug 1819048: Remove this bad assertion. r=webrtc-reviewers,jib
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/154c9cdb386d0f50c5e1549270e1af6ab4969602
+Differential Revision: https://phabricator.services.mozilla.com/D174978
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5a52e1b0c808edfda82f0abea668699eb68098dc
 ---
- modules/rtp_rtcp/source/rtcp_receiver.cc | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ video/task_queue_frame_decode_scheduler.cc | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index 94de316421..bda6ad9a52 100644
---- a/modules/rtp_rtcp/source/rtcp_receiver.cc
-+++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
-@@ -368,10 +368,10 @@ void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
-                                         int64_t* ntp_timestamp_ms,
-                                         int64_t* remote_ntp_timestamp_ms) const {
-   MutexLock lock(&rtcp_receiver_lock_);
--  *packet_count = remote_sender_packet_count_;
--  *octet_count = remote_sender_octet_count_;
--  *ntp_timestamp_ms = last_received_sr_ntp_.ToMs();
--  *remote_ntp_timestamp_ms = remote_sender_ntp_time_.ToMs();
-+  *packet_count = remote_sender_.packets_sent;
-+  *octet_count = remote_sender_.bytes_sent;
-+  *ntp_timestamp_ms = remote_sender_.last_arrival_timestamp.ToMs();
-+  *remote_ntp_timestamp_ms = remote_sender_.last_remote_timestamp.ToMs();
- }
- 
- std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {
+diff --git a/video/task_queue_frame_decode_scheduler.cc b/video/task_queue_frame_decode_scheduler.cc
+index cd109c2932..6dd7b47f17 100644
+--- a/video/task_queue_frame_decode_scheduler.cc
++++ b/video/task_queue_frame_decode_scheduler.cc
+@@ -37,7 +37,8 @@ void TaskQueueFrameDecodeScheduler::ScheduleFrame(
+     uint32_t rtp,
+     FrameDecodeTiming::FrameSchedule schedule,
+     FrameReleaseCallback cb) {
+-  RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
++  // Mozilla modification, until https://bugs.webrtc.org/14944 is fixed
++  //RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
+   RTC_DCHECK(!scheduled_rtp_.has_value())
+       << "Can not schedule two frames for release at the same time.";
+   RTC_DCHECK(cb);

@@ -1,22 +1,33 @@
-From: Jan-Ivar Bruaroey <jib@mozilla.com>
-Date: Fri, 18 Aug 2023 13:26:37 -0500
-Subject: Bug 1701809: Close dev/video* driver file descriptors after camera
- access on linux. r=ng
+From: Dan Minor <dminor@mozilla.com>
+Date: Wed, 12 Feb 2020 17:19:00 +0000
+Subject: Bug 1578073 - Suppress MissingPermission lint in Camera2Session;
+ r=snorp
 
-Differential Revision: https://phabricator.services.mozilla.com/D110589
+Depends on D61861
+
+Differential Revision: https://phabricator.services.mozilla.com/D62457
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/722c4a6d1dad867f9ce47fe96d71b5dedb4cbaa8
 ---
- modules/video_capture/linux/device_info_v4l2.cc | 1 +
- 1 file changed, 1 insertion(+)
+ sdk/android/src/java/org/webrtc/Camera2Session.java | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index cd0ba6e3df..c5d33ff9a4 100644
---- a/modules/video_capture/linux/device_info_v4l2.cc
-+++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -330,6 +330,7 @@ int32_t DeviceInfoV4l2::CreateCapabilityMap(const char* deviceUniqueIdUTF8) {
-     if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
-       // skip devices without video capture capability
-       if (!IsVideoCaptureDevice(&cap)) {
-+        close(fd);
-         continue;
-       }
+diff --git a/sdk/android/src/java/org/webrtc/Camera2Session.java b/sdk/android/src/java/org/webrtc/Camera2Session.java
+index dec97a2c25..d5ee80c73e 100644
+--- a/sdk/android/src/java/org/webrtc/Camera2Session.java
++++ b/sdk/android/src/java/org/webrtc/Camera2Session.java
+@@ -10,6 +10,7 @@
+ 
+ package org.webrtc;
+ 
++import android.annotation.SuppressLint;
+ import android.content.Context;
+ import android.hardware.camera2.CameraAccessException;
+ import android.hardware.camera2.CameraCaptureSession;
+@@ -347,6 +348,7 @@ class Camera2Session implements CameraSession {
+     Logging.d(TAG, "Using capture format: " + captureFormat);
+   }
+ 
++  @SuppressLint("MissingPermission")
+   private void openCamera() {
+     checkIsOnCameraThread();
  

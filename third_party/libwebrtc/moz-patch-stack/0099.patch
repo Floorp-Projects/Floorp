@@ -1,43 +1,30 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 18 Oct 2023 18:51:00 +0000
-Subject: Bug 1857862 - (fix-34d82df2ba) Guard clang-specific pragmas in
- libwebrtc/api/call/transport.h. r=webrtc-reviewers,mjf
+From: Michael Froman <mfroman@mozilla.com>
+Date: Thu, 5 Oct 2023 14:21:00 +0000
+Subject: Bug 1857037 - pt1 - add shim gni files to limit BUILD.gn changes.
+ r=ng,webrtc-reviewers
 
-Differential Revision: https://phabricator.services.mozilla.com/D191312
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3b5018d89fa118d1f227346ddd67a1fe1db4d4c1
+Differential Revision: https://phabricator.services.mozilla.com/D190104
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a84d39db037cbe34aa19588b0d18335eb5e2d79b
 ---
- api/call/transport.h | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ testing/libfuzzer/fuzzer_test.gni | 2 ++
+ testing/test.gni                  | 2 ++
+ 2 files changed, 4 insertions(+)
+ create mode 100644 testing/libfuzzer/fuzzer_test.gni
+ create mode 100644 testing/test.gni
 
-diff --git a/api/call/transport.h b/api/call/transport.h
-index 6c6cbb8941..52c577ba83 100644
---- a/api/call/transport.h
-+++ b/api/call/transport.h
-@@ -48,8 +48,15 @@ class Transport {
-   // New style functions. Default implementations are to accomodate
-   // subclasses that haven't been converted to new style yet.
-   // TODO(bugs.webrtc.org/14870): Deprecate and remove old functions.
-+  // Mozilla: Add GCC pragmas for now. They will be removed soon:
-+  //   https://webrtc.googlesource.com/src/+/e14d122a7b24bf78c02b8a4ce23716f79451dd23
-+#if defined(__clang__)
- #pragma clang diagnostic push
- #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-+#elif defined(__GNUC__)
-+#pragma GCC diagnostic push
-+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-+#endif
-   virtual bool SendRtp(rtc::ArrayView<const uint8_t> packet,
-                        const PacketOptions& options) {
-     return SendRtp(packet.data(), packet.size(), options);
-@@ -57,7 +64,11 @@ class Transport {
-   virtual bool SendRtcp(rtc::ArrayView<const uint8_t> packet) {
-     return SendRtcp(packet.data(), packet.size());
-   }
-+#if defined(__clang__)
- #pragma clang diagnostic pop
-+#elif defined(__GNUC__)
-+#pragma GCC diagnostic pop
-+#endif
-   // Old style functions.
-   [[deprecated("Use ArrayView version")]] virtual bool
-   SendRtp(const uint8_t* packet, size_t length, const PacketOptions& options) {
+diff --git a/testing/libfuzzer/fuzzer_test.gni b/testing/libfuzzer/fuzzer_test.gni
+new file mode 100644
+index 0000000000..8fdf3cdad2
+--- /dev/null
++++ b/testing/libfuzzer/fuzzer_test.gni
+@@ -0,0 +1,2 @@
++# "empty" file in place of importing new testing/libfuzzer
++# to allow BUILD.gn imports to succeed.
+diff --git a/testing/test.gni b/testing/test.gni
+new file mode 100644
+index 0000000000..f46fa82778
+--- /dev/null
++++ b/testing/test.gni
+@@ -0,0 +1,2 @@
++# "empty" file in place of importing new testing/test.gni
++# to allow BUILD.gn imports to succeed.
