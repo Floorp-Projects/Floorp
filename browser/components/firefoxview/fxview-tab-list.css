@@ -5,7 +5,7 @@
 .fxview-tab-list {
   display: grid;
   grid-template-columns: min-content 3fr 2fr 1fr 1fr min-content;
-  gap: 8px;
+  gap: 6px;
 }
 
 :host([compactRows]) .fxview-tab-list {

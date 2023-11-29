@@ -18,7 +18,7 @@
 
 .card-container-header {
   display: inline-flex;
-  gap: 16px;
+  gap: 14px;
   width: 100%;
   align-items: center;
   cursor: pointer;
@@ -26,6 +26,8 @@
   outline-offset: 4px;
   padding: 6px;
   padding-inline-end: 0;
+  margin-block-end: 6px;
+  height: 24px;
 }
 
 .card-container-header[withViewAll] {

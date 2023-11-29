@@ -28,6 +28,8 @@
 
   /* copy over newtab background color from activity-stream-[os].css files */
   --newtab-background-color: #F9F9FB;
+
+  --fxview-card-header-font-weight: 500;
 }
 
 @media (prefers-color-scheme: dark) {
