@@ -9,7 +9,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/de8c14e4972f717bf
  1 file changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/modules/rtp_rtcp/source/source_tracker.cc b/modules/rtp_rtcp/source/source_tracker.cc
-index 51e8f1cd38..7dfe2b71c5 100644
+index 51e8f1cd38..b54f6cacf8 100644
 --- a/modules/rtp_rtcp/source/source_tracker.cc
 +++ b/modules/rtp_rtcp/source/source_tracker.cc
 @@ -47,7 +47,8 @@ void SourceTracker::OnFrameDeliveredInternal(
@@ -27,7 +27,7 @@ index 51e8f1cd38..7dfe2b71c5 100644
    }
  
 +  std::sort(sources.begin(), sources.end(), [](const auto &a, const auto &b){
-+    return a.timestamp_ms() > b.timestamp_ms();
++    return a.timestamp().ms() > b.timestamp().ms();
 +  });
 +
    return sources;
