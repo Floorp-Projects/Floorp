@@ -311,16 +311,6 @@ void nsTableCellFrame::DecorateForSelection(DrawTarget* aDrawTarget,
   }
 }
 
-ImgDrawResult nsTableCellFrame::PaintBackground(gfxContext& aRenderingContext,
-                                                const nsRect& aDirtyRect,
-                                                nsPoint aPt, uint32_t aFlags) {
-  nsRect rect(aPt, GetSize());
-  nsCSSRendering::PaintBGParams params =
-      nsCSSRendering::PaintBGParams::ForAllLayers(*PresContext(), aDirtyRect,
-                                                  rect, this, aFlags);
-  return nsCSSRendering::PaintStyleImageLayer(params, aRenderingContext);
-}
-
 void nsTableCellFrame::ProcessBorders(nsTableFrame* aFrame,
                                       nsDisplayListBuilder* aBuilder,
                                       const nsDisplayListSet& aLists) {
@@ -974,32 +964,6 @@ nsMargin nsBCTableCellFrame::GetBorderOverflow() {
                            BC_BORDER_END_HALF_COORD(d2a, mBEndBorder),
                            BC_BORDER_START_HALF_COORD(d2a, mIStartBorder));
   return halfBorder.GetPhysicalMargin(wm);
-}
-
-ImgDrawResult nsBCTableCellFrame::PaintBackground(gfxContext& aRenderingContext,
-                                                  const nsRect& aDirtyRect,
-                                                  nsPoint aPt,
-                                                  uint32_t aFlags) {
-  // make border-width reflect the half of the border-collapse
-  // assigned border that's inside the cell
-  WritingMode wm = GetWritingMode();
-  nsMargin borderWidth = GetBorderWidth(wm).GetPhysicalMargin(wm);
-
-  nsStyleBorder myBorder(*StyleBorder());
-
-  const auto a2d = PresContext()->AppUnitsPerDevPixel();
-  for (const auto side : mozilla::AllPhysicalSides()) {
-    myBorder.SetBorderWidth(side, borderWidth.Side(side), a2d);
-  }
-
-  // bypassing nsCSSRendering::PaintBackground is safe because this kind
-  // of frame cannot be used for the root element
-  nsRect rect(aPt, GetSize());
-  nsCSSRendering::PaintBGParams params =
-      nsCSSRendering::PaintBGParams::ForAllLayers(*PresContext(), aDirtyRect,
-                                                  rect, this, aFlags);
-  return nsCSSRendering::PaintStyleImageLayerWithSC(params, aRenderingContext,
-                                                    Style(), myBorder);
 }
 
 namespace mozilla {
