@@ -1,34 +1,46 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Fri, 9 Jul 2021 18:14:00 -0500
-Subject: Bug 1654112 - mutex changes to fix tsan errors. r=ng
+From: Dan Minor <dminor@mozilla.com>
+Date: Wed, 18 Nov 2020 13:33:00 -0500
+Subject: Bug 1654112 - Suppress -Wclass-varargs warning in logging.h. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D119674
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3d5503acf9a4b22e02c4300f29e4fbfed406ea2c
+This needs some investigation to see why we get this warning when it is not
+present upstream.
+
+Since both were doing the same thing for different compiler chains,
+also includes:
+Bug 1654112 - linux build fix (pragmas) for base-toolchains* . r=ng
+
+Differential Revision: https://phabricator.services.mozilla.com/D130086
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8d832e832ffe513246c0763a56376a8022b2447b
 ---
- rtc_base/logging.cc | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ rtc_base/logging.h | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
-index ad2303735e..9c2d3b0a39 100644
---- a/rtc_base/logging.cc
-+++ b/rtc_base/logging.cc
-@@ -275,8 +275,8 @@ void LogMessage::LogTimestamps(bool on) {
- }
+diff --git a/rtc_base/logging.h b/rtc_base/logging.h
+index df7f173f58..a3733d7543 100644
+--- a/rtc_base/logging.h
++++ b/rtc_base/logging.h
+@@ -48,6 +48,14 @@
+ #ifndef RTC_BASE_LOGGING_H_
+ #define RTC_BASE_LOGGING_H_
  
- void LogMessage::LogToDebug(LoggingSeverity min_sev) {
--  g_dbg_sev = min_sev;
-   webrtc::MutexLock lock(&GetLoggingLock());
-+  g_dbg_sev = min_sev;
-   UpdateMinLogSeverity();
- }
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wvarargs"
++
++#if defined(__clang__)
++#  pragma clang diagnostic push
++#  pragma clang diagnostic ignored "-Wclass-varargs"
++#endif
++
+ #include <errno.h>
  
-@@ -460,6 +460,9 @@ void LogMessage::OutputToDebug(const LogLineRef& log_line) {
+ #include <atomic>
+@@ -764,4 +772,9 @@ inline const char* AdaptString(const std::string& str) {
  
- // static
- bool LogMessage::IsNoop(LoggingSeverity severity) {
-+  // Added MutexLock to fix tsan warnings on accessing g_dbg_sev. (mjf)
-+  // See https://bugs.chromium.org/p/chromium/issues/detail?id=1228729
-+  webrtc::MutexLock lock(&GetLoggingLock());
-   if (severity >= g_dbg_sev || severity >= g_min_sev)
-     return false;
-   return streams_empty_.load(std::memory_order_relaxed);
+ }  // namespace rtc
+ 
++#pragma GCC diagnostic pop
++#if defined(__clang__)
++#  pragma clang diagnostic pop
++#endif
++
+ #endif  // RTC_BASE_LOGGING_H_
