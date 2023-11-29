@@ -57,6 +57,6 @@ BROWSER_CHROME_MANIFESTS += [
     "test/browser/browser.toml",
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.toml"]
 
 FINAL_LIBRARY = "xul"

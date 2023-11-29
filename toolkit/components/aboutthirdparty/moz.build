@@ -10,7 +10,7 @@ with Files("**"):
 FINAL_LIBRARY = "xul"
 
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]
 JAR_MANIFESTS += ["jar.mn"]
 XPCOM_MANIFESTS += ["components.conf"]
 XPIDL_MODULE = "AboutThirdParty"

@@ -7,7 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Blocklist Implementation")
 
-XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.toml"]
 
 XPIDL_SOURCES += [
     "nsICascadeFilter.idl",

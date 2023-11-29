@@ -1,0 +1,6 @@
+[DEFAULT]
+firefox-appdir = "browser"
+head = "head.js"
+skip-if = ["os == 'android'"]
+
+["test_empty.js"]

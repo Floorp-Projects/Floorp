@@ -1,0 +1,22 @@
+[DEFAULT]
+head = ""
+skip-if = ["os == 'android'"]
+support-files = [
+  "data/bug1079747.mp4",
+  "data/bug1725190.cr3",
+  "data/detodos.mp3",
+  "data/ff-inst.exe",
+  "data/file.mkv",
+  "data/file.webm",
+  "data/fl10.mp2",
+  "data/he_free.mp3",
+  "data/id3tags.mp3",
+  "data/mp3-in-riff.wav",
+  "data/notags-bad.mp3",
+  "data/notags-scan.mp3",
+  "data/notags.mp3",
+]
+
+["test_mediasniffer.js"]
+
+["test_mediasniffer_ext.js"]

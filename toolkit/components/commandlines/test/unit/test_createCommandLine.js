@@ -4,7 +4,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
 add_task(async function test_createCommandLine() {
-  const EXISTING_FILE = do_get_file("xpcshell.ini");
+  const EXISTING_FILE = do_get_file("xpcshell.toml");
 
   // Test `arguments`.
   let cmdLine = Cu.createCommandLine(

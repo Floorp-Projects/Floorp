@@ -12,4 +12,4 @@ TESTING_JS_MODULES += [
     "EnterprisePolicyTesting.sys.mjs",
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["xpcshell/xpcshell.toml"]

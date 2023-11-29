@@ -1,0 +1,34 @@
+[DEFAULT]
+head = "../head.js ../head_remote.js ../head_service_worker.js head_webidl_api.js"
+firefox-appdir = "browser"
+tags = "webextensions webextensions-webidl-api"
+# NOTE: these tests seems to be timing out because it takes too much time to
+# run all tests and then fully exiting the test.
+skip-if = ["os == 'android' && verify"]
+prefs = [
+  "extensions.backgroundServiceWorker.enabled=true", # Enable support for the extension background service worker.
+  # Enable Extensions API WebIDL bindings for extension windows.
+ "extensions.webidl-api.enabled=true",
+  # Enable ExtensionMockAPI WebIDL bindings used for unit tests
+  # related to the API request forwarding and not tied to a particular
+  # extension API.
+ "extensions.webidl-api.expose_mock_interface=true",
+  # Make sure that loading the default settings for url-classifier-skip-urls
+  # doesn't interfere with running our tests while IDB operations are in
+  # flight by overriding the remote settings server URL to
+  # ensure that the IDB database isn't created in the first place.
+ "services.settings.server='data:,#remote-settings-dummy/v1'",
+]
+
+["test_ext_webidl_api.js"]
+
+["test_ext_webidl_api_event_callback.js"]
+skip-if = ["os == 'android' && processor == 'x86_64' && debug"] # Bug 1716308
+
+["test_ext_webidl_api_request_handler.js"]
+
+["test_ext_webidl_api_schema_errors.js"]
+
+["test_ext_webidl_api_schema_formatters.js"]
+
+["test_ext_webidl_runtime_port.js"]

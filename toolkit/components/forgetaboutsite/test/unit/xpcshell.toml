@@ -1,0 +1,5 @@
+[DEFAULT]
+head = "head_forgetaboutsite.js"
+skip-if = ["os == 'android'"]
+
+["test_removeDataFromDomain.js"]

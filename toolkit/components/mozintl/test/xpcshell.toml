@@ -1,0 +1,8 @@
+[DEFAULT]
+head = ""
+
+["test_mozintl.js"]
+
+["test_mozintl_getLocaleDisplayNames.js"]
+
+["test_mozintlhelper.js"]

@@ -4,7 +4,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
 add_task(async function test_resolveFile() {
-  const EXISTING_FILE = do_get_file("xpcshell.ini");
+  const EXISTING_FILE = do_get_file("xpcshell.toml");
   // We explicitly do not initialize this with a working dir.
   let cmdLine = Cu.createCommandLine(
     [],
@@ -16,7 +16,7 @@ add_task(async function test_resolveFile() {
   Assert.ok(EXISTING_FILE.equals(fileByPath), "Should find the same file");
 
   Assert.ok(
-    !cmdLine.resolveFile("xpcshell.ini"),
+    !cmdLine.resolveFile("xpcshell.toml"),
     "Should get null for relative files."
   );
 
@@ -26,7 +26,7 @@ add_task(async function test_resolveFile() {
     EXISTING_FILE.parent,
     Ci.nsICommandLine.STATE_REMOTE_EXPLICIT
   );
-  let resolvedTxtFile = cmdLine.resolveFile("xpcshell.ini");
+  let resolvedTxtFile = cmdLine.resolveFile("xpcshell.toml");
 
   info("Resolved: " + resolvedTxtFile.path);
   Assert.ok(

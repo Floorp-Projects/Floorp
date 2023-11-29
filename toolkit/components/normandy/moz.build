@@ -25,4 +25,4 @@ SPHINX_TREES["normandy"] = "docs"
 
 TEST_DIRS += ["test/browser"]
 
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.toml"]

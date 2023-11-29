@@ -1,0 +1,666 @@
+[DEFAULT]
+# Some tests of downloads.download() expect a file picker, which is only shown
+# by default when the browser.download.useDownloadDir pref is set to true. This
+# is the case on desktop Firefox, but not on Thunderbird.
+# Force pref value to true to get download tests to pass on Thunderbird.
+prefs = ["browser.download.useDownloadDir=true"]
+
+["test_QuarantinedDomains.js"]
+
+["test_QuarantinedDomains_telemetry.js"]
+
+["test_change_remote_mode.js"]
+
+["test_ext_MessageManagerProxy.js"]
+skip-if = ["os == 'android'"] # Bug 1545439
+
+["test_ext_activityLog.js"]
+
+["test_ext_alarms.js"]
+
+["test_ext_alarms_does_not_fire.js"]
+
+["test_ext_alarms_periodic.js"]
+
+["test_ext_alarms_replaces.js"]
+
+["test_ext_api_events_listener_calls_exceptions.js"]
+
+["test_ext_api_permissions.js"]
+
+["test_ext_asyncAPICall_isHandlingUserInput.js"]
+
+["test_ext_background_api_injection.js"]
+
+["test_ext_background_early_shutdown.js"]
+
+["test_ext_background_generated_load_events.js"]
+
+["test_ext_background_generated_reload.js"]
+
+["test_ext_background_global_history.js"]
+skip-if = ["os == 'android'"] # Android does not use Places for history.
+
+["test_ext_background_iframe.js"]
+
+["test_ext_background_private_browsing.js"]
+
+["test_ext_background_runtime_connect_params.js"]
+
+["test_ext_background_script_and_service_worker.js"]
+
+["test_ext_background_sub_windows.js"]
+
+["test_ext_background_teardown.js"]
+
+["test_ext_background_telemetry.js"]
+
+["test_ext_background_type_module.js"]
+
+["test_ext_background_window_properties.js"]
+skip-if = ["os == 'android'"]
+
+["test_ext_brokenlinks.js"]
+
+["test_ext_browserSettings.js"]
+
+["test_ext_browserSettings_homepage.js"]
+skip-if = [
+  "appname == 'thunderbird'",
+  "os == 'android'",
+]
+
+["test_ext_browser_style_deprecation.js"]
+skip-if = ["appname == 'thunderbird'"]
+
+["test_ext_browsingData.js"]
+
+["test_ext_browsingData_cookies_cache.js"]
+
+["test_ext_browsingData_cookies_cookieStoreId.js"]
+
+["test_ext_cache_api.js"]
+
+["test_ext_captivePortal.js"]
+# As with test_captive_portal_service.js, we use the same limits here.
+skip-if = [
+  "appname == 'thunderbird'",
+  "os == 'android'", # CP service is disabled on Android
+  "os == 'mac' && debug", # macosx1014/debug due to 1564534
+]
+run-sequentially = "node server exceptions dont replay well"
+
+["test_ext_captivePortal_url.js"]
+# As with test_captive_portal_service.js, we use the same limits here.
+skip-if = [
+  "appname == 'thunderbird'",
+  "os == 'android'", # CP service is disabled on Android,
+  "os == 'mac' && debug", # macosx1014/debug due to 1564534
+]
+run-sequentially = "node server exceptions dont replay well"
+
+["test_ext_content_security_policy.js"]
+skip-if = ["os == 'win'"] # Bug 1762638
+
+["test_ext_contentscript_api_injection.js"]
+
+["test_ext_contentscript_async_loading.js"]
+skip-if = [
+  "os == 'android' && debug", # The generated script takes too long to load on Android debug
+  "fission",  # Bug 1762638
+]
+
+["test_ext_contentscript_context.js"]
+skip-if = [
+  "tsan", # Bug 1683730
+  "apple_silicon", # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
+  "sessionHistoryInParent", # Bug 1762638
+]
+
+["test_ext_contentscript_context_isolation.js"]
+skip-if = [
+  "tsan", # Bug 1683730
+  "apple_silicon", # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
+  "sessionHistoryInParent", # Bug 1762638
+]
+
+["test_ext_contentscript_create_iframe.js"]
+
+["test_ext_contentscript_csp.js"]
+run-sequentially = "very high failure rate in parallel"
+
+["test_ext_contentscript_css.js"]
+skip-if = [
+  "os == 'linux' && fission", # Bug 1762638
+  "os == 'mac' && debug", # Bug 1762638
+]
+
+["test_ext_contentscript_dynamic_registration.js"]
+
+["test_ext_contentscript_exporthelpers.js"]
+
+["test_ext_contentscript_importmap.js"]
+
+["test_ext_contentscript_in_background.js"]
+
+["test_ext_contentscript_json_api.js"]
+
+["test_ext_contentscript_module_import.js"]
+
+["test_ext_contentscript_restrictSchemes.js"]
+
+["test_ext_contentscript_teardown.js"]
+skip-if = ["tsan"] # Bug 1683730
+
+["test_ext_contentscript_unregister_during_loadContentScript.js"]
+
+["test_ext_contentscript_xml_prettyprint.js"]
+
+["test_ext_contextual_identities.js"]
+skip-if = [
+  "appname == 'thunderbird'",
+  "os == 'android'", # Containers are not exposed to android.
+]
+
+["test_ext_cookieBehaviors.js"]
+skip-if = [
+  "appname == 'thunderbird'",
+  "apple_silicon", # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
+  "tsan", # Bug 1683730
+]
+
+["test_ext_cookies_errors.js"]
+
+["test_ext_cookies_firstParty.js"]
+skip-if = [
+  "appname == 'thunderbird'",
+  "tsan", # Bug 1683730
+]
+
+["test_ext_cookies_onChanged.js"]
+
+["test_ext_cookies_partitionKey.js"]
+
+["test_ext_cookies_samesite.js"]
+
+["test_ext_cors_mozextension.js"]
+
+["test_ext_csp_frame_ancestors.js"]
+
+["test_ext_csp_upgrade_requests.js"]
+
+["test_ext_debugging_utils.js"]
+
+["test_ext_dnr_allowAllRequests.js"]
+
+["test_ext_dnr_api.js"]
+
+["test_ext_dnr_download.js"]
+skip-if = ["os == 'android'"] # Android: downloads.download goes through the embedder app instead of Gecko, and cannot be intercepted.
+
+["test_ext_dnr_dynamic_rules.js"]
+
+["test_ext_dnr_modifyHeaders.js"]
+
+["test_ext_dnr_private_browsing.js"]
+
+["test_ext_dnr_redirect_transform.js"]
+
+["test_ext_dnr_regexFilter.js"]
+
+["test_ext_dnr_regexFilter_limits.js"]
+
+["test_ext_dnr_session_rules.js"]
+
+["test_ext_dnr_startup_cache.js"]
+
+["test_ext_dnr_static_rules.js"]
+
+["test_ext_dnr_system_restrictions.js"]
+
+["test_ext_dnr_tabIds.js"]
+
+["test_ext_dnr_testMatchOutcome.js"]
+
+["test_ext_dnr_urlFilter.js"]
+
+["test_ext_dnr_webrequest.js"]
+
+["test_ext_dnr_without_webrequest.js"]
+
+["test_ext_dns.js"]
+skip-if = ["os == 'android'"] # Android needs alternative for proxy.settings - bug 1723523
+
+["test_ext_downloads.js"]
+
+["test_ext_downloads_cookieStoreId.js"]
+skip-if = ["os == 'android'"]
+
+["test_ext_downloads_cookies.js"]
+skip-if = [
+  "os == 'android'", # downloads API needs to be implemented in GeckoView - bug 1538348
+  "win11_2009", # Bug 1797751
+]
+
+["test_ext_downloads_download.js"]
+skip-if = [
+  "tsan", # Bug 1683730
+  "appname == 'thunderbird'",
+  "os == 'android'",
+]
+
+["test_ext_downloads_eventpage.js"]
+skip-if = ["os == 'android'"]
+
+["test_ext_downloads_misc.js"]
+skip-if = [
+  "os == 'android'",
+  "tsan", # Bug 1683730
+]
+
+["test_ext_downloads_partitionKey.js"]
+skip-if = ["os == 'android'"]
+
+["test_ext_downloads_private.js"]
+skip-if = ["os == 'android'"]
+
+["test_ext_downloads_search.js"]
+skip-if = [
+  "os == 'android'",
+  "tsan", # tsan: bug 1612707
+]
+
+["test_ext_downloads_urlencoded.js"]
+skip-if = ["os == 'android'"]
+
+["test_ext_error_location.js"]
+
+["test_ext_eventpage_idle.js"]
+
+["test_ext_eventpage_messaging.js"]
+
+["test_ext_eventpage_messaging_wakeup.js"]
+
+["test_ext_eventpage_settings.js"]
+
+["test_ext_eventpage_warning.js"]
+
+["test_ext_experiments.js"]
+
+["test_ext_extension.js"]
+
+["test_ext_extensionPreferencesManager.js"]
+
+["test_ext_extensionSettingsStore.js"]
+
+["test_ext_extension_content_telemetry.js"]
+
+["test_ext_extension_page_navigated.js"]
+
+["test_ext_extension_startup_failure.js"]
+
+["test_ext_extension_startup_telemetry.js"]
+
+["test_ext_file_access.js"]
+
+["test_ext_geckoProfiler_control.js"]
+skip-if = [
+  "os == 'android'", # Not shipped on Android.
+  "tsan", # tsan: bug 1612707
+]
+
+["test_ext_geturl.js"]
+
+["test_ext_idle.js"]
+
+["test_ext_incognito.js"]
+skip-if = ["appname == 'thunderbird'"]
+
+["test_ext_l10n.js"]
+
+["test_ext_localStorage.js"]
+
+["test_ext_management.js"]
+skip-if = ["os == 'win' && !debug"] # Bug 1419183 disable on Windows
+
+["test_ext_management_uninstall_self.js"]
+
+["test_ext_messaging_startup.js"]
+skip-if = [
+  "appname == 'thunderbird'",
+  "os == 'android' && debug",
+]
+
+["test_ext_networkStatus.js"]
+
+["test_ext_notifications_incognito.js"]
+skip-if = ["appname == 'thunderbird'"]
+
+["test_ext_notifications_unsupported.js"]
+
+["test_ext_onmessage_removelistener.js"]
+skip-if = ["true"] # This test no longer tests what it is meant to test.
+
+["test_ext_permission_xhr.js"]
+
+["test_ext_permissions.js"]
+skip-if = [
+  "appname == 'thunderbird'",
+  "os == 'android'", # Bug 1350559
+]
+
+["test_ext_permissions_api.js"]
+skip-if = [
+  "appname == 'thunderbird'",
+  "os == 'android'", # Bug 1350559
+]
+
+["test_ext_permissions_migrate.js"]
+skip-if = [
+  "appname == 'thunderbird'",
+  "os == 'android'", # Bug 1350559
+]
+
+["test_ext_permissions_uninstall.js"]
+skip-if = [
+  "appname == 'thunderbird'",
+  "os == 'android'", # Bug 1350559
+]
+
+["test_ext_persistent_events.js"]
+
+["test_ext_privacy.js"]
+skip-if = [
+  "appname == 'thunderbird'",
+  "os == 'android' && debug",
+  "os == 'linux' && !debug", # Bug 1625455
+]
+
+["test_ext_privacy_disable.js"]
+skip-if = ["appname == 'thunderbird'"]
+
+["test_ext_privacy_nonPersistentCookies.js"]
+
+["test_ext_privacy_update.js"]
+
+["test_ext_proxy_authorization_via_proxyinfo.js"]
+skip-if = ["true"] # Bug 1622433 needs h2 proxy implementation
+
+["test_ext_proxy_config.js"]
+skip-if = ["appname == 'thunderbird'"]
+
+["test_ext_proxy_containerIsolation.js"]
+
+["test_ext_proxy_onauthrequired.js"]
+
+["test_ext_proxy_settings.js"]
+skip-if = [
+  "appname == 'thunderbird'",
+  "os == 'android'", # Bug 1725981: proxy settings are not supported on android
+]
+
+["test_ext_proxy_socks.js"]
+skip-if = ["socketprocess_networking"]
+run-sequentially = "TCPServerSocket fails otherwise"
+
+["test_ext_proxy_speculative.js"]
+skip-if = ["ccov && os == 'linux'"] # bug 1607581
+
+["test_ext_proxy_startup.js"]
+skip-if = ["ccov && os == 'linux'"] # bug 1607581
+
+["test_ext_redirects.js"]
+skip-if = ["os == 'android' && debug"]
+
+["test_ext_runtime_connect_no_receiver.js"]
+
+["test_ext_runtime_getBackgroundPage.js"]
+
+["test_ext_runtime_getBrowserInfo.js"]
+
+["test_ext_runtime_getPlatformInfo.js"]
+
+["test_ext_runtime_id.js"]
+skip-if = ["ccov && os == 'linux'"] # bug 1607581
+
+["test_ext_runtime_messaging_self.js"]
+
+["test_ext_runtime_onInstalled_and_onStartup.js"]
+
+["test_ext_runtime_ports.js"]
+
+["test_ext_runtime_ports_gc.js"]
+
+["test_ext_runtime_sendMessage.js"]
+
+["test_ext_runtime_sendMessage_errors.js"]
+
+["test_ext_runtime_sendMessage_multiple.js"]
+
+["test_ext_runtime_sendMessage_no_receiver.js"]
+
+["test_ext_same_site_cookies.js"]
+
+["test_ext_same_site_redirects.js"]
+
+["test_ext_sandbox_var.js"]
+
+["test_ext_sandboxed_resource.js"]
+
+["test_ext_schema.js"]
+
+["test_ext_script_filenames.js"]
+run-sequentially = "very high failure rate in parallel"
+
+["test_ext_scripting_contentScripts.js"]
+
+["test_ext_scripting_contentScripts_css.js"]
+skip-if = [
+  "os == 'linux' && debug && fission", # Bug 1762638
+  "os == 'mac' && debug && fission",  # Bug 1762638
+]
+run-sequentially = "very high failure rate in parallel"
+
+["test_ext_scripting_contentScripts_file.js"]
+
+["test_ext_scripting_mv2.js"]
+
+["test_ext_scripting_persistAcrossSessions.js"]
+
+["test_ext_scripting_startupCache.js"]
+
+["test_ext_scripting_updateContentScripts.js"]
+
+["test_ext_shared_workers.js"]
+
+["test_ext_shutdown_cleanup.js"]
+
+["test_ext_simple.js"]
+
+["test_ext_startupData.js"]
+
+["test_ext_startup_cache.js"]
+skip-if = ["os == 'android'"]
+
+["test_ext_startup_perf.js"]
+
+["test_ext_startup_request_handler.js"]
+
+["test_ext_storage_content_local.js"]
+skip-if = ["os == 'android' && debug"]
+
+["test_ext_storage_content_sync.js"]
+skip-if = ["os == 'android'"] # Bug 1625257 - support non-Kinto storage.sync on Android
+
+["test_ext_storage_content_sync_kinto.js"]
+skip-if = ["os == 'android' && debug"]
+
+["test_ext_storage_idb_data_migration.js"]
+skip-if = [
+  "appname == 'thunderbird'",
+  "os == 'android' && debug",
+]
+
+["test_ext_storage_local.js"]
+skip-if = ["os == 'android' && debug"]
+
+["test_ext_storage_managed.js"]
+skip-if = ["os == 'android'"]
+
+["test_ext_storage_managed_policy.js"]
+skip-if = [
+  "appname == 'thunderbird'",
+  "os == 'android'",
+]
+
+["test_ext_storage_quota_exceeded_errors.js"]
+skip-if = ["os == 'android'"] # Bug 1564871
+
+["test_ext_storage_sanitizer.js"]
+skip-if = [
+  "appname == 'thunderbird'",
+  "os == 'android'", # Sanitizer.jsm is not in toolkit.
+]
+
+["test_ext_storage_session.js"]
+
+["test_ext_storage_sync.js"]
+skip-if = ["os == 'android'"] # Bug 1625257 - support non-Kinto storage.sync on Android
+
+["test_ext_storage_sync_kinto.js"]
+skip-if = [
+  "appname == 'thunderbird'",
+  "os == 'android'", # resource://services-sync not bundled with Android
+]
+
+["test_ext_storage_sync_kinto_crypto.js"]
+skip-if = [
+  "appname == 'thunderbird'",
+  "os == 'android'", # resource://services-sync not bundled with Android
+]
+
+["test_ext_storage_tab.js"]
+
+["test_ext_storage_telemetry.js"]
+
+["test_ext_tab_teardown.js"]
+skip-if = ["os == 'android'"] # Bug 1258975 on android.
+
+["test_ext_telemetry.js"]
+
+["test_ext_theme_experiments.js"]
+
+["test_ext_trustworthy_origin.js"]
+
+["test_ext_unlimitedStorage.js"]
+
+["test_ext_unload_frame.js"]
+skip-if = ["true"] # Too frequent intermittent failures
+
+["test_ext_userScripts.js"]
+run-sequentially = "very high failure rate in parallel"
+
+["test_ext_userScripts_exports.js"]
+run-sequentially = "very high failure rate in parallel"
+
+["test_ext_userScripts_register.js"]
+skip-if = [
+  "os == 'linux' && !fission", # Bug 1763197
+  "os == 'android'", # Bug 1763197
+]
+
+["test_ext_wasm.js"]
+
+["test_ext_webRequest_auth.js"]
+skip-if = ["os == 'android' && debug"]
+
+["test_ext_webRequest_cached.js"]
+skip-if = ["os == 'android'"] # Bug 1573511
+
+["test_ext_webRequest_cancelWithReason.js"]
+skip-if = ["os == 'android' && processor == 'x86_64'"] # Bug 1683253
+
+["test_ext_webRequest_containerIsolation.js"]
+
+["test_ext_webRequest_download.js"]
+skip-if = ["os == 'android'"] # Android: downloads.download goes through the embedder app instead of Gecko.
+
+["test_ext_webRequest_filterTypes.js"]
+
+["test_ext_webRequest_filter_urls.js"]
+
+["test_ext_webRequest_from_extension_page.js"]
+
+["test_ext_webRequest_host.js"]
+skip-if = ["os == 'android' && debug"]
+
+["test_ext_webRequest_incognito.js"]
+skip-if = ["os == 'android' && debug"]
+
+["test_ext_webRequest_mergecsp.js"]
+skip-if = ["tsan"] # Bug 1683730
+
+["test_ext_webRequest_permission.js"]
+skip-if = ["os == 'android' && debug"]
+
+["test_ext_webRequest_redirectProperty.js"]
+skip-if = ["os == 'android' && processor == 'x86_64'"] # Bug 1683253
+
+["test_ext_webRequest_redirect_mozextension.js"]
+
+["test_ext_webRequest_requestSize.js"]
+
+["test_ext_webRequest_restrictedHeaders.js"]
+
+["test_ext_webRequest_set_cookie.js"]
+skip-if = ["appname == 'thunderbird'"]
+
+["test_ext_webRequest_startup.js"]
+skip-if = ["os == 'android'"] # bug 1683159
+
+["test_ext_webRequest_style_cache.js"]
+skip-if = ["os == 'android'"] # bug 1848398 - style cache miss on Android.
+
+["test_ext_webRequest_suspend.js"]
+
+["test_ext_webRequest_userContextId.js"]
+
+["test_ext_webRequest_viewsource.js"]
+
+["test_ext_webRequest_webSocket.js"]
+skip-if = ["appname == 'thunderbird'"]
+
+["test_ext_webSocket.js"]
+run-sequentially = "very high failure rate in parallel"
+
+["test_ext_xhr_capabilities.js"]
+
+["test_ext_xhr_cors.js"]
+run-sequentially = "very high failure rate in parallel"
+
+["test_native_manifests.js"]
+subprocess = true
+skip-if = ["os == 'android'"]
+
+["test_proxy_failover.js"]
+
+["test_proxy_incognito.js"]
+skip-if = ["os == 'android'"] # incognito not supported on android
+
+["test_proxy_info_results.js"]
+skip-if = ["os == 'win'"] # bug 1802704
+
+["test_proxy_listener.js"]
+skip-if = ["appname == 'thunderbird'"]
+
+["test_proxy_userContextId.js"]
+
+["test_resistfingerprinting_exempt.js"]
+
+["test_site_permissions.js"]
+
+["test_webRequest_ancestors.js"]
+
+["test_webRequest_cookies.js"]
+
+["test_webRequest_filtering.js"]

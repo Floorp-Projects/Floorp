@@ -1,0 +1,14 @@
+[DEFAULT]
+head = ""
+skip-if = ["os == 'android'"]
+support-files = [
+  "crash.dmp",
+  "crash.extra",
+]
+
+["test_crash_manager.js"]
+
+["test_crash_service.js"]
+run-sequentially = "very high failure rate in parallel"
+
+["test_crash_store.js"]

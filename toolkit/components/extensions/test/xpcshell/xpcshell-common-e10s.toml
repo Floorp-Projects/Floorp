@@ -1,0 +1,26 @@
+[DEFAULT]
+
+["test_ext_webRequest_eventPage_StreamFilter.js"]
+
+["test_ext_webRequest_filterResponseData.js"]
+skip-if = [
+  "tsan", # tsan failure is for test_filter_301 timing out, bug 1674773
+  "os == 'android' && debug",
+  "apple_silicon", # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
+  "fission", # Bug 1762638
+]
+
+["test_ext_webRequest_redirect_StreamFilter.js"]
+
+["test_ext_webRequest_responseBody.js"]
+skip-if = ["os == 'android' && debug"]
+
+["test_ext_webRequest_startup_StreamFilter.js"]
+skip-if = ["os == 'android' && debug"]
+
+["test_ext_webRequest_viewsource_StreamFilter.js"]
+skip-if = [
+  "tsan", # Bug 1683730
+  "apple_silicon", # Disabled due to bleedover with other tests when run in regular suites; passes in "failures" jobs
+  "fission", # Bug 1762638
+]

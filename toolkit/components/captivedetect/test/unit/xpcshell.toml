@@ -1,0 +1,23 @@
+[DEFAULT]
+head = "head_setprefs.js"
+
+["test_abort.js"]
+
+["test_abort_during_user_login.js"]
+
+["test_abort_ongoing_request.js"]
+
+["test_abort_pending_request.js"]
+
+
+["test_captive_portal_found.js"]
+
+["test_captive_portal_found_303.js"]
+
+["test_captive_portal_not_found.js"]
+
+["test_captive_portal_not_found_404.js"]
+
+["test_multiple_requests.js"]
+
+["test_user_cancel.js"]

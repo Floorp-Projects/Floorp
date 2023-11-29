@@ -24,7 +24,7 @@ let OptionalPermissions;
 
 add_task(async function setup() {
   // Bug 1646182: Force ExtensionPermissions to run in rkv mode, the legacy
-  // storage mode will run in xpcshell-legacy-ep.ini
+  // storage mode will run in xpcshell-legacy-ep.toml
   await ExtensionPermissions._uninit();
 
   Services.prefs.setBoolPref(

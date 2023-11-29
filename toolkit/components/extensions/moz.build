@@ -122,18 +122,18 @@ MOCHITEST_MANIFESTS += [
 ]
 MOCHITEST_CHROME_MANIFESTS += ["test/mochitest/chrome.toml"]
 XPCSHELL_TESTS_MANIFESTS += [
-    "test/xpcshell/native_messaging.ini",
-    "test/xpcshell/xpcshell-e10s.ini",
-    "test/xpcshell/xpcshell-legacy-ep.ini",
-    "test/xpcshell/xpcshell-remote.ini",
-    "test/xpcshell/xpcshell.ini",
+    "test/xpcshell/native_messaging.toml",
+    "test/xpcshell/xpcshell-e10s.toml",
+    "test/xpcshell/xpcshell-legacy-ep.toml",
+    "test/xpcshell/xpcshell-remote.toml",
+    "test/xpcshell/xpcshell.toml",
 ]
 
 # Only include tests that requires the WebExtensions WebIDL API bindings
 # in builds where they are enabled (currently only on Nightly builds).
 if CONFIG["MOZ_WEBEXT_WEBIDL_ENABLED"]:
     XPCSHELL_TESTS_MANIFESTS += [
-        "test/xpcshell/webidl-api/xpcshell.ini",
+        "test/xpcshell/webidl-api/xpcshell.toml",
         "test/xpcshell/xpcshell-serviceworker.ini",
     ]
     MOCHITEST_MANIFESTS += ["test/mochitest/mochitest-serviceworker.ini"]

@@ -7,7 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Internationalization")
 
-XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell.toml"]
 
 XPIDL_SOURCES += [
     "mozIMozIntl.idl",

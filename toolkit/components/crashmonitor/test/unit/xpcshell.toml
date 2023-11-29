@@ -1,0 +1,15 @@
+[DEFAULT]
+head = "head.js"
+skip-if = ["os == 'android'"]
+
+["test_init.js"]
+
+["test_invalid_file.js"]
+
+["test_invalid_json.js"]
+
+["test_missing_file.js"]
+
+["test_register.js"]
+
+["test_valid_file.js"]

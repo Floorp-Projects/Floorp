@@ -6,7 +6,7 @@
 
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.toml"]
 XPCSHELL_TESTS_MANIFESTS += [
-    "tests/xpcshell/xpcshell.ini",
+    "tests/xpcshell/xpcshell.toml",
 ]
 
 JAR_MANIFESTS += ["jar.mn"]

@@ -1,0 +1,15 @@
+[DEFAULT]
+head = "head.js"
+skip-if = ["os == 'android'"]
+
+["test_errno.js"]
+
+["test_finalizer.js"]
+
+["test_finalizer_shouldaccept.js"]
+
+["test_finalizer_shouldfail.js"]
+
+["test_jsctypes.js"]
+# Bug 676989: test fails consistently on Android
+fail-if = ["os == 'android'"]

@@ -4,12 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.toml"]
 
 if CONFIG["OS_ARCH"] == "WINNT":
-    XPCSHELL_TESTS_MANIFESTS += ["test/unit_win/xpcshell.ini"]
+    XPCSHELL_TESTS_MANIFESTS += ["test/unit_win/xpcshell.toml"]
 elif CONFIG["OS_ARCH"] != "Darwin":
-    XPCSHELL_TESTS_MANIFESTS += ["test/unit_unix/xpcshell.ini"]
+    XPCSHELL_TESTS_MANIFESTS += ["test/unit_unix/xpcshell.toml"]
 
 XPIDL_SOURCES += [
     "nsICommandLine.idl",

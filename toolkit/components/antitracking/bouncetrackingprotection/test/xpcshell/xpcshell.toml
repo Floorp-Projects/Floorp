@@ -1,0 +1,8 @@
+[DEFAULT]
+prefs = [
+  "privacy.bounceTrackingProtection.enabled=true",
+  "privacy.bounceTrackingProtection.enableTestMode=true",
+  "privacy.bounceTrackingProtection.bounceTrackingPurgeTimerPeriodSec=0",
+]
+
+["test_bouncetracking_purge.js"]

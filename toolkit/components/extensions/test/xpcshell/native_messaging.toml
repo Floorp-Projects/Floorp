@@ -1,0 +1,19 @@
+[DEFAULT]
+head = "head.js head_e10s.js head_native_messaging.js head_telemetry.js"
+firefox-appdir = "browser"
+skip-if = [
+  "appname == 'thunderbird'",
+  "os == 'android'",
+]
+subprocess = true
+support-files = ["data/**"]
+tags = "webextensions"
+
+["test_ext_native_messaging.js"]
+skip-if = ["apple_silicon"] # bug 1729540
+run-sequentially = "very high failure rate in parallel"
+
+["test_ext_native_messaging_perf.js"]
+skip-if = ["tsan"] # Unreasonably slow, bug 1612707
+
+["test_ext_native_messaging_unresponsive.js"]

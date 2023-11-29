@@ -14,7 +14,7 @@ BROWSER_CHROME_MANIFESTS += [
 
 SPHINX_TREES["docs"] = "schemas"
 
-XPCSHELL_TESTS_MANIFESTS += ["targeting/test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["targeting/test/unit/xpcshell.toml"]
 
 TESTING_JS_MODULES += [
     "schemas/SpecialMessageActionSchemas/SpecialMessageActionSchemas.json",

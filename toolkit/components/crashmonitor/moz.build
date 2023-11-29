@@ -7,7 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "General")
 
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.toml"]
 
 EXTRA_JS_MODULES += [
     "CrashMonitor.sys.mjs",

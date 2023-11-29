@@ -1,0 +1,22 @@
+[DEFAULT]
+head = "head_xpc.js"
+firefox-appdir = "browser"
+support-files = [
+  "mock_api/**",
+  "invalid_recipe_signature_api/**",
+  "query_server.sjs",
+  "echo_server.sjs",
+  "cookie_server.sjs",
+  "utils.js",
+]
+tags = "normandy"
+
+["test_Normandy.js"]
+
+["test_NormandyApi.js"]
+
+["test_PrefUtils.js"]
+
+["test_RecipeRunner.js"]
+
+["test_addon_unenroll.js"]

@@ -11,7 +11,7 @@ EXTRA_JS_MODULES += [
     "kvstore.sys.mjs",
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.toml"]
 
 XPIDL_SOURCES += [
     "nsIKeyValue.idl",
