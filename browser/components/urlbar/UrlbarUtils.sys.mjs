@@ -554,7 +554,7 @@ export var UrlbarUtils = {
             ? UrlbarUtils.RESULT_GROUP.RECENT_SEARCH
             : UrlbarUtils.RESULT_GROUP.FORM_HISTORY;
         }
-        if (result.payload.tail && !result.isRichSuggestion) {
+        if (result.payload.tail) {
           return UrlbarUtils.RESULT_GROUP.TAIL_SUGGESTION;
         }
         if (result.payload.suggestion) {
