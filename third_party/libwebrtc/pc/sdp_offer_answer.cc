@@ -53,6 +53,7 @@
 #include "pc/rtp_sender_proxy.h"
 #include "pc/simulcast_description.h"
 #include "pc/usage_pattern.h"
+#include "pc/used_ids.h"
 #include "pc/webrtc_session_description_factory.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/logging.h"
@@ -119,12 +120,6 @@ const char kDefaultStreamId[] = "default";
 // NOTE: Duplicated in peer_connection.cc:
 static const char kDefaultAudioSenderId[] = "defaulta0";
 static const char kDefaultVideoSenderId[] = "defaultv0";
-
-// NOTE: Duplicated from pc/used_ids.h
-static const int kLastDynamicPayloadTypeLowerRange = 63;
-
-static const int kFirstDynamicPayloadTypeUpperRange = 96;
-static const int kLastDynamicPayloadTypeUpperRange = 127;
 
 void NoteAddIceCandidateResult(int result) {
   RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.AddIceCandidate", result,
@@ -574,10 +569,8 @@ RTCError ValidatePayloadTypes(const cricket::SessionDescription& description) {
     if (type == cricket::MEDIA_TYPE_AUDIO) {
       RTC_DCHECK(media_description->as_audio());
       for (const auto& codec : media_description->as_audio()->codecs()) {
-        if (codec.id < 0 || codec.id > kLastDynamicPayloadTypeUpperRange ||
-            (media_description->rtcp_mux() &&
-             (codec.id > kLastDynamicPayloadTypeLowerRange &&
-              codec.id < kFirstDynamicPayloadTypeUpperRange))) {
+        if (!cricket::UsedPayloadTypes::IsIdValid(
+                codec, media_description->rtcp_mux())) {
           LOG_AND_RETURN_ERROR(
               RTCErrorType::INVALID_PARAMETER,
               "The media section with MID='" + content.mid() +
@@ -589,10 +582,8 @@ RTCError ValidatePayloadTypes(const cricket::SessionDescription& description) {
     } else if (type == cricket::MEDIA_TYPE_VIDEO) {
       RTC_DCHECK(media_description->as_video());
       for (const auto& codec : media_description->as_video()->codecs()) {
-        if (codec.id < 0 || codec.id > kLastDynamicPayloadTypeUpperRange ||
-            (media_description->rtcp_mux() &&
-             (codec.id > kLastDynamicPayloadTypeLowerRange &&
-              codec.id < kFirstDynamicPayloadTypeUpperRange))) {
+        if (!cricket::UsedPayloadTypes::IsIdValid(
+                codec, media_description->rtcp_mux())) {
           LOG_AND_RETURN_ERROR(
               RTCErrorType::INVALID_PARAMETER,
               "The media section with MID='" + content.mid() +
