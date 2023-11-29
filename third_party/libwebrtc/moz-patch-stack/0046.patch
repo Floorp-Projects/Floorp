@@ -255,7 +255,7 @@ index e748b257e8..36e117af55 100644
    RtcpLossNotificationObserver* const rtcp_loss_notification_observer_;
    NetworkStateEstimateObserver* const network_state_estimate_observer_;
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index dc86f92bf5..889b099abd 100644
+index af0fc8ac8b..5a4809b534 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 @@ -74,6 +74,9 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
