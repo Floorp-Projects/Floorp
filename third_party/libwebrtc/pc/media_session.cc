@@ -43,6 +43,8 @@
 namespace {
 
 using rtc::UniqueRandomIdGenerator;
+using webrtc::RTCError;
+using webrtc::RTCErrorType;
 using webrtc::RtpTransceiverDirection;
 
 const char kInline[] = "inline:";
@@ -661,7 +663,7 @@ static std::vector<const ContentInfo*> GetActiveContents(
 // crypto (in current_cryptos) and it is enabled (in secure_policy), crypto is
 // created (according to crypto_suites). The created content is added to the
 // offer.
-static bool CreateContentOffer(
+static RTCError CreateContentOffer(
     const MediaDescriptionOptions& media_description_options,
     const MediaSessionOptions& session_options,
     const SecurePolicy& secure_policy,
@@ -701,18 +703,20 @@ static bool CreateContentOffer(
     }
     if (offer->cryptos().empty()) {
       if (!CreateMediaCryptos(crypto_suites, offer)) {
-        return false;
+        LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
+                             "Failed to create crypto parameters");
       }
     }
   }
 
   if (secure_policy == SEC_REQUIRED && offer->cryptos().empty()) {
-    return false;
+    LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
+                         "Failed to create crypto parameters");
   }
-  return true;
+  return RTCError::OK();
 }
 
-static bool CreateMediaContentOffer(
+static RTCError CreateMediaContentOffer(
     const MediaDescriptionOptions& media_description_options,
     const MediaSessionOptions& session_options,
     const std::vector<Codec>& codecs,
@@ -728,7 +732,8 @@ static bool CreateMediaContentOffer(
   if (!AddStreamParams(media_description_options.sender_options,
                        session_options.rtcp_cname, ssrc_generator,
                        current_streams, offer, field_trials)) {
-    return false;
+    LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
+                         "Failed to add stream parameters");
   }
 
   return CreateContentOffer(media_description_options, session_options,
@@ -1666,7 +1671,8 @@ MediaSessionDescriptionFactory::filtered_rtp_header_extensions(
   return extensions;
 }
 
-std::unique_ptr<SessionDescription> MediaSessionDescriptionFactory::CreateOffer(
+webrtc::RTCErrorOr<std::unique_ptr<SessionDescription>>
+MediaSessionDescriptionFactory::CreateOfferOrError(
     const MediaSessionOptions& session_options,
     const SessionDescription* current_description) const {
   // Must have options for each existing section.
@@ -1712,42 +1718,36 @@ std::unique_ptr<SessionDescription> MediaSessionDescriptionFactory::CreateOffer(
                  IsMediaContentOfType(current_content,
                                       media_description_options.type));
     }
+    RTCError error;
     switch (media_description_options.type) {
       case MEDIA_TYPE_AUDIO:
-        if (!AddAudioContentForOffer(media_description_options, session_options,
-                                     current_content, current_description,
-                                     extensions_with_ids.audio,
-                                     offer_audio_codecs, &current_streams,
-                                     offer.get(), &ice_credentials)) {
-          return nullptr;
-        }
+        error = AddAudioContentForOffer(
+            media_description_options, session_options, current_content,
+            current_description, extensions_with_ids.audio, offer_audio_codecs,
+            &current_streams, offer.get(), &ice_credentials);
         break;
       case MEDIA_TYPE_VIDEO:
-        if (!AddVideoContentForOffer(media_description_options, session_options,
-                                     current_content, current_description,
-                                     extensions_with_ids.video,
-                                     offer_video_codecs, &current_streams,
-                                     offer.get(), &ice_credentials)) {
-          return nullptr;
-        }
+        error = AddVideoContentForOffer(
+            media_description_options, session_options, current_content,
+            current_description, extensions_with_ids.video, offer_video_codecs,
+            &current_streams, offer.get(), &ice_credentials);
         break;
       case MEDIA_TYPE_DATA:
-        if (!AddDataContentForOffer(media_description_options, session_options,
-                                    current_content, current_description,
-                                    &current_streams, offer.get(),
-                                    &ice_credentials)) {
-          return nullptr;
-        }
+        error = AddDataContentForOffer(media_description_options,
+                                       session_options, current_content,
+                                       current_description, &current_streams,
+                                       offer.get(), &ice_credentials);
         break;
       case MEDIA_TYPE_UNSUPPORTED:
-        if (!AddUnsupportedContentForOffer(
-                media_description_options, session_options, current_content,
-                current_description, offer.get(), &ice_credentials)) {
-          return nullptr;
-        }
+        error = AddUnsupportedContentForOffer(
+            media_description_options, session_options, current_content,
+            current_description, offer.get(), &ice_credentials);
         break;
       default:
         RTC_DCHECK_NOTREACHED();
+    }
+    if (!error.ok()) {
+      return error;
     }
     ++msection_index;
   }
@@ -1770,14 +1770,14 @@ std::unique_ptr<SessionDescription> MediaSessionDescriptionFactory::CreateOffer(
     if (!offer_bundle.content_names().empty()) {
       offer->AddGroup(offer_bundle);
       if (!UpdateTransportInfoForBundle(offer_bundle, offer.get())) {
-        RTC_LOG(LS_ERROR)
-            << "CreateOffer failed to UpdateTransportInfoForBundle.";
-        return nullptr;
+        LOG_AND_RETURN_ERROR(
+            RTCErrorType::INTERNAL_ERROR,
+            "CreateOffer failed to UpdateTransportInfoForBundle");
       }
       if (!UpdateCryptoParamsForBundle(offer_bundle, offer.get())) {
-        RTC_LOG(LS_ERROR)
-            << "CreateOffer failed to UpdateCryptoParamsForBundle.";
-        return nullptr;
+        LOG_AND_RETURN_ERROR(
+            RTCErrorType::INTERNAL_ERROR,
+            "CreateOffer failed to UpdateCryptoParamsForBundle.");
       }
     }
   }
@@ -1800,13 +1800,13 @@ std::unique_ptr<SessionDescription> MediaSessionDescriptionFactory::CreateOffer(
   return offer;
 }
 
-std::unique_ptr<SessionDescription>
-MediaSessionDescriptionFactory::CreateAnswer(
+webrtc::RTCErrorOr<std::unique_ptr<SessionDescription>>
+MediaSessionDescriptionFactory::CreateAnswerOrError(
     const SessionDescription* offer,
     const MediaSessionOptions& session_options,
     const SessionDescription* current_description) const {
   if (!offer) {
-    return nullptr;
+    LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR, "Called without offer.");
   }
 
   // Must have options for exactly as many sections as in the offer.
@@ -1887,43 +1887,39 @@ MediaSessionDescriptionFactory::CreateAnswer(
     RtpHeaderExtensions header_extensions = RtpHeaderExtensionsFromCapabilities(
         UnstoppedRtpHeaderExtensionCapabilities(
             media_description_options.header_extensions));
+    RTCError error;
     switch (media_description_options.type) {
       case MEDIA_TYPE_AUDIO:
-        if (!AddAudioContentForAnswer(
-                media_description_options, session_options, offer_content,
-                offer, current_content, current_description, bundle_transport,
-                answer_audio_codecs, header_extensions, &current_streams,
-                answer.get(), &ice_credentials)) {
-          return nullptr;
-        }
+        error = AddAudioContentForAnswer(
+            media_description_options, session_options, offer_content, offer,
+            current_content, current_description, bundle_transport,
+            answer_audio_codecs, header_extensions, &current_streams,
+            answer.get(), &ice_credentials);
         break;
       case MEDIA_TYPE_VIDEO:
-        if (!AddVideoContentForAnswer(
-                media_description_options, session_options, offer_content,
-                offer, current_content, current_description, bundle_transport,
-                answer_video_codecs, header_extensions, &current_streams,
-                answer.get(), &ice_credentials)) {
-          return nullptr;
-        }
+        error = AddVideoContentForAnswer(
+            media_description_options, session_options, offer_content, offer,
+            current_content, current_description, bundle_transport,
+            answer_video_codecs, header_extensions, &current_streams,
+            answer.get(), &ice_credentials);
         break;
       case MEDIA_TYPE_DATA:
-        if (!AddDataContentForAnswer(
-                media_description_options, session_options, offer_content,
-                offer, current_content, current_description, bundle_transport,
-                &current_streams, answer.get(), &ice_credentials)) {
-          return nullptr;
-        }
+        error = AddDataContentForAnswer(
+            media_description_options, session_options, offer_content, offer,
+            current_content, current_description, bundle_transport,
+            &current_streams, answer.get(), &ice_credentials);
         break;
       case MEDIA_TYPE_UNSUPPORTED:
-        if (!AddUnsupportedContentForAnswer(
-                media_description_options, session_options, offer_content,
-                offer, current_content, current_description, bundle_transport,
-                answer.get(), &ice_credentials)) {
-          return nullptr;
-        }
+        error = AddUnsupportedContentForAnswer(
+            media_description_options, session_options, offer_content, offer,
+            current_content, current_description, bundle_transport,
+            answer.get(), &ice_credentials);
         break;
       default:
         RTC_DCHECK_NOTREACHED();
+    }
+    if (!error.ok()) {
+      return error;
     }
     ++msection_index;
     // See if we can add the newly generated m= section to the BUNDLE group in
@@ -1953,15 +1949,15 @@ MediaSessionDescriptionFactory::CreateAnswer(
         // Share the same ICE credentials and crypto params across all contents,
         // as BUNDLE requires.
         if (!UpdateTransportInfoForBundle(answer_bundle, answer.get())) {
-          RTC_LOG(LS_ERROR)
-              << "CreateAnswer failed to UpdateTransportInfoForBundle.";
-          return NULL;
+          LOG_AND_RETURN_ERROR(
+              RTCErrorType::INTERNAL_ERROR,
+              "CreateAnswer failed to UpdateTransportInfoForBundle.");
         }
 
         if (!UpdateCryptoParamsForBundle(answer_bundle, answer.get())) {
-          RTC_LOG(LS_ERROR)
-              << "CreateAnswer failed to UpdateCryptoParamsForBundle.";
-          return NULL;
+          LOG_AND_RETURN_ERROR(
+              RTCErrorType::INTERNAL_ERROR,
+              "CreateAnswer failed to UpdateCryptoParamsForBundle.");
         }
       }
     }
@@ -2249,14 +2245,16 @@ MediaSessionDescriptionFactory::GetOfferedRtpHeaderExtensionsWithIds(
   return offered_extensions;
 }
 
-bool MediaSessionDescriptionFactory::AddTransportOffer(
+RTCError MediaSessionDescriptionFactory::AddTransportOffer(
     const std::string& content_name,
     const TransportOptions& transport_options,
     const SessionDescription* current_desc,
     SessionDescription* offer_desc,
     IceCredentialsIterator* ice_credentials) const {
-  if (!transport_desc_factory_)
-    return false;
+  if (!transport_desc_factory_) {
+    LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
+                         "Missing transport description factory");
+  }
   const TransportDescription* current_tdesc =
       GetTransportDescription(content_name, current_desc);
   std::unique_ptr<TransportDescription> new_tdesc(
@@ -2267,7 +2265,7 @@ bool MediaSessionDescriptionFactory::AddTransportOffer(
                       << content_name;
   }
   offer_desc->AddTransportInfo(TransportInfo(content_name, *new_tdesc));
-  return true;
+  return RTCError::OK();
 }
 
 std::unique_ptr<TransportDescription>
@@ -2278,8 +2276,9 @@ MediaSessionDescriptionFactory::CreateTransportAnswer(
     const SessionDescription* current_desc,
     bool require_transport_attributes,
     IceCredentialsIterator* ice_credentials) const {
-  if (!transport_desc_factory_)
-    return NULL;
+  if (!transport_desc_factory_) {
+    return nullptr;
+  }
   const TransportDescription* offer_tdesc =
       GetTransportDescription(content_name, offer_desc);
   const TransportDescription* current_tdesc =
@@ -2289,12 +2288,12 @@ MediaSessionDescriptionFactory::CreateTransportAnswer(
                                                current_tdesc, ice_credentials);
 }
 
-bool MediaSessionDescriptionFactory::AddTransportAnswer(
+RTCError MediaSessionDescriptionFactory::AddTransportAnswer(
     const std::string& content_name,
     const TransportDescription& transport_desc,
     SessionDescription* answer_desc) const {
   answer_desc->AddTransportInfo(TransportInfo(content_name, transport_desc));
-  return true;
+  return RTCError::OK();
 }
 
 // `audio_codecs` = set of all possible codecs that can be used, with correct
@@ -2309,7 +2308,7 @@ bool MediaSessionDescriptionFactory::AddTransportAnswer(
 // from acd->codecs() and then supported_codecs, to ensure that re-offers don't
 // change existing codec priority, and that new codecs are added with the right
 // priority.
-bool MediaSessionDescriptionFactory::AddAudioContentForOffer(
+RTCError MediaSessionDescriptionFactory::AddAudioContentForOffer(
     const MediaDescriptionOptions& media_description_options,
     const MediaSessionOptions& session_options,
     const ContentInfo* current_content,
@@ -2342,10 +2341,10 @@ bool MediaSessionDescriptionFactory::AddAudioContentForOffer(
       if (!IsMediaContentOfType(current_content, MEDIA_TYPE_AUDIO)) {
         // TODO(bugs.webrtc.org/15471): add a unit test for this since
         // it is not clear how this can happen for offers.
-        RTC_LOG(LS_ERROR) << "Media type for content with mid='"
-                          << current_content->name
-                          << "' does not match previous type.";
-        return false;
+        LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
+                             "Media type for content with mid='" +
+                                 current_content->name +
+                                 "' does not match previous type.");
       }
       const AudioContentDescription* acd =
           current_content->media_description()->as_audio();
@@ -2383,12 +2382,13 @@ bool MediaSessionDescriptionFactory::AddAudioContentForOffer(
   std::vector<std::string> crypto_suites;
   GetSupportedAudioSdesCryptoSuiteNames(session_options.crypto_options,
                                         &crypto_suites);
-  if (!CreateMediaContentOffer(
-          media_description_options, session_options, filtered_codecs,
-          sdes_policy, GetCryptos(current_content), crypto_suites,
-          audio_rtp_extensions, ssrc_generator(), current_streams, audio.get(),
-          transport_desc_factory_->trials())) {
-    return false;
+  auto error = CreateMediaContentOffer(
+      media_description_options, session_options, filtered_codecs, sdes_policy,
+      GetCryptos(current_content), crypto_suites, audio_rtp_extensions,
+      ssrc_generator(), current_streams, audio.get(),
+      transport_desc_factory_->trials());
+  if (!error.ok()) {
+    return error;
   }
 
   bool secure_transport = (transport_desc_factory_->secure() != SEC_DISABLED);
@@ -2398,18 +2398,19 @@ bool MediaSessionDescriptionFactory::AddAudioContentForOffer(
 
   desc->AddContent(media_description_options.mid, MediaProtocolType::kRtp,
                    media_description_options.stopped, std::move(audio));
-  if (!AddTransportOffer(media_description_options.mid,
-                         media_description_options.transport_options,
-                         current_description, desc, ice_credentials)) {
-    return false;
+  error = AddTransportOffer(media_description_options.mid,
+                            media_description_options.transport_options,
+                            current_description, desc, ice_credentials);
+  if (!error.ok()) {
+    return error;
   }
 
-  return true;
+  return RTCError::OK();
 }
 
 // TODO(kron): This function is very similar to AddAudioContentForOffer.
 // Refactor to reuse shared code.
-bool MediaSessionDescriptionFactory::AddVideoContentForOffer(
+RTCError MediaSessionDescriptionFactory::AddVideoContentForOffer(
     const MediaDescriptionOptions& media_description_options,
     const MediaSessionOptions& session_options,
     const ContentInfo* current_content,
@@ -2442,10 +2443,10 @@ bool MediaSessionDescriptionFactory::AddVideoContentForOffer(
       if (!IsMediaContentOfType(current_content, MEDIA_TYPE_VIDEO)) {
         // TODO(bugs.webrtc.org/15471): add a unit test for this since
         // it is not clear how this can happen for offers.
-        RTC_LOG(LS_ERROR) << "Media type for content with mid='"
-                          << current_content->name
-                          << "' does not match previous type.";
-        return false;
+        LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
+                             "Media type for content with mid='" +
+                                 current_content->name +
+                                 "' does not match previous type.");
       }
 
       const VideoContentDescription* vcd =
@@ -2503,12 +2504,13 @@ bool MediaSessionDescriptionFactory::AddVideoContentForOffer(
   std::vector<std::string> crypto_suites;
   GetSupportedVideoSdesCryptoSuiteNames(session_options.crypto_options,
                                         &crypto_suites);
-  if (!CreateMediaContentOffer(
-          media_description_options, session_options, filtered_codecs,
-          sdes_policy, GetCryptos(current_content), crypto_suites,
-          video_rtp_extensions, ssrc_generator(), current_streams, video.get(),
-          transport_desc_factory_->trials())) {
-    return false;
+  auto error = CreateMediaContentOffer(
+      media_description_options, session_options, filtered_codecs, sdes_policy,
+      GetCryptos(current_content), crypto_suites, video_rtp_extensions,
+      ssrc_generator(), current_streams, video.get(),
+      transport_desc_factory_->trials());
+  if (!error.ok()) {
+    return error;
   }
 
   video->set_bandwidth(kAutoBandwidth);
@@ -2520,16 +2522,12 @@ bool MediaSessionDescriptionFactory::AddVideoContentForOffer(
 
   desc->AddContent(media_description_options.mid, MediaProtocolType::kRtp,
                    media_description_options.stopped, std::move(video));
-  if (!AddTransportOffer(media_description_options.mid,
-                         media_description_options.transport_options,
-                         current_description, desc, ice_credentials)) {
-    return false;
-  }
-
-  return true;
+  return AddTransportOffer(media_description_options.mid,
+                           media_description_options.transport_options,
+                           current_description, desc, ice_credentials);
 }
 
-bool MediaSessionDescriptionFactory::AddDataContentForOffer(
+RTCError MediaSessionDescriptionFactory::AddDataContentForOffer(
     const MediaDescriptionOptions& media_description_options,
     const MediaSessionOptions& session_options,
     const ContentInfo* current_content,
@@ -2557,24 +2555,22 @@ bool MediaSessionDescriptionFactory::AddDataContentForOffer(
   data->set_use_sctpmap(session_options.use_obsolete_sctp_sdp);
   data->set_max_message_size(kSctpSendBufferSize);
 
-  if (!CreateContentOffer(media_description_options, session_options,
-                          sdes_policy, GetCryptos(current_content),
-                          crypto_suites, RtpHeaderExtensions(),
-                          ssrc_generator(), current_streams, data.get())) {
-    return false;
+  auto error = CreateContentOffer(
+      media_description_options, session_options, sdes_policy,
+      GetCryptos(current_content), crypto_suites, RtpHeaderExtensions(),
+      ssrc_generator(), current_streams, data.get());
+  if (!error.ok()) {
+    return error;
   }
 
   desc->AddContent(media_description_options.mid, MediaProtocolType::kSctp,
                    media_description_options.stopped, std::move(data));
-  if (!AddTransportOffer(media_description_options.mid,
-                         media_description_options.transport_options,
-                         current_description, desc, ice_credentials)) {
-    return false;
-  }
-  return true;
+  return AddTransportOffer(media_description_options.mid,
+                           media_description_options.transport_options,
+                           current_description, desc, ice_credentials);
 }
 
-bool MediaSessionDescriptionFactory::AddUnsupportedContentForOffer(
+RTCError MediaSessionDescriptionFactory::AddUnsupportedContentForOffer(
     const MediaDescriptionOptions& media_description_options,
     const MediaSessionOptions& session_options,
     const ContentInfo* current_content,
@@ -2591,12 +2587,9 @@ bool MediaSessionDescriptionFactory::AddUnsupportedContentForOffer(
   desc->AddContent(media_description_options.mid, MediaProtocolType::kOther,
                    /*rejected=*/true, std::move(unsupported));
 
-  if (!AddTransportOffer(media_description_options.mid,
-                         media_description_options.transport_options,
-                         current_description, desc, ice_credentials)) {
-    return false;
-  }
-  return true;
+  return AddTransportOffer(media_description_options.mid,
+                           media_description_options.transport_options,
+                           current_description, desc, ice_credentials);
 }
 
 // `audio_codecs` = set of all possible codecs that can be used, with correct
@@ -2611,7 +2604,7 @@ bool MediaSessionDescriptionFactory::AddUnsupportedContentForOffer(
 // from acd->codecs() and then supported_codecs, to ensure that re-offers don't
 // change existing codec priority, and that new codecs are added with the right
 // priority.
-bool MediaSessionDescriptionFactory::AddAudioContentForAnswer(
+RTCError MediaSessionDescriptionFactory::AddAudioContentForAnswer(
     const MediaDescriptionOptions& media_description_options,
     const MediaSessionOptions& session_options,
     const ContentInfo* offer_content,
@@ -2635,7 +2628,9 @@ bool MediaSessionDescriptionFactory::AddAudioContentForAnswer(
       media_description_options.transport_options, current_description,
       bundle_transport != nullptr, ice_credentials);
   if (!audio_transport) {
-    return false;
+    LOG_AND_RETURN_ERROR(
+        RTCErrorType::INTERNAL_ERROR,
+        "Failed to create transport answer, audio transport is missing");
   }
 
   // Pick codecs based on the requested communications direction in the offer
@@ -2660,10 +2655,10 @@ bool MediaSessionDescriptionFactory::AddAudioContentForAnswer(
         current_content->name == media_description_options.mid) {
       if (!IsMediaContentOfType(current_content, MEDIA_TYPE_AUDIO)) {
         // Can happen if the remote side re-uses a MID while recycling.
-        RTC_LOG(LS_ERROR) << "Media type for content with mid='"
-                          << current_content->name
-                          << "' does not match previous type.";
-        return false;
+        LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
+                             "Media type for content with mid='" +
+                                 current_content->name +
+                                 "' does not match previous type.");
       }
       const AudioContentDescription* acd =
           current_content->media_description()->as_audio();
@@ -2708,7 +2703,8 @@ bool MediaSessionDescriptionFactory::AddAudioContentForAnswer(
                          media_description_options, session_options,
                          ssrc_generator(), current_streams, audio_answer.get(),
                          transport_desc_factory_->trials())) {
-    return false;
+    LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
+                         "Failed to set codecs in answer");
   }
   if (!CreateMediaContentAnswer(
           offer_audio_description, media_description_options, session_options,
@@ -2716,7 +2712,8 @@ bool MediaSessionDescriptionFactory::AddAudioContentForAnswer(
           filtered_rtp_header_extensions(rtp_header_extensions),
           ssrc_generator(), enable_encrypted_rtp_header_extensions_,
           current_streams, bundle_enabled, audio_answer.get())) {
-    return false;  // Fails the session setup.
+    LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
+                         "Failed to create answer");
   }
 
   bool secure = bundle_transport ? bundle_transport->description.secure()
@@ -2725,9 +2722,10 @@ bool MediaSessionDescriptionFactory::AddAudioContentForAnswer(
                   offer_content->rejected || !has_common_media_codecs ||
                   !IsMediaProtocolSupported(MEDIA_TYPE_AUDIO,
                                             audio_answer->protocol(), secure);
-  if (!AddTransportAnswer(media_description_options.mid,
-                          *(audio_transport.get()), answer)) {
-    return false;
+  auto error = AddTransportAnswer(media_description_options.mid,
+                                  *(audio_transport.get()), answer);
+  if (!error.ok()) {
+    return error;
   }
 
   if (rejected) {
@@ -2737,12 +2735,12 @@ bool MediaSessionDescriptionFactory::AddAudioContentForAnswer(
 
   answer->AddContent(media_description_options.mid, offer_content->type,
                      rejected, std::move(audio_answer));
-  return true;
+  return RTCError::OK();
 }
 
 // TODO(kron): This function is very similar to AddAudioContentForAnswer.
 // Refactor to reuse shared code.
-bool MediaSessionDescriptionFactory::AddVideoContentForAnswer(
+RTCError MediaSessionDescriptionFactory::AddVideoContentForAnswer(
     const MediaDescriptionOptions& media_description_options,
     const MediaSessionOptions& session_options,
     const ContentInfo* offer_content,
@@ -2766,7 +2764,9 @@ bool MediaSessionDescriptionFactory::AddVideoContentForAnswer(
       media_description_options.transport_options, current_description,
       bundle_transport != nullptr, ice_credentials);
   if (!video_transport) {
-    return false;
+    LOG_AND_RETURN_ERROR(
+        RTCErrorType::INTERNAL_ERROR,
+        "Failed to create transport answer, video transport is missing");
   }
 
   // Pick codecs based on the requested communications direction in the offer
@@ -2791,10 +2791,10 @@ bool MediaSessionDescriptionFactory::AddVideoContentForAnswer(
         current_content->name == media_description_options.mid) {
       if (!IsMediaContentOfType(current_content, MEDIA_TYPE_VIDEO)) {
         // Can happen if the remote side re-uses a MID while recycling.
-        RTC_LOG(LS_ERROR) << "Media type for content with mid='"
-                          << current_content->name
-                          << "' does not match previous type.";
-        return false;
+        LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
+                             "Media type for content with mid='" +
+                                 current_content->name +
+                                 "' does not match previous type.");
       }
       const VideoContentDescription* vcd =
           current_content->media_description()->as_video();
@@ -2849,7 +2849,8 @@ bool MediaSessionDescriptionFactory::AddVideoContentForAnswer(
                          media_description_options, session_options,
                          ssrc_generator(), current_streams, video_answer.get(),
                          transport_desc_factory_->trials())) {
-    return false;
+    LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
+                         "Failed to set codecs in answer");
   }
   if (!CreateMediaContentAnswer(
           offer_video_description, media_description_options, session_options,
@@ -2857,7 +2858,8 @@ bool MediaSessionDescriptionFactory::AddVideoContentForAnswer(
           filtered_rtp_header_extensions(default_video_rtp_header_extensions),
           ssrc_generator(), enable_encrypted_rtp_header_extensions_,
           current_streams, bundle_enabled, video_answer.get())) {
-    return false;  // Failed the session setup.
+    LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
+                         "Failed to create answer");
   }
   bool secure = bundle_transport ? bundle_transport->description.secure()
                                  : video_transport->secure();
@@ -2865,9 +2867,10 @@ bool MediaSessionDescriptionFactory::AddVideoContentForAnswer(
                   offer_content->rejected || !has_common_media_codecs ||
                   !IsMediaProtocolSupported(MEDIA_TYPE_VIDEO,
                                             video_answer->protocol(), secure);
-  if (!AddTransportAnswer(media_description_options.mid,
-                          *(video_transport.get()), answer)) {
-    return false;
+  auto error = AddTransportAnswer(media_description_options.mid,
+                                  *(video_transport.get()), answer);
+  if (!error.ok()) {
+    return error;
   }
 
   if (!rejected) {
@@ -2878,10 +2881,10 @@ bool MediaSessionDescriptionFactory::AddVideoContentForAnswer(
   }
   answer->AddContent(media_description_options.mid, offer_content->type,
                      rejected, std::move(video_answer));
-  return true;
+  return RTCError::OK();
 }
 
-bool MediaSessionDescriptionFactory::AddDataContentForAnswer(
+RTCError MediaSessionDescriptionFactory::AddDataContentForAnswer(
     const MediaDescriptionOptions& media_description_options,
     const MediaSessionOptions& session_options,
     const ContentInfo* offer_content,
@@ -2897,7 +2900,9 @@ bool MediaSessionDescriptionFactory::AddDataContentForAnswer(
       media_description_options.transport_options, current_description,
       bundle_transport != nullptr, ice_credentials);
   if (!data_transport) {
-    return false;
+    LOG_AND_RETURN_ERROR(
+        RTCErrorType::INTERNAL_ERROR,
+        "Failed to create transport answer, data transport is missing");
   }
 
   // Do not require or create SDES cryptos if DTLS is used.
@@ -2930,7 +2935,8 @@ bool MediaSessionDescriptionFactory::AddDataContentForAnswer(
             sdes_policy, GetCryptos(current_content), RtpHeaderExtensions(),
             ssrc_generator(), enable_encrypted_rtp_header_extensions_,
             current_streams, bundle_enabled, data_answer.get())) {
-      return false;  // Fails the session setup.
+      LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
+                           "Failed to create answer");
     }
     // Respond with sctpmap if the offer uses sctpmap.
     bool offer_uses_sctpmap = offer_data_description->use_sctpmap();
@@ -2946,17 +2952,17 @@ bool MediaSessionDescriptionFactory::AddDataContentForAnswer(
                   offer_content->rejected ||
                   !IsMediaProtocolSupported(MEDIA_TYPE_DATA,
                                             data_answer->protocol(), secure);
-  if (!AddTransportAnswer(media_description_options.mid,
-                          *(data_transport.get()), answer)) {
-    return false;
+  auto error = AddTransportAnswer(media_description_options.mid,
+                                  *(data_transport.get()), answer);
+  if (!error.ok()) {
+    return error;
   }
-
   answer->AddContent(media_description_options.mid, offer_content->type,
                      rejected, std::move(data_answer));
-  return true;
+  return RTCError::OK();
 }
 
-bool MediaSessionDescriptionFactory::AddUnsupportedContentForAnswer(
+RTCError MediaSessionDescriptionFactory::AddUnsupportedContentForAnswer(
     const MediaDescriptionOptions& media_description_options,
     const MediaSessionOptions& session_options,
     const ContentInfo* offer_content,
@@ -2972,7 +2978,9 @@ bool MediaSessionDescriptionFactory::AddUnsupportedContentForAnswer(
                             current_description, bundle_transport != nullptr,
                             ice_credentials);
   if (!unsupported_transport) {
-    return false;
+    LOG_AND_RETURN_ERROR(
+        RTCErrorType::INTERNAL_ERROR,
+        "Failed to create transport answer, unsupported transport is missing");
   }
   RTC_CHECK(IsMediaContentOfType(offer_content, MEDIA_TYPE_UNSUPPORTED));
 
@@ -2983,13 +2991,15 @@ bool MediaSessionDescriptionFactory::AddUnsupportedContentForAnswer(
           offer_unsupported_description->media_type());
   unsupported_answer->set_protocol(offer_unsupported_description->protocol());
 
-  if (!AddTransportAnswer(media_description_options.mid,
-                          *(unsupported_transport.get()), answer)) {
-    return false;
+  auto error = AddTransportAnswer(media_description_options.mid,
+                                  *(unsupported_transport.get()), answer);
+  if (!error.ok()) {
+    return error;
   }
+
   answer->AddContent(media_description_options.mid, offer_content->type,
                      /*rejected=*/true, std::move(unsupported_answer));
-  return true;
+  return RTCError::OK();
 }
 
 void MediaSessionDescriptionFactory::ComputeAudioCodecsIntersectionAndUnion() {
