@@ -29,6 +29,7 @@ constexpr uint8_t kVp8Header[kCodecTypeBytesCount] = {'V', 'P', '8', '0'};
 constexpr uint8_t kVp9Header[kCodecTypeBytesCount] = {'V', 'P', '9', '0'};
 constexpr uint8_t kAv1Header[kCodecTypeBytesCount] = {'A', 'V', '0', '1'};
 constexpr uint8_t kH264Header[kCodecTypeBytesCount] = {'H', '2', '6', '4'};
+constexpr uint8_t kH265Header[kCodecTypeBytesCount] = {'H', '2', '6', '5'};
 
 // RTP standard required 90kHz clock rate.
 constexpr int32_t kRtpClockRateHz = 90000;
@@ -191,6 +192,9 @@ absl::optional<VideoCodecType> IvfFileReader::ParseCodecType(uint8_t* buffer,
   }
   if (memcmp(&buffer[start_pos], kH264Header, kCodecTypeBytesCount) == 0) {
     return VideoCodecType::kVideoCodecH264;
+  }
+  if (memcmp(&buffer[start_pos], kH265Header, kCodecTypeBytesCount) == 0) {
+    return VideoCodecType::kVideoCodecH265;
   }
   has_error_ = true;
   RTC_LOG(LS_ERROR) << "Unknown codec type: "

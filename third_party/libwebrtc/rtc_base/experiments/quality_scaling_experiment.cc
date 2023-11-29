@@ -81,6 +81,8 @@ QualityScalingExperiment::GetQpThresholds(VideoCodecType codec_type) {
       return GetThresholds(settings->vp8_low, settings->vp8_high, kMaxVp8Qp);
     case kVideoCodecVP9:
       return GetThresholds(settings->vp9_low, settings->vp9_high, kMaxVp9Qp);
+    case kVideoCodecH265:
+    //  TODO(bugs.webrtc.org/13485): Use H264 QP thresholds for now.
     case kVideoCodecH264:
       return GetThresholds(settings->h264_low, settings->h264_high, kMaxH264Qp);
     case kVideoCodecGeneric:

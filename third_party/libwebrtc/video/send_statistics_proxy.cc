@@ -47,6 +47,7 @@ enum HistogramCodecType {
   kVideoVp9 = 2,
   kVideoH264 = 3,
   kVideoAv1 = 4,
+  kVideoH265 = 5,
   kVideoMax = 64,
 };
 
@@ -76,6 +77,8 @@ HistogramCodecType PayloadNameToHistogramCodecType(
       return kVideoH264;
     case kVideoCodecAV1:
       return kVideoAv1;
+    case kVideoCodecH265:
+      return kVideoH265;
     default:
       return kVideoUnknown;
   }

@@ -92,6 +92,10 @@ bool IsBaseLayer(const RTPVideoHeader& video_header) {
       // TODO(kron): Implement logic for H264 once WebRTC supports temporal
       // layers for H264.
       break;
+    case kVideoCodecH265:
+      // TODO(bugs.webrtc.org/13485): Implement logic for H265 once WebRTC
+      // supports temporal layers for H265.
+      break;
     default:
       break;
   }

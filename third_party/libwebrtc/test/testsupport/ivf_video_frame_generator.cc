@@ -148,6 +148,9 @@ std::unique_ptr<VideoDecoder> IvfVideoFrameGenerator::CreateVideoDecoder(
   if (codec_type == VideoCodecType::kVideoCodecAV1) {
     return CreateDav1dDecoder();
   }
+  if (codec_type == VideoCodecType::kVideoCodecH265) {
+    // TODO(bugs.webrtc.org/13485): implement H265 decoder
+  }
   return nullptr;
 }
 
