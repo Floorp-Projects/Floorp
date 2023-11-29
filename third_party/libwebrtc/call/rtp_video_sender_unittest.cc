@@ -32,7 +32,6 @@
 #include "test/scenario/scenario.h"
 #include "test/scoped_key_value_config.h"
 #include "test/time_controller/simulated_time_controller.h"
-#include "video/send_delay_stats.h"
 #include "video/send_statistics_proxy.h"
 
 namespace webrtc {
@@ -62,17 +61,15 @@ class MockRtcpIntraFrameObserver : public RtcpIntraFrameObserver {
 };
 
 RtpSenderObservers CreateObservers(
-    RtcpRttStats* rtcp_rtt_stats,
     RtcpIntraFrameObserver* intra_frame_callback,
     ReportBlockDataObserver* report_block_data_observer,
     StreamDataCountersCallback* rtp_stats,
     BitrateStatisticsObserver* bitrate_observer,
     FrameCountObserver* frame_count_observer,
     RtcpPacketTypeCounterObserver* rtcp_type_observer,
-    SendSideDelayObserver* send_delay_observer,
-    SendPacketObserver* send_packet_observer) {
+    SendSideDelayObserver* send_delay_observer) {
   RtpSenderObservers observers;
-  observers.rtcp_rtt_stats = rtcp_rtt_stats;
+  observers.rtcp_rtt_stats = nullptr;
   observers.intra_frame_callback = intra_frame_callback;
   observers.rtcp_loss_notification_observer = nullptr;
   observers.report_block_data_observer = report_block_data_observer;
@@ -81,7 +78,7 @@ RtpSenderObservers CreateObservers(
   observers.frame_count_observer = frame_count_observer;
   observers.rtcp_type_observer = rtcp_type_observer;
   observers.send_delay_observer = send_delay_observer;
-  observers.send_packet_observer = send_packet_observer;
+  observers.send_packet_observer = nullptr;
   return observers;
 }
 
@@ -127,7 +124,6 @@ class RtpVideoSenderTestFixture {
                                             ssrcs,
                                             rtx_ssrcs,
                                             payload_type)),
-        send_delay_stats_(time_controller_.GetClock()),
         bitrate_config_(GetBitrateConfig()),
         transport_controller_(
             time_controller_.GetClock(),
@@ -148,9 +144,9 @@ class RtpVideoSenderTestFixture {
     router_ = std::make_unique<RtpVideoSender>(
         time_controller_.GetClock(), suspended_ssrcs, suspended_payload_states,
         config_.rtp, config_.rtcp_report_interval_ms, &transport_,
-        CreateObservers(nullptr, &encoder_feedback_, &stats_proxy_,
-                        &stats_proxy_, &stats_proxy_, frame_count_observer,
-                        &stats_proxy_, &stats_proxy_, &send_delay_stats_),
+        CreateObservers(&encoder_feedback_, &stats_proxy_, &stats_proxy_,
+                        &stats_proxy_, frame_count_observer, &stats_proxy_,
+                        &stats_proxy_),
         &transport_controller_, &event_log_, &retransmission_rate_limiter_,
         std::make_unique<FecControllerDefault>(time_controller_.GetClock()),
         nullptr, CryptoOptions{}, frame_transformer,
@@ -206,7 +202,6 @@ class RtpVideoSenderTestFixture {
   GlobalSimulatedTimeController time_controller_;
   RtcEventLogNull event_log_;
   VideoSendStream::Config config_;
-  SendDelayStats send_delay_stats_;
   BitrateConstraints bitrate_config_;
   RtpTransportControllerSend transport_controller_;
   SendStatisticsProxy stats_proxy_;
