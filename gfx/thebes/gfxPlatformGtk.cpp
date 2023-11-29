@@ -225,6 +225,11 @@ void gfxPlatformGtk::InitDmabufConfig() {
                          "FEATURE_FAILURE_REQUIRES_EGL"_ns);
   }
 
+  if (!gfxVars::WebglUseHardware()) {
+    feature.Disable(FeatureStatus::Blocklisted,
+                    "DMABuf disabled with software rendering", failureId);
+  }
+
   nsAutoCString drmRenderDevice;
   gfxInfo->GetDrmRenderDevice(drmRenderDevice);
   gfxVars::SetDrmRenderDevice(drmRenderDevice);
