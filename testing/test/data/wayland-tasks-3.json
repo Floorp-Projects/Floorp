@@ -1,0 +1,96 @@
+[
+  {
+    "id": "b7_ahjGtQ_-ZMNBG_hUZUw",
+    "label": "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-7",
+    "duration": 748218,
+    "result": "passed",
+    "state": "completed",
+    "classification": "not classified",
+    "classification_note": null,
+    "tags": {
+      "createdForUser": "ci@mozilla.org",
+      "kind": "test",
+      "label": "test-linux1804-64-tsan-qr/opt-mochitest-browser-chrome-swr-26",
+      "os": "linux",
+      "retrigger": "true",
+      "test-type": "mochitest",
+      "tests_grouped": "1",
+      "worker-implementation": "docker-worker"
+    },
+    "tier": 1,
+    "results": [
+      {
+        "group": "browser/components/urlbar/tests/browser-updateResults/browser.toml",
+        "ok": true,
+        "duration": 104656
+      }
+    ],
+    "errors": null,
+    "failure_types": {}
+  },
+  {
+    "id": "WVczuxkuSRKZg_jMiGyQsA",
+    "label": "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-7",
+    "duration": 2239064,
+    "result": "passed",
+    "state": "completed",
+    "classification": "not classified",
+    "classification_note": null,
+    "tags": {
+      "createdForUser": "ci@mozilla.org",
+      "kind": "test",
+      "label": "test-linux1804-64-qr/debug-mochitest-browser-chrome-swr-15",
+      "os": "linux",
+      "retrigger": "true",
+      "test-type": "mochitest",
+      "tests_grouped": "1",
+      "worker-implementation": "docker-worker"
+    },
+    "tier": 1,
+    "results": [
+      {
+        "group": "browser/components/urlbar/tests/browser-updateResults/browser.toml",
+        "ok": true,
+        "duration": 82817
+      }
+    ],
+    "errors": null,
+    "failure_types": {}
+  },
+  {
+    "id": "UOZUIVAaTZKmRwArq5WkDw",
+    "label": "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-7",
+    "duration": 1885869,
+    "result": "failed",
+    "state": "completed",
+    "classification": "not classified",
+    "classification_note": null,
+    "tags": {
+      "createdForUser": "ci@mozilla.org",
+      "kind": "test",
+      "label": "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-7",
+      "os": "linux",
+      "retrigger": "true",
+      "test-type": "mochitest",
+      "tests_grouped": "1",
+      "worker-implementation": "docker-worker"
+    },
+    "tier": 1,
+    "results": [
+      {
+        "group": "browser/components/urlbar/tests/browser-updateResults/browser.toml",
+        "ok": false,
+        "duration": 55841
+      }
+    ],
+    "errors": null,
+    "failure_types": {
+      "browser/components/urlbar/tests/browser-updateResults/browser.toml": [
+        [
+          "browser/components/urlbar/tests/browser-updateResults/browser_suggestedIndex_10_url_10_search.js",
+          "generic"
+        ]
+      ]
+    }
+  }
+]

@@ -1226,3 +1226,37 @@ def run_migration_tests(command_context, test_paths=None, **kwargs):
     for context in with_context:
         rv |= fmt.test_migration(command_context, obj_dir, **context)
     return rv
+
+
+@Command(
+    "manifest",
+    category="testing",
+    description="Manifest operations",
+    virtualenv_name="manifest",
+)
+def manifest(_command_context):
+    """
+    All functions implemented as subcommands.
+    """
+
+
+@SubCommand(
+    "manifest",
+    "skip-fails",
+    description="Update manifests to skip failing tests",
+)
+@CommandArgument("try_url", nargs=1, help="Treeherder URL for try (please use quotes)")
+@CommandArgument(
+    "-b", "--bugzilla", default=None, dest="bugzilla", help="Bugzilla instance"
+)
+@CommandArgument("-v", "--verbose", action="store_true", help="Verbose mode")
+@CommandArgument(
+    "-d",
+    "--dry-run",
+    action="store_true",
+    help="Determine manifest changes, but do not write them",
+)
+def skipfails(command_context, try_url, verbose=False, bugzilla=None, dry_run=False):
+    from skipfails import Skipfails
+
+    Skipfails(command_context, try_url, verbose, bugzilla, dry_run).run()

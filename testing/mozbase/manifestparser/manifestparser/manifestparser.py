@@ -55,6 +55,7 @@ class ManifestParser(object):
         finder=None,
         handle_defaults=True,
         use_toml=True,
+        document=False,
     ):
         """Creates a ManifestParser from the given manifest files.
 
@@ -80,17 +81,20 @@ class ManifestParser(object):
                                 defaults themselves via the manifest_defaults member
                                 variable in this case.
         :param use_toml: If True *.toml configration files will be used iff present in the same location as *.ini files (applies to included files as well). If False only *.ini files will be considered. (defaults to True)
+        :param document: If True *.toml configration will preserve the parsed document from `tomlkit` in self.source_documents[filename] (defaults to False)
         """
         self._defaults = defaults or {}
         self.tests = []
         self.manifest_defaults = {}
         self.source_files = set()
+        self.source_documents = {}  # source document for each filename (optional)
         self.strict = strict
         self.rootdir = rootdir
         self._root = None
         self.finder = finder
         self._handle_defaults = handle_defaults
         self.use_toml = use_toml
+        self.document = document
         self.logger = Logger()
         if manifests:
             self.read(*manifests)
@@ -225,12 +229,15 @@ class ManifestParser(object):
         defaults["here"] = here
 
         # read the configuration
-        sections, defaults = read_fn(
+        sections, defaults, document = read_fn(
             fp=fp,
             defaults=defaults,
             strict=self.strict,
             handle_defaults=self._handle_defaults,
+            document=self.document,
         )
+        if filename is not None:
+            self.source_documents[filename] = document
         if parentmanifest and filename:
             # A manifest can be read multiple times, via "include:", optionally
             # with section-specific variables. These variables only apply to

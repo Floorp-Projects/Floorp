@@ -84,6 +84,7 @@ vendored:third_party/python/sentry_sdk
 vendored:third_party/python/setuptools
 vendored:third_party/python/six
 vendored:third_party/python/toml
+vendored:third_party/python/tomlkit
 vendored:third_party/python/tqdm
 vendored:third_party/python/typing_extensions
 vendored:third_party/python/urllib3

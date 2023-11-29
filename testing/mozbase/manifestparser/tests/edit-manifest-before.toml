@@ -1,0 +1,13 @@
+# This is an example of comment at the top of a manifest
+
+["bug_100.js"]
+skip-if = ["debug"] # Bug 100
+
+["bug_3.js"]
+# This is a comment about Bug 3
+run-if = ["os == 'linux'"]
+
+['bug_20.js']
+
+["test_foo.html"]
+skip-if = ["os == 'mac' && !debug"] # bug 31415

@@ -12,7 +12,8 @@ skip-if = [
 
 [linuxtest]
 skip-if = [
-  "(os == 'mac') || (os == 'win')",
+  "os == 'mac'",
+  "os == 'win'",
 ]
 fail-if = [
   "toolkit == 'cocoa'",
