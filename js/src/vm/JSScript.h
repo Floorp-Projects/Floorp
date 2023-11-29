@@ -1030,6 +1030,9 @@ class ScriptSource {
   [[nodiscard]] bool setFilename(FrontendContext* fc, const char* filename);
   [[nodiscard]] bool setFilename(FrontendContext* fc, UniqueChars&& filename);
 
+  bool hasIntroducerFilename() const {
+    return introducerFilename_ ? true : false;
+  }
   const char* introducerFilename() const {
     return introducerFilename_ ? introducerFilename_.chars() : filename();
   }
