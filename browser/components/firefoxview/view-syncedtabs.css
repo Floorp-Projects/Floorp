@@ -35,7 +35,8 @@ h3.device-header {
   display: grid;
   align-items: center;
   cursor: inherit;
-  font-weight: 600;
+  font-weight: var(--fxview-card-header-font-weight);
+  font-size: 1em;
   grid-template-columns: min-content 1fr;
   gap: 0 16px;
   margin: 0;
@@ -44,7 +45,6 @@ h3.device-header {
 h3.device-header:not([slot=header]) {
   margin-block: 0.7em;
   margin-inline: 0.5em 0;
-  font-size: 1em;
 }
 
 h3.device-header:not([slot=header]):not(:first-child) {
