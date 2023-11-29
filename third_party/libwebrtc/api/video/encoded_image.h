@@ -83,9 +83,11 @@ class RTC_EXPORT EncodedImage {
   void SetRtpTimestamp(uint32_t timestamp) { timestamp_rtp_ = timestamp; }
   uint32_t RtpTimestamp() const { return timestamp_rtp_; }
 
-  // TODO(bugs.webrtc.org/9378): Delete two functions below.
-  void SetTimestamp(uint32_t timestamp) { SetRtpTimestamp(timestamp); }
-  uint32_t Timestamp() const { return RtpTimestamp(); }
+  // TODO(bugs.webrtc.org/9378): Delete two functions below after 2023-10-12
+  [[deprecated]] void SetTimestamp(uint32_t timestamp) {
+    SetRtpTimestamp(timestamp);
+  }
+  [[deprecated]] uint32_t Timestamp() const { return RtpTimestamp(); }
 
   void SetEncodeTime(int64_t encode_start_ms, int64_t encode_finish_ms);
 
