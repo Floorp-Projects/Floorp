@@ -88,7 +88,7 @@ std::vector<RtpSource> SourceTracker::GetSources() const {
   }
 
   std::sort(sources.begin(), sources.end(), [](const auto &a, const auto &b){
-    return a.timestamp_ms() > b.timestamp_ms();
+    return a.timestamp().ms() > b.timestamp().ms();
   });
 
   return sources;
