@@ -127,10 +127,10 @@ index 87ee39e142..0dc7dee71d 100644
      TimeDelta total_decode_time = TimeDelta::Zero();
      // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-totalprocessingdelay
 diff --git a/modules/video_coding/packet_buffer.cc b/modules/video_coding/packet_buffer.cc
-index 52ef5c2d85..be45db6ef0 100644
+index 420a200ba9..3a31d21048 100644
 --- a/modules/video_coding/packet_buffer.cc
 +++ b/modules/video_coding/packet_buffer.cc
-@@ -115,25 +115,27 @@ PacketBuffer::InsertResult PacketBuffer::InsertPacket(
+@@ -122,25 +122,27 @@ PacketBuffer::InsertResult PacketBuffer::InsertPacket(
    return result;
  }
  
@@ -161,7 +161,7 @@ index 52ef5c2d85..be45db6ef0 100644
        stored = nullptr;
      }
      ++first_seq_num_;
-@@ -149,6 +151,8 @@ void PacketBuffer::ClearTo(uint16_t seq_num) {
+@@ -156,6 +158,8 @@ void PacketBuffer::ClearTo(uint16_t seq_num) {
  
    received_padding_.erase(received_padding_.begin(),
                            received_padding_.lower_bound(seq_num));
