@@ -307,8 +307,8 @@ static void AddRtxCodec(const VideoCodec& rtx_codec,
   codecs->push_back(rtx_codec);
 }
 
-template <class T>
-static std::vector<std::string> GetCodecNames(const std::vector<T>& codecs) {
+static std::vector<std::string> GetCodecNames(
+    const std::vector<cricket::Codec>& codecs) {
   std::vector<std::string> codec_names;
   codec_names.reserve(codecs.size());
   for (const auto& codec : codecs) {
@@ -4706,9 +4706,8 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestSetAudioCodecs) {
 
 namespace {
 // Compare the two vectors of codecs ignoring the payload type.
-template <class Codec>
-bool CodecsMatch(const std::vector<Codec>& codecs1,
-                 const std::vector<Codec>& codecs2,
+bool CodecsMatch(const std::vector<cricket::Codec>& codecs1,
+                 const std::vector<cricket::Codec>& codecs2,
                  const webrtc::FieldTrialsView* field_trials) {
   if (codecs1.size() != codecs2.size()) {
     return false;
@@ -4759,14 +4758,11 @@ void TestAudioCodecsOffer(RtpTransceiverDirection direction) {
     // might eventually be used anything, but we don't know more at this
     // moment.
     if (acd->direction() == RtpTransceiverDirection::kSendOnly) {
-      EXPECT_TRUE(
-          CodecsMatch<AudioCodec>(send_codecs, acd->codecs(), &field_trials));
+      EXPECT_TRUE(CodecsMatch(send_codecs, acd->codecs(), &field_trials));
     } else if (acd->direction() == RtpTransceiverDirection::kRecvOnly) {
-      EXPECT_TRUE(
-          CodecsMatch<AudioCodec>(recv_codecs, acd->codecs(), &field_trials));
+      EXPECT_TRUE(CodecsMatch(recv_codecs, acd->codecs(), &field_trials));
     } else {
-      EXPECT_TRUE(CodecsMatch<AudioCodec>(sendrecv_codecs, acd->codecs(),
-                                          &field_trials));
+      EXPECT_TRUE(CodecsMatch(sendrecv_codecs, acd->codecs(), &field_trials));
     }
   }
 }
