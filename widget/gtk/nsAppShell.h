@@ -49,6 +49,11 @@ class nsAppShell : public nsBaseAppShell {
 
   static gboolean EventProcessorCallback(GIOChannel* source,
                                          GIOCondition condition, gpointer data);
+  void InstallTermSignalHandler();
+  static void TermSignalHandler(int signo);
+
+  void ScheduleQuitEvent();
+
   int mPipeFDs[2] = {0, 0};
   unsigned mTag = 0;
 
