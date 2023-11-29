@@ -10,10 +10,12 @@
 
 #include "modules/congestion_controller/goog_cc/delay_based_bwe.h"
 
-#include <string>
+#include <cstdint>
 
+#include "api/network_state_predictor.h"
 #include "api/transport/network_types.h"
-#include "modules/congestion_controller/goog_cc/acknowledged_bitrate_estimator.h"
+#include "api/units/data_rate.h"
+#include "api/units/time_delta.h"
 #include "modules/congestion_controller/goog_cc/delay_based_bwe_unittest_helper.h"
 #include "system_wrappers/include/clock.h"
 #include "test/gtest.h"

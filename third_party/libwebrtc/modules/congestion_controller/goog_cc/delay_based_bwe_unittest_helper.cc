@@ -10,12 +10,22 @@
 #include "modules/congestion_controller/goog_cc/delay_based_bwe_unittest_helper.h"
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <vector>
 
-#include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
+#include "api/transport/network_types.h"
+#include "api/units/data_rate.h"
+#include "api/units/data_size.h"
+#include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
+#include "modules/congestion_controller/goog_cc/acknowledged_bitrate_estimator_interface.h"
 #include "modules/congestion_controller/goog_cc/delay_based_bwe.h"
+#include "modules/congestion_controller/goog_cc/probe_bitrate_estimator.h"
 #include "rtc_base/checks.h"
+#include "test/field_trial.h"
 
 namespace webrtc {
 constexpr size_t kMtu = 1200;

@@ -11,18 +11,23 @@
 #include "modules/congestion_controller/goog_cc/probe_controller.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <initializer_list>
 #include <memory>
-#include <string>
+#include <vector>
 
 #include "absl/strings/match.h"
 #include "absl/types/optional.h"
+#include "api/field_trials_view.h"
+#include "api/rtc_event_log/rtc_event_log.h"
+#include "api/transport/network_types.h"
 #include "api/units/data_rate.h"
 #include "api/units/data_size.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "logging/rtc_event_log/events/rtc_event_probe_cluster_created.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/logging.h"
 #include "system_wrappers/include/metrics.h"
 

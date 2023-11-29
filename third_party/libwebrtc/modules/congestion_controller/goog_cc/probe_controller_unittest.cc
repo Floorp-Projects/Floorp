@@ -10,12 +10,14 @@
 #include "modules/congestion_controller/goog_cc/probe_controller.h"
 
 #include <memory>
+#include <vector>
 
+#include "absl/strings/string_view.h"
+#include "api/transport/network_types.h"
 #include "api/units/data_rate.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "logging/rtc_event_log/mock/mock_rtc_event_log.h"
-#include "rtc_base/logging.h"
 #include "system_wrappers/include/clock.h"
 #include "test/explicit_key_value_config.h"
 #include "test/gmock.h"
