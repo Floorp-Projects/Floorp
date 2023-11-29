@@ -21,7 +21,7 @@ class nsDirIndexParser : public nsIDirIndexParser {
   virtual ~nsDirIndexParser() = default;
 
   nsDirIndexParser() = default;
-  nsresult Init();
+  void Init();
 
  public:
   NS_DECL_ISUPPORTS
@@ -31,30 +31,23 @@ class nsDirIndexParser : public nsIDirIndexParser {
 
   static already_AddRefed<nsIDirIndexParser> CreateInstance() {
     RefPtr<nsDirIndexParser> parser = new nsDirIndexParser();
-    if (NS_FAILED(parser->Init())) {
-      return nullptr;
-    }
+    parser->Init();
     return parser.forget();
   }
 
   enum fieldType {
     FIELD_UNKNOWN = 0,  // MUST be 0
     FIELD_FILENAME,
-    FIELD_DESCRIPTION,
     FIELD_CONTENTLENGTH,
     FIELD_LASTMODIFIED,
-    FIELD_CONTENTTYPE,
     FIELD_FILETYPE
   };
 
  protected:
   nsCOMPtr<nsIDirIndexListener> mListener;
 
-  nsCString mEncoding;
-  nsCString mComment;
   nsCString mBuf;
   int32_t mLineStart{0};
-  bool mHasDescription{false};
   int mFormat[8]{-1};
 
   nsresult ProcessData(nsIRequest* aRequest);

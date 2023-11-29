@@ -38,24 +38,12 @@ interface nsIDirIndex : nsISupports
     attribute unsigned long type;
 
     /**
-     * The content type - may be null if it is unknown.
-     * Unspecified for directories
-     */
-    attribute ACString contentType;
-
-    /**
      * The fully qualified filename, expressed as a uri
      *
      * This is encoded with the encoding specified in
      * the nsIDirIndexParser, and is also escaped.
      */
     attribute ACString location;
-
-    /**
-     * A description for the filename, which should be
-     * displayed by a viewer
-     */
-    attribute AString description;
 
     /**
      * File size, with -1 meaning "unknown"

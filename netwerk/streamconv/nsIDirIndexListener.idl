@@ -43,16 +43,4 @@ interface nsIDirIndexParser : nsIStreamListener {
      * The interface to use as a callback for new entries
      */
     attribute nsIDirIndexListener listener;
-
-    /**
-     * The comment given, if any
-     * This result is only valid _after_ OnStopRequest has occurred,
-     * because it can occur anywhere in the datastream
-     */
-    readonly attribute string comment;
-
-    /**
-     * The encoding to use
-     */
-    attribute string encoding;
 };

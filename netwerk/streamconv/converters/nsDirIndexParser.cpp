@@ -17,94 +17,15 @@
 #include "nsEscape.h"
 #include "nsIDirIndex.h"
 #include "nsIInputStream.h"
-#include "nsITextToSubURI.h"
-#include "nsServiceManagerUtils.h"
-#include "mozilla/intl/LocaleService.h"
 
 using namespace mozilla;
-
-struct EncodingProp {
-  const char* const mKey;
-  NotNull<const Encoding*> mValue;
-};
-
-static StaticRefPtr<nsITextToSubURI> gTextToSubURI;
-
-static const EncodingProp localesFallbacks[] = {
-    {"ar", WINDOWS_1256_ENCODING}, {"ba", WINDOWS_1251_ENCODING},
-    {"be", WINDOWS_1251_ENCODING}, {"bg", WINDOWS_1251_ENCODING},
-    {"cs", WINDOWS_1250_ENCODING}, {"el", ISO_8859_7_ENCODING},
-    {"et", WINDOWS_1257_ENCODING}, {"fa", WINDOWS_1256_ENCODING},
-    {"he", WINDOWS_1255_ENCODING}, {"hr", WINDOWS_1250_ENCODING},
-    {"hu", ISO_8859_2_ENCODING},   {"ja", SHIFT_JIS_ENCODING},
-    {"kk", WINDOWS_1251_ENCODING}, {"ko", EUC_KR_ENCODING},
-    {"ku", WINDOWS_1254_ENCODING}, {"ky", WINDOWS_1251_ENCODING},
-    {"lt", WINDOWS_1257_ENCODING}, {"lv", WINDOWS_1257_ENCODING},
-    {"mk", WINDOWS_1251_ENCODING}, {"pl", ISO_8859_2_ENCODING},
-    {"ru", WINDOWS_1251_ENCODING}, {"sah", WINDOWS_1251_ENCODING},
-    {"sk", WINDOWS_1250_ENCODING}, {"sl", ISO_8859_2_ENCODING},
-    {"sr", WINDOWS_1251_ENCODING}, {"tg", WINDOWS_1251_ENCODING},
-    {"th", WINDOWS_874_ENCODING},  {"tr", WINDOWS_1254_ENCODING},
-    {"tt", WINDOWS_1251_ENCODING}, {"uk", WINDOWS_1251_ENCODING},
-    {"vi", WINDOWS_1258_ENCODING}, {"zh", GBK_ENCODING}};
-
-static NotNull<const Encoding*>
-GetFTPFallbackEncodingDoNotAddNewCallersToThisFunction() {
-  nsAutoCString locale;
-  mozilla::intl::LocaleService::GetInstance()->GetAppLocaleAsBCP47(locale);
-
-  // Let's lower case the string just in case unofficial language packs
-  // don't stick to conventions.
-  ToLowerCase(locale);  // ASCII lowercasing with CString input!
-
-  // Special case Traditional Chinese before throwing away stuff after the
-  // language itself. Today we only ship zh-TW, but be defensive about
-  // possible future values.
-  if (locale.EqualsLiteral("zh-tw") || locale.EqualsLiteral("zh-hk") ||
-      locale.EqualsLiteral("zh-mo") || locale.EqualsLiteral("zh-hant")) {
-    return BIG5_ENCODING;
-  }
-
-  // Throw away regions and other variants to accommodate weird stuff seen
-  // in telemetry--apparently unofficial language packs.
-  int32_t hyphenIndex = locale.FindChar('-');
-  if (hyphenIndex >= 0) {
-    locale.Truncate(hyphenIndex);
-  }
-
-  size_t index;
-  if (BinarySearchIf(
-          localesFallbacks, 0, ArrayLength(localesFallbacks),
-          [&locale](const EncodingProp& aProperty) {
-            return Compare(locale, nsDependentCString(aProperty.mKey));
-          },
-          &index)) {
-    return localesFallbacks[index].mValue;
-  }
-  return WINDOWS_1252_ENCODING;
-}
 
 NS_IMPL_ISUPPORTS(nsDirIndexParser, nsIRequestObserver, nsIStreamListener,
                   nsIDirIndexParser)
 
-nsresult nsDirIndexParser::Init() {
+void nsDirIndexParser::Init() {
   mLineStart = 0;
-  mHasDescription = false;
   mFormat[0] = -1;
-  auto encoding = GetFTPFallbackEncodingDoNotAddNewCallersToThisFunction();
-  encoding->Name(mEncoding);
-
-  nsresult rv = NS_OK;
-  if (!gTextToSubURI) {
-    nsCOMPtr<nsITextToSubURI> service =
-        do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      gTextToSubURI = service;
-      ClearOnShutdown(&gTextToSubURI);
-    }
-  }
-
-  return rv;
 }
 
 NS_IMETHODIMP
@@ -116,30 +37,6 @@ nsDirIndexParser::SetListener(nsIDirIndexListener* aListener) {
 NS_IMETHODIMP
 nsDirIndexParser::GetListener(nsIDirIndexListener** aListener) {
   *aListener = do_AddRef(mListener).take();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDirIndexParser::GetComment(char** aComment) {
-  *aComment = ToNewCString(mComment, mozilla::fallible);
-
-  if (!*aComment) return NS_ERROR_OUT_OF_MEMORY;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDirIndexParser::SetEncoding(const char* aEncoding) {
-  mEncoding.Assign(aEncoding);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDirIndexParser::GetEncoding(char** aEncoding) {
-  *aEncoding = ToNewCString(mEncoding, mozilla::fallible);
-
-  if (!*aEncoding) return NS_ERROR_OUT_OF_MEMORY;
-
   return NS_OK;
 }
 
@@ -158,10 +55,8 @@ nsDirIndexParser::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
 
 nsDirIndexParser::Field nsDirIndexParser::gFieldTable[] = {
     {"Filename", FIELD_FILENAME},
-    {"Description", FIELD_DESCRIPTION},
     {"Content-Length", FIELD_CONTENTLENGTH},
     {"Last-Modified", FIELD_LASTMODIFIED},
-    {"Content-Type", FIELD_CONTENTTYPE},
     {"File-Type", FIELD_FILETYPE},
     {nullptr, FIELD_UNKNOWN}};
 
@@ -188,10 +83,6 @@ void nsDirIndexParser::ParseFormat(const char* aFormatStr) {
 
     // Okay, we're gonna monkey with the nsStr. Bold!
     name.SetLength(nsUnescapeCount(name.BeginWriting()));
-
-    // All tokens are case-insensitive -
-    // http://www.mozilla.org/projects/netlib/dirindexformat.html
-    if (name.LowerCaseEqualsLiteral("description")) mHasDescription = true;
 
     for (Field* i = gFieldTable; i->mName; ++i) {
       if (name.EqualsIgnoreCase(i->mName)) {
@@ -272,40 +163,8 @@ void nsDirIndexParser::ParseData(nsIDirIndex* aIdx, char* aDataStr,
       case FIELD_FILENAME: {
         // don't unescape at this point, so that UnEscapeAndConvert() can
         filename = value;
-
-        bool success = false;
-
-        nsAutoString entryuri;
-
-        if (RefPtr<nsITextToSubURI> textToSub = gTextToSubURI) {
-          nsAutoString result;
-          if (NS_SUCCEEDED(
-                  textToSub->UnEscapeAndConvert(mEncoding, filename, result))) {
-            if (!result.IsEmpty()) {
-              aIdx->SetLocation(filename);
-              if (!mHasDescription) aIdx->SetDescription(result);
-              success = true;
-            }
-          } else {
-            NS_WARNING("UnEscapeAndConvert error");
-          }
-        }
-
-        if (!success) {
-          // if unsuccessfully at charset conversion, then
-          // just fallback to unescape'ing in-place
-          // XXX - this shouldn't be using UTF8, should it?
-          // when can we fail to get the service, anyway? - bbaetz
-          aIdx->SetLocation(filename);
-          if (!mHasDescription) {
-            aIdx->SetDescription(NS_ConvertUTF8toUTF16(value));
-          }
-        }
+        aIdx->SetLocation(filename);
       } break;
-      case FIELD_DESCRIPTION:
-        nsUnescape(value);
-        aIdx->SetDescription(NS_ConvertUTF8toUTF16(value));
-        break;
       case FIELD_CONTENTLENGTH: {
         int64_t len;
         int32_t status = PR_sscanf(value, "%lld", &len);
@@ -322,9 +181,6 @@ void nsDirIndexParser::ParseData(nsIDirIndex* aIdx, char* aDataStr,
           aIdx->SetLastModified(tm);
         }
       } break;
-      case FIELD_CONTENTTYPE:
-        aIdx->SetContentType(nsDependentCString(value));
-        break;
       case FIELD_FILETYPE:
         // unescape in-place
         nsUnescape(value);
@@ -395,16 +251,10 @@ nsresult nsDirIndexParser::ProcessData(nsIRequest* aRequest) {
             // 100. Human-readable comment line. Ignore
           } else if (buf[2] == '1' && buf[3] == ':') {
             // 101. Human-readable information line.
-            mComment.Append(buf + 4);
-
             char* value = ((char*)buf) + 4;
             nsUnescape(value);
             mListener->OnInformationAvailable(aRequest,
                                               NS_ConvertUTF8toUTF16(value));
-
-          } else if (buf[2] == '2' && buf[3] == ':') {
-            // 102. Human-readable information line, HTML.
-            mComment.Append(buf + 4);
           }
         }
       } else if (buf[0] == '2') {
@@ -418,18 +268,6 @@ nsresult nsDirIndexParser::ProcessData(nsIRequest* aRequest) {
 
             ParseData(idx, ((char*)buf) + 4, lineLen - 4);
             mListener->OnIndexAvailable(aRequest, idx);
-          }
-        }
-      } else if (buf[0] == '3') {
-        if (buf[1] == '0') {
-          if (buf[2] == '0' && buf[3] == ':') {
-            // 300. Self-referring URL
-          } else if (buf[2] == '1' && buf[3] == ':') {
-            // 301. OUR EXTENSION - encoding
-            int i = 4;
-            while (buf[i] && nsCRT::IsAsciiSpace(buf[i])) ++i;
-
-            if (buf[i]) SetEncoding(buf + i);
           }
         }
       }

@@ -22,18 +22,6 @@ nsDirIndex::SetType(uint32_t aType) {
 }
 
 NS_IMETHODIMP
-nsDirIndex::GetContentType(nsACString& aContentType) {
-  aContentType = mContentType;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDirIndex::SetContentType(const nsACString& aContentType) {
-  mContentType = aContentType;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDirIndex::GetLocation(nsACString& aLocation) {
   aLocation = mLocation;
   return NS_OK;
@@ -42,18 +30,6 @@ nsDirIndex::GetLocation(nsACString& aLocation) {
 NS_IMETHODIMP
 nsDirIndex::SetLocation(const nsACString& aLocation) {
   mLocation = aLocation;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDirIndex::GetDescription(nsAString& aDescription) {
-  aDescription = mDescription;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDirIndex::SetDescription(const nsAString& aDescription) {
-  mDescription = aDescription;
   return NS_OK;
 }
 
