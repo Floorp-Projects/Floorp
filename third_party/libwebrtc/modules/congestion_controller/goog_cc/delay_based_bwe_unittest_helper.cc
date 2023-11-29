@@ -166,6 +166,7 @@ DelayBasedBweTest::DelayBasedBweTest()
       stream_generator_(new test::StreamGenerator(1e6,  // Capacity.
                                                   clock_.TimeInMicroseconds())),
       arrival_time_offset_ms_(0),
+      next_sequence_number_(0),
       first_update_(true) {}
 
 DelayBasedBweTest::~DelayBasedBweTest() {}
@@ -201,6 +202,7 @@ void DelayBasedBweTest::IncomingFeedback(Timestamp receive_time,
   packet.sent_packet.send_time = send_time;
   packet.sent_packet.size = DataSize::Bytes(payload_size);
   packet.sent_packet.pacing_info = pacing_info;
+  packet.sent_packet.sequence_number = next_sequence_number_++;
   if (packet.sent_packet.pacing_info.probe_cluster_id !=
       PacedPacketInfo::kNotAProbe)
     probe_bitrate_estimator_->HandleProbeAndEstimateBitrate(packet);
