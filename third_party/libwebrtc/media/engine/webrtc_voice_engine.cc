@@ -1873,7 +1873,7 @@ webrtc::RTCError WebRtcVoiceSendChannel::SetRtpSendParameters(
     // TODO(orphis): Support mixed-codec simulcast
     if (parameters.encodings[0].codec && send_codec &&
         !send_codec->MatchesRtpCodec(*parameters.encodings[0].codec)) {
-      RTC_LOG(LS_ERROR) << "Trying to change codec to "
+      RTC_LOG(LS_VERBOSE) << "Trying to change codec to "
                         << parameters.encodings[0].codec->name;
       auto matched_codec =
           absl::c_find_if(send_codecs_, [&](auto negotiated_codec) {
