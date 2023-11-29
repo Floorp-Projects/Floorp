@@ -488,7 +488,7 @@ AudioMixer::Source::AudioFrameInfo ChannelReceive::GetAudioFrameWithInfo(
     absl::optional<TimeDelta> local_capture_clock_offset;
     if (local_capture_clock_offset_q32x32.has_value()) {
       local_capture_clock_offset = TimeDelta::Millis(
-          UQ32x32ToInt64Ms(*local_capture_clock_offset_q32x32));
+          Q32x32ToInt64Ms(*local_capture_clock_offset_q32x32));
     }
     new_packet_info.set_local_capture_clock_offset(local_capture_clock_offset);
     packet_infos.push_back(std::move(new_packet_info));
