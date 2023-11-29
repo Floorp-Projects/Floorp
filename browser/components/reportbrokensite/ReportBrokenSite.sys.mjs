@@ -376,18 +376,16 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
       state.reset();
     });
 
-    state.cancelButton.addEventListener("command", ({ target, view }) => {
-      const multiview = target.closest("panelmultiview");
-      view.ownerGlobal.PanelMultiView.forNode(multiview).hidePopup();
+    state.cancelButton.addEventListener("command", ({ target }) => {
+      target.ownerGlobal.CustomizableUI.hidePanelForNode(target);
       state.reset();
     });
 
     state.sendMoreInfoLink.addEventListener("click", async event => {
       event.preventDefault();
-      const tabbrowser = event.view.ownerGlobal.gBrowser;
-      const multiview = event.target.closest("panelmultiview");
+      const tabbrowser = event.target.ownerGlobal.gBrowser;
       this.#recordGleanEvent("sendMoreInfo");
-      event.view.ownerGlobal.PanelMultiView.forNode(multiview).hidePopup();
+      event.target.ownerGlobal.CustomizableUI.hidePanelForNode(event.target);
       await this.#openWebCompatTab(tabbrowser);
       state.reset();
     });
@@ -441,9 +439,8 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
   }
 
   #initReportSentView(state) {
-    state.okayButton.addEventListener("command", ({ target, view }) => {
-      const multiview = target.closest("panelmultiview");
-      view.ownerGlobal.PanelMultiView.forNode(multiview).hidePopup();
+    state.okayButton.addEventListener("command", ({ target }) => {
+      target.ownerGlobal.CustomizableUI.hidePanelForNode(target);
     });
   }
 
@@ -465,7 +462,12 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
 
     state.mainView.hidden = false;
 
-    state.sendMoreInfoLink.hidden = !this.#sendMoreInfoEnabled;
+    const { sendMoreInfoLink } = state;
+    const { sendMoreInfoEndpoint } = this;
+    if (sendMoreInfoLink.href !== sendMoreInfoEndpoint) {
+      sendMoreInfoLink.href = sendMoreInfoEndpoint;
+    }
+    sendMoreInfoLink.hidden = !this.#sendMoreInfoEnabled;
 
     state.reasonInput.hidden = !this.#reasonEnabled;
 
@@ -646,7 +648,7 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
 
   open(event) {
     const { target } = event.sourceEvent;
-    const { selectedBrowser } = event.view.ownerGlobal.gBrowser;
+    const { selectedBrowser } = target.ownerGlobal.gBrowser;
     const { ownerGlobal } = selectedBrowser;
     const { document } = ownerGlobal;
 
