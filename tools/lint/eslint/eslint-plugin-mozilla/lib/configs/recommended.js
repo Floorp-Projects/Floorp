@@ -115,7 +115,12 @@ module.exports = {
         browser: false,
         worker: true,
       },
-      files: ["**/*.worker.js", "**/*.worker.mjs"],
+      files: [
+        // Most files should use the `.worker.` format to be consistent with
+        // other items like `.sys.mjs`, but we allow simply calling the file
+        // "worker" as well.
+        "**/?(*.)worker.?(m)js",
+      ],
     },
   ],
 
