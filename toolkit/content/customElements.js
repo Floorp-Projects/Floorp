@@ -830,6 +830,8 @@
           );
         case "moz-toggle":
           return import("chrome://global/content/elements/moz-toggle.mjs");
+        case "moz-card":
+          return import("chrome://global/content/elements/moz-card.mjs");
       }
       throw new Error(`Unknown custom element name (${name})`);
     }
