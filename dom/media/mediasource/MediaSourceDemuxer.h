@@ -45,8 +45,8 @@ class MediaSourceDemuxer : public MediaDataDemuxer,
   bool ShouldComputeStartTime() const override { return false; }
 
   /* interface for TrackBuffersManager */
-  void AttachSourceBuffer(RefPtr<TrackBuffersManager>& aSourceBuffer);
-  void DetachSourceBuffer(RefPtr<TrackBuffersManager>& aSourceBuffer);
+  void AttachSourceBuffer(const RefPtr<TrackBuffersManager>& aSourceBuffer);
+  void DetachSourceBuffer(const RefPtr<TrackBuffersManager>& aSourceBuffer);
   TaskQueue* GetTaskQueue() { return mTaskQueue; }
   void NotifyInitDataArrived();
 
