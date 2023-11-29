@@ -862,7 +862,7 @@ class GitRepository(Repository):
     def get_commit_patches(self, nodes: List[str]) -> List[bytes]:
         """Return the contents of the patch `node` in the VCS' standard format."""
         return [
-            self._run("format-patch", node, "-1", "--stdout").encode("utf-8")
+            self._run("format-patch", node, "-1", "--always", "--stdout").encode("utf-8")
             for node in nodes
         ]
 
