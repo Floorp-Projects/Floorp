@@ -8926,6 +8926,21 @@ shopping:
       - 'firefox'
     record_in_processes:
       - main
+  disabled_ads:
+    bug_numbers:
+      - 1858540
+    description: >
+      Indicates if the user has manually disabled ads. Set during shopping
+      component init and updated when changed in browser.
+    expires: "134"
+    kind: boolean
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
 
 power:
   cpu_time_bogus_values:
