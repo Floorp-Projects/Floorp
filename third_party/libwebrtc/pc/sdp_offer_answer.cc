@@ -3619,11 +3619,7 @@ RTCError SdpOfferAnswerHandler::ValidateSessionDescription(
 
   // Validate that there are no collisions of bundled header extensions ids.
   error = ValidateBundledRtpHeaderExtensions(*sdesc->description());
-  RTC_HISTOGRAM_BOOLEAN("WebRTC.PeerConnection.ValidBundledExtensionIds",
-                        error.ok());
-  // TODO(bugs.webrtc.org/14782): remove killswitch after rollout.
-  if (!error.ok() && !pc_->trials().IsDisabled(
-                         "WebRTC-PreventBundleHeaderExtensionIdCollision")) {
+  if (!error.ok()) {
     return error;
   }
 
