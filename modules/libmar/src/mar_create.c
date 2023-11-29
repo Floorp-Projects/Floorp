@@ -250,13 +250,13 @@ int refresh_product_info_block(const char* path,
 
       fclose(fp);
       return 0;
-    } else {
-      /* This is not the additional block you're looking for. Move along. */
-      if (fseek(fp, additionalBlockSize, SEEK_CUR)) {
-        fprintf(stderr, "ERROR: Could not seek past current block.\n");
-        fclose(fp);
-        return -1;
-      }
+    }
+
+    /* This is not the additional block you're looking for. Move along. */
+    if (fseek(fp, additionalBlockSize, SEEK_CUR)) {
+      fprintf(stderr, "ERROR: Could not seek past current block.\n");
+      fclose(fp);
+      return -1;
     }
   }
 
