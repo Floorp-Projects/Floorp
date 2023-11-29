@@ -40,6 +40,7 @@ XPIDL_SOURCES += [
     "nsIAccessibleTextSelectionChangeEvent.idl",
     "nsIAccessibleTypes.idl",
     "nsIAccessibleValue.idl",
+    "nsIAccessibleVirtualCursorChangeEvent.idl",
 ]
 
 XPIDL_MODULE = "accessibility"

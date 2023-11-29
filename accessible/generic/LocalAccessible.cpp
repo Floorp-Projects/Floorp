@@ -915,8 +915,7 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
           AccCaretMoveEvent* event = downcast_accEvent(aEvent);
           ipcDoc->SendCaretMoveEvent(
               id, event->GetCaretOffset(), event->IsSelectionCollapsed(),
-              event->IsAtEndOfLine(), event->GetGranularity(),
-              event->IsFromUserInput());
+              event->IsAtEndOfLine(), event->GetGranularity());
           break;
         }
         case nsIAccessibleEvent::EVENT_TEXT_INSERTED:
@@ -934,6 +933,16 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
           AccSelChangeEvent* selEvent = downcast_accEvent(aEvent);
           ipcDoc->SendSelectionEvent(id, selEvent->Widget()->ID(),
                                      aEvent->GetEventType());
+          break;
+        }
+        case nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED: {
+          AccVCChangeEvent* vcEvent = downcast_accEvent(aEvent);
+          LocalAccessible* position = vcEvent->NewAccessible();
+          LocalAccessible* oldPosition = vcEvent->OldAccessible();
+          ipcDoc->SendVirtualCursorChangeEvent(
+              id, oldPosition ? oldPosition->ID() : 0,
+              position ? position->ID() : 0, vcEvent->Reason(),
+              vcEvent->IsFromUserInput());
           break;
         }
         case nsIAccessibleEvent::EVENT_FOCUS:
@@ -1029,9 +1038,9 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
       // AccessibleWrap::UpdateSystemCaretFor currently needs to call
       // HyperTextAccessible::GetCaretRect again to get the widget and there's
       // no point calling it twice.
-      PlatformCaretMoveEvent(
-          target, event->GetCaretOffset(), event->IsSelectionCollapsed(),
-          event->GetGranularity(), rect, event->IsFromUserInput());
+      PlatformCaretMoveEvent(target, event->GetCaretOffset(),
+                             event->IsSelectionCollapsed(),
+                             event->GetGranularity(), rect);
       break;
     }
     case nsIAccessibleEvent::EVENT_TEXT_INSERTED:
@@ -1049,6 +1058,15 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
       AccSelChangeEvent* selEvent = downcast_accEvent(aEvent);
       PlatformSelectionEvent(target, selEvent->Widget(),
                              aEvent->GetEventType());
+      break;
+    }
+    case nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED: {
+#ifdef ANDROID
+      AccVCChangeEvent* vcEvent = downcast_accEvent(aEvent);
+      PlatformVirtualCursorChangeEvent(
+          target, vcEvent->OldAccessible(), vcEvent->NewAccessible(),
+          vcEvent->Reason(), vcEvent->IsFromUserInput());
+#endif
       break;
     }
     case nsIAccessibleEvent::EVENT_FOCUS: {

@@ -165,10 +165,10 @@ bool SessionAccessibility::Pivot(int32_t aID, int32_t aGranularity,
           [this, self, aID, aGranularity, aForward, aInclusive] {
             MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
             if (Accessible* _acc = GetAccessibleByID(aID)) {
-              MOZ_ASSERT(_acc->IsLocal());
-              if (Accessible* result = AccessibleWrap::DoPivot(
-                      _acc, aGranularity, aForward, aInclusive)) {
-                SendAccessibilityFocusedEvent(result);
+              MOZ_ASSERT(_acc && _acc->IsLocal());
+              if (LocalAccessible* localAcc = _acc->AsLocal()) {
+                static_cast<AccessibleWrap*>(localAcc)->PivotTo(
+                    aGranularity, aForward, aInclusive);
               }
             }
           });
