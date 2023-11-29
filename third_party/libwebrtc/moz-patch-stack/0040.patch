@@ -1,54 +1,38 @@
 From: Nico Grunbaum <na-g@nostrum.com>
-Date: Thu, 18 Feb 2021 17:23:00 -0800
-Subject: Bug 1654112 - fix device_info_ds pid and Windows constants includes;
- r=pehrsons
+Date: Wed, 10 Feb 2021 12:24:00 -0800
+Subject: Bug 1654112 - Use newer thread run callback, and adapt
+ PlatformUIThread; r=pehrsons
 
-Upstreaming bug 1697385
-
-Differential Revision: https://phabricator.services.mozilla.com/D107899
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/24809d566449907edea49ea47528065ad0f76910
+Differential Revision: https://phabricator.services.mozilla.com/D107879
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/bb6417a4cfac1416a8e2565bd68b66c40be4827b
 ---
- modules/video_capture/windows/device_info_ds.cc | 3 ++-
- modules/video_capture/windows/device_info_ds.h  | 6 +++++-
- 2 files changed, 7 insertions(+), 2 deletions(-)
+ rtc_base/platform_thread.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
-index 9d22f42f4d..f6927281f3 100644
---- a/modules/video_capture/windows/device_info_ds.cc
-+++ b/modules/video_capture/windows/device_info_ds.cc
-@@ -172,7 +172,8 @@ int32_t DeviceInfoDS::GetDeviceName(uint32_t deviceNumber,
-                                     char* deviceUniqueIdUTF8,
-                                     uint32_t deviceUniqueIdUTF8Length,
-                                     char* productUniqueIdUTF8,
--                                    uint32_t productUniqueIdUTF8Length) {
-+                                    uint32_t productUniqueIdUTF8Length,
-+                                    pid_t* pid) {
-   MutexLock lock(&_apiLock);
-   const int32_t result = GetDeviceInfo(
-       deviceNumber, deviceNameUTF8, deviceNameLength, deviceUniqueIdUTF8,
-diff --git a/modules/video_capture/windows/device_info_ds.h b/modules/video_capture/windows/device_info_ds.h
-index ed2a726d6f..e6dfaed366 100644
---- a/modules/video_capture/windows/device_info_ds.h
-+++ b/modules/video_capture/windows/device_info_ds.h
-@@ -12,8 +12,11 @@
- #define MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_DEVICE_INFO_DS_H_
+diff --git a/rtc_base/platform_thread.h b/rtc_base/platform_thread.h
+index befd61849d..5b7c6884fe 100644
+--- a/rtc_base/platform_thread.h
++++ b/rtc_base/platform_thread.h
+@@ -21,8 +21,13 @@
+ #include "absl/types/optional.h"
+ #include "rtc_base/platform_thread_types.h"
  
- #include <dshow.h>
-+#include <Ks.h>
-+#include <dbt.h>
++#include "rtc_base/deprecated/recursive_critical_section.h"
++
+ namespace rtc {
  
- #include "modules/video_capture/device_info_impl.h"
-+#include "modules/video_capture/video_capture.h"
- #include "modules/video_capture/video_capture_impl.h"
++// Bug 1691641
++class PlatformUIThread;
++
+ enum class ThreadPriority {
+   kLow = 1,
+   kNormal,
+@@ -113,6 +118,8 @@ class PlatformThread final {
  
- namespace webrtc {
-@@ -47,7 +50,8 @@ class DeviceInfoDS : public DeviceInfoImpl {
-                         char* deviceUniqueIdUTF8,
-                         uint32_t deviceUniqueIdUTF8Length,
-                         char* productUniqueIdUTF8,
--                        uint32_t productUniqueIdUTF8Length) override;
-+                        uint32_t productUniqueIdUTF8Length,
-+                        pid_t* pid) override;
+   absl::optional<Handle> handle_;
+   bool joinable_ = false;
++  // Bug 1691641
++  friend PlatformUIThread;
+ };
  
-   /*
-    * Display OS /capture device specific settings dialog
+ }  // namespace rtc

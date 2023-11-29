@@ -1,149 +1,73 @@
 From: Michael Froman <mjfroman@mac.com>
-Date: Wed, 29 Nov 2023 12:10:23 -0600
-Subject: (tmp-cherry-pick) Revert "Always use AV1 specific bitrate limits when
- spatial layers are used." (030c6ff43f)
+Date: Wed, 29 Nov 2023 12:20:21 -0600
+Subject: (tmp-cherry-pick) Revert "Remove device_status dimensions for perf
+ bot" (ffd656694a)
 
-This reverts commit d2d165d47cc7a2aaa53596ad8055ddc30b76101b.
+This reverts commit cb5f65054538ee3c17f4c73799ffb89c515c9f4f.
 
-Reason for revert: All the regressions!
+Reason for revert: Bot check now runs that flips this dimension on the bot so we can now actually use this dimension.
 
 Original change's description:
-> Always use AV1 specific bitrate limits when spatial layers are used.
+> Remove device_status dimensions for perf bot
 >
-> Bug: b/295129711
-> Change-Id: I93569027bea34c43e2a3c4de0875e8bbddd5b64e
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/319283
-> Reviewed-by: Michael Horowitz <mhoro@webrtc.org>
-> Commit-Queue: Philip Eliasson <philipel@webrtc.org>
-> Reviewed-by: Sergey Silkin <ssilkin@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#40719}
+> Bug: b/299080080
+> Change-Id: I647d9fae65593d7c78e124278c085be8d9c1b61b
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/319860
+> Reviewed-by: Jeremy Leconte <jleconte@google.com>
+> Commit-Queue: Christoffer Jansson <jansson@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#40729}
 
-Bug: b/295129711
-Change-Id: I5776edbaba33e86eb10414062ef2b29510f40b8d
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/319880
-Commit-Queue: Philip Eliasson <philipel@webrtc.org>
+Bug: b/299080080
+Change-Id: I2ce3da17e182fb9428e022ce540aa51fe417bcd9
+No-Presubmit: true
+No-Tree-Checks: true
+No-Try: true
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/319883
+Reviewed-by: Jeremy Leconte <jleconte@google.com>
 Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Cr-Commit-Position: refs/heads/main@{#40730}
+Commit-Queue: Christoffer Jansson <jansson@google.com>
+Cr-Commit-Position: refs/heads/main@{#40735}
 ---
- .../video_coding/codecs/av1/av1_svc_config.cc | 13 +++++-
- .../codecs/av1/av1_svc_config_unittest.cc     | 43 +++++++++++++++----
- .../resolution_bitrate_limits_tests.cc        | 18 ++++++++
- 3 files changed, 65 insertions(+), 9 deletions(-)
+ infra/specs/internal.client.webrtc.json | 1 +
+ infra/specs/mixins.pyl                  | 3 ++-
+ infra/specs/mixins_webrtc.pyl           | 1 +
+ 3 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/modules/video_coding/codecs/av1/av1_svc_config.cc b/modules/video_coding/codecs/av1/av1_svc_config.cc
-index 2acadbd0d3..c480737096 100644
---- a/modules/video_coding/codecs/av1/av1_svc_config.cc
-+++ b/modules/video_coding/codecs/av1/av1_svc_config.cc
-@@ -118,10 +118,21 @@ bool SetAv1SvcConfig(VideoCodec& video_codec,
-     spatial_layer.active = true;
-   }
- 
-+  if (info.num_spatial_layers == 1) {
-+    SpatialLayer& spatial_layer = video_codec.spatialLayers[0];
-+    spatial_layer.minBitrate = video_codec.minBitrate;
-+    spatial_layer.maxBitrate = video_codec.maxBitrate;
-+    spatial_layer.targetBitrate =
-+        (video_codec.minBitrate + video_codec.maxBitrate) / 2;
-+    return true;
-+  }
-+
-   for (int sl_idx = 0; sl_idx < info.num_spatial_layers; ++sl_idx) {
-     SpatialLayer& spatial_layer = video_codec.spatialLayers[sl_idx];
-+    // minBitrate and maxBitrate formulas are copied from vp9 settings and
-+    // are not yet tuned for av1.
-     const int num_pixels = spatial_layer.width * spatial_layer.height;
--    int min_bitrate_kbps = (480.0 * std::sqrt(num_pixels) - 95'000.0) / 1000.0;
-+    int min_bitrate_kbps = (600.0 * std::sqrt(num_pixels) - 95'000.0) / 1000.0;
-     spatial_layer.minBitrate = std::max(min_bitrate_kbps, 20);
-     spatial_layer.maxBitrate = 50 + static_cast<int>(1.6 * num_pixels / 1000.0);
-     spatial_layer.targetBitrate =
-diff --git a/modules/video_coding/codecs/av1/av1_svc_config_unittest.cc b/modules/video_coding/codecs/av1/av1_svc_config_unittest.cc
-index 3a4af05e40..7ba7986f0d 100644
---- a/modules/video_coding/codecs/av1/av1_svc_config_unittest.cc
-+++ b/modules/video_coding/codecs/av1/av1_svc_config_unittest.cc
-@@ -123,21 +123,48 @@ TEST(Av1SvcConfigTest, SetsNumberOfTemporalLayers) {
-   EXPECT_EQ(video_codec.spatialLayers[0].numberOfTemporalLayers, 3);
- }
- 
--TEST(Av1SvcConfigTest, SetsBitratesForMultipleSpatialLayers) {
-+TEST(Av1SvcConfigTest, CopiesMinMaxBitrateForSingleSpatialLayer) {
-   VideoCodec video_codec;
-   video_codec.codecType = kVideoCodecAV1;
--  video_codec.width = 640;
--  video_codec.height = 360;
--  video_codec.SetScalabilityMode(ScalabilityMode::kL2T2);
-+  video_codec.SetScalabilityMode(ScalabilityMode::kL1T3);
-+  video_codec.minBitrate = 100;
-+  video_codec.maxBitrate = 500;
- 
-   EXPECT_TRUE(SetAv1SvcConfig(video_codec, /*num_temporal_layers=*/kDontCare,
-                               /*num_spatial_layers=*/kDontCare));
- 
--  EXPECT_EQ(video_codec.spatialLayers[0].minBitrate, 20u);
--  EXPECT_EQ(video_codec.spatialLayers[0].maxBitrate, 142u);
-+  EXPECT_EQ(video_codec.spatialLayers[0].minBitrate, 100u);
-+  EXPECT_EQ(video_codec.spatialLayers[0].maxBitrate, 500u);
-+  EXPECT_LE(video_codec.spatialLayers[0].minBitrate,
-+            video_codec.spatialLayers[0].targetBitrate);
-+  EXPECT_LE(video_codec.spatialLayers[0].targetBitrate,
-+            video_codec.spatialLayers[0].maxBitrate);
-+}
-+
-+TEST(Av1SvcConfigTest, SetsBitratesForMultipleSpatialLayers) {
-+  VideoCodec video_codec = GetDefaultVideoCodec();
-+  video_codec.SetScalabilityMode(ScalabilityMode::kL3T3);
-+
-+  EXPECT_TRUE(SetAv1SvcConfig(video_codec, /*num_temporal_layers=*/kDontCare,
-+                              /*num_spatial_layers=*/kDontCare));
- 
--  EXPECT_EQ(video_codec.spatialLayers[1].minBitrate, 135u);
--  EXPECT_EQ(video_codec.spatialLayers[1].maxBitrate, 418u);
-+  EXPECT_GT(video_codec.spatialLayers[0].minBitrate, 0u);
-+  EXPECT_LE(video_codec.spatialLayers[0].minBitrate,
-+            video_codec.spatialLayers[0].targetBitrate);
-+  EXPECT_LE(video_codec.spatialLayers[0].targetBitrate,
-+            video_codec.spatialLayers[0].maxBitrate);
-+
-+  EXPECT_GT(video_codec.spatialLayers[1].minBitrate, 0u);
-+  EXPECT_LE(video_codec.spatialLayers[1].minBitrate,
-+            video_codec.spatialLayers[1].targetBitrate);
-+  EXPECT_LE(video_codec.spatialLayers[1].targetBitrate,
-+            video_codec.spatialLayers[1].maxBitrate);
-+
-+  EXPECT_GT(video_codec.spatialLayers[2].minBitrate, 0u);
-+  EXPECT_LE(video_codec.spatialLayers[2].minBitrate,
-+            video_codec.spatialLayers[2].targetBitrate);
-+  EXPECT_LE(video_codec.spatialLayers[2].targetBitrate,
-+            video_codec.spatialLayers[2].maxBitrate);
- }
- 
- TEST(Av1SvcConfigTest, ReduceSpatialLayersOnInsufficentInputResolution) {
-diff --git a/video/end_to_end_tests/resolution_bitrate_limits_tests.cc b/video/end_to_end_tests/resolution_bitrate_limits_tests.cc
-index b62d702dd7..e110fb759c 100644
---- a/video/end_to_end_tests/resolution_bitrate_limits_tests.cc
-+++ b/video/end_to_end_tests/resolution_bitrate_limits_tests.cc
-@@ -502,6 +502,24 @@ TEST_F(ResolutionBitrateLimitsWithScalabilityModeTest,
-   RunBaseTest(&test);
- }
- 
-+TEST_F(ResolutionBitrateLimitsWithScalabilityModeTest,
-+       OneStreamLimitsAppliedForAv1OneSpatialLayer) {
-+  webrtc::test::ScopedFieldTrials field_trials(
-+      "WebRTC-GetEncoderInfoOverride/"
-+      "frame_size_pixels:921600,"
-+      "min_start_bitrate_bps:0,"
-+      "min_bitrate_bps:32000,"
-+      "max_bitrate_bps:133000/");
-+
-+  InitEncodeTest test(
-+      "AV1", {{.active = true, .scalability_mode = ScalabilityMode::kL1T1}},
-+      // Expectations:
-+      {{.pixels = 1280 * 720,
-+        .eq_bitrate = {DataRate::KilobitsPerSec(32),
-+                       DataRate::KilobitsPerSec(133)}}});
-+  RunBaseTest(&test);
-+}
-+
- TEST_F(ResolutionBitrateLimitsWithScalabilityModeTest,
-        LimitsAppliedForAv1Simulcast) {
-   webrtc::test::ScopedFieldTrials field_trials(
+diff --git a/infra/specs/internal.client.webrtc.json b/infra/specs/internal.client.webrtc.json
+index 7f23682b12..67033dff3f 100644
+--- a/infra/specs/internal.client.webrtc.json
++++ b/infra/specs/internal.client.webrtc.json
+@@ -485,6 +485,7 @@
+             }
+           ],
+           "dimensions": {
++            "device_status": "available",
+             "id": "mac-254-e504",
+             "os": "iOS-15.7.8",
+             "pool": "WebRTC"
+diff --git a/infra/specs/mixins.pyl b/infra/specs/mixins.pyl
+index 57855eae82..1fcb3d206e 100644
+--- a/infra/specs/mixins.pyl
++++ b/infra/specs/mixins.pyl
+@@ -79,7 +79,8 @@
+       'dimensions': {
+         'os': 'iOS-15.7.8',
+         'pool': 'WebRTC',
+-        'id': 'mac-254-e504'
++        'id': 'mac-254-e504',
++        'device_status': 'available'
+       }
+     }
+   },
+diff --git a/infra/specs/mixins_webrtc.pyl b/infra/specs/mixins_webrtc.pyl
+index ea871d79f2..ded32c10e3 100644
+--- a/infra/specs/mixins_webrtc.pyl
++++ b/infra/specs/mixins_webrtc.pyl
+@@ -60,6 +60,7 @@
+         'os': 'iOS-15.7.8',
+         'pool': 'WebRTC',
+         'id': 'mac-254-e504',
++        'device_status': 'available'
+       },
+     },
+   },
