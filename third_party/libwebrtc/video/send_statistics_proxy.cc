@@ -1382,6 +1382,13 @@ void SendStatisticsProxy::FrameCountUpdated(const FrameCounts& frame_counts,
   stats->frame_counts = frame_counts;
 }
 
+void SendStatisticsProxy::OnSendPacket(uint32_t ssrc, Timestamp capture_time) {
+  [[maybe_unused]] TimeDelta send_delay = clock_->CurrentTime() - capture_time;
+  // TODO(danilchap): Calculate average and max send_delay per ssrc over last
+  // second, Use that measurement instead of whatever is received in
+  // SendSideDelayUpdated below.
+}
+
 void SendStatisticsProxy::SendSideDelayUpdated(int avg_delay_ms,
                                                int max_delay_ms,
                                                uint32_t ssrc) {
