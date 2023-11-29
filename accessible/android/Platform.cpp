@@ -193,24 +193,6 @@ void a11y::PlatformShowHideEvent(Accessible* aTarget, Accessible* aParent,
 
 void a11y::PlatformSelectionEvent(Accessible*, Accessible*, uint32_t) {}
 
-void a11y::PlatformVirtualCursorChangeEvent(Accessible* aTarget,
-                                            Accessible* aOldPosition,
-                                            Accessible* aNewPosition,
-                                            int16_t aReason, bool aFromUser) {
-  if (!aNewPosition || !aFromUser) {
-    return;
-  }
-
-  RefPtr<SessionAccessibility> sessionAcc =
-      SessionAccessibility::GetInstanceFor(aTarget);
-
-  if (!sessionAcc) {
-    return;
-  }
-
-  sessionAcc->SendAccessibilityFocusedEvent(aNewPosition);
-}
-
 void a11y::PlatformScrollingEvent(Accessible* aTarget, uint32_t aEventType,
                                   uint32_t aScrollX, uint32_t aScrollY,
                                   uint32_t aMaxScrollX, uint32_t aMaxScrollY) {

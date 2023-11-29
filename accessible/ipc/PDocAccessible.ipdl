@@ -70,11 +70,6 @@ parent:
   async SelectionEvent(uint64_t aID, uint64_t aWidgetID, uint32_t aType);
   async RoleChangedEvent(role aRole, uint8_t aRoleMapEntryIndex);
   async FocusEvent(uint64_t aID, LayoutDeviceIntRect aCaretRect);
-  async VirtualCursorChangeEvent(uint64_t aID,
-                                 uint64_t aOldPosition,
-                                 uint64_t aPosition,
-                                 int16_t aReason,
-                                 bool aFromUservcEvent);
   async ScrollingEvent(uint64_t aID, uint64_t aType,
                        uint32_t aScrollX, uint32_t aScrollY,
                        uint32_t aMaxScrollX, uint32_t aMaxScrollY);

@@ -1006,7 +1006,7 @@ already_AddRefed<DOMStringList> nsAccessibilityService::GetStringStates(
 
 void nsAccessibilityService::GetStringEventType(uint32_t aEventType,
                                                 nsAString& aString) {
-  NS_ASSERTION(
+  static_assert(
       nsIAccessibleEvent::EVENT_LAST_ENTRY == ArrayLength(kEventTypeNames),
       "nsIAccessibleEvent constants are out of sync to kEventTypeNames");
 
