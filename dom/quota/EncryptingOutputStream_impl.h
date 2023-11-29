@@ -18,6 +18,8 @@
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsIAsyncOutputStream.h"
+#include "nsIRandomGenerator.h"
+#include "nsServiceManagerUtils.h"
 
 namespace mozilla::dom::quota {
 template <typename CipherStrategy>
@@ -205,6 +207,26 @@ nsresult EncryptingOutputStream<CipherStrategy>::FlushToBaseStream() {
   if (!mNextByte) {
     // Nothing to do.
     return NS_OK;
+  }
+
+  if (mNextByte < mEncryptedBlock->MaxPayloadLength()) {
+    if (!mRandomGenerator) {
+      mRandomGenerator =
+          do_GetService("@mozilla.org/security/random-generator;1");
+      if (NS_WARN_IF(!mRandomGenerator)) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+
+    const auto payload = mEncryptedBlock->MutablePayload();
+
+    const auto unusedPayload = payload.From(mNextByte);
+
+    nsresult rv = mRandomGenerator->GenerateRandomBytesInto(
+        unusedPayload.Elements(), unusedPayload.Length());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   // XXX The compressing stream implementation this was based on wrote a stream
