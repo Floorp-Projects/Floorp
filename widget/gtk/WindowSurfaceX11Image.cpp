@@ -35,7 +35,21 @@ WindowSurfaceX11Image::WindowSurfaceX11Image(Display* aDisplay, Window aWindow,
       mTransparencyBitmap(nullptr),
       mTransparencyBitmapWidth(0),
       mTransparencyBitmapHeight(0),
-      mIsShaped(aIsShaped) {}
+      mIsShaped(aIsShaped),
+      mWindowParent(0) {
+  if (!mIsShaped) {
+    return;
+  }
+
+  Window root, *children = nullptr;
+  unsigned int childrenNum;
+  if (XQueryTree(mDisplay, mWindow, &root, &mWindowParent, &children,
+                 &childrenNum)) {
+    if (children) {
+      XFree((char*)children);
+    }
+  }
+}
 
 WindowSurfaceX11Image::~WindowSurfaceX11Image() {
   if (mTransparencyBitmap) {
@@ -206,6 +220,10 @@ void WindowSurfaceX11Image::ApplyTransparencyBitmap() {
         mTransparencyBitmapHeight);
     XShapeCombineMask(xDisplay, xDrawable, ShapeBounding, 0, 0, maskPixmap,
                       ShapeSet);
+    if (mWindowParent) {
+      XShapeCombineMask(mDisplay, mWindowParent, ShapeBounding, 0, 0,
+                        maskPixmap, ShapeSet);
+    }
     XFreePixmap(xDisplay, maskPixmap);
   }
 }
