@@ -663,6 +663,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
             ("fcp", ["paintTiming", "first-contentful-paint"]),
             ("dcf", "timeToDomContentFlushed"),
             ("loadtime", "loadEventEnd"),
+            ("largestContentfulPaint", ["largestContentfulPaint", "renderTime"]),
         )
 
         def _get_raptor_val(mdict, mname, retval=False):
