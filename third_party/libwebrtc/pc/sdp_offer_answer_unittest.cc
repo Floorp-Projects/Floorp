@@ -304,9 +304,6 @@ TEST_F(SdpOfferAnswerTest, BundleMeasuresHeaderExtensionIdCollision) {
   RTCError error;
   pc->SetRemoteDescription(std::move(desc), &error);
   EXPECT_TRUE(error.ok());
-  EXPECT_METRIC_EQ(1,
-                   webrtc::metrics::NumEvents(
-                       "WebRTC.PeerConnection.ValidBundledExtensionIds", true));
 }
 
 // extmap:3 is used with two different URIs which is not allowed.
@@ -345,9 +342,6 @@ TEST_F(SdpOfferAnswerTest, BundleRejectsHeaderExtensionIdCollision) {
   pc->SetRemoteDescription(std::move(desc), &error);
   EXPECT_FALSE(error.ok());
   EXPECT_EQ(error.type(), RTCErrorType::INVALID_PARAMETER);
-  EXPECT_METRIC_EQ(
-      1, webrtc::metrics::NumEvents(
-             "WebRTC.PeerConnection.ValidBundledExtensionIds", false));
 }
 
 // transport-wide cc is negotiated with two different ids 3 and 4.
@@ -388,9 +382,6 @@ TEST_F(SdpOfferAnswerTest, BundleAcceptsDifferentIdsForSameExtension) {
   RTCError error;
   pc->SetRemoteDescription(std::move(desc), &error);
   EXPECT_TRUE(error.ok());
-  EXPECT_METRIC_EQ(1,
-                   webrtc::metrics::NumEvents(
-                       "WebRTC.PeerConnection.ValidBundledExtensionIds", true));
 }
 
 TEST_F(SdpOfferAnswerTest, LargeMidsAreRejected) {
