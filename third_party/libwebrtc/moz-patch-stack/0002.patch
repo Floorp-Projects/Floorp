@@ -336,7 +336,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fc01107426c3adebb
  .../video_capture/linux/device_info_v4l2.h    |  18 +-
  modules/video_capture/video_capture.h         |  41 +++-
  .../video_capture/video_capture_factory.cc    |   8 -
- modules/video_capture/video_capture_impl.cc   |  36 +++-
+ modules/video_capture/video_capture_impl.cc   |  34 +++-
  modules/video_capture/video_capture_impl.h    |   6 +-
  .../codecs/vp9/libvpx_vp9_encoder.cc          |  52 +++++
  .../codecs/vp9/libvpx_vp9_encoder.h           |   4 +
@@ -346,7 +346,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fc01107426c3adebb
  test/fuzzers/rtp_packet_fuzzer.cc             |   5 +
  test/vcm_capturer.cc                          |   2 +-
  webrtc.gni                                    |   2 +-
- 39 files changed, 574 insertions(+), 86 deletions(-)
+ 39 files changed, 573 insertions(+), 85 deletions(-)
 
 diff --git a/api/rtp_headers.cc b/api/rtp_headers.cc
 index 0573e54684..40d4690397 100644
@@ -1347,7 +1347,7 @@ index 563ef5abd2..e085ac2df8 100644
  
  VideoCaptureModule::DeviceInfo* VideoCaptureFactory::CreateDeviceInfo(
 diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index a1461fb687..66fd0a0ebe 100644
+index 428253bf23..66fd0a0ebe 100644
 --- a/modules/video_capture/video_capture_impl.cc
 +++ b/modules/video_capture/video_capture_impl.cc
 @@ -77,7 +77,6 @@ VideoCaptureImpl::VideoCaptureImpl()
@@ -1414,15 +1414,6 @@ index a1461fb687..66fd0a0ebe 100644
    }
  
    return 0;
-@@ -214,7 +225,7 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
-       buffer.get()->StrideV(), 0, 0,  // No Cropping
-       width, height, target_width, target_height, rotation_mode,
-       ConvertVideoType(frameInfo.videoType));
--  if (conversionResult < 0) {
-+  if (conversionResult != 0) {
-     RTC_LOG(LS_ERROR) << "Failed to convert capture frame from type "
-                       << static_cast<int>(frameInfo.videoType) << "to I420.";
-     return -1;
 @@ -229,6 +240,13 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
            .build();
    captureFrame.set_ntp_time_ms(captureTime);
