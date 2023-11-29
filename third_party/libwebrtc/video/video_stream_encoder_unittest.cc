@@ -8822,6 +8822,9 @@ class VideoStreamEncoderWithRealEncoderTest
             mock_encoder_factory_for_multiplex_.get(), SdpVideoFormat("VP8"),
             false);
         break;
+      case kVideoCodecH265:
+        // TODO(bugs.webrtc.org/13485): Use a fake encoder
+        break;
       default:
         RTC_DCHECK_NOTREACHED();
     }

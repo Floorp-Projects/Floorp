@@ -266,6 +266,12 @@ void EncoderOvershootDetector::UpdateHistograms() {
       RTC_HISTOGRAMS_COUNTS_10000(index, overshoot_histogram_prefix + "H264",
                                   average_overshoot_percent);
       break;
+    case VideoCodecType::kVideoCodecH265:
+      RTC_HISTOGRAMS_COUNTS_10000(index, rmse_histogram_prefix + "H265",
+                                  bitrate_rmse);
+      RTC_HISTOGRAMS_COUNTS_10000(index, overshoot_histogram_prefix + "H265",
+                                  average_overshoot_percent);
+      break;
     case VideoCodecType::kVideoCodecGeneric:
     case VideoCodecType::kVideoCodecMultiplex:
       break;

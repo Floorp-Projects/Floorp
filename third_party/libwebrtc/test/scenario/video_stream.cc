@@ -51,6 +51,8 @@ uint8_t CodecTypeToPayloadType(VideoCodecType codec_type) {
       return VideoTestConstants::kPayloadTypeVP9;
     case VideoCodecType::kVideoCodecH264:
       return VideoTestConstants::kPayloadTypeH264;
+    case VideoCodecType::kVideoCodecH265:
+      return VideoTestConstants::kPayloadTypeH265;
     default:
       RTC_DCHECK_NOTREACHED();
   }
@@ -66,6 +68,8 @@ std::string CodecTypeToCodecName(VideoCodecType codec_type) {
       return cricket::kVp9CodecName;
     case VideoCodecType::kVideoCodecH264:
       return cricket::kH264CodecName;
+    case VideoCodecType::kVideoCodecH265:
+      return cricket::kH265CodecName;
     default:
       RTC_DCHECK_NOTREACHED();
   }
@@ -203,6 +207,7 @@ CreateEncoderSpecificSettings(VideoStreamConfig config) {
       return CreateVp9SpecificSettings(config);
     case Codec::kVideoCodecGeneric:
     case Codec::kVideoCodecAV1:
+    case Codec::kVideoCodecH265:
       return nullptr;
     case Codec::kVideoCodecMultiplex:
       RTC_DCHECK_NOTREACHED();

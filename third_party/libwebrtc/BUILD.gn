@@ -309,6 +309,10 @@ config("common_config") {
     defines += [ "RTC_ENABLE_VP9" ]
   }
 
+  if (rtc_use_h265) {
+    defines += [ "RTC_ENABLE_H265" ]
+  }
+
   if (rtc_include_dav1d_in_internal_decoder_factory) {
     defines += [ "RTC_DAV1D_IN_INTERNAL_DECODER_FACTORY" ]
   }

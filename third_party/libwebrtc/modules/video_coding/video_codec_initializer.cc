@@ -344,6 +344,9 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
                     kMaxTemporalStreams);
       break;
     }
+    case kVideoCodecH265:
+      // TODO(bugs.webrtc.org/13485)
+      break;
     default:
       // TODO(pbos): Support encoder_settings codec-agnostically.
       RTC_DCHECK(!config.encoder_specific_settings)
