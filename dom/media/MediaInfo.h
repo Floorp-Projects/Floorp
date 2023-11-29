@@ -295,8 +295,6 @@ class TrackInfo {
   bool IsText() const { return !!GetAsTextInfo(); }
   TrackType GetType() const { return mType; }
 
-  nsCString ToString() const;
-
   bool virtual IsValid() const = 0;
 
   virtual UniquePtr<TrackInfo> Clone() const = 0;
@@ -499,8 +497,6 @@ class AudioInfo : public TrackInfo {
   AudioInfo* GetAsAudioInfo() override { return this; }
 
   const AudioInfo* GetAsAudioInfo() const override { return this; }
-
-  nsCString ToString() const;
 
   UniquePtr<TrackInfo> Clone() const override {
     return MakeUnique<AudioInfo>(*this);
