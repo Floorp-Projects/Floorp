@@ -142,8 +142,10 @@ nsresult SVGUseElement::Clone(dom::NodeInfo* aNodeInfo,
   nsresult rv1 = it->Init();
   nsresult rv2 = const_cast<SVGUseElement*>(this)->CopyInnerTo(it);
 
-  // SVGUseElement specific portion - record who we cloned from
-  it->mOriginal = const_cast<SVGUseElement*>(this);
+  if (aNodeInfo->GetDocument()->CloningForSVGUse()) {
+    // SVGUseElement specific portion - record who we cloned from
+    it->mOriginal = const_cast<SVGUseElement*>(this);
+  }
 
   if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2)) {
     kungFuDeathGrip.swap(*aResult);
@@ -543,19 +545,21 @@ void SVGUseElement::LookupHref() {
     return;
   }
 
-  nsCOMPtr<nsIURI> originURI =
-      mOriginal ? mOriginal->GetBaseURI() : GetBaseURI();
-  nsCOMPtr<nsIURI> baseURI =
-      nsContentUtils::IsLocalRefURL(href)
-          ? SVGObserverUtils::GetBaseURLForLocalRef(this, originURI)
-          : originURI;
+  Element* treeToWatch = mOriginal ? mOriginal.get() : this;
+  if (nsContentUtils::IsLocalRefURL(href)) {
+    RefPtr<nsAtom> idAtom = NS_AtomizeMainThread(Substring(href, 1));
+    mReferencedElementTracker.ResetWithID(*treeToWatch, idAtom);
+    return;
+  }
 
+  nsCOMPtr<nsIURI> baseURI = treeToWatch->GetBaseURI();
   nsCOMPtr<nsIURI> targetURI;
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
                                             GetComposedDoc(), baseURI);
   nsIReferrerInfo* referrer =
       OwnerDoc()->ReferrerInfoForInternalCSSAndSVGResources();
-  mReferencedElementTracker.ResetToURIFragmentID(this, targetURI, referrer);
+  mReferencedElementTracker.ResetToURIFragmentID(treeToWatch, targetURI,
+                                                 referrer);
 }
 
 void SVGUseElement::TriggerReclone() {
