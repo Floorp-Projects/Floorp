@@ -2573,6 +2573,20 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             startTagTemplateInHead(elementName, attributes);
                             attributes = null; // CPP
                             break starttagloop;
+                        case HR:
+                            if (isCurrent("option")) {
+                                pop();
+                            }
+                            if (isCurrent("optgroup")) {
+                                pop();
+                            }
+                            appendVoidElementToCurrent(elementName, attributes);
+                            selfClosing = false;
+                            // [NOCPP[
+                            voidElement = true;
+                            // ]NOCPP]
+                            attributes = null; // CPP
+                            break starttagloop;
                         default:
                             errStrayStartTag(name);
                             break starttagloop;
@@ -5455,6 +5469,25 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         // ]NOCPP]
         );
         push(node);
+    }
+
+    private void appendVoidElementToCurrent(
+            ElementName elementName, HtmlAttributes attributes)
+            throws SAXException {
+        @Local String popName = elementName.getName();
+        // [NOCPP[
+        checkAttributes(attributes, "http://www.w3.org/1999/xhtml");
+        if (!elementName.isInterned()) {
+            popName = checkPopName(popName);
+        }
+        // ]NOCPP]
+        T currentNode = nodeFromStackWithBlinkCompat(currentPtr);
+        T elt = createElement("http://www.w3.org/1999/xhtml", popName, attributes, currentNode
+                // CPPONLY: , htmlCreator(elementName.getHtmlCreator())
+                );
+        appendElement(elt, currentNode);
+        elementPushed("http://www.w3.org/1999/xhtml", popName, elt);
+        elementPopped("http://www.w3.org/1999/xhtml", popName, elt);
     }
 
     private void appendVoidElementToCurrentMayFoster(

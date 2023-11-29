@@ -274,7 +274,13 @@ export var SelectParentHelper = {
 
     this._currentZoom = zoom;
     this._currentMenulist = menulist;
-    this.populateChildren(menulist, items, uniqueItemStyles, selectedIndex);
+    this.populateChildren(
+      menulist,
+      custom,
+      items,
+      uniqueItemStyles,
+      selectedIndex
+    );
   },
 
   open(browser, menulist, rect, isOpenedViaTouch, selectParentActor) {
@@ -476,6 +482,7 @@ export var SelectParentHelper = {
    */
   populateChildren(
     menulist,
+    custom,
     options,
     uniqueOptionStyles,
     selectedIndex,
@@ -489,26 +496,19 @@ export var SelectParentHelper = {
     let ariaOwns = "";
     for (let option of options) {
       let isOptGroup = option.isOptGroup;
-      let item = element.ownerDocument.createXULElement(
-        isOptGroup ? "menucaption" : "menuitem"
-      );
+      let isHR = option.isHR;
+
+      let xulElement = "menuitem";
       if (isOptGroup) {
-        item.setAttribute("role", "group");
+        xulElement = "menucaption";
       }
-      item.setAttribute("label", option.textContent);
-      item.className = `ContentSelectDropdown-item-${option.styleIndex}`;
+      if (isHR) {
+        xulElement = "menuseparator";
+      }
+
+      let item = element.ownerDocument.createXULElement(xulElement);
       item.hidden =
         option.display == "none" || (parentElement && parentElement.hidden);
-      // Keep track of which options are hidden by page content, so we can avoid
-      // showing them on search input.
-      item.hiddenByContent = item.hidden;
-      item.setAttribute("tooltiptext", option.tooltip);
-
-      if (uniqueOptionStyles[option.styleIndex].customStyling) {
-        item.setAttribute("customoptionstyling", "true");
-      } else {
-        item.removeAttribute("customoptionstyling");
-      }
 
       if (parentElement) {
         // In the menupopup, the optgroup is a sibling of its contained options.
@@ -523,6 +523,30 @@ export var SelectParentHelper = {
       element.appendChild(item);
       nthChildIndex++;
 
+      if (isHR) {
+        item.style.color = (custom && option.color) || "";
+
+        // Continue early as HRs do not have other attributes.
+        continue;
+      }
+
+      item.className = `ContentSelectDropdown-item-${option.styleIndex}`;
+
+      if (isOptGroup) {
+        item.setAttribute("role", "group");
+      }
+      item.setAttribute("label", option.textContent);
+      // Keep track of which options are hidden by page content, so we can avoid
+      // showing them on search input.
+      item.hiddenByContent = item.hidden;
+      item.setAttribute("tooltiptext", option.tooltip);
+
+      if (uniqueOptionStyles[option.styleIndex].customStyling) {
+        item.setAttribute("customoptionstyling", "true");
+      } else {
+        item.removeAttribute("customoptionstyling");
+      }
+
       // A disabled optgroup disables all of its child options.
       let isDisabled = isGroupDisabled || option.disabled;
       if (isDisabled) {
@@ -532,6 +556,7 @@ export var SelectParentHelper = {
       if (isOptGroup) {
         nthChildIndex = this.populateChildren(
           menulist,
+          custom,
           option.children,
           uniqueOptionStyles,
           selectedIndex,
