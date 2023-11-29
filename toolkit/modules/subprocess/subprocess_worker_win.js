@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+/* eslint-env mozilla/chrome-worker */
 /* exported Process */
 
 /* import-globals-from subprocess_shared.js */

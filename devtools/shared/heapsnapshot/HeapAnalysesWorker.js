@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env worker */
+
 // This is a worker which reads offline heap snapshots into memory and performs
 // heavyweight analyses on them without blocking the main thread. A
 // HeapAnalysesWorker is owned and communicated with by a HeapAnalysesClient

@@ -18,7 +18,7 @@ EXTRA_PP_JS_MODULES += [
 EXTRA_JS_MODULES.reader = [
     "JSDOMParser.js",
     "Readability.js",
-    "Reader.worker.js",
+    "ReaderWorker.js",
     "ReaderWorker.sys.mjs",
 ]
 

@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env worker */
+
 // FIXME: This file is currently not covered by TypeScript, there is no "@ts-check" comment.
 // We should fix this once we know how to deal with the module imports below.
 // (Maybe once Firefox supports worker module? Bug 1247687)
