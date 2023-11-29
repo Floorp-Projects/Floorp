@@ -587,7 +587,6 @@ export var SessionStore = {
       // SSB windows should be not restored, so we don't need to keep their state.
       if (win.tabs[0]) {
         if (win.tabs[0].floorpSSB) {
-          console.log("SSB window state removed");
           aState.windows.splice(i, 1);
           if (aState.selectedWindow > i) {
             aState.selectedWindow--;
