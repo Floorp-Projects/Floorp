@@ -709,7 +709,7 @@ function makeSearchResult(
 ) {
   // Tail suggestion common cases, handled here to reduce verbosity in tests.
   if (tail) {
-    if (!tailPrefix && !isRichSuggestion) {
+    if (!tailPrefix) {
       tailPrefix = "… ";
     }
     if (!tailOffsetIndex) {
@@ -764,12 +764,6 @@ function makeSearchResult(
       result.payload.suggestion.toLocaleLowerCase();
     result.payload.trending = trending;
     result.isRichSuggestion = isRichSuggestion;
-  }
-
-  if (isRichSuggestion) {
-    result.payload.icon =
-      "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
-    result.payload.description = "description";
   }
 
   if (providerName) {
