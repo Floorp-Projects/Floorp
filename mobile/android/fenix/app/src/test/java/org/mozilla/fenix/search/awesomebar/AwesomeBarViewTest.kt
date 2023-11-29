@@ -795,7 +795,6 @@ class AwesomeBarViewTest {
         val settings: Settings = mockk(relaxed = true)
         val url = Uri.parse("https://www.test.com")
         every { activity.settings() } returns settings
-        every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
         val state = getSearchProviderState(
             showSessionSuggestionsForCurrentEngine = false,
             searchEngineSource = SearchEngineSource.Shortcut(
@@ -836,10 +835,10 @@ class AwesomeBarViewTest {
 
     @Test
     fun `GIVEN private browsing mode and needing to show tabs suggestions WHEN configuring providers THEN don't add the tabs provider`() {
-        val appStore = AppStore(AppState(mode = BrowsingMode.Private))
+        val privateAppStore = AppStore(AppState(mode = BrowsingMode.Private))
         val settings: Settings = mockk(relaxed = true)
         every { activity.settings() } returns settings
-        every { any<Activity>().components.appStore } returns appStore
+        every { any<Activity>().components.appStore } returns privateAppStore
         val state = getSearchProviderState(
             searchEngineSource = SearchEngineSource.Shortcut(mockk(relaxed = true)),
         )
@@ -898,7 +897,6 @@ class AwesomeBarViewTest {
         val settings: Settings = mockk(relaxed = true)
         val url = Uri.parse("https://www.test.com")
         every { activity.settings() } returns settings
-        every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
         val state = getSearchProviderState(
             showSyncedTabsSuggestionsForCurrentEngine = false,
             searchEngineSource = SearchEngineSource.Shortcut(
@@ -943,7 +941,6 @@ class AwesomeBarViewTest {
         val settings: Settings = mockk(relaxed = true)
         val url = Uri.parse("https://www.test.com")
         every { activity.settings() } returns settings
-        every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
         val state = getSearchProviderState(
             showBookmarksSuggestionsForCurrentEngine = false,
             searchEngineSource = SearchEngineSource.Shortcut(
@@ -1037,7 +1034,6 @@ class AwesomeBarViewTest {
         val settings: Settings = mockk(relaxed = true)
         val url = Uri.parse("https://www.test.com")
         every { activity.settings() } returns settings
-        every { activity.browsingModeManager.mode } returns BrowsingMode.Normal
         val state = getSearchProviderState(
             searchEngineSource = SearchEngineSource.Default(
                 mockk(relaxed = true) {

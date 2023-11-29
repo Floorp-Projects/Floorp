@@ -32,6 +32,13 @@ import org.mozilla.fenix.wallpapers.Wallpaper
  * [Action] implementation related to [AppStore].
  */
 sealed class AppAction : Action {
+    /**
+     * [AppAction] dispatched to indicate that the store is initialized and
+     * ready to use. This action is dispatched automatically before any other
+     * action is processed. Its main purpose is to trigger initialization logic
+     * in middlewares. The action itself should have no effect on the [AppState].
+     */
+    object Init : AppAction()
 
     /**
      * NOTE: This action is not yet functional and will require https://bugzilla.mozilla.org/show_bug.cgi?id=1845409
@@ -41,6 +48,12 @@ sealed class AppAction : Action {
      * @property mode Which [BrowsingMode] the tab should be opened in.
      */
     data class OpenTabInBrowser(val mode: BrowsingMode) : AppAction()
+
+    /**
+     * The browsing [mode] has been loaded from a persistence layer.
+     */
+    data class BrowsingModeLoaded(val mode: BrowsingMode) : AppAction()
+
     data class UpdateInactiveExpanded(val expanded: Boolean) : AppAction()
 
     /**

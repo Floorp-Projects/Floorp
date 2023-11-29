@@ -19,4 +19,8 @@ import org.mozilla.fenix.components.appstate.AppStoreReducer
 class AppStore(
     initialState: AppState = AppState(),
     middlewares: List<Middleware<AppState, AppAction>> = emptyList(),
-) : Store<AppState, AppAction>(initialState, AppStoreReducer::reduce, middlewares)
+) : Store<AppState, AppAction>(initialState, AppStoreReducer::reduce, middlewares) {
+    init {
+        dispatch(AppAction.Init)
+    }
+}

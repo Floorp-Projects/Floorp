@@ -8,19 +8,22 @@ import android.view.View
 import androidx.annotation.StringRes
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 
 /**
  * Sets up the private browsing toggle button on the [HomeFragment].
+ *
+ * @param button The button to bind content descriptions and click listeners to.
+ * @param mode The current [BrowsingMode].
+ * @param onClick Click handler for the button.
  */
 class PrivateBrowsingButtonView(
     button: View,
-    private val browsingModeManager: BrowsingModeManager,
+    private val mode: BrowsingMode,
     private val onClick: (BrowsingMode) -> Unit,
 ) : View.OnClickListener {
 
     init {
-        button.contentDescription = button.context.getString(getContentDescription(browsingModeManager.mode))
+        button.contentDescription = button.context.getString(getContentDescription(mode))
         button.setOnClickListener(this)
     }
 
@@ -28,10 +31,7 @@ class PrivateBrowsingButtonView(
      * Calls [onClick] with the new [BrowsingMode] and updates the [browsingModeManager].
      */
     override fun onClick(v: View) {
-        val invertedMode = BrowsingMode.fromBoolean(!browsingModeManager.mode.isPrivate)
-        onClick(invertedMode)
-
-        browsingModeManager.mode = invertedMode
+        onClick(mode.inverted)
     }
 
     companion object {

@@ -17,6 +17,11 @@ enum class BrowsingMode {
      */
     val isPrivate get() = this == Private
 
+    val inverted get() = when (this) {
+        Private -> Normal
+        Normal -> Private
+    }
+
     companion object {
 
         /**

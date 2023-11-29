@@ -27,7 +27,9 @@ import org.mozilla.fenix.messaging.state.MessagingReducer
 internal object AppStoreReducer {
     @Suppress("LongMethod")
     fun reduce(state: AppState, action: AppAction): AppState = when (action) {
+        is AppAction.Init -> state
         is AppAction.OpenTabInBrowser -> state.copy(mode = action.mode)
+        is AppAction.BrowsingModeLoaded -> state.copy(mode = action.mode)
         is AppAction.UpdateInactiveExpanded ->
             state.copy(inactiveTabsExpanded = action.expanded)
         is AppAction.UpdateFirstFrameDrawn -> {
