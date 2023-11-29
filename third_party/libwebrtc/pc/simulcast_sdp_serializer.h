@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef PC_SDP_SERIALIZER_H_
-#define PC_SDP_SERIALIZER_H_
+#ifndef PC_SIMULCAST_SDP_SERIALIZER_H_
+#define PC_SIMULCAST_SDP_SERIALIZER_H_
 
 #include <string>
 
@@ -21,19 +21,19 @@
 
 namespace webrtc {
 
-// This class should serialize components of the SDP (and not the SDP itself).
+// This class serializes simulcast components of the SDP.
 // Example:
 //     SimulcastDescription can be serialized and deserialized by this class.
 //     The serializer will know how to translate the data to spec-compliant
 //     format without knowing about the SDP attribute details (a=simulcast:)
 // Usage:
 //     Consider the SDP attribute for simulcast a=simulcast:<configuration>.
-//     The SDP serializtion code (webrtcsdp.h) should use `SdpSerializer` to
+//     The SDP serializtion code (webrtc_sdp.h) should use `SdpSerializer` to
 //     serialize and deserialize the <configuration> section.
 // This class will allow testing the serialization of components without
 // having to serialize the entire SDP while hiding implementation details
-// from callers of sdp serialization (webrtcsdp.h).
-class SdpSerializer {
+// from callers of sdp serialization (webrtc_sdp.h).
+class SimulcastSdpSerializer {
  public:
   // Serialization for the Simulcast description according to
   // https://tools.ietf.org/html/draft-ietf-mmusic-sdp-simulcast-13#section-5.1
@@ -58,4 +58,4 @@ class SdpSerializer {
 
 }  // namespace webrtc
 
-#endif  // PC_SDP_SERIALIZER_H_
+#endif  // PC_SIMULCAST_SDP_SERIALIZER_H_
