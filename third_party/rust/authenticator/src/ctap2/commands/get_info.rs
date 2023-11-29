@@ -1,4 +1,4 @@
-use super::{Command, CommandError, RequestCtap2, StatusCode};
+use super::{Command, CommandError, CtapResponse, RequestCtap2, StatusCode};
 use crate::ctap2::attestation::AAGuid;
 use crate::ctap2::server::PublicKeyCredentialParameters;
 use crate::transport::errors::HIDError;
@@ -367,6 +367,8 @@ impl AuthenticatorInfo {
         self.options.client_pin == Some(true) || self.options.user_verification == Some(true)
     }
 }
+
+impl CtapResponse for AuthenticatorInfo {}
 
 macro_rules! parse_next_optional_value {
     ($name:expr, $map:expr) => {

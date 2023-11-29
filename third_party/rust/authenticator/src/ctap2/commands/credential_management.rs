@@ -1,4 +1,4 @@
-use super::{Command, CommandError, PinUvAuthCommand, RequestCtap2, StatusCode};
+use super::{Command, CommandError, CtapResponse, PinUvAuthCommand, RequestCtap2, StatusCode};
 use crate::{
     crypto::{COSEKey, PinUvAuthParam, PinUvAuthToken},
     ctap2::server::{
@@ -170,6 +170,8 @@ pub struct CredentialManagementResponse {
     /// Large blob encryption key.
     pub large_blob_key: Option<Vec<u8>>,
 }
+
+impl CtapResponse for CredentialManagementResponse {}
 
 #[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct CredentialRpListEntry {

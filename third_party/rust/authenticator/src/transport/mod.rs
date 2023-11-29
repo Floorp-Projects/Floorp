@@ -112,6 +112,21 @@ pub trait FidoDeviceIO {
     ) -> Result<Req::Output, HIDError>;
 }
 
+pub trait TestDevice {
+    #[cfg(test)]
+    fn skip_serialization(&self) -> bool;
+    #[cfg(test)]
+    fn send_ctap1_unserialized<Req: RequestCtap1>(
+        &mut self,
+        msg: &Req,
+    ) -> Result<Req::Output, HIDError>;
+    #[cfg(test)]
+    fn send_ctap2_unserialized<Req: RequestCtap2>(
+        &mut self,
+        msg: &Req,
+    ) -> Result<Req::Output, HIDError>;
+}
+
 pub trait FidoDevice: FidoDeviceIO
 where
     Self: Sized,
