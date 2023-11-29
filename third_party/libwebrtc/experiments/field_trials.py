@@ -9,7 +9,7 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 import sys
-from typing import Set
+from typing import FrozenSet
 
 import argparse
 import dataclasses
@@ -28,12 +28,13 @@ class FieldTrial:
 
 # As per the policy in `g3doc/field-trials.md`, all field trials should be
 # registered in the container below. Please keep the keys sorted.
-REGISTERED_FIELD_TRIALS: Set[FieldTrial] = {
+REGISTERED_FIELD_TRIALS: FrozenSet[FieldTrial] = frozenset([
     FieldTrial(''),  # TODO(bugs.webrtc.org/14154): Populate
-}
+])
 
 
-def registry_header(field_trials: Set[FieldTrial] = None) -> str:
+def registry_header(
+        field_trials: FrozenSet[FieldTrial] = REGISTERED_FIELD_TRIALS) -> str:
     """Generates a C++ header with all field trial keys.
 
     Args:
@@ -64,8 +65,6 @@ def registry_header(field_trials: Set[FieldTrial] = None) -> str:
     #endif  // GEN_REGISTERED_FIELD_TRIALS_H_
     <BLANKLINE>
     """
-    if not field_trials:
-        field_trials = REGISTERED_FIELD_TRIALS
     registered_keys = [f.key for f in field_trials]
     keys = '\n'.join(f'    "{k}",' for k in sorted(registered_keys))
     return ('// This file was automatically generated. Do not edit.\n'
