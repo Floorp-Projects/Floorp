@@ -438,18 +438,9 @@ RTCError ValidateBundledPayloadTypes(
         continue;
       }
       const auto type = media_description->type();
-      if (type == cricket::MEDIA_TYPE_AUDIO) {
-        RTC_DCHECK(media_description->as_audio());
-        for (const auto& c : media_description->as_audio()->codecs()) {
-          auto error = FindDuplicateCodecParameters(
-              c.ToCodecParameters(), payload_to_codec_parameters);
-          if (!error.ok()) {
-            return error;
-          }
-        }
-      } else if (type == cricket::MEDIA_TYPE_VIDEO) {
-        RTC_DCHECK(media_description->as_video());
-        for (const auto& c : media_description->as_video()->codecs()) {
+      if (type == cricket::MEDIA_TYPE_AUDIO ||
+          type == cricket::MEDIA_TYPE_VIDEO) {
+        for (const auto& c : media_description->codecs()) {
           auto error = FindDuplicateCodecParameters(
               c.ToCodecParameters(), payload_to_codec_parameters);
           if (!error.ok()) {
