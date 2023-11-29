@@ -361,7 +361,12 @@ void ResizeObserver::GatherActiveObservations(uint32_t aDepth) {
     if (targetDepth > aDepth) {
       mActiveTargets.AppendElement(observation);
     } else {
-      mHasSkippedTargets = true;
+      // This boolean is only used to indicate we will deliver resize loop error
+      // notification later on. However, we don't want to do that for our
+      // internal observers.
+      if (!HasNativeCallback()) {
+        mHasSkippedTargets = true;
+      }
     }
   }
 }
@@ -531,12 +536,14 @@ static void LastRememberedSizeCallback(
       continue;
     }
     nsIFrame* frame = target->GetPrimaryFrame();
-    if (!frame || frame->HidesContent()) {
+    if (!frame) {
       aObserver.Unobserve(*target);
       continue;
     }
     MOZ_ASSERT(!frame->IsLineParticipant() || frame->IsReplaced(),
                "Should have unobserved non-replaced inline.");
+    MOZ_ASSERT(!frame->HidesContent(),
+               "Should have unobserved element skipping its contents.");
     const nsStylePosition* stylePos = frame->StylePosition();
     const WritingMode wm = frame->GetWritingMode();
     bool canUpdateBSize = stylePos->ContainIntrinsicBSize(wm).HasAuto();

@@ -17202,12 +17202,6 @@ void Document::DetermineProximityToViewportAndNotifyResizeObservers() {
       break;
     }
 
-    // nsIFrame::UpdateIsRelevantContent may call ObserveForLastRememberedSize()
-    // so update the relevancy after the observations are gathered, otherwise
-    // the last remembered size observation could be a skipped one.
-    if (PresShell* presShell = GetPresShell()) {
-      presShell->UpdateRelevancyOfContentVisibilityAutoFrames();
-    }
     DebugOnly<uint32_t> oldShallowestTargetDepth = shallowestTargetDepth;
     shallowestTargetDepth = BroadcastAllActiveResizeObservations();
     NS_ASSERTION(oldShallowestTargetDepth < shallowestTargetDepth,

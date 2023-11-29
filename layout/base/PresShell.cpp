@@ -11992,7 +11992,7 @@ PresShell::ProximityToViewportResult PresShell::DetermineProximityToViewport() {
             .Intersects();
     element->SetVisibleForContentVisibility(intersects);
     if (oldVisibility.isNothing() || *oldVisibility != intersects) {
-      ScheduleContentRelevancyUpdate(ContentRelevancyReason::Visible);
+      frame->UpdateIsRelevantContent(ContentRelevancyReason::Visible);
     }
 
     // 14.2.3.3
