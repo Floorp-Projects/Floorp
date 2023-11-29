@@ -48,13 +48,14 @@ AudioFrameType InterfaceFrameTypeToInternalFrameType(
 class TransformableOutgoingAudioFrame
     : public TransformableAudioFrameInterface {
  public:
-  TransformableOutgoingAudioFrame(AudioFrameType frame_type,
-                                  uint8_t payload_type,
-                                  uint32_t rtp_timestamp_with_offset,
-                                  const uint8_t* payload_data,
-                                  size_t payload_size,
-                                  int64_t absolute_capture_timestamp_ms,
-                                  uint32_t ssrc)
+  TransformableOutgoingAudioFrame(
+      AudioFrameType frame_type,
+      uint8_t payload_type,
+      uint32_t rtp_timestamp_with_offset,
+      const uint8_t* payload_data,
+      size_t payload_size,
+      absl::optional<uint64_t> absolute_capture_timestamp_ms,
+      uint32_t ssrc)
       : frame_type_(frame_type),
         payload_type_(payload_type),
         rtp_timestamp_with_offset_(rtp_timestamp_with_offset),
@@ -97,7 +98,7 @@ class TransformableOutgoingAudioFrame
   uint8_t payload_type_;
   uint32_t rtp_timestamp_with_offset_;
   rtc::Buffer payload_;
-  int64_t absolute_capture_timestamp_ms_;
+  absl::optional<uint64_t> absolute_capture_timestamp_ms_;
   uint32_t ssrc_;
 };
 }  // namespace
@@ -168,12 +169,11 @@ void ChannelSendFrameTransformerDelegate::SendFrame(
 
 std::unique_ptr<TransformableAudioFrameInterface> CloneSenderAudioFrame(
     TransformableAudioFrameInterface* original) {
-  // TODO(crbug.com/webrtc/14949): Ensure the correct timestamps are passed.
   return std::make_unique<TransformableOutgoingAudioFrame>(
       InterfaceFrameTypeToInternalFrameType(original->Type()),
       original->GetPayloadType(), original->GetTimestamp(),
       original->GetData().data(), original->GetData().size(),
-      original->GetTimestamp(), original->GetSsrc());
+      original->AbsoluteCaptureTimestamp(), original->GetSsrc());
 }
 
 }  // namespace webrtc
