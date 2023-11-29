@@ -86,6 +86,10 @@ PlacesTreeView.prototype = {
       }
       delete this._editingObservers;
     }
+    // Break the reference cycle between the PlacesTreeView and result.
+    if (this._result) {
+      this._result.removeObserver(this);
+    }
   },
 
   /**
@@ -1635,8 +1639,7 @@ PlacesTreeView.prototype = {
         // detach from result when we are detaching from the tree.
         // This breaks the reference cycle between us and the result.
         if (!aTree) {
-          // Balances the addObserver call from the load method in tree.xml
-          this._result.removeObserver(this);
+          // Close the root container to free up memory and stop live updates.
           this._rootNode.containerOpen = false;
         }
       }

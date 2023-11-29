@@ -205,6 +205,9 @@ fail-if = ["a11y_checks"] # Bug 1854443 tree#bookmarks-view may not be labeled
 ["browser_sidebar_history_telemetry.js"]
 fail-if = ["a11y_checks"] # Bug 1854443 tree#historyTree may not be labeled
 
+["browser_sidebar_on_customization.js"]
+fail-if = ["a11y_checks"] # Bug 1854443 tree#bookmarks-view may not be labeled
+
 ["browser_sidebar_open_bookmarks.js"]
 fail-if = ["a11y_checks"] # Bug 1854443 tree#bookmarks-view may not be labeled
 
