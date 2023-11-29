@@ -69,7 +69,7 @@ class SendStatisticsProxyTest : public ::testing::Test {
   SendStatisticsProxyTest() : SendStatisticsProxyTest("") {}
   explicit SendStatisticsProxyTest(const std::string& field_trials)
       : override_field_trials_(field_trials),
-        fake_clock_(1234),
+        fake_clock_(Timestamp::Seconds(1234)),
         config_(GetTestConfig()) {}
   virtual ~SendStatisticsProxyTest() {}
 
@@ -2353,7 +2353,8 @@ TEST_F(SendStatisticsProxyTest, EncodedResolutionTimesOut) {
   EXPECT_EQ(kEncodedHeight, stats.substreams[config_.rtp.ssrcs[1]].height);
 
   // Forward almost to timeout, this should not have removed stats.
-  fake_clock_.AdvanceTimeMilliseconds(SendStatisticsProxy::kStatsTimeoutMs - 1);
+  fake_clock_.AdvanceTime(SendStatisticsProxy::kStatsTimeout -
+                          TimeDelta::Millis(1));
   stats = statistics_proxy_->GetStats();
   EXPECT_EQ(kEncodedWidth, stats.substreams[config_.rtp.ssrcs[0]].width);
   EXPECT_EQ(kEncodedHeight, stats.substreams[config_.rtp.ssrcs[0]].height);
