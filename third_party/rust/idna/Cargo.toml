@@ -13,13 +13,16 @@
 edition = "2018"
 rust-version = "1.51"
 name = "idna"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["The rust-url developers"]
 autotests = false
 description = "IDNA (Internationalizing Domain Names in Applications) and Punycode."
 categories = ["no_std"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/servo/rust-url/"
+
+[package.metadata.docs.rs]
+rustdoc-args = ["--generate-link-to-definition"]
 
 [lib]
 doctest = false

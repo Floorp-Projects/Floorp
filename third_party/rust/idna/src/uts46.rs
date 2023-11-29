@@ -453,7 +453,7 @@ impl Idna {
             return Errors::default();
         }
         let mut errors = processing(domain, self.config, &mut self.normalized, out);
-        self.output = std::mem::replace(out, String::with_capacity(out.len()));
+        self.output = core::mem::replace(out, String::with_capacity(out.len()));
         let mut first = true;
         for label in self.output.split('.') {
             if !first {
@@ -509,6 +509,7 @@ impl Idna {
 }
 
 #[derive(Clone, Copy)]
+#[must_use]
 pub struct Config {
     use_std3_ascii_rules: bool,
     transitional_processing: bool,

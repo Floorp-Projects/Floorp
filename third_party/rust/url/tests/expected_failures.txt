@@ -42,8 +42,6 @@
 <foo:///some/path> set pathname to <>
 <http://example.net:8080/path> set port to <randomstring>
 <file:///var/log/system.log> set href to <http://0300.168.0xF0>
-<data:space  ?query#fragment> set search to <>
-<sc:space  ?query#fragment> set search to <>
 <file://monkey/> set pathname to <\\\\>
 <file:///unicorn> set pathname to <//\\/>
 <file:///unicorn> set pathname to <//monkey/..//>

@@ -1573,6 +1573,11 @@ who = "Valentin Gosu <valentin.gosu@gmail.com>"
 criteria = "safe-to-deploy"
 version = "1.2.0"
 
+[[audits.form_urlencoded]]
+who = "Valentin Gosu <valentin.gosu@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "1.2.0 -> 1.2.1"
+
 [[audits.fs-err]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -2023,6 +2028,11 @@ who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.3.0 -> 0.2.3"
 notes = "Backwards diff with some algorithm changes, no unsafe code."
+
+[[audits.idna]]
+who = "Valentin Gosu <valentin.gosu@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.4.0 -> 0.5.0"
 
 [[audits.indexmap]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -2625,6 +2635,11 @@ notes = "Small refactor of some simple iterator logic, no unsafe code or capabil
 who = "Valentin Gosu <valentin.gosu@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "2.2.0 -> 2.3.0"
+
+[[audits.percent-encoding]]
+who = "Valentin Gosu <valentin.gosu@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "2.3.0 -> 2.3.1"
 
 [[audits.phf]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -3920,6 +3935,11 @@ version = "2.4.0"
 who = "Valentin Gosu <valentin.gosu@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "2.4.0 -> 2.4.1"
+
+[[audits.url]]
+who = "Valentin Gosu <valentin.gosu@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "2.4.1 -> 2.5.0"
 
 [[audits.uuid]]
 who = "Gabriele Svelto <gsvelto@mozilla.com>"
