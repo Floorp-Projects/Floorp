@@ -278,8 +278,8 @@ absl::optional<ReConfigChunk> StreamResetHandler::MakeStreamResetRequest() {
     return absl::nullopt;
   }
 
-  current_request_.emplace(TSN(*retransmission_queue_->next_tsn() - 1),
-                           retransmission_queue_->GetStreamsReadyToBeReset());
+  current_request_.emplace(retransmission_queue_->last_assigned_tsn(),
+                           retransmission_queue_->BeginResetStreams());
   reconfig_timer_->set_duration(ctx_->current_rto());
   reconfig_timer_->Start();
   return MakeReconfigChunk();
