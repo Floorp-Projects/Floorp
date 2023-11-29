@@ -146,7 +146,7 @@ class TRRDNSListener {
         this.additionalInfo,
         this,
         currentThread,
-        {} // defaultOriginAttributes
+        this.options.originAttributes || {} // defaultOriginAttributes
       );
       Assert.ok(!this.options.expectEarlyFail, "asyncResolve ok");
     } catch (e) {

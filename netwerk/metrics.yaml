@@ -577,3 +577,19 @@ networking:
     labels:
       - success
       - failure
+
+  trr_request_count:
+    type: labeled_counter
+    description: >
+      The count of successful TRR requests keyed by regular/private browsing
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1866245
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1866245
+    notification_emails:
+      - vgosu@mozilla.com
+      - necko@mozilla.com
+    expires: 130
+    labels:
+      - regular
+      - private
