@@ -193,7 +193,7 @@ index cc86183c17..29b0c9e943 100644
      } else {
        deps += [
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index f2d10ec296..425d6458fa 100644
+index 46703f93ce..d2b7f06c87 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -35,7 +35,7 @@ rtc_source_set("callfactory_api") {
@@ -205,7 +205,7 @@ index f2d10ec296..425d6458fa 100644
    rtc_library("create_peerconnection_factory") {
      visibility = [ "*" ]
      allow_poison = [ "default_task_queue" ]
-@@ -186,6 +186,10 @@ rtc_source_set("ice_transport_interface") {
+@@ -189,6 +189,10 @@ rtc_source_set("ice_transport_interface") {
  }
  
  rtc_library("dtls_transport_interface") {
@@ -216,7 +216,7 @@ index f2d10ec296..425d6458fa 100644
    visibility = [ "*" ]
  
    sources = [
-@@ -202,6 +206,7 @@ rtc_library("dtls_transport_interface") {
+@@ -205,6 +209,7 @@ rtc_library("dtls_transport_interface") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
@@ -224,7 +224,7 @@ index f2d10ec296..425d6458fa 100644
  
  rtc_library("dtmf_sender_interface") {
    visibility = [ "*" ]
-@@ -214,6 +219,10 @@ rtc_library("dtmf_sender_interface") {
+@@ -217,6 +222,10 @@ rtc_library("dtmf_sender_interface") {
  }
  
  rtc_library("rtp_sender_interface") {
@@ -235,7 +235,7 @@ index f2d10ec296..425d6458fa 100644
    visibility = [ "*" ]
  
    sources = [
-@@ -225,8 +234,8 @@ rtc_library("rtp_sender_interface") {
+@@ -228,8 +237,8 @@ rtc_library("rtp_sender_interface") {
      ":dtmf_sender_interface",
      ":frame_transformer_interface",
      ":media_stream_interface",
@@ -245,7 +245,7 @@ index f2d10ec296..425d6458fa 100644
      ":scoped_refptr",
      "../rtc_base:checks",
      "../rtc_base:refcount",
-@@ -234,10 +243,24 @@ rtc_library("rtp_sender_interface") {
+@@ -237,10 +246,24 @@ rtc_library("rtp_sender_interface") {
      "crypto:frame_encryptor_interface",
      "video_codecs:video_codecs_api",
    ]
@@ -270,7 +270,7 @@ index f2d10ec296..425d6458fa 100644
    visibility = [ "*" ]
    cflags = []
    sources = [
-@@ -354,6 +377,7 @@ rtc_library("libjingle_peerconnection_api") {
+@@ -357,6 +380,7 @@ rtc_library("libjingle_peerconnection_api") {
      "//third_party/abseil-cpp/absl/types:optional",
    ]
  }
@@ -278,7 +278,7 @@ index f2d10ec296..425d6458fa 100644
  
  rtc_source_set("frame_transformer_interface") {
    visibility = [ "*" ]
-@@ -545,6 +569,7 @@ rtc_source_set("peer_network_dependencies") {
+@@ -548,6 +572,7 @@ rtc_source_set("peer_network_dependencies") {
  }
  
  rtc_source_set("peer_connection_quality_test_fixture_api") {
@@ -286,7 +286,7 @@ index f2d10ec296..425d6458fa 100644
    visibility = [ "*" ]
    testonly = true
    sources = [ "test/peerconnection_quality_test_fixture.h" ]
-@@ -595,6 +620,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
+@@ -598,6 +623,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
      "//third_party/abseil-cpp/absl/types:optional",
    ]
  }
@@ -294,7 +294,7 @@ index f2d10ec296..425d6458fa 100644
  
  rtc_source_set("frame_generator_api") {
    visibility = [ "*" ]
-@@ -713,6 +739,7 @@ rtc_library("create_frame_generator") {
+@@ -716,6 +742,7 @@ rtc_library("create_frame_generator") {
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
  
@@ -302,7 +302,7 @@ index f2d10ec296..425d6458fa 100644
  rtc_library("create_peer_connection_quality_test_frame_generator") {
    visibility = [ "*" ]
    testonly = true
-@@ -729,6 +756,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
+@@ -732,6 +759,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
@@ -310,7 +310,7 @@ index f2d10ec296..425d6458fa 100644
  
  rtc_source_set("libjingle_logging_api") {
    visibility = [ "*" ]
-@@ -901,6 +929,7 @@ rtc_source_set("refcountedbase") {
+@@ -904,6 +932,7 @@ rtc_source_set("refcountedbase") {
    ]
  }
  
@@ -318,7 +318,7 @@ index f2d10ec296..425d6458fa 100644
  rtc_library("ice_transport_factory") {
    visibility = [ "*" ]
    sources = [
-@@ -919,6 +948,7 @@ rtc_library("ice_transport_factory") {
+@@ -922,6 +951,7 @@ rtc_library("ice_transport_factory") {
      "rtc_event_log:rtc_event_log",
    ]
  }
