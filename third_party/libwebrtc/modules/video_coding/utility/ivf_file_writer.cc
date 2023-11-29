@@ -10,13 +10,20 @@
 
 #include "modules/video_coding/utility/ivf_file_writer.h"
 
+#include <cstddef>
+#include <cstdint>
+#include <memory>
 #include <utility>
 
+#include "absl/strings/string_view.h"
+#include "api/video/encoded_image.h"
+#include "api/video/video_codec_type.h"
 #include "api/video_codecs/video_codec.h"
 #include "modules/rtp_rtcp/source/byte_io.h"
 #include "modules/video_coding/utility/ivf_defines.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/system/file_wrapper.h"
 
 // TODO(palmkvist): make logging more informative in the absence of a file name
 // (or get one)
@@ -51,6 +58,12 @@ std::unique_ptr<IvfFileWriter> IvfFileWriter::Wrap(FileWrapper file,
                                                    size_t byte_limit) {
   return std::unique_ptr<IvfFileWriter>(
       new IvfFileWriter(std::move(file), byte_limit));
+}
+
+std::unique_ptr<IvfFileWriter> IvfFileWriter::Wrap(absl::string_view filename,
+                                                   size_t byte_limit) {
+  return std::unique_ptr<IvfFileWriter>(
+      new IvfFileWriter(FileWrapper::OpenWriteOnly(filename), byte_limit));
 }
 
 bool IvfFileWriter::WriteHeader() {
