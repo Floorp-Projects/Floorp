@@ -9,6 +9,7 @@
 import("//webrtc.gni")
 
 if (is_android) {
+  import("//third_party/jni_zero/jni_zero.gni")
   rtc_android_apk("androidvoip") {
     testonly = true
     apk_name = "androidvoip"

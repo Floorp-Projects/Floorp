@@ -212,19 +212,8 @@
   EXPECT_EQ(0, audioSession.activationCount);
 }
 
-// Hack - fixes OCMVerify link error
-// Link error is: Undefined symbols for architecture i386:
-// "OCMMakeLocation(objc_object*, char const*, int)", referenced from:
-// -[RTCAudioSessionTest testConfigureWebRTCSession] in RTCAudioSessionTest.o
-// ld: symbol(s) not found for architecture i386
-// REASON: https://github.com/erikdoe/ocmock/issues/238
-OCMLocation *OCMMakeLocation(id testCase, const char *fileCString, int line){
-  return [OCMLocation locationWithTestCase:testCase
-                                      file:[NSString stringWithUTF8String:fileCString]
-                                      line:line];
-}
-
-- (void)testConfigureWebRTCSession {
+// TODO(b/298960678): Fix crash when running the test on simulators.
+- (void)DISABLED_testConfigureWebRTCSession {
   NSError *error = nil;
 
   void (^setActiveBlock)(NSInvocation *invocation) = ^(NSInvocation *invocation) {
@@ -264,15 +253,19 @@ OCMLocation *OCMMakeLocation(id testCase, const char *fileCString, int line){
   EXPECT_EQ(NO, [mockAVAudioSession setActive:YES withOptions:0 error:&error]);
   [audioSession unlockForConfiguration];
 
+  // The -Wunused-value is a workaround for https://bugs.llvm.org/show_bug.cgi?id=45245
+  _Pragma("clang diagnostic push") _Pragma("clang diagnostic ignored \"-Wunused-value\"");
   OCMVerify([mockAudioSession session]);
   OCMVerify([[mockAVAudioSession ignoringNonObjectArgs] setActive:YES withOptions:0 error:&error]);
   OCMVerify([[mockAVAudioSession ignoringNonObjectArgs] setActive:NO withOptions:0 error:&error]);
+  _Pragma("clang diagnostic pop");
 
   [mockAVAudioSession stopMocking];
   [mockAudioSession stopMocking];
 }
 
-- (void)testConfigureWebRTCSessionWithoutLocking {
+// TODO(b/298960678): Fix crash when running the test on simulators.
+- (void)DISABLED_testConfigureWebRTCSessionWithoutLocking {
   NSError *error = nil;
 
   id mockAVAudioSession = OCMPartialMock([AVAudioSession sharedInstance]);
