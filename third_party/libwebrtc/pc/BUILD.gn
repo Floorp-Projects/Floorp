@@ -105,6 +105,7 @@ rtc_source_set("channel") {
     "../rtc_base/third_party/sigslot",
   ]
   absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
