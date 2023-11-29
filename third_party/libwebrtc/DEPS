@@ -2699,11 +2699,11 @@ hooks = [
   },
   # Download remote exec cfg files
   {
-    'name': 'fetch_reclient_cfgs',
+    'name': 'configure_reclient_cfgs',
     'pattern': '.',
     'condition': 'download_remoteexec_cfg',
     'action': ['python3',
-               'src/buildtools/reclient_cfgs/fetch_reclient_cfgs.py',
+               'src/buildtools/reclient_cfgs/configure_reclient_cfgs.py',
                '--rbe_instance',
                Var('rbe_instance'),
                '--reproxy_cfg_template',
