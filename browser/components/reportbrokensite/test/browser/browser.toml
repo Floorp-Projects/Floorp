@@ -5,6 +5,8 @@ support-files = [
   "sendMoreInfoTestEndpoint.html",
 ]
 
+["browser_keyboard_navigation.js"]
+
 ["browser_parent_menuitems.js"]
 
 ["browser_reason_dropdown.js"]
