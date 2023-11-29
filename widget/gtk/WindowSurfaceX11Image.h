@@ -39,6 +39,7 @@ class WindowSurfaceX11Image : public WindowSurfaceX11 {
   int32_t mTransparencyBitmapWidth;
   int32_t mTransparencyBitmapHeight;
   bool mIsShaped;
+  Window mWindowParent;
 };
 
 }  // namespace widget
