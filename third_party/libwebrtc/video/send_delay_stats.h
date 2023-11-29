@@ -44,7 +44,6 @@ class SendDelayStats : public SendPacketObserver {
   // Called when a packet is sent (leaving socket).
   bool OnSentPacket(int packet_id, Timestamp time);
 
- protected:
   // From SendPacketObserver.
   // Called when a packet is sent to the transport.
   void OnSendPacket(uint16_t packet_id,

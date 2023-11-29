@@ -103,6 +103,8 @@ class SendStatisticsProxy : public VideoStreamEncoderObserver,
   void OnEncodedFrameTimeMeasured(int encode_time_ms,
                                   int encode_usage_percent) override;
 
+  void OnSendPacket(uint32_t ssrc, Timestamp capture_time);
+
   int GetInputFrameRate() const override;
   int GetSendFrameRate() const;
 
