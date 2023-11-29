@@ -13813,6 +13813,12 @@
   mirror: always
   rust: true
 
+# WebAuthn JSON serialization methods
+- name: security.webauthn.enable_json_serialization_methods
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Dispatch WebAuthn requests to virtual authenticators (mutually exclusive
 # with and webauthn_enable_usbtoken)
 - name: security.webauth.webauthn_enable_softtoken
