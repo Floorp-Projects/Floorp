@@ -11,7 +11,7 @@
 import datetime
 from datetime import date
 import sys
-from typing import FrozenSet, Set
+from typing import FrozenSet, List, Set
 
 import argparse
 import dataclasses
@@ -32,10 +32,28 @@ class FieldTrial:
 
 
 # As per the policy in `g3doc/field-trials.md`, all field trials should be
-# registered in the container below. Please keep the keys sorted.
-REGISTERED_FIELD_TRIALS: FrozenSet[FieldTrial] = frozenset([
+# registered in the container below.
+ACTIVE_FIELD_TRIALS: FrozenSet[FieldTrial] = frozenset([
+    # keep-sorted start
     FieldTrial('', '', date(1, 1, 1)),  # TODO(bugs.webrtc.org/14154): Populate
+    # keep-sorted end
 ])
+
+# These field trials precedes the policy in `g3doc/field-trials.md` and are
+# therefore not required to follow it. Do not add any new field trials here.
+POLICY_EXEMPT_FIELD_TRIALS: FrozenSet[FieldTrial] = frozenset([
+    # keep-sorted start
+    FieldTrial('', '', date(1, 1, 1)),  # TODO(bugs.webrtc.org/14154): Populate
+    # keep-sorted end
+])
+
+REGISTERED_FIELD_TRIALS: FrozenSet[FieldTrial] = ACTIVE_FIELD_TRIALS.union(
+    POLICY_EXEMPT_FIELD_TRIALS)
+
+
+def todays_date() -> date:
+    now = datetime.datetime.now(datetime.timezone.utc)
+    return date(now.year, now.month, now.day)
 
 
 def registry_header(
@@ -117,13 +135,32 @@ def expired_field_trials(
     return {f for f in field_trials if f.end_date <= threshold}
 
 
+def validate_field_trials(
+        field_trials: FrozenSet[FieldTrial] = ACTIVE_FIELD_TRIALS
+) -> List[str]:
+    """Validate that field trials conforms to the policy.
+
+    Args:
+      field_trials: Field trials to validate.
+
+    Returns:
+      A list of explanations for invalid field trials.
+    """
+    invalid = []
+    for trial in field_trials:
+        if not trial.key.startswith('WebRTC-'):
+            invalid.append(f'{trial.key} does not start with "WebRTC-".')
+        if len(trial.bug) <= 0:
+            invalid.append(f'{trial.key} must have an associated bug.')
+    return invalid
+
+
 def cmd_header(args: argparse.Namespace) -> None:
     args.output.write(registry_header())
 
 
 def cmd_expired(args: argparse.Namespace) -> None:
-    now = datetime.datetime.now(datetime.timezone.utc)
-    today = date(now.year, now.month, now.day)
+    today = todays_date()
     diff = datetime.timedelta(days=args.in_days)
     expired = expired_field_trials(today + diff)
 
@@ -136,6 +173,17 @@ def cmd_expired(args: argparse.Namespace) -> None:
         for date, key in expired_by_date))
     if any(date <= today for date, _ in expired_by_date):
         sys.exit(1)
+
+
+def cmd_validate(args: argparse.Namespace) -> None:
+    del args
+    invalid = validate_field_trials()
+
+    if len(invalid) <= 0:
+        return
+
+    print('\n'.join(sorted(invalid)))
+    sys.exit(1)
 
 
 def main() -> None:
@@ -166,6 +214,15 @@ def main() -> None:
         required=False,
         help='number of days relative to today to check')
     parser_expired.set_defaults(cmd=cmd_expired)
+
+    parser_validate = subcommand.add_parser(
+        'validate',
+        help='validates that all field trials conforms to the policy.',
+        description='''
+        Validates that all field trials conforms to the policy. Exits with a
+        non-zero exit status if any field trials does not.
+        ''')
+    parser_validate.set_defaults(cmd=cmd_validate)
 
     args = parser.parse_args()
 
