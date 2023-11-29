@@ -3350,27 +3350,30 @@ void nsWindow::SetCursor(const Cursor& aCursor) {
   mUpdateCursor = false;
   mCursor = aCursor;
 
-  // Try to set the cursor image first, and fall back to the numeric cursor.
-  bool fromImage = true;
-  GdkCursor* newCursor = GetCursorForImage(aCursor, GdkCeiledScaleFactor());
-  if (!newCursor) {
-    fromImage = false;
-    newCursor = get_gtk_cursor(aCursor.mDefaultCursor);
-  }
-
-  auto CleanupCursor = mozilla::MakeScopeExit([&]() {
-    // get_gtk_cursor returns a weak reference, which we shouldn't unref.
-    if (fromImage) {
-      g_object_unref(newCursor);
-    }
-  });
-
-  if (!newCursor || !mContainer) {
+  if (!mContainer) {
     return;
   }
 
+  // Try to set the cursor image first, and fall back to the numeric cursor.
+  GdkCursor* imageCursor = GetCursorForImage(aCursor, GdkCeiledScaleFactor());
+
+  // When using a custom cursor, clear the cursor first using eCursor_none, in
+  // order to work around https://gitlab.gnome.org/GNOME/gtk/-/issues/6242
+  GdkCursor* nonImageCursor =
+      get_gtk_cursor(imageCursor ? eCursor_none : aCursor.mDefaultCursor);
+  auto CleanupCursor = mozilla::MakeScopeExit([&]() {
+    // get_gtk_cursor returns a weak reference, which we shouldn't unref.
+    if (imageCursor) {
+      g_object_unref(imageCursor);
+    }
+  });
+
   gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(mContainer)),
-                        newCursor);
+                        nonImageCursor);
+  if (imageCursor) {
+    gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(mContainer)),
+                          imageCursor);
+  }
 }
 
 void nsWindow::Invalidate(const LayoutDeviceIntRect& aRect) {
