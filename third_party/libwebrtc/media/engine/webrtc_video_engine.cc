@@ -963,6 +963,15 @@ WebRtcVideoSendChannel::WebRtcVideoSendStream::ConfigureVideoEncoderSettings(
     return rtc::make_ref_counted<
         webrtc::VideoEncoderConfig::Vp9EncoderSpecificSettings>(vp9_settings);
   }
+  if (absl::EqualsIgnoreCase(codec.name, kAv1CodecName)) {
+    webrtc::VideoCodecAV1 av1_settings = {.automatic_resize_on =
+                                              automatic_resize};
+    if (NumSpatialLayersFromEncoding(rtp_parameters_, /*idx=*/0) > 1) {
+      av1_settings.automatic_resize_on = false;
+    }
+    return rtc::make_ref_counted<
+        webrtc::VideoEncoderConfig::Av1EncoderSpecificSettings>(av1_settings);
+  }
   return nullptr;
 }
 std::vector<VideoCodecSettings> WebRtcVideoSendChannel::SelectSendVideoCodecs(

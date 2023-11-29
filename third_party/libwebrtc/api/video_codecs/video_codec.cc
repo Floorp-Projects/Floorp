@@ -102,6 +102,16 @@ const VideoCodecH264& VideoCodec::H264() const {
   return codec_specific_.H264;
 }
 
+VideoCodecAV1* VideoCodec::AV1() {
+  RTC_DCHECK_EQ(codecType, kVideoCodecAV1);
+  return &codec_specific_.AV1;
+}
+
+const VideoCodecAV1& VideoCodec::AV1() const {
+  RTC_DCHECK_EQ(codecType, kVideoCodecAV1);
+  return codec_specific_.AV1;
+}
+
 const char* CodecTypeToPayloadString(VideoCodecType type) {
   switch (type) {
     case kVideoCodecVP8:
