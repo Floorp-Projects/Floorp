@@ -300,6 +300,10 @@ export var SyncedTabs = {
     return this._internal.syncTabs(force);
   },
 
+  createRecentTabsList(clients, maxCount, extraParams) {
+    return this._internal._createRecentTabsList(clients, maxCount, extraParams);
+  },
+
   sortTabClientsByLastUsed(clients) {
     // First sort the list of tabs for each client. Note that
     // this module promises that the objects it returns are never
