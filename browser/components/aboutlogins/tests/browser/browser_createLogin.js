@@ -103,6 +103,18 @@ add_task(async function test_create_login() {
           "input[name='password']"
         );
 
+        // Upon clicking create-login-button, the origin input field is automatically focused.
+        Assert.ok(
+          ContentTaskUtils.is_visible(loginItem._originWarning),
+          "The origin warning should be visible"
+        );
+
+        // At this moment, the password input field is not focused so no warning should be displayed.
+        Assert.ok(
+          ContentTaskUtils.is_hidden(loginItem._passwordWarning),
+          "The password warning should not be visible if the password input field is not focused"
+        );
+
         Assert.equal(
           content.document.l10n.getAttributes(usernameInput).id,
           null,
@@ -113,9 +125,22 @@ add_task(async function test_create_login() {
           "",
           "there should be no placeholder on the username input in edit mode"
         );
+
         originInput.value = aOriginTuple[0];
         usernameInput.value = "testuser1";
+
+        passwordInput.focus();
+        Assert.ok(
+          ContentTaskUtils.is_visible(loginItem._passwordWarning),
+          "The password warning should not visible"
+        );
         passwordInput.value = "testpass1";
+
+        // Since the password field is focused, the origin warning should not be displayed.
+        Assert.ok(
+          ContentTaskUtils.is_hidden(loginItem._originWarning),
+          "The origin warning should not be visible if the origin input field is not focused"
+        );
 
         let saveChangesButton = loginItem.shadowRoot.querySelector(
           ".save-changes-button"
@@ -324,10 +349,7 @@ add_task(async function test_cancel_create_login() {
       "the blank login list item should be hidden before create mode"
     );
 
-    let createButton = content.document
-      .querySelector("login-list")
-      .shadowRoot.querySelector(".create-login-button")
-      .shadowRoot.querySelector("button");
+    let createButton = loginList._createLoginButton;
     createButton.click();
 
     Assert.ok(

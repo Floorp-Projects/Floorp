@@ -262,6 +262,7 @@
       <script type="module" src="chrome://browser/content/aboutlogins/components/login-timeline.mjs"></script>
       <script type="module" src="chrome://browser/content/aboutlogins/components/login-command-button.mjs"></script>
       <script type="module" src="chrome://browser/content/aboutlogins/components/login-alert.mjs"></script>
+      <script type="module" src="chrome://browser/content/aboutlogins/components/login-message-popup.mjs"></script>
       <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-item.css">
@@ -304,11 +305,7 @@
                         dir="auto"
                         readonly/>
                   <a class="origin-input" dir="auto" target="_blank" rel="noreferrer" name="origin" href=""></a>
-                  <div class="tooltip-container">
-                    <div class="arrow-box">
-                        <p class="tooltip-message" data-l10n-id="login-item-tooltip-message"></p>
-                    </div>
-                  </div>
+                  <origin-warning></origin-warning>
                 </label>
               </div>
               <div class="detail-grid">
@@ -342,6 +339,7 @@
                       <input type="checkbox"
                             class="reveal-password-checkbox"
                             data-l10n-id="login-item-password-reveal-checkbox"/>
+                      <password-warning></password-warning>
                     </div>
                   </label>
                   <login-command-button class="copy-button copy-password-button" l10nId="login-item-copy-password-button-text" >
