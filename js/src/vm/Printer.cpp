@@ -582,4 +582,49 @@ void StringEscape::convertInto(GenericPrinter& out, char16_t c) {
   }
 }
 
+void IndentedPrinter::putIndent() {
+  // Allocate a static buffer of 16 spaces (plus null terminator) and use that
+  // in batches for the total number of spaces we need to put.
+  static const char spaceBuffer[17] = "                ";
+  size_t remainingSpaces = indentLevel_ * indentAmount_;
+  while (remainingSpaces > 16) {
+    out_.put(spaceBuffer, 16);
+    remainingSpaces -= 16;
+  }
+  if (remainingSpaces) {
+    out_.put(spaceBuffer, remainingSpaces);
+  }
+}
+
+void IndentedPrinter::putWithMaybeIndent(const char* s, size_t len) {
+  if (len == 0) {
+    return;
+  }
+  if (pendingIndent_) {
+    putIndent();
+    pendingIndent_ = false;
+  }
+  out_.put(s, len);
+}
+
+void IndentedPrinter::put(const char* s, size_t len) {
+  const char* current = s;
+  // Split the text into lines and output each with an indent
+  while (const char* nextLineEnd = (const char*)memchr(current, '\n', len)) {
+    // Put this line (including the new-line)
+    size_t lineWithNewLineSize = nextLineEnd - current + 1;
+    putWithMaybeIndent(current, lineWithNewLineSize);
+
+    // The next put should have an indent added
+    pendingIndent_ = true;
+
+    // Advance the cursor
+    current += lineWithNewLineSize;
+    len -= lineWithNewLineSize;
+  }
+
+  // Put any remaining text
+  putWithMaybeIndent(current, len);
+}
+
 }  // namespace js

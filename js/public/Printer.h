@@ -471,6 +471,48 @@ class JS_PUBLIC_API StringEscape {
   void convertInto(GenericPrinter& out, char16_t c);
 };
 
+// A GenericPrinter that formats everything at a nested indentation level.
+class JS_PUBLIC_API IndentedPrinter final : public GenericPrinter {
+  GenericPrinter& out_;
+  // The number of indents to insert at the beginning of each line.
+  uint32_t indentLevel_;
+  // The number of spaces to insert for each indent.
+  uint32_t indentAmount_;
+  // Whether we have seen a line ending and should insert an indent at the
+  // next line fragment.
+  bool pendingIndent_;
+
+  // Put an indent to `out_`
+  void putIndent();
+  // Put `s` to `out_`, inserting an indent if we need to
+  void putWithMaybeIndent(const char* s, size_t len);
+
+ public:
+  explicit IndentedPrinter(GenericPrinter& out, uint32_t indentLevel = 0,
+                           uint32_t indentAmount = 2)
+      : out_(out),
+        indentLevel_(indentLevel),
+        indentAmount_(indentAmount),
+        pendingIndent_(false) {}
+
+  // Automatically insert and remove and indent for a scope
+  class AutoIndent {
+    IndentedPrinter& printer_;
+
+   public:
+    explicit AutoIndent(IndentedPrinter& printer) : printer_(printer) {
+      printer_.setIndentLevel(printer_.indentLevel() + 1);
+    }
+    ~AutoIndent() { printer_.setIndentLevel(printer_.indentLevel() - 1); }
+  };
+
+  uint32_t indentLevel() const { return indentLevel_; }
+  void setIndentLevel(uint32_t indentLevel) { indentLevel_ = indentLevel; }
+
+  virtual void put(const char* s, size_t len) override;
+  using GenericPrinter::put;  // pick up |inline void put(const char* s);|
+};
+
 // Map escaped code to the letter/symbol escaped with a backslash.
 extern const char js_EscapeMap[];
 
