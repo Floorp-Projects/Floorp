@@ -1,73 +1,416 @@
 From: Michael Froman <mjfroman@mac.com>
-Date: Wed, 29 Nov 2023 12:20:21 -0600
-Subject: (tmp-cherry-pick) Revert "Remove device_status dimensions for perf
- bot" (ffd656694a)
+Date: Wed, 29 Nov 2023 11:59:23 -0600
+Subject: (tmp-cherry-pick) Revert "Add option to disable quality scaling for
+ AV1." (83102d3907)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-This reverts commit cb5f65054538ee3c17f4c73799ffb89c515c9f4f.
+This reverts commit 446dbc66fde7e9d5e684d3f71e357c2076a91740.
 
-Reason for revert: Bot check now runs that flips this dimension on the bot so we can now actually use this dimension.
+Reason for revert: downstream break
 
 Original change's description:
-> Remove device_status dimensions for perf bot
+> Add option to disable quality scaling for AV1.
 >
-> Bug: b/299080080
-> Change-Id: I647d9fae65593d7c78e124278c085be8d9c1b61b
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/319860
-> Reviewed-by: Jeremy Leconte <jleconte@google.com>
-> Commit-Queue: Christoffer Jansson <jansson@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#40729}
+> The main goal of this change is to disable the quality scaler when multiple spatial layers are used.
+>
+> Bug: b/295129711
+> Change-Id: I25e0b7440a8c2adee3e97720a1e0ee5e0a914334
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/319181
+> Reviewed-by: Sergey Silkin <ssilkin@webrtc.org>
+> Reviewed-by: Erik Språng <sprang@webrtc.org>
+> Commit-Queue: Philip Eliasson <philipel@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#40709}
 
-Bug: b/299080080
-Change-Id: I2ce3da17e182fb9428e022ce540aa51fe417bcd9
-No-Presubmit: true
-No-Tree-Checks: true
-No-Try: true
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/319883
-Reviewed-by: Jeremy Leconte <jleconte@google.com>
+Bug: b/295129711
+Change-Id: Iaeb13951d1b839bc0426120436035843bb3ee98f
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/320081
+Reviewed-by: Sergey Silkin <ssilkin@webrtc.org>
 Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Commit-Queue: Christoffer Jansson <jansson@google.com>
-Cr-Commit-Position: refs/heads/main@{#40735}
+Commit-Queue: Philip Eliasson <philipel@webrtc.org>
+Owners-Override: Philip Eliasson <philipel@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#40742}
 ---
- infra/specs/internal.client.webrtc.json | 1 +
- infra/specs/mixins.pyl                  | 3 ++-
- infra/specs/mixins_webrtc.pyl           | 1 +
- 3 files changed, 4 insertions(+), 1 deletion(-)
+ api/video_codecs/video_codec.cc               | 10 ----
+ api/video_codecs/video_codec.h                | 13 -----
+ media/engine/fake_webrtc_call.cc              | 13 -----
+ media/engine/fake_webrtc_call.h               |  2 -
+ media/engine/fake_webrtc_video_engine.cc      |  8 +--
+ media/engine/fake_webrtc_video_engine.h       |  4 +-
+ media/engine/webrtc_video_engine.cc           | 10 ----
+ media/engine/webrtc_video_engine_unittest.cc  | 57 +------------------
+ .../codecs/av1/libaom_av1_encoder.cc          |  5 +-
+ .../codecs/av1/libaom_av1_encoder_unittest.cc | 12 ----
+ video/config/video_encoder_config.cc          | 16 ------
+ video/config/video_encoder_config.h           | 10 ----
+ 12 files changed, 8 insertions(+), 152 deletions(-)
 
-diff --git a/infra/specs/internal.client.webrtc.json b/infra/specs/internal.client.webrtc.json
-index 7f23682b12..67033dff3f 100644
---- a/infra/specs/internal.client.webrtc.json
-+++ b/infra/specs/internal.client.webrtc.json
-@@ -485,6 +485,7 @@
-             }
-           ],
-           "dimensions": {
-+            "device_status": "available",
-             "id": "mac-254-e504",
-             "os": "iOS-15.7.8",
-             "pool": "WebRTC"
-diff --git a/infra/specs/mixins.pyl b/infra/specs/mixins.pyl
-index 57855eae82..1fcb3d206e 100644
---- a/infra/specs/mixins.pyl
-+++ b/infra/specs/mixins.pyl
-@@ -79,7 +79,8 @@
-       'dimensions': {
-         'os': 'iOS-15.7.8',
-         'pool': 'WebRTC',
--        'id': 'mac-254-e504'
-+        'id': 'mac-254-e504',
-+        'device_status': 'available'
-       }
-     }
-   },
-diff --git a/infra/specs/mixins_webrtc.pyl b/infra/specs/mixins_webrtc.pyl
-index ea871d79f2..ded32c10e3 100644
---- a/infra/specs/mixins_webrtc.pyl
-+++ b/infra/specs/mixins_webrtc.pyl
-@@ -60,6 +60,7 @@
-         'os': 'iOS-15.7.8',
-         'pool': 'WebRTC',
-         'id': 'mac-254-e504',
-+        'device_status': 'available'
-       },
-     },
-   },
+diff --git a/api/video_codecs/video_codec.cc b/api/video_codecs/video_codec.cc
+index dfd2e216ab..c6122d3f6a 100644
+--- a/api/video_codecs/video_codec.cc
++++ b/api/video_codecs/video_codec.cc
+@@ -102,16 +102,6 @@ const VideoCodecH264& VideoCodec::H264() const {
+   return codec_specific_.H264;
+ }
+ 
+-VideoCodecAV1* VideoCodec::AV1() {
+-  RTC_DCHECK_EQ(codecType, kVideoCodecAV1);
+-  return &codec_specific_.AV1;
+-}
+-
+-const VideoCodecAV1& VideoCodec::AV1() const {
+-  RTC_DCHECK_EQ(codecType, kVideoCodecAV1);
+-  return codec_specific_.AV1;
+-}
+-
+ const char* CodecTypeToPayloadString(VideoCodecType type) {
+   switch (type) {
+     case kVideoCodecVP8:
+diff --git a/api/video_codecs/video_codec.h b/api/video_codecs/video_codec.h
+index a596af1528..496cfb5e22 100644
+--- a/api/video_codecs/video_codec.h
++++ b/api/video_codecs/video_codec.h
+@@ -97,16 +97,6 @@ struct VideoCodecH264 {
+   uint8_t numberOfTemporalLayers;
+ };
+ 
+-struct VideoCodecAV1 {
+-  bool operator==(const VideoCodecAV1& other) const {
+-    return automatic_resize_on == other.automatic_resize_on;
+-  }
+-  bool operator!=(const VideoCodecAV1& other) const {
+-    return !(*this == other);
+-  }
+-  bool automatic_resize_on;
+-};
+-
+ // Translates from name of codec to codec type and vice versa.
+ RTC_EXPORT const char* CodecTypeToPayloadString(VideoCodecType type);
+ RTC_EXPORT VideoCodecType PayloadStringToCodecType(const std::string& name);
+@@ -115,7 +105,6 @@ union VideoCodecUnion {
+   VideoCodecVP8 VP8;
+   VideoCodecVP9 VP9;
+   VideoCodecH264 H264;
+-  VideoCodecAV1 AV1;
+ };
+ 
+ enum class VideoCodecMode { kRealtimeVideo, kScreensharing };
+@@ -204,8 +193,6 @@ class RTC_EXPORT VideoCodec {
+   const VideoCodecVP9& VP9() const;
+   VideoCodecH264* H264();
+   const VideoCodecH264& H264() const;
+-  VideoCodecAV1* AV1();
+-  const VideoCodecAV1& AV1() const;
+ 
+  private:
+   // TODO(hta): Consider replacing the union with a pointer type.
+diff --git a/media/engine/fake_webrtc_call.cc b/media/engine/fake_webrtc_call.cc
+index 16e7169b21..846be4d7ae 100644
+--- a/media/engine/fake_webrtc_call.cc
++++ b/media/engine/fake_webrtc_call.cc
+@@ -211,16 +211,6 @@ bool FakeVideoSendStream::GetH264Settings(
+   return true;
+ }
+ 
+-bool FakeVideoSendStream::GetAv1Settings(
+-    webrtc::VideoCodecAV1* settings) const {
+-  if (!codec_settings_set_) {
+-    return false;
+-  }
+-
+-  *settings = codec_specific_settings_.av1;
+-  return true;
+-}
+-
+ int FakeVideoSendStream::GetNumberOfSwappedFrames() const {
+   return num_swapped_frames_;
+ }
+@@ -325,9 +315,6 @@ void FakeVideoSendStream::ReconfigureVideoEncoder(
+     } else if (config_.rtp.payload_name == "H264") {
+       codec_specific_settings_.h264.numberOfTemporalLayers =
+           num_temporal_layers;
+-    } else if (config_.rtp.payload_name == "AV1") {
+-      config.encoder_specific_settings->FillVideoCodecAv1(
+-          &codec_specific_settings_.av1);
+     } else {
+       ADD_FAILURE() << "Unsupported encoder payload: "
+                     << config_.rtp.payload_name;
+diff --git a/media/engine/fake_webrtc_call.h b/media/engine/fake_webrtc_call.h
+index 3dd6bdf397..8d9ecb6396 100644
+--- a/media/engine/fake_webrtc_call.h
++++ b/media/engine/fake_webrtc_call.h
+@@ -169,7 +169,6 @@ class FakeVideoSendStream final
+   bool GetVp8Settings(webrtc::VideoCodecVP8* settings) const;
+   bool GetVp9Settings(webrtc::VideoCodecVP9* settings) const;
+   bool GetH264Settings(webrtc::VideoCodecH264* settings) const;
+-  bool GetAv1Settings(webrtc::VideoCodecAV1* settings) const;
+ 
+   int GetNumberOfSwappedFrames() const;
+   int GetLastWidth() const;
+@@ -227,7 +226,6 @@ class FakeVideoSendStream final
+     webrtc::VideoCodecVP8 vp8;
+     webrtc::VideoCodecVP9 vp9;
+     webrtc::VideoCodecH264 h264;
+-    webrtc::VideoCodecAV1 av1;
+   } codec_specific_settings_;
+   bool resolution_scaling_enabled_;
+   bool framerate_scaling_enabled_;
+diff --git a/media/engine/fake_webrtc_video_engine.cc b/media/engine/fake_webrtc_video_engine.cc
+index cf402478a0..adbaf6cce3 100644
+--- a/media/engine/fake_webrtc_video_engine.cc
++++ b/media/engine/fake_webrtc_video_engine.cc
+@@ -281,13 +281,11 @@ void FakeWebRtcVideoEncoderFactory::AddSupportedVideoCodec(
+ }
+ 
+ void FakeWebRtcVideoEncoderFactory::AddSupportedVideoCodecType(
+-    const std::string& name,
+-    const std::vector<webrtc::ScalabilityMode>& scalability_modes) {
++    const std::string& name) {
+   // This is to match the default H264 params of cricket::VideoCodec.
+   cricket::VideoCodec video_codec = cricket::CreateVideoCodec(name);
+-  formats_.push_back(webrtc::SdpVideoFormat(
+-      video_codec.name, video_codec.params,
+-      {scalability_modes.begin(), scalability_modes.end()}));
++  formats_.push_back(
++      webrtc::SdpVideoFormat(video_codec.name, video_codec.params));
+ }
+ 
+ int FakeWebRtcVideoEncoderFactory::GetNumCreatedEncoders() {
+diff --git a/media/engine/fake_webrtc_video_engine.h b/media/engine/fake_webrtc_video_engine.h
+index 3db4225ced..87d107ac37 100644
+--- a/media/engine/fake_webrtc_video_engine.h
++++ b/media/engine/fake_webrtc_video_engine.h
+@@ -124,9 +124,7 @@ class FakeWebRtcVideoEncoderFactory : public webrtc::VideoEncoderFactory {
+   void EncoderDestroyed(FakeWebRtcVideoEncoder* encoder);
+   void set_encoders_have_internal_sources(bool internal_source);
+   void AddSupportedVideoCodec(const webrtc::SdpVideoFormat& format);
+-  void AddSupportedVideoCodecType(
+-      const std::string& name,
+-      const std::vector<webrtc::ScalabilityMode>& scalability_modes = {});
++  void AddSupportedVideoCodecType(const std::string& name);
+   int GetNumCreatedEncoders();
+   const std::vector<FakeWebRtcVideoEncoder*> encoders();
+ 
+diff --git a/media/engine/webrtc_video_engine.cc b/media/engine/webrtc_video_engine.cc
+index b756768d13..e8bffc2d05 100644
+--- a/media/engine/webrtc_video_engine.cc
++++ b/media/engine/webrtc_video_engine.cc
+@@ -963,16 +963,6 @@ WebRtcVideoSendChannel::WebRtcVideoSendStream::ConfigureVideoEncoderSettings(
+     return rtc::make_ref_counted<
+         webrtc::VideoEncoderConfig::Vp9EncoderSpecificSettings>(vp9_settings);
+   }
+-  if (absl::EqualsIgnoreCase(codec.name, kAv1CodecName)) {
+-    webrtc::VideoCodecAV1 av1_settings = {.automatic_resize_on =
+-                                              automatic_resize};
+-    if (NumSpatialLayersFromEncoding(rtp_parameters_, /*idx=*/0) > 1 ||
+-        rtp_parameters_.encodings.size() > 1) {
+-      av1_settings.automatic_resize_on = false;
+-    }
+-    return rtc::make_ref_counted<
+-        webrtc::VideoEncoderConfig::Av1EncoderSpecificSettings>(av1_settings);
+-  }
+   return nullptr;
+ }
+ std::vector<VideoCodecSettings> WebRtcVideoSendChannel::SelectSendVideoCodecs(
+diff --git a/media/engine/webrtc_video_engine_unittest.cc b/media/engine/webrtc_video_engine_unittest.cc
+index 22bb45b8f1..4262aa03db 100644
+--- a/media/engine/webrtc_video_engine_unittest.cc
++++ b/media/engine/webrtc_video_engine_unittest.cc
+@@ -382,9 +382,7 @@ class WebRtcVideoEngineTest : public ::testing::Test {
+   // Find the codec in the engine with the given name. The codec must be
+   // present.
+   cricket::VideoCodec GetEngineCodec(const std::string& name) const;
+-  void AddSupportedVideoCodecType(
+-      const std::string& name,
+-      const std::vector<webrtc::ScalabilityMode>& scalability_modes = {});
++  void AddSupportedVideoCodecType(const std::string& name);
+   std::unique_ptr<VideoMediaSendChannelInterface>
+   SetSendParamsWithAllSupportedCodecs();
+ 
+@@ -857,9 +855,8 @@ cricket::VideoCodec WebRtcVideoEngineTest::GetEngineCodec(
+ }
+ 
+ void WebRtcVideoEngineTest::AddSupportedVideoCodecType(
+-    const std::string& name,
+-    const std::vector<webrtc::ScalabilityMode>& scalability_modes) {
+-  encoder_factory_->AddSupportedVideoCodecType(name, scalability_modes);
++    const std::string& name) {
++  encoder_factory_->AddSupportedVideoCodecType(name);
+   decoder_factory_->AddSupportedVideoCodecType(name);
+ }
+ 
+@@ -2648,8 +2645,6 @@ class WebRtcVideoChannelTest : public WebRtcVideoEngineTest {
+   void SetUp() override {
+     AddSupportedVideoCodecType("VP8");
+     AddSupportedVideoCodecType("VP9");
+-    AddSupportedVideoCodecType(
+-        "AV1", {ScalabilityMode::kL1T3, ScalabilityMode::kL2T3});
+ #if defined(WEBRTC_USE_H264)
+     AddSupportedVideoCodecType("H264");
+ #endif
+@@ -3669,52 +3664,6 @@ TEST_F(WebRtcVideoChannelTest, VerifyVp8SpecificSettings) {
+   EXPECT_TRUE(send_channel_->SetVideoSend(last_ssrc_, nullptr, nullptr));
+ }
+ 
+-TEST_F(WebRtcVideoChannelTest, VerifyAv1SpecificSettings) {
+-  cricket::VideoSenderParameters parameters;
+-  parameters.codecs.push_back(GetEngineCodec("AV1"));
+-  ASSERT_TRUE(send_channel_->SetSenderParameters(parameters));
+-  webrtc::test::FrameForwarder frame_forwarder;
+-  webrtc::VideoCodecAV1 settings;
+-
+-  // Single-stream settings should apply with RTX as well (verifies that we
+-  // check number of regular SSRCs and not StreamParams::ssrcs which contains
+-  // both RTX and regular SSRCs).
+-  FakeVideoSendStream* stream = SetUpSimulcast(false, /*with_rtx=*/true);
+-  EXPECT_TRUE(
+-      send_channel_->SetVideoSend(last_ssrc_, nullptr, &frame_forwarder));
+-  send_channel_->SetSend(true);
+-  frame_forwarder.IncomingCapturedFrame(frame_source_.GetFrame());
+-
+-  ASSERT_TRUE(stream->GetAv1Settings(&settings)) << "No AV1 config set.";
+-  EXPECT_TRUE(settings.automatic_resize_on);
+-
+-  webrtc::RtpParameters rtp_parameters =
+-      send_channel_->GetRtpSendParameters(last_ssrc_);
+-  EXPECT_THAT(
+-      rtp_parameters.encodings,
+-      ElementsAre(Field(&webrtc::RtpEncodingParameters::scalability_mode,
+-                        absl::nullopt)));
+-  rtp_parameters.encodings[0].scalability_mode = "L2T3";
+-  EXPECT_TRUE(
+-      send_channel_->SetRtpSendParameters(last_ssrc_, rtp_parameters).ok());
+-  frame_forwarder.IncomingCapturedFrame(frame_source_.GetFrame());
+-
+-  ASSERT_TRUE(stream->GetAv1Settings(&settings)) << "No AV1 config set.";
+-  EXPECT_FALSE(settings.automatic_resize_on);
+-
+-  EXPECT_TRUE(send_channel_->SetVideoSend(last_ssrc_, nullptr, nullptr));
+-  stream = SetUpSimulcast(true, /*with_rtx=*/false);
+-  EXPECT_TRUE(
+-      send_channel_->SetVideoSend(last_ssrc_, nullptr, &frame_forwarder));
+-  send_channel_->SetSend(true);
+-  frame_forwarder.IncomingCapturedFrame(frame_source_.GetFrame());
+-
+-  ASSERT_TRUE(stream->GetAv1Settings(&settings)) << "No AV1 config set.";
+-  EXPECT_FALSE(settings.automatic_resize_on);
+-
+-  EXPECT_TRUE(send_channel_->SetVideoSend(last_ssrc_, nullptr, nullptr));
+-}
+-
+ // Test that setting the same options doesn't result in the encoder being
+ // reconfigured.
+ TEST_F(WebRtcVideoChannelTest, SetIdenticalOptionsDoesntReconfigureEncoder) {
+diff --git a/modules/video_coding/codecs/av1/libaom_av1_encoder.cc b/modules/video_coding/codecs/av1/libaom_av1_encoder.cc
+index 1d333e7196..28a8e5f846 100644
+--- a/modules/video_coding/codecs/av1/libaom_av1_encoder.cc
++++ b/modules/video_coding/codecs/av1/libaom_av1_encoder.cc
+@@ -824,10 +824,7 @@ VideoEncoder::EncoderInfo LibaomAv1Encoder::GetEncoderInfo() const {
+   info.implementation_name = "libaom";
+   info.has_trusted_rate_controller = true;
+   info.is_hardware_accelerated = false;
+-  info.scaling_settings =
+-      (inited_ && !encoder_settings_.AV1().automatic_resize_on)
+-          ? VideoEncoder::ScalingSettings::kOff
+-          : VideoEncoder::ScalingSettings(kMinQindex, kMaxQindex);
++  info.scaling_settings = VideoEncoder::ScalingSettings(kMinQindex, kMaxQindex);
+   info.preferred_pixel_formats = {VideoFrameBuffer::Type::kI420,
+                                   VideoFrameBuffer::Type::kNV12};
+   if (SvcEnabled()) {
+diff --git a/modules/video_coding/codecs/av1/libaom_av1_encoder_unittest.cc b/modules/video_coding/codecs/av1/libaom_av1_encoder_unittest.cc
+index 04ee9162ba..09bf1bf1ca 100644
+--- a/modules/video_coding/codecs/av1/libaom_av1_encoder_unittest.cc
++++ b/modules/video_coding/codecs/av1/libaom_av1_encoder_unittest.cc
+@@ -36,7 +36,6 @@ using ::testing::SizeIs;
+ 
+ VideoCodec DefaultCodecSettings() {
+   VideoCodec codec_settings;
+-  codec_settings.codecType = kVideoCodecAV1;
+   codec_settings.width = 320;
+   codec_settings.height = 180;
+   codec_settings.maxFramerate = 30;
+@@ -399,16 +398,5 @@ TEST(LibaomAv1EncoderTest, AdheresToTargetBitrateDespiteUnevenFrameTiming) {
+       kTargetBitrateBps, kTargetBitrateBps / 10);
+ }
+ 
+-TEST(LibaomAv1EncoderTest, DisableAutomaticResize) {
+-  std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
+-  ASSERT_TRUE(encoder);
+-  VideoCodec codec_settings = DefaultCodecSettings();
+-  codec_settings.AV1()->automatic_resize_on = false;
+-  EXPECT_EQ(encoder->InitEncode(&codec_settings, DefaultEncoderSettings()),
+-            WEBRTC_VIDEO_CODEC_OK);
+-  EXPECT_EQ(encoder->GetEncoderInfo().scaling_settings.thresholds,
+-            absl::nullopt);
+-}
+-
+ }  // namespace
+ }  // namespace webrtc
+diff --git a/video/config/video_encoder_config.cc b/video/config/video_encoder_config.cc
+index 5eec7b5f78..6ea2052138 100644
+--- a/video/config/video_encoder_config.cc
++++ b/video/config/video_encoder_config.cc
+@@ -96,8 +96,6 @@ void VideoEncoderConfig::EncoderSpecificSettings::FillEncoderSpecificSettings(
+     FillVideoCodecVp8(codec->VP8());
+   } else if (codec->codecType == kVideoCodecVP9) {
+     FillVideoCodecVp9(codec->VP9());
+-  } else if (codec->codecType == kVideoCodecAV1) {
+-    FillVideoCodecAv1(codec->AV1());
+   } else {
+     RTC_DCHECK_NOTREACHED()
+         << "Encoder specifics set/used for unknown codec type.";
+@@ -114,11 +112,6 @@ void VideoEncoderConfig::EncoderSpecificSettings::FillVideoCodecVp9(
+   RTC_DCHECK_NOTREACHED();
+ }
+ 
+-void VideoEncoderConfig::EncoderSpecificSettings::FillVideoCodecAv1(
+-    VideoCodecAV1* av1_settings) const {
+-  RTC_DCHECK_NOTREACHED();
+-}
+-
+ VideoEncoderConfig::Vp8EncoderSpecificSettings::Vp8EncoderSpecificSettings(
+     const VideoCodecVP8& specifics)
+     : specifics_(specifics) {}
+@@ -137,13 +130,4 @@ void VideoEncoderConfig::Vp9EncoderSpecificSettings::FillVideoCodecVp9(
+   *vp9_settings = specifics_;
+ }
+ 
+-VideoEncoderConfig::Av1EncoderSpecificSettings::Av1EncoderSpecificSettings(
+-    const VideoCodecAV1& specifics)
+-    : specifics_(specifics) {}
+-
+-void VideoEncoderConfig::Av1EncoderSpecificSettings::FillVideoCodecAv1(
+-    VideoCodecAV1* av1_settings) const {
+-  *av1_settings = specifics_;
+-}
+-
+ }  // namespace webrtc
+diff --git a/video/config/video_encoder_config.h b/video/config/video_encoder_config.h
+index cb0644a7fd..59c9a39f82 100644
+--- a/video/config/video_encoder_config.h
++++ b/video/config/video_encoder_config.h
+@@ -99,7 +99,6 @@ class VideoEncoderConfig {
+ 
+     virtual void FillVideoCodecVp8(VideoCodecVP8* vp8_settings) const;
+     virtual void FillVideoCodecVp9(VideoCodecVP9* vp9_settings) const;
+-    virtual void FillVideoCodecAv1(VideoCodecAV1* av1_settings) const;
+ 
+    private:
+     ~EncoderSpecificSettings() override {}
+@@ -124,15 +123,6 @@ class VideoEncoderConfig {
+     VideoCodecVP9 specifics_;
+   };
+ 
+-  class Av1EncoderSpecificSettings : public EncoderSpecificSettings {
+-   public:
+-    explicit Av1EncoderSpecificSettings(const VideoCodecAV1& specifics);
+-    void FillVideoCodecAv1(VideoCodecAV1* av1_settings) const override;
+-
+-   private:
+-    VideoCodecAV1 specifics_;
+-  };
+-
+   enum class ContentType {
+     kRealtimeVideo,
+     kScreen,
