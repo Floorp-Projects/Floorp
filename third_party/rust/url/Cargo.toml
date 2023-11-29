@@ -13,16 +13,29 @@
 edition = "2018"
 rust-version = "1.56"
 name = "url"
-version = "2.4.1"
+version = "2.5.0"
 authors = ["The rust-url developers"]
-include = ["src/**/*", "LICENSE-*", "README.md", "tests/**"]
+include = [
+    "src/**/*",
+    "LICENSE-*",
+    "README.md",
+    "tests/**",
+]
 description = "URL library for Rust, based on the WHATWG URL Standard"
 documentation = "https://docs.rs/url"
-readme = "../README.md"
-keywords = ["url", "parser"]
-categories = ["parser-implementations", "web-programming", "encoding"]
+readme = "README.md"
+keywords = [
+    "url",
+    "parser",
+]
+categories = [
+    "parser-implementations",
+    "web-programming",
+    "encoding",
+]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/servo/rust-url"
+
 [package.metadata.docs.rs]
 features = ["serde"]
 rustdoc-args = ["--generate-link-to-definition"]
@@ -39,19 +52,21 @@ harness = false
 name = "parse_url"
 path = "benches/parse_url.rs"
 harness = false
+
 [dependencies.form_urlencoded]
-version = "1.2.0"
+version = "1.2.1"
 
 [dependencies.idna]
-version = "0.4.0"
+version = "0.5.0"
 
 [dependencies.percent-encoding]
-version = "2.3.0"
+version = "2.3.1"
 
 [dependencies.serde]
 version = "1.0"
 features = ["derive"]
 optional = true
+
 [dev-dependencies.bencher]
 version = "0.1"
 
