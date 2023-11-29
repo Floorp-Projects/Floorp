@@ -26,10 +26,10 @@ Cr-Branched-From: 5afcec093c1403fe9e3872706d04671cbc6d2983-refs/heads/main@{#407
  5 files changed, 53 insertions(+)
 
 diff --git a/pc/BUILD.gn b/pc/BUILD.gn
-index e8d1e8622b..b2e448e96a 100644
+index 9176cf9735..dc4505508b 100644
 --- a/pc/BUILD.gn
 +++ b/pc/BUILD.gn
-@@ -443,6 +443,7 @@ rtc_source_set("rtp_transport") {
+@@ -444,6 +444,7 @@ rtc_source_set("rtp_transport") {
      ":rtp_transport_internal",
      ":session_description",
      "../api:array_view",

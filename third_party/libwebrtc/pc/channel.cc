@@ -16,6 +16,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "absl/algorithm/container.h"
 #include "absl/strings/string_view.h"
 #include "api/rtp_parameters.h"
 #include "api/sequence_checker.h"
@@ -1036,19 +1037,34 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
 
   bool needs_send_params_update = false;
   if (type == SdpType::kAnswer || type == SdpType::kPrAnswer) {
-    for (auto& send_codec : send_params.codecs) {
-      auto* recv_codec = FindMatchingCodec(recv_params.codecs, send_codec);
-      if (recv_codec) {
-        if (!recv_codec->packetization && send_codec.packetization) {
-          send_codec.packetization.reset();
-          needs_send_params_update = true;
-        } else if (recv_codec->packetization != send_codec.packetization) {
-          error_desc = StringFormat(
-              "Failed to set local answer due to invalid codec packetization "
-              "specified in m-section with mid='%s'.",
-              mid().c_str());
-          return false;
-        }
+    webrtc::flat_set<const VideoCodec*> matched_codecs;
+    for (VideoCodec& send_codec : send_params.codecs) {
+      if (absl::c_any_of(matched_codecs, [&](const VideoCodec* c) {
+            return send_codec.Matches(*c);
+          })) {
+        continue;
+      }
+
+      const VideoCodec* recv_codec =
+          FindMatchingCodec(recv_params.codecs, send_codec);
+      if (recv_codec == nullptr) {
+        continue;
+      }
+
+      if (!recv_codec->packetization.has_value() &&
+          send_codec.packetization.has_value()) {
+        send_codec.packetization = absl::nullopt;
+        needs_send_params_update = true;
+      } else if (recv_codec->packetization != send_codec.packetization) {
+        error_desc = StringFormat(
+            "Failed to set local answer due to incompatible codec "
+            "packetization for pt='%d' specified in m-section with mid='%s'.",
+            send_codec.id, mid().c_str());
+        return false;
+      }
+
+      if (recv_codec->packetization == send_codec.packetization) {
+        matched_codecs.insert(&send_codec);
       }
     }
   }
@@ -1121,19 +1137,34 @@ bool VideoChannel::SetRemoteContent_w(const MediaContentDescription* content,
 
   bool needs_recv_params_update = false;
   if (type == SdpType::kAnswer || type == SdpType::kPrAnswer) {
-    for (auto& recv_codec : recv_params.codecs) {
-      auto* send_codec = FindMatchingCodec(send_params.codecs, recv_codec);
-      if (send_codec) {
-        if (!send_codec->packetization && recv_codec.packetization) {
-          recv_codec.packetization.reset();
-          needs_recv_params_update = true;
-        } else if (send_codec->packetization != recv_codec.packetization) {
-          error_desc = StringFormat(
-              "Failed to set remote answer due to invalid codec packetization "
-              "specifid in m-section with mid='%s'.",
-              mid().c_str());
-          return false;
-        }
+    webrtc::flat_set<const VideoCodec*> matched_codecs;
+    for (VideoCodec& recv_codec : recv_params.codecs) {
+      if (absl::c_any_of(matched_codecs, [&](const VideoCodec* c) {
+            return recv_codec.Matches(*c);
+          })) {
+        continue;
+      }
+
+      const VideoCodec* send_codec =
+          FindMatchingCodec(send_params.codecs, recv_codec);
+      if (send_codec == nullptr) {
+        continue;
+      }
+
+      if (!send_codec->packetization.has_value() &&
+          recv_codec.packetization.has_value()) {
+        recv_codec.packetization = absl::nullopt;
+        needs_recv_params_update = true;
+      } else if (send_codec->packetization != recv_codec.packetization) {
+        error_desc = StringFormat(
+            "Failed to set remote answer due to incompatible codec "
+            "packetization for pt='%d' specified in m-section with mid='%s'.",
+            recv_codec.id, mid().c_str());
+        return false;
+      }
+
+      if (send_codec->packetization == recv_codec.packetization) {
+        matched_codecs.insert(&recv_codec);
       }
     }
   }
