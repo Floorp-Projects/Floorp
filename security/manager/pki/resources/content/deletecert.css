@@ -12,8 +12,13 @@ dialog::part(content-box) {
   contain: inline-size;
 }
 
+#impact {
+  margin-block-start: 12px;
+}
+
 #certlist {
   flex: 1;
   min-height: 8em;
+  contain: size;
   min-width: 35em;
 }
