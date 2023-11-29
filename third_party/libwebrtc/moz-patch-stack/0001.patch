@@ -1,253 +1,176 @@
-From: Michael Froman <mjfroman@mac.com>
-Date: Wed, 29 Nov 2023 17:03:09 -0600
-Subject: (tmp-cherry-pick) Revert "Clean up last_packet_received_time_ as it's
- no longer used." (b4d4bbcebd)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: Harald Alvestrand <hta@webrtc.org>
+Date: Tue, 26 Sep 2023 19:38:19 +0000
+Subject: (cherry-pick-branch-heads/5993) [M118] Fire MaybeSignalReadyToSend in
+ a PostTask when recursive
 
-This reverts commit 2f4bc6416651be40ef8f95a4695e6b7c41f18666.
+Speculative fix. Writing the test for it is more complex.
 
-Reason for revert: Breaks downstream test
+(cherry picked from commit 83894d384763c613e548e6352838406e6e0c2fc1)
 
-Original change's description:
-> Clean up last_packet_received_time_ as it's no longer used.
->
-> Bug: webrtc:15377
-> Change-Id: I5453b9fd572a04dbea3241a2eb1c8ad8bb8b1186
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/320560
-> Reviewed-by: Erik Språng <sprang@webrtc.org>
-> Reviewed-by: Björn Terelius <terelius@webrtc.org>
-> Commit-Queue: Ying Wang <yinwa@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#40792}
-
-Bug: webrtc:15377
-Change-Id: Ifa57671cc479cdd86f543c4edc236221beb76f90
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/321340
-Auto-Submit: Björn Terelius <terelius@webrtc.org>
-Reviewed-by: Ying Wang <yinwa@webrtc.org>
-Owners-Override: Björn Terelius <terelius@webrtc.org>
-Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Commit-Queue: Björn Terelius <terelius@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#40797}
+Bug: chromium:1483874
+Change-Id: Icfaf1524b0499c609010753e0b6f3cadbd0e98f9
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/321480
+Reviewed-by: Per Kjellander <perkj@webrtc.org>
+Commit-Queue: Harald Alvestrand <hta@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#40820}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/322124
+Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5993@{#3}
+Cr-Branched-From: 5afcec093c1403fe9e3872706d04671cbc6d2983-refs/heads/main@{#40703}
 ---
- api/transport/network_control.h                           | 3 +++
- api/transport/test/mock_network_control.h                 | 4 ++++
- call/call.cc                                              | 1 +
- call/rtp_transport_controller_send.cc                     | 7 +++++++
- call/rtp_transport_controller_send.h                      | 1 +
- call/rtp_transport_controller_send_interface.h            | 3 +++
- call/test/mock_rtp_transport_controller_send.h            | 1 +
- .../goog_cc/goog_cc_network_control.cc                    | 8 +++++++-
- .../goog_cc/goog_cc_network_control.h                     | 2 ++
- .../congestion_controller/pcc/pcc_network_controller.cc   | 5 +++++
- .../congestion_controller/pcc/pcc_network_controller.h    | 1 +
- test/scenario/call_client.cc                              | 4 ++++
- test/scenario/call_client.h                               | 1 +
- 13 files changed, 40 insertions(+), 1 deletion(-)
+ pc/BUILD.gn                       |  1 +
+ pc/rtp_transport.cc               | 10 ++++++++++
+ pc/rtp_transport.h                |  4 ++++
+ pc/rtp_transport_unittest.cc      | 28 ++++++++++++++++++++++++++++
+ pc/test/rtp_transport_test_util.h | 10 ++++++++++
+ 5 files changed, 53 insertions(+)
 
-diff --git a/api/transport/network_control.h b/api/transport/network_control.h
-index c07447cc41..862322443d 100644
---- a/api/transport/network_control.h
-+++ b/api/transport/network_control.h
-@@ -79,6 +79,9 @@ class NetworkControllerInterface {
-   // Called when a packet is sent on the network.
-   ABSL_MUST_USE_RESULT virtual NetworkControlUpdate OnSentPacket(
-       SentPacket) = 0;
-+  // Called when a packet is received from the remote client.
-+  ABSL_MUST_USE_RESULT virtual NetworkControlUpdate OnReceivedPacket(
-+      ReceivedPacket) = 0;
-   // Called when the stream specific configuration has been updated.
-   ABSL_MUST_USE_RESULT virtual NetworkControlUpdate OnStreamsConfig(
-       StreamsConfig) = 0;
-diff --git a/api/transport/test/mock_network_control.h b/api/transport/test/mock_network_control.h
-index 841628d3df..e3a15b8e11 100644
---- a/api/transport/test/mock_network_control.h
-+++ b/api/transport/test/mock_network_control.h
-@@ -39,6 +39,10 @@ class MockNetworkControllerInterface : public NetworkControllerInterface {
-               (RoundTripTimeUpdate),
-               (override));
-   MOCK_METHOD(NetworkControlUpdate, OnSentPacket, (SentPacket), (override));
-+  MOCK_METHOD(NetworkControlUpdate,
-+              OnReceivedPacket,
-+              (ReceivedPacket),
-+              (override));
-   MOCK_METHOD(NetworkControlUpdate,
-               OnStreamsConfig,
-               (StreamsConfig),
-diff --git a/call/call.cc b/call/call.cc
-index 9b605e435c..fa5d14d204 100644
---- a/call/call.cc
-+++ b/call/call.cc
-@@ -1460,6 +1460,7 @@ void Call::NotifyBweOfReceivedPacket(const RtpPacketReceived& packet,
-   if (packet.GetExtension<AbsoluteSendTime>(&time_24)) {
-     packet_msg.send_time = AbsoluteSendTime::ToTimestamp(time_24);
-   }
-+  transport_send_->OnReceivedPacket(packet_msg);
- 
-   receive_side_cc_.OnReceivedPacket(packet, media_type);
- }
-diff --git a/call/rtp_transport_controller_send.cc b/call/rtp_transport_controller_send.cc
-index 77d334b37f..dc1d37168e 100644
---- a/call/rtp_transport_controller_send.cc
-+++ b/call/rtp_transport_controller_send.cc
-@@ -419,6 +419,13 @@ void RtpTransportControllerSend::ProcessSentPacketUpdates(
+diff --git a/pc/BUILD.gn b/pc/BUILD.gn
+index 2da703e869..3e237445ef 100644
+--- a/pc/BUILD.gn
++++ b/pc/BUILD.gn
+@@ -444,6 +444,7 @@ rtc_source_set("rtp_transport") {
+     ":rtp_transport_internal",
+     ":session_description",
+     "../api:array_view",
++    "../api/task_queue:pending_task_safety_flag",
+     "../api/units:timestamp",
+     "../call:rtp_receiver",
+     "../call:video_stream_api",
+diff --git a/pc/rtp_transport.cc b/pc/rtp_transport.cc
+index 32bdf99ec4..653b51fd9e 100644
+--- a/pc/rtp_transport.cc
++++ b/pc/rtp_transport.cc
+@@ -285,8 +285,18 @@ void RtpTransport::MaybeSignalReadyToSend() {
+   bool ready_to_send =
+       rtp_ready_to_send_ && (rtcp_ready_to_send_ || rtcp_mux_enabled_);
+   if (ready_to_send != ready_to_send_) {
++    if (processing_ready_to_send_) {
++      // Delay ReadyToSend processing until current operation is finished.
++      // Note that this may not cause a signal, since ready_to_send may
++      // have a new value by the time this executes.
++      TaskQueueBase::Current()->PostTask(
++          SafeTask(safety_.flag(), [this] { MaybeSignalReadyToSend(); }));
++      return;
++    }
+     ready_to_send_ = ready_to_send;
++    processing_ready_to_send_ = true;
+     SendReadyToSend(ready_to_send);
++    processing_ready_to_send_ = false;
    }
  }
  
-+void RtpTransportControllerSend::OnReceivedPacket(
-+    const ReceivedPacket& packet_msg) {
-+  RTC_DCHECK_RUN_ON(&sequence_checker_);
-+  if (controller_)
-+    PostUpdates(controller_->OnReceivedPacket(packet_msg));
-+}
-+
- void RtpTransportControllerSend::UpdateBitrateConstraints(
-     const BitrateConstraints& updated) {
-   RTC_DCHECK_RUN_ON(&sequence_checker_);
-diff --git a/call/rtp_transport_controller_send.h b/call/rtp_transport_controller_send.h
-index 42f4f774ec..1aace1ce65 100644
---- a/call/rtp_transport_controller_send.h
-+++ b/call/rtp_transport_controller_send.h
-@@ -96,6 +96,7 @@ class RtpTransportControllerSend final
-   absl::optional<Timestamp> GetFirstPacketTime() const override;
-   void EnablePeriodicAlrProbing(bool enable) override;
-   void OnSentPacket(const rtc::SentPacket& sent_packet) override;
-+  void OnReceivedPacket(const ReceivedPacket& packet_msg) override;
+diff --git a/pc/rtp_transport.h b/pc/rtp_transport.h
+index 1afcb5ee3d..456c91c370 100644
+--- a/pc/rtp_transport.h
++++ b/pc/rtp_transport.h
+@@ -17,6 +17,7 @@
+ #include <string>
  
-   void SetSdpBitrateParameters(const BitrateConstraints& constraints) override;
-   void SetClientBitratePreferences(const BitrateSettings& preferences) override;
-diff --git a/call/rtp_transport_controller_send_interface.h b/call/rtp_transport_controller_send_interface.h
-index a63189f12d..7edc135037 100644
---- a/call/rtp_transport_controller_send_interface.h
-+++ b/call/rtp_transport_controller_send_interface.h
-@@ -32,6 +32,7 @@
- #include "modules/rtp_rtcp/include/rtcp_statistics.h"
- #include "modules/rtp_rtcp/include/rtp_packet_sender.h"
- #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
+ #include "absl/types/optional.h"
++#include "api/task_queue/pending_task_safety_flag.h"
+ #include "call/rtp_demuxer.h"
+ #include "call/video_receive_stream.h"
+ #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
+@@ -137,6 +138,9 @@ class RtpTransport : public RtpTransportInternal {
  
- namespace rtc {
- struct SentPacket;
-@@ -138,6 +139,8 @@ class RtpTransportControllerSendInterface {
-   // the calling thread or make assumptions about the thread context.
-   virtual void OnSentPacket(const rtc::SentPacket& sent_packet) = 0;
- 
-+  virtual void OnReceivedPacket(const ReceivedPacket& received_packet) = 0;
-+
-   virtual void SetSdpBitrateParameters(
-       const BitrateConstraints& constraints) = 0;
-   virtual void SetClientBitratePreferences(
-diff --git a/call/test/mock_rtp_transport_controller_send.h b/call/test/mock_rtp_transport_controller_send.h
-index 366db42899..b24e5a59ec 100644
---- a/call/test/mock_rtp_transport_controller_send.h
-+++ b/call/test/mock_rtp_transport_controller_send.h
-@@ -98,6 +98,7 @@ class MockRtpTransportControllerSend
-   MOCK_METHOD(void, OnTransportOverheadChanged, (size_t), (override));
-   MOCK_METHOD(void, AccountForAudioPacketsInPacedSender, (bool), (override));
-   MOCK_METHOD(void, IncludeOverheadInPacedSender, (), (override));
-+  MOCK_METHOD(void, OnReceivedPacket, (const ReceivedPacket&), (override));
-   MOCK_METHOD(void, EnsureStarted, (), (override));
+   // Used for identifying the MID for RtpDemuxer.
+   RtpHeaderExtensionMap header_extension_map_;
++  // Guard against recursive "ready to send" signals
++  bool processing_ready_to_send_ = false;
++  ScopedTaskSafety safety_;
  };
+ 
  }  // namespace webrtc
-diff --git a/modules/congestion_controller/goog_cc/goog_cc_network_control.cc b/modules/congestion_controller/goog_cc/goog_cc_network_control.cc
-index 4cbd40a74e..9d7828d262 100644
---- a/modules/congestion_controller/goog_cc/goog_cc_network_control.cc
-+++ b/modules/congestion_controller/goog_cc/goog_cc_network_control.cc
-@@ -240,7 +240,7 @@ NetworkControlUpdate GoogCcNetworkController::OnProcessInterval(
-                                       probes.begin(), probes.end());
+diff --git a/pc/rtp_transport_unittest.cc b/pc/rtp_transport_unittest.cc
+index ca748ae9a6..5b6a8309e0 100644
+--- a/pc/rtp_transport_unittest.cc
++++ b/pc/rtp_transport_unittest.cc
+@@ -10,12 +10,16 @@
  
-   if (rate_control_settings_.UseCongestionWindow() &&
--      !feedback_max_rtts_.empty()) {
-+      last_packet_received_time_.IsFinite() && !feedback_max_rtts_.empty()) {
-     UpdateCongestionWindowSize();
-   }
-   if (congestion_window_pushback_controller_ && current_data_window_) {
-@@ -304,6 +304,12 @@ NetworkControlUpdate GoogCcNetworkController::OnSentPacket(
-   }
+ #include "pc/rtp_transport.h"
+ 
++#include <utility>
++
+ #include "p2p/base/fake_packet_transport.h"
+ #include "pc/test/rtp_transport_test_util.h"
+ #include "rtc_base/buffer.h"
+ #include "rtc_base/containers/flat_set.h"
++#include "rtc_base/gunit.h"
+ #include "rtc_base/third_party/sigslot/sigslot.h"
+ #include "test/gtest.h"
++#include "test/run_loop.h"
+ 
+ namespace webrtc {
+ 
+@@ -321,4 +325,28 @@ TEST(RtpTransportTest, DontSignalUnhandledRtpPayloadType) {
+   transport.UnregisterRtpDemuxerSink(&observer);
  }
  
-+NetworkControlUpdate GoogCcNetworkController::OnReceivedPacket(
-+    ReceivedPacket received_packet) {
-+  last_packet_received_time_ = received_packet.receive_time;
-+  return NetworkControlUpdate();
++TEST(RtpTransportTest, RecursiveSetSendDoesNotCrash) {
++  const int kShortTimeout = 100;
++  test::RunLoop loop;
++  RtpTransport transport(kMuxEnabled);
++  rtc::FakePacketTransport fake_rtp("fake_rtp");
++  transport.SetRtpPacketTransport(&fake_rtp);
++  TransportObserver observer(&transport);
++  observer.SetActionOnReadyToSend([&](bool ready) {
++    const rtc::PacketOptions options;
++    const int flags = 0;
++    rtc::CopyOnWriteBuffer rtp_data(kRtpData, kRtpLen);
++    transport.SendRtpPacket(&rtp_data, options, flags);
++  });
++  // The fake RTP will have no destination, so will return -1.
++  fake_rtp.SetError(ENOTCONN);
++  fake_rtp.SetWritable(true);
++  // At this point, only the initial ready-to-send is observed.
++  EXPECT_TRUE(observer.ready_to_send());
++  EXPECT_EQ(observer.ready_to_send_signal_count(), 1);
++  // After the wait, the ready-to-send false is observed.
++  EXPECT_EQ_WAIT(observer.ready_to_send_signal_count(), 2, kShortTimeout);
++  EXPECT_FALSE(observer.ready_to_send());
 +}
 +
- NetworkControlUpdate GoogCcNetworkController::OnStreamsConfig(
-     StreamsConfig msg) {
-   NetworkControlUpdate update;
-diff --git a/modules/congestion_controller/goog_cc/goog_cc_network_control.h b/modules/congestion_controller/goog_cc/goog_cc_network_control.h
-index a524beb8dd..df918e1392 100644
---- a/modules/congestion_controller/goog_cc/goog_cc_network_control.h
-+++ b/modules/congestion_controller/goog_cc/goog_cc_network_control.h
-@@ -63,6 +63,7 @@ class GoogCcNetworkController : public NetworkControllerInterface {
-   NetworkControlUpdate OnRemoteBitrateReport(RemoteBitrateReport msg) override;
-   NetworkControlUpdate OnRoundTripTimeUpdate(RoundTripTimeUpdate msg) override;
-   NetworkControlUpdate OnSentPacket(SentPacket msg) override;
-+  NetworkControlUpdate OnReceivedPacket(ReceivedPacket msg) override;
-   NetworkControlUpdate OnStreamsConfig(StreamsConfig msg) override;
-   NetworkControlUpdate OnTargetRateConstraints(
-       TargetRateConstraints msg) override;
-@@ -132,6 +133,7 @@ class GoogCcNetworkController : public NetworkControllerInterface {
+ }  // namespace webrtc
+diff --git a/pc/test/rtp_transport_test_util.h b/pc/test/rtp_transport_test_util.h
+index 29ffad8539..593ee002c9 100644
+--- a/pc/test/rtp_transport_test_util.h
++++ b/pc/test/rtp_transport_test_util.h
+@@ -11,6 +11,8 @@
+ #ifndef PC_TEST_RTP_TRANSPORT_TEST_UTIL_H_
+ #define PC_TEST_RTP_TRANSPORT_TEST_UTIL_H_
  
-   absl::optional<uint8_t> last_estimated_fraction_loss_ = 0;
-   TimeDelta last_estimated_round_trip_time_ = TimeDelta::PlusInfinity();
-+  Timestamp last_packet_received_time_ = Timestamp::MinusInfinity();
- 
-   double pacing_factor_;
-   DataRate min_total_allocated_bitrate_;
-diff --git a/modules/congestion_controller/pcc/pcc_network_controller.cc b/modules/congestion_controller/pcc/pcc_network_controller.cc
-index 116bd1a85e..8653470955 100644
---- a/modules/congestion_controller/pcc/pcc_network_controller.cc
-+++ b/modules/congestion_controller/pcc/pcc_network_controller.cc
-@@ -377,6 +377,11 @@ NetworkControlUpdate PccNetworkController::OnStreamsConfig(StreamsConfig msg) {
-   return NetworkControlUpdate();
- }
- 
-+NetworkControlUpdate PccNetworkController::OnReceivedPacket(
-+    ReceivedPacket msg) {
-+  return NetworkControlUpdate();
-+}
++#include <utility>
 +
- NetworkControlUpdate PccNetworkController::OnNetworkStateEstimate(
-     NetworkStateEstimate msg) {
-   return NetworkControlUpdate();
-diff --git a/modules/congestion_controller/pcc/pcc_network_controller.h b/modules/congestion_controller/pcc/pcc_network_controller.h
-index 37bb0abfe6..e5f65dd7d9 100644
---- a/modules/congestion_controller/pcc/pcc_network_controller.h
-+++ b/modules/congestion_controller/pcc/pcc_network_controller.h
-@@ -78,6 +78,7 @@ class PccNetworkController : public NetworkControllerInterface {
-   NetworkControlUpdate OnRemoteBitrateReport(RemoteBitrateReport msg) override;
-   NetworkControlUpdate OnRoundTripTimeUpdate(RoundTripTimeUpdate msg) override;
-   NetworkControlUpdate OnTransportLossReport(TransportLossReport msg) override;
-+  NetworkControlUpdate OnReceivedPacket(ReceivedPacket msg) override;
-   NetworkControlUpdate OnNetworkStateEstimate(
-       NetworkStateEstimate msg) override;
+ #include "call/rtp_packet_sink_interface.h"
+ #include "modules/rtp_rtcp/source/rtp_packet_received.h"
+ #include "pc/rtp_transport_internal.h"
+@@ -65,6 +67,9 @@ class TransportObserver : public RtpPacketSinkInterface {
+   }
  
-diff --git a/test/scenario/call_client.cc b/test/scenario/call_client.cc
-index 99e702f622..d2019aebc7 100644
---- a/test/scenario/call_client.cc
-+++ b/test/scenario/call_client.cc
-@@ -122,6 +122,10 @@ NetworkControlUpdate NetworkControleUpdateCache::OnRoundTripTimeUpdate(
- NetworkControlUpdate NetworkControleUpdateCache::OnSentPacket(SentPacket msg) {
-   return Update(controller_->OnSentPacket(msg));
- }
-+NetworkControlUpdate NetworkControleUpdateCache::OnReceivedPacket(
-+    ReceivedPacket msg) {
-+  return Update(controller_->OnReceivedPacket(msg));
-+}
- NetworkControlUpdate NetworkControleUpdateCache::OnStreamsConfig(
-     StreamsConfig msg) {
-   return Update(controller_->OnStreamsConfig(msg));
-diff --git a/test/scenario/call_client.h b/test/scenario/call_client.h
-index 0208cacc94..3717a7e796 100644
---- a/test/scenario/call_client.h
-+++ b/test/scenario/call_client.h
-@@ -47,6 +47,7 @@ class NetworkControleUpdateCache : public NetworkControllerInterface {
-   NetworkControlUpdate OnRemoteBitrateReport(RemoteBitrateReport msg) override;
-   NetworkControlUpdate OnRoundTripTimeUpdate(RoundTripTimeUpdate msg) override;
-   NetworkControlUpdate OnSentPacket(SentPacket msg) override;
-+  NetworkControlUpdate OnReceivedPacket(ReceivedPacket msg) override;
-   NetworkControlUpdate OnStreamsConfig(StreamsConfig msg) override;
-   NetworkControlUpdate OnTargetRateConstraints(
-       TargetRateConstraints msg) override;
+   void OnReadyToSend(bool ready) {
++    if (action_on_ready_to_send_) {
++      action_on_ready_to_send_(ready);
++    }
+     ready_to_send_signal_count_++;
+     ready_to_send_ = ready;
+   }
+@@ -73,6 +78,10 @@ class TransportObserver : public RtpPacketSinkInterface {
+ 
+   int ready_to_send_signal_count() { return ready_to_send_signal_count_; }
+ 
++  void SetActionOnReadyToSend(absl::AnyInvocable<void(bool)> action) {
++    action_on_ready_to_send_ = std::move(action);
++  }
++
+  private:
+   bool ready_to_send_ = false;
+   int rtp_count_ = 0;
+@@ -81,6 +90,7 @@ class TransportObserver : public RtpPacketSinkInterface {
+   int ready_to_send_signal_count_ = 0;
+   rtc::CopyOnWriteBuffer last_recv_rtp_packet_;
+   rtc::CopyOnWriteBuffer last_recv_rtcp_packet_;
++  absl::AnyInvocable<void(bool)> action_on_ready_to_send_;
+ };
+ 
+ }  // namespace webrtc
