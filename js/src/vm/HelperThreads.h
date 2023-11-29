@@ -51,6 +51,7 @@ class GCRuntime;
 namespace jit {
 class IonCompileTask;
 class IonFreeTask;
+class JitRuntime;
 using IonFreeCompileTasks = Vector<IonCompileTask*, 8, SystemAllocPolicy>;
 }  // namespace jit
 
@@ -146,16 +147,19 @@ bool StartOffThreadIonCompile(jit::IonCompileTask* task,
 void FinishOffThreadIonCompile(jit::IonCompileTask* task,
                                const AutoLockHelperThreadState& lock);
 
-// RAII class to submit an IonFreeTask for a list of Ion compilation tasks.
+// RAII class to handle batching compile tasks and starting an IonFreeTask.
 class MOZ_RAII AutoStartIonFreeTask {
-  jit::IonFreeCompileTasks tasks_;
+  jit::JitRuntime* jitRuntime_;
+
+  // If true, start an IonFreeTask even if the batch is small.
+  bool force_;
 
  public:
+  explicit AutoStartIonFreeTask(jit::JitRuntime* jitRuntime, bool force = false)
+      : jitRuntime_(jitRuntime), force_(force) {}
   ~AutoStartIonFreeTask();
 
-  [[nodiscard]] bool appendCompileTask(jit::IonCompileTask* task) {
-    return tasks_.append(task);
-  }
+  [[nodiscard]] bool addIonCompileToFreeTaskBatch(jit::IonCompileTask* task);
 };
 
 struct ZonesInState {

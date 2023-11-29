@@ -207,7 +207,7 @@ void jit::FinishOffThreadTask(JSRuntime* runtime,
 
   // Try to free the Ion LifoAlloc off-thread. Free on the main thread if this
   // OOMs.
-  if (!freeTask.appendCompileTask(task)) {
+  if (!freeTask.addIonCompileToFreeTaskBatch(task)) {
     FreeIonCompileTask(task);
   }
 }

@@ -87,6 +87,8 @@ JitRuntime::~JitRuntime() {
   MOZ_ASSERT(ionLazyLinkListSize_ == 0);
   MOZ_ASSERT(ionLazyLinkList_.ref().isEmpty());
 
+  MOZ_ASSERT(ionFreeTaskBatch_.ref().empty());
+
   // By this point, the jitcode global table should be empty.
   MOZ_ASSERT_IF(jitcodeGlobalTable_, jitcodeGlobalTable_->empty());
   js_delete(jitcodeGlobalTable_.ref());
@@ -376,7 +378,7 @@ void jit::LinkIonScript(JSContext* cx, HandleScript calleeScript) {
     }
   }
 
-  AutoStartIonFreeTask freeTask;
+  AutoStartIonFreeTask freeTask(cx->runtime()->jitRuntime());
   FinishOffThreadTask(cx->runtime(), freeTask, task);
 }
 
