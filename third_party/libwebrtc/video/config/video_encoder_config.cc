@@ -68,8 +68,7 @@ VideoEncoderConfig::~VideoEncoderConfig() = default;
 std::string VideoEncoderConfig::ToString() const {
   char buf[1024];
   rtc::SimpleStringBuilder ss(buf);
-  ss << "{codec_type: ";
-  ss << CodecTypeToPayloadString(codec_type);
+  ss << "{codec_type: " << CodecTypeToPayloadString(codec_type);
   ss << ", content_type: ";
   switch (content_type) {
     case ContentType::kRealtimeVideo:
