@@ -909,3 +909,38 @@ add_task(async function test_padding() {
 });
 
 add_task(test_connection_reuse_and_cycling);
+
+// Can't test for socket process since telemetry is captured in different process.
+add_task(
+  { skip_if: () => mozinfo.socketprocess_networking },
+  async function test_trr_pb_telemetry() {
+    setModeAndURI(Ci.nsIDNSService.MODE_TRRONLY, `doh`);
+    Services.dns.clearCache(true);
+    Services.fog.initializeFOG();
+    Services.fog.testResetFOG();
+    await new TRRDNSListener("testytest.com", { expectedAnswer: "5.5.5.5" });
+
+    Assert.equal(
+      await Glean.networking.trrRequestCount.regular.testGetValue(),
+      2
+    ); // One for IPv4 and one for IPv6.
+    Assert.equal(
+      await Glean.networking.trrRequestCount.private.testGetValue(),
+      null
+    );
+
+    await new TRRDNSListener("testytest.com", {
+      expectedAnswer: "5.5.5.5",
+      originAttributes: { privateBrowsingId: 1 },
+    });
+
+    Assert.equal(
+      await Glean.networking.trrRequestCount.regular.testGetValue(),
+      2
+    );
+    Assert.equal(
+      await Glean.networking.trrRequestCount.private.testGetValue(),
+      2
+    );
+  }
+);
