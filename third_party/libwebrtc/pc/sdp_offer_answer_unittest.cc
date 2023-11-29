@@ -959,4 +959,38 @@ TEST_F(SdpOfferAnswerTest, OfferWithRtxAndNoMsidIsNotRejected) {
   EXPECT_TRUE(pc->SetRemoteDescription(std::move(offer)));
 }
 
+TEST_F(SdpOfferAnswerTest, RejectsAnswerWithInvalidTransport) {
+  auto pc1 = CreatePeerConnection();
+  pc1->AddAudioTrack("audio_track", {});
+  auto pc2 = CreatePeerConnection();
+  pc2->AddAudioTrack("anotheraudio_track", {});
+
+  auto initial_offer = pc1->CreateOfferAndSetAsLocal();
+  ASSERT_EQ(initial_offer->description()->contents().size(), 1u);
+  auto mid = initial_offer->description()->contents()[0].mid();
+
+  EXPECT_TRUE(pc2->SetRemoteDescription(std::move(initial_offer)));
+  auto initial_answer = pc2->CreateAnswerAndSetAsLocal();
+
+  std::string sdp;
+  initial_answer->ToString(&sdp);
+  EXPECT_TRUE(pc1->SetRemoteDescription(std::move(initial_answer)));
+
+  auto transceivers = pc1->pc()->GetTransceivers();
+  ASSERT_EQ(transceivers.size(), 1u);
+  // This stops the only transport.
+  transceivers[0]->StopStandard();
+
+  auto subsequent_offer = pc1->CreateOfferAndSetAsLocal();
+  // But the remote answers with a non-rejected m-line which is not valid.
+  auto bad_answer = CreateSessionDescription(
+      SdpType::kAnswer,
+      absl::StrReplaceAll(sdp, {{"a=group:BUNDLE " + mid + "\r\n", ""}}));
+
+  RTCError error;
+  pc1->SetRemoteDescription(std::move(bad_answer), &error);
+  EXPECT_FALSE(error.ok());
+  EXPECT_EQ(error.type(), RTCErrorType::INVALID_PARAMETER);
+}
+
 }  // namespace webrtc
