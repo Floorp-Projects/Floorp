@@ -8,6 +8,7 @@
   /* Do not use base tokens directly as they don't carry any meaning and are used to set our base. Refer to Application tokens below. */
   /** Color **/
   --color-white: #ffffff;
+  --color-black-a10: rgba(0, 0, 0, 0.1);
   --color-blue-05: #deeafc;
   --color-blue-30: #73a7f3;
   --color-blue-50: #0060df;
@@ -21,6 +22,7 @@
   --color-gray-50: #bfbfc9;
   --color-gray-60: #8f8f9d;
   --color-gray-70: #5b5b66;
+  --color-gray-80: #23222b;
   --color-gray-90: #1c1b22;
   --color-gray-100: #15141a;
   --color-green-05: #d8eedc;
@@ -40,8 +42,13 @@
   /** Border **/
   --border-radius-circle: 9999px;
   --border-radius-small: 4px;
+  --border-radius-medium: 8px;
   --border-width: 1px;
   --border-interactive-color: unset;
+
+  /** Box **/
+  --box-background-color: light-dark(var(--color-white), var(--color-gray-80));
+  --box-shadow-10: 0 1px 4px var(--color-black-a10);
 
   /** Color **/
   --color-accent-primary: unset;
@@ -115,6 +122,9 @@
     --border-interactive-color-hover: ButtonText;
     --border-interactive-color-active: AccentColor;
     --border-interactive-color-disabled: GrayText;
+
+    /** Box **/
+    --box-background-color: var(--color-canvas);
 
     /* Button */
     --button-background-color: ButtonFace;
