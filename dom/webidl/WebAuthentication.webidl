@@ -17,7 +17,7 @@ interface PublicKeyCredential : Credential {
     readonly attribute DOMString?                            authenticatorAttachment;
     AuthenticationExtensionsClientOutputs getClientExtensionResults();
     [NewObject] static Promise<boolean> isConditionalMediationAvailable();
-    [Throws] object toJSON();
+    [Throws, Pref="security.webauthn.enable_json_serialization_methods"] object toJSON();
 };
 
 typedef DOMString Base64URLString;
@@ -87,7 +87,7 @@ partial interface PublicKeyCredential {
 
 [SecureContext]
 partial interface PublicKeyCredential {
-    [Throws] static PublicKeyCredentialCreationOptions parseCreationOptionsFromJSON(PublicKeyCredentialCreationOptionsJSON options);
+    [Throws, Pref="security.webauthn.enable_json_serialization_methods"] static PublicKeyCredentialCreationOptions parseCreationOptionsFromJSON(PublicKeyCredentialCreationOptionsJSON options);
 };
 
 dictionary PublicKeyCredentialCreationOptionsJSON {
@@ -121,7 +121,7 @@ dictionary AuthenticationExtensionsClientInputsJSON {
 
 [SecureContext]
 partial interface PublicKeyCredential {
-    [Throws] static PublicKeyCredentialRequestOptions parseRequestOptionsFromJSON(PublicKeyCredentialRequestOptionsJSON options);
+    [Throws, Pref="security.webauthn.enable_json_serialization_methods"] static PublicKeyCredentialRequestOptions parseRequestOptionsFromJSON(PublicKeyCredentialRequestOptionsJSON options);
 };
 
 dictionary PublicKeyCredentialRequestOptionsJSON {
