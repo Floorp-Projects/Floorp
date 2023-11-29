@@ -1,0 +1,2186 @@
+From: Dan Minor <dminor@mozilla.com>
+Date: Thu, 24 Sep 2020 18:28:00 +0000
+Subject: Bug 1665166 - Move media/webrtc/trunk/* to third-party/libwebrtc;
+ r=ng
+
+Differential Revision: https://phabricator.services.mozilla.com/D91317
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/57e3c54bd7b9a0203e19ff1df272d24bb551ed29
+---
+ tools/clang/OWNERS                            |   2 +
+ tools/clang/plugins/ChromeClassTester.cpp     | 294 ++++++++++++
+ tools/clang/plugins/ChromeClassTester.h       |  84 ++++
+ tools/clang/plugins/FindBadConstructs.cpp     | 435 ++++++++++++++++++
+ tools/clang/plugins/Makefile                  |  19 +
+ tools/clang/plugins/OWNERS                    |   1 +
+ tools/clang/plugins/README.chromium           |   4 +
+ tools/clang/plugins/tests/base_refcounted.cpp |  72 +++
+ tools/clang/plugins/tests/base_refcounted.h   | 121 +++++
+ tools/clang/plugins/tests/base_refcounted.txt |  23 +
+ .../clang/plugins/tests/inline_copy_ctor.cpp  |   5 +
+ tools/clang/plugins/tests/inline_copy_ctor.h  |  12 +
+ .../clang/plugins/tests/inline_copy_ctor.txt  |   5 +
+ tools/clang/plugins/tests/inline_ctor.cpp     |  25 +
+ tools/clang/plugins/tests/inline_ctor.h       |  21 +
+ tools/clang/plugins/tests/inline_ctor.txt     |   8 +
+ tools/clang/plugins/tests/missing_ctor.cpp    |  23 +
+ tools/clang/plugins/tests/missing_ctor.h      |  19 +
+ tools/clang/plugins/tests/missing_ctor.txt    |   6 +
+ .../tests/nested_class_inline_ctor.cpp        |   5 +
+ .../plugins/tests/nested_class_inline_ctor.h  |  22 +
+ .../tests/nested_class_inline_ctor.txt        |   8 +
+ .../plugins/tests/overridden_methods.cpp      |  38 ++
+ .../clang/plugins/tests/overridden_methods.h  |  54 +++
+ .../plugins/tests/overridden_methods.txt      |  20 +
+ tools/clang/plugins/tests/test.sh             |  72 +++
+ tools/clang/plugins/tests/virtual_methods.cpp |  36 ++
+ tools/clang/plugins/tests/virtual_methods.h   |  39 ++
+ tools/clang/plugins/tests/virtual_methods.txt |   8 +
+ tools/clang/scripts/package.sh                |  87 ++++
+ tools/clang/scripts/plugin_flags.sh           |  24 +
+ tools/clang/scripts/update.py                 |  34 ++
+ tools/clang/scripts/update.sh                 | 286 ++++++++++++
+ 33 files changed, 1912 insertions(+)
+ create mode 100644 tools/clang/OWNERS
+ create mode 100644 tools/clang/plugins/ChromeClassTester.cpp
+ create mode 100644 tools/clang/plugins/ChromeClassTester.h
+ create mode 100644 tools/clang/plugins/FindBadConstructs.cpp
+ create mode 100644 tools/clang/plugins/Makefile
+ create mode 100644 tools/clang/plugins/OWNERS
+ create mode 100644 tools/clang/plugins/README.chromium
+ create mode 100644 tools/clang/plugins/tests/base_refcounted.cpp
+ create mode 100644 tools/clang/plugins/tests/base_refcounted.h
+ create mode 100644 tools/clang/plugins/tests/base_refcounted.txt
+ create mode 100644 tools/clang/plugins/tests/inline_copy_ctor.cpp
+ create mode 100644 tools/clang/plugins/tests/inline_copy_ctor.h
+ create mode 100644 tools/clang/plugins/tests/inline_copy_ctor.txt
+ create mode 100644 tools/clang/plugins/tests/inline_ctor.cpp
+ create mode 100644 tools/clang/plugins/tests/inline_ctor.h
+ create mode 100644 tools/clang/plugins/tests/inline_ctor.txt
+ create mode 100644 tools/clang/plugins/tests/missing_ctor.cpp
+ create mode 100644 tools/clang/plugins/tests/missing_ctor.h
+ create mode 100644 tools/clang/plugins/tests/missing_ctor.txt
+ create mode 100644 tools/clang/plugins/tests/nested_class_inline_ctor.cpp
+ create mode 100644 tools/clang/plugins/tests/nested_class_inline_ctor.h
+ create mode 100644 tools/clang/plugins/tests/nested_class_inline_ctor.txt
+ create mode 100644 tools/clang/plugins/tests/overridden_methods.cpp
+ create mode 100644 tools/clang/plugins/tests/overridden_methods.h
+ create mode 100644 tools/clang/plugins/tests/overridden_methods.txt
+ create mode 100755 tools/clang/plugins/tests/test.sh
+ create mode 100644 tools/clang/plugins/tests/virtual_methods.cpp
+ create mode 100644 tools/clang/plugins/tests/virtual_methods.h
+ create mode 100644 tools/clang/plugins/tests/virtual_methods.txt
+ create mode 100755 tools/clang/scripts/package.sh
+ create mode 100755 tools/clang/scripts/plugin_flags.sh
+ create mode 100755 tools/clang/scripts/update.py
+ create mode 100755 tools/clang/scripts/update.sh
+
+diff --git a/tools/clang/OWNERS b/tools/clang/OWNERS
+new file mode 100644
+index 0000000000..d86ef9424a
+--- /dev/null
++++ b/tools/clang/OWNERS
+@@ -0,0 +1,2 @@
++hans@chromium.org
++thakis@chromium.org
+diff --git a/tools/clang/plugins/ChromeClassTester.cpp b/tools/clang/plugins/ChromeClassTester.cpp
+new file mode 100644
+index 0000000000..055866c5c5
+--- /dev/null
++++ b/tools/clang/plugins/ChromeClassTester.cpp
+@@ -0,0 +1,294 @@
++// Copyright (c) 2012 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++// A general interface for filtering and only acting on classes in Chromium C++
++// code.
++
++#include "ChromeClassTester.h"
++
++#include <sys/param.h>
++
++#include "clang/AST/AST.h"
++#include "clang/Basic/FileManager.h"
++#include "clang/Basic/SourceManager.h"
++
++using namespace clang;
++
++namespace {
++
++bool starts_with(const std::string& one, const std::string& two) {
++  return one.compare(0, two.size(), two) == 0;
++}
++
++std::string lstrip(const std::string& one, const std::string& two) {
++  if (starts_with(one, two))
++    return one.substr(two.size());
++  return one;
++}
++
++bool ends_with(const std::string& one, const std::string& two) {
++  if (two.size() > one.size())
++    return false;
++
++  return one.compare(one.size() - two.size(), two.size(), two) == 0;
++}
++
++}  // namespace
++
++ChromeClassTester::ChromeClassTester(CompilerInstance& instance)
++    : instance_(instance),
++      diagnostic_(instance.getDiagnostics()) {
++  BuildBannedLists();
++}
++
++ChromeClassTester::~ChromeClassTester() {}
++
++void ChromeClassTester::HandleTagDeclDefinition(TagDecl* tag) {
++  pending_class_decls_.push_back(tag);
++}
++
++bool ChromeClassTester::HandleTopLevelDecl(DeclGroupRef group_ref) {
++  for (size_t i = 0; i < pending_class_decls_.size(); ++i)
++    CheckTag(pending_class_decls_[i]);
++  pending_class_decls_.clear();
++
++  return true;  // true means continue parsing.
++}
++
++void ChromeClassTester::CheckTag(TagDecl* tag) {
++  // We handle class types here where we have semantic information. We can only
++  // check structs/classes/enums here, but we get a bunch of nice semantic
++  // information instead of just parsing information.
++
++  if (CXXRecordDecl* record = dyn_cast<CXXRecordDecl>(tag)) {
++    // If this is a POD or a class template or a type dependent on a
++    // templated class, assume there's no ctor/dtor/virtual method
++    // optimization that we can do.
++    if (record->isPOD() ||
++        record->getDescribedClassTemplate() ||
++        record->getTemplateSpecializationKind() ||
++        record->isDependentType())
++      return;
++
++    if (InBannedNamespace(record))
++      return;
++
++    SourceLocation record_location = record->getInnerLocStart();
++    if (InBannedDirectory(record_location))
++      return;
++
++    // We sadly need to maintain a blacklist of types that violate these
++    // rules, but do so for good reason or due to limitations of this
++    // checker (i.e., we don't handle extern templates very well).
++    std::string base_name = record->getNameAsString();
++    if (IsIgnoredType(base_name))
++      return;
++
++    // We ignore all classes that end with "Matcher" because they're probably
++    // GMock artifacts.
++    if (ends_with(base_name, "Matcher"))
++        return;
++
++    CheckChromeClass(record_location, record);
++  }
++}
++
++void ChromeClassTester::emitWarning(SourceLocation loc,
++                                    const char* raw_error) {
++  FullSourceLoc full(loc, instance().getSourceManager());
++  std::string err;
++  err = "[chromium-style] ";
++  err += raw_error;
++  DiagnosticsEngine::Level level =
++      diagnostic().getWarningsAsErrors() ?
++      DiagnosticsEngine::Error :
++      DiagnosticsEngine::Warning;
++  unsigned id = diagnostic().getCustomDiagID(level, err);
++  DiagnosticBuilder builder = diagnostic().Report(full, id);
++}
++
++bool ChromeClassTester::InBannedNamespace(const Decl* record) {
++  std::string n = GetNamespace(record);
++  if (!n.empty()) {
++    return std::find(banned_namespaces_.begin(), banned_namespaces_.end(), n)
++        != banned_namespaces_.end();
++  }
++
++  return false;
++}
++
++std::string ChromeClassTester::GetNamespace(const Decl* record) {
++  return GetNamespaceImpl(record->getDeclContext(), "");
++}
++
++bool ChromeClassTester::InImplementationFile(SourceLocation record_location) {
++  std::string filename;
++  if (!GetFilename(record_location, &filename))
++    return false;
++
++  if (ends_with(filename, ".cc") || ends_with(filename, ".cpp") ||
++      ends_with(filename, ".mm")) {
++    return true;
++  }
++
++  return false;
++}
++
++void ChromeClassTester::BuildBannedLists() {
++  banned_namespaces_.push_back("std");
++  banned_namespaces_.push_back("__gnu_cxx");
++  banned_namespaces_.push_back("WebKit");
++
++  banned_directories_.push_back("third_party/");
++  banned_directories_.push_back("native_client/");
++  banned_directories_.push_back("breakpad/");
++  banned_directories_.push_back("courgette/");
++  banned_directories_.push_back("pdf/");
++  banned_directories_.push_back("ppapi/");
++  banned_directories_.push_back("usr/");
++  banned_directories_.push_back("testing/");
++  banned_directories_.push_back("googleurl/");
++  banned_directories_.push_back("v8/");
++  banned_directories_.push_back("dart/");
++  banned_directories_.push_back("sdch/");
++  banned_directories_.push_back("icu4c/");
++  banned_directories_.push_back("frameworks/");
++
++  // Don't check autogenerated headers.
++  // Make puts them below $(builddir_name)/.../gen and geni.
++  // Ninja puts them below OUTPUT_DIR/.../gen
++  // Xcode has a fixed output directory for everything.
++  banned_directories_.push_back("gen/");
++  banned_directories_.push_back("geni/");
++  banned_directories_.push_back("xcodebuild/");
++
++  // You are standing in a mazy of twisty dependencies, all resolved by
++  // putting everything in the header.
++  banned_directories_.push_back("automation/");
++
++  // Don't check system headers.
++  banned_directories_.push_back("/Developer/");
++
++  // Used in really low level threading code that probably shouldn't be out of
++  // lined.
++  ignored_record_names_.insert("ThreadLocalBoolean");
++
++  // A complicated pickle derived struct that is all packed integers.
++  ignored_record_names_.insert("Header");
++
++  // Part of the GPU system that uses multiple included header
++  // weirdness. Never getting this right.
++  ignored_record_names_.insert("Validators");
++
++  // Has a UNIT_TEST only constructor. Isn't *terribly* complex...
++  ignored_record_names_.insert("AutocompleteController");
++  ignored_record_names_.insert("HistoryURLProvider");
++
++  // Because of chrome frame
++  ignored_record_names_.insert("ReliabilityTestSuite");
++
++  // Used over in the net unittests. A large enough bundle of integers with 1
++  // non-pod class member. Probably harmless.
++  ignored_record_names_.insert("MockTransaction");
++
++  // Used heavily in ui_unittests and once in views_unittests. Fixing this
++  // isn't worth the overhead of an additional library.
++  ignored_record_names_.insert("TestAnimationDelegate");
++
++  // Part of our public interface that nacl and friends use. (Arguably, this
++  // should mean that this is a higher priority but fixing this looks hard.)
++  ignored_record_names_.insert("PluginVersionInfo");
++}
++
++std::string ChromeClassTester::GetNamespaceImpl(const DeclContext* context,
++                                                const std::string& candidate) {
++  switch (context->getDeclKind()) {
++    case Decl::TranslationUnit: {
++      return candidate;
++    }
++    case Decl::Namespace: {
++      const NamespaceDecl* decl = dyn_cast<NamespaceDecl>(context);
++      std::string name_str;
++      llvm::raw_string_ostream OS(name_str);
++      if (decl->isAnonymousNamespace())
++        OS << "<anonymous namespace>";
++      else
++        OS << *decl;
++      return GetNamespaceImpl(context->getParent(),
++                              OS.str());
++    }
++    default: {
++      return GetNamespaceImpl(context->getParent(), candidate);
++    }
++  }
++}
++
++bool ChromeClassTester::InBannedDirectory(SourceLocation loc) {
++  std::string filename;
++  if (!GetFilename(loc, &filename)) {
++    // If the filename cannot be determined, simply treat this as a banned
++    // location, instead of going through the full lookup process.
++    return true;
++  }
++
++  // We need to special case scratch space; which is where clang does its
++  // macro expansion. We explicitly want to allow people to do otherwise bad
++  // things through macros that were defined due to third party libraries.
++  if (filename == "<scratch space>")
++    return true;
++
++  // Don't complain about autogenerated protobuf files.
++  if (ends_with(filename, ".pb.h")) {
++    return true;
++  }
++
++  // We need to munge the paths so that they are relative to the repository
++  // srcroot. We first resolve the symlinktastic relative path and then
++  // remove our known srcroot from it if needed.
++  char resolvedPath[MAXPATHLEN];
++  if (realpath(filename.c_str(), resolvedPath)) {
++    filename = resolvedPath;
++  }
++
++  // On linux, chrome is often checked out to /usr/local/google. Due to the
++  // "usr" rule in banned_directories_, all diagnostics would be suppressed
++  // in that case. As a workaround, strip that prefix.
++  filename = lstrip(filename, "/usr/local/google");
++
++  for (std::vector<std::string>::const_iterator it =
++           banned_directories_.begin();
++       it != banned_directories_.end(); ++it) {
++    // If we can find any of the banned path components in this path, then
++    // this file is rejected.
++    size_t index = filename.find(*it);
++    if (index != std::string::npos) {
++      bool matches_full_dir_name = index == 0 || filename[index - 1] == '/';
++      if ((*it)[0] == '/')
++        matches_full_dir_name = true;
++      if (matches_full_dir_name)
++        return true;
++    }
++  }
++
++  return false;
++}
++
++bool ChromeClassTester::IsIgnoredType(const std::string& base_name) {
++  return ignored_record_names_.find(base_name) != ignored_record_names_.end();
++}
++
++bool ChromeClassTester::GetFilename(SourceLocation loc,
++                                    std::string* filename) {
++  const SourceManager& source_manager = instance_.getSourceManager();
++  SourceLocation spelling_location = source_manager.getSpellingLoc(loc);
++  PresumedLoc ploc = source_manager.getPresumedLoc(spelling_location);
++  if (ploc.isInvalid()) {
++    // If we're in an invalid location, we're looking at things that aren't
++    // actually stated in the source.
++    return false;
++  }
++
++  *filename = ploc.getFilename();
++  return true;
++}
+diff --git a/tools/clang/plugins/ChromeClassTester.h b/tools/clang/plugins/ChromeClassTester.h
+new file mode 100644
+index 0000000000..588ae9cae5
+--- /dev/null
++++ b/tools/clang/plugins/ChromeClassTester.h
+@@ -0,0 +1,84 @@
++// Copyright (c) 2012 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef TOOLS_CLANG_PLUGINS_CHROMECLASSTESTER_H_
++#define TOOLS_CLANG_PLUGINS_CHROMECLASSTESTER_H_
++
++#include <set>
++#include <vector>
++
++#include "clang/AST/ASTConsumer.h"
++#include "clang/AST/TypeLoc.h"
++#include "clang/Frontend/CompilerInstance.h"
++
++// A class on top of ASTConsumer that forwards classes defined in Chromium
++// headers to subclasses which implement CheckChromeClass().
++class ChromeClassTester : public clang::ASTConsumer {
++ public:
++  explicit ChromeClassTester(clang::CompilerInstance& instance);
++  virtual ~ChromeClassTester();
++
++  // clang::ASTConsumer:
++  virtual void HandleTagDeclDefinition(clang::TagDecl* tag);
++  virtual bool HandleTopLevelDecl(clang::DeclGroupRef group_ref);
++
++ protected:
++  clang::CompilerInstance& instance() { return instance_; }
++  clang::DiagnosticsEngine& diagnostic() { return diagnostic_; }
++
++  // Emits a simple warning; this shouldn't be used if you require printf-style
++  // printing.
++  void emitWarning(clang::SourceLocation loc, const char* error);
++
++  // Utility method for subclasses to check if this class is in a banned
++  // namespace.
++  bool InBannedNamespace(const clang::Decl* record);
++
++  // Utility method for subclasses to determine the namespace of the
++  // specified record, if any. Unnamed namespaces will be identified as
++  // "<anonymous namespace>".
++  std::string GetNamespace(const clang::Decl* record);
++
++  // Utility method for subclasses to check if this class is within an
++  // implementation (.cc, .cpp, .mm) file.
++  bool InImplementationFile(clang::SourceLocation location);
++
++ private:
++  void BuildBannedLists();
++
++  void CheckTag(clang::TagDecl*);
++
++  // Filtered versions of tags that are only called with things defined in
++  // chrome header files.
++  virtual void CheckChromeClass(clang::SourceLocation record_location,
++                                clang::CXXRecordDecl* record) = 0;
++
++  // Utility methods used for filtering out non-chrome classes (and ones we
++  // deliberately ignore) in HandleTagDeclDefinition().
++  std::string GetNamespaceImpl(const clang::DeclContext* context,
++                               const std::string& candidate);
++  bool InBannedDirectory(clang::SourceLocation loc);
++  bool IsIgnoredType(const std::string& base_name);
++
++  // Attempts to determine the filename for the given SourceLocation.
++  // Returns false if the filename could not be determined.
++  bool GetFilename(clang::SourceLocation loc, std::string* filename);
++
++  clang::CompilerInstance& instance_;
++  clang::DiagnosticsEngine& diagnostic_;
++
++  // List of banned namespaces.
++  std::vector<std::string> banned_namespaces_;
++
++  // List of banned directories.
++  std::vector<std::string> banned_directories_;
++
++  // List of types that we don't check.
++  std::set<std::string> ignored_record_names_;
++
++  // List of decls to check once the current top-level decl is parsed.
++  std::vector<clang::TagDecl*> pending_class_decls_;
++};
++
++#endif  // TOOLS_CLANG_PLUGINS_CHROMECLASSTESTER_H_
+diff --git a/tools/clang/plugins/FindBadConstructs.cpp b/tools/clang/plugins/FindBadConstructs.cpp
+new file mode 100644
+index 0000000000..b79a64dbd1
+--- /dev/null
++++ b/tools/clang/plugins/FindBadConstructs.cpp
+@@ -0,0 +1,435 @@
++// Copyright (c) 2012 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++// This file defines a bunch of recurring problems in the Chromium C++ code.
++//
++// Checks that are implemented:
++// - Constructors/Destructors should not be inlined if they are of a complex
++//   class type.
++// - Missing "virtual" keywords on methods that should be virtual.
++// - Non-annotated overriding virtual methods.
++// - Virtual methods with nonempty implementations in their headers.
++// - Classes that derive from base::RefCounted / base::RefCountedThreadSafe
++//   should have protected or private destructors.
++
++#include "clang/Frontend/FrontendPluginRegistry.h"
++#include "clang/AST/ASTConsumer.h"
++#include "clang/AST/AST.h"
++#include "clang/AST/CXXInheritance.h"
++#include "clang/AST/TypeLoc.h"
++#include "clang/Basic/SourceManager.h"
++#include "clang/Frontend/CompilerInstance.h"
++#include "llvm/Support/raw_ostream.h"
++
++#include "ChromeClassTester.h"
++
++using namespace clang;
++
++namespace {
++
++bool TypeHasNonTrivialDtor(const Type* type) {
++  if (const CXXRecordDecl* cxx_r = type->getCXXRecordDeclForPointerType())
++    return cxx_r->hasTrivialDestructor();
++
++  return false;
++}
++
++// Returns the underlying Type for |type| by expanding typedefs and removing
++// any namespace qualifiers.
++const Type* UnwrapType(const Type* type) {
++  if (const ElaboratedType* elaborated = dyn_cast<ElaboratedType>(type))
++    return UnwrapType(elaborated->getNamedType().getTypePtr());
++  if (const TypedefType* typedefed = dyn_cast<TypedefType>(type))
++    return UnwrapType(typedefed->desugar().getTypePtr());
++  return type;
++}
++
++// Searches for constructs that we know we don't want in the Chromium code base.
++class FindBadConstructsConsumer : public ChromeClassTester {
++ public:
++  FindBadConstructsConsumer(CompilerInstance& instance,
++                            bool check_refcounted_dtors,
++                            bool check_virtuals_in_implementations)
++      : ChromeClassTester(instance),
++        check_refcounted_dtors_(check_refcounted_dtors),
++        check_virtuals_in_implementations_(check_virtuals_in_implementations) {
++  }
++
++  virtual void CheckChromeClass(SourceLocation record_location,
++                                CXXRecordDecl* record) {
++    bool implementation_file = InImplementationFile(record_location);
++
++    if (!implementation_file) {
++      // Only check for "heavy" constructors/destructors in header files;
++      // within implementation files, there is no performance cost.
++      CheckCtorDtorWeight(record_location, record);
++    }
++
++    if (!implementation_file || check_virtuals_in_implementations_) {
++      bool warn_on_inline_bodies = !implementation_file;
++
++      // Check that all virtual methods are marked accordingly with both
++      // virtual and OVERRIDE.
++      CheckVirtualMethods(record_location, record, warn_on_inline_bodies);
++    }
++
++    if (check_refcounted_dtors_)
++      CheckRefCountedDtors(record_location, record);
++  }
++
++ private:
++  bool check_refcounted_dtors_;
++  bool check_virtuals_in_implementations_;
++
++  // Returns true if |base| specifies one of the Chromium reference counted
++  // classes (base::RefCounted / base::RefCountedThreadSafe). |user_data| is
++  // ignored.
++  static bool IsRefCountedCallback(const CXXBaseSpecifier* base,
++                                   CXXBasePath& path,
++                                   void* user_data) {
++    FindBadConstructsConsumer* self =
++        static_cast<FindBadConstructsConsumer*>(user_data);
++
++    const TemplateSpecializationType* base_type =
++        dyn_cast<TemplateSpecializationType>(
++            UnwrapType(base->getType().getTypePtr()));
++    if (!base_type) {
++      // Base-most definition is not a template, so this cannot derive from
++      // base::RefCounted. However, it may still be possible to use with a
++      // scoped_refptr<> and support ref-counting, so this is not a perfect
++      // guarantee of safety.
++      return false;
++    }
++
++    TemplateName name = base_type->getTemplateName();
++    if (TemplateDecl* decl = name.getAsTemplateDecl()) {
++      std::string base_name = decl->getNameAsString();
++
++      // Check for both base::RefCounted and base::RefCountedThreadSafe.
++      if (base_name.compare(0, 10, "RefCounted") == 0 &&
++          self->GetNamespace(decl) == "base") {
++        return true;
++      }
++    }
++    return false;
++  }
++
++  // Prints errors if the destructor of a RefCounted class is public.
++  void CheckRefCountedDtors(SourceLocation record_location,
++                            CXXRecordDecl* record) {
++    // Skip anonymous structs.
++    if (record->getIdentifier() == NULL)
++      return;
++
++    CXXBasePaths paths;
++    if (!record->lookupInBases(
++            &FindBadConstructsConsumer::IsRefCountedCallback, this, paths)) {
++      return;  // Class does not derive from a ref-counted base class.
++    }
++
++    if (!record->hasUserDeclaredDestructor()) {
++      emitWarning(
++          record_location,
++          "Classes that are ref-counted should have explicit "
++          "destructors that are protected or private.");
++    } else if (CXXDestructorDecl* dtor = record->getDestructor()) {
++      if (dtor->getAccess() == AS_public) {
++        emitWarning(
++            dtor->getInnerLocStart(),
++            "Classes that are ref-counted should not have "
++            "public destructors.");
++      }
++    }
++  }
++
++  // Prints errors if the constructor/destructor weight is too heavy.
++  void CheckCtorDtorWeight(SourceLocation record_location,
++                           CXXRecordDecl* record) {
++    // We don't handle anonymous structs. If this record doesn't have a
++    // name, it's of the form:
++    //
++    // struct {
++    //   ...
++    // } name_;
++    if (record->getIdentifier() == NULL)
++      return;
++
++    // Count the number of templated base classes as a feature of whether the
++    // destructor can be inlined.
++    int templated_base_classes = 0;
++    for (CXXRecordDecl::base_class_const_iterator it = record->bases_begin();
++         it != record->bases_end(); ++it) {
++      if (it->getTypeSourceInfo()->getTypeLoc().getTypeLocClass() ==
++          TypeLoc::TemplateSpecialization) {
++        ++templated_base_classes;
++      }
++    }
++
++    // Count the number of trivial and non-trivial member variables.
++    int trivial_member = 0;
++    int non_trivial_member = 0;
++    int templated_non_trivial_member = 0;
++    for (RecordDecl::field_iterator it = record->field_begin();
++         it != record->field_end(); ++it) {
++      CountType(it->getType().getTypePtr(),
++                &trivial_member,
++                &non_trivial_member,
++                &templated_non_trivial_member);
++    }
++
++    // Check to see if we need to ban inlined/synthesized constructors. Note
++    // that the cutoffs here are kind of arbitrary. Scores over 10 break.
++    int dtor_score = 0;
++    // Deriving from a templated base class shouldn't be enough to trigger
++    // the ctor warning, but if you do *anything* else, it should.
++    //
++    // TODO(erg): This is motivated by templated base classes that don't have
++    // any data members. Somehow detect when templated base classes have data
++    // members and treat them differently.
++    dtor_score += templated_base_classes * 9;
++    // Instantiating a template is an insta-hit.
++    dtor_score += templated_non_trivial_member * 10;
++    // The fourth normal class member should trigger the warning.
++    dtor_score += non_trivial_member * 3;
++
++    int ctor_score = dtor_score;
++    // You should be able to have 9 ints before we warn you.
++    ctor_score += trivial_member;
++
++    if (ctor_score >= 10) {
++      if (!record->hasUserDeclaredConstructor()) {
++        emitWarning(record_location,
++                    "Complex class/struct needs an explicit out-of-line "
++                    "constructor.");
++      } else {
++        // Iterate across all the constructors in this file and yell if we
++        // find one that tries to be inline.
++        for (CXXRecordDecl::ctor_iterator it = record->ctor_begin();
++             it != record->ctor_end(); ++it) {
++          if (it->hasInlineBody()) {
++            if (it->isCopyConstructor() &&
++                !record->hasUserDeclaredCopyConstructor()) {
++              emitWarning(record_location,
++                          "Complex class/struct needs an explicit out-of-line "
++                          "copy constructor.");
++            } else {
++              emitWarning(it->getInnerLocStart(),
++                          "Complex constructor has an inlined body.");
++            }
++          }
++        }
++      }
++    }
++
++    // The destructor side is equivalent except that we don't check for
++    // trivial members; 20 ints don't need a destructor.
++    if (dtor_score >= 10 && !record->hasTrivialDestructor()) {
++      if (!record->hasUserDeclaredDestructor()) {
++        emitWarning(
++            record_location,
++            "Complex class/struct needs an explicit out-of-line "
++            "destructor.");
++      } else if (CXXDestructorDecl* dtor = record->getDestructor()) {
++        if (dtor->hasInlineBody()) {
++          emitWarning(dtor->getInnerLocStart(),
++                      "Complex destructor has an inline body.");
++        }
++      }
++    }
++  }
++
++  void CheckVirtualMethod(const CXXMethodDecl* method,
++                          bool warn_on_inline_bodies) {
++    if (!method->isVirtual())
++      return;
++
++    if (!method->isVirtualAsWritten()) {
++      SourceLocation loc = method->getTypeSpecStartLoc();
++      if (isa<CXXDestructorDecl>(method))
++        loc = method->getInnerLocStart();
++      emitWarning(loc, "Overriding method must have \"virtual\" keyword.");
++    }
++
++    // Virtual methods should not have inline definitions beyond "{}". This
++    // only matters for header files.
++    if (warn_on_inline_bodies && method->hasBody() &&
++        method->hasInlineBody()) {
++      if (CompoundStmt* cs = dyn_cast<CompoundStmt>(method->getBody())) {
++        if (cs->size()) {
++          emitWarning(
++              cs->getLBracLoc(),
++              "virtual methods with non-empty bodies shouldn't be "
++              "declared inline.");
++        }
++      }
++    }
++  }
++
++  bool InTestingNamespace(const Decl* record) {
++    return GetNamespace(record).find("testing") != std::string::npos;
++  }
++
++  bool IsMethodInBannedNamespace(const CXXMethodDecl* method) {
++    if (InBannedNamespace(method))
++      return true;
++    for (CXXMethodDecl::method_iterator i = method->begin_overridden_methods();
++         i != method->end_overridden_methods();
++         ++i) {
++      const CXXMethodDecl* overridden = *i;
++      if (IsMethodInBannedNamespace(overridden))
++        return true;
++    }
++
++    return false;
++  }
++
++  void CheckOverriddenMethod(const CXXMethodDecl* method) {
++    if (!method->size_overridden_methods() || method->getAttr<OverrideAttr>())
++      return;
++
++    if (isa<CXXDestructorDecl>(method) || method->isPure())
++      return;
++
++    if (IsMethodInBannedNamespace(method))
++      return;
++
++    SourceLocation loc = method->getTypeSpecStartLoc();
++    emitWarning(loc, "Overriding method must be marked with OVERRIDE.");
++  }
++
++  // Makes sure there is a "virtual" keyword on virtual methods.
++  //
++  // Gmock objects trigger these for each MOCK_BLAH() macro used. So we have a
++  // trick to get around that. If a class has member variables whose types are
++  // in the "testing" namespace (which is how gmock works behind the scenes),
++  // there's a really high chance we won't care about these errors
++  void CheckVirtualMethods(SourceLocation record_location,
++                           CXXRecordDecl* record,
++                           bool warn_on_inline_bodies) {
++    for (CXXRecordDecl::field_iterator it = record->field_begin();
++         it != record->field_end(); ++it) {
++      CXXRecordDecl* record_type =
++          it->getTypeSourceInfo()->getTypeLoc().getTypePtr()->
++          getAsCXXRecordDecl();
++      if (record_type) {
++        if (InTestingNamespace(record_type)) {
++          return;
++        }
++      }
++    }
++
++    for (CXXRecordDecl::method_iterator it = record->method_begin();
++         it != record->method_end(); ++it) {
++      if (it->isCopyAssignmentOperator() || isa<CXXConstructorDecl>(*it)) {
++        // Ignore constructors and assignment operators.
++      } else if (isa<CXXDestructorDecl>(*it) &&
++          !record->hasUserDeclaredDestructor()) {
++        // Ignore non-user-declared destructors.
++      } else {
++        CheckVirtualMethod(*it, warn_on_inline_bodies);
++        CheckOverriddenMethod(*it);
++      }
++    }
++  }
++
++  void CountType(const Type* type,
++                 int* trivial_member,
++                 int* non_trivial_member,
++                 int* templated_non_trivial_member) {
++    switch (type->getTypeClass()) {
++      case Type::Record: {
++        // Simplifying; the whole class isn't trivial if the dtor is, but
++        // we use this as a signal about complexity.
++        if (TypeHasNonTrivialDtor(type))
++          (*trivial_member)++;
++        else
++          (*non_trivial_member)++;
++        break;
++      }
++      case Type::TemplateSpecialization: {
++        TemplateName name =
++            dyn_cast<TemplateSpecializationType>(type)->getTemplateName();
++        bool whitelisted_template = false;
++
++        // HACK: I'm at a loss about how to get the syntax checker to get
++        // whether a template is exterened or not. For the first pass here,
++        // just do retarded string comparisons.
++        if (TemplateDecl* decl = name.getAsTemplateDecl()) {
++          std::string base_name = decl->getNameAsString();
++          if (base_name == "basic_string")
++            whitelisted_template = true;
++        }
++
++        if (whitelisted_template)
++          (*non_trivial_member)++;
++        else
++          (*templated_non_trivial_member)++;
++        break;
++      }
++      case Type::Elaborated: {
++        CountType(
++            dyn_cast<ElaboratedType>(type)->getNamedType().getTypePtr(),
++            trivial_member, non_trivial_member, templated_non_trivial_member);
++        break;
++      }
++      case Type::Typedef: {
++        while (const TypedefType* TT = dyn_cast<TypedefType>(type)) {
++          type = TT->getDecl()->getUnderlyingType().getTypePtr();
++        }
++        CountType(type, trivial_member, non_trivial_member,
++                  templated_non_trivial_member);
++        break;
++      }
++      default: {
++        // Stupid assumption: anything we see that isn't the above is one of
++        // the 20 integer types.
++        (*trivial_member)++;
++        break;
++      }
++    }
++  }
++};
++
++class FindBadConstructsAction : public PluginASTAction {
++ public:
++  FindBadConstructsAction()
++      : check_refcounted_dtors_(true),
++        check_virtuals_in_implementations_(true) {
++  }
++
++ protected:
++  // Overridden from PluginASTAction:
++  virtual ASTConsumer* CreateASTConsumer(CompilerInstance& instance,
++                                         llvm::StringRef ref) {
++    return new FindBadConstructsConsumer(
++        instance, check_refcounted_dtors_, check_virtuals_in_implementations_);
++  }
++
++  virtual bool ParseArgs(const CompilerInstance& instance,
++                         const std::vector<std::string>& args) {
++    bool parsed = true;
++
++    for (size_t i = 0; i < args.size() && parsed; ++i) {
++      if (args[i] == "skip-refcounted-dtors") {
++        check_refcounted_dtors_ = false;
++      } else if (args[i] == "skip-virtuals-in-implementations") {
++        check_virtuals_in_implementations_ = false;
++      } else {
++        parsed = false;
++        llvm::errs() << "Unknown argument: " << args[i] << "\n";
++      }
++    }
++
++    return parsed;
++  }
++
++ private:
++  bool check_refcounted_dtors_;
++  bool check_virtuals_in_implementations_;
++};
++
++}  // namespace
++
++static FrontendPluginRegistry::Add<FindBadConstructsAction>
++X("find-bad-constructs", "Finds bad C++ constructs");
+diff --git a/tools/clang/plugins/Makefile b/tools/clang/plugins/Makefile
+new file mode 100644
+index 0000000000..0cfec71159
+--- /dev/null
++++ b/tools/clang/plugins/Makefile
+@@ -0,0 +1,19 @@
++# This file requires the clang build system, at least for now. So to use this
++# Makefile, you should execute the following commands to copy this directory
++# into a clang checkout:
++#
++#   cp -R <this directory> third_party/llvm/tools/clang/tools/chrome-plugin
++#   cd third_party/llvm/tools/clang/tools/chrome-plugin
++#   make
++
++CLANG_LEVEL := ../..
++LIBRARYNAME = FindBadConstructs
++
++LINK_LIBS_IN_SHARED = 0
++SHARED_LIBRARY = 1
++
++include $(CLANG_LEVEL)/Makefile
++
++ifeq ($(OS),Darwin)
++  LDFLAGS=-Wl,-undefined,dynamic_lookup
++endif
+diff --git a/tools/clang/plugins/OWNERS b/tools/clang/plugins/OWNERS
+new file mode 100644
+index 0000000000..4733a4f06b
+--- /dev/null
++++ b/tools/clang/plugins/OWNERS
+@@ -0,0 +1 @@
++erg@chromium.org
+diff --git a/tools/clang/plugins/README.chromium b/tools/clang/plugins/README.chromium
+new file mode 100644
+index 0000000000..a2ce0ff557
+--- /dev/null
++++ b/tools/clang/plugins/README.chromium
+@@ -0,0 +1,4 @@
++Documentation for this code is:
++
++- http://code.google.com/p/chromium/wiki/Clang
++- http://code.google.com/p/chromium/wiki/WritingClangPlugins
+diff --git a/tools/clang/plugins/tests/base_refcounted.cpp b/tools/clang/plugins/tests/base_refcounted.cpp
+new file mode 100644
+index 0000000000..364a3e888c
+--- /dev/null
++++ b/tools/clang/plugins/tests/base_refcounted.cpp
+@@ -0,0 +1,72 @@
++// Copyright (c) 2012 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "base_refcounted.h"
++
++#include <cstddef>
++
++namespace {
++
++// Unsafe; should error.
++class AnonymousDerivedProtectedToPublicInImpl
++    : public ProtectedRefCountedDtorInHeader {
++ public:
++  AnonymousDerivedProtectedToPublicInImpl() {}
++  ~AnonymousDerivedProtectedToPublicInImpl() {}
++};
++
++}  // namespace
++
++// Unsafe; should error.
++class PublicRefCountedDtorInImpl
++    : public base::RefCounted<PublicRefCountedDtorInImpl> {
++ public:
++  PublicRefCountedDtorInImpl() {}
++  ~PublicRefCountedDtorInImpl() {}
++
++ private:
++  friend class base::RefCounted<PublicRefCountedDtorInImpl>;
++};
++
++class Foo {
++ public:
++  class BarInterface {
++   protected:
++    virtual ~BarInterface() {}
++  };
++
++  typedef base::RefCounted<BarInterface> RefCountedBar;
++  typedef RefCountedBar AnotherTypedef;
++};
++
++class Baz {
++ public:
++  typedef typename Foo::AnotherTypedef MyLocalTypedef;
++};
++
++// Unsafe; should error.
++class UnsafeTypedefChainInImpl : public Baz::MyLocalTypedef {
++ public:
++  UnsafeTypedefChainInImpl() {}
++  ~UnsafeTypedefChainInImpl() {}
++};
++
++int main() {
++  PublicRefCountedDtorInHeader bad;
++  PublicRefCountedDtorInImpl also_bad;
++
++  ProtectedRefCountedDtorInHeader* protected_ok = NULL;
++  PrivateRefCountedDtorInHeader* private_ok = NULL;
++
++  DerivedProtectedToPublicInHeader still_bad;
++  PublicRefCountedThreadSafeDtorInHeader another_bad_variation;
++  AnonymousDerivedProtectedToPublicInImpl and_this_is_bad_too;
++  ImplicitDerivedProtectedToPublicInHeader bad_yet_again;
++  UnsafeTypedefChainInImpl and_again_this_is_bad;
++
++  WebKitPublicDtorInHeader ignored;
++  WebKitDerivedPublicDtorInHeader still_ignored;
++
++  return 0;
++}
+diff --git a/tools/clang/plugins/tests/base_refcounted.h b/tools/clang/plugins/tests/base_refcounted.h
+new file mode 100644
+index 0000000000..1e53215997
+--- /dev/null
++++ b/tools/clang/plugins/tests/base_refcounted.h
+@@ -0,0 +1,121 @@
++// Copyright (c) 2012 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef BASE_REFCOUNTED_H_
++#define BASE_REFCOUNTED_H_
++
++namespace base {
++
++template <typename T>
++class RefCounted {
++ public:
++  RefCounted() {}
++  ~RefCounted() {}
++};
++
++template <typename T>
++class RefCountedThreadSafe {
++ public:
++  RefCountedThreadSafe() {}
++  ~RefCountedThreadSafe() {}
++};
++
++}  // namespace base
++
++// Ignore classes whose inheritance tree ends in WebKit's RefCounted base
++// class. Though prone to error, this pattern is very prevalent in WebKit
++// code, so do not issue any warnings.
++namespace WebKit {
++
++template <typename T>
++class RefCounted {
++ public:
++  RefCounted() {}
++  ~RefCounted() {}
++};
++
++}  // namespace WebKit
++
++// Unsafe; should error.
++class PublicRefCountedDtorInHeader
++    : public base::RefCounted<PublicRefCountedDtorInHeader> {
++ public:
++  PublicRefCountedDtorInHeader() {}
++  ~PublicRefCountedDtorInHeader() {}
++
++ private:
++  friend class base::RefCounted<PublicRefCountedDtorInHeader>;
++};
++
++// Unsafe; should error.
++class PublicRefCountedThreadSafeDtorInHeader
++    : public base::RefCountedThreadSafe<
++          PublicRefCountedThreadSafeDtorInHeader> {
++ public:
++  PublicRefCountedThreadSafeDtorInHeader() {}
++  ~PublicRefCountedThreadSafeDtorInHeader() {}
++
++ private:
++  friend class base::RefCountedThreadSafe<
++      PublicRefCountedThreadSafeDtorInHeader>;
++};
++
++// Safe; should not have errors.
++class ProtectedRefCountedDtorInHeader
++    : public base::RefCounted<ProtectedRefCountedDtorInHeader> {
++ public:
++  ProtectedRefCountedDtorInHeader() {}
++
++ protected:
++  ~ProtectedRefCountedDtorInHeader() {}
++
++ private:
++  friend class base::RefCounted<ProtectedRefCountedDtorInHeader>;
++};
++
++// Safe; should not have errors.
++class PrivateRefCountedDtorInHeader
++    : public base::RefCounted<PrivateRefCountedDtorInHeader> {
++ public:
++  PrivateRefCountedDtorInHeader() {}
++
++ private:
++  ~PrivateRefCountedDtorInHeader() {}
++  friend class base::RefCounted<PrivateRefCountedDtorInHeader>;
++};
++
++// Unsafe; A grandchild class ends up exposing their parent and grandparent's
++// destructors.
++class DerivedProtectedToPublicInHeader
++    : public ProtectedRefCountedDtorInHeader {
++ public:
++  DerivedProtectedToPublicInHeader() {}
++  ~DerivedProtectedToPublicInHeader() {}
++};
++
++// Unsafe; A grandchild ends up implicitly exposing their parent and
++// grantparent's destructors.
++class ImplicitDerivedProtectedToPublicInHeader
++    : public ProtectedRefCountedDtorInHeader {
++ public:
++  ImplicitDerivedProtectedToPublicInHeader() {}
++};
++
++// Unsafe-but-ignored; should not have errors.
++class WebKitPublicDtorInHeader
++    : public WebKit::RefCounted<WebKitPublicDtorInHeader> {
++ public:
++  WebKitPublicDtorInHeader() {}
++  ~WebKitPublicDtorInHeader() {}
++};
++
++// Unsafe-but-ignored; should not have errors.
++class WebKitDerivedPublicDtorInHeader
++    : public WebKitPublicDtorInHeader {
++ public:
++  WebKitDerivedPublicDtorInHeader() {}
++  ~WebKitDerivedPublicDtorInHeader() {}
++};
++
++#endif  // BASE_REFCOUNTED_H_
+diff --git a/tools/clang/plugins/tests/base_refcounted.txt b/tools/clang/plugins/tests/base_refcounted.txt
+new file mode 100644
+index 0000000000..4626424177
+--- /dev/null
++++ b/tools/clang/plugins/tests/base_refcounted.txt
+@@ -0,0 +1,23 @@
++In file included from base_refcounted.cpp:5:
++./base_refcounted.h:45:3: warning: [chromium-style] Classes that are ref-counted should not have public destructors.
++  ~PublicRefCountedDtorInHeader() {}
++  ^
++./base_refcounted.h:57:3: warning: [chromium-style] Classes that are ref-counted should not have public destructors.
++  ~PublicRefCountedThreadSafeDtorInHeader() {}
++  ^
++./base_refcounted.h:94:3: warning: [chromium-style] Classes that are ref-counted should not have public destructors.
++  ~DerivedProtectedToPublicInHeader() {}
++  ^
++./base_refcounted.h:99:1: warning: [chromium-style] Classes that are ref-counted should have explicit destructors that are protected or private.
++class ImplicitDerivedProtectedToPublicInHeader
++^
++base_refcounted.cpp:16:3: warning: [chromium-style] Classes that are ref-counted should not have public destructors.
++  ~AnonymousDerivedProtectedToPublicInImpl() {}
++  ^
++base_refcounted.cpp:26:3: warning: [chromium-style] Classes that are ref-counted should not have public destructors.
++  ~PublicRefCountedDtorInImpl() {}
++  ^
++base_refcounted.cpp:52:3: warning: [chromium-style] Classes that are ref-counted should not have public destructors.
++  ~UnsafeTypedefChainInImpl() {}
++  ^
++7 warnings generated.
+diff --git a/tools/clang/plugins/tests/inline_copy_ctor.cpp b/tools/clang/plugins/tests/inline_copy_ctor.cpp
+new file mode 100644
+index 0000000000..dcd90020c5
+--- /dev/null
++++ b/tools/clang/plugins/tests/inline_copy_ctor.cpp
+@@ -0,0 +1,5 @@
++// Copyright (c) 2012 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "inline_copy_ctor.h"
+diff --git a/tools/clang/plugins/tests/inline_copy_ctor.h b/tools/clang/plugins/tests/inline_copy_ctor.h
+new file mode 100644
+index 0000000000..619a18392b
+--- /dev/null
++++ b/tools/clang/plugins/tests/inline_copy_ctor.h
+@@ -0,0 +1,12 @@
++// Copyright (c) 2012 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++struct C {
++  C();
++  ~C();
++
++  static C foo() { return C(); }
++
++  int a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p , q, r, s, t, u, v, w, x;
++};
+diff --git a/tools/clang/plugins/tests/inline_copy_ctor.txt b/tools/clang/plugins/tests/inline_copy_ctor.txt
+new file mode 100644
+index 0000000000..bc4bd8911e
+--- /dev/null
++++ b/tools/clang/plugins/tests/inline_copy_ctor.txt
+@@ -0,0 +1,5 @@
++In file included from inline_copy_ctor.cpp:5:
++./inline_copy_ctor.h:5:1: warning: [chromium-style] Complex class/struct needs an explicit out-of-line copy constructor.
++struct C {
++^
++1 warning generated.
+diff --git a/tools/clang/plugins/tests/inline_ctor.cpp b/tools/clang/plugins/tests/inline_ctor.cpp
+new file mode 100644
+index 0000000000..6a751fb405
+--- /dev/null
++++ b/tools/clang/plugins/tests/inline_ctor.cpp
+@@ -0,0 +1,25 @@
++// Copyright (c) 2011 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "inline_ctor.h"
++
++#include <string>
++#include <vector>
++
++// We don't warn on classes that are in CPP files.
++class InlineInCPPOK {
++ public:
++  InlineInCPPOK() {}
++  ~InlineInCPPOK() {}
++
++ private:
++  std::vector<int> one_;
++  std::vector<std::string> two_;
++};
++
++int main() {
++  InlineInCPPOK one;
++  InlineCtorsArentOKInHeader two;
++  return 0;
++}
+diff --git a/tools/clang/plugins/tests/inline_ctor.h b/tools/clang/plugins/tests/inline_ctor.h
+new file mode 100644
+index 0000000000..d053b2f57d
+--- /dev/null
++++ b/tools/clang/plugins/tests/inline_ctor.h
+@@ -0,0 +1,21 @@
++// Copyright (c) 2012 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef INLINE_CTOR_H_
++#define INLINE_CTOR_H_
++
++#include <string>
++#include <vector>
++
++class InlineCtorsArentOKInHeader {
++ public:
++  InlineCtorsArentOKInHeader() {}
++  ~InlineCtorsArentOKInHeader() {}
++
++ private:
++  std::vector<int> one_;
++  std::vector<std::string> two_;
++};
++
++#endif  // INLINE_CTOR_H_
+diff --git a/tools/clang/plugins/tests/inline_ctor.txt b/tools/clang/plugins/tests/inline_ctor.txt
+new file mode 100644
+index 0000000000..caa0cb4e3b
+--- /dev/null
++++ b/tools/clang/plugins/tests/inline_ctor.txt
+@@ -0,0 +1,8 @@
++In file included from inline_ctor.cpp:5:
++./inline_ctor.h:13:3: warning: [chromium-style] Complex constructor has an inlined body.
++  InlineCtorsArentOKInHeader() {}
++  ^
++./inline_ctor.h:14:3: warning: [chromium-style] Complex destructor has an inline body.
++  ~InlineCtorsArentOKInHeader() {}
++  ^
++2 warnings generated.
+diff --git a/tools/clang/plugins/tests/missing_ctor.cpp b/tools/clang/plugins/tests/missing_ctor.cpp
+new file mode 100644
+index 0000000000..8ee2fb2ac8
+--- /dev/null
++++ b/tools/clang/plugins/tests/missing_ctor.cpp
+@@ -0,0 +1,23 @@
++// Copyright (c) 2011 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "missing_ctor.h"
++
++#include <string>
++#include <vector>
++
++// We don't warn on classes that use default ctors in cpp files.
++class MissingInCPPOK {
++ public:
++
++ private:
++  std::vector<int> one_;
++  std::vector<std::string> two_;
++};
++
++int main() {
++  MissingInCPPOK one;
++  MissingCtorsArentOKInHeader two;
++  return 0;
++}
+diff --git a/tools/clang/plugins/tests/missing_ctor.h b/tools/clang/plugins/tests/missing_ctor.h
+new file mode 100644
+index 0000000000..1050457a1a
+--- /dev/null
++++ b/tools/clang/plugins/tests/missing_ctor.h
+@@ -0,0 +1,19 @@
++// Copyright (c) 2011 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef MISSING_CTOR_H_
++#define MISSING_CTOR_H_
++
++#include <string>
++#include <vector>
++
++class MissingCtorsArentOKInHeader {
++ public:
++
++ private:
++  std::vector<int> one_;
++  std::vector<std::string> two_;
++};
++
++#endif  // MISSING_CTOR_H_
+diff --git a/tools/clang/plugins/tests/missing_ctor.txt b/tools/clang/plugins/tests/missing_ctor.txt
+new file mode 100644
+index 0000000000..301449c4ac
+--- /dev/null
++++ b/tools/clang/plugins/tests/missing_ctor.txt
+@@ -0,0 +1,6 @@
++In file included from missing_ctor.cpp:5:
++./missing_ctor.h:11:1: warning: [chromium-style] Complex class/struct needs an explicit out-of-line constructor.
++class MissingCtorsArentOKInHeader {
++^
++./missing_ctor.h:11:1: warning: [chromium-style] Complex class/struct needs an explicit out-of-line destructor.
++2 warnings generated.
+diff --git a/tools/clang/plugins/tests/nested_class_inline_ctor.cpp b/tools/clang/plugins/tests/nested_class_inline_ctor.cpp
+new file mode 100644
+index 0000000000..aa90a95eb3
+--- /dev/null
++++ b/tools/clang/plugins/tests/nested_class_inline_ctor.cpp
+@@ -0,0 +1,5 @@
++// Copyright (c) 2012 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "nested_class_inline_ctor.h"
+diff --git a/tools/clang/plugins/tests/nested_class_inline_ctor.h b/tools/clang/plugins/tests/nested_class_inline_ctor.h
+new file mode 100644
+index 0000000000..01cfea9232
+--- /dev/null
++++ b/tools/clang/plugins/tests/nested_class_inline_ctor.h
+@@ -0,0 +1,22 @@
++// Copyright (c) 2012 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef NESTED_CLASS_INLINE_CTOR_H_
++#define NESTED_CLASS_INLINE_CTOR_H_
++
++#include <string>
++#include <vector>
++
++// See crbug.com/136863.
++
++class Foo {
++  class Bar {
++    Bar() {}
++    ~Bar() {}
++
++    std::vector<std::string> a;
++  };
++};
++
++#endif  // NESTED_CLASS_INLINE_CTOR_H_
+diff --git a/tools/clang/plugins/tests/nested_class_inline_ctor.txt b/tools/clang/plugins/tests/nested_class_inline_ctor.txt
+new file mode 100644
+index 0000000000..39bd6e1dce
+--- /dev/null
++++ b/tools/clang/plugins/tests/nested_class_inline_ctor.txt
+@@ -0,0 +1,8 @@
++In file included from nested_class_inline_ctor.cpp:5:
++./nested_class_inline_ctor.h:15:5: warning: [chromium-style] Complex constructor has an inlined body.
++    Bar() {}
++    ^
++./nested_class_inline_ctor.h:16:5: warning: [chromium-style] Complex destructor has an inline body.
++    ~Bar() {}
++    ^
++2 warnings generated.
+diff --git a/tools/clang/plugins/tests/overridden_methods.cpp b/tools/clang/plugins/tests/overridden_methods.cpp
+new file mode 100644
+index 0000000000..f572a41733
+--- /dev/null
++++ b/tools/clang/plugins/tests/overridden_methods.cpp
+@@ -0,0 +1,38 @@
++// Copyright (c) 2012 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "overridden_methods.h"
++
++// Fill in the implementations
++void DerivedClass::SomeMethod() {}
++void DerivedClass::SomeOtherMethod() {}
++void DerivedClass::WebKitModifiedSomething() {}
++
++class ImplementationInterimClass : public BaseClass {
++ public:
++  // Should not warn about pure virtual methods.
++  virtual void SomeMethod() = 0;
++};
++
++class ImplementationDerivedClass : public ImplementationInterimClass,
++                                   public webkit_glue::WebKitObserverImpl {
++ public:
++  // Should not warn about destructors.
++  virtual ~ImplementationDerivedClass() {}
++  // Should warn.
++  virtual void SomeMethod();
++  // Should not warn if marked as override.
++  virtual void SomeOtherMethod() override;
++  // Should not warn for inline implementations in implementation files.
++  virtual void SomeInlineMethod() {}
++  // Should not warn if overriding a method whose origin is WebKit.
++  virtual void WebKitModifiedSomething();
++  // Should warn if overridden method isn't pure.
++  virtual void SomeNonPureBaseMethod() {}
++};
++
++int main() {
++  DerivedClass something;
++  ImplementationDerivedClass something_else;
++}
+diff --git a/tools/clang/plugins/tests/overridden_methods.h b/tools/clang/plugins/tests/overridden_methods.h
+new file mode 100644
+index 0000000000..150c79913f
+--- /dev/null
++++ b/tools/clang/plugins/tests/overridden_methods.h
+@@ -0,0 +1,54 @@
++// Copyright (c) 2011 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef OVERRIDDEN_METHODS_H_
++#define OVERRIDDEN_METHODS_H_
++
++// Should warn about overriding of methods.
++class BaseClass {
++ public:
++  virtual ~BaseClass() {}
++  virtual void SomeMethod() = 0;
++  virtual void SomeOtherMethod() = 0;
++  virtual void SomeInlineMethod() = 0;
++  virtual void SomeNonPureBaseMethod() {}
++};
++
++class InterimClass : public BaseClass {
++  // Should not warn about pure virtual methods.
++  virtual void SomeMethod() = 0;
++};
++
++namespace WebKit {
++class WebKitObserver {
++ public:
++  virtual void WebKitModifiedSomething() {};
++};
++}  // namespace WebKit
++
++namespace webkit_glue {
++class WebKitObserverImpl : WebKit::WebKitObserver {
++ public:
++  virtual void WebKitModifiedSomething() {};
++};
++}  // namespace webkit_glue
++
++class DerivedClass : public InterimClass,
++                     public webkit_glue::WebKitObserverImpl {
++ public:
++  // Should not warn about destructors.
++  virtual ~DerivedClass() {}
++  // Should warn.
++  virtual void SomeMethod();
++  // Should not warn if marked as override.
++  virtual void SomeOtherMethod() override;
++  // Should warn for inline implementations.
++  virtual void SomeInlineMethod() {}
++  // Should not warn if overriding a method whose origin is WebKit.
++  virtual void WebKitModifiedSomething();
++  // Should warn if overridden method isn't pure.
++  virtual void SomeNonPureBaseMethod() {}
++};
++
++#endif  // OVERRIDDEN_METHODS_H_
+diff --git a/tools/clang/plugins/tests/overridden_methods.txt b/tools/clang/plugins/tests/overridden_methods.txt
+new file mode 100644
+index 0000000000..7553ade70e
+--- /dev/null
++++ b/tools/clang/plugins/tests/overridden_methods.txt
+@@ -0,0 +1,20 @@
++In file included from overridden_methods.cpp:5:
++./overridden_methods.h:43:11: warning: [chromium-style] Overriding method must be marked with OVERRIDE.
++  virtual void SomeMethod();
++          ^
++./overridden_methods.h:47:11: warning: [chromium-style] Overriding method must be marked with OVERRIDE.
++  virtual void SomeInlineMethod() {}
++          ^
++./overridden_methods.h:51:11: warning: [chromium-style] Overriding method must be marked with OVERRIDE.
++  virtual void SomeNonPureBaseMethod() {}
++          ^
++overridden_methods.cpp:24:11: warning: [chromium-style] Overriding method must be marked with OVERRIDE.
++  virtual void SomeMethod();
++          ^
++overridden_methods.cpp:28:11: warning: [chromium-style] Overriding method must be marked with OVERRIDE.
++  virtual void SomeInlineMethod() {}
++          ^
++overridden_methods.cpp:32:11: warning: [chromium-style] Overriding method must be marked with OVERRIDE.
++  virtual void SomeNonPureBaseMethod() {}
++          ^
++6 warnings generated.
+diff --git a/tools/clang/plugins/tests/test.sh b/tools/clang/plugins/tests/test.sh
+new file mode 100755
+index 0000000000..262ebbba29
+--- /dev/null
++++ b/tools/clang/plugins/tests/test.sh
+@@ -0,0 +1,72 @@
++#!/bin/bash
++#
++# Copyright (c) 2011 The Chromium Authors. All rights reserved.
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++#
++# Hacky, primitive testing: This runs the style plugin for a set of input files
++# and compares the output with golden result files.
++
++E_BADARGS=65
++E_FAILEDTEST=1
++
++failed_any_test=
++
++# Prints usage information.
++usage() {
++  echo "Usage: $(basename "${0}")" \
++    "<Path to the llvm build dir, usually Release+Asserts>"
++  echo ""
++  echo "  Runs all the libFindBadConstructs unit tests"
++  echo ""
++}
++
++# Runs a single test case.
++do_testcase() {
++  local output="$("${CLANG_DIR}"/bin/clang -c -Wno-c++11-extensions \
++      -Xclang -load -Xclang "${CLANG_DIR}"/lib/libFindBadConstructs.${LIB} \
++      -Xclang -plugin -Xclang find-bad-constructs ${1} 2>&1)"
++  local diffout="$(echo "${output}" | diff - "${2}")"
++  if [ "${diffout}" = "" ]; then
++    echo "PASS: ${1}"
++  else
++    failed_any_test=yes
++    echo "FAIL: ${1}"
++    echo "Output of compiler:"
++    echo "${output}"
++    echo "Expected output:"
++    cat "${2}"
++    echo
++  fi
++}
++
++# Validate input to the script.
++if [[ -z "${1}" ]]; then
++  usage
++  exit ${E_BADARGS}
++elif [[ ! -d "${1}" ]]; then
++  echo "${1} is not a directory."
++  usage
++  exit ${E_BADARGS}
++else
++  export CLANG_DIR="${PWD}/${1}"
++  echo "Using clang directory ${CLANG_DIR}..."
++
++  # The golden files assume that the cwd is this directory. To make the script
++  # work no matter what the cwd is, explicitly cd to there.
++  cd "$(dirname "${0}")"
++
++  if [ "$(uname -s)" = "Linux" ]; then
++    export LIB=so
++  elif [ "$(uname -s)" = "Darwin" ]; then
++    export LIB=dylib
++  fi
++fi
++
++for input in *.cpp; do
++  do_testcase "${input}" "${input%cpp}txt"
++done
++
++if [[ "${failed_any_test}" ]]; then
++  exit ${E_FAILEDTEST}
++fi
+diff --git a/tools/clang/plugins/tests/virtual_methods.cpp b/tools/clang/plugins/tests/virtual_methods.cpp
+new file mode 100644
+index 0000000000..a07cbe4875
+--- /dev/null
++++ b/tools/clang/plugins/tests/virtual_methods.cpp
+@@ -0,0 +1,36 @@
++// Copyright (c) 2012 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "virtual_methods.h"
++
++// Shouldn't warn about method usage in the implementation file.
++class VirtualMethodsInImplementation {
++ public:
++  virtual void MethodIsAbstract() = 0;
++  virtual void MethodHasNoArguments();
++  virtual void MethodHasEmptyDefaultImpl() {}
++  virtual bool ComplainAboutThis() { return true; }
++};
++
++// Stubs to fill in the abstract method
++class ConcreteVirtualMethodsInHeaders : public VirtualMethodsInHeaders {
++ public:
++  virtual void MethodIsAbstract() override {}
++};
++
++class ConcreteVirtualMethodsInImplementation
++    : public VirtualMethodsInImplementation {
++ public:
++  virtual void MethodIsAbstract() override {}
++};
++
++// Fill in the implementations
++void VirtualMethodsInHeaders::MethodHasNoArguments() {}
++void WarnOnMissingVirtual::MethodHasNoArguments() {}
++void VirtualMethodsInImplementation::MethodHasNoArguments() {}
++
++int main() {
++  ConcreteVirtualMethodsInHeaders one;
++  ConcreteVirtualMethodsInImplementation two;
++}
+diff --git a/tools/clang/plugins/tests/virtual_methods.h b/tools/clang/plugins/tests/virtual_methods.h
+new file mode 100644
+index 0000000000..d9fbf96ed3
+--- /dev/null
++++ b/tools/clang/plugins/tests/virtual_methods.h
+@@ -0,0 +1,39 @@
++// Copyright (c) 2011 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef VIRTUAL_METHODS_H_
++#define VIRTUAL_METHODS_H_
++
++// Should warn about virtual method usage.
++class VirtualMethodsInHeaders {
++ public:
++  // Don't complain about these.
++  virtual void MethodIsAbstract() = 0;
++  virtual void MethodHasNoArguments();
++  virtual void MethodHasEmptyDefaultImpl() {}
++
++  // But complain about this:
++  virtual bool ComplainAboutThis() { return true; }
++};
++
++// Complain on missing 'virtual' keyword in overrides.
++class WarnOnMissingVirtual : public VirtualMethodsInHeaders {
++ public:
++  void MethodHasNoArguments() override;
++};
++
++// Don't complain about things in a 'testing' namespace.
++namespace testing {
++struct TestStruct {};
++}  // namespace testing
++
++class VirtualMethodsInHeadersTesting : public VirtualMethodsInHeaders {
++ public:
++  // Don't complain about no virtual testing methods.
++  void MethodHasNoArguments();
++ private:
++  testing::TestStruct tester_;
++};
++
++#endif  // VIRTUAL_METHODS_H_
+diff --git a/tools/clang/plugins/tests/virtual_methods.txt b/tools/clang/plugins/tests/virtual_methods.txt
+new file mode 100644
+index 0000000000..571d6d667d
+--- /dev/null
++++ b/tools/clang/plugins/tests/virtual_methods.txt
+@@ -0,0 +1,8 @@
++In file included from virtual_methods.cpp:5:
++./virtual_methods.h:17:36: warning: [chromium-style] virtual methods with non-empty bodies shouldn't be declared inline.
++  virtual bool ComplainAboutThis() { return true; }
++                                   ^
++./virtual_methods.h:23:3: warning: [chromium-style] Overriding method must have "virtual" keyword.
++  void MethodHasNoArguments() override;
++  ^
++2 warnings generated.
+diff --git a/tools/clang/scripts/package.sh b/tools/clang/scripts/package.sh
+new file mode 100755
+index 0000000000..eb345810b9
+--- /dev/null
++++ b/tools/clang/scripts/package.sh
+@@ -0,0 +1,87 @@
++#!/bin/bash
++# Copyright (c) 2012 The Chromium Authors. All rights reserved.
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++
++# This script will check out llvm and clang, and then package the results up
++# to a tgz file.
++
++THIS_DIR="$(dirname "${0}")"
++LLVM_DIR="${THIS_DIR}/../../../third_party/llvm"
++LLVM_BOOTSTRAP_DIR="${THIS_DIR}/../../../third_party/llvm-bootstrap"
++LLVM_BUILD_DIR="${THIS_DIR}/../../../third_party/llvm-build"
++LLVM_BIN_DIR="${LLVM_BUILD_DIR}/Release+Asserts/bin"
++LLVM_LIB_DIR="${LLVM_BUILD_DIR}/Release+Asserts/lib"
++
++echo "Diff in llvm:" | tee buildlog.txt
++svn stat "${LLVM_DIR}" 2>&1 | tee -a buildlog.txt
++svn diff "${LLVM_DIR}" 2>&1 | tee -a buildlog.txt
++echo "Diff in llvm/tools/clang:" | tee -a buildlog.txt
++svn stat "${LLVM_DIR}/tools/clang" 2>&1 | tee -a buildlog.txt
++svn diff "${LLVM_DIR}/tools/clang" 2>&1 | tee -a buildlog.txt
++echo "Diff in llvm/projects/compiler-rt:" | tee -a buildlog.txt
++svn stat "${LLVM_DIR}/projects/compiler-rt" 2>&1 | tee -a buildlog.txt
++svn diff "${LLVM_DIR}/projects/compiler-rt" 2>&1 | tee -a buildlog.txt
++
++echo "Starting build" | tee -a buildlog.txt
++
++set -ex
++
++# Do a clobber build.
++rm -rf "${LLVM_BOOTSTRAP_DIR}"
++rm -rf "${LLVM_BUILD_DIR}"
++"${THIS_DIR}"/update.sh --run-tests --bootstrap --force-local-build 2>&1 | \
++    tee -a buildlog.txt
++
++R=$("${LLVM_BIN_DIR}/clang" --version | \
++     sed -ne 's/clang version .*(trunk \([0-9]*\))/\1/p')
++
++PDIR=clang-$R
++rm -rf $PDIR
++mkdir $PDIR
++mkdir $PDIR/bin
++mkdir $PDIR/lib
++
++# Copy buildlog over.
++cp buildlog.txt $PDIR/
++
++# Copy clang into pdir, symlink clang++ to it.
++cp "${LLVM_BIN_DIR}/clang" $PDIR/bin/
++(cd $PDIR/bin && ln -sf clang clang++ && cd -)
++
++# Copy plugins. Some of the dylibs are pretty big, so copy only the ones we
++# care about.
++if [ "$(uname -s)" = "Darwin" ]; then
++  cp "${LLVM_LIB_DIR}/libFindBadConstructs.dylib" $PDIR/lib
++else
++  cp "${LLVM_LIB_DIR}/libFindBadConstructs.so" $PDIR/lib
++fi
++
++# Copy built-in headers (lib/clang/3.2/include).
++# libcompiler-rt puts all kinds of libraries there too, but we want only ASan.
++if [ "$(uname -s)" = "Darwin" ]; then
++  # Keep only Release+Asserts/lib/clang/3.2/lib/darwin/libclang_rt.asan_osx.a
++  find "${LLVM_LIB_DIR}/clang" -type f -path '*lib/darwin*' | grep -v asan | \
++       xargs rm
++else
++  # Keep only
++  # Release+Asserts/lib/clang/3.2/lib/linux/libclang_rt.{asan,tsan}-x86_64.a
++  # TODO(thakis): Make sure the 32bit version of ASan runtime is kept too once
++  # that's built. TSan runtime exists only for 64 bits.
++  find "${LLVM_LIB_DIR}/clang" -type f -path '*lib/linux*' | \
++       grep -v "asan\|tsan" | xargs rm
++fi
++
++cp -R "${LLVM_LIB_DIR}/clang" $PDIR/lib
++
++tar zcf $PDIR.tgz -C $PDIR bin lib buildlog.txt
++
++if [ "$(uname -s)" = "Darwin" ]; then
++  PLATFORM=Mac
++else
++  PLATFORM=Linux_x64
++fi
++
++echo To upload, run:
++echo gsutil cp -a public-read $PDIR.tgz \
++     gs://chromium-browser-clang/$PLATFORM/$PDIR.tgz
+diff --git a/tools/clang/scripts/plugin_flags.sh b/tools/clang/scripts/plugin_flags.sh
+new file mode 100755
+index 0000000000..217c5c3bd6
+--- /dev/null
++++ b/tools/clang/scripts/plugin_flags.sh
+@@ -0,0 +1,24 @@
++#!/bin/bash
++# Copyright (c) 2012 The Chromium Authors. All rights reserved.
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++
++# This script returns the flags that should be used when GYP_DEFINES contains
++# clang_use_chrome_plugins. The flags are stored in a script so that they can
++# be changed on the bots without requiring a master restart.
++
++THIS_ABS_DIR=$(cd $(dirname $0) && echo $PWD)
++CLANG_LIB_PATH=$THIS_ABS_DIR/../../../third_party/llvm-build/Release+Asserts/lib
++
++if uname -s | grep -q Darwin; then
++  LIBSUFFIX=dylib
++else
++  LIBSUFFIX=so
++fi
++
++echo -Xclang -load -Xclang $CLANG_LIB_PATH/libFindBadConstructs.$LIBSUFFIX \
++  -Xclang -add-plugin -Xclang find-bad-constructs \
++  -Xclang -plugin-arg-find-bad-constructs \
++  -Xclang skip-virtuals-in-implementations \
++  -Xclang -plugin-arg-find-bad-constructs \
++  -Xclang check-cc-directory
+diff --git a/tools/clang/scripts/update.py b/tools/clang/scripts/update.py
+new file mode 100755
+index 0000000000..bdc781f715
+--- /dev/null
++++ b/tools/clang/scripts/update.py
+@@ -0,0 +1,34 @@
++#!/usr/bin/env python
++# Copyright (c) 2012 The Chromium Authors. All rights reserved.
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++
++"""Windows can't run .sh files, so this is a small python wrapper around
++update.sh.
++"""
++
++import os
++import subprocess
++import sys
++
++
++def main():
++  if sys.platform in ['win32', 'cygwin']:
++    return 0
++
++  # This script is called by gclient. gclient opens its hooks subprocesses with
++  # (stdout=subprocess.PIPE, stderr=subprocess.STDOUT) and then does custom
++  # output processing that breaks printing '\r' characters for single-line
++  # updating status messages as printed by curl and wget.
++  # Work around this by setting stderr of the update.sh process to stdin (!):
++  # gclient doesn't redirect stdin, and while stdin itself is read-only, a
++  # dup()ed sys.stdin is writable, try
++  #   fd2 = os.dup(sys.stdin.fileno()); os.write(fd2, 'hi')
++  # TODO: Fix gclient instead, http://crbug.com/95350
++  return subprocess.call(
++      [os.path.join(os.path.dirname(__file__), 'update.sh')] +  sys.argv[1:],
++      stderr=os.fdopen(os.dup(sys.stdin.fileno())))
++
++
++if __name__ == '__main__':
++  sys.exit(main())
+diff --git a/tools/clang/scripts/update.sh b/tools/clang/scripts/update.sh
+new file mode 100755
+index 0000000000..e9448236c8
+--- /dev/null
++++ b/tools/clang/scripts/update.sh
+@@ -0,0 +1,286 @@
++#!/usr/bin/env bash
++# Copyright (c) 2012 The Chromium Authors. All rights reserved.
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++
++# This script will check out llvm and clang into third_party/llvm and build it.
++
++# Do NOT CHANGE this if you don't know what you're doing -- see
++# https://code.google.com/p/chromium/wiki/UpdatingClang
++# Reverting problematic clang rolls is safe, though.
++CLANG_REVISION=163674
++
++THIS_DIR="$(dirname "${0}")"
++LLVM_DIR="${THIS_DIR}/../../../third_party/llvm"
++LLVM_BUILD_DIR="${LLVM_DIR}/../llvm-build"
++LLVM_BOOTSTRAP_DIR="${LLVM_DIR}/../llvm-bootstrap"
++CLANG_DIR="${LLVM_DIR}/tools/clang"
++COMPILER_RT_DIR="${LLVM_DIR}/projects/compiler-rt"
++STAMP_FILE="${LLVM_BUILD_DIR}/cr_build_revision"
++
++# ${A:-a} returns $A if it's set, a else.
++LLVM_REPO_URL=${LLVM_URL:-https://llvm.org/svn/llvm-project}
++
++# Die if any command dies.
++set -e
++
++OS="$(uname -s)"
++
++# Parse command line options.
++force_local_build=
++mac_only=
++run_tests=
++bootstrap=
++while [[ $# > 0 ]]; do
++  case $1 in
++    --bootstrap)
++      bootstrap=yes
++      ;;
++    --force-local-build)
++      force_local_build=yes
++      ;;
++    --mac-only)
++      mac_only=yes
++      ;;
++    --run-tests)
++      run_tests=yes
++      ;;
++    --help)
++      echo "usage: $0 [--force-local-build] [--mac-only] [--run-tests] "
++      echo "--bootstrap: First build clang with CC, then with itself."
++      echo "--force-local-build: Don't try to download prebuilt binaries."
++      echo "--mac-only: Do initial download only on Mac systems."
++      echo "--run-tests: Run tests after building. Only for local builds."
++      exit 1
++      ;;
++  esac
++  shift
++done
++
++# --mac-only prevents the initial download on non-mac systems, but if clang has
++# already been downloaded in the past, this script keeps it up to date even if
++# --mac-only is passed in and the system isn't a mac. People who don't like this
++# can just delete their third_party/llvm-build directory.
++if [[ -n "$mac_only" ]] && [[ "${OS}" != "Darwin" ]] &&
++    [[ "$GYP_DEFINES" != *clang=1* ]] && ! [[ -d "${LLVM_BUILD_DIR}" ]]; then
++  exit 0
++fi
++
++# Xcode and clang don't get along when predictive compilation is enabled.
++# http://crbug.com/96315
++if [[ "${OS}" = "Darwin" ]] && xcodebuild -version | grep -q 'Xcode 3.2' ; then
++  XCONF=com.apple.Xcode
++  if [[ "${GYP_GENERATORS}" != "make" ]] && \
++     [ "$(defaults read "${XCONF}" EnablePredictiveCompilation)" != "0" ]; then
++    echo
++    echo "          HEARKEN!"
++    echo "You're using Xcode3 and you have 'Predictive Compilation' enabled."
++    echo "This does not work well with clang (http://crbug.com/96315)."
++    echo "Disable it in Preferences->Building (lower right), or run"
++    echo "    defaults write ${XCONF} EnablePredictiveCompilation -boolean NO"
++    echo "while Xcode is not running."
++    echo
++  fi
++
++  SUB_VERSION=$(xcodebuild -version | sed -Ene 's/Xcode 3\.2\.([0-9]+)/\1/p')
++  if [[ "${SUB_VERSION}" < 6 ]]; then
++    echo
++    echo "          YOUR LD IS BUGGY!"
++    echo "Please upgrade Xcode to at least 3.2.6."
++    echo
++  fi
++fi
++
++
++# Check if there's anything to be done, exit early if not.
++if [[ -f "${STAMP_FILE}" ]]; then
++  PREVIOUSLY_BUILT_REVISON=$(cat "${STAMP_FILE}")
++  if [[ -z "$force_local_build" ]] && \
++       [[ "${PREVIOUSLY_BUILT_REVISON}" = "${CLANG_REVISION}" ]]; then
++    echo "Clang already at ${CLANG_REVISION}"
++    exit 0
++  fi
++fi
++# To always force a new build if someone interrupts their build half way.
++rm -f "${STAMP_FILE}"
++
++# Clobber pch files, since they only work with the compiler version that
++# created them. Also clobber .o files, to make sure everything will be built
++# with the new compiler.
++if [[ "${OS}" = "Darwin" ]]; then
++  XCODEBUILD_DIR="${THIS_DIR}/../../../xcodebuild"
++
++  # Xcode groups .o files by project first, configuration second.
++  if [[ -d "${XCODEBUILD_DIR}" ]]; then
++    echo "Clobbering .o files for Xcode build"
++    find "${XCODEBUILD_DIR}" -name '*.o' -exec rm {} +
++  fi
++fi
++
++if [ -f "${THIS_DIR}/../../../WebKit.gyp" ]; then
++  # We're inside a WebKit checkout.
++  # TODO(thakis): try to unify the directory layout of the xcode- and
++  # make-based builds. http://crbug.com/110455
++  MAKE_DIR="${THIS_DIR}/../../../../../../out"
++else
++  # We're inside a Chromium checkout.
++  MAKE_DIR="${THIS_DIR}/../../../out"
++fi
++
++for CONFIG in Debug Release; do
++  if [[ -d "${MAKE_DIR}/${CONFIG}/obj.target" ||
++        -d "${MAKE_DIR}/${CONFIG}/obj.host" ]]; then
++    echo "Clobbering ${CONFIG} PCH and .o files for make build"
++    if [[ -d "${MAKE_DIR}/${CONFIG}/obj.target" ]]; then
++      find "${MAKE_DIR}/${CONFIG}/obj.target" -name '*.gch' -exec rm {} +
++      find "${MAKE_DIR}/${CONFIG}/obj.target" -name '*.o' -exec rm {} +
++    fi
++    if [[ -d "${MAKE_DIR}/${CONFIG}/obj.host" ]]; then
++      find "${MAKE_DIR}/${CONFIG}/obj.host" -name '*.o' -exec rm {} +
++    fi
++  fi
++
++  # ninja puts its output below ${MAKE_DIR} as well.
++  if [[ -d "${MAKE_DIR}/${CONFIG}/obj" ]]; then
++    echo "Clobbering ${CONFIG} PCH and .o files for ninja build"
++    find "${MAKE_DIR}/${CONFIG}/obj" -name '*.gch' -exec rm {} +
++    find "${MAKE_DIR}/${CONFIG}/obj" -name '*.o' -exec rm {} +
++    find "${MAKE_DIR}/${CONFIG}/obj" -name '*.o.d' -exec rm {} +
++  fi
++
++  if [[ "${OS}" = "Darwin" ]]; then
++    if [[ -d "${XCODEBUILD_DIR}/${CONFIG}/SharedPrecompiledHeaders" ]]; then
++      echo "Clobbering ${CONFIG} PCH files for Xcode build"
++      rm -rf "${XCODEBUILD_DIR}/${CONFIG}/SharedPrecompiledHeaders"
++    fi
++  fi
++done
++
++if [[ -z "$force_local_build" ]]; then
++  # Check if there's a prebuilt binary and if so just fetch that. That's faster,
++  # and goma relies on having matching binary hashes on client and server too.
++  CDS_URL=https://commondatastorage.googleapis.com/chromium-browser-clang
++  CDS_FILE="clang-${CLANG_REVISION}.tgz"
++  CDS_OUT_DIR=$(mktemp -d -t clang_download.XXXXXX)
++  CDS_OUTPUT="${CDS_OUT_DIR}/${CDS_FILE}"
++  if [ "${OS}" = "Linux" ]; then
++    CDS_FULL_URL="${CDS_URL}/Linux_x64/${CDS_FILE}"
++  elif [ "${OS}" = "Darwin" ]; then
++    CDS_FULL_URL="${CDS_URL}/Mac/${CDS_FILE}"
++  fi
++  echo Trying to download prebuilt clang
++  if which curl > /dev/null; then
++    curl -L --fail "${CDS_FULL_URL}" -o "${CDS_OUTPUT}" || \
++        rm -rf "${CDS_OUT_DIR}"
++  elif which wget > /dev/null; then
++    wget "${CDS_FULL_URL}" -O "${CDS_OUTPUT}" || rm -rf "${CDS_OUT_DIR}"
++  else
++    echo "Neither curl nor wget found. Please install one of these."
++    exit 1
++  fi
++  if [ -f "${CDS_OUTPUT}" ]; then
++    rm -rf "${LLVM_BUILD_DIR}/Release+Asserts"
++    mkdir -p "${LLVM_BUILD_DIR}/Release+Asserts"
++    tar -xzf "${CDS_OUTPUT}" -C "${LLVM_BUILD_DIR}/Release+Asserts"
++    echo clang "${CLANG_REVISION}" unpacked
++    echo "${CLANG_REVISION}" > "${STAMP_FILE}"
++    rm -rf "${CDS_OUT_DIR}"
++    exit 0
++  else
++    echo Did not find prebuilt clang at r"${CLANG_REVISION}", building
++  fi
++fi
++
++echo Getting LLVM r"${CLANG_REVISION}" in "${LLVM_DIR}"
++if ! svn co --force "${LLVM_REPO_URL}/llvm/trunk@${CLANG_REVISION}" \
++                    "${LLVM_DIR}"; then
++  echo Checkout failed, retrying
++  rm -rf "${LLVM_DIR}"
++  svn co --force "${LLVM_REPO_URL}/llvm/trunk@${CLANG_REVISION}" "${LLVM_DIR}"
++fi
++
++echo Getting clang r"${CLANG_REVISION}" in "${CLANG_DIR}"
++svn co --force "${LLVM_REPO_URL}/cfe/trunk@${CLANG_REVISION}" "${CLANG_DIR}"
++
++echo Getting compiler-rt r"${CLANG_REVISION}" in "${COMPILER_RT_DIR}"
++svn co --force "${LLVM_REPO_URL}/compiler-rt/trunk@${CLANG_REVISION}" \
++               "${COMPILER_RT_DIR}"
++
++# Echo all commands.
++set -x
++
++NUM_JOBS=3
++if [[ "${OS}" = "Linux" ]]; then
++  NUM_JOBS="$(grep -c "^processor" /proc/cpuinfo)"
++elif [ "${OS}" = "Darwin" ]; then
++  NUM_JOBS="$(sysctl -n hw.ncpu)"
++fi
++
++# Build bootstrap clang if requested.
++if [[ -n "${bootstrap}" ]]; then
++  echo "Building bootstrap compiler"
++  mkdir -p "${LLVM_BOOTSTRAP_DIR}"
++  cd "${LLVM_BOOTSTRAP_DIR}"
++  if [[ ! -f ./config.status ]]; then
++    # The bootstrap compiler only needs to be able to build the real compiler,
++    # so it needs no cross-compiler output support. In general, the host
++    # compiler should be as similar to the final compiler as possible, so do
++    # keep --disable-threads & co.
++    ../llvm/configure \
++        --enable-optimized \
++        --enable-targets=host-only \
++        --disable-threads \
++        --disable-pthreads \
++        --without-llvmgcc \
++        --without-llvmgxx
++    MACOSX_DEPLOYMENT_TARGET=10.5 make -j"${NUM_JOBS}"
++  fi
++  if [[ -n "${run_tests}" ]]; then
++    make check-all
++  fi
++  cd -
++  export CC="${PWD}/${LLVM_BOOTSTRAP_DIR}/Release+Asserts/bin/clang"
++  export CXX="${PWD}/${LLVM_BOOTSTRAP_DIR}/Release+Asserts/bin/clang++"
++  echo "Building final compiler"
++fi
++
++# Build clang (in a separate directory).
++# The clang bots have this path hardcoded in built/scripts/slave/compile.py,
++# so if you change it you also need to change these links.
++mkdir -p "${LLVM_BUILD_DIR}"
++cd "${LLVM_BUILD_DIR}"
++if [[ ! -f ./config.status ]]; then
++  ../llvm/configure \
++      --enable-optimized \
++      --disable-threads \
++      --disable-pthreads \
++      --without-llvmgcc \
++      --without-llvmgxx
++fi
++
++MACOSX_DEPLOYMENT_TARGET=10.5 make -j"${NUM_JOBS}"
++cd -
++
++# Build plugin.
++# Copy it into the clang tree and use clang's build system to compile the
++# plugin.
++PLUGIN_SRC_DIR="${THIS_DIR}/../plugins"
++PLUGIN_DST_DIR="${LLVM_DIR}/tools/clang/tools/chrome-plugin"
++PLUGIN_BUILD_DIR="${LLVM_BUILD_DIR}/tools/clang/tools/chrome-plugin"
++rm -rf "${PLUGIN_DST_DIR}"
++cp -R "${PLUGIN_SRC_DIR}" "${PLUGIN_DST_DIR}"
++rm -rf "${PLUGIN_BUILD_DIR}"
++mkdir -p "${PLUGIN_BUILD_DIR}"
++cp "${PLUGIN_SRC_DIR}/Makefile" "${PLUGIN_BUILD_DIR}"
++MACOSX_DEPLOYMENT_TARGET=10.5 make -j"${NUM_JOBS}" -C "${PLUGIN_BUILD_DIR}"
++
++if [[ -n "$run_tests" ]]; then
++  # Run a few tests.
++  "${PLUGIN_SRC_DIR}/tests/test.sh" "${LLVM_BUILD_DIR}/Release+Asserts"
++  cd "${LLVM_BUILD_DIR}"
++  make check-all
++  cd -
++fi
++
++# After everything is done, log success for this revision.
++echo "${CLANG_REVISION}" > "${STAMP_FILE}"

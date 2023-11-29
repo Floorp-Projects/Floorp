@@ -1,43 +1,70 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Sat, 13 Feb 2021 04:20:00 -0800
-Subject: Bug 1654112 - Add pid_t to desktop_capture_types.h; r=pehrsons
+From: Philipp Hancke <phancke@microsoft.com>
+Date: Fri, 8 Sep 2023 11:31:30 +0200
+Subject: (cherry-pick-branch-heads/5993) [M118] Obfuscate prflx raddr when
+ using mdns
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Upstreaming bug 1697385
+BUG=chromium:1478690
 
-Also includes:
-Bug 1654112 - Clarifying prev. rev that moved pid_t into the global namespace; r=dminor
+(cherry picked from commit a8e3111d8c6622eeb930c32ab7a2e6be51b3d801)
 
-Differential Revision: https://phabricator.services.mozilla.com/D107897
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/539b69f0e21118a1898f1ef689577c7193ff7be7
+Change-Id: I7a1caad7bbd2fc82507b61b59be71546494a304c
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/319580
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Reviewed-by: Henrik Boström <hbos@webrtc.org>
+Commit-Queue: Philipp Hancke <phancke@microsoft.com>
+Cr-Original-Commit-Position: refs/heads/main@{#40724}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/320580
+Cr-Commit-Position: refs/branch-heads/5993@{#2}
+Cr-Branched-From: 5afcec093c1403fe9e3872706d04671cbc6d2983-refs/heads/main@{#40703}
 ---
- modules/desktop_capture/desktop_capture_types.h | 4 ++++
- modules/video_capture/video_capture.h           | 1 +
- 2 files changed, 5 insertions(+)
+ p2p/base/port_allocator.cc          |  5 ++++-
+ p2p/base/port_allocator_unittest.cc | 15 +++++++++++++++
+ 2 files changed, 19 insertions(+), 1 deletion(-)
 
-diff --git a/modules/desktop_capture/desktop_capture_types.h b/modules/desktop_capture/desktop_capture_types.h
-index a4e3e897fd..e777a45f92 100644
---- a/modules/desktop_capture/desktop_capture_types.h
-+++ b/modules/desktop_capture/desktop_capture_types.h
-@@ -13,6 +13,10 @@
+diff --git a/p2p/base/port_allocator.cc b/p2p/base/port_allocator.cc
+index 522f0beb98..d8ff04fe20 100644
+--- a/p2p/base/port_allocator.cc
++++ b/p2p/base/port_allocator.cc
+@@ -340,9 +340,12 @@ Candidate PortAllocator::SanitizeCandidate(const Candidate& c) const {
+   // If the candidate filter doesn't allow reflexive addresses, empty TURN raddr
+   // to avoid reflexive address leakage.
+   bool filter_turn_related_address = !(candidate_filter_ & CF_REFLEXIVE);
++  // Sanitize related_address when using MDNS.
++  bool filter_prflx_related_address = MdnsObfuscationEnabled();
+   bool filter_related_address =
+       ((c.type() == STUN_PORT_TYPE && filter_stun_related_address) ||
+-       (c.type() == RELAY_PORT_TYPE && filter_turn_related_address));
++       (c.type() == RELAY_PORT_TYPE && filter_turn_related_address) ||
++       (c.type() == PRFLX_PORT_TYPE && filter_prflx_related_address));
+   return c.ToSanitizedCopy(use_hostname_address, filter_related_address);
+ }
  
- #include <stdint.h>
+diff --git a/p2p/base/port_allocator_unittest.cc b/p2p/base/port_allocator_unittest.cc
+index f70997179e..48d0bc8a6e 100644
+--- a/p2p/base/port_allocator_unittest.cc
++++ b/p2p/base/port_allocator_unittest.cc
+@@ -357,6 +357,21 @@ TEST_F(PortAllocatorTest, SanitizePrflxCandidateMdnsObfuscationEnabled) {
+   EXPECT_EQ("", output.address().ipaddr().ToString());
+ }
  
-+#ifdef XP_WIN      // Moving this into the global namespace
-+typedef int pid_t; // matching what used to be in
-+#endif             // video_capture_defines.h
++TEST_F(PortAllocatorTest,
++       SanitizePrflxCandidateMdnsObfuscationEnabledRelatedAddress) {
++  allocator_->SetMdnsObfuscationEnabledForTesting(true);
++  // Create the candidate from an IP literal. This populates the hostname.
++  cricket::Candidate input(1, "udp", rtc::SocketAddress(kIpv4Address, 443), 1,
++                           "username", "password", cricket::PRFLX_PORT_TYPE, 1,
++                           "foundation", 1, 1);
 +
- namespace webrtc {
- 
- enum class CaptureType { kWindow, kScreen, kAnyScreenContent };
-diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index e207598d68..58485f28e9 100644
---- a/modules/video_capture/video_capture.h
-+++ b/modules/video_capture/video_capture.h
-@@ -13,6 +13,7 @@
- 
- #include "api/video/video_rotation.h"
- #include "api/video/video_sink_interface.h"
-+#include "modules/desktop_capture/desktop_capture_types.h"
- #include "modules/video_capture/raw_video_sink_interface.h"
- #include "modules/video_capture/video_capture_defines.h"
- #include <set>
++  cricket::Candidate output = allocator_->SanitizeCandidate(input);
++  EXPECT_NE(kIpv4AddressWithPort, output.address().ToString());
++  EXPECT_EQ("", output.address().ipaddr().ToString());
++  EXPECT_NE(kIpv4AddressWithPort, output.related_address().ToString());
++  EXPECT_EQ("", output.related_address().ipaddr().ToString());
++}
++
+ TEST_F(PortAllocatorTest, SanitizeIpv4NonLiteralMdnsObfuscationEnabled) {
+   // Create the candidate with an empty hostname.
+   allocator_->SetMdnsObfuscationEnabledForTesting(true);

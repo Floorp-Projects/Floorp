@@ -1,40 +1,26 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 11 Feb 2020 17:07:00 +0000
-Subject: Bug 1578073 - Remove native calls in Histogram.java; r=ng
+Date: Wed, 9 Oct 2019 20:12:00 +0000
+Subject: Bug 1587159 - Fix undefined shift in g722_encode.c; r=ng
 
-Getting the JNI calls here to work requires a good amount of webrtc.org
-machinery. It might be worth setting that up the next time we do an upstream
-merge, but for now, it is a lot simpler to just remove the affected code,
-given that we are not interested in collecting this data anyway.
+Left shifting a negative value results in undefined behaviour. It is safer to
+multiply in this case.
 
-Differential Revision: https://phabricator.services.mozilla.com/D61860
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7a9b07dec9f9d435416b06829fa5063aca3a476e
+Differential Revision: https://phabricator.services.mozilla.com/D48751
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/385d660fac359c907986e08d1d89ab5a353f30b2
 ---
- sdk/android/src/java/org/webrtc/Histogram.java | 9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+ modules/third_party/g722/g722_encode.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/sdk/android/src/java/org/webrtc/Histogram.java b/sdk/android/src/java/org/webrtc/Histogram.java
-index 877986134a..c1d2d61a71 100644
---- a/sdk/android/src/java/org/webrtc/Histogram.java
-+++ b/sdk/android/src/java/org/webrtc/Histogram.java
-@@ -27,18 +27,13 @@ class Histogram {
-   }
+diff --git a/modules/third_party/g722/g722_encode.c b/modules/third_party/g722/g722_encode.c
+index 10a5bcfe7c..fedf9f5961 100644
+--- a/modules/third_party/g722/g722_encode.c
++++ b/modules/third_party/g722/g722_encode.c
+@@ -74,7 +74,7 @@ static void block4(G722EncoderState *s, int band, int d)
+     /* Block 4, UPPOL2 */
+     for (i = 0;  i < 3;  i++)
+         s->band[band].sg[i] = s->band[band].p[i] >> 15;
+-    wd1 = saturate(s->band[band].a[1] << 2);
++    wd1 = saturate(s->band[band].a[1] * 4);
  
-   static public Histogram createCounts(String name, int min, int max, int bucketCount) {
--    return new Histogram(nativeCreateCounts(name, min, max, bucketCount));
-+    return new Histogram(0);
-   }
- 
-   static public Histogram createEnumeration(String name, int max) {
--    return new Histogram(nativeCreateEnumeration(name, max));
-+    return new Histogram(0);
-   }
- 
-   public void addSample(int sample) {
--    nativeAddSample(handle, sample);
-   }
--
--  private static native long nativeCreateCounts(String name, int min, int max, int bucketCount);
--  private static native long nativeCreateEnumeration(String name, int max);
--  private static native void nativeAddSample(long handle, int sample);
- }
+     wd2 = (s->band[band].sg[0] == s->band[band].sg[1])  ?  -wd1  :  wd1;
+     if (wd2 > 32767)

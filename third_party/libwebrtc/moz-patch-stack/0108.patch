@@ -1,0 +1,149 @@
+From: Byron Campen <docfaraday@gmail.com>
+Date: Tue, 31 Oct 2023 21:11:00 +0000
+Subject: Bug 1860685 - Cherry-pick upstream libwebrtc commit 10e5724fe9 r=mjf
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Upstream commit: https://webrtc.googlesource.com/src/+/10e5724fe9
+       Delete deprecated variants of RTPSenderAudio::SendAudio
+
+       Bug: webrtc:13757
+       Change-Id: I402a31c847ca7ffe0ef20a0046959ec50c60e3ac
+       Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/319582
+       Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
+       Auto-Submit: Danil Chapovalov <danilchap@webrtc.org>
+       Reviewed-by: Åsa Persson <asapersson@webrtc.org>
+       Cr-Commit-Position: refs/heads/main@{#40740}
+
+Differential Revision: https://phabricator.services.mozilla.com/D192395
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7bc9f9c659dd5c04c341cef4f898cb08574d9cdd
+---
+ modules/rtp_rtcp/source/rtp_sender_audio.cc | 45 +--------------------
+ modules/rtp_rtcp/source/rtp_sender_audio.h  | 23 -----------
+ 2 files changed, 2 insertions(+), 66 deletions(-)
+
+diff --git a/modules/rtp_rtcp/source/rtp_sender_audio.cc b/modules/rtp_rtcp/source/rtp_sender_audio.cc
+index 62174e343c..b9ac4db30c 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_audio.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_audio.cc
+@@ -141,35 +141,6 @@ bool RTPSenderAudio::MarkerBit(AudioFrameType frame_type, int8_t payload_type) {
+   return marker_bit;
+ }
+ 
+-bool RTPSenderAudio::SendAudio(AudioFrameType frame_type,
+-                               int8_t payload_type,
+-                               uint32_t rtp_timestamp,
+-                               const uint8_t* payload_data,
+-                               size_t payload_size) {
+-  return SendAudio({.type = frame_type,
+-                    .payload{payload_data, payload_size},
+-                    .payload_id = payload_type,
+-                    .rtp_timestamp = rtp_timestamp});
+-}
+-
+-bool RTPSenderAudio::SendAudio(AudioFrameType frame_type,
+-                               int8_t payload_type,
+-                               uint32_t rtp_timestamp,
+-                               const uint8_t* payload_data,
+-                               size_t payload_size,
+-                               int64_t absolute_capture_timestamp_ms) {
+-  RtpAudioFrame frame = {
+-      .type = frame_type,
+-      .payload{payload_data, payload_size},
+-      .payload_id = payload_type,
+-      .rtp_timestamp = rtp_timestamp,
+-  };
+-  if (absolute_capture_timestamp_ms > 0) {
+-    frame.capture_time = Timestamp::Millis(absolute_capture_timestamp_ms);
+-  }
+-  return SendAudio(frame);
+-}
+-
+ bool RTPSenderAudio::SendAudio(const RtpAudioFrame& frame) {
+   RTC_DCHECK_GE(frame.payload_id, 0);
+   RTC_DCHECK_LE(frame.payload_id, 127);
+@@ -182,12 +153,10 @@ bool RTPSenderAudio::SendAudio(const RtpAudioFrame& frame) {
+   // Alternatively, a source MAY decide to use a different spacing for event
+   // updates, with a value of 50 ms RECOMMENDED.
+   constexpr int kDtmfIntervalTimeMs = 50;
+-  uint8_t audio_level_dbov = 0;
+   uint32_t dtmf_payload_freq = 0;
+   absl::optional<uint32_t> encoder_rtp_timestamp_frequency;
+   {
+     MutexLock lock(&send_audio_mutex_);
+-    audio_level_dbov = audio_level_dbov_;
+     dtmf_payload_freq = dtmf_payload_freq_;
+     encoder_rtp_timestamp_frequency = encoder_rtp_timestamp_frequency_;
+   }
+@@ -278,10 +247,10 @@ bool RTPSenderAudio::SendAudio(const RtpAudioFrame& frame) {
+   packet->SetPayloadType(frame.payload_id);
+   packet->SetTimestamp(frame.rtp_timestamp);
+   packet->set_capture_time(clock_->CurrentTime());
+-  // Update audio level extension, if included.
++  // Set audio level extension, if included.
+   packet->SetExtension<AudioLevel>(
+       frame.type == AudioFrameType::kAudioFrameSpeech,
+-      frame.audio_level_dbov.value_or(audio_level_dbov));
++      frame.audio_level_dbov.value_or(127));
+ 
+   if (frame.capture_time.has_value()) {
+     // Send absolute capture time periodically in order to optimize and save
+@@ -326,16 +295,6 @@ bool RTPSenderAudio::SendAudio(const RtpAudioFrame& frame) {
+   return true;
+ }
+ 
+-// Audio level magnitude and voice activity flag are set for each RTP packet
+-int32_t RTPSenderAudio::SetAudioLevel(uint8_t level_dbov) {
+-  if (level_dbov > 127) {
+-    return -1;
+-  }
+-  MutexLock lock(&send_audio_mutex_);
+-  audio_level_dbov_ = level_dbov;
+-  return 0;
+-}
+-
+ // Send a TelephoneEvent tone using RFC 2833 (4733)
+ int32_t RTPSenderAudio::SendTelephoneEvent(uint8_t key,
+                                            uint16_t time_ms,
+diff --git a/modules/rtp_rtcp/source/rtp_sender_audio.h b/modules/rtp_rtcp/source/rtp_sender_audio.h
+index ee4e92635f..b53bb02c89 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_audio.h
++++ b/modules/rtp_rtcp/source/rtp_sender_audio.h
+@@ -64,26 +64,6 @@ class RTPSenderAudio {
+   };
+   bool SendAudio(const RtpAudioFrame& frame);
+ 
+-  [[deprecated]] bool SendAudio(AudioFrameType frame_type,
+-                                int8_t payload_type,
+-                                uint32_t rtp_timestamp,
+-                                const uint8_t* payload_data,
+-                                size_t payload_size);
+-
+-  // `absolute_capture_timestamp_ms` and `Clock::CurrentTime`
+-  // should be using the same epoch.
+-  [[deprecated]] bool SendAudio(AudioFrameType frame_type,
+-                                int8_t payload_type,
+-                                uint32_t rtp_timestamp,
+-                                const uint8_t* payload_data,
+-                                size_t payload_size,
+-                                int64_t absolute_capture_timestamp_ms);
+-
+-  // Store the audio level in dBov for
+-  // header-extension-for-audio-level-indication.
+-  // Valid range is [0,127]. Actual value is negative.
+-  [[deprecated]] int32_t SetAudioLevel(uint8_t level_dbov);
+-
+   // Send a DTMF tone using RFC 2833 (4733)
+   int32_t SendTelephoneEvent(uint8_t key, uint16_t time_ms, uint8_t level);
+ 
+@@ -122,9 +102,6 @@ class RTPSenderAudio {
+   int8_t cngfb_payload_type_ RTC_GUARDED_BY(send_audio_mutex_) = -1;
+   int8_t last_payload_type_ RTC_GUARDED_BY(send_audio_mutex_) = -1;
+ 
+-  // Audio level indication.
+-  // (https://datatracker.ietf.org/doc/draft-lennox-avt-rtp-audio-level-exthdr/)
+-  uint8_t audio_level_dbov_ RTC_GUARDED_BY(send_audio_mutex_) = 127;
+   OneTimeEvent first_packet_sent_;
+ 
+   absl::optional<uint32_t> encoder_rtp_timestamp_frequency_
