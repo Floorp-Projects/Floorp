@@ -722,7 +722,7 @@ GMPExtractor.prototype = {
     let zipFile = new lazy.FileUtils.File(zipPath);
     let zipURI = Services.io.newFileURI(zipFile).spec;
     let worker = new ChromeWorker(
-      "resource://gre/modules/GMPExtractorWorker.js"
+      "resource://gre/modules/GMPExtractor.worker.js"
     );
     worker.onmessage = function (msg) {
       let log = getScopedLogger("GMPExtractor");

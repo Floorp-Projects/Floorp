@@ -246,7 +246,7 @@ EXTRA_PP_JS_MODULES += [
 if "Android" != CONFIG["OS_TARGET"]:
     EXTRA_JS_MODULES += [
         "ClipboardContextMenu.sys.mjs",
-        "GMPExtractorWorker.js",
+        "GMPExtractor.worker.js",
         "GMPInstallManager.sys.mjs",
         "GMPUtils.sys.mjs",
         "LightweightThemeConsumer.sys.mjs",
