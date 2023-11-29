@@ -321,7 +321,7 @@ EncodedImageCallback::Result MultiplexEncoderAdapter::OnEncodedImage(
 
   MutexLock lock(&mutex_);
   const auto& stashed_image_itr =
-      stashed_images_.find(encodedImage.Timestamp());
+      stashed_images_.find(encodedImage.RtpTimestamp());
   const auto& stashed_image_next_itr = std::next(stashed_image_itr, 1);
   RTC_DCHECK(stashed_image_itr != stashed_images_.end());
   MultiplexImage& stashed_image = stashed_image_itr->second;

@@ -129,20 +129,20 @@ int32_t MultiplexDecoderAdapter::Decode(const EncodedImage& input_image,
   MultiplexImage image = MultiplexEncodedImagePacker::Unpack(input_image);
 
   if (supports_augmenting_data_) {
-    RTC_DCHECK(decoded_augmenting_data_.find(input_image.Timestamp()) ==
+    RTC_DCHECK(decoded_augmenting_data_.find(input_image.RtpTimestamp()) ==
                decoded_augmenting_data_.end());
     decoded_augmenting_data_.emplace(
         std::piecewise_construct,
-        std::forward_as_tuple(input_image.Timestamp()),
+        std::forward_as_tuple(input_image.RtpTimestamp()),
         std::forward_as_tuple(std::move(image.augmenting_data),
                               image.augmenting_data_size));
   }
 
   if (image.component_count == 1) {
-    RTC_DCHECK(decoded_data_.find(input_image.Timestamp()) ==
+    RTC_DCHECK(decoded_data_.find(input_image.RtpTimestamp()) ==
                decoded_data_.end());
     decoded_data_.emplace(std::piecewise_construct,
-                          std::forward_as_tuple(input_image.Timestamp()),
+                          std::forward_as_tuple(input_image.RtpTimestamp()),
                           std::forward_as_tuple(kAXXStream));
   }
   int32_t rv = 0;

@@ -69,11 +69,11 @@ auto Frame(testing::Matcher<EncodedFrame> m) {
 
 std::unique_ptr<test::FakeEncodedFrame> WithReceiveTimeFromRtpTimestamp(
     std::unique_ptr<test::FakeEncodedFrame> frame) {
-  if (frame->Timestamp() == 0) {
+  if (frame->RtpTimestamp() == 0) {
     frame->SetReceivedTime(kClockStart.ms());
   } else {
     frame->SetReceivedTime(
-        TimeDelta::Seconds(frame->Timestamp() / 90000.0).ms() +
+        TimeDelta::Seconds(frame->RtpTimestamp() / 90000.0).ms() +
         kClockStart.ms());
   }
   return frame;

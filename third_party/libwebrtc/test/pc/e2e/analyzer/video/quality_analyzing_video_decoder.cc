@@ -75,19 +75,20 @@ int32_t QualityAnalyzingVideoDecoder::Decode(const EncodedImage& input_image,
     //
     // For more details see QualityAnalyzingVideoEncoder.
     return analyzing_callback_->IrrelevantSimulcastStreamDecoded(
-        out.id.value_or(VideoFrame::kNotSetId), input_image.Timestamp());
+        out.id.value_or(VideoFrame::kNotSetId), input_image.RtpTimestamp());
   }
 
   EncodedImage* origin_image;
   {
     MutexLock lock(&mutex_);
     // Store id to be able to retrieve it in analyzing callback.
-    timestamp_to_frame_id_.insert({input_image.Timestamp(), out.id});
+    timestamp_to_frame_id_.insert({input_image.RtpTimestamp(), out.id});
     // Store encoded image to prevent its destruction while it is used in
     // decoder.
-    origin_image = &(
-        decoding_images_.insert({input_image.Timestamp(), std::move(out.image)})
-            .first->second);
+    origin_image =
+        &(decoding_images_
+              .insert({input_image.RtpTimestamp(), std::move(out.image)})
+              .first->second);
   }
   // We can safely dereference `origin_image`, because it can be removed from
   // the map only after `delegate_` Decode method will be invoked. Image will
@@ -101,8 +102,8 @@ int32_t QualityAnalyzingVideoDecoder::Decode(const EncodedImage& input_image,
     VideoQualityAnalyzerInterface::DecoderStats stats;
     {
       MutexLock lock(&mutex_);
-      timestamp_to_frame_id_.erase(input_image.Timestamp());
-      decoding_images_.erase(input_image.Timestamp());
+      timestamp_to_frame_id_.erase(input_image.RtpTimestamp());
+      decoding_images_.erase(input_image.RtpTimestamp());
       stats.decoder_name = codec_name_;
     }
     analyzer_->OnDecoderError(

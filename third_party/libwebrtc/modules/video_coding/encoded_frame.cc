@@ -36,7 +36,7 @@ VCMEncodedFrame::~VCMEncodedFrame() {
 }
 
 void VCMEncodedFrame::Reset() {
-  SetTimestamp(0);
+  SetRtpTimestamp(0);
   SetSpatialIndex(absl::nullopt);
   _renderTimeMs = -1;
   _payloadType = 0;

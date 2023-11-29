@@ -30,7 +30,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ee566d1bfb654d36e
  12 files changed, 70 insertions(+), 8 deletions(-)
 
 diff --git a/api/video/frame_buffer.cc b/api/video/frame_buffer.cc
-index 4cdf2212a6..8267b8e6cb 100644
+index 5e8fc0ff44..09ca53ac94 100644
 --- a/api/video/frame_buffer.cc
 +++ b/api/video/frame_buffer.cc
 @@ -140,14 +140,29 @@ void FrameBuffer::DropNextDecodableTemporalUnit() {
@@ -215,7 +215,7 @@ index 8e4941f961..7bcfc7c057 100644
                                     int current_delay_ms,
                                     int target_delay_ms,
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index 89c241d900..07b3c6a4a9 100644
+index 47c31812f3..0954327f1c 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -244,6 +244,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
@@ -285,10 +285,10 @@ index 2067f255f7..85cc0aa0dc 100644
                                   std::move(config_.frame_decryptor),
                                   std::move(config_.frame_transformer),
 diff --git a/video/video_stream_buffer_controller.cc b/video/video_stream_buffer_controller.cc
-index 455f064b01..20588fbcad 100644
+index 59c07ddaab..e6e16db752 100644
 --- a/video/video_stream_buffer_controller.cc
 +++ b/video/video_stream_buffer_controller.cc
-@@ -263,6 +263,7 @@ void VideoStreamBufferController::OnFrameReady(
+@@ -264,6 +264,7 @@ void VideoStreamBufferController::OnFrameReady(
  
    // Update stats.
    UpdateDroppedFrames();
@@ -296,7 +296,7 @@ index 455f064b01..20588fbcad 100644
    UpdateFrameBufferTimings(min_receive_time, now);
    UpdateTimingFrameInfo();
  
-@@ -328,6 +329,17 @@ void VideoStreamBufferController::UpdateDroppedFrames()
+@@ -329,6 +330,17 @@ void VideoStreamBufferController::UpdateDroppedFrames()
        buffer_->GetTotalNumberOfDroppedFrames();
  }
  

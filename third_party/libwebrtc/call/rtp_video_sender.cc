@@ -575,7 +575,7 @@ EncodedImageCallback::Result RtpVideoSender::OnEncodedImage(
   RTC_DCHECK_LT(simulcast_index, rtp_streams_.size());
 
   uint32_t rtp_timestamp =
-      encoded_image.Timestamp() +
+      encoded_image.RtpTimestamp() +
       rtp_streams_[simulcast_index].rtp_rtcp->StartTimestamp();
 
   // RTCPSender has it's own copy of the timestamp offset, added in
@@ -583,7 +583,7 @@ EncodedImageCallback::Result RtpVideoSender::OnEncodedImage(
   // TODO(nisse): Delete RTCPSender:timestamp_offset_, and see if we can confine
   // knowledge of the offset to a single place.
   if (!rtp_streams_[simulcast_index].rtp_rtcp->OnSendingRtpFrame(
-          encoded_image.Timestamp(), encoded_image.capture_time_ms_,
+          encoded_image.RtpTimestamp(), encoded_image.capture_time_ms_,
           rtp_config_.payload_type,
           encoded_image._frameType == VideoFrameType::kVideoFrameKey)) {
     // The payload router could be active but this module isn't sending.

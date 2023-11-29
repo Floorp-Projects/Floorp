@@ -157,7 +157,7 @@ absl::optional<EncodedImage> IvfFileReader::NextFrame() {
 
   EncodedImage image;
   image.capture_time_ms_ = current_timestamp;
-  image.SetTimestamp(
+  image.SetRtpTimestamp(
       static_cast<uint32_t>(current_timestamp * kRtpClockRateHz / time_scale_));
   image.SetEncodedData(payload);
   image.SetSpatialIndex(static_cast<int>(layer_sizes.size()) - 1);
