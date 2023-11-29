@@ -187,8 +187,10 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_AV1_HW_DECODE = 45;
   /* Whether video overlay of software decoded video is supported, starting in 116. */
   const long FEATURE_VIDEO_SOFTWARE_OVERLAY = 46;
+  /* Whether WebGL is allowed to use hardware rendering, otherwise software fallbacks. */
+  const long FEATURE_WEBGL_USE_HARDWARE = 47;
   /* the maximum feature value. */
-  const long FEATURE_MAX_VALUE = FEATURE_VIDEO_SOFTWARE_OVERLAY;
+  const long FEATURE_MAX_VALUE = FEATURE_WEBGL_USE_HARDWARE;
 
   /*
    * A set of return values from GetFeatureStatus
