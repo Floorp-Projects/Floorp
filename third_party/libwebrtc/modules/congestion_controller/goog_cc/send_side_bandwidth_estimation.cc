@@ -11,22 +11,27 @@
 #include "modules/congestion_controller/goog_cc/send_side_bandwidth_estimation.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <cstdio>
 #include <limits>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "absl/strings/match.h"
+#include "absl/types/optional.h"
 #include "api/field_trials_view.h"
 #include "api/network_state_predictor.h"
-#include "api/rtc_event_log/rtc_event.h"
 #include "api/rtc_event_log/rtc_event_log.h"
+#include "api/transport/network_types.h"
 #include "api/units/data_rate.h"
 #include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
 #include "logging/rtc_event_log/events/rtc_event_bwe_update_loss_based.h"
 #include "modules/congestion_controller/goog_cc/loss_based_bwe_v2.h"
 #include "modules/remote_bitrate_estimator/include/bwe_defines.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/logging.h"
 #include "system_wrappers/include/field_trial.h"
 #include "system_wrappers/include/metrics.h"
