@@ -1492,7 +1492,7 @@ class VideoStreamEncoderTest : public ::testing::Test {
       last_encoded_image_ = EncodedImage(encoded_image);
       last_encoded_image_data_ = std::vector<uint8_t>(
           encoded_image.data(), encoded_image.data() + encoded_image.size());
-      uint32_t timestamp = encoded_image.Timestamp();
+      uint32_t timestamp = encoded_image.RtpTimestamp();
       if (last_timestamp_ != timestamp) {
         num_received_layers_ = 1;
         last_width_ = encoded_image._encodedWidth;

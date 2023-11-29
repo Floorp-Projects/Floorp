@@ -95,7 +95,7 @@ std::string ToString(const EncodedImage& encoded_image) {
 
   ss << VideoFrameTypeToString(encoded_image._frameType)
      << ", size=" << encoded_image.size() << ", qp=" << encoded_image.qp_
-     << ", timestamp=" << encoded_image.Timestamp();
+     << ", timestamp=" << encoded_image.RtpTimestamp();
 
   if (encoded_image.SimulcastIndex()) {
     ss << ", SimulcastIndex=" << *encoded_image.SimulcastIndex();

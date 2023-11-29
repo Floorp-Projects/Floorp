@@ -141,7 +141,7 @@ bool IvfFileWriter::InitFromFirstFrame(const EncodedImage& encoded_image,
     height_ = encoded_image._encodedHeight;
   }
 
-  using_capture_timestamps_ = encoded_image.Timestamp() == 0;
+  using_capture_timestamps_ = encoded_image.RtpTimestamp() == 0;
 
   codec_type_ = codec_type;
 
@@ -168,7 +168,7 @@ bool IvfFileWriter::WriteFrame(const EncodedImage& encoded_image,
 
   int64_t timestamp = using_capture_timestamps_
                           ? encoded_image.capture_time_ms_
-                          : wrap_handler_.Unwrap(encoded_image.Timestamp());
+                          : wrap_handler_.Unwrap(encoded_image.RtpTimestamp());
   if (last_timestamp_ != -1 && timestamp < last_timestamp_) {
     RTC_LOG(LS_WARNING) << "Timestamp not increasing: " << last_timestamp_
                         << " -> " << timestamp;

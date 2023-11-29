@@ -892,7 +892,7 @@ void RtpVideoStreamReceiver2::OnAssembledFrame(
   // Reset `reference_finder_` if `frame` is new and the codec have changed.
   if (current_codec_) {
     bool frame_is_newer =
-        AheadOf(frame->Timestamp(), last_assembled_frame_rtp_timestamp_);
+        AheadOf(frame->RtpTimestamp(), last_assembled_frame_rtp_timestamp_);
 
     if (frame->codec_type() != current_codec_) {
       if (frame_is_newer) {
@@ -910,11 +910,11 @@ void RtpVideoStreamReceiver2::OnAssembledFrame(
     }
 
     if (frame_is_newer) {
-      last_assembled_frame_rtp_timestamp_ = frame->Timestamp();
+      last_assembled_frame_rtp_timestamp_ = frame->RtpTimestamp();
     }
   } else {
     current_codec_ = frame->codec_type();
-    last_assembled_frame_rtp_timestamp_ = frame->Timestamp();
+    last_assembled_frame_rtp_timestamp_ = frame->RtpTimestamp();
   }
 
   if (buffered_frame_decryptor_ != nullptr) {

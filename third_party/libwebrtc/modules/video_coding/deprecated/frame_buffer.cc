@@ -81,7 +81,7 @@ VCMFrameBufferEnum VCMFrameBuffer::InsertPacket(const VCMPacket& packet,
   if (kStateEmpty == _state) {
     // First packet (empty and/or media) inserted into this frame.
     // store some info and set some initial values.
-    SetTimestamp(packet.timestamp);
+    SetRtpTimestamp(packet.timestamp);
     // We only take the ntp timestamp of the first packet of a frame.
     ntp_time_ms_ = packet.ntp_time_ms_;
     _codec = packet.codec();
