@@ -133,7 +133,6 @@ class GoogCcNetworkController : public NetworkControllerInterface {
 
   absl::optional<uint8_t> last_estimated_fraction_loss_ = 0;
   TimeDelta last_estimated_round_trip_time_ = TimeDelta::PlusInfinity();
-  Timestamp last_packet_received_time_ = Timestamp::MinusInfinity();
 
   double pacing_factor_;
   DataRate min_total_allocated_bitrate_;
