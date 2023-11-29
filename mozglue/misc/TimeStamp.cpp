@@ -38,9 +38,9 @@ struct TimeStampInitialization {
     // On Windows < 10, initializing the uptime requires `mFirstTimeStamp` to be
     // valid.
     mozilla::InitializeUptime();
-  };
+  }
 
-  ~TimeStampInitialization() { TimeStamp::Shutdown(); };
+  ~TimeStampInitialization() { TimeStamp::Shutdown(); }
 };
 
 static TimeStampInitialization sInitOnce;
