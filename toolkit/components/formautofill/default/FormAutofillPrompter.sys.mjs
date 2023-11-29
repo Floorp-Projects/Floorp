@@ -137,15 +137,22 @@ export class AutofillDoorhanger {
     return AutofillDoorhanger.menuButton(this.panel);
   }
 
+  static menuPopup(panel) {
+    return AutofillDoorhanger.menuButton(panel).querySelector(
+      `.toolbar-menupopup`
+    );
+  }
+  get menuPopup() {
+    return AutofillDoorhanger.menuPopup(this.panel);
+  }
+
   static preferenceButton(panel) {
-    const menu = AutofillDoorhanger.menuButton(panel);
-    return menu.menupopup.querySelector(
+    return AutofillDoorhanger.menuButton(panel).querySelector(
       `[data-l10n-id=address-capture-manage-address-button]`
     );
   }
   static learnMoreButton(panel) {
-    const menu = AutofillDoorhanger.menuButton(panel);
-    return menu.menupopup.querySelector(
+    return AutofillDoorhanger.menuButton(panel).querySelector(
       `[data-l10n-id=address-capture-learn-more-button]`
     );
   }
@@ -197,10 +204,13 @@ export class AutofillDoorhanger {
       return;
     }
 
-    const button = this.doc.createXULElement("toolbarbutton");
+    const button = this.doc.createElement("button");
     button.setAttribute("id", AutofillDoorhanger.menuButtonId);
+    button.setAttribute("class", "address-capture-icon-button");
+    this.doc.l10n.setAttributes(button, "address-capture-open-menu-button");
 
     const menupopup = this.doc.createXULElement("menupopup");
+    menupopup.setAttribute("id", AutofillDoorhanger.menuButtonId);
     menupopup.setAttribute("class", "toolbar-menupopup");
 
     for (const [index, element] of this.ui.menu.entries()) {
@@ -220,9 +230,9 @@ export class AutofillDoorhanger {
 
     button.appendChild(menupopup);
     /* eslint-disable mozilla/balanced-listeners */
-    button.addEventListener("command", event => {
+    button.addEventListener("click", event => {
       event.stopPropagation();
-      button.menupopup.openPopup(button, "after_start");
+      menupopup.openPopup(button, "after_start");
     });
     this.header.appendChild(button);
   }
@@ -568,12 +578,17 @@ export class AddressSaveDoorhanger extends AutofillDoorhanger {
 
       // Put the edit address button in the first section
       if (!AddressSaveDoorhanger.editButton(this.panel)) {
-        const button = this.doc.createXULElement("toolbarbutton");
+        const button = this.doc.createElement("button");
         button.setAttribute("id", AddressSaveDoorhanger.editButtonId);
+        button.setAttribute("class", "address-capture-icon-button");
+        this.doc.l10n.setAttributes(
+          button,
+          "address-capture-edit-address-button"
+        );
 
         // The element will be removed after the popup is closed
         /* eslint-disable mozilla/balanced-listeners */
-        button.addEventListener("command", event => {
+        button.addEventListener("click", event => {
           event.stopPropagation();
           this.#editAddressCb(event);
         });
@@ -752,7 +767,10 @@ export class AddressEditDoorhanger extends AutofillDoorhanger {
     const div = this.doc.createElement("div");
     div.setAttribute("class", "address-edit-input-container");
 
+    const inputId = AddressEditDoorhanger.getInputId(fieldName);
     const label = this.doc.createElement("label");
+    label.setAttribute("for", inputId);
+
     switch (fieldName) {
       case "address-level1":
         this.doc.l10n.setAttributes(label, this.layout.addressLevel1L10nId);
@@ -808,7 +826,7 @@ export class AddressEditDoorhanger extends AutofillDoorhanger {
       input = this.doc.createElement("input");
     }
 
-    input.setAttribute("id", AddressEditDoorhanger.getInputId(fieldName));
+    input.setAttribute("id", inputId);
 
     const value = this.#getFieldDisplayData(fieldName) ?? null;
     if (popup) {
@@ -907,6 +925,7 @@ CONTENT = {
       ],
     },
     options: {
+      autofocus: true,
       persistWhileVisible: true,
       hideClose: true,
     },
@@ -966,6 +985,7 @@ CONTENT = {
       ],
     },
     options: {
+      autofocus: true,
       persistWhileVisible: true,
       hideClose: true,
     },
@@ -1012,6 +1032,7 @@ CONTENT = {
       ],
     },
     options: {
+      autofocus: true,
       persistWhileVisible: true,
       removeOnDismissal: true,
       hideClose: true,

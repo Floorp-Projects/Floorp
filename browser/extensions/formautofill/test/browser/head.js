@@ -772,7 +772,8 @@ async function clickAddressDoorhangerButton(buttonType, subType) {
     button = AddressSaveDoorhanger.editButton(notification);
   } else if (buttonType == ADDRESS_MENU_BUTTON) {
     const menu = AutofillDoorhanger.menuButton(notification);
-    const promise = BrowserTestUtils.waitForEvent(menu.menupopup, "popupshown");
+    const menupopup = AutofillDoorhanger.menuPopup(notification);
+    const promise = BrowserTestUtils.waitForEvent(menupopup, "popupshown");
     menu.click();
     await promise;
     if (subType == ADDRESS_MENU_PREFENCE) {
