@@ -104,9 +104,13 @@ size_t JSString::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
     return 0;
   }
 
+  // Chars in the nursery are owned by the nursery.
+  if (!ownsMallocedChars()) {
+    return 0;
+  }
+
   // Everything else: measure the space for the chars.
   JSLinearString& linear = asLinear();
-  MOZ_ASSERT(linear.ownsMallocedChars());
   return linear.hasLatin1Chars() ? mallocSizeOf(linear.rawLatin1Chars())
                                  : mallocSizeOf(linear.rawTwoByteChars());
 }
