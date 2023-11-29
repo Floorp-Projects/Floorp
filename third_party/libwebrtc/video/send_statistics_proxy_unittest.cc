@@ -320,24 +320,29 @@ TEST_F(SendStatisticsProxyTest, Bitrate) {
 }
 
 TEST_F(SendStatisticsProxyTest, SendSideDelay) {
-  SendSideDelayObserver* observer = statistics_proxy_.get();
-  for (const auto& ssrc : config_.rtp.ssrcs) {
+  for (uint32_t ssrc : config_.rtp.ssrcs) {
     // Use ssrc as avg_delay_ms and max_delay_ms to get a unique value for each
     // stream.
-    int avg_delay_ms = ssrc;
-    int max_delay_ms = ssrc + 1;
-    observer->SendSideDelayUpdated(avg_delay_ms, max_delay_ms, ssrc);
-    expected_.substreams[ssrc].avg_delay_ms = avg_delay_ms;
-    expected_.substreams[ssrc].max_delay_ms = max_delay_ms;
+    expected_.substreams[ssrc].avg_delay_ms = ssrc;
+    expected_.substreams[ssrc].max_delay_ms = ssrc + 1;
+    statistics_proxy_->OnSendPacket(ssrc,
+                                    /*capture_time=*/fake_clock_.CurrentTime() -
+                                        TimeDelta::Millis(ssrc + 1));
+    statistics_proxy_->OnSendPacket(ssrc,
+                                    /*capture_time=*/fake_clock_.CurrentTime() -
+                                        TimeDelta::Millis(ssrc - 1));
   }
-  for (const auto& ssrc : config_.rtp.rtx.ssrcs) {
+  for (uint32_t ssrc : config_.rtp.rtx.ssrcs) {
     // Use ssrc as avg_delay_ms and max_delay_ms to get a unique value for each
     // stream.
-    int avg_delay_ms = ssrc;
-    int max_delay_ms = ssrc + 1;
-    observer->SendSideDelayUpdated(avg_delay_ms, max_delay_ms, ssrc);
-    expected_.substreams[ssrc].avg_delay_ms = avg_delay_ms;
-    expected_.substreams[ssrc].max_delay_ms = max_delay_ms;
+    expected_.substreams[ssrc].avg_delay_ms = ssrc;
+    expected_.substreams[ssrc].max_delay_ms = ssrc + 1;
+    statistics_proxy_->OnSendPacket(ssrc,
+                                    /*capture_time=*/fake_clock_.CurrentTime() -
+                                        TimeDelta::Millis(ssrc + 1));
+    statistics_proxy_->OnSendPacket(ssrc,
+                                    /*capture_time=*/fake_clock_.CurrentTime() -
+                                        TimeDelta::Millis(ssrc - 1));
   }
   VideoSendStream::Stats stats = statistics_proxy_->GetStats();
   ExpectEqual(expected_, stats);
