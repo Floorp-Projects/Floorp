@@ -61,19 +61,6 @@ AccessibleWrap::~AccessibleWrap() {}
 nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
   auto accessible = static_cast<AccessibleWrap*>(aEvent->GetAccessible());
   NS_ENSURE_TRUE(accessible, NS_ERROR_FAILURE);
-  DocAccessibleWrap* doc =
-      static_cast<DocAccessibleWrap*>(accessible->Document());
-  if (doc) {
-    switch (aEvent->GetEventType()) {
-      case nsIAccessibleEvent::EVENT_SCROLLING_START: {
-        accessible->PivotTo(
-            java::SessionAccessibility::HTML_GRANULARITY_DEFAULT, true, true);
-        break;
-      }
-      default:
-        break;
-    }
-  }
 
   nsresult rv = LocalAccessible::HandleAccEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);

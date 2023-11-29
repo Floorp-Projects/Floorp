@@ -12,6 +12,7 @@
 #include "nsIAccessibleEvent.h"
 #include "nsIAccessiblePivot.h"
 #include "nsIStringBundle.h"
+#include "TextLeafRange.h"
 
 #define ROLE_STRINGS_URL "chrome://global/locale/AccessFu.properties"
 
@@ -94,6 +95,13 @@ void a11y::PlatformEvent(Accessible* aTarget, uint32_t aEventType) {
   switch (aEventType) {
     case nsIAccessibleEvent::EVENT_REORDER:
       sessionAcc->SendWindowContentChangedEvent();
+      break;
+    case nsIAccessibleEvent::EVENT_SCROLLING_START:
+      if (Accessible* result = AccessibleWrap::DoPivot(
+              aTarget, java::SessionAccessibility::HTML_GRANULARITY_DEFAULT,
+              true, true)) {
+        sessionAcc->SendAccessibilityFocusedEvent(result);
+      }
       break;
     default:
       break;
