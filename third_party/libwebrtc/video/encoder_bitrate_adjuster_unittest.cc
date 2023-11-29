@@ -67,6 +67,8 @@ class EncoderBitrateAdjusterTest : public ::testing::Test {
         codec_.simulcastStream[si].maxBitrate = 300 * (1 << si);
         codec_.simulcastStream[si].active = true;
         codec_.simulcastStream[si].numberOfTemporalLayers = num_temporal_layers;
+        codec_.spatialLayers[si].width = 320 * (1<<si);
+        codec_.spatialLayers[si].height = 180 * (1<<si);
       }
     }
 
@@ -500,6 +502,34 @@ TEST_F(EncoderBitrateAdjusterTest, DontExceedMediaRateEvenWithHeadroom) {
     ExpectNear(MultiplyAllocation(current_input_allocation_, 1 / 1.1),
                current_adjusted_allocation_, 0.015);
   }
+}
+
+TEST_F(EncoderBitrateAdjusterTest, HonorMinBitrateSettingFromEncoderInfo) {
+  // Single layer, well behaved encoder.
+  const int high_bitrate = 20000;
+  const int a_lower_min_bitrate = 12000;
+  current_input_allocation_.SetBitrate(0, 0, high_bitrate);
+  VideoBitrateAllocation expected_input_allocation;
+  expected_input_allocation.SetBitrate(0, 0, a_lower_min_bitrate);
+
+  target_framerate_fps_ = 30;
+
+  SetUpAdjuster(1, 1, false);
+
+  auto new_resolution_limit = VideoEncoder::ResolutionBitrateLimits(
+      codec_.spatialLayers[0].width * codec_.spatialLayers[0].height, 15000,
+      a_lower_min_bitrate, 2000000);
+  encoder_info_.resolution_bitrate_limits.push_back(new_resolution_limit);
+  adjuster_->OnEncoderInfo(encoder_info_);
+
+  InsertFrames({{2.0}}, kWindowSizeMs);
+
+  current_adjusted_allocation_ =
+      adjuster_->AdjustRateAllocation(VideoEncoder::RateControlParameters(
+          current_input_allocation_, target_framerate_fps_));
+  // Adjusted allocation near input. Allow 1% error margin due to rounding
+  // errors etc.
+  ExpectNear(expected_input_allocation, current_adjusted_allocation_, 0.01);
 }
 
 }  // namespace test
