@@ -509,7 +509,7 @@ function initPage() {
       let message = document.getElementById("trrOnlyMessage");
       document.l10n.setAttributes(
         message,
-        "neterror-dns-not-found-trr-only-reason",
+        "neterror-dns-not-found-trr-only-reason2",
         {
           hostname: HOST_NAME,
         }
@@ -653,7 +653,7 @@ function showNativeFallbackWarning() {
   let message = document.getElementById("nativeFallbackMessage");
   document.l10n.setAttributes(
     message,
-    "neterror-dns-not-found-native-fallback-reason",
+    "neterror-dns-not-found-native-fallback-reason2",
     {
       hostname: HOST_NAME,
     }
