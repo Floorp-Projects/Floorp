@@ -2176,7 +2176,7 @@ if (rtc_include_tests) {
         sources += [ "win32_unittest.cc" ]
         deps += [ ":win32" ]
       }
-      if (is_posix || is_fuchsia) {
+      if (is_posix || is_fuchsia || is_win) {
         sources += [
           "openssl_adapter_unittest.cc",
           "openssl_session_cache_unittest.cc",
