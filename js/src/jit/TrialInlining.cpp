@@ -461,6 +461,28 @@ static uint32_t GetMaxCalleeNumActuals(BytecodeLocation loc) {
 }
 
 /*static*/
+bool TrialInliner::IsValidInliningOp(JSOp op) {
+  switch (op) {
+    case JSOp::GetProp:
+    case JSOp::GetElem:
+    case JSOp::SetProp:
+    case JSOp::StrictSetProp:
+    case JSOp::Call:
+    case JSOp::CallContent:
+    case JSOp::CallIgnoresRv:
+    case JSOp::CallIter:
+    case JSOp::CallContentIter:
+    case JSOp::New:
+    case JSOp::NewContent:
+    case JSOp::SuperCall:
+      return true;
+    default:
+      break;
+  }
+  return false;
+}
+
+/*static*/
 bool TrialInliner::canInline(JSFunction* target, HandleScript caller,
                              BytecodeLocation loc) {
   if (!target->hasJitScript()) {
@@ -491,6 +513,10 @@ bool TrialInliner::canInline(JSFunction* target, HandleScript caller,
   }
   if (JitOptions.onlyInlineSelfHosted && !script->selfHosted()) {
     JitSpew(JitSpew_WarpTrialInlining, "SKIP: only inlining self hosted");
+    return false;
+  }
+  if (!IsValidInliningOp(loc.getOp())) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: non inlineable op");
     return false;
   }
 

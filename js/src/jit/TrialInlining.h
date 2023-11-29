@@ -162,6 +162,8 @@ class MOZ_RAII TrialInliner {
   static bool canInline(JSFunction* target, HandleScript caller,
                         BytecodeLocation loc);
 
+  static bool IsValidInliningOp(JSOp op);
+
  private:
   ICCacheIRStub* maybeSingleStub(const ICEntry& entry);
   void cloneSharedPrefix(ICCacheIRStub* stub, const uint8_t* endOfPrefix,
