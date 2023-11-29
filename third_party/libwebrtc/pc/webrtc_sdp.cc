@@ -54,9 +54,9 @@
 #include "p2p/base/transport_info.h"
 #include "pc/media_protocol_names.h"
 #include "pc/media_session.h"
-#include "pc/sdp_serializer.h"
 #include "pc/session_description.h"
 #include "pc/simulcast_description.h"
+#include "pc/simulcast_sdp_serializer.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/helpers.h"
@@ -1601,7 +1601,7 @@ void BuildRtpContentAttributes(const MediaContentDescription* media_desc,
                                const cricket::MediaType media_type,
                                int msid_signaling,
                                std::string* message) {
-  SdpSerializer serializer;
+  SimulcastSdpSerializer serializer;
   rtc::StringBuilder os;
   // RFC 8285
   // a=extmap-allow-mixed
@@ -3049,7 +3049,7 @@ bool ParseContent(absl::string_view message,
   std::string ptime_as_string;
   std::vector<std::string> stream_ids;
   std::string track_id;
-  SdpSerializer deserializer;
+  SimulcastSdpSerializer deserializer;
   std::vector<RidDescription> rids;
   SimulcastDescription simulcast;
 

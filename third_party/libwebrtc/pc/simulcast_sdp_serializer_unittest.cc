@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "pc/sdp_serializer.h"
+#include "pc/simulcast_sdp_serializer.h"
 
 #include <stddef.h>
 
@@ -102,7 +102,7 @@ class SimulcastSdpSerializerTest : public TestWithParam<const char*> {
   // `expected` - The expected output Simulcast to compare to.
   void TestDeserialization(const std::string& str,
                            const SimulcastDescription& expected) const {
-    SdpSerializer deserializer;
+    SimulcastSdpSerializer deserializer;
     auto result = deserializer.DeserializeSimulcastDescription(str);
     EXPECT_TRUE(result.ok());
     ExpectEqual(expected, result.value());
@@ -113,7 +113,7 @@ class SimulcastSdpSerializerTest : public TestWithParam<const char*> {
   // `expected` - The expected output string to compare to.
   void TestSerialization(const SimulcastDescription& simulcast,
                          const std::string& expected) const {
-    SdpSerializer serializer;
+    SimulcastSdpSerializer serializer;
     auto result = serializer.SerializeSimulcastDescription(simulcast);
     EXPECT_EQ(expected, result);
   }
@@ -214,7 +214,7 @@ TEST_F(SimulcastSdpSerializerTest, Deserialize_PausedStreams) {
 
 // Parameterized negative test case for deserialization with invalid inputs.
 TEST_P(SimulcastSdpSerializerTest, SimulcastDeserializationFailed) {
-  SdpSerializer deserializer;
+  SimulcastSdpSerializer deserializer;
   auto result = deserializer.DeserializeSimulcastDescription(GetParam());
   EXPECT_FALSE(result.ok());
 }
@@ -286,7 +286,7 @@ class RidDescriptionSdpSerializerTest : public TestWithParam<const char*> {
   // `expected` - The expected output RidDescription to compare to.
   void TestDeserialization(const std::string& str,
                            const RidDescription& expected) const {
-    SdpSerializer deserializer;
+    SimulcastSdpSerializer deserializer;
     auto result = deserializer.DeserializeRidDescription(str);
     EXPECT_TRUE(result.ok());
     ExpectEqual(expected, result.value());
@@ -297,7 +297,7 @@ class RidDescriptionSdpSerializerTest : public TestWithParam<const char*> {
   // `expected` - The expected output string to compare to.
   void TestSerialization(const RidDescription& rid_description,
                          const std::string& expected) const {
-    SdpSerializer serializer;
+    SimulcastSdpSerializer serializer;
     auto result = serializer.SerializeRidDescription(rid_description);
     EXPECT_EQ(expected, result);
   }
@@ -447,7 +447,7 @@ TEST_F(RidDescriptionSdpSerializerTest, Deserialize_AmbiguousCase) {
 
 // Parameterized negative test case for deserialization with invalid inputs.
 TEST_P(RidDescriptionSdpSerializerTest, RidDescriptionDeserializationFailed) {
-  SdpSerializer deserializer;
+  SimulcastSdpSerializer deserializer;
   auto result = deserializer.DeserializeRidDescription(GetParam());
   EXPECT_FALSE(result.ok());
 }
