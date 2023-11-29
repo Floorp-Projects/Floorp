@@ -117,7 +117,9 @@ class RtpSenderEgress {
                              Timestamp now,
                              uint32_t ssrc);
   void RecomputeMaxSendDelay();
-  void UpdateOnSendPacket(int packet_id, Timestamp capture_time, uint32_t ssrc);
+  void UpdateOnSendPacket(absl::optional<uint16_t> packet_id,
+                          Timestamp capture_time,
+                          uint32_t ssrc);
   // Sends packet on to `transport_`, leaving the RTP module.
   bool SendPacketToNetwork(const RtpPacketToSend& packet,
                            const PacketOptions& options,

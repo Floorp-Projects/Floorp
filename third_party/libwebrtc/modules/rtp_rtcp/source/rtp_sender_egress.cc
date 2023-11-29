@@ -252,7 +252,9 @@ void RtpSenderEgress::CompleteSendPacket(const Packet& compound_packet,
   // Downstream code actually uses this flag to distinguish between media and
   // everything else.
   options.is_retransmit = !is_media;
-  if (auto packet_id = packet->GetExtension<TransportSequenceNumber>()) {
+  absl::optional<uint16_t> packet_id =
+      packet->GetExtension<TransportSequenceNumber>();
+  if (packet_id.has_value()) {
     options.packet_id = *packet_id;
     options.included_in_feedback = true;
     options.included_in_allocation = true;
@@ -265,7 +267,7 @@ void RtpSenderEgress::CompleteSendPacket(const Packet& compound_packet,
   if (packet->packet_type() != RtpPacketMediaType::kPadding &&
       packet->packet_type() != RtpPacketMediaType::kRetransmission) {
     UpdateDelayStatistics(packet->capture_time(), now, packet_ssrc);
-    UpdateOnSendPacket(options.packet_id, packet->capture_time(), packet_ssrc);
+    UpdateOnSendPacket(packet_id, packet->capture_time(), packet_ssrc);
   }
   options.batchable = enable_send_packet_batching_ && !is_audio_;
   options.last_packet_in_batch = last_in_batch;
@@ -506,10 +508,10 @@ void RtpSenderEgress::RecomputeMaxSendDelay() {
   }
 }
 
-void RtpSenderEgress::UpdateOnSendPacket(int packet_id,
+void RtpSenderEgress::UpdateOnSendPacket(absl::optional<uint16_t> packet_id,
                                          Timestamp capture_time,
                                          uint32_t ssrc) {
-  if (!send_packet_observer_ || capture_time.IsInfinite() || packet_id == -1) {
+  if (!send_packet_observer_ || capture_time.IsInfinite()) {
     return;
   }
 

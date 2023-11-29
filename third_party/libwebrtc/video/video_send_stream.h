@@ -104,11 +104,13 @@ class VideoSendStream : public webrtc::VideoSendStream {
                          SendDelayStats* send_delay_stats)
         : stats_proxy_(*stats_proxy), send_delay_stats_(*send_delay_stats) {}
 
-    void OnSendPacket(uint16_t packet_id,
+    void OnSendPacket(absl::optional<uint16_t> packet_id,
                       Timestamp capture_time,
                       uint32_t ssrc) override {
       stats_proxy_.OnSendPacket(ssrc, capture_time);
-      send_delay_stats_.OnSendPacket(packet_id, capture_time, ssrc);
+      if (packet_id.has_value()) {
+        send_delay_stats_.OnSendPacket(*packet_id, capture_time, ssrc);
+      }
     }
 
    private:
