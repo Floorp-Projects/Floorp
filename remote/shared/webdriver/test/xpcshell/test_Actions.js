@@ -4,8 +4,12 @@
 
 "use strict";
 
-const { action } = ChromeUtils.importESModule(
+const { action, CLICK_INTERVAL, ClickTracker } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/webdriver/Actions.sys.mjs"
+);
+
+const { setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
 );
 
 const XHTMLNS = "http://www.w3.org/1999/xhtml";
@@ -679,6 +683,35 @@ add_task(function test_computeTickDuration_noDurations() {
   ];
   const chain = action.Chain.fromJSON(state, chainForTick(inputTickActions));
   equal(0, chain[0].getDuration());
+});
+
+add_task(function test_ClickTracker_setClick() {
+  const clickTracker = new ClickTracker();
+  const button1 = 1;
+  const button2 = 2;
+
+  clickTracker.setClick(button1);
+  equal(1, clickTracker.count);
+
+  // Make sure that clicking different mouse buttons doesn't increase the count.
+  clickTracker.setClick(button2);
+  equal(1, clickTracker.count);
+
+  clickTracker.setClick(button2);
+  equal(2, clickTracker.count);
+
+  clickTracker.reset();
+  equal(0, clickTracker.count);
+});
+
+add_task(function test_ClickTracker_reset_after_timeout() {
+  const clickTracker = new ClickTracker();
+
+  clickTracker.setClick(1);
+  equal(1, clickTracker.count);
+
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  setTimeout(() => equal(0, clickTracker.count), CLICK_INTERVAL + 10);
 });
 
 // helpers

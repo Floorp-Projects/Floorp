@@ -10,6 +10,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AppInfo: "chrome://remote/content/shared/AppInfo.sys.mjs",
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
+  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   dom: "chrome://remote/content/shared/DOM.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   event: "chrome://remote/content/marionette/event.sys.mjs",
@@ -17,6 +18,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
   Sleep: "chrome://remote/content/marionette/sync.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "logger", () =>
@@ -38,6 +40,9 @@ ChromeUtils.defineLazyGetter(lazy, "logger", () =>
  */
 export const action = {};
 
+// Max interval between two clicks that should result in a dblclick or a tripleclick (in ms)
+export const CLICK_INTERVAL = 640;
+
 /** Map from normalized key value to UI Events modifier key name */
 const MODIFIER_NAME_LOOKUP = {
   Alt: "alt",
@@ -53,6 +58,7 @@ const MODIFIER_NAME_LOOKUP = {
  */
 action.State = class {
   constructor() {
+    this.clickTracker = new ClickTracker();
     /**
      * A map between input ID and the device state for that input
      * source, with one entry for each active input source.
@@ -87,7 +93,6 @@ action.State = class {
   async release(win) {
     this.inputsToCancel.reverse();
     await this.inputsToCancel.dispatch(this, win);
-    lazy.event.DoubleClickTracker.resetClick();
   }
 
   /**
@@ -168,6 +173,60 @@ action.State = class {
     return pointerId;
   }
 };
+
+export class ClickTracker {
+  #count;
+  #lastButtonClicked;
+  #timer;
+
+  constructor() {
+    this.#count = 0;
+    this.#lastButtonClicked = null;
+  }
+
+  get count() {
+    return this.#count;
+  }
+
+  #cancelTimer() {
+    lazy.clearTimeout(this.#timer);
+  }
+
+  #startTimer() {
+    this.#timer = lazy.setTimeout(this.reset.bind(this), CLICK_INTERVAL);
+  }
+
+  /**
+   * Reset tracking mouse click counter.
+   */
+  reset() {
+    this.#cancelTimer();
+    this.#count = 0;
+    this.#lastButtonClicked = null;
+  }
+
+  /**
+   * Track |button| click to identify possible double or triple click.
+   *
+   * @param {number} button
+   *     A positive integer that refers to a mouse button.
+   */
+  setClick(button) {
+    this.#cancelTimer();
+
+    if (
+      this.#lastButtonClicked === null ||
+      this.#lastButtonClicked === button
+    ) {
+      this.#count++;
+    } else {
+      this.#count = 1;
+    }
+
+    this.#lastButtonClicked = button;
+    this.#startTimer();
+  }
+}
 
 /**
  * Device state for an input source.
@@ -1790,10 +1849,10 @@ class MousePointer extends Pointer {
     if (mouseEvent.ctrlKey) {
       if (lazy.AppInfo.isMac) {
         mouseEvent.button = 2;
-        lazy.event.DoubleClickTracker.resetClick();
+        state.clickTracker.reset();
       }
-    } else if (lazy.event.DoubleClickTracker.isClicked()) {
-      mouseEvent.clickCount = 2;
+    } else {
+      mouseEvent.clickCount = state.clickTracker.count + 1;
     }
 
     lazy.event.synthesizeMouseAtPoint(
@@ -1823,9 +1882,8 @@ class MousePointer extends Pointer {
     });
     mouseEvent.update(state, inputSource);
 
-    if (lazy.event.DoubleClickTracker.isClicked()) {
-      mouseEvent.clickCount = 2;
-    }
+    state.clickTracker.setClick(action.button);
+    mouseEvent.clickCount = state.clickTracker.count;
 
     lazy.event.synthesizeMouseAtPoint(
       inputSource.x,
@@ -1890,6 +1948,10 @@ action.Chain = class extends Array {
         await tickActions.dispatch(state, win);
       }
     })();
+
+    // Reset the current click tracker counter. We shouldn't be able to simulate
+    // a double click with multiple action chains.
+    state.clickTracker.reset();
 
     return chainEvents;
   }

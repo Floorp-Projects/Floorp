@@ -13,10 +13,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 /** Provides functionality for creating and sending DOM events. */
 export const event = {};
 
-ChromeUtils.defineLazyGetter(lazy, "dblclickTimer", () => {
-  return Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-});
-
 const _eventUtils = new WeakMap();
 
 function _getEventUtils(win) {
@@ -35,9 +31,6 @@ function _getEventUtils(win) {
   }
   return _eventUtils.get(win);
 }
-
-//  Max interval between two clicks that should result in a dblclick (in ms)
-const DBLCLICK_INTERVAL = 640;
 
 event.MouseEvents = {
   click: 0,
@@ -64,33 +57,6 @@ event.MouseButton = {
   },
   isSecondary(button) {
     return button === 2;
-  },
-};
-
-event.DoubleClickTracker = {
-  firstClick: false,
-  isClicked() {
-    return event.DoubleClickTracker.firstClick;
-  },
-  setClick() {
-    if (!event.DoubleClickTracker.firstClick) {
-      event.DoubleClickTracker.firstClick = true;
-      event.DoubleClickTracker.startTimer();
-    }
-  },
-  resetClick() {
-    event.DoubleClickTracker.firstClick = false;
-    event.DoubleClickTracker.cancelTimer();
-  },
-  startTimer() {
-    lazy.dblclickTimer.initWithCallback(
-      event.DoubleClickTracker.resetClick,
-      DBLCLICK_INTERVAL,
-      Ci.nsITimer.TYPE_ONE_SHOT
-    );
-  },
-  cancelTimer() {
-    lazy.dblclickTimer.cancel();
   },
 };
 
