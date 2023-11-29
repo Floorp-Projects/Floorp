@@ -1,176 +1,70 @@
-From: Harald Alvestrand <hta@webrtc.org>
-Date: Tue, 26 Sep 2023 19:38:19 +0000
-Subject: (cherry-pick-branch-heads/5993) [M118] Fire MaybeSignalReadyToSend in
- a PostTask when recursive
+From: Philipp Hancke <phancke@microsoft.com>
+Date: Fri, 8 Sep 2023 11:31:30 +0200
+Subject: (cherry-pick-branch-heads/5993) [M118] Obfuscate prflx raddr when
+ using mdns
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Speculative fix. Writing the test for it is more complex.
+BUG=chromium:1478690
 
-(cherry picked from commit 83894d384763c613e548e6352838406e6e0c2fc1)
+(cherry picked from commit a8e3111d8c6622eeb930c32ab7a2e6be51b3d801)
 
-Bug: chromium:1483874
-Change-Id: Icfaf1524b0499c609010753e0b6f3cadbd0e98f9
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/321480
-Reviewed-by: Per Kjellander <perkj@webrtc.org>
-Commit-Queue: Harald Alvestrand <hta@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#40820}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/322124
-Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/5993@{#3}
+Change-Id: I7a1caad7bbd2fc82507b61b59be71546494a304c
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/319580
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Reviewed-by: Henrik Boström <hbos@webrtc.org>
+Commit-Queue: Philipp Hancke <phancke@microsoft.com>
+Cr-Original-Commit-Position: refs/heads/main@{#40724}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/320580
+Cr-Commit-Position: refs/branch-heads/5993@{#2}
 Cr-Branched-From: 5afcec093c1403fe9e3872706d04671cbc6d2983-refs/heads/main@{#40703}
 ---
- pc/BUILD.gn                       |  1 +
- pc/rtp_transport.cc               | 10 ++++++++++
- pc/rtp_transport.h                |  4 ++++
- pc/rtp_transport_unittest.cc      | 28 ++++++++++++++++++++++++++++
- pc/test/rtp_transport_test_util.h | 10 ++++++++++
- 5 files changed, 53 insertions(+)
+ p2p/base/port_allocator.cc          |  5 ++++-
+ p2p/base/port_allocator_unittest.cc | 15 +++++++++++++++
+ 2 files changed, 19 insertions(+), 1 deletion(-)
 
-diff --git a/pc/BUILD.gn b/pc/BUILD.gn
-index e8d1e8622b..b2e448e96a 100644
---- a/pc/BUILD.gn
-+++ b/pc/BUILD.gn
-@@ -443,6 +443,7 @@ rtc_source_set("rtp_transport") {
-     ":rtp_transport_internal",
-     ":session_description",
-     "../api:array_view",
-+    "../api/task_queue:pending_task_safety_flag",
-     "../api/units:timestamp",
-     "../call:rtp_receiver",
-     "../call:video_stream_api",
-diff --git a/pc/rtp_transport.cc b/pc/rtp_transport.cc
-index 32bdf99ec4..653b51fd9e 100644
---- a/pc/rtp_transport.cc
-+++ b/pc/rtp_transport.cc
-@@ -285,8 +285,18 @@ void RtpTransport::MaybeSignalReadyToSend() {
-   bool ready_to_send =
-       rtp_ready_to_send_ && (rtcp_ready_to_send_ || rtcp_mux_enabled_);
-   if (ready_to_send != ready_to_send_) {
-+    if (processing_ready_to_send_) {
-+      // Delay ReadyToSend processing until current operation is finished.
-+      // Note that this may not cause a signal, since ready_to_send may
-+      // have a new value by the time this executes.
-+      TaskQueueBase::Current()->PostTask(
-+          SafeTask(safety_.flag(), [this] { MaybeSignalReadyToSend(); }));
-+      return;
-+    }
-     ready_to_send_ = ready_to_send;
-+    processing_ready_to_send_ = true;
-     SendReadyToSend(ready_to_send);
-+    processing_ready_to_send_ = false;
-   }
+diff --git a/p2p/base/port_allocator.cc b/p2p/base/port_allocator.cc
+index 522f0beb98..d8ff04fe20 100644
+--- a/p2p/base/port_allocator.cc
++++ b/p2p/base/port_allocator.cc
+@@ -340,9 +340,12 @@ Candidate PortAllocator::SanitizeCandidate(const Candidate& c) const {
+   // If the candidate filter doesn't allow reflexive addresses, empty TURN raddr
+   // to avoid reflexive address leakage.
+   bool filter_turn_related_address = !(candidate_filter_ & CF_REFLEXIVE);
++  // Sanitize related_address when using MDNS.
++  bool filter_prflx_related_address = MdnsObfuscationEnabled();
+   bool filter_related_address =
+       ((c.type() == STUN_PORT_TYPE && filter_stun_related_address) ||
+-       (c.type() == RELAY_PORT_TYPE && filter_turn_related_address));
++       (c.type() == RELAY_PORT_TYPE && filter_turn_related_address) ||
++       (c.type() == PRFLX_PORT_TYPE && filter_prflx_related_address));
+   return c.ToSanitizedCopy(use_hostname_address, filter_related_address);
  }
  
-diff --git a/pc/rtp_transport.h b/pc/rtp_transport.h
-index 1afcb5ee3d..456c91c370 100644
---- a/pc/rtp_transport.h
-+++ b/pc/rtp_transport.h
-@@ -17,6 +17,7 @@
- #include <string>
+diff --git a/p2p/base/port_allocator_unittest.cc b/p2p/base/port_allocator_unittest.cc
+index f70997179e..48d0bc8a6e 100644
+--- a/p2p/base/port_allocator_unittest.cc
++++ b/p2p/base/port_allocator_unittest.cc
+@@ -357,6 +357,21 @@ TEST_F(PortAllocatorTest, SanitizePrflxCandidateMdnsObfuscationEnabled) {
+   EXPECT_EQ("", output.address().ipaddr().ToString());
+ }
  
- #include "absl/types/optional.h"
-+#include "api/task_queue/pending_task_safety_flag.h"
- #include "call/rtp_demuxer.h"
- #include "call/video_receive_stream.h"
- #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
-@@ -137,6 +138,9 @@ class RtpTransport : public RtpTransportInternal {
- 
-   // Used for identifying the MID for RtpDemuxer.
-   RtpHeaderExtensionMap header_extension_map_;
-+  // Guard against recursive "ready to send" signals
-+  bool processing_ready_to_send_ = false;
-+  ScopedTaskSafety safety_;
- };
- 
- }  // namespace webrtc
-diff --git a/pc/rtp_transport_unittest.cc b/pc/rtp_transport_unittest.cc
-index ca748ae9a6..5b6a8309e0 100644
---- a/pc/rtp_transport_unittest.cc
-+++ b/pc/rtp_transport_unittest.cc
-@@ -10,12 +10,16 @@
- 
- #include "pc/rtp_transport.h"
- 
-+#include <utility>
++TEST_F(PortAllocatorTest,
++       SanitizePrflxCandidateMdnsObfuscationEnabledRelatedAddress) {
++  allocator_->SetMdnsObfuscationEnabledForTesting(true);
++  // Create the candidate from an IP literal. This populates the hostname.
++  cricket::Candidate input(1, "udp", rtc::SocketAddress(kIpv4Address, 443), 1,
++                           "username", "password", cricket::PRFLX_PORT_TYPE, 1,
++                           "foundation", 1, 1);
 +
- #include "p2p/base/fake_packet_transport.h"
- #include "pc/test/rtp_transport_test_util.h"
- #include "rtc_base/buffer.h"
- #include "rtc_base/containers/flat_set.h"
-+#include "rtc_base/gunit.h"
- #include "rtc_base/third_party/sigslot/sigslot.h"
- #include "test/gtest.h"
-+#include "test/run_loop.h"
- 
- namespace webrtc {
- 
-@@ -321,4 +325,28 @@ TEST(RtpTransportTest, DontSignalUnhandledRtpPayloadType) {
-   transport.UnregisterRtpDemuxerSink(&observer);
- }
- 
-+TEST(RtpTransportTest, RecursiveSetSendDoesNotCrash) {
-+  const int kShortTimeout = 100;
-+  test::RunLoop loop;
-+  RtpTransport transport(kMuxEnabled);
-+  rtc::FakePacketTransport fake_rtp("fake_rtp");
-+  transport.SetRtpPacketTransport(&fake_rtp);
-+  TransportObserver observer(&transport);
-+  observer.SetActionOnReadyToSend([&](bool ready) {
-+    const rtc::PacketOptions options;
-+    const int flags = 0;
-+    rtc::CopyOnWriteBuffer rtp_data(kRtpData, kRtpLen);
-+    transport.SendRtpPacket(&rtp_data, options, flags);
-+  });
-+  // The fake RTP will have no destination, so will return -1.
-+  fake_rtp.SetError(ENOTCONN);
-+  fake_rtp.SetWritable(true);
-+  // At this point, only the initial ready-to-send is observed.
-+  EXPECT_TRUE(observer.ready_to_send());
-+  EXPECT_EQ(observer.ready_to_send_signal_count(), 1);
-+  // After the wait, the ready-to-send false is observed.
-+  EXPECT_EQ_WAIT(observer.ready_to_send_signal_count(), 2, kShortTimeout);
-+  EXPECT_FALSE(observer.ready_to_send());
++  cricket::Candidate output = allocator_->SanitizeCandidate(input);
++  EXPECT_NE(kIpv4AddressWithPort, output.address().ToString());
++  EXPECT_EQ("", output.address().ipaddr().ToString());
++  EXPECT_NE(kIpv4AddressWithPort, output.related_address().ToString());
++  EXPECT_EQ("", output.related_address().ipaddr().ToString());
 +}
 +
- }  // namespace webrtc
-diff --git a/pc/test/rtp_transport_test_util.h b/pc/test/rtp_transport_test_util.h
-index 29ffad8539..593ee002c9 100644
---- a/pc/test/rtp_transport_test_util.h
-+++ b/pc/test/rtp_transport_test_util.h
-@@ -11,6 +11,8 @@
- #ifndef PC_TEST_RTP_TRANSPORT_TEST_UTIL_H_
- #define PC_TEST_RTP_TRANSPORT_TEST_UTIL_H_
- 
-+#include <utility>
-+
- #include "call/rtp_packet_sink_interface.h"
- #include "modules/rtp_rtcp/source/rtp_packet_received.h"
- #include "pc/rtp_transport_internal.h"
-@@ -65,6 +67,9 @@ class TransportObserver : public RtpPacketSinkInterface {
-   }
- 
-   void OnReadyToSend(bool ready) {
-+    if (action_on_ready_to_send_) {
-+      action_on_ready_to_send_(ready);
-+    }
-     ready_to_send_signal_count_++;
-     ready_to_send_ = ready;
-   }
-@@ -73,6 +78,10 @@ class TransportObserver : public RtpPacketSinkInterface {
- 
-   int ready_to_send_signal_count() { return ready_to_send_signal_count_; }
- 
-+  void SetActionOnReadyToSend(absl::AnyInvocable<void(bool)> action) {
-+    action_on_ready_to_send_ = std::move(action);
-+  }
-+
-  private:
-   bool ready_to_send_ = false;
-   int rtp_count_ = 0;
-@@ -81,6 +90,7 @@ class TransportObserver : public RtpPacketSinkInterface {
-   int ready_to_send_signal_count_ = 0;
-   rtc::CopyOnWriteBuffer last_recv_rtp_packet_;
-   rtc::CopyOnWriteBuffer last_recv_rtcp_packet_;
-+  absl::AnyInvocable<void(bool)> action_on_ready_to_send_;
- };
- 
- }  // namespace webrtc
+ TEST_F(PortAllocatorTest, SanitizeIpv4NonLiteralMdnsObfuscationEnabled) {
+   // Create the candidate with an empty hostname.
+   allocator_->SetMdnsObfuscationEnabledForTesting(true);
