@@ -749,6 +749,32 @@ static void LineNumberAndColumn(HandleScript script, BytecodeLocation loc,
 #endif
 }
 
+static void MaybeSetInliningStateFromJitHints(JSContext* cx,
+                                              ICFallbackStub* fallbackStub,
+                                              JSScript* script,
+                                              BytecodeLocation loc) {
+  // Only update the state if it has already been marked as a candidate.
+  if (fallbackStub->trialInliningState() != TrialInliningState::Candidate) {
+    return;
+  }
+
+  // Make sure the op is inlineable.
+  if (!TrialInliner::IsValidInliningOp(loc.getOp())) {
+    return;
+  }
+
+  if (!cx->runtime()->jitRuntime()->hasJitHintsMap()) {
+    return;
+  }
+
+  JitHintsMap* jitHints = cx->runtime()->jitRuntime()->getJitHintsMap();
+  uint32_t offset = loc.bytecodeToOffset(script);
+
+  if (jitHints->hasMonomorphicInlineHintAtOffset(script, offset)) {
+    fallbackStub->setTrialInliningState(TrialInliningState::MonomorphicInlined);
+  }
+}
+
 AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
                                                   BytecodeLocation loc) {
   // Do one of the following:
@@ -779,14 +805,7 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
 
   // Set the trial inlining state directly if there is a hint cached from a
   // previous compilation.
-  if (cx_->runtime()->jitRuntime()->hasJitHintsMap()) {
-    JitHintsMap* jitHints = cx_->runtime()->jitRuntime()->getJitHintsMap();
-    if (fallbackStub->trialInliningState() == TrialInliningState::Candidate &&
-        jitHints->hasMonomorphicInlineHintAtOffset(script_, offset)) {
-      fallbackStub->setTrialInliningState(
-          TrialInliningState::MonomorphicInlined);
-    }
-  }
+  MaybeSetInliningStateFromJitHints(cx_, fallbackStub, script_, loc);
 
   // Clear the used-by-transpiler flag on the IC. It can still be set from a
   // previous compilation because we don't clear the flag on every IC when
