@@ -6001,7 +6001,9 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
   if (!usePlaceholder &&
       ShouldResistFingerprinting(RFPTarget::CanvasRandomization)) {
     needRandomizePixels = true;
-    readback = CreateDataSourceSurfaceByCloning(readback);
+    if (readback) {
+      readback = CreateDataSourceSurfaceByCloning(readback);
+    }
   }
 
   DataSourceSurface::MappedSurface rawData;
