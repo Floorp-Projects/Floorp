@@ -8,7 +8,7 @@ PYTHON_UNITTEST_MANIFESTS += ["pytest/python.ini"]
 
 TEST_DIRS += ["gtest"]
 
-XPCSHELL_TESTS_MANIFESTS += ["xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["xpcshell/xpcshell.toml"]
 
 BROWSER_CHROME_MANIFESTS += ["browser/browser.toml"]
 

@@ -1,0 +1,11 @@
+[DEFAULT]
+head = "head.js"
+skip-if = ["os == 'android'"]
+
+["test_AsyncShutdown.js"]
+
+["test_AsyncShutdown_blocker_error_annotations.js"]
+
+["test_AsyncShutdown_leave_uncaught.js"]
+
+["test_converters.js"]

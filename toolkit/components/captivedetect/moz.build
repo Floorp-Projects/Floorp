@@ -7,7 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Networking")
 
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.toml"]
 
 XPIDL_SOURCES += [
     "nsICaptivePortalDetector.idl",

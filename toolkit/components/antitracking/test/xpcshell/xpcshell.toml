@@ -1,0 +1,52 @@
+[DEFAULT]
+head = "head.js ../../../../components/url-classifier/tests/unit/head_urlclassifier.js"
+prefs = ["dom.security.https_first=false"] #Disable https-first because of explicit http/https testing
+
+["test_ExceptionListService.js"]
+
+["test_cookie_behavior.js"]
+
+["test_getPartitionKeyFromURL.js"]
+skip-if = ["socketprocess_networking"] # Bug 1759035
+
+["test_purge_trackers.js"]
+skip-if = [
+  "win10_2009", # Bug 1718292
+  "win11_2009", # Bug 1797751
+]
+run-sequentially = "very high failure rate in parallel"
+
+["test_purge_trackers_telemetry.js"]
+
+["test_staticPartition_authhttp.js"]
+skip-if = ["socketprocess_networking"] # Bug 1759035
+
+["test_staticPartition_clientAuthRemember.js"]
+
+["test_staticPartition_font.js"]
+support-files = ["data/font.woff"]
+skip-if = [
+  "os == 'linux' && !debug", # Bug 1760086
+  "apple_silicon", # bug 1729551
+  "os == 'mac' && bits == 64 && !debug", # Bug 1652119
+  "os == 'win' && bits == 64 && !debug", # Bug 1652119
+  "socketprocess_networking", # Bug 1759035
+]
+run-sequentially = "very high failure rate in parallel"
+
+["test_staticPartition_image.js"]
+skip-if = ["socketprocess_networking"] # Bug 1759035
+
+["test_staticPartition_prefetch.js"]
+skip-if = ["socketprocess_networking"] # Bug 1759035
+
+["test_staticPartition_preload.js"]
+skip-if = ["socketprocess_networking"] # Bug 1759035
+
+["test_tracking_db_service.js"]
+skip-if = ["os == 'android'"] # Bug 1697936
+
+["test_validate_strip_on_share_list.js"]
+
+["test_view_source.js"]
+skip-if = ["socketprocess_networking"] # Bug 1759035 (not as common on win, perma on linux/osx)

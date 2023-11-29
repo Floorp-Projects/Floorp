@@ -1,0 +1,30 @@
+[DEFAULT]
+head = "head.js"
+skip-if = ["os == 'android'"]
+support-files = ["AsyncRunner.sys.mjs"]
+
+["test_extractDomain.js"]
+
+["test_getCached.js"]
+
+["test_getCachedSubdomains.js"]
+
+["test_getSubdomains.js"]
+
+["test_migrationToSchema4.js"]
+
+["test_migrationToSchema5.js"]
+
+["test_observers.js"]
+
+["test_remove.js"]
+
+["test_removeAllDomains.js"]
+
+["test_removeAllDomainsSince.js"]
+
+["test_removeByDomain.js"]
+
+["test_removeByName.js"]
+
+["test_setGet.js"]

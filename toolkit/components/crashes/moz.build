@@ -38,7 +38,7 @@ if CONFIG["MOZ_CRASHREPORTER"]:
         "CrashManagerTest.sys.mjs",
     ]
 
-    XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+    XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]
 
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Crash Reporting")

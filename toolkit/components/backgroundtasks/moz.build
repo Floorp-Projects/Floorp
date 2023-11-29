@@ -59,7 +59,7 @@ LOCAL_INCLUDES += [
 ]
 
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]
 
 TESTING_JS_MODULES += [
     "BackgroundTasksTestUtils.sys.mjs",

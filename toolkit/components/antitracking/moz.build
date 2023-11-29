@@ -94,7 +94,7 @@ if CONFIG["MOZ_BUILD_APP"] != "mobile/android":
         "test/browser/browser.toml",
     ]
 
-XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.toml"]
 
 TEST_DIRS += ["test/gtest"]
 

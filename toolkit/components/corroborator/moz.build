@@ -13,5 +13,5 @@ EXTRA_JS_MODULES += [
 ]
 
 XPCSHELL_TESTS_MANIFESTS += [
-    "test/xpcshell/xpcshell.ini",
+    "test/xpcshell/xpcshell.toml",
 ]

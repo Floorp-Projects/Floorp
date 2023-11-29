@@ -1,0 +1,5 @@
+[DEFAULT]
+tags = "corroborator"
+support-files = ["data/**"]
+
+["test_verify_jar.js"]

@@ -30,7 +30,7 @@ if (
         "components.conf",
     ]
 
-    XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.ini"]
+    XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.toml"]
 
 XPIDL_SOURCES += [
     "nsIHangDetails.idl",

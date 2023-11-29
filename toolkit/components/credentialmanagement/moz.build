@@ -27,7 +27,7 @@ EXTRA_JS_MODULES += [
 ]
 
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]
 
 XPCOM_MANIFESTS += [
     "components.conf",

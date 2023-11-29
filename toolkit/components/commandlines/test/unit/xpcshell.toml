@@ -1,0 +1,17 @@
+[DEFAULT]
+head = ""
+skip-if = ["os == 'android'"]
+support-files = [
+  "data/test_bug410156.desktop",
+  "data/test_bug410156.url",
+]
+
+["test_bug666224.js"]
+
+["test_classinfo.js"]
+
+["test_createCommandLine.js"]
+
+["test_handleFlagWithParam.js"]
+
+["test_resolvefile.js"]

@@ -1,0 +1,12 @@
+[DEFAULT]
+head = "head.js"
+tags = "featuregates"
+firefox-appdir = "browser"
+
+["test_FeatureGate.js"]
+# Ignore platforms which the use the update channel 'default' on non-nightly
+# platforms because it gets compared to preference values guarded by variables
+# like RELEASE_OR_BETA which are set based on the build channel.
+skip-if = ["!nightly_build && (asan || debug)"]
+
+["test_FeatureGateImplementation.js"]
