@@ -416,8 +416,6 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
                                                       false);
   FieldTrialParameter<TimeDelta> probe_expiration("ProbeExpiration",
                                                   TimeDelta::Seconds(10));
-  FieldTrialParameter<bool> bound_by_upper_link_capacity_when_loss_limited(
-      "BoundByUpperLinkCapacityWhenLossLimited", true);
   FieldTrialParameter<bool> not_use_acked_rate_in_alr("NotUseAckedRateInAlr",
                                                       false);
   if (key_value_config) {
@@ -457,7 +455,6 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
                      &high_loss_rate_threshold,
                      &bandwidth_cap_at_high_loss_rate,
                      &slope_of_bwe_high_loss_func,
-                     &bound_by_upper_link_capacity_when_loss_limited,
                      &not_use_acked_rate_in_alr},
                     key_value_config->Lookup("WebRTC-Bwe-LossBasedBweV2"));
   }
@@ -520,8 +517,6 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   config->slope_of_bwe_high_loss_func = slope_of_bwe_high_loss_func.Get();
   config->probe_integration_enabled = probe_integration_enabled.Get();
   config->probe_expiration = probe_expiration.Get();
-  config->bound_by_upper_link_capacity_when_loss_limited =
-      bound_by_upper_link_capacity_when_loss_limited.Get();
   config->not_use_acked_rate_in_alr = not_use_acked_rate_in_alr.Get();
 
   return config;
@@ -965,12 +960,6 @@ void LossBasedBweV2::CalculateInstantUpperBound() {
     }
   }
 
-  if (IsBandwidthLimitedDueToLoss()) {
-    if (IsValid(upper_link_capacity_) &&
-        config_->bound_by_upper_link_capacity_when_loss_limited) {
-      instant_limit = std::min(instant_limit, upper_link_capacity_);
-    }
-  }
   cached_instant_upper_bound_ = instant_limit;
 }
 
