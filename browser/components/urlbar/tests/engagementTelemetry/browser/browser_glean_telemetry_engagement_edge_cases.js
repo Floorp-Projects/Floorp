@@ -144,11 +144,20 @@ add_task(async function engagement_before_showing_results() {
 add_task(async function engagement_after_closing_results() {
   const TRIGGERS = [
     () => EventUtils.synthesizeKey("KEY_Escape"),
-    () =>
+    () => {
+      // We intentionally turn off this a11y check, because the following click
+      // is sent to test the telemetry behavior using an alternative way of the
+      // urlbar dismissal, where other ways are accessible (and tested above),
+      // therefore this test can be ignored.
+      AccessibilityUtils.setEnv({
+        mustHaveAccessibleRule: false,
+      });
       EventUtils.synthesizeMouseAtCenter(
         document.getElementById("customizableui-special-spring2"),
         {}
-      ),
+      );
+      AccessibilityUtils.resetEnv();
+    },
   ];
 
   for (const trigger of TRIGGERS) {

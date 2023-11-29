@@ -36,10 +36,8 @@ prefs = ["browser.bookmarks.testing.skipDefaultBookmarksImport=true"]
 ["browser_glean_telemetry_abandonment_search_mode.js"]
 
 ["browser_glean_telemetry_abandonment_tips.js"]
-fail-if = ["a11y_checks"] # Bug 1854660 clicked element may not be focusable and/or labeled
 
 ["browser_glean_telemetry_engagement_edge_cases.js"]
-fail-if = ["a11y_checks"] # Bug 1854660 clicked customizableui-special-spring2 may not be focusable
 
 ["browser_glean_telemetry_engagement_groups.js"]
 
