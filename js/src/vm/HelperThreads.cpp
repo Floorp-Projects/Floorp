@@ -258,16 +258,38 @@ bool GlobalHelperThreadState::submitTask(
   return true;
 }
 
+bool js::AutoStartIonFreeTask::addIonCompileToFreeTaskBatch(
+    jit::IonCompileTask* task) {
+  return jitRuntime_->addIonCompileToFreeTaskBatch(task);
+}
+
 js::AutoStartIonFreeTask::~AutoStartIonFreeTask() {
-  if (tasks_.empty()) {
+  jitRuntime_->maybeStartIonFreeTask(force_);
+}
+
+void jit::JitRuntime::maybeStartIonFreeTask(bool force) {
+  IonFreeCompileTasks& tasks = ionFreeTaskBatch_.ref();
+  if (tasks.empty()) {
     return;
   }
 
-  auto freeTask = js::MakeUnique<jit::IonFreeTask>(std::move(tasks_));
+  // Start an IonFreeTask if we have at least eight tasks. If |force| is true we
+  // always start an IonFreeTask.
+  if (!force) {
+    constexpr size_t MinBatchSize = 8;
+    static_assert(IonFreeCompileTasks::InlineLength >= MinBatchSize,
+                  "Minimum batch size shouldn't require malloc");
+    if (tasks.length() < MinBatchSize) {
+      return;
+    }
+  }
+
+  auto freeTask = js::MakeUnique<jit::IonFreeTask>(std::move(tasks));
   if (!freeTask) {
     // Free compilation data on the main thread instead.
-    MOZ_ASSERT(!tasks_.empty(), "shouldn't have moved tasks_ on OOM");
-    jit::FreeIonCompileTasks(tasks_);
+    MOZ_ASSERT(!tasks.empty(), "shouldn't have moved tasks on OOM");
+    jit::FreeIonCompileTasks(tasks);
+    tasks.clearAndFree();
     return;
   }
 
@@ -277,6 +299,8 @@ js::AutoStartIonFreeTask::~AutoStartIonFreeTask() {
     // its task list.
     jit::FreeIonCompileTasks(freeTask->compileTasks());
   }
+
+  tasks.clearAndFree();
 }
 
 bool GlobalHelperThreadState::submitTask(
@@ -354,6 +378,20 @@ static bool IonCompileTaskMatches(const CompilationSelector& selector,
   return selector.match(TaskMatches{task});
 }
 
+// If we're canceling Ion compilations for a zone/runtime, force a new
+// IonFreeTask even if there are just a few tasks. This lets us free as much
+// memory as possible.
+static bool ShouldForceIonFreeTask(const CompilationSelector& selector) {
+  struct Matcher {
+    bool operator()(JSScript* script) { return false; }
+    bool operator()(Zone* zone) { return true; }
+    bool operator()(ZonesInState zbs) { return true; }
+    bool operator()(JSRuntime* runtime) { return true; }
+  };
+
+  return selector.match(Matcher());
+}
+
 void js::CancelOffThreadIonCompile(const CompilationSelector& selector) {
   if (!JitDataStructuresExist(selector)) {
     return;
@@ -363,9 +401,10 @@ void js::CancelOffThreadIonCompile(const CompilationSelector& selector) {
     return;
   }
 
-  MOZ_ASSERT(GetSelectorRuntime(selector)->jitRuntime() != nullptr);
+  jit::JitRuntime* jitRuntime = GetSelectorRuntime(selector)->jitRuntime();
+  MOZ_ASSERT(jitRuntime);
 
-  AutoStartIonFreeTask freeTask;
+  AutoStartIonFreeTask freeTask(jitRuntime, ShouldForceIonFreeTask(selector));
 
   {
     AutoLockHelperThreadState lock;
