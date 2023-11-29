@@ -515,16 +515,15 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
       RTC_LOG(LS_INFO) << "Not sending probe, Network state estimate is zero";
       return {};
     }
-    estimate_capped_bitrate =
-        std::min({estimate_capped_bitrate, max_probe_bitrate,
-                  network_estimate_->link_capacity_upper *
-                      config_.network_state_probe_scale});
+    estimate_capped_bitrate = std::min(
+        {estimate_capped_bitrate, max_probe_bitrate,
+         std::max(estimated_bitrate_, network_estimate_->link_capacity_upper *
+                                          config_.network_state_probe_scale)});
   }
 
   std::vector<ProbeClusterConfig> pending_probes;
   for (DataRate bitrate : bitrates_to_probe) {
     RTC_DCHECK(!bitrate.IsZero());
-
     bitrate = std::min(bitrate, estimate_capped_bitrate);
     if (bitrate > max_probe_bitrate) {
       bitrate = max_probe_bitrate;
