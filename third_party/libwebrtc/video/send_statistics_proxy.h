@@ -43,8 +43,7 @@ class SendStatisticsProxy : public VideoStreamEncoderObserver,
                             public RtcpPacketTypeCounterObserver,
                             public StreamDataCountersCallback,
                             public BitrateStatisticsObserver,
-                            public FrameCountObserver,
-                            public SendSideDelayObserver {
+                            public FrameCountObserver {
  public:
   static constexpr TimeDelta kStatsTimeout = TimeDelta::Seconds(5);
   // Number of required samples to be collected before a metric is added
@@ -128,11 +127,6 @@ class SendStatisticsProxy : public VideoStreamEncoderObserver,
   // From FrameCountObserver.
   void FrameCountUpdated(const FrameCounts& frame_counts,
                          uint32_t ssrc) override;
-
-  // From SendSideDelayObserver.
-  void SendSideDelayUpdated(int avg_delay_ms,
-                            int max_delay_ms,
-                            uint32_t ssrc) override {}
 
  private:
   class SampleCounter {
