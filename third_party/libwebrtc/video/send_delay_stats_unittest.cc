@@ -11,6 +11,7 @@
 #include "video/send_delay_stats.h"
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 #include "call/rtp_config.h"
@@ -54,8 +55,7 @@ class SendDelayStatsTest : public ::testing::Test {
   }
 
   void OnSendPacket(uint16_t id, uint32_t ssrc, Timestamp capture) {
-    SendPacketObserver* observer = stats_.get();
-    observer->OnSendPacket(id, capture, ssrc);
+    stats_->OnSendPacket(id, capture, ssrc);
   }
 
   bool OnSentPacket(uint16_t id) {
