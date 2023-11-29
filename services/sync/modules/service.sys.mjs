@@ -67,30 +67,33 @@ const fxAccounts = getFxAccountsSingleton();
 
 function getEngineModules() {
   let result = {
-    Addons: { module: "addons.js", symbol: "AddonsEngine" },
-    Password: { module: "passwords.js", symbol: "PasswordEngine" },
-    Prefs: { module: "prefs.js", symbol: "PrefsEngine" },
+    Addons: { module: "addons.sys.mjs", symbol: "AddonsEngine" },
+    Password: { module: "passwords.sys.mjs", symbol: "PasswordEngine" },
+    Prefs: { module: "prefs.sys.mjs", symbol: "PrefsEngine" },
   };
   if (AppConstants.MOZ_APP_NAME != "thunderbird") {
-    result.Bookmarks = { module: "bookmarks.js", symbol: "BookmarksEngine" };
-    result.Form = { module: "forms.js", symbol: "FormEngine" };
-    result.History = { module: "history.js", symbol: "HistoryEngine" };
-    result.Tab = { module: "tabs.js", symbol: "TabEngine" };
+    result.Bookmarks = {
+      module: "bookmarks.sys.mjs",
+      symbol: "BookmarksEngine",
+    };
+    result.Form = { module: "forms.sys.mjs", symbol: "FormEngine" };
+    result.History = { module: "history.sys.mjs", symbol: "HistoryEngine" };
+    result.Tab = { module: "tabs.sys.mjs", symbol: "TabEngine" };
   }
   if (Svc.PrefBranch.getBoolPref("engine.addresses.available", false)) {
     result.Addresses = {
-      module: "resource://autofill/FormAutofillSync.jsm",
+      module: "resource://autofill/FormAutofillSync.sys.mjs",
       symbol: "AddressesEngine",
     };
   }
   if (Svc.PrefBranch.getBoolPref("engine.creditcards.available", false)) {
     result.CreditCards = {
-      module: "resource://autofill/FormAutofillSync.jsm",
+      module: "resource://autofill/FormAutofillSync.sys.mjs",
       symbol: "CreditCardsEngine",
     };
   }
   result["Extension-Storage"] = {
-    module: "extension-storage.js",
+    module: "extension-storage.sys.mjs",
     controllingPref: "webextensions.storage.sync.kinto",
     whenTrue: "ExtensionStorageEngineKinto",
     whenFalse: "ExtensionStorageEngineBridge",
@@ -455,7 +458,7 @@ Sync11Service.prototype = {
         modInfo.module = "resource://services-sync/engines/" + modInfo.module;
       }
       try {
-        let ns = ChromeUtils.import(modInfo.module);
+        let ns = ChromeUtils.importESModule(modInfo.module);
         if (modInfo.symbol) {
           let symbol = modInfo.symbol;
           if (!(symbol in ns)) {

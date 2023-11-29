@@ -27,8 +27,8 @@ Services.obs.notifyObservers(
 // NOTE: this helper class does also depends from the two jsm files where the
 // Parent and Child TestWorkerWatcher actor is defined:
 //
-// - data/TestWorkerWatcherParent.jsm
-// - data/TestWorkerWatcherChild.jsm
+// - data/TestWorkerWatcherParent.sys.mjs
+// - data/TestWorkerWatcherChild.sys.mjs
 class TestWorkerWatcher extends ExtensionCommon.EventEmitter {
   JS_ACTOR_NAME = "TestWorkerWatcher";
 
@@ -113,10 +113,10 @@ class TestWorkerWatcher extends ExtensionCommon.EventEmitter {
     const { JS_ACTOR_NAME } = this;
     ChromeUtils.registerProcessActor(JS_ACTOR_NAME, {
       parent: {
-        moduleURI: `resource://testing-common/${JS_ACTOR_NAME}Parent.jsm`,
+        esModuleURI: `resource://testing-common/${JS_ACTOR_NAME}Parent.sys.mjs`,
       },
       child: {
-        moduleURI: `resource://testing-common/${JS_ACTOR_NAME}Child.jsm`,
+        esModuleURI: `resource://testing-common/${JS_ACTOR_NAME}Child.sys.mjs`,
       },
     });
   }
