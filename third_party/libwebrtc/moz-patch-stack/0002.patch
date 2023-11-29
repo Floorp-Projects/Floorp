@@ -1,70 +1,73 @@
-From: Philipp Hancke <phancke@microsoft.com>
-Date: Fri, 8 Sep 2023 11:31:30 +0200
-Subject: (cherry-pick-branch-heads/5993) [M118] Obfuscate prflx raddr when
- using mdns
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: Markus Handell <handellm@webrtc.org>
+Date: Thu, 14 Sep 2023 01:31:11 +0300
+Subject: (cherry-pick-branch-heads/5993) [M118] FrameCadenceAdapter: stop
+ delayed refresh frame calls on dtor.
 
-BUG=chromium:1478690
+The FrameCadenceAdapter starts a delayed task to request a
+new refresh frame on receiving frame drop. However, the
+resulting RepeatingTaskHandle was not Stop()ed on destruction,
+leading to UAF.
 
-(cherry picked from commit a8e3111d8c6622eeb930c32ab7a2e6be51b3d801)
+(cherry picked from commit fb98b01061e7eec51a800b53d4346827f89336a5)
 
-Change-Id: I7a1caad7bbd2fc82507b61b59be71546494a304c
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/319580
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Reviewed-by: Henrik Boström <hbos@webrtc.org>
-Commit-Queue: Philipp Hancke <phancke@microsoft.com>
-Cr-Original-Commit-Position: refs/heads/main@{#40724}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/320580
-Cr-Commit-Position: refs/branch-heads/5993@{#2}
+Fixed: chromium:1478944
+Change-Id: Iba441420953e989cfc7fcfd2f358b5b30f375786
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/320200
+Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#40747}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/320420
+Reviewed-by: Henrik Andreassson <henrika@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5993@{#1}
 Cr-Branched-From: 5afcec093c1403fe9e3872706d04671cbc6d2983-refs/heads/main@{#40703}
 ---
- p2p/base/port_allocator.cc          |  5 ++++-
- p2p/base/port_allocator_unittest.cc | 15 +++++++++++++++
- 2 files changed, 19 insertions(+), 1 deletion(-)
+ video/frame_cadence_adapter.cc          |  1 +
+ video/frame_cadence_adapter_unittest.cc | 23 +++++++++++++++++++++++
+ 2 files changed, 24 insertions(+)
 
-diff --git a/p2p/base/port_allocator.cc b/p2p/base/port_allocator.cc
-index 522f0beb98..d8ff04fe20 100644
---- a/p2p/base/port_allocator.cc
-+++ b/p2p/base/port_allocator.cc
-@@ -340,9 +340,12 @@ Candidate PortAllocator::SanitizeCandidate(const Candidate& c) const {
-   // If the candidate filter doesn't allow reflexive addresses, empty TURN raddr
-   // to avoid reflexive address leakage.
-   bool filter_turn_related_address = !(candidate_filter_ & CF_REFLEXIVE);
-+  // Sanitize related_address when using MDNS.
-+  bool filter_prflx_related_address = MdnsObfuscationEnabled();
-   bool filter_related_address =
-       ((c.type() == STUN_PORT_TYPE && filter_stun_related_address) ||
--       (c.type() == RELAY_PORT_TYPE && filter_turn_related_address));
-+       (c.type() == RELAY_PORT_TYPE && filter_turn_related_address) ||
-+       (c.type() == PRFLX_PORT_TYPE && filter_prflx_related_address));
-   return c.ToSanitizedCopy(use_hostname_address, filter_related_address);
+diff --git a/video/frame_cadence_adapter.cc b/video/frame_cadence_adapter.cc
+index a8d581b568..ef76038ef0 100644
+--- a/video/frame_cadence_adapter.cc
++++ b/video/frame_cadence_adapter.cc
+@@ -102,6 +102,7 @@ class ZeroHertzAdapterMode : public AdapterMode {
+                        Clock* clock,
+                        FrameCadenceAdapterInterface::Callback* callback,
+                        double max_fps);
++  ~ZeroHertzAdapterMode() { refresh_frame_requester_.Stop(); }
+ 
+   // Reconfigures according to parameters.
+   // All spatial layer trackers are initialized as unconverged by this method.
+diff --git a/video/frame_cadence_adapter_unittest.cc b/video/frame_cadence_adapter_unittest.cc
+index 1fd2091c34..052b0a6c61 100644
+--- a/video/frame_cadence_adapter_unittest.cc
++++ b/video/frame_cadence_adapter_unittest.cc
+@@ -563,6 +563,29 @@ TEST(FrameCadenceAdapterTest, AcceptsUnconfiguredLayerFeedback) {
+   adapter->UpdateLayerStatus(2, false);
  }
  
-diff --git a/p2p/base/port_allocator_unittest.cc b/p2p/base/port_allocator_unittest.cc
-index f70997179e..48d0bc8a6e 100644
---- a/p2p/base/port_allocator_unittest.cc
-+++ b/p2p/base/port_allocator_unittest.cc
-@@ -357,6 +357,21 @@ TEST_F(PortAllocatorTest, SanitizePrflxCandidateMdnsObfuscationEnabled) {
-   EXPECT_EQ("", output.address().ipaddr().ToString());
- }
- 
-+TEST_F(PortAllocatorTest,
-+       SanitizePrflxCandidateMdnsObfuscationEnabledRelatedAddress) {
-+  allocator_->SetMdnsObfuscationEnabledForTesting(true);
-+  // Create the candidate from an IP literal. This populates the hostname.
-+  cricket::Candidate input(1, "udp", rtc::SocketAddress(kIpv4Address, 443), 1,
-+                           "username", "password", cricket::PRFLX_PORT_TYPE, 1,
-+                           "foundation", 1, 1);
-+
-+  cricket::Candidate output = allocator_->SanitizeCandidate(input);
-+  EXPECT_NE(kIpv4AddressWithPort, output.address().ToString());
-+  EXPECT_EQ("", output.address().ipaddr().ToString());
-+  EXPECT_NE(kIpv4AddressWithPort, output.related_address().ToString());
-+  EXPECT_EQ("", output.related_address().ipaddr().ToString());
++TEST(FrameCadenceAdapterTest, IgnoresDropInducedCallbacksPostDestruction) {
++  ZeroHertzFieldTrialEnabler enabler;
++  auto callback = std::make_unique<MockCallback>();
++  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
++  auto queue = time_controller.GetTaskQueueFactory()->CreateTaskQueue(
++      "queue", TaskQueueFactory::Priority::NORMAL);
++  auto adapter = FrameCadenceAdapterInterface::Create(
++      time_controller.GetClock(), queue.get(), enabler);
++  queue->PostTask([&adapter, &callback] {
++    adapter->Initialize(callback.get());
++    adapter->SetZeroHertzModeEnabled(
++        FrameCadenceAdapterInterface::ZeroHertzModeParams{});
++  });
++  time_controller.AdvanceTime(TimeDelta::Zero());
++  constexpr int kMaxFps = 10;
++  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, kMaxFps});
++  adapter->OnDiscardedFrame();
++  time_controller.AdvanceTime(TimeDelta::Zero());
++  callback = nullptr;
++  queue->PostTask([adapter = std::move(adapter)]() mutable {});
++  time_controller.AdvanceTime(3 * TimeDelta::Seconds(1) / kMaxFps);
 +}
 +
- TEST_F(PortAllocatorTest, SanitizeIpv4NonLiteralMdnsObfuscationEnabled) {
-   // Create the candidate with an empty hostname.
-   allocator_->SetMdnsObfuscationEnabledForTesting(true);
+ class FrameCadenceAdapterSimulcastLayersParamTest
+     : public ::testing::TestWithParam<int> {
+  public:
