@@ -2341,7 +2341,14 @@ bool MediaSessionDescriptionFactory::AddAudioContentForOffer(
     // recycled.
     if (current_content && !current_content->rejected &&
         current_content->name == media_description_options.mid) {
-      RTC_CHECK(IsMediaContentOfType(current_content, MEDIA_TYPE_AUDIO));
+      if (!IsMediaContentOfType(current_content, MEDIA_TYPE_AUDIO)) {
+        // TODO(bugs.webrtc.org/15471): add a unit test for this since
+        // it is not clear how this can happen for offers.
+        RTC_LOG(LS_ERROR) << "Media type for content with mid='"
+                          << current_content->name
+                          << "' does not match previous type.";
+        return false;
+      }
       const AudioContentDescription* acd =
           current_content->media_description()->as_audio();
       for (const AudioCodec& codec : acd->codecs()) {
@@ -2434,7 +2441,15 @@ bool MediaSessionDescriptionFactory::AddVideoContentForOffer(
     // recycled.
     if (current_content && !current_content->rejected &&
         current_content->name == media_description_options.mid) {
-      RTC_CHECK(IsMediaContentOfType(current_content, MEDIA_TYPE_VIDEO));
+      if (!IsMediaContentOfType(current_content, MEDIA_TYPE_VIDEO)) {
+        // TODO(bugs.webrtc.org/15471): add a unit test for this since
+        // it is not clear how this can happen for offers.
+        RTC_LOG(LS_ERROR) << "Media type for content with mid='"
+                          << current_content->name
+                          << "' does not match previous type.";
+        return false;
+      }
+
       const VideoContentDescription* vcd =
           current_content->media_description()->as_video();
       for (const VideoCodec& codec : vcd->codecs()) {
@@ -2645,7 +2660,13 @@ bool MediaSessionDescriptionFactory::AddAudioContentForAnswer(
     // recycled.
     if (current_content && !current_content->rejected &&
         current_content->name == media_description_options.mid) {
-      RTC_CHECK(IsMediaContentOfType(current_content, MEDIA_TYPE_AUDIO));
+      if (!IsMediaContentOfType(current_content, MEDIA_TYPE_AUDIO)) {
+        // Can happen if the remote side re-uses a MID while recycling.
+        RTC_LOG(LS_ERROR) << "Media type for content with mid='"
+                          << current_content->name
+                          << "' does not match previous type.";
+        return false;
+      }
       const AudioContentDescription* acd =
           current_content->media_description()->as_audio();
       for (const AudioCodec& codec : acd->codecs()) {
@@ -2770,7 +2791,13 @@ bool MediaSessionDescriptionFactory::AddVideoContentForAnswer(
     // recycled.
     if (current_content && !current_content->rejected &&
         current_content->name == media_description_options.mid) {
-      RTC_CHECK(IsMediaContentOfType(current_content, MEDIA_TYPE_VIDEO));
+      if (!IsMediaContentOfType(current_content, MEDIA_TYPE_VIDEO)) {
+        // Can happen if the remote side re-uses a MID while recycling.
+        RTC_LOG(LS_ERROR) << "Media type for content with mid='"
+                          << current_content->name
+                          << "' does not match previous type.";
+        return false;
+      }
       const VideoContentDescription* vcd =
           current_content->media_description()->as_video();
       for (const VideoCodec& codec : vcd->codecs()) {
