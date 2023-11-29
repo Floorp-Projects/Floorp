@@ -347,6 +347,10 @@ If you have any questions which aren't already answered below please reach out t
 
        Use the option ``--show-all``. This will let you select tests from the ``./mach try fuzzy --full`` interface directly instead of the categories. You will always be able to find your tests this way. Please be careful with your task selections though as it's easy to run far too many tests in this way!
 
+     * **How do I run Fenix tests?**
+
+       Use the options ``--android --fenix``. This will enable Fenix tasks to be selected in the categories you pick, assuming those categories have Fenix tasks available. **Note that the Fenix APK is pulled from the firefox-android projet so any local changes you make will not be applied to it, and the base/new pushes will be testing the same build.** However, if you use the ``--browsertime-upload-apk <PATH-TO-APK>`` option, you will be able to upload a locally built APK of Fenix to run in try. It will be used in the new revision push. See the ``--help`` for more information on this.
+
 Future Work
 -----------
 

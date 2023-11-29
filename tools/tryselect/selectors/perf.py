@@ -127,6 +127,19 @@ class PerfParser(CompareParser):
             },
         ],
         [
+            # Bug 1866047 - Remove once monorepo changes are complete
+            ["--fenix"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "Include Fenix in tasks to run (disabled by default). Must "
+                "be used in conjunction with --android. Fenix isn't built on mozilla-central "
+                "so we pull the APK being tested from the firefox-android project. This "
+                "means that the fenix APK being tested in the two pushes is the same, and "
+                "any local changes made won't impact it.",
+            },
+        ],
+        [
             ["--chrome"],
             {
                 "action": "store_true",
@@ -188,6 +201,7 @@ class PerfParser(CompareParser):
             },
         ],
         [
+            # Bug 1866047 - Remove once monorepo changes are complete
             ["--browsertime-upload-apk"],
             {
                 "type": str,
@@ -205,6 +219,7 @@ class PerfParser(CompareParser):
             },
         ],
         [
+            # Bug 1866047 - Remove once monorepo changes are complete
             ["--mozperftest-upload-apk"],
             {
                 "type": str,
@@ -575,12 +590,7 @@ class PerfParser(CompareParser):
             return True
         return False
 
-    def build_category_matrix(
-        requested_variants=[BASE_CATEGORY_NAME],
-        requested_platforms=[],
-        requested_apps=[],
-        **kwargs,
-    ):
+    def build_category_matrix(**kwargs):
         """Build a decision matrix for all the categories.
 
         It will have the form:
@@ -588,6 +598,10 @@ class PerfParser(CompareParser):
                 - Variants
                     - ...
         """
+        requested_variants = kwargs.get("requested_variants", [BASE_CATEGORY_NAME])
+        requested_platforms = kwargs.get("requested_platforms", [])
+        requested_apps = kwargs.get("requested_apps", [])
+
         # Build the base decision matrix
         decision_matrix = PerfParser._build_decision_matrix()
 
@@ -856,6 +870,20 @@ class PerfParser(CompareParser):
                 # We only need to handle this for categories that
                 # don't specify an app
                 continue
+
+            if PerfParser.apps[app.value].get("restriction", None) is None:
+                # If this app has no restriction flag, it means we should select it
+                # as much as possible and not negate it. However, if specific apps were requested,
+                # we should allow the negation to proceed since a `negation` field
+                # was provided (checked above), assuming this app was requested.
+                requested_apps = kwargs.get("requested_apps", [])
+                if requested_apps and app.value in requested_apps:
+                    # Apps were requested, and this was is included
+                    continue
+                elif not requested_apps:
+                    # Apps were not requested, so we should keep this one
+                    continue
+
             if PerfParser._enable_restriction(
                 PerfParser.apps[app.value].get("restriction", None), **kwargs
             ):
@@ -1389,7 +1417,8 @@ class PerfParser(CompareParser):
             "\nAPK is setup for uploading. Please commit the changes, "
             "and re-run this command. \nEnsure you supply the --android, "
             "and select the correct tasks (fenix, geckoview) or use "
-            "--show-all for mozperftest task selection.\n"
+            "--show-all for mozperftest task selection. \nFor Fenix, ensure "
+            "you also provide the --fenix flag."
         )
 
     def build_category_description(base_cmd, categories):
