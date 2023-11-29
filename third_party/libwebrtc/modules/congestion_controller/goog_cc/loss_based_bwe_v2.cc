@@ -136,6 +136,10 @@ bool LossBasedBweV2::IsReady() const {
          num_observations_ > 0;
 }
 
+bool LossBasedBweV2::ReadyToUseInStartPhase() const {
+  return IsReady() && config_->use_in_start_phase;
+}
+
 LossBasedBweV2::Result LossBasedBweV2::GetLossBasedResult() const {
   Result result;
   result.state = current_state_;
@@ -238,9 +242,12 @@ void LossBasedBweV2::UpdateBandwidthEstimate(
   SetProbeBitrate(probe_bitrate);
 
   if (!IsValid(current_estimate_.loss_limited_bandwidth)) {
-    RTC_LOG(LS_VERBOSE)
-        << "The estimator must be initialized before it can be used.";
-    return;
+    if (!IsValid(delay_based_estimate)) {
+      RTC_LOG(LS_WARNING) << "The delay based estimate must be finite: "
+                        << ToString(delay_based_estimate);
+      return;
+    }
+    current_estimate_.loss_limited_bandwidth = delay_based_estimate;
   }
 
   ChannelParameters best_candidate = current_estimate_;
@@ -416,6 +423,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
                                                   TimeDelta::Seconds(10));
   FieldTrialParameter<bool> not_use_acked_rate_in_alr("NotUseAckedRateInAlr",
                                                       false);
+  FieldTrialParameter<bool> use_in_start_phase("UseInStartPhase", false);
   if (key_value_config) {
     ParseFieldTrial({&enabled,
                      &bandwidth_rampup_upper_bound_factor,
@@ -453,7 +461,8 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
                      &high_loss_rate_threshold,
                      &bandwidth_cap_at_high_loss_rate,
                      &slope_of_bwe_high_loss_func,
-                     &not_use_acked_rate_in_alr},
+                     &not_use_acked_rate_in_alr,
+                     &use_in_start_phase},
                     key_value_config->Lookup("WebRTC-Bwe-LossBasedBweV2"));
   }
 
@@ -516,6 +525,7 @@ absl::optional<LossBasedBweV2::Config> LossBasedBweV2::CreateConfig(
   config->probe_integration_enabled = probe_integration_enabled.Get();
   config->probe_expiration = probe_expiration.Get();
   config->not_use_acked_rate_in_alr = not_use_acked_rate_in_alr.Get();
+  config->use_in_start_phase = use_in_start_phase.Get();
 
   return config;
 }
