@@ -98,10 +98,10 @@ add_task(async function test_webnavigation_urlbar_typed_transitions() {
   await extension.awaitMessage("ready");
 
   gURLBar.focus();
+  gURLBar.value = "";
   const inputValue = "http://example.com/?q=typed";
-  gURLBar.value = inputValue.slice(0, -1);
-  EventUtils.sendString(inputValue.slice(-1));
-  EventUtils.synthesizeKey("VK_RETURN", { altKey: true });
+  await EventUtils.sendString(inputValue);
+  await EventUtils.synthesizeKey("VK_RETURN", { altKey: true });
 
   await extension.awaitFinish("webNavigation.from_address_bar.typed");
 
