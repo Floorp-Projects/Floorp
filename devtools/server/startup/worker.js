@@ -4,7 +4,6 @@
 
 "use strict";
 
-/* eslint-env worker */
 /* global worker, loadSubScript, global */
 
 /*

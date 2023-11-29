@@ -4,8 +4,6 @@
 
 "use strict";
 
-/* eslint-env worker */
-
 /* import-globals-from search.js */
 /* import-globals-from ../../../../shared/worker-utils.js */
 importScripts(
