@@ -53,7 +53,6 @@
     <string name="menu_remove_from_shortcuts">Премахване на пряк път</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Новото в това издание</string>
     <string name="menu_settings">Настройки</string>
     <string name="menu_about">Относно</string>
     <string name="menu_help">Помощ</string>
@@ -308,6 +307,12 @@
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Използване на пръстов отпечатък за отключване на приложението</string>
 
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string name="preference_security_biometric_summary2">Отключете чрез пръстов отпечатък, ако сте добавили преки пътища или когато уебсайт вече е отворен в %s.</string>
+
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
     <string name="preference_privacy_secure_mode">Невидим</string>
@@ -485,7 +490,10 @@
 
 
 
-  <string name="error_hostLookup_title">Сървърът не е намерен</string>
+  <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
+    <string name="snackbar_added_to_shortcuts">Добавено към преки пътища!</string>
+
+    <string name="error_hostLookup_title">Сървърът не е намерен</string>
 
 
 
@@ -728,6 +736,27 @@
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
     <string name="cookie_banner_exception_panel_title_state_off_for_site">Изключване на намаляването на банерите за бисквитки за %1$s?</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_on_for_site">%1$s ще изчисти бисквитките на този сайт и ще презареди страницата. Изчистването на всички бисквитки може да ви отпише от системата или да изпразни количките ви за пазаруване.</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s може автоматично да опита да отхвърли заявките за бисквитки.</string>
+
+    <!-- Long text for a detail explanation indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_description_site_is_not_supported">Този сайт в момента не поддържа намаляването на банери за бисквитки. Бихте ли искали нашия екип да прегледа този уебсайт и да добави поддръжка в бъдеще?</string>
+
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_site_is_not_supported_cancel_button">Отказ</string>
+
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_site_is_not_supported_request_support_button">Заявка за поддръжка</string>
+
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_report_a_site_snackbar_label">Заявката за поддръжка на сайта е изпратена.</string>
+
+    <!-- Label for cookie banner item from tracking protection, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_the_site_was_reported">Заявката за поддръжка на сайта е изпратена.</string>
+
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text. -->
     <string name="cfr_cookie_banner">%1$s ще опита да откаже заявките за бисквитки, за да не показва досадните запитвания за бисквитките.\n\nПроменете това в %2$s.</string>
@@ -816,6 +845,19 @@
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Отдалечено отстраняване на дефекти през USB/Wi-Fi</string>
 
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">Отключване</string>
+
+    <!-- Title text for biometric prompt pop-up -->
+    <string name="biometric_prompt_title">Потвърдете с вашия пръстов отпечатък</string>
+
+    <!-- Subtitle text for biometric prompt pop-up -->
+    <string name="biometric_prompt_subtitle">Вече можете да използвате пръстовия си отпечатък, за да продължите текущата си сесия на приложението.</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Отваряне на връзката в нова сесия</string>
+
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">Картинка на пръстов отпечатък</string>
 
@@ -826,6 +868,13 @@
     <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
     This is displayed during the authentication flow as the app launches.-->
     <string name="biometric_auth_moved_too_quickly">Пръстът се придвижи твърде бързо. Опитайте пак.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">Показване на предложения за търсене?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">За да получите предложения, %1$s трябва да изпрати това, което въвеждате в адресната лента до търсачката.</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Не</string>
@@ -885,6 +934,9 @@
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Режим „само HTTPS“</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary3">Автоматично опитване за свързка със сайтове, използвайки HTTPS протокола за криптиране за повишена сигурност.</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Изключения</string>
     <!-- Description for the exceptions preference screen-->
@@ -938,6 +990,9 @@
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="insecure_connection">Връзката не е защитена</string>
 
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Проследяващи програми и скриптове за блокиране</string>
+
     <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
     <string name="go_back">Връщане назад</string>
 
@@ -950,6 +1005,10 @@
     <string name="rename_top_site">Преименуване</string>
     <!-- Placeholder text for the input field of rename top site-->
     <string name="placeholder_rename_top_site">Име на пряк път</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">Запазените и споделените изображения &lt;b&gt;няма да бъдат&lt;/b&gt; изтрити, когато изтриете историята на %1$s</string>
 
     <!-- Theme Preferences -->
     <!-- Preference category for changing default theme to dark or light mode -->
@@ -964,18 +1023,52 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Като темата на устройството</string>
 
-     <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Този сайт не поддържа HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s се опитва да използва HTTPS връзка винаги, когато е възможно за повече сигурност.
+     <a href="%2$s">Научете повече</a> <br/><br/>
+     Променете тази настройка в  Настройки > Поверителност &amp; Сигурност > Сигурност.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Връзката не е защитена</string>
+
+     <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Това може да е проблем с конфигурацията на сървъра или може някой да се опитва да се представя за сървъра. <br/><br/>
+    Ако сте се свързвали успешно с този сървър в миналото, грешката може да е временна.
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Някой може да се опитва да се представя за сайта и продължаването да бъде рисковано.</label>
+        <br><br>
+        <label>%1$s не вярва на <b>%2$s</b>, защото издателят на сертификата му е неизвестен, сертификатът е самоподписан или сървърът не изпраща правилните междинни сертификати.</label>
+    ]]></string>
 
      <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Затваряне на раздела</string>
 
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon2">Хванахме ги! Спряхме този сайт да ви шпионира. Натиснете щита по всяко време, за да видите какво блокираме.</string>
+
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Затваряне на изскачащия прозорец</string>
 
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">Вие сте защитени!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Настройките по подразбиране предлагат силна защита. Лесно е да ги промените, за да отговарят на вашите специфични нужди.</string>
     <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
     <string name="tool_tip_dismiss_button_content_description">Прекратяване</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon2">Натиснете тук за да изхвърлите всичко — история за сърфирането, бисквитки, всичко — и започнете на чисто в нов раздел.</string>
 
     <!-- Promote SearchWidget Dialog -->
 
@@ -983,4 +1076,25 @@
     close button from promote search widget dialog. -->
     <string name="promote_search_widget_dialog_content_description">Затваряне</string>
 
-    </resources>
+    <!-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_picture_content_description">Приспособление за търсене</string>
+
+    <!-- This is the title of promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_title">Историята на сърфирането е изчистена! 🎉</string>
+
+    <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
+    <string name="cfr_for_start_browsing">Започнете личната ви сесия на сърфиране и ние ще блокираме проследяващи програми и други лоши неща, докато го правите.</string>
+
+    <!-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. "Focus") -->
+    <string name="promote_search_widget_dialog_subtitle">Ще ви оставим на личното ви сърфиране, но следващия път започнете по-бързо с приспособлението %1$s на началния екран.</string>
+
+    <!-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. -->
+    <string name="promote_search_widget_button_text">Прибавете приспособлението към началния екран</string>
+
+    <!-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. -->
+    <string name="promote_search_widget_snackbar_message">Приспособлението е добавено към началния екран</string>
+</resources>
