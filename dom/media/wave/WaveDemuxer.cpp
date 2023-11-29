@@ -21,7 +21,6 @@ using mozilla::media::TimeIntervals;
 using mozilla::media::TimeUnit;
 
 extern mozilla::LazyLogModule gMediaDemuxerLog;
-
 namespace mozilla {
 
 #define LOG(msg, ...) \
@@ -710,25 +709,21 @@ AudioConfig::ChannelLayout::ChannelMap FormatChunk::ChannelMap() const {
   // Regular mapping if file doesn't have channel mapping info. Alternatively,
   // if the chunk size doesn't have the field for the size of the extension
   // data, return a regular mapping.
-  constexpr size_t SIZE_WAVEFORMATEX = 18;
-  constexpr size_t MIN_SIZE_WAVEFORMATEXTENSIBLE = 22;
-  constexpr size_t OFFSET_CHANNEL_MAP = 20;
-  if (WaveFormat() != 0xFFFE || mRaw.Length() <= SIZE_WAVEFORMATEX) {
+  if (WaveFormat() != 0xFFFE || mRaw.Length() < 18) {
     return AudioConfig::ChannelLayout(Channels()).Map();
   }
   // The length of this chunk is at least 18, check if it's long enough to
-  // hold the WAVE_FORMAT_EXTENSIBLE struct, that is 22 more than the
-  // WAVEFORMATEX. If not, fall back to a common mapping. The channel
-  // mapping is four bytes, starting at offset 20.
-  if (ExtraFormatInfoSize() < MIN_SIZE_WAVEFORMATEXTENSIBLE ||
-      mRaw.Length() < SIZE_WAVEFORMATEX + MIN_SIZE_WAVEFORMATEXTENSIBLE) {
+  // hold the WAVE_FORMAT_EXTENSIBLE struct, that is 22 bytes. If not, fall
+  // back to a common mapping. The channel mapping is four bytes, starting at
+  // offset 18.
+  if (ExtraFormatInfoSize() < 22 || mRaw.Length() < 22) {
     return AudioConfig::ChannelLayout(Channels()).Map();
   }
   // ChannelLayout::ChannelMap is by design bit-per-bit compatible with
-  // WAVEFORMATEXTENSIBLE's dwChannelMask attribute.
-  BufferReader reader(mRaw.Elements() + OFFSET_CHANNEL_MAP, sizeof(uint32_t));
-  auto channelMap = reader.ReadLEU32();
-  return channelMap.unwrapOr(AudioConfig::ChannelLayout::UNKNOWN_MAP);
+  // WAVEFORMATEXTENSIBLE's dwChannelMask attribute, we can just cast here.
+  auto channelMap = static_cast<AudioConfig::ChannelLayout::ChannelMap>(
+      mRaw[21] | mRaw[20] | mRaw[19] | mRaw[18]);
+  return channelMap;
 }
 
 // DataParser
