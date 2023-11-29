@@ -13,8 +13,8 @@ XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell.ini"]
 EXTRA_JS_MODULES += [
     "BackgroundPageThumbs.sys.mjs",
     "PageThumbs.sys.mjs",
+    "PageThumbs.worker.js",
     "PageThumbsStorageService.sys.mjs",
-    "PageThumbsWorker.js",
     "PageThumbUtils.sys.mjs",
 ]
 
