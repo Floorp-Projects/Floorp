@@ -1,6 +1,7 @@
 use super::get_info::{AuthenticatorInfo, AuthenticatorVersion};
 use super::{
-    Command, CommandError, PinUvAuthCommand, RequestCtap1, RequestCtap2, Retryable, StatusCode,
+    Command, CommandError, CtapResponse, PinUvAuthCommand, RequestCtap1, RequestCtap2, Retryable,
+    StatusCode,
 };
 use crate::consts::{PARAMETER_SIZE, U2F_REGISTER, U2F_REQUEST_USER_PRESENCE};
 use crate::crypto::{
@@ -198,6 +199,8 @@ impl<'de> Deserialize<'de> for MakeCredentialsResult {
         deserializer.deserialize_bytes(MakeCredentialsResultVisitor)
     }
 }
+
+impl CtapResponse for MakeCredentialsResult {}
 
 #[derive(Copy, Clone, Debug, Default, Serialize)]
 #[cfg_attr(test, derive(Deserialize))]

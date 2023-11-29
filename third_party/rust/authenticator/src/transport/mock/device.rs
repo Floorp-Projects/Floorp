@@ -4,9 +4,13 @@
 use crate::consts::{Capability, HIDCmd, CID_BROADCAST};
 use crate::crypto::SharedSecret;
 use crate::ctap2::commands::get_info::AuthenticatorInfo;
+use crate::ctap2::commands::{CtapResponse, RequestCtap1, RequestCtap2};
 use crate::transport::device_selector::DeviceCommand;
+use crate::transport::TestDevice;
 use crate::transport::{hid::HIDDevice, FidoDevice, FidoProtocol, HIDError};
 use crate::u2ftypes::{U2FDeviceInfo, U2FHIDInitResp};
+use std::any::Any;
+use std::collections::VecDeque;
 use std::hash::{Hash, Hasher};
 use std::io::{self, Read, Write};
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -25,6 +29,9 @@ pub struct Device {
     pub sender: Option<Sender<DeviceCommand>>,
     pub receiver: Option<Receiver<DeviceCommand>>,
     pub protocol: FidoProtocol,
+    skip_serialization: bool,
+    pub upcoming_requests: VecDeque<Vec<u8>>,
+    pub upcoming_responses: VecDeque<Result<Box<dyn Any>, HIDError>>,
 }
 
 impl Device {
@@ -44,10 +51,47 @@ impl Device {
         self.reads.push(read);
     }
 
+    pub fn add_upcoming_ctap2_request(&mut self, msg: &impl RequestCtap2) {
+        self.upcoming_requests
+            .push_back(msg.wire_format().expect("Failed to serialize CTAP request"));
+    }
+
+    pub fn add_upcoming_ctap1_request(&mut self, msg: &impl RequestCtap1) {
+        let (upcoming, _) = msg
+            .ctap1_format()
+            .expect("Failed to serialize CTAP request");
+        self.upcoming_requests.push_back(upcoming);
+    }
+
+    pub fn add_upcoming_ctap_response(&mut self, msg: impl CtapResponse) {
+        self.upcoming_responses.push_back(Ok(Box::new(msg)));
+    }
+
+    pub fn add_upcoming_ctap_error(&mut self, msg: HIDError) {
+        self.upcoming_responses.push_back(Err(msg));
+    }
+
     pub fn create_channel(&mut self) {
         let (tx, rx) = channel();
         self.sender = Some(tx);
         self.receiver = Some(rx);
+    }
+
+    pub fn new_skipping_serialization(id: &str) -> Result<Self, (HIDError, String)> {
+        Ok(Device {
+            id: id.to_string(),
+            cid: CID_BROADCAST,
+            reads: vec![],
+            writes: vec![],
+            dev_info: None,
+            authenticator_info: None,
+            sender: None,
+            receiver: None,
+            protocol: FidoProtocol::CTAP2,
+            skip_serialization: true,
+            upcoming_requests: VecDeque::new(),
+            upcoming_responses: VecDeque::new(),
+        })
     }
 }
 
@@ -124,6 +168,9 @@ impl HIDDevice for Device {
             sender: None,
             receiver: None,
             protocol: FidoProtocol::CTAP2,
+            skip_serialization: false,
+            upcoming_requests: VecDeque::new(),
+            upcoming_responses: VecDeque::new(),
         })
     }
 
@@ -187,6 +234,52 @@ impl HIDDevice for Device {
         self.set_device_info(info);
 
         Ok(())
+    }
+}
+
+impl TestDevice for Device {
+    fn skip_serialization(&self) -> bool {
+        self.skip_serialization
+    }
+
+    fn send_ctap1_unserialized<Req: RequestCtap1>(
+        &mut self,
+        msg: &Req,
+    ) -> Result<Req::Output, HIDError> {
+        let expected = self
+            .upcoming_requests
+            .pop_front()
+            .expect("No expected CTAP1 command left");
+        let (incoming, _) = msg.ctap1_format().expect("Can't serialize CTAP1 request");
+        assert_eq!(expected, incoming);
+        let response = self
+            .upcoming_responses
+            .pop_front()
+            .expect("No response given!");
+        response.map(|x| {
+            *x.downcast()
+                .expect("Failed to downcast given CTAP response")
+        })
+    }
+
+    fn send_ctap2_unserialized<Req: RequestCtap2>(
+        &mut self,
+        msg: &Req,
+    ) -> Result<Req::Output, HIDError> {
+        let expected = self
+            .upcoming_requests
+            .pop_front()
+            .expect("No expected CTAP2 command left");
+        let incoming = msg.wire_format().expect("Can't serialize CTAP2 request");
+        assert_eq!(expected, incoming);
+        let response = self
+            .upcoming_responses
+            .pop_front()
+            .expect("No response given!");
+        response.map(|x| {
+            *x.downcast()
+                .expect("Failed to downcast given CTAP response")
+        })
     }
 }
 

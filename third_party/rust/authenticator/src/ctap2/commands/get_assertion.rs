@@ -1,6 +1,7 @@
 use super::get_info::AuthenticatorInfo;
 use super::{
-    Command, CommandError, PinUvAuthCommand, RequestCtap1, RequestCtap2, Retryable, StatusCode,
+    Command, CommandError, CtapResponse, PinUvAuthCommand, RequestCtap1, RequestCtap2, Retryable,
+    StatusCode,
 };
 use crate::consts::{
     PARAMETER_SIZE, U2F_AUTHENTICATE, U2F_DONT_ENFORCE_USER_PRESENCE_AND_SIGN,
@@ -292,6 +293,9 @@ impl Serialize for GetAssertion {
     }
 }
 
+type GetAssertionOutput = Vec<GetAssertionResult>;
+impl CtapResponse for GetAssertionOutput {}
+
 impl RequestCtap1 for GetAssertion {
     type Output = Vec<GetAssertionResult>;
     type AdditionalInfo = PublicKeyCredentialDescriptor;
@@ -508,6 +512,7 @@ impl GetAssertionResult {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub struct GetAssertionResponse {
     pub credentials: Option<PublicKeyCredentialDescriptor>,
     pub auth_data: AuthenticatorData,
@@ -515,6 +520,8 @@ pub struct GetAssertionResponse {
     pub user: Option<PublicKeyCredentialUserEntity>,
     pub number_of_credentials: Option<usize>,
 }
+
+impl CtapResponse for GetAssertionResponse {}
 
 impl<'de> Deserialize<'de> for GetAssertionResponse {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>

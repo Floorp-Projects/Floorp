@@ -1,4 +1,5 @@
 #![allow(non_upper_case_globals)]
+use super::CtapResponse;
 // Note: Needed for PinUvAuthTokenPermission
 //       The current version of `bitflags` doesn't seem to allow
 //       to set this for an individual bitflag-struct.
@@ -154,6 +155,8 @@ pub struct ClientPinResponse {
     pub power_cycle_state: Option<bool>,
     pub uv_retries: Option<u8>,
 }
+
+impl CtapResponse for ClientPinResponse {}
 
 impl<'de> Deserialize<'de> for ClientPinResponse {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>

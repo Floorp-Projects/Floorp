@@ -289,8 +289,6 @@ impl Serialize for AuthenticatorData {
         data.extend([self.flags.bits()]); // (2) "flags", len=1 (u8)
         data.extend(self.counter.to_be_bytes()); // (3) "signCount", len=4, 32-bit unsigned big-endian integer.
 
-        // TODO(MS): Here flags=AT needs to be set, but this data comes from the security device
-        //           and we (probably?) need to just trust the device to set the right flags
         if let Some(cred) = &self.credential_data {
             // see https://www.w3.org/TR/webauthn-2/#sctn-attested-credential-data
             // Attested Credential Data
@@ -308,9 +306,12 @@ impl Serialize for AuthenticatorData {
                     .map_err(|_| SerError::custom("Failed to serialize auth_data"))?,
             );
         }
-        // TODO(MS): Here flags=ED needs to be set, but this data comes from the security device
-        //           and we (probably?) need to just trust the device to set the right flags
-        if self.extensions.has_some() {
+        // If we have parsed extension data, then we should serialize it even if the authenticator
+        // failed to set the extension data flag.
+        // If we don't have parsed extension data, then what we output depends on the flag.
+        // If the flag is set, we output the empty CBOR map. If it is not set, we output nothing.
+        if self.extensions.has_some() || self.flags.contains(AuthenticatorDataFlags::EXTENSION_DATA)
+        {
             data.extend(
                 // (5) "extensions", len=variable
                 &serde_cbor::to_vec(&self.extensions)
@@ -1076,6 +1077,29 @@ pub mod test {
                 0x87, 0xD6, 0x29, 0x0F, 0xD4, 0x7A, 0x40, 0xC4,
             ]))
         );
+    }
+
+    #[test]
+    fn test_empty_extension_data() {
+        let mut parsed_auth_data: AuthenticatorData =
+            from_slice(&SAMPLE_AUTH_DATA_MAKE_CREDENTIAL).unwrap();
+        assert!(parsed_auth_data
+            .flags
+            .contains(AuthenticatorDataFlags::EXTENSION_DATA));
+
+        // Remove the extension data but keep the extension data flag set.
+        parsed_auth_data.extensions = Default::default();
+        let with_flag = to_vec(&parsed_auth_data).expect("could not serialize auth data");
+        // The serialized auth data should end with an empty map (CBOR 0xA0).
+        assert_eq!(with_flag[with_flag.len() - 1], 0xA0);
+
+        // Remove the extension data flag.
+        parsed_auth_data
+            .flags
+            .remove(AuthenticatorDataFlags::EXTENSION_DATA);
+        let without_flag = to_vec(&parsed_auth_data).expect("could not serialize auth data");
+        // The serialized auth data should be one byte shorter.
+        assert!(with_flag.len() == without_flag.len() + 1);
     }
 
     /// See: https://github.com/mozilla/authenticator-rs/issues/187

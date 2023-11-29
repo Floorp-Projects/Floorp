@@ -1,13 +1,16 @@
-use super::{CommandError, RequestCtap1, Retryable};
+use super::{CommandError, CtapResponse, RequestCtap1, Retryable};
 use crate::consts::U2F_VERSION;
 use crate::transport::errors::{ApduErrorStatus, HIDError};
 use crate::transport::{FidoDevice, VirtualFidoDevice};
 use crate::u2ftypes::CTAP1RequestAPDU;
 
 #[allow(non_camel_case_types)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum U2FInfo {
     U2F_V2,
 }
+
+impl CtapResponse for U2FInfo {}
 
 #[derive(Debug, Default)]
 // TODO(baloo): if one does not issue U2F_VERSION before makecredentials or getassertion, token
