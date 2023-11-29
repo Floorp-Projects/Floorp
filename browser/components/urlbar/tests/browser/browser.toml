@@ -682,7 +682,6 @@ support-files = [
 ]
 
 ["browser_view_selectionByMouse.js"]
-fail-if = ["a11y_checks"] # Bug 1854660 clicked element may not be focusable and/or labeled
 skip-if = ["os == 'linux' && asan"] # Bug 1789051
 
 ["browser_waitForLoadStartOrTimeout.js"]
