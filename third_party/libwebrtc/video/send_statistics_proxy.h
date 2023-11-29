@@ -45,7 +45,7 @@ class SendStatisticsProxy : public VideoStreamEncoderObserver,
                             public FrameCountObserver,
                             public SendSideDelayObserver {
  public:
-  static const int kStatsTimeoutMs;
+  static constexpr TimeDelta kStatsTimeout = TimeDelta::Seconds(5);
   // Number of required samples to be collected before a metric is added
   // to a rtc histogram.
   static const int kMinRequiredMetricsSamples = 200;
@@ -157,11 +157,6 @@ class SendStatisticsProxy : public VideoStreamEncoderObserver,
     int64_t sum;
     int64_t num_samples;
   };
-  struct StatsUpdateTimes {
-    StatsUpdateTimes() : resolution_update_ms(0), bitrate_update_ms(0) {}
-    int64_t resolution_update_ms;
-    int64_t bitrate_update_ms;
-  };
   struct TargetRateUpdates {
     TargetRateUpdates()
         : pause_resume_events(0), last_paused_or_resumed(false), last_ms(-1) {}
@@ -253,6 +248,15 @@ class SendStatisticsProxy : public VideoStreamEncoderObserver,
     MaskedAdaptationCounts Mask(const VideoAdaptationCounters& counters,
                                 const AdaptationSettings& settings) const;
   };
+  // Collection of various stats that are tracked per ssrc.
+  struct Trackers {
+    Trackers();
+    Trackers(const Trackers&) = delete;
+    Trackers& operator=(const Trackers&) = delete;
+
+    Timestamp resolution_update = Timestamp::MinusInfinity();
+    rtc::RateTracker encoded_frame_rate;
+  };
 
   void SetAdaptTimer(const MaskedAdaptationCounts& counts, StatsTimer* timer)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
@@ -280,15 +284,13 @@ class SendStatisticsProxy : public VideoStreamEncoderObserver,
   VideoEncoderConfig::ContentType content_type_ RTC_GUARDED_BY(mutex_);
   const int64_t start_ms_;
   VideoSendStream::Stats stats_ RTC_GUARDED_BY(mutex_);
-  std::map<uint32_t, StatsUpdateTimes> update_times_ RTC_GUARDED_BY(mutex_);
   rtc::ExpFilter encode_time_ RTC_GUARDED_BY(mutex_);
   QualityLimitationReasonTracker quality_limitation_reason_tracker_
       RTC_GUARDED_BY(mutex_);
   rtc::RateTracker media_byte_rate_tracker_ RTC_GUARDED_BY(mutex_);
   rtc::RateTracker encoded_frame_rate_tracker_ RTC_GUARDED_BY(mutex_);
-  // Rate trackers mapped by ssrc.
-  std::map<uint32_t, std::unique_ptr<rtc::RateTracker>>
-      encoded_frame_rate_trackers_ RTC_GUARDED_BY(mutex_);
+  // Trackers mapped by ssrc.
+  std::map<uint32_t, Trackers> trackers_ RTC_GUARDED_BY(mutex_);
 
   absl::optional<int64_t> last_outlier_timestamp_ RTC_GUARDED_BY(mutex_);
 
