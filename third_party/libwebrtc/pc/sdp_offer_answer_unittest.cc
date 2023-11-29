@@ -993,4 +993,26 @@ TEST_F(SdpOfferAnswerTest, RejectsAnswerWithInvalidTransport) {
   EXPECT_EQ(error.type(), RTCErrorType::INVALID_PARAMETER);
 }
 
+TEST_F(SdpOfferAnswerTest, SdpMungingWithInvalidPayloadTypeIsRejected) {
+  auto pc = CreatePeerConnection();
+  pc->AddAudioTrack("audio_track", {});
+
+  auto offer = pc->CreateOffer();
+  ASSERT_EQ(offer->description()->contents().size(), 1u);
+  auto* audio =
+      offer->description()->contents()[0].media_description()->as_audio();
+  ASSERT_GT(audio->codecs().size(), 0u);
+  EXPECT_TRUE(audio->rtcp_mux());
+  auto codecs = audio->codecs();
+  for (int invalid_payload_type = 64; invalid_payload_type < 96;
+       invalid_payload_type++) {
+    codecs[0].id =
+        invalid_payload_type;  // The range [64-95] is disallowed with rtcp_mux.
+    audio->set_codecs(codecs);
+    // ASSERT to avoid getting into a bad state.
+    ASSERT_FALSE(pc->SetLocalDescription(offer->Clone()));
+    ASSERT_FALSE(pc->SetRemoteDescription(offer->Clone()));
+  }
+}
+
 }  // namespace webrtc
