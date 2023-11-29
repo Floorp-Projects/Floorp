@@ -280,17 +280,16 @@ void WebRtcSessionDescriptionFactory::InternalCreateOffer(
     }
   }
 
-  std::unique_ptr<cricket::SessionDescription> desc =
-      session_desc_factory_.CreateOffer(
-          request.options, sdp_info_->local_description()
-                               ? sdp_info_->local_description()->description()
-                               : nullptr);
-  if (!desc) {
-    PostCreateSessionDescriptionFailed(
-        request.observer.get(), RTCError(RTCErrorType::INTERNAL_ERROR,
-                                         "Failed to initialize the offer."));
+  auto result = session_desc_factory_.CreateOfferOrError(
+      request.options, sdp_info_->local_description()
+                           ? sdp_info_->local_description()->description()
+                           : nullptr);
+  if (!result.ok()) {
+    PostCreateSessionDescriptionFailed(request.observer.get(), result.error());
     return;
   }
+  std::unique_ptr<cricket::SessionDescription> desc = std::move(result.value());
+  RTC_CHECK(desc);
 
   // RFC 3264
   // When issuing an offer that modifies the session,
@@ -339,21 +338,20 @@ void WebRtcSessionDescriptionFactory::InternalCreateAnswer(
     }
   }
 
-  std::unique_ptr<cricket::SessionDescription> desc =
-      session_desc_factory_.CreateAnswer(
-          sdp_info_->remote_description()
-              ? sdp_info_->remote_description()->description()
-              : nullptr,
-          request.options,
-          sdp_info_->local_description()
-              ? sdp_info_->local_description()->description()
-              : nullptr);
-  if (!desc) {
-    PostCreateSessionDescriptionFailed(
-        request.observer.get(), RTCError(RTCErrorType::INTERNAL_ERROR,
-                                         "Failed to initialize the answer."));
+  auto result = session_desc_factory_.CreateAnswerOrError(
+      sdp_info_->remote_description()
+          ? sdp_info_->remote_description()->description()
+          : nullptr,
+      request.options,
+      sdp_info_->local_description()
+          ? sdp_info_->local_description()->description()
+          : nullptr);
+  if (!result.ok()) {
+    PostCreateSessionDescriptionFailed(request.observer.get(), result.error());
     return;
   }
+  std::unique_ptr<cricket::SessionDescription> desc = std::move(result.value());
+  RTC_CHECK(desc);
 
   // RFC 3264
   // If the answer is different from the offer in any way (different IP
