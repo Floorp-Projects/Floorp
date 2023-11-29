@@ -110,7 +110,8 @@ class DocAccessibleParent : public RemoteAccessible,
   mozilla::ipc::IPCResult RecvCaretMoveEvent(
       const uint64_t& aID, const LayoutDeviceIntRect& aCaretRect,
       const int32_t& aOffset, const bool& aIsSelectionCollapsed,
-      const bool& aIsAtEndOfLine, const int32_t& aGranularity) final;
+      const bool& aIsAtEndOfLine, const int32_t& aGranularity,
+      const bool& aFromUser) final;
 
   virtual mozilla::ipc::IPCResult RecvTextChangeEvent(
       const uint64_t& aID, const nsAString& aStr, const int32_t& aStart,

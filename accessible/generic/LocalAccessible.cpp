@@ -915,7 +915,8 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
           AccCaretMoveEvent* event = downcast_accEvent(aEvent);
           ipcDoc->SendCaretMoveEvent(
               id, event->GetCaretOffset(), event->IsSelectionCollapsed(),
-              event->IsAtEndOfLine(), event->GetGranularity());
+              event->IsAtEndOfLine(), event->GetGranularity(),
+              event->IsFromUserInput());
           break;
         }
         case nsIAccessibleEvent::EVENT_TEXT_INSERTED:
@@ -1038,9 +1039,9 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
       // AccessibleWrap::UpdateSystemCaretFor currently needs to call
       // HyperTextAccessible::GetCaretRect again to get the widget and there's
       // no point calling it twice.
-      PlatformCaretMoveEvent(target, event->GetCaretOffset(),
-                             event->IsSelectionCollapsed(),
-                             event->GetGranularity(), rect);
+      PlatformCaretMoveEvent(
+          target, event->GetCaretOffset(), event->IsSelectionCollapsed(),
+          event->GetGranularity(), rect, event->IsFromUserInput());
       break;
     }
     case nsIAccessibleEvent::EVENT_TEXT_INSERTED:
