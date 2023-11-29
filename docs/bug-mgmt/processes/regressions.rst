@@ -29,7 +29,7 @@ These things are true about regressions:
 -  **Status_FirefoxNN** is ``affected`` for each version (in current
    nightly, beta, and release) of Firefox in which the bug was found
 -  The bug’s description covers previously working behavior which is no
-   longer working [ed. I need a better phrase for this]
+   longer working
 
 Until the change set which caused the regression has been found through
 `mozregression <https://mozilla.github.io/mozregression/>`__ or another
