@@ -15,6 +15,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.* // ktlint-disable no-wildcard-imports
+import org.mozilla.geckoview.GeckoSession.AnalysisStatusResponse
 import org.mozilla.geckoview.GeckoSession.ContentDelegate
 import org.mozilla.geckoview.GeckoSession.Recommendation
 import org.mozilla.geckoview.GeckoSession.ReviewAnalysis
@@ -128,11 +129,35 @@ class ReviewQualityCheckerTest : BaseSessionTest() {
                 "geckoview.shopping.mock_test_response" to true,
             ),
         )
-        val result = mainSession.requestCreateAnalysis("https://www.example.com/mock/")
-        assertThat("Analysis status should match", sessionRule.waitForResult(result), equalTo("pending"))
+        val createResult = mainSession.requestCreateAnalysis("https://www.example.com/mock/")
+        assertThat("Analysis status should match", sessionRule.waitForResult(createResult), equalTo("pending"))
 
-        val status = mainSession.requestAnalysisCreationStatus("https://www.example.com/mock/")
-        assertThat("Analysis status should match", sessionRule.waitForResult(status), equalTo("in_progress"))
+        val creationStatus = mainSession.requestAnalysisCreationStatus("https://www.example.com/mock/")
+        assertThat("Analysis status should match", sessionRule.waitForResult(creationStatus), equalTo("in_progress"))
+
+        val status = "in_progress"
+        val progress = 90.9
+
+        val analysisObject = AnalysisStatusResponse.Builder(status)
+            .progress(progress)
+            .build()
+        assertThat("Analysis URL should match", analysisObject, notNullValue())
+        assertThat("Analysis URL should match", analysisObject.status, equalTo(status))
+        assertThat("Product id should match", analysisObject.progress, equalTo(progress))
+
+        val statusResult = mainSession.requestAnalysisStatus("https://www.example.com/mock/")
+        sessionRule.waitForResult(statusResult).let {
+            assertThat(
+                "Analysis status should match",
+                it.status,
+                equalTo("in_progress"),
+            )
+            assertThat(
+                "Analysis progress should match",
+                it.progress,
+                equalTo(90.9),
+            )
+        }
     }
 
     @Test

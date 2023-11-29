@@ -21,6 +21,7 @@ export class GeckoViewContent extends GeckoViewModule {
       "GeckoView:RestoreState",
       "GeckoView:ContainsFormData",
       "GeckoView:RequestCreateAnalysis",
+      "GeckoView:RequestAnalysisStatus",
       "GeckoView:RequestAnalysisCreationStatus",
       "GeckoView:PollForAnalysisCompleted",
       "GeckoView:SendClickAttributionEvent",
@@ -242,6 +243,9 @@ export class GeckoViewContent extends GeckoViewModule {
       case "GeckoView:RequestCreateAnalysis":
         this._requestCreateAnalysis(aData, aCallback);
         break;
+      case "GeckoView:RequestAnalysisStatus":
+        this._requestAnalysisStatus(aData, aCallback);
+        break;
       case "GeckoView:RequestAnalysisCreationStatus":
         this._requestAnalysisCreationStatus(aData, aCallback);
         break;
@@ -459,6 +463,28 @@ export class GeckoViewContent extends GeckoViewModule {
         return;
       }
       aCallback.onSuccess(status.status);
+    }
+  }
+
+  async _requestAnalysisStatus(aData, aCallback) {
+    if (
+      Services.prefs.getBoolPref("geckoview.shopping.mock_test_response", false)
+    ) {
+      const status = { status: "in_progress", progress: 90.9 };
+      aCallback.onSuccess({ status });
+      return;
+    }
+    const url = Services.io.newURI(aData.url);
+    if (!lazy.isProductURL(url)) {
+      aCallback.onError(`Cannot requestAnalysisStatus on a non-product url.`);
+    } else {
+      const product = new lazy.ShoppingProduct(url);
+      const status = await product.requestAnalysisCreationStatus();
+      if (!status) {
+        aCallback.onError(`Status of product analysis returned null.`);
+        return;
+      }
+      aCallback.onSuccess({ status });
     }
   }
 
