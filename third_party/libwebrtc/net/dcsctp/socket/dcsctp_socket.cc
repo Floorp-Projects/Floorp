@@ -1102,9 +1102,7 @@ void DcSctpSocket::HandleDataCommon(AnyDataChunk& chunk) {
 
   if (tcb_->data_tracker().Observe(tsn, immediate_ack)) {
     tcb_->reassembly_queue().Add(tsn, std::move(data));
-    tcb_->reassembly_queue().MaybeResetStreamsDeferred(
-        tcb_->data_tracker().last_cumulative_acked_tsn());
-    DeliverReassembledMessages();
+    MaybeResetStreamsDeferredAndDeliverMessages();
   }
 }
 
@@ -1455,12 +1453,15 @@ void DcSctpSocket::HandleCookieAck(
   callbacks_.OnConnected();
 }
 
-void DcSctpSocket::DeliverReassembledMessages() {
-  if (tcb_->reassembly_queue().HasMessages()) {
-    for (auto& message : tcb_->reassembly_queue().FlushMessages()) {
-      ++metrics_.rx_messages_count;
-      callbacks_.OnMessageReceived(std::move(message));
-    }
+void DcSctpSocket::MaybeResetStreamsDeferredAndDeliverMessages() {
+  // As new data has been received, see if paused streams can be resumed, which
+  // results in even more data added to the reassembly queue.
+  tcb_->reassembly_queue().MaybeResetStreamsDeferred(
+      tcb_->data_tracker().last_cumulative_acked_tsn());
+
+  for (auto& message : tcb_->reassembly_queue().FlushMessages()) {
+    ++metrics_.rx_messages_count;
+    callbacks_.OnMessageReceived(std::move(message));
   }
 }
 
@@ -1710,12 +1711,10 @@ void DcSctpSocket::HandleForwardTsnCommon(const AnyForwardTsnChunk& chunk) {
   }
   tcb_->data_tracker().HandleForwardTsn(chunk.new_cumulative_tsn());
   tcb_->reassembly_queue().Handle(chunk);
+
   // A forward TSN - for ordered streams - may allow messages to be
   // delivered.
-  DeliverReassembledMessages();
-
-  // Processing a FORWARD_TSN might result in sending a SACK.
-  tcb_->MaybeSendSack();
+  MaybeResetStreamsDeferredAndDeliverMessages();
 }
 
 void DcSctpSocket::MaybeSendShutdownOrAck() {

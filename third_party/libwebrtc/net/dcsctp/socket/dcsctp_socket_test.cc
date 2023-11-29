@@ -9,6 +9,7 @@
  */
 #include "net/dcsctp/socket/dcsctp_socket.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <deque>
 #include <memory>
@@ -30,6 +31,7 @@
 #include "net/dcsctp/packet/chunk/data_chunk.h"
 #include "net/dcsctp/packet/chunk/data_common.h"
 #include "net/dcsctp/packet/chunk/error_chunk.h"
+#include "net/dcsctp/packet/chunk/forward_tsn_chunk.h"
 #include "net/dcsctp/packet/chunk/heartbeat_ack_chunk.h"
 #include "net/dcsctp/packet/chunk/heartbeat_request_chunk.h"
 #include "net/dcsctp/packet/chunk/idata_chunk.h"
@@ -273,6 +275,26 @@ void AdvanceTime(SocketUnderTest& a, SocketUnderTest& z, DurationMs duration) {
 
   RunTimers(a);
   RunTimers(z);
+}
+
+// Exchanges messages between `a` and `z`, advancing time until there are no
+// more pending timers, or until `max_timeout` is reached.
+void ExchangeMessagesAndAdvanceTime(
+    SocketUnderTest& a,
+    SocketUnderTest& z,
+    DurationMs max_timeout = DurationMs(10000)) {
+  TimeMs time_started = a.cb.TimeMillis();
+  while (a.cb.TimeMillis() - time_started < max_timeout) {
+    ExchangeMessages(a, z);
+
+    DurationMs time_to_next_timeout =
+        std::min(a.cb.GetTimeToNextTimeout(), z.cb.GetTimeToNextTimeout());
+    if (time_to_next_timeout == DurationMs::InfiniteDuration()) {
+      // No more pending timer.
+      return;
+    }
+    AdvanceTime(a, z, time_to_next_timeout);
+  }
 }
 
 // Calls Connect() on `sock_a_` and make the connection established.
@@ -2977,5 +2999,60 @@ TEST_P(DcSctpSocketParametrizedTest, AllPacketsAfterConnectHaveZeroChecksum) {
 
   MaybeHandoverSocketAndSendMessage(a, std::move(z));
 }
+
+TEST(DcSctpSocketTest, HandlesForwardTsnOutOfOrderWithStreamResetting) {
+  // This test ensures that receiving FORWARD-TSN and RECONFIG out of order is
+  // handled correctly.
+  SocketUnderTest a("A", {.heartbeat_interval = DurationMs(0)});
+  SocketUnderTest z("Z", {.heartbeat_interval = DurationMs(0)});
+
+  ConnectSockets(a, z);
+  std::vector<uint8_t> payload(kSmallMessageSize);
+  a.socket.Send(DcSctpMessage(StreamID(1), PPID(51), payload),
+                {
+                    .max_retransmissions = 0,
+                });
+
+  // Packet is lost.
+  EXPECT_THAT(a.cb.ConsumeSentPacket(),
+              HasChunks(ElementsAre(
+                  IsDataChunk(AllOf(Property(&DataChunk::ssn, SSN(0)),
+                                    Property(&DataChunk::ppid, PPID(51)))))));
+  AdvanceTime(a, z, a.options.rto_initial);
+
+  auto fwd_tsn_packet = a.cb.ConsumeSentPacket();
+  EXPECT_THAT(fwd_tsn_packet,
+              HasChunks(ElementsAre(IsChunkType(ForwardTsnChunk::kType))));
+  // Reset stream 1
+  a.socket.ResetStreams(std::vector<StreamID>({StreamID(1)}));
+  auto reconfig_packet = a.cb.ConsumeSentPacket();
+  EXPECT_THAT(reconfig_packet,
+              HasChunks(ElementsAre(IsChunkType(ReConfigChunk::kType))));
+
+  // These two packets are received in the wrong order.
+  z.socket.ReceivePacket(reconfig_packet);
+  z.socket.ReceivePacket(fwd_tsn_packet);
+  ExchangeMessagesAndAdvanceTime(a, z);
+
+  a.socket.Send(DcSctpMessage(StreamID(1), PPID(52), payload), {});
+  a.socket.Send(DcSctpMessage(StreamID(1), PPID(53), payload), {});
+
+  auto data_packet_2 = a.cb.ConsumeSentPacket();
+  auto data_packet_3 = a.cb.ConsumeSentPacket();
+  EXPECT_THAT(data_packet_2, HasChunks(ElementsAre(IsDataChunk(AllOf(
+                                 Property(&DataChunk::ssn, SSN(0)),
+                                 Property(&DataChunk::ppid, PPID(52)))))));
+  EXPECT_THAT(data_packet_3, HasChunks(ElementsAre(IsDataChunk(AllOf(
+                                 Property(&DataChunk::ssn, SSN(1)),
+                                 Property(&DataChunk::ppid, PPID(53)))))));
+
+  z.socket.ReceivePacket(data_packet_2);
+  z.socket.ReceivePacket(data_packet_3);
+  ASSERT_THAT(z.cb.ConsumeReceivedMessage(),
+              testing::Optional(Property(&DcSctpMessage::ppid, PPID(52))));
+  ASSERT_THAT(z.cb.ConsumeReceivedMessage(),
+              testing::Optional(Property(&DcSctpMessage::ppid, PPID(53))));
+}
+
 }  // namespace
 }  // namespace dcsctp
