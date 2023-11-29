@@ -5359,16 +5359,35 @@ void PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder* aBuilder,
 }
 
 bool PresShell::IsTransparentContainerElement() const {
+  if (mDocument->IsInitialDocument()) {
+    switch (StaticPrefs::layout_css_initial_document_transparency()) {
+      case 3:
+        return true;
+      case 2:
+        if (!mDocument->IsTopLevelContentDocument()) {
+          return true;
+        }
+        [[fallthrough]];
+      case 1:
+        if (mDocument->IsLikelyContentInaccessibleTopLevelAboutBlank()) {
+          return true;
+        }
+        [[fallthrough]];
+      default:
+        break;
+    }
+  }
+
   nsPresContext* pc = GetPresContext();
   if (!pc->IsRootContentDocumentCrossProcess()) {
-    if (pc->IsChrome()) {
+    if (mDocument->IsInChromeDocShell()) {
       return true;
     }
     // Frames are transparent except if their used embedder color-scheme is
     // mismatched, in which case we use an opaque background to avoid
     // black-on-black or white-on-white text, see
     // https://github.com/w3c/csswg-drafts/issues/4772
-    if (BrowsingContext* bc = pc->Document()->GetBrowsingContext()) {
+    if (BrowsingContext* bc = mDocument->GetBrowsingContext()) {
       switch (bc->GetEmbedderColorSchemes().mUsed) {
         case dom::PrefersColorSchemeOverride::Light:
           return pc->DefaultBackgroundColorScheme() == ColorScheme::Light;
@@ -5379,11 +5398,6 @@ bool PresShell::IsTransparentContainerElement() const {
           break;
       }
     }
-    return true;
-  }
-
-  if (mDocument->IsInitialDocument() &&
-      mDocument->IsLikelyContentInaccessibleTopLevelAboutBlank()) {
     return true;
   }
 

@@ -8221,6 +8221,22 @@
   value: true
   mirror: always
 
+# Controls the transparency of the initial about:blank document. Generally you
+# don't ever want a white flash in dark mode, but due to backwards compat we
+# have some extra control over this, for now at least.
+#
+# See https://github.com/w3c/csswg-drafts/issues/9624 for iframes.
+#
+# Values:
+#  1: content-inaccessible top-level only.
+#  2: frames and content-inaccessible top-level only.
+#  3: always
+#  Others: don't treat this document specially.
+- name: layout.css.initial-document-transparency
+  type: RelaxedAtomicInt32
+  value: 3
+  mirror: always
+
 # The minimum contrast ratio between the accent color foreground and background
 # colors.
 #
