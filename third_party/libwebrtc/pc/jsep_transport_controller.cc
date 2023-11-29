@@ -641,7 +641,12 @@ RTCError JsepTransportController::ApplyDescription_n(
 
     cricket::JsepTransport* transport =
         GetJsepTransportForMid(content_info.name);
-    RTC_DCHECK(transport);
+    if (!transport) {
+      LOG_AND_RETURN_ERROR(
+          RTCErrorType::INVALID_PARAMETER,
+          "Could not find transport for m= section with mid='" +
+              content_info.name + "'");
+    }
 
     SetIceRole_n(DetermineIceRole(transport, transport_info, type, local));
 
