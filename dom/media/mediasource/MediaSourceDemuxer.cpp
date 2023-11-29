@@ -159,7 +159,7 @@ UniquePtr<EncryptionInfo> MediaSourceDemuxer::GetCrypto() {
 }
 
 void MediaSourceDemuxer::AttachSourceBuffer(
-    RefPtr<TrackBuffersManager>& aSourceBuffer) {
+    const RefPtr<TrackBuffersManager>& aSourceBuffer) {
   nsCOMPtr<nsIRunnable> task = NewRunnableMethod<RefPtr<TrackBuffersManager>&&>(
       "MediaSourceDemuxer::DoAttachSourceBuffer", this,
       &MediaSourceDemuxer::DoAttachSourceBuffer, aSourceBuffer);
@@ -176,7 +176,7 @@ void MediaSourceDemuxer::DoAttachSourceBuffer(
 }
 
 void MediaSourceDemuxer::DetachSourceBuffer(
-    RefPtr<TrackBuffersManager>& aSourceBuffer) {
+    const RefPtr<TrackBuffersManager>& aSourceBuffer) {
   nsCOMPtr<nsIRunnable> task =
       NS_NewRunnableFunction("MediaSourceDemuxer::DoDetachSourceBuffer",
                              [self = RefPtr{this}, aSourceBuffer]() {
