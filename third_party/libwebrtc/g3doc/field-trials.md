@@ -39,18 +39,18 @@ The policy for field trials is:
 -   The field trial must have an end date. The end date may be pushed back if
     necessary, but should not be pushed back indefinitely.
 -   A field trial must be associated with a bug that
-    -   reserves the field trial key,
-    -   is open, and
+    -   reserves the field trial key, and
     -   is assigned to an owner.
 
 ## Creating a field trial
 
 Before creating a new field trial, make sure to read the [policy](#policy).
 
-Either create a new or reuse an existing bug and make it is open and assigned to
-the correct owner. Take note of the bug ID. Next, decide how long you need the
-field trial to last. It should be rare to have field trials lasting more than 12
-months.
+Either create a new or reuse an existing bug and make sure it is assigned to the
+correct owner. Take note of the bug ID. Next, decide how long you need the field
+trial to last. It should be rare to have field trials lasting more than 12
+months. You can use the `NextAction` field in the bug to help you remember the
+end date.
 
 Using this information, add a new entry to `ACTIVE_FIELD_TRIALS` in
 `experiments/field_trials.py`. You may not add new items to
