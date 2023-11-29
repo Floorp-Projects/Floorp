@@ -81,6 +81,8 @@ export default class LoginItem extends HTMLElement {
     this._vulnerableAlert = this.shadowRoot.querySelector(
       "login-vulnerable-password-alert"
     );
+    this._passwordWarning = this.shadowRoot.querySelector("password-warning");
+    this._originWarning = this.shadowRoot.querySelector("origin-warning");
 
     this.render();
 
@@ -265,6 +267,7 @@ export default class LoginItem extends HTMLElement {
     this._updatePasswordRevealState();
     this._updateOriginDisplayState();
     this.#updateTimeline();
+    this.#updatePasswordMessage();
   }
 
   #updateTimeline() {
@@ -1035,6 +1038,11 @@ export default class LoginItem extends HTMLElement {
 
   #updateVulnerablePasswordAlert(hostname) {
     this._vulnerableAlert.hostname = hostname;
+  }
+
+  #updatePasswordMessage() {
+    this._passwordWarning.isNewLogin = this.dataset.isNewLogin;
+    this._passwordWarning.webTitle = this._login.title;
   }
 }
 customElements.define("login-item", LoginItem);

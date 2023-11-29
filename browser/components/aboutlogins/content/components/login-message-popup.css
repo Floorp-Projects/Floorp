@@ -1,0 +1,47 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+:host .tooltip-container {
+  position: absolute;
+  inset-inline-start: 315px;
+  width: 232px;
+  box-shadow: 2px 2px 10px 1px rgba(0,0,0,0.18);
+  top: 0;
+}
+
+:host .tooltip-message {
+  margin: 0;
+  font-size: 14px;
+}
+
+:host .arrow-box {
+  position: relative;
+  padding: 12px;
+  background-color: var(--in-content-box-background);
+  border: 1px solid var(--in-content-border-color);
+  border-radius: 4px;
+}
+
+:host .arrow-box::before,
+:host .arrow-box::after {
+  inset-inline-end: 100%;
+  top: 40px; /* This allows the arrow to stay in the correct position, even if the text length is changed */
+  border: solid transparent;
+  content: "";
+  height: 0;
+  width: 0;
+  position: absolute;
+  pointer-events: none;
+}
+
+:host .arrow-box::after {
+  border-inline-end-color: var(--in-content-box-background);
+  border-width: 10px;
+  margin-top: -10px;
+}
+:host .arrow-box::before {
+  border-inline-end-color: var(--in-content-border-color);
+  border-width: 11px;
+  margin-top: -11px;
+}

@@ -95,7 +95,11 @@ login-item-new-login-title = Create New Login
 login-item-edit-button = Edit
 about-logins-login-item-remove-button = Remove
 login-item-origin-label = Website address
-login-item-tooltip-message = Make sure this matches the exact address of the website where you log in.
+about-logins-origin-tooltip = Make sure this matches the exact address of the website where you log in.
+# Variables
+#   $webTitle (String) - Website title of the password being changed.
+about-logins-edit-password-tooltip = Make sure you’re saving your current password for this site. Changing the password here does not change it with { $webTitle }.
+about-logins-add-password-tooltip = Make sure you’re saving your current password for this site.
 login-item-origin =
   .placeholder = https://www.example.com
 login-item-username-label = Username
