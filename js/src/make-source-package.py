@@ -190,6 +190,7 @@ rsync_filter_list = """
 + /testing/moz.build
 + /testing/mozbase/**
 + /testing/performance/**
++ /testing/test/**
 + /testing/web-platform/*.ini
 + /testing/web-platform/*.py
 + /testing/web-platform/meta/streams/**
