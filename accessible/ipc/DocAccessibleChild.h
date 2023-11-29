@@ -132,7 +132,7 @@ class DocAccessibleChild : public PDocAccessibleChild {
   bool SendCaretMoveEvent(const uint64_t& aID, const int32_t& aOffset,
                           const bool& aIsSelectionCollapsed,
                           const bool& aIsAtEndOfLine,
-                          const int32_t& aGranularity);
+                          const int32_t& aGranularity, bool aFromUser);
   bool SendFocusEvent(const uint64_t& aID);
 
 #if !defined(XP_WIN)

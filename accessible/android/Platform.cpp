@@ -142,7 +142,8 @@ void a11y::PlatformFocusEvent(Accessible* aTarget,
 void a11y::PlatformCaretMoveEvent(Accessible* aTarget, int32_t aOffset,
                                   bool aIsSelectionCollapsed,
                                   int32_t aGranularity,
-                                  const LayoutDeviceIntRect& aCaretRect) {
+                                  const LayoutDeviceIntRect& aCaretRect,
+                                  bool aFromUser) {
   RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
 
