@@ -251,6 +251,6 @@ device-migration-fxa-spotlight-older-device-header = Peace of mind, from { -bran
 device-migration-fxa-spotlight-older-device-body = An account keeps your important info updated and protected on any device you connect.
 device-migration-fxa-spotlight-older-device-primary-button = Create an account
 
-device-migration-fxa-spotlight-getting-new-device-header = Hoping for a new device this season?
+device-migration-fxa-spotlight-getting-new-device-header-2 = New device in your future?
 device-migration-fxa-spotlight-getting-new-device-body = Back up your data now, so you’re ready to go when your device arrives.
 device-migration-fxa-spotlight-getting-new-device-primary-button = How to back up my data
