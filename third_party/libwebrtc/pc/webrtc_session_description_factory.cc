@@ -194,15 +194,15 @@ void WebRtcSessionDescriptionFactory::CreateOffer(
   std::string error = "CreateOffer";
   if (certificate_request_state_ == CERTIFICATE_FAILED) {
     error += kFailedDueToIdentityFailed;
-    RTC_LOG(LS_ERROR) << error;
-    PostCreateSessionDescriptionFailed(observer, error);
+    PostCreateSessionDescriptionFailed(
+        observer, RTCError(RTCErrorType::INTERNAL_ERROR, std::move(error)));
     return;
   }
 
   if (!ValidMediaSessionOptions(session_options)) {
     error += " called with invalid session options";
-    RTC_LOG(LS_ERROR) << error;
-    PostCreateSessionDescriptionFailed(observer, error);
+    PostCreateSessionDescriptionFailed(
+        observer, RTCError(RTCErrorType::INTERNAL_ERROR, std::move(error)));
     return;
   }
 
@@ -223,27 +223,27 @@ void WebRtcSessionDescriptionFactory::CreateAnswer(
   std::string error = "CreateAnswer";
   if (certificate_request_state_ == CERTIFICATE_FAILED) {
     error += kFailedDueToIdentityFailed;
-    RTC_LOG(LS_ERROR) << error;
-    PostCreateSessionDescriptionFailed(observer, error);
+    PostCreateSessionDescriptionFailed(
+        observer, RTCError(RTCErrorType::INTERNAL_ERROR, std::move(error)));
     return;
   }
   if (!sdp_info_->remote_description()) {
     error += " can't be called before SetRemoteDescription.";
-    RTC_LOG(LS_ERROR) << error;
-    PostCreateSessionDescriptionFailed(observer, error);
+    PostCreateSessionDescriptionFailed(
+        observer, RTCError(RTCErrorType::INTERNAL_ERROR, std::move(error)));
     return;
   }
   if (sdp_info_->remote_description()->GetType() != SdpType::kOffer) {
     error += " failed because remote_description is not an offer.";
-    RTC_LOG(LS_ERROR) << error;
-    PostCreateSessionDescriptionFailed(observer, error);
+    PostCreateSessionDescriptionFailed(
+        observer, RTCError(RTCErrorType::INTERNAL_ERROR, std::move(error)));
     return;
   }
 
   if (!ValidMediaSessionOptions(session_options)) {
     error += " called with invalid session options.";
-    RTC_LOG(LS_ERROR) << error;
-    PostCreateSessionDescriptionFailed(observer, error);
+    PostCreateSessionDescriptionFailed(
+        observer, RTCError(RTCErrorType::INTERNAL_ERROR, std::move(error)));
     return;
   }
 
@@ -286,8 +286,9 @@ void WebRtcSessionDescriptionFactory::InternalCreateOffer(
                                ? sdp_info_->local_description()->description()
                                : nullptr);
   if (!desc) {
-    PostCreateSessionDescriptionFailed(request.observer.get(),
-                                       "Failed to initialize the offer.");
+    PostCreateSessionDescriptionFailed(
+        request.observer.get(), RTCError(RTCErrorType::INTERNAL_ERROR,
+                                         "Failed to initialize the offer."));
     return;
   }
 
@@ -348,8 +349,9 @@ void WebRtcSessionDescriptionFactory::InternalCreateAnswer(
               ? sdp_info_->local_description()->description()
               : nullptr);
   if (!desc) {
-    PostCreateSessionDescriptionFailed(request.observer.get(),
-                                       "Failed to initialize the answer.");
+    PostCreateSessionDescriptionFailed(
+        request.observer.get(), RTCError(RTCErrorType::INTERNAL_ERROR,
+                                         "Failed to initialize the answer."));
     return;
   }
 
@@ -387,24 +389,22 @@ void WebRtcSessionDescriptionFactory::FailPendingRequests(
         create_session_description_requests_.front();
     PostCreateSessionDescriptionFailed(
         request.observer.get(),
-        ((request.type == CreateSessionDescriptionRequest::kOffer)
-             ? "CreateOffer"
-             : "CreateAnswer") +
-            reason);
+        RTCError(RTCErrorType::INTERNAL_ERROR,
+                 ((request.type == CreateSessionDescriptionRequest::kOffer)
+                      ? "CreateOffer"
+                      : "CreateAnswer") +
+                     reason));
     create_session_description_requests_.pop();
   }
 }
 
 void WebRtcSessionDescriptionFactory::PostCreateSessionDescriptionFailed(
     CreateSessionDescriptionObserver* observer,
-    const std::string& error) {
+    RTCError error) {
   Post([observer =
             rtc::scoped_refptr<CreateSessionDescriptionObserver>(observer),
-        error]() mutable {
-    observer->OnFailure(
-        RTCError(RTCErrorType::INTERNAL_ERROR, std::move(error)));
-  });
-  RTC_LOG(LS_ERROR) << "Create SDP failed: " << error;
+        error]() mutable { observer->OnFailure(error); });
+  RTC_LOG(LS_ERROR) << "CreateSessionDescription failed: " << error.message();
 }
 
 void WebRtcSessionDescriptionFactory::PostCreateSessionDescriptionSucceeded(
