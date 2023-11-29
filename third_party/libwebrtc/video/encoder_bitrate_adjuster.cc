@@ -48,6 +48,7 @@ EncoderBitrateAdjuster::EncoderBitrateAdjuster(const VideoCodec& codec_settings)
                                       .BitrateAdjusterCanUseNetworkHeadroom()),
       frames_since_layout_change_(0),
       min_bitrates_bps_{},
+      frame_size_pixels_{},
       codec_(codec_settings.codecType),
       codec_mode_(codec_settings.mode) {
   // TODO(https://crbug.com/webrtc/14891): If we want to support simulcast of
@@ -60,6 +61,8 @@ EncoderBitrateAdjuster::EncoderBitrateAdjuster(const VideoCodec& codec_settings)
         min_bitrates_bps_[si] =
             std::max(codec_settings.minBitrate * 1000,
                      codec_settings.spatialLayers[si].minBitrate * 1000);
+        frame_size_pixels_[si] = codec_settings.spatialLayers[si].width *
+                                 codec_settings.spatialLayers[si].height;
       }
     }
   } else {
@@ -68,6 +71,8 @@ EncoderBitrateAdjuster::EncoderBitrateAdjuster(const VideoCodec& codec_settings)
         min_bitrates_bps_[si] =
             std::max(codec_settings.minBitrate * 1000,
                      codec_settings.simulcastStream[si].minBitrate * 1000);
+        frame_size_pixels_[si] = codec_settings.spatialLayers[si].width *
+                                 codec_settings.spatialLayers[si].height;
       }
     }
   }
@@ -314,6 +319,12 @@ void EncoderBitrateAdjuster::OnEncoderInfo(
   // Copy allocation into current state and re-allocate.
   for (size_t si = 0; si < kMaxSpatialLayers; ++si) {
     current_fps_allocation_[si] = encoder_info.fps_allocation[si];
+    if (frame_size_pixels_[si] > 0) {
+      if (auto bwlimit = encoder_info.GetEncoderBitrateLimitsForResolution(
+              frame_size_pixels_[si])) {
+        min_bitrates_bps_[si] = bwlimit->min_bitrate_bps;
+      }
+    }
   }
 
   // Trigger re-allocation so that overshoot detectors have correct targets.
