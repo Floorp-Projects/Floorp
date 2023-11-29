@@ -336,7 +336,7 @@ export var ReaderMode = {
 
   /**
    * Attempts to parse a document into an article. Heavy lifting happens
-   * in Reader.worker.js.
+   * in readerWorker.js.
    *
    * @param doc The document to parse.
    * @return {Promise}

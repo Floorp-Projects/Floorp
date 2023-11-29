@@ -883,5 +883,5 @@ export var PageThumbsExpiration = {
  * Interface to a dedicated thread handling I/O
  */
 var PageThumbsWorker = new BasePromiseWorker(
-  "resource://gre/modules/PageThumbs.worker.js"
+  "resource://gre/modules/PageThumbsWorker.js"
 );

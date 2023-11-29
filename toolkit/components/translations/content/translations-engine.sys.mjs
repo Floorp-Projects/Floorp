@@ -263,7 +263,7 @@ export class TranslationsEngine {
     this.toLanguage = toLanguage;
     this.languagePairKey = getLanguagePairKey(fromLanguage, toLanguage);
     this.#worker = new Worker(
-      "chrome://global/content/translations/translations-engine.worker.js"
+      "chrome://global/content/translations/translations-engine-worker.js"
     );
 
     /** @type {Promise<void>} */

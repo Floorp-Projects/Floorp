@@ -55,7 +55,7 @@ class WinPromiseWorker extends PromiseWorker {
 
 class Process extends BaseProcess {
   static get WORKER_URL() {
-    return "resource://gre/modules/subprocess/subprocess_win.worker.js";
+    return "resource://gre/modules/subprocess/subprocess_worker_win.js";
   }
 
   static get WorkerClass() {

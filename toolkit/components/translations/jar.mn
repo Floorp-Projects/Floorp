@@ -7,7 +7,7 @@ toolkit.jar:
     content/global/translations/translations-document.sys.mjs (content/translations-document.sys.mjs)
     content/global/translations/translations-engine.html      (content/translations-engine.html)
     content/global/translations/translations-engine.sys.mjs   (content/translations-engine.sys.mjs)
-    content/global/translations/translations-engine.worker.js (content/translations-engine.worker.js)
+    content/global/translations/translations-engine-worker.js (content/translations-engine-worker.js)
     content/global/translations/translations.html             (content/translations.html)
     content/global/translations/translations.css              (content/translations.css)
     content/global/translations/translations.mjs              (content/translations.mjs)
