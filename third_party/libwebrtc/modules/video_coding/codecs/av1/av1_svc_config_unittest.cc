@@ -142,29 +142,20 @@ TEST(Av1SvcConfigTest, CopiesMinMaxBitrateForSingleSpatialLayer) {
 }
 
 TEST(Av1SvcConfigTest, SetsBitratesForMultipleSpatialLayers) {
-  VideoCodec video_codec = GetDefaultVideoCodec();
-  video_codec.SetScalabilityMode(ScalabilityMode::kL3T3);
+  VideoCodec video_codec;
+  video_codec.codecType = kVideoCodecAV1;
+  video_codec.width = 640;
+  video_codec.height = 360;
+  video_codec.SetScalabilityMode(ScalabilityMode::kL2T2);
 
   EXPECT_TRUE(SetAv1SvcConfig(video_codec, /*num_temporal_layers=*/kDontCare,
                               /*num_spatial_layers=*/kDontCare));
 
-  EXPECT_GT(video_codec.spatialLayers[0].minBitrate, 0u);
-  EXPECT_LE(video_codec.spatialLayers[0].minBitrate,
-            video_codec.spatialLayers[0].targetBitrate);
-  EXPECT_LE(video_codec.spatialLayers[0].targetBitrate,
-            video_codec.spatialLayers[0].maxBitrate);
+  EXPECT_EQ(video_codec.spatialLayers[0].minBitrate, 20u);
+  EXPECT_EQ(video_codec.spatialLayers[0].maxBitrate, 142u);
 
-  EXPECT_GT(video_codec.spatialLayers[1].minBitrate, 0u);
-  EXPECT_LE(video_codec.spatialLayers[1].minBitrate,
-            video_codec.spatialLayers[1].targetBitrate);
-  EXPECT_LE(video_codec.spatialLayers[1].targetBitrate,
-            video_codec.spatialLayers[1].maxBitrate);
-
-  EXPECT_GT(video_codec.spatialLayers[2].minBitrate, 0u);
-  EXPECT_LE(video_codec.spatialLayers[2].minBitrate,
-            video_codec.spatialLayers[2].targetBitrate);
-  EXPECT_LE(video_codec.spatialLayers[2].targetBitrate,
-            video_codec.spatialLayers[2].maxBitrate);
+  EXPECT_EQ(video_codec.spatialLayers[1].minBitrate, 135u);
+  EXPECT_EQ(video_codec.spatialLayers[1].maxBitrate, 418u);
 }
 
 TEST(Av1SvcConfigTest, ReduceSpatialLayersOnInsufficentInputResolution) {
