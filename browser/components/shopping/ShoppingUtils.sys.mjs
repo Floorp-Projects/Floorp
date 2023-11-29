@@ -22,6 +22,7 @@ const LAST_AUTO_ACTIVATE_PREF =
   "browser.shopping.experience2023.lastAutoActivate";
 const AUTO_ACTIVATE_COUNT_PREF =
   "browser.shopping.experience2023.autoActivateCount";
+const ADS_USER_ENABLED_PREF = "browser.shopping.experience2023.ads.userEnabled";
 
 const CFR_FEATURES_PREF =
   "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features";
@@ -77,6 +78,7 @@ export const ShoppingUtils = {
     // or adjusting onboarding-related prefs once per session.
 
     this.setOnUpdate(undefined, undefined, this.optedIn);
+    this.recordUserAdsPreference();
 
     this.initialized = true;
   },
@@ -153,6 +155,10 @@ export const ShoppingUtils = {
     Glean.shoppingSettings.hasOnboarded.set(current > 0);
   },
 
+  recordUserAdsPreference() {
+    Glean.shoppingSettings.disabledAds.set(!ShoppingUtils.adsUserEnabled);
+  },
+
   /**
    * If the user has not opted in, automatically set the sidebar to `active` if:
    * 1. The sidebar has not already been automatically set to `active` twice.
@@ -222,4 +228,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "cfrFeatures",
   CFR_FEATURES_PREF,
   true
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  ShoppingUtils,
+  "adsUserEnabled",
+  ADS_USER_ENABLED_PREF,
+  false,
+  ShoppingUtils.recordUserAdsPreference
 );

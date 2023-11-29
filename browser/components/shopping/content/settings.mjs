@@ -30,6 +30,8 @@ class ShoppingSettings extends MozLitElement {
 
   onToggleRecommendations() {
     this.adsEnabledByUser = this.recommendationsToggleEl.pressed;
+    let action = this.adsEnabledByUser ? "enabled" : "disabled";
+    Glean.shopping.surfaceAdsSettingToggled.record({ action });
     RPMSetPref(
       "browser.shopping.experience2023.ads.userEnabled",
       this.adsEnabledByUser

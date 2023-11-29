@@ -315,6 +315,119 @@ add_task(async function test_review_quality_explainer_link() {
   });
 });
 
+// Start with ads user enabled, then disable them, and verify telemetry.
+add_task(async function test_ads_disable_button_click() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.shopping.experience2023.adsEnabled", true],
+      ["browser.shopping.experience2023.ads.userEnabled", true],
+    ],
+  });
+
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      let mockArgs = {
+        mockData: MOCK_ANALYZED_PRODUCT_RESPONSE,
+        mockRecommendationData: MOCK_RECOMMENDED_ADS_RESPONSE,
+      };
+
+      await clickAdsToggle(browser, mockArgs);
+
+      await Services.fog.testFlushAllChildren();
+
+      // Verify the ads state was changed to disabled.
+      let toggledEvents =
+        Glean.shopping.surfaceAdsSettingToggled.testGetValue();
+      assertEventMatches(toggledEvents[0], {
+        category: "shopping",
+        name: "surface_ads_setting_toggled",
+        extra: { action: "disabled" },
+      });
+
+      // Verify the ads disabled state is set to true.
+      Assert.equal(
+        Glean.shoppingSettings.disabledAds.testGetValue(),
+        true,
+        "Ads should be marked as disabled"
+      );
+    }
+  );
+});
+
+// Start with ads user disabled, then enable them, and verify telemetry.
+add_task(async function test_ads_enable_button_click() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.shopping.experience2023.adsEnabled", true],
+      ["browser.shopping.experience2023.ads.userEnabled", false],
+    ],
+  });
+
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      let mockArgs = {
+        mockData: MOCK_ANALYZED_PRODUCT_RESPONSE,
+        mockRecommendationData: MOCK_RECOMMENDED_ADS_RESPONSE,
+      };
+
+      await clickAdsToggle(browser, mockArgs);
+
+      await Services.fog.testFlushAllChildren();
+
+      // Verify the ads state was changed to enabled.
+      let toggledEvents =
+        Glean.shopping.surfaceAdsSettingToggled.testGetValue();
+      assertEventMatches(toggledEvents[0], {
+        category: "shopping",
+        name: "surface_ads_setting_toggled",
+        extra: { action: "enabled" },
+      });
+
+      // Verify the ads disabled state is set to false.
+      Assert.equal(
+        Glean.shoppingSettings.disabledAds.testGetValue(),
+        false,
+        "Ads should be marked as enabled"
+      );
+    }
+  );
+});
+
+function clickAdsToggle(browser, data) {
+  return SpecialPowers.spawn(browser, [data], async args => {
+    const { mockData, mockRecommendationData } = args;
+    let shoppingContainer =
+      content.document.querySelector("shopping-container").wrappedJSObject;
+    shoppingContainer.data = Cu.cloneInto(mockData, content);
+    shoppingContainer.recommendationData = Cu.cloneInto(
+      mockRecommendationData,
+      content
+    );
+
+    await shoppingContainer.updateComplete;
+
+    let shoppingSettings = shoppingContainer.settingsEl;
+    let toggle = shoppingSettings.recommendationsToggleEl;
+    toggle.click();
+
+    await shoppingContainer.updateComplete;
+  });
+}
+
 function clickReAnalyzeLink(browser, data) {
   return SpecialPowers.spawn(browser, [data], async mockData => {
     let shoppingContainer =
