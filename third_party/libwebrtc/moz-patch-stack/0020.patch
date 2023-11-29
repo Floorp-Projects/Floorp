@@ -1,53 +1,95 @@
 From: Alex Chronopoulos <achronop@gmail.com>
-Date: Wed, 18 Sep 2019 13:12:00 +0000
+Date: Wed, 18 Sep 2019 13:16:00 +0000
 Subject: Bug 1572281 - Remove audio device change notifications from video
- capture in Windows. r=dminor
+ capture in Linux. r=dminor
 
-Video capture used to provide device change notifications for audio and video devices. From now on, CubebDeviceEnumerator will provide audio device change notifications thus video capture is updated to notify only changes of the video device. This is the windows part.
+Video capture used to provide device change notifications for audio and video devices. From now on, CubebDeviceEnumerator will provide audio device change notifications thus video capture is updated to notify only changes of the video device. This is the Linux part.
 
-Differential Revision: https://phabricator.services.mozilla.com/D46274
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a5c23245837ebdd99532e8bfaca05774c5c96d9d
+Differential Revision: https://phabricator.services.mozilla.com/D46272
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7bf7263db30b794139332691f4fbc98b4bfcfdd7
 ---
- modules/video_capture/windows/device_info_ds.cc | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ .../video_capture/linux/device_info_v4l2.cc   | 28 ++-----------------
+ 1 file changed, 3 insertions(+), 25 deletions(-)
 
-diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
-index a7eca19bbf..9d22f42f4d 100644
---- a/modules/video_capture/windows/device_info_ds.cc
-+++ b/modules/video_capture/windows/device_info_ds.cc
-@@ -20,7 +20,7 @@
- namespace webrtc {
- namespace videocapturemodule {
- 
--BOOL isCaptureDevice(DEV_BROADCAST_HDR *pHdr)
-+BOOL isVideoDevice(DEV_BROADCAST_HDR *pHdr)
+diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
+index 19b32f16b9..f77d791033 100644
+--- a/modules/video_capture/linux/device_info_v4l2.cc
++++ b/modules/video_capture/linux/device_info_v4l2.cc
+@@ -62,7 +62,7 @@ namespace videocapturemodule {
+ void DeviceInfoV4l2::HandleEvent(inotify_event* event, int fd)
  {
-   if (pHdr == NULL) {
-     return FALSE;
-@@ -29,7 +29,7 @@ BOOL isCaptureDevice(DEV_BROADCAST_HDR *pHdr)
-     return FALSE;
-   }
-   DEV_BROADCAST_DEVICEINTERFACE* pDi = (DEV_BROADCAST_DEVICEINTERFACE*)pHdr;
--  return pDi->dbcc_classguid == KSCATEGORY_CAPTURE;
-+  return pDi->dbcc_classguid == KSCATEGORY_VIDEO_CAMERA;
- }
- 
- LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
-@@ -47,7 +47,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
-     else if (uiMsg == WM_DEVICECHANGE)
-     {
-         pParent = (DeviceInfoDS*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
--        if (pParent && isCaptureDevice((PDEV_BROADCAST_HDR)lParam))
-+        if (pParent && isVideoDevice((PDEV_BROADCAST_HDR)lParam))
-         {
-             pParent->DeviceChange();
+     if (event->mask & IN_CREATE) {
+-        if (fd == _fd_v4l || fd == _fd_snd) {
++        if (fd == _fd_v4l) {
+             DeviceChange();
+         } else if ((event->mask & IN_ISDIR) && (fd == _fd_dev)) {
+             if (_wd_v4l < 0) {
+@@ -74,25 +74,15 @@ void DeviceInfoV4l2::HandleEvent(inotify_event* event, int fd)
+                     DeviceChange();
+                 }
+             }
+-            if (_wd_snd < 0) {
+-                usleep(5*1000);
+-                _wd_snd = inotify_add_watch(_fd_snd, "/dev/snd/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
+-                if (_wd_snd >= 0) {
+-                    DeviceChange();
+-                }
+-            }
          }
-@@ -128,7 +128,7 @@ DeviceInfoDS::DeviceInfoDS()
-     DEV_BROADCAST_DEVICEINTERFACE di = { 0 };
-     di.dbcc_size = sizeof(di);
-     di.dbcc_devicetype  = DBT_DEVTYP_DEVICEINTERFACE;
--    di.dbcc_classguid  = KSCATEGORY_CAPTURE;
-+    di.dbcc_classguid  = KSCATEGORY_VIDEO_CAMERA;
+     } else if (event->mask & IN_DELETE) {
+-        if (fd == _fd_v4l || fd == _fd_snd) {
++        if (fd == _fd_v4l) {
+             DeviceChange();
+         }
+     } else if (event->mask & IN_DELETE_SELF) {
+         if (fd == _fd_v4l) {
+             inotify_rm_watch(_fd_v4l, _wd_v4l);
+             _wd_v4l = -1;
+-        } else if (fd == _fd_snd) {
+-            inotify_rm_watch(_fd_snd, _wd_snd);
+-            _wd_snd = -1;
+         } else {
+             assert(false);
+         }
+@@ -159,11 +149,6 @@ int DeviceInfoV4l2::ProcessInotifyEvents()
+                 break;
+             }
+         }
+-        if (EventCheck(_fd_snd) > 0) {
+-            if (HandleEvents(_fd_snd) < 0) {
+-                break;
+-            }
+-        }
+     }
+     return 0;
+ }
+@@ -176,11 +161,9 @@ void DeviceInfoV4l2::InotifyEventThread(void* obj)
+ void DeviceInfoV4l2::InotifyProcess()
+ {
+     _fd_v4l = inotify_init();
+-    _fd_snd = inotify_init();
+     _fd_dev = inotify_init();
+-    if (_fd_v4l >= 0 && _fd_snd >= 0 && _fd_dev >= 0) {
++    if (_fd_v4l >= 0 && _fd_dev >= 0) {
+         _wd_v4l = inotify_add_watch(_fd_v4l, "/dev/v4l/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
+-        _wd_snd = inotify_add_watch(_fd_snd, "/dev/snd/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
+         _wd_dev = inotify_add_watch(_fd_dev, "/dev/", IN_CREATE);
+         ProcessInotifyEvents();
  
-     _hdevnotify = RegisterDeviceNotification(_hwnd, &di,
-                                              DEVICE_NOTIFY_WINDOW_HANDLE);
+@@ -188,16 +171,11 @@ void DeviceInfoV4l2::InotifyProcess()
+           inotify_rm_watch(_fd_v4l, _wd_v4l);
+         }
+ 
+-        if (_wd_snd >= 0) {
+-          inotify_rm_watch(_fd_snd, _wd_snd);
+-        }
+-
+         if (_wd_dev >= 0) {
+           inotify_rm_watch(_fd_dev, _wd_dev);
+         }
+ 
+         close(_fd_v4l);
+-        close(_fd_snd);
+         close(_fd_dev);
+     }
+ }

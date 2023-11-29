@@ -1,0 +1,110 @@
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Mon, 27 Nov 2023 10:33:00 +0000
+Subject: Bug 1865872 - Fix thread and lock annotations in PipeWire video
+ capture r=pehrsons,webrtc-reviewers
+
+This is a simple backport of an WebRTC upstream change.
+
+Upstream commit: a9d497b52dc21497fdfd0e8c03ab2f8559e02d15
+
+Differential Revision: https://phabricator.services.mozilla.com/D194247
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f8332fd7347051f18a029f5c9314698cf3cd68ae
+---
+ modules/video_capture/linux/video_capture_pipewire.cc |  8 +++++---
+ modules/video_capture/linux/video_capture_pipewire.h  |  8 +++++---
+ rtc_base/race_checker.h                               | 11 ++++++++---
+ 3 files changed, 18 insertions(+), 9 deletions(-)
+
+diff --git a/modules/video_capture/linux/video_capture_pipewire.cc b/modules/video_capture/linux/video_capture_pipewire.cc
+index 7b79f15a6c..9d47e3ddbf 100644
+--- a/modules/video_capture/linux/video_capture_pipewire.cc
++++ b/modules/video_capture/linux/video_capture_pipewire.cc
+@@ -126,6 +126,7 @@ int32_t VideoCaptureModulePipeWire::StartCapture(
+   RTC_LOG(LS_VERBOSE) << "Creating new PipeWire stream for node " << node_id_;
+ 
+   PipeWireThreadLoopLock thread_loop_lock(session_->pw_main_loop_);
++  RTC_CHECK_RUNS_SERIALIZED(&pipewire_checker_);
+   pw_properties* reuse_props =
+       pw_properties_new_string("pipewire.client.reuse=1");
+   stream_ = pw_stream_new(session_->pw_core_, "camera-stream", reuse_props);
+@@ -178,6 +179,7 @@ int32_t VideoCaptureModulePipeWire::StopCapture() {
+   RTC_DCHECK_RUN_ON(&api_checker_);
+ 
+   PipeWireThreadLoopLock thread_loop_lock(session_->pw_main_loop_);
++  RTC_CHECK_RUNS_SERIALIZED(&pipewire_checker_);
+   if (stream_) {
+     pw_stream_destroy(stream_);
+     stream_ = nullptr;
+@@ -210,14 +212,14 @@ void VideoCaptureModulePipeWire::OnStreamParamChanged(
+   VideoCaptureModulePipeWire* that =
+       static_cast<VideoCaptureModulePipeWire*>(data);
+   RTC_DCHECK(that);
+-  RTC_CHECK_RUNS_SERIALIZED(&that->capture_checker_);
++  RTC_CHECK_RUNS_SERIALIZED(&that->pipewire_checker_);
+ 
+   if (format && id == SPA_PARAM_Format)
+     that->OnFormatChanged(format);
+ }
+ 
+ void VideoCaptureModulePipeWire::OnFormatChanged(const struct spa_pod* format) {
+-  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
++  RTC_CHECK_RUNS_SERIALIZED(&pipewire_checker_);
+ 
+   uint32_t media_type, media_subtype;
+ 
+@@ -359,7 +361,7 @@ static VideoRotation VideorotationFromPipeWireTransform(uint32_t transform) {
+ }
+ 
+ void VideoCaptureModulePipeWire::ProcessBuffers() {
+-  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
++  RTC_CHECK_RUNS_SERIALIZED(&pipewire_checker_);
+ 
+   while (pw_buffer* buffer = pw_stream_dequeue_buffer(stream_)) {
+     struct spa_meta_header* h;
+diff --git a/modules/video_capture/linux/video_capture_pipewire.h b/modules/video_capture/linux/video_capture_pipewire.h
+index 316fb2449d..620ee520ca 100644
+--- a/modules/video_capture/linux/video_capture_pipewire.h
++++ b/modules/video_capture/linux/video_capture_pipewire.h
+@@ -43,15 +43,17 @@ class VideoCaptureModulePipeWire : public VideoCaptureImpl {
+   void OnFormatChanged(const struct spa_pod* format);
+   void ProcessBuffers();
+ 
++  rtc::RaceChecker pipewire_checker_;
++
+   const rtc::scoped_refptr<PipeWireSession> session_
+       RTC_GUARDED_BY(capture_checker_);
+   int node_id_ RTC_GUARDED_BY(capture_checker_);
+   VideoCaptureCapability configured_capability_
+-      RTC_GUARDED_BY(capture_checker_);
++      RTC_GUARDED_BY(pipewire_checker_);
+   bool started_ RTC_GUARDED_BY(api_lock_);
+ 
+-  struct pw_stream* stream_ RTC_GUARDED_BY(capture_checker_) = nullptr;
+-  struct spa_hook stream_listener_ RTC_GUARDED_BY(capture_checker_);
++  struct pw_stream* stream_ RTC_GUARDED_BY(pipewire_checker_) = nullptr;
++  struct spa_hook stream_listener_ RTC_GUARDED_BY(pipewire_checker_);
+ };
+ }  // namespace videocapturemodule
+ }  // namespace webrtc
+diff --git a/rtc_base/race_checker.h b/rtc_base/race_checker.h
+index 4d574601eb..00bab52f33 100644
+--- a/rtc_base/race_checker.h
++++ b/rtc_base/race_checker.h
+@@ -62,9 +62,14 @@ class RTC_SCOPED_LOCKABLE RaceCheckerScopeDoNothing {
+ }  // namespace internal
+ }  // namespace rtc
+ 
+-#define RTC_CHECK_RUNS_SERIALIZED(x)               \
+-  rtc::internal::RaceCheckerScope race_checker(x); \
+-  RTC_CHECK(!race_checker.RaceDetected())
++#define RTC_CHECK_RUNS_SERIALIZED(x) RTC_CHECK_RUNS_SERIALIZED_NEXT(x, __LINE__)
++
++#define RTC_CHECK_RUNS_SERIALIZED_NEXT(x, suffix) \
++  RTC_CHECK_RUNS_SERIALIZED_IMPL(x, suffix)
++
++#define RTC_CHECK_RUNS_SERIALIZED_IMPL(x, suffix)          \
++  rtc::internal::RaceCheckerScope race_checker##suffix(x); \
++  RTC_CHECK(!race_checker##suffix.RaceDetected())
+ 
+ #if RTC_DCHECK_IS_ON
+ #define RTC_DCHECK_RUNS_SERIALIZED(x)              \
