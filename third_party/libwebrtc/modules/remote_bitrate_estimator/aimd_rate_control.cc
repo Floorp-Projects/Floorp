@@ -79,7 +79,9 @@ AimdRateControl::AimdRateControl(const FieldTrialsView& key_value_config,
       rtt_(kDefaultRtt),
       send_side_(send_side),
       no_bitrate_increase_in_alr_(
-          key_value_config.IsEnabled("WebRTC-DontIncreaseDelayBasedBweInAlr")) {
+          key_value_config.IsEnabled("WebRTC-DontIncreaseDelayBasedBweInAlr")),
+      subtract_additional_backoff_term_(!key_value_config.IsDisabled(
+          "WebRTC-Bwe-SubtractAdditionalBackoffTerm")) {
   ParseFieldTrial(
       {&disable_estimate_bounded_increase_,
        &use_current_estimate_as_min_upper_bound_},
@@ -287,6 +289,11 @@ void AimdRateControl::ChangeBitrate(const RateControlInput& input,
       // Set bit rate to something slightly lower than the measured throughput
       // to get rid of any self-induced delay.
       decreased_bitrate = estimated_throughput * beta_;
+      if (decreased_bitrate > DataRate::KilobitsPerSec(5) &&
+          subtract_additional_backoff_term_) {
+        decreased_bitrate -= DataRate::KilobitsPerSec(5);
+      }
+
       if (decreased_bitrate > current_bitrate_) {
         // TODO(terelius): The link_capacity estimate may be based on old
         // throughput measurements. Relying on them may lead to unnecessary
