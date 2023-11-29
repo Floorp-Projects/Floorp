@@ -418,7 +418,7 @@ class TestInfoReport(TestInfo):
         # get historical data from test-info job artifact; if missing get fresh
         url = self.get_testinfoall_index_url()
         print("INFO: requesting runcounts url: %s" % url)
-        testrundata = self.get_url(url)
+        olddata = self.get_url(url)
 
         # fill in any holes we have
         endday = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
@@ -429,14 +429,14 @@ class TestInfoReport(TestInfo):
         # build list of dates with missing data
         while startday < endday:
             nextday = startday + datetime.timedelta(days=1)
-            if not testrundata.get(str(nextday.date()), {}):
+            if not olddata.get(str(nextday.date()), {}):
                 url = "https://treeherder.mozilla.org/api/groupsummary/"
                 url += "?startdate=%s&enddate=%s" % (
                     startday.date(),
                     nextday.date(),
                 )
                 urls_to_fetch.append([str(nextday.date()), url])
-                testrundata[str(nextday.date())] = {}
+            testrundata[str(nextday.date())] = olddata[str(nextday.date())]
 
             startday = nextday
 
