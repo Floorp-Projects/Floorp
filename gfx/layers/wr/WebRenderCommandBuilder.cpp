@@ -2210,15 +2210,15 @@ void WebRenderCommandBuilder::PopOverrideForASR(
   mClipManager.PopOverrideForASR(aASR);
 }
 
-static wr::WrRotation ToWrRotation(VideoInfo::Rotation aRotation) {
+static wr::WrRotation ToWrRotation(VideoRotation aRotation) {
   switch (aRotation) {
-    case VideoInfo::Rotation::kDegree_0:
+    case VideoRotation::kDegree_0:
       return wr::WrRotation::Degree0;
-    case VideoInfo::Rotation::kDegree_90:
+    case VideoRotation::kDegree_90:
       return wr::WrRotation::Degree90;
-    case VideoInfo::Rotation::kDegree_180:
+    case VideoRotation::kDegree_180:
       return wr::WrRotation::Degree180;
-    case VideoInfo::Rotation::kDegree_270:
+    case VideoRotation::kDegree_270:
       return wr::WrRotation::Degree270;
   }
   return wr::WrRotation::Degree0;

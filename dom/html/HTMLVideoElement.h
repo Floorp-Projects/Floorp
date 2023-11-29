@@ -85,9 +85,7 @@ class HTMLVideoElement final : public HTMLMediaElement {
 
   uint32_t VideoHeight();
 
-  VideoInfo::Rotation RotationDegrees() const {
-    return mMediaInfo.mVideo.mRotation;
-  }
+  VideoRotation RotationDegrees() const { return mMediaInfo.mVideo.mRotation; }
 
   bool HasAlpha() const { return mMediaInfo.mVideo.HasAlpha(); }
 

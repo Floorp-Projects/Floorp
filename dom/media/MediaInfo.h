@@ -329,15 +329,16 @@ class TrackInfo {
 // String version of track type.
 const char* TrackTypeToStr(TrackInfo::TrackType aTrack);
 
+enum class VideoRotation {
+  kDegree_0 = 0,
+  kDegree_90 = 90,
+  kDegree_180 = 180,
+  kDegree_270 = 270,
+};
+
 // Stores info relevant to presenting media frames.
 class VideoInfo : public TrackInfo {
  public:
-  enum Rotation {
-    kDegree_0 = 0,
-    kDegree_90 = 90,
-    kDegree_180 = 180,
-    kDegree_270 = 270,
-  };
   VideoInfo() : VideoInfo(-1, -1) {}
 
   VideoInfo(int32_t aWidth, int32_t aHeight)
@@ -350,7 +351,7 @@ class VideoInfo : public TrackInfo {
         mImage(aSize),
         mCodecSpecificConfig(new MediaByteBuffer),
         mExtraData(new MediaByteBuffer),
-        mRotation(kDegree_0) {}
+        mRotation(VideoRotation::kDegree_0) {}
 
   VideoInfo(const VideoInfo& aOther) = default;
 
@@ -409,17 +410,17 @@ class VideoInfo : public TrackInfo {
     return imageRect;
   }
 
-  Rotation ToSupportedRotation(int32_t aDegree) const {
+  VideoRotation ToSupportedRotation(int32_t aDegree) const {
     switch (aDegree) {
       case 90:
-        return kDegree_90;
+        return VideoRotation::kDegree_90;
       case 180:
-        return kDegree_180;
+        return VideoRotation::kDegree_180;
       case 270:
-        return kDegree_270;
+        return VideoRotation::kDegree_270;
       default:
         NS_WARNING_ASSERTION(aDegree == 0, "Invalid rotation degree, ignored");
-        return kDegree_0;
+        return VideoRotation::kDegree_0;
     }
   }
 
@@ -438,7 +439,7 @@ class VideoInfo : public TrackInfo {
 
   // Describing how many degrees video frames should be rotated in clock-wise to
   // get correct view.
-  Rotation mRotation;
+  VideoRotation mRotation;
 
   // Should be 8, 10 or 12. Default value is 8.
   gfx::ColorDepth mColorDepth = gfx::ColorDepth::COLOR_8;

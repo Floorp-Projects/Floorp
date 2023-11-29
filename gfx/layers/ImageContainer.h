@@ -30,7 +30,6 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/UniquePtr.h"
-#include "MediaInfo.h"
 #include "nsTHashMap.h"
 
 #ifdef XP_WIN
@@ -42,6 +41,8 @@ struct ID3D10ShaderResourceView;
 typedef void* HANDLE;
 
 namespace mozilla {
+
+enum class VideoRotation;
 
 namespace layers {
 
@@ -497,12 +498,12 @@ class ImageContainer final : public SupportsThreadSafeWeakPtr<ImageContainer> {
     return mTransformHint;
   }
 
-  void SetRotation(VideoInfo::Rotation aRotation) {
+  void SetRotation(VideoRotation aRotation) {
     MOZ_ASSERT(NS_IsMainThread());
     mRotation = aRotation;
   }
 
-  VideoInfo::Rotation GetRotation() const {
+  VideoRotation GetRotation() const {
     MOZ_ASSERT(NS_IsMainThread());
     return mRotation;
   }
@@ -645,7 +646,7 @@ class ImageContainer final : public SupportsThreadSafeWeakPtr<ImageContainer> {
   gfx::Matrix mTransformHint MOZ_GUARDED_BY(mRecursiveMutex);
 
   // Main thread only.
-  VideoInfo::Rotation mRotation = VideoInfo::Rotation::kDegree_0;
+  VideoRotation mRotation;
 
   RefPtr<BufferRecycleBin> mRecycleBin MOZ_GUARDED_BY(mRecursiveMutex);
 
