@@ -23,6 +23,22 @@
 
 namespace webrtc {
 namespace {
+const int kMinAv1SpatialLayerLongSideLength = 240;
+const int kMinAv1SpatialLayerShortSideLength = 135;
+
+int GetLimitedNumSpatialLayers(int width, int height) {
+  const bool is_landscape = width >= height;
+  const int min_width = is_landscape ? kMinAv1SpatialLayerLongSideLength
+                                     : kMinAv1SpatialLayerShortSideLength;
+  const int min_height = is_landscape ? kMinAv1SpatialLayerShortSideLength
+                                      : kMinAv1SpatialLayerLongSideLength;
+  const int num_layers_fit_horz = static_cast<int>(
+      std::floor(1 + std::max(0.0f, std::log2(1.0f * width / min_width))));
+  const int num_layers_fit_vert = static_cast<int>(
+      std::floor(1 + std::max(0.0f, std::log2(1.0f * height / min_height))));
+  return std::min(num_layers_fit_horz, num_layers_fit_vert);
+}
+
 absl::optional<ScalabilityMode> BuildScalabilityMode(int num_temporal_layers,
                                                      int num_spatial_layers) {
   char name[20];
@@ -67,6 +83,16 @@ bool SetAv1SvcConfig(VideoCodec& video_codec,
       RTC_LOG(LS_WARNING) << "Scalability mode is not set, using 'L1T1'.";
       scalability_mode = ScalabilityMode::kL1T1;
     }
+  }
+
+  if (ScalabilityMode reduced = LimitNumSpatialLayers(
+          *scalability_mode,
+          GetLimitedNumSpatialLayers(video_codec.width, video_codec.height));
+      *scalability_mode != reduced) {
+    RTC_LOG(LS_WARNING) << "Reduced number of spatial layers from "
+                        << ScalabilityModeToString(*scalability_mode) << " to "
+                        << ScalabilityModeToString(reduced);
+    scalability_mode = reduced;
   }
 
   std::unique_ptr<ScalableVideoController> structure =
