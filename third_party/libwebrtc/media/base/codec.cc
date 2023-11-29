@@ -387,11 +387,10 @@ bool HasTransportCc(const Codec& codec) {
       FeedbackParam(kRtcpFbParamTransportCc, kParamValueEmpty));
 }
 
-const VideoCodec* FindMatchingCodec(
-    const std::vector<VideoCodec>& supported_codecs,
-    const VideoCodec& codec) {
+const Codec* FindMatchingVideoCodec(const std::vector<Codec>& supported_codecs,
+                                    const Codec& codec) {
   webrtc::SdpVideoFormat sdp_video_format{codec.name, codec.params};
-  for (const VideoCodec& supported_codec : supported_codecs) {
+  for (const Codec& supported_codec : supported_codecs) {
     if (sdp_video_format.IsSameCodec(
             {supported_codec.name, supported_codec.params})) {
       return &supported_codec;
@@ -400,12 +399,12 @@ const VideoCodec* FindMatchingCodec(
   return nullptr;
 }
 
-std::vector<const VideoCodec*> FindAllMatchingCodecs(
-    const std::vector<VideoCodec>& supported_codecs,
-    const VideoCodec& codec) {
-  std::vector<const VideoCodec*> result;
+std::vector<const Codec*> FindAllMatchingCodecs(
+    const std::vector<Codec>& supported_codecs,
+    const Codec& codec) {
+  std::vector<const Codec*> result;
   webrtc::SdpVideoFormat sdp(codec.name, codec.params);
-  for (const VideoCodec& supported_codec : supported_codecs) {
+  for (const Codec& supported_codec : supported_codecs) {
     if (sdp.IsSameCodec({supported_codec.name, supported_codec.params})) {
       result.push_back(&supported_codec);
     }
