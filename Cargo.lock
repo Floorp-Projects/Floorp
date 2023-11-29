@@ -6196,6 +6196,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
+ "thiserror",
  "time 0.3.23",
  "tokio",
  "tokio-stream",
