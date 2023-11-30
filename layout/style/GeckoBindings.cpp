@@ -808,12 +808,6 @@ bool Gecko_IsTableBorderNonzero(const Element* aElement) {
          (val->Type() != nsAttrValue::eInteger || val->GetIntegerValue() != 0);
 }
 
-bool Gecko_IsBrowserFrame(const Element* aElement) {
-  nsIMozBrowserFrame* browserFrame =
-      const_cast<Element*>(aElement)->GetAsMozBrowserFrame();
-  return browserFrame && browserFrame->GetReallyIsBrowser();
-}
-
 bool Gecko_IsSelectListBox(const Element* aElement) {
   const auto* select = HTMLSelectElement::FromNode(aElement);
   return select && !select->IsCombobox();

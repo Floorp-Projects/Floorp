@@ -352,11 +352,9 @@
 }
 
 :fullscreen:not(:root) {
+  -moz-top-layer: top !important;
   position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
+  inset: 0 !important;
   width: 100% !important;
   height: 100% !important;
   margin: 0 !important;
@@ -367,14 +365,6 @@
   box-sizing: border-box !important;
   object-fit: contain;
   transform: none !important;
-}
-
-xul|*:fullscreen:not(:root, [hidden="true"]) {
-  /* The position: fixed; property above used to force the computed display
-   * value to block. It is no longer the case now, so we manually set it here to
-   * maintain the old behaviour. We should probably not do this, but we don't
-   * fullscreen XUL element that frequently either. */
-  display: block;
 }
 
 /* This pseudo-class is used to remove the inertness for the topmost modal
@@ -403,18 +393,11 @@ xul|*:fullscreen:not(:root, [hidden="true"]) {
   color: CanvasText;
 }
 
-/* Selectors here should match the check in
- * nsViewportFrame.cpp:ShouldInTopLayerForFullscreen() */
-:fullscreen:not(:root, :-moz-browser-frame) {
-  -moz-top-layer: top !important;
-}
-
 ::backdrop {
   -moz-top-layer: top !important;
   display: block;
   position: fixed;
-  top: 0; left: 0;
-  right: 0; bottom: 0;
+  inset: 0;
   /* This prevents undesired interactions with the selection code. */
   user-select: none;
 }
