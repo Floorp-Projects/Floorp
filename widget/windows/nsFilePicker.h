@@ -9,6 +9,7 @@
 
 #include <windows.h>
 
+#include "mozilla/MozPromise.h"
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
 #include "nsCOMArray.h"
@@ -51,6 +52,8 @@ class nsFilePicker : public nsBaseWinFilePicker {
   using Maybe = mozilla::Maybe<T>;
   template <typename T>
   using Result = mozilla::Result<T, HRESULT>;
+  template <typename Res>
+  using FPPromise = RefPtr<mozilla::MozPromise<Maybe<Res>, HRESULT, true>>;
 
   using Command = mozilla::widget::filedialog::Command;
   using Results = mozilla::widget::filedialog::Results;
@@ -84,15 +87,15 @@ class nsFilePicker : public nsBaseWinFilePicker {
 
  private:
   // Show the dialog out-of-process.
-  static Result<Maybe<Results>> ShowFilePickerRemote(
+  static FPPromise<Results> ShowFilePickerRemote(
       HWND aParent, FileDialogType type, nsTArray<Command> const& commands);
-  static Result<Maybe<nsString>> ShowFolderPickerRemote(
+  static FPPromise<nsString> ShowFolderPickerRemote(
       HWND aParent, nsTArray<Command> const& commands);
 
   // Show the dialog in-process.
-  static Result<Maybe<Results>> ShowFilePickerLocal(
+  static FPPromise<Results> ShowFilePickerLocal(
       HWND aParent, FileDialogType type, nsTArray<Command> const& commands);
-  static Result<Maybe<nsString>> ShowFolderPickerLocal(
+  static FPPromise<nsString> ShowFolderPickerLocal(
       HWND aParent, nsTArray<Command> const& commands);
 
  protected:
