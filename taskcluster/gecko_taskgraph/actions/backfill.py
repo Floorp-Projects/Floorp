@@ -286,7 +286,7 @@ def add_task_with_original_manifests(
     """
     # This step takes a lot of time when executed locally
     logger.info("Retreving the full task graph and labels.")
-    decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
+    decision_task_id, full_task_graph, label_to_taskid, _ = fetch_graph_and_labels(
         parameters, graph_config
     )
 
@@ -417,7 +417,7 @@ def add_all_browsertime(parameters, graph_config, input, task_group_id, task_id)
     https://firefox-source-docs.mozilla.org/taskcluster/actions.html#testing-the-action-locally
     """
     logger.info("Retreving the full task graph and labels.")
-    decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
+    decision_task_id, full_task_graph, label_to_taskid, _ = fetch_graph_and_labels(
         parameters, graph_config
     )
 

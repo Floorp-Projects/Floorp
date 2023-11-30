@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+import itertools
 import logging
 import sys
 import textwrap
@@ -145,7 +146,7 @@ def retrigger_decision_action(parameters, graph_config, input, task_group_id, ta
     },
 )
 def retrigger_action(parameters, graph_config, input, task_group_id, task_id):
-    decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
+    decision_task_id, full_task_graph, label_to_taskid, _ = fetch_graph_and_labels(
         parameters, graph_config
     )
 
@@ -199,11 +200,13 @@ def retrigger_action(parameters, graph_config, input, task_group_id, task_id):
 def rerun_action(parameters, graph_config, input, task_group_id, task_id):
     task = get_task_definition(task_id)
     parameters = dict(parameters)
-    decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
+    decision_task_id, full_task_graph, label_to_taskid, label_to_taskids = fetch_graph_and_labels(
         parameters, graph_config
     )
     label = task["metadata"]["name"]
-    if task_id not in label_to_taskid.values():
+    if task_id not in itertools.chain(*label_to_taskid.values()):
+        # XXX the error message is wrong, we're also looking at label_to_taskid
+        #     from action and cron tasks on that revision
         logger.error(
             "Refusing to rerun {}: taskId {} not in decision task {} label_to_taskid!".format(
                 label, task_id, decision_task_id
@@ -258,7 +261,7 @@ def _rerun_task(task_id, label):
     },
 )
 def retrigger_multiple(parameters, graph_config, input, task_group_id, task_id):
-    decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
+    decision_task_id, full_task_graph, label_to_taskid, label_to_taskids = fetch_graph_and_labels(
         parameters, graph_config
     )
 
@@ -281,7 +284,8 @@ def retrigger_multiple(parameters, graph_config, input, task_group_id, task_id):
             # In practice, this shouldn't matter, as only completed tasks
             # are pulled in from other pushes and treeherder won't pass
             # those labels.
-            _rerun_task(label_to_taskid[label], label)
+            for rerun_taskid in label_to_taskids[label]:
+                _rerun_task(rerun_taskid, label)
 
         for j in range(times):
             suffix = f"{i}-{j}"

@@ -165,6 +165,7 @@ def fetch_graph_and_labels(parameters, graph_config):
     logger.info("Load taskgraph from JSON.")
     _, full_task_graph = TaskGraph.from_json(full_task_graph)
     label_to_taskid = get_artifact(decision_task_id, "public/label-to-taskid.json")
+    label_to_taskids = {label: [task_id] for label, task_id in label_to_taskid.items()}
 
     logger.info("Fetching additional tasks from action and cron tasks.")
     # fetch everything in parallel; this avoids serializing any delay in downloading
@@ -172,13 +173,14 @@ def fetch_graph_and_labels(parameters, graph_config):
     with futures.ThreadPoolExecutor(CONCURRENCY) as e:
         fetches = []
 
-        # fetch any modifications made by action tasks and swap out new tasks
-        # for old ones
+        # fetch any modifications made by action tasks and add the new tasks
         def fetch_action(task_id):
             logger.info(f"fetching label-to-taskid.json for action task {task_id}")
             try:
                 run_label_to_id = get_artifact(task_id, "public/label-to-taskid.json")
                 label_to_taskid.update(run_label_to_id)
+                for label, task_id in run_label_to_id.items():
+                    label_to_taskids.setdefault(label, []).append(task_id)
             except HTTPError as e:
                 if e.response.status_code != 404:
                     raise
@@ -200,6 +202,8 @@ def fetch_graph_and_labels(parameters, graph_config):
             try:
                 run_label_to_id = get_artifact(task_id, "public/label-to-taskid.json")
                 label_to_taskid.update(run_label_to_id)
+                for label, task_id in run_label_to_id.items():
+                    label_to_taskids.setdefault(label, []).append(task_id)
             except HTTPError as e:
                 if e.response.status_code != 404:
                     raise
@@ -218,7 +222,7 @@ def fetch_graph_and_labels(parameters, graph_config):
         for f in futures.as_completed(fetches):
             f.result()
 
-    return (decision_task_id, full_task_graph, label_to_taskid)
+    return (decision_task_id, full_task_graph, label_to_taskid, label_to_taskids)
 
 
 def create_task_from_def(task_def, level, action_tag=None):

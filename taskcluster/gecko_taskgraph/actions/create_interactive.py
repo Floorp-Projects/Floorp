@@ -105,7 +105,7 @@ def create_interactive_action(parameters, graph_config, input, task_group_id, ta
     # fetch the original task definition from the taskgraph, to avoid
     # creating interactive copies of unexpected tasks.  Note that this only applies
     # to docker-worker tasks, so we can assume the docker-worker payload format.
-    decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
+    decision_task_id, full_task_graph, label_to_taskid, _ = fetch_graph_and_labels(
         parameters, graph_config
     )
     task = get_task_definition(task_id)
