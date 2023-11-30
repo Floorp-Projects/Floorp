@@ -663,6 +663,9 @@ name = "cc"
 version = "1.0.78"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a20104e2335ce8a659d6dd92a51a767a0c062599c73b343fd152cb401e828c3d"
+dependencies = [
+ "jobserver",
+]
 
 [[package]]
 name = "cert_storage"
@@ -3635,6 +3638,7 @@ dependencies = [
  "bindgen 0.69.1",
  "bitflags 2.4.0",
  "bytes",
+ "cc",
  "chrono",
  "env_logger",
  "flate2",
