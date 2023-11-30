@@ -2778,10 +2778,11 @@ dom.contentprocess:
       - 1754658
       - 1777404
       - 1817104
+      - 1866197
     description: >
       The number of times a process crashed early but we could verify it was not
       because of buildID mismatch between the parent and the content processes.
-    expires: "123"
+    expires: "135"
     kind: uint
     notification_emails:
       - alissy@mozilla.com
