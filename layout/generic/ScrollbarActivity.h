@@ -106,6 +106,9 @@ class ScrollbarActivity final : public nsIDOMEventListener {
   nsCOMPtr<dom::EventTarget> mVerticalScrollbar;    // null while inactive
   nsCOMPtr<nsITimer> mFadeTimer;
   uint32_t mNestedActivityCounter = 0;
+  // This boolean is true from the point activity starts to the point BeginFade
+  // runs, and effectively reflects the "active" attribute of the scrollbar.
+  bool mScrollbarEffectivelyVisible = false;
   bool mListeningForScrollbarEvents = false;
   bool mListeningForScrollAreaEvents = false;
   bool mHScrollbarHovered = false;
