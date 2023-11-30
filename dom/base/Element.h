@@ -1309,15 +1309,23 @@ class Element : public FragmentOrElement {
   bool ParseLoadingAttribute(const nsAString& aValue, nsAttrValue& aResult);
 
   // Shadow DOM v1
-  already_AddRefed<ShadowRoot> AttachShadow(const ShadowRootInit& aInit,
-                                            ErrorResult& aError);
+  enum class ShadowRootDeclarative : bool { No, Yes };
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  already_AddRefed<ShadowRoot> AttachShadow(
+      const ShadowRootInit& aInit, ErrorResult& aError,
+      ShadowRootDeclarative aNewShadowIsDeclarative =
+          ShadowRootDeclarative::No);
   bool CanAttachShadowDOM() const;
 
   enum class DelegatesFocus : bool { No, Yes };
+  enum class ShadowRootClonable : bool { No, Yes };
 
   already_AddRefed<ShadowRoot> AttachShadowWithoutNameChecks(
       ShadowRootMode aMode, DelegatesFocus = DelegatesFocus::No,
-      SlotAssignmentMode aSlotAssignmentMode = SlotAssignmentMode::Named);
+      SlotAssignmentMode aSlotAssignmentMode = SlotAssignmentMode::Named,
+      ShadowRootClonable aClonable = ShadowRootClonable::No,
+      ShadowRootDeclarative aDeclarative = ShadowRootDeclarative::No);
 
   // Attach UA Shadow Root if it is not attached.
   enum class NotifyUAWidgetSetup : bool { No, Yes };
