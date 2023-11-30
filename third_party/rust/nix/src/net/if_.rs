@@ -334,6 +334,7 @@ libc_bitflags!(
     target_os = "macos",
     target_os = "netbsd",
     target_os = "openbsd",
+    target_os = "illumos",
 ))]
 #[cfg_attr(docsrs, doc(cfg(all())))]
 mod if_nameindex {
@@ -465,5 +466,6 @@ mod if_nameindex {
     target_os = "macos",
     target_os = "netbsd",
     target_os = "openbsd",
+    target_os = "illumos",
 ))]
 pub use if_nameindex::*;

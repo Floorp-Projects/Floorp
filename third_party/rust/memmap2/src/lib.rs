@@ -4,7 +4,7 @@
 //! which correspond to mapping a [`File`] to a [`&[u8]`](https://doc.rust-lang.org/std/primitive.slice.html)
 //! or [`&mut [u8]`](https://doc.rust-lang.org/std/primitive.slice.html)
 //! respectively. Both function by dereferencing to a slice, allowing the
-//! [`Mmap`]/[`MmapMut`] to be used in the same way you would the equivelant slice
+//! [`Mmap`]/[`MmapMut`] to be used in the same way you would the equivalent slice
 //! types.
 //!
 //! [`File`]: std::fs::File
@@ -35,6 +35,8 @@
 //! However for cases which require configuration of the mapping, then
 //! you can use [`MmapOptions`] in order to further configure a mapping
 //! before you create it.
+
+#![allow(clippy::len_without_is_empty, clippy::missing_safety_doc)]
 
 #[cfg_attr(unix, path = "unix.rs")]
 #[cfg_attr(windows, path = "windows.rs")]
@@ -482,7 +484,7 @@ impl MmapOptions {
             ));
         }
 
-        MmapInner::map_anon(len, self.stack).map(|inner| MmapMut { inner })
+        MmapInner::map_anon(len, self.stack, self.populate).map(|inner| MmapMut { inner })
     }
 
     /// Creates a raw memory map.
@@ -495,6 +497,21 @@ impl MmapOptions {
         let desc = file.as_raw_desc();
 
         MmapInner::map_mut(self.get_len(&file)?, desc.0, self.offset, self.populate)
+            .map(|inner| MmapRaw { inner })
+    }
+
+    /// Creates a read-only raw memory map
+    ///
+    /// This is primarily useful to avoid intermediate `Mmap` instances when
+    /// read-only access to files modified elsewhere are required.
+    ///
+    /// # Errors
+    ///
+    /// This method returns an error when the underlying system call fails
+    pub fn map_raw_read_only<T: MmapAsRawDesc>(&self, file: T) -> Result<MmapRaw> {
+        let desc = file.as_raw_desc();
+
+        MmapInner::map(self.get_len(&file)?, desc.0, self.offset, self.populate)
             .map(|inner| MmapRaw { inner })
     }
 }
@@ -514,7 +531,7 @@ impl MmapOptions {
 /// Dereferencing and accessing the bytes of the buffer may result in page faults (e.g. swapping
 /// the mapped pages into physical memory) though the details of this are platform specific.
 ///
-/// `Mmap` is [`Sync`](std::marker::Sync) and [`Send`](std::marker::Send).
+/// `Mmap` is [`Sync`] and [`Send`].
 ///
 /// ## Safety
 ///
@@ -646,7 +663,7 @@ impl Mmap {
     ///
     /// See [mlock()](https://man7.org/linux/man-pages/man2/mlock.2.html) map page.
     #[cfg(unix)]
-    pub fn lock(&mut self) -> Result<()> {
+    pub fn lock(&self) -> Result<()> {
         self.inner.lock()
     }
 
@@ -654,8 +671,30 @@ impl Mmap {
     ///
     /// See [munlock()](https://man7.org/linux/man-pages/man2/munlock.2.html) map page.
     #[cfg(unix)]
-    pub fn unlock(&mut self) -> Result<()> {
+    pub fn unlock(&self) -> Result<()> {
         self.inner.unlock()
+    }
+
+    /// Adjust the size of the memory mapping.
+    ///
+    /// This will try to resize the memory mapping in place. If
+    /// [`RemapOptions::may_move`] is specified it will move the mapping if it
+    /// could not resize in place, otherwise it will error.
+    ///
+    /// Only supported on Linux.
+    ///
+    /// See the [`mremap(2)`] man page.
+    ///
+    /// # Safety
+    ///
+    /// Resizing the memory mapping beyond the end of the mapped file will
+    /// result in UB should you happen to access memory beyond the end of the
+    /// file.
+    ///
+    /// [`mremap(2)`]: https://man7.org/linux/man-pages/man2/mremap.2.html
+    #[cfg(target_os = "linux")]
+    pub unsafe fn remap(&mut self, new_len: usize, options: RemapOptions) -> Result<()> {
+        self.inner.remap(new_len, options)
     }
 }
 
@@ -837,7 +876,7 @@ impl MmapRaw {
     ///
     /// See [mlock()](https://man7.org/linux/man-pages/man2/mlock.2.html) map page.
     #[cfg(unix)]
-    pub fn lock(&mut self) -> Result<()> {
+    pub fn lock(&self) -> Result<()> {
         self.inner.lock()
     }
 
@@ -845,8 +884,30 @@ impl MmapRaw {
     ///
     /// See [munlock()](https://man7.org/linux/man-pages/man2/munlock.2.html) map page.
     #[cfg(unix)]
-    pub fn unlock(&mut self) -> Result<()> {
+    pub fn unlock(&self) -> Result<()> {
         self.inner.unlock()
+    }
+
+    /// Adjust the size of the memory mapping.
+    ///
+    /// This will try to resize the memory mapping in place. If
+    /// [`RemapOptions::may_move`] is specified it will move the mapping if it
+    /// could not resize in place, otherwise it will error.
+    ///
+    /// Only supported on Linux.
+    ///
+    /// See the [`mremap(2)`] man page.
+    ///
+    /// # Safety
+    ///
+    /// Resizing the memory mapping beyond the end of the mapped file will
+    /// result in UB should you happen to access memory beyond the end of the
+    /// file.
+    ///
+    /// [`mremap(2)`]: https://man7.org/linux/man-pages/man2/mremap.2.html
+    #[cfg(target_os = "linux")]
+    pub unsafe fn remap(&mut self, new_len: usize, options: RemapOptions) -> Result<()> {
+        self.inner.remap(new_len, options)
     }
 }
 
@@ -887,7 +948,7 @@ impl From<MmapMut> for MmapRaw {
 /// Dereferencing and accessing the bytes of the buffer may result in page faults (e.g. swapping
 /// the mapped pages into physical memory) though the details of this are platform specific.
 ///
-/// `Mmap` is [`Sync`](std::marker::Sync) and [`Send`](std::marker::Send).
+/// `Mmap` is [`Sync`] and [`Send`].
 ///
 /// See [`Mmap`] for the immutable version.
 ///
@@ -1105,7 +1166,7 @@ impl MmapMut {
     ///
     /// See [mlock()](https://man7.org/linux/man-pages/man2/mlock.2.html) map page.
     #[cfg(unix)]
-    pub fn lock(&mut self) -> Result<()> {
+    pub fn lock(&self) -> Result<()> {
         self.inner.lock()
     }
 
@@ -1113,8 +1174,30 @@ impl MmapMut {
     ///
     /// See [munlock()](https://man7.org/linux/man-pages/man2/munlock.2.html) map page.
     #[cfg(unix)]
-    pub fn unlock(&mut self) -> Result<()> {
+    pub fn unlock(&self) -> Result<()> {
         self.inner.unlock()
+    }
+
+    /// Adjust the size of the memory mapping.
+    ///
+    /// This will try to resize the memory mapping in place. If
+    /// [`RemapOptions::may_move`] is specified it will move the mapping if it
+    /// could not resize in place, otherwise it will error.
+    ///
+    /// Only supported on Linux.
+    ///
+    /// See the [`mremap(2)`] man page.
+    ///
+    /// # Safety
+    ///
+    /// Resizing the memory mapping beyond the end of the mapped file will
+    /// result in UB should you happen to access memory beyond the end of the
+    /// file.
+    ///
+    /// [`mremap(2)`]: https://man7.org/linux/man-pages/man2/mremap.2.html
+    #[cfg(target_os = "linux")]
+    pub unsafe fn remap(&mut self, new_len: usize, options: RemapOptions) -> Result<()> {
+        self.inner.remap(new_len, options)
     }
 }
 
@@ -1160,14 +1243,60 @@ impl fmt::Debug for MmapMut {
     }
 }
 
+/// Options for [`Mmap::remap`] and [`MmapMut::remap`].
+#[derive(Copy, Clone, Default, Debug)]
+#[cfg(target_os = "linux")]
+pub struct RemapOptions {
+    may_move: bool,
+}
+
+#[cfg(target_os = "linux")]
+impl RemapOptions {
+    /// Creates a mew set of options for resizing a memory map.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Controls whether the memory map can be moved if it is not possible to
+    /// resize it in place.
+    ///
+    /// If false then the memory map is guaranteed to remain at the same
+    /// address when being resized but attempting to resize will return an
+    /// error if the new memory map would overlap with something else in the
+    /// current process' memory.
+    ///
+    /// By default this is false.
+    ///
+    /// # `may_move` and `StableDeref`
+    /// If the `stable_deref_trait` feature is enabled then [`Mmap`] and
+    /// [`MmapMut`] implement `StableDeref`. `StableDeref` promises that the
+    /// memory map dereferences to a fixed address, however, calling `remap`
+    /// with `may_move` set may result in the backing memory of the mapping
+    /// being moved to a new address. This may cause UB in other code
+    /// depending on the `StableDeref` guarantees.
+    pub fn may_move(mut self, may_move: bool) -> Self {
+        self.may_move = may_move;
+        self
+    }
+
+    pub(crate) fn into_flags(self) -> libc::c_int {
+        if self.may_move {
+            libc::MREMAP_MAYMOVE
+        } else {
+            0
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     extern crate tempfile;
 
     #[cfg(unix)]
     use crate::advice::Advice;
-    use std::fs::OpenOptions;
+    use std::fs::{File, OpenOptions};
     use std::io::{Read, Write};
+    use std::mem;
     #[cfg(unix)]
     use std::os::unix::io::AsRawFd;
     #[cfg(windows)]
@@ -1188,7 +1317,7 @@ mod test {
             .read(true)
             .write(true)
             .create(true)
-            .open(&path)
+            .open(path)
             .unwrap();
 
         file.set_len(expected_len as u64).unwrap();
@@ -1221,7 +1350,7 @@ mod test {
             .read(true)
             .write(true)
             .create(true)
-            .open(&path)
+            .open(path)
             .unwrap();
 
         file.set_len(expected_len as u64).unwrap();
@@ -1253,12 +1382,14 @@ mod test {
             .read(true)
             .write(true)
             .create(true)
-            .open(&path)
+            .open(path)
             .unwrap();
         let mmap = unsafe { Mmap::map(&file).unwrap() };
         assert!(mmap.is_empty());
+        assert_eq!(mmap.as_ptr().align_offset(mem::size_of::<usize>()), 0);
         let mmap = unsafe { MmapMut::map_mut(&file).unwrap() };
         assert!(mmap.is_empty());
+        assert_eq!(mmap.as_ptr().align_offset(mem::size_of::<usize>()), 0);
     }
 
     #[test]
@@ -1306,7 +1437,7 @@ mod test {
             .read(true)
             .write(true)
             .create(true)
-            .open(&path)
+            .open(path)
             .unwrap();
         file.set_len(128).unwrap();
 
@@ -1330,7 +1461,7 @@ mod test {
             .read(true)
             .write(true)
             .create(true)
-            .open(&path)
+            .open(path)
             .unwrap();
         file.set_len(128).unwrap();
         let write = b"abc123";
@@ -1356,7 +1487,7 @@ mod test {
             .read(true)
             .write(true)
             .create(true)
-            .open(&path)
+            .open(path)
             .unwrap();
         file.set_len(128).unwrap();
 
@@ -1392,7 +1523,7 @@ mod test {
             .read(true)
             .write(true)
             .create(true)
-            .open(&path)
+            .open(path)
             .unwrap();
         file.set_len(128).unwrap();
 
@@ -1417,10 +1548,10 @@ mod test {
             .read(true)
             .write(true)
             .create(true)
-            .open(&path)
+            .open(path)
             .unwrap();
 
-        let offset = u32::max_value() as u64 + 2;
+        let offset = u32::MAX as u64 + 2;
         let len = 5432;
         file.set_len(offset + len as u64).unwrap();
 
@@ -1482,7 +1613,7 @@ mod test {
 
         let mmap = mmap.make_exec().expect("make_exec");
 
-        let jitfn: extern "C" fn() -> u8 = unsafe { std::mem::transmute(mmap.as_ptr()) };
+        let jitfn: extern "C" fn() -> u8 = unsafe { mem::transmute(mmap.as_ptr()) };
         assert_eq!(jitfn(), 0xab);
     }
 
@@ -1504,7 +1635,7 @@ mod test {
             .read(true)
             .write(true)
             .create(true)
-            .open(&tempdir.path().join("jit_x86"))
+            .open(tempdir.path().join("jit_x86"))
             .expect("open");
 
         file.set_len(4096).expect("set_len");
@@ -1524,7 +1655,7 @@ mod test {
             .read(true)
             .write(true)
             .create(true)
-            .open(&path)
+            .open(path)
             .expect("open");
         file.set_len(256_u64).expect("set_len");
 
@@ -1570,7 +1701,7 @@ mod test {
             .read(true)
             .write(true)
             .create(true)
-            .open(&path)
+            .open(path)
             .expect("open");
         file.set_len(256_u64).expect("set_len");
 
@@ -1624,10 +1755,26 @@ mod test {
             .read(true)
             .write(true)
             .create(true)
-            .open(&path)
+            .open(path)
             .expect("open");
         file.write_all(b"abc123").unwrap();
         let mmap = MmapOptions::new().map_raw(&file).unwrap();
+        assert_eq!(mmap.len(), 6);
+        assert!(!mmap.as_ptr().is_null());
+        assert_eq!(unsafe { std::ptr::read(mmap.as_ptr()) }, b'a');
+    }
+
+    #[test]
+    fn raw_read_only() {
+        let tempdir = tempfile::tempdir().unwrap();
+        let path = tempdir.path().join("mmaprawro");
+
+        File::create(&path).unwrap().write_all(b"abc123").unwrap();
+
+        let mmap = MmapOptions::new()
+            .map_raw_read_only(&File::open(&path).unwrap())
+            .unwrap();
+
         assert_eq!(mmap.len(), 6);
         assert!(!mmap.as_ptr().is_null());
         assert_eq!(unsafe { std::ptr::read(mmap.as_ptr()) }, b'a');
@@ -1662,14 +1809,14 @@ mod test {
             .read(true)
             .write(true)
             .create(true)
-            .open(&path)
+            .open(path)
             .unwrap();
 
         file.set_len(expected_len as u64).unwrap();
 
         // Test MmapMut::advise
         let mut mmap = unsafe { MmapMut::map_mut(&file).unwrap() };
-        mmap.advise(Advice::Random)
+        mmap.advise(Advice::random())
             .expect("mmap advising should be supported on unix");
 
         let len = mmap.len();
@@ -1681,7 +1828,7 @@ mod test {
         // check that the mmap is empty
         assert_eq!(&zeros[..], &mmap[..]);
 
-        mmap.advise_range(Advice::Sequential, 0, mmap.len())
+        mmap.advise_range(Advice::sequential(), 0, mmap.len())
             .expect("mmap advising should be supported on unix");
 
         // write values into the mmap
@@ -1693,11 +1840,26 @@ mod test {
         // Set advice and Read from the read-only map
         let mmap = unsafe { Mmap::map(&file).unwrap() };
 
-        mmap.advise(Advice::Random)
+        mmap.advise(Advice::random())
             .expect("mmap advising should be supported on unix");
 
         // read values back
         assert_eq!(&incr[..], &mmap[..]);
+    }
+
+    #[test]
+    #[cfg(target_os = "linux")]
+    fn advise_writes_unsafely() {
+        let mut mmap = MmapMut::map_anon(4096).unwrap();
+        mmap.as_mut().fill(255);
+        let mmap = mmap.make_read_only().unwrap();
+
+        let a = mmap.as_ref()[0];
+        mmap.advise(unsafe { Advice::dont_need() }).unwrap();
+        let b = mmap.as_ref()[0];
+
+        assert_eq!(a, 255);
+        assert_eq!(b, 0);
     }
 
     /// Returns true if a non-zero amount of memory is locked.
@@ -1724,11 +1886,11 @@ mod test {
             .read(true)
             .write(true)
             .create(true)
-            .open(&path)
+            .open(path)
             .unwrap();
         file.set_len(128).unwrap();
 
-        let mut mmap = unsafe { Mmap::map(&file).unwrap() };
+        let mmap = unsafe { Mmap::map(&file).unwrap() };
         #[cfg(target_os = "linux")]
         assert!(!is_locked());
 
@@ -1750,5 +1912,120 @@ mod test {
             .expect("mmap unlock again should not cause problems");
         #[cfg(target_os = "linux")]
         assert!(!is_locked());
+    }
+
+    #[test]
+    #[cfg(target_os = "linux")]
+    fn remap_grow() {
+        use crate::RemapOptions;
+
+        let initial_len = 128;
+        let final_len = 2000;
+
+        let zeros = vec![0u8; final_len];
+        let incr: Vec<u8> = (0..final_len).map(|v| v as u8).collect();
+
+        let file = tempfile::tempfile().unwrap();
+        file.set_len(final_len as u64).unwrap();
+
+        let mut mmap = unsafe { MmapOptions::new().len(initial_len).map_mut(&file).unwrap() };
+        assert_eq!(mmap.len(), initial_len);
+        assert_eq!(&mmap[..], &zeros[..initial_len]);
+
+        unsafe {
+            mmap.remap(final_len, RemapOptions::new().may_move(true))
+                .unwrap()
+        };
+
+        // The size should have been updated
+        assert_eq!(mmap.len(), final_len);
+
+        // Should still be all zeros
+        assert_eq!(&mmap[..], &zeros);
+
+        // Write out to the whole expanded slice.
+        mmap.copy_from_slice(&incr);
+    }
+
+    #[test]
+    #[cfg(target_os = "linux")]
+    fn remap_shrink() {
+        use crate::RemapOptions;
+
+        let initial_len = 20000;
+        let final_len = 400;
+
+        let incr: Vec<u8> = (0..final_len).map(|v| v as u8).collect();
+
+        let file = tempfile::tempfile().unwrap();
+        file.set_len(initial_len as u64).unwrap();
+
+        let mut mmap = unsafe { MmapMut::map_mut(&file).unwrap() };
+        assert_eq!(mmap.len(), initial_len);
+
+        unsafe { mmap.remap(final_len, RemapOptions::new()).unwrap() };
+        assert_eq!(mmap.len(), final_len);
+
+        // Check that the mmap is still writable along the slice length
+        mmap.copy_from_slice(&incr);
+    }
+
+    #[test]
+    #[cfg(target_os = "linux")]
+    #[cfg(target_pointer_width = "32")]
+    fn remap_len_overflow() {
+        use crate::RemapOptions;
+
+        let file = tempfile::tempfile().unwrap();
+        file.set_len(1024).unwrap();
+        let mut mmap = unsafe { MmapOptions::new().len(1024).map(&file).unwrap() };
+
+        let res = unsafe { mmap.remap(0x80000000, RemapOptions::new().may_move(true)) };
+        assert_eq!(
+            res.unwrap_err().to_string(),
+            "memory map length overflows isize"
+        );
+
+        assert_eq!(mmap.len(), 1024);
+    }
+
+    #[test]
+    #[cfg(target_os = "linux")]
+    fn remap_with_offset() {
+        use crate::RemapOptions;
+
+        let offset = 77;
+        let initial_len = 128;
+        let final_len = 2000;
+
+        let zeros = vec![0u8; final_len];
+        let incr: Vec<u8> = (0..final_len).map(|v| v as u8).collect();
+
+        let file = tempfile::tempfile().unwrap();
+        file.set_len(final_len as u64 + offset).unwrap();
+
+        let mut mmap = unsafe {
+            MmapOptions::new()
+                .len(initial_len)
+                .offset(offset)
+                .map_mut(&file)
+                .unwrap()
+        };
+        assert_eq!(mmap.len(), initial_len);
+        assert_eq!(&mmap[..], &zeros[..initial_len]);
+
+        unsafe {
+            mmap.remap(final_len, RemapOptions::new().may_move(true))
+                .unwrap()
+        };
+
+        // The size should have been updated
+        assert_eq!(mmap.len(), final_len);
+
+        // Should still be all zeros
+        assert_eq!(&mmap[..], &zeros);
+
+        // Write out to the whole expanded slice.
+        mmap.copy_from_slice(&incr);
     }
 }

@@ -38,7 +38,7 @@ exit 23";
             MsFlags::empty(),
             NONE,
         )
-        .unwrap_or_else(|e| panic!("mount failed: {}", e));
+        .unwrap_or_else(|e| panic!("mount failed: {e}"));
 
         let test_path = tempdir.path().join("test");
 
@@ -67,17 +67,17 @@ exit 23";
                     .unwrap();
                     process::exit(0);
                 } else {
-                    panic!("open failed: {}", e);
+                    panic!("open failed: {e}");
                 }
             })
             .and_then(|mut f| f.write(SCRIPT_CONTENTS))
-            .unwrap_or_else(|e| panic!("write failed: {}", e));
+            .unwrap_or_else(|e| panic!("write failed: {e}"));
 
         // Verify read.
         let mut buf = Vec::new();
         File::open(&test_path)
             .and_then(|mut f| f.read_to_end(&mut buf))
-            .unwrap_or_else(|e| panic!("read failed: {}", e));
+            .unwrap_or_else(|e| panic!("read failed: {e}"));
         assert_eq!(buf, SCRIPT_CONTENTS);
 
         // Verify execute.
@@ -85,13 +85,12 @@ exit 23";
             EXPECTED_STATUS,
             Command::new(&test_path)
                 .status()
-                .unwrap_or_else(|e| panic!("exec failed: {}", e))
+                .unwrap_or_else(|e| panic!("exec failed: {e}"))
                 .code()
                 .unwrap_or_else(|| panic!("child killed by signal"))
         );
 
-        umount(tempdir.path())
-            .unwrap_or_else(|e| panic!("umount failed: {}", e));
+        umount(tempdir.path()).unwrap_or_else(|e| panic!("umount failed: {e}"));
     }
 
     pub fn test_mount_rdonly_disallows_write() {
@@ -104,7 +103,7 @@ exit 23";
             MsFlags::MS_RDONLY,
             NONE,
         )
-        .unwrap_or_else(|e| panic!("mount failed: {}", e));
+        .unwrap_or_else(|e| panic!("mount failed: {e}"));
 
         // EROFS: Read-only file system
         assert_eq!(
@@ -115,8 +114,7 @@ exit 23";
                 .unwrap()
         );
 
-        umount(tempdir.path())
-            .unwrap_or_else(|e| panic!("umount failed: {}", e));
+        umount(tempdir.path()).unwrap_or_else(|e| panic!("umount failed: {e}"));
     }
 
     pub fn test_mount_noexec_disallows_exec() {
@@ -129,7 +127,7 @@ exit 23";
             MsFlags::MS_NOEXEC,
             NONE,
         )
-        .unwrap_or_else(|e| panic!("mount failed: {}", e));
+        .unwrap_or_else(|e| panic!("mount failed: {e}"));
 
         let test_path = tempdir.path().join("test");
 
@@ -139,13 +137,13 @@ exit 23";
             .mode((Mode::S_IRWXU | Mode::S_IRWXG | Mode::S_IRWXO).bits())
             .open(&test_path)
             .and_then(|mut f| f.write(SCRIPT_CONTENTS))
-            .unwrap_or_else(|e| panic!("write failed: {}", e));
+            .unwrap_or_else(|e| panic!("write failed: {e}"));
 
         // Verify that we cannot execute despite a+x permissions being set.
         let mode = stat::Mode::from_bits_truncate(
             fs::metadata(&test_path)
                 .map(|md| md.permissions().mode())
-                .unwrap_or_else(|e| panic!("metadata failed: {}", e)),
+                .unwrap_or_else(|e| panic!("metadata failed: {e}")),
         );
 
         assert!(
@@ -164,8 +162,7 @@ exit 23";
                 .unwrap()
         );
 
-        umount(tempdir.path())
-            .unwrap_or_else(|e| panic!("umount failed: {}", e));
+        umount(tempdir.path()).unwrap_or_else(|e| panic!("umount failed: {e}"));
     }
 
     pub fn test_mount_bind() {
@@ -182,7 +179,7 @@ exit 23";
                 MsFlags::MS_BIND,
                 NONE,
             )
-            .unwrap_or_else(|e| panic!("mount failed: {}", e));
+            .unwrap_or_else(|e| panic!("mount failed: {e}"));
 
             fs::OpenOptions::new()
                 .create(true)
@@ -190,10 +187,10 @@ exit 23";
                 .mode((Mode::S_IRWXU | Mode::S_IRWXG | Mode::S_IRWXO).bits())
                 .open(mount_point.path().join(file_name))
                 .and_then(|mut f| f.write(SCRIPT_CONTENTS))
-                .unwrap_or_else(|e| panic!("write failed: {}", e));
+                .unwrap_or_else(|e| panic!("write failed: {e}"));
 
             umount(mount_point.path())
-                .unwrap_or_else(|e| panic!("umount failed: {}", e));
+                .unwrap_or_else(|e| panic!("umount failed: {e}"));
         }
 
         // Verify the file written in the mount shows up in source directory, even
@@ -202,7 +199,7 @@ exit 23";
         let mut buf = Vec::new();
         File::open(tempdir.path().join(file_name))
             .and_then(|mut f| f.read_to_end(&mut buf))
-            .unwrap_or_else(|e| panic!("read failed: {}", e));
+            .unwrap_or_else(|e| panic!("read failed: {e}"));
         assert_eq!(buf, SCRIPT_CONTENTS);
     }
 
@@ -214,8 +211,7 @@ exit 23";
             let stderr = io::stderr();
             let mut handle = stderr.lock();
             writeln!(handle,
-                     "unshare failed: {}. Are unprivileged user namespaces available?",
-                     e).unwrap();
+                     "unshare failed: {e}. Are unprivileged user namespaces available?").unwrap();
             writeln!(handle, "mount is not being tested").unwrap();
             // Exit with success because not all systems support unprivileged user namespaces, and
             // that's not what we're testing for.
@@ -226,8 +222,8 @@ exit 23";
         fs::OpenOptions::new()
             .write(true)
             .open("/proc/self/uid_map")
-            .and_then(|mut f| f.write(format!("1000 {} 1\n", uid).as_bytes()))
-            .unwrap_or_else(|e| panic!("could not write uid map: {}", e));
+            .and_then(|mut f| f.write(format!("1000 {uid} 1\n").as_bytes()))
+            .unwrap_or_else(|e| panic!("could not write uid map: {e}"));
     }
 }
 

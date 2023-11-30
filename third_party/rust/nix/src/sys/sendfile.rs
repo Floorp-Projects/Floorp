@@ -1,7 +1,7 @@
 //! Send data from a file to a socket, bypassing userland.
 
 use cfg_if::cfg_if;
-use std::os::unix::io::RawFd;
+use std::os::unix::io::{AsFd, AsRawFd};
 use std::ptr;
 
 use libc::{self, off_t};
@@ -23,16 +23,23 @@ use crate::Result;
 /// For more information, see [the sendfile(2) man page.](https://man7.org/linux/man-pages/man2/sendfile.2.html)
 #[cfg(any(target_os = "android", target_os = "linux"))]
 #[cfg_attr(docsrs, doc(cfg(all())))]
-pub fn sendfile(
-    out_fd: RawFd,
-    in_fd: RawFd,
+pub fn sendfile<F1: AsFd, F2: AsFd>(
+    out_fd: F1,
+    in_fd: F2,
     offset: Option<&mut off_t>,
     count: usize,
 ) -> Result<usize> {
     let offset = offset
         .map(|offset| offset as *mut _)
         .unwrap_or(ptr::null_mut());
-    let ret = unsafe { libc::sendfile(out_fd, in_fd, offset, count) };
+    let ret = unsafe {
+        libc::sendfile(
+            out_fd.as_fd().as_raw_fd(),
+            in_fd.as_fd().as_raw_fd(),
+            offset,
+            count,
+        )
+    };
     Errno::result(ret).map(|r| r as usize)
 }
 
@@ -50,16 +57,23 @@ pub fn sendfile(
 /// For more information, see [the sendfile(2) man page.](https://man7.org/linux/man-pages/man2/sendfile.2.html)
 #[cfg(target_os = "linux")]
 #[cfg_attr(docsrs, doc(cfg(all())))]
-pub fn sendfile64(
-    out_fd: RawFd,
-    in_fd: RawFd,
+pub fn sendfile64<F1: AsFd, F2: AsFd>(
+    out_fd: F1,
+    in_fd: F2,
     offset: Option<&mut libc::off64_t>,
     count: usize,
 ) -> Result<usize> {
     let offset = offset
         .map(|offset| offset as *mut _)
         .unwrap_or(ptr::null_mut());
-    let ret = unsafe { libc::sendfile64(out_fd, in_fd, offset, count) };
+    let ret = unsafe {
+        libc::sendfile64(
+            out_fd.as_fd().as_raw_fd(),
+            in_fd.as_fd().as_raw_fd(),
+            offset,
+            count,
+        )
+    };
     Errno::result(ret).map(|r| r as usize)
 }
 
@@ -156,9 +170,9 @@ cfg_if! {
         /// For more information, see
         /// [the sendfile(2) man page.](https://www.freebsd.org/cgi/man.cgi?query=sendfile&sektion=2)
         #[allow(clippy::too_many_arguments)]
-        pub fn sendfile(
-            in_fd: RawFd,
-            out_sock: RawFd,
+        pub fn sendfile<F1: AsFd, F2: AsFd>(
+            in_fd: F1,
+            out_sock: F2,
             offset: off_t,
             count: Option<usize>,
             headers: Option<&[&[u8]]>,
@@ -175,8 +189,8 @@ cfg_if! {
             let hdtr = headers.or(trailers).map(|_| SendfileHeaderTrailer::new(headers, trailers));
             let hdtr_ptr = hdtr.as_ref().map_or(ptr::null(), |s| &s.0 as *const libc::sf_hdtr);
             let return_code = unsafe {
-                libc::sendfile(in_fd,
-                               out_sock,
+                libc::sendfile(in_fd.as_fd().as_raw_fd(),
+                               out_sock.as_fd().as_raw_fd(),
                                offset,
                                count.unwrap_or(0),
                                hdtr_ptr as *mut libc::sf_hdtr,
@@ -206,9 +220,9 @@ cfg_if! {
         ///
         /// For more information, see
         /// [the sendfile(2) man page.](https://leaf.dragonflybsd.org/cgi/web-man?command=sendfile&section=2)
-        pub fn sendfile(
-            in_fd: RawFd,
-            out_sock: RawFd,
+        pub fn sendfile<F1: AsFd, F2: AsFd>(
+            in_fd: F1,
+            out_sock: F2,
             offset: off_t,
             count: Option<usize>,
             headers: Option<&[&[u8]]>,
@@ -218,8 +232,8 @@ cfg_if! {
             let hdtr = headers.or(trailers).map(|_| SendfileHeaderTrailer::new(headers, trailers));
             let hdtr_ptr = hdtr.as_ref().map_or(ptr::null(), |s| &s.0 as *const libc::sf_hdtr);
             let return_code = unsafe {
-                libc::sendfile(in_fd,
-                               out_sock,
+                libc::sendfile(in_fd.as_fd().as_raw_fd(),
+                               out_sock.as_fd().as_raw_fd(),
                                offset,
                                count.unwrap_or(0),
                                hdtr_ptr as *mut libc::sf_hdtr,
@@ -252,9 +266,9 @@ cfg_if! {
         ///
         /// For more information, see
         /// [the sendfile(2) man page.](https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man2/sendfile.2.html)
-        pub fn sendfile(
-            in_fd: RawFd,
-            out_sock: RawFd,
+        pub fn sendfile<F1: AsFd, F2: AsFd>(
+            in_fd: F1,
+            out_sock: F2,
             offset: off_t,
             count: Option<off_t>,
             headers: Option<&[&[u8]]>,
@@ -264,8 +278,8 @@ cfg_if! {
             let hdtr = headers.or(trailers).map(|_| SendfileHeaderTrailer::new(headers, trailers));
             let hdtr_ptr = hdtr.as_ref().map_or(ptr::null(), |s| &s.0 as *const libc::sf_hdtr);
             let return_code = unsafe {
-                libc::sendfile(in_fd,
-                               out_sock,
+                libc::sendfile(in_fd.as_fd().as_raw_fd(),
+                               out_sock.as_fd().as_raw_fd(),
                                offset,
                                &mut len as *mut off_t,
                                hdtr_ptr as *mut libc::sf_hdtr,

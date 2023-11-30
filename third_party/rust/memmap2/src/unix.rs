@@ -28,6 +28,18 @@ const MAP_POPULATE: libc::c_int = libc::MAP_POPULATE;
 #[cfg(not(any(target_os = "linux", target_os = "android")))]
 const MAP_POPULATE: libc::c_int = 0;
 
+#[cfg(any(
+    target_os = "android",
+    all(target_os = "linux", not(target_env = "musl"))
+))]
+use libc::{mmap64 as mmap, off64_t as off_t};
+
+#[cfg(not(any(
+    target_os = "android",
+    all(target_os = "linux", not(target_env = "musl"))
+)))]
+use libc::{mmap, off_t};
+
 pub struct MmapInner {
     ptr: *mut libc::c_void,
     len: usize,
@@ -36,7 +48,7 @@ pub struct MmapInner {
 impl MmapInner {
     /// Creates a new `MmapInner`.
     ///
-    /// This is a thin wrapper around the `mmap` sytem call.
+    /// This is a thin wrapper around the `mmap` system call.
     fn new(
         len: usize,
         prot: libc::c_int,
@@ -46,7 +58,48 @@ impl MmapInner {
     ) -> io::Result<MmapInner> {
         let alignment = offset % page_size() as u64;
         let aligned_offset = offset - alignment;
-        let aligned_len = len + alignment as usize;
+
+        let (map_len, map_offset) = Self::adjust_mmap_params(len, alignment as usize)?;
+
+        unsafe {
+            let ptr = mmap(
+                ptr::null_mut(),
+                map_len as libc::size_t,
+                prot,
+                flags,
+                file,
+                aligned_offset as off_t,
+            );
+
+            if ptr == libc::MAP_FAILED {
+                Err(io::Error::last_os_error())
+            } else {
+                Ok(Self::from_raw_parts(ptr, len, map_offset))
+            }
+        }
+    }
+
+    fn adjust_mmap_params(len: usize, alignment: usize) -> io::Result<(usize, usize)> {
+        use std::isize;
+
+        // Rust's slice cannot be larger than isize::MAX.
+        // See https://doc.rust-lang.org/std/slice/fn.from_raw_parts.html
+        //
+        // This is not a problem on 64-bit targets, but on 32-bit one
+        // having a file or an anonymous mapping larger than 2GB is quite normal
+        // and we have to prevent it.
+        //
+        // The code below is essentially the same as in Rust's std:
+        // https://github.com/rust-lang/rust/blob/db78ab70a88a0a5e89031d7ee4eccec835dcdbde/library/alloc/src/raw_vec.rs#L495
+        if std::mem::size_of::<usize>() < 8 && len > isize::MAX as usize {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "memory map length overflows isize",
+            ));
+        }
+
+        let map_len = len + alignment;
+        let map_offset = alignment;
 
         // `libc::mmap` does not support zero-size mappings. POSIX defines:
         //
@@ -54,7 +107,7 @@ impl MmapInner {
         // > If `len` is zero, `mmap()` shall fail and no mapping shall be established.
         //
         // So if we would create such a mapping, crate a one-byte mapping instead:
-        let aligned_len = aligned_len.max(1);
+        let map_len = map_len.max(1);
 
         // Note that in that case `MmapInner::len` is still set to zero,
         // and `Mmap` will still dereferences to an empty slice.
@@ -79,25 +132,73 @@ impl MmapInner {
         //
         // (SIGBUS is still possible by mapping a non-empty file and then truncating it
         // to a shorter size, but that is unrelated to this handling of empty files.)
+        Ok((map_len, map_offset))
+    }
 
-        unsafe {
-            let ptr = libc::mmap(
-                ptr::null_mut(),
-                aligned_len as libc::size_t,
-                prot,
-                flags,
-                file,
-                aligned_offset as libc::off_t,
-            );
+    /// Get the current memory mapping as a `(ptr, map_len, offset)` tuple.
+    ///
+    /// Note that `map_len` is the length of the memory mapping itself and
+    /// _not_ the one that would be passed to `from_raw_parts`.
+    fn as_mmap_params(&self) -> (*mut libc::c_void, usize, usize) {
+        let offset = self.ptr as usize % page_size();
+        let len = self.len + offset;
 
-            if ptr == libc::MAP_FAILED {
-                Err(io::Error::last_os_error())
-            } else {
-                Ok(MmapInner {
-                    ptr: ptr.offset(alignment as isize),
-                    len,
-                })
-            }
+        // There are two possible memory layouts we could have, depending on
+        // the length and offset passed when constructing this instance:
+        //
+        // 1. The "normal" memory layout looks like this:
+        //
+        //         |<------------------>|<---------------------->|
+        //     mmap ptr    offset      ptr     public slice
+        //
+        //    That is, we have
+        //    - The start of the page-aligned memory mapping returned by mmap,
+        //      followed by,
+        //    - Some number of bytes that are memory mapped but ignored since
+        //      they are before the byte offset requested by the user, followed
+        //      by,
+        //    - The actual memory mapped slice requested by the user.
+        //
+        //    This maps cleanly to a (ptr, len, offset) tuple.
+        //
+        // 2. Then, we have the case where the user requested a zero-length
+        //    memory mapping. mmap(2) does not support zero-length mappings so
+        //    this crate works around that by actually making a mapping of
+        //    length one. This means that we have
+        //    - A length zero slice, followed by,
+        //    - A single memory mapped byte
+        //
+        //    Note that this only happens if the offset within the page is also
+        //    zero. Otherwise, we have a memory map of offset bytes and not a
+        //    zero-length memory map.
+        //
+        //    This doesn't fit cleanly into a (ptr, len, offset) tuple. Instead,
+        //    we fudge it slightly: a zero-length memory map turns into a
+        //    mapping of length one and can't be told apart outside of this
+        //    method without knowing the original length.
+        if len == 0 {
+            (self.ptr, 1, 0)
+        } else {
+            (unsafe { self.ptr.offset(-(offset as isize)) }, len, offset)
+        }
+    }
+
+    /// Construct this `MmapInner` from its raw components
+    ///
+    /// # Safety
+    ///
+    /// - `ptr` must point to the start of memory mapping that can be freed
+    ///   using `munmap(2)` (i.e. returned by `mmap(2)` or `mremap(2)`)
+    /// - The memory mapping at `ptr` must have a length of `len + offset`.
+    /// - If `len + offset == 0` then the memory mapping must be of length 1.
+    /// - `offset` must be less than the current page size.
+    unsafe fn from_raw_parts(ptr: *mut libc::c_void, len: usize, offset: usize) -> Self {
+        debug_assert_eq!(ptr as usize % page_size(), 0, "ptr not page-aligned");
+        debug_assert!(offset < page_size(), "offset larger than page size");
+
+        Self {
+            ptr: ptr.add(offset),
+            len,
         }
     }
 
@@ -162,12 +263,13 @@ impl MmapInner {
     }
 
     /// Open an anonymous memory map.
-    pub fn map_anon(len: usize, stack: bool) -> io::Result<MmapInner> {
+    pub fn map_anon(len: usize, stack: bool, populate: bool) -> io::Result<MmapInner> {
         let stack = if stack { MAP_STACK } else { 0 };
+        let populate = if populate { MAP_POPULATE } else { 0 };
         MmapInner::new(
             len,
             libc::PROT_READ | libc::PROT_WRITE,
-            libc::MAP_PRIVATE | libc::MAP_ANON | stack,
+            libc::MAP_PRIVATE | libc::MAP_ANON | stack | populate,
             -1,
             0,
         )
@@ -245,9 +347,27 @@ impl MmapInner {
         let offset = offset as isize - alignment as isize;
         let len = len + alignment;
         unsafe {
-            if libc::madvise(self.ptr.offset(offset), len, advice as i32) != 0 {
+            if libc::madvise(self.ptr.offset(offset), len, advice.0) != 0 {
                 Err(io::Error::last_os_error())
             } else {
+                Ok(())
+            }
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    pub fn remap(&mut self, new_len: usize, options: crate::RemapOptions) -> io::Result<()> {
+        let (old_ptr, old_len, offset) = self.as_mmap_params();
+        let (map_len, offset) = Self::adjust_mmap_params(new_len, offset)?;
+
+        unsafe {
+            let new_ptr = libc::mremap(old_ptr, old_len, map_len, options.into_flags());
+
+            if new_ptr == libc::MAP_FAILED {
+                Err(io::Error::last_os_error())
+            } else {
+                // We explicitly don't drop self since the pointer within is no longer valid.
+                ptr::write(self, Self::from_raw_parts(new_ptr, new_len, offset));
                 Ok(())
             }
         }
@@ -276,16 +396,12 @@ impl MmapInner {
 
 impl Drop for MmapInner {
     fn drop(&mut self) {
-        let alignment = self.ptr as usize % page_size();
-        let len = self.len + alignment;
-        let len = len.max(1);
+        let (ptr, len, _) = self.as_mmap_params();
+
         // Any errors during unmapping/closing are ignored as the only way
         // to report them would be through panicking which is highly discouraged
         // in Drop impls, c.f. https://github.com/rust-lang/lang-team/issues/97
-        unsafe {
-            let ptr = self.ptr.offset(-(alignment as isize));
-            libc::munmap(ptr, len as libc::size_t);
-        }
+        unsafe { libc::munmap(ptr, len as libc::size_t) };
     }
 }
 

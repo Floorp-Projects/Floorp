@@ -1,6 +1,6 @@
 use crate::errno::Errno;
 use crate::Result;
-use std::os::unix::io::RawFd;
+use std::os::unix::io::{FromRawFd, OwnedFd};
 
 libc_bitflags! {
     pub struct EfdFlags: libc::c_int {
@@ -10,8 +10,8 @@ libc_bitflags! {
     }
 }
 
-pub fn eventfd(initval: libc::c_uint, flags: EfdFlags) -> Result<RawFd> {
+pub fn eventfd(initval: libc::c_uint, flags: EfdFlags) -> Result<OwnedFd> {
     let res = unsafe { libc::eventfd(initval, flags.bits()) };
 
-    Errno::result(res).map(|r| r as RawFd)
+    Errno::result(res).map(|r| unsafe { OwnedFd::from_raw_fd(r) })
 }

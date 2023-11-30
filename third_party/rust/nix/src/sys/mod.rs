@@ -25,7 +25,6 @@ feature! {
               target_os = "macos",
               target_os = "netbsd",
               target_os = "openbsd"))]
-    #[allow(missing_docs)]
     pub mod event;
 
     #[cfg(any(target_os = "android", target_os = "linux"))]
@@ -66,6 +65,12 @@ feature! {
 feature! {
     #![feature = "personality"]
     pub mod personality;
+}
+
+#[cfg(target_os = "linux")]
+feature! {
+    #![feature = "process"]
+    pub mod prctl;
 }
 
 feature! {
@@ -111,7 +116,6 @@ feature! {
     pub mod resource;
 }
 
-#[cfg(not(target_os = "redox"))]
 feature! {
     #![feature = "poll"]
     pub mod select;
@@ -139,7 +143,6 @@ feature! {
     pub mod signalfd;
 }
 
-#[cfg(not(target_os = "redox"))]
 feature! {
     #![feature = "socket"]
     #[allow(missing_docs)]

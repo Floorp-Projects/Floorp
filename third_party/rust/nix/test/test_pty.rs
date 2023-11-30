@@ -2,28 +2,13 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::os::unix::prelude::*;
 use std::path::Path;
-use tempfile::tempfile;
 
 use libc::{_exit, STDOUT_FILENO};
 use nix::fcntl::{open, OFlag};
 use nix::pty::*;
 use nix::sys::stat;
 use nix::sys::termios::*;
-use nix::unistd::{close, pause, write};
-
-/// Regression test for Issue #659
-/// This is the correct way to explicitly close a `PtyMaster`
-#[test]
-fn test_explicit_close() {
-    let mut f = {
-        let m = posix_openpt(OFlag::O_RDWR).unwrap();
-        close(m.into_raw_fd()).unwrap();
-        tempfile().unwrap()
-    };
-    // This should work.  But if there's been a double close, then it will
-    // return EBADF
-    f.write_all(b"whatever").unwrap();
-}
+use nix::unistd::{pause, write};
 
 /// Test equivalence of `ptsname` and `ptsname_r`
 #[test]
@@ -50,7 +35,6 @@ fn test_ptsname_copy() {
 
     // Open a new PTTY master
     let master_fd = posix_openpt(OFlag::O_RDWR).unwrap();
-    assert!(master_fd.as_raw_fd() > 0);
 
     // Get the name of the slave
     let slave_name1 = unsafe { ptsname(&master_fd) }.unwrap();
@@ -67,7 +51,6 @@ fn test_ptsname_copy() {
 fn test_ptsname_r_copy() {
     // Open a new PTTY master
     let master_fd = posix_openpt(OFlag::O_RDWR).unwrap();
-    assert!(master_fd.as_raw_fd() > 0);
 
     // Get the name of the slave
     let slave_name1 = ptsname_r(&master_fd).unwrap();
@@ -84,11 +67,9 @@ fn test_ptsname_unique() {
 
     // Open a new PTTY master
     let master1_fd = posix_openpt(OFlag::O_RDWR).unwrap();
-    assert!(master1_fd.as_raw_fd() > 0);
 
     // Open a second PTTY master
     let master2_fd = posix_openpt(OFlag::O_RDWR).unwrap();
-    assert!(master2_fd.as_raw_fd() > 0);
 
     // Get the name of the slave
     let slave_name1 = unsafe { ptsname(&master1_fd) }.unwrap();
@@ -147,26 +128,24 @@ fn open_ptty_pair() -> (PtyMaster, File) {
 ///
 /// This uses a common `open_ptty_pair` because much of these functions aren't useful by
 /// themselves. So for this test we perform the basic act of getting a file handle for a
-/// master/slave PTTY pair, then just sanity-check the raw values.
+/// master/slave PTTY pair.
 #[test]
 fn test_open_ptty_pair() {
-    let (master, slave) = open_ptty_pair();
-    assert!(master.as_raw_fd() > 0);
-    assert!(slave.as_raw_fd() > 0);
+    let (_, _) = open_ptty_pair();
 }
 
 /// Put the terminal in raw mode.
-fn make_raw(fd: RawFd) {
-    let mut termios = tcgetattr(fd).unwrap();
+fn make_raw<Fd: AsFd>(fd: Fd) {
+    let mut termios = tcgetattr(&fd).unwrap();
     cfmakeraw(&mut termios);
-    tcsetattr(fd, SetArg::TCSANOW, &termios).unwrap();
+    tcsetattr(&fd, SetArg::TCSANOW, &termios).unwrap();
 }
 
 /// Test `io::Read` on the PTTY master
 #[test]
 fn test_read_ptty_pair() {
     let (mut master, mut slave) = open_ptty_pair();
-    make_raw(slave.as_raw_fd());
+    make_raw(&slave);
 
     let mut buf = [0u8; 5];
     slave.write_all(b"hello").unwrap();
@@ -183,7 +162,7 @@ fn test_read_ptty_pair() {
 #[test]
 fn test_write_ptty_pair() {
     let (mut master, mut slave) = open_ptty_pair();
-    make_raw(slave.as_raw_fd());
+    make_raw(&slave);
 
     let mut buf = [0u8; 5];
     master.write_all(b"adios").unwrap();
@@ -202,33 +181,28 @@ fn test_openpty() {
     let _m = crate::PTSNAME_MTX.lock();
 
     let pty = openpty(None, None).unwrap();
-    assert!(pty.master > 0);
-    assert!(pty.slave > 0);
 
     // Writing to one should be readable on the other one
     let string = "foofoofoo\n";
     let mut buf = [0u8; 10];
-    write(pty.master, string.as_bytes()).unwrap();
-    crate::read_exact(pty.slave, &mut buf);
+    write(pty.master.as_raw_fd(), string.as_bytes()).unwrap();
+    crate::read_exact(&pty.slave, &mut buf);
 
     assert_eq!(&buf, string.as_bytes());
 
     // Read the echo as well
     let echoed_string = "foofoofoo\r\n";
     let mut buf = [0u8; 11];
-    crate::read_exact(pty.master, &mut buf);
+    crate::read_exact(&pty.master, &mut buf);
     assert_eq!(&buf, echoed_string.as_bytes());
 
     let string2 = "barbarbarbar\n";
     let echoed_string2 = "barbarbarbar\r\n";
     let mut buf = [0u8; 14];
-    write(pty.slave, string2.as_bytes()).unwrap();
-    crate::read_exact(pty.master, &mut buf);
+    write(pty.slave.as_raw_fd(), string2.as_bytes()).unwrap();
+    crate::read_exact(&pty.master, &mut buf);
 
     assert_eq!(&buf, echoed_string2.as_bytes());
-
-    close(pty.master).unwrap();
-    close(pty.slave).unwrap();
 }
 
 #[test]
@@ -239,44 +213,34 @@ fn test_openpty_with_termios() {
     // Open one pty to get attributes for the second one
     let mut termios = {
         let pty = openpty(None, None).unwrap();
-        assert!(pty.master > 0);
-        assert!(pty.slave > 0);
-        let termios = tcgetattr(pty.slave).unwrap();
-        close(pty.master).unwrap();
-        close(pty.slave).unwrap();
-        termios
+        tcgetattr(&pty.slave).unwrap()
     };
     // Make sure newlines are not transformed so the data is preserved when sent.
     termios.output_flags.remove(OutputFlags::ONLCR);
 
     let pty = openpty(None, &termios).unwrap();
     // Must be valid file descriptors
-    assert!(pty.master > 0);
-    assert!(pty.slave > 0);
 
     // Writing to one should be readable on the other one
     let string = "foofoofoo\n";
     let mut buf = [0u8; 10];
-    write(pty.master, string.as_bytes()).unwrap();
-    crate::read_exact(pty.slave, &mut buf);
+    write(pty.master.as_raw_fd(), string.as_bytes()).unwrap();
+    crate::read_exact(&pty.slave, &mut buf);
 
     assert_eq!(&buf, string.as_bytes());
 
     // read the echo as well
     let echoed_string = "foofoofoo\n";
-    crate::read_exact(pty.master, &mut buf);
+    crate::read_exact(&pty.master, &mut buf);
     assert_eq!(&buf, echoed_string.as_bytes());
 
     let string2 = "barbarbarbar\n";
     let echoed_string2 = "barbarbarbar\n";
     let mut buf = [0u8; 13];
-    write(pty.slave, string2.as_bytes()).unwrap();
-    crate::read_exact(pty.master, &mut buf);
+    write(pty.slave.as_raw_fd(), string2.as_bytes()).unwrap();
+    crate::read_exact(&pty.master, &mut buf);
 
     assert_eq!(&buf, echoed_string2.as_bytes());
-
-    close(pty.master).unwrap();
-    close(pty.slave).unwrap();
 }
 
 #[test]
@@ -303,11 +267,10 @@ fn test_forkpty() {
         Parent { child } => {
             let mut buf = [0u8; 10];
             assert!(child.as_raw() > 0);
-            crate::read_exact(pty.master, &mut buf);
+            crate::read_exact(&pty.master, &mut buf);
             kill(child, SIGTERM).unwrap();
             wait().unwrap(); // keep other tests using generic wait from getting our child
             assert_eq!(&buf, echoed_string.as_bytes());
-            close(pty.master).unwrap();
         }
     }
 }

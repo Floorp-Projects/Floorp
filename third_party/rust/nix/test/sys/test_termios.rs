@@ -1,17 +1,17 @@
-use std::os::unix::prelude::*;
+use std::os::unix::io::{AsFd, AsRawFd};
 use tempfile::tempfile;
 
 use nix::errno::Errno;
 use nix::fcntl;
 use nix::pty::openpty;
 use nix::sys::termios::{self, tcgetattr, LocalFlags, OutputFlags};
-use nix::unistd::{close, read, write};
+use nix::unistd::{read, write};
 
-/// Helper function analogous to `std::io::Write::write_all`, but for `RawFd`s
-fn write_all(f: RawFd, buf: &[u8]) {
+/// Helper function analogous to `std::io::Write::write_all`, but for `Fd`s
+fn write_all<Fd: AsFd>(f: Fd, buf: &[u8]) {
     let mut len = 0;
     while len < buf.len() {
-        len += write(f, &buf[len..]).unwrap();
+        len += write(f.as_fd().as_raw_fd(), &buf[len..]).unwrap();
     }
 }
 
@@ -22,25 +22,14 @@ fn test_tcgetattr_pty() {
     let _m = crate::PTSNAME_MTX.lock();
 
     let pty = openpty(None, None).expect("openpty failed");
-    termios::tcgetattr(pty.slave).unwrap();
-    close(pty.master).expect("closing the master failed");
-    close(pty.slave).expect("closing the slave failed");
+    termios::tcgetattr(&pty.slave).unwrap();
 }
 
 // Test tcgetattr on something that isn't a terminal
 #[test]
 fn test_tcgetattr_enotty() {
     let file = tempfile().unwrap();
-    assert_eq!(
-        termios::tcgetattr(file.as_raw_fd()).err(),
-        Some(Errno::ENOTTY)
-    );
-}
-
-// Test tcgetattr on an invalid file descriptor
-#[test]
-fn test_tcgetattr_ebadf() {
-    assert_eq!(termios::tcgetattr(-1).err(), Some(Errno::EBADF));
+    assert_eq!(termios::tcgetattr(&file).err(), Some(Errno::ENOTTY));
 }
 
 // Test modifying output flags
@@ -52,12 +41,7 @@ fn test_output_flags() {
     // Open one pty to get attributes for the second one
     let mut termios = {
         let pty = openpty(None, None).expect("openpty failed");
-        assert!(pty.master > 0);
-        assert!(pty.slave > 0);
-        let termios = tcgetattr(pty.slave).expect("tcgetattr failed");
-        close(pty.master).unwrap();
-        close(pty.slave).unwrap();
-        termios
+        tcgetattr(&pty.slave).expect("tcgetattr failed")
     };
 
     // Make sure postprocessing '\r' isn't specified by default or this test is useless.
@@ -73,19 +57,15 @@ fn test_output_flags() {
 
     // Open a pty
     let pty = openpty(None, &termios).unwrap();
-    assert!(pty.master > 0);
-    assert!(pty.slave > 0);
 
     // Write into the master
     let string = "foofoofoo\r";
-    write_all(pty.master, string.as_bytes());
+    write_all(&pty.master, string.as_bytes());
 
     // Read from the slave verifying that the output has been properly transformed
     let mut buf = [0u8; 10];
-    crate::read_exact(pty.slave, &mut buf);
+    crate::read_exact(&pty.slave, &mut buf);
     let transformed_string = "foofoofoo\n";
-    close(pty.master).unwrap();
-    close(pty.slave).unwrap();
     assert_eq!(&buf, transformed_string.as_bytes());
 }
 
@@ -98,12 +78,7 @@ fn test_local_flags() {
     // Open one pty to get attributes for the second one
     let mut termios = {
         let pty = openpty(None, None).unwrap();
-        assert!(pty.master > 0);
-        assert!(pty.slave > 0);
-        let termios = tcgetattr(pty.slave).unwrap();
-        close(pty.master).unwrap();
-        close(pty.slave).unwrap();
-        termios
+        tcgetattr(&pty.slave).unwrap()
     };
 
     // Make sure echo is specified by default or this test is useless.
@@ -114,23 +89,19 @@ fn test_local_flags() {
 
     // Open a new pty with our modified termios settings
     let pty = openpty(None, &termios).unwrap();
-    assert!(pty.master > 0);
-    assert!(pty.slave > 0);
 
     // Set the master is in nonblocking mode or reading will never return.
-    let flags = fcntl::fcntl(pty.master, fcntl::F_GETFL).unwrap();
+    let flags = fcntl::fcntl(pty.master.as_raw_fd(), fcntl::F_GETFL).unwrap();
     let new_flags =
         fcntl::OFlag::from_bits_truncate(flags) | fcntl::OFlag::O_NONBLOCK;
-    fcntl::fcntl(pty.master, fcntl::F_SETFL(new_flags)).unwrap();
+    fcntl::fcntl(pty.master.as_raw_fd(), fcntl::F_SETFL(new_flags)).unwrap();
 
     // Write into the master
     let string = "foofoofoo\r";
-    write_all(pty.master, string.as_bytes());
+    write_all(&pty.master, string.as_bytes());
 
     // Try to read from the master, which should not have anything as echoing was disabled.
     let mut buf = [0u8; 10];
-    let read = read(pty.master, &mut buf).unwrap_err();
-    close(pty.master).unwrap();
-    close(pty.slave).unwrap();
+    let read = read(pty.master.as_raw_fd(), &mut buf).unwrap_err();
     assert_eq!(read, Errno::EAGAIN);
 }

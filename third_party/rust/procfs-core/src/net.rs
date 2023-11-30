@@ -667,6 +667,943 @@ impl super::FromBufRead for RouteEntries {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+/// The indication of whether this entity is acting as an IP gateway in respect
+/// to the forwarding of datagrams received by, but not addressed to, this
+/// entity.  IP gateways forward datagrams.  IP hosts do not (except those
+/// source-routed via the host).
+///
+/// Note that for some managed nodes, this object may take on only a subset of
+/// the values possible. Accordingly, it is appropriate for an agent to return a
+/// `badValue` response if a management station attempts to change this object
+/// to an inappropriate value.
+pub enum IpForwarding {
+    /// Acting as a gateway
+    Forwarding = 1,
+    /// Not acting as a gateway
+    NotForwarding = 2,
+}
+
+impl IpForwarding {
+    pub fn from_u8(num: u8) -> Option<IpForwarding> {
+        match num {
+            1 => Some(IpForwarding::Forwarding),
+            2 => Some(IpForwarding::NotForwarding),
+            _ => None,
+        }
+    }
+
+    pub fn to_u8(&self) -> u8 {
+        match self {
+            IpForwarding::Forwarding => 1,
+            IpForwarding::NotForwarding => 2,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+/// The algorithm used to determine the timeout value used for retransmitting
+/// unacknowledged octets.
+pub enum TcpRtoAlgorithm {
+    /// None of the following
+    Other = 1,
+    /// A constant rto
+    Constant = 2,
+    /// MIL-STD-1778, [Appendix B](https://datatracker.ietf.org/doc/html/rfc1213#appendix-B)
+    Rsre = 3,
+    /// Van Jacobson's algorithm
+    ///
+    /// Reference: Jacobson, V., "Congestion Avoidance and Control", SIGCOMM 1988, Stanford, California.
+    Vanj = 4,
+}
+
+impl TcpRtoAlgorithm {
+    pub fn from_u8(num: u8) -> Option<TcpRtoAlgorithm> {
+        match num {
+            1 => Some(TcpRtoAlgorithm::Other),
+            2 => Some(TcpRtoAlgorithm::Constant),
+            3 => Some(TcpRtoAlgorithm::Rsre),
+            4 => Some(TcpRtoAlgorithm::Vanj),
+            _ => None,
+        }
+    }
+
+    pub fn to_u8(&self) -> u8 {
+        match self {
+            TcpRtoAlgorithm::Other => 1,
+            TcpRtoAlgorithm::Constant => 2,
+            TcpRtoAlgorithm::Rsre => 3,
+            TcpRtoAlgorithm::Vanj => 4,
+        }
+    }
+}
+
+/// This struct holds the data needed for the IP, ICMP, TCP, and UDP management
+/// information bases for an SNMP agent.
+///
+/// For more details, see [RFC1213](https://datatracker.ietf.org/doc/html/rfc1213)
+/// and [SNMP counter](https://docs.kernel.org/networking/snmp_counter.html)
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+pub struct Snmp {
+    pub ip_forwarding: IpForwarding,
+    /// The default value inserted into the Time-To-Live field of the IP header
+    /// of datagrams originated at this entity, whenever a TTL value is not
+    /// supplied by the transport layer protocol.
+    pub ip_default_ttl: u32,
+    /// The total number of input datagrams received from interfaces, including
+    /// those received in error.
+    pub ip_in_receives: u64,
+    /// The number of input datagrams discarded due to errors in their IP
+    /// headers.
+    pub ip_in_hdr_errors: u64,
+    /// The number of input datagrams discarded because the IP address in their
+    /// IP header's destination field was not a valid address to be received at
+    /// this entity.
+    pub ip_in_addr_errors: u64,
+    /// The number of input datagrams for which this entity was not their final
+    /// IP destination, as a result of which an attempt was made to find a
+    /// route to forward them to that final destination.
+    pub ip_forw_datagrams: u64,
+    /// The number of locally-addressed datagrams received successfully but
+    /// discarded because of an unknown or unsupported protocol.
+    pub ip_in_unknown_protos: u64,
+    /// The number of input IP datagrams for which no problems were encountered
+    /// to prevent their continued processing, but which were discarded
+    /// (e.g., for lack of buffer space).
+    pub ip_in_discards: u64,
+    /// The total number of input datagrams successfully delivered to IP
+    /// user-protocols (including ICMP).
+    ///
+    /// Note that this counter does not include any datagrams discarded while
+    /// awaiting re-assembly.
+    pub ip_in_delivers: u64,
+    /// The total number of IP datagrams which local IP user-protocols
+    /// (including ICMP) supplied to IP in requests for transmission.
+    ///
+    /// Note that this counter does not include any datagrams counted in
+    /// ipForwDatagrams.
+    pub ip_out_requests: u64,
+    /// The number of output IP datagrams for which no problem was encountered
+    /// to prevent their transmission to their destination, but which were
+    /// discarded (e.g., for lack of buffer space).
+    ///
+    /// Note that this counter would include datagrams counted in
+    /// `IpForwDatagrams` if any such packets met this (discretionary) discard
+    /// criterion.
+    pub ip_out_discards: u64,
+    /// The number of IP datagrams discarded because no route could be found to
+    /// transmit them to their destination.
+    ///
+    /// Note that this counter includes any packets counted in `IpForwDatagrams`
+    /// which meet this `no-route' criterion.
+    ///
+    /// Note that this includes any datagarms which a host cannot route because
+    /// all of its default gateways are down.
+    pub ip_out_no_routes: u64,
+    /// The maximum number of seconds which received fragments are held while
+    /// they are awaiting reassembly at this entity.
+    pub ip_reasm_timeout: u64,
+    /// The number of IP fragments received which needed to be reassembled at
+    /// this entity.
+    pub ip_reasm_reqds: u64,
+    /// The number of IP datagrams successfully re-assembled.
+    pub ip_reasm_oks: u64,
+    /// The number of failures detected by the IP re-assembly algorithm
+    /// (for whatever reason: timed out, errors, etc).
+    ///
+    /// Note that this is not necessarily a count of discarded IP fragments
+    /// since some algorithms (notably the algorithm in [RFC 815](https://datatracker.ietf.org/doc/html/rfc815))
+    /// can lose track of the number of fragments by combining them as they are
+    /// received.
+    pub ip_reasm_fails: u64,
+    /// The number of IP datagrams that have been successfully fragmented at
+    /// this entity.
+    pub ip_frag_oks: u64,
+    /// The number of IP datagrams that have been discarded because they needed
+    /// to be fragmented at this entity but could not be, e.g., because their
+    /// `Don't Fragment` flag was set.
+    pub ip_frag_fails: u64,
+    /// The number of IP datagram fragments that have been generated as a result
+    /// of fragmentation at this entity.
+    pub ip_frag_creates: u64,
+
+    /// The total number of ICMP messages which the entity received.
+    ///
+    /// Note that this counter includes all those counted by `icmp_in_errors`.
+    pub icmp_in_msgs: u64,
+    /// The number of ICMP messages which the entity received but determined as
+    /// having ICMP-specific errors (bad ICMP checksums, bad length, etc.
+    pub icmp_in_errors: u64,
+    /// This counter indicates the checksum of the ICMP packet is wrong.
+    ///
+    /// Non RFC1213 field
+    pub icmp_in_csum_errors: u64,
+    /// The number of ICMP Destination Unreachable messages received.
+    pub icmp_in_dest_unreachs: u64,
+    /// The number of ICMP Time Exceeded messages received.
+    pub icmp_in_time_excds: u64,
+    /// The number of ICMP Parameter Problem messages received.
+    pub icmp_in_parm_probs: u64,
+    /// The number of ICMP Source Quench messages received.
+    pub icmp_in_src_quenchs: u64,
+    /// The number of ICMP Redirect messages received.
+    pub icmp_in_redirects: u64,
+    /// The number of ICMP Echo (request) messages received.
+    pub icmp_in_echos: u64,
+    /// The number of ICMP Echo Reply messages received.
+    pub icmp_in_echo_reps: u64,
+    /// The number of ICMP Timestamp (request) messages received.
+    pub icmp_in_timestamps: u64,
+    /// The number of ICMP Timestamp Reply messages received.
+    pub icmp_in_timestamp_reps: u64,
+    /// The number of ICMP Address Mask Request messages received.
+    pub icmp_in_addr_masks: u64,
+    /// The number of ICMP Address Mask Reply messages received.
+    pub icmp_in_addr_mask_reps: u64,
+    /// The total number of ICMP messages which this entity attempted to send.
+    ///
+    /// Note that this counter includes all those counted by `icmp_out_errors`.
+    pub icmp_out_msgs: u64,
+    /// The number of ICMP messages which this entity did not send due to
+    /// problems discovered within ICMP such as a lack of buffers.  This value
+    /// should not include errors discovered outside the ICMP layer such as the
+    /// inability of IP to route the resultant datagram.  In some
+    /// implementations there may be no types of error which contribute to this
+    /// counter's value.
+    pub icmp_out_errors: u64,
+    /// The number of ICMP Destination Unreachable messages sent.
+    pub icmp_out_dest_unreachs: u64,
+    /// The number of ICMP Time Exceeded messages sent.
+    pub icmp_out_time_excds: u64,
+    /// The number of ICMP Parameter Problem messages sent.
+    pub icmp_out_parm_probs: u64,
+    /// The number of ICMP Source Quench messages sent.
+    pub icmp_out_src_quenchs: u64,
+    /// The number of ICMP Redirect messages sent.  For a host, this object will
+    /// always be zero, since hosts do not send redirects.
+    pub icmp_out_redirects: u64,
+    /// The number of ICMP Echo (request) messages sent.
+    pub icmp_out_echos: u64,
+    /// The number of ICMP Echo Reply messages sent.
+    pub icmp_out_echo_reps: u64,
+    /// The number of ICMP Timestamp (request) messages sent.
+    pub icmp_out_timestamps: u64,
+    /// The number of ICMP Timestamp Reply messages sent.
+    pub icmp_out_timestamp_reps: u64,
+    /// The number of ICMP Address Mask Request messages sent.
+    pub icmp_out_addr_masks: u64,
+    /// The number of ICMP Address Mask Reply messages sent.
+    pub icmp_out_addr_mask_reps: u64,
+
+    // ignore ICMP numeric types
+    pub tcp_rto_algorithm: TcpRtoAlgorithm,
+    /// The minimum value permitted by a TCP implementation for the
+    /// retransmission timeout, measured in milliseconds.  More refined
+    /// semantics for objects of this type depend upon the algorithm used to
+    /// determine the retransmission timeout.  In particular, when the timeout
+    /// algorithm is rsre(3), an object of this type has the semantics of the
+    /// LBOUND quantity described in [RFC 793](https://datatracker.ietf.org/doc/html/rfc793).
+    pub tcp_rto_min: u64,
+    /// The maximum value permitted by a TCP implementation for the
+    /// retransmission timeout, measured in milliseconds.  More refined
+    /// semantics for objects of this type depend upon the algorithm used to
+    /// determine the retransmission timeout.  In particular, when the timeout
+    /// algorithm is rsre(3), an object of this type has the semantics of the
+    /// UBOUND quantity described in [RFC 793](https://datatracker.ietf.org/doc/html/rfc793).
+    pub tcp_rto_max: u64,
+    /// The limit on the total number of TCP connections the entity can support.
+    /// In entities where the maximum number of connections is dynamic, this
+    /// object should contain the value -1.
+    pub tcp_max_conn: i64,
+    /// The number of times TCP connections have made a direct transition to the
+    /// SYN-SENT state from the CLOSED state.
+    pub tcp_active_opens: u64,
+    /// The number of times TCP connections have made a direct transition to the
+    /// SYN-RCVD state from the LISTEN state.
+    pub tcp_passive_opens: u64,
+    /// The number of times TCP connections have made a direct transition to the
+    /// CLOSED state from either the SYN-SENT state or the SYN-RCVD state, plus
+    /// the number of times TCP connections have made a direct transition to the
+    /// LISTEN state from the SYN-RCVD state.
+    pub tcp_attempt_fails: u64,
+    /// The number of times TCP connections have made a direct transition to the
+    /// CLOSED state from either the ESTABLISHED state or the CLOSE-WAIT state.
+    pub tcp_estab_resets: u64,
+    /// The number of TCP connections for which the current state is either
+    /// ESTABLISHED or CLOSE-WAIT.
+    pub tcp_curr_estab: u64,
+    /// The total number of segments received, including those received in
+    /// error.  This count includes segments received on currently established
+    /// connections.
+    pub tcp_in_segs: u64,
+    /// The total number of segments sent, including those on current
+    /// connections but excluding those containing only retransmitted octets.
+    pub tcp_out_segs: u64,
+    /// The total number of segments retransmitted - that is, the number of TCP
+    /// segments transmitted containing one or more previously transmitted octets.
+    pub tcp_retrans_segs: u64,
+    /// The total number of segments received in error (e.g., bad TCP checksums).
+    pub tcp_in_errs: u64,
+    /// The number of TCP segments sent containing the RST flag.
+    pub tcp_out_rsts: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub tcp_in_csum_errors: u64,
+
+    /// The total number of UDP datagrams delivered to UDP users.
+    pub udp_in_datagrams: u64,
+    /// The total number of received UDP datagrams for which there was no
+    /// application at the destination port.
+    pub udp_no_ports: u64,
+    /// The number of received UDP datagrams that could not be delivered for
+    /// reasons other than the lack of an application at the destination port.
+    pub udp_in_errors: u64,
+    /// The total number of UDP datagrams sent from this entity.
+    pub udp_out_datagrams: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_rcvbuf_errors: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_sndbuf_errors: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_in_csum_errors: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_ignored_multi: u64,
+
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_lite_in_datagrams: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_lite_no_ports: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_lite_in_errors: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_lite_out_datagrams: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_lite_rcvbuf_errors: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_lite_sndbuf_errors: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_lite_in_csum_errors: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_lite_ignored_multi: u64,
+}
+
+impl super::FromBufRead for Snmp {
+    fn from_buf_read<R: BufRead>(r: R) -> ProcResult<Self> {
+        fn next_group<R: BufRead>(lines: &mut std::io::Lines<R>, prefix: &str) -> ProcResult<String> {
+            if cfg!(test) {
+                let line = lines.next().unwrap()?;
+                if !line.starts_with(prefix) {
+                    return Err(build_internal_error!(format!(
+                        "`{}` section not found in /proc/net/snmp",
+                        prefix
+                    )));
+                }
+                let line = lines.next().unwrap()?;
+                if !line.starts_with(prefix) {
+                    return Err(build_internal_error!(format!(
+                        "`{}` section not found in /proc/net/snmp",
+                        prefix
+                    )));
+                }
+                return Ok(line);
+            } else {
+                Ok(lines.skip(1).next().unwrap()?)
+            }
+        }
+        fn expect_none(line: Option<&str>, msg: &str) -> ProcResult<()> {
+            if cfg!(test) {
+                match line {
+                    Some(..) => Err(build_internal_error!(format!("`{}` section is not consumed", msg))),
+                    None => Ok(()),
+                }
+            } else {
+                Ok(())
+            }
+        }
+
+        let mut lines = r.lines();
+
+        let ip = next_group(&mut lines, "Ip:")?;
+        let mut ip = ip.split_whitespace().skip(1);
+        let icmp = next_group(&mut lines, "Icmp:")?;
+        let mut icmp = icmp.split_whitespace().skip(1);
+        let _ = next_group(&mut lines, "IcmpMsg:")?;
+        let tcp = next_group(&mut lines, "Tcp:")?;
+        let mut tcp = tcp.split_whitespace().skip(1);
+        let udp = next_group(&mut lines, "Udp:")?;
+        let mut udp = udp.split_whitespace().skip(1);
+        let udp_lite = next_group(&mut lines, "UdpLite:")?;
+        let mut udp_lite = udp_lite.split_whitespace().skip(1);
+
+        let snmp = Snmp {
+            // Ip
+            ip_forwarding: expect!(IpForwarding::from_u8(from_str!(u8, expect!(ip.next())))),
+            ip_default_ttl: from_str!(u32, expect!(ip.next())),
+            ip_in_receives: from_str!(u64, expect!(ip.next())),
+            ip_in_hdr_errors: from_str!(u64, expect!(ip.next())),
+            ip_in_addr_errors: from_str!(u64, expect!(ip.next())),
+            ip_forw_datagrams: from_str!(u64, expect!(ip.next())),
+            ip_in_unknown_protos: from_str!(u64, expect!(ip.next())),
+            ip_in_discards: from_str!(u64, expect!(ip.next())),
+            ip_in_delivers: from_str!(u64, expect!(ip.next())),
+            ip_out_requests: from_str!(u64, expect!(ip.next())),
+            ip_out_discards: from_str!(u64, expect!(ip.next())),
+            ip_out_no_routes: from_str!(u64, expect!(ip.next())),
+            ip_reasm_timeout: from_str!(u64, expect!(ip.next())),
+            ip_reasm_reqds: from_str!(u64, expect!(ip.next())),
+            ip_reasm_oks: from_str!(u64, expect!(ip.next())),
+            ip_reasm_fails: from_str!(u64, expect!(ip.next())),
+            ip_frag_oks: from_str!(u64, expect!(ip.next())),
+            ip_frag_fails: from_str!(u64, expect!(ip.next())),
+            ip_frag_creates: from_str!(u64, expect!(ip.next())),
+            // Icmp
+            icmp_in_msgs: from_str!(u64, expect!(icmp.next())),
+            icmp_in_errors: from_str!(u64, expect!(icmp.next())),
+            icmp_in_csum_errors: from_str!(u64, expect!(icmp.next())),
+            icmp_in_dest_unreachs: from_str!(u64, expect!(icmp.next())),
+            icmp_in_time_excds: from_str!(u64, expect!(icmp.next())),
+            icmp_in_parm_probs: from_str!(u64, expect!(icmp.next())),
+            icmp_in_src_quenchs: from_str!(u64, expect!(icmp.next())),
+            icmp_in_redirects: from_str!(u64, expect!(icmp.next())),
+            icmp_in_echos: from_str!(u64, expect!(icmp.next())),
+            icmp_in_echo_reps: from_str!(u64, expect!(icmp.next())),
+            icmp_in_timestamps: from_str!(u64, expect!(icmp.next())),
+            icmp_in_timestamp_reps: from_str!(u64, expect!(icmp.next())),
+            icmp_in_addr_masks: from_str!(u64, expect!(icmp.next())),
+            icmp_in_addr_mask_reps: from_str!(u64, expect!(icmp.next())),
+            icmp_out_msgs: from_str!(u64, expect!(icmp.next())),
+            icmp_out_errors: from_str!(u64, expect!(icmp.next())),
+            icmp_out_dest_unreachs: from_str!(u64, expect!(icmp.next())),
+            icmp_out_time_excds: from_str!(u64, expect!(icmp.next())),
+            icmp_out_parm_probs: from_str!(u64, expect!(icmp.next())),
+            icmp_out_src_quenchs: from_str!(u64, expect!(icmp.next())),
+            icmp_out_redirects: from_str!(u64, expect!(icmp.next())),
+            icmp_out_echos: from_str!(u64, expect!(icmp.next())),
+            icmp_out_echo_reps: from_str!(u64, expect!(icmp.next())),
+            icmp_out_timestamps: from_str!(u64, expect!(icmp.next())),
+            icmp_out_timestamp_reps: from_str!(u64, expect!(icmp.next())),
+            icmp_out_addr_masks: from_str!(u64, expect!(icmp.next())),
+            icmp_out_addr_mask_reps: from_str!(u64, expect!(icmp.next())),
+            // Tcp
+            tcp_rto_algorithm: expect!(TcpRtoAlgorithm::from_u8(from_str!(u8, expect!(tcp.next())))),
+            tcp_rto_min: from_str!(u64, expect!(tcp.next())),
+            tcp_rto_max: from_str!(u64, expect!(tcp.next())),
+            tcp_max_conn: from_str!(i64, expect!(tcp.next())),
+            tcp_active_opens: from_str!(u64, expect!(tcp.next())),
+            tcp_passive_opens: from_str!(u64, expect!(tcp.next())),
+            tcp_attempt_fails: from_str!(u64, expect!(tcp.next())),
+            tcp_estab_resets: from_str!(u64, expect!(tcp.next())),
+            tcp_curr_estab: from_str!(u64, expect!(tcp.next())),
+            tcp_in_segs: from_str!(u64, expect!(tcp.next())),
+            tcp_out_segs: from_str!(u64, expect!(tcp.next())),
+            tcp_retrans_segs: from_str!(u64, expect!(tcp.next())),
+            tcp_in_errs: from_str!(u64, expect!(tcp.next())),
+            tcp_out_rsts: from_str!(u64, expect!(tcp.next())),
+            tcp_in_csum_errors: from_str!(u64, expect!(tcp.next())),
+            // Udp
+            udp_in_datagrams: from_str!(u64, expect!(udp.next())),
+            udp_no_ports: from_str!(u64, expect!(udp.next())),
+            udp_in_errors: from_str!(u64, expect!(udp.next())),
+            udp_out_datagrams: from_str!(u64, expect!(udp.next())),
+            udp_rcvbuf_errors: from_str!(u64, expect!(udp.next())),
+            udp_sndbuf_errors: from_str!(u64, expect!(udp.next())),
+            udp_in_csum_errors: from_str!(u64, expect!(udp.next())),
+            udp_ignored_multi: from_str!(u64, expect!(udp.next())),
+            // UdpLite
+            udp_lite_in_datagrams: from_str!(u64, expect!(udp_lite.next())),
+            udp_lite_no_ports: from_str!(u64, expect!(udp_lite.next())),
+            udp_lite_in_errors: from_str!(u64, expect!(udp_lite.next())),
+            udp_lite_out_datagrams: from_str!(u64, expect!(udp_lite.next())),
+            udp_lite_rcvbuf_errors: from_str!(u64, expect!(udp_lite.next())),
+            udp_lite_sndbuf_errors: from_str!(u64, expect!(udp_lite.next())),
+            udp_lite_in_csum_errors: from_str!(u64, expect!(udp_lite.next())),
+            udp_lite_ignored_multi: from_str!(u64, expect!(udp_lite.next())),
+        };
+
+        expect_none(ip.next(), "Ip")?;
+        expect_none(icmp.next(), "Icmp")?;
+        expect_none(tcp.next(), "Tcp")?;
+        expect_none(udp.next(), "Udp")?;
+        expect_none(udp_lite.next(), "UdpLite")?;
+
+        Ok(snmp)
+    }
+}
+
+/// This struct holds the data needed for the IP, ICMP, TCP, and UDP management
+/// information bases for an SNMP agent.
+///
+/// Note that this struct is only for IPv6
+///
+/// For more details, see [RFC1213](https://datatracker.ietf.org/doc/html/rfc1213)
+/// and [SNMP counter](https://docs.kernel.org/networking/snmp_counter.html)
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde1", derive(Serialize, Deserialize))]
+pub struct Snmp6 {
+    /// The total number of input datagrams received from interfaces, including
+    /// those received in error.
+    pub ip_in_receives: u64,
+    /// The number of input datagrams discarded due to errors in their IP
+    /// headers.
+    pub ip_in_hdr_errors: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub ip_in_too_big_errors: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub ip_in_no_routes: u64,
+    /// The number of input datagrams discarded because the IP address in their
+    /// IP header's destination field was not a valid address to be received at
+    /// this entity.
+    pub ip_in_addr_errors: u64,
+    /// The number of locally-addressed datagrams received successfully but
+    /// discarded because of an unknown or unsupported protocol.
+    pub ip_in_unknown_protos: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub ip_in_truncated_pkts: u64,
+    /// The number of input IP datagrams for which no problems were encountered
+    /// to prevent their continued processing, but which were discarded
+    /// (e.g., for lack of buffer space).
+    pub ip_in_discards: u64,
+    /// The total number of input datagrams successfully delivered to IP
+    /// user-protocols (including ICMP).
+    ///
+    /// Note that this counter does not include any datagrams discarded while
+    /// awaiting re-assembly.
+    pub ip_in_delivers: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub ip_out_forw_datagrams: u64,
+    /// The total number of IP datagrams which local IP user-protocols
+    /// (including ICMP) supplied to IP in requests for transmission.
+    ///
+    /// Note that this counter does not include any datagrams counted in
+    /// ipForwDatagrams.
+    pub ip_out_requests: u64,
+    /// The number of output IP datagrams for which no problem was encountered
+    /// to prevent their transmission to their destination, but which were
+    /// discarded (e.g., for lack of buffer space).
+    ///
+    /// Note that this counter would include datagrams counted in
+    /// `IpForwDatagrams` if any such packets met this (discretionary) discard
+    /// criterion.
+    pub ip_out_discards: u64,
+    /// The number of IP datagrams discarded because no route could be found to
+    /// transmit them to their destination.
+    ///
+    /// Note that this counter includes any packets counted in `IpForwDatagrams`
+    /// which meet this `no-route' criterion.
+    ///
+    /// Note that this includes any datagarms which a host cannot route because
+    /// all of its default gateways are down.
+    pub ip_out_no_routes: u64,
+    /// The maximum number of seconds which received fragments are held while
+    /// they are awaiting reassembly at this entity.
+    pub ip_reasm_timeout: u64,
+    /// The number of IP fragments received which needed to be reassembled at
+    /// this entity.
+    pub ip_reasm_reqds: u64,
+    /// The number of IP datagrams successfully re-assembled.
+    pub ip_reasm_oks: u64,
+    /// The number of failures detected by the IP re-assembly algorithm
+    /// (for whatever reason: timed out, errors, etc).
+    ///
+    /// Note that this is not necessarily a count of discarded IP fragments
+    /// since some algorithms (notably the algorithm in [RFC 815](https://datatracker.ietf.org/doc/html/rfc815))
+    /// can lose track of the number of fragments by combining them as they are
+    /// received.
+    pub ip_reasm_fails: u64,
+    /// The number of IP datagrams that have been successfully fragmented at
+    /// this entity.
+    pub ip_frag_oks: u64,
+    /// The number of IP datagrams that have been discarded because they needed
+    /// to be fragmented at this entity but could not be, e.g., because their
+    /// `Don't Fragment` flag was set.
+    pub ip_frag_fails: u64,
+    /// The number of IP datagram fragments that have been generated as a result
+    /// of fragmentation at this entity.
+    pub ip_frag_creates: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub ip_in_mcast_pkts: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub ip_out_mcast_pkts: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub ip_in_octets: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub ip_out_octets: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub ip_in_mcast_octets: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub ip_out_mcast_octets: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub ip_in_bcast_octets: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub ip_out_bcast_octets: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub ip_in_no_ect_pkts: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub ip_in_ect1_pkts: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub ip_in_ect0_pkts: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub ip_in_ce_pkts: u64,
+
+    /// The total number of ICMP messages which the entity received.
+    ///
+    /// Note that this counter includes all those counted by `icmp_in_errors`.
+    pub icmp_in_msgs: u64,
+    /// The number of ICMP messages which the entity received but determined as
+    /// having ICMP-specific errors (bad ICMP checksums, bad length, etc.
+    pub icmp_in_errors: u64,
+    /// The total number of ICMP messages which this entity attempted to send.
+    ///
+    /// Note that this counter includes all those counted by `icmp_out_errors`.
+    pub icmp_out_msgs: u64,
+    /// The number of ICMP messages which this entity did not send due to
+    /// problems discovered within ICMP such as a lack of buffers.  This value
+    /// should not include errors discovered outside the ICMP layer such as the
+    /// inability of IP to route the resultant datagram.  In some
+    /// implementations there may be no types of error which contribute to this
+    /// counter's value.
+    pub icmp_out_errors: u64,
+    /// This counter indicates the checksum of the ICMP packet is wrong.
+    ///
+    /// Non RFC1213 field
+    pub icmp_in_csum_errors: u64,
+    /// The number of ICMP Destination Unreachable messages received.
+    pub icmp_in_dest_unreachs: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub icmp_in_pkt_too_bigs: u64,
+    /// The number of ICMP Time Exceeded messages received.
+    pub icmp_in_time_excds: u64,
+    /// The number of ICMP Parameter Problem messages received.
+    pub icmp_in_parm_problem: u64,
+    /// The number of ICMP Echo (request) messages received.
+    pub icmp_in_echos: u64,
+    /// The number of ICMP Echo Reply messages received.
+    pub icmp_in_echo_replies: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub icmp_in_group_memb_queries: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub icmp_in_group_memb_responses: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub icmp_in_group_memb_reductions: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub icmp_in_router_solicits: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub icmp_in_router_advertisements: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub icmp_in_neighbor_solicits: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub icmp_in_neighbor_advertisements: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub icmp_in_redirects: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub icmp_in_mldv2_reports: u64,
+    /// The number of ICMP Destination Unreachable messages sent.
+    pub icmp_out_dest_unreachs: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub icmp_out_pkt_too_bigs: u64,
+    /// The number of ICMP Time Exceeded messages sent.
+    pub icmp_out_time_excds: u64,
+    /// The number of ICMP Parameter Problem messages sent.
+    pub icmp_out_parm_problems: u64,
+    /// The number of ICMP Echo (request) messages sent.
+    pub icmp_out_echos: u64,
+    /// The number of ICMP Echo Reply messages sent.
+    pub icmp_out_echo_replies: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub icmp_out_group_memb_queries: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub icmp_out_group_memb_responses: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub icmp_out_group_memb_reductions: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub icmp_out_router_solicits: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub icmp_out_router_advertisements: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub icmp_out_neighbor_solicits: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub icmp_out_neighbor_advertisements: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub icmp_out_redirects: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub icmp_out_mldv2_reports: u64,
+    //
+    // ignore ICMP numeric types
+    //
+    /// The total number of UDP datagrams delivered to UDP users.
+    pub udp_in_datagrams: u64,
+    /// The total number of received UDP datagrams for which there was no
+    /// application at the destination port.
+    pub udp_no_ports: u64,
+    /// The number of received UDP datagrams that could not be delivered for
+    /// reasons other than the lack of an application at the destination port.
+    pub udp_in_errors: u64,
+    /// The total number of UDP datagrams sent from this entity.
+    pub udp_out_datagrams: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_rcvbuf_errors: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_sndbuf_errors: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_in_csum_errors: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_ignored_multi: u64,
+
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_lite_in_datagrams: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_lite_no_ports: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_lite_in_errors: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_lite_out_datagrams: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_lite_rcvbuf_errors: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_lite_sndbuf_errors: u64,
+    /// [To be documented.]
+    ///
+    /// Non RFC1213 field
+    pub udp_lite_in_csum_errors: u64,
+}
+
+impl super::FromBufRead for Snmp6 {
+    fn from_buf_read<R: BufRead>(r: R) -> ProcResult<Self> {
+        let mut map = HashMap::new();
+
+        for line in r.lines() {
+            let line = expect!(line);
+            if line.is_empty() {
+                continue;
+            }
+            let mut s = line.split_whitespace();
+            let field = expect!(s.next(), "no field");
+            if field.starts_with("Icmp6InType") || field.starts_with("Icmp6OutType") {
+                continue;
+            }
+            let value = from_str!(u64, expect!(s.next(), "no value"));
+            map.insert(field.to_string(), value);
+        }
+
+        let snmp6 = Snmp6 {
+            ip_in_receives: expect!(map.remove("Ip6InReceives")),
+            ip_in_hdr_errors: expect!(map.remove("Ip6InHdrErrors")),
+            ip_in_too_big_errors: expect!(map.remove("Ip6InTooBigErrors")),
+            ip_in_no_routes: expect!(map.remove("Ip6InNoRoutes")),
+            ip_in_addr_errors: expect!(map.remove("Ip6InAddrErrors")),
+            ip_in_unknown_protos: expect!(map.remove("Ip6InUnknownProtos")),
+            ip_in_truncated_pkts: expect!(map.remove("Ip6InTruncatedPkts")),
+            ip_in_discards: expect!(map.remove("Ip6InDiscards")),
+            ip_in_delivers: expect!(map.remove("Ip6InDelivers")),
+            ip_out_forw_datagrams: expect!(map.remove("Ip6OutForwDatagrams")),
+            ip_out_requests: expect!(map.remove("Ip6OutRequests")),
+            ip_out_discards: expect!(map.remove("Ip6OutDiscards")),
+            ip_out_no_routes: expect!(map.remove("Ip6OutNoRoutes")),
+            ip_reasm_timeout: expect!(map.remove("Ip6ReasmTimeout")),
+            ip_reasm_reqds: expect!(map.remove("Ip6ReasmReqds")),
+            ip_reasm_oks: expect!(map.remove("Ip6ReasmOKs")),
+            ip_reasm_fails: expect!(map.remove("Ip6ReasmFails")),
+            ip_frag_oks: expect!(map.remove("Ip6FragOKs")),
+            ip_frag_fails: expect!(map.remove("Ip6FragFails")),
+            ip_frag_creates: expect!(map.remove("Ip6FragCreates")),
+            ip_in_mcast_pkts: expect!(map.remove("Ip6InMcastPkts")),
+            ip_out_mcast_pkts: expect!(map.remove("Ip6OutMcastPkts")),
+            ip_in_octets: expect!(map.remove("Ip6InOctets")),
+            ip_out_octets: expect!(map.remove("Ip6OutOctets")),
+            ip_in_mcast_octets: expect!(map.remove("Ip6InMcastOctets")),
+            ip_out_mcast_octets: expect!(map.remove("Ip6OutMcastOctets")),
+            ip_in_bcast_octets: expect!(map.remove("Ip6InBcastOctets")),
+            ip_out_bcast_octets: expect!(map.remove("Ip6OutBcastOctets")),
+            ip_in_no_ect_pkts: expect!(map.remove("Ip6InNoECTPkts")),
+            ip_in_ect1_pkts: expect!(map.remove("Ip6InECT1Pkts")),
+            ip_in_ect0_pkts: expect!(map.remove("Ip6InECT0Pkts")),
+            ip_in_ce_pkts: expect!(map.remove("Ip6InCEPkts")),
+
+            icmp_in_msgs: expect!(map.remove("Icmp6InMsgs")),
+            icmp_in_errors: expect!(map.remove("Icmp6InErrors")),
+            icmp_out_msgs: expect!(map.remove("Icmp6OutMsgs")),
+            icmp_out_errors: expect!(map.remove("Icmp6OutErrors")),
+            icmp_in_csum_errors: expect!(map.remove("Icmp6InCsumErrors")),
+            icmp_in_dest_unreachs: expect!(map.remove("Icmp6InDestUnreachs")),
+            icmp_in_pkt_too_bigs: expect!(map.remove("Icmp6InPktTooBigs")),
+            icmp_in_time_excds: expect!(map.remove("Icmp6InTimeExcds")),
+            icmp_in_parm_problem: expect!(map.remove("Icmp6InParmProblems")),
+            icmp_in_echos: expect!(map.remove("Icmp6InEchos")),
+            icmp_in_echo_replies: expect!(map.remove("Icmp6InEchoReplies")),
+            icmp_in_group_memb_queries: expect!(map.remove("Icmp6InGroupMembQueries")),
+            icmp_in_group_memb_responses: expect!(map.remove("Icmp6InGroupMembResponses")),
+            icmp_in_group_memb_reductions: expect!(map.remove("Icmp6InGroupMembReductions")),
+            icmp_in_router_solicits: expect!(map.remove("Icmp6InRouterSolicits")),
+            icmp_in_router_advertisements: expect!(map.remove("Icmp6InRouterAdvertisements")),
+            icmp_in_neighbor_solicits: expect!(map.remove("Icmp6InNeighborSolicits")),
+            icmp_in_neighbor_advertisements: expect!(map.remove("Icmp6InNeighborAdvertisements")),
+            icmp_in_redirects: expect!(map.remove("Icmp6InRedirects")),
+            icmp_in_mldv2_reports: expect!(map.remove("Icmp6InMLDv2Reports")),
+            icmp_out_dest_unreachs: expect!(map.remove("Icmp6OutDestUnreachs")),
+            icmp_out_pkt_too_bigs: expect!(map.remove("Icmp6OutPktTooBigs")),
+            icmp_out_time_excds: expect!(map.remove("Icmp6OutTimeExcds")),
+            icmp_out_parm_problems: expect!(map.remove("Icmp6OutParmProblems")),
+            icmp_out_echos: expect!(map.remove("Icmp6OutEchos")),
+            icmp_out_echo_replies: expect!(map.remove("Icmp6OutEchoReplies")),
+            icmp_out_group_memb_queries: expect!(map.remove("Icmp6OutGroupMembQueries")),
+            icmp_out_group_memb_responses: expect!(map.remove("Icmp6OutGroupMembResponses")),
+            icmp_out_group_memb_reductions: expect!(map.remove("Icmp6OutGroupMembReductions")),
+            icmp_out_router_solicits: expect!(map.remove("Icmp6OutRouterSolicits")),
+            icmp_out_router_advertisements: expect!(map.remove("Icmp6OutRouterAdvertisements")),
+            icmp_out_neighbor_solicits: expect!(map.remove("Icmp6OutNeighborSolicits")),
+            icmp_out_neighbor_advertisements: expect!(map.remove("Icmp6OutNeighborAdvertisements")),
+            icmp_out_redirects: expect!(map.remove("Icmp6OutRedirects")),
+            icmp_out_mldv2_reports: expect!(map.remove("Icmp6OutMLDv2Reports")),
+
+            //
+            // ignore ICMP numeric types
+            //
+            udp_in_datagrams: expect!(map.remove("Udp6InDatagrams")),
+            udp_no_ports: expect!(map.remove("Udp6NoPorts")),
+            udp_in_errors: expect!(map.remove("Udp6InErrors")),
+            udp_out_datagrams: expect!(map.remove("Udp6OutDatagrams")),
+            udp_rcvbuf_errors: expect!(map.remove("Udp6RcvbufErrors")),
+            udp_sndbuf_errors: expect!(map.remove("Udp6SndbufErrors")),
+            udp_in_csum_errors: expect!(map.remove("Udp6InCsumErrors")),
+            udp_ignored_multi: expect!(map.remove("Udp6IgnoredMulti")),
+
+            udp_lite_in_datagrams: expect!(map.remove("UdpLite6InDatagrams")),
+            udp_lite_no_ports: expect!(map.remove("UdpLite6NoPorts")),
+            udp_lite_in_errors: expect!(map.remove("UdpLite6InErrors")),
+            udp_lite_out_datagrams: expect!(map.remove("UdpLite6OutDatagrams")),
+            udp_lite_rcvbuf_errors: expect!(map.remove("UdpLite6RcvbufErrors")),
+            udp_lite_sndbuf_errors: expect!(map.remove("UdpLite6SndbufErrors")),
+            udp_lite_in_csum_errors: expect!(map.remove("UdpLite6InCsumErrors")),
+        };
+
+        if cfg!(test) {
+            assert!(map.is_empty(), "snmp6 map is not empty: {:#?}", map);
+        }
+
+        Ok(snmp6)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

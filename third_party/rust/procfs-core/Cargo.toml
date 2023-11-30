@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.48"
 name = "procfs-core"
-version = "0.16.0-RC1"
+version = "0.16.0"
 authors = ["Andrew Chin <achin@eminence32.net>"]
 description = "Data structures and parsing for the linux procfs pseudo-filesystem"
 documentation = "https://docs.rs/procfs-core/"

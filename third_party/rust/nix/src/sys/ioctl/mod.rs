@@ -712,7 +712,7 @@ macro_rules! ioctl_read_buf {
         pub unsafe fn $name(fd: $crate::libc::c_int,
                             data: &mut [$ty])
                             -> $crate::Result<$crate::libc::c_int> {
-            convert_ioctl_res!($crate::libc::ioctl(fd, request_code_read!($ioty, $nr, data.len() * ::std::mem::size_of::<$ty>()) as $crate::sys::ioctl::ioctl_num_type, data))
+            convert_ioctl_res!($crate::libc::ioctl(fd, request_code_read!($ioty, $nr, ::std::mem::size_of_val(data)) as $crate::sys::ioctl::ioctl_num_type, data))
         }
     )
 }
@@ -751,7 +751,7 @@ macro_rules! ioctl_write_buf {
         pub unsafe fn $name(fd: $crate::libc::c_int,
                             data: &[$ty])
                             -> $crate::Result<$crate::libc::c_int> {
-            convert_ioctl_res!($crate::libc::ioctl(fd, request_code_write!($ioty, $nr, data.len() * ::std::mem::size_of::<$ty>()) as $crate::sys::ioctl::ioctl_num_type, data))
+            convert_ioctl_res!($crate::libc::ioctl(fd, request_code_write!($ioty, $nr, ::std::mem::size_of_val(data)) as $crate::sys::ioctl::ioctl_num_type, data))
         }
     )
 }
@@ -780,7 +780,7 @@ macro_rules! ioctl_readwrite_buf {
         pub unsafe fn $name(fd: $crate::libc::c_int,
                             data: &mut [$ty])
                             -> $crate::Result<$crate::libc::c_int> {
-            convert_ioctl_res!($crate::libc::ioctl(fd, request_code_readwrite!($ioty, $nr, data.len() * ::std::mem::size_of::<$ty>()) as $crate::sys::ioctl::ioctl_num_type, data))
+            convert_ioctl_res!($crate::libc::ioctl(fd, request_code_readwrite!($ioty, $nr, ::std::mem::size_of_val(data)) as $crate::sys::ioctl::ioctl_num_type, data))
         }
     )
 }

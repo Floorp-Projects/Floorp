@@ -10,10 +10,10 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
-rust-version = "1.56"
+edition = "2021"
+rust-version = "1.65"
 name = "nix"
-version = "0.26.2"
+version = "0.27.1"
 authors = ["The nix-rust Project Developers"]
 include = [
     "src/**/*",
@@ -29,6 +29,7 @@ license = "MIT"
 repository = "https://github.com/nix-rust/nix"
 
 [package.metadata.docs.rs]
+all-features = true
 rustdoc-args = [
     "--cfg",
     "docsrs",
@@ -65,31 +66,29 @@ path = "test/test_mount.rs"
 harness = false
 
 [[test]]
-name = "test-ptymaster-drop"
-path = "test/test_ptymaster_drop.rs"
+name = "test-prctl"
+path = "test/sys/test_prctl.rs"
 
 [dependencies.bitflags]
-version = "1.1"
+version = "2.3.1"
 
 [dependencies.cfg-if]
 version = "1.0"
 
 [dependencies.libc]
-version = "0.2.137"
+version = "0.2.147"
 features = ["extra_traits"]
+
+[dependencies.memoffset]
+version = "0.9"
+optional = true
 
 [dependencies.pin-utils]
 version = "0.1.0"
 optional = true
 
-[dependencies.static_assertions]
-version = "1"
-
 [dev-dependencies.assert-impl]
 version = "0.1"
-
-[dev-dependencies.lazy_static]
-version = "1.4"
 
 [dev-dependencies.parking_lot]
 version = "0.12"
@@ -101,45 +100,12 @@ version = "0.8"
 version = "1.0.7"
 
 [dev-dependencies.tempfile]
-version = "3.3.0"
+version = "3.7.1"
 
 [features]
 acct = []
 aio = ["pin-utils"]
-default = [
-    "acct",
-    "aio",
-    "dir",
-    "env",
-    "event",
-    "feature",
-    "fs",
-    "hostname",
-    "inotify",
-    "ioctl",
-    "kmod",
-    "mman",
-    "mount",
-    "mqueue",
-    "net",
-    "personality",
-    "poll",
-    "process",
-    "pthread",
-    "ptrace",
-    "quota",
-    "reboot",
-    "resource",
-    "sched",
-    "signal",
-    "socket",
-    "term",
-    "time",
-    "ucontext",
-    "uio",
-    "user",
-    "zerocopy",
-]
+default = []
 dir = ["fs"]
 env = []
 event = []
@@ -176,10 +142,6 @@ zerocopy = [
 
 [target."cfg(any(target_os = \"android\", target_os = \"linux\"))".dev-dependencies.caps]
 version = "0.5.3"
-
-[target."cfg(not(target_os = \"redox\"))".dependencies.memoffset]
-version = "0.7"
-optional = true
 
 [target."cfg(target_os = \"freebsd\")".dev-dependencies.sysctl]
 version = "0.4"

@@ -2235,6 +2235,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.5.8 -> 0.5.9"
 
+[[audits.memmap2]]
+who = "Gabriele Svelto <gsvelto@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.5.9 -> 0.8.0"
+
 [[audits.memoffset]]
 who = "Gabriele Svelto <gsvelto@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -2294,6 +2299,12 @@ criteria = "safe-to-deploy"
 delta = "0.17.0 -> 0.17.0@git:87a29fba5e19cfae5ebf73a57ba31504a3872545"
 
 [[audits.minidump-common]]
+who = "Gabriele Svelto <gsvelto@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.17.0 -> 0.19.1"
+notes = "All the changes have been authored or reviewed by Mozilla employees"
+
+[[audits.minidump-common]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.17.0@git:87a29fba5e19cfae5ebf73a57ba31504a3872545 -> 0.17.0@git:6ae42a7f992e8a88ebee661bc77bcedb95cd671f"
@@ -2320,6 +2331,12 @@ who = "Gabriele Svelto <gsvelto@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.8.1 -> 0.8.1@git:491eb330e78e310c32927e5cc3bd2350af1e93f8"
 notes = "All the changes were written by a Mozilla employee (me)"
+
+[[audits.minidump-writer]]
+who = "Gabriele Svelto <gsvelto@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.8.1 -> 0.8.3"
+notes = "All changes were authored or reviewed by Mozilla employees"
 
 [[audits.miniz_oxide]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -2435,6 +2452,11 @@ delta = "0.25.0 -> 0.25.1"
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.25.1 -> 0.26.2"
+
+[[audits.nix]]
+who = "Gabriele Svelto <gsvelto@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.26.2 -> 0.27.1"
 
 [[audits.nom]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -2797,6 +2819,11 @@ delta = "1.0.49 -> 1.0.51"
 who = "Gabriele Svelto <gsvelto@mozilla.com>"
 criteria = "safe-to-deploy"
 version = "0.16.0-RC1"
+
+[[audits.procfs-core]]
+who = "Gabriele Svelto <gsvelto@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.16.0-RC1 -> 0.16.0"
 
 [[audits.profiling]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"

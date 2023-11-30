@@ -8,42 +8,10 @@
 //! This is a pseudo-filesystem which is available on most every linux system and provides an
 //! interface to kernel data structures.
 //!
+//! # `procfs-core`
 //!
-//! # Kernel support
-//!
-//! Not all fields/data are available in each kernel.  Some fields were added in specific kernel
-//! releases, and other fields are only present in certain kernel configuration options are
-//! enabled.  These are represented as `Option` fields in this crate.
-//!
-//! This crate aims to support all 2.6 kernels (and newer).  WSL2 is also supported.
-//!
-//! # Documentation
-//!
-//! In almost all cases, the documentation is taken from the
-//! [`proc.5`](http://man7.org/linux/man-pages/man5/proc.5.html) manual page.  This means that
-//! sometimes the style of writing is not very "rusty", or may do things like reference related files
-//! (instead of referencing related structs).  Contributions to improve this are welcome.
-//!
-//! # Panicing
-//!
-//! While previous versions of the library could panic, this current version aims to be panic-free
-//! in a many situations as possible.  Whenever the procfs crate encounters a bug in its own
-//! parsing code, it will return an [`InternalError`](enum.ProcError.html#variant.InternalError) error.  This should be considered a
-//! bug and should be [reported](https://github.com/eminence/procfs).  If you encounter a panic,
-//! please report that as well.
-//!
-//! # Cargo features
-//!
-//! The following cargo features are available:
-//!
-//! * `chrono` -- Default.  Optional.  This feature enables a few methods that return values as `DateTime` objects.
-//! * `backtrace` -- Optional.  This feature lets you get a stack trace whenever an `InternalError` is raised.
-//!
-//! # Examples
-//!
-//! Examples can be found in the various modules shown below, or in the
-//! [examples](https://github.com/eminence/procfs/tree/master/examples) folder of the code repository.
-//!
+//! The `procfs-core` crate is a fully platform-independent crate that contains most of the data-structures and
+//! parsing code.  Most people should first look at the `procfs` crate instead.
 
 use bitflags::bitflags;
 
@@ -252,6 +220,37 @@ macro_rules! from_str {
 }
 
 /// Auxiliary system information interface.
+///
+/// A few function in this crate require some extra system info to compute their results.  For example,
+/// the [crate::process::Stat::rss_bytes()] function needs to know the page size.  Since `procfs-core` only parses
+/// data and never interacts with a real system, this `SystemInfoInterface` is what allows real system info to be used.
+///
+/// If you are a user of the `procfs` crate, you'll normally use the `[procfs::WithCurrentSystemInfo]` trait.
+/// For example:
+///
+/// ```rust,ignore
+/// use procfs::WithCurrentSystemInfo;
+///
+/// let me = procfs::process::Process::myself().unwrap();
+/// let stat = me.stat().unwrap();
+/// let bytes = stat.rss_bytes().get();
+/// ```
+///
+/// However, imagine that you captured a process's stat info, along with page size:
+/// ```rust
+/// # use procfs_core::{FromRead, WithSystemInfo};
+/// # let stat_data = std::io::Cursor::new(b"475071 (cat) R 323893 475071 323893 34826 475071 4194304 94 0 0 0 0 0 0 0 20 0 1 0 201288208 5738496 225 18446744073709551615 94881179934720 94881179954601 140722831478832 0 0 0 0 0 0 0 0 0 17 4 0 0 0 0 0 94881179970608 94881179972224 94881184485376 140722831483757 140722831483777 140722831483777 140722831486955 0");
+/// let stat = procfs_core::process::Stat::from_read(stat_data).unwrap();
+///
+/// let system_info = procfs_core::ExplicitSystemInfo {
+///     boot_time_secs: 1692972606,
+///     ticks_per_second: 100,
+///     page_size: 4096,
+///     is_little_endian: true,
+/// };
+///
+/// let rss_bytes = stat.rss_bytes().with_system_info(&system_info);
+/// ```
 pub trait SystemInfoInterface {
     fn boot_time_secs(&self) -> ProcResult<u64>;
     fn ticks_per_second(&self) -> u64;
@@ -365,6 +364,9 @@ pub use locks::*;
 
 mod mounts;
 pub use mounts::*;
+
+mod partitions;
+pub use partitions::*;
 
 mod meminfo;
 pub use meminfo::*;

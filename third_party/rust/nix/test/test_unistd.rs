@@ -56,11 +56,11 @@ fn test_fork_and_waitpid() {
 
                 // panic, must never happen
                 s @ Ok(_) => {
-                    panic!("Child exited {:?}, should never happen", s)
+                    panic!("Child exited {s:?}, should never happen")
                 }
 
                 // panic, waitpid should never fail
-                Err(s) => panic!("Error: waitpid returned Err({:?}", s),
+                Err(s) => panic!("Error: waitpid returned Err({s:?}"),
             }
         }
     }
@@ -94,7 +94,7 @@ fn test_mkstemp() {
             close(fd).unwrap();
             unlink(path.as_path()).unwrap();
         }
-        Err(e) => panic!("mkstemp failed: {}", e),
+        Err(e) => panic!("mkstemp failed: {e}"),
     }
 }
 
@@ -555,16 +555,13 @@ fn test_lseek() {
     const CONTENTS: &[u8] = b"abcdef123456";
     let mut tmp = tempfile().unwrap();
     tmp.write_all(CONTENTS).unwrap();
-    let tmpfd = tmp.into_raw_fd();
 
     let offset: off_t = 5;
-    lseek(tmpfd, offset, Whence::SeekSet).unwrap();
+    lseek(tmp.as_raw_fd(), offset, Whence::SeekSet).unwrap();
 
     let mut buf = [0u8; 7];
-    crate::read_exact(tmpfd, &mut buf);
+    crate::read_exact(&tmp, &mut buf);
     assert_eq!(b"f123456", &buf);
-
-    close(tmpfd).unwrap();
 }
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
@@ -573,15 +570,12 @@ fn test_lseek64() {
     const CONTENTS: &[u8] = b"abcdef123456";
     let mut tmp = tempfile().unwrap();
     tmp.write_all(CONTENTS).unwrap();
-    let tmpfd = tmp.into_raw_fd();
 
-    lseek64(tmpfd, 5, Whence::SeekSet).unwrap();
+    lseek64(tmp.as_raw_fd(), 5, Whence::SeekSet).unwrap();
 
     let mut buf = [0u8; 7];
-    crate::read_exact(tmpfd, &mut buf);
+    crate::read_exact(&tmp, &mut buf);
     assert_eq!(b"f123456", &buf);
-
-    close(tmpfd).unwrap();
 }
 
 cfg_if! {
@@ -778,15 +772,12 @@ fn test_ftruncate() {
     let tempdir = tempdir().unwrap();
     let path = tempdir.path().join("file");
 
-    let tmpfd = {
-        let mut tmp = File::create(&path).unwrap();
-        const CONTENTS: &[u8] = b"12345678";
-        tmp.write_all(CONTENTS).unwrap();
-        tmp.into_raw_fd()
-    };
+    let mut file = File::create(&path).unwrap();
+    const CONTENTS: &[u8] = b"12345678";
+    file.write_all(CONTENTS).unwrap();
 
-    ftruncate(tmpfd, 2).unwrap();
-    close(tmpfd).unwrap();
+    ftruncate(&file, 2).unwrap();
+    drop(file);
 
     let metadata = fs::metadata(&path).unwrap();
     assert_eq!(2, metadata.len());
@@ -799,12 +790,7 @@ static mut ALARM_CALLED: bool = false;
 // Used in `test_alarm`.
 #[cfg(not(target_os = "redox"))]
 pub extern "C" fn alarm_signal_handler(raw_signal: libc::c_int) {
-    assert_eq!(
-        raw_signal,
-        libc::SIGALRM,
-        "unexpected signal: {}",
-        raw_signal
-    );
+    assert_eq!(raw_signal, libc::SIGALRM, "unexpected signal: {raw_signal}");
     unsafe { ALARM_CALLED = true };
 }
 

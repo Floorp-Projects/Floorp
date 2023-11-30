@@ -15,6 +15,7 @@ mod linux {
         sys::mman::{mmap, MapFlags, ProtFlags},
         unistd::getppid,
     };
+    use std::os::fd::BorrowedFd;
 
     macro_rules! test {
         ($x:expr, $errmsg:expr) => {
@@ -214,12 +215,12 @@ mod linux {
         let memory_size = std::num::NonZeroUsize::new(page_size.unwrap() as usize).unwrap();
         // Get some memory to be mapped by the child-process
         let mapped_mem = unsafe {
-            mmap(
+            mmap::<BorrowedFd>(
                 None,
                 memory_size,
                 ProtFlags::PROT_READ | ProtFlags::PROT_WRITE,
                 MapFlags::MAP_PRIVATE | MapFlags::MAP_ANON,
-                -1,
+                None,
                 0,
             )
             .unwrap()
@@ -246,6 +247,26 @@ mod linux {
         }
     }
 
+    fn create_files_wait(num: usize) -> Result<()> {
+        let mut file_array = Vec::<tempfile::NamedTempFile>::with_capacity(num);
+        for id in 0..num {
+            let file = tempfile::Builder::new()
+                .prefix("test_file")
+                .suffix::<str>(id.to_string().as_ref())
+                .tempfile()
+                .unwrap();
+            file_array.push(file);
+            println!("1");
+        }
+        println!("1");
+        loop {
+            std::thread::park();
+            // This shouldn't be executed, but we put it here to ensure that
+            // all the files within the array are kept open.
+            println!("{}", file_array.len());
+        }
+    }
+
     pub(super) fn real_main(args: Vec<String>) -> Result<()> {
         match args.len() {
             1 => match args[0].as_ref() {
@@ -266,6 +287,10 @@ mod linux {
                 "spawn_name_wait" => {
                     let num_of_threads: usize = args[1].parse().unwrap();
                     spawn_name_wait(num_of_threads)
+                }
+                "create_files_wait" => {
+                    let num_of_files: usize = args[1].parse().unwrap();
+                    create_files_wait(num_of_files)
                 }
                 _ => Err(format!("Len 2: Unknown test option: {}", args[0]).into()),
             },

@@ -391,8 +391,8 @@ impl<'a> Nmount<'a> {
         });
 
         let niov = self.iov.len() as c_uint;
-        let iovp = self.iov.as_mut_ptr() as *mut libc::iovec;
-        let res = unsafe { libc::nmount(iovp, niov, flags.bits) };
+        let iovp = self.iov.as_mut_ptr();
+        let res = unsafe { libc::nmount(iovp, niov, flags.bits()) };
         match Errno::result(res) {
             Ok(_) => Ok(()),
             Err(error) => {
@@ -446,7 +446,7 @@ where
     P: ?Sized + NixPath,
 {
     let res = mountpoint.with_nix_path(|cstr| unsafe {
-        libc::unmount(cstr.as_ptr(), flags.bits)
+        libc::unmount(cstr.as_ptr(), flags.bits())
     })?;
 
     Errno::result(res).map(drop)

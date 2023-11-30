@@ -224,6 +224,9 @@ contextual_tests! {
         let _ = dump
             .get_raw_stream(LinuxDsoDebug as u32)
             .expect("Couldn't find LinuxDsoDebug");
+        let _ = dump
+            .get_raw_stream(MozLinuxLimits as u32)
+            .expect("Couldn't find MozLinuxLimits");
     }
 
     fn test_write_with_additional_memory(context: Context) {
@@ -473,6 +476,46 @@ contextual_tests! {
             expected.insert(format!("thread_{}", id));
         }
         assert_eq!(expected, names);
+
+    }
+
+    fn test_file_descriptors(context: Context) {
+        let num_of_files = 5;
+        let mut child = start_child_and_wait_for_create_files(num_of_files);
+        let pid = child.id() as i32;
+
+        let mut tmpfile = tempfile::Builder::new()
+            .prefix("testfiles")
+            .tempfile()
+            .unwrap();
+
+        let mut tmp = context.minidump_writer(pid);
+        let _ = tmp.dump(&mut tmpfile).expect("Could not write minidump");
+        child.kill().expect("Failed to kill process");
+
+        // Reap child
+        let waitres = child.wait().expect("Failed to wait for child");
+        let status = waitres.signal().expect("Child did not die due to signal");
+        assert_eq!(waitres.code(), None);
+        assert_eq!(status, Signal::SIGKILL as i32);
+
+        // Read dump file and check its contents. There should be a truncated minidump available
+        let dump = Minidump::read_path(tmpfile.path()).expect("Failed to read minidump");
+        let fds: MinidumpHandleDataStream = dump.get_stream().expect("Couldn't find MinidumpHandleDataStream");
+        // We check that we create num_of_files plus stdin, stdout and stderr
+        for i in 0..2 {
+            let descriptor = fds.handles.get(i).expect("Descriptor should be present");
+            let fd = *descriptor.raw.handle().expect("Handle should be populated");
+            assert_eq!(fd, i as u64);
+        }
+
+        for i in 3..num_of_files {
+            let descriptor = fds.handles.get(i).expect("Descriptor should be present");
+            let object_name = descriptor.object_name.as_ref().expect("The path should be populated");
+            let file_name = object_name.split('/').last().expect("The filename should be present");
+            assert!(file_name.starts_with("test_file"));
+            assert!(file_name.ends_with(&(i - 3).to_string()));
+        }
     }
 }
 

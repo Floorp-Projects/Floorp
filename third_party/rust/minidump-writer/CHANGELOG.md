@@ -8,6 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+## [0.8.3] - 2023-11-07
+### Added
+- [PR#94](https://github.com/rust-minidump/minidump-writer/pull/94) added support for writing [file information](https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/ns-minidumpapiset-minidump_handle_descriptor) for every file open in the process the dump is being performed for into the [`MINIDUMP_HANDLE_DATA_STREAM`](https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/ns-minidumpapiset-minidump_handle_data_stream) stream.
+- [PR#90](https://github.com/rust-minidump/minidump-writer/pull/90) added support for including the `/proc/<pid>/limits` file in the [`MozLinuxLimits`](https://docs.rs/minidump-common/latest/minidump_common/format/enum.MINIDUMP_STREAM_TYPE.html#variant.MozLinuxLimits) stream. This information can be used together with the file information described above to diagnose situations where the process was killed by the kernel due to file handle limits being hit. Thanks [@lissyx](https://github.com/lissyx)!
+
+### Changed
+- [PR#94](https://github.com/rust-minidump/minidump-writer/pull/94) updated several dependencies to align with `minidump-common`, which was also bumped.
+
+## [0.8.2] - 2023-09-21
+### Added
+- [PR#86](https://github.com/rust-minidump/minidump-writer/pull/86) added support for `i686-android-linux`.
+
+### Fixed
+- [PR#85](https://github.com/rust-minidump/minidump-writer/pull/85) removed the dependency on `chrono`.
+- [PR#89](https://github.com/rust-minidump/minidump-writer/pull/89) resolved [#88](https://github.com/rust-minidump/minidump-writer/issues/88) by merging ranges that were mapped, but had 1 or more unmapped ranges in between them.
+
+### Changed
+- [PR#87](https://github.com/rust-minidump/minidump-writer/pull/87) updated some dependencies.
+
 ## [0.8.1] - 2023-06-21
 ### Added
 - [PR#70](https://github.com/rust-minidump/minidump-writer/pull/70) resolved [#8](https://github.com/rust-minidump/minidump-writer/issues/8) by adding support for writing `MemoryInfoListStream` on Linux/Android targets, this allows minidump consumers to process minidumps more easily without needing to parse and understand Linux-specific information. Thanks [@afranchuk](https://github.com/afranchuk)!
@@ -84,7 +103,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release, including basic support for `x86_64-unknown-linux-gnu/musl` and `x86_64-pc-windows-msvc`
 
 <!-- next-url -->
-[Unreleased]: https://github.com/rust-minidump/minidump-writer/compare/0.8.1...HEAD
+[Unreleased]: https://github.com/rust-minidump/minidump-writer/compare/0.8.3...HEAD
+[0.8.3]: https://github.com/rust-minidump/minidump-writer/compare/0.8.2...0.8.3
+[0.8.2]: https://github.com/rust-minidump/minidump-writer/compare/0.8.1...0.8.2
 [0.8.1]: https://github.com/rust-minidump/minidump-writer/compare/0.8.0...0.8.1
 [0.8.0]: https://github.com/rust-minidump/minidump-writer/compare/0.7.0...0.8.0
 [0.7.0]: https://github.com/rust-minidump/minidump-writer/compare/0.6.0...0.7.0

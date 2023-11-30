@@ -26,7 +26,7 @@ use std::io::prelude::*;
 #[cfg(not(target_os = "redox"))]
 use std::os::unix::fs;
 #[cfg(not(target_os = "redox"))]
-use tempfile::{self, NamedTempFile};
+use tempfile::NamedTempFile;
 
 #[test]
 #[cfg(not(target_os = "redox"))]
@@ -227,6 +227,51 @@ fn test_readlink() {
     );
 }
 
+/// This test creates a temporary file containing the contents
+/// 'foobarbaz' and uses the `copy_file_range` call to transfer
+/// 3 bytes at offset 3 (`bar`) to another empty file at offset 0. The
+/// resulting file is read and should contain the contents `bar`.
+/// The from_offset should be updated by the call to reflect
+/// the 3 bytes read (6).
+#[cfg(any(
+        target_os = "linux",
+        // Not available until FreeBSD 13.0
+        all(target_os = "freebsd", fbsd14),
+        target_os = "android"
+))]
+#[test]
+// QEMU does not support copy_file_range. Skip under qemu
+#[cfg_attr(qemu, ignore)]
+fn test_copy_file_range() {
+    use nix::fcntl::copy_file_range;
+    use std::os::unix::io::AsFd;
+
+    const CONTENTS: &[u8] = b"foobarbaz";
+
+    let mut tmp1 = tempfile::tempfile().unwrap();
+    let mut tmp2 = tempfile::tempfile().unwrap();
+
+    tmp1.write_all(CONTENTS).unwrap();
+    tmp1.flush().unwrap();
+
+    let mut from_offset: i64 = 3;
+    copy_file_range(
+        tmp1.as_fd(),
+        Some(&mut from_offset),
+        tmp2.as_fd(),
+        None,
+        3,
+    )
+    .unwrap();
+
+    let mut res: String = String::new();
+    tmp2.rewind().unwrap();
+    tmp2.read_to_string(&mut res).unwrap();
+
+    assert_eq!(res, String::from("bar"));
+    assert_eq!(from_offset, 6);
+}
+
 #[cfg(any(target_os = "linux", target_os = "android"))]
 mod linux_android {
     use libc::loff_t;
@@ -238,46 +283,10 @@ mod linux_android {
     use nix::unistd::{close, pipe, read, write};
 
     use tempfile::tempfile;
-    #[cfg(any(target_os = "linux"))]
+    #[cfg(target_os = "linux")]
     use tempfile::NamedTempFile;
 
     use crate::*;
-
-    /// This test creates a temporary file containing the contents
-    /// 'foobarbaz' and uses the `copy_file_range` call to transfer
-    /// 3 bytes at offset 3 (`bar`) to another empty file at offset 0. The
-    /// resulting file is read and should contain the contents `bar`.
-    /// The from_offset should be updated by the call to reflect
-    /// the 3 bytes read (6).
-    #[test]
-    // QEMU does not support copy_file_range. Skip under qemu
-    #[cfg_attr(qemu, ignore)]
-    fn test_copy_file_range() {
-        const CONTENTS: &[u8] = b"foobarbaz";
-
-        let mut tmp1 = tempfile().unwrap();
-        let mut tmp2 = tempfile().unwrap();
-
-        tmp1.write_all(CONTENTS).unwrap();
-        tmp1.flush().unwrap();
-
-        let mut from_offset: i64 = 3;
-        copy_file_range(
-            tmp1.as_raw_fd(),
-            Some(&mut from_offset),
-            tmp2.as_raw_fd(),
-            None,
-            3,
-        )
-        .unwrap();
-
-        let mut res: String = String::new();
-        tmp2.rewind().unwrap();
-        tmp2.read_to_string(&mut res).unwrap();
-
-        assert_eq!(res, String::from("bar"));
-        assert_eq!(from_offset, 6);
-    }
 
     #[test]
     fn test_splice() {
@@ -340,7 +349,7 @@ mod linux_android {
 
         let buf1 = b"abcdef";
         let buf2 = b"defghi";
-        let iovecs = vec![IoSlice::new(&buf1[0..3]), IoSlice::new(&buf2[0..3])];
+        let iovecs = [IoSlice::new(&buf1[0..3]), IoSlice::new(&buf2[0..3])];
 
         let res = vmsplice(wr, &iovecs[..], SpliceFFlags::empty()).unwrap();
 
@@ -355,7 +364,7 @@ mod linux_android {
         close(wr).unwrap();
     }
 
-    #[cfg(any(target_os = "linux"))]
+    #[cfg(target_os = "linux")]
     #[test]
     fn test_fallocate() {
         let tmp = NamedTempFile::new().unwrap();
@@ -383,7 +392,7 @@ mod linux_android {
         let tmp = NamedTempFile::new().unwrap();
 
         let fd = tmp.as_raw_fd();
-        let statfs = nix::sys::statfs::fstatfs(&tmp).unwrap();
+        let statfs = nix::sys::statfs::fstatfs(tmp.as_file()).unwrap();
         if statfs.filesystem_type() == nix::sys::statfs::OVERLAYFS_SUPER_MAGIC {
             // OverlayFS is a union file system.  It returns one inode value in
             // stat(2), but a different one shows up in /proc/locks.  So we must
@@ -421,7 +430,7 @@ mod linux_android {
         let tmp = NamedTempFile::new().unwrap();
 
         let fd = tmp.as_raw_fd();
-        let statfs = nix::sys::statfs::fstatfs(&tmp).unwrap();
+        let statfs = nix::sys::statfs::fstatfs(tmp.as_file()).unwrap();
         if statfs.filesystem_type() == nix::sys::statfs::OVERLAYFS_SUPER_MAGIC {
             // OverlayFS is a union file system.  It returns one inode value in
             // stat(2), but a different one shows up in /proc/locks.  So we must
@@ -559,7 +568,7 @@ mod test_posix_fallocate {
         let err = posix_fallocate(rd as RawFd, 0, 100).unwrap_err();
         match err {
             Errno::EINVAL | Errno::ENODEV | Errno::ESPIPE | Errno::EBADF => (),
-            errno => panic!("unexpected errno {}", errno,),
+            errno => panic!("unexpected errno {errno}",),
         }
     }
 }

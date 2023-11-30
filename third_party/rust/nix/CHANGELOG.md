@@ -3,9 +3,120 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## [0.26.2] - 2023-01-18
+## [0.27.1] - 2023-08-28
+
 ### Fixed
-- Fix `SockaddrIn6` bug that was swapping flowinfo and scope_id byte ordering.
+
+- Fixed generating the documentation on docs.rs.
+  ([#2111](https://github.com/nix-rust/nix/pull/2111))
+
+## [0.27.0] - 2023-08-28
+### Added
+- Added `AT_EACCESS` to `AtFlags` on all platforms but android
+  ([#1995](https://github.com/nix-rust/nix/pull/1995))
+- Add `PF_ROUTE` to `SockType` on macOS, iOS, all of the BSDs, Fuchsia, Haiku, Illumos.
+  ([#1867](https://github.com/nix-rust/nix/pull/1867))
+- Added `nix::ucontext` module on `aarch64-unknown-linux-gnu`.
+  (#[1662](https://github.com/nix-rust/nix/pull/1662))
+- Added `CanRaw` to `SockProtocol` and `CanBcm` as a separate `SocProtocol` constant.
+  ([#1912](https://github.com/nix-rust/nix/pull/1912))
+- Added `Generic` and `NFLOG` to `SockProtocol`.
+  ([#2092](https://github.com/nix-rust/nix/pull/2092))
+- Added `mq_timedreceive` to `::nix::mqueue`.
+  ([#1966])(https://github.com/nix-rust/nix/pull/1966)
+- Added `LocalPeerPid` to `nix::sys::socket::sockopt` for macOS. ([#1967](https://github.com/nix-rust/nix/pull/1967))
+- Added `TFD_TIMER_CANCEL_ON_SET` to `::nix::sys::time::TimerSetTimeFlags` on Linux and Android.
+  ([#2040](https://github.com/nix-rust/nix/pull/2040))
+- Added `SOF_TIMESTAMPING_OPT_ID` and `SOF_TIMESTAMPING_OPT_TSONLY` to `nix::sys::socket::TimestampingFlag`.
+  ([#2048](https://github.com/nix-rust/nix/pull/2048))
+- Enabled socket timestamping options on Android. ([#2077](https://github.com/nix-rust/nix/pull/2077))
+- Added vsock support for macOS ([#2056](https://github.com/nix-rust/nix/pull/2056))
+- Added `SO_SETFIB` and `SO_USER_COOKIE` to `nix::sys::socket::sockopt` for FreeBSD.
+  ([#2085](https://github.com/nix-rust/nix/pull/2085))
+- Added `SO_RTABLE` for OpenBSD and `SO_ACCEPTFILTER` for FreeBSD/NetBSD to `nix::sys::socket::sockopt`.
+  ([#2085](https://github.com/nix-rust/nix/pull/2085))
+- Added `MSG_WAITFORONE` to `MsgFlags` on Android, Fuchsia, Linux, NetBSD,
+  FreeBSD, OpenBSD, and Solaris.
+  ([#2014](https://github.com/nix-rust/nix/pull/2014))
+- Added `SO_TS_CLOCK` for FreeBSD to `nix::sys::socket::sockopt`.
+  ([#2093](https://github.com/nix-rust/nix/pull/2093))
+- Added support for prctl in Linux.
+  (#[1550](https://github.com/nix-rust/nix/pull/1550))
+- `nix::socket` and `nix::select` are now available on Redox.
+  ([#2012](https://github.com/nix-rust/nix/pull/2012))
+- Implemented AsFd, AsRawFd, FromRawFd, and IntoRawFd for `mqueue::MqdT`.
+  ([#2097](https://github.com/nix-rust/nix/pull/2097))
+- Add the ability to set `kevent_flags` on `SigEvent`.
+  ([#1731](https://github.com/nix-rust/nix/pull/1731))
+
+### Changed
+
+- All Cargo features have been removed from the default set. Users will need to
+  specify which features they depend on in their Cargo.toml.
+  ([#2091](https://github.com/nix-rust/nix/pull/2091))
+- Implemented I/O safety for many, but not all, of Nix's APIs.  Many public
+  functions argument and return types have changed:
+  | Original Type | New Type              |
+  | ------------- | --------------------- |
+  | AsRawFd       | AsFd                  |
+  | RawFd         | BorrowedFd or OwnedFd |
+
+  (#[1906](https://github.com/nix-rust/nix/pull/1906))
+- Use I/O safety with `copy_file_range`, and expose it on FreeBSD.
+  (#[1906](https://github.com/nix-rust/nix/pull/1906))
+- The MSRV is now 1.65
+  ([#1862](https://github.com/nix-rust/nix/pull/1862))
+  ([#2104](https://github.com/nix-rust/nix/pull/2104))
+- The epoll interface now uses a type.
+  ([#1882](https://github.com/nix-rust/nix/pull/1882))
+- With I/O-safe type applied in `pty::OpenptyResult` and `pty::ForkptyResult`,
+  users no longer need to manually close the file descriptors in these types.
+  ([#1921](https://github.com/nix-rust/nix/pull/1921))
+- Refactored `name` parameter of `mq_open` and `mq_unlink` to be generic over
+   `NixPath`.
+  ([#2102](https://github.com/nix-rust/nix/pull/2102)).
+- Made `clone` unsafe, like `fork`.
+  ([#1993](https://github.com/nix-rust/nix/pull/1993))
+
+### Removed
+
+- `sys::event::{kevent, kevent_ts}` are deprecated in favor of
+  `sys::kevent::Kqueue::kevent`, and `sys::event::kqueue` is deprecated in
+  favor of `sys::kevent::Kqueue::new`.
+  ([#1943](https://github.com/nix-rust/nix/pull/1943))
+- Removed deprecated IoVec API.
+  ([#1855](https://github.com/nix-rust/nix/pull/1855))
+- Removed deprecated net APIs.
+  ([#1861](https://github.com/nix-rust/nix/pull/1861))
+- `nix::sys::signalfd::signalfd` is deprecated.  Use
+  `nix::sys::signalfd::SignalFd` instead.
+  ([#1938](https://github.com/nix-rust/nix/pull/1938))
+- Removed `SigEvent` support on Fuchsia, where it was unsound.
+  ([#2079](https://github.com/nix-rust/nix/pull/2079))
+- Removed `flock` from `::nix::fcntl` on Solaris.
+  ([#2082](https://github.com/nix-rust/nix/pull/2082))
+
+## [0.26.3] - 2023-08-27
+
+### Fixed
+- Fix: send `ETH_P_ALL` in htons format 
+  ([#1925](https://github.com/nix-rust/nix/pull/1925))
+- Fix: `recvmsg` now sets the length of the received `sockaddr_un` field
+  correctly on Linux platforms. ([#2041](https://github.com/nix-rust/nix/pull/2041))
+- Fix potentially invalid conversions in
+  `SockaddrIn::from<std::net::SocketAddrV4>`,
+  `SockaddrIn6::from<std::net::SockaddrV6>`, `IpMembershipRequest::new`, and
+  `Ipv6MembershipRequest::new` with future Rust versions.
+  ([#2061](https://github.com/nix-rust/nix/pull/2061))
+- Fixed an incorrect lifetime returned from `recvmsg`.
+  ([#2095](https://github.com/nix-rust/nix/pull/2095))
+
+## [0.26.2] - 2023-01-18
+
+### Fixed
+
+- Fix `SockaddrIn6` bug that was swapping `flowinfo` and `scope_id` byte
+  ordering.
   ([#1964](https://github.com/nix-rust/nix/pull/1964))
 
 ## [0.26.1] - 2022-11-29
@@ -209,7 +320,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   (#[1563](https://github.com/nix-rust/nix/pull/1563))
 - Added `process_vm_readv` and `process_vm_writev` on Android.
   (#[1557](https://github.com/nix-rust/nix/pull/1557))
-- Added `nix::uncontext` module on s390x.
+- Added `nix::ucontext` module on s390x.
   (#[1662](https://github.com/nix-rust/nix/pull/1662))
 - Implemented `Extend`, `FromIterator`, and `IntoIterator` for `SigSet` and
   added `SigSet::iter` and `SigSetIter`.

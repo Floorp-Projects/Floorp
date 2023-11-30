@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use nix::errno::Errno;
 use nix::sys::epoll::{epoll_create1, epoll_ctl};
 use nix::sys::epoll::{EpollCreateFlags, EpollEvent, EpollFlags, EpollOp};

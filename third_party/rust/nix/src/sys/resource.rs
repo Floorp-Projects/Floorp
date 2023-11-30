@@ -20,6 +20,7 @@ cfg_if! {
         target_os = "ios",
         target_os = "android",
         target_os = "dragonfly",
+        target_os = "aix",
         all(target_os = "linux", not(target_env = "gnu"))
     ))]{
         use libc::rlimit;
@@ -51,6 +52,7 @@ libc_enum! {
             target_os = "ios",
             target_os = "android",
             target_os = "dragonfly",
+            target_os = "aix",
             all(target_os = "linux", not(any(target_env = "gnu", target_env = "uclibc")))
         ), repr(i32))]
     #[non_exhaustive]
@@ -115,6 +117,7 @@ libc_enum! {
             target_os = "netbsd",
             target_os = "openbsd",
             target_os = "linux",
+            target_os = "aix",
         ))]
         #[cfg_attr(docsrs, doc(cfg(all())))]
         /// The maximum number of simultaneous processes for this user id.
@@ -131,6 +134,7 @@ libc_enum! {
             target_os = "netbsd",
             target_os = "openbsd",
             target_os = "linux",
+            target_os = "aix",
         ))]
         #[cfg_attr(docsrs, doc(cfg(all())))]
         /// When there is memory pressure and swap is available, prioritize

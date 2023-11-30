@@ -6,13 +6,10 @@ use crate::Result;
 use cfg_if::cfg_if;
 use libc::{self, c_int, c_void, socklen_t};
 use std::ffi::{OsStr, OsString};
-use std::{
-    convert::TryFrom,
-    mem::{self, MaybeUninit}
-};
+use std::mem::{self, MaybeUninit};
 #[cfg(target_family = "unix")]
 use std::os::unix::ffi::OsStrExt;
-use std::os::unix::io::RawFd;
+use std::os::unix::io::{AsFd, AsRawFd};
 
 // Constants
 // TCP_CA_NAME_MAX isn't defined in user space include files
@@ -47,12 +44,12 @@ macro_rules! setsockopt_impl {
         impl SetSockOpt for $name {
             type Val = $ty;
 
-            fn set(&self, fd: RawFd, val: &$ty) -> Result<()> {
+            fn set<F: AsFd>(&self, fd: &F, val: &$ty) -> Result<()> {
                 unsafe {
                     let setter: $setter = Set::new(val);
 
                     let res = libc::setsockopt(
-                        fd,
+                        fd.as_fd().as_raw_fd(),
                         $level,
                         $flag,
                         setter.ffi_ptr(),
@@ -92,12 +89,12 @@ macro_rules! getsockopt_impl {
         impl GetSockOpt for $name {
             type Val = $ty;
 
-            fn get(&self, fd: RawFd) -> Result<$ty> {
+            fn get<F: AsFd>(&self, fd: &F) -> Result<$ty> {
                 unsafe {
                     let mut getter: $getter = Get::uninit();
 
                     let res = libc::getsockopt(
-                        fd,
+                        fd.as_fd().as_raw_fd(),
                         $level,
                         $flag,
                         getter.ffi_ptr(),
@@ -107,7 +104,7 @@ macro_rules! getsockopt_impl {
 
                     match <$ty>::try_from(getter.assume_init()) {
                         Err(_) => Err(Errno::EINVAL),
-                        Ok(r) => Ok(r)
+                        Ok(r) => Ok(r),
                     }
                 }
             }
@@ -141,7 +138,6 @@ macro_rules! getsockopt_impl {
 /// * `$getter:ty`: `Get` implementation; optional; only for `GetOnly` and `Both`.
 /// * `$setter:ty`: `Set` implementation; optional; only for `SetOnly` and `Both`.
 // Some targets don't use all rules.
-#[allow(unknown_lints)]
 #[allow(unused_macro_rules)]
 macro_rules! sockopt_impl {
     ($(#[$attr:meta])* $name:ident, GetOnly, $level:expr, $flag:path, bool) => {
@@ -496,6 +492,15 @@ sockopt_impl!(
     libc::LOCAL_PEERCRED,
     super::XuCred
 );
+#[cfg(any(target_os = "macos", target_os = "ios"))]
+sockopt_impl!(
+    /// Get the PID of the peer process of a connected unix domain socket.
+    LocalPeerPid,
+    GetOnly,
+    0,
+    libc::LOCAL_PEERPID,
+    libc::c_int
+);
 #[cfg(any(target_os = "android", target_os = "linux"))]
 sockopt_impl!(
     /// Return the credentials of the foreign process connected to this socket.
@@ -539,13 +544,13 @@ cfg_if! {
         sockopt_impl!(
             /// The maximum segment size for outgoing TCP packets.
             TcpMaxSeg, Both, libc::IPPROTO_TCP, libc::TCP_MAXSEG, u32);
-    } else {
+    } else if #[cfg(not(target_os = "redox"))] {
         sockopt_impl!(
             /// The maximum segment size for outgoing TCP packets.
             TcpMaxSeg, GetOnly, libc::IPPROTO_TCP, libc::TCP_MAXSEG, u32);
     }
 }
-#[cfg(not(any(target_os = "openbsd", target_os = "haiku")))]
+#[cfg(not(any(target_os = "openbsd", target_os = "haiku", target_os = "redox")))]
 #[cfg(feature = "net")]
 sockopt_impl!(
     #[cfg_attr(docsrs, doc(cfg(feature = "net")))]
@@ -567,7 +572,7 @@ sockopt_impl!(
     libc::TCP_REPAIR,
     u32
 );
-#[cfg(not(any(target_os = "openbsd", target_os = "haiku")))]
+#[cfg(not(any(target_os = "openbsd", target_os = "haiku", target_os = "redox")))]
 #[cfg(feature = "net")]
 sockopt_impl!(
     #[cfg_attr(docsrs, doc(cfg(feature = "net")))]
@@ -678,7 +683,7 @@ sockopt_impl!(
     libc::IP6T_SO_ORIGINAL_DST,
     libc::sockaddr_in6
 );
-#[cfg(any(target_os = "linux"))]
+#[cfg(any(target_os = "android", target_os = "linux"))]
 sockopt_impl!(
     /// Specifies exact type of timestamping information collected by the kernel
     /// [Further reading](https://www.kernel.org/doc/html/latest/networking/timestamping.html)
@@ -688,7 +693,7 @@ sockopt_impl!(
     libc::SO_TIMESTAMPING,
     super::TimestampingFlag
 );
-#[cfg(not(target_os = "haiku"))]
+#[cfg(not(any(target_os = "aix", target_os = "haiku", target_os = "redox")))]
 sockopt_impl!(
     /// Enable or disable the receiving of the `SO_TIMESTAMP` control message.
     ReceiveTimestamp,
@@ -697,7 +702,7 @@ sockopt_impl!(
     libc::SO_TIMESTAMP,
     bool
 );
-#[cfg(all(target_os = "linux"))]
+#[cfg(any(target_os = "android", target_os = "linux"))]
 sockopt_impl!(
     /// Enable or disable the receiving of the `SO_TIMESTAMPNS` control message.
     ReceiveTimestampns,
@@ -705,6 +710,16 @@ sockopt_impl!(
     libc::SOL_SOCKET,
     libc::SO_TIMESTAMPNS,
     bool
+);
+#[cfg(target_os = "freebsd")]
+sockopt_impl!(
+    /// Sets a specific timestamp format instead of the classic `SCM_TIMESTAMP`,
+    /// to follow up after `SO_TIMESTAMP` is set.
+    TsClock,
+    Both,
+    libc::SOL_SOCKET,
+    libc::SO_TS_CLOCK,
+    i32
 );
 #[cfg(any(target_os = "android", target_os = "linux"))]
 #[cfg(feature = "net")]
@@ -740,6 +755,46 @@ sockopt_impl!(
     libc::IPPROTO_IP,
     libc::IP_BINDANY,
     bool
+);
+#[cfg(target_os = "freebsd")]
+sockopt_impl!(
+    /// Set the route table (FIB) for this socket up to the `net.fibs` OID limit
+    /// (more specific than the setfib command line/call which are process based).
+    Fib,
+    SetOnly,
+    libc::SOL_SOCKET,
+    libc::SO_SETFIB,
+    i32
+);
+#[cfg(target_os = "freebsd")]
+sockopt_impl!(
+    /// Set `so_user_cookie` for this socket allowing network traffic based
+    /// upon it, similar to Linux's netfilter MARK.
+    UserCookie,
+    SetOnly,
+    libc::SOL_SOCKET,
+    libc::SO_USER_COOKIE,
+    u32
+);
+#[cfg(target_os = "openbsd")]
+sockopt_impl!(
+    /// Set the route table for this socket, needs a privileged user if
+    /// the process/socket had been set to the non default route.
+    Rtable,
+    SetOnly,
+    libc::SOL_SOCKET,
+    libc::SO_RTABLE,
+    i32
+);
+#[cfg(any(target_os = "freebsd", target_os = "netbsd"))]
+sockopt_impl!(
+    /// Get/set a filter on this socket before accepting connections similarly
+    /// to Linux's TCP_DEFER_ACCEPT but after the listen's call.
+    AcceptFilter,
+    Both,
+    libc::SOL_SOCKET,
+    libc::SO_ACCEPTFILTER,
+    libc::accept_filter_arg
 );
 #[cfg(target_os = "linux")]
 sockopt_impl!(
@@ -1008,10 +1063,10 @@ pub struct AlgSetAeadAuthSize;
 impl SetSockOpt for AlgSetAeadAuthSize {
     type Val = usize;
 
-    fn set(&self, fd: RawFd, val: &usize) -> Result<()> {
+    fn set<F: AsFd>(&self, fd: &F, val: &usize) -> Result<()> {
         unsafe {
             let res = libc::setsockopt(
-                fd,
+                fd.as_fd().as_raw_fd(),
                 libc::SOL_ALG,
                 libc::ALG_SET_AEAD_AUTHSIZE,
                 ::std::ptr::null(),
@@ -1042,10 +1097,10 @@ where
 {
     type Val = T;
 
-    fn set(&self, fd: RawFd, val: &T) -> Result<()> {
+    fn set<F: AsFd>(&self, fd: &F, val: &T) -> Result<()> {
         unsafe {
             let res = libc::setsockopt(
-                fd,
+                fd.as_fd().as_raw_fd(),
                 libc::SOL_ALG,
                 libc::ALG_SET_KEY,
                 val.as_ref().as_ptr() as *const _,
@@ -1358,8 +1413,8 @@ mod test {
             SockFlag::empty(),
         )
         .unwrap();
-        let a_cred = getsockopt(a, super::PeerCredentials).unwrap();
-        let b_cred = getsockopt(b, super::PeerCredentials).unwrap();
+        let a_cred = getsockopt(&a, super::PeerCredentials).unwrap();
+        let b_cred = getsockopt(&b, super::PeerCredentials).unwrap();
         assert_eq!(a_cred, b_cred);
         assert_ne!(a_cred.pid(), 0);
     }
@@ -1367,25 +1422,21 @@ mod test {
     #[test]
     fn is_socket_type_unix() {
         use super::super::*;
-        use crate::unistd::close;
 
-        let (a, b) = socketpair(
+        let (a, _b) = socketpair(
             AddressFamily::Unix,
             SockType::Stream,
             None,
             SockFlag::empty(),
         )
         .unwrap();
-        let a_type = getsockopt(a, super::SockType).unwrap();
+        let a_type = getsockopt(&a, super::SockType).unwrap();
         assert_eq!(a_type, SockType::Stream);
-        close(a).unwrap();
-        close(b).unwrap();
     }
 
     #[test]
     fn is_socket_type_dgram() {
         use super::super::*;
-        use crate::unistd::close;
 
         let s = socket(
             AddressFamily::Inet,
@@ -1394,16 +1445,14 @@ mod test {
             None,
         )
         .unwrap();
-        let s_type = getsockopt(s, super::SockType).unwrap();
+        let s_type = getsockopt(&s, super::SockType).unwrap();
         assert_eq!(s_type, SockType::Datagram);
-        close(s).unwrap();
     }
 
     #[cfg(any(target_os = "freebsd", target_os = "linux"))]
     #[test]
     fn can_get_listen_on_tcp_socket() {
         use super::super::*;
-        use crate::unistd::close;
 
         let s = socket(
             AddressFamily::Inet,
@@ -1412,11 +1461,10 @@ mod test {
             None,
         )
         .unwrap();
-        let s_listening = getsockopt(s, super::AcceptConn).unwrap();
+        let s_listening = getsockopt(&s, super::AcceptConn).unwrap();
         assert!(!s_listening);
-        listen(s, 10).unwrap();
-        let s_listening2 = getsockopt(s, super::AcceptConn).unwrap();
+        listen(&s, 10).unwrap();
+        let s_listening2 = getsockopt(&s, super::AcceptConn).unwrap();
         assert!(s_listening2);
-        close(s).unwrap();
     }
 }

@@ -1,5 +1,6 @@
 use std::io::prelude::*;
-use std::os::unix::prelude::*;
+#[cfg(any(target_os = "android", target_os = "linux"))]
+use std::os::unix::io::{FromRawFd, OwnedFd};
 
 use libc::off_t;
 use nix::sys::sendfile::*;
@@ -23,7 +24,12 @@ fn test_sendfile_linux() {
 
     let (rd, wr) = pipe().unwrap();
     let mut offset: off_t = 5;
-    let res = sendfile(wr, tmp.as_raw_fd(), Some(&mut offset), 2).unwrap();
+    // The construct of this `OwnedFd` is a temporary workaround, when `pipe(2)`
+    // becomes I/O-safe:
+    // pub fn pipe() -> std::result::Result<(OwnedFd, OwnedFd), Error>
+    // then it is no longer needed.
+    let wr = unsafe { OwnedFd::from_raw_fd(wr) };
+    let res = sendfile(&wr, &tmp, Some(&mut offset), 2).unwrap();
 
     assert_eq!(2, res);
 
@@ -33,7 +39,6 @@ fn test_sendfile_linux() {
     assert_eq!(7, offset);
 
     close(rd).unwrap();
-    close(wr).unwrap();
 }
 
 #[cfg(target_os = "linux")]
@@ -45,7 +50,12 @@ fn test_sendfile64_linux() {
 
     let (rd, wr) = pipe().unwrap();
     let mut offset: libc::off64_t = 5;
-    let res = sendfile64(wr, tmp.as_raw_fd(), Some(&mut offset), 2).unwrap();
+    // The construct of this `OwnedFd` is a temporary workaround, when `pipe(2)`
+    // becomes I/O-safe:
+    // pub fn pipe() -> std::result::Result<(OwnedFd, OwnedFd), Error>
+    // then it is no longer needed.
+    let wr = unsafe { OwnedFd::from_raw_fd(wr) };
+    let res = sendfile64(&wr, &tmp, Some(&mut offset), 2).unwrap();
 
     assert_eq!(2, res);
 
@@ -55,7 +65,6 @@ fn test_sendfile64_linux() {
     assert_eq!(7, offset);
 
     close(rd).unwrap();
-    close(wr).unwrap();
 }
 
 #[cfg(target_os = "freebsd")]
@@ -63,10 +72,10 @@ fn test_sendfile64_linux() {
 fn test_sendfile_freebsd() {
     // Declare the content
     let header_strings =
-        vec!["HTTP/1.1 200 OK\n", "Content-Type: text/plain\n", "\n"];
+        ["HTTP/1.1 200 OK\n", "Content-Type: text/plain\n", "\n"];
     let body = "Xabcdef123456";
     let body_offset = 1;
-    let trailer_strings = vec!["\n", "Served by Make Believe\n"];
+    let trailer_strings = ["\n", "Served by Make Believe\n"];
 
     // Write the body to a file
     let mut tmp = tempfile().unwrap();
@@ -83,8 +92,8 @@ fn test_sendfile_freebsd() {
 
     // Call the test method
     let (res, bytes_written) = sendfile(
-        tmp.as_raw_fd(),
-        wr.as_raw_fd(),
+        &tmp,
+        &wr,
         body_offset as off_t,
         None,
         Some(headers.as_slice()),
@@ -114,10 +123,10 @@ fn test_sendfile_freebsd() {
 fn test_sendfile_dragonfly() {
     // Declare the content
     let header_strings =
-        vec!["HTTP/1.1 200 OK\n", "Content-Type: text/plain\n", "\n"];
+        ["HTTP/1.1 200 OK\n", "Content-Type: text/plain\n", "\n"];
     let body = "Xabcdef123456";
     let body_offset = 1;
-    let trailer_strings = vec!["\n", "Served by Make Believe\n"];
+    let trailer_strings = ["\n", "Served by Make Believe\n"];
 
     // Write the body to a file
     let mut tmp = tempfile().unwrap();
@@ -134,8 +143,8 @@ fn test_sendfile_dragonfly() {
 
     // Call the test method
     let (res, bytes_written) = sendfile(
-        tmp.as_raw_fd(),
-        wr.as_raw_fd(),
+        &tmp,
+        &wr,
         body_offset as off_t,
         None,
         Some(headers.as_slice()),
@@ -183,8 +192,8 @@ fn test_sendfile_darwin() {
 
     // Call the test method
     let (res, bytes_written) = sendfile(
-        tmp.as_raw_fd(),
-        wr.as_raw_fd(),
+        &tmp,
+        &wr,
         body_offset as off_t,
         None,
         Some(headers.as_slice()),

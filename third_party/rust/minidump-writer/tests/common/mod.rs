@@ -59,6 +59,11 @@ pub fn start_child_and_wait_for_named_threads(num: usize) -> Child {
 }
 
 #[allow(unused)]
+pub fn start_child_and_wait_for_create_files(num: usize) -> Child {
+    start_child_and_wait_for_threads_helper("create_files_wait", num)
+}
+
+#[allow(unused)]
 pub fn wait_for_threads(child: &mut Child, num: usize) {
     let mut f = BufReader::new(child.stdout.as_mut().expect("Can't open stdout"));
     let mut lines = 0;

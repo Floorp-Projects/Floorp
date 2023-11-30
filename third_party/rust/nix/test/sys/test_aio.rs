@@ -21,9 +21,7 @@ use nix::{
 };
 use tempfile::tempfile;
 
-lazy_static! {
-    pub static ref SIGNALED: AtomicBool = AtomicBool::new(false);
-}
+pub static SIGNALED: AtomicBool = AtomicBool::new(false);
 
 extern "C" fn sigfunc(_: c_int) {
     SIGNALED.store(true, Ordering::Relaxed);
@@ -200,7 +198,7 @@ mod aio_read {
             assert_eq!(err, Ok(()));
             assert_eq!(aior.as_mut().aio_return().unwrap(), EXPECT.len());
         }
-        assert_eq!(EXPECT, rbuf.deref().deref());
+        assert_eq!(EXPECT, rbuf.deref());
     }
 
     // Like ok, but allocates the structure on the stack.
@@ -223,7 +221,7 @@ mod aio_read {
             assert_eq!(err, Ok(()));
             assert_eq!(aior.as_mut().aio_return().unwrap(), EXPECT.len());
         }
-        assert_eq!(EXPECT, rbuf.deref().deref());
+        assert_eq!(EXPECT, rbuf.deref());
     }
 }
 
@@ -610,7 +608,7 @@ fn test_aio_suspend() {
             let r = aio_suspend(&cbbuf[..], Some(timeout));
             match r {
                 Err(Errno::EINTR) => continue,
-                Err(e) => panic!("aio_suspend returned {:?}", e),
+                Err(e) => panic!("aio_suspend returned {e:?}"),
                 Ok(_) => (),
             };
         }

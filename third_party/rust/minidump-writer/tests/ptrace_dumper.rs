@@ -7,7 +7,7 @@ use nix::sys::signal::Signal;
 use std::convert::TryInto;
 use std::io::{BufRead, BufReader};
 use std::mem::size_of;
-use std::os::unix::io::AsRawFd;
+use std::os::unix::io::AsFd;
 use std::os::unix::process::ExitStatusExt;
 
 mod common;
@@ -129,7 +129,7 @@ fn test_merged_mappings() {
             map_size,
             ProtFlags::PROT_READ,
             MapFlags::MAP_SHARED,
-            file.as_raw_fd(),
+            Some(file.as_fd()),
             0,
         )
         .unwrap()
@@ -142,7 +142,7 @@ fn test_merged_mappings() {
             page_size,
             ProtFlags::PROT_NONE,
             MapFlags::MAP_SHARED | MapFlags::MAP_FIXED,
-            file.as_raw_fd(),
+            Some(file.as_fd()),
             // Map a different offset just to
             // better test real-world conditions.
             page_size.get().try_into().unwrap(), // try_into() in order to work for 32 and 64 bit

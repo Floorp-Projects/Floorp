@@ -393,6 +393,19 @@ impl Stat {
     /// See also the [`starttime`](struct.Stat.html#structfield.starttime) field.
     ///
     /// This function requires the "chrono" features to be enabled (which it is by default).
+    ///
+    /// Since computing the absolute start time requires knowing the current boot time, this function returns
+    /// a type that needs info about the current machine.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// use procfs::WithCurrentSystemInfo;
+    ///
+    /// let me = procfs::process::Process::myself().unwrap();
+    /// let stat = me.stat().unwrap();
+    /// let start = stat.starttime().get().unwrap();
+    /// ```
     #[cfg(feature = "chrono")]
     pub fn starttime(&self) -> impl crate::WithSystemInfo<Output = ProcResult<chrono::DateTime<chrono::Local>>> {
         move |si: &crate::SystemInfo| {
@@ -405,6 +418,17 @@ impl Stat {
     /// Gets the Resident Set Size (in bytes)
     ///
     /// The `rss` field will return the same value in pages
+    ///
+    /// # Example
+    ///
+    /// Calculating the rss value in bytes requires knowing the page size, so a `SystemInfo` is needed.
+    /// ```rust,ignore
+    /// use procfs::WithCurrentSystemInfo;
+    ///
+    /// let me = procfs::process::Process::myself().unwrap();
+    /// let stat = me.stat().unwrap();
+    /// let bytes = stat.rss_bytes().get();
+    /// ```
     pub fn rss_bytes(&self) -> impl crate::WithSystemInfo<Output = u64> {
         move |si: &crate::SystemInfo| self.rss * si.page_size()
     }

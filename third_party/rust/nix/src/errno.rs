@@ -34,6 +34,10 @@ cfg_if! {
         unsafe fn errno_location() -> *mut c_int {
             libc::_errnop()
         }
+    } else if #[cfg(any(target_os = "aix"))] {
+        unsafe fn errno_location() -> *mut c_int {
+            libc::_Errno()
+        }
     }
 }
 
@@ -223,6 +227,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "linux",
             target_os = "android",
+            target_os = "aix",
             target_os = "illumos",
             target_os = "solaris",
             target_os = "fuchsia"
@@ -232,6 +237,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "linux",
             target_os = "android",
+            target_os = "aix",
             target_os = "illumos",
             target_os = "solaris",
             target_os = "fuchsia"
@@ -241,6 +247,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "linux",
             target_os = "android",
+            target_os = "aix",
             target_os = "illumos",
             target_os = "solaris",
             target_os = "fuchsia"
@@ -250,6 +257,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "linux",
             target_os = "android",
+            target_os = "aix",
             target_os = "illumos",
             target_os = "solaris",
             target_os = "fuchsia"
@@ -259,6 +267,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "linux",
             target_os = "android",
+            target_os = "aix",
             target_os = "illumos",
             target_os = "solaris",
             target_os = "fuchsia"
@@ -268,6 +277,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "linux",
             target_os = "android",
+            target_os = "aix",
             target_os = "illumos",
             target_os = "solaris",
             target_os = "fuchsia"
@@ -277,6 +287,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "linux",
             target_os = "android",
+            target_os = "aix",
             target_os = "illumos",
             target_os = "solaris",
             target_os = "fuchsia"
@@ -286,6 +297,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "linux",
             target_os = "android",
+            target_os = "aix",
             target_os = "illumos",
             target_os = "solaris",
             target_os = "fuchsia"
@@ -421,6 +433,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "linux",
             target_os = "android",
+            target_os = "aix",
             target_os = "illumos",
             target_os = "solaris",
             target_os = "fuchsia"
@@ -457,6 +470,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "linux",
             target_os = "android",
+            target_os = "aix",
             target_os = "illumos",
             target_os = "solaris",
             target_os = "fuchsia"
@@ -466,6 +480,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "linux",
             target_os = "android",
+            target_os = "aix",
             target_os = "illumos",
             target_os = "solaris",
             target_os = "fuchsia"
@@ -482,6 +497,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "linux",
             target_os = "android",
+            target_os = "aix",
             target_os = "fuchsia"
         ))]
         EBADMSG => "Not a data message",
@@ -492,6 +508,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "linux",
             target_os = "android",
+            target_os = "aix",
             target_os = "fuchsia",
             target_os = "haiku"
         ))]
@@ -572,6 +589,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "linux",
             target_os = "android",
+            target_os = "aix",
             target_os = "illumos",
             target_os = "solaris",
             target_os = "fuchsia",
@@ -582,6 +600,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "linux",
             target_os = "android",
+            target_os = "aix",
             target_os = "illumos",
             target_os = "solaris",
             target_os = "fuchsia"
@@ -722,6 +741,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "linux",
             target_os = "android",
+            target_os = "aix",
             target_os = "fuchsia"
         ))]
         EOWNERDEAD => "Owner died",
@@ -732,6 +752,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "linux",
             target_os = "android",
+            target_os = "aix",
             target_os = "fuchsia"
         ))]
         ENOTRECOVERABLE => "State not recoverable",
@@ -868,6 +889,7 @@ fn desc(errno: Errno) -> &'static str {
             target_os = "ios",
             target_os = "openbsd",
             target_os = "netbsd",
+            target_os = "aix",
             target_os = "illumos",
             target_os = "solaris",
             target_os = "haiku"
@@ -879,6 +901,7 @@ fn desc(errno: Errno) -> &'static str {
             target_os = "freebsd",
             target_os = "dragonfly",
             target_os = "ios",
+            target_os = "aix",
             target_os = "openbsd",
             target_os = "netbsd"
         ))]
@@ -889,6 +912,7 @@ fn desc(errno: Errno) -> &'static str {
             target_os = "freebsd",
             target_os = "dragonfly",
             target_os = "ios",
+            target_os = "aix",
             target_os = "openbsd",
             target_os = "netbsd",
             target_os = "redox"
@@ -903,6 +927,7 @@ fn desc(errno: Errno) -> &'static str {
             target_os = "openbsd",
             target_os = "netbsd",
             target_os = "redox",
+            target_os = "aix",
             target_os = "illumos",
             target_os = "solaris",
             target_os = "haiku"
@@ -917,6 +942,7 @@ fn desc(errno: Errno) -> &'static str {
             target_os = "openbsd",
             target_os = "netbsd",
             target_os = "redox",
+            target_os = "aix",
             target_os = "illumos",
             target_os = "solaris",
             target_os = "haiku"
@@ -928,6 +954,7 @@ fn desc(errno: Errno) -> &'static str {
             target_os = "freebsd",
             target_os = "dragonfly",
             target_os = "ios",
+            target_os = "aix",
             target_os = "openbsd",
             target_os = "netbsd",
             target_os = "redox"
@@ -1009,6 +1036,7 @@ fn desc(errno: Errno) -> &'static str {
             target_os = "freebsd",
             target_os = "dragonfly",
             target_os = "ios",
+            target_os = "aix",
             target_os = "openbsd",
             target_os = "netbsd",
             target_os = "redox"
@@ -1044,6 +1072,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "macos",
             target_os = "ios",
+            target_os = "aix",
             target_os = "netbsd",
             target_os = "redox"
         ))]
@@ -1060,6 +1089,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "macos",
             target_os = "ios",
+            target_os = "aix",
             target_os = "netbsd",
             target_os = "redox"
         ))]
@@ -1068,6 +1098,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "macos",
             target_os = "ios",
+            target_os = "aix",
             target_os = "netbsd",
             target_os = "redox"
         ))]
@@ -1076,6 +1107,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "macos",
             target_os = "ios",
+            target_os = "aix",
             target_os = "netbsd",
             target_os = "redox"
         ))]
@@ -1084,6 +1116,7 @@ fn desc(errno: Errno) -> &'static str {
         #[cfg(any(
             target_os = "macos",
             target_os = "ios",
+            target_os = "aix",
             target_os = "illumos",
             target_os = "solaris"
         ))]
@@ -3127,6 +3160,220 @@ mod consts {
             libc::EMULTIHOP => EMULTIHOP,
             libc::ENOLINK => ENOLINK,
             libc::EPROTO => EPROTO,
+            _ => UnknownErrno,
+        }
+    }
+}
+
+#[cfg(target_os = "aix")]
+mod consts {
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+    #[repr(i32)]
+    #[non_exhaustive]
+    pub enum Errno {
+        UnknownErrno = 0,
+        EPERM = libc::EPERM,
+        ENOENT = libc::ENOENT,
+        ESRCH = libc::ESRCH,
+        EINTR = libc::EINTR,
+        EIO = libc::EIO,
+        ENXIO = libc::ENXIO,
+        E2BIG = libc::E2BIG,
+        ENOEXEC = libc::ENOEXEC,
+        EBADF = libc::EBADF,
+        ECHILD = libc::ECHILD,
+        EAGAIN = libc::EAGAIN,
+        ENOMEM = libc::ENOMEM,
+        EACCES = libc::EACCES,
+        EFAULT = libc::EFAULT,
+        ENOTBLK = libc::ENOTBLK,
+        EBUSY = libc::EBUSY,
+        EEXIST = libc::EEXIST,
+        EXDEV = libc::EXDEV,
+        ENODEV = libc::ENODEV,
+        ENOTDIR = libc::ENOTDIR,
+        EISDIR = libc::EISDIR,
+        EINVAL = libc::EINVAL,
+        ENFILE = libc::ENFILE,
+        EMFILE = libc::EMFILE,
+        ENOTTY = libc::ENOTTY,
+        ETXTBSY = libc::ETXTBSY,
+        EFBIG = libc::EFBIG,
+        ENOSPC = libc::ENOSPC,
+        ESPIPE = libc::ESPIPE,
+        EROFS = libc::EROFS,
+        EMLINK = libc::EMLINK,
+        EPIPE = libc::EPIPE,
+        EDOM = libc::EDOM,
+        ERANGE = libc::ERANGE,
+        EDEADLK = libc::EDEADLK,
+        ENAMETOOLONG = libc::ENAMETOOLONG,
+        ENOLCK = libc::ENOLCK,
+        ENOSYS = libc::ENOSYS,
+        ENOTEMPTY = libc::ENOTEMPTY,
+        ELOOP = libc::ELOOP,
+        ENOMSG = libc::ENOMSG,
+        EIDRM = libc::EIDRM,
+        EINPROGRESS = libc::EINPROGRESS,
+        EALREADY = libc::EALREADY,
+        ENOTSOCK = libc::ENOTSOCK,
+        EDESTADDRREQ = libc::EDESTADDRREQ,
+        EMSGSIZE = libc::EMSGSIZE,
+        EPROTOTYPE = libc::EPROTOTYPE,
+        ENOPROTOOPT = libc::ENOPROTOOPT,
+        EPROTONOSUPPORT = libc::EPROTONOSUPPORT,
+        ESOCKTNOSUPPORT = libc::ESOCKTNOSUPPORT,
+        EPFNOSUPPORT = libc::EPFNOSUPPORT,
+        EAFNOSUPPORT = libc::EAFNOSUPPORT,
+        EADDRINUSE = libc::EADDRINUSE,
+        EADDRNOTAVAIL = libc::EADDRNOTAVAIL,
+        ENETDOWN = libc::ENETDOWN,
+        ENETUNREACH = libc::ENETUNREACH,
+        ENETRESET = libc::ENETRESET,
+        ECONNABORTED = libc::ECONNABORTED,
+        ECONNRESET = libc::ECONNRESET,
+        ENOBUFS = libc::ENOBUFS,
+        EISCONN = libc::EISCONN,
+        ENOTCONN = libc::ENOTCONN,
+        ESHUTDOWN = libc::ESHUTDOWN,
+        ETOOMANYREFS = libc::ETOOMANYREFS,
+        ETIMEDOUT = libc::ETIMEDOUT,
+        ECONNREFUSED = libc::ECONNREFUSED,
+        EHOSTDOWN = libc::EHOSTDOWN,
+        EHOSTUNREACH = libc::EHOSTUNREACH,
+        ECHRNG = libc::ECHRNG,
+        EL2NSYNC = libc::EL2NSYNC,
+        EL3HLT = libc::EL3HLT,
+        EL3RST = libc::EL3RST,
+        ELNRNG = libc::ELNRNG,
+        EUNATCH = libc::EUNATCH,
+        ENOCSI = libc::ENOCSI,
+        EL2HLT = libc::EL2HLT,
+        ENOLINK = libc::ENOLINK,
+        EPROTO = libc::EPROTO,
+        EMULTIHOP = libc::EMULTIHOP,
+        EBADMSG = libc::EBADMSG,
+        EOVERFLOW = libc::EOVERFLOW,
+        EILSEQ = libc::EILSEQ,
+        ERESTART = libc::ERESTART,
+        EOWNERDEAD = libc::EOWNERDEAD,
+        ENOTRECOVERABLE = libc::ENOTRECOVERABLE,
+        ENOTSUP = libc::ENOTSUP,
+        EPROCLIM = libc::EPROCLIM,
+        EUSERS = libc::EUSERS,
+        EDQUOT = libc::EDQUOT,
+        ESTALE = libc::ESTALE,
+        EREMOTE = libc::EREMOTE,
+        ECANCELED = libc::ECANCELED,
+        ENODATA = libc::ENODATA,
+        ENOSR = libc::ENOSR,
+        ENOSTR = libc::ENOSTR,
+        ETIME = libc::ETIME,
+        EOPNOTSUPP = libc::EOPNOTSUPP,
+    }
+
+    pub const fn from_i32(e: i32) -> Errno {
+        use self::Errno::*;
+
+        match e {
+            libc::EPERM => EPERM,
+            libc::ENOENT => ENOENT,
+            libc::ESRCH => ESRCH,
+            libc::EINTR => EINTR,
+            libc::EIO => EIO,
+            libc::ENXIO => ENXIO,
+            libc::E2BIG => E2BIG,
+            libc::ENOEXEC => ENOEXEC,
+            libc::EBADF => EBADF,
+            libc::ECHILD => ECHILD,
+            libc::EAGAIN => EAGAIN,
+            libc::ENOMEM => ENOMEM,
+            libc::EACCES => EACCES,
+            libc::EFAULT => EFAULT,
+            libc::ENOTBLK => ENOTBLK,
+            libc::EBUSY => EBUSY,
+            libc::EEXIST => EEXIST,
+            libc::EXDEV => EXDEV,
+            libc::ENODEV => ENODEV,
+            libc::ENOTDIR => ENOTDIR,
+            libc::EISDIR => EISDIR,
+            libc::EINVAL => EINVAL,
+            libc::ENFILE => ENFILE,
+            libc::EMFILE => EMFILE,
+            libc::ENOTTY => ENOTTY,
+            libc::ETXTBSY => ETXTBSY,
+            libc::EFBIG => EFBIG,
+            libc::ENOSPC => ENOSPC,
+            libc::ESPIPE => ESPIPE,
+            libc::EROFS => EROFS,
+            libc::EMLINK => EMLINK,
+            libc::EPIPE => EPIPE,
+            libc::EDOM => EDOM,
+            libc::ERANGE => ERANGE,
+            libc::EDEADLK => EDEADLK,
+            libc::ENAMETOOLONG => ENAMETOOLONG,
+            libc::ENOLCK => ENOLCK,
+            libc::ENOSYS => ENOSYS,
+            libc::ENOTEMPTY => ENOTEMPTY,
+            libc::ELOOP => ELOOP,
+            libc::ENOMSG => ENOMSG,
+            libc::EIDRM => EIDRM,
+            libc::EINPROGRESS => EINPROGRESS,
+            libc::EALREADY => EALREADY,
+            libc::ENOTSOCK => ENOTSOCK,
+            libc::EDESTADDRREQ => EDESTADDRREQ,
+            libc::EMSGSIZE => EMSGSIZE,
+            libc::EPROTOTYPE => EPROTOTYPE,
+            libc::ENOPROTOOPT => ENOPROTOOPT,
+            libc::EPROTONOSUPPORT => EPROTONOSUPPORT,
+            libc::ESOCKTNOSUPPORT => ESOCKTNOSUPPORT,
+            libc::EPFNOSUPPORT => EPFNOSUPPORT,
+            libc::EAFNOSUPPORT => EAFNOSUPPORT,
+            libc::EADDRINUSE => EADDRINUSE,
+            libc::EADDRNOTAVAIL => EADDRNOTAVAIL,
+            libc::ENETDOWN => ENETDOWN,
+            libc::ENETUNREACH => ENETUNREACH,
+            libc::ENETRESET => ENETRESET,
+            libc::ECONNABORTED => ECONNABORTED,
+            libc::ECONNRESET => ECONNRESET,
+            libc::ENOBUFS => ENOBUFS,
+            libc::EISCONN => EISCONN,
+            libc::ENOTCONN => ENOTCONN,
+            libc::ESHUTDOWN => ESHUTDOWN,
+            libc::ETOOMANYREFS => ETOOMANYREFS,
+            libc::ETIMEDOUT => ETIMEDOUT,
+            libc::ECONNREFUSED => ECONNREFUSED,
+            libc::EHOSTDOWN => EHOSTDOWN,
+            libc::EHOSTUNREACH => EHOSTUNREACH,
+            libc::ECHRNG => ECHRNG,
+            libc::EL2NSYNC => EL2NSYNC,
+            libc::EL3HLT => EL3HLT,
+            libc::EL3RST => EL3RST,
+            libc::ELNRNG => ELNRNG,
+            libc::EUNATCH => EUNATCH,
+            libc::ENOCSI => ENOCSI,
+            libc::EL2HLT => EL2HLT,
+            libc::ENOLINK => ENOLINK,
+            libc::EPROTO => EPROTO,
+            libc::EMULTIHOP => EMULTIHOP,
+            libc::EBADMSG => EBADMSG,
+            libc::EOVERFLOW => EOVERFLOW,
+            libc::EILSEQ => EILSEQ,
+            libc::ERESTART => ERESTART,
+            libc::ENOTRECOVERABLE => ENOTRECOVERABLE,
+            libc::EOWNERDEAD => EOWNERDEAD,
+            libc::ENOTSUP => ENOTSUP,
+            libc::EPROCLIM => EPROCLIM,
+            libc::EUSERS => EUSERS,
+            libc::EDQUOT => EDQUOT,
+            libc::ESTALE => ESTALE,
+            libc::EREMOTE => EREMOTE,
+            libc::ECANCELED => ECANCELED,
+            libc::ENODATA => ENODATA,
+            libc::ENOSR => ENOSR,
+            libc::ENOSTR => ENOSTR,
+            libc::ETIME => ETIME,
+            libc::EOPNOTSUPP => EOPNOTSUPP,
             _ => UnknownErrno,
         }
     }

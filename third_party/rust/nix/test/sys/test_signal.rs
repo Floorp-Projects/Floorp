@@ -54,9 +54,8 @@ fn test_sigprocmask() {
     // test don't make sense.
     assert!(
         !old_signal_set.contains(SIGNAL),
-        "the {:?} signal is already blocked, please change to a \
-             different one",
-        SIGNAL
+        "the {SIGNAL:?} signal is already blocked, please change to a \
+             different one"
     );
 
     // Now block the signal.
@@ -71,8 +70,7 @@ fn test_sigprocmask() {
         .expect("expect to be able to retrieve old signals");
     assert!(
         old_signal_set.contains(SIGNAL),
-        "expected the {:?} to be blocked",
-        SIGNAL
+        "expected the {SIGNAL:?} to be blocked"
     );
 
     // Reset the signal.
@@ -80,9 +78,7 @@ fn test_sigprocmask() {
         .expect("expect to be able to block signals");
 }
 
-lazy_static! {
-    static ref SIGNALED: AtomicBool = AtomicBool::new(false);
-}
+static SIGNALED: AtomicBool = AtomicBool::new(false);
 
 extern "C" fn test_sigaction_handler(signal: libc::c_int) {
     let signal = Signal::try_from(signal).unwrap();

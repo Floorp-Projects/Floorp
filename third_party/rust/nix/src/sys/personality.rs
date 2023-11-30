@@ -80,7 +80,10 @@ pub fn get() -> Result<Persona> {
 ///
 /// Example:
 ///
-/// ```
+// Disable test on aarch64 until we know why it fails.
+// https://github.com/nix-rust/nix/issues/2060
+#[cfg_attr(target_arch = "aarch64", doc = " ```no_run")]
+#[cfg_attr(not(target_arch = "aarch64"), doc = " ```")]
 /// # use nix::sys::personality::{self, Persona};
 /// let mut pers = personality::get().unwrap();
 /// assert!(!pers.contains(Persona::ADDR_NO_RANDOMIZE));
