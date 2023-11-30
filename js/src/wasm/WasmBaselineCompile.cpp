@@ -1316,6 +1316,15 @@ void BaseCompiler::shuffleStackResultsBeforeBranch(StackHeight srcHeight,
   fr.popStackBeforeBranch(destHeight, stackResultBytes);
 }
 
+bool BaseCompiler::insertLeaveFrame() {
+  if (!compilerEnv_.debugEnabled()) {
+    return true;
+  }
+  insertBreakablePoint(CallSiteDesc::LeaveFrame);
+  return createStackMap("debug: leave-frame breakpoint",
+                        HasDebugFrameWithLiveRefs::Maybe);
+}
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Function calls.
@@ -4849,6 +4858,9 @@ bool BaseCompiler::emitReturnCall() {
   }
 
   sync();
+  if (!insertLeaveFrame()) {
+    return false;
+  }
 
   const FuncType& funcType = *moduleEnv_.funcs[funcIndex].type;
   bool import = moduleEnv_.funcIsImport(funcIndex);
@@ -4966,6 +4978,9 @@ bool BaseCompiler::emitReturnCallIndirect() {
   }
 
   sync();
+  if (!insertLeaveFrame()) {
+    return false;
+  }
 
   const FuncType& funcType = (*moduleEnv_.types)[funcTypeIndex].funcType();
 
@@ -5072,6 +5087,9 @@ bool BaseCompiler::emitReturnCallRef() {
   }
 
   sync();
+  if (!insertLeaveFrame()) {
+    return false;
+  }
 
   // Stack: ... arg1 .. argn callee
 
