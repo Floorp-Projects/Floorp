@@ -2428,8 +2428,10 @@ struct ABIFunctionArgs {
   MIRType operator[](size_t i) const {
     MOZ_ASSERT(i < len);
     uint64_t abi = uint64_t(abiType);
-    while (i--) {
+    size_t argAtLSB = len - 1;
+    while (argAtLSB != i) {
       abi = abi >> ArgType_Shift;
+      argAtLSB--;
     }
     return ToMIRType(ABIArgType(abi & ArgType_Mask));
   }
