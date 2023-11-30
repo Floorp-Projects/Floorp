@@ -373,13 +373,21 @@ void ZeroHertzAdapterMode::OnFrame(Timestamp post_time,
 
   // Store the frame in the queue and schedule deferred processing.
   queued_frames_.push_back(frame);
+  int frame_id = current_frame_id_;
   current_frame_id_++;
   scheduled_repeat_ = absl::nullopt;
-  TimeDelta time_spent_since_post = clock_->CurrentTime() - post_time;
+  Timestamp task_post_time = clock_->CurrentTime();
+  TimeDelta time_spent_since_post = task_post_time - post_time;
+  TRACE_EVENT_ASYNC_BEGIN0(TRACE_DISABLED_BY_DEFAULT("webrtc"), "FrameToQueue2",
+                           frame_id);
   queue_->PostDelayedHighPrecisionTask(
       SafeTask(safety_.flag(),
-               [this] {
+               [this, frame_id, task_post_time] {
                  RTC_DCHECK_RUN_ON(&sequence_checker_);
+                 TRACE_EVENT_ASYNC_END1(
+                     TRACE_DISABLED_BY_DEFAULT("webrtc"), "FrameToQueue2",
+                     frame_id, "delay_us",
+                     (clock_->CurrentTime() - task_post_time).us());
                  ProcessOnDelayedCadence();
                }),
       std::max(frame_delay_ - time_spent_since_post, TimeDelta::Zero()));
@@ -647,11 +655,17 @@ void FrameCadenceAdapterImpl::OnFrame(const VideoFrame& frame) {
   // Local time in webrtc time base.
   Timestamp post_time = clock_->CurrentTime();
   frames_scheduled_for_processing_.fetch_add(1, std::memory_order_relaxed);
+  TRACE_EVENT_ASYNC_BEGIN0(TRACE_DISABLED_BY_DEFAULT("webrtc"), "FrameToQueue1",
+                           frame.id());
   queue_->PostTask(SafeTask(safety_.flag(), [this, post_time, frame] {
     RTC_DCHECK_RUN_ON(queue_);
+    Timestamp current_time = clock_->CurrentTime();
+    TRACE_EVENT_ASYNC_END1(TRACE_DISABLED_BY_DEFAULT("webrtc"), "FrameToQueue1",
+                           frame.id(), "delay_us",
+                           (current_time - post_time).us());
     if (zero_hertz_adapter_created_timestamp_.has_value()) {
       TimeDelta time_until_first_frame =
-          clock_->CurrentTime() - *zero_hertz_adapter_created_timestamp_;
+          current_time - *zero_hertz_adapter_created_timestamp_;
       zero_hertz_adapter_created_timestamp_ = absl::nullopt;
       RTC_HISTOGRAM_COUNTS_10000(
           "WebRTC.Screenshare.ZeroHz.TimeUntilFirstFrameMs",
