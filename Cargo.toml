@@ -144,6 +144,8 @@ backtrace = { path = "build/rust/backtrace" }
 bindgen_0_63 = { package = "bindgen", path = "build/rust/bindgen-0.63" }
 bindgen_0_64 = { package = "bindgen", path = "build/rust/bindgen-0.64" }
 bindgen = { path = "build/rust/bindgen" }
+# 0.69.1 +  https://github.com/rust-lang/rust-bindgen/pull/2689
+bindgen_0_69 = { package = "bindgen", git = "https://github.com/rust-lang/rust-bindgen", rev = "86f3dbe846020e2ba573d6eb38d1434d0cbcbb40" }
 
 # Patch nix 0.24 to 0.27
 nix = { path = "build/rust/nix" }
