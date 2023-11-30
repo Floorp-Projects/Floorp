@@ -1008,11 +1008,24 @@ void nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
 
     nsRect bgRect = GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
+    nsRect bgRectInsideBorder = bgRect;
+
+    // If we're doing collapsed borders, and this element forms a new stacking
+    // context or has position:relative (which paints as though it did), inset
+    // the background rect so that we don't overpaint the inset part of our
+    // borders.
+    nsTableFrame* tableFrame = GetTableFrame();
+    if (tableFrame->IsBorderCollapse() &&
+        (IsStackingContext() ||
+         StyleDisplay()->mPosition == StylePositionProperty::Relative)) {
+      bgRectInsideBorder.Deflate(GetUsedBorder());
+    }
 
     // display background if we need to.
     const AppendedBackgroundType result =
         nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
-            aBuilder, this, bgRect, aLists.BorderBackground());
+            aBuilder, this, bgRectInsideBorder, aLists.BorderBackground(), true,
+            bgRect);
     if (result == AppendedBackgroundType::None) {
       aBuilder->BuildCompositorHitTestInfoIfNeeded(this,
                                                    aLists.BorderBackground());
@@ -1025,7 +1038,6 @@ void nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
 
     // display borders if we need to
-    nsTableFrame* tableFrame = GetTableFrame();
     ProcessBorders(tableFrame, aBuilder, aLists);
 
     // and display the selection border if we need to
