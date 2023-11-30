@@ -9415,8 +9415,10 @@ bool BaseCompiler::emitCallBuiltinModuleFunc() {
     return true;
   }
 
-  // The final parameter of an builtinModuleFunc is implicitly the heap base
-  pushHeapBase(0);
+  if (builtinModuleFunc->usesMemory) {
+    // The final parameter of an builtinModuleFunc is implicitly the heap base
+    pushHeapBase(0);
+  }
 
   // Call the builtinModuleFunc
   return emitInstanceCall(builtinModuleFunc->signature);

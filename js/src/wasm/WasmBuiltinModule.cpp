@@ -32,14 +32,17 @@
 using namespace js;
 using namespace js::wasm;
 
-#define VISIT_BUILTIN_FUNC(op, export, sa_name, abitype, entry, idx) \
-  static const ValType BuiltinModuleFunc##op##_Params[] =            \
-      DECLARE_BUILTIN_MODULE_FUNC_SAS_PARAM_VALTYPES_##op;           \
-                                                                     \
-  const BuiltinModuleFunc BuiltinModuleFunc##op = {                  \
-      export,                                                        \
-      mozilla::Span<const ValType>(BuiltinModuleFunc##op##_Params),  \
-      SASig##sa_name,                                                \
+#define VISIT_BUILTIN_FUNC(op, export, sa_name, abitype, entry, uses_memory, \
+                           idx)                                              \
+  static const ValType BuiltinModuleFunc##op##_Params[] =                    \
+      DECLARE_BUILTIN_MODULE_FUNC_PARAM_VALTYPES_##op;                       \
+                                                                             \
+  const BuiltinModuleFunc BuiltinModuleFunc##op = {                          \
+      export,                                                                \
+      mozilla::Span<const ValType>(BuiltinModuleFunc##op##_Params),          \
+      DECLARE_BUILTIN_MODULE_FUNC_RESULT_VALTYPE_##op,                       \
+      SASig##sa_name,                                                        \
+      uses_memory,                                                           \
   };
 
 FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
@@ -50,15 +53,19 @@ bool BuiltinModuleFunc::funcType(FuncType* type) const {
   if (!paramVec.append(params.data(), params.data() + params.size())) {
     return false;
   }
-  *type = FuncType(std::move(paramVec), ValTypeVector());
+  ValTypeVector resultVec;
+  if (result.isSome() && !resultVec.append(*result)) {
+    return false;
+  }
+  *type = FuncType(std::move(paramVec), std::move(resultVec));
   return true;
 }
 
 /* static */
 const BuiltinModuleFunc& BuiltinModuleFunc::getFromId(BuiltinModuleFuncId id) {
   switch (id) {
-#define VISIT_BUILTIN_FUNC(op, export, sa_name, abitype, entry, idx) \
-  case BuiltinModuleFuncId::op:                                      \
+#define VISIT_BUILTIN_FUNC(op, ...) \
+  case BuiltinModuleFuncId::op:     \
     return BuiltinModuleFunc##op;
     FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
 #undef VISIT_BUILTIN_FUNC
@@ -89,7 +96,7 @@ bool EncodeFuncBody(const BuiltinModuleFunc& builtinModuleFunc,
 
 bool wasm::CompileBuiltinModule(JSContext* cx,
                                 const mozilla::Span<BuiltinModuleFuncId> ids,
-                                Shareable sharedMemory,
+                                mozilla::Maybe<Shareable> memory,
                                 MutableHandle<WasmModuleObject*> result) {
   // Create the options manually, enabling intrinsics
   FeatureOptions featureOptions;
@@ -113,23 +120,24 @@ bool wasm::CompileBuiltinModule(JSContext* cx,
     return false;
   }
 
-  // Add (import (memory 0))
-  CacheableName emptyString;
-  CacheableName memoryString;
-  if (!CacheableName::fromUTF8Chars("memory", &memoryString)) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-  if (!moduleEnv.imports.append(Import(std::move(emptyString),
-                                       std::move(memoryString),
-                                       DefinitionKind::Memory))) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-  if (!moduleEnv.memories.append(
-          MemoryDesc(Limits(0, Nothing(), sharedMemory)))) {
-    ReportOutOfMemory(cx);
-    return false;
+  if (memory.isSome()) {
+    // Add (import (memory 0))
+    CacheableName emptyString;
+    CacheableName memoryString;
+    if (!CacheableName::fromUTF8Chars("memory", &memoryString)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+    if (!moduleEnv.imports.append(Import(std::move(emptyString),
+                                         std::move(memoryString),
+                                         DefinitionKind::Memory))) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+    if (!moduleEnv.memories.append(MemoryDesc(Limits(0, Nothing(), *memory)))) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
   }
 
   // Add (type (func (params ...))) for each func. The function types will

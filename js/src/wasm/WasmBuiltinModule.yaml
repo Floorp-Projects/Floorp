@@ -12,10 +12,12 @@
   entry: Instance::intrI8VecMul
   export: i8vecmul
   params:
-    - I32
-    - I32
-    - I32
-    - I32
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+  fail_mode: FailOnNegI32
+  uses_memory: true
 
 #if defined(ENABLE_WASM_MOZ_INTGEMM)
 
@@ -38,12 +40,14 @@
   entry: intgemm::IntrI8PrepareB
   export: int8_prepare_b
   params:
-    - I32
-    - F32
-    - F32
-    - I32
-    - I32
-    - I32
+    - 'ValType::i32()'
+    - 'ValType::f32()'
+    - 'ValType::f32()'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+  fail_mode: FailOnNegI32
+  uses_memory: true
 
 
 # Prepare B for the Matrix Multiply intrinsic from transposed version of Input matrix B.
@@ -61,12 +65,14 @@
   entry: intgemm::IntrI8PrepareBFromTransposed
   export: int8_prepare_b_from_transposed
   params:
-    - I32
-    - F32
-    - F32
-    - I32
-    - I32
-    - I32
+    - 'ValType::i32()'
+    - 'ValType::f32()'
+    - 'ValType::f32()'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+  fail_mode: FailOnNegI32
+  uses_memory: true
 
 
 # Prepare B for the Matrix Multiply intrinsic from a quantized and transposed version of Input
@@ -84,10 +90,12 @@
   entry: intgemm::IntrI8PrepareBFromQuantizedTransposed
   export: int8_prepare_b_from_quantized_transposed
   params:
-    - I32
-    - I32
-    - I32
-    - I32
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+  fail_mode: FailOnNegI32
+  uses_memory: true
 
 
 # Prepare A for the Matrix Multiply intrinsic from Input matrix A.
@@ -108,12 +116,14 @@
   entry: intgemm::IntrI8PrepareA
   export: int8_prepare_a
   params:
-    - I32
-    - F32
-    - F32
-    - I32
-    - I32
-    - I32
+    - 'ValType::i32()'
+    - 'ValType::f32()'
+    - 'ValType::f32()'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+  fail_mode: FailOnNegI32
+  uses_memory: true
 
 
 # Prepares bias for the Matrix Multiply intrinsic.
@@ -132,15 +142,17 @@
   entry: intgemm::IntrI8PrepareBias
   export: int8_prepare_bias
   params:
-    - I32
-    - F32
-    - F32
-    - F32
-    - F32
-    - I32
-    - I32
-    - I32
-    - I32
+    - 'ValType::i32()'
+    - 'ValType::f32()'
+    - 'ValType::f32()'
+    - 'ValType::f32()'
+    - 'ValType::f32()'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+  fail_mode: FailOnNegI32
+  uses_memory: true
 
 
 # Perform multiplication of 2 matrices followed by adding a bias.
@@ -165,18 +177,20 @@
   entry: intgemm::IntrI8MultiplyAndAddBias
   export: int8_multiply_and_add_bias
   params:
-    - I32
-    - F32
-    - F32
-    - I32
-    - F32
-    - F32
-    - I32
-    - F32
-    - I32
-    - I32
-    - I32
-    - I32
+    - 'ValType::i32()'
+    - 'ValType::f32()'
+    - 'ValType::f32()'
+    - 'ValType::i32()'
+    - 'ValType::f32()'
+    - 'ValType::f32()'
+    - 'ValType::i32()'
+    - 'ValType::f32()'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+  fail_mode: FailOnNegI32
+  uses_memory: true
 
 
 # Select a subset of columns of prepared B.
@@ -192,11 +206,13 @@
   entry: intgemm::IntrI8SelectColumnsOfB
   export: int8_select_columns_of_b
   params:
-    - I32
-    - I32
-    - I32
-    - I32
-    - I32
-    - I32
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+  fail_mode: FailOnNegI32
+  uses_memory: true
 
 #endif // ENABLE_WASM_MOZ_INTGEMM

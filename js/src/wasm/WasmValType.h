@@ -112,11 +112,11 @@ union PackedTypeCode {
 
   static PackedTypeCode pack(TypeCode tc) { return pack(tc, nullptr, false); }
 
-  bool isValid() const { return typeCode_ != NoTypeCode; }
+  constexpr bool isValid() const { return typeCode_ != NoTypeCode; }
 
   PackedRepr bits() const { return bits_; }
 
-  TypeCode typeCode() const {
+  constexpr TypeCode typeCode() const {
     MOZ_ASSERT(isValid());
     return TypeCode(typeCode_);
   }
@@ -134,7 +134,7 @@ union PackedTypeCode {
   // what ValType needs, so that this decoding step is not necessary, but that
   // moves complexity elsewhere, and the perf gain here would be only about 1%
   // for baseline compilation throughput.
-  TypeCode typeCodeAbstracted() const {
+  constexpr TypeCode typeCodeAbstracted() const {
     TypeCode tc = typeCode();
     return tc < LowestPrimitiveTypeCode ? AbstractReferenceTypeCode : tc;
   }
@@ -634,6 +634,11 @@ class PackedType : public T {
   inline void AddRef() const;
   inline void Release() const;
 
+  static constexpr PackedType i32() { return PackedType(PackedType::I32); }
+  static constexpr PackedType f32() { return PackedType(PackedType::F32); }
+  static constexpr PackedType i64() { return PackedType(PackedType::I64); }
+  static constexpr PackedType f64() { return PackedType(PackedType::F64); }
+
   static PackedType fromMIRType(jit::MIRType mty) {
     switch (mty) {
       case jit::MIRType::Int32:
@@ -830,7 +835,7 @@ class PackedType : public T {
   // as a pointer.  At the JS/wasm boundary, an AnyRef can be represented as a
   // JS::Value, and the type translation may have to be handled specially and on
   // a case-by-case basis.
-  jit::MIRType toMIRType() const {
+  constexpr jit::MIRType toMIRType() const {
     switch (tc_.typeCodeAbstracted()) {
       case TypeCode::I32:
         return jit::MIRType::Int32;

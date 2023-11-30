@@ -7708,16 +7708,29 @@ static bool EmitCallBuiltinModuleFunc(FunctionCompiler& f) {
     return false;
   }
 
-  MDefinition* memoryBase = f.memoryBase(0);
-  if (!f.passArg(memoryBase, MIRType::Pointer, &args)) {
-    return false;
+  if (builtinModuleFunc->usesMemory) {
+    MDefinition* memoryBase = f.memoryBase(0);
+    if (!f.passArg(memoryBase, MIRType::Pointer, &args)) {
+      return false;
+    }
   }
 
   if (!f.finishCall(&args)) {
     return false;
   }
 
-  return f.builtinInstanceMethodCall(callee, bytecodeOffset, args);
+  bool hasResult = builtinModuleFunc->result.isSome();
+  MDefinition* result = nullptr;
+  MDefinition** resultOutParam = hasResult ? &result : nullptr;
+  if (!f.builtinInstanceMethodCall(callee, bytecodeOffset, args,
+                                   resultOutParam)) {
+    return false;
+  }
+
+  if (hasResult) {
+    f.iter().setResult(result);
+  }
+  return true;
 }
 
 static bool EmitBodyExprs(FunctionCompiler& f) {

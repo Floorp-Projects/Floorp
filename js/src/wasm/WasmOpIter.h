@@ -4097,10 +4097,16 @@ inline bool OpIter<Policy>::readCallBuiltinModuleFunc(
 
   *builtinModuleFunc = &BuiltinModuleFunc::getFromId(BuiltinModuleFuncId(id));
 
-  if (env_.numMemories() == 0) {
+  if ((*builtinModuleFunc)->usesMemory && env_.numMemories() == 0) {
     return fail("can't touch memory without memory");
   }
-  return popWithTypes((*builtinModuleFunc)->params, params);
+  if (!popWithTypes((*builtinModuleFunc)->params, params)) {
+    return false;
+  }
+  if ((*builtinModuleFunc)->result.isNothing()) {
+    return true;
+  }
+  return push(*(*builtinModuleFunc)->result);
 }
 
 }  // namespace wasm

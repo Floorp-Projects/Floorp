@@ -1794,8 +1794,8 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native array.init_elem function";
     case SymbolicAddress::ArrayCopy:
       return "call to native array.copy function";
-#define VISIT_BUILTIN_FUNC(op, export, sa_name, abitype, entry, idx) \
-  case SymbolicAddress::sa_name:                                     \
+#define VISIT_BUILTIN_FUNC(op, export, sa_name, ...) \
+  case SymbolicAddress::sa_name:                     \
     return "call to native " #op " builtin (in wasm)";
       FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
 #undef VISIT_BUILTIN_FUNC
