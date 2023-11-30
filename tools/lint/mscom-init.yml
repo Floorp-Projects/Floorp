@@ -18,13 +18,18 @@ forbid-mscom-init:
         - cc
         - cpp
     exclude:
-        # These files are the only allowable locations
+        # These files contain utilities for using COM more safely.
         - ipc/mscom/ApartmentRegion.h
         - ipc/mscom/COMWrappers.cpp
         - ipc/mscom/COMWrappers.h
-        - ipc/mscom/ProcessRuntime.cpp
         - ipc/mscom/EnsureMTA.cpp
-        # These files are existing locations that must eventually be fixed.
+        # These files have been reviewed by MSCOM peers, and the use of
+        # CoInitialize within them has been confirmed to be necessary and
+        # proper.
+        - ipc/mscom/ProcessRuntime.cpp
+        # These files are existing legacy uses of CoInitialize (and so forth)
+        # that must eventually be fixed -- probably by converting them to use
+        # ApartmentRegion and moving them to _that_ lint's exception-list.
         - browser/components/migration/nsIEHistoryEnumerator.cpp
         - browser/components/migration/tests/unit/insertIEHistory/InsertIEHistory.cpp
         - browser/components/shell/nsWindowsShellService.cpp
@@ -43,3 +48,26 @@ forbid-mscom-init:
         - widget/windows/nsWindow.h
         - widget/windows/tests/TestUriValidation.cpp
         - xpcom/io/nsLocalFileWin.cpp
+
+forbid-apartment-region:
+    description: >-
+        New uses of ApartmentRegion, ApartmentRegionT, MTARegion, or STARegion
+        require approval by a peer of the IPC: MSCOM module.
+    level: error
+    include: ['.']
+    type: regex
+    payload: ApartmentRegion(T)?|[MS]TARegion
+    ignore-case: false
+    extensions:
+        - h
+        - c
+        - cc
+        - cpp
+    exclude:
+        # ApartmentRegion's definition.
+        - ipc/mscom/ApartmentRegion.h
+        # These files have been reviewed and approved by MSCOM peers.
+        - ipc/mscom/ProcessRuntime.cpp
+        - ipc/mscom/ProcessRuntime.h
+        # These files are existing uses that must eventually be fixed.
+        - widget/windows/LegacyJumpListBuilder.cpp
