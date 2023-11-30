@@ -567,8 +567,6 @@ fn on_pseudo_class<C: Collector>(pc: &NonTSPseudoClass, collector: &mut C) -> Re
         #[cfg(feature = "gecko")]
         NonTSPseudoClass::MozTableBorderNonzero => local_name!("border"),
         #[cfg(feature = "gecko")]
-        NonTSPseudoClass::MozBrowserFrame => local_name!("mozbrowser"),
-        #[cfg(feature = "gecko")]
         NonTSPseudoClass::MozSelectListBox => {
             // This depends on two attributes.
             add_attr_dependency(local_name!("multiple"), collector)?;

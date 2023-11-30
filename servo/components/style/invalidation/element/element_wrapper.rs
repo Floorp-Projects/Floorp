@@ -197,15 +197,6 @@ where
             },
 
             #[cfg(feature = "gecko")]
-            NonTSPseudoClass::MozBrowserFrame => {
-                if let Some(snapshot) = self.snapshot() {
-                    if snapshot.has_other_pseudo_class_state() {
-                        return snapshot.mIsMozBrowserFrame();
-                    }
-                }
-            },
-
-            #[cfg(feature = "gecko")]
             NonTSPseudoClass::MozSelectListBox => {
                 if let Some(snapshot) = self.snapshot() {
                     if snapshot.has_other_pseudo_class_state() {

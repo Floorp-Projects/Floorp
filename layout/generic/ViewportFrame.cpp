@@ -86,14 +86,7 @@ void ViewportFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
  * fullscreen. This function should matches the CSS rule in ua.css.
  */
 static bool ShouldInTopLayerForFullscreen(dom::Element* aElement) {
-  if (!aElement->GetParent()) {
-    return false;
-  }
-  nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(aElement);
-  if (browserFrame && browserFrame->GetReallyIsBrowser()) {
-    return false;
-  }
-  return true;
+  return !!aElement->GetParent();
 }
 #endif  // DEBUG
 

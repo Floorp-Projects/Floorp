@@ -143,11 +143,6 @@ class ServoElementSnapshot {
     return mIsTableBorderNonzero;
   }
 
-  bool IsMozBrowserFrame() const {
-    MOZ_ASSERT(HasOtherPseudoClassState());
-    return mIsMozBrowserFrame;
-  }
-
   bool IsSelectListBox() const {
     MOZ_ASSERT(HasOtherPseudoClassState());
     return mIsSelectListBox;
@@ -166,7 +161,6 @@ class ServoElementSnapshot {
   bool mIsInChromeDocument : 1;
   bool mSupportsLangAttr : 1;
   bool mIsTableBorderNonzero : 1;
-  bool mIsMozBrowserFrame : 1;
   bool mIsSelectListBox : 1;
   bool mClassAttributeChanged : 1;
   bool mIdAttributeChanged : 1;
