@@ -26,6 +26,7 @@
     <string name="tracking_protection">Tracking Protection</string>
     <string name="tracking_protection_ex">TP exception</string>
     <string name="private_browsing">Private Browsing</string>
+    <string name="global_privacy_control">Global Privacy Control</string>
     <string name="remote_debugging">Remote Debugging</string>
     <string name="forward">Forward</string>
     <string name="reload">Reload</string>
@@ -85,6 +86,9 @@
 
     <string name="key_allow_extensions_in_private_browsing">allow_extensions_in_private_browsing</string>
     <item type="bool" name="allow_extensions_in_private_browsing_default">false</item>
+
+    <string name="key_global_privacy_control_enabled">global_privacy_control_enabled</string>
+    <item type="bool" name="global_privacy_control_enabled_default">false</item>
 
     <string name="key_user_agent_override">user_agent_override</string>
     <string name="user_agent_override_default"></string>

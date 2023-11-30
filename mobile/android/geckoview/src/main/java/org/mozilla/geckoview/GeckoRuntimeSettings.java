@@ -135,6 +135,20 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     }
 
     /**
+     * Set whether Global Privacy Control should be enabled. GPC is a mechanism for people to tell
+     * websites to respect their privacy rights. Once turned on, it sends a signal to the websites
+     * users visit telling them that the user doesn't want to be tracked and doesn't want their data
+     * to be sold.
+     *
+     * @param enabled A flag determining whether Global Privacy Control should be enabled.
+     * @return The builder instance.
+     */
+    public @NonNull Builder globalPrivacyControlEnabled(final boolean enabled) {
+      getSettings().setGlobalPrivacyControl(enabled);
+      return this;
+    }
+
+    /**
      * Set whether remote debugging support should be enabled.
      *
      * @param enabled True if remote debugging should be enabled.
@@ -586,6 +600,12 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
       new PrefWithoutDefault<Long>("extensions.webextensions.crash.timeframe");
   /* package */ final PrefWithoutDefault<Integer> mExtensionsProcessCrashThreshold =
       new PrefWithoutDefault<Integer>("extensions.webextensions.crash.threshold");
+  /* package */ final Pref<Boolean> mGlobalPrivacyControlEnabled =
+      new Pref<Boolean>("privacy.globalprivacycontrol.enabled", false);
+  /* package */ final Pref<Boolean> mGlobalPrivacyControlEnabledPrivateMode =
+      new Pref<Boolean>("privacy.globalprivacycontrol.pbmode.enabled", true);
+  /* package */ final Pref<Boolean> mGlobalPrivacyControlFunctionalityEnabled =
+      new Pref<Boolean>("privacy.globalprivacycontrol.functionality.enabled", true);
 
   /* package */ int mPreferredColorScheme = COLOR_SCHEME_SYSTEM;
 
@@ -712,6 +732,22 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
    */
   public @NonNull GeckoRuntimeSettings setJavaScriptEnabled(final boolean flag) {
     mJavaScript.commit(flag);
+    return this;
+  }
+
+  /**
+   * Enable the Global Privacy Control Feature.
+   *
+   * <p>Note: Global Privacy Control is always enabled in private mode.
+   *
+   * @param enabled A flag determining whether GPC should be enabled.
+   * @return This GeckoRuntimeSettings instance
+   */
+  public @NonNull GeckoRuntimeSettings setGlobalPrivacyControl(final boolean enabled) {
+    mGlobalPrivacyControlEnabled.commit(enabled);
+    // Global Privacy Control Feature is enabled by default in private browsing.
+    mGlobalPrivacyControlEnabledPrivateMode.commit(true);
+    mGlobalPrivacyControlFunctionalityEnabled.commit(true);
     return this;
   }
 
@@ -928,6 +964,24 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
    */
   public boolean getExtensionsWebAPIEnabled() {
     return mExtensionsWebAPIEnabled.get();
+  }
+
+  /**
+   * Get whether or not Global Privacy Control is currently enabled for normal tabs.
+   *
+   * @return True if GPC is enabled in normal tabs.
+   */
+  public boolean getGlobalPrivacyControl() {
+    return mGlobalPrivacyControlEnabled.get();
+  }
+
+  /**
+   * Get whether or not Global Privacy Control is currently enabled for private tabs.
+   *
+   * @return True if GPC is enabled in private tabs.
+   */
+  public boolean getGlobalPrivacyControlPrivateMode() {
+    return mGlobalPrivacyControlEnabledPrivateMode.get();
   }
 
   /**
