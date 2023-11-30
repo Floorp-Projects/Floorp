@@ -336,6 +336,8 @@
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox stavlja ljude iznad profita i brani vašu privatnost blokiranjem alata za praćenje.\n\nSaznajte više u našoj politici privatnosti.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2">Naš neprofitni preglednik pomaže spriječiti tvrtke da vas tajno prate na webu.\n\nSaznajte više u našoj obavijesti o privatnosti.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">politika privatnosti</string>
@@ -345,6 +347,8 @@
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Ne sada</string>
     <!-- Title for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">Prebacite se s telefona na laptop i nazad</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title_2">Ostanite zaštićeni šifriranjem kada prenosite podatke između uređaja</string>
     <!-- Description for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">Dohvatite otvorene kartice i lozinke s vašeg drugog uređaja i nastavite gdje ste stali.</string>
     <!-- Text for the button to sign in to sync on the device -->
