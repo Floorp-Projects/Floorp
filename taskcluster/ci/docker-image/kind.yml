@@ -262,7 +262,7 @@ jobs:
         parent: debian12-base
     push-to-try:
         symbol: I(push-to-try)
-        parent: debian11-base
+        parent: debian12-base
     decision:
         symbol: I(decision)
         parent: ubuntu2004-base
