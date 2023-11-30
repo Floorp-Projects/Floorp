@@ -430,12 +430,10 @@ class ChromeActions {
       }
     }
 
-    const res = {
+    sendResponse({
       browserPrefs: this.getBrowserPrefs(),
       prefs: currentPrefs,
-    };
-    sendResponse?.(res);
-    return res;
+    });
   }
 
   /**
@@ -707,42 +705,35 @@ class RequestListener {
     this.actions = actions;
   }
 
-  // Receive an event and synchronously or asynchronously responds.
-  receive(event) {
-    var message = event.target;
-    var doc = message.ownerDocument;
-    var action = event.detail.action;
-    var data = event.detail.data;
-    var sync = event.detail.sync;
-    var actions = this.actions;
-    if (!(action in actions)) {
+  // Receive an event and (optionally) asynchronously responds.
+  receive({ target, detail }) {
+    const doc = target.ownerDocument;
+    const { action, data, responseExpected } = detail;
+
+    const actionFn = this.actions[action];
+    if (!actionFn) {
       log("Unknown action: " + action);
       return;
     }
-    var response;
-    if (sync) {
-      response = actions[action].call(this.actions, data);
-      event.detail.response = Cu.cloneInto(response, doc.defaultView);
+    let response = null;
+
+    if (!responseExpected) {
+      doc.documentElement.removeChild(target);
     } else {
-      if (!event.detail.responseExpected) {
-        doc.documentElement.removeChild(message);
-        response = null;
-      } else {
-        response = function sendResponse(aResponse) {
-          try {
-            var listener = doc.createEvent("CustomEvent");
-            let detail = Cu.cloneInto({ response: aResponse }, doc.defaultView);
-            listener.initCustomEvent("pdf.js.response", true, false, detail);
-            return message.dispatchEvent(listener);
-          } catch (e) {
-            // doc is no longer accessible because the requestor is already
-            // gone. unloaded content cannot receive the response anyway.
-            return false;
-          }
-        };
-      }
-      actions[action].call(this.actions, data, response);
+      response = function (aResponse) {
+        try {
+          const listener = doc.createEvent("CustomEvent");
+          const detail = Cu.cloneInto({ response: aResponse }, doc.defaultView);
+          listener.initCustomEvent("pdf.js.response", true, false, detail);
+          return target.dispatchEvent(listener);
+        } catch (e) {
+          // doc is no longer accessible because the requestor is already
+          // gone. unloaded content cannot receive the response anyway.
+          return false;
+        }
+      };
     }
+    actionFn.call(this.actions, data, response);
   }
 }
 
