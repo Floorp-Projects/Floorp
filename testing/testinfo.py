@@ -436,7 +436,7 @@ class TestInfoReport(TestInfo):
                     nextday.date(),
                 )
                 urls_to_fetch.append([str(nextday.date()), url])
-            testrundata[str(nextday.date())] = olddata[str(nextday.date())]
+            testrundata[str(nextday.date())] = olddata.get(str(nextday.date()), {})
 
             startday = nextday
 
