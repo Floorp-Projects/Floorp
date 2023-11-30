@@ -100,9 +100,11 @@ const MR_ABOUT_WELCOME_DEFAULT = {
         progress_bar: true,
         hide_secondary_section: "responsive",
         logo: {},
-        title: { string_id: "mr2022-onboarding-set-default-title" },
+        title: {
+          string_id: "onboarding-easy-setup-security-and-privacy-title",
+        },
         subtitle: {
-          string_id: "mr2022-onboarding-set-default-subtitle",
+          string_id: "onboarding-easy-setup-security-and-privacy-subtitle",
         },
         tiles: {
           type: "multiselect",
@@ -220,10 +222,10 @@ const MR_ABOUT_WELCOME_DEFAULT = {
         progress_bar: true,
         logo: {},
         title: {
-          string_id: "mr2022-onboarding-set-default-title",
+          string_id: "onboarding-easy-setup-security-and-privacy-title",
         },
         subtitle: {
-          string_id: "mr2022-onboarding-set-default-subtitle",
+          string_id: "onboarding-easy-setup-security-and-privacy-subtitle",
         },
         tiles: {
           type: "multiselect",
@@ -331,10 +333,10 @@ const MR_ABOUT_WELCOME_DEFAULT = {
         progress_bar: true,
         logo: {},
         title: {
-          string_id: "mr2022-onboarding-set-default-title",
+          string_id: "onboarding-easy-setup-security-and-privacy-title",
         },
         subtitle: {
-          string_id: "mr2022-onboarding-set-default-subtitle",
+          string_id: "onboarding-easy-setup-security-and-privacy-subtitle",
         },
         tiles: {
           type: "multiselect",
@@ -441,10 +443,10 @@ const MR_ABOUT_WELCOME_DEFAULT = {
         progress_bar: true,
         logo: {},
         title: {
-          string_id: "mr2022-onboarding-set-default-title",
+          string_id: "onboarding-easy-setup-security-and-privacy-title",
         },
         subtitle: {
-          string_id: "mr2022-onboarding-set-default-subtitle",
+          string_id: "onboarding-easy-setup-security-and-privacy-subtitle",
         },
         tiles: {
           type: "multiselect",
@@ -614,10 +616,10 @@ const MR_ABOUT_WELCOME_DEFAULT = {
         progress_bar: true,
         logo: {},
         title: {
-          string_id: "mr2022-onboarding-mobile-download-title",
+          string_id: "onboarding-mobile-download-security-and-privacy-title",
         },
         subtitle: {
-          string_id: "mr2022-onboarding-mobile-download-subtitle",
+          string_id: "onboarding-mobile-download-security-and-privacy-subtitle",
         },
         hero_image: {
           url: "chrome://activity-stream/content/data/content/assets/mobile-download-qr-new-user.svg",
@@ -693,10 +695,10 @@ const MR_ABOUT_WELCOME_DEFAULT = {
         progress_bar: true,
         logo: {},
         title: {
-          string_id: "mr2022-onboarding-gratitude-title",
+          string_id: "onboarding-gratitude-security-and-privacy-title",
         },
         subtitle: {
-          string_id: "mr2022-onboarding-gratitude-subtitle",
+          string_id: "onboarding-gratitude-security-and-privacy-subtitle",
         },
         primary_button: {
           label: {
