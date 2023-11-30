@@ -65,7 +65,7 @@ class MOZ_STACK_CLASS DragDataProducer {
                    nsIContent* aSelectionTargetNode, bool aIsAltKeyPressed);
   nsresult Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
                    Selection** aSelection, nsIContent** aDragNode,
-                   nsIPrincipal** aPrincipal, nsIContentSecurityPolicy** aCsp,
+                   nsIContentSecurityPolicy** aCsp,
                    nsICookieJarSettings** aCookieJarSettings);
 
  private:
@@ -110,8 +110,7 @@ nsresult nsContentAreaDragDrop::GetDragData(
     nsPIDOMWindowOuter* aWindow, nsIContent* aTarget,
     nsIContent* aSelectionTargetNode, bool aIsAltKeyPressed,
     DataTransfer* aDataTransfer, bool* aCanDrag, Selection** aSelection,
-    nsIContent** aDragNode, nsIPrincipal** aPrincipal,
-    nsIContentSecurityPolicy** aCsp,
+    nsIContent** aDragNode, nsIContentSecurityPolicy** aCsp,
     nsICookieJarSettings** aCookieJarSettings) {
   NS_ENSURE_TRUE(aSelectionTargetNode, NS_ERROR_INVALID_ARG);
 
@@ -119,8 +118,8 @@ nsresult nsContentAreaDragDrop::GetDragData(
 
   DragDataProducer provider(aWindow, aTarget, aSelectionTargetNode,
                             aIsAltKeyPressed);
-  return provider.Produce(aDataTransfer, aCanDrag, aSelection, aDragNode,
-                          aPrincipal, aCsp, aCookieJarSettings);
+  return provider.Produce(aDataTransfer, aCanDrag, aSelection, aDragNode, aCsp,
+                          aCookieJarSettings);
 }
 
 NS_IMPL_ISUPPORTS(nsContentAreaDragDropDataProvider, nsIFlavorDataProvider)
@@ -423,7 +422,6 @@ nsresult DragDataProducer::GetImageData(imgIContainer* aImage,
 nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
                                    Selection** aSelection,
                                    nsIContent** aDragNode,
-                                   nsIPrincipal** aPrincipal,
                                    nsIContentSecurityPolicy** aCsp,
                                    nsICookieJarSettings** aCookieJarSettings) {
   MOZ_ASSERT(aCanDrag && aSelection && aDataTransfer && aDragNode,

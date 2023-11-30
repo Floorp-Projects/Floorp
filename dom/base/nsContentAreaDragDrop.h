@@ -45,8 +45,6 @@ class nsContentAreaDragDrop {
    *                    selection is being dragged.
    * aDragNode - [out] the link, image or area being dragged, or null if the
    *             drag occurred on another element.
-   * aPrincipal - [out] set to the triggering principal of the drag, or null if
-   *                    it's from browser chrome or OS
    * aCSP       - [out] set to the CSP of the Drag, or null if
    *                    it's from browser chrome or OS
    * aCookieJarSettings - [out] set to the cookieJarSetting of the Drag, or null
@@ -58,7 +56,7 @@ class nsContentAreaDragDrop {
                               mozilla::dom::DataTransfer* aDataTransfer,
                               bool* aCanDrag,
                               mozilla::dom::Selection** aSelection,
-                              nsIContent** aDragNode, nsIPrincipal** aPrincipal,
+                              nsIContent** aDragNode,
                               nsIContentSecurityPolicy** aCsp,
                               nsICookieJarSettings** aCookieJarSettings);
 };
