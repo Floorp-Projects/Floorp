@@ -1374,7 +1374,7 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvRequestCameraAccess(
                }
              });
 #else
-  aResolver(NS_ERROR_NOT_IMPLEMENTED);
+  aResolver(CamerasAccessStatus::Error);
 #endif
   return IPC_OK();
 }
