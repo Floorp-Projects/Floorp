@@ -18307,8 +18307,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **playback pageset manifest**: mitm8-linux-firefox-imgur.manifest
    * **playback version**: 8.1.1
    * **preferences**: {"media.autoplay.default": 5, "media.autoplay.ask-permission": true, "media.autoplay.blocking_policy": 1, "media.allowed-to-play.enabled": false, "media.block-autoplay-until-in-foreground": true}
-   * **secondary url**: `<https://imgur.com/gallery/rCXZUil>`__
-   * **test url**: `<https://imgur.com/gallery/m5tYJL6>`__
+   * **secondary url**: `<https://imgur.com/gallery/WuOobqV>`__
+   * **test url**: `<https://imgur.com/gallery/uTI7fKy>`__
    * **type**: pageload
    * **unit**: ms
    * **use live sites**: false
@@ -22639,7 +22639,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
    * **browser cycles**: 25
@@ -22647,10 +22647,11 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
+   * **measure**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm7-linux-firefox-twitch.manifest
+   * **playback pageset manifest**: mitm8-linux-firefox-twitch.manifest
    * **playback version**: 8.1.1
    * **preferences**: {"media.autoplay.default": 5, "media.autoplay.ask-permission": true, "media.autoplay.blocking_policy": 1, "media.allowed-to-play.enabled": false, "media.block-autoplay-until-in-foreground": true}
    * **secondary url**: `<https://www.twitch.tv/gmashley>`__
