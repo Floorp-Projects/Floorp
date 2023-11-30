@@ -71,9 +71,6 @@ add_task(async function test_collapse_and_expand_card() {
     let recentlyClosedComponent = document.querySelector(
       "view-recentlyclosed[slot=recentlyclosed]"
     );
-    await TestUtils.waitForCondition(
-      () => recentlyClosedComponent.fullyUpdated
-    );
     let cardContainer = recentlyClosedComponent.cardEl;
     is(
       cardContainer.isExpanded,
@@ -82,7 +79,11 @@ add_task(async function test_collapse_and_expand_card() {
     );
     await clearAllParentTelemetryEvents();
     // Click the summary to collapse the details disclosure
-    EventUtils.synthesizeMouseAtCenter(cardContainer.summaryEl, {}, content);
+    await EventUtils.synthesizeMouseAtCenter(
+      cardContainer.summaryEl,
+      {},
+      content
+    );
     is(
       cardContainer.detailsEl.hasAttribute("open"),
       false,
@@ -90,7 +91,11 @@ add_task(async function test_collapse_and_expand_card() {
     );
     await telemetryEvent(CARD_COLLAPSED_EVENT);
     // Click the summary again to expand the details disclosure
-    EventUtils.synthesizeMouseAtCenter(cardContainer.summaryEl, {}, content);
+    await EventUtils.synthesizeMouseAtCenter(
+      cardContainer.summaryEl,
+      {},
+      content
+    );
     is(
       cardContainer.detailsEl.hasAttribute("open"),
       true,
@@ -134,7 +139,7 @@ add_task(async function test_change_page_telemetry() {
       ],
     ];
     await clearAllParentTelemetryEvents();
-    EventUtils.synthesizeMouseAtCenter(viewAllLink, {}, content);
+    await EventUtils.synthesizeMouseAtCenter(viewAllLink, {}, content);
     await telemetryEvent(changePageEvent);
   });
 });
@@ -150,7 +155,7 @@ add_task(async function test_context_menu_telemetry() {
     is(document.location.href, "about:firefoxview-next");
 
     // Test history context menu options
-    await navigateToCategoryAndWait(document, "history");
+    navigateToCategory(document, "history");
     let historyComponent = document.querySelector("view-history");
     await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
     await TestUtils.waitForCondition(
@@ -159,7 +164,7 @@ add_task(async function test_context_menu_telemetry() {
     let firstTabList = historyComponent.lists[0];
     let firstItem = firstTabList.rowEls[0];
     let panelList = historyComponent.panelList;
-    EventUtils.synthesizeMouseAtCenter(firstItem.buttonEl, {}, content);
+    await EventUtils.synthesizeMouseAtCenter(firstItem.buttonEl, {}, content);
     await BrowserTestUtils.waitForEvent(panelList, "shown");
     await clearAllParentTelemetryEvents();
     let panelItems = Array.from(panelList.children).filter(
@@ -178,24 +183,17 @@ add_task(async function test_context_menu_telemetry() {
     let newWindowPromise = BrowserTestUtils.waitForNewWindow({
       url: URLs[0],
     });
-    EventUtils.synthesizeMouseAtCenter(openInNewWindowOption, {}, content);
+    await EventUtils.synthesizeMouseAtCenter(
+      openInNewWindowOption,
+      {},
+      content
+    );
     let win = await newWindowPromise;
     await telemetryEvent(contextMenuEvent);
     await BrowserTestUtils.closeWindow(win);
-    info("New window closed.");
 
-    await SimpleTest.promiseFocus(window);
-    await TestUtils.waitForCondition(
-      () => !historyComponent.paused && historyComponent.fullyUpdated
-    );
-    firstTabList = historyComponent.lists[0];
-    firstItem = firstTabList.rowEls[0];
-    panelList = historyComponent.panelList;
-
-    EventUtils.synthesizeMouseAtCenter(firstItem.buttonEl, {}, content);
-    info("Context menu button clicked.");
+    await EventUtils.synthesizeMouseAtCenter(firstItem.buttonEl, {}, content);
     await BrowserTestUtils.waitForEvent(panelList, "shown");
-    info("Context menu shown.");
     await clearAllParentTelemetryEvents();
     let openInPrivateWindowOption = panelItems[2];
     contextMenuEvent = [
@@ -210,30 +208,21 @@ add_task(async function test_context_menu_telemetry() {
     newWindowPromise = BrowserTestUtils.waitForNewWindow({
       url: URLs[0],
     });
-    EventUtils.synthesizeMouseAtCenter(openInPrivateWindowOption, {}, content);
-    info("Open in private window context menu option clicked.");
+    await EventUtils.synthesizeMouseAtCenter(
+      openInPrivateWindowOption,
+      {},
+      content
+    );
     win = await newWindowPromise;
-    info("New private window opened.");
     await telemetryEvent(contextMenuEvent);
     ok(
       PrivateBrowsingUtils.isWindowPrivate(win),
       "Should have opened a private window."
     );
     await BrowserTestUtils.closeWindow(win);
-    info("New private window closed.");
 
-    await SimpleTest.promiseFocus(window);
-    await TestUtils.waitForCondition(
-      () => !historyComponent.paused && historyComponent.fullyUpdated
-    );
-    firstTabList = historyComponent.lists[0];
-    firstItem = firstTabList.rowEls[0];
-    panelList = historyComponent.panelList;
-
-    EventUtils.synthesizeMouseAtCenter(firstItem.buttonEl, {}, content);
-    info("Context menu button clicked.");
+    await EventUtils.synthesizeMouseAtCenter(firstItem.buttonEl, {}, content);
     await BrowserTestUtils.waitForEvent(panelList, "shown");
-    info("Context menu shown.");
     await clearAllParentTelemetryEvents();
     let deleteFromHistoryOption = panelItems[0];
     contextMenuEvent = [
@@ -245,8 +234,11 @@ add_task(async function test_context_menu_telemetry() {
         { menu_action: "delete-from-history", data_type: "history" },
       ],
     ];
-    EventUtils.synthesizeMouseAtCenter(deleteFromHistoryOption, {}, content);
-    info("Delete from history context menu option clicked.");
+    await EventUtils.synthesizeMouseAtCenter(
+      deleteFromHistoryOption,
+      {},
+      content
+    );
     await telemetryEvent(contextMenuEvent);
 
     // clean up extra tabs

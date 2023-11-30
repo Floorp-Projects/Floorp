@@ -31,14 +31,9 @@ async function getElements(document) {
   let recentBrowsingRecentlyClosedTabsView = recentBrowsingView.querySelector(
     "view-recentlyclosed"
   );
-  await TestUtils.waitForCondition(
-    () => recentBrowsingRecentlyClosedTabsView.fullyUpdated
-  );
   let recentBrowsingRecentlyClosedTabsList =
     recentBrowsingRecentlyClosedTabsView?.tabList;
-  if (recentlyClosedView.firstUpdateComplete) {
-    await TestUtils.waitForCondition(() => recentlyClosedView.fullyUpdated);
-  }
+
   let recentlyClosedList = recentlyClosedView.tabList;
   let openTabsList =
     openTabsView.shadowRoot.querySelector("view-opentabs-card")?.tabList;

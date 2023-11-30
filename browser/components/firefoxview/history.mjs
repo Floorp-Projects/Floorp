@@ -5,7 +5,6 @@
 import {
   html,
   ifDefined,
-  repeat,
   when,
 } from "chrome://global/content/vendor/lit.all.mjs";
 import { escapeHtmlEntities, isSearchEnabled } from "./helpers.mjs";
@@ -394,66 +393,64 @@ class HistoryInView extends ViewPage {
     if (this.searchResults) {
       return this.#searchResultsTemplate();
     } else if (this.allHistoryItems.size) {
-      return html`${repeat(
-        this.sortOption === "date"
-          ? this.historyMapByDate
-          : this.historyMapBySite,
-        item => item,
-        item => this.#historyCardTemplate(item)
-      )} `;
+      return this.#historyCardsTemplate();
     }
     return this.#emptyMessageTemplate();
   }
 
-  #historyCardTemplate(cardItem) {
-    let cardTemplate = [];
+  #historyCardsTemplate() {
+    let cardsTemplate = [];
     if (this.sortOption === "date" && this.historyMapByDate.length) {
-      if (cardItem.items.length) {
-        let dateArg = JSON.stringify({ date: cardItem.items[0].time });
-        cardTemplate = html`<card-container>
-          <h2
-            slot="header"
-            data-l10n-id=${cardItem.l10nId}
-            data-l10n-args=${dateArg}
-          ></h2>
-          <fxview-tab-list
-            slot="main"
-            class="with-context-menu"
-            dateTimeFormat=${cardItem.l10nId.includes("prev-month")
-              ? "dateTime"
-              : "time"}
-            hasPopup="menu"
-            maxTabsLength=${this.maxTabsLength}
-            .tabItems=${cardItem.items}
-            @fxview-tab-list-primary-action=${this.onPrimaryAction}
-            @fxview-tab-list-secondary-action=${this.onSecondaryAction}
-          >
-            ${this.panelListTemplate()}
-          </fxview-tab-list>
-        </card-container>`;
-      }
+      this.historyMapByDate.forEach(historyItem => {
+        if (historyItem.items.length) {
+          let dateArg = JSON.stringify({ date: historyItem.items[0].time });
+          cardsTemplate.push(html`<card-container>
+            <h3
+              slot="header"
+              data-l10n-id=${historyItem.l10nId}
+              data-l10n-args=${dateArg}
+            ></h3>
+            <fxview-tab-list
+              slot="main"
+              class="with-context-menu"
+              dateTimeFormat=${historyItem.l10nId.includes("prev-month")
+                ? "dateTime"
+                : "time"}
+              hasPopup="menu"
+              maxTabsLength=${this.maxTabsLength}
+              .tabItems=${historyItem.items}
+              @fxview-tab-list-primary-action=${this.onPrimaryAction}
+              @fxview-tab-list-secondary-action=${this.onSecondaryAction}
+            >
+              ${this.panelListTemplate()}
+            </fxview-tab-list>
+          </card-container>`);
+        }
+      });
     } else if (this.historyMapBySite.length) {
-      if (cardItem.items.length) {
-        cardTemplate = html`<card-container>
-          <h3 slot="header" data-l10n-id="${ifDefined(cardItem.l10nId)}">
-            ${cardItem.domain}
-          </h3>
-          <fxview-tab-list
-            slot="main"
-            class="with-context-menu"
-            dateTimeFormat="dateTime"
-            hasPopup="menu"
-            maxTabsLength=${this.maxTabsLength}
-            .tabItems=${cardItem.items}
-            @fxview-tab-list-primary-action=${this.onPrimaryAction}
-            @fxview-tab-list-secondary-action=${this.onSecondaryAction}
-          >
-            ${this.panelListTemplate()}
-          </fxview-tab-list>
-        </card-container>`;
-      }
+      this.historyMapBySite.forEach(historyItem => {
+        if (historyItem.items.length) {
+          cardsTemplate.push(html`<card-container>
+            <h3 slot="header" data-l10n-id="${ifDefined(historyItem.l10nId)}">
+              ${historyItem.domain}
+            </h3>
+            <fxview-tab-list
+              slot="main"
+              class="with-context-menu"
+              dateTimeFormat="dateTime"
+              hasPopup="menu"
+              maxTabsLength=${this.maxTabsLength}
+              .tabItems=${historyItem.items}
+              @fxview-tab-list-primary-action=${this.onPrimaryAction}
+              @fxview-tab-list-secondary-action=${this.onSecondaryAction}
+            >
+              ${this.panelListTemplate()}
+            </fxview-tab-list>
+          </card-container>`);
+        }
+      });
     }
-    return cardTemplate;
+    return cardsTemplate;
   }
 
   #emptyMessageTemplate() {
