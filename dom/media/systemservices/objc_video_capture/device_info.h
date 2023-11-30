@@ -30,7 +30,7 @@ class DeviceInfoIos : public DeviceInfoImpl {
   int32_t GetDeviceName(uint32_t deviceNumber, char* deviceNameUTF8, uint32_t deviceNameLength,
                         char* deviceUniqueIdUTF8, uint32_t deviceUniqueIdUTF8Length,
                         char* productUniqueIdUTF8 = 0, uint32_t productUniqueIdUTF8Length = 0,
-                        pid_t* pid = 0) override;
+                        pid_t* pid = 0, bool* deviceIsPlaceholder = 0) override;
 
   int32_t NumberOfCapabilities(const char* deviceUniqueIdUTF8) override;
 

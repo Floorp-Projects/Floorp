@@ -74,7 +74,8 @@ class VideoCaptureModule : public rtc::RefCountInterface {
                                   uint32_t deviceUniqueIdUTF8Length,
                                   char* productUniqueIdUTF8 = 0,
                                   uint32_t productUniqueIdUTF8Length = 0,
-                                  pid_t* pid = 0) = 0;
+                                  pid_t* pid = 0,
+                                  bool* deviceIsPlaceholder = 0) = 0;
 
     // Returns the number of capabilities this device.
     virtual int32_t NumberOfCapabilities(const char* deviceUniqueIdUTF8) = 0;

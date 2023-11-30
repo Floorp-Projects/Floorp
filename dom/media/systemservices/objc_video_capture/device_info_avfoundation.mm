@@ -83,7 +83,7 @@ int32_t DeviceInfoAvFoundation::GetDeviceName(
     uint32_t aDeviceNumber, char* aDeviceNameUTF8, uint32_t aDeviceNameLength,
     char* aDeviceUniqueIdUTF8, uint32_t aDeviceUniqueIdUTF8Length,
     char* /* aProductUniqueIdUTF8 */, uint32_t /* aProductUniqueIdUTF8Length */,
-    pid_t* /* aPid */) {
+    pid_t* /* aPid */, bool* /*deviceIsPlaceholder*/) {
   RTC_DCHECK_RUN_ON(&mChecker);
   // Don't EnsureCapabilitiesMap() here, since:
   // 1) That might invalidate the capabilities map

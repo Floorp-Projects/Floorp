@@ -173,7 +173,8 @@ int32_t DeviceInfoDS::GetDeviceName(uint32_t deviceNumber,
                                     uint32_t deviceUniqueIdUTF8Length,
                                     char* productUniqueIdUTF8,
                                     uint32_t productUniqueIdUTF8Length,
-                                    pid_t* pid) {
+                                    pid_t* pid,
+                                    bool* deviceIsPlaceholder) {
   MutexLock lock(&_apiLock);
   const int32_t result = GetDeviceInfo(
       deviceNumber, deviceNameUTF8, deviceNameLength, deviceUniqueIdUTF8,

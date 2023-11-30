@@ -250,7 +250,8 @@ int32_t DeviceInfoV4l2::GetDeviceName(uint32_t deviceNumber,
                                       uint32_t deviceUniqueIdUTF8Length,
                                       char* /*productUniqueIdUTF8*/,
                                       uint32_t /*productUniqueIdUTF8Length*/,
-                                      pid_t* /*pid*/) {
+                                      pid_t* /*pid*/,
+                                      bool* /*deviceIsPlaceholder*/) {
   // Travel through /dev/video [0-63]
   uint32_t count = 0;
   char device[20];
