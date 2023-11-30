@@ -64,7 +64,7 @@ def make_task_description(config, tasks):
             "worker": task["worker"],
             "scopes": [
                 bucket_scope,
-                "project:mobile:firefox-android:releng:beetmover:action:direct-push-to-bucket",
+                "project:releng:beetmover:action:direct-push-to-bucket",
             ],
             "dependencies": task["dependencies"],
             "attributes": attributes,
