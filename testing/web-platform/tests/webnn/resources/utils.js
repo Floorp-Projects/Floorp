@@ -300,6 +300,7 @@ const PrecisionMetrics = {
   cos: {ATOL: {float32: 1/1024, float16: 1/512}},
   exp: {ULP: {float32: 32, float16: 1}},
   floor: {ULP: {float32: 0, float16: 0}},
+  identity: {ULP: {float32: 0, float16: 0}},
   log: {ATOL: {float32: 1/1024, float16:  1/1024}},
   neg: {ULP: {float32: 0, float16: 0}},
   sin: {ATOL: {float32: 1/1024, float16: 1/512}},
