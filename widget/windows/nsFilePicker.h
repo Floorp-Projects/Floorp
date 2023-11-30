@@ -82,10 +82,13 @@ class nsFilePicker : public nsBaseWinFilePicker {
   nsresult Show(nsIFilePicker::ResultCode* aReturnVal) override;
   nsresult ShowW(nsIFilePicker::ResultCode* aReturnVal);
   void GetFilterListArray(nsString& aFilterList);
-  bool ShowFolderPicker(const nsString& aInitialDir);
-  bool ShowFilePicker(const nsString& aInitialDir);
 
  private:
+  RefPtr<mozilla::MozPromise<bool, HRESULT, true>> ShowFolderPicker(
+      const nsString& aInitialDir);
+  RefPtr<mozilla::MozPromise<bool, HRESULT, true>> ShowFilePicker(
+      const nsString& aInitialDir);
+
   // Show the dialog out-of-process.
   static FPPromise<Results> ShowFilePickerRemote(
       HWND aParent, FileDialogType type, nsTArray<Command> const& commands);
