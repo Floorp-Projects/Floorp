@@ -63,6 +63,7 @@ EXPORTS.mozilla = [
     "Latin1.h",
     "Likely.h",
     "LinkedList.h",
+    "Literals.h",
     "MacroArgs.h",
     "MacroForEach.h",
     "MathAlgorithms.h",
