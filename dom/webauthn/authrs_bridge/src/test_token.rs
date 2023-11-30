@@ -191,6 +191,14 @@ impl TestToken {
             .binary_search_by_key(&id, |probe| &probe.id)
             .is_ok()
     }
+
+    fn max_supported_version(&self) -> AuthenticatorVersion {
+        self.authenticator_info
+            .as_ref()
+            .map_or(AuthenticatorVersion::U2F_V2, |info| {
+                info.max_supported_version()
+            })
+    }
 }
 
 impl FidoDevice for TestToken {
@@ -388,9 +396,18 @@ impl VirtualFidoDevice for TestToken {
             // return at most one assertion matching an allowed credential ID
             for credential in eligible_cred_iter {
                 if req.allow_list.iter().any(|x| x.id == credential.id) {
-                    let assertion = credential.assert(&req.client_data_hash, flags)?.into();
+                    let mut assertion: GetAssertionResponse =
+                        credential.assert(&req.client_data_hash, flags)?;
+                    if req.allow_list.len() == 1
+                        && self.max_supported_version() == AuthenticatorVersion::FIDO_2_0
+                    {
+                        // CTAP 2.0 authenticators are allowed to omit the credential ID in the
+                        // response if the allow list contains exactly one entry. This behavior is
+                        // a common source of bugs, e.g. Bug 1864504, so we'll exercise it here.
+                        assertion.credentials = None;
+                    }
                     assertions.push(GetAssertionResult {
-                        assertion,
+                        assertion: assertion.into(),
                         attachment: AuthenticatorAttachment::Unknown,
                         extensions: Default::default(),
                     });
