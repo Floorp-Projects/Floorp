@@ -275,56 +275,17 @@ Result<Maybe<nsString>, HRESULT> nsFilePicker::ShowFolderPickerRemote(
 Result<Maybe<filedialog::Results>, HRESULT> nsFilePicker::ShowFilePickerLocal(
     HWND parent, filedialog::FileDialogType type,
     nsTArray<filedialog::Command> const& commands) {
-  using mozilla::Err;
-  using mozilla::Nothing;
-  using mozilla::Some;
+  auto promise = filedialog::SpawnFilePicker(parent, type, commands.Clone());
 
-  namespace fd = filedialog;
-
-  RefPtr<IFileDialog> dialog;
-  MOZ_TRY_VAR(dialog, fd::MakeFileDialog(type));
-
-  if (auto const res = fd::ApplyCommands(dialog.get(), commands); FAILED(res)) {
-    return Err(res);
-  }
-
-  // synchronously show the dialog
-  auto const ret = dialog->Show(parent);
-  if (ret == HRESULT_FROM_WIN32(ERROR_CANCELLED)) {
-    return Maybe<fd::Results>(Nothing());
-  }
-  if (FAILED(ret)) {
-    return Err(ret);
-  }
-
-  return fd::GetFileResults(dialog.get()).map(mozilla::Some<fd::Results>);
+  return mozilla::detail::ImmorallyDrivePromiseToCompletion(std::move(promise));
 }
 
 /* static */
 Result<Maybe<nsString>, HRESULT> nsFilePicker::ShowFolderPickerLocal(
     HWND parent, nsTArray<filedialog::Command> const& commands) {
-  using mozilla::Err;
-  using mozilla::Nothing;
-  using mozilla::Some;
-  namespace fd = filedialog;
+  auto promise = filedialog::SpawnFolderPicker(parent, commands.Clone());
 
-  RefPtr<IFileDialog> dialog;
-  MOZ_TRY_VAR(dialog, fd::MakeFileDialog(fd::FileDialogType::Open));
-
-  if (auto const res = fd::ApplyCommands(dialog.get(), commands); FAILED(res)) {
-    return Err(res);
-  }
-
-  // synchronously show the dialog
-  auto const ret = dialog->Show(parent);
-  if (ret == HRESULT_FROM_WIN32(ERROR_CANCELLED)) {
-    return Maybe<nsString>(Nothing());
-  }
-  if (FAILED(ret)) {
-    return Err(ret);
-  }
-
-  return fd::GetFolderResults(dialog.get()).map(mozilla::Some<nsString>);
+  return mozilla::detail::ImmorallyDrivePromiseToCompletion(std::move(promise));
 }
 
 /*
@@ -549,10 +510,6 @@ nsresult nsFilePicker::ShowW(nsIFilePicker::ResultCode* aReturnVal) {
   // Clear previous file selections
   mUnicodeFile.Truncate();
   mFiles.Clear();
-
-  // On Win10, the picker doesn't support per-monitor DPI, so we open it
-  // with our context set temporarily to system-dpi-aware
-  WinUtils::AutoSystemDpiAware dpiAwareness;
 
   bool result = false;
   if (mMode == modeGetFolder) {
