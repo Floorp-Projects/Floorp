@@ -583,6 +583,8 @@ rtc_library("webrtc_vp8") {
     ":webrtc_vp8_temporal_layers",
     "../../api:fec_controller_api",
     "../../api:scoped_refptr",
+    "../../api/units:time_delta",
+    "../../api/units:timestamp",
     "../../api/video:encoded_image",
     "../../api/video:video_frame",
     "../../api/video:video_rtp_headers",
