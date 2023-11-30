@@ -14,6 +14,14 @@ namespace dom {
 
 class PlacesBookmark : public PlacesEvent {
  public:
+  explicit PlacesBookmark(PlacesEventType aEventType)
+      : PlacesEvent(aEventType) {}
+
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override {
+    return PlacesBookmark_Binding::Wrap(aCx, this, aGivenProto);
+  }
+
   const PlacesBookmark* AsPlacesBookmark() const override { return this; }
 
   unsigned short ItemType() { return mItemType; }
@@ -35,7 +43,7 @@ class PlacesBookmark : public PlacesEvent {
   bool mIsTagging;
 
  protected:
-  using PlacesEvent::PlacesEvent;
+  virtual ~PlacesBookmark() = default;
 };
 
 }  // namespace dom
