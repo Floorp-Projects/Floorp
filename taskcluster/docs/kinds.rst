@@ -880,6 +880,10 @@ push-bundle
 -----------
 Push Focus and Fenix AABs to Google Play.
 
+push-bundle
+-----------
+Push Focus and Fenix AABs to Google Play.
+
 version-bump
 ------------
 Version bump for mobile/android/version.txt.
