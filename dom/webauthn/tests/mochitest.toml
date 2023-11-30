@@ -47,6 +47,9 @@ skip-if = [
 ["test_webauthn_crossorigin_featurepolicy.html"]
 fail-if = ["xorigin"] # Cross-origin use of WebAuthn requires a feature policy.
 
+["test_webauthn_ctap2_omitted_credential_id.html"]
+fail-if = ["xorigin"] # NotAllowedError
+
 ["test_webauthn_get_assertion.html"]
 fail-if = ["xorigin"] # NotAllowedError
 skip-if = [
