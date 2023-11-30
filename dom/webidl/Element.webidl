@@ -276,6 +276,7 @@ dictionary ShadowRootInit {
   required ShadowRootMode mode;
   boolean delegatesFocus = false;
   SlotAssignmentMode slotAssignment = "named";
+  [Pref="dom.webcomponents.shadowdom.declarative.enabled"]
   boolean clonable = false;
 };
 
@@ -406,5 +407,7 @@ partial interface Element {
 };
 
 partial interface Element {
+  // https://html.spec.whatwg.org/#dom-element-sethtmlunsafe
+  [Pref="dom.webcomponents.shadowdom.declarative.enabled"]
   undefined setHTMLUnsafe(DOMString html);
 };
