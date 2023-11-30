@@ -1928,6 +1928,22 @@ RefPtr<DeviceSetPromise> MediaManager::EnumerateRawDevices(
         ipc::BackgroundChild::GetOrCreateForCurrentThread();
     deviceAccessPromise = backgroundChild->SendRequestCameraAccess(
         aFlags.contains(EnumerationFlag::AllowPermissionRequest));
+
+    if (aFlags.contains(EnumerationFlag::AllowPermissionRequest)) {
+      deviceAccessPromise = deviceAccessPromise->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [this,
+           self = RefPtr(this)](NativePromise::ResolveOrRejectValue&& aValue) {
+            if (aValue.IsResolve() &&
+                aValue.ResolveValue() == CamerasAccessStatus::Granted) {
+              EnsureNoPlaceholdersInDeviceCache();
+            }
+
+            return NativePromise::CreateAndResolveOrReject(
+                std::move(aValue),
+                "MediaManager::EnumerateRawDevices::DeviceAccessPromise");
+          });
+    }
   }
 
   if (!deviceAccessPromise) {
@@ -2367,7 +2383,23 @@ void MediaManager::DeviceListChanged() {
           [] { /* Timer was canceled by us, or we're in shutdown. */ });
 }
 
+void MediaManager::EnsureNoPlaceholdersInDeviceCache() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mPhysicalDevices) {
+    // Invalidate the list if there is a placeholder
+    for (const auto& device : *mPhysicalDevices) {
+      if (device->mIsPlaceholder) {
+        InvalidateDeviceCache();
+        break;
+      }
+    }
+  }
+}
+
 void MediaManager::InvalidateDeviceCache() {
+  MOZ_ASSERT(NS_IsMainThread());
+
   mPhysicalDevices = nullptr;
   // Disconnect any in-progress enumeration, which may now be out of date,
   // from updating mPhysicalDevices or resolving future device request
