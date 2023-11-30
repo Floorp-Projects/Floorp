@@ -42,6 +42,7 @@
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/media/CamerasTypes.h"
 #include "mozilla/media/MediaChild.h"
 #include "mozilla/media/MediaTaskUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -151,6 +152,7 @@ class GetUserMediaStreamTask;
 class LocalTrackSource;
 class SelectAudioOutputTask;
 
+using camera::CamerasAccessStatus;
 using dom::BFCacheStatus;
 using dom::CallerType;
 using dom::ConstrainDOMStringParameters;
@@ -858,7 +860,8 @@ NS_IMPL_ISUPPORTS(LocalMediaDevice, nsIMediaDevice)
 MediaDevice::MediaDevice(MediaEngine* aEngine, MediaSourceEnum aMediaSource,
                          const nsString& aRawName, const nsString& aRawID,
                          const nsString& aRawGroupID, IsScary aIsScary,
-                         const OsPromptable canRequestOsLevelPrompt)
+                         const OsPromptable canRequestOsLevelPrompt,
+                         const IsPlaceholder aIsPlaceholder)
     : mEngine(aEngine),
       mAudioDeviceInfo(nullptr),
       mMediaSource(aMediaSource),
@@ -868,6 +871,7 @@ MediaDevice::MediaDevice(MediaEngine* aEngine, MediaSourceEnum aMediaSource,
       mScary(aIsScary == IsScary::Yes),
       mCanRequestOsLevelPrompt(canRequestOsLevelPrompt == OsPromptable::Yes),
       mIsFake(mEngine->IsFake()),
+      mIsPlaceholder(aIsPlaceholder == IsPlaceholder::Yes),
       mType(
           NS_ConvertASCIItoUTF16(dom::MediaDeviceKindValues::GetString(mKind))),
       mRawID(aRawID),
@@ -890,6 +894,7 @@ MediaDevice::MediaDevice(MediaEngine* aEngine,
       mScary(false),
       mCanRequestOsLevelPrompt(false),
       mIsFake(false),
+      mIsPlaceholder(false),
       mType(
           NS_ConvertASCIItoUTF16(dom::MediaDeviceKindValues::GetString(mKind))),
       mRawID(aRawID),
@@ -903,7 +908,8 @@ RefPtr<MediaDevice> MediaDevice::CopyWithNewRawGroupId(
   return new MediaDevice(aOther->mEngine, aOther->mMediaSource,
                          aOther->mRawName, aOther->mRawID, aRawGroupID,
                          IsScary(aOther->mScary),
-                         OsPromptable(aOther->mCanRequestOsLevelPrompt));
+                         OsPromptable(aOther->mCanRequestOsLevelPrompt),
+                         IsPlaceholder(aOther->mIsPlaceholder));
 }
 
 MediaDevice::~MediaDevice() = default;
@@ -1819,15 +1825,15 @@ class DeviceSetPromiseHolderWithFallback
 // even if |task| does not run, which can happen in case there is no
 // observer for the ask-device-permission event.
 class DeviceAccessRequestPromiseHolderWithFallback
-    : public MozPromiseHolder<
-          MozPromise<nsresult, mozilla::ipc::ResponseRejectReason, true>> {
+    : public MozPromiseHolder<MozPromise<
+          CamerasAccessStatus, mozilla::ipc::ResponseRejectReason, true>> {
  public:
   DeviceAccessRequestPromiseHolderWithFallback() = default;
   DeviceAccessRequestPromiseHolderWithFallback(
       DeviceAccessRequestPromiseHolderWithFallback&&) = default;
   ~DeviceAccessRequestPromiseHolderWithFallback() {
     if (!IsEmpty()) {
-      Resolve(NS_OK, __func__);
+      Resolve(CamerasAccessStatus::Granted, __func__);
     }
   }
 };
@@ -1892,38 +1898,42 @@ RefPtr<DeviceSetPromise> MediaManager::EnumerateRawDevices(
   const bool realDeviceRequested = (!hasFakeCams && hasVideo) ||
                                    (!hasFakeMics && hasAudio) || hasAudioOutput;
 
-  using NativePromise = MozPromise<nsresult, mozilla::ipc::ResponseRejectReason,
-                                   /* IsExclusive = */ true>;
+  using NativePromise =
+      MozPromise<CamerasAccessStatus, mozilla::ipc::ResponseRejectReason,
+                 /* IsExclusive = */ true>;
   RefPtr<NativePromise> deviceAccessPromise;
   if (realDeviceRequested &&
-      aFlags.contains(EnumerationFlag::AllowPermissionRequest)) {
-    if (Preferences::GetBool("media.navigator.permission.device", false)) {
-      // Need to ask permission to retrieve list of all devices;
-      // notify frontend observer and wait for callback notification to post
-      // task.
-      const char16_t* const type =
-          (aVideoInputType != MediaSourceEnum::Camera)       ? u"audio"
-          : (aAudioInputType != MediaSourceEnum::Microphone) ? u"video"
-                                                             : u"all";
-      nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-      DeviceAccessRequestPromiseHolderWithFallback deviceAccessPromiseHolder;
-      deviceAccessPromise = deviceAccessPromiseHolder.Ensure(__func__);
-      RefPtr task = NS_NewRunnableFunction(
-          __func__, [holder = std::move(deviceAccessPromiseHolder)]() mutable {
-            holder.Resolve(NS_OK, "getUserMedia:got-device-permission");
-          });
-      obs->NotifyObservers(static_cast<nsIRunnable*>(task),
-                           "getUserMedia:ask-device-permission", type);
-    } else if (hasVideo && aVideoInputType == MediaSourceEnum::Camera) {
-      ipc::PBackgroundChild* backgroundChild =
-          ipc::BackgroundChild::GetOrCreateForCurrentThread();
-      deviceAccessPromise = backgroundChild->SendRequestCameraAccess();
-    }
+      aFlags.contains(EnumerationFlag::AllowPermissionRequest) &&
+      Preferences::GetBool("media.navigator.permission.device", false)) {
+    // Need to ask permission to retrieve list of all devices;
+    // notify frontend observer and wait for callback notification to post
+    // task.
+    const char16_t* const type =
+        (aVideoInputType != MediaSourceEnum::Camera)       ? u"audio"
+        : (aAudioInputType != MediaSourceEnum::Microphone) ? u"video"
+                                                           : u"all";
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    DeviceAccessRequestPromiseHolderWithFallback deviceAccessPromiseHolder;
+    deviceAccessPromise = deviceAccessPromiseHolder.Ensure(__func__);
+    RefPtr task = NS_NewRunnableFunction(
+        __func__, [holder = std::move(deviceAccessPromiseHolder)]() mutable {
+          holder.Resolve(CamerasAccessStatus::Granted,
+                         "getUserMedia:got-device-permission");
+        });
+    obs->NotifyObservers(static_cast<nsIRunnable*>(task),
+                         "getUserMedia:ask-device-permission", type);
+  } else if (realDeviceRequested && hasVideo &&
+             aVideoInputType == MediaSourceEnum::Camera) {
+    ipc::PBackgroundChild* backgroundChild =
+        ipc::BackgroundChild::GetOrCreateForCurrentThread();
+    deviceAccessPromise = backgroundChild->SendRequestCameraAccess(
+        aFlags.contains(EnumerationFlag::AllowPermissionRequest));
   }
 
   if (!deviceAccessPromise) {
     // No device access request needed. Proceed directly.
-    deviceAccessPromise = NativePromise::CreateAndResolve(NS_OK, __func__);
+    deviceAccessPromise =
+        NativePromise::CreateAndResolve(CamerasAccessStatus::Granted, __func__);
   }
 
   deviceAccessPromise->Then(
@@ -1940,7 +1950,15 @@ RefPtr<DeviceSetPromise> MediaManager::EnumerateRawDevices(
           return;
         }
 
-        if (nsresult value = aValue.ResolveValue(); NS_FAILED(value)) {
+        const CamerasAccessStatus value = aValue.ResolveValue();
+        if (value == CamerasAccessStatus::Rejected ||
+            value == CamerasAccessStatus::Error) {
+          LOG("Request to camera access %s",
+              value == CamerasAccessStatus::Rejected ? "was rejected"
+                                                     : "failed");
+          if (value == CamerasAccessStatus::Error) {
+            NS_WARNING("Failed to request camera access");
+          }
           holder.Reject(
               MakeRefPtr<MediaMgrError>(MediaMgrError::Name::NotAllowedError),
               "EnumerateRawDevices: camera access rejected");

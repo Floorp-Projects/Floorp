@@ -1359,19 +1359,20 @@ BackgroundParentImpl::RecvEnsureUtilityProcessAndCreateBridge(
 }
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvRequestCameraAccess(
+    const bool& aAllowPermissionRequest,
     RequestCameraAccessResolver&& aResolver) {
 #ifdef MOZ_WEBRTC
-  mozilla::camera::CamerasParent::RequestCameraAccess()->Then(
-      GetCurrentSerialEventTarget(), __func__,
-      [resolver = std::move(aResolver)](
-          const mozilla::camera::CamerasParent::CameraAccessRequestPromise::
-              ResolveOrRejectValue& aValue) {
-        if (aValue.IsResolve()) {
-          resolver(aValue.ResolveValue());
-        } else {
-          resolver(aValue.RejectValue());
-        }
-      });
+  mozilla::camera::CamerasParent::RequestCameraAccess(aAllowPermissionRequest)
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [resolver = std::move(aResolver)](
+                 const mozilla::camera::CamerasParent::
+                     CameraAccessRequestPromise::ResolveOrRejectValue& aValue) {
+               if (aValue.IsResolve()) {
+                 resolver(aValue.ResolveValue());
+               } else {
+                 resolver(CamerasAccessStatus::Error);
+               }
+             });
 #else
   aResolver(NS_ERROR_NOT_IMPLEMENTED);
 #endif

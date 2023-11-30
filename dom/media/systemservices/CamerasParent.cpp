@@ -7,6 +7,7 @@
 #include "CamerasParent.h"
 
 #include <atomic>
+#include "CamerasTypes.h"
 #include "MediaEngineSource.h"
 #include "PerformanceRecorder.h"
 #include "VideoFrameUtils.h"
@@ -650,7 +651,7 @@ ipc::IPCResult CamerasParent::RecvGetCaptureDevice(
 
   LOG_FUNCTION();
 
-  using Data = std::tuple<nsCString, nsCString, pid_t, int>;
+  using Data = std::tuple<nsCString, nsCString, pid_t, bool, int>;
   using Promise = MozPromise<Data, bool, true>;
   InvokeAsync(
       mVideoCaptureThread, __func__,
@@ -660,12 +661,13 @@ ipc::IPCResult CamerasParent::RecvGetCaptureDevice(
         nsCString name;
         nsCString uniqueId;
         pid_t devicePid = 0;
+        bool placeholder = false;
         int error = -1;
         if (auto* engine = EnsureInitialized(aCapEngine)) {
           if (auto devInfo = engine->GetOrCreateVideoCaptureDeviceInfo()) {
             error = devInfo->GetDeviceName(
                 aDeviceIndex, deviceName, sizeof(deviceName), deviceUniqueId,
-                sizeof(deviceUniqueId), nullptr, 0, &devicePid);
+                sizeof(deviceUniqueId), nullptr, 0, &devicePid, &placeholder);
           }
         }
         if (error == 0) {
@@ -675,13 +677,13 @@ ipc::IPCResult CamerasParent::RecvGetCaptureDevice(
 
         return Promise::CreateAndResolve(
             std::make_tuple(std::move(name), std::move(uniqueId), devicePid,
-                            error),
+                            placeholder, error),
             "CamerasParent::RecvGetCaptureDevice");
       })
       ->Then(
           mPBackgroundEventTarget, __func__,
           [this, self = RefPtr(this)](Promise::ResolveOrRejectValue&& aValue) {
-            const auto& [name, uniqueId, devicePid, error] =
+            const auto& [name, uniqueId, devicePid, placeholder, error] =
                 aValue.ResolveValue();
             if (mDestroyed) {
               return;
@@ -695,7 +697,8 @@ ipc::IPCResult CamerasParent::RecvGetCaptureDevice(
 
             LOG("Returning %s name %s id (pid = %d)%s", name.get(),
                 uniqueId.get(), devicePid, (scary ? " (scary)" : ""));
-            Unused << SendReplyGetCaptureDevice(name, uniqueId, scary);
+            Unused << SendReplyGetCaptureDevice(name, uniqueId, scary,
+                                                placeholder);
           });
   return IPC_OK();
 }
@@ -1179,9 +1182,31 @@ CamerasParent::CamerasParent()
   // after the constructor returns.
 }
 
-auto CamerasParent::RequestCameraAccess()
+/* static */
+auto CamerasParent::RequestCameraAccess(bool aAllowPermissionRequest)
     -> RefPtr<CameraAccessRequestPromise> {
   ipc::AssertIsOnBackgroundThread();
+
+  // Special case for PipeWire where we at this point just need to make sure
+  // we have information about camera availabilty through the camera portal
+  if (!aAllowPermissionRequest) {
+    return EnsureVideoCaptureFactory()->UpdateCameraAvailability()->Then(
+        GetCurrentSerialEventTarget(),
+        "CamerasParent::RequestCameraAccess update camera availability",
+        [](const VideoCaptureFactory::UpdateCameraAvailabilityPromise::
+               ResolveOrRejectValue& aValue) {
+          LOG("Camera availability updated to %s",
+              aValue.IsResolve()
+                  ? aValue.ResolveValue() ==
+                            VideoCaptureFactory::CameraAvailability::Available
+                        ? "available"
+                        : "not available"
+                  : "still unknown");
+          return CameraAccessRequestPromise::CreateAndResolve(
+              CamerasAccessStatus::RequestRequired,
+              "CamerasParent::RequestCameraAccess camera availability updated");
+        });
+  }
 
   static StaticRefPtr<CameraAccessRequestPromise> sCameraAccessRequestPromise;
   if (!sCameraAccessRequestPromise) {
@@ -1191,15 +1216,28 @@ auto CamerasParent::RequestCameraAccess()
             "CamerasParent::RequestCameraAccess camera backend init handler",
             [](nsresult aRv) mutable {
               MOZ_ASSERT(NS_SUCCEEDED(aRv));
+              if (sVideoCaptureThread) {
+                MOZ_ASSERT(sEngines);
+                MOZ_ALWAYS_SUCCEEDS(
+                    sVideoCaptureThread->Dispatch(NS_NewRunnableFunction(
+                        __func__, [engines = RefPtr(sEngines.get())] {
+                          if (VideoEngine* engine =
+                                  engines->ElementAt(CameraEngine)) {
+                            engine->ClearVideoCaptureDeviceInfo();
+                          }
+                        })));
+              }
               return CameraAccessRequestPromise::CreateAndResolve(
-                  aRv,
+                  CamerasAccessStatus::Granted,
                   "CamerasParent::RequestCameraAccess camera backend init "
                   "resolve");
             },
             [](nsresult aRv) mutable {
               MOZ_ASSERT(NS_FAILED(aRv));
-              return CameraAccessRequestPromise::CreateAndReject(
-                  aRv,
+              return CameraAccessRequestPromise::CreateAndResolve(
+                  aRv == NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR
+                      ? CamerasAccessStatus::Rejected
+                      : CamerasAccessStatus::Error,
                   "CamerasParent::RequestCameraAccess camera backend init "
                   "reject");
             }));
@@ -1212,17 +1250,19 @@ auto CamerasParent::RequestCameraAccess()
   return sCameraAccessRequestPromise->Then(
       GetCurrentSerialEventTarget(),
       "CamerasParent::CameraAccessRequestPromise rejection handler",
-      [](nsresult aRv) {
+      [](CamerasAccessStatus aStatus) {
         return CameraAccessRequestPromise::CreateAndResolve(
-            aRv, "CamerasParent::RequestCameraAccess resolve");
+            aStatus, "CamerasParent::RequestCameraAccess resolve");
       },
-      [promise = RefPtr(sCameraAccessRequestPromise.get())](nsresult aRv) {
+      [promise = RefPtr(sCameraAccessRequestPromise.get()),
+       aAllowPermissionRequest](void_t aRv) {
         if (promise == sCameraAccessRequestPromise) {
           sCameraAccessRequestPromise = nullptr;
-          return CameraAccessRequestPromise::CreateAndReject(
-              aRv, "CamerasParent::RequestCameraAccess reject");
+          return CameraAccessRequestPromise::CreateAndResolve(
+              CamerasAccessStatus::Error,
+              "CamerasParent::RequestCameraAccess reject");
         }
-        return CamerasParent::RequestCameraAccess();
+        return CamerasParent::RequestCameraAccess(aAllowPermissionRequest);
       });
 }
 

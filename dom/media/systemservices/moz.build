@@ -58,6 +58,9 @@ if CONFIG["MOZ_WEBRTC"]:
         ]
 
     if "WEBRTC_USE_PIPEWIRE" in DEFINES:
+        UNIFIED_SOURCES += [
+            "video_engine/placeholder_device_info.cc",
+        ]
         CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
 
 if CONFIG["OS_TARGET"] == "Android":
