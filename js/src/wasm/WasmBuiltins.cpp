@@ -453,10 +453,13 @@ ABIArgType ToABIType(MIRType type) {
 ABIFunctionType ToABIType(const SymbolicAddressSignature& sig) {
   MOZ_ASSERT_IF(sig.failureMode != FailureMode::Infallible,
                 ToABIType(sig.failureMode) == ToABIType(sig.retType));
-  int abiType = ToABIType(sig.retType) << RetType_Shift;
+  int abiType = 0;
   for (int i = 0; i < sig.numArgs; i++) {
-    abiType |= (ToABIType(sig.argTypes[i]) << (ArgType_Shift * (i + 1)));
+    abiType <<= ArgType_Shift;
+    abiType |= ToABIType(sig.argTypes[i]);
   }
+  abiType <<= ArgType_Shift;
+  abiType |= ToABIType(sig.retType);
   return ABIFunctionType(abiType);
 }
 #endif
@@ -1125,16 +1128,16 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_General0;
       return FuncCast(AllocateBigIntTenuredNoGC, *abiType);
     case SymbolicAddress::DivI64:
-      *abiType = Args_General4;
+      *abiType = Args_Int64_Int32Int32Int32Int32;
       return FuncCast(DivI64, *abiType);
     case SymbolicAddress::UDivI64:
-      *abiType = Args_General4;
+      *abiType = Args_Int64_Int32Int32Int32Int32;
       return FuncCast(UDivI64, *abiType);
     case SymbolicAddress::ModI64:
-      *abiType = Args_General4;
+      *abiType = Args_Int64_Int32Int32Int32Int32;
       return FuncCast(ModI64, *abiType);
     case SymbolicAddress::UModI64:
-      *abiType = Args_General4;
+      *abiType = Args_Int64_Int32Int32Int32Int32;
       return FuncCast(UModI64, *abiType);
     case SymbolicAddress::TruncateDoubleToUint64:
       *abiType = Args_Int64_Double;
@@ -1162,10 +1165,10 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       return FuncCast(Int64ToFloat32, *abiType);
 #if defined(JS_CODEGEN_ARM)
     case SymbolicAddress::aeabi_idivmod:
-      *abiType = Args_General2;
+      *abiType = Args_Int64_GeneralGeneral;
       return FuncCast(__aeabi_idivmod, *abiType);
     case SymbolicAddress::aeabi_uidivmod:
-      *abiType = Args_General2;
+      *abiType = Args_Int64_GeneralGeneral;
       return FuncCast(__aeabi_uidivmod, *abiType);
 #endif
     case SymbolicAddress::ModD:
@@ -1977,33 +1980,36 @@ static Maybe<ABIFunctionType> ToBuiltinABIFunctionType(
     return Nothing();
   }
 
-  uint32_t abiType;
-  switch (results[0].kind()) {
-    case ValType::F32:
-      abiType = ArgType_Float32 << RetType_Shift;
-      break;
-    case ValType::F64:
-      abiType = ArgType_Float64 << RetType_Shift;
-      break;
-    default:
-      return Nothing();
-  }
-
   if ((args.length() + 1) > (sizeof(uint32_t) * 8 / ArgType_Shift)) {
     return Nothing();
   }
 
+  uint32_t abiType = 0;
   for (size_t i = 0; i < args.length(); i++) {
     switch (args[i].kind()) {
       case ValType::F32:
-        abiType |= (ArgType_Float32 << (ArgType_Shift * (i + 1)));
+        abiType <<= ArgType_Shift;
+        abiType |= ArgType_Float32;
         break;
       case ValType::F64:
-        abiType |= (ArgType_Float64 << (ArgType_Shift * (i + 1)));
+        abiType <<= ArgType_Shift;
+        abiType |= ArgType_Float64;
         break;
       default:
         return Nothing();
     }
+  }
+
+  abiType <<= ArgType_Shift;
+  switch (results[0].kind()) {
+    case ValType::F32:
+      abiType |= ArgType_Float32;
+      break;
+    case ValType::F64:
+      abiType |= ArgType_Float64;
+      break;
+    default:
+      return Nothing();
   }
 
   return Some(ABIFunctionType(abiType));

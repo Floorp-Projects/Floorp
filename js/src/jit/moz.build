@@ -260,6 +260,13 @@ elif CONFIG["JS_CODEGEN_WASM32"]:
         "wasm32/Trampoline-wasm32.cpp",
     ]
 
+# Generate jit/ABIFunctionTypeGenerated.h from jit/ABIFunctionType.yaml
+GeneratedFile(
+    "ABIFunctionTypeGenerated.h",
+    script="GenerateABIFunctionType.py",
+    inputs=["ABIFunctionType.yaml"],
+)
+
 # Generate jit/MIROpsGenerated.h from jit/MIROps.yaml
 GeneratedFile(
     "MIROpsGenerated.h",
