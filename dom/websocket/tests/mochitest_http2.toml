@@ -1,5 +1,6 @@
 [DEFAULT]
 run-if = ["http2"]
+prefs = ["network.http.http2.websockets=true"]
 
 ["test_websocket_http2.html"]
 scheme = "https"
