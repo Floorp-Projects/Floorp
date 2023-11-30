@@ -66,17 +66,33 @@ WinFileDialogChild::IPCResult WinFileDialogChild::RecvShowFileDialog(
     FileResolver&& resolver) {
   MOZ_ABORT_IF_ALREADY_USED();
 
-  SpawnFilePicker(HWND(parentHwnd), type, std::move(commands))
-      ->Then(
-          GetMainThreadSerialEventTarget(), __PRETTY_FUNCTION__,
-          [resolver = std::move(resolver)](Maybe<Results> const& res) {
-            resolver(res);
-          },
-          [self = RefPtr(this)](HRESULT hr) {
-            // this doesn't need to be returned anywhere; it'll crash the
-            // process as a side effect of construction
-            self->MakeIpcFailure(hr, "SpawnFilePicker");
-          });
+  // create dialog of the relevant type
+  RefPtr<IFileDialog> dialog;
+  {
+    auto res = MakeFileDialog(type);
+    if (res.isErr()) {
+      return MakeIpcFailure(res.unwrapErr(), "creating file dialog");
+    }
+    dialog = res.unwrap();
+  }
+
+  MOZ_IPC_ENSURE_HRESULT_OK(ApplyCommands(dialog.get(), commands),
+                            "applying commands");
+
+  auto const hr = dialog->Show((HWND)parentHwnd);
+  if (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED)) {
+    resolver(Nothing());
+    return IPC_OK();
+  }
+  MOZ_IPC_ENSURE_HRESULT_OK(hr, "showing file dialog");
+
+  {
+    auto res = GetFileResults(dialog.get());
+    if (res.isErr()) {
+      return MakeIpcFailure(res.unwrapErr(), "GetFileResults");
+    }
+    resolver(Some(res.unwrap()));
+  }
 
   return IPC_OK();
 }
@@ -86,17 +102,34 @@ WinFileDialogChild::IPCResult WinFileDialogChild::RecvShowFolderDialog(
     FolderResolver&& resolver) {
   MOZ_ABORT_IF_ALREADY_USED();
 
-  SpawnFolderPicker(HWND(parentHwnd), std::move(commands))
-      ->Then(
-          GetMainThreadSerialEventTarget(), __PRETTY_FUNCTION__,
-          [resolver = std::move(resolver)](Maybe<nsString> const& res) {
-            resolver(res);
-          },
-          [self = RefPtr(this), resolver](HRESULT hr) {
-            // this doesn't need to be returned anywhere; it'll crash the
-            // process as a side effect of construction
-            self->MakeIpcFailure(hr, "SpawnFolderPicker");
-          });
+  RefPtr<IFileDialog> dialog;
+  {
+    auto res = MakeFileDialog(FileDialogType::Open);
+    if (res.isErr()) {
+      return MakeIpcFailure(res.unwrapErr(), "creating file dialog");
+    }
+    dialog = res.unwrap();
+  }
+
+  MOZ_IPC_ENSURE_HRESULT_OK(ApplyCommands(dialog.get(), commands),
+                            "applying commands");
+
+  {
+    auto const hr = dialog->Show((HWND)parentHwnd);
+    if (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED)) {
+      resolver(Nothing());
+      return IPC_OK();
+    }
+    MOZ_IPC_ENSURE_HRESULT_OK(hr, "showing folder dialog");
+  }
+
+  {
+    auto res = GetFolderResults(dialog.get());
+    if (res.isErr()) {
+      return MakeIpcFailure(res.unwrapErr(), "GetFolderResults");
+    }
+    resolver(Some(res.unwrap()));
+  }
 
   return IPC_OK();
 }
