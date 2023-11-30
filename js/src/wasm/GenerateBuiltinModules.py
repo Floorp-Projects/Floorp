@@ -56,6 +56,12 @@ def load_yaml(yaml_path):
     return yaml.load(contents, OrderedLoader)
 
 
+def cppBool(v):
+    if v:
+        return "true"
+    return "false"
+
+
 def main(c_out, yaml_path):
     data = load_yaml(yaml_path)
 
@@ -66,21 +72,41 @@ def main(c_out, yaml_path):
         sa = op["symbolic_address"]
         contents += (
             f"    M({op['op']}, \"{op['export']}\", "
-            f"{sa['name']}, {sa['type']}, {op['entry']}, {i})\\\n"
+            f"{sa['name']}, {sa['type']}, {op['entry']}, {cppBool(op['uses_memory'])}, {i})\\\n"
         )
     contents += "\n"
 
     for op in data:
-        # Define DECLARE_BUILTIN_MODULE_FUNC_SAS_PARAM_VALTYPES_<op> as:
+        # Define DECLARE_BUILTIN_MODULE_FUNC_PARAM_VALTYPES_<op> as:
         # `{ValType::I32, ValType::I32, ...}`.
         contents += (
-            f"#define DECLARE_BUILTIN_MODULE_FUNC_SAS_PARAM_VALTYPES_{op['op']} "
-            f"{{ValType::{', ValType::'.join(op['params'])}}}\n"
+            f"#define DECLARE_BUILTIN_MODULE_FUNC_PARAM_VALTYPES_{op['op']} "
+            f"{{{', '.join(op['params'])}}}\n"
         )
-        # Define DECLARE_BUILTIN_MODULE_FUNC_PARAM_TYPES_<op> as:
+
+        # Define DECLARE_BUILTIN_MODULE_FUNC_PARAM_SASTYPES_<op> as:
         # `<num_types>, {_PTR, _I32, ..., _PTR, _END}`.
-        sas_types = f"{{_PTR{''.join(', _' + p for p in op['params'])}, _PTR, _END}}"
-        num_types = len(op["params"]) + 2
-        contents += f"#define DECLARE_BUILTIN_MODULE_FUNC_PARAM_TYPES_{op['op']} {num_types}, {sas_types}\n"
+        num_types = len(op["params"]) + 1
+        sas_types = (
+            f"{{_PTR{''.join(', ' + (p + '.toMIRType()') for p in op['params'])}"
+        )
+        if op["uses_memory"]:
+            sas_types += ", _PTR"
+            num_types += 1
+        sas_types += ", _END}"
+
+        contents += f"#define DECLARE_BUILTIN_MODULE_FUNC_PARAM_SASTYPES_{op['op']} {num_types}, {sas_types}\n"
+
+        result_valtype = ""
+        result_sastype = ""
+        if "result" in op:
+            result_valtype = f"Some({op['result']})\n"
+            result_sastype = f"{op['result']}.toMIRType()\n"
+        else:
+            result_valtype = "Nothing()"
+            result_sastype = "_VOID"
+        contents += f"#define DECLARE_BUILTIN_MODULE_FUNC_RESULT_VALTYPE_{op['op']} {result_valtype}\n"
+        contents += f"#define DECLARE_BUILTIN_MODULE_FUNC_RESULT_SASTYPE_{op['op']} {result_sastype}\n"
+        contents += f"#define DECLARE_BUILTIN_MODULE_FUNC_FAILMODE_{op['op']} _{op['fail_mode']}\n"
 
     generate_header(c_out, "wasm_WasmBuiltinModuleGenerated_h", contents)

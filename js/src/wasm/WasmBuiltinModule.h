@@ -19,6 +19,7 @@
 #ifndef wasm_builtin_module_h
 #define wasm_builtin_module_h
 
+#include "mozilla/Maybe.h"
 #include "mozilla/Span.h"
 
 #include "wasm/WasmBuiltins.h"
@@ -36,11 +37,15 @@ namespace wasm {
 struct BuiltinModuleFunc {
   // The name of the func as it is exported
   const char* exportName;
-  // The params taken by the func. No results are required for these funcs
-  // at this time, so we omit them
+  // The params taken by the func.
   mozilla::Span<const ValType> params;
+  // The optional result returned by the func.
+  mozilla::Maybe<const ValType> result;
   // The signature of the builtin that implements the func
   const SymbolicAddressSignature& signature;
+  // Whether this function takes a pointer to the memory base as a hidden final
+  // parameter.
+  bool usesMemory;
 
   // Allocate a FuncType for this func, returning false for OOM
   bool funcType(FuncType* type) const;
@@ -53,7 +58,7 @@ struct BuiltinModuleFunc {
 // Compile and return the builtin module for a given set of operations.
 bool CompileBuiltinModule(JSContext* cx,
                           const mozilla::Span<BuiltinModuleFuncId> ids,
-                          Shareable sharedMemory,
+                          mozilla::Maybe<Shareable> memory,
                           MutableHandle<WasmModuleObject*> result);
 
 }  // namespace wasm

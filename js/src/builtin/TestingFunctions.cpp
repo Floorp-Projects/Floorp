@@ -2120,7 +2120,8 @@ static bool WasmBuiltinI8VecMul(JSContext* cx, unsigned argc, Value* vp) {
 
   wasm::BuiltinModuleFuncId ids[] = {wasm::BuiltinModuleFuncId::I8VecMul};
   Rooted<WasmModuleObject*> module(cx);
-  if (!wasm::CompileBuiltinModule(cx, ids, wasm::Shareable::False, &module)) {
+  if (!wasm::CompileBuiltinModule(cx, ids, Some(wasm::Shareable::False),
+                                  &module)) {
     return false;
   }
   args.rval().set(ObjectValue(*module.get()));
