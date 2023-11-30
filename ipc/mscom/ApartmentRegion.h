@@ -11,9 +11,16 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/mscom/COMWrappers.h"
 
-namespace mozilla {
-namespace mscom {
+namespace mozilla::mscom {
 
+// This runtime-dynamic apartment class is used in ProcessRuntime.cpp, to
+// initialize the process's main thread. Do not use it in new contexts if at all
+// possible; instead, prefer ApartmentRegionT, below.
+//
+// For backwards compatibility, this class does not yet automatically disable
+// OLE1/DDE, although there is believed to be no code relying on it.
+//
+// (TODO: phase out all uses of CoInitialize without `COINIT_DISABLE_OLE1DDE`?)
 class MOZ_NON_TEMPORARY_CLASS ApartmentRegion final {
  public:
   /**
@@ -48,22 +55,29 @@ class MOZ_NON_TEMPORARY_CLASS ApartmentRegion final {
     return IsValid();
   }
 
-  HRESULT
-  GetHResult() const { return mInitResult; }
+  HRESULT GetHResult() const { return mInitResult; }
 
- private:
   ApartmentRegion(const ApartmentRegion&) = delete;
   ApartmentRegion& operator=(const ApartmentRegion&) = delete;
   ApartmentRegion(ApartmentRegion&&) = delete;
   ApartmentRegion& operator=(ApartmentRegion&&) = delete;
 
+ private:
   HRESULT mInitResult;
 };
 
-template <COINIT T>
+template <COINIT AptType, bool UseOLE1 = false>
 class MOZ_NON_TEMPORARY_CLASS ApartmentRegionT final {
+  static COINIT ActualType() {
+    static_assert(
+        !((AptType & COINIT_DISABLE_OLE1DDE) == 0 && UseOLE1),
+        "only one of `UseOLE1` and `COINIT_DISABLE_OLE1DDE` permitted");
+    if (UseOLE1) return AptType;
+    return static_cast<COINIT>(AptType | COINIT_DISABLE_OLE1DDE);
+  }
+
  public:
-  ApartmentRegionT() : mAptRgn(T) {}
+  ApartmentRegionT() : mAptRgn(ActualType()) {}
 
   ~ApartmentRegionT() = default;
 
@@ -75,19 +89,18 @@ class MOZ_NON_TEMPORARY_CLASS ApartmentRegionT final {
 
   HRESULT GetHResult() const { return mAptRgn.GetHResult(); }
 
- private:
   ApartmentRegionT(const ApartmentRegionT&) = delete;
   ApartmentRegionT& operator=(const ApartmentRegionT&) = delete;
   ApartmentRegionT(ApartmentRegionT&&) = delete;
   ApartmentRegionT& operator=(ApartmentRegionT&&) = delete;
 
+ private:
   ApartmentRegion mAptRgn;
 };
 
-typedef ApartmentRegionT<COINIT_APARTMENTTHREADED> STARegion;
-typedef ApartmentRegionT<COINIT_MULTITHREADED> MTARegion;
+using STARegion = ApartmentRegionT<COINIT_APARTMENTTHREADED>;
+using MTARegion = ApartmentRegionT<COINIT_MULTITHREADED>;
 
-}  // namespace mscom
-}  // namespace mozilla
+}  // namespace mozilla::mscom
 
 #endif  // mozilla_mscom_ApartmentRegion_h
