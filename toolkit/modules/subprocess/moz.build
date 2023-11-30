@@ -18,13 +18,13 @@ if CONFIG["OS_TARGET"] == "WINNT":
     EXTRA_JS_MODULES.subprocess += [
         "subprocess_shared_win.js",
         "subprocess_win.sys.mjs",
-        "subprocess_worker_win.js",
+        "subprocess_win.worker.js",
     ]
 else:
     EXTRA_JS_MODULES.subprocess += [
         "subprocess_shared_unix.js",
         "subprocess_unix.sys.mjs",
-        "subprocess_worker_unix.js",
+        "subprocess_unix.worker.js",
     ]
 
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]

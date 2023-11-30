@@ -69,7 +69,7 @@ class UnixPromiseWorker extends PromiseWorker {
 
 class Process extends BaseProcess {
   static get WORKER_URL() {
-    return "resource://gre/modules/subprocess/subprocess_worker_unix.js";
+    return "resource://gre/modules/subprocess/subprocess_unix.worker.js";
   }
 
   static get WorkerClass() {

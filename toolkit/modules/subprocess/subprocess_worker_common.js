@@ -5,9 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-// This file is loaded into the same context as subprocess_worker_unix.js
-// and subprocess_worker_win.js
-/* import-globals-from subprocess_worker_unix.js */
+// This file is loaded into the same context as subprocess_unix.worker.js
+// and subprocess_win.worker.js
+/* import-globals-from subprocess_unix.worker.js */
 
 /* exported BasePipe, BaseProcess, debug */
 
