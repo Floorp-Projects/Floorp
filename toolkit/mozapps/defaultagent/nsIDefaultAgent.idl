@@ -79,21 +79,6 @@ interface nsIDefaultAgent : nsISupports
   void setDefaultBrowserUserChoice(in AString aAumid, in Array<AString> aExtraFileExtensions);
 
   /**
-  * Set the default browser and optionally additional file extensions via the
-  * UserChoice registry keys, asynchronously. Does the actual work on a
-  * background thread.
-  *
-  * @param {AString} aAumid
-  *        Suffix to be appended to ProgIDs when registering system defaults.
-  * @param {Array<AString>} aExtraFileExtensions
-  *        Additional optional file extensions to register specified as argument
-  *        pairs: the first element is the file extension, the second element is
-  *        the root of a ProgID, which will be suffixed with `-{aAumid}`.
-  */
-  [implicit_jscontext]
-  Promise setDefaultBrowserUserChoiceAsync(in AString aAumid, in Array<AString> aExtraFileExtensions);
-
-  /**
   * Sets file extensions via the UserChoice registry keys.
   *
   * @param {AString} aAumid
