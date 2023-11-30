@@ -189,6 +189,9 @@ export class _DSCard extends React.PureComponent {
             card_type: this.props.flightId ? "spoc" : "organic",
             recommendation_id: this.props.recommendation_id,
             tile_id: this.props.id,
+            ...(this.props.shim && this.props.shim.click
+              ? { shim: this.props.shim.click }
+              : {}),
           },
         })
       );
@@ -233,6 +236,9 @@ export class _DSCard extends React.PureComponent {
             card_type: this.props.flightId ? "spoc" : "organic",
             recommendation_id: this.props.recommendation_id,
             tile_id: this.props.id,
+            ...(this.props.shim && this.props.shim.save
+              ? { shim: this.props.shim.save }
+              : {}),
           },
         })
       );
