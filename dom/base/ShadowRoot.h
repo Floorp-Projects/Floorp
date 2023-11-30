@@ -245,6 +245,9 @@ class ShadowRoot final : public DocumentFragment, public DocumentOrShadowRoot {
 
   bool IsClonable() const { return mIsClonable == Clonable::Yes; }
 
+  MOZ_CAN_RUN_SCRIPT
+  void SetHTMLUnsafe(const nsAString& aHTML);
+
  protected:
   // FIXME(emilio): This will need to become more fine-grained.
   void ApplicableRulesChanged();
