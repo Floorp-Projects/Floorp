@@ -1,0 +1,18 @@
+[DEFAULT]
+head = "head_download_manager.js"
+skip-if = ["os == 'android'"]
+support-files = [
+  "data/digest.chunk",
+  "data/block_digest.chunk",
+  "data/signed_win.exe",
+]
+
+["test_app_rep.js"]
+run-sequentially = "very high failure rate in parallel"
+
+["test_app_rep_maclinux.js"]
+skip-if = ["os == 'win'"]
+run-sequentially = "very high failure rate in parallel"
+
+["test_app_rep_windows.js"]
+run-if = ["os == 'win'"]

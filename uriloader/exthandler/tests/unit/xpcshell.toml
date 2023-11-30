@@ -1,0 +1,43 @@
+[DEFAULT]
+head = "head.js"
+run-sequentially = "Bug 912235 - Intermittent failures"
+firefox-appdir = "browser"
+
+["test_badMIMEType.js"]
+run-if = ["buildapp == 'browser'"]
+
+["test_defaults_handlerService.js"]
+# No default stored handlers on android given lack of support.
+# No default stored handlers on Thunderbird.
+skip-if = [
+  "os == 'android'",
+  "appname == 'thunderbird'",
+]
+
+["test_filename_sanitize.js"]
+skip-if = ["os == 'mac'"] # Bug 1817727
+
+["test_getFromTypeAndExtension.js"]
+
+["test_getMIMEInfo_pdf.js"]
+
+["test_getMIMEInfo_unknown_mime_type.js"]
+run-if = ["os == 'win'"] # Windows only test
+
+["test_getTypeFromExtension_ext_to_type_mapping.js"]
+
+["test_getTypeFromExtension_with_empty_Content_Type.js"]
+run-if = ["os == 'win'"] # Windows only test
+
+["test_handlerService.js"]
+support-files = ["mailcap"]
+# Bug 676997: test consistently fails on Android
+fail-if = ["os == 'android'"]
+
+["test_handlerService_store.js"]
+# Disabled for 1563343 -- the app should determine possible handlers in GV.
+fail-if = ["os == 'android'"]
+support-files = ["handlers.json"]
+
+["test_punycodeURIs.js"]
+skip-if = ["os == 'win' && msix"] # https://bugzilla.mozilla.org/show_bug.cgi?id=1809485

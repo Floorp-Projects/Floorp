@@ -11,16 +11,16 @@ TESTING_JS_MODULES += [
 ]
 
 XPCSHELL_TESTS_MANIFESTS += [
-    "bookmarks/xpcshell.ini",
-    "expiration/xpcshell.ini",
-    "favicons/xpcshell.ini",
-    "history/xpcshell.ini",
-    "legacy/xpcshell.ini",
-    "maintenance/xpcshell.ini",
-    "migration/xpcshell.ini",
-    "queries/xpcshell.ini",
-    "sync/xpcshell.ini",
-    "unit/xpcshell.ini",
+    "bookmarks/xpcshell.toml",
+    "expiration/xpcshell.toml",
+    "favicons/xpcshell.toml",
+    "history/xpcshell.toml",
+    "legacy/xpcshell.toml",
+    "maintenance/xpcshell.toml",
+    "migration/xpcshell.toml",
+    "queries/xpcshell.toml",
+    "sync/xpcshell.toml",
+    "unit/xpcshell.toml",
 ]
 
 BROWSER_CHROME_MANIFESTS += [

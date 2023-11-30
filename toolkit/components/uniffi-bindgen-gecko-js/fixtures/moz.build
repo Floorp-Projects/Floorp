@@ -21,4 +21,4 @@ EXTRA_JS_MODULES += [
     "generated/Rust{}.sys.mjs".format(component) for component in components
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]

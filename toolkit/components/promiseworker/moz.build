@@ -10,7 +10,7 @@ EXTRA_JS_MODULES += [
     "PromiseWorker.sys.mjs",
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]
 
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Async Tooling")

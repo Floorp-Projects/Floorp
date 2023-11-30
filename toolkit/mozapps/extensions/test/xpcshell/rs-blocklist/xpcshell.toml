@@ -1,0 +1,102 @@
+[DEFAULT]
+tags = "addons blocklist"
+head = "head.js ../head_addons.js"
+firefox-appdir = "browser"
+support-files = [
+  "../data/**",
+  "../../xpinstall/webmidi_permission.xpi",
+]
+
+["test_android_blocklist_dump.js"]
+run-if = ["os == 'android'"]
+
+["test_blocklist_addonBlockURL.js"]
+
+["test_blocklist_appversion.js"]
+skip-if = ["os == 'android' && verify"] # times out
+
+["test_blocklist_clients.js"]
+tags = "remote-settings"
+
+["test_blocklist_gfx.js"]
+
+["test_blocklist_metadata_filters.js"]
+
+["test_blocklist_mlbf.js"]
+
+["test_blocklist_mlbf_dump.js"]
+skip-if = ["os == 'android'"] # blocklist v3 is not bundled with Android builds, see test_android_blocklist_dump.js instead.
+
+["test_blocklist_mlbf_fetch.js"]
+
+["test_blocklist_mlbf_stashes.js"]
+
+["test_blocklist_mlbf_telemetry.js"]
+skip-if = ["appname == 'thunderbird'"] # Data irrelevant to Thunderbird. Bug 1641400.
+
+["test_blocklist_mlbf_update.js"]
+
+["test_blocklist_osabi.js"]
+skip-if = ["os == 'android' && verify"] # times out
+
+["test_blocklist_prefs.js"]
+
+["test_blocklist_regexp_split.js"]
+
+["test_blocklist_severities.js"]
+
+["test_blocklist_statechange_telemetry.js"]
+skip-if = ["appname == 'thunderbird'"] # Data irrelevant to Thunderbird. Bug 1641400.
+
+["test_blocklist_targetapp_filter.js"]
+tags = "remote-settings"
+
+["test_blocklist_telemetry.js"]
+tags = "remote-settings"
+skip-if = ["appname == 'thunderbird'"] # Data irrelevant to Thunderbird. Bug 1641400.
+
+["test_blocklistchange.js"]
+# Times out during parallel runs on desktop
+requesttimeoutfactor = 2
+skip-if = ["os == 'android' && verify"] # times out because it takes too much time to run the full test
+
+["test_blocklistchange_v2.js"]
+# Times out during parallel runs on desktop
+requesttimeoutfactor = 2
+skip-if = ["os == 'android' && verify"] # times out in chaos mode on Android because several minutes are spent waiting at https://hg.mozilla.org/mozilla-central/file/3350b680/toolkit/mozapps/extensions/Blocklist.jsm#l698
+
+["test_gfxBlacklist_Device.js"]
+
+["test_gfxBlacklist_DriverNew.js"]
+
+["test_gfxBlacklist_Equal_DriverNew.js"]
+
+["test_gfxBlacklist_Equal_DriverOld.js"]
+
+["test_gfxBlacklist_Equal_OK.js"]
+
+["test_gfxBlacklist_GTE_DriverOld.js"]
+
+["test_gfxBlacklist_GTE_OK.js"]
+
+["test_gfxBlacklist_No_Comparison.js"]
+
+["test_gfxBlacklist_OK.js"]
+
+["test_gfxBlacklist_OS.js"]
+
+["test_gfxBlacklist_OSVersion_match.js"]
+
+["test_gfxBlacklist_OSVersion_mismatch_DriverVersion.js"]
+
+["test_gfxBlacklist_OSVersion_mismatch_OSVersion.js"]
+
+["test_gfxBlacklist_Vendor.js"]
+
+["test_gfxBlacklist_Version.js"]
+
+["test_gfxBlacklist_prefs.js"]
+# Bug 1248787 - consistently fails
+skip-if = ["true"]
+
+["test_softblocked.js"]

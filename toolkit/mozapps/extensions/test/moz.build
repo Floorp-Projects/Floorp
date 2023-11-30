@@ -11,9 +11,9 @@ MOCHITEST_MANIFESTS += ["mochitest/mochitest.toml"]
 MOCHITEST_CHROME_MANIFESTS += ["mochitest/chrome.toml"]
 
 XPCSHELL_TESTS_MANIFESTS += [
-    "xpcshell/rs-blocklist/xpcshell.ini",
+    "xpcshell/rs-blocklist/xpcshell.toml",
     "xpcshell/xpcshell-unpack.ini",
-    "xpcshell/xpcshell.ini",
+    "xpcshell/xpcshell.toml",
 ]
 
 with Files("xpcshell/rs-blocklist/**"):

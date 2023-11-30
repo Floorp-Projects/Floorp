@@ -113,7 +113,7 @@ with Files("*wheeltransaction*"):
     BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 
-XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.toml"]
 MOCHITEST_MANIFESTS += ["mochitest.toml"]
 MOCHITEST_CHROME_MANIFESTS += ["chrome.toml"]
 BROWSER_CHROME_MANIFESTS += ["browser/browser.toml"]

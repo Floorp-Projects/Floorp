@@ -1,0 +1,20 @@
+[DEFAULT]
+
+["test_TaskScheduler.js"]
+skip-if = [
+  "apple_silicon",  # bug 1707753
+  "apple_catalina", # Bug 1713329
+]
+
+["test_TaskSchedulerMacOSImpl.js"]
+run-if = ["os == 'mac'"] # Test of macOS backend
+skip-if = [
+  "apple_silicon",  # bug 1707753
+  "apple_catalina", # Bug 1713329
+]
+
+["test_TaskSchedulerWinImpl.js"]
+run-if = ["os == 'win'"] # Test of Windows backend
+
+["test_WinTaskSchedulerService.js"]
+run-if = ["os == 'win'"] # Test of Windows only service

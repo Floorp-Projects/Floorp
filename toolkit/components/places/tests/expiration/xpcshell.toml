@@ -1,0 +1,23 @@
+[DEFAULT]
+head = "head_expiration.js"
+skip-if = ["os == 'android'"]
+
+["test_annos_expire_never.js"]
+
+["test_clearHistory.js"]
+
+["test_debug_expiration.js"]
+
+["test_idle_daily.js"]
+
+["test_interactions_expiration.js"]
+
+["test_notifications.js"]
+
+["test_notifications_pageRemoved_allVisits.js"]
+
+["test_notifications_pageRemoved_fromStore.js"]
+
+["test_pref_interval.js"]
+
+["test_pref_maxpages.js"]

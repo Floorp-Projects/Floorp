@@ -1,0 +1,6 @@
+[DEFAULT]
+head = ""
+
+["test_wwauthpromptfactory.js"]
+
+["test_wwpromptfactory.js"]

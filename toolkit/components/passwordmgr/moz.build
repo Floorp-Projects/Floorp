@@ -9,7 +9,7 @@ if CONFIG["MOZ_BUILD_APP"] == "browser":
 
 MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.toml"]
 BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.toml"]
 
 TESTING_JS_MODULES += [
     "test/LoginTestUtils.sys.mjs",

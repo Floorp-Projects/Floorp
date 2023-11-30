@@ -27,7 +27,7 @@ else:
         "subprocess_unix.worker.js",
     ]
 
-XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.toml"]
 
 SPHINX_TREES["toolkit_modules/subprocess"] = ["docs"]
 

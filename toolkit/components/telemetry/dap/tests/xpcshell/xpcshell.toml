@@ -1,0 +1,4 @@
+[DEFAULT]
+
+["test_dap.js"]
+skip-if = ["os == 'android'"] # DAP is not supported on Android

@@ -1,0 +1,89 @@
+[DEFAULT]
+tags = "appupdate"
+head = "head_update.js"
+skip-if = ["os == 'win' && (ccov || msix)"] # Our updater is disabled in MSIX builds
+prefs = ["app.update.staging.enabled=false"]
+support-files = [
+  "../data/shared.js",
+  "../data/sharedUpdateXML.js",
+  "../data/xpcshellUtilsAUS.js",
+  "../data/app_update.sjs",
+  "testConstants.js",
+  "../data/simple.mar",
+]
+
+["ausReadStrings.js"]
+
+["backgroundUpdateTaskInternalUpdater.js"]
+
+["canCheckForAndCanApplyUpdates.js"]
+
+["cleanupDownloadingForDifferentChannel.js"]
+
+["cleanupDownloadingForOlderAppVersion.js"]
+
+["cleanupDownloadingForSameVersionAndBuildID.js"]
+
+["cleanupDownloadingIncorrectStatus.js"]
+
+["cleanupPendingVersionFileIncorrectStatus.js"]
+
+["cleanupSuccessLogMove.js"]
+
+["cleanupSuccessLogsFIFO.js"]
+
+["disableBackgroundUpdatesBackgroundTask.js"]
+skip-if = ["socketprocess_networking"] # Bug 1759035
+
+["disableBackgroundUpdatesNonBackgroundTask.js"]
+skip-if = ["socketprocess_networking"] # Bug 1759035
+
+["downloadInterruptedNoRecovery.js"]
+skip-if = ["socketprocess_networking"] # Bug 1759035
+
+["downloadInterruptedOffline.js"]
+skip-if = ["socketprocess_networking"] # Bug 1759035
+
+["downloadInterruptedRecovery.js"]
+skip-if = ["socketprocess_networking"] # Bug 1759035
+
+["downloadResumeForSameAppVersion.js"]
+
+["ensureExperimentToRolloutTransitionPerformed.js"]
+run-if = ["os == 'win' && appname == 'firefox'"]
+reason = "Feature is Firefox-specific and Windows-specific."
+
+["languagePackUpdates.js"]
+skip-if = ["socketprocess_networking"] # Bug 1759035
+
+["multiUpdate.js"]
+skip-if = ["socketprocess_networking"] # Bug 1759035
+
+["onlyDownloadUpdatesThisSession.js"]
+skip-if = ["socketprocess_networking"] # Bug 1759035
+
+["perInstallationPrefs.js"]
+
+["remoteUpdateXML.js"]
+skip-if = ["socketprocess_networking"] # Bug 1759035
+
+["updateAutoPrefMigrate.js"]
+run-if = ["os == 'win'"]
+reason = "Update pref migration is currently Windows only"
+
+["updateCheckCombine.js"]
+
+["updateDirectoryMigrate.js"]
+run-if = ["os == 'win'"]
+reason = "Update directory migration is currently Windows only"
+
+["updateManagerXML.js"]
+
+["updateSyncManager.js"]
+
+["urlConstruction.js"]
+skip-if = ["socketprocess_networking"] # Bug 1759035
+
+["verifyChannelPrefsFile.js"]
+run-if = ["appname == 'firefox'"]
+reason = "File being verified is Firefox-specific."

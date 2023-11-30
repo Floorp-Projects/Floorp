@@ -1,0 +1,24 @@
+[DEFAULT]
+firefox-appdir = "browser"
+skip-if = [
+  "os == 'android'",
+  "os == 'win' && msix", # Our updater is disabled in MSIX builds
+]
+head = "head.js"
+support-files = [
+  "../data/shared.js",
+  "../data/sharedUpdateXML.js",
+  "../data/xpcshellUtilsAUS.js",
+]
+
+["test_backgroundupdate_exitcodes.js"]
+run-sequentially = "very high failure rate in parallel"
+
+["test_backgroundupdate_glean.js"]
+
+["test_backgroundupdate_reason.js"]
+
+["test_backgroundupdate_reason_schedule.js"]
+
+["test_backgroundupdate_reason_update.js"]
+run-sequentially = "very high failure rate in parallel"

@@ -1,0 +1,5 @@
+[DEFAULT]
+head = "head_urlformatter.js"
+skip-if = ["os == 'android'"]
+
+["test_urlformatter.js"]

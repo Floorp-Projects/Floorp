@@ -7,8 +7,8 @@
 SPHINX_TREES["/toolkit/search"] = "docs"
 
 XPCSHELL_TESTS_MANIFESTS += [
-    "tests/xpcshell/searchconfigs/xpcshell.ini",
-    "tests/xpcshell/xpcshell.ini",
+    "tests/xpcshell/searchconfigs/xpcshell.toml",
+    "tests/xpcshell/xpcshell.toml",
 ]
 
 XPIDL_SOURCES += [

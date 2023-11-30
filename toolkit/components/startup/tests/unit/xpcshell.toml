@@ -1,0 +1,5 @@
+[DEFAULT]
+head = "head_startup.js"
+skip-if = ["os == 'android'"]
+
+["test_startup_crash.js"]

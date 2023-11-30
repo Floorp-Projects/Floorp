@@ -10,7 +10,7 @@ with Files("**"):
 TEST_DIRS += ["test"]
 
 if CONFIG["ENABLE_TESTS"]:
-    XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
+    XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.toml"]
 
 XPIDL_SOURCES += [
     "nsIWindowCreator.idl",

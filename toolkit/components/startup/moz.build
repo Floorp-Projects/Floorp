@@ -11,7 +11,7 @@ EXPORTS.mozilla += [
 ]
 
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
-XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.toml"]
 
 UNIFIED_SOURCES += [
     "nsAppStartup.cpp",

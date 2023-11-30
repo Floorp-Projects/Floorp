@@ -1,0 +1,7 @@
+[DEFAULT]
+head = "head.js"
+support-files = ["support.js"]
+
+["test_basic.js"]
+
+["test_basic_child_and_parent.js"]

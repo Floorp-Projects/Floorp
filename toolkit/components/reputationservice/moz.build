@@ -7,7 +7,7 @@
 with Files("*"):
     BUG_COMPONENT = ("Toolkit", "Safe Browsing")
 
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.toml"]
 
 EXPORTS.mozilla += ["ApplicationReputation.h"]
 

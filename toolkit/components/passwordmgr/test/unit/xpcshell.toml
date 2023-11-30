@@ -1,0 +1,118 @@
+[DEFAULT]
+head = "head.js"
+skip-if = ["os == 'android'"] # Not supported on GV because we can't add/remove from storage.
+support-files = ["data/**"]
+
+["test_CSVParser.js"]
+
+["test_LoginManagerParent_doAutocompleteSearch.js"]
+skip-if = ["os == 'android'"] # Password generation not packaged/used on Android
+
+["test_LoginManagerParent_getGeneratedPassword.js"]
+skip-if = ["os == 'android'"] # Password generation not packaged/used on Android
+
+["test_LoginManagerParent_onPasswordEditedOrGenerated.js"]
+skip-if = ["os == 'android'"] # Password generation not packaged/used on Android
+
+["test_LoginManagerParent_searchAndDedupeLogins.js"]
+skip-if = ["os == 'android'"] # schemeUpgrades aren't supported
+
+["test_LoginManagerPrompter_getUsernameSuggestions.js"]
+skip-if = ["os == 'android'"] # Tests desktop's prompter
+
+["test_OSCrypto_win.js"]
+run-if = ["os == 'win'"]
+
+["test_PasswordGenerator.js"]
+skip-if = ["os == 'android'"] # Not packaged/used on Android
+
+["test_PasswordRulesManager_generatePassword.js"]
+
+["test_context_menu.js"]
+skip-if = ["os == 'android'"] # The context menu isn't used on Android.
+# LoginManagerContextMenu is only included for MOZ_BUILD_APP == 'browser'.
+run-if = ["buildapp == 'browser'"]
+
+["test_dedupeLogins.js"]
+
+["test_disabled_hosts.js"]
+
+["test_displayOrigin.js"]
+
+["test_doLoginsMatch.js"]
+
+["test_findRelatedRealms.js"]
+
+["test_getFormFields.js"]
+
+["test_getPasswordFields.js"]
+
+["test_getPasswordOrigin.js"]
+
+["test_getUserNameAndPasswordFields.js"]
+
+["test_getUsernameFieldFromUsernameOnlyForm.js"]
+
+["test_isInferredLoginForm.js"]
+
+["test_isInferredUsernameField.js"]
+
+["test_isOriginMatching.js"]
+
+["test_isProbablyANewPasswordField.js"]
+
+["test_isUsernameFieldType.js"]
+
+["test_legacy_empty_formActionOrigin.js"]
+
+["test_legacy_validation.js"]
+
+["test_login_autocomplete_result.js"]
+skip-if = ["os == 'android'"]
+
+["test_loginsBackup.js"]
+skip-if = ["os == 'android'"]
+
+# The following tests apply to any storage back-end that supports add/modify/remove.
+
+["test_logins_change.js"]
+
+["test_logins_decrypt_failure.js"]
+skip-if = ["os == 'android'"] # Bug 1171687: Needs fixing on Android
+
+["test_logins_metainfo.js"]
+
+["test_logins_search.js"]
+
+["test_maybeImportLogin.js"]
+skip-if = ["os == 'android'"] # Only used by migrator, which isn't on Android
+
+["test_module_LoginCSVImport.js"]
+
+["test_module_LoginExport.js"]
+skip-if = ["os == 'android'"] # there is no export for android
+
+["test_module_LoginManager.js"]
+
+["test_module_LoginStore.js"]
+skip-if = ["os == 'android'"]
+
+["test_notifications.js"]
+
+["test_recipes_add.js"]
+
+["test_recipes_content.js"]
+
+["test_remote_recipes.js"]
+skip-if = ["os == 'android'"]
+
+["test_search_schemeUpgrades.js"]
+
+["test_shadowHTTPLogins.js"]
+
+["test_storage.js"]
+
+["test_telemetry.js"]
+
+["test_vulnerable_passwords.js"]
+skip-if = ["os == 'android'"] # Not implemented for storage-mozStorage

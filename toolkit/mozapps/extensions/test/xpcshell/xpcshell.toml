@@ -1,0 +1,362 @@
+[DEFAULT]
+skip-if = ["os == 'android'"]
+tags = "addons"
+head = "head_addons.js"
+firefox-appdir = "browser"
+dupe-manifest = true
+support-files = ["data/**"]
+
+["test_AMBrowserExtensionsImport.js"]
+
+["test_AbuseReporter.js"]
+
+["test_AddonRepository.js"]
+
+["test_AddonRepository_appIsShuttingDown.js"]
+
+["test_AddonRepository_cache.js"]
+
+["test_AddonRepository_cache_locale.js"]
+
+["test_AddonRepository_langpacks.js"]
+
+["test_AddonRepository_paging.js"]
+
+["test_ProductAddonChecker.js"]
+
+["test_ProductAddonChecker_signatures.js"]
+head = "head_addons.js head_cert_handling.js"
+
+["test_QuarantinedDomains_AMRemoteSettings.js"]
+head = "head_addons.js head_amremotesettings.js ../../../../components/extensions/test/xpcshell/head_telemetry.js"
+
+["test_QuarantinedDomains_AddonWrapper.js"]
+
+["test_XPIStates.js"]
+skip-if = ["condprof"]  # Bug 1769184 - by design for now
+
+["test_XPIcancel.js"]
+
+["test_addonStartup.js"]
+
+["test_addon_manager_telemetry_events.js"]
+
+["test_amo_stats_telemetry.js"]
+
+["test_aom_startup.js"]
+
+["test_bad_json.js"]
+
+["test_badschema.js"]
+
+["test_builtin_location.js"]
+
+["test_cacheflush.js"]
+
+["test_childprocess.js"]
+head = ""
+
+["test_colorways_builtin_theme_upgrades.js"]
+skip-if = ["appname == 'thunderbird'"] # Bug 1809438 - No colorways in Thunderbird
+
+["test_cookies.js"]
+
+["test_corrupt.js"]
+
+["test_crash_annotation_quoting.js"]
+
+["test_db_path.js"]
+head = ""
+
+["test_delay_update_webextension.js"]
+tags = "webextensions"
+
+["test_dependencies.js"]
+
+["test_dictionary_webextension.js"]
+
+["test_distribution.js"]
+
+["test_distribution_langpack.js"]
+
+["test_embedderDisabled.js"]
+
+["test_error.js"]
+skip-if = ["os == 'win'"] # Bug 1508482
+
+["test_ext_management.js"]
+tags = "webextensions"
+
+["test_general.js"]
+
+["test_getInstallSourceFromHost.js"]
+
+["test_gmpProvider.js"]
+skip-if = ["appname != 'firefox'"]
+
+["test_harness.js"]
+
+["test_hidden.js"]
+
+["test_install.js"]
+
+["test_installOrigins.js"]
+
+["test_install_cancel.js"]
+
+["test_install_file_change.js"]
+
+["test_install_icons.js"]
+
+["test_installtrigger_deprecation.js"]
+head = "head_addons.js head_amremotesettings.js"
+
+["test_installtrigger_schemes.js"]
+
+["test_isDebuggable.js"]
+
+["test_isReady.js"]
+
+["test_loadManifest_isPrivileged.js"]
+
+["test_locale.js"]
+
+["test_moved_extension_metadata.js"]
+skip-if = ["true"] # bug 1777900
+
+["test_no_addons.js"]
+
+["test_nodisable_hidden.js"]
+
+["test_onPropertyChanged_appDisabled.js"]
+head = "head_addons.js head_compat.js"
+skip-if = ["tsan"] # Times out, bug 1674773
+
+["test_permissions.js"]
+
+["test_permissions_prefs.js"]
+
+["test_pref_properties.js"]
+
+["test_provider_markSafe.js"]
+
+["test_provider_shutdown.js"]
+
+["test_provider_unsafe_access_shutdown.js"]
+
+["test_provider_unsafe_access_startup.js"]
+
+["test_proxies.js"]
+skip-if = ["require_signing"]
+
+["test_recommendations.js"]
+skip-if = ["require_signing"]
+
+["test_registerchrome.js"]
+
+["test_registry.js"]
+run-if = ["os == 'win'"]
+
+["test_reinstall_disabled_addon.js"]
+
+["test_reload.js"]
+skip-if = ["os == 'win'"] # There's a problem removing a temp file without manually clearing the cache on Windows
+tags = "webextensions"
+
+["test_remote_pref_telemetry.js"]
+
+["test_safemode.js"]
+
+["test_schema_change.js"]
+
+["test_seen.js"]
+
+["test_shutdown.js"]
+
+["test_shutdown_barriers.js"]
+
+["test_shutdown_early.js"]
+skip-if = ["condprof"] # Bug 1769184 - by design for now
+
+["test_sideload_scopes.js"]
+head = "head_addons.js head_sideload.js"
+skip-if = [
+  "os == 'linux'", # Bug 1613268
+  "condprof", # Bug 1769184 - by design for now
+]
+
+["test_sideloads.js"]
+
+["test_sideloads_after_rebuild.js"]
+skip-if = ["condprof"] # Bug 1769184 - by design for now
+head = "head_addons.js head_sideload.js"
+
+["test_signed_inject.js"]
+skip-if = ["true"] # Bug 1394122
+
+["test_signed_install.js"]
+
+["test_signed_langpack.js"]
+
+["test_signed_long.js"]
+
+["test_signed_updatepref.js"]
+skip-if = [
+  "require_signing",
+  "!allow_legacy_extensions",
+]
+
+["test_signed_verify.js"]
+
+["test_sitePermsAddonProvider.js"]
+skip-if = ["appname == 'thunderbird'"] # Disabled in extensions.manifest
+
+["test_startup.js"]
+head = "head_addons.js head_sideload.js"
+skip-if = [
+  "os == 'linux'", # Bug 1613268
+  "condprof", # Bug 1769184 - by design for now
+]
+
+["test_startup_enable.js"]
+
+["test_startup_isPrivileged.js"]
+
+["test_startup_scan.js"]
+head = "head_addons.js head_sideload.js"
+
+["test_strictcompatibility.js"]
+head = "head_addons.js head_compat.js"
+
+["test_syncGUID.js"]
+
+["test_system_allowed.js"]
+head = "head_addons.js head_system_addons.js"
+
+["test_system_delay_update.js"]
+head = "head_addons.js head_system_addons.js"
+
+["test_system_profile_location.js"]
+
+["test_system_repository.js"]
+head = "head_addons.js head_system_addons.js"
+
+["test_system_reset.js"]
+head = "head_addons.js head_system_addons.js"
+
+["test_system_update_blank.js"]
+head = "head_addons.js head_system_addons.js"
+
+["test_system_update_checkSizeHash.js"]
+head = "head_addons.js head_system_addons.js"
+
+["test_system_update_custom.js"]
+head = "head_addons.js head_system_addons.js"
+
+["test_system_update_empty.js"]
+head = "head_addons.js head_system_addons.js"
+skip-if = ["true"] # Failing intermittently due to a race condition in the test, see bug 1348981
+
+["test_system_update_enterprisepolicy.js"]
+head = "head_addons.js head_system_addons.js"
+
+["test_system_update_fail.js"]
+head = "head_addons.js head_system_addons.js"
+
+["test_system_update_installTelemetryInfo.js"]
+head = "head_addons.js head_system_addons.js"
+
+["test_system_update_newset.js"]
+head = "head_addons.js head_system_addons.js"
+
+["test_system_update_overlapping.js"]
+head = "head_addons.js head_system_addons.js"
+
+["test_system_update_uninstall_check.js"]
+head = "head_addons.js head_system_addons.js"
+
+["test_system_update_upgrades.js"]
+head = "head_addons.js head_system_addons.js"
+
+["test_system_upgrades.js"]
+skip-if = ["condprof"]  # Bug 1769184 - by design for now
+head = "head_addons.js head_system_addons.js"
+
+["test_systemaddomstartupprefs.js"]
+skip-if = ["condprof"]  # Bug 1769184 - by design for now
+head = "head_addons.js head_system_addons.js"
+
+["test_temporary.js"]
+skip-if = ["os == 'win'"] # Bug 1469904
+tags = "webextensions"
+
+["test_trash_directory.js"]
+run-if = ["os == 'win'"]
+
+["test_types.js"]
+
+["test_undouninstall.js"]
+skip-if = ["os == 'win'"] # Bug 1358846
+
+["test_update.js"]
+
+["test_updateCancel.js"]
+
+["test_update_addontype.js"]
+
+["test_update_compatmode.js"]
+head = "head_addons.js head_compat.js"
+
+["test_update_ignorecompat.js"]
+skip-if = ["true"] # Bug 676922 Bug 1437697
+
+["test_update_isPrivileged.js"]
+skip-if = ["condprof"]  # Bug 1769184 - by design for now
+
+["test_update_noSystemAddonUpdate.js"]
+head = "head_addons.js head_system_addons.js"
+
+["test_update_strictcompat.js"]
+head = "head_addons.js head_compat.js"
+
+["test_update_theme.js"]
+
+["test_update_webextensions.js"]
+tags = "webextensions"
+
+["test_updatecheck.js"]
+
+["test_updatecheck_errors.js"]
+
+["test_updatecheck_json.js"]
+
+["test_updateid.js"]
+
+["test_updateversion.js"]
+
+["test_upgrade.js"]
+head = "head_addons.js head_compat.js"
+run-sequentially = "Uses global XCurProcD dir."
+
+["test_upgrade_incompatible.js"]
+
+["test_webextension.js"]
+tags = "webextensions"
+
+["test_webextension_events.js"]
+tags = "webextensions"
+
+["test_webextension_icons.js"]
+tags = "webextensions"
+
+["test_webextension_install.js"]
+tags = "webextensions"
+
+["test_webextension_install_syntax_error.js"]
+tags = "webextensions"
+
+["test_webextension_langpack.js"]
+tags = "webextensions"
+
+["test_webextension_theme.js"]
+tags = "webextensions"
