@@ -292,34 +292,28 @@ export class Region {
     return Math.min(this.#y1, this.#y2);
   }
   set top(val) {
-    this.#y1 = val > 0 ? val : 0;
+    this.#y1 = Math.min(this.#windowDimensions.scrollHeight, Math.max(0, val));
   }
 
   get left() {
     return Math.min(this.#x1, this.#x2);
   }
   set left(val) {
-    this.#x1 = val > 0 ? val : 0;
+    this.#x1 = Math.min(this.#windowDimensions.scrollWidth, Math.max(0, val));
   }
 
   get right() {
     return Math.max(this.#x1, this.#x2);
   }
   set right(val) {
-    this.#x2 =
-      val > this.#windowDimensions.scrollWidth
-        ? this.#windowDimensions.scrollWidth
-        : val;
+    this.#x2 = Math.min(this.#windowDimensions.scrollWidth, Math.max(0, val));
   }
 
   get bottom() {
     return Math.max(this.#y1, this.#y2);
   }
   set bottom(val) {
-    this.#y2 =
-      val > this.#windowDimensions.scrollHeight
-        ? this.#windowDimensions.scrollHeight
-        : val;
+    this.#y2 = Math.min(this.#windowDimensions.scrollHeight, Math.max(0, val));
   }
 
   get width() {
@@ -327,6 +321,19 @@ export class Region {
   }
   get height() {
     return Math.abs(this.#y2 - this.#y1);
+  }
+
+  get x1() {
+    return this.#x1;
+  }
+  get x2() {
+    return this.#x2;
+  }
+  get y1() {
+    return this.#y1;
+  }
+  get y2() {
+    return this.#y2;
   }
 }
 
