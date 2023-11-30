@@ -1441,7 +1441,11 @@ Tester.prototype = {
             );
             self.currentTest.timedOut = true;
             self.currentTest.scope.__waitTimer = null;
-            self.nextTest();
+            if (gConfig.timeoutAsPass) {
+              self.nextTest();
+            } else {
+              self.finish();
+            }
           },
           gTimeoutSeconds * 1000,
         ]);
