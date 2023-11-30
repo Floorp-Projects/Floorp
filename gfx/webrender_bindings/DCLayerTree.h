@@ -405,6 +405,8 @@ class DCSurfaceVideo : public DCSurface {
   RefPtr<RenderTextureHost> mRenderTextureHost;
   RefPtr<RenderTextureHost> mPrevTexture;
   int mSlowPresentCount = 0;
+  bool mFirstPresent = true;
+  const UINT mSwapChainBufferCount;
 };
 
 /**
