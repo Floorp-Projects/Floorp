@@ -223,6 +223,17 @@ interface nsIWebProgressListener : nsISupports
 
   const unsigned long STATE_IDENTITY_EV_TOPLEVEL    = 0x00100000;
 
+  /***
+   * Associated state flag
+   *
+   * This flag is used to if a page is inheriting its security context.
+   *
+   * STATE_IDENTITY_ASSOCIATED
+   *   This document doesn't have an identity of its own, and instead
+   *   uses its predecessor's identity.
+   */
+   const unsigned long STATE_IDENTITY_ASSOCIATED    = 0x00200000;
+
   /**
     * Broken state flags
     *

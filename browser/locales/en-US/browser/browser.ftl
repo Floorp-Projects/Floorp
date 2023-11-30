@@ -377,6 +377,7 @@ identity-connection-secure = Connection secure
 identity-connection-failure = Connection failure
 identity-connection-internal = This is a secure { -brand-short-name } page.
 identity-connection-file = This page is stored on your computer.
+identity-connection-associated = This page is loaded from another page.
 identity-extension-page = This page is loaded from an extension.
 identity-active-blocked = { -brand-short-name } has blocked parts of this page that are not secure.
 identity-custom-root = Connection verified by a certificate issuer that is not recognized by Mozilla.
