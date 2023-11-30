@@ -461,7 +461,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["trending.maxResultsNoSearchMode", 10],
 
   // Feature gate pref for rich suggestions being shown in the urlbar.
-  ["richSuggestions.featureGate", false],
+  ["richSuggestions.featureGate", true],
 
   // Feature gate pref for clipboard suggestions in the urlbar.
   ["clipboard.featureGate", true],
