@@ -441,7 +441,17 @@ clippy:
             - 'tools/lint/clippy.yml'
     fetches:
         toolchain:
+            - linux64-clang
             - linux64-rust
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-sccache
+            - linux64-nasm
+            - linux64-node
+            - linux64-pkgconf
+            - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
 
 
 file-whitespace:
