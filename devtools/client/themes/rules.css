@@ -254,12 +254,13 @@
 }
 
 .ruleview-header {
+  --ruleview-header-padding: 4px;
   background: var(--rule-header-background-color);
   border-bottom: 1px solid var(--theme-splitter-color);
   color: var(--theme-toolbar-color);
   font-size: 12px;
   line-height: 16px;
-  padding: 4px;
+  padding: var(--ruleview-header-padding);
   width: 100%;
   align-items: center;
   display: flex;
@@ -268,15 +269,31 @@
 
 .ruleview-expandable-header {
   cursor: pointer;
-}
+  /* Reset padding set on ruleview-header since we're going to put it on the button instead */
+  padding: 0;
 
-.ruleview-expandable-header:hover {
-  background-color: var(--theme-accordion-header-hover);
-}
+   &:hover {
+    background-color: var(--theme-accordion-header-hover);
+  }
 
-.ruleview-expandable-header .theme-twisty {
-  margin-inline-start: 0;
-  margin-inline-end: 2px;
+  & button[aria-expanded] {
+    display: flex;
+    /* Space between arrow and label */
+    gap: 2px;
+    width: 100%;
+    padding: var(--ruleview-header-padding);
+    /* Reset button-specific styles */
+    background-color: transparent;
+    border: none;
+    text-align: start;
+    /* Apply same font-size as set on ruleview-header */
+    font-size: 1em;
+    outline-offset: -2px;
+
+    &[aria-expanded="true"] .theme-twisty {
+      rotate: 90deg;
+    }
+  }
 }
 
 .ruleview-rule-pseudo-element {

@@ -264,7 +264,6 @@ skip-if = [
 ["browser_rules_print_media_simulation.js"]
 
 ["browser_rules_pseudo-element_01.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeledv
 
 ["browser_rules_pseudo-element_02.js"]
 

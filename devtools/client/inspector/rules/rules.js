@@ -77,6 +77,7 @@ const FILTER_PROP_RE = /\s*([^:\s]*)\s*:\s*(.*?)\s*;?$/;
 const FILTER_STRICT_RE = /\s*`(.*?)`\s*$/;
 
 const RULE_VIEW_HEADER_CLASSNAME = "ruleview-header";
+const PSEUDO_ELEMENTS_CONTAINER_ID = "pseudo-elements-container";
 
 /**
  * Our model looks like this:
@@ -1223,36 +1224,44 @@ CssRuleView.prototype = {
    *
    * @param  {String} label
    *         The label for the container header
+   * @param  {String} containerId
+   *         The id that will be set on the container
    * @param  {Boolean} isPseudo
    *         Whether or not the container will hold pseudo element rules
    * @return {DOMNode} The container element
    */
-  createExpandableContainer(label, isPseudo = false) {
+  createExpandableContainer(label, containerId, isPseudo = false) {
     const header = this.styleDocument.createElementNS(HTML_NS, "div");
     header.classList.add(
       RULE_VIEW_HEADER_CLASSNAME,
       "ruleview-expandable-header"
     );
     header.setAttribute("role", "heading");
-    header.textContent = label;
+
+    const toggleButton = this.styleDocument.createElementNS(HTML_NS, "button");
+    toggleButton.setAttribute(
+      "title",
+      l10n("rule.expandableContainerToggleButton.title")
+    );
+    toggleButton.setAttribute("aria-expanded", "true");
+    toggleButton.setAttribute("aria-controls", containerId);
 
     const twisty = this.styleDocument.createElementNS(HTML_NS, "span");
     twisty.className = "ruleview-expander theme-twisty";
-    twisty.setAttribute("open", "true");
-    twisty.setAttribute("role", "button");
-    twisty.setAttribute("aria-label", l10n("rule.twistyCollapse.label"));
 
-    header.insertBefore(twisty, header.firstChild);
-    this.element.appendChild(header);
+    toggleButton.append(twisty, this.styleDocument.createTextNode(label));
+    header.append(toggleButton);
 
     const container = this.styleDocument.createElementNS(HTML_NS, "div");
+    container.id = containerId;
     container.classList.add("ruleview-expandable-container");
     container.hidden = false;
-    this.element.appendChild(container);
 
-    header.addEventListener("click", () => {
+    this.element.append(header, container);
+
+    toggleButton.addEventListener("click", () => {
       this._toggleContainerVisibility(
-        twisty,
+        toggleButton,
         container,
         isPseudo,
         !this.showPseudoElements
@@ -1260,10 +1269,8 @@ CssRuleView.prototype = {
     });
 
     if (isPseudo) {
-      container.id = "pseudo-elements-container";
-      twisty.id = "pseudo-elements-header-twisty";
       this._toggleContainerVisibility(
-        twisty,
+        toggleButton,
         container,
         isPseudo,
         this.showPseudoElements
@@ -1285,8 +1292,8 @@ CssRuleView.prototype = {
    * @param  {Boolean}  showPseudo
    *         Whether or not pseudo element rules should be displayed
    */
-  _toggleContainerVisibility(twisty, container, isPseudo, showPseudo) {
-    let isOpen = twisty.getAttribute("open");
+  _toggleContainerVisibility(toggleButton, container, isPseudo, showPseudo) {
+    let isOpen = toggleButton.getAttribute("aria-expanded") === "true";
 
     if (isPseudo) {
       this._showPseudoElements = !!showPseudo;
@@ -1302,13 +1309,7 @@ CssRuleView.prototype = {
       container.hidden = !container.hidden;
     }
 
-    if (isOpen) {
-      twisty.removeAttribute("open");
-      twisty.setAttribute("aria-label", l10n("rule.twistyExpand.label"));
-    } else {
-      twisty.setAttribute("open", "true");
-      twisty.setAttribute("aria-label", l10n("rule.twistyCollapse.label"));
-    }
+    toggleButton.setAttribute("aria-expanded", !isOpen);
   },
 
   /**
@@ -1375,6 +1376,7 @@ CssRuleView.prototype = {
         seenPseudoElement = true;
         container = this.createExpandableContainer(
           this.pseudoElementLabel,
+          PSEUDO_ELEMENTS_CONTAINER_ID,
           true
         );
       }
@@ -1382,7 +1384,10 @@ CssRuleView.prototype = {
       const keyframes = rule.keyframes;
       if (keyframes && keyframes !== lastKeyframes) {
         lastKeyframes = keyframes;
-        container = this.createExpandableContainer(rule.keyframesName);
+        container = this.createExpandableContainer(
+          rule.keyframesName,
+          `keyframes-container-${keyframes.name}`
+        );
       }
 
       rule.editor.element.setAttribute("role", "article");
@@ -1910,12 +1915,12 @@ CssRuleView.prototype = {
    */
   _togglePseudoElementRuleContainer() {
     const container = this.styleDocument.getElementById(
-      "pseudo-elements-container"
+      PSEUDO_ELEMENTS_CONTAINER_ID
     );
-    const twisty = this.styleDocument.getElementById(
-      "pseudo-elements-header-twisty"
+    const toggle = this.styleDocument.querySelector(
+      `[aria-controls="${PSEUDO_ELEMENTS_CONTAINER_ID}"]`
     );
-    this._toggleContainerVisibility(twisty, container, true, true);
+    this._toggleContainerVisibility(toggle, container, true, true);
   },
 
   /**
