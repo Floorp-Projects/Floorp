@@ -421,6 +421,8 @@ export class UrlbarInput {
           uri = Services.io.createExposableURI(uri);
         } catch (e) {}
 
+        let isInitialPageControlledByWebContent = false;
+
         // Replace initial page URIs with an empty string
         // only if there's no opener (bug 370555).
         if (
@@ -432,6 +434,8 @@ export class UrlbarInput {
         ) {
           value = "";
         } else {
+          isInitialPageControlledByWebContent = true;
+
           // We should deal with losslessDecodeURI throwing for exotic URIs
           try {
             value = losslessDecodeURI(uri);
@@ -445,7 +449,8 @@ export class UrlbarInput {
         valid =
           !dueToSessionRestore &&
           (!this.window.isBlankPageURL(uri.spec) ||
-            uri.schemeIs("moz-extension"));
+            uri.schemeIs("moz-extension") ||
+            isInitialPageControlledByWebContent);
       }
     } else if (
       this.window.isInitialPage(value) &&
