@@ -76,9 +76,7 @@ add_task(async function test_identityBlock_inherited_blank() {
     );
     is(
       identityBox.className,
-      Services.prefs.getBoolPref("security.insecure_connection_text.enabled")
-        ? "notSecure notSecureText"
-        : "notSecure",
+      "unknownIdentity",
       "Identity box should have been updated."
     );
 

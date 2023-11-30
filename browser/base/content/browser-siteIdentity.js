@@ -91,6 +91,10 @@ var gIdentityHandler = {
     );
   },
 
+  get _isAssociatedIdentity() {
+    return this._state & Ci.nsIWebProgressListener.STATE_IDENTITY_ASSOCIATED;
+  },
+
   get _isMixedActiveContentLoaded() {
     return (
       this._state & Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT
@@ -872,8 +876,13 @@ var gIdentityHandler = {
     } else if (this._isAboutHttpsOnlyErrorPage) {
       // We show a not secure lock icon for 'about:httpsonlyerror' page.
       this._identityBox.className = "httpsOnlyErrorPage";
-    } else if (this._isAboutNetErrorPage || this._isAboutBlockedPage) {
-      // Network errors and blocked pages get a more neutral icon
+    } else if (
+      this._isAboutNetErrorPage ||
+      this._isAboutBlockedPage ||
+      this._isAssociatedIdentity
+    ) {
+      // Network errors, blocked pages, and pages associated
+      // with another page get a more neutral icon
       this._identityBox.className = "unknownIdentity";
     } else if (this._isPotentiallyTrustworthy) {
       // This is a local resource (and shouldn't be marked insecure).
@@ -986,6 +995,8 @@ var gIdentityHandler = {
       connection = "not-secure";
     } else if (this._isAboutNetErrorPage) {
       connection = "net-error-page";
+    } else if (this._isAssociatedIdentity) {
+      connection = "associated";
     } else if (this._isPotentiallyTrustworthy) {
       connection = "file";
     }
@@ -1145,6 +1156,14 @@ var gIdentityHandler = {
     document.l10n.setAttributes(
       this._identityPopupSecurityView,
       "identity-header-security-with-host",
+      {
+        host,
+      }
+    );
+
+    document.l10n.setAttributes(
+      this._identityPopupMainViewHeaderLabel,
+      "identity-site-information",
       {
         host,
       }
