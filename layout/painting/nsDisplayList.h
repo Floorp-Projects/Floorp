@@ -214,8 +214,6 @@ struct ActiveScrolledRoot {
   // Call this when inserting an ancestor.
   void IncrementDepth() { mDepth++; }
 
-  bool IsRootScrollFrameOfDocument() const;
-
   /**
    * Find the view ID (or generate a new one) for the content element
    * corresponding to the ASR.
