@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <appmodel.h>
 #include <shlobj.h>  // for SHChangeNotify and IApplicationAssociationRegistration
+#include <functional>
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
@@ -146,25 +147,21 @@ static bool SetUserChoiceRegistry(const wchar_t* aExt, const wchar_t* aProgID,
   return true;
 }
 
-static bool LaunchReg(int aArgsLength, const wchar_t* const* aArgs) {
-  mozilla::UniquePtr<wchar_t[]> regPath =
-      mozilla::MakeUnique<wchar_t[]>(MAX_PATH + 1);
-  if (!ConstructSystem32Path(L"reg.exe", regPath.get(), MAX_PATH + 1)) {
-    LOG_ERROR_MESSAGE(L"Failed to construct path to reg.exe");
-    return false;
-  }
-
-  const wchar_t* regArgs[] = {regPath.get()};
-  mozilla::UniquePtr<wchar_t[]> regCmdLine(mozilla::MakeCommandLine(
-      mozilla::ArrayLength(regArgs), const_cast<wchar_t**>(regArgs),
-      aArgsLength, const_cast<wchar_t**>(aArgs)));
+static bool LaunchExecutable(
+    const wchar_t* exePath, int aArgsLength, const wchar_t* const* aArgs,
+    std::function<bool(DWORD, const wchar_t*)> handleExitCode) {
+  const wchar_t* args[] = {exePath};
+  mozilla::UniquePtr<wchar_t[]> cmdLine(mozilla::MakeCommandLine(
+      mozilla::ArrayLength(args), const_cast<wchar_t**>(args), aArgsLength,
+      const_cast<wchar_t**>(aArgs)));
 
   PROCESS_INFORMATION pi;
   STARTUPINFOW si = {sizeof(si)};
   si.dwFlags = STARTF_USESHOWWINDOW;
   si.wShowWindow = SW_HIDE;
-  if (!::CreateProcessW(regPath.get(), regCmdLine.get(), nullptr, nullptr,
-                        FALSE, 0, nullptr, nullptr, &si, &pi)) {
+
+  if (!::CreateProcessW(exePath, cmdLine.get(), nullptr, nullptr, FALSE, 0,
+                        nullptr, nullptr, &si, &pi)) {
     HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
     LOG_ERROR(hr);
     return false;
@@ -176,16 +173,81 @@ static bool LaunchReg(int aArgsLength, const wchar_t* const* aArgs) {
   DWORD exitCode;
   if (::WaitForSingleObject(process.get(), INFINITE) == WAIT_OBJECT_0 &&
       ::GetExitCodeProcess(process.get(), &exitCode)) {
-    // N.b.: `reg.exe` returns 0 (unchanged) or 2 (changed) on success.
-    bool success = (exitCode == 0 || exitCode == 2);
-    if (!success) {
-      LOG_ERROR_MESSAGE(L"%s returned failure exitCode %d", regCmdLine.get(),
-                        exitCode);
-    }
-    return success;
+    return handleExitCode(exitCode, cmdLine.get());
   }
 
   return false;
+}
+
+static bool LaunchReg(int aArgsLength, const wchar_t* const* aArgs,
+                      bool emitMessageOnError) {
+  mozilla::UniquePtr<wchar_t[]> exePath =
+      mozilla::MakeUnique<wchar_t[]>(MAX_PATH + 1);
+  if (!ConstructSystem32Path(L"reg.exe", exePath.get(), MAX_PATH + 1)) {
+    LOG_ERROR_MESSAGE(L"Failed to construct path to reg.exe");
+    return false;
+  }
+
+  return LaunchExecutable(
+      exePath.get(), aArgsLength, aArgs,
+      [emitMessageOnError](DWORD exitCode, const wchar_t* regCmdLine) {
+        // N.b.: `reg.exe` returns 0 (unchanged) or 2 (changed) on success.
+        bool success = (exitCode == 0 || exitCode == 2);
+        if (!success && emitMessageOnError) {
+          LOG_ERROR_MESSAGE(L"%s returned failure exitCode %d", regCmdLine,
+                            exitCode);
+        }
+        return success;
+      });
+}
+
+static bool LaunchPowershell(const wchar_t* command) {
+  const wchar_t* args[] = {
+      L"-c",
+      command,
+  };
+
+  mozilla::UniquePtr<wchar_t[]> exePath =
+      mozilla::MakeUnique<wchar_t[]>(MAX_PATH + 1);
+  if (!ConstructSystem32Path(L"WindowsPowershell\\v1.0\\powershell.exe",
+                             exePath.get(), MAX_PATH + 1)) {
+    LOG_ERROR_MESSAGE(L"Failed to construct path to powershell.exe");
+    return false;
+  }
+
+  return LaunchExecutable(exePath.get(), mozilla::ArrayLength(args), args,
+                          [](DWORD exitCode, const wchar_t* regCmdLine) {
+                            bool success = (exitCode == 0);
+                            if (!success) {
+                              LOG_ERROR_MESSAGE(
+                                  L"%s returned failure exitCode %d",
+                                  regCmdLine, exitCode);
+                            }
+                            return success;
+                          });
+}
+
+static mozilla::UniquePtr<wchar_t[]>
+CreatePowershellCommandToRemoveDenyAccessToFileExtRegKey(
+    const wchar_t* assocKeyPath) {
+  const wchar_t* formatString =
+      LR"($path = '%s\UserChoice' ; )"
+      LR"(Get-Acl -Path "HKCU:$path" | fl ; )"
+      LR"($key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey($path,[Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree,[System.Security.AccessControl.RegistryRights]::ChangePermissions) ; )"
+      LR"($acl = $key.GetAccessControl() ; )"
+      LR"($rule = New-Object System.Security.AccessControl.RegistryAccessRule([Security.Principal.WindowsIdentity]::GetCurrent().Name, 'SetValue', 'Deny') ; )"
+      LR"($acl.RemoveAccessRule($rule) ; )"
+      LR"($key.SetAccessControl($acl) ; )"
+      LR"(Get-Acl -Path "HKCU:$path" | fl)";
+
+  int bufferSize = _scwprintf(formatString, assocKeyPath);
+  ++bufferSize;  // Extra character for terminating null
+  mozilla::UniquePtr<wchar_t[]> command =
+      mozilla::MakeUnique<wchar_t[]>(bufferSize);
+  _snwprintf_s(command.get(), bufferSize, _TRUNCATE, formatString,
+               assocKeyPath);
+
+  return command;
 }
 
 static bool SetUserChoiceCommand(const wchar_t* aExt, const wchar_t* aProgID,
@@ -208,8 +270,28 @@ static bool SetUserChoiceCommand(const wchar_t* aExt, const wchar_t* aProgID,
       userChoiceKeyPath.get(),
       L"/F",
   };
-  if (!LaunchReg(mozilla::ArrayLength(deleteArgs), deleteArgs)) {
-    LOG_ERROR_MESSAGE(L"Failed to reg.exe DELETE; ignoring and continuing.");
+
+  // Note that calling delete on the registry keys the first time is expected to
+  // fail in many cases so we do not log an error message in that case.
+  if (!LaunchReg(mozilla::ArrayLength(deleteArgs), deleteArgs,
+                 /* emitMessageOnError */ false)) {
+    // If the delete failed the first time, assume it was a permissions issue
+    // and work around it.
+
+    auto command = CreatePowershellCommandToRemoveDenyAccessToFileExtRegKey(
+        assocKeyPath.get());
+    bool canDeleteKey = LaunchPowershell(command.get());
+
+    if (canDeleteKey) {
+      // The permissions on the key were changed; try to delete again.
+      // This time, log the error on failure.
+      if (!LaunchReg(mozilla::ArrayLength(deleteArgs), deleteArgs,
+                     /* emitMessageOnError */ true)) {
+        return false;
+      }
+    } else {
+      return false;
+    }
   }
 
   // Like REG ADD [ROOT\]RegKey /V ValueName [/T DataType] [/S Separator] [/D
@@ -223,7 +305,8 @@ static bool SetUserChoiceCommand(const wchar_t* aExt, const wchar_t* aProgID,
       aProgID,
   };
 
-  if (!LaunchReg(mozilla::ArrayLength(progIDArgs), progIDArgs)) {
+  if (!LaunchReg(mozilla::ArrayLength(progIDArgs), progIDArgs,
+                 /* emitMessageOnError */ true)) {
     // LaunchReg will have logged an error message already.
     return false;
   }
@@ -235,7 +318,8 @@ static bool SetUserChoiceCommand(const wchar_t* aExt, const wchar_t* aProgID,
       L"REG_SZ", L"/D",
       aHash,
   };
-  if (!LaunchReg(mozilla::ArrayLength(hashArgs), hashArgs)) {
+  if (!LaunchReg(mozilla::ArrayLength(hashArgs), hashArgs,
+                 /* emitMessageOnError */ true)) {
     // LaunchReg will have logged an error message already.
     return false;
   }
@@ -350,12 +434,6 @@ nsresult SetDefaultBrowserUserChoice(
     return NS_ERROR_WDBA_HASH_CHECK;
   }
 
-  nsTArray<nsString> browserDefaults = {
-      u"https"_ns, u"FirefoxURL"_ns,  u"http"_ns, u"FirefoxURL"_ns,
-      u".html"_ns, u"FirefoxHTML"_ns, u".htm"_ns, u"FirefoxHTML"_ns};
-
-  browserDefaults.AppendElements(aExtraFileExtensions);
-
   if (!mozilla::IsWin10CreatorsUpdateOrLater()) {
     LOG_ERROR_MESSAGE(L"UserChoice hash matched, but Windows build is too old");
     return NS_ERROR_WDBA_BUILD;
@@ -365,6 +443,12 @@ nsresult SetDefaultBrowserUserChoice(
   if (!sid) {
     return NS_ERROR_FAILURE;
   }
+
+  nsTArray<nsString> browserDefaults = {
+      u"https"_ns, u"FirefoxURL"_ns,  u"http"_ns, u"FirefoxURL"_ns,
+      u".html"_ns, u"FirefoxHTML"_ns, u".htm"_ns, u"FirefoxHTML"_ns};
+
+  browserDefaults.AppendElements(aExtraFileExtensions);
 
   nsresult rv = SetDefaultExtensionHandlersUserChoiceImpl(aAumi, sid.get(),
                                                           browserDefaults);
@@ -376,6 +460,34 @@ nsresult SetDefaultBrowserUserChoice(
   ::SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nullptr, nullptr);
 
   return rv;
+}
+
+nsresult SetDefaultBrowserUserChoiceAsync(
+    const wchar_t* aAumi, const nsTArray<nsString>& aExtraFileExtensions,
+    std::function<void(nsresult)> completionCallback) {
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+
+  // make a copy of the AUMI string
+  auto len = wcslen(aAumi);
+  mozilla::UniquePtr<wchar_t[]> aumi = mozilla::MakeUnique<wchar_t[]>(len + 1);
+  wcscpy_s(aumi.get(), len + 1, aAumi);
+
+  return NS_DispatchBackgroundTask(
+      NS_NewRunnableFunction(
+          "SetDefaultBrowserUserChoiceAsync",
+          [aumi = std::move(aumi), completionCallback,
+           aExtraFileExtensions =
+               CopyableTArray<nsString>(aExtraFileExtensions)] {
+            nsresult rv =
+                SetDefaultBrowserUserChoice(aumi.get(), aExtraFileExtensions);
+
+            NS_DispatchToMainThread(NS_NewRunnableFunction(
+                "SetDefaultBrowserUserChoiceAsync callback",
+                [rv, completionCallback] { completionCallback(rv); }));
+          }),
+      NS_DISPATCH_EVENT_MAY_BLOCK);
 }
 
 nsresult SetDefaultExtensionHandlersUserChoice(
