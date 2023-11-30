@@ -316,6 +316,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
                                      webgl::InitContextResult* out);
 
  private:
+  bool mIsRgb8Renderable = false;
   void FinishInit();
 
  protected:
