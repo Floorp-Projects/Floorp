@@ -180,6 +180,53 @@ add_task(async function cred_mgmt_real_data() {
   send_credential_list(REAL_DATA);
   buttons[2].click();
   check_cred_buttons_disabled(true);
+
+  // Confirmation section should now be open
+  let credential_section = doc.getElementById("credential-management-section");
+  is(
+    credential_section.style.display,
+    "none",
+    "credential section still visible"
+  );
+  let confirmation_section = doc.getElementById("confirm-deletion-section");
+  isnot(
+    confirmation_section.style.display,
+    "none",
+    "Confirmation section did not open."
+  );
+
+  // Check if the label displays the correct data
+  let confirmation_context = doc.getElementById("confirmation-context");
+  is(
+    confirmation_context.textContent,
+    "webauthn.io - hhhhhg",
+    "Deletion context show wrong credential name"
+  );
+  // Check if the delete-button has the correct context-data
+  let cmd = {
+    CredentialManagement: {
+      DeleteCredential: REAL_DATA[1].credentials[0].credential_id,
+    },
+  };
+  is(
+    confirmation_context.getAttribute("data-ctap-command"),
+    JSON.stringify(cmd),
+    "Confirm-button has the wrong context data"
+  );
+
+  let cancel_button = doc.getElementById("cancel-confirmation-button");
+  cancel_button.click();
+  isnot(
+    credential_section.style.display,
+    "none",
+    "credential section still visible"
+  );
+  is(
+    confirmation_section.style.display,
+    "none",
+    "Confirmation section did not open."
+  );
+  check_cred_buttons_disabled(false);
 });
 
 const REAL_DATA = [
