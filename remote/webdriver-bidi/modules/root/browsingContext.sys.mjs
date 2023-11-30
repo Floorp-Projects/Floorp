@@ -16,6 +16,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/messagehandler/MessageHandler.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   EventPromise: "chrome://remote/content/shared/Sync.sys.mjs",
+  getTimeoutMultiplier: "chrome://remote/content/shared/AppInfo.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   modal: "chrome://remote/content/shared/Prompt.sys.mjs",
   registerNavigationId:
@@ -1143,7 +1144,7 @@ class BrowsingContextModule extends Module {
       },
       {
         errorMessage: `History was not updated for index "${targetIndex}"`,
-        timeout: TIMEOUT_SET_HISTORY_INDEX,
+        timeout: TIMEOUT_SET_HISTORY_INDEX * lazy.getTimeoutMultiplier(),
       }
     );
   }
