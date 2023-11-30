@@ -5335,6 +5335,9 @@ class Document : public nsINode,
   void LoadEventFired();
 
   RadioGroupContainer& OwnedRadioGroupContainer();
+
+  static already_AddRefed<Document> ParseHTMLUnsafe(GlobalObject& aGlobal,
+                                                    const nsAString& aHTML);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Document, NS_IDOCUMENT_IID)
