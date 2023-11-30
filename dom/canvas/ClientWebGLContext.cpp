@@ -4394,8 +4394,6 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
 
   // -
 
-  // -
-
   mozilla::ipc::Shmem* pShmem = nullptr;
   // Image to release after WebGLContext::TexImage().
   RefPtr<layers::Image> keepAliveImage;
@@ -4406,12 +4404,7 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
     const auto& contextInfo = mNotLost->info;
 
     const auto fallbackReason = [&]() -> Maybe<std::string> {
-      if (!respecFormat) {
-        return Some(std::string{
-            "Fast uploads not supported for TexSubImage. Use TexImage."});
-      }
-      auto fallbackReason = BlitPreventReason(
-          level, offset, respecFormat, pi, *desc, contextInfo.isRgb8Renderable);
+      auto fallbackReason = BlitPreventReason(level, offset, pi, *desc);
       if (fallbackReason) return fallbackReason;
 
       const bool canUploadViaSd = contextInfo.uploadableSdTypes[sdType];

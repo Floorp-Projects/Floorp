@@ -7,7 +7,6 @@
 #define GLCONTEXT_TYPES_H_
 
 #include "GLTypes.h"
-#include "mozilla/DefineEnum.h"
 #include "mozilla/TypedEnumBits.h"
 
 namespace mozilla {
@@ -47,12 +46,6 @@ struct GLContextCreateDesc {
 struct GLContextDesc final : public GLContextCreateDesc {
   bool isOffscreen = false;
 };
-
-// -
-
-MOZ_DEFINE_ENUM_CLASS_WITH_BASE(GLVendor, uint8_t,
-                                (Intel, NVIDIA, ATI, Qualcomm, Imagination,
-                                 Nouveau, Vivante, VMware, ARM, Other));
 
 } /* namespace gl */
 } /* namespace mozilla */
