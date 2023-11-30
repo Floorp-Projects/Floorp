@@ -190,8 +190,8 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
   // By default, the WGC capture API adds a yellow border around the captured
   // window or display to indicate that a capture is in progress. The section
   // below is an attempt to remove this yellow border to make the capture
-  // experience more inline with the DXGI capture path. The QueryInterface call
-  // will silently fail on Windows versions lower than 2104 (10.0.20348.0).
+  // experience more inline with the DXGI capture path.
+  // This requires 10.0.20348.0 or later, which practically means Windows 11.
   ComPtr<ABI::Windows::Graphics::Capture::IGraphicsCaptureSession3> session3;
   if (SUCCEEDED(session_->QueryInterface(
           ABI::Windows::Graphics::Capture::IID_IGraphicsCaptureSession3,
