@@ -20,6 +20,10 @@
 
 class nsIThread;
 
+namespace mozilla {
+class VideoCaptureFactory;
+}
+
 namespace mozilla::camera {
 
 class CamerasParent;
@@ -153,6 +157,10 @@ class CamerasParent final : public PCamerasParent,
 
   // Reference to same VideoEngineArray as sEngines. Video capture thread only.
   const RefPtr<VideoEngineArray> mEngines;
+
+  // Reference to same VideoCaptureFactory as sVideoCaptureFactory. Video
+  // capture thread only.
+  const RefPtr<VideoCaptureFactory> mVideoCaptureFactory;
 
   // image buffers
   ShmemPool mShmemPool;
