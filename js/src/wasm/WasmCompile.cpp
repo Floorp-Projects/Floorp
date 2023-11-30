@@ -22,6 +22,9 @@
 
 #include <algorithm>
 
+#include "js/Equality.h"
+#include "js/ForOfIterator.h"
+
 #ifndef __wasi__
 #  include "jit/ProcessExecutableMemory.h"
 #endif
@@ -87,6 +90,68 @@ uint32_t wasm::ObservedCPUFeatures() {
 #endif
 }
 
+bool FeatureOptions::init(JSContext* cx, HandleValue val) {
+  if (val.isNullOrUndefined()) {
+    return true;
+  }
+
+#ifdef ENABLE_WASM_JS_STRING_BUILTINS
+  if (JSStringBuiltinsAvailable(cx)) {
+    if (!val.isObject()) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_WASM_BAD_COMPILE_OPTIONS);
+      return false;
+    }
+    RootedObject obj(cx, &val.toObject());
+
+    // Get the `builtins` iterable
+    RootedValue builtins(cx);
+    if (!JS_GetProperty(cx, obj, "builtins", &builtins)) {
+      return false;
+    }
+
+    JS::ForOfIterator iterator(cx);
+
+    if (!iterator.init(builtins, JS::ForOfIterator::ThrowOnNonIterable)) {
+      return false;
+    }
+
+    RootedValue jsStringModule(cx, StringValue(cx->names().jsStringModule));
+    RootedValue nextBuiltin(cx);
+    while (true) {
+      bool done;
+      if (!iterator.next(&nextBuiltin, &done)) {
+        return false;
+      }
+      if (done) {
+        break;
+      }
+
+      bool jsStringBuiltins;
+      if (!JS::LooselyEqual(cx, nextBuiltin, jsStringModule,
+                            &jsStringBuiltins)) {
+        return false;
+      }
+
+      if (!jsStringBuiltins) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                 JSMSG_WASM_UNKNOWN_BUILTIN);
+        return false;
+      }
+
+      if (this->jsStringBuiltins && jsStringBuiltins) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                 JSMSG_WASM_DUPLICATE_BUILTIN);
+        return false;
+      }
+      this->jsStringBuiltins = jsStringBuiltins;
+    }
+  }
+#endif
+
+  return true;
+}
+
 FeatureArgs FeatureArgs::build(JSContext* cx, const FeatureOptions& options) {
   FeatureArgs features;
 
@@ -100,6 +165,9 @@ FeatureArgs FeatureArgs::build(JSContext* cx, const FeatureOptions& options) {
 
   features.simd = jit::JitSupportsWasmSimd();
   features.isBuiltinModule = options.isBuiltinModule;
+  if (features.jsStringBuiltins) {
+    features.builtinModules.jsString = options.jsStringBuiltins;
+  }
 
   return features;
 }

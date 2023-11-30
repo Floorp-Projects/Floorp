@@ -326,14 +326,13 @@ static bool DescribeScriptedCaller(JSContext* cx, ScriptedCaller* caller,
   return true;
 }
 
-static SharedCompileArgs InitCompileArgs(JSContext* cx,
+static SharedCompileArgs InitCompileArgs(JSContext* cx, FeatureOptions options,
                                          const char* introducer) {
   ScriptedCaller scriptedCaller;
   if (!DescribeScriptedCaller(cx, &scriptedCaller, introducer)) {
     return nullptr;
   }
 
-  FeatureOptions options;
   return CompileArgs::buildAndReport(cx, std::move(scriptedCaller), options);
 }
 
@@ -358,7 +357,8 @@ bool wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code,
     return false;
   }
 
-  SharedCompileArgs compileArgs = InitCompileArgs(cx, "wasm_eval");
+  FeatureOptions options;
+  SharedCompileArgs compileArgs = InitCompileArgs(cx, options, "wasm_eval");
   if (!compileArgs) {
     return false;
   }
@@ -1448,7 +1448,13 @@ bool WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  SharedCompileArgs compileArgs = InitCompileArgs(cx, "WebAssembly.Module");
+  FeatureOptions options;
+  if (!options.init(cx, callArgs.get(1))) {
+    return false;
+  }
+
+  SharedCompileArgs compileArgs =
+      InitCompileArgs(cx, options, "WebAssembly.Module");
   if (!compileArgs) {
     return false;
   }
@@ -1717,13 +1723,13 @@ void WasmInstanceObject::initExportsObj(JSObject& exportsObj) {
   setReservedSlot(EXPORTS_OBJ_SLOT, ObjectValue(exportsObj));
 }
 
-static bool GetImportArg(JSContext* cx, CallArgs callArgs,
+static bool GetImportArg(JSContext* cx, HandleValue importArg,
                          MutableHandleObject importObj) {
-  if (!callArgs.get(1).isUndefined()) {
-    if (!callArgs[1].isObject()) {
+  if (!importArg.isUndefined()) {
+    if (!importArg.isObject()) {
       return ThrowBadImportArg(cx);
     }
-    importObj.set(&callArgs[1].toObject());
+    importObj.set(&importArg.toObject());
   }
   return true;
 }
@@ -1750,7 +1756,7 @@ bool WasmInstanceObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedObject importObj(cx);
-  if (!GetImportArg(cx, args, &importObj)) {
+  if (!GetImportArg(cx, args.get(1), &importObj)) {
     return false;
   }
 
@@ -4374,8 +4380,8 @@ struct CompileBufferTask : PromiseHelperTask {
   CompileBufferTask(JSContext* cx, Handle<PromiseObject*> promise)
       : PromiseHelperTask(cx, promise), instantiate(false) {}
 
-  bool init(JSContext* cx, const char* introducer) {
-    compileArgs = InitCompileArgs(cx, introducer);
+  bool init(JSContext* cx, FeatureOptions options, const char* introducer) {
+    compileArgs = InitCompileArgs(cx, options, introducer);
     if (!compileArgs) {
       return false;
     }
@@ -4457,12 +4463,21 @@ static bool WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   auto task = cx->make_unique<CompileBufferTask>(cx, promise);
-  if (!task || !task->init(cx, "WebAssembly.compile")) {
+  if (!task) {
     return false;
   }
 
   if (!GetBufferSource(cx, callArgs, "WebAssembly.compile", &task->bytecode)) {
     return RejectWithPendingException(cx, promise, callArgs);
+  }
+
+  FeatureOptions options;
+  if (!options.init(cx, callArgs.get(1))) {
+    return false;
+  }
+
+  if (!task->init(cx, options, "WebAssembly.compile")) {
+    return false;
   }
 
   if (!StartOffThreadPromiseHelperTask(cx, std::move(task))) {
@@ -4475,7 +4490,8 @@ static bool WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool GetInstantiateArgs(JSContext* cx, CallArgs callArgs,
                                MutableHandleObject firstArg,
-                               MutableHandleObject importObj) {
+                               MutableHandleObject importObj,
+                               MutableHandleValue featureOptions) {
   if (!callArgs.requireAtLeast(cx, "WebAssembly.instantiate", 1)) {
     return false;
   }
@@ -4488,7 +4504,12 @@ static bool GetInstantiateArgs(JSContext* cx, CallArgs callArgs,
 
   firstArg.set(&callArgs[0].toObject());
 
-  return GetImportArg(cx, callArgs, importObj);
+  if (!GetImportArg(cx, callArgs.get(1), importObj)) {
+    return false;
+  }
+
+  featureOptions.set(callArgs.get(2));
+  return true;
 }
 
 static bool WebAssembly_instantiate(JSContext* cx, unsigned argc, Value* vp) {
@@ -4507,7 +4528,9 @@ static bool WebAssembly_instantiate(JSContext* cx, unsigned argc, Value* vp) {
 
   RootedObject firstArg(cx);
   RootedObject importObj(cx);
-  if (!GetInstantiateArgs(cx, callArgs, &firstArg, &importObj)) {
+  RootedValue featureOptions(cx);
+  if (!GetInstantiateArgs(cx, callArgs, &firstArg, &importObj,
+                          &featureOptions)) {
     return RejectWithPendingException(cx, promise, callArgs);
   }
 
@@ -4524,8 +4547,13 @@ static bool WebAssembly_instantiate(JSContext* cx, unsigned argc, Value* vp) {
       return RejectWithPendingException(cx, promise, callArgs);
     }
 
+    FeatureOptions options;
+    if (!options.init(cx, featureOptions)) {
+      return false;
+    }
+
     auto task = cx->make_unique<CompileBufferTask>(cx, promise, importObj);
-    if (!task || !task->init(cx, "WebAssembly.instantiate")) {
+    if (!task || !task->init(cx, options, "WebAssembly.instantiate")) {
       return false;
     }
 
@@ -5031,8 +5059,9 @@ static bool ResolveResponse_OnRejected(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool ResolveResponse(JSContext* cx, CallArgs callArgs,
-                            Handle<PromiseObject*> promise,
+static bool ResolveResponse(JSContext* cx, Handle<Value> responsePromise,
+                            Handle<Value> featureOptions,
+                            Handle<PromiseObject*> resultPromise,
                             bool instantiate = false,
                             HandleObject importObj = nullptr) {
   MOZ_ASSERT_IF(importObj, instantiate);
@@ -5040,14 +5069,19 @@ static bool ResolveResponse(JSContext* cx, CallArgs callArgs,
   const char* introducer = instantiate ? "WebAssembly.instantiateStreaming"
                                        : "WebAssembly.compileStreaming";
 
-  SharedCompileArgs compileArgs = InitCompileArgs(cx, introducer);
+  FeatureOptions options;
+  if (!options.init(cx, featureOptions)) {
+    return false;
+  }
+
+  SharedCompileArgs compileArgs = InitCompileArgs(cx, options, introducer);
   if (!compileArgs) {
     return false;
   }
 
   RootedObject closure(
-      cx, ResolveResponseClosure::create(cx, *compileArgs, promise, instantiate,
-                                         importObj));
+      cx, ResolveResponseClosure::create(cx, *compileArgs, resultPromise,
+                                         instantiate, importObj));
   if (!closure) {
     return false;
   }
@@ -5070,7 +5104,7 @@ static bool ResolveResponse(JSContext* cx, CallArgs callArgs,
   onRejected->setExtendedSlot(0, ObjectValue(*closure));
 
   RootedObject resolve(cx,
-                       PromiseObject::unforgeableResolve(cx, callArgs.get(0)));
+                       PromiseObject::unforgeableResolve(cx, responsePromise));
   if (!resolve) {
     return false;
   }
@@ -5086,8 +5120,9 @@ static bool WebAssembly_compileStreaming(JSContext* cx, unsigned argc,
 
   Log(cx, "async compileStreaming() started");
 
-  Rooted<PromiseObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
-  if (!promise) {
+  Rooted<PromiseObject*> resultPromise(
+      cx, PromiseObject::createSkippingExecutor(cx));
+  if (!resultPromise) {
     return false;
   }
 
@@ -5097,14 +5132,16 @@ static bool WebAssembly_compileStreaming(JSContext* cx, unsigned argc,
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_CSP_BLOCKED_WASM,
                               "WebAssembly.compileStreaming");
-    return RejectWithPendingException(cx, promise, callArgs);
+    return RejectWithPendingException(cx, resultPromise, callArgs);
   }
 
-  if (!ResolveResponse(cx, callArgs, promise)) {
-    return RejectWithPendingException(cx, promise, callArgs);
+  Rooted<Value> responsePromise(cx, callArgs.get(0));
+  Rooted<Value> featureOptions(cx, callArgs.get(1));
+  if (!ResolveResponse(cx, responsePromise, featureOptions, resultPromise)) {
+    return RejectWithPendingException(cx, resultPromise, callArgs);
   }
 
-  callArgs.rval().setObject(*promise);
+  callArgs.rval().setObject(*resultPromise);
   return true;
 }
 
@@ -5116,8 +5153,9 @@ static bool WebAssembly_instantiateStreaming(JSContext* cx, unsigned argc,
 
   Log(cx, "async instantiateStreaming() started");
 
-  Rooted<PromiseObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
-  if (!promise) {
+  Rooted<PromiseObject*> resultPromise(
+      cx, PromiseObject::createSkippingExecutor(cx));
+  if (!resultPromise) {
     return false;
   }
 
@@ -5127,20 +5165,24 @@ static bool WebAssembly_instantiateStreaming(JSContext* cx, unsigned argc,
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_CSP_BLOCKED_WASM,
                               "WebAssembly.instantiateStreaming");
-    return RejectWithPendingException(cx, promise, callArgs);
+    return RejectWithPendingException(cx, resultPromise, callArgs);
   }
 
-  RootedObject firstArg(cx);
-  RootedObject importObj(cx);
-  if (!GetInstantiateArgs(cx, callArgs, &firstArg, &importObj)) {
-    return RejectWithPendingException(cx, promise, callArgs);
+  Rooted<JSObject*> firstArg(cx);
+  Rooted<JSObject*> importObj(cx);
+  Rooted<Value> featureOptions(cx);
+  if (!GetInstantiateArgs(cx, callArgs, &firstArg, &importObj,
+                          &featureOptions)) {
+    return RejectWithPendingException(cx, resultPromise, callArgs);
+  }
+  Rooted<Value> responsePromise(cx, ObjectValue(*firstArg.get()));
+
+  if (!ResolveResponse(cx, responsePromise, featureOptions, resultPromise, true,
+                       importObj)) {
+    return RejectWithPendingException(cx, resultPromise, callArgs);
   }
 
-  if (!ResolveResponse(cx, callArgs, promise, true, importObj)) {
-    return RejectWithPendingException(cx, promise, callArgs);
-  }
-
-  callArgs.rval().setObject(*promise);
+  callArgs.rval().setObject(*resultPromise);
   return true;
 }
 

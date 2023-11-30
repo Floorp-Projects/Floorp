@@ -324,6 +324,7 @@
   MACRO_(iterate, "iterate")                                                   \
   MACRO_(join, "join")                                                         \
   MACRO2(js, "js")                                                             \
+  MACRO_(jsStringModule, "js-string")                                          \
   MACRO_(keys, "keys")                                                         \
   IF_DECORATORS(MACRO_(kind, "kind"))                                          \
   MACRO_(label, "label")                                                       \
