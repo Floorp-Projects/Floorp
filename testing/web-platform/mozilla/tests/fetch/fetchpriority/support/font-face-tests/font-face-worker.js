@@ -1,4 +1,4 @@
-const fontFace = new FontFace("dummy-font", "url(dummy.font)");
+const fontFace = new FontFace("dummy-font", "url(../resources/dummy.font)");
 fonts.add(fontFace);
 fontFace.load();
 
