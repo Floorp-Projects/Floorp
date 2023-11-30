@@ -133,11 +133,6 @@ add_task(async function test_button_toggles_sidebars() {
     sidebar = browserPanel.querySelector("shopping-sidebar");
     ok(BrowserTestUtils.is_visible(sidebar), "Shopping sidebar should be open");
 
-    let closedSidebarPromise = BrowserTestUtils.waitForCondition(
-      () => BrowserTestUtils.is_hidden(sidebar),
-      "Sidebar should be closed"
-    );
-
     // close
     shoppingButton.click();
     await BrowserTestUtils.waitForMutationCondition(
@@ -148,7 +143,10 @@ add_task(async function test_button_toggles_sidebars() {
       () => shoppingButton.getAttribute("shoppingsidebaropen") == "false"
     );
 
-    await closedSidebarPromise;
+    ok(
+      BrowserTestUtils.is_hidden(sidebar),
+      "Shopping sidebar should be closed"
+    );
   });
 });
 
@@ -203,15 +201,6 @@ add_task(async function test_button_toggles_all_windows() {
     "Shopping sidebar should be open in new window"
   );
 
-  let closedSidebarA = BrowserTestUtils.waitForCondition(
-    () => BrowserTestUtils.is_hidden(sidebarA),
-    "sidebar A should be closed"
-  );
-  let closedSidebarB = BrowserTestUtils.waitForCondition(
-    () => BrowserTestUtils.is_hidden(sidebarA),
-    "sidebar B should be closed"
-  );
-
   // close
   shoppingButton.click();
   await BrowserTestUtils.waitForMutationCondition(
@@ -222,8 +211,14 @@ add_task(async function test_button_toggles_all_windows() {
     () => shoppingButton.getAttribute("shoppingsidebaropen") == "false"
   );
 
-  await closedSidebarA;
-  await closedSidebarB;
+  ok(
+    BrowserTestUtils.is_hidden(sidebarA),
+    "Shopping sidebar should be closed in current window"
+  );
+  ok(
+    BrowserTestUtils.is_hidden(sidebarB),
+    "Shopping sidebar should be closed in new window"
+  );
 
   BrowserTestUtils.removeTab(tab);
   await BrowserTestUtils.closeWindow(newWindow);
