@@ -661,6 +661,17 @@ public class GeckoViewActivity extends AppCompatActivity
         }
       };
 
+  private final BooleanSetting mGlobalPrivacyControlEnabled =
+      new BooleanSetting(
+          R.string.key_global_privacy_control_enabled,
+          R.bool.global_privacy_control_enabled_default,
+          /* reloadCurrentSession */ true) {
+        @Override
+        public void setValue(final GeckoRuntimeSettings settings, final Boolean value) {
+          settings.setGlobalPrivacyControl(value);
+        }
+      };
+
   private final BooleanSetting mExtensionsProcessEnabled =
       new BooleanSetting(
           R.string.key_extensions_process_enabled,
@@ -854,6 +865,7 @@ public class GeckoViewActivity extends AppCompatActivity
           .telemetryDelegate(new ExampleTelemetryDelegate())
           .javaScriptEnabled(mJavascriptEnabled.value())
           .extensionsProcessEnabled(mExtensionsProcessEnabled.value())
+          .globalPrivacyControlEnabled(mGlobalPrivacyControlEnabled.value())
           .aboutConfigEnabled(true);
 
       sGeckoRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());

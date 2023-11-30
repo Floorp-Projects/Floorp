@@ -17,9 +17,11 @@ exclude: true
 - ⚠️ Removed [`onGetNimbusFeature`][115.5], please use `ExperimentDelegate.onGetExperimentFeature` instead.
 - Added [`GeckoSession.reportBackInStock`][122.1] for reporting a Shopping product is back in stock.([bug 1858945]({{bugzilla}}1858945))
 - Added [`GeckoSession.requestCreateAnalysis`][122.2] to return a `AnalysisStatusResponse` that contains a status and a progress field. ([bug 1866112]({{bugzilla}}1866112))
+- Added support for controlling `privacy.globalprivacycontrol.enabled` and `privacy.globalprivacycontrol.pbmode.enabled` and `privacy.globalprivacycontrol.functionality.enabled` via [`GeckoRuntimeSettings.Builder.globalPrivacyControlEnabled`][122.3]
 
 [122.1]: {{javadoc_uri}}/GeckoSession.html#reportBackInStock(String)
 [122.2]: {{javadoc_uri}}/GeckoSession.html#requestCreateAnalysis(String)
+[122.3]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#globalPrivacyControlEnabled(boolean)
 
 ## v121
 - Added runtime controller functions. [`RuntimeTranslation`][121.1] has options for retrieving translation languages and managing language models.
@@ -1484,4 +1486,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: cc8dd4510b5af41d544a74966e447ce1cd2feda2
+[api-version]: c86f070273075d121f61de0a303e888c79c42023
