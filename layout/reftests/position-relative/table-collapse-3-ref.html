@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <head>
   <style>
+    html {
+      line-height: 1.25;
+    }
     body {
       background-color: white;
       margin: 0;
@@ -22,6 +25,7 @@
       top: 525px;
     }
     td {
+      padding: 0;
       border-style: solid;
       border-width: 5px;
       border-color: transparent;
@@ -112,7 +116,7 @@
     </tbody>
     <tfoot>
       <tr>
-        <td class="bg-cyan show-text">XXX</td>
+        <td><div class="bg-cyan show-text">XXX</div></td>
         <td class="bg-white show-text">&nbsp;</td>
       </tr>
     </tfoot>
@@ -120,24 +124,24 @@
   <table id="third-table">
     <thead>
       <tr>
-        <td class="bg-cyan show-text">XXX</td>
-        <td class="bg-blue show-text">YYY</td>
+        <td><div class="bg-cyan show-text">XXX</div></td>
+        <td><div class="bg-blue show-text">YYY</div></td>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td class="bg-cyan show-text">XXX</td>
+        <td><div class="bg-cyan show-text">XXX</div></td>
         <td class="bg-white">YYY</td>
       </tr>
       <tr>
         <td class="bg-white">XXX</td>
-        <td rowspan=2 class="bg-blue show-text">YYY</td>
+        <td rowspan=2><div class="bg-blue show-text" style="padding: 12.5px 0">YYY</div></td>
       </tr>
       <tr>
         <td class="bg-green">XXX</td>
       </tr>
       <tr>
-        <td colspan=2 class="bg-cyan show-text">XXX</td>
+        <td colspan=2><div class="bg-cyan show-text">XXX</div></td>
       </tr>
     </tbody>
     <tfoot>
@@ -164,7 +168,7 @@
         <td class="bg-white" rowspan=2>YYY</td>
       </tr>
       <tr>
-        <td class="bg-cyan show-text">XXX</td>
+        <td><div class="bg-cyan show-text">XXX</div></td>
       </tr>
       <tr>
         <td class="bg-white" colspan=2>XXX</td>

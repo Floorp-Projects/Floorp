@@ -44,6 +44,11 @@
 	div { width: 57px; height: 19px; margin: 40px 118px 86px 123px; }
 	div.color { background-color: aqua; }
 
+	/* The use of opacity < 1 on this cell will create a stacking context,
+	   which causes its background to be inset inside the (collapsed) borders,
+	   see bug 1859523. Adjust the reference div to match. */
+	div.color.o { width: 55px; height: 15px; margin: 42px 119px 88px 124px; }
+
 	div.imagetl, div.imagebr {
 		background-image: url(repeatable-diagonal-gradient-with-ticks.png);
 	}
