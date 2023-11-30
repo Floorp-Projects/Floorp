@@ -10,7 +10,7 @@ const {
 } = require("resource://devtools/shared/worker/worker.js");
 
 const WORKER_URL =
-  "resource://devtools/shared/heapsnapshot/HeapAnalysesWorker.js";
+  "resource://devtools/shared/heapsnapshot/HeapAnalyses.worker.js";
 var workerCounter = 0;
 
 /**
