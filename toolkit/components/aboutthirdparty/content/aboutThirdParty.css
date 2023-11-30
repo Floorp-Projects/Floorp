@@ -26,6 +26,8 @@
   background-position: left 8px center;
   background-repeat: no-repeat;
   padding-inline-start: 2em;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 .button-block:dir(rtl) {
