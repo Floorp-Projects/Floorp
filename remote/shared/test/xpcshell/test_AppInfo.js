@@ -4,7 +4,11 @@
 
 "use strict";
 
-const { AppInfo } = ChromeUtils.importESModule(
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
+
+const { AppInfo, getTimeoutMultiplier } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/AppInfo.sys.mjs"
 );
 
@@ -28,5 +32,22 @@ add_task(function test_custom_properties() {
       "boolean",
       `Custom property ${prop} has expected type`
     );
+  }
+});
+
+add_task(function test_getTimeoutMultiplier() {
+  const message = "Timeout multiplier has expected value";
+  const timeoutMultiplier = getTimeoutMultiplier();
+
+  if (
+    AppConstants.DEBUG ||
+    AppConstants.MOZ_CODE_COVERAGE ||
+    AppConstants.ASAN
+  ) {
+    equal(timeoutMultiplier, 4, message);
+  } else if (AppConstants.TSAN) {
+    equal(timeoutMultiplier, 8, message);
+  } else {
+    equal(timeoutMultiplier, 1, message);
   }
 });
