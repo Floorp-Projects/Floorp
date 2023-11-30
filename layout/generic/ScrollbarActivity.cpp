@@ -69,7 +69,7 @@ void ScrollbarActivity::ActivityStopped() {
 
 NS_IMETHODIMP
 ScrollbarActivity::HandleEvent(dom::Event* aEvent) {
-  if (!IsActive() && !DisplayOnMouseMove()) {
+  if (!mScrollbarEffectivelyVisible && !DisplayOnMouseMove()) {
     return NS_OK;
   }
 
@@ -247,10 +247,12 @@ void ScrollbarActivity::ActivityChanged() {
   CancelFadeTimer();
   SetBooleanAttribute(GetHorizontalScrollbar(), nsGkAtoms::active, true);
   SetBooleanAttribute(GetVerticalScrollbar(), nsGkAtoms::active, true);
+  mScrollbarEffectivelyVisible = true;
 }
 
 void ScrollbarActivity::BeginFade() {
   MOZ_ASSERT(!IsActive());
+  mScrollbarEffectivelyVisible = false;
   SetBooleanAttribute(GetHorizontalScrollbar(), nsGkAtoms::active, false);
   SetBooleanAttribute(GetVerticalScrollbar(), nsGkAtoms::active, false);
 }
