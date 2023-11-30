@@ -3943,7 +3943,7 @@ void WorkerPrivate::ClearMainEventQueue(WorkerRanOrNot aRanOrNot) {
     // It's appropriate to disconnect event targets at the point that it's no
     // longer possible for new tasks to be dispatched at the global, and this is
     // that point.
-    globalScope->DisconnectEventTargetObjects();
+    globalScope->DisconnectGlobalTeardownObservers();
 
     globalScope->WorkerPrivateSaysForbidScript();
   }

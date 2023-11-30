@@ -173,8 +173,8 @@ nsresult ImageCapture::PostErrorEvent(uint16_t aErrorCode, nsresult aReason) {
     }
   }
 
-  RefPtr<ImageCaptureError> error =
-      new ImageCaptureError(this, aErrorCode, errorMsg);
+  RefPtr<ImageCaptureError> error = new ImageCaptureError(
+      static_cast<EventTarget*>(this), aErrorCode, errorMsg);
 
   ImageCaptureErrorEventInit init;
   init.mBubbles = false;

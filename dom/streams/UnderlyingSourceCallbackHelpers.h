@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_UnderlyingSourceCallbackHelpers_h
 #define mozilla_dom_UnderlyingSourceCallbackHelpers_h
 
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
