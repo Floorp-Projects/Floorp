@@ -126,9 +126,12 @@ struct ModuleEnvironment {
 #undef WASM_FEATURE
   Shareable sharedMemoryEnabled() const { return features.sharedMemory; }
   bool simdAvailable() const { return features.simd; }
-  bool intrinsicsEnabled() const { return features.intrinsics; }
 
   bool isAsmJS() const { return kind == ModuleKind::AsmJS; }
+  // A builtin module is a host constructed wasm module that exports host
+  // functionality, using special opcodes. Otherwise, it has the same rules
+  // as wasm modules and so it does not get a new ModuleKind.
+  bool isBuiltinModule() const { return features.isBuiltinModule; }
 
   bool hugeMemoryEnabled(uint32_t memoryIndex) const {
     return !isAsmJS() && memoryIndex < memories.length() &&

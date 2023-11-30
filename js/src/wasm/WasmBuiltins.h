@@ -21,7 +21,7 @@
 
 #include "intgemm/IntegerGemmIntrinsic.h"
 #include "jit/IonTypes.h"
-#include "wasm/WasmIntrinsicGenerated.h"
+#include "wasm/WasmBuiltinModuleGenerated.h"
 
 namespace js {
 namespace jit {
@@ -142,9 +142,9 @@ enum class SymbolicAddress {
   ArrayInitData,
   ArrayInitElem,
   ArrayCopy,
-#define DECL_INTRINSIC_SA(op, export, sa_name, abitype, entry, idx) sa_name,
-  FOR_EACH_INTRINSIC(DECL_INTRINSIC_SA)
-#undef DECL_INTRINSIC_SA
+#define VISIT_BUILTIN_FUNC(op, export, sa_name, abitype, entry, idx) sa_name,
+  FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
+#undef VISIT_BUILTIN_FUNC
 #ifdef WASM_CODEGEN_DEBUG
       PrintI32,
   PrintPtr,
@@ -278,10 +278,10 @@ extern const SymbolicAddressSignature SASigArrayNewElem;
 extern const SymbolicAddressSignature SASigArrayInitData;
 extern const SymbolicAddressSignature SASigArrayInitElem;
 extern const SymbolicAddressSignature SASigArrayCopy;
-#define EXT_INTR_SA_DECL(op, export, sa_name, abitype, entry, idx) \
+#define VISIT_BUILTIN_FUNC(op, export, sa_name, abitype, entry, idx) \
   extern const SymbolicAddressSignature SASig##sa_name;
-FOR_EACH_INTRINSIC(EXT_INTR_SA_DECL)
-#undef EXT_INTR_SA_DECL
+FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
+#undef VISIT_BUILTIN_FUNC
 
 bool IsRoundingFunction(SymbolicAddress callee, jit::RoundingMode* mode);
 

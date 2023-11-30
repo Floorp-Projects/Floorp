@@ -19,6 +19,7 @@ UNIFIED_SOURCES += [
     "WasmBCFrame.cpp",
     "WasmBCMemory.cpp",
     "WasmBinary.cpp",
+    "WasmBuiltinModule.cpp",
     "WasmBuiltins.cpp",
     "WasmCode.cpp",
     "WasmCodegenTypes.cpp",
@@ -33,7 +34,6 @@ UNIFIED_SOURCES += [
     "WasmGenerator.cpp",
     "WasmInitExpr.cpp",
     "WasmInstance.cpp",
-    "WasmIntrinsic.cpp",
     "WasmIonCompile.cpp",
     "WasmJS.cpp",
     "WasmLog.cpp",
@@ -54,11 +54,11 @@ UNIFIED_SOURCES += [
     "WasmValue.cpp",
 ]
 
-# Generate wasm/WasmIntrinsicGenerated.h from wasm/WasmIntrinsic.yaml
+# Generate wasm/WasmBuiltinModuleGenerated.h from wasm/WasmBuiltinModule.yaml
 GeneratedFile(
-    "WasmIntrinsicGenerated.h",
-    script="GenerateIntrinsics.py",
-    inputs=["WasmIntrinsic.yaml"],
+    "WasmBuiltinModuleGenerated.h",
+    script="GenerateBuiltinModules.py",
+    inputs=["WasmBuiltinModule.yaml"],
 )
 
 # Make sure all WebAssembly code is built with libfuzzer

@@ -59,12 +59,12 @@
 #include "vm/StringType.h"
 #include "vm/Warnings.h"  // js::WarnNumberASCII
 #include "wasm/WasmBaselineCompile.h"
+#include "wasm/WasmBuiltinModule.h"
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCompile.h"
 #include "wasm/WasmDebug.h"
 #include "wasm/WasmFeatures.h"
 #include "wasm/WasmInstance.h"
-#include "wasm/WasmIntrinsic.h"
 #include "wasm/WasmIonCompile.h"
 #include "wasm/WasmMemory.h"
 #include "wasm/WasmModule.h"
@@ -5150,15 +5150,15 @@ static bool WebAssembly_mozIntGemm(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   Rooted<WasmModuleObject*> module(cx);
-  wasm::IntrinsicId ids[] = {
-      wasm::IntrinsicId::I8PrepareB,
-      wasm::IntrinsicId::I8PrepareBFromTransposed,
-      wasm::IntrinsicId::I8PrepareBFromQuantizedTransposed,
-      wasm::IntrinsicId::I8PrepareA,
-      wasm::IntrinsicId::I8PrepareBias,
-      wasm::IntrinsicId::I8MultiplyAndAddBias,
-      wasm::IntrinsicId::I8SelectColumnsOfB};
-  if (!wasm::CompileIntrinsicModule(cx, ids, Shareable::False, &module)) {
+  wasm::BuiltinModuleFuncId ids[] = {
+      wasm::BuiltinModuleFuncId::I8PrepareB,
+      wasm::BuiltinModuleFuncId::I8PrepareBFromTransposed,
+      wasm::BuiltinModuleFuncId::I8PrepareBFromQuantizedTransposed,
+      wasm::BuiltinModuleFuncId::I8PrepareA,
+      wasm::BuiltinModuleFuncId::I8PrepareBias,
+      wasm::BuiltinModuleFuncId::I8MultiplyAndAddBias,
+      wasm::BuiltinModuleFuncId::I8SelectColumnsOfB};
+  if (!wasm::CompileBuiltinModule(cx, ids, Shareable::False, &module)) {
     ReportOutOfMemory(cx);
     return false;
   }

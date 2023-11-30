@@ -21,7 +21,7 @@
 
 #include <stdint.h>
 
-#include "wasm/WasmIntrinsicGenerated.h"
+#include "wasm/WasmBuiltinModuleGenerated.h"
 
 namespace js {
 namespace wasm {
@@ -950,16 +950,16 @@ enum class ThreadOp {
   Limit
 };
 
-enum class IntrinsicId {
+enum class BuiltinModuleFuncId {
 // ------------------------------------------------------------------------
-// These are part/suffix of the MozOp::Intrinsic operators that are emitted
-// internally when compiling intrinsic modules and are rejected by wasm
+// These are part/suffix of the MozOp::CallBuiltinModuleFunc operators that are
+// emitted internally when compiling intrinsic modules and are rejected by wasm
 // validation.
-// See wasm/WasmIntrinsic.yaml for the list.
-#define DECL_INTRINSIC_OP(op, export, sa_name, abitype, entry, idx) \
+// See wasm/WasmBuiltinModule.yaml for the list.
+#define VISIT_BUILTIN_FUNC(op, export, sa_name, abitype, entry, idx) \
   op = idx,  // NOLINT
-  FOR_EACH_INTRINSIC(DECL_INTRINSIC_OP)
-#undef DECL_INTRINSIC_OP
+  FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
+#undef VISIT_BUILTIN_FUNC
 
   // Op limit.
   Limit
@@ -1008,9 +1008,9 @@ enum class MozOp {
   OldCallDirect,
   OldCallIndirect,
 
-  // Intrinsic modules operations. The operator has argument leb u32 to specify
-  // particular operation id. See IntrinsicId above.
-  Intrinsic,
+  // Call a builtin module funcs. The operator has argument leb u32 to specify
+  // particular operation id. See BuiltinModuleFuncId above.
+  CallBuiltinModuleFunc,
 
   Limit
 };

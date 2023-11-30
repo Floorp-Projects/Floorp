@@ -93,7 +93,7 @@ included_inclnames_to_ignore = set(
         "unicode/unistr.h",  # ICU
         "unicode/utypes.h",  # ICU
         "vtune/VTuneWrapper.h",  # VTune
-        "wasm/WasmIntrinsicGenerated.h",  # generated in $OBJDIR"
+        "wasm/WasmBuiltinModuleGenerated.h",  # generated in $OBJDIR"
         "zydis/ZydisAPI.h",  # Zydis
     ]
 )

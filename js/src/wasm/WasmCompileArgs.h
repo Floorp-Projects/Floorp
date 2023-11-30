@@ -73,10 +73,10 @@ class Tiers {
 // available under prefs.)
 
 struct FeatureOptions {
-  FeatureOptions() : intrinsics(false) {}
+  FeatureOptions() : isBuiltinModule(false) {}
 
-  // Enables intrinsic opcodes, only set in WasmIntrinsic.cpp.
-  bool intrinsics;
+  // Enables builtin module opcodes, only set in WasmBuiltinModule.cpp.
+  bool isBuiltinModule;
 };
 
 // Describes the features that control wasm compilation.
@@ -89,7 +89,7 @@ struct FeatureArgs {
 #undef WASM_FEATURE
             sharedMemory(Shareable::False),
         simd(false),
-        intrinsics(false) {
+        isBuiltinModule(false) {
   }
   FeatureArgs(const FeatureArgs&) = default;
   FeatureArgs& operator=(const FeatureArgs&) = default;
@@ -103,7 +103,9 @@ struct FeatureArgs {
 
   Shareable sharedMemory;
   bool simd;
-  bool intrinsics;
+  // Whether this module is a wasm builtin module (see WasmBuiltinModule.h) and
+  // can contain special opcodes in function bodies.
+  bool isBuiltinModule;
 };
 
 // Describes the JS scripted caller of a request to compile a wasm module.
