@@ -11054,11 +11054,6 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
-- name: memory.phc.min_ram_mb
-  type: uint32_t
-  value: 8000
-  mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "midi."
 #---------------------------------------------------------------------------
