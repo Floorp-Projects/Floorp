@@ -659,8 +659,10 @@ bool TexUnpackImage::Validate(const WebGLContext* const webgl,
 }
 
 Maybe<std::string> BlitPreventReason(const int32_t level, const ivec3& offset,
+                                     const GLenum internalFormat,
                                      const webgl::PackingInfo& pi,
-                                     const TexUnpackBlobDesc& desc) {
+                                     const TexUnpackBlobDesc& desc,
+                                     const bool isRgb8Renderable) {
   const auto& size = desc.size;
   const auto& unpacking = desc.unpacking;
 
@@ -691,13 +693,31 @@ Maybe<std::string> BlitPreventReason(const int32_t level, const ivec3& offset,
     }();
     if (premultReason) return premultReason;
 
-    if (pi.format != LOCAL_GL_RGBA) {
-      return "`format` is not RGBA";
-    }
+    const auto formatReason = [&]() -> const char* {
+      if (pi.type != LOCAL_GL_UNSIGNED_BYTE) {
+        return "`type` must be `UNSIGNED_BYTE`";
+      }
 
-    if (pi.type != LOCAL_GL_UNSIGNED_BYTE) {
-      return "`type` is not UNSIGNED_BYTE";
-    }
+      switch (internalFormat) {
+        case LOCAL_GL_RGBA:
+        case LOCAL_GL_RGBA8:
+          return nullptr;
+
+        case LOCAL_GL_RGB:
+        case LOCAL_GL_RGB8:
+          if (isRgb8Renderable) {
+            return nullptr;
+          }
+          break;
+      }
+      if (isRgb8Renderable) {
+        return "effective format must be RGB8 or RGBA8";
+      } else {
+        return "effective format must be RGBA8";
+      }
+    }();
+    if (formatReason) return formatReason;
+
     return nullptr;
   }();
   if (ret) {
@@ -725,7 +745,8 @@ bool TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec,
   // -
 
   const auto reason =
-      BlitPreventReason(level, {xOffset, yOffset, zOffset}, pi, mDesc);
+      BlitPreventReason(level, {xOffset, yOffset, zOffset}, dui->internalFormat,
+                        pi, mDesc, webgl->mIsRgb8Renderable);
   if (reason) {
     webgl->GeneratePerfWarning(
         "Failed to hit GPU-copy fast-path."

@@ -641,6 +641,7 @@ RefPtr<WebGLContext> WebGLContext::Create(HostWebGLContext& host,
   out->limits = *webgl->mLimits;
   out->uploadableSdTypes = UploadableSdTypes();
   out->vendor = webgl->gl->Vendor();
+  out->isRgb8Renderable = webgl->mIsRgb8Renderable;
 
   return webgl;
 }
@@ -689,6 +690,24 @@ void WebGLContext::FinishInit() {
   AssertCachedGlobalState();
 
   mShouldPresent = true;
+
+  //////
+  // mIsRgb8Renderable
+
+  {
+    const auto tex = gl::ScopedTexture(gl);
+    const auto fb = gl::ScopedFramebuffer(gl);
+    gl->fBindTexture(LOCAL_GL_TEXTURE_2D, tex);
+    gl->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGB, 1, 1, 0, LOCAL_GL_RGB,
+                    LOCAL_GL_UNSIGNED_BYTE, nullptr);
+
+    gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, fb);
+    gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0,
+                              LOCAL_GL_TEXTURE_2D, tex, 0);
+
+    const auto status = gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+    mIsRgb8Renderable = (status == LOCAL_GL_FRAMEBUFFER_COMPLETE);
+  }
 
   //////
 
