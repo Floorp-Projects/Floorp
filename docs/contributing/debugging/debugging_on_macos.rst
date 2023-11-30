@@ -108,29 +108,29 @@ that then Xcode will simply **copy** the source files under the
 project directory rather than link to them which breaks debugging and the
 possibility to modify-rebuild-relaunch from inside Xcode.
 
-These steps were last updated for Xcode 10.3:
+These steps were last updated for Xcode 15:
 
-#. Open Xcode, and create a new Project with File > New Project. Select
-   the "Cross-platform" tab then under the "Other" template group select
-   the "Empty" project type. the click Next. Name the project and click
-   Next. Create/select a temporary directory to contain the project and
-   then click Create.
-#. Before going any further, close the project (File > Close Project)
-   and open Finder. Find the \*.xcodejproj directory in the temporary
-   directory, move it into your Mozilla source tree, and then
-   double-click on it to reopen it.
+#. Open Xcode, and create a new Project with File > New > Project.
+   Select the "Other" tab then select the "Empty" project type, then
+   click Next. Name the project and click Next again. Xcode will refuse
+   to create a new project in a non-empty directory, so create/select
+   a temporary directory to contain the project files, untick "Create
+   Git repository" and then click Create.
+#. Before going any further, close the project (File > Close Project).
+   Now open Finder, find the \*.xcodejproj directory in the temporary
+   directory, move it into the root directory of your Mozilla source
+   tree, then double-click on it to reopen it. (You can now delete the
+   temporary directory.)
 #. In the left-hand pane in Xcode you should see a tree item where the
-   root item has the project name. If the temporary directory that you
-   originally created the Xcode project in is under that, right click it
-   and delete it. Now, right click on the root item, select 'Add files
-   to "<project-name>"', select all the files and directories in your
-   source directory, untick "Copy items if needed", then click Add.
-   (These will then be progressively added under the root item
-   <project-name> in the left-hand pane. Note that subdirectories may
-   initially appear to be empty, but they too will progressively be
-   populated as Xcode processes the sourse files. Once done, you should
-   be able to open any file quickly by hitting Cmd-Shift-O and typing in
-   the name of a file.)
+   root item has the project name. Now, right click on the root item,
+   select 'Add files to "<project-name>"', select all the files and
+   directories in your source directory, untick "Copy items if needed",
+   then click Add. (These will then be progressively added under the
+   root item <project-name> in the left-hand pane. Note that
+   subdirectories may initially appear to be empty, but they too will
+   progressively be  populated as Xcode processes the sourse files.
+   Once done, you should be able to open any file quickly by hitting
+   Cmd-Shift-O and typing in the name of a file.)
 #. In the Product menu, select Scheme > New Scheme and name your scheme
    (for example, "Debug"). After you click OK, Xcode should open the
    settings window for the new scheme. (If not, then open its settings
@@ -159,9 +159,10 @@ These steps were last updated for Xcode 10.3:
    will get build errors).
 #. Click "Close" to close the scheme editor.
 
-At this point you can run the application from Xcode, and when you pause
-or hit breakpoints it should show open the correct source file at the
-correct line.
+At this point you can run and debug the Mozilla application from Xcode
+(if the application doesn't appear to open, check whether it opened in
+the background). When it hits breakpoints, Xcode should open the
+correct source file at the correct line.
 
 Setting up lldb
 ---------------
