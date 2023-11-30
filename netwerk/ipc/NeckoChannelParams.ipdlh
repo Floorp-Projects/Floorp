@@ -447,6 +447,7 @@ struct CookieStruct
   bool      isHttpOnly;
   bool      isSession;
   bool      isSecure;
+  bool      isPartitioned;
   int32_t   sameSite;
   int32_t   rawSameSite;
   uint8_t   schemeMap;
