@@ -18,12 +18,6 @@ async function registerWorker() {
   });
 }
 
-async function unregisterWorker() {
-  const sw = navigator.serviceWorker;
-  const swr = await sw.register("service-worker.sjs", { scope: "" });
-  return swr.unregister();
-}
-
 async function fetchFromWorker() {
   const response = await fetch("whatever");
   const text = await response.text();
