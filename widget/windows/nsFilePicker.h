@@ -9,7 +9,6 @@
 
 #include <windows.h>
 
-#include "mozilla/MozPromise.h"
 #include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
 #include "nsCOMArray.h"
@@ -45,15 +44,13 @@ class nsBaseWinFilePicker : public nsBaseFilePicker {
  * Native Windows FileSelector wrapper
  */
 
-class nsFilePicker final : public nsBaseWinFilePicker {
+class nsFilePicker : public nsBaseWinFilePicker {
   virtual ~nsFilePicker() = default;
 
   template <typename T>
   using Maybe = mozilla::Maybe<T>;
   template <typename T>
   using Result = mozilla::Result<T, HRESULT>;
-  template <typename Res>
-  using FPPromise = RefPtr<mozilla::MozPromise<Maybe<Res>, HRESULT, true>>;
 
   using Command = mozilla::widget::filedialog::Command;
   using Results = mozilla::widget::filedialog::Results;
@@ -80,26 +77,29 @@ class nsFilePicker final : public nsBaseWinFilePicker {
   /* method from nsBaseFilePicker */
   virtual void InitNative(nsIWidget* aParent, const nsAString& aTitle) override;
   nsresult Show(nsIFilePicker::ResultCode* aReturnVal) override;
+  nsresult ShowW(nsIFilePicker::ResultCode* aReturnVal);
   void GetFilterListArray(nsString& aFilterList);
-
-  NS_IMETHOD Open(nsIFilePickerShownCallback* aCallback) override;
+  bool ShowFolderPicker(const nsString& aInitialDir);
+  bool ShowFilePicker(const nsString& aInitialDir);
 
  private:
-  RefPtr<mozilla::MozPromise<bool, HRESULT, true>> ShowFolderPicker(
-      const nsString& aInitialDir);
-  RefPtr<mozilla::MozPromise<bool, HRESULT, true>> ShowFilePicker(
-      const nsString& aInitialDir);
+  // Show the dialog (by default, remotely falling back to locally, or whatever
+  // is specified by the current config).
+  static Result<Maybe<Results>> ShowFilePickerImpl(
+      HWND aParent, FileDialogType type, nsTArray<Command> const& commands);
+  static Result<Maybe<nsString>> ShowFolderPickerImpl(
+      HWND aParent, nsTArray<Command> const& commands);
 
   // Show the dialog out-of-process.
-  static FPPromise<Results> ShowFilePickerRemote(
+  static Result<Maybe<Results>> ShowFilePickerRemote(
       HWND aParent, FileDialogType type, nsTArray<Command> const& commands);
-  static FPPromise<nsString> ShowFolderPickerRemote(
+  static Result<Maybe<nsString>> ShowFolderPickerRemote(
       HWND aParent, nsTArray<Command> const& commands);
 
   // Show the dialog in-process.
-  static FPPromise<Results> ShowFilePickerLocal(
+  static Result<Maybe<Results>> ShowFilePickerLocal(
       HWND aParent, FileDialogType type, nsTArray<Command> const& commands);
-  static FPPromise<nsString> ShowFolderPickerLocal(
+  static Result<Maybe<nsString>> ShowFolderPickerLocal(
       HWND aParent, nsTArray<Command> const& commands);
 
  protected:

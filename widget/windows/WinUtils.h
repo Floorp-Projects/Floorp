@@ -665,15 +665,13 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(WinUtils::PathTransformFlags);
 
 // RTL shim windows are temporary child windows of our nsWindows created to
 // address RTL issues in picker dialogs. (See bug 588735.)
-class ScopedRtlShimWindow {
+class MOZ_STACK_CLASS ScopedRtlShimWindow {
  public:
   explicit ScopedRtlShimWindow(nsIWidget* aParent);
   ~ScopedRtlShimWindow();
 
   ScopedRtlShimWindow(const ScopedRtlShimWindow&) = delete;
-  ScopedRtlShimWindow(ScopedRtlShimWindow&& that) noexcept : mWnd(that.mWnd) {
-    that.mWnd = nullptr;
-  };
+  ScopedRtlShimWindow(ScopedRtlShimWindow&&) = delete;
 
   HWND get() const { return mWnd; }
 
