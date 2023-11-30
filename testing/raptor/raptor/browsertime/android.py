@@ -157,6 +157,8 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
             "--use-mock-keychain",
             "--no-default-browser-check",
             "--no-first-run",
+            "--no-experiments",
+            "--disable-site-isolation-trials",
         ]
 
         if test.get("playback", False):
