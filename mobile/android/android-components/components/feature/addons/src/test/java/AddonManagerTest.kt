@@ -352,7 +352,7 @@ class AddonManagerTest {
         WebExtensionSupport.installedExtensions[addon.id] = extension
 
         val addonManager = AddonManager(store, mock(), addonsProvider, mock())
-        addonManager.installAddon(addon)
+        addonManager.installAddon(url = addon.downloadUrl)
         addonManager.enableAddon(addon)
         addonManager.disableAddon(addon)
         addonManager.uninstallAddon(addon)
@@ -534,14 +534,13 @@ class AddonManagerTest {
         var installedAddon: Addon? = null
         val manager = AddonManager(mock(), engine, mock(), mock())
         manager.installAddon(
-            addon,
+            url = addon.downloadUrl,
             onSuccess = {
                 installedAddon = it
             },
         )
 
         verify(engine).installWebExtension(
-            eq("ext1"),
             any(),
             onSuccessCaptor.capture(),
             any(),
@@ -563,61 +562,25 @@ class AddonManagerTest {
     fun `installAddon failure`() {
         val addon = Addon(id = "ext1")
         val engine: Engine = mock()
-        val onErrorCaptor = argumentCaptor<((String, Throwable) -> Unit)>()
+        val onErrorCaptor = argumentCaptor<((Throwable) -> Unit)>()
 
         var throwable: Throwable? = null
-        var msg: String? = null
         val manager = AddonManager(mock(), engine, mock(), mock())
         manager.installAddon(
-            addon,
-            onError = { errorMsg, caught ->
+            url = addon.downloadUrl,
+            onError = { caught ->
                 throwable = caught
-                msg = errorMsg
             },
         )
 
         verify(engine).installWebExtension(
-            eq("ext1"),
             any(),
             any(),
             onErrorCaptor.capture(),
         )
 
-        onErrorCaptor.value.invoke(addon.id, IllegalStateException("test"))
+        onErrorCaptor.value.invoke(IllegalStateException("test"))
         assertNotNull(throwable!!)
-        assertEquals(msg, addon.id)
-        assertTrue(manager.pendingAddonActions.isEmpty())
-    }
-
-    @Test
-    fun `installAddon fails for blocked permission`() {
-        val addon = Addon(
-            id = "ext1",
-            permissions = listOf("bookmarks", "geckoviewaddons", "nativemessaging"),
-        )
-
-        val engine: Engine = mock()
-
-        var throwable: Throwable? = null
-        var msg: String? = null
-        val manager = AddonManager(mock(), engine, mock(), mock())
-        manager.installAddon(
-            addon,
-            onError = { errorMsg, caught ->
-                throwable = caught
-                msg = errorMsg
-            },
-        )
-
-        verify(engine, never()).installWebExtension(
-            any(),
-            any(),
-            any(),
-            any(),
-        )
-
-        assertNotNull(throwable!!)
-        assertEquals(msg, addon.id)
         assertTrue(manager.pendingAddonActions.isEmpty())
     }
 

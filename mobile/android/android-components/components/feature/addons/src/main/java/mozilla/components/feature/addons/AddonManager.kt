@@ -119,42 +119,6 @@ class AddonManager(
     }
 
     /**
-     * Installs the provided [Addon].
-     *
-     * @param addon the addon to install.
-     * @param onSuccess (optional) callback invoked if the addon was installed successfully,
-     * providing access to the [Addon] object.
-     * @param onError (optional) callback invoked if there was an error installing the addon.
-     */
-    fun installAddon(
-        addon: Addon,
-        onSuccess: ((Addon) -> Unit) = { },
-        onError: ((String, Throwable) -> Unit) = { _, _ -> },
-    ): CancellableOperation {
-        // Verify the add-on doesn't require blocked permissions
-        // only available to built-in extensions
-        BLOCKED_PERMISSIONS.forEach { blockedPermission ->
-            if (addon.permissions.any { it.equals(blockedPermission, ignoreCase = true) }) {
-                onError(addon.id, IllegalArgumentException("Addon requires invalid permission $blockedPermission"))
-                return CancellableOperation.Noop()
-            }
-        }
-
-        val pendingAction = addPendingAddonAction()
-        return runtime.installWebExtension(
-            id = addon.id,
-            url = addon.downloadUrl,
-            onSuccess = { ext ->
-                onAddonInstalled(ext, pendingAction, onSuccess)
-            },
-            onError = { id, throwable ->
-                completePendingAddonAction(pendingAction)
-                onError(id, throwable)
-            },
-        )
-    }
-
-    /**
      * Installs an [Addon] from the provided [url].
      *
      *  @param url the url pointing to either a resources path for locating the extension
@@ -444,10 +408,6 @@ class AddonManager(
     }
 
     companion object {
-        // List of invalid permissions for external add-ons i.e. permissions only
-        // granted to built-in extensions:
-        val BLOCKED_PERMISSIONS = listOf("geckoViewAddons", "nativeMessaging")
-
         // Size of the icon to load for extensions
         const val ADDON_ICON_SIZE = 48
 

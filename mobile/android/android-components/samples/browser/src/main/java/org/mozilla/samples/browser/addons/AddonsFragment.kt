@@ -197,7 +197,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
         isInstallationInProgress = true
 
         val installOperation = requireContext().components.addonManager.installAddon(
-            addon,
+            url = addon.downloadUrl,
             onSuccess = { installedAddon ->
                 context?.let {
                     adapter?.updateAddon(installedAddon)
@@ -206,7 +206,7 @@ class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
                     showInstallationDialog(installedAddon)
                 }
             },
-            onError = { _, e ->
+            onError = { e ->
                 // No need to display an error message if installation was cancelled by the user.
                 if (e !is CancellationException) {
                     Toast.makeText(
