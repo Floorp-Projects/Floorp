@@ -74,6 +74,7 @@ static const unsigned BUILTIN_THUNK_LIFO_SIZE = 64 * 1024;
 #define _END MIRType::None
 #define _Infallible FailureMode::Infallible
 #define _FailOnNegI32 FailureMode::FailOnNegI32
+#define _FailOnMaxI32 FailureMode::FailOnMaxI32
 #define _FailOnNullPtr FailureMode::FailOnNullPtr
 #define _FailOnInvalidRef FailureMode::FailOnInvalidRef
 

@@ -94,10 +94,10 @@ bool EncodeFuncBody(const BuiltinModuleFunc& builtinModuleFunc,
   return encoder.writeOp(Op::End);
 }
 
-bool wasm::CompileBuiltinModule(JSContext* cx,
-                                const mozilla::Span<BuiltinModuleFuncId> ids,
-                                mozilla::Maybe<Shareable> memory,
-                                MutableHandle<WasmModuleObject*> result) {
+bool CompileBuiltinModule(JSContext* cx,
+                          const mozilla::Span<BuiltinModuleFuncId> ids,
+                          mozilla::Maybe<Shareable> memory,
+                          MutableHandle<WasmModuleObject*> result) {
   // Create the options manually, enabling intrinsics
   FeatureOptions featureOptions;
   featureOptions.isBuiltinModule = true;
@@ -250,4 +250,98 @@ bool wasm::CompileBuiltinModule(JSContext* cx,
   }
   result.set(WasmModuleObject::create(cx, *module, proto));
   return !!result;
+}
+
+static BuiltinModuleFuncId SelfTestFuncs[] = {BuiltinModuleFuncId::I8VecMul};
+
+static BuiltinModuleFuncId IntGemmFuncs[] = {
+#ifdef ENABLE_WASM_MOZ_INTGEMM
+    BuiltinModuleFuncId::I8PrepareB,
+    BuiltinModuleFuncId::I8PrepareBFromTransposed,
+    BuiltinModuleFuncId::I8PrepareBFromQuantizedTransposed,
+    BuiltinModuleFuncId::I8PrepareA,
+    BuiltinModuleFuncId::I8PrepareBias,
+    BuiltinModuleFuncId::I8MultiplyAndAddBias,
+    BuiltinModuleFuncId::I8SelectColumnsOfB
+#endif  // ENABLE_WASM_MOZ_INTGEMM
+};
+
+static BuiltinModuleFuncId JSStringFuncs[] = {
+#ifdef ENABLE_WASM_JS_STRING_BUILTINS
+    BuiltinModuleFuncId::StringFromWTF16Array,
+    BuiltinModuleFuncId::StringToWTF16Array,
+    BuiltinModuleFuncId::StringFromCharCode,
+    BuiltinModuleFuncId::StringFromCodePoint,
+    BuiltinModuleFuncId::StringCharCodeAt,
+    BuiltinModuleFuncId::StringCodePointAt,
+    BuiltinModuleFuncId::StringLength,
+    BuiltinModuleFuncId::StringConcatenate,
+    BuiltinModuleFuncId::StringSubstring,
+    BuiltinModuleFuncId::StringEquals,
+    BuiltinModuleFuncId::StringCompare
+#endif  // ENABLE_WASM_JS_STRING_BUILTINS
+};
+static const char* JSStringModuleName = "wasm:js-string";
+
+Maybe<BuiltinModuleId> wasm::ImportMatchesBuiltinModule(
+    Span<const char> importName, BuiltinModuleIds enabledBuiltins) {
+  if (enabledBuiltins.jsString &&
+      importName == mozilla::MakeStringSpan(JSStringModuleName)) {
+    return Some(BuiltinModuleId::JSString);
+  }
+  // Not supported for implicit instantiation yet
+  MOZ_RELEASE_ASSERT(!enabledBuiltins.selfTest && !enabledBuiltins.intGemm);
+  return Nothing();
+}
+
+Maybe<const BuiltinModuleFunc*> wasm::ImportMatchesBuiltinModuleFunc(
+    mozilla::Span<const char> importName, BuiltinModuleId module) {
+  // Not supported for implicit instantiation yet
+  MOZ_RELEASE_ASSERT(module == BuiltinModuleId::JSString);
+  for (BuiltinModuleFuncId funcId : JSStringFuncs) {
+    const BuiltinModuleFunc& func = BuiltinModuleFunc::getFromId(funcId);
+    if (importName == mozilla::MakeStringSpan(func.exportName)) {
+      return Some(&func);
+    }
+  }
+  return Nothing();
+}
+
+bool wasm::CompileBuiltinModule(JSContext* cx, BuiltinModuleId module,
+                                MutableHandle<WasmModuleObject*> result) {
+  switch (module) {
+    case BuiltinModuleId::SelfTest:
+      return CompileBuiltinModule(cx, SelfTestFuncs, Some(Shareable::False),
+                                  result);
+#ifdef ENABLE_WASM_MOZ_INTGEMM
+    case BuiltinModuleId::IntGemm:
+      return CompileBuiltinModule(cx, IntGemmFuncs, Some(Shareable::False),
+                                  result);
+#endif  // ENABLE_WASM_MOZ_INTGEMM
+#ifdef ENABLE_WASM_JS_STRING_BUILTINS
+    case BuiltinModuleId::JSString:
+      return CompileBuiltinModule(cx, JSStringFuncs, Nothing(), result);
+#endif  // ENABLE_WASM_JS_STRING_BUILTINS
+    default:
+      MOZ_CRASH();
+  }
+}
+
+bool wasm::InstantiateBuiltinModule(JSContext* cx, BuiltinModuleId module,
+                                    MutableHandleObject result) {
+  Rooted<WasmModuleObject*> moduleObj(cx);
+  if (!CompileBuiltinModule(cx, module, &moduleObj)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+  ImportValues imports;
+  Rooted<WasmInstanceObject*> instanceObj(cx);
+  RootedObject instanceProto(cx);
+  if (!moduleObj->module().instantiate(cx, imports, instanceProto,
+                                       &instanceObj)) {
+    MOZ_RELEASE_ASSERT(cx->isThrowingOutOfMemory());
+    return false;
+  }
+  result.set(&instanceObj->exportsObj());
+  return true;
 }

@@ -24,6 +24,7 @@
 
 #include "js/Equality.h"
 #include "js/ForOfIterator.h"
+#include "js/PropertyAndElement.h"
 
 #ifndef __wasi__
 #  include "jit/ProcessExecutableMemory.h"
@@ -33,6 +34,7 @@
 #include "jit/JitOptions.h"
 #include "util/Text.h"
 #include "vm/HelperThreads.h"
+#include "vm/JSAtomState.h"
 #include "vm/Realm.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmFeatures.h"

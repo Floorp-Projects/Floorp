@@ -216,3 +216,150 @@
   uses_memory: true
 
 #endif // ENABLE_WASM_MOZ_INTGEMM
+
+#if defined(ENABLE_WASM_JS_STRING_BUILTINS)
+
+- op: StringFromWTF16Array
+  symbolic_address:
+    name: StringFromWTF16Array
+    type: Args_General_GeneralGeneralInt32Int32
+  entry: Instance::stringFromWTF16Array
+  export: fromWTF16Array
+  params:
+    - 'ValType(RefType::any())'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+  result: 'ValType(RefType::extern_())'
+  fail_mode: FailOnNullPtr
+  uses_memory: false
+
+- op: StringToWTF16Array
+  symbolic_address:
+    name: StringToWTF16Array
+    type: Args_Int32_GeneralGeneralGeneralInt32
+  entry: Instance::stringToWTF16Array
+  export: toWTF16Array
+  params:
+    - 'ValType(RefType::extern_())'
+    - 'ValType(RefType::any())'
+    - 'ValType::i32()'
+  result: 'ValType::i32()'
+  fail_mode: FailOnNegI32
+  uses_memory: false
+
+- op: StringFromCharCode
+  symbolic_address:
+    name: StringFromCharCode
+    type: Args_General_GeneralInt32
+  entry: Instance::stringFromCharCode
+  export: fromCharCode
+  params:
+    - 'ValType::i32()'
+  result: 'ValType(RefType::extern_())'
+  fail_mode: FailOnNullPtr
+  uses_memory: false
+
+- op: StringFromCodePoint
+  symbolic_address:
+    name: StringFromCodePoint
+    type: Args_General_GeneralInt32
+  entry: Instance::stringFromCodePoint
+  export: fromCodePoint
+  params:
+    - 'ValType::i32()'
+  result: 'ValType(RefType::extern_())'
+  fail_mode: FailOnNullPtr
+  uses_memory: false
+
+- op: StringCharCodeAt
+  symbolic_address:
+    name: StringCharCodeAt
+    type: Args_Int32_GeneralGeneralInt32
+  entry: Instance::stringCharCodeAt
+  export: charCodeAt
+  params:
+    - 'ValType(RefType::extern_())'
+    - 'ValType::i32()'
+  result: 'ValType::i32()'
+  fail_mode: FailOnNegI32
+  uses_memory: false
+
+- op: StringCodePointAt
+  symbolic_address:
+    name: StringCodePointAt
+    type: Args_Int32_GeneralGeneralInt32
+  entry: Instance::stringCodePointAt
+  export: codePointAt
+  params:
+    - 'ValType(RefType::extern_())'
+    - 'ValType::i32()'
+  result: 'ValType::i32()'
+  fail_mode: FailOnNegI32
+  uses_memory: false
+
+- op: StringLength
+  symbolic_address:
+    name: StringLength
+    type: Args_Int32_GeneralGeneral
+  entry: Instance::stringLength
+  export: length
+  params:
+    - 'ValType(RefType::extern_())'
+  result: 'ValType::i32()'
+  fail_mode: FailOnNegI32
+  uses_memory: false
+
+- op: StringConcatenate
+  symbolic_address:
+    name: StringConcatenate
+    type: Args_General3
+  entry: Instance::stringConcatenate
+  export: concatenate
+  params:
+    - 'ValType(RefType::extern_())'
+    - 'ValType(RefType::extern_())'
+  result: 'ValType(RefType::extern_())'
+  fail_mode: FailOnNullPtr
+  uses_memory: false
+
+- op: StringSubstring
+  symbolic_address:
+    name: StringSubstring
+    type: Args_General_GeneralGeneralInt32Int32
+  entry: Instance::stringSubstring
+  export: substring
+  params:
+    - 'ValType(RefType::extern_())'
+    - 'ValType::i32()'
+    - 'ValType::i32()'
+  result: 'ValType(RefType::extern_())'
+  fail_mode: FailOnNullPtr
+  uses_memory: false
+
+- op: StringEquals
+  symbolic_address:
+    name: StringEquals
+    type: Args_Int32_GeneralGeneralGeneral
+  entry: Instance::stringEquals
+  export: equals
+  params:
+    - 'ValType(RefType::extern_())'
+    - 'ValType(RefType::extern_())'
+  result: 'ValType::i32()'
+  fail_mode: FailOnNegI32
+  uses_memory: false
+
+- op: StringCompare
+  symbolic_address:
+    name: StringCompare
+    type: Args_Int32_GeneralGeneralGeneral
+  entry: Instance::stringCompare
+  export: compare
+  params:
+    - 'ValType(RefType::extern_())'
+    - 'ValType(RefType::extern_())'
+  result: 'ValType::i32()'
+  fail_mode: FailOnMaxI32
+  uses_memory: false
+
+#endif // ENABLE_WASM_JS_STRING_BUILTINS

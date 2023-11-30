@@ -149,6 +149,9 @@
 - ret: General
   args: [General, Int32, Int32, General, Int32]
 
+- name: General_GeneralGeneralInt32Int32
+  ret: General
+  args: [General, General, Int32, Int32]
 
 # int32_t f(...) variants
 - ret: Int32
@@ -159,6 +162,12 @@
 
 - ret: Int32
   args: [General, General, General]
+
+- ret: Int32
+  args: [General, General, General, Int32]
+
+- ret: Int32
+  args: [General, General, Int32]
 
 - ret: Int32
   args: [General, General, Int32, General]

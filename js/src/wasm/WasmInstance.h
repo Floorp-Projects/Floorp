@@ -569,6 +569,26 @@ class alignas(16) Instance {
                          const wasm::TypeDef* typeDef);
   static int32_t intrI8VecMul(Instance* instance, uint32_t dest, uint32_t src1,
                               uint32_t src2, uint32_t len, uint8_t* memBase);
+
+  static void* stringFromWTF16Array(Instance* instance, void* arrayArg,
+                                    uint32_t start, uint32_t len);
+  static int32_t stringToWTF16Array(Instance* instance, void* stringArg,
+                                    void* arrayArg, uint32_t start);
+  static void* stringFromCharCode(Instance* instance, uint32_t charCode);
+  static void* stringFromCodePoint(Instance* instance, uint32_t codePoint);
+  static int32_t stringCharCodeAt(Instance* instance, void* stringArg,
+                                  uint32_t index);
+  static int32_t stringCodePointAt(Instance* instance, void* stringArg,
+                                   uint32_t index);
+  static int32_t stringLength(Instance* instance, void* stringArg);
+  static void* stringConcatenate(Instance* instance, void* firstStringArg,
+                                 void* secondStringArg);
+  static void* stringSubstring(Instance* instance, void* stringArg,
+                               int32_t startIndex, int32_t endIndex);
+  static int32_t stringEquals(Instance* instance, void* firstStringArg,
+                              void* secondStringArg);
+  static int32_t stringCompare(Instance* instance, void* firstStringArg,
+                               void* secondStringArg);
 };
 
 bool ResultsToJSValue(JSContext* cx, ResultType type, void* registerResultLoc,
