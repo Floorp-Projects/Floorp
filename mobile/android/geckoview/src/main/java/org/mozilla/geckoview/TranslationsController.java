@@ -8,6 +8,7 @@ package org.mozilla.geckoview;
 
 import android.util.Log;
 import androidx.annotation.AnyThread;
+import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringDef;
@@ -74,7 +75,12 @@ public class TranslationsController {
       if (DEBUG) {
         Log.d(LOGTAG, "Requesting if the translations engine supports the device.");
       }
-      return EventDispatcher.getInstance().queryBoolean(ENGINE_SUPPORTED_EVENT);
+      return EventDispatcher.getInstance()
+          .queryBoolean(ENGINE_SUPPORTED_EVENT)
+          .map(
+              result -> result,
+              exception ->
+                  new TranslationsException(TranslationsException.ERROR_ENGINE_NOT_SUPPORTED));
     }
 
     /**
@@ -102,7 +108,9 @@ public class TranslationsController {
                   return null;
                 }
                 return null;
-              });
+              },
+              exception ->
+                  new TranslationsException(TranslationsException.ERROR_COULD_NOT_LOAD_LANGUAGES));
     }
 
     /**
@@ -120,7 +128,25 @@ public class TranslationsController {
       if (DEBUG) {
         Log.d(LOGTAG, "Requesting management of the language model.");
       }
-      return EventDispatcher.getInstance().queryVoid(MANAGE_MODEL_EVENT, options.toBundle());
+      return EventDispatcher.getInstance()
+          .queryVoid(MANAGE_MODEL_EVENT, options.toBundle())
+          .map(
+              result -> result,
+              exception -> {
+                final String exceptionData =
+                    ((EventDispatcher.QueryException) exception).data.toString();
+                if (exceptionData.contains("COULD_NOT_DELETE")) {
+                  return new TranslationsException(
+                      TranslationsException.ERROR_MODEL_COULD_NOT_DELETE);
+                } else if (exceptionData.contains("LANGUAGE_REQUIRED")) {
+                  return new TranslationsException(
+                      TranslationsException.ERROR_MODEL_LANGUAGE_REQUIRED);
+                } else if (exceptionData.contains("COULD_NOT_DOWNLOAD")) {
+                  return new TranslationsException(
+                      TranslationsException.ERROR_MODEL_COULD_NOT_DOWNLOAD);
+                }
+                return new TranslationsException(TranslationsException.ERROR_UNKNOWN);
+              });
     }
 
     /**
@@ -137,9 +163,9 @@ public class TranslationsController {
       return EventDispatcher.getInstance()
           .queryBundle(TRANSLATION_INFORMATION_EVENT)
           .map(
-              bundle -> {
-                return TranslationSupport.fromBundle(bundle);
-              });
+              bundle -> TranslationSupport.fromBundle(bundle),
+              exception ->
+                  new TranslationsException(TranslationsException.ERROR_COULD_NOT_LOAD_LANGUAGES));
     }
 
     /**
@@ -208,7 +234,9 @@ public class TranslationsController {
                   return null;
                 }
                 return null;
-              });
+              },
+              exception ->
+                  new TranslationsException(TranslationsException.ERROR_MODEL_COULD_NOT_RETRIEVE));
     }
 
     /**
@@ -618,14 +646,14 @@ public class TranslationsController {
      * <p>Currently when translating, the necessary language models will be automatically
      * downloaded.
      *
-     * <p>ToDo: bug 1853055 will adjust this flow to add an option for automatic/non-automatic
+     * <p>ToDo: bug 1854691 will adjust this flow to add an option for automatic/non-automatic
      * downloads.
      *
      * @param fromLanguage BCP 47 language tag that the page should be translated from. Usually will
      *     be the suggested detected language or user specified.
      * @param toLanguage BCP 47 language tag that the page should be translated to. Usually will be
      *     the suggested preference language or user specified.
-     * @param options no-op, ToDo: bug 1853055 will add options
+     * @param options no-op, ToDo: bug 1854691 will add options
      * @return if translate process begins or exceptionally if an issue occurs.
      */
     @AnyThread
@@ -646,8 +674,14 @@ public class TranslationsController {
       final GeckoBundle bundle = new GeckoBundle(2);
       bundle.putString("fromLanguage", fromLanguage);
       bundle.putString("toLanguage", toLanguage);
-      // ToDo: bug 1853055 - Translate options will be configured in a later iteration.
-      return mSession.getEventDispatcher().queryVoid(TRANSLATE_EVENT, bundle);
+      // ToDo: bug 1854691 - Translate options will be configured in a later iteration.
+      return mSession
+          .getEventDispatcher()
+          .queryVoid(TRANSLATE_EVENT, bundle)
+          .map(
+              result -> result,
+              exception ->
+                  new TranslationsException(TranslationsException.ERROR_COULD_NOT_TRANSLATE));
     }
 
     /**
@@ -655,7 +689,7 @@ public class TranslationsController {
      * translation pair.
      *
      * @param translationPair the object with a from and to language
-     * @param options no-op, ToDo: bug 1853055 will add options
+     * @param options no-op, ToDo: bug 1854691 will add options
      * @return if translate process begins or exceptionally if an issue occurs.
      */
     @AnyThread
@@ -675,7 +709,13 @@ public class TranslationsController {
       if (DEBUG) {
         Log.d(LOGTAG, "Restore translated page requested");
       }
-      return mSession.getEventDispatcher().queryVoid(RESTORE_PAGE_EVENT);
+      return mSession
+          .getEventDispatcher()
+          .queryVoid(RESTORE_PAGE_EVENT)
+          .map(
+              result -> result,
+              exception ->
+                  new TranslationsException(TranslationsException.ERROR_COULD_NOT_RESTORE));
     }
 
     /**
@@ -712,7 +752,7 @@ public class TranslationsController {
 
     /**
      * Options available for translating. The options available for translating. Will be developed
-     * in ToDo: bug 1853055.
+     * in ToDo: bug 1854691.
      *
      * <p>Options (default):
      *
@@ -1125,6 +1165,77 @@ public class TranslationsController {
         Log.w(LOGTAG, "Could not deserialize language object: " + e);
         return null;
       }
+    }
+  }
+
+  /**
+   * An exception to be used when there is an issue retrieving or sending information to the
+   * translations toolkit engine.
+   */
+  public static class TranslationsException extends Exception {
+
+    /**
+     * Construct a [TranslationsException]
+     *
+     * @param code Error code the given exception corresponds to.
+     */
+    public TranslationsException(final @Code int code) {
+      this.code = code;
+    }
+
+    /** Default error for unexpected issues. */
+    public static final int ERROR_UNKNOWN = -1;
+
+    /** Translations engine does not work on the device architecture. */
+    public static final int ERROR_ENGINE_NOT_SUPPORTED = -2;
+
+    /** Generic could not compete a translation error. */
+    public static final int ERROR_COULD_NOT_TRANSLATE = -3;
+
+    /** Generic could not restore the page after a translation error. */
+    public static final int ERROR_COULD_NOT_RESTORE = -4;
+
+    /** Could not load language options error. */
+    public static final int ERROR_COULD_NOT_LOAD_LANGUAGES = -5;
+
+    /** The language is not supported for translation. */
+    public static final int ERROR_LANGUAGE_NOT_SUPPORTED = -6;
+
+    /** Could not retrieve information on the language model. */
+    public static final int ERROR_MODEL_COULD_NOT_RETRIEVE = -7;
+
+    /** Could not delete the language model. */
+    public static final int ERROR_MODEL_COULD_NOT_DELETE = -8;
+
+    /** Could not download the language model. */
+    public static final int ERROR_MODEL_COULD_NOT_DOWNLOAD = -9;
+
+    /** A language is required for language scoped requests. */
+    public static final int ERROR_MODEL_LANGUAGE_REQUIRED = -10;
+
+    /** Translation exception error codes. */
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef(
+        value = {
+          ERROR_UNKNOWN,
+          ERROR_ENGINE_NOT_SUPPORTED,
+          ERROR_COULD_NOT_TRANSLATE,
+          ERROR_COULD_NOT_RESTORE,
+          ERROR_COULD_NOT_LOAD_LANGUAGES,
+          ERROR_LANGUAGE_NOT_SUPPORTED,
+          ERROR_MODEL_COULD_NOT_RETRIEVE,
+          ERROR_MODEL_COULD_NOT_DELETE,
+          ERROR_MODEL_COULD_NOT_DOWNLOAD,
+          ERROR_MODEL_LANGUAGE_REQUIRED,
+        })
+    public @interface Code {}
+
+    /** {@link Code} that provides more information about this exception. */
+    public final @Code int code;
+
+    @Override
+    public String toString() {
+      return "TranslationsException: " + code;
     }
   }
 }

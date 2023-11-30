@@ -16,14 +16,22 @@ import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.TranslationsController
 import org.mozilla.geckoview.TranslationsController.Language
+import org.mozilla.geckoview.TranslationsController.RuntimeTranslation
+import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.ALL
 import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.ALWAYS
+import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.DELETE
 import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.DOWNLOAD
+import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.LANGUAGE
 import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.ModelManagementOptions
 import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.NEVER
 import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.OFFER
 import org.mozilla.geckoview.TranslationsController.SessionTranslation.Delegate
 import org.mozilla.geckoview.TranslationsController.SessionTranslation.TranslationOptions
 import org.mozilla.geckoview.TranslationsController.SessionTranslation.TranslationState
+import org.mozilla.geckoview.TranslationsController.TranslationsException
+import org.mozilla.geckoview.TranslationsController.TranslationsException.ERROR_MODEL_COULD_NOT_DELETE
+import org.mozilla.geckoview.TranslationsController.TranslationsException.ERROR_MODEL_COULD_NOT_DOWNLOAD
+import org.mozilla.geckoview.TranslationsController.TranslationsException.ERROR_MODEL_LANGUAGE_REQUIRED
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 
 @RunWith(AndroidJUnit4::class)
@@ -453,6 +461,61 @@ class TranslationsTest : BaseSessionTest() {
                     OFFER,
                 ),
             )
+        }
+    }
+
+    @Test
+    fun testManageLanguageModelErrors() {
+        val missingLanguage = ModelManagementOptions.Builder()
+            .operation(DOWNLOAD)
+            .operationLevel(LANGUAGE)
+            .build()
+        try {
+            sessionRule.waitForResult(RuntimeTranslation.manageLanguageModel(missingLanguage))
+            assertTrue("Should not complete requests on an incompatible state.", false)
+        } catch (e: RuntimeException) {
+            // Wait call causes a runtime exception too.
+            val te = e.cause as TranslationsException
+            assertTrue(
+                "Correctly rejected an incompatible state with missing language.",
+                te.code == ERROR_MODEL_LANGUAGE_REQUIRED,
+            )
+        }
+
+        // In the Android Studio test runner, these should be skipped because Remote Settings is
+        // active. However, in CI, these will fail as expected because no download service is available.
+        if (sessionRule.env.isAutomation) {
+            val allDownloadAttempt = ModelManagementOptions.Builder()
+                .operation(DOWNLOAD)
+                .operationLevel(ALL)
+                .build()
+            try {
+                sessionRule.waitForResult(RuntimeTranslation.manageLanguageModel(allDownloadAttempt))
+                assertTrue("Should not complete downloads in automation.", false)
+            } catch (e: RuntimeException) {
+                // Wait call causes a runtime exception too.
+                val te = e.cause as TranslationsException
+                assertTrue(
+                    "Correctly could not download on automated test harness.",
+                    te.code == ERROR_MODEL_COULD_NOT_DOWNLOAD,
+                )
+            }
+
+            val allDeleteAttempt = ModelManagementOptions.Builder()
+                .operation(DELETE)
+                .operationLevel(ALL)
+                .build()
+            try {
+                sessionRule.waitForResult(RuntimeTranslation.manageLanguageModel(allDeleteAttempt))
+                assertTrue("Should not complete deletes in automation.", false)
+            } catch (e: RuntimeException) {
+                // Wait call causes a runtime exception too.
+                val te = e.cause as TranslationsException
+                assertTrue(
+                    "Correctly could not delete on automated test harness.",
+                    te.code == ERROR_MODEL_COULD_NOT_DELETE,
+                )
+            }
         }
     }
 }

@@ -2377,6 +2377,24 @@ package org.mozilla.geckoview {
     field @Nullable public final TranslationsController.SessionTranslation.TranslationPair requestedTranslationPair;
   }
 
+  public static class TranslationsController.TranslationsException extends Exception {
+    ctor public TranslationsException(int);
+    field public static final int ERROR_COULD_NOT_LOAD_LANGUAGES = -5;
+    field public static final int ERROR_COULD_NOT_RESTORE = -4;
+    field public static final int ERROR_COULD_NOT_TRANSLATE = -3;
+    field public static final int ERROR_ENGINE_NOT_SUPPORTED = -2;
+    field public static final int ERROR_LANGUAGE_NOT_SUPPORTED = -6;
+    field public static final int ERROR_MODEL_COULD_NOT_DELETE = -8;
+    field public static final int ERROR_MODEL_COULD_NOT_DOWNLOAD = -9;
+    field public static final int ERROR_MODEL_COULD_NOT_RETRIEVE = -7;
+    field public static final int ERROR_MODEL_LANGUAGE_REQUIRED = -10;
+    field public static final int ERROR_UNKNOWN = -1;
+    field public final int code;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface TranslationsController.TranslationsException.Code {
+  }
+
   public class WebExtension {
     method @Nullable @UiThread public WebExtension.BrowsingDataDelegate getBrowsingDataDelegate();
     method @Nullable @UiThread public WebExtension.DownloadDelegate getDownloadDelegate();

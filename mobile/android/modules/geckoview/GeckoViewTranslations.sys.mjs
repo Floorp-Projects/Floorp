@@ -45,7 +45,6 @@ export class GeckoViewTranslations extends GeckoViewModule {
           this.getActor("Translations").translate(fromLanguage, toLanguage);
           aCallback.onSuccess();
         } catch (error) {
-          // Bug 1853055 will add named error states.
           aCallback.onError(`Could not translate: ${error}`);
         }
         break;
@@ -54,7 +53,6 @@ export class GeckoViewTranslations extends GeckoViewModule {
           this.getActor("Translations").restorePage();
           aCallback.onSuccess();
         } catch (error) {
-          // Bug 1853055 will add named error states.
           aCallback.onError(`Could not restore page: ${error}`);
         }
         break;
@@ -134,9 +132,15 @@ export const GeckoViewTranslationsSettings = {
 
     switch (aEvent) {
       case "GeckoView:Translations:IsTranslationEngineSupported": {
-        aCallback.onSuccess(
-          lazy.TranslationsParent.getIsTranslationsEngineSupported()
-        );
+        try {
+          aCallback.onSuccess(
+            lazy.TranslationsParent.getIsTranslationsEngineSupported()
+          );
+        } catch (error) {
+          aCallback.onError(
+            `An issue occurred while checking the translations engine: ${error}`
+          );
+        }
         return;
       }
       case "GeckoView:Translations:PreferredLanguages": {
@@ -154,18 +158,17 @@ export const GeckoViewTranslationsSettings = {
                 aCallback.onSuccess();
               },
               function (error) {
-                // Bug 1853055 will add named error states.
                 aCallback.onError(
-                  `An issue occurred while deleting all language files: ${error}`
+                  `COULD_NOT_DELETE - An issue occurred while deleting all language files: ${error}`
                 );
               }
             );
             return;
           }
           if (operationLevel === "language") {
-            if (language == null) {
+            if (language === undefined) {
               aCallback.onError(
-                `A specified language is required language level operations.`
+                `LANGUAGE_REQUIRED - A specified language is required language level operations.`
               );
               return;
             }
@@ -174,9 +177,8 @@ export const GeckoViewTranslationsSettings = {
                 aCallback.onSuccess();
               },
               function (error) {
-                // Bug 1853055 will add named error states.
                 aCallback.onError(
-                  `An issue occurred while deleting a language file: ${error}`
+                  `COULD_NOT_DELETE - An issue occurred while deleting a language file: ${error}`
                 );
               }
             );
@@ -190,18 +192,17 @@ export const GeckoViewTranslationsSettings = {
                 aCallback.onSuccess();
               },
               function (error) {
-                // Bug 1853055 will add named error states.
                 aCallback.onError(
-                  `An issue occurred while downloading all language files: ${error}`
+                  `COULD_NOT_DOWNLOAD - An issue occurred while downloading all language files: ${error}`
                 );
               }
             );
             return;
           }
           if (operationLevel === "language") {
-            if (language == null) {
+            if (language === undefined) {
               aCallback.onError(
-                `A specified language is required language level operations.`
+                `LANGUAGE_REQUIRED - A specified language is required language level operations.`
               );
               return;
             }
@@ -210,9 +211,8 @@ export const GeckoViewTranslationsSettings = {
                 aCallback.onSuccess();
               },
               function (error) {
-                // Bug 1853055 will add named error states.
                 aCallback.onError(
-                  `An issue occurred while downloading a language files: ${error}`
+                  `COULD_NOT_DOWNLOAD - An issue occurred while downloading a language files: ${error}`
                 );
               }
             );
@@ -251,7 +251,6 @@ export const GeckoViewTranslationsSettings = {
             aCallback.onSuccess(value);
           },
           function (error) {
-            // Bug 1853055 will add named error states.
             aCallback.onError(
               `Could not retrieve requested information: ${error}`
             );
