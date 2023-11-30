@@ -9,6 +9,8 @@
 const SUGGEST_ENABLED_PREF = "browser.search.suggest.enabled";
 const RICH_SUGGESTIONS_PREF = "browser.urlbar.richSuggestions.featureGate";
 
+const QUICKACTIONS_URLBAR_PREF = "quickactions.enabled";
+
 var suggestionsFn;
 var previousSuggestionsFn;
 
@@ -72,10 +74,12 @@ add_setup(async function () {
     );
     Services.prefs.clearUserPref(RICH_SUGGESTIONS_PREF);
     Services.prefs.clearUserPref(SUGGEST_ENABLED_PREF);
+    UrlbarPrefs.clear(QUICKACTIONS_URLBAR_PREF);
   });
   Services.search.setDefault(engine, Ci.nsISearchService.CHANGE_REASON_UNKNOWN);
   Services.prefs.setBoolPref(RICH_SUGGESTIONS_PREF, true);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
+  UrlbarPrefs.set(QUICKACTIONS_URLBAR_PREF, false);
 });
 
 /**
