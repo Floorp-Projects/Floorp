@@ -70,7 +70,9 @@ if [ -d $MOZ_FETCHES_DIR/sysroot ]; then
   [ -d $MOZ_FETCHES_DIR/sysroot/usr/include/c++/$gcc_major ] || exit 1
   export CFLAGS="-g -O2 --sysroot=$MOZ_FETCHES_DIR/sysroot"
   export CXXFLAGS="$CFLAGS -isystem $MOZ_FETCHES_DIR/sysroot/usr/include/c++/$gcc_major -isystem $MOZ_FETCHES_DIR/sysroot/usr/include/x86_64-linux-gnu/c++/$gcc_major"
+  export LDFLAGS="-L$MOZ_FETCHES_DIR/sysroot/lib/x86_64-linux-gnu -L$MOZ_FETCHES_DIR/sysroot/usr/lib/x86_64-linux-gnu -L$MOZ_FETCHES_DIR/sysroot/usr/lib/gcc/x86_64-linux-gnu/8"
 fi
+
 
 # Build target-specific GNU as ; build them first so that the few documentation
 # files they install are overwritten by the full binutils build.
