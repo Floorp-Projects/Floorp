@@ -69,14 +69,20 @@ class Tiers {
 };
 
 // Describes per-compilation settings that are controlled by an options bag
-// passed to compilation and validation functions.  (Nonstandard extension
+// passed to compilation and validation functions. (Nonstandard extension
 // available under prefs.)
 
 struct FeatureOptions {
-  FeatureOptions() : isBuiltinModule(false) {}
+  FeatureOptions() : isBuiltinModule(false), jsStringBuiltins(false) {}
 
   // Enables builtin module opcodes, only set in WasmBuiltinModule.cpp.
   bool isBuiltinModule;
+  // Enable JS String builtins for this module, only available if the feature
+  // is also enabled.
+  bool jsStringBuiltins;
+
+  // Parse the compile options bag.
+  [[nodiscard]] bool init(JSContext* cx, HandleValue val);
 };
 
 // Describes the features that control wasm compilation.
@@ -106,6 +112,8 @@ struct FeatureArgs {
   // Whether this module is a wasm builtin module (see WasmBuiltinModule.h) and
   // can contain special opcodes in function bodies.
   bool isBuiltinModule;
+  // The set of builtin modules that are imported by this module.
+  BuiltinModuleIds builtinModules;
 };
 
 // Describes the JS scripted caller of a request to compile a wasm module.

@@ -1123,6 +1123,7 @@ SharedMetadata ModuleGenerator::finishMetadata(const Bytes& bytecode) {
   // Copy over data from the ModuleEnvironment.
 
   metadata_->startFuncIndex = moduleEnv_->startFuncIndex;
+  metadata_->builtinModules = moduleEnv_->features.builtinModules;
   metadata_->memories = std::move(moduleEnv_->memories);
   metadata_->tables = std::move(moduleEnv_->tables);
   metadata_->globals = std::move(moduleEnv_->globals);

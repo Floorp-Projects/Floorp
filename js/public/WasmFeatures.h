@@ -100,6 +100,11 @@
 #else
 #  define WASM_MULTI_MEMORY_ENABLED 0
 #endif
+#ifdef ENABLE_WASM_JS_STRING_BUILTINS
+#  define WASM_JS_STRING_BUILTINS_ENABLED 1
+#else
+#  define WASM_JS_STRING_BUILTINS_ENABLED 0
+#endif
 
 enum class WasmFeatureStage {
   Experimental = 0,
@@ -153,6 +158,17 @@ enum class WasmFeatureStage {
     /* flag fuzz enable   */ false,                                     \
     /* shell flag         */ "gc",                                      \
     /* preference name    */ "gc")                                      \
+  FEATURE(                                                              \
+    /* capitalized name   */ JSStringBuiltins,                          \
+    /* lower case name    */ jsStringBuiltins,                          \
+    /* stage              */ WasmFeatureStage::Experimental,            \
+    /* compile predicate  */ WASM_JS_STRING_BUILTINS_ENABLED,           \
+    /* compiler predicate */ AnyCompilerAvailable(cx),                  \
+    /* flag predicate     */ true,                                      \
+    /* flag force enable  */ false,                                     \
+    /* flag fuzz enable   */ true,                                      \
+    /* shell flag         */ "js-string-builtins",                      \
+    /* preference name    */ "js_string_builtins")                      \
   FEATURE(                                                              \
     /* capitalized name   */ RelaxedSimd,                               \
     /* lower case name    */ v128Relaxed,                               \

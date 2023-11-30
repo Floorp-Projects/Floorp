@@ -774,6 +774,32 @@ def wasm_gc(value, function_references, no_experimental):
 set_config("ENABLE_WASM_GC", wasm_gc)
 set_define("ENABLE_WASM_GC", wasm_gc)
 
+# Support for WebAssembly JS String Builtins
+# ==========================================
+
+@depends(milestone.is_nightly)
+def default_wasm_js_string_builtins(is_nightly):
+    if is_nightly:
+        return True
+
+
+option(
+    "--enable-wasm-js-string-builtins", default=default_wasm_js_string_builtins, help="{Enable|Disable} WebAssembly JS String Builtins"
+)
+
+
+@depends(
+    "--enable-wasm-js-string-builtins", "--wasm-no-experimental"
+)
+def wasm_js_string_builtins(value, no_experimental):
+    if no_experimental or not value:
+        return
+
+    return True
+
+
+set_config("ENABLE_WASM_JS_STRING_BUILTINS", wasm_js_string_builtins)
+set_define("ENABLE_WASM_JS_STRING_BUILTINS", wasm_js_string_builtins)
 
 # Support for WebAssembly shared memory and atomics.
 #
