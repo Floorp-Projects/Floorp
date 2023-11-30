@@ -12,7 +12,7 @@ webconsole-commands-usage-block =
 
   Start blocking network requests
 
-    It accepts only one URLSTRING argument, an unquoted string which will be used to block all requests whose URL includes this string.
+    It accepts only one URL_STRING argument, an unquoted string which will be used to block all requests whose URL includes this string.
     Use :unblock or the Network Monitor request blocking sidebar to undo this.
 
 # Usage string for :unblock command
