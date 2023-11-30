@@ -578,9 +578,10 @@ def get_raptor_test_list(args, oskey):
             and next_test.get("type") == "pageload"
         ):
             next_test["measure"] = (
-                "fnbpaint, fcp, dcf, loadtime,"
-                "ContentfulSpeedIndex, PerceptualSpeedIndex,"
-                "SpeedIndex, FirstVisualChange, LastVisualChange"
+                "fnbpaint, fcp, dcf, loadtime, "
+                "ContentfulSpeedIndex, PerceptualSpeedIndex, "
+                "SpeedIndex, FirstVisualChange, LastVisualChange, "
+                "largestContentfulPaint"
             )
 
         # convert 'measure =' test INI line to list
