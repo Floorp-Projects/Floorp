@@ -70,6 +70,8 @@
     <string name="preferences_debug_settings_translations" translatable="false">Enable Firefox Translations</string>
     <!-- Label for enabling Firefox Suggest -->
     <string name="preferences_debug_settings_fxsuggest" translatable="false">Enable Firefox Suggest</string>
+    <!-- Label for enabling Toolbar Redesign incomplete portions -->
+    <string name="preferences_debug_settings_toolbar_redesign" translatable="false">Enable Toolbar Redesign incomplete portions</string>
     <!-- Label for enabling Felt Privacy -->
     <string name="preferences_debug_felt_privacy" translatable="false">Enable Felt Privacy</string>
 
