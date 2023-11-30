@@ -211,7 +211,8 @@ int ArchiveReader::Open(const NS_tchar* path) {
 #endif
   if (result == MAR_MEM_ERROR) {
     return ARCHIVE_READER_MEM_ERROR;
-  } else if (result != MAR_READ_SUCCESS) {
+  }
+  if (result != MAR_READ_SUCCESS) {
     return READ_ERROR;
   }
 
