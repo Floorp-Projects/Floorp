@@ -157,7 +157,9 @@ def main(args):
             print("Could not run mach: No mach source directory found.")
             sys.exit(1)
         sys.exit(mach.run(args))
-    except:
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except Exception as e:
         if sys.version_info >= (
             MAX_PYTHON_VERSION_TO_CONSIDER[0],
             MAX_PYTHON_VERSION_TO_CONSIDER[1] + 1,
