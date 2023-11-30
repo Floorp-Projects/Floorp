@@ -2029,6 +2029,13 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 
 /* Report Broken Site panels */
 
+/* Hide the Report Broken Site menu item that
+ * is on the App Menu's Help sub-menu.
+ */
+#appMenu_help_reportBrokenSite {
+  display: none;
+}
+
 .report-broken-site-view {
   description,
   label,
