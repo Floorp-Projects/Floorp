@@ -438,11 +438,7 @@ def run(
     return result.returncode
 
 
-def main() -> int:
+if __name__ == "__main__":
     parser = MozlintParser()
     args = vars(parser.parse_args())
-    return run(**args)
-
-
-if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(run(**args))
