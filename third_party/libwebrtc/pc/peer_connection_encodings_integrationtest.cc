@@ -1423,6 +1423,69 @@ TEST_F(PeerConnectionEncodingsIntegrationTest,
 }
 
 TEST_F(PeerConnectionEncodingsIntegrationTest,
+       SetParametersRejectsNonRemotelyNegotiatedCodecParameterAudio) {
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  absl::optional<webrtc::RtpCodecCapability> opus =
+      local_pc_wrapper->FindFirstSendCodecWithName(cricket::MEDIA_TYPE_AUDIO,
+                                                   "opus");
+  ASSERT_TRUE(opus);
+
+  std::vector<webrtc::RtpCodecCapability> not_opus_codecs =
+      local_pc_wrapper->pc_factory()
+          ->GetRtpSenderCapabilities(cricket::MEDIA_TYPE_AUDIO)
+          .codecs;
+  not_opus_codecs.erase(
+      std::remove_if(not_opus_codecs.begin(), not_opus_codecs.end(),
+                     [&](const auto& codec) {
+                       return absl::EqualsIgnoreCase(codec.name, opus->name);
+                     }),
+      not_opus_codecs.end());
+
+  auto transceiver_or_error =
+      local_pc_wrapper->pc()->AddTransceiver(cricket::MEDIA_TYPE_AUDIO);
+  ASSERT_TRUE(transceiver_or_error.ok());
+  rtc::scoped_refptr<RtpTransceiverInterface> audio_transceiver =
+      transceiver_or_error.MoveValue();
+
+  // Negotiation, create offer and apply it
+  std::unique_ptr<SessionDescriptionInterface> offer =
+      CreateOffer(local_pc_wrapper);
+  rtc::scoped_refptr<MockSetSessionDescriptionObserver> p1 =
+      SetLocalDescription(local_pc_wrapper, offer.get());
+  rtc::scoped_refptr<MockSetSessionDescriptionObserver> p2 =
+      SetRemoteDescription(remote_pc_wrapper, offer.get());
+  EXPECT_TRUE(Await({p1, p2}));
+
+  // Update the remote transceiver to reject Opus
+  std::vector<rtc::scoped_refptr<RtpTransceiverInterface>> remote_transceivers =
+      remote_pc_wrapper->pc()->GetTransceivers();
+  ASSERT_TRUE(!remote_transceivers.empty());
+  rtc::scoped_refptr<RtpTransceiverInterface> remote_audio_transceiver =
+      remote_transceivers[0];
+  ASSERT_TRUE(
+      remote_audio_transceiver->SetCodecPreferences(not_opus_codecs).ok());
+
+  // Create answer and apply it
+  std::unique_ptr<SessionDescriptionInterface> answer =
+      CreateAnswer(remote_pc_wrapper);
+  p1 = SetLocalDescription(remote_pc_wrapper, answer.get());
+  p2 = SetRemoteDescription(local_pc_wrapper, answer.get());
+  EXPECT_TRUE(Await({p1, p2}));
+
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  webrtc::RtpParameters parameters =
+      audio_transceiver->sender()->GetParameters();
+  parameters.encodings[0].codec = opus;
+  RTCError error = audio_transceiver->sender()->SetParameters(parameters);
+  EXPECT_EQ(error.type(), RTCErrorType::INVALID_MODIFICATION);
+}
+
+TEST_F(PeerConnectionEncodingsIntegrationTest,
        SetParametersRejectsNonNegotiatedCodecParameterVideo) {
   rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
   rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
@@ -1452,6 +1515,69 @@ TEST_F(PeerConnectionEncodingsIntegrationTest,
   ASSERT_TRUE(video_transceiver->SetCodecPreferences(not_vp8_codecs).ok());
 
   NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  webrtc::RtpParameters parameters =
+      video_transceiver->sender()->GetParameters();
+  parameters.encodings[0].codec = vp8;
+  RTCError error = video_transceiver->sender()->SetParameters(parameters);
+  EXPECT_EQ(error.type(), RTCErrorType::INVALID_MODIFICATION);
+}
+
+TEST_F(PeerConnectionEncodingsIntegrationTest,
+       SetParametersRejectsNonRemotelyNegotiatedCodecParameterVideo) {
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  absl::optional<webrtc::RtpCodecCapability> vp8 =
+      local_pc_wrapper->FindFirstSendCodecWithName(cricket::MEDIA_TYPE_VIDEO,
+                                                   "vp8");
+  ASSERT_TRUE(vp8);
+
+  std::vector<webrtc::RtpCodecCapability> not_vp8_codecs =
+      local_pc_wrapper->pc_factory()
+          ->GetRtpSenderCapabilities(cricket::MEDIA_TYPE_VIDEO)
+          .codecs;
+  not_vp8_codecs.erase(
+      std::remove_if(not_vp8_codecs.begin(), not_vp8_codecs.end(),
+                     [&](const auto& codec) {
+                       return absl::EqualsIgnoreCase(codec.name, vp8->name);
+                     }),
+      not_vp8_codecs.end());
+
+  auto transceiver_or_error =
+      local_pc_wrapper->pc()->AddTransceiver(cricket::MEDIA_TYPE_VIDEO);
+  ASSERT_TRUE(transceiver_or_error.ok());
+  rtc::scoped_refptr<RtpTransceiverInterface> video_transceiver =
+      transceiver_or_error.MoveValue();
+
+  // Negotiation, create offer and apply it
+  std::unique_ptr<SessionDescriptionInterface> offer =
+      CreateOffer(local_pc_wrapper);
+  rtc::scoped_refptr<MockSetSessionDescriptionObserver> p1 =
+      SetLocalDescription(local_pc_wrapper, offer.get());
+  rtc::scoped_refptr<MockSetSessionDescriptionObserver> p2 =
+      SetRemoteDescription(remote_pc_wrapper, offer.get());
+  EXPECT_TRUE(Await({p1, p2}));
+
+  // Update the remote transceiver to reject VP8
+  std::vector<rtc::scoped_refptr<RtpTransceiverInterface>> remote_transceivers =
+      remote_pc_wrapper->pc()->GetTransceivers();
+  ASSERT_TRUE(!remote_transceivers.empty());
+  rtc::scoped_refptr<RtpTransceiverInterface> remote_video_transceiver =
+      remote_transceivers[0];
+  ASSERT_TRUE(
+      remote_video_transceiver->SetCodecPreferences(not_vp8_codecs).ok());
+
+  // Create answer and apply it
+  std::unique_ptr<SessionDescriptionInterface> answer =
+      CreateAnswer(remote_pc_wrapper);
+  p1 = SetLocalDescription(remote_pc_wrapper, answer.get());
+  p2 = SetRemoteDescription(local_pc_wrapper, answer.get());
+  EXPECT_TRUE(Await({p1, p2}));
+
   local_pc_wrapper->WaitForConnection();
   remote_pc_wrapper->WaitForConnection();
 

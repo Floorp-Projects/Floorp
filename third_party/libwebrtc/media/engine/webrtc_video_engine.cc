@@ -29,6 +29,7 @@
 #include "api/media_stream_interface.h"
 #include "api/media_types.h"
 #include "api/priority.h"
+#include "api/rtc_error.h"
 #include "api/rtp_transceiver_direction.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
@@ -47,6 +48,7 @@
 #include "common_video/frame_counts.h"
 #include "common_video/include/quality_limitation_reason.h"
 #include "media/base/codec.h"
+#include "media/base/media_channel.h"
 #include "media/base/media_constants.h"
 #include "media/base/rid_description.h"
 #include "media/base/rtp_utils.h"
@@ -1333,17 +1335,24 @@ webrtc::RTCError WebRtcVideoSendChannel::SetRtpSendParameters(
         break;
     }
 
+    // Since we validate that all layers have the same value, we can just check
+    // the first layer.
     // TODO(orphis): Support mixed-codec simulcast
     if (parameters.encodings[0].codec && send_codec_ &&
         !send_codec_->codec.MatchesRtpCodec(*parameters.encodings[0].codec)) {
-      RTC_LOG(LS_ERROR) << "Trying to change codec to "
-                        << parameters.encodings[0].codec->name;
+      RTC_LOG(LS_VERBOSE) << "Trying to change codec to "
+                          << parameters.encodings[0].codec->name;
       auto matched_codec =
           absl::c_find_if(negotiated_codecs_, [&](auto negotiated_codec) {
             return negotiated_codec.codec.MatchesRtpCodec(
                 *parameters.encodings[0].codec);
           });
-      RTC_CHECK(matched_codec != negotiated_codecs_.end());
+      if (matched_codec == negotiated_codecs_.end()) {
+        return webrtc::InvokeSetParametersCallback(
+            callback, webrtc::RTCError(
+                          webrtc::RTCErrorType::INVALID_MODIFICATION,
+                          "Attempted to use an unsupported codec for layer 0"));
+      }
 
       ChangedSenderParameters params;
       params.send_codec = *matched_codec;
