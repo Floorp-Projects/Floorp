@@ -8,7 +8,7 @@
 asdf
 <script>
   onload = function() {
-    const fontFace = new FontFace("dummy-font", "url(dummy.font)");
+    const fontFace = new FontFace("dummy-font", "url(../resources/dummy.font)");
     document.fonts.add(fontFace);
     fontFace.load();
     document.fonts.ready.then(() => opener.postMessage("ChildLoaded", "*"));
