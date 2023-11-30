@@ -54,6 +54,18 @@ class VideoCaptureFactory : webrtc::VideoCaptureOptions::Callback {
   // this method override has to follow webrtc::VideoCaptureOptions::Callback
   void OnInitialized(webrtc::VideoCaptureOptions::Status status) override;
 
+  /**
+   * Resolves with true or false depending on whether there is a camera device
+   * advertised by the xdg-desktop-portal (Camera portal). Rejects with one
+   * of the following errors:
+   *  1) NS_ERROR_NOT_IMPLEMENTED - support for the Camera portal is not
+   *     implemented or enabled
+   *  2) NS_ERROR_NO_INTERFACE - the camera portal is not available
+   *  3) NS_ERROR_UNEXPECTED - the camera portal returned wrong value
+   */
+  using HasCameraDevicePromise = MozPromise<bool, nsresult, true>;
+  RefPtr<HasCameraDevicePromise> HasCameraDevice();
+
   std::atomic<bool> mCameraBackendInitialized = false;
 #if (defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)) && !defined(WEBRTC_ANDROID)
   std::unique_ptr<webrtc::VideoCaptureOptions> mVideoCaptureOptions;
