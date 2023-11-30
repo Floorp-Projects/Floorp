@@ -1392,6 +1392,7 @@ Document::Document(const char* aContentType)
       mHasUserInteractionTimerScheduled(false),
       mShouldResistFingerprinting(false),
       mCloningForSVGUse(false),
+      mAllowDeclarativeShadowRoots(false),
       mXMLDeclarationBits(0),
       mOnloadBlockCount(0),
       mWriteLevel(0),
@@ -18929,6 +18930,15 @@ RadioGroupContainer& Document::OwnedRadioGroupContainer() {
     mRadioGroupContainer = MakeUnique<RadioGroupContainer>();
   }
   return *mRadioGroupContainer;
+}
+
+void Document::SetAllowDeclarativeShadowRoots(
+    bool aAllowDeclarativeShadowRoots) {
+  mAllowDeclarativeShadowRoots = aAllowDeclarativeShadowRoots;
+}
+
+bool Document::AllowsDeclarativeShadowRoots() const {
+  return mAllowDeclarativeShadowRoots;
 }
 
 }  // namespace mozilla::dom

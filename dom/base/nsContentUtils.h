@@ -176,6 +176,7 @@ class DOMArena;
 class Element;
 class Event;
 class EventTarget;
+class FragmentOrElement;
 class HTMLElement;
 class HTMLInputElement;
 class IPCTransferable;
@@ -187,6 +188,7 @@ class MessageBroadcaster;
 class NodeInfo;
 class OwningFileOrUSVStringOrFormData;
 class Selection;
+enum class ShadowRootMode : uint8_t;
 struct StructuredSerializeOptions;
 class WorkerPrivate;
 enum class ElementCallbackType;
@@ -1802,6 +1804,9 @@ class nsContentUtils {
                            bool aPreventScriptExecution,
                            mozilla::ErrorResult& aRv);
 
+  MOZ_CAN_RUN_SCRIPT
+  static void SetHTMLUnsafe(mozilla::dom::FragmentOrElement* aTarget,
+                            Element* aContext, const nsAString& aSource);
   /**
    * Invoke the fragment parsing algorithm (innerHTML) using the HTML parser.
    *
@@ -3456,6 +3461,11 @@ class nsContentUtils {
   static int32_t CompareTreePosition(nsIContent* aContent1,
                                      nsIContent* aContent2,
                                      const nsIContent* aCommonAncestor);
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  static nsIContent* AttachDeclarativeShadowRoot(
+      nsIContent* aHost, mozilla::dom::ShadowRootMode aMode,
+      bool aDelegatesFocus);
 
  private:
   static bool InitializeEventTable();

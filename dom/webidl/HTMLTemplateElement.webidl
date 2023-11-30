@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/templates/index.html
+ * https://html.spec.whatwg.org/multipage/scripting.html#the-template-element
  *
  * Copyright © 2012 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
@@ -13,5 +13,7 @@
 interface HTMLTemplateElement : HTMLElement {
   [HTMLConstructor] constructor();
 
-    readonly attribute DocumentFragment content;
+  readonly attribute DocumentFragment content;
+  [CEReactions] attribute DOMString shadowRootMode;
+  [CEReactions] attribute boolean shadowRootDelegatesFocus;
 };

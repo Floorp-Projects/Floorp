@@ -7,9 +7,12 @@
 #include "ErrorList.h"
 #include "nsError.h"
 #include "nsHtml5AttributeName.h"
+#include "nsHtml5HtmlAttributes.h"
 #include "nsHtml5String.h"
 #include "nsNetUtil.h"
 #include "mozilla/dom/FetchPriority.h"
+#include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/dom/ShadowRootBinding.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Likely.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -1632,6 +1635,53 @@ nsIContentHandle* nsHtml5TreeBuilder::getDocumentFragmentForTemplate(
   }
   nsIContentHandle* fragHandle = AllocateContentHandle();
   opGetDocumentFragmentForTemplate operation(aTemplate, fragHandle);
+  treeOp->Init(mozilla::AsVariant(operation));
+  return fragHandle;
+}
+
+void nsHtml5TreeBuilder::setDocumentFragmentForTemplate(
+    nsIContentHandle* aTemplate, nsIContentHandle* aFragment) {
+  if (mBuilder) {
+    nsHtml5TreeOperation::SetDocumentFragmentForTemplate(
+        static_cast<nsIContent*>(aTemplate),
+        static_cast<nsIContent*>(aFragment));
+    return;
+  }
+
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement(mozilla::fallible);
+  if (MOZ_UNLIKELY(!treeOp)) {
+    MarkAsBrokenAndRequestSuspensionWithoutBuilder(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+  opSetDocumentFragmentForTemplate operation(aTemplate, aFragment);
+  treeOp->Init(mozilla::AsVariant(operation));
+}
+
+nsIContentHandle* nsHtml5TreeBuilder::getShadowRootFromHost(
+    nsIContentHandle* aHost, nsIContentHandle* aTemplateNode,
+    nsHtml5String aShadowRootMode, bool aShadowRootDelegatesFocus) {
+  ShadowRootMode mode;
+  if (aShadowRootMode.LowerCaseEqualsASCII("open")) {
+    mode = ShadowRootMode::Open;
+  } else if (aShadowRootMode.LowerCaseEqualsASCII("closed")) {
+    mode = ShadowRootMode::Closed;
+  } else {
+    return nullptr;
+  }
+
+  if (mBuilder) {
+    return nsContentUtils::AttachDeclarativeShadowRoot(
+        static_cast<nsIContent*>(aHost), mode, aShadowRootDelegatesFocus);
+  }
+
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement(mozilla::fallible);
+  if (MOZ_UNLIKELY(!treeOp)) {
+    MarkAsBrokenAndRequestSuspensionWithoutBuilder(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+  nsIContentHandle* fragHandle = AllocateContentHandle();
+  opGetShadowRootFromHost operation(aHost, fragHandle, aTemplateNode, mode,
+                                    aShadowRootDelegatesFocus);
   treeOp->Init(mozilla::AsVariant(operation));
   return fragHandle;
 }
