@@ -63,7 +63,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Canvas)
 namespace mozilla::dom {
 
 class RequestedFrameRefreshObserver : public nsARefreshObserver {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RequestedFrameRefreshObserver, override)
+  NS_INLINE_DECL_REFCOUNTING(RequestedFrameRefreshObserver, override)
 
  public:
   RequestedFrameRefreshObserver(HTMLCanvasElement* const aOwningElement,
