@@ -159,7 +159,7 @@ class Configuration(DescriptorProvider):
 
             self.interfaces[iface.identifier.name] = iface
 
-            entry = config.get(iface.identifier.name, {})
+            entry = config.pop(iface.identifier.name, {})
             assert not isinstance(entry, list)
 
             desc = Descriptor(
@@ -174,6 +174,13 @@ class Configuration(DescriptorProvider):
             # having to do multiple loops.
             assert desc.interface.identifier.name not in self.descriptorsByName
             self.descriptorsByName[desc.interface.identifier.name] = desc
+
+        if len(config) > 0:
+            raise NoSuchDescriptorError(
+                "Bindings.conf contains entries for "
+                + str(list(config))
+                + " that aren't declared as interfaces in the .webidl files."
+            )
 
         # Keep the descriptor list sorted for determinism.
         self.descriptors.sort(key=lambda x: x.name)

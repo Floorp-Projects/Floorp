@@ -39,7 +39,7 @@ class TestWebIDLCodegenManager(unittest.TestCase):
 
     @property
     def _config_path(self):
-        config = mozpath.join(TOPSRCDIR, "dom", "bindings", "Bindings.conf")
+        config = mozpath.join(OUR_DIR, "TestBindings.conf")
         self.assertTrue(os.path.exists(config))
 
         return config
