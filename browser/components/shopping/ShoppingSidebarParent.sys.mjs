@@ -160,7 +160,7 @@ class ShoppingSidebarManagerClass {
 
     if (!this.isActive) {
       document.querySelectorAll("shopping-sidebar").forEach(sidebar => {
-        sidebar.toggleAttribute("closed", true);
+        sidebar.hidden = true;
       });
     }
 
@@ -196,18 +196,18 @@ class ShoppingSidebarManagerClass {
     if (isProduct && this.isActive) {
       if (!sidebar) {
         sidebar = document.createXULElement("shopping-sidebar");
-        sidebar.removeAttribute("closed");
+        sidebar.hidden = false;
         let splitter = document.createXULElement("splitter");
         splitter.classList.add("sidebar-splitter");
         browserPanel.appendChild(splitter);
         browserPanel.appendChild(sidebar);
       } else {
         actor?.updateProductURL(aLocationURI, aFlags);
-        sidebar.removeAttribute("closed");
+        sidebar.hidden = false;
       }
-    } else if (sidebar && !sidebar.hasAttribute("closed")) {
+    } else if (sidebar && !sidebar.hidden) {
       actor?.updateProductURL(null);
-      sidebar.toggleAttribute("closed", true);
+      sidebar.hidden = true;
     }
 
     this._updateBCActiveness(aBrowser);
@@ -215,7 +215,7 @@ class ShoppingSidebarManagerClass {
 
     if (
       sidebar &&
-      !sidebar.hasAttribute("closed") &&
+      !sidebar.hidden &&
       lazy.ShoppingUtils.isProductPageNavigation(aLocationURI, aFlags)
     ) {
       Glean.shopping.surfaceDisplayed.record();
@@ -258,7 +258,7 @@ class ShoppingSidebarManagerClass {
       browsingContext.isActive =
         !document.hidden &&
         aBrowser == gBrowser.selectedBrowser &&
-        !sidebar.hasAttribute("closed");
+        !sidebar.hidden;
     } catch (ex) {
       // The setter can throw and we do need to run the rest of this
       // code in that case.

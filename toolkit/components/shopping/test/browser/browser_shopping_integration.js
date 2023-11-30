@@ -15,9 +15,9 @@ add_task(async function test_sidebar_navigation() {
   await BrowserTestUtils.withNewTab(PRODUCT_TEST_URL, async browser => {
     let sidebar = gBrowser.getPanel(browser).querySelector("shopping-sidebar");
     Assert.ok(sidebar, "Sidebar should exist");
-    await BrowserTestUtils.waitForCondition(
-      () => BrowserTestUtils.is_visible(sidebar),
-      "Sidebar should be visible"
+    Assert.ok(
+      BrowserTestUtils.is_visible(sidebar),
+      "Sidebar should be visible."
     );
     info("Waiting for sidebar to update.");
     await promiseSidebarUpdated(sidebar, PRODUCT_TEST_URL);
@@ -33,15 +33,14 @@ add_task(async function test_sidebar_navigation() {
       BrowserTestUtils.browserLoaded(browser, false, OTHER_PRODUCT_TEST_URL),
       promiseSidebarUpdated(sidebar, OTHER_PRODUCT_TEST_URL),
     ]);
-    let openedSidebarPromise = BrowserTestUtils.waitForCondition(
-      () => BrowserTestUtils.is_visible(sidebar),
-      "Sidebar should be visible"
-    );
     BrowserTestUtils.startLoadingURIString(browser, OTHER_PRODUCT_TEST_URL);
     info("Loading another product.");
     await loadedPromise;
     Assert.ok(sidebar, "Sidebar should exist.");
-    await openedSidebarPromise;
+    Assert.ok(
+      BrowserTestUtils.is_visible(sidebar),
+      "Sidebar should be visible."
+    );
     info("Verifying another product.");
     await verifyProductInfo(sidebar, {
       productURL: OTHER_PRODUCT_TEST_URL,
@@ -55,24 +54,15 @@ add_task(async function test_sidebar_navigation() {
       false,
       "https://example.com/1"
     );
-    let closedSidebarPromise = BrowserTestUtils.waitForCondition(
-      () => BrowserTestUtils.is_hidden(sidebar),
-      "Shopping sidebar should be hidden"
-    );
-
     BrowserTestUtils.startLoadingURIString(browser, "https://example.com/1");
     info("Go to a non-product.");
     await loadedPromise;
-    await closedSidebarPromise;
+    Assert.ok(BrowserTestUtils.is_hidden(sidebar));
 
     // Navigate using pushState:
     loadedPromise = BrowserTestUtils.waitForLocationChange(
       gBrowser,
       PRODUCT_TEST_URL
-    );
-    openedSidebarPromise = BrowserTestUtils.waitForCondition(
-      () => BrowserTestUtils.is_visible(sidebar),
-      "Sidebar should be visible"
     );
     info("Navigate to the first product using pushState.");
     await SpecialPowers.spawn(browser, [PRODUCT_TEST_URL], urlToUse => {
@@ -83,7 +73,10 @@ add_task(async function test_sidebar_navigation() {
     info("Waiting for the sidebar to have updated.");
     await promiseSidebarUpdated(sidebar, PRODUCT_TEST_URL);
     Assert.ok(sidebar, "Sidebar should exist");
-    await openedSidebarPromise;
+    Assert.ok(
+      BrowserTestUtils.is_visible(sidebar),
+      "Sidebar should be visible."
+    );
 
     info("Waiting to verify the first product a second time.");
     await verifyProductInfo(sidebar, {
@@ -143,9 +136,9 @@ add_task(async function test_button_visible_when_opted_out() {
         .getPanel(browser)
         .querySelector("shopping-sidebar");
       Assert.ok(sidebar, "Sidebar should exist");
-      await BrowserTestUtils.waitForCondition(
-        () => BrowserTestUtils.is_visible(sidebar),
-        "Sidebar should be visible"
+      Assert.ok(
+        BrowserTestUtils.is_visible(sidebar),
+        "Sidebar should be visible."
       );
       info("Waiting for sidebar to update.");
       await promiseSidebarUpdated(sidebar, PRODUCT_TEST_URL);
@@ -204,9 +197,9 @@ add_task(async function test_sidebar_button_open_close() {
   await BrowserTestUtils.withNewTab(PRODUCT_TEST_URL, async browser => {
     let sidebar = gBrowser.getPanel(browser).querySelector("shopping-sidebar");
     Assert.ok(sidebar, "Sidebar should exist");
-    await BrowserTestUtils.waitForCondition(
-      () => BrowserTestUtils.is_visible(sidebar),
-      "Sidebar should be visible"
+    Assert.ok(
+      BrowserTestUtils.is_visible(sidebar),
+      "Sidebar should be visible."
     );
     let shoppingButton = document.getElementById("shopping-sidebar-button");
     ok(
@@ -224,25 +217,16 @@ add_task(async function test_sidebar_button_open_close() {
       letterGrade: "B",
     });
 
-    let closedSidebarPromise = BrowserTestUtils.waitForCondition(
-      () => BrowserTestUtils.is_hidden(sidebar),
-      "Sidebar should be hidden"
-    );
-
     // close the sidebar
     shoppingButton.click();
-
-    await closedSidebarPromise;
-
-    let openedSidebarPromise = BrowserTestUtils.waitForCondition(
-      () => BrowserTestUtils.is_visible(sidebar),
-      "Sidebar should be visible"
-    );
+    ok(BrowserTestUtils.is_hidden(sidebar), "Sidebar should be hidden");
 
     // reopen the sidebar
     shoppingButton.click();
-
-    await openedSidebarPromise;
+    Assert.ok(
+      BrowserTestUtils.is_visible(sidebar),
+      "Sidebar should be visible."
+    );
 
     info("Waiting for sidebar to update.");
     await promiseSidebarUpdated(sidebar, PRODUCT_TEST_URL);
@@ -272,9 +256,9 @@ add_task(async function test_no_reliability_available() {
 
     Assert.ok(sidebar, "Sidebar should exist");
 
-    await BrowserTestUtils.waitForCondition(
-      () => BrowserTestUtils.is_visible(sidebar),
-      "Sidebar should be visible"
+    Assert.ok(
+      BrowserTestUtils.is_visible(sidebar),
+      "Sidebar should be visible."
     );
     info("Waiting for sidebar to update.");
     await promiseSidebarUpdated(sidebar, NEEDS_ANALYSIS_TEST_URL);

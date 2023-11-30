@@ -1163,35 +1163,8 @@ panel toolbarseparator {
 /* Shopping sidebar */
 
 shopping-sidebar {
-  /* `--shopping-sidebar-width` and `--shopping-sidebar-width-translate-x`
-   * have the same default values, but they should still be separate vars
-   * (see shopping-sidebar.js). */
-  --shopping-sidebar-width: 320px;
-  --shopping-sidebar-width-translate-x: var(--shopping-sidebar-width);
-
   border-inline-start: 1px solid var(--chrome-content-separator-color);
   min-width: 16.92em;
   max-width: 32.31em;
-  width: var(--shopping-sidebar-width);
-  visibility: visible;
-  inset-inline-end: 0;
-
-  &[closed] {
-    transform: translateX(var(--shopping-sidebar-width-translate-x));
-    visibility: collapse;
-    position: absolute;
-    /* Because of absolute positioning, height would normally be set to 0 and break animations.
-     * Set height to 100% so that animations are smooth and the sidebar maintains its original size. */
-    height: 100%;
-
-    &:-moz-locale-dir(rtl) {
-      transform: translateX(calc(-1 * var(--shopping-sidebar-width-translate-x)));
-    }
-  }
-}
-
-@media not (prefers-reduced-motion) {
-  shopping-sidebar {
-    transition: visibility 0.3s, transform 0.3s ease-in-out;
-  }
+  width: 26.67em;
 }
