@@ -17,19 +17,10 @@ namespace dom {
 
 class PlacesEvent : public nsWrapperCache {
  public:
-  explicit PlacesEvent(PlacesEventType aType) : mType(aType) {}
-
-  static already_AddRefed<PlacesEvent> Constructor(const GlobalObject& aGlobal,
-                                                   PlacesEventType aType,
-                                                   ErrorResult& aRv);
-
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PlacesEvent)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(PlacesEvent)
 
   nsISupports* GetParentObject() const;
-
-  JSObject* WrapObject(JSContext* aCx,
-                       JS::Handle<JSObject*> aGivenProto) override;
 
   PlacesEventType Type() const { return mType; }
 
@@ -76,6 +67,7 @@ class PlacesEvent : public nsWrapperCache {
   }
 
  protected:
+  explicit PlacesEvent(PlacesEventType aType) : mType(aType) {}
   virtual ~PlacesEvent() = default;
   PlacesEventType mType;
 };
