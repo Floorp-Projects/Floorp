@@ -2,20 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: taskgraph.loader.transform:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
     - taskgraph.transforms.from_deps
     - android_taskgraph.transforms.upstream_artifacts
     - android_taskgraph.transforms.treeherder
     - android_taskgraph.transforms.push_android_app
-    - taskgraph.transforms.task
+    - gecko_taskgraph.transforms.task
 
 kind-dependencies:
     - signing-bundle
-    - startup-test
+    - android-startup-test
 
-tasks:
+jobs:
     push-bundle:
         description: Publish Fenix and Focus AABs
         from-deps:
@@ -32,7 +32,6 @@ tasks:
                 attribute: build-type
             copy-attributes: true
         worker-type: push-apk
-        run-on-tasks-for: []
         worker:
             certificate-alias:
                 by-build-type:
@@ -60,7 +59,7 @@ tasks:
                     default: focus-android
         shipping-phase: push
         treeherder:
-            job-symbol:
+            symbol:
                 by-build-type:
                     default: gp-aab
                     focus-release: gpf-aab
@@ -69,5 +68,5 @@ tasks:
         routes:
             by-level:
                 '3':
-                  - "notify.email.release-mgmt@mozilla.com.on-failed"
+                    - "notify.email.release-mgmt@mozilla.com.on-failed"
                 'default': []
