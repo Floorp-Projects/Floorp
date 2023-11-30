@@ -26,6 +26,7 @@
 
 #include "jsmath.h"
 
+#include "builtin/String.h"
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "jit/AtomicOperations.h"
@@ -38,6 +39,7 @@
 #include "js/Stack.h"                 // JS::NativeStackLimitMin
 #include "util/StringBuffer.h"
 #include "util/Text.h"
+#include "util/Unicode.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/BigIntType.h"
 #include "vm/Compartment.h"
@@ -1939,6 +1941,274 @@ static bool ArrayCopyFromElem(JSContext* cx, Handle<WasmArrayObject*> arrayObj,
   }
 
   return 0;
+}
+
+// TODO: this cast is irregular and not representable in wasm, as it does not
+// take into account the enclosing recursion group of the type. This is
+// temporary until builtin module functions can specify a precise array type
+// for params/results.
+static WasmArrayObject* CastToI16Array(HandleAnyRef ref, bool needMutable) {
+  if (!ref.isJSObject()) {
+    return nullptr;
+  }
+  JSObject& object = ref.toJSObject();
+  if (!object.is<WasmArrayObject>()) {
+    return nullptr;
+  }
+  WasmArrayObject& array = object.as<WasmArrayObject>();
+  const ArrayType& type = array.typeDef().arrayType();
+  if (type.elementType_ != FieldType::I16) {
+    return nullptr;
+  }
+  if (needMutable && !type.isMutable_) {
+    return nullptr;
+  }
+  return &array;
+}
+
+/* static */
+void* Instance::stringFromWTF16Array(Instance* instance, void* arrayArg,
+                                     uint32_t arrayStart, uint32_t arrayCount) {
+  JSContext* cx = instance->cx();
+  RootedAnyRef arrayRef(cx, AnyRef::fromCompiledCode(arrayArg));
+  Rooted<WasmArrayObject*> array(cx);
+  if (!(array = CastToI16Array(arrayRef, false))) {
+    ReportTrapError(cx, JSMSG_WASM_BAD_CAST);
+    return nullptr;
+  }
+
+  CheckedUint32 lastIndexPlus1 =
+      CheckedUint32(arrayStart) + CheckedUint32(arrayCount);
+  if (!lastIndexPlus1.isValid() ||
+      lastIndexPlus1.value() > array->numElements_) {
+    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    return nullptr;
+  }
+
+  JSLinearString* string = NewStringCopyN<CanGC, char16_t>(
+      cx, (char16_t*)array->data_ + arrayStart, arrayCount);
+  if (!string) {
+    return nullptr;
+  }
+  return AnyRef::fromJSString(string).forCompiledCode();
+}
+
+/* static */
+int32_t Instance::stringToWTF16Array(Instance* instance, void* stringArg,
+                                     void* arrayArg, uint32_t arrayStart) {
+  JSContext* cx = instance->cx();
+  AnyRef stringRef = AnyRef::fromCompiledCode(stringArg);
+  if (!stringRef.isJSString()) {
+    ReportTrapError(cx, JSMSG_WASM_BAD_CAST);
+    return -1;
+  }
+  Rooted<JSString*> string(cx, stringRef.toJSString());
+  size_t stringLength = string->length();
+
+  RootedAnyRef arrayRef(cx, AnyRef::fromCompiledCode(arrayArg));
+  Rooted<WasmArrayObject*> array(cx);
+  if (!(array = CastToI16Array(arrayRef, true))) {
+    ReportTrapError(cx, JSMSG_WASM_BAD_CAST);
+    return -1;
+  }
+
+  CheckedUint32 lastIndexPlus1 = CheckedUint32(arrayStart) + stringLength;
+  if (!lastIndexPlus1.isValid() ||
+      lastIndexPlus1.value() > array->numElements_) {
+    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    return -1;
+  }
+
+  JSLinearString* linearStr = string->ensureLinear(cx);
+  if (!linearStr) {
+    return -1;
+  }
+  char16_t* arrayData = reinterpret_cast<char16_t*>(array->data_);
+  CopyChars(arrayData + arrayStart, *linearStr);
+  return stringLength;
+}
+
+void* Instance::stringFromCharCode(Instance* instance, uint32_t charCode) {
+  JSContext* cx = instance->cx();
+
+  RootedValue rval(cx, NumberValue(charCode));
+  if (!str_fromCharCode_one_arg(cx, rval, &rval)) {
+    MOZ_ASSERT(cx->isThrowingOutOfMemory());
+    return nullptr;
+  }
+
+  return AnyRef::fromJSString(rval.toString()).forCompiledCode();
+}
+
+void* Instance::stringFromCodePoint(Instance* instance, uint32_t codePoint) {
+  JSContext* cx = instance->cx();
+
+  // Check for any error conditions before calling fromCodePoint so we report
+  // the correct error
+  if (codePoint > int32_t(unicode::NonBMPMax)) {
+    ReportTrapError(cx, JSMSG_WASM_BAD_CODEPOINT);
+    return nullptr;
+  }
+
+  RootedValue rval(cx, Int32Value(codePoint));
+  if (!str_fromCodePoint_one_arg(cx, rval, &rval)) {
+    MOZ_ASSERT(cx->isThrowingOutOfMemory());
+    return nullptr;
+  }
+
+  return AnyRef::fromJSString(rval.toString()).forCompiledCode();
+}
+
+int32_t Instance::stringCharCodeAt(Instance* instance, void* stringArg,
+                                   uint32_t index) {
+  JSContext* cx = instance->cx();
+  AnyRef stringRef = AnyRef::fromCompiledCode(stringArg);
+  if (!stringRef.isJSString()) {
+    ReportTrapError(cx, JSMSG_WASM_BAD_CAST);
+    return -1;
+  }
+
+  Rooted<JSString*> string(cx, stringRef.toJSString());
+  if (index >= string->length()) {
+    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    return -1;
+  }
+
+  char16_t c;
+  if (!string->getChar(cx, index, &c)) {
+    MOZ_ASSERT(cx->isThrowingOutOfMemory());
+    return false;
+  }
+  return c;
+}
+
+int32_t Instance::stringCodePointAt(Instance* instance, void* stringArg,
+                                    uint32_t index) {
+  JSContext* cx = instance->cx();
+  AnyRef stringRef = AnyRef::fromCompiledCode(stringArg);
+  if (!stringRef.isJSString()) {
+    ReportTrapError(cx, JSMSG_WASM_BAD_CAST);
+    return -1;
+  }
+
+  Rooted<JSString*> string(cx, stringRef.toJSString());
+  if (index >= string->length()) {
+    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    return -1;
+  }
+
+  char32_t c;
+  if (!string->getCodePoint(cx, index, &c)) {
+    MOZ_ASSERT(cx->isThrowingOutOfMemory());
+    return false;
+  }
+  return c;
+}
+
+int32_t Instance::stringLength(Instance* instance, void* stringArg) {
+  JSContext* cx = instance->cx();
+  AnyRef stringRef = AnyRef::fromCompiledCode(stringArg);
+  if (!stringRef.isJSString()) {
+    ReportTrapError(cx, JSMSG_WASM_BAD_CAST);
+    return -1;
+  }
+
+  static_assert(JS::MaxStringLength <= INT32_MAX);
+  return (int32_t)stringRef.toJSString()->length();
+}
+
+void* Instance::stringConcatenate(Instance* instance, void* firstStringArg,
+                                  void* secondStringArg) {
+  JSContext* cx = instance->cx();
+
+  AnyRef firstStringRef = AnyRef::fromCompiledCode(firstStringArg);
+  AnyRef secondStringRef = AnyRef::fromCompiledCode(secondStringArg);
+  if (!firstStringRef.isJSString() || !secondStringRef.isJSString()) {
+    ReportTrapError(cx, JSMSG_WASM_BAD_CAST);
+    return nullptr;
+  }
+
+  Rooted<JSString*> firstString(cx, firstStringRef.toJSString());
+  Rooted<JSString*> secondString(cx, secondStringRef.toJSString());
+  JSString* result = ConcatStrings<CanGC>(cx, firstString, secondString);
+  if (!result) {
+    MOZ_ASSERT(cx->isThrowingOutOfMemory());
+    return nullptr;
+  }
+  return AnyRef::fromJSString(result).forCompiledCode();
+}
+
+void* Instance::stringSubstring(Instance* instance, void* stringArg,
+                                int32_t startIndex, int32_t endIndex) {
+  JSContext* cx = instance->cx();
+
+  AnyRef stringRef = AnyRef::fromCompiledCode(stringArg);
+  if (!stringRef.isJSString()) {
+    ReportTrapError(cx, JSMSG_WASM_BAD_CAST);
+    return nullptr;
+  }
+
+  RootedString string(cx, stringRef.toJSString());
+  static_assert(JS::MaxStringLength <= INT32_MAX);
+  if ((uint32_t)startIndex > string->length() ||
+      (uint32_t)endIndex > string->length() || startIndex > endIndex) {
+    return AnyRef::fromJSString(cx->names().empty_).forCompiledCode();
+  }
+
+  JSString* result =
+      SubstringKernel(cx, string, startIndex, endIndex - startIndex);
+  if (!result) {
+    MOZ_ASSERT(cx->isThrowingOutOfMemory());
+    return nullptr;
+  }
+  return AnyRef::fromJSString(result).forCompiledCode();
+}
+
+int32_t Instance::stringEquals(Instance* instance, void* firstStringArg,
+                               void* secondStringArg) {
+  JSContext* cx = instance->cx();
+
+  AnyRef firstStringRef = AnyRef::fromCompiledCode(firstStringArg);
+  AnyRef secondStringRef = AnyRef::fromCompiledCode(secondStringArg);
+  if (!firstStringRef.isJSString() || !secondStringRef.isJSString()) {
+    ReportTrapError(cx, JSMSG_WASM_BAD_CAST);
+    return -1;
+  }
+
+  bool equals;
+  if (!EqualStrings(cx, firstStringRef.toJSString(),
+                    secondStringRef.toJSString(), &equals)) {
+    MOZ_ASSERT(cx->isThrowingOutOfMemory());
+    return -1;
+  }
+  return equals ? 1 : 0;
+}
+
+int32_t Instance::stringCompare(Instance* instance, void* firstStringArg,
+                                void* secondStringArg) {
+  JSContext* cx = instance->cx();
+
+  AnyRef firstStringRef = AnyRef::fromCompiledCode(firstStringArg);
+  AnyRef secondStringRef = AnyRef::fromCompiledCode(secondStringArg);
+  if (!firstStringRef.isJSString() || !secondStringRef.isJSString()) {
+    ReportTrapError(cx, JSMSG_WASM_BAD_CAST);
+    return INT32_MAX;
+  }
+
+  int32_t result;
+  if (!CompareStrings(cx, firstStringRef.toJSString(),
+                      secondStringRef.toJSString(), &result)) {
+    MOZ_ASSERT(cx->isThrowingOutOfMemory());
+    return INT32_MAX;
+  }
+
+  if (result < 0) {
+    return -1;
+  }
+  if (result > 0) {
+    return 1;
+  }
+  return result;
 }
 
 //////////////////////////////////////////////////////////////////////////////

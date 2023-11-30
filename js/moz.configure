@@ -777,6 +777,7 @@ set_define("ENABLE_WASM_GC", wasm_gc)
 # Support for WebAssembly JS String Builtins
 # ==========================================
 
+
 @depends(milestone.is_nightly)
 def default_wasm_js_string_builtins(is_nightly):
     if is_nightly:
@@ -784,13 +785,13 @@ def default_wasm_js_string_builtins(is_nightly):
 
 
 option(
-    "--enable-wasm-js-string-builtins", default=default_wasm_js_string_builtins, help="{Enable|Disable} WebAssembly JS String Builtins"
+    "--enable-wasm-js-string-builtins",
+    default=default_wasm_js_string_builtins,
+    help="{Enable|Disable} WebAssembly JS String Builtins",
 )
 
 
-@depends(
-    "--enable-wasm-js-string-builtins", "--wasm-no-experimental"
-)
+@depends("--enable-wasm-js-string-builtins", "--wasm-no-experimental")
 def wasm_js_string_builtins(value, no_experimental):
     if no_experimental or not value:
         return

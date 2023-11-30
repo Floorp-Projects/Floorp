@@ -1,0 +1,1 @@
+|jit-test| --wasm-gc; --wasm-js-string-builtins; test-also=--wasm-compiler=optimizing; include:wasm.js

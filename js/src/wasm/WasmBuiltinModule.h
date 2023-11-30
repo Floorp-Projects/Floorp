@@ -19,17 +19,45 @@
 #ifndef wasm_builtin_module_h
 #define wasm_builtin_module_h
 
+#include "mozilla/EnumeratedArray.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Span.h"
 
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCompileArgs.h"
 #include "wasm/WasmConstants.h"
+#include "wasm/WasmSerialize.h"
 #include "wasm/WasmTypeDecls.h"
 #include "wasm/WasmTypeDef.h"
 
 namespace js {
 namespace wasm {
+
+struct MOZ_STACK_CLASS BuiltinModuleInstances {
+  explicit BuiltinModuleInstances(JSContext* cx)
+      : selfTest(cx), intGemm(cx), jsString(cx) {}
+
+  Rooted<JSObject*> selfTest;
+  Rooted<JSObject*> intGemm;
+  Rooted<JSObject*> jsString;
+
+  MutableHandle<JSObject*> operator[](BuiltinModuleId module) {
+    switch (module) {
+      case BuiltinModuleId::SelfTest: {
+        return &selfTest;
+      }
+      case BuiltinModuleId::IntGemm: {
+        return &intGemm;
+      }
+      case BuiltinModuleId::JSString: {
+        return &jsString;
+      }
+      default: {
+        MOZ_CRASH();
+      }
+    }
+  }
+};
 
 // An builtin module func is a natively implemented function that may be
 // compiled into a 'builtin module', which may be instantiated with a provided
@@ -55,11 +83,20 @@ struct BuiltinModuleFunc {
   static const BuiltinModuleFunc& getFromId(BuiltinModuleFuncId id);
 };
 
-// Compile and return the builtin module for a given set of operations.
-bool CompileBuiltinModule(JSContext* cx,
-                          const mozilla::Span<BuiltinModuleFuncId> ids,
-                          mozilla::Maybe<Shareable> memory,
+Maybe<BuiltinModuleId> ImportMatchesBuiltinModule(
+    mozilla::Span<const char> importName, BuiltinModuleIds enabledBuiltins);
+Maybe<const BuiltinModuleFunc*> ImportMatchesBuiltinModuleFunc(
+    mozilla::Span<const char> importName, BuiltinModuleId module);
+
+// Compile and return the builtin module for a particular
+// builtin module.
+bool CompileBuiltinModule(JSContext* cx, BuiltinModuleId module,
                           MutableHandle<WasmModuleObject*> result);
+
+// Compile, instantiate and return the builtin module instance for a particular
+// builtin module.
+bool InstantiateBuiltinModule(JSContext* cx, BuiltinModuleId module,
+                              MutableHandle<JSObject*> result);
 
 }  // namespace wasm
 }  // namespace js

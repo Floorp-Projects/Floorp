@@ -2140,8 +2140,8 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
     return d.fail("expected valid import module name");
   }
 
-  CacheableName funcName;
-  if (!DecodeName(d, &funcName)) {
+  CacheableName fieldName;
+  if (!DecodeName(d, &fieldName)) {
     return d.fail("expected valid import field name");
   }
 
@@ -2221,8 +2221,78 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       return d.fail("unsupported import kind");
   }
 
-  return env->imports.emplaceBack(std::move(moduleName), std::move(funcName),
+  return env->imports.emplaceBack(std::move(moduleName), std::move(fieldName),
                                   importKind);
+}
+
+static bool CheckImportsAgainstBuiltinModules(Decoder& d,
+                                              ModuleEnvironment* env) {
+  const BuiltinModuleIds& builtinModules = env->features.builtinModules;
+
+  // Skip this pass if there are no builtin modules enabled
+  if (builtinModules.hasNone()) {
+    return true;
+  }
+
+  // Allocate a type context for builtin types so we can canonicalize them
+  // and use them in type comparisons
+  RefPtr<TypeContext> builtinTypes = js_new<TypeContext>();
+  if (!builtinTypes) {
+    return false;
+  }
+
+  uint32_t importFuncIndex = 0;
+  for (auto& import : env->imports) {
+    Maybe<BuiltinModuleId> builtinModule =
+        ImportMatchesBuiltinModule(import.module.utf8Bytes(), builtinModules);
+
+    switch (import.kind) {
+      case DefinitionKind::Function: {
+        const FuncDesc& func = env->funcs[importFuncIndex];
+        importFuncIndex += 1;
+
+        // Skip this import if it doesn't refer to a builtin module. We do have
+        // to increment the import function index regardless though.
+        if (!builtinModule) {
+          continue;
+        }
+
+        // Check if this import refers to a builtin module function
+        Maybe<const BuiltinModuleFunc*> builtinFunc =
+            ImportMatchesBuiltinModuleFunc(import.field.utf8Bytes(),
+                                           *builtinModule);
+        if (!builtinFunc) {
+          return d.fail("unrecognized builtin module field");
+        }
+
+        // Get a canonicalized type definition for this builtin so we can
+        // accurately compare it against the import type.
+        FuncType builtinFuncType;
+        if (!(*builtinFunc)->funcType(&builtinFuncType)) {
+          return false;
+        }
+        if (!builtinTypes->addType(builtinFuncType)) {
+          return false;
+        }
+        const TypeDef& builtinTypeDef =
+            builtinTypes->type(builtinTypes->length() - 1);
+
+        const TypeDef& importTypeDef = (*env->types)[func.typeIndex];
+        if (!TypeDef::isSubTypeOf(&builtinTypeDef, &importTypeDef)) {
+          return d.failf("type mismatch in %s", (*builtinFunc)->exportName);
+        }
+        break;
+      }
+      default: {
+        if (!builtinModule) {
+          continue;
+        }
+        return d.fail("unrecognized builtin import");
+      }
+    }
+  }
+
+  return true;
 }
 
 static bool DecodeImportSection(Decoder& d, ModuleEnvironment* env) {
@@ -2853,6 +2923,12 @@ bool wasm::DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env) {
   }
 
   if (!DecodeImportSection(d, env)) {
+    return false;
+  }
+
+  // Eagerly check imports for future link errors against any known builtin
+  // module.
+  if (!CheckImportsAgainstBuiltinModules(d, env)) {
     return false;
   }
 

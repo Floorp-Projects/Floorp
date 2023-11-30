@@ -491,6 +491,7 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   bool empty() const { return length() == 0; }
 
   inline bool getChar(JSContext* cx, size_t index, char16_t* code);
+  inline bool getCodePoint(JSContext* cx, size_t index, char32_t* codePoint);
 
   /* Strings have either Latin1 or TwoByte chars. */
   bool hasLatin1Chars() const { return flags() & LATIN1_CHARS_BIT; }
@@ -1834,6 +1835,34 @@ MOZ_ALWAYS_INLINE bool JSString::getChar(JSContext* cx, size_t index,
   }
 
   *code = str->asLinear().latin1OrTwoByteChar(index);
+  return true;
+}
+
+MOZ_ALWAYS_INLINE bool JSString::getCodePoint(JSContext* cx, size_t index,
+                                              char32_t* code) {
+  // C++ implementation of https://tc39.es/ecma262/#sec-codepointat
+  size_t size = length();
+  MOZ_ASSERT(index < size);
+
+  char16_t first;
+  if (!getChar(cx, index, &first)) {
+    return false;
+  }
+  if (!js::unicode::IsLeadSurrogate(first) || index + 1 == size) {
+    *code = first;
+    return true;
+  }
+
+  char16_t second;
+  if (!getChar(cx, index + 1, &second)) {
+    return false;
+  }
+  if (!js::unicode::IsTrailSurrogate(second)) {
+    *code = first;
+    return true;
+  }
+
+  *code = js::unicode::UTF16Decode(first, second);
   return true;
 }
 

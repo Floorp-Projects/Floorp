@@ -163,6 +163,7 @@ enum class SymbolicAddress {
 enum class FailureMode : uint8_t {
   Infallible,
   FailOnNegI32,
+  FailOnMaxI32,
   FailOnNullPtr,
   FailOnInvalidRef
 };

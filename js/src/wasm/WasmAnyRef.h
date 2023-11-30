@@ -357,7 +357,9 @@ class WrappedPtrOperations<wasm::AnyRef, Wrapper> {
   bool isNull() const { return value().isNull(); }
   bool isI31() const { return value().isI31(); }
   bool isJSObject() const { return value().isJSObject(); }
+  bool isJSString() const { return value().isJSString(); }
   JSObject& toJSObject() const { return value().toJSObject(); }
+  JSString* toJSString() const { return value().toJSString(); }
 };
 
 // If the Value is a GC pointer type, call |f| with the pointer cast to that

@@ -5482,6 +5482,10 @@ CodeOffset MacroAssembler::wasmCallBuiltinInstanceMethod(
       case wasm::FailureMode::FailOnNegI32:
         branchTest32(Assembler::NotSigned, ReturnReg, ReturnReg, &noTrap);
         break;
+      case wasm::FailureMode::FailOnMaxI32:
+        branchPtr(Assembler::NotEqual, ReturnReg, ImmWord(uintptr_t(INT32_MAX)),
+                  &noTrap);
+        break;
       case wasm::FailureMode::FailOnNullPtr:
         branchTestPtr(Assembler::NonZero, ReturnReg, ReturnReg, &noTrap);
         break;
