@@ -7,9 +7,6 @@ set -vex
 
 . ./updatebot-version.sh # Get UPDATEBOT_REVISION
 
-# If you edit this, be sure to edit fetch/updatebot.yml
-export SQLPROXY_REVISION=fb1939ab92846761595833361c6b0b0ecd543861
-
 export DEBIAN_FRONTEND=noninteractive
 
 # Update apt-get lists
@@ -19,6 +16,7 @@ apt-get update -y
 apt-get install -y --no-install-recommends \
     arcanist \
     ca-certificates \
+    cloudsql-proxy \
     curl \
     ed \
     golang-go \
@@ -58,13 +56,6 @@ npm ci --legacy-peer-deps
 # be much faster than a new clone each time.
 cd /builds/worker/
 git clone https://github.com/v8/v8.git
-
-# Build Google's Cloud SQL Proxy from source
-cd /builds/worker/
-mkdir cloud_sql_proxy
-cd cloud_sql_proxy
-go mod init cloud_sql_proxy
-go get github.com/GoogleCloudPlatform/cloudsql-proxy/cmd/cloud_sql_proxy@$SQLPROXY_REVISION
 
 # Check out source code
 cd /builds/worker/

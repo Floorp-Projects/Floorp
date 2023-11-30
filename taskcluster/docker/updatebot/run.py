@@ -153,7 +153,7 @@ with open("sql-proxy-key", "w") as proxy_key_file:
 
 instance_name = sql_proxy_config["instance-name"]
 if platform.system() == "Linux":
-    sql_proxy_command = "/builds/worker/go/bin/cloud_sql_proxy"
+    sql_proxy_command = "cloud_sql_proxy"
 else:
     sql_proxy_command = os.path.join(UPDATEBOT_PATH, "..", "cloud_sql_proxy.exe")
 
