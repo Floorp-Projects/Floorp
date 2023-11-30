@@ -59,8 +59,8 @@ class LegacyWorkersWatcher {
     //   line 37: NetworkError: WorkerDebuggerGlobalScope.loadSubScript: Failed to load worker script at resource://devtools/shared/worker/loader.js (nsresult = 0x805e0006)
     return (
       workerTarget.isDedicatedWorker &&
-      !workerTarget.url.startsWith(
-        "resource://gre/modules/subprocess/subprocess_worker"
+      !/resource:\/\/gre\/modules\/subprocess\/subprocess_.*\.worker\.js/.test(
+        workerTarget.url
       )
     );
   }
