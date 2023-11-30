@@ -17,8 +17,4 @@ CFLAGS += [
 
 # Use OS_LIBS instead of LDFLAGS to "force" the flag to come after -pie
 # from MOZ_PROGRAM_LDFLAGS.
-if CONFIG["CC_TYPE"] == "clang":
-    # clang < 5.0 doesn't support -no-pie.
-    OS_LIBS += ["-nopie"]
-else:
-    OS_LIBS += ["-no-pie"]
+OS_LIBS += ["-no-pie"]
