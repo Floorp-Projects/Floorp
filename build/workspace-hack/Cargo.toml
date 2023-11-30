@@ -50,6 +50,7 @@ uuid = { version = "1", features = ["serde", "v4"], optional = true }
 
 [target."cfg(windows)".dependencies]
 scopeguard = { version = "1", optional = true }
+windows-sys = { version = "0.48", features = ["Win32_System_Com", "Win32_System_Memory", "Win32_System_SystemServices", "Win32_System_Threading"], optional = true }
 
 [build-dependencies]
 bindgen = { version = "0.69", default-features = false, features = ["runtime"], optional = true }
@@ -158,10 +159,10 @@ features = [
 
 [features]
 builtins-static = ["dep:bindgen", "dep:bitflags", "dep:memchr", "dep:nom", "dep:regex", "dep:smallvec"]
-geckodriver = ["dep:bitflags", "dep:bytes", "dep:cc", "dep:chrono", "dep:flate2", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:hyper", "dep:indexmap", "dep:log", "dep:memchr", "dep:mio", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:semver", "dep:serde_json", "dep:smallvec", "dep:time", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:url", "dep:uuid"]
-gkrust = ["dep:arrayvec", "dep:bindgen", "dep:bitflags", "dep:bytes", "dep:cc", "dep:chrono", "dep:env_logger", "dep:flate2", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:memchr", "dep:nom", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:scopeguard", "dep:semver", "dep:serde_json", "dep:smallvec", "dep:time", "dep:url", "dep:uuid"]
+geckodriver = ["dep:bitflags", "dep:bytes", "dep:cc", "dep:chrono", "dep:flate2", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:hyper", "dep:indexmap", "dep:log", "dep:memchr", "dep:mio", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:semver", "dep:serde_json", "dep:smallvec", "dep:time", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:url", "dep:uuid", "dep:windows-sys"]
+gkrust = ["dep:arrayvec", "dep:bindgen", "dep:bitflags", "dep:bytes", "dep:cc", "dep:chrono", "dep:env_logger", "dep:flate2", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:memchr", "dep:nom", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:scopeguard", "dep:semver", "dep:serde_json", "dep:smallvec", "dep:time", "dep:url", "dep:uuid", "dep:windows-sys"]
 gkrust-gtest = ["gkrust"]
-http3server = ["dep:arrayvec", "dep:bindgen", "dep:bitflags", "dep:bytes", "dep:chrono", "dep:env_logger", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:hyper", "dep:indexmap", "dep:log", "dep:memchr", "dep:mio", "dep:nom", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:serde_json", "dep:smallvec", "dep:time", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:url"]
+http3server = ["dep:arrayvec", "dep:bindgen", "dep:bitflags", "dep:bytes", "dep:chrono", "dep:env_logger", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:hyper", "dep:indexmap", "dep:log", "dep:memchr", "dep:mio", "dep:nom", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:serde_json", "dep:smallvec", "dep:time", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:url", "dep:windows-sys"]
 ipcclientcerts-static = ["dep:bindgen", "dep:bitflags", "dep:memchr", "dep:nom", "dep:regex"]
 jsrust = ["dep:arrayvec", "dep:cc", "dep:env_logger", "dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:memchr", "dep:num-traits", "dep:once_cell", "dep:semver", "dep:smallvec", "dep:url"]
 mozwer_s = ["dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:once_cell", "dep:serde_json", "dep:uuid"]

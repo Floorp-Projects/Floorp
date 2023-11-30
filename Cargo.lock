@@ -3674,6 +3674,7 @@ dependencies = [
  "url",
  "uuid",
  "winapi",
+ "windows-sys",
 ]
 
 [[package]]
