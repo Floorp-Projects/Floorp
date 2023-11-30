@@ -687,10 +687,36 @@ class GitRepository(Repository):
     def head_ref(self):
         return self._run("rev-parse", "HEAD").strip()
 
+    def get_mozilla_upstream_remote(self) -> Optional[str]:
+        """Return the Mozilla-official upstream remote for this repo."""
+        out = self._run("remote", "-v")
+        if not out:
+            return None
+
+        remotes = out.splitlines()
+        if not remotes:
+            return None
+
+        # Prefer mozilla-unified, then find any other official-looking remote next.
+        for upstream in ("hg.mozilla.org/mozilla-unified", "hg.mozilla.org"):
+            for line in remotes:
+                name, url, action = line.split()
+
+                if upstream in url:
+                    return name
+
+        return None
+
+
     @property
     def base_ref(self):
+        official_remote = self.get_mozilla_upstream_remote()
+
+        # Limit remotes to official Firefox repos where possible.
+        remote_arg = f"--remotes={official_remote}" if official_remote else "--remotes"
+
         refs = self._run(
-            "rev-list", "HEAD", "--topo-order", "--boundary", "--not", "--remotes"
+            "rev-list", "HEAD", "--topo-order", "--boundary", "--not", remote_arg
         ).splitlines()
         if refs:
             return refs[-1][1:]  # boundary starts with a prefix `-`
