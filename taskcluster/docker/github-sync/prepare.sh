@@ -28,4 +28,4 @@ apt-get install -y \
     python3-setuptools
 
 # Python packages
-pip3 install -r "$1"
+pip3 install --break-system-packages -r "$1"
