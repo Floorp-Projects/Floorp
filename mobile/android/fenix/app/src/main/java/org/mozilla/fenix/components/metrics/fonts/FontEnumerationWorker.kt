@@ -18,13 +18,12 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mozilla.components.service.glean.private.CommonMetricData
-import mozilla.components.service.glean.private.Lifetime
-import mozilla.components.service.glean.private.TextMetricType
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.GleanMetrics.Metrics
+import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.ext.settings
 import java.io.File
 import java.util.Locale
@@ -49,19 +48,8 @@ class FontEnumerationWorker(
             return@withContext Result.retry()
         }
 
-        // We only want to get one submission per user, so set lifetime=Ping,
-        // And the value will be only set once (when this WorkRequest is run)
-        val fontList =
-            TextMetricType(
-                CommonMetricData(
-                    category = "metrics",
-                    name = "font_list_json",
-                    sendInPings = listOf("font-list"),
-                    lifetime = Lifetime.PING,
-                    disabled = false,
-                ),
-            )
-        fontList.set(s)
+        Metrics.fontListJson.set(s)
+        Pings.fontList.submit()
 
         // To avoid getting multiple submissions from new installs, set directly
         // to the desired number of submissions
