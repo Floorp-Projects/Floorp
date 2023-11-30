@@ -303,6 +303,7 @@ const PrecisionMetrics = {
   identity: {ULP: {float32: 0, float16: 0}},
   log: {ATOL: {float32: 1/1024, float16:  1/1024}},
   neg: {ULP: {float32: 0, float16: 0}},
+  reciprocal: {ULP: {float32: 2, float16: 2}},
   sin: {ATOL: {float32: 1/1024, float16: 1/512}},
   tan: {ATOL: {float32: 1/1024, float16: 1/512}},
   // End Element-wise unary operations
