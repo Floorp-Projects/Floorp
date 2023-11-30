@@ -632,7 +632,7 @@ const buildGemm = (operationName, builder, resources) => {
     } else {
       // MLOperand c;
       // Create a single-value operand when c is a scalar
-      gemmOptions.c = builder.constant(gemmOptions.c);
+      gemmOptions.c = builder.constant({dataType: 'float32', type: 'float32', dimensions: [1]}, new Float32Array([gemmOptions.c]));
     }
   }
   namedOutputOperand[resources.expected.name] = builder[operationName](inputOperandA, inputOperandB, gemmOptions);
