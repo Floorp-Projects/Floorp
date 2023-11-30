@@ -94,11 +94,13 @@ class PreloadService {
 
   void PreloadFont(nsIURI* aURI, const nsAString& aCrossOrigin,
                    const nsAString& aReferrerPolicy,
-                   uint64_t aEarlyHintPreloaderId);
+                   uint64_t aEarlyHintPreloaderId,
+                   const nsAString& aFetchPriority);
 
   void PreloadFetch(nsIURI* aURI, const nsAString& aCrossOrigin,
                     const nsAString& aReferrerPolicy,
-                    uint64_t aEarlyHintPreloaderId);
+                    uint64_t aEarlyHintPreloaderId,
+                    const nsAString& aFetchPriority);
 
   static void NotifyNodeEvent(nsINode* aNode, bool aSuccess);
 

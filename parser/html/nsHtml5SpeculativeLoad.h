@@ -95,7 +95,8 @@ class nsHtml5SpeculativeLoad {
   }
 
   inline void InitFont(nsHtml5String aUrl, nsHtml5String aCrossOrigin,
-                       nsHtml5String aMedia, nsHtml5String aReferrerPolicy) {
+                       nsHtml5String aMedia, nsHtml5String aReferrerPolicy,
+                       nsHtml5String aFetchPriority) {
     MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
                "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadFont;
@@ -108,12 +109,14 @@ class nsHtml5SpeculativeLoad {
     mReferrerPolicyOrIntegrity.Assign(
         nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(
             referrerPolicy));
+    aFetchPriority.ToString(mFetchPriority);
     // This can be only triggered by <link rel=preload type=font>
     mIsLinkPreload = true;
   }
 
   inline void InitFetch(nsHtml5String aUrl, nsHtml5String aCrossOrigin,
-                        nsHtml5String aMedia, nsHtml5String aReferrerPolicy) {
+                        nsHtml5String aMedia, nsHtml5String aReferrerPolicy,
+                        nsHtml5String aFetchPriority) {
     MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
                "Trying to reinitialize a speculative load!");
     mOpCode = eSpeculativeLoadFetch;
@@ -126,6 +129,7 @@ class nsHtml5SpeculativeLoad {
     mReferrerPolicyOrIntegrity.Assign(
         nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(
             referrerPolicy));
+    aFetchPriority.ToString(mFetchPriority);
 
     // This method can be only be triggered by <link rel=preload type=fetch>,
     // hence this operation is always a preload.

@@ -270,10 +270,12 @@ class nsHtml5TreeOpExecutor final
                             const nsAString& aType, const nsAString& aMedia);
 
   void PreloadFont(const nsAString& aURL, const nsAString& aCrossOrigin,
-                   const nsAString& aMedia, const nsAString& aReferrerPolicy);
+                   const nsAString& aMedia, const nsAString& aReferrerPolicy,
+                   const nsAString& aFetchPriority);
 
   void PreloadFetch(const nsAString& aURL, const nsAString& aCrossOrigin,
-                    const nsAString& aMedia, const nsAString& aReferrerPolicy);
+                    const nsAString& aMedia, const nsAString& aReferrerPolicy,
+                    const nsAString& aFetchPriority);
 
   void SetSpeculationBase(const nsAString& aURL);
 

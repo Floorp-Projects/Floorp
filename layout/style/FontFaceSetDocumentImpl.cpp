@@ -20,6 +20,7 @@
 #include "nsFontFaceLoader.h"
 #include "nsIDocShell.h"
 #include "nsINetworkPredictor.h"
+#include "nsISupportsPriority.h"
 #include "nsIWebNavigation.h"
 #include "nsPresContext.h"
 
@@ -285,7 +286,8 @@ nsresult FontFaceSetDocumentImpl::StartLoad(gfxUserFontEntry* aUserFontEntry,
     rv = FontLoaderUtils::BuildChannel(
         getter_AddRefs(channel), src.mURI->get(), CORS_ANONYMOUS,
         dom::ReferrerPolicy::_empty /* not used */, aUserFontEntry, &src,
-        mDocument, loadGroup, nullptr, false);
+        mDocument, loadGroup, nullptr, false,
+        nsISupportsPriority::PRIORITY_HIGH);
     NS_ENSURE_SUCCESS(rv, rv);
 
     fontLoader = new nsFontFaceLoader(aUserFontEntry, aSrcIndex, this, channel);
