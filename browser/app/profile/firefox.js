@@ -2500,8 +2500,6 @@ pref("devtools.inspector.imagePreviewTooltipSize", 300);
 pref("devtools.inspector.showUserAgentStyles", false);
 // Show native anonymous content and user agent shadow roots
 pref("devtools.inspector.showAllAnonymousContent", false);
-// Enable the compatibility tool in the inspector.
-pref("devtools.inspector.compatibility.enabled", true);
 // Enable overflow debugging in the inspector.
 pref("devtools.overflow.debugging.enabled", true);
 // Enable drag to edit properties in the inspector rule view.

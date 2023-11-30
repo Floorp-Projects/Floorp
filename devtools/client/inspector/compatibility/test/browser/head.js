@@ -20,8 +20,6 @@ const {
 
 async function openCompatibilityView() {
   info("Open the compatibility view");
-  await pushPref("devtools.inspector.compatibility.enabled", true);
-
   const { inspector } = await openInspectorSidebarTab("compatibilityview");
   await Promise.all([
     waitForUpdateSelectedNodeAction(inspector.store),

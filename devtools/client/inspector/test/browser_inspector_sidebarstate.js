@@ -58,9 +58,6 @@ add_task(async function () {
   const snapshot = Services.telemetry.snapshotEvents(ALL_CHANNELS, true);
   ok(!snapshot.parent, "No events have been logged for the main process");
 
-  // Enable the compatibility view explictly as this pref is enabled for only Nightly and DevEdition.
-  await pushPref("devtools.inspector.compatibility.enabled", true);
-
   let { inspector, toolbox } = await openInspectorForURL(TEST_URI);
 
   info("Selecting font inspector.");

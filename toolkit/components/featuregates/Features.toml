@@ -31,17 +31,6 @@ bug-numbers = [1539075]
 is-public = {default = false, nightly = true}
 default-value = false
 
-[devtools-compatibility-panel]
-title = "experimental-features-devtools-compatibility-panel"
-description = "experimental-features-devtools-compatibility-panel-description"
-description-links = {bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1584464"}
-restart-required = false
-preference = "devtools.inspector.compatibility.enabled"
-type = "boolean"
-bug-numbers = [1605154, 1605153]
-is-public = true
-default-value = true
-
 [cookie-samesite-none-requires-secure]
 title = "experimental-features-cookie-samesite-none-requires-secure2"
 description = "experimental-features-cookie-samesite-none-requires-secure2-description"
