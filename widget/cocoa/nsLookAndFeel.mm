@@ -47,7 +47,7 @@ void nsLookAndFeel::NativeInit() {
 
 static nscolor GetColorFromNSColor(NSColor* aColor) {
   NSColor* deviceColor =
-      [aColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
+      [aColor colorUsingColorSpace:[NSColorSpace deviceRGBColorSpace]];
   return NS_RGBA((unsigned int)(deviceColor.redComponent * 255.0),
                  (unsigned int)(deviceColor.greenComponent * 255.0),
                  (unsigned int)(deviceColor.blueComponent * 255.0),
@@ -57,7 +57,7 @@ static nscolor GetColorFromNSColor(NSColor* aColor) {
 static nscolor GetColorFromNSColorWithCustomAlpha(NSColor* aColor,
                                                   float alpha) {
   NSColor* deviceColor =
-      [aColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
+      [aColor colorUsingColorSpace:[NSColorSpace deviceRGBColorSpace]];
   return NS_RGBA((unsigned int)(deviceColor.redComponent * 255.0),
                  (unsigned int)(deviceColor.greenComponent * 255.0),
                  (unsigned int)(deviceColor.blueComponent * 255.0),
