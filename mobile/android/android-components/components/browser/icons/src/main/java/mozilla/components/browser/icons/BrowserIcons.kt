@@ -187,7 +187,7 @@ class BrowserIcons constructor(
      * Installs the "icons" extension in the engine in order to dynamically load icons for loaded websites.
      */
     fun install(engine: Engine, store: BrowserStore) {
-        engine.installWebExtension(
+        engine.installBuiltInWebExtension(
             id = "icons@mozac.org",
             url = "resource://android/assets/extensions/browser-icons/",
             onSuccess = { extension ->
@@ -195,7 +195,7 @@ class BrowserIcons constructor(
 
                 store.flowScoped { flow -> subscribeToUpdates(store, flow, extension) }
             },
-            onError = { _, throwable ->
+            onError = { throwable ->
                 Logger.error("Could not install browser-icons extension", throwable)
             },
         )

@@ -42,13 +42,13 @@ abstract class BaseSearchTelemetry {
         store: BrowserStore,
         extensionInfo: ExtensionInfo,
     ) {
-        engine.installWebExtension(
+        engine.installBuiltInWebExtension(
             id = extensionInfo.id,
             url = extensionInfo.resourceUrl,
             onSuccess = { extension ->
                 store.flowScoped { flow -> subscribeToUpdates(flow, extension, extensionInfo) }
             },
-            onError = { _, throwable ->
+            onError = { throwable ->
                 Logger.error("Could not install ${extensionInfo.id} extension", throwable)
             },
         )

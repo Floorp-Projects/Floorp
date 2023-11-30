@@ -62,8 +62,8 @@ class FxaWebChannelFeatureTest {
         webchannelFeature.start()
 
         val onSuccess = argumentCaptor<((WebExtension) -> Unit)>()
-        val onError = argumentCaptor<((String, Throwable) -> Unit)>()
-        verify(engine, times(1)).installWebExtension(
+        val onError = argumentCaptor<((Throwable) -> Unit)>()
+        verify(engine, times(1)).installBuiltInWebExtension(
             eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
             eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_URL),
             onSuccess.capture(),
@@ -74,7 +74,7 @@ class FxaWebChannelFeatureTest {
 
         // Already installed, should not try to install again.
         webchannelFeature.start()
-        verify(engine, times(1)).installWebExtension(
+        verify(engine, times(1)).installBuiltInWebExtension(
             eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID),
             eq(FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_URL),
             any(),

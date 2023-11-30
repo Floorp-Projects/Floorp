@@ -881,11 +881,11 @@ class GeckoEngineTest {
         val result = GeckoResult<GeckoWebExtension>()
 
         whenever(extensionController.ensureBuiltIn(extUrl, extId)).thenReturn(result)
-        engine.installWebExtension(
+        engine.installBuiltInWebExtension(
             extId,
             extUrl,
             onSuccess = { onSuccessCalled = true },
-            onError = { _, _ -> onErrorCalled = true },
+            onError = { _ -> onErrorCalled = true },
         )
         result.complete(mockNativeWebExtension(extId, extUrl))
 
@@ -916,10 +916,9 @@ class GeckoEngineTest {
 
         whenever(extensionController.install(any())).thenReturn(result)
         engine.installWebExtension(
-            extId,
             extUrl,
             onSuccess = { onSuccessCalled = true },
-            onError = { _, _ -> onErrorCalled = true },
+            onError = { _ -> onErrorCalled = true },
         )
         result.complete(mockNativeWebExtension(extId, extUrl))
 
@@ -948,7 +947,7 @@ class GeckoEngineTest {
 
         var throwable: Throwable? = null
         whenever(extensionController.ensureBuiltIn(extUrl, extId)).thenReturn(result)
-        engine.installWebExtension(extId, extUrl) { _, e ->
+        engine.installBuiltInWebExtension(extId, extUrl) { e ->
             onErrorCalled = true
             throwable = e
         }
@@ -963,7 +962,6 @@ class GeckoEngineTest {
     @Test
     fun `install external web extension failure`() {
         val runtime = mock<GeckoRuntime>()
-        val extId = "test-webext"
         val extUrl = "https://addons.mozilla.org/firefox/downloads/file/123/some_web_ext.xpi"
 
         val extensionController: WebExtensionController = mock()
@@ -976,7 +974,7 @@ class GeckoEngineTest {
 
         var throwable: Throwable? = null
         whenever(extensionController.install(any())).thenReturn(result)
-        engine.installWebExtension(extId, extUrl) { _, e ->
+        engine.installWebExtension(extUrl) { e ->
             onErrorCalled = true
             throwable = e
         }
@@ -986,6 +984,18 @@ class GeckoEngineTest {
 
         assertTrue(onErrorCalled)
         assertTrue(throwable is GeckoWebExtensionException)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `installWebExtension should throw when a resource URL is passed`() {
+        val engine = GeckoEngine(context, runtime = mock())
+        engine.installWebExtension("resource://android/assets/extensions/test")
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `installBuiltInWebExtension should throw when a non-resource URL is passed`() {
+        val engine = GeckoEngine(context, runtime = mock())
+        engine.installBuiltInWebExtension(id = "id", url = "https://addons.mozilla.org/1/some_web_ext.xpi")
     }
 
     @Test
@@ -1076,7 +1086,7 @@ class GeckoEngineTest {
         val extUrl = "resource://android/assets/extensions/test"
         val result = GeckoResult<GeckoWebExtension>()
         whenever(webExtensionController.ensureBuiltIn(extUrl, extId)).thenReturn(result)
-        engine.installWebExtension(extId, extUrl)
+        engine.installBuiltInWebExtension(extId, extUrl)
         result.complete(mockNativeWebExtension(extId, extUrl))
 
         shadowOf(getMainLooper()).idle()
@@ -1101,7 +1111,7 @@ class GeckoEngineTest {
         val extUrl = "https://addons.mozilla.org/firefox/downloads/123/some_web_ext.xpi"
         val result = GeckoResult<GeckoWebExtension>()
         whenever(webExtensionController.install(any())).thenReturn(result)
-        engine.installWebExtension(extId, extUrl)
+        engine.installWebExtension(extUrl)
         result.complete(mockNativeWebExtension(extId, extUrl))
 
         shadowOf(getMainLooper()).idle()
@@ -1336,7 +1346,7 @@ class GeckoEngineTest {
 
         val result = GeckoResult<GeckoWebExtension>()
         whenever(extensionController.ensureBuiltIn(extUrl, extId)).thenReturn(result)
-        engine.installWebExtension(extId, extUrl)
+        engine.installBuiltInWebExtension(extId, extUrl)
         val extension = mockNativeWebExtension(extId, extUrl)
         result.complete(extension)
 
@@ -1372,7 +1382,7 @@ class GeckoEngineTest {
 
         val result = GeckoResult<GeckoWebExtension>()
         whenever(extensionController.ensureBuiltIn(extUrl, extId)).thenReturn(result)
-        engine.installWebExtension(extId, extUrl)
+        engine.installBuiltInWebExtension(extId, extUrl)
         val extension = mockNativeWebExtension(extId, extUrl)
         result.complete(extension)
 
@@ -1408,7 +1418,7 @@ class GeckoEngineTest {
 
         val result = GeckoResult<GeckoWebExtension>()
         whenever(extensionController.ensureBuiltIn(extUrl, extId)).thenReturn(result)
-        engine.installWebExtension(extId, extUrl)
+        engine.installBuiltInWebExtension(extId, extUrl)
         val extension = mockNativeWebExtension(extId, extUrl)
         result.complete(extension)
 
@@ -1440,7 +1450,7 @@ class GeckoEngineTest {
 
         val result = GeckoResult<GeckoWebExtension>()
         whenever(extensionController.install(any())).thenReturn(result)
-        engine.installWebExtension(extId, extUrl)
+        engine.installWebExtension(extUrl)
         val extension = mockNativeWebExtension(extId, extUrl)
         result.complete(extension)
 
@@ -1476,7 +1486,7 @@ class GeckoEngineTest {
 
         val result = GeckoResult<GeckoWebExtension>()
         whenever(extensionController.install(any())).thenReturn(result)
-        engine.installWebExtension(extId, extUrl)
+        engine.installWebExtension(extUrl)
         val extension = mockNativeWebExtension(extId, extUrl)
         result.complete(extension)
 
@@ -1512,7 +1522,7 @@ class GeckoEngineTest {
 
         val result = GeckoResult<GeckoWebExtension>()
         whenever(extensionController.install(any())).thenReturn(result)
-        engine.installWebExtension(extId, extUrl)
+        engine.installWebExtension(extUrl)
         val extension = mockNativeWebExtension(extId, extUrl)
         result.complete(extension)
 

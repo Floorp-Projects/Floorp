@@ -75,8 +75,8 @@ class ReaderViewFeatureTest {
         readerViewFeature.start()
 
         val onSuccess = argumentCaptor<((WebExtension) -> Unit)>()
-        val onError = argumentCaptor<((String, Throwable) -> Unit)>()
-        verify(engine, times(1)).installWebExtension(
+        val onError = argumentCaptor<((Throwable) -> Unit)>()
+        verify(engine, times(1)).installBuiltInWebExtension(
             eq(ReaderViewFeature.READER_VIEW_EXTENSION_ID),
             eq(ReaderViewFeature.READER_VIEW_EXTENSION_URL),
             onSuccess.capture(),
@@ -87,7 +87,7 @@ class ReaderViewFeatureTest {
 
         // Already installed, should not try to install again.
         readerViewFeature.start()
-        verify(engine, times(1)).installWebExtension(
+        verify(engine, times(1)).installBuiltInWebExtension(
             eq(ReaderViewFeature.READER_VIEW_EXTENSION_ID),
             eq(ReaderViewFeature.READER_VIEW_EXTENSION_URL),
             any(),
@@ -124,8 +124,8 @@ class ReaderViewFeatureTest {
         readerViewFeature.start()
 
         val onSuccess = argumentCaptor<((WebExtension) -> Unit)>()
-        val onError = argumentCaptor<((String, Throwable) -> Unit)>()
-        verify(engine, times(1)).installWebExtension(
+        val onError = argumentCaptor<((Throwable) -> Unit)>()
+        verify(engine, times(1)).installBuiltInWebExtension(
             eq(ReaderViewFeature.READER_VIEW_EXTENSION_ID),
             eq(ReaderViewFeature.READER_VIEW_EXTENSION_URL),
             onSuccess.capture(),

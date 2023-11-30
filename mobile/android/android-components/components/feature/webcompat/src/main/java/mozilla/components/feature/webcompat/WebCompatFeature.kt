@@ -20,14 +20,14 @@ object WebCompatFeature {
      * Installs the web extension in the runtime through the WebExtensionRuntime install method
      */
     fun install(runtime: WebExtensionRuntime) {
-        runtime.installWebExtension(
+        runtime.installBuiltInWebExtension(
             WEBCOMPAT_EXTENSION_ID,
             WEBCOMPAT_EXTENSION_URL,
             onSuccess = {
                 logger.debug("Installed WebCompat webextension: ${it.id}")
             },
-            onError = { ext, throwable ->
-                logger.error("Failed to install WebCompat webextension: $ext", throwable)
+            onError = { throwable ->
+                logger.error("Failed to install WebCompat webextension", throwable)
             },
         )
     }

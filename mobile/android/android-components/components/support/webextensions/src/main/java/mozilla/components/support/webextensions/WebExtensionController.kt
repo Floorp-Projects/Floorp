@@ -51,7 +51,7 @@ class WebExtensionController(
     ) {
         val installedExtension = installedExtensions[extensionId]
         if (installedExtension == null) {
-            runtime.installWebExtension(
+            runtime.installBuiltInWebExtension(
                 extensionId,
                 extensionUrl,
                 onSuccess = {
@@ -63,8 +63,8 @@ class WebExtensionController(
                         onSuccess(it)
                     }
                 },
-                onError = { ext, throwable ->
-                    logger.error("Failed to install extension: $ext", throwable)
+                onError = { throwable ->
+                    logger.error("Failed to install extension: $extensionId", throwable)
                     onError(throwable)
                 },
             )

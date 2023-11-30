@@ -49,7 +49,7 @@ class BaseSearchTelemetryTest {
 
         baseTelemetry.installWebExtension(engine, store, extensionInfo)
 
-        verify(engine).installWebExtension(
+        verify(engine).installBuiltInWebExtension(
             id = eq(id),
             url = eq(resourceUrl),
             onSuccess = any(),

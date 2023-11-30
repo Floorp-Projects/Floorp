@@ -43,8 +43,8 @@ class WebExtensionControllerTest {
         controller.install(engine, onSuccess = { onSuccessInvoked = true }, onError = { onErrorInvoked = true })
 
         val onSuccess = argumentCaptor<((WebExtension) -> Unit)>()
-        val onError = argumentCaptor<((String, Throwable) -> Unit)>()
-        verify(engine, times(1)).installWebExtension(
+        val onError = argumentCaptor<((Throwable) -> Unit)>()
+        verify(engine, times(1)).installBuiltInWebExtension(
             eq(extensionId),
             eq(extensionUrl),
             onSuccess.capture(),
@@ -58,14 +58,14 @@ class WebExtensionControllerTest {
         assertTrue(WebExtensionController.installedExtensions.containsKey(extensionId))
 
         controller.install(engine)
-        verify(engine, times(1)).installWebExtension(
+        verify(engine, times(1)).installBuiltInWebExtension(
             eq(extensionId),
             eq(extensionUrl),
             onSuccess.capture(),
             onError.capture(),
         )
 
-        onError.value.invoke("", mock())
+        onError.value.invoke(mock())
         assertTrue(onErrorInvoked)
     }
 
@@ -80,8 +80,8 @@ class WebExtensionControllerTest {
         controller.install(engine, onSuccess = { onSuccessInvoked = true }, onError = { onErrorInvoked = true })
 
         val onSuccess = argumentCaptor<((WebExtension) -> Unit)>()
-        val onError = argumentCaptor<((String, Throwable) -> Unit)>()
-        verify(engine, never()).installWebExtension(
+        val onError = argumentCaptor<((Throwable) -> Unit)>()
+        verify(engine, never()).installBuiltInWebExtension(
             eq(extensionId),
             eq(extensionUrl),
             onSuccess.capture(),
@@ -110,8 +110,8 @@ class WebExtensionControllerTest {
         controller.install(engine)
 
         val onSuccess = argumentCaptor<((WebExtension) -> Unit)>()
-        val onError = argumentCaptor<((String, Throwable) -> Unit)>()
-        verify(engine, times(1)).installWebExtension(
+        val onError = argumentCaptor<((Throwable) -> Unit)>()
+        verify(engine, times(1)).installBuiltInWebExtension(
             eq(extensionId),
             eq(extensionUrl),
             onSuccess.capture(),
@@ -167,8 +167,8 @@ class WebExtensionControllerTest {
         controller.install(engine)
 
         val onSuccess = argumentCaptor<((WebExtension) -> Unit)>()
-        val onError = argumentCaptor<((String, Throwable) -> Unit)>()
-        verify(engine, times(1)).installWebExtension(
+        val onError = argumentCaptor<((Throwable) -> Unit)>()
+        verify(engine, times(1)).installBuiltInWebExtension(
             eq(extensionId),
             eq(extensionUrl),
             onSuccess.capture(),

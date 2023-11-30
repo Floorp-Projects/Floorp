@@ -31,13 +31,13 @@ class Components(private val applicationContext: Context) : DefaultComponents(ap
 
     override val engine: Engine by lazy {
         GeckoEngine(applicationContext, engineSettings, runtime).also {
-            it.installWebExtension("borderify@mozac.org", "resource://android/assets/extensions/borderify/") {
-                    ext, throwable ->
-                Log.log(Log.Priority.ERROR, "SampleBrowser", throwable, "Failed to install $ext")
+            it.installBuiltInWebExtension("borderify@mozac.org", "resource://android/assets/extensions/borderify/") {
+                    throwable ->
+                Log.log(Log.Priority.ERROR, "SampleBrowser", throwable, "Failed to install borderify")
             }
-            it.installWebExtension("testext@mozac.org", "resource://android/assets/extensions/test/") {
-                    ext, throwable ->
-                Log.log(Log.Priority.ERROR, "SampleBrowser", throwable, "Failed to install $ext")
+            it.installBuiltInWebExtension("testext@mozac.org", "resource://android/assets/extensions/test/") {
+                    throwable ->
+                Log.log(Log.Priority.ERROR, "SampleBrowser", throwable, "Failed to install testext")
             }
             WebCompatFeature.install(it)
             WebCompatReporterFeature.install(it)

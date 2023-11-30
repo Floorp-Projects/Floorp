@@ -69,7 +69,12 @@ class EngineTest {
     @Test
     fun `invokes error callback if webextensions not supported`() {
         var exception: Throwable? = null
-        testEngine.installWebExtension("my-ext", "resource://path", onError = { _, e -> exception = e })
+        testEngine.installWebExtension("resource://path", onError = { e -> exception = e })
+        assertNotNull(exception)
+        assertTrue(exception is UnsupportedOperationException)
+
+        exception = null
+        testEngine.installBuiltInWebExtension("a-built-in", "resource://path", onError = { e -> exception = e })
         assertNotNull(exception)
         assertTrue(exception is UnsupportedOperationException)
 

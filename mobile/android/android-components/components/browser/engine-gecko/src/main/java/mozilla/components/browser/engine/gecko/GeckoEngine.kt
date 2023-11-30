@@ -225,40 +225,29 @@ class GeckoEngine(
     }
 
     /**
-     * See [Engine.installWebExtension].
+     * See [Engine.installBuiltInWebExtension].
      */
-    override fun installWebExtension(
+    override fun installBuiltInWebExtension(
         id: String,
         url: String,
         onSuccess: ((WebExtension) -> Unit),
-        onError: ((String, Throwable) -> Unit),
+        onError: ((Throwable) -> Unit),
     ): CancellableOperation {
-        return if (url.isResourceUrl()) {
-            val geckoResult = runtime.webExtensionController.ensureBuiltIn(url, id).apply {
-                then(
-                    {
-                        onExtensionInstalled(it!!, onSuccess)
-                        GeckoResult<Void>()
-                    },
-                    { throwable ->
-                        onError(
-                            id,
-                            GeckoWebExtensionException.createWebExtensionException(throwable),
-                        )
-                        GeckoResult<Void>()
-                    },
-                )
-            }
-            geckoResult.asCancellableOperation()
-        } else {
-            this.installWebExtension(
-                url,
-                onSuccess,
-                onError = { throwable ->
-                    onError(id, throwable)
+        require(url.isResourceUrl()) { "url should be a resource url" }
+
+        val geckoResult = runtime.webExtensionController.ensureBuiltIn(url, id).apply {
+            then(
+                {
+                    onExtensionInstalled(it!!, onSuccess)
+                    GeckoResult<Void>()
+                },
+                { throwable ->
+                    onError(GeckoWebExtensionException.createWebExtensionException(throwable))
+                    GeckoResult<Void>()
                 },
             )
         }
+        return geckoResult.asCancellableOperation()
     }
 
     /**
@@ -269,6 +258,8 @@ class GeckoEngine(
         onSuccess: ((WebExtension) -> Unit),
         onError: ((Throwable) -> Unit),
     ): CancellableOperation {
+        require(!url.isResourceUrl()) { "url shouldn't be a resource url" }
+
         val geckoResult = runtime.webExtensionController.install(url).apply {
             then(
                 {
