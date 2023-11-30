@@ -1,0 +1,152 @@
+[DEFAULT]
+head = "head_crashreporter.js"
+skip-if = [
+  "os == 'android'",
+  "os == 'win' && msix", # https://bugzilla.mozilla.org/show_bug.cgi?id=1807922
+]
+support-files = [
+  "crasher_subprocess_head.js",
+  "crasher_subprocess_tail.js",
+]
+
+["test_crash_AsyncShutdown.js"]
+
+["test_crash_abort.js"]
+skip-if = ["os == 'win'"]
+
+["test_crash_after_js_large_allocation_failure.js"]
+
+["test_crash_after_js_large_allocation_failure_reporting.js"]
+
+["test_crash_after_js_oom_recovered.js"]
+
+["test_crash_after_js_oom_reported.js"]
+
+["test_crash_after_js_oom_reported_2.js"]
+
+["test_crash_backgroundtask_moz_crash.js"]
+
+["test_crash_exc_guard.js"]
+run-if = ["os == 'mac'"]
+reason = "Test covering macOS-specific crash type"
+
+["test_crash_heap_corruption.js"]
+run-if = ["os == 'win'"]
+reason = "Test covering Windows-specific crash type"
+run-sequentially = "very high failure rate in parallel"
+
+["test_crash_modules.js"]
+run-if = ["os == 'win'"]
+reason = "Test covering Windows-specific module handling"
+run-sequentially = "very high failure rate in parallel"
+
+["test_crash_moz_crash.js"]
+
+["test_crash_oom.js"]
+
+["test_crash_purevirtual.js"]
+
+["test_crash_rust_panic.js"]
+
+["test_crash_rust_panic_multiline.js"]
+
+["test_crash_stack_overflow.js"]
+skip-if = ["os != 'linux'"]
+reason = "Still broken on macOS and not yet supported on Windows"
+
+["test_crash_terminator.js"]
+
+["test_crash_uncaught_exception.js"]
+
+["test_crash_win64cfi_alloc_large.js"]
+head = "head_crashreporter.js head_win64cfi.js"
+run-if = ["os == 'win' && bits == 64 && processor == 'x86_64'"]
+reason = "Windows test specific to the x86-64 architecture"
+
+["test_crash_win64cfi_alloc_small.js"]
+head = "head_crashreporter.js head_win64cfi.js"
+run-if = ["os == 'win' && bits == 64 && processor == 'x86_64'"]
+reason = "Windows test specific to the x86-64 architecture"
+
+["test_crash_win64cfi_epilog.js"]
+head = "head_crashreporter.js head_win64cfi.js"
+run-if = ["os == 'win' && bits == 64 && processor == 'x86_64'"]
+reason = "Windows test specific to the x86-64 architecture"
+
+["test_crash_win64cfi_infinite_code_chain.js"]
+head = "head_crashreporter.js head_win64cfi.js"
+run-if = ["os == 'win' && bits == 64 && processor == 'x86_64'"]
+reason = "Windows test specific to the x86-64 architecture"
+support-files = ["test_crash_win64cfi_infinite_code_chain.exe"]
+
+["test_crash_win64cfi_infinite_entry_chain.js"]
+head = "head_crashreporter.js head_win64cfi.js"
+run-if = ["os == 'win' && bits == 64 && processor == 'x86_64'"]
+reason = "Windows test specific to the x86-64 architecture"
+support-files = ["test_crash_win64cfi_infinite_entry_chain.exe"]
+
+["test_crash_win64cfi_invalid_exception_rva.js"]
+head = "head_crashreporter.js head_win64cfi.js"
+run-if = ["os == 'win' && bits == 64 && processor == 'x86_64'"]
+reason = "Windows test specific to the x86-64 architecture"
+support-files = ["test_crash_win64cfi_invalid_exception_rva.exe"]
+
+["test_crash_win64cfi_not_a_pe.js"]
+head = "head_crashreporter.js head_win64cfi.js"
+run-if = ["os == 'win' && bits == 64 && processor == 'x86_64'"]
+reason = "Windows test specific to the x86-64 architecture"
+support-files = ["test_crash_win64cfi_not_a_pe.exe"]
+
+["test_crash_win64cfi_push_nonvol.js"]
+head = "head_crashreporter.js head_win64cfi.js"
+run-if = ["os == 'win' && bits == 64 && processor == 'x86_64'"]
+reason = "Windows test specific to the x86-64 architecture"
+
+["test_crash_win64cfi_save_nonvol.js"]
+head = "head_crashreporter.js head_win64cfi.js"
+run-if = ["os == 'win' && bits == 64 && processor == 'x86_64'"]
+reason = "Windows test specific to the x86-64 architecture"
+
+["test_crash_win64cfi_save_nonvol_far.js"]
+head = "head_crashreporter.js head_win64cfi.js"
+run-if = ["os == 'win' && bits == 64 && processor == 'x86_64'"]
+reason = "Windows test specific to the x86-64 architecture"
+
+["test_crash_win64cfi_save_xmm128.js"]
+head = "head_crashreporter.js head_win64cfi.js"
+run-if = ["os == 'win' && bits == 64 && processor == 'x86_64'"]
+reason = "Windows test specific to the x86-64 architecture"
+
+["test_crash_win64cfi_save_xmm128_far.js"]
+head = "head_crashreporter.js head_win64cfi.js"
+run-if = ["os == 'win' && bits == 64 && processor == 'x86_64'"]
+reason = "Windows test specific to the x86-64 architecture"
+
+["test_crash_win64cfi_unknown_op.js"]
+head = "head_crashreporter.js head_win64cfi.js"
+run-if = ["os == 'win' && bits == 64 && processor == 'x86_64'"]
+reason = "Windows test specific to the x86-64 architecture"
+
+["test_crash_with_memory_report.js"]
+
+["test_crashreporter.js"]
+
+["test_crashreporter_appmem.js"]
+# we need to skip this due to bug 838613
+skip-if = [
+  "os != 'win' && os != 'linux'",
+  "os=='linux' && bits==32",
+]
+
+["test_crashreporter_crash.js"]
+run-sequentially = "very high failure rate in parallel"
+
+["test_event_files.js"]
+
+["test_kill.js"]
+
+["test_oom_annotation.js"]
+run-sequentially = "very high failure rate in parallel"
+
+["test_override_exception_handler.js"]
+skip-if = ["os != 'win'"]

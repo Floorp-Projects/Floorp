@@ -33,7 +33,7 @@ UNIFIED_SOURCES += [
 
 FINAL_LIBRARY = "xul"
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
 
 # Platform-specific implementations of `ProcInfo`.

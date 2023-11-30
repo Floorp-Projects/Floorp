@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Form Manager")
 
 MOCHITEST_MANIFESTS += ["test/mochitest.toml"]
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.toml"]
 BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
 
 XPIDL_SOURCES += [

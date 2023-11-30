@@ -1,0 +1,210 @@
+[DEFAULT]
+head = "head_bookmarks.js"
+firefox-appdir = "browser"
+prefs = ["places.loglevel='All'"]
+support-files = [
+  "bookmarks.corrupt.html",
+  "bookmarks.json",
+  "bookmarks_corrupt.json",
+  "bookmarks.preplaces.html",
+  "bookmarks_html_localized.html",
+  "bookmarks_html_singleframe.html",
+  "bookmarks_iconuri.json",
+  "mobile_bookmarks_folder_import.json",
+  "mobile_bookmarks_folder_merge.json",
+  "mobile_bookmarks_multiple_folders.json",
+  "mobile_bookmarks_root_import.json",
+  "mobile_bookmarks_root_merge.json",
+]
+
+["test_1085291.js"]
+
+["test_1105208.js"]
+
+["test_1105866.js"]
+
+["test_1606731.js"]
+
+["test_331487.js"]
+
+["test_384370.js"]
+
+["test_385397.js"]
+
+["test_399266.js"]
+skip-if = ["os == 'linux'"] # Bug 821781
+
+["test_402799.js"]
+
+["test_412132.js"]
+
+["test_415460.js"]
+
+["test_415757.js"]
+
+["test_419792_node_tags_property.js"]
+
+["test_425563.js"]
+
+["test_429505_remove_shortcuts.js"]
+
+["test_433317_query_title_update.js"]
+
+["test_433525_hasChildren_crash.js"]
+
+["test_454977.js"]
+
+["test_463863.js"]
+
+["test_485442_crash_bug_nsNavHistoryQuery_GetUri.js"]
+
+["test_486978_sort_by_date_queries.js"]
+
+["test_536081.js"]
+
+["test_PlacesDBUtils_removeOldCorruptDBs.js"]
+
+["test_PlacesQuery_history.js"]
+
+["test_PlacesUtils_isRootItem.js"]
+
+["test_PlacesUtils_unwrapNodes_place.js"]
+
+["test_asyncExecuteLegacyQueries.js"]
+
+["test_async_transactions.js"]
+
+["test_autocomplete_match_fallbackTitle.js"]
+
+["test_bookmark-tags-changed_frequency.js"]
+
+["test_bookmarks_html.js"]
+
+["test_bookmarks_html_corrupt.js"]
+
+["test_bookmarks_html_escape_entities.js"]
+
+["test_bookmarks_html_import_tags.js"]
+
+["test_bookmarks_html_localized.js"]
+
+["test_bookmarks_html_singleframe.js"]
+
+["test_bookmarks_json.js"]
+
+["test_bookmarks_json_corrupt.js"]
+
+["test_bookmarks_restore_notification.js"]
+
+["test_broken_folderShortcut_result.js"]
+
+["test_browserhistory.js"]
+
+["test_childlessTags.js"]
+
+["test_frecency_decay.js"]
+
+["test_frecency_observers.js"]
+
+["test_frecency_origins_alternative.js"]
+
+["test_frecency_origins_recalc.js"]
+prefs = ["places.frecency.origins.alternative.featureGate=true"]
+
+["test_frecency_pages_alternative.js"]
+prefs = ["places.frecency.pages.alternative.featureGate=true"]
+
+["test_frecency_pages_recalc_alt.js"]
+prefs = ["places.frecency.pages.alternative.featureGate=true"]
+
+["test_frecency_recalc_triggers.js"]
+
+["test_frecency_recalculator.js"]
+
+["test_frecency_unvisited_bookmark.js"]
+
+["test_frecency_zero_updated.js"]
+
+["test_getChildIndex.js"]
+
+["test_get_query_param_sql_function.js"]
+
+["test_hash.js"]
+
+["test_history.js"]
+
+["test_history_clear.js"]
+
+["test_history_notifications.js"]
+
+["test_history_observer.js"]
+
+["test_history_sidebar.js"]
+
+["test_import_mobile_bookmarks.js"]
+
+["test_isPageInDB.js"]
+
+["test_isURIVisited.js"]
+
+["test_isvisited.js"]
+
+["test_keywords.js"]
+
+["test_lastModified.js"]
+
+["test_markpageas.js"]
+
+["test_metadata.js"]
+
+["test_missing_builtin_folders.js"]
+
+["test_missing_root_folder.js"]
+
+["test_multi_observation.js"]
+
+["test_multi_word_tags.js"]
+
+["test_nested_notifications.js"]
+
+["test_nsINavHistoryViewer.js"]
+
+["test_null_interfaces.js"]
+
+["test_origins.js"]
+
+["test_origins_parsing.js"]
+
+["test_pageGuid_bookmarkGuid.js"]
+
+["test_placeURIs.js"]
+
+["test_promiseBookmarksTree.js"]
+
+["test_resolveNullBookmarkTitles.js"]
+
+["test_result_sort.js"]
+
+["test_resultsAsVisit_details.js"]
+
+["test_sql_function_origin.js"]
+
+["test_sql_guid_functions.js"]
+
+["test_tag_autocomplete_search.js"]
+
+["test_tagging.js"]
+
+["test_telemetry.js"]
+
+["test_update_frecency_after_delete.js"]
+
+["test_utils_backups_create.js"]
+
+["test_utils_backups_hasRecent.js"]
+
+["test_utils_getURLsForContainerNode.js"]
+
+["test_utils_timeConversion.js"]
+
+["test_visitsInDB.js"]

@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Startup and Profile System")
 
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.toml"]
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]
 
 XPIDL_MODULE = "toolkit_xulstore"
 

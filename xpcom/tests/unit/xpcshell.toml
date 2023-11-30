@@ -1,0 +1,113 @@
+[DEFAULT]
+head = "head_xpcom.js"
+support-files = [
+  "data/**",
+  "xpcomtest.xpt",
+]
+generated-files = "xpcomtest.xpt"
+
+["test_bug121341.js"]
+
+["test_bug325418.js"]
+
+["test_bug332389.js"]
+
+["test_bug333505.js"]
+
+["test_bug364285-1.js"]
+
+["test_bug374754.js"]
+
+["test_bug476919.js"]
+# Creating a symlink requires admin or developer mode on Windows.
+skip-if = ["os == 'win'"]
+# Bug 676998: test fails consistently on Android
+fail-if = ["os == 'android'"]
+
+["test_bug478086.js"]
+
+["test_bug745466.js"]
+skip-if = ["os == 'win'"]
+# Bug 676998: test fails consistently on Android
+fail-if = ["os == 'android'"]
+
+["test_bug1434856.js"]
+
+["test_console_service_callFunctionAndLogException.js"]
+
+["test_debugger_malloc_size_of.js"]
+
+["test_file_createUnique.js"]
+
+["test_file_equality.js"]
+
+["test_file_renameTo.js"]
+
+["test_getTimers.js"]
+skip-if = ["os == 'android'"]
+
+["test_hidden_files.js"]
+
+["test_home.js"]
+# Bug 676998: test fails consistently on Android
+fail-if = ["os == 'android'"]
+
+["test_iniParser.js"]
+
+["test_ioutil.js"]
+
+["test_localfile.js"]
+
+["test_mac_bundle.js"]
+
+["test_mac_xattrs.js"]
+run-if = ["os == 'mac'"]
+
+["test_notxpcom_scriptable.js"]
+
+["test_nsIMutableArray.js"]
+
+["test_nsIProcess.js"]
+skip-if = [
+  "os == 'win'", # Bug 1325609
+  "os == 'linux'", # Bug 676998
+  "os == 'android'", # Bug 1631671
+]
+
+["test_nsIProcess_stress.js"]
+skip-if = [
+  "os == 'win'", # bug 676412, test isn't needed on windows and runs really slowly
+  "ccov", # bug 1394989
+]
+
+["test_pipe.js"]
+
+["test_process_directives.js"]
+
+["test_process_directives_child.js"]
+skip-if = ["os == 'android'"]
+
+["test_seek_multiplex.js"]
+
+["test_storagestream.js"]
+
+["test_streams.js"]
+
+["test_stringstream.js"]
+
+["test_symlinks.js"]
+# Creating a symlink requires admin or developer mode on Windows.
+skip-if = ["os == 'win'"]
+# Bug 676998: test fails consistently on Android
+fail-if = ["os == 'android'"]
+
+["test_systemInfo.js"]
+
+["test_versioncomparator.js"]
+skip-if = ["os == 'win' && asan"] # Bug 1763002
+
+["test_windows_cmdline_file.js"]
+run-if = ["os == 'win'"]
+
+["test_windows_registry.js"]
+run-if = ["os == 'win'"]

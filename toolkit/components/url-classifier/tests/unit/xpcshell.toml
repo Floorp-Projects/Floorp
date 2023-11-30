@@ -1,0 +1,56 @@
+[DEFAULT]
+head = "head_urlclassifier.js"
+tags = "condprof"
+skip-if = ["os == 'android'"]
+support-files = ["data/**"]
+
+["test_addsub.js"]
+
+["test_backoff.js"]
+
+["test_bug1274685_unowned_list.js"]
+
+["test_canonicalization.js"]
+
+["test_channelClassifierService.js"]
+
+["test_dbservice.js"]
+skip-if = ["condprof"]  # Bug 1769828
+
+["test_digest256.js"]
+run-sequentially = "very high failure rate in parallel"
+
+["test_exceptionListService.js"]
+tags = "remote-settings"
+
+["test_features.js"]
+
+["test_hashcompleter.js"]
+
+["test_hashcompleter_v4.js"]
+
+["test_listmanager.js"]
+run-sequentially = "very high failure rate in parallel"
+
+["test_malwaretable_pref.js"]
+
+["test_partial.js"]
+
+["test_platform_specific_threats.js"]
+
+["test_pref.js"]
+
+["test_prefixset.js"]
+
+["test_provider_url.js"]
+
+["test_rsListService.js"]
+tags = "remote-settings"
+
+["test_safebrowsing_protobuf.js"]
+
+["test_shouldclassify.js"]
+
+["test_streamupdater.js"]
+
+["test_threat_type_conversion.js"]

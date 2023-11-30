@@ -1,0 +1,181 @@
+[DEFAULT]
+tags = "appupdate"
+head = "head_update.js"
+skip-if = ["os == 'win' && (ccov || msix)"] # Our updater is disabled in MSIX builds
+support-files = [
+  "../data/shared.js",
+  "../data/sharedUpdateXML.js",
+  "../data/xpcshellUtilsAUS.js",
+]
+
+["invalidArgCallbackFileNotInInstallDirFailure.js"]
+
+["invalidArgCallbackFilePathTooLongFailure.js"]
+
+["invalidArgInstallDirPathTooLongFailure.js"]
+
+["invalidArgInstallDirPathTraversalFailure.js"]
+
+["invalidArgInstallWorkingDirPathNotSameFailure_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["invalidArgPatchDirPathTraversalFailure.js"]
+
+["invalidArgStageDirNotInInstallDirFailure_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["invalidArgWorkingDirPathLocalUNCFailure_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["invalidArgWorkingDirPathRelativeFailure.js"]
+
+["marAppApplyDirLockedStageFailure_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marAppApplyUpdateAppBinInUseStageSuccess_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marAppApplyUpdateSkippedWriteAccess_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marAppApplyUpdateStageOldVersionFailure.js"]
+
+["marAppApplyUpdateStageSuccess.js"]
+skip-if = [
+  "apple_silicon",  # bug 1707753
+  "apple_catalina", # Bug 1713329
+]
+
+["marAppApplyUpdateSuccess.js"]
+skip-if = ["apple_silicon"]  # bug 1724579
+
+["marAppInUseBackgroundTaskFailure_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marAppInUseStageFailureComplete_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marAppInUseStageSuccessComplete_unix.js"]
+run-if = ["os != 'win'"] # not a Windows test
+skip-if = [
+  "apple_silicon",  # bug 1707753
+  "apple_catalina", # Bug 1713329
+]
+
+["marAppInUseSuccessComplete.js"]
+
+["marCallbackAppStageSuccessComplete_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marCallbackAppStageSuccessPartial_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marCallbackAppSuccessComplete_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marCallbackAppSuccessPartial_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marCallbackUmask_unix.js"]
+run-if = ["os != 'win'"]  # not a Windows test
+reason = "Unix only test"
+
+["marFailurePartial.js"]
+
+["marFileInUseStageFailureComplete_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marFileInUseStageFailurePartial_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marFileInUseSuccessComplete_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marFileInUseSuccessPartial_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marFileLockedFailureComplete_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marFileLockedFailurePartial_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marFileLockedStageFailureComplete_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marFileLockedStageFailurePartial_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marMissingUpdateSettings.js"]
+
+["marMissingUpdateSettingsStage.js"]
+
+["marPIDPersistsSuccessComplete_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marRMRFDirFileInUseStageFailureComplete_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marRMRFDirFileInUseStageFailurePartial_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marRMRFDirFileInUseSuccessComplete_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marRMRFDirFileInUseSuccessPartial_win.js"]
+run-if = ["os == 'win'"]
+reason = "Windows only test"
+
+["marStageFailurePartial.js"]
+
+["marStageSuccessComplete.js"]
+skip-if = [
+  "apple_silicon",  # bug 1707753
+  "apple_catalina", # Bug 1713329
+]
+
+["marStageSuccessPartial.js"]
+skip-if = [
+  "apple_silicon",  # bug 1707753
+  "apple_catalina", # Bug 1713329
+]
+
+["marSuccessComplete.js"]
+
+["marSuccessPartial.js"]
+
+["marSuccessPartialWhileBackgroundTaskRunning.js"]
+skip-if = [
+  "apple_silicon",  # Bug 1754931
+  "apple_catalina", # Bug 1754931
+]
+
+["marVersionDowngrade.js"]
+
+["marWrongChannel.js"]
+
+["marWrongChannelStage.js"]

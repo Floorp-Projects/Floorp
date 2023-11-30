@@ -33,7 +33,7 @@ SimplePrograms(test_progs)
 
 USE_LIBS += ["mozglue"]
 
-XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.toml"]
 
 if CONFIG["COMPILE_ENVIRONMENT"]:
     TEST_HARNESS_FILES.xpcshell.xpcom.tests.unit += [

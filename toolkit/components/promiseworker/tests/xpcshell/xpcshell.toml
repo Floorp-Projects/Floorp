@@ -1,0 +1,12 @@
+[DEFAULT]
+head = ""
+skip-if = ["os == 'android'"]
+support-files = [
+  "data/worker.js",
+  "data/worker.mjs",
+  "data/chrome.manifest",
+]
+
+["test_Promise.js"]
+
+["test_PromiseESM.js"]

@@ -1,0 +1,24 @@
+[DEFAULT]
+run-sequentially = "very high failure rate in parallel"
+head = ""
+skip-if = ["os == 'android'"]
+support-files = [
+  "!/toolkit/crashreporter/test/unit/crasher_subprocess_head.js",
+  "!/toolkit/crashreporter/test/unit/crasher_subprocess_tail.js",
+  "!/toolkit/crashreporter/test/unit/head_crashreporter.js",
+]
+
+["test_content_annotation.js"]
+
+["test_content_exception_time_annotation.js"]
+
+["test_content_large_annotation.js"]
+
+["test_content_memory_list.js"]
+skip-if = ["os != 'win'"]
+
+["test_content_oom_annotation.js"]
+
+["test_content_rust_panic.js"]
+
+["test_content_rust_panic_multiline.js"]

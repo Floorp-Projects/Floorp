@@ -1,0 +1,15 @@
+[DEFAULT]
+run-if = [
+  "os == 'linux'",
+  "os == 'win'",
+]
+headless = true
+
+["test_headless.js"]
+skip-if = ["appname == 'thunderbird'"]
+support-files = [
+  "headless.html",
+  "headless_button.html",
+]
+
+["test_headless_clipboard.js"]

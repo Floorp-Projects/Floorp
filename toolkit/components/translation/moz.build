@@ -11,4 +11,4 @@ EXTRA_JS_MODULES.translation = [
     "LanguageDetector.sys.mjs",
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.toml"]

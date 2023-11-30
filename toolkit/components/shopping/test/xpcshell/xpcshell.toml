@@ -1,0 +1,38 @@
+[DEFAULT]
+head = "head.js"
+prefs = [
+  "toolkit.shopping.environment='test'",
+  "toolkit.shopping.ohttpConfigURL=''",
+  "toolkit.shopping.ohttpRelayURL=''",
+]
+
+support-files = [
+  "data/analysis_response.json",
+  "data/recommendations_response.json",
+  "data/invalid_analysis_response.json",
+  "data/invalid_recommendations_response.json",
+  "data/analysis_request.json",
+  "data/recommendations_request.json",
+  "data/invalid_analysis_request.json",
+  "data/invalid_recommendations_request.json",
+  "data/service_unavailable.json",
+  "data/bad_request.json",
+  "data/unprocessable_entity.json",
+  "data/needs_analysis_response.json",
+  "data/attribution_response.json",
+  "data/image.jpg",
+  "data/report_response.json",
+  "data/analysis_status_completed_response.json",
+  "data/analysis_status_in_progress_response.json",
+  "data/analysis_status_pending_response.json",
+  "data/analyze_pending.json",
+  "data/too_many_requests.json",
+]
+
+["test_fetchImage.js"]
+
+["test_product.js"]
+
+["test_product_urls.js"]
+
+["test_product_validator.js"]

@@ -14,7 +14,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
 
 MOCHITEST_MANIFESTS += ["test/mochitest.toml"]
 BROWSER_CHROME_MANIFESTS += ["test/browser.toml"]
-XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell.toml"]
 MARIONETTE_UNIT_MANIFESTS += ["test/marionette/marionette.ini"]
 
 XPIDL_SOURCES += [

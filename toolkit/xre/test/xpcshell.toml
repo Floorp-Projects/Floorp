@@ -1,0 +1,16 @@
+[DEFAULT]
+tags = "native"
+
+["test_install_hash.js"]
+# Android doesn't ship Subprocess.sys.mjs and debug builds output garbage that the
+# test cannot handle.
+skip-if = [
+  "os == 'android'",
+  "debug",
+]
+support-files = ["show_hash.js"]
+
+["test_launch_without_hang.js"]
+run-sequentially = "Has to launch application binary"
+skip-if = ["os == 'android'"]
+requesttimeoutfactor = 2

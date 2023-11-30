@@ -1,0 +1,11 @@
+[DEFAULT]
+# This directory is for tests for the legacy, sync APIs as somewhere to put them
+# until we remove the APIs themselves.
+head = "head_legacy.js"
+firefox-appdir = "browser"
+
+["test_bookmarks.js"]
+
+["test_bookmarks_setNullTitle.js"]
+
+["test_protectRoots.js"]
