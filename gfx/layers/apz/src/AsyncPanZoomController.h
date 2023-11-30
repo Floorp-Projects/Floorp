@@ -1300,13 +1300,6 @@ class AsyncPanZoomController {
   void AdvanceToNextSample();
 
   /**
-   * Returns whether we have changes to the scroll offsets which need to be
-   * sampled in the next couple of frames (it depends on how many offsets we
-   * have, currently it's two).
-   */
-  bool HavePendingFrameDelayedOffset() const;
-
-  /**
    * Samples the composited async transform, storing the result into
    * mSampledState. This will make the result of
    * |GetCurrentAsyncTransform(eForCompositing)| and similar functions reflect

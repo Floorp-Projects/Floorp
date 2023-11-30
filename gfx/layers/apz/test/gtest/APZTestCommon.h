@@ -248,11 +248,6 @@ class TestAPZCTreeManager : public APZCTreeManager {
    **/
   void CancelAnimation() { EXPECT_TRUE(false); }
 
-  bool AdvanceAnimations(const SampleTime& aSampleTime) {
-    MutexAutoLock lock(mMapLock);
-    return AdvanceAnimationsInternal(lock, aSampleTime);
-  }
-
   APZEventResult ReceiveInputEvent(
       InputData& aEvent,
       InputBlockCallback&& aCallback = InputBlockCallback()) override {
