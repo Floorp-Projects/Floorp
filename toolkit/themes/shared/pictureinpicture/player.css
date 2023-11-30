@@ -36,6 +36,20 @@ body:fullscreen {
   overflow: hidden;
 }
 
+.seethrough-mode {
+  background: transparent;
+
+  .player-holder {
+    will-change: opacity, filter;
+    transition: opacity 160ms linear, filter 160ms linear;
+
+    body:hover:not(:fullscreen) & {
+      opacity: 0.35;
+      filter: blur(8px);
+    }
+  }
+}
+
 browser {
   flex: 1;
 }

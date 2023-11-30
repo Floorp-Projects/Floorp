@@ -27,6 +27,8 @@ const TEXT_TRACK_FONT_SIZE_PREF =
   "media.videocontrols.picture-in-picture.display-text-tracks.size";
 const IMPROVED_CONTROLS_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.improved-video-controls.enabled";
+const SEETHROUGH_MODE_ENABLED_PREF =
+  "media.videocontrols.picture-in-picture.seethrough-mode.enabled";
 
 // Time to fade the Picture-in-Picture video controls after first opening.
 const CONTROLS_FADE_TIMEOUT_MS = 3000;
@@ -334,6 +336,11 @@ let Player = {
       document.querySelector(`#${fontSize}`).checked = "true";
     } else {
       document.querySelector("#medium").checked = "true";
+    }
+
+    // In see-through mode the PiP window is made semi-transparent on hover.
+    if (Services.prefs.getBoolPref(SEETHROUGH_MODE_ENABLED_PREF, false)) {
+      document.documentElement.classList.add("seethrough-mode");
     }
 
     this._isInitialized = true;

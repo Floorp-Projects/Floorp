@@ -1231,8 +1231,12 @@ TransparencyMode nsCocoaWindow::GetTransparencyMode() {
 void nsCocoaWindow::SetTransparencyMode(TransparencyMode aMode) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
-  // Only respect calls for popup windows.
-  if (!mWindow || mWindowType != WindowType::Popup) {
+  // Only respect calls for popup windows and always-on-top dialogs.
+  // We don't want to enable transparency for all dialogs, as it breaks some
+  // system dialogs like the profile selection (and possibly some extensions).
+  BOOL isAlwaysOnTopDialog =
+      (mWindowType == WindowType::Dialog && mAlwaysOnTop);
+  if (!mWindow || (mWindowType != WindowType::Popup && !isAlwaysOnTopDialog)) {
     return;
   }
 

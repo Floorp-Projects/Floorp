@@ -11566,8 +11566,7 @@ void PresShell::SyncWindowProperties(bool aSync) {
     widget::TransparencyMode mode = nsLayoutUtils::GetFrameTransparency(
         canvas ? canvas : rootFrame, rootFrame);
     StyleWindowShadow shadow = rootFrame->StyleUIReset()->mWindowShadow;
-    nsCOMPtr<nsIWidget> viewWidget = view->GetWidget();
-    viewWidget->SetTransparencyMode(mode);
+    windowWidget->SetTransparencyMode(mode);
     windowWidget->SetWindowShadowStyle(shadow);
 
     // For macOS, apply color scheme overrides to the top level window widget.
