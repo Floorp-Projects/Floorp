@@ -618,6 +618,13 @@ pocket:
           The id from the Pocket API response that returned the recommendation.
           Like "{61934fe5-fbb0-4f4e-b9dd-7eab5f6ee9cd}".
         type: string
+      tile_id: &pocket_tile_id
+        description: >
+          A content identifier.
+          For organic Pocket recommendations it is an opaque id produced by
+          Pocket's recommendation systems.
+          For sponsored Pocket content it is Kevel's "ad ID".
+        type: quantity
     send_in_pings:
       - newtab
 
@@ -649,6 +656,7 @@ pocket:
       is_sponsored: *is_sponsored_pocket
       position: *pocket_position
       recommendation_id: *recommendation_id
+      tile_id: *pocket_tile_id
     send_in_pings:
       - newtab
 
@@ -681,6 +689,7 @@ pocket:
       is_sponsored: *is_sponsored_pocket
       position: *pocket_position
       recommendation_id: *recommendation_id
+      tile_id: *pocket_tile_id
     send_in_pings:
       - newtab
 
