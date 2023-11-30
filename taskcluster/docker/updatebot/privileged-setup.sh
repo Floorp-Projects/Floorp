@@ -27,6 +27,7 @@ apt-get install -y --no-install-recommends \
     python3-minimal \
     python3-wheel \
     python3-pip \
+    python3-poetry \
     python3-venv \
     python3-requests \
     python3-requests-unixsocket \
@@ -75,8 +76,5 @@ git checkout "$UPDATEBOT_REVISION"
 cd /builds/worker/
 chown -R worker:worker .
 chown -R worker:worker .*
-
-python3 -m pip install -U pip
-python3 -m pip install poetry==1.2.2
 
 rm -rf /setup
