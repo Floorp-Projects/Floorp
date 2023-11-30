@@ -338,7 +338,7 @@
     {
       "login": false,
       "name": "imgur",
-      "test_url": "https://imgur.com/gallery/m5tYJL6",
+      "test_url": "https://imgur.com/gallery/uTI7fKy",
       "inject_deterministic": false,
       "dismiss_cookie_prompt": [
         [
@@ -346,7 +346,7 @@
           "/html/body/div[1]/div/div/div/div[2]/div/button[2]"
         ]
       ],
-      "secondary_url": "https://imgur.com/gallery/rCXZUil",
+      "secondary_url": "https://imgur.com/gallery/WuOobqV",
       "preferences": {
         "media.autoplay.default": 5,
         "media.autoplay.ask-permission": true,
