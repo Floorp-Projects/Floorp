@@ -2851,6 +2851,8 @@ pref("browser.firefox-view.view-count", 0);
 pref("browser.firefox-view.max-history-rows", 300);
 // Enables search functionality in Firefox View.
 pref("browser.firefox-view.search.enabled", false);
+// Enables virtual list functionality in Firefox View.
+pref("browser.firefox-view.virtual-list.enabled", false);
 
 // If the user has seen the pdf.js feature tour this value reflects the tour
 // message id, the id of the last screen they saw, and whether they completed the tour
