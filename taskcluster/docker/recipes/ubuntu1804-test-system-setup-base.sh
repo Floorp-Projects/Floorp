@@ -159,14 +159,4 @@ rm -rf /usr/share/locale/   /usr/share/locale-langpack/     /usr/share/locales/
 # Further cleanup
 apt-get autoremove
 
-# We've changed python3 to use 3.7, but binary modules are only installed for
-# the distribution's default which is 3.6. Symlink a module we need for 3.7.
-ln -s /usr/lib/python3/dist-packages/gi/_gi.cpython-{36m,37m}-x86_64-linux-gnu.so
-
-# The packaged version of pyatspi is not compatible with Python 3.7. Hack it to
-# be compatible, since there's no package for 3.7 in this distribution.
-# Specifically, rename variables named "async" to "asynchronous", since "async"
-# is a reserved keyword in Python 3.7.
-sed -i 's/\basync\b/asynchronous/' /usr/lib/python3/dist-packages/pyatspi/registry.py
-
 rm -f "$0"

@@ -41,6 +41,34 @@ ub18-python-psutil:
             apt-get install python3.7-dev python3.7-dbg &&
             export DEBPYTHON3_SUPPORTED="3.7"
 
+ub18-pygobject:
+    description: "pygobject for Ubuntu bionic"
+    treeherder:
+        symbol: Ub18(pygobject)
+    run:
+        dsc:
+            url: http://archive.ubuntu.com/ubuntu/pool/main/p/pygobject/pygobject_3.26.1-2ubuntu1.dsc
+            sha256: b77f84885d9b6d2c03422ecb3bf69d50dd0607d3456154943671e5a1f87946aa
+        name: pygobject
+        pre-build-command: >-
+            apt-get install python3.7-dev python3.7-dbg &&
+            export DEBPYTHON3_SUPPORTED="3.6,3.7"
+
+ub18-pyatspi:
+    description: "pyatspi for Ubuntu bionic"
+    treeherder:
+        symbol: Ub18(pyatspi)
+    run:
+        dsc:
+            url: http://archive.ubuntu.com/ubuntu/pool/main/p/pyatspi/pyatspi_2.26.0+dfsg-1.dsc
+            sha256: 83c57052b055c0e2ee8307e3467d069de859db6c362137be01d142e085026826
+        name: pyatspi
+        pre-build-command: >-
+            sed -i s/\\basync\\b/asynchronous/ pyatspi/registry.py &&
+            EDITOR=cat dpkg-source --commit . sync &&
+            apt-get install python3.7-dev python3.7-dbg &&
+            export DEBPYTHON3_SUPPORTED="3.6,3.7"
+
 ub18-python-zstandard:
     description: "python-zstandard for Ubuntu bionic"
     treeherder:
