@@ -1,0 +1,36 @@
+From: Michael Froman <mfroman@mozilla.com>
+Date: Thu, 30 Nov 2023 11:59:00 -0600
+Subject: Bug 1867099 - Cherry-pick upstream libwebrtc commit 5f78ed6eaf - only
+ updates a comment.
+
+Upstream commit: https://webrtc.googlesource.com/src/+/5f78ed6eafa40451b61747978d134afda42ca4d6
+       Minor change in comment for use of an IGraphicsCaptureSession3 API
+
+       Makes it more clear that a certain API is only supported in Windows 11.
+
+       Bug: webrtc:15451
+       Change-Id: Ic3abfb2cbf0e30f9cb722ac843876f41279bf200
+       Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/323161
+       Reviewed-by: Alexander Cooper <alcooper@chromium.org>
+       Commit-Queue: Henrik Andreassson <henrika@webrtc.org>
+       Cr-Commit-Position: refs/heads/main@{#40931}
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f88616ffaff5074d90963348ef0bc511b48a1c6d
+---
+ modules/desktop_capture/win/wgc_capture_session.cc | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/modules/desktop_capture/win/wgc_capture_session.cc b/modules/desktop_capture/win/wgc_capture_session.cc
+index e220e4f4f8..827f257717 100644
+--- a/modules/desktop_capture/win/wgc_capture_session.cc
++++ b/modules/desktop_capture/win/wgc_capture_session.cc
+@@ -190,8 +190,8 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
+   // By default, the WGC capture API adds a yellow border around the captured
+   // window or display to indicate that a capture is in progress. The section
+   // below is an attempt to remove this yellow border to make the capture
+-  // experience more inline with the DXGI capture path. The QueryInterface call
+-  // will silently fail on Windows versions lower than 2104 (10.0.20348.0).
++  // experience more inline with the DXGI capture path.
++  // This requires 10.0.20348.0 or later, which practically means Windows 11.
+   ComPtr<ABI::Windows::Graphics::Capture::IGraphicsCaptureSession3> session3;
+   if (SUCCEEDED(session_->QueryInterface(
+           ABI::Windows::Graphics::Capture::IID_IGraphicsCaptureSession3,
