@@ -6521,6 +6521,10 @@
     type: RelaxedAtomicBool
     value: false
     mirror: always
+-   name: gfx.webrender.dcomp-video-swap-chain-present-interval-0
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 -   name: gfx.video.convert-i420-to-nv12.force-enabled
     type: bool
     value: false

@@ -1133,7 +1133,11 @@ DCTile* DCSurface::GetTile(int32_t aX, int32_t aY) const {
 
 DCSurfaceVideo::DCSurfaceVideo(bool aIsOpaque, DCLayerTree* aDCLayerTree)
     : DCSurface(wr::DeviceIntSize{}, wr::DeviceIntPoint{}, false, aIsOpaque,
-                aDCLayerTree) {}
+                aDCLayerTree),
+      mSwapChainBufferCount(
+          StaticPrefs::gfx_webrender_dcomp_video_force_triple_buffering() ? 3
+                                                                          : 2) {
+}
 
 DCSurfaceVideo::~DCSurfaceVideo() {
   ReleaseDecodeSwapChainResources();
@@ -1272,8 +1276,68 @@ void DCSurfaceVideo::PresentVideo() {
     return;
   }
 
+  const auto device = mDCLayerTree->GetDevice();
+  HRESULT hr;
+  if (mFirstPresent) {
+    mFirstPresent = false;
+    UINT flags = DXGI_PRESENT_USE_DURATION;
+    // DirectComposition can display black for a swap chain between the first
+    // and second time it's presented to - maybe the first Present can get lost
+    // somehow and it shows the wrong buffer. In that case copy the buffers so
+    // all have the correct contents, which seems to help. The first Present()
+    // after this needs to have SyncInterval > 0, or else the workaround doesn't
+    // help.
+    for (size_t i = 0; i < mSwapChainBufferCount - 1; ++i) {
+      hr = mVideoSwapChain->Present(0, flags);
+      // Ignore DXGI_STATUS_OCCLUDED since that's not an error but only
+      // indicates that the window is occluded and we can stop rendering.
+      if (FAILED(hr) && hr != DXGI_STATUS_OCCLUDED) {
+        gfxCriticalNoteOnce << "video Present failed during first present: "
+                            << gfx::hexa(hr);
+        return;
+      }
+
+      RefPtr<ID3D11Texture2D> destTexture;
+      mVideoSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D),
+                                 (void**)getter_AddRefs(destTexture));
+      MOZ_ASSERT(destTexture);
+      RefPtr<ID3D11Texture2D> srcTexture;
+      hr = mVideoSwapChain->GetBuffer(1, __uuidof(ID3D11Texture2D),
+                                      (void**)getter_AddRefs(srcTexture));
+      MOZ_ASSERT(srcTexture);
+      RefPtr<ID3D11DeviceContext> context;
+      device->GetImmediateContext(getter_AddRefs(context));
+      MOZ_ASSERT(context);
+      context->CopyResource(destTexture, srcTexture);
+    }
+
+    // Additionally wait for the GPU to finish executing its commands, or
+    // there still may be a black flicker when presenting expensive content
+    // (e.g. 4k video).
+
+    RefPtr<IDXGIDevice2> dxgiDevice2;
+    device->QueryInterface((IDXGIDevice2**)getter_AddRefs(dxgiDevice2));
+    MOZ_ASSERT(dxgiDevice2);
+
+    HANDLE event = ::CreateEvent(nullptr, false, false, nullptr);
+    hr = dxgiDevice2->EnqueueSetEvent(event);
+    if (SUCCEEDED(hr)) {
+      DebugOnly<DWORD> result = ::WaitForSingleObject(event, INFINITE);
+      MOZ_ASSERT(result == WAIT_OBJECT_0);
+    } else {
+      gfxCriticalNoteOnce << "EnqueueSetEvent failed: " << gfx::hexa(hr);
+    }
+    ::CloseHandle(event);
+  }
+
+  UINT flags = DXGI_PRESENT_USE_DURATION;
+  UINT interval = 1;
+  if (StaticPrefs::gfx_webrender_dcomp_video_swap_chain_present_interval_0()) {
+    interval = 0;
+  }
+
   auto start = TimeStamp::Now();
-  HRESULT hr = mVideoSwapChain->Present(0, 0);
+  hr = mVideoSwapChain->Present(interval, flags);
   auto end = TimeStamp::Now();
 
   if (FAILED(hr) && hr != DXGI_STATUS_OCCLUDED) {
@@ -1332,6 +1396,8 @@ DXGI_FORMAT DCSurfaceVideo::GetSwapChainFormat() {
 bool DCSurfaceVideo::CreateVideoSwapChain() {
   MOZ_ASSERT(mRenderTextureHost);
 
+  mFirstPresent = true;
+
   const auto device = mDCLayerTree->GetDevice();
 
   RefPtr<IDXGIDevice> dxgiDevice;
@@ -1352,8 +1418,6 @@ bool DCSurfaceVideo::CreateVideoSwapChain() {
   }
 
   auto swapChainFormat = GetSwapChainFormat();
-  bool useTripleBuffering =
-      StaticPrefs::gfx_webrender_dcomp_video_force_triple_buffering();
 
   DXGI_SWAP_CHAIN_DESC1 desc = {};
   desc.Width = mSwapChainSize.width;
@@ -1361,7 +1425,7 @@ bool DCSurfaceVideo::CreateVideoSwapChain() {
   desc.Format = swapChainFormat;
   desc.Stereo = FALSE;
   desc.SampleDesc.Count = 1;
-  desc.BufferCount = useTripleBuffering ? 3 : 2;
+  desc.BufferCount = mSwapChainBufferCount;
   desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
   desc.Scaling = DXGI_SCALING_STRETCH;
   desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
