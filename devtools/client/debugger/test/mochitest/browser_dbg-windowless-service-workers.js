@@ -7,17 +7,13 @@
 
 "use strict";
 
+const SW_URL = EXAMPLE_URL + "service-worker.sjs";
+
 add_task(async function () {
   info("Subtest #1");
   await pushPref("devtools.debugger.features.windowless-service-workers", true);
   await pushPref("devtools.debugger.threads-visible", true);
-  await pushPref("dom.serviceWorkers.enabled", true);
   await pushPref("dom.serviceWorkers.testing.enabled", true);
-
-  // Speed up the destruction of the worker once the registration has been removed
-  // (There is a delay between calling registration's `unregister` method
-  // and the actually destruction of the worker thread)
-  await pushPref("dom.serviceWorkers.idle_timeout", 3000);
 
   const dbg = await initDebugger("doc-service-workers.html");
 
@@ -65,7 +61,7 @@ add_task(async function () {
   info("Wait for reload to complete after resume");
   await onReloaded;
 
-  invokeInTab("unregisterWorker");
+  await unregisterServiceWorker(SW_URL);
 
   await checkAdditionalThreadCount(dbg, 0);
   await waitForRequestsToSettle(dbg);
@@ -107,7 +103,7 @@ add_task(async function () {
   // Add a breakpoint for the next subtest.
   await addBreakpoint(dbg, "service-worker.sjs", 2);
 
-  invokeInTab("unregisterWorker");
+  await unregisterServiceWorker(SW_URL);
 
   await checkAdditionalThreadCount(dbg, 0);
   await waitForRequestsToSettle(dbg);
@@ -157,7 +153,7 @@ add_task(async function () {
   await checkWorkerStatus(dbg, "activating");
 
   await resume(dbg);
-  invokeInTab("unregisterWorker");
+  await unregisterServiceWorker(SW_URL);
 
   await checkAdditionalThreadCount(dbg, 0);
   await waitForRequestsToSettle(dbg);
