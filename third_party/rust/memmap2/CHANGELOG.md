@@ -6,6 +6,50 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.8.0] - 2023-09-25
+### Changed
+- The `Advice` type is a struct and not an enum now.
+  [@adamreichold](https://github.com/adamreichold)
+
+### Fixed
+- Some of the `Advise` variants were unsound and now require `unsafe` to be constructed.
+  [@adamreichold](https://github.com/adamreichold)
+
+## [0.7.1] - 2023-06-24
+### Fixed
+- Mapping beyond 4GB offset on 32 bit glibc. Linux-only.
+  [@lvella](https://github.com/lvella)
+
+## [0.7.0] - 2023-06-08
+### Added
+- `Mmap::remap`, `MmapMut::remap` and `MmapRaw::remap`. Linux-only.
+  [@Phantomical](https://github.com/Phantomical)
+- `Advice::PopulateRead` and `Advice::PopulateWrite`. Linux-only.
+  [@Jesse-Bakker](https://github.com/Jesse-Bakker)
+
+### Changed
+- libc crate >= 0.2.143 is required now.
+
+## [0.6.2] - 2023-05-24
+### Fixed
+- Alignment for empty files on Windows.
+  [@timvisee](https://github.com/timvisee)
+
+## [0.6.1] - 2023-05-10
+### Added
+- Add `MmapOptions::map_raw_read_only` to avoid intermediate invalid `Mmap` instances.
+  [@adamreichold](https://github.com/adamreichold)
+
+## [0.6.0] - 2023-05-09
+### Changed
+- `lock()` and `unlock` methods require `&self` and not `&mut self` now.
+  [@timvisee](https://github.com/timvisee)
+
+## [0.5.10] - 2023-02-22
+### Added
+- `MmapOptions::map_anon` accounts for `populate` on Linux now.
+  [@jsgf](https://github.com/jsgf)
+
 ## [0.5.9] - 2023-02-17
 ### Added
 - `From<Mmap> for MmapRaw` and `From<MmapMut> for MmapRaw`.
@@ -130,7 +174,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Removed
 - `winapi` dependency. [memmap-rs/pull/89](https://github.com/danburkert/memmap-rs/pull/89)
 
-[Unreleased]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.5.9...HEAD
+[Unreleased]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.7.1...v0.8.0
+[0.7.1]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.7.0...v0.7.1
+[0.7.0]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.6.2...v0.7.0
+[0.6.2]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.6.1...v0.6.2
+[0.6.1]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.6.0...v0.6.1
+[0.6.0]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.5.10...v0.6.0
+[0.5.10]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.5.9...v0.5.10
 [0.5.9]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.5.8...v0.5.9
 [0.5.8]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.5.7...v0.5.8
 [0.5.7]: https://github.com/RazrFalcon/memmap2-rs/compare/v0.5.6...v0.5.7

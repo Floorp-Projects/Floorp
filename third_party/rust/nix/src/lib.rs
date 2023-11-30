@@ -16,7 +16,7 @@
 //! * `fs` - File system functionality
 //! * `hostname` - Get and set the system's hostname
 //! * `inotify` - Linux's `inotify` file system notification API
-//! * `ioctl` - The `ioctl` syscall, and wrappers for my specific instances
+//! * `ioctl` - The `ioctl` syscall, and wrappers for many specific instances
 //! * `kmod` - Load and unload kernel modules
 //! * `mman` - Stuff relating to memory management
 //! * `mount` - Mount and unmount file systems
@@ -47,7 +47,43 @@
 #![recursion_limit = "500"]
 #![deny(unused)]
 #![allow(unused_macros)]
-#![cfg_attr(not(feature = "default"), allow(unused_imports))]
+#![cfg_attr(
+    not(all(
+        feature = "acct",
+        feature = "aio",
+        feature = "dir",
+        feature = "env",
+        feature = "event",
+        feature = "feature",
+        feature = "fs",
+        feature = "hostname",
+        feature = "inotify",
+        feature = "ioctl",
+        feature = "kmod",
+        feature = "mman",
+        feature = "mount",
+        feature = "mqueue",
+        feature = "net",
+        feature = "personality",
+        feature = "poll",
+        feature = "process",
+        feature = "pthread",
+        feature = "ptrace",
+        feature = "quota",
+        feature = "reboot",
+        feature = "resource",
+        feature = "sched",
+        feature = "socket",
+        feature = "signal",
+        feature = "term",
+        feature = "time",
+        feature = "ucontext",
+        feature = "uio",
+        feature = "user",
+        feature = "zerocopy",
+    )),
+    allow(unused_imports)
+)]
 #![deny(unstable_features)]
 #![deny(missing_copy_implementations)]
 #![deny(missing_debug_implementations)]
@@ -144,7 +180,12 @@ feature! {
 // provides bindings for them.
 #[cfg(all(
     target_os = "linux",
-    any(target_arch = "s390x", target_arch = "x86", target_arch = "x86_64")
+    any(
+        target_arch = "aarch64",
+        target_arch = "s390x",
+        target_arch = "x86",
+        target_arch = "x86_64"
+    )
 ))]
 feature! {
     #![feature = "ucontext"]

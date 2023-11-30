@@ -1,8 +1,9 @@
 use nix::{
     errno::Errno,
     poll::{poll, PollFd, PollFlags},
-    unistd::{pipe, write},
+    unistd::{close, pipe, write},
 };
+use std::os::unix::io::{BorrowedFd, FromRawFd, OwnedFd};
 
 macro_rules! loop_while_eintr {
     ($poll_expr: expr) => {
@@ -19,7 +20,8 @@ macro_rules! loop_while_eintr {
 #[test]
 fn test_poll() {
     let (r, w) = pipe().unwrap();
-    let mut fds = [PollFd::new(r, PollFlags::POLLIN)];
+    let r = unsafe { OwnedFd::from_raw_fd(r) };
+    let mut fds = [PollFd::new(&r, PollFlags::POLLIN)];
 
     // Poll an idle pipe.  Should timeout
     let nfds = loop_while_eintr!(poll(&mut fds, 100));
@@ -32,6 +34,7 @@ fn test_poll() {
     let nfds = poll(&mut fds, 100).unwrap();
     assert_eq!(nfds, 1);
     assert!(fds[0].revents().unwrap().contains(PollFlags::POLLIN));
+    close(w).unwrap();
 }
 
 // ppoll(2) is the same as poll except for how it handles timeouts and signals.
@@ -51,7 +54,8 @@ fn test_ppoll() {
 
     let timeout = TimeSpec::milliseconds(1);
     let (r, w) = pipe().unwrap();
-    let mut fds = [PollFd::new(r, PollFlags::POLLIN)];
+    let r = unsafe { OwnedFd::from_raw_fd(r) };
+    let mut fds = [PollFd::new(&r, PollFlags::POLLIN)];
 
     // Poll an idle pipe.  Should timeout
     let sigset = SigSet::empty();
@@ -65,19 +69,13 @@ fn test_ppoll() {
     let nfds = ppoll(&mut fds, Some(timeout), None).unwrap();
     assert_eq!(nfds, 1);
     assert!(fds[0].revents().unwrap().contains(PollFlags::POLLIN));
-}
-
-#[test]
-fn test_pollfd_fd() {
-    use std::os::unix::io::AsRawFd;
-
-    let pfd = PollFd::new(0x1234, PollFlags::empty());
-    assert_eq!(pfd.as_raw_fd(), 0x1234);
+    close(w).unwrap();
 }
 
 #[test]
 fn test_pollfd_events() {
-    let mut pfd = PollFd::new(-1, PollFlags::POLLIN);
+    let fd_zero = unsafe { BorrowedFd::borrow_raw(0) };
+    let mut pfd = PollFd::new(&fd_zero, PollFlags::POLLIN);
     assert_eq!(pfd.events(), PollFlags::POLLIN);
     pfd.set_events(PollFlags::POLLOUT);
     assert_eq!(pfd.events(), PollFlags::POLLOUT);

@@ -91,8 +91,10 @@ pub(crate) mod timer {
     #[cfg(any(target_os = "android", target_os = "linux"))]
     bitflags! {
         /// Flags that are used for arming the timer.
+        #[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
         pub struct TimerSetTimeFlags: libc::c_int {
             const TFD_TIMER_ABSTIME = libc::TFD_TIMER_ABSTIME;
+            const TFD_TIMER_CANCEL_ON_SET = libc::TFD_TIMER_CANCEL_ON_SET;
         }
     }
     #[cfg(any(
@@ -103,6 +105,7 @@ pub(crate) mod timer {
     ))]
     bitflags! {
         /// Flags that are used for arming the timer.
+        #[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
         pub struct TimerSetTimeFlags: libc::c_int {
             const TFD_TIMER_ABSTIME = libc::TIMER_ABSTIME;
         }
@@ -261,8 +264,7 @@ impl TimeValLike for TimeSpec {
     fn seconds(seconds: i64) -> TimeSpec {
         assert!(
             (TS_MIN_SECONDS..=TS_MAX_SECONDS).contains(&seconds),
-            "TimeSpec out of bounds; seconds={}",
-            seconds
+            "TimeSpec out of bounds; seconds={seconds}",
         );
         let mut ts = zero_init_timespec();
         ts.tv_sec = seconds as time_t;
@@ -428,20 +430,20 @@ impl fmt::Display for TimeSpec {
 
         let sec = abs.tv_sec();
 
-        write!(f, "{}", sign)?;
+        write!(f, "{sign}")?;
 
         if abs.tv_nsec() == 0 {
-            if abs.tv_sec() == 1 {
-                write!(f, "{} second", sec)?;
+            if sec == 1 {
+                write!(f, "1 second")?;
             } else {
-                write!(f, "{} seconds", sec)?;
+                write!(f, "{sec} seconds")?;
             }
         } else if abs.tv_nsec() % 1_000_000 == 0 {
-            write!(f, "{}.{:03} seconds", sec, abs.tv_nsec() / 1_000_000)?;
+            write!(f, "{sec}.{:03} seconds", abs.tv_nsec() / 1_000_000)?;
         } else if abs.tv_nsec() % 1_000 == 0 {
-            write!(f, "{}.{:06} seconds", sec, abs.tv_nsec() / 1_000)?;
+            write!(f, "{sec}.{:06} seconds", abs.tv_nsec() / 1_000)?;
         } else {
-            write!(f, "{}.{:09} seconds", sec, abs.tv_nsec())?;
+            write!(f, "{sec}.{:09} seconds", abs.tv_nsec())?;
         }
 
         Ok(())
@@ -497,8 +499,7 @@ impl TimeValLike for TimeVal {
     fn seconds(seconds: i64) -> TimeVal {
         assert!(
             (TV_MIN_SECONDS..=TV_MAX_SECONDS).contains(&seconds),
-            "TimeVal out of bounds; seconds={}",
-            seconds
+            "TimeVal out of bounds; seconds={seconds}"
         );
         #[cfg_attr(target_env = "musl", allow(deprecated))]
         // https://github.com/rust-lang/libc/issues/1848
@@ -662,18 +663,18 @@ impl fmt::Display for TimeVal {
 
         let sec = abs.tv_sec();
 
-        write!(f, "{}", sign)?;
+        write!(f, "{sign}")?;
 
         if abs.tv_usec() == 0 {
-            if abs.tv_sec() == 1 {
-                write!(f, "{} second", sec)?;
+            if sec == 1 {
+                write!(f, "1 second")?;
             } else {
-                write!(f, "{} seconds", sec)?;
+                write!(f, "{sec} seconds")?;
             }
         } else if abs.tv_usec() % 1000 == 0 {
-            write!(f, "{}.{:03} seconds", sec, abs.tv_usec() / 1000)?;
+            write!(f, "{sec}.{:03} seconds", abs.tv_usec() / 1000)?;
         } else {
-            write!(f, "{}.{:06} seconds", sec, abs.tv_usec())?;
+            write!(f, "{sec}.{:06} seconds", abs.tv_usec())?;
         }
 
         Ok(())

@@ -111,6 +111,9 @@ terminal_size = { path = "build/rust/terminal_size" }
 # Patch bitflags 2.0 to 1.0 while not too many crates use 2.0 features
 bitflags = { path = "build/rust/bitflags" }
 
+# Patch memmap2 0.5.x to 0.8.0
+memmap2 = { path = "build/rust/memmap2" }
+
 # Patch cfg-if 0.1 to 1.0
 cfg-if = { path = "build/rust/cfg-if" }
 
@@ -142,7 +145,7 @@ bindgen_0_63 = { package = "bindgen", path = "build/rust/bindgen-0.63" }
 bindgen_0_64 = { package = "bindgen", path = "build/rust/bindgen-0.64" }
 bindgen = { path = "build/rust/bindgen" }
 
-# Patch nix 0.24 to 0.26
+# Patch nix 0.24 to 0.27
 nix = { path = "build/rust/nix" }
 
 # Patch indexmap 2.0 to 1.0
@@ -190,10 +193,6 @@ firefox-on-glean = { path = "toolkit/components/glean/api" }
 icu_testdata = { path = "intl/icu_testdata" }
 libudev-sys = { path = "dom/webauthn/libudev-sys" }
 midir = { git = "https://github.com/mozilla/midir.git", rev = "519e651241e867af3391db08f9ae6400bc023e18" }
-# Avoid the dependency on chrono and include Android support
-minidump-writer = { git = "https://github.com/rust-minidump/minidump-writer.git", rev = "491eb330e78e310c32927e5cc3bd2350af1e93f8" }
-# Bump some dependencies
-minidump-common = { git = "https://github.com/rust-minidump/rust-minidump", rev = "6ae42a7f992e8a88ebee661bc77bcedb95cd671f" }
 # warp 0.3.3 + https://github.com/seanmonstar/warp/pull/1007
 warp = { git = "https://github.com/glandium/warp", rev = "4af45fae95bc98b0eba1ef0db17e1dac471bb23d" }
 # Allow webrender to have a versioned dependency on the older crate on crates.io

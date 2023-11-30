@@ -6,6 +6,7 @@ mod os {
     use crate::sys::utsname::uname;
     use crate::Result;
     use std::os::unix::ffi::OsStrExt;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     // Features:
     // * atomic cloexec on socket: 2.6.27
@@ -72,15 +73,15 @@ mod os {
     }
 
     fn kernel_version() -> Result<usize> {
-        static mut KERNEL_VERS: usize = 0;
+        static KERNEL_VERS: AtomicUsize = AtomicUsize::new(0);
+        let mut kernel_vers = KERNEL_VERS.load(Ordering::Relaxed);
 
-        unsafe {
-            if KERNEL_VERS == 0 {
-                KERNEL_VERS = parse_kernel_version()?;
-            }
-
-            Ok(KERNEL_VERS)
+        if kernel_vers == 0 {
+            kernel_vers = parse_kernel_version()?;
+            KERNEL_VERS.store(kernel_vers, Ordering::Relaxed);
         }
+
+        Ok(kernel_vers)
     }
 
     /// Check if the OS supports atomic close-on-exec for sockets
@@ -112,6 +113,7 @@ mod os {
 }
 
 #[cfg(any(
+    target_os = "aix",
     target_os = "macos",
     target_os = "ios",
     target_os = "fuchsia",

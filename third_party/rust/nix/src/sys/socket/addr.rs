@@ -9,11 +9,12 @@
     target_os = "netbsd",
     target_os = "openbsd",
     target_os = "haiku",
-    target_os = "fuchsia"
+    target_os = "fuchsia",
+    target_os = "aix",
 ))]
 #[cfg(feature = "net")]
 pub use self::datalink::LinkAddr;
-#[cfg(any(target_os = "android", target_os = "linux"))]
+#[cfg(any(target_os = "android", target_os = "linux", target_os = "macos"))]
 pub use self::vsock::VsockAddr;
 use super::sa_family_t;
 use crate::errno::Errno;
@@ -33,29 +34,22 @@ use std::convert::TryInto;
 use std::ffi::OsStr;
 use std::hash::{Hash, Hasher};
 use std::os::unix::ffi::OsStrExt;
-#[cfg(any(target_os = "ios", target_os = "macos"))]
-use std::os::unix::io::RawFd;
 use std::path::Path;
 use std::{fmt, mem, net, ptr, slice};
 
 /// Convert a std::net::Ipv4Addr into the libc form.
 #[cfg(feature = "net")]
 pub(crate) const fn ipv4addr_to_libc(addr: net::Ipv4Addr) -> libc::in_addr {
-    static_assertions::assert_eq_size!(net::Ipv4Addr, libc::in_addr);
-    // Safe because both types have the same memory layout, and no fancy Drop
-    // impls.
-    unsafe {
-        mem::transmute(addr)
+    libc::in_addr {
+        s_addr: u32::from_ne_bytes(addr.octets())
     }
 }
 
 /// Convert a std::net::Ipv6Addr into the libc form.
 #[cfg(feature = "net")]
 pub(crate) const fn ipv6addr_to_libc(addr: &net::Ipv6Addr) -> libc::in6_addr {
-    static_assertions::assert_eq_size!(net::Ipv6Addr, libc::in6_addr);
-    // Safe because both are Newtype wrappers around the same libc type
-    unsafe {
-        mem::transmute(*addr)
+    libc::in6_addr {
+        s6_addr: addr.octets()
     }
 }
 
@@ -80,6 +74,13 @@ pub enum AddressFamily {
     #[cfg(any(target_os = "android", target_os = "linux"))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
     Netlink = libc::AF_NETLINK,
+    /// Kernel interface for interacting with the routing table
+    #[cfg(not(any(
+        target_os = "redox",
+        target_os = "linux",
+        target_os = "android"
+    )))]
+    Route = libc::PF_ROUTE,
     /// Low level packet interface (see [`packet(7)`](https://man7.org/linux/man-pages/man7/packet.7.html))
     #[cfg(any(
         target_os = "android",
@@ -99,8 +100,11 @@ pub enum AddressFamily {
     #[cfg_attr(docsrs, doc(cfg(all())))]
     Ax25 = libc::AF_AX25,
     /// IPX - Novell protocols
+    #[cfg(not(any(target_os = "aix", target_os = "redox")))]
+    #[cfg_attr(docsrs, doc(cfg(all())))]
     Ipx = libc::AF_IPX,
     /// AppleTalk
+    #[cfg(not(target_os = "redox"))]
     AppleTalk = libc::AF_APPLETALK,
     /// AX.25 packet layer protocol.
     /// (see [netrom(4)](https://www.unix.com/man-page/linux/4/netrom/))
@@ -129,7 +133,7 @@ pub enum AddressFamily {
     #[cfg_attr(docsrs, doc(cfg(all())))]
     Rose = libc::AF_ROSE,
     /// DECet protocol sockets.
-    #[cfg(not(target_os = "haiku"))]
+    #[cfg(not(any(target_os = "haiku", target_os = "redox")))]
     Decnet = libc::AF_DECnet,
     /// Reserved for "802.2LLC project"; never used.
     #[cfg(any(target_os = "android", target_os = "linux"))]
@@ -161,7 +165,7 @@ pub enum AddressFamily {
     #[cfg_attr(docsrs, doc(cfg(all())))]
     Rds = libc::AF_RDS,
     /// IBM SNA
-    #[cfg(not(target_os = "haiku"))]
+    #[cfg(not(any(target_os = "haiku", target_os = "redox")))]
     Sna = libc::AF_SNA,
     /// Socket interface over IrDA
     #[cfg(any(target_os = "android", target_os = "linux"))]
@@ -198,10 +202,12 @@ pub enum AddressFamily {
     Tipc = libc::AF_TIPC,
     /// Bluetooth low-level socket protocol
     #[cfg(not(any(
+        target_os = "aix",
         target_os = "illumos",
         target_os = "ios",
         target_os = "macos",
-        target_os = "solaris"
+        target_os = "solaris",
+        target_os = "redox",
     )))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
     Bluetooth = libc::AF_BLUETOOTH,
@@ -216,9 +222,11 @@ pub enum AddressFamily {
     RxRpc = libc::AF_RXRPC,
     /// New "modular ISDN" driver interface protocol
     #[cfg(not(any(
+        target_os = "aix",
         target_os = "illumos",
         target_os = "solaris",
-        target_os = "haiku"
+        target_os = "haiku",
+        target_os = "redox",
     )))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
     Isdn = libc::AF_ISDN,
@@ -244,7 +252,7 @@ pub enum AddressFamily {
     #[cfg_attr(docsrs, doc(cfg(all())))]
     Nfc = libc::AF_NFC,
     /// VMWare VSockets protocol for hypervisor-guest interaction.
-    #[cfg(any(target_os = "android", target_os = "linux"))]
+    #[cfg(any(target_os = "android", target_os = "linux", target_os = "macos"))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
     Vsock = libc::AF_VSOCK,
     /// ARPANet IMP addresses
@@ -421,6 +429,12 @@ impl AddressFamily {
             libc::AF_NETLINK => Some(AddressFamily::Netlink),
             #[cfg(any(target_os = "macos", target_os = "macos"))]
             libc::AF_SYSTEM => Some(AddressFamily::System),
+            #[cfg(not(any(
+                target_os = "redox",
+                target_os = "linux",
+                target_os = "android"
+            )))]
+            libc::PF_ROUTE => Some(AddressFamily::Route),
             #[cfg(any(target_os = "android", target_os = "linux"))]
             libc::AF_PACKET => Some(AddressFamily::Packet),
             #[cfg(any(
@@ -433,313 +447,11 @@ impl AddressFamily {
                 target_os = "openbsd"
             ))]
             libc::AF_LINK => Some(AddressFamily::Link),
-            #[cfg(any(target_os = "android", target_os = "linux"))]
+            #[cfg(any(target_os = "android", target_os = "linux", target_os = "macos"))]
             libc::AF_VSOCK => Some(AddressFamily::Vsock),
             _ => None,
         }
     }
-}
-
-feature! {
-#![feature = "net"]
-
-#[deprecated(
-    since = "0.24.0",
-    note = "use SockaddrIn, SockaddrIn6, or SockaddrStorage instead"
-)]
-#[allow(missing_docs)]  // Since they're all deprecated anyway
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub enum InetAddr {
-    V4(libc::sockaddr_in),
-    V6(libc::sockaddr_in6),
-}
-
-#[allow(missing_docs)]  // It's deprecated anyway
-#[allow(deprecated)]
-impl InetAddr {
-    #[allow(clippy::needless_update)]   // It isn't needless on all OSes
-    pub fn from_std(std: &net::SocketAddr) -> InetAddr {
-        match *std {
-            net::SocketAddr::V4(ref addr) => {
-                InetAddr::V4(libc::sockaddr_in {
-                    #[cfg(any(target_os = "dragonfly", target_os = "freebsd",
-                              target_os = "haiku", target_os = "hermit",
-                              target_os = "ios", target_os = "macos",
-                              target_os = "netbsd", target_os = "openbsd"))]
-                    sin_len: mem::size_of::<libc::sockaddr_in>() as u8,
-                    sin_family: AddressFamily::Inet as sa_family_t,
-                    sin_port: addr.port().to_be(),  // network byte order
-                    sin_addr: Ipv4Addr::from_std(addr.ip()).0,
-                    .. unsafe { mem::zeroed() }
-                })
-            }
-            net::SocketAddr::V6(ref addr) => {
-                InetAddr::V6(libc::sockaddr_in6 {
-                    #[cfg(any(target_os = "dragonfly", target_os = "freebsd",
-                              target_os = "haiku", target_os = "hermit",
-                              target_os = "ios", target_os = "macos",
-                              target_os = "netbsd", target_os = "openbsd"))]
-                    sin6_len: mem::size_of::<libc::sockaddr_in6>() as u8,
-                    sin6_family: AddressFamily::Inet6 as sa_family_t,
-                    sin6_port: addr.port().to_be(),  // network byte order
-                    sin6_addr: Ipv6Addr::from_std(addr.ip()).0,
-                    sin6_flowinfo: addr.flowinfo(),  // host byte order
-                    sin6_scope_id: addr.scope_id(),  // host byte order
-                    .. unsafe { mem::zeroed() }
-                })
-            }
-        }
-    }
-
-    #[allow(clippy::needless_update)]   // It isn't needless on all OSes
-    pub fn new(ip: IpAddr, port: u16) -> InetAddr {
-        match ip {
-            IpAddr::V4(ref ip) => {
-                InetAddr::V4(libc::sockaddr_in {
-                    sin_family: AddressFamily::Inet as sa_family_t,
-                    sin_port: port.to_be(),
-                    sin_addr: ip.0,
-                    .. unsafe { mem::zeroed() }
-                })
-            }
-            IpAddr::V6(ref ip) => {
-                InetAddr::V6(libc::sockaddr_in6 {
-                    sin6_family: AddressFamily::Inet6 as sa_family_t,
-                    sin6_port: port.to_be(),
-                    sin6_addr: ip.0,
-                    .. unsafe { mem::zeroed() }
-                })
-            }
-        }
-    }
-    /// Gets the IP address associated with this socket address.
-    pub const fn ip(&self) -> IpAddr {
-        match *self {
-            InetAddr::V4(ref sa) => IpAddr::V4(Ipv4Addr(sa.sin_addr)),
-            InetAddr::V6(ref sa) => IpAddr::V6(Ipv6Addr(sa.sin6_addr)),
-        }
-    }
-
-    /// Gets the port number associated with this socket address
-    pub const fn port(&self) -> u16 {
-        match *self {
-            InetAddr::V6(ref sa) => u16::from_be(sa.sin6_port),
-            InetAddr::V4(ref sa) => u16::from_be(sa.sin_port),
-        }
-    }
-
-    pub fn to_std(&self) -> net::SocketAddr {
-        match *self {
-            InetAddr::V4(ref sa) => net::SocketAddr::V4(
-                net::SocketAddrV4::new(
-                    Ipv4Addr(sa.sin_addr).to_std(),
-                    self.port())),
-            InetAddr::V6(ref sa) => net::SocketAddr::V6(
-                net::SocketAddrV6::new(
-                    Ipv6Addr(sa.sin6_addr).to_std(),
-                    self.port(),
-                    sa.sin6_flowinfo,
-                    sa.sin6_scope_id)),
-        }
-    }
-
-    #[deprecated(since = "0.23.0", note = "use .to_string() instead")]
-    pub fn to_str(&self) -> String {
-        format!("{}", self)
-    }
-}
-
-#[allow(deprecated)]
-impl fmt::Display for InetAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            InetAddr::V4(_) => write!(f, "{}:{}", self.ip(), self.port()),
-            InetAddr::V6(_) => write!(f, "[{}]:{}", self.ip(), self.port()),
-        }
-    }
-}
-
-/*
- *
- * ===== IpAddr =====
- *
- */
-#[allow(missing_docs)]  // Since they're all deprecated anyway
-#[allow(deprecated)]
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-#[deprecated(
-    since = "0.24.0",
-    note = "Use std::net::IpAddr instead"
-)]
-pub enum IpAddr {
-    V4(Ipv4Addr),
-    V6(Ipv6Addr),
-}
-
-#[allow(deprecated)]
-#[allow(missing_docs)]  // Since they're all deprecated anyway
-impl IpAddr {
-    /// Create a new IpAddr that contains an IPv4 address.
-    ///
-    /// The result will represent the IP address a.b.c.d
-    pub const fn new_v4(a: u8, b: u8, c: u8, d: u8) -> IpAddr {
-        IpAddr::V4(Ipv4Addr::new(a, b, c, d))
-    }
-
-    /// Create a new IpAddr that contains an IPv6 address.
-    ///
-    /// The result will represent the IP address a:b:c:d:e:f
-    #[allow(clippy::many_single_char_names)]
-    #[allow(clippy::too_many_arguments)]
-    pub const fn new_v6(a: u16, b: u16, c: u16, d: u16, e: u16, f: u16, g: u16, h: u16) -> IpAddr {
-        IpAddr::V6(Ipv6Addr::new(a, b, c, d, e, f, g, h))
-    }
-
-    pub fn from_std(std: &net::IpAddr) -> IpAddr {
-        match *std {
-            net::IpAddr::V4(ref std) => IpAddr::V4(Ipv4Addr::from_std(std)),
-            net::IpAddr::V6(ref std) => IpAddr::V6(Ipv6Addr::from_std(std)),
-        }
-    }
-
-    pub const fn to_std(&self) -> net::IpAddr {
-        match *self {
-            IpAddr::V4(ref ip) => net::IpAddr::V4(ip.to_std()),
-            IpAddr::V6(ref ip) => net::IpAddr::V6(ip.to_std()),
-        }
-    }
-}
-
-#[allow(deprecated)]
-impl fmt::Display for IpAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            IpAddr::V4(ref v4) => v4.fmt(f),
-            IpAddr::V6(ref v6) => v6.fmt(f)
-        }
-    }
-}
-
-/*
- *
- * ===== Ipv4Addr =====
- *
- */
-
-#[deprecated(
-    since = "0.24.0",
-    note = "Use std::net::Ipv4Addr instead"
-)]
-#[allow(missing_docs)]  // Since they're all deprecated anyway
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-#[repr(transparent)]
-pub struct Ipv4Addr(pub libc::in_addr);
-
-#[allow(deprecated)]
-#[allow(missing_docs)]  // Since they're all deprecated anyway
-impl Ipv4Addr {
-    #[allow(clippy::identity_op)]   // More readable this way
-    pub const fn new(a: u8, b: u8, c: u8, d: u8) -> Ipv4Addr {
-        let ip = (((a as u32) << 24) |
-                  ((b as u32) << 16) |
-                  ((c as u32) <<  8) |
-                  ((d as u32) <<  0)).to_be();
-
-        Ipv4Addr(libc::in_addr { s_addr: ip })
-    }
-
-    // Use pass by reference for symmetry with Ipv6Addr::from_std
-    #[allow(clippy::trivially_copy_pass_by_ref)]
-    pub fn from_std(std: &net::Ipv4Addr) -> Ipv4Addr {
-        let bits = std.octets();
-        Ipv4Addr::new(bits[0], bits[1], bits[2], bits[3])
-    }
-
-    pub const fn any() -> Ipv4Addr {
-        Ipv4Addr(libc::in_addr { s_addr: libc::INADDR_ANY })
-    }
-
-    pub const fn octets(self) -> [u8; 4] {
-        let bits = u32::from_be(self.0.s_addr);
-        [(bits >> 24) as u8, (bits >> 16) as u8, (bits >> 8) as u8, bits as u8]
-    }
-
-    pub const fn to_std(self) -> net::Ipv4Addr {
-        let bits = self.octets();
-        net::Ipv4Addr::new(bits[0], bits[1], bits[2], bits[3])
-    }
-}
-
-#[allow(deprecated)]
-impl fmt::Display for Ipv4Addr {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let octets = self.octets();
-        write!(fmt, "{}.{}.{}.{}", octets[0], octets[1], octets[2], octets[3])
-    }
-}
-
-/*
- *
- * ===== Ipv6Addr =====
- *
- */
-
-#[deprecated(
-    since = "0.24.0",
-    note = "Use std::net::Ipv6Addr instead"
-)]
-#[allow(missing_docs)]  // Since they're all deprecated anyway
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-#[repr(transparent)]
-pub struct Ipv6Addr(pub libc::in6_addr);
-
-// Note that IPv6 addresses are stored in big endian order on all architectures.
-// See https://tools.ietf.org/html/rfc1700 or consult your favorite search
-// engine.
-
-macro_rules! to_u8_array {
-    ($($num:ident),*) => {
-        [ $(($num>>8) as u8, ($num&0xff) as u8,)* ]
-    }
-}
-
-macro_rules! to_u16_array {
-    ($slf:ident, $($first:expr, $second:expr),*) => {
-        [$( (($slf.0.s6_addr[$first] as u16) << 8) + $slf.0.s6_addr[$second] as u16,)*]
-    }
-}
-
-#[allow(deprecated)]
-#[allow(missing_docs)]  // Since they're all deprecated anyway
-impl Ipv6Addr {
-    #[allow(clippy::many_single_char_names)]
-    #[allow(clippy::too_many_arguments)]
-    pub const fn new(a: u16, b: u16, c: u16, d: u16, e: u16, f: u16, g: u16, h: u16) -> Ipv6Addr {
-        Ipv6Addr(libc::in6_addr{s6_addr: to_u8_array!(a,b,c,d,e,f,g,h)})
-    }
-
-    pub fn from_std(std: &net::Ipv6Addr) -> Ipv6Addr {
-        let s = std.segments();
-        Ipv6Addr::new(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7])
-    }
-
-    /// Return the eight 16-bit segments that make up this address
-    pub const fn segments(&self) -> [u16; 8] {
-        to_u16_array!(self, 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15)
-    }
-
-    pub const fn to_std(&self) -> net::Ipv6Addr {
-        let s = self.segments();
-        net::Ipv6Addr::new(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7])
-    }
-}
-
-#[allow(deprecated)]
-impl fmt::Display for Ipv6Addr {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        self.to_std().fmt(fmt)
-    }
-}
 }
 
 /// A wrapper around `sockaddr_un`.
@@ -755,7 +467,8 @@ pub struct UnixAddr {
         target_os = "android",
         target_os = "fuchsia",
         target_os = "illumos",
-        target_os = "linux"
+        target_os = "linux",
+        target_os = "redox",
     ))]
     sun_len: u8,
 }
@@ -775,6 +488,7 @@ enum UnixAddrKind<'a> {
 }
 impl<'a> UnixAddrKind<'a> {
     /// Safety: sun & sun_len must be valid
+    #[allow(clippy::unnecessary_cast)]   // Not unnecessary on all platforms
     unsafe fn get(sun: &'a libc::sockaddr_un, sun_len: u8) -> Self {
         assert!(sun_len as usize >= offset_of!(libc::sockaddr_un, sun_path));
         let path_len =
@@ -811,6 +525,7 @@ impl<'a> UnixAddrKind<'a> {
 
 impl UnixAddr {
     /// Create a new sockaddr_un representing a filesystem path.
+    #[allow(clippy::unnecessary_cast)]   // Not unnecessary on all platforms
     pub fn new<P: ?Sized + NixPath>(path: &P) -> Result<UnixAddr> {
         path.with_nix_path(|cstr| unsafe {
             let mut ret = libc::sockaddr_un {
@@ -858,6 +573,7 @@ impl UnixAddr {
     /// processes to communicate with processes having a different filesystem view.
     #[cfg(any(target_os = "android", target_os = "linux"))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
+    #[allow(clippy::unnecessary_cast)]   // Not unnecessary on all platforms
     pub fn new_abstract(path: &[u8]) -> Result<UnixAddr> {
         unsafe {
             let mut ret = libc::sockaddr_un {
@@ -891,10 +607,11 @@ impl UnixAddr {
     pub fn new_unnamed() -> UnixAddr {
         let ret = libc::sockaddr_un {
             sun_family: AddressFamily::Unix as sa_family_t,
-            .. unsafe { mem::zeroed() }
+            ..unsafe { mem::zeroed() }
         };
 
-        let sun_len: u8 = offset_of!(libc::sockaddr_un, sun_path).try_into().unwrap();
+        let sun_len: u8 =
+            offset_of!(libc::sockaddr_un, sun_path).try_into().unwrap();
 
         unsafe { UnixAddr::from_raw_parts(ret, sun_len) }
     }
@@ -918,7 +635,8 @@ impl UnixAddr {
             if #[cfg(any(target_os = "android",
                      target_os = "fuchsia",
                      target_os = "illumos",
-                     target_os = "linux"
+                     target_os = "linux",
+                     target_os = "redox",
                 ))]
             {
                 UnixAddr { sun, sun_len }
@@ -984,7 +702,8 @@ impl UnixAddr {
             if #[cfg(any(target_os = "android",
                      target_os = "fuchsia",
                      target_os = "illumos",
-                     target_os = "linux"
+                     target_os = "linux",
+                     target_os = "redox",
                 ))]
             {
                 self.sun_len
@@ -1030,7 +749,8 @@ impl SockaddrLike for UnixAddr {
             if #[cfg(any(target_os = "android",
                          target_os = "fuchsia",
                          target_os = "illumos",
-                         target_os = "linux"
+                         target_os = "linux",
+                         target_os = "redox",
                 ))] {
                 let su_len = len.unwrap_or(
                     mem::size_of::<libc::sockaddr_un>() as libc::socklen_t
@@ -1048,6 +768,22 @@ impl SockaddrLike for UnixAddr {
         Self: Sized,
     {
         mem::size_of::<libc::sockaddr_un>() as libc::socklen_t
+    }
+
+    unsafe fn set_length(&mut self, new_length: usize) -> std::result::Result<(), SocketAddressLengthNotDynamic> {
+        // `new_length` is only used on some platforms, so it must be provided even when not used
+        #![allow(unused_variables)]
+        cfg_if! {
+            if #[cfg(any(target_os = "android",
+                         target_os = "fuchsia",
+                         target_os = "illumos",
+                         target_os = "linux",
+                         target_os = "redox",
+                ))] {
+                self.sun_len = new_length as u8;
+            }
+        };
+        Ok(())
     }
 }
 
@@ -1139,9 +875,10 @@ pub trait SockaddrLike: private::SockaddrLikePriv {
     /// One common use is to match on the family of a union type, like this:
     /// ```
     /// # use nix::sys::socket::*;
+    /// # use std::os::unix::io::AsRawFd;
     /// let fd = socket(AddressFamily::Inet, SockType::Stream,
     ///     SockFlag::empty(), None).unwrap();
-    /// let ss: SockaddrStorage = getsockname(fd).unwrap();
+    /// let ss: SockaddrStorage = getsockname(fd.as_raw_fd()).unwrap();
     /// match ss.family().unwrap() {
     ///     AddressFamily::Inet => println!("{}", ss.as_sockaddr_in().unwrap()),
     ///     AddressFamily::Inet6 => println!("{}", ss.as_sockaddr_in6().unwrap()),
@@ -1198,7 +935,32 @@ pub trait SockaddrLike: private::SockaddrLikePriv {
     {
         mem::size_of::<Self>() as libc::socklen_t
     }
+
+    /// Set the length of this socket address
+    ///
+    /// This method may only be called on socket addresses whose lengths are dynamic, and it
+    /// returns an error if called on a type whose length is static.
+    ///
+    /// # Safety
+    ///
+    /// `new_length` must be a valid length for this type of address. Specifically, reads of that
+    /// length from `self` must be valid.
+    #[doc(hidden)]
+    unsafe fn set_length(&mut self, _new_length: usize) -> std::result::Result<(), SocketAddressLengthNotDynamic> {
+        Err(SocketAddressLengthNotDynamic)
+    }
 }
+
+/// The error returned by [`SockaddrLike::set_length`] on an address whose length is statically
+/// fixed.
+#[derive(Copy, Clone, Debug)]
+pub struct SocketAddressLengthNotDynamic;
+impl fmt::Display for SocketAddressLengthNotDynamic {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("Attempted to set length on socket whose length is statically fixed")
+    }
+}
+impl std::error::Error for SocketAddressLengthNotDynamic {}
 
 impl private::SockaddrLikePriv for () {
     fn as_mut_ptr(&mut self) -> *mut libc::sockaddr {
@@ -1235,9 +997,6 @@ impl SockaddrLike for () {
 }
 
 /// An IPv4 socket address
-// This is identical to net::SocketAddrV4.  But the standard library
-// doesn't allow direct access to the libc fields, which we need.  So we
-// reimplement it here.
 #[cfg(feature = "net")]
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -1260,6 +1019,7 @@ impl SockaddrIn {
                 target_os = "ios",
                 target_os = "macos",
                 target_os = "netbsd",
+                target_os = "aix",
                 target_os = "haiku",
                 target_os = "openbsd"
             ))]
@@ -1502,11 +1262,12 @@ impl std::str::FromStr for SockaddrIn6 {
 /// ```
 /// # use nix::sys::socket::*;
 /// # use std::str::FromStr;
+/// # use std::os::unix::io::AsRawFd;
 /// let localhost = SockaddrIn::from_str("127.0.0.1:8081").unwrap();
 /// let fd = socket(AddressFamily::Inet, SockType::Stream, SockFlag::empty(),
 ///     None).unwrap();
-/// bind(fd, &localhost).expect("bind");
-/// let ss: SockaddrStorage = getsockname(fd).expect("getsockname");
+/// bind(fd.as_raw_fd(), &localhost).expect("bind");
+/// let ss: SockaddrStorage = getsockname(fd.as_raw_fd()).expect("getsockname");
 /// assert_eq!(&localhost, ss.as_sockaddr_in().unwrap());
 /// ```
 #[derive(Clone, Copy, Eq)]
@@ -1515,7 +1276,7 @@ pub union SockaddrStorage {
     #[cfg(any(target_os = "android", target_os = "linux"))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
     alg: AlgAddr,
-    #[cfg(feature = "net")]
+    #[cfg(all(feature = "net", not(target_os = "redox")))]
     #[cfg_attr(docsrs, doc(cfg(feature = "net")))]
     dl: LinkAddr,
     #[cfg(any(target_os = "android", target_os = "linux"))]
@@ -1532,7 +1293,7 @@ pub union SockaddrStorage {
     sin6: SockaddrIn6,
     ss: libc::sockaddr_storage,
     su: UnixAddr,
-    #[cfg(any(target_os = "android", target_os = "linux"))]
+    #[cfg(any(target_os = "android", target_os = "linux", target_os = "macos" ))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
     vsock: VsockAddr,
 }
@@ -1567,7 +1328,9 @@ impl SockaddrLike for SockaddrStorage {
                 if i32::from(ss.ss_family) == libc::AF_UNIX {
                     // Safe because we UnixAddr is strictly smaller than
                     // SockaddrStorage, and we just initialized the structure.
-                    (*(&mut ss as *mut libc::sockaddr_storage as *mut UnixAddr)).sun_len = len as u8;
+                    (*(&mut ss as *mut libc::sockaddr_storage
+                        as *mut UnixAddr))
+                        .sun_len = len as u8;
                 }
                 Some(Self { ss })
             }
@@ -1622,7 +1385,7 @@ impl SockaddrLike for SockaddrStorage {
                 libc::AF_SYSTEM => {
                     SysControlAddr::from_raw(addr, l).map(|sctl| Self { sctl })
                 }
-                #[cfg(any(target_os = "android", target_os = "linux"))]
+                #[cfg(any(target_os = "android", target_os = "linux", target_os = "macos" ))]
                 libc::AF_VSOCK => {
                     VsockAddr::from_raw(addr, l).map(|vsock| Self { vsock })
                 }
@@ -1642,7 +1405,16 @@ impl SockaddrLike for SockaddrStorage {
             // The UnixAddr type knows its own length
             Some(ua) => ua.len(),
             // For all else, we're just a boring SockaddrStorage
-            None => mem::size_of_val(self) as libc::socklen_t
+            None => mem::size_of_val(self) as libc::socklen_t,
+        }
+    }
+
+    unsafe fn set_length(&mut self, new_length: usize) -> std::result::Result<(), SocketAddressLengthNotDynamic> {
+        match self.as_unix_addr_mut() {
+            Some(addr) => {
+                addr.set_length(new_length)
+            },
+            None => Err(SocketAddressLengthNotDynamic),
         }
     }
 }
@@ -1702,12 +1474,13 @@ impl SockaddrStorage {
             }
         }
         // Sanity checks
-        if self.family() != Some(AddressFamily::Unix) ||
-           len < offset_of!(libc::sockaddr_un, sun_path) ||
-           len > mem::size_of::<libc::sockaddr_un>() {
+        if self.family() != Some(AddressFamily::Unix)
+            || len < offset_of!(libc::sockaddr_un, sun_path)
+            || len > mem::size_of::<libc::sockaddr_un>()
+        {
             None
         } else {
-            Some(unsafe{&self.su})
+            Some(unsafe { &self.su })
         }
     }
 
@@ -1731,12 +1504,13 @@ impl SockaddrStorage {
             }
         }
         // Sanity checks
-        if self.family() != Some(AddressFamily::Unix) ||
-           len < offset_of!(libc::sockaddr_un, sun_path) ||
-           len > mem::size_of::<libc::sockaddr_un>() {
+        if self.family() != Some(AddressFamily::Unix)
+            || len < offset_of!(libc::sockaddr_un, sun_path)
+            || len > mem::size_of::<libc::sockaddr_un>()
+        {
             None
         } else {
-            Some(unsafe{&mut self.su})
+            Some(unsafe { &mut self.su })
         }
     }
 
@@ -1787,7 +1561,7 @@ impl SockaddrStorage {
     accessors! {as_sys_control_addr, as_sys_control_addr_mut, SysControlAddr,
     AddressFamily::System, libc::sockaddr_ctl, sctl}
 
-    #[cfg(any(target_os = "android", target_os = "linux"))]
+    #[cfg(any(target_os = "android", target_os = "linux", target_os = "macos"))]
     #[cfg_attr(docsrs, doc(cfg(all())))]
     accessors! {as_vsock_addr, as_vsock_addr_mut, VsockAddr,
     AddressFamily::Vsock, libc::sockaddr_vm, vsock}
@@ -1837,7 +1611,7 @@ impl fmt::Display for SockaddrStorage {
                 #[cfg(feature = "ioctl")]
                 libc::AF_SYSTEM => self.sctl.fmt(f),
                 libc::AF_UNIX => self.su.fmt(f),
-                #[cfg(any(target_os = "android", target_os = "linux"))]
+                #[cfg(any(target_os = "android", target_os = "linux", target_os = "macos"))]
                 libc::AF_VSOCK => self.vsock.fmt(f),
                 _ => "<Address family unspecified>".fmt(f),
             }
@@ -1911,7 +1685,7 @@ impl Hash for SockaddrStorage {
                 #[cfg(feature = "ioctl")]
                 libc::AF_SYSTEM => self.sctl.hash(s),
                 libc::AF_UNIX => self.su.hash(s),
-                #[cfg(any(target_os = "android", target_os = "linux"))]
+                #[cfg(any(target_os = "android", target_os = "linux", target_os = "macos"))]
                 libc::AF_VSOCK => self.vsock.hash(s),
                 _ => self.ss.hash(s),
             }
@@ -1953,7 +1727,7 @@ impl PartialEq for SockaddrStorage {
                 #[cfg(feature = "ioctl")]
                 (libc::AF_SYSTEM, libc::AF_SYSTEM) => self.sctl == other.sctl,
                 (libc::AF_UNIX, libc::AF_UNIX) => self.su == other.su,
-                #[cfg(any(target_os = "android", target_os = "linux"))]
+                #[cfg(any(target_os = "android", target_os = "linux", target_os = "macos"))]
                 (libc::AF_VSOCK, libc::AF_VSOCK) => self.vsock == other.vsock,
                 _ => false,
             }
@@ -1961,7 +1735,7 @@ impl PartialEq for SockaddrStorage {
     }
 }
 
-mod private {
+pub(super) mod private {
     pub trait SockaddrLikePriv {
         /// Returns a mutable raw pointer to the inner structure.
         ///
@@ -1974,358 +1748,6 @@ mod private {
         fn as_mut_ptr(&mut self) -> *mut libc::sockaddr {
             self as *mut Self as *mut libc::sockaddr
         }
-    }
-}
-
-/// Represents a socket address
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-#[deprecated(
-    since = "0.24.0",
-    note = "use SockaddrLike or SockaddrStorage instead"
-)]
-#[allow(missing_docs)] // Since they're all deprecated anyway
-#[allow(deprecated)]
-#[non_exhaustive]
-pub enum SockAddr {
-    #[cfg(feature = "net")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "net")))]
-    Inet(InetAddr),
-    Unix(UnixAddr),
-    #[cfg(any(target_os = "android", target_os = "linux"))]
-    #[cfg_attr(docsrs, doc(cfg(all())))]
-    Netlink(NetlinkAddr),
-    #[cfg(any(target_os = "android", target_os = "linux"))]
-    #[cfg_attr(docsrs, doc(cfg(all())))]
-    Alg(AlgAddr),
-    #[cfg(all(
-        feature = "ioctl",
-        any(target_os = "ios", target_os = "macos")
-    ))]
-    #[cfg_attr(docsrs, doc(cfg(feature = "ioctl")))]
-    SysControl(SysControlAddr),
-    /// Datalink address (MAC)
-    #[cfg(any(
-        target_os = "android",
-        target_os = "dragonfly",
-        target_os = "freebsd",
-        target_os = "ios",
-        target_os = "linux",
-        target_os = "macos",
-        target_os = "illumos",
-        target_os = "netbsd",
-        target_os = "openbsd"
-    ))]
-    #[cfg(feature = "net")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "net")))]
-    Link(LinkAddr),
-    #[cfg(any(target_os = "android", target_os = "linux"))]
-    #[cfg_attr(docsrs, doc(cfg(all())))]
-    Vsock(VsockAddr),
-}
-
-#[allow(missing_docs)] // Since they're all deprecated anyway
-#[allow(deprecated)]
-impl SockAddr {
-    feature! {
-    #![feature = "net"]
-    pub fn new_inet(addr: InetAddr) -> SockAddr {
-        SockAddr::Inet(addr)
-    }
-    }
-
-    pub fn new_unix<P: ?Sized + NixPath>(path: &P) -> Result<SockAddr> {
-        Ok(SockAddr::Unix(UnixAddr::new(path)?))
-    }
-
-    #[cfg(any(target_os = "android", target_os = "linux"))]
-    #[cfg_attr(docsrs, doc(cfg(all())))]
-    pub fn new_netlink(pid: u32, groups: u32) -> SockAddr {
-        SockAddr::Netlink(NetlinkAddr::new(pid, groups))
-    }
-
-    #[cfg(any(target_os = "android", target_os = "linux"))]
-    #[cfg_attr(docsrs, doc(cfg(all())))]
-    pub fn new_alg(alg_type: &str, alg_name: &str) -> SockAddr {
-        SockAddr::Alg(AlgAddr::new(alg_type, alg_name))
-    }
-
-    feature! {
-    #![feature = "ioctl"]
-    #[cfg(any(target_os = "ios", target_os = "macos"))]
-    pub fn new_sys_control(sockfd: RawFd, name: &str, unit: u32) -> Result<SockAddr> {
-        SysControlAddr::from_name(sockfd, name, unit).map(SockAddr::SysControl)
-    }
-    }
-
-    #[cfg(any(target_os = "android", target_os = "linux"))]
-    #[cfg_attr(docsrs, doc(cfg(all())))]
-    pub fn new_vsock(cid: u32, port: u32) -> SockAddr {
-        SockAddr::Vsock(VsockAddr::new(cid, port))
-    }
-
-    pub fn family(&self) -> AddressFamily {
-        match *self {
-            #[cfg(feature = "net")]
-            SockAddr::Inet(InetAddr::V4(..)) => AddressFamily::Inet,
-            #[cfg(feature = "net")]
-            SockAddr::Inet(InetAddr::V6(..)) => AddressFamily::Inet6,
-            SockAddr::Unix(..) => AddressFamily::Unix,
-            #[cfg(any(target_os = "android", target_os = "linux"))]
-            SockAddr::Netlink(..) => AddressFamily::Netlink,
-            #[cfg(any(target_os = "android", target_os = "linux"))]
-            SockAddr::Alg(..) => AddressFamily::Alg,
-            #[cfg(all(
-                feature = "ioctl",
-                any(target_os = "ios", target_os = "macos")
-            ))]
-            SockAddr::SysControl(..) => AddressFamily::System,
-            #[cfg(any(target_os = "android", target_os = "linux"))]
-            #[cfg(feature = "net")]
-            SockAddr::Link(..) => AddressFamily::Packet,
-            #[cfg(any(
-                target_os = "dragonfly",
-                target_os = "freebsd",
-                target_os = "ios",
-                target_os = "macos",
-                target_os = "netbsd",
-                target_os = "illumos",
-                target_os = "openbsd"
-            ))]
-            #[cfg(feature = "net")]
-            SockAddr::Link(..) => AddressFamily::Link,
-            #[cfg(any(target_os = "android", target_os = "linux"))]
-            SockAddr::Vsock(..) => AddressFamily::Vsock,
-        }
-    }
-
-    #[deprecated(since = "0.23.0", note = "use .to_string() instead")]
-    pub fn to_str(&self) -> String {
-        format!("{}", self)
-    }
-
-    /// Creates a `SockAddr` struct from libc's sockaddr.
-    ///
-    /// Supports only the following address families: Unix, Inet (v4 & v6), Netlink and System.
-    /// Returns None for unsupported families.
-    ///
-    /// # Safety
-    ///
-    /// unsafe because it takes a raw pointer as argument.  The caller must
-    /// ensure that the pointer is valid.
-    #[cfg(not(target_os = "fuchsia"))]
-    #[cfg(feature = "net")]
-    pub(crate) unsafe fn from_libc_sockaddr(
-        addr: *const libc::sockaddr,
-    ) -> Option<SockAddr> {
-        if addr.is_null() {
-            None
-        } else {
-            match AddressFamily::from_i32(i32::from((*addr).sa_family)) {
-                Some(AddressFamily::Unix) => None,
-                #[cfg(feature = "net")]
-                Some(AddressFamily::Inet) => Some(SockAddr::Inet(
-                    InetAddr::V4(ptr::read_unaligned(addr as *const _)),
-                )),
-                #[cfg(feature = "net")]
-                Some(AddressFamily::Inet6) => Some(SockAddr::Inet(
-                    InetAddr::V6(ptr::read_unaligned(addr as *const _)),
-                )),
-                #[cfg(any(target_os = "android", target_os = "linux"))]
-                Some(AddressFamily::Netlink) => Some(SockAddr::Netlink(
-                    NetlinkAddr(ptr::read_unaligned(addr as *const _)),
-                )),
-                #[cfg(all(
-                    feature = "ioctl",
-                    any(target_os = "ios", target_os = "macos")
-                ))]
-                Some(AddressFamily::System) => Some(SockAddr::SysControl(
-                    SysControlAddr(ptr::read_unaligned(addr as *const _)),
-                )),
-                #[cfg(any(target_os = "android", target_os = "linux"))]
-                #[cfg(feature = "net")]
-                Some(AddressFamily::Packet) => Some(SockAddr::Link(LinkAddr(
-                    ptr::read_unaligned(addr as *const _),
-                ))),
-                #[cfg(any(
-                    target_os = "dragonfly",
-                    target_os = "freebsd",
-                    target_os = "ios",
-                    target_os = "macos",
-                    target_os = "netbsd",
-                    target_os = "illumos",
-                    target_os = "openbsd"
-                ))]
-                #[cfg(feature = "net")]
-                Some(AddressFamily::Link) => {
-                    let ether_addr =
-                        LinkAddr(ptr::read_unaligned(addr as *const _));
-                    if ether_addr.is_empty() {
-                        None
-                    } else {
-                        Some(SockAddr::Link(ether_addr))
-                    }
-                }
-                #[cfg(any(target_os = "android", target_os = "linux"))]
-                Some(AddressFamily::Vsock) => Some(SockAddr::Vsock(VsockAddr(
-                    ptr::read_unaligned(addr as *const _),
-                ))),
-                // Other address families are currently not supported and simply yield a None
-                // entry instead of a proper conversion to a `SockAddr`.
-                Some(_) | None => None,
-            }
-        }
-    }
-
-    /// Conversion from nix's SockAddr type to the underlying libc sockaddr type.
-    ///
-    /// This is useful for interfacing with other libc functions that don't yet have nix wrappers.
-    /// Returns a reference to the underlying data type (as a sockaddr reference) along
-    /// with the size of the actual data type. sockaddr is commonly used as a proxy for
-    /// a superclass as C doesn't support inheritance, so many functions that take
-    /// a sockaddr * need to take the size of the underlying type as well and then internally cast it back.
-    pub fn as_ffi_pair(&self) -> (&libc::sockaddr, libc::socklen_t) {
-        match *self {
-            #[cfg(feature = "net")]
-            SockAddr::Inet(InetAddr::V4(ref addr)) => (
-                // This cast is always allowed in C
-                unsafe {
-                    &*(addr as *const libc::sockaddr_in
-                        as *const libc::sockaddr)
-                },
-                mem::size_of_val(addr) as libc::socklen_t,
-            ),
-            #[cfg(feature = "net")]
-            SockAddr::Inet(InetAddr::V6(ref addr)) => (
-                // This cast is always allowed in C
-                unsafe {
-                    &*(addr as *const libc::sockaddr_in6
-                        as *const libc::sockaddr)
-                },
-                mem::size_of_val(addr) as libc::socklen_t,
-            ),
-            SockAddr::Unix(ref unix_addr) => (
-                // This cast is always allowed in C
-                unsafe {
-                    &*(&unix_addr.sun as *const libc::sockaddr_un
-                        as *const libc::sockaddr)
-                },
-                unix_addr.sun_len() as libc::socklen_t,
-            ),
-            #[cfg(any(target_os = "android", target_os = "linux"))]
-            SockAddr::Netlink(NetlinkAddr(ref sa)) => (
-                // This cast is always allowed in C
-                unsafe {
-                    &*(sa as *const libc::sockaddr_nl as *const libc::sockaddr)
-                },
-                mem::size_of_val(sa) as libc::socklen_t,
-            ),
-            #[cfg(any(target_os = "android", target_os = "linux"))]
-            SockAddr::Alg(AlgAddr(ref sa)) => (
-                // This cast is always allowed in C
-                unsafe {
-                    &*(sa as *const libc::sockaddr_alg as *const libc::sockaddr)
-                },
-                mem::size_of_val(sa) as libc::socklen_t,
-            ),
-            #[cfg(all(
-                feature = "ioctl",
-                any(target_os = "ios", target_os = "macos")
-            ))]
-            SockAddr::SysControl(SysControlAddr(ref sa)) => (
-                // This cast is always allowed in C
-                unsafe {
-                    &*(sa as *const libc::sockaddr_ctl as *const libc::sockaddr)
-                },
-                mem::size_of_val(sa) as libc::socklen_t,
-            ),
-            #[cfg(any(target_os = "android", target_os = "linux"))]
-            #[cfg(feature = "net")]
-            SockAddr::Link(LinkAddr(ref addr)) => (
-                // This cast is always allowed in C
-                unsafe {
-                    &*(addr as *const libc::sockaddr_ll
-                        as *const libc::sockaddr)
-                },
-                mem::size_of_val(addr) as libc::socklen_t,
-            ),
-            #[cfg(any(
-                target_os = "dragonfly",
-                target_os = "freebsd",
-                target_os = "ios",
-                target_os = "macos",
-                target_os = "illumos",
-                target_os = "netbsd",
-                target_os = "openbsd"
-            ))]
-            #[cfg(feature = "net")]
-            SockAddr::Link(LinkAddr(ref addr)) => (
-                // This cast is always allowed in C
-                unsafe {
-                    &*(addr as *const libc::sockaddr_dl
-                        as *const libc::sockaddr)
-                },
-                mem::size_of_val(addr) as libc::socklen_t,
-            ),
-            #[cfg(any(target_os = "android", target_os = "linux"))]
-            SockAddr::Vsock(VsockAddr(ref sa)) => (
-                // This cast is always allowed in C
-                unsafe {
-                    &*(sa as *const libc::sockaddr_vm as *const libc::sockaddr)
-                },
-                mem::size_of_val(sa) as libc::socklen_t,
-            ),
-        }
-    }
-}
-
-#[allow(deprecated)]
-impl fmt::Display for SockAddr {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            #[cfg(feature = "net")]
-            SockAddr::Inet(ref inet) => inet.fmt(f),
-            SockAddr::Unix(ref unix) => unix.fmt(f),
-            #[cfg(any(target_os = "android", target_os = "linux"))]
-            SockAddr::Netlink(ref nl) => nl.fmt(f),
-            #[cfg(any(target_os = "android", target_os = "linux"))]
-            SockAddr::Alg(ref nl) => nl.fmt(f),
-            #[cfg(all(
-                feature = "ioctl",
-                any(target_os = "ios", target_os = "macos")
-            ))]
-            SockAddr::SysControl(ref sc) => sc.fmt(f),
-            #[cfg(any(
-                target_os = "android",
-                target_os = "dragonfly",
-                target_os = "freebsd",
-                target_os = "ios",
-                target_os = "linux",
-                target_os = "macos",
-                target_os = "netbsd",
-                target_os = "illumos",
-                target_os = "openbsd"
-            ))]
-            #[cfg(feature = "net")]
-            SockAddr::Link(ref ether_addr) => ether_addr.fmt(f),
-            #[cfg(any(target_os = "android", target_os = "linux"))]
-            SockAddr::Vsock(ref svm) => svm.fmt(f),
-        }
-    }
-}
-
-#[cfg(not(target_os = "fuchsia"))]
-#[cfg(feature = "net")]
-#[allow(deprecated)]
-impl private::SockaddrLikePriv for SockAddr {}
-#[cfg(not(target_os = "fuchsia"))]
-#[cfg(feature = "net")]
-#[allow(deprecated)]
-impl SockaddrLike for SockAddr {
-    unsafe fn from_raw(
-        addr: *const libc::sockaddr,
-        _len: Option<libc::socklen_t>,
-    ) -> Option<Self> {
-        Self::from_libc_sockaddr(addr)
     }
 }
 
@@ -2738,6 +2160,7 @@ mod datalink {
     target_os = "illumos",
     target_os = "netbsd",
     target_os = "haiku",
+    target_os = "aix",
     target_os = "openbsd"
 ))]
 #[cfg_attr(docsrs, doc(cfg(all())))]
@@ -2850,11 +2273,10 @@ mod datalink {
             &self.0
         }
     }
-
     }
 }
 
-#[cfg(any(target_os = "android", target_os = "linux"))]
+#[cfg(any(target_os = "android", target_os = "linux", target_os = "macos"))]
 #[cfg_attr(docsrs, doc(cfg(all())))]
 pub mod vsock {
     use super::*;
@@ -2900,19 +2322,32 @@ pub mod vsock {
     }
 
     impl PartialEq for VsockAddr {
+        #[cfg(any(target_os = "android", target_os = "linux"))]
         fn eq(&self, other: &Self) -> bool {
             let (inner, other) = (self.0, other.0);
             (inner.svm_family, inner.svm_cid, inner.svm_port)
                 == (other.svm_family, other.svm_cid, other.svm_port)
+        }
+        #[cfg(target_os = "macos")]
+        fn eq(&self, other: &Self) -> bool {
+            let (inner, other) = (self.0, other.0);
+            (inner.svm_family, inner.svm_cid, inner.svm_port, inner.svm_len)
+                == (other.svm_family, other.svm_cid, other.svm_port, inner.svm_len)
         }
     }
 
     impl Eq for VsockAddr {}
 
     impl Hash for VsockAddr {
+        #[cfg(any(target_os = "android", target_os = "linux"))]
         fn hash<H: Hasher>(&self, s: &mut H) {
             let inner = self.0;
             (inner.svm_family, inner.svm_cid, inner.svm_port).hash(s);
+        }
+        #[cfg(target_os = "macos")]
+        fn hash<H: Hasher>(&self, s: &mut H) {
+            let inner = self.0;
+            (inner.svm_family, inner.svm_cid, inner.svm_port, inner.svm_len).hash(s);
         }
     }
 
@@ -2928,6 +2363,10 @@ pub mod vsock {
             addr.svm_cid = cid;
             addr.svm_port = port;
 
+            #[cfg(target_os = "macos")]
+            {
+             addr.svm_len =  std::mem::size_of::<sockaddr_vm>() as u8;
+            }
             VsockAddr(addr)
         }
 
@@ -2980,6 +2419,7 @@ mod tests {
         }
     }
 
+    #[cfg(not(target_os = "redox"))]
     mod link {
         #![allow(clippy::cast_ptr_alignment)]
 
@@ -3015,7 +2455,7 @@ mod tests {
                 sdl_slen: 0,
                 ..unsafe { mem::zeroed() }
             });
-            format!("{}", la);
+            format!("{la}");
         }
 
         #[cfg(all(
@@ -3109,6 +2549,7 @@ mod tests {
         #[test]
         fn size() {
             #[cfg(any(
+                target_os = "aix",
                 target_os = "dragonfly",
                 target_os = "freebsd",
                 target_os = "ios",
@@ -3137,7 +2578,7 @@ mod tests {
         fn display() {
             let s = "127.0.0.1:8080";
             let addr = SockaddrIn::from_str(s).unwrap();
-            assert_eq!(s, format!("{}", addr));
+            assert_eq!(s, format!("{addr}"));
         }
 
         #[test]
@@ -3157,7 +2598,7 @@ mod tests {
         fn display() {
             let s = "[1234:5678:90ab:cdef::1111:2222]:8080";
             let addr = SockaddrIn6::from_str(s).unwrap();
-            assert_eq!(s, format!("{}", addr));
+            assert_eq!(s, format!("{addr}"));
         }
 
         #[test]
@@ -3176,7 +2617,7 @@ mod tests {
             nix_sin6.0.sin6_flowinfo = 0x12345678;
             nix_sin6.0.sin6_scope_id = 0x9abcdef0;
 
-            let std_sin6 : std::net::SocketAddrV6 = nix_sin6.into();
+            let std_sin6: std::net::SocketAddrV6 = nix_sin6.into();
             assert_eq!(nix_sin6, std_sin6.into());
         }
     }
@@ -3188,9 +2629,8 @@ mod tests {
         fn from_sockaddr_un_named() {
             let ua = UnixAddr::new("/var/run/mysock").unwrap();
             let ptr = ua.as_ptr() as *const libc::sockaddr;
-            let ss = unsafe {
-                SockaddrStorage::from_raw(ptr, Some(ua.len()))
-            }.unwrap();
+            let ss = unsafe { SockaddrStorage::from_raw(ptr, Some(ua.len())) }
+                .unwrap();
             assert_eq!(ss.len(), ua.len());
         }
 
@@ -3200,9 +2640,8 @@ mod tests {
             let name = String::from("nix\0abstract\0test");
             let ua = UnixAddr::new_abstract(name.as_bytes()).unwrap();
             let ptr = ua.as_ptr() as *const libc::sockaddr;
-            let ss = unsafe {
-                SockaddrStorage::from_raw(ptr, Some(ua.len()))
-            }.unwrap();
+            let ss = unsafe { SockaddrStorage::from_raw(ptr, Some(ua.len())) }
+                .unwrap();
             assert_eq!(ss.len(), ua.len());
         }
 
@@ -3211,9 +2650,8 @@ mod tests {
         fn from_sockaddr_un_abstract_unnamed() {
             let ua = UnixAddr::new_unnamed();
             let ptr = ua.as_ptr() as *const libc::sockaddr;
-            let ss = unsafe {
-                SockaddrStorage::from_raw(ptr, Some(ua.len()))
-            }.unwrap();
+            let ss = unsafe { SockaddrStorage::from_raw(ptr, Some(ua.len())) }
+                .unwrap();
             assert_eq!(ss.len(), ua.len());
         }
     }

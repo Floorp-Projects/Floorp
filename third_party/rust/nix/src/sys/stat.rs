@@ -177,7 +177,7 @@ pub fn mknod<P: ?Sized + NixPath>(
     dev: dev_t,
 ) -> Result<()> {
     let res = path.with_nix_path(|cstr| unsafe {
-        libc::mknod(cstr.as_ptr(), kind.bits | perm.bits() as mode_t, dev)
+        libc::mknod(cstr.as_ptr(), kind.bits() | perm.bits() as mode_t, dev)
     })?;
 
     Errno::result(res).map(drop)
@@ -202,7 +202,7 @@ pub fn mknodat<P: ?Sized + NixPath>(
         libc::mknodat(
             dirfd,
             cstr.as_ptr(),
-            kind.bits | perm.bits() as mode_t,
+            kind.bits() | perm.bits() as mode_t,
             dev,
         )
     })?;

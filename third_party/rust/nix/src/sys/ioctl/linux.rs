@@ -1,3 +1,5 @@
+use cfg_if::cfg_if;
+
 /// The datatype used for the ioctl number
 #[cfg(any(target_os = "android", target_env = "musl"))]
 #[doc(hidden)]
@@ -14,47 +16,41 @@ pub const NRBITS: ioctl_num_type = 8;
 #[doc(hidden)]
 pub const TYPEBITS: ioctl_num_type = 8;
 
-#[cfg(any(
-    target_arch = "mips",
-    target_arch = "mips64",
-    target_arch = "powerpc",
-    target_arch = "powerpc64",
-    target_arch = "sparc64"
-))]
-mod consts {
-    #[doc(hidden)]
-    pub const NONE: u8 = 1;
-    #[doc(hidden)]
-    pub const READ: u8 = 2;
-    #[doc(hidden)]
-    pub const WRITE: u8 = 4;
-    #[doc(hidden)]
-    pub const SIZEBITS: u8 = 13;
-    #[doc(hidden)]
-    pub const DIRBITS: u8 = 3;
-}
-
-// "Generic" ioctl protocol
-#[cfg(any(
-    target_arch = "x86",
-    target_arch = "arm",
-    target_arch = "s390x",
-    target_arch = "x86_64",
-    target_arch = "aarch64",
-    target_arch = "riscv32",
-    target_arch = "riscv64"
-))]
-mod consts {
-    #[doc(hidden)]
-    pub const NONE: u8 = 0;
-    #[doc(hidden)]
-    pub const READ: u8 = 2;
-    #[doc(hidden)]
-    pub const WRITE: u8 = 1;
-    #[doc(hidden)]
-    pub const SIZEBITS: u8 = 14;
-    #[doc(hidden)]
-    pub const DIRBITS: u8 = 2;
+cfg_if! {
+    if #[cfg(any(
+        target_arch = "mips",
+        target_arch = "mips64",
+        target_arch = "powerpc",
+        target_arch = "powerpc64",
+        target_arch = "sparc64"
+    ))] {
+        mod consts {
+            #[doc(hidden)]
+            pub const NONE: u8 = 1;
+            #[doc(hidden)]
+            pub const READ: u8 = 2;
+            #[doc(hidden)]
+            pub const WRITE: u8 = 4;
+            #[doc(hidden)]
+            pub const SIZEBITS: u8 = 13;
+            #[doc(hidden)]
+            pub const DIRBITS: u8 = 3;
+        }
+    } else {
+        // "Generic" ioctl protocol
+        mod consts {
+            #[doc(hidden)]
+            pub const NONE: u8 = 0;
+            #[doc(hidden)]
+            pub const READ: u8 = 2;
+            #[doc(hidden)]
+            pub const WRITE: u8 = 1;
+            #[doc(hidden)]
+            pub const SIZEBITS: u8 = 14;
+            #[doc(hidden)]
+            pub const DIRBITS: u8 = 2;
+        }
+    }
 }
 
 pub use self::consts::*;

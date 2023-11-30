@@ -222,7 +222,7 @@ use libc::{self, c_int, tcflag_t};
 use std::cell::{Ref, RefCell};
 use std::convert::From;
 use std::mem;
-use std::os::unix::io::RawFd;
+use std::os::unix::io::{AsFd, AsRawFd};
 
 #[cfg(feature = "process")]
 use crate::unistd::Pid;
@@ -309,7 +309,7 @@ impl Termios {
         let termios = *self.inner.borrow_mut();
         self.input_flags = InputFlags::from_bits_truncate(termios.c_iflag);
         self.output_flags = OutputFlags::from_bits_truncate(termios.c_oflag);
-        self.control_flags = ControlFlags::from_bits_truncate(termios.c_cflag);
+        self.control_flags = ControlFlags::from_bits_retain(termios.c_cflag);
         self.local_flags = LocalFlags::from_bits_truncate(termios.c_lflag);
         self.control_chars = termios.c_cc;
         #[cfg(any(
@@ -355,9 +355,9 @@ libc_enum! {
     /// enum.
     ///
     /// B0 is special and will disable the port.
-    #[cfg_attr(all(any(target_os = "haiku"), target_pointer_width = "64"), repr(u8))]
+    #[cfg_attr(target_os = "haiku", repr(u8))]
     #[cfg_attr(all(any(target_os = "ios", target_os = "macos"), target_pointer_width = "64"), repr(u64))]
-    #[cfg_attr(not(all(any(target_os = "ios", target_os = "macos", target_os = "haiku"), target_pointer_width = "64")), repr(u32))]
+    #[cfg_attr(all(not(all(any(target_os = "ios", target_os = "macos"), target_pointer_width = "64")), not(target_os = "haiku")), repr(u32))]
     #[non_exhaustive]
     pub enum BaudRate {
         B0,
@@ -397,6 +397,8 @@ libc_enum! {
         #[cfg_attr(docsrs, doc(cfg(all())))]
         B28800,
         B38400,
+        #[cfg(not(target_os = "aix"))]
+        #[cfg_attr(docsrs, doc(cfg(all())))]
         B57600,
         #[cfg(any(target_os = "dragonfly",
                 target_os = "freebsd",
@@ -405,10 +407,14 @@ libc_enum! {
                 target_os = "openbsd"))]
         #[cfg_attr(docsrs, doc(cfg(all())))]
         B76800,
+        #[cfg(not(target_os = "aix"))]
+        #[cfg_attr(docsrs, doc(cfg(all())))]
         B115200,
         #[cfg(any(target_os = "illumos", target_os = "solaris"))]
         #[cfg_attr(docsrs, doc(cfg(all())))]
         B153600,
+        #[cfg(not(target_os = "aix"))]
+        #[cfg_attr(docsrs, doc(cfg(all())))]
         B230400,
         #[cfg(any(target_os = "illumos", target_os = "solaris"))]
         #[cfg_attr(docsrs, doc(cfg(all())))]
@@ -542,6 +548,8 @@ libc_enum! {
     #[repr(usize)]
     #[non_exhaustive]
     pub enum SpecialCharacterIndices {
+        #[cfg(not(target_os = "aix"))]
+        #[cfg_attr(docsrs, doc(cfg(all())))]
         VDISCARD,
         #[cfg(any(target_os = "dragonfly",
                 target_os = "freebsd",
@@ -549,6 +557,7 @@ libc_enum! {
                 target_os = "macos",
                 target_os = "netbsd",
                 target_os = "openbsd",
+                target_os = "aix",
                 target_os = "solaris"))]
         #[cfg_attr(docsrs, doc(cfg(all())))]
         VDSUSP,
@@ -566,7 +575,7 @@ libc_enum! {
         VKILL,
         VLNEXT,
         #[cfg(not(any(all(target_os = "linux", target_arch = "sparc64"),
-                target_os = "illumos", target_os = "solaris")))]
+                target_os = "illumos", target_os = "solaris", target_os = "aix")))]
         #[cfg_attr(docsrs, doc(cfg(all())))]
         VMIN,
         VQUIT,
@@ -590,9 +599,11 @@ libc_enum! {
         #[cfg_attr(docsrs, doc(cfg(all())))]
         VSWTCH,
         #[cfg(not(any(all(target_os = "linux", target_arch = "sparc64"),
-                target_os = "illumos", target_os = "solaris")))]
+                target_os = "illumos", target_os = "solaris", target_os = "aix")))]
         #[cfg_attr(docsrs, doc(cfg(all())))]
         VTIME,
+        #[cfg(not(target_os = "aix"))]
+        #[cfg_attr(docsrs, doc(cfg(all())))]
         VWERASE,
         #[cfg(target_os = "dragonfly")]
         #[cfg_attr(docsrs, doc(cfg(all())))]
@@ -603,7 +614,8 @@ libc_enum! {
 #[cfg(any(
     all(target_os = "linux", target_arch = "sparc64"),
     target_os = "illumos",
-    target_os = "solaris"
+    target_os = "solaris",
+    target_os = "aix",
 ))]
 impl SpecialCharacterIndices {
     pub const VMIN: SpecialCharacterIndices = SpecialCharacterIndices::VEOF;
@@ -616,6 +628,7 @@ pub use libc::NCCS;
     target_os = "dragonfly",
     target_os = "freebsd",
     target_os = "linux",
+    target_os = "aix",
     target_os = "macos",
     target_os = "netbsd",
     target_os = "openbsd"
@@ -881,7 +894,7 @@ libc_bitflags! {
         PARODD;
         HUPCL;
         CLOCAL;
-        #[cfg(not(target_os = "redox"))]
+        #[cfg(not(any(target_os = "redox", target_os = "aix")))]
         #[cfg_attr(docsrs, doc(cfg(all())))]
         CRTSCTS;
         #[cfg(any(target_os = "android", target_os = "linux"))]
@@ -967,7 +980,7 @@ libc_bitflags! {
         #[cfg_attr(docsrs, doc(cfg(all())))]
         ALTWERASE;
         IEXTEN;
-        #[cfg(not(any(target_os = "redox", target_os = "haiku")))]
+        #[cfg(not(any(target_os = "redox", target_os = "haiku", target_os = "aix")))]
         #[cfg_attr(docsrs, doc(cfg(all())))]
         EXTPROC;
         TOSTOP;
@@ -1143,10 +1156,12 @@ pub fn cfmakesane(termios: &mut Termios) {
 /// `tcgetattr()` returns a `Termios` structure with the current configuration for a port. Modifying
 /// this structure *will not* reconfigure the port, instead the modifications should be done to
 /// the `Termios` structure and then the port should be reconfigured using `tcsetattr()`.
-pub fn tcgetattr(fd: RawFd) -> Result<Termios> {
+pub fn tcgetattr<Fd: AsFd>(fd: Fd) -> Result<Termios> {
     let mut termios = mem::MaybeUninit::uninit();
 
-    let res = unsafe { libc::tcgetattr(fd, termios.as_mut_ptr()) };
+    let res = unsafe {
+        libc::tcgetattr(fd.as_fd().as_raw_fd(), termios.as_mut_ptr())
+    };
 
     Errno::result(res)?;
 
@@ -1159,18 +1174,26 @@ pub fn tcgetattr(fd: RawFd) -> Result<Termios> {
 /// `tcsetattr()` reconfigures the given port based on a given `Termios` structure. This change
 /// takes affect at a time specified by `actions`. Note that this function may return success if
 /// *any* of the parameters were successfully set, not only if all were set successfully.
-pub fn tcsetattr(fd: RawFd, actions: SetArg, termios: &Termios) -> Result<()> {
+pub fn tcsetattr<Fd: AsFd>(
+    fd: Fd,
+    actions: SetArg,
+    termios: &Termios,
+) -> Result<()> {
     let inner_termios = termios.get_libc_termios();
     Errno::result(unsafe {
-        libc::tcsetattr(fd, actions as c_int, &*inner_termios)
+        libc::tcsetattr(
+            fd.as_fd().as_raw_fd(),
+            actions as c_int,
+            &*inner_termios,
+        )
     })
     .map(drop)
 }
 
 /// Block until all output data is written (see
 /// [tcdrain(3p)](https://pubs.opengroup.org/onlinepubs/9699919799/functions/tcdrain.html)).
-pub fn tcdrain(fd: RawFd) -> Result<()> {
-    Errno::result(unsafe { libc::tcdrain(fd) }).map(drop)
+pub fn tcdrain<Fd: AsFd>(fd: Fd) -> Result<()> {
+    Errno::result(unsafe { libc::tcdrain(fd.as_fd().as_raw_fd()) }).map(drop)
 }
 
 /// Suspend or resume the transmission or reception of data (see
@@ -1178,8 +1201,11 @@ pub fn tcdrain(fd: RawFd) -> Result<()> {
 ///
 /// `tcflow()` suspends of resumes the transmission or reception of data for the given port
 /// depending on the value of `action`.
-pub fn tcflow(fd: RawFd, action: FlowArg) -> Result<()> {
-    Errno::result(unsafe { libc::tcflow(fd, action as c_int) }).map(drop)
+pub fn tcflow<Fd: AsFd>(fd: Fd, action: FlowArg) -> Result<()> {
+    Errno::result(unsafe {
+        libc::tcflow(fd.as_fd().as_raw_fd(), action as c_int)
+    })
+    .map(drop)
 }
 
 /// Discard data in the output or input queue (see
@@ -1187,8 +1213,11 @@ pub fn tcflow(fd: RawFd, action: FlowArg) -> Result<()> {
 ///
 /// `tcflush()` will discard data for a terminal port in the input queue, output queue, or both
 /// depending on the value of `action`.
-pub fn tcflush(fd: RawFd, action: FlushArg) -> Result<()> {
-    Errno::result(unsafe { libc::tcflush(fd, action as c_int) }).map(drop)
+pub fn tcflush<Fd: AsFd>(fd: Fd, action: FlushArg) -> Result<()> {
+    Errno::result(unsafe {
+        libc::tcflush(fd.as_fd().as_raw_fd(), action as c_int)
+    })
+    .map(drop)
 }
 
 /// Send a break for a specific duration (see
@@ -1196,16 +1225,19 @@ pub fn tcflush(fd: RawFd, action: FlushArg) -> Result<()> {
 ///
 /// When using asynchronous data transmission `tcsendbreak()` will transmit a continuous stream
 /// of zero-valued bits for an implementation-defined duration.
-pub fn tcsendbreak(fd: RawFd, duration: c_int) -> Result<()> {
-    Errno::result(unsafe { libc::tcsendbreak(fd, duration) }).map(drop)
+pub fn tcsendbreak<Fd: AsFd>(fd: Fd, duration: c_int) -> Result<()> {
+    Errno::result(unsafe {
+        libc::tcsendbreak(fd.as_fd().as_raw_fd(), duration)
+    })
+    .map(drop)
 }
 
 feature! {
 #![feature = "process"]
 /// Get the session controlled by the given terminal (see
 /// [tcgetsid(3)](https://pubs.opengroup.org/onlinepubs/9699919799/functions/tcgetsid.html)).
-pub fn tcgetsid(fd: RawFd) -> Result<Pid> {
-    let res = unsafe { libc::tcgetsid(fd) };
+pub fn tcgetsid<Fd: AsFd>(fd: Fd) -> Result<Pid> {
+    let res = unsafe { libc::tcgetsid(fd.as_fd().as_raw_fd()) };
 
     Errno::result(res).map(Pid::from_raw)
 }

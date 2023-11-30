@@ -1,5 +1,5 @@
 //! Wait for events to trigger on specific file descriptors
-use std::os::unix::io::{AsRawFd, RawFd};
+use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd};
 
 use crate::errno::Errno;
 use crate::Result;
@@ -14,20 +14,36 @@ use crate::Result;
 /// retrieved by calling [`revents()`](#method.revents) on the `PollFd`.
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub struct PollFd {
+pub struct PollFd<'fd> {
     pollfd: libc::pollfd,
+    _fd: std::marker::PhantomData<BorrowedFd<'fd>>,
 }
 
-impl PollFd {
+impl<'fd> PollFd<'fd> {
     /// Creates a new `PollFd` specifying the events of interest
     /// for a given file descriptor.
-    pub const fn new(fd: RawFd, events: PollFlags) -> PollFd {
+    //
+    // Different from other I/O-safe interfaces, here, we have to take `AsFd`
+    // by reference to prevent the case where the `fd` is closed but it is
+    // still in use. For example:
+    //
+    // ```rust
+    // let (reader, _) = pipe().unwrap();
+    //
+    // // If `PollFd::new()` takes `AsFd` by value, then `reader` will be consumed,
+    // // but the file descriptor of `reader` will still be in use.
+    // let pollfd = PollFd::new(reader, flag);
+    //
+    // // Do something with `pollfd`, which uses the CLOSED fd.
+    // ```
+    pub fn new<Fd: AsFd>(fd: &'fd Fd, events: PollFlags) -> PollFd<'fd> {
         PollFd {
             pollfd: libc::pollfd {
-                fd,
+                fd: fd.as_fd().as_raw_fd(),
                 events: events.bits(),
                 revents: PollFlags::empty().bits(),
             },
+            _fd: std::marker::PhantomData,
         }
     }
 
@@ -68,9 +84,29 @@ impl PollFd {
     }
 }
 
-impl AsRawFd for PollFd {
-    fn as_raw_fd(&self) -> RawFd {
-        self.pollfd.fd
+impl<'fd> AsFd for PollFd<'fd> {
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        // Safety:
+        //
+        // BorrowedFd::borrow_raw(RawFd) requires that the raw fd being passed
+        // must remain open for the duration of the returned BorrowedFd, this is
+        // guaranteed as the returned BorrowedFd has the lifetime parameter same
+        // as `self`:
+        // "fn as_fd<'self>(&'self self) -> BorrowedFd<'self>"
+        // which means that `self` (PollFd) is guaranteed to outlive the returned
+        // BorrowedFd. (Lifetime: PollFd > BorrowedFd)
+        //
+        // And the lifetime parameter of PollFd::new(fd, ...) ensures that `fd`
+        // (an owned file descriptor) must outlive the returned PollFd:
+        // "pub fn new<Fd: AsFd>(fd: &'fd Fd, events: PollFlags) -> PollFd<'fd>"
+        // (Lifetime: Owned fd > PollFd)
+        //
+        // With two above relationships, we can conclude that the `Owned file
+        // descriptor` will outlive the returned BorrowedFd,
+        // (Lifetime: Owned fd > BorrowedFd)
+        // i.e., the raw fd being passed will remain valid for the lifetime of
+        // the returned BorrowedFd.
+        unsafe { BorrowedFd::borrow_raw(self.pollfd.fd) }
     }
 }
 

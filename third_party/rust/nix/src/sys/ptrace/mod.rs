@@ -1,4 +1,4 @@
-///! Provides helpers for making ptrace system calls
+//! Provides helpers for making ptrace system calls
 
 #[cfg(any(target_os = "android", target_os = "linux"))]
 mod linux;

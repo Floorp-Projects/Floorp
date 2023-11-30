@@ -33,24 +33,28 @@ pub use crate::sys::time::timer::{Expiration, TimerSetTimeFlags};
 use crate::unistd::read;
 use crate::{errno::Errno, Result};
 use libc::c_int;
-use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
+use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, OwnedFd, RawFd};
 
 /// A timerfd instance. This is also a file descriptor, you can feed it to
-/// other interfaces consuming file descriptors, epoll for example.
+/// other interfaces taking file descriptors as arguments, [`epoll`] for example.
+///
+/// [`epoll`]: crate::sys::epoll
 #[derive(Debug)]
 pub struct TimerFd {
-    fd: RawFd,
+    fd: OwnedFd,
 }
 
-impl AsRawFd for TimerFd {
-    fn as_raw_fd(&self) -> RawFd {
-        self.fd
+impl AsFd for TimerFd {
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        self.fd.as_fd()
     }
 }
 
 impl FromRawFd for TimerFd {
     unsafe fn from_raw_fd(fd: RawFd) -> Self {
-        TimerFd { fd }
+        TimerFd {
+            fd: OwnedFd::from_raw_fd(fd),
+        }
     }
 }
 
@@ -97,7 +101,9 @@ impl TimerFd {
         Errno::result(unsafe {
             libc::timerfd_create(clockid as i32, flags.bits())
         })
-        .map(|fd| Self { fd })
+        .map(|fd| Self {
+            fd: unsafe { OwnedFd::from_raw_fd(fd) },
+        })
     }
 
     /// Sets a new alarm on the timer.
@@ -129,6 +135,13 @@ impl TimerFd {
     /// Then the one shot TimeSpec and the delay TimeSpec of the delayed
     /// interval are going to be interpreted as absolute.
     ///
+    /// # Cancel on a clock change
+    ///
+    /// If you set a `TFD_TIMER_CANCEL_ON_SET` alongside `TFD_TIMER_ABSTIME`
+    /// and the clock for this timer is `CLOCK_REALTIME` or `CLOCK_REALTIME_ALARM`,
+    /// then this timer is marked as cancelable if the real-time clock undergoes
+    /// a discontinuous change.
+    ///
     /// # Disabling alarms
     ///
     /// Note: Only one alarm can be set for any given timer. Setting a new alarm
@@ -145,7 +158,7 @@ impl TimerFd {
         let timerspec: TimerSpec = expiration.into();
         Errno::result(unsafe {
             libc::timerfd_settime(
-                self.fd,
+                self.fd.as_fd().as_raw_fd(),
                 flags.bits(),
                 timerspec.as_ref(),
                 std::ptr::null_mut(),
@@ -159,7 +172,10 @@ impl TimerFd {
     pub fn get(&self) -> Result<Option<Expiration>> {
         let mut timerspec = TimerSpec::none();
         Errno::result(unsafe {
-            libc::timerfd_gettime(self.fd, timerspec.as_mut())
+            libc::timerfd_gettime(
+                self.fd.as_fd().as_raw_fd(),
+                timerspec.as_mut(),
+            )
         })
         .map(|_| {
             if timerspec.as_ref().it_interval.tv_sec == 0
@@ -179,7 +195,7 @@ impl TimerFd {
     pub fn unset(&self) -> Result<()> {
         Errno::result(unsafe {
             libc::timerfd_settime(
-                self.fd,
+                self.fd.as_fd().as_raw_fd(),
                 TimerSetTimeFlags::empty().bits(),
                 TimerSpec::none().as_ref(),
                 std::ptr::null_mut(),
@@ -192,23 +208,15 @@ impl TimerFd {
     ///
     /// Note: If the alarm is unset, then you will wait forever.
     pub fn wait(&self) -> Result<()> {
-        while let Err(e) = read(self.fd, &mut [0u8; 8]) {
+        while let Err(e) = read(self.fd.as_fd().as_raw_fd(), &mut [0u8; 8]) {
+            if e == Errno::ECANCELED {
+                break;
+            }
             if e != Errno::EINTR {
                 return Err(e);
             }
         }
 
         Ok(())
-    }
-}
-
-impl Drop for TimerFd {
-    fn drop(&mut self) {
-        if !std::thread::panicking() {
-            let result = Errno::result(unsafe { libc::close(self.fd) });
-            if let Err(Errno::EBADF) = result {
-                panic!("close of TimerFd encountered EBADF");
-            }
-        }
     }
 }

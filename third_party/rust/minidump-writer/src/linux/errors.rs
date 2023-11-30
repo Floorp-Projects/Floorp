@@ -143,6 +143,16 @@ pub enum SectionExceptionStreamError {
 }
 
 #[derive(Debug, Error)]
+pub enum SectionHandleDataStreamError {
+    #[error("Failed to access file")]
+    IOError(#[from] std::io::Error),
+    #[error("Failed to write to memory")]
+    MemoryWriterError(#[from] MemoryWriterError),
+    #[error("Failed integer conversion")]
+    TryFromIntError(#[from] std::num::TryFromIntError),
+}
+
+#[derive(Debug, Error)]
 pub enum SectionMappingsError {
     #[error("Failed to write to memory")]
     MemoryWriterError(#[from] MemoryWriterError),
@@ -218,6 +228,8 @@ pub enum WriterError {
     SectionAppMemoryError(#[from] SectionAppMemoryError),
     #[error("Failed when writing section ExceptionStream")]
     SectionExceptionStreamError(#[from] SectionExceptionStreamError),
+    #[error("Failed when writing section HandleDataStream")]
+    SectionHandleDataStreamError(#[from] SectionHandleDataStreamError),
     #[error("Failed when writing section MappingsError")]
     SectionMappingsError(#[from] SectionMappingsError),
     #[error("Failed when writing section MemList")]

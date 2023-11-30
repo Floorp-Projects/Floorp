@@ -269,7 +269,7 @@ unsafe fn ptrace_other(
     .map(|_| 0)
 }
 
-/// Set options, as with `ptrace(PTRACE_SETOPTIONS,...)`.
+/// Set options, as with `ptrace(PTRACE_SETOPTIONS, ...)`.
 pub fn setoptions(pid: Pid, options: Options) -> Result<()> {
     let res = unsafe {
         libc::ptrace(
@@ -282,17 +282,17 @@ pub fn setoptions(pid: Pid, options: Options) -> Result<()> {
     Errno::result(res).map(drop)
 }
 
-/// Gets a ptrace event as described by `ptrace(PTRACE_GETEVENTMSG,...)`
+/// Gets a ptrace event as described by `ptrace(PTRACE_GETEVENTMSG, ...)`
 pub fn getevent(pid: Pid) -> Result<c_long> {
     ptrace_get_data::<c_long>(Request::PTRACE_GETEVENTMSG, pid)
 }
 
-/// Get siginfo as with `ptrace(PTRACE_GETSIGINFO,...)`
+/// Get siginfo as with `ptrace(PTRACE_GETSIGINFO, ...)`
 pub fn getsiginfo(pid: Pid) -> Result<siginfo_t> {
     ptrace_get_data::<siginfo_t>(Request::PTRACE_GETSIGINFO, pid)
 }
 
-/// Set siginfo as with `ptrace(PTRACE_SETSIGINFO,...)`
+/// Set siginfo as with `ptrace(PTRACE_SETSIGINFO, ...)`
 pub fn setsiginfo(pid: Pid, sig: &siginfo_t) -> Result<()> {
     let ret = unsafe {
         Errno::clear();
@@ -517,12 +517,14 @@ pub fn sysemu_step<T: Into<Option<Signal>>>(pid: Pid, sig: T) -> Result<()> {
     }
 }
 
-/// Reads a word from a processes memory at the given address
+/// Reads a word from a processes memory at the given address, as with
+/// ptrace(PTRACE_PEEKDATA, ...)
 pub fn read(pid: Pid, addr: AddressType) -> Result<c_long> {
     ptrace_peek(Request::PTRACE_PEEKDATA, pid, addr, ptr::null_mut())
 }
 
-/// Writes a word into the processes memory at the given address
+/// Writes a word into the processes memory at the given address, as with
+/// ptrace(PTRACE_POKEDATA, ...)
 ///
 /// # Safety
 ///
@@ -536,13 +538,13 @@ pub unsafe fn write(
     ptrace_other(Request::PTRACE_POKEDATA, pid, addr, data).map(drop)
 }
 
-/// Reads a word from a user area at `offset`.
+/// Reads a word from a user area at `offset`, as with ptrace(PTRACE_PEEKUSER, ...).
 /// The user struct definition can be found in `/usr/include/sys/user.h`.
 pub fn read_user(pid: Pid, offset: AddressType) -> Result<c_long> {
     ptrace_peek(Request::PTRACE_PEEKUSER, pid, offset, ptr::null_mut())
 }
 
-/// Writes a word to a user area at `offset`.
+/// Writes a word to a user area at `offset`, as with ptrace(PTRACE_POKEUSER, ...).
 /// The user struct definition can be found in `/usr/include/sys/user.h`.
 ///
 /// # Safety
