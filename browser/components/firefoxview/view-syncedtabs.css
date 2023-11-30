@@ -94,3 +94,7 @@ label {
 .syncedtabs-footer button .icon {
   margin-inline-end: 0.7rem;
 }
+
+.search-container {
+  margin-block-start: 35px;
+}

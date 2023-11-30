@@ -434,3 +434,91 @@ add_task(async function test_empty_desktop_same_name_three() {
   });
   await tearDown(sandbox);
 });
+
+add_task(async function search_synced_tabs() {
+  TabsSetupFlowManager.resetInternalState();
+
+  const sandbox = setupRecentDeviceListMocks();
+  const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
+  let mockTabs1 = getMockTabData(syncedTabsData1);
+  let getRecentTabsResult = mockTabs1;
+  syncedTabsMock.callsFake(() => {
+    info(
+      `Stubbed SyncedTabs.getRecentTabs returning a promise that resolves to ${getRecentTabsResult.length} tabs\n`
+    );
+    return Promise.resolve(getRecentTabsResult);
+  });
+  sandbox.stub(SyncedTabs, "getTabClients").callsFake(() => {
+    return Promise.resolve(syncedTabsData1);
+  });
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.firefox-view.search.enabled", true]],
+  });
+
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    await navigateToCategoryAndWait(document, "syncedtabs");
+    Services.obs.notifyObservers(null, UIState.ON_UPDATE);
+
+    let syncedTabsComponent = document.querySelector(
+      "view-syncedtabs:not([slot=syncedtabs])"
+    );
+    await TestUtils.waitForCondition(() => syncedTabsComponent.fullyUpdated);
+
+    let cards = syncedTabsComponent.cardEls;
+    is(cards.length, 2, "There are two device cards.");
+    let deviceOneTabs = cards[0].querySelector("fxview-tab-list").rowEls;
+    let deviceTwoTabs = cards[1].querySelector("fxview-tab-list").rowEls;
+
+    info("Input a search query.");
+    EventUtils.synthesizeMouseAtCenter(
+      syncedTabsComponent.searchTextbox,
+      {},
+      content
+    );
+    EventUtils.sendString("Mozilla", content);
+    await TestUtils.waitForCondition(
+      () => syncedTabsComponent.fullyUpdated,
+      "Synced Tabs component is done updating."
+    );
+    cards = syncedTabsComponent.cardEls;
+    deviceOneTabs = cards[0].querySelector("fxview-tab-list").rowEls;
+    deviceTwoTabs = cards[1].querySelector("fxview-tab-list");
+    await TestUtils.waitForCondition(
+      () => deviceOneTabs.length === 1,
+      "There is one matching search result for the first device."
+    );
+    await TestUtils.waitForCondition(
+      () => !deviceTwoTabs,
+      "There are no matching search results for the second device."
+    );
+
+    info("Clear the search query.");
+    EventUtils.synthesizeMouseAtCenter(
+      syncedTabsComponent.searchTextbox.clearButton,
+      {},
+      content
+    );
+    await TestUtils.waitForCondition(
+      () => syncedTabsComponent.fullyUpdated,
+      "Synced Tabs component is done updating."
+    );
+    cards = syncedTabsComponent.cardEls;
+    deviceOneTabs = cards[0].querySelector("fxview-tab-list").rowEls;
+    deviceTwoTabs = cards[1].querySelector("fxview-tab-list").rowEls;
+    await TestUtils.waitForCondition(
+      () =>
+        syncedTabsComponent.cardEls[0].querySelector("fxview-tab-list").rowEls
+          .length === deviceOneTabs.length,
+      "The original device's list is restored."
+    );
+    await TestUtils.waitForCondition(
+      () =>
+        syncedTabsComponent.cardEls[1].querySelector("fxview-tab-list").rowEls
+          .length === deviceTwoTabs.length,
+      "The new devices's list is restored."
+    );
+  });
+  await SpecialPowers.popPrefEnv();
+  await tearDown(sandbox);
+});

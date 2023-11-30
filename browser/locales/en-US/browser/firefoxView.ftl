@@ -192,6 +192,10 @@ firefoxview-search-text-box-history =
 firefoxview-search-text-box-recentlyclosed =
   .placeholder = Search recently closed tabs
 
+# Placeholder for the input field to search in open tabs ("search" is a verb).
+firefoxview-search-text-box-syncedtabs =
+  .placeholder = Search synced tabs
+
 # "Search" is a noun (as in "Results of the search for")
 # Variables:
 #   $query (String) - The search query used for searching through browser history.

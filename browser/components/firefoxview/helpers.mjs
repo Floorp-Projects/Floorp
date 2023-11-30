@@ -186,3 +186,12 @@ export function searchTabList(query, tabList) {
     ({ title, url }) => regex.test(title) || regex.test(url)
   );
 }
+
+export function escapeHtmlEntities(text) {
+  return (text || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
