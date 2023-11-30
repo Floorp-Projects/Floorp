@@ -62,7 +62,7 @@ child:
   async ReplyNumberOfCapabilities(int capabilityCount);
   async ReplyAllocateCapture(int captureId);
   async ReplyGetCaptureCapability(VideoCaptureCapability cap);
-  async ReplyGetCaptureDevice(nsCString device_name, nsCString device_id, bool scary);
+  async ReplyGetCaptureDevice(nsCString device_name, nsCString device_id, bool scary, bool placeholder);
   async ReplyFailure();
   async ReplySuccess();
   async __delete__();

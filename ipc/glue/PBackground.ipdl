@@ -75,6 +75,8 @@ using class mozilla::dom::SSCacheCopy from "mozilla/dom/PBackgroundSessionStorag
 
 using mozilla::RemoteDecodeIn from "mozilla/RemoteDecoderManagerChild.h";
 
+using mozilla::camera::CamerasAccessStatus from "mozilla/media/CamerasTypes.h";
+
 namespace mozilla {
 namespace ipc {
 
@@ -281,7 +283,7 @@ parent:
 
   async PFetch();
 
-  async RequestCameraAccess() returns (nsresult rv);
+  async RequestCameraAccess(bool aAllowPermissionRequest) returns (CamerasAccessStatus rv);
 
 child:
   async PCache();

@@ -353,6 +353,7 @@ class BackgroundParentImpl : public PBackgroundParent {
       EnsureUtilityProcessAndCreateBridgeResolver&& aResolver) override;
 
   mozilla::ipc::IPCResult RecvRequestCameraAccess(
+      const bool& aAllowPermissionRequest,
       RequestCameraAccessResolver&& aResolver) override;
 
   bool DeallocPEndpointForReportParent(

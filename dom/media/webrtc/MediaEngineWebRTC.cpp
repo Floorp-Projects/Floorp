@@ -102,6 +102,7 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
     char deviceName[MediaEngineSource::kMaxDeviceNameLength];
     char uniqueId[MediaEngineSource::kMaxUniqueIdLength];
     bool scarySource = false;
+    bool placeholder = false;
 
     // paranoia
     deviceName[0] = '\0';
@@ -110,7 +111,7 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
 
     error = GetChildAndCall(&CamerasChild::GetCaptureDevice, capEngine, i,
                             deviceName, sizeof(deviceName), uniqueId,
-                            sizeof(uniqueId), &scarySource);
+                            sizeof(uniqueId), &scarySource, &placeholder);
     if (error) {
       LOG(("camera:GetCaptureDevice: Failed %d", error));
       continue;
@@ -137,11 +138,13 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
     // The remote video backend doesn't implement group id. We return the
     // device name and higher layers will correlate this with the name of
     // audio devices.
-    aDevices->EmplaceBack(new MediaDevice(
-        this, aMediaSource, name, uuid, uuid,
-        MediaDevice::IsScary(scaryKind || scarySource),
-        canRequestOsLevelPrompt ? MediaDevice::OsPromptable::Yes
-                                : MediaDevice::OsPromptable::No));
+
+    aDevices->EmplaceBack(
+        new MediaDevice(this, aMediaSource, name, uuid, uuid,
+                        MediaDevice::IsScary(scaryKind || scarySource),
+                        canRequestOsLevelPrompt ? MediaDevice::OsPromptable::Yes
+                                                : MediaDevice::OsPromptable::No,
+                        MediaDevice::IsPlaceholder(placeholder)));
   }
 }
 

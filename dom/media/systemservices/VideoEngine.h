@@ -89,6 +89,12 @@ class VideoEngine {
   std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo>
   GetOrCreateVideoCaptureDeviceInfo();
 
+  /**
+   * Destroys existing DeviceInfo.
+   *  The DeviceInfo will be recreated the next time it is needed.
+   */
+  void ClearVideoCaptureDeviceInfo();
+
   class CaptureEntry {
    public:
     CaptureEntry(int32_t aCapnum,

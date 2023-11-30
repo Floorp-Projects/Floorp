@@ -10,6 +10,10 @@
 #include "desktop_capture_impl.h"
 #include "VideoEngine.h"
 
+#if defined(WEBRTC_USE_PIPEWIRE)
+#  include "video_engine/placeholder_device_info.h"
+#endif
+
 #if defined(MOZ_ENABLE_DBUS)
 #  include "mozilla/widget/AsyncDBus.h"
 #endif
@@ -18,7 +22,7 @@
 
 namespace mozilla {
 
-VideoCaptureFactory::VideoCaptureFactory() : mCameraBackendInitialized(false) {
+VideoCaptureFactory::VideoCaptureFactory() {
 #if (defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)) && !defined(WEBRTC_ANDROID)
   mVideoCaptureOptions = std::make_unique<webrtc::VideoCaptureOptions>();
   // In case pipewire is enabled, this acts as a fallback and can be always
@@ -44,6 +48,16 @@ VideoCaptureFactory::CreateDeviceInfo(
   if (aType == mozilla::camera::CaptureDeviceType::Camera) {
     std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo> deviceInfo;
 #if (defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)) && !defined(WEBRTC_ANDROID)
+    // Special case when PipeWire is not initialized yet and we need to insert
+    // a camera device placeholder based on camera device availability we get
+    // from the camera portal
+    if (!mCameraBackendInitialized) {
+      MOZ_ASSERT(mCameraAvailability != Unknown);
+      deviceInfo.reset(
+          new PlaceholderDeviceInfo(mCameraAvailability == Available));
+      return deviceInfo;
+    }
+
     deviceInfo.reset(webrtc::VideoCaptureFactory::CreateDeviceInfo(
         mVideoCaptureOptions.get()));
 #else
@@ -100,8 +114,8 @@ auto VideoCaptureFactory::InitCameraBackend()
   return mPromise;
 }
 
-RefPtr<VideoCaptureFactory::HasCameraDevicePromise>
-VideoCaptureFactory::HasCameraDevice() {
+auto VideoCaptureFactory::HasCameraDevice()
+    -> RefPtr<VideoCaptureFactory::HasCameraDevicePromise> {
 #if defined(WEBRTC_USE_PIPEWIRE) && defined(MOZ_ENABLE_DBUS)
   if (mVideoCaptureOptions && mVideoCaptureOptions->allow_pipewire()) {
     return widget::CreateDBusProxyForBus(
@@ -129,7 +143,8 @@ VideoCaptureFactory::HasCameraDevice() {
               const bool hasCamera = g_variant_get_boolean(variant);
               g_variant_unref(variant);
               return HasCameraDevicePromise::CreateAndResolve(
-                  hasCamera, "VideoCaptureFactory::HasCameraDevice Resolve");
+                  hasCamera ? Available : NotAvailable,
+                  "VideoCaptureFactory::HasCameraDevice Resolve");
             },
             [](GUniquePtr<GError>&& aError) {
               return HasCameraDevicePromise::CreateAndReject(
@@ -140,6 +155,27 @@ VideoCaptureFactory::HasCameraDevice() {
 #endif
   return HasCameraDevicePromise::CreateAndReject(
       NS_ERROR_NOT_IMPLEMENTED, "VideoCaptureFactory::HasCameraDevice Resolve");
+}
+
+auto VideoCaptureFactory::UpdateCameraAvailability()
+    -> RefPtr<UpdateCameraAvailabilityPromise> {
+  return VideoCaptureFactory::HasCameraDevice()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [this, self = RefPtr(this)](
+          const HasCameraDevicePromise::ResolveOrRejectValue& aValue) {
+        if (aValue.IsResolve()) {
+          mCameraAvailability = aValue.ResolveValue();
+
+          return HasCameraDevicePromise::CreateAndResolve(
+              mCameraAvailability,
+              "VideoCaptureFactory::UpdateCameraAvailability Resolve");
+        }
+
+        mCameraAvailability = Unknown;
+        return HasCameraDevicePromise::CreateAndReject(
+            aValue.RejectValue(),
+            "VideoCaptureFactory::UpdateCameraAvailability Reject");
+      });
 }
 
 void VideoCaptureFactory::OnInitialized(

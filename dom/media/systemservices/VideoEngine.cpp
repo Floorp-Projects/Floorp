@@ -158,6 +158,11 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
   return mDeviceInfo;
 }
 
+void VideoEngine::ClearVideoCaptureDeviceInfo() {
+  LOG(("%s", __PRETTY_FUNCTION__));
+  mDeviceInfo.reset();
+}
+
 already_AddRefed<VideoEngine> VideoEngine::Create(
     const CaptureDeviceType& aCaptureDeviceType,
     RefPtr<VideoCaptureFactory> aVideoCaptureFactory) {
