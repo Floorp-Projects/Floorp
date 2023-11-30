@@ -13,6 +13,10 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
   WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
 });
 
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
+});
+
 ChromeUtils.defineESModuleGetters(lazy, {
   PageActions: "resource:///modules/PageActions.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
@@ -608,8 +612,36 @@ export var PictureInPicture = {
         this.togglePipPanel(browser);
         return;
       } else if (pipCount === 1) {
+        let eventExtraKeys = {};
+        if (
+          !Services.prefs.getBoolPref(TOGGLE_HAS_USED_PREF) &&
+          lazy.ASRouter.initialized
+        ) {
+          let { messages, messageImpressions } = lazy.ASRouter.state;
+          let pipCallouts = messages.filter(
+            message =>
+              message.template === "feature_callout" &&
+              message.content.screens.some(screen =>
+                screen.anchors.some(anchor =>
+                  anchor.selector.includes("picture-in-picture-button")
+                )
+              )
+          );
+          if (pipCallouts.length) {
+            // Has one of the callouts been seen in the last 48 hours?
+            let now = Date.now();
+            let callout = pipCallouts.some(message =>
+              messageImpressions[message.id]?.some(
+                impression => now - impression < 48 * 60 * 60 * 1000
+              )
+            );
+            if (callout) {
+              eventExtraKeys.callout = "true";
+            }
+          }
+        }
         let actor = windowGlobal.getActor("PictureInPictureToggle");
-        actor.sendAsyncMessage("PictureInPicture:UrlbarToggle");
+        actor.sendAsyncMessage("PictureInPicture:UrlbarToggle", eventExtraKeys);
         return;
       }
     }

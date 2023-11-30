@@ -2896,6 +2896,9 @@ pictureinpicture:
     extra_keys:
       firstTimeToggle: If the user has used Picture-in-Picture before
       disableDialog: True when urlbar button opens the disable PiP dialog
+      callout: >
+        Boolean. True if PiP is being shown for the first time within 48 hours
+        of a feature callout message highlighting the urlbar toggle.
     notification_emails:
       - mconley@mozilla.com
     products:
@@ -2904,6 +2907,7 @@ pictureinpicture:
     bug_numbers:
       - 1749585
       - 1834554
+      - 1858471
     expiry_version: "never"
     release_channel_collection: opt-out
   closed_method:

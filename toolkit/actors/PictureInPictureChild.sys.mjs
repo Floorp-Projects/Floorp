@@ -139,6 +139,7 @@ export class PictureInPictureLauncherChild extends JSWindowActorChild {
           this.togglePictureInPicture({
             video: event.target,
             reason: event.detail?.reason,
+            eventExtraKeys: event.detail?.eventExtraKeys,
           });
         }
         break;
@@ -161,15 +162,17 @@ export class PictureInPictureLauncherChild extends JSWindowActorChild {
    * Picture-in-Picture window existing, this tells the parent to
    * close it before opening the new one.
    *
-   * @param {Object} pipObject An object containing the video and reason
-   * for toggling the PiP video
+   * @param {Object} pipObject
+   * @param {HTMLVideoElement} pipObject.video
+   * @param {String} pipObject.reason What toggled PiP, e.g. "shortcut"
+   * @param {Object} pipObject.eventExtraKeys Extra telemetry keys to record
    *
    * @return {Promise}
    * @resolves {undefined} Once the new Picture-in-Picture window
    * has been requested.
    */
   async togglePictureInPicture(pipObject) {
-    let { video, reason } = pipObject;
+    let { video, reason, eventExtraKeys = {} } = pipObject;
     if (video.isCloningElementVisually) {
       // The only way we could have entered here for the same video is if
       // we are toggling via the context menu or via the urlbar button,
@@ -227,18 +230,17 @@ export class PictureInPictureLauncherChild extends JSWindowActorChild {
       volume: PictureInPictureChild.videoWrapper.getVolume(video),
     });
 
-    let args = {
-      firstTimeToggle: (!Services.prefs.getBoolPref(
-        TOGGLE_HAS_USED_PREF
-      )).toString(),
-    };
-
     Services.telemetry.recordEvent(
       "pictureinpicture",
       "opened_method",
       reason,
       null,
-      args
+      {
+        firstTimeToggle: (!Services.prefs.getBoolPref(
+          TOGGLE_HAS_USED_PREF
+        )).toString(),
+        ...eventExtraKeys,
+      }
     );
   }
 
@@ -307,7 +309,7 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
   receiveMessage(message) {
     switch (message.name) {
       case "PictureInPicture:UrlbarToggle": {
-        this.urlbarToggle();
+        this.urlbarToggle(message.data);
         break;
       }
     }
@@ -662,7 +664,7 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
     });
   }
 
-  urlbarToggle() {
+  urlbarToggle(eventExtraKeys) {
     let video = ChromeUtils.nondeterministicGetWeakSetKeys(
       this.eligiblePipVideos
     )[0];
@@ -671,7 +673,7 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
         "MozTogglePictureInPicture",
         {
           bubbles: true,
-          detail: { reason: "urlBar" },
+          detail: { reason: "urlBar", eventExtraKeys },
         }
       );
       video.dispatchEvent(pipEvent);
