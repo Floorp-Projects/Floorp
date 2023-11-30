@@ -33,6 +33,8 @@ import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.databinding.QuicksettingsProtectionsPanelBinding
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.trackingprotection.CookieBannerUIMode
+import org.mozilla.fenix.trackingprotection.CookieBannerUIMode.REQUEST_UNSUPPORTED_SITE_SUBMITTED
+import org.mozilla.fenix.trackingprotection.CookieBannerUIMode.SITE_NOT_SUPPORTED
 import org.mozilla.fenix.trackingprotection.ProtectionsState
 import org.mozilla.fenix.utils.Settings
 
@@ -108,7 +110,11 @@ class ProtectionsView(
         binding.cookieBannerItem.apply {
             setContent {
                 FirefoxTheme {
-                    if (cookieBannerMode == CookieBannerUIMode.REQUEST_UNSUPPORTED_SITE_SUBMITTED) {
+                    if (cookieBannerMode in listOf(
+                            REQUEST_UNSUPPORTED_SITE_SUBMITTED,
+                            SITE_NOT_SUPPORTED,
+                        )
+                    ) {
                         CookieBannerItem(
                             label = label,
                             cookieBannerUIMode = cookieBannerMode,
