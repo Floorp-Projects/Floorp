@@ -4,107 +4,10 @@
 
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "swm",
-  "@mozilla.org/serviceworkers/manager;1",
-  "nsIServiceWorkerManager"
-);
-
 const { waitForTick } = require("resource://devtools/shared/DevToolsUtils.js");
 
 const PROCESS_SCRIPT_URL =
   "resource://devtools/server/actors/watcher/target-helpers/service-worker-jsprocessactor-startup.js";
-
-let gServiceWorkerListener = null;
-
-/**
- * Helper class on top of nsIServiceWorkerManager
- */
-class ServiceWorkerListener {
-  constructor() {
-    // Process all existing service worker registrations...
-    const array = swm.getAllRegistrations();
-    for (let i = 0; i < array.length; i++) {
-      const registration = array.queryElementAt(
-        i,
-        Ci.nsIServiceWorkerRegistrationInfo
-      );
-      this.onRegister(registration);
-    }
-    // ... and listen for all the ones registered later.
-    swm.addListener(this.#swmListener);
-  }
-
-  // Map of all active listener objects for each nsIServiceWorkerRegistrationInfo
-  #registrationListeners = new Map();
-
-  // A listener registered against nsIServiceWorkerManager interface
-  #swmListener = {
-    onRegister: this.onRegister.bind(this),
-    onUnregister() {},
-  };
-
-  destroy() {
-    swm.removeListener(this.#swmListener);
-
-    // Prevent leaking listeners on nsIServiceWorkerRegistrationInfo interface
-    for (const [
-      registration,
-      listener,
-    ] of this.#registrationListeners.entries()) {
-      registration.removeListener(listener);
-    }
-  }
-
-  /**
-   * Called from the constructor or by nsIServiceWorkerManager for all
-   * service worker registrations.
-   *
-   * This method waits for the service worker to have an active worker
-   * running. Once we have one, we attach the debugger on it.
-   *
-   * @param {nsIServiceWorkerRegistrationInfo} registration
-   */
-  onRegister(registration) {
-    if (registration.activeWorker) {
-      this.onServiceWorkerReady(registration.activeWorker);
-      return;
-    }
-
-    const listener = {
-      onChange: () => {
-        if (registration.activeWorker) {
-          registration.removeListener(listener);
-          this.#registrationListeners.delete(registration);
-          this.onServiceWorkerReady(registration.activeWorker);
-        }
-      },
-    };
-    registration.addListener(listener);
-
-    // Keep the list of listener in case the worker never becomes active
-    this.#registrationListeners.set(registration, listener);
-  }
-
-  /**
-   * Called from `#swmListener.onRegister` whenever a service worker starts being active.
-   *
-   * @param {nsIServiceWorkerInfo} worker
-   */
-  onServiceWorkerReady(serviceWorkerInfo) {
-    // This starts up the Service Worker if it's not already running.
-    // Note that the Service Workers exist in content processes but are
-    // managed from the parent process. This is why we call `attachDebugger`
-    // here (in the parent process) instead of in a process script.
-    serviceWorkerInfo.attachDebugger();
-    serviceWorkerInfo.detachDebugger();
-  }
-}
 
 const PROCESS_ACTOR_NAME = "DevToolsServiceWorker";
 const PROCESS_ACTOR_OPTIONS = {
@@ -207,10 +110,6 @@ async function createTargets(watcher) {
   // - Force the instantiation of a DevToolsServiceWorkerChild
   // - Have the DevToolsServiceWorkerChild to spawn the WorkerTargetActors
 
-  if (!gServiceWorkerListener) {
-    gServiceWorkerListener = new ServiceWorkerListener();
-  }
-
   const promises = [];
   for (const process of getAllContentProcesses()) {
     const promise = process
@@ -258,11 +157,6 @@ async function destroyTargets(watcher) {
   await waitForTick();
 
   maybeUnregisterProcessActor(watcher);
-
-  if (gWatchers.size == 0 && gServiceWorkerListener) {
-    gServiceWorkerListener.destroy();
-    gServiceWorkerListener = null;
-  }
 }
 
 /**
