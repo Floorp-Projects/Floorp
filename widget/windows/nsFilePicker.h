@@ -45,7 +45,7 @@ class nsBaseWinFilePicker : public nsBaseFilePicker {
  * Native Windows FileSelector wrapper
  */
 
-class nsFilePicker : public nsBaseWinFilePicker {
+class nsFilePicker final : public nsBaseWinFilePicker {
   virtual ~nsFilePicker() = default;
 
   template <typename T>
@@ -80,8 +80,9 @@ class nsFilePicker : public nsBaseWinFilePicker {
   /* method from nsBaseFilePicker */
   virtual void InitNative(nsIWidget* aParent, const nsAString& aTitle) override;
   nsresult Show(nsIFilePicker::ResultCode* aReturnVal) override;
-  nsresult ShowW(nsIFilePicker::ResultCode* aReturnVal);
   void GetFilterListArray(nsString& aFilterList);
+
+  NS_IMETHOD Open(nsIFilePickerShownCallback* aCallback) override;
 
  private:
   RefPtr<mozilla::MozPromise<bool, HRESULT, true>> ShowFolderPicker(
