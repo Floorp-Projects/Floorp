@@ -7,7 +7,7 @@ import {
   ifDefined,
   when,
 } from "chrome://global/content/vendor/lit.all.mjs";
-import { isSearchEnabled } from "./helpers.mjs";
+import { escapeHtmlEntities, isSearchEnabled } from "./helpers.mjs";
 import { ViewPage } from "./viewpage.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/migration/migration-wizard.mjs";
@@ -498,7 +498,7 @@ class HistoryInView extends ViewPage {
         slot="header"
         data-l10n-id="firefoxview-search-results-header"
         data-l10n-args=${JSON.stringify({
-          query: this.#escapeHtmlEntities(this.searchQuery),
+          query: escapeHtmlEntities(this.searchQuery),
         })}
       ></h3>
       ${when(
@@ -526,15 +526,6 @@ class HistoryInView extends ViewPage {
         ${this.panelListTemplate()}
       </fxview-tab-list>
     </card-container>`;
-  }
-
-  #escapeHtmlEntities(text) {
-    return (text || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
   }
 
   render() {
