@@ -28,12 +28,16 @@ enum class ReferrerPolicy : uint8_t;
 
 class FontLoaderUtils {
  public:
-  static nsresult BuildChannel(
-      nsIChannel** aChannel, nsIURI* aURI, const CORSMode aCORSMode,
-      const dom::ReferrerPolicy& aReferrerPolicy,
-      gfxUserFontEntry* aUserFontEntry, const gfxFontFaceSrc* aFontFaceSrc,
-      dom::Document* aDocument, nsILoadGroup* aLoadGroup,
-      nsIInterfaceRequestor* aCallbacks, bool aIsPreload);
+  // @param aSuppportsPriorityValue See <nsISupportsPriority.idl>.
+  static nsresult BuildChannel(nsIChannel** aChannel, nsIURI* aURI,
+                               const CORSMode aCORSMode,
+                               const dom::ReferrerPolicy& aReferrerPolicy,
+                               gfxUserFontEntry* aUserFontEntry,
+                               const gfxFontFaceSrc* aFontFaceSrc,
+                               dom::Document* aDocument,
+                               nsILoadGroup* aLoadGroup,
+                               nsIInterfaceRequestor* aCallbacks,
+                               bool aIsPreload, int32_t aSupportsPriorityValue);
 
   static nsresult BuildChannel(nsIChannel** aChannel, nsIURI* aURI,
                                const CORSMode aCORSMode,
@@ -53,7 +57,8 @@ class FontLoaderUtils {
   static nsresult BuildChannelSetup(nsIChannel* aChannel,
                                     nsIHttpChannel* aHttpChannel,
                                     nsIReferrerInfo* aReferrerInfo,
-                                    const gfxFontFaceSrc* aFontFaceSrc);
+                                    const gfxFontFaceSrc* aFontFaceSrc,
+                                    int32_t aSupportsPriorityValue);
 };
 
 }  // namespace mozilla

@@ -44,7 +44,8 @@ namespace mozilla {
 
 /* static */ nsresult FontLoaderUtils::BuildChannelSetup(
     nsIChannel* aChannel, nsIHttpChannel* aHttpChannel,
-    nsIReferrerInfo* aReferrerInfo, const gfxFontFaceSrc* aFontFaceSrc) {
+    nsIReferrerInfo* aReferrerInfo, const gfxFontFaceSrc* aFontFaceSrc,
+    int32_t aSupportsPriorityValue) {
   if (aHttpChannel) {
     nsresult rv = aHttpChannel->SetRequestHeader(
         "Accept"_ns,
@@ -75,7 +76,7 @@ namespace mozilla {
 
   nsCOMPtr<nsISupportsPriority> priorityChannel(do_QueryInterface(aChannel));
   if (priorityChannel) {
-    priorityChannel->AdjustPriority(nsISupportsPriority::PRIORITY_HIGH);
+    priorityChannel->SetPriority(aSupportsPriorityValue);
   }
   nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(aChannel));
   if (cos) {
@@ -91,7 +92,8 @@ nsresult FontLoaderUtils::BuildChannel(
     const dom::ReferrerPolicy& aReferrerPolicy,
     gfxUserFontEntry* aUserFontEntry, const gfxFontFaceSrc* aFontFaceSrc,
     dom::Document* aDocument, nsILoadGroup* aLoadGroup,
-    nsIInterfaceRequestor* aCallbacks, bool aIsPreload) {
+    nsIInterfaceRequestor* aCallbacks, bool aIsPreload,
+    int32_t aSupportsPriorityValue) {
   nsresult rv;
 
   nsIPrincipal* principal =
@@ -127,7 +129,8 @@ nsresult FontLoaderUtils::BuildChannel(
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
-  rv = BuildChannelSetup(channel, httpChannel, referrerInfo, aFontFaceSrc);
+  rv = BuildChannelSetup(channel, httpChannel, referrerInfo, aFontFaceSrc,
+                         aSupportsPriorityValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
   channel.forget(aChannel);
@@ -171,7 +174,8 @@ nsresult FontLoaderUtils::BuildChannel(
             ->CloneWithNewPolicy(aReferrerPolicy);
   }
 
-  rv = BuildChannelSetup(channel, httpChannel, referrerInfo, aFontFaceSrc);
+  rv = BuildChannelSetup(channel, httpChannel, referrerInfo, aFontFaceSrc,
+                         nsISupportsPriority::PRIORITY_HIGH);
   NS_ENSURE_SUCCESS(rv, rv);
 
   channel.forget(aChannel);

@@ -429,10 +429,10 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                       true);
                 } else if (as.LowerCaseEqualsASCII("font")) {
                   mSpeculativeLoadQueue.AppendElement()->InitFont(
-                      url, crossOrigin, media, referrerPolicy);
+                      url, crossOrigin, media, referrerPolicy, fetchPriority);
                 } else if (as.LowerCaseEqualsASCII("fetch")) {
                   mSpeculativeLoadQueue.AppendElement()->InitFetch(
-                      url, crossOrigin, media, referrerPolicy);
+                      url, crossOrigin, media, referrerPolicy, fetchPriority);
                 }
                 // Other "as" values will be supported later.
               }

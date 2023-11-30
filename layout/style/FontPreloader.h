@@ -21,7 +21,8 @@ class FontPreloader final : public FetchPreloader {
                          const dom::ReferrerPolicy& aReferrerPolicy,
                          dom::Document* aDocument, nsILoadGroup* aLoadGroup,
                          nsIInterfaceRequestor* aCallbacks,
-                         uint64_t aEarlyHintPreloaderId) override;
+                         uint64_t aEarlyHintPreloaderId,
+                         int32_t aSupportsPriorityValue) override;
 };
 
 }  // namespace mozilla

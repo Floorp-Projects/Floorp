@@ -114,11 +114,11 @@ void nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor) {
       break;
     case eSpeculativeLoadFont:
       aExecutor->PreloadFont(mUrlOrSizes, mCrossOrigin, mMedia,
-                             mReferrerPolicyOrIntegrity);
+                             mReferrerPolicyOrIntegrity, mFetchPriority);
       break;
     case eSpeculativeLoadFetch:
       aExecutor->PreloadFetch(mUrlOrSizes, mCrossOrigin, mMedia,
-                              mReferrerPolicyOrIntegrity);
+                              mReferrerPolicyOrIntegrity, mFetchPriority);
       break;
     case eSpeculativeLoadMaybeComplainAboutCharset: {
       MOZ_ASSERT(mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity
