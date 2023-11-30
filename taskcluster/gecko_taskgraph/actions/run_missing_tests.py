@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
     context=[],  # Applies to decision task
 )
 def run_missing_tests(parameters, graph_config, input, task_group_id, task_id):
-    decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
+    decision_task_id, full_task_graph, label_to_taskid, _ = fetch_graph_and_labels(
         parameters, graph_config
     )
     target_tasks = get_artifact(decision_task_id, "public/target-tasks.json")

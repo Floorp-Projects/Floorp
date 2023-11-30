@@ -96,7 +96,7 @@ def side_by_side_action(parameters, graph_config, input, task_group_id, task_id)
     https://firefox-source-docs.mozilla.org/taskcluster/actions.html#testing-the-action-locally
     """
     task = get_task_definition(task_id)
-    decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
+    decision_task_id, full_task_graph, label_to_taskid, _ = fetch_graph_and_labels(
         parameters, graph_config
     )
     # TODO: find another way to detect side-by-side comparable jobs

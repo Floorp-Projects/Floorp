@@ -119,7 +119,7 @@ def basic_custom_retrigger_action_basic(
 
 def handle_custom_retrigger(parameters, graph_config, input, task_group_id, task_id):
     task = get_task_definition(task_id)
-    decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
+    decision_task_id, full_task_graph, label_to_taskid, _ = fetch_graph_and_labels(
         parameters, graph_config
     )
 
