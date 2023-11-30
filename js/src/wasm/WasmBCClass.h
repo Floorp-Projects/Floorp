@@ -875,6 +875,9 @@ struct BaseCompiler final {
   void shuffleStackResultsBeforeBranch(StackHeight srcHeight,
                                        StackHeight destHeight, ResultType type);
 
+  // If in debug mode, adds LeaveFrame breakpoint.
+  bool insertLeaveFrame();
+
   //////////////////////////////////////////////////////////////////////
   //
   // Stack maps
