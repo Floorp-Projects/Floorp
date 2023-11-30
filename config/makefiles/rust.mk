@@ -179,6 +179,8 @@ export AR_$(rust_cc_env_name)=$(AR)
 ifeq (WINNT,$(HOST_OS_ARCH))
 HOST_CC_BASE_FLAGS += -DUNICODE
 HOST_CXX_BASE_FLAGS += -DUNICODE
+endif
+ifeq (WINNT,$(OS_ARCH))
 CC_BASE_FLAGS += -DUNICODE
 CXX_BASE_FLAGS += -DUNICODE
 endif
