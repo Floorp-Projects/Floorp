@@ -16,5 +16,27 @@ p:first-of-type.auto-stylesheet-class-3,
 }
 
 :root .auto-bold .auto-stylesheet-class-5 {
-  font-size: bold;
+  font-size: 1em;
+
+  & .auto-stylesheet-nested-class-1,
+  &:is(.auto-stylesheet-nested-class-2),
+  &:has(.auto-stylesheet-nested-class-3) {
+    font-weight: bold;
+  }
+}
+
+@media (min-width: 1000px) {
+  .auto-stylesheet-nested-class-4 {
+    color: black;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .auto-stylesheet-nested-class-5 {
+      color: white;
+
+      &.auto-stylesheet-nested-class-6 {
+        outline: 1px solid;
+      }
+    }
+  }
 }

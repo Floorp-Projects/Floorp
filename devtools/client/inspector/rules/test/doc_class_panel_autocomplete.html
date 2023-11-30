@@ -24,7 +24,29 @@
     }
 
     :root .auto-bold .auto-inline-class-5 {
-      font-size: bold;
+      font-size: 1em;
+
+      & .auto-inline-nested-class-1,
+      &:is(.auto-inline-nested-class-2),
+      &:has(.auto-inline-nested-class-3) {
+        font-weight: bold;
+      }
+    }
+
+    @media (min-width: 1000px) {
+      .auto-inline-nested-class-4 {
+        color: black;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .auto-inline-nested-class-5 {
+          color: white;
+
+          &.auto-inline-nested-class-6 {
+            outline: 1px solid;
+          }
+        }
+      }
     }
   </style>
   <script defer>
