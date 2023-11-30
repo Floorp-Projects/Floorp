@@ -147,6 +147,7 @@ CO01:
         # browser/locales/en-US/browser/newtab/onboarding.ftl
         - mr1-onboarding-welcome-image-caption
         - mr2022-onboarding-gratitude-subtitle
+        - onboarding-gratitude-security-and-privacy-subtitle
         # browser/locales/en-US/browser/policies/policies-descriptions.ftl
         - policy-DisableFirefoxScreenshots
         # browser/locales/en-US/browser/preferences/preferences.ftl

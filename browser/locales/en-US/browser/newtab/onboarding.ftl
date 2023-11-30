@@ -307,3 +307,17 @@ onboarding-device-migration-image-alt =
 onboarding-device-migration-title = Welcome back!
 onboarding-device-migration-subtitle2 = Sign in to your account to bring your bookmarks, passwords, and history with you on your new device.
 onboarding-device-migration-primary-button-label = Sign in
+
+## The following screens have been updated to use security and privacy focused strings:
+
+# Easy setup screen
+onboarding-easy-setup-security-and-privacy-title = We love keeping you safe
+onboarding-easy-setup-security-and-privacy-subtitle = Our non-profit backed browser helps stop companies from secretly following you around the web.
+
+# Mobile download screen
+onboarding-mobile-download-security-and-privacy-title = Stay encrypted when you hop between devices
+onboarding-mobile-download-security-and-privacy-subtitle = When you’re synced up, { -brand-short-name } encrypts your passwords, bookmarks, and more. Plus you can grab tabs from your other devices.
+
+# Gratitude screen
+onboarding-gratitude-security-and-privacy-title = { -brand-short-name } has your back
+onboarding-gratitude-security-and-privacy-subtitle = Thank you for using { -brand-short-name }, backed by the Mozilla Foundation. With your support, we’re working to make the internet safer and more accessible for everyone.
