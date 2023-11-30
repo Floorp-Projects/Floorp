@@ -147,7 +147,7 @@ static auto ShowRemote(HWND parent, ActionType&& action)
     return fail();
   }
 
-  auto wfda = mgr->CreateWinFileDialogAsync();
+  auto wfda = mgr->CreateWinFileDialogActor();
   if (!wfda) {
     return fail();
   }

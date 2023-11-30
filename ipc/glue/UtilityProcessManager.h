@@ -76,7 +76,7 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
 
   // Get a new Windows file-dialog utility-process actor. These are never
   // reused; this will always return a fresh actor.
-  RefPtr<WinFileDialogPromise> CreateWinFileDialogAsync();
+  RefPtr<WinFileDialogPromise> CreateWinFileDialogActor();
 #endif
 
   void OnProcessUnexpectedShutdown(UtilityProcessHost* aHost);
