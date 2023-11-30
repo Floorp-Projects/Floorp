@@ -7968,7 +7968,10 @@ class _DSCard extends (external_React_default()).PureComponent {
         value: {
           card_type: this.props.flightId ? "spoc" : "organic",
           recommendation_id: this.props.recommendation_id,
-          tile_id: this.props.id
+          tile_id: this.props.id,
+          ...(this.props.shim && this.props.shim.click ? {
+            shim: this.props.shim.click
+          } : {})
         }
       }));
       this.props.dispatch(actionCreators.ImpressionStats({
@@ -8007,7 +8010,10 @@ class _DSCard extends (external_React_default()).PureComponent {
         value: {
           card_type: this.props.flightId ? "spoc" : "organic",
           recommendation_id: this.props.recommendation_id,
-          tile_id: this.props.id
+          tile_id: this.props.id,
+          ...(this.props.shim && this.props.shim.save ? {
+            shim: this.props.shim.save
+          } : {})
         }
       }));
       this.props.dispatch(actionCreators.ImpressionStats({

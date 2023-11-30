@@ -654,6 +654,9 @@ const TEST_GLOBAL = {
       topicClick: {
         record() {},
       },
+      shim: {
+        set() {},
+      },
     },
     topsites: {
       enabled: {
@@ -710,6 +713,9 @@ const TEST_GLOBAL = {
       submit() {},
     },
     topSites: {
+      submit() {},
+    },
+    spoc: {
       submit() {},
     },
   },

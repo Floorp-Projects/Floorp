@@ -592,6 +592,7 @@ pocket:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1854245
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1862670
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105#c11
@@ -638,6 +639,7 @@ pocket:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1854245
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1862670
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105#c11
@@ -671,6 +673,7 @@ pocket:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1854245
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1862670
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105#c11
@@ -723,6 +726,37 @@ pocket:
         type: string
     send_in_pings:
       - newtab
+
+  shim:
+    type: text
+    lifetime: ping
+    description: |
+      Opaque partner identifier for a given ad impression or engagement action,
+      unique per market and region.
+      Pocket
+      [proxies requests to ad partners](https://github.com/Pocket/proxy-server/)
+      and provides them solely with market, region, and action to generate these
+      shims. Thus, though the contents of this field are obscure, they cannot
+      identify clients.
+      At time of writing this information is a comma-separated trio.
+      The first item is an index into the proxy server's list of acceptable http
+      endpoints for contacting the ad service. The second item is a
+      several-hundred-byte base64-encoded JSON-encoded struct with fields for,
+      amongst other things, market and region. The third is unknown, but appears
+      to be a signature or checksum.
+      This shim should not be sent with the client_id.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1862670
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1862670
+    data_sensitivity:
+      - stored_content # Required for text type, and to encourage scrutiny
+    notification_emails:
+      - chutten@mozilla.com
+      - najiang@mozilla.com
+    expires: never
+    send_in_pings:
+      - spoc
 
 
 messaging_system:
