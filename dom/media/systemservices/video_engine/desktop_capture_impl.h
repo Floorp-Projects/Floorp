@@ -60,7 +60,8 @@ class ScreenDeviceInfoImpl : public VideoCaptureModule::DeviceInfo {
                                 char* aDeviceUniqueIdUTF8,
                                 uint32_t aDeviceUniqueIdUTF8Size,
                                 char* aProductUniqueIdUTF8,
-                                uint32_t aProductUniqueIdUTF8Size, pid_t* aPid);
+                                uint32_t aProductUniqueIdUTF8Size, pid_t* aPid,
+                                bool* aDeviceIsPlaceholder = nullptr);
 
   virtual int32_t DisplayCaptureSettingsDialogBox(
       const char* aDeviceUniqueIdUTF8, const char* aDialogTitleUTF8,
@@ -95,7 +96,8 @@ class WindowDeviceInfoImpl : public VideoCaptureModule::DeviceInfo {
                                 char* aDeviceUniqueIdUTF8,
                                 uint32_t aDeviceUniqueIdUTF8Size,
                                 char* aProductUniqueIdUTF8,
-                                uint32_t aProductUniqueIdUTF8Size, pid_t* aPid);
+                                uint32_t aProductUniqueIdUTF8Size, pid_t* aPid,
+                                bool* aDeviceIsPlaceholder = nullptr);
 
   virtual int32_t DisplayCaptureSettingsDialogBox(
       const char* aDeviceUniqueIdUTF8, const char* aDialogTitleUTF8,
@@ -130,7 +132,8 @@ class BrowserDeviceInfoImpl : public VideoCaptureModule::DeviceInfo {
                                 char* aDeviceUniqueIdUTF8,
                                 uint32_t aDeviceUniqueIdUTF8Size,
                                 char* aProductUniqueIdUTF8,
-                                uint32_t aProductUniqueIdUTF8Size, pid_t* aPid);
+                                uint32_t aProductUniqueIdUTF8Size, pid_t* aPid,
+                                bool* aDeviceIsPlaceholder = nullptr);
 
   virtual int32_t DisplayCaptureSettingsDialogBox(
       const char* aDeviceUniqueIdUTF8, const char* aDialogTitleUTF8,

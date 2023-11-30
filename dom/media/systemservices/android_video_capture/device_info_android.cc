@@ -239,7 +239,7 @@ int32_t DeviceInfoAndroid::GetDeviceName(
     uint32_t deviceNumber, char* deviceNameUTF8, uint32_t deviceNameLength,
     char* deviceUniqueIdUTF8, uint32_t deviceUniqueIdUTF8Length,
     char* /*productUniqueIdUTF8*/, uint32_t /*productUniqueIdUTF8Length*/,
-    pid_t* /*pid*/) {
+    pid_t* /*pid*/, bool* /*deviceIsPlaceholder*/) {
   if (deviceNumber >= g_camera_info->size()) {
     return -1;
   }

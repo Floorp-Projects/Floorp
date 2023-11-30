@@ -45,7 +45,7 @@ class DeviceInfoAndroid : public DeviceInfoImpl {
                                 uint32_t deviceUniqueIdUTF8Length,
                                 char* productUniqueIdUTF8 = 0,
                                 uint32_t productUniqueIdUTF8Length = 0,
-                                pid_t* pid = 0);
+                                pid_t* pid = 0, bool* deviceIsPlaceholder = 0);
   virtual int32_t CreateCapabilityMap(const char* deviceUniqueIdUTF8)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(_apiLock);
 

@@ -38,7 +38,8 @@ class DeviceInfoAvFoundation : public DeviceInfoImpl {
                         uint32_t aDeviceUniqueIdUTF8Length,
                         char* aProductUniqueIdUTF8 = nullptr,
                         uint32_t aProductUniqueIdUTF8Length = 0,
-                        pid_t* aPid = nullptr) override;
+                        pid_t* aPid = nullptr,
+                        bool* deviceIsPlaceholder = 0) override;
   int32_t NumberOfCapabilities(const char* aDeviceUniqueIdUTF8) override;
   int32_t GetCapability(const char* aDeviceUniqueIdUTF8,
                         const uint32_t aDeviceCapabilityNumber,

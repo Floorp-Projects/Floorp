@@ -70,8 +70,8 @@ uint32_t ScreenDeviceInfoImpl::NumberOfDevices() {
 int32_t ScreenDeviceInfoImpl::GetDeviceName(
     uint32_t aDeviceNumber, char* aDeviceNameUTF8, uint32_t aDeviceNameUTF8Size,
     char* aDeviceUniqueIdUTF8, uint32_t aDeviceUniqueIdUTF8Size,
-    char* aProductUniqueIdUTF8, uint32_t aProductUniqueIdUTF8Size,
-    pid_t* aPid) {
+    char* aProductUniqueIdUTF8, uint32_t aProductUniqueIdUTF8Size, pid_t* aPid,
+    bool* aDeviceIsPlaceholder) {
   DesktopDisplayDevice desktopDisplayDevice;
 
   // always initialize output
@@ -160,8 +160,8 @@ uint32_t WindowDeviceInfoImpl::NumberOfDevices() {
 int32_t WindowDeviceInfoImpl::GetDeviceName(
     uint32_t aDeviceNumber, char* aDeviceNameUTF8, uint32_t aDeviceNameUTF8Size,
     char* aDeviceUniqueIdUTF8, uint32_t aDeviceUniqueIdUTF8Size,
-    char* aProductUniqueIdUTF8, uint32_t aProductUniqueIdUTF8Size,
-    pid_t* aPid) {
+    char* aProductUniqueIdUTF8, uint32_t aProductUniqueIdUTF8Size, pid_t* aPid,
+    bool* aDeviceIsPlaceholder) {
   DesktopDisplayDevice desktopDisplayDevice;
 
   // always initialize output
@@ -245,8 +245,8 @@ uint32_t BrowserDeviceInfoImpl::NumberOfDevices() {
 int32_t BrowserDeviceInfoImpl::GetDeviceName(
     uint32_t aDeviceNumber, char* aDeviceNameUTF8, uint32_t aDeviceNameUTF8Size,
     char* aDeviceUniqueIdUTF8, uint32_t aDeviceUniqueIdUTF8Size,
-    char* aProductUniqueIdUTF8, uint32_t aProductUniqueIdUTF8Size,
-    pid_t* aPid) {
+    char* aProductUniqueIdUTF8, uint32_t aProductUniqueIdUTF8Size, pid_t* aPid,
+    bool* aDeviceIsPlaceholder) {
   DesktopTab desktopTab;
 
   // always initialize output
