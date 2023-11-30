@@ -22,10 +22,10 @@
 #include "js/ColumnNumber.h"  // JS::WasmFunctionIndex, LimitedColumnNumberOneOrigin, JS::TaggedColumnNumberOneOrigin, JS::TaggedColumnNumberOneOrigin
 #include "vm/JitActivation.h"  // js::jit::JitActivation
 #include "vm/JSContext.h"
+#include "wasm/WasmBuiltinModuleGenerated.h"
 #include "wasm/WasmDebugFrame.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmInstanceData.h"
-#include "wasm/WasmIntrinsicGenerated.h"
 #include "wasm/WasmStubs.h"
 
 #include "jit/MacroAssembler-inl.h"
@@ -1794,11 +1794,11 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native array.init_elem function";
     case SymbolicAddress::ArrayCopy:
       return "call to native array.copy function";
-#define OP(op, export, sa_name, abitype, entry, idx) \
-  case SymbolicAddress::sa_name:                     \
-    return "call to native " #op " intrinsic (in wasm)";
-      FOR_EACH_INTRINSIC(OP)
-#undef OP
+#define VISIT_BUILTIN_FUNC(op, export, sa_name, abitype, entry, idx) \
+  case SymbolicAddress::sa_name:                                     \
+    return "call to native " #op " builtin (in wasm)";
+      FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
+#undef VISIT_BUILTIN_FUNC
 #ifdef WASM_CODEGEN_DEBUG
     case SymbolicAddress::PrintI32:
     case SymbolicAddress::PrintPtr:

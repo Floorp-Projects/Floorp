@@ -1776,7 +1776,7 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitVectorShiftRightI64x2();
 #  endif
 #endif
-  [[nodiscard]] bool emitIntrinsic();
+  [[nodiscard]] bool emitCallBuiltinModuleFunc();
 };
 
 }  // namespace wasm

@@ -25,7 +25,7 @@
 #include <type_traits>
 
 #include "js/Printf.h"
-#include "wasm/WasmIntrinsic.h"
+#include "wasm/WasmBuiltinModule.h"
 #include "wasm/WasmUtility.h"
 #include "wasm/WasmValidate.h"
 
@@ -230,7 +230,7 @@ enum class OpKind {
   Throw,
   Rethrow,
   Try,
-  Intrinsic,
+  CallBuiltinModuleFunc,
 };
 
 // Return the OpKind for a given Op. This is used for sanity-checking that
@@ -813,8 +813,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                    uint32_t* laneIndex, Value* input);
 #endif
 
-  [[nodiscard]] bool readIntrinsic(const Intrinsic** intrinsic,
-                                   ValueVector* params);
+  [[nodiscard]] bool readCallBuiltinModuleFunc(
+      const BuiltinModuleFunc** builtinModuleFunc, ValueVector* params);
 
   // At a location where readOp is allowed, peek at the next opcode
   // without consuming it or updating any internal state.
@@ -4082,25 +4082,25 @@ inline bool OpIter<Policy>::readStoreLane(uint32_t byteSize,
 #endif  // ENABLE_WASM_SIMD
 
 template <typename Policy>
-inline bool OpIter<Policy>::readIntrinsic(const Intrinsic** intrinsic,
-                                          ValueVector* params) {
-  MOZ_ASSERT(Classify(op_) == OpKind::Intrinsic);
+inline bool OpIter<Policy>::readCallBuiltinModuleFunc(
+    const BuiltinModuleFunc** builtinModuleFunc, ValueVector* params) {
+  MOZ_ASSERT(Classify(op_) == OpKind::CallBuiltinModuleFunc);
 
   uint32_t id;
   if (!d_.readVarU32(&id)) {
     return false;
   }
 
-  if (id >= uint32_t(IntrinsicId::Limit)) {
-    return fail("intrinsic index out of range");
+  if (id >= uint32_t(BuiltinModuleFuncId::Limit)) {
+    return fail("index out of range");
   }
 
-  *intrinsic = &Intrinsic::getFromId(IntrinsicId(id));
+  *builtinModuleFunc = &BuiltinModuleFunc::getFromId(BuiltinModuleFuncId(id));
 
   if (env_.numMemories() == 0) {
     return fail("can't touch memory without memory");
   }
-  return popWithTypes((*intrinsic)->params, params);
+  return popWithTypes((*builtinModuleFunc)->params, params);
 }
 
 }  // namespace wasm

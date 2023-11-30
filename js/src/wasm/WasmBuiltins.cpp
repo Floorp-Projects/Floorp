@@ -393,13 +393,13 @@ const SymbolicAddressSignature SASigArrayCopy = {
     7,
     {_PTR, _RoN, _I32, _RoN, _I32, _I32, _I32, _END}};
 
-#define DECL_SAS_FOR_INTRINSIC(op, export, sa_name, abitype, entry, idx) \
-  const SymbolicAddressSignature SASig##sa_name = {                      \
-      SymbolicAddress::sa_name, _VOID, _FailOnNegI32,                    \
-      DECLARE_INTRINSIC_PARAM_TYPES_##op};
+#define VISIT_BUILTIN_FUNC(op, export, sa_name, abitype, entry, idx) \
+  const SymbolicAddressSignature SASig##sa_name = {                  \
+      SymbolicAddress::sa_name, _VOID, _FailOnNegI32,                \
+      DECLARE_BUILTIN_MODULE_FUNC_PARAM_TYPES_##op};
 
-FOR_EACH_INTRINSIC(DECL_SAS_FOR_INTRINSIC)
-#undef DECL_SAS_FOR_INTRINSIC
+FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
+#undef VISIT_BUILTIN_FUNC
 
 }  // namespace wasm
 }  // namespace js
@@ -1455,12 +1455,12 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_General1;
       return FuncCast(PrintText, *abiType);
 #endif
-#define DECL_SAS_TYPE_AND_FN(op, export, sa_name, abitype, entry, idx) \
-  case SymbolicAddress::sa_name:                                       \
-    *abiType = abitype;                                                \
+#define VISIT_BUILTIN_FUNC(op, export, sa_name, abitype, entry, idx) \
+  case SymbolicAddress::sa_name:                                     \
+    *abiType = abitype;                                              \
     return FuncCast(entry, *abiType);
-      FOR_EACH_INTRINSIC(DECL_SAS_TYPE_AND_FN)
-#undef DECL_SAS_TYPE_AND_FN
+      FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
+#undef VISIT_BUILTIN_FUNC
     case SymbolicAddress::Limit:
       break;
   }
@@ -1617,10 +1617,10 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::ArrayInitData:
     case SymbolicAddress::ArrayInitElem:
     case SymbolicAddress::ArrayCopy:
-#define OP(op, export, sa_name, abitype, entry, idx) \
+#define VISIT_BUILTIN_FUNC(op, export, sa_name, abitype, entry, idx) \
   case SymbolicAddress::sa_name:
-      FOR_EACH_INTRINSIC(OP)
-#undef OP
+      FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
+#undef VISIT_BUILTIN_FUNC
       return true;
 
     case SymbolicAddress::Limit:

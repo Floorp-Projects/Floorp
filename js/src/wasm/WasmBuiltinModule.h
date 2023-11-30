@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef wasm_intrinsic_h
-#define wasm_intrinsic_h
+#ifndef wasm_builtin_module_h
+#define wasm_builtin_module_h
 
 #include "mozilla/Span.h"
 
@@ -30,31 +30,33 @@
 namespace js {
 namespace wasm {
 
-// An intrinsic is a natively implemented function that may be compiled into an
-// 'intrinsic module', which may be instantiated with a provided memory
-// yielding an exported WebAssembly function wrapping the intrinsic.
-struct Intrinsic {
-  // The name of the intrinsic as it is exported
+// An builtin module func is a natively implemented function that may be
+// compiled into a 'builtin module', which may be instantiated with a provided
+// memory yielding an exported WebAssembly function wrapping the builtin module.
+struct BuiltinModuleFunc {
+  // The name of the func as it is exported
   const char* exportName;
-  // The params taken by the intrinsic. No results are required for intrinsics
+  // The params taken by the func. No results are required for these funcs
   // at this time, so we omit them
   mozilla::Span<const ValType> params;
-  // The signature of the builtin that implements the intrinsic
+  // The signature of the builtin that implements the func
   const SymbolicAddressSignature& signature;
 
-  // Allocate a FuncType for this intrinsic, returning false for OOM
+  // Allocate a FuncType for this func, returning false for OOM
   bool funcType(FuncType* type) const;
 
-  // Get the Intrinsic for an IntrinsicId. IntrinsicId must be validated.
-  static const Intrinsic& getFromId(IntrinsicId id);
+  // Get the BuiltinModuleFunc for an BuiltinModuleFuncId. BuiltinModuleFuncId
+  // must be validated.
+  static const BuiltinModuleFunc& getFromId(BuiltinModuleFuncId id);
 };
 
-// Compile and return the intrinsic module for a given set of operations.
-bool CompileIntrinsicModule(JSContext* cx, const mozilla::Span<IntrinsicId> ids,
-                            Shareable sharedMemory,
-                            MutableHandle<WasmModuleObject*> result);
+// Compile and return the builtin module for a given set of operations.
+bool CompileBuiltinModule(JSContext* cx,
+                          const mozilla::Span<BuiltinModuleFuncId> ids,
+                          Shareable sharedMemory,
+                          MutableHandle<WasmModuleObject*> result);
 
 }  // namespace wasm
 }  // namespace js
 
-#endif  // wasm_intrinsic_h
+#endif  // wasm_builtin_module_h

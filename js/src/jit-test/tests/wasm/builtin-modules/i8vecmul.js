@@ -1,7 +1,7 @@
 let memory = new WebAssembly.Memory({initial: 1});
 let bytes = new Uint8Array(memory.buffer);
 
-let module = wasmIntrinsicI8VecMul();
+let module = wasmBuiltinI8VecMul();
 let instance = new WebAssembly.Instance(module, {
   "": {"memory": memory}
 });

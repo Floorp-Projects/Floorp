@@ -32,12 +32,12 @@
 #include "jit/ShuffleAnalysis.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "wasm/WasmBaselineCompile.h"
+#include "wasm/WasmBuiltinModule.h"
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCodegenTypes.h"
 #include "wasm/WasmGC.h"
 #include "wasm/WasmGcObject.h"
 #include "wasm/WasmGenerator.h"
-#include "wasm/WasmIntrinsic.h"
 #include "wasm/WasmOpIter.h"
 #include "wasm/WasmSignalHandlers.h"
 #include "wasm/WasmStubs.h"
@@ -7682,29 +7682,29 @@ static bool EmitExternConvertAny(FunctionCompiler& f) {
 
 #endif  // ENABLE_WASM_GC
 
-static bool EmitIntrinsic(FunctionCompiler& f) {
+static bool EmitCallBuiltinModuleFunc(FunctionCompiler& f) {
   // It's almost possible to use FunctionCompiler::emitInstanceCallN here.
   // Unfortunately not currently possible though, since ::emitInstanceCallN
   // expects an array of arguments along with a size, and that's not what is
   // available here.  It would be possible if we were prepared to copy
-  // `intrinsic->params` into a fixed-sized (16 element?) array, add
+  // `builtinModuleFunc->params` into a fixed-sized (16 element?) array, add
   // `memoryBase`, and make the call.
-  const Intrinsic* intrinsic;
+  const BuiltinModuleFunc* builtinModuleFunc;
 
   DefVector params;
-  if (!f.iter().readIntrinsic(&intrinsic, &params)) {
+  if (!f.iter().readCallBuiltinModuleFunc(&builtinModuleFunc, &params)) {
     return false;
   }
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
-  const SymbolicAddressSignature& callee = intrinsic->signature;
+  const SymbolicAddressSignature& callee = builtinModuleFunc->signature;
 
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
   }
 
-  if (!f.passArgs(params, intrinsic->params, &args)) {
+  if (!f.passArgs(params, builtinModuleFunc->params, &args)) {
     return false;
   }
 
@@ -8929,11 +8929,11 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
 
       // asm.js-specific operators
       case uint16_t(Op::MozPrefix): {
-        if (op.b1 == uint32_t(MozOp::Intrinsic)) {
-          if (!f.moduleEnv().intrinsicsEnabled()) {
+        if (op.b1 == uint32_t(MozOp::CallBuiltinModuleFunc)) {
+          if (!f.moduleEnv().isBuiltinModule()) {
             return f.iter().unrecognizedOpcode(&op);
           }
-          CHECK(EmitIntrinsic(f));
+          CHECK(EmitCallBuiltinModuleFunc(f));
         }
 
         if (!f.moduleEnv().isAsmJS()) {

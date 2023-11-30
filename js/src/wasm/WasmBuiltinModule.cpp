@@ -16,14 +16,14 @@
  * limitations under the License.
  */
 
-#include "wasm/WasmIntrinsic.h"
+#include "wasm/WasmBuiltinModule.h"
 
 #include "util/Text.h"
 #include "vm/GlobalObject.h"
 
+#include "wasm/WasmBuiltinModuleGenerated.h"
 #include "wasm/WasmFeatures.h"
 #include "wasm/WasmGenerator.h"
-#include "wasm/WasmIntrinsicGenerated.h"
 #include "wasm/WasmJS.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmOpIter.h"
@@ -32,20 +32,20 @@
 using namespace js;
 using namespace js::wasm;
 
-#define INTR_DECL(op, export, sa_name, abitype, entry, idx) \
-  static const ValType Intrinsic##op##_Params[] =           \
-      DECLARE_INTRINSIC_SAS_PARAM_VALTYPES_##op;            \
-                                                            \
-  const Intrinsic Intrinsic##op = {                         \
-      export,                                               \
-      mozilla::Span<const ValType>(Intrinsic##op##_Params), \
-      SASig##sa_name,                                       \
+#define VISIT_BUILTIN_FUNC(op, export, sa_name, abitype, entry, idx) \
+  static const ValType BuiltinModuleFunc##op##_Params[] =            \
+      DECLARE_BUILTIN_MODULE_FUNC_SAS_PARAM_VALTYPES_##op;           \
+                                                                     \
+  const BuiltinModuleFunc BuiltinModuleFunc##op = {                  \
+      export,                                                        \
+      mozilla::Span<const ValType>(BuiltinModuleFunc##op##_Params),  \
+      SASig##sa_name,                                                \
   };
 
-FOR_EACH_INTRINSIC(INTR_DECL)
-#undef INTR_DECL
+FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
+#undef VISIT_BUILTIN_FUNC
 
-bool Intrinsic::funcType(FuncType* type) const {
+bool BuiltinModuleFunc::funcType(FuncType* type) const {
   ValTypeVector paramVec;
   if (!paramVec.append(params.data(), params.data() + params.size())) {
     return false;
@@ -55,30 +55,30 @@ bool Intrinsic::funcType(FuncType* type) const {
 }
 
 /* static */
-const Intrinsic& Intrinsic::getFromId(IntrinsicId id) {
+const BuiltinModuleFunc& BuiltinModuleFunc::getFromId(BuiltinModuleFuncId id) {
   switch (id) {
-#define OP(op, export, sa_name, abitype, entry, idx) \
-  case IntrinsicId::op:                              \
-    return Intrinsic##op;
-    FOR_EACH_INTRINSIC(OP)
-#undef OP
+#define VISIT_BUILTIN_FUNC(op, export, sa_name, abitype, entry, idx) \
+  case BuiltinModuleFuncId::op:                                      \
+    return BuiltinModuleFunc##op;
+    FOR_EACH_BUILTIN_MODULE_FUNC(VISIT_BUILTIN_FUNC)
+#undef VISIT_BUILTIN_FUNC
     default:
-      MOZ_CRASH("unexpected intrinsic");
+      MOZ_CRASH("unexpected builtinModuleFunc");
   }
 }
 
-bool EncodeIntrinsicBody(const Intrinsic& intrinsic, IntrinsicId id,
-                         Bytes* body) {
+bool EncodeFuncBody(const BuiltinModuleFunc& builtinModuleFunc,
+                    BuiltinModuleFuncId id, Bytes* body) {
   Encoder encoder(*body);
   if (!EncodeLocalEntries(encoder, ValTypeVector())) {
     return false;
   }
-  for (uint32_t i = 0; i < intrinsic.params.size(); i++) {
+  for (uint32_t i = 0; i < builtinModuleFunc.params.size(); i++) {
     if (!encoder.writeOp(Op::LocalGet) || !encoder.writeVarU32(i)) {
       return false;
     }
   }
-  if (!encoder.writeOp(MozOp::Intrinsic)) {
+  if (!encoder.writeOp(MozOp::CallBuiltinModuleFunc)) {
     return false;
   }
   if (!encoder.writeVarU32(uint32_t(id))) {
@@ -87,13 +87,13 @@ bool EncodeIntrinsicBody(const Intrinsic& intrinsic, IntrinsicId id,
   return encoder.writeOp(Op::End);
 }
 
-bool wasm::CompileIntrinsicModule(JSContext* cx,
-                                  const mozilla::Span<IntrinsicId> ids,
-                                  Shareable sharedMemory,
-                                  MutableHandle<WasmModuleObject*> result) {
+bool wasm::CompileBuiltinModule(JSContext* cx,
+                                const mozilla::Span<BuiltinModuleFuncId> ids,
+                                Shareable sharedMemory,
+                                MutableHandle<WasmModuleObject*> result) {
   // Create the options manually, enabling intrinsics
   FeatureOptions featureOptions;
-  featureOptions.intrinsics = true;
+  featureOptions.isBuiltinModule = true;
 
   // Initialize the compiler environment, choosing the best tier possible
   SharedCompileArgs compileArgs = CompileArgs::buildAndReport(
@@ -132,14 +132,15 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
     return false;
   }
 
-  // Add (type (func (params ...))) for each intrinsic. The function types will
+  // Add (type (func (params ...))) for each func. The function types will
   // be deduplicated by the runtime
   for (uint32_t funcIndex = 0; funcIndex < ids.size(); funcIndex++) {
-    const IntrinsicId& id = ids[funcIndex];
-    const Intrinsic& intrinsic = Intrinsic::getFromId(id);
+    const BuiltinModuleFuncId& id = ids[funcIndex];
+    const BuiltinModuleFunc& builtinModuleFunc =
+        BuiltinModuleFunc::getFromId(id);
 
     FuncType type;
-    if (!intrinsic.funcType(&type) ||
+    if (!builtinModuleFunc.funcType(&type) ||
         !moduleEnv.types->addType(std::move(type))) {
       ReportOutOfMemory(cx);
       return false;
@@ -160,10 +161,12 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
 
   // Add (export "$name" (func $i)) declarations.
   for (uint32_t funcIndex = 0; funcIndex < ids.size(); funcIndex++) {
-    const Intrinsic& intrinsic = Intrinsic::getFromId(ids[funcIndex]);
+    const BuiltinModuleFunc& builtinModuleFunc =
+        BuiltinModuleFunc::getFromId(ids[funcIndex]);
 
     CacheableName exportName;
-    if (!CacheableName::fromUTF8Chars(intrinsic.exportName, &exportName) ||
+    if (!CacheableName::fromUTF8Chars(builtinModuleFunc.exportName,
+                                      &exportName) ||
         !moduleEnv.exports.append(Export(std::move(exportName), funcIndex,
                                          DefinitionKind::Function))) {
       ReportOutOfMemory(cx);
@@ -187,17 +190,18 @@ bool wasm::CompileIntrinsicModule(JSContext* cx,
     return false;
   }
   for (uint32_t funcIndex = 0; funcIndex < ids.size(); funcIndex++) {
-    IntrinsicId id = ids[funcIndex];
-    const Intrinsic& intrinsic = Intrinsic::getFromId(ids[funcIndex]);
+    BuiltinModuleFuncId id = ids[funcIndex];
+    const BuiltinModuleFunc& builtinModuleFunc =
+        BuiltinModuleFunc::getFromId(ids[funcIndex]);
 
     // Compilation may be done using other threads, ModuleGenerator requires
     // that function bodies live until after finishFuncDefs().
     bodies.infallibleAppend(Bytes());
     Bytes& bytecode = bodies.back();
 
-    // Encode function body that will call the intrinsic using our builtin
-    // opcode, and launch a compile task
-    if (!EncodeIntrinsicBody(intrinsic, id, &bytecode) ||
+    // Encode function body that will call the builtinModuleFunc using our
+    // builtin opcode, and launch a compile task
+    if (!EncodeFuncBody(builtinModuleFunc, id, &bytecode) ||
         !mg.compileFuncDef(funcIndex, 0, bytecode.begin(),
                            bytecode.begin() + bytecode.length())) {
       // This must be an OOM and will be reported by the caller

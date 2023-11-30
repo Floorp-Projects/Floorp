@@ -805,8 +805,8 @@ OpKind wasm::Classify(OpBytes op) {
           return OpKind::OldCallDirect;
         case MozOp::OldCallIndirect:
           return OpKind::OldCallIndirect;
-        case MozOp::Intrinsic:
-          return OpKind::Intrinsic;
+        case MozOp::CallBuiltinModuleFunc:
+          return OpKind::CallBuiltinModuleFunc;
       }
       break;
     }

@@ -99,7 +99,7 @@ FeatureArgs FeatureArgs::build(JSContext* cx, const FeatureOptions& options) {
       wasm::ThreadsAvailable(cx) ? Shareable::True : Shareable::False;
 
   features.simd = jit::JitSupportsWasmSimd();
-  features.intrinsics = options.intrinsics;
+  features.isBuiltinModule = options.isBuiltinModule;
 
   return features;
 }
