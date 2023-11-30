@@ -82,9 +82,13 @@ class LinuxBootstrapper(MobileAndroidBootstrapper):
                 "perl",
                 "tar",
                 "unzip",
-                "watchman",
             ]
         )
+        # Optional packages
+        try:
+            self.install_packages(["watchman"])
+        except Exception:
+            pass
 
     def install_browser_packages(self, mozconfig_builder, artifact_mode=False):
         pass
