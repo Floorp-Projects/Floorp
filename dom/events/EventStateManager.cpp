@@ -2390,7 +2390,7 @@ void EventStateManager::DetermineDragTargetAndDefaultData(
     bool wasAlt = (mGestureModifiers & MODIFIER_ALT) != 0;
     nsresult rv = nsContentAreaDragDrop::GetDragData(
         aWindow, mGestureDownContent, aSelectionTarget, wasAlt, aDataTransfer,
-        &canDrag, aSelection, getter_AddRefs(dragDataNode), aPrincipal, aCsp,
+        &canDrag, aSelection, getter_AddRefs(dragDataNode), aCsp,
         aCookieJarSettings);
     if (NS_FAILED(rv) || !canDrag) {
       return;
