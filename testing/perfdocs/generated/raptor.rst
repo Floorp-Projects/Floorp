@@ -11571,7 +11571,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox
-   * **browser cycles**: 10
+   * **browser cycles**: 3
    * **cold**: true
    * **custom data**: true
    * **expected**: pass
