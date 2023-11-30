@@ -281,10 +281,12 @@ class nsHtml5AttributeName {
   static nsHtml5AttributeName* ATTR_LOADING;
   static nsHtml5AttributeName* ATTR_READONLY;
   static nsHtml5AttributeName* ATTR_RENDERING_INTENT;
+  static nsHtml5AttributeName* ATTR_SHADOWROOTMODE;
   static nsHtml5AttributeName* ATTR_SEED;
   static nsHtml5AttributeName* ATTR_SRCDOC;
   static nsHtml5AttributeName* ATTR_STDDEVIATION;
   static nsHtml5AttributeName* ATTR_SANDBOX;
+  static nsHtml5AttributeName* ATTR_SHADOWROOTDELEGATESFOCUS;
   static nsHtml5AttributeName* ATTR_WORD_SPACING;
   static nsHtml5AttributeName* ATTR_ACCENTUNDER;
   static nsHtml5AttributeName* ATTR_ACCEPT_CHARSET;
