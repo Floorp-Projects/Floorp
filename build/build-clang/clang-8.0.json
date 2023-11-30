@@ -4,6 +4,7 @@
     "as": "/usr/bin/gcc",
     "targets": "X86;WebAssembly",
     "patches": [
+        "clang-8-missing-header.patch",
         "llvmorg-10-init-136-gb288d90b39f4.patch"
     ]
 }
