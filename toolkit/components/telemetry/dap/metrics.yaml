@@ -16,6 +16,7 @@ dap:
     labels:
       - success
       - failure
+      - abort
     description: >
       The result of trying to upload a report to the DAP server.
     bugs:
@@ -33,6 +34,7 @@ dap:
     labels:
       - success
       - failure
+      - abort
     description: >
       The result of trying to generate a DAP report.
     bugs:
