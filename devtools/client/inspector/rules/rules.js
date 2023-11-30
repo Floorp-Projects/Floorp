@@ -76,6 +76,8 @@ const FILTER_PROP_RE = /\s*([^:\s]*)\s*:\s*(.*?)\s*;?$/;
 // should be strict or not
 const FILTER_STRICT_RE = /\s*`(.*?)`\s*$/;
 
+const RULE_VIEW_HEADER_CLASSNAME = "ruleview-header";
+
 /**
  * Our model looks like this:
  *
@@ -1227,7 +1229,10 @@ CssRuleView.prototype = {
    */
   createExpandableContainer(label, isPseudo = false) {
     const header = this.styleDocument.createElementNS(HTML_NS, "div");
-    header.className = this._getRuleViewHeaderClassName(true);
+    header.classList.add(
+      RULE_VIEW_HEADER_CLASSNAME,
+      "ruleview-expandable-header"
+    );
     header.setAttribute("role", "heading");
     header.textContent = label;
 
@@ -1306,13 +1311,6 @@ CssRuleView.prototype = {
     }
   },
 
-  _getRuleViewHeaderClassName(isPseudo) {
-    const baseClassName = "ruleview-header";
-    return isPseudo
-      ? baseClassName + " ruleview-expandable-header"
-      : baseClassName;
-  },
-
   /**
    * Creates editor UI for each of the rules in _elementStyle.
    */
@@ -1356,7 +1354,7 @@ CssRuleView.prototype = {
       if (seenPseudoElement && !seenNormalElement && !rule.pseudoElement) {
         seenNormalElement = true;
         const div = this.styleDocument.createElementNS(HTML_NS, "div");
-        div.className = this._getRuleViewHeaderClassName();
+        div.className = RULE_VIEW_HEADER_CLASSNAME;
         div.setAttribute("role", "heading");
         div.textContent = this.selectedElementLabel;
         this.element.appendChild(div);
@@ -1365,7 +1363,7 @@ CssRuleView.prototype = {
       const inheritedSource = rule.inherited;
       if (inheritedSource && inheritedSource !== lastInheritedSource) {
         const div = this.styleDocument.createElementNS(HTML_NS, "div");
-        div.className = this._getRuleViewHeaderClassName();
+        div.className = RULE_VIEW_HEADER_CLASSNAME;
         div.setAttribute("role", "heading");
         div.setAttribute("aria-level", "3");
         div.textContent = rule.inheritedSource;
