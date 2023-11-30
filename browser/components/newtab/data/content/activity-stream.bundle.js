@@ -7967,7 +7967,8 @@ class _DSCard extends (external_React_default()).PureComponent {
         action_position: this.props.pos,
         value: {
           card_type: this.props.flightId ? "spoc" : "organic",
-          recommendation_id: this.props.recommendation_id
+          recommendation_id: this.props.recommendation_id,
+          tile_id: this.props.id
         }
       }));
       this.props.dispatch(actionCreators.ImpressionStats({
@@ -8005,7 +8006,8 @@ class _DSCard extends (external_React_default()).PureComponent {
         action_position: this.props.pos,
         value: {
           card_type: this.props.flightId ? "spoc" : "organic",
-          recommendation_id: this.props.recommendation_id
+          recommendation_id: this.props.recommendation_id,
+          tile_id: this.props.id
         }
       }));
       this.props.dispatch(actionCreators.ImpressionStats({

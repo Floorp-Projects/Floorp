@@ -170,7 +170,11 @@ describe("<DSCard>", () => {
           event: "CLICK",
           source: "FOO",
           action_position: 1,
-          value: { card_type: "organic", recommendation_id: undefined },
+          value: {
+            card_type: "organic",
+            recommendation_id: undefined,
+            tile_id: "fooidx",
+          },
         })
       );
       assert.calledWith(
@@ -204,7 +208,11 @@ describe("<DSCard>", () => {
           event: "CLICK",
           source: "FOO",
           action_position: 1,
-          value: { card_type: "spoc", recommendation_id: undefined },
+          value: {
+            card_type: "spoc",
+            recommendation_id: undefined,
+            tile_id: "fooidx",
+          },
         })
       );
       assert.calledWith(
@@ -245,7 +253,11 @@ describe("<DSCard>", () => {
           event: "CLICK",
           source: "FOO",
           action_position: 1,
-          value: { card_type: "organic", recommendation_id: undefined },
+          value: {
+            card_type: "organic",
+            recommendation_id: undefined,
+            tile_id: "fooidx",
+          },
         })
       );
       assert.calledWith(
@@ -374,7 +386,11 @@ describe("<DSCard>", () => {
           event: "SAVE_TO_POCKET",
           source: "CARDGRID_HOVER",
           action_position: 1,
-          value: { card_type: "organic", recommendation_id: undefined },
+          value: {
+            card_type: "organic",
+            recommendation_id: undefined,
+            tile_id: "fooidx",
+          },
         })
       );
       assert.calledWith(
