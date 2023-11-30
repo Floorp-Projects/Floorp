@@ -44,9 +44,6 @@ add_task(async function test_aria_roles() {
     let recentlyClosedComponent = document.querySelector(
       "view-recentlyclosed[slot=recentlyclosed]"
     );
-    await TestUtils.waitForCondition(
-      () => recentlyClosedComponent.fullyUpdated
-    );
     let recentlyClosedEmptyState = recentlyClosedComponent.emptyState;
     let descriptionEls = recentlyClosedEmptyState.descriptionEls;
     is(
