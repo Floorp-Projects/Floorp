@@ -36,11 +36,23 @@ add_task(async function () {
     "auto-inline-class-3",
     "auto-inline-class-4",
     "auto-inline-class-5",
+    "auto-inline-nested-class-1",
+    "auto-inline-nested-class-2",
+    "auto-inline-nested-class-3",
+    "auto-inline-nested-class-4",
+    "auto-inline-nested-class-5",
+    "auto-inline-nested-class-6",
     "auto-stylesheet-class-1",
     "auto-stylesheet-class-2",
     "auto-stylesheet-class-3",
     "auto-stylesheet-class-4",
     "auto-stylesheet-class-5",
+    "auto-stylesheet-nested-class-1",
+    "auto-stylesheet-nested-class-2",
+    "auto-stylesheet-nested-class-3",
+    "auto-stylesheet-nested-class-4",
+    "auto-stylesheet-nested-class-5",
+    "auto-stylesheet-nested-class-6",
   ];
 
   const { autocompletePopup } = view.classListPreviewer;
@@ -226,8 +238,7 @@ async function checkAutocompleteItems(
       getAutocompleteItems(autocompletePopup).length === expectedItems.length
   );
   const items = getAutocompleteItems(autocompletePopup);
-  const formatList = list => `\n${list.join("\n")}\n`;
-  is(formatList(items), formatList(expectedItems), assertionMessage);
+  Assert.deepEqual(items, expectedItems, assertionMessage);
 }
 
 function getAutocompleteItems(autocompletePopup) {
