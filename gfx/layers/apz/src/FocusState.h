@@ -125,6 +125,11 @@ class FocusState final {
    */
   bool CanIgnoreKeyboardShortcutMisses() const;
 
+  /**
+   * Reset to initial state.
+   */
+  void Reset();
+
  private:
   /**
    * Whether the current focus state is known to be current or else if an event

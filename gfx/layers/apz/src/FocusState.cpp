@@ -35,7 +35,6 @@ uint64_t FocusState::LastAPZProcessedEvent() const {
 bool FocusState::IsCurrent(const MutexAutoLock& aProofOfLock) const {
   FS_LOG("Checking IsCurrent() with cseq=%" PRIu64 ", aseq=%" PRIu64 "\n",
          mLastContentProcessedEvent, mLastAPZProcessedEvent);
-
   MOZ_ASSERT(mLastContentProcessedEvent <= mLastAPZProcessedEvent);
   return mLastContentProcessedEvent == mLastAPZProcessedEvent;
 }
@@ -53,8 +52,8 @@ void FocusState::ReceiveFocusChangingEvent() {
     return;
   }
   mLastAPZProcessedEvent += 1;
-  FS_LOG("Focus changing event incremented aseq to %" PRIu64 "\n",
-         mLastAPZProcessedEvent);
+  FS_LOG("Focus changing event incremented aseq to %" PRIu64 ", (%p)\n",
+         mLastAPZProcessedEvent, this);
 }
 
 void FocusState::Update(LayersId aRootLayerTreeId,
@@ -105,8 +104,8 @@ void FocusState::Update(LayersId aRootLayerTreeId,
 
       bool operator()(const FocusTarget::NoFocusTarget& aNoFocusTarget) {
         FS_LOG("Setting target to nil (reached a nil target) with seq=%" PRIu64
-               "\n",
-               mSequenceNumber);
+               ", (%p)\n",
+               mSequenceNumber, &mFocusState);
 
         // Mark what sequence number this target has for debugging purposes so
         // we can always accurately report on whether we are stale or not
@@ -144,9 +143,9 @@ void FocusState::Update(LayersId aRootLayerTreeId,
 
       bool operator()(const FocusTarget::ScrollTargets& aScrollTargets) {
         FS_LOG("Setting target to h=%" PRIu64 ", v=%" PRIu64
-               ", and seq=%" PRIu64 "\n",
+               ", and seq=%" PRIu64 "(%p)\n",
                aScrollTargets.mHorizontal, aScrollTargets.mVertical,
-               mSequenceNumber);
+               mSequenceNumber, &mFocusState);
 
         // This is the global focus target
         mFocusState.mFocusHorizontalTarget = aScrollTargets.mHorizontal;
@@ -219,6 +218,19 @@ bool FocusState::CanIgnoreKeyboardShortcutMisses() const {
   MutexAutoLock lock(mMutex);
 
   return IsCurrent(lock) && !mFocusHasKeyEventListeners;
+}
+
+void FocusState::Reset() {
+  MutexAutoLock lock(mMutex);
+
+  mLastAPZProcessedEvent = 1;
+  mLastContentProcessedEvent = 0;
+  mFocusHasKeyEventListeners = false;
+  mReceivedUpdate = false;
+  mFocusLayersId = {0};
+  mFocusHorizontalTarget = ScrollableLayerGuid::NULL_SCROLL_ID;
+  mFocusVerticalTarget = ScrollableLayerGuid::NULL_SCROLL_ID;
+  mFocusTree = {};
 }
 
 }  // namespace layers
