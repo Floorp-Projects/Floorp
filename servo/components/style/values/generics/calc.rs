@@ -1072,9 +1072,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
             Self::Abs(ref c) => {
                 let mut result = c.resolve_internal(leaf_to_output_fn)?;
 
-                if !result.is_zero() {
-                    result.map(|v| v.abs());
-                }
+                result.map(|v| v.abs());
 
                 Ok(result)
             },
@@ -1535,7 +1533,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
             },
             Self::Abs(ref mut child) => {
                 if let CalcNode::Leaf(leaf) = child.as_mut() {
-                    leaf.map(|v| if v.is_zero() { v } else { v.abs() });
+                    leaf.map(|v| v.abs());
                     replace_self_with!(&mut **child);
                 }
             },
