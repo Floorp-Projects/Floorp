@@ -4090,10 +4090,18 @@ FullscreenTransitionTask::Run() {
     // If the widget has been destroyed before we get here, don't try to
     // do anything more. Just let it go and release ourselves.
     NS_WARNING("The widget to fullscreen has been destroyed");
+    mWindow->mIsInFullScreenTransition = false;
     return NS_OK;
   }
   if (stage == eBeforeToggle) {
     PROFILER_MARKER_UNTYPED("Fullscreen transition start", DOM);
+
+    mWindow->mIsInFullScreenTransition = true;
+
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    NS_ENSURE_TRUE(obs, NS_ERROR_FAILURE);
+    obs->NotifyObservers(nullptr, "fullscreen-transition-start", nullptr);
+
     mWidget->PerformFullscreenTransition(nsIWidget::eBeforeFullscreenToggle,
                                          mDuration.mFadeIn, mTransitionData,
                                          this);
@@ -4134,6 +4142,13 @@ FullscreenTransitionTask::Run() {
                                          this);
   } else if (stage == eEnd) {
     PROFILER_MARKER_UNTYPED("Fullscreen transition end", DOM);
+
+    mWindow->mIsInFullScreenTransition = false;
+
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    NS_ENSURE_TRUE(obs, NS_ERROR_FAILURE);
+    obs->NotifyObservers(nullptr, "fullscreen-transition-end", nullptr);
+
     mWidget->CleanupFullscreenTransition();
   }
   return NS_OK;
