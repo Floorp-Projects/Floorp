@@ -220,7 +220,7 @@ class NSSSocketControl final : public CommonSocketControl {
 
   void SetSharedOwningReference(mozilla::psm::SharedSSLState* ref);
 
-  nsresult SetResumptionTokenFromExternalCache();
+  nsresult SetResumptionTokenFromExternalCache(PRFileDesc* fd);
 
   void SetPreliminaryHandshakeInfo(const SSLChannelInfo& channelInfo,
                                    const SSLCipherSuiteInfo& cipherInfo);
@@ -260,7 +260,10 @@ class NSSSocketControl final : public CommonSocketControl {
   }
 
  private:
-  ~NSSSocketControl() = default;
+  ~NSSSocketControl() {
+    MOZ_RELEASE_ASSERT(!mFd,
+                       "NSSSocketControl must outlive its file descriptor!");
+  }
 
   PRFileDesc* mFd;
 
