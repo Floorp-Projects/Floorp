@@ -71,46 +71,6 @@ static LazyLogModule sUpdateLog("updatedriver");
 #endif
 #define LOG(args) MOZ_LOG(sUpdateLog, mozilla::LogLevel::Debug, args)
 
-#ifdef XP_MACOSX
-static void UpdateDriverSetupMacCommandLine(int& argc, char**& argv,
-                                            bool restart) {
-  if (NS_IsMainThread()) {
-    CommandLineServiceMac::SetupMacCommandLine(argc, argv, restart);
-    return;
-  }
-  // Bug 1335916: SetupMacCommandLine calls a CoreFoundation function that
-  // asserts that it was called from the main thread, so if we are not the main
-  // thread, we have to dispatch that call to there. But we also have to get the
-  // result from it, so we can't just dispatch and return, we have to wait
-  // until the dispatched operation actually completes. So we also set up a
-  // monitor to signal us when that happens, and block until then.
-  Monitor monitor MOZ_UNANNOTATED("nsUpdateDriver SetupMacCommandLine");
-
-  nsresult rv = NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "UpdateDriverSetupMacCommandLine",
-      [&argc, &argv, restart, &monitor]() -> void {
-        CommandLineServiceMac::SetupMacCommandLine(argc, argv, restart);
-        MonitorAutoLock(monitor).Notify();
-      }));
-
-  if (NS_FAILED(rv)) {
-    LOG(
-        ("Update driver error dispatching SetupMacCommandLine to main thread: "
-         "%d\n",
-         uint32_t(rv)));
-    return;
-  }
-
-  // The length of this wait is arbitrary, but should be long enough that having
-  // it expire means something is seriously wrong.
-  CVStatus status =
-      MonitorAutoLock(monitor).Wait(TimeDuration::FromSeconds(60));
-  if (status == CVStatus::Timeout) {
-    LOG(("Update driver timed out waiting for SetupMacCommandLine\n"));
-  }
-}
-#endif
-
 static nsresult GetCurrentWorkingDir(nsACString& aOutPath) {
   // Cannot use NS_GetSpecialDirectory because XPCOM is not yet initialized.
   // This code is duplicated from xpcom/io/SpecialSystemDirectory.cpp:
@@ -316,6 +276,9 @@ static bool IsOlderVersion(nsIFile* versionFile, const char* appVersion) {
 static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
                         int appArgc, char** appArgv, bool restart,
                         bool isStaged, ProcessType* outpid) {
+  MOZ_DIAGNOSTIC_ASSERT(
+      !restart || NS_IsMainThread(),
+      "restart may only be set when called on the main thread");
   // The following determines the update operation to perform.
   // 1. When restart is false the update will be staged.
   // 2. When restart is true and isStaged is false the update will apply the mar
@@ -616,15 +579,20 @@ static void ApplyUpdate(nsIFile* greDir, nsIFile* updateDir, nsIFile* appDir,
     }
   }
 #elif defined(XP_MACOSX)
-UpdateDriverSetupMacCommandLine(argc, argv, restart);
-if (restart && needElevation) {
-  bool hasLaunched = LaunchElevatedUpdate(argc, argv, outpid);
-  free(argv);
-  if (!hasLaunched) {
-    LOG(("Failed to launch elevated update!"));
-    exit(1);
+if (restart) {
+  // Ensure we've added URLs to load into the app command line if we're
+  // restarting.
+  CommandLineServiceMac::SetupMacCommandLine(argc, argv, restart);
+
+  if (needElevation) {
+    bool hasLaunched = LaunchElevatedUpdate(argc, argv, outpid);
+    free(argv);
+    if (!hasLaunched) {
+      LOG(("Failed to launch elevated update!"));
+      exit(1);
+    }
+    exit(0);
   }
-  exit(0);
 }
 
 if (isStaged) {
