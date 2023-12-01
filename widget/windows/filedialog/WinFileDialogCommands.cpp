@@ -6,15 +6,19 @@
 
 #include "mozilla/widget/filedialog/WinFileDialogCommands.h"
 
+#include <type_traits>
 #include <shobjidl.h>
 #include <shtypes.h>
 #include <winerror.h>
 #include "WinUtils.h"
-#include "mozilla/ipc/ProtocolUtils.h"
-#include "mozilla/ipc/UtilityProcessManager.h"
 #include "mozilla/Logging.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
+#include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/ipc/UtilityProcessManager.h"
+#include "mozilla/mscom/ApartmentRegion.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla::widget::filedialog {
 
@@ -297,6 +301,162 @@ void LogProcessingError(LogModule* aModule, ipc::IProtocol* aCaller,
     }
   }
 }
+
+// Given a (synchronous) Action returning a Result<T, HRESULT>, perform that
+// action on a new single-purpose "File Dialog" thread, with COM initialized as
+// STA. (The thread will be destroyed afterwards.)
+//
+// Returns a Promise which will resolve to T (if the action returns Ok) or
+// reject with an HRESULT (if the action either returns Err or couldn't be
+// performed).
+template <typename Res, typename Action, size_t N>
+RefPtr<Promise<Res>> SpawnFileDialogThread(const char (&where)[N],
+                                           Action action) {
+  static mozilla::LazyLogModule sLogWFD("FileDialog");
+
+  RefPtr<nsIThread> thread;
+  {
+    nsresult rv = NS_NewNamedThread("File Dialog", getter_AddRefs(thread),
+                                    nullptr, {.isUiThread = true});
+    if (NS_FAILED(rv)) {
+      return Promise<Res>::CreateAndReject((HRESULT)rv, where);
+    }
+  }
+  // `thread` is single-purpose, and should not perform any additional work
+  // after `action`. Shut it down after we've dispatched that.
+  auto close_thread_ = MakeScopeExit([&]() {
+    auto const res = thread->AsyncShutdown();
+    static_assert(
+        std::is_same_v<uint32_t, std::underlying_type_t<decltype(res)>>);
+    if (NS_FAILED(res)) {
+      MOZ_LOG(sLogWFD, LogLevel::Warning,
+              ("thread->AsyncShutdown() failed: res=0x%08" PRIX32,
+               static_cast<uint32_t>(res)));
+    }
+  });
+
+  // our eventual return value
+  RefPtr promise = MakeRefPtr<typename Promise<Res>::Private>(where);
+
+  // alias to reduce indentation depth
+  auto const dispatch = [&](auto closure) {
+    return thread->DispatchToQueue(
+        NS_NewRunnableFunction(where, std::move(closure)),
+        mozilla::EventQueuePriority::Normal);
+  };
+
+  dispatch([thread, promise, where, action = std::move(action)]() {
+    // Like essentially all COM UI components, the file dialog is STA: it must
+    // be associated with a specific thread to create its HWNDs and receive
+    // messages for them. If it's launched from a thread in the multithreaded
+    // apartment (including via implicit MTA), COM will proxy out to the
+    // process's main STA thread, and the file-dialog's modal loop will run
+    // there.
+    //
+    // This of course would completely negate any point in using a separate
+    // thread, since behind the scenes the dialog would still be running on the
+    // process's main thread. In particular, under that arrangement, file
+    // dialogs (and other nested modal loops, like those performed by
+    // `SpinEventLoopUntil`) will resolve in strictly LIFO order, effectively
+    // remaining suspended until all later modal loops resolve.
+    //
+    // To avoid this, we initialize COM as STA, so that it (rather than the main
+    // STA thread) is the file dialog's "home" thread and the IFileDialog's home
+    // apartment.
+
+    mozilla::mscom::STARegion staRegion;
+    if (!staRegion) {
+      MOZ_LOG(sLogWFD, LogLevel::Error,
+              ("COM init failed on file dialog thread: hr = %08lx",
+               staRegion.GetHResult()));
+
+      APTTYPE at;
+      APTTYPEQUALIFIER atq;
+      HRESULT const hr = ::CoGetApartmentType(&at, &atq);
+      MOZ_LOG(sLogWFD, LogLevel::Error,
+              ("  current COM apartment state: hr = %08lX, APTTYPE = "
+               "%08X, APTTYPEQUALIFIER = %08X",
+               hr, at, atq));
+
+      // If this happens in the utility process, crash so we learn about it.
+      // (TODO: replace this with a telemetry ping.)
+      if (!XRE_IsParentProcess()) {
+        // Preserve relevant data on the stack for later analysis.
+        std::tuple volatile info{staRegion.GetHResult(), hr, at, atq};
+        MOZ_CRASH("Could not initialize COM STA in utility process");
+      }
+
+      // If this happens in the parent process, don't crash; just fall back to a
+      // nested modal loop. This isn't ideal, but it will probably still work
+      // well enough for the common case, wherein no other modal loops are
+      // active.
+      //
+      // (TODO: replace this with a telemetry ping, too.)
+    }
+
+    // Actually invoke the action and report the result.
+    Result<Res, HRESULT> val = action();
+    if (val.isErr()) {
+      promise->Reject(val.unwrapErr(), where);
+    } else {
+      promise->Resolve(val.unwrap(), where);
+    }
+  });
+
+  return promise;
+}
+
+// For F returning `Result<T, E>`, yields the type `T`.
+template <typename F, typename... Args>
+using inner_result_of =
+    typename std::remove_reference_t<decltype(std::declval<F>()(
+        std::declval<Args>()...))>::ok_type;
+
+template <typename ExtractorF,
+          typename RetT = inner_result_of<ExtractorF, IFileDialog*>>
+auto SpawnPickerT(HWND parent, FileDialogType type, ExtractorF&& extractor,
+                  nsTArray<Command> commands) -> RefPtr<Promise<Maybe<RetT>>> {
+  return detail::SpawnFileDialogThread<Maybe<RetT>>(
+      __PRETTY_FUNCTION__,
+      [=, commands = std::move(commands)]() -> Result<Maybe<RetT>, HRESULT> {
+        // On Win10, the picker doesn't support per-monitor DPI, so we create it
+        // with our context set temporarily to system-dpi-aware.
+        WinUtils::AutoSystemDpiAware dpiAwareness;
+
+        RefPtr<IFileDialog> dialog;
+        MOZ_TRY_VAR(dialog, MakeFileDialog(type));
+
+        if (HRESULT const rv = ApplyCommands(dialog, commands); FAILED(rv)) {
+          return mozilla::Err(rv);
+        }
+
+        if (HRESULT const rv = dialog->Show(parent); FAILED(rv)) {
+          if (rv == HRESULT_FROM_WIN32(ERROR_CANCELLED)) {
+            return Result<Maybe<RetT>, HRESULT>(Nothing());
+          }
+          return mozilla::Err(rv);
+        }
+
+        RetT res;
+        MOZ_TRY_VAR(res, extractor(dialog.get()));
+
+        return Some(res);
+      });
+}
+
 }  // namespace detail
+
+RefPtr<Promise<Maybe<Results>>> SpawnFilePicker(HWND parent,
+                                                FileDialogType type,
+                                                nsTArray<Command> commands) {
+  return detail::SpawnPickerT(parent, type, GetFileResults,
+                              std::move(commands));
+}
+
+RefPtr<Promise<Maybe<nsString>>> SpawnFolderPicker(HWND parent,
+                                                   nsTArray<Command> commands) {
+  return detail::SpawnPickerT(parent, FileDialogType::Open, GetFolderResults,
+                              std::move(commands));
+}
 
 }  // namespace mozilla::widget::filedialog
