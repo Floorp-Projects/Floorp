@@ -23,7 +23,7 @@
 //   -q secp256r1 -x -k ec -z <(date +%s) -1 -2 -n cert$num; sleep 2;
 // done
 
-add_task(async function run_test_no_overlong_path_building() {
+add_task(async function test_no_overlong_path_building() {
   let profile = do_get_profile();
   const CERT_DB_NAME = "cert9.db";
   let srcCertDBFile = do_get_file(`test_self_signed_certs/${CERT_DB_NAME}`);
@@ -66,4 +66,44 @@ add_task(async function run_test_no_overlong_path_building() {
   let timeAfter = Date.now();
   let secondsElapsed = (timeAfter - timeBefore) / 1000;
   ok(secondsElapsed < 120, "verifications shouldn't take too long");
+});
+
+add_task(async function test_no_bad_signature() {
+  // If there are two self-signed CA certificates with the same subject and
+  // issuer but different keys, where one is trusted, test that using the other
+  // one as a server certificate doesn't result in a non-overridable "bad
+  // signature" error but rather a "self-signed cert" error.
+  let selfSignedCert = constructCertFromFile("test_self_signed_certs/ca1.pem");
+  let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
+  addCertFromFile(certDB, "test_self_signed_certs/ca2.pem", "CTu,,");
+  await checkCertErrorGeneric(
+    certDB,
+    selfSignedCert,
+    MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT,
+    certificateUsageSSLServer,
+    false,
+    "example.com"
+  );
+});
+
+add_task(async function test_no_inadequate_key_usage() {
+  // If there are two different non-CA, self-signed certificates with the same
+  // subject and issuer but different keys, test that using one of them as a
+  // server certificate doesn't result in a non-overridable "inadequate key
+  // usage" error but rather a "self-signed cert" error.
+  let selfSignedCert = constructCertFromFile("test_self_signed_certs/ee1.pem");
+  let certDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
+  addCertFromFile(certDB, "test_self_signed_certs/ee2.pem", ",,");
+  await checkCertErrorGeneric(
+    certDB,
+    selfSignedCert,
+    MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT,
+    certificateUsageSSLServer,
+    false,
+    "example.com"
+  );
 });
