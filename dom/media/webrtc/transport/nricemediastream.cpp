@@ -630,15 +630,18 @@ nsresult NrIceMediaStream::SendPacket(int component_id,
   return NS_OK;
 }
 
-void NrIceMediaStream::Ready() {
+void NrIceMediaStream::Ready(nr_ice_media_stream* stream) {
+  if (stream == stream_) {
+    NS_DispatchToCurrentThread(NewRunnableMethod<nr_ice_media_stream*>(
+        "NrIceMediaStream::DeferredCloseOldStream", this,
+        &NrIceMediaStream::DeferredCloseOldStream, old_stream_));
+  }
+
   // This function is called whenever a stream becomes ready, but it
   // gets fired multiple times when a stream gets nominated repeatedly.
   if (state_ != ICE_OPEN) {
     MOZ_MTLOG(ML_DEBUG, "Marking stream ready '" << name_ << "'");
     state_ = ICE_OPEN;
-    NS_DispatchToCurrentThread(NewRunnableMethod<nr_ice_media_stream*>(
-        "NrIceMediaStream::DeferredCloseOldStream", this,
-        &NrIceMediaStream::DeferredCloseOldStream, old_stream_));
     SignalReady(this);
   } else {
     MOZ_MTLOG(ML_DEBUG,
