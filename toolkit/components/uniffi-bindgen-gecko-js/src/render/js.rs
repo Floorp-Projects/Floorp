@@ -26,11 +26,11 @@ fn arg_names(args: &[&Argument]) -> String {
 }
 
 fn render_enum_literal(typ: &Type, variant_name: &str) -> String {
-    if let Type::Enum(enum_name) = typ {
+    if let Type::Enum { name, .. } = typ {
         // TODO: This does not support complex enum literals yet.
         return format!(
             "{}.{}",
-            enum_name.to_upper_camel_case(),
+            name.to_upper_camel_case(),
             variant_name.to_shouty_snake_case()
         );
     } else {
@@ -210,7 +210,7 @@ pub impl Type {
     // Render an expression to check if two instances of this type are equal
     fn equals(&self, first: &str, second: &str) -> String {
         match self {
-            Type::Record(_) => format!("{}.equals({})", first, second),
+            Type::Record { .. } => format!("{}.equals({})", first, second),
             _ => format!("{} == {}", first, second),
         }
     }
@@ -233,6 +233,42 @@ pub impl Type {
 
     fn compute_size_fn(&self) -> String {
         format!("{}.computeSize", self.ffi_converter())
+    }
+
+    fn canonical_name(&self) -> String {
+        match self {
+            Type::Int8 => "i8".into(),
+            Type::UInt8 => "u8".into(),
+            Type::Int16 => "i16".into(),
+            Type::UInt16 => "u16".into(),
+            Type::Int32 => "i32".into(),
+            Type::UInt32 => "u32".into(),
+            Type::Int64 => "i64".into(),
+            Type::UInt64 => "u64".into(),
+            Type::Float32 => "f32".into(),
+            Type::Float64 => "f64".into(),
+            Type::String => "string".into(),
+            Type::Bytes => "bytes".into(),
+            Type::Boolean => "bool".into(),
+            Type::Object { name, .. }
+            | Type::Enum { name, .. }
+            | Type::Record { name, .. }
+            | Type::CallbackInterface { name, .. } => format!("Type{name}"),
+            Type::Timestamp => "Timestamp".into(),
+            Type::Duration => "Duration".into(),
+            Type::ForeignExecutor => "ForeignExecutor".into(),
+            Type::Optional { inner_type } => format!("Optional{}", inner_type.canonical_name()),
+            Type::Sequence { inner_type } => format!("Sequence{}", inner_type.canonical_name()),
+            Type::Map {
+                key_type,
+                value_type,
+            } => format!(
+                "Map{}{}",
+                key_type.canonical_name().to_upper_camel_case(),
+                value_type.canonical_name().to_upper_camel_case()
+            ),
+            Type::External { name, .. } | Type::Custom { name, .. } => format!("Type{name}"),
+        }
     }
 
     fn ffi_converter(&self) -> String {

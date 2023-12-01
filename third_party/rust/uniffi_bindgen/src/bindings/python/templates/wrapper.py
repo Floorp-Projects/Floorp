@@ -30,16 +30,20 @@ import platform
 {%- endfor %}
 
 # Used for default argument values
-DEFAULT = object()
+_DEFAULT = object()
 
 {% include "RustBufferTemplate.py" %}
 {% include "Helpers.py" %}
 {% include "PointerManager.py" %}
 {% include "RustBufferHelper.py" %}
 
-# Contains loading, initialization code,
-# and the FFI Function declarations in a com.sun.jna.Library.
+# Contains loading, initialization code, and the FFI Function declarations.
 {% include "NamespaceLibraryTemplate.py" %}
+
+# Async support
+{%- if ci.has_async_fns() %}
+{%- include "Async.py" %}
+{%- endif %}
 
 # Public interface members begin here.
 {{ type_helper_code }}

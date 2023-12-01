@@ -4,7 +4,7 @@ export class {{ ffi_converter }} extends FfiConverterArrayBuffer {
         const len = dataStream.readInt32();
         const arr = [];
         for (let i = 0; i < len; i++) {
-            arr.push({{ inner.ffi_converter() }}.read(dataStream));
+            arr.push({{ inner_type.ffi_converter() }}.read(dataStream));
         }
         return arr;
     }
@@ -12,7 +12,7 @@ export class {{ ffi_converter }} extends FfiConverterArrayBuffer {
     static write(dataStream, value) {
         dataStream.writeInt32(value.length);
         value.forEach((innerValue) => {
-            {{ inner.ffi_converter() }}.write(dataStream, innerValue);
+            {{ inner_type.ffi_converter() }}.write(dataStream, innerValue);
         })
     }
 
@@ -20,7 +20,7 @@ export class {{ ffi_converter }} extends FfiConverterArrayBuffer {
         // The size of the length
         let size = 4;
         for (const innerValue of value) {
-            size += {{ inner.ffi_converter() }}.computeSize(innerValue);
+            size += {{ inner_type.ffi_converter() }}.computeSize(innerValue);
         }
         return size;
     }
@@ -31,7 +31,7 @@ export class {{ ffi_converter }} extends FfiConverterArrayBuffer {
         }
         value.forEach((innerValue, idx) => {
             try {
-                {{ inner.ffi_converter() }}.checkType(innerValue);
+                {{ inner_type.ffi_converter() }}.checkType(innerValue);
             } catch (e) {
                 if (e instanceof UniFFITypeError) {
                     e.addItemDescriptionPart(`[${idx}]`);

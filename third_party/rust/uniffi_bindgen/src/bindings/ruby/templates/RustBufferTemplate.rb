@@ -61,7 +61,7 @@ class RustBuffer < FFI::Struct
   end
 
   {%- for typ in ci.iter_types() -%}
-  {%- let canonical_type_name = typ.canonical_name() -%}
+  {%- let canonical_type_name = canonical_name(typ) -%}
   {%- match typ -%}
 
   {% when Type::String -%}
@@ -124,7 +124,7 @@ class RustBuffer < FFI::Struct
     end
   end
 
-  {% when Type::Record with (record_name) -%}
+  {% when Type::Record { name: record_name, module_path } -%}
   {%- let rec = ci|get_record_definition(record_name) -%}
   # The Record type {{ record_name }}.
 
@@ -141,7 +141,7 @@ class RustBuffer < FFI::Struct
     end
   end
 
-  {% when Type::Enum with (enum_name) -%}
+  {% when Type::Enum { name: enum_name, module_path }  -%}
   {% if !ci.is_name_used_as_error(enum_name) %}
   {%- let e = ci|get_enum_definition(enum_name) -%}
   # The Enum type {{ enum_name }}.
@@ -160,8 +160,8 @@ class RustBuffer < FFI::Struct
   end
   {% endif %}
 
-  {% when Type::Optional with (inner_type) -%}
-  # The Optional<T> type for {{ inner_type.canonical_name() }}.
+  {% when Type::Optional { inner_type } -%}
+  # The Optional<T> type for {{ canonical_name(inner_type) }}.
 
   def self.alloc_from_{{ canonical_type_name }}(v)
     RustBuffer.allocWithBuilder do |builder|
@@ -176,8 +176,8 @@ class RustBuffer < FFI::Struct
     end
   end
 
-  {% when Type::Sequence with (inner_type) -%}
-  # The Sequence<T> type for {{ inner_type.canonical_name() }}.
+  {% when Type::Sequence { inner_type } -%}
+  # The Sequence<T> type for {{ canonical_name(inner_type) }}.
 
   def self.alloc_from_{{ canonical_type_name }}(v)
     RustBuffer.allocWithBuilder do |builder|
@@ -192,8 +192,8 @@ class RustBuffer < FFI::Struct
     end
   end
 
-  {% when Type::Map with (k, inner_type) -%}
-  # The Map<T> type for {{ inner_type.canonical_name() }}.
+  {% when Type::Map { key_type: k, value_type: inner_type } -%}
+  # The Map<T> type for {{ canonical_name(inner_type) }}.
 
   def self.alloc_from_{{ canonical_type_name }}(v)
     RustBuffer.allocWithBuilder do |builder|

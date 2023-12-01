@@ -44,25 +44,32 @@ public class {{ type_name }}: {{ obj.name() }}Protocol {
     {%- if meth.is_async() %}
 
     public func {{ meth.name()|fn_name }}({%- call swift::arg_list_decl(meth) -%}) async {% call swift::throws(meth) %}{% match meth.return_type() %}{% when Some with (return_type) %} -> {{ return_type|type_name }}{% when None %}{% endmatch %} {
-        // Suspend the function and call the scaffolding function, passing it a callback handler from
-        // `AsyncTypes.swift`
-        //
-        // Make sure to hold on to a reference to the continuation in the top-level scope so that
-        // it's not freed before the callback is invoked.
-        var continuation: {{ meth.result_type().borrow()|future_continuation_type }}? = nil
-        return {% call swift::try(meth) %} await withCheckedThrowingContinuation {
-            continuation = $0
-            try! rustCall() {
+        return {% call swift::try(meth) %} await uniffiRustCallAsync(
+            rustFutureFunc: {
                 {{ meth.ffi_func().name() }}(
-                    self.pointer,
-                    {% call swift::arg_list_lowered(meth) %}
-                    FfiConverterForeignExecutor.lower(UniFfiForeignExecutor()),
-                    {{ meth.result_type().borrow()|future_callback }},
-                    &continuation,
-                    $0
+                    self.pointer
+                    {%- for arg in meth.arguments() -%}
+                    ,
+                    {{ arg|lower_fn }}({{ arg.name()|var_name }})
+                    {%- endfor %}
                 )
-            }
-        }
+            },
+            pollFunc: {{ meth.ffi_rust_future_poll(ci) }},
+            completeFunc: {{ meth.ffi_rust_future_complete(ci) }},
+            freeFunc: {{ meth.ffi_rust_future_free(ci) }},
+            {%- match meth.return_type() %}
+            {%- when Some(return_type) %}
+            liftFunc: {{ return_type|lift_fn }},
+            {%- when None %}
+            liftFunc: { $0 },
+            {%- endmatch %}
+            {%- match meth.throws_type() %}
+            {%- when Some with (e) %}
+            errorHandler: {{ e|ffi_converter_name }}.lift
+            {%- else %}
+            errorHandler: nil
+            {% endmatch %}
+        )
     }
 
     {% else -%}

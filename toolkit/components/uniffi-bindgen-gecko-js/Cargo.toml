@@ -15,7 +15,7 @@ clap = { version = "4", default-features = false, features = ["std", "derive", "
 extend = "1.1"
 heck = "0.4"
 uniffi = { workspace = true }
-uniffi_bindgen = "0.24"
+uniffi_bindgen = "0.25"
 serde = "1"
 toml = "0.5"
 camino = "1.0.8"

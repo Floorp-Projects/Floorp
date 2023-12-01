@@ -56,7 +56,7 @@ ERROR_MODULE_TO_READER_METHOD = {
 {%- for e in ci.enum_definitions() %}
 {% if ci.is_name_used_as_error(e.name()) %}
 {%- let typ=ci.get_type(e.name()).unwrap() %}
-{%- let canonical_type_name = typ.canonical_name().borrow()|class_name_rb %}
+{%- let canonical_type_name = canonical_name(typ.borrow()).borrow()|class_name_rb %}
   {{ e.name()|class_name_rb }} => :read{{ canonical_type_name }},
 {% endif %}
 {%- endfor %}

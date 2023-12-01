@@ -6,7 +6,7 @@
 # Ideally this would live in a separate .rb file where it can be unittested etc
 # in isolation, and perhaps even published as a re-useable package.
 #
-# However, it's important that the detils of how this helper code works (e.g. the
+# However, it's important that the details of how this helper code works (e.g. the
 # way that different builtin types are passed across the FFI) exactly match what's
 # expected by the rust code on the other side of the interface. In practice right
 # now that means coming from the exact some version of `uniffi` that was used to
