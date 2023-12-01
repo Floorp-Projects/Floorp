@@ -82,3 +82,13 @@ window.addEventListener("unload", onUnload);
 function onUnload() {
   console.log("unload");
 }
+
+const popover = document.getElementById("popover");
+popover.addEventListener("beforetoggle", onBeforeToggle);
+function onBeforeToggle(event) {
+  console.log("beforetoggle", event);
+}
+popover.addEventListener("toggle", onToggle);
+function onToggle(event) {
+  console.log("toggle", event);
+}
