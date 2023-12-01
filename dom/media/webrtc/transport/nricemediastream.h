@@ -179,7 +179,7 @@ class NrIceMediaStream {
   nsresult SendPacket(int component_id, const unsigned char* data, size_t len);
 
   // Set your state to ready. Called by the NrIceCtx;
-  void Ready();
+  void Ready(nr_ice_media_stream* stream);
   void Failed();
 
   // Close the stream. Called by the NrIceCtx.

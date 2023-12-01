@@ -376,7 +376,7 @@ int NrIceCtx::stream_ready(void* obj, nr_ice_media_stream* stream) {
   // Streams which do not exist should never be ready.
   MOZ_ASSERT(s);
 
-  s->Ready();
+  s->Ready(stream);
 
   return 0;
 }
