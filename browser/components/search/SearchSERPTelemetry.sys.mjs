@@ -1039,11 +1039,6 @@ class ContentHandler {
     if (wrappedChannel._adClickRecorded) {
       lazy.logConsole.debug("Ad click already recorded");
       return;
-      // When _adClickRecorded is false but _recordedClick is true, it means we
-      // recorded a non-ad link click, and it is being re-directed.
-    } else if (wrappedChannel._recordedClick) {
-      lazy.logConsole.debug("Non ad-click already recorded");
-      return;
     }
 
     Services.tm.dispatchToMainThread(() => {
@@ -1069,154 +1064,12 @@ class ContentHandler {
         return provider.telemetryId == providerInfo;
       });
 
-      // Some channels re-direct by loading pages that return 200. The result
-      // is the channel will have an originURL that changes from the SERP to
-      // either a nonAdsRegexp or an extraAdServersRegexps. This is typical
-      // for loading a page in a new tab. The channel will have changed so any
-      // properties attached to them to record state (e.g. _recordedClick)
-      // won't be present.
-      if (
-        info.nonAdsLinkRegexps.some(r => r.test(originURL)) ||
-        info.extraAdServersRegexps.some(r => r.test(originURL))
-      ) {
-        return;
-      }
-
-      // A click event is recorded if a user loads a resource from an
-      // originURL that is a SERP.
-      //
-      // Typically, we only want top level loads containing documents to avoid
-      // recording any event on an in-page resource a SERP might load
-      // (e.g. CSS files).
-      //
-      // The exception to this is if a subframe loads a resource that matches
-      // a non ad link. Some SERPs encode non ad search results with a URL
-      // that gets loaded into an iframe, which then tells the container of
-      // the iframe to change the location of the page.
-      if (
-        lazy.serpEventsEnabled &&
-        channel.isDocument &&
-        (channel.loadInfo.isTopLevelLoad ||
-          info.nonAdsLinkRegexps.some(r => r.test(url)))
-      ) {
-        let browser = wrappedChannel.browserElement;
-        // If the load is from history, don't record an event.
-        if (
-          browser?.browsingContext.webProgress?.loadType &
-          Ci.nsIDocShell.LOAD_CMD_HISTORY
-        ) {
-          lazy.logConsole.debug("Ignoring load from history");
-          return;
-        }
-
-        // Step 1: Check if the browser associated with the request was a
-        // tracked SERP.
-        let start = Cu.now();
-        let telemetryState;
-        let isFromNewtab = false;
-        if (item.browserTelemetryStateMap.has(browser)) {
-          // Current browser is tracked.
-          telemetryState = item.browserTelemetryStateMap.get(browser);
-        } else if (browser) {
-          // Current browser might have been created by a browser in a
-          // different tab.
-          let tabBrowser = browser.getTabBrowser();
-          let tab = tabBrowser.getTabForBrowser(browser).openerTab;
-          telemetryState = item.browserTelemetryStateMap.get(tab.linkedBrowser);
-          if (telemetryState) {
-            isFromNewtab = true;
-          }
-        }
-
-        // Step 2: If we have telemetryState, the browser object must be
-        // associated with another browser that is tracked. Try to find the
-        // component type on the SERP responsible for the request.
-        // Exceptions:
-        // - If a searchbox was used to initiate the load, don't record another
-        //   engagement because the event was logged elsewhere.
-        // - If the ad impression hasn't been recorded yet, we have no way of
-        //   knowing precisely what kind of component was selected.
-        let isSerp = false;
-        if (
-          telemetryState &&
-          telemetryState.adImpressionsReported &&
-          !telemetryState.searchBoxSubmitted
-        ) {
-          if (info.searchPageRegexp?.test(originURL)) {
-            isSerp = true;
-          }
-
-          let startFindComponent = Cu.now();
-          let parsedUrl = new URL(url);
-          // Determine the component type of the link.
-          let type;
-          for (let [
-            storedUrl,
-            componentType,
-          ] of telemetryState.urlToComponentMap.entries()) {
-            // The URL we're navigating to may have more query parameters if
-            // the provider adds query parameters when the user clicks on a link.
-            // On the other hand, the URL we are navigating to may have have
-            // fewer query parameters because of query param stripping.
-            // Thus, if a query parameter is missing, a match can still be made
-            // provided keys that exist in both URLs contain equal values.
-            let score = SearchSERPTelemetry.compareUrls(storedUrl, parsedUrl, {
-              paramValues: true,
-              path: true,
-            });
-            if (score) {
-              type = componentType;
-              break;
-            }
-          }
-          ChromeUtils.addProfilerMarker(
-            "SearchSERPTelemetry._observeActivity",
-            startFindComponent,
-            "Find component for URL"
-          );
-
-          // Default value for URLs that don't match any components categorized
-          // on the page.
-          if (!type) {
-            type = SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK;
-          }
-
-          if (
-            type == SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS
-          ) {
-            SearchSERPTelemetry.setBrowserContentSource(
-              browser,
-              SearchSERPTelemetryUtils.INCONTENT_SOURCES.REFINE_ON_SERP
-            );
-          } else if (isSerp && isFromNewtab) {
-            SearchSERPTelemetry.setBrowserContentSource(
-              browser,
-              SearchSERPTelemetryUtils.INCONTENT_SOURCES.OPENED_IN_NEW_TAB
-            );
-          }
-
-          // Step 3: Record the engagement.
-          impressionIdsWithoutEngagementsSet.delete(
-            telemetryState.impressionId
-          );
-          Glean.serp.engagement.record({
-            impression_id: telemetryState.impressionId,
-            action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
-            target: type,
-          });
-          lazy.logConsole.debug("Counting click:", {
-            impressionId: telemetryState.impressionId,
-            type,
-            URL: url,
-          });
-          // Prevent re-directed channels from being examined more than once.
-          wrappedChannel._recordedClick = true;
-        }
-        ChromeUtils.addProfilerMarker(
-          "SearchSERPTelemetry._observeActivity",
-          start,
-          "Maybe record user engagement."
-        );
+      // If an error occurs with Glean SERP telemetry logic, avoid
+      // disrupting legacy telemetry.
+      try {
+        this.#maybeRecordSERPTelemetry(wrappedChannel, item, info);
+      } catch (ex) {
+        lazy.logConsole.error(ex);
       }
 
       if (!info.extraAdServersRegexps?.some(regex => regex.test(url))) {
@@ -1249,6 +1102,184 @@ class ContentHandler {
         console.error(e);
       }
     });
+  }
+
+  /**
+   * Checks if a request should record an ad click if it can be traced to a
+   * browser containing an observed SERP.
+   *
+   * @param {ChannelWrapper} wrappedChannel
+   *   The wrapped channel.
+   * @param {object} item
+   *   The browser item associated with the origin URL of the request.
+   * @param {object} info
+   *   The search provider info associated with the item.
+   */
+  #maybeRecordSERPTelemetry(wrappedChannel, item, info) {
+    if (!lazy.serpEventsEnabled) {
+      return;
+    }
+
+    if (wrappedChannel._recordedClick) {
+      lazy.logConsole.debug("Click already recorded.");
+      return;
+    }
+
+    let originURL = wrappedChannel.originURI?.spec;
+    let url = wrappedChannel.finalURL;
+    // Some channels re-direct by loading pages that return 200. The result
+    // is the channel will have an originURL that changes from the SERP to
+    // either a nonAdsRegexp or an extraAdServersRegexps. This is typical
+    // for loading a page in a new tab. The channel will have changed so any
+    // properties attached to them to record state (e.g. _recordedClick)
+    // won't be present.
+    if (
+      info.nonAdsLinkRegexps.some(r => r.test(originURL)) ||
+      info.extraAdServersRegexps.some(r => r.test(originURL))
+    ) {
+      return;
+    }
+
+    // A click event is recorded if a user loads a resource from an
+    // originURL that is a SERP.
+    //
+    // Typically, we only want top level loads containing documents to avoid
+    // recording any event on an in-page resource a SERP might load
+    // (e.g. CSS files).
+    //
+    // The exception to this is if a subframe loads a resource that matches
+    // a non ad link. Some SERPs encode non ad search results with a URL
+    // that gets loaded into an iframe, which then tells the container of
+    // the iframe to change the location of the page.
+    if (
+      wrappedChannel.channel.isDocument &&
+      (wrappedChannel.channel.loadInfo.isTopLevelLoad ||
+        info.nonAdsLinkRegexps.some(r => r.test(url)))
+    ) {
+      let browser = wrappedChannel.browserElement;
+
+      // If the load is from history, don't record an event.
+      if (
+        browser?.browsingContext.webProgress?.loadType &
+        Ci.nsIDocShell.LOAD_CMD_HISTORY
+      ) {
+        lazy.logConsole.debug("Ignoring load from history");
+        return;
+      }
+
+      // Step 1: Check if the browser associated with the request was a
+      // tracked SERP.
+      let start = Cu.now();
+      let telemetryState;
+      let isFromNewtab = false;
+      if (item.browserTelemetryStateMap.has(browser)) {
+        // Current browser is tracked.
+        telemetryState = item.browserTelemetryStateMap.get(browser);
+      } else if (browser) {
+        // Current browser might have been created by a browser in a
+        // different tab.
+        let tabBrowser = browser.getTabBrowser();
+        // A tab will not always have an openerTab, such as if a tab was
+        // created as a first tab in a new window. Bug 1866548: additional
+        // conditions need to be added in order to track clicks that open in
+        // new windows.
+        let tab = tabBrowser.getTabForBrowser(browser).openerTab;
+        if (tab) {
+          telemetryState = item.browserTelemetryStateMap.get(tab.linkedBrowser);
+          if (telemetryState) {
+            isFromNewtab = true;
+          }
+        }
+      }
+
+      // Step 2: If we have telemetryState, the browser object must be
+      // associated with another browser that is tracked. Try to find the
+      // component type on the SERP responsible for the request.
+      // Exceptions:
+      // - If a searchbox was used to initiate the load, don't record another
+      //   engagement because the event was logged elsewhere.
+      // - If the ad impression hasn't been recorded yet, we have no way of
+      //   knowing precisely what kind of component was selected.
+      let isSerp = false;
+      if (
+        telemetryState &&
+        telemetryState.adImpressionsReported &&
+        !telemetryState.searchBoxSubmitted
+      ) {
+        if (info.searchPageRegexp?.test(originURL)) {
+          isSerp = true;
+        }
+
+        let startFindComponent = Cu.now();
+        let parsedUrl = new URL(url);
+        // Determine the component type of the link.
+        let type;
+        for (let [
+          storedUrl,
+          componentType,
+        ] of telemetryState.urlToComponentMap.entries()) {
+          // The URL we're navigating to may have more query parameters if
+          // the provider adds query parameters when the user clicks on a link.
+          // On the other hand, the URL we are navigating to may have have
+          // fewer query parameters because of query param stripping.
+          // Thus, if a query parameter is missing, a match can still be made
+          // provided keys that exist in both URLs contain equal values.
+          let score = SearchSERPTelemetry.compareUrls(storedUrl, parsedUrl, {
+            paramValues: true,
+            path: true,
+          });
+          if (score) {
+            type = componentType;
+            break;
+          }
+        }
+        ChromeUtils.addProfilerMarker(
+          "SearchSERPTelemetry._observeActivity",
+          startFindComponent,
+          "Find component for URL"
+        );
+
+        // Default value for URLs that don't match any components categorized
+        // on the page.
+        if (!type) {
+          type = SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK;
+        }
+
+        if (
+          type == SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS
+        ) {
+          SearchSERPTelemetry.setBrowserContentSource(
+            browser,
+            SearchSERPTelemetryUtils.INCONTENT_SOURCES.REFINE_ON_SERP
+          );
+        } else if (isSerp && isFromNewtab) {
+          SearchSERPTelemetry.setBrowserContentSource(
+            browser,
+            SearchSERPTelemetryUtils.INCONTENT_SOURCES.OPENED_IN_NEW_TAB
+          );
+        }
+
+        // Step 3: Record the engagement.
+        impressionIdsWithoutEngagementsSet.delete(telemetryState.impressionId);
+        Glean.serp.engagement.record({
+          impression_id: telemetryState.impressionId,
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: type,
+        });
+        lazy.logConsole.debug("Counting click:", {
+          impressionId: telemetryState.impressionId,
+          type,
+          URL: url,
+        });
+        // Prevent re-directed channels from being examined more than once.
+        wrappedChannel._recordedClick = true;
+      }
+      ChromeUtils.addProfilerMarker(
+        "SearchSERPTelemetry._observeActivity",
+        start,
+        "Maybe record user engagement."
+      );
+    }
   }
 
   /**
