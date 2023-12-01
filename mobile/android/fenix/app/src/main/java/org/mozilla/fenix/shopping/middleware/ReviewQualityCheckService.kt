@@ -68,6 +68,7 @@ class DefaultReviewQualityCheckService(
     private val browserStore: BrowserStore,
 ) : ReviewQualityCheckService {
 
+    private val recommendationsCache: MutableMap<String, ProductRecommendation> = mutableMapOf()
     private val logger = Logger("DefaultReviewQualityCheckService")
 
     override suspend fun fetchProductReview(): ProductAnalysis? = withContext(Dispatchers.Main) {
@@ -125,25 +126,34 @@ class DefaultReviewQualityCheckService(
         withContext(Dispatchers.Main) {
             suspendCoroutine { continuation ->
                 browserStore.state.selectedTab?.let { tab ->
-                    tab.engineState.engineSession?.requestProductRecommendations(
-                        url = tab.content.url,
-                        onResult = {
-                            if (it.isEmpty()) {
-                                if (shouldRecordAvailableTelemetry) {
-                                    Shopping.surfaceNoAdsAvailable.record()
+
+                    if (recommendationsCache.containsKey(tab.content.url)) {
+                        continuation.resume(recommendationsCache[tab.content.url])
+                    } else {
+                        tab.engineState.engineSession?.requestProductRecommendations(
+                            url = tab.content.url,
+                            onResult = {
+                                if (it.isEmpty()) {
+                                    if (shouldRecordAvailableTelemetry) {
+                                        Shopping.surfaceNoAdsAvailable.record()
+                                    }
+                                } else {
+                                    Shopping.adsExposure.record()
                                 }
-                            } else {
-                                Shopping.adsExposure.record()
-                            }
-                            // Return the first available recommendation since ui requires only
-                            // one recommendation.
-                            continuation.resume(it.firstOrNull())
-                        },
-                        onException = {
-                            logger.error("Error fetching product recommendation", it)
-                            continuation.resume(null)
-                        },
-                    )
+                                // Return the first available recommendation since ui requires only
+                                // one recommendation.
+                                continuation.resume(
+                                    it.firstOrNull()?.also { recommendation ->
+                                        recommendationsCache[tab.content.url] = recommendation
+                                    },
+                                )
+                            },
+                            onException = {
+                                logger.error("Error fetching product recommendation", it)
+                                continuation.resume(null)
+                            },
+                        )
+                    }
                 }
             }
         }

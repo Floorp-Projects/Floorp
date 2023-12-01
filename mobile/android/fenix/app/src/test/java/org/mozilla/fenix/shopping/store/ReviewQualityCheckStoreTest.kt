@@ -217,6 +217,135 @@ class ReviewQualityCheckStoreTest {
         }
 
     @Test
+    fun `GIVEN product recommendations are available WHEN the user turns product recommendations off THEN state should not contain product recommendation`() =
+        runTest {
+            setAndResetLocale {
+                var productRecommendationsFetchCounter = 0
+                val tested = ReviewQualityCheckStore(
+                    middleware = provideReviewQualityCheckMiddleware(
+                        reviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(
+                            isEnabled = true,
+                            isProductRecommendationsEnabled = true,
+                        ),
+                        reviewQualityCheckService = FakeReviewQualityCheckService(
+                            productAnalysis = { ProductAnalysisTestData.productAnalysis() },
+                            productRecommendation = {
+                                productRecommendationsFetchCounter++
+                                ProductRecommendationTestData.productRecommendation()
+                            },
+                        ),
+                    ),
+                )
+                tested.waitUntilIdle()
+                dispatcher.scheduler.advanceUntilIdle()
+                tested.dispatch(ReviewQualityCheckAction.FetchProductAnalysis).joinBlocking()
+                tested.waitUntilIdle()
+                dispatcher.scheduler.advanceUntilIdle()
+
+                assertEquals(1, productRecommendationsFetchCounter)
+
+                tested.dispatch(ReviewQualityCheckAction.ToggleProductRecommendation).joinBlocking()
+                tested.waitUntilIdle()
+                dispatcher.scheduler.advanceUntilIdle()
+
+                val expected = ReviewQualityCheckState.OptedIn(
+                    productRecommendationsPreference = false,
+                    productRecommendationsExposure = true,
+                    productVendor = ProductVendor.BEST_BUY,
+                    productReviewState = ProductAnalysisTestData.analysisPresent(),
+                )
+                assertEquals(expected, tested.state)
+                assertEquals(1, productRecommendationsFetchCounter)
+            }
+        }
+
+    @Test
+    fun `GIVEN product recommendations are available WHEN the user turns product recommendations off and then back on THEN state should contain product recommendation`() =
+        runTest {
+            setAndResetLocale {
+                val tested = ReviewQualityCheckStore(
+                    middleware = provideReviewQualityCheckMiddleware(
+                        reviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(
+                            isEnabled = true,
+                            isProductRecommendationsEnabled = true,
+                        ),
+                        reviewQualityCheckService = FakeReviewQualityCheckService(
+                            productAnalysis = { ProductAnalysisTestData.productAnalysis() },
+                            productRecommendation = { ProductRecommendationTestData.productRecommendation() },
+                        ),
+                        shoppingExperienceFeature = FakeShoppingExperienceFeature(
+                            productRecommendationsExposureEnabled = true,
+                        ),
+                    ),
+                )
+                tested.waitUntilIdle()
+                dispatcher.scheduler.advanceUntilIdle()
+                tested.dispatch(ReviewQualityCheckAction.FetchProductAnalysis).joinBlocking()
+                tested.waitUntilIdle()
+                dispatcher.scheduler.advanceUntilIdle()
+                tested.dispatch(ReviewQualityCheckAction.ToggleProductRecommendation).joinBlocking()
+                tested.waitUntilIdle()
+                dispatcher.scheduler.advanceUntilIdle()
+                tested.dispatch(ReviewQualityCheckAction.ToggleProductRecommendation).joinBlocking()
+                tested.waitUntilIdle()
+                dispatcher.scheduler.advanceUntilIdle()
+
+                val expected = ReviewQualityCheckState.OptedIn(
+                    productRecommendationsPreference = true,
+                    productRecommendationsExposure = true,
+                    productVendor = ProductVendor.BEST_BUY,
+                    productReviewState = ProductAnalysisTestData.analysisPresent(
+                        recommendedProductState = ProductRecommendationTestData.product(),
+                    ),
+                )
+                assertEquals(expected, tested.state)
+            }
+        }
+
+    @Test
+    fun `GIVEN product recommendations are available but analysis failed WHEN the user turns product recommendations on THEN recommendations should not be fetched`() =
+        runTest {
+            setAndResetLocale {
+                var productRecommendationsFetchCounter = 0
+                val tested = ReviewQualityCheckStore(
+                    middleware = provideReviewQualityCheckMiddleware(
+                        reviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(
+                            isEnabled = true,
+                            isProductRecommendationsEnabled = false,
+                        ),
+                        reviewQualityCheckService = FakeReviewQualityCheckService(
+                            productAnalysis = { null },
+                            productRecommendation = {
+                                productRecommendationsFetchCounter++
+                                ProductRecommendationTestData.productRecommendation()
+                            },
+                        ),
+                    ),
+                )
+                tested.waitUntilIdle()
+                dispatcher.scheduler.advanceUntilIdle()
+                tested.dispatch(ReviewQualityCheckAction.FetchProductAnalysis).joinBlocking()
+                tested.waitUntilIdle()
+                dispatcher.scheduler.advanceUntilIdle()
+
+                assertEquals(0, productRecommendationsFetchCounter)
+
+                tested.dispatch(ReviewQualityCheckAction.ToggleProductRecommendation).joinBlocking()
+                tested.waitUntilIdle()
+                dispatcher.scheduler.advanceUntilIdle()
+
+                val expected = ReviewQualityCheckState.OptedIn(
+                    productRecommendationsPreference = true,
+                    productRecommendationsExposure = true,
+                    productVendor = ProductVendor.BEST_BUY,
+                    productReviewState = ReviewQualityCheckState.OptedIn.ProductReviewState.Error.GenericError,
+                )
+                assertEquals(expected, tested.state)
+                assertEquals(0, productRecommendationsFetchCounter)
+            }
+        }
+
+    @Test
     fun `GIVEN the user has opted in the feature WHEN there is existing card state data for a pdp THEN it should be restored`() =
         runTest {
             val captureActionsMiddleware = CaptureActionsMiddleware<AppState, AppAction>()

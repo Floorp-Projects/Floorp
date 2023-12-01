@@ -80,37 +80,16 @@ class ReviewQualityCheckNetworkMiddleware(
                 ReviewQualityCheckAction.AnalyzeProduct,
                 ReviewQualityCheckAction.RestoreReanalysis,
                 -> {
-                    val reanalysis = reviewQualityCheckService.reanalyzeProduct()
+                    store.onReanalyze()
+                }
 
-                    if (reanalysis == null) {
-                        store.updateProductReviewState(ProductReviewState.Error.GenericError)
-                        return@launch
-                    }
-
-                    val status = pollForAnalysisStatus()
-
-                    if (status == null ||
-                        status == AnalysisStatusDto.PENDING ||
-                        status == AnalysisStatusDto.IN_PROGRESS
+                ReviewQualityCheckAction.ToggleProductRecommendation -> {
+                    val state = store.state
+                    if (state is ReviewQualityCheckState.OptedIn &&
+                        state.productReviewState is ProductReviewState.AnalysisPresent &&
+                        state.productRecommendationsPreference == true
                     ) {
-                        // poll failed, reset to previous state
-                        val state = store.state
-                        if (state is ReviewQualityCheckState.OptedIn) {
-                            if (state.productReviewState is ProductReviewState.NoAnalysisPresent) {
-                                store.updateProductReviewState(ProductReviewState.NoAnalysisPresent())
-                            } else if (state.productReviewState is ProductReviewState.AnalysisPresent) {
-                                store.updateProductReviewState(
-                                    state.productReviewState.copy(
-                                        analysisStatus = AnalysisStatus.NEEDS_ANALYSIS,
-                                    ),
-                                )
-                            }
-                        }
-                    } else {
-                        // poll succeeded, update state
-                        val productAnalysis = reviewQualityCheckService.fetchProductReview()
-                        val productReviewState = productAnalysis.toProductReviewState()
-                        store.updateProductReviewState(productReviewState)
+                        store.updateRecommendedProductState()
                     }
                 }
 
@@ -122,6 +101,39 @@ class ReviewQualityCheckNetworkMiddleware(
                     reviewQualityCheckService.recordRecommendedProductImpression(action.productAid)
                 }
             }
+        }
+    }
+
+    private suspend fun Store<ReviewQualityCheckState, ReviewQualityCheckAction>.onReanalyze() {
+        val reanalysis = reviewQualityCheckService.reanalyzeProduct()
+
+        if (reanalysis == null) {
+            updateProductReviewState(ProductReviewState.Error.GenericError)
+            return
+        }
+
+        val status = pollForAnalysisStatus()
+
+        if (status == null ||
+            status == AnalysisStatusDto.PENDING ||
+            status == AnalysisStatusDto.IN_PROGRESS
+        ) {
+            // poll failed, reset to previous state
+            val state = this.state
+            if (state is ReviewQualityCheckState.OptedIn) {
+                if (state.productReviewState is ProductReviewState.NoAnalysisPresent) {
+                    updateProductReviewState(ProductReviewState.NoAnalysisPresent())
+                } else if (state.productReviewState is ProductReviewState.AnalysisPresent) {
+                    updateProductReviewState(
+                        state.productReviewState.copy(analysisStatus = AnalysisStatus.NEEDS_ANALYSIS),
+                    )
+                }
+            }
+        } else {
+            // poll succeeded, update state
+            val productAnalysis = reviewQualityCheckService.fetchProductReview()
+            val productReviewState = productAnalysis.toProductReviewState()
+            updateProductReviewState(productReviewState)
         }
     }
 

@@ -56,7 +56,7 @@ sealed interface ReviewQualityCheckAction : Action {
     /**
      * Triggered when the user has enabled or disabled product recommendations.
      */
-    object ToggleProductRecommendation : PreferencesMiddlewareAction, UpdateAction, TelemetryAction
+    object ToggleProductRecommendation : PreferencesMiddlewareAction, UpdateAction, NetworkAction, TelemetryAction
 
     /**
      * Triggered as a result of a [OptIn] or [Init] whe user has opted in for shopping experience.

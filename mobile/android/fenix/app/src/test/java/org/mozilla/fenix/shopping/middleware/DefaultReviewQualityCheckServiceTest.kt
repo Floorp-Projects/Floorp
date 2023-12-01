@@ -6,6 +6,7 @@ package org.mozilla.fenix.shopping.middleware
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
@@ -238,5 +239,75 @@ class DefaultReviewQualityCheckServiceTest {
             val actual = tested.productRecommendation(false)
 
             assertNull(actual)
+        }
+
+    @Test
+    fun `GIVEN product recommendations is called WHEN onResult is invoked with the result THEN recommendations returns the same result without re-fetching again`() =
+        runTest {
+            val engineSession = mockk<EngineSession>()
+            val expected = ProductRecommendationTestData.productRecommendation()
+            val productRecommendations = listOf(expected)
+
+            every {
+                engineSession.requestProductRecommendations(any(), any(), any())
+            }.answers {
+                secondArg<(List<ProductRecommendation>) -> Unit>().invoke(productRecommendations)
+            }
+
+            val tab = createTab(
+                url = "https://www.shopping.org/product",
+                id = "test-tab",
+                engineSession = engineSession,
+            )
+            val browserState = BrowserState(
+                tabs = listOf(tab),
+                selectedTabId = tab.id,
+            )
+
+            val tested = DefaultReviewQualityCheckService(BrowserStore(browserState))
+
+            tested.productRecommendation(false)
+            tested.productRecommendation(false)
+            val actual = tested.productRecommendation(false)
+
+            assertEquals(expected, actual)
+
+            verify(exactly = 1) {
+                engineSession.requestProductRecommendations(any(), any(), any())
+            }
+        }
+
+    @Test
+    fun `GIVEN product recommendations is called WHEN onResult is invoked with the empty result THEN recommendations fetches every time`() =
+        runTest {
+            val engineSession = mockk<EngineSession>()
+
+            every {
+                engineSession.requestProductRecommendations(any(), any(), any())
+            }.answers {
+                secondArg<(List<ProductRecommendation>) -> Unit>().invoke(emptyList())
+            }
+
+            val tab = createTab(
+                url = "https://www.shopping.org/product",
+                id = "test-tab",
+                engineSession = engineSession,
+            )
+            val browserState = BrowserState(
+                tabs = listOf(tab),
+                selectedTabId = tab.id,
+            )
+
+            val tested = DefaultReviewQualityCheckService(BrowserStore(browserState))
+
+            tested.productRecommendation(false)
+            tested.productRecommendation(false)
+            val actual = tested.productRecommendation(false)
+
+            assertNull(actual)
+
+            verify(exactly = 3) {
+                engineSession.requestProductRecommendations(any(), any(), any())
+            }
         }
 }
