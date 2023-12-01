@@ -1446,6 +1446,15 @@ pref("browser.bookmarks.editDialog.maxRecentFolders", 7);
   pref("browser.taskbar.previews.max", 20);
   pref("browser.taskbar.previews.cachetime", 5);
   pref("browser.taskbar.lists.legacyBackend", true);
+
+  // We'll only enable the new off-main-thread jumplist backend on Nightly for
+  // now while we test it.
+#ifdef NIGHTLY_BUILD
+  pref("browser.taskbar.lists.legacyBackend", false);
+#else
+  pref("browser.taskbar.lists.legacyBackend", true);
+#endif
+
   pref("browser.taskbar.lists.enabled", true);
   pref("browser.taskbar.lists.frequent.enabled", true);
   pref("browser.taskbar.lists.recent.enabled", false);
