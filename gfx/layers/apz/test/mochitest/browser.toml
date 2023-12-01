@@ -72,3 +72,9 @@ support-files = ["helper_test_select_zoom.html"]
 ["browser_test_tab_drag_zoom.js"]
 skip-if = ["os == 'win'"] # Our Windows touch injection test code doesn't support pinch gestures (bug 1495580)
 support-files = ["helper_test_tab_drag_zoom.html"]
+
+["browser_test_tab_drag_event_counts.js"]
+skip-if = ["os == 'linux'"] # No native key event support on Linux at this time (bug 1770143)
+support-files = [
+  "helper_test_tab_drag_event_counts.html"
+]

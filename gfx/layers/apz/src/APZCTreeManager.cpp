@@ -330,6 +330,13 @@ void APZCTreeManager::NotifyLayerTreeAdopted(
     // that information repopulated soon anyway (on the next layers update).
   }
 
+  // There may be focus updates from the tab's content process in flight
+  // triggered by events that were processed by the old tree manager,
+  // which this tree manager does not expect.
+  // Resetting the focus state avoids this (the state will sync with content
+  // on the next focus update).
+  mFocusState.Reset();
+
   UniquePtr<APZTestData> adoptedData;
   if (aOldApzcTreeManager) {
     MutexAutoLock lock(aOldApzcTreeManager->mTestDataLock);
