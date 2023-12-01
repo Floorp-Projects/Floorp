@@ -23,3 +23,7 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+.search-container {
+  margin-block-start: 35px;
+}

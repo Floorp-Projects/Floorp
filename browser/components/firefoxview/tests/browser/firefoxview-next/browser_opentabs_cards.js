@@ -379,3 +379,55 @@ add_task(async function toggle_show_more_link() {
   });
   await cleanup();
 });
+
+add_task(async function search_open_tabs() {
+  // Open a new window and navigate to TEST_URL. Then, when we search for
+  // TEST_URL, it should show a search result in the new window's card.
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+  await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.firefox-view.search.enabled", true]],
+  });
+  await openFirefoxViewTab(window).then(async viewTab => {
+    const browser = viewTab.linkedBrowser;
+    await navigateToOpenTabs(browser);
+    const openTabs = getOpenTabsComponent(browser);
+    await openTabs.getUpdateComplete();
+
+    const cards = getCards(browser);
+    is(cards.length, 2, "There are two windows.");
+    const winTabs = await getRowsForCard(cards[0]);
+    const newWinTabs = await getRowsForCard(cards[1]);
+
+    info("Input a search query.");
+    EventUtils.synthesizeMouseAtCenter(openTabs.searchTextbox, {}, content);
+    EventUtils.sendString(TEST_URL, content);
+    await TestUtils.waitForCondition(
+      () => openTabs.viewCards[0].tabList.rowEls.length === 0,
+      "There are no matching search results in the original window."
+    );
+    await TestUtils.waitForCondition(
+      () => openTabs.viewCards[1].tabList.rowEls.length === 1,
+      "There is one matching search result in the new window."
+    );
+
+    info("Clear the search query.");
+    EventUtils.synthesizeMouseAtCenter(
+      openTabs.searchTextbox.clearButton,
+      {},
+      content
+    );
+    await TestUtils.waitForCondition(
+      () => openTabs.viewCards[0].tabList.rowEls.length === winTabs.length,
+      "The original window's list is restored."
+    );
+    await TestUtils.waitForCondition(
+      () => openTabs.viewCards[1].tabList.rowEls.length === newWinTabs.length,
+      "The new window's list is restored."
+    );
+  });
+
+  await SpecialPowers.popPrefEnv();
+  await cleanup();
+});
