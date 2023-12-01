@@ -8,11 +8,8 @@
 #define mozilla_dom_HTMLTemplateElement_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/DocumentFragment.h"
-#include "mozilla/dom/ShadowRootBinding.h"
-#include "nsGkAtoms.h"
 
 namespace mozilla::dom {
 
@@ -29,38 +26,9 @@ class HTMLTemplateElement final : public nsGenericHTMLElement {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLTemplateElement,
                                            nsGenericHTMLElement)
 
-  void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
-                    nsIPrincipal* aMaybeScriptedPrincipal,
-                    bool aNotify) override;
-
-  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                      const nsAString& aValue,
-                      nsIPrincipal* aMaybeScriptedPrincipal,
-                      nsAttrValue& aResult) override;
-
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   DocumentFragment* Content() { return mContent; }
-  void SetContent(DocumentFragment* aContent) { mContent = aContent; }
-
-  void GetShadowRootMode(nsAString& aResult) const {
-    GetEnumAttr(nsGkAtoms::shadowrootmode, nullptr, aResult);
-  }
-  void SetShadowRootMode(const nsAString& aValue) {
-    SetHTMLAttr(nsGkAtoms::shadowrootmode, aValue);
-  }
-
-  bool ShadowRootDelegatesFocus() {
-    return GetBoolAttr(nsGkAtoms::shadowrootdelegatesfocus);
-  }
-  void SetShadowRootDelegatesFocus(bool aValue) {
-    SetHTMLBoolAttr(nsGkAtoms::shadowrootdelegatesfocus, aValue,
-                    IgnoredErrorResult());
-  }
-
-  MOZ_CAN_RUN_SCRIPT
-  void SetHTMLUnsafe(const nsAString& aHTML) final;
 
  protected:
   virtual ~HTMLTemplateElement();
@@ -69,7 +37,6 @@ class HTMLTemplateElement final : public nsGenericHTMLElement {
                              JS::Handle<JSObject*> aGivenProto) override;
 
   RefPtr<DocumentFragment> mContent;
-  Maybe<ShadowRootMode> mShadowRootMode;
 };
 
 }  // namespace mozilla::dom

@@ -5377,34 +5377,6 @@ bool AllowsUnsanitizedContentForAboutNewTab(nsIPrincipal* aPrincipal) {
 }
 
 /* static */
-void nsContentUtils::SetHTMLUnsafe(FragmentOrElement* aTarget,
-                                   Element* aContext,
-                                   const nsAString& aSource) {
-  MOZ_ASSERT(!sFragmentParsingActive, "Re-entrant fragment parsing attempted.");
-  mozilla::AutoRestore<bool> guard(sFragmentParsingActive);
-  sFragmentParsingActive = true;
-  if (!sHTMLFragmentParser) {
-    NS_ADDREF(sHTMLFragmentParser = new nsHtml5StringParser());
-    // Now sHTMLFragmentParser owns the object
-  }
-
-  nsAtom* contextLocalName = aContext->NodeInfo()->NameAtom();
-  int32_t contextNameSpaceID = aContext->GetNameSpaceID();
-
-  RefPtr<Document> doc = aTarget->OwnerDoc();
-  RefPtr<DocumentFragment> fragment = doc->CreateDocumentFragment();
-  nsresult rv = sHTMLFragmentParser->ParseFragment(
-      aSource, fragment, contextLocalName, contextNameSpaceID,
-      fragment->OwnerDoc()->GetCompatibilityMode() == eCompatibility_NavQuirks,
-      true, true);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to parse fragment for SetHTMLUnsafe");
-  }
-
-  aTarget->ReplaceChildren(fragment, IgnoreErrors());
-}
-
-/* static */
 nsresult nsContentUtils::ParseFragmentHTML(
     const nsAString& aSourceBuffer, nsIContent* aTargetNode,
     nsAtom* aContextLocalName, int32_t aContextNamespace, bool aQuirks,
@@ -5459,7 +5431,7 @@ nsresult nsContentUtils::ParseFragmentHTML(
 
   nsresult rv = sHTMLFragmentParser->ParseFragment(
       aSourceBuffer, target, aContextLocalName, aContextNamespace, aQuirks,
-      aPreventScriptExecution, false);
+      aPreventScriptExecution);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (fragment) {
@@ -11297,25 +11269,6 @@ template bool nsContentUtils::AddElementToListByTreeOrder(
 template bool nsContentUtils::AddElementToListByTreeOrder(
     nsTArray<RefPtr<HTMLInputElement>>& aList, HTMLInputElement* aChild,
     nsIContent* aAncestor);
-
-nsIContent* nsContentUtils::AttachDeclarativeShadowRoot(nsIContent* aHost,
-                                                        ShadowRootMode aMode,
-                                                        bool aDelegatesFocus) {
-  RefPtr<Element> host = mozilla::dom::Element::FromNodeOrNull(aHost);
-  if (!host) {
-    return nullptr;
-  }
-
-  ShadowRootInit init;
-  init.mMode = aMode;
-  init.mDelegatesFocus = aDelegatesFocus;
-  init.mSlotAssignment = SlotAssignmentMode::Named;
-  init.mClonable = true;
-
-  RefPtr shadowRoot = host->AttachShadow(init, IgnoreErrors(),
-                                         Element::ShadowRootDeclarative::Yes);
-  return shadowRoot;
-}
 
 namespace mozilla {
 std::ostream& operator<<(std::ostream& aOut,
