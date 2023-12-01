@@ -1,430 +1,594 @@
 <!DOCTYPE HTML>
 <html>
+
 <head>
   <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="sdpUtils.js"></script>
 </head>
+
 <body>
-<pre id="test">
+  <pre id="test">
 <script type="application/javascript">
-createHTML({
-  bug: "1401592",
-  title: "Test that glean is recording stats as expected",
-  visible: true
-});
+  createHTML({
+    bug: "1401592",
+    title: "Test that glean is recording stats as expected",
+    visible: true
+  });
 
-const { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+  const { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
+    "resource://gre/modules/AppConstants.sys.mjs"
+  );
 
-async function getAllWarningRates() {
-  return {
-    warnNoGetparameters:
-    await GleanTest.rtcrtpsenderSetparameters.warnNoGetparameters.testGetValue(),
-    warnLengthChanged:
-    await GleanTest.rtcrtpsenderSetparameters.warnLengthChanged.testGetValue(),
-    warnNoTransactionid:
-    await GleanTest.rtcrtpsenderSetparameters.warnNoTransactionid.testGetValue(),
+  async function gleanResetTestValues() {
+    return SpecialPowers.spawnChrome([], async () => {
+      await Services.fog.testFlushAllChildren();
+      Services.fog.testResetFOG();
+      }
+    )
   };
-}
 
-const tests = [
-  async function checkRTCRtpSenderCount() {
-    const pc = new RTCPeerConnection();
-    const oldCount = await GleanTest.rtcrtpsender.count.testGetValue() ?? 0;
-    const {sender} = pc.addTransceiver('video', {
-      sendEncodings: [{rid: "0"},{rid: "1"},{rid: "2"}]
-    });
-    const countDiff = await GleanTest.rtcrtpsender.count.testGetValue() - oldCount;
-    is(countDiff, 1, "Glean should have recorded the creation of a single RTCRtpSender");
-  },
 
-  async function checkRTCRtpSenderSetParametersCompatCount() {
-    await pushPrefs(
-      ["media.peerconnection.allow_old_setParameters", true]);
-    const pc = new RTCPeerConnection();
-    const oldCount = await GleanTest.rtcrtpsender.countSetparametersCompat.testGetValue() ?? 0;
-    const {sender} = pc.addTransceiver('video', {
-      sendEncodings: [{rid: "0"},{rid: "1"},{rid: "2"}]
-    });
-    const countDiff = await GleanTest.rtcrtpsender.countSetparametersCompat.testGetValue() - oldCount;
-    is(countDiff, 1, "Glean should have recorded the creation of a single RTCRtpSender that uses the setParameters compat mode");
-  },
-
-  async function checkSendEncodings() {
-    const pc = new RTCPeerConnection();
-    const oldRate = await GleanTest.rtcrtpsender.usedSendencodings.testGetValue();
-    const {sender} = pc.addTransceiver('video', {
-      sendEncodings: [{rid: "0"},{rid: "1"},{rid: "2"}]
-    });
-    const newRate = await GleanTest.rtcrtpsender.usedSendencodings.testGetValue();
-    is(newRate.denominator, oldRate.denominator + 1, "Glean should have recorded the creation of a single RTCRtpSender");
-    is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded the use of sendEncodings");
-  },
-
-  async function checkAddTransceiverNoSendEncodings() {
-    const pc = new RTCPeerConnection();
-    const oldRate = await GleanTest.rtcrtpsender.usedSendencodings.testGetValue();
-    const {sender} = pc.addTransceiver('video');
-    const newRate = await GleanTest.rtcrtpsender.usedSendencodings.testGetValue();
-    is(newRate.denominator, oldRate.denominator + 1, "Glean should have recorded the creation of a single RTCRtpSender");
-    is(newRate.numerator, oldRate.numerator, "Glean should not have recorded a use of sendEncodings");
-  },
-
-  async function checkAddTrack() {
-    const pc = new RTCPeerConnection();
-    const oldRate = await GleanTest.rtcrtpsender.usedSendencodings.testGetValue();
-    const stream = await navigator.mediaDevices.getUserMedia({video: true});
-    const sender = pc.addTrack(stream.getTracks()[0]);
-    const newRate = await GleanTest.rtcrtpsender.usedSendencodings.testGetValue();
-    is(newRate.denominator, oldRate.denominator + 1, "Glean should have recorded the creation of a single RTCRtpSender");
-    is(newRate.numerator, oldRate.numerator, "Glean should not have recorded a use of sendEncodings");
-  },
-
-  async function checkGoodSetParametersCompatMode() {
-    await pushPrefs(
-      ["media.peerconnection.allow_old_setParameters", true]);
-    const pc = new RTCPeerConnection();
-    const {sender} = pc.addTransceiver('video', {
-      sendEncodings: [{rid: "0"},{rid: "1"},{rid: "2"}]
-    });
-    const oldWarningRates = await getAllWarningRates();
-    await sender.setParameters(sender.getParameters());
-    const newWarningRates = await getAllWarningRates();
-    isDeeply(oldWarningRates, newWarningRates);
-  },
-
-  async function checkBadSetParametersNoGetParametersWarning() {
-    await pushPrefs(
-      ["media.peerconnection.allow_old_setParameters", true]);
-    const pc = new RTCPeerConnection();
-    const {sender} = pc.addTransceiver('video', {
-      sendEncodings: [{rid: "0"},{rid: "1"},{rid: "2"}]
-    });
-
-    let oldRate = await GleanTest.rtcrtpsenderSetparameters.warnNoGetparameters.testGetValue();
-    let oldBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameNoGetparameters["example.com"].testGetValue() || 0;
-
-    await sender.setParameters({encodings: [{rid: "0"},{rid: "1"},{rid: "2"}]});
-
-    let newRate = await GleanTest.rtcrtpsenderSetparameters.warnNoGetparameters.testGetValue();
-    let newBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameNoGetparameters["example.com"].testGetValue() || 0;
-
-    is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded a warning in setParameters due to lack of a getParameters call");
-
-    if (AppConstants.EARLY_BETA_OR_EARLIER) {
-      is(newBlameCount, oldBlameCount + 1, "Glean should have recorded that example.com encountered this warning");
-    } else {
-      is(newBlameCount, oldBlameCount, "Glean should not have recorded that example.com encountered this warning, because we're running this test on a stable channel");
-    }
-
-    oldRate = newRate;
-    oldBlameCount = newBlameCount;
-
-    // Glean should only record the warning once per sender!
-    await sender.setParameters({encodings: [{rid: "0"},{rid: "1"},{rid: "2"}]});
-
-    newRate = await GleanTest.rtcrtpsenderSetparameters.warnNoGetparameters.testGetValue();
-    newBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameNoGetparameters["example.com"].testGetValue() || 0;
-
-    is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another warning in setParameters due to lack of a getParameters call");
-    is(newBlameCount, oldBlameCount, "Glean should not have recorded that example.com encountered this warning a second time, since this is the same sender");
-  },
-
-  async function checkBadSetParametersLengthChangedWarning() {
-    await pushPrefs(
-      ["media.peerconnection.allow_old_setParameters", true]);
-    const pc = new RTCPeerConnection();
-    const {sender} = pc.addTransceiver('video', {
-      sendEncodings: [{rid: "0"},{rid: "1"},{rid: "2"}]
-    });
-
-    let oldRate = await GleanTest.rtcrtpsenderSetparameters.warnLengthChanged.testGetValue();
-    let oldBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameLengthChanged["example.com"].testGetValue() || 0;
-
-    let params = sender.getParameters();
-    params.encodings.pop();
-    await sender.setParameters(params);
-
-    let newRate = await GleanTest.rtcrtpsenderSetparameters.warnLengthChanged.testGetValue();
-    let newBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameLengthChanged["example.com"].testGetValue() || 0;
-
-    is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded a warning due to a length change in encodings");
-
-    if (AppConstants.EARLY_BETA_OR_EARLIER) {
-      is(newBlameCount, oldBlameCount + 1, "Glean should have recorded that example.com encountered this warning");
-    } else {
-      is(newBlameCount, oldBlameCount, "Glean should not have recorded that example.com encountered this warning, because we're running this test on a stable channel");
-    }
-
-    oldRate = newRate;
-    oldBlameCount = newBlameCount;
-
-    // Glean should only record the warning once per sender!
-    params = sender.getParameters();
-    params.encodings.pop();
-    await sender.setParameters(params);
-
-    newRate = await GleanTest.rtcrtpsenderSetparameters.warnLengthChanged.testGetValue();
-    newBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameLengthChanged["example.com"].testGetValue() || 0;
-
-    is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another warning due to a length change in encodings");
-    is(newBlameCount, oldBlameCount, "Glean should not have recorded that example.com encountered this warning a second time, since this is the same sender");
-  },
-
-  async function checkBadSetParametersRidChangedWarning() {
-    // This pref does not let rid change errors slide anymore
-    await pushPrefs(
-      ["media.peerconnection.allow_old_setParameters", true]);
-    const pc = new RTCPeerConnection();
-    const {sender} = pc.addTransceiver('video', {
-      sendEncodings: [{rid: "0"},{rid: "1"},{rid: "2"}]
-    });
-
-    let oldRate = await GleanTest.rtcrtpsenderSetparameters.failRidChanged.testGetValue();
-
-    let params = sender.getParameters();
-    params.encodings[1].rid = "foo";
-    try {
-      await sender.setParameters(params);
-    } catch (e) {
-    }
-    let newRate = await GleanTest.rtcrtpsenderSetparameters.failRidChanged.testGetValue();
-    is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded an error due to a rid change in encodings");
-
-    // Glean should only record the error once per sender!
-    params = sender.getParameters();
-    params.encodings[1].rid = "bar";
-    oldRate = newRate;
-    try {
-      await sender.setParameters(params);
-    } catch (e) {
-    }
-    newRate = await GleanTest.rtcrtpsenderSetparameters.failRidChanged.testGetValue();
-    is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another error due to a rid change in encodings");
-   },
-
-  async function checkBadSetParametersNoTransactionIdWarning() {
-    await pushPrefs(
-      ["media.peerconnection.allow_old_setParameters", true]);
-    const pc = new RTCPeerConnection();
-    const {sender} = pc.addTransceiver('video', {
-      sendEncodings: [{rid: "0"},{rid: "1"},{rid: "2"}]
-    });
-
-    let oldRate = await GleanTest.rtcrtpsenderSetparameters.warnNoTransactionid.testGetValue();
-    let oldBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameNoTransactionid["example.com"].testGetValue() || 0;
-
-    await sender.setParameters({encodings: [{rid: "0"},{rid: "1"},{rid: "2"}]});
-
-    let newRate = await GleanTest.rtcrtpsenderSetparameters.warnNoTransactionid.testGetValue();
-    let newBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameNoTransactionid["example.com"].testGetValue() || 0;
-
-    is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded a warning due to missing transactionId in setParameters");
-
-    if (AppConstants.EARLY_BETA_OR_EARLIER) {
-      is(newBlameCount, oldBlameCount + 1, "Glean should have recorded that example.com encountered this warning");
-    } else {
-      is(newBlameCount, oldBlameCount, "Glean should not have recorded that example.com encountered this warning, because we're running this test on a stable channel");
-    }
-
-    oldRate = newRate;
-    oldBlameCount = newBlameCount;
-
-    // Glean should only record the warning once per sender!
-    await sender.setParameters({encodings: [{rid: "0"},{rid: "1"},{rid: "2"}]});
-
-    newRate = await GleanTest.rtcrtpsenderSetparameters.warnNoTransactionid.testGetValue();
-    newBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameNoTransactionid["example.com"].testGetValue() || 0;
-
-    is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another warning due to missing transactionId in setParameters");
-    is(newBlameCount, oldBlameCount, "Glean should not have recorded that example.com encountered this warning a second time, since this is the same sender");
-  },
-
-  async function checkBadSetParametersLengthChangedError() {
-    await pushPrefs(
-      ["media.peerconnection.allow_old_setParameters", false]);
-    const pc = new RTCPeerConnection();
-    const {sender} = pc.addTransceiver('video', {
-      sendEncodings: [{rid: "0"},{rid: "1"},{rid: "2"}]
-    });
-    let oldRate = await GleanTest.rtcrtpsenderSetparameters.failLengthChanged.testGetValue();
-    let params = sender.getParameters();
-    params.encodings.pop();
-    try {
-      await sender.setParameters(params);
-    } catch(e) {
-    }
-    let newRate = await GleanTest.rtcrtpsenderSetparameters.failLengthChanged.testGetValue();
-    is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded an error due to a length change in encodings");
-
-    // Glean should only record the error once per sender!
-    params = sender.getParameters();
-    params.encodings.pop();
-    oldRate = newRate;
-    try {
-      await sender.setParameters(params);
-    } catch (e) {
-    }
-    newRate = await GleanTest.rtcrtpsenderSetparameters.failLengthChanged.testGetValue();
-    is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another error due to a length change in encodings");
-  },
-
-  async function checkBadSetParametersRidChangedError() {
-    await pushPrefs(
-      ["media.peerconnection.allow_old_setParameters", false]);
-    const pc = new RTCPeerConnection();
-    const {sender} = pc.addTransceiver('video', {
-      sendEncodings: [{rid: "0"},{rid: "1"},{rid: "2"}]
-    });
-    let oldRate = await GleanTest.rtcrtpsenderSetparameters.failRidChanged.testGetValue();
-    let params = sender.getParameters();
-    params.encodings[1].rid = "foo";
-    try {
-      await sender.setParameters(params);
-    } catch (e) {
-    }
-    let newRate = await GleanTest.rtcrtpsenderSetparameters.failRidChanged.testGetValue();
-    is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded an error due to a rid change in encodings");
-
-    // Glean should only record the error once per sender!
-    params = sender.getParameters();
-    params.encodings[1].rid = "bar";
-    oldRate = newRate;
-    try {
-      await sender.setParameters(params);
-    } catch (e) {
-    }
-    newRate = await GleanTest.rtcrtpsenderSetparameters.failRidChanged.testGetValue();
-    is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another error due to a rid change in encodings");
-  },
-
-  async function checkBadSetParametersNoGetParametersError() {
-    await pushPrefs(
-      ["media.peerconnection.allow_old_setParameters", false]);
-    const pc = new RTCPeerConnection();
-    const {sender} = pc.addTransceiver('video', {
-      sendEncodings: [{rid: "0"},{rid: "1"},{rid: "2"}]
-    });
-    let oldRate = await GleanTest.rtcrtpsenderSetparameters.failNoGetparameters.testGetValue();
-    try {
-      await sender.setParameters({encodings: [{rid: "0"},{rid: "1"},{rid: "2"}]});
-    } catch (e) {
-    }
-    let newRate = await GleanTest.rtcrtpsenderSetparameters.failNoGetparameters.testGetValue();
-    is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded an error in setParameters due to lack of a getParameters call");
-
-    // Glean should only record the error once per sender!
-    oldRate = newRate;
-    try {
-      await sender.setParameters({encodings: [{rid: "0"},{rid: "1"},{rid: "2"}]});
-    } catch (e) {
-    }
-    newRate = await GleanTest.rtcrtpsenderSetparameters.failNoGetparameters.testGetValue();
-    is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another error in setParameters due to lack of a getParameters call");
-  },
-
-  async function checkBadSetParametersStaleTransactionIdError() {
-    await pushPrefs(
-      ["media.peerconnection.allow_old_setParameters", false]);
-    const pc = new RTCPeerConnection();
-    const {sender} = pc.addTransceiver('video', {
-      sendEncodings: [{rid: "0"},{rid: "1"},{rid: "2"}]
-    });
-    let oldRate = await GleanTest.rtcrtpsenderSetparameters.failStaleTransactionid.testGetValue();
-    let params = sender.getParameters();
-    // Cause transactionId to be stale
-    await pc.createOffer();
-    // ...but make sure there is a recent getParameters call
-    sender.getParameters();
-    try {
-      await sender.setParameters(params);
-    } catch (e) {
-    }
-    let newRate = await GleanTest.rtcrtpsenderSetparameters.failStaleTransactionid.testGetValue();
-    is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded an error due to stale transactionId in setParameters");
-
-    // Glean should only record the error once per sender!
-    oldRate = newRate;
-    params = sender.getParameters();
-    // Cause transactionId to be stale
-    await pc.createOffer();
-    // ...but make sure there is a recent getParameters call
-    sender.getParameters();
-    try {
-      await sender.setParameters(params);
-    } catch (e) {
-    }
-    newRate = await GleanTest.rtcrtpsenderSetparameters.failStaleTransactionid.testGetValue();
-    is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another error due to stale transactionId in setParameters");
-  },
-
-  async function checkBadSetParametersNoEncodingsError() {
-    // If we do not allow the old setParameters, this will fail the length check
-    // instead.
-    await pushPrefs(
-      ["media.peerconnection.allow_old_setParameters", true]);
-    const pc = new RTCPeerConnection();
-    const {sender} = pc.addTransceiver('video', {
-      sendEncodings: [{rid: "0"},{rid: "1"},{rid: "2"}]
-    });
-    let oldRate = await GleanTest.rtcrtpsenderSetparameters.failNoEncodings.testGetValue();
-    let params = sender.getParameters();
-    params.encodings = [];
-    try {
-      await sender.setParameters(params);
-    } catch (e) {
-    }
-    let newRate = await GleanTest.rtcrtpsenderSetparameters.failNoEncodings.testGetValue();
-    is(newRate.numerator, oldRate.numerator, "Glean should not have recorded an error due to empty encodings in setParameters");
-
-    // Glean should only record the error once per sender!
-    oldRate = newRate;
-    params = sender.getParameters();
-    params.encodings = [];
-    try {
-      await sender.setParameters(params);
-    } catch (e) {
-    }
-    newRate = await GleanTest.rtcrtpsenderSetparameters.failNoEncodings.testGetValue();
-    is(newRate.numerator, oldRate.numerator, "Glean should not have recorded an error due empty encodings in setParameters");
-  },
-
-  async function checkBadSetParametersOtherError() {
-    const pc = new RTCPeerConnection();
-    const {sender} = pc.addTransceiver('video', {
-      sendEncodings: [{rid: "0"},{rid: "1"},{rid: "2"}]
-    });
-    let oldRate = await GleanTest.rtcrtpsenderSetparameters.failOther.testGetValue();
-    let params = sender.getParameters();
-    params.encodings[0].scaleResolutionDownBy = 0.5;
-    try {
-      await sender.setParameters(params);
-    } catch (e) {
-    }
-    let newRate = await GleanTest.rtcrtpsenderSetparameters.failOther.testGetValue();
-    is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded an error due to some other failure");
-
-    // Glean should only record the error once per sender!
-    oldRate = newRate;
-    params = sender.getParameters();
-    params.encodings[0].scaleResolutionDownBy = 0.5;
-    try {
-      await sender.setParameters(params);
-    } catch (e) {
-    }
-    newRate = await GleanTest.rtcrtpsenderSetparameters.failOther.testGetValue();
-    is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another error due to some other failure");
-  },
-
-];
-
-runNetworkTest(async () => {
-  for (const test of tests) {
-    info(`Running test: ${test.name}`);
-    await test();
-    info(`Done running test: ${test.name}`);
+  async function getAllWarningRates() {
+    return {
+      warnNoGetparameters:
+        await GleanTest.rtcrtpsenderSetparameters.warnNoGetparameters.testGetValue(),
+      warnLengthChanged:
+        await GleanTest.rtcrtpsenderSetparameters.warnLengthChanged.testGetValue(),
+      warnNoTransactionid:
+        await GleanTest.rtcrtpsenderSetparameters.warnNoTransactionid.testGetValue(),
+    };
   }
-});
+
+  const tests = [
+    async function checkRTCRtpSenderCount() {
+      const pc = new RTCPeerConnection();
+      const oldCount = await GleanTest.rtcrtpsender.count.testGetValue() ?? 0;
+      const { sender } = pc.addTransceiver('video', {
+        sendEncodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }]
+      });
+      const countDiff = await GleanTest.rtcrtpsender.count.testGetValue() - oldCount;
+      is(countDiff, 1, "Glean should have recorded the creation of a single RTCRtpSender");
+    },
+
+    async function checkRTCRtpSenderSetParametersCompatCount() {
+      await pushPrefs(
+        ["media.peerconnection.allow_old_setParameters", true]);
+      const pc = new RTCPeerConnection();
+      const oldCount = await GleanTest.rtcrtpsender.countSetparametersCompat.testGetValue() ?? 0;
+      const { sender } = pc.addTransceiver('video', {
+        sendEncodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }]
+      });
+      const countDiff = await GleanTest.rtcrtpsender.countSetparametersCompat.testGetValue() - oldCount;
+      is(countDiff, 1, "Glean should have recorded the creation of a single RTCRtpSender that uses the setParameters compat mode");
+    },
+
+    async function checkSendEncodings() {
+      const pc = new RTCPeerConnection();
+      const oldRate = await GleanTest.rtcrtpsender.usedSendencodings.testGetValue();
+      const { sender } = pc.addTransceiver('video', {
+        sendEncodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }]
+      });
+      const newRate = await GleanTest.rtcrtpsender.usedSendencodings.testGetValue();
+      is(newRate.denominator, oldRate.denominator + 1, "Glean should have recorded the creation of a single RTCRtpSender");
+      is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded the use of sendEncodings");
+    },
+
+    async function checkAddTransceiverNoSendEncodings() {
+      const pc = new RTCPeerConnection();
+      const oldRate = await GleanTest.rtcrtpsender.usedSendencodings.testGetValue();
+      const { sender } = pc.addTransceiver('video');
+      const newRate = await GleanTest.rtcrtpsender.usedSendencodings.testGetValue();
+      is(newRate.denominator, oldRate.denominator + 1, "Glean should have recorded the creation of a single RTCRtpSender");
+      is(newRate.numerator, oldRate.numerator, "Glean should not have recorded a use of sendEncodings");
+    },
+
+    async function checkAddTrack() {
+      const pc = new RTCPeerConnection();
+      const oldRate = await GleanTest.rtcrtpsender.usedSendencodings.testGetValue();
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const sender = pc.addTrack(stream.getTracks()[0]);
+      const newRate = await GleanTest.rtcrtpsender.usedSendencodings.testGetValue();
+      is(newRate.denominator, oldRate.denominator + 1, "Glean should have recorded the creation of a single RTCRtpSender");
+      is(newRate.numerator, oldRate.numerator, "Glean should not have recorded a use of sendEncodings");
+    },
+
+    async function checkGoodSetParametersCompatMode() {
+      await pushPrefs(
+        ["media.peerconnection.allow_old_setParameters", true]);
+      const pc = new RTCPeerConnection();
+      const { sender } = pc.addTransceiver('video', {
+        sendEncodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }]
+      });
+      const oldWarningRates = await getAllWarningRates();
+      await sender.setParameters(sender.getParameters());
+      const newWarningRates = await getAllWarningRates();
+      isDeeply(oldWarningRates, newWarningRates);
+    },
+
+    async function checkBadSetParametersNoGetParametersWarning() {
+      await pushPrefs(
+        ["media.peerconnection.allow_old_setParameters", true]);
+      const pc = new RTCPeerConnection();
+      const { sender } = pc.addTransceiver('video', {
+        sendEncodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }]
+      });
+
+      let oldRate = await GleanTest.rtcrtpsenderSetparameters.warnNoGetparameters.testGetValue();
+      let oldBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameNoGetparameters["example.com"].testGetValue() || 0;
+
+      await sender.setParameters({ encodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }] });
+
+      let newRate = await GleanTest.rtcrtpsenderSetparameters.warnNoGetparameters.testGetValue();
+      let newBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameNoGetparameters["example.com"].testGetValue() || 0;
+
+      is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded a warning in setParameters due to lack of a getParameters call");
+
+      if (AppConstants.EARLY_BETA_OR_EARLIER) {
+        is(newBlameCount, oldBlameCount + 1, "Glean should have recorded that example.com encountered this warning");
+      } else {
+        is(newBlameCount, oldBlameCount, "Glean should not have recorded that example.com encountered this warning, because we're running this test on a stable channel");
+      }
+
+      oldRate = newRate;
+      oldBlameCount = newBlameCount;
+
+      // Glean should only record the warning once per sender!
+      await sender.setParameters({ encodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }] });
+
+      newRate = await GleanTest.rtcrtpsenderSetparameters.warnNoGetparameters.testGetValue();
+      newBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameNoGetparameters["example.com"].testGetValue() || 0;
+
+      is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another warning in setParameters due to lack of a getParameters call");
+      is(newBlameCount, oldBlameCount, "Glean should not have recorded that example.com encountered this warning a second time, since this is the same sender");
+    },
+
+    async function checkBadSetParametersLengthChangedWarning() {
+      await pushPrefs(
+        ["media.peerconnection.allow_old_setParameters", true]);
+      const pc = new RTCPeerConnection();
+      const { sender } = pc.addTransceiver('video', {
+        sendEncodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }]
+      });
+
+      let oldRate = await GleanTest.rtcrtpsenderSetparameters.warnLengthChanged.testGetValue();
+      let oldBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameLengthChanged["example.com"].testGetValue() || 0;
+
+      let params = sender.getParameters();
+      params.encodings.pop();
+      await sender.setParameters(params);
+
+      let newRate = await GleanTest.rtcrtpsenderSetparameters.warnLengthChanged.testGetValue();
+      let newBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameLengthChanged["example.com"].testGetValue() || 0;
+
+      is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded a warning due to a length change in encodings");
+
+      if (AppConstants.EARLY_BETA_OR_EARLIER) {
+        is(newBlameCount, oldBlameCount + 1, "Glean should have recorded that example.com encountered this warning");
+      } else {
+        is(newBlameCount, oldBlameCount, "Glean should not have recorded that example.com encountered this warning, because we're running this test on a stable channel");
+      }
+
+      oldRate = newRate;
+      oldBlameCount = newBlameCount;
+
+      // Glean should only record the warning once per sender!
+      params = sender.getParameters();
+      params.encodings.pop();
+      await sender.setParameters(params);
+
+      newRate = await GleanTest.rtcrtpsenderSetparameters.warnLengthChanged.testGetValue();
+      newBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameLengthChanged["example.com"].testGetValue() || 0;
+
+      is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another warning due to a length change in encodings");
+      is(newBlameCount, oldBlameCount, "Glean should not have recorded that example.com encountered this warning a second time, since this is the same sender");
+    },
+
+    async function checkBadSetParametersRidChangedWarning() {
+      // This pref does not let rid change errors slide anymore
+      await pushPrefs(
+        ["media.peerconnection.allow_old_setParameters", true]);
+      const pc = new RTCPeerConnection();
+      const { sender } = pc.addTransceiver('video', {
+        sendEncodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }]
+      });
+
+      let oldRate = await GleanTest.rtcrtpsenderSetparameters.failRidChanged.testGetValue();
+
+      let params = sender.getParameters();
+      params.encodings[1].rid = "foo";
+      try {
+        await sender.setParameters(params);
+      } catch (e) {
+      }
+      let newRate = await GleanTest.rtcrtpsenderSetparameters.failRidChanged.testGetValue();
+      is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded an error due to a rid change in encodings");
+
+      // Glean should only record the error once per sender!
+      params = sender.getParameters();
+      params.encodings[1].rid = "bar";
+      oldRate = newRate;
+      try {
+        await sender.setParameters(params);
+      } catch (e) {
+      }
+      newRate = await GleanTest.rtcrtpsenderSetparameters.failRidChanged.testGetValue();
+      is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another error due to a rid change in encodings");
+    },
+
+    async function checkBadSetParametersNoTransactionIdWarning() {
+      await pushPrefs(
+        ["media.peerconnection.allow_old_setParameters", true]);
+      const pc = new RTCPeerConnection();
+      const { sender } = pc.addTransceiver('video', {
+        sendEncodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }]
+      });
+
+      let oldRate = await GleanTest.rtcrtpsenderSetparameters.warnNoTransactionid.testGetValue();
+      let oldBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameNoTransactionid["example.com"].testGetValue() || 0;
+
+      await sender.setParameters({ encodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }] });
+
+      let newRate = await GleanTest.rtcrtpsenderSetparameters.warnNoTransactionid.testGetValue();
+      let newBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameNoTransactionid["example.com"].testGetValue() || 0;
+
+      is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded a warning due to missing transactionId in setParameters");
+
+      if (AppConstants.EARLY_BETA_OR_EARLIER) {
+        is(newBlameCount, oldBlameCount + 1, "Glean should have recorded that example.com encountered this warning");
+      } else {
+        is(newBlameCount, oldBlameCount, "Glean should not have recorded that example.com encountered this warning, because we're running this test on a stable channel");
+      }
+
+      oldRate = newRate;
+      oldBlameCount = newBlameCount;
+
+      // Glean should only record the warning once per sender!
+      await sender.setParameters({ encodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }] });
+
+      newRate = await GleanTest.rtcrtpsenderSetparameters.warnNoTransactionid.testGetValue();
+      newBlameCount = await GleanTest.rtcrtpsenderSetparameters.blameNoTransactionid["example.com"].testGetValue() || 0;
+
+      is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another warning due to missing transactionId in setParameters");
+      is(newBlameCount, oldBlameCount, "Glean should not have recorded that example.com encountered this warning a second time, since this is the same sender");
+    },
+
+    async function checkBadSetParametersLengthChangedError() {
+      await pushPrefs(
+        ["media.peerconnection.allow_old_setParameters", false]);
+      const pc = new RTCPeerConnection();
+      const { sender } = pc.addTransceiver('video', {
+        sendEncodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }]
+      });
+      let oldRate = await GleanTest.rtcrtpsenderSetparameters.failLengthChanged.testGetValue();
+      let params = sender.getParameters();
+      params.encodings.pop();
+      try {
+        await sender.setParameters(params);
+      } catch (e) {
+      }
+      let newRate = await GleanTest.rtcrtpsenderSetparameters.failLengthChanged.testGetValue();
+      is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded an error due to a length change in encodings");
+
+      // Glean should only record the error once per sender!
+      params = sender.getParameters();
+      params.encodings.pop();
+      oldRate = newRate;
+      try {
+        await sender.setParameters(params);
+      } catch (e) {
+      }
+      newRate = await GleanTest.rtcrtpsenderSetparameters.failLengthChanged.testGetValue();
+      is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another error due to a length change in encodings");
+    },
+
+    async function checkBadSetParametersRidChangedError() {
+      await pushPrefs(
+        ["media.peerconnection.allow_old_setParameters", false]);
+      const pc = new RTCPeerConnection();
+      const { sender } = pc.addTransceiver('video', {
+        sendEncodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }]
+      });
+      let oldRate = await GleanTest.rtcrtpsenderSetparameters.failRidChanged.testGetValue();
+      let params = sender.getParameters();
+      params.encodings[1].rid = "foo";
+      try {
+        await sender.setParameters(params);
+      } catch (e) {
+      }
+      let newRate = await GleanTest.rtcrtpsenderSetparameters.failRidChanged.testGetValue();
+      is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded an error due to a rid change in encodings");
+
+      // Glean should only record the error once per sender!
+      params = sender.getParameters();
+      params.encodings[1].rid = "bar";
+      oldRate = newRate;
+      try {
+        await sender.setParameters(params);
+      } catch (e) {
+      }
+      newRate = await GleanTest.rtcrtpsenderSetparameters.failRidChanged.testGetValue();
+      is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another error due to a rid change in encodings");
+    },
+
+    async function checkBadSetParametersNoGetParametersError() {
+      await pushPrefs(
+        ["media.peerconnection.allow_old_setParameters", false]);
+      const pc = new RTCPeerConnection();
+      const { sender } = pc.addTransceiver('video', {
+        sendEncodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }]
+      });
+      let oldRate = await GleanTest.rtcrtpsenderSetparameters.failNoGetparameters.testGetValue();
+      try {
+        await sender.setParameters({ encodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }] });
+      } catch (e) {
+      }
+      let newRate = await GleanTest.rtcrtpsenderSetparameters.failNoGetparameters.testGetValue();
+      is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded an error in setParameters due to lack of a getParameters call");
+
+      // Glean should only record the error once per sender!
+      oldRate = newRate;
+      try {
+        await sender.setParameters({ encodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }] });
+      } catch (e) {
+      }
+      newRate = await GleanTest.rtcrtpsenderSetparameters.failNoGetparameters.testGetValue();
+      is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another error in setParameters due to lack of a getParameters call");
+    },
+
+    async function checkBadSetParametersStaleTransactionIdError() {
+      await pushPrefs(
+        ["media.peerconnection.allow_old_setParameters", false]);
+      const pc = new RTCPeerConnection();
+      const { sender } = pc.addTransceiver('video', {
+        sendEncodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }]
+      });
+      let oldRate = await GleanTest.rtcrtpsenderSetparameters.failStaleTransactionid.testGetValue();
+      let params = sender.getParameters();
+      // Cause transactionId to be stale
+      await pc.createOffer();
+      // ...but make sure there is a recent getParameters call
+      sender.getParameters();
+      try {
+        await sender.setParameters(params);
+      } catch (e) {
+      }
+      let newRate = await GleanTest.rtcrtpsenderSetparameters.failStaleTransactionid.testGetValue();
+      is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded an error due to stale transactionId in setParameters");
+
+      // Glean should only record the error once per sender!
+      oldRate = newRate;
+      params = sender.getParameters();
+      // Cause transactionId to be stale
+      await pc.createOffer();
+      // ...but make sure there is a recent getParameters call
+      sender.getParameters();
+      try {
+        await sender.setParameters(params);
+      } catch (e) {
+      }
+      newRate = await GleanTest.rtcrtpsenderSetparameters.failStaleTransactionid.testGetValue();
+      is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another error due to stale transactionId in setParameters");
+    },
+
+    async function checkBadSetParametersNoEncodingsError() {
+      // If we do not allow the old setParameters, this will fail the length check
+      // instead.
+      await pushPrefs(
+        ["media.peerconnection.allow_old_setParameters", true]);
+      const pc = new RTCPeerConnection();
+      const { sender } = pc.addTransceiver('video', {
+        sendEncodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }]
+      });
+      let oldRate = await GleanTest.rtcrtpsenderSetparameters.failNoEncodings.testGetValue();
+      let params = sender.getParameters();
+      params.encodings = [];
+      try {
+        await sender.setParameters(params);
+      } catch (e) {
+      }
+      let newRate = await GleanTest.rtcrtpsenderSetparameters.failNoEncodings.testGetValue();
+      is(newRate.numerator, oldRate.numerator, "Glean should not have recorded an error due to empty encodings in setParameters");
+
+      // Glean should only record the error once per sender!
+      oldRate = newRate;
+      params = sender.getParameters();
+      params.encodings = [];
+      try {
+        await sender.setParameters(params);
+      } catch (e) {
+      }
+      newRate = await GleanTest.rtcrtpsenderSetparameters.failNoEncodings.testGetValue();
+      is(newRate.numerator, oldRate.numerator, "Glean should not have recorded an error due empty encodings in setParameters");
+    },
+
+    async function checkBadSetParametersOtherError() {
+      const pc = new RTCPeerConnection();
+      const { sender } = pc.addTransceiver('video', {
+        sendEncodings: [{ rid: "0" }, { rid: "1" }, { rid: "2" }]
+      });
+      let oldRate = await GleanTest.rtcrtpsenderSetparameters.failOther.testGetValue();
+      let params = sender.getParameters();
+      params.encodings[0].scaleResolutionDownBy = 0.5;
+      try {
+        await sender.setParameters(params);
+      } catch (e) {
+      }
+      let newRate = await GleanTest.rtcrtpsenderSetparameters.failOther.testGetValue();
+      is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded an error due to some other failure");
+
+      // Glean should only record the error once per sender!
+      oldRate = newRate;
+      params = sender.getParameters();
+      params.encodings[0].scaleResolutionDownBy = 0.5;
+      try {
+        await sender.setParameters(params);
+      } catch (e) {
+      }
+      newRate = await GleanTest.rtcrtpsenderSetparameters.failOther.testGetValue();
+      is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another error due to some other failure");
+    },
+
+    async function checkUlpfecNegotiated() {
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+      await gleanResetTestValues();
+
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const sender = pc1.addTrack(stream.getTracks()[0]);
+      let offer = await pc1.createOffer();
+      pc1.setLocalDescription(offer);
+      pc2.setRemoteDescription(offer);
+      let answer = await pc2.createAnswer();
+      pc2.setLocalDescription(answer);
+      pc1.setRemoteDescription(answer);
+
+      // Validate logging shows ulpfec negotiated and preferred video VP8
+      let ulpfecNotNegotiated = await GleanTest.codecStats.ulpfecNegotiated.not_negotiated.testGetValue() || 0;
+      ok(ulpfecNotNegotiated == 0, "checkUlpfecNegotiated glean should not count not_negotiated");
+      let ulpfecNegotiated = await GleanTest.codecStats.ulpfecNegotiated.negotiated.testGetValue() || 0;
+      ok(ulpfecNegotiated == 2, "checkUlpfecNegotiated glean should show ulpfec negotiated");
+      let preferredVideoCodec = await GleanTest.codecStats.videoPreferredCodec.VP8.testGetValue() || 0;
+      ok(preferredVideoCodec == 2, "checkUlpfecNegotiated glean should show preferred video codec VP8");
+    },
+
+    async function checkNoUlpfecNegotiated() {
+
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+      await gleanResetTestValues();
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const sender = pc1.addTrack(stream.getTracks()[0]);
+      let offer = await pc1.createOffer();
+      const payloadType = sdputils.findCodecId(offer.sdp, "ulpfec");
+      offer.sdp = sdputils.removeCodec(offer.sdp, payloadType);
+      pc1.setLocalDescription(offer);
+      pc2.setRemoteDescription(offer);
+      let answer = await pc2.createAnswer();
+      pc2.setLocalDescription(answer);
+      pc1.setRemoteDescription(answer);
+
+      // Validate logging shows ulpfec not negotiated and preferred video VP8
+      let ulpfecNotNegotiated = await GleanTest.codecStats.ulpfecNegotiated.not_negotiated.testGetValue() || 0;
+      ok(ulpfecNotNegotiated == 2, "checkNoUlpfecNegotiated glean should count not_negotiated");
+      let ulpfecNegotiated = await GleanTest.codecStats.ulpfecNegotiated.negotiated.testGetValue() || 0;
+      ok(ulpfecNegotiated == 0, "checkNoUlpfecNegotiated glean should not show ulpfec negotiated " + ulpfecNegotiated);
+      let preferredVideoCodec = await GleanTest.codecStats.videoPreferredCodec.VP8.testGetValue() || 0;
+      ok(preferredVideoCodec == 2, "checkNoUlpfecNegotiated glean should show preferred video codec VP8");
+    },
+
+    async function checkFlexfecOffered() {
+
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+      await gleanResetTestValues();
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const sender = pc1.addTrack(stream.getTracks()[0]);
+      let offer = await pc1.createOffer();
+      offer.sdp = offer.sdp.replaceAll('VP8','flexfec');
+      pc1.setLocalDescription(offer);
+      pc2.setRemoteDescription(offer);
+      let answer = await pc2.createAnswer();
+      pc2.setLocalDescription(answer);
+      pc1.setRemoteDescription(answer);
+
+      // Validate logging shows flexfec counted once ulpfec negotiated twice and preferred video VP9 since no VP8 was offered.
+      let flexfecOffered = await GleanTest.codecStats.otherFecSignaled.flexfec.testGetValue() || 0;
+      ok(flexfecOffered == 1, "checkFlexfecOffered glean should count flexfec being offered" + flexfecOffered);
+      let ulpfecNegotiated = await GleanTest.codecStats.ulpfecNegotiated.negotiated.testGetValue() || 0;
+      ok(ulpfecNegotiated == 2, "checkUlpfecNegotiated glean should show ulpfec negotiated");
+      let preferredVideoCodec = await GleanTest.codecStats.videoPreferredCodec.VP9.testGetValue() || 0;
+      ok(preferredVideoCodec == 2, "checkFlexfecOffered glean should show preferred video codec VP9");
+    },
+
+    async function checkPreferredVideoCodec() {
+
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+      await gleanResetTestValues();
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const sender = pc1.addTrack(stream.getTracks()[0]);
+      let offer = await pc1.createOffer();
+      // Set a video codec that does not exist to simulate receiving codecs we dont support
+      // and verify it gets logged.
+      offer.sdp = offer.sdp.replaceAll('VP8','AVADA1');
+      pc1.setLocalDescription(offer);
+      pc2.setRemoteDescription(offer);
+      let answer = await pc2.createAnswer();
+      pc2.setLocalDescription(answer);
+      pc1.setRemoteDescription(answer);
+
+      // We should show AVADA1 as the preferred codec from the offer and the answer should prefer VP9 since VP8 was removed.
+      let preferredVideoCodecAVADA1 = await GleanTest.codecStats.videoPreferredCodec.AVADA1.testGetValue() || 0;
+      ok(preferredVideoCodecAVADA1 == 1, "checkPreferredVideoCodec glean should show preferred video codec AVADA1" + preferredVideoCodecAVADA1);
+      let preferredVideoCodecVP9 = await GleanTest.codecStats.videoPreferredCodec.VP9.testGetValue() || 0;
+      ok(preferredVideoCodecVP9 == 1, "checkPreferredVideoCodec glean should show preferred video codec VP9" + preferredVideoCodecVP9);
+    },
+
+    async function checkPreferredAudioCodec() {
+
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+      await gleanResetTestValues();
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const sender = pc1.addTrack(stream.getTracks()[0]);
+      let offer = await pc1.createOffer();
+      // Set an audio codec that does not exist to simulate receiving codecs we dont support
+      // and verify it gets logged.
+      offer.sdp = offer.sdp.replaceAll('opus','FAKECodec');
+      pc1.setLocalDescription(offer);
+      pc2.setRemoteDescription(offer);
+      let answer = await pc2.createAnswer();
+      pc2.setLocalDescription(answer);
+      pc1.setRemoteDescription(answer);
+
+      // We should show CN as the preferred codec from the offer and the answer should prefer G722 since opus was removed.
+      let preferredAudioCodecFAKECodec = await GleanTest.codecStats.audioPreferredCodec.FAKECodec.testGetValue() || 0;
+      ok(preferredAudioCodecFAKECodec == 1, "checkPreferredAudioCodec Glean should show preferred audio codec FAKECodec " + preferredAudioCodecFAKECodec);
+      let preferredAudioCodecG722 = await GleanTest.codecStats.audioPreferredCodec.G722.testGetValue() || 0;
+      ok(preferredAudioCodecG722 == 1, "checkPreferredAudioCodec Glean should show preferred audio codec G722 " + preferredAudioCodecG722);
+    },
+
+    async function checkLoggingMultipleTransceivers() {
+      const pc1 = new RTCPeerConnection();
+      const pc2 = new RTCPeerConnection();
+      await gleanResetTestValues();
+
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const sender = pc1.addTrack(stream.getTracks()[0]);
+      pc1.addTransceiver(stream.getTracks()[0]);
+      pc1.addTransceiver(stream.getTracks()[0]);
+
+      let offer = await pc1.createOffer();
+      pc1.setLocalDescription(offer);
+      pc2.setRemoteDescription(offer);
+      let answer = await pc2.createAnswer();
+      pc2.setLocalDescription(answer);
+      pc1.setRemoteDescription(answer);
+
+      pc1.setLocalDescription(offer);
+      pc2.setRemoteDescription(offer);
+      answer = await pc2.createAnswer();
+      pc2.setLocalDescription(answer);
+      pc1.setRemoteDescription(answer);
+
+      // Validate logging shows for each transciever but is not duplicated with the renegotiation
+      let ulpfecNotNegotiated = await GleanTest.codecStats.ulpfecNegotiated.not_negotiated.testGetValue() || 0;
+      ok(ulpfecNotNegotiated == 0, "checkLoggingMultipleTransceivers glean should not count not_negotiated");
+      let ulpfecNegotiated = await GleanTest.codecStats.ulpfecNegotiated.negotiated.testGetValue() || 0;
+      ok(ulpfecNegotiated == 6, "checkLoggingMultipleTransceivers glean should show ulpfec negotiated " + ulpfecNegotiated);
+      let preferredVideoCodec = await GleanTest.codecStats.videoPreferredCodec.VP8.testGetValue() || 0;
+      ok(preferredVideoCodec == 6, "checkLoggingMultipleTransceivers glean should show preferred video codec VP8 " + preferredVideoCodec);
+    },
+
+  ];
+
+  runNetworkTest(async () => {
+    for (const test of tests) {
+      info(`Running test: ${test.name}`);
+      await test();
+      info(`Done running test: ${test.name}`);
+    }
+  });
 
 </script>
 </pre>

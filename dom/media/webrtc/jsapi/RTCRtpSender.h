@@ -200,6 +200,12 @@ class RTCRtpSender : public nsISupports,
   bool mHaveFailedBecauseNoEncodings = false;
   bool mHaveFailedBecauseOtherError = false;
 
+  // Limits logging of codec information
+  bool mHaveLoggedUlpfecInfo = false;
+  bool mHaveLoggedOtherFec = false;
+  bool mHaveLoggedVideoPreferredCodec = false;
+  bool mHaveLoggedAudioPreferredCodec = false;
+
   RefPtr<dom::RTCDTMFSender> mDtmf;
 
   class BaseConfig {
