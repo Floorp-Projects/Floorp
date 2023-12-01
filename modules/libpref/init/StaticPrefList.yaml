@@ -6525,10 +6525,6 @@
     type: RelaxedAtomicBool
     value: false
     mirror: always
--   name: gfx.video.convert-i420-to-nv12.force-enabled
-    type: bool
-    value: false
-    mirror: once
 -   name: gfx.video.convert-yuv-to-nv12.image-host-win
     type: RelaxedAtomicBool
     value: true
