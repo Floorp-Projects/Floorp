@@ -33,6 +33,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  WebAuthnFeature: "resource://gre/modules/WebAuthnFeature.sys.mjs",
   PasswordGenerator: "resource://gre/modules/PasswordGenerator.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
@@ -384,6 +385,10 @@ export class LoginManagerParent extends JSWindowActorParent {
         );
         return this.#generateRelayUsername(context.origin);
       }
+
+      case "PasswordManager:promptForAuthenticator": {
+        return this.#promptForAuthenticator(data.selection);
+      }
     }
 
     return undefined;
@@ -520,6 +525,11 @@ export class LoginManagerParent extends JSWindowActorParent {
   async #generateRelayUsername(origin) {
     const browser = lazy.LoginHelper.getBrowserForPrompt(this.getRootBrowser());
     return lazy.FirefoxRelay.generateUsername(browser, origin);
+  }
+
+  async #promptForAuthenticator(selection) {
+    const browser = lazy.LoginHelper.getBrowserForPrompt(this.getRootBrowser());
+    return lazy.WebAuthnFeature.promptForAuthenticator(browser, selection);
   }
 
   /**
@@ -710,6 +720,7 @@ export class LoginManagerParent extends JSWindowActorParent {
       isProbablyANewPasswordField,
       scenarioName,
       inputMaxLength,
+      isWebAuthn,
     }
   ) {
     // Note: previousResult is a regular object, not an
@@ -807,16 +818,31 @@ export class LoginManagerParent extends JSWindowActorParent {
     // doesn't support structured cloning.
     let jsLogins = lazy.LoginHelper.loginsToVanillaObjects(matchingLogins);
 
+    let autocompleteItems = [];
+
+    if (!hasBeenTypePassword) {
+      autocompleteItems.push(
+        ...(await lazy.FirefoxRelay.autocompleteItemsAsync({
+          formOrigin,
+          scenarioName,
+          hasInput: !!searchStringLower.length,
+        }))
+      );
+    }
+    autocompleteItems.push(
+      ...(await lazy.WebAuthnFeature.autocompleteItemsAsync(
+        this._overrideBrowsingContextId ??
+          this.getRootBrowser().browsingContext.id,
+        formOrigin,
+        scenarioName,
+        isWebAuthn
+      ))
+    );
+
     return {
       generatedPassword,
       importable: await getImportableLogins(formOrigin),
-      autocompleteItems: hasBeenTypePassword
-        ? []
-        : await lazy.FirefoxRelay.autocompleteItemsAsync({
-            formOrigin,
-            scenarioName,
-            hasInput: !!searchStringLower.length,
-          }),
+      autocompleteItems,
       logins: jsLogins,
       willAutoSaveGeneratedPassword,
     };
