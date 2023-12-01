@@ -74,22 +74,6 @@ interface nsILegacyJumpListLink : nsILegacyJumpListItem
    * Set or get the title for a link item.
    */
   attribute AString uriTitle;
-
-  /**
-   * Get a 'privacy safe' unique string hash of the uri's
-   * spec. Useful in tracking removed items using visible
-   * data stores such as prefs. Generates an MD5 hash of
-   * the URI spec using nsICryptoHash.
-   */
-  readonly attribute ACString uriHash;
-
-  /**
-   * Compare this item's hash to another uri.
-   *
-   * Generates a spec hash of the incoming uri and compares
-   * it to this item's uri spec hash.
-   */
-  boolean compareHash(in nsIURI uri);
 };
 
 /**
