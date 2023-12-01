@@ -277,6 +277,8 @@ var Builder = class {
           customDescriptions
         );
       }
+    } catch (e) {
+      console.error("buildList failed: ", e);
     } finally {
       this._isBuilding = false;
     }
