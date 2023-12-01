@@ -86,6 +86,12 @@ const MOCK_STALE_PRODUCT_RESPONSE = {
   needs_analysis: true,
 };
 
+const MOCK_UNGRADED_PRODUCT_RESPONSE = {
+  ...MOCK_UNPOPULATED_DATA,
+  product_id: "ABCD123",
+  needs_analysis: true,
+};
+
 const MOCK_NOT_ENOUGH_REVIEWS_PRODUCT_RESPONSE = {
   ...MOCK_UNPOPULATED_DATA,
   product_id: "ABCD123",

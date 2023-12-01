@@ -56,3 +56,31 @@ add_task(async function test_analyzed_product() {
     }
   );
 });
+
+/**
+ * Tests that the unanalyzed product card appears if a product has no grade,
+ * even if a product id is available.
+ * Settings should be the only other component that is visible.
+ */
+add_task(async function test_ungraded_product() {
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      let shoppingContainer = await getAnalysisDetails(
+        browser,
+        MOCK_UNGRADED_PRODUCT_RESPONSE
+      );
+
+      ok(
+        shoppingContainer.unanalyzedProductEl,
+        "Got the unanalyzed-product-card element"
+      );
+
+      verifyAnalysisDetailsHidden(shoppingContainer);
+      verifyFooterVisible(shoppingContainer);
+    }
+  );
+});
