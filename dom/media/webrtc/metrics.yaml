@@ -303,3 +303,64 @@ rtcrtpsender.setparameters:
     notification_emails:
       - webrtc-telemetry-alerts@mozilla.com
     expires: 126
+
+codec.stats:
+  ulpfec_negotiated:
+    type: labeled_counter
+    description: >
+      Counts the number of times that ulpfec is negotiated or not negotiated
+      on the first negotiation for each video transceiver.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858213
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858213
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - webrtc-telemetry-alerts@mozilla.com
+    expires: 126
+    labels:
+      - negotiated
+      - not_negotiated
+
+  other_fec_signaled:
+    type: labeled_counter
+    description: >
+      Count how many other fec options are being offered.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858213
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858213
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - webrtc-telemetry-alerts@mozilla.com
+    expires: 126
+
+  video_preferred_codec:
+    type: labeled_counter
+    description: >
+      Counts the preferred video codec being signaled to us to identify preferred video codec.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858213
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858213
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - webrtc-telemetry-alerts@mozilla.com
+    expires: 126
+
+  audio_preferred_codec:
+    type: labeled_counter
+    description: >
+      Counts the preferred audio codec being signaled to us to identify preferred audio codec.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858213
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858213
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - webrtc-telemetry-alerts@mozilla.com
+    expires: 126
