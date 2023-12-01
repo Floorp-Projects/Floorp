@@ -48,7 +48,6 @@ linux64-rust-dev:
     treeherder:
         symbol: TL(rust-dev)
     worker:
-        docker-image: {in-tree: deb11-toolchain-build}
         env:
             # Work around https://github.com/rust-lang/rust/issues/105967
             RUSTFLAGS_BOOTSTRAP: '-Clink-arg=-Wl,--undefined-version'
