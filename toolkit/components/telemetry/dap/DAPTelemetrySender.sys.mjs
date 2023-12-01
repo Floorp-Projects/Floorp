@@ -160,8 +160,13 @@ export const DAPTelemetrySender = new (class {
         controller.signal
       );
     } catch (e) {
-      Glean.dap.reportGenerationStatus.failure.add(1);
-      lazy.logConsole.error("DAP report generation failed: " + e);
+      if (e.name === "AbortError") {
+        Glean.dap.reportGenerationStatus.abort.add(1);
+        lazy.logConsole.error("Aborted DAP report generation.", e);
+      } else {
+        Glean.dap.reportGenerationStatus.failure.add(1);
+        lazy.logConsole.error("DAP report generation failed: " + e);
+      }
     }
   }
 
@@ -187,6 +192,9 @@ export const DAPTelemetrySender = new (class {
         abortSignal
       ),
     ]);
+    if (abortSignal.aborted) {
+      throw new DOMException("HPKE config download was aborted", "AbortError");
+    }
     let task_id = new Uint8Array(
       ChromeUtils.base64URLDecode(task.id, { padding: "ignore" })
     );
@@ -290,8 +298,13 @@ export const DAPTelemetrySender = new (class {
         Glean.dap.uploadStatus.success.add(1);
       }
     } catch (err) {
-      lazy.logConsole.error("Failed to send report. fetch failed", err);
-      Glean.dap.uploadStatus.failure.add(1);
+      if (err.name === "AbortError") {
+        lazy.logConsole.error("Aborted DAP report sending.", err);
+        Glean.dap.uploadStatus.abort.add(1);
+      } else {
+        lazy.logConsole.error("Failed to send report. fetch failed", err);
+        Glean.dap.uploadStatus.failure.add(1);
+      }
     }
   }
 })();
