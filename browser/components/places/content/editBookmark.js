@@ -1227,6 +1227,7 @@ ChromeUtils.defineLazyGetter(gEditItemOverlay, "_folderTree", () => {
     <tree id="editBMPanel_folderTree"
           class="placesTree"
           is="places-tree"
+          data-l10n-id="bookmark-overlay-folders-tree"
           editable="true"
           onselect="gEditItemOverlay.onFolderTreeSelect();"
           disableUserActions="true"
