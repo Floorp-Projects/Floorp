@@ -44,6 +44,14 @@ var values = [
   ["tel-extension", {fieldName: "tel-extension"}, ""],
   ["foobar", {}, ""],
   ["section-blue", {}, ""],
+  [" WEBAUTHN ", {fieldName: "webauthn", credentialType: "webauthn"}, "webauthn"],
+
+  // One token + WebAuthn credential type
+  ["on webauthn", {}, ""],
+  ["off webauthn", {}, ""],
+  ["webauthn webauthn", {}, ""],
+  ["username WebAuthn", {fieldName: "username", credentialType: "webauthn"}, "username webauthn"],
+  ["current-PASSWORD webauthn", {fieldName: "current-password", credentialType: "webauthn", canAutomaticallyPersist: false}, "current-password webauthn"],
 
   // Two tokens
   ["on off", {}, ""],
@@ -67,6 +75,11 @@ var values = [
   ["fax url", {}, ""],
   ["section-blue name", {section: "section-blue", fieldName: "name"}, "section-blue name"],
   ["section-blue tel", {section: "section-blue", fieldName: "tel"}, "section-blue tel"],
+  ["webauthn username", {}, ""],
+
+  // Two tokens + WebAuthn credential type
+  ["fax url webauthn", {}, ""],
+  ["shipping tel webauthn", {addressType: "shipping", fieldName: "tel", credentialType: "webauthn"}, "shipping tel webauthn"],
 
   // Three tokens
   ["billing invalid tel", {}, ""],
@@ -82,6 +95,11 @@ var values = [
   ["section-blue home address-level2", {}, ""],
   ["section-blue shipping name", {section: "section-blue", addressType: "shipping", fieldName: "name"}, "section-blue shipping name"],
   ["section-blue mobile tel", {section: "section-blue", contactType: "mobile", fieldName: "tel"}, "section-blue mobile tel"],
+  ["shipping webauthn tel", {}, ""],
+
+  // Three tokens + WebAuthn credential type
+  ["invalid mobile tel webauthn", {}, ""],
+  ["section-blue shipping name webauthn", {section: "section-blue", addressType: "shipping", fieldName: "name", credentialType: "webauthn"}, "section-blue shipping name webauthn"],
 
   // Four tokens
   ["billing billing mobile tel", {}, ""],
@@ -89,10 +107,19 @@ var values = [
   ["secti shipping work address-line1", {}, ""],
   ["section-blue shipping home name", {}, ""],
   ["section-blue shipping mobile tel", {section: "section-blue", addressType: "shipping", contactType: "mobile", fieldName: "tel"}, "section-blue shipping mobile tel"],
+  ["section-blue webauthn mobile tel", {}, ""],
+
+  // Four tokens + WebAuthn credential type
+  ["section-blue shipping home name webauthn", {}, ""],
+  ["section-blue shipping mobile tel webauthn", {section: "section-blue", addressType: "shipping", contactType: "mobile", fieldName: "tel", credentialType: "webauthn"}, "section-blue shipping mobile tel webauthn"],
 
   // Five tokens (invalid)
   ["billing billing billing mobile tel", {}, ""],
   ["section-blue section-blue billing mobile tel", {}, ""],
+  ["section-blue section-blue billing webauthn tel", {}, ""],
+
+  // Five tokens + WebAuthn credential type (invalid)
+  ["billing billing billing mobile tel webauthn", {}, ""],
 ];
 
 var autocompleteInfoFieldIds = ["input", "select"];
@@ -143,6 +170,8 @@ function testAutocompleteInfoValue(aEnabled) {
         "Checking autocompleteInfo.contactType for " + field + ": " + test[0]);
       is(info.fieldName, "fieldName" in test[1] ? test[1].fieldName : "",
         "Checking autocompleteInfo.fieldName for " + field + ": " + test[0]);
+      is(info.credentialType, "credentialType" in test[1] ? test[1].credentialType: "",
+        "Checking autocompleteInfo.credentialType for " + field + ": " + test[0]);
       is(info.canAutomaticallyPersist, "canAutomaticallyPersist" in test[1] ? test[1].canAutomaticallyPersist : true,
         "Checking autocompleteInfo.canAutomaticallyPersist for " + field + ": " + test[0]);
     }
