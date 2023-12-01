@@ -1,12 +1,12 @@
-class _UniffiConverterUInt64(_UniffiConverterPrimitiveInt):
+class FfiConverterUInt64(FfiConverterPrimitiveInt):
     CLASS_NAME = "u64"
     VALUE_MIN = 0
     VALUE_MAX = 2**64
 
     @staticmethod
     def read(buf):
-        return buf.read_u64()
+        return buf.readU64()
 
     @staticmethod
-    def write_unchecked(value, buf):
-        buf.write_u64(value)
+    def writeUnchecked(value, buf):
+        buf.writeU64(value)

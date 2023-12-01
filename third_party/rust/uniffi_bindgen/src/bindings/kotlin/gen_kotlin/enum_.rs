@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use super::CodeType;
-use crate::backend::Literal;
-use crate::ComponentInterface;
+use crate::backend::{CodeType, Literal};
 
 #[derive(Debug)]
 pub struct EnumCodeType {
@@ -18,19 +16,19 @@ impl EnumCodeType {
 }
 
 impl CodeType for EnumCodeType {
-    fn type_label(&self, ci: &ComponentInterface) -> String {
-        super::KotlinCodeOracle.class_name(ci, &self.id)
+    fn type_label(&self) -> String {
+        super::KotlinCodeOracle.class_name(&self.id)
     }
 
     fn canonical_name(&self) -> String {
         format!("Type{}", self.id)
     }
 
-    fn literal(&self, literal: &Literal, ci: &ComponentInterface) -> String {
+    fn literal(&self, literal: &Literal) -> String {
         if let Literal::Enum(v, _) = literal {
             format!(
                 "{}.{}",
-                self.type_label(ci),
+                self.type_label(),
                 super::KotlinCodeOracle.enum_variant_name(v)
             )
         } else {
