@@ -711,12 +711,14 @@ void DesktopCaptureImpl::OnCaptureResult(DesktopCapturer::Result aResult,
 
 void DesktopCaptureImpl::NotifyOnFrame(const VideoFrame& aFrame) {
   RTC_DCHECK_RUN_ON(&mCaptureThreadChecker);
-  MOZ_ASSERT(Timestamp::Millis(aFrame.render_time_ms()) >
-             mNextFrameMinimumTime);
   // Set the next frame's minimum time to ensure two consecutive frames don't
   // have an identical render time (which is in milliseconds).
-  mNextFrameMinimumTime =
+  Timestamp nextFrameMinimumTime =
       Timestamp::Millis(aFrame.render_time_ms()) + TimeDelta::Millis(1);
+
+  MOZ_ASSERT(nextFrameMinimumTime >= mNextFrameMinimumTime);
+
+  mNextFrameMinimumTime = nextFrameMinimumTime;
   auto callbacks = mCallbacks.Lock();
   for (auto* cb : *callbacks) {
     cb->OnFrame(aFrame);
