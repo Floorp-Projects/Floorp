@@ -679,7 +679,7 @@ this.AccessibilityUtils = (function () {
   function findInteractiveAccessible(node) {
     let acc;
     // Walk DOM ancestors until we find one with an accessible.
-    for (; node && !acc; node = node.parentNode) {
+    for (; node && !acc; node = node.flattenedTreeParentNode) {
       acc = getAccessible(node);
     }
     if (!acc) {
@@ -793,6 +793,13 @@ this.AccessibilityUtils = (function () {
     handleEvent({ composedTarget }) {
       if (!this._shouldHandleClicks) {
         return;
+      }
+      if (composedTarget.tagName.toLowerCase() == "slot") {
+        // The click occurred on a text node inside a slot. Since events don't
+        // target text nodes, the event was retargeted to the slot. However, a
+        // slot isn't itself rendered. To deal with this, use the slot's parent
+        // instead.
+        composedTarget = composedTarget.flattenedTreeParentNode;
       }
       const bounds =
         composedTarget.ownerGlobal?.windowUtils?.getBoundsWithoutFlushing(
