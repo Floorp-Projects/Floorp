@@ -40,7 +40,8 @@ class WinWebAuthnService final : public nsIWebAuthnService {
 
   using TransactionStateMutex = DataMutex<Maybe<TransactionState>>;
   TransactionStateMutex mTransactionState;
-  void DoGetAssertion(const TransactionStateMutex::AutoLock& aProofOfLock);
+  void DoGetAssertion(Maybe<nsTArray<uint8_t>>&& aSelectedCredentialId,
+                      const TransactionStateMutex::AutoLock& aGuard);
 };
 
 }  // namespace mozilla::dom
