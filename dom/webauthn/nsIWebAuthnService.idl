@@ -18,6 +18,20 @@ interface nsICredentialParameters : nsISupports
     readonly attribute uint32_t signCount;
 };
 
+[scriptable, uuid(686d552e-a39d-4ba2-8127-faca54274039)]
+interface nsIWebAuthnAutoFillEntry: nsISupports
+{
+    const octet PROVIDER_UNKNOWN = 0;
+    const octet PROVIDER_TEST_TOKEN = 1;
+    const octet PROVIDER_PLATFORM_WINDOWS = 2;
+    const octet PROVIDER_PLATFORM_MACOS = 3;
+    const octet PROVIDER_PLATFORM_ANDROID = 4;
+
+    readonly attribute octet provider;
+    readonly attribute AString userName;
+    readonly attribute AString rpId;
+    readonly attribute Array<uint8_t> credentialId;
+};
 
 [scriptable, uuid(e236a9b4-a26f-11ed-b6cc-07a9834e19b1)]
 interface nsIWebAuthnService : nsISupports
@@ -46,6 +60,27 @@ interface nsIWebAuthnService : nsISupports
     // prompts. This is used by WebAuthnPromptHelper when the user hits the
     // "cancel" button.
     void cancel(in uint64_t aTransactionId);
+
+    // `hasPendingConditionalGet` returns the transaction ID of a pending
+    // conditionally-mediated getAssertion promise. The browsing context and
+    // origin arguments must match those of the pending promise. If there is no
+    // pending getAssertion promise, or the browsing context and origin do not
+    // match, then `hasPendingConditionalGet` returns 0.
+    uint64_t hasPendingConditionalGet(in uint64_t aBrowsingContextId, in AString aOrigin);
+
+    // If there is a pending conditionally-mediated getAssertion promise with
+    // transaction ID equal to `aTransactionId`, `getAutoFillEntries` returns
+    // an nsIWebAuthnAutoFillEntry for each silently discoverable credential
+    // that can be used to fullfill the request.
+    Array<nsIWebAuthnAutoFillEntry> getAutoFillEntries(in uint64_t aTransactionId);
+
+    // A pending conditionally-mediated getAssertion promise is resolved by
+    // calling `selectAutoFillEntry` or `resumeConditionalGet`.
+    // `selectAutoFillEntry` specifies the credential ID that should be used to
+    // fulfill the request, whereas `resumeConditionalGet` indicates that any
+    // allowed credential can be used.
+    void selectAutoFillEntry(in uint64_t aTransactionId, in Array<uint8_t> aCredentialId);
+    void resumeConditionalGet(in uint64_t aTransactionId);
 
     void pinCallback(in uint64_t aTransactionId, in ACString aPin);
     void resumeMakeCredential(in uint64_t aTransactionId, in bool aForceNoneAttestation);

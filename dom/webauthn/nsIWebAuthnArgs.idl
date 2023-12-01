@@ -93,4 +93,6 @@ interface nsIWebAuthnSignArgs : nsISupports {
     // Arguably we don't need to pass it through since WebAuthnController can
     // cancel transactions.
     readonly attribute unsigned long timeoutMS;
+
+    readonly attribute bool conditionallyMediated;
 };
