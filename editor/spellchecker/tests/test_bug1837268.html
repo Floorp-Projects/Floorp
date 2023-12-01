@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mozilla bug 1837268</title>
+  <link rel=stylesheet href="/tests/SimpleTest/test.css">
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/editor/spellchecker/tests/spellcheck.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1837268">Mozilla Bug 1837268</a>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<div id="contenteditable" contenteditable=true>aabbcc</div>
+
+<script>
+const { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/AsyncSpellCheckTestHelper.sys.mjs"
+);
+
+SimpleTest.waitForExplicitFinish();
+
+function getEditor() {
+  return SpecialPowers.wrap(window).docShell.editor;
+}
+
+SimpleTest.waitForFocus(async () => {
+  let contenteditable = document.getElementById("contenteditable");
+  contenteditable.addEventListener("beforeinput", (ev) => {
+    ev.preventDefault();
+    let text = contenteditable.textContent;
+    const sel = window.getSelection();
+    let offset = sel.anchorOffset;
+    switch (ev.inputType) {
+      case "insertText":
+        text = text.substring(0, offset) + ev.data + text.substring(offset);
+        offset += 1;
+        break;
+      case "deleteContentBackward":
+        text = text.substring(0, offset - 1) + text.substring(offset);
+        offset -= 1;
+        break;
+      default:
+        return;
+    }
+    if (contenteditable.firstChild) {
+      contenteditable.firstChild.nodeValue = text;
+    } else {
+      contenteditable.textContent = text;
+    }
+    sel.collapse(contenteditable.firstChild ?? contenteditable, offset);
+  });
+
+  let misspelledWords = [];
+  misspelledWords.push("aabbc"); // One c removed.
+
+  contenteditable.focus();
+  window.getSelection().collapse(contenteditable.firstChild, contenteditable.firstChild.length);
+
+  // Run spell checker
+  await new Promise((resolve) => { maybeOnSpellCheck(contenteditable, resolve); });
+
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey(" ");
+
+  await new Promise((resolve) => { maybeOnSpellCheck(contenteditable, resolve); });
+  let editor = getEditor();
+  // isSpellingCheckOk is defined in spellcheck.js
+  // eslint-disable-next-line no-undef
+  ok(isSpellingCheckOk(editor, misspelledWords), "correct word is selected as misspelled");
+
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>
