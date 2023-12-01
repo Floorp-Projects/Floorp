@@ -79,8 +79,8 @@ const WindowsOscpuPromise = (async () => {
     let isWow64 = (await Services.sysinfo.processInfo).isWow64;
     WindowsOscpu =
       cpuArch == "x86_64" || isWow64 || (cpuArch == "aarch64" && isWin11)
-        ? `Windows NT ${osVersion}; Win64; x64`
-        : `Windows NT ${osVersion}`;
+        ? "Windows NT 10.0; Win64; x64"
+        : "Windows NT 10.0";
   }
   return WindowsOscpu;
 })();
