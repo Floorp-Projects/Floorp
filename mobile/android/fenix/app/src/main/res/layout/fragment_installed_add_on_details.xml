@@ -99,6 +99,13 @@
                 android:layout_marginHorizontal="16dp"
                 android:layout_below="@id/permissions"
                 android:text="@string/mozac_feature_addons_remove" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/report_add_on"
+                style="@style/NeutralButton"
+                android:layout_marginHorizontal="16dp"
+                android:layout_below="@id/remove_add_on"
+                android:text="@string/mozac_feature_addons_report" />
         </RelativeLayout>
     </ScrollView>
 

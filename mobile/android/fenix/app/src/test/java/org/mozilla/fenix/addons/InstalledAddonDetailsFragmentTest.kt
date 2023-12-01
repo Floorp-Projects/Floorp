@@ -4,6 +4,9 @@
 
 package org.mozilla.fenix.addons
 
+import android.view.LayoutInflater
+import androidx.navigation.NavController
+import androidx.navigation.Navigation
 import com.google.android.material.switchmaterial.SwitchMaterial
 import io.mockk.Runs
 import io.mockk.every
@@ -15,9 +18,17 @@ import io.mockk.verify
 import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManager
+import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.databinding.FragmentInstalledAddOnDetailsBinding
+import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
+@RunWith(FenixRobolectricTestRunner::class)
 class InstalledAddonDetailsFragmentTest {
 
     private lateinit var fragment: InstalledAddonDetailsFragment
@@ -135,5 +146,97 @@ class InstalledAddonDetailsFragmentTest {
         fragment.bindEnableSwitch()
 
         verify { enableSwitch.isEnabled = false }
+    }
+
+    @Test
+    fun `GIVEN an add-on WHEN clicking the report button THEN a new tab is open`() {
+        val addon = mockAddon()
+        every { fragment.addon } returns addon
+        every { fragment.activity } returns mockk<HomeActivity>(relaxed = true)
+        val useCases = mockk<TabsUseCases>()
+        val selectOrAddTab = mockk<TabsUseCases.SelectOrAddUseCase>()
+        every { selectOrAddTab.invoke(any(), any(), any(), any(), any()) } returns "some-tab-id"
+        every { useCases.selectOrAddTab } returns selectOrAddTab
+        every { testContext.components.useCases.tabsUseCases } returns useCases
+        // We create the `binding` instance and bind the UI here because `onCreateView()` checks a late init variable
+        // and we cannot easily mock it to skip the check.
+        fragment.setBindingAndBindUI(
+            FragmentInstalledAddOnDetailsBinding.inflate(
+                LayoutInflater.from(testContext),
+                mockk(relaxed = true),
+                false,
+            ),
+        )
+        val navController = mockk<NavController>(relaxed = true)
+        Navigation.setViewNavController(fragment.binding.root, navController)
+
+        // Click the report button.
+        fragment.binding.reportAddOn.performClick()
+
+        verify {
+            selectOrAddTab.invoke(
+                url = "https://addons.mozilla.org/android/feedback/addon/some-addon-id/",
+                private = false,
+                ignoreFragment = true,
+            )
+        }
+        verify {
+            navController.navigate(
+                InstalledAddonDetailsFragmentDirections.actionGlobalBrowser(null),
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN an add-on and private browsing mode is used WHEN clicking the report button THEN a new private tab is open`() {
+        val addon = mockAddon()
+        every { fragment.addon } returns addon
+        val homeActivity = mockk<HomeActivity>(relaxed = true)
+        every { homeActivity.browsingModeManager.mode.isPrivate } returns true
+        every { fragment.activity } returns homeActivity
+        val useCases = mockk<TabsUseCases>()
+        val selectOrAddTab = mockk<TabsUseCases.SelectOrAddUseCase>()
+        every { selectOrAddTab.invoke(any(), any(), any(), any(), any()) } returns "some-tab-id"
+        every { useCases.selectOrAddTab } returns selectOrAddTab
+        every { testContext.components.useCases.tabsUseCases } returns useCases
+        // We create the `binding` instance and bind the UI here because `onCreateView()` checks a late init variable
+        // and we cannot easily mock it to skip the check.
+        fragment.setBindingAndBindUI(
+            FragmentInstalledAddOnDetailsBinding.inflate(
+                LayoutInflater.from(testContext),
+                mockk(relaxed = true),
+                false,
+            ),
+        )
+        val navController = mockk<NavController>(relaxed = true)
+        Navigation.setViewNavController(fragment.binding.root, navController)
+
+        // Click the report button.
+        fragment.binding.reportAddOn.performClick()
+
+        verify {
+            selectOrAddTab.invoke(
+                url = "https://addons.mozilla.org/android/feedback/addon/some-addon-id/",
+                private = true,
+                ignoreFragment = true,
+            )
+        }
+        verify {
+            navController.navigate(
+                InstalledAddonDetailsFragmentDirections.actionGlobalBrowser(null),
+            )
+        }
+    }
+
+    private fun mockAddon(): Addon {
+        val addon: Addon = mockk()
+        every { addon.id } returns "some-addon-id"
+        every { addon.isEnabled() } returns true
+        every { addon.isDisabledAsBlocklisted() } returns false
+        every { addon.isDisabledAsNotCorrectlySigned() } returns false
+        every { addon.isDisabledAsIncompatible() } returns false
+        every { addon.installedState } returns null
+        every { addon.isAllowedInPrivateBrowsing() } returns false
+        return addon
     }
 }
