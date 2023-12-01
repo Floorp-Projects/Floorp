@@ -1166,5 +1166,5 @@ shopping-sidebar {
   border-inline-start: 1px solid var(--chrome-content-separator-color);
   min-width: 16.92em;
   max-width: 32.31em;
-  width: 26.67em;
+  width: 320px;
 }
