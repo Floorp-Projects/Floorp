@@ -486,6 +486,7 @@ const size_t MAX_ALLOWED_CREDENTIALS = 20;
 
 already_AddRefed<Promise> WebAuthnManager::GetAssertion(
     const PublicKeyCredentialRequestOptions& aOptions,
+    const bool aConditionallyMediated,
     const Optional<OwningNonNull<AbortSignal>>& aSignal, ErrorResult& aError) {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -671,7 +672,7 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
   WebAuthnGetAssertionInfo info(origin, NS_ConvertUTF8toUTF16(rpId), challenge,
                                 clientDataJSON, adjustedTimeout, allowList,
                                 extensions, aOptions.mUserVerification,
-                                context->Top()->Id());
+                                aConditionallyMediated, context->Top()->Id());
 
   // Set up the transaction state (including event listeners, etc). Fallible
   // operations should not be performed below this line, as we must not leave

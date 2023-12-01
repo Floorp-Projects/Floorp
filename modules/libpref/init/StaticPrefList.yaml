@@ -13808,6 +13808,12 @@
   value: true
   mirror: always
 
+# WebAuthn conditional mediation
+- name: security.webauthn.enable_conditional_mediation
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Dispatch WebAuthn requests to virtual authenticators (mutually exclusive
 # with and webauthn_enable_usbtoken)
 - name: security.webauth.webauthn_enable_softtoken
