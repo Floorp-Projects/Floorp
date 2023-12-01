@@ -377,41 +377,7 @@ export function add(a,b) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                30, // arithmetic:uniffi_arithmetic_fn_func_add
-                FfiConverterU64.lower(a),
-                FfiConverterU64.lower(b),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
-}
-
-export function sub(a,b) {
-
-        const liftResult = (result) => FfiConverterU64.lift(result);
-        const liftError = (data) => FfiConverterTypeArithmeticError.lift(data);
-        const functionCall = () => {
-            try {
-                FfiConverterU64.checkType(a)
-            } catch (e) {
-                if (e instanceof UniFFITypeError) {
-                    e.addItemDescriptionPart("a");
-                }
-                throw e;
-            }
-            try {
-                FfiConverterU64.checkType(b)
-            } catch (e) {
-                if (e instanceof UniFFITypeError) {
-                    e.addItemDescriptionPart("b");
-                }
-                throw e;
-            }
-            return UniFFIScaffolding.callAsync(
-                31, // arithmetic:uniffi_arithmetic_fn_func_sub
+                28, // arithmetic:uniffi_arithmetical_fn_func_add
                 FfiConverterU64.lower(a),
                 FfiConverterU64.lower(b),
             )
@@ -445,7 +411,7 @@ export function div(dividend,divisor) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                32, // arithmetic:uniffi_arithmetic_fn_func_div
+                29, // arithmetic:uniffi_arithmetical_fn_func_div
                 FfiConverterU64.lower(dividend),
                 FfiConverterU64.lower(divisor),
             )
@@ -479,7 +445,41 @@ export function equal(a,b) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                33, // arithmetic:uniffi_arithmetic_fn_func_equal
+                30, // arithmetic:uniffi_arithmetical_fn_func_equal
+                FfiConverterU64.lower(a),
+                FfiConverterU64.lower(b),
+            )
+        }
+        try {
+            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+        }  catch (error) {
+            return Promise.reject(error)
+        }
+}
+
+export function sub(a,b) {
+
+        const liftResult = (result) => FfiConverterU64.lift(result);
+        const liftError = (data) => FfiConverterTypeArithmeticError.lift(data);
+        const functionCall = () => {
+            try {
+                FfiConverterU64.checkType(a)
+            } catch (e) {
+                if (e instanceof UniFFITypeError) {
+                    e.addItemDescriptionPart("a");
+                }
+                throw e;
+            }
+            try {
+                FfiConverterU64.checkType(b)
+            } catch (e) {
+                if (e instanceof UniFFITypeError) {
+                    e.addItemDescriptionPart("b");
+                }
+                throw e;
+            }
+            return UniFFIScaffolding.callAsync(
+                31, // arithmetic:uniffi_arithmetical_fn_func_sub
                 FfiConverterU64.lower(a),
                 FfiConverterU64.lower(b),
             )

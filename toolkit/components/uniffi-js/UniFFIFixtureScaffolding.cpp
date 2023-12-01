@@ -24,125 +24,126 @@ using dom::UniFFIScaffoldingCallResult;
 
 // Define scaffolding functions from UniFFI
 extern "C" {
-  double uniffi_geometry_fn_func_gradient(RustBuffer, RustCallStatus*);
-  RustBuffer uniffi_geometry_fn_func_intersection(RustBuffer, RustBuffer, RustCallStatus*);
-  uint64_t uniffi_arithmetic_fn_func_add(uint64_t, uint64_t, RustCallStatus*);
-  uint64_t uniffi_arithmetic_fn_func_sub(uint64_t, uint64_t, RustCallStatus*);
-  uint64_t uniffi_arithmetic_fn_func_div(uint64_t, uint64_t, RustCallStatus*);
-  int8_t uniffi_arithmetic_fn_func_equal(uint64_t, uint64_t, RustCallStatus*);
-  void uniffi_rondpoint_fn_free_retourneur(void *, RustCallStatus*);
-  void * uniffi_rondpoint_fn_constructor_retourneur_new(RustCallStatus*);
-  int8_t uniffi_rondpoint_fn_method_retourneur_identique_i8(void *, int8_t, RustCallStatus*);
-  uint8_t uniffi_rondpoint_fn_method_retourneur_identique_u8(void *, uint8_t, RustCallStatus*);
-  int16_t uniffi_rondpoint_fn_method_retourneur_identique_i16(void *, int16_t, RustCallStatus*);
-  uint16_t uniffi_rondpoint_fn_method_retourneur_identique_u16(void *, uint16_t, RustCallStatus*);
-  int32_t uniffi_rondpoint_fn_method_retourneur_identique_i32(void *, int32_t, RustCallStatus*);
-  uint32_t uniffi_rondpoint_fn_method_retourneur_identique_u32(void *, uint32_t, RustCallStatus*);
-  int64_t uniffi_rondpoint_fn_method_retourneur_identique_i64(void *, int64_t, RustCallStatus*);
-  uint64_t uniffi_rondpoint_fn_method_retourneur_identique_u64(void *, uint64_t, RustCallStatus*);
-  float uniffi_rondpoint_fn_method_retourneur_identique_float(void *, float, RustCallStatus*);
-  double uniffi_rondpoint_fn_method_retourneur_identique_double(void *, double, RustCallStatus*);
-  int8_t uniffi_rondpoint_fn_method_retourneur_identique_boolean(void *, int8_t, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_retourneur_identique_string(void *, RustBuffer, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_retourneur_identique_nombres_signes(void *, RustBuffer, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_retourneur_identique_nombres(void *, RustBuffer, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_retourneur_identique_optionneur_dictionnaire(void *, RustBuffer, RustCallStatus*);
-  void uniffi_rondpoint_fn_free_stringifier(void *, RustCallStatus*);
-  void * uniffi_rondpoint_fn_constructor_stringifier_new(RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_stringifier_well_known_string(void *, RustBuffer, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_stringifier_to_string_i8(void *, int8_t, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_stringifier_to_string_u8(void *, uint8_t, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_stringifier_to_string_i16(void *, int16_t, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_stringifier_to_string_u16(void *, uint16_t, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_stringifier_to_string_i32(void *, int32_t, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_stringifier_to_string_u32(void *, uint32_t, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_stringifier_to_string_i64(void *, int64_t, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_stringifier_to_string_u64(void *, uint64_t, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_stringifier_to_string_float(void *, float, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_stringifier_to_string_double(void *, double, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_stringifier_to_string_boolean(void *, int8_t, RustCallStatus*);
-  void uniffi_rondpoint_fn_free_optionneur(void *, RustCallStatus*);
-  void * uniffi_rondpoint_fn_constructor_optionneur_new(RustCallStatus*);
-  int8_t uniffi_rondpoint_fn_method_optionneur_sinon_boolean(void *, int8_t, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_optionneur_sinon_string(void *, RustBuffer, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_optionneur_sinon_sequence(void *, RustBuffer, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_optionneur_sinon_null(void *, RustBuffer, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_optionneur_sinon_zero(void *, RustBuffer, RustCallStatus*);
-  uint8_t uniffi_rondpoint_fn_method_optionneur_sinon_u8_dec(void *, uint8_t, RustCallStatus*);
-  int8_t uniffi_rondpoint_fn_method_optionneur_sinon_i8_dec(void *, int8_t, RustCallStatus*);
-  uint16_t uniffi_rondpoint_fn_method_optionneur_sinon_u16_dec(void *, uint16_t, RustCallStatus*);
-  int16_t uniffi_rondpoint_fn_method_optionneur_sinon_i16_dec(void *, int16_t, RustCallStatus*);
-  uint32_t uniffi_rondpoint_fn_method_optionneur_sinon_u32_dec(void *, uint32_t, RustCallStatus*);
-  int32_t uniffi_rondpoint_fn_method_optionneur_sinon_i32_dec(void *, int32_t, RustCallStatus*);
-  uint64_t uniffi_rondpoint_fn_method_optionneur_sinon_u64_dec(void *, uint64_t, RustCallStatus*);
-  int64_t uniffi_rondpoint_fn_method_optionneur_sinon_i64_dec(void *, int64_t, RustCallStatus*);
-  uint8_t uniffi_rondpoint_fn_method_optionneur_sinon_u8_hex(void *, uint8_t, RustCallStatus*);
-  int8_t uniffi_rondpoint_fn_method_optionneur_sinon_i8_hex(void *, int8_t, RustCallStatus*);
-  uint16_t uniffi_rondpoint_fn_method_optionneur_sinon_u16_hex(void *, uint16_t, RustCallStatus*);
-  int16_t uniffi_rondpoint_fn_method_optionneur_sinon_i16_hex(void *, int16_t, RustCallStatus*);
-  uint32_t uniffi_rondpoint_fn_method_optionneur_sinon_u32_hex(void *, uint32_t, RustCallStatus*);
-  int32_t uniffi_rondpoint_fn_method_optionneur_sinon_i32_hex(void *, int32_t, RustCallStatus*);
-  uint64_t uniffi_rondpoint_fn_method_optionneur_sinon_u64_hex(void *, uint64_t, RustCallStatus*);
-  int64_t uniffi_rondpoint_fn_method_optionneur_sinon_i64_hex(void *, int64_t, RustCallStatus*);
-  uint32_t uniffi_rondpoint_fn_method_optionneur_sinon_u32_oct(void *, uint32_t, RustCallStatus*);
-  float uniffi_rondpoint_fn_method_optionneur_sinon_f32(void *, float, RustCallStatus*);
-  double uniffi_rondpoint_fn_method_optionneur_sinon_f64(void *, double, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_method_optionneur_sinon_enum(void *, RustBuffer, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_func_copie_dictionnaire(RustBuffer, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_func_copie_enumeration(RustBuffer, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_func_copie_enumerations(RustBuffer, RustCallStatus*);
-  RustBuffer uniffi_rondpoint_fn_func_copie_carte(RustBuffer, RustCallStatus*);
-  int8_t uniffi_rondpoint_fn_func_switcheroo(int8_t, RustCallStatus*);
-  void uniffi_sprites_fn_free_sprite(void *, RustCallStatus*);
-  void * uniffi_sprites_fn_constructor_sprite_new(RustBuffer, RustCallStatus*);
-  void * uniffi_sprites_fn_constructor_sprite_new_relative_to(RustBuffer, RustBuffer, RustCallStatus*);
-  RustBuffer uniffi_sprites_fn_method_sprite_get_position(void *, RustCallStatus*);
-  void uniffi_sprites_fn_method_sprite_move_to(void *, RustBuffer, RustCallStatus*);
-  void uniffi_sprites_fn_method_sprite_move_by(void *, RustBuffer, RustCallStatus*);
-  RustBuffer uniffi_sprites_fn_func_translate(RustBuffer, RustBuffer, RustCallStatus*);
-  void uniffi_todolist_fn_free_todolist(void *, RustCallStatus*);
-  void * uniffi_todolist_fn_constructor_todolist_new(RustCallStatus*);
-  void uniffi_todolist_fn_method_todolist_add_item(void *, RustBuffer, RustCallStatus*);
-  void uniffi_todolist_fn_method_todolist_add_entry(void *, RustBuffer, RustCallStatus*);
-  RustBuffer uniffi_todolist_fn_method_todolist_get_entries(void *, RustCallStatus*);
-  RustBuffer uniffi_todolist_fn_method_todolist_get_items(void *, RustCallStatus*);
-  void uniffi_todolist_fn_method_todolist_add_entries(void *, RustBuffer, RustCallStatus*);
-  void uniffi_todolist_fn_method_todolist_add_items(void *, RustBuffer, RustCallStatus*);
-  RustBuffer uniffi_todolist_fn_method_todolist_get_last_entry(void *, RustCallStatus*);
-  RustBuffer uniffi_todolist_fn_method_todolist_get_last(void *, RustCallStatus*);
-  RustBuffer uniffi_todolist_fn_method_todolist_get_first(void *, RustCallStatus*);
-  void uniffi_todolist_fn_method_todolist_clear_item(void *, RustBuffer, RustCallStatus*);
-  void uniffi_todolist_fn_method_todolist_make_default(void *, RustCallStatus*);
-  RustBuffer uniffi_todolist_fn_func_get_default_list(RustCallStatus*);
-  void uniffi_todolist_fn_func_set_default_list(void *, RustCallStatus*);
-  RustBuffer uniffi_todolist_fn_func_create_entry_with(RustBuffer, RustCallStatus*);
-  void uniffi_fixture_callbacks_fn_init_callback_logger(ForeignCallback, RustCallStatus*);
-  void uniffi_fixture_callbacks_fn_func_log_even_numbers(uint64_t, RustBuffer, RustCallStatus*);
-  void uniffi_fixture_callbacks_fn_func_log_even_numbers_main_thread(uint64_t, RustBuffer, RustCallStatus*);
-  RustBuffer uniffi_custom_types_fn_func_get_custom_types_demo(RustBuffer, RustCallStatus*);
-  double uniffi_external_types_fn_func_gradient(RustBuffer, RustCallStatus*);
+  uint64_t uniffi_arithmetical_fn_func_add(uint64_t, uint64_t, RustCallStatus*);
+  uint64_t uniffi_arithmetical_fn_func_div(uint64_t, uint64_t, RustCallStatus*);
+  int8_t uniffi_arithmetical_fn_func_equal(uint64_t, uint64_t, RustCallStatus*);
+  uint64_t uniffi_arithmetical_fn_func_sub(uint64_t, uint64_t, RustCallStatus*);
+  RustBuffer uniffi_uniffi_custom_types_fn_func_get_custom_types_demo(RustBuffer, RustCallStatus*);
+  double uniffi_uniffi_fixture_external_types_fn_func_gradient(RustBuffer, RustCallStatus*);
+  RustBuffer uniffi_uniffi_fixture_external_types_fn_func_intersection(RustBuffer, RustBuffer, RustCallStatus*);
+  void uniffi_uniffi_fixture_callbacks_fn_init_callback_logger(ForeignCallback, RustCallStatus*);
+  void uniffi_uniffi_fixture_callbacks_fn_func_log_even_numbers(uint64_t, RustBuffer, RustCallStatus*);
+  void uniffi_uniffi_fixture_callbacks_fn_func_log_even_numbers_main_thread(uint64_t, RustBuffer, RustCallStatus*);
+  double uniffi_uniffi_geometry_fn_func_gradient(RustBuffer, RustCallStatus*);
+  RustBuffer uniffi_uniffi_geometry_fn_func_intersection(RustBuffer, RustBuffer, RustCallStatus*);
+  void uniffi_uniffi_rondpoint_fn_free_optionneur(void *, RustCallStatus*);
+  void * uniffi_uniffi_rondpoint_fn_constructor_optionneur_new(RustCallStatus*);
+  int8_t uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_boolean(void *, int8_t, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_enum(void *, RustBuffer, RustCallStatus*);
+  float uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_f32(void *, float, RustCallStatus*);
+  double uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_f64(void *, double, RustCallStatus*);
+  int16_t uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i16_dec(void *, int16_t, RustCallStatus*);
+  int16_t uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i16_hex(void *, int16_t, RustCallStatus*);
+  int32_t uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i32_dec(void *, int32_t, RustCallStatus*);
+  int32_t uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i32_hex(void *, int32_t, RustCallStatus*);
+  int64_t uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i64_dec(void *, int64_t, RustCallStatus*);
+  int64_t uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i64_hex(void *, int64_t, RustCallStatus*);
+  int8_t uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i8_dec(void *, int8_t, RustCallStatus*);
+  int8_t uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i8_hex(void *, int8_t, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_null(void *, RustBuffer, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_sequence(void *, RustBuffer, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_string(void *, RustBuffer, RustCallStatus*);
+  uint16_t uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u16_dec(void *, uint16_t, RustCallStatus*);
+  uint16_t uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u16_hex(void *, uint16_t, RustCallStatus*);
+  uint32_t uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_dec(void *, uint32_t, RustCallStatus*);
+  uint32_t uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_hex(void *, uint32_t, RustCallStatus*);
+  uint32_t uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_oct(void *, uint32_t, RustCallStatus*);
+  uint64_t uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u64_dec(void *, uint64_t, RustCallStatus*);
+  uint64_t uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u64_hex(void *, uint64_t, RustCallStatus*);
+  uint8_t uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u8_dec(void *, uint8_t, RustCallStatus*);
+  uint8_t uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u8_hex(void *, uint8_t, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_zero(void *, RustBuffer, RustCallStatus*);
+  void uniffi_uniffi_rondpoint_fn_free_retourneur(void *, RustCallStatus*);
+  void * uniffi_uniffi_rondpoint_fn_constructor_retourneur_new(RustCallStatus*);
+  int8_t uniffi_uniffi_rondpoint_fn_method_retourneur_identique_boolean(void *, int8_t, RustCallStatus*);
+  double uniffi_uniffi_rondpoint_fn_method_retourneur_identique_double(void *, double, RustCallStatus*);
+  float uniffi_uniffi_rondpoint_fn_method_retourneur_identique_float(void *, float, RustCallStatus*);
+  int16_t uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i16(void *, int16_t, RustCallStatus*);
+  int32_t uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i32(void *, int32_t, RustCallStatus*);
+  int64_t uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i64(void *, int64_t, RustCallStatus*);
+  int8_t uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i8(void *, int8_t, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_retourneur_identique_nombres(void *, RustBuffer, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_retourneur_identique_nombres_signes(void *, RustBuffer, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_retourneur_identique_optionneur_dictionnaire(void *, RustBuffer, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_retourneur_identique_string(void *, RustBuffer, RustCallStatus*);
+  uint16_t uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u16(void *, uint16_t, RustCallStatus*);
+  uint32_t uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u32(void *, uint32_t, RustCallStatus*);
+  uint64_t uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u64(void *, uint64_t, RustCallStatus*);
+  uint8_t uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u8(void *, uint8_t, RustCallStatus*);
+  void uniffi_uniffi_rondpoint_fn_free_stringifier(void *, RustCallStatus*);
+  void * uniffi_uniffi_rondpoint_fn_constructor_stringifier_new(RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_boolean(void *, int8_t, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_double(void *, double, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_float(void *, float, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i16(void *, int16_t, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i32(void *, int32_t, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i64(void *, int64_t, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i8(void *, int8_t, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u16(void *, uint16_t, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u32(void *, uint32_t, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u64(void *, uint64_t, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u8(void *, uint8_t, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_method_stringifier_well_known_string(void *, RustBuffer, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_func_copie_carte(RustBuffer, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_func_copie_dictionnaire(RustBuffer, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_func_copie_enumeration(RustBuffer, RustCallStatus*);
+  RustBuffer uniffi_uniffi_rondpoint_fn_func_copie_enumerations(RustBuffer, RustCallStatus*);
+  int8_t uniffi_uniffi_rondpoint_fn_func_switcheroo(int8_t, RustCallStatus*);
+  void uniffi_uniffi_sprites_fn_free_sprite(void *, RustCallStatus*);
+  void * uniffi_uniffi_sprites_fn_constructor_sprite_new(RustBuffer, RustCallStatus*);
+  void * uniffi_uniffi_sprites_fn_constructor_sprite_new_relative_to(RustBuffer, RustBuffer, RustCallStatus*);
+  RustBuffer uniffi_uniffi_sprites_fn_method_sprite_get_position(void *, RustCallStatus*);
+  void uniffi_uniffi_sprites_fn_method_sprite_move_by(void *, RustBuffer, RustCallStatus*);
+  void uniffi_uniffi_sprites_fn_method_sprite_move_to(void *, RustBuffer, RustCallStatus*);
+  RustBuffer uniffi_uniffi_sprites_fn_func_translate(RustBuffer, RustBuffer, RustCallStatus*);
+  void uniffi_uniffi_todolist_fn_free_todolist(void *, RustCallStatus*);
+  void * uniffi_uniffi_todolist_fn_constructor_todolist_new(RustCallStatus*);
+  void uniffi_uniffi_todolist_fn_method_todolist_add_entries(void *, RustBuffer, RustCallStatus*);
+  void uniffi_uniffi_todolist_fn_method_todolist_add_entry(void *, RustBuffer, RustCallStatus*);
+  void uniffi_uniffi_todolist_fn_method_todolist_add_item(void *, RustBuffer, RustCallStatus*);
+  void uniffi_uniffi_todolist_fn_method_todolist_add_items(void *, RustBuffer, RustCallStatus*);
+  void uniffi_uniffi_todolist_fn_method_todolist_clear_item(void *, RustBuffer, RustCallStatus*);
+  RustBuffer uniffi_uniffi_todolist_fn_method_todolist_get_entries(void *, RustCallStatus*);
+  RustBuffer uniffi_uniffi_todolist_fn_method_todolist_get_first(void *, RustCallStatus*);
+  RustBuffer uniffi_uniffi_todolist_fn_method_todolist_get_items(void *, RustCallStatus*);
+  RustBuffer uniffi_uniffi_todolist_fn_method_todolist_get_last(void *, RustCallStatus*);
+  RustBuffer uniffi_uniffi_todolist_fn_method_todolist_get_last_entry(void *, RustCallStatus*);
+  void uniffi_uniffi_todolist_fn_method_todolist_make_default(void *, RustCallStatus*);
+  RustBuffer uniffi_uniffi_todolist_fn_func_create_entry_with(RustBuffer, RustCallStatus*);
+  RustBuffer uniffi_uniffi_todolist_fn_func_get_default_list(RustCallStatus*);
+  void uniffi_uniffi_todolist_fn_func_set_default_list(void *, RustCallStatus*);
 }
 
 // Define pointer types
+const static mozilla::uniffi::UniFFIPointerType kRondpointOptionneurPointerType {
+  "rondpoint::Optionneur"_ns,
+  uniffi_uniffi_rondpoint_fn_free_optionneur
+};
 const static mozilla::uniffi::UniFFIPointerType kRondpointRetourneurPointerType {
   "rondpoint::Retourneur"_ns,
-  uniffi_rondpoint_fn_free_retourneur
+  uniffi_uniffi_rondpoint_fn_free_retourneur
 };
 const static mozilla::uniffi::UniFFIPointerType kRondpointStringifierPointerType {
   "rondpoint::Stringifier"_ns,
-  uniffi_rondpoint_fn_free_stringifier
-};
-const static mozilla::uniffi::UniFFIPointerType kRondpointOptionneurPointerType {
-  "rondpoint::Optionneur"_ns,
-  uniffi_rondpoint_fn_free_optionneur
+  uniffi_uniffi_rondpoint_fn_free_stringifier
 };
 const static mozilla::uniffi::UniFFIPointerType kSpritesSpritePointerType {
   "sprites::Sprite"_ns,
-  uniffi_sprites_fn_free_sprite
+  uniffi_uniffi_sprites_fn_free_sprite
 };
 const static mozilla::uniffi::UniFFIPointerType kTodolistTodoListPointerType {
   "todolist::TodoList"_ns,
-  uniffi_todolist_fn_free_todolist
+  uniffi_uniffi_todolist_fn_free_todolist
 };
 
 // Define the data we need per-callback interface
@@ -166,7 +167,7 @@ Maybe<CallbackInterfaceInfo> UniFFIFixturesGetCallbackInterfaceInfo(uint64_t aIn
                 "Logger",
                 &JS_CALLBACK_HANDLER_LOGGER,
                 UniFFIFixturesCallbackHandlerLogger,
-                uniffi_fixture_callbacks_fn_init_callback_logger,
+                uniffi_uniffi_fixture_callbacks_fn_init_callback_logger,
             });
         }
 
@@ -177,369 +178,373 @@ Maybe<CallbackInterfaceInfo> UniFFIFixturesGetCallbackInterfaceInfo(uint64_t aIn
 
 Maybe<already_AddRefed<Promise>> UniFFIFixturesCallAsync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<ScaffoldingType>& aArgs, ErrorResult& aError) {
   switch (aId) {
-    case 28: { // geometry:uniffi_geometry_fn_func_gradient
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_geometry_fn_func_gradient, aGlobal, aArgs, "uniffi_geometry_fn_func_gradient: "_ns, aError));
-    }
-    case 29: { // geometry:uniffi_geometry_fn_func_intersection
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_geometry_fn_func_intersection, aGlobal, aArgs, "uniffi_geometry_fn_func_intersection: "_ns, aError));
-    }
-    case 30: { // arithmetic:uniffi_arithmetic_fn_func_add
+    case 28: { // arithmetic:uniffi_arithmetical_fn_func_add
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>>;
-      return Some(CallHandler::CallAsync(uniffi_arithmetic_fn_func_add, aGlobal, aArgs, "uniffi_arithmetic_fn_func_add: "_ns, aError));
+      return Some(CallHandler::CallAsync(uniffi_arithmetical_fn_func_add, aGlobal, aArgs, "uniffi_arithmetical_fn_func_add: "_ns, aError));
     }
-    case 31: { // arithmetic:uniffi_arithmetic_fn_func_sub
+    case 29: { // arithmetic:uniffi_arithmetical_fn_func_div
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>>;
-      return Some(CallHandler::CallAsync(uniffi_arithmetic_fn_func_sub, aGlobal, aArgs, "uniffi_arithmetic_fn_func_sub: "_ns, aError));
+      return Some(CallHandler::CallAsync(uniffi_arithmetical_fn_func_div, aGlobal, aArgs, "uniffi_arithmetical_fn_func_div: "_ns, aError));
     }
-    case 32: { // arithmetic:uniffi_arithmetic_fn_func_div
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>>;
-      return Some(CallHandler::CallAsync(uniffi_arithmetic_fn_func_div, aGlobal, aArgs, "uniffi_arithmetic_fn_func_div: "_ns, aError));
-    }
-    case 33: { // arithmetic:uniffi_arithmetic_fn_func_equal
+    case 30: { // arithmetic:uniffi_arithmetical_fn_func_equal
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>>;
-      return Some(CallHandler::CallAsync(uniffi_arithmetic_fn_func_equal, aGlobal, aArgs, "uniffi_arithmetic_fn_func_equal: "_ns, aError));
+      return Some(CallHandler::CallAsync(uniffi_arithmetical_fn_func_equal, aGlobal, aArgs, "uniffi_arithmetical_fn_func_equal: "_ns, aError));
     }
-    case 34: { // rondpoint:uniffi_rondpoint_fn_constructor_retourneur_new
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_constructor_retourneur_new, aGlobal, aArgs, "uniffi_rondpoint_fn_constructor_retourneur_new: "_ns, aError));
+    case 31: { // arithmetic:uniffi_arithmetical_fn_func_sub
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>>;
+      return Some(CallHandler::CallAsync(uniffi_arithmetical_fn_func_sub, aGlobal, aArgs, "uniffi_arithmetical_fn_func_sub: "_ns, aError));
     }
-    case 35: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_i8
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int8_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_retourneur_identique_i8, aGlobal, aArgs, "uniffi_rondpoint_fn_method_retourneur_identique_i8: "_ns, aError));
-    }
-    case 36: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_u8
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint8_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint8_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_retourneur_identique_u8, aGlobal, aArgs, "uniffi_rondpoint_fn_method_retourneur_identique_u8: "_ns, aError));
-    }
-    case 37: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_i16
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int16_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int16_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_retourneur_identique_i16, aGlobal, aArgs, "uniffi_rondpoint_fn_method_retourneur_identique_i16: "_ns, aError));
-    }
-    case 38: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_u16
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint16_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint16_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_retourneur_identique_u16, aGlobal, aArgs, "uniffi_rondpoint_fn_method_retourneur_identique_u16: "_ns, aError));
-    }
-    case 39: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_i32
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int32_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int32_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_retourneur_identique_i32, aGlobal, aArgs, "uniffi_rondpoint_fn_method_retourneur_identique_i32: "_ns, aError));
-    }
-    case 40: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_u32
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint32_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_retourneur_identique_u32, aGlobal, aArgs, "uniffi_rondpoint_fn_method_retourneur_identique_u32: "_ns, aError));
-    }
-    case 41: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_i64
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int64_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int64_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_retourneur_identique_i64, aGlobal, aArgs, "uniffi_rondpoint_fn_method_retourneur_identique_i64: "_ns, aError));
-    }
-    case 42: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_u64
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint64_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_retourneur_identique_u64, aGlobal, aArgs, "uniffi_rondpoint_fn_method_retourneur_identique_u64: "_ns, aError));
-    }
-    case 43: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_float
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<float>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<float>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_retourneur_identique_float, aGlobal, aArgs, "uniffi_rondpoint_fn_method_retourneur_identique_float: "_ns, aError));
-    }
-    case 44: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_double
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<double>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_retourneur_identique_double, aGlobal, aArgs, "uniffi_rondpoint_fn_method_retourneur_identique_double: "_ns, aError));
-    }
-    case 45: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_boolean
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int8_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_retourneur_identique_boolean, aGlobal, aArgs, "uniffi_rondpoint_fn_method_retourneur_identique_boolean: "_ns, aError));
-    }
-    case 46: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_string
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_retourneur_identique_string, aGlobal, aArgs, "uniffi_rondpoint_fn_method_retourneur_identique_string: "_ns, aError));
-    }
-    case 47: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_nombres_signes
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_retourneur_identique_nombres_signes, aGlobal, aArgs, "uniffi_rondpoint_fn_method_retourneur_identique_nombres_signes: "_ns, aError));
-    }
-    case 48: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_nombres
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_retourneur_identique_nombres, aGlobal, aArgs, "uniffi_rondpoint_fn_method_retourneur_identique_nombres: "_ns, aError));
-    }
-    case 49: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_optionneur_dictionnaire
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_retourneur_identique_optionneur_dictionnaire, aGlobal, aArgs, "uniffi_rondpoint_fn_method_retourneur_identique_optionneur_dictionnaire: "_ns, aError));
-    }
-    case 50: { // rondpoint:uniffi_rondpoint_fn_constructor_stringifier_new
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRondpointStringifierPointerType>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_constructor_stringifier_new, aGlobal, aArgs, "uniffi_rondpoint_fn_constructor_stringifier_new: "_ns, aError));
-    }
-    case 51: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_well_known_string
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_stringifier_well_known_string, aGlobal, aArgs, "uniffi_rondpoint_fn_method_stringifier_well_known_string: "_ns, aError));
-    }
-    case 52: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_i8
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int8_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_stringifier_to_string_i8, aGlobal, aArgs, "uniffi_rondpoint_fn_method_stringifier_to_string_i8: "_ns, aError));
-    }
-    case 53: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_u8
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint8_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_stringifier_to_string_u8, aGlobal, aArgs, "uniffi_rondpoint_fn_method_stringifier_to_string_u8: "_ns, aError));
-    }
-    case 54: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_i16
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int16_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_stringifier_to_string_i16, aGlobal, aArgs, "uniffi_rondpoint_fn_method_stringifier_to_string_i16: "_ns, aError));
-    }
-    case 55: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_u16
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint16_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_stringifier_to_string_u16, aGlobal, aArgs, "uniffi_rondpoint_fn_method_stringifier_to_string_u16: "_ns, aError));
-    }
-    case 56: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_i32
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int32_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_stringifier_to_string_i32, aGlobal, aArgs, "uniffi_rondpoint_fn_method_stringifier_to_string_i32: "_ns, aError));
-    }
-    case 57: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_u32
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint32_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_stringifier_to_string_u32, aGlobal, aArgs, "uniffi_rondpoint_fn_method_stringifier_to_string_u32: "_ns, aError));
-    }
-    case 58: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_i64
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int64_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_stringifier_to_string_i64, aGlobal, aArgs, "uniffi_rondpoint_fn_method_stringifier_to_string_i64: "_ns, aError));
-    }
-    case 59: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_u64
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint64_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_stringifier_to_string_u64, aGlobal, aArgs, "uniffi_rondpoint_fn_method_stringifier_to_string_u64: "_ns, aError));
-    }
-    case 60: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_float
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<float>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_stringifier_to_string_float, aGlobal, aArgs, "uniffi_rondpoint_fn_method_stringifier_to_string_float: "_ns, aError));
-    }
-    case 61: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_double
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<double>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_stringifier_to_string_double, aGlobal, aArgs, "uniffi_rondpoint_fn_method_stringifier_to_string_double: "_ns, aError));
-    }
-    case 62: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_boolean
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int8_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_stringifier_to_string_boolean, aGlobal, aArgs, "uniffi_rondpoint_fn_method_stringifier_to_string_boolean: "_ns, aError));
-    }
-    case 63: { // rondpoint:uniffi_rondpoint_fn_constructor_optionneur_new
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_constructor_optionneur_new, aGlobal, aArgs, "uniffi_rondpoint_fn_constructor_optionneur_new: "_ns, aError));
-    }
-    case 64: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_boolean
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int8_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_boolean, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_boolean: "_ns, aError));
-    }
-    case 65: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_string
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_string, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_string: "_ns, aError));
-    }
-    case 66: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_sequence
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_sequence, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_sequence: "_ns, aError));
-    }
-    case 67: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_null
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_null, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_null: "_ns, aError));
-    }
-    case 68: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_zero
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_zero, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_zero: "_ns, aError));
-    }
-    case 69: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_u8_dec
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint8_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_u8_dec, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_u8_dec: "_ns, aError));
-    }
-    case 70: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_i8_dec
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int8_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_i8_dec, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_i8_dec: "_ns, aError));
-    }
-    case 71: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_u16_dec
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint16_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_u16_dec, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_u16_dec: "_ns, aError));
-    }
-    case 72: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_i16_dec
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int16_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_i16_dec, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_i16_dec: "_ns, aError));
-    }
-    case 73: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_u32_dec
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint32_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_u32_dec, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_u32_dec: "_ns, aError));
-    }
-    case 74: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_i32_dec
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int32_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_i32_dec, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_i32_dec: "_ns, aError));
-    }
-    case 75: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_u64_dec
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint64_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_u64_dec, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_u64_dec: "_ns, aError));
-    }
-    case 76: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_i64_dec
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int64_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_i64_dec, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_i64_dec: "_ns, aError));
-    }
-    case 77: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_u8_hex
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint8_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_u8_hex, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_u8_hex: "_ns, aError));
-    }
-    case 78: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_i8_hex
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int8_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_i8_hex, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_i8_hex: "_ns, aError));
-    }
-    case 79: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_u16_hex
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint16_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_u16_hex, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_u16_hex: "_ns, aError));
-    }
-    case 80: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_i16_hex
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int16_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_i16_hex, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_i16_hex: "_ns, aError));
-    }
-    case 81: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_u32_hex
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint32_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_u32_hex, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_u32_hex: "_ns, aError));
-    }
-    case 82: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_i32_hex
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int32_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_i32_hex, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_i32_hex: "_ns, aError));
-    }
-    case 83: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_u64_hex
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint64_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_u64_hex, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_u64_hex: "_ns, aError));
-    }
-    case 84: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_i64_hex
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int64_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_i64_hex, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_i64_hex: "_ns, aError));
-    }
-    case 85: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_u32_oct
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint32_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_u32_oct, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_u32_oct: "_ns, aError));
-    }
-    case 86: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_f32
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<float>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<float>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_f32, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_f32: "_ns, aError));
-    }
-    case 87: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_f64
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<double>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_f64, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_f64: "_ns, aError));
-    }
-    case 88: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_enum
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_method_optionneur_sinon_enum, aGlobal, aArgs, "uniffi_rondpoint_fn_method_optionneur_sinon_enum: "_ns, aError));
-    }
-    case 89: { // rondpoint:uniffi_rondpoint_fn_func_copie_dictionnaire
+    case 32: { // custom_types:uniffi_uniffi_custom_types_fn_func_get_custom_types_demo
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_func_copie_dictionnaire, aGlobal, aArgs, "uniffi_rondpoint_fn_func_copie_dictionnaire: "_ns, aError));
+      return Some(CallHandler::CallAsync(uniffi_uniffi_custom_types_fn_func_get_custom_types_demo, aGlobal, aArgs, "uniffi_uniffi_custom_types_fn_func_get_custom_types_demo: "_ns, aError));
     }
-    case 90: { // rondpoint:uniffi_rondpoint_fn_func_copie_enumeration
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_func_copie_enumeration, aGlobal, aArgs, "uniffi_rondpoint_fn_func_copie_enumeration: "_ns, aError));
-    }
-    case 91: { // rondpoint:uniffi_rondpoint_fn_func_copie_enumerations
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_func_copie_enumerations, aGlobal, aArgs, "uniffi_rondpoint_fn_func_copie_enumerations: "_ns, aError));
-    }
-    case 92: { // rondpoint:uniffi_rondpoint_fn_func_copie_carte
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_func_copie_carte, aGlobal, aArgs, "uniffi_rondpoint_fn_func_copie_carte: "_ns, aError));
-    }
-    case 93: { // rondpoint:uniffi_rondpoint_fn_func_switcheroo
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingConverter<int8_t>>;
-      return Some(CallHandler::CallAsync(uniffi_rondpoint_fn_func_switcheroo, aGlobal, aArgs, "uniffi_rondpoint_fn_func_switcheroo: "_ns, aError));
-    }
-    case 94: { // sprites:uniffi_sprites_fn_constructor_sprite_new
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_sprites_fn_constructor_sprite_new, aGlobal, aArgs, "uniffi_sprites_fn_constructor_sprite_new: "_ns, aError));
-    }
-    case 95: { // sprites:uniffi_sprites_fn_constructor_sprite_new_relative_to
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_sprites_fn_constructor_sprite_new_relative_to, aGlobal, aArgs, "uniffi_sprites_fn_constructor_sprite_new_relative_to: "_ns, aError));
-    }
-    case 96: { // sprites:uniffi_sprites_fn_method_sprite_get_position
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kSpritesSpritePointerType>>;
-      return Some(CallHandler::CallAsync(uniffi_sprites_fn_method_sprite_get_position, aGlobal, aArgs, "uniffi_sprites_fn_method_sprite_get_position: "_ns, aError));
-    }
-    case 97: { // sprites:uniffi_sprites_fn_method_sprite_move_to
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_sprites_fn_method_sprite_move_to, aGlobal, aArgs, "uniffi_sprites_fn_method_sprite_move_to: "_ns, aError));
-    }
-    case 98: { // sprites:uniffi_sprites_fn_method_sprite_move_by
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_sprites_fn_method_sprite_move_by, aGlobal, aArgs, "uniffi_sprites_fn_method_sprite_move_by: "_ns, aError));
-    }
-    case 99: { // sprites:uniffi_sprites_fn_func_translate
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_sprites_fn_func_translate, aGlobal, aArgs, "uniffi_sprites_fn_func_translate: "_ns, aError));
-    }
-    case 100: { // todolist:uniffi_todolist_fn_constructor_todolist_new
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      return Some(CallHandler::CallAsync(uniffi_todolist_fn_constructor_todolist_new, aGlobal, aArgs, "uniffi_todolist_fn_constructor_todolist_new: "_ns, aError));
-    }
-    case 101: { // todolist:uniffi_todolist_fn_method_todolist_add_item
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_todolist_fn_method_todolist_add_item, aGlobal, aArgs, "uniffi_todolist_fn_method_todolist_add_item: "_ns, aError));
-    }
-    case 102: { // todolist:uniffi_todolist_fn_method_todolist_add_entry
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_todolist_fn_method_todolist_add_entry, aGlobal, aArgs, "uniffi_todolist_fn_method_todolist_add_entry: "_ns, aError));
-    }
-    case 103: { // todolist:uniffi_todolist_fn_method_todolist_get_entries
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      return Some(CallHandler::CallAsync(uniffi_todolist_fn_method_todolist_get_entries, aGlobal, aArgs, "uniffi_todolist_fn_method_todolist_get_entries: "_ns, aError));
-    }
-    case 104: { // todolist:uniffi_todolist_fn_method_todolist_get_items
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      return Some(CallHandler::CallAsync(uniffi_todolist_fn_method_todolist_get_items, aGlobal, aArgs, "uniffi_todolist_fn_method_todolist_get_items: "_ns, aError));
-    }
-    case 105: { // todolist:uniffi_todolist_fn_method_todolist_add_entries
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_todolist_fn_method_todolist_add_entries, aGlobal, aArgs, "uniffi_todolist_fn_method_todolist_add_entries: "_ns, aError));
-    }
-    case 106: { // todolist:uniffi_todolist_fn_method_todolist_add_items
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_todolist_fn_method_todolist_add_items, aGlobal, aArgs, "uniffi_todolist_fn_method_todolist_add_items: "_ns, aError));
-    }
-    case 107: { // todolist:uniffi_todolist_fn_method_todolist_get_last_entry
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      return Some(CallHandler::CallAsync(uniffi_todolist_fn_method_todolist_get_last_entry, aGlobal, aArgs, "uniffi_todolist_fn_method_todolist_get_last_entry: "_ns, aError));
-    }
-    case 108: { // todolist:uniffi_todolist_fn_method_todolist_get_last
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      return Some(CallHandler::CallAsync(uniffi_todolist_fn_method_todolist_get_last, aGlobal, aArgs, "uniffi_todolist_fn_method_todolist_get_last: "_ns, aError));
-    }
-    case 109: { // todolist:uniffi_todolist_fn_method_todolist_get_first
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      return Some(CallHandler::CallAsync(uniffi_todolist_fn_method_todolist_get_first, aGlobal, aArgs, "uniffi_todolist_fn_method_todolist_get_first: "_ns, aError));
-    }
-    case 110: { // todolist:uniffi_todolist_fn_method_todolist_clear_item
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_todolist_fn_method_todolist_clear_item, aGlobal, aArgs, "uniffi_todolist_fn_method_todolist_clear_item: "_ns, aError));
-    }
-    case 111: { // todolist:uniffi_todolist_fn_method_todolist_make_default
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      return Some(CallHandler::CallAsync(uniffi_todolist_fn_method_todolist_make_default, aGlobal, aArgs, "uniffi_todolist_fn_method_todolist_make_default: "_ns, aError));
-    }
-    case 112: { // todolist:uniffi_todolist_fn_func_get_default_list
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_todolist_fn_func_get_default_list, aGlobal, aArgs, "uniffi_todolist_fn_func_get_default_list: "_ns, aError));
-    }
-    case 113: { // todolist:uniffi_todolist_fn_func_set_default_list
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      return Some(CallHandler::CallAsync(uniffi_todolist_fn_func_set_default_list, aGlobal, aArgs, "uniffi_todolist_fn_func_set_default_list: "_ns, aError));
-    }
-    case 114: { // todolist:uniffi_todolist_fn_func_create_entry_with
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_todolist_fn_func_create_entry_with, aGlobal, aArgs, "uniffi_todolist_fn_func_create_entry_with: "_ns, aError));
-    }
-    case 115: { // fixture_callbacks:uniffi_fixture_callbacks_fn_func_log_even_numbers
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_fixture_callbacks_fn_func_log_even_numbers, aGlobal, aArgs, "uniffi_fixture_callbacks_fn_func_log_even_numbers: "_ns, aError));
-    }
-    case 116: { // fixture_callbacks:uniffi_fixture_callbacks_fn_func_log_even_numbers_main_thread
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_fixture_callbacks_fn_func_log_even_numbers_main_thread, aGlobal, aArgs, "uniffi_fixture_callbacks_fn_func_log_even_numbers_main_thread: "_ns, aError));
-    }
-    case 117: { // custom_types:uniffi_custom_types_fn_func_get_custom_types_demo
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_custom_types_fn_func_get_custom_types_demo, aGlobal, aArgs, "uniffi_custom_types_fn_func_get_custom_types_demo: "_ns, aError));
-    }
-    case 118: { // external_types:uniffi_external_types_fn_func_gradient
+    case 33: { // external_types:uniffi_uniffi_fixture_external_types_fn_func_gradient
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingConverter<RustBuffer>>;
-      return Some(CallHandler::CallAsync(uniffi_external_types_fn_func_gradient, aGlobal, aArgs, "uniffi_external_types_fn_func_gradient: "_ns, aError));
+      return Some(CallHandler::CallAsync(uniffi_uniffi_fixture_external_types_fn_func_gradient, aGlobal, aArgs, "uniffi_uniffi_fixture_external_types_fn_func_gradient: "_ns, aError));
+    }
+    case 34: { // external_types:uniffi_uniffi_fixture_external_types_fn_func_intersection
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_fixture_external_types_fn_func_intersection, aGlobal, aArgs, "uniffi_uniffi_fixture_external_types_fn_func_intersection: "_ns, aError));
+    }
+    case 35: { // fixture_callbacks:uniffi_uniffi_fixture_callbacks_fn_func_log_even_numbers
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_fixture_callbacks_fn_func_log_even_numbers, aGlobal, aArgs, "uniffi_uniffi_fixture_callbacks_fn_func_log_even_numbers: "_ns, aError));
+    }
+    case 36: { // fixture_callbacks:uniffi_uniffi_fixture_callbacks_fn_func_log_even_numbers_main_thread
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_fixture_callbacks_fn_func_log_even_numbers_main_thread, aGlobal, aArgs, "uniffi_uniffi_fixture_callbacks_fn_func_log_even_numbers_main_thread: "_ns, aError));
+    }
+    case 37: { // geometry:uniffi_uniffi_geometry_fn_func_gradient
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_geometry_fn_func_gradient, aGlobal, aArgs, "uniffi_uniffi_geometry_fn_func_gradient: "_ns, aError));
+    }
+    case 38: { // geometry:uniffi_uniffi_geometry_fn_func_intersection
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_geometry_fn_func_intersection, aGlobal, aArgs, "uniffi_uniffi_geometry_fn_func_intersection: "_ns, aError));
+    }
+    case 39: { // rondpoint:uniffi_uniffi_rondpoint_fn_constructor_optionneur_new
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_constructor_optionneur_new, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_constructor_optionneur_new: "_ns, aError));
+    }
+    case 40: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_boolean
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int8_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_boolean, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_boolean: "_ns, aError));
+    }
+    case 41: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_enum
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_enum, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_enum: "_ns, aError));
+    }
+    case 42: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_f32
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<float>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<float>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_f32, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_f32: "_ns, aError));
+    }
+    case 43: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_f64
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<double>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_f64, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_f64: "_ns, aError));
+    }
+    case 44: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i16_dec
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int16_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i16_dec, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i16_dec: "_ns, aError));
+    }
+    case 45: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i16_hex
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int16_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i16_hex, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i16_hex: "_ns, aError));
+    }
+    case 46: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i32_dec
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int32_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i32_dec, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i32_dec: "_ns, aError));
+    }
+    case 47: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i32_hex
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int32_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i32_hex, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i32_hex: "_ns, aError));
+    }
+    case 48: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i64_dec
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int64_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i64_dec, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i64_dec: "_ns, aError));
+    }
+    case 49: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i64_hex
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int64_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i64_hex, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i64_hex: "_ns, aError));
+    }
+    case 50: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i8_dec
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int8_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i8_dec, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i8_dec: "_ns, aError));
+    }
+    case 51: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i8_hex
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int8_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i8_hex, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i8_hex: "_ns, aError));
+    }
+    case 52: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_null
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_null, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_null: "_ns, aError));
+    }
+    case 53: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_sequence
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_sequence, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_sequence: "_ns, aError));
+    }
+    case 54: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_string
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_string, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_string: "_ns, aError));
+    }
+    case 55: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u16_dec
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint16_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u16_dec, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u16_dec: "_ns, aError));
+    }
+    case 56: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u16_hex
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint16_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u16_hex, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u16_hex: "_ns, aError));
+    }
+    case 57: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_dec
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint32_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_dec, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_dec: "_ns, aError));
+    }
+    case 58: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_hex
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint32_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_hex, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_hex: "_ns, aError));
+    }
+    case 59: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_oct
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint32_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_oct, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_oct: "_ns, aError));
+    }
+    case 60: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u64_dec
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint64_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u64_dec, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u64_dec: "_ns, aError));
+    }
+    case 61: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u64_hex
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint64_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u64_hex, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u64_hex: "_ns, aError));
+    }
+    case 62: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u8_dec
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint8_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u8_dec, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u8_dec: "_ns, aError));
+    }
+    case 63: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u8_hex
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint8_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u8_hex, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u8_hex: "_ns, aError));
+    }
+    case 64: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_zero
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_zero, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_zero: "_ns, aError));
+    }
+    case 65: { // rondpoint:uniffi_uniffi_rondpoint_fn_constructor_retourneur_new
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_constructor_retourneur_new, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_constructor_retourneur_new: "_ns, aError));
+    }
+    case 66: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_boolean
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int8_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_boolean, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_boolean: "_ns, aError));
+    }
+    case 67: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_double
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<double>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_double, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_double: "_ns, aError));
+    }
+    case 68: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_float
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<float>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<float>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_float, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_float: "_ns, aError));
+    }
+    case 69: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i16
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int16_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int16_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i16, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i16: "_ns, aError));
+    }
+    case 70: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i32
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int32_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int32_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i32, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i32: "_ns, aError));
+    }
+    case 71: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i64
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int64_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int64_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i64, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i64: "_ns, aError));
+    }
+    case 72: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i8
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int8_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i8, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i8: "_ns, aError));
+    }
+    case 73: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_nombres
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_nombres, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_nombres: "_ns, aError));
+    }
+    case 74: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_nombres_signes
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_nombres_signes, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_nombres_signes: "_ns, aError));
+    }
+    case 75: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_optionneur_dictionnaire
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_optionneur_dictionnaire, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_optionneur_dictionnaire: "_ns, aError));
+    }
+    case 76: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_string
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_string, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_string: "_ns, aError));
+    }
+    case 77: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u16
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint16_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint16_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u16, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u16: "_ns, aError));
+    }
+    case 78: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u32
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint32_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u32, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u32: "_ns, aError));
+    }
+    case 79: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u64
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint64_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u64, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u64: "_ns, aError));
+    }
+    case 80: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u8
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint8_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint8_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u8, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u8: "_ns, aError));
+    }
+    case 81: { // rondpoint:uniffi_uniffi_rondpoint_fn_constructor_stringifier_new
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRondpointStringifierPointerType>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_constructor_stringifier_new, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_constructor_stringifier_new: "_ns, aError));
+    }
+    case 82: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_boolean
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int8_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_boolean, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_boolean: "_ns, aError));
+    }
+    case 83: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_double
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<double>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_double, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_double: "_ns, aError));
+    }
+    case 84: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_float
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<float>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_float, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_float: "_ns, aError));
+    }
+    case 85: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i16
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int16_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i16, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i16: "_ns, aError));
+    }
+    case 86: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i32
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int32_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i32, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i32: "_ns, aError));
+    }
+    case 87: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i64
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int64_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i64, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i64: "_ns, aError));
+    }
+    case 88: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i8
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int8_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i8, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i8: "_ns, aError));
+    }
+    case 89: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u16
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint16_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u16, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u16: "_ns, aError));
+    }
+    case 90: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u32
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint32_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u32, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u32: "_ns, aError));
+    }
+    case 91: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u64
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint64_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u64, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u64: "_ns, aError));
+    }
+    case 92: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u8
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint8_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u8, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u8: "_ns, aError));
+    }
+    case 93: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_well_known_string
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_method_stringifier_well_known_string, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_method_stringifier_well_known_string: "_ns, aError));
+    }
+    case 94: { // rondpoint:uniffi_uniffi_rondpoint_fn_func_copie_carte
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_func_copie_carte, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_func_copie_carte: "_ns, aError));
+    }
+    case 95: { // rondpoint:uniffi_uniffi_rondpoint_fn_func_copie_dictionnaire
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_func_copie_dictionnaire, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_func_copie_dictionnaire: "_ns, aError));
+    }
+    case 96: { // rondpoint:uniffi_uniffi_rondpoint_fn_func_copie_enumeration
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_func_copie_enumeration, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_func_copie_enumeration: "_ns, aError));
+    }
+    case 97: { // rondpoint:uniffi_uniffi_rondpoint_fn_func_copie_enumerations
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_func_copie_enumerations, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_func_copie_enumerations: "_ns, aError));
+    }
+    case 98: { // rondpoint:uniffi_uniffi_rondpoint_fn_func_switcheroo
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingConverter<int8_t>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_rondpoint_fn_func_switcheroo, aGlobal, aArgs, "uniffi_uniffi_rondpoint_fn_func_switcheroo: "_ns, aError));
+    }
+    case 99: { // sprites:uniffi_uniffi_sprites_fn_constructor_sprite_new
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_sprites_fn_constructor_sprite_new, aGlobal, aArgs, "uniffi_uniffi_sprites_fn_constructor_sprite_new: "_ns, aError));
+    }
+    case 100: { // sprites:uniffi_uniffi_sprites_fn_constructor_sprite_new_relative_to
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_sprites_fn_constructor_sprite_new_relative_to, aGlobal, aArgs, "uniffi_uniffi_sprites_fn_constructor_sprite_new_relative_to: "_ns, aError));
+    }
+    case 101: { // sprites:uniffi_uniffi_sprites_fn_method_sprite_get_position
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kSpritesSpritePointerType>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_sprites_fn_method_sprite_get_position, aGlobal, aArgs, "uniffi_uniffi_sprites_fn_method_sprite_get_position: "_ns, aError));
+    }
+    case 102: { // sprites:uniffi_uniffi_sprites_fn_method_sprite_move_by
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_sprites_fn_method_sprite_move_by, aGlobal, aArgs, "uniffi_uniffi_sprites_fn_method_sprite_move_by: "_ns, aError));
+    }
+    case 103: { // sprites:uniffi_uniffi_sprites_fn_method_sprite_move_to
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_sprites_fn_method_sprite_move_to, aGlobal, aArgs, "uniffi_uniffi_sprites_fn_method_sprite_move_to: "_ns, aError));
+    }
+    case 104: { // sprites:uniffi_uniffi_sprites_fn_func_translate
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_sprites_fn_func_translate, aGlobal, aArgs, "uniffi_uniffi_sprites_fn_func_translate: "_ns, aError));
+    }
+    case 105: { // todolist:uniffi_uniffi_todolist_fn_constructor_todolist_new
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_todolist_fn_constructor_todolist_new, aGlobal, aArgs, "uniffi_uniffi_todolist_fn_constructor_todolist_new: "_ns, aError));
+    }
+    case 106: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_add_entries
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_todolist_fn_method_todolist_add_entries, aGlobal, aArgs, "uniffi_uniffi_todolist_fn_method_todolist_add_entries: "_ns, aError));
+    }
+    case 107: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_add_entry
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_todolist_fn_method_todolist_add_entry, aGlobal, aArgs, "uniffi_uniffi_todolist_fn_method_todolist_add_entry: "_ns, aError));
+    }
+    case 108: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_add_item
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_todolist_fn_method_todolist_add_item, aGlobal, aArgs, "uniffi_uniffi_todolist_fn_method_todolist_add_item: "_ns, aError));
+    }
+    case 109: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_add_items
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_todolist_fn_method_todolist_add_items, aGlobal, aArgs, "uniffi_uniffi_todolist_fn_method_todolist_add_items: "_ns, aError));
+    }
+    case 110: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_clear_item
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_todolist_fn_method_todolist_clear_item, aGlobal, aArgs, "uniffi_uniffi_todolist_fn_method_todolist_clear_item: "_ns, aError));
+    }
+    case 111: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_get_entries
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_todolist_fn_method_todolist_get_entries, aGlobal, aArgs, "uniffi_uniffi_todolist_fn_method_todolist_get_entries: "_ns, aError));
+    }
+    case 112: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_get_first
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_todolist_fn_method_todolist_get_first, aGlobal, aArgs, "uniffi_uniffi_todolist_fn_method_todolist_get_first: "_ns, aError));
+    }
+    case 113: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_get_items
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_todolist_fn_method_todolist_get_items, aGlobal, aArgs, "uniffi_uniffi_todolist_fn_method_todolist_get_items: "_ns, aError));
+    }
+    case 114: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_get_last
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_todolist_fn_method_todolist_get_last, aGlobal, aArgs, "uniffi_uniffi_todolist_fn_method_todolist_get_last: "_ns, aError));
+    }
+    case 115: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_get_last_entry
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_todolist_fn_method_todolist_get_last_entry, aGlobal, aArgs, "uniffi_uniffi_todolist_fn_method_todolist_get_last_entry: "_ns, aError));
+    }
+    case 116: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_make_default
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_todolist_fn_method_todolist_make_default, aGlobal, aArgs, "uniffi_uniffi_todolist_fn_method_todolist_make_default: "_ns, aError));
+    }
+    case 117: { // todolist:uniffi_uniffi_todolist_fn_func_create_entry_with
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_todolist_fn_func_create_entry_with, aGlobal, aArgs, "uniffi_uniffi_todolist_fn_func_create_entry_with: "_ns, aError));
+    }
+    case 118: { // todolist:uniffi_uniffi_todolist_fn_func_get_default_list
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_todolist_fn_func_get_default_list, aGlobal, aArgs, "uniffi_uniffi_todolist_fn_func_get_default_list: "_ns, aError));
+    }
+    case 119: { // todolist:uniffi_uniffi_todolist_fn_func_set_default_list
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
+      return Some(CallHandler::CallAsync(uniffi_uniffi_todolist_fn_func_set_default_list, aGlobal, aArgs, "uniffi_uniffi_todolist_fn_func_set_default_list: "_ns, aError));
     }
   }
   return Nothing();
@@ -547,459 +552,464 @@ Maybe<already_AddRefed<Promise>> UniFFIFixturesCallAsync(const GlobalObject& aGl
 
 bool UniFFIFixturesCallSync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<ScaffoldingType>& aArgs, RootedDictionary<UniFFIScaffoldingCallResult>& aReturnValue, ErrorResult& aError) {
   switch (aId) {
-    case 28: { // geometry:uniffi_geometry_fn_func_gradient
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_geometry_fn_func_gradient, aGlobal, aArgs, aReturnValue, "uniffi_geometry_fn_func_gradient: "_ns, aError);
-      return true;
-    }
-    case 29: { // geometry:uniffi_geometry_fn_func_intersection
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_geometry_fn_func_intersection, aGlobal, aArgs, aReturnValue, "uniffi_geometry_fn_func_intersection: "_ns, aError);
-      return true;
-    }
-    case 30: { // arithmetic:uniffi_arithmetic_fn_func_add
+    case 28: { // arithmetic:uniffi_arithmetical_fn_func_add
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>>;
-      CallHandler::CallSync(uniffi_arithmetic_fn_func_add, aGlobal, aArgs, aReturnValue, "uniffi_arithmetic_fn_func_add: "_ns, aError);
+      CallHandler::CallSync(uniffi_arithmetical_fn_func_add, aGlobal, aArgs, aReturnValue, "uniffi_arithmetical_fn_func_add: "_ns, aError);
       return true;
     }
-    case 31: { // arithmetic:uniffi_arithmetic_fn_func_sub
+    case 29: { // arithmetic:uniffi_arithmetical_fn_func_div
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>>;
-      CallHandler::CallSync(uniffi_arithmetic_fn_func_sub, aGlobal, aArgs, aReturnValue, "uniffi_arithmetic_fn_func_sub: "_ns, aError);
+      CallHandler::CallSync(uniffi_arithmetical_fn_func_div, aGlobal, aArgs, aReturnValue, "uniffi_arithmetical_fn_func_div: "_ns, aError);
       return true;
     }
-    case 32: { // arithmetic:uniffi_arithmetic_fn_func_div
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>>;
-      CallHandler::CallSync(uniffi_arithmetic_fn_func_div, aGlobal, aArgs, aReturnValue, "uniffi_arithmetic_fn_func_div: "_ns, aError);
-      return true;
-    }
-    case 33: { // arithmetic:uniffi_arithmetic_fn_func_equal
+    case 30: { // arithmetic:uniffi_arithmetical_fn_func_equal
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>>;
-      CallHandler::CallSync(uniffi_arithmetic_fn_func_equal, aGlobal, aArgs, aReturnValue, "uniffi_arithmetic_fn_func_equal: "_ns, aError);
+      CallHandler::CallSync(uniffi_arithmetical_fn_func_equal, aGlobal, aArgs, aReturnValue, "uniffi_arithmetical_fn_func_equal: "_ns, aError);
       return true;
     }
-    case 34: { // rondpoint:uniffi_rondpoint_fn_constructor_retourneur_new
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_constructor_retourneur_new, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_constructor_retourneur_new: "_ns, aError);
+    case 31: { // arithmetic:uniffi_arithmetical_fn_func_sub
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<uint64_t>>;
+      CallHandler::CallSync(uniffi_arithmetical_fn_func_sub, aGlobal, aArgs, aReturnValue, "uniffi_arithmetical_fn_func_sub: "_ns, aError);
       return true;
     }
-    case 35: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_i8
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int8_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_retourneur_identique_i8, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_retourneur_identique_i8: "_ns, aError);
-      return true;
-    }
-    case 36: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_u8
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint8_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint8_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_retourneur_identique_u8, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_retourneur_identique_u8: "_ns, aError);
-      return true;
-    }
-    case 37: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_i16
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int16_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int16_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_retourneur_identique_i16, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_retourneur_identique_i16: "_ns, aError);
-      return true;
-    }
-    case 38: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_u16
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint16_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint16_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_retourneur_identique_u16, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_retourneur_identique_u16: "_ns, aError);
-      return true;
-    }
-    case 39: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_i32
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int32_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int32_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_retourneur_identique_i32, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_retourneur_identique_i32: "_ns, aError);
-      return true;
-    }
-    case 40: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_u32
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint32_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_retourneur_identique_u32, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_retourneur_identique_u32: "_ns, aError);
-      return true;
-    }
-    case 41: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_i64
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int64_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int64_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_retourneur_identique_i64, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_retourneur_identique_i64: "_ns, aError);
-      return true;
-    }
-    case 42: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_u64
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint64_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_retourneur_identique_u64, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_retourneur_identique_u64: "_ns, aError);
-      return true;
-    }
-    case 43: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_float
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<float>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<float>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_retourneur_identique_float, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_retourneur_identique_float: "_ns, aError);
-      return true;
-    }
-    case 44: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_double
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<double>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_retourneur_identique_double, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_retourneur_identique_double: "_ns, aError);
-      return true;
-    }
-    case 45: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_boolean
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int8_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_retourneur_identique_boolean, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_retourneur_identique_boolean: "_ns, aError);
-      return true;
-    }
-    case 46: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_string
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_retourneur_identique_string, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_retourneur_identique_string: "_ns, aError);
-      return true;
-    }
-    case 47: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_nombres_signes
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_retourneur_identique_nombres_signes, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_retourneur_identique_nombres_signes: "_ns, aError);
-      return true;
-    }
-    case 48: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_nombres
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_retourneur_identique_nombres, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_retourneur_identique_nombres: "_ns, aError);
-      return true;
-    }
-    case 49: { // rondpoint:uniffi_rondpoint_fn_method_retourneur_identique_optionneur_dictionnaire
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_retourneur_identique_optionneur_dictionnaire, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_retourneur_identique_optionneur_dictionnaire: "_ns, aError);
-      return true;
-    }
-    case 50: { // rondpoint:uniffi_rondpoint_fn_constructor_stringifier_new
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRondpointStringifierPointerType>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_constructor_stringifier_new, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_constructor_stringifier_new: "_ns, aError);
-      return true;
-    }
-    case 51: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_well_known_string
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_stringifier_well_known_string, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_stringifier_well_known_string: "_ns, aError);
-      return true;
-    }
-    case 52: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_i8
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int8_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_stringifier_to_string_i8, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_stringifier_to_string_i8: "_ns, aError);
-      return true;
-    }
-    case 53: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_u8
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint8_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_stringifier_to_string_u8, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_stringifier_to_string_u8: "_ns, aError);
-      return true;
-    }
-    case 54: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_i16
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int16_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_stringifier_to_string_i16, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_stringifier_to_string_i16: "_ns, aError);
-      return true;
-    }
-    case 55: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_u16
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint16_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_stringifier_to_string_u16, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_stringifier_to_string_u16: "_ns, aError);
-      return true;
-    }
-    case 56: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_i32
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int32_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_stringifier_to_string_i32, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_stringifier_to_string_i32: "_ns, aError);
-      return true;
-    }
-    case 57: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_u32
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint32_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_stringifier_to_string_u32, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_stringifier_to_string_u32: "_ns, aError);
-      return true;
-    }
-    case 58: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_i64
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int64_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_stringifier_to_string_i64, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_stringifier_to_string_i64: "_ns, aError);
-      return true;
-    }
-    case 59: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_u64
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint64_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_stringifier_to_string_u64, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_stringifier_to_string_u64: "_ns, aError);
-      return true;
-    }
-    case 60: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_float
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<float>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_stringifier_to_string_float, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_stringifier_to_string_float: "_ns, aError);
-      return true;
-    }
-    case 61: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_double
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<double>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_stringifier_to_string_double, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_stringifier_to_string_double: "_ns, aError);
-      return true;
-    }
-    case 62: { // rondpoint:uniffi_rondpoint_fn_method_stringifier_to_string_boolean
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int8_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_stringifier_to_string_boolean, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_stringifier_to_string_boolean: "_ns, aError);
-      return true;
-    }
-    case 63: { // rondpoint:uniffi_rondpoint_fn_constructor_optionneur_new
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_constructor_optionneur_new, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_constructor_optionneur_new: "_ns, aError);
-      return true;
-    }
-    case 64: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_boolean
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int8_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_boolean, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_boolean: "_ns, aError);
-      return true;
-    }
-    case 65: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_string
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_string, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_string: "_ns, aError);
-      return true;
-    }
-    case 66: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_sequence
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_sequence, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_sequence: "_ns, aError);
-      return true;
-    }
-    case 67: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_null
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_null, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_null: "_ns, aError);
-      return true;
-    }
-    case 68: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_zero
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_zero, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_zero: "_ns, aError);
-      return true;
-    }
-    case 69: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_u8_dec
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint8_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_u8_dec, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_u8_dec: "_ns, aError);
-      return true;
-    }
-    case 70: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_i8_dec
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int8_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_i8_dec, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_i8_dec: "_ns, aError);
-      return true;
-    }
-    case 71: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_u16_dec
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint16_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_u16_dec, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_u16_dec: "_ns, aError);
-      return true;
-    }
-    case 72: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_i16_dec
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int16_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_i16_dec, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_i16_dec: "_ns, aError);
-      return true;
-    }
-    case 73: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_u32_dec
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint32_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_u32_dec, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_u32_dec: "_ns, aError);
-      return true;
-    }
-    case 74: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_i32_dec
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int32_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_i32_dec, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_i32_dec: "_ns, aError);
-      return true;
-    }
-    case 75: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_u64_dec
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint64_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_u64_dec, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_u64_dec: "_ns, aError);
-      return true;
-    }
-    case 76: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_i64_dec
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int64_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_i64_dec, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_i64_dec: "_ns, aError);
-      return true;
-    }
-    case 77: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_u8_hex
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint8_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_u8_hex, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_u8_hex: "_ns, aError);
-      return true;
-    }
-    case 78: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_i8_hex
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int8_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_i8_hex, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_i8_hex: "_ns, aError);
-      return true;
-    }
-    case 79: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_u16_hex
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint16_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_u16_hex, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_u16_hex: "_ns, aError);
-      return true;
-    }
-    case 80: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_i16_hex
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int16_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_i16_hex, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_i16_hex: "_ns, aError);
-      return true;
-    }
-    case 81: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_u32_hex
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint32_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_u32_hex, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_u32_hex: "_ns, aError);
-      return true;
-    }
-    case 82: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_i32_hex
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int32_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_i32_hex, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_i32_hex: "_ns, aError);
-      return true;
-    }
-    case 83: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_u64_hex
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint64_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_u64_hex, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_u64_hex: "_ns, aError);
-      return true;
-    }
-    case 84: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_i64_hex
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int64_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_i64_hex, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_i64_hex: "_ns, aError);
-      return true;
-    }
-    case 85: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_u32_oct
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint32_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_u32_oct, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_u32_oct: "_ns, aError);
-      return true;
-    }
-    case 86: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_f32
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<float>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<float>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_f32, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_f32: "_ns, aError);
-      return true;
-    }
-    case 87: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_f64
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<double>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_f64, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_f64: "_ns, aError);
-      return true;
-    }
-    case 88: { // rondpoint:uniffi_rondpoint_fn_method_optionneur_sinon_enum
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_method_optionneur_sinon_enum, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_method_optionneur_sinon_enum: "_ns, aError);
-      return true;
-    }
-    case 89: { // rondpoint:uniffi_rondpoint_fn_func_copie_dictionnaire
+    case 32: { // custom_types:uniffi_uniffi_custom_types_fn_func_get_custom_types_demo
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_func_copie_dictionnaire, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_func_copie_dictionnaire: "_ns, aError);
+      CallHandler::CallSync(uniffi_uniffi_custom_types_fn_func_get_custom_types_demo, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_custom_types_fn_func_get_custom_types_demo: "_ns, aError);
       return true;
     }
-    case 90: { // rondpoint:uniffi_rondpoint_fn_func_copie_enumeration
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_func_copie_enumeration, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_func_copie_enumeration: "_ns, aError);
-      return true;
-    }
-    case 91: { // rondpoint:uniffi_rondpoint_fn_func_copie_enumerations
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_func_copie_enumerations, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_func_copie_enumerations: "_ns, aError);
-      return true;
-    }
-    case 92: { // rondpoint:uniffi_rondpoint_fn_func_copie_carte
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_func_copie_carte, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_func_copie_carte: "_ns, aError);
-      return true;
-    }
-    case 93: { // rondpoint:uniffi_rondpoint_fn_func_switcheroo
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingConverter<int8_t>>;
-      CallHandler::CallSync(uniffi_rondpoint_fn_func_switcheroo, aGlobal, aArgs, aReturnValue, "uniffi_rondpoint_fn_func_switcheroo: "_ns, aError);
-      return true;
-    }
-    case 94: { // sprites:uniffi_sprites_fn_constructor_sprite_new
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_sprites_fn_constructor_sprite_new, aGlobal, aArgs, aReturnValue, "uniffi_sprites_fn_constructor_sprite_new: "_ns, aError);
-      return true;
-    }
-    case 95: { // sprites:uniffi_sprites_fn_constructor_sprite_new_relative_to
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_sprites_fn_constructor_sprite_new_relative_to, aGlobal, aArgs, aReturnValue, "uniffi_sprites_fn_constructor_sprite_new_relative_to: "_ns, aError);
-      return true;
-    }
-    case 96: { // sprites:uniffi_sprites_fn_method_sprite_get_position
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kSpritesSpritePointerType>>;
-      CallHandler::CallSync(uniffi_sprites_fn_method_sprite_get_position, aGlobal, aArgs, aReturnValue, "uniffi_sprites_fn_method_sprite_get_position: "_ns, aError);
-      return true;
-    }
-    case 97: { // sprites:uniffi_sprites_fn_method_sprite_move_to
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_sprites_fn_method_sprite_move_to, aGlobal, aArgs, aReturnValue, "uniffi_sprites_fn_method_sprite_move_to: "_ns, aError);
-      return true;
-    }
-    case 98: { // sprites:uniffi_sprites_fn_method_sprite_move_by
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_sprites_fn_method_sprite_move_by, aGlobal, aArgs, aReturnValue, "uniffi_sprites_fn_method_sprite_move_by: "_ns, aError);
-      return true;
-    }
-    case 99: { // sprites:uniffi_sprites_fn_func_translate
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_sprites_fn_func_translate, aGlobal, aArgs, aReturnValue, "uniffi_sprites_fn_func_translate: "_ns, aError);
-      return true;
-    }
-    case 100: { // todolist:uniffi_todolist_fn_constructor_todolist_new
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      CallHandler::CallSync(uniffi_todolist_fn_constructor_todolist_new, aGlobal, aArgs, aReturnValue, "uniffi_todolist_fn_constructor_todolist_new: "_ns, aError);
-      return true;
-    }
-    case 101: { // todolist:uniffi_todolist_fn_method_todolist_add_item
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_todolist_fn_method_todolist_add_item, aGlobal, aArgs, aReturnValue, "uniffi_todolist_fn_method_todolist_add_item: "_ns, aError);
-      return true;
-    }
-    case 102: { // todolist:uniffi_todolist_fn_method_todolist_add_entry
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_todolist_fn_method_todolist_add_entry, aGlobal, aArgs, aReturnValue, "uniffi_todolist_fn_method_todolist_add_entry: "_ns, aError);
-      return true;
-    }
-    case 103: { // todolist:uniffi_todolist_fn_method_todolist_get_entries
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      CallHandler::CallSync(uniffi_todolist_fn_method_todolist_get_entries, aGlobal, aArgs, aReturnValue, "uniffi_todolist_fn_method_todolist_get_entries: "_ns, aError);
-      return true;
-    }
-    case 104: { // todolist:uniffi_todolist_fn_method_todolist_get_items
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      CallHandler::CallSync(uniffi_todolist_fn_method_todolist_get_items, aGlobal, aArgs, aReturnValue, "uniffi_todolist_fn_method_todolist_get_items: "_ns, aError);
-      return true;
-    }
-    case 105: { // todolist:uniffi_todolist_fn_method_todolist_add_entries
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_todolist_fn_method_todolist_add_entries, aGlobal, aArgs, aReturnValue, "uniffi_todolist_fn_method_todolist_add_entries: "_ns, aError);
-      return true;
-    }
-    case 106: { // todolist:uniffi_todolist_fn_method_todolist_add_items
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_todolist_fn_method_todolist_add_items, aGlobal, aArgs, aReturnValue, "uniffi_todolist_fn_method_todolist_add_items: "_ns, aError);
-      return true;
-    }
-    case 107: { // todolist:uniffi_todolist_fn_method_todolist_get_last_entry
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      CallHandler::CallSync(uniffi_todolist_fn_method_todolist_get_last_entry, aGlobal, aArgs, aReturnValue, "uniffi_todolist_fn_method_todolist_get_last_entry: "_ns, aError);
-      return true;
-    }
-    case 108: { // todolist:uniffi_todolist_fn_method_todolist_get_last
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      CallHandler::CallSync(uniffi_todolist_fn_method_todolist_get_last, aGlobal, aArgs, aReturnValue, "uniffi_todolist_fn_method_todolist_get_last: "_ns, aError);
-      return true;
-    }
-    case 109: { // todolist:uniffi_todolist_fn_method_todolist_get_first
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      CallHandler::CallSync(uniffi_todolist_fn_method_todolist_get_first, aGlobal, aArgs, aReturnValue, "uniffi_todolist_fn_method_todolist_get_first: "_ns, aError);
-      return true;
-    }
-    case 110: { // todolist:uniffi_todolist_fn_method_todolist_clear_item
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_todolist_fn_method_todolist_clear_item, aGlobal, aArgs, aReturnValue, "uniffi_todolist_fn_method_todolist_clear_item: "_ns, aError);
-      return true;
-    }
-    case 111: { // todolist:uniffi_todolist_fn_method_todolist_make_default
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      CallHandler::CallSync(uniffi_todolist_fn_method_todolist_make_default, aGlobal, aArgs, aReturnValue, "uniffi_todolist_fn_method_todolist_make_default: "_ns, aError);
-      return true;
-    }
-    case 112: { // todolist:uniffi_todolist_fn_func_get_default_list
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_todolist_fn_func_get_default_list, aGlobal, aArgs, aReturnValue, "uniffi_todolist_fn_func_get_default_list: "_ns, aError);
-      return true;
-    }
-    case 113: { // todolist:uniffi_todolist_fn_func_set_default_list
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
-      CallHandler::CallSync(uniffi_todolist_fn_func_set_default_list, aGlobal, aArgs, aReturnValue, "uniffi_todolist_fn_func_set_default_list: "_ns, aError);
-      return true;
-    }
-    case 114: { // todolist:uniffi_todolist_fn_func_create_entry_with
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_todolist_fn_func_create_entry_with, aGlobal, aArgs, aReturnValue, "uniffi_todolist_fn_func_create_entry_with: "_ns, aError);
-      return true;
-    }
-    case 115: { // fixture_callbacks:uniffi_fixture_callbacks_fn_func_log_even_numbers
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_fixture_callbacks_fn_func_log_even_numbers, aGlobal, aArgs, aReturnValue, "uniffi_fixture_callbacks_fn_func_log_even_numbers: "_ns, aError);
-      return true;
-    }
-    case 116: { // fixture_callbacks:uniffi_fixture_callbacks_fn_func_log_even_numbers_main_thread
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_fixture_callbacks_fn_func_log_even_numbers_main_thread, aGlobal, aArgs, aReturnValue, "uniffi_fixture_callbacks_fn_func_log_even_numbers_main_thread: "_ns, aError);
-      return true;
-    }
-    case 117: { // custom_types:uniffi_custom_types_fn_func_get_custom_types_demo
-      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_custom_types_fn_func_get_custom_types_demo, aGlobal, aArgs, aReturnValue, "uniffi_custom_types_fn_func_get_custom_types_demo: "_ns, aError);
-      return true;
-    }
-    case 118: { // external_types:uniffi_external_types_fn_func_gradient
+    case 33: { // external_types:uniffi_uniffi_fixture_external_types_fn_func_gradient
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingConverter<RustBuffer>>;
-      CallHandler::CallSync(uniffi_external_types_fn_func_gradient, aGlobal, aArgs, aReturnValue, "uniffi_external_types_fn_func_gradient: "_ns, aError);
+      CallHandler::CallSync(uniffi_uniffi_fixture_external_types_fn_func_gradient, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_fixture_external_types_fn_func_gradient: "_ns, aError);
+      return true;
+    }
+    case 34: { // external_types:uniffi_uniffi_fixture_external_types_fn_func_intersection
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_fixture_external_types_fn_func_intersection, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_fixture_external_types_fn_func_intersection: "_ns, aError);
+      return true;
+    }
+    case 35: { // fixture_callbacks:uniffi_uniffi_fixture_callbacks_fn_func_log_even_numbers
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_fixture_callbacks_fn_func_log_even_numbers, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_fixture_callbacks_fn_func_log_even_numbers: "_ns, aError);
+      return true;
+    }
+    case 36: { // fixture_callbacks:uniffi_uniffi_fixture_callbacks_fn_func_log_even_numbers_main_thread
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingConverter<uint64_t>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_fixture_callbacks_fn_func_log_even_numbers_main_thread, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_fixture_callbacks_fn_func_log_even_numbers_main_thread: "_ns, aError);
+      return true;
+    }
+    case 37: { // geometry:uniffi_uniffi_geometry_fn_func_gradient
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_geometry_fn_func_gradient, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_geometry_fn_func_gradient: "_ns, aError);
+      return true;
+    }
+    case 38: { // geometry:uniffi_uniffi_geometry_fn_func_intersection
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_geometry_fn_func_intersection, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_geometry_fn_func_intersection: "_ns, aError);
+      return true;
+    }
+    case 39: { // rondpoint:uniffi_uniffi_rondpoint_fn_constructor_optionneur_new
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_constructor_optionneur_new, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_constructor_optionneur_new: "_ns, aError);
+      return true;
+    }
+    case 40: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_boolean
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int8_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_boolean, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_boolean: "_ns, aError);
+      return true;
+    }
+    case 41: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_enum
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_enum, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_enum: "_ns, aError);
+      return true;
+    }
+    case 42: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_f32
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<float>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<float>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_f32, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_f32: "_ns, aError);
+      return true;
+    }
+    case 43: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_f64
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<double>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_f64, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_f64: "_ns, aError);
+      return true;
+    }
+    case 44: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i16_dec
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int16_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i16_dec, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i16_dec: "_ns, aError);
+      return true;
+    }
+    case 45: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i16_hex
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int16_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i16_hex, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i16_hex: "_ns, aError);
+      return true;
+    }
+    case 46: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i32_dec
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int32_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i32_dec, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i32_dec: "_ns, aError);
+      return true;
+    }
+    case 47: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i32_hex
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int32_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i32_hex, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i32_hex: "_ns, aError);
+      return true;
+    }
+    case 48: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i64_dec
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int64_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i64_dec, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i64_dec: "_ns, aError);
+      return true;
+    }
+    case 49: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i64_hex
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int64_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i64_hex, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i64_hex: "_ns, aError);
+      return true;
+    }
+    case 50: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i8_dec
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int8_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i8_dec, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i8_dec: "_ns, aError);
+      return true;
+    }
+    case 51: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i8_hex
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<int8_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i8_hex, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_i8_hex: "_ns, aError);
+      return true;
+    }
+    case 52: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_null
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_null, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_null: "_ns, aError);
+      return true;
+    }
+    case 53: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_sequence
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_sequence, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_sequence: "_ns, aError);
+      return true;
+    }
+    case 54: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_string
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_string, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_string: "_ns, aError);
+      return true;
+    }
+    case 55: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u16_dec
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint16_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u16_dec, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u16_dec: "_ns, aError);
+      return true;
+    }
+    case 56: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u16_hex
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint16_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint16_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u16_hex, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u16_hex: "_ns, aError);
+      return true;
+    }
+    case 57: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_dec
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint32_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_dec, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_dec: "_ns, aError);
+      return true;
+    }
+    case 58: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_hex
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint32_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_hex, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_hex: "_ns, aError);
+      return true;
+    }
+    case 59: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_oct
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint32_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_oct, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u32_oct: "_ns, aError);
+      return true;
+    }
+    case 60: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u64_dec
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint64_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u64_dec, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u64_dec: "_ns, aError);
+      return true;
+    }
+    case 61: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u64_hex
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint64_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u64_hex, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u64_hex: "_ns, aError);
+      return true;
+    }
+    case 62: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u8_dec
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint8_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u8_dec, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u8_dec: "_ns, aError);
+      return true;
+    }
+    case 63: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u8_hex
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint8_t>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<uint8_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u8_hex, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_u8_hex: "_ns, aError);
+      return true;
+    }
+    case 64: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_zero
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointOptionneurPointerType>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_zero, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_optionneur_sinon_zero: "_ns, aError);
+      return true;
+    }
+    case 65: { // rondpoint:uniffi_uniffi_rondpoint_fn_constructor_retourneur_new
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_constructor_retourneur_new, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_constructor_retourneur_new: "_ns, aError);
+      return true;
+    }
+    case 66: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_boolean
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int8_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_boolean, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_boolean: "_ns, aError);
+      return true;
+    }
+    case 67: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_double
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<double>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<double>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_double, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_double: "_ns, aError);
+      return true;
+    }
+    case 68: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_float
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<float>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<float>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_float, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_float: "_ns, aError);
+      return true;
+    }
+    case 69: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i16
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int16_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int16_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i16, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i16: "_ns, aError);
+      return true;
+    }
+    case 70: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i32
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int32_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int32_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i32, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i32: "_ns, aError);
+      return true;
+    }
+    case 71: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i64
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int64_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int64_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i64, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i64: "_ns, aError);
+      return true;
+    }
+    case 72: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i8
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<int8_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i8, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_i8: "_ns, aError);
+      return true;
+    }
+    case 73: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_nombres
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_nombres, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_nombres: "_ns, aError);
+      return true;
+    }
+    case 74: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_nombres_signes
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_nombres_signes, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_nombres_signes: "_ns, aError);
+      return true;
+    }
+    case 75: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_optionneur_dictionnaire
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_optionneur_dictionnaire, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_optionneur_dictionnaire: "_ns, aError);
+      return true;
+    }
+    case 76: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_string
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_string, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_string: "_ns, aError);
+      return true;
+    }
+    case 77: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u16
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint16_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint16_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u16, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u16: "_ns, aError);
+      return true;
+    }
+    case 78: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u32
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint32_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint32_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u32, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u32: "_ns, aError);
+      return true;
+    }
+    case 79: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u64
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint64_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint64_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u64, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u64: "_ns, aError);
+      return true;
+    }
+    case 80: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u8
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<uint8_t>, ScaffoldingObjectConverter<&kRondpointRetourneurPointerType>, ScaffoldingConverter<uint8_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u8, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_retourneur_identique_u8: "_ns, aError);
+      return true;
+    }
+    case 81: { // rondpoint:uniffi_uniffi_rondpoint_fn_constructor_stringifier_new
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRondpointStringifierPointerType>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_constructor_stringifier_new, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_constructor_stringifier_new: "_ns, aError);
+      return true;
+    }
+    case 82: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_boolean
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int8_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_boolean, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_boolean: "_ns, aError);
+      return true;
+    }
+    case 83: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_double
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<double>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_double, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_double: "_ns, aError);
+      return true;
+    }
+    case 84: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_float
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<float>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_float, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_float: "_ns, aError);
+      return true;
+    }
+    case 85: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i16
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int16_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i16, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i16: "_ns, aError);
+      return true;
+    }
+    case 86: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i32
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int32_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i32, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i32: "_ns, aError);
+      return true;
+    }
+    case 87: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i64
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int64_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i64, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i64: "_ns, aError);
+      return true;
+    }
+    case 88: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i8
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<int8_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i8, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_i8: "_ns, aError);
+      return true;
+    }
+    case 89: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u16
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint16_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u16, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u16: "_ns, aError);
+      return true;
+    }
+    case 90: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u32
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint32_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u32, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u32: "_ns, aError);
+      return true;
+    }
+    case 91: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u64
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint64_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u64, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u64: "_ns, aError);
+      return true;
+    }
+    case 92: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u8
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<uint8_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u8, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_stringifier_to_string_u8: "_ns, aError);
+      return true;
+    }
+    case 93: { // rondpoint:uniffi_uniffi_rondpoint_fn_method_stringifier_well_known_string
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRondpointStringifierPointerType>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_method_stringifier_well_known_string, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_method_stringifier_well_known_string: "_ns, aError);
+      return true;
+    }
+    case 94: { // rondpoint:uniffi_uniffi_rondpoint_fn_func_copie_carte
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_func_copie_carte, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_func_copie_carte: "_ns, aError);
+      return true;
+    }
+    case 95: { // rondpoint:uniffi_uniffi_rondpoint_fn_func_copie_dictionnaire
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_func_copie_dictionnaire, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_func_copie_dictionnaire: "_ns, aError);
+      return true;
+    }
+    case 96: { // rondpoint:uniffi_uniffi_rondpoint_fn_func_copie_enumeration
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_func_copie_enumeration, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_func_copie_enumeration: "_ns, aError);
+      return true;
+    }
+    case 97: { // rondpoint:uniffi_uniffi_rondpoint_fn_func_copie_enumerations
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_func_copie_enumerations, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_func_copie_enumerations: "_ns, aError);
+      return true;
+    }
+    case 98: { // rondpoint:uniffi_uniffi_rondpoint_fn_func_switcheroo
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingConverter<int8_t>>;
+      CallHandler::CallSync(uniffi_uniffi_rondpoint_fn_func_switcheroo, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_rondpoint_fn_func_switcheroo: "_ns, aError);
+      return true;
+    }
+    case 99: { // sprites:uniffi_uniffi_sprites_fn_constructor_sprite_new
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_sprites_fn_constructor_sprite_new, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_sprites_fn_constructor_sprite_new: "_ns, aError);
+      return true;
+    }
+    case 100: { // sprites:uniffi_uniffi_sprites_fn_constructor_sprite_new_relative_to
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_sprites_fn_constructor_sprite_new_relative_to, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_sprites_fn_constructor_sprite_new_relative_to: "_ns, aError);
+      return true;
+    }
+    case 101: { // sprites:uniffi_uniffi_sprites_fn_method_sprite_get_position
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kSpritesSpritePointerType>>;
+      CallHandler::CallSync(uniffi_uniffi_sprites_fn_method_sprite_get_position, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_sprites_fn_method_sprite_get_position: "_ns, aError);
+      return true;
+    }
+    case 102: { // sprites:uniffi_uniffi_sprites_fn_method_sprite_move_by
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_sprites_fn_method_sprite_move_by, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_sprites_fn_method_sprite_move_by: "_ns, aError);
+      return true;
+    }
+    case 103: { // sprites:uniffi_uniffi_sprites_fn_method_sprite_move_to
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kSpritesSpritePointerType>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_sprites_fn_method_sprite_move_to, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_sprites_fn_method_sprite_move_to: "_ns, aError);
+      return true;
+    }
+    case 104: { // sprites:uniffi_uniffi_sprites_fn_func_translate
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_sprites_fn_func_translate, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_sprites_fn_func_translate: "_ns, aError);
+      return true;
+    }
+    case 105: { // todolist:uniffi_uniffi_todolist_fn_constructor_todolist_new
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
+      CallHandler::CallSync(uniffi_uniffi_todolist_fn_constructor_todolist_new, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_todolist_fn_constructor_todolist_new: "_ns, aError);
+      return true;
+    }
+    case 106: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_add_entries
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_todolist_fn_method_todolist_add_entries, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_todolist_fn_method_todolist_add_entries: "_ns, aError);
+      return true;
+    }
+    case 107: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_add_entry
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_todolist_fn_method_todolist_add_entry, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_todolist_fn_method_todolist_add_entry: "_ns, aError);
+      return true;
+    }
+    case 108: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_add_item
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_todolist_fn_method_todolist_add_item, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_todolist_fn_method_todolist_add_item: "_ns, aError);
+      return true;
+    }
+    case 109: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_add_items
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_todolist_fn_method_todolist_add_items, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_todolist_fn_method_todolist_add_items: "_ns, aError);
+      return true;
+    }
+    case 110: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_clear_item
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_todolist_fn_method_todolist_clear_item, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_todolist_fn_method_todolist_clear_item: "_ns, aError);
+      return true;
+    }
+    case 111: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_get_entries
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
+      CallHandler::CallSync(uniffi_uniffi_todolist_fn_method_todolist_get_entries, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_todolist_fn_method_todolist_get_entries: "_ns, aError);
+      return true;
+    }
+    case 112: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_get_first
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
+      CallHandler::CallSync(uniffi_uniffi_todolist_fn_method_todolist_get_first, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_todolist_fn_method_todolist_get_first: "_ns, aError);
+      return true;
+    }
+    case 113: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_get_items
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
+      CallHandler::CallSync(uniffi_uniffi_todolist_fn_method_todolist_get_items, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_todolist_fn_method_todolist_get_items: "_ns, aError);
+      return true;
+    }
+    case 114: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_get_last
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
+      CallHandler::CallSync(uniffi_uniffi_todolist_fn_method_todolist_get_last, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_todolist_fn_method_todolist_get_last: "_ns, aError);
+      return true;
+    }
+    case 115: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_get_last_entry
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
+      CallHandler::CallSync(uniffi_uniffi_todolist_fn_method_todolist_get_last_entry, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_todolist_fn_method_todolist_get_last_entry: "_ns, aError);
+      return true;
+    }
+    case 116: { // todolist:uniffi_uniffi_todolist_fn_method_todolist_make_default
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
+      CallHandler::CallSync(uniffi_uniffi_todolist_fn_method_todolist_make_default, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_todolist_fn_method_todolist_make_default: "_ns, aError);
+      return true;
+    }
+    case 117: { // todolist:uniffi_uniffi_todolist_fn_func_create_entry_with
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_todolist_fn_func_create_entry_with, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_todolist_fn_func_create_entry_with: "_ns, aError);
+      return true;
+    }
+    case 118: { // todolist:uniffi_uniffi_todolist_fn_func_get_default_list
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_uniffi_todolist_fn_func_get_default_list, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_todolist_fn_func_get_default_list: "_ns, aError);
+      return true;
+    }
+    case 119: { // todolist:uniffi_uniffi_todolist_fn_func_set_default_list
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kTodolistTodoListPointerType>>;
+      CallHandler::CallSync(uniffi_uniffi_todolist_fn_func_set_default_list, aGlobal, aArgs, aReturnValue, "uniffi_uniffi_todolist_fn_func_set_default_list: "_ns, aError);
       return true;
     }
   }
@@ -1009,16 +1019,16 @@ bool UniFFIFixturesCallSync(const GlobalObject& aGlobal, uint64_t aId, const Seq
 Maybe<already_AddRefed<UniFFIPointer>> UniFFIFixturesReadPointer(const GlobalObject& aGlobal, uint64_t aId, const ArrayBuffer& aArrayBuff, long aPosition, ErrorResult& aError) {
   const UniFFIPointerType* type;
   switch (aId) {
-    case 4: { // rondpoint:Retourneur
+    case 4: { // rondpoint:Optionneur
+      type = &kRondpointOptionneurPointerType;
+      break;
+    }
+    case 5: { // rondpoint:Retourneur
       type = &kRondpointRetourneurPointerType;
       break;
     }
-    case 5: { // rondpoint:Stringifier
+    case 6: { // rondpoint:Stringifier
       type = &kRondpointStringifierPointerType;
-      break;
-    }
-    case 6: { // rondpoint:Optionneur
-      type = &kRondpointOptionneurPointerType;
       break;
     }
     case 7: { // sprites:Sprite
@@ -1038,16 +1048,16 @@ Maybe<already_AddRefed<UniFFIPointer>> UniFFIFixturesReadPointer(const GlobalObj
 bool UniFFIFixturesWritePointer(const GlobalObject& aGlobal, uint64_t aId, const UniFFIPointer& aPtr, const ArrayBuffer& aArrayBuff, long aPosition, ErrorResult& aError) {
   const UniFFIPointerType* type;
   switch (aId) {
-    case 4: { // rondpoint:Retourneur
+    case 4: { // rondpoint:Optionneur
+      type = &kRondpointOptionneurPointerType;
+      break;
+    }
+    case 5: { // rondpoint:Retourneur
       type = &kRondpointRetourneurPointerType;
       break;
     }
-    case 5: { // rondpoint:Stringifier
+    case 6: { // rondpoint:Stringifier
       type = &kRondpointStringifierPointerType;
-      break;
-    }
-    case 6: { // rondpoint:Optionneur
-      type = &kRondpointOptionneurPointerType;
       break;
     }
     case 7: { // sprites:Sprite
