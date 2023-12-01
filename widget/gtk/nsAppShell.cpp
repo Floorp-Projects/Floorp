@@ -160,6 +160,8 @@ gboolean nsAppShell::EventProcessorCallback(GIOChannel* source,
 }
 
 nsAppShell::~nsAppShell() {
+  sAppShell = nullptr;
+
 #ifdef MOZ_ENABLE_DBUS
   StopDBusListening();
 #endif
@@ -332,6 +334,11 @@ void nsAppShell::TermSignalHandler(int signo) {
 }
 
 void nsAppShell::InstallTermSignalHandler() {
+  if (!XRE_IsParentProcess() || PR_GetEnv("MOZ_DISABLE_SIG_HANDLER") ||
+      !sAppShell) {
+    return;
+  }
+
   struct sigaction act = {}, oldact;
   act.sa_handler = TermSignalHandler;
   sigfillset(&act.sa_mask);
@@ -344,7 +351,6 @@ void nsAppShell::InstallTermSignalHandler() {
   }
 
   sigaction(SIGTERM, &act, nullptr);
-  sAppShell = this;
 }
 
 nsresult nsAppShell::Init() {
@@ -446,9 +452,7 @@ nsresult nsAppShell::Init() {
   mTag = g_source_attach(source, nullptr);
   g_source_unref(source);
 
-  if (XRE_IsParentProcess() && !PR_GetEnv("MOZ_DISABLE_SIG_HANDLER")) {
-    InstallTermSignalHandler();
-  }
+  sAppShell = this;
 
   return nsBaseAppShell::Init();
 failed:
@@ -476,15 +480,15 @@ void nsAppShell::ScheduleNativeEventCallback() {
   Unused << write(mPipeFDs[1], buf, 1);
 }
 
+void nsAppShell::ScheduleQuitEvent() {
+  unsigned char buf[] = {QUIT_TOKEN};
+  Unused << write(mPipeFDs[1], buf, 1);
+}
+
 bool nsAppShell::ProcessNextNativeEvent(bool mayWait) {
   if (mSuspendNativeCount) {
     return false;
   }
   bool didProcessEvent = g_main_context_iteration(nullptr, mayWait);
   return didProcessEvent;
-}
-
-void nsAppShell::ScheduleQuitEvent() {
-  unsigned char buf[] = {QUIT_TOKEN};
-  Unused << write(mPipeFDs[1], buf, 1);
 }

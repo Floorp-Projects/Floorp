@@ -114,6 +114,10 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     UNIFIED_SOURCES += [
         "nsGDKErrorHandler.cpp",
     ]
+    LOCAL_INCLUDES += [
+        "/widget",
+        "/widget/gtk",
+    ]
 
 if CONFIG["MOZ_X11"]:
     EXPORTS += ["nsX11ErrorHandler.h"]

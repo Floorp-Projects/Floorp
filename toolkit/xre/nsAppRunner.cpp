@@ -263,6 +263,10 @@
 #  include "mozilla/GfxInfo.h"
 #endif
 
+#ifdef MOZ_WIDGET_GTK
+#  include "nsAppShell.h"
+#endif
+
 extern uint32_t gRestartMode;
 extern void InstallSignalHandlers(const char* ProgramName);
 
@@ -5150,6 +5154,9 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     if (IsWaylandEnabled()) {
       MOZ_UNUSED(WaylandDisplayGet());
     }
+#endif
+#ifdef MOZ_WIDGET_GTK
+    nsAppShell::InstallTermSignalHandler();
 #endif
   }
 
