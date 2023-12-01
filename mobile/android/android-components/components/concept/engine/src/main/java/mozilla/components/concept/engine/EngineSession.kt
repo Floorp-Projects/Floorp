@@ -969,6 +969,18 @@ abstract class EngineSession(
     )
 
     /**
+     * Reports when a product is back in stock.
+     *
+     * @param onResult callback invoked if the engine API returns a valid response.
+     * @param onException callback invoked if there was an error getting the response.
+     */
+    abstract fun reportBackInStock(
+        url: String,
+        onResult: (String) -> Unit,
+        onException: (Throwable) -> Unit,
+    )
+
+    /**
      * Requests the [EngineSession] to translate the current session's contents.
      *
      * @param fromLanguage The BCP 47 language tag that the page should be translated from.

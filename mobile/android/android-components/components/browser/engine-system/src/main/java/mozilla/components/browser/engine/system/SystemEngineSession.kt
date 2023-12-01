@@ -493,6 +493,17 @@ class SystemEngineSession(
     }
 
     /**
+     * See [EngineSession.reportBackInStock]
+     */
+    override fun reportBackInStock(
+        url: String,
+        onResult: (String) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {
+        throw UnsupportedOperationException("Reporting back in stock is not available in this engine")
+    }
+
+    /**
      * See [EngineSession.requestTranslate]
      */
     override fun requestTranslate(
