@@ -150,6 +150,15 @@ const TEST_DATA = [
       },
     ],
   },
+  {
+    selector: "#popover-invoker",
+    attributes: [
+      {
+        attributeName: "popovertarget",
+        links: [{ type: "idref", value: "my-popover" }],
+      },
+    ],
+  },
 ];
 
 requestLongerTimeout(2);

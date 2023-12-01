@@ -217,6 +217,7 @@ const ATTRIBUTE_TYPES = new Map([
   ["insertafter", { WILDCARD: { namespaceURI: XUL_NS, type: TYPE_IDREF } }],
   ["insertbefore", { WILDCARD: { namespaceURI: XUL_NS, type: TYPE_IDREF } }],
   ["observes", { WILDCARD: { namespaceURI: XUL_NS, type: TYPE_IDREF } }],
+  ["popovertarget", { WILDCARD: { namespaceURI: HTML_NS, type: TYPE_IDREF } }],
   ["popup", { WILDCARD: { namespaceURI: XUL_NS, type: TYPE_IDREF } }],
   ["ref", { WILDCARD: { namespaceURI: XUL_NS, type: TYPE_URI } }],
   ["removeelement", { WILDCARD: { namespaceURI: XUL_NS, type: TYPE_IDREF } }],
