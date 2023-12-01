@@ -853,7 +853,7 @@ CookieService::AddNative(const nsACString& aHost, const nsACString& aPath,
   CookieStruct cookieData(nsCString(aName), nsCString(aValue), nsCString(aHost),
                           nsCString(aPath), aExpiry, currentTimeInUsec,
                           Cookie::GenerateUniqueCreationTime(currentTimeInUsec),
-                          aIsHttpOnly, aIsSession, aIsSecure, false, aSameSite,
+                          aIsHttpOnly, aIsSession, aIsSecure, aSameSite,
                           aSameSite, aSchemeMap);
 
   RefPtr<Cookie> cookie = Cookie::Create(cookieData, key.mOriginAttributes);
@@ -1126,21 +1126,6 @@ static void RecordUnicodeTelemetry(const CookieStruct& cookieData) {
   Telemetry::AccumulateCategorical(label);
 }
 
-static void RecordPartitionedTelemetry(const CookieStruct& aCookieData,
-                                       bool aIsForeign) {
-  mozilla::glean::networking::set_cookie.Add(1);
-  if (aCookieData.isPartitioned()) {
-    mozilla::glean::networking::set_cookie_partitioned.AddToNumerator(1);
-  }
-  if (aIsForeign) {
-    mozilla::glean::networking::set_cookie_foreign.AddToNumerator(1);
-  }
-  if (aIsForeign && aCookieData.isPartitioned()) {
-    mozilla::glean::networking::set_cookie_foreign_partitioned.AddToNumerator(
-        1);
-  }
-}
-
 // processes a single cookie, and returns true if there are more cookies
 // to be processed
 bool CookieService::CanSetCookie(
@@ -1213,12 +1198,6 @@ bool CookieService::CanSetCookie(
   }
 
   RecordUnicodeTelemetry(aCookieData);
-
-  // We count SetCookie operations in the parent process only for HTTP set
-  // cookies to prevent double counting.
-  if (XRE_IsParentProcess() || !aFromHttp) {
-    RecordPartitionedTelemetry(aCookieData, aIsForeignAndNotAddon);
-  }
 
   if (!CookieCommons::CheckName(aCookieData)) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
@@ -1526,7 +1505,6 @@ bool CookieService::ParseAttributes(nsIConsoleReportCollector* aCRC,
   static const char kSameSiteLax[] = "lax";
   static const char kSameSiteNone[] = "none";
   static const char kSameSiteStrict[] = "strict";
-  static const char kPartitioned[] = "partitioned";
 
   nsACString::const_char_iterator cookieStart;
   aCookieHeader.BeginReading(cookieStart);
@@ -1579,10 +1557,6 @@ bool CookieService::ParseAttributes(nsIConsoleReportCollector* aCRC,
       // ignore any tokenValue for isSecure; just set the boolean
     } else if (tokenString.LowerCaseEqualsLiteral(kSecure)) {
       aCookieData.isSecure() = true;
-
-      // ignore any tokenValue for isPartitioned; just set the boolean
-    } else if (tokenString.LowerCaseEqualsLiteral(kPartitioned)) {
-      aCookieData.isPartitioned() = true;
 
       // ignore any tokenValue for isHttpOnly (see bug 178993);
       // just set the boolean

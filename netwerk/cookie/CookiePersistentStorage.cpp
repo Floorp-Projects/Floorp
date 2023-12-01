@@ -1695,7 +1695,7 @@ UniquePtr<CookieStruct> CookiePersistentStorage::GetCookieFromRow(
   // Create a new constCookie and assign the data.
   return MakeUnique<CookieStruct>(
       name, value, host, path, expiry, lastAccessed, creationTime, isHttpOnly,
-      false, isSecure, false, sameSite, rawSameSite,
+      false, isSecure, sameSite, rawSameSite,
       static_cast<nsICookie::schemeType>(schemeMap));
 }
 
