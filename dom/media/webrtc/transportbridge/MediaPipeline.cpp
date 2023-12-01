@@ -518,7 +518,6 @@ void MediaPipeline::PacketReceived(const std::string& aTransportId,
   }
 
   MOZ_ASSERT(mRtpState == TransportLayer::TS_OPEN);
-  MOZ_ASSERT(mRtcpState == mRtpState);
 
   if (packet.type() != MediaPacket::RTP) {
     return;
