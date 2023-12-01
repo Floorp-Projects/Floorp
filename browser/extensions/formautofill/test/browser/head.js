@@ -933,6 +933,7 @@ function verifySectionFieldDetails(sections, expectedSectionsInfo) {
           section: "",
           contactType: "",
           addressType: "",
+          credentialType: "",
         },
         ...expectedSection.default,
         ...expectedFieldDetail,

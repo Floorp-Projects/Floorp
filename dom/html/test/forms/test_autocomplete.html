@@ -33,6 +33,14 @@ var values = [
   ["tel-extension", ""],
   ["foobar", ""],
   ["section-blue", ""],
+  [" WEBAUTHN ", "webauthn"],
+
+  // One token + WebAuthn credential type
+  ["on webauthn", ""],
+  ["off webauthn", ""],
+  ["webauthn webauthn", ""],
+  ["username WebAuthn", "username webauthn"],
+  ["current-PASSWORD webauthn", "current-password webauthn"],
 
   // Two tokens
   ["on off", ""],
@@ -56,6 +64,11 @@ var values = [
   ["fax url", ""],
   ["section-blue name", "section-blue name"],
   ["section-blue tel", "section-blue tel"],
+  ["webauthn username", ""],
+
+  // Two tokens + WebAuthn credential type
+  ["fax url webauthn", ""],
+  ["shipping tel webauthn", "shipping tel webauthn"],
 
   // Three tokens
   ["billing invalid tel", ""],
@@ -71,6 +84,11 @@ var values = [
   ["section-blue home address-level2", ""],
   ["section-blue shipping name", "section-blue shipping name"],
   ["section-blue mobile tel", "section-blue mobile tel"],
+  ["shipping webauthn tel", ""],
+
+  // Three tokens + WebAuthn credential type
+  ["invalid mobile tel webauthn", ""],
+  ["section-blue shipping name webauthn", "section-blue shipping name webauthn"],
 
   // Four tokens
   ["billing billing mobile tel", ""],
@@ -78,10 +96,19 @@ var values = [
   ["secti shipping work address-line1", ""],
   ["section-blue shipping home name", ""],
   ["section-blue shipping mobile tel", "section-blue shipping mobile tel"],
+  ["section-blue webauthn mobile tel", ""],
+
+  // Four tokens + WebAuthn credential type
+  ["section-blue shipping home name webauthn", ""],
+  ["section-blue shipping mobile tel webauthn", "section-blue shipping mobile tel webauthn"],
 
   // Five tokens (invalid)
   ["billing billing billing mobile tel", ""],
   ["section-blue section-blue billing mobile tel", ""],
+  ["section-blue section-blue billing webauthn tel", ""],
+
+  // Five tokens + WebAuthn credential type (invalid)
+  ["billing billing billing mobile tel webauthn", ""],
 ];
 
 var types = [undefined, "hidden", "text", "search"]; // Valid types for all non-multiline hints.
