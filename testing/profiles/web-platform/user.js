@@ -92,5 +92,7 @@ user_pref("security.webauth.webauthn_enable_softtoken", true);
 user_pref("security.webauth.webauthn_enable_usbtoken", false);
 // Disable the WebAuthn direct attestation consent prompt.
 user_pref("security.webauth.webauthn_testing_allow_direct_attestation", true);
+// Enable WebAuthn conditional mediation.
+user_pref("security.webauthn.enable_conditional_mediation", true);
 // Disable captive portal service
 user_pref("network.captive-portal-service.enabled", false);
