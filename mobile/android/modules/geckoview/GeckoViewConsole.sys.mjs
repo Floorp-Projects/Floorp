@@ -6,6 +6,14 @@ import { GeckoViewUtils } from "resource://gre/modules/GeckoViewUtils.sys.mjs";
 
 const { debug, warn } = GeckoViewUtils.initLogging("Console");
 
+const lazy = {};
+
+ChromeUtils.defineLazyGetter(
+  lazy,
+  "l10n",
+  () => new Localization(["mobile/android/geckoViewConsole.ftl"], true)
+);
+
 export var GeckoViewConsole = {
   _isEnabled: false,
 
@@ -70,54 +78,37 @@ export var GeckoViewConsole = {
       );
       Services.console.logMessage(consoleMsg);
     } else if (aMessage.level == "trace") {
-      const bundle = Services.strings.createBundle(
-        "chrome://browser/locale/browser.properties"
-      );
       const args = aMessage.arguments;
       const msgDetails = args[0] ?? aMessage;
       const filename = this.abbreviateSourceURL(msgDetails.filename);
       const functionName =
         msgDetails.functionName ||
-        bundle.GetStringFromName("stacktrace.anonymousFunction");
-      const lineNumber = msgDetails.lineNumber;
+        lazy.l10n.formatValueSync("console-stacktrace-anonymous-function");
 
-      let body = bundle.formatStringFromName("stacktrace.outputMessage", [
+      let body = lazy.l10n.formatValueSync("console-stacktrace", {
         filename,
         functionName,
-        lineNumber,
-      ]);
+        lineNumber: msgDetails.lineNumber ?? "",
+      });
       body += "\n";
-      args.forEach(function (aFrame) {
+      for (const aFrame of args) {
         const functionName =
           aFrame.functionName ||
-          bundle.GetStringFromName("stacktrace.anonymousFunction");
-        body +=
-          "  " +
-          aFrame.filename +
-          " :: " +
-          functionName +
-          " :: " +
-          aFrame.lineNumber +
-          "\n";
-      });
+          lazy.l10n.formatValueSync("console-stacktrace-anonymous-function");
+        body += `  ${aFrame.filename} :: ${functionName} :: ${aFrame.lineNumber}\n`;
+      }
 
       Services.console.logStringMessage(body);
     } else if (aMessage.level == "time" && aMessage.arguments) {
-      const bundle = Services.strings.createBundle(
-        "chrome://browser/locale/browser.properties"
-      );
-      const body = bundle.formatStringFromName("timer.start", [
-        aMessage.arguments.name,
-      ]);
+      const body = lazy.l10n.formatValueSync("console-timer-start", {
+        name: aMessage.arguments.name ?? "",
+      });
       Services.console.logStringMessage(body);
     } else if (aMessage.level == "timeEnd" && aMessage.arguments) {
-      const bundle = Services.strings.createBundle(
-        "chrome://browser/locale/browser.properties"
-      );
-      const body = bundle.formatStringFromName("timer.end", [
-        aMessage.arguments.name,
-        aMessage.arguments.duration,
-      ]);
+      const body = lazy.l10n.formatValueSync("console-timer-end", {
+        name: aMessage.arguments.name ?? "",
+        duration: aMessage.arguments.duration ?? "",
+      });
       Services.console.logStringMessage(body);
     } else if (
       ["group", "groupCollapsed", "groupEnd"].includes(aMessage.level)
