@@ -266,6 +266,15 @@ export var FormAutofillContent = {
     this._autofillPending = flag;
   },
 
+  /**
+   * Identifies and marks each autofill field
+   *
+   * @param {HTMLElement} element
+   *        Element that serves as an anchor for the formautofill heuristics to retrieve
+   *        the root form and run the formautofill heuristics on the form elements
+   * @returns {boolean}
+   *        whether any autofill fields were identified
+   */
   identifyAutofillFields(element) {
     this.debug(
       `identifyAutofillFields: ${element.ownerDocument.location?.hostname}`
@@ -283,6 +292,8 @@ export var FormAutofillContent = {
       this._fieldDetailsManager.identifyAutofillFields(element);
 
     validDetails?.forEach(detail => this._markAsAutofillField(detail.element));
+
+    return !!validDetails.length;
   },
 
   clearForm() {

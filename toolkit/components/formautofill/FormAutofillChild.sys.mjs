@@ -73,6 +73,11 @@ export class FormAutofillChild extends JSWindowActorChild {
     }
   }
 
+  /**
+   * Invokes the FormAutofillContent to identify the autofill fields
+   * and consider opening the dropdown menu for the focused field
+   *
+   */
   _doIdentifyAutofillFields() {
     if (this._hasPendingTask) {
       return;
@@ -80,7 +85,16 @@ export class FormAutofillChild extends JSWindowActorChild {
     this._hasPendingTask = true;
 
     lazy.setTimeout(() => {
-      lazy.FormAutofillContent.identifyAutofillFields(this._nextHandleElement);
+      const isAnyFieldIdentified =
+        lazy.FormAutofillContent.identifyAutofillFields(
+          this._nextHandleElement
+        );
+      if (isAnyFieldIdentified) {
+        this.registerDOMDocFetchSuccessEventListener(
+          this._nextHandleElement.ownerDocument
+        );
+      }
+
       this._hasPendingTask = false;
       this._nextHandleElement = null;
       // This is for testing purpose only which sends a notification to indicate that the
@@ -88,6 +102,37 @@ export class FormAutofillChild extends JSWindowActorChild {
       this.sendAsyncMessage("FormAutofill:FieldsIdentified");
       lazy.FormAutofillContent.updateActiveInput();
     });
+  }
+
+  /**
+   * After a focusin event and after we identify formautofill fields,
+   * we set up an event listener for the DOMDocFetchSuccess event
+   *
+   * @param {Document} document The document we want to be notified by of a DOMDocFetchSuccess event
+   */
+  registerDOMDocFetchSuccessEventListener(document) {
+    document.setNotifyFetchSuccess(true);
+
+    // Is removed after a DOMDocFetchSuccess event (bug 1864855)
+    /* eslint-disable mozilla/balanced-listeners */
+    this.docShell.chromeEventHandler.addEventListener(
+      "DOMDocFetchSuccess",
+      this,
+      true
+    );
+  }
+
+  /**
+   * After a DOMDocFetchSuccess event we remove the DOMDocFetchSuccess event listener
+   *
+   * @param {Document} document The document we are notified by of a DOMDocFetchSuccess event
+   */
+  unregisterDOMDocFetchSuccessEventListener(document) {
+    document.setNotifyFetchSuccess(false);
+    this.docShell.chromeEventHandler.removeEventListener(
+      "DOMDocFetchSuccess",
+      this
+    );
   }
 
   shouldIgnoreFormAutofillEvent(event) {
@@ -119,6 +164,10 @@ export class FormAutofillChild extends JSWindowActorChild {
         if (lazy.FormAutofill.isAutofillEnabled) {
           this.onDOMFormBeforeSubmit(evt);
         }
+        break;
+      }
+      case "DOMDocFetchSuccess": {
+        this.onDOMDocFetchSuccess(evt);
         break;
       }
 
@@ -169,6 +218,21 @@ export class FormAutofillChild extends JSWindowActorChild {
     }
 
     lazy.FormAutofillContent.formSubmitted(formElement);
+  }
+
+  /**
+   * Handle the DOMDocFetchSuccess event.
+   *
+   * Sets up an event listener for the DOMFormRemoved event
+   * and unregisters the event listener for DOMDocFetchSuccess event.
+   *
+   * @param {Event} evt DOMDocFetchSuccess
+   */
+  onDOMDocFetchSuccess(evt) {
+    const document = evt.target;
+    // TODO: Register mutation observer to watch for form removal (implemented in P2)
+
+    this.unregisterDOMDocFetchSuccessEventListener(document);
   }
 
   receiveMessage(message) {
