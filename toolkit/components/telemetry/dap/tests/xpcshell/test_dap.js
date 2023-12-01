@@ -128,7 +128,7 @@ add_setup(async function () {
 add_task(async function testVerificationTask() {
   Services.fog.testResetFOG();
   let before = Glean.dap.uploadStatus.success.testGetValue() ?? 0;
-  await lazy.DAPTelemetrySender.sendTestReports(tasks);
+  await lazy.DAPTelemetrySender.sendTestReports(tasks, 1000);
   let after = Glean.dap.uploadStatus.success.testGetValue() ?? 0;
 
   Assert.equal(before + 2, after, "Successful submissions should be counted.");
@@ -139,7 +139,7 @@ add_task(async function testNetworkError() {
   Services.fog.testResetFOG();
   let before = Glean.dap.reportGenerationStatus.failure.testGetValue() ?? 0;
   Services.prefs.setStringPref(PREF_LEADER, server_addr + "/invalid-endpoint");
-  await lazy.DAPTelemetrySender.sendTestReports(tasks);
+  await lazy.DAPTelemetrySender.sendTestReports(tasks, 1000);
   let after = Glean.dap.reportGenerationStatus.failure.testGetValue() ?? 0;
   Assert.equal(
     before + 2,
