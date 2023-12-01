@@ -322,13 +322,20 @@ PRIOMethods nsSSLIOLayerHelpers::nsSSLIOLayerMethods;
 PRIOMethods nsSSLIOLayerHelpers::nsSSLPlaintextLayerMethods;
 
 static PRStatus nsSSLIOLayerClose(PRFileDesc* fd) {
-  if (!fd) return PR_FAILURE;
+  if (!fd) {
+    return PR_FAILURE;
+  }
 
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-          ("[%p] Shutting down socket\n", (void*)fd));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("[%p] Shutting down socket", fd));
 
-  NSSSocketControl* socketInfo = (NSSSocketControl*)fd->secret;
-  MOZ_ASSERT(socketInfo, "NSSSocketControl was null for an fd");
+  // Take the owning reference from the layer. See the corresponding comment in
+  // nsSSLIOLayerAddToSocket where this gets set.
+  RefPtr<NSSSocketControl> socketInfo(
+      already_AddRefed((NSSSocketControl*)fd->secret));
+  fd->secret = nullptr;
+  if (!socketInfo) {
+    return PR_FAILURE;
+  }
 
   return socketInfo->CloseSocketAndDestroy();
 }
@@ -971,17 +978,17 @@ PrefObserver::Observe(nsISupports* aSubject, const char* aTopic,
 
 static int32_t PlaintextRecv(PRFileDesc* fd, void* buf, int32_t amount,
                              int flags, PRIntervalTime timeout) {
-  // The shutdownlocker is not needed here because it will already be
-  // held higher in the stack
   NSSSocketControl* socketInfo = nullptr;
 
   int32_t bytesRead =
       fd->lower->methods->recv(fd->lower, buf, amount, flags, timeout);
-  if (fd->identity == nsSSLIOLayerHelpers::nsSSLPlaintextLayerIdentity)
+  if (fd->identity == nsSSLIOLayerHelpers::nsSSLPlaintextLayerIdentity) {
     socketInfo = (NSSSocketControl*)fd->secret;
+  }
 
-  if ((bytesRead > 0) && socketInfo)
+  if ((bytesRead > 0) && socketInfo) {
     socketInfo->AddPlaintextBytesRead(bytesRead);
+  }
   return bytesRead;
 }
 
@@ -1627,7 +1634,15 @@ nsresult nsSSLIOLayerAddToSocket(int32_t family, const char* host, int32_t port,
   if (!layer) {
     return NS_ERROR_FAILURE;
   }
-  layer->secret = (PRFilePrivate*)infoObject.get();
+  // Give the layer an owning reference to the NSSSocketControl.
+  // This is the simplest way to prevent the layer from outliving the
+  // NSSSocketControl (otherwise, the layer could potentially use it in
+  // nsSSLIOLayerClose after it has been released).
+  // nsSSLIOLayerClose takes the owning reference when the underlying fd gets
+  // closed. If the fd never gets closed (as in, leaks), the NSSSocketControl
+  // will also leak.
+  layer->secret = (PRFilePrivate*)do_AddRef(infoObject).take();
+
   if (PR_PushIOLayer(sslSock, PR_GetLayersIdentity(sslSock), layer) !=
       PR_SUCCESS) {
     layer->dtor(layer);
