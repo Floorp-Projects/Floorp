@@ -6044,6 +6044,19 @@ nsIPrincipal* nsGlobalWindowInner::GetClientPrincipal() {
   return mClientSource ? mClientSource->GetPrincipal() : nullptr;
 }
 
+bool nsGlobalWindowInner::IsInFullScreenTransition() {
+  if (!mIsChrome) {
+    return false;
+  }
+
+  nsGlobalWindowOuter* outerWindow = GetOuterWindowInternal();
+  if (!outerWindow) {
+    return false;
+  }
+
+  return outerWindow->mIsInFullScreenTransition;
+}
+
 //*****************************************************************************
 // nsGlobalWindowInner: Timeout Functions
 //*****************************************************************************
