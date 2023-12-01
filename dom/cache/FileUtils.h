@@ -42,7 +42,9 @@ Result<nsCOMPtr<nsISupports>, nsresult> BodyStartWriteStream(
 
 void BodyCancelWrite(nsISupports& aCopyContext);
 
-nsresult BodyFinalizeWrite(nsIFile& aBaseDir, const nsID& aId);
+Result<int64_t, nsresult> BodyFinalizeWrite(nsIFile& aBaseDir, const nsID& aId);
+
+Result<int64_t, nsresult> GetBodyDiskSize(nsIFile& aBaseDir, const nsID& aId);
 
 Result<MovingNotNull<nsCOMPtr<nsIInputStream>>, nsresult> BodyOpen(
     const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile& aBaseDir,

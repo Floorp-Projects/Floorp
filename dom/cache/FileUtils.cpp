@@ -193,7 +193,8 @@ void BodyCancelWrite(nsISupports& aCopyContext) {
   // makes its callback.
 }
 
-nsresult BodyFinalizeWrite(nsIFile& aBaseDir, const nsID& aId) {
+Result<int64_t, nsresult> BodyFinalizeWrite(nsIFile& aBaseDir,
+                                            const nsID& aId) {
   QM_TRY_INSPECT(const auto& tmpFile,
                  BodyIdToFile(aBaseDir, aId, BODY_FILE_TMP));
 
@@ -208,7 +209,20 @@ nsresult BodyFinalizeWrite(nsIFile& aBaseDir, const nsID& aId) {
   // opening file next time.
   QM_TRY(MOZ_TO_RESULT(tmpFile->RenameTo(nullptr, finalFileName)));
 
-  return NS_OK;
+  QM_TRY_INSPECT(const int64_t& fileSize,
+                 MOZ_TO_RESULT_INVOKE_MEMBER(*finalFile, GetFileSize));
+
+  return fileSize;
+}
+
+Result<int64_t, nsresult> GetBodyDiskSize(nsIFile& aBaseDir, const nsID& aId) {
+  QM_TRY_INSPECT(const auto& finalFile,
+                 BodyIdToFile(aBaseDir, aId, BODY_FILE_FINAL));
+
+  QM_TRY_INSPECT(const int64_t& fileSize,
+                 MOZ_TO_RESULT_INVOKE_MEMBER(*finalFile, GetFileSize));
+
+  return fileSize;
 }
 
 Result<MovingNotNull<nsCOMPtr<nsIInputStream>>, nsresult> BodyOpen(
@@ -796,4 +810,5 @@ nsresult DirectoryPaddingDeleteFile(nsIFile& aBaseDir,
 
   return NS_OK;
 }
+
 }  // namespace mozilla::dom::cache
