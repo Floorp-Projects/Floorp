@@ -2111,9 +2111,9 @@ void HTMLFormElement::MaybeFireFormRemoved() {
     return;
   }
 
-  // Right now, only the password manager listens to the event and only listen
-  // to it under certain circumstances. So don't fire this event unless
-  // necessary.
+  // Right now, only the password manager and formautofill listen to the event
+  // and only listen to it under certain circumstances. So don't fire this event
+  // unless necessary.
   if (!doc->ShouldNotifyFormOrPasswordRemoved()) {
     return;
   }
