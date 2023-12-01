@@ -136,7 +136,7 @@ open class FxaAccountManager(
     private fun checkForMultipleRequiveryCalls() {
         val alreadyScheduled = authRecoveryScheduled.getAndSet(true)
         if (alreadyScheduled) {
-            crashReporter?.recordCrashBreadcrumb(Breadcrumb("multiple auth recoveries scheduled at once"))
+            crashReporter?.recordCrashBreadcrumb(Breadcrumb("multiple fxa recoveries scheduled at once"))
         }
     }
     private fun finishedAuthRecovery() {
