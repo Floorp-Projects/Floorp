@@ -63,9 +63,12 @@ nsresult LocalFileToDirectoryOrBlob(nsPIDOMWindowInner* aWindow,
 
 }  // anonymous namespace
 
+#ifndef XP_WIN
 /**
  * A runnable to dispatch from the main thread to the main thread to display
  * the file picker while letting the showAsync method return right away.
+ *
+ * Not needed on Windows, where nsFilePicker::Open() is fully async.
  */
 class nsBaseFilePicker::AsyncShowFilePicker : public mozilla::Runnable {
  public:
@@ -98,6 +101,7 @@ class nsBaseFilePicker::AsyncShowFilePicker : public mozilla::Runnable {
   RefPtr<nsBaseFilePicker> mFilePicker;
   RefPtr<nsIFilePickerShownCallback> mCallback;
 };
+#endif
 
 class nsBaseFilePickerEnumerator : public nsSimpleEnumerator {
  public:
@@ -190,12 +194,14 @@ nsBaseFilePicker::IsModeSupported(nsIFilePicker::Mode aMode, JSContext* aCx,
   return NS_OK;
 }
 
+#ifndef XP_WIN
 NS_IMETHODIMP
 nsBaseFilePicker::Open(nsIFilePickerShownCallback* aCallback) {
   nsCOMPtr<nsIRunnable> filePickerEvent =
       new AsyncShowFilePicker(this, aCallback);
   return NS_DispatchToMainThread(filePickerEvent);
 }
+#endif
 
 NS_IMETHODIMP
 nsBaseFilePicker::AppendFilters(int32_t aFilterMask) {
