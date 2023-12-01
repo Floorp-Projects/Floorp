@@ -80,7 +80,6 @@ class ScrollbarActivity final : public nsIDOMEventListener {
  protected:
   virtual ~ScrollbarActivity() = default;
 
-  void ActivityChanged();
   void StartFadeTimer();
   void CancelFadeTimer();
   void BeginFade();
