@@ -44,12 +44,13 @@ class nsAppShell : public nsBaseAppShell {
                                         gpointer aUserData);
 #endif
 
+  static void InstallTermSignalHandler();
+
  private:
   virtual ~nsAppShell();
 
   static gboolean EventProcessorCallback(GIOChannel* source,
                                          GIOCondition condition, gpointer data);
-  void InstallTermSignalHandler();
   static void TermSignalHandler(int signo);
 
   void ScheduleQuitEvent();
