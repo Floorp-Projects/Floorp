@@ -441,11 +441,11 @@
     }
   }
 
-  @at-root panel#{&}:is([side='top'], [side='bottom']):not(.hidden-arrow) {
+  @at-root panel#{&}:is([side='top'], [side='bottom']):not([hide-arrow='permanent']) {
     margin-inline: var(--panel-margin-offset);
   }
 
-  @at-root panel#{&}:is([side='left'], [side='right']):not(.hidden-arrow) {
+  @at-root panel#{&}:is([side='left'], [side='right']):not([hide-arrow='permanent']) {
     margin-block: var(--panel-margin-offset);
   }
 
@@ -464,7 +464,7 @@
   }
 
   &:not([arrow-position]) .arrow-box,
-  &.hidden-arrow .arrow-box {
+  &[hide-arrow] .arrow-box {
     display: none;
   }
 

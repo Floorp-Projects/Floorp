@@ -699,8 +699,15 @@ export class FeatureCallout {
       }
       // Hide the arrow if the `flip` behavior has caused the panel to
       // offset relative to its anchor, since the arrow would no longer
-      // point at the true anchor.
-      this.classList.toggle("hidden-arrow", !!alignmentOffset);
+      // point at the true anchor. This differs from an arrow that is
+      // intentionally hidden by the user in message.
+      if (this.getAttribute("hide-arrow") !== "permanent") {
+        if (alignmentOffset) {
+          this.setAttribute("hide-arrow", "temporary");
+        } else {
+          this.removeAttribute("hide-arrow");
+        }
+      }
       let arrowPosition = "top";
       switch (positionParts[1]) {
         case "start":
@@ -782,7 +789,11 @@ export class FeatureCallout {
         this._container?.classList.add("hidden");
       }
       this._container.classList.add("featureCallout", "callout-arrow");
-      this._container.classList.toggle("hidden-arrow", !!hide_arrow);
+      if (hide_arrow) {
+        this._container.setAttribute("hide-arrow", "permanent");
+      } else {
+        this._container.removeAttribute("hide-arrow");
+      }
       this._container.id = CONTAINER_ID;
       this._container.setAttribute(
         "aria-describedby",
