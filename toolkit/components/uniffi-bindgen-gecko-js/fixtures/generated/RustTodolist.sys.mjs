@@ -298,7 +298,7 @@ export class TodoList {
         const liftError = null;
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                100, // todolist:uniffi_todolist_fn_constructor_todolist_new
+                105, // todolist:uniffi_uniffi_todolist_fn_constructor_todolist_new
             )
         }
         try {
@@ -307,22 +307,22 @@ export class TodoList {
             return Promise.reject(error)
         }}
 
-    addItem(todo) {
+    addEntries(entries) {
         const liftResult = (result) => undefined;
-        const liftError = (data) => FfiConverterTypeTodoError.lift(data);
+        const liftError = null;
         const functionCall = () => {
             try {
-                FfiConverterString.checkType(todo)
+                FfiConverterSequenceTypeTodoEntry.checkType(entries)
             } catch (e) {
                 if (e instanceof UniFFITypeError) {
-                    e.addItemDescriptionPart("todo");
+                    e.addItemDescriptionPart("entries");
                 }
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                101, // todolist:uniffi_todolist_fn_method_todolist_add_item
+                106, // todolist:uniffi_uniffi_todolist_fn_method_todolist_add_entries
                 FfiConverterTypeTodoList.lower(this),
-                FfiConverterString.lower(todo),
+                FfiConverterSequenceTypeTodoEntry.lower(entries),
             )
         }
         try {
@@ -345,7 +345,7 @@ export class TodoList {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                102, // todolist:uniffi_todolist_fn_method_todolist_add_entry
+                107, // todolist:uniffi_uniffi_todolist_fn_method_todolist_add_entry
                 FfiConverterTypeTodoList.lower(this),
                 FfiConverterTypeTodoEntry.lower(entry),
             )
@@ -357,54 +357,22 @@ export class TodoList {
         }
     }
 
-    getEntries() {
-        const liftResult = (result) => FfiConverterSequenceTypeTodoEntry.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            return UniFFIScaffolding.callAsync(
-                103, // todolist:uniffi_todolist_fn_method_todolist_get_entries
-                FfiConverterTypeTodoList.lower(this),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
-    }
-
-    getItems() {
-        const liftResult = (result) => FfiConverterSequencestring.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            return UniFFIScaffolding.callAsync(
-                104, // todolist:uniffi_todolist_fn_method_todolist_get_items
-                FfiConverterTypeTodoList.lower(this),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
-    }
-
-    addEntries(entries) {
+    addItem(todo) {
         const liftResult = (result) => undefined;
-        const liftError = null;
+        const liftError = (data) => FfiConverterTypeTodoError.lift(data);
         const functionCall = () => {
             try {
-                FfiConverterSequenceTypeTodoEntry.checkType(entries)
+                FfiConverterString.checkType(todo)
             } catch (e) {
                 if (e instanceof UniFFITypeError) {
-                    e.addItemDescriptionPart("entries");
+                    e.addItemDescriptionPart("todo");
                 }
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                105, // todolist:uniffi_todolist_fn_method_todolist_add_entries
+                108, // todolist:uniffi_uniffi_todolist_fn_method_todolist_add_item
                 FfiConverterTypeTodoList.lower(this),
-                FfiConverterSequenceTypeTodoEntry.lower(entries),
+                FfiConverterString.lower(todo),
             )
         }
         try {
@@ -427,57 +395,9 @@ export class TodoList {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                106, // todolist:uniffi_todolist_fn_method_todolist_add_items
+                109, // todolist:uniffi_uniffi_todolist_fn_method_todolist_add_items
                 FfiConverterTypeTodoList.lower(this),
                 FfiConverterSequencestring.lower(items),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
-    }
-
-    getLastEntry() {
-        const liftResult = (result) => FfiConverterTypeTodoEntry.lift(result);
-        const liftError = (data) => FfiConverterTypeTodoError.lift(data);
-        const functionCall = () => {
-            return UniFFIScaffolding.callAsync(
-                107, // todolist:uniffi_todolist_fn_method_todolist_get_last_entry
-                FfiConverterTypeTodoList.lower(this),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
-    }
-
-    getLast() {
-        const liftResult = (result) => FfiConverterString.lift(result);
-        const liftError = (data) => FfiConverterTypeTodoError.lift(data);
-        const functionCall = () => {
-            return UniFFIScaffolding.callAsync(
-                108, // todolist:uniffi_todolist_fn_method_todolist_get_last
-                FfiConverterTypeTodoList.lower(this),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
-    }
-
-    getFirst() {
-        const liftResult = (result) => FfiConverterString.lift(result);
-        const liftError = (data) => FfiConverterTypeTodoError.lift(data);
-        const functionCall = () => {
-            return UniFFIScaffolding.callAsync(
-                109, // todolist:uniffi_todolist_fn_method_todolist_get_first
-                FfiConverterTypeTodoList.lower(this),
             )
         }
         try {
@@ -500,9 +420,89 @@ export class TodoList {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                110, // todolist:uniffi_todolist_fn_method_todolist_clear_item
+                110, // todolist:uniffi_uniffi_todolist_fn_method_todolist_clear_item
                 FfiConverterTypeTodoList.lower(this),
                 FfiConverterString.lower(todo),
+            )
+        }
+        try {
+            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+        }  catch (error) {
+            return Promise.reject(error)
+        }
+    }
+
+    getEntries() {
+        const liftResult = (result) => FfiConverterSequenceTypeTodoEntry.lift(result);
+        const liftError = null;
+        const functionCall = () => {
+            return UniFFIScaffolding.callAsync(
+                111, // todolist:uniffi_uniffi_todolist_fn_method_todolist_get_entries
+                FfiConverterTypeTodoList.lower(this),
+            )
+        }
+        try {
+            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+        }  catch (error) {
+            return Promise.reject(error)
+        }
+    }
+
+    getFirst() {
+        const liftResult = (result) => FfiConverterString.lift(result);
+        const liftError = (data) => FfiConverterTypeTodoError.lift(data);
+        const functionCall = () => {
+            return UniFFIScaffolding.callAsync(
+                112, // todolist:uniffi_uniffi_todolist_fn_method_todolist_get_first
+                FfiConverterTypeTodoList.lower(this),
+            )
+        }
+        try {
+            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+        }  catch (error) {
+            return Promise.reject(error)
+        }
+    }
+
+    getItems() {
+        const liftResult = (result) => FfiConverterSequencestring.lift(result);
+        const liftError = null;
+        const functionCall = () => {
+            return UniFFIScaffolding.callAsync(
+                113, // todolist:uniffi_uniffi_todolist_fn_method_todolist_get_items
+                FfiConverterTypeTodoList.lower(this),
+            )
+        }
+        try {
+            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+        }  catch (error) {
+            return Promise.reject(error)
+        }
+    }
+
+    getLast() {
+        const liftResult = (result) => FfiConverterString.lift(result);
+        const liftError = (data) => FfiConverterTypeTodoError.lift(data);
+        const functionCall = () => {
+            return UniFFIScaffolding.callAsync(
+                114, // todolist:uniffi_uniffi_todolist_fn_method_todolist_get_last
+                FfiConverterTypeTodoList.lower(this),
+            )
+        }
+        try {
+            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+        }  catch (error) {
+            return Promise.reject(error)
+        }
+    }
+
+    getLastEntry() {
+        const liftResult = (result) => FfiConverterTypeTodoEntry.lift(result);
+        const liftError = (data) => FfiConverterTypeTodoError.lift(data);
+        const functionCall = () => {
+            return UniFFIScaffolding.callAsync(
+                115, // todolist:uniffi_uniffi_todolist_fn_method_todolist_get_last_entry
+                FfiConverterTypeTodoList.lower(this),
             )
         }
         try {
@@ -517,7 +517,7 @@ export class TodoList {
         const liftError = null;
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                111, // todolist:uniffi_todolist_fn_method_todolist_make_default
+                116, // todolist:uniffi_uniffi_todolist_fn_method_todolist_make_default
                 FfiConverterTypeTodoList.lower(this),
             )
         }
@@ -859,13 +859,38 @@ export class FfiConverterSequenceTypeTodoEntry extends FfiConverterArrayBuffer {
 
 
 
+export function createEntryWith(todo) {
+
+        const liftResult = (result) => FfiConverterTypeTodoEntry.lift(result);
+        const liftError = (data) => FfiConverterTypeTodoError.lift(data);
+        const functionCall = () => {
+            try {
+                FfiConverterString.checkType(todo)
+            } catch (e) {
+                if (e instanceof UniFFITypeError) {
+                    e.addItemDescriptionPart("todo");
+                }
+                throw e;
+            }
+            return UniFFIScaffolding.callAsync(
+                117, // todolist:uniffi_uniffi_todolist_fn_func_create_entry_with
+                FfiConverterString.lower(todo),
+            )
+        }
+        try {
+            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+        }  catch (error) {
+            return Promise.reject(error)
+        }
+}
+
 export function getDefaultList() {
 
         const liftResult = (result) => FfiConverterOptionalTypeTodoList.lift(result);
         const liftError = null;
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                112, // todolist:uniffi_todolist_fn_func_get_default_list
+                118, // todolist:uniffi_uniffi_todolist_fn_func_get_default_list
             )
         }
         try {
@@ -889,33 +914,8 @@ export function setDefaultList(list) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                113, // todolist:uniffi_todolist_fn_func_set_default_list
+                119, // todolist:uniffi_uniffi_todolist_fn_func_set_default_list
                 FfiConverterTypeTodoList.lower(list),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
-}
-
-export function createEntryWith(todo) {
-
-        const liftResult = (result) => FfiConverterTypeTodoEntry.lift(result);
-        const liftError = (data) => FfiConverterTypeTodoError.lift(data);
-        const functionCall = () => {
-            try {
-                FfiConverterString.checkType(todo)
-            } catch (e) {
-                if (e instanceof UniFFITypeError) {
-                    e.addItemDescriptionPart("todo");
-                }
-                throw e;
-            }
-            return UniFFIScaffolding.callAsync(
-                114, // todolist:uniffi_todolist_fn_func_create_entry_with
-                FfiConverterString.lower(todo),
             )
         }
         try {
