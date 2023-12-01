@@ -197,7 +197,7 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
   #isQuickSuggestOptInElement(element) {
     return (
       this.#quickSuggestOptInContainer &&
-      element.compareDocumentPosition(this.#quickSuggestOptInContainer) &
+      element?.compareDocumentPosition(this.#quickSuggestOptInContainer) &
         Node.DOCUMENT_POSITION_CONTAINS
     );
   }
