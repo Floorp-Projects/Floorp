@@ -12,6 +12,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
+export const FORM_SUBMISSION_REASON = {
+  FORM_SUBMIT_EVENT: "form-submit-event",
+  FORM_REMOVAL_AFTER_FETCH: "form-removal-after-fetch",
+};
+
 /**
  * Handles content's interactions for the frame.
  */
@@ -244,9 +249,12 @@ export class FormAutofillChild extends JSWindowActorChild {
    * @param {Event} evt
    */
   onDOMFormBeforeSubmit(evt) {
-    let formElement = evt.target;
+    const formElement = evt.target;
 
-    lazy.FormAutofillContent.formSubmitted(formElement);
+    lazy.FormAutofillContent.formSubmitted(
+      formElement,
+      FORM_SUBMISSION_REASON.FORM_SUBMIT_EVENT
+    );
   }
 
   /**
@@ -260,7 +268,10 @@ export class FormAutofillChild extends JSWindowActorChild {
   onDOMFormRemoved(evt) {
     const document = evt.composedTarget.ownerDocument;
 
-    // TODO: Infer a form submission (will be implemented P3)
+    lazy.FormAutofillContent.formSubmitted(
+      evt.target,
+      FORM_SUBMISSION_REASON.FORM_REMOVAL_AFTER_FETCH
+    );
 
     this.unregisterDOMFormRemovedEventListener(document);
   }

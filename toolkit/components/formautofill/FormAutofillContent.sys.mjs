@@ -10,6 +10,7 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { FORM_SUBMISSION_REASON } from "./FormAutofillChild.sys.mjs";
 
 const lazy = {};
 
@@ -135,16 +136,19 @@ export var FormAutofillContent = {
    * 3. Number of filled fields is less than autofill threshold
    *
    * @param {HTMLElement} formElement Root element which receives submit event.
+   * @param {string} reason Reason for invoking the form submission
+   *                 (see options for FORM_SUBMISSION_REASON in FormAutofillChild))
    * @param {Window} domWin Content window; passed for unit tests and when
    *                 invoked by the FormAutofillSection
    * @param {object} handler FormAutofillHander, if known by caller
    */
   formSubmitted(
     formElement,
+    reason = FORM_SUBMISSION_REASON.FORM_SUBMIT_EVENT,
     domWin = formElement.ownerGlobal,
     handler = undefined
   ) {
-    this.debug("Handling form submission");
+    this.debug(`Handling form submission - derived from ${reason}`);
 
     if (!lazy.FormAutofill.isAutofillEnabled) {
       this.debug("Form Autofill is disabled");
