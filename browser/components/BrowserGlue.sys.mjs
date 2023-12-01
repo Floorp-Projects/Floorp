@@ -5488,12 +5488,7 @@ export var DefaultBrowserCheck = {
     let buttonNumClicked = rv.get("buttonNumClicked");
     let checkboxState = rv.get("checked");
     if (buttonNumClicked == 0) {
-      try {
-        await shellService.setAsDefault();
-      } catch (e) {
-        this.log.error("Failed to set the default browser", e);
-      }
-
+      shellService.setAsDefault();
       shellService.pinToTaskbar();
     }
     if (checkboxState) {

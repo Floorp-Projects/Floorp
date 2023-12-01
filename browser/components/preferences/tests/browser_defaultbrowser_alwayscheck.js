@@ -164,7 +164,7 @@ async function test_with_mock_shellservice(options, testFn) {
         isDefaultBrowser() {
           return this._isDefault;
         },
-        async setDefaultBrowser() {
+        setDefaultBrowser() {
           this._isDefault = true;
         },
       };

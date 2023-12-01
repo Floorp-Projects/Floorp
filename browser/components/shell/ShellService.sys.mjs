@@ -253,7 +253,7 @@ let ShellServiceInternal = {
         }
       }
       try {
-        await this.defaultAgent.setDefaultBrowserUserChoiceAsync(
+        this.defaultAgent.setDefaultBrowserUserChoice(
           aumi,
           extraFileExtensions
         );
@@ -314,7 +314,7 @@ let ShellServiceInternal = {
   },
 
   // override nsIShellService.setDefaultBrowser() on the ShellService proxy.
-  async setDefaultBrowser(forAllUsers) {
+  setDefaultBrowser(forAllUsers) {
     // On Windows, our best chance is to set UserChoice, so try that first.
     if (
       AppConstants.platform == "win" &&
@@ -322,26 +322,24 @@ let ShellServiceInternal = {
         "setDefaultBrowserUserChoice"
       )
     ) {
-      try {
-        await this.setAsDefaultUserChoice();
-        return;
-      } catch (err) {
-        lazy.log.warn(
-          "Error thrown during setAsDefaultUserChoice. Full exception:",
-          err
-        );
-
-        // intentionally fall through to setting via the non-user choice pathway on error
-      }
+      // nsWindowsShellService::SetDefaultBrowser() kicks off several
+      // operations, but doesn't wait for their result. So we don't need to
+      // await the result of setAsDefaultUserChoice() here, either, we just need
+      // to fall back in case it fails.
+      this.setAsDefaultUserChoice().catch(err => {
+        console.error(err);
+        this.shellService.setDefaultBrowser(forAllUsers);
+      });
+      return;
     }
 
     this.shellService.setDefaultBrowser(forAllUsers);
   },
 
-  async setAsDefault() {
+  setAsDefault() {
     let setAsDefaultError = false;
     try {
-      await ShellService.setDefaultBrowser(false);
+      ShellService.setDefaultBrowser(false);
     } catch (ex) {
       setAsDefaultError = true;
       console.error(ex);
