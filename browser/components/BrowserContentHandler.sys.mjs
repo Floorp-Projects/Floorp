@@ -613,7 +613,13 @@ nsBrowserContentHandler.prototype = {
       }
     }
     if (cmdLine.handleFlag("setDefaultBrowser", false)) {
-      lazy.ShellService.setDefaultBrowser(true);
+      // Note that setDefaultBrowser is an async function, but "handle" (the method being executed)
+      // is an implementation of an interface method and changing it to be async would be complicated
+      // and ultimately nothing here needs the result of setDefaultBrowser, so we do not bother doing
+      // an await.
+      lazy.ShellService.setDefaultBrowser(true).catch(e => {
+        console.error("setDefaultBrowser failed:", e);
+      });
     }
 
     if (cmdLine.handleFlag("first-startup", false)) {
