@@ -8,13 +8,13 @@ ChromeUtils.defineESModuleGetters(this, {
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
-const setDefaultBrowserUserChoiceStub = () => {
+const setDefaultBrowserUserChoiceStub = async () => {
   throw Components.Exception("", Cr.NS_ERROR_WDBA_NO_PROGID);
 };
 
 const defaultAgentStub = sinon
   .stub(ShellService, "defaultAgent")
-  .value({ setDefaultBrowserUserChoice: setDefaultBrowserUserChoiceStub });
+  .value({ setDefaultBrowserUserChoiceAsync: setDefaultBrowserUserChoiceStub });
 
 const _userChoiceImpossibleTelemetryResultStub = sinon
   .stub(ShellService, "_userChoiceImpossibleTelemetryResult")
@@ -39,7 +39,7 @@ registerCleanupFunction(() => {
 
 let defaultUserChoice;
 add_task(async function need_user_choice() {
-  ShellService.setDefaultBrowser();
+  await ShellService.setDefaultBrowser();
   defaultUserChoice = userChoiceStub.called;
 
   Assert.ok(
@@ -69,7 +69,7 @@ add_task(async function remote_disable() {
     },
   });
 
-  ShellService.setDefaultBrowser();
+  await ShellService.setDefaultBrowser();
 
   Assert.ok(
     userChoiceStub.notCalled,
@@ -90,7 +90,7 @@ add_task(async function restore_default() {
   setDefaultStub.resetHistory();
   ExperimentAPI._store._deleteForTests("shellService");
 
-  ShellService.setDefaultBrowser();
+  await ShellService.setDefaultBrowser();
 
   Assert.equal(
     userChoiceStub.called,
@@ -125,7 +125,7 @@ add_task(async function ensure_fallback() {
     },
   });
 
-  ShellService.setDefaultBrowser();
+  await ShellService.setDefaultBrowser();
 
   Assert.ok(userChoiceStub.called, "Set default with user choice called");
 

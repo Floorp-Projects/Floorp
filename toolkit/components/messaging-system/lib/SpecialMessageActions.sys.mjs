@@ -97,8 +97,8 @@ export const SpecialMessageActions = {
    *
    *  @param {Window} window Reference to a window object
    */
-  setDefaultBrowser(window) {
-    window.getShellService().setAsDefault();
+  async setDefaultBrowser(window) {
+    await window.getShellService().setAsDefault();
   },
 
   /**
@@ -442,10 +442,10 @@ export const SpecialMessageActions = {
         break;
       case "PIN_AND_DEFAULT":
         await this.pinFirefoxToTaskbar(window, action.data?.privatePin);
-        this.setDefaultBrowser(window);
+        await this.setDefaultBrowser(window);
         break;
       case "SET_DEFAULT_BROWSER":
-        this.setDefaultBrowser(window);
+        await this.setDefaultBrowser(window);
         break;
       case "SET_DEFAULT_PDF_HANDLER":
         this.setDefaultPDFHandler(
