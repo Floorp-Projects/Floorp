@@ -3,14 +3,40 @@
 
 /* Test that the Report Broken Site menu items are disabled
  * when the active tab is not on a reportable URL, and is hidden
- * when the feature is disabled via pref.
+ * when the feature is disabled via pref. Also ensure that the
+ * Report Broken Site item that is automatically generated in
+ * the app menu's help sub-menu is hidden.
  */
 
 "use strict";
 
 add_common_setup();
 
-add_task(async function test() {
+add_task(async function testAppMenuHelpSubmenuItemIsHidden() {
+  ensureReportBrokenSitePreffedOn();
+  const menu = AppMenuHelpSubmenu();
+  await menu.open();
+  isMenuItemHidden(menu.reportBrokenSite);
+  await menu.close();
+
+  ensureReportBrokenSitePreffedOff();
+  await menu.open();
+  isMenuItemHidden(menu.reportBrokenSite);
+  await menu.close();
+
+  await BrowserTestUtils.withNewTab(REPORTABLE_PAGE_URL, async function () {
+    await menu.open();
+    isMenuItemHidden(menu.reportBrokenSite);
+    await menu.close();
+
+    ensureReportBrokenSitePreffedOn();
+    await menu.open();
+    isMenuItemHidden(menu.reportBrokenSite);
+    await menu.close();
+  });
+});
+
+add_task(async function testOtherMenus() {
   ensureReportBrokenSitePreffedOff();
 
   const appMenu = AppMenu();
