@@ -226,6 +226,8 @@ export class DownloadLastDir {
    *  - all file:/// URIs share the same folder
    *  - data: URIs share a folder per mime-type. If a mime-type is not
    *    specified text/plain is assumed.
+   *  - blob: URIs share the same folder as their origin. This is done by
+   *    ContentPrefs already, so we just let the url fall-through.
    * In any other case the original URL is returned as a string and ContentPrefs
    * will do its usual parsing.
    *

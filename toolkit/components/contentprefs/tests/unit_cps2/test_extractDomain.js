@@ -4,6 +4,11 @@
 
 function run_test() {
   let tests = {
+    "blob:": "blob:",
+    "blob:https://chat.mozilla.org/35d6a992-6e18-4957-8216-070c53b9bc83":
+      "chat.mozilla.org",
+    "blob:resource://pdf.js/ed645567-3eea-4ff1-94fd-efb04812afe0":
+      "resource://pdf.js",
     "http://example.com": "example.com",
     "http://example.com/": "example.com",
     "http://example.com/foo/bar/baz": "example.com",

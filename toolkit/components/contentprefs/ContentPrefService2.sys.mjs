@@ -68,19 +68,41 @@ function executeStatementsInTransaction(conn, stmts) {
   });
 }
 
-function HostnameGrouper_group(aURI) {
-  var group;
-
-  try {
+/**
+ * Helper function to extract a non-empty group from a URI.
+ * @param {nsIURI} uri The URI to extract from.
+ * @returns {string} a non-empty group.
+ * @throws if a non-empty group cannot be extracted.
+ */
+function nonEmptyGroupFromURI(uri) {
+  if (uri.schemeIs("blob")) {
+    // blob: URLs are generated internally for a specific browser instance,
+    // thus storing settings for them would be pointless. Though in most cases
+    // it's possible to extract an origin from them and use it as the group.
+    let embeddedURL = new URL(URL.fromURI(uri).origin);
+    if (/^https?:$/.test(embeddedURL.protocol)) {
+      return embeddedURL.host;
+    }
+    if (embeddedURL.origin) {
+      // Keep the protocol if it's not http(s), to avoid mixing up settings
+      // for different protocols, e.g. resource://moz.com and https://moz.com.
+      return embeddedURL.origin;
+    }
+  }
+  if (uri.host) {
     // Accessing the host property of the URI will throw an exception
     // if the URI is of a type that doesn't have a host property.
     // Otherwise, we manually throw an exception if the host is empty,
     // since the effect is the same (we can't derive a group from it).
+    return uri.host;
+  }
+  // If reach this point, we'd have an empty group.
+  throw new Error(`Can't derive non-empty CPS group from ${uri.spec}`);
+}
 
-    group = aURI.host;
-    if (!group) {
-      throw new Error("can't derive group from host; no host in URI");
-    }
+function HostnameGrouper_group(aURI) {
+  try {
+    return nonEmptyGroupFromURI(aURI);
   } catch (ex) {
     // If we don't have a host, then use the entire URI (minus the query,
     // reference, and hash, if possible) as the group.  This means that URIs
@@ -95,14 +117,11 @@ function HostnameGrouper_group(aURI) {
     // XXX Is there something better we can do here?
 
     try {
-      var url = aURI.QueryInterface(Ci.nsIURL);
-      group = aURI.prePath + url.filePath;
+      return aURI.prePath + aURI.filePath;
     } catch (ex) {
-      group = aURI.spec;
+      return aURI.spec;
     }
   }
-
-  return group;
 }
 
 ContentPrefService2.prototype = {
@@ -1118,7 +1137,7 @@ ContentPrefService2.prototype = {
 
   // Database Creation & Access
 
-  _dbVersion: 5,
+  _dbVersion: 6,
 
   _dbSchema: {
     tables: {
@@ -1390,6 +1409,28 @@ ContentPrefService2.prototype = {
         maxlen: Ci.nsIContentPrefService2.GROUP_NAME_MAX_LENGTH,
       }
     );
+  },
+
+  async _dbMigrate5To6(conn) {
+    // This is a data migration for blob: URIs, as we started storing their
+    // origin when possible.
+    // Rather than trying to migrate blob URIs to their origins, that would
+    // require multiple steps for a tiny benefit (they never worked anyway),
+    // just remove them, as they are one-time generated URLs unlikely to be
+    // useful in the future. New inserted blobs will do the right thing.
+    await conn.execute(`
+      DELETE FROM prefs
+      WHERE id IN (
+        SELECT p.id FROM prefs p
+        JOIN groups g ON g.id = p.groupID
+        AND g.name BETWEEN 'blob:' AND 'blob:' || X'FFFF'
+      )
+    `);
+    await conn.execute(`
+      DELETE FROM groups WHERE NOT EXISTS (
+        SELECT 1 FROM prefs WHERE groupId = groups.id
+      )
+    `);
   },
 };
 
