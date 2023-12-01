@@ -262,10 +262,7 @@ class NSSSocketControl final : public CommonSocketControl {
   }
 
  private:
-  ~NSSSocketControl() {
-    MOZ_RELEASE_ASSERT(!mFd,
-                       "NSSSocketControl must outlive its file descriptor!");
-  }
+  ~NSSSocketControl() = default;
 
   PRFileDesc* mFd;
 
