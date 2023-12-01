@@ -239,6 +239,63 @@ networking:
       - edgul@mozilla.com
     expires: 128
 
+  set_cookie:
+    type: counter
+    description: >
+      This counts the number of times we set a cookie. Introduced
+      as a denomenator for measuring CHIPS adoption.
+    bugs:
+      - https://bugzilla.mozilla.org/1865199
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1865199#c3
+    notification_emails:
+      - bvandersloot@mozilla.com
+    expires: 132
+
+  set_cookie_foreign:
+    type: rate
+    description: >
+      This counts the number of times we set a cookie from a foreign (not
+      same-site) context. Introduced as a denomenator for measuring CHIPS
+      adoption.
+    bugs:
+      - https://bugzilla.mozilla.org/1865199
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1865199#c3
+    notification_emails:
+      - bvandersloot@mozilla.com
+    expires: 132
+    denominator_metric: networking.set_cookie
+
+  set_cookie_partitioned:
+    type: rate
+    description: >
+      This counts the number of times we set a cookie that has the Partitioned
+      attribute. This tracks the adoption of CHIPS.
+    bugs:
+      - https://bugzilla.mozilla.org/1865199
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1865199#c3
+    notification_emails:
+      - bvandersloot@mozilla.com
+    expires: 132
+    denominator_metric: networking.set_cookie
+
+  set_cookie_foreign_partitioned:
+    type: rate
+    description: >
+      This counts the number of times we set a cookie that has the Partitioned
+      attribute in a foreign (not same-site) context. This tracks the adoption
+      of CHIPS.
+    bugs:
+      - https://bugzilla.mozilla.org/1865199
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1865199#c3
+    notification_emails:
+      - bvandersloot@mozilla.com
+    expires: 132
+    denominator_metric: networking.set_cookie
+
   dns_lookup_time:
     type: timing_distribution
     time_unit: millisecond
