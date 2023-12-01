@@ -919,7 +919,7 @@ export function serialize(
     }
 
     return serialized;
-  } else if (className === "Window") {
+  } else if (Window.isInstance(value)) {
     const serialized = buildSerialized("window", handleId);
     const window = Cu.unwaiveXrays(value);
 
