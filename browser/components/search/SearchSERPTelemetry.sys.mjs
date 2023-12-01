@@ -1173,22 +1173,41 @@ class ContentHandler {
       let telemetryState;
       let isFromNewtab = false;
       if (item.browserTelemetryStateMap.has(browser)) {
-        // Current browser is tracked.
+        // If the map contains the browser, then it means that the request is
+        // the SERP is going from one page to another. We know this because
+        // previous conditions prevent non-top level loads from occuring here.
         telemetryState = item.browserTelemetryStateMap.get(browser);
       } else if (browser) {
-        // Current browser might have been created by a browser in a
-        // different tab.
-        let tabBrowser = browser.getTabBrowser();
-        // A tab will not always have an openerTab, such as if a tab was
-        // created as a first tab in a new window. Bug 1866548: additional
-        // conditions need to be added in order to track clicks that open in
-        // new windows.
-        let tab = tabBrowser.getTabForBrowser(browser).openerTab;
-        if (tab) {
-          telemetryState = item.browserTelemetryStateMap.get(tab.linkedBrowser);
-          if (telemetryState) {
-            isFromNewtab = true;
+        // Alternatively, it could be the case that the request is occuring in
+        // a new tab but was triggered by one of the browsers in the state map.
+        // If only one browser exists in the state map, it must be that one.
+        if (item.count === 1) {
+          let sourceBrowsers = ChromeUtils.nondeterministicGetWeakMapKeys(
+            item.browserTelemetryStateMap
+          );
+          if (sourceBrowsers?.length) {
+            telemetryState = item.browserTelemetryStateMap.get(
+              sourceBrowsers[0]
+            );
           }
+        } else if (item.count > 1) {
+          // If the count is more than 1, then multiple open SERPs contain the
+          // same search term, so try to find the specific browser that opened
+          // the request.
+          let tabBrowser = browser.getTabBrowser();
+          let tab = tabBrowser.getTabForBrowser(browser).openerTab;
+          // A tab will not always have an openerTab, as first tabs in new
+          // windows don't have an openerTab.
+          // Bug 1867582: We should also handle the case where multiple tabs
+          // contain the same search term.
+          if (tab) {
+            telemetryState = item.browserTelemetryStateMap.get(
+              tab.linkedBrowser
+            );
+          }
+        }
+        if (telemetryState) {
+          isFromNewtab = true;
         }
       }
 
