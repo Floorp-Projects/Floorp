@@ -11,13 +11,15 @@
 //! These types are purely an implementation detail of UniFFI, so consumers shouldn't
 //! need to know about them. But as a developer working on UniFFI itself, you're likely
 //! to spend a lot of time thinking about how these low-level types are used to represent
-//! the higher-level "interface types" from the [`super::types::Type`] enum.
+//! the higher-level "interface types" from the [`Type`] enum.
 /// Represents the restricted set of low-level types that can be used to construct
 /// the C-style FFI layer between a rust component and its foreign language bindings.
 ///
 /// For the types that involve memory allocation, we make a distinction between
 /// "owned" types (the recipient must free it, or pass it to someone else) and
 /// "borrowed" types (the sender must keep it alive for the duration of the call).
+use uniffi_meta::{ExternalKind, Type};
+
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum FfiType {
     // N.B. there are no booleans at this layer, since they cause problems for JNA.
@@ -52,16 +54,81 @@ pub enum FfiType {
     ForeignExecutorHandle,
     /// Pointer to the callback function that's invoked to schedule calls with a ForeignExecutor
     ForeignExecutorCallback,
-    /// Pointer to a callback function to complete an async Rust function
-    FutureCallback {
-        /// Note: `return_type` is not optional because we have a void callback parameter like we
-        /// can have a void return.  Instead, we use `UInt8` as a placeholder value.
-        return_type: Box<FfiType>,
-    },
-    /// Opaque pointer passed to the FutureCallback
-    FutureCallbackData,
+    /// Pointer to a Rust future
+    RustFutureHandle,
+    /// Continuation function for a Rust future
+    RustFutureContinuationCallback,
+    RustFutureContinuationData,
     // TODO: you can imagine a richer structural typesystem here, e.g. `Ref<String>` or something.
     // We don't need that yet and it's possible we never will, so it isn't here for now.
+}
+
+/// When passing data across the FFI, each `Type` value will be lowered into a corresponding
+/// `FfiType` value. This conversion tells you which one.
+///
+/// Note that the conversion is one-way - given an FfiType, it is not in general possible to
+/// tell what the corresponding Type is that it's being used to represent.
+impl From<&Type> for FfiType {
+    fn from(t: &Type) -> FfiType {
+        match t {
+            // Types that are the same map to themselves, naturally.
+            Type::UInt8 => FfiType::UInt8,
+            Type::Int8 => FfiType::Int8,
+            Type::UInt16 => FfiType::UInt16,
+            Type::Int16 => FfiType::Int16,
+            Type::UInt32 => FfiType::UInt32,
+            Type::Int32 => FfiType::Int32,
+            Type::UInt64 => FfiType::UInt64,
+            Type::Int64 => FfiType::Int64,
+            Type::Float32 => FfiType::Float32,
+            Type::Float64 => FfiType::Float64,
+            // Booleans lower into an Int8, to work around a bug in JNA.
+            Type::Boolean => FfiType::Int8,
+            // Strings are always owned rust values.
+            // We might add a separate type for borrowed strings in future.
+            Type::String => FfiType::RustBuffer(None),
+            // Byte strings are also always owned rust values.
+            // We might add a separate type for borrowed byte strings in future as well.
+            Type::Bytes => FfiType::RustBuffer(None),
+            // Objects are pointers to an Arc<>
+            Type::Object { name, .. } => FfiType::RustArcPtr(name.to_owned()),
+            // Callback interfaces are passed as opaque integer handles.
+            Type::CallbackInterface { .. } => FfiType::UInt64,
+            Type::ForeignExecutor => FfiType::ForeignExecutorHandle,
+            // Other types are serialized into a bytebuffer and deserialized on the other side.
+            Type::Enum { .. }
+            | Type::Record { .. }
+            | Type::Optional { .. }
+            | Type::Sequence { .. }
+            | Type::Map { .. }
+            | Type::Timestamp
+            | Type::Duration => FfiType::RustBuffer(None),
+            Type::External {
+                name,
+                kind: ExternalKind::Interface,
+                ..
+            } => FfiType::RustArcPtr(name.clone()),
+            Type::External {
+                name,
+                kind: ExternalKind::DataClass,
+                ..
+            } => FfiType::RustBuffer(Some(name.clone())),
+            Type::Custom { builtin, .. } => FfiType::from(builtin.as_ref()),
+        }
+    }
+}
+
+// Needed for rust scaffolding askama template
+impl From<Type> for FfiType {
+    fn from(ty: Type) -> Self {
+        (&ty).into()
+    }
+}
+
+impl From<&&Type> for FfiType {
+    fn from(ty: &&Type) -> Self {
+        (*ty).into()
+    }
 }
 
 /// Represents an "extern C"-style function that will be part of the FFI.
@@ -114,28 +181,8 @@ impl FfiFunction {
     ) {
         self.arguments = args.into_iter().collect();
         if self.is_async() {
-            self.arguments.extend([
-                // Used to schedule polls
-                FfiArgument {
-                    name: "uniffi_executor".into(),
-                    type_: FfiType::ForeignExecutorHandle,
-                },
-                // Invoked when the future is ready
-                FfiArgument {
-                    name: "uniffi_callback".into(),
-                    type_: FfiType::FutureCallback {
-                        return_type: Box::new(return_type.unwrap_or(FfiType::UInt8)),
-                    },
-                },
-                // Data pointer passed to the callback
-                FfiArgument {
-                    name: "uniffi_callback_data".into(),
-                    type_: FfiType::FutureCallbackData,
-                },
-            ]);
-            // Async scaffolding functions never return values.  Instead, the callback is invoked
-            // when the Future is ready.
-            self.return_type = None;
+            self.return_type = Some(FfiType::RustFutureHandle);
+            self.has_rust_call_status_arg = false;
         } else {
             self.return_type = return_type;
         }

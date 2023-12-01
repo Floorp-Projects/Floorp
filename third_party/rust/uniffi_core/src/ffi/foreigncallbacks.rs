@@ -2,121 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-//! Callback interfaces are traits specified in UDL which can be implemented by foreign languages.
-//!
-//! # Using callback interfaces
-//!
-//! 1. Define a Rust trait.
-//!
-//! This toy example defines a way of Rust accessing a key-value store exposed
-//! by the host operating system (e.g. the key chain).
-//!
-//! ```
-//! trait Keychain: Send {
-//!   fn get(&self, key: String) -> Option<String>;
-//!   fn put(&self, key: String, value: String);
-//! }
-//! ```
-//!
-//! 2. Define a callback interface in the UDL
-//!
-//! ```idl
-//! callback interface Keychain {
-//!     string? get(string key);
-//!     void put(string key, string data);
-//! };
-//! ```
-//!
-//! 3. And allow it to be passed into Rust.
-//!
-//! Here, we define a constructor to pass the keychain to rust, and then another method
-//! which may use it.
-//!
-//! In UDL:
-//! ```idl
-//! object Authenticator {
-//!     constructor(Keychain keychain);
-//!     void login();
-//! }
-//! ```
-//!
-//! In Rust:
-//!
-//! ```
-//!# trait Keychain: Send {
-//!#  fn get(&self, key: String) -> Option<String>;
-//!#  fn put(&self, key: String, value: String);
-//!# }
-//! struct Authenticator {
-//!   keychain: Box<dyn Keychain>,
-//! }
-//!
-//! impl Authenticator {
-//!   pub fn new(keychain: Box<dyn Keychain>) -> Self {
-//!     Self { keychain }
-//!   }
-//!   pub fn login(&self) {
-//!     let username = self.keychain.get("username".into());
-//!     let password = self.keychain.get("password".into());
-//!   }
-//! }
-//! ```
-//! 4. Create an foreign language implementation of the callback interface.
-//!
-//! In this example, here's a Kotlin implementation.
-//!
-//! ```kotlin
-//! class AndroidKeychain: Keychain {
-//!     override fun get(key: String): String? {
-//!         // … elide the implementation.
-//!         return value
-//!     }
-//!     override fun put(key: String) {
-//!         // … elide the implementation.
-//!     }
-//! }
-//! ```
-//! 5. Pass the implementation to Rust.
-//!
-//! Again, in Kotlin
-//!
-//! ```kotlin
-//! val authenticator = Authenticator(AndroidKeychain())
-//! authenticator.login()
-//! ```
-//!
-//! # How it works.
-//!
-//! ## High level
-//!
-//! Uniffi generates a protocol or interface in client code in the foreign language must implement.
-//!
-//! For each callback interface, a `CallbackInternals` (on the Foreign Language side) and `ForeignCallbackInternals`
-//! (on Rust side) manages the process through a `ForeignCallback`. There is one `ForeignCallback` per callback interface.
-//!
-//! Passing a callback interface implementation from foreign language (e.g. `AndroidKeychain`) into Rust causes the
-//! `KeychainCallbackInternals` to store the instance in a handlemap.
-//!
-//! The object handle is passed over to Rust, and used to instantiate a struct `KeychainProxy` which implements
-//! the trait. This proxy implementation is generate by Uniffi. The `KeychainProxy` object is then passed to
-//! client code as `Box<dyn Keychain>`.
-//!
-//! Methods on `KeychainProxy` objects (e.g. `self.keychain.get("username".into())`) encode the arguments into a `RustBuffer`.
-//! Using the `ForeignCallback`, it calls the `CallbackInternals` object on the foreign language side using the
-//! object handle, and the method selector.
-//!
-//! The `CallbackInternals` object unpacks the arguments from the passed buffer, gets the object out from the handlemap,
-//! and calls the actual implementation of the method.
-//!
-//! If there's a return value, it is packed up in to another `RustBuffer` and used as the return value for
-//! `ForeignCallback`. The caller of `ForeignCallback`, the `KeychainProxy` unpacks the returned buffer into the correct
-//! type and then returns to client code.
-//!
+//! This module contains code to handle foreign callbacks - C-ABI functions that are defined by a
+//! foreign language, then registered with UniFFI.  These callbacks are used to implement callback
+//! interfaces, async scheduling etc. Foreign callbacks are registered at startup, when the foreign
+//! code loads the exported library. For each callback type, we also define a "cell" type for
+//! storing the callback.
 
-use crate::{FfiConverter, RustBuffer};
-use std::fmt;
-use std::os::raw::c_int;
 use std::sync::atomic::{AtomicUsize, Ordering};
+
+use crate::{ForeignExecutorHandle, RustBuffer, RustTaskCallback};
 
 /// ForeignCallback is the Rust representation of a foreign language function.
 /// It is the basis for all callbacks interfaces. It is registered exactly once per callback interface,
@@ -133,12 +27,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 ///   arguments from the buffer and passes them to the user's callback.
 /// * `buf_ptr` is a pointer to where the resulting buffer will be written. UniFFI will allocate a
 ///   buffer to write the result into.
-/// * A callback returns:
-///    - `-2` An error occurred that was serialized to buf_ptr
-///    - `-1` An unexpected error occurred
-///    - `0` is a deprecated way to signal that if the call succeeded, but did not modify buf_ptr
-///    - `1` If the call succeeded.  For non-void functions the return value should be serialized
-///      to buf_ptr.
+/// * Callbacks return one of the `CallbackResult` values
 ///   Note: The output buffer might still contain 0 bytes of data.
 pub type ForeignCallback = unsafe extern "C" fn(
     handle: u64,
@@ -146,137 +35,69 @@ pub type ForeignCallback = unsafe extern "C" fn(
     args_data: *const u8,
     args_len: i32,
     buf_ptr: *mut RustBuffer,
-) -> c_int;
+) -> i32;
 
-/// The method index used by the Drop trait to communicate to the foreign language side that Rust has finished with it,
-/// and it can be deleted from the handle map.
-pub const IDX_CALLBACK_FREE: u32 = 0;
-pub const CALLBACK_SUCCESS: i32 = 0;
-pub const CALLBACK_ERROR: i32 = 1;
-pub const CALLBACK_UNEXPECTED_ERROR: i32 = 2;
-
-// Overly-paranoid sanity checking to ensure that these types are
-// convertible between each-other. `transmute` actually should check this for
-// us too, but this helps document the invariants we rely on in this code.
-//
-// Note that these are guaranteed by
-// https://rust-lang.github.io/unsafe-code-guidelines/layout/function-pointers.html
-// and thus this is a little paranoid.
-static_assertions::assert_eq_size!(usize, ForeignCallback);
-static_assertions::assert_eq_size!(usize, Option<ForeignCallback>);
-
-/// Struct to hold a foreign callback.
-pub struct ForeignCallbackInternals {
-    callback_ptr: AtomicUsize,
-}
-
-const EMPTY_PTR: usize = 0;
-
-impl ForeignCallbackInternals {
-    pub const fn new() -> Self {
-        ForeignCallbackInternals {
-            callback_ptr: AtomicUsize::new(EMPTY_PTR),
-        }
-    }
-
-    pub fn set_callback(&self, callback: ForeignCallback) {
-        let as_usize = callback as usize;
-        let old_ptr = self.callback_ptr.compare_exchange(
-            EMPTY_PTR,
-            as_usize,
-            Ordering::SeqCst,
-            Ordering::SeqCst,
-        );
-        match old_ptr {
-            // We get the previous value back. If this is anything except EMPTY_PTR,
-            // then this has been set before we get here.
-            Ok(EMPTY_PTR) => (),
-            _ =>
-            // This is an internal bug, the other side of the FFI should ensure
-            // it sets this only once.
-            {
-                panic!("Bug: call set_callback multiple times. This is likely a uniffi bug")
-            }
-        };
-    }
-
-    fn call_callback(
-        &self,
-        handle: u64,
-        method: u32,
-        args: RustBuffer,
-        ret_rbuf: &mut RustBuffer,
-    ) -> c_int {
-        let ptr_value = self.callback_ptr.load(Ordering::SeqCst);
-        unsafe {
-            // SAFETY: `callback_ptr` was set in `set_callback` from a ForeignCallback pointer, so
-            // it's safe to transmute it back here.
-            let callback = std::mem::transmute::<usize, Option<ForeignCallback>>(ptr_value)
-                .expect("Callback interface handler not set");
-            callback(
-                handle,
-                method,
-                args.data_pointer(),
-                args.len() as i32,
-                ret_rbuf,
-            )
-        }
-    }
-
-    /// Invoke a callback interface method on the foreign side and return the result
-    pub fn invoke_callback<R, UniFfiTag>(&self, handle: u64, method: u32, args: RustBuffer) -> R
-    where
-        R: FfiConverter<UniFfiTag>,
-    {
-        let mut ret_rbuf = RustBuffer::new();
-        let callback_result = self.call_callback(handle, method, args, &mut ret_rbuf);
-        match callback_result {
-            CALLBACK_SUCCESS => R::lift_callback_return(ret_rbuf),
-            CALLBACK_ERROR => R::lift_callback_error(ret_rbuf),
-            CALLBACK_UNEXPECTED_ERROR => {
-                let reason = if !ret_rbuf.is_empty() {
-                    match <String as FfiConverter<UniFfiTag>>::try_lift(ret_rbuf) {
-                        Ok(s) => s,
-                        Err(e) => {
-                            log::error!("{{ trait_name }} Error reading ret_buf: {e}");
-                            String::from("[Error reading reason]")
-                        }
-                    }
-                } else {
-                    RustBuffer::destroy(ret_rbuf);
-                    String::from("[Unknown Reason]")
-                };
-                R::handle_callback_unexpected_error(UnexpectedUniFFICallbackError { reason })
-            }
-            // Other values should never be returned
-            _ => panic!("Callback failed with unexpected return code"),
-        }
-    }
-}
-
-/// Used when internal/unexpected error happened when calling a foreign callback, for example when
-/// a unknown exception is raised
+/// Callback to schedule a Rust call with a `ForeignExecutor`. The bindings code registers exactly
+/// one of these with the Rust code.
 ///
-/// User callback error types must implement a From impl from this type to their own error type.
-#[derive(Debug)]
-pub struct UnexpectedUniFFICallbackError {
-    pub reason: String,
+/// Delay is an approximate amount of ms to wait before scheduling the call.  Delay is usually 0,
+/// which means schedule sometime soon.
+///
+/// As a special case, when Rust drops the foreign executor, with `task=null`.  The foreign
+/// bindings should release the reference to the executor that was reserved for Rust.
+///
+/// This callback can be invoked from any thread, including threads created by Rust.
+///
+/// The callback should return one of the `ForeignExecutorCallbackResult` values.
+pub type ForeignExecutorCallback = extern "C" fn(
+    executor: ForeignExecutorHandle,
+    delay: u32,
+    task: Option<RustTaskCallback>,
+    task_data: *const (),
+) -> i8;
+
+/// Store a [ForeignCallback] pointer
+pub(crate) struct ForeignCallbackCell(AtomicUsize);
+
+/// Store a [ForeignExecutorCallback] pointer
+pub(crate) struct ForeignExecutorCallbackCell(AtomicUsize);
+
+/// Macro to define foreign callback types as well as the callback cell.
+macro_rules! impl_foreign_callback_cell {
+    ($callback_type:ident, $cell_type:ident) => {
+        // Overly-paranoid sanity checking to ensure that these types are
+        // convertible between each-other. `transmute` actually should check this for
+        // us too, but this helps document the invariants we rely on in this code.
+        //
+        // Note that these are guaranteed by
+        // https://rust-lang.github.io/unsafe-code-guidelines/layout/function-pointers.html
+        // and thus this is a little paranoid.
+        static_assertions::assert_eq_size!(usize, $callback_type);
+        static_assertions::assert_eq_size!(usize, Option<$callback_type>);
+
+        impl $cell_type {
+            pub const fn new() -> Self {
+                Self(AtomicUsize::new(0))
+            }
+
+            pub fn set(&self, callback: $callback_type) {
+                // Store the pointer using Ordering::Relaxed.  This is sufficient since callback
+                // should be set at startup, before there's any chance of using them.
+                self.0.store(callback as usize, Ordering::Relaxed);
+            }
+
+            pub fn get(&self) -> $callback_type {
+                let ptr_value = self.0.load(Ordering::Relaxed);
+                unsafe {
+                    // SAFETY: self.0 was set in `set` from our function pointer type, so
+                    // it's safe to transmute it back here.
+                    ::std::mem::transmute::<usize, Option<$callback_type>>(ptr_value)
+                        .expect("Bug: callback not set.  This is likely a uniffi bug.")
+                }
+            }
+        }
+    };
 }
 
-impl UnexpectedUniFFICallbackError {
-    pub fn from_reason(reason: String) -> Self {
-        Self { reason }
-    }
-}
-
-impl fmt::Display for UnexpectedUniFFICallbackError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "UnexpectedUniFFICallbackError(reason: {:?})",
-            self.reason
-        )
-    }
-}
-
-impl std::error::Error for UnexpectedUniFFICallbackError {}
+impl_foreign_callback_cell!(ForeignCallback, ForeignCallbackCell);
+impl_foreign_callback_cell!(ForeignExecutorCallback, ForeignExecutorCallbackCell);

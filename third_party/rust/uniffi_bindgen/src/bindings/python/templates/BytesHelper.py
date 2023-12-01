@@ -1,7 +1,7 @@
-class FfiConverterBytes(FfiConverterRustBuffer):
+class _UniffiConverterBytes(_UniffiConverterRustBuffer):
     @staticmethod
     def read(buf):
-        size = buf.readI32()
+        size = buf.read_i32()
         if size < 0:
             raise InternalError("Unexpected negative byte string length")
         return buf.read(size)
@@ -12,5 +12,5 @@ class FfiConverterBytes(FfiConverterRustBuffer):
             memoryview(value)
         except TypeError:
             raise TypeError("a bytes-like object is required, not {!r}".format(type(value).__name__))
-        buf.writeI32(len(value))
+        buf.write_i32(len(value))
         buf.write(value)

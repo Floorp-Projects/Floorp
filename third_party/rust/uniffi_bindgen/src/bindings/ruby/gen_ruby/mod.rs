@@ -23,57 +23,58 @@ fn is_reserved_word(word: &str) -> bool {
     RESERVED_WORDS.contains(&word)
 }
 
-impl Type {
-    /// Get the canonical, unique-within-this-component name for a type.
-    ///
-    /// When generating helper code for foreign language bindings, it's sometimes useful to be
-    /// able to name a particular type in order to e.g. call a helper function that is specific
-    /// to that type. We support this by defining a naming convention where each type gets a
-    /// unique canonical name, constructed recursively from the names of its component types (if any).
-    pub fn canonical_name(&self) -> String {
-        match self {
-            // Builtin primitive types, with plain old names.
-            Type::Int8 => "i8".into(),
-            Type::UInt8 => "u8".into(),
-            Type::Int16 => "i16".into(),
-            Type::UInt16 => "u16".into(),
-            Type::Int32 => "i32".into(),
-            Type::UInt32 => "u32".into(),
-            Type::Int64 => "i64".into(),
-            Type::UInt64 => "u64".into(),
-            Type::Float32 => "f32".into(),
-            Type::Float64 => "f64".into(),
-            Type::String => "string".into(),
-            Type::Bytes => "bytes".into(),
-            Type::Boolean => "bool".into(),
-            // API defined types.
-            // Note that these all get unique names, and the parser ensures that the names do not
-            // conflict with a builtin type. We add a prefix to the name to guard against pathological
-            // cases like a record named `SequenceRecord` interfering with `sequence<Record>`.
-            // However, types that support importing all end up with the same prefix of "Type", so
-            // that the import handling code knows how to find the remote reference.
-            Type::Object { name, .. } => format!("Type{name}"),
-            Type::Enum(nm) => format!("Type{nm}"),
-            Type::Record(nm) => format!("Type{nm}"),
-            Type::CallbackInterface(nm) => format!("CallbackInterface{nm}"),
-            Type::Timestamp => "Timestamp".into(),
-            Type::Duration => "Duration".into(),
-            Type::ForeignExecutor => "ForeignExecutor".into(),
-            // Recursive types.
-            // These add a prefix to the name of the underlying type.
-            // The component API definition cannot give names to recursive types, so as long as the
-            // prefixes we add here are all unique amongst themselves, then we have no chance of
-            // acccidentally generating name collisions.
-            Type::Optional(t) => format!("Optional{}", t.canonical_name()),
-            Type::Sequence(t) => format!("Sequence{}", t.canonical_name()),
-            Type::Map(k, v) => format!(
-                "Map{}{}",
-                k.canonical_name().to_upper_camel_case(),
-                v.canonical_name().to_upper_camel_case()
-            ),
-            // A type that exists externally.
-            Type::External { name, .. } | Type::Custom { name, .. } => format!("Type{name}"),
-        }
+/// Get the canonical, unique-within-this-component name for a type.
+///
+/// When generating helper code for foreign language bindings, it's sometimes useful to be
+/// able to name a particular type in order to e.g. call a helper function that is specific
+/// to that type. We support this by defining a naming convention where each type gets a
+/// unique canonical name, constructed recursively from the names of its component types (if any).
+pub fn canonical_name(t: &Type) -> String {
+    match t {
+        // Builtin primitive types, with plain old names.
+        Type::Int8 => "i8".into(),
+        Type::UInt8 => "u8".into(),
+        Type::Int16 => "i16".into(),
+        Type::UInt16 => "u16".into(),
+        Type::Int32 => "i32".into(),
+        Type::UInt32 => "u32".into(),
+        Type::Int64 => "i64".into(),
+        Type::UInt64 => "u64".into(),
+        Type::Float32 => "f32".into(),
+        Type::Float64 => "f64".into(),
+        Type::String => "string".into(),
+        Type::Bytes => "bytes".into(),
+        Type::Boolean => "bool".into(),
+        // API defined types.
+        // Note that these all get unique names, and the parser ensures that the names do not
+        // conflict with a builtin type. We add a prefix to the name to guard against pathological
+        // cases like a record named `SequenceRecord` interfering with `sequence<Record>`.
+        // However, types that support importing all end up with the same prefix of "Type", so
+        // that the import handling code knows how to find the remote reference.
+        Type::Object { name, .. } => format!("Type{name}"),
+        Type::Enum { name, .. } => format!("Type{name}"),
+        Type::Record { name, .. } => format!("Type{name}"),
+        Type::CallbackInterface { name, .. } => format!("CallbackInterface{name}"),
+        Type::Timestamp => "Timestamp".into(),
+        Type::Duration => "Duration".into(),
+        Type::ForeignExecutor => "ForeignExecutor".into(),
+        // Recursive types.
+        // These add a prefix to the name of the underlying type.
+        // The component API definition cannot give names to recursive types, so as long as the
+        // prefixes we add here are all unique amongst themselves, then we have no chance of
+        // acccidentally generating name collisions.
+        Type::Optional { inner_type } => format!("Optional{}", canonical_name(inner_type)),
+        Type::Sequence { inner_type } => format!("Sequence{}", canonical_name(inner_type)),
+        Type::Map {
+            key_type,
+            value_type,
+        } => format!(
+            "Map{}{}",
+            canonical_name(key_type).to_upper_camel_case(),
+            canonical_name(value_type).to_upper_camel_case()
+        ),
+        // A type that exists externally.
+        Type::External { name, .. } | Type::Custom { name, .. } => format!("Type{name}"),
     }
 }
 
@@ -103,8 +104,6 @@ impl Config {
 }
 
 impl BindingsConfig for Config {
-    const TOML_KEY: &'static str = "ruby";
-
     fn update_from_ci(&mut self, ci: &ComponentInterface) {
         self.cdylib_name
             .get_or_insert_with(|| format!("uniffi_{}", ci.namespace()));
@@ -123,10 +122,15 @@ impl BindingsConfig for Config {
 pub struct RubyWrapper<'a> {
     config: Config,
     ci: &'a ComponentInterface,
+    canonical_name: &'a dyn Fn(&Type) -> String,
 }
 impl<'a> RubyWrapper<'a> {
     pub fn new(config: Config, ci: &'a ComponentInterface) -> Self {
-        Self { config, ci }
+        Self {
+            config,
+            ci,
+            canonical_name: &canonical_name,
+        }
     }
 }
 
@@ -156,7 +160,9 @@ mod filters {
             FfiType::ForeignExecutorHandle => {
                 unimplemented!("Foreign executors are not implemented")
             }
-            FfiType::FutureCallback { .. } | FfiType::FutureCallbackData => {
+            FfiType::RustFutureHandle
+            | FfiType::RustFutureContinuationCallback
+            | FfiType::RustFutureContinuationData => {
                 unimplemented!("Async functions are not implemented")
             }
         })
@@ -177,7 +183,9 @@ mod filters {
             Literal::EmptySequence => "[]".into(),
             Literal::EmptyMap => "{}".into(),
             Literal::Enum(v, type_) => match type_ {
-                Type::Enum(name) => format!("{}::{}", class_name_rb(name)?, enum_name_rb(v)?),
+                Type::Enum { name, .. } => {
+                    format!("{}::{}", class_name_rb(name)?, enum_name_rb(v)?)
+                }
                 _ => panic!("Unexpected type in enum literal: {type_:?}"),
             },
             // https://docs.ruby-lang.org/en/2.0.0/syntax/literals_rdoc.html
@@ -226,13 +234,15 @@ mod filters {
             Type::UInt64 => format!("{ns}::uniffi_in_range({nm}, \"u64\", 0, 2**64)"),
             Type::Float32 | Type::Float64 => nm.to_string(),
             Type::Boolean => format!("{nm} ? true : false"),
-            Type::Object { .. } | Type::Enum(_) | Type::Record(_) => nm.to_string(),
+            Type::Object { .. } | Type::Enum { .. } | Type::Record { .. } => nm.to_string(),
             Type::String => format!("{ns}::uniffi_utf8({nm})"),
             Type::Bytes => format!("{ns}::uniffi_bytes({nm})"),
             Type::Timestamp | Type::Duration => nm.to_string(),
-            Type::CallbackInterface(_) => panic!("No support for coercing callback interfaces yet"),
-            Type::Optional(t) => format!("({nm} ? {} : nil)", coerce_rb(nm, ns, t)?),
-            Type::Sequence(t) => {
+            Type::CallbackInterface { .. } => {
+                panic!("No support for coercing callback interfaces yet")
+            }
+            Type::Optional { inner_type: t } => format!("({nm} ? {} : nil)", coerce_rb(nm, ns, t)?),
+            Type::Sequence { inner_type: t } => {
                 let coerce_code = coerce_rb("v", ns, t)?;
                 if coerce_code == "v" {
                     nm.to_string()
@@ -240,7 +250,7 @@ mod filters {
                     format!("{nm}.map {{ |v| {coerce_code} }}")
                 }
             }
-            Type::Map(_k, t) => {
+            Type::Map { value_type: t, .. } => {
                 let k_coerce_code = coerce_rb("k", ns, &Type::String)?;
                 let v_coerce_code = coerce_rb("v", ns, t)?;
 
@@ -274,16 +284,18 @@ mod filters {
             Type::String => format!("RustBuffer.allocFromString({nm})"),
             Type::Bytes => format!("RustBuffer.allocFromBytes({nm})"),
             Type::Object { name, .. } => format!("({}._uniffi_lower {nm})", class_name_rb(name)?),
-            Type::CallbackInterface(_) => panic!("No support for lowering callback interfaces yet"),
-            Type::Enum(_)
-            | Type::Record(_)
-            | Type::Optional(_)
-            | Type::Sequence(_)
+            Type::CallbackInterface { .. } => {
+                panic!("No support for lowering callback interfaces yet")
+            }
+            Type::Enum { .. }
+            | Type::Record { .. }
+            | Type::Optional { .. }
+            | Type::Sequence { .. }
             | Type::Timestamp
             | Type::Duration
-            | Type::Map(_, _) => format!(
+            | Type::Map { .. } => format!(
                 "RustBuffer.alloc_from_{}({})",
-                class_name_rb(&type_.canonical_name())?,
+                class_name_rb(&canonical_name(type_))?,
                 nm
             ),
             Type::External { .. } => panic!("No support for lowering external types, yet"),
@@ -307,23 +319,25 @@ mod filters {
             Type::String => format!("{nm}.consumeIntoString"),
             Type::Bytes => format!("{nm}.consumeIntoBytes"),
             Type::Object { name, .. } => format!("{}._uniffi_allocate({nm})", class_name_rb(name)?),
-            Type::CallbackInterface(_) => panic!("No support for lifting callback interfaces, yet"),
-            Type::Enum(_) => {
+            Type::CallbackInterface { .. } => {
+                panic!("No support for lifting callback interfaces, yet")
+            }
+            Type::Enum { .. } => {
                 format!(
                     "{}.consumeInto{}",
                     nm,
-                    class_name_rb(&type_.canonical_name())?
+                    class_name_rb(&canonical_name(type_))?
                 )
             }
-            Type::Record(_)
-            | Type::Optional(_)
-            | Type::Sequence(_)
+            Type::Record { .. }
+            | Type::Optional { .. }
+            | Type::Sequence { .. }
             | Type::Timestamp
             | Type::Duration
-            | Type::Map(_, _) => format!(
+            | Type::Map { .. } => format!(
                 "{}.consumeInto{}",
                 nm,
-                class_name_rb(&type_.canonical_name())?
+                class_name_rb(&canonical_name(type_))?
             ),
             Type::External { .. } => panic!("No support for lifting external types, yet"),
             Type::Custom { .. } => panic!("No support for lifting custom types, yet"),
@@ -339,15 +353,19 @@ mod test_type {
     #[test]
     fn test_canonical_names() {
         // Non-exhaustive, but gives a bit of a flavour of what we want.
-        assert_eq!(Type::UInt8.canonical_name(), "u8");
-        assert_eq!(Type::String.canonical_name(), "string");
-        assert_eq!(Type::Bytes.canonical_name(), "bytes");
+        assert_eq!(canonical_name(&Type::UInt8), "u8");
+        assert_eq!(canonical_name(&Type::String), "string");
+        assert_eq!(canonical_name(&Type::Bytes), "bytes");
         assert_eq!(
-            Type::Optional(Box::new(Type::Sequence(Box::new(Type::Object {
-                name: "Example".into(),
-                imp: ObjectImpl::Struct,
-            }))))
-            .canonical_name(),
+            canonical_name(&Type::Optional {
+                inner_type: Box::new(Type::Sequence {
+                    inner_type: Box::new(Type::Object {
+                        module_path: "anything".to_string(),
+                        name: "Example".into(),
+                        imp: ObjectImpl::Struct,
+                    })
+                })
+            }),
             "OptionalSequenceTypeExample"
         );
     }

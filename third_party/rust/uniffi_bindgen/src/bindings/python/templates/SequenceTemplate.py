@@ -1,16 +1,16 @@
 {%- let inner_ffi_converter = inner_type|ffi_converter_name %}
 
-class {{ ffi_converter_name}}(FfiConverterRustBuffer):
+class {{ ffi_converter_name}}(_UniffiConverterRustBuffer):
     @classmethod
     def write(cls, value, buf):
         items = len(value)
-        buf.writeI32(items)
+        buf.write_i32(items)
         for item in value:
             {{ inner_ffi_converter }}.write(item, buf)
 
     @classmethod
     def read(cls, buf):
-        count = buf.readI32()
+        count = buf.read_i32()
         if count < 0:
             raise InternalError("Unexpected negative sequence length")
 

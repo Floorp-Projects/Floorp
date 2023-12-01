@@ -28,7 +28,7 @@ fileprivate let {{ foreign_callback }} : ForeignCallback =
         {%- match meth.return_type() %}
         {%- when Some(return_type) %}
         func makeCall() throws -> Int32 {
-            let result = try swiftCallbackInterface.{{ meth.name()|fn_name }}(
+            let result = {% if meth.throws() %} try{% endif %} swiftCallbackInterface.{{ meth.name()|fn_name }}(
                     {% for arg in meth.arguments() -%}
                     {% if !config.omit_argument_labels() %}{{ arg.name()|var_name }}: {% endif %} try {{ arg|read_fn }}(from: &reader)
                     {%- if !loop.last %}, {% endif %}

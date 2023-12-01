@@ -32,7 +32,7 @@ typedef struct RustBuffer
 typedef int32_t (*ForeignCallback)(uint64_t, int32_t, const uint8_t *_Nonnull, int32_t, RustBuffer *_Nonnull);
 
 // Task defined in Rust that Swift executes
-typedef void (*UniFfiRustTaskCallback)(const void * _Nullable);
+typedef void (*UniFfiRustTaskCallback)(const void * _Nullable, int8_t);
 
 // Callback to execute Rust tasks using a Swift Task
 //
@@ -41,7 +41,7 @@ typedef void (*UniFfiRustTaskCallback)(const void * _Nullable);
 //   delay: Delay in MS
 //   task: UniFfiRustTaskCallback to call
 //   task_data: data to pass the task callback
-typedef void (*UniFfiForeignExecutorCallback)(size_t, uint32_t, UniFfiRustTaskCallback _Nullable, const void * _Nullable);
+typedef int8_t (*UniFfiForeignExecutorCallback)(size_t, uint32_t, UniFfiRustTaskCallback _Nullable, const void * _Nullable);
 
 typedef struct ForeignBytes
 {
@@ -59,10 +59,8 @@ typedef struct RustCallStatus {
 // ⚠️ increment the version suffix in all instances of UNIFFI_SHARED_HEADER_V4 in this file.           ⚠️
 #endif // def UNIFFI_SHARED_H
 
-// Callbacks for UniFFI Futures
-{%- for ffi_type in ci.iter_future_callback_params() %}
-typedef void (*UniFfiFutureCallback{{ ffi_type|ffi_canonical_name }})(const void * _Nonnull, {{ ffi_type|header_ffi_type_name }}, RustCallStatus);
-{%- endfor %}
+// Continuation callback for UniFFI Futures
+typedef void (*UniFfiRustFutureContinuation)(void * _Nonnull, int8_t);
 
 // Scaffolding functions
 {%- for func in ci.iter_ffi_function_definitions() %}

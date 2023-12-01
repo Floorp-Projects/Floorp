@@ -7,4 +7,5 @@ typedef extern Line;
 
 namespace external_types {
     double gradient(Line? value);
+    Point? intersection(Line ln1, Line ln2);
 };

@@ -69,7 +69,7 @@ impl r#{{ trait_name }} for {{ trait_impl }} {
         let mut args_buf = Vec::new();
         {% endif -%}
         {%- for arg in meth.arguments() %}
-        {{ arg.as_type().borrow()|ffi_converter }}::write(r#{{ arg.name() }}, &mut args_buf);
+        {{ arg.as_type().borrow()|ffi_trait("Lower") }}::write(r#{{ arg.name() }}, &mut args_buf);
         {%- endfor -%}
         let args_rbuf = uniffi::RustBuffer::from_vec(args_buf);
 
@@ -79,4 +79,4 @@ impl r#{{ trait_name }} for {{ trait_impl }} {
     {%- endfor %}
 }
 
-::uniffi::ffi_converter_callback_interface!(r#{{ trait_name }}, {{ trait_impl }}, "{{ cbi.name() }}", crate::UniFfiTag);
+::uniffi::scaffolding_ffi_converter_callback_interface!(r#{{ trait_name }}, {{ trait_impl }});

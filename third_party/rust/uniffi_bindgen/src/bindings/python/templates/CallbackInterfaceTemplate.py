@@ -3,7 +3,7 @@
 
 {% if self.include_once_check("CallbackInterfaceRuntime.py") %}{% include "CallbackInterfaceRuntime.py" %}{% endif %}
 
-# Declaration and FfiConverters for {{ type_name }} Callback Interface
+# Declaration and _UniffiConverters for {{ type_name }} Callback Interface
 
 class {{ type_name }}:
     {% for meth in cbi.methods() -%}
@@ -16,7 +16,7 @@ def py_{{ foreign_callback }}(handle, method, args_data, args_len, buf_ptr):
     {% for meth in cbi.methods() -%}
     {% let method_name = format!("invoke_{}", meth.name())|fn_name %}
     def {{ method_name }}(python_callback, args_stream, buf_ptr):
-        {#- Unpacking args from the RustBuffer #}
+        {#- Unpacking args from the _UniffiRustBuffer #}
         def makeCall():
             {#- Calling the concrete callback object #}
             {%- if meth.arguments().len() != 0 -%}
@@ -34,13 +34,13 @@ def py_{{ foreign_callback }}(handle, method, args_data, args_len, buf_ptr):
             {%- match meth.return_type() %}
             {%- when Some(return_type) %}
             rval = makeCall()
-            with RustBuffer.allocWithBuilder() as builder:
+            with _UniffiRustBuffer.alloc_with_builder() as builder:
                 {{ return_type|write_fn }}(rval, builder)
                 buf_ptr[0] = builder.finalize()
             {%- when None %}
             makeCall()
             {%- endmatch %}
-            return UNIFFI_CALLBACK_SUCCESS
+            return _UNIFFI_CALLBACK_SUCCESS
 
         {%- match meth.throws_type() %}
         {%- when None %}
@@ -50,23 +50,23 @@ def py_{{ foreign_callback }}(handle, method, args_data, args_len, buf_ptr):
             return makeCallAndHandleReturn()
         except {{ err|type_name }} as e:
             # Catch errors declared in the UDL file
-            with RustBuffer.allocWithBuilder() as builder:
+            with _UniffiRustBuffer.alloc_with_builder() as builder:
                 {{ err|write_fn }}(e, builder)
                 buf_ptr[0] = builder.finalize()
-            return UNIFFI_CALLBACK_ERROR
+            return _UNIFFI_CALLBACK_ERROR
         {%- endmatch %}
 
     {% endfor %}
 
     cb = {{ ffi_converter_name }}.lift(handle)
     if not cb:
-        raise InternalError("No callback in handlemap; this is a Uniffi bug")
+        raise InternalError("No callback in handlemap; this is a uniffi bug")
 
     if method == IDX_CALLBACK_FREE:
         {{ ffi_converter_name }}.drop(handle)
         # Successfull return
         # See docs of ForeignCallback in `uniffi_core/src/ffi/foreigncallbacks.rs`
-        return UNIFFI_CALLBACK_SUCCESS
+        return _UNIFFI_CALLBACK_SUCCESS
 
     {% for meth in cbi.methods() -%}
     {% let method_name = format!("invoke_{}", meth.name())|fn_name -%}
@@ -74,7 +74,7 @@ def py_{{ foreign_callback }}(handle, method, args_data, args_len, buf_ptr):
         # Call the method and handle any errors
         # See docs of ForeignCallback in `uniffi_core/src/ffi/foreigncallbacks.rs` for details
         try:
-            return {{ method_name }}(cb, RustBufferStream(args_data, args_len), buf_ptr)
+            return {{ method_name }}(cb, _UniffiRustBufferStream(args_data, args_len), buf_ptr)
         except BaseException as e:
             # Catch unexpected errors
             try:
@@ -83,7 +83,7 @@ def py_{{ foreign_callback }}(handle, method, args_data, args_len, buf_ptr):
             except:
                 # If that fails, just give up
                 pass
-            return UNIFFI_CALLBACK_UNEXPECTED_ERROR
+            return _UNIFFI_CALLBACK_UNEXPECTED_ERROR
     {% endfor %}
 
     # This should never happen, because an out of bounds method index won't
@@ -92,14 +92,14 @@ def py_{{ foreign_callback }}(handle, method, args_data, args_len, buf_ptr):
 
     # An unexpected error happened.
     # See docs of ForeignCallback in `uniffi_core/src/ffi/foreigncallbacks.rs`
-    return UNIFFI_CALLBACK_UNEXPECTED_ERROR
+    return _UNIFFI_CALLBACK_UNEXPECTED_ERROR
 
 # We need to keep this function reference alive:
 # if they get GC'd while in use then UniFFI internals could attempt to call a function
 # that is in freed memory.
 # That would be...uh...bad. Yeah, that's the word. Bad.
-{{ foreign_callback }} = FOREIGN_CALLBACK_T(py_{{ foreign_callback }})
-rust_call(lambda err: _UniFFILib.{{ cbi.ffi_init_callback().name() }}({{ foreign_callback }}, err))
+{{ foreign_callback }} = _UNIFFI_FOREIGN_CALLBACK_T(py_{{ foreign_callback }})
+_rust_call(lambda err: _UniffiLib.{{ cbi.ffi_init_callback().name() }}({{ foreign_callback }}, err))
 
-# The FfiConverter which transforms the Callbacks in to Handles to pass to Rust.
-{{ ffi_converter_name }} = FfiConverterCallbackInterface({{ foreign_callback }})
+# The _UniffiConverter which transforms the Callbacks in to Handles to pass to Rust.
+{{ ffi_converter_name }} = _UniffiConverterCallbackInterface({{ foreign_callback }})

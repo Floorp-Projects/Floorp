@@ -2,41 +2,18 @@
 // Trust me, you don't want to mess with it!
 {% import "macros.rs" as rs %}
 
-// Unit struct to parameterize the FfiConverter trait.
-//
-// We use FfiConverter<UniFfiTag> to handle lowering/lifting/serializing types for this crate.  See
-// https://mozilla.github.io/uniffi-rs/internals/lifting_and_lowering.html#code-generation-and-the-fficonverter-trait
-// for details.
-//
-// This is pub, since we need to access it to support external types
-#[doc(hidden)]
-pub struct UniFfiTag;
+::uniffi::setup_scaffolding!("{{ ci.namespace() }}");
 
-#[allow(clippy::missing_safety_doc, missing_docs)]
-#[doc(hidden)]
-#[no_mangle]
-pub extern "C" fn {{ ci.ffi_uniffi_contract_version().name() }}() -> u32 {
-    {{ ci.uniffi_contract_version() }}
-}
-
-{%- include "namespace_metadata.rs" %}
-
-// Check for compatibility between `uniffi` and `uniffi_bindgen` versions.
-// Note that we have an error message on the same line as the assertion.
-// This is important, because if the assertion fails, the compiler only
-// seems to show that single line as context for the user.
-uniffi::assert_compatible_version!("{{ uniffi_version }}"); // Please check that you depend on version {{ uniffi_version }} of the `uniffi` crate.
+{% include "UdlMetadata.rs" %}
 
 {% for ty in ci.iter_types() %}
 {%- match ty %}
-{%- when Type::Map with (k, v) -%}
+{%- when Type::Map { key_type: k, value_type: v } -%}
 {# Next comment MUST be after the line to be in the compiler output #}
 uniffi::deps::static_assertions::assert_impl_all!({{ k|type_rs }}: ::std::cmp::Eq, ::std::hash::Hash); // record<{{ k|type_rs }}, {{ v|type_rs }}>
 {%- else %}
 {%- endmatch %}
 {% endfor %}
-
-{% include "RustBuffer.rs" %}
 
 {% for e in ci.enum_definitions() %}
 {% if ci.is_name_used_as_error(e.name()) %}
@@ -71,10 +48,5 @@ uniffi::deps::static_assertions::assert_impl_all!({{ k|type_rs }}: ::std::cmp::E
 // External and Wrapped types
 {% include "ExternalTypesTemplate.rs" %}
 
-// Export scaffolding checksums
+// Export scaffolding checksums for UDL items
 {% include "Checksums.rs" %}
-
-// The `reexport_uniffi_scaffolding` macro
-{% include "ReexportUniFFIScaffolding.rs" %}
-
-{%- import "macros.rs" as rs -%}

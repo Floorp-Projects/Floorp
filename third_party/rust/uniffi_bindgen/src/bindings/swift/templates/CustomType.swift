@@ -1,4 +1,4 @@
-{%- let ffi_type_name=builtin.ffi_type().borrow()|ffi_type_name %}
+{%- let ffi_type_name=builtin|ffi_type|ffi_type_name %}
 {%- match config.custom_types.get(name.as_str())  %}
 {%- when None %}
 {#- No config, just forward all methods to our builtin type #}
@@ -70,6 +70,8 @@ public struct FfiConverterType{{ name }}: FfiConverter {
     }
 }
 
+{%- endmatch %}
+
 {#
 We always write these public functions just incase the type is used as
 an external type by another crate.
@@ -81,6 +83,4 @@ public func FfiConverterType{{ name }}_lift(_ value: {{ ffi_type_name }}) throws
 public func FfiConverterType{{ name }}_lower(_ value: {{ name }}) -> {{ ffi_type_name }} {
     return FfiConverterType{{ name }}.lower(value)
 }
-
-{%- endmatch %}
 
