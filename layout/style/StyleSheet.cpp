@@ -1219,6 +1219,7 @@ void StyleSheet::FinishAsyncParse(
   MOZ_ASSERT(!mParsePromise.IsEmpty());
   Inner().mContents = aSheetContents;
   Inner().mUseCounters = std::move(aUseCounters);
+  FixUpRuleListAfterContentsChangeIfNeeded();
   mParsePromise.Resolve(true, __func__);
 }
 
