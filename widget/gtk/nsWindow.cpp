@@ -889,14 +889,9 @@ bool nsWindow::DrawsToCSDTitlebar() const {
 }
 
 void nsWindow::AddCSDDecorationSize(int* aWidth, int* aHeight) {
-  if (mUndecorated || mSizeMode != nsSizeMode_Normal ||
-      mGtkWindowDecoration != GTK_DECORATION_CLIENT) {
-    return;
-  }
-
-  // We add decoration borders if titlebar is off or on Wayland
-  // where CSD is always used.
-  if (!mDrawInTitlebar && !GdkIsWaylandDisplay()) {
+  if (mSizeMode != nsSizeMode_Normal || mUndecorated ||
+      mGtkWindowDecoration != GTK_DECORATION_CLIENT || !GdkIsWaylandDisplay() ||
+      !IsGnomeDesktopEnvironment()) {
     return;
   }
 
