@@ -160,6 +160,11 @@ export class CookieBannerListService {
     // Passing `doImport = false` since we trigger the import ourselves.
     Services.cookieBanners.resetRules(false);
     this.importAllRules();
+
+    // Reset executed records (private and normal browsing) for easier testing
+    // of rules.
+    Services.cookieBanners.removeAllExecutedRecords(false);
+    Services.cookieBanners.removeAllExecutedRecords(true);
   }
 
   #removeRules(rules = []) {
