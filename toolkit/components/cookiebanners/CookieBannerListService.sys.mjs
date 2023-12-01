@@ -17,10 +17,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "cookiebanners.cookieInjector.defaultExpiryRelative"
 );
 
+const PREF_SKIP_REMOTE_SETTINGS =
+  "cookiebanners.listService.testSkipRemoteSettings";
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "TEST_SKIP_REMOTE_SETTINGS",
-  "cookiebanners.listService.testSkipRemoteSettings"
+  PREF_SKIP_REMOTE_SETTINGS
 );
 
 const PREF_TEST_RULES = "cookiebanners.listService.testRules";
@@ -73,6 +75,7 @@ export class CookieBannerListService {
 
     // Register listener to import rules when test pref changes.
     Services.prefs.addObserver(PREF_TEST_RULES, this);
+    Services.prefs.addObserver(PREF_SKIP_REMOTE_SETTINGS, this);
 
     // Register callback for collection changes.
     // Only register if not already registered.
@@ -123,6 +126,7 @@ export class CookieBannerListService {
     }
 
     Services.prefs.removeObserver(PREF_TEST_RULES, this);
+    Services.prefs.removeObserver(PREF_SKIP_REMOTE_SETTINGS, this);
   }
 
   /**
@@ -145,13 +149,14 @@ export class CookieBannerListService {
   }
 
   observe(subject, topic, prefName) {
-    if (prefName != PREF_TEST_RULES) {
+    if (prefName != PREF_TEST_RULES && prefName != PREF_SKIP_REMOTE_SETTINGS) {
       return;
     }
 
     // When the test rules update we need to clear all rules and import them
-    // again. This is required because we don't have a mechanism for deleting specific
-    // test rules.
+    // again. This is required because we don't have a mechanism for deleting
+    // specific test rules.
+    // Also reimport when rule import from RemoteSettings is enabled / disabled.
     // Passing `doImport = false` since we trigger the import ourselves.
     Services.cookieBanners.resetRules(false);
     this.importAllRules();
