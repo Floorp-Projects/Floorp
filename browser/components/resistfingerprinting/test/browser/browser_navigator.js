@@ -14,13 +14,11 @@ ChromeUtils.defineESModuleGetters(this, {
 
 let expectedResults;
 
-const osVersion = Services.sysinfo.get("version");
-
 const DEFAULT_APPVERSION = {
   linux: "5.0 (X11)",
   win: "5.0 (Windows)",
   macosx: "5.0 (Macintosh)",
-  android: `5.0 (Android ${osVersion})`,
+  android: "5.0 (Android 10)",
   other: "5.0 (X11)",
 };
 
@@ -88,7 +86,7 @@ const SPOOFED_OSCPU = {
 const DEFAULT_UA_OS = {
   linux: `X11; Linux ${cpuArch}`,
   macosx: "Macintosh; Intel Mac OS X 10.15",
-  android: `Android ${osVersion}; Mobile`,
+  android: "Android 10; Mobile",
   other: `X11; Linux ${cpuArch}`,
 };
 
