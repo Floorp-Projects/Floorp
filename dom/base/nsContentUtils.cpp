@@ -549,6 +549,13 @@ enum AutocompleteFieldContactHint : uint8_t {
 #undef AUTOCOMPLETE_FIELD_CONTACT_HINT
 };
 
+enum AutocompleteCredentialType : uint8_t {
+#define AUTOCOMPLETE_CREDENTIAL_TYPE(name_, value_) \
+  eAutocompleteCredentialType_##name_,
+#include "AutocompleteFieldList.h"
+#undef AUTOCOMPLETE_CREDENTIAL_TYPE
+};
+
 enum AutocompleteCategory {
 #define AUTOCOMPLETE_CATEGORY(name_, value_) eAutocompleteCategory_##name_,
 #include "AutocompleteFieldList.h"
@@ -603,6 +610,13 @@ static const nsAttrValue::EnumTable kAutocompleteContactFieldHintTable[] = {
   {value_, eAutocompleteFieldContactHint_##name_},
 #include "AutocompleteFieldList.h"
 #undef AUTOCOMPLETE_FIELD_CONTACT_HINT
+    {nullptr, 0}};
+
+static const nsAttrValue::EnumTable kAutocompleteCredentialTypeTable[] = {
+#define AUTOCOMPLETE_CREDENTIAL_TYPE(name_, value_) \
+  {value_, eAutocompleteCredentialType_##name_},
+#include "AutocompleteFieldList.h"
+#undef AUTOCOMPLETE_CREDENTIAL_TYPE
     {nullptr, 0}};
 
 namespace {
@@ -1165,6 +1179,18 @@ nsContentUtils::SerializeAutocompleteAttribute(
       }
       aResult += info.mFieldName;
     }
+
+    // The autocomplete attribute value "webauthn" is interpreted as both a
+    // field name and a credential type. The corresponding IDL-exposed autofill
+    // value is "webauthn", not "webauthn webauthn".
+    if (!info.mCredentialType.IsEmpty() &&
+        !(info.mCredentialType.Equals(u"webauthn"_ns) &&
+          info.mCredentialType.Equals(aResult))) {
+      if (!aResult.IsEmpty()) {
+        aResult += ' ';
+      }
+      aResult += info.mCredentialType;
+    }
   }
 
   return state;
@@ -1198,7 +1224,7 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(
   }
 
   uint32_t numTokens = aAttrVal->GetAtomCount();
-  if (!numTokens) {
+  if (!numTokens || numTokens > INT32_MAX) {
     return eAutocompleteAttrState_Invalid;
   }
 
@@ -1206,6 +1232,46 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(
   nsString tokenString = nsDependentAtomString(aAttrVal->AtomAt(index));
   AutocompleteCategory category;
   nsAttrValue enumValue;
+  nsAutoString credentialTypeStr;
+
+  bool result = enumValue.ParseEnumValue(
+      tokenString, kAutocompleteCredentialTypeTable, false);
+  if (result) {
+    if (!enumValue.Equals(u"webauthn"_ns, eIgnoreCase) || numTokens > 5) {
+      return eAutocompleteAttrState_Invalid;
+    }
+    enumValue.ToString(credentialTypeStr);
+    ASCIIToLower(credentialTypeStr);
+    // category is Credential and the indexth token is "webauthn"
+    if (index == 0) {
+      aInfo.mFieldName.Assign(credentialTypeStr);
+      aInfo.mCredentialType.Assign(credentialTypeStr);
+      return eAutocompleteAttrState_Valid;
+    }
+
+    --index;
+    tokenString = nsDependentAtomString(aAttrVal->AtomAt(index));
+
+    // Only the Normal and Contact categories are allowed with webauthn
+    //  - disallow Credential
+    if (enumValue.ParseEnumValue(tokenString, kAutocompleteCredentialTypeTable,
+                                 false)) {
+      return eAutocompleteAttrState_Invalid;
+    }
+    //  - disallow Off and Automatic
+    if (enumValue.ParseEnumValue(tokenString, kAutocompleteFieldNameTable,
+                                 false)) {
+      if (enumValue.Equals(u"off"_ns, eIgnoreCase) ||
+          enumValue.Equals(u"on"_ns, eIgnoreCase)) {
+        return eAutocompleteAttrState_Invalid;
+      }
+    }
+
+    // Proceed to process the remaining tokens as if "webauthn" was not present.
+    // We need to decrement numTokens to enforce the correct per-category limits
+    // on the maximum number of tokens.
+    --numTokens;
+  }
 
   bool unsupported = false;
   if (!aGrantAllValidValue) {
@@ -1216,9 +1282,10 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(
     }
   }
 
-  nsAutoString str;
-  bool result =
+  nsAutoString fieldNameStr;
+  result =
       enumValue.ParseEnumValue(tokenString, kAutocompleteFieldNameTable, false);
+
   if (result) {
     // Off/Automatic/Normal categories.
     if (enumValue.Equals(u"off"_ns, eIgnoreCase) ||
@@ -1226,9 +1293,10 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(
       if (numTokens > 1) {
         return eAutocompleteAttrState_Invalid;
       }
-      enumValue.ToString(str);
-      ASCIIToLower(str);
-      aInfo.mFieldName.Assign(str);
+      enumValue.ToString(fieldNameStr);
+      ASCIIToLower(fieldNameStr);
+      aInfo.mFieldName.Assign(fieldNameStr);
+      aInfo.mCredentialType.Assign(credentialTypeStr);
       aInfo.mCanAutomaticallyPersist =
           !enumValue.Equals(u"off"_ns, eIgnoreCase);
       return eAutocompleteAttrState_Valid;
@@ -1263,10 +1331,11 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(
     category = eAutocompleteCategory_CONTACT;
   }
 
-  enumValue.ToString(str);
-  ASCIIToLower(str);
-  aInfo.mFieldName.Assign(str);
+  enumValue.ToString(fieldNameStr);
+  ASCIIToLower(fieldNameStr);
 
+  aInfo.mFieldName.Assign(fieldNameStr);
+  aInfo.mCredentialType.Assign(credentialTypeStr);
   aInfo.mCanAutomaticallyPersist = !enumValue.ParseEnumValue(
       tokenString, kAutocompleteNoPersistFieldNameTable, false);
 
@@ -1333,6 +1402,7 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(
   aInfo.mAddressType.Truncate();
   aInfo.mContactType.Truncate();
   aInfo.mFieldName.Truncate();
+  aInfo.mCredentialType.Truncate();
 
   return eAutocompleteAttrState_Invalid;
 }
