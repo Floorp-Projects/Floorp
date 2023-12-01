@@ -355,6 +355,7 @@ let JSWINDOWACTORS = {
     child: {
       esModuleURI: "resource://gre/modules/LoginManagerChild.sys.mjs",
       events: {
+        DOMDocFetchSuccess: {},
         DOMFormBeforeSubmit: {},
         DOMFormHasPassword: {},
         DOMFormHasPossibleUsername: {},

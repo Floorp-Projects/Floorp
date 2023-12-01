@@ -10,7 +10,6 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-import { FORM_SUBMISSION_REASON } from "./FormAutofillChild.sys.mjs";
 
 const lazy = {};
 
@@ -136,19 +135,16 @@ export var FormAutofillContent = {
    * 3. Number of filled fields is less than autofill threshold
    *
    * @param {HTMLElement} formElement Root element which receives submit event.
-   * @param {string} reason Reason for invoking the form submission
-   *                 (see options for FORM_SUBMISSION_REASON in FormAutofillChild))
    * @param {Window} domWin Content window; passed for unit tests and when
    *                 invoked by the FormAutofillSection
    * @param {object} handler FormAutofillHander, if known by caller
    */
   formSubmitted(
     formElement,
-    reason = FORM_SUBMISSION_REASON.FORM_SUBMIT_EVENT,
     domWin = formElement.ownerGlobal,
     handler = undefined
   ) {
-    this.debug(`Handling form submission - derived from ${reason}`);
+    this.debug("Handling form submission");
 
     if (!lazy.FormAutofill.isAutofillEnabled) {
       this.debug("Form Autofill is disabled");
@@ -270,15 +266,6 @@ export var FormAutofillContent = {
     this._autofillPending = flag;
   },
 
-  /**
-   * Identifies and marks each autofill field
-   *
-   * @param {HTMLElement} element
-   *        Element that serves as an anchor for the formautofill heuristics to retrieve
-   *        the root form and run the formautofill heuristics on the form elements
-   * @returns {boolean}
-   *        whether any autofill fields were identified
-   */
   identifyAutofillFields(element) {
     this.debug(
       `identifyAutofillFields: ${element.ownerDocument.location?.hostname}`
@@ -296,8 +283,6 @@ export var FormAutofillContent = {
       this._fieldDetailsManager.identifyAutofillFields(element);
 
     validDetails?.forEach(detail => this._markAsAutofillField(detail.element));
-
-    return !!validDetails.length;
   },
 
   clearForm() {
