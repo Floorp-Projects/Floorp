@@ -1273,7 +1273,7 @@ static bool TryParseDashedNumericDatePrefix(const CharT* s, size_t length,
     year = third;
   }
 
-  if (mon > 12 || mday > 31) {
+  if (mon < 1 || mon > 12 || mday < 1 || mday > 31) {
     return false;
   }
 

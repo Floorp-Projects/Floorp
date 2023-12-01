@@ -99,6 +99,11 @@ inTimeZone("MST", () => {
     "2022-02-32",
     // month > 12
     "2022-13-30",
+
+    // 00 for mon or mday
+    "0000-00-00",
+    "0000-01-00",
+    "0000-00-01",
   ];
 
   for (const [test, dateObject] of Object.entries(accepted)) {
