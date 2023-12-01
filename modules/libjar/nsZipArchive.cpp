@@ -715,7 +715,7 @@ nsresult nsZipArchive::BuildFileList(PRFileDesc* aFd)
     sig = 0;
   } /* while reading central directory records */
 
-  if (sig != ENDSIG) {
+  if (sig != ENDSIG && sig != ENDSIG64) {
     return NS_ERROR_FILE_CORRUPTED;
   }
 
