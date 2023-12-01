@@ -8,6 +8,7 @@ import {
   map,
   when,
 } from "chrome://global/content/vendor/lit.all.mjs";
+import { isSearchEnabled, searchTabList } from "./helpers.mjs";
 import { ViewPage, ViewPageContent } from "./viewpage.mjs";
 
 const lazy = {};
@@ -38,9 +39,11 @@ const TOPIC_CURRENT_BROWSER_CHANGED = "net:current-browser-id";
 class OpenTabsInView extends ViewPage {
   static properties = {
     windows: { type: Map },
+    searchQuery: { type: String },
   };
   static queries = {
     viewCards: { all: "view-opentabs-card" },
+    searchTextbox: "fxview-search-textbox",
   };
 
   static TAB_ATTRS_TO_WATCH = Object.freeze(["image", "label"]);
@@ -56,6 +59,7 @@ class OpenTabsInView extends ViewPage {
     );
     this.boundObserve = (...args) => this.observe(...args);
     this.devices = [];
+    this.searchQuery = "";
   }
 
   start() {
@@ -211,6 +215,16 @@ class OpenTabsInView extends ViewPage {
           class="page-header heading-large"
           data-l10n-id="firefoxview-opentabs-header"
         ></h2>
+        ${when(
+          isSearchEnabled(),
+          () => html`<div class="search-container">
+            <fxview-search-textbox
+              data-l10n-id="firefoxview-search-text-box-opentabs"
+              data-l10n-attrs="placeholder"
+              @fxview-search-textbox-query=${this.onSearchQuery}
+            ></fxview-search-textbox>
+          </div>`
+        )}
       </div>
       <div
         card-count=${cardCount}
@@ -231,6 +245,7 @@ class OpenTabsInView extends ViewPage {
                   winID: currentWindowIndex,
                 })}"
                 .devices=${this.devices}
+                .searchQuery=${this.searchQuery}
               ></view-opentabs-card>
             `
         )}
@@ -245,11 +260,16 @@ class OpenTabsInView extends ViewPage {
               data-l10n-id="firefoxview-opentabs-window-header"
               data-l10n-args="${JSON.stringify({ winID })}"
               .devices=${this.devices}
+              .searchQuery=${this.searchQuery}
             ></view-opentabs-card>
           `
         )}
       </div>
     `;
+  }
+
+  onSearchQuery(e) {
+    this.searchQuery = e.detail.query;
   }
 
   /**
@@ -318,8 +338,13 @@ class OpenTabsInView extends ViewPage {
     }
     this.requestUpdate();
     if (!this.recentBrowsing) {
-      const selector = `view-opentabs-card[data-inner-id="${win.windowGlobalChild.innerWindowId}"]`;
-      this.shadowRoot.querySelector(selector)?.requestUpdate();
+      const cardForWin = this.shadowRoot.querySelector(
+        `view-opentabs-card[data-inner-id="${win.windowGlobalChild.innerWindowId}"]`
+      );
+      if (this.searchQuery) {
+        cardForWin?.updateSearchResults();
+      }
+      cardForWin?.requestUpdate();
     }
   }
 
@@ -369,6 +394,8 @@ class OpenTabsInViewCard extends ViewPageContent {
     recentBrowsing: { type: Boolean },
     devices: { type: Array },
     triggerNode: { type: Object },
+    searchQuery: { type: String },
+    searchResults: { type: Array },
   };
   static MAX_TABS_FOR_COMPACT_HEIGHT = 7;
 
@@ -379,6 +406,8 @@ class OpenTabsInViewCard extends ViewPageContent {
     this.title = "";
     this.recentBrowsing = false;
     this.devices = [];
+    this.searchQuery = "";
+    this.searchResults = null;
   }
 
   static queries = {
@@ -582,7 +611,8 @@ class OpenTabsInViewCard extends ViewPageContent {
             @fxview-tab-list-primary-action=${this.onTabListRowClick}
             @fxview-tab-list-secondary-action=${this.openContextMenu}
             .maxTabsLength=${this.getMaxTabsLength()}
-            .tabItems=${getTabListItems(this.tabs)}
+            .tabItems=${this.searchResults || getTabListItems(this.tabs)}
+            .searchQuery=${this.searchQuery}
             >${this.panelListTemplate()}</fxview-tab-list
           >
         </div>
@@ -602,6 +632,18 @@ class OpenTabsInViewCard extends ViewPageContent {
           : null}
       </card-container>
     `;
+  }
+
+  willUpdate(changedProperties) {
+    if (changedProperties.has("searchQuery") || changedProperties.has("tabs")) {
+      this.updateSearchResults();
+    }
+  }
+
+  updateSearchResults() {
+    this.searchResults = this.searchQuery
+      ? searchTabList(this.searchQuery, getTabListItems(this.tabs))
+      : null;
   }
 }
 customElements.define("view-opentabs-card", OpenTabsInViewCard);
