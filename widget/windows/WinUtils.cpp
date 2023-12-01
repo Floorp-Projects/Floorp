@@ -1045,25 +1045,32 @@ nsresult FaviconHelper::ObtainCachedIconFile(
   return rv;
 }
 
-nsresult FaviconHelper::HashURI(nsCOMPtr<nsICryptoHash>& aCryptoHash,
-                                nsIURI* aUri, nsACString& aUriHash) {
-  if (!aUri) return NS_ERROR_INVALID_ARG;
-
+// Hash a URI using a cryptographic hash function (currently SHA-256)
+// Output will be a base64-encoded string of the hash.
+static nsresult HashURI(nsIURI* aUri, nsACString& aUriHash) {
   nsAutoCString spec;
   nsresult rv = aUri->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!aCryptoHash) {
-    aCryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  nsCOMPtr<nsICryptoHash> cryptoHash =
+      do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aCryptoHash->Init(nsICryptoHash::MD5);
+  rv = cryptoHash->Init(nsICryptoHash::SHA256);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aCryptoHash->Update(
-      reinterpret_cast<const uint8_t*>(spec.BeginReading()), spec.Length());
+
+  // Add some context to the hash to even further reduce the chances of
+  // collision. Note that we are hashing this string with its null-terminator.
+  const char kHashUriContext[] = "firefox-uri";
+  rv = cryptoHash->Update(reinterpret_cast<const uint8_t*>(kHashUriContext),
+                          sizeof(kHashUriContext));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = aCryptoHash->Finish(true, aUriHash);
+
+  rv = cryptoHash->Update(reinterpret_cast<const uint8_t*>(spec.BeginReading()),
+                          spec.Length());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = cryptoHash->Finish(true, aUriHash);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1072,13 +1079,15 @@ nsresult FaviconHelper::HashURI(nsCOMPtr<nsICryptoHash>& aCryptoHash,
 // (static) Obtains the ICO file for the favicon at page aFaviconPageURI
 // If successful, the file path on disk is in the format:
 // <ProfLDS>\jumpListCache\<hash(aFaviconPageURI)>.ico
+//
+// We generate the name with a cryptographically secure hash function in order
+// to ensure that malicious websites can't intentionally craft URLs to collide
+// with legitimate websites.
 nsresult FaviconHelper::GetOutputIconPath(nsCOMPtr<nsIURI> aFaviconPageURI,
                                           nsCOMPtr<nsIFile>& aICOFile,
                                           bool aURLShortcut) {
-  // Hash the input URI and replace any / with _
   nsAutoCString inputURIHash;
-  nsCOMPtr<nsICryptoHash> cryptoHash;
-  nsresult rv = HashURI(cryptoHash, aFaviconPageURI, inputURIHash);
+  nsresult rv = HashURI(aFaviconPageURI, inputURIHash);
   NS_ENSURE_SUCCESS(rv, rv);
   char* cur = inputURIHash.BeginWriting();
   char* end = inputURIHash.EndWriting();

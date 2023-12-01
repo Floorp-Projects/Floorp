@@ -646,9 +646,6 @@ class FaviconHelper {
       RefPtr<LazyIdleThread>& aIOThread, bool aURLShortcut,
       already_AddRefed<nsIRunnable> aRunnable = nullptr);
 
-  static nsresult HashURI(nsCOMPtr<nsICryptoHash>& aCryptoHash, nsIURI* aUri,
-                          nsACString& aUriHash);
-
   static nsresult GetOutputIconPath(nsCOMPtr<nsIURI> aFaviconPageURI,
                                     nsCOMPtr<nsIFile>& aICOFile,
                                     bool aURLShortcut);

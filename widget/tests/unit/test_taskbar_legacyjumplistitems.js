@@ -54,58 +54,6 @@ function test_separator() {
   Assert.ok(item.type == Ci.nsILegacyJumpListItem.JUMPLIST_ITEM_SEPARATOR);
 }
 
-function test_hashes() {
-  var link = Cc["@mozilla.org/windows-legacyjumplistlink;1"].createInstance(
-    Ci.nsILegacyJumpListLink
-  );
-  var uri1 = Cc["@mozilla.org/network/simple-uri-mutator;1"]
-    .createInstance(Ci.nsIURIMutator)
-    .setSpec("http://www.123.com/")
-    .finalize();
-  var uri2 = Cc["@mozilla.org/network/simple-uri-mutator;1"]
-    .createInstance(Ci.nsIURIMutator)
-    .setSpec("http://www.123.com/")
-    .finalize();
-
-  link.uri = uri1;
-
-  Assert.ok(link.compareHash(uri2));
-  uri2 = uri2.mutate().setSpec("http://www.456.com/").finalize();
-  Assert.ok(!link.compareHash(uri2));
-  uri2 = uri2.mutate().setSpec("http://www.123.com/").finalize();
-  Assert.ok(link.compareHash(uri2));
-  uri2 = uri2.mutate().setSpec("https://www.123.com/").finalize();
-  Assert.ok(!link.compareHash(uri2));
-  uri2 = uri2.mutate().setSpec("http://www.123.com/test/").finalize();
-  Assert.ok(!link.compareHash(uri2));
-  uri1 = uri1.mutate().setSpec("http://www.123.com/test/").finalize();
-  link.uri = uri1;
-  uri2 = uri2.mutate().setSpec("http://www.123.com/test/").finalize();
-  Assert.ok(link.compareHash(uri2));
-  uri1 = uri1.mutate().setSpec("https://www.123.com/test/").finalize();
-  link.uri = uri1;
-  uri2 = uri2.mutate().setSpec("https://www.123.com/test/").finalize();
-  Assert.ok(link.compareHash(uri2));
-  uri2 = uri2.mutate().setSpec("ftp://www.123.com/test/").finalize();
-  Assert.ok(!link.compareHash(uri2));
-  uri2 = uri2.mutate().setSpec("http://123.com/test/").finalize();
-  Assert.ok(!link.compareHash(uri2));
-  uri1 = uri1.mutate().setSpec("https://www.123.com/test/").finalize();
-  link.uri = uri1;
-  uri2 = uri2.mutate().setSpec("https://www.123.com/Test/").finalize();
-  Assert.ok(!link.compareHash(uri2));
-
-  uri1 = uri1.mutate().setSpec("http://www.123.com/").finalize();
-  link.uri = uri1;
-  Assert.equal(link.uriHash, "QGLmWuwuTozr3tOfXSf5mg==");
-  uri1 = uri1.mutate().setSpec("http://www.123.com/test/").finalize();
-  link.uri = uri1;
-  Assert.equal(link.uriHash, "AG87Ls+GmaUYSUJFETRr3Q==");
-  uri1 = uri1.mutate().setSpec("https://www.123.com/").finalize();
-  link.uri = uri1;
-  Assert.equal(link.uriHash, "iSx6UH1a9enVPzUA9JZ42g==");
-}
-
 function test_links() {
   // links:
   var link1 = Cc["@mozilla.org/windows-legacyjumplistlink;1"].createInstance(
@@ -272,7 +220,6 @@ function run_test() {
   }
   test_basics();
   test_separator();
-  test_hashes();
   test_links();
   test_shortcuts();
 

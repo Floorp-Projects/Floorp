@@ -105,34 +105,6 @@ NS_IMETHODIMP LegacyJumpListLink::GetUriTitle(nsAString& aUriTitle) {
   return NS_OK;
 }
 
-NS_IMETHODIMP LegacyJumpListLink::GetUriHash(nsACString& aUriHash) {
-  if (!mURI) return NS_ERROR_NOT_AVAILABLE;
-
-  return mozilla::widget::FaviconHelper::HashURI(mCryptoHash, mURI, aUriHash);
-}
-
-NS_IMETHODIMP LegacyJumpListLink::CompareHash(nsIURI* aUri, bool* aResult) {
-  nsresult rv;
-
-  if (!mURI) {
-    *aResult = !aUri;
-    return NS_OK;
-  }
-
-  NS_ENSURE_ARG_POINTER(aUri);
-
-  nsAutoCString hash1, hash2;
-
-  rv = mozilla::widget::FaviconHelper::HashURI(mCryptoHash, mURI, hash1);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mozilla::widget::FaviconHelper::HashURI(mCryptoHash, aUri, hash2);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aResult = hash1.Equals(hash2);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP LegacyJumpListLink::Equals(nsILegacyJumpListItem* aItem,
                                          bool* aResult) {
   NS_ENSURE_ARG_POINTER(aItem);
