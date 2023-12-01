@@ -329,9 +329,7 @@ const observer = {
           lazy.LoginHelper.formRemovalCaptureEnabled &&
           (!alreadyModified || !alreadyModifiedFormLessField)
         ) {
-          loginManagerChild.registerDOMDocFetchSuccessEventListener(
-            ownerDocument
-          );
+          ownerDocument.setNotifyFetchSuccess(true);
         }
 
         if (
@@ -1544,23 +1542,6 @@ export class LoginManagerChild extends JSWindowActorChild {
     );
   }
 
-  registerDOMDocFetchSuccessEventListener(document) {
-    document.setNotifyFetchSuccess(true);
-    this.docShell.chromeEventHandler.addEventListener(
-      "DOMDocFetchSuccess",
-      this,
-      true
-    );
-  }
-
-  unregisterDOMDocFetchSuccessEventListener(document) {
-    document.setNotifyFetchSuccess(false);
-    this.docShell.chromeEventHandler.removeEventListener(
-      "DOMDocFetchSuccess",
-      this
-    );
-  }
-
   handleEvent(event) {
     if (
       AppConstants.platform == "android" &&
@@ -1723,8 +1704,8 @@ export class LoginManagerChild extends JSWindowActorChild {
       }
     }
 
-    // Observers have been set up, remove the listener.
-    this.unregisterDOMDocFetchSuccessEventListener(document);
+    // Observers have been setted up, removed the listener.
+    document.setNotifyFetchSuccess(false);
   }
 
   /*
