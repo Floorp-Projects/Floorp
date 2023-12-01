@@ -19,7 +19,7 @@ object FenixVersions {
     const val fastlane = "2.1.1"
 
     const val androidx_activity = "1.7.2"
-    const val androidx_benchmark = "1.2.1"
+    const val androidx_benchmark = "1.2.2"
     const val androidx_profileinstaller = "1.3.1"
     const val androidx_legacy = "1.0.0"
     const val androidx_navigation = "2.5.3"
