@@ -1126,6 +1126,21 @@ static void RecordUnicodeTelemetry(const CookieStruct& cookieData) {
   Telemetry::AccumulateCategorical(label);
 }
 
+static void RecordPartitionedTelemetry(const CookieStruct& aCookieData,
+                                       bool aIsForeign) {
+  mozilla::glean::networking::set_cookie.Add(1);
+  if (aCookieData.isPartitioned()) {
+    mozilla::glean::networking::set_cookie_partitioned.AddToNumerator(1);
+  }
+  if (aIsForeign) {
+    mozilla::glean::networking::set_cookie_foreign.AddToNumerator(1);
+  }
+  if (aIsForeign && aCookieData.isPartitioned()) {
+    mozilla::glean::networking::set_cookie_foreign_partitioned.AddToNumerator(
+        1);
+  }
+}
+
 // processes a single cookie, and returns true if there are more cookies
 // to be processed
 bool CookieService::CanSetCookie(
@@ -1198,6 +1213,12 @@ bool CookieService::CanSetCookie(
   }
 
   RecordUnicodeTelemetry(aCookieData);
+
+  // We count SetCookie operations in the parent process only for HTTP set
+  // cookies to prevent double counting.
+  if (XRE_IsParentProcess() || !aFromHttp) {
+    RecordPartitionedTelemetry(aCookieData, aIsForeignAndNotAddon);
+  }
 
   if (!CookieCommons::CheckName(aCookieData)) {
     COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, savedCookieHeader,
