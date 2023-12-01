@@ -65,6 +65,10 @@ describe("ActivityStreamMessageChannel", () => {
       reset: globals.sandbox.spy(),
     });
     globals.set("AboutHomeStartupCache", { onPreloadedNewTabMessage() {} });
+    globals.set("AboutNewTabParent", {
+      flushQueuedMessagesFromContent: globals.sandbox.stub(),
+    });
+
     dispatch = globals.sandbox.spy();
     mm = new ActivityStreamMessageChannel({ dispatch });
 
@@ -174,6 +178,15 @@ describe("ActivityStreamMessageChannel", () => {
         mm.loadedTabs.set(msg4.data.browser, msg4.data);
         mm.simulateMessagesForExistingTabs();
         assert.equal(msg4.data.browser.renderLayers, true);
+      });
+      it("should flush queued messages from content when doing the simulation", () => {
+        assert.notCalled(
+          global.AboutNewTabParent.flushQueuedMessagesFromContent
+        );
+        mm.simulateMessagesForExistingTabs();
+        assert.calledOnce(
+          global.AboutNewTabParent.flushQueuedMessagesFromContent
+        );
       });
     });
   });

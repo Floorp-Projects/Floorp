@@ -4,12 +4,10 @@ import {
 } from "common/Actions.sys.mjs";
 import { addNumberReducer, GlobalOverrider } from "test/unit/utils";
 import {
-  EARLY_QUEUED_ACTIONS,
   INCOMING_MESSAGE_NAME,
   initStore,
   MERGE_STORE_ACTION,
   OUTGOING_MESSAGE_NAME,
-  queueEarlyMessageMiddleware,
   rehydrationMiddleware,
 } from "content-src/lib/init-store";
 
@@ -152,56 +150,6 @@ describe("initStore", () => {
       );
       dispatch(action);
       assert.notCalled(next);
-    });
-  });
-  describe("queueEarlyMessageMiddleware", () => {
-    it("should allow all local actions to go through", () => {
-      const action = { type: "FOO" };
-      const next = sinon.spy();
-
-      queueEarlyMessageMiddleware(store)(next)(action);
-
-      assert.calledWith(next, action);
-    });
-    it("should allow action to main that does not belong to EARLY_QUEUED_ACTIONS to go through", () => {
-      const action = ac.AlsoToMain({ type: "FOO" });
-      const next = sinon.spy();
-
-      queueEarlyMessageMiddleware(store)(next)(action);
-
-      assert.calledWith(next, action);
-    });
-    it(`should line up EARLY_QUEUED_ACTIONS only let them go through after it receives the action from main`, () => {
-      EARLY_QUEUED_ACTIONS.forEach(actionType => {
-        const testStore = initStore({ number: addNumberReducer });
-        const next = sinon.spy();
-        const dispatch = queueEarlyMessageMiddleware(testStore)(next);
-        const action = ac.AlsoToMain({ type: actionType });
-        const fromMainAction = ac.AlsoToOneContent({ type: "FOO" }, 123);
-
-        // Early actions should be added to the queue
-        dispatch(action);
-        dispatch(action);
-
-        assert.notCalled(next);
-        assert.equal(testStore.getState.earlyActionQueue.length, 2);
-        next.resetHistory();
-
-        // Receiving action from main would empty the queue
-        dispatch(fromMainAction);
-
-        assert.calledThrice(next);
-        assert.equal(next.firstCall.args[0], fromMainAction);
-        assert.equal(next.secondCall.args[0], action);
-        assert.equal(next.thirdCall.args[0], action);
-        assert.equal(testStore.getState.earlyActionQueue.length, 0);
-        next.resetHistory();
-
-        // New action should go through immediately
-        dispatch(action);
-        assert.calledOnce(next);
-        assert.calledWith(next, action);
-      });
     });
   });
 });

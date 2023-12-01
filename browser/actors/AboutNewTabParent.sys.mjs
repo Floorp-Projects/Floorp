@@ -120,6 +120,15 @@ export class AboutNewTabParent extends JSWindowActorParent {
 
     let channel = this.getChannel();
     if (!channel) {
+      // We're not yet ready to deal with these messages. We'll queue
+      // them for now, and then dispatch them once the channel has finished
+      // being set up.
+      AboutNewTabParent.#queuedMessages.push({
+        actor: this,
+        name,
+        message,
+        tabDetails,
+      });
       return;
     }
 
@@ -143,5 +152,22 @@ export class AboutNewTabParent extends JSWindowActorParent {
 
   getChannel() {
     return lazy.AboutNewTab.activityStream?.store?.getMessageChannel();
+  }
+
+  // Queued messages sent from the content process. These are only queued
+  // if an AboutNewTabParent receives them before the
+  // ActivityStreamMessageChannel exists.
+  static #queuedMessages = [];
+
+  /**
+   * If there were any messages sent from content before the
+   * ActivityStreamMessageChannel was set up, dispatch them now.
+   */
+  static flushQueuedMessagesFromContent() {
+    for (let messageData of AboutNewTabParent.#queuedMessages) {
+      let { actor, name, message, tabDetails } = messageData;
+      actor.notifyActivityStreamChannel(name, message, tabDetails);
+    }
+    AboutNewTabParent.#queuedMessages = [];
   }
 }
