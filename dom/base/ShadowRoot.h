@@ -42,9 +42,6 @@ class HTMLInputElement;
 class ShadowRoot final : public DocumentFragment, public DocumentOrShadowRoot {
   friend class DocumentOrShadowRoot;
 
-  using Declarative = Element::ShadowRootDeclarative;
-  using Clonable = Element::ShadowRootClonable;
-
  public:
   NS_IMPL_FROMNODE_HELPER(ShadowRoot, IsShadowRoot());
 
@@ -53,8 +50,7 @@ class ShadowRoot final : public DocumentFragment, public DocumentOrShadowRoot {
 
   ShadowRoot(Element* aElement, ShadowRootMode aMode,
              Element::DelegatesFocus aDelegatesFocus,
-             SlotAssignmentMode aSlotAssignment, Clonable aClonable,
-             Declarative aDeclarative,
+             SlotAssignmentMode aSlotAssignment,
              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
   void AddSizeOfExcludingThis(nsWindowSizes&, size_t* aNodeSize) const final;
@@ -235,19 +231,6 @@ class ShadowRoot final : public DocumentFragment, public DocumentOrShadowRoot {
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
-  bool IsDeclarative() const { return mIsDeclarative == Declarative::Yes; }
-  void SetIsDeclarative(Declarative aIsDeclarative) {
-    mIsDeclarative = aIsDeclarative;
-  }
-  void SetIsDeclarative(bool aIsDeclarative) {
-    mIsDeclarative = aIsDeclarative ? Declarative::Yes : Declarative::No;
-  }
-
-  bool IsClonable() const { return mIsClonable == Clonable::Yes; }
-
-  MOZ_CAN_RUN_SCRIPT
-  void SetHTMLUnsafe(const nsAString& aHTML);
-
  protected:
   // FIXME(emilio): This will need to become more fine-grained.
   void ApplicableRulesChanged();
@@ -284,12 +267,6 @@ class ShadowRoot final : public DocumentFragment, public DocumentOrShadowRoot {
 
   // https://dom.spec.whatwg.org/#shadowroot-available-to-element-internals
   bool mIsAvailableToElementInternals : 1;
-
-  // https://dom.spec.whatwg.org/#shadowroot-declarative
-  Declarative mIsDeclarative;
-
-  // https://dom.spec.whatwg.org/#shadowroot-clonable
-  Clonable mIsClonable;
 
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };

@@ -678,8 +678,6 @@ void nsHtml5Parser::StartTokenizer(bool aScriptingEnabled) {
 
   mTreeBuilder->SetPreventScriptExecution(!aScriptingEnabled);
   mTreeBuilder->setScriptingEnabled(aScriptingEnabled);
-  mTreeBuilder->setAllowDeclarativeShadowRoots(
-      mExecutor->GetDocument()->AllowsDeclarativeShadowRoots());
   mTokenizer->start();
 }
 

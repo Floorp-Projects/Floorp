@@ -11,7 +11,6 @@
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/DocGroup.h"
-#include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/LinkStyle.h"
@@ -19,14 +18,12 @@
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/MutationObservers.h"
-#include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/Text.h"
 #include "nsAttrName.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "nsDocElementCreatedNotificationRunner.h"
 #include "nsEscape.h"
-#include "nsGenericHTMLElement.h"
 #include "nsHtml5AutoPauseUpdate.h"
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5HtmlAttributes.h"
@@ -137,10 +134,6 @@ nsHtml5TreeOperation::~nsHtml5TreeOperation() {
     }
 
     void operator()(const opGetDocumentFragmentForTemplate& aOperation) {}
-
-    void operator()(const opSetDocumentFragmentForTemplate& aOperation) {}
-
-    void operator()(const opGetShadowRootFromHost& aOperation) {}
 
     void operator()(const opGetFosterParent& aOperation) {}
 
@@ -701,12 +694,6 @@ nsIContent* nsHtml5TreeOperation::GetDocumentFragmentForTemplate(
   return tempElem->Content();
 }
 
-void nsHtml5TreeOperation::SetDocumentFragmentForTemplate(
-    nsIContent* aNode, nsIContent* aDocumentFragment) {
-  auto* tempElem = static_cast<HTMLTemplateElement*>(aNode);
-  tempElem->SetContent(static_cast<DocumentFragment*>(aDocumentFragment));
-}
-
 nsIContent* nsHtml5TreeOperation::GetFosterParent(nsIContent* aTable,
                                                   nsIContent* aStackParent) {
   nsIContent* tableParent = aTable->GetParent();
@@ -904,31 +891,6 @@ nsresult nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     nsresult operator()(const opGetDocumentFragmentForTemplate& aOperation) {
       nsIContent* node = *(aOperation.mTemplate);
       *(aOperation.mFragHandle) = GetDocumentFragmentForTemplate(node);
-      return NS_OK;
-    }
-
-    nsresult operator()(const opSetDocumentFragmentForTemplate& aOperation) {
-      SetDocumentFragmentForTemplate(*aOperation.mTemplate,
-                                     *aOperation.mFragment);
-      return NS_OK;
-    }
-
-    nsresult operator()(const opGetShadowRootFromHost& aOperation) {
-      nsIContent* root = nsContentUtils::AttachDeclarativeShadowRoot(
-          *aOperation.mHost, aOperation.mShadowRootMode,
-          aOperation.mShadowRootDelegatesFocus);
-      if (root) {
-        *aOperation.mFragHandle = root;
-        return NS_OK;
-      }
-
-      // We failed to attach a new shadow root, so instead attach a template
-      // element and return its content.
-      nsHtml5TreeOperation::Append(*aOperation.mTemplateNode, *aOperation.mHost,
-                                   mBuilder);
-      *aOperation.mFragHandle =
-          static_cast<HTMLTemplateElement*>(*aOperation.mTemplateNode)
-              ->Content();
       return NS_OK;
     }
 

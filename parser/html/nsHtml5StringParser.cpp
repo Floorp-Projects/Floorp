@@ -24,10 +24,12 @@ nsHtml5StringParser::nsHtml5StringParser()
 
 nsHtml5StringParser::~nsHtml5StringParser() {}
 
-nsresult nsHtml5StringParser::ParseFragment(
-    const nsAString& aSourceBuffer, nsIContent* aTargetNode,
-    nsAtom* aContextLocalName, int32_t aContextNamespace, bool aQuirks,
-    bool aPreventScriptExecution, bool aAllowDeclarativeShadowRoots) {
+nsresult nsHtml5StringParser::ParseFragment(const nsAString& aSourceBuffer,
+                                            nsIContent* aTargetNode,
+                                            nsAtom* aContextLocalName,
+                                            int32_t aContextNamespace,
+                                            bool aQuirks,
+                                            bool aPreventScriptExecution) {
   NS_ENSURE_TRUE(aSourceBuffer.Length() <= INT32_MAX, NS_ERROR_OUT_OF_MEMORY);
 
   Document* doc = aTargetNode->OwnerDoc();
@@ -50,7 +52,7 @@ nsresult nsHtml5StringParser::ParseFragment(
 
   mTreeBuilder->SetPreventScriptExecution(aPreventScriptExecution);
 
-  return Tokenize(aSourceBuffer, doc, true, aAllowDeclarativeShadowRoots);
+  return Tokenize(aSourceBuffer, doc, true);
 }
 
 nsresult nsHtml5StringParser::ParseDocument(
@@ -65,14 +67,12 @@ nsresult nsHtml5StringParser::ParseDocument(
   mTreeBuilder->SetPreventScriptExecution(true);
 
   return Tokenize(aSourceBuffer, aTargetDoc,
-                  aScriptingEnabledForNoscriptParsing,
-                  aTargetDoc->AllowsDeclarativeShadowRoots());
+                  aScriptingEnabledForNoscriptParsing);
 }
 
-nsresult nsHtml5StringParser::Tokenize(const nsAString& aSourceBuffer,
-                                       Document* aDocument,
-                                       bool aScriptingEnabledForNoscriptParsing,
-                                       bool aDeclarativeShadowRootsAllowed) {
+nsresult nsHtml5StringParser::Tokenize(
+    const nsAString& aSourceBuffer, Document* aDocument,
+    bool aScriptingEnabledForNoscriptParsing) {
   nsIURI* uri = aDocument->GetDocumentURI();
 
   mBuilder->Init(aDocument, uri, nullptr, nullptr);
@@ -85,7 +85,6 @@ nsresult nsHtml5StringParser::Tokenize(const nsAString& aSourceBuffer,
 
   mTreeBuilder->setScriptingEnabled(aScriptingEnabledForNoscriptParsing);
   mTreeBuilder->setIsSrcdocDocument(aDocument->IsSrcdocDocument());
-  mTreeBuilder->setAllowDeclarativeShadowRoots(aDeclarativeShadowRootsAllowed);
   mBuilder->Start();
   mTokenizer->start();
   if (!aSourceBuffer.IsEmpty()) {
