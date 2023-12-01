@@ -114,6 +114,9 @@ support-files = [
   "serp.css",
 ]
 
+["browser_search_telemetry_new_window.js"]
+support-files = ["searchTelemetry.html", "searchTelemetryAd.html"]
+
 ["browser_search_telemetry_private.js"]
 support-files = ["searchTelemetry.html", "searchTelemetryAd.html", "serp.css"]
 
