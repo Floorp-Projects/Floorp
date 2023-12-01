@@ -138,12 +138,8 @@ already_AddRefed<Promise> PublicKeyCredential::IsConditionalMediationAvailable(
   if (aError.Failed()) {
     return nullptr;
   }
-#if defined(MOZ_WIDGET_ANDROID)
+  // Support for conditional mediation will be added in Bug 1838932
   promise->MaybeResolve(false);
-#else
-  promise->MaybeResolve(
-      StaticPrefs::security_webauthn_enable_conditional_mediation());
-#endif
   return promise.forget();
 }
 

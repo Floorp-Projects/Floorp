@@ -93,7 +93,6 @@ class WebAuthnManager final : public WebAuthnManagerBase, public AbortFollower {
 
   already_AddRefed<Promise> GetAssertion(
       const PublicKeyCredentialRequestOptions& aOptions,
-      const bool aConditionallyMediated,
       const Optional<OwningNonNull<AbortSignal>>& aSignal, ErrorResult& aError);
 
   already_AddRefed<Promise> Store(const Credential& aCredential,

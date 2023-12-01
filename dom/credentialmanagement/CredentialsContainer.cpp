@@ -163,8 +163,9 @@ already_AddRefed<Promise> CredentialsContainer::Get(
       return CreateAndRejectWithNotAllowed(mParent, aRv);
     }
 
-    if (conditionallyMediated &&
-        !StaticPrefs::security_webauthn_enable_conditional_mediation()) {
+    if (conditionallyMediated) {
+      // Conditional mediation for WebAuthn Get() will be implemented in
+      // Bug 1838932.
       RefPtr<Promise> promise = CreatePromise(mParent, aRv);
       if (!promise) {
         return nullptr;
@@ -175,8 +176,8 @@ already_AddRefed<Promise> CredentialsContainer::Get(
     }
 
     EnsureWebAuthnManager();
-    return mManager->GetAssertion(aOptions.mPublicKey.Value(),
-                                  conditionallyMediated, aOptions.mSignal, aRv);
+    return mManager->GetAssertion(aOptions.mPublicKey.Value(), aOptions.mSignal,
+                                  aRv);
   }
 
   if (aOptions.mIdentity.WasPassed() &&
