@@ -12919,7 +12919,7 @@
 # Whether we use the CSS @page size as the paper size in PDF output.
 - name: print.save_as_pdf.use_page_rule_size_as_paper_size.enabled
   type: RelaxedAtomicBool
-  value: true
+  value: @IS_NOT_ANDROID@
   mirror: always
 
 # The default DPI for printing.
