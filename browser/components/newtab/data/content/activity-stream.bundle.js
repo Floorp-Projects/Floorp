@@ -15190,7 +15190,6 @@ const external_Redux_namespaceObject = Redux;
 const MERGE_STORE_ACTION = "NEW_TAB_INITIAL_STATE";
 const OUTGOING_MESSAGE_NAME = "ActivityStream:ContentToMain";
 const INCOMING_MESSAGE_NAME = "ActivityStream:MainToContent";
-const EARLY_QUEUED_ACTIONS = [actionTypes.SAVE_SESSION_PERF_DATA];
 /**
  * A higher-order function which returns a reducer that, on MERGE_STORE action,
  * will return the action.data object merged into the previous state.
@@ -15285,38 +15284,6 @@ const rehydrationMiddleware = ({
   };
 };
 /**
- * This middleware queues up all the EARLY_QUEUED_ACTIONS until it receives
- * the first action from main. This is useful for those actions for main which
- * require higher reliability, i.e. the action will not be lost in the case
- * that it gets sent before the main is ready to receive it. Conversely, any
- * actions allowed early are accepted to be ignorable or re-sendable.
- */
-
-const queueEarlyMessageMiddleware = ({
-  getState
-}) => {
-  // NB: The parameter here is MiddlewareAPI which looks like a Store and shares
-  // the same getState, so attached properties are accessible from the store.
-  getState.earlyActionQueue = [];
-  getState.receivedFromMain = false;
-  return next => action => {
-    if (getState.receivedFromMain) {
-      next(action);
-    } else if (actionUtils.isFromMain(action)) {
-      next(action);
-      getState.receivedFromMain = true; // Sending out all the early actions as main is ready now
-
-      getState.earlyActionQueue.forEach(next);
-      getState.earlyActionQueue.length = 0;
-    } else if (EARLY_QUEUED_ACTIONS.includes(action.type)) {
-      getState.earlyActionQueue.push(action);
-    } else {
-      // Let any other type of action go through
-      next(action);
-    }
-  };
-};
-/**
  * initStore - Create a store and listen for incoming actions
  *
  * @param  {object} reducers An object containing Redux reducers
@@ -15325,7 +15292,7 @@ const queueEarlyMessageMiddleware = ({
  */
 
 function initStore(reducers, initialState) {
-  const store = (0,external_Redux_namespaceObject.createStore)(mergeStateReducer((0,external_Redux_namespaceObject.combineReducers)(reducers)), initialState, __webpack_require__.g.RPMAddMessageListener && (0,external_Redux_namespaceObject.applyMiddleware)(queueEarlyMessageMiddleware, rehydrationMiddleware, messageMiddleware));
+  const store = (0,external_Redux_namespaceObject.createStore)(mergeStateReducer((0,external_Redux_namespaceObject.combineReducers)(reducers)), initialState, __webpack_require__.g.RPMAddMessageListener && (0,external_Redux_namespaceObject.applyMiddleware)(rehydrationMiddleware, messageMiddleware));
 
   if (__webpack_require__.g.RPMAddMessageListener) {
     __webpack_require__.g.RPMAddMessageListener(INCOMING_MESSAGE_NAME, msg => {

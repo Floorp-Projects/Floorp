@@ -236,6 +236,13 @@ class ActivityStreamMessageChannel {
         this.tabLoaded(simulatedDetails);
       }
     }
+
+    // It's possible that those existing tabs had sent some messages up
+    // to us before the feeds / ActivityStreamMessageChannel was ready.
+    //
+    // AboutNewTabParent takes care of queueing those for us, so
+    // now that we're ready, we can flush these queued messages.
+    lazy.AboutNewTabParent.flushQueuedMessagesFromContent();
   }
 
   /**
