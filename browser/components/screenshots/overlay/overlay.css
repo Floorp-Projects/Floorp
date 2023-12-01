@@ -229,13 +229,13 @@
 }
 
 .highlight {
+  border-radius: 1px;
   border: 2px dashed rgba(255, 255, 255, 0.8);
   box-sizing: border-box;
   cursor: move;
   position: absolute;
   pointer-events: auto;
   z-index: 2;
-  outline-offset: 8px;
 }
 
 .mover-target {
@@ -245,7 +245,6 @@
   position: absolute;
   z-index: 5;
   pointer-events: auto;
-  outline-offset: -15px;
 }
 
 .mover-target.direction-topLeft {
@@ -334,4 +333,28 @@
 .small-selection .mover {
   height: 10px;
   width: 10px;
+}
+
+.direction-topLeft .mover,
+.direction-left .mover,
+.direction-bottomLeft .mover {
+  left: -1px;
+}
+
+.direction-topLeft .mover,
+.direction-top .mover,
+.direction-topRight .mover {
+  top: -1px;
+}
+
+.direction-topRight .mover,
+.direction-right .mover,
+.direction-bottomRight .mover {
+  right: -1px;
+}
+
+.direction-bottomRight .mover,
+.direction-bottom .mover,
+.direction-bottomLeft .mover {
+  bottom: -1px;
 }
