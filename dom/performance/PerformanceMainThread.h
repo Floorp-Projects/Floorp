@@ -139,6 +139,8 @@ class PerformanceMainThread final : public Performance,
 
   void FinalizeLCPEntriesForText();
 
+  void ClearGeneratedTempDataForLCP();
+
  protected:
   ~PerformanceMainThread();
 
@@ -171,8 +173,6 @@ class PerformanceMainThread final : public Performance,
   RefPtr<PerformanceEventTiming> mPendingPointerDown;
 
  private:
-  void ClearGeneratedTempDataForLCP();
-
   void SetHasDispatchedInputEvent();
 
   bool mHasQueuedRefreshdriverObserver = false;

@@ -141,6 +141,7 @@
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/PartitionedLocalStorage.h"
 #include "mozilla/dom/Performance.h"
+#include "mozilla/dom/PerformanceMainThread.h"
 #include "mozilla/dom/PopStateEvent.h"
 #include "mozilla/dom/PopStateEventBinding.h"
 #include "mozilla/dom/PopupBlocker.h"
@@ -1270,6 +1271,13 @@ void nsGlobalWindowInner::FreeInnerObjects() {
     mLocalStorage = nullptr;
   }
   mSessionStorage = nullptr;
+  if (mPerformance) {
+    // Since window is dying, nothing is going to be painted
+    // with meaningful sizes, so these temp data for LCP is
+    // no longer needed.
+    static_cast<PerformanceMainThread*>(mPerformance.get())
+        ->ClearGeneratedTempDataForLCP();
+  }
   mPerformance = nullptr;
 
   mContentMediaController = nullptr;
