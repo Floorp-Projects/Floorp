@@ -44,14 +44,6 @@ add_setup(async function () {
   });
 });
 
-function initSandbox({ pin = true, isDefault = false } = {}) {
-  const sandbox = sinon.createSandbox();
-  sandbox.stub(AboutWelcomeParent, "doesAppNeedPin").returns(pin);
-  sandbox.stub(AboutWelcomeParent, "isDefaultBrowser").returns(isDefault);
-
-  return sandbox;
-}
-
 add_task(async function test_aboutwelcome_addonspicker() {
   const TEST_ADDON_CONTENT = [
     {

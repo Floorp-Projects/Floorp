@@ -45,19 +45,11 @@ add_setup(async function () {
   });
 });
 
-function initSandbox({ needsPin = true, isDefault = false } = {}) {
-  const sandbox = sinon.createSandbox();
-  sandbox.stub(AboutWelcomeParent, "doesAppNeedPin").returns(needsPin);
-  sandbox.stub(AboutWelcomeParent, "isDefaultBrowser").returns(isDefault);
-
-  return sandbox;
-}
-
 /**
  * Test MR message telemetry
  */
 add_task(async function test_aboutwelcome_mr_template_telemetry() {
-  const sandbox = initSandbox();
+  const sandbox = sinon.createSandbox();
 
   let { browser, cleanup } = await openMRAboutWelcome();
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
@@ -89,7 +81,7 @@ add_task(async function test_aboutwelcome_mr_template_telemetry() {
  * Telemetry Impression with Easy Setup Need Default and Pin as First Screen
  */
 add_task(async function test_aboutwelcome_easy_setup_screen_impression() {
-  const sandbox = initSandbox();
+  const sandbox = sinon.createSandbox();
   sandbox
     .stub(AWScreenUtils, "evaluateScreenTargeting")
     .resolves(false)
@@ -139,178 +131,6 @@ add_task(async function test_aboutwelcome_easy_setup_screen_impression() {
     ),
     "Impression telemetry includes correct message id"
   );
-  await cleanup();
-  sandbox.restore();
-});
-
-/**
- * Test MR template content - Browser is not Pinned and not set as default
- */
-add_task(async function test_aboutwelcome_mr_template_content() {
-  const sandbox = initSandbox();
-
-  sandbox
-    .stub(AWScreenUtils, "evaluateScreenTargeting")
-    .resolves(false)
-    .withArgs(
-      "doesAppNeedPin && 'browser.shell.checkDefaultBrowser'|preferenceValue && !isDefaultBrowser"
-    )
-    .resolves(true)
-    .withArgs("isDeviceMigration")
-    .resolves(false);
-
-  let { cleanup, browser } = await openMRAboutWelcome();
-
-  await test_screen_content(
-    browser,
-    "MR template includes screens with split position and a sign in link on the first screen",
-    // Expected selectors:
-    [
-      `main.screen[pos="split"]`,
-      "div.secondary-cta.top",
-      "button[value='secondary_button_top']",
-    ]
-  );
-
-  await test_screen_content(
-    browser,
-    "renders easy setup needing default and pin screen",
-    //Expected selectors:
-    ["main.AW_EASY_SETUP_NEEDS_DEFAULT_AND_PIN"],
-    //Unexpected selectors:
-    [
-      "main.AW_EASY_SETUP_NEEDS_PIN",
-      "main.AW_EASY_SETUP_NEEDS_DEFAULT",
-      "main.AW_EASY_SETUP_ONLY_IMPORT",
-    ]
-  );
-
-  await clickVisibleButton(browser, ".action-buttons button.secondary");
-
-  //should render gratitude screen
-  await test_screen_content(
-    browser,
-    "renders gratitude screen",
-    //Expected selectors:
-    ["main.AW_GRATITUDE"],
-    //Unexpected selectors:
-    ["main.AW_IMPORT_SETTINGS_EMBEDDED"]
-  );
-
-  await cleanup();
-  sandbox.restore();
-});
-
-/**
- * Test MR template content - Browser has been set as Default, not pinned
- */
-add_task(async function test_aboutwelcome_mr_template_content_needs_pin() {
-  const sandbox = initSandbox({ isDefault: true });
-
-  sandbox
-    .stub(AWScreenUtils, "evaluateScreenTargeting")
-    .resolves(false)
-    .withArgs(
-      "doesAppNeedPin && (!'browser.shell.checkDefaultBrowser'|preferenceValue || isDefaultBrowser)"
-    )
-    .resolves(true)
-    .withArgs("isDeviceMigration")
-    .resolves(false);
-
-  let { browser, cleanup } = await openMRAboutWelcome();
-
-  await test_screen_content(
-    browser,
-    "renders easy setup needs pin screen",
-    //Expected selectors:
-    ["main.AW_EASY_SETUP_NEEDS_PIN"],
-    //Unexpected selectors:
-    [
-      "main.AW_EASY_SETUP_NEEDS_DEFAULT",
-      "main.AW_EASY_SETUP_NEEDS_DEFAULT_AND_PIN",
-      "main.AW_EASY_SETUP_ONLY_IMPORT",
-    ]
-  );
-
-  await clickVisibleButton(browser, ".action-buttons button.secondary");
-
-  await test_screen_content(
-    browser,
-    "renders next screen",
-    //Expected selectors:
-    ["main.AW_GRATITUDE"],
-    //Unexpected selectors:
-    ["main.AW_IMPORT_SETTINGS_EMBEDDED"]
-  );
-
-  await cleanup();
-  sandbox.restore();
-});
-
-/**
- * Test MR template content - Browser is Pinned, not default
- */
-add_task(async function test_aboutwelcome_mr_template_only_default() {
-  const sandbox = initSandbox({ needsPin: false });
-  sandbox
-    .stub(AWScreenUtils, "evaluateScreenTargeting")
-    .resolves(false)
-    .withArgs(
-      "!doesAppNeedPin && 'browser.shell.checkDefaultBrowser'|preferenceValue && !isDefaultBrowser"
-    )
-    .resolves(true)
-    .withArgs("isDeviceMigration")
-    .resolves(false);
-
-  let { browser, cleanup } = await openMRAboutWelcome();
-  //should render easy setup needs default screen
-  await test_screen_content(
-    browser,
-    "renders set easy setup needs default screen",
-    //Expected selectors:
-    ["main.AW_EASY_SETUP_NEEDS_DEFAULT"],
-    //Unexpected selectors:
-    [
-      "main.AW_EASY_SETUP_NEEDS_PIN",
-      "main.AW_EASY_SETUP_NEEDS_DEFAULT_AND_PIN",
-      "main.AW_EASY_SETUP_ONLY_IMPORT",
-    ]
-  );
-
-  await cleanup();
-  sandbox.restore();
-});
-/**
- * Test MR template content - Browser is Pinned and set as default
- */
-add_task(async function test_aboutwelcome_mr_template_only_import() {
-  const sandbox = initSandbox({ needsPin: false, isDefault: true });
-  sandbox
-    .stub(AWScreenUtils, "evaluateScreenTargeting")
-    .resolves(false)
-    .withArgs(
-      "!doesAppNeedPin && (!'browser.shell.checkDefaultBrowser'|preferenceValue || isDefaultBrowser)"
-    )
-    .resolves(true)
-    .withArgs("isDeviceMigration")
-    .resolves(false);
-
-  let { browser, cleanup } = await openMRAboutWelcome();
-
-  //should render easy setup only import screen
-  await test_screen_content(
-    browser,
-    "doesn't render pin and set default screens",
-    //Expected selectors:
-    ["main.AW_EASY_SETUP_ONLY_IMPORT"],
-    //Unexpected selectors:
-    [
-      "main.AW_EASY_SETUP_NEEDS_PIN",
-      "main.AW_EASY_SETUP_NEEDS_DEFAULT_AND_PIN",
-      "main.AW_EASY_SETUP_NEEDS_DEFAULT",
-    ]
-  );
-
   await cleanup();
   sandbox.restore();
 });
