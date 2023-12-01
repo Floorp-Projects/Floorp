@@ -1021,10 +1021,19 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
     }
   }
 
-  mObservingState = eRefreshObserving;
   if (!mDocument) {
+    // A null mDocument means we've gotten a Shutdown() call (presumably via
+    // some script that we triggered above), and that means we're done here.
+    // Note: in this case, it's important that don't modify mObservingState;
+    // Shutdown() will have *unregistered* us as a refresh observer, and we
+    // don't want to mistakenly overwrite mObservingState and fool ourselves
+    // into thinking we've re-registered when we really haven't!
+    MOZ_ASSERT(mObservingState == eNotObservingRefresh,
+               "We've been shutdown, which means we should've been "
+               "unregistered as a refresh observer");
     return;
   }
+  mObservingState = eRefreshObserving;
 
   // Stop further processing if there are no new notifications of any kind or
   // events and document load is processed.
