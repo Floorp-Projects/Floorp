@@ -563,7 +563,7 @@ add_task(async function handle_invalid_form() {
   let fakeForm = doc.createElement("form");
   sinon.spy(FormAutofillContent, "_onFormSubmit");
 
-  FormAutofillContent.formSubmitted(fakeForm, null);
+  FormAutofillContent.formSubmitted(fakeForm, undefined, null);
   Assert.equal(FormAutofillContent._onFormSubmit.called, false);
   FormAutofillContent._onFormSubmit.restore();
 });
@@ -602,7 +602,7 @@ add_task(async function autofill_disabled() {
     "extensions.formautofill.creditCards.enabled",
     false
   );
-  FormAutofillContent.formSubmitted(form, null);
+  FormAutofillContent.formSubmitted(form, undefined, null);
   Assert.equal(FormAutofillContent._onFormSubmit.called, false);
   FormAutofillContent._onFormSubmit.resetHistory();
 
@@ -615,7 +615,7 @@ add_task(async function autofill_disabled() {
     true
   );
 
-  FormAutofillContent.formSubmitted(form, null);
+  FormAutofillContent.formSubmitted(form, undefined, null);
   Assert.equal(FormAutofillContent._onFormSubmit.called, true);
   Assert.notDeepEqual(FormAutofillContent._onFormSubmit.args[0][0].address, []);
   Assert.notDeepEqual(
@@ -629,7 +629,7 @@ add_task(async function autofill_disabled() {
     "extensions.formautofill.addresses.enabled",
     false
   );
-  FormAutofillContent.formSubmitted(form, null);
+  FormAutofillContent.formSubmitted(form, undefined, null);
   Assert.equal(FormAutofillContent._onFormSubmit.called, true);
   Assert.deepEqual(FormAutofillContent._onFormSubmit.args[0][0].address, []);
   Assert.notDeepEqual(
@@ -644,7 +644,7 @@ add_task(async function autofill_disabled() {
     "extensions.formautofill.creditCards.enabled",
     false
   );
-  FormAutofillContent.formSubmitted(form, null);
+  FormAutofillContent.formSubmitted(form, undefined, null);
   Assert.deepEqual(FormAutofillContent._onFormSubmit.called, true);
   Assert.notDeepEqual(FormAutofillContent._onFormSubmit.args[0][0].address, []);
   Assert.deepEqual(FormAutofillContent._onFormSubmit.args[0][0].creditCard, []);
@@ -684,7 +684,7 @@ TESTCASES.forEach(testcase => {
 
     let element = doc.getElementById(testcase.targetElementId);
     FormAutofillContent.identifyAutofillFields(element);
-    FormAutofillContent.formSubmitted(form, null);
+    FormAutofillContent.formSubmitted(form, undefined, null);
 
     Assert.equal(
       FormAutofillContent._onFormSubmit.called,
