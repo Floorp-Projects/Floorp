@@ -10815,8 +10815,7 @@ nsresult nsContentUtils::AnonymizeURI(nsIURI* aURI, nsCString& aAnonymizedURI) {
 
 static bool JSONCreator(const char16_t* aBuf, uint32_t aLen, void* aData) {
   nsAString* result = static_cast<nsAString*>(aData);
-  result->Append(aBuf, aLen);
-  return true;
+  return result->Append(aBuf, aLen, fallible);
 }
 
 /* static */
