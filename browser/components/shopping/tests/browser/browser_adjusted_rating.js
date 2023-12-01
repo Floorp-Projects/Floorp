@@ -72,6 +72,42 @@ add_task(async function test_adjusted_rating() {
             0.5,
             `When the rating is 0, the star rating displays 0.5 stars.`
           );
+
+          rating = null;
+          adjustedRating.rating = rating;
+
+          await adjustedRating.updateComplete;
+
+          is(
+            adjustedRating.rating,
+            rating,
+            `The adjusted rating "rating" is now ${rating}`
+          );
+
+          ok(
+            ContentTaskUtils.is_hidden(adjustedRating),
+            "adjusted rating should not be visible"
+          );
+
+          rating = 3;
+          adjustedRating.rating = rating;
+
+          await adjustedRating.updateComplete;
+          mozFiveStar = adjustedRating.ratingEl;
+          ok(
+            ContentTaskUtils.is_visible(adjustedRating),
+            "adjusted rating should be visible"
+          );
+          is(
+            mozFiveStar.rating,
+            rating,
+            `The moz-five-star rating is now ${rating}`
+          );
+          is(
+            adjustedRating.rating,
+            rating,
+            `The adjusted rating "rating" is now ${rating}`
+          );
         }
       );
     }

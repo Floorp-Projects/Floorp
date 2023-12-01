@@ -162,7 +162,9 @@ export class ShoppingContainer extends MozLitElement {
   getAnalysisDetailsTemplate() {
     return html`
       <review-reliability letter=${this.data.grade}></review-reliability>
-      <adjusted-rating rating=${this.data.adjusted_rating}></adjusted-rating>
+      <adjusted-rating
+        rating=${ifDefined(this.data.adjusted_rating)}
+      ></adjusted-rating>
       <review-highlights
         .highlights=${this.data.highlights}
       ></review-highlights>
