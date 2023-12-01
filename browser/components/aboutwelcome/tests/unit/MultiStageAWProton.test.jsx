@@ -408,7 +408,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
         );
     });
     it("should have a multi action primary button by default", async () => {
-      const data = await prepConfig({ needPin: true }, ["AW_WELCOME_BACK"]);
+      const data = await prepConfig({}, ["AW_WELCOME_BACK"]);
       assert.propertyVal(
         data.screens[0].content.primary_button.action,
         "type",
