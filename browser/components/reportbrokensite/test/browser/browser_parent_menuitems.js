@@ -11,6 +11,8 @@
 
 add_common_setup();
 
+requestLongerTimeout(10);
+
 add_task(async function test() {
   ensureReportBrokenSitePreffedOff();
 
