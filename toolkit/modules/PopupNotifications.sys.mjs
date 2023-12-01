@@ -1900,8 +1900,8 @@ PopupNotifications.prototype = {
         return;
       }
 
-      let timeSinceShown =
-        this.window.performance.now() - notification.timeShown;
+      let now = this.window.performance.now();
+      let timeSinceShown = now - notification.timeShown;
       if (timeSinceShown < lazy.buttonDelay) {
         Services.console.logStringMessage(
           "PopupNotifications._onButtonEvent: " +
@@ -1909,6 +1909,7 @@ PopupNotifications.prototype = {
             timeSinceShown +
             "ms"
         );
+        notification.timeShown = now;
         return;
       }
     }
