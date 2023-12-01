@@ -48,6 +48,7 @@ VideoCaptureFactory::CreateDeviceInfo(
   if (aType == mozilla::camera::CaptureDeviceType::Camera) {
     std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo> deviceInfo;
 #if (defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)) && !defined(WEBRTC_ANDROID)
+#  if defined(WEBRTC_USE_PIPEWIRE)
     // Special case when PipeWire is not initialized yet and we need to insert
     // a camera device placeholder based on camera device availability we get
     // from the camera portal
@@ -57,6 +58,7 @@ VideoCaptureFactory::CreateDeviceInfo(
           new PlaceholderDeviceInfo(mCameraAvailability == Available));
       return deviceInfo;
     }
+#  endif
 
     deviceInfo.reset(webrtc::VideoCaptureFactory::CreateDeviceInfo(
         mVideoCaptureOptions.get()));
