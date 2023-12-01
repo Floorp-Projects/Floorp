@@ -33,7 +33,7 @@ use authenticator::{RegisterResult, SignResult, StatusUpdate};
 use base64::Engine;
 use moz_task::RunnableBuilder;
 use nserror::{nsresult, NS_ERROR_FAILURE, NS_ERROR_INVALID_ARG, NS_OK};
-use nsstring::{nsACString, nsCString};
+use nsstring::{nsACString, nsAString, nsCString, nsString};
 use rand::{thread_rng, RngCore};
 use std::cell::{Ref, RefCell};
 use std::collections::{hash_map::Entry, HashMap};
@@ -42,7 +42,7 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
 use thin_vec::ThinVec;
-use xpcom::interfaces::nsICredentialParameters;
+use xpcom::interfaces::{nsICredentialParameters, nsIWebAuthnAutoFillEntry};
 use xpcom::{xpcom_method, RefPtr};
 
 // All TestTokens use this fixed, randomly generated, AAGUID
@@ -128,8 +128,8 @@ impl TestToken {
         thread_rng().fill_bytes(&mut pin_token);
         Self {
             protocol: FidoProtocol::CTAP2,
-            versions,
             transport,
+            versions,
             has_resident_key,
             has_user_verification,
             is_user_consenting,
@@ -671,6 +671,34 @@ impl CredentialParameters {
     }
 }
 
+#[xpcom(implement(nsIWebAuthnAutoFillEntry), atomic)]
+struct WebAuthnAutoFillEntry {
+    rp: String,
+    credential_id: Vec<u8>,
+}
+
+impl WebAuthnAutoFillEntry {
+    xpcom_method!(get_provider => GetProvider() -> u8);
+    fn get_provider(&self) -> Result<u8, nsresult> {
+        Ok(nsIWebAuthnAutoFillEntry::PROVIDER_TEST_TOKEN)
+    }
+
+    xpcom_method!(get_user_name => GetUserName() -> nsAString);
+    fn get_user_name(&self) -> Result<nsString, nsresult> {
+        Ok(nsString::from("Test User"))
+    }
+
+    xpcom_method!(get_rp_id => GetRpId() -> nsAString);
+    fn get_rp_id(&self) -> Result<nsString, nsresult> {
+        Ok(nsString::from(&self.rp))
+    }
+
+    xpcom_method!(get_credential_id => GetCredentialId() -> ThinVec<u8>);
+    fn get_credential_id(&self) -> Result<ThinVec<u8>, nsresult> {
+        Ok(self.credential_id.as_slice().into())
+    }
+}
+
 #[derive(Default)]
 pub(crate) struct TestTokenManager {
     state: Arc<Mutex<HashMap<u64, TestToken>>>,
@@ -901,5 +929,46 @@ impl TestTokenManager {
         }
 
         false
+    }
+
+    pub fn get_autofill_entries(
+        &self,
+        rp_id: &str,
+        credential_filter: &Vec<PublicKeyCredentialDescriptor>,
+    ) -> Result<ThinVec<Option<RefPtr<nsIWebAuthnAutoFillEntry>>>, nsresult> {
+        let guard = self.state.lock().map_err(|_| NS_ERROR_FAILURE)?;
+        let mut entries = ThinVec::new();
+
+        for token in guard.values() {
+            let credentials = token.get_credentials();
+            for credential in credentials.deref() {
+                // The relying party ID must match.
+                if !rp_id.eq(&credential.rp.id) {
+                    continue;
+                }
+                // Only discoverable credentials are admissible.
+                if !credential.is_discoverable_credential {
+                    continue;
+                }
+                // Only credentials listed in the credential filter (if it is
+                // non-empty) are admissible.
+                if credential_filter.len() > 0
+                    && credential_filter
+                        .iter()
+                        .find(|cred| cred.id == credential.id)
+                        .is_none()
+                {
+                    continue;
+                }
+                let entry = WebAuthnAutoFillEntry::allocate(InitWebAuthnAutoFillEntry {
+                    rp: credential.rp.id.clone(),
+                    credential_id: credential.id.clone(),
+                })
+                .query_interface::<nsIWebAuthnAutoFillEntry>()
+                .ok_or(NS_ERROR_FAILURE)?;
+                entries.push(Some(entry));
+            }
+        }
+        Ok(entries)
     }
 }

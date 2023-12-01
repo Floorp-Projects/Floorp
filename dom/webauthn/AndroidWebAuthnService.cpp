@@ -40,7 +40,7 @@ AndroidWebAuthnService::GetIsUVPAA(bool* aAvailable) {
 
 NS_IMETHODIMP
 AndroidWebAuthnService::MakeCredential(uint64_t aTransactionId,
-                                       uint64_t browsingContextId,
+                                       uint64_t aBrowsingContextId,
                                        nsIWebAuthnRegisterArgs* aArgs,
                                        nsIWebAuthnRegisterPromise* aPromise) {
   Reset();
@@ -201,10 +201,17 @@ AndroidWebAuthnService::MakeCredential(uint64_t aTransactionId,
 
 NS_IMETHODIMP
 AndroidWebAuthnService::GetAssertion(uint64_t aTransactionId,
-                                     uint64_t browsingContextId,
+                                     uint64_t aBrowsingContextId,
                                      nsIWebAuthnSignArgs* aArgs,
                                      nsIWebAuthnSignPromise* aPromise) {
   Reset();
+
+  bool conditionallyMediated;
+  Unused << aArgs->GetConditionallyMediated(&conditionallyMediated);
+  if (conditionallyMediated) {
+    aPromise->Reject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return NS_OK;
+  }
 
   GetMainThreadSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
       "java::WebAuthnTokenManager::WebAuthnGetAssertion",
@@ -299,12 +306,41 @@ AndroidWebAuthnService::GetAssertion(uint64_t aTransactionId,
 
 NS_IMETHODIMP
 AndroidWebAuthnService::Reset() {
-  mRegisterCredPropsRk = Nothing();
+  mRegisterCredPropsRk.reset();
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 AndroidWebAuthnService::Cancel(uint64_t aTransactionId) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+AndroidWebAuthnService::HasPendingConditionalGet(uint64_t aBrowsingContextId,
+                                                 const nsAString& aOrigin,
+                                                 uint64_t* aRv) {
+  // Signal that there is no pending conditional get request, so the caller
+  // will not attempt to call GetAutoFillEntries, SelectAutoFillEntry, or
+  // ResumeConditionalGet (as these are not implemented).
+  *aRv = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AndroidWebAuthnService::GetAutoFillEntries(
+    uint64_t aTransactionId, nsTArray<RefPtr<nsIWebAuthnAutoFillEntry>>& aRv) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+AndroidWebAuthnService::SelectAutoFillEntry(
+    uint64_t aTransactionId, const nsTArray<uint8_t>& aCredentialId) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+AndroidWebAuthnService::ResumeConditionalGet(uint64_t aTransactionId) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

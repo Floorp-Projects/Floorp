@@ -121,6 +121,7 @@ struct WebAuthnGetAssertionInfo {
   WebAuthnScopedCredential[] AllowList;
   WebAuthnExtension[] Extensions;
   nsString userVerificationRequirement;
+  bool ConditionallyMediated;
   uint64_t BrowsingContextId;
 };
 
