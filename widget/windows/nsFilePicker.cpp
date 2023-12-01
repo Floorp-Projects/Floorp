@@ -244,19 +244,6 @@ auto ShowLocalAndOrRemote(Fn1 local, Fn2 remote, Args const&... args)
 }  // namespace
 }  // namespace mozilla::detail
 
-Result<Maybe<filedialog::Results>, HRESULT> nsFilePicker::ShowFilePickerImpl(
-    HWND parent, filedialog::FileDialogType type,
-    nsTArray<filedialog::Command> const& commands) {
-  return mozilla::detail::ShowLocalAndOrRemote(
-      &ShowFilePickerLocal, &ShowFilePickerRemote, parent, type, commands);
-}
-
-Result<Maybe<nsString>, HRESULT> nsFilePicker::ShowFolderPickerImpl(
-    HWND parent, nsTArray<filedialog::Command> const& commands) {
-  return mozilla::detail::ShowLocalAndOrRemote(
-      &ShowFolderPickerLocal, &ShowFolderPickerRemote, parent, commands);
-}
-
 /* static */
 Result<Maybe<filedialog::Results>, HRESULT> nsFilePicker::ShowFilePickerRemote(
     HWND parent, filedialog::FileDialogType type,
@@ -372,7 +359,9 @@ bool nsFilePicker::ShowFolderPicker(const nsString& aInitialDir) {
     AutoWidgetPickerState awps(mParentWidget);
 
     mozilla::BackgroundHangMonitor().NotifyWait();
-    auto res = ShowFolderPickerImpl(shim.get(), commands);
+
+    auto res = mozilla::detail::ShowLocalAndOrRemote(
+        &ShowFolderPickerLocal, &ShowFolderPickerRemote, shim.get(), commands);
     if (res.isErr()) {
       NS_WARNING("ShowFolderPickerImpl failed");
       return false;
@@ -490,9 +479,10 @@ bool nsFilePicker::ShowFilePicker(const nsString& aInitialDir) {
     AutoWidgetPickerState awps(mParentWidget);
 
     mozilla::BackgroundHangMonitor().NotifyWait();
-    auto res = ShowFilePickerImpl(
-        shim.get(),
-        mMode == modeSave ? FileDialogType::Save : FileDialogType::Open,
+    auto type = mMode == modeSave ? FileDialogType::Save : FileDialogType::Open;
+
+    auto res = mozilla::detail::ShowLocalAndOrRemote(
+        &ShowFilePickerLocal, &ShowFilePickerRemote, shim.get(), type,
         commands);
 
     if (res.isErr()) {
