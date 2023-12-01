@@ -4697,8 +4697,10 @@ bool AsyncPanZoomController::UpdateAnimation(
   // composite multiple times at the same timestamp.
   // However we only want to do one animation step per composition so we need
   // to deduplicate these calls first.
+  // Even if there's no animation, if we have a scroll offset change pending due
+  // to the frame delay, we need to keep compositing.
   if (mLastSampleTime == aSampleTime) {
-    return !!mAnimation;
+    return !!mAnimation || HavePendingFrameDelayedOffset();
   }
 
   // We're at a new timestamp, so advance to the next sample in the deque, if
@@ -5017,6 +5019,17 @@ void AsyncPanZoomController::AdvanceToNextSample() {
   if (mSampledState.size() > 1) {
     mSampledState.pop_front();
   }
+}
+
+bool AsyncPanZoomController::HavePendingFrameDelayedOffset() const {
+  AssertOnSamplerThread();
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+
+  const bool nextFrameWillChange =
+      mSampledState.size() >= 2 && mSampledState[0] != mSampledState[1];
+  const bool frameAfterThatWillChange =
+      mSampledState.back() != SampledAPZCState(Metrics());
+  return nextFrameWillChange || frameAfterThatWillChange;
 }
 
 bool AsyncPanZoomController::SampleCompositedAsyncTransform(

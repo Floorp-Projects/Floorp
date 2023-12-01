@@ -267,11 +267,11 @@ APZCTreeManager::APZCTreeManager(LayersId aRootLayersId,
                                  UniquePtr<IAPZHitTester> aHitTester)
     : mTestSampleTime(Nothing(), "APZCTreeManager::mTestSampleTime"),
       mInputQueue(new InputQueue()),
+      mMapLock("APZCMapLock"),
       mRootLayersId(aRootLayersId),
       mSampler(nullptr),
       mUpdater(nullptr),
       mTreeLock("APZCTreeLock"),
-      mMapLock("APZCMapLock"),
       mRetainedTouchIdentifier(-1),
       mInScrollbarTouchDrag(false),
       mCurrentMousePosition(ScreenPoint(),
@@ -748,7 +748,7 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
         wrBridgeParent = aState.mWrBridge;
       });
 
-  bool activeAnimations = AdvanceAnimationsInternal(lock, aSampleTime);
+  const bool activeAnimations = AdvanceAnimationsInternal(lock, aSampleTime);
   if (activeAnimations && controller) {
     controller->ScheduleRenderOnCompositorThread(
         wr::RenderReasons::ANIMATED_PROPERTY);
