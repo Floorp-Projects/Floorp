@@ -7,7 +7,7 @@
 #define DEFAULT_BROWSER_SET_DEFAULT_BROWSER_H__
 
 #include "nsStringFwd.h"
-#include "nsTArrayForwardDeclare.h"
+#include "nsArray.h"
 #include <functional>
 
 namespace mozilla::default_agent {
