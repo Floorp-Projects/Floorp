@@ -14,7 +14,7 @@
 #  include "video_engine/placeholder_device_info.h"
 #endif
 
-#if defined(MOZ_ENABLE_DBUS)
+#if defined(WEBRTC_USE_PIPEWIRE) && defined(MOZ_ENABLE_DBUS)
 #  include "mozilla/widget/AsyncDBus.h"
 #endif
 
