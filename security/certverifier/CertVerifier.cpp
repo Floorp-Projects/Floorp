@@ -854,10 +854,13 @@ Result CertVerifier::VerifySSLServerCert(
     if (peerBackCert.Init() != Success) {
       return rv;
     }
-    if (rv == Result::ERROR_UNKNOWN_ISSUER &&
+    if ((rv == Result::ERROR_UNKNOWN_ISSUER ||
+         rv == Result::ERROR_BAD_SIGNATURE ||
+         rv == Result::ERROR_INADEQUATE_KEY_USAGE) &&
         CertIsSelfSigned(peerBackCert, pinarg)) {
-      // In this case we didn't find any issuer for the certificate and the
-      // certificate is self-signed.
+      // In this case we didn't find any issuer for the certificate, or we did
+      // find other certificates with the same subject but different keys, and
+      // the certificate is self-signed.
       return Result::ERROR_SELF_SIGNED_CERT;
     }
     if (rv == Result::ERROR_UNKNOWN_ISSUER) {
