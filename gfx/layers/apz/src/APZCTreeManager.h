@@ -520,6 +520,9 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   APZSampler* GetSampler() const;
   APZUpdater* GetUpdater() const;
 
+  bool AdvanceAnimationsInternal(const MutexAutoLock& aProofOfMapLock,
+                                 const SampleTime& aSampleTime);
+
   // We need to allow APZUpdater to lock and unlock this tree during a WR
   // scene swap. We do this using private helpers to avoid exposing these
   // functions to the world.
@@ -788,9 +791,6 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   static already_AddRefed<GeckoContentController> GetContentController(
       LayersId aLayersId);
 
-  bool AdvanceAnimationsInternal(const MutexAutoLock& aProofOfMapLock,
-                                 const SampleTime& aSampleTime);
-
   using ClippedCompositionBoundsMap =
       std::unordered_map<ScrollableLayerGuid, ParentLayerRect,
                          ScrollableLayerGuid::HashIgnoringPresShellFn,
@@ -812,6 +812,11 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * figure out where they're going. Protected so gtests can access it.
    */
   RefPtr<InputQueue> mInputQueue;
+
+  /** A lock that protects mApzcMap, mScrollThumbInfo, mRootScrollbarInfo,
+   * mFixedPositionInfo, and mStickyPositionInfo.
+   */
+  mutable mozilla::Mutex mMapLock;
 
  private:
   /* Layers id for the root CompositorBridgeParent that owns this
@@ -852,11 +857,6 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    */
   std::unordered_set<LayersId, LayersId::HashFn> mDetachedLayersIds
       MOZ_GUARDED_BY(mTreeLock);
-
-  /** A lock that protects mApzcMap, mScrollThumbInfo, mRootScrollbarInfo,
-   * mFixedPositionInfo, and mStickyPositionInfo.
-   */
-  mutable mozilla::Mutex mMapLock;
 
   /**
    * Helper structure to store a bunch of things in mApzcMap so that they can

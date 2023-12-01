@@ -8,6 +8,7 @@
 #include "APZTestCommon.h"
 #include "InputUtils.h"
 #include "Units.h"
+#include "mozilla/StaticPrefs_apz.h"
 
 class APZCTreeManagerGenericTester : public APZCTreeManagerTester {
  protected:
@@ -344,4 +345,67 @@ TEST_F(APZCTreeManagerTester, Bug1805601) {
   // Check that APZ clamped the scroll offset.
   EXPECT_EQ(CSSRect(0, 0, 300, 300), compositorMetrics.CalculateScrollRange());
   EXPECT_EQ(CSSPoint(300, 300), compositorMetrics.GetVisualScrollOffset());
+}
+
+TEST_F(APZCTreeManagerTester,
+       InstantKeyScrollBetweenTwoSamplingsWithSameTimeStamp) {
+  if (!StaticPrefs::apz_keyboard_enabled_AtStartup()) {
+    // On Android apz.keyboard.enabled is false by default and it's can't be
+    // changed here since it's `mirror: once`, so we just skip this test.
+    return;
+  }
+
+  // For instant scrolling, i.e. no async animation should not be involved.
+  SCOPED_GFX_PREF_BOOL("general.smoothScroll", false);
+
+  // Set up a keyboard shortcuts map to scroll page down.
+  AutoTArray<KeyboardShortcut, 1> shortcuts{KeyboardShortcut(
+      KeyboardInput::KEY_DOWN, 0, 0, 0, 0,
+      KeyboardScrollAction(
+          KeyboardScrollAction::KeyboardScrollActionType::eScrollPage, true))};
+  KeyboardMap keyboardMap(std::move(shortcuts));
+  manager->SetKeyboardMap(keyboardMap);
+
+  // Set up a scrollable layer.
+  CreateSimpleScrollingLayer();
+  ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
+  UpdateHitTestingTree();
+
+  // Setup the scrollable layer is scrollable by key events.
+  FocusTarget focusTarget;
+  focusTarget.mSequenceNumber = 1;
+  focusTarget.mData = AsVariant<FocusTarget::ScrollTargets>(
+      {ScrollableLayerGuid::START_SCROLL_ID,
+       ScrollableLayerGuid::START_SCROLL_ID});
+  manager->UpdateFocusState(LayersId{0}, LayersId{0}, focusTarget);
+
+  // A vsync tick happens.
+  mcc->AdvanceByMillis(16);
+
+  // The first sampling happens, there's no change have happened, thus no need
+  // to composite.
+  EXPECT_FALSE(manager->AdvanceAnimations(mcc->GetSampleTime()));
+
+  // A key event causing scroll page down happens.
+  WidgetKeyboardEvent widgetEvent(true, eKeyDown, nullptr);
+  KeyboardInput input(widgetEvent);
+  Unused << manager->ReceiveInputEvent(input);
+
+  // Simulate WebRender compositing frames until APZ tells it the scroll offset
+  // has stopped changing.
+  // Important to trigger the bug: the first composite has the same time stamp
+  // as the earlier one above.
+  ParentLayerPoint compositedScrollOffset;
+  while (true) {
+    bool needMoreFrames = manager->AdvanceAnimations(mcc->GetSampleTime());
+    compositedScrollOffset = ApzcOf(root)->GetCurrentAsyncScrollOffset(
+        AsyncPanZoomController::eForCompositing);
+    if (!needMoreFrames) {
+      break;
+    }
+    mcc->AdvanceBy(TimeDuration::FromMilliseconds(16));
+  }
+
+  // Check that the effect of the keyboard scroll has been composited.
+  EXPECT_GT(compositedScrollOffset.y, 0);
 }
