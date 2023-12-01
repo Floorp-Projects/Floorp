@@ -59,11 +59,12 @@ add_task(async function testSteps() {
 
   await setUpEnv();
 
-  info("Test 0 - Upgrade from 25 to 26");
+  info("Test 0 - InitOrigin shouldn't leave an empty directoy");
 
   let cache = await caches.open("test");
   let response = await cache.match(url);
   ok(!!response, "Upgrade from 25 to 26 do succeed");
+  ok(verifyResult(), "InitOrigin should clean all empty directories");
 
   info("Test 1 - DeleteOrphanedBodyFiles shouldn't leave an empty directoy");
 
