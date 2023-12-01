@@ -2,10 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_security.h"
-#include "nsIObserverService.h"
-#include "nsThreadUtils.h"
 #include "WebAuthnService.h"
 
 namespace mozilla::dom {
@@ -35,35 +32,12 @@ WebAuthnService::GetAssertion(uint64_t aTransactionId,
                               uint64_t browsingContextId,
                               nsIWebAuthnSignArgs* aArgs,
                               nsIWebAuthnSignPromise* aPromise) {
-  nsresult rv;
   if (StaticPrefs::security_webauth_webauthn_enable_softtoken()) {
-    rv = mTestService->GetAssertion(aTransactionId, browsingContextId, aArgs,
-                                    aPromise);
-  } else {
-    rv = mPlatformService->GetAssertion(aTransactionId, browsingContextId,
+    return mTestService->GetAssertion(aTransactionId, browsingContextId, aArgs,
+                                      aPromise);
+  }
+  return mPlatformService->GetAssertion(aTransactionId, browsingContextId,
                                         aArgs, aPromise);
-  }
-
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // If this is a conditionally mediated request, notify observers that there
-  // is a pending transaction. This is mainly useful in tests.
-  bool conditionallyMediated;
-  Unused << aArgs->GetConditionallyMediated(&conditionallyMediated);
-  if (conditionallyMediated) {
-    nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(__func__, []() {
-      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-      if (os) {
-        os->NotifyObservers(nullptr, "webauthn:conditional-get-pending",
-                            nullptr);
-      }
-    }));
-    NS_DispatchToMainThread(runnable.forget());
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -72,44 +46,6 @@ WebAuthnService::GetIsUVPAA(bool* aAvailable) {
     return mTestService->GetIsUVPAA(aAvailable);
   }
   return mPlatformService->GetIsUVPAA(aAvailable);
-}
-
-NS_IMETHODIMP
-WebAuthnService::HasPendingConditionalGet(uint64_t aBrowsingContextId,
-                                          const nsAString& aOrigin,
-                                          uint64_t* aRv) {
-  if (StaticPrefs::security_webauth_webauthn_enable_softtoken()) {
-    return mTestService->HasPendingConditionalGet(aBrowsingContextId, aOrigin,
-                                                  aRv);
-  }
-  return mPlatformService->HasPendingConditionalGet(aBrowsingContextId, aOrigin,
-                                                    aRv);
-}
-
-NS_IMETHODIMP
-WebAuthnService::GetAutoFillEntries(
-    uint64_t aTransactionId, nsTArray<RefPtr<nsIWebAuthnAutoFillEntry>>& aRv) {
-  if (StaticPrefs::security_webauth_webauthn_enable_softtoken()) {
-    return mTestService->GetAutoFillEntries(aTransactionId, aRv);
-  }
-  return mPlatformService->GetAutoFillEntries(aTransactionId, aRv);
-}
-
-NS_IMETHODIMP
-WebAuthnService::SelectAutoFillEntry(uint64_t aTransactionId,
-                                     const nsTArray<uint8_t>& aCredentialId) {
-  if (StaticPrefs::security_webauth_webauthn_enable_softtoken()) {
-    return mTestService->SelectAutoFillEntry(aTransactionId, aCredentialId);
-  }
-  return mPlatformService->SelectAutoFillEntry(aTransactionId, aCredentialId);
-}
-
-NS_IMETHODIMP
-WebAuthnService::ResumeConditionalGet(uint64_t aTransactionId) {
-  if (StaticPrefs::security_webauth_webauthn_enable_softtoken()) {
-    return mTestService->ResumeConditionalGet(aTransactionId);
-  }
-  return mPlatformService->ResumeConditionalGet(aTransactionId);
 }
 
 NS_IMETHODIMP
