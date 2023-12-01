@@ -366,12 +366,17 @@ def backfill_all_browsertime(parameters, graph_config, input, task_group_id, tas
             sys.exit(1)
 
 
-def filter_raptor_jobs(full_task_graph, label_to_taskid):
+def filter_raptor_jobs(full_task_graph, label_to_taskid, project):
+    # Late import to prevent impacting other backfill action tasks
+    from ..util.attributes import match_run_on_projects
+
     to_run = []
     for label, entry in full_task_graph.tasks.items():
         if entry.kind != "test":
             continue
         if entry.task.get("extra", {}).get("suite", "") != "raptor":
+            continue
+        if not match_run_on_projects(project, entry.attributes.get("run_on_projects", [])):
             continue
         if "browsertime" not in entry.attributes.get("raptor_try_name", ""):
             continue
@@ -421,7 +426,7 @@ def add_all_browsertime(parameters, graph_config, input, task_group_id, task_id)
         parameters, graph_config
     )
 
-    to_run = filter_raptor_jobs(full_task_graph, label_to_taskid)
+    to_run = filter_raptor_jobs(full_task_graph, label_to_taskid, parameters["project"])
 
     create_tasks(
         graph_config,
