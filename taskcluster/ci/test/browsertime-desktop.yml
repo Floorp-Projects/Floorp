@@ -128,7 +128,7 @@ browsertime-tp6:
                         default: []
         treeherder-symbol: Btime(tp6)
     raptor:
-        apps: [firefox, chrome, chromium]
+        apps: [firefox, chrome]
         test: tp6
         run-visual-metrics: true
         subtests:
@@ -163,7 +163,7 @@ browsertime-tp6:
 browsertime-responsiveness:
     <<: *tp6-defaults
     raptor:
-        apps: [firefox, chrome, chromium]
+        apps: [firefox, chrome]
         test: tp6
         run-visual-metrics: true
         subtests:
@@ -214,7 +214,7 @@ browsertime-tp6-essential:
                         - --conditioned-profile=settled
                         - --extra-profiler-run
         raptor:
-            apps: [firefox, chrome, chromium]  # Disable non sp3 tests temporarily for CaR. Bug 1867809
+            apps: [firefox, chrome]  # Disable non sp3 tests temporarily for CaR. Bug 1867809
             test: tp6
             run-visual-metrics:
                 by-test-platform:
@@ -299,7 +299,7 @@ browsertime-tp6-bytecode:
 browsertime-benchmark:
     description: Raptor (browsertime) Benchmark tests
     raptor:
-        apps: [firefox, chrome, chromium, safari, custom-car]
+        apps: [firefox, chrome, safari, custom-car]
         subtests:
             by-test-platform:
                 macosx1300.*shippable.*:
@@ -452,7 +452,7 @@ browsertime-benchmark:
 browsertime-benchmark-wasm:
     description: Raptor (browsertime) WASM benchmarks
     raptor:
-        apps: [firefox, chrome, chromium, safari]
+        apps: [firefox, chrome, safari]
         subtests:
             by-app:
                 firefox:
@@ -554,7 +554,7 @@ browsertime-tp6-live:
             - --live-sites
             - --extra-profiler-run
     raptor:
-        apps: [firefox, chrome, chromium, safari]
+        apps: [firefox, chrome, safari]
         test: tp6
         run-visual-metrics: true
         subtests:
@@ -744,7 +744,7 @@ browsertime-regression-tests:
 
 browsertime-upload:
     raptor:
-        apps: [firefox, chrome, chromium, safari]
+        apps: [firefox, chrome, safari]
         subtests:
             - [upload, upload-h2]
             - upload-h3
