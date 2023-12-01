@@ -19,10 +19,6 @@ import {{ config.ffi_module_name() }}
 // Public interface members begin here.
 {{ type_helper_code }}
 
-{%- if ci.has_async_fns() %}
-{% include "Async.swift" %}
-{%- endif %}
-
 {%- for func in ci.function_definitions() %}
 {%- include "TopLevelFunctionTemplate.swift" %}
 {%- endfor %}

@@ -480,7 +480,7 @@ export class FfiConverterString extends FfiConverter {
 
 
 // Export the FFIConverter object to make external types work.
-export class FfiConverterTypeLogger extends FfiConverter {
+export class FfiConverterCallbackInterfaceLogger extends FfiConverter {
     static lower(callbackObj) {
         return callbackHandlerLogger.storeCallbackObj(callbackObj)
     }
@@ -580,7 +580,7 @@ export function logEvenNumbers(logger,items) {
         const liftError = null;
         const functionCall = () => {
             try {
-                FfiConverterTypeLogger.checkType(logger)
+                FfiConverterCallbackInterfaceLogger.checkType(logger)
             } catch (e) {
                 if (e instanceof UniFFITypeError) {
                     e.addItemDescriptionPart("logger");
@@ -596,8 +596,8 @@ export function logEvenNumbers(logger,items) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                35, // fixture_callbacks:uniffi_uniffi_fixture_callbacks_fn_func_log_even_numbers
-                FfiConverterTypeLogger.lower(logger),
+                115, // fixture_callbacks:uniffi_fixture_callbacks_fn_func_log_even_numbers
+                FfiConverterCallbackInterfaceLogger.lower(logger),
                 FfiConverterSequencei32.lower(items),
             )
         }
@@ -614,7 +614,7 @@ export function logEvenNumbersMainThread(logger,items) {
         const liftError = null;
         const functionCall = () => {
             try {
-                FfiConverterTypeLogger.checkType(logger)
+                FfiConverterCallbackInterfaceLogger.checkType(logger)
             } catch (e) {
                 if (e instanceof UniFFITypeError) {
                     e.addItemDescriptionPart("logger");
@@ -630,8 +630,8 @@ export function logEvenNumbersMainThread(logger,items) {
                 throw e;
             }
             return UniFFIScaffolding.callSync(
-                36, // fixture_callbacks:uniffi_uniffi_fixture_callbacks_fn_func_log_even_numbers_main_thread
-                FfiConverterTypeLogger.lower(logger),
+                116, // fixture_callbacks:uniffi_fixture_callbacks_fn_func_log_even_numbers_main_thread
+                FfiConverterCallbackInterfaceLogger.lower(logger),
                 FfiConverterSequencei32.lower(items),
             )
         }

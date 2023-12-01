@@ -1,7 +1,7 @@
 {%- import "macros.kt" as kt %}
 
 {%- for type_ in ci.iter_types() %}
-{%- let type_name = type_|type_name(ci) %}
+{%- let type_name = type_|type_name %}
 {%- let ffi_converter_name = type_|ffi_converter_name %}
 {%- let canonical_type_name = type_|canonical_name %}
 {%- let contains_object_references = ci.item_contains_object_references(type_) %}
@@ -56,7 +56,7 @@
 {%- when Type::Bytes %}
 {%- include "ByteArrayHelper.kt" %}
 
-{%- when Type::Enum { name, module_path } %}
+{%- when Type::Enum(name) %}
 {%- let e = ci.get_enum_definition(name).unwrap() %}
 {%- if !ci.is_name_used_as_error(name) %}
 {% include "EnumTemplate.kt" %}
@@ -64,22 +64,22 @@
 {% include "ErrorTemplate.kt" %}
 {%- endif -%}
 
-{%- when Type::Object { module_path, name, imp } %}
+{%- when Type::Object { name, imp } %}
 {% include "ObjectTemplate.kt" %}
 
-{%- when Type::Record { name, module_path } %}
+{%- when Type::Record(name) %}
 {% include "RecordTemplate.kt" %}
 
-{%- when Type::Optional { inner_type } %}
+{%- when Type::Optional(inner_type) %}
 {% include "OptionalTemplate.kt" %}
 
-{%- when Type::Sequence { inner_type } %}
+{%- when Type::Sequence(inner_type) %}
 {% include "SequenceTemplate.kt" %}
 
-{%- when Type::Map { key_type, value_type } %}
+{%- when Type::Map(key_type, value_type) %}
 {% include "MapTemplate.kt" %}
 
-{%- when Type::CallbackInterface { module_path, name } %}
+{%- when Type::CallbackInterface(name) %}
 {% include "CallbackInterfaceTemplate.kt" %}
 
 {%- when Type::ForeignExecutor %}
@@ -91,10 +91,10 @@
 {%- when Type::Duration %}
 {% include "DurationHelper.kt" %}
 
-{%- when Type::Custom { module_path, name, builtin } %}
+{%- when Type::Custom { name, builtin } %}
 {% include "CustomTypeTemplate.kt" %}
 
-{%- when Type::External { module_path, name, namespace, kind, tagged } %}
+{%- when Type::External { crate_name, name, kind } %}
 {% include "ExternalTypeTemplate.kt" %}
 
 {%- else %}
@@ -102,8 +102,5 @@
 {%- endfor %}
 
 {%- if ci.has_async_fns() %}
-{# Import types needed for async support #}
-{{ self.add_import("kotlin.coroutines.resume") }}
-{{ self.add_import("kotlinx.coroutines.suspendCancellableCoroutine") }}
-{{ self.add_import("kotlinx.coroutines.CancellableContinuation") }}
+{% include "AsyncTypes.kt" %}
 {%- endif %}
