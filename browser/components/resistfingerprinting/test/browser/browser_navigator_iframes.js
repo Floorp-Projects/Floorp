@@ -29,11 +29,13 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource://gre/modules/components-utils/WindowsVersionInfo.sys.mjs",
 });
 
+const osVersion = Services.sysinfo.get("version");
+
 const DEFAULT_APPVERSION = {
   linux: "5.0 (X11)",
   win: "5.0 (Windows)",
   macosx: "5.0 (Macintosh)",
-  android: "5.0 (Android 10)",
+  android: `5.0 (Android ${osVersion})`,
   other: "5.0 (X11)",
 };
 
@@ -77,8 +79,8 @@ const WindowsOscpuPromise = (async () => {
     let isWow64 = (await Services.sysinfo.processInfo).isWow64;
     WindowsOscpu =
       cpuArch == "x86_64" || isWow64 || (cpuArch == "aarch64" && isWin11)
-        ? "Windows NT 10.0; Win64; x64"
-        : "Windows NT 10.0";
+        ? `Windows NT ${osVersion}; Win64; x64`
+        : `Windows NT ${osVersion}`;
   }
   return WindowsOscpu;
 })();
@@ -101,7 +103,7 @@ const SPOOFED_OSCPU = {
 const DEFAULT_UA_OS = {
   linux: `X11; Linux ${cpuArch}`,
   macosx: "Macintosh; Intel Mac OS X 10.15",
-  android: "Android 10; Mobile",
+  android: `Android ${osVersion}; Mobile`,
   other: `X11; Linux ${cpuArch}`,
 };
 
