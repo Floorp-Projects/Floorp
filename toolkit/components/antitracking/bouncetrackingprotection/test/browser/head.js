@@ -114,30 +114,6 @@ async function navigateLinkClick(browser, targetURL) {
 }
 
 /**
- * Helper to wait for an observer message to be dispatched.
- * @param {string} message - Message to listen for.
- * @param {function} [conditionFn] - Optional condition function to filter
- * messages. Return false to keep listening for messages.
- * @returns {Promise} A promise which resolves once the given message has been
- * observed.
- */
-async function waitForObserverMessage(message, conditionFn = () => true) {
-  return new Promise(resolve => {
-    let observer = (subject, topic, data) => {
-      if (topic != message) {
-        return;
-      }
-
-      if (conditionFn(subject, topic, data)) {
-        Services.obs.removeObserver(observer, message);
-        resolve();
-      }
-    };
-    Services.obs.addObserver(observer, message);
-  });
-}
-
-/**
  * Wait for the record-bounces method to run for the given tab / browser.
  * @param {browser} browser - Browser element which represents the tab we want
  * to observe.
@@ -145,7 +121,7 @@ async function waitForObserverMessage(message, conditionFn = () => true) {
  * run for the given browser.
  */
 async function waitForRecordBounces(browser) {
-  return waitForObserverMessage(
+  return TestUtils.topicObserved(
     OBSERVER_MSG_RECORD_BOUNCES_FINISHED,
     subject => {
       // Ensure the message was dispatched for the browser we're interested in.
