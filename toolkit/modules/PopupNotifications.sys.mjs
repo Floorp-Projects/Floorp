@@ -798,7 +798,10 @@ PopupNotifications.prototype = {
       case "activate":
         if (this.isPanelOpen) {
           for (let elt of this.panel.children) {
-            elt.notification.timeShown = this.window.performance.now();
+            elt.notification.timeShown = Math.max(
+              this.window.performance.now(),
+              elt.notification.timeShown ?? 0
+            );
           }
           break;
         }
@@ -1259,7 +1262,11 @@ PopupNotifications.prototype = {
 
     // Remember the time the notification was shown for the security delay.
     notificationsToShow.forEach(
-      n => (n.timeShown = this.window.performance.now())
+      n =>
+        (n.timeShown = Math.max(
+          this.window.performance.now(),
+          n.timeShown ?? 0
+        ))
     );
 
     if (this.isPanelOpen && this._currentAnchorElement == anchorElement) {
@@ -1909,7 +1916,7 @@ PopupNotifications.prototype = {
             timeSinceShown +
             "ms"
         );
-        notification.timeShown = now;
+        notification.timeShown = Math.max(now, notification.timeShown);
         return;
       }
     }
