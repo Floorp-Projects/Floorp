@@ -216,7 +216,7 @@ export class ShoppingContainer extends MozLitElement {
     }
 
     if (this.data.needs_analysis) {
-      if (!this.data.product_id || typeof this.data.grade != "number") {
+      if (!this.data.product_id) {
         // Product is new to us.
         return html`<unanalyzed-product-card
           productUrl=${ifDefined(this.productUrl)}
