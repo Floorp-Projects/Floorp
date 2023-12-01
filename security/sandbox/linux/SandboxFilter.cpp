@@ -882,8 +882,11 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
       // In the absence of a broker we still need to handle the
       // fstat-equivalent subset of fstatat; see bug 1673770.
       switch (sysno) {
-      CASES_FOR_fstatat:
-        return Trap(StatAtTrap, nullptr);
+        // statx may be used for fstat (bug 1867673)
+        case __NR_statx:
+          return Error(ENOSYS);
+        CASES_FOR_fstatat:
+          return Trap(StatAtTrap, nullptr);
       }
     }
 
