@@ -43,6 +43,7 @@ UNIFIED_SOURCES += [
     "AuthenticatorResponse.cpp",
     "PublicKeyCredential.cpp",
     "WebAuthnArgs.cpp",
+    "WebAuthnAutoFillEntry.cpp",
     "WebAuthnManager.cpp",
     "WebAuthnManagerBase.cpp",
     "WebAuthnPromiseHolder.cpp",

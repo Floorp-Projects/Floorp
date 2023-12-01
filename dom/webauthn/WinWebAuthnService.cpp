@@ -14,6 +14,7 @@
 
 #include "nsTextFormatter.h"
 #include "nsWindowsHelpers.h"
+#include "WebAuthnAutoFillEntry.h"
 #include "WebAuthnEnumStrings.h"
 #include "WebAuthnResult.h"
 #include "WebAuthnTransportIdentifiers.h"
@@ -44,6 +45,10 @@ static decltype(WebAuthNCancelCurrentOperation)*
 static decltype(WebAuthNGetErrorName)* gWinWebauthnGetErrorName = nullptr;
 static decltype(WebAuthNGetApiVersionNumber)* gWinWebauthnGetApiVersionNumber =
     nullptr;
+static decltype(WebAuthNGetPlatformCredentialList)*
+    gWinWebauthnGetPlatformCredentialList = nullptr;
+static decltype(WebAuthNFreePlatformCredentialList)*
+    gWinWebauthnFreePlatformCredentialList = nullptr;
 
 }  // namespace
 
@@ -129,6 +134,21 @@ nsresult WinWebAuthnService::EnsureWinWebAuthnModuleLoaded() {
         gWinWebauthnCancelCurrentOperation && gWinWebauthnGetErrorName &&
         gWinWebauthnGetApiVersionNumber)) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (gWinWebauthnGetApiVersionNumber() >= WEBAUTHN_API_VERSION_4) {
+    gWinWebauthnGetPlatformCredentialList =
+        reinterpret_cast<decltype(WebAuthNGetPlatformCredentialList)*>(
+            GetProcAddress(gWinWebAuthnModule,
+                           "WebAuthNGetPlatformCredentialList"));
+    gWinWebauthnFreePlatformCredentialList =
+        reinterpret_cast<decltype(WebAuthNFreePlatformCredentialList)*>(
+            GetProcAddress(gWinWebAuthnModule,
+                           "WebAuthNFreePlatformCredentialList"));
+    if (!(gWinWebauthnGetPlatformCredentialList &&
+          gWinWebauthnFreePlatformCredentialList)) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
   }
 
   markModuleUnusable.release();
@@ -606,12 +626,13 @@ WinWebAuthnService::GetAssertion(uint64_t aTransactionId,
   bool conditionallyMediated;
   Unused << aArgs->GetConditionallyMediated(&conditionallyMediated);
   if (!conditionallyMediated) {
-    DoGetAssertion(guard);
+    DoGetAssertion(Nothing(), guard);
   }
   return NS_OK;
 }
 
 void WinWebAuthnService::DoGetAssertion(
+    Maybe<nsTArray<uint8_t>>&& aSelectedCredentialId,
     const TransactionStateMutex::AutoLock& aGuard) {
   if (aGuard->isNothing() || aGuard->ref().pendingSignArgs.isNothing() ||
       aGuard->ref().pendingSignPromise.isNothing()) {
@@ -627,6 +648,7 @@ void WinWebAuthnService::DoGetAssertion(
   nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
       "WinWebAuthnService::MakeCredential",
       [self = RefPtr{this}, aArgs, aPromise,
+       aSelectedCredentialId = std::move(aSelectedCredentialId),
        aCancellationId = aGuard->ref().cancellationId]() mutable {
         // Take a read lock on gWinWebAuthnModuleLock to prevent the module from
         // being unloaded while the operation is in progress. This does not
@@ -694,10 +716,15 @@ void WinWebAuthnService::DoGetAssertion(
 
         // allow Credentials
         nsTArray<nsTArray<uint8_t>> allowList;
-        Unused << aArgs->GetAllowList(allowList);
-
         nsTArray<uint8_t> allowListTransports;
-        Unused << aArgs->GetAllowListTransports(allowListTransports);
+        if (aSelectedCredentialId.isSome()) {
+          allowList.AppendElement(aSelectedCredentialId.extract());
+          allowListTransports.AppendElement(
+              MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_INTERNAL);
+        } else {
+          Unused << aArgs->GetAllowList(allowList);
+          Unused << aArgs->GetAllowListTransports(allowListTransports);
+        }
 
         if (allowList.Length() != allowListTransports.Length()) {
           aPromise->Reject(NS_ERROR_DOM_UNKNOWN_ERR);
@@ -845,15 +872,72 @@ WinWebAuthnService::GetAutoFillEntries(
       guard->ref().pendingSignArgs.isNothing()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  // Bug 1864544: discover credentials from Windows Hello and return them.
+
+  StaticAutoReadLock moduleLock(gWinWebAuthnModuleLock);
+  if (!gWinWebAuthnModule) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   aRv.Clear();
+
+  if (gWinWebauthnGetApiVersionNumber() < WEBAUTHN_API_VERSION_4) {
+    // GetPlatformCredentialList was added in version 4. Earlier versions
+    // can still present a generic "Use a Passkey" autofill entry, so
+    // this isn't an error.
+    return NS_OK;
+  }
+
+  nsString rpId;
+  Unused << guard->ref().pendingSignArgs.ref()->GetRpId(rpId);
+
+  WEBAUTHN_GET_CREDENTIALS_OPTIONS getCredentialsOptions{
+      WEBAUTHN_GET_CREDENTIALS_OPTIONS_VERSION_1,
+      rpId.get(),  // pwszRpId
+      FALSE,       // bBrowserInPrivateMode
+  };
+  PWEBAUTHN_CREDENTIAL_DETAILS_LIST pCredentialList = nullptr;
+  HRESULT hr = gWinWebauthnGetPlatformCredentialList(&getCredentialsOptions,
+                                                     &pCredentialList);
+  // WebAuthNGetPlatformCredentialList has an _Outptr_result_maybenull_
+  // annotation and a comment "Returns NTE_NOT_FOUND when credentials are
+  // not found."
+  if (pCredentialList == nullptr) {
+    if (hr != NTE_NOT_FOUND) {
+      return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
+  }
+  MOZ_ASSERT(hr == S_OK);
+  for (size_t i = 0; i < pCredentialList->cCredentialDetails; i++) {
+    RefPtr<nsIWebAuthnAutoFillEntry> entry(
+        new WebAuthnAutoFillEntry(pCredentialList->ppCredentialDetails[i]));
+    aRv.AppendElement(entry);
+  }
+  gWinWebauthnFreePlatformCredentialList(pCredentialList);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 WinWebAuthnService::SelectAutoFillEntry(
     uint64_t aTransactionId, const nsTArray<uint8_t>& aCredentialId) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  auto guard = mTransactionState.Lock();
+  if (guard->isNothing() || guard->ref().transactionId != aTransactionId ||
+      guard->ref().pendingSignArgs.isNothing()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsTArray<nsTArray<uint8_t>> allowList;
+  Unused << guard->ref().pendingSignArgs.ref()->GetAllowList(allowList);
+  if (!allowList.IsEmpty() && !allowList.Contains(aCredentialId)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  Maybe<nsTArray<uint8_t>> id;
+  id.emplace();
+  id.ref().Assign(aCredentialId);
+  DoGetAssertion(std::move(id), guard);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -863,7 +947,7 @@ WinWebAuthnService::ResumeConditionalGet(uint64_t aTransactionId) {
       guard->ref().pendingSignArgs.isNothing()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  DoGetAssertion(guard);
+  DoGetAssertion(Nothing(), guard);
   return NS_OK;
 }
 
