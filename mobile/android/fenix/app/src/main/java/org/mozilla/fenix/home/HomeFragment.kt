@@ -91,6 +91,8 @@ import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.toolbar.IncompleteRedesignToolbarFeature
+import org.mozilla.fenix.components.toolbar.NavigationBarView
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.databinding.FragmentHomeBinding
 import org.mozilla.fenix.ext.components
@@ -430,6 +432,13 @@ class HomeFragment : Fragment() {
             context = requireContext(),
             interactor = sessionControlInteractor,
         )
+
+        if (IncompleteRedesignToolbarFeature(requireContext().settings()).isEnabled) {
+            NavigationBarView(
+                context = requireContext(),
+                container = binding.homeLayout,
+            )
+        }
 
         sessionControlView = SessionControlView(
             containerView = binding.sessionControlRecyclerView,

@@ -133,6 +133,8 @@ import org.mozilla.fenix.components.toolbar.BrowserFragmentStore
 import org.mozilla.fenix.components.toolbar.BrowserToolbarView
 import org.mozilla.fenix.components.toolbar.DefaultBrowserToolbarController
 import org.mozilla.fenix.components.toolbar.DefaultBrowserToolbarMenuController
+import org.mozilla.fenix.components.toolbar.IncompleteRedesignToolbarFeature
+import org.mozilla.fenix.components.toolbar.NavigationBarView
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
@@ -448,6 +450,13 @@ abstract class BaseBrowserFragment :
             customTabSession = customTabSessionId?.let { store.state.findCustomTab(it) },
             lifecycleOwner = viewLifecycleOwner,
         )
+
+        if (IncompleteRedesignToolbarFeature(context.settings()).isEnabled) {
+            NavigationBarView(
+                context = context,
+                container = binding.browserLayout,
+            )
+        }
 
         toolbarIntegration.set(
             feature = browserToolbarView.toolbarIntegration,
