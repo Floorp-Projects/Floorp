@@ -163,7 +163,7 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">Tetepy mbopapapy jejavy</string>
 
-    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Ko kuatiarogue eñeha’ãva ehecha ndojehechaukakuaái oiporu rupi ñeikumby oiko’ỹvaa térã ipu’aka’ỹva.</p>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>Ko kuatiarogue eñeha’ãva ehecha ndojehechaukakuaái oiporu rupi ñeikũmby oiko’ỹvaa térã ipu’aka’ỹva.</p>
       <ul>
         <li>Eñe’ẽ ñanduti renda jára ndive emombe’u hag̃ua chupekuéra ko apañuãi.</li>
       </ul>]]></string>

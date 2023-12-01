@@ -1369,7 +1369,7 @@
     <!-- The dialog text shown when additional devices are not available -->
     <string name="sync_connect_device_dialog">Emondo hag̃ua tendayke, eñepyrũ tembiapo Firefox-pe ambue mba’e’okápe.</string>
     <!-- Confirmation dialog button -->
-    <string name="sync_confirmation_button">Kumbypyre</string>
+    <string name="sync_confirmation_button">Kũmbypyre</string>
     <!-- Share error message -->
     <string name="share_error_snackbar">Ndaikatúi emoherakuã ko tembiporu’i ndive</string>
     <!-- Add new device screen title -->
@@ -2143,7 +2143,7 @@
     <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
     <string name="shortcut_max_limit_content">Embojuaju hag̃ua jeike pyahu, embogue peteĩ. Ejopy are tenda ha eiporavo mboguete.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
-    <string name="top_sites_max_limit_confirmation_button">Oĩma, aikumby</string>
+    <string name="top_sites_max_limit_confirmation_button">Oĩma, aikũmby</string>
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Jeike pya’eha</string>
@@ -2295,8 +2295,6 @@
     <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">Ñemurã %s</string>
 
     <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
-    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources" moz:RemovedIn="119">Marandu’i rechajeyhápe oiko %s rupive.</string>
-    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
     <string name="review_quality_check_powered_by_2">Marandu’i rechajeyhápe oiko %s rupive.</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s Mozilla mba’e</string>
@@ -2337,7 +2335,7 @@
     <!-- Title for info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">Ñehesa’ỹijo hekopyahúma</string>
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
-    <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Aikumby</string>
+    <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Aikũmby</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
     <string name="review_quality_check_generic_error_title">Ndaipóri marandu ko’ág̃aite</string>
     <!-- Text for body of error card displayed to the user when an error occurred. -->

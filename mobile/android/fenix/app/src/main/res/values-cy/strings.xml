@@ -637,6 +637,8 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Ychwanegion</string>
 
+    <!-- Preference for installing a local add-on -->
+    <string name="preferences_install_local_addon">Gosod ychwanegyn o ffeil</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Hysbysiadau</string>
 
@@ -2243,8 +2245,6 @@
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">Hysbyseb gan %s</string>
     <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
-    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources" moz:RemovedIn="119">Mae’r gwirydd adolygiadau yn cael ei bweru gan %s.</string>
-    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
     <string name="review_quality_check_powered_by_2">Mae’r gwirydd adolygiadau yn cael ei bweru gan %s</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s gan Mozilla</string>
@@ -2304,6 +2304,8 @@
     <string name="review_quality_check_contextual_onboarding_title">Rhowch gynnig ar ein canllaw dibynadwy i adolygiadau cynnyrch</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
     <string name="review_quality_check_contextual_onboarding_description">Gweld pa mor ddibynadwy yw adolygiadau cynnyrch ar %1$s cyn i chi brynu. Mae gwirydd adolygiadau, nodwedd arbrofol gan %2$s, wedi’i gynnwys yn y porwr. Mae’n gweithio ar %3$s a %4$s hefyd.</string>
+    <!-- Description for review quality check contextual onboarding card. The first parameters is for retailer name (e.g. Amazon). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description_one_vendor">Gweld pa mor ddibynadwy yw adolygiadau cynnyrch ar %1$s cyn i chi brynu. Mae Review Checker, nodwedd arbrofol o %2$s, wedi\'i chynnwys yn y porwr.</string>
     <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_contextual_onboarding_learn_more">Gan ddefnyddio pŵer %1$s gan Mozilla, rydym yn eich helpu i osgoi adolygiadau rhagfarnllyd ac annilys. Mae ein model AI bob amser yn gwella i’ch diogelu wrth i chi siopa. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
@@ -2370,4 +2372,6 @@
     <string name="a11y_action_label_read_article">darllen yr erthygl</string>
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">agor dolen i wybod rhagor</string>
+    <!-- Content description for headings announced by accessibility service. The first parameter is the text of the heading. Talkback will announce the first parameter and then speak the word "Heading" indicating to the user that this text is a heading for a section. -->
+    <string name="a11y_heading">%s, Pennawd</string>
 </resources>

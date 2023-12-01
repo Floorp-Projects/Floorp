@@ -202,8 +202,6 @@
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s ndaikatúi oñemohenda ndojokupytýi rupi %2$s %3$s ndive.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted_1">%1$s ndaikatúi oñemohenda omoapañuãi rupi tuichaháicha tekopyta térã tekorosã</string>
-    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">%1$s ndaikatúi oñemohenda omoapañuãi kuaágui tekopyta térã tekorosãrã</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s hendýma hekopete</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
@@ -245,7 +243,7 @@
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_installed_dialog_description">Embojuruja poravorãme</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
-    <string name="mozac_feature_addons_installed_dialog_okay_button">Oĩma, aikumby</string>
+    <string name="mozac_feature_addons_installed_dialog_okay_button">Oĩma, aikũmby</string>
     <!-- "Learn more" link displayed below an add-on status message. -->
     <string name="mozac_feature_addons_status_learn_more">Eikuaave</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
