@@ -13800,35 +13800,6 @@
   value: false
   mirror: always
 
-# wasm-unsafe-eval source keyword
-- name: security.csp.wasm-unsafe-eval.enabled
-  type: bool
-  value: true
-  mirror: always
-
-# unsafe-hashes source keyword
-- name: security.csp.unsafe-hashes.enabled
-  type: bool
-  value: true
-  mirror: always
-
-# The script-src-attr and script-src-elem directive
-- name: security.csp.script-src-attr-elem.enabled
-  type: bool
-  value: true
-  mirror: always
-
-# The style-src-attr and style-src-elem directive
-- name: security.csp.style-src-attr-elem.enabled
-  type: bool
-  value: true
-  mirror: always
-
-- name: security.csp.external-hashes.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # WebAuthn CTAP2 support
 - name: security.webauthn.ctap2
   type: RelaxedAtomicBool

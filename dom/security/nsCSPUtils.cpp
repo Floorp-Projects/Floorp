@@ -1130,8 +1130,7 @@ bool nsCSPDirective::permits(CSPDirective aDirective, nsILoadInfo* aLoadInfo,
       }
 
       // Step 1.3. If integrity expressions is not empty:
-      if (!integrityExpressions.IsEmpty() &&
-          StaticPrefs::security_csp_external_hashes_enabled()) {
+      if (!integrityExpressions.IsEmpty()) {
         // Step 1.3.1. Let integrity sources be the result of executing the
         // algorithm defined in [SRI 3.3.3 Parse metadata] on request’s
         // integrity metadata.

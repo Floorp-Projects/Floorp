@@ -447,14 +447,12 @@ nsCSPBaseSrc* nsCSPParser::keywordSource() {
     return new nsCSPKeywordSrc(CSP_UTF16KeywordToEnum(mCurToken));
   }
 
-  if (StaticPrefs::security_csp_wasm_unsafe_eval_enabled() &&
-      CSP_IsKeyword(mCurToken, CSP_WASM_UNSAFE_EVAL)) {
+  if (CSP_IsKeyword(mCurToken, CSP_WASM_UNSAFE_EVAL)) {
     mHasAnyUnsafeEval = true;
     return new nsCSPKeywordSrc(CSP_UTF16KeywordToEnum(mCurToken));
   }
 
-  if (StaticPrefs::security_csp_unsafe_hashes_enabled() &&
-      CSP_IsKeyword(mCurToken, CSP_UNSAFE_HASHES)) {
+  if (CSP_IsKeyword(mCurToken, CSP_UNSAFE_HASHES)) {
     return new nsCSPKeywordSrc(CSP_UTF16KeywordToEnum(mCurToken));
   }
 
@@ -857,20 +855,6 @@ nsCSPDirective* nsCSPParser::directiveName() {
   // Currently we are not supporting that directive, hence we log a
   // warning to the console and ignore the directive including its values.
   if (directive == nsIContentSecurityPolicy::REFLECTED_XSS_DIRECTIVE) {
-    AutoTArray<nsString, 1> params = {mCurToken};
-    logWarningErrorToConsole(nsIScriptError::warningFlag,
-                             "notSupportingDirective", params);
-    return nullptr;
-  }
-
-  // script-src-attr and script-scr-elem might have been disabled.
-  // Similarly style-src-{attr, elem}.
-  if (((directive == nsIContentSecurityPolicy::SCRIPT_SRC_ATTR_DIRECTIVE ||
-        directive == nsIContentSecurityPolicy::SCRIPT_SRC_ELEM_DIRECTIVE) &&
-       !StaticPrefs::security_csp_script_src_attr_elem_enabled()) ||
-      ((directive == nsIContentSecurityPolicy::STYLE_SRC_ATTR_DIRECTIVE ||
-        directive == nsIContentSecurityPolicy::STYLE_SRC_ELEM_DIRECTIVE) &&
-       !StaticPrefs::security_csp_style_src_attr_elem_enabled())) {
     AutoTArray<nsString, 1> params = {mCurToken};
     logWarningErrorToConsole(nsIScriptError::warningFlag,
                              "notSupportingDirective", params);
