@@ -26,16 +26,6 @@
 
     --focus-outline-color: var(--button-primary-bgcolor);
 
-    --checkbox-border-color: var(--input-border-color);
-    --checkbox-unchecked-bgcolor: var(--button-bgcolor);
-    --checkbox-unchecked-hover-bgcolor: var(--button-hover-bgcolor);
-    --checkbox-unchecked-active-bgcolor: var(--button-active-bgcolor);
-    --checkbox-checked-border-color: transparent;
-    --checkbox-checked-bgcolor: var(--button-primary-bgcolor);
-    --checkbox-checked-color: var(--button-primary-color);
-    --checkbox-checked-hover-bgcolor: var(--button-primary-hover-bgcolor);
-    --checkbox-checked-active-bgcolor: var(--button-primary-active-bgcolor);
-
     --arrowpanel-background: light-dark(white, rgb(66, 65, 77));
     --arrowpanel-color: light-dark(black, rgb(251, 251, 254));
     --arrowpanel-border-color: light-dark(rgb(240, 240, 244), rgb(82,82,94));

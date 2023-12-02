@@ -33,6 +33,10 @@ radio {
   -moz-default-appearance: radio;
   margin: 1px 0;
 
+  radiogroup:focus-visible > radio[focused] > & {
+    outline-style: auto;
+  }
+
   @media (-moz-platform: windows) {
     width: 13px;
     height: 13px;
