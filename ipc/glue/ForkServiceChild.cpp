@@ -72,15 +72,18 @@ ForkServiceChild::~ForkServiceChild() {
 }
 
 Result<Ok, LaunchError> ForkServiceChild::SendForkNewSubprocess(
-    const nsTArray<nsCString>& aArgv, const nsTArray<EnvVar>& aEnvMap,
-    const nsTArray<FdMapping>& aFdsRemap, pid_t* aPid) {
+    const Args& aArgs, pid_t* aPid) {
   mRecvPid = -1;
   IPC::Message msg(MSG_ROUTING_CONTROL, Msg_ForkNewSubprocess__ID);
 
   IPC::MessageWriter writer(msg);
-  WriteIPDLParam(&writer, nullptr, aArgv);
-  WriteIPDLParam(&writer, nullptr, aEnvMap);
-  WriteIPDLParam(&writer, nullptr, aFdsRemap);
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+  WriteIPDLParam(&writer, nullptr, aArgs.mForkFlags);
+  WriteIPDLParam(&writer, nullptr, aArgs.mChroot);
+#endif
+  WriteIPDLParam(&writer, nullptr, aArgs.mArgv);
+  WriteIPDLParam(&writer, nullptr, aArgs.mEnv);
+  WriteIPDLParam(&writer, nullptr, aArgs.mFdsRemap);
   if (!mTcver->Send(msg)) {
     MOZ_LOG(gForkServiceLog, LogLevel::Verbose,
             ("the pipe to the fork server is closed or having errors"));

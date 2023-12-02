@@ -155,6 +155,12 @@ inline bool ParseForkNewSubprocess(IPC::Message& aMsg,
   nsTArray<EnvVar> env_map;
   nsTArray<FdMapping> fds_remap;
 
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+  ReadParamInfallible(&reader, &aOptions->fork_flags,
+                      "Error deserializing 'int'");
+  ReadParamInfallible(&reader, &aOptions->sandbox_chroot,
+                      "Error deserializing 'bool'");
+#endif
   ReadParamInfallible(&reader, &argv_array,
                       "Error deserializing 'nsCString[]'");
   ReadParamInfallible(&reader, &env_map, "Error deserializing 'EnvVar[]'");
@@ -202,10 +208,6 @@ void ForkServer::OnMessageReceived(UniquePtr<IPC::Message> message) {
   if (!ParseForkNewSubprocess(*message, argv, &options)) {
     return;
   }
-
-#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
-  mozilla::SandboxLaunchForkServerPrepare(argv, options);
-#endif
 
   base::ProcessHandle child_pid = -1;
   mAppProcBuilder = MakeUnique<base::AppProcessBuilder>();
