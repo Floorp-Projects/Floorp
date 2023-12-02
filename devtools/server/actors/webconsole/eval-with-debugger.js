@@ -499,6 +499,7 @@ function makeSideeffectFreeDebugger(targetActorDbg) {
   // The debugger only calls onNativeCall handlers on the debugger that is
   // explicitly calling either eval, DebuggerObject.apply or DebuggerObject.call,
   // so we need to add this hook on "dbg" even though the rest of our hooks work via "newDbg".
+  const { SIDE_EFFECT_FREE } = WebConsoleCommandsManager;
   dbg.onNativeCall = (callee, reason) => {
     try {
       // Setters are always effectful. Natives called normally or called via
@@ -516,6 +517,18 @@ function makeSideeffectFreeDebugger(targetActorDbg) {
         new Error("Unable to validate native function against allowlist")
       );
     }
+
+    // The WebConsole Commands manager will use Cu.exportFunction which will force
+    // to call a native method which is hard to identify.
+    // getEvalResult will flag those getter methods with a magic attribute.
+    if (
+      reason == "call" &&
+      callee.unsafeDereference().isSideEffectFree === SIDE_EFFECT_FREE
+    ) {
+      // Returning undefined causes execution to continue normally.
+      return undefined;
+    }
+
     // Returning null terminates the current evaluation.
     return null;
   };

@@ -28,10 +28,16 @@ const USAGE_STRING_MAPPING = {
  *
  */
 const WebConsoleCommandsManager = {
+  // Flag used by eager evaluation in order to allow the execution of commands
+  // which are side effect free and disallow all the others.
+  SIDE_EFFECT_FREE: Symbol("SIDE_EFFECT_FREE"),
+
   // Map of command name to command function or property descriptor (see register method)
   _registeredCommands: new Map(),
   // Map of command name to optional array of accepted argument names
   _validArguments: new Map(),
+  // Set of command names that are side effect free
+  _sideEffectFreeCommands: new Set(),
 
   /**
    * Register a new command.
@@ -39,6 +45,9 @@ const WebConsoleCommandsManager = {
    * @param {Object} options
    * @param {string} options.name
    *        The command name (exemple: "$", "screenshot",...))
+   * @param {Boolean} isSideEffectFree
+   *        Tells if the command is free of any side effect to know
+   *        if it can run in eager console evaluation.
    * @param {function|object} options.command
    *        The command to register.
    *        It can be:
@@ -73,7 +82,7 @@ const WebConsoleCommandsManager = {
    *     }
    *   });
    */
-  register({ name, command, validArguments, usage }) {
+  register({ name, isSideEffectFree, command, validArguments, usage }) {
     if (
       typeof command != "function" &&
       !(typeof command == "object" && typeof command.get == "function")
@@ -82,9 +91,17 @@ const WebConsoleCommandsManager = {
         "Invalid web console command. It can only be a function, or an object with a function as 'get' attribute"
       );
     }
+    if (typeof isSideEffectFree !== "boolean") {
+      throw new Error(
+        "Invalid web console command. 'isSideEffectFree' attribute should be set and be a boolean"
+      );
+    }
     this._registeredCommands.set(name, command);
     if (validArguments) {
       this._validArguments.set(name, validArguments);
+    }
+    if (isSideEffectFree) {
+      this._sideEffectFreeCommands.add(name);
     }
   },
 
@@ -284,12 +301,27 @@ const WebConsoleCommandsManager = {
         // Function commands
         descriptor.value = command.bind(undefined, owner);
         maybeExport(descriptor, "value");
+
+        // Unfortunately evalWithBindings will access all bindings values,
+        // which would trigger a debuggee native call because bindings's property
+        // is using Cu.exportFunction.
+        // Put a magic symbol attribute on them in order to carefully accept
+        // all bindings as being side effect safe by default.
+        if (this._sideEffectFreeCommands.has(name)) {
+          descriptor.value.isSideEffectFree = this.SIDE_EFFECT_FREE;
+        }
+
         // Make sure the helpers can be used during eval.
         descriptor.value = debuggerGlobal.makeDebuggeeValue(descriptor.value);
       } else if (typeof command?.get === "function") {
         // Getter commands
         descriptor.get = command.get.bind(undefined, owner);
         maybeExport(descriptor, "get");
+
+        // See comment in previous block.
+        if (this._sideEffectFreeCommands.has(name)) {
+          descriptor.get.isSideEffectFree = this.SIDE_EFFECT_FREE;
+        }
       }
       Object.defineProperty(bindings, name, descriptor);
     }
@@ -399,6 +431,7 @@ exports.WebConsoleCommandsManager = WebConsoleCommandsManager;
  */
 WebConsoleCommandsManager.register({
   name: "$",
+  isSideEffectFree: true,
   command(owner, selector, element) {
     try {
       if (
@@ -430,6 +463,7 @@ WebConsoleCommandsManager.register({
  */
 WebConsoleCommandsManager.register({
   name: "$$",
+  isSideEffectFree: true,
   command(owner, selector, element) {
     let scope = owner.window.document;
     try {
@@ -465,6 +499,7 @@ WebConsoleCommandsManager.register({
  */
 WebConsoleCommandsManager.register({
   name: "$_",
+  isSideEffectFree: true,
   command: {
     get(owner) {
       return owner.consoleActor.getLastConsoleInputEvaluation();
@@ -485,6 +520,7 @@ WebConsoleCommandsManager.register({
  */
 WebConsoleCommandsManager.register({
   name: "$x",
+  isSideEffectFree: true,
   command(
     owner,
     xPath,
@@ -561,6 +597,7 @@ WebConsoleCommandsManager.register({
  */
 WebConsoleCommandsManager.register({
   name: "$0",
+  isSideEffectFree: true,
   command: {
     get(owner) {
       return owner.makeDebuggeeValue(owner.selectedNode);
@@ -573,6 +610,7 @@ WebConsoleCommandsManager.register({
  */
 WebConsoleCommandsManager.register({
   name: "clear",
+  isSideEffectFree: false,
   command(owner) {
     owner.helperResult = {
       type: "clearOutput",
@@ -585,6 +623,7 @@ WebConsoleCommandsManager.register({
  */
 WebConsoleCommandsManager.register({
   name: "clearHistory",
+  isSideEffectFree: false,
   command(owner) {
     owner.helperResult = {
       type: "clearHistory",
@@ -601,6 +640,7 @@ WebConsoleCommandsManager.register({
  */
 WebConsoleCommandsManager.register({
   name: "keys",
+  isSideEffectFree: true,
   command(owner, object) {
     // Need to waive Xrays so we can iterate functions and accessor properties
     return Cu.cloneInto(Object.keys(Cu.waiveXrays(object)), owner.window);
@@ -616,6 +656,7 @@ WebConsoleCommandsManager.register({
  */
 WebConsoleCommandsManager.register({
   name: "values",
+  isSideEffectFree: true,
   command(owner, object) {
     const values = [];
     // Need to waive Xrays so we can iterate functions and accessor properties
@@ -635,6 +676,7 @@ WebConsoleCommandsManager.register({
  */
 WebConsoleCommandsManager.register({
   name: "help",
+  isSideEffectFree: false,
   command(owner, args) {
     owner.helperResult = { type: "help" };
   },
@@ -648,6 +690,7 @@ WebConsoleCommandsManager.register({
  */
 WebConsoleCommandsManager.register({
   name: "inspect",
+  isSideEffectFree: false,
   command(owner, object, forceExpandInConsole = false) {
     const dbgObj = owner.preprocessDebuggerObject(
       owner.makeDebuggeeValue(object)
@@ -672,6 +715,7 @@ WebConsoleCommandsManager.register({
  */
 WebConsoleCommandsManager.register({
   name: "copy",
+  isSideEffectFree: false,
   command(owner, value) {
     let payload;
     try {
@@ -706,6 +750,7 @@ WebConsoleCommandsManager.register({
  */
 WebConsoleCommandsManager.register({
   name: "screenshot",
+  isSideEffectFree: false,
   command(owner, args = {}) {
     owner.helperResult = {
       type: "screenshotOutput",
@@ -723,6 +768,7 @@ WebConsoleCommandsManager.register({
  */
 WebConsoleCommandsManager.register({
   name: "history",
+  isSideEffectFree: false,
   command(owner, args = {}) {
     owner.helperResult = {
       type: "historyOutput",
@@ -741,6 +787,7 @@ WebConsoleCommandsManager.register({
  */
 WebConsoleCommandsManager.register({
   name: "block",
+  isSideEffectFree: false,
   command(owner, args = {}) {
     // Note that this command is implemented in the frontend, from actions's input.js
     // We only forward the command arguments back to the client.
@@ -770,6 +817,7 @@ WebConsoleCommandsManager.register({
  */
 WebConsoleCommandsManager.register({
   name: "unblock",
+  isSideEffectFree: false,
   command(owner, args = {}) {
     // Note that this command is implemented in the frontend, from actions's input.js
     // We only forward the command arguments back to the client.
@@ -799,6 +847,7 @@ WebConsoleCommandsManager.register({
  */
 WebConsoleCommandsManager.register({
   name: "trace",
+  isSideEffectFree: false,
   command(owner, args) {
     if (isWorker) {
       throw new Error(":trace command isn't supported in workers");

@@ -16,6 +16,7 @@ function zzyzx2() {
 var obj = {propA: "A", propB: "B"};
 var array = [1, 2, 3];
 </script>
+<h1>title</h1>
 `;
 
 const EAGER_EVALUATION_PREF = "devtools.webconsole.input.eagerEvaluation";
@@ -24,7 +25,12 @@ const EAGER_EVALUATION_PREF = "devtools.webconsole.input.eagerEvaluation";
 // eagerly evaluated should show their results, and expressions with side
 // effects should not perform those side effects.
 add_task(async function () {
-  const hud = await openNewTabAndConsole(TEST_URI);
+  // Open the inspector first to select a node, so that we can later test "$0"
+  const toolbox = await openNewTabAndToolbox(TEST_URI, "inspector");
+  await selectNodeWithPicker(toolbox, "h1");
+
+  info("Picker mode stopped, <h1> selected, now switching to the console");
+  const hud = await openConsole();
 
   // Do an evaluation to populate $_
   await executeAndWaitForResultMessage(
@@ -92,6 +98,16 @@ add_task(async function () {
 
   setInputValue(hud, "Math.round(3.2)");
   await waitForEagerEvaluationResult(hud, "3");
+
+  info("Check web console commands");
+  setInputValue(hud, "help()");
+  await waitForNoEagerEvaluationResult(hud);
+
+  setInputValue(hud, "$0");
+  await waitForEagerEvaluationResult(hud, `<h1>`);
+
+  setInputValue(hud, "$('html')");
+  await waitForEagerEvaluationResult(hud, `<html>`);
 
   info("Check that $_ wasn't polluted by eager evaluations");
   setInputValue(hud, "$_");
