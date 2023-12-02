@@ -644,6 +644,8 @@
 
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Additivos</string>
+    <!-- Preference for installing a local add-on -->
+    <string name="preferences_install_local_addon">Installar additivo ab un file</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Notificationes</string>
 
@@ -2301,8 +2303,6 @@
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">Aviso publicitari per %s</string>
     <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
-    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources" moz:RemovedIn="119">Le verificator de recension es supportate per %s.</string>
-    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
     <string name="review_quality_check_powered_by_2">Le verificator de recension es supportate per %s</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s per Mozilla</string>
@@ -2363,6 +2363,8 @@
     <string name="review_quality_check_contextual_onboarding_title">Prova nostre guida digne de fide pro recensiones de producto</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
     <string name="review_quality_check_contextual_onboarding_description">Vide quanto fidabile es le recensiones de producto sur %1$s ante que tu compra. Verificator de recension, un function experimental de %2$s, es producite justo in le navigator. Illo ancora functiona sur %3$s e %4$s.</string>
+    <!-- Description for review quality check contextual onboarding card. The first parameters is for retailer name (e.g. Amazon). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description_one_vendor">Vide quanto fidabile es le recensiones de producto sur %1$s ante que tu compra. Verificator de recension, un function experimental per %2$s, es integrate justo in le navigator.</string>
     <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_contextual_onboarding_learn_more">Per le potentia de %1$s per Mozilla, nos te adjuta a evitar recensiones prevenite e inauthentic. Nostre modello de intelligentia artificial sempre meliora pro proteger te dum tu compra. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
@@ -2429,4 +2431,6 @@
     <string name="a11y_action_label_read_article">leger le articulo</string>
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">aperi le ligamine pro saper plus</string>
+    <!-- Content description for headings announced by accessibility service. The first parameter is the text of the heading. Talkback will announce the first parameter and then speak the word "Heading" indicating to the user that this text is a heading for a section. -->
+    <string name="a11y_heading">%s, Titulo</string>
 </resources>

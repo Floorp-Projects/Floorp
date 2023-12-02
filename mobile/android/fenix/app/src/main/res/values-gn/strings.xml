@@ -677,7 +677,7 @@
     <string name="customize_toggle_recently_visited">Ojeikeramohague</string>
 
     <!-- Title for the customize home screen section with Pocket. -->
-    <string name="customize_toggle_pocket_2">Tembiasakue nemyakãngetáva</string>
+    <string name="customize_toggle_pocket_2">Tembiasakue nemoakãngetáva</string>
     <!-- Summary for the customize home screen section with Pocket. The first parameter is product name Pocket -->
     <string name="customize_toggle_pocket_summary">Jehaipy oykekóva %s</string>
     <!-- Title for the customize home screen section with sponsored Pocket stories. -->
@@ -2212,7 +2212,7 @@
 
     <!-- Pocket recommended stories -->
     <!-- Header text for a section on the home screen. -->
-    <string name="pocket_stories_header_1">Tembiasakue nemyakãngetáva</string>
+    <string name="pocket_stories_header_1">Tembiasakue nemoakãngetáva</string>
     <!-- Header text for a section on the home screen. -->
     <string name="pocket_stories_categories_header">Tembiasakue téma rehegua</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
@@ -2421,4 +2421,4 @@
     <string name="a11y_action_label_read_article">emoñe’ẽ jehaipy</string>
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">embojuruja juajuha eikuaave hag̃ua</string>
-</resources>
+    </resources>

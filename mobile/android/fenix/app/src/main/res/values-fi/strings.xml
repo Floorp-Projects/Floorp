@@ -643,6 +643,8 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Lisäosat</string>
 
+    <!-- Preference for installing a local add-on -->
+    <string name="preferences_install_local_addon">Asenna lisäosa tiedostosta</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Ilmoitukset</string>
 
@@ -2260,8 +2262,6 @@
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">Mainostaja %s</string>
     <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
-    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources" moz:RemovedIn="119">Arvostelun tarkistuksen tarjoaa %s.</string>
-    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
     <string name="review_quality_check_powered_by_2">Arvostelujen tarkistuksen tarjoaa %s</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s Mozillalta</string>
@@ -2313,6 +2313,8 @@
     <string name="review_quality_check_no_connection_body">Tarkista verkkoyhteytesi ja yritä sitten ladata sivu uudelleen.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
     <string name="review_quality_check_no_analysis_title">Näistä arvosteluista ei ole vielä tietoa</string>
+    <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
+    <string name="review_quality_check_no_analysis_body">Tarkista arvostelun laatu, jos haluat tietää, ovatko tämän tuotteen arvostelut luotettavia. Se kestää vain noin 60 sekuntia.</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
     <string name="review_quality_check_no_analysis_link">Tarkista arvostelun laatu</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
@@ -2365,4 +2367,4 @@
     <string name="a11y_action_label_read_article">lukeaksesi artikkelin</string>
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">avataksesi linkin ja lukeaksesi lisää</string>
-</resources>
+    </resources>

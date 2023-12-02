@@ -637,6 +637,8 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Dodatki</string>
 
+    <!-- Preference for installing a local add-on -->
+    <string name="preferences_install_local_addon">Namesti dodatek iz datoteke</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Obvestila</string>
 
@@ -2393,4 +2395,6 @@
     <string name="a11y_action_label_read_article">preberete članek</string>
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">odprete povezavo s podrobnostmi</string>
+    <!-- Content description for headings announced by accessibility service. The first parameter is the text of the heading. Talkback will announce the first parameter and then speak the word "Heading" indicating to the user that this text is a heading for a section. -->
+    <string name="a11y_heading">%s, naslov</string>
 </resources>

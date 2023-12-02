@@ -89,6 +89,7 @@
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Pelajari tentang Perlindungan Kuki Total</string>
 
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Akses kamera diperlukan. Buka pengaturan Android, ketuk izin, dan ketuk izinkan.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -239,7 +240,7 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Pindai</string>
     <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button">Mesin pencari</string>
+    <string name="search_engine_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Mesin pencari</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Setelan mesin pencari</string>
 
@@ -306,19 +307,12 @@
     <string name="onboarding_home_enable_notifications_negative_button">Jangan sekarang</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
-    <!-- Title for set firefox as default browser screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Jadikan %s sebagai peramban pilihan Anda</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Jadikan Firefox sebagai peramban pilihan Anda</string>
-    <!-- Description for set firefox as default browser screen.
-        The first parameter is the Firefox brand name.
-        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s mengutamakan masyarakat daripada laba dan membela privasi Anda dengan memblokir pelacak lintas situs.\n\n\nPelajari lebih lanjut dalam %2$s.</string>
+    <string name="juno_onboarding_default_browser_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Jadikan Firefox sebagai peramban pilihan Anda</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox mengutamakan masyarakat daripada laba dan membela privasi Anda dengan memblokir pelacak lintas situs.\n\n\nPelajari lebih lanjut dalam kebijakan privasi kami.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox mengutamakan masyarakat daripada laba dan membela privasi Anda dengan memblokir pelacak lintas situs.\n\n\nPelajari lebih lanjut dalam kebijakan privasi kami.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">kebijakan privasi</string>
@@ -327,26 +321,20 @@
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Jangan sekarang</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Berpindah dari ponsel ke laptop  dan sebaliknya</string>
+    <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">Berpindah dari ponsel ke laptop  dan sebaliknya</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Bawa tab dan kata sandi Anda dari perangkat lain untuk meneruskan jelajah terakhir.</string>
+    <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">Bawa tab dan kata sandi Anda dari perangkat lain untuk meneruskan jelajah terakhir.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Masuk</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Jangan sekarang</string>
-    <!-- Title for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Notifikasi membantu Anda lakukan lebih banyak hal dengan %s</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Notifikasi membantu Anda lakukan lebih banyak hal dengan Firefox</string>
+    <string name="juno_onboarding_enable_notifications_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Notifikasi membantu Anda lakukan lebih banyak hal dengan Firefox</string>
 
-    <!-- Description for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Kirim tab antar perangkat, kelola unduhan, dan dapatkan kiat terbaik menggunakan %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-       Note: The word "Firefox" should NOT be translated   -->
-    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Kirim tab antar perangkat, kelola unduhan, dan dapatkan kiat terbaik menggunakan Firefox.</string>
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Kirim tab antar perangkat, kelola unduhan, dan dapatkan kiat terbaik menggunakan Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Aktifkan notifikasi</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -373,7 +361,7 @@
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">Pilih satu</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts">Kelola pintasan pencarian</string>
+    <string name="preferences_manage_search_shortcuts" moz:removedIn="120" tools:ignore="UnusedResources">Kelola pintasan pencarian</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary">Sunting mesin peramban terlihat di menu pencarian</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
@@ -383,7 +371,7 @@
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Cari</string>
     <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Bilah alamat</string>
+    <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">Bilah alamat</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Beri nilai di Google Play</string>
     <!-- Preference linking to about page for Fenix
@@ -413,22 +401,22 @@
     <string name="preferences_https_only_title">Mode Hanya HTTPS</string>
 
     <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction">Pengurangan Spanduk Kuki</string>
+    <string name="preferences_cookie_banner_reduction" moz:RemovedIn="121" tools:ignore="UnusedResources">Pengurangan Spanduk Kuki</string>
+    <!-- Label for cookie banner section in quick settings panel. -->
+    <string name="cookie_banner_blocker">Pemblokir Spanduk Kuki</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
-    <string name="reduce_cookie_banner_option">Kurangi spanduk kuki</string>
+    <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">Kurangi spanduk kuki</string>
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
-    <string name="reduce_cookie_banner_option_off">Nonaktif</string>
+    <string name="reduce_cookie_banner_option_off" moz:RemovedIn="121" tools:ignore="UnusedResources">Nonaktif</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
-    <string name="reduce_cookie_banner_option_on">Aktif</string>
+    <string name="reduce_cookie_banner_option_on" moz:RemovedIn="121" tools:ignore="UnusedResources">Aktif</string>
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_summary_1">%1$s secara otomatis coba menolak permintaan kuki di spanduk kuki.</string>
+    <string name="reduce_cookie_banner_summary_1" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s secara otomatis coba menolak permintaan kuki di spanduk kuki.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Nonaktif untuk situs ini</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Batal</string>
-    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button" moz:RemovedIn="115" tools:ignore="UnusedResources">Minta dukungan</string>
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Kirim permintaan</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -443,27 +431,27 @@
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Saat ini, situs tidak didukung</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Aktifkan Pengurangan Spanduk Kuki untuk %1$s?</string>
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Aktifkan Pengurangan Spanduk Kuki untuk %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Nonaktifkan Pengurangan Spanduk Kuki untuk %1$s?</string>
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Nonaktifkan Pengurangan Spanduk Kuki untuk %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s tidak dapat secara otomatis menolak permintaan kuki di situs ini. Anda dapat mengirimkan permintaan dukungan untuk situs ini di masa mendatang.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s akan menghapus kuki situs ini dan menyegarkan laman ini. Membersihkan semua kuki dapat membuat Anda keluar dari suatu situs atau mengosongkan keranjang belanja.</string>
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s akan menghapus kuki situs ini dan menyegarkan laman ini. Membersihkan semua kuki dapat membuat Anda keluar dari suatu situs atau mengosongkan keranjang belanja.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s mencoba secara otomatis menolak semua permintaan kuki di situs yang didukung.</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s mencoba secara otomatis menolak semua permintaan kuki di situs yang didukung.</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_title">Izinkan %1$s untuk menolak spanduk kuki?</string>
+    <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="121" tools:ignore="UnusedResources">Izinkan %1$s untuk menolak spanduk kuki?</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_body">%1$s dapat menolak permintaan spanduk kuki secara otomatis.</string>
+    <string name="reduce_cookie_banner_dialog_body" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s dapat menolak permintaan spanduk kuki secara otomatis.</string>
     <!-- Remind me later text button for the onboarding dialog -->
-    <string name="reduce_cookie_banner_dialog_not_now_button">Jangan sekarang</string>
+    <string name="reduce_cookie_banner_dialog_not_now_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Jangan sekarang</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
-    <string name="reduce_cookie_banner_dialog_snackbar_text">Anda akan melihat lebih sedikit permintaan kuki</string>
+    <string name="reduce_cookie_banner_dialog_snackbar_text" moz:RemovedIn="121" tools:ignore="UnusedResources">Anda akan melihat lebih sedikit permintaan kuki</string>
 
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
-    <string name="reduce_cookie_banner_dialog_change_setting_button">Izinkan</string>
+    <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Izinkan</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Secara otomatis mencoba terhubung ke situs menggunakan protokol enkripsi HTTPS untuk meningkatkan keamanan.</string>
@@ -488,11 +476,11 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Aksesibilitas</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Penyedia Firefox Account khusus</string>
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Penyedia Firefox Account khusus</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Penyedia Sync khusus</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Penyedia Firefox Account/Sync dimodifikasi. Keluar dari aplikasi untuk menerapkan pengubahan…</string>
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Penyedia Firefox Account/Sync dimodifikasi. Keluar dari aplikasi untuk menerapkan pengubahan…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Akun</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -508,7 +496,7 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Masuk untuk menyinkronkan tab, markah, sandi, dan yang lainnya.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Firefox Account</string>
+    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox Account</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Hubungkan kembali untuk melanjutkan sinkronisasi</string>
     <!-- Preference for language -->
@@ -520,7 +508,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Pengawakutuan jarak jauh melalui USB</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Tampilkan mesin pencari</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Tampilkan mesin pencari</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Tampilkan saran pencarian</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -620,12 +608,6 @@
 
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">%s Klasik</string>
-    <!-- Text for limited edition wallpapers title. -->
-    <string name="wallpaper_limited_edition_title">Edisi Terbatas</string>
-    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
-    <string name="wallpaper_limited_edition_description_with_learn_more">Koleksi Suara Independen baru. %s</string>
-    <!-- Description text for the limited edition wallpapers. -->
-    <string name="wallpaper_limited_edition_description">Koleksi Suara Independen baru.</string>
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">Coba berbagai ragam warna</string>
     <!-- Wallpaper onboarding dialog body text. -->
@@ -635,9 +617,9 @@
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">Pengaya tidak didukung</string>
+    <string name="addon_not_supported_error" moz:removedIn="120" tools:ignore="UnusedResources">Pengaya tidak didukung</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">Pengaya telah didukung</string>
+    <string name="addon_already_installed" moz:removedIn="120" tools:ignore="UnusedResources">Pengaya telah didukung</string>
 
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
@@ -939,9 +921,9 @@
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Nama koleksi</string>
     <!-- Text for the menu button to rename a top site -->
-	<string name="rename_top_site">Ubah nama</string>
-	<!-- Text for the menu button to remove a top site -->
-	<string name="remove_top_site">Hapus</string>
+    <string name="rename_top_site">Ubah nama</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Hapus</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Hapus dari riwayat</string>
@@ -1220,7 +1202,7 @@
     <!-- Text for standard error snackbar dismiss button. -->
     <string name="standard_snackbar_error_dismiss">Tutup</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_error">Gagal mencetak</string>
+    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">Gagal mencetak</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">Cetak</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
@@ -1363,14 +1345,10 @@
     <string name="preferences_delete_browsing_data_tabs_title_2">Tab terbuka</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d tab</string>
-    <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Riwayat penjelajahan dan situs data</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d alamat situs</string>
 
-    <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Kuki</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Anda\ akan keluar dari sebagian besar situs</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1426,62 +1404,10 @@
     <string name="delete_history_group_snackbar">Grup dihapus</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome header. -->
-    <string name="onboarding_header_2">Selamat datang di Internet yang lebih baik</string>
-    <!-- Text for the onboarding welcome message. -->
-    <string name="onboarding_message">Peramban yang dibuat untuk masyarakat, bukan profit.</string>
-    <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header">Mulai dari situasi saat Anda pergi</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description">Sinkronkan tab dan kata sandi di berbagai perangkat untuk peralihan layar yang mulus.</string>
-    <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in">Masuk</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sinkronisasi aktif</string>
-    <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header">Perlindungan privasi secara bawaan</string>
-    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_old">%1$s secara otomatis menghentikan perusahaan yang mengikuti Anda di web secara rahasia.</string>
-    <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description">Menghadirkan Perlindungan Kuki Total untuk mencegah pelacak gunakan kuki untuk menguntit Anda di web.</string>
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Standar (baku)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3">Seimbang untuk privasi dan kinerja. Halaman dimuat secara normal.</string>
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Ketat</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">Blokir lebih banyak pelacak sehingga laman dimuat lebih cepat, tetapi beberapa fungsionalitas pada laman mungkin rusak.</string>
-    <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1">Pilih penempatan bilah alat Anda</string>
-    <!-- Text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description">Simpan di bawah, atau pindahkan ke atas.</string>
-    <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1">Anda mengendalikan data Anda</string>
-    <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description">Firefox memberi Anda kendali atas apa saja yang Anda bagikan secara daring dan apa yang Anda bagikan kepada kami.</string>
-    <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Pelajari pemberitahuan privasi kami</string>
-
-    <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header">Siap membuka Internet yang luar biasa?</string>
-    <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Mulai menjelajah</string>
 
     <!-- Onboarding theme -->
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Pilih tema Anda</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2">Hemat baterai dan penglihatan Anda dengan mode gelap.</string>
-    <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Otomatis</string>
-    <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Menyesuaikan dengan pengaturan perangkat Anda</string>
-    <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Tema gelap</string>
-    <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Tema terang</string>
-
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Tab berhasil dikirim!</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
@@ -1888,26 +1814,26 @@
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Ubah mesin pencari</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Tambah</string>
+    <string name="search_engine_add_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Tambah</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Simpan</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Simpan</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Ubah</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">Hapus</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Lainnya</string>
+    <string name="search_add_custom_engine_label_other" moz:RemovedIn="120" tools:ignore="UnusedResources">Lainnya</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
     <string name="search_add_custom_engine_name_label">Nama</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Nama</string>
+    <string name="search_add_custom_engine_name_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Nama</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2">Nama mesin pencari</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
     <string name="search_add_custom_engine_url_label">URL string pencarian</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">String pencarian untuk digunakan</string>
+    <string name="search_add_custom_engine_search_string_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">String pencarian untuk digunakan</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint_2">URL yang digunakan untuk pencarian</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
@@ -1920,8 +1846,6 @@
     <string name="search_add_custom_engine_suggest_url_label">API saran pencarian (opsional)</string>
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
     <string name="search_add_custom_engine_suggest_string_hint">URL API saran pencarian</string>
-    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_suggest_string_example" formatted="false">Ganti kueri dengan “%s”. Contoh:\nhttp://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
     <string name="search_custom_engine_save_button">Simpan</string>
 
@@ -2052,14 +1976,14 @@
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Pintasan</string>
-	<!-- Title text displayed in the rename top site dialog. -->
-	<string name="top_sites_rename_dialog_title">Nama</string>
+    <!-- Title text displayed in the rename top site dialog. -->
+    <string name="top_sites_rename_dialog_title">Nama</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Nama pintasan</string>
-	<!-- Button caption to confirm the renaming of the top site. -->
-	<string name="top_sites_rename_dialog_ok">OK</string>
-	<!-- Dialog button text for canceling the rename top site prompt. -->
-	<string name="top_sites_rename_dialog_cancel">Batal</string>
+    <!-- Button caption to confirm the renaming of the top site. -->
+    <string name="top_sites_rename_dialog_ok">OK</string>
+    <!-- Dialog button text for canceling the rename top site prompt. -->
+    <string name="top_sites_rename_dialog_cancel">Batal</string>
 
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">Pengaturan</string>
@@ -2147,4 +2071,4 @@
     <string name="a11y_action_label_read_article">baca artikel</string>
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">buka tautan untuk mempelajari lebih lanjut</string>
-</resources>
+    </resources>
