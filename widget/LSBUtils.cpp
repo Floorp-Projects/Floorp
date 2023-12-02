@@ -34,7 +34,8 @@ bool GetLSBRelease(nsACString& aDistributor, nsACString& aDescription,
   options.wait = true;
 
   base::ProcessHandle process;
-  Result<Ok, ipc::LaunchError> err = base::LaunchApp(argv, options, &process);
+  Result<Ok, ipc::LaunchError> err =
+      base::LaunchApp(argv, std::move(options), &process);
   close(pipefd[1]);
   if (err.isErr()) {
     NS_WARNING("Failed to spawn lsb_release!");

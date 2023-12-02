@@ -84,7 +84,7 @@ static void ReplaceEnviroment(const LaunchOptions& options) {
 }
 
 bool AppProcessBuilder::ForkProcess(const std::vector<std::string>& argv,
-                                    const LaunchOptions& options,
+                                    LaunchOptions&& options,
                                     ProcessHandle* process_handle) {
   auto cleanFDs = mozilla::MakeScopeExit([&] {
     for (auto& elt : options.fds_to_remap) {
@@ -231,7 +231,7 @@ static Result<Ok, LaunchError> LaunchAppWithForkServer(
 #endif  // MOZ_ENABLE_FORKSERVER
 
 Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
-                                  const LaunchOptions& options,
+                                  LaunchOptions&& options,
                                   ProcessHandle* process_handle) {
 #if defined(MOZ_ENABLE_FORKSERVER)
   if (options.use_forkserver && ForkServiceChild::Get()) {
@@ -347,12 +347,6 @@ Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
   if (process_handle) *process_handle = pid;
 
   return Ok();
-}
-
-Result<Ok, LaunchError> LaunchApp(const CommandLine& cl,
-                                  const LaunchOptions& options,
-                                  ProcessHandle* process_handle) {
-  return LaunchApp(cl.argv(), options, process_handle);
 }
 
 }  // namespace base
