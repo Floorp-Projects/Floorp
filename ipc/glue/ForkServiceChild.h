@@ -33,6 +33,16 @@ class ForkServiceChild {
   ForkServiceChild(int aFd, GeckoChildProcessHost* aProcess);
   virtual ~ForkServiceChild();
 
+  struct Args {
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+    int mForkFlags = 0;
+    bool mChroot = false;
+#endif
+    nsTArray<nsCString> mArgv;
+    nsTArray<EnvVar> mEnv;
+    nsTArray<FdMapping> mFdsRemap;
+  };
+
   /**
    * Ask the fork server to create a new process with given parameters.
    *
@@ -45,9 +55,7 @@ class ForkServiceChild {
    * \param aPid returns the PID of the content process created.
    * \return true if success.
    */
-  Result<Ok, LaunchError> SendForkNewSubprocess(
-      const nsTArray<nsCString>& aArgv, const nsTArray<EnvVar>& aEnvMap,
-      const nsTArray<FdMapping>& aFdsRemap, pid_t* aPid);
+  Result<Ok, LaunchError> SendForkNewSubprocess(const Args& aArgs, pid_t* aPid);
 
   /**
    * Create a fork server process and the singleton of this class.

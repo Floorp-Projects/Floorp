@@ -163,15 +163,16 @@ struct LaunchOptions {
   bool use_forkserver = false;
 #endif
 
-#if defined(XP_LINUX)
-  struct ForkDelegate {
-    virtual ~ForkDelegate() {}
-    virtual pid_t Fork() = 0;
-  };
-
-  // If non-null, the fork delegate will be called instead of fork().
-  // It is not required to call pthread_atfork hooks.
-  mozilla::UniquePtr<ForkDelegate> fork_delegate = nullptr;
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+  // These fields are used by the sandboxing code in SandboxLaunch.cpp.
+  // It's not ideal to have them here, but trying to abstract them makes
+  // it harder to serialize LaunchOptions for the fork server.
+  //
+  // (fork_flags holds extra flags for the clone() syscall, and
+  // sandbox_chroot indicates whether the child process will be given
+  // the ability to chroot() itself to an empty directory.)
+  int fork_flags = 0;
+  bool sandbox_chroot = false;
 #endif
 
 #ifdef XP_DARWIN

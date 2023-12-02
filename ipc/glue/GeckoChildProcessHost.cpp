@@ -614,7 +614,7 @@ void GeckoChildProcessHost::PrepareLaunch() {
   }
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
-  SandboxLaunchPrepare(mProcessType, mLaunchOptions.get(), mSandbox);
+  SandboxLaunch::Configure(mProcessType, mSandbox, mLaunchOptions.get());
 #endif
 
 #ifdef XP_WIN
