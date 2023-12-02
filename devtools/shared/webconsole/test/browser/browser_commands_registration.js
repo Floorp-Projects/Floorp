@@ -37,6 +37,7 @@ async function registerNewCommand(commands) {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
     this.WebConsoleCommandsManager.register({
       name: "setFoo",
+      isSideEffectFree: false,
       command(owner, value) {
         owner.window.foo = value;
         return "ok";
@@ -59,6 +60,7 @@ async function registerAccessor(commands) {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function () {
     this.WebConsoleCommandsManager.register({
       name: "$foo",
+      isSideEffectFree: true,
       command: {
         get(owner) {
           const foo = owner.window.document.getElementById("quack");
