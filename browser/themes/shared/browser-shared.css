@@ -29,6 +29,7 @@
 :root {
   user-select: none;
   color-scheme: light dark;
+  accent-color: var(--button-primary-bgcolor);
 
   --toolbox-non-lwt-bgcolor: -moz-headerbar;
   --toolbox-non-lwt-textcolor: -moz-headerbartext;
@@ -59,15 +60,6 @@
   --buttons-destructive-hover-bgcolor: #c50042;
   --buttons-destructive-active-bgcolor: #810220;
   --buttons-destructive-color: #fbfbfe;
-
-  --checkbox-unchecked-bgcolor: var(--button-bgcolor);
-  --checkbox-unchecked-hover-bgcolor: var(--button-hover-bgcolor);
-  --checkbox-unchecked-active-bgcolor: var(--button-active-bgcolor);
-  --checkbox-checked-border-color: transparent;
-  --checkbox-checked-bgcolor: var(--button-primary-bgcolor);
-  --checkbox-checked-color: var(--button-primary-color);
-  --checkbox-checked-hover-bgcolor: var(--button-primary-hover-bgcolor);
-  --checkbox-checked-active-bgcolor: var(--button-primary-active-bgcolor);
 
   --identity-box-margin-inline: 4px;
   --urlbar-box-bgcolor: var(--button-bgcolor);
@@ -101,7 +93,6 @@
   &:-moz-lwtheme {
     color: var(--lwt-text-color);
 
-    --checkbox-border-color: color-mix(in srgb, currentColor 41%, transparent);
     --link-color: light-dark(rgb(0, 97, 224), rgb(0, 221, 255));
     --chrome-content-separator-color: rgba(0,0,0,.3);
 
@@ -112,7 +103,6 @@
 
   @media (prefers-contrast) {
     --urlbar-icon-fill-opacity: 1;
-    --checkbox-checked-border-color: var(--checkbox-checked-bgcolor);
   }
 
   &[uidensity=compact] {

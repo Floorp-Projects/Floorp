@@ -594,6 +594,29 @@ static bool StateChangeMayAffectFrame(const Element& aElement,
   return needsImageFrame != aFrame.IsImageFrameOrSubclass();
 }
 
+static bool RepaintForAppearance(nsIFrame& aFrame, const Element& aElement,
+                                 ElementState aStateMask) {
+  if (aStateMask.HasAtLeastOneOfStates(ElementState::HOVER) &&
+      aElement.IsAnyOfXULElements(nsGkAtoms::checkbox, nsGkAtoms::radio)) {
+    // The checkbox inside these elements inherit hover state and so on, see
+    // nsNativeTheme::GetContentState.
+    // FIXME(emilio): Would be nice to not have these hard-coded.
+    return true;
+  }
+  auto appearance = aFrame.StyleDisplay()->EffectiveAppearance();
+  if (appearance == StyleAppearance::None) {
+    return false;
+  }
+  nsPresContext* pc = aFrame.PresContext();
+  nsITheme* theme = pc->Theme();
+  if (!theme->ThemeSupportsWidget(pc, &aFrame, appearance)) {
+    return false;
+  }
+  bool repaint = false;
+  theme->WidgetStateChanged(&aFrame, appearance, nullptr, &repaint, nullptr);
+  return repaint;
+}
+
 /**
  * Calculates the change hint and the restyle hint for a given content state
  * change.
@@ -612,20 +635,8 @@ static nsChangeHint ChangeForContentStateChange(const Element& aElement,
     if (StateChangeMayAffectFrame(aElement, *primaryFrame, aStateMask)) {
       return nsChangeHint_ReconstructFrame;
     }
-
-    StyleAppearance appearance =
-        primaryFrame->StyleDisplay()->EffectiveAppearance();
-    if (appearance != StyleAppearance::None) {
-      nsPresContext* pc = primaryFrame->PresContext();
-      nsITheme* theme = pc->Theme();
-      if (theme->ThemeSupportsWidget(pc, primaryFrame, appearance)) {
-        bool repaint = false;
-        theme->WidgetStateChanged(primaryFrame, appearance, nullptr, &repaint,
-                                  nullptr);
-        if (repaint) {
-          changeHint |= nsChangeHint_RepaintFrame;
-        }
-      }
+    if (RepaintForAppearance(*primaryFrame, aElement, aStateMask)) {
+      changeHint |= nsChangeHint_RepaintFrame;
     }
     primaryFrame->ElementStateChanged(aStateMask);
   }

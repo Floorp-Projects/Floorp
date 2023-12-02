@@ -1377,6 +1377,11 @@ bool nsNativeThemeGTK::ThemeDrawsFocusForWidget(nsIFrame* aFrame,
     return Theme::ThemeDrawsFocusForWidget(aFrame, aAppearance);
   }
   switch (aAppearance) {
+    case StyleAppearance::Checkbox:
+    case StyleAppearance::Radio:
+      // These are drawn only for non-XUL elements, but in XUL the label has
+      // the focus ring.
+      return true;
     case StyleAppearance::Button:
     case StyleAppearance::Menulist:
     case StyleAppearance::MenulistButton:
