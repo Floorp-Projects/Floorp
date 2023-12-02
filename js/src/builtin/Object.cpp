@@ -18,6 +18,7 @@
 
 #include "builtin/Eval.h"
 #include "builtin/SelfHostingDefines.h"
+#include "gc/GC.h"
 #include "jit/InlinableNatives.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
@@ -1484,8 +1485,11 @@ bool js::GetOwnPropertyDescriptorToArray(JSContext* cx, unsigned argc,
 }
 
 static bool NewValuePair(JSContext* cx, HandleValue val1, HandleValue val2,
-                         MutableHandleValue rval) {
-  ArrayObject* array = NewDenseFullyAllocatedArray(cx, 2);
+                         MutableHandleValue rval,
+                         gc::Heap heap = gc::Heap::Default) {
+  NewObjectKind kind =
+      heap == gc::Heap::Tenured ? TenuredObject : GenericObject;
+  ArrayObject* array = NewDenseFullyAllocatedArray(cx, 2, kind);
   if (!array) {
     return false;
   }
@@ -1590,6 +1594,10 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
     }
   }
 
+  // Switch to allocating in the tenured heap if necessary to avoid possible
+  // quadratic behaviour marking stack rooted |properties| vector.
+  AutoSelectGCHeap gcHeap(cx, 1);
+
   // We have ensured |nobj| contains no extra indexed properties, so the
   // only indexed properties we need to handle here are dense and typed
   // array elements.
@@ -1610,7 +1618,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
       static_assert(
           NativeObject::MAX_DENSE_ELEMENTS_COUNT <= PropertyKey::IntMax,
           "dense elements don't exceed PropertyKey::IntMax");
-      str = Int32ToString<CanGC>(cx, i);
+      str = Int32ToStringWithHeap<CanGC>(cx, i, gcHeap);
       if (!str) {
         return false;
       }
@@ -1621,7 +1629,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
       value.setString(str);
     } else if (kind == EnumerableOwnPropertiesKind::KeysAndValues) {
       key.setString(str);
-      if (!NewValuePair(cx, key, value, &value)) {
+      if (!NewValuePair(cx, key, value, &value, gcHeap)) {
         return false;
       }
     }
@@ -1655,7 +1663,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
         static_assert(
             NativeObject::MAX_DENSE_ELEMENTS_COUNT <= PropertyKey::IntMax,
             "dense elements don't exceed PropertyKey::IntMax");
-        str = Int32ToString<CanGC>(cx, i);
+        str = Int32ToStringWithHeap<CanGC>(cx, i, gcHeap);
         if (!str) {
           return false;
         }
@@ -1673,7 +1681,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
         if (!tobj->getElement<CanGC>(cx, i, &value)) {
           return false;
         }
-        if (!NewValuePair(cx, key, value, &value)) {
+        if (!NewValuePair(cx, key, value, &value, gcHeap)) {
           return false;
         }
       }
@@ -1716,7 +1724,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
         }
         MOZ_ALWAYS_TRUE(rec->getOwnProperty(cx, keyId, &value));
 
-        if (!NewValuePair(cx, key, value, &value)) {
+        if (!NewValuePair(cx, key, value, &value, gcHeap)) {
           return false;
         }
       }
@@ -1790,7 +1798,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
         } else {
           key.setString(id.toString());
           value.set(nobj->getSlot(iter->slot()));
-          if (!NewValuePair(cx, key, value, &value)) {
+          if (!NewValuePair(cx, key, value, &value, gcHeap)) {
             return false;
           }
         }
@@ -1856,7 +1864,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
 
       if (kind == EnumerableOwnPropertiesKind::KeysAndValues) {
         key.setString(id.toString());
-        if (!NewValuePair(cx, key, value, &value)) {
+        if (!NewValuePair(cx, key, value, &value, gcHeap)) {
           return false;
         }
       }
