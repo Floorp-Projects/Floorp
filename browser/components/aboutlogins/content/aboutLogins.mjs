@@ -220,7 +220,7 @@ window.addEventListener("AboutLoginsExportPasswordsDialog", async () => {
 async function interceptFocusKey() {
   // Intercept Ctrl+F on the page to focus login filter box
   const [findKey] = await document.l10n.formatMessages([
-    { id: "about-logins-login-filter" },
+    { id: "about-logins-login-filter2" },
   ]);
   const focusKey = findKey.attributes
     .find(a => a.name == "key")
