@@ -8,7 +8,7 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; object-src 'none'; script-src resource: chrome:; img-src data: blob: https://firefoxusercontent.com https://profile.accounts.firefox.com;">
     <meta name="color-scheme" content="light dark">
-    <title data-l10n-id="about-logins-page-title"></title>
+    <title data-l10n-id="about-logins-page-title-name"></title>
     <link rel="localization" href="branding/brand.ftl">
     <link rel="localization" href="browser/aboutLogins.ftl">
     <link rel="localization" href="toolkit/branding/accounts.ftl">
@@ -183,7 +183,7 @@
       <div class="listHeader">
         <login-filter></login-filter>
         <div class="create-login-button-container">
-          <login-command-button class="create-login-button" data-l10n-id="create-new-login-button" icon="chrome://global/skin/icons/plus.svg" ></login-command-button>
+          <login-command-button class="create-login-button" data-l10n-id="create-login-button" icon="chrome://global/skin/icons/plus.svg" ></login-command-button>
         </div>
       </div>
       <div class="meta text-deemphasized">
@@ -199,17 +199,17 @@
             <option name="alerts" data-l10n-id="about-logins-login-list-alerts-option" value="alerts" hidden>
           </select>
         </label>
-        <span class="count" data-l10n-id="login-list-count" data-l10n-args='{"count": 0}'></span>
+        <span class="count" data-l10n-id="login-list-count2" data-l10n-args='{"count": 0}'></span>
       </div>
       <!-- This container is to work around bug 1569292 -->
       <div class="container">
         <ol role="listbox" tabindex="0" data-l10n-id="login-list"></ol>
         <div class="intro">
-          <p data-l10n-id="login-list-intro-title"></p>
+          <p data-l10n-id="login-list-intro-title2"></p>
           <span data-l10n-id="login-list-intro-description"></span>
         </div>
         <div class="empty-search-message">
-          <p data-l10n-id="about-logins-login-list-empty-search-title"></p>
+          <p data-l10n-id="about-logins-login-list-empty-search-title2"></p>
           <span data-l10n-id="about-logins-login-list-empty-search-description"></span>
         </div>
       </div>
@@ -356,7 +356,7 @@
       <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-filter.css">
-      <input data-l10n-id="about-logins-login-filter" class="filter" type="text" dir="auto"/>
+      <input data-l10n-id="about-logins-login-filter2" class="filter" type="text" dir="auto"/>
     </template>
 
     <template id="menu-button-template">

@@ -3,14 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 # NOTE: New strings should use the about-logins- prefix.
 
-about-logins-page-title = Logins & Passwords
+about-logins-page-title-name = Passwords
 
-about-logins-login-filter =
-  .placeholder = Search Logins
+about-logins-login-filter2 =
+  .placeholder = Search Passwords
   .key = F
 
-create-new-login-button =
-  .title = Create new login
+create-login-button =
+  .title = Add password
 
 fxaccounts-sign-in-text = Get your passwords on your other devices
 fxaccounts-sign-in-sync-button = Sign in to sync
@@ -39,18 +39,18 @@ login-list =
   .aria-label = Logins matching search query
 # Variables
 #   $count (number) - Number of logins
-login-list-count =
+login-list-count2 =
   { $count ->
-      [one] { $count } login
-     *[other] { $count } logins
+      [one] { $count } password
+     *[other] { $count } passwords
   }
 # Variables
 #   $count (number) - Number of filtered logins
 #   $total (number) - Total number of logins
-login-list-filtered-count =
+login-list-filtered-count2 =
   { $total ->
-      [one] { $count } of { $total } login
-     *[other] { $count } of { $total } logins
+      [one] { $count } of { $total } password
+     *[other] { $count } of { $total } passwords
   }
 login-list-sort-label-text = Sort by:
 login-list-name-option = Name (A-Z)
@@ -60,12 +60,15 @@ login-list-username-reverse-option = Username (Z-A)
 about-logins-login-list-alerts-option = Alerts
 login-list-last-changed-option = Last Modified
 login-list-last-used-option = Last Used
-login-list-intro-title = No logins found
+
+login-list-intro-title2 = No passwords saved
 login-list-intro-description = When you save a password in { -brand-product-name }, it will show up here.
-about-logins-login-list-empty-search-title = No logins found
+
+about-logins-login-list-empty-search-title2 = No passwords found
 about-logins-login-list-empty-search-description = There are no results matching your search.
-login-list-item-title-new-login = New Login
-login-list-item-subtitle-new-login = Enter your login credentials
+
+login-list-item-title-new-login2 = Add password
+
 login-list-item-subtitle-missing-username = (no username)
 about-logins-list-item-breach-icon =
   .title = Breached website

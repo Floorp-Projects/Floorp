@@ -63,13 +63,9 @@ export class NewListItem extends MozLitElement {
           <span
             class="title"
             dir="auto"
-            data-l10n-id="login-list-item-title-new-login"
+            data-l10n-id="login-list-item-title-new-login2"
           ></span
-          ><span
-            class="subtitle"
-            dir="auto"
-            data-l10n-id="login-list-item-subtitle-new-login"
-          ></span>
+          ><span class="subtitle" dir="auto"></span>
         </div>
       </list-item>
     `;
