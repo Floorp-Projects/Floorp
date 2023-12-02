@@ -164,26 +164,6 @@
   color: inherit;
 }
 
-#context_reloadTab {
-  list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");
-}
-
-#context_closeOtherTabs {
-  list-style-image: url("moz-icon://stock/gtk-clear?size=menu");
-}
-
-#context_closeOtherTabs[disabled] {
-  list-style-image: url("moz-icon://stock/gtk-clear?size=menu&state=disabled");
-}
-
-#context_undoCloseTab {
-  list-style-image: url("moz-icon://stock/gtk-undelete?size=menu");
-}
-
-#context_closeTab {
-  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
-}
-
 /* All tabs menupopup */
 
 .alltabs-item[selected="true"] {
