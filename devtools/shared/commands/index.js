@@ -22,6 +22,7 @@ const Commands = {
     "devtools/shared/commands/target-configuration/target-configuration-command",
   threadConfigurationCommand:
     "devtools/shared/commands/thread-configuration/thread-configuration-command",
+  tracerCommand: "devtools/shared/commands/tracer/tracer-command",
 };
 /* eslint-disable sort-keys */
 

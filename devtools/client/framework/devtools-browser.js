@@ -304,11 +304,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
         if (!toolbox) {
           break;
         }
-        const dbg = await toolbox.getPanel("jsdebugger");
-        if (!dbg) {
-          break;
-        }
-        dbg.toggleJavascriptTracing();
+        await toolbox.commands.tracerCommand.toggle();
         break;
     }
   },

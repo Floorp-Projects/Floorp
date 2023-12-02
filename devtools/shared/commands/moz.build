@@ -12,6 +12,7 @@ DIRS += [
     "target",
     "target-configuration",
     "thread-configuration",
+    "tracer",
 ]
 
 DevToolsModules(
