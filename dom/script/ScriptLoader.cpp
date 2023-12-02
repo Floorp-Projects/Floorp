@@ -1131,17 +1131,11 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
     return false;
   }
 
-  // If there are a preloaded request and an import map, we won't use the
-  // preloaded request and will try to create a new one for this, because the
-  // import map isn't preloaded, and the preloaded request may have used the
-  // wrong module specifiers.
-  //
-  // We use IsModuleFetched() to check if the module has been fetched, if it
-  // hasn't been fetched we can simply just reuse it.
-  if (request && mModuleLoader->IsModuleFetched(request->mURI) &&
+  if (request && request->IsModuleRequest() &&
       mModuleLoader->HasImportMapRegistered()) {
-    DebugOnly<bool> removed = mModuleLoader->RemoveFetchedModule(request->mURI);
-    MOZ_ASSERT(removed);
+    // We don't preload module scripts after seeing an import map but a script
+    // can dynamically insert an import map after preloading has happened.
+    request->Cancel();
     request = nullptr;
   }
 
@@ -3591,10 +3585,8 @@ void ScriptLoader::HandleLoadError(ScriptLoadRequest* aRequest,
         modReq->CancelDynamicImport(aResult);
       }
     } else {
-      MOZ_ASSERT(!modReq->IsTopLevel());
       MOZ_ASSERT(!modReq->isInList());
       modReq->Cancel();
-      // The error is handled for the top level module.
     }
   } else if (mParserBlockingRequest == aRequest) {
     MOZ_ASSERT(!aRequest->isInList());
