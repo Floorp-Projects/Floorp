@@ -535,6 +535,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         subtest_name_filters,
         handle_custom_data,
         support_class,
+        submetric_summary_method,
         **kwargs,
     ):
         """
@@ -742,6 +743,8 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 "measurements": {},
                 "statistics": {},
             }
+            if submetric_summary_method is not None:
+                bt_result["submetric_summary_method"] = submetric_summary_method
 
             def _extract_cpu_vals():
                 # Bug 1806402 - Handle chrome cpu data properly
@@ -1100,6 +1103,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 test.get("subtest_name_filters", ""),
                 test.get("custom_data", False) == "true",
                 test.get("support_class", None),
+                test.get("submetric_summary_method", None),
                 gather_cpuTime=test.get("gather_cpuTime", None),
             ):
 
