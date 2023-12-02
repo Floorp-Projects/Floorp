@@ -987,7 +987,6 @@ html {
   --in-content-primary-button-background: rgb(0, 221, 255);
   --in-content-primary-button-background-hover: rgb(128, 235, 255);
   --in-content-primary-button-background-active: rgb(170, 242, 255);
-  --checkbox-checked-bgcolor: var(--in-content-primary-button-background);
   --in-content-button-text-color: var(--in-content-page-color);
 }
 .onboardingContainer .screen.dark-text {
@@ -999,7 +998,6 @@ html {
   --in-content-primary-button-background-active: #053E94;
   --in-content-primary-button-border-color: transparent;
   --in-content-primary-button-border-hover: transparent;
-  --checkbox-checked-bgcolor: var(--in-content-primary-button-background);
   --in-content-button-text-color: var(--in-content-page-color);
 }
 .onboardingContainer .screen:dir(rtl) {
@@ -2116,7 +2114,7 @@ html {
 }
 .onboardingContainer .steps .indicator.current {
   opacity: 1;
-  border-color: var(--checkbox-checked-bgcolor);
+  border-color: var(--in-content-primary-button-background);
 }
 .onboardingContainer .steps .indicator.current:last-of-type:first-of-type {
   opacity: 0;
@@ -2134,7 +2132,7 @@ html {
   width: 100%;
   height: 100%;
   margin-inline: -1px;
-  background-color: var(--checkbox-checked-bgcolor);
+  background-color: var(--in-content-primary-button-background);
   border: 0;
   border-radius: 0;
   opacity: 1;

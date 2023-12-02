@@ -550,7 +550,7 @@ add_task(async function test_aboutwelcome_with_progress_bar() {
     const indicatorStyles = content.window.getComputedStyle(indicator);
     for (let [key, val] of Object.entries({
       // The filled "completed" element should have
-      // `background-color: var(--checkbox-checked-bgcolor);`
+      // `background-color: var(--in-content-primary-button-background);`
       "background-color": "rgb(0, 97, 224)",
       // Base progress bar step styles.
       height: "6px",
