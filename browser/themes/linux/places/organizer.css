@@ -16,36 +16,24 @@
   }
 }
 
-/* Back button */
+#placesToolbar > toolbarbutton > .toolbarbutton-icon {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+/* Back and forward buttons */
 
 #back-button {
-  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar");
+  list-style-image: url("chrome://browser/skin/back.svg");
 }
-#back-button[disabled] {
-  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar&state=disabled");
-}
-
-#back-button:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar");
-}
-#back-button[disabled]:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar&state=disabled");
-}
-
-/* Forward button */
 
 #forward-button {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar");
-}
-#forward-button[disabled] {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar&state=disabled");
+  list-style-image: url("chrome://browser/skin/forward.svg");
 }
 
-#forward-button:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar");
-}
-#forward-button[disabled]:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar&state=disabled");
+#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#forward-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  transform: scaleX(-1);
 }
 
 /* Menus */
