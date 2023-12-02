@@ -1,5 +1,7 @@
 [DEFAULT]
 support-files = [
+  "bug_1865410_module_a.mjs",
+  "bug_1865410_module_b.mjs",
   "module_importMap_with_external_script_0.mjs",
   "module_importMap_with_external_script_1.mjs",
   "module_importMap_with_external_script_2.mjs",
@@ -26,3 +28,4 @@ prefs = ["dom.importMaps.enabled=true"]
 
 ["test_importMap_with_external_script.html"]
 
+["test_bug_1865410.html"]
