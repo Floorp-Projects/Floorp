@@ -109,11 +109,13 @@ function isObject(value) {
  *         - result: the result of the evaluation.
  */
 function evalWithDebugger(string, options = {}, webConsole) {
-  if (string.trim() === "?") {
+  const trimmedString = string.trim();
+  // The help function needs to be easy to guess, so accept "?" as a shortcut
+  if (trimmedString === "?") {
     return evalWithDebugger(":help", options, webConsole);
   }
 
-  const isCmd = isCommand(string.trim());
+  const isCmd = isCommand(trimmedString);
 
   if (isCmd && options.eager) {
     return {
@@ -157,6 +159,14 @@ function evalWithDebugger(string, options = {}, webConsole) {
     !!options.disableBreaks
   );
   let { bindings } = helpers;
+
+  // Ease calling the help command by not requiring the "()".
+  // But wait for the bindings computation in order to know if "help" variable
+  // was overloaded by the page. If it is missing from bindings, it is overloaded and we should
+  // display its value by doing a regular evaluation.
+  if (trimmedString === "help" && bindings.help) {
+    return evalWithDebugger(":help", options, webConsole);
+  }
 
   // '_self' refers to the JS object references via options.selectedObjectActor.
   // This isn't exposed on typical console evaluation, but only when "Store As Global"
@@ -232,11 +242,6 @@ function evalWithDebugger(string, options = {}, webConsole) {
     );
   }
 
-  // The help function needs to be easy to guess, so we make the () optional.
-  if (string.trim() === "help" && isHelpFunction(result, bindings)) {
-    return evalWithDebugger(":help", options, webConsole);
-  }
-
   return {
     result,
     // Retrieve the result of commands, if any ran
@@ -247,18 +252,6 @@ function evalWithDebugger(string, options = {}, webConsole) {
   };
 }
 exports.evalWithDebugger = evalWithDebugger;
-
-/**
- * Checks if the evaluation result is the 'help' function in bindings.
- */
-function isHelpFunction(result, bindings) {
-  return (
-    "return" in result &&
-    result.return &&
-    result.return.class === "Function" &&
-    result.return === bindings.help
-  );
-}
 
 function getEvalResult(
   dbg,
