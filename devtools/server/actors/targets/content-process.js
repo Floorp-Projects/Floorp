@@ -65,7 +65,8 @@ class ContentProcessTargetActor extends BaseTargetActor {
 
     // Use a see-everything debugger
     this.makeDebugger = makeDebugger.bind(null, {
-      findDebuggees: dbg => dbg.findAllGlobals(),
+      findDebuggees: dbg =>
+        dbg.findAllGlobals().map(g => g.unsafeDereference()),
       shouldAddNewGlobalAsDebuggee: global => true,
     });
 

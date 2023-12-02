@@ -206,31 +206,16 @@ function evalWithDebugger(string, options = {}, webConsole) {
 
   updateConsoleInputEvaluation(dbg, webConsole);
 
-  let noSideEffectDebugger = null;
-  if (options.eager) {
-    noSideEffectDebugger = makeSideeffectFreeDebugger();
-  }
-
-  let result;
-  try {
-    const evalString = getEvalInput(string, bindings);
-    result = getEvalResult(
-      dbg,
-      evalString,
-      evalOptions,
-      bindings,
-      frame,
-      dbgGlobal,
-      noSideEffectDebugger
-    );
-  } finally {
-    // We need to be absolutely sure that the sideeffect-free debugger's
-    // debuggees are removed because otherwise we risk them terminating
-    // execution of later code in the case of unexpected exceptions.
-    if (noSideEffectDebugger) {
-      noSideEffectDebugger.removeAllDebuggees();
-    }
-  }
+  const evalString = getEvalInput(string, bindings);
+  const result = getEvalResult(
+    dbg,
+    evalString,
+    evalOptions,
+    bindings,
+    frame,
+    dbgGlobal,
+    options.eager
+  );
 
   // Attempt to initialize any declarations found in the evaluated string
   // since they may now be stuck in an "initializing" state due to the
@@ -253,6 +238,27 @@ function evalWithDebugger(string, options = {}, webConsole) {
 }
 exports.evalWithDebugger = evalWithDebugger;
 
+/**
+ * Sub-function to reduce the complexity of evalWithDebugger.
+ * This focuses on calling Debugger.Frame or Debugger.Object eval methods.
+ *
+ * @param {Debugger} dbg
+ * @param {String} string
+ *        The string to evaluate.
+ * @param {Object} evalOptions
+ *        Spidermonkey options to pass to eval methods.
+ * @param {Object} bindings
+ *        Dictionary object with symbols to override in the evaluation.
+ * @param {Debugger.Frame} frame
+ *        If paused, the paused frame.
+ * @param {Debugger.Object} dbgGlobal
+ *        The target's global.
+ * @param {Boolean} eager
+ *        Is this an eager evaluation?
+ * @return {Object}
+ *        The evaluation result object.
+ *        See `Debugger.Ojbect.executeInGlobalWithBindings` definition.
+ */
 function getEvalResult(
   dbg,
   string,
@@ -260,21 +266,22 @@ function getEvalResult(
   bindings,
   frame,
   dbgGlobal,
-  noSideEffectDebugger
+  eager
 ) {
-  if (noSideEffectDebugger) {
-    // Bug 1637883 demonstrated an issue where dbgGlobal was somehow in the
-    // same compartment as the Debugger, meaning it could not be debugged
-    // and thus cannot handle eager evaluation. In that case we skip execution.
-    if (!noSideEffectDebugger.hasDebuggee(dbgGlobal.unsafeDereference())) {
-      return null;
-    }
+  // When we are doing an eager evaluation, we aren't using the target's Debugger object
+  // but a special one, dedicated to each evaluation.
+  let noSideEffectDebugger = null;
+  if (eager) {
+    noSideEffectDebugger = makeSideeffectFreeDebugger(dbg);
 
     // When a sideeffect-free debugger has been created, we need to eval
     // in the context of that debugger in order for the side-effect tracking
     // to apply.
-    frame = frame ? noSideEffectDebugger.adoptFrame(frame) : null;
-    dbgGlobal = noSideEffectDebugger.adoptDebuggeeValue(dbgGlobal);
+    if (frame) {
+      frame = noSideEffectDebugger.adoptFrame(frame);
+    } else {
+      dbgGlobal = noSideEffectDebugger.adoptDebuggeeValue(dbgGlobal);
+    }
     if (bindings) {
       bindings = Object.keys(bindings).reduce((acc, key) => {
         acc[key] = noSideEffectDebugger.adoptDebuggeeValue(bindings[key]);
@@ -283,25 +290,35 @@ function getEvalResult(
     }
   }
 
-  let result;
-  if (frame) {
-    result = frame.evalWithBindings(string, bindings, evalOptions);
-  } else {
-    result = dbgGlobal.executeInGlobalWithBindings(
-      string,
-      bindings,
-      evalOptions
-    );
-  }
-  if (noSideEffectDebugger && result) {
-    if ("return" in result) {
-      result.return = dbg.adoptDebuggeeValue(result.return);
+  try {
+    let result;
+    if (frame) {
+      result = frame.evalWithBindings(string, bindings, evalOptions);
+    } else {
+      result = dbgGlobal.executeInGlobalWithBindings(
+        string,
+        bindings,
+        evalOptions
+      );
     }
-    if ("throw" in result) {
-      result.throw = dbg.adoptDebuggeeValue(result.throw);
+    if (noSideEffectDebugger && result) {
+      if ("return" in result) {
+        result.return = dbg.adoptDebuggeeValue(result.return);
+      }
+      if ("throw" in result) {
+        result.throw = dbg.adoptDebuggeeValue(result.throw);
+      }
+    }
+    return result;
+  } finally {
+    // We need to be absolutely sure that the sideeffect-free debugger's
+    // debuggees are removed because otherwise we risk them terminating
+    // execution of later code in the case of unexpected exceptions.
+    if (noSideEffectDebugger) {
+      noSideEffectDebugger.removeAllDebuggees();
+      noSideEffectDebugger.onNativeCall = undefined;
     }
   }
-  return result;
 }
 
 /**
@@ -398,28 +415,46 @@ function forceLexicalInitForVariableDeclarationsInThrowingExpression(
 }
 
 /**
- * Creates a side-effect-free debugger instance
+ * Creates a side-effect-free Debugger instance.
  *
- * @return object
- *         Side-effect-free debugger.
+ * @param {Debugger} targetActorDbg
+ *        The target actor's dbg object, crafted by make-debugger.js module.
+ * @return {Debugger}
+ *         Side-effect-free Debugger instance.
  */
-function makeSideeffectFreeDebugger() {
-  // We ensure that the metadata for native functions is loaded before we
-  // initialize sideeffect-prevention because the data is lazy-loaded, and this
-  // logic can run inside of debuggee compartments because the
-  // "addAllGlobalsAsDebuggees" considers the vast majority of realms
-  // valid debuggees. Without this, eager-eval runs the risk of failing
-  // because building the list of valid native functions is itself a
-  // side-effectful operation because it needs to populate a
-  // module cache, among any number of other things.
+function makeSideeffectFreeDebugger(targetActorDbg) {
+  // Populate the cached Map once before the evaluation
   ensureSideEffectFreeNatives();
 
   // Note: It is critical for debuggee performance that we implement all of
   // this debuggee tracking logic with a separate Debugger instance.
   // Bug 1617666 arises otherwise if we set an onEnterFrame hook on the
   // existing debugger object and then later clear it.
+  //
+  // Also note that we aren't registering any global to this debugger.
+  // We will only adopt values into it: the paused frame (if any) or the
+  // target's global (when not paused).
   const dbg = new Debugger();
-  dbg.addAllGlobalsAsDebuggees();
+
+  // We need to register all target actor's globals.
+  // In most cases, this will be only one global, except for the browser toolbox,
+  // where process target actors may interact with many.
+  // On the browser toolbox, we may have many debuggees and this is important to register
+  // them in order to detect native call made from/to these others globals.
+  for (const global of targetActorDbg.findDebuggees()) {
+    try {
+      dbg.addDebuggee(global);
+    } catch (e) {
+      // Ignore the following exception which can happen for some globals in the browser toolbox
+      if (
+        !e.message.includes(
+          "debugger and debuggee must be in different compartments"
+        )
+      ) {
+        throw e;
+      }
+    }
+  }
 
   const timeoutDuration = 100;
   const endTime = Date.now() + timeoutDuration;
