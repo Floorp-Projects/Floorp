@@ -209,7 +209,7 @@ void ForkServer::OnMessageReceived(UniquePtr<IPC::Message> message) {
 
   base::ProcessHandle child_pid = -1;
   mAppProcBuilder = MakeUnique<base::AppProcessBuilder>();
-  if (!mAppProcBuilder->ForkProcess(argv, options, &child_pid)) {
+  if (!mAppProcBuilder->ForkProcess(argv, std::move(options), &child_pid)) {
     MOZ_CRASH("fail to fork");
   }
   MOZ_ASSERT(child_pid >= 0);

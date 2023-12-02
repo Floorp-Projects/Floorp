@@ -60,7 +60,7 @@ NS_IMETHODIMP BackgroundTasksRunner::RunInDetachedProcess(
     argv.push_back(str.get());
   }
 
-  if (base::LaunchApp(argv, options, nullptr).isErr()) {
+  if (base::LaunchApp(argv, std::move(options), nullptr).isErr()) {
     return NS_ERROR_FAILURE;
   }
 #endif

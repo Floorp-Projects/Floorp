@@ -204,6 +204,8 @@ Result<Ok, LaunchError> LaunchApp(const std::wstring& cmdline,
                                   const LaunchOptions& options,
                                   ProcessHandle* process_handle);
 
+Result<Ok, LaunchError> LaunchApp(const CommandLine& cl, const LaunchOptions&,
+                                  ProcessHandle* process_handle);
 #else
 // Runs the application specified in argv[0] with the command line argv.
 //
@@ -213,7 +215,7 @@ Result<Ok, LaunchError> LaunchApp(const std::wstring& cmdline,
 // Note that the first argument in argv must point to the filename,
 // and must be fully specified (i.e., this will not search $PATH).
 Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
-                                  const LaunchOptions& options,
+                                  LaunchOptions&& options,
                                   ProcessHandle* process_handle);
 
 // Merge an environment map with the current environment.
@@ -240,7 +242,7 @@ class AppProcessBuilder {
   // This function will fork a new process for use as a
   // content processes.
   bool ForkProcess(const std::vector<std::string>& argv,
-                   const LaunchOptions& options, ProcessHandle* process_handle);
+                   LaunchOptions&& options, ProcessHandle* process_handle);
   // This function will be called in the child process to initializes
   // the environment of the content process.  It should be called
   // after the message loop of the main thread, to make sure the fork
@@ -269,11 +271,6 @@ void InitForkServerProcess();
  */
 void RegisterForkServerNoCloseFD(int aFd);
 #endif
-
-// Executes the application specified by cl. This function delegates to one
-// of the above two platform-specific functions.
-Result<Ok, LaunchError> LaunchApp(const CommandLine& cl, const LaunchOptions&,
-                                  ProcessHandle* process_handle);
 
 // Attempts to kill the process identified by the given process
 // entry structure, giving it the specified exit code.

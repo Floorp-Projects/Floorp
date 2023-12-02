@@ -2886,7 +2886,7 @@ uint32_t IOUtils::LaunchProcess(GlobalObject& aGlobal,
   static_assert(sizeof(pid) <= sizeof(uint32_t),
                 "WebIDL long should be large enough for a pid");
   Result<Ok, mozilla::ipc::LaunchError> err =
-      base::LaunchApp(argv, options, &pid);
+      base::LaunchApp(argv, std::move(options), &pid);
   if (err.isErr()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return 0;

@@ -41,7 +41,7 @@ static mozilla::EnvironmentLog gProcessLog("MOZ_PROCESS_LOG");
 namespace base {
 
 Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
-                                  const LaunchOptions& options,
+                                  LaunchOptions&& options,
                                   ProcessHandle* process_handle) {
   Result<Ok, LaunchError> retval = Ok();
 
@@ -162,12 +162,6 @@ Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
   }
 
   return retval;
-}
-
-Result<Ok, LaunchError> LaunchApp(const CommandLine& cl,
-                                  const LaunchOptions& options,
-                                  ProcessHandle* process_handle) {
-  return LaunchApp(cl.argv(), options, process_handle);
 }
 
 }  // namespace base
