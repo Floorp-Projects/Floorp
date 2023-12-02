@@ -467,18 +467,6 @@ nsresult ModuleLoaderBase::GetFetchedModuleURLs(nsTArray<nsCString>& aURLs) {
   return NS_OK;
 }
 
-bool ModuleLoaderBase::RemoveFetchedModule(nsIURI* aURL) {
-#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
-  RefPtr<ModuleScript> ms;
-  MOZ_ALWAYS_TRUE(mFetchedModules.Get(aURL, getter_AddRefs(ms)));
-  if (ms && ms->ModuleRecord()) {
-    JS::AssertModuleUnlinked(ms->ModuleRecord());
-  }
-#endif
-
-  return mFetchedModules.Remove(aURL);
-}
-
 void ModuleLoaderBase::SetModuleFetchStarted(ModuleLoadRequest* aRequest) {
   // Update the module map to indicate that a module is currently being fetched.
 
