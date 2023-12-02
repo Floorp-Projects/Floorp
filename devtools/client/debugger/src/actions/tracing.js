@@ -28,9 +28,7 @@ export function toggleTracing(logMethod) {
 
     return dispatch({
       type: "TOGGLE_TRACING",
-      [PROMISE]: isTracingEnabled
-        ? client.stopTracing()
-        : client.startTracing(logMethod),
+      [PROMISE]: client.toggleTracing(logMethod),
     });
   };
 }

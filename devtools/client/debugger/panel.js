@@ -363,12 +363,6 @@ class DebuggerPanel {
     this._actions.selectThread(threadActorID);
   }
 
-  toggleJavascriptTracing() {
-    this._actions.toggleTracing(
-      this._selectors.getJavascriptTracingLogMethod(this._getState())
-    );
-  }
-
   destroy() {
     this.panelWin.Debugger.destroy();
     this.emit("destroyed");

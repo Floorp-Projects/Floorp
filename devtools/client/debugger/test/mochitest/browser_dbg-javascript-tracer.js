@@ -221,7 +221,7 @@ add_task(async function testPageKeyShortcut() {
     "The tab is still focused after enabling tracing"
   );
 
-  info("Toggle it back off, wit the same shortcut");
+  info("Toggle it back off, with the same shortcut");
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     EventUtils.synthesizeKey(
       "VK_5",
@@ -234,4 +234,85 @@ add_task(async function testPageKeyShortcut() {
   await waitForState(dbg, state => {
     return !dbg.selectors.getIsThreadCurrentlyTracing(topLevelThread);
   });
+});
+
+add_task(async function testPageKeyShortcutWithoutDebugger() {
+  // Ensures that the key shortcut emitted in the content process bubbles up to the parent process
+  await pushPref("test.events.async.enabled", true);
+
+  // Fake DevTools being opened by a real user interaction.
+  // Tests are bypassing DevToolsStartup to open the tools by calling gDevTools directly.
+  // By doing so DevToolsStartup considers itself as uninitialized,
+  // whereas we want it to handle the key shortcut we trigger in this test.
+  const DevToolsStartup = Cc["@mozilla.org/devtools/startup-clh;1"].getService(
+    Ci.nsISupports
+  ).wrappedJSObject;
+  DevToolsStartup.initialized = true;
+  registerCleanupFunction(() => {
+    DevToolsStartup.initialized = false;
+  });
+
+  const toolbox = await openNewTabAndToolbox(
+    "data:text/html,tracer",
+    "webconsole"
+  );
+
+  info(
+    "Focus the page in order to assert that the page keeps the focus when enabling the tracer"
+  );
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
+    content.focus();
+  });
+  await waitFor(
+    () => Services.focus.focusedElement == gBrowser.selectedBrowser
+  );
+  is(
+    Services.focus.focusedElement,
+    gBrowser.selectedBrowser,
+    "The tab is still focused before enabling tracing"
+  );
+
+  info("Toggle ON the tracing via the key shortcut from the web page");
+  const { resourceCommand } = toolbox.commands;
+  const { onResource: onTracingStateEnabled } =
+    await resourceCommand.waitForNextResource(
+      resourceCommand.TYPES.TRACING_STATE,
+      {
+        ignoreExistingResources: true,
+        predicate(resource) {
+          return resource.enabled;
+        },
+      }
+    );
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
+    EventUtils.synthesizeKey(
+      "VK_5",
+      { ctrlKey: true, shiftKey: true },
+      content
+    );
+  });
+  info("Wait for tracing to be enabled");
+  await onTracingStateEnabled;
+
+  info("Toggle it back off, with the same shortcut");
+  const { onResource: onTracingStateDisabled } =
+    await resourceCommand.waitForNextResource(
+      resourceCommand.TYPES.TRACING_STATE,
+      {
+        ignoreExistingResources: true,
+        predicate(resource) {
+          return !resource.enabled;
+        },
+      }
+    );
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
+    EventUtils.synthesizeKey(
+      "VK_5",
+      { ctrlKey: true, shiftKey: true },
+      content
+    );
+  });
+
+  info("Wait for tracing to be disabled");
+  await onTracingStateDisabled;
 });

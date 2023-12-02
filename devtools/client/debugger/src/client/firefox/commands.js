@@ -111,37 +111,8 @@ function forEachThread(iteratee) {
   return Promise.all(promises);
 }
 
-/**
- * Start JavaScript tracing for all targets.
- *
- * @param {String} logMethod
- *        Where to log the traces. Can be stdout or console.
- */
-async function startTracing(logMethod) {
-  const targets = commands.targetCommand.getAllTargets(
-    commands.targetCommand.ALL_TYPES
-  );
-  await Promise.all(
-    targets.map(async targetFront => {
-      const tracerFront = await targetFront.getFront("tracer");
-      return tracerFront.startTracing(logMethod);
-    })
-  );
-}
-
-/**
- * Stop JavaScript tracing for all targets.
- */
-async function stopTracing() {
-  const targets = commands.targetCommand.getAllTargets(
-    commands.targetCommand.ALL_TYPES
-  );
-  await Promise.all(
-    targets.map(async targetFront => {
-      const tracerFront = await targetFront.getFront("tracer");
-      return tracerFront.stopTracing();
-    })
-  );
+async function toggleTracing(logMethod) {
+  return commands.tracerCommand.toggle(logMethod);
 }
 
 function resume(thread, frameId) {
@@ -504,8 +475,7 @@ const clientCommands = {
   loadObjectProperties,
   releaseActor,
   pauseGrip,
-  startTracing,
-  stopTracing,
+  toggleTracing,
   resume,
   stepIn,
   stepOut,
