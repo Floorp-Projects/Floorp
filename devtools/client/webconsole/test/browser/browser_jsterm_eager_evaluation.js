@@ -15,6 +15,7 @@ function zzyzx2() {
 }
 var obj = {propA: "A", propB: "B"};
 var array = [1, 2, 3];
+var $$ = 42;
 </script>
 <h1>title</h1>
 `;
@@ -108,6 +109,9 @@ add_task(async function () {
 
   setInputValue(hud, "$('html')");
   await waitForEagerEvaluationResult(hud, `<html>`);
+
+  setInputValue(hud, "$$");
+  await waitForEagerEvaluationResult(hud, `42`);
 
   info("Check that $_ wasn't polluted by eager evaluations");
   setInputValue(hud, "$_");

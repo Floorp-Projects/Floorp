@@ -481,7 +481,6 @@ function terminalInputChanged(expression, force = false) {
       ),
       mapped,
       eager: true,
-      disableBreaks: true,
     });
 
     return dispatch({
