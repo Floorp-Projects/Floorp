@@ -27,8 +27,8 @@ const {
  * @param Function findDebuggees
  *        Called with one argument: a |Debugger| instance. This function should
  *        return an iterable of globals to be added to the |Debugger|
- *        instance. The globals may be wrapped in a |Debugger.Object|, or
- *        unwrapped.
+ *        instance. The globals are the actual global objects and aren't wrapped
+ *        in in a |Debugger.Object|.
  *
  * @param Function shouldAddNewGlobalAsDebuggee
  *        Called with one argument: a |Debugger.Object| wrapping a global
@@ -94,6 +94,9 @@ module.exports = function makeDebugger({
   dbg.enable = function () {
     dbg.addDebuggees();
     dbg.onNewGlobalObject = onNewGlobalObject;
+  };
+  dbg.findDebuggees = function () {
+    return findDebuggees(dbg);
   };
 
   return dbg;
