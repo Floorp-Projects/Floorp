@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Bug 1865410: Test interaction between speculative preload and import maps</title>
+
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<!-- Insert an import map after we have started preloading the modules. -->
+<div id="container"></div>
+<script>
+  let script = document.createElement("script");
+  script.type = "importmap";
+  script.textContent = "{}";
+  let container = document.getElementById("container");
+  container.appendChild(script);
+</script>
+
+<!-- Load the first module which will load the second via an import. -->
+<script type="module" src="bug_1865410_module_a.mjs" async></script>
+<script src="../../slow.sjs"></script>
+
+<!-- Load the second, already loaded module. -->
+<script type="module", src="bug_1865410_module_b.mjs"></script>
+
+<script>
+  ok(true, "Didn't crash");
+</script>

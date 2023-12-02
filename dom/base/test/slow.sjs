@@ -4,7 +4,7 @@ function handleRequest(request, response) {
   timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.init(
     function () {
-      response.write("Here the content. But slowly.");
+      response.write("/* Here the content. But slowly. */");
       response.finish();
     },
     5000,
