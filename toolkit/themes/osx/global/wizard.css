@@ -9,11 +9,6 @@
   padding: 14px;
 }
 
-.wizard-header {
-  appearance: auto;
-  -moz-default-appearance: dialog;
-}
-
 .wizard-header-box-text {
   padding: 6px 10px;
   font: menu;
@@ -38,8 +33,6 @@
 
 html|*.wizard-page-box {
   padding: 15px 23px;
-  appearance: auto;
-  -moz-default-appearance: dialog;
 }
 
 .wizard-buttons-separator {

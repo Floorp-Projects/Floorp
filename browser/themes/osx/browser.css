@@ -8,8 +8,6 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 :root {
-  appearance: none;
-
   --arrowpanel-field-background: light-dark(rgba(249, 249, 250, .3), rgba(12, 12, 13, .3));
 
   --sidebar-border-color: hsla(240, 5%, 5%, .1);

@@ -6,6 +6,10 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 @media (-moz-platform: macos) {
+  :root {
+    background-color: transparent;
+  }
+
   #topBar {
     appearance: auto;
     -moz-default-appearance: toolbar;
