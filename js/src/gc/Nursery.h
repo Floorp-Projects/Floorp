@@ -112,7 +112,15 @@ class Nursery {
   MOZ_ALWAYS_INLINE bool isInside(gc::Cell* cellp) const = delete;
   MOZ_ALWAYS_INLINE bool isInside(const void* p) const {
     for (auto* chunk : chunks_) {
-      if (uintptr_t(p) - uintptr_t(chunk) < gc::ChunkSize) {
+      // The first sizeof(ChunkBase) bytes of the nursery is never used for
+      // data, which means that a pointer to the beginning of the nursery should
+      // be considered as a zero-length pointer to the end of the memory just
+      // before the chunk (as otherwise it would be ambiguous).
+      //
+      // It would be best to use chunk->start(), but that would require dragging
+      // a huge amount of stuff into *-inl.h files.
+      uintptr_t chunkStart = uintptr_t(chunk) + sizeof(gc::ChunkBase);
+      if (uintptr_t(p) - chunkStart <= gc::ChunkSize) {
         return true;
       }
     }
