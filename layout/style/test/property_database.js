@@ -5248,7 +5248,7 @@ var gCSSProperties = {
       "#fed292",
       "rgba(45,300,12,2)",
       "transparent",
-      "-moz-nativehyperlinktext",
+      "LinkText",
       "rgba(255,128,0,0.5)",
       "#e0fc",
       "#10fcee72",
