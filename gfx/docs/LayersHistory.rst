@@ -31,7 +31,7 @@ infrastructure.
 
 -  Tiling v1 (April 2012 - Bug 739679) Originally done for Fennec. This
    was done to avoid situations where we had to do a bunch of work for
-   scrolling a small amount. i.e. buffer rotation. It allowed us to have
+   scrolling a small amount. i.e. buffer rotation. It allowed us to have
    a variety of interesting features like progressive painting and lower
    resolution painting.
 

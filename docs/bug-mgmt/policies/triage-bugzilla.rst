@@ -116,7 +116,7 @@ These bugs are reviewed in the weekly Regression Triage meeting
 Automatic Bug Updates
 ~~~~~~~~~~~~~~~~~~~~~
 
-When a bug is tracked for a release, i.e. the ``tracking_firefoxNN``
+When a bug is tracked for a release, i.e. the ``tracking_firefoxNN``
 flag is set to ``+`` or ``blocking`` triage decisions will be overridden,
 or made as follows:
 

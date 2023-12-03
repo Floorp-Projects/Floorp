@@ -90,7 +90,7 @@ Actions to take
    REGRESSION keyword
 -  Set affected status for the releases where the bug appears
 -  Open an issue in the corresponding GitHub project, put the Bugzilla
-   bug number in the title with the prefix ‘Bug’ (i.e. “Bug 99999:
+   bug number in the title with the prefix ‘Bug’ (i.e. “Bug 99999:
    Regression in foo”)
 -  Add the REGRESSION label to the new issue
 -  Add the link to the GitHub issue into the ‘See Also” field in the

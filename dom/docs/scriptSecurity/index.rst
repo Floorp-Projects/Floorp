@@ -6,8 +6,8 @@ Script Security
    This page provides an overview of the script security architecture in
    Gecko.
 
-Like any web browser, Gecko can load JavaScript from untrusted and
-potentially hostile web pages and run it on the user's computer. The
+Like any web browser, Gecko can load JavaScript from untrusted and
+potentially hostile web pages and run it on the user's computer. The
 security model for web content is based on the `same-origin policy
 <https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy>`__,
 in which code
@@ -19,7 +19,7 @@ cross-origin, are now mostly standardized across browsers.
 Gecko has an additional problem, though: while its core is written in
 C++, the front-end code is written in JavaScript. This JavaScript code,
 which is commonly referred to as c\ *hrome code*, runs with system
-privileges. If the code is compromised, the attacker can take over the
+privileges. If the code is compromised, the attacker can take over the
 user's computer. Legacy SDK extensions also run with chrome privileges.
 
 Having the browser front end in JavaScript has benefits: it can be much
@@ -45,19 +45,19 @@ Gecko implements the following security policy:
 -  **Objects that are cross-origin** get highly restricted access to
    each other, according to the same-origin policy.
    For example, code served from *https://example.org/* trying to access
-   objects from *https://somewhere-else.org/* will have restricted
+   objects from *https://somewhere-else.org/* will have restricted
    access.
 -  **Objects in a privileged scope** are allowed complete access to
    objects in a less privileged scope, but by default they see a
    `restricted view <#privileged-to-unprivileged-code>`__
    of such objects, designed to prevent them from being tricked by the
-   untrusted code. An example of this scope is chrome-privileged
+   untrusted code. An example of this scope is chrome-privileged
    JavaScript accessing web content.
 -  **Objects in a less privileged scope** don't get any access to
    objects in a more privileged scope, unless the more privileged scope
    `explicitly clones those objects <#unprivileged-to-privileged-code>`__.
    An example of this scope is web content accessing objects in a
-   chrome-privileged scope. 
+   chrome-privileged scope.
 
 .. _Compartments:
 
@@ -67,7 +67,7 @@ Compartments
 Compartments are the foundation for Gecko's script security
 architecture. A compartment is a specific, separate area of memory. In
 Gecko, there's a separate compartment for every global object. This
-means that each global object and the objects associated with it live in
+means that each global object and the objects associated with it live in
 their own region of memory.
 
 .. image:: images/compartments.png
@@ -108,7 +108,7 @@ Same-origin
 ~~~~~~~~~~~
 
 As we've already seen, the most common scenario for same-origin access
-is when objects belonging to the same window object interact. This all
+is when objects belonging to the same window object interact. This all
 takes place within the same compartment, with no need for security
 checks or wrappers.
 
@@ -157,9 +157,9 @@ gets an *Xray wrapper* for the object.
 
 Xrays are designed to prevent untrusted code from confusing trusted code
 by redefining objects in unexpected ways. For example, privileged code
-using an Xray to a DOM object sees only the original version of the DOM
+using an Xray to a DOM object sees only the original version of the DOM
 object. Any expando properties are not visible, and if any native DOM properties have been
-redefined, they are not visible in the Xray.
+redefined, they are not visible in the Xray.
 
 The privileged code is able to waive Xrays if it wants unfiltered access to the untrusted object.
 
@@ -278,7 +278,7 @@ disabled for web content.
 
 Expanded principals are useful when you want to give code extra
 privileges, including cross-origin access, but don't want to give the
-code full system privileges. For example, expanded principals are used
+code full system privileges. For example, expanded principals are used
 in the Add-on SDK to give content scripts cross-domain privileges for a predefined set of
 domains,
 and to protect content scripts from access by untrusted web content,
@@ -302,7 +302,7 @@ Principal relationships
 
 The diagram below summarizes the relationships between the different
 principals. The arrow connecting principals A and B means "A subsumes
-B".  (A is the start of the arrow, and B is the end.)
+B". (A is the start of the arrow, and B is the end.)
 
 .. image:: images/principal-relationships.png
 
