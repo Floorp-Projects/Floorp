@@ -1516,14 +1516,9 @@ nsresult nsNavBookmarks::QueryFolderChildren(
   // by mDBGetURLPageInfo, and additionally contains columns for position,
   // item_child, and folder_child from moz_bookmarks.
   nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-      "WITH tagged(place_id, tags) AS ( "
-      "  SELECT b.fk, group_concat(p.title) "
-      "  FROM moz_bookmarks b "
-      "  JOIN moz_bookmarks p ON p.id = b.parent "
-      "  JOIN moz_bookmarks g ON g.id = p.parent "
-      "  WHERE g.guid = " SQL_QUOTE(TAGS_ROOT_GUID)
-      "  GROUP BY b.fk "
-      ") "
+      nsNavHistory::GetTagsSqlFragment(
+          nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS,
+          aOptions->ExcludeItems()) +
       "SELECT "
       "  h.id, h.url, b.title, h.rev_host, h.visit_count, "
       "  h.last_visit_date, null, b.id, b.dateAdded, b.lastModified, b.parent, "
@@ -1538,7 +1533,7 @@ nsresult nsNavBookmarks::QueryFolderChildren(
       "b.type = :folder OR "
       "h.url_hash BETWEEN hash('place', 'prefix_lo') "
       "               AND hash('place', 'prefix_hi')) "
-      "ORDER BY b.position ASC");
+      "ORDER BY b.position ASC"_ns);
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
 
