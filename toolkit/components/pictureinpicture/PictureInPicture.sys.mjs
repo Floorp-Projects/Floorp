@@ -25,10 +25,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 import { Rect, Point } from "resource://gre/modules/Geometry.sys.mjs";
 
 const PLAYER_URI = "chrome://global/content/pictureinpicture/player.xhtml";
-// Currently, we need titlebar="yes" on macOS in order for the player window
-// to be resizable. See bug 1824171.
-const TITLEBAR = AppConstants.platform == "macosx" ? "yes" : "no";
-const PLAYER_FEATURES = `chrome,alwaysontop,lockaspectratio,resizable,dialog,titlebar=${TITLEBAR}`;
+const PLAYER_FEATURES = `chrome,alwaysontop,lockaspectratio,resizable,dialog,titlebar=no`;
 
 const WINDOW_TYPE = "Toolkit:PictureInPicture";
 const TOGGLE_ENABLED_PREF =

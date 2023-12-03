@@ -450,28 +450,14 @@ nsresult nsCocoaWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   return Create(aParent, aNativeParent, desktopRect, aInitData);
 }
 
+// https://developer.apple.com/documentation/appkit/nswindowstylemask
 static unsigned int WindowMaskForBorderStyle(BorderStyle aBorderStyle) {
-  bool allOrDefault = (aBorderStyle == BorderStyle::All ||
-                       aBorderStyle == BorderStyle::Default);
-
-  /* Apple's docs on NSWindow styles say that "a window's style mask should
-   * include NSWindowStyleMaskTitled if it includes any of the others [besides
-   * NSWindowStyleMaskBorderless]".  This implies that a borderless window
-   * shouldn't have any other styles than NSWindowStyleMaskBorderless.
-   */
-  if (!allOrDefault && !(aBorderStyle & BorderStyle::Title)) {
-    if (aBorderStyle & BorderStyle::Minimize) {
-      /* It appears that at a minimum, borderless windows can be miniaturizable,
-       * effectively contradicting some of Apple's documentation referenced
-       * above. One such exception is the screen share indicator, see
-       * bug 1742877.
-       */
-      return NSWindowStyleMaskBorderless | NSWindowStyleMaskMiniaturizable;
-    }
-    return NSWindowStyleMaskBorderless;
+  const bool allOrDefault =
+      aBorderStyle == BorderStyle::All || aBorderStyle == BorderStyle::Default;
+  unsigned int mask = 0;
+  if (allOrDefault || aBorderStyle & BorderStyle::Title) {
+    mask |= NSWindowStyleMaskTitled;
   }
-
-  unsigned int mask = NSWindowStyleMaskTitled;
   if (allOrDefault || aBorderStyle & BorderStyle::Close) {
     mask |= NSWindowStyleMaskClosable;
   }
@@ -481,7 +467,6 @@ static unsigned int WindowMaskForBorderStyle(BorderStyle aBorderStyle) {
   if (allOrDefault || aBorderStyle & BorderStyle::ResizeH) {
     mask |= NSWindowStyleMaskResizable;
   }
-
   return mask;
 }
 
