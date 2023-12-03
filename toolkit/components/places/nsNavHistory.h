@@ -310,6 +310,13 @@ class nsNavHistory final : public nsSupportsWeakReference,
   void UpdateDaysOfHistory(PRTime visitTime);
 
   /**
+   * Get a SQL fragment to pre-cache all the tagged bookmark into a `tagged`
+   * CTE.
+   */
+  static nsLiteralCString GetTagsSqlFragment(const uint16_t aQueryType,
+                                             bool aExcludeItems);
+
+  /**
    * Get target folder guid from given query URI.
    * If the folder guid is not found, returns Nonthing().
    */

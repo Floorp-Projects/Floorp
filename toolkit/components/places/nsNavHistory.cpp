@@ -185,19 +185,6 @@ static Maybe<nsCString> GetSimpleBookmarksQueryParent(
     const RefPtr<nsNavHistoryQueryOptions>& aOptions);
 static void ParseSearchTermsFromQuery(const RefPtr<nsNavHistoryQuery>& aQuery,
                                       nsTArray<nsString>* aTerms);
-nsLiteralCString GetTagsSqlFragment(const uint16_t aQueryType) {
-  if (aQueryType != nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS) {
-    return "WITH tagged(place_id, tags) AS (VALUES(NULL, NULL)) "_ns;
-  }
-  return "WITH tagged(place_id, tags) AS ( "
-         "  SELECT b.fk, group_concat(p.title) "
-         "  FROM moz_bookmarks b "
-         "  JOIN moz_bookmarks p ON p.id = b.parent "
-         "  JOIN moz_bookmarks g ON g.id = p.parent "
-         "  WHERE g.guid = " SQL_QUOTE(TAGS_ROOT_GUID)
-         "  GROUP BY b.fk "
-         ") "_ns;
-}
 
 nsresult FetchInfo(const RefPtr<mozilla::places::Database>& aDB,
                    const nsCString& aGUID, int32_t& aType, int64_t& aId,
@@ -476,6 +463,23 @@ void nsNavHistory::UpdateDaysOfHistory(PRTime visitTime) {
   if (visitTime > mLastCachedEndOfDay || visitTime < mLastCachedStartOfDay) {
     InvalidateDaysOfHistory();
   }
+}
+
+/** static */
+nsLiteralCString nsNavHistory::GetTagsSqlFragment(const uint16_t aQueryType,
+                                                  bool aExcludeItems) {
+  if (aQueryType != nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS ||
+      aExcludeItems) {
+    return "WITH tagged(place_id, tags) AS (VALUES(NULL, NULL)) "_ns;
+  }
+  return "WITH tagged(place_id, tags) AS ( "
+         "  SELECT b.fk, group_concat(p.title) "
+         "  FROM moz_bookmarks b "
+         "  JOIN moz_bookmarks p ON p.id = b.parent "
+         "  JOIN moz_bookmarks g ON g.id = p.parent "
+         "  WHERE g.guid = " SQL_QUOTE(TAGS_ROOT_GUID)
+         "  GROUP BY b.fk "
+         ") "_ns;
 }
 
 /* static */
@@ -871,6 +875,7 @@ class PlacesSQLQueryBuilder {
 
   uint16_t mResultType;
   uint16_t mQueryType;
+  bool mExcludeItems;
   bool mIncludeHidden;
   uint16_t mSortingMode;
   uint32_t mMaxResults;
@@ -891,6 +896,7 @@ PlacesSQLQueryBuilder::PlacesSQLQueryBuilder(
       mUseLimit(aUseLimit),
       mResultType(aOptions->ResultType()),
       mQueryType(aOptions->QueryType()),
+      mExcludeItems(aOptions->ExcludeItems()),
       mIncludeHidden(aOptions->IncludeHidden()),
       mSortingMode(aOptions->SortingMode()),
       mMaxResults(aOptions->MaxResults()),
@@ -974,7 +980,7 @@ nsresult PlacesSQLQueryBuilder::SelectAsURI() {
   switch (mQueryType) {
     case nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY: {
       mQueryString =
-          GetTagsSqlFragment(mQueryType) +
+          nsNavHistory::GetTagsSqlFragment(mQueryType, mExcludeItems) +
           "SELECT h.id, h.url, h.title AS page_title, h.rev_host, "
           "  h.visit_count, h.last_visit_date, null, null, null, null, null, "
           "  (SELECT tags FROM tagged WHERE place_id = h.id) AS tags, "
@@ -990,7 +996,7 @@ nsresult PlacesSQLQueryBuilder::SelectAsURI() {
     }
     case nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS: {
       mQueryString =
-          GetTagsSqlFragment(mQueryType) +
+          nsNavHistory::GetTagsSqlFragment(mQueryType, mExcludeItems) +
           "SELECT b.fk, h.url, b.title AS page_title, "
           "  h.rev_host, h.visit_count, h.last_visit_date, null, b.id, "
           "  b.dateAdded, b.lastModified, b.parent, "
@@ -1019,7 +1025,7 @@ nsresult PlacesSQLQueryBuilder::SelectAsURI() {
 
 nsresult PlacesSQLQueryBuilder::SelectAsVisit() {
   mQueryString =
-      GetTagsSqlFragment(mQueryType) +
+      nsNavHistory::GetTagsSqlFragment(mQueryType, mExcludeItems) +
       "SELECT h.id, h.url, h.title AS page_title, h.rev_host, h.visit_count, "
       "  v.visit_date, null, null, null, null, null, "
       "  (SELECT tags FROM tagged WHERE place_id = h.id) AS tags, "
@@ -1613,7 +1619,7 @@ nsresult nsNavHistory::ConstructQueryString(
     // Generate an optimized query for the history menu and the old most visited
     // bookmark that was inserted into profiles.
     queryString =
-        GetTagsSqlFragment(aOptions->QueryType()) +
+        GetTagsSqlFragment(aOptions->QueryType(), aOptions->ExcludeItems()) +
         "SELECT h.id, h.url, h.title AS page_title, h.rev_host, "
         "  h.visit_count, h.last_visit_date, null, null, null, null, null, "
         "  (SELECT tags FROM tagged WHERE place_id = h.id) AS tags, "
