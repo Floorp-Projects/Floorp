@@ -336,6 +336,9 @@ BROWSER_PROCESS += [
 
     # Kingsoft internet security (bug 1837246)
     DllBlocklistEntry("dghmpg64.dll", ALL_VERSIONS),
+
+    # Microsoft Forefront Threat Management Gateway (bug 1459680)
+    DllBlocklistEntry("fwcwsp64.dll", (7, 0, 7734, 100)),
 ]
 
 CHILD_PROCESSES += [
