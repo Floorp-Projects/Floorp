@@ -114,7 +114,7 @@ Layers
 Rendering each layer
 ~~~~~~~~~~~~~~~~~~~~
 
-Tiling vs. Buffer Rotation vs. Full paint
+Tiling vs. Buffer Rotation vs. Full paint
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Compositing for the final result

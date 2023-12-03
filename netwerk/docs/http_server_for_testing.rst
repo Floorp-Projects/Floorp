@@ -90,7 +90,7 @@ Once you've done that, you can create a new server as follows:
 You can also pass in a numeric port argument to the ``start()`` method,
 but we strongly suggest you don't do it. Using a dynamic port allow us
 to run your test in parallel with other tests which reduces wait times
-and makes everybody happy.  If you really have to use a hardcoded port,
+and makes everybody happy. If you really have to use a hardcoded port,
 you will have to annotate your test in the xpcshell manifest file with
 ``run-sequentially = REASON``.
 However, this should only be used as the last possible option.
@@ -271,7 +271,7 @@ without state accidentally bleeding between unrelated handlers.
 
 .. note::
 
-   **Note:** State saved by this method is specific to the HTTP path,
+   State saved by this method is specific to the HTTP path,
    excluding query string and hash reference. ``/counter``,
    ``/counter?foo``, and ``/counter?bar#baz`` all share the same state
    for the purposes of these methods. (Indeed, non-shared state would be
@@ -280,7 +280,7 @@ without state accidentally bleeding between unrelated handlers.
 
 .. note::
 
-   **Note:** The predefined ``__LOCATION__`` state
+   The predefined ``__LOCATION__`` state
    contains the native path of the SJS file itself. You can pass the
    result directly to the ``nsILocalFile.initWithPath()``. Example:
    ``thisSJSfile.initWithPath(getState('__LOCATION__'));``

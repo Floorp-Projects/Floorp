@@ -486,7 +486,7 @@ to a bare :python:`COPY()`.
 Plural Strings
 --------------
 
-Migrating plural strings from `.properties` files usually involves two
+Migrating plural strings from `.properties` files usually involves two
 Transforms from :python:`fluent.migrate.transforms`: the
 :python:`REPLACE_IN_TEXT` Transform takes TextElements as input, making it
 possible to pass it as the foreach function of the :python:`PLURALS` Transform.

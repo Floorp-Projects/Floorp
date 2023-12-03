@@ -79,7 +79,7 @@ to do your build:
 
    This is because, starting from Mojave, headers are no longer
    installed in ``/usr/include``. Refer the `release
-   notes <https://developer.apple.com/documentation/xcode_release_notes/xcode_10_release_notes>`__  under
+   notes <https://developer.apple.com/documentation/xcode_release_notes/xcode_10_release_notes>`__ under
    Command Line Tools -> New Features
 
    The release notes also states that this compatibility package will no longer be provided in the near

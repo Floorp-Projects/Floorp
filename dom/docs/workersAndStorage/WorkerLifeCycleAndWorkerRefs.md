@@ -19,9 +19,9 @@ The worker’s life cycle is maintained by a status machine in the WorkerPrivate
 Following we briefly describe what is done for each status.
 
 
-### Pending: 
+### Pending:
 
-This is the initial status of a Worker. 
+This is the initial status of a Worker.
 
 Worker’s initialization is done in this status in the parent(main or the parent worker) and worker thread.
 
@@ -34,9 +34,9 @@ Worker’s initialization starts from its parent thread, which includes
 5. Connect debugger
 6. Dispatch CompileScriptRunnable to the worker thread
 
-Before the Worker thread starts running runnables, a Worker could have already been exposed to its parent window/worker. So the parent window/worker can send messages to the worker through the postMessage() method. If the Worker is not in the “Running” status yet, these runnables would be kept in WorkerPrivate::mPreStartRunnables. 
+Before the Worker thread starts running runnables, a Worker could have already been exposed to its parent window/worker. So the parent window/worker can send messages to the worker through the postMessage() method. If the Worker is not in the “Running” status yet, these runnables would be kept in WorkerPrivate::mPreStartRunnables.
 
-When WorkerThreadPrimaryRunnable starts executing on the worker thread, it continues the initialization on the worker thread, which includes  
+When WorkerThreadPrimaryRunnable starts executing on the worker thread, it continues the initialization on the worker thread, which includes
 
 1. Build the connection between WorkerPrivate and the worker thread. Then moving the WorkerPrivate::mPreStartRunnables to the worker thread’s event queue.
 2. Initialize the PerformanceStorage for the Worker.
@@ -60,12 +60,12 @@ Once the Worker gets into “Running”,
 2. Create sync-eventLoop to make the worker thread to wait for another thread's execution.
 3. Dispatching events to WorkerGlobalScope to trigger event callbacks defined in the script.
 
-We will talk about WorkerRef, Sync-EventLoop in detail later. 
+We will talk about WorkerRef, Sync-EventLoop in detail later.
 
 
 ### Closing:
 
-This is a special status for DedicatedWorker and SharedWorker when DedicateWorkerGlobalScope.close()/SharedWorkerGlobalScope.close() is called. 
+This is a special status for DedicatedWorker and SharedWorker when DedicateWorkerGlobalScope.close()/SharedWorkerGlobalScope.close() is called.
 
 When Worker enters into the “Closing” status,
 
@@ -92,7 +92,7 @@ So the WorkerRef holders and children Workers will start the shutdown jobs
 
 Once all sync-eventLoops are closed,
 
-1.  Disconnect the EventTarget/WebTaskScheduler of the WorkerGlobalScope
+1. Disconnect the EventTarget/WebTaskScheduler of the WorkerGlobalScope
 
 
 ### Killing:
@@ -133,7 +133,7 @@ The WorkerPrivate is supposed to be released after its self-reference is nullifi
 
 Normally, there are four situations making a Worker get into shutdown.
 
-1. Worker is GC/CCed. 
+1. Worker is GC/CCed.
 
    1. Navigating to another page.
    2. Worker is idle for a while. (Notice that idle is not a status of Worker, it is a condition in “Running” status)
@@ -176,7 +176,7 @@ According to the following requirements, four types of WorkerRefs are introduced
 
 ### WeakWorkerRef
 
-WeakWorkerRef, as its name, is a “Weak” reference since WeakWorkerRef releases the internal reference to the Worker immediately after WeakWorkerRef’s registered callback execution completes. Therefore, WeakWorkerRef does not block the Worker’s shutdown. In addition, holding a WeakWorkerRef would not block GC/CC the Worker. This means a Worker will be considered to be cycle-collected even if there are WeakWorkerRefs to the Worker. 
+WeakWorkerRef, as its name, is a “Weak” reference since WeakWorkerRef releases the internal reference to the Worker immediately after WeakWorkerRef’s registered callback execution completes. Therefore, WeakWorkerRef does not block the Worker’s shutdown. In addition, holding a WeakWorkerRef would not block GC/CC the Worker. This means a Worker will be considered to be cycle-collected even if there are WeakWorkerRefs to the Worker.
 
 WeakWorkerRef is ref-counted, but not thread-safe.
 
@@ -189,7 +189,7 @@ Unlike WeakWorkerRef, StrongWorkerRef does not release its internal reference to
 
 When using the StrongWorkerRef, resource cleanup might involve multiple threads and asynchronous behavior. StrongWorkerRef release timing becomes crucial not to cause memory problems, such as UAF or leaking. StrongWorkerRef must be released. Otherwise, a shutdown hang would not be a surprise.
 
-StrongWorkerRef also blocks the GC/CC a Worker. Once there is a StrongWorkerRef to the Worker, GC/CC will not collect the Worker. 
+StrongWorkerRef also blocks the GC/CC a Worker. Once there is a StrongWorkerRef to the Worker, GC/CC will not collect the Worker.
 
 StrongWorkerRef is ref-counted, but not thread-safe.
 
@@ -207,7 +207,7 @@ ThreadSafeWorkerRef is ref-counted and thread-safe.
 
 IPCWorkerRef is a special WorkerRef for IPC actors which binds its life-cycle with Worker’s shutdown notification. (In our current codebase, Cache API and Client API uses IPCWorkerRef)
 
-Because some IPC shutdown needs to be in a special sequence during the Worker's shutdown. However, to make these IPC shutdown needs to ensure the Worker is kept alive, so IPCWorkerRef blocks the Worker's shutdown. But IPC shutdown no need to block GC/CC a Worker.   
+Because some IPC shutdown needs to be in a special sequence during the Worker's shutdown. However, to make these IPC shutdown needs to ensure the Worker is kept alive, so IPCWorkerRef blocks the Worker's shutdown. But IPC shutdown no need to block GC/CC a Worker.
 
 IPCWorkerRef is ref-counted, but not thread-safe.
 
@@ -218,7 +218,7 @@ Following is a table for the comparison between WorkerRefs
 |                           | WeakWorkerRef | StrongWorkerRef | ThreadSafeWorkerRef |  IPCWorkerRef |
 | Holder thread             | Worker thread |  Worker thread  |      Any thread     | Worker thread |
 | Callback execution thread | Worker thread |  Worker thread  |    Worker thread    | Worker thread |
-| Block Worker’s shutdown   |       No      |       Yes       |         Yes         |      Yes      |
+| Block Worker’s shutdown   |       No      |       Yes       |         Yes         |      Yes      |
 | Block GC a Worker         |       No      |       Yes       |         Yes         |       No      |
 
 

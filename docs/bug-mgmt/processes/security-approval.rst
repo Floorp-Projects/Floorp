@@ -90,7 +90,7 @@ explicit approval if:
 
 | **A)** The bug has a sec-low, sec-moderate, sec-other, or sec-want
   rating.
-|    **or**
+|    **or**
 | **B)** The bug is a recent regression on mozilla-central. This means
 
 -  A specific regressing check-in has been identified

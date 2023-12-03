@@ -191,7 +191,7 @@ with a URL. Do not modify this value.
 
 .. warning::
 
-   Since Firefox 64, the *"ASan Crash Reporter"*  feature is no longer
+   Since Firefox 64, the *"ASan Crash Reporter"* feature is no longer
    listed in ``about:support``
 
 Will there be support for Mac?

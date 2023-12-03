@@ -264,7 +264,7 @@ the extension.
 
 The type of ``message`` will be ``JSONObject`` when the extension sends
 a javascript object, but could also be a primitive type if the extension
-sends one, e.g. for
+sends one, e.g. for
 
 .. code:: javascript
 
@@ -372,7 +372,7 @@ and then using it when needed.
    }
 
 For example, let’s send a message to the extension every time the user
-long presses on a key on the virtual keyboard, e.g. on the back button.
+long presses on a key on the virtual keyboard, e.g. on the back button.
 
 .. code:: java
 

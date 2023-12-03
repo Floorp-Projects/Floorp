@@ -10,7 +10,7 @@ Xray Vision
 Gecko runs JavaScript from a variety of different sources and at a
 variety of different privilege levels.
 
--  The JavaScript code that along with the C++ core, implements the
+-  The JavaScript code that along with the C++ core, implements the
    browser itself is called *chrome code* and runs using system
    privileges. If chrome-privileged code is compromised, the attacker
    can take over the user's computer.
@@ -139,7 +139,7 @@ Xrays for DOM objects
 ---------------------
 
 The primary use of Xray vision is for DOM objects: that is, the
-objects that represent parts of the web page.
+objects that represent parts of the web page.
 
 In Gecko, DOM objects have a dual representation: the canonical
 representation is in C++, and this is reflected into JavaScript for the

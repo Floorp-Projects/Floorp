@@ -129,7 +129,7 @@ Editor plugins
 
    -  `clang-format.el <https://raw.githubusercontent.com/llvm-mirror/clang/master/tools/clang-format/clang-format.el>`__
       (Or install
-      `clang-format <http://melpa.org/#/clang-format>`__ from MELPA)
+      `clang-format <http://melpa.org/#/clang-format>`__ from MELPA)
    -  `google-c-style <http://melpa.org/#/google-c-style>`__ from MELPA
 
 -  `Sublime Text <https://packagecontrol.io/packages/Clang%20Format>`__
