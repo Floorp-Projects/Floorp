@@ -5,6 +5,7 @@
 /* Places Organizer Sidebars */
 
 #placesList {
+  background-color: -moz-mac-sidebar;
   width: 160px;
   min-width: 100px;
   max-width: 400px;
