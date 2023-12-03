@@ -137,15 +137,6 @@ impl SelectorParsingState {
         !self.intersects(Self::AFTER_PSEUDO | Self::DISALLOW_PSEUDOS)
     }
 
-    // TODO(emilio): Maybe some of these should be allowed, but this gets us on
-    // the safe side for now, matching previous behavior. Gotta be careful with
-    // the ones like :-moz-any, which allow nested selectors but don't carry the
-    // state, and so on.
-    #[inline]
-    fn allows_custom_functional_pseudo_classes(self) -> bool {
-        !self.intersects(Self::AFTER_PSEUDO)
-    }
-
     #[inline]
     fn allows_non_functional_pseudo_classes(self) -> bool {
         !self.intersects(Self::AFTER_SLOTTED | Self::AFTER_NON_STATEFUL_PSEUDO_ELEMENT)
@@ -307,10 +298,11 @@ pub trait Parser<'i> {
     fn parse_non_ts_functional_pseudo_class<'t>(
         &self,
         name: CowRcStr<'i>,
-        arguments: &mut CssParser<'i, 't>,
+        parser: &mut CssParser<'i, 't>,
+        _after_part: bool,
     ) -> Result<<Self::Impl as SelectorImpl>::NonTSPseudoClass, ParseError<'i, Self::Error>> {
         Err(
-            arguments.new_custom_error(SelectorParseErrorKind::UnsupportedPseudoClassOrElement(
+            parser.new_custom_error(SelectorParseErrorKind::UnsupportedPseudoClassOrElement(
                 name,
             )),
         )
@@ -3282,11 +3274,12 @@ where
         return parse_is_where(parser, input, state, Component::Is);
     }
 
-    if !state.allows_custom_functional_pseudo_classes() {
+    if state.intersects(SelectorParsingState::AFTER_PSEUDO_ELEMENT | SelectorParsingState::AFTER_SLOTTED) {
         return Err(input.new_custom_error(SelectorParseErrorKind::InvalidState));
     }
 
-    P::parse_non_ts_functional_pseudo_class(parser, name, input).map(Component::NonTSPseudoClass)
+    let after_part = state.intersects(SelectorParsingState::AFTER_PART);
+    P::parse_non_ts_functional_pseudo_class(parser, name, input, after_part).map(Component::NonTSPseudoClass)
 }
 
 fn parse_nth_pseudo_class<'i, 't, P, Impl>(
@@ -3734,9 +3727,10 @@ pub mod tests {
             &self,
             name: CowRcStr<'i>,
             parser: &mut CssParser<'i, 't>,
+            after_part: bool,
         ) -> Result<PseudoClass, SelectorParseError<'i>> {
             match_ignore_ascii_case! { &name,
-                "lang" => {
+                "lang" if !after_part => {
                     let lang = parser.expect_ident_or_string()?.as_ref().to_owned();
                     return Ok(PseudoClass::Lang(lang));
                 },
