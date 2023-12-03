@@ -13,7 +13,7 @@
   --arrowpanel-field-background: light-dark(rgba(249, 249, 250, .3), rgba(12, 12, 13, .3));
 
   --sidebar-border-color: hsla(240, 5%, 5%, .1);
-  --sidebar-background-color: light-dark(#f6f6f6, #2d2d2d);
+  --sidebar-background-color: -moz-mac-sidebar;
 }
 
 #browser,
