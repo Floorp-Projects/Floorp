@@ -337,6 +337,7 @@ nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
   // Should use aElement->OwnerDoc() instead.
   mDocumentWeak = do_GetWeakReference(aDocument);
   mElement = aElement;
+  SetEnabledCallbacks(nsIMutationObserver::kParentChainChanged);
 }
 
 nsComputedDOMStyle::~nsComputedDOMStyle() {
