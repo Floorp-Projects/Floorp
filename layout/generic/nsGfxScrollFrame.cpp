@@ -2831,6 +2831,9 @@ static nscoord ClampAndAlignWithPixels(nscoord aDesired, nscoord aBoundLower,
   nscoord destUpper = clamped(aDestUpper, aBoundLower, aBoundUpper);
 
   nscoord desired = clamped(aDesired, destLower, destUpper);
+  if (StaticPrefs::layout_scroll_disable_pixel_alignment()) {
+    return desired;
+  }
 
   double currentLayerVal = (aRes * aCurrent) / aAppUnitsPerPixel;
   double desiredLayerVal = (aRes * desired) / aAppUnitsPerPixel;
@@ -6832,6 +6835,9 @@ bool nsHTMLScrollFrame::GetBorderRadii(const nsSize& aFrameSize,
 
 static nscoord SnapCoord(nscoord aCoord, double aRes,
                          nscoord aAppUnitsPerPixel) {
+  if (StaticPrefs::layout_scroll_disable_pixel_alignment()) {
+    return aCoord;
+  }
   double snappedToLayerPixels = NS_round((aRes * aCoord) / aAppUnitsPerPixel);
   return NSToCoordRoundWithClamp(snappedToLayerPixels * aAppUnitsPerPixel /
                                  aRes);
