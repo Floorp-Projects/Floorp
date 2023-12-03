@@ -9338,6 +9338,12 @@
   value: true
   mirror: always
 
+# Whether to disable layer pixel alignment in scroll related stuff.
+- name: layout.scroll.disable-pixel-alignment
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "mathml."
 #---------------------------------------------------------------------------
