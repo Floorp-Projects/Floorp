@@ -2791,7 +2791,9 @@ NS_IMETHODIMP
 WebSocketImpl::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags) {
   nsCOMPtr<nsIRunnable> event_ref(aEvent);
   if (mIsMainThread) {
-    return GetMainThreadSerialEventTarget()->Dispatch(event_ref.forget());
+    nsISerialEventTarget* target = GetMainThreadSerialEventTarget();
+    NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
+    return target->Dispatch(event_ref.forget());
   }
 
   MutexAutoLock lock(mMutex);
