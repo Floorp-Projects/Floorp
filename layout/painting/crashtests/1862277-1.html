@@ -1,0 +1,73 @@
+<html class="reftest-wait">
+<style>
+.hide {
+	display: none;
+}
+</style>
+
+<!--
+Need an svg element that references a clippath that is display none (so that we don't use the clip path).
+Then make the clippath no longer display none (and do it without touching the clippath itself, ie make an
+ancestor no longer display none).
+We should now draw the clip path, but the bug made us not invalidate.
+Then we can make things worse using retained display list partial updates by marking a frame modified
+that is affected by the clip path a couple times. The retained display list won't have the nsDisplayMask
+container, but the modified display list will have the nsDisplayMask, this will confuse merging when the
+same item appears inside two different containers.
+
+Note that we set widget.windows.window_occlusion_tracking.enabled=false for this test because
+crashtests leave windows open and occlud the crashtest window, which means the refresh driver doesn't
+run, which means the requestAnimationFrame don't run. Bug 1864255 tracks fixing this.
+
+Note that we image.decode-sync.enabled=false for this test because sync decoding triggers extra
+invalidation which "fixes" this bug before it gets a chance to appear. Bug 1866411 tracks this.
+-->
+
+<div style="width: 40px; height: 40px;">
+   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" style="width: 100%; height: 100%;">
+      <defs id="thedefs" class="hide">
+         <clipPath id="aclip">
+            <rect width="10" height="10" x="0" y="0"></rect>
+         </clipPath>
+      </defs>
+      <g clip-path="url(#aclip)">
+      	<rect width="23" height="23" x="0" y="1" fill="rgb(0,255,0)"></rect>
+      	<rect id="therect" width="1" height="1" x="0" y="0" fill="rgb(255,0,0)"></rect>
+      </g>
+   </svg>
+</div>
+
+
+<script>
+
+function finish() {
+	document.documentElement.className = "";
+}
+
+function TweakSmall() {
+	let therect = document.getElementById("therect");
+	therect.setAttributeNS(null, "fill", "rgb(254,0,0)");
+	requestAnimationFrame(TweakSmall2);
+}
+
+function TweakSmall2() {
+	let therect = document.getElementById("therect");
+	therect.setAttributeNS(null, "fill", "rgb(253,0,0)");
+	requestAnimationFrame(finish);
+}
+
+function DisplaySomeClip() {
+	document.getElementById("thedefs").className.baseVal = "";
+	requestAnimationFrame(TweakSmall);
+}
+
+function start() {
+	requestAnimationFrame(DisplaySomeClip);
+
+}
+
+window.addEventListener("MozReftestInvalidate", start);
+//window.onload = start;
+</script>
+
+</html>
