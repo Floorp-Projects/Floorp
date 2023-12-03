@@ -274,6 +274,7 @@ static const char sColorPrefs[][41] = {
     "ui.-moz-mac-defaultbuttontext",
     "ui.-moz-mac-focusring",
     "ui.-moz_mac_disabledtoolbartext",
+    "ui.-moz-mac-sidebar",
     "ui.accentcolor",
     "ui.accentcolortext",
     "ui.-moz-autofill-background",
