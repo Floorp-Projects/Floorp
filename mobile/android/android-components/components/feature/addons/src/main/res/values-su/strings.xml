@@ -202,8 +202,6 @@
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s teu bisa dipasang alatan teu kompatibel jeung %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted_1">%1$s teu bisa dipasang alatan gedé résikona ngabalukarkeun masalah kastabilan jeung kaamanan.</string>
-    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">%1$s teu bisa dipasang alatan hariwang bisi ngabalukarkeun masalah stabilitas atawa kaamanan</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">Laksana ngaktipkeun %1$s</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
@@ -252,4 +250,6 @@
     <string name="mozac_feature_addons_status_blocklisted">%1$s geus ditumpurkeun alatan masalah kaamanan atawa stabilitas.</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_unsigned">%1$s teu bisa dipéripikasi aman tur geus ditumpurkeun.</string>
-    </resources>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">%1$s teu cocog jeung pérsi %2$s anjeun (pérsi %3$s).</string>
+</resources>
