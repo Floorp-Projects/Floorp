@@ -602,7 +602,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect,
 
   if (mWindowType == WindowType::Popup) {
     SetPopupWindowLevel();
-    [mWindow setBackgroundColor:[NSColor clearColor]];
+    [mWindow setBackgroundColor:NSColor.clearColor];
     [mWindow setOpaque:NO];
 
     // When multiple spaces are in use and the browser is assigned to a
@@ -1216,22 +1216,18 @@ TransparencyMode nsCocoaWindow::GetTransparencyMode() {
 void nsCocoaWindow::SetTransparencyMode(TransparencyMode aMode) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
-  // Only respect calls for popup windows and always-on-top dialogs.
-  // We don't want to enable transparency for all dialogs, as it breaks some
-  // system dialogs like the profile selection (and possibly some extensions).
-  BOOL isAlwaysOnTopDialog =
-      (mWindowType == WindowType::Dialog && mAlwaysOnTop);
-  if (!mWindow || (mWindowType != WindowType::Popup && !isAlwaysOnTopDialog)) {
+  if (!mWindow) {
     return;
   }
 
   BOOL isTransparent = aMode == TransparencyMode::Transparent;
-  BOOL currentTransparency = ![mWindow isOpaque];
-  if (isTransparent != currentTransparency) {
-    [mWindow setOpaque:!isTransparent];
-    [mWindow setBackgroundColor:(isTransparent ? [NSColor clearColor]
-                                               : [NSColor whiteColor])];
+  BOOL currentTransparency = mWindow.isOpaque;
+  if (isTransparent == currentTransparency) {
+    return;
   }
+  [mWindow setOpaque:!isTransparent];
+  [mWindow setBackgroundColor:(isTransparent ? NSColor.clearColor
+                                             : NSColor.whiteColor)];
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
