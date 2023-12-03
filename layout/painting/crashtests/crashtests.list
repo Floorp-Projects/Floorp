@@ -31,3 +31,4 @@ load 1714584-1.html
 load 1763006-1.html
 load 1819957-1.html
 load 1851726-1.html
+pref(widget.windows.window_occlusion_tracking.enabled,false) pref(image.decode-sync.enabled,false) load 1862277-1.html
