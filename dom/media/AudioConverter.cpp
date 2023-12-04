@@ -75,11 +75,16 @@ size_t AudioConverter::ProcessInternal(void* aOut, const void* aIn,
   if (!aFrames) {
     return 0;
   }
+
   if (mIn.Channels() > mOut.Channels()) {
     return DownmixAudio(aOut, aIn, aFrames);
-  } else if (mIn.Channels() < mOut.Channels()) {
+  }
+
+  if (mIn.Channels() < mOut.Channels()) {
     return UpmixAudio(aOut, aIn, aFrames);
-  } else if (mIn.Layout() != mOut.Layout() && CanReorderAudio()) {
+  }
+
+  if (mIn.Layout() != mOut.Layout() && CanReorderAudio()) {
     ReOrderInterleavedChannels(aOut, aIn, aFrames);
   } else if (aIn != aOut) {
     memmove(aOut, aIn, FramesOutToBytes(aFrames));
