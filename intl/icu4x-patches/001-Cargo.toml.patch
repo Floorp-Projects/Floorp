@@ -1,0 +1,22 @@
+--- a/intl/icu_capi/Cargo.toml	2023-11-23 00:55:29.801649858 +0900
++++ b/intl/icu_capi/Cargo.toml	2023-11-23 00:57:49.528753911 +0900
+@@ -190,19 +190,7 @@
+     "icu_timezone?/serde",
+ ]
+ compiled_data = [
+-    "icu_calendar?/compiled_data",
+-    "icu_casemap?/compiled_data",
+-    "icu_collator?/compiled_data",
+-    "icu_datetime?/compiled_data",
+-    "icu_decimal?/compiled_data",
+-    "icu_displaynames?/compiled_data",
+-    "icu_list?/compiled_data",
+-    "icu_locid_transform?/compiled_data",
+-    "icu_normalizer?/compiled_data",
+-    "icu_plurals?/compiled_data",
+-    "icu_properties?/compiled_data",
+     "icu_segmenter?/compiled_data",
+-    "icu_timezone?/compiled_data",
+ ]
+ cpp_default = ["logging"]
+ default = [
