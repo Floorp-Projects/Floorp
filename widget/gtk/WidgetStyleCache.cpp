@@ -114,12 +114,6 @@ static GtkWidget* CreateFrameWidget() {
   return widget;
 }
 
-static GtkWidget* CreateGripperWidget() {
-  GtkWidget* widget = gtk_handle_box_new();
-  AddToWindowContainer(widget);
-  return widget;
-}
-
 static GtkWidget* CreateButtonWidget() {
   GtkWidget* widget = gtk_button_new_with_label("M");
   AddToWindowContainer(widget);
