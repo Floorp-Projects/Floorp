@@ -893,11 +893,6 @@ interface GPUCommandEncoder {
         GPUImageCopyTexture destination,
         GPUExtent3D copySize);
 
-    undefined clearBuffer(
-        GPUBuffer buffer,
-        optional GPUSize64 offset = 0,
-        optional GPUSize64 size);
-
     GPUCommandBuffer finish(optional GPUCommandBufferDescriptor descriptor = {});
 };
 GPUCommandEncoder includes GPUObjectBase;
