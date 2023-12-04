@@ -1271,6 +1271,20 @@ const TESTCASES = [
       },
     ],
   },
+  {
+    description: "Test (special case) maxlength=4 on cc-exp field.",
+    document: `<form>
+                 <input autocomplete="cc-number">
+                 <input autocomplete="cc-exp" maxlength="4">
+               </form>`,
+    profileData: [{ ...DEFAULT_CREDITCARD_RECORD }],
+    expectedResult: [
+      {
+        ...DEFAULT_CREDITCARD_RECORD,
+        "cc-exp": "0125",
+      },
+    ],
+  },
 ];
 
 for (let testcase of TESTCASES) {
