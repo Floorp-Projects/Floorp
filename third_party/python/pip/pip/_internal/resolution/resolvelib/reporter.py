@@ -11,16 +11,16 @@ logger = getLogger(__name__)
 
 class PipReporter(BaseReporter):
     def __init__(self) -> None:
-        self.reject_count_by_package: DefaultDict[str, int] = defaultdict(int)
+        self.backtracks_by_package: DefaultDict[str, int] = defaultdict(int)
 
-        self._messages_at_reject_count = {
+        self._messages_at_backtrack = {
             1: (
                 "pip is looking at multiple versions of {package_name} to "
                 "determine which version is compatible with other "
                 "requirements. This could take a while."
             ),
             8: (
-                "pip is still looking at multiple versions of {package_name} to "
+                "pip is looking at multiple versions of {package_name} to "
                 "determine which version is compatible with other "
                 "requirements. This could take a while."
             ),
@@ -32,27 +32,15 @@ class PipReporter(BaseReporter):
             ),
         }
 
-    def rejecting_candidate(self, criterion: Any, candidate: Candidate) -> None:
-        self.reject_count_by_package[candidate.name] += 1
+    def backtracking(self, candidate: Candidate) -> None:
+        self.backtracks_by_package[candidate.name] += 1
 
-        count = self.reject_count_by_package[candidate.name]
-        if count not in self._messages_at_reject_count:
+        count = self.backtracks_by_package[candidate.name]
+        if count not in self._messages_at_backtrack:
             return
 
-        message = self._messages_at_reject_count[count]
+        message = self._messages_at_backtrack[count]
         logger.info("INFO: %s", message.format(package_name=candidate.name))
-
-        msg = "Will try a different candidate, due to conflict:"
-        for req_info in criterion.information:
-            req, parent = req_info.requirement, req_info.parent
-            # Inspired by Factory.get_installation_error
-            msg += "\n    "
-            if parent:
-                msg += f"{parent.name} {parent.version} depends on "
-            else:
-                msg += "The user requested "
-            msg += req.format_for_error()
-        logger.debug(msg)
 
 
 class PipDebuggingReporter(BaseReporter):
@@ -73,8 +61,8 @@ class PipDebuggingReporter(BaseReporter):
     def adding_requirement(self, requirement: Requirement, parent: Candidate) -> None:
         logger.info("Reporter.adding_requirement(%r, %r)", requirement, parent)
 
-    def rejecting_candidate(self, criterion: Any, candidate: Candidate) -> None:
-        logger.info("Reporter.rejecting_candidate(%r, %r)", criterion, candidate)
+    def backtracking(self, candidate: Candidate) -> None:
+        logger.info("Reporter.backtracking(%r)", candidate)
 
     def pinning(self, candidate: Candidate) -> None:
         logger.info("Reporter.pinning(%r)", candidate)

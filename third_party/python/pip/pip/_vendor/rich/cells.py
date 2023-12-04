@@ -60,7 +60,7 @@ def _get_codepoint_cell_size(codepoint: int) -> int:
     """Get the cell size of a character.
 
     Args:
-        codepoint (int): Codepoint of a character.
+        character (str): A single character.
 
     Returns:
         int: Number of cells (0, 1 or 2) occupied by that character.

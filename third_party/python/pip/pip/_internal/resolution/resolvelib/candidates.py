@@ -65,13 +65,15 @@ def make_install_req_from_link(
         use_pep517=template.use_pep517,
         isolated=template.isolated,
         constraint=template.constraint,
-        global_options=template.global_options,
-        hash_options=template.hash_options,
+        options=dict(
+            install_options=template.install_options,
+            global_options=template.global_options,
+            hashes=template.hash_options,
+        ),
         config_settings=template.config_settings,
     )
     ireq.original_link = template.original_link
     ireq.link = link
-    ireq.extras = template.extras
     return ireq
 
 
@@ -79,7 +81,7 @@ def make_install_req_from_editable(
     link: Link, template: InstallRequirement
 ) -> InstallRequirement:
     assert template.editable, "template not editable"
-    ireq = install_req_from_editable(
+    return install_req_from_editable(
         link.url,
         user_supplied=template.user_supplied,
         comes_from=template.comes_from,
@@ -87,12 +89,13 @@ def make_install_req_from_editable(
         isolated=template.isolated,
         constraint=template.constraint,
         permit_editable_wheels=template.permit_editable_wheels,
-        global_options=template.global_options,
-        hash_options=template.hash_options,
+        options=dict(
+            install_options=template.install_options,
+            global_options=template.global_options,
+            hashes=template.hash_options,
+        ),
         config_settings=template.config_settings,
     )
-    ireq.extras = template.extras
-    return ireq
 
 
 def _make_install_req_from_dist(
@@ -111,8 +114,11 @@ def _make_install_req_from_dist(
         use_pep517=template.use_pep517,
         isolated=template.isolated,
         constraint=template.constraint,
-        global_options=template.global_options,
-        hash_options=template.hash_options,
+        options=dict(
+            install_options=template.install_options,
+            global_options=template.global_options,
+            hashes=template.hash_options,
+        ),
         config_settings=template.config_settings,
     )
     ireq.satisfied_by = dist
@@ -259,7 +265,7 @@ class LinkCandidate(_InstallRequirementBackedCandidate):
         version: Optional[CandidateVersion] = None,
     ) -> None:
         source_link = link
-        cache_entry = factory.get_wheel_cache_entry(source_link, name)
+        cache_entry = factory.get_wheel_cache_entry(link, name)
         if cache_entry is not None:
             logger.debug("Using cached wheel link: %s", cache_entry.link)
             link = cache_entry.link
@@ -277,15 +283,13 @@ class LinkCandidate(_InstallRequirementBackedCandidate):
                 )
 
         if cache_entry is not None:
-            assert ireq.link.is_wheel
-            assert ireq.link.is_file
             if cache_entry.persistent and template.link is template.original_link:
-                ireq.cached_wheel_source_link = source_link
+                ireq.original_link_is_in_wheel_cache = True
             if cache_entry.origin is not None:
                 ireq.download_info = cache_entry.origin
             else:
                 # Legacy cache entry that does not have origin.json.
-                # download_info may miss the archive_info.hashes field.
+                # download_info may miss the archive_info.hash field.
                 ireq.download_info = direct_url_from_link(
                     source_link, link_is_in_wheel_cache=cache_entry.persistent
                 )
@@ -341,7 +345,6 @@ class AlreadyInstalledCandidate(Candidate):
         self.dist = dist
         self._ireq = _make_install_req_from_dist(dist, template)
         self._factory = factory
-        self._version = None
 
         # This is just logging some messages, so we can do it eagerly.
         # The returned dist would be exactly the same as self.dist because we
@@ -377,9 +380,7 @@ class AlreadyInstalledCandidate(Candidate):
 
     @property
     def version(self) -> CandidateVersion:
-        if self._version is None:
-            self._version = self.dist.version
-        return self._version
+        return self.dist.version
 
     @property
     def is_editable(self) -> bool:

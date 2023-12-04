@@ -814,7 +814,7 @@ class Packer(object):
                 self._pack_raw_header(n)
                 return self._buffer.write(obj)
             if check(obj, memoryview):
-                n = obj.nbytes
+                n = len(obj) * obj.itemsize
                 if n >= 2**32:
                     raise ValueError("Memoryview is too large")
                 self._pack_bin_header(n)

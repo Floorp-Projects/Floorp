@@ -151,7 +151,6 @@ class SessionCommandMixin(CommandContextMixIn):
 
         # Determine if we can prompt the user for authentication or not
         session.auth.prompting = not options.no_input
-        session.auth.keyring_provider = options.keyring_provider
 
         return session
 
@@ -287,7 +286,6 @@ class RequirementCommand(IndexGroupCommand):
         """
         temp_build_dir_path = temp_build_dir.path
         assert temp_build_dir_path is not None
-        legacy_resolver = False
 
         resolver_variant = cls.determine_resolver_variant(options)
         if resolver_variant == "2020-resolver":
@@ -301,7 +299,6 @@ class RequirementCommand(IndexGroupCommand):
                     "production."
                 )
         else:
-            legacy_resolver = True
             lazy_wheel = False
             if "fast-deps" in options.features_enabled:
                 logger.warning(
@@ -322,7 +319,6 @@ class RequirementCommand(IndexGroupCommand):
             use_user_site=use_user_site,
             lazy_wheel=lazy_wheel,
             verbosity=verbosity,
-            legacy_resolver=legacy_resolver,
         )
 
     @classmethod
@@ -347,6 +343,7 @@ class RequirementCommand(IndexGroupCommand):
             install_req_from_req_string,
             isolated=options.isolated_mode,
             use_pep517=use_pep517,
+            config_settings=getattr(options, "config_settings", None),
         )
         resolver_variant = cls.determine_resolver_variant(options)
         # The long import name and duplicated invocation is needed to convince
@@ -413,7 +410,7 @@ class RequirementCommand(IndexGroupCommand):
         for req in args:
             req_to_add = install_req_from_line(
                 req,
-                comes_from=None,
+                None,
                 isolated=options.isolated_mode,
                 use_pep517=options.use_pep517,
                 user_supplied=True,
@@ -441,9 +438,6 @@ class RequirementCommand(IndexGroupCommand):
                     isolated=options.isolated_mode,
                     use_pep517=options.use_pep517,
                     user_supplied=True,
-                    config_settings=parsed_req.options.get("config_settings")
-                    if parsed_req.options
-                    else None,
                 )
                 requirements.append(req_to_add)
 

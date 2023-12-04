@@ -3,17 +3,12 @@
 Contains interface (MultiDomainBasicAuth) and associated glue code for
 providing credentials in the context of network requests.
 """
-import logging
+
 import os
 import shutil
 import subprocess
-import sysconfig
-import typing
 import urllib.parse
 from abc import ABC, abstractmethod
-from functools import lru_cache
-from os.path import commonprefix
-from pathlib import Path
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
 from pip._vendor.requests.auth import AuthBase, HTTPBasicAuth
@@ -44,8 +39,6 @@ class Credentials(NamedTuple):
 class KeyRingBaseProvider(ABC):
     """Keyring base provider interface"""
 
-    has_keyring: bool
-
     @abstractmethod
     def get_auth_info(self, url: str, username: Optional[str]) -> Optional[AuthInfo]:
         ...
@@ -58,8 +51,6 @@ class KeyRingBaseProvider(ABC):
 class KeyRingNullProvider(KeyRingBaseProvider):
     """Keyring null provider"""
 
-    has_keyring = False
-
     def get_auth_info(self, url: str, username: Optional[str]) -> Optional[AuthInfo]:
         return None
 
@@ -69,8 +60,6 @@ class KeyRingNullProvider(KeyRingBaseProvider):
 
 class KeyRingPythonProvider(KeyRingBaseProvider):
     """Keyring interface which uses locally imported `keyring`"""
-
-    has_keyring = True
 
     def __init__(self) -> None:
         import keyring
@@ -108,8 +97,6 @@ class KeyRingCliProvider(KeyRingBaseProvider):
     PATH.
     """
 
-    has_keyring = True
-
     def __init__(self, cmd: str) -> None:
         self.keyring = cmd
 
@@ -136,7 +123,7 @@ class KeyRingCliProvider(KeyRingBaseProvider):
         res = subprocess.run(
             cmd,
             stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
+            capture_output=True,
             env=env,
         )
         if res.returncode:
@@ -147,89 +134,66 @@ class KeyRingCliProvider(KeyRingBaseProvider):
         """Mirror the implementation of keyring.set_password using cli"""
         if self.keyring is None:
             return None
+
+        cmd = [self.keyring, "set", service_name, username]
+        input_ = (password + os.linesep).encode("utf-8")
         env = os.environ.copy()
         env["PYTHONIOENCODING"] = "utf-8"
-        subprocess.run(
-            [self.keyring, "set", service_name, username],
-            input=f"{password}{os.linesep}".encode("utf-8"),
-            env=env,
-            check=True,
-        )
+        res = subprocess.run(cmd, input=input_, env=env)
+        res.check_returncode()
         return None
 
 
-@lru_cache(maxsize=None)
-def get_keyring_provider(provider: str) -> KeyRingBaseProvider:
-    logger.verbose("Keyring provider requested: %s", provider)
-
+def get_keyring_provider() -> KeyRingBaseProvider:
     # keyring has previously failed and been disabled
-    if KEYRING_DISABLED:
-        provider = "disabled"
-    if provider in ["import", "auto"]:
+    if not KEYRING_DISABLED:
+        # Default to trying to use Python provider
         try:
-            impl = KeyRingPythonProvider()
-            logger.verbose("Keyring provider set: import")
-            return impl
+            return KeyRingPythonProvider()
         except ImportError:
             pass
         except Exception as exc:
             # In the event of an unexpected exception
             # we should warn the user
-            msg = "Installed copy of keyring fails with exception %s"
-            if provider == "auto":
-                msg = msg + ", trying to find a keyring executable as a fallback"
-            logger.warning(msg, exc, exc_info=logger.isEnabledFor(logging.DEBUG))
-    if provider in ["subprocess", "auto"]:
+            logger.warning(
+                "Installed copy of keyring fails with exception %s, "
+                "trying to find a keyring executable as a fallback",
+                str(exc),
+            )
+
+        # Fallback to Cli Provider if `keyring` isn't installed
         cli = shutil.which("keyring")
-        if cli and cli.startswith(sysconfig.get_path("scripts")):
-            # all code within this function is stolen from shutil.which implementation
-            @typing.no_type_check
-            def PATH_as_shutil_which_determines_it() -> str:
-                path = os.environ.get("PATH", None)
-                if path is None:
-                    try:
-                        path = os.confstr("CS_PATH")
-                    except (AttributeError, ValueError):
-                        # os.confstr() or CS_PATH is not available
-                        path = os.defpath
-                # bpo-35755: Don't use os.defpath if the PATH environment variable is
-                # set to an empty string
-
-                return path
-
-            scripts = Path(sysconfig.get_path("scripts"))
-
-            paths = []
-            for path in PATH_as_shutil_which_determines_it().split(os.pathsep):
-                p = Path(path)
-                try:
-                    if not p.samefile(scripts):
-                        paths.append(path)
-                except FileNotFoundError:
-                    pass
-
-            path = os.pathsep.join(paths)
-
-            cli = shutil.which("keyring", path=path)
-
         if cli:
-            logger.verbose("Keyring provider set: subprocess with executable %s", cli)
             return KeyRingCliProvider(cli)
 
-    logger.verbose("Keyring provider set: disabled")
     return KeyRingNullProvider()
+
+
+def get_keyring_auth(url: Optional[str], username: Optional[str]) -> Optional[AuthInfo]:
+    """Return the tuple auth for a given url from keyring."""
+    # Do nothing if no url was provided
+    if not url:
+        return None
+
+    keyring = get_keyring_provider()
+    try:
+        return keyring.get_auth_info(url, username)
+    except Exception as exc:
+        logger.warning(
+            "Keyring is skipped due to an exception: %s",
+            str(exc),
+        )
+        global KEYRING_DISABLED
+        KEYRING_DISABLED = True
+        return None
 
 
 class MultiDomainBasicAuth(AuthBase):
     def __init__(
-        self,
-        prompting: bool = True,
-        index_urls: Optional[List[str]] = None,
-        keyring_provider: str = "auto",
+        self, prompting: bool = True, index_urls: Optional[List[str]] = None
     ) -> None:
         self.prompting = prompting
         self.index_urls = index_urls
-        self.keyring_provider = keyring_provider  # type: ignore[assignment]
         self.passwords: Dict[str, AuthInfo] = {}
         # When the user is prompted to enter credentials and keyring is
         # available, we will offer to save them. If the user accepts,
@@ -237,47 +201,6 @@ class MultiDomainBasicAuth(AuthBase):
         # request authenticates, the caller should call
         # ``save_credentials`` to save these.
         self._credentials_to_save: Optional[Credentials] = None
-
-    @property
-    def keyring_provider(self) -> KeyRingBaseProvider:
-        return get_keyring_provider(self._keyring_provider)
-
-    @keyring_provider.setter
-    def keyring_provider(self, provider: str) -> None:
-        # The free function get_keyring_provider has been decorated with
-        # functools.cache. If an exception occurs in get_keyring_auth that
-        # cache will be cleared and keyring disabled, take that into account
-        # if you want to remove this indirection.
-        self._keyring_provider = provider
-
-    @property
-    def use_keyring(self) -> bool:
-        # We won't use keyring when --no-input is passed unless
-        # a specific provider is requested because it might require
-        # user interaction
-        return self.prompting or self._keyring_provider not in ["auto", "disabled"]
-
-    def _get_keyring_auth(
-        self,
-        url: Optional[str],
-        username: Optional[str],
-    ) -> Optional[AuthInfo]:
-        """Return the tuple auth for a given url from keyring."""
-        # Do nothing if no url was provided
-        if not url:
-            return None
-
-        try:
-            return self.keyring_provider.get_auth_info(url, username)
-        except Exception as exc:
-            logger.warning(
-                "Keyring is skipped due to an exception: %s",
-                str(exc),
-            )
-            global KEYRING_DISABLED
-            KEYRING_DISABLED = True
-            get_keyring_provider.cache_clear()
-            return None
 
     def _get_index_url(self, url: str) -> Optional[str]:
         """Return the original index URL matching the requested URL.
@@ -295,42 +218,15 @@ class MultiDomainBasicAuth(AuthBase):
         if not url or not self.index_urls:
             return None
 
-        url = remove_auth_from_url(url).rstrip("/") + "/"
-        parsed_url = urllib.parse.urlsplit(url)
-
-        candidates = []
-
-        for index in self.index_urls:
-            index = index.rstrip("/") + "/"
-            parsed_index = urllib.parse.urlsplit(remove_auth_from_url(index))
-            if parsed_url == parsed_index:
-                return index
-
-            if parsed_url.netloc != parsed_index.netloc:
-                continue
-
-            candidate = urllib.parse.urlsplit(index)
-            candidates.append(candidate)
-
-        if not candidates:
-            return None
-
-        candidates.sort(
-            reverse=True,
-            key=lambda candidate: commonprefix(
-                [
-                    parsed_url.path,
-                    candidate.path,
-                ]
-            ).rfind("/"),
-        )
-
-        return urllib.parse.urlunsplit(candidates[0])
+        for u in self.index_urls:
+            prefix = remove_auth_from_url(u).rstrip("/") + "/"
+            if url.startswith(prefix):
+                return u
+        return None
 
     def _get_new_credentials(
         self,
         original_url: str,
-        *,
         allow_netrc: bool = True,
         allow_keyring: bool = False,
     ) -> AuthInfo:
@@ -374,8 +270,8 @@ class MultiDomainBasicAuth(AuthBase):
             # The index url is more specific than the netloc, so try it first
             # fmt: off
             kr_auth = (
-                self._get_keyring_auth(index_url, username) or
-                self._get_keyring_auth(netloc, username)
+                get_keyring_auth(index_url, username) or
+                get_keyring_auth(netloc, username)
             )
             # fmt: on
             if kr_auth:
@@ -452,23 +348,18 @@ class MultiDomainBasicAuth(AuthBase):
     def _prompt_for_password(
         self, netloc: str
     ) -> Tuple[Optional[str], Optional[str], bool]:
-        username = ask_input(f"User for {netloc}: ") if self.prompting else None
+        username = ask_input(f"User for {netloc}: ")
         if not username:
             return None, None, False
-        if self.use_keyring:
-            auth = self._get_keyring_auth(netloc, username)
-            if auth and auth[0] is not None and auth[1] is not None:
-                return auth[0], auth[1], False
+        auth = get_keyring_auth(netloc, username)
+        if auth and auth[0] is not None and auth[1] is not None:
+            return auth[0], auth[1], False
         password = ask_password("Password: ")
         return username, password, True
 
     # Factored out to allow for easy patching in tests
     def _should_save_password_to_keyring(self) -> bool:
-        if (
-            not self.prompting
-            or not self.use_keyring
-            or not self.keyring_provider.has_keyring
-        ):
+        if get_keyring_provider() is None:
             return False
         return ask("Save credentials to keyring [y/N]: ", ["y", "n"]) == "y"
 
@@ -478,21 +369,18 @@ class MultiDomainBasicAuth(AuthBase):
         if resp.status_code != 401:
             return resp
 
-        username, password = None, None
-
-        # Query the keyring for credentials:
-        if self.use_keyring:
-            username, password = self._get_new_credentials(
-                resp.url,
-                allow_netrc=False,
-                allow_keyring=True,
-            )
-
         # We are not able to prompt the user so simply return the response
-        if not self.prompting and not username and not password:
+        if not self.prompting:
             return resp
 
         parsed = urllib.parse.urlparse(resp.url)
+
+        # Query the keyring for credentials:
+        username, password = self._get_new_credentials(
+            resp.url,
+            allow_netrc=False,
+            allow_keyring=True,
+        )
 
         # Prompt the user for a new username and password
         save = False
@@ -514,9 +402,7 @@ class MultiDomainBasicAuth(AuthBase):
 
         # Consume content and release the original connection to allow our new
         #   request to reuse the same one.
-        # The result of the assignment isn't used, it's just needed to consume
-        # the content.
-        _ = resp.content
+        resp.content
         resp.raw.release_conn()
 
         # Add our new username and password to the request
@@ -545,8 +431,9 @@ class MultiDomainBasicAuth(AuthBase):
 
     def save_credentials(self, resp: Response, **kwargs: Any) -> None:
         """Response callback to save credentials on success."""
-        assert (
-            self.keyring_provider.has_keyring
+        keyring = get_keyring_provider()
+        assert not isinstance(
+            keyring, KeyRingNullProvider
         ), "should never reach here without keyring"
 
         creds = self._credentials_to_save
@@ -554,8 +441,6 @@ class MultiDomainBasicAuth(AuthBase):
         if creds and resp.status_code < 400:
             try:
                 logger.info("Saving credentials to keyring")
-                self.keyring_provider.save_auth_info(
-                    creds.url, creds.username, creds.password
-                )
+                keyring.save_auth_info(creds.url, creds.username, creds.password)
             except Exception:
                 logger.exception("Failed to save credentials")
