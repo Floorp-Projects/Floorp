@@ -3054,6 +3054,14 @@ ScreenMargin APZCTreeManager::GetCompositorFixedLayerMargins() const {
   return mCompositorFixedLayerMargins;
 }
 
+AsyncPanZoomController* APZCTreeManager::FindRootApzcFor(
+    LayersId aLayersId) const {
+  RecursiveMutexAutoLock lock(mTreeLock);
+
+  HitTestingTreeNode* resultNode = FindRootNodeForLayersId(aLayersId);
+  return resultNode ? resultNode->GetApzc() : nullptr;
+}
+
 AsyncPanZoomController* APZCTreeManager::FindRootContentApzcForLayersId(
     LayersId aLayersId) const {
   mTreeLock.AssertCurrentThreadIn();
@@ -3269,10 +3277,8 @@ ParentLayerToScreenMatrix4x4 APZCTreeManager::GetApzcToGeckoTransformForHit(
   return GetApzcToGeckoTransform(aHitResult.mTargetApzc, components);
 }
 
-ParentLayerToParentLayerMatrix4x4
-APZCTreeManager::GetOopifApzcToRootContentApzcTransform(
+CSSToCSSMatrix4x4 APZCTreeManager::GetOopifToRootContentTransform(
     AsyncPanZoomController* aApzc) const {
-  ParentLayerToParentLayerMatrix4x4 result;
   MOZ_ASSERT(aApzc->IsRootForLayersId());
 
   RefPtr<AsyncPanZoomController> rootContentApzc = FindZoomableApzc(aApzc);
@@ -3280,17 +3286,27 @@ APZCTreeManager::GetOopifApzcToRootContentApzcTransform(
              "aApzc must be out-of-process of the rootContentApzc");
   if (!rootContentApzc || rootContentApzc == aApzc ||
       rootContentApzc->GetLayersId() == aApzc->GetLayersId()) {
-    return result;
+    return CSSToCSSMatrix4x4();
+  }
+  ParentLayerToParentLayerMatrix4x4 result =
+      GetApzcToApzcTransform(aApzc, rootContentApzc,
+                             AsyncTransformComponent::eLayout) *
+      // We need to multiply by the root content APZC's
+      // GetPaintedResolutionTransform() here; See
+      // https://phabricator.services.mozilla.com/D184440?vs=755900&id=757585#6173584
+      // for the details.
+      ViewAs<AsyncTransformComponentMatrix>(
+          rootContentApzc->GetPaintedResolutionTransform());
+
+  CSSToParentLayerScale thisZoom = aApzc->GetZoom();
+  result.PreScale(thisZoom.scale, thisZoom.scale, 1.0);
+  CSSToParentLayerScale rootZoom = rootContentApzc->GetZoom();
+  if (rootZoom != CSSToParentLayerScale(0)) {
+    result.PostScale(1.0 / rootZoom.scale, 1.0 / rootZoom.scale, 1.0);
   }
 
-  return GetApzcToApzcTransform(aApzc, rootContentApzc,
-                                AsyncTransformComponent::eLayout) *
-         // We need to multiply by the root content APZC's
-         // GetPaintedResolutionTransform() here; See
-         // https://phabricator.services.mozilla.com/D184440?vs=755900&id=757585#6173584
-         // for the details.
-         ViewAs<AsyncTransformComponentMatrix>(
-             rootContentApzc->GetPaintedResolutionTransform());
+  return ViewAs<CSSToCSSMatrix4x4>(result,
+                                   PixelCastJustification::UntypedPrePostScale);
 }
 
 CSSRect APZCTreeManager::ConvertRectInApzcToRoot(AsyncPanZoomController* aApzc,
@@ -3301,15 +3317,7 @@ CSSRect APZCTreeManager::ConvertRectInApzcToRoot(AsyncPanZoomController* aApzc,
     return aRect;
   }
 
-  ParentLayerRect rectInParent = aRect * aApzc->GetZoom();
-  ParentLayerRect rectInRoot =
-      GetOopifApzcToRootContentApzcTransform(aApzc).TransformBounds(
-          rectInParent);
-
-  if (rootContentApzc->GetZoom() != CSSToParentLayerScale(0)) {
-    return rectInRoot / rootContentApzc->GetZoom();
-  }
-  return rectInRoot / CSSToParentLayerScale(1);
+  return GetOopifToRootContentTransform(aApzc).TransformBounds(aRect);
 }
 
 ScreenPoint APZCTreeManager::GetCurrentMousePosition() const {
