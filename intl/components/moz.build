@@ -81,7 +81,7 @@ if CONFIG["MOZ_ICU4X"]:
         "src/ICU4XGeckoDataProvider.cpp",
     ]
     LOCAL_INCLUDES += [
-        "/third_party/rust/icu_capi/c/include",
+        "/intl/icu_capi/c/include",
     ]
 
 # At the time of this writing the MOZ_HAS_MOZGLUE define must be true in order to

@@ -17,7 +17,7 @@ capi::ICU4XDataProvider* GetDataProvider() {
   static std::once_flag sOnce;
 
   std::call_once(sOnce, []() {
-    sICU4XDataProvider = capi::ICU4XDataProvider_create_test();
+    sICU4XDataProvider = capi::ICU4XDataProvider_create_compiled();
   });
 
   return sICU4XDataProvider;

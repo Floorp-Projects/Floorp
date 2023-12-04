@@ -142,7 +142,8 @@ rsync_filter_list = """
 - /intl/icu/source/tools
 + /intl/icu/**
 
-+ /intl/icu_testdata/**
++ /intl/icu_capi/**
++ /intl/icu_segmenter_data/**
 
 - /intl/components/gtest
 + /intl/components/**
