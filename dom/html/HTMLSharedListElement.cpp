@@ -8,6 +8,7 @@
 #include "mozilla/dom/HTMLDListElementBinding.h"
 #include "mozilla/dom/HTMLOListElementBinding.h"
 #include "mozilla/dom/HTMLUListElementBinding.h"
+#include "mozilla/dom/HTMLLIElement.h"
 
 #include "mozilla/MappedDeclarationsBuilder.h"
 #include "nsGenericHTMLElement.h"
@@ -26,35 +27,21 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLSharedListElement,
 
 NS_IMPL_ELEMENT_CLONE(HTMLSharedListElement)
 
-nsAttrValue::EnumTable kListTypeTable[] = {
-    {"none", ListStyle::None},
-    {"disc", ListStyle::Disc},
-    {"circle", ListStyle::Circle},
-    {"round", ListStyle::Circle},
-    {"square", ListStyle::Square},
-    {"decimal", ListStyle::Decimal},
-    {"lower-roman", ListStyle::LowerRoman},
-    {"upper-roman", ListStyle::UpperRoman},
-    {"lower-alpha", ListStyle::LowerAlpha},
-    {"upper-alpha", ListStyle::UpperAlpha},
-    {nullptr, 0}};
-
-static const nsAttrValue::EnumTable kOldListTypeTable[] = {
-    {"1", ListStyle::Decimal},    {"A", ListStyle::UpperAlpha},
-    {"a", ListStyle::LowerAlpha}, {"I", ListStyle::UpperRoman},
-    {"i", ListStyle::LowerRoman}, {nullptr, 0}};
-
 bool HTMLSharedListElement::ParseAttribute(
     int32_t aNamespaceID, nsAtom* aAttribute, const nsAString& aValue,
     nsIPrincipal* aMaybeScriptedPrincipal, nsAttrValue& aResult) {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (mNodeInfo->Equals(nsGkAtoms::ol) || mNodeInfo->Equals(nsGkAtoms::ul)) {
+    if (mNodeInfo->Equals(nsGkAtoms::ul)) {
       if (aAttribute == nsGkAtoms::type) {
-        return aResult.ParseEnumValue(aValue, kListTypeTable, false) ||
-               aResult.ParseEnumValue(aValue, kOldListTypeTable, true);
+        return aResult.ParseEnumValue(aValue, HTMLLIElement::kULTypeTable,
+                                      false);
       }
     }
     if (mNodeInfo->Equals(nsGkAtoms::ol)) {
+      if (aAttribute == nsGkAtoms::type) {
+        return aResult.ParseEnumValue(aValue, HTMLLIElement::kOLTypeTable,
+                                      true);
+      }
       if (aAttribute == nsGkAtoms::start) {
         return aResult.ParseIntValue(aValue);
       }
