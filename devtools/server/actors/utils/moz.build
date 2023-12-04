@@ -14,6 +14,7 @@ DevToolsModules(
     "dbg-source.js",
     "event-breakpoints.js",
     "event-loop.js",
+    "gecko-profile-collector.js",
     "inactive-property-helper.js",
     "logEvent.js",
     "make-debugger.js",

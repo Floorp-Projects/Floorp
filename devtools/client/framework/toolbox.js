@@ -204,6 +204,17 @@ loader.lazyRequireGetter(
   "resource://devtools/client/shared/source-map-loader/index.js",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "openProfilerTab",
+  "resource://devtools/client/performance-new/shared/browser.js",
+  true
+);
+loader.lazyGetter(this, "ProfilerBackground", () => {
+  return ChromeUtils.import(
+    "resource://devtools/client/performance-new/shared/background.jsm.js"
+  );
+});
 
 /**
  * A "Toolbox" is the component that holds all the tools for one specific
@@ -657,6 +668,29 @@ Toolbox.prototype = {
   },
 
   /**
+   * Called on each new TRACING_STATE resource
+   *
+   * @param {Object} resource The TRACING_STATE resource
+   */
+  async _onTracingStateChanged(resource) {
+    const { profile } = resource;
+    if (!profile) {
+      return;
+    }
+    const browser = await openProfilerTab();
+
+    const profileCaptureResult = {
+      type: "SUCCESS",
+      profile,
+    };
+    ProfilerBackground.registerProfileCaptureForBrowser(
+      browser,
+      profileCaptureResult,
+      null
+    );
+  },
+
+  /**
    * Be careful, this method is synchronous, but highlightTool, raise, selectTool
    * are all async.
    */
@@ -885,6 +919,15 @@ Toolbox.prototype = {
         this.resourceCommand.TYPES.DOCUMENT_EVENT,
         this.resourceCommand.TYPES.THREAD_STATE,
       ];
+
+      if (
+        Services.prefs.getBoolPref(
+          "devtools.debugger.features.javascript-tracing",
+          false
+        )
+      ) {
+        watchedResources.push(this.resourceCommand.TYPES.TRACING_STATE);
+      }
 
       if (!this.isBrowserToolbox) {
         // Independently of watching network event resources for the error count icon,
@@ -4700,6 +4743,9 @@ Toolbox.prototype = {
 
       if (resourceType == TYPES.THREAD_STATE) {
         this._onThreadStateChanged(resource);
+      }
+      if (resourceType == TYPES.TRACING_STATE) {
+        this._onTracingStateChanged(resource);
       }
     }
 
