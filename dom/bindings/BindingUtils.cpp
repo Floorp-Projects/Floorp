@@ -7,7 +7,6 @@
 #include "BindingUtils.h"
 
 #include <algorithm>
-#include <cstdint>
 #include <stdarg.h>
 
 #include "mozilla/Assertions.h"
@@ -1271,6 +1270,16 @@ bool WrapObject(JSContext* cx, const WindowProxyHolder& p,
   return ToJSValue(cx, p, rval);
 }
 
+static int ComparePropertyInfosAtIndices(const void* aElement1,
+                                         const void* aElement2,
+                                         void* aClosure) {
+  const uint16_t index1 = *static_cast<const uint16_t*>(aElement1);
+  const uint16_t index2 = *static_cast<const uint16_t*>(aElement2);
+  const PropertyInfo* infos = static_cast<PropertyInfo*>(aClosure);
+
+  return PropertyInfo::Compare(infos[index1], infos[index2]);
+}
+
 // {JSPropertySpec,JSFunctionSpec} use {JSPropertySpec,JSFunctionSpec}::Name
 // and ConstantSpec uses `const char*` for name field.
 static inline JSPropertySpec::Name ToPropertySpecName(
@@ -1338,20 +1347,15 @@ static bool InitPropertyInfos(JSContext* cx,
 
   // Initialize and sort the index array.
   uint16_t* indices = nativeProperties->sortedPropertyIndices;
-  auto count = nativeProperties->propertyInfoCount;
-  for (auto i = 0; i < count; ++i) {
+  for (unsigned int i = 0; i < nativeProperties->propertyInfoCount; ++i) {
     indices[i] = i;
   }
-  std::sort(indices, indices + count,
-            [infos = nativeProperties->PropertyInfos()](const uint16_t left,
-                                                        const uint16_t right) {
-              // std::sort may call us with the same element by design but
-              // PropertyInfo::Compare does not like that.
-              if (left == right) {
-                return false;
-              }
-              return PropertyInfo::Compare(infos[left], infos[right]) < 0;
-            });
+  // ComparePropertyInfosAtIndices() doesn't actually modify the PropertyInfo
+  // array, so the const_cast here is OK in spite of the signature of
+  // NS_QuickSort().
+  NS_QuickSort(indices, nativeProperties->propertyInfoCount, sizeof(uint16_t),
+               ComparePropertyInfosAtIndices,
+               const_cast<PropertyInfo*>(nativeProperties->PropertyInfos()));
 
   return true;
 }

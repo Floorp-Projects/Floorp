@@ -22,6 +22,7 @@
 #include "nsCaret.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
+#include "nsQuickSort.h"
 #include "SVGPaintServerFrame.h"
 #include "nsTArray.h"
 #include "nsTextFrame.h"

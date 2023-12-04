@@ -22,6 +22,7 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsPrintfCString.h"
+#include "nsQuickSort.h"
 #include "nsEnumeratorUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/ArenaAllocatorExtensions.h"
@@ -209,10 +210,12 @@ static nsresult CreateEntryEnumerator(nsTHashtable<CategoryLeaf>& aTable,
     }
   }
 
-  entries.Sort([](nsICategoryEntry* aA, nsICategoryEntry* aB) {
-    return strcmp(CategoryEntry::Cast(aA)->Key(),
-                  CategoryEntry::Cast(aB)->Key());
-  });
+  entries.Sort(
+      [](nsICategoryEntry* aA, nsICategoryEntry* aB, void*) {
+        return strcmp(CategoryEntry::Cast(aA)->Key(),
+                      CategoryEntry::Cast(aB)->Key());
+      },
+      nullptr);
 
   return NS_NewArrayEnumerator(aResult, entries, NS_GET_IID(nsICategoryEntry));
 }
