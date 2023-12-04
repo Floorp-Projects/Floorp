@@ -5016,4 +5016,8 @@ bool Element::Translate() const {
   return true;
 }
 
+void Element::SetHTMLUnsafe(const nsAString& aHTML) {
+  nsContentUtils::SetHTMLUnsafe(this, this, aHTML);
+}
+
 }  // namespace mozilla::dom
