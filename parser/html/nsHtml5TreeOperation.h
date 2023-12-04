@@ -8,7 +8,6 @@
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5HtmlAttributes.h"
 #include "mozilla/dom/FromParser.h"
-#include "mozilla/dom/ShadowRootBinding.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/Variant.h"
 #include "nsCharsetSource.h"
@@ -265,37 +264,6 @@ struct opGetDocumentFragmentForTemplate {
   }
 };
 
-struct opSetDocumentFragmentForTemplate {
-  nsIContent** mTemplate;
-  nsIContent** mFragment;
-
-  explicit opSetDocumentFragmentForTemplate(nsIContentHandle* aTemplate,
-                                            nsIContentHandle* aFragment) {
-    mTemplate = static_cast<nsIContent**>(aTemplate);
-    mFragment = static_cast<nsIContent**>(aFragment);
-  }
-};
-
-struct opGetShadowRootFromHost {
-  nsIContent** mHost;
-  nsIContent** mFragHandle;
-  nsIContent** mTemplateNode;
-  mozilla::dom::ShadowRootMode mShadowRootMode;
-  bool mShadowRootDelegatesFocus;
-
-  explicit opGetShadowRootFromHost(nsIContentHandle* aHost,
-                                   nsIContentHandle* aFragHandle,
-                                   nsIContentHandle* aTemplateNode,
-                                   mozilla::dom::ShadowRootMode aShadowRootMode,
-                                   bool aShadowRootDelegatesFocus) {
-    mHost = static_cast<nsIContent**>(aHost);
-    mFragHandle = static_cast<nsIContent**>(aFragHandle);
-    mTemplateNode = static_cast<nsIContent**>(aTemplateNode);
-    mShadowRootMode = aShadowRootMode;
-    mShadowRootDelegatesFocus = aShadowRootDelegatesFocus;
-  }
-};
-
 struct opGetFosterParent {
   nsIContent** mTable;
   nsIContent** mStackParent;
@@ -524,8 +492,7 @@ typedef mozilla::Variant<
     opCreateHTMLElement, opCreateSVGElement, opCreateMathMLElement,
     opSetFormElement, opAppendText, opFosterParentText, opAppendComment,
     opAppendCommentToDocument, opAppendDoctypeToDocument,
-    opGetDocumentFragmentForTemplate, opSetDocumentFragmentForTemplate,
-    opGetShadowRootFromHost, opGetFosterParent,
+    opGetDocumentFragmentForTemplate, opGetFosterParent,
     // Gecko-specific on-pop ops
     opMarkAsBroken, opRunScriptThatMayDocumentWriteOrBlock,
     opRunScriptThatCannotDocumentWriteOrBlock, opPreventScriptExecution,
@@ -620,8 +587,6 @@ class nsHtml5TreeOperation final {
                                           nsHtml5DocumentBuilder* aBuilder);
 
   static nsIContent* GetDocumentFragmentForTemplate(nsIContent* aNode);
-  static void SetDocumentFragmentForTemplate(nsIContent* aNode,
-                                             nsIContent* aDocumentFragment);
 
   static nsIContent* GetFosterParent(nsIContent* aTable,
                                      nsIContent* aStackParent);
