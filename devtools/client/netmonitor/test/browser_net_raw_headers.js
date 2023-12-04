@@ -21,8 +21,16 @@ add_task(async function () {
 
   store.dispatch(Actions.batchEnable(false));
 
+  info("Add block pattern to block the second request");
+  await addBlockedRequest(
+    "sjs_simple-test-server.sjs?foo=bar&baz=42&type=multipart",
+    monitor
+  );
+
   // Execute requests.
   await performRequests(monitor, tab, 2);
+
+  info("Test the request headers for a normal request");
 
   let wait = waitForDOM(document, "#headers-panel .accordion-item", 2);
   EventUtils.sendMouseEvent(
@@ -40,13 +48,41 @@ add_task(async function () {
   await wait;
 
   testRawHeaderToggleStyle(true);
-  testShowRawHeaders(getSortedRequests(store.getState())[0]);
+  testAllRawHeaders(getSortedRequests(store.getState())[0]);
 
   EventUtils.sendMouseEvent({ type: "click" }, getRawHeadersToggle("RESPONSE"));
   EventUtils.sendMouseEvent({ type: "click" }, getRawHeadersToggle("REQUEST"));
 
   testRawHeaderToggleStyle(false);
   testHideRawHeaders(document);
+
+  info("Test the request headers for a blocked request");
+
+  const waitForRequestHeaderPanel = waitForDOM(
+    document,
+    "#headers-panel .accordion-item",
+    1
+  );
+  EventUtils.sendMouseEvent(
+    { type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[1]
+  );
+  await waitForRequestHeaderPanel;
+
+  info("Toggle on the request headers raw toggle button");
+  wait = waitForDOM(document, "#requestHeaders textarea.raw-headers", 1);
+  EventUtils.sendMouseEvent(
+    { type: "click" },
+    document.querySelector(".devtools-checkbox-toggle")
+  );
+  await wait;
+
+  testRawHeaders(
+    "request",
+    document.querySelector("textarea.raw-headers").value,
+    getSortedRequests(store.getState())[1].requestHeaders,
+    "POST /browser/devtools/client/netmonitor/test/sjs_simple-test-server.sjs?foo=bar&baz=42&type=multipart HTTP/1.1"
+  );
 
   return teardown(monitor);
 
@@ -88,23 +124,44 @@ add_task(async function () {
   /*
    * Tests that raw headers were displayed correctly
    */
-  function testShowRawHeaders(data) {
+
+  async function testAllRawHeaders(data) {
     // Request headers are rendered first, so it is element with index 1
-    const requestHeaders = document.querySelectorAll("textarea.raw-headers")[1]
-      .value;
-    for (const header of data.requestHeaders.headers) {
-      ok(
-        requestHeaders.includes(header.name + ": " + header.value),
-        "textarea contains request headers"
-      );
-    }
+    testRawHeaders(
+      "request",
+      document.querySelectorAll("textarea.raw-headers")[1].value,
+      data.requestHeaders,
+      "POST /browser/devtools/client/netmonitor/test/sjs_simple-test-server.sjs?foo=bar&baz=42&valueWithEqualSign=hijk=123=mnop&type=urlencoded HTTP/1.1"
+    );
+
     // Response headers are rendered first, so it is element with index 0
-    const responseHeaders = document.querySelectorAll("textarea.raw-headers")[0]
-      .value;
-    for (const header of data.responseHeaders.headers) {
+    testRawHeaders(
+      "response",
+      document.querySelector("textarea.raw-headers").value,
+      data.responseHeaders,
+      "HTTP/1.1 200 Och Aye"
+    );
+  }
+
+  function testRawHeaders(
+    headerType,
+    rawTextContent,
+    headersData,
+    expectedPreText
+  ) {
+    info(
+      `Assert that the ${headerType} raw headers first line version is rendered correctly`
+    );
+    ok(
+      rawTextContent.startsWith(expectedPreText),
+      `The first line of the raw ${headerType} header content is correct`
+    );
+
+    info(`Assert the ${headerType} headers and values`);
+    for (const header of headersData.headers) {
       ok(
-        responseHeaders.includes(header.name + ": " + header.value),
-        "textarea contains response headers"
+        rawTextContent.includes(header.name + ": " + header.value),
+        `textarea contains ${header.name} ${headerType} header`
       );
     }
   }

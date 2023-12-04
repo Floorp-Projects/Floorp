@@ -23,15 +23,9 @@ add_task(async function () {
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   store.dispatch(Actions.batchEnable(false));
 
-  // Open the request blocking panel
-  store.dispatch(Actions.toggleRequestBlockingPanel());
-
   // Add patterns which should block some of the requests
   await addBlockedRequest("test1", monitor);
   await addBlockedRequest("test/*/test3", monitor);
-
-  // Close the blocking panel to ensure it's opened by the context menu later
-  store.dispatch(Actions.toggleRequestBlockingPanel());
 
   // Execute two XHRs (the same URL) and wait till they're finished
   const TEST_URL_1 = HTTPS_SEARCH_SJS + "?value=test1";
