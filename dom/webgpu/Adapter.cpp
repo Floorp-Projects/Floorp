@@ -130,10 +130,7 @@ static Maybe<ffi::WGPUFeatures> ToWGPUFeatures(
       return Some(WGPUFeatures_BGRA8UNORM_STORAGE);
 
     case dom::GPUFeatureName::Float32_filterable:
-#ifdef WGPUFeatures_FLOAT32_FILTERABLE
-#  error fix todo
-#endif
-      return Nothing();  // TODO
+      return Some(WGPUFeatures_FLOAT32_FILTERABLE);
 
     case dom::GPUFeatureName::EndGuard_:
       break;
@@ -454,15 +451,16 @@ already_AddRefed<dom::Promise> Adapter::RequestDevice(
     // -
 
     ffi::WGPUDeviceDescriptor ffiDesc = {};
-    ffiDesc.features = *MakeFeatureBits(aDesc.mRequiredFeatures);
-    ffiDesc.limits = deviceLimits;
+    ffiDesc.required_features = *MakeFeatureBits(aDesc.mRequiredFeatures);
+    ffiDesc.required_limits = deviceLimits;
     auto request = mBridge->AdapterRequestDevice(mId, ffiDesc);
     if (!request) {
       promise->MaybeRejectWithNotSupportedError(
           "Unable to instantiate a Device");
       return;
     }
-    RefPtr<Device> device = new Device(this, request->mId, ffiDesc.limits);
+    RefPtr<Device> device =
+        new Device(this, request->mId, ffiDesc.required_limits);
     for (const auto& feature : aDesc.mRequiredFeatures) {
       device->mFeatures->Add(feature, aRv);
     }

@@ -21,6 +21,7 @@ exclude = [
     "Cargo.lock",
     "target/**/*",
 ]
+autotests = false
 description = "Shader translation infrastructure"
 readme = "README.md"
 keywords = [
@@ -35,6 +36,10 @@ resolver = "2"
 
 [package.metadata.docs.rs]
 all-features = true
+
+[[test]]
+name = "naga-test"
+path = "tests/root.rs"
 
 [[bench]]
 name = "criterion"
@@ -143,6 +148,7 @@ spv-out = ["spirv"]
 wgsl-in = [
     "hexf-parse",
     "unicode-xid",
+    "compact",
 ]
 wgsl-out = []
 
