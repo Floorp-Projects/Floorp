@@ -1,0 +1,11 @@
+### 001-Cargo.toml.patch
+
+A patch for Cargo.toml of icu_capi. Remove weak dependencies of unnecessary crates.
+
+### 002-GH4109.patch
+
+A patch for icu_capi for clang and static analysis.
+
+### empty.toml
+
+Empty toml data for trie_data for icu_segmenter_data.

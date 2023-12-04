@@ -1,0 +1,89 @@
+diff --git a/intl/icu_capi/cpp/include/diplomat_runtime.hpp b/intl/icu_capi/cpp/include/diplomat_runtime.hpp
+--- a/intl/icu_capi/cpp/include/diplomat_runtime.hpp
++++ b/intl/icu_capi/cpp/include/diplomat_runtime.hpp
+@@ -49,52 +49,60 @@ template<typename T> struct WriteableTra
+ template<> struct WriteableTrait<std::string> {
+   static inline capi::DiplomatWriteable Construct(std::string& t) {
+     return diplomat::WriteableFromString(t);
+   }
+ };
+ 
+ template<class T> struct Ok {
+   T inner;
+-  Ok(T&& i): inner(std::move(i)) {}
++  explicit Ok(T&& i): inner(std::move(i)) {}
+   // We don't want to expose an lvalue-capable constructor in general
+   // however there is no problem doing this for trivially copyable types
+   template<typename X = T, typename = typename std::enable_if<std::is_trivially_copyable<X>::value>::type>
+-  Ok(T i): inner(i) {}
++  explicit Ok(const T& i): inner(i) {}
+   Ok() = default;
+   Ok(Ok&&) noexcept = default;
+   Ok(const Ok &) = default;
+   Ok& operator=(const Ok&) = default;
+   Ok& operator=(Ok&&) noexcept = default;
+ };
+ 
+ template<class T> struct Err {
+   T inner;
+-  Err(T&& i): inner(std::move(i)) {}
++  explicit Err(T&& i): inner(std::move(i)) {}
+   // We don't want to expose an lvalue-capable constructor in general
+   // however there is no problem doing this for trivially copyable types
+   template<typename X = T, typename = typename std::enable_if<std::is_trivially_copyable<X>::value>::type>
+-  Err(T i): inner(i) {}
++  explicit Err(const T& i): inner(i) {}
+   Err() = default;
+   Err(Err&&) noexcept = default;
+   Err(const Err &) = default;
+   Err& operator=(const Err&) = default;
+   Err& operator=(Err&&) noexcept = default;
+ };
+ 
+ template<class T, class E>
+ class result {
+ private:
+     std::variant<Ok<T>, Err<E>> val;
+ public:
+-  result(Ok<T>&& v): val(std::move(v)) {}
+-  result(Err<E>&& v): val(std::move(v)) {}
++  explicit result(Ok<T>&& v): val(std::move(v)) {}
++  explicit result(Err<E>&& v): val(std::move(v)) {}
+   result() = default;
+   result(const result &) = default;
+   result& operator=(const result&) = default;
++  result& operator=(Ok<T>&& t) {
++    this->val = Ok<T>(std::move(t));
++    return *this;
++  }
++  result& operator=(Err<E>&& e) {
++    this->val = Err<E>(std::move(e));
++    return *this;
++  }
+   result& operator=(result&&) noexcept = default;
+   result(result &&) noexcept = default;
+   ~result() = default;
+   bool is_ok() const {
+     return std::holds_alternative<Ok<T>>(this->val);
+   };
+   bool is_err() const {
+     return std::holds_alternative<Err<E>>(this->val);
+@@ -142,17 +150,17 @@ template<class T> using span = std::span
+ // C++-17-compatible std::span
+ template<class T>
+ class span {
+ 
+ public:
+   constexpr span(T* data, size_t size)
+     : data_(data), size_(size) {}
+   template<size_t N>
+-  constexpr span(std::array<typename std::remove_const<T>::type, N>& arr)
++  explicit constexpr span(std::array<typename std::remove_const<T>::type, N>& arr)
+     : data_(const_cast<T*>(arr.data())), size_(N) {}
+   constexpr T* data() const noexcept {
+     return this->data_;
+   }
+   constexpr size_t size() const noexcept {
+     return this->size_;
+   }
+ private:

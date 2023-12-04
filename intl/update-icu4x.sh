@@ -6,20 +6,21 @@
 set -e
 
 # Update the icu4x binary data for a given release:
-#   Usage: update-icu4x.sh <URL of ICU GIT> <release tag name> <CLDR version> <ICU release tag name>
-#   update-icu4x.sh https://github.com/unicode-org/icu4x.git icu@1.2.0 43.0.0 release-73-1
+#   Usage: update-icu4x.sh <URL of ICU GIT> <release tag name> <CLDR version> <ICU release tag name> <ICU4X version of icu_capi>
+#   update-icu4x.sh https://github.com/unicode-org/icu4x.git icu@1.4.0 44.0.0 release-74-1 1.4.0
 #
 # Update to the main branch:
-#   Usage: update-icu4x.sh <URL of ICU GIT> <branch> <CLDR version> <ICU release tag name>
-#   update-icu4x.sh https://github.com/unicode-org/icu4x.git main 43.0.0 release-73-1
+#   Usage: update-icu4x.sh <URL of ICU GIT> <branch> <CLDR version> <ICU release tag name> <ICU4X version of icu_capi>
+#   update-icu4x.sh https://github.com/unicode-org/icu4x.git main 44.0.0 release-74-1 1.4.0
 
 # default
-cldr=${3:-43.0.0}
-icuexport=${4:-release-73-1}
+cldr=${3:-44.0.0}
+icuexport=${4:-release-74-1}
+icu4x_version=${5:-1.4.0}
 
 if [ $# -lt 2 ]; then
-  echo "Usage: update-icu4x.sh <URL of ICU4X GIT> <ICU4X release tag name> <CLDR version> <ICU release tag name>"
-  echo "Example: update-icu4x.sh https://github.com/unicode-org/icu4x.git icu@1.2.0 43.0.0 release-73-1"
+  echo "Usage: update-icu4x.sh <URL of ICU4X GIT> <ICU4X release tag name> <CLDR version> <ICU release tag name> <ICU4X version for icu_capi>"
+  echo "Example: update-icu4x.sh https://github.com/unicode-org/icu4x.git icu@1.4.0 44.0.0 release-74-1 1.4.0"
   exit 1
 fi
 
@@ -39,11 +40,28 @@ export LC_ALL=en_US.UTF-8
 # Define all of the paths.
 original_pwd=$(pwd)
 top_src_dir=$(cd -- "$(dirname "$0")/.." >/dev/null 2>&1 ; pwd -P)
-data_dir=${top_src_dir}/intl/icu_testdata/data/baked
-git_info_file=${data_dir}/ICU4X-GIT-INFO
+segmenter_data_dir=${top_src_dir}/intl/icu_segmenter_data/data
+git_info_file=${segmenter_data_dir}/ICU4X-GIT-INFO
 
 log "Remove the old data"
-rm -rf ${data_dir}
+rm -rf ${segmenter_data_dir}
+
+log "Download icuexportdata"
+tmpicuexportdir=$(mktemp -d)
+icuexport_filename=`echo "icuexportdata_${icuexport}.zip" | sed "s/\//-/g"`
+cd ${tmpicuexportdir}
+wget https://github.com/unicode-org/icu/releases/download/${icuexport}/${icuexport_filename}
+
+log "Patching icuexportdata to reduce data size"
+unzip ${icuexport_filename}
+for toml in          \
+    burmesedict.toml \
+    khmerdict.toml   \
+    laodict.toml     \
+    thaidict.toml    \
+; do
+    cp ${top_src_dir}/intl/icu4x-patches/empty.toml ${tmpicuexportdir}/segmenter/dictionary/$toml
+done
 
 log "Clone ICU4X"
 tmpclonedir=$(mktemp -d)
@@ -53,12 +71,25 @@ log "Change the directory to the cloned repo"
 log ${tmpclonedir}
 cd ${tmpclonedir}
 
-log "Patching line segmenter data to fix https://github.com/unicode-org/icu4x/issues/3811."
-# This manually patch can be removed once we upgrade to ICU4X 1.3 in bug 1851323.
-wget --unlink -q -O ${tmpclonedir}/provider/datagen/data/segmenter/line.toml https://raw.githubusercontent.com/unicode-org/icu4x/fd62de5e232ea1f0cb81e88dc6eb0cf9c86f85ca/provider/datagen/src/transform/segmenter/rules/line.toml
+log "Copy icu_capi crate to local since we need a patched version"
+rm -rf ${top_src_dir}/intl/icu_capi
+wget -O icu_capi.tar.gz https://crates.io/api/v1/crates/icu_capi/${icu4x_version}/download
+tar xf icu_capi.tar.gz -C ${top_src_dir}/intl
+mv ${top_src_dir}/intl/icu_capi-${icu4x_version} ${top_src_dir}/intl/icu_capi
+rm -rf icu_capi_tar.gz
 
-log "Run the icu4x-datagen tool to regenerate the data."
-log "Saving the data into: ${data_dir}"
+log "Patching icu_capi"
+for patch in \
+    001-Cargo.toml.patch \
+    002-GH4109.patch \
+; do
+    patch -d ${top_src_dir} -p1 --no-backup-if-mismatch < ${top_src_dir}/intl/icu4x-patches/$patch
+done
+
+# ICU4X 1.3 or later with icu_capi uses each compiled_data crate.
+
+log "Run the icu4x-datagen tool to regenerate the segmenter data."
+log "Saving the data into: ${segmenter_data_dir}"
 
 # TODO(Bug 1741262) - Should locales be filtered as well? It doesn't appear that the existing ICU
 # data builder is using any locale filtering.
@@ -72,17 +103,17 @@ cargo run --bin icu4x-datagen          \
   --features=bin                       \
   --                                   \
   --cldr-tag ${cldr}                   \
-  --icuexport-tag ${icuexport}         \
+  --icuexport-root ${tmpicuexportdir}  \
   --keys segmenter/dictionary/w_auto@1 \
+  --keys segmenter/dictionary/wl_ext@1 \
   --keys segmenter/grapheme@1          \
   --keys segmenter/line@1              \
   --keys segmenter/lstm/wl_auto@1      \
   --keys segmenter/sentence@1          \
   --keys segmenter/word@1              \
   --all-locales                        \
-  --use-separate-crates                \
   --format mod                         \
-  --out ${data_dir}                    \
+  --out ${segmenter_data_dir}          \
 
 log "Record the current cloned git information to:"
 log ${git_info_file}
@@ -94,3 +125,4 @@ git -C ${tmpclonedir} log -1 > ${git_info_file}
 log "Clean up the tmp directory"
 cd ${original_pwd}
 rm -rf ${tmpclonedir}
+rm -rf ${tmpicuexportdir}
