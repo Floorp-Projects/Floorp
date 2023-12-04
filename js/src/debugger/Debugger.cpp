@@ -533,6 +533,7 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
       uncaughtExceptionHook(nullptr),
       allowUnobservedAsmJS(false),
       allowUnobservedWasm(false),
+      exclusiveDebuggerOnEval(false),
       collectCoverageInfo(false),
       observedGCs(cx->zone()),
       allocationsLog(cx),
@@ -3434,6 +3435,10 @@ Debugger::IsObserving Debugger::observesNativeCalls() const {
   return NotObserving;
 }
 
+bool Debugger::isExclusiveDebuggerOnEval() const {
+  return exclusiveDebuggerOnEval;
+}
+
 // Toggle whether this Debugger's debuggees observe all execution. This is
 // called when a hook that observes all execution is set or unset. See
 // hookObservesAllExecution.
@@ -4136,6 +4141,8 @@ struct MOZ_STACK_CLASS Debugger::CallData {
   bool setAllowUnobservedAsmJS();
   bool getAllowUnobservedWasm();
   bool setAllowUnobservedWasm();
+  bool getExclusiveDebuggerOnEval();
+  bool setExclusiveDebuggerOnEval();
   bool getCollectCoverageInfo();
   bool setCollectCoverageInfo();
   bool getMemory();
@@ -4421,6 +4428,21 @@ bool Debugger::CallData::setAllowUnobservedWasm() {
     Realm* realm = global->realm();
     realm->updateDebuggerObservesWasm();
   }
+
+  args.rval().setUndefined();
+  return true;
+}
+
+bool Debugger::CallData::getExclusiveDebuggerOnEval() {
+  args.rval().setBoolean(dbg->exclusiveDebuggerOnEval);
+  return true;
+}
+
+bool Debugger::CallData::setExclusiveDebuggerOnEval() {
+  if (!args.requireAtLeast(cx, "Debugger.set exclusiveDebuggerOnEval", 1)) {
+    return false;
+  }
+  dbg->exclusiveDebuggerOnEval = ToBoolean(args[0]);
 
   args.rval().setUndefined();
   return true;
@@ -6430,6 +6452,8 @@ const JSPropertySpec Debugger::properties[] = {
                   setAllowUnobservedWasm),
     JS_DEBUG_PSGS("collectCoverageInfo", getCollectCoverageInfo,
                   setCollectCoverageInfo),
+    JS_DEBUG_PSGS("exclusiveDebuggerOnEval", getExclusiveDebuggerOnEval,
+                  setExclusiveDebuggerOnEval),
     JS_DEBUG_PSG("memory", getMemory),
     JS_STRING_SYM_PS(toStringTag, "Debugger", JSPROP_READONLY),
     JS_PS_END};

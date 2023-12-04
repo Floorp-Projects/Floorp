@@ -438,6 +438,10 @@ function makeSideeffectFreeDebugger(targetActorDbg) {
   // target's global (when not paused).
   const dbg = new Debugger();
 
+  // Special flag in order to ensure that any evaluation or call being
+  // made via this debugger will be ignored by all debuggers except this one.
+  dbg.exclusiveDebuggerOnEval = true;
+
   // We need to register all target actor's globals.
   // In most cases, this will be only one global, except for the browser toolbox,
   // where process target actors may interact with many.

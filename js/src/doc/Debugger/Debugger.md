@@ -43,6 +43,14 @@ Setting this to `false` prevents this `Debugger` instance from requiring any
 code coverage instrumentation, but it does not guarantee that the
 instrumentation is not present.
 
+### `exclusiveDebuggerOnEval`
+A boolean value indicating whether other Debugger instances should
+have their hook functions called when this instance uses:
+* Debugger.Frame.evalWithBindings,
+* Debugger.Object.executeInGlobalWithBindings
+* Debugger.Object.call
+When set to true, other Debugger instances are not notified.
+
 ### `uncaughtExceptionHook`
 Either `null` or a function that SpiderMonkey calls when a call to a
 debug event handler, breakpoint handler, or similar
