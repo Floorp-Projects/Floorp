@@ -282,28 +282,20 @@ void SVGRenderingObserver::AttributeChanged(dom::Element* aElement,
   // observers and ourselves for all attribute changes? For non-ID changes
   // surely that is unnecessary.
 
-  if (mFlags & OBSERVE_ATTRIBUTE_CHANGES) {
-    OnRenderingChange();
-  }
+  OnRenderingChange();
 }
 
 void SVGRenderingObserver::ContentAppended(nsIContent* aFirstNewContent) {
-  if (mFlags & OBSERVE_CONTENT_CHANGES) {
-    OnRenderingChange();
-  }
+  OnRenderingChange();
 }
 
 void SVGRenderingObserver::ContentInserted(nsIContent* aChild) {
-  if (mFlags & OBSERVE_CONTENT_CHANGES) {
-    OnRenderingChange();
-  }
+  OnRenderingChange();
 }
 
 void SVGRenderingObserver::ContentRemoved(nsIContent* aChild,
                                           nsIContent* aPreviousSibling) {
-  if (mFlags & OBSERVE_CONTENT_CHANGES) {
-    OnRenderingChange();
-  }
+  OnRenderingChange();
 }
 
 /**
@@ -325,7 +317,8 @@ class SVGIDRenderingObserver : public SVGRenderingObserver {
   SVGIDRenderingObserver(
       URLAndReferrerInfo* aURI, nsIContent* aObservingContent,
       bool aReferenceImage,
-      uint32_t aFlags = OBSERVE_ATTRIBUTE_CHANGES | OBSERVE_CONTENT_CHANGES,
+      uint32_t aCallbacks = kAttributeChanged | kContentAppended |
+                            kContentInserted | kContentRemoved,
       TargetIsValidCallback aTargetIsValidCallback = nullptr);
 
   void Traverse(nsCycleCollectionTraversalCallback* aCB);
@@ -422,9 +415,9 @@ class SVGIDRenderingObserver : public SVGRenderingObserver {
  */
 SVGIDRenderingObserver::SVGIDRenderingObserver(
     URLAndReferrerInfo* aURI, nsIContent* aObservingContent,
-    bool aReferenceImage, uint32_t aFlags,
+    bool aReferenceImage, uint32_t aCallbacks,
     TargetIsValidCallback aTargetIsValidCallback)
-    : SVGRenderingObserver(aFlags),
+    : SVGRenderingObserver(aCallbacks),
       mObservedElementTracker(this),
       mObservingContent(aObservingContent->AsElement()),
       mTargetIsValidCallback(aTargetIsValidCallback) {
@@ -462,10 +455,11 @@ class SVGRenderingObserverProperty : public SVGIDRenderingObserver {
 
   SVGRenderingObserverProperty(
       URLAndReferrerInfo* aURI, nsIFrame* aFrame, bool aReferenceImage,
-      uint32_t aFlags = OBSERVE_ATTRIBUTE_CHANGES | OBSERVE_CONTENT_CHANGES,
+      uint32_t aCallbacks = kAttributeChanged | kContentAppended |
+                            kContentInserted | kContentRemoved,
       TargetIsValidCallback aTargetIsValidCallback = nullptr)
       : SVGIDRenderingObserver(aURI, aFrame->GetContent(), aReferenceImage,
-                               aFlags, aTargetIsValidCallback),
+                               aCallbacks, aTargetIsValidCallback),
         mFrameReference(aFrame) {}
 
  protected:
@@ -508,8 +502,7 @@ class SVGTextPathObserver final : public SVGRenderingObserverProperty {
   SVGTextPathObserver(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
                       bool aReferenceImage)
       : SVGRenderingObserverProperty(aURI, aFrame, aReferenceImage,
-                                     OBSERVE_ATTRIBUTE_CHANGES,
-                                     IsSVGGeometryElement) {}
+                                     kAttributeChanged, IsSVGGeometryElement) {}
 
  protected:
   void OnRenderingChange() override;
@@ -558,8 +551,7 @@ class SVGMPathObserver final : public SVGIDRenderingObserver {
 
   SVGMPathObserver(URLAndReferrerInfo* aURI, SVGMPathElement* aElement)
       : SVGIDRenderingObserver(aURI, aElement, /* aReferenceImage = */ false,
-                               OBSERVE_ATTRIBUTE_CHANGES,
-                               IsSVGGeometryElement) {}
+                               kAttributeChanged, IsSVGGeometryElement) {}
 
  protected:
   virtual ~SVGMPathObserver() = default;  // non-public
@@ -584,9 +576,9 @@ class SVGMarkerObserver final : public SVGRenderingObserverProperty {
  public:
   SVGMarkerObserver(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
                     bool aReferenceImage)
-      : SVGRenderingObserverProperty(
-            aURI, aFrame, aReferenceImage,
-            OBSERVE_ATTRIBUTE_CHANGES | OBSERVE_CONTENT_CHANGES) {}
+      : SVGRenderingObserverProperty(aURI, aFrame, aReferenceImage,
+                                     kAttributeChanged | kContentAppended |
+                                         kContentInserted | kContentRemoved) {}
 
  protected:
   void OnRenderingChange() override;
@@ -731,10 +723,10 @@ class SVGFilterObserver final : public SVGIDRenderingObserver {
  public:
   SVGFilterObserver(URLAndReferrerInfo* aURI, nsIContent* aObservingContent,
                     SVGFilterObserverList* aFilterChainObserver)
-      : SVGIDRenderingObserver(
-            aURI, aObservingContent, false,
-            OBSERVE_ATTRIBUTE_CHANGES | OBSERVE_CONTENT_CHANGES,
-            IsSVGFilterElement),
+      : SVGIDRenderingObserver(aURI, aObservingContent, false,
+                               kAttributeChanged | kContentAppended |
+                                   kContentInserted | kContentRemoved,
+                               IsSVGFilterElement),
         mFilterObserverList(aFilterChainObserver) {}
 
   void DetachFromChainObserver() { mFilterObserverList = nullptr; }
@@ -1039,9 +1031,9 @@ class SVGTemplateElementObserver : public SVGIDRenderingObserver {
 
   SVGTemplateElementObserver(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
                              bool aReferenceImage)
-      : SVGIDRenderingObserver(
-            aURI, aFrame->GetContent(), aReferenceImage,
-            OBSERVE_ATTRIBUTE_CHANGES | OBSERVE_CONTENT_CHANGES),
+      : SVGIDRenderingObserver(aURI, aFrame->GetContent(), aReferenceImage,
+                               kAttributeChanged | kContentAppended |
+                                   kContentInserted | kContentRemoved),
         mFrameReference(aFrame) {}
 
  protected:

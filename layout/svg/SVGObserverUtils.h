@@ -99,15 +99,14 @@ class SVGRenderingObserver : public nsStubMutationObserver {
   virtual ~SVGRenderingObserver() = default;
 
  public:
-  enum Flags : uint32_t {
-    OBSERVE_ATTRIBUTE_CHANGES = 0x01,
-    OBSERVE_CONTENT_CHANGES = 0x02
-  };
   using Element = dom::Element;
 
-  SVGRenderingObserver(uint32_t aFlags = OBSERVE_ATTRIBUTE_CHANGES |
-                                         OBSERVE_CONTENT_CHANGES)
-      : mInObserverSet(false), mFlags(aFlags) {}
+  SVGRenderingObserver(uint32_t aCallbacks = kAttributeChanged |
+                                             kContentAppended |
+                                             kContentInserted |
+                                             kContentRemoved) {
+    SetEnabledCallbacks(aCallbacks);
+  }
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
@@ -167,10 +166,7 @@ class SVGRenderingObserver : public nsStubMutationObserver {
 #endif
 
   // Whether we're in our observed element's observer set at this time.
-  bool mInObserverSet;
-
-  // Flags to control what changes we notify about.
-  uint32_t mFlags;
+  bool mInObserverSet = false;
 };
 
 class SVGObserverUtils {
