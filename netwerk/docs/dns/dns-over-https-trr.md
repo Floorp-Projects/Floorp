@@ -1,6 +1,4 @@
----
-title: DNS over HTTPS (Trusted Recursive Resolver)
----
+# DNS over HTTPS (Trusted Recursive Resolver)
 
 ## Terminology
 

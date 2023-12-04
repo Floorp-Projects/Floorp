@@ -24,9 +24,7 @@ pypi:pyasn1==0.4.8
 # for autodoc
 pypi:pytest==7.2.1
 pypi:python-dateutil==2.8.2
-pypi:python-frontmatter==1.0.0
 pypi:pytz==2022.7.1
-# for autodoc
 pypi:pywatchman==1.4.1
 pypi:s3transfer==0.6.0
 pypi:scandir==1.10.0
