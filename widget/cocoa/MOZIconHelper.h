@@ -26,7 +26,8 @@ class ComputedStyle;
 + (NSImage*)iconImageFromImageContainer:(imgIContainer*)aImage
                                withSize:(NSSize)aSize
                             presContext:(const nsPresContext*)aPresContext
-                          computedStyle:(const mozilla::ComputedStyle*)aComputedStyle
+                          computedStyle:
+                              (const mozilla::ComputedStyle*)aComputedStyle
                             scaleFactor:(CGFloat)aScaleFactor;
 
 @end

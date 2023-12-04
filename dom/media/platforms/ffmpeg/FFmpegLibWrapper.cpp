@@ -115,25 +115,25 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
                       : LinkResult::UnknownFutureLibAVVersion;
   }
 
-#define AV_FUNC_OPTION_SILENT(func, ver)                              \
-  if ((ver)&version) {                                                \
-    if (!((func) = (decltype(func))PR_FindSymbol(                     \
-              ((ver)&AV_FUNC_AVUTIL_MASK) ? mAVUtilLib : mAVCodecLib, \
-              #func))) {                                              \
-    }                                                                 \
-  } else {                                                            \
-    (func) = (decltype(func))nullptr;                                 \
+#define AV_FUNC_OPTION_SILENT(func, ver)                                \
+  if ((ver) & version) {                                                \
+    if (!((func) = (decltype(func))PR_FindSymbol(                       \
+              ((ver) & AV_FUNC_AVUTIL_MASK) ? mAVUtilLib : mAVCodecLib, \
+              #func))) {                                                \
+    }                                                                   \
+  } else {                                                              \
+    (func) = (decltype(func))nullptr;                                   \
   }
 
-#define AV_FUNC_OPTION(func, ver)                           \
-  AV_FUNC_OPTION_SILENT(func, ver)                          \
-  if ((ver)&version && (func) == (decltype(func))nullptr) { \
-    FFMPEGP_LOG("Couldn't load function " #func);           \
+#define AV_FUNC_OPTION(func, ver)                             \
+  AV_FUNC_OPTION_SILENT(func, ver)                            \
+  if ((ver) & version && (func) == (decltype(func))nullptr) { \
+    FFMPEGP_LOG("Couldn't load function " #func);             \
   }
 
 #define AV_FUNC(func, ver)                              \
   AV_FUNC_OPTION(func, ver)                             \
-  if ((ver)&version && !(func)) {                       \
+  if ((ver) & version && !(func)) {                     \
     Unlink();                                           \
     return isFFMpeg ? LinkResult::MissingFFMpegFunction \
                     : LinkResult::MissingLibAVFunction; \

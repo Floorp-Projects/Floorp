@@ -18,8 +18,9 @@ class gfxCoreTextShaper : public gfxFontShaper {
 
   virtual ~gfxCoreTextShaper();
 
-  bool ShapeText(DrawTarget* aDrawTarget, const char16_t* aText, uint32_t aOffset, uint32_t aLength,
-                 Script aScript, nsAtom* aLanguage, bool aVertical, RoundingFlags aRounding,
+  bool ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
+                 uint32_t aOffset, uint32_t aLength, Script aScript,
+                 nsAtom* aLanguage, bool aVertical, RoundingFlags aRounding,
                  gfxShapedText* aShapedText) override;
 
   // clean up static objects that may have been cached
@@ -47,10 +48,11 @@ class gfxCoreTextShaper : public gfxFontShaper {
   CFDictionaryRef mAttributesDictLTR;
   CFDictionaryRef mAttributesDictRTL;
 
-  nsresult SetGlyphsFromRun(gfxShapedText* aShapedText, uint32_t aOffset, uint32_t aLength,
-                            CTRunRef aCTRun);
+  nsresult SetGlyphsFromRun(gfxShapedText* aShapedText, uint32_t aOffset,
+                            uint32_t aLength, CTRunRef aCTRun);
 
-  CTFontRef CreateCTFontWithFeatures(CGFloat aSize, CTFontDescriptorRef aDescriptor);
+  CTFontRef CreateCTFontWithFeatures(CGFloat aSize,
+                                     CTFontDescriptorRef aDescriptor);
 
   CFDictionaryRef CreateAttrDict(bool aRightToLeft);
   CFDictionaryRef CreateAttrDictWithoutDirection();

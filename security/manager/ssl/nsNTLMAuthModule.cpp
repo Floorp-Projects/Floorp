@@ -218,8 +218,8 @@ static void LogToken(const char* name, const void* token, uint32_t tokenLen) {
 //-----------------------------------------------------------------------------
 
 // byte order swapping
-#define SWAP16(x) ((((x)&0xff) << 8) | (((x) >> 8) & 0xff))
-#define SWAP32(x) ((SWAP16((x)&0xffff) << 16) | (SWAP16((x) >> 16)))
+#define SWAP16(x) ((((x) & 0xff) << 8) | (((x) >> 8) & 0xff))
+#define SWAP32(x) ((SWAP16((x) & 0xffff) << 16) | (SWAP16((x) >> 16)))
 
 static void* WriteBytes(void* buf, const void* data, uint32_t dataLen) {
   memcpy(buf, data, dataLen);

@@ -298,8 +298,7 @@ Maybe<double> WebGLContext::GetParameter(const GLenum pname) {
               default:
                 return fb->ColorAttachment0();
             }
-          }
-          ();
+          }();
 
           const auto imageInfo = attachment.GetImageInfo();
           if (!imageInfo) return nullptr;

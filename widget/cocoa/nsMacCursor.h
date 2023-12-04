@@ -47,8 +47,8 @@
     @param      aCursor the name of the image to use for the cursor
     @param      aPoint the point within the cursor to use as the hotspot
     @param      aType the corresponding <code>nsCursor</code> constant
-    @result     an autoreleased instance of <code>nsMacCursor</code> that uses the given image and
-   hotspot
+    @result     an autoreleased instance of <code>nsMacCursor</code> that uses
+   the given image and hotspot
  */
 + (nsMacCursor*)cursorWithImageNamed:(NSString*)aCursorImage
                              hotSpot:(NSPoint)aPoint
@@ -80,7 +80,8 @@
     @result     an autoreleased instance of <code>nsMacCursor</code> that will
                 animate the given cursor frames
  */
-+ (NSCursor*)cocoaCursorWithImageNamed:(NSString*)imageName hotSpot:(NSPoint)aPoint;
++ (NSCursor*)cocoaCursorWithImageNamed:(NSString*)imageName
+                               hotSpot:(NSPoint)aPoint;
 
 /*! @method     isSet
     @abstract   Determines whether this cursor is currently active.

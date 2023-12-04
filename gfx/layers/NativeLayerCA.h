@@ -121,8 +121,9 @@ class NativeLayerRootCA : public NativeLayerRoot {
   enum class WhichRepresentation : uint8_t { ONSCREEN, OFFSCREEN };
 
   // Overridden methods
-  already_AddRefed<NativeLayer> CreateLayer(const gfx::IntSize& aSize, bool aIsOpaque,
-                                            SurfacePoolHandle* aSurfacePoolHandle) override;
+  already_AddRefed<NativeLayer> CreateLayer(
+      const gfx::IntSize& aSize, bool aIsOpaque,
+      SurfacePoolHandle* aSurfacePoolHandle) override;
   void AppendLayer(NativeLayer* aLayer) override;
   void RemoveLayer(NativeLayer* aLayer) override;
   void SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) override;
@@ -131,8 +132,10 @@ class NativeLayerRootCA : public NativeLayerRoot {
   void SetBackingScale(float aBackingScale);
   float BackingScale();
 
-  already_AddRefed<NativeLayer> CreateLayerForExternalTexture(bool aIsOpaque) override;
-  already_AddRefed<NativeLayer> CreateLayerForColor(gfx::DeviceColor aColor) override;
+  already_AddRefed<NativeLayer> CreateLayerForExternalTexture(
+      bool aIsOpaque) override;
+  already_AddRefed<NativeLayer> CreateLayerForColor(
+      gfx::DeviceColor aColor) override;
 
   void SetWindowIsFullscreen(bool aFullscreen);
 
@@ -146,7 +149,8 @@ class NativeLayerRootCA : public NativeLayerRoot {
     explicit Representation(CALayer* aRootCALayer);
     ~Representation();
     void Commit(WhichRepresentation aRepresentation,
-                const nsTArray<RefPtr<NativeLayerCA>>& aSublayers, bool aWindowIsFullscreen);
+                const nsTArray<RefPtr<NativeLayerCA>>& aSublayers,
+                bool aWindowIsFullscreen);
     CALayer* mRootCALayer = nullptr;  // strong
     bool mMutatedLayerStructure = false;
   };
@@ -187,21 +191,23 @@ class RenderSourceNLRS;
 
 class NativeLayerRootSnapshotterCA final : public NativeLayerRootSnapshotter {
  public:
-  static UniquePtr<NativeLayerRootSnapshotterCA> Create(NativeLayerRootCA* aLayerRoot,
-                                                        CALayer* aRootCALayer);
+  static UniquePtr<NativeLayerRootSnapshotterCA> Create(
+      NativeLayerRootCA* aLayerRoot, CALayer* aRootCALayer);
   virtual ~NativeLayerRootSnapshotterCA();
 
-  bool ReadbackPixels(const gfx::IntSize& aReadbackSize, gfx::SurfaceFormat aReadbackFormat,
+  bool ReadbackPixels(const gfx::IntSize& aReadbackSize,
+                      gfx::SurfaceFormat aReadbackFormat,
                       const Range<uint8_t>& aReadbackBuffer) override;
   already_AddRefed<profiler_screenshots::RenderSource> GetWindowContents(
       const gfx::IntSize& aWindowSize) override;
   already_AddRefed<profiler_screenshots::DownscaleTarget> CreateDownscaleTarget(
       const gfx::IntSize& aSize) override;
-  already_AddRefed<profiler_screenshots::AsyncReadbackBuffer> CreateAsyncReadbackBuffer(
-      const gfx::IntSize& aSize) override;
+  already_AddRefed<profiler_screenshots::AsyncReadbackBuffer>
+  CreateAsyncReadbackBuffer(const gfx::IntSize& aSize) override;
 
  protected:
-  NativeLayerRootSnapshotterCA(NativeLayerRootCA* aLayerRoot, RefPtr<gl::GLContext>&& aGL,
+  NativeLayerRootSnapshotterCA(NativeLayerRootCA* aLayerRoot,
+                               RefPtr<gl::GLContext>&& aGL,
                                CALayer* aRootCALayer);
   void UpdateSnapshot(const gfx::IntSize& aSize);
 
@@ -236,9 +242,9 @@ class NativeLayerCA : public NativeLayer {
   gfx::Matrix4x4 GetTransform() override;
   gfx::IntRect GetRect() override;
   void SetSamplingFilter(gfx::SamplingFilter aSamplingFilter) override;
-  RefPtr<gfx::DrawTarget> NextSurfaceAsDrawTarget(const gfx::IntRect& aDisplayRect,
-                                                  const gfx::IntRegion& aUpdateRegion,
-                                                  gfx::BackendType aBackendType) override;
+  RefPtr<gfx::DrawTarget> NextSurfaceAsDrawTarget(
+      const gfx::IntRect& aDisplayRect, const gfx::IntRegion& aUpdateRegion,
+      gfx::BackendType aBackendType) override;
   Maybe<GLuint> NextSurfaceAsFramebuffer(const gfx::IntRect& aDisplayRect,
                                          const gfx::IntRegion& aUpdateRegion,
                                          bool aNeedsDepth) override;
@@ -260,7 +266,8 @@ class NativeLayerCA : public NativeLayer {
  protected:
   friend class NativeLayerRootCA;
 
-  NativeLayerCA(const gfx::IntSize& aSize, bool aIsOpaque, SurfacePoolHandleCA* aSurfacePoolHandle);
+  NativeLayerCA(const gfx::IntSize& aSize, bool aIsOpaque,
+                SurfacePoolHandleCA* aSurfacePoolHandle);
   explicit NativeLayerCA(bool aIsOpaque);
   explicit NativeLayerCA(gfx::DeviceColor aColor);
   ~NativeLayerCA() override;
@@ -303,7 +310,8 @@ class NativeLayerCA : public NativeLayer {
   // aCopyFn: Fn(CFTypeRefPtr<IOSurfaceRef> aValidSourceIOSurface,
   //             const gfx::IntRegion& aCopyRegion) -> void
   template <typename F>
-  void HandlePartialUpdate(const MutexAutoLock& aProofOfLock, const gfx::IntRect& aDisplayRect,
+  void HandlePartialUpdate(const MutexAutoLock& aProofOfLock,
+                           const gfx::IntRect& aDisplayRect,
                            const gfx::IntRegion& aUpdateRegion, F&& aCopyFn);
 
   struct SurfaceWithInvalidRegion {
@@ -316,7 +324,8 @@ class NativeLayerCA : public NativeLayer {
     uint32_t mCheckCount;  // The number of calls to IOSurfaceIsInUse
   };
 
-  Maybe<SurfaceWithInvalidRegion> GetUnusedSurfaceAndCleanUp(const MutexAutoLock& aProofOfLock);
+  Maybe<SurfaceWithInvalidRegion> GetUnusedSurfaceAndCleanUp(
+      const MutexAutoLock& aProofOfLock);
 
   bool IsVideo();
   bool IsVideoAndLocked(const MutexAutoLock& aProofOfLock);
@@ -328,8 +337,9 @@ class NativeLayerCA : public NativeLayer {
   // If set, the CGRect has the scaled position of the clip relative to the
   // surface origin and the scaled size of the clip rect.
   static Maybe<CGRect> CalculateClipGeometry(
-      const gfx::IntSize& aSize, const gfx::IntPoint& aPosition, const gfx::Matrix4x4& aTransform,
-      const gfx::IntRect& aDisplayRect, const Maybe<gfx::IntRect>& aClipRect, float aBackingScale);
+      const gfx::IntSize& aSize, const gfx::IntPoint& aPosition,
+      const gfx::Matrix4x4& aTransform, const gfx::IntRect& aDisplayRect,
+      const Maybe<gfx::IntRect>& aClipRect, float aBackingScale);
 
   // Wraps one CALayer representation of this NativeLayer.
   struct Representation {
@@ -349,13 +359,14 @@ class NativeLayerCA : public NativeLayer {
     // a partial update, the return value will indicate if all the needed
     // changes were able to be applied under these restrictions. A false return
     // value indicates an All update is necessary.
-    bool ApplyChanges(UpdateType aUpdate, const gfx::IntSize& aSize, bool aIsOpaque,
-                      const gfx::IntPoint& aPosition, const gfx::Matrix4x4& aTransform,
-                      const gfx::IntRect& aDisplayRect, const Maybe<gfx::IntRect>& aClipRect,
-                      float aBackingScale, bool aSurfaceIsFlipped,
-                      gfx::SamplingFilter aSamplingFilter, bool aSpecializeVideo,
-                      CFTypeRefPtr<IOSurfaceRef> aFrontSurface, CFTypeRefPtr<CGColorRef> aColor,
-                      bool aIsDRM, bool aIsVideo);
+    bool ApplyChanges(
+        UpdateType aUpdate, const gfx::IntSize& aSize, bool aIsOpaque,
+        const gfx::IntPoint& aPosition, const gfx::Matrix4x4& aTransform,
+        const gfx::IntRect& aDisplayRect, const Maybe<gfx::IntRect>& aClipRect,
+        float aBackingScale, bool aSurfaceIsFlipped,
+        gfx::SamplingFilter aSamplingFilter, bool aSpecializeVideo,
+        CFTypeRefPtr<IOSurfaceRef> aFrontSurface,
+        CFTypeRefPtr<CGColorRef> aColor, bool aIsDRM, bool aIsVideo);
 
     // Return whether any aspects of this layer representation have been mutated
     // since the last call to ApplyChanges, i.e. whether ApplyChanges needs to

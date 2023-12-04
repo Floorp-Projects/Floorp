@@ -156,11 +156,11 @@ inline bool HasRTLChars(mozilla::Span<const char16_t> aBuffer) {
   (((bo) >> 8) & 0x0000000F) /* 4 bits for NUMERAL */
 
 #define SET_BIDI_OPTION_DIRECTION(bo, dir) \
-  { (bo) = ((bo)&0xFFFFFFF0) | (((dir)&0x0000000F) << 0); }
+  { (bo) = ((bo) & 0xFFFFFFF0) | (((dir) & 0x0000000F) << 0); }
 #define SET_BIDI_OPTION_TEXTTYPE(bo, tt) \
-  { (bo) = ((bo)&0xFFFFFF0F) | (((tt)&0x0000000F) << 4); }
+  { (bo) = ((bo) & 0xFFFFFF0F) | (((tt) & 0x0000000F) << 4); }
 #define SET_BIDI_OPTION_NUMERAL(bo, num) \
-  { (bo) = ((bo)&0xFFFFF0FF) | (((num)&0x0000000F) << 8); }
+  { (bo) = ((bo) & 0xFFFFF0FF) | (((num) & 0x0000000F) << 8); }
 
 /* Constants related to the position of numerics in the codepage */
 #define START_HINDI_DIGITS 0x0660

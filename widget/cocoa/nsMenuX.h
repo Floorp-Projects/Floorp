@@ -47,16 +47,18 @@ class nsMenuXObserver {
   virtual void OnMenuDidOpen(mozilla::dom::Element* aPopupElement) = 0;
 
   // Called before a menu item is activated.
-  virtual void OnMenuWillActivateItem(mozilla::dom::Element* aPopupElement,
-                                      mozilla::dom::Element* aMenuItemElement) = 0;
+  virtual void OnMenuWillActivateItem(
+      mozilla::dom::Element* aPopupElement,
+      mozilla::dom::Element* aMenuItemElement) = 0;
 
   // Called when a menu in this menu subtree closed, after popuphidden.
   // No strong reference is held to the observer during the call.
   virtual void OnMenuClosed(mozilla::dom::Element* aPopupElement) = 0;
 };
 
-// Once instantiated, this object lives until its DOM node or its parent window is destroyed.
-// Do not hold references to this, they can become invalid any time the DOM node can be destroyed.
+// Once instantiated, this object lives until its DOM node or its parent window
+// is destroyed. Do not hold references to this, they can become invalid any
+// time the DOM node can be destroyed.
 class nsMenuX final : public nsMenuParentX,
                       public nsChangeObserver,
                       public nsMenuItemIconX::Listener,
@@ -65,7 +67,8 @@ class nsMenuX final : public nsMenuParentX,
   using Observer = nsMenuXObserver;
 
   // aParent is optional.
-  nsMenuX(nsMenuParentX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aContent);
+  nsMenuX(nsMenuParentX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner,
+          nsIContent* aContent);
 
   NS_INLINE_DECL_REFCOUNTING(nsMenuX)
 
@@ -79,7 +82,8 @@ class nsMenuX final : public nsMenuParentX,
   // nsMenuItemIconX::Listener
   void IconUpdated() override;
 
-  // nsMenuXObserver, to forward notifications from our children to our observer.
+  // nsMenuXObserver, to forward notifications from our children to our
+  // observer.
   void OnMenuWillOpen(mozilla::dom::Element* aPopupElement) override;
   void OnMenuDidOpen(mozilla::dom::Element* aPopupElement) override;
   void OnMenuWillActivateItem(mozilla::dom::Element* aPopupElement,
@@ -88,14 +92,16 @@ class nsMenuX final : public nsMenuParentX,
 
   bool IsVisible() const { return mVisible; }
 
-  // Unregisters nsMenuX from the nsMenuGroupOwner, and nulls out the group owner pointer, on this
-  // nsMenuX and also all nested nsMenuX and nsMenuItemX objects.
-  // This is needed because nsMenuX is reference-counted and can outlive its owner, and the menu
-  // group owner asserts that everything has been unregistered when it is destroyed.
+  // Unregisters nsMenuX from the nsMenuGroupOwner, and nulls out the group
+  // owner pointer, on this nsMenuX and also all nested nsMenuX and nsMenuItemX
+  // objects. This is needed because nsMenuX is reference-counted and can
+  // outlive its owner, and the menu group owner asserts that everything has
+  // been unregistered when it is destroyed.
   void DetachFromGroupOwnerRecursive();
 
   // Nulls out our reference to the parent.
-  // This is needed because nsMenuX is reference-counted and can outlive its parent.
+  // This is needed because nsMenuX is reference-counted and can outlive its
+  // parent.
   void DetachFromParent() { mParent = nullptr; }
 
   mozilla::Maybe<MenuChild> GetItemAt(uint32_t aPos);
@@ -104,45 +110,55 @@ class nsMenuX final : public nsMenuParentX,
   mozilla::Maybe<MenuChild> GetVisibleItemAt(uint32_t aPos);
   nsresult GetVisibleItemCount(uint32_t& aCount);
 
-  mozilla::Maybe<MenuChild> GetItemForElement(mozilla::dom::Element* aMenuChildElement);
+  mozilla::Maybe<MenuChild> GetItemForElement(
+      mozilla::dom::Element* aMenuChildElement);
 
-  // Asynchronously runs the command event on aItem, after the root menu has closed.
-  void ActivateItemAfterClosing(RefPtr<nsMenuItemX>&& aItem, NSEventModifierFlags aModifiers,
+  // Asynchronously runs the command event on aItem, after the root menu has
+  // closed.
+  void ActivateItemAfterClosing(RefPtr<nsMenuItemX>&& aItem,
+                                NSEventModifierFlags aModifiers,
                                 int16_t aButton);
 
   bool IsOpenForGecko() const { return mIsOpenForGecko; }
 
-  // Fires the popupshowing event and returns whether the handler allows the popup to open.
-  // When calling this method, the caller must hold a strong reference to this object, because other
-  // references to this object can be dropped during the handling of the DOM event.
+  // Fires the popupshowing event and returns whether the handler allows the
+  // popup to open. When calling this method, the caller must hold a strong
+  // reference to this object, because other references to this object can be
+  // dropped during the handling of the DOM event.
   MOZ_CAN_RUN_SCRIPT bool OnOpen();
 
-  void PopupShowingEventWasSentAndApprovedExternally() { DidFirePopupShowing(); }
+  void PopupShowingEventWasSentAndApprovedExternally() {
+    DidFirePopupShowing();
+  }
 
   // Called from the menu delegate during menuWillOpen, or to simulate opening.
   // Ignored if the menu is already considered open.
-  // When calling this method, the caller must hold a strong reference to this object, because other
-  // references to this object can be dropped during the handling of the DOM event.
+  // When calling this method, the caller must hold a strong reference to this
+  // object, because other references to this object can be dropped during the
+  // handling of the DOM event.
   // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void MenuOpened();
 
   // Called from the menu delegate during menuDidClose, or to simulate closing.
   // Ignored if the menu is already considered closed.
-  // When calling this method, the caller must hold a strong reference to this object, because other
-  // references to this object can be dropped during the handling of the DOM event.
+  // When calling this method, the caller must hold a strong reference to this
+  // object, because other references to this object can be dropped during the
+  // handling of the DOM event.
   void MenuClosed();
 
-  // Close the menu if it's open, and flush any pending popuphiding / popuphidden events.
+  // Close the menu if it's open, and flush any pending popuphiding /
+  // popuphidden events.
   bool Close();
 
   // Called from the menu delegate during menu:willHighlightItem:.
   // If called with Nothing(), it means that no item is highlighted.
-  // The index only accounts for visible items, i.e. items for which there exists an NSMenuItem* in
-  // mNativeMenu.
-  void OnHighlightedItemChanged(const mozilla::Maybe<uint32_t>& aNewHighlightedIndex);
+  // The index only accounts for visible items, i.e. items for which there
+  // exists an NSMenuItem* in mNativeMenu.
+  void OnHighlightedItemChanged(
+      const mozilla::Maybe<uint32_t>& aNewHighlightedIndex);
 
-  // Called from the menu delegate before an item anywhere in this menu is activated.
-  // Called after MenuClosed().
+  // Called from the menu delegate before an item anywhere in this menu is
+  // activated. Called after MenuClosed().
   void OnWillActivateItem(NSMenuItem* aItem);
 
   void SetRebuild(bool aMenuEvent);
@@ -151,11 +167,14 @@ class nsMenuX final : public nsMenuParentX,
   NSMenuItem* NativeNSMenuItem() { return mNativeMenuItem; }
   GeckoNSMenu* NativeNSMenu() { return mNativeMenu; }
 
-  void SetIconListener(nsMenuItemIconX::Listener* aListener) { mIconListener = aListener; }
+  void SetIconListener(nsMenuItemIconX::Listener* aListener) {
+    mIconListener = aListener;
+  }
   void ClearIconListener() { mIconListener = nullptr; }
 
   // nsMenuParentX
-  void MenuChildChangedVisibility(const MenuChild& aChild, bool aIsVisible) override;
+  void MenuChildChangedVisibility(const MenuChild& aChild,
+                                  bool aIsVisible) override;
 
   void Dump(uint32_t aIndent) const;
 
@@ -188,40 +207,43 @@ class nsMenuX final : public nsMenuParentX,
   GeckoNSMenu* CreateMenuWithGeckoString(nsString& aMenuTitle);
   void DidFirePopupShowing();
 
-  // Find the index at which aChild needs to be inserted into mMenuChildren such that mMenuChildren
-  // remains in correct content order, i.e. the order in mMenuChildren is the same as the order of
-  // the DOM children of our <menupopup>.
+  // Find the index at which aChild needs to be inserted into mMenuChildren such
+  // that mMenuChildren remains in correct content order, i.e. the order in
+  // mMenuChildren is the same as the order of the DOM children of our
+  // <menupopup>.
   size_t FindInsertionIndex(const MenuChild& aChild);
 
-  // Calculates the index at which aChild's NSMenuItem should be inserted into our NSMenu.
-  // The order of NSMenuItems in the NSMenu is the same as the order of menu children in
-  // mMenuChildren; the only difference is that mMenuChildren contains both visible and invisible
-  // children, and the NSMenu only contains visible items. So the insertion index is equal to the
-  // number of visible previous siblings of aChild in mMenuChildren.
+  // Calculates the index at which aChild's NSMenuItem should be inserted into
+  // our NSMenu. The order of NSMenuItems in the NSMenu is the same as the order
+  // of menu children in mMenuChildren; the only difference is that
+  // mMenuChildren contains both visible and invisible children, and the NSMenu
+  // only contains visible items. So the insertion index is equal to the number
+  // of visible previous siblings of aChild in mMenuChildren.
   NSInteger CalculateNativeInsertionPoint(const MenuChild& aChild);
 
   // Fires the popupshown event.
   MOZ_CAN_RUN_SCRIPT void MenuOpenedAsync();
 
-  // Called from mPendingAsyncMenuCloseRunnable asynchronously after MenuClosed(), so that it runs
-  // after any potential menuItemHit calls for clicked menu items.
-  // Fires popuphiding and popuphidden events.
-  // When calling this method, the caller must hold a strong reference to this object, because other
-  // references to this object can be dropped during the handling of the DOM event.
+  // Called from mPendingAsyncMenuCloseRunnable asynchronously after
+  // MenuClosed(), so that it runs after any potential menuItemHit calls for
+  // clicked menu items. Fires popuphiding and popuphidden events. When calling
+  // this method, the caller must hold a strong reference to this object,
+  // because other references to this object can be dropped during the handling
+  // of the DOM event.
   MOZ_CAN_RUN_SCRIPT void MenuClosedAsync();
 
-  // If mPendingAsyncMenuOpenRunnable is non-null, call MenuOpenedAsync() to send out the pending
-  // popupshown event.
+  // If mPendingAsyncMenuOpenRunnable is non-null, call MenuOpenedAsync() to
+  // send out the pending popupshown event.
   // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void FlushMenuOpenedRunnable();
 
-  // If mPendingAsyncMenuCloseRunnable is non-null, call MenuClosedAsync() to send out pending
-  // popuphiding/popuphidden events.
+  // If mPendingAsyncMenuCloseRunnable is non-null, call MenuClosedAsync() to
+  // send out pending popuphiding/popuphidden events.
   // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void FlushMenuClosedRunnable();
 
-  // Make sure the NSMenu contains at least one item, even if mVisibleItemsCount is zero.
-  // Otherwise it won't open.
+  // Make sure the NSMenu contains at least one item, even if mVisibleItemsCount
+  // is zero. Otherwise it won't open.
   void InsertPlaceholderIfNeeded();
   // Remove the placeholder before adding an item to mNativeNSMenu.
   void RemovePlaceholderIfPresent();
@@ -244,9 +266,9 @@ class nsMenuX final : public nsMenuParentX,
   RefPtr<mozilla::CancelableRunnable> mPendingAsyncMenuOpenRunnable;
 
   // Non-null between a call to MenuClosed() and MenuClosedAsync().
-  // This is asynchronous so that, if a menu item is clicked, we can fire popuphiding *after* we
-  // execute the menu item command. The macOS menu system calls menuWillClose *before* it calls
-  // menuItemHit.
+  // This is asynchronous so that, if a menu item is clicked, we can fire
+  // popuphiding *after* we execute the menu item command. The macOS menu system
+  // calls menuWillClose *before* it calls menuItemHit.
   RefPtr<mozilla::CancelableRunnable> mPendingAsyncMenuCloseRunnable;
 
   struct PendingCommandEvent {
@@ -264,17 +286,20 @@ class nsMenuX final : public nsMenuParentX,
   // nsMenuX objects should always have a valid native menu item.
   NSMenuItem* mNativeMenuItem = nil;  // [strong]
 
-  // Nothing() if no item is highlighted. The index only accounts for visible items.
+  // Nothing() if no item is highlighted. The index only accounts for visible
+  // items.
   mozilla::Maybe<uint32_t> mHighlightedItemIndex;
 
   bool mIsEnabled = true;
   bool mNeedsRebuild = true;
 
   // Whether the native NSMenu is considered open.
-  // Also affected by MenuOpened() / MenuClosed() calls for simulated opening / closing.
+  // Also affected by MenuOpened() / MenuClosed() calls for simulated opening /
+  // closing.
   bool mIsOpen = false;
 
-  // Whether the popup is open from Gecko's perspective, based on popupshowing / popuphiding events.
+  // Whether the popup is open from Gecko's perspective, based on popupshowing /
+  // popuphiding events.
   bool mIsOpenForGecko = false;
 
   bool mVisible = true;

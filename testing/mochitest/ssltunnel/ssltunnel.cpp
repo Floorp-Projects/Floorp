@@ -38,8 +38,8 @@ using namespace mozilla::psm;
 using std::string;
 using std::vector;
 
-#define IS_DELIM(m, c) ((m)[(c) >> 3] & (1 << ((c)&7)))
-#define SET_DELIM(m, c) ((m)[(c) >> 3] |= (1 << ((c)&7)))
+#define IS_DELIM(m, c) ((m)[(c) >> 3] & (1 << ((c) & 7)))
+#define SET_DELIM(m, c) ((m)[(c) >> 3] |= (1 << ((c) & 7)))
 #define DELIM_TABLE_SIZE 32
 
 // You can set the level of logging by env var SSLTUNNEL_LOG_LEVEL=n, where n

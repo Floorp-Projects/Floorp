@@ -17,12 +17,14 @@ enum MPRemoteCommandHandlerStatus : long;
 namespace mozilla {
 namespace widget {
 
-typedef MPRemoteCommandHandlerStatus (^MediaCenterEventHandler)(MPRemoteCommandEvent* event);
+typedef MPRemoteCommandHandlerStatus (^MediaCenterEventHandler)(
+    MPRemoteCommandEvent* event);
 
 class MediaHardwareKeysEventSourceMacMediaCenter final
     : public mozilla::dom::MediaControlKeySource {
  public:
-  NS_INLINE_DECL_REFCOUNTING(MediaHardwareKeysEventSourceMacMediaCenter, override)
+  NS_INLINE_DECL_REFCOUNTING(MediaHardwareKeysEventSourceMacMediaCenter,
+                             override)
   MediaHardwareKeysEventSourceMacMediaCenter();
 
   MediaCenterEventHandler CreatePlayPauseHandler();

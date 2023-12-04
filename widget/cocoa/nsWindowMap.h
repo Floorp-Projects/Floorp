@@ -22,7 +22,8 @@
 
 @interface WindowDataMap : NSObject {
  @private
-  NSMutableDictionary* mWindowMap;  // dict of TopLevelWindowData keyed by address of NSWindow
+  NSMutableDictionary*
+      mWindowMap;  // dict of TopLevelWindowData keyed by address of NSWindow
 }
 
 + (WindowDataMap*)sharedWindowDataMap;

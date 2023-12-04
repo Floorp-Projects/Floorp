@@ -22,7 +22,7 @@ namespace mozilla {
  * frequency per second.  Therefore we need to multiply QPC value by 1000 to
  * have the same units to allow simple arithmentic with both QPC and GTC.
  */
-#define ms2mt(x) ((x)*mozilla::GetQueryPerformanceFrequencyPerSec())
+#define ms2mt(x) ((x) * mozilla::GetQueryPerformanceFrequencyPerSec())
 #define mt2ms(x) ((x) / mozilla::GetQueryPerformanceFrequencyPerSec())
 #define mt2ms_f(x) (double(x) / mozilla::GetQueryPerformanceFrequencyPerSec())
 

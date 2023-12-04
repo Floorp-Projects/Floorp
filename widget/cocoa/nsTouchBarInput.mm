@@ -102,7 +102,7 @@
       [self setColor:[NSColor
                          colorWithDisplayP3Red:((aColor >> 16) & 0xFF) / 255.0
                                          green:((aColor >> 8) & 0xFF) / 255.0
-                                          blue:((aColor)&0xFF) / 255.0
+                                          blue:((aColor) & 0xFF) / 255.0
                                          alpha:1.0]];
     }
     if (aChildren) {

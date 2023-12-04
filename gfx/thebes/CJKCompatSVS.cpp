@@ -2,10 +2,10 @@
 
 #include <stdint.h>
 
-#define U16(v) (((v) >> 8) & 0xFF), ((v)&0xFF)
-#define U24(v) (((v) >> 16) & 0xFF), (((v) >> 8) & 0xFF), ((v)&0xFF)
+#define U16(v) (((v) >> 8) & 0xFF), ((v) & 0xFF)
+#define U24(v) (((v) >> 16) & 0xFF), (((v) >> 8) & 0xFF), ((v) & 0xFF)
 #define U32(v) \
-  (((v) >> 24) & 0xFF), (((v) >> 16) & 0xFF), (((v) >> 8) & 0xFF), ((v)&0xFF)
+  (((v) >> 24) & 0xFF), (((v) >> 16) & 0xFF), (((v) >> 8) & 0xFF), ((v) & 0xFF)
 #define GLYPH(v) U16(v >= 0x2F800 ? (v) - (0x2F800 - 0xFB00) : (v))
 
 // Fallback mappings for CJK Compatibility Ideographs Standardized Variants

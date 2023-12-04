@@ -24,8 +24,8 @@
 #  ifndef R_OK
 #    define R_OK 04
 #  endif
-#  define S_ISDIR(s) (((s)&_S_IFMT) == _S_IFDIR)
-#  define S_ISREG(s) (((s)&_S_IFMT) == _S_IFREG)
+#  define S_ISDIR(s) (((s) & _S_IFMT) == _S_IFDIR)
+#  define S_ISREG(s) (((s) & _S_IFMT) == _S_IFREG)
 
 #  define access _access
 

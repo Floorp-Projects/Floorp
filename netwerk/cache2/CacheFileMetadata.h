@@ -35,7 +35,7 @@ static const uint32_t kCacheEntryIsPinned = 1 << 0;
 // the frecency value to a correct internal representation again.
 // It might not be 100% accurate, but for the purpose it suffice.
 #define FRECENCY2INT(aFrecency) \
-  ((uint32_t)((aFrecency)*CacheObserver::HalfLifeSeconds()))
+  ((uint32_t)((aFrecency) * CacheObserver::HalfLifeSeconds()))
 #define INT2FRECENCY(aInt) \
   ((double)(aInt) / (double)CacheObserver::HalfLifeSeconds())
 

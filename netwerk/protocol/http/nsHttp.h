@@ -189,7 +189,7 @@ extern const nsCString kHttp3Versions[];
 #define NS_HTTP_TRR_FLAGS_FROM_MODE(x) ((static_cast<uint32_t>(x) & 3) << 19)
 
 #define NS_HTTP_TRR_MODE_FROM_FLAGS(x) \
-  (static_cast<nsIRequest::TRRMode>((((x)&NS_HTTP_TRR_MODE_MASK) >> 19) & 3))
+  (static_cast<nsIRequest::TRRMode>((((x) & NS_HTTP_TRR_MODE_MASK) >> 19) & 3))
 
 //-----------------------------------------------------------------------------
 // some default values

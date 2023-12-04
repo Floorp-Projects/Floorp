@@ -119,7 +119,7 @@ static constexpr PowerOfTwo32 BASE_PROFILER_DEFAULT_ENTRIES =
 #  if !defined(GP_PLAT_arm_android)
     MakePowerOfTwo32<16 * 1024 * 1024>();  // 16M entries = 128MiB
 #  else
-    MakePowerOfTwo32<4 * 1024 * 1024>();            // 4M entries = 32MiB
+    MakePowerOfTwo32<4 * 1024 * 1024>();  // 4M entries = 32MiB
 #  endif
 
 // Startup profiling usually need to capture more data, especially on slow

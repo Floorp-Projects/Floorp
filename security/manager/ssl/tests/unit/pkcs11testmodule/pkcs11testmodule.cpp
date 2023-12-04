@@ -514,7 +514,7 @@ CK_RV Test_C_WaitForSlotEvent(CK_FLAGS, CK_SLOT_ID_PTR pSlot, CK_VOID_PTR) {
 #ifdef WIN32
   Sleep(50);  // Sleep takes the duration argument as milliseconds
 #else
-  usleep(50000);    // usleep takes the duration argument as microseconds
+  usleep(50000);  // usleep takes the duration argument as microseconds
 #endif
   *pSlot = 1;
   tokenPresent = !tokenPresent;

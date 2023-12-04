@@ -33,7 +33,7 @@ ssize_t internal_getdelim(char** __restrict lineptr, size_t* __restrict n,
       std::numeric_limits<ssize_t>::max() < std::numeric_limits<size_t>::max()
           ? (size_t)std::numeric_limits<ssize_t>::max() + 1
           : std::numeric_limits<size_t>::max();
-  constexpr size_t n_limit = 2  * ((n_max - 1) / 3);
+  constexpr size_t n_limit = 2 * ((n_max - 1) / 3);
 
   if (!lineptr || !n || !stream) {
     errno = EINVAL;

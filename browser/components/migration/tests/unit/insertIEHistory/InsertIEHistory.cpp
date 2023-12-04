@@ -28,7 +28,8 @@ int main(int argc, char** argv) {
   hr = ieHist->AddUrl(L"http://www.mozilla.org/1", L"Mozilla HTTP Test", 0);
   if (FAILED(hr)) return -3;
 
-  hr = ieHist->AddUrl(L"https://www.mozilla.org/2", L"Mozilla HTTPS Test 🦊", 0);
+  hr =
+      ieHist->AddUrl(L"https://www.mozilla.org/2", L"Mozilla HTTPS Test 🦊", 0);
   if (FAILED(hr)) return -4;
 
   CoUninitialize();
