@@ -5400,7 +5400,7 @@ var XULBrowserWindow = {
       }
     }
 
-    if (TranslationsParent.isRestrictedPage(gBrowser.currentURI.scheme)) {
+    if (TranslationsParent.isRestrictedPage(gBrowser)) {
       this._menuItemForTranslations.setAttribute("disabled", "true");
     } else {
       this._menuItemForTranslations.removeAttribute("disabled");
