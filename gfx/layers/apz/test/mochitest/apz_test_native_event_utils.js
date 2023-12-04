@@ -1915,8 +1915,12 @@ async function closeContextMenu() {
 // generate a smooth scroll animation using an input event. The smooth
 // scroll animation is slowed down so the test can perform other actions
 // while it's still in progress.
-function getSmoothScrollPrefs(aInputType) {
+function getSmoothScrollPrefs(aInputType, aMsdPhysics) {
   let result = [["apz.test.logging_enabled", true]];
+  // Some callers just want the default and don't pass in aMsdPhysics.
+  if (aMsdPhysics !== undefined) {
+    result.push(["general.smoothScroll.msdPhysics.enabled", aMsdPhysics]);
+  }
   if (aInputType == "wheel") {
     // We want to test real wheel events rather than pan events.
     result.push(["apz.test.mac.synth_wheel_input", true]);
@@ -1952,7 +1956,11 @@ function buildRelativeScrollSmoothnessVariants(aInputType, aScrollMethods) {
   for (let scrollMethod of aScrollMethods) {
     subtests.push({
       file: `helper_relative_scroll_smoothness.html?input-type=${aInputType}&scroll-method=${scrollMethod}`,
-      prefs: getSmoothScrollPrefs(aInputType)
+      prefs: getSmoothScrollPrefs(aInputType, /* Bezier physics */ false)
+    });
+    subtests.push({
+      file: `helper_relative_scroll_smoothness.html?input-type=${aInputType}&scroll-method=${scrollMethod}`,
+      prefs: getSmoothScrollPrefs(aInputType, /* MSD physics */ true),
     });
   }
   return subtests;
