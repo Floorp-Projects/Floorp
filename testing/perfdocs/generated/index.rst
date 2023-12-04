@@ -8,6 +8,7 @@ Performance Testing
   :glob:
 
   DAMP
+  IndexedDB
   awsy
   fxrecord
   mach-try-perf
@@ -23,6 +24,7 @@ but `mozperftest </testing/perfdocs/mozperftest.html>`_ aims to provide this in 
 For more detailed information about each test suite and project, see their documentation:
 
   * :doc:`DAMP`
+  * :doc:`IndexedDB`
   * :doc:`awsy`
   * :doc:`fxrecord`
   * :doc:`mach-try-perf`

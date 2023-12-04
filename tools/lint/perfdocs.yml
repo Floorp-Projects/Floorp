@@ -9,6 +9,7 @@ perfdocs:
         'testing/talos',
         'testing/performance/fxrecord',
         'testing/performance/mach-try-perf',
+        'dom/indexedDB/test',
     ]
     exclude: []
     extensions: ['rst', 'ini', 'yml']
