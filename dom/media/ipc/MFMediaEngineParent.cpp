@@ -223,6 +223,8 @@ void MFMediaEngineParent::HandleMediaEngineEvent(
       break;
     }
     case MF_MEDIA_ENGINE_EVENT_FORMATCHANGE:
+      // TODO : add callback to notify resizing in bug 1867634.
+      break;
     case MF_MEDIA_ENGINE_EVENT_FIRSTFRAMEREADY: {
       if (mMediaEngine->HasVideo()) {
         EnsureDcompSurfaceHandle();
@@ -594,8 +596,7 @@ void MFMediaEngineParent::EnsureDcompSurfaceHandle() {
   RETURN_VOID_IF_FAILED(mMediaEngine->GetNativeVideoSize(&width, &height));
   if (width != mDisplayWidth || height != mDisplayHeight) {
     // Update stream size before asking for a handle. If we don't update the
-    // size, media engine will create the dcomp surface in a wrong size. If
-    // the size isn't changed, then we don't need to recreate the surface.
+    // size, media engine will create the dcomp surface in a wrong size.
     LOG("Update video size [%lux%lu] -> [%lux%lu] ", mDisplayWidth,
         mDisplayHeight, width, height);
     ENGINE_MARKER_TEXT("MFMediaEngineParent,UpdateVideoSize",
