@@ -118,4 +118,19 @@ add_task(async function migratedFile() {
     webextStorageLocalPrivateId,
     "We should have the default userContextIdInternal.webextStorageLocal private identity"
   );
+
+  // Check that all StringBundle references are replaced by Fluent references.
+
+  equal(
+    cis
+      .getPublicIdentities()
+      .filter(identity => identity.l10nID || identity.accessKey).length,
+    0,
+    "No StringBundle l10nID or accessKey should be set"
+  );
+  equal(
+    cis.getPublicIdentities().filter(identity => identity.l10nId).length,
+    oldFileData.identities.filter(identity => identity.l10nID).length,
+    "All StringBundle references should be replaced by Fluent references"
+  );
 });
