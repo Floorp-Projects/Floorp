@@ -497,7 +497,7 @@ const featureDescriptions = [
     name: "CPU Utilization - All Threads",
     value: "cpuallthreads",
     title:
-      "Record how much CPU has been used between samples by ALL registered thread.",
+      "Record CPU usage of all known threads, even threads which are not being profiled.",
     experimental: true,
   },
   {
