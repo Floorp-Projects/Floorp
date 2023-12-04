@@ -1920,6 +1920,10 @@ function getSmoothScrollPrefs(aInputType, aMsdPhysics) {
   // Some callers just want the default and don't pass in aMsdPhysics.
   if (aMsdPhysics !== undefined) {
     result.push(["general.smoothScroll.msdPhysics.enabled", aMsdPhysics]);
+  } else {
+    aMsdPhysics = SpecialPowers.getBoolPref(
+      "general.smoothScroll.msdPhysics.enabled"
+    );
   }
   if (aInputType == "wheel") {
     // We want to test real wheel events rather than pan events.
@@ -1933,14 +1937,26 @@ function getSmoothScrollPrefs(aInputType, aMsdPhysics) {
   // Use a longer animation duration to avoid the situation that the
   // animation stops accidentally in between each arrow input event.
   // If the situation happens, scroll offsets will not change at the moment.
-  if (aInputType == "wheel") {
+  if (aMsdPhysics) {
+    // Prefs for MSD physics (applicable to any input type).
+    result.push(
+      ...[
+        ["general.smoothScroll.msdPhysics.motionBeginSpringConstant", 20],
+        ["general.smoothScroll.msdPhysics.regularSpringConstant", 20],
+        ["general.smoothScroll.msdPhysics.slowdownMinDeltaRatio", 0.1],
+        ["general.smoothScroll.msdPhysics.slowdownSpringConstant", 20],
+      ]
+    );
+  } else if (aInputType == "wheel") {
+    // Prefs for Bezier physics with wheel input.
     result.push(
       ...[
         ["general.smoothScroll.mouseWheel.durationMaxMS", 1500],
         ["general.smoothScroll.mouseWheel.durationMinMS", 1500],
       ]
     );
-  } /* keyboard input */ else {
+  } else {
+    // Prefs for Bezier physics with keyboard input.
     result.push(
       ...[
         ["general.smoothScroll.lines.durationMaxMS", 1500],
