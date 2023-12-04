@@ -2109,12 +2109,14 @@ describe("TelemetryFeed", () => {
         is_sponsored: false,
         position: pos1,
         recommendation_id: "decaf-c0ff33",
+        tile_id: 1,
       });
       assert.deepEqual(Glean.pocket.impression.record.secondCall.args[0], {
         newtab_visit_id: session_id,
         is_sponsored: true,
         position: pos2,
         recommendation_id: undefined,
+        tile_id: 2,
       });
     });
   });
@@ -2559,6 +2561,7 @@ describe("TelemetryFeed", () => {
         value: {
           card_type: "organic",
           recommendation_id: "decaf-c0ff33",
+          tile_id: 314623757745896,
         },
       });
       instance = new TelemetryFeed();
@@ -2574,6 +2577,7 @@ describe("TelemetryFeed", () => {
         is_sponsored: false,
         position: action_position,
         recommendation_id: "decaf-c0ff33",
+        tile_id: 314623757745896,
       });
     });
     it("instruments a sponsored top stories click", () => {
@@ -2584,6 +2588,7 @@ describe("TelemetryFeed", () => {
         value: {
           card_type: "spoc",
           recommendation_id: undefined,
+          tile_id: 448685088,
         },
       });
       instance = new TelemetryFeed();
@@ -2599,6 +2604,7 @@ describe("TelemetryFeed", () => {
         is_sponsored: true,
         position: action_position,
         recommendation_id: undefined,
+        tile_id: 448685088,
       });
     });
     it("instruments a save of an organic top story", () => {
@@ -2609,6 +2615,7 @@ describe("TelemetryFeed", () => {
         value: {
           card_type: "organic",
           recommendation_id: "decaf-c0ff33",
+          tile_id: 314623757745896,
         },
       });
       instance = new TelemetryFeed();
@@ -2624,6 +2631,7 @@ describe("TelemetryFeed", () => {
         is_sponsored: false,
         position: action_position,
         recommendation_id: "decaf-c0ff33",
+        tile_id: 314623757745896,
       });
     });
     it("instruments a save of a sponsored top story", () => {
@@ -2634,6 +2642,7 @@ describe("TelemetryFeed", () => {
         value: {
           card_type: "spoc",
           recommendation_id: undefined,
+          tile_id: 448685088,
         },
       });
       instance = new TelemetryFeed();
@@ -2649,6 +2658,7 @@ describe("TelemetryFeed", () => {
         is_sponsored: true,
         position: action_position,
         recommendation_id: undefined,
+        tile_id: 448685088,
       });
     });
     it("instruments a save of a sponsored top story, without `value`", () => {
@@ -2670,6 +2680,7 @@ describe("TelemetryFeed", () => {
         is_sponsored: false,
         position: action_position,
         recommendation_id: undefined,
+        tile_id: undefined,
       });
     });
   });
