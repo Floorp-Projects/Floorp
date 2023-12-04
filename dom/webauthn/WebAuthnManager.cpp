@@ -398,7 +398,7 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
   // The residentKey field was added in WebAuthn level 2. It takes precedent
   // over the requireResidentKey field if and only if it is present and it is a
   // member of the ResidentKeyRequirement enum.
-  static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
+  static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 3);
   bool useResidentKeyValue =
       selection.mResidentKey.WasPassed() &&
       (selection.mResidentKey.Value().EqualsLiteral(
@@ -585,7 +585,7 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
         // We ignore unknown transports for forward-compatibility, but this
         // needs to be reviewed if values are added to the
         // AuthenticatorTransport enum.
-        static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
+        static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 3);
         for (const nsAString& str : s.mTransports.Value()) {
           if (str.EqualsLiteral(MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_USB)) {
             transports |= MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_USB;
@@ -598,6 +598,9 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
           } else if (str.EqualsLiteral(
                          MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_INTERNAL)) {
             transports |= MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_INTERNAL;
+          } else if (str.EqualsLiteral(
+                         MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_HYBRID)) {
+            transports |= MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_HYBRID;
           }
         }
         c.transports() = transports;
