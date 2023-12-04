@@ -54,7 +54,6 @@ NS_IMPL_ISUPPORTS(nsNativeTheme, nsITimerCallback, nsINamed)
     if (aAppearance == StyleAppearance::Checkbox ||
         aAppearance == StyleAppearance::Radio ||
         aAppearance == StyleAppearance::ToolbarbuttonDropdown ||
-        aAppearance == StyleAppearance::Treeheadersortarrow ||
         aAppearance == StyleAppearance::ButtonArrowPrevious ||
         aAppearance == StyleAppearance::ButtonArrowNext ||
         aAppearance == StyleAppearance::ButtonArrowUp ||

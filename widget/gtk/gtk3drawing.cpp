@@ -878,17 +878,6 @@ static gint moz_gtk_scale_thumb_paint(cairo_t* cr, GdkRectangle* rect,
   return MOZ_GTK_SUCCESS;
 }
 
-static gint moz_gtk_gripper_paint(cairo_t* cr, GdkRectangle* rect,
-                                  GtkWidgetState* state,
-                                  GtkTextDirection direction) {
-  GtkStyleContext* style =
-      GetStyleContext(MOZ_GTK_GRIPPER, state->image_scale, direction,
-                      GetStateFlagsFromGtkWidgetState(state));
-  gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
-  gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
-  return MOZ_GTK_SUCCESS;
-}
-
 static gint moz_gtk_hpaned_paint(cairo_t* cr, GdkRectangle* rect,
                                  GtkWidgetState* state) {
   GtkStyleContext* style =
@@ -996,42 +985,6 @@ static gint moz_gtk_tree_header_cell_paint(cairo_t* cr,
                                            GtkTextDirection direction) {
   moz_gtk_button_paint(cr, aRect, state, GTK_RELIEF_NORMAL,
                        GetWidget(MOZ_GTK_TREE_HEADER_CELL), direction);
-  return MOZ_GTK_SUCCESS;
-}
-
-static gint moz_gtk_tree_header_sort_arrow_paint(cairo_t* cr,
-                                                 GdkRectangle* rect,
-                                                 GtkWidgetState* state,
-                                                 GtkArrowType arrow_type,
-                                                 GtkTextDirection direction) {
-  GdkRectangle arrow_rect;
-  gdouble arrow_angle;
-  GtkStyleContext* style;
-
-  /* hard code these values */
-  arrow_rect.width = 11;
-  arrow_rect.height = 11;
-  arrow_rect.x = rect->x + (rect->width - arrow_rect.width) / 2;
-  arrow_rect.y = rect->y + (rect->height - arrow_rect.height) / 2;
-  style = GetStyleContext(MOZ_GTK_TREE_HEADER_SORTARROW, state->image_scale,
-                          direction, GetStateFlagsFromGtkWidgetState(state));
-  switch (arrow_type) {
-    case GTK_ARROW_LEFT:
-      arrow_angle = ARROW_LEFT;
-      break;
-    case GTK_ARROW_RIGHT:
-      arrow_angle = ARROW_RIGHT;
-      break;
-    case GTK_ARROW_DOWN:
-      arrow_angle = ARROW_DOWN;
-      break;
-    default:
-      arrow_angle = ARROW_UP;
-      break;
-  }
-  if (arrow_type != GTK_ARROW_NONE)
-    gtk_render_arrow(style, cr, arrow_angle, arrow_rect.x, arrow_rect.y,
-                     arrow_rect.width);
   return MOZ_GTK_SUCCESS;
 }
 
@@ -1181,57 +1134,6 @@ static gint moz_gtk_arrow_paint(cairo_t* cr, GdkRectangle* rect,
       MOZ_GTK_BUTTON_ARROW, state->image_scale, direction, state_flags);
   gtk_render_arrow(style, cr, arrow_angle, arrow_rect.x, arrow_rect.y,
                    arrow_rect.width);
-  return MOZ_GTK_SUCCESS;
-}
-
-static gint moz_gtk_toolbar_paint(cairo_t* cr, GdkRectangle* rect,
-                                  GtkWidgetState* state,
-                                  GtkTextDirection direction) {
-  GtkStyleContext* style =
-      GetStyleContext(MOZ_GTK_TOOLBAR, state->image_scale, direction);
-  gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
-  gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
-  return MOZ_GTK_SUCCESS;
-}
-
-/* See _gtk_toolbar_paint_space_line() for reference.
- */
-static gint moz_gtk_toolbar_separator_paint(cairo_t* cr, GdkRectangle* rect,
-                                            GtkWidgetState* state,
-                                            GtkTextDirection direction) {
-  gint separator_width;
-  gint paint_width;
-  gboolean wide_separators;
-
-  /* Defined as constants in GTK+ 2.10.14 */
-  const double start_fraction = 0.2;
-  const double end_fraction = 0.8;
-
-  GtkStyleContext* style = GetStyleContext(MOZ_GTK_TOOLBAR, state->image_scale);
-  gtk_style_context_get_style(style, "wide-separators", &wide_separators,
-                              "separator-width", &separator_width, NULL);
-
-  style =
-      GetStyleContext(MOZ_GTK_TOOLBAR_SEPARATOR, state->image_scale, direction);
-  if (wide_separators) {
-    if (separator_width > rect->width) separator_width = rect->width;
-
-    gtk_render_frame(style, cr, rect->x + (rect->width - separator_width) / 2,
-                     rect->y + rect->height * start_fraction, separator_width,
-                     rect->height * (end_fraction - start_fraction));
-  } else {
-    GtkBorder padding;
-    gtk_style_context_get_padding(style, gtk_style_context_get_state(style),
-                                  &padding);
-
-    paint_width = padding.left;
-    if (paint_width > rect->width) paint_width = rect->width;
-
-    gtk_render_line(style, cr, rect->x + (rect->width - paint_width) / 2,
-                    rect->y + rect->height * start_fraction,
-                    rect->x + (rect->width - paint_width) / 2,
-                    rect->y + rect->height * end_fraction);
-  }
   return MOZ_GTK_SUCCESS;
 }
 
@@ -1723,9 +1625,6 @@ gint moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
       moz_gtk_add_border_padding(style, left, top, right, bottom);
       return MOZ_GTK_SUCCESS;
     }
-    case MOZ_GTK_TREE_HEADER_SORTARROW:
-      w = GetWidget(MOZ_GTK_TREE_HEADER_SORTARROW);
-      break;
     case MOZ_GTK_DROPDOWN: {
       /* We need to account for the arrow on the dropdown, so text
        * doesn't come too close to the arrow, or in some cases spill
@@ -1824,12 +1723,10 @@ gint moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
     case MOZ_GTK_RADIOBUTTON:
     case MOZ_GTK_SCALE_THUMB_HORIZONTAL:
     case MOZ_GTK_SCALE_THUMB_VERTICAL:
-    case MOZ_GTK_GRIPPER:
     case MOZ_GTK_PROGRESS_CHUNK:
     case MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE:
     case MOZ_GTK_PROGRESS_CHUNK_VERTICAL_INDETERMINATE:
     case MOZ_GTK_TREEVIEW_EXPANDER:
-    case MOZ_GTK_TOOLBAR_SEPARATOR:
     case MOZ_GTK_HEADER_BAR:
     case MOZ_GTK_HEADER_BAR_MAXIMIZED:
     case MOZ_GTK_HEADER_BAR_BUTTON_CLOSE:
@@ -1843,7 +1740,6 @@ gint moz_gtk_get_widget_border(WidgetNodeType widget, gint* left, gint* top,
     case MOZ_GTK_WINDOW_DECORATION_SOLID:
     case MOZ_GTK_RESIZER:
     case MOZ_GTK_TOOLBARBUTTON_ARROW:
-    case MOZ_GTK_TOOLBAR:
     case MOZ_GTK_TAB_SCROLLARROW:
       return MOZ_GTK_SUCCESS;
     default:
@@ -1936,22 +1832,6 @@ void moz_gtk_get_arrow_size(WidgetNodeType widgetType, gint* width,
     *width = 0;
     *height = 0;
   }
-}
-
-gint moz_gtk_get_toolbar_separator_width(gint* size) {
-  gboolean wide_separators;
-  gint separator_width;
-  GtkBorder border;
-
-  GtkStyleContext* style = GetStyleContext(MOZ_GTK_TOOLBAR);
-  gtk_style_context_get_style(style, "space-size", size, "wide-separators",
-                              &wide_separators, "separator-width",
-                              &separator_width, NULL);
-  /* Just in case... */
-  gtk_style_context_get_border(style, gtk_style_context_get_state(style),
-                               &border);
-  *size = MAX(*size, (wide_separators ? separator_width : border.left));
-  return MOZ_GTK_SUCCESS;
 }
 
 gint moz_gtk_get_expander_size(gint* size) {
@@ -2232,15 +2112,10 @@ gint moz_gtk_widget_paint(WidgetNodeType widget, cairo_t* cr,
                           direction, GetStateFlagsFromGtkWidgetState(state));
       return moz_gtk_entry_paint(cr, rect, state, style, widget);
     }
-    case MOZ_GTK_GRIPPER:
-      return moz_gtk_gripper_paint(cr, rect, state, direction);
     case MOZ_GTK_TREEVIEW:
       return moz_gtk_treeview_paint(cr, rect, state, direction);
     case MOZ_GTK_TREE_HEADER_CELL:
       return moz_gtk_tree_header_cell_paint(cr, rect, state, flags, direction);
-    case MOZ_GTK_TREE_HEADER_SORTARROW:
-      return moz_gtk_tree_header_sort_arrow_paint(
-          cr, rect, state, (GtkArrowType)flags, direction);
     case MOZ_GTK_TREEVIEW_EXPANDER:
       return moz_gtk_treeview_expander_paint(
           cr, rect, state, (GtkExpanderStyle)flags, direction);
@@ -2256,10 +2131,6 @@ gint moz_gtk_widget_paint(WidgetNodeType widget, cairo_t* cr,
       return moz_gtk_text_view_paint(cr, rect, state, direction);
     case MOZ_GTK_DROPDOWN:
       return moz_gtk_combo_box_paint(cr, rect, state, direction);
-    case MOZ_GTK_TOOLBAR:
-      return moz_gtk_toolbar_paint(cr, rect, state, direction);
-    case MOZ_GTK_TOOLBAR_SEPARATOR:
-      return moz_gtk_toolbar_separator_paint(cr, rect, state, direction);
     case MOZ_GTK_TOOLTIP:
       return moz_gtk_tooltip_paint(cr, rect, state, direction);
     case MOZ_GTK_FRAME:
