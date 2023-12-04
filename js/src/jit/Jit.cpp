@@ -175,7 +175,7 @@ EnterJitStatus js::jit::MaybeEnterJit(JSContext* cx, RunState& state) {
 
   // JITs do not respect the debugger's OnNativeCall hook, so JIT execution is
   // disabled if this hook might need to be called.
-  if (cx->insideDebuggerEvaluationWithOnNativeCallHook) {
+  if (cx->realm()->debuggerObservesNativeCall()) {
     return EnterJitStatus::NotEntered;
   }
 

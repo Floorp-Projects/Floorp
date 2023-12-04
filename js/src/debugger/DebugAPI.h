@@ -305,6 +305,9 @@ class DebugAPI {
   // Whether any Debugger is observing WebAssembly execution in a global.
   static bool debuggerObservesWasm(GlobalObject* global);
 
+  // Whether any Debugger is observing native function call.
+  static bool debuggerObservesNativeCall(GlobalObject* global);
+
   /*
    * Return true if the given global is being observed by at least one
    * Debugger that is tracking allocations.

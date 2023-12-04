@@ -507,7 +507,7 @@ MOZ_ALWAYS_INLINE bool CallJSNativeConstructor(JSContext* cx, Native native,
   MOZ_ASSERT(args.rval().isObject());
   MOZ_ASSERT_IF(!JS_IsNativeFunction(callee, obj_construct) &&
                     !callee->is<BoundFunctionObject>() &&
-                    !cx->insideDebuggerEvaluationWithOnNativeCallHook,
+                    !cx->realm()->debuggerObservesNativeCall(),
                 args.rval() != ObjectValue(*callee));
 
   return true;
@@ -3031,7 +3031,7 @@ bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
       if (!isFunction || !maybeFun->isInterpreted() ||
           (construct && !maybeFun->isConstructor()) ||
           (!construct && maybeFun->isClassConstructor()) ||
-          cx->insideDebuggerEvaluationWithOnNativeCallHook) {
+          cx->realm()->debuggerObservesNativeCall()) {
         if (construct) {
           CallReason reason = op == JSOp::NewContent ? CallReason::CallContent
                                                      : CallReason::Call;

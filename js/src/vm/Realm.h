@@ -365,6 +365,7 @@ class JS::Realm : public JS::shadow::Realm {
     DebuggerObservesAsmJS = 1 << 2,
     DebuggerObservesCoverage = 1 << 3,
     DebuggerObservesWasm = 1 << 4,
+    DebuggerObservesNativeCall = 1 << 5,
   };
   unsigned debugModeBits_ = 0;
   friend class js::AutoRestoreRealmDebugMode;
@@ -706,6 +707,17 @@ class JS::Realm : public JS::shadow::Realm {
   }
   void updateDebuggerObservesWasm() {
     updateDebuggerObservesFlag(DebuggerObservesWasm);
+  }
+
+  // True if this compartment's global is a debuggee of some Debugger
+  // object with a live hook that observes native calls.
+  // (has a onNativeCall function registered)
+  bool debuggerObservesNativeCall() const {
+    static const unsigned Mask = IsDebuggee | DebuggerObservesNativeCall;
+    return (debugModeBits_ & Mask) == Mask;
+  }
+  void updateDebuggerObservesNativeCall() {
+    updateDebuggerObservesFlag(DebuggerObservesNativeCall);
   }
 
   // True if this realm's global is a debuggee of some Debugger object
