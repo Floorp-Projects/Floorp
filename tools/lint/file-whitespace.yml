@@ -67,7 +67,7 @@ file-whitespace:
         - image/test/crashtests
         - image/test/mochitest
         - image/test/reftest
-        - intl/icu_testdata
+        - intl/icu_segmenter_data
         - intl/lwbrk/crashtests
         - intl/uconv/crashtests
         - intl/uconv/tests

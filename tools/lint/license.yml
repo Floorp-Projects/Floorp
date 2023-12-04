@@ -28,7 +28,7 @@ license:
         # might not work with license
         - gradle/wrapper/gradle-wrapper.properties
         # ICU4X data
-        - intl/icu_testdata
+        - intl/icu_segmenter_data
         # Imported code that is dual Apache2 / MIT licensed
         - intl/l10n/rust/l10nregistry-rs
         - intl/l10n/rust/l10nregistry-tests
