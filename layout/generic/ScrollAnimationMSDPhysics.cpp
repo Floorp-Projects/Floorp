@@ -142,10 +142,11 @@ static double ClampVelocityToMaximum(double aVelocity, double aInitialPosition,
 }
 
 ScrollAnimationMSDPhysics::NonOscillatingAxisPhysicsMSDModel::
-NonOscillatingAxisPhysicsMSDModel(double aInitialPosition,
-                                  double aInitialDestination,
-                                  double aInitialVelocity,
-                                  double aSpringConstant, double aDampingRatio)
+    NonOscillatingAxisPhysicsMSDModel(double aInitialPosition,
+                                      double aInitialDestination,
+                                      double aInitialVelocity,
+                                      double aSpringConstant,
+                                      double aDampingRatio)
     : AxisPhysicsMSDModel(
           aInitialPosition, aInitialDestination,
           ClampVelocityToMaximum(aInitialVelocity, aInitialPosition,
