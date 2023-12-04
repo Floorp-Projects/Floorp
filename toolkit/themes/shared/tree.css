@@ -17,6 +17,10 @@ tree {
   color: FieldText;
   appearance: auto;
   -moz-default-appearance: listbox;
+  @media (-moz-platform: linux) {
+    appearance: none;
+    border: 1px solid ThreeDShadow;
+  }
 }
 
 /* ::::: tree rows ::::: */
@@ -121,20 +125,35 @@ treecol,
 .tree-columnpicker-button {
   appearance: auto;
   -moz-default-appearance: treeheadercell;
+  background-color: -moz-ColHeader;
+  color: -moz-ColHeaderText;
   align-items: center;
   justify-content: center;
-  color: -moz-ColHeaderText;
   padding: 0 4px;
   margin: 0;
-}
+  border-inline-start: 1px solid ThreeDLightShadow;
 
-treecol:where(:hover),
-.tree-columnpicker-button:where(:hover) {
-  color: -moz-ColHeaderHoverText;
+  @media (-moz-platform: linux) or ((-moz-platform: windows) and (prefers-color-scheme: dark)) {
+    appearance: none;
+    box-shadow: inset 0 -1px ThreeDLightShadow;
+  }
+
+  &:where(:hover) {
+    background-color: -moz-ColHeaderHover;
+    color: -moz-ColHeaderHoverText;
+  }
+  &:where(:hover:active) {
+    background-color: -moz-ColHeaderActive;
+    color: -moz-ColHeaderActiveText;
+  }
 }
 
 .treecol-text {
   margin: 0 !important;
+}
+
+treecol:where([ordinal="1"]) {
+  border-inline-start: none;
 }
 
 treecol[hideheader="true"] {
@@ -231,44 +250,21 @@ html|input.tree-input {
   z-index: 2147483647;
 }
 
-@media (-moz-platform: windows) {
+@media (-moz-platform: windows) or (-moz-platform: linux) {
   /* ::::: sort direction indicator :::::  */
-
   .treecol-sortdirection {
-    list-style-image: none;
+    list-style-image: url("chrome://global/skin/tree/sort-asc.svg");
     -moz-context-properties: fill;
     fill: currentColor;
-  }
+    visibility: hidden;
 
-  treecol[sortDirection="ascending"]:not([hideheader="true"]) > .treecol-sortdirection {
-    list-style-image: url("chrome://global/skin/tree/sort-asc.svg");
-  }
+    treecol[sortDirection="ascending"]:not([hideheader="true"]) > & {
+      visibility: inherit;
+    }
 
-  treecol[sortDirection="descending"]:not([hideheader="true"]) > .treecol-sortdirection {
-    list-style-image: url("chrome://global/skin/tree/sort-dsc.svg");
-  }
-
-  @media (prefers-color-scheme: dark) {
-    treecol,
-    .tree-columnpicker-button {
-      appearance: none;
-      background-color: ButtonFace;
-      color: ButtonText;
-      border-inline-start: 1px solid ThreeDLightShadow;
-      box-shadow: inset 0 -1px ThreeDLightShadow;
-    }
-    treecol:where([ordinal="1"]) {
-      border-inline-start: none;
-    }
-    treecol:where(:hover),
-    .tree-columnpicker-button:where(:hover) {
-      background-color: -moz-ButtonHoverFace;
-      color: -moz-ButtonHoverText;
-    }
-    treecol:where(:hover:active),
-    .tree-columnpicker-button:where(:hover:active) {
-      background-color: -moz-ButtonActiveFace;
-      color: -moz-ButtonActiveText;
+    treecol[sortDirection="descending"]:not([hideheader="true"]) > & {
+      visibility: inherit;
+      list-style-image: url("chrome://global/skin/tree/sort-dsc.svg");
     }
   }
 }
@@ -281,12 +277,5 @@ html|input.tree-input {
        are selected. */
   treechildren::-moz-tree-row(selected, current, focus) {
     outline: none;
-  }
-}
-
-@media (-moz-platform: linux) {
-  .treecol-sortdirection {
-    appearance: auto;
-    -moz-default-appearance: treeheadersortarrow;
   }
 }

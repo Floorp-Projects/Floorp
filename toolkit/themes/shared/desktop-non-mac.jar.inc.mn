@@ -18,7 +18,10 @@
 
   skin/classic/global/icons/search-textbox.svg             (../../windows/global/icons/search-textbox.svg)
 
-  skin/classic/mozapps/downloads/unknownContentType.css      (../../windows/mozapps/downloads/unknownContentType.css)
-  skin/classic/mozapps/handling/handling.css                 (../../windows/mozapps/handling/handling.css)
+  skin/classic/mozapps/downloads/unknownContentType.css    (../../windows/mozapps/downloads/unknownContentType.css)
+  skin/classic/mozapps/handling/handling.css               (../../windows/mozapps/handling/handling.css)
+
+  skin/classic/global/tree/sort-asc.svg                    (../../windows/global/tree/sort-asc.svg)
+  skin/classic/global/tree/sort-dsc.svg                    (../../windows/global/tree/sort-dsc.svg)
 
 % override chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png       chrome://mozapps/skin/extensions/extensionGeneric.svg

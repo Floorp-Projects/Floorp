@@ -120,8 +120,9 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     ColorPair mAccent;
     ColorPair mSelectedItem;
 
-    nscolor mMozColHeaderText = kBlack;
-    nscolor mMozColHeaderHoverText = kBlack;
+    ColorPair mMozColHeader;
+    ColorPair mMozColHeaderHover;
+    ColorPair mMozColHeaderActive;
 
     ColorPair mTitlebar;
     ColorPair mTitlebarInactive;

@@ -749,11 +749,23 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::MozComboboxtext:
       aColor = mComboBoxText;
       break;
+    case ColorID::MozColheader:
+      aColor = mMozColHeader.mBg;
+      break;
     case ColorID::MozColheadertext:
-      aColor = mMozColHeaderText;
+      aColor = mMozColHeader.mFg;
+      break;
+    case ColorID::MozColheaderhover:
+      aColor = mMozColHeaderHover.mBg;
       break;
     case ColorID::MozColheaderhovertext:
-      aColor = mMozColHeaderHoverText;
+      aColor = mMozColHeaderHover.mFg;
+      break;
+    case ColorID::MozColheaderactive:
+      aColor = mMozColHeaderActive.mBg;
+      break;
+    case ColorID::MozColheaderactivetext:
+      aColor = mMozColHeaderActive.mFg;
       break;
     case ColorID::SpellCheckerUnderline:
     case ColorID::Mark:
@@ -2113,10 +2125,9 @@ void nsLookAndFeel::PerThemeData::Init() {
 
   // Column header colors
   style = GetStyleContext(MOZ_GTK_TREE_HEADER_CELL);
-  gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
-  mMozColHeaderText = GDK_RGBA_TO_NS_RGBA(color);
-  gtk_style_context_get_color(style, GTK_STATE_FLAG_PRELIGHT, &color);
-  mMozColHeaderHoverText = GDK_RGBA_TO_NS_RGBA(color);
+  mMozColHeader = GetColorPair(style, GTK_STATE_FLAG_NORMAL);
+  mMozColHeaderHover = GetColorPair(style, GTK_STATE_FLAG_NORMAL);
+  mMozColHeaderActive = GetColorPair(style, GTK_STATE_FLAG_ACTIVE);
 
   // Compute cell highlight colors
   InitCellHighlightColors();
