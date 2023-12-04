@@ -513,7 +513,7 @@ class nsGridContainerFrame final : public nsContainerFrame,
 
   // The internal implementation for AddImplicitNamedAreas().
   void AddImplicitNamedAreasInternal(LineNameList& aNameList,
-                                     ImplicitNamedAreas* aAreas);
+                                     ImplicitNamedAreas*& aAreas);
 
   /**
    * Cached values to optimize GetMinISize/GetPrefISize.
