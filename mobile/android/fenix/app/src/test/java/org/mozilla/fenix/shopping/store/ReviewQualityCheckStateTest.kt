@@ -10,6 +10,7 @@ import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mozilla.fenix.shopping.ProductAnalysisTestData
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.AnalysisStatus
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.HighlightsInfo
 
 class ReviewQualityCheckStateTest {
@@ -223,5 +224,25 @@ class ReviewQualityCheckStateTest {
 
         assertTrue(analysis.highlightsInfo!!.showMoreButtonVisible)
         assertFalse(analysis.highlightsInfo!!.highlightsFadeVisible)
+    }
+
+    @Test
+    fun `WHEN analysis status has progress THEN normalized progress should match`() {
+        val analysisStatus = AnalysisStatus.Reanalyzing(progress = 61.6f)
+        assertEquals(analysisStatus.normalizedProgress, 0.616f)
+    }
+
+    @Test
+    fun `WHEN no analysis is present with progress THEN normalized progress should match and isReanalyzing is true`() {
+        val analysis = ProductAnalysisTestData.noAnalysisPresent(progress = 61.6f)
+        assertTrue(analysis.isReanalyzing)
+        assertEquals(analysis.normalizedProgress, 0.616f)
+    }
+
+    @Test
+    fun `WHEN no analysis is present with null progress THEN normalized progress should match and isReanalyzing is true`() {
+        val analysis = ProductAnalysisTestData.noAnalysisPresent(progress = null)
+        assertFalse(analysis.isReanalyzing)
+        assertEquals(analysis.normalizedProgress, null)
     }
 }

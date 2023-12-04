@@ -132,6 +132,13 @@ sealed interface ReviewQualityCheckAction : Action {
     object AnalyzeProduct : NetworkAction, UpdateAction, TelemetryAction
 
     /**
+     * Triggered when the analysis status is updated.
+     *
+     * @property progress The progress of the analysis ranging from 0.0-100.0.
+     */
+    data class UpdateAnalysisProgress(val progress: Double) : UpdateAction
+
+    /**
      * Triggered when the user clicks on the recommended product.
      *
      * @property productAid The product's aid.

@@ -244,7 +244,7 @@ class ReviewQualityCheckTelemetryMiddlewareTest {
     @Test
     fun `GIVEN a product review has been updated WHEN restore analysis is false THEN the stale analysis event is recorded`() {
         val productReviewState = ProductAnalysisTestData.analysisPresent(
-            analysisStatus = AnalysisPresent.AnalysisStatus.NEEDS_ANALYSIS,
+            analysisStatus = AnalysisPresent.AnalysisStatus.NeedsAnalysis,
         )
 
         val tested = ReviewQualityCheckStore(
@@ -270,7 +270,7 @@ class ReviewQualityCheckTelemetryMiddlewareTest {
     @Test
     fun `GIVEN a product review has been updated WHEN restore analysis is true THEN the stale analysis event is not recorded`() {
         val productReviewState = ProductAnalysisTestData.analysisPresent(
-            analysisStatus = AnalysisPresent.AnalysisStatus.NEEDS_ANALYSIS,
+            analysisStatus = AnalysisPresent.AnalysisStatus.NeedsAnalysis,
         )
         val tested = ReviewQualityCheckStore(
             initialState = ReviewQualityCheckState.OptedIn(

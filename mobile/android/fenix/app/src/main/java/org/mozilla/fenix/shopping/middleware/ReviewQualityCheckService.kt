@@ -37,9 +37,9 @@ interface ReviewQualityCheckService {
     /**
      * Fetches the status of the product review for the current tab.
      *
-     * @return [AnalysisStatusDto] if the request succeeds, null otherwise.
+     * @return [AnalysisStatusProgressDto] if the request succeeds, null otherwise.
      */
-    suspend fun analysisStatus(): AnalysisStatusDto?
+    suspend fun analysisStatus(): AnalysisStatusProgressDto?
 
     /**
      * Fetches product recommendations related to the product user is browsing in the current tab.
@@ -105,13 +105,18 @@ class DefaultReviewQualityCheckService(
         }
     }
 
-    override suspend fun analysisStatus(): AnalysisStatusDto? = withContext(Dispatchers.Main) {
+    override suspend fun analysisStatus(): AnalysisStatusProgressDto? = withContext(Dispatchers.Main) {
         suspendCoroutine { continuation ->
             browserStore.state.selectedTab?.let { tab ->
                 tab.engineState.engineSession?.requestAnalysisStatus(
                     url = tab.content.url,
                     onResult = {
-                        continuation.resume(it.status.asEnumOrDefault(AnalysisStatusDto.OTHER))
+                        continuation.resume(
+                            AnalysisStatusProgressDto(
+                                status = it.status.asEnumOrDefault(AnalysisStatusDto.OTHER)!!,
+                                progress = it.progress,
+                            ),
+                        )
                     },
                     onException = {
                         logger.error("Error fetching analysis status", it)
@@ -216,3 +221,14 @@ enum class AnalysisStatusDto {
      */
     OTHER,
 }
+
+/**
+ * Class that represents the analysis status response of the product review analysis.
+ *
+ * @property status Enum indicating the current status of the analysis
+ * @property progress Number indicating the progress of the analysis
+ */
+data class AnalysisStatusProgressDto(
+    val status: AnalysisStatusDto,
+    val progress: Double,
+)

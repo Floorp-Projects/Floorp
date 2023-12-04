@@ -159,5 +159,5 @@ class ReviewQualityCheckTelemetryMiddleware : ReviewQualityCheckMiddleware {
     private fun ReviewQualityCheckState.isStaleAnalysis(): Boolean =
         this is ReviewQualityCheckState.OptedIn &&
             this.productReviewState is ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent &&
-            this.productReviewState.analysisStatus == AnalysisStatus.NEEDS_ANALYSIS
+            this.productReviewState.analysisStatus == AnalysisStatus.NeedsAnalysis
 }

@@ -31,6 +31,7 @@ import org.mozilla.fenix.shopping.fake.FakeReviewQualityCheckService
 import org.mozilla.fenix.shopping.fake.FakeReviewQualityCheckVendorsService
 import org.mozilla.fenix.shopping.fake.FakeShoppingExperienceFeature
 import org.mozilla.fenix.shopping.middleware.AnalysisStatusDto
+import org.mozilla.fenix.shopping.middleware.AnalysisStatusProgressDto
 import org.mozilla.fenix.shopping.middleware.NetworkChecker
 import org.mozilla.fenix.shopping.middleware.ReviewQualityCheckNetworkMiddleware
 import org.mozilla.fenix.shopping.middleware.ReviewQualityCheckPreferences
@@ -752,7 +753,7 @@ class ReviewQualityCheckStoreTest {
                     reviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(isEnabled = true),
                     reviewQualityCheckService = FakeReviewQualityCheckService(
                         reanalysis = AnalysisStatusDto.PENDING,
-                        status = null,
+                        statusProgress = { null },
                         productAnalysis = { productAnalysisList[it] },
                     ),
                     networkChecker = FakeNetworkChecker(isConnected = true),
@@ -771,7 +772,7 @@ class ReviewQualityCheckStoreTest {
             val expected = ReviewQualityCheckState.OptedIn(
                 productReviewState = ProductAnalysisTestData.analysisPresent(
                     reviewGrade = ReviewQualityCheckState.Grade.B,
-                    analysisStatus = AnalysisStatus.NEEDS_ANALYSIS,
+                    analysisStatus = AnalysisStatus.NeedsAnalysis,
                 ),
                 productRecommendationsPreference = false,
                 productRecommendationsExposure = true,
@@ -789,7 +790,12 @@ class ReviewQualityCheckStoreTest {
                     reviewQualityCheckService = FakeReviewQualityCheckService(
                         productAnalysis = { ProductAnalysisTestData.productAnalysis() },
                         reanalysis = AnalysisStatusDto.PENDING,
-                        status = AnalysisStatusDto.COMPLETED,
+                        statusProgress = {
+                            AnalysisStatusProgressDto(
+                                status = AnalysisStatusDto.COMPLETED,
+                                progress = 100.0,
+                            )
+                        },
                     ),
                     networkChecker = FakeNetworkChecker(isConnected = true),
                 ),
@@ -823,7 +829,12 @@ class ReviewQualityCheckStoreTest {
                             )
                         },
                         reanalysis = AnalysisStatusDto.PENDING,
-                        status = AnalysisStatusDto.COMPLETED,
+                        statusProgress = {
+                            AnalysisStatusProgressDto(
+                                status = AnalysisStatusDto.COMPLETED,
+                                progress = 100.0,
+                            )
+                        },
                     ),
                     networkChecker = FakeNetworkChecker(isConnected = true),
                 ),
@@ -847,6 +858,26 @@ class ReviewQualityCheckStoreTest {
     @Test
     fun `GIVEN a product analysis WHEN analysis status is in progress or pending THEN state should be updated to reanalysing`() =
         runTest {
+            val statusProgressResponses = listOf(
+                AnalysisStatusProgressDto(
+                    status = AnalysisStatusDto.IN_PROGRESS,
+                    progress = 50.0,
+                ),
+                AnalysisStatusProgressDto(
+                    status = AnalysisStatusDto.IN_PROGRESS,
+                    progress = 61.6,
+                ),
+                AnalysisStatusProgressDto(
+                    status = AnalysisStatusDto.IN_PROGRESS,
+                    progress = 92.52,
+                ),
+                AnalysisStatusProgressDto(
+                    status = AnalysisStatusDto.COMPLETED,
+                    progress = 100.0,
+                ),
+            )
+            var counter = 0
+
             val tested = ReviewQualityCheckStore(
                 middleware = provideReviewQualityCheckMiddleware(
                     reviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(isEnabled = true),
@@ -855,7 +886,9 @@ class ReviewQualityCheckStoreTest {
                             ProductAnalysisTestData.productAnalysis()
                         },
                         reanalysis = AnalysisStatusDto.PENDING,
-                        status = AnalysisStatusDto.IN_PROGRESS,
+                        statusProgress = {
+                            statusProgressResponses[counter].also { counter++ }
+                        },
                     ),
                     networkChecker = FakeNetworkChecker(isConnected = true),
                 ),
@@ -873,18 +906,111 @@ class ReviewQualityCheckStoreTest {
             tested.waitUntilIdle()
             dispatcher.scheduler.advanceUntilIdle()
 
-            val expected = ReviewQualityCheckState.OptedIn(
+            val expectedProgressState1 = ReviewQualityCheckState.OptedIn(
                 productReviewState = ProductAnalysisTestData.analysisPresent(
-                    analysisStatus = AnalysisStatus.REANALYZING,
+                    analysisStatus = AnalysisStatus.Reanalyzing(61.6f),
                 ),
                 productRecommendationsPreference = false,
                 productRecommendationsExposure = true,
                 productVendor = ProductVendor.BEST_BUY,
             )
 
+            val expectedProgressState2 = expectedProgressState1.copy(
+                productReviewState = ProductAnalysisTestData.analysisPresent(
+                    analysisStatus = AnalysisStatus.Reanalyzing(92.52f),
+                ),
+            )
+
             // Since reanalyzing is an intermediate state and the tests completes to get to the final
             // state, this checks if the intermediate state is present in the observed state.
-            assertTrue(observedState.contains(expected))
+            assertTrue(observedState.contains(expectedProgressState1))
+            assertTrue(observedState.contains(expectedProgressState2))
+        }
+
+    @Test
+    fun `GIVEN reanalyse product is clicked WHEN analysis status is in progress or pending THEN state should be updated to reanalysing`() =
+        runTest {
+            val statusProgressResponses = listOf(
+                AnalysisStatusProgressDto(
+                    status = AnalysisStatusDto.OTHER,
+                    progress = 0.0,
+                ),
+                AnalysisStatusProgressDto(
+                    status = AnalysisStatusDto.IN_PROGRESS,
+                    progress = 30.0,
+                ),
+                AnalysisStatusProgressDto(
+                    status = AnalysisStatusDto.IN_PROGRESS,
+                    progress = 61.6,
+                ),
+                AnalysisStatusProgressDto(
+                    status = AnalysisStatusDto.IN_PROGRESS,
+                    progress = 92.52,
+                ),
+                AnalysisStatusProgressDto(
+                    status = AnalysisStatusDto.COMPLETED,
+                    progress = 100.0,
+                ),
+            )
+            var counter = 0
+
+            val tested = ReviewQualityCheckStore(
+                middleware = provideReviewQualityCheckMiddleware(
+                    reviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(isEnabled = true),
+                    reviewQualityCheckService = FakeReviewQualityCheckService(
+                        productAnalysis = {
+                            ProductAnalysisTestData.productAnalysis()
+                        },
+                        reanalysis = AnalysisStatusDto.PENDING,
+                        statusProgress = {
+                            statusProgressResponses[counter].also { counter++ }
+                        },
+                    ),
+                    networkChecker = FakeNetworkChecker(isConnected = true),
+                ),
+            )
+
+            val observedState = mutableListOf<ReviewQualityCheckState>()
+            tested.observeForever {
+                observedState.add(it)
+            }
+
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+            tested.waitUntilIdle()
+            tested.dispatch(ReviewQualityCheckAction.FetchProductAnalysis).joinBlocking()
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+            tested.dispatch(ReviewQualityCheckAction.ReanalyzeProduct).joinBlocking()
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+
+            val expectedProgressState1 = ReviewQualityCheckState.OptedIn(
+                productReviewState = ProductAnalysisTestData.analysisPresent(
+                    analysisStatus = AnalysisStatus.Reanalyzing(30f),
+                ),
+                productRecommendationsPreference = false,
+                productRecommendationsExposure = true,
+                productVendor = ProductVendor.BEST_BUY,
+            )
+
+            val expectedProgressState2 = expectedProgressState1.copy(
+                productReviewState = ProductAnalysisTestData.analysisPresent(
+                    analysisStatus = AnalysisStatus.Reanalyzing(61.6f),
+                ),
+            )
+
+            val expectedProgressState3 = expectedProgressState1.copy(
+                productReviewState = ProductAnalysisTestData.analysisPresent(
+                    analysisStatus = AnalysisStatus.Reanalyzing(92.52f),
+                ),
+            )
+
+            // Since reanalyzing is an intermediate state and the tests completes to get to the final
+            // state, this checks if the intermediate state is present in the observed state.
+            assertTrue(observedState.contains(expectedProgressState1))
+            assertTrue(observedState.contains(expectedProgressState2))
+            assertTrue(observedState.contains(expectedProgressState3))
         }
 
     @Test
@@ -898,7 +1024,12 @@ class ReviewQualityCheckStoreTest {
                             ProductAnalysisTestData.productAnalysis(needsAnalysis = true)
                         },
                         reanalysis = AnalysisStatusDto.COMPLETED,
-                        status = AnalysisStatusDto.COMPLETED,
+                        statusProgress = {
+                            AnalysisStatusProgressDto(
+                                status = AnalysisStatusDto.COMPLETED,
+                                progress = 100.0,
+                            )
+                        },
                     ),
                     networkChecker = FakeNetworkChecker(isConnected = true),
                 ),
@@ -918,7 +1049,7 @@ class ReviewQualityCheckStoreTest {
 
             val expected = ReviewQualityCheckState.OptedIn(
                 productReviewState = ProductAnalysisTestData.analysisPresent(
-                    analysisStatus = AnalysisStatus.NEEDS_ANALYSIS,
+                    analysisStatus = AnalysisStatus.NeedsAnalysis,
                 ),
                 productRecommendationsPreference = false,
                 productRecommendationsExposure = true,
@@ -928,7 +1059,7 @@ class ReviewQualityCheckStoreTest {
 
             val notExpected = ReviewQualityCheckState.OptedIn(
                 productReviewState = ProductAnalysisTestData.analysisPresent(
-                    analysisStatus = AnalysisStatus.REANALYZING,
+                    analysisStatus = AnalysisStatus.Reanalyzing(0f),
                 ),
                 productRecommendationsPreference = false,
                 productRecommendationsExposure = true,
@@ -948,7 +1079,7 @@ class ReviewQualityCheckStoreTest {
                             ProductAnalysisTestData.productAnalysis()
                         },
                         reanalysis = null,
-                        status = null,
+                        statusProgress = { null },
                     ),
                     networkChecker = FakeNetworkChecker(isConnected = true),
                 ),
@@ -976,13 +1107,179 @@ class ReviewQualityCheckStoreTest {
 
             val notExpected = ReviewQualityCheckState.OptedIn(
                 productReviewState = ProductAnalysisTestData.analysisPresent(
-                    analysisStatus = AnalysisStatus.REANALYZING,
+                    analysisStatus = AnalysisStatus.Reanalyzing(0f),
                 ),
                 productRecommendationsPreference = false,
                 productRecommendationsExposure = true,
                 productVendor = ProductVendor.BEST_BUY,
             )
             assertFalse(observedState.contains(notExpected))
+        }
+
+    @Test
+    fun `GIVEN no analysis WHEN analysis is in progress THEN state should update to no analysis present with progress`() =
+        runTest {
+            val statusProgressResponses = listOf(
+                AnalysisStatusProgressDto(
+                    status = AnalysisStatusDto.IN_PROGRESS,
+                    progress = 30.0,
+                ),
+                AnalysisStatusProgressDto(
+                    status = AnalysisStatusDto.IN_PROGRESS,
+                    progress = 61.6,
+                ),
+                AnalysisStatusProgressDto(
+                    status = AnalysisStatusDto.IN_PROGRESS,
+                    progress = 92.52,
+                ),
+                AnalysisStatusProgressDto(
+                    status = AnalysisStatusDto.COMPLETED,
+                    progress = 100.0,
+                ),
+            )
+            var counter = 0
+
+            val tested = ReviewQualityCheckStore(
+                middleware = provideReviewQualityCheckMiddleware(
+                    reviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(isEnabled = true),
+                    reviewQualityCheckService = FakeReviewQualityCheckService(
+                        productAnalysis = {
+                            ProductAnalysisTestData.productAnalysis(
+                                grade = null,
+                                adjustedRating = null,
+                                needsAnalysis = true,
+                            )
+                        },
+                        reanalysis = AnalysisStatusDto.PENDING,
+                        statusProgress = {
+                            statusProgressResponses[counter].also { counter++ }
+                        },
+                    ),
+                    networkChecker = FakeNetworkChecker(isConnected = true),
+                ),
+            )
+
+            val observedState = mutableListOf<ReviewQualityCheckState>()
+            tested.observeForever {
+                observedState.add(it)
+            }
+
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+            tested.waitUntilIdle()
+            tested.dispatch(ReviewQualityCheckAction.FetchProductAnalysis).joinBlocking()
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+
+            val expectedProgressState1 = ReviewQualityCheckState.OptedIn(
+                productReviewState = ProductAnalysisTestData.noAnalysisPresent(
+                    progress = 61.6f,
+                ),
+                productRecommendationsPreference = false,
+                productRecommendationsExposure = true,
+                productVendor = ProductVendor.BEST_BUY,
+            )
+
+            val expectedProgressState2 = expectedProgressState1.copy(
+                productReviewState = ProductAnalysisTestData.noAnalysisPresent(
+                    progress = 92.52f,
+                ),
+            )
+
+            // Since reanalyzing is an intermediate state and the tests completes to get to the final
+            // state, this checks if the intermediate state is present in the observed state.
+            assertTrue(observedState.contains(expectedProgressState1))
+            assertTrue(observedState.contains(expectedProgressState2))
+        }
+
+    @Test
+    fun `GIVEN no analysis WHEN reanalyze THEN state should update to no analysis present with progress`() =
+        runTest {
+            val statusProgressResponses = listOf(
+                AnalysisStatusProgressDto(
+                    status = AnalysisStatusDto.OTHER,
+                    progress = 0.0,
+                ),
+                AnalysisStatusProgressDto(
+                    status = AnalysisStatusDto.IN_PROGRESS,
+                    progress = 30.0,
+                ),
+                AnalysisStatusProgressDto(
+                    status = AnalysisStatusDto.IN_PROGRESS,
+                    progress = 61.6,
+                ),
+                AnalysisStatusProgressDto(
+                    status = AnalysisStatusDto.IN_PROGRESS,
+                    progress = 92.52,
+                ),
+                AnalysisStatusProgressDto(
+                    status = AnalysisStatusDto.COMPLETED,
+                    progress = 100.0,
+                ),
+            )
+            var counter = 0
+
+            val tested = ReviewQualityCheckStore(
+                middleware = provideReviewQualityCheckMiddleware(
+                    reviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(isEnabled = true),
+                    reviewQualityCheckService = FakeReviewQualityCheckService(
+                        productAnalysis = {
+                            ProductAnalysisTestData.productAnalysis(
+                                grade = null,
+                                adjustedRating = null,
+                                needsAnalysis = true,
+                            )
+                        },
+                        reanalysis = AnalysisStatusDto.PENDING,
+                        statusProgress = {
+                            statusProgressResponses[counter].also { counter++ }
+                        },
+                    ),
+                    networkChecker = FakeNetworkChecker(isConnected = true),
+                ),
+            )
+
+            val observedState = mutableListOf<ReviewQualityCheckState>()
+            tested.observeForever {
+                observedState.add(it)
+            }
+
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+            tested.waitUntilIdle()
+            tested.dispatch(ReviewQualityCheckAction.FetchProductAnalysis).joinBlocking()
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+            tested.dispatch(ReviewQualityCheckAction.ReanalyzeProduct).joinBlocking()
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+
+            val expectedProgressState1 = ReviewQualityCheckState.OptedIn(
+                productReviewState = ProductAnalysisTestData.noAnalysisPresent(
+                    progress = 30f,
+                ),
+                productRecommendationsPreference = false,
+                productRecommendationsExposure = true,
+                productVendor = ProductVendor.BEST_BUY,
+            )
+
+            val expectedProgressState2 = expectedProgressState1.copy(
+                productReviewState = ProductAnalysisTestData.noAnalysisPresent(
+                    progress = 61.6f,
+                ),
+            )
+
+            val expectedProgressState3 = expectedProgressState1.copy(
+                productReviewState = ProductAnalysisTestData.noAnalysisPresent(
+                    progress = 92.52f,
+                ),
+            )
+
+            // Since reanalyzing is an intermediate state and the tests completes to get to the final
+            // state, this checks if the intermediate state is present in the observed state.
+            assertTrue(observedState.contains(expectedProgressState1))
+            assertTrue(observedState.contains(expectedProgressState2))
+            assertTrue(observedState.contains(expectedProgressState3))
         }
 
     @Test

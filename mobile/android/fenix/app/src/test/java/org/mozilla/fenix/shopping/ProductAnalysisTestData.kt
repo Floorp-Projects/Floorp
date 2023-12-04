@@ -44,7 +44,7 @@ object ProductAnalysisTestData {
         productUrl: String = "https://test.com",
         reviewGrade: ReviewQualityCheckState.Grade? = ReviewQualityCheckState.Grade.A,
         adjustedRating: Float? = 4.5f,
-        analysisStatus: AnalysisStatus = AnalysisStatus.UP_TO_DATE,
+        analysisStatus: AnalysisStatus = AnalysisStatus.UpToDate,
         highlightsInfo: HighlightsInfo? = null,
         recommendedProductState: RecommendedProductState = RecommendedProductState.Initial,
     ): ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent =
@@ -56,5 +56,12 @@ object ProductAnalysisTestData {
             analysisStatus = analysisStatus,
             highlightsInfo = highlightsInfo,
             recommendedProductState = recommendedProductState,
+        )
+
+    fun noAnalysisPresent(
+        progress: Float? = 0f,
+    ): ReviewQualityCheckState.OptedIn.ProductReviewState.NoAnalysisPresent =
+        ReviewQualityCheckState.OptedIn.ProductReviewState.NoAnalysisPresent(
+            progress = progress,
         )
 }

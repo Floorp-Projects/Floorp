@@ -63,7 +63,7 @@ class ReviewQualityCheckNetworkMiddleware(
                     // returns a result. This makes sure that the UI doesn't show the reanalyse
                     // button in case the product analysis is already in progress on the backend.
                     if (productReviewState.isAnalysisPresentOrNoAnalysisPresent() &&
-                        reviewQualityCheckService.analysisStatus().isPendingOrInProgress()
+                        reviewQualityCheckService.analysisStatus()?.status.isPendingOrInProgress()
                     ) {
                         store.updateProductReviewState(productReviewState, true)
                         store.dispatch(ReviewQualityCheckAction.RestoreReanalysis)
@@ -112,11 +112,13 @@ class ReviewQualityCheckNetworkMiddleware(
             return
         }
 
-        val status = pollForAnalysisStatus()
+        val statusProgress = pollForAnalysisStatus {
+            dispatch(ReviewQualityCheckAction.UpdateAnalysisProgress(it))
+        }
 
-        if (status == null ||
-            status == AnalysisStatusDto.PENDING ||
-            status == AnalysisStatusDto.IN_PROGRESS
+        if (statusProgress == null ||
+            statusProgress.status == AnalysisStatusDto.PENDING ||
+            statusProgress.status == AnalysisStatusDto.IN_PROGRESS
         ) {
             // poll failed, reset to previous state
             val state = this.state
@@ -125,7 +127,7 @@ class ReviewQualityCheckNetworkMiddleware(
                     updateProductReviewState(ProductReviewState.NoAnalysisPresent())
                 } else if (state.productReviewState is ProductReviewState.AnalysisPresent) {
                     updateProductReviewState(
-                        state.productReviewState.copy(analysisStatus = AnalysisStatus.NEEDS_ANALYSIS),
+                        state.productReviewState.copy(analysisStatus = AnalysisStatus.NeedsAnalysis),
                     )
                 }
             }
@@ -137,10 +139,16 @@ class ReviewQualityCheckNetworkMiddleware(
         }
     }
 
-    private suspend fun pollForAnalysisStatus(): AnalysisStatusDto? =
+    private suspend fun pollForAnalysisStatus(
+        onEachSuccessfulPoll: (progress: Double) -> Unit,
+    ): AnalysisStatusProgressDto? =
         retry(
-            predicate = { it.isPendingOrInProgress() },
-            block = { reviewQualityCheckService.analysisStatus() },
+            predicate = { it?.status.isPendingOrInProgress() },
+            block = {
+                reviewQualityCheckService.analysisStatus()?.also {
+                    onEachSuccessfulPoll(it.progress)
+                }
+            },
         )
 
     private fun Store<ReviewQualityCheckState, ReviewQualityCheckAction>.updateProductReviewState(

@@ -50,8 +50,8 @@ private fun ProductAnalysis.toProductReview(): ProductReviewState =
 
 private fun Boolean.toAnalysisStatus(): AnalysisStatus =
     when (this) {
-        true -> AnalysisStatus.NEEDS_ANALYSIS
-        false -> AnalysisStatus.UP_TO_DATE
+        true -> AnalysisStatus.NeedsAnalysis
+        false -> AnalysisStatus.UpToDate
     }
 
 private fun Highlight.toHighlights(): Map<HighlightType, List<String>>? =

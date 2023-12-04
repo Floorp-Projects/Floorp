@@ -35,7 +35,7 @@ class ProductAnalysisMapperTest {
         val expected = ProductAnalysisTestData.analysisPresent(
             productId = "id1",
             reviewGrade = ReviewQualityCheckState.Grade.C,
-            analysisStatus = AnalysisStatus.UP_TO_DATE,
+            analysisStatus = AnalysisStatus.UpToDate,
             adjustedRating = 3.4f,
             productUrl = "https://example.com",
             highlightsInfo = HighlightsInfo(
@@ -72,7 +72,7 @@ class ProductAnalysisMapperTest {
         val expected = ProductAnalysisTestData.analysisPresent(
             productId = "id1",
             reviewGrade = ReviewQualityCheckState.Grade.C,
-            analysisStatus = AnalysisStatus.NEEDS_ANALYSIS,
+            analysisStatus = AnalysisStatus.NeedsAnalysis,
             adjustedRating = 3.4f,
             productUrl = "https://example.com",
             highlightsInfo = HighlightsInfo(
@@ -100,7 +100,7 @@ class ProductAnalysisMapperTest {
         val expected = ProductAnalysisTestData.analysisPresent(
             productId = "id1",
             reviewGrade = null,
-            analysisStatus = AnalysisStatus.UP_TO_DATE,
+            analysisStatus = AnalysisStatus.UpToDate,
             adjustedRating = 3.4f,
             productUrl = "https://example.com",
         )
@@ -162,7 +162,7 @@ class ProductAnalysisMapperTest {
         val expected = ProductAnalysisTestData.analysisPresent(
             productId = "1",
             reviewGrade = ReviewQualityCheckState.Grade.A,
-            analysisStatus = AnalysisStatus.UP_TO_DATE,
+            analysisStatus = AnalysisStatus.UpToDate,
             adjustedRating = 4.5f,
             productUrl = "https://test.com",
         )
@@ -180,7 +180,7 @@ class ProductAnalysisMapperTest {
         val expected = ProductAnalysisTestData.analysisPresent(
             productId = "1",
             reviewGrade = ReviewQualityCheckState.Grade.A,
-            analysisStatus = AnalysisStatus.NEEDS_ANALYSIS,
+            analysisStatus = AnalysisStatus.NeedsAnalysis,
             adjustedRating = 4.5f,
             productUrl = "https://test.com",
             highlightsInfo = null,
