@@ -264,125 +264,122 @@ function getInplaceEditorForSpan(span) {
 
 exports.getInplaceEditorForSpan = getInplaceEditorForSpan;
 
-function InplaceEditor(options, event) {
-  this.elt = options.element;
-  const doc = this.elt.ownerDocument;
-  this.doc = doc;
-  this.elt.inplaceEditor = this;
-  this.cssProperties = options.cssProperties;
-  this.cssVariables = options.cssVariables || new Map();
-  this.change = options.change;
-  this.done = options.done;
-  this.contextMenu = options.contextMenu;
-  this.defaultIncrement = options.defaultIncrement || 1;
-  this.destroy = options.destroy;
-  this.initial = options.initial ? options.initial : this.elt.textContent;
-  this.multiline = options.multiline || false;
-  this.maxWidth = options.maxWidth;
-  if (typeof this.maxWidth == "function") {
-    this.maxWidth = this.maxWidth();
-  }
+class InplaceEditor extends EventEmitter {
+  constructor(options, event) {
+    super();
 
-  this.trimOutput =
-    options.trimOutput === undefined ? true : !!options.trimOutput;
-  this.stopOnShiftTab = !!options.stopOnShiftTab;
-  this.stopOnTab = !!options.stopOnTab;
-  this.stopOnReturn = !!options.stopOnReturn;
-  this.contentType = options.contentType || CONTENT_TYPES.PLAIN_TEXT;
-  this.property = options.property;
-  this.popup = options.popup;
-  this.preserveTextStyles =
-    options.preserveTextStyles === undefined
-      ? false
-      : !!options.preserveTextStyles;
-  this.showSuggestCompletionOnEmpty = !!options.showSuggestCompletionOnEmpty;
-  this.focusEditableFieldAfterApply =
-    options.focusEditableFieldAfterApply === true;
-  this.focusEditableFieldContainerSelector =
-    options.focusEditableFieldContainerSelector;
-
-  if (
-    this.focusEditableFieldAfterApply &&
-    !this.focusEditableFieldContainerSelector
-  ) {
-    throw new Error(
-      "focusEditableFieldContainerSelector is mandatory when focusEditableFieldAfterApply is true"
-    );
-  }
-
-  this._onBlur = this._onBlur.bind(this);
-  this._onWindowBlur = this._onWindowBlur.bind(this);
-  this._onKeyPress = this._onKeyPress.bind(this);
-  this._onInput = this._onInput.bind(this);
-  this._onKeyup = this._onKeyup.bind(this);
-  this._onAutocompletePopupClick = this._onAutocompletePopupClick.bind(this);
-  this._onContextMenu = this._onContextMenu.bind(this);
-
-  this._createInput();
-
-  // Hide the provided element and add our editor.
-  this.originalDisplay = this.elt.style.display;
-  this.elt.style.display = "none";
-  this.elt.parentNode.insertBefore(this.input, this.elt);
-
-  // After inserting the input to have all CSS styles applied, start autosizing.
-  this._autosize();
-
-  this.inputCharDimensions = this._getInputCharDimensions();
-  // Pull out character codes for advanceChars, listing the
-  // characters that should trigger a blur.
-  if (typeof options.advanceChars === "function") {
-    this._advanceChars = options.advanceChars;
-  } else {
-    const advanceCharcodes = {};
-    const advanceChars = options.advanceChars || "";
-    for (let i = 0; i < advanceChars.length; i++) {
-      advanceCharcodes[advanceChars.charCodeAt(i)] = true;
+    this.elt = options.element;
+    const doc = this.elt.ownerDocument;
+    this.doc = doc;
+    this.elt.inplaceEditor = this;
+    this.cssProperties = options.cssProperties;
+    this.cssVariables = options.cssVariables || new Map();
+    this.change = options.change;
+    this.done = options.done;
+    this.contextMenu = options.contextMenu;
+    this.defaultIncrement = options.defaultIncrement || 1;
+    this.destroy = options.destroy;
+    this.initial = options.initial ? options.initial : this.elt.textContent;
+    this.multiline = options.multiline || false;
+    this.maxWidth = options.maxWidth;
+    if (typeof this.maxWidth == "function") {
+      this.maxWidth = this.maxWidth();
     }
-    this._advanceChars = charCode => charCode in advanceCharcodes;
+
+    this.trimOutput =
+      options.trimOutput === undefined ? true : !!options.trimOutput;
+    this.stopOnShiftTab = !!options.stopOnShiftTab;
+    this.stopOnTab = !!options.stopOnTab;
+    this.stopOnReturn = !!options.stopOnReturn;
+    this.contentType = options.contentType || CONTENT_TYPES.PLAIN_TEXT;
+    this.property = options.property;
+    this.popup = options.popup;
+    this.preserveTextStyles =
+      options.preserveTextStyles === undefined
+        ? false
+        : !!options.preserveTextStyles;
+    this.showSuggestCompletionOnEmpty = !!options.showSuggestCompletionOnEmpty;
+    this.focusEditableFieldAfterApply =
+      options.focusEditableFieldAfterApply === true;
+    this.focusEditableFieldContainerSelector =
+      options.focusEditableFieldContainerSelector;
+
+    if (
+      this.focusEditableFieldAfterApply &&
+      !this.focusEditableFieldContainerSelector
+    ) {
+      throw new Error(
+        "focusEditableFieldContainerSelector is mandatory when focusEditableFieldAfterApply is true"
+      );
+    }
+
+    this._onBlur = this._onBlur.bind(this);
+    this._onWindowBlur = this._onWindowBlur.bind(this);
+    this._onKeyPress = this._onKeyPress.bind(this);
+    this._onInput = this._onInput.bind(this);
+    this._onKeyup = this._onKeyup.bind(this);
+    this._onAutocompletePopupClick = this._onAutocompletePopupClick.bind(this);
+    this._onContextMenu = this._onContextMenu.bind(this);
+
+    this._createInput();
+
+    // Hide the provided element and add our editor.
+    this.originalDisplay = this.elt.style.display;
+    this.elt.style.display = "none";
+    this.elt.parentNode.insertBefore(this.input, this.elt);
+
+    // After inserting the input to have all CSS styles applied, start autosizing.
+    this._autosize();
+
+    this.inputCharDimensions = this._getInputCharDimensions();
+    // Pull out character codes for advanceChars, listing the
+    // characters that should trigger a blur.
+    if (typeof options.advanceChars === "function") {
+      this._advanceChars = options.advanceChars;
+    } else {
+      const advanceCharcodes = {};
+      const advanceChars = options.advanceChars || "";
+      for (let i = 0; i < advanceChars.length; i++) {
+        advanceCharcodes[advanceChars.charCodeAt(i)] = true;
+      }
+      this._advanceChars = charCode => charCode in advanceCharcodes;
+    }
+
+    this.input.focus();
+
+    if (typeof options.selectAll == "undefined" || options.selectAll) {
+      this.input.select();
+    }
+
+    this.input.addEventListener("blur", this._onBlur);
+    this.input.addEventListener("keypress", this._onKeyPress);
+    this.input.addEventListener("input", this._onInput);
+    this.input.addEventListener("dblclick", this._stopEventPropagation);
+    this.input.addEventListener("click", this._stopEventPropagation);
+    this.input.addEventListener("mousedown", this._stopEventPropagation);
+    this.input.addEventListener("contextmenu", this._onContextMenu);
+    this.doc.defaultView.addEventListener("blur", this._onWindowBlur);
+
+    this.validate = options.validate;
+
+    if (this.validate) {
+      this.input.addEventListener("keyup", this._onKeyup);
+    }
+
+    this._updateSize();
+
+    if (options.start) {
+      options.start(this, event);
+    }
+
+    this._getGridNamesBeforeCompletion(options.getGridLineNames);
   }
+  static CONTENT_TYPES = CONTENT_TYPES;
 
-  this.input.focus();
-
-  if (typeof options.selectAll == "undefined" || options.selectAll) {
-    this.input.select();
-  }
-
-  this.input.addEventListener("blur", this._onBlur);
-  this.input.addEventListener("keypress", this._onKeyPress);
-  this.input.addEventListener("input", this._onInput);
-  this.input.addEventListener("dblclick", this._stopEventPropagation);
-  this.input.addEventListener("click", this._stopEventPropagation);
-  this.input.addEventListener("mousedown", this._stopEventPropagation);
-  this.input.addEventListener("contextmenu", this._onContextMenu);
-  this.doc.defaultView.addEventListener("blur", this._onWindowBlur);
-
-  this.validate = options.validate;
-
-  if (this.validate) {
-    this.input.addEventListener("keyup", this._onKeyup);
-  }
-
-  this._updateSize();
-
-  EventEmitter.decorate(this);
-
-  if (options.start) {
-    options.start(this, event);
-  }
-
-  this._getGridNamesBeforeCompletion(options.getGridLineNames);
-}
-
-exports.InplaceEditor = InplaceEditor;
-
-InplaceEditor.CONTENT_TYPES = CONTENT_TYPES;
-
-InplaceEditor.prototype = {
   get currentInputValue() {
     const val = this.trimOutput ? this.input.value.trim() : this.input.value;
     return val;
-  },
+  }
 
   _createInput() {
     this.input = this.doc.createElementNS(
@@ -404,7 +401,7 @@ InplaceEditor.prototype = {
     if (!this.preserveTextStyles) {
       copyTextStyles(this.elt, this.input);
     }
-  },
+  }
 
   /**
    * Get rid of the editor.
@@ -442,7 +439,7 @@ InplaceEditor.prototype = {
     if (this.destroy) {
       this.destroy();
     }
-  },
+  }
 
   /**
    * Keeps the editor close to the size of its input string.  This is pretty
@@ -481,7 +478,7 @@ InplaceEditor.prototype = {
 
     copyAllStyles(this.input, this._measurement);
     this._updateSize();
-  },
+  }
 
   /**
    * Clean up the mess created by _autosize().
@@ -492,7 +489,7 @@ InplaceEditor.prototype = {
     }
     this._measurement.remove();
     delete this._measurement;
-  },
+  }
 
   /**
    * Size the editor to fit its current contents.
@@ -531,7 +528,7 @@ InplaceEditor.prototype = {
       this.input.style.height = height + "px";
     }
     this.input.style.width = width + "px";
-  },
+  }
 
   /**
    * Get the width and height of a single character in the input to properly
@@ -544,7 +541,7 @@ InplaceEditor.prototype = {
     const width = this._measurement.clientWidth;
     const height = this._measurement.clientHeight;
     return { width, height };
-  },
+  }
 
   /**
    * Increment property values in rule view.
@@ -579,7 +576,7 @@ InplaceEditor.prototype = {
     }
 
     return true;
-  },
+  }
 
   /**
    * Increment the property value based on the property type.
@@ -680,7 +677,7 @@ InplaceEditor.prototype = {
       start: range.start + selection[0],
       end: range.start + selection[1],
     };
-  },
+  }
 
   /**
    * Find a compatible unit to use for a CSS number value inserted between the
@@ -719,7 +716,7 @@ InplaceEditor.prototype = {
       }
     }
     return "";
-  },
+  }
 
   /**
    * Parses the property value and type.
@@ -771,7 +768,7 @@ InplaceEditor.prototype = {
       end: start + m.index + m[0].length,
       type,
     };
-  },
+  }
 
   /**
    * Increment the property value for types other than
@@ -847,7 +844,7 @@ InplaceEditor.prototype = {
     }
 
     return null;
-  },
+  }
 
   /**
    * Increment the property value for numbers.
@@ -887,7 +884,7 @@ InplaceEditor.prototype = {
     newValue = newValue.toString();
 
     return newValue + units;
-  },
+  }
 
   /**
    * Increment the property value for hex.
@@ -1000,7 +997,7 @@ InplaceEditor.prototype = {
       value: "#" + rawValue,
       selection: [offset + 1, offsetEnd + 1],
     };
-  },
+  }
 
   /**
    * Cycle through the autocompletion suggestions in the popup.
@@ -1053,7 +1050,7 @@ InplaceEditor.prototype = {
     this._updateSize();
     // This emit is mainly for the purpose of making the test flow simpler.
     this.emit("after-suggest");
-  },
+  }
 
   /**
    * Call the client's done handler and clear out.
@@ -1071,7 +1068,7 @@ InplaceEditor.prototype = {
     }
 
     return null;
-  },
+  }
 
   /**
    * Hide the popup and cancel any pending popup opening.
@@ -1084,7 +1081,7 @@ InplaceEditor.prototype = {
     if (this._openPopupTimeout) {
       this.doc.defaultView.clearTimeout(this._openPopupTimeout);
     }
-  },
+  }
 
   /**
    * Event handler called when the inplace-editor's input loses focus.
@@ -1101,7 +1098,7 @@ InplaceEditor.prototype = {
       this._apply();
       this._clear();
     }
-  },
+  }
 
   /**
    * Before offering autocomplete, set this.gridLineNames as the line names
@@ -1126,7 +1123,7 @@ InplaceEditor.prototype = {
     ) {
       this._maybeSuggestCompletion(false);
     }
-  },
+  }
 
   /**
    * Event handler called by the autocomplete popup when receiving a click
@@ -1134,7 +1131,7 @@ InplaceEditor.prototype = {
    */
   _onAutocompletePopupClick() {
     this._acceptPopupSuggestion();
-  },
+  }
 
   _acceptPopupSuggestion() {
     let label, preLabel;
@@ -1188,7 +1185,7 @@ InplaceEditor.prototype = {
     };
     this.popup.on("popup-closed", onPopupHidden);
     this._hideAutocompletePopup();
-  },
+  }
 
   /**
    * Handle the input field's keypress event.
@@ -1346,7 +1343,7 @@ InplaceEditor.prototype = {
     if (prevent) {
       event.preventDefault();
     }
-  },
+  }
 
   _onContextMenu(event) {
     if (this.contextMenu) {
@@ -1356,7 +1353,7 @@ InplaceEditor.prototype = {
       event.preventDefault();
       this.contextMenu(event);
     }
-  },
+  }
 
   /**
    * Open the autocomplete popup, adding a custom click handler and classname.
@@ -1370,7 +1367,7 @@ InplaceEditor.prototype = {
   _openAutocompletePopup(offset, selectedIndex) {
     this.popup.on("popup-click", this._onAutocompletePopupClick);
     this.popup.openPopup(this.input, offset, 0, selectedIndex);
-  },
+  }
 
   /**
    * Remove the custom classname and click handler and close the autocomplete
@@ -1379,7 +1376,7 @@ InplaceEditor.prototype = {
   _hideAutocompletePopup() {
     this.popup.off("popup-click", this._onAutocompletePopupClick);
     this.popup.hidePopup();
-  },
+  }
 
   /**
    * Get the increment/decrement step to use for the provided key event.
@@ -1416,14 +1413,14 @@ InplaceEditor.prototype = {
     }
 
     return increment;
-  },
+  }
 
   /**
    * Handle the input field's keyup event.
    */
   _onKeyup() {
     this._applied = false;
-  },
+  }
 
   /**
    * Handle changes to the input text.
@@ -1446,14 +1443,14 @@ InplaceEditor.prototype = {
     if (this.currentInputValue === "" && this.showSuggestCompletionOnEmpty) {
       this._maybeSuggestCompletion(false);
     }
-  },
+  }
 
   /**
    * Stop propagation on the provided event
    */
   _stopEventPropagation(e) {
     e.stopPropagation();
-  },
+  }
 
   /**
    * Fire validation callback with current input
@@ -1462,7 +1459,7 @@ InplaceEditor.prototype = {
     if (this.validate && this.input) {
       this.validate(this.input.value);
     }
-  },
+  }
 
   /**
    * Handles displaying suggestions based on the current input.
@@ -1683,7 +1680,7 @@ InplaceEditor.prototype = {
       this.emit("after-suggest");
       this._doValidation();
     }, 0);
-  },
+  }
 
   /**
    * Automatically add closing parenthesis and skip closing parenthesis when needed.
@@ -1711,7 +1708,7 @@ InplaceEditor.prototype = {
     }
 
     this._pressedKey = null;
-  },
+  }
 
   /**
    * Update the current value of the input while preserving the caret position.
@@ -1721,7 +1718,7 @@ InplaceEditor.prototype = {
     this.input.value = str;
     this.input.setSelectionRange(start, start);
     this._updateSize();
-  },
+  }
 
   /**
    * Split the provided string at the provided index. Returns an array of two strings.
@@ -1729,7 +1726,7 @@ InplaceEditor.prototype = {
    */
   _splitStringAt(str, index) {
     return [str.substring(0, index), str.substring(index, str.length)];
-  },
+  }
 
   /**
    * Check if the current input is displaying more than one line of text.
@@ -1746,7 +1743,7 @@ InplaceEditor.prototype = {
     }
     const inputRect = this.input.getBoundingClientRect();
     return inputRect.height < 2 * this.inputCharDimensions.height;
-  },
+  }
 
   /**
    * Returns the list of CSS properties to use for the autocompletion. This
@@ -1756,7 +1753,7 @@ InplaceEditor.prototype = {
    */
   _getCSSPropertyList() {
     return this.cssProperties.getNames().sort();
-  },
+  }
 
   /**
    * Returns a list of CSS values valid for a provided property name to use for
@@ -1781,7 +1778,7 @@ InplaceEditor.prototype = {
     return gridLineList
       .concat(this.cssProperties.getValues(propertyName))
       .sort();
-  },
+  }
 
   /**
    * Returns the list of all CSS variables to use for the autocompletion.
@@ -1790,7 +1787,7 @@ InplaceEditor.prototype = {
    */
   _getCSSVariableNames() {
     return Array.from(this.cssVariables.keys()).sort();
-  },
+  }
 
   /**
    * Returns the variable's value for the given CSS variable name.
@@ -1801,8 +1798,10 @@ InplaceEditor.prototype = {
    */
   _getCSSVariableValue(varName) {
     return this.cssVariables.get(varName);
-  },
-};
+  }
+}
+
+exports.InplaceEditor = InplaceEditor;
 
 /**
  * Copy text-related styles from one element to another.
