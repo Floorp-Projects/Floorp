@@ -34,6 +34,7 @@ void StyleSheetList::NodeWillBeDestroyed(nsINode* aNode) {
 
 StyleSheetList::StyleSheetList(DocumentOrShadowRoot& aScope)
     : mDocumentOrShadowRoot(&aScope) {
+  SetEnabledCallbacks(nsIMutationObserver::kNodeWillBeDestroyed);
   mDocumentOrShadowRoot->AsNode().AddMutationObserver(this);
 }
 
