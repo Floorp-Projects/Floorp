@@ -3958,7 +3958,8 @@ nsContainerFrame* NS_NewGridContainerFrame(PresShell* aPresShell,
 }
 
 void nsGridContainerFrame::AddImplicitNamedAreasInternal(
-    LineNameList& aNameList, nsGridContainerFrame::ImplicitNamedAreas* aAreas) {
+    LineNameList& aNameList,
+    nsGridContainerFrame::ImplicitNamedAreas*& aAreas) {
   for (const auto& nameIdent : aNameList.AsSpan()) {
     nsAtom* name = nameIdent.AsAtom();
     uint32_t indexOfSuffix;
