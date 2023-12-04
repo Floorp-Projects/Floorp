@@ -14,7 +14,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsXULContentUtils.h"
 #include "nsString.h"
-#include "nsQuickSort.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsXULSortService.h"
 #include "nsXULElement.h"
@@ -51,14 +50,12 @@ struct MOZ_STACK_CLASS nsSortState final {
   nsSortState() : initialized(false), sortHints(0) {}
 };
 
-// information about a particular item to be sorted
+// Information about a particular item to be sorted.
+// Its lifecycle is bound to the 'SortContainer' function scope,
+// so we can use raw pointers to avoid refcount noise during sorting.
 struct contentSortInfo {
-  nsCOMPtr<nsIContent> content;
-  nsCOMPtr<nsIContent> parent;
-  void swap(contentSortInfo& other) {
-    content.swap(other.content);
-    parent.swap(other.parent);
-  }
+  nsIContent* content;
+  nsIContent* parent;
 };
 
 /**
@@ -130,7 +127,7 @@ static void SetSortHints(Element* aElement, nsSortState* aSortState) {
  *   - otherwise, for trees, get the child treeitems
  *   - otherwise, get the direct children
  */
-static nsresult GetItemsToSort(nsIContent* aContainer, nsSortState* aSortState,
+static nsresult GetItemsToSort(nsIContent* aContainer,
                                nsTArray<contentSortInfo>& aSortItems) {
   // Get the children. For trees, get the treechildren element and
   // use that as the parent
@@ -186,30 +183,26 @@ static int32_t CompareValues(const nsAString& aLeft, const nsAString& aRight,
   return ::Compare(aLeft, aRight, nsCaseInsensitiveStringComparator);
 }
 
-static int testSortCallback(const void* data1, const void* data2,
-                            void* privateData) {
-  /// Note: testSortCallback is a small C callback stub for NS_QuickSort
-  contentSortInfo* left = (contentSortInfo*)data1;
-  contentSortInfo* right = (contentSortInfo*)data2;
-  nsSortState* sortState = (nsSortState*)privateData;
-
+static int testSortCallback(const contentSortInfo& left,
+                            const contentSortInfo& right,
+                            nsSortState& sortState) {
   int32_t sortOrder = 0;
 
-  int32_t length = sortState->sortKeys.Length();
-  for (int32_t t = 0; t < length; t++) {
+  size_t length = sortState.sortKeys.Length();
+  for (size_t t = 0; t < length; t++) {
     // compare attributes. Ignore namespaces for now.
     nsAutoString leftstr, rightstr;
-    if (left->content->IsElement()) {
-      left->content->AsElement()->GetAttr(sortState->sortKeys[t], leftstr);
+    if (left.content->IsElement()) {
+      left.content->AsElement()->GetAttr(sortState.sortKeys[t], leftstr);
     }
-    if (right->content->IsElement()) {
-      right->content->AsElement()->GetAttr(sortState->sortKeys[t], rightstr);
+    if (right.content->IsElement()) {
+      right.content->AsElement()->GetAttr(sortState.sortKeys[t], rightstr);
     }
 
-    sortOrder = CompareValues(leftstr, rightstr, sortState->sortHints);
+    sortOrder = CompareValues(leftstr, rightstr, sortState.sortHints);
   }
 
-  if (sortState->direction == nsSortState_descending) sortOrder = -sortOrder;
+  if (sortState.direction == nsSortState_descending) sortOrder = -sortOrder;
 
   return sortOrder;
 }
@@ -226,7 +219,7 @@ static nsresult InvertSortInfo(nsTArray<contentSortInfo>& aData, int32_t aStart,
     int32_t downPoint = (aNumItems - 2) / 2 + aStart;
     int32_t half = aNumItems / 2;
     while (half-- > 0) {
-      aData[downPoint--].swap(aData[upPoint++]);
+      std::swap(aData[downPoint--], aData[upPoint++]);
     }
   }
   return NS_OK;
@@ -235,9 +228,9 @@ static nsresult InvertSortInfo(nsTArray<contentSortInfo>& aData, int32_t aStart,
 /**
  * Sort a container using the supplied sort state details.
  */
-static nsresult SortContainer(nsIContent* aContainer, nsSortState* aSortState) {
+static nsresult SortContainer(nsIContent* aContainer, nsSortState& aSortState) {
   nsTArray<contentSortInfo> items;
-  nsresult rv = GetItemsToSort(aContainer, aSortState, items);
+  nsresult rv = GetItemsToSort(aContainer, items);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t numResults = items.Length();
@@ -247,11 +240,13 @@ static nsresult SortContainer(nsIContent* aContainer, nsSortState* aSortState) {
 
   // if the items are just being inverted, that is, just switching between
   // ascending and descending, just reverse the list.
-  if (aSortState->invertSort)
+  if (aSortState.invertSort) {
     InvertSortInfo(items, 0, numResults);
-  else
-    NS_QuickSort((void*)items.Elements(), numResults, sizeof(contentSortInfo),
-                 testSortCallback, (void*)aSortState);
+  } else {
+    items.Sort([&aSortState](auto left, auto right) {
+      return testSortCallback(left, right, aSortState);
+    });
+  }
 
   // first remove the items from the old positions
   for (i = 0; i < numResults; i++) {
@@ -386,7 +381,7 @@ nsresult mozilla::XULWidgetSort(Element* aNode, const nsAString& aSortKey,
 
   // store sort info in attributes on content
   SetSortHints(aNode, &sortState);
-  rv = SortContainer(aNode, &sortState);
+  rv = SortContainer(aNode, sortState);
 
   return rv;
 }
