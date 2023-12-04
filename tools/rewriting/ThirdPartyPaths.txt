@@ -89,6 +89,7 @@ gfx/vr/service/openvr/src/vrpathregistry_public.h
 gfx/wr/
 gfx/ycbcr/
 intl/icu/
+intl/icu_capi/
 ipc/chromium/src/third_party/
 js/src/ctypes/libffi/
 js/src/dtoa.c
