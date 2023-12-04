@@ -13,18 +13,18 @@ Enabling ICU4X
 Updating the bundled ICU4X data
 ===============================
 
-ICU4X data is bundled directly as a rust crate in the ``intl/icu_testdata``. Although this crate is the same name as ICU4X's ``icu_testdata`` crate, it has customized data for Gecko.
+ICU4X data is bundled directly as a rust crate with ``compiled_data`` feature.
+
+But each ``icu_*_data`` crate has all locale data, so it might include unnecessary data. ``icu_segmenter`` uses custom crates in Gecko since it includes unnecessary data such as the word dictionaries for East Asian.
 
 The script ``intl/update-icu4x.sh`` can generate and update this binary data. If you want to add the new data type, you modify this script and then, run it.
 
-When using ICU4X 1.2.0 data, CLDR 43, and ICU4C 73.1, you have to run the following. The baked data is generated into ``intl/icu_testdata/data/baked``.
+When using ICU4X 1.4.0 data with the latest data that is hard-coded, you have to run the following. The baked data of ``icu_segmenter`` is generated into ``intl/icu_segmenter_data/data``.
 
 .. code:: bash
 
     $ cd $(TOPSRCDIR)/intl
-    $ ./update-icu4x.sh https://github.com/unicode-org/icu4x.git icu@1.2.0 43.0.0 release-73-1
-
-ICU4X 1.3 will have new feature "``complied_data``" that replaces customized ``icu_testdata``. After upgrading to 1.3, we update this document too.
+    $ ./update-icu4x.sh https://github.com/unicode-org/icu4x.git icu@1.4.0 44.0.0 release-74-1 1.4.0
 
 Updating ICU4X
 ==============
@@ -39,15 +39,7 @@ ICU4X provides ``icu_capi`` crate for C/C++ FFI. ``mozilla::intl::GetDataProvide
 Accessing the data provider from Rust
 =====================================
 
-``icu_testdata::any()`` returns any data provider.
-
-If you want to use unstable data provider from Rust, you should add it to ``intl/icu_testdata/src/lib.rs`` like the following, then use ``icu_testdata::unstable()``.
-
-.. code:: rust
-
-    pub fn unstable() -> UnstableDataProvider {
-        UnstableDataProvider
-    }
+Use ``compiled_data`` feature. You don't consider data provider.
 
 Adding new ICU4X features to Gecko
 ==================================
@@ -55,5 +47,6 @@ Adding new ICU4X features to Gecko
 To reduce build time and binary size, embedded ICU4X in Gecko is minimal configuration. If you have to add new features, you have to update some files.
 
 #. Adding the feature to ``icu_capi`` entry in ``js/src/rust/shared/Cargo.toml``.
-#. Modify ``intl/update-icu4x.sh`` to add generated ICU4X data.
-#. Modify ``intl/icu_testdata/Cargo.toml`` to add the data for enabled feature.
+#. Modify ``[features]`` section in ``intl/icu_capi/Cargo.toml`` to enable ``compiled_data`` feature of added crate.
+#. Modify the patch file for ``intl/icu_capi/Cargo.toml`` into ``intl/icu4x-patches``.
+#. (Optional) Modify ``intl/update-icu4x.sh`` to add generated ICU4X data if you want to modify ICU4X baked data.
