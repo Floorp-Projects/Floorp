@@ -58,8 +58,6 @@ internal class WebPushEngineDelegate(
     private val logger = Logger("WebPushEngineDelegate")
 
     override fun onGetSubscription(scope: String, onSubscription: (WebPushSubscription?) -> Unit) {
-        // We don't have the appServerKey unless an app is creating a new subscription so we
-        // allow the key to be null since it won't be overridden from a previous subscription.
         pushFeature.getSubscription(scope) {
             onSubscription(it?.toEnginePushSubscription())
         }
@@ -72,9 +70,7 @@ internal class WebPushEngineDelegate(
     ) {
         pushFeature.subscribe(
             scope = scope,
-            // See the full note at the implementation of `toEnginePushSubscription`.
-            // Issue: https://github.com/mozilla/application-services/issues/2698
-            appServerKey = null,
+            appServerKey = serverKey?.toEncodedBase64String(),
             onSubscribeError = {
                 logger.error("Error on push onSubscribe.")
                 onSubscribe(null)
@@ -104,13 +100,12 @@ internal fun AutoPushSubscription.toEnginePushSubscription() = WebPushSubscripti
     publicKey = this.publicKey.toDecodedByteArray(),
     endpoint = this.endpoint,
     authSecret = this.authKey.toDecodedByteArray(),
-    // We don't send the `serverKey` because the code path from that will query
-    // the push database for this key, which leads to an exception thrown.
-    // Our workaround for now is to not put the server key in to begin with (which
-    // will probably break a lot of sites).
-    // See: https://github.com/mozilla/application-services/issues/2698
+    // We don't have the appServerKey unless an app is creating a new subscription so we
+    // allow the key to be null since it won't be overridden from a previous subscription.
     appServerKey = null,
 )
 
 private fun String.toDecodedByteArray() =
     Base64.decode(this.toByteArray(), Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
+private fun ByteArray.toEncodedBase64String() =
+    Base64.encodeToString(this, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
