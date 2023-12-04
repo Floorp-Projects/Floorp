@@ -550,56 +550,39 @@ class nsNavHistoryContainerResultNode
                                            const nsAString& b);
 
   static int32_t SortComparison_Bookmark(nsNavHistoryResultNode* a,
-                                         nsNavHistoryResultNode* b,
-                                         void* closure);
+                                         nsNavHistoryResultNode* b);
   static int32_t SortComparison_TitleLess(nsNavHistoryResultNode* a,
-                                          nsNavHistoryResultNode* b,
-                                          void* closure);
+                                          nsNavHistoryResultNode* b);
   static int32_t SortComparison_TitleGreater(nsNavHistoryResultNode* a,
-                                             nsNavHistoryResultNode* b,
-                                             void* closure);
+                                             nsNavHistoryResultNode* b);
   static int32_t SortComparison_DateLess(nsNavHistoryResultNode* a,
-                                         nsNavHistoryResultNode* b,
-                                         void* closure);
+                                         nsNavHistoryResultNode* b);
   static int32_t SortComparison_DateGreater(nsNavHistoryResultNode* a,
-                                            nsNavHistoryResultNode* b,
-                                            void* closure);
+                                            nsNavHistoryResultNode* b);
   static int32_t SortComparison_URILess(nsNavHistoryResultNode* a,
-                                        nsNavHistoryResultNode* b,
-                                        void* closure);
+                                        nsNavHistoryResultNode* b);
   static int32_t SortComparison_URIGreater(nsNavHistoryResultNode* a,
-                                           nsNavHistoryResultNode* b,
-                                           void* closure);
+                                           nsNavHistoryResultNode* b);
   static int32_t SortComparison_VisitCountLess(nsNavHistoryResultNode* a,
-                                               nsNavHistoryResultNode* b,
-                                               void* closure);
+                                               nsNavHistoryResultNode* b);
   static int32_t SortComparison_VisitCountGreater(nsNavHistoryResultNode* a,
-                                                  nsNavHistoryResultNode* b,
-                                                  void* closure);
+                                                  nsNavHistoryResultNode* b);
   static int32_t SortComparison_DateAddedLess(nsNavHistoryResultNode* a,
-                                              nsNavHistoryResultNode* b,
-                                              void* closure);
+                                              nsNavHistoryResultNode* b);
   static int32_t SortComparison_DateAddedGreater(nsNavHistoryResultNode* a,
-                                                 nsNavHistoryResultNode* b,
-                                                 void* closure);
+                                                 nsNavHistoryResultNode* b);
   static int32_t SortComparison_LastModifiedLess(nsNavHistoryResultNode* a,
-                                                 nsNavHistoryResultNode* b,
-                                                 void* closure);
+                                                 nsNavHistoryResultNode* b);
   static int32_t SortComparison_LastModifiedGreater(nsNavHistoryResultNode* a,
-                                                    nsNavHistoryResultNode* b,
-                                                    void* closure);
+                                                    nsNavHistoryResultNode* b);
   static int32_t SortComparison_TagsLess(nsNavHistoryResultNode* a,
-                                         nsNavHistoryResultNode* b,
-                                         void* closure);
+                                         nsNavHistoryResultNode* b);
   static int32_t SortComparison_TagsGreater(nsNavHistoryResultNode* a,
-                                            nsNavHistoryResultNode* b,
-                                            void* closure);
+                                            nsNavHistoryResultNode* b);
   static int32_t SortComparison_FrecencyLess(nsNavHistoryResultNode* a,
-                                             nsNavHistoryResultNode* b,
-                                             void* closure);
+                                             nsNavHistoryResultNode* b);
   static int32_t SortComparison_FrecencyGreater(nsNavHistoryResultNode* a,
-                                                nsNavHistoryResultNode* b,
-                                                void* closure);
+                                                nsNavHistoryResultNode* b);
 
   // finding children: THESE DO NOT ADDREF
   nsNavHistoryResultNode* FindChildByURI(const nsACString& aSpec,

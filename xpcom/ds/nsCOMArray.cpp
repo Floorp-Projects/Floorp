@@ -8,7 +8,6 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/OperatorNewExtensions.h"
-#include "nsQuickSort.h"
 
 #include "nsCOMPtr.h"
 
@@ -94,22 +93,6 @@ bool nsCOMArray_base::EnumerateBackwards(nsBaseArrayEnumFunc aFunc,
   }
 
   return true;
-}
-
-int nsCOMArray_base::VoidStarComparator(const void* aElement1,
-                                        const void* aElement2, void* aData) {
-  auto ctx = static_cast<nsISupportsComparatorContext*>(aData);
-  return (*ctx->mComparatorFunc)(*static_cast<nsISupports* const*>(aElement1),
-                                 *static_cast<nsISupports* const*>(aElement2),
-                                 ctx->mData);
-}
-
-void nsCOMArray_base::Sort(nsISupportsComparatorFunc aFunc, void* aData) {
-  if (mArray.Length() > 1) {
-    nsISupportsComparatorContext ctx = {aFunc, aData};
-    NS_QuickSort(mArray.Elements(), mArray.Length(), sizeof(nsISupports*),
-                 VoidStarComparator, &ctx);
-  }
 }
 
 bool nsCOMArray_base::InsertObjectAt(nsISupports* aObject, int32_t aIndex) {
