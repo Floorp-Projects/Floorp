@@ -197,6 +197,7 @@ class NetworkEventActor extends Actor {
       referrerPolicy: lazy.NetworkUtils.getReferrerPolicy(channel),
       stacktraceResourceId,
       startedDateTime: new Date(timeStamp).toISOString(),
+      httpVersion: lazy.NetworkUtils.getHttpVersion(channel),
       timeStamp,
       timings: {},
       url,
@@ -493,7 +494,6 @@ class NetworkEventActor extends Actor {
     }
 
     this._onEventUpdate("responseStart", {
-      httpVersion: lazy.NetworkUtils.getHttpVersion(channel),
       mimeType,
       remoteAddress: fromCache ? "" : channel.remoteAddress,
       remotePort: fromCache ? "" : channel.remotePort,

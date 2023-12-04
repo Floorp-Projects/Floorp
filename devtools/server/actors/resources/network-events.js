@@ -338,7 +338,6 @@ class NetworkEventWatcher {
 
     switch (updateResource.updateType) {
       case "responseStart":
-        resourceUpdates.httpVersion = updateResource.httpVersion;
         resourceUpdates.status = updateResource.status;
         resourceUpdates.statusText = updateResource.statusText;
         resourceUpdates.remoteAddress = updateResource.remoteAddress;
