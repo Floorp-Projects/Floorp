@@ -32,15 +32,13 @@ const testData = [
   ["VK_LEFT", "background", -1, 0],
 ];
 
-const mockGetCSSPropertyList = function () {
-  return [
-    "background",
-    "border",
-    "box-sizing",
-    "color",
-    "display",
-    "visibility",
-  ];
+const mockValues = {
+  background: [],
+  border: [],
+  "box-sizing": [],
+  color: [],
+  display: [],
+  visibility: [],
 };
 
 add_task(async function () {
@@ -57,6 +55,10 @@ add_task(async function () {
         contentType: InplaceEditor.CONTENT_TYPES.CSS_PROPERTY,
         done: resolve,
         popup,
+        cssProperties: {
+          getNames: () => Object.keys(mockValues),
+          getValues: propertyName => mockValues[propertyName] || [],
+        },
       },
       doc
     );
@@ -69,8 +71,6 @@ add_task(async function () {
 
 const runPropertyAutocompletionTest = async function (editor) {
   info("Starting to test for css property completion");
-  editor._getCSSPropertyList = mockGetCSSPropertyList;
-
   for (const data of testData) {
     await testCompletion(data, editor);
   }

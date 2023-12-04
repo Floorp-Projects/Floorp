@@ -50,6 +50,11 @@ add_task(async function () {
         property: {
           name: "background-image",
         },
+        cssProperties: {
+          // No need to test autocompletion here, return an empty array.
+          getNames: () => [],
+          getValues: () => [],
+        },
         cssVariables: new Map(),
         done: resolve,
         popup,
@@ -65,13 +70,8 @@ add_task(async function () {
 
 const runPropertyAutocompletionTest = async function (editor) {
   info("Starting to test for css property completion");
-
-  // No need to test autocompletion here, return an empty array.
-  editor._getCSSValuesForPropertyName = () => [];
-
   for (const data of testData) {
     await testCompletion(data, editor);
   }
-
   EventUtils.synthesizeKey("VK_RETURN", {}, editor.input.defaultView);
 };
