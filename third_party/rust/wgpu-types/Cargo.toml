@@ -58,10 +58,10 @@ strict_asserts = []
 trace = ["serde"]
 
 [target."cfg(target_arch = \"wasm32\")".dependencies]
-js-sys = "0.3.65"
+js-sys = "0.3.66"
 
 [target."cfg(target_arch = \"wasm32\")".dependencies.web-sys]
-version = "0.3.64"
+version = "0.3.66"
 features = [
     "ImageBitmap",
     "HtmlVideoElement",

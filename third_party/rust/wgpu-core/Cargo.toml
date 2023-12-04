@@ -81,6 +81,7 @@ path = "../wgpu-types"
 package = "wgpu-types"
 
 [features]
+api_log_info = []
 default = ["link"]
 dx11 = ["hal/dx11"]
 dx12 = ["hal/dx12"]
@@ -99,6 +100,7 @@ replay = [
     "arrayvec/serde",
     "naga/deserialize",
 ]
+resource_log_info = []
 serial-pass = [
     "serde",
     "wgt/serde",
@@ -116,7 +118,7 @@ vulkan = ["hal/vulkan"]
 wgsl = ["naga/wgsl-in"]
 
 [target."cfg(all(target_arch = \"wasm32\", not(target_os = \"emscripten\")))".dependencies.web-sys]
-version = "0.3.64"
+version = "0.3.66"
 features = [
     "HtmlCanvasElement",
     "OffscreenCanvas",

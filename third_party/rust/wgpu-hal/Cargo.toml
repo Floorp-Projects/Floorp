@@ -88,7 +88,7 @@ path = "../naga"
 features = ["wgsl-in"]
 
 [dev-dependencies.winit]
-version = "0.29.2"
+version = "0.29.4"
 features = ["android-native-activity"]
 
 [features]
@@ -146,11 +146,11 @@ vulkan = [
 windows_rs = ["gpu-allocator"]
 
 [target."cfg(all(target_arch = \"wasm32\", not(target_os = \"emscripten\")))".dependencies]
-js-sys = "0.3.65"
+js-sys = "0.3.66"
 wasm-bindgen = "0.2.87"
 
 [target."cfg(all(target_arch = \"wasm32\", not(target_os = \"emscripten\")))".dependencies.web-sys]
-version = "0.3.64"
+version = "0.3.66"
 features = [
     "Window",
     "HtmlCanvasElement",
