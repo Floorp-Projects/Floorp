@@ -37,6 +37,11 @@ class EncryptedBlock {
     // But maybe that's not necessary as the block size is not user-provided and
     // small.
     mData.SetLength(aOverallSize);
+
+    // Bug 1867394: Making sure to zero-initialize first block as there might
+    // be some unused bytes in it which could expose sensitive data.
+    // Currently, only sizeof(uint16_t) bytes gets used in the first block.
+    std::fill(mData.begin(), mData.begin() + CipherPrefixOffset(), 0);
     SetActualPayloadLength(MaxPayloadLength());
   }
 
@@ -85,7 +90,7 @@ class EncryptedBlock {
     return (aValue + BasicBlockSize - 1) / BasicBlockSize * BasicBlockSize;
   }
 
-  nsTArray<uint8_t> mData;  ///< XXX use some "safe memory" here?
+  nsTArray<uint8_t> mData;
 };
 
 }  // namespace mozilla::dom::quota
