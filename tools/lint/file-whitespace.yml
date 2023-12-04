@@ -30,6 +30,7 @@ file-whitespace:
         - dom/canvas/test
         - dom/events/crashtests
         - dom/events/test
+        - dom/file/tests/crashtests/1748342.html
         - dom/file/tests/file_mozfiledataurl_inner.html
         - dom/html/crashtests
         - dom/html/reftests
@@ -67,8 +68,10 @@ file-whitespace:
         - image/test/crashtests
         - image/test/mochitest
         - image/test/reftest
+        - intl/components/gtest/TestNumberRangeFormat.cpp
         - intl/icu_segmenter_data
         - intl/lwbrk/crashtests
+        - intl/lwbrk/rulebrk.c
         - intl/uconv/crashtests
         - intl/uconv/tests
         - intl/strres/tests/unit/397093.properties
@@ -115,7 +118,9 @@ file-whitespace:
         - testing/web-platform/tests/html
         - testing/web-platform/tests/tools/lint/tests/dummy/broken.html
         - testing/web-platform/tests/tools/lint/tests/dummy/broken_ignored.html
+        - toolkit/components/passwordmgr/test/mochitest/
         - toolkit/content/tests/chrome
+        - toolkit/locales/en-US/chrome/passwordmgr/passwordmgr.properties
         - tools/jprof/README.html
         - tools/lint/eslint
         - tools/lint/test/test_clang_format.py

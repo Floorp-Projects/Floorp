@@ -999,7 +999,7 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
     return false;
   }
 
-  // Step 8. Perform ! CreateDataPropertyOrThrow(contextObj, "kind", kindStr).
+  // Step 8. Perform ! CreateDataPropertyOrThrow(contextObj, "kind", kindStr).
   if (!oe.emitInit(frontend::AccessorType::None,
                    frontend::TaggedParserAtomIndex::WellKnown::kind())) {
     //          [stack] context
@@ -1009,7 +1009,7 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
   if (kind != Kind::Class) {
     MOZ_ASSERT(key != nullptr, "Expect key to be present except for classes");
 
-    // Step 9.a. Perform ! CreateDataPropertyOrThrow(contextObj, "access",
+    // Step 9.a. Perform ! CreateDataPropertyOrThrow(contextObj, "access",
     //           CreateDecoratorAccessObject(kind, name)).
     if (!oe.prepareForPropValue(pos.begin, PropertyEmitter::Kind::Prototype)) {
       return false;
@@ -1023,7 +1023,7 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
       return false;
     }
     // Step 9.b. If isStatic is present, perform
-    //           ! CreateDataPropertyOrThrow(contextObj, "static", isStatic).
+    //           ! CreateDataPropertyOrThrow(contextObj, "static", isStatic).
     if (!oe.prepareForPropValue(pos.begin, PropertyEmitter::Kind::Prototype)) {
       return false;
     }
@@ -1037,10 +1037,10 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
       return false;
     }
     // Step 9.c. If name is a Private Name, then
-    // Step 9.c.i. Perform ! CreateDataPropertyOrThrow(contextObj, "private",
+    // Step 9.c.i. Perform ! CreateDataPropertyOrThrow(contextObj, "private",
     //             true).
     // Step 9.d. Else, Step 9.d.i. Perform
-    //           ! CreateDataPropertyOrThrow(contextObj, "private", false).
+    //           ! CreateDataPropertyOrThrow(contextObj, "private", false).
     if (!oe.prepareForPropValue(pos.begin, PropertyEmitter::Kind::Prototype)) {
       return false;
     }
@@ -1054,10 +1054,10 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
       //          [stack] context
       return false;
     }
-    // Step 9.c.ii. Perform ! CreateDataPropertyOrThrow(contextObj,
+    // Step 9.c.ii. Perform ! CreateDataPropertyOrThrow(contextObj,
     //              "name", name.[[Description]]).
     //
-    // Step 9.d.ii. Perform ! CreateDataPropertyOrThrow(contextObj,
+    // Step 9.d.ii. Perform ! CreateDataPropertyOrThrow(contextObj,
     //              "name", name.[[Description]]).)
     if (!oe.prepareForPropValue(pos.begin, PropertyEmitter::Kind::Prototype)) {
       return false;
@@ -1078,7 +1078,7 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
     }
   } else {
     // Step 10. Else,
-    // Step 10.a. Perform ! CreateDataPropertyOrThrow(contextObj, "name", name).
+    // Step 10.a. Perform ! CreateDataPropertyOrThrow(contextObj, "name", name).
     if (!oe.prepareForPropValue(pos.begin, PropertyEmitter::Kind::Prototype)) {
       return false;
     }
@@ -1106,7 +1106,7 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
     //          [stack] context addInitializer
     return false;
   }
-  // Step 12. Perform ! CreateDataPropertyOrThrow(contextObj, "addInitializer",
+  // Step 12. Perform ! CreateDataPropertyOrThrow(contextObj, "addInitializer",
   //          addInitializer).
   if (!oe.emitInit(
           frontend::AccessorType::None,

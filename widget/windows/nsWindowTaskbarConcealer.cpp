@@ -361,7 +361,8 @@ void nsWindow::TaskbarConcealer::OnAsyncStateUpdateRequest(HWND hwnd) {
   // shell to notify it to recalculate the current rudeness state of all
   // monitors.
   //
-  // [0] https://github.com/dechamps/RudeWindowFixer#a-race-condition-activating-a-minimized-window
+  // [0]
+  // https://github.com/dechamps/RudeWindowFixer#a-race-condition-activating-a-minimized-window
   //
   static UINT const shellHookMsg = ::RegisterWindowMessageW(L"SHELLHOOK");
   if (shellHookMsg != 0) {
