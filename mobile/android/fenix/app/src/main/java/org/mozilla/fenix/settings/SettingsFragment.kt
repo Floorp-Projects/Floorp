@@ -112,13 +112,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         addonFilePicker = AddonFilePicker(
             requireContext(),
             requireComponents.addonManager,
-        ) {
-            Toast.makeText(
-                context,
-                getString(R.string.mozac_feature_addons_failed_to_install_generic),
-                Toast.LENGTH_LONG,
-            ).show()
-        }
+        )
         addonFilePicker.registerForResults(this)
 
         // It's important to update the account UI state in onCreate since that ensures we'll never
