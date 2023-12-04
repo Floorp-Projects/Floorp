@@ -9,12 +9,10 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 const setDefaultBrowserUserChoiceStub = sinon.stub();
-const setDefaultExtensionHandlersUserChoiceStub = sinon
-  .stub()
-  .callsFake(() => Promise.resolve());
+const setDefaultExtensionHandlersUserChoiceStub = sinon.stub();
 
 const defaultAgentStub = sinon.stub(ShellService, "defaultAgent").value({
-  setDefaultBrowserUserChoiceAsync: setDefaultBrowserUserChoiceStub,
+  setDefaultBrowserUserChoice: setDefaultBrowserUserChoiceStub,
   setDefaultExtensionHandlersUserChoice:
     setDefaultExtensionHandlersUserChoiceStub,
 });
@@ -75,7 +73,7 @@ add_task(async function remoteEnableWithPDF() {
   );
 
   setDefaultBrowserUserChoiceStub.resetHistory();
-  await ShellService.setDefaultBrowser();
+  ShellService.setDefaultBrowser();
 
   const aumi = XreDirProvider.getInstallHash();
   Assert.ok(setDefaultBrowserUserChoiceStub.called);
@@ -120,7 +118,7 @@ add_task(async function remoteEnableWithPDF_testOnlyReplaceBrowsers() {
     queryCurrentDefaultHandlerForStub.callsFake(() => progId);
 
     setDefaultBrowserUserChoiceStub.resetHistory();
-    await ShellService.setDefaultBrowser();
+    ShellService.setDefaultBrowser();
 
     Assert.ok(setDefaultBrowserUserChoiceStub.called);
     Assert.deepEqual(
@@ -134,7 +132,7 @@ add_task(async function remoteEnableWithPDF_testOnlyReplaceBrowsers() {
   queryCurrentDefaultHandlerForStub.callsFake(() => "Acrobat.Document.DC");
 
   setDefaultBrowserUserChoiceStub.resetHistory();
-  await ShellService.setDefaultBrowser();
+  ShellService.setDefaultBrowser();
 
   Assert.ok(setDefaultBrowserUserChoiceStub.called);
   Assert.deepEqual(
@@ -166,7 +164,7 @@ add_task(async function remoteEnableWithoutPDF() {
   );
 
   setDefaultBrowserUserChoiceStub.resetHistory();
-  await ShellService.setDefaultBrowser();
+  ShellService.setDefaultBrowser();
 
   const aumi = XreDirProvider.getInstallHash();
   Assert.ok(setDefaultBrowserUserChoiceStub.called);
@@ -195,7 +193,7 @@ add_task(async function remoteDisable() {
   );
 
   setDefaultBrowserUserChoiceStub.resetHistory();
-  await ShellService.setDefaultBrowser();
+  ShellService.setDefaultBrowser();
 
   Assert.ok(setDefaultBrowserUserChoiceStub.notCalled);
   Assert.ok(setDefaultStub.called);
