@@ -162,6 +162,21 @@ void CommandEncoder::CopyTextureToTexture(
   }
 }
 
+void CommandEncoder::ClearBuffer(const Buffer& aBuffer, const uint64_t aOffset,
+                                 const dom::Optional<uint64_t>& aSize) {
+  uint64_t sizeVal = 0xdeaddead;
+  uint64_t* size = nullptr;
+  if (aSize.WasPassed()) {
+    sizeVal = aSize.Value();
+    size = &sizeVal;
+  }
+
+  ipc::ByteBuf bb;
+  ffi::wgpu_command_encoder_clear_buffer(aBuffer.mId, aOffset, size,
+                                         ToFFI(&bb));
+  mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
+}
+
 void CommandEncoder::PushDebugGroup(const nsAString& aString) {
   if (!mBridge->IsOpen()) {
     return;
