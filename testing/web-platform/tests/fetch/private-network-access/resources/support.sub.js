@@ -446,10 +446,6 @@ async function iframeTest(t, { source, target, expected }) {
   const targetUrl = preflightUrl(target);
   targetUrl.searchParams.set("file", "iframed.html");
   targetUrl.searchParams.set("iframe-uuid", uuid);
-  targetUrl.searchParams.set(
-    "file-if-no-preflight-received",
-    "iframed-no-preflight-received.html",
-  );
 
   const sourceUrl =
       resolveUrl("resources/iframer.html", sourceResolveOptions(source));
@@ -474,18 +470,13 @@ async function iframeTest(t, { source, target, expected }) {
   assert_equals(result, expected);
 }
 
-const NavigationTestResult = {
+const WindowOpenTestResult = {
   SUCCESS: "success",
-  FAILURE: "timeout",
+  FAILURE: "failure",
 };
 
 async function windowOpenTest(t, { source, target, expected }) {
   const targetUrl = preflightUrl(target);
-  targetUrl.searchParams.set("file", "openee.html");
-  targetUrl.searchParams.set(
-    "file-if-no-preflight-received",
-    "no-preflight-received.html",
-  );
 
   const sourceUrl =
       resolveUrl("resources/opener.html", sourceResolveOptions(source));
@@ -496,41 +487,7 @@ async function windowOpenTest(t, { source, target, expected }) {
 
   iframe.contentWindow.postMessage({ url: targetUrl.href }, "*");
 
-  const result = await Promise.race([
-      reply,
-      new Promise((resolve) => {
-        t.step_timeout(() => resolve("timeout"), 3000 /* ms */);
-      }),
-  ]);
-
-  assert_equals(result, expected);
-}
-
-async function anchorTest(t, { source, target, expected }) {
-  const targetUrl = preflightUrl(target);
-  targetUrl.searchParams.set("file", "openee.html");
-  targetUrl.searchParams.set(
-    "file-if-no-preflight-received",
-    "no-preflight-received.html",
-  );
-
-  const sourceUrl =
-      resolveUrl("resources/anchor.html", sourceResolveOptions(source));
-  sourceUrl.searchParams.set("url", targetUrl);
-
-  const iframe = await appendIframe(t, document, sourceUrl);
-  const reply = futureMessage({ source: iframe.contentWindow });
-
-  iframe.contentWindow.postMessage({ url: targetUrl.href }, "*");
-
-  const result = await Promise.race([
-      reply,
-      new Promise((resolve) => {
-        t.step_timeout(() => resolve("timeout"), 4000 /* ms */);
-      }),
-  ]);
-
-  assert_equals(result, expected);
+  assert_equals(await reply, expected);
 }
 
 // Similar to `iframeTest`, but replaced iframes with fenced frames.

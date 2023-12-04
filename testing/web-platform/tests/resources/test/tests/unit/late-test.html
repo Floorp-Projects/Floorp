@@ -10,12 +10,11 @@
 <p>This test simulates an automated test running scenario, where the test
 results emitted by testharness.js may be interpreted after some delay. It is
 intended to demonstrate that in such cases, any additional tests which are
-executed during that delay are included in the dataset.</p>
+executed during that delay are <em>not</em> included in the dataset.</p>
 
-<p>Although these "late tests" are likely an indication of a mistake in test
-design, they are also recorded. Previously, "late tests" were ignored.
-This test changed to assert "late tests" were no longer ignored after
-https://github.com/web-platform-tests/wpt/pull/38806 was introduced.</p>
+<p>Although these "late" tests are likely an indication of a mistake in test
+design, they cannot be detected deterministically, so in the interest of
+stability, they should be silently tolerated.</p>
 <script>
 async_test(function(t) {
     var source = [
@@ -28,7 +27,7 @@ async_test(function(t) {
         "test(function() {}, 'acceptable test');",
         "onload = function() {",
         "  done();",
-        "  test(function() {}, 'test registered in onload handler');",
+        "  test(function() {}, 'this test is late and should be ignored');",
         "};",
         "</" + "script>"
     ].join("\n");
@@ -38,9 +37,8 @@ async_test(function(t) {
     window.childReady = t.step_func(function(childWindow) {
         childWindow.add_completion_callback(t.step_func(function(tests, status) {
             t.step_timeout(t.step_func(function() {
-                assert_equals(tests.length, 2);
+                assert_equals(tests.length, 1);
                 assert_equals(tests[0].name, "acceptable test");
-                assert_equals(tests[1].name, "test registered in onload handler");
                 assert_equals(status.status, status.OK);
                 t.done();
             }), 0);
