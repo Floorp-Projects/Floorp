@@ -46,6 +46,11 @@
        ThemeVariableMap.sys.mjs when the user has a theme that defines
        ntp_background. */
     --tabpanel-background-color: #25003e !important;
+
+    /* stylelint-disable-next-line media-query-no-invalid */
+    @media (-moz-bool-pref: "browser.privatebrowsing.felt-privacy-v1") {
+      --tabpanel-background-color: linear-gradient(45deg, #722291 0%, #45278D 50%, #393473 100%) !important;
+    }
   }
 }
 
@@ -53,7 +58,7 @@
   appearance: none;
   padding: 0;
   color-scheme: unset;
-  background-color: var(--tabpanel-background-color);
+  background: var(--tabpanel-background-color);
 
   browser[type=content] {
     color-scheme: env(-moz-content-preferred-color-scheme);
