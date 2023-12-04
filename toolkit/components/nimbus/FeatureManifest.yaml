@@ -1419,6 +1419,10 @@ networking:
       description: Whether we can send OnDataFinished in the content process
       type: boolean
       setPref: "network.send_OnDataFinished"
+    sendOnDataFinshedFromInputStreamPump:
+      description: Whether we can send OnDataFinished to the content process from InputStreamPump
+      type: boolean
+      setPref: "network.send_OnDataFinished.nsInputStreamPump"
     sendOnDataFinishedToHtml5parser:
       description: Whether we can send OnDataFinished to the html5parser in content process
       type: boolean
