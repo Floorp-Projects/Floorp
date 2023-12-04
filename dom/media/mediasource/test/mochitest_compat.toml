@@ -244,6 +244,9 @@ tags = "firstpartyisolation"
 
 ["test_EndOfStream_mp4.html"]
 
+["test_FrameSelection.html"]
+skip-if = ["os == 'android'"] # bug 1341519, bug 1401090
+
 ["test_HaveMetadataUnbufferedSeek.html"]
 
 ["test_HaveMetadataUnbufferedSeek_mp4.html"]
