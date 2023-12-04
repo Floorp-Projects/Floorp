@@ -770,7 +770,7 @@ pref("browser.shopping.experience2023.ads.enabled", false);
 // Activates the ad card in the shopping sidebar.
 // Unlike `browser.shopping.experience2023.ads.enabled`, this pref is controlled by users
 // using the visible toggle.
-pref("browser.shopping.experience2023.ads.userEnabled", false);
+pref("browser.shopping.experience2023.ads.userEnabled", true);
 
 // Saves if shopping survey is enabled.
 pref("browser.shopping.experience2023.survey.enabled", true);
