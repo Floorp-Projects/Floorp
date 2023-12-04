@@ -6560,16 +6560,20 @@ var SessionStoreInternal = {
 
       hasPinnedTabs ||= !!newWindowState.tabs.length;
 
-      // Only transfer over window attributes for pinned tabs, which has
-      // already been extracted into newWindowState.tabs.
-      if (newWindowState.tabs.length) {
+      // At this point the window in the state object has been modified (or not)
+      // We want to build the rest of this new window object if we have pinnedTabs.
+      if (
+        newWindowState.tabs.length ||
+        (PERSIST_SESSIONS && newWindowState._closedTabs.length)
+      ) {
+        // First get the other attributes off the window
         WINDOW_ATTRIBUTES.forEach(function (attr) {
           if (attr in window) {
             newWindowState[attr] = window[attr];
             delete window[attr];
           }
         });
-        // We're just copying position data into the window for pinned tabs.
+        // We're just copying position data into the pinned window.
         // Not copying over:
         // - extData
         // - isPopup
@@ -6579,14 +6583,8 @@ var SessionStoreInternal = {
         // remaining data
         window.__lastSessionWindowID = newWindowState.__lastSessionWindowID =
           "" + Date.now() + Math.random();
-      }
 
-      // If this newWindowState contains pinned tabs (stored in tabs) or
-      // closed tabs, add it to the defaultState so they're available immediately.
-      if (
-        newWindowState.tabs.length ||
-        (PERSIST_SESSIONS && newWindowState._closedTabs.length)
-      ) {
+        // Actually add this window to our defaultState
         defaultState.windows.push(newWindowState);
         // Remove the window from the state if it doesn't have any tabs
         if (!window.tabs.length) {
