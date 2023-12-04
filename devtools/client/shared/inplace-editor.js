@@ -343,19 +343,43 @@ class InplaceEditor extends EventEmitter {
       this.input.select();
     }
 
-    this.input.addEventListener("blur", this.#onBlur);
-    this.input.addEventListener("keypress", this.#onKeyPress);
-    this.input.addEventListener("input", this.#onInput);
-    this.input.addEventListener("dblclick", this.#stopEventPropagation);
-    this.input.addEventListener("click", this.#stopEventPropagation);
-    this.input.addEventListener("mousedown", this.#stopEventPropagation);
-    this.input.addEventListener("contextmenu", this.#onContextMenu);
-    this.doc.defaultView.addEventListener("blur", this.#onWindowBlur);
+    const win = doc.defaultView;
+    this.#abortController = new win.AbortController();
+    const eventListenerConfig = { signal: this.#abortController.signal };
+
+    this.input.addEventListener("blur", this.#onBlur, eventListenerConfig);
+    this.input.addEventListener(
+      "keypress",
+      this.#onKeyPress,
+      eventListenerConfig
+    );
+    this.input.addEventListener("input", this.#onInput, eventListenerConfig);
+    this.input.addEventListener(
+      "dblclick",
+      this.#stopEventPropagation,
+      eventListenerConfig
+    );
+    this.input.addEventListener(
+      "click",
+      this.#stopEventPropagation,
+      eventListenerConfig
+    );
+    this.input.addEventListener(
+      "mousedown",
+      this.#stopEventPropagation,
+      eventListenerConfig
+    );
+    this.input.addEventListener(
+      "contextmenu",
+      this.#onContextMenu,
+      eventListenerConfig
+    );
+    win.addEventListener("blur", this.#onWindowBlur, eventListenerConfig);
 
     this.validate = options.validate;
 
     if (this.validate) {
-      this.input.addEventListener("keyup", this.#onKeyup);
+      this.input.addEventListener("keyup", this.#onKeyup, eventListenerConfig);
     }
 
     this.#updateSize();
@@ -368,6 +392,7 @@ class InplaceEditor extends EventEmitter {
   }
   static CONTENT_TYPES = CONTENT_TYPES;
 
+  #abortController;
   #advanceChars;
   #applied;
   #measurement;
@@ -412,16 +437,7 @@ class InplaceEditor extends EventEmitter {
       return;
     }
 
-    this.input.removeEventListener("blur", this.#onBlur);
-    this.input.removeEventListener("keypress", this.#onKeyPress);
-    this.input.removeEventListener("keyup", this.#onKeyup);
-    this.input.removeEventListener("input", this.#onInput);
-    this.input.removeEventListener("dblclick", this.#stopEventPropagation);
-    this.input.removeEventListener("click", this.#stopEventPropagation);
-    this.input.removeEventListener("mousedown", this.#stopEventPropagation);
-    this.input.removeEventListener("contextmenu", this.#onContextMenu);
-    this.doc.defaultView.removeEventListener("blur", this.#onWindowBlur);
-
+    this.#abortController.abort();
     this.#stopAutosize();
 
     this.elt.style.display = this.originalDisplay;
