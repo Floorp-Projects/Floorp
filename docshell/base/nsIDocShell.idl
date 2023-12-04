@@ -540,14 +540,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   [infallible] readonly attribute boolean isTopLevelContentDocShell;
 
   /**
-   * Like nsIDocShellTreeItem::GetSameTypeParent, except this ignores <iframe
-   * mozbrowser> boundaries. Which no longer exist.
-   *
-   * @deprecated: Use `BrowsingContext::GetParent()` in the future.
-   */
-  nsIDocShell getSameTypeInProcessParentIgnoreBrowserBoundaries();
-
-  /**
    * True iff asynchronous panning and zooming is enabled for this
    * docshell.
    */
