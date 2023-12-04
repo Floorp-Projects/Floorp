@@ -100,17 +100,19 @@ static inline __attribute__((always_inline)) void do_relocations(
       ptr = (Elf_Addr*)((intptr_t)&__ehdr_start + *entry);
       *ptr += (intptr_t)&__ehdr_start;
     } else {
-      size_t remaining = (8 * sizeof(Elf_Addr) - 1);
       Elf_Addr bits = *entry;
+      Elf_Addr* end = ptr + 8 * sizeof(Elf_Addr) - 1;
       do {
-        bits >>= 1;
-        remaining--;
         ptr++;
-        if (bits & 1) {
-          *ptr += (intptr_t)&__ehdr_start;
-        }
-      } while (bits);
-      ptr += remaining;
+        bits >>= 1;
+#if defined(__ANDROID__)
+        // FIXME: I don't see why this would fail, compared to the below faster
+        // version, but it does on Android.
+        if (bits & 1) *ptr += (intptr_t)&__ehdr_start;
+#else
+        *ptr += (bits & 1) ? (intptr_t)&__ehdr_start : 0;
+#endif
+      } while (ptr < end);
     }
   }
 }
