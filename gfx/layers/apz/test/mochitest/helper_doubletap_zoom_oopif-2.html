@@ -1,0 +1,142 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100,initial-scale=0.4"/>
+  <title>Tests that double tap to zoom in iframe works regardless whether cross-origin or not</title>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+  html {
+    /* To avoid bug 1865573 */
+    scrollbar-width: none;
+  }
+  iframe {
+    position: absolute;
+    top: 100px;
+    left: 100px;
+    border: none;
+  }
+  </style>
+
+  <script>
+
+async function setupIframe(aURL) {
+  const iframe = document.querySelector("iframe");
+  const iframeLoadPromise = promiseOneEvent(iframe, "load", null);
+  iframe.src = aURL;
+  await iframeLoadPromise;
+  info(`${aURL} loaded`);
+
+  await SpecialPowers.spawn(iframe, [], async () => {
+    await content.wrappedJSObject.waitUntilApzStable();
+    await SpecialPowers.contentTransformsReceived(content);
+  });
+}
+
+async function targetElementPosition() {
+  const iframe = document.querySelector("iframe");
+  return SpecialPowers.spawn(iframe, [], async () => {
+    return content.document.querySelector("#target").getBoundingClientRect();
+  });
+}
+
+function cloneVisualViewport() {
+  return {
+    offsetLeft: visualViewport.offsetLeft,
+    offsetTop:  visualViewport.offsetTop,
+    pageLeft: visualViewport.pageLeft,
+    pageTop: visualViewport.pageTop,
+    width: visualViewport.width,
+    height: visualViewport.height,
+    scale: visualViewport.scale,
+  };
+}
+
+function compareVisualViewport(aVisualViewportValue1, aVisualViewportValue2, aMessage) {
+  for (let p in aVisualViewportValue1) {
+    // Due to the method difference of the calculation for double-tap-zoom in
+    // OOP iframes, we allow 1.0 difference in each visualViewport value.
+    // NOTE: Because of our layer pixel snapping (bug 1774315 and bug 1852884)
+    // the visual viewport metrics can have one more pixel difference so we
+    // allow it here.
+    const tolerance = 1.0 + 1.0;
+    isfuzzy(aVisualViewportValue1[p], aVisualViewportValue2[p],
+            aVisualViewportValue1.scale > 1.0 ? tolerance : tolerance / aVisualViewportValue1.scale,
+            `${p} should be same on ${aMessage}`);
+  }
+}
+
+const useTouchpad = (location.search == "?touchpad");
+
+async function test(aTestFile) {
+  let iframeURL = SimpleTest.getTestFileURL(aTestFile);
+
+  // Load the test document in the same origin.
+  await setupIframe(iframeURL);
+
+  let resolution = await getResolution();
+  ok(resolution > 0,
+     "The initial_resolution is " + resolution + ", which is some sane value");
+
+  let pos = await targetElementPosition();
+  const iframe = document.querySelector("iframe");
+  await doubleTapOn(iframe, pos.x + 10, pos.y + 10, useTouchpad);
+
+  let prev_resolution = resolution;
+  resolution = await getResolution();
+  ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
+
+  let zoomedInState = cloneVisualViewport();
+
+  await doubleTapOn(iframe, pos.x + 10, pos.y + 10, useTouchpad);
+  prev_resolution = resolution;
+  resolution = await getResolution();
+  ok(resolution < prev_resolution, "The second double-tap has decreased the resolution to " + resolution);
+
+  let zoomedOutState = cloneVisualViewport();
+
+  // Now load the document in an OOP iframe.
+  iframeURL = iframeURL.replace(window.location.origin, "https://example.com");
+  await setupIframe(iframeURL);
+
+  await doubleTapOn(iframe, pos.x + 10, pos.y + 10, useTouchpad);
+  prev_resolution = resolution;
+  resolution = await getResolution();
+  ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
+
+  compareVisualViewport(zoomedInState, cloneVisualViewport(), "zoomed-in state");
+
+  await doubleTapOn(iframe, pos.x + 10, pos.y + 10, useTouchpad);
+  compareVisualViewport(zoomedOutState, cloneVisualViewport(), "zoomed-out state");
+}
+
+async function moveIframe() {
+  const iframe = document.querySelector("iframe");
+  iframe.style.top = "500vh";
+
+  // Scroll to the bottom to make the layout scroll offset non-zero.
+  window.scrollTo(0, document.documentElement.scrollHeight);
+  ok(window.scrollY > 0, "The root scroll position should be non-zero");
+
+  await SpecialPowers.spawn(iframe, [], async () => {
+    await SpecialPowers.contentTransformsReceived(content);
+  });
+}
+
+waitUntilApzStable()
+.then(async () => test("helper_doubletap_zoom_oopif_subframe-1.html"))
+// A test case where the layout scroll offset isn't zero.
+.then(async () => moveIframe())
+.then(async () => test("helper_doubletap_zoom_oopif_subframe-1.html"))
+// A test case where the layout scroll offset in the iframe isn't zero.
+.then(async () => test("helper_doubletap_zoom_oopif_subframe-2.html#target"))
+.then(subtestDone, subtestFailed);
+
+  </script>
+</head>
+<body>
+<iframe width="500" height="500"></iframe>
+</body>
+</html>

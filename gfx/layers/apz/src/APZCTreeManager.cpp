@@ -2440,8 +2440,12 @@ void APZCTreeManager::ZoomToRect(const ScrollableLayerGuid& aGuid,
     }
     return;
   }
+
   if (apzc) {
-    apzc->ZoomToRect(aZoomTarget, aFlags);
+    apzc = FindZoomableApzc(apzc);
+    if (apzc) {
+      apzc->ZoomToRect(aZoomTarget, aFlags);
+    }
   }
 }
 

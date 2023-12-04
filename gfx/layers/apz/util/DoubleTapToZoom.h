@@ -72,10 +72,11 @@ struct DoubleTapToZoomMetrics {
  * For a double tap at |aPoint|, return a ZoomTarget struct with contains a rect
  * to which the browser should zoom in response (see ZoomTarget definition for
  * more details). An empty rect means the browser should zoom out. |aDocument|
- * should be the root content document for the content that was tapped.
+ * should be the in-process root content document for the content that was
+ * tapped.
  */
 ZoomTarget CalculateRectToZoomTo(
-    const RefPtr<mozilla::dom::Document>& aRootContentDocument,
+    const RefPtr<mozilla::dom::Document>& aInProcessRootContentDocument,
     const CSSPoint& aPoint, const DoubleTapToZoomMetrics& aMetrics);
 
 }  // namespace layers
