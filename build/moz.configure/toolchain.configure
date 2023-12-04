@@ -722,9 +722,13 @@ def rust_search_path(rust_path, search_order, original_path):
 # Prepend the mozilla-build msys2 path, since otherwise we can get mismatched
 # cygwin dll errors during configure if we get called from another msys2
 # environment, see bug 1801826.
-@depends(mozillabuild_bin_paths, clang_search_path, rust_search_path, target, original_path)
+@depends(
+    mozillabuild_bin_paths, clang_search_path, rust_search_path, target, original_path
+)
 @imports("os")
-def altered_path(mozillabuild_bin_paths, clang_search_path, rust_search_path, target, original_path):
+def altered_path(
+    mozillabuild_bin_paths, clang_search_path, rust_search_path, target, original_path
+):
     altered_path = mozillabuild_bin_paths
     if target.kernel == "Darwin":
         # The rust compiler wants to execute dsymutil, but it does so in a

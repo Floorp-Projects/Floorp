@@ -45,7 +45,8 @@ def get_graph_from_spec(tmpdir_factory):
 
 
 @pytest.mark.parametrize(
-    "param_spec", [os.path.splitext(p)[0] for p in os.listdir(PARAMS_DIR) if p.endswith(".yml")]
+    "param_spec",
+    [os.path.splitext(p)[0] for p in os.listdir(PARAMS_DIR) if p.endswith(".yml")],
 )
 def test_generate_graphs(get_graph_from_spec, param_spec):
     ret = get_graph_from_spec(param_spec)

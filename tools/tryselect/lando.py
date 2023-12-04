@@ -236,7 +236,7 @@ class Auth0Config:
         build.notify(auth_msg)
 
         try:
-            webbrowser.open(device_code_data['verification_uri_complete'])
+            webbrowser.open(device_code_data["verification_uri_complete"])
         except webbrowser.Error:
             print("Could not automatically open the web browser.")
 

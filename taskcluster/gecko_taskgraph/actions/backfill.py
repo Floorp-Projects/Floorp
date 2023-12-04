@@ -376,7 +376,9 @@ def filter_raptor_jobs(full_task_graph, label_to_taskid, project):
             continue
         if entry.task.get("extra", {}).get("suite", "") != "raptor":
             continue
-        if not match_run_on_projects(project, entry.attributes.get("run_on_projects", [])):
+        if not match_run_on_projects(
+            project, entry.attributes.get("run_on_projects", [])
+        ):
             continue
         if "browsertime" not in entry.attributes.get("raptor_try_name", ""):
             continue

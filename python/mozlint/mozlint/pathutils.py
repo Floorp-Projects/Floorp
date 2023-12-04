@@ -152,6 +152,7 @@ def filterpaths(root, paths, include, exclude=None, extensions=None):
     :returns: A tuple containing a list of file paths to lint and a list of
               paths to exclude.
     """
+
     def normalize(path):
         if "*" not in path and not os.path.isabs(path):
             path = os.path.join(root, path)
