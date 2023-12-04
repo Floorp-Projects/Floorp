@@ -31,11 +31,8 @@ const testData = [
   ["VK_LEFT", "inline", -1, 0],
 ];
 
-const mockGetCSSValuesForPropertyName = function (propertyName) {
-  const values = {
-    display: ["block", "flex", "inline", "inline-block", "none"],
-  };
-  return values[propertyName] || [];
+const mockValues = {
+  display: ["block", "flex", "inline", "inline-block", "none"],
 };
 
 add_task(async function () {
@@ -55,6 +52,10 @@ add_task(async function () {
         property: {
           name: "display",
         },
+        cssProperties: {
+          getNames: () => Object.keys(mockValues),
+          getValues: propertyName => mockValues[propertyName] || [],
+        },
         done: resolve,
         popup,
       },
@@ -69,8 +70,6 @@ add_task(async function () {
 
 const runAutocompletionTest = async function (editor) {
   info("Starting to test for css property completion");
-  editor._getCSSValuesForPropertyName = mockGetCSSValuesForPropertyName;
-
   for (const data of testData) {
     await testCompletion(data, editor);
   }

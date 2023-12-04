@@ -61,10 +61,6 @@ const CSS_VARIABLES = [
   ["--yz", "hsla(120, 60%, 70%, 0.3)"],
 ];
 
-const mockGetCSSValuesForPropertyName = function (propertyName) {
-  return [];
-};
-
 add_task(async function () {
   await addTab(
     "data:text/html;charset=utf-8,inplace editor CSS variable autocomplete"
@@ -81,6 +77,10 @@ add_task(async function () {
         property: {
           name: "color",
         },
+        cssProperties: {
+          getNames: () => [],
+          getValues: () => [],
+        },
         cssVariables: new Map(CSS_VARIABLES),
         done: resolve,
         popup,
@@ -96,8 +96,6 @@ add_task(async function () {
 
 const runAutocompletionTest = async function (editor) {
   info("Starting to test for css variable completion");
-  editor._getCSSValuesForPropertyName = mockGetCSSValuesForPropertyName;
-
   for (const data of testData) {
     await testCompletion(data, editor);
   }

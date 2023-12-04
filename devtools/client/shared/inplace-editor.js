@@ -313,15 +313,7 @@ class InplaceEditor extends EventEmitter {
       );
     }
 
-    this._onBlur = this._onBlur.bind(this);
-    this._onWindowBlur = this._onWindowBlur.bind(this);
-    this._onKeyPress = this._onKeyPress.bind(this);
-    this._onInput = this._onInput.bind(this);
-    this._onKeyup = this._onKeyup.bind(this);
-    this._onAutocompletePopupClick = this._onAutocompletePopupClick.bind(this);
-    this._onContextMenu = this._onContextMenu.bind(this);
-
-    this._createInput();
+    this.#createInput();
 
     // Hide the provided element and add our editor.
     this.originalDisplay = this.elt.style.display;
@@ -329,9 +321,9 @@ class InplaceEditor extends EventEmitter {
     this.elt.parentNode.insertBefore(this.input, this.elt);
 
     // After inserting the input to have all CSS styles applied, start autosizing.
-    this._autosize();
+    this.#autosize();
 
-    this.inputCharDimensions = this._getInputCharDimensions();
+    this.inputCharDimensions = this.#getInputCharDimensions();
     // Pull out character codes for advanceChars, listing the
     // characters that should trigger a blur.
     if (typeof options.advanceChars === "function") {
@@ -351,28 +343,28 @@ class InplaceEditor extends EventEmitter {
       this.input.select();
     }
 
-    this.input.addEventListener("blur", this._onBlur);
-    this.input.addEventListener("keypress", this._onKeyPress);
-    this.input.addEventListener("input", this._onInput);
-    this.input.addEventListener("dblclick", this._stopEventPropagation);
-    this.input.addEventListener("click", this._stopEventPropagation);
-    this.input.addEventListener("mousedown", this._stopEventPropagation);
-    this.input.addEventListener("contextmenu", this._onContextMenu);
-    this.doc.defaultView.addEventListener("blur", this._onWindowBlur);
+    this.input.addEventListener("blur", this.#onBlur);
+    this.input.addEventListener("keypress", this.#onKeyPress);
+    this.input.addEventListener("input", this.#onInput);
+    this.input.addEventListener("dblclick", this.#stopEventPropagation);
+    this.input.addEventListener("click", this.#stopEventPropagation);
+    this.input.addEventListener("mousedown", this.#stopEventPropagation);
+    this.input.addEventListener("contextmenu", this.#onContextMenu);
+    this.doc.defaultView.addEventListener("blur", this.#onWindowBlur);
 
     this.validate = options.validate;
 
     if (this.validate) {
-      this.input.addEventListener("keyup", this._onKeyup);
+      this.input.addEventListener("keyup", this.#onKeyup);
     }
 
-    this._updateSize();
+    this.#updateSize();
 
     if (options.start) {
       options.start(this, event);
     }
 
-    this._getGridNamesBeforeCompletion(options.getGridLineNames);
+    this.#getGridNamesBeforeCompletion(options.getGridLineNames);
   }
   static CONTENT_TYPES = CONTENT_TYPES;
 
@@ -381,7 +373,7 @@ class InplaceEditor extends EventEmitter {
     return val;
   }
 
-  _createInput() {
+  #createInput() {
     this.input = this.doc.createElementNS(
       HTML_NS,
       this.multiline ? "textarea" : "input"
@@ -406,23 +398,23 @@ class InplaceEditor extends EventEmitter {
   /**
    * Get rid of the editor.
    */
-  _clear() {
+  #clear() {
     if (!this.input) {
       // Already cleared.
       return;
     }
 
-    this.input.removeEventListener("blur", this._onBlur);
-    this.input.removeEventListener("keypress", this._onKeyPress);
-    this.input.removeEventListener("keyup", this._onKeyup);
-    this.input.removeEventListener("input", this._onInput);
-    this.input.removeEventListener("dblclick", this._stopEventPropagation);
-    this.input.removeEventListener("click", this._stopEventPropagation);
-    this.input.removeEventListener("mousedown", this._stopEventPropagation);
-    this.input.removeEventListener("contextmenu", this._onContextMenu);
-    this.doc.defaultView.removeEventListener("blur", this._onWindowBlur);
+    this.input.removeEventListener("blur", this.#onBlur);
+    this.input.removeEventListener("keypress", this.#onKeyPress);
+    this.input.removeEventListener("keyup", this.#onKeyup);
+    this.input.removeEventListener("input", this.#onInput);
+    this.input.removeEventListener("dblclick", this.#stopEventPropagation);
+    this.input.removeEventListener("click", this.#stopEventPropagation);
+    this.input.removeEventListener("mousedown", this.#stopEventPropagation);
+    this.input.removeEventListener("contextmenu", this.#onContextMenu);
+    this.doc.defaultView.removeEventListener("blur", this.#onWindowBlur);
 
-    this._stopAutosize();
+    this.#stopAutosize();
 
     this.elt.style.display = this.originalDisplay;
 
@@ -445,7 +437,7 @@ class InplaceEditor extends EventEmitter {
    * Keeps the editor close to the size of its input string.  This is pretty
    * crappy, suggestions for improvement welcome.
    */
-  _autosize() {
+  #autosize() {
     // Create a hidden, absolutely-positioned span to measure the text
     // in the input.  Boo.
 
@@ -477,13 +469,13 @@ class InplaceEditor extends EventEmitter {
     }
 
     copyAllStyles(this.input, this._measurement);
-    this._updateSize();
+    this.#updateSize();
   }
 
   /**
    * Clean up the mess created by _autosize().
    */
-  _stopAutosize() {
+  #stopAutosize() {
     if (!this._measurement) {
       return;
     }
@@ -494,7 +486,7 @@ class InplaceEditor extends EventEmitter {
   /**
    * Size the editor to fit its current contents.
    */
-  _updateSize() {
+  #updateSize() {
     // Replace spaces with non-breaking spaces.  Otherwise setting
     // the span's textContent will collapse spaces and the measurement
     // will be wrong.
@@ -534,7 +526,7 @@ class InplaceEditor extends EventEmitter {
    * Get the width and height of a single character in the input to properly
    * position the autocompletion popup.
    */
-  _getInputCharDimensions() {
+  #getInputCharDimensions() {
     // Just make the text content to be 'x' to get the width and height of any
     // character in a monospace font.
     this._measurement.textContent = "x";
@@ -550,12 +542,12 @@ class InplaceEditor extends EventEmitter {
    *        The amount to increase/decrease the property value.
    * @return {Boolean} true if value has been incremented.
    */
-  _incrementValue(increment) {
+  #incrementValue(increment) {
     const value = this.input.value;
     const selectionStart = this.input.selectionStart;
     const selectionEnd = this.input.selectionEnd;
 
-    const newValue = this._incrementCSSValue(
+    const newValue = this.#incrementCSSValue(
       value,
       increment,
       selectionStart,
@@ -568,7 +560,7 @@ class InplaceEditor extends EventEmitter {
 
     this.input.value = newValue.value;
     this.input.setSelectionRange(newValue.start, newValue.end);
-    this._doValidation();
+    this.#doValidation();
 
     // Call the user's change handler if available.
     if (this.change) {
@@ -591,8 +583,8 @@ class InplaceEditor extends EventEmitter {
    *        Ending index of the value.
    * @return {Object} object with properties 'value', 'start', and 'end'.
    */
-  _incrementCSSValue(value, increment, selStart, selEnd) {
-    const range = this._parseCSSValue(value, selStart);
+  #incrementCSSValue(value, increment, selStart, selEnd) {
+    const range = this.#parseCSSValue(value, selStart);
     const type = range?.type || "";
     const rawValue = range ? value.substring(range.start, range.end) : "";
     const preRawValue = range ? value.substr(0, range.start) : "";
@@ -604,10 +596,10 @@ class InplaceEditor extends EventEmitter {
     if (type === "num") {
       if (rawValue == "0") {
         info = {};
-        info.units = this._findCompatibleUnit(preRawValue, postRawValue);
+        info.units = this.#findCompatibleUnit(preRawValue, postRawValue);
       }
 
-      const newValue = this._incrementRawValue(rawValue, increment, info);
+      const newValue = this.#incrementRawValue(rawValue, increment, info);
       if (newValue !== null) {
         incrementedValue = newValue;
         selection = [0, incrementedValue.length];
@@ -615,7 +607,7 @@ class InplaceEditor extends EventEmitter {
     } else if (type === "hex") {
       const exprOffset = selStart - range.start;
       const exprOffsetEnd = selEnd - range.start;
-      const newValue = this._incHexColor(
+      const newValue = this.#incHexColor(
         rawValue,
         increment,
         exprOffset,
@@ -659,7 +651,7 @@ class InplaceEditor extends EventEmitter {
           }
         }
       }
-      return this._incrementGenericValue(
+      return this.#incrementGenericValue(
         value,
         increment,
         selStart,
@@ -693,7 +685,7 @@ class InplaceEditor extends EventEmitter {
    * @return {String} a valid unit that can be used for this number value or
    *         empty string if no match could be found.
    */
-  _findCompatibleUnit(beforeValue, afterValue) {
+  #findCompatibleUnit(beforeValue, afterValue) {
     if (!this.property || !this.property.name) {
       return "";
     }
@@ -728,7 +720,7 @@ class InplaceEditor extends EventEmitter {
    * @return {Object} object with properties 'value', 'start', 'end', and
    *         'type'.
    */
-  _parseCSSValue(value, offset) {
+  #parseCSSValue(value, offset) {
     /* eslint-disable max-len */
     const reSplitCSS =
       /(?<url>url\("?[^"\)]+"?\)?)|(?<rgb>rgba?\([^)]*\)?)|(?<hsl>hsla?\([^)]*\)?)|(?<hwb>hwb\([^)]*\)?)|(?<hex>#[\dA-Fa-f]+)|(?<number>-?\d*\.?\d+(%|[a-z]{1,4})?)|"([^"]*)"?|'([^']*)'?|([^,\s\/!\(\)]+)|(!(.*)?)/;
@@ -786,7 +778,7 @@ class InplaceEditor extends EventEmitter {
    *        Object with details about the property value.
    * @return {Object} object with properties 'value', 'start', and 'end'.
    */
-  _incrementGenericValue(value, increment, offset, offsetEnd, info) {
+  #incrementGenericValue(value, increment, offset, offsetEnd, info) {
     // Try to find a number around the cursor to increment.
     let start, end;
     // Check if we are incrementing in a non-number context (such as a URL)
@@ -832,7 +824,7 @@ class InplaceEditor extends EventEmitter {
       let mid = value.substring(start, end);
       const last = value.substr(end);
 
-      mid = this._incrementRawValue(mid, increment, info);
+      mid = this.#incrementRawValue(mid, increment, info);
 
       if (mid !== null) {
         return {
@@ -857,7 +849,7 @@ class InplaceEditor extends EventEmitter {
    *        Object with info about the property value.
    * @return {String} the incremented value.
    */
-  _incrementRawValue(rawValue, increment, info) {
+  #incrementRawValue(rawValue, increment, info) {
     const num = parseFloat(rawValue);
 
     if (isNaN(num)) {
@@ -899,7 +891,7 @@ class InplaceEditor extends EventEmitter {
    *        Ending index of the property value.
    * @return {Object} object with properties 'value' and 'selection'.
    */
-  _incHexColor(rawValue, increment, offset, offsetEnd) {
+  #incHexColor(rawValue, increment, offset, offsetEnd) {
     // Return early if no part of the rawValue is selected.
     if (offsetEnd > rawValue.length && offset >= rawValue.length) {
       return null;
@@ -1008,7 +1000,7 @@ class InplaceEditor extends EventEmitter {
    *        true to not select the text after selecting the newly selectedItem
    *        from the popup.
    */
-  _cycleCSSSuggestion(reverse, noSelect) {
+  #cycleCSSSuggestion(reverse, noSelect) {
     // selectedItem can be null when nothing is selected in an empty editor.
     const { label, preLabel } = this.popup.selectedItem || {
       label: "",
@@ -1047,7 +1039,7 @@ class InplaceEditor extends EventEmitter {
       );
     }
 
-    this._updateSize();
+    this.#updateSize();
     // This emit is mainly for the purpose of making the test flow simpler.
     this.emit("after-suggest");
   }
@@ -1055,7 +1047,7 @@ class InplaceEditor extends EventEmitter {
   /**
    * Call the client's done handler and clear out.
    */
-  _apply(event, direction) {
+  #apply(event, direction) {
     if (this._applied) {
       return null;
     }
@@ -1073,7 +1065,7 @@ class InplaceEditor extends EventEmitter {
   /**
    * Hide the popup and cancel any pending popup opening.
    */
-  _onWindowBlur() {
+  #onWindowBlur = () => {
     if (this.popup && this.popup.isOpen) {
       this.popup.hidePopup();
     }
@@ -1081,24 +1073,24 @@ class InplaceEditor extends EventEmitter {
     if (this._openPopupTimeout) {
       this.doc.defaultView.clearTimeout(this._openPopupTimeout);
     }
-  }
+  };
 
   /**
    * Event handler called when the inplace-editor's input loses focus.
    */
-  _onBlur(event) {
+  #onBlur = event => {
     if (
       event &&
       this.popup &&
       this.popup.isOpen &&
       this.popup.selectedIndex >= 0
     ) {
-      this._acceptPopupSuggestion();
+      this.#acceptPopupSuggestion();
     } else {
-      this._apply();
-      this._clear();
+      this.#apply();
+      this.#clear();
     }
-  }
+  };
 
   /**
    * Before offering autocomplete, set this.gridLineNames as the line names
@@ -1107,7 +1099,7 @@ class InplaceEditor extends EventEmitter {
    * @param {Function} getGridLineNames
    *        A function which gets the line names of the current grid.
    */
-  async _getGridNamesBeforeCompletion(getGridLineNames) {
+  async #getGridNamesBeforeCompletion(getGridLineNames) {
     if (
       getGridLineNames &&
       this.property &&
@@ -1121,7 +1113,7 @@ class InplaceEditor extends EventEmitter {
       this.input &&
       this.input.value == ""
     ) {
-      this._maybeSuggestCompletion(false);
+      this.#maybeSuggestCompletion(false);
     }
   }
 
@@ -1129,11 +1121,11 @@ class InplaceEditor extends EventEmitter {
    * Event handler called by the autocomplete popup when receiving a click
    * event.
    */
-  _onAutocompletePopupClick() {
-    this._acceptPopupSuggestion();
-  }
+  #onAutocompletePopupClick = () => {
+    this.#acceptPopupSuggestion();
+  };
 
-  _acceptPopupSuggestion() {
+  #acceptPopupSuggestion() {
     let label, preLabel;
 
     if (this._selectedIndex === undefined) {
@@ -1173,7 +1165,7 @@ class InplaceEditor extends EventEmitter {
       pre.length + toComplete.length,
       pre.length + toComplete.length
     );
-    this._updateSize();
+    this.#updateSize();
     // Wait for the popup to hide and then focus input async otherwise it does
     // not work.
     const onPopupHidden = () => {
@@ -1184,14 +1176,14 @@ class InplaceEditor extends EventEmitter {
       }, 0);
     };
     this.popup.on("popup-closed", onPopupHidden);
-    this._hideAutocompletePopup();
+    this.#hideAutocompletePopup();
   }
 
   /**
    * Handle the input field's keypress event.
    */
   // eslint-disable-next-line complexity
-  _onKeyPress(event) {
+  #onKeyPress = event => {
     let prevent = false;
 
     const key = event.keyCode;
@@ -1202,13 +1194,13 @@ class InplaceEditor extends EventEmitter {
     this._pressedKey = event.key;
 
     const multilineNavigation =
-      !this._isSingleLine() && isKeyIn(key, "UP", "DOWN", "LEFT", "RIGHT");
+      !this.#isSingleLine() && isKeyIn(key, "UP", "DOWN", "LEFT", "RIGHT");
     const isPlainText = this.contentType == CONTENT_TYPES.PLAIN_TEXT;
     const isPopupOpen = this.popup && this.popup.isOpen;
 
     let increment = 0;
     if (!isPlainText && !multilineNavigation) {
-      increment = this._getIncrement(event);
+      increment = this.#getIncrement(event);
     }
 
     if (isKeyIn(key, "PAGE_UP", "PAGE_DOWN")) {
@@ -1216,8 +1208,8 @@ class InplaceEditor extends EventEmitter {
     }
 
     let cycling = false;
-    if (increment && this._incrementValue(increment)) {
-      this._updateSize();
+    if (increment && this.#incrementValue(increment)) {
+      this.#updateSize();
       prevent = true;
       cycling = true;
     }
@@ -1225,13 +1217,13 @@ class InplaceEditor extends EventEmitter {
     if (isPopupOpen && isKeyIn(key, "UP", "DOWN", "PAGE_UP", "PAGE_DOWN")) {
       prevent = true;
       cycling = true;
-      this._cycleCSSSuggestion(isKeyIn(key, "UP", "PAGE_UP"));
-      this._doValidation();
+      this.#cycleCSSSuggestion(isKeyIn(key, "UP", "PAGE_UP"));
+      this.#doValidation();
     }
 
     if (isKeyIn(key, "BACK_SPACE", "DELETE", "LEFT", "RIGHT", "HOME", "END")) {
       if (isPopupOpen && this.currentInputValue !== "") {
-        this._hideAutocompletePopup();
+        this.#hideAutocompletePopup();
       }
     } else if (
       // We may show the suggestion completion if Ctrl+space is pressed, or if an
@@ -1245,7 +1237,7 @@ class InplaceEditor extends EventEmitter {
         !event.altKey &&
         !event.ctrlKey)
     ) {
-      this._maybeSuggestCompletion(true);
+      this.#maybeSuggestCompletion(true);
     }
 
     if (this.multiline && event.shiftKey && isKeyIn(key, "RETURN")) {
@@ -1288,16 +1280,16 @@ class InplaceEditor extends EventEmitter {
           return;
         } else if (this.popup && this.popup.isOpen) {
           event.preventDefault();
-          this._cycleCSSSuggestion(event.shiftKey, true);
+          this.#cycleCSSSuggestion(event.shiftKey, true);
           return;
         }
       }
 
-      this._apply(event, direction);
+      this.#apply(event, direction);
 
       // Close the popup if open
       if (this.popup && this.popup.isOpen) {
-        this._hideAutocompletePopup();
+        this.#hideAutocompletePopup();
       }
 
       if (direction !== null && focusManager.focusedElement === input) {
@@ -1319,19 +1311,19 @@ class InplaceEditor extends EventEmitter {
         }
       }
 
-      this._clear();
+      this.#clear();
     } else if (isKeyIn(key, "ESCAPE")) {
       // Cancel and blur ourselves.
       // Now we don't want to suggest anything as we are moving out.
       this._preventSuggestions = true;
       // Close the popup if open
       if (this.popup && this.popup.isOpen) {
-        this._hideAutocompletePopup();
+        this.#hideAutocompletePopup();
       }
       prevent = true;
       this.cancelled = true;
-      this._apply();
-      this._clear();
+      this.#apply();
+      this.#clear();
       event.stopPropagation();
     } else if (isKeyIn(key, "SPACE")) {
       // No need for leading spaces here.  This is particularly
@@ -1343,9 +1335,9 @@ class InplaceEditor extends EventEmitter {
     if (prevent) {
       event.preventDefault();
     }
-  }
+  };
 
-  _onContextMenu(event) {
+  #onContextMenu = event => {
     if (this.contextMenu) {
       // Call stopPropagation() and preventDefault() here so that avoid to show default
       // context menu in about:devtools-toolbox. See Bug 1515265.
@@ -1353,7 +1345,7 @@ class InplaceEditor extends EventEmitter {
       event.preventDefault();
       this.contextMenu(event);
     }
-  }
+  };
 
   /**
    * Open the autocomplete popup, adding a custom click handler and classname.
@@ -1364,8 +1356,8 @@ class InplaceEditor extends EventEmitter {
    *        The index of the item that should be selected. Use -1 to have no
    *        item selected.
    */
-  _openAutocompletePopup(offset, selectedIndex) {
-    this.popup.on("popup-click", this._onAutocompletePopupClick);
+  #openAutocompletePopup(offset, selectedIndex) {
+    this.popup.on("popup-click", this.#onAutocompletePopupClick);
     this.popup.openPopup(this.input, offset, 0, selectedIndex);
   }
 
@@ -1373,15 +1365,15 @@ class InplaceEditor extends EventEmitter {
    * Remove the custom classname and click handler and close the autocomplete
    * popup.
    */
-  _hideAutocompletePopup() {
-    this.popup.off("popup-click", this._onAutocompletePopupClick);
+  #hideAutocompletePopup() {
+    this.popup.off("popup-click", this.#onAutocompletePopupClick);
     this.popup.hidePopup();
   }
 
   /**
    * Get the increment/decrement step to use for the provided key event.
    */
-  _getIncrement(event) {
+  #getIncrement(event) {
     const getSmallIncrementKey = evt => {
       if (lazy.AppConstants.platform === "macosx") {
         return evt.altKey;
@@ -1418,20 +1410,20 @@ class InplaceEditor extends EventEmitter {
   /**
    * Handle the input field's keyup event.
    */
-  _onKeyup() {
+  #onKeyup = () => {
     this._applied = false;
-  }
+  };
 
   /**
    * Handle changes to the input text.
    */
-  _onInput() {
+  #onInput = () => {
     // Validate the entered value.
-    this._doValidation();
+    this.#doValidation();
 
     // Update size if we're autosizing.
     if (this._measurement) {
-      this._updateSize();
+      this.#updateSize();
     }
 
     // Call the user's change handler if available.
@@ -1441,21 +1433,21 @@ class InplaceEditor extends EventEmitter {
 
     // In case that the current value becomes empty, show the suggestions if needed.
     if (this.currentInputValue === "" && this.showSuggestCompletionOnEmpty) {
-      this._maybeSuggestCompletion(false);
+      this.#maybeSuggestCompletion(false);
     }
-  }
+  };
 
   /**
    * Stop propagation on the provided event
    */
-  _stopEventPropagation(e) {
+  #stopEventPropagation(e) {
     e.stopPropagation();
   }
 
   /**
    * Fire validation callback with current input
    */
-  _doValidation() {
+  #doValidation() {
     if (this.validate && this.input) {
       this.validate(this.input.value);
     }
@@ -1467,7 +1459,7 @@ class InplaceEditor extends EventEmitter {
    * @param {Boolean} autoInsert
    *        Pass true to automatically insert the most relevant suggestion.
    */
-  _maybeSuggestCompletion(autoInsert) {
+  #maybeSuggestCompletion(autoInsert) {
     // Input can be null in cases when you intantaneously switch out of it.
     if (!this.input) {
       return;
@@ -1520,7 +1512,7 @@ class InplaceEditor extends EventEmitter {
       let postLabelValues = [];
 
       if (this.contentType == CONTENT_TYPES.CSS_PROPERTY) {
-        list = this._getCSSPropertyList();
+        list = this.#getCSSPropertyList();
       } else if (this.contentType == CONTENT_TYPES.CSS_VALUE) {
         // Get the last query to be completed before the caret.
         const match = /([^\s,.\/]+$)/.exec(query);
@@ -1535,14 +1527,14 @@ class InplaceEditor extends EventEmitter {
 
         if (varMatch && varMatch.length == 2) {
           startCheckQuery = varMatch[1];
-          list = this._getCSSVariableNames();
+          list = this.#getCSSVariableNames();
           postLabelValues = list.map(varName =>
-            this._getCSSVariableValue(varName)
+            this.#getCSSVariableValue(varName)
           );
         } else {
           list = [
             "!important",
-            ...this._getCSSValuesForPropertyName(this.property.name),
+            ...this.#getCSSValuesForPropertyName(this.property.name),
           ];
         }
 
@@ -1573,7 +1565,7 @@ class InplaceEditor extends EventEmitter {
             )[1];
             list = [
               "!important;",
-              ...this._getCSSValuesForPropertyName(propertyName),
+              ...this.#getCSSValuesForPropertyName(propertyName),
             ];
             const matchLastQuery = /([^\s,.\/]+$)/.exec(match[2] || "");
             if (matchLastQuery) {
@@ -1587,7 +1579,7 @@ class InplaceEditor extends EventEmitter {
             }
           } else if (match[1]) {
             // We are in CSS property name completion
-            list = this._getCSSPropertyList();
+            list = this.#getCSSPropertyList();
             startCheckQuery = match[2];
           }
           if (startCheckQuery == null) {
@@ -1654,7 +1646,7 @@ class InplaceEditor extends EventEmitter {
           query.length,
           query.length + item.length - startCheckQuery.length
         );
-        this._updateSize();
+        this.#updateSize();
       }
 
       // Display the list of suggestions if there are more than one.
@@ -1662,32 +1654,32 @@ class InplaceEditor extends EventEmitter {
         // Calculate the popup horizontal offset.
         const indent = this.input.selectionStart - startCheckQuery.length;
         let offset = indent * this.inputCharDimensions.width;
-        offset = this._isSingleLine() ? offset : 0;
+        offset = this.#isSingleLine() ? offset : 0;
 
         // Select the most relevantItem if autoInsert is allowed
         const selectedIndex = autoInsert ? index : -1;
 
         // Open the suggestions popup.
         this.popup.setItems(finalList, selectedIndex);
-        this._openAutocompletePopup(offset, selectedIndex);
+        this.#openAutocompletePopup(offset, selectedIndex);
       } else {
-        this._hideAutocompletePopup();
+        this.#hideAutocompletePopup();
       }
 
-      this._autocloseParenthesis();
+      this.#autocloseParenthesis();
 
       // This emit is mainly for the purpose of making the test flow simpler.
       this.emit("after-suggest");
-      this._doValidation();
+      this.#doValidation();
     }, 0);
   }
 
   /**
    * Automatically add closing parenthesis and skip closing parenthesis when needed.
    */
-  _autocloseParenthesis() {
+  #autocloseParenthesis() {
     // Split the current value at the cursor index to rebuild the string.
-    const parts = this._splitStringAt(
+    const parts = this.#splitStringAt(
       this.input.value,
       this.input.selectionStart
     );
@@ -1698,13 +1690,13 @@ class InplaceEditor extends EventEmitter {
     // Autocomplete closing parenthesis if the last key pressed was "(" and the next
     // character is not a "word" character.
     if (this._pressedKey == "(" && !isWordChar(nextChar)) {
-      this._updateValue(parts[0] + ")" + parts[1]);
+      this.#updateValue(parts[0] + ")" + parts[1]);
     }
 
     // Skip inserting ")" if the next character is already a ")" (note that we actually
     // insert and remove the extra ")" here, as the input has already been modified).
     if (this._pressedKey == ")" && nextChar == ")") {
-      this._updateValue(parts[0] + parts[1].substring(1));
+      this.#updateValue(parts[0] + parts[1].substring(1));
     }
 
     this._pressedKey = null;
@@ -1713,18 +1705,18 @@ class InplaceEditor extends EventEmitter {
   /**
    * Update the current value of the input while preserving the caret position.
    */
-  _updateValue(str) {
+  #updateValue(str) {
     const start = this.input.selectionStart;
     this.input.value = str;
     this.input.setSelectionRange(start, start);
-    this._updateSize();
+    this.#updateSize();
   }
 
   /**
    * Split the provided string at the provided index. Returns an array of two strings.
    * _splitStringAt("1234567", 3) will return ["123", "4567"]
    */
-  _splitStringAt(str, index) {
+  #splitStringAt(str, index) {
     return [str.substring(0, index), str.substring(index, str.length)];
   }
 
@@ -1733,7 +1725,7 @@ class InplaceEditor extends EventEmitter {
    *
    * @return {Boolean} true if the input has a single line of text
    */
-  _isSingleLine() {
+  #isSingleLine() {
     if (!this.multiline) {
       // Checking the inputCharDimensions.height only makes sense with multiline
       // editors, because the textarea is directly sized using
@@ -1751,7 +1743,7 @@ class InplaceEditor extends EventEmitter {
    *
    * @return {Array} array of CSS property names (Strings)
    */
-  _getCSSPropertyList() {
+  #getCSSPropertyList() {
     return this.cssProperties.getNames().sort();
   }
 
@@ -1763,7 +1755,7 @@ class InplaceEditor extends EventEmitter {
    * @param {String} propertyName
    * @return {Array} array of CSS property values (Strings)
    */
-  _getCSSValuesForPropertyName(propertyName) {
+  #getCSSValuesForPropertyName(propertyName) {
     const gridLineList = [];
     if (this.gridLineNames) {
       if (GRID_ROW_PROPERTY_NAMES.includes(this.property.name)) {
@@ -1785,7 +1777,7 @@ class InplaceEditor extends EventEmitter {
    *
    * @return {Array} array of CSS variable names (Strings)
    */
-  _getCSSVariableNames() {
+  #getCSSVariableNames() {
     return Array.from(this.cssVariables.keys()).sort();
   }
 
@@ -1796,7 +1788,7 @@ class InplaceEditor extends EventEmitter {
    *        The variable name to retrieve the value of
    * @return {String} the variable value to the given CSS variable name
    */
-  _getCSSVariableValue(varName) {
+  #getCSSVariableValue(varName) {
     return this.cssVariables.get(varName);
   }
 }
