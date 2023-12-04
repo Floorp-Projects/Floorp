@@ -2227,9 +2227,10 @@
   value: false
   mirror: always
 
+  # Enable CacheAPI in private browsing mode with encryption
 - name: dom.cache.privateBrowsing.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # Exposes window.caches and skips SecureContext check.
