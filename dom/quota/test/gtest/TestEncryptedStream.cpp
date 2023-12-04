@@ -603,6 +603,22 @@ TEST_P(ParametrizedCryptTest, DummyCipherStrategy_IncompleteBlock) {
                            readData.Length(), &read));
 }
 
+TEST_P(ParametrizedCryptTest, zeroInitializedEncryptedBlock) {
+  const TestParams& testParams = GetParam();
+
+  using EncryptedBlock = EncryptedBlock<DummyCipherStrategy::BlockPrefixLength,
+                                        DummyCipherStrategy::BasicBlockSize>;
+
+  EncryptedBlock encryptedBlock{testParams.BlockSize()};
+  auto firstBlock =
+      encryptedBlock.WholeBlock().First<DummyCipherStrategy::BasicBlockSize>();
+  auto unusedBytesInFirstBlock = firstBlock.from(sizeof(uint16_t));
+
+  EXPECT_TRUE(std::all_of(unusedBytesInFirstBlock.begin(),
+                          unusedBytesInFirstBlock.end(),
+                          [](const auto& e) { return 0ul == e; }));
+}
+
 enum struct SeekOffset {
   Zero,
   MinusHalfDataSize,
