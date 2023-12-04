@@ -328,7 +328,7 @@ WinWebAuthnService::MakeCredential(uint64_t aTransactionId,
         Unused << aArgs->GetUserVerification(userVerificationReq);
         // This mapping needs to be reviewed if values are added to the
         // UserVerificationRequirement enum.
-        static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
+        static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 3);
         if (userVerificationReq.EqualsLiteral(
                 MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED)) {
           winUserVerificationReq =
@@ -357,7 +357,7 @@ WinWebAuthnService::MakeCredential(uint64_t aTransactionId,
           }
           // This mapping needs to be reviewed if values are added to the
           // AuthenticatorAttachement enum.
-          static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
+          static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 3);
           if (authenticatorAttachment.EqualsLiteral(
                   MOZ_WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM)) {
             winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_PLATFORM;
@@ -374,7 +374,7 @@ WinWebAuthnService::MakeCredential(uint64_t aTransactionId,
         Unused << aArgs->GetResidentKey(residentKey);
         // This mapping needs to be reviewed if values are added to the
         // ResidentKeyRequirement enum.
-        static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
+        static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 3);
         if (residentKey.EqualsLiteral(
                 MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_REQUIRED)) {
           winRequireResidentKey = TRUE;
@@ -401,7 +401,7 @@ WinWebAuthnService::MakeCredential(uint64_t aTransactionId,
         bool anonymize = false;
         // This mapping needs to be reviewed if values are added to the
         // AttestationConveyancePreference enum.
-        static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
+        static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 3);
         if (attestation.EqualsLiteral(
                 MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE)) {
           winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE;
@@ -482,6 +482,9 @@ WinWebAuthnService::MakeCredential(uint64_t aTransactionId,
           }
           if (transports & MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_INTERNAL) {
             winTransports |= WEBAUTHN_CTAP_TRANSPORT_INTERNAL;
+          }
+          if (transports & MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_HYBRID) {
+            winTransports |= WEBAUTHN_CTAP_TRANSPORT_HYBRID;
           }
 
           WEBAUTHN_CREDENTIAL_EX credential = {
@@ -697,7 +700,7 @@ void WinWebAuthnService::DoGetAssertion(
         DWORD winUserVerificationReq;
         // This mapping needs to be reviewed if values are added to the
         // UserVerificationRequirement enum.
-        static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
+        static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 3);
         if (userVerificationReq.EqualsLiteral(
                 MOZ_WEBAUTHN_USER_VERIFICATION_REQUIREMENT_REQUIRED)) {
           winUserVerificationReq =
@@ -752,6 +755,9 @@ void WinWebAuthnService::DoGetAssertion(
           }
           if (transports & MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_INTERNAL) {
             winTransports |= WEBAUTHN_CTAP_TRANSPORT_INTERNAL;
+          }
+          if (transports & MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_HYBRID) {
+            winTransports |= WEBAUTHN_CTAP_TRANSPORT_HYBRID;
           }
 
           WEBAUTHN_CREDENTIAL_EX credential = {
