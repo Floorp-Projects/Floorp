@@ -2709,6 +2709,25 @@ nsDocShell::GetInProcessSameTypeParent(nsIDocShellTreeItem** aParent) {
 }
 
 NS_IMETHODIMP
+nsDocShell::GetSameTypeInProcessParentIgnoreBrowserBoundaries(
+    nsIDocShell** aParent) {
+  NS_ENSURE_ARG_POINTER(aParent);
+  *aParent = nullptr;
+
+  nsCOMPtr<nsIDocShellTreeItem> parent =
+      do_QueryInterface(GetAsSupports(mParent));
+  if (!parent) {
+    return NS_OK;
+  }
+
+  if (parent->ItemType() == mItemType) {
+    nsCOMPtr<nsIDocShell> parentDS = do_QueryInterface(parent);
+    parentDS.forget(aParent);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetInProcessRootTreeItem(nsIDocShellTreeItem** aRootTreeItem) {
   NS_ENSURE_ARG_POINTER(aRootTreeItem);
 
