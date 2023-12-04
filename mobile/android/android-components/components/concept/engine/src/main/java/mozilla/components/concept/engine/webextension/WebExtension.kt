@@ -604,4 +604,10 @@ sealed class WebExtensionInstallException(
      */
     class Unknown(override val extensionName: String? = null, throwable: Throwable) :
         WebExtensionInstallException(throwable = throwable)
+
+    /**
+     * The extension install failed because the extension type is not supported.
+     */
+    class UnsupportedAddonType(override val extensionName: String? = null, throwable: Throwable) :
+        WebExtensionInstallException(throwable = throwable)
 }

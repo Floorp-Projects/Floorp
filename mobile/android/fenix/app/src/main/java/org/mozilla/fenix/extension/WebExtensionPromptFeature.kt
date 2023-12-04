@@ -161,7 +161,9 @@ class WebExtensionPromptFeature(
                 return
             }
 
-            is WebExtensionInstallException.Unknown -> {
+            is WebExtensionInstallException.UnsupportedAddonType,
+            is WebExtensionInstallException.Unknown,
+            -> {
                 // Making sure we don't have a
                 // Title = Failed to install
                 // Message = Failed to install $addonName

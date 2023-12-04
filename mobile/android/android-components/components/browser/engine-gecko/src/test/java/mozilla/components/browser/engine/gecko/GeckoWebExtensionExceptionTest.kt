@@ -18,6 +18,7 @@ import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_CORR
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_INCOMPATIBLE
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_NETWORK_FAILURE
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_SIGNEDSTATE_REQUIRED
+import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_UNSUPPORTED_ADDON_TYPE
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_USER_CANCELED
 
 @RunWith(AndroidJUnit4::class)
@@ -98,5 +99,18 @@ class GeckoWebExtensionExceptionTest {
             GeckoWebExtensionException.createWebExtensionException(geckoException)
 
         assertTrue(webExtensionException is WebExtensionInstallException.Incompatible)
+    }
+
+    @Test
+    fun `Handles an UnsupportedAddonType exception`() {
+        val geckoException = mock<WebExtension.InstallException>()
+        ReflectionUtils.setField(
+            geckoException,
+            "code",
+            ERROR_UNSUPPORTED_ADDON_TYPE,
+        )
+        val webExtensionException = GeckoWebExtensionException.createWebExtensionException(geckoException)
+
+        assertTrue(webExtensionException is WebExtensionInstallException.UnsupportedAddonType)
     }
 }

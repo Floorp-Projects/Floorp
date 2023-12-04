@@ -307,4 +307,22 @@ class WebExtensionPromptFeatureTest {
         }
         verify(exactly = 1) { onConfirm(true) }
     }
+
+    @Test
+    fun `WHEN calling handleInstallationFailedRequest with UnsupportedAddonType error THEN showDialog with the correct message`() {
+        val expectedTitle = ""
+        val extensionName = "extensionName"
+        val exception = WebExtensionInstallException.UnsupportedAddonType(
+            extensionName = extensionName,
+            throwable = Exception(),
+        )
+        val expectedMessage =
+            testContext.getString(R.string.mozac_feature_addons_failed_to_install, extensionName)
+
+        webExtensionPromptFeature.handleInstallationFailedRequest(
+            exception = exception,
+        )
+
+        verify { webExtensionPromptFeature.showDialog(expectedTitle, expectedMessage) }
+    }
 }

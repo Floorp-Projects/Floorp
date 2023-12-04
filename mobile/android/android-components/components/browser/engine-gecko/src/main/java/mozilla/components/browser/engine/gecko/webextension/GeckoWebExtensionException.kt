@@ -12,6 +12,7 @@ import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_CORR
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_INCOMPATIBLE
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_NETWORK_FAILURE
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_SIGNEDSTATE_REQUIRED
+import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_UNSUPPORTED_ADDON_TYPE
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_USER_CANCELED
 
 /**
@@ -49,6 +50,11 @@ class GeckoWebExtensionException(throwable: Throwable) : WebExtensionException(t
                     )
 
                     ERROR_INCOMPATIBLE -> WebExtensionInstallException.Incompatible(
+                        extensionName = throwable.extensionName,
+                        throwable,
+                    )
+
+                    ERROR_UNSUPPORTED_ADDON_TYPE -> WebExtensionInstallException.UnsupportedAddonType(
                         extensionName = throwable.extensionName,
                         throwable,
                     )

@@ -109,10 +109,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             updateFxAAllowDomesticChinaServerMenu = ::updateFxAAllowDomesticChinaServerMenu,
         )
 
-        addonFilePicker = AddonFilePicker(
-            requireContext(),
-            requireComponents.addonManager,
-        )
+        addonFilePicker = AddonFilePicker(requireContext(), requireComponents.addonManager)
         addonFilePicker.registerForResults(this)
 
         // It's important to update the account UI state in onCreate since that ensures we'll never
