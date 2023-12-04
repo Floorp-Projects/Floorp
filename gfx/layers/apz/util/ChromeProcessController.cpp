@@ -133,7 +133,9 @@ dom::Document* ChromeProcessController::GetRootContentDocument(
 
 void ChromeProcessController::HandleDoubleTap(
     const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
-    const ScrollableLayerGuid& aGuid) {
+    const ScrollableLayerGuid& aGuid,
+    const DoubleTapToZoomMetrics& aDoubleTapToZoomMetrics) {
+  MOZ_LOG(sApzChromeLog, LogLevel::Debug, ("HandleDoubleTap\n"));
   MOZ_ASSERT(mUIThread->IsOnCurrentThread());
 
   RefPtr<dom::Document> document = GetRootContentDocument(aGuid.mScrollId);
@@ -141,7 +143,8 @@ void ChromeProcessController::HandleDoubleTap(
     return;
   }
 
-  ZoomTarget zoomTarget = CalculateRectToZoomTo(document, aPoint);
+  ZoomTarget zoomTarget =
+      CalculateRectToZoomTo(document, aPoint, aDoubleTapToZoomMetrics);
 
   uint32_t presShellId;
   ScrollableLayerGuid::ViewID viewId;
@@ -156,17 +159,19 @@ void ChromeProcessController::HandleDoubleTap(
 void ChromeProcessController::HandleTap(
     TapType aType, const mozilla::LayoutDevicePoint& aPoint,
     Modifiers aModifiers, const ScrollableLayerGuid& aGuid,
-    uint64_t aInputBlockId) {
+    uint64_t aInputBlockId,
+    const Maybe<DoubleTapToZoomMetrics>& aDoubleTapToZoomMetrics) {
   MOZ_LOG(sApzChromeLog, LogLevel::Debug,
           ("HandleTap called with %d\n", (int)aType));
   if (!mUIThread->IsOnCurrentThread()) {
     MOZ_LOG(sApzChromeLog, LogLevel::Debug, ("HandleTap redispatching\n"));
     mUIThread->Dispatch(
         NewRunnableMethod<TapType, mozilla::LayoutDevicePoint, Modifiers,
-                          ScrollableLayerGuid, uint64_t>(
+                          ScrollableLayerGuid, uint64_t,
+                          Maybe<DoubleTapToZoomMetrics>>(
             "layers::ChromeProcessController::HandleTap", this,
             &ChromeProcessController::HandleTap, aType, aPoint, aModifiers,
-            aGuid, aInputBlockId));
+            aGuid, aInputBlockId, aDoubleTapToZoomMetrics));
     return;
   }
 
@@ -199,7 +204,8 @@ void ChromeProcessController::HandleTap(
       break;
     }
     case TapType::eDoubleTap:
-      HandleDoubleTap(point, aModifiers, aGuid);
+      MOZ_ASSERT(aDoubleTapToZoomMetrics);
+      HandleDoubleTap(point, aModifiers, aGuid, *aDoubleTapToZoomMetrics);
       break;
     case TapType::eSecondTap: {
       RefPtr<APZEventState> eventState(mAPZEventState);

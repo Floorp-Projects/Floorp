@@ -160,7 +160,7 @@ TEST_F(APZCTreeManagerGenericTesterMock, Bug1194876) {
   // We want to ensure that ApzcOf(layers[0]) has had its state cleared, because
   // otherwise it will do things like dispatch spurious long-tap events.
 
-  EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, _, _, _, _)).Times(0);
+  EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, _, _, _, _, _)).Times(0);
 }
 
 TEST_F(APZCTreeManagerGenericTesterMock, TargetChangesMidGesture_Bug1570559) {
@@ -209,7 +209,7 @@ TEST_F(APZCTreeManagerGenericTesterMock, TargetChangesMidGesture_Bug1570559) {
 
   // If we've failed to clear the child's gesture state, then the long tap
   // timeout task will fire in TearDown() and a long-tap will be dispatched.
-  EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, _, _, _, _)).Times(0);
+  EXPECT_CALL(*mcc, HandleTap(TapType::eLongTap, _, _, _, _, _)).Times(0);
 }
 
 TEST_F(APZCTreeManagerGenericTesterMock, Bug1198900) {

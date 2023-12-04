@@ -11,6 +11,7 @@
 #include "mozilla/layers/APZCCallbackHelper.h"      // for APZCCallbackHelper
 #include "mozilla/layers/APZInputBridgeChild.h"     // for APZInputBridgeChild
 #include "mozilla/layers/GeckoContentController.h"  // for GeckoContentController
+#include "mozilla/layers/DoubleTapToZoom.h"  // for DoubleTapToZoomMetrics
 #include "mozilla/layers/RemoteCompositorSession.h"  // for RemoteCompositorSession
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/jni/Utils.h"  // for DispatchToGeckoPriorityQueue
@@ -145,14 +146,16 @@ void APZCTreeManagerChild::ActorDestroy(ActorDestroyReason aWhy) {
 mozilla::ipc::IPCResult APZCTreeManagerChild::RecvHandleTap(
     const TapType& aType, const LayoutDevicePoint& aPoint,
     const Modifiers& aModifiers, const ScrollableLayerGuid& aGuid,
-    const uint64_t& aInputBlockId) {
+    const uint64_t& aInputBlockId,
+    const Maybe<DoubleTapToZoomMetrics>& aDoubleTapToZoomMetrics) {
   MOZ_ASSERT(XRE_IsParentProcess());
   if (mCompositorSession &&
       mCompositorSession->RootLayerTreeId() == aGuid.mLayersId &&
       mCompositorSession->GetContentController()) {
     RefPtr<GeckoContentController> controller =
         mCompositorSession->GetContentController();
-    controller->HandleTap(aType, aPoint, aModifiers, aGuid, aInputBlockId);
+    controller->HandleTap(aType, aPoint, aModifiers, aGuid, aInputBlockId,
+                          aDoubleTapToZoomMetrics);
     return IPC_OK();
   }
   dom::BrowserParent* tab =
@@ -166,12 +169,14 @@ mozilla::ipc::IPCResult APZCTreeManagerChild::RecvHandleTap(
     // may receive the tap event before the touch events that synthesized it.
     mozilla::jni::DispatchToGeckoPriorityQueue(
         NewRunnableMethod<TapType, LayoutDevicePoint, Modifiers,
-                          ScrollableLayerGuid, uint64_t>(
+                          ScrollableLayerGuid, uint64_t,
+                          Maybe<DoubleTapToZoomMetrics>>(
             "dom::BrowserParent::SendHandleTap", tab,
             &dom::BrowserParent::SendHandleTap, aType, aPoint, aModifiers,
-            aGuid, aInputBlockId));
+            aGuid, aInputBlockId, aDoubleTapToZoomMetrics));
 #else
-    tab->SendHandleTap(aType, aPoint, aModifiers, aGuid, aInputBlockId);
+    tab->SendHandleTap(aType, aPoint, aModifiers, aGuid, aInputBlockId,
+                       aDoubleTapToZoomMetrics);
 #endif
   }
   return IPC_OK();

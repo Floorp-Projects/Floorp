@@ -1256,7 +1256,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvSuppressDisplayport(
 
 void BrowserChild::HandleDoubleTap(const CSSPoint& aPoint,
                                    const Modifiers& aModifiers,
-                                   const ScrollableLayerGuid& aGuid) {
+                                   const ScrollableLayerGuid& aGuid,
+                                   const DoubleTapToZoomMetrics& aMetrics) {
   MOZ_LOG(
       sApzChildLog, LogLevel::Debug,
       ("Handling double tap at %s with %p %p\n", ToString(aPoint).c_str(),
@@ -1271,7 +1272,7 @@ void BrowserChild::HandleDoubleTap(const CSSPoint& aPoint,
   // Note: there is nothing to do with the modifiers here, as we are not
   // synthesizing any sort of mouse event.
   RefPtr<Document> document = GetTopLevelDocument();
-  ZoomTarget zoomTarget = CalculateRectToZoomTo(document, aPoint);
+  ZoomTarget zoomTarget = CalculateRectToZoomTo(document, aPoint, aMetrics);
   // The double-tap can be dispatched by any scroll frame (so |aGuid| could be
   // the guid of any scroll frame), but the zoom-to-rect operation must be
   // performed by the root content scroll frame, so query its identifiers
@@ -1291,7 +1292,8 @@ void BrowserChild::HandleDoubleTap(const CSSPoint& aPoint,
 mozilla::ipc::IPCResult BrowserChild::RecvHandleTap(
     const GeckoContentController::TapType& aType,
     const LayoutDevicePoint& aPoint, const Modifiers& aModifiers,
-    const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId) {
+    const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId,
+    const Maybe<DoubleTapToZoomMetrics>& aDoubleTapToZoomMetrics) {
   // IPDL doesn't hold a strong reference to protocols as they're not required
   // to be refcounted. This function can run script, which may trigger a nested
   // event loop, which may release this, so we hold a strong reference here.
@@ -1319,7 +1321,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvHandleTap(
       }
       break;
     case GeckoContentController::TapType::eDoubleTap:
-      HandleDoubleTap(point, aModifiers, aGuid);
+      HandleDoubleTap(point, aModifiers, aGuid, *aDoubleTapToZoomMetrics);
       break;
     case GeckoContentController::TapType::eSecondTap:
       if (mBrowserChildMessageManager) {
@@ -1348,12 +1350,14 @@ mozilla::ipc::IPCResult BrowserChild::RecvHandleTap(
 mozilla::ipc::IPCResult BrowserChild::RecvNormalPriorityHandleTap(
     const GeckoContentController::TapType& aType,
     const LayoutDevicePoint& aPoint, const Modifiers& aModifiers,
-    const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId) {
+    const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId,
+    const Maybe<DoubleTapToZoomMetrics>& aDoubleTapToZoomMetrics) {
   // IPDL doesn't hold a strong reference to protocols as they're not required
   // to be refcounted. This function can run script, which may trigger a nested
   // event loop, which may release this, so we hold a strong reference here.
   RefPtr<BrowserChild> kungFuDeathGrip(this);
-  return RecvHandleTap(aType, aPoint, aModifiers, aGuid, aInputBlockId);
+  return RecvHandleTap(aType, aPoint, aModifiers, aGuid, aInputBlockId,
+                       aDoubleTapToZoomMetrics);
 }
 
 void BrowserChild::NotifyAPZStateChange(

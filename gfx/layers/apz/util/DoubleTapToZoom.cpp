@@ -98,7 +98,7 @@ static dom::Element* GetNearbyTableCell(
 static bool ShouldZoomToElement(
     const nsCOMPtr<dom::Element>& aElement,
     const RefPtr<dom::Document>& aRootContentDocument,
-    nsIScrollableFrame* aRootScrollFrame, const FrameMetrics& aMetrics) {
+    nsIScrollableFrame* aRootScrollFrame, const CSSRect& aRootScrollableRect) {
   if (nsIFrame* frame = aElement->GetPrimaryFrame()) {
     if (frame->StyleDisplay()->IsInlineFlow() &&
         // Replaced elements are suitable zoom targets because they act like
@@ -127,7 +127,7 @@ static bool ShouldZoomToElement(
   if (dom::Element* tableCell = GetNearbyTableCell(aElement)) {
     CSSRect rect =
         nsLayoutUtils::GetBoundingContentRect(tableCell, aRootScrollFrame);
-    if (rect.width < 0.3 * aMetrics.GetScrollableRect().width) {
+    if (rect.width < 0.3 * aRootScrollableRect.width) {
       return false;
     }
   }
@@ -166,25 +166,23 @@ static bool RectHasAlmostSameZoomLevel(const CSSRect& aRect,
 }  // namespace
 
 static CSSRect AddHMargin(const CSSRect& aRect, const CSSCoord& aMargin,
-                          const FrameMetrics& aMetrics) {
+                          const CSSRect& aRootScrollableRect) {
   CSSRect rect =
-      CSSRect(std::max(aMetrics.GetScrollableRect().X(), aRect.X() - aMargin),
-              aRect.Y(), aRect.Width() + 2 * aMargin, aRect.Height());
+      CSSRect(std::max(aRootScrollableRect.X(), aRect.X() - aMargin), aRect.Y(),
+              aRect.Width() + 2 * aMargin, aRect.Height());
   // Constrict the rect to the screen's right edge
-  rect.SetWidth(
-      std::min(rect.Width(), aMetrics.GetScrollableRect().XMost() - rect.X()));
+  rect.SetWidth(std::min(rect.Width(), aRootScrollableRect.XMost() - rect.X()));
   return rect;
 }
 
 static CSSRect AddVMargin(const CSSRect& aRect, const CSSCoord& aMargin,
-                          const FrameMetrics& aMetrics) {
+                          const CSSRect& aRootScrollableRect) {
   CSSRect rect =
-      CSSRect(aRect.X(),
-              std::max(aMetrics.GetScrollableRect().Y(), aRect.Y() - aMargin),
+      CSSRect(aRect.X(), std::max(aRootScrollableRect.Y(), aRect.Y() - aMargin),
               aRect.Width(), aRect.Height() + 2 * aMargin);
   // Constrict the rect to the screen's bottom edge
   rect.SetHeight(
-      std::min(rect.Height(), aMetrics.GetScrollableRect().YMost() - rect.Y()));
+      std::min(rect.Height(), aRootScrollableRect.YMost() - rect.Y()));
   return rect;
 }
 
@@ -209,7 +207,8 @@ static bool HasNonPassiveWheelListenerOnAncestor(nsIContent* aContent) {
 }
 
 ZoomTarget CalculateRectToZoomTo(
-    const RefPtr<dom::Document>& aRootContentDocument, const CSSPoint& aPoint) {
+    const RefPtr<dom::Document>& aRootContentDocument, const CSSPoint& aPoint,
+    const DoubleTapToZoomMetrics& aMetrics) {
   // Ensure the layout information we get is up-to-date.
   aRootContentDocument->FlushPendingNotifications(FlushType::Layout);
 
@@ -243,11 +242,9 @@ ZoomTarget CalculateRectToZoomTo(
           ? CantZoomOutBehavior::Nothing
           : CantZoomOutBehavior::ZoomIn;
 
-  FrameMetrics metrics =
-      nsLayoutUtils::CalculateBasicFrameMetrics(rootScrollFrame);
-
-  while (element && !ShouldZoomToElement(element, aRootContentDocument,
-                                         rootScrollFrame, metrics)) {
+  while (element &&
+         !ShouldZoomToElement(element, aRootContentDocument, rootScrollFrame,
+                              aMetrics.mRootScrollableRect)) {
     element = element->GetFlattenedTreeParentElement();
   }
 
@@ -256,9 +253,6 @@ ZoomTarget CalculateRectToZoomTo(
                       Some(documentRelativePoint)};
   }
 
-  CSSPoint visualScrollOffset = metrics.GetVisualScrollOffset();
-  CSSRect compositedArea(visualScrollOffset,
-                         metrics.CalculateCompositedSizeInCssPixels());
   Maybe<CSSRect> nearestScrollClip;
   CSSRect rect = nsLayoutUtils::GetBoundingContentRect(element, rootScrollFrame,
                                                        &nearestScrollClip);
@@ -299,12 +293,12 @@ ZoomTarget CalculateRectToZoomTo(
   // the height of the |rect| so that it has the same aspect ratio as
   // the root frame.  The clipped |rect| is centered on the y value of
   // the touch point. This allows tall narrow elements to be zoomed.
-  if (!rect.IsEmpty() && compositedArea.Width() > 0.0f &&
-      compositedArea.Height() > 0.0f) {
+  if (!rect.IsEmpty() && aMetrics.mVisualViewport.Width() > 0.0f &&
+      aMetrics.mVisualViewport.Height() > 0.0f) {
     // Calculate the height of the rect if it had the same aspect ratio as
-    // compositedArea.
-    const float widthRatio = rect.Width() / compositedArea.Width();
-    float targetHeight = compositedArea.Height() * widthRatio;
+    // aMetrics.mVisualViewport.
+    const float widthRatio = rect.Width() / aMetrics.mVisualViewport.Width();
+    float targetHeight = aMetrics.mVisualViewport.Height() * widthRatio;
 
     // We don't want to cut off the top or bottoms of replaced elements that are
     // square or wider in aspect ratio.
@@ -314,16 +308,16 @@ ZoomTarget CalculateRectToZoomTo(
         // If the target rect is at most 1.1x away from being square or wider
         // aspect ratio
         rect.Height() < 1.1 * rect.Width() &&
-        // and our compositedArea is wider than it is tall
-        compositedArea.Width() >= compositedArea.Height()) {
+        // and our aMetrics.mVisualViewport is wider than it is tall
+        aMetrics.mVisualViewport.Width() >= aMetrics.mVisualViewport.Height()) {
       heightConstrained = true;
-      // Expand the width of the rect so that it fills compositedArea so that if
-      // we are already zoomed to this element then the IsRectZoomedIn call
-      // below returns true so that we zoom out. This won't change what we
-      // actually zoom to as we are just making the rect the same aspect ratio
-      // as compositedArea.
-      float targetWidth =
-          rect.Height() * compositedArea.Width() / compositedArea.Height();
+      // Expand the width of the rect so that it fills aMetrics.mVisualViewport
+      // so that if we are already zoomed to this element then the
+      // IsRectZoomedIn call below returns true so that we zoom out. This won't
+      // change what we actually zoom to as we are just making the rect the same
+      // aspect ratio as aMetrics.mVisualViewport.
+      float targetWidth = rect.Height() * aMetrics.mVisualViewport.Width() /
+                          aMetrics.mVisualViewport.Height();
       MOZ_ASSERT(targetWidth > rect.Width());
       if (targetWidth > rect.Width()) {
         rect.x -= (targetWidth - rect.Width()) / 2;
@@ -334,7 +328,7 @@ ZoomTarget CalculateRectToZoomTo(
 
     } else if (targetHeight < rect.Height()) {
       // Trim the height so that the target rect has the same aspect ratio as
-      // compositedArea, centering it around the user tap point.
+      // aMetrics.mVisualViewport, centering it around the user tap point.
       float newY = documentRelativePoint.y - (targetHeight * 0.5f);
       if ((newY + targetHeight) > rect.YMost()) {
         rect.MoveByY(rect.Height() - targetHeight);
@@ -346,30 +340,39 @@ ZoomTarget CalculateRectToZoomTo(
   }
 
   const CSSCoord margin = 15;
-  rect = AddHMargin(rect, margin, metrics);
+  rect = AddHMargin(rect, margin, aMetrics.mRootScrollableRect);
 
   if (heightConstrained) {
-    rect = AddVMargin(rect, margin, metrics);
+    rect = AddVMargin(rect, margin, aMetrics.mRootScrollableRect);
   }
 
   // If the rect is already taking up most of the visible area and is
   // stretching the width of the page, then we want to zoom out instead.
-  if (RectHasAlmostSameZoomLevel(rect, compositedArea)) {
+  if (RectHasAlmostSameZoomLevel(rect, aMetrics.mVisualViewport)) {
     return ZoomTarget{zoomOut, cantZoomOutBehavior, Nothing(),
                       Some(documentRelativePoint)};
   }
 
-  elementBoundingRect = AddHMargin(elementBoundingRect, margin, metrics);
+  elementBoundingRect =
+      AddHMargin(elementBoundingRect, margin, aMetrics.mRootScrollableRect);
 
   // Unlike rect, elementBoundingRect is the full height of the element we are
   // zooming to. If we zoom to it without a margin it can look a weird, so give
   // it a vertical margin.
-  elementBoundingRect = AddVMargin(elementBoundingRect, margin, metrics);
+  elementBoundingRect =
+      AddVMargin(elementBoundingRect, margin, aMetrics.mRootScrollableRect);
 
   rect.Round();
   elementBoundingRect.Round();
   return ZoomTarget{rect, cantZoomOutBehavior, Some(elementBoundingRect),
                     Some(documentRelativePoint)};
+}
+
+std::ostream& operator<<(std::ostream& aStream,
+                         const DoubleTapToZoomMetrics& aMetrics) {
+  aStream << "{ vv=" << aMetrics.mVisualViewport
+          << ", rscr=" << aMetrics.mRootScrollableRect << " }";
+  return aStream;
 }
 
 }  // namespace layers

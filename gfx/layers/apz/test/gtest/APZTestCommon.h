@@ -18,6 +18,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/DoubleTapToZoom.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/MatrixMessage.h"
 #include "mozilla/StaticPrefs_layout.h"
@@ -126,8 +127,9 @@ class MockContentController : public GeckoContentController {
  public:
   MOCK_METHOD1(NotifyLayerTransforms, void(nsTArray<MatrixMessage>&&));
   MOCK_METHOD1(RequestContentRepaint, void(const RepaintRequest&));
-  MOCK_METHOD5(HandleTap, void(TapType, const LayoutDevicePoint&, Modifiers,
-                               const ScrollableLayerGuid&, uint64_t));
+  MOCK_METHOD6(HandleTap, void(TapType, const LayoutDevicePoint&, Modifiers,
+                               const ScrollableLayerGuid&, uint64_t,
+                               const Maybe<DoubleTapToZoomMetrics>&));
   MOCK_METHOD5(NotifyPinchGesture,
                void(PinchGestureInput::PinchGestureType,
                     const ScrollableLayerGuid&, const LayoutDevicePoint&,

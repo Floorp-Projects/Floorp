@@ -591,7 +591,8 @@ class BrowserParent final : public PBrowserParent,
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY bool SendHandleTap(
       TapType aType, const LayoutDevicePoint& aPoint, Modifiers aModifiers,
-      const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId);
+      const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId,
+      const Maybe<DoubleTapToZoomMetrics>& aDoubleTapToZoomMetrics);
 
   already_AddRefed<PFilePickerParent> AllocPFilePickerParent(
       const nsString& aTitle, const nsIFilePicker::Mode& aMode);
