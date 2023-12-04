@@ -26,6 +26,7 @@ namespace layers {
 
 class IAPZCTreeManager;
 class APZEventState;
+struct DoubleTapToZoomMetrics;
 
 /**
  * ChromeProcessController is a GeckoContentController attached to the root of
@@ -54,9 +55,11 @@ class ChromeProcessController : public mozilla::layers::GeckoContentController {
   bool IsRepaintThread() override;
   void DispatchToRepaintThread(already_AddRefed<Runnable> aTask) override;
   MOZ_CAN_RUN_SCRIPT
-  void HandleTap(TapType aType, const mozilla::LayoutDevicePoint& aPoint,
-                 Modifiers aModifiers, const ScrollableLayerGuid& aGuid,
-                 uint64_t aInputBlockId) override;
+  void HandleTap(
+      TapType aType, const mozilla::LayoutDevicePoint& aPoint,
+      Modifiers aModifiers, const ScrollableLayerGuid& aGuid,
+      uint64_t aInputBlockId,
+      const Maybe<DoubleTapToZoomMetrics>& aDoubleTapToZoomMetrics) override;
   void NotifyPinchGesture(PinchGestureInput::PinchGestureType aType,
                           const ScrollableLayerGuid& aGuid,
                           const LayoutDevicePoint& aFocusPoint,
@@ -93,7 +96,8 @@ class ChromeProcessController : public mozilla::layers::GeckoContentController {
   dom::Document* GetRootContentDocument(
       const ScrollableLayerGuid::ViewID& aScrollId) const;
   void HandleDoubleTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
-                       const ScrollableLayerGuid& aGuid);
+                       const ScrollableLayerGuid& aGuid,
+                       const DoubleTapToZoomMetrics& aDoubleTapToZoomMetrics);
 };
 
 }  // namespace layers

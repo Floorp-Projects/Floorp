@@ -14,6 +14,7 @@ using mozilla::LayoutDeviceCoord from "Units.h";
 using mozilla::LayoutDevicePoint from "Units.h";
 using mozilla::ScreenPoint from "Units.h";
 using mozilla::layers::ZoomTarget from "mozilla/layers/DoubleTapToZoom.h";
+using mozilla::layers::DoubleTapToZoomMetrics from "mozilla/layers/DoubleTapToZoom.h";
 using mozilla::layers::ZoomConstraints from "mozilla/layers/ZoomConstraints.h";
 using mozilla::layers::ScrollableLayerGuid from "mozilla/layers/ScrollableLayerGuid.h";
 using mozilla::layers::ScrollableLayerGuid::ViewID from "mozilla/layers/ScrollableLayerGuid.h";
@@ -80,7 +81,8 @@ parent:
 child:
 
   async HandleTap(GeckoContentController_TapType aType, LayoutDevicePoint point, Modifiers aModifiers,
-                  ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
+                  ScrollableLayerGuid aGuid, uint64_t aInputBlockId,
+                  DoubleTapToZoomMetrics? aDoubleTapToZoomMetrics);
 
   async NotifyPinchGesture(PinchGestureType aType, ScrollableLayerGuid aGuid,
                            LayoutDevicePoint aFocusPoint, LayoutDeviceCoord aSpanChange,

@@ -3065,7 +3065,7 @@ nsEventStatus AsyncPanZoomController::OnLongPress(
       }
       uint64_t blockId = GetInputQueue()->InjectNewTouchBlock(this);
       controller->HandleTap(TapType::eLongTap, *geckoScreenPoint,
-                            aEvent.modifiers, GetGuid(), blockId);
+                            aEvent.modifiers, GetGuid(), blockId, Nothing());
       return nsEventStatus_eConsumeNoDefault;
     }
   }
@@ -3111,10 +3111,12 @@ nsEventStatus AsyncPanZoomController::GenerateSingleTap(
       APZC_LOG("posting runnable for HandleTap from GenerateSingleTap");
       RefPtr<Runnable> runnable =
           NewRunnableMethod<TapType, LayoutDevicePoint, mozilla::Modifiers,
-                            ScrollableLayerGuid, uint64_t>(
+                            ScrollableLayerGuid, uint64_t,
+                            Maybe<DoubleTapToZoomMetrics>>(
               "layers::GeckoContentController::HandleTap", controller,
               &GeckoContentController::HandleTap, aType, *geckoScreenPoint,
-              aModifiers, GetGuid(), touch ? touch->GetBlockId() : 0);
+              aModifiers, GetGuid(), touch ? touch->GetBlockId() : 0,
+              Nothing());
 
       controller->PostDelayedTask(runnable.forget(), 0);
       return nsEventStatus_eConsumeNoDefault;
@@ -3160,6 +3162,20 @@ nsEventStatus AsyncPanZoomController::OnDoubleTap(
     const TapGestureInput& aEvent) {
   APZC_LOG_DETAIL("got a double-tap in state %s\n", this,
                   ToString(mState).c_str());
+
+  RefPtr<AsyncPanZoomController> rootContentApzc;
+  if (IsRootContent()) {
+    rootContentApzc = RefPtr{this};
+  } else {
+    if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
+      rootContentApzc = treeManagerLocal->FindZoomableApzc(this);
+    }
+  }
+
+  if (!rootContentApzc) {
+    return nsEventStatus_eIgnore;
+  }
+
   RefPtr<GeckoContentController> controller = GetGeckoContentController();
   if (controller) {
     if (ZoomConstraintsAllowDoubleTapZoom() &&
@@ -3169,7 +3185,9 @@ nsEventStatus AsyncPanZoomController::OnDoubleTap(
               ConvertToGecko(aEvent.mPoint)) {
         controller->HandleTap(
             TapType::eDoubleTap, *geckoScreenPoint, aEvent.modifiers, GetGuid(),
-            GetCurrentTouchBlock() ? GetCurrentTouchBlock()->GetBlockId() : 0);
+            GetCurrentTouchBlock() ? GetCurrentTouchBlock()->GetBlockId() : 0,
+            Some(DoubleTapToZoomMetrics{rootContentApzc->GetVisualViewport(),
+                                        rootContentApzc->GetScrollableRect()}));
       }
     }
     return nsEventStatus_eConsumeNoDefault;
