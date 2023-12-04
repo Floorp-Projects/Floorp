@@ -5314,10 +5314,11 @@ void AsyncPanZoomController::NotifyLayersUpdated(
   // XXX Suspicious comparison between layout and visual scroll offsets.
   // This may not do the right thing when we're zoomed in.
   CSSPoint lastScrollOffset = mLastContentPaintMetrics.GetLayoutScrollOffset();
-  bool userScrolled = !FuzzyEqualsAdditive(Metrics().GetVisualScrollOffset().x,
-                                           lastScrollOffset.x) ||
-                      !FuzzyEqualsAdditive(Metrics().GetVisualScrollOffset().y,
-                                           lastScrollOffset.y);
+  bool userScrolled =
+      !FuzzyEqualsCoordinate(Metrics().GetVisualScrollOffset().x,
+                             lastScrollOffset.x) ||
+      !FuzzyEqualsCoordinate(Metrics().GetVisualScrollOffset().y,
+                             lastScrollOffset.y);
 
   if (aScrollMetadata.DidContentGetPainted()) {
     mLastContentPaintMetadata = aScrollMetadata;
