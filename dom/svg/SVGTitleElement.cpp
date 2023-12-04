@@ -31,6 +31,8 @@ SVGTitleElement::SVGTitleElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGTitleElementBase(std::move(aNodeInfo)) {
   AddMutationObserver(this);
+  SetEnabledCallbacks(kCharacterDataChanged | kContentAppended |
+                      kContentInserted | kContentRemoved);
 }
 
 void SVGTitleElement::CharacterDataChanged(nsIContent* aContent,

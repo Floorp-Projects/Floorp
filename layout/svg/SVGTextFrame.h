@@ -364,6 +364,9 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
     explicit MutationObserver(SVGTextFrame* aFrame) : mFrame(aFrame) {
       MOZ_ASSERT(mFrame, "MutationObserver needs a non-null frame");
       mFrame->GetContent()->AddMutationObserver(this);
+      SetEnabledCallbacks(kCharacterDataChanged | kAttributeChanged |
+                          kContentAppended | kContentInserted |
+                          kContentRemoved);
     }
 
     // nsISupports
