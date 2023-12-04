@@ -461,22 +461,6 @@ class SyncedTabsInView extends ViewPage {
         );
       }
     }
-    if (!this.recentBrowsing) {
-      renderArray.push(
-        html`<div class="syncedtabs-footer">
-          <button data-action="add-device" @click=${this.handleEvent}>
-            <img
-              class="icon"
-              role="presentation"
-              src="chrome://global/skin/icons/plus.svg"
-            /><span
-              data-l10n-id="firefoxview-syncedtabs-connect-another-device"
-              data-action="add-device"
-            ></span>
-          </button>
-        </div>`
-      );
-    }
     return renderArray;
   }
 
@@ -526,6 +510,7 @@ class SyncedTabsInView extends ViewPage {
       rel="stylesheet"
       href="chrome://browser/content/firefoxview/firefoxview-next.css"
     />`);
+
     if (!this.recentBrowsing) {
       renderArray.push(html`<div class="sticky-container bottom-fade">
         <h2
@@ -533,13 +518,38 @@ class SyncedTabsInView extends ViewPage {
           data-l10n-id="firefoxview-synced-tabs-header"
         ></h2>
         ${when(
-          isSearchEnabled(),
-          () => html`<div class="search-container">
-            <fxview-search-textbox
-              data-l10n-id="firefoxview-search-text-box-syncedtabs"
-              data-l10n-attrs="placeholder"
-              @fxview-search-textbox-query=${this.onSearchQuery}
-            ></fxview-search-textbox>
+          isSearchEnabled() || this._currentSetupStateIndex === 4,
+          () => html`<div class="syncedtabs-header">
+            ${when(
+              isSearchEnabled(),
+              () => html`<div>
+                <fxview-search-textbox
+                  data-l10n-id="firefoxview-search-text-box-syncedtabs"
+                  data-l10n-attrs="placeholder"
+                  @fxview-search-textbox-query=${this.onSearchQuery}
+                ></fxview-search-textbox>
+              </div>`
+            )}
+            ${when(
+              this._currentSetupStateIndex === 4,
+              () => html`
+                <button
+                  class="small-button"
+                  data-action="add-device"
+                  @click=${this.handleEvent}
+                >
+                  <img
+                    class="icon"
+                    role="presentation"
+                    src="chrome://global/skin/icons/plus.svg"
+                    alt="plus sign"
+                  /><span
+                    data-l10n-id="firefoxview-syncedtabs-connect-another-device"
+                    data-action="add-device"
+                  ></span>
+                </button>
+              `
+            )}
           </div>`
         )}
       </div>`);
