@@ -1781,30 +1781,6 @@ bool GetNativeDataPropertyByValuePure(JSContext* cx, JSObject* obj,
   return GetNativeDataPropertyPureImpl(cx, obj, id, entry, res);
 }
 
-bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyKey id,
-                               Value* val) {
-  AutoUnsafeCallWithABI unsafe;
-
-  if (MOZ_UNLIKELY(!obj->is<NativeObject>())) {
-    return false;
-  }
-
-  NativeObject* nobj = &obj->as<NativeObject>();
-  uint32_t index;
-  PropMap* map = nobj->shape()->lookup(cx, id, &index);
-  if (!map) {
-    return false;
-  }
-
-  PropertyInfo prop = map->getPropertyInfo(index);
-  if (!prop.isDataProperty() || !prop.writable()) {
-    return false;
-  }
-
-  nobj->setSlot(prop.slot(), *val);
-  return true;
-}
-
 bool ObjectHasGetterSetterPure(JSContext* cx, JSObject* objArg, jsid id,
                                GetterSetter* getterSetter) {
   AutoUnsafeCallWithABI unsafe;
