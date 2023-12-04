@@ -28,8 +28,9 @@ use writeable::Writeable;
 ///
 /// ```
 /// use icu_locid::{
-///     extensions_unicode_key as key, extensions_unicode_value as value,
-///     locale, subtags_language as language, subtags_region as region,
+///     extensions::unicode::{key, value},
+///     locale,
+///     subtags::{language, region},
 /// };
 ///
 /// let loc = locale!("en-US-u-ca-buddhist");
@@ -56,7 +57,8 @@ use writeable::Writeable;
 /// `_` separators to `-` and adjusting casing to conform to the Unicode standard.
 ///
 /// Any bogus subtags will cause the parsing to fail with an error.
-/// No subtag validation or canonicalization is performed.
+///
+/// No subtag validation or alias resolution is performed.
 ///
 /// # Examples
 ///
@@ -98,13 +100,13 @@ fn test_sizes() {
     assert_eq!(core::mem::size_of::<Option<LanguageIdentifier>>(), 32);
     assert_eq!(core::mem::size_of::<extensions::transform::Fields>(), 24);
 
-    assert_eq!(core::mem::size_of::<extensions::unicode::Attributes>(), 24);
+    assert_eq!(core::mem::size_of::<extensions::unicode::Attributes>(), 16);
     assert_eq!(core::mem::size_of::<extensions::unicode::Keywords>(), 24);
     assert_eq!(core::mem::size_of::<Vec<extensions::other::Other>>(), 24);
-    assert_eq!(core::mem::size_of::<extensions::private::Private>(), 24);
-    assert_eq!(core::mem::size_of::<extensions::Extensions>(), 152);
+    assert_eq!(core::mem::size_of::<extensions::private::Private>(), 16);
+    assert_eq!(core::mem::size_of::<extensions::Extensions>(), 136);
 
-    assert_eq!(core::mem::size_of::<Locale>(), 184);
+    assert_eq!(core::mem::size_of::<Locale>(), 168);
 }
 
 impl Locale {
@@ -250,7 +252,7 @@ impl Locale {
     /// Compare this `Locale` with a potentially unnormalized BCP-47 string.
     ///
     /// The return value is equivalent to what would happen if you first parsed the
-    /// BCP-47 string to a `Locale` and then performed a structucal comparison.
+    /// BCP-47 string to a `Locale` and then performed a structural comparison.
     ///
     /// # Examples
     ///
@@ -422,7 +424,7 @@ fn test_writeable() {
 ///
 /// ```
 /// use icu::locid::Locale;
-/// use icu::locid::{locale, subtags_language as language};
+/// use icu::locid::{locale, subtags::language};
 ///
 /// assert_eq!(Locale::from(language!("en")), locale!("en"));
 /// ```
@@ -439,7 +441,7 @@ impl From<subtags::Language> for Locale {
 ///
 /// ```
 /// use icu::locid::Locale;
-/// use icu::locid::{locale, subtags_script as script};
+/// use icu::locid::{locale, subtags::script};
 ///
 /// assert_eq!(Locale::from(Some(script!("latn"))), locale!("und-Latn"));
 /// ```
@@ -456,7 +458,7 @@ impl From<Option<subtags::Script>> for Locale {
 ///
 /// ```
 /// use icu::locid::Locale;
-/// use icu::locid::{locale, subtags_region as region};
+/// use icu::locid::{locale, subtags::region};
 ///
 /// assert_eq!(Locale::from(Some(region!("US"))), locale!("und-US"));
 /// ```
@@ -474,8 +476,8 @@ impl From<Option<subtags::Region>> for Locale {
 /// ```
 /// use icu::locid::Locale;
 /// use icu::locid::{
-///     locale, subtags_language as language, subtags_region as region,
-///     subtags_script as script,
+///     locale,
+///     subtags::{language, region, script},
 /// };
 ///
 /// assert_eq!(

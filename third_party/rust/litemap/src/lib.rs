@@ -21,6 +21,13 @@
 //! random-access data store, giving that data store a map-like interface. See the [`store`]
 //! module for more details.
 //!
+//! ## Const construction
+//!
+//! [`LiteMap`] supports const construction from any store that is const-constructible, such as a
+//! static slice, via [`LiteMap::from_sorted_store_unchecked()`]. This also makes [`LiteMap`]
+//! suitable for use with [`databake`]. See [`impl Bake for LiteMap`] for more details.
+//!
+//! [`impl Bake for LiteMap`]: ./struct.LiteMap.html#impl-Bake-for-LiteMap<K,+V,+S>
 //! [`Vec`]: alloc::vec::Vec
 
 // https://github.com/unicode-org/icu4x/blob/main/docs/process/boilerplate.md#library-annotations
@@ -44,6 +51,9 @@ extern crate std;
 
 extern crate alloc;
 
+#[cfg(feature = "databake")]
+#[path = "databake.rs"] // to not conflict with `databake` as used in the docs
+mod databake_impls;
 mod map;
 #[cfg(feature = "serde")]
 mod serde;
@@ -51,7 +61,7 @@ mod serde;
 mod serde_helpers;
 pub mod store;
 
-#[cfg(feature = "testing")]
+#[cfg(any(test, feature = "testing"))]
 pub mod testing;
 
 pub use map::LiteMap;

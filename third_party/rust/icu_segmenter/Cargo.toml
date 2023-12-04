@@ -11,11 +11,12 @@
 
 [package]
 edition = "2021"
+rust-version = "1.67"
 name = "icu_segmenter"
-version = "1.2.1"
+version = "1.4.0"
 authors = ["The ICU4X Project Developers"]
 include = [
-    "data/*",
+    "data/**/*",
     "src/**/*",
     "examples/**/*",
     "benches/**/*",
@@ -25,16 +26,16 @@ include = [
     "README.md",
 ]
 description = "Unicode line breaking and text segmentation algorithms for text boundaries analysis"
+homepage = "https://icu4x.unicode.org"
 readme = "README.md"
 categories = ["internationalization"]
-license = "Unicode-DFS-2016"
+license-file = "LICENSE"
 repository = "https://github.com/unicode-org/icu4x"
 
 [package.metadata.docs.rs]
 all-features = true
 
 [lib]
-path = "src/lib.rs"
 bench = false
 
 [[test]]
@@ -45,28 +46,41 @@ required-features = ["auto"]
 name = "bench"
 harness = false
 
+[dependencies.core_maths]
+version = "0.1"
+optional = true
+
 [dependencies.databake]
-version = "0.1.3"
+version = "0.1.7"
 features = ["derive"]
 optional = true
+default-features = false
 
 [dependencies.displaydoc]
 version = "0.2.3"
 default-features = false
 
 [dependencies.icu_collections]
-version = "1.2.0"
+version = "~1.4.0"
+default-features = false
 
 [dependencies.icu_locid]
-version = "1.2.0"
+version = "~1.4.0"
+default-features = false
+
+[dependencies.icu_locid_transform]
+version = "~1.4.0"
+features = ["compiled_data"]
+optional = true
+default-features = false
 
 [dependencies.icu_provider]
-version = "1.2.0"
+version = "~1.4.0"
 features = ["macros"]
+default-features = false
 
-[dependencies.num-traits]
-version = "0.2"
-features = ["libm"]
+[dependencies.icu_segmenter_data]
+version = "~1.4.0"
 optional = true
 default-features = false
 
@@ -83,11 +97,14 @@ default-features = false
 version = "1.0.3"
 
 [dependencies.zerovec]
-version = "0.9.4"
+version = "0.10.1"
 features = ["yoke"]
+default-features = false
 
-[dev-dependencies.criterion]
-version = "0.4"
+[dev-dependencies.icu_properties]
+version = "~1.4.0"
+features = ["compiled_data"]
+default-features = false
 
 [dev-dependencies.itertools]
 version = "0.10"
@@ -102,14 +119,19 @@ version = "1.0"
 
 [features]
 auto = ["lstm"]
+bench = []
+compiled_data = ["dep:icu_segmenter_data"]
 datagen = [
     "serde",
     "dep:databake",
     "zerovec/databake",
     "icu_collections/databake",
 ]
-default = ["auto"]
-lstm = ["dep:num-traits"]
+default = [
+    "compiled_data",
+    "auto",
+]
+lstm = ["dep:core_maths"]
 serde = [
     "dep:serde",
     "zerovec/serde",
@@ -121,3 +143,6 @@ std = [
     "icu_locid/std",
     "icu_provider/std",
 ]
+
+[target."cfg(not(target_arch = \"wasm32\"))".dev-dependencies.criterion]
+version = "0.4"

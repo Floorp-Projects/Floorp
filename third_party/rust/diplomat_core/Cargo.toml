@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "diplomat_core"
-version = "0.5.2"
+version = "0.7.0"
 authors = [
     "Shadaj Laddad <shadaj@users.noreply.github.com>",
     "Manish Goregaokar <manishsmail@gmail.com>",
@@ -25,8 +25,9 @@ keywords = [
     "codegen",
 ]
 categories = ["development-tools"]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-diplomat/diplomat"
+resolver = "1"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -34,19 +35,25 @@ all-features = true
 [lib]
 path = "src/lib.rs"
 
-[dependencies]
-lazy_static = "1.4.0"
-proc-macro2 = "1.0.27"
-quote = "1.0"
-smallvec = "1.9.0"
-
 [dependencies.displaydoc]
 version = "0.2"
 optional = true
 
+[dependencies.lazy_static]
+version = "1.4.0"
+
+[dependencies.proc-macro2]
+version = "1.0.27"
+
+[dependencies.quote]
+version = "1.0"
+
 [dependencies.serde]
 version = "1.0"
 features = ["derive"]
+
+[dependencies.smallvec]
+version = "1.9.0"
 
 [dependencies.strck_ident]
 version = "0.1"
@@ -59,8 +66,8 @@ features = [
     "extra-traits",
 ]
 
-[dev-dependencies]
-insta = "1.7.1"
+[dev-dependencies.insta]
+version = "1.7.1"
 
 [features]
 hir = []

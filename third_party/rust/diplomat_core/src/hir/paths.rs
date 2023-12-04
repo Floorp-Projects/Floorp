@@ -5,6 +5,7 @@ use super::{
 
 /// Path to a struct that may appear as an output.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub enum ReturnableStructPath {
     Struct(StructPath),
     OutStruct(OutStructPath),
@@ -15,6 +16,7 @@ pub type OutStructPath = StructPath<OutputOnly>;
 
 /// Path to a struct that can be used in inputs and outputs.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct StructPath<P: TyPosition = Everywhere> {
     pub lifetimes: TypeLifetimes,
     pub tcx_id: P::StructId,
@@ -35,6 +37,7 @@ pub struct StructPath<P: TyPosition = Everywhere> {
 /// 3. `OpaquePath<NonOptional, Borrow>`: Opaques in the `&self` position, which
 /// cannot be optional and must be borrowed for the same reason as above.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct OpaquePath<Opt, Owner> {
     pub lifetimes: TypeLifetimes,
     pub optional: Opt,
@@ -46,6 +49,7 @@ pub struct OpaquePath<Opt, Owner> {
 pub struct Optional(pub(super) bool);
 
 #[derive(Debug, Copy, Clone)]
+#[allow(clippy::exhaustive_structs)] // marker type
 pub struct NonOptional;
 
 impl<Owner: OpaqueOwner> OpaquePath<Optional, Owner> {
@@ -79,6 +83,7 @@ impl<Opt> OpaquePath<Opt, Borrow> {
 
 /// Path to an enum.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct EnumPath {
     pub tcx_id: EnumId,
 }
@@ -87,6 +92,7 @@ pub struct EnumPath {
 ///
 /// Since owned opaques cannot be used as inputs, this only appears in output types.
 #[derive(Copy, Clone, Debug)]
+#[allow(clippy::exhaustive_enums)] // only two answers to this question
 pub enum MaybeOwn {
     Own,
     Borrow(Borrow),

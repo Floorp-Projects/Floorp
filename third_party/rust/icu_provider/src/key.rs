@@ -3,8 +3,8 @@
 // (online at: https://github.com/unicode-org/icu4x/blob/main/LICENSE ).
 
 use crate::error::{DataError, DataErrorKind};
-use crate::helpers;
 
+use crate::fallback::{LocaleFallbackConfig, LocaleFallbackPriority, LocaleFallbackSupplement};
 use alloc::borrow::Cow;
 use core::fmt;
 use core::fmt::Write;
@@ -50,7 +50,7 @@ pub struct DataKeyHash([u8; 4]);
 
 impl DataKeyHash {
     const fn compute_from_path(path: DataKeyPath) -> Self {
-        let hash = helpers::fxhash_32(
+        let hash = fxhash_32(
             path.tagged.as_bytes(),
             leading_tag!().len(),
             trailing_tag!().len(),
@@ -62,6 +62,79 @@ impl DataKeyHash {
     pub const fn to_bytes(self) -> [u8; 4] {
         self.0
     }
+}
+
+/// Const function to compute the FxHash of a byte array.
+///
+/// FxHash is a speedy hash algorithm used within rustc. The algorithm is satisfactory for our
+/// use case since the strings being hashed originate from a trusted source (the ICU4X
+/// components), and the hashes are computed at compile time, so we can check for collisions.
+///
+/// We could have considered a SHA or other cryptographic hash function. However, we are using
+/// FxHash because:
+///
+/// 1. There is precedent for this algorithm in Rust
+/// 2. The algorithm is easy to implement as a const function
+/// 3. The amount of code is small enough that we can reasonably keep the algorithm in-tree
+/// 4. FxHash is designed to output 32-bit or 64-bit values, whereas SHA outputs more bits,
+///    such that truncation would be required in order to fit into a u32, partially reducing
+///    the benefit of a cryptographically secure algorithm
+// The indexing operations in this function have been reviewed in detail and won't panic.
+#[allow(clippy::indexing_slicing)]
+const fn fxhash_32(bytes: &[u8], ignore_leading: usize, ignore_trailing: usize) -> u32 {
+    // This code is adapted from https://github.com/rust-lang/rustc-hash,
+    // whose license text is reproduced below.
+    //
+    // Copyright 2015 The Rust Project Developers. See the COPYRIGHT
+    // file at the top-level directory of this distribution and at
+    // http://rust-lang.org/COPYRIGHT.
+    //
+    // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+    // http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+    // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+    // option. This file may not be copied, modified, or distributed
+    // except according to those terms.
+
+    if ignore_leading + ignore_trailing >= bytes.len() {
+        return 0;
+    }
+
+    #[inline]
+    const fn hash_word_32(mut hash: u32, word: u32) -> u32 {
+        const ROTATE: u32 = 5;
+        const SEED32: u32 = 0x9e_37_79_b9;
+        hash = hash.rotate_left(ROTATE);
+        hash ^= word;
+        hash = hash.wrapping_mul(SEED32);
+        hash
+    }
+
+    let mut cursor = ignore_leading;
+    let end = bytes.len() - ignore_trailing;
+    let mut hash = 0;
+
+    while end - cursor >= 4 {
+        let word = u32::from_le_bytes([
+            bytes[cursor],
+            bytes[cursor + 1],
+            bytes[cursor + 2],
+            bytes[cursor + 3],
+        ]);
+        hash = hash_word_32(hash, word);
+        cursor += 4;
+    }
+
+    if end - cursor >= 2 {
+        let word = u16::from_le_bytes([bytes[cursor], bytes[cursor + 1]]);
+        hash = hash_word_32(hash, word as u32);
+        cursor += 2;
+    }
+
+    if end - cursor >= 1 {
+        hash = hash_word_32(hash, bytes[cursor] as u32);
+    }
+
+    hash
 }
 
 impl<'a> zerovec::maps::ZeroMapKV<'a> for DataKeyHash {
@@ -85,48 +158,6 @@ impl AsULE for DataKeyHash {
 
 // Safe since the ULE type is `self`.
 unsafe impl EqULE for DataKeyHash {}
-
-/// Hint for what to prioritize during fallback when data is unavailable.
-///
-/// For example, if `"en-US"` is requested, but we have no data for that specific locale,
-/// fallback may take us to `"en"` or `"und-US"` to check for data.
-#[derive(Debug, PartialEq, Eq, Copy, Clone, PartialOrd, Ord)]
-#[non_exhaustive]
-pub enum FallbackPriority {
-    /// Prioritize the language. This is the default behavior.
-    ///
-    /// For example, `"en-US"` should go to `"en"` and then `"und"`.
-    Language,
-    /// Prioritize the region.
-    ///
-    /// For example, `"en-US"` should go to `"und-US"` and then `"und"`.
-    Region,
-    /// Collation-specific fallback rules. Similar to language priority.
-    ///
-    /// For example, `"zh-Hant"` goes to `"zh"` before `"und"`.
-    Collation,
-}
-
-impl FallbackPriority {
-    /// Const-friendly version of [`Default::default`].
-    pub const fn const_default() -> Self {
-        Self::Language
-    }
-}
-
-impl Default for FallbackPriority {
-    fn default() -> Self {
-        Self::const_default()
-    }
-}
-
-/// What additional data to load when performing fallback.
-#[derive(Debug, PartialEq, Eq, Copy, Clone, PartialOrd, Ord)]
-#[non_exhaustive]
-pub enum FallbackSupplement {
-    /// Collation supplement; see `CollationFallbackSupplementV1Marker`
-    Collation,
-}
 
 /// The string path of a data key. For example, "foo@1"
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -163,35 +194,42 @@ impl Deref for DataKeyPath {
 #[non_exhaustive]
 pub struct DataKeyMetadata {
     /// What to prioritize when fallbacking on this [`DataKey`].
-    pub fallback_priority: FallbackPriority,
+    pub fallback_priority: LocaleFallbackPriority,
     /// A Unicode extension keyword to consider when loading data for this [`DataKey`].
     pub extension_key: Option<icu_locid::extensions::unicode::Key>,
     /// Optional choice for additional fallbacking data required for loading this marker.
     ///
     /// For more information, see `LocaleFallbackConfig::fallback_supplement`.
-    pub fallback_supplement: Option<FallbackSupplement>,
+    pub fallback_supplement: Option<LocaleFallbackSupplement>,
+    /// Whether the key has a singleton value, as opposed to per-locale values. Singleton
+    /// keys behave differently, e.g. they never perform fallback, and can be optimized
+    /// in data providers.
+    pub singleton: bool,
 }
 
 impl DataKeyMetadata {
     /// Const-friendly version of [`Default::default`].
     pub const fn const_default() -> Self {
         Self {
-            fallback_priority: FallbackPriority::const_default(),
+            fallback_priority: LocaleFallbackPriority::const_default(),
             extension_key: None,
             fallback_supplement: None,
+            singleton: false,
         }
     }
 
     #[doc(hidden)]
     pub const fn construct_internal(
-        fallback_priority: FallbackPriority,
+        fallback_priority: LocaleFallbackPriority,
         extension_key: Option<icu_locid::extensions::unicode::Key>,
-        fallback_supplement: Option<FallbackSupplement>,
+        fallback_supplement: Option<LocaleFallbackSupplement>,
+        singleton: bool,
     ) -> Self {
         Self {
             fallback_priority,
             extension_key,
             fallback_supplement,
+            singleton,
         }
     }
 }
@@ -300,6 +338,16 @@ impl DataKey {
     #[inline]
     pub const fn metadata(self) -> DataKeyMetadata {
         self.metadata
+    }
+
+    /// Returns the [`LocaleFallbackConfig`] for this [`DataKey`].
+    #[inline]
+    pub const fn fallback_config(self) -> LocaleFallbackConfig {
+        let mut config = LocaleFallbackConfig::const_default();
+        config.priority = self.metadata.fallback_priority;
+        config.extension_key = self.metadata.extension_key;
+        config.fallback_supplement = self.metadata.fallback_supplement;
+        config
     }
 
     /// Constructs a [`DataKey`] from a path and metadata.
@@ -620,7 +668,27 @@ fn test_key_to_string() {
         },
     ] {
         writeable::assert_writeable_eq!(&cas.key, cas.expected);
+        assert_eq!(cas.expected, &*cas.key.path());
     }
+}
+
+#[test]
+fn test_hash_word_32() {
+    assert_eq!(0, fxhash_32(b"", 0, 0));
+    assert_eq!(0, fxhash_32(b"a", 1, 0));
+    assert_eq!(0, fxhash_32(b"a", 0, 1));
+    assert_eq!(0, fxhash_32(b"a", 0, 10));
+    assert_eq!(0, fxhash_32(b"a", 10, 0));
+    assert_eq!(0, fxhash_32(b"a", 1, 1));
+    assert_eq!(0xF3051F19, fxhash_32(b"a", 0, 0));
+    assert_eq!(0x2F9DF119, fxhash_32(b"ab", 0, 0));
+    assert_eq!(0xCB1D9396, fxhash_32(b"abc", 0, 0));
+    assert_eq!(0x8628F119, fxhash_32(b"abcd", 0, 0));
+    assert_eq!(0xBEBDB56D, fxhash_32(b"abcde", 0, 0));
+    assert_eq!(0x1CE8476D, fxhash_32(b"abcdef", 0, 0));
+    assert_eq!(0xC0F176A4, fxhash_32(b"abcdefg", 0, 0));
+    assert_eq!(0x09AB476D, fxhash_32(b"abcdefgh", 0, 0));
+    assert_eq!(0xB72F5D88, fxhash_32(b"abcdefghi", 0, 0));
 }
 
 #[test]
@@ -628,27 +696,22 @@ fn test_key_hash() {
     struct KeyTestCase {
         pub key: DataKey,
         pub hash: DataKeyHash,
-        pub path: &'static str,
     }
 
     for cas in [
         KeyTestCase {
             key: data_key!("core/cardinal@1"),
             hash: DataKeyHash([172, 207, 42, 236]),
-            path: "core/cardinal@1",
         },
         KeyTestCase {
             key: data_key!("core/maxlengthsubcatg@1"),
             hash: DataKeyHash([193, 6, 79, 61]),
-            path: "core/maxlengthsubcatg@1",
         },
         KeyTestCase {
             key: data_key!("core/cardinal@65535"),
             hash: DataKeyHash([176, 131, 182, 223]),
-            path: "core/cardinal@65535",
         },
     ] {
-        assert_eq!(cas.hash, cas.key.hashed(), "{}", cas.path);
-        assert_eq!(cas.path, &*cas.key.path(), "{}", cas.path);
+        assert_eq!(cas.hash, cas.key.hashed(), "{}", cas.key);
     }
 }

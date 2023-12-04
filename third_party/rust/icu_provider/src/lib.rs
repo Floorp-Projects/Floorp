@@ -80,9 +80,6 @@
 //!
 //! - [`HelloWorldProvider`] returns "hello world" strings in several languages.
 //!
-//! If you need a testing provider that contains the actual resource keys used by ICU4X features,
-//! see the [`icu_testdata`] crate.
-//!
 //! ## Types and Lifetimes
 //!
 //! Types compatible with [`Yokeable`] can be passed through the data provider, so long as they are
@@ -116,7 +113,6 @@
 //! [`CldrJsonDataProvider`]: ../icu_datagen/cldr/struct.CldrJsonDataProvider.html
 //! [`FsDataProvider`]: ../icu_provider_fs/struct.FsDataProvider.html
 //! [`BlobDataProvider`]: ../icu_provider_blob/struct.BlobDataProvider.html
-//! [`icu_testdata`]: ../icu_testdata/index.html
 //! [`icu_datagen`]: ../icu_datagen/index.html
 
 // https://github.com/unicode-org/icu4x/blob/main/docs/process/boilerplate.md#library-annotations
@@ -139,7 +135,8 @@ extern crate alloc;
 
 mod data_provider;
 mod error;
-mod helpers;
+#[doc(hidden)]
+pub mod fallback;
 mod key;
 mod request;
 mod response;
@@ -148,12 +145,9 @@ pub mod any;
 pub mod buf;
 pub mod constructors;
 #[cfg(feature = "datagen")]
-#[macro_use]
 pub mod datagen;
-#[macro_use]
 pub mod dynutil;
 pub mod hello_world;
-#[macro_use]
 pub mod marker;
 #[cfg(feature = "serde")]
 pub mod serde;
@@ -167,8 +161,8 @@ pub use crate::key::DataKey;
 pub use crate::key::DataKeyHash;
 pub use crate::key::DataKeyMetadata;
 pub use crate::key::DataKeyPath;
-pub use crate::key::FallbackPriority;
-pub use crate::key::FallbackSupplement;
+#[cfg(feature = "experimental")]
+pub use crate::request::AuxiliaryKeys;
 pub use crate::request::DataLocale;
 pub use crate::request::DataRequest;
 pub use crate::request::DataRequestMetadata;
@@ -214,6 +208,9 @@ pub mod prelude {
     #[doc(no_inline)]
     pub use crate::AsDynamicDataProviderAnyMarkerWrap;
     #[doc(no_inline)]
+    #[cfg(feature = "experimental")]
+    pub use crate::AuxiliaryKeys;
+    #[doc(no_inline)]
     pub use crate::BufferMarker;
     #[doc(no_inline)]
     pub use crate::BufferProvider;
@@ -252,8 +249,19 @@ pub mod prelude {
     pub use zerofrom;
 }
 
+// Additional crate re-exports for compatibility
+#[doc(hidden)]
+pub use fallback::LocaleFallbackPriority as FallbackPriority;
+#[doc(hidden)]
+pub use fallback::LocaleFallbackSupplement as FallbackSupplement;
+#[doc(hidden)]
+pub use yoke;
+#[doc(hidden)]
+pub use zerofrom;
+
 // For macros
 #[doc(hidden)]
 pub mod _internal {
-    pub use icu_locid::extensions_unicode_key;
+    pub use super::fallback::{LocaleFallbackPriority, LocaleFallbackSupplement};
+    pub use icu_locid as locid;
 }

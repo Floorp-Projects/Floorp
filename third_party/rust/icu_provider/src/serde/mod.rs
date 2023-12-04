@@ -29,6 +29,13 @@ pub struct DeserializingBufferProvider<'a, P: ?Sized>(&'a P);
 /// Blanket-implemented trait adding the [`Self::as_deserializing()`] function.
 pub trait AsDeserializingBufferProvider {
     /// Wrap this [`BufferProvider`] in a [`DeserializingBufferProvider`].
+    ///
+    /// This requires enabling the deserialization Cargo feature
+    /// for the expected format(s):
+    ///
+    /// - `deserialize_json`
+    /// - `deserialize_postcard_1`
+    /// - `deserialize_bincode_1`
     fn as_deserializing(&self) -> DeserializingBufferProvider<Self>;
 }
 
@@ -37,6 +44,13 @@ where
     P: BufferProvider + ?Sized,
 {
     /// Wrap this [`BufferProvider`] in a [`DeserializingBufferProvider`].
+    ///
+    /// This requires enabling the deserialization Cargo feature
+    /// for the expected format(s):
+    ///
+    /// - `deserialize_json`
+    /// - `deserialize_postcard_1`
+    /// - `deserialize_bincode_1`
     fn as_deserializing(&self) -> DeserializingBufferProvider<Self> {
         DeserializingBufferProvider(self)
     }
@@ -90,6 +104,13 @@ impl DataPayload<BufferMarker> {
     /// Deserialize a [`DataPayload`]`<`[`BufferMarker`]`>` into a [`DataPayload`] of a
     /// specific concrete type.
     ///
+    /// This requires enabling the deserialization Cargo feature
+    /// for the expected format(s):
+    ///
+    /// - `deserialize_json`
+    /// - `deserialize_postcard_1`
+    /// - `deserialize_bincode_1`
+    ///
     /// This function takes the buffer format as an argument. When a buffer payload is returned
     /// from a data provider, the buffer format is stored in the [`DataResponseMetadata`].
     ///
@@ -135,6 +156,14 @@ where
     // Necessary workaround bound (see `yoke::trait_hack` docs):
     for<'de> YokeTraitHack<<M::Yokeable as Yokeable<'de>>::Output>: Deserialize<'de>,
 {
+    /// Converts a buffer into a concrete type by deserializing from a supported buffer format.
+    ///
+    /// This requires enabling the deserialization Cargo feature
+    /// for the expected format(s):
+    ///
+    /// - `deserialize_json`
+    /// - `deserialize_postcard_1`
+    /// - `deserialize_bincode_1`
     fn load_data(&self, key: DataKey, req: DataRequest) -> Result<DataResponse<M>, DataError> {
         let buffer_response = BufferProvider::load_buffer(self.0, key, req)?;
         let buffer_format = buffer_response.metadata.buffer_format.ok_or_else(|| {
@@ -161,6 +190,13 @@ where
     for<'de> YokeTraitHack<<M::Yokeable as Yokeable<'de>>::Output>: Deserialize<'de>,
 {
     /// Converts a buffer into a concrete type by deserializing from a supported buffer format.
+    ///
+    /// This requires enabling the deserialization Cargo feature
+    /// for the expected format(s):
+    ///
+    /// - `deserialize_json`
+    /// - `deserialize_postcard_1`
+    /// - `deserialize_bincode_1`
     fn load(&self, req: DataRequest) -> Result<DataResponse<M>, DataError> {
         self.load_data(M::KEY, req)
     }

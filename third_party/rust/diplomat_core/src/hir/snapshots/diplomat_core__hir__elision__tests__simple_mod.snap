@@ -29,7 +29,7 @@ TypeContext {
                                 ],
                             },
                             optional: Optional(
-                                true,
+                                false,
                             ),
                             owner: Own,
                             tcx_id: OpaqueId(
@@ -95,8 +95,16 @@ TypeContext {
                             ),
                         ),
                     ),
+                    attrs: Attrs {
+                        disable: false,
+                        rename: None,
+                    },
                 },
             ],
+            attrs: Attrs {
+                disable: false,
+                rename: None,
+            },
         },
     ],
     structs: [
@@ -190,8 +198,16 @@ TypeContext {
                             ),
                         ),
                     ),
+                    attrs: Attrs {
+                        disable: false,
+                        rename: None,
+                    },
                 },
             ],
+            attrs: Attrs {
+                disable: false,
+                rename: None,
+            },
         },
     ],
     opaques: [
@@ -202,6 +218,10 @@ TypeContext {
             ),
             name: "Opaque",
             methods: [],
+            attrs: Attrs {
+                disable: false,
+                rename: None,
+            },
         },
     ],
     enums: [],

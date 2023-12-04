@@ -2,421 +2,297 @@
 // called LICENSE at the top level of the ICU4X source tree
 // (online at: https://github.com/unicode-org/icu4x/blob/main/LICENSE ).
 
-//! Tools for locale fallback, enabling arbitrary input locales to be mapped into the nearest
-//! locale with data.
-//!
-//! The algorithm implemented in this module is called [Flexible Vertical Fallback](
-//! https://docs.google.com/document/d/1Mp7EUyl-sFh_HZYgyeVwj88vJGpCBIWxzlCwGgLCDwM/edit).
-//! Watch [#2243](https://github.com/unicode-org/icu4x/issues/2243) to track improvements to
-//! this algorithm and steps to enshrine the algorithm in CLDR.
-//!
-//! # Examples
-//!
-//! Run the locale fallback algorithm:
-//!
-//! ```
-//! use icu_locid::locale;
-//! use icu_provider_adapters::fallback::LocaleFallbacker;
-//! use icu_provider::prelude::*;
-//!
-//! // Set up a LocaleFallbacker with data.
-//! let fallbacker = LocaleFallbacker::try_new_unstable(&icu_testdata::unstable()).expect("data");
-//!
-//! // Create a LocaleFallbackerWithConfig with a configuration for a specific key.
-//! // By default, uses language priority with no additional extension keywords.
-//! let key_fallbacker = fallbacker.for_config(Default::default());
-//!
-//! // Set up the fallback iterator.
-//! let mut fallback_iterator = key_fallbacker.fallback_for(DataLocale::from(locale!("hi-Latn-IN")));
-//!
-//! // Run the algorithm and check the results.
-//! assert_eq!(fallback_iterator.get(), &DataLocale::from(locale!("hi-Latn-IN")));
-//! fallback_iterator.step();
-//! assert_eq!(fallback_iterator.get(), &DataLocale::from(locale!("hi-Latn")));
-//! fallback_iterator.step();
-//! assert_eq!(fallback_iterator.get(), &DataLocale::from(locale!("en-IN")));
-//! fallback_iterator.step();
-//! assert_eq!(fallback_iterator.get(), &DataLocale::from(locale!("en-001")));
-//! fallback_iterator.step();
-//! assert_eq!(fallback_iterator.get(), &DataLocale::from(locale!("en")));
-//! fallback_iterator.step();
-//! assert_eq!(fallback_iterator.get(), &DataLocale::from(locale!("und")));
-//! ```
+//! A data provider wrapper that performs locale fallback.
 
-use icu_locid::extensions::unicode::{Key, Value};
-use icu_locid::subtags::Variants;
+use crate::helpers::result_is_err_missing_locale;
+use icu_locid_transform::provider::*;
 use icu_provider::prelude::*;
-use icu_provider::FallbackPriority;
-use icu_provider::FallbackSupplement;
 
-mod adapter;
-mod algorithms;
-pub mod provider;
+#[doc(hidden)] // moved
+pub use icu_locid_transform::fallback::{
+    LocaleFallbackIterator, LocaleFallbacker, LocaleFallbackerWithConfig,
+};
+#[doc(hidden)] // moved
+pub use icu_provider::fallback::LocaleFallbackConfig;
 
-pub use adapter::LocaleFallbackProvider;
-
-use provider::*;
-
-/// Configuration settings for a particular fallback operation.
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
-#[non_exhaustive]
-pub struct LocaleFallbackConfig {
-    /// Strategy for choosing which subtags to drop during locale fallback.
-    ///
-    /// # Examples
-    ///
-    /// Retain the language and script subtags until the final step:
-    ///
-    /// ```
-    /// use icu_locid::locale;
-    /// use icu_provider::prelude::*;
-    /// use icu_provider::FallbackPriority;
-    /// use icu_provider_adapters::fallback::LocaleFallbackConfig;
-    /// use icu_provider_adapters::fallback::LocaleFallbacker;
-    ///
-    /// // Set up the fallback iterator.
-    /// let fallbacker =
-    ///     LocaleFallbacker::try_new_unstable(&icu_testdata::unstable())
-    ///         .expect("data");
-    /// let mut config = LocaleFallbackConfig::default();
-    /// config.priority = FallbackPriority::Language;
-    /// let key_fallbacker = fallbacker.for_config(config);
-    /// let mut fallback_iterator = key_fallbacker
-    ///     .fallback_for(DataLocale::from(locale!("ca-ES-valencia")));
-    ///
-    /// // Run the algorithm and check the results.
-    /// assert_eq!(
-    ///     fallback_iterator.get(),
-    ///     &DataLocale::from(locale!("ca-ES-valencia"))
-    /// );
-    /// fallback_iterator.step();
-    /// assert_eq!(fallback_iterator.get(), &DataLocale::from(locale!("ca-ES")));
-    /// fallback_iterator.step();
-    /// assert_eq!(fallback_iterator.get(), &DataLocale::from(locale!("ca")));
-    /// fallback_iterator.step();
-    /// assert_eq!(fallback_iterator.get(), &DataLocale::from(locale!("und")));
-    /// ```
-    ///
-    /// Retain the region subtag until the final step:
-    ///
-    /// ```
-    /// use icu_locid::locale;
-    /// use icu_provider::prelude::*;
-    /// use icu_provider::FallbackPriority;
-    /// use icu_provider_adapters::fallback::LocaleFallbackConfig;
-    /// use icu_provider_adapters::fallback::LocaleFallbacker;
-    ///
-    /// // Set up the fallback iterator.
-    /// let fallbacker =
-    ///     LocaleFallbacker::try_new_unstable(&icu_testdata::unstable())
-    ///         .expect("data");
-    /// let mut config = LocaleFallbackConfig::default();
-    /// config.priority = FallbackPriority::Region;
-    /// let key_fallbacker = fallbacker.for_config(config);
-    /// let mut fallback_iterator = key_fallbacker
-    ///     .fallback_for(DataLocale::from(locale!("ca-ES-valencia")));
-    ///
-    /// // Run the algorithm and check the results.
-    /// assert_eq!(
-    ///     fallback_iterator.get(),
-    ///     &DataLocale::from(locale!("ca-ES-valencia"))
-    /// );
-    /// fallback_iterator.step();
-    /// assert_eq!(fallback_iterator.get(), &DataLocale::from(locale!("ca-ES")));
-    /// fallback_iterator.step();
-    /// assert_eq!(
-    ///     fallback_iterator.get(),
-    ///     &DataLocale::from(locale!("und-ES-valencia"))
-    /// );
-    /// fallback_iterator.step();
-    /// assert_eq!(
-    ///     fallback_iterator.get(),
-    ///     &DataLocale::from(locale!("und-ES"))
-    /// );
-    /// fallback_iterator.step();
-    /// assert_eq!(fallback_iterator.get(), &DataLocale::from(locale!("und")));
-    /// ```
-    pub priority: FallbackPriority,
-    /// An extension keyword to retain during locale fallback.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use icu_locid::locale;
-    /// use icu_provider::prelude::*;
-    /// use icu_provider_adapters::fallback::LocaleFallbackConfig;
-    /// use icu_provider_adapters::fallback::LocaleFallbacker;
-    ///
-    /// // Set up the fallback iterator.
-    /// let fallbacker =
-    ///     LocaleFallbacker::try_new_unstable(&icu_testdata::unstable())
-    ///         .expect("data");
-    /// let mut config = LocaleFallbackConfig::default();
-    /// config.extension_key = Some(icu_locid::extensions_unicode_key!("nu"));
-    /// let key_fallbacker = fallbacker.for_config(config);
-    /// let mut fallback_iterator = key_fallbacker
-    ///     .fallback_for(DataLocale::from(locale!("ar-EG-u-nu-latn")));
-    ///
-    /// // Run the algorithm and check the results.
-    /// assert_eq!(
-    ///     fallback_iterator.get(),
-    ///     &DataLocale::from(locale!("ar-EG-u-nu-latn"))
-    /// );
-    /// fallback_iterator.step();
-    /// assert_eq!(fallback_iterator.get(), &DataLocale::from(locale!("ar-EG")));
-    /// fallback_iterator.step();
-    /// assert_eq!(fallback_iterator.get(), &DataLocale::from(locale!("ar")));
-    /// fallback_iterator.step();
-    /// assert_eq!(fallback_iterator.get(), &DataLocale::from(locale!("und")));
-    /// ```
-    pub extension_key: Option<Key>,
-    /// Fallback supplement data key to customize fallback rules.
-    ///
-    /// For example, most data keys for collation add additional parent locales, such as
-    /// "yue" to "zh-Hant", and data used for the `"-u-co"` extension keyword fallback.
-    ///
-    /// Currently the only supported fallback supplement is `FallbackSupplement::Collation`, but more may be
-    /// added in the future.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use icu_locid::locale;
-    /// use icu_provider::prelude::*;
-    /// use icu_provider::FallbackPriority;
-    /// use icu_provider::FallbackSupplement;
-    /// use icu_provider_adapters::fallback::LocaleFallbackConfig;
-    /// use icu_provider_adapters::fallback::LocaleFallbacker;
-    /// use tinystr::tinystr;
-    ///
-    /// // Set up the fallback iterator.
-    /// let fallbacker =
-    ///     LocaleFallbacker::try_new_unstable(&icu_testdata::unstable())
-    ///         .expect("data");
-    /// let mut config = LocaleFallbackConfig::default();
-    /// config.priority = FallbackPriority::Collation;
-    /// config.fallback_supplement = Some(FallbackSupplement::Collation);
-    /// let key_fallbacker = fallbacker.for_config(config);
-    /// let mut fallback_iterator =
-    ///     key_fallbacker.fallback_for(DataLocale::from(locale!("yue-HK")));
-    ///
-    /// // Run the algorithm and check the results.
-    /// // TODO(#1964): add "zh" as a target.
-    /// assert_eq!(
-    ///     fallback_iterator.get(),
-    ///     &DataLocale::from(locale!("yue-HK"))
-    /// );
-    /// fallback_iterator.step();
-    /// assert_eq!(fallback_iterator.get(), &DataLocale::from(locale!("yue")));
-    /// fallback_iterator.step();
-    /// assert_eq!(
-    ///     fallback_iterator.get(),
-    ///     &DataLocale::from(locale!("zh-Hant"))
-    /// );
-    /// fallback_iterator.step();
-    /// assert_eq!(fallback_iterator.get(), &DataLocale::from(locale!("und")));
-    /// ```
-    pub fallback_supplement: Option<FallbackSupplement>,
-}
-
-/// Entry type for locale fallbacking.
+/// A data provider wrapper that performs locale fallback. This enables arbitrary locales to be
+/// handled at runtime.
 ///
-/// See the module-level documentation for an example.
-#[derive(Debug, Clone, PartialEq)]
-pub struct LocaleFallbacker {
-    likely_subtags: DataPayload<LocaleFallbackLikelySubtagsV1Marker>,
-    parents: DataPayload<LocaleFallbackParentsV1Marker>,
-    collation_supplement: Option<DataPayload<CollationFallbackSupplementV1Marker>>,
-}
-
-/// Intermediate type for spawning locale fallback iterators based on a specific configuration.
+/// # Examples
 ///
-/// See the module-level documentation for an example.
-#[derive(Debug, Clone, PartialEq)]
-pub struct LocaleFallbackerWithConfig<'a> {
-    likely_subtags: &'a LocaleFallbackLikelySubtagsV1<'a>,
-    parents: &'a LocaleFallbackParentsV1<'a>,
-    supplement: Option<&'a LocaleFallbackSupplementV1<'a>>,
-    config: LocaleFallbackConfig,
-}
-
-/// Inner iteration type. Does not own the item under fallback.
-#[derive(Debug)]
-struct LocaleFallbackIteratorInner<'a, 'b> {
-    likely_subtags: &'a LocaleFallbackLikelySubtagsV1<'a>,
-    parents: &'a LocaleFallbackParentsV1<'a>,
-    supplement: Option<&'a LocaleFallbackSupplementV1<'a>>,
-    config: &'b LocaleFallbackConfig,
-    backup_extension: Option<Value>,
-    backup_subdivision: Option<Value>,
-    backup_variants: Option<Variants>,
-}
-
-/// Iteration type for locale fallback operations.
+/// ```
+/// use icu_locid::locale;
+/// use icu_provider::prelude::*;
+/// use icu_provider::hello_world::*;
+/// use icu_provider_adapters::fallback::LocaleFallbackProvider;
 ///
-/// Because the `Iterator` trait does not allow items to borrow from the iterator, this class does
-/// not implement that trait. Instead, use `.step()` and `.get()`.
-#[derive(Debug)]
-pub struct LocaleFallbackIterator<'a, 'b> {
-    current: DataLocale,
-    inner: LocaleFallbackIteratorInner<'a, 'b>,
+/// # let provider = icu_provider_blob::BlobDataProvider::try_new_from_static_blob(include_bytes!("../../tests/data/blob.postcard")).unwrap();
+/// # let provider = provider.as_deserializing();
+///
+/// let req = DataRequest {
+///     locale: &locale!("ja-JP").into(),
+///     metadata: Default::default(),
+/// };
+///
+/// // The provider does not have data for "ja-JP":
+/// DataProvider::<HelloWorldV1Marker>::load(&provider, req).expect_err("No fallback");
+///
+/// // But if we wrap the provider in a fallback provider...
+/// let provider = LocaleFallbackProvider::try_new_unstable(provider)
+///     .expect("Fallback data present");
+///
+/// // ...then we can load "ja-JP" based on "ja" data
+/// let response =
+///   DataProvider::<HelloWorldV1Marker>::load(&provider, req).expect("successful with vertical fallback");
+///
+/// assert_eq!(
+///     response.metadata.locale.unwrap(),
+///     locale!("ja").into(),
+/// );
+/// assert_eq!(
+///     response.payload.unwrap().get().message,
+///     "こんにちは世界",
+/// );
+/// ```
+#[derive(Clone, Debug)]
+pub struct LocaleFallbackProvider<P> {
+    inner: P,
+    fallbacker: LocaleFallbacker,
 }
 
-impl LocaleFallbacker {
-    /// Creates a [`LocaleFallbacker`] with fallback data (likely subtags and parent locales).
+impl<P> LocaleFallbackProvider<P>
+where
+    P: DataProvider<LocaleFallbackLikelySubtagsV1Marker>
+        + DataProvider<LocaleFallbackParentsV1Marker>
+        + DataProvider<CollationFallbackSupplementV1Marker>,
+{
+    /// Create a [`LocaleFallbackProvider`] by wrapping another data provider and then loading
+    /// fallback data from it.
     ///
-    /// [📚 Help choosing a constructor](icu_provider::constructors)
-    /// <div class="stab unstable">
-    /// ⚠️ The bounds on this function may change over time, including in SemVer minor releases.
-    /// </div>
-    pub fn try_new_unstable<P>(provider: &P) -> Result<Self, DataError>
-    where
-        P: DataProvider<LocaleFallbackLikelySubtagsV1Marker>
-            + DataProvider<LocaleFallbackParentsV1Marker>
-            + DataProvider<CollationFallbackSupplementV1Marker>
-            + ?Sized,
-    {
-        let likely_subtags = provider.load(Default::default())?.take_payload()?;
-        let parents = provider.load(Default::default())?.take_payload()?;
-        let collation_supplement = match DataProvider::<CollationFallbackSupplementV1Marker>::load(
-            provider,
-            Default::default(),
-        ) {
-            Ok(response) => Some(response.take_payload()?),
-            // It is expected that not all keys are present
-            Err(DataError {
-                kind: DataErrorKind::MissingDataKey,
-                ..
-            }) => None,
-            Err(e) => return Err(e),
-        };
-        Ok(LocaleFallbacker {
-            likely_subtags,
-            parents,
-            collation_supplement,
+    /// If the data provider being wrapped does not contain fallback data, use
+    /// [`LocaleFallbackProvider::new_with_fallbacker`].
+    pub fn try_new_unstable(provider: P) -> Result<Self, DataError> {
+        let fallbacker = LocaleFallbacker::try_new_unstable(&provider)?;
+        Ok(Self {
+            inner: provider,
+            fallbacker,
         })
     }
+}
 
-    icu_provider::gen_any_buffer_constructors!(locale: skip, options: skip, error: DataError);
-
-    /// Creates a [`LocaleFallbacker`] without fallback data. Using this constructor may result in
-    /// surprising behavior, especially in multi-script languages.
-    pub fn new_without_data() -> Self {
-        LocaleFallbacker {
-            likely_subtags: DataPayload::from_owned(Default::default()),
-            parents: DataPayload::from_owned(Default::default()),
-            collation_supplement: None,
-        }
+impl<P> LocaleFallbackProvider<P>
+where
+    P: AnyProvider,
+{
+    /// Create a [`LocaleFallbackProvider`] by wrapping another data provider and then loading
+    /// fallback data from it.
+    ///
+    /// If the data provider being wrapped does not contain fallback data, use
+    /// [`LocaleFallbackProvider::new_with_fallbacker`].
+    pub fn try_new_with_any_provider(provider: P) -> Result<Self, DataError> {
+        let fallbacker = LocaleFallbacker::try_new_with_any_provider(&provider)?;
+        Ok(Self {
+            inner: provider,
+            fallbacker,
+        })
     }
+}
 
-    /// Creates the intermediate [`LocaleFallbackerWithConfig`] with configuration options.
-    pub fn for_config(&self, config: LocaleFallbackConfig) -> LocaleFallbackerWithConfig {
-        let supplement = match config.fallback_supplement {
-            Some(FallbackSupplement::Collation) => {
-                self.collation_supplement.as_ref().map(|p| p.get())
-            }
-            _ => None,
-        };
-        LocaleFallbackerWithConfig {
-            likely_subtags: self.likely_subtags.get(),
-            parents: self.parents.get(),
-            supplement,
-            config,
-        }
+#[cfg(feature = "serde")]
+impl<P> LocaleFallbackProvider<P>
+where
+    P: BufferProvider,
+{
+    /// Create a [`LocaleFallbackProvider`] by wrapping another data provider and then loading
+    /// fallback data from it.
+    ///
+    /// If the data provider being wrapped does not contain fallback data, use
+    /// [`LocaleFallbackProvider::new_with_fallbacker`].
+    pub fn try_new_with_buffer_provider(provider: P) -> Result<Self, DataError> {
+        let fallbacker = LocaleFallbacker::try_new_with_buffer_provider(&provider)?;
+        Ok(Self {
+            inner: provider,
+            fallbacker,
+        })
     }
+}
 
-    /// Creates the intermediate [`LocaleFallbackerWithConfig`] based on a
-    /// [`DataKey`] and a [`DataRequestMetadata`].
+impl<P> LocaleFallbackProvider<P> {
+    /// Wrap a provider with an arbitrary fallback engine.
+    ///
+    /// This relaxes the requirement that the wrapped provider contains its own fallback data.
     ///
     /// # Examples
     ///
     /// ```
     /// use icu_locid::locale;
+    /// use icu_locid_transform::LocaleFallbacker;
+    /// use icu_provider::hello_world::*;
     /// use icu_provider::prelude::*;
-    /// use icu_provider_adapters::fallback::LocaleFallbacker;
-    /// use std::borrow::Cow;
+    /// use icu_provider_adapters::fallback::LocaleFallbackProvider;
     ///
-    /// // Define the data struct with key.
-    /// #[icu_provider::data_struct(marker(
-    ///     FooV1Marker,
-    ///     "demo/foo@1",
-    ///     fallback_by = "region"
-    /// ))]
-    /// pub struct FooV1<'data> {
-    ///     message: Cow<'data, str>,
+    /// let provider = HelloWorldProvider;
+    ///
+    /// let req = DataRequest {
+    ///     locale: &locale!("de-CH").into(),
+    ///     metadata: Default::default(),
     /// };
     ///
-    /// // Set up the fallback iterator.
-    /// let fallbacker =
-    ///     LocaleFallbacker::try_new_unstable(&icu_testdata::unstable())
-    ///         .expect("data");
-    /// let key_fallbacker = fallbacker.for_key(FooV1Marker::KEY);
-    /// let mut fallback_iterator =
-    ///     key_fallbacker.fallback_for(DataLocale::from(locale!("en-GB")));
+    /// // There is no "de-CH" data in the `HelloWorldProvider`
+    /// DataProvider::<HelloWorldV1Marker>::load(&provider, req)
+    ///     .expect_err("No data for de-CH");
     ///
-    /// // Run the algorithm and check the results.
-    /// assert_eq!(fallback_iterator.get(), &DataLocale::from(locale!("en-GB")));
-    /// fallback_iterator.step();
-    /// assert_eq!(
-    ///     fallback_iterator.get(),
-    ///     &DataLocale::from(locale!("und-GB"))
+    /// // `HelloWorldProvider` does not contain fallback data,
+    /// // but we can construct a fallbacker with `icu_locid_transform`'s
+    /// // compiled data.
+    /// let provider = LocaleFallbackProvider::new_with_fallbacker(
+    ///     provider,
+    ///     LocaleFallbacker::new().static_to_owned(),
     /// );
-    /// fallback_iterator.step();
-    /// assert_eq!(fallback_iterator.get(), &DataLocale::from(locale!("und")));
+    ///
+    /// // Now we can load the "de-CH" data via fallback to "de".
+    /// let german_hello_world: DataPayload<HelloWorldV1Marker> = provider
+    ///     .load(req)
+    ///     .expect("Loading should succeed")
+    ///     .take_payload()
+    ///     .expect("Data should be present");
+    ///
+    /// assert_eq!("Hallo Welt", german_hello_world.get().message);
     /// ```
-    ///
-    /// [`DataRequestMetadata`]: icu_provider::DataRequestMetadata
-    pub fn for_key(&self, data_key: DataKey) -> LocaleFallbackerWithConfig {
-        let priority = data_key.metadata().fallback_priority;
-        let extension_key = data_key.metadata().extension_key;
-        let fallback_supplement = data_key.metadata().fallback_supplement;
-        self.for_config(LocaleFallbackConfig {
-            priority,
-            extension_key,
-            fallback_supplement,
-        })
-    }
-}
-
-impl<'a> LocaleFallbackerWithConfig<'a> {
-    /// Creates an iterator based on a [`DataLocale`] (which can be created from [`Locale`]).
-    ///
-    /// When first initialized, the locale is normalized according to the fallback algorithm.
-    ///
-    /// [`Locale`]: icu_locid::Locale
-    pub fn fallback_for<'b>(&'b self, mut locale: DataLocale) -> LocaleFallbackIterator<'a, 'b> {
-        self.normalize(&mut locale);
-        LocaleFallbackIterator {
-            current: locale,
-            inner: LocaleFallbackIteratorInner {
-                likely_subtags: self.likely_subtags,
-                parents: self.parents,
-                supplement: self.supplement,
-                config: &self.config,
-                backup_extension: None,
-                backup_subdivision: None,
-                backup_variants: None,
-            },
+    pub fn new_with_fallbacker(provider: P, fallbacker: LocaleFallbacker) -> Self {
+        Self {
+            inner: provider,
+            fallbacker,
         }
     }
+
+    /// Returns a reference to the inner provider, bypassing fallback.
+    pub fn inner(&self) -> &P {
+        &self.inner
+    }
+
+    /// Returns a mutable reference to the inner provider.
+    pub fn inner_mut(&mut self) -> &mut P {
+        &mut self.inner
+    }
+
+    /// Returns ownership of the inner provider to the caller.
+    pub fn into_inner(self) -> P {
+        self.inner
+    }
+
+    /// Run the fallback algorithm with the data request using the inner data provider.
+    /// Internal function; external clients should use one of the trait impls below.
+    ///
+    /// Function arguments:
+    ///
+    /// - F1 should perform a data load for a single DataRequest and return the result of it
+    /// - F2 should map from the provider-specific response type to DataResponseMetadata
+    fn run_fallback<F1, F2, R>(
+        &self,
+        key: DataKey,
+        mut base_req: DataRequest,
+        mut f1: F1,
+        mut f2: F2,
+    ) -> Result<R, DataError>
+    where
+        F1: FnMut(DataRequest) -> Result<R, DataError>,
+        F2: FnMut(&mut R) -> &mut DataResponseMetadata,
+    {
+        if key.metadata().singleton {
+            return f1(base_req);
+        }
+        let mut fallback_iterator = self
+            .fallbacker
+            .for_config(key.fallback_config())
+            .fallback_for(base_req.locale.clone());
+        let base_silent = core::mem::replace(&mut base_req.metadata.silent, true);
+        loop {
+            let result = f1(DataRequest {
+                locale: fallback_iterator.get(),
+                metadata: base_req.metadata,
+            });
+            if !result_is_err_missing_locale(&result) {
+                return result
+                    .map(|mut res| {
+                        f2(&mut res).locale = Some(fallback_iterator.take());
+                        res
+                    })
+                    // Log the original request rather than the fallback request
+                    .map_err(|e| {
+                        base_req.metadata.silent = base_silent;
+                        e.with_req(key, base_req)
+                    });
+            }
+            // If we just checked und, break out of the loop.
+            if fallback_iterator.get().is_und() {
+                break;
+            }
+            fallback_iterator.step();
+        }
+        base_req.metadata.silent = base_silent;
+        Err(DataErrorKind::MissingLocale.with_req(key, base_req))
+    }
 }
 
-impl LocaleFallbackIterator<'_, '_> {
-    /// Borrows the current [`DataLocale`] under fallback.
-    pub fn get(&self) -> &DataLocale {
-        &self.current
+impl<P> AnyProvider for LocaleFallbackProvider<P>
+where
+    P: AnyProvider,
+{
+    fn load_any(&self, key: DataKey, base_req: DataRequest) -> Result<AnyResponse, DataError> {
+        self.run_fallback(
+            key,
+            base_req,
+            |req| self.inner.load_any(key, req),
+            |res| &mut res.metadata,
+        )
     }
+}
 
-    /// Takes the current [`DataLocale`] under fallback.
-    pub fn take(self) -> DataLocale {
-        self.current
+impl<P> BufferProvider for LocaleFallbackProvider<P>
+where
+    P: BufferProvider,
+{
+    fn load_buffer(
+        &self,
+        key: DataKey,
+        base_req: DataRequest,
+    ) -> Result<DataResponse<BufferMarker>, DataError> {
+        self.run_fallback(
+            key,
+            base_req,
+            |req| self.inner.load_buffer(key, req),
+            |res| &mut res.metadata,
+        )
     }
+}
 
-    /// Performs one step of the locale fallback algorithm.
-    ///
-    /// The fallback is completed once the inner [`DataLocale`] becomes `und`.
-    pub fn step(&mut self) -> &mut Self {
-        self.inner.step(&mut self.current);
-        self
+impl<P, M> DynamicDataProvider<M> for LocaleFallbackProvider<P>
+where
+    P: DynamicDataProvider<M>,
+    M: DataMarker,
+{
+    fn load_data(&self, key: DataKey, base_req: DataRequest) -> Result<DataResponse<M>, DataError> {
+        self.run_fallback(
+            key,
+            base_req,
+            |req| self.inner.load_data(key, req),
+            |res| &mut res.metadata,
+        )
+    }
+}
+
+impl<P, M> DataProvider<M> for LocaleFallbackProvider<P>
+where
+    P: DataProvider<M>,
+    M: KeyedDataMarker,
+{
+    fn load(&self, base_req: DataRequest) -> Result<DataResponse<M>, DataError> {
+        self.run_fallback(
+            M::KEY,
+            base_req,
+            |req| self.inner.load(req),
+            |res| &mut res.metadata,
+        )
     }
 }

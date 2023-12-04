@@ -3,6 +3,7 @@
 // (online at: https://github.com/unicode-org/icu4x/blob/main/LICENSE ).
 
 use crate::TinyAsciiStr;
+use crate::UnvalidatedTinyAsciiStr;
 use databake::*;
 
 impl<const N: usize> Bake for TinyAsciiStr<N> {
@@ -10,7 +11,27 @@ impl<const N: usize> Bake for TinyAsciiStr<N> {
         env.insert("tinystr");
         let string = self.as_str();
         quote! {
-            ::tinystr::tinystr!(#N, #string)
+            tinystr::tinystr!(#N, #string)
+        }
+    }
+}
+
+impl<const N: usize> databake::Bake for UnvalidatedTinyAsciiStr<N> {
+    fn bake(&self, env: &databake::CrateEnv) -> databake::TokenStream {
+        match self.try_into_tinystr() {
+            Ok(tiny) => {
+                let tiny = tiny.bake(env);
+                databake::quote! {
+                    #tiny.to_unvalidated()
+                }
+            }
+            Err(_) => {
+                let bytes = self.0.bake(env);
+                env.insert("tinystr");
+                databake::quote! {
+                    tinystr::UnvalidatedTinyAsciiStr::from_bytes_unchecked(*#bytes)
+                }
+            }
         }
     }
 }
@@ -18,4 +39,10 @@ impl<const N: usize> Bake for TinyAsciiStr<N> {
 #[test]
 fn test() {
     test_bake!(TinyAsciiStr<10>, const: crate::tinystr!(10usize, "foo"), tinystr);
+}
+
+#[test]
+fn test_unvalidated() {
+    test_bake!(UnvalidatedTinyAsciiStr<10>, const: crate::tinystr!(10usize, "foo").to_unvalidated(), tinystr);
+    test_bake!(UnvalidatedTinyAsciiStr<3>, const: crate::UnvalidatedTinyAsciiStr::from_bytes_unchecked(*b"AB\xCD"), tinystr);
 }

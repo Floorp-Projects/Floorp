@@ -44,9 +44,31 @@ pub const BINCODE_BUF: &[u8] = &[
     0, 72, 73, 74, 0, 76, 77, 78, 0,
 ];
 
-/// Representation of a VarZeroVec<str> of length 4 as bytes.
-/// Safety: The bytes were manually verified to be valid.
+/// Representation of a VarZeroVec<str> with contents ["w", "ω", "文", "𑄃"]
 pub const TEST_VARZEROSLICE_BYTES: &[u8] = &[
-    4, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 6, 0, 0, 0, 119, 207, 137, 230, 150, 135, 240,
-    145, 132, 131,
+    4, 0, 0, 0, 0, 0, 1, 0, 3, 0, 6, 0, 119, 207, 137, 230, 150, 135, 240, 145, 132, 131,
 ];
+
+#[test]
+fn validate() {
+    use crate::{VarZeroVec, ZeroVec};
+
+    assert_eq!(
+        ZeroVec::<u32>::parse_byte_slice(TEST_BUFFER_LE).unwrap(),
+        ZeroVec::alloc_from_slice(TEST_SLICE)
+    );
+
+    assert_eq!(TEST_SLICE.iter().sum::<u32>(), TEST_SUM);
+
+    assert_eq!(
+        serde_json::from_str::<ZeroVec::<u32>>(JSON_STR).unwrap(),
+        ZeroVec::alloc_from_slice(TEST_SLICE)
+    );
+
+    assert_eq!(
+        bincode::deserialize::<ZeroVec::<u32>>(BINCODE_BUF).unwrap(),
+        ZeroVec::alloc_from_slice(TEST_SLICE)
+    );
+
+    VarZeroVec::<str>::parse_byte_slice(TEST_VARZEROSLICE_BYTES).unwrap();
+}

@@ -5,7 +5,7 @@
 impl_tinystr_subtag!(
     /// A script subtag (examples: `"Latn"`, `"Arab"`, etc.)
     ///
-    /// [`Script`] represents a Unicode base language code conformat to the
+    /// [`Script`] represents a Unicode base language code conformant to the
     /// [`unicode_script_id`] field of the Language and Locale Identifier.
     ///
     /// # Examples
@@ -19,7 +19,8 @@ impl_tinystr_subtag!(
     ///
     /// [`unicode_script_id`]: https://unicode.org/reports/tr35/#unicode_script_id
     Script,
-    subtags::Script,
+    subtags,
+    script,
     subtags_script,
     4..=4,
     s,

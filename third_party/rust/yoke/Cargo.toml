@@ -11,13 +11,16 @@
 
 [package]
 edition = "2021"
+rust-version = "1.67"
 name = "yoke"
-version = "0.7.1"
+version = "0.7.3"
 authors = ["Manish Goregaokar <manishsmail@gmail.com>"]
 include = [
+    "data/**/*",
     "src/**/*",
     "examples/**/*",
     "benches/**/*",
+    "tests/**/*",
     "Cargo.toml",
     "LICENSE",
     "README.md",
@@ -37,14 +40,17 @@ categories = [
     "caching",
     "no-std",
 ]
-license = "Unicode-DFS-2016"
+license-file = "LICENSE"
 repository = "https://github.com/unicode-org/icu4x"
 
-[package.metadata.workspaces]
-independent = true
+[package.metadata.cargo-all-features]
+max_combination_size = 3
 
 [package.metadata.docs.rs]
 all-features = true
+
+[package.metadata.workspaces]
+independent = true
 
 [dependencies.serde]
 version = "1.0"
@@ -56,11 +62,12 @@ version = "1.2.0"
 default-features = false
 
 [dependencies.yoke-derive]
-version = "0.7.0"
+version = "0.7.3"
 optional = true
+default-features = false
 
 [dependencies.zerofrom]
-version = "0.1.1"
+version = "0.1.2"
 optional = true
 default-features = false
 
@@ -84,3 +91,5 @@ derive = [
     "dep:yoke-derive",
     "zerofrom/derive",
 ]
+serde = ["dep:serde"]
+zerofrom = ["dep:zerofrom"]

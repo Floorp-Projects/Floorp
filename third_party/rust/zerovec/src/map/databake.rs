@@ -16,7 +16,7 @@ where
         env.insert("zerovec");
         let keys = self.keys.bake(env);
         let values = self.values.bake(env);
-        quote! { unsafe { #[allow(unused_unsafe)] ::zerovec::ZeroMap::from_parts_unchecked(#keys, #values) } }
+        quote! { unsafe { #[allow(unused_unsafe)] zerovec::ZeroMap::from_parts_unchecked(#keys, #values) } }
     }
 }
 
@@ -31,7 +31,7 @@ where
         env.insert("zerovec");
         let keys = self.keys.bake(env);
         let values = self.values.bake(env);
-        quote! { unsafe { #[allow(unused_unsafe)] ::zerovec::maps::ZeroMapBorrowed::from_parts_unchecked(#keys, #values) } }
+        quote! { unsafe { #[allow(unused_unsafe)] zerovec::maps::ZeroMapBorrowed::from_parts_unchecked(#keys, #values) } }
     }
 }
 

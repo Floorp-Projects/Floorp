@@ -33,8 +33,8 @@ fn one_hundred_code_points(sample_str: &str) -> String {
 fn get_trie_small() -> CodePointTrie<'static, u8> {
     CodePointTrie::try_new(
         tries::gc_small::HEADER,
-        tries::gc_small::INDEX.as_zerovec(),
-        tries::gc_small::DATA.as_zerovec(),
+        tries::gc_small::INDEX,
+        tries::gc_small::DATA,
     )
     .unwrap()
 }
@@ -43,8 +43,8 @@ fn get_trie_small() -> CodePointTrie<'static, u8> {
 fn get_trie_fast() -> CodePointTrie<'static, u8> {
     CodePointTrie::try_new(
         tries::gc_fast::HEADER,
-        tries::gc_fast::INDEX.as_zerovec(),
-        tries::gc_fast::DATA.as_zerovec(),
+        tries::gc_fast::INDEX,
+        tries::gc_fast::DATA,
     )
     .unwrap()
 }

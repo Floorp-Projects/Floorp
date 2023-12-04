@@ -3,6 +3,7 @@ use crate::ast;
 
 /// 8, 16, 32, and 64-bit signed and unsigned integers.
 #[derive(Copy, Clone, Debug)]
+#[allow(clippy::exhaustive_enums)] // there are only these
 pub enum IntType {
     I8,
     I16,
@@ -16,6 +17,7 @@ pub enum IntType {
 
 /// Platform-dependent signed and unsigned size types.
 #[derive(Copy, Clone, Debug)]
+#[allow(clippy::exhaustive_enums)] // there are only these
 pub enum IntSizeType {
     Isize,
     Usize,
@@ -23,6 +25,7 @@ pub enum IntSizeType {
 
 /// 128-bit signed and unsigned integers.
 #[derive(Copy, Clone, Debug)]
+#[allow(clippy::exhaustive_enums)] // there are only these
 pub enum Int128Type {
     I128,
     U128,
@@ -30,6 +33,7 @@ pub enum Int128Type {
 
 /// 32 and 64-bit floating point numbers.
 #[derive(Copy, Clone, Debug)]
+#[allow(clippy::exhaustive_enums)] // there are only these
 pub enum FloatType {
     F32,
     F64,
@@ -37,6 +41,7 @@ pub enum FloatType {
 
 /// All primitive types.
 #[derive(Copy, Clone, Debug)]
+#[allow(clippy::exhaustive_enums)] // there are only these
 pub enum PrimitiveType {
     Bool,
     Char,

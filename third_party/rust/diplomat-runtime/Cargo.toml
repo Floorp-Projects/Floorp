@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "diplomat-runtime"
-version = "0.5.2"
+version = "0.7.0"
 authors = [
     "Shadaj Laddad <shadaj@users.noreply.github.com>",
     "Manish Goregaokar <manishsmail@gmail.com>",
@@ -25,10 +25,12 @@ keywords = [
     "codegen",
 ]
 categories = ["development-tools"]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-diplomat/diplomat"
 
 [lib]
 path = "src/lib.rs"
 
-[dependencies]
+[dependencies.log]
+version = "0.4"
+optional = true

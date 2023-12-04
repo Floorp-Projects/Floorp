@@ -65,10 +65,10 @@ fn skip_node_value(pos: usize, lead: u16) -> usize {
     }
 }
 
-/// This struct represents a de-serialized Char16Trie that was exported from
+/// This struct represents a de-serialized `Char16Trie` that was exported from
 /// ICU binary data.
 ///
-/// Light-weight, non-const reader class for a CharsTrie. Traverses a
+/// Light-weight, non-const reader class for a `CharsTrie`. Traverses a
 /// char-serialized data structure with minimal state, for mapping 16-bit-unit
 /// sequences to non-negative integer values.
 ///
@@ -102,9 +102,9 @@ impl<'data> Char16Trie<'data> {
 pub struct Char16TrieIterator<'a> {
     /// A reference to the Char16Trie data to iterate over.
     trie: &'a ZeroSlice<u16>,
-    /// Index of next trie unit to read, or None if there are no more matches.
+    /// Index of next trie unit to read, or `None` if there are no more matches.
     pos: Option<usize>,
-    /// Remaining length of a linear-match node, minus 1, or None if not in
+    /// Remaining length of a linear-match node, minus 1, or `None` if not in
     /// such a node.
     remaining_match_length: Option<usize>,
 }
@@ -113,8 +113,8 @@ pub struct Char16TrieIterator<'a> {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum TrieResult {
     /// The input unit(s) did not continue a matching string.
-    /// Once next() returns TrieResult::NoMatch, all further calls to next()
-    /// will also return TrieResult::NoMatch.
+    /// Once `next()` returns `TrieResult::NoMatch`, all further calls to `next()`
+    /// will also return `TrieResult::NoMatch`.
     NoMatch,
     /// The input unit(s) matched a string but there is no value for the string
     /// so far.  (It is a prefix of a longer string.)
@@ -147,7 +147,7 @@ fn u16_tail(supplementary: i32) -> u16 {
 
 /// A macro that takes an `Option` argument and either unwraps it if it has a value or
 /// causes the function to return `TrieResult::NoMatch` if there is no value.
-/// This could perhaps be done with std::ops::Try once stabilized.
+/// This could perhaps be done with `std::ops::Try` once stabilized.
 macro_rules! trie_unwrap {
     ($option:expr) => {
         match $option {
@@ -180,9 +180,8 @@ impl<'a> Char16TrieIterator<'a> {
     /// use zerovec::ZeroVec;
     ///
     /// // A Char16Trie containing the ASCII characters 'a' and 'b'.
-    /// let trie_data = vec![48, 97, 176, 98, 32868];
-    /// let trie =
-    ///     Char16Trie::new(ZeroVec::from_slice_or_alloc(trie_data.as_slice()));
+    /// let trie_data = [48, 97, 176, 98, 32868];
+    /// let trie = Char16Trie::new(ZeroVec::from_slice_or_alloc(&trie_data));
     ///
     /// let mut iter = trie.iter();
     /// let res = iter.next('a');
@@ -214,9 +213,8 @@ impl<'a> Char16TrieIterator<'a> {
     /// use zerovec::ZeroVec;
     ///
     /// // A Char16Trie containing the ASCII characters 'a' and 'b'.
-    /// let trie_data = vec![48, 97, 176, 98, 32868];
-    /// let trie =
-    ///     Char16Trie::new(ZeroVec::from_slice_or_alloc(trie_data.as_slice()));
+    /// let trie_data = [48, 97, 176, 98, 32868];
+    /// let trie = Char16Trie::new(ZeroVec::from_slice_or_alloc(&trie_data));
     ///
     /// let mut iter = trie.iter();
     /// let res = iter.next('a');
@@ -248,9 +246,8 @@ impl<'a> Char16TrieIterator<'a> {
     /// use zerovec::ZeroVec;
     ///
     /// // A Char16Trie containing the ASCII characters 'a' and 'b'.
-    /// let trie_data = vec![48, 97, 176, 98, 32868];
-    /// let trie =
-    ///     Char16Trie::new(ZeroVec::from_slice_or_alloc(trie_data.as_slice()));
+    /// let trie_data = [48, 97, 176, 98, 32868];
+    /// let trie = Char16Trie::new(ZeroVec::from_slice_or_alloc(&trie_data));
     ///
     /// let mut iter = trie.iter();
     /// let res = iter.next16('a' as u16);

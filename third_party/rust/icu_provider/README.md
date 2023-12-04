@@ -1,5 +1,7 @@
 # icu_provider [![crates.io](https://img.shields.io/crates/v/icu_provider)](https://crates.io/crates/icu_provider)
 
+<!-- cargo-rdme start -->
+
 `icu_provider` is one of the [`ICU4X`] components.
 
 Unicode's experience with ICU4X's parent projects, ICU4C and ICU4J, led the team to realize
@@ -78,9 +80,6 @@ This crate also contains a concrete provider for demonstration purposes:
 
 - [`HelloWorldProvider`] returns "hello world" strings in several languages.
 
-If you need a testing provider that contains the actual resource keys used by ICU4X features,
-see the [`icu_testdata`] crate.
-
 ### Types and Lifetimes
 
 Types compatible with [`Yokeable`] can be passed through the data provider, so long as they are
@@ -114,8 +113,9 @@ data generation implementation.
 [`CldrJsonDataProvider`]: ../icu_datagen/cldr/struct.CldrJsonDataProvider.html
 [`FsDataProvider`]: ../icu_provider_fs/struct.FsDataProvider.html
 [`BlobDataProvider`]: ../icu_provider_blob/struct.BlobDataProvider.html
-[`icu_testdata`]: ../icu_testdata/index.html
 [`icu_datagen`]: ../icu_datagen/index.html
+
+<!-- cargo-rdme end -->
 
 ## More Information
 

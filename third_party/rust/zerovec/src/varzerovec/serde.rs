@@ -72,7 +72,7 @@ where
     where
         D: Deserializer<'de>,
     {
-        let visitor = VarZeroVecVisitor::default();
+        let visitor = VarZeroVecVisitor::<T, F>::default();
         if deserializer.is_human_readable() {
             deserializer.deserialize_seq(visitor)
         } else {
@@ -98,7 +98,7 @@ where
                 "&VarZeroSlice cannot be deserialized from human-readable formats",
             ))
         } else {
-            let deserialized: VarZeroVec<'a, T, F> = VarZeroVec::deserialize(deserializer)?;
+            let deserialized = VarZeroVec::<'a, T, F>::deserialize(deserializer)?;
             let borrowed = if let VarZeroVec::Borrowed(b) = deserialized {
                 b
             } else {
@@ -108,6 +108,22 @@ where
             };
             Ok(borrowed)
         }
+    }
+}
+
+/// This impl requires enabling the optional `serde` Cargo feature of the `zerovec` crate
+impl<'de, T, F> Deserialize<'de> for Box<VarZeroSlice<T, F>>
+where
+    T: VarULE + ?Sized,
+    Box<T>: Deserialize<'de>,
+    F: VarZeroVecFormat,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let deserialized = VarZeroVec::<T, F>::deserialize(deserializer)?;
+        Ok(deserialized.to_boxed())
     }
 }
 
@@ -164,6 +180,12 @@ mod test {
     struct DeriveTest_VarZeroSlice<'data> {
         #[serde(borrow)]
         _data: &'data VarZeroSlice<str>,
+    }
+
+    #[derive(serde::Serialize, serde::Deserialize)]
+    struct DeriveTest_VarZeroVec_of_VarZeroSlice<'data> {
+        #[serde(borrow)]
+        _data: VarZeroVec<'data, VarZeroSlice<str>>,
     }
 
     // ["foo", "bar", "baz", "dolor", "quux", "lorem ipsum"];

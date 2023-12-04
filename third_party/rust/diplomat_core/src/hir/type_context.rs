@@ -1,6 +1,9 @@
 //! Store all the types contained in the HIR.
 
-use super::{EnumDef, LoweringError, OpaqueDef, OutStructDef, StructDef, TypeDef, TypeLowerer};
+use super::{
+    AttributeValidator, EnumDef, LoweringContext, LoweringError, OpaqueDef, OutStructDef,
+    StructDef, TypeDef,
+};
 #[allow(unused_imports)] // use in docs links
 use crate::hir;
 use crate::{ast, Env};
@@ -34,6 +37,7 @@ pub struct OpaqueId(usize);
 pub struct EnumId(usize);
 
 #[derive(Copy, Clone, Debug)]
+#[non_exhaustive]
 pub enum TypeId {
     Struct(StructId),
     OutStruct(OutStructId),
@@ -109,7 +113,10 @@ impl TypeContext {
     }
 
     /// Lower the AST to the HIR while simultaneously performing validation.
-    pub fn from_ast(env: &Env) -> Result<Self, Vec<LoweringError>> {
+    pub fn from_ast(
+        env: &Env,
+        attr_validator: impl AttributeValidator + 'static,
+    ) -> Result<Self, Vec<LoweringError>> {
         let mut ast_out_structs = SmallVec::<[_; 16]>::new();
         let mut ast_structs = SmallVec::<[_; 16]>::new();
         let mut ast_opaques = SmallVec::<[_; 16]>::new();
@@ -139,12 +146,19 @@ impl TypeContext {
             &ast_opaques[..],
             &ast_enums[..],
         );
+        let attr_validator = Box::new(attr_validator);
 
-        let out_structs =
-            OutStructDef::lower_all(&ast_out_structs[..], &lookup_id, env, &mut errors);
-        let structs = StructDef::lower_all(&ast_structs[..], &lookup_id, env, &mut errors);
-        let opaques = OpaqueDef::lower_all(&ast_opaques[..], &lookup_id, env, &mut errors);
-        let enums = EnumDef::lower_all(&ast_enums[..], &lookup_id, env, &mut errors);
+        let mut ctx = LoweringContext {
+            lookup_id: &lookup_id,
+            env,
+            errors: &mut errors,
+            attr_validator,
+        };
+
+        let out_structs = ctx.lower_all_out_structs(&ast_out_structs[..]);
+        let structs = ctx.lower_all_structs(&ast_structs[..]);
+        let opaques = ctx.lower_all_opaques(&ast_opaques[..]);
+        let enums = ctx.lower_all_enums(&ast_enums[..]);
 
         match (out_structs, structs, opaques, enums) {
             (Some(out_structs), Some(structs), Some(opaques), Some(enums)) => {

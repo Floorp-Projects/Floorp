@@ -95,11 +95,6 @@ git = "https://github.com/mozilla/uniffi-rs.git"
 rev = "c0e64b839018728d8153ce1758d391b7782e2e21"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/rust-diplomat/diplomat?rev=8d125999893fedfdf30595e97334c21ec4b18da9"]
-git = "https://github.com/rust-diplomat/diplomat"
-rev = "8d125999893fedfdf30595e97334c21ec4b18da9"
-replace-with = "vendored-sources"
-
 [source."git+https://github.com/rust-lang/rust-bindgen?rev=86f3dbe846020e2ba573d6eb38d1434d0cbcbb40"]
 git = "https://github.com/rust-lang/rust-bindgen"
 rev = "86f3dbe846020e2ba573d6eb38d1434d0cbcbb40"
@@ -108,11 +103,6 @@ replace-with = "vendored-sources"
 [source."git+https://github.com/servo/rust-cssparser?rev=aaa966d9d6ae70c4b8a62bb5e3a14c068bb7dff0"]
 git = "https://github.com/servo/rust-cssparser"
 rev = "aaa966d9d6ae70c4b8a62bb5e3a14c068bb7dff0"
-replace-with = "vendored-sources"
-
-[source."git+https://github.com/unicode-org/icu4x?rev=14e9a3a9857be74582abe2dfa7ab799c5eaac873"]
-git = "https://github.com/unicode-org/icu4x"
-rev = "14e9a3a9857be74582abe2dfa7ab799c5eaac873"
 replace-with = "vendored-sources"
 
 

@@ -21,10 +21,12 @@
 
 mod subtag;
 
+use crate::helpers::ShortSlice;
 use crate::parser::ParserError;
 use crate::parser::SubtagIterator;
 use alloc::vec::Vec;
-pub use subtag::Subtag;
+#[doc(inline)]
+pub use subtag::{subtag, Subtag};
 
 /// A list of [`Other Use Extensions`] as defined in [`Unicode Locale
 /// Identifier`] specification.
@@ -49,7 +51,7 @@ pub use subtag::Subtag;
 #[derive(Clone, PartialEq, Eq, Debug, Default, Hash, PartialOrd, Ord)]
 pub struct Other {
     ext: u8,
-    keys: Vec<Subtag>,
+    keys: ShortSlice<Subtag>,
 }
 
 impl Other {
@@ -71,6 +73,10 @@ impl Other {
     /// assert_eq!(&other.to_string(), "a-foo-bar");
     /// ```
     pub fn from_vec_unchecked(ext: u8, keys: Vec<Subtag>) -> Self {
+        Self::from_short_slice_unchecked(ext, keys.into())
+    }
+
+    pub(crate) fn from_short_slice_unchecked(ext: u8, keys: ShortSlice<Subtag>) -> Self {
         assert!(ext.is_ascii_alphabetic());
         Self { ext, keys }
     }
@@ -78,7 +84,7 @@ impl Other {
     pub(crate) fn try_from_iter(ext: u8, iter: &mut SubtagIterator) -> Result<Self, ParserError> {
         debug_assert!(ext.is_ascii_alphabetic());
 
-        let mut keys = Vec::new();
+        let mut keys = ShortSlice::new();
         while let Some(subtag) = iter.peek() {
             if !Subtag::valid_key(subtag) {
                 break;
@@ -89,7 +95,7 @@ impl Other {
             iter.next();
         }
 
-        Ok(Self::from_vec_unchecked(ext, keys))
+        Ok(Self::from_short_slice_unchecked(ext, keys))
     }
 
     /// Gets the tag character for this extension as a &str.

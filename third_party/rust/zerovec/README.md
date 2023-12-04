@@ -1,5 +1,7 @@
 # zerovec [![crates.io](https://img.shields.io/crates/v/zerovec)](https://crates.io/crates/zerovec)
 
+<!-- cargo-rdme start -->
+
 Zero-copy vector abstractions for arbitrary types, backed by byte slices.
 
 `zerovec` enables a far wider range of types — beyond just `&[u8]` and `&str` — to participate in
@@ -36,9 +38,9 @@ This crate has several optional Cargo features:
  -  `serde`: Allows serializing and deserializing `zerovec`'s abstractions via [`serde`](https://docs.rs/serde)
  -   `yoke`: Enables implementations of `Yokeable` from the [`yoke`](https://docs.rs/yoke/) crate, which is also useful
              in situations involving a lot of zero-copy deserialization.
- - `derive`: Makes it easier to use custom types in these collections by providing the [`#[make_ule]`](crate::make_ule) and
-    [`#[make_varule]`](crate::make_varule) proc macros, which generate appropriate [`ULE`](crate::ule::ULE) and
-    [`VarULE`](crate::ule::VarULE)-conformant types for a given "normal" type.
+ - `derive`: Makes it easier to use custom types in these collections by providing the `#[make_ule]` and
+    `#[make_varule]` proc macros, which generate appropriate [`ULE`](https://docs.rs/zerovec/latest/zerovec/ule/trait.ULE.html) and
+    [`VarULE`](https://docs.rs/zerovec/latest/zerovec/ule/trait.VarULE.html)-conformant types for a given "normal" type.
  - `std`: Enabled `std::Error` implementations for error types. This crate is by default `no_std` with a dependency on `alloc`.
 
 [`ZeroVec<'a, T>`]: ZeroVec
@@ -187,6 +189,8 @@ Small = 16 elements, large = 131,072 elements. Maps contain `<String, String>`.
 The benches used to generate the above table can be found in the `benches` directory in the project repository.
 `zeromap` benches are named by convention, e.g. `zeromap/deserialize/small`, `zeromap/lookup/large`. The type
 is appended for baseline comparisons, e.g. `zeromap/lookup/small/hashmap`.
+
+<!-- cargo-rdme end -->
 
 ## More Information
 

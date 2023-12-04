@@ -66,11 +66,12 @@ use alloc::vec::Vec;
 pub use builder::CodePointInversionListBuilder;
 pub use conversions::*;
 pub use cpinvlist::CodePointInversionList;
+pub use cpinvlist::CodePointInversionListULE;
 use displaydoc::Display;
 
 /// Custom Errors for [`CodePointInversionList`].
 ///
-/// Re-exported as [`Error`](Error).
+/// Re-exported as [`Error`].
 #[derive(Display, Debug)]
 pub enum CodePointInversionListError {
     /// A CodePointInversionList was constructed with an invalid inversion list

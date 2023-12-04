@@ -4,11 +4,13 @@
 
 #[cfg(feature = "serde")]
 use alloc::format;
+#[cfg(feature = "serde")]
+use alloc::string::String;
 use alloc::vec::Vec;
 use core::{char, ops::RangeBounds, ops::RangeInclusive};
 use yoke::Yokeable;
 use zerofrom::ZeroFrom;
-use zerovec::{ule::AsULE, ZeroSlice, ZeroVec};
+use zerovec::{ule::AsULE, zerovec, ZeroVec};
 
 use super::CodePointInversionListError;
 use crate::codepointinvlist::utils::{deconstruct_range, is_valid_zv};
@@ -17,20 +19,20 @@ use crate::codepointinvlist::utils::{deconstruct_range, is_valid_zv};
 const BMP_MAX: u32 = 0xFFFF;
 
 /// Represents the inversion list for a set of all code points in the Basic Multilingual Plane.
-const BMP_INV_LIST_SLICE: &ZeroSlice<u32> =
-    ZeroSlice::<u32>::from_ule_slice(&<u32 as AsULE>::ULE::from_array([0x0, BMP_MAX + 1]));
+const BMP_INV_LIST_VEC: ZeroVec<u32> =
+    zerovec!(u32; <u32 as AsULE>::ULE::from_unsigned; [0x0, BMP_MAX + 1]);
 
 /// Represents the inversion list for all of the code points in the Unicode range.
-const ALL_SLICE: &ZeroSlice<u32> =
-    ZeroSlice::<u32>::from_ule_slice(&<u32 as AsULE>::ULE::from_array([
-        0x0,
-        (char::MAX as u32) + 1,
-    ]));
+const ALL_VEC: ZeroVec<u32> =
+    zerovec!(u32; <u32 as AsULE>::ULE::from_unsigned; [0x0, (char::MAX as u32) + 1]);
 
 /// A membership wrapper for [`CodePointInversionList`].
 ///
 /// Provides exposure to membership functions and constructors from serialized `CodePointSet`s (sets of code points)
 /// and predefined ranges.
+#[zerovec::make_varule(CodePointInversionListULE)]
+#[zerovec::skip_derive(Ord)]
+#[zerovec::derive(Debug)]
 #[derive(Debug, Eq, PartialEq, Clone, Yokeable, ZeroFrom)]
 pub struct CodePointInversionList<'data> {
     // If we wanted to use an array to keep the memory on the stack, there is an unsafe nightly feature
@@ -39,7 +41,7 @@ pub struct CodePointInversionList<'data> {
 
     // Implements an [inversion list.](https://en.wikipedia.org/wiki/Inversion_list)
     inv_list: ZeroVec<'data, u32>,
-    size: usize,
+    size: u32,
 }
 
 #[cfg(feature = "serde")]
@@ -67,17 +69,24 @@ impl<'de: 'a, 'a> serde::Deserialize<'de> for CodePointInversionList<'a> {
                     let mut inv_list =
                         ZeroVec::new_owned(Vec::with_capacity(parsed_strings.len() * 2));
                     for range in parsed_strings {
-                        let mut chars = range.chars();
-                        let (start, end) = match (chars.next(), chars.next(), chars.next(), chars.next()) {
-                            (Some(single), None, None, None) => (single as u32, single as u32 + 1),
-                            (Some(start), Some('-'), Some(end), None) => (start as u32, end as u32 + 1),
-                            _ => return Err(Error::custom(format!(
-                                "Cannot deserialize invalid inversion list for CodePointInversionList: {range:?}"
-                            )))
-                        };
+                        fn internal(range: &str) -> Option<(u32, u32)> {
+                            let (start, range) = UnicodeCodePoint::parse(range)?;
+                            if range.is_empty() {
+                                return Some((start.0, start.0));
+                            }
+                            let (hyphen, range) = UnicodeCodePoint::parse(range)?;
+                            if hyphen.0 != '-' as u32 {
+                                return None;
+                            }
+                            let (end, range) = UnicodeCodePoint::parse(range)?;
+                            range.is_empty().then_some((start.0, end.0))
+                        }
+                        let (start, end) = internal(&range).ok_or_else(|| Error::custom(format!(
+                            "Cannot deserialize invalid inversion list for CodePointInversionList: {range:?}"
+                        )))?;
                         inv_list.with_mut(|v| {
                             v.push(start.to_unaligned());
-                            v.push(end.to_unaligned());
+                            v.push((end + 1).to_unaligned());
                         });
                     }
                     inv_list
@@ -103,8 +112,44 @@ impl databake::Bake for CodePointInversionList<'_> {
         // Safe because our parts are safe.
         databake::quote! { unsafe {
             #[allow(unused_unsafe)]
-            ::icu_collections::codepointinvlist::CodePointInversionList::from_parts_unchecked(#inv_list, #size)
+            icu_collections::codepointinvlist::CodePointInversionList::from_parts_unchecked(#inv_list, #size)
         }}
+    }
+}
+
+#[cfg(feature = "serde")]
+#[derive(Debug, Copy, Clone)]
+struct UnicodeCodePoint(u32);
+
+#[cfg(feature = "serde")]
+impl UnicodeCodePoint {
+    fn from_u32(cp: u32) -> Result<Self, String> {
+        if cp <= char::MAX as u32 {
+            Ok(Self(cp))
+        } else {
+            Err(format!("Not a Unicode code point {}", cp))
+        }
+    }
+
+    fn parse(value: &str) -> Option<(Self, &str)> {
+        Some(if let Some(hex) = value.strip_prefix("U+") {
+            let (escape, remainder) = (hex.get(..4)?, hex.get(4..)?);
+            (Self(u32::from_str_radix(escape, 16).ok()?), remainder)
+        } else {
+            let c = value.chars().next()?;
+            (Self(c as u32), value.get(c.len_utf8()..)?)
+        })
+    }
+}
+
+#[cfg(feature = "serde")]
+impl core::fmt::Display for UnicodeCodePoint {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self.0 {
+            s @ 0xD800..=0xDFFF => write!(f, "U+{s:X}"),
+            // SAFETY: c <= char::MAX by construction, and not a surrogate
+            c => write!(f, "{}", unsafe { char::from_u32_unchecked(c) }),
+        }
     }
 }
 
@@ -119,16 +164,12 @@ impl<'data> serde::Serialize for CodePointInversionList<'data> {
             use serde::ser::SerializeSeq;
             let mut seq = serializer.serialize_seq(Some(self.inv_list.len() / 2))?;
             for range in self.iter_ranges() {
-                let start = char::from_u32(*range.start()).ok_or_else(|| {
-                    S::Error::custom(format!("Invalid code point {}", range.start()))
-                })?;
-                let end = char::from_u32(*range.end()).ok_or_else(|| {
-                    S::Error::custom(format!("Invalid code point {}", range.end()))
-                })?;
-                if start == end {
-                    seq.serialize_element(&start)?;
+                let start = UnicodeCodePoint::from_u32(*range.start()).map_err(S::Error::custom)?;
+                if range.start() == range.end() {
+                    seq.serialize_element(&format!("{start}"))?;
                 } else {
-                    seq.serialize_element(&format!("{start}-{end}"))?;
+                    let end = UnicodeCodePoint::from_u32(*range.end()).map_err(S::Error::custom)?;
+                    seq.serialize_element(&format!("{start}-{end}",))?;
                 }
             }
             seq.end()
@@ -182,7 +223,7 @@ impl<'data> CodePointInversionList<'data> {
                     <u32 as AsULE>::from_unaligned(end_points[1])
                         - <u32 as AsULE>::from_unaligned(end_points[0])
                 })
-                .sum::<u32>() as usize;
+                .sum::<u32>();
             Ok(Self { inv_list, size })
         } else {
             Err(CodePointInversionListError::InvalidSet(inv_list.to_vec()))
@@ -190,7 +231,7 @@ impl<'data> CodePointInversionList<'data> {
     }
 
     #[doc(hidden)] // databake internal
-    pub const unsafe fn from_parts_unchecked(inv_list: ZeroVec<'data, u32>, size: usize) -> Self {
+    pub const unsafe fn from_parts_unchecked(inv_list: ZeroVec<'data, u32>, size: u32) -> Self {
         Self { inv_list, size }
     }
 
@@ -269,6 +310,14 @@ impl<'data> CodePointInversionList<'data> {
         CodePointInversionList::try_from_inversion_list(inv_list_zv)
     }
 
+    /// Attempts to convert this list into a fully-owned one. No-op if already fully owned
+    pub fn into_owned(self) -> CodePointInversionList<'static> {
+        CodePointInversionList {
+            inv_list: self.inv_list.into_owned(),
+            size: self.size,
+        }
+    }
+
     /// Returns an owned inversion list representing the current [`CodePointInversionList`]
     pub fn get_inversion_list_vec(&self) -> Vec<u32> {
         let result: Vec<u32> = self.as_inversion_list().to_vec(); // Only crate public, to not leak impl
@@ -285,7 +334,7 @@ impl<'data> CodePointInversionList<'data> {
     /// use icu_collections::codepointinvlist::CodePointInversionList;
     /// use zerovec::ZeroVec;
     ///
-    /// let expected = vec![0x0, (char::MAX as u32) + 1];
+    /// let expected = [0x0, (char::MAX as u32) + 1];
     /// assert_eq!(
     ///     CodePointInversionList::all().get_inversion_list_vec(),
     ///     expected
@@ -297,8 +346,8 @@ impl<'data> CodePointInversionList<'data> {
     /// ```
     pub fn all() -> Self {
         Self {
-            inv_list: ALL_SLICE.as_zerovec(),
-            size: (char::MAX as usize) + 1,
+            inv_list: ALL_VEC,
+            size: (char::MAX as u32) + 1,
         }
     }
 
@@ -314,7 +363,7 @@ impl<'data> CodePointInversionList<'data> {
     ///
     /// const BMP_MAX: u32 = 0xFFFF;
     ///
-    /// let expected = vec![0x0, BMP_MAX + 1];
+    /// let expected = [0x0, BMP_MAX + 1];
     /// assert_eq!(
     ///     CodePointInversionList::bmp().get_inversion_list_vec(),
     ///     expected
@@ -326,8 +375,8 @@ impl<'data> CodePointInversionList<'data> {
     /// ```
     pub fn bmp() -> Self {
         Self {
-            inv_list: BMP_INV_LIST_SLICE.as_zerovec(),
-            size: (BMP_MAX as usize) + 1,
+            inv_list: BMP_INV_LIST_VEC,
+            size: BMP_MAX + 1,
         }
     }
 
@@ -441,7 +490,7 @@ impl<'data> CodePointInversionList<'data> {
             let range_limit: u32 = AsULE::from_unaligned(pair[1]);
             RangeInclusive::new(range_start, range_limit - 1)
         });
-        beginning.into_iter().chain(chunks).chain(end.into_iter())
+        beginning.into_iter().chain(chunks).chain(end)
     }
 
     /// Returns the number of ranges contained in this [`CodePointInversionList`]
@@ -464,7 +513,7 @@ impl<'data> CodePointInversionList<'data> {
         if self.is_empty() {
             return 0;
         }
-        self.size
+        self.size as usize
     }
 
     /// Returns whether or not the [`CodePointInversionList`] is empty
@@ -946,9 +995,27 @@ mod tests {
     }
 
     #[test]
+    fn test_serde_serialize_surrogates() {
+        let inv_list = [0xDFAB, 0xDFFF];
+        let uniset = CodePointInversionList::try_from_inversion_list_slice(&inv_list).unwrap();
+        let json_str = serde_json::to_string(&uniset).unwrap();
+        assert_eq!(json_str, r#"["U+DFAB-U+DFFE"]"#);
+    }
+
+    #[test]
     fn test_serde_deserialize() {
         let inv_list_str = r#"["A-E","K-T"]"#;
         let exp_inv_list = [0x41, 0x46, 0x4B, 0x55];
+        let exp_uniset =
+            CodePointInversionList::try_from_inversion_list_slice(&exp_inv_list).unwrap();
+        let act_uniset: CodePointInversionList = serde_json::from_str(inv_list_str).unwrap();
+        assert_eq!(act_uniset, exp_uniset);
+    }
+
+    #[test]
+    fn test_serde_deserialize_surrogates() {
+        let inv_list_str = r#"["U+DFAB-U+DFFE"]"#;
+        let exp_inv_list = [0xDFAB, 0xDFFF];
         let exp_uniset =
             CodePointInversionList::try_from_inversion_list_slice(&exp_inv_list).unwrap();
         let act_uniset: CodePointInversionList = serde_json::from_str(inv_list_str).unwrap();
@@ -967,10 +1034,8 @@ mod tests {
 
     #[test]
     fn test_serde_deserialize_invalid() {
-        let inv_list_str = "[65,70,98775,85]";
-        let act_result: Result<CodePointInversionList, serde_json::Error> =
-            serde_json::from_str(inv_list_str);
-        assert!(matches!(act_result, Err(_)));
+        assert!(serde_json::from_str::<CodePointInversionList>("[65,70,98775,85]").is_err());
+        assert!(serde_json::from_str::<CodePointInversionList>("[65,70,U+FFFFFFFFFF,85]").is_err());
     }
 
     #[test]
@@ -994,11 +1059,11 @@ mod tests {
                 #[allow(unused_unsafe)]
                 crate::codepointinvlist::CodePointInversionList::from_parts_unchecked(
                     unsafe {
-                        ::zerovec::ZeroVec::from_bytes_unchecked(
+                        zerovec::ZeroVec::from_bytes_unchecked(
                             b"0\0\0\0:\0\0\0A\0\0\0G\0\0\0a\0\0\0g\0\0\0"
                         )
                     },
-                    22usize,
+                    22u32,
                 )
             },
             icu_collections,

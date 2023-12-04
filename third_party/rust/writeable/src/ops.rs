@@ -183,7 +183,7 @@ mod tests {
 
     #[test]
     fn test_sum() {
-        let lens = vec![
+        let lens = [
             LengthHint::exact(4),
             LengthHint::exact(1),
             LengthHint::exact(1),
@@ -193,7 +193,7 @@ mod tests {
             LengthHint::exact(6)
         );
 
-        let lens = vec![
+        let lens = [
             LengthHint::exact(4),
             LengthHint::undefined(),
             LengthHint::at_least(1),
@@ -203,7 +203,7 @@ mod tests {
             LengthHint::at_least(5)
         );
 
-        let lens = vec![
+        let lens = [
             LengthHint::exact(4),
             LengthHint::undefined(),
             LengthHint::at_most(1),
@@ -213,7 +213,7 @@ mod tests {
             LengthHint::at_least(4)
         );
 
-        let lens = vec![4, 1, 1];
+        let lens = [4, 1, 1];
         assert_eq!(
             lens.iter().copied().sum::<LengthHint>(),
             LengthHint::exact(6)

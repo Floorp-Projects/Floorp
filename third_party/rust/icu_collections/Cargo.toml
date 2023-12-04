@@ -11,10 +11,12 @@
 
 [package]
 edition = "2021"
+rust-version = "1.67"
 name = "icu_collections"
-version = "1.2.0"
+version = "1.4.0"
 authors = ["The ICU4X Project Developers"]
 include = [
+    "data/**/*",
     "src/**/*",
     "examples/**/*",
     "benches/**/*",
@@ -24,24 +26,20 @@ include = [
     "README.md",
 ]
 description = "Collection of API for use in ICU libraries."
+homepage = "https://icu4x.unicode.org"
 readme = "README.md"
 categories = ["internationalization"]
-license = "Unicode-DFS-2016"
+license-file = "LICENSE"
 repository = "https://github.com/unicode-org/icu4x"
-
-[package.metadata.docs.rs]
-all-features = true
 
 [package.metadata.cargo-all-features]
 denylist = ["bench"]
 
-[lib]
-path = "src/lib.rs"
-bench = false
+[package.metadata.docs.rs]
+all-features = true
 
-[[example]]
-name = "unicode_bmp_blocks_selector"
-path = "src/codepointinvlist/examples/unicode_bmp_blocks_selector.rs"
+[lib]
+bench = false
 
 [[bench]]
 name = "codepointtrie"
@@ -60,9 +58,10 @@ path = "src/codepointinvlist/benches/inv_list.rs"
 harness = false
 
 [dependencies.databake]
-version = "0.1.3"
+version = "0.1.7"
 features = ["derive"]
 optional = true
+default-features = false
 
 [dependencies.displaydoc]
 version = "0.2.3"
@@ -78,19 +77,22 @@ optional = true
 default-features = false
 
 [dependencies.yoke]
-version = "0.7.1"
+version = "0.7.3"
 features = ["derive"]
+default-features = false
 
 [dependencies.zerofrom]
-version = "0.1.1"
+version = "0.1.2"
 features = ["derive"]
+default-features = false
 
 [dependencies.zerovec]
-version = "0.9.4"
-features = ["yoke"]
-
-[dev-dependencies.criterion]
-version = "0.4"
+version = "0.10.1"
+features = [
+    "derive",
+    "yoke",
+]
+default-features = false
 
 [dev-dependencies.iai]
 version = "0.1.1"
@@ -121,3 +123,6 @@ serde = [
     "zerovec/serde",
 ]
 std = []
+
+[target."cfg(not(target_arch = \"wasm32\"))".dev-dependencies.criterion]
+version = "0.4"

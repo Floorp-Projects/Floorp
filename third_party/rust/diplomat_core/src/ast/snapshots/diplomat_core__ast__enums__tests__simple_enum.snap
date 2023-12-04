@@ -16,10 +16,13 @@ variants:
     - 0
     - - ""
       - []
+    - cfg: []
   - - Def
     - 1
     - - Some more docs.
       - []
+    - cfg: []
 methods: []
-cfg_attrs: []
+attrs:
+  cfg: []
 

@@ -1,5 +1,7 @@
 # tinystr [![crates.io](https://img.shields.io/crates/v/tinystr)](https://crates.io/crates/tinystr)
 
+<!-- cargo-rdme start -->
+
 `tinystr` is a utility crate of the [`ICU4X`] project.
 
 It includes [`TinyAsciiStr`], a core API for representing small ASCII-only bounded length strings.
@@ -47,6 +49,8 @@ bitmasking to provide basic string manipulation operations:
 `TinyAsciiStr` will fall back to `u8` character manipulation for strings of length greater than 8.
 
 [`ICU4X`]: ../icu/index.html
+
+<!-- cargo-rdme end -->
 
 ## More Information
 

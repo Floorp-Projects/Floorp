@@ -48,6 +48,7 @@ extern crate alloc;
 pub mod either;
 #[cfg(feature = "alloc")]
 pub mod erased;
+mod kinda_sorta_dangling;
 mod macro_impls;
 pub mod trait_hack;
 mod yoke;

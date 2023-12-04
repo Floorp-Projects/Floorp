@@ -29,9 +29,7 @@
 //!```rust
 //! use icu::segmenter::LineSegmenter;
 //!
-//! let segmenter =
-//!     LineSegmenter::try_new_auto_unstable(&icu_testdata::unstable())
-//!         .expect("Data exists");
+//! let segmenter = LineSegmenter::new_auto();
 //!
 //! let breakpoints: Vec<usize> = segmenter
 //!     .segment_str("Hello World. Xin chào thế giới!")
@@ -48,9 +46,7 @@
 //!```rust
 //! use icu::segmenter::GraphemeClusterSegmenter;
 //!
-//! let segmenter =
-//!     GraphemeClusterSegmenter::try_new_unstable(&icu_testdata::unstable())
-//!         .expect("Data exists");
+//! let segmenter = GraphemeClusterSegmenter::new();
 //!
 //! let breakpoints: Vec<usize> = segmenter
 //!     .segment_str("Hello World. Xin chào thế giới!")
@@ -73,9 +69,7 @@
 //!```rust
 //! use icu::segmenter::WordSegmenter;
 //!
-//! let segmenter =
-//!     WordSegmenter::try_new_auto_unstable(&icu_testdata::unstable())
-//!         .expect("Data exists");
+//! let segmenter = WordSegmenter::new_auto();
 //!
 //! let breakpoints: Vec<usize> = segmenter
 //!     .segment_str("Hello World. Xin chào thế giới!")
@@ -95,9 +89,7 @@
 //!```rust
 //! use icu::segmenter::SentenceSegmenter;
 //!
-//! let segmenter =
-//!     SentenceSegmenter::try_new_unstable(&icu_testdata::unstable())
-//!         .expect("Data exists");
+//! let segmenter = SentenceSegmenter::new();
 //!
 //! let breakpoints: Vec<usize> = segmenter
 //!     .segment_str("Hello World. Xin chào thế giới!")
@@ -126,11 +118,9 @@
 extern crate alloc;
 
 mod complex;
-mod dictionary;
 mod error;
 mod indices;
 mod iterator_helpers;
-mod language;
 mod rule_segmenter;
 
 mod grapheme;
@@ -143,11 +133,6 @@ pub mod provider;
 // icu_datagen uses symbols, but we don't want to expose this implementation detail to the users.
 #[doc(hidden)]
 pub mod symbols;
-
-#[cfg(feature = "lstm")]
-mod lstm;
-#[cfg(feature = "lstm")]
-mod math_helper;
 
 // Main Segmenter and BreakIterator public types
 pub use crate::grapheme::GraphemeClusterBreakIterator;

@@ -2,6 +2,7 @@ use super::{Ident, Path, TypeName};
 
 #[cfg_attr(feature = "displaydoc", derive(displaydoc::Display))]
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub enum ValidityError {
     /// An oqaue type crosses the FFI boundary as a value.
     #[cfg_attr(

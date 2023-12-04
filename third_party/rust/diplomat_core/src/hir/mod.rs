@@ -2,6 +2,7 @@
 //!
 //! Enabled with the `"hir"` Cargo feature
 
+mod attrs;
 mod defs;
 mod elision;
 mod lifetimes;
@@ -12,6 +13,7 @@ mod primitives;
 mod ty_position;
 mod type_context;
 mod types;
+pub use attrs::*;
 pub use defs::*;
 pub(super) use elision::*;
 pub use lifetimes::*;

@@ -26,6 +26,46 @@ use icu_collections::codepointtrie::CodePointTrie;
 use icu_provider::prelude::*;
 use zerovec::ZeroVec;
 
+#[cfg(feature = "compiled_data")]
+#[derive(Debug)]
+/// Baked data
+///
+/// <div class="stab unstable">
+/// 🚧 This code is considered unstable; it may change at any time, in breaking or non-breaking ways,
+/// including in SemVer minor releases. In particular, the `DataProvider` implementations are only
+/// guaranteed to match with this version's `*_unstable` providers. Use with caution.
+/// </div>
+pub struct Baked;
+
+#[cfg(feature = "compiled_data")]
+const _: () = {
+    pub mod icu {
+        pub use crate as segmenter;
+        pub use icu_collections as collections;
+    }
+    icu_segmenter_data::make_provider!(Baked);
+    icu_segmenter_data::impl_segmenter_dictionary_w_auto_v1!(Baked);
+    icu_segmenter_data::impl_segmenter_dictionary_wl_ext_v1!(Baked);
+    icu_segmenter_data::impl_segmenter_grapheme_v1!(Baked);
+    icu_segmenter_data::impl_segmenter_line_v1!(Baked);
+    #[cfg(feature = "lstm")]
+    icu_segmenter_data::impl_segmenter_lstm_wl_auto_v1!(Baked);
+    icu_segmenter_data::impl_segmenter_sentence_v1!(Baked);
+    icu_segmenter_data::impl_segmenter_word_v1!(Baked);
+};
+
+#[cfg(feature = "datagen")]
+/// The latest minimum set of keys required by this component.
+pub const KEYS: &[DataKey] = &[
+    DictionaryForWordLineExtendedV1Marker::KEY,
+    DictionaryForWordOnlyAutoV1Marker::KEY,
+    GraphemeClusterBreakDataV1Marker::KEY,
+    LineBreakDataV1Marker::KEY,
+    LstmForWordLineAutoV1Marker::KEY,
+    SentenceBreakDataV1Marker::KEY,
+    WordBreakDataV1Marker::KEY,
+];
+
 /// Pre-processed Unicode data in the form of tables to be used for rule-based breaking.
 ///
 /// <div class="stab unstable">
@@ -34,10 +74,10 @@ use zerovec::ZeroVec;
 /// to be stable, their Rust representation might not be. Use with caution.
 /// </div>
 #[icu_provider::data_struct(
-    LineBreakDataV1Marker = "segmenter/line@1",
-    WordBreakDataV1Marker = "segmenter/word@1",
-    GraphemeClusterBreakDataV1Marker = "segmenter/grapheme@1",
-    SentenceBreakDataV1Marker = "segmenter/sentence@1"
+    marker(LineBreakDataV1Marker, "segmenter/line@1", singleton),
+    marker(WordBreakDataV1Marker, "segmenter/word@1", singleton),
+    marker(GraphemeClusterBreakDataV1Marker, "segmenter/grapheme@1", singleton),
+    marker(SentenceBreakDataV1Marker, "segmenter/sentence@1", singleton)
 )]
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(

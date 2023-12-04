@@ -16,18 +16,23 @@ variants:
     - -1
     - - ""
       - []
+    - cfg: []
   - - Def
     - 0
     - - ""
       - []
+    - cfg: []
   - - Ghi
     - 1
     - - ""
       - []
+    - cfg: []
   - - Jkl
     - 2
     - - ""
       - []
+    - cfg: []
 methods: []
-cfg_attrs: []
+attrs:
+  cfg: []
 

@@ -1,43 +1,94 @@
-// minimal WASM logger based on https://github.com/DeMille/wasm-glue
-extern "C" {
-    fn trace_js(ptr: *const u8, len: usize);
-    fn warn_js(ptr: *const u8, len: usize);
-    fn log_js(ptr: *const u8, len: usize);
-}
-
-/// Throw an exception.
-pub fn console_trace(msg: &str) {
-    unsafe {
-        trace_js(msg.as_ptr(), msg.len());
-    }
-}
-
-/// Write a message to `console.warn`.
-pub fn console_warn(msg: &str) {
-    unsafe { warn_js(msg.as_ptr(), msg.len()) }
-}
-
-/// Write a message to `console.log`.
-pub fn console_log(msg: &str) {
-    unsafe { log_js(msg.as_ptr(), msg.len()) }
-}
+use alloc::format;
+use core::panic::PanicInfo;
 
 #[no_mangle]
-pub unsafe extern "C" fn diplomat_init() {
+unsafe extern "C" fn diplomat_init() {
     #[cfg(debug_assertions)]
-    // Sets a custom panic hook using `trace_js`, which by default crates a JS error
-    std::panic::set_hook(Box::new(|info| {
-        let file = info.location().unwrap().file();
-        let line = info.location().unwrap().line();
-        let col = info.location().unwrap().column();
+    std::panic::set_hook(Box::new(panic_handler));
+    #[cfg(feature = "log")]
+    log::set_logger(&ConsoleLogger)
+        .map(|()| log::set_max_level(log::LevelFilter::Debug))
+        .unwrap();
+}
 
-        let msg = match info.payload().downcast_ref::<&'static str>() {
-            Some(&s) => s,
-            None => match info.payload().downcast_ref::<String>() {
-                Some(s) => s.as_str(),
-                None => "Box<Any>",
-            },
+fn panic_handler(info: &PanicInfo) {
+    let msg = match info.payload().downcast_ref::<&'static str>() {
+        Some(&s) => s,
+        None => match info.payload().downcast_ref::<String>() {
+            Some(s) => s.as_str(),
+            None => "Box<Any>",
+        },
+    };
+
+    let msg = match info.location() {
+        Some(l) => format!(
+            "wasm panicked at {}:{}:{}:\n{msg}",
+            l.file(),
+            l.line(),
+            l.column(),
+        ),
+        None => format!("wasm panicked at <unknown location>:\n{msg}"),
+    };
+
+    extern "C" {
+        fn diplomat_throw_error_js(ptr: *const u8, len: usize);
+    }
+
+    unsafe { diplomat_throw_error_js(msg.as_ptr(), msg.len()) }
+}
+
+#[cfg(feature = "log")]
+struct ConsoleLogger;
+
+#[cfg(feature = "log")]
+impl log::Log for ConsoleLogger {
+    #[inline]
+    fn enabled(&self, metadata: &log::Metadata) -> bool {
+        metadata.level() <= log::max_level()
+    }
+
+    fn log(&self, record: &log::Record) {
+        if !self.enabled(record.metadata()) {
+            return;
+        }
+
+        let out = match record.level() {
+            log::Level::Error => {
+                extern "C" {
+                    fn diplomat_console_error_js(ptr: *const u8, len: usize);
+                }
+                diplomat_console_error_js
+            }
+            log::Level::Warn => {
+                extern "C" {
+                    fn diplomat_console_warn_js(ptr: *const u8, len: usize);
+                }
+                diplomat_console_warn_js
+            }
+            log::Level::Info => {
+                extern "C" {
+                    fn diplomat_console_info_js(ptr: *const u8, len: usize);
+                }
+                diplomat_console_info_js
+            }
+            log::Level::Debug => {
+                extern "C" {
+                    fn diplomat_console_log_js(ptr: *const u8, len: usize);
+                }
+                diplomat_console_log_js
+            }
+            log::Level::Trace => {
+                extern "C" {
+                    fn diplomat_console_debug_js(ptr: *const u8, len: usize);
+                }
+                diplomat_console_debug_js
+            }
         };
-        console_trace(&format!("Panicked at '{msg}', {file}:{line}:{col}"));
-    }));
+
+        let msg = alloc::format!("{}", record.args());
+
+        unsafe { out(msg.as_ptr(), msg.len()) };
+    }
+
+    fn flush(&self) {}
 }

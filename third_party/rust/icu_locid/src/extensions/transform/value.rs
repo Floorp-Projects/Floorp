@@ -2,9 +2,8 @@
 // called LICENSE at the top level of the ICU4X source tree
 // (online at: https://github.com/unicode-org/icu4x/blob/main/LICENSE ).
 
+use crate::helpers::ShortSlice;
 use crate::parser::{ParserError, SubtagIterator};
-use alloc::vec;
-use alloc::vec::Vec;
 use core::ops::RangeInclusive;
 use core::str::FromStr;
 use tinystr::TinyAsciiStr;
@@ -28,7 +27,7 @@ use tinystr::TinyAsciiStr;
 /// "no".parse::<Value>().expect_err("Invalid Value.");
 /// ```
 #[derive(Debug, PartialEq, Eq, Clone, Hash, PartialOrd, Ord, Default)]
-pub struct Value(Vec<TinyAsciiStr<{ *TYPE_LENGTH.end() }>>);
+pub struct Value(ShortSlice<TinyAsciiStr<{ *TYPE_LENGTH.end() }>>);
 
 const TYPE_LENGTH: RangeInclusive<usize> = 3..=8;
 const TRUE_TVALUE: TinyAsciiStr<8> = tinystr::tinystr!(8, "true");
@@ -45,7 +44,7 @@ impl Value {
     /// let value = Value::try_from_bytes(b"hybrid").expect("Parsing failed.");
     /// ```
     pub fn try_from_bytes(input: &[u8]) -> Result<Self, ParserError> {
-        let mut v = vec![];
+        let mut v = ShortSlice::default();
         let mut has_value = false;
 
         for subtag in SubtagIterator::new(input) {
@@ -66,12 +65,14 @@ impl Value {
         Ok(Self(v))
     }
 
-    pub(crate) fn from_vec_unchecked(input: Vec<TinyAsciiStr<{ *TYPE_LENGTH.end() }>>) -> Self {
+    pub(crate) fn from_short_slice_unchecked(
+        input: ShortSlice<TinyAsciiStr<{ *TYPE_LENGTH.end() }>>,
+    ) -> Self {
         Self(input)
     }
 
     pub(crate) fn is_type_subtag(t: &[u8]) -> bool {
-        TYPE_LENGTH.contains(&t.len()) && !t.iter().any(|c: &u8| !c.is_ascii_alphanumeric())
+        TYPE_LENGTH.contains(&t.len()) && t.iter().all(u8::is_ascii_alphanumeric)
     }
 
     pub(crate) fn parse_subtag(
@@ -122,9 +123,12 @@ fn test_writeable() {
     let foobar = "foobar".parse().unwrap();
 
     assert_writeable_eq!(Value::default(), "true");
-    assert_writeable_eq!(Value::from_vec_unchecked(vec![hybrid]), "hybrid");
     assert_writeable_eq!(
-        Value::from_vec_unchecked(vec![hybrid, foobar]),
+        Value::from_short_slice_unchecked(vec![hybrid].into()),
+        "hybrid"
+    );
+    assert_writeable_eq!(
+        Value::from_short_slice_unchecked(vec![hybrid, foobar].into()),
         "hybrid-foobar"
     );
 }

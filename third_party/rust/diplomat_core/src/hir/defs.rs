@@ -1,14 +1,16 @@
 //! Type definitions for structs, output structs, opaque structs, and enums.
 
-use super::{Everywhere, IdentBuf, Method, OutputOnly, TyPosition, Type};
+use super::{Attrs, Everywhere, IdentBuf, Method, OutputOnly, TyPosition, Type};
 use crate::ast::Docs;
 
+#[non_exhaustive]
 pub enum ReturnableStructDef<'tcx> {
     Struct(&'tcx StructDef),
     OutStruct(&'tcx OutStructDef),
 }
 
 #[derive(Copy, Clone, Debug)]
+#[non_exhaustive]
 pub enum TypeDef<'tcx> {
     Struct(&'tcx StructDef),
     OutStruct(&'tcx OutStructDef),
@@ -21,11 +23,13 @@ pub type OutStructDef = StructDef<OutputOnly>;
 
 /// Structs that can be either inputs or outputs in methods.
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct StructDef<P: TyPosition = Everywhere> {
     pub docs: Docs,
     pub name: IdentBuf,
     pub fields: Vec<StructField<P>>,
     pub methods: Vec<Method>,
+    pub attrs: Attrs,
 }
 
 /// A struct whose contents are opaque across the FFI boundary, and can only
@@ -37,19 +41,23 @@ pub struct StructDef<P: TyPosition = Everywhere> {
 ///
 /// A struct marked with `#[diplomat::opaque]`.
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct OpaqueDef {
     pub docs: Docs,
     pub name: IdentBuf,
     pub methods: Vec<Method>,
+    pub attrs: Attrs,
 }
 
 /// The enum type.
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct EnumDef {
     pub docs: Docs,
     pub name: IdentBuf,
     pub variants: Vec<EnumVariant>,
     pub methods: Vec<Method>,
+    pub attrs: Attrs,
 }
 
 /// A field on a [`OutStruct`]s.
@@ -57,6 +65,7 @@ pub type OutStructField = StructField<OutputOnly>;
 
 /// A field on a [`Struct`]s.
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct StructField<P: TyPosition = Everywhere> {
     pub docs: Docs,
     pub name: IdentBuf,
@@ -65,10 +74,12 @@ pub struct StructField<P: TyPosition = Everywhere> {
 
 /// A variant of an [`Enum`].
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct EnumVariant {
     pub docs: Docs,
     pub name: IdentBuf,
     pub discriminant: isize,
+    pub attrs: Attrs,
 }
 
 impl<P: TyPosition> StructDef<P> {
@@ -77,22 +88,25 @@ impl<P: TyPosition> StructDef<P> {
         name: IdentBuf,
         fields: Vec<StructField<P>>,
         methods: Vec<Method>,
+        attrs: Attrs,
     ) -> Self {
         Self {
             docs,
             name,
             fields,
             methods,
+            attrs,
         }
     }
 }
 
 impl OpaqueDef {
-    pub(super) fn new(docs: Docs, name: IdentBuf, methods: Vec<Method>) -> Self {
+    pub(super) fn new(docs: Docs, name: IdentBuf, methods: Vec<Method>, attrs: Attrs) -> Self {
         Self {
             docs,
             name,
             methods,
+            attrs,
         }
     }
 }
@@ -103,12 +117,14 @@ impl EnumDef {
         name: IdentBuf,
         variants: Vec<EnumVariant>,
         methods: Vec<Method>,
+        attrs: Attrs,
     ) -> Self {
         Self {
             docs,
             name,
             variants,
             methods,
+            attrs,
         }
     }
 }
@@ -161,6 +177,15 @@ impl<'tcx> TypeDef<'tcx> {
             Self::OutStruct(ty) => &ty.methods,
             Self::Opaque(ty) => &ty.methods,
             Self::Enum(ty) => &ty.methods,
+        }
+    }
+
+    pub fn attrs(&self) -> &'tcx Attrs {
+        match *self {
+            Self::Struct(ty) => &ty.attrs,
+            Self::OutStruct(ty) => &ty.attrs,
+            Self::Opaque(ty) => &ty.attrs,
+            Self::Enum(ty) => &ty.attrs,
         }
     }
 }

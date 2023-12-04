@@ -53,7 +53,7 @@ pub unsafe trait VarZeroVecFormat: 'static + Sized {
 /// Will have a smaller data size, but it's more likely for larger arrays
 /// to be unrepresentable (and error on construction)
 ///
-/// This is the default index size used by all [`VarZeroVec`](super::VarZeroVec) tyoes.
+/// This is the default index size used by all [`VarZeroVec`](super::VarZeroVec) types.
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[allow(clippy::exhaustive_structs)] // marker
 pub struct Index16;
@@ -128,13 +128,7 @@ pub struct VarZeroVecComponents<'a, T: ?Sized, F> {
 impl<'a, T: ?Sized, F> Copy for VarZeroVecComponents<'a, T, F> {}
 impl<'a, T: ?Sized, F> Clone for VarZeroVecComponents<'a, T, F> {
     fn clone(&self) -> Self {
-        VarZeroVecComponents {
-            len: self.len,
-            indices: self.indices,
-            things: self.things,
-            entire_slice: self.entire_slice,
-            marker: PhantomData,
-        }
+        *self
     }
 }
 
@@ -161,13 +155,14 @@ impl<'a, T: VarULE + ?Sized, F: VarZeroVecFormat> VarZeroVecComponents<'a, T, F>
     /// Construct a new VarZeroVecComponents, checking invariants about the overall buffer size:
     ///
     /// - There must be either zero or at least four bytes (if four, this is the "length" parsed as a usize)
-    /// - There must be at least `4*length + 4` bytes total, to form the the array `indices` of indices
+    /// - There must be at least `4*length + 4` bytes total, to form the array `indices` of indices
     /// - `indices[i]..indices[i+1]` must index into a valid section of
     ///   `things`, such that it parses to a `T::VarULE`
     /// - `indices[len - 1]..things.len()` must index into a valid section of
     ///   `things`, such that it parses to a `T::VarULE`
     #[inline]
     pub fn parse_byte_slice(slice: &'a [u8]) -> Result<Self, ZeroVecError> {
+        // The empty VZV is special-cased to the empty slice
         if slice.is_empty() {
             return Ok(VarZeroVecComponents {
                 len: 0,
@@ -219,6 +214,7 @@ impl<'a, T: VarULE + ?Sized, F: VarZeroVecFormat> VarZeroVecComponents<'a, T, F>
     /// The bytes must have previously successfully run through
     /// [`VarZeroVecComponents::parse_byte_slice()`]
     pub unsafe fn from_bytes_unchecked(slice: &'a [u8]) -> Self {
+        // The empty VZV is special-cased to the empty slice
         if slice.is_empty() {
             return VarZeroVecComponents {
                 len: 0,
@@ -369,7 +365,7 @@ impl<'a, T: VarULE + ?Sized, F: VarZeroVecFormat> VarZeroVecComponents<'a, T, F>
                     .copied()
                     .map(F::rawbytes_to_usize)
                     .skip(1)
-                    .chain(core::iter::once(self.things.len())),
+                    .chain([self.things.len()]),
             )
             .map(move |(start, end)| unsafe { self.things.get_unchecked(start..end) })
             .map(|bytes| unsafe { T::from_byte_slice_unchecked(bytes) })
@@ -485,12 +481,13 @@ where
 }
 
 /// Collects the bytes for a VarZeroSlice into a Vec.
-pub fn get_serializable_bytes<T, A, F>(elements: &[A]) -> Option<Vec<u8>>
+pub fn get_serializable_bytes_non_empty<T, A, F>(elements: &[A]) -> Option<Vec<u8>>
 where
     T: VarULE + ?Sized,
     A: EncodeAsVarULE<T>,
     F: VarZeroVecFormat,
 {
+    debug_assert!(!elements.is_empty());
     let len = compute_serializable_len::<T, A, F>(elements)?;
     debug_assert!(len >= LENGTH_WIDTH as u32);
     let mut output: Vec<u8> = alloc::vec![0; len as usize];
@@ -566,9 +563,7 @@ where
     let data_len: u32 = elements
         .iter()
         .map(|v| u32::try_from(v.encode_var_ule_len()).ok())
-        .fold(Some(0u32), |s, v| {
-            s.and_then(|s| v.and_then(|v| s.checked_add(v)))
-        })?;
+        .try_fold(0u32, |s, v| s.checked_add(v?))?;
     let ret = idx_len.checked_add(data_len);
     if let Some(r) = ret {
         if r >= F::MAX_VALUE {

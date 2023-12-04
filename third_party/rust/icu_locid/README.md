@@ -1,5 +1,7 @@
 # icu_locid [![crates.io](https://img.shields.io/crates/v/icu_locid)](https://crates.io/crates/icu_locid)
 
+<!-- cargo-rdme start -->
+
 Parsing, manipulating, and serializing Unicode Language and Locale Identifiers.
 
 This module is published as its own crate ([`icu_locid`](https://docs.rs/icu_locid/latest/icu_locid/))
@@ -22,7 +24,8 @@ If in doubt, use [`Locale`].
 ```rust
 use icu::locid::Locale;
 use icu::locid::{
-    locale, subtags_language as language, subtags_region as region,
+    locale,
+    subtags::{language, region},
 };
 
 let mut loc: Locale = locale!("en-US");
@@ -42,6 +45,8 @@ For more details, see [`Locale`] and [`LanguageIdentifier`].
 [`UTS #35: Unicode LDML 3. Unicode Language and Locale Identifiers`]: https://unicode.org/reports/tr35/tr35.html#Unicode_Language_and_Locale_Identifiers
 [`ICU4X`]: ../icu/index.html
 [`Unicode Extensions`]: extensions
+
+<!-- cargo-rdme end -->
 
 ## More Information
 

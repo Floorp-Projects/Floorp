@@ -25,7 +25,7 @@ where
     ///
     /// ```
     /// use icu_locid::LanguageIdentifier;
-    /// use icu_locid::{langid, locale, subtags_language as language};
+    /// use icu_locid::{langid, locale, subtags::language};
     /// use icu_provider::datagen::*;
     /// use icu_provider::hello_world::*;
     /// use icu_provider::prelude::*;
@@ -106,7 +106,7 @@ where
     /// use icu_provider::prelude::*;
     /// use icu_provider_adapters::filter::Filterable;
     ///
-    /// let allowlist = vec![langid!("de"), langid!("zh")];
+    /// let allowlist = [langid!("de"), langid!("zh")];
     /// let provider = HelloWorldProvider
     ///     .filterable("Demo German+Chinese filter")
     ///     .filter_by_langid_allowlist_strict(&allowlist);

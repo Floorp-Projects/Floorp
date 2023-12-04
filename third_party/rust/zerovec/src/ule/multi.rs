@@ -44,7 +44,7 @@ impl MultiFieldsULE {
                 lengths, output,
             );
             debug_assert!(
-                <VarZeroSlice<[u8]>>::validate_byte_slice(output).is_ok(),
+                <VarZeroSlice<[u8], Index32>>::validate_byte_slice(output).is_ok(),
                 "Encoded slice must be valid VarZeroSlice"
             );
             // Safe since write_serializable_bytes produces a valid VarZeroSlice buffer
@@ -141,12 +141,14 @@ unsafe impl VarULE for MultiFieldsULE {
     /// This impl exists so that EncodeAsVarULE can work.
     #[inline]
     fn validate_byte_slice(slice: &[u8]) -> Result<(), ZeroVecError> {
-        <VarZeroSlice<[u8]>>::validate_byte_slice(slice)
+        <VarZeroSlice<[u8], Index32>>::validate_byte_slice(slice)
     }
 
     #[inline]
     unsafe fn from_byte_slice_unchecked(bytes: &[u8]) -> &Self {
         // &Self is transparent over &VZS<..>
-        mem::transmute(<VarZeroSlice<[u8]>>::from_byte_slice_unchecked(bytes))
+        mem::transmute(<VarZeroSlice<[u8], Index32>>::from_byte_slice_unchecked(
+            bytes,
+        ))
     }
 }

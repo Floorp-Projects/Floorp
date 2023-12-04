@@ -38,6 +38,7 @@ use syn::{Ident, LitStr, Path, Token};
 mod tests;
 
 #[proc_macro_attribute]
+
 /// The `#[data_struct]` attribute should be applied to all types intended
 /// for use in a `DataStruct`.
 ///
@@ -50,6 +51,19 @@ mod tests;
 /// by adding symbols with optional key strings:
 ///
 /// ```
+/// # // We DO NOT want to pull in the `icu` crate as a dev-dependency,
+/// # // because that will rebuild the whole tree in proc macro mode
+/// # // when using cargo test --all-features --all-targets.
+/// # pub mod icu {
+/// #   pub mod locid_transform {
+/// #     pub mod fallback {
+/// #       pub use icu_provider::_internal::{LocaleFallbackPriority, LocaleFallbackSupplement};
+/// #     }
+/// #   }
+/// #   pub use icu_provider::_internal::locid;
+/// # }
+/// use icu::locid_transform::fallback::*;
+/// use icu::locid::extensions::unicode::key;
 /// use icu_provider::prelude::*;
 /// use std::borrow::Cow;
 ///
@@ -73,18 +87,18 @@ mod tests;
 /// assert_eq!(&*BarV1Marker::KEY.path(), "demo/bar@1");
 /// assert_eq!(
 ///     BarV1Marker::KEY.metadata().fallback_priority,
-///     icu_provider::FallbackPriority::Language
+///     LocaleFallbackPriority::Language
 /// );
 /// assert_eq!(BarV1Marker::KEY.metadata().extension_key, None);
 ///
 /// assert_eq!(&*BazV1Marker::KEY.path(), "demo/baz@1");
 /// assert_eq!(
 ///     BazV1Marker::KEY.metadata().fallback_priority,
-///     icu_provider::FallbackPriority::Region
+///     LocaleFallbackPriority::Region
 /// );
 /// assert_eq!(
 ///     BazV1Marker::KEY.metadata().extension_key,
-///     Some(icu::locid::extensions_unicode_key!("ca"))
+///     Some(key!("ca"))
 /// );
 /// ```
 ///
@@ -113,6 +127,7 @@ struct DataStructArg {
     fallback_by: Option<LitStr>,
     extension_key: Option<LitStr>,
     fallback_supplement: Option<LitStr>,
+    singleton: bool,
 }
 
 impl DataStructArg {
@@ -123,6 +138,7 @@ impl DataStructArg {
             fallback_by: None,
             extension_key: None,
             fallback_supplement: None,
+            singleton: false,
         }
     }
 }
@@ -155,9 +171,10 @@ impl Parse for DataStructArg {
             let mut fallback_by: Option<LitStr> = None;
             let mut extension_key: Option<LitStr> = None;
             let mut fallback_supplement: Option<LitStr> = None;
+            let mut singleton = false;
             let punct = content.parse_terminated(DataStructMarkerArg::parse, Token![,])?;
 
-            for entry in punct.into_iter() {
+            for entry in punct {
                 match entry {
                     DataStructMarkerArg::Path(path) => {
                         at_most_one_option(&mut marker_name, path, "marker", input.span())?;
@@ -194,6 +211,9 @@ impl Parse for DataStructArg {
                     DataStructMarkerArg::Lit(lit) => {
                         at_most_one_option(&mut key_lit, lit, "literal key", input.span())?;
                     }
+                    DataStructMarkerArg::Singleton => {
+                        singleton = true;
+                    }
                 }
             }
             let marker_name = if let Some(marker_name) = marker_name {
@@ -211,6 +231,7 @@ impl Parse for DataStructArg {
                 fallback_by,
                 extension_key,
                 fallback_supplement,
+                singleton,
             })
         } else {
             let mut this = DataStructArg::new(path);
@@ -232,6 +253,7 @@ enum DataStructMarkerArg {
     Path(Path),
     NameValue(Ident, LitStr),
     Lit(LitStr),
+    Singleton,
 }
 impl Parse for DataStructMarkerArg {
     fn parse(input: ParseStream<'_>) -> parse::Result<Self> {
@@ -250,6 +272,8 @@ impl Parse for DataStructMarkerArg {
                     ident.clone(),
                     input.parse()?,
                 ))
+            } else if path.is_ident("singleton") {
+                Ok(DataStructMarkerArg::Singleton)
             } else {
                 Ok(DataStructMarkerArg::Path(path))
             }
@@ -297,13 +321,14 @@ fn data_struct_impl(attr: DataStructArgs, input: DeriveInput) -> TokenStream2 {
 
     let mut result = TokenStream2::new();
 
-    for single_attr in attr.args.into_iter() {
+    for single_attr in attr.args {
         let DataStructArg {
             marker_name,
             key_lit,
             fallback_by,
             extension_key,
             fallback_supplement,
+            singleton,
         } = single_attr;
 
         let docs = if let Some(ref key_lit) = key_lit {
@@ -333,34 +358,44 @@ fn data_struct_impl(attr: DataStructArgs, input: DeriveInput) -> TokenStream2 {
             let key_str = key_lit.value();
             let fallback_by_expr = if let Some(fallback_by_lit) = fallback_by {
                 match fallback_by_lit.value().as_str() {
-                    "region" => quote! {icu_provider::FallbackPriority::Region},
-                    "collation" => quote! {icu_provider::FallbackPriority::Collation},
-                    "language" => quote! {icu_provider::FallbackPriority::Language},
+                    "region" => {
+                        quote! {icu_provider::_internal::LocaleFallbackPriority::Region}
+                    }
+                    "collation" => {
+                        quote! {icu_provider::_internal::LocaleFallbackPriority::Collation}
+                    }
+                    "language" => {
+                        quote! {icu_provider::_internal::LocaleFallbackPriority::Language}
+                    }
                     _ => panic!("Invalid value for fallback_by"),
                 }
             } else {
-                quote! {icu_provider::FallbackPriority::const_default()}
+                quote! {icu_provider::_internal::LocaleFallbackPriority::const_default()}
             };
             let extension_key_expr = if let Some(extension_key_lit) = extension_key {
-                quote! {Some(icu_provider::_internal::extensions_unicode_key!(#extension_key_lit))}
+                quote! {Some(icu_provider::_internal::locid::extensions::unicode::key!(#extension_key_lit))}
             } else {
                 quote! {None}
             };
-            let fallback_supplement_expr =
-                if let Some(fallback_supplement_lit) = fallback_supplement {
-                    match fallback_supplement_lit.value().as_str() {
-                        "collation" => quote! {Some(icu_provider::FallbackSupplement::Collation)},
-                        _ => panic!("Invalid value for fallback_supplement"),
+            let fallback_supplement_expr = if let Some(fallback_supplement_lit) =
+                fallback_supplement
+            {
+                match fallback_supplement_lit.value().as_str() {
+                    "collation" => {
+                        quote! {Some(icu_provider::_internal::LocaleFallbackSupplement::Collation)}
                     }
-                } else {
-                    quote! {None}
-                };
+                    _ => panic!("Invalid value for fallback_supplement"),
+                }
+            } else {
+                quote! {None}
+            };
             result.extend(quote!(
                 impl icu_provider::KeyedDataMarker for #marker_name {
                     const KEY: icu_provider::DataKey = icu_provider::data_key!(#key_str, icu_provider::DataKeyMetadata::construct_internal(
                         #fallback_by_expr,
                         #extension_key_expr,
-                        #fallback_supplement_expr
+                        #fallback_supplement_expr,
+                        #singleton,
                     ));
                 }
             ));
