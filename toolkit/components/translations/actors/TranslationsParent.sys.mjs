@@ -49,6 +49,10 @@ if (AppConstants.ENABLE_WEBDRIVER) {
   lazy.RemoteAgent = { running: false };
 }
 
+XPCOMUtils.defineLazyServiceGetters(lazy, {
+  BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
+});
+
 ChromeUtils.defineESModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
@@ -450,10 +454,14 @@ export class TranslationsParent extends JSWindowActorParent {
    * @param {LangTags} detectedLanguages
    */
   maybeOfferTranslations(detectedLanguages) {
+    if (!this.browsingContext.currentWindowGlobal) {
+      return;
+    }
     if (!lazy.automaticallyPopupPref) {
       return;
     }
-    if (!this.browsingContext.currentWindowGlobal) {
+    if (lazy.BrowserHandler.kiosk) {
+      // Pop-ups should not be shown in kiosk mode.
       return;
     }
     const { documentURI } = this.browsingContext.currentWindowGlobal;
