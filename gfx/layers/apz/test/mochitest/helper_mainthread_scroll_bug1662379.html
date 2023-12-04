@@ -107,6 +107,7 @@ async function test() {
 
   // Simulate user mouse-wheel scrolling the lhs pane down to the bottom.
   let lhs = document.getElementById("lhs");
+  let scrollendPromise = promiseScrollend(lhs);
   while (lhs.scrollTop < lhs.scrollTopMax) {
     await promiseNativeWheelAndWaitForScrollEvent(
       lhs,
@@ -114,6 +115,11 @@ async function test() {
       0, -50);
     info("Did scroll, pos is now " + lhs.scrollTop + "/" + lhs.scrollTopMax);
   }
+  // Wait for the animation to be completely done. (scrollTop is rounded to
+  // the nearest integer value, so at the time scrollTop reaches scrollTopMax,
+  // the compositor animation may still be a sub-pixel amount away from the
+  // destination).
+  await scrollendPromise;
   await promiseApzFlushedRepaints();
 
   // Click at 50,50 from the top-left corner of the lhs pane. If lhs were
