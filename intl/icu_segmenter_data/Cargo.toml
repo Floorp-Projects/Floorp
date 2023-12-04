@@ -1,0 +1,26 @@
+# This crate is replacement crates to use baked data provider in ICU4X's
+# icu_capi crate.
+#
+# To generate baked data, run /intl/update-icu4x.sh
+
+[package]
+edition = "2021"
+rust-version = "1.67"
+name = "icu_segmenter_data"
+version = "1.4.0"
+authors = ["The ICU4X Project Developers"]
+include = [
+    "data/**/*",
+    "src/**/*",
+    "examples/**/*",
+    "benches/**/*",
+    "tests/**/*",
+    "Cargo.toml",
+    "LICENSE",
+    "README.md",
+]
+description = "Data for the icu_segmenter crate"
+homepage = "https://icu4x.unicode.org"
+categories = ["internationalization"]
+license = "MPL-2.0"
+repository = "https://github.com/unicode-org/icu4x"

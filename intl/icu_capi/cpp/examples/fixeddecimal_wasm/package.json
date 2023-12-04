@@ -1,0 +1,6 @@
+{
+    "type": "commonjs",
+    "scripts": {
+        "test": "node node-test.js"
+    }
+}

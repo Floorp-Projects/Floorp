@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "outDir": "./dist/",
+        "sourceMap": true,
+        "module": "es2020",
+        "target": "es2020",
+        "moduleResolution": "node"
+    },
+}
