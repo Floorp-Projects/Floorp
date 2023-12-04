@@ -24,6 +24,8 @@ const ERRORS = {
   [-10]: "ERROR_BLOCKLISTED: The add-on is blocklisted.",
   [-11]:
     "ERROR_INCOMPATIBLE: The add-on is incompatible (w.r.t. the compatibility range).",
+  [-12]:
+    "ERROR_UNSUPPORTED_ADDON_TYPE: The add-on type is not supported by the platform.",
 };
 
 async function installAddon(file) {

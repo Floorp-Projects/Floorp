@@ -554,7 +554,7 @@ class WebExtensionTest : BaseSessionTest() {
         sessionRule.waitForResult(
             controller.install("resource://android/assets/web_extensions/$name")
                 .accept({
-                    // We should not be able to install unsigned extensions
+                    // We should not be able to install an extension here.
                     assertTrue(false)
                 }, { exception ->
                     val installException = exception as WebExtension.InstallException
@@ -663,7 +663,7 @@ class WebExtensionTest : BaseSessionTest() {
         sessionRule.waitForResult(
             controller.install("resource://android/assets/web_extensions/borderify-missing-id.xpi")
                 .accept({
-                    // We should not be able to install unsigned extensions
+                    // We should not be able to install extensions without an id.
                     assertTrue(false)
                 }, { exception ->
                     val installException = exception as WebExtension.InstallException
@@ -678,6 +678,16 @@ class WebExtensionTest : BaseSessionTest() {
             name = "dummy-incompatible.xpi",
             expectedError = InstallException.ErrorCodes.ERROR_INCOMPATIBLE,
             expectedExtensionID = "dummy@tests.mozilla.org",
+            expectedExtension = true,
+        )
+    }
+
+    @Test
+    fun installAddonUnsupportedType() {
+        testInstallError(
+            name = "langpack_signed.xpi",
+            expectedError = InstallException.ErrorCodes.ERROR_UNSUPPORTED_ADDON_TYPE,
+            expectedExtensionID = "langpack-klingon@firefox.mozilla.org",
             expectedExtension = true,
         )
     }
