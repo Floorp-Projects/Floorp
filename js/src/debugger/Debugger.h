@@ -1005,6 +1005,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
                                                        IsObserving observing);
   void updateObservesAsmJSOnDebuggees(IsObserving observing);
   void updateObservesWasmOnDebuggees(IsObserving observing);
+  void updateObservesNativeCallOnDebuggees(IsObserving observing);
 
   JSObject* getHook(Hook hook) const;
   bool hasAnyLiveHooks() const;

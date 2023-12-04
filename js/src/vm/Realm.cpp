@@ -401,7 +401,8 @@ void Realm::updateDebuggerObservesFlag(unsigned flag) {
   MOZ_ASSERT(isDebuggee());
   MOZ_ASSERT(flag == DebuggerObservesAllExecution ||
              flag == DebuggerObservesCoverage ||
-             flag == DebuggerObservesAsmJS || flag == DebuggerObservesWasm);
+             flag == DebuggerObservesAsmJS || flag == DebuggerObservesWasm ||
+             flag == DebuggerObservesNativeCall);
 
   GlobalObject* global =
       zone()->runtimeFromMainThread()->gc.isForegroundSweeping()
@@ -416,6 +417,8 @@ void Realm::updateDebuggerObservesFlag(unsigned flag) {
     observes = DebugAPI::debuggerObservesAsmJS(global);
   } else if (flag == DebuggerObservesWasm) {
     observes = DebugAPI::debuggerObservesWasm(global);
+  } else if (flag == DebuggerObservesNativeCall) {
+    observes = DebugAPI::debuggerObservesNativeCall(global);
   }
 
   if (observes) {
