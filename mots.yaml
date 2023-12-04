@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-11-16T11:14:06.284084'
+updated_at: '2023-12-03T16:33:33.529743'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -1501,7 +1501,7 @@ modules:
         - Kyle Machulis
       group: dev-platform
       components:
-        - Core::Document Navigation
+        - Core::DOM: Navigation
     owners:
       - *smaug
       - *nika
@@ -4250,5 +4250,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: d5b62265988dc82ca65cc890040bb62f7b0d7cf9
-  export: 71d3735e528428378a13e202f072302ab8edfb4b
+  config: 9233bf8edcdf9fce3658d3d765ee52de0001dc12
+  export: 2c2b8bcffc25f52ccc7da6ae9ad9465d113c5646

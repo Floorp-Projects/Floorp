@@ -7,7 +7,7 @@
 include("/ipc/chromium/chromium-config.mozbuild")
 
 with Files("**"):
-    BUG_COMPONENT = ("Core", "Document Navigation")
+    BUG_COMPONENT = ("Core", "DOM: Navigation")
 
 with Files("nsITransfer.idl"):
     BUG_COMPONENT = ("Firefox", "File Handling")
