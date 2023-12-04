@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">Més informació sobre els permisos</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Valoració</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">Més informació sobre aquest complement</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Paràmetres</string>
     <!-- Indicates the add-on is enabled. -->
@@ -200,8 +202,6 @@
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">No s’ha pogut instal·lar el complement «%1$s» perquè no és compatible amb el %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted_1">No s’ha pogut instal·lar el complement %1$s perquè hi ha un alt risc que provoqui problemes d’estabilitat o de seguretat.</string>
-    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">No s\'ha pogut instal·lar el complement %1$s perquè té un risc elevat de provocar problemes d\'estabilitat o de seguretat</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s s’ha activat correctament</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

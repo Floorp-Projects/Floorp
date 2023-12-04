@@ -631,6 +631,8 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons">ส่วนเสริม</string>
 
+    <!-- Preference for installing a local add-on -->
+    <string name="preferences_install_local_addon">ติดตั้งส่วนเสริมจากไฟล์</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">การแจ้งเตือน</string>
 
@@ -2248,6 +2250,8 @@
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">สินค้าไม่พร้อมจำหน่าย</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">รายงานสินค้านี้ได้กลับมาในสต็อก</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">รายงานสินค้ามีในสต็อก</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">กำลังตรวจสอบคุณภาพบทวิจารณ์</string>
@@ -2333,4 +2337,4 @@
     <string name="a11y_action_label_read_article">อ่านบทความ</string>
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">เปิดลิงก์เพื่อเรียนรู้เพิ่มเติม</string>
-</resources>
+    </resources>

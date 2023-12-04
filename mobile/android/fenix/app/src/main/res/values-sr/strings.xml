@@ -333,6 +333,8 @@
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Нека Firefox буде ваш главни прегледач</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_2">Бринемо о вашој безбедности</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox ставља људе испред профита и штити вашу приватност тако што блокира елементе за праћење.\n\nСазнајте више у нашем обавештењу о приватности.</string>
@@ -348,8 +350,13 @@
     <!-- Title for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">Брзо се пребацујте између телефона и лаптопа</string>
 
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title_2">Останите заштићени шифровањем када мењате уређаје</string>
     <!-- Description for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">Пренесите картице и лозинке за ваших осталих уређаја и наставите тамо где сте стали.</string>
+    <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
+     Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_sign_in_description_2">Безбеднији сте када се пријавите и синхронизујете. Firefox шифрује ваше лозинке, обележиваче и остало.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Пријави се</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -357,13 +364,31 @@
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Обавештења вам помажу да урадите више уз Firefox</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus_2">Обавештења помажу Firefox-у да вас заштити</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Шаљите картице између уређаја, управљајте преузимањима и добијајте савете о томе како да најбоље искористите Firefox.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus_2">Безбедно шаљите језичке између уређаја и откријте нове функције приватности у Firefox-у.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Укључи обавештења</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Не сада</string>
+
+    <!-- Title for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Испробајте Firefox-ов виџет за претрагу</string>
+    <!-- Description for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_description" tools:ignore="UnusedResources">Уз Firefox на почетном екрану, добијате лак приступ прегледачу који брине о приватности и блокира елементе за праћење.</string>
+    <!-- Text for the button to add search widget on the device used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_positive_button" tools:ignore="UnusedResources">Додај Firefox виџет</string>
+    <!-- Text for the button to dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">Не сада</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -387,6 +412,8 @@
     <string name="preferences_category_select_default_search_engine">Изаберите</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts" moz:removedIn="120" tools:ignore="UnusedResources">Управљајте пречицама за претрагу</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_2">Управљајте другим претраживачима</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary">Уредите претраживаче приказане у менију за претрагу</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
@@ -395,8 +422,18 @@
     <string name="preferences_default_search_engine">Подразумевани претраживач</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Претрага</string>
+    <!-- Preference for settings related to Search engines -->
+    <string name="preferences_search_engines">Претраживачи</string>
+    <!-- Preference for settings related to Search engines suggestions-->
+    <string name="preferences_search_engines_suggestions">Предлози претраживача</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">Адресна трака</string>
+    <!-- Preference Category for settings related to Search address bar -->
+    <string name="preferences_settings_address_bar">Подешавања адресне траке</string>
+    <!-- Preference Category for settings to Firefox Suggest -->
+    <string name="preference_search_address_bar_fx_suggest">Адресна трака - Firefox предлог</string>
+    <!-- Preference link to Learn more about Firefox Suggest -->
+    <string name="preference_search_learn_about_fx_suggest">Сазнајте више о Firefox предлогу</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Оцените на Google Play продавници</string>
     <!-- Preference linking to about page for Fenix
@@ -427,6 +464,10 @@
 
     <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
     <string name="preferences_cookie_banner_reduction" moz:RemovedIn="121" tools:ignore="UnusedResources">Смањење банера колачића</string>
+    <!-- Label for cookie banner section in quick settings panel. -->
+    <string name="cookie_banner_blocker">Блокатор банера колачића</string>
+    <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction_private_mode">Блокатор банера колачића у приватном прегледању</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">Смањи банере колачића</string>
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
@@ -454,15 +495,23 @@
     <string name="reduce_cookie_banner_unsupported_site">Сајт тренутно није подржан</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Укључити смањење банера колачића за %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">Укључити блокатор банера колачића за %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Икључити смањење банера колачича за %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">Искључити блокатор банера колачића за %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s не може самостално одбити захтеве за употребу колачића на овој страници. Можете послати захтев за подржавање одбијања на овом сајту у будућности.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s ће обрисати колачиће и освежити страницу. Брисање колачића може да вас одјави са сајта или да испразни вашу корпу за куповину.</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">Искључите и %1$s ће обрисати колачиће и поново учитати овај сајт. Ово вас може одјавити са налога или испразнити вашу корпу за куповину.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s покушава аутоматски да одбије све захтеве за колачиће на подржаним сајтовима.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">Укључите и %1$s ће покушати да аутоматски одбије све банере колачића на овом сајту.</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="121" tools:ignore="UnusedResources">Дозволити да %1$s одбаци банере колачића?</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
@@ -474,6 +523,11 @@
 
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
     <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Дозволи</string>
+
+    <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
+    <string name="cookie_banner_cfr_title">%1$s је управо одбио колачиће уместо вас</string>
+    <!--Message for the cookie banner re-engagement CFR -->
+    <string name="cookie_banner_cfr_message">Мање ометања, мање колачића који вас прате на овом сајту.</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Самостално се повезујемо на странице користећи HTTPS протокол за шифровање података у преносу зарад боље безбедности.</string>
@@ -499,10 +553,14 @@
     <string name="preferences_accessibility">Приступачност</string>
     <!-- Preference to override the Firefox Account server -->
     <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Прилагођени сервер Firefox налога</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">Прилагођени сервер Mozilla налога</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Прилагођени Sync сервер</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
     <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox налог/Sync сервер је промењен. Затворите апликацију да би промене ступиле на снагу…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Mozilla налог/сервер за синхронизацију је измењен. Затварање апликације ради примене промена…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Налог</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -551,6 +609,16 @@
     <string name="preferences_account_settings">Подешавања налога</string>
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Аутоматско завршавање адреса</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">Спонзорисани предлози</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">Подржите %1$s повременим спонзорисаним предлозима</string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">Предлози од %1$s</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">Добијајте предлоге са интернета у вези са вашим претрагама</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Отвори везе у апликацијама</string>
     <!-- Preference for open links in third party apps always open in apps option -->
@@ -562,9 +630,16 @@
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Спољни управник преузимања</string>
 
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">Омогућите Gecko евидентирање</string>
+    <!-- Message to indicate users that we are quitting the application to apply the changes -->
+    <string name="quit_application">Затварање апликације ради примене промена…</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Додаци</string>
 
+    <!-- Preference for installing a local add-on -->
+    <string name="preferences_install_local_addon">Инсталирајте додатак из датотеке</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Обавештења</string>
 
@@ -2065,7 +2140,7 @@
 
     <!-- Awesome bar suggestion's headers -->
     <!-- Search suggestions title for Firefox Suggest. -->
-    <string name="firefox_suggest_header">Firefox предлози</string>
+    <string name="firefox_suggest_header">Firefox предлог</string>
 
     <!-- Title for search suggestions when Google is the default search suggestion engine. -->
     <string name="google_search_engine_suggestion_header">Google претрага</string>
@@ -2115,10 +2190,48 @@
     <string name="review_quality_check_settings_title">Подешавања</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Сазнајте више</string>
+    <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
+    <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Проверите сада</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Производ није доступан</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">Пријавите да је производ на залихама</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">Пријавите да је производ на залихама</string>
+    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
+    <string name="review_quality_check_reanalysis_in_progress_warning_title">Провера квалитета рецензија</string>
+    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
+    <string name="review_quality_check_analysis_in_progress_warning_title">Провера квалитета рецензија</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_body">Ово може да потраје око 60 секунди.</string>
+    <!-- Title for info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Хвала што сте пријавили!</string>
+    <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">Требало би да имамо информације о рецензијама овог производа у року од 24 сата. Навратите касније.</string>
+    <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_title">Не можемо да проверимо ове рецензије</string>
+    <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_body">Нажалост, не можемо да проверимо квалитет рецензија за одређене врсте производа, као што су: поклон картице и стриминг видеа, музике и игара.</string>
+    <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Информације стижу ускоро</string>
+    <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_body" tools:ignore="UnusedResources">Требало би да имамо информације о рецензијама овог производа у року од 24 сата. Навратите касније.</string>
+    <!-- Title for info card displayed to the user when analysis finished updating. -->
+    <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">Анализа је ажурна</string>
+    <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
+    <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Важи</string>
+    <!-- Title for error card displayed to the user when an error occurred. -->
+    <string name="review_quality_check_generic_error_title">Тренутно нема доступних информација</string>
+    <!-- Text for body of error card displayed to the user when an error occurred. -->
+    <string name="review_quality_check_generic_error_body">Радимо на решавању проблема. Покушајте поново касније.</string>
+    <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
+    <string name="review_quality_check_no_connection_title">Нема интернет везе</string>
+    <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
+    <string name="review_quality_check_no_connection_body">Проверите вашу интернет везу, па покушајте да поново учитате страницу.</string>
+    <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
+    <string name="review_quality_check_no_analysis_title">Још увек нема информација о овим рецензијама</string>
+    <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more_link">Сазнајте више</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="121" tools:ignore="UnusedResources">политика приватности</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
@@ -2163,4 +2276,4 @@
     <string name="a11y_action_label_read_article">прочитајте чланак</string>
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">отворите везу да сазнате више</string>
-</resources>
+    </resources>
