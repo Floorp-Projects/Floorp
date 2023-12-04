@@ -56,3 +56,20 @@ top-sites:
     - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
   notification_emails:
     - najiang@mozilla.com
+
+spoc:
+  description: |
+    A ping for submitting the pocket sponsored content's `shim`.
+    Does not contain a `client_id`.
+  include_client_id: false
+  reasons:
+    impression: A sponsored story was impressed upon the client.
+    click: A sponsored story was clicked.
+    save: A sponsored story was saved to Pocket.
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1862670
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1862670
+  notification_emails:
+    - najiang@mozilla.com
+    - chutten@mozilla.com
