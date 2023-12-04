@@ -11,12 +11,13 @@ impl_tinystr_subtag!(
     /// # Examples
     ///
     /// ```
-    /// use icu::locid::extensions_other_subtag as subtag;
+    /// use icu::locid::extensions::other::subtag;
     ///
     /// assert_eq!(subtag!("Foo").as_str(), "foo");
     /// ```
     Subtag,
-    extensions::other::Subtag,
+    extensions::other,
+    subtag,
     extensions_other_subtag,
     2..=8,
     s,

@@ -5,10 +5,10 @@
 pub use super::errors::ParserError;
 use crate::extensions::unicode::{Attribute, Key, Value};
 use crate::extensions::ExtensionType;
+use crate::helpers::ShortSlice;
 use crate::parser::SubtagIterator;
 use crate::LanguageIdentifier;
 use crate::{extensions, subtags};
-use alloc::vec::Vec;
 use tinystr::TinyAsciiStr;
 
 #[derive(PartialEq, Clone, Copy)]
@@ -31,7 +31,7 @@ pub fn parse_language_identifier_from_iter(
 ) -> Result<LanguageIdentifier, ParserError> {
     let mut script = None;
     let mut region = None;
-    let mut variants = Vec::new();
+    let mut variants = ShortSlice::new();
 
     let language = if let Some(subtag) = iter.next() {
         subtags::Language::try_from_bytes(subtag)?
@@ -95,7 +95,7 @@ pub fn parse_language_identifier_from_iter(
         language,
         script,
         region,
-        variants: subtags::Variants::from_vec_unchecked(variants),
+        variants: subtags::Variants::from_short_slice_unchecked(variants),
     })
 }
 

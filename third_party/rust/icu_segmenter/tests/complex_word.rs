@@ -2,30 +2,13 @@
 // called LICENSE at the top level of the ICU4X source tree
 // (online at: https://github.com/unicode-org/icu4x/blob/main/LICENSE ).
 
-use icu_provider::prelude::*;
-use icu_provider_adapters::fork::ForkByKeyProvider;
-use icu_provider_fs::FsDataProvider;
 use icu_segmenter::WordSegmenter;
-use std::path::PathBuf;
 
 // Additional word segmenter tests with complex string.
 
-fn get_segmenter_testdata_provider() -> impl BufferProvider {
-    let segmenter_fs_provider = FsDataProvider::try_new(
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/testdata/provider"),
-    )
-    .unwrap();
-    ForkByKeyProvider::new(segmenter_fs_provider, icu_testdata::buffer())
-}
-
 #[test]
 fn word_break_th() {
-    let segmenter_auto =
-        WordSegmenter::try_new_auto_unstable(&icu_testdata::unstable()).expect("Data exists");
-    let segmenter_lstm =
-        WordSegmenter::try_new_lstm_unstable(&icu_testdata::unstable()).expect("Data exists");
-
-    for segmenter in [segmenter_auto, segmenter_lstm] {
+    for segmenter in [WordSegmenter::new_auto(), WordSegmenter::new_lstm()] {
         // http://wpt.live/css/css-text/word-break/word-break-normal-th-000.html
         let s = "ภาษาไทยภาษาไทย";
         let utf16: Vec<u16> = s.encode_utf16().collect();
@@ -56,9 +39,7 @@ fn word_break_th() {
 
 #[test]
 fn word_break_my() {
-    let segmenter =
-        WordSegmenter::try_new_auto_with_buffer_provider(&get_segmenter_testdata_provider())
-            .expect("Data exists");
+    let segmenter = WordSegmenter::new_auto();
 
     let s = "မြန်မာစာမြန်မာစာမြန်မာစာ";
     let utf16: Vec<u16> = s.encode_utf16().collect();
@@ -72,12 +53,7 @@ fn word_break_my() {
 
 #[test]
 fn word_break_hiragana() {
-    let segmenter_auto =
-        WordSegmenter::try_new_auto_unstable(&icu_testdata::unstable()).expect("Data exists");
-    let segmenter_dictionary =
-        WordSegmenter::try_new_dictionary_unstable(&icu_testdata::unstable()).expect("Data exists");
-
-    for segmenter in [segmenter_auto, segmenter_dictionary] {
+    for segmenter in [WordSegmenter::new_auto(), WordSegmenter::new_dictionary()] {
         let s = "うなぎうなじ";
         let iter = segmenter.segment_str(s);
         assert_eq!(
@@ -90,12 +66,7 @@ fn word_break_hiragana() {
 
 #[test]
 fn word_break_mixed_han() {
-    let segmenter_auto =
-        WordSegmenter::try_new_auto_unstable(&icu_testdata::unstable()).expect("Data exists");
-    let segmenter_dictionary =
-        WordSegmenter::try_new_dictionary_unstable(&icu_testdata::unstable()).expect("Data exists");
-
-    for segmenter in [segmenter_auto, segmenter_dictionary] {
+    for segmenter in [WordSegmenter::new_auto(), WordSegmenter::new_dictionary()] {
         let s = "Welcome龟山岛龟山岛Welcome";
         let iter = segmenter.segment_str(s);
         assert_eq!(
@@ -115,10 +86,8 @@ fn word_line_th_wikipedia_auto() {
     let utf16: Vec<u16> = text.encode_utf16().collect();
     assert_eq!(utf16.len(), 142);
 
-    let segmenter_word_auto =
-        WordSegmenter::try_new_auto_unstable(&icu_testdata::unstable()).expect("Data exists");
-    let segmenter_line_auto =
-        LineSegmenter::try_new_auto_unstable(&icu_testdata::unstable()).expect("Data exists");
+    let segmenter_word_auto = WordSegmenter::new_auto();
+    let segmenter_line_auto = LineSegmenter::new_auto();
 
     let breakpoints_word_utf8 = segmenter_word_auto.segment_str(text).collect::<Vec<_>>();
     assert_eq!(

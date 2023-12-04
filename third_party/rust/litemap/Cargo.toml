@@ -11,10 +11,12 @@
 
 [package]
 edition = "2021"
+rust-version = "1.67"
 name = "litemap"
-version = "0.7.0"
+version = "0.7.2"
 authors = ["The ICU4X Project Developers"]
 include = [
+    "data/**/*",
     "src/**/*",
     "examples/**/*",
     "benches/**/*",
@@ -25,7 +27,7 @@ include = [
 ]
 description = "A key-value Map implementation based on a flat, sorted Vec."
 documentation = "https://docs.rs/litemap"
-readme = "./README.md"
+readme = "README.md"
 keywords = [
     "sorted",
     "vec",
@@ -33,26 +35,29 @@ keywords = [
     "hashmap",
     "btreemap",
 ]
-license = "Unicode-DFS-2016"
+license-file = "LICENSE"
 repository = "https://github.com/unicode-org/icu4x"
-
-[package.metadata.workspaces]
-independent = true
-
-[package.metadata.docs.rs]
-all-features = true
 
 [package.metadata.cargo-all-features]
 denylist = ["bench"]
 
+[package.metadata.docs.rs]
+all-features = true
+
+[package.metadata.workspaces]
+independent = true
+
+[lib]
+bench = false
+
 [[example]]
 name = "litemap_bincode"
-path = "benches/bin/litemap_bincode.rs"
+path = "examples/litemap_bincode.rs"
 required-features = ["serde"]
 
 [[example]]
 name = "litemap_postcard"
-path = "benches/bin/litemap_postcard.rs"
+path = "examples/litemap_postcard.rs"
 required-features = ["serde"]
 
 [[test]]
@@ -68,6 +73,11 @@ name = "litemap"
 harness = false
 required-features = ["serde"]
 
+[dependencies.databake]
+version = "0.1.7"
+optional = true
+default-features = false
+
 [dependencies.serde]
 version = "1"
 features = ["alloc"]
@@ -75,18 +85,16 @@ optional = true
 default-features = false
 
 [dependencies.yoke]
-version = "0.7.1"
+version = "0.7.3"
 features = ["derive"]
 optional = true
+default-features = false
 
 [dev-dependencies.bincode]
 version = "1"
 
 [dev-dependencies.bytecheck]
 version = "0.6"
-
-[dev-dependencies.criterion]
-version = "0.4"
 
 [dev-dependencies.postcard]
 version = "1.0.0"
@@ -105,6 +113,12 @@ version = "1"
 
 [features]
 alloc = []
-bench = []
+bench = ["serde"]
+databake = ["dep:databake"]
 default = ["alloc"]
+serde = ["dep:serde"]
 testing = ["alloc"]
+yoke = ["dep:yoke"]
+
+[target."cfg(not(target_arch = \"wasm32\"))".dev-dependencies.criterion]
+version = "0.4"

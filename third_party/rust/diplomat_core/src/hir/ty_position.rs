@@ -109,6 +109,7 @@ pub trait TyPosition: Debug + Copy {
 ///
 /// The complement of this type is [`OutputOnly`].
 #[derive(Debug, Copy, Clone)]
+#[non_exhaustive]
 pub struct Everywhere;
 
 /// One of two types implementing [`TyPosition`], representing types that can
@@ -116,6 +117,7 @@ pub struct Everywhere;
 ///
 /// The complement of this type is [`Everywhere`].
 #[derive(Debug, Copy, Clone)]
+#[non_exhaustive]
 pub struct OutputOnly;
 
 impl TyPosition for Everywhere {

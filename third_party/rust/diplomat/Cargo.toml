@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "diplomat"
-version = "0.5.2"
+version = "0.7.0"
 authors = [
     "Shadaj Laddad <shadaj@users.noreply.github.com>",
     "Manish Goregaokar <manishsmail@gmail.com>",
@@ -25,20 +25,21 @@ keywords = [
     "codegen",
 ]
 categories = ["development-tools"]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-diplomat/diplomat"
 
 [lib]
 path = "src/lib.rs"
 proc-macro = true
 
-[dependencies]
-proc-macro2 = "1.0.27"
-quote = "1.0"
-
 [dependencies.diplomat_core]
-version = "0.5.2"
-path = "../core"
+version = "0.7.0"
+
+[dependencies.proc-macro2]
+version = "1.0.27"
+
+[dependencies.quote]
+version = "1.0"
 
 [dependencies.syn]
 version = "2.0"
@@ -47,6 +48,8 @@ features = [
     "extra-traits",
 ]
 
-[dev-dependencies]
-insta = "1.7.1"
-tempfile = "3.2.0"
+[dev-dependencies.insta]
+version = "1.7.1"
+
+[dev-dependencies.tempfile]
+version = "3.2.0"

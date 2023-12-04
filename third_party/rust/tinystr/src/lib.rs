@@ -72,6 +72,7 @@ mod ascii;
 mod asciibyte;
 mod error;
 mod int_ops;
+mod unvalidated;
 
 #[cfg(feature = "serde")]
 mod serde;
@@ -87,6 +88,7 @@ extern crate alloc;
 
 pub use ascii::TinyAsciiStr;
 pub use error::TinyStrError;
+pub use unvalidated::UnvalidatedTinyAsciiStr;
 
 /// These are temporary compatability reexports that will be removed
 /// in a future version.

@@ -37,43 +37,19 @@ macro_rules! bench_block {
         let mut group4 = $c.benchmark_group(&format!("{}/4", $name));
         group4.bench_function("String", $action!(String, STRINGS_4));
         group4.bench_function("TinyAsciiStr<4>", $action!(TinyAsciiStr<4>, STRINGS_4));
-        group4.bench_function(
-            "tinystr_old::TinyStr4",
-            $action!(tinystr_old::TinyStr4, STRINGS_4),
-        );
         group4.bench_function("TinyAsciiStr<8>", $action!(TinyAsciiStr<8>, STRINGS_4));
-        group4.bench_function(
-            "tinystr_old::TinyStr8",
-            $action!(tinystr_old::TinyStr8, STRINGS_4),
-        );
         group4.bench_function("TinyAsciiStr<16>", $action!(TinyAsciiStr<16>, STRINGS_4));
-        group4.bench_function(
-            "tinystr_old::TinyStr16",
-            $action!(tinystr_old::TinyStr16, STRINGS_4),
-        );
         group4.finish();
 
         let mut group8 = $c.benchmark_group(&format!("{}/8", $name));
         group8.bench_function("String", $action!(String, STRINGS_8));
         group8.bench_function("TinyAsciiStr<8>", $action!(TinyAsciiStr<8>, STRINGS_8));
         group8.bench_function("TinyAsciiStr<16>", $action!(TinyAsciiStr<16>, STRINGS_8));
-        group8.bench_function(
-            "tinystr_old::TinyStr8",
-            $action!(tinystr_old::TinyStr8, STRINGS_8),
-        );
-        group8.bench_function(
-            "tinystr_old::TinyStr16",
-            $action!(tinystr_old::TinyStr16, STRINGS_8),
-        );
         group8.finish();
 
         let mut group16 = $c.benchmark_group(&format!("{}/16", $name));
         group16.bench_function("String", $action!(String, STRINGS_16));
         group16.bench_function("TinyAsciiStr<16>", $action!(TinyAsciiStr<16>, STRINGS_16));
-        group16.bench_function(
-            "tinystr_old::TinyStr16",
-            $action!(tinystr_old::TinyStr16, STRINGS_16),
-        );
         group16.finish();
     };
 }

@@ -7,7 +7,7 @@ use icu_collections::codepointinvlist::CodePointInversionList;
 use std::char;
 
 fn uniset_bench(c: &mut Criterion) {
-    let best_ex = vec![0x41, 0x46];
+    let best_ex = [0x41, 0x46];
     let best_sample = CodePointInversionList::try_from_inversion_list_slice(&best_ex).unwrap();
     let worst_ex: Vec<u32> = (0x0..((char::MAX as u32) + 1)).collect();
     let worst_sample = CodePointInversionList::try_from_inversion_list_slice(&worst_ex).unwrap();

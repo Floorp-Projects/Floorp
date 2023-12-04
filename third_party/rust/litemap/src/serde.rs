@@ -148,10 +148,9 @@ mod test {
     use crate::LiteMap;
     use alloc::borrow::ToOwned;
     use alloc::string::String;
-    use alloc::vec;
 
     fn get_simple_map() -> LiteMap<u32, String> {
-        vec![
+        [
             (1, "one".to_owned()),
             (2, "two".to_owned()),
             (4, "four".to_owned()),
@@ -162,7 +161,7 @@ mod test {
     }
 
     fn get_tuple_map() -> LiteMap<(u32, String), String> {
-        vec![
+        [
             ((1, "en".to_owned()), "one".to_owned()),
             ((1, "zh".to_owned()), "一".to_owned()),
             ((2, "en".to_owned()), "two".to_owned()),

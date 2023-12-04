@@ -5,6 +5,7 @@
 //! Traits for data providers that produce `Any` objects.
 
 use crate::prelude::*;
+use crate::response::DataPayloadInner;
 use core::any::Any;
 use core::convert::TryFrom;
 use core::convert::TryInto;
@@ -105,7 +106,7 @@ impl AnyPayload {
                 let down_ref: &'static M::Yokeable = any_ref
                     .downcast_ref()
                     .ok_or_else(|| DataError::for_type::<M>().with_str_context(type_name))?;
-                Ok(DataPayload::from_owned(M::Yokeable::zero_from(down_ref)))
+                Ok(DataPayload::from_static_ref(down_ref))
             }
             PayloadRc(any_rc) => {
                 let down_rc = any_rc
@@ -166,8 +167,8 @@ where
     M: DataMarker,
     M::Yokeable: MaybeSendSync,
 {
-    /// Moves this DataPayload to the heap (requiring an allocation) and returns it as an
-    /// erased `AnyPayload`.
+    /// Converts this DataPayload into a type-erased `AnyPayload`. Unless the payload stores a static
+    /// reference, this will move it to the heap.
     ///
     /// # Examples
     ///
@@ -190,7 +191,10 @@ where
     /// ```
     pub fn wrap_into_any_payload(self) -> AnyPayload {
         AnyPayload {
-            inner: AnyPayloadInner::PayloadRc(SelectedRc::from(self)),
+            inner: match self.0 {
+                DataPayloadInner::StaticRef(r) => AnyPayloadInner::StructRef(r),
+                inner => AnyPayloadInner::PayloadRc(SelectedRc::from(Self(inner))),
+            },
             type_name: core::any::type_name::<M>(),
         }
     }
@@ -219,7 +223,7 @@ pub struct AnyResponse {
     /// Metadata about the returned object.
     pub metadata: DataResponseMetadata,
 
-    /// The object itself; None if it was not loaded.
+    /// The object itself; `None` if it was not loaded.
     pub payload: Option<AnyPayload>,
 }
 
@@ -346,7 +350,26 @@ pub trait AnyProvider {
     fn load_any(&self, key: DataKey, req: DataRequest) -> Result<AnyResponse, DataError>;
 }
 
+impl<'a, T: AnyProvider + ?Sized> AnyProvider for &'a T {
+    fn load_any(&self, key: DataKey, req: DataRequest) -> Result<AnyResponse, DataError> {
+        (**self).load_any(key, req)
+    }
+}
+
 impl<T: AnyProvider + ?Sized> AnyProvider for alloc::boxed::Box<T> {
+    fn load_any(&self, key: DataKey, req: DataRequest) -> Result<AnyResponse, DataError> {
+        (**self).load_any(key, req)
+    }
+}
+
+impl<T: AnyProvider + ?Sized> AnyProvider for alloc::rc::Rc<T> {
+    fn load_any(&self, key: DataKey, req: DataRequest) -> Result<AnyResponse, DataError> {
+        (**self).load_any(key, req)
+    }
+}
+
+#[cfg(target_has_atomic = "ptr")]
+impl<T: AnyProvider + ?Sized> AnyProvider for alloc::sync::Arc<T> {
     fn load_any(&self, key: DataKey, req: DataRequest) -> Result<AnyResponse, DataError> {
         (**self).load_any(key, req)
     }
@@ -365,7 +388,7 @@ pub trait AsDynamicDataProviderAnyMarkerWrap {
 
 impl<P> AsDynamicDataProviderAnyMarkerWrap for P
 where
-    P: DynamicDataProvider<AnyMarker>,
+    P: DynamicDataProvider<AnyMarker> + ?Sized,
 {
     #[inline]
     fn as_any_provider(&self) -> DynamicDataProviderAnyMarkerWrap<P> {

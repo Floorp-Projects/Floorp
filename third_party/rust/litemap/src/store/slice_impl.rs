@@ -45,6 +45,14 @@ impl<'a, K: 'a, V: 'a> Store<K, V> for &'a [(K, V)] {
     }
 }
 
+impl<'a, K, V> StoreSlice<K, V> for &'a [(K, V)] {
+    type Slice = [(K, V)];
+
+    fn lm_get_range(&self, range: Range<usize>) -> Option<&Self::Slice> {
+        self.get(range)
+    }
+}
+
 impl<'a, K: 'a, V: 'a> StoreIterable<'a, K, V> for &'a [(K, V)] {
     type KeyValueIter = core::iter::Map<core::slice::Iter<'a, (K, V)>, MapF<K, V>>;
 

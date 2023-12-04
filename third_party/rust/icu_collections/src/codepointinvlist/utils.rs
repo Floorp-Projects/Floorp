@@ -54,8 +54,7 @@ mod tests {
 
     #[test]
     fn test_is_valid_zv_empty() {
-        let v: Vec<u32> = vec![];
-        let check = ZeroVec::from_slice_or_alloc(&v);
+        let check = ZeroVec::from_slice_or_alloc(&[]);
         assert!(is_valid_zv(&check));
     }
 

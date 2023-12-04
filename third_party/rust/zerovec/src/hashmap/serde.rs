@@ -77,7 +77,7 @@ mod test {
     }
 
     fn make_zerohashmap() -> ZeroHashMap<'static, u32, str> {
-        ZeroHashMap::from_iter(vec![(0, "a"), (1, "b"), (2, "c")].into_iter())
+        ZeroHashMap::from_iter([(0, "a"), (1, "b"), (2, "c")])
     }
 
     fn build_invalid_hashmap_str(

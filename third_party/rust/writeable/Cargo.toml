@@ -11,10 +11,12 @@
 
 [package]
 edition = "2021"
+rust-version = "1.67"
 name = "writeable"
-version = "0.5.2"
+version = "0.5.4"
 authors = ["The ICU4X Project Developers"]
 include = [
+    "data/**/*",
     "src/**/*",
     "examples/**/*",
     "benches/**/*",
@@ -25,28 +27,24 @@ include = [
 ]
 description = "A more efficient alternative to fmt::Display"
 readme = "README.md"
-license = "Unicode-DFS-2016"
+license-file = "LICENSE"
 repository = "https://github.com/unicode-org/icu4x"
-
-[package.metadata.workspaces]
-independent = true
-
-[package.metadata.docs.rs]
-all-features = true
 
 [package.metadata.cargo-all-features]
 denylist = ["bench"]
 
+[package.metadata.docs.rs]
+all-features = true
+
+[package.metadata.workspaces]
+independent = true
+
 [lib]
-path = "src/lib.rs"
 bench = false
 
 [[bench]]
 name = "writeable"
 harness = false
-
-[dev-dependencies.criterion]
-version = "0.4"
 
 [dev-dependencies.rand]
 version = "0.8"
@@ -54,3 +52,6 @@ features = ["small_rng"]
 
 [features]
 bench = []
+
+[target."cfg(not(target_arch = \"wasm32\"))".dev-dependencies.criterion]
+version = "0.4"

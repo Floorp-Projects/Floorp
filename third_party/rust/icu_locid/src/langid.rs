@@ -20,7 +20,8 @@ use writeable::Writeable;
 ///
 /// ```
 /// use icu::locid::{
-///     langid, subtags_language as language, subtags_region as region,
+///     langid,
+///     subtags::{language, region},
 /// };
 ///
 /// let li = langid!("en-US");
@@ -49,8 +50,8 @@ use writeable::Writeable;
 ///
 /// ```
 /// use icu::locid::{
-///     langid, subtags_language as language, subtags_region as region,
-///     subtags_script as script, subtags_variant as variant,
+///     langid,
+///     subtags::{language, region, script, variant},
 /// };
 ///
 /// let li = langid!("eN_latn_Us-Valencia");
@@ -257,7 +258,7 @@ impl LanguageIdentifier {
     /// Compare this `LanguageIdentifier` with a potentially unnormalized BCP-47 string.
     ///
     /// The return value is equivalent to what would happen if you first parsed the
-    /// BCP-47 string to a `LanguageIdentifier` and then performed a structucal comparison.
+    /// BCP-47 string to a `LanguageIdentifier` and then performed a structural comparison.
     ///
     /// # Examples
     ///
@@ -326,6 +327,74 @@ impl LanguageIdentifier {
         }
         Ok(())
     }
+
+    /// Executes `f` on each subtag string of this `LanguageIdentifier`, with every string in
+    /// lowercase ascii form.
+    ///
+    /// The default canonicalization of language identifiers uses titlecase scripts and uppercase
+    /// regions. However, this differs from [RFC6497 (BCP 47 Extension T)], which specifies:
+    ///
+    /// > _The canonical form for all subtags in the extension is lowercase, with the fields
+    /// ordered by the separators, alphabetically._
+    ///
+    /// Hence, this method is used inside [`Transform Extensions`] to be able to get the correct
+    /// canonicalization of the language identifier.
+    ///
+    /// As an example, the canonical form of locale **EN-LATN-CA-T-EN-LATN-CA** is
+    /// **en-Latn-CA-t-en-latn-ca**, with the script and region parts lowercased inside T extensions,
+    /// but titlecased and uppercased outside T extensions respectively.
+    ///
+    /// [RFC6497 (BCP 47 Extension T)]: https://www.ietf.org/rfc/rfc6497.txt
+    /// [`Transform extensions`]: crate::extensions::transform
+    pub(crate) fn for_each_subtag_str_lowercased<E, F>(&self, f: &mut F) -> Result<(), E>
+    where
+        F: FnMut(&str) -> Result<(), E>,
+    {
+        f(self.language.as_str())?;
+        if let Some(ref script) = self.script {
+            f(script.into_tinystr().to_ascii_lowercase().as_str())?;
+        }
+        if let Some(ref region) = self.region {
+            f(region.into_tinystr().to_ascii_lowercase().as_str())?;
+        }
+        for variant in self.variants.iter() {
+            f(variant.as_str())?;
+        }
+        Ok(())
+    }
+
+    /// Writes this `LanguageIdentifier` to a sink, replacing uppercase ascii chars with
+    /// lowercase ascii chars.
+    ///
+    /// The default canonicalization of language identifiers uses titlecase scripts and uppercase
+    /// regions. However, this differs from [RFC6497 (BCP 47 Extension T)], which specifies:
+    ///
+    /// > _The canonical form for all subtags in the extension is lowercase, with the fields
+    /// ordered by the separators, alphabetically._
+    ///
+    /// Hence, this method is used inside [`Transform Extensions`] to be able to get the correct
+    /// canonicalization of the language identifier.
+    ///
+    /// As an example, the canonical form of locale **EN-LATN-CA-T-EN-LATN-CA** is
+    /// **en-Latn-CA-t-en-latn-ca**, with the script and region parts lowercased inside T extensions,
+    /// but titlecased and uppercased outside T extensions respectively.
+    ///
+    /// [RFC6497 (BCP 47 Extension T)]: https://www.ietf.org/rfc/rfc6497.txt
+    /// [`Transform extensions`]: crate::extensions::transform
+    pub(crate) fn write_lowercased_to<W: core::fmt::Write + ?Sized>(
+        &self,
+        sink: &mut W,
+    ) -> core::fmt::Result {
+        let mut initial = true;
+        self.for_each_subtag_str_lowercased(&mut |subtag| {
+            if initial {
+                initial = false;
+            } else {
+                sink.write_char('-')?;
+            }
+            sink.write_str(subtag)
+        })
+    }
 }
 
 impl AsRef<LanguageIdentifier> for LanguageIdentifier {
@@ -382,9 +451,7 @@ fn test_writeable() {
 /// # Examples
 ///
 /// ```
-/// use icu::locid::{
-///     langid, subtags_language as language, LanguageIdentifier,
-/// };
+/// use icu::locid::{langid, subtags::language, LanguageIdentifier};
 ///
 /// assert_eq!(LanguageIdentifier::from(language!("en")), langid!("en"));
 /// ```
@@ -400,7 +467,7 @@ impl From<subtags::Language> for LanguageIdentifier {
 /// # Examples
 ///
 /// ```
-/// use icu::locid::{langid, subtags_script as script, LanguageIdentifier};
+/// use icu::locid::{langid, subtags::script, LanguageIdentifier};
 ///
 /// assert_eq!(
 ///     LanguageIdentifier::from(Some(script!("latn"))),
@@ -419,7 +486,7 @@ impl From<Option<subtags::Script>> for LanguageIdentifier {
 /// # Examples
 ///
 /// ```
-/// use icu::locid::{langid, subtags_region as region, LanguageIdentifier};
+/// use icu::locid::{langid, subtags::region, LanguageIdentifier};
 ///
 /// assert_eq!(
 ///     LanguageIdentifier::from(Some(region!("US"))),
@@ -441,8 +508,9 @@ impl From<Option<subtags::Region>> for LanguageIdentifier {
 ///
 /// ```
 /// use icu::locid::{
-///     langid, subtags_language as language, subtags_region as region,
-///     subtags_script as script, LanguageIdentifier,
+///     langid,
+///     subtags::{language, region, script},
+///     LanguageIdentifier,
 /// };
 ///
 /// let lang = language!("en");
@@ -482,8 +550,8 @@ impl
 ///
 /// ```
 /// use icu::locid::{
-///     langid, subtags_language as language, subtags_region as region,
-///     subtags_script as script,
+///     langid,
+///     subtags::{language, region, script},
 /// };
 ///
 /// let lid = langid!("en-Latn-US");

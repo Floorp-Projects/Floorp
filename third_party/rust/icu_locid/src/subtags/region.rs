@@ -5,7 +5,7 @@
 impl_tinystr_subtag!(
     /// A region subtag (examples: `"US"`, `"CN"`, `"AR"` etc.)
     ///
-    /// [`Region`] represents a Unicode base language code conformat to the
+    /// [`Region`] represents a Unicode base language code conformant to the
     /// [`unicode_region_id`] field of the Language and Locale Identifier.
     ///
     /// # Examples
@@ -19,7 +19,8 @@ impl_tinystr_subtag!(
     ///
     /// [`unicode_region_id`]: https://unicode.org/reports/tr35/#unicode_region_id
     Region,
-    subtags::Region,
+    subtags,
+    region,
     subtags_region,
     2..=3,
     s,

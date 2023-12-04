@@ -7,26 +7,32 @@
 //! It depends on [`CodePointInversionList`] to efficiently represent Unicode code points, while
 //! it also maintains a list of strings in the set.
 //!
-//! It is an implementation of the the existing [ICU4C UnicodeSet API](https://unicode-org.github.io/icu-docs/apidoc/released/icu4c/classicu_1_1UnicodeSet.html).
+//! It is an implementation of the existing [ICU4C UnicodeSet API](https://unicode-org.github.io/icu-docs/apidoc/released/icu4c/classicu_1_1UnicodeSet.html).
 
 use crate::codepointinvlist::{
     CodePointInversionList, CodePointInversionListBuilder, CodePointInversionListError,
+    CodePointInversionListULE,
 };
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use displaydoc::Display;
 use yoke::Yokeable;
 use zerofrom::ZeroFrom;
-use zerovec::VarZeroVec;
+use zerovec::{VarZeroSlice, VarZeroVec};
 
 /// A data structure providing a concrete implementation of a `UnicodeSet`
 /// (which represents a set of code points and strings) using an inversion list for the code points and a simple
 /// list-like structure to store and iterate over the strings.
+#[zerovec::make_varule(CodePointInversionListAndStringListULE)]
+#[zerovec::skip_derive(Ord)]
+#[zerovec::derive(Debug)]
 #[derive(Debug, Eq, PartialEq, Clone, Yokeable, ZeroFrom)]
 // Valid to auto-derive Deserialize because the invariants are weakly held
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(feature = "serde", zerovec::derive(Serialize, Deserialize, Debug))]
 pub struct CodePointInversionListAndStringList<'data> {
     #[cfg_attr(feature = "serde", serde(borrow))]
+    #[zerovec::varule(CodePointInversionListULE)]
     cp_inv_list: CodePointInversionList<'data>,
     // Invariants (weakly held):
     //   - no input string is length 1 (a length 1 string should be a single code point)
@@ -44,7 +50,7 @@ impl databake::Bake for CodePointInversionListAndStringList<'_> {
         let str_list = self.str_list.bake(env);
         // Safe because our parts are safe.
         databake::quote! {
-            ::icu_collections::codepointinvliststringlist::CodePointInversionListAndStringList::from_parts_unchecked(#cp_inv_list, #str_list)
+            icu_collections::codepointinvliststringlist::CodePointInversionListAndStringList::from_parts_unchecked(#cp_inv_list, #str_list)
         }
     }
 }
@@ -205,6 +211,16 @@ impl<'data> CodePointInversionListAndStringList<'data> {
     pub fn contains_char(&self, ch: char) -> bool {
         self.contains32(ch as u32)
     }
+
+    /// Access the underlying [`CodePointInversionList`].
+    pub fn code_points(&self) -> &CodePointInversionList<'data> {
+        &self.cp_inv_list
+    }
+
+    /// Access the contained strings.
+    pub fn strings(&self) -> &VarZeroSlice<str> {
+        &self.str_list
+    }
 }
 
 impl<'a> FromIterator<&'a str> for CodePointInversionListAndStringList<'_> {
@@ -242,7 +258,7 @@ impl<'a> FromIterator<&'a str> for CodePointInversionListAndStringList<'_> {
 
 /// Custom Errors for [`CodePointInversionListAndStringList`].
 ///
-/// Re-exported as [`Error`](Error).
+/// Re-exported as [`Error`].
 #[derive(Display, Debug)]
 pub enum CodePointInversionListAndStringListError {
     /// An invalid CodePointInversionList was constructed
@@ -347,8 +363,8 @@ mod tests {
         let in_strs_1 = ["a", "abc", "xyz", "abc"];
         let in_strs_2 = ["xyz", "abc", "a", "abc"];
 
-        let cpilsl_1 = CodePointInversionListAndStringList::from_iter(in_strs_1.into_iter());
-        let cpilsl_2 = CodePointInversionListAndStringList::from_iter(in_strs_2.into_iter());
+        let cpilsl_1 = CodePointInversionListAndStringList::from_iter(in_strs_1);
+        let cpilsl_2 = CodePointInversionListAndStringList::from_iter(in_strs_2);
 
         assert_eq!(cpilsl_1, cpilsl_2);
 

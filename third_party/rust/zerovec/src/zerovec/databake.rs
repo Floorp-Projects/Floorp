@@ -8,15 +8,15 @@ use databake::*;
 
 impl<T> Bake for ZeroVec<'_, T>
 where
-    T: AsULE + ?Sized,
+    T: AsULE + ?Sized + Bake,
 {
     fn bake(&self, env: &CrateEnv) -> TokenStream {
         env.insert("zerovec");
         if self.is_empty() {
-            quote! { ::zerovec::ZeroVec::new() }
+            quote! { zerovec::ZeroVec::new() }
         } else {
             let bytes = databake::Bake::bake(&self.as_bytes(), env);
-            quote! { unsafe { ::zerovec::ZeroVec::from_bytes_unchecked(#bytes) } }
+            quote! { unsafe { zerovec::ZeroVec::from_bytes_unchecked(#bytes) } }
         }
     }
 }
@@ -28,10 +28,10 @@ where
     fn bake(&self, env: &CrateEnv) -> TokenStream {
         env.insert("zerovec");
         if self.is_empty() {
-            quote! { ::zerovec::ZeroSlice::new_empty() }
+            quote! { zerovec::ZeroSlice::new_empty() }
         } else {
             let bytes = databake::Bake::bake(&self.as_bytes(), env);
-            quote! { unsafe { ::zerovec::ZeroSlice::from_bytes_unchecked(#bytes) } }
+            quote! { unsafe { zerovec::ZeroSlice::from_bytes_unchecked(#bytes) } }
         }
     }
 }

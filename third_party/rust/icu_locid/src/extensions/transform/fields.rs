@@ -24,11 +24,10 @@ use super::Value;
 /// # Examples
 ///
 /// ```
-/// use icu::locid::extensions::transform::{Fields, Key, Value};
-/// use icu::locid::extensions_transform_key as key;
+/// use icu::locid::extensions::transform::{key, Fields, Key, Value};
 ///
 /// let value = "hybrid".parse::<Value>().expect("Failed to parse a Value.");
-/// let fields = vec![(key!("h0"), value)].into_iter().collect::<Fields>();
+/// let fields = [(key!("h0"), value)].into_iter().collect::<Fields>();
 ///
 /// assert_eq!(&fields.to_string(), "h0-hybrid");
 /// ```
@@ -76,11 +75,10 @@ impl Fields {
     /// # Examples
     ///
     /// ```
-    /// use icu::locid::extensions::transform::{Fields, Value};
-    /// use icu::locid::extensions_transform_key as key;
+    /// use icu::locid::extensions::transform::{key, Fields, Value};
     ///
     /// let value = "hybrid".parse::<Value>().expect("Failed to parse a Value.");
-    /// let mut fields = vec![(key!("h0"), value)].into_iter().collect::<Fields>();
+    /// let mut fields = [(key!("h0"), value)].into_iter().collect::<Fields>();
     ///
     /// assert_eq!(&fields.to_string(), "h0-hybrid");
     ///
@@ -102,7 +100,7 @@ impl Fields {
     ///
     /// let key: Key = "h0".parse().expect("Failed to parse a Key.");
     /// let value: Value = "hybrid".parse().expect("Failed to parse a Value.");
-    /// let mut fields: Fields = vec![(key, value)].into_iter().collect();
+    /// let mut fields = [(key, value)].into_iter().collect::<Fields>();
     ///
     /// let key: Key = "h0".parse().expect("Failed to parse a Key.");
     /// assert!(&fields.contains_key(&key));
@@ -121,11 +119,10 @@ impl Fields {
     /// # Examples
     ///
     /// ```
-    /// use icu::locid::extensions::transform::{Fields, Key, Value};
-    /// use icu::locid::extensions_transform_key as key;
+    /// use icu::locid::extensions::transform::{key, Fields, Key, Value};
     ///
     /// let value = "hybrid".parse::<Value>().unwrap();
-    /// let fields = vec![(key!("h0"), value.clone())]
+    /// let fields = [(key!("h0"), value.clone())]
     ///     .into_iter()
     ///     .collect::<Fields>();
     ///
@@ -144,9 +141,7 @@ impl Fields {
     /// # Examples
     ///
     /// ```
-    /// use icu::locid::extensions::transform::Key;
-    /// use icu::locid::extensions::transform::Value;
-    /// use icu::locid::extensions_transform_key as key;
+    /// use icu::locid::extensions::transform::{key, Key, Value};
     /// use icu::locid::Locale;
     ///
     /// let lower = "lower".parse::<Value>().expect("valid extension subtag");
@@ -169,7 +164,7 @@ impl Fields {
     /// # Examples
     ///
     /// ```
-    /// use icu::locid::extensions_transform_key as key;
+    /// use icu::locid::extensions::transform::key;
     /// use icu::locid::Locale;
     ///
     /// let mut loc: Locale = "und-t-h0-hybrid-d0-hex-m0-xml".parse().unwrap();

@@ -18,7 +18,8 @@ impl_tinystr_subtag!(
     /// assert_eq!(key1.as_str(), "k0");
     /// ```
     Key,
-    extensions::transform::Key,
+    extensions::transform,
+    key,
     extensions_transform_key,
     2..=2,
     s,

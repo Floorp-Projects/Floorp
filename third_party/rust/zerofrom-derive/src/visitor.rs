@@ -5,13 +5,13 @@
 //! Visitor for determining whether a type has type and non-static lifetime parameters
 //! (duplicated in yoke/derive/src/visitor.rs)
 
-use std::collections::HashSet;
+use std::collections::HashMap;
 use syn::visit::{visit_lifetime, visit_type, visit_type_path, Visit};
 use syn::{Ident, Lifetime, Type, TypePath};
 
 struct TypeVisitor<'a> {
     /// The type parameters in scope
-    typarams: &'a HashSet<Ident>,
+    typarams: &'a HashMap<Ident, Option<Ident>>,
     /// Whether we found a type parameter
     found_typarams: bool,
     /// Whether we found a non-'static lifetime parameter
@@ -30,8 +30,11 @@ impl<'a, 'ast> Visit<'ast> for TypeVisitor<'a> {
         // generics in ty.path because the visitor will eventually visit those
         // types on its own
         if let Some(ident) = ty.path.get_ident() {
-            if self.typarams.contains(ident) {
+            if let Some(maybe_borrowed) = self.typarams.get(ident) {
                 self.found_typarams = true;
+                if maybe_borrowed.is_some() {
+                    self.found_lifetimes = true;
+                }
             }
         }
 
@@ -41,7 +44,10 @@ impl<'a, 'ast> Visit<'ast> for TypeVisitor<'a> {
 
 /// Checks if a type has type or lifetime parameters, given the local context of
 /// named type parameters. Returns (has_type_params, has_lifetime_params)
-pub fn check_type_for_parameters(ty: &Type, typarams: &HashSet<Ident>) -> (bool, bool) {
+pub fn check_type_for_parameters(
+    ty: &Type,
+    typarams: &HashMap<Ident, Option<Ident>>,
+) -> (bool, bool) {
     let mut visit = TypeVisitor {
         typarams,
         found_typarams: false,
@@ -55,14 +61,14 @@ pub fn check_type_for_parameters(ty: &Type, typarams: &HashSet<Ident>) -> (bool,
 #[cfg(test)]
 mod tests {
     use proc_macro2::Span;
-    use std::collections::HashSet;
+    use std::collections::HashMap;
     use syn::{parse_quote, Ident};
 
     use super::check_type_for_parameters;
-    fn make_typarams(params: &[&str]) -> HashSet<Ident> {
+    fn make_typarams(params: &[&str]) -> HashMap<Ident, Option<Ident>> {
         params
             .iter()
-            .map(|x| Ident::new(x, Span::call_site()))
+            .map(|x| (Ident::new(x, Span::call_site()), None))
             .collect()
     }
 

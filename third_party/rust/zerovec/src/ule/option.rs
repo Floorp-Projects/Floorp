@@ -197,9 +197,8 @@ unsafe impl<U: VarULE + ?Sized> VarULE for OptionVarULE<U> {
 
     #[inline]
     unsafe fn from_byte_slice_unchecked(bytes: &[u8]) -> &Self {
-        let metadata = bytes.len() - 1;
         let entire_struct_as_slice: *const [u8] =
-            ::core::slice::from_raw_parts(bytes.as_ptr(), metadata);
+            ::core::ptr::slice_from_raw_parts(bytes.as_ptr(), bytes.len() - 1);
         &*(entire_struct_as_slice as *const Self)
     }
 }

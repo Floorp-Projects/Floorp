@@ -96,6 +96,7 @@ where
 /// Wrapper type for `TypeLifetime` and `MethodLifetime`, indicating that it may
 /// be the `'static` lifetime.
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+#[allow(clippy::exhaustive_enums)] // this will only ever have two variants
 pub enum MaybeStatic<T> {
     Static,
     NonStatic(T),

@@ -46,7 +46,7 @@ impl<'de, const N: usize> Visitor<'de> for TinyAsciiStrVisitor<N> {
     type Value = TinyAsciiStr<N>;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        write!(formatter, "a TinyAsciiStr<{}>", N)
+        write!(formatter, "a TinyAsciiStr<{N}>")
     }
 
     #[inline]

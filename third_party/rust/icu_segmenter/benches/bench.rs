@@ -17,15 +17,12 @@ const TEST_STR_TH: &str =
 fn line_break_iter_latin1(c: &mut Criterion) {
     let mut group = c.benchmark_group("Line Break/Latin1");
 
-    let segmenter =
-        LineSegmenter::try_new_dictionary_unstable(&icu_testdata::unstable()).expect("Data exists");
+    let segmenter = LineSegmenter::new_dictionary();
 
     let mut options = LineBreakOptions::default();
     options.strictness = LineBreakStrictness::Anywhere;
     options.word_option = LineBreakWordOption::BreakAll;
-    let segmenter_css =
-        LineSegmenter::try_new_dictionary_with_options_unstable(&icu_testdata::unstable(), options)
-            .expect("Data exists");
+    let segmenter_css = LineSegmenter::new_dictionary_with_options(options);
 
     group.bench_function("En", |b| {
         b.iter(|| {
@@ -47,19 +44,14 @@ fn line_break_iter_latin1(c: &mut Criterion) {
 fn line_break_iter_utf8(c: &mut Criterion) {
     let mut group = c.benchmark_group("Line Break/UTF8");
 
-    let segmenter_auto =
-        LineSegmenter::try_new_auto_unstable(&icu_testdata::unstable()).expect("Data exists");
-    let segmenter_lstm =
-        LineSegmenter::try_new_lstm_unstable(&icu_testdata::unstable()).expect("Data exists");
-    let segmenter_dictionary =
-        LineSegmenter::try_new_dictionary_unstable(&icu_testdata::unstable()).expect("Data exists");
+    let segmenter_auto = LineSegmenter::new_auto();
+    let segmenter_lstm = LineSegmenter::new_lstm();
+    let segmenter_dictionary = LineSegmenter::new_dictionary();
 
     let mut options = LineBreakOptions::default();
     options.strictness = LineBreakStrictness::Anywhere;
     options.word_option = LineBreakWordOption::BreakAll;
-    let segmenter_css_dictionary =
-        LineSegmenter::try_new_dictionary_with_options_unstable(&icu_testdata::unstable(), options)
-            .expect("Data exists");
+    let segmenter_css_dictionary = LineSegmenter::new_dictionary_with_options(options);
 
     // No need to test "auto", "lstm", or "dictionary" constructor variants since English uses only
     // UAX14 rules for line breaking.
@@ -101,19 +93,14 @@ fn line_break_iter_utf16(c: &mut Criterion) {
     let utf16_en: Vec<u16> = TEST_STR_EN.encode_utf16().collect();
     let utf16_th: Vec<u16> = TEST_STR_TH.encode_utf16().collect();
 
-    let segmenter_auto =
-        LineSegmenter::try_new_auto_unstable(&icu_testdata::unstable()).expect("Data exists");
-    let segmenter_lstm =
-        LineSegmenter::try_new_lstm_unstable(&icu_testdata::unstable()).expect("Data exists");
-    let segmenter_dictionary =
-        LineSegmenter::try_new_dictionary_unstable(&icu_testdata::unstable()).expect("Data exists");
+    let segmenter_auto = LineSegmenter::new_auto();
+    let segmenter_lstm = LineSegmenter::new_lstm();
+    let segmenter_dictionary = LineSegmenter::new_dictionary();
 
     let mut options = LineBreakOptions::default();
     options.strictness = LineBreakStrictness::Anywhere;
     options.word_option = LineBreakWordOption::BreakAll;
-    let segmenter_css_dictionary =
-        LineSegmenter::try_new_dictionary_with_options_unstable(&icu_testdata::unstable(), options)
-            .expect("Data exists");
+    let segmenter_css_dictionary = LineSegmenter::new_dictionary_with_options(options);
 
     // No need to test "auto", "lstm", or "dictionary" constructor variants since English uses only
     // UAX14 rules for line breaking.

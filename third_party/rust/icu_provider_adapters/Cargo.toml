@@ -11,10 +11,12 @@
 
 [package]
 edition = "2021"
+rust-version = "1.67"
 name = "icu_provider_adapters"
-version = "1.2.0"
+version = "1.4.0"
 authors = ["The ICU4X Project Developers"]
 include = [
+    "data/**/*",
     "src/**/*",
     "examples/**/*",
     "benches/**/*",
@@ -24,23 +26,31 @@ include = [
     "README.md",
 ]
 description = "Adapters for composing and manipulating data providers."
+homepage = "https://icu4x.unicode.org"
 readme = "README.md"
 categories = ["internationalization"]
-license = "Unicode-DFS-2016"
+license-file = "LICENSE"
 repository = "https://github.com/unicode-org/icu4x"
 
 [dependencies.databake]
-version = "0.1.3"
+version = "0.1.7"
 features = ["derive"]
 optional = true
+default-features = false
 
 [dependencies.icu_locid]
-version = "1.2.0"
+version = "~1.4.0"
 features = ["zerovec"]
+default-features = false
+
+[dependencies.icu_locid_transform]
+version = "~1.4.0"
+default-features = false
 
 [dependencies.icu_provider]
-version = "1.2.0"
+version = "~1.4.0"
 features = ["macros"]
+default-features = false
 
 [dependencies.serde]
 version = "1.0"
@@ -52,15 +62,14 @@ optional = true
 default-features = false
 
 [dependencies.tinystr]
-version = "0.7.1"
+version = "0.7.4"
 features = ["zerovec"]
-
-[dependencies.yoke]
-version = "0.7.1"
+default-features = false
 
 [dependencies.zerovec]
-version = "0.9.4"
+version = "0.10.1"
 features = ["yoke"]
+default-features = false
 
 [dev-dependencies]
 
@@ -68,15 +77,13 @@ features = ["yoke"]
 datagen = [
     "std",
     "serde",
-    "dep:databake",
     "icu_provider/datagen",
-    "icu_locid/databake",
-    "zerovec/databake",
 ]
 serde = [
     "dep:serde",
     "zerovec/serde",
     "icu_locid/serde",
+    "icu_locid_transform/serde",
     "icu_provider/serde",
 ]
 std = [

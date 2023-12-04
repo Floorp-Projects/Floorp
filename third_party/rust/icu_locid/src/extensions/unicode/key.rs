@@ -17,7 +17,8 @@ impl_tinystr_subtag!(
     /// assert!("ca".parse::<Key>().is_ok());
     /// ```
     Key,
-    extensions::unicode::Key,
+    extensions::unicode,
+    key,
     extensions_unicode_key,
     2..=2,
     s,

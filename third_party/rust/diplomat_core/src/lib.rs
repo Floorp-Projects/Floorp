@@ -4,6 +4,7 @@
 //! extracting APIs.
 
 #![allow(clippy::needless_lifetimes)] // we use named lifetimes for clarity
+#![warn(clippy::exhaustive_structs, clippy::exhaustive_enums)]
 
 pub mod ast;
 #[cfg(feature = "hir")]

@@ -992,7 +992,7 @@ impl<'trie, T: TrieValue + databake::Bake> databake::Bake for CodePointTrie<'tri
         let index = self.index.bake(env);
         let data = self.data.bake(env);
         let error_value = self.error_value.bake(env);
-        databake::quote! { ::icu_collections::codepointtrie::CodePointTrie::from_parts(#header, #index, #data, #error_value) }
+        databake::quote! { icu_collections::codepointtrie::CodePointTrie::from_parts(#header, #index, #data, #error_value) }
     }
 }
 
@@ -1271,8 +1271,8 @@ mod tests {
                     null_value: 5u32,
                     trie_type: crate::codepointtrie::TrieType::Small,
                 },
-                ::zerovec::ZeroVec::new(),
-                ::zerovec::ZeroVec::new(),
+                zerovec::ZeroVec::new(),
+                zerovec::ZeroVec::new(),
                 0u32,
             ),
             icu_collections,

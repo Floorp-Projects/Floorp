@@ -30,6 +30,7 @@ use core::cmp::Ordering;
 use core::iter::DoubleEndedIterator;
 use core::iter::FromIterator;
 use core::iter::Iterator;
+use core::ops::Range;
 
 /// Trait to enable const construction of empty store.
 pub trait StoreConstEmpty<K: ?Sized, V: ?Sized> {
@@ -53,7 +54,7 @@ pub trait Store<K: ?Sized, V: ?Sized>: Sized {
     /// Gets a key/value pair at the specified index.
     fn lm_get(&self, index: usize) -> Option<(&K, &V)>;
 
-    /// Gets the last element in the store, or None if the store is empty.
+    /// Gets the last element in the store, or `None` if the store is empty.
     fn lm_last(&self) -> Option<(&K, &V)> {
         let len = self.lm_len();
         if len == 0 {
@@ -74,6 +75,12 @@ pub trait Store<K: ?Sized, V: ?Sized>: Sized {
 pub trait StoreFromIterable<K, V>: Store<K, V> {
     /// Create a sorted store from `iter`.
     fn lm_sort_from_iter<I: IntoIterator<Item = (K, V)>>(iter: I) -> Self;
+}
+
+pub trait StoreSlice<K: ?Sized, V: ?Sized>: Store<K, V> {
+    type Slice: ?Sized;
+
+    fn lm_get_range(&self, range: Range<usize>) -> Option<&Self::Slice>;
 }
 
 pub trait StoreMut<K, V>: Store<K, V> {
@@ -129,7 +136,7 @@ pub trait StoreMut<K, V>: Store<K, V> {
 }
 
 /// Iterator methods for the LiteMap store.
-pub trait StoreIterable<'a, K: 'a, V: 'a>: Store<K, V> {
+pub trait StoreIterable<'a, K: 'a + ?Sized, V: 'a + ?Sized>: Store<K, V> {
     type KeyValueIter: Iterator<Item = (&'a K, &'a V)> + DoubleEndedIterator + 'a;
 
     /// Returns an iterator over key/value pairs.

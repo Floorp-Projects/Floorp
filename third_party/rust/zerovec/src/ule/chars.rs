@@ -6,10 +6,11 @@
 //! ULE implementation for the `char` type.
 
 use super::*;
+use crate::impl_ule_from_array;
 use core::cmp::Ordering;
 use core::convert::TryFrom;
 
-/// A u8 array of little-endian data corresponding to a Unicode code point.
+/// A u8 array of little-endian data corresponding to a Unicode scalar value.
 ///
 /// The bytes of a `CharULE` are guaranteed to represent a little-endian-encoded u32 that is a
 /// valid `char` and can be converted without validation.
@@ -39,6 +40,20 @@ use core::convert::TryFrom;
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct CharULE([u8; 3]);
+
+impl CharULE {
+    /// Converts a [`char`] to a [`CharULE`]. This is equivalent to calling
+    /// [`AsULE::to_unaligned()`]
+    ///
+    /// See the type-level documentation for [`CharULE`] for more information.
+    #[inline]
+    pub const fn from_aligned(c: char) -> Self {
+        let [u0, u1, u2, _u3] = (c as u32).to_le_bytes();
+        Self([u0, u1, u2])
+    }
+
+    impl_ule_from_array!(char, CharULE, Self([0; 3]));
+}
 
 // Safety (based on the safety checklist on the ULE trait):
 //  1. CharULE does not include any uninitialized or padding bytes.
@@ -72,13 +87,12 @@ impl AsULE for char {
 
     #[inline]
     fn to_unaligned(self) -> Self::ULE {
-        let [u0, u1, u2, _u3] = u32::from(self).to_le_bytes();
-        CharULE([u0, u1, u2])
+        CharULE::from_aligned(self)
     }
 
     #[inline]
     fn from_unaligned(unaligned: Self::ULE) -> Self {
-        // Safe because the bytes of CharULE are defined to represent a valid Unicode code point.
+        // Safe because the bytes of CharULE are defined to represent a valid Unicode scalar value.
         unsafe {
             Self::from_u32_unchecked(u32::from_le_bytes([
                 unaligned.0[0],
@@ -92,7 +106,7 @@ impl AsULE for char {
 
 impl PartialOrd for CharULE {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        char::from_unaligned(*self).partial_cmp(&char::from_unaligned(*other))
+        Some(self.cmp(other))
     }
 }
 
@@ -105,6 +119,25 @@ impl Ord for CharULE {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn test_from_array() {
+        const CHARS: [char; 2] = ['a', '🙃'];
+        const CHARS_ULE: [CharULE; 2] = CharULE::from_array(CHARS);
+        assert_eq!(
+            CharULE::as_byte_slice(&CHARS_ULE),
+            &[0x61, 0x00, 0x00, 0x43, 0xF6, 0x01]
+        );
+    }
+
+    #[test]
+    fn test_from_array_zst() {
+        const CHARS: [char; 0] = [];
+        const CHARS_ULE: [CharULE; 0] = CharULE::from_array(CHARS);
+        let bytes = CharULE::as_byte_slice(&CHARS_ULE);
+        let empty: &[u8] = &[];
+        assert_eq!(bytes, empty);
+    }
 
     #[test]
     fn test_parse() {
@@ -141,7 +174,7 @@ mod test {
             .collect();
         let u32_bytes: &[u8] = RawBytesULE::<4>::as_byte_slice(&u32_ules);
         let parsed_ules_result = CharULE::parse_byte_slice(u32_bytes);
-        assert!(matches!(parsed_ules_result, Err(_)));
+        assert!(parsed_ules_result.is_err());
 
         // 0x20FFFF is out of range for a char
         let u32s = [0x20FFFF];
@@ -152,6 +185,6 @@ mod test {
             .collect();
         let u32_bytes: &[u8] = RawBytesULE::<4>::as_byte_slice(&u32_ules);
         let parsed_ules_result = CharULE::parse_byte_slice(u32_bytes);
-        assert!(matches!(parsed_ules_result, Err(_)));
+        assert!(parsed_ules_result.is_err());
     }
 }

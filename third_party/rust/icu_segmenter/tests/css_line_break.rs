@@ -13,9 +13,7 @@ fn check_with_options(
     mut expect_utf16: Vec<usize>,
     options: LineBreakOptions,
 ) {
-    let segmenter =
-        LineSegmenter::try_new_dictionary_with_options_unstable(&icu_testdata::unstable(), options)
-            .expect("Data exists");
+    let segmenter = LineSegmenter::new_dictionary_with_options(options);
 
     let iter = segmenter.segment_str(s);
     let result: Vec<usize> = iter.collect();

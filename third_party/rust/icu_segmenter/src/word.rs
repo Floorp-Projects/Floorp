@@ -95,9 +95,7 @@ pub type WordBreakIteratorUtf16<'l, 's> = WordBreakIterator<'l, 's, WordBreakTyp
 ///
 /// ```rust
 /// use icu_segmenter::WordSegmenter;
-/// let segmenter =
-///     WordSegmenter::try_new_auto_unstable(&icu_testdata::unstable())
-///         .expect("Data exists");
+/// let segmenter = WordSegmenter::new_auto();
 ///
 /// let breakpoints: Vec<usize> =
 ///     segmenter.segment_str("Hello World").collect();
@@ -108,9 +106,7 @@ pub type WordBreakIteratorUtf16<'l, 's> = WordBreakIterator<'l, 's, WordBreakTyp
 ///
 /// ```rust
 /// use icu_segmenter::WordSegmenter;
-/// let segmenter =
-///     WordSegmenter::try_new_auto_unstable(&icu_testdata::unstable())
-///         .expect("Data exists");
+/// let segmenter = WordSegmenter::new_auto();
 ///
 /// let breakpoints: Vec<usize> =
 ///     segmenter.segment_latin1(b"Hello World").collect();
@@ -123,16 +119,18 @@ pub type WordBreakIteratorUtf16<'l, 's> = WordBreakIterator<'l, 's, WordBreakTyp
 ///
 /// ```rust
 /// # use icu_segmenter::WordSegmenter;
-/// # let segmenter = WordSegmenter::try_new_auto_unstable(&icu_testdata::unstable())
-/// #     .expect("Data exists");
+/// # let segmenter = WordSegmenter::new_auto();
 /// use itertools::Itertools;
 /// let text = "Mark’d ye his words?";
 /// let segments: Vec<&str> = segmenter
-///    .segment_str(text)
-///    .tuple_windows()
-///    .map(|(i, j)| &text[i..j])
-///    .collect();
-/// assert_eq!(&segments, &["Mark’d", " ", "ye", " ", "his", " ", "words", "?"]);
+///     .segment_str(text)
+///     .tuple_windows()
+///     .map(|(i, j)| &text[i..j])
+///     .collect();
+/// assert_eq!(
+///     &segments,
+///     &["Mark’d", " ", "ye", " ", "his", " ", "words", "?"]
+/// );
 /// ```
 ///
 /// Not all segments delimited by word boundaries are words; some are interword
@@ -142,8 +140,7 @@ pub type WordBreakIteratorUtf16<'l, 's> = WordBreakIterator<'l, 's, WordBreakTyp
 /// ```rust
 /// # use itertools::Itertools;
 /// # use icu_segmenter::{WordType, WordSegmenter};
-/// # let segmenter = WordSegmenter::try_new_auto_unstable(&icu_testdata::unstable())
-/// #     .expect("Data exists");
+/// # let segmenter = WordSegmenter::new_auto();
 /// # let text = "Mark’d ye his words?";
 /// let words: Vec<&str> = {
 ///     let mut it = segmenter.segment_str(text);
@@ -162,11 +159,15 @@ pub struct WordSegmenter {
 }
 
 impl WordSegmenter {
-    /// Constructs a [`WordSegmenter`] with an invariant locale and the best available data for
+    /// Constructs a [`WordSegmenter`] with an invariant locale and the best available compiled data for
     /// complex scripts (Chinese, Japanese, Khmer, Lao, Myanmar, and Thai).
     ///
     /// The current behavior, which is subject to change, is to use the LSTM model when available
     /// and the dictionary model for Chinese and Japanese.
+    ///
+    /// ✨ *Enabled with the `compiled_data` and `auto` Cargo features.*
+    ///
+    /// [📚 Help choosing a constructor](icu_provider::constructors)
     ///
     /// # Examples
     ///
@@ -178,9 +179,7 @@ impl WordSegmenter {
     /// let th_str = "ทุกสองสัปดาห์";
     /// let ja_str = "こんにちは世界";
     ///
-    /// let segmenter =
-    ///     WordSegmenter::try_new_auto_unstable(&icu_testdata::unstable())
-    ///         .unwrap();
+    /// let segmenter = WordSegmenter::new_auto();
     ///
     /// let th_bps = segmenter.segment_str(th_str).collect::<Vec<_>>();
     /// let ja_bps = segmenter.segment_str(ja_str).collect::<Vec<_>>();
@@ -188,7 +187,34 @@ impl WordSegmenter {
     /// assert_eq!(th_bps, [0, 9, 18, 39]);
     /// assert_eq!(ja_bps, [0, 15, 21]);
     /// ```
+    #[cfg(feature = "compiled_data")]
     #[cfg(feature = "auto")]
+    pub fn new_auto() -> Self {
+        Self {
+            payload: DataPayload::from_static_ref(
+                crate::provider::Baked::SINGLETON_SEGMENTER_WORD_V1,
+            ),
+            complex: ComplexPayloads::new_auto(),
+        }
+    }
+
+    #[cfg(feature = "auto")]
+    icu_provider::gen_any_buffer_data_constructors!(
+        locale: skip,
+        options: skip,
+        error: SegmenterError,
+        #[cfg(skip)]
+        functions: [
+            try_new_auto,
+            try_new_auto_with_any_provider,
+            try_new_auto_with_buffer_provider,
+            try_new_auto_unstable,
+            Self
+        ]
+    );
+
+    #[cfg(feature = "auto")]
+    #[doc = icu_provider::gen_any_buffer_unstable_docs!(UNSTABLE, Self::new_auto)]
     pub fn try_new_auto_unstable<D>(provider: &D) -> Result<Self, SegmenterError>
     where
         D: DataProvider<WordBreakDataV1Marker>
@@ -203,19 +229,7 @@ impl WordSegmenter {
         })
     }
 
-    #[cfg(feature = "auto")]
-    icu_provider::gen_any_buffer_constructors!(
-        locale: skip,
-        options: skip,
-        error: SegmenterError,
-        functions: [
-            Self::try_new_auto_unstable,
-            try_new_auto_with_any_provider,
-            try_new_auto_with_buffer_provider
-        ]
-    );
-
-    /// Constructs a [`WordSegmenter`] with an invariant locale and LSTM data for
+    /// Constructs a [`WordSegmenter`] with an invariant locale and compiled LSTM data for
     /// complex scripts (Burmese, Khmer, Lao, and Thai).
     ///
     /// The LSTM, or Long Term Short Memory, is a machine learning model. It is smaller than
@@ -223,6 +237,10 @@ impl WordSegmenter {
     ///
     /// Warning: there is not currently an LSTM model for Chinese or Japanese, so the [`WordSegmenter`]
     /// created by this function will have unexpected behavior in spans of those scripts.
+    ///
+    /// ✨ *Enabled with the `compiled_data` and `lstm` Cargo features.*
+    ///
+    /// [📚 Help choosing a constructor](icu_provider::constructors)
     ///
     /// # Examples
     ///
@@ -234,9 +252,7 @@ impl WordSegmenter {
     /// let th_str = "ทุกสองสัปดาห์";
     /// let ja_str = "こんにちは世界";
     ///
-    /// let segmenter =
-    ///     WordSegmenter::try_new_lstm_unstable(&icu_testdata::unstable())
-    ///         .unwrap();
+    /// let segmenter = WordSegmenter::new_lstm();
     ///
     /// let th_bps = segmenter.segment_str(th_str).collect::<Vec<_>>();
     /// let ja_bps = segmenter.segment_str(ja_str).collect::<Vec<_>>();
@@ -246,7 +262,34 @@ impl WordSegmenter {
     /// // Note: We aren't able to find a suitable breakpoint in Chinese/Japanese.
     /// assert_eq!(ja_bps, [0, 21]);
     /// ```
+    #[cfg(feature = "compiled_data")]
     #[cfg(feature = "lstm")]
+    pub fn new_lstm() -> Self {
+        Self {
+            payload: DataPayload::from_static_ref(
+                crate::provider::Baked::SINGLETON_SEGMENTER_WORD_V1,
+            ),
+            complex: ComplexPayloads::new_lstm(),
+        }
+    }
+
+    #[cfg(feature = "lstm")]
+    icu_provider::gen_any_buffer_data_constructors!(
+        locale: skip,
+        options: skip,
+        error: SegmenterError,
+        #[cfg(skip)]
+        functions: [
+            new_lstm,
+            try_new_lstm_with_any_provider,
+            try_new_lstm_with_buffer_provider,
+            try_new_lstm_unstable,
+            Self
+        ]
+    );
+
+    #[cfg(feature = "lstm")]
+    #[doc = icu_provider::gen_any_buffer_unstable_docs!(UNSTABLE, Self::new_lstm)]
     pub fn try_new_lstm_unstable<D>(provider: &D) -> Result<Self, SegmenterError>
     where
         D: DataProvider<WordBreakDataV1Marker>
@@ -260,23 +303,15 @@ impl WordSegmenter {
         })
     }
 
-    #[cfg(feature = "lstm")]
-    icu_provider::gen_any_buffer_constructors!(
-        locale: skip,
-        options: skip,
-        error: SegmenterError,
-        functions: [
-            Self::try_new_lstm_unstable,
-            try_new_lstm_with_any_provider,
-            try_new_lstm_with_buffer_provider
-        ]
-    );
-
-    /// Construct a [`WordSegmenter`] with an invariant locale and dictionary data for
+    /// Construct a [`WordSegmenter`] with an invariant locale and compiled dictionary data for
     /// complex scripts (Chinese, Japanese, Khmer, Lao, Myanmar, and Thai).
     ///
     /// The dictionary model uses a list of words to determine appropriate breakpoints. It is
     /// faster than the LSTM model but requires more data.
+    ///
+    /// ✨ *Enabled with the `compiled_data` Cargo feature.*
+    ///
+    /// [📚 Help choosing a constructor](icu_provider::constructors)
     ///
     /// # Examples
     ///
@@ -288,9 +323,7 @@ impl WordSegmenter {
     /// let th_str = "ทุกสองสัปดาห์";
     /// let ja_str = "こんにちは世界";
     ///
-    /// let segmenter =
-    ///     WordSegmenter::try_new_dictionary_unstable(&icu_testdata::unstable())
-    ///         .unwrap();
+    /// let segmenter = WordSegmenter::new_dictionary();
     ///
     /// let th_bps = segmenter.segment_str(th_str).collect::<Vec<_>>();
     /// let ja_bps = segmenter.segment_str(ja_str).collect::<Vec<_>>();
@@ -298,6 +331,31 @@ impl WordSegmenter {
     /// assert_eq!(th_bps, [0, 9, 18, 39]);
     /// assert_eq!(ja_bps, [0, 15, 21]);
     /// ```
+    #[cfg(feature = "compiled_data")]
+    pub fn new_dictionary() -> Self {
+        Self {
+            payload: DataPayload::from_static_ref(
+                crate::provider::Baked::SINGLETON_SEGMENTER_WORD_V1,
+            ),
+            complex: ComplexPayloads::new_dict(),
+        }
+    }
+
+    icu_provider::gen_any_buffer_data_constructors!(
+        locale: skip,
+        options: skip,
+        error: SegmenterError,
+        #[cfg(skip)]
+        functions: [
+            new_dictionary,
+            try_new_dictionary_with_any_provider,
+            try_new_dictionary_with_buffer_provider,
+            try_new_dictionary_unstable,
+            Self
+        ]
+    );
+
+    #[doc = icu_provider::gen_any_buffer_unstable_docs!(UNSTABLE, Self::new_dictionary)]
     pub fn try_new_dictionary_unstable<D>(provider: &D) -> Result<Self, SegmenterError>
     where
         D: DataProvider<WordBreakDataV1Marker>
@@ -311,17 +369,6 @@ impl WordSegmenter {
             complex: ComplexPayloads::try_new_dict(provider)?,
         })
     }
-
-    icu_provider::gen_any_buffer_constructors!(
-        locale: skip,
-        options: skip,
-        error: SegmenterError,
-        functions: [
-            Self::try_new_dictionary_unstable,
-            try_new_dictionary_with_any_provider,
-            try_new_dictionary_with_buffer_provider
-        ]
-    );
 
     /// Creates a word break iterator for an `str` (a UTF-8 string).
     ///
@@ -552,8 +599,7 @@ impl<'l, 's> RuleBreakType<'l, 's> for WordBreakTypeUtf16 {
 #[cfg(all(test, feature = "serde"))]
 #[test]
 fn empty_string() {
-    let segmenter =
-        WordSegmenter::try_new_auto_with_buffer_provider(&icu_testdata::buffer()).unwrap();
+    let segmenter = WordSegmenter::new_auto();
     let breaks: Vec<usize> = segmenter.segment_str("").collect();
     assert_eq!(breaks, [0]);
 }

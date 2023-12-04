@@ -9,7 +9,7 @@ impl Bake for FlexZeroVec<'_> {
     fn bake(&self, env: &CrateEnv) -> TokenStream {
         env.insert("zerovec");
         if self.is_empty() {
-            quote! { ::zerovec::vecs::FlexZeroVec::new() }
+            quote! { zerovec::vecs::FlexZeroVec::new() }
         } else {
             let slice = self.as_ref().bake(env);
             quote! { #slice.as_flexzerovec() }
@@ -21,10 +21,10 @@ impl Bake for &FlexZeroSlice {
     fn bake(&self, env: &CrateEnv) -> TokenStream {
         env.insert("zerovec");
         if self.is_empty() {
-            quote! { ::zerovec::vecs::FlexZeroSlice::new_empty() }
+            quote! { zerovec::vecs::FlexZeroSlice::new_empty() }
         } else {
             let bytes = databake::Bake::bake(&self.as_bytes(), env);
-            quote! { unsafe { ::zerovec::vecs::FlexZeroSlice::from_byte_slice_unchecked(#bytes) } }
+            quote! { unsafe { zerovec::vecs::FlexZeroSlice::from_byte_slice_unchecked(#bytes) } }
         }
     }
 }

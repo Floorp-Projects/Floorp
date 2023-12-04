@@ -216,6 +216,6 @@ mod test {
         let zerovec_orig: ZeroVec<u32> = ZeroVec::from_slice_or_alloc(&[119, 0xD800, 120]);
         let bincode_buf = bincode::serialize(&zerovec_orig).expect("serialize");
         let zerovec_result = bincode::deserialize::<ZeroVec<char>>(&bincode_buf);
-        assert!(matches!(zerovec_result, Err(_)));
+        assert!(zerovec_result.is_err());
     }
 }

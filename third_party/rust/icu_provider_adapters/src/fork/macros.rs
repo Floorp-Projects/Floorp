@@ -11,27 +11,23 @@
 /// use icu_provider_adapters::fork::ForkByKeyProvider;
 ///
 /// // Some empty example providers:
-/// #[derive(Default, PartialEq, Debug)]
+/// #[derive(PartialEq, Debug)]
 /// struct Provider1;
-/// #[derive(Default, PartialEq, Debug)]
+/// #[derive(PartialEq, Debug)]
 /// struct Provider2;
-/// #[derive(Default, PartialEq, Debug)]
+/// #[derive(PartialEq, Debug)]
 /// struct Provider3;
 ///
 /// // Combine them into one:
 /// let forking1 = icu_provider_adapters::make_forking_provider!(
 ///     ForkByKeyProvider::new,
-///     [
-///         Provider1::default(),
-///         Provider2::default(),
-///         Provider3::default(),
-///     ]
+///     [Provider1, Provider2, Provider3,]
 /// );
 ///
 /// // This is equivalent to:
 /// let forking2 = ForkByKeyProvider::new(
-///     Provider1::default(),
-///     ForkByKeyProvider::new(Provider2::default(), Provider3::default()),
+///     Provider1,
+///     ForkByKeyProvider::new(Provider2, Provider3),
 /// );
 ///
 /// assert_eq!(forking1, forking2);
@@ -50,22 +46,15 @@ macro_rules! make_forking_provider {
 
 #[cfg(test)]
 mod test {
-    #[derive(Default)]
     struct Provider1;
-    #[derive(Default)]
     struct Provider2;
-    #[derive(Default)]
     struct Provider3;
 
     #[test]
     fn test_make_forking_provider() {
         make_forking_provider!(
             crate::fork::ForkByKeyProvider::new,
-            [
-                Provider1::default(),
-                Provider2::default(),
-                Provider3::default(),
-            ]
+            [Provider1, Provider2, Provider3,]
         );
     }
 }

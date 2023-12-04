@@ -1,18 +1,19 @@
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use super::docs::Docs;
-use super::{attrs, Ident, Method};
+use super::{Attrs, Ident, Method};
 use quote::ToTokens;
 
 /// A fieldless enum declaration in an FFI module.
-#[derive(Clone, Serialize, Deserialize, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Serialize, Debug, Hash, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct Enum {
     pub name: Ident,
     pub docs: Docs,
-    /// A list of variants of the enum. (name, discriminant, docs)
-    pub variants: Vec<(Ident, isize, Docs)>,
+    /// A list of variants of the enum. (name, discriminant, docs, attrs)
+    pub variants: Vec<(Ident, isize, Docs, Attrs)>,
     pub methods: Vec<Method>,
-    pub cfg_attrs: Vec<String>,
+    pub attrs: Attrs,
 }
 
 impl From<&syn::ItemEnum> for Enum {
@@ -27,7 +28,6 @@ impl From<&syn::ItemEnum> for Enum {
             panic!("Enums cannot have generic parameters");
         }
 
-        let cfg_attrs = attrs::extract_cfg_attrs(&enm.attrs).collect();
         Enum {
             name: (&enm.ident).into(),
             docs: Docs::from_attrs(&enm.attrs),
@@ -56,11 +56,12 @@ impl From<&syn::ItemEnum> for Enum {
                         (&v.ident).into(),
                         new_discriminant,
                         Docs::from_attrs(&v.attrs),
+                        (&*v.attrs).into(),
                     )
                 })
                 .collect(),
             methods: vec![],
-            cfg_attrs,
+            attrs: (&*enm.attrs).into(),
         }
     }
 }

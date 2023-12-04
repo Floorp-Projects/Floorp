@@ -11,10 +11,12 @@
 
 [package]
 edition = "2021"
+rust-version = "1.67"
 name = "icu_provider_macros"
-version = "1.2.0"
+version = "1.4.0"
 authors = ["The ICU4X Project Developers"]
 include = [
+    "data/**/*",
     "src/**/*",
     "examples/**/*",
     "benches/**/*",
@@ -24,18 +26,21 @@ include = [
     "README.md",
 ]
 description = "Proc macros for ICU data providers"
+homepage = "https://icu4x.unicode.org"
 readme = "README.md"
 categories = ["internationalization"]
-license = "Unicode-DFS-2016"
+license-file = "LICENSE"
 repository = "https://github.com/unicode-org/icu4x"
 
 [lib]
 path = "src/lib.rs"
 proc-macro = true
 
-[dependencies]
-proc-macro2 = "1.0.27"
-quote = "1.0.9"
+[dependencies.proc-macro2]
+version = "1.0.27"
+
+[dependencies.quote]
+version = "1.0.9"
 
 [dependencies.syn]
 version = "2"
@@ -44,9 +49,4 @@ features = [
     "parsing",
 ]
 
-[dev-dependencies.icu]
-path = "../../components/icu"
-
-[dev-dependencies.icu_provider]
-path = "../core"
-features = ["macros"]
+[dev-dependencies]

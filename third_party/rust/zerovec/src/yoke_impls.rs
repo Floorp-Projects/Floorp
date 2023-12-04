@@ -3,6 +3,9 @@
 // (online at: https://github.com/unicode-org/icu4x/blob/main/LICENSE ).
 
 // This way we can copy-paste Yokeable impls
+#![allow(unknown_lints)] // forgetting_copy_types
+#![allow(renamed_and_removed_lints)] // forgetting_copy_types
+#![allow(forgetting_copy_types)]
 #![allow(clippy::forget_copy)]
 #![allow(clippy::forget_non_drop)]
 
@@ -30,8 +33,8 @@ unsafe impl<'a, T: 'static + AsULE + ?Sized> Yokeable<'a> for ZeroVec<'static, T
     #[inline]
     unsafe fn make(from: Self::Output) -> Self {
         debug_assert!(mem::size_of::<Self::Output>() == mem::size_of::<Self>());
-        let ptr: *const Self = (&from as *const Self::Output).cast();
-        mem::forget(from);
+        let from = mem::ManuallyDrop::new(from);
+        let ptr: *const Self = (&*from as *const Self::Output).cast();
         ptr::read(ptr)
     }
     #[inline]
@@ -58,8 +61,8 @@ unsafe impl<'a, T: 'static + VarULE + ?Sized> Yokeable<'a> for VarZeroVec<'stati
     #[inline]
     unsafe fn make(from: Self::Output) -> Self {
         debug_assert!(mem::size_of::<Self::Output>() == mem::size_of::<Self>());
-        let ptr: *const Self = (&from as *const Self::Output).cast();
-        mem::forget(from);
+        let from = mem::ManuallyDrop::new(from);
+        let ptr: *const Self = (&*from as *const Self::Output).cast();
         ptr::read(ptr)
     }
     #[inline]
@@ -86,8 +89,8 @@ unsafe impl<'a> Yokeable<'a> for FlexZeroVec<'static> {
     #[inline]
     unsafe fn make(from: Self::Output) -> Self {
         debug_assert!(mem::size_of::<Self::Output>() == mem::size_of::<Self>());
-        let ptr: *const Self = (&from as *const Self::Output).cast();
-        mem::forget(from);
+        let from = mem::ManuallyDrop::new(from);
+        let ptr: *const Self = (&*from as *const Self::Output).cast();
         ptr::read(ptr)
     }
     #[inline]
@@ -124,16 +127,16 @@ where
         unsafe {
             // Similar problem as transform(), but we need to use ptr::read since
             // the compiler isn't sure of the sizes
-            let ptr: *const Self::Output = (&self as *const Self).cast();
-            mem::forget(self);
+            let this = mem::ManuallyDrop::new(self);
+            let ptr: *const Self::Output = (&*this as *const Self).cast();
             ptr::read(ptr)
         }
     }
     #[inline]
     unsafe fn make(from: Self::Output) -> Self {
         debug_assert!(mem::size_of::<Self::Output>() == mem::size_of::<Self>());
-        let ptr: *const Self = (&from as *const Self::Output).cast();
-        mem::forget(from);
+        let from = mem::ManuallyDrop::new(from);
+        let ptr: *const Self = (&*from as *const Self::Output).cast();
         ptr::read(ptr)
     }
     #[inline]
@@ -170,16 +173,16 @@ where
         unsafe {
             // Similar problem as transform(), but we need to use ptr::read since
             // the compiler isn't sure of the sizes
-            let ptr: *const Self::Output = (&self as *const Self).cast();
-            mem::forget(self);
+            let this = mem::ManuallyDrop::new(self);
+            let ptr: *const Self::Output = (&*this as *const Self).cast();
             ptr::read(ptr)
         }
     }
     #[inline]
     unsafe fn make(from: Self::Output) -> Self {
         debug_assert!(mem::size_of::<Self::Output>() == mem::size_of::<Self>());
-        let ptr: *const Self = (&from as *const Self::Output).cast();
-        mem::forget(from);
+        let from = mem::ManuallyDrop::new(from);
+        let ptr: *const Self = (&*from as *const Self::Output).cast();
         ptr::read(ptr)
     }
     #[inline]
@@ -218,16 +221,16 @@ where
         unsafe {
             // Similar problem as transform(), but we need to use ptr::read since
             // the compiler isn't sure of the sizes
-            let ptr: *const Self::Output = (&self as *const Self).cast();
-            mem::forget(self);
+            let this = mem::ManuallyDrop::new(self);
+            let ptr: *const Self::Output = (&*this as *const Self).cast();
             ptr::read(ptr)
         }
     }
     #[inline]
     unsafe fn make(from: Self::Output) -> Self {
         debug_assert!(mem::size_of::<Self::Output>() == mem::size_of::<Self>());
-        let ptr: *const Self = (&from as *const Self::Output).cast();
-        mem::forget(from);
+        let from = mem::ManuallyDrop::new(from);
+        let ptr: *const Self = (&*from as *const Self::Output).cast();
         ptr::read(ptr)
     }
     #[inline]
@@ -266,16 +269,16 @@ where
         unsafe {
             // Similar problem as transform(), but we need to use ptr::read since
             // the compiler isn't sure of the sizes
-            let ptr: *const Self::Output = (&self as *const Self).cast();
-            mem::forget(self);
+            let this = mem::ManuallyDrop::new(self);
+            let ptr: *const Self::Output = (&*this as *const Self).cast();
             ptr::read(ptr)
         }
     }
     #[inline]
     unsafe fn make(from: Self::Output) -> Self {
         debug_assert!(mem::size_of::<Self::Output>() == mem::size_of::<Self>());
-        let ptr: *const Self = (&from as *const Self::Output).cast();
-        mem::forget(from);
+        let from = mem::ManuallyDrop::new(from);
+        let ptr: *const Self = (&*from as *const Self::Output).cast();
         ptr::read(ptr)
     }
     #[inline]
@@ -345,13 +348,11 @@ mod test {
     }
 
     #[test]
-    #[ignore] // https://github.com/rust-lang/rust/issues/98906
     fn bake_FlexZeroVec() {
         test_bake!(
             DeriveTest_FlexZeroVec<'static>,
             crate::yoke_impls::test::DeriveTest_FlexZeroVec {
-                _data: unsafe { crate::vecs::FlexZeroSlice::from_byte_slice_unchecked(b"\x01") }
-                    .as_flexzerovec(),
+                _data: crate::vecs::FlexZeroVec::new(),
             },
             zerovec,
         );

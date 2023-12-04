@@ -108,8 +108,8 @@ pub struct VarZeroSlice<T: ?Sized, F = Index16> {
 impl<T: VarULE + ?Sized, F: VarZeroVecFormat> VarZeroSlice<T, F> {
     /// Construct a new empty VarZeroSlice
     pub const fn new_empty() -> &'static Self {
-        let arr: &[u8] = &[];
-        unsafe { mem::transmute(arr) }
+        // The empty VZV is special-cased to the empty slice
+        unsafe { mem::transmute(&[] as &[u8]) }
     }
 
     /// Obtain a [`VarZeroVecComponents`] borrowing from the internal buffer
@@ -192,7 +192,7 @@ impl<T: VarULE + ?Sized, F: VarZeroVecFormat> VarZeroSlice<T, F> {
         self.as_components().iter()
     }
 
-    /// Get one of this slice's elements, returning None if the index is out of bounds
+    /// Get one of this slice's elements, returning `None` if the index is out of bounds
     ///
     /// # Example
     ///
@@ -366,7 +366,7 @@ where
     /// assert_eq!(vec.binary_search_in_range("g", 1..6), Some(Ok(2)));
     /// assert_eq!(vec.binary_search_in_range("h", 1..6), Some(Err(3)));
     ///
-    /// // Will return None if the range is out of bounds:
+    /// // Will return `None` if the range is out of bounds:
     /// assert_eq!(vec.binary_search_in_range("x", 100..200), None);
     /// assert_eq!(vec.binary_search_in_range("x", 0..200), None);
     /// # Ok::<(), ZeroVecError>(())
@@ -460,7 +460,7 @@ where
     ///     Some(Err(3))
     /// );
     ///
-    /// // Will return None if the range is out of bounds:
+    /// // Will return `None` if the range is out of bounds:
     /// assert_eq!(
     ///     vec.binary_search_in_range_by(|v| v.cmp("x"), 100..200),
     ///     None

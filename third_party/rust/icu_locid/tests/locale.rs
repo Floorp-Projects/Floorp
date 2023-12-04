@@ -72,10 +72,10 @@ fn test_locale_conversions() {
 
 #[test]
 fn test_locale_canonicalize() {
-    let locale: Locale = "En-latn-US-MacOS"
-        .parse()
-        .expect("Failed to parse a locale.");
-    assert_writeable_eq!(locale, Locale::canonicalize("eN-latN-uS-macOS").unwrap());
+    let path = "./tests/fixtures/canonicalize.json";
+    let data = helpers::read_fixture(path).expect("Failed to read a fixture");
+
+    test_langid_fixtures(data);
 }
 
 #[test]

@@ -4,6 +4,7 @@ use std::fmt;
 use super::Ident;
 
 #[derive(Hash, Eq, PartialEq, Deserialize, Serialize, Clone, Debug, Ord, PartialOrd)]
+#[non_exhaustive]
 pub struct Path {
     pub elements: Vec<Ident>,
 }

@@ -2,11 +2,11 @@ use std::collections::{BTreeMap, HashSet};
 use std::fmt::Write as _;
 
 use quote::ToTokens;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use syn::{ImplItem, Item, ItemMod, UseTree, Visibility};
 
 use super::{
-    attrs, CustomType, Enum, Ident, Method, ModSymbol, Mutability, OpaqueStruct, Path, PathType,
+    Attrs, CustomType, Enum, Ident, Method, ModSymbol, Mutability, OpaqueStruct, Path, PathType,
     RustLink, Struct, ValidityError,
 };
 use crate::environment::*;
@@ -59,7 +59,8 @@ impl DiplomatStructAttribute {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Debug)]
+#[non_exhaustive]
 pub struct Module {
     pub name: Ident,
     pub imports: Vec<(Path, Ident)>,
@@ -176,7 +177,7 @@ impl Module {
                             syn::Type::Path(s) => PathType::from(s),
                             _ => panic!("Self type not found"),
                         };
-                        let cfg_attrs: Vec<_> = attrs::extract_cfg_attrs(&imp.attrs).collect();
+                        let attrs = Attrs::from(&*imp.attrs);
 
                         let mut new_methods = imp
                             .items
@@ -186,7 +187,7 @@ impl Module {
                                 _ => None,
                             })
                             .filter(|m| matches!(m.vis, Visibility::Public(_)))
-                            .map(|m| Method::from_syn(m, self_path.clone(), Some(&imp.generics), &cfg_attrs))
+                            .map(|m| Method::from_syn(m, self_path.clone(), Some(&imp.generics), &attrs))
                             .collect();
 
                         let self_ident = self_path.path.elements.last().unwrap();
@@ -242,7 +243,8 @@ fn extract_imports(base_path: &Path, use_tree: &UseTree, out: &mut Vec<(Path, Id
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Clone, Debug)]
+#[non_exhaustive]
 pub struct File {
     pub modules: BTreeMap<String, Module>,
 }

@@ -5,7 +5,7 @@
 use std::borrow::Cow;
 
 use zerofrom::ZeroFrom;
-use zerovec::*;
+use zerovec::{ule::AsULE, *};
 
 #[make_varule(VarStructULE)]
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, serde::Serialize, serde::Deserialize)]
@@ -57,6 +57,30 @@ struct MultiFieldStruct<'a> {
     #[serde(borrow)]
     e: Cow<'a, str>,
     f: char,
+}
+
+#[make_varule(MultiFieldConsecutiveStructULE)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, serde::Serialize, serde::Deserialize)]
+#[zerovec::derive(Serialize, Deserialize, Debug)]
+struct MultiFieldConsecutiveStruct<'a> {
+    #[serde(borrow)]
+    a: Cow<'a, str>,
+    #[serde(borrow)]
+    b: Cow<'a, str>,
+    #[serde(borrow)]
+    c: Cow<'a, str>,
+    #[serde(borrow)]
+    d: Cow<'a, str>,
+}
+
+#[make_varule(CustomVarFieldULE)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, serde::Serialize, serde::Deserialize)]
+#[zerovec::derive(Serialize, Deserialize, Debug)]
+struct CustomVarField<'a> {
+    #[zerovec::varule(MultiFieldStructULE)]
+    #[serde(borrow)]
+    a: MultiFieldStruct<'a>,
+    b: u32,
 }
 
 #[make_varule(MultiFieldTupleULE)]
@@ -129,6 +153,11 @@ fn main() {
         assert_eq!(stack, &MultiFieldStruct::zero_from(zero))
     });
 
+    assert_zerovec::<MultiFieldConsecutiveStructULE, MultiFieldConsecutiveStruct, _>(
+        TEST_MULTICONSECUTIVE,
+        |stack, zero| assert_eq!(stack, &MultiFieldConsecutiveStruct::zero_from(zero)),
+    );
+
     let vartuples = &[
         VarTupleStruct(101, 'ø', TEST_STRINGS1.into()),
         VarTupleStruct(9499, '⸘', TEST_STRINGS2.into()),
@@ -137,6 +166,15 @@ fn main() {
     assert_zerovec::<VarTupleStructULE, VarTupleStruct, _>(vartuples, |stack, zero| {
         assert_eq!(stack, &VarTupleStruct::zero_from(zero))
     });
+
+    // Test that all fields are accessible on a type using multifieldule
+    let multi_ule = ule::encode_varule_to_box(&TEST_MULTIFIELD[0]);
+    assert_eq!(multi_ule.a, TEST_MULTIFIELD[0].a.to_unaligned());
+    assert_eq!(multi_ule.b, TEST_MULTIFIELD[0].b.to_unaligned());
+    assert_eq!(multi_ule.c(), TEST_MULTIFIELD[0].c);
+    assert_eq!(multi_ule.d, TEST_MULTIFIELD[0].d);
+    assert_eq!(multi_ule.e(), TEST_MULTIFIELD[0].e);
+    assert_eq!(multi_ule.f, TEST_MULTIFIELD[0].f.to_unaligned());
 }
 
 const TEST_VARSTRUCTS: &[VarStruct<'static>] = &[
@@ -187,3 +225,11 @@ const TEST_MULTIFIELD: &[MultiFieldStruct<'static>] = &[
         f: 'ə',
     },
 ];
+
+const TEST_MULTICONSECUTIVE: &[MultiFieldConsecutiveStruct<'static>] =
+    &[MultiFieldConsecutiveStruct {
+        a: Cow::Borrowed("one"),
+        b: Cow::Borrowed("2"),
+        c: Cow::Borrowed("three"),
+        d: Cow::Borrowed("four"),
+    }];

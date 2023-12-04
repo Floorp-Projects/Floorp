@@ -20,7 +20,7 @@ where
         let joiner = self.joiner.bake(env);
         let keys1 = self.keys1.bake(env);
         let values = self.values.bake(env);
-        quote! { unsafe { #[allow(unused_unsafe)] ::zerovec::ZeroMap2d::from_parts_unchecked(#keys0, #joiner, #keys1, #values) } }
+        quote! { unsafe { #[allow(unused_unsafe)] zerovec::ZeroMap2d::from_parts_unchecked(#keys0, #joiner, #keys1, #values) } }
     }
 }
 
@@ -39,7 +39,7 @@ where
         let joiner = self.joiner.bake(env);
         let keys1 = self.keys1.bake(env);
         let values = self.values.bake(env);
-        quote! { unsafe { #[allow(unused_unsafe)] ::zerovec::maps::ZeroMap2dBorrowed::from_parts_unchecked(#keys0, #joiner, #keys1, #values) } }
+        quote! { unsafe { #[allow(unused_unsafe)] zerovec::maps::ZeroMap2dBorrowed::from_parts_unchecked(#keys0, #joiner, #keys1, #values) } }
     }
 }
 
@@ -52,7 +52,7 @@ fn test_baked_map() {
             crate::ZeroMap2d::from_parts_unchecked(
                 unsafe {
                     crate::VarZeroVec::from_bytes_unchecked(
-                        b"arcaz\0cu\0en\0ff\0grckk\0ku\0ky\0lifmanmn\0pa\0palsd\0tg\0ug\0unruz\0yuezh\0"
+                        b"\x0E\0\0\0\0\0\x05\0\x07\0\t\0\x0B\0\x10\0\x12\0\x14\0\x1C\0\x1E\0#\0%\0'\0,\0arcazcuenffgrckkkukylifmanmnpapalsdtgugunruzyuezh"
                     )
                 },
                 unsafe {
@@ -62,12 +62,12 @@ fn test_baked_map() {
                 },
                 unsafe {
                     crate::VarZeroVec::from_bytes_unchecked(
-                        b"NbatPalmArabGlagShawAdlmLinbArabArabYeziArabLatnLimbNkooMongArabPhlpDevaKhojSindArabCyrlDevaArabHansBopoHanbHant"
+                        b"\x1C\0\0\0\0\0\x04\0\x08\0\x0C\0\x10\0\x14\0\x18\0\x1C\0 \0$\0(\0,\x000\x004\08\0<\0@\0D\0H\0L\0P\0T\0X\0\\\0`\0d\0h\0l\0NbatPalmArabGlagShawAdlmLinbArabArabYeziArabLatnLimbNkooMongArabPhlpDevaKhojSindArabCyrlDevaArabHansBopoHanbHant"
                     )
                 },
                 unsafe {
                     crate::VarZeroVec::from_bytes_unchecked(
-                        b"JO\0SY\0IR\0BG\0GB\0GN\0GR\0CN\0IQ\0GE\0CN\0TR\0IN\0GN\0CN\0PK\0CN\0IN\0IN\0IN\0PK\0KZ\0NP\0AF\0CN\0TW\0TW\0TW\0"
+                        b"\x1C\0\0\0\0\0\x02\0\x04\0\x06\0\x08\0\n\0\x0C\0\x0E\0\x10\0\x12\0\x14\0\x16\0\x18\0\x1A\0\x1C\0\x1E\0 \0\"\0$\0&\0(\0*\0,\0.\x000\x002\x004\x006\0JOSYIRBGGBGNGRCNIQGECNTRINGNCNPKCNINININPKKZNPAFCNTWTWTW"
                     )
                 },
             )
@@ -85,7 +85,7 @@ fn test_baked_borrowed_map() {
             crate::maps::ZeroMap2dBorrowed::from_parts_unchecked(
                 unsafe {
                     crate::VarZeroSlice::from_bytes_unchecked(
-                        b"arcaz\0cu\0en\0ff\0grckk\0ku\0ky\0lifmanmn\0pa\0palsd\0tg\0ug\0unruz\0yuezh\0"
+                        b"\x0E\0\0\0\0\0\x05\0\x07\0\t\0\x0B\0\x10\0\x12\0\x14\0\x1C\0\x1E\0#\0%\0'\0,\0arcazcuenffgrckkkukylifmanmnpapalsdtgugunruzyuezh"
                     )
                 },
                 unsafe {
@@ -95,12 +95,12 @@ fn test_baked_borrowed_map() {
                 },
                 unsafe {
                     crate::VarZeroSlice::from_bytes_unchecked(
-                        b"NbatPalmArabGlagShawAdlmLinbArabArabYeziArabLatnLimbNkooMongArabPhlpDevaKhojSindArabCyrlDevaArabHansBopoHanbHant"
+                        b"\x1C\0\0\0\0\0\x04\0\x08\0\x0C\0\x10\0\x14\0\x18\0\x1C\0 \0$\0(\0,\x000\x004\08\0<\0@\0D\0H\0L\0P\0T\0X\0\\\0`\0d\0h\0l\0NbatPalmArabGlagShawAdlmLinbArabArabYeziArabLatnLimbNkooMongArabPhlpDevaKhojSindArabCyrlDevaArabHansBopoHanbHant"
                     )
                 },
                 unsafe {
                     crate::VarZeroSlice::from_bytes_unchecked(
-                        b"JO\0SY\0IR\0BG\0GB\0GN\0GR\0CN\0IQ\0GE\0CN\0TR\0IN\0GN\0CN\0PK\0CN\0IN\0IN\0IN\0PK\0KZ\0NP\0AF\0CN\0TW\0TW\0TW\0"
+                        b"\x1C\0\0\0\0\0\x02\0\x04\0\x06\0\x08\0\n\0\x0C\0\x0E\0\x10\0\x12\0\x14\0\x16\0\x18\0\x1A\0\x1C\0\x1E\0 \0\"\0$\0&\0(\0*\0,\0.\x000\x002\x004\x006\0JOSYIRBGGBGNGRCNIQGECNTRINGNCNPKCNINININPKKZNPAFCNTWTWTW"
                     )
                 },
             )

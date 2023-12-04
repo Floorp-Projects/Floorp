@@ -112,7 +112,7 @@ impl<'a> Default for FlexZeroVec<'a> {
 
 impl<'a> PartialOrd for FlexZeroVec<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.iter().partial_cmp(other.iter())
+        Some(self.cmp(other))
     }
 }
 

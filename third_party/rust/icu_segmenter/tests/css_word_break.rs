@@ -2,22 +2,10 @@
 // called LICENSE at the top level of the ICU4X source tree
 // (online at: https://github.com/unicode-org/icu4x/blob/main/LICENSE ).
 
-use icu_provider::prelude::*;
-use icu_provider_adapters::fork::ForkByKeyProvider;
-use icu_provider_fs::FsDataProvider;
 use icu_segmenter::LineBreakOptions;
 use icu_segmenter::LineBreakStrictness;
 use icu_segmenter::LineBreakWordOption;
 use icu_segmenter::LineSegmenter;
-use std::path::PathBuf;
-
-fn get_segmenter_testdata_provider() -> impl BufferProvider {
-    let segmenter_fs_provider = FsDataProvider::try_new(
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/testdata/provider"),
-    )
-    .unwrap();
-    ForkByKeyProvider::new(segmenter_fs_provider, icu_testdata::buffer())
-}
 
 fn check_with_options(
     s: &str,
@@ -25,11 +13,7 @@ fn check_with_options(
     mut expect_utf16: Vec<usize>,
     options: LineBreakOptions,
 ) {
-    let segmenter = LineSegmenter::try_new_dictionary_with_options_with_buffer_provider(
-        &get_segmenter_testdata_provider(),
-        options,
-    )
-    .expect("Data exists");
+    let segmenter = LineSegmenter::new_dictionary_with_options(options);
 
     let iter = segmenter.segment_str(s);
     let result: Vec<usize> = iter.collect();

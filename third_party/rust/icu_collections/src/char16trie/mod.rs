@@ -11,7 +11,7 @@
 //!
 //! ## Architecture
 //!
-//! ICU4X [`Char16Trie`](crate::char16trie::Char16Trie) is designed to provide a read-only view of UCharsTrie data that is exported from ICU4C.
+//! ICU4X [`Char16Trie`] is designed to provide a read-only view of UCharsTrie data that is exported from ICU4C.
 //!
 //! ## Examples
 //!
@@ -23,9 +23,8 @@
 //!
 //! // A Char16Trie containing the ASCII characters mapping 'a' to 1 and 'ab'
 //! // to 100.
-//! let trie_data = vec![48, 97, 176, 98, 32868];
-//! let trie =
-//!     Char16Trie::new(ZeroVec::from_slice_or_alloc(trie_data.as_slice()));
+//! let trie_data = [48, 97, 176, 98, 32868];
+//! let trie = Char16Trie::new(ZeroVec::from_slice_or_alloc(&trie_data));
 //!
 //! let mut iter = trie.iter();
 //! let res = iter.next('a');

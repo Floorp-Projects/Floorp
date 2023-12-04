@@ -53,6 +53,14 @@ impl<K, V> Store<K, V> for Vec<(K, V)> {
     }
 }
 
+impl<K, V> StoreSlice<K, V> for Vec<(K, V)> {
+    type Slice = [(K, V)];
+
+    fn lm_get_range(&self, range: Range<usize>) -> Option<&Self::Slice> {
+        self.get(range)
+    }
+}
+
 impl<K, V> StoreMut<K, V> for Vec<(K, V)> {
     #[inline]
     fn lm_with_capacity(capacity: usize) -> Self {

@@ -1,5 +1,7 @@
 # litemap [![crates.io](https://img.shields.io/crates/v/litemap)](https://crates.io/crates/litemap)
 
+<!-- cargo-rdme start -->
+
 ## `litemap`
 
 `litemap` is a crate providing [`LiteMap`], a highly simplistic "flat" key-value map
@@ -19,7 +21,16 @@ By default, [`LiteMap`] is backed by a [`Vec`]; however, it can be backed by any
 random-access data store, giving that data store a map-like interface. See the [`store`]
 module for more details.
 
+### Const construction
+
+[`LiteMap`] supports const construction from any store that is const-constructible, such as a
+static slice, via [`LiteMap::from_sorted_store_unchecked()`]. This also makes [`LiteMap`]
+suitable for use with [`databake`]. See [`impl Bake for LiteMap`] for more details.
+
+[`impl Bake for LiteMap`]: ./struct.LiteMap.html#impl-Bake-for-LiteMap<K,+V,+S>
 [`Vec`]: alloc::vec::Vec
+
+<!-- cargo-rdme end -->
 
 ## More Information
 

@@ -4,6 +4,7 @@
 
 use super::Attribute;
 
+use crate::helpers::ShortSlice;
 use alloc::vec::Vec;
 use core::ops::Deref;
 
@@ -30,7 +31,7 @@ use core::ops::Deref;
 /// assert_eq!(attributes.to_string(), "foobar-testing");
 /// ```
 #[derive(Default, Debug, PartialEq, Eq, Clone, Hash, PartialOrd, Ord)]
-pub struct Attributes(Vec<Attribute>);
+pub struct Attributes(ShortSlice<Attribute>);
 
 impl Attributes {
     /// Returns a new empty set of attributes. Same as [`default()`](Default::default()), but is `const`.
@@ -44,7 +45,7 @@ impl Attributes {
     /// ```
     #[inline]
     pub const fn new() -> Self {
-        Self(Vec::new())
+        Self(ShortSlice::new())
     }
 
     /// A constructor which takes a pre-sorted list of [`Attribute`] elements.
@@ -68,6 +69,10 @@ impl Attributes {
     /// for the caller to use [`binary_search`](slice::binary_search) instead of [`sort`](slice::sort)
     /// and [`dedup`](Vec::dedup()).
     pub fn from_vec_unchecked(input: Vec<Attribute>) -> Self {
+        Self(input.into())
+    }
+
+    pub(crate) fn from_short_slice_unchecked(input: ShortSlice<Attribute>) -> Self {
         Self(input)
     }
 
@@ -78,8 +83,7 @@ impl Attributes {
     /// # Examples
     ///
     /// ```
-    /// use icu::locid::extensions::unicode::{Attribute, Attributes};
-    /// use icu::locid::extensions_unicode_attribute as attribute;
+    /// use icu::locid::extensions::unicode::{attribute, Attribute, Attributes};
     /// use writeable::assert_writeable_eq;
     ///
     /// let mut attributes = Attributes::from_vec_unchecked(vec![

@@ -7,19 +7,20 @@ use alloc::borrow::Cow;
 use core::fmt;
 
 macro_rules! impl_write_num {
-    ($u:ty, $i:ty, $test:ident, $max_ilog_10:expr) => {
+    ($u:ty, $i:ty, $test:ident) => {
         impl $crate::Writeable for $u {
             fn write_to<W: core::fmt::Write + ?Sized>(&self, sink: &mut W) -> core::fmt::Result {
-                let mut buf = [b'0'; $max_ilog_10 + 1];
+                const MAX_LEN: usize = <$u>::MAX.ilog10() as usize + 1;
+                let mut buf = [b'0'; MAX_LEN];
                 let mut n = *self;
-                let mut i = $max_ilog_10 + 1;
+                let mut i = MAX_LEN;
                 #[allow(clippy::indexing_slicing)] // n < 10^i
                 while n != 0 {
                     i -= 1;
                     buf[i] = b'0' + (n % 10) as u8;
                     n /= 10;
                 }
-                if i == buf.len() {
+                if i == MAX_LEN {
                     debug_assert_eq!(*self, 0);
                     i -= 1;
                 }
@@ -29,39 +30,7 @@ macro_rules! impl_write_num {
             }
 
             fn writeable_length_hint(&self) -> $crate::LengthHint {
-                #[allow(unstable_name_collisions)] // that's the idea
                 LengthHint::exact(self.checked_ilog10().unwrap_or(0) as usize + 1)
-            }
-        }
-
-        impl ILog10Ext for $u {
-            fn checked_ilog10(self) -> Option<u32> {
-                if self == 0 {
-                    return None;
-                }
-                let b = (<$u>::BITS - 1) - self.leading_zeros();
-                // self ∈ [2ᵇ, 2ᵇ⁺¹-1] => ⌊log₁₀(self)⌋ ∈ [⌊log₁₀(2ᵇ)⌋, ⌊log₁₀(2ᵇ⁺¹-1)⌋]
-                //                    <=> ⌊log₁₀(self)⌋ ∈ [⌊log₁₀(2ᵇ)⌋, ⌊log₁₀(2ᵇ⁺¹)⌋]
-                //                    <=> ⌊log₁₀(self)⌋ ∈ [⌊b log₁₀(2)⌋, ⌊(b+1) log₁₀(2)⌋]
-                // The second line holds because there is no integer in
-                // [log₁₀(2ᶜ-1), log₁₀(2ᶜ)], if there were, there'd be some 10ⁿ in
-                // [2ᶜ-1, 2ᶜ], but it can't be 2ᶜ-1 due to parity nor 2ᶜ due to prime
-                // factors.
-
-                const M: u32 = (core::f64::consts::LOG10_2 * (1 << 26) as f64) as u32;
-                let low = (b * M) >> 26;
-                let high = ((b + 1) * M) >> 26;
-
-                // If the bounds aren't tight (e.g. 87 ∈ [64, 127] ⟹ ⌊log₁₀(87)⌋ ∈ [1,2]),
-                // compare to 10ʰ (100). This shouldn't happen too often as there are more
-                // powers of 2 than 10 (it happens for 14% of u32s).
-                Some(if high == low {
-                    low
-                } else if self < (10 as $u).pow(high) {
-                    low
-                } else {
-                    high
-                })
             }
         }
 
@@ -114,23 +83,12 @@ macro_rules! impl_write_num {
     };
 }
 
-/// `checked_ilog10` is added as a method on integer types in 1.67.
-/// This extension trait provides it for older compilers.
-trait ILog10Ext: Sized {
-    fn checked_ilog10(self) -> Option<u32>;
-}
-
-impl_write_num!(u8, i8, test_u8, 2);
-impl_write_num!(u16, i16, test_u16, 4);
-impl_write_num!(u32, i32, test_u32, 9);
-impl_write_num!(u64, i64, test_u64, 19);
-impl_write_num!(u128, i128, test_u128, 38);
-impl_write_num!(
-    usize,
-    isize,
-    test_usize,
-    if usize::MAX as u64 == u64::MAX { 19 } else { 9 }
-);
+impl_write_num!(u8, i8, test_u8);
+impl_write_num!(u16, i16, test_u16);
+impl_write_num!(u32, i32, test_u32);
+impl_write_num!(u64, i64, test_u64);
+impl_write_num!(u128, i128, test_u128);
+impl_write_num!(usize, isize, test_usize);
 
 impl Writeable for str {
     #[inline]

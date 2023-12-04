@@ -26,9 +26,9 @@ macro_rules! lstm_matrix {
         pub struct $name<'data> {
             // Invariant: dims.product() == data.len()
             #[allow(missing_docs)]
-            dims: [u16; $generic],
+            pub(crate) dims: [u16; $generic],
             #[allow(missing_docs)]
-            data: ZeroVec<'data, f32>,
+            pub(crate) data: ZeroVec<'data, f32>,
         }
 
         impl<'data> $name<'data> {
@@ -51,14 +51,6 @@ macro_rules! lstm_matrix {
                 data: ZeroVec<'data, f32>,
             ) -> Self {
                 Self { dims, data }
-            }
-
-            #[cfg(feature = "lstm")]
-            pub(crate) fn as_matrix_zero(&self) -> crate::math_helper::MatrixZero<$generic> {
-                crate::math_helper::MatrixZero::from_parts_unchecked(
-                    &self.data,
-                    self.dims.map(|x| x as usize),
-                )
             }
         }
 

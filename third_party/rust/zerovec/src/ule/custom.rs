@@ -129,8 +129,8 @@
 //! }
 //!
 //! fn main() {
-//!     let mut foos = vec![Foo {field1: 'u', field2: 983, field3: ZeroVec::alloc_from_slice(&[1212,2309,500,7000])},
-//!                         Foo {field1: 'l', field2: 1010, field3: ZeroVec::alloc_from_slice(&[1932, 0, 8888, 91237])}];
+//!     let mut foos = [Foo {field1: 'u', field2: 983, field3: ZeroVec::alloc_from_slice(&[1212,2309,500,7000])},
+//!                     Foo {field1: 'l', field2: 1010, field3: ZeroVec::alloc_from_slice(&[1932, 0, 8888, 91237])}];
 //!
 //!     let vzv = VarZeroVec::<_>::from(&foos);
 //!

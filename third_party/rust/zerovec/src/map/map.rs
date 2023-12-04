@@ -4,7 +4,7 @@
 
 use super::*;
 use crate::ule::{AsULE, EncodeAsVarULE, VarULE};
-use crate::{VarZeroVec, ZeroSlice, ZeroVec};
+use crate::{VarZeroVec, ZeroSlice, ZeroVec, ZeroVecError};
 use alloc::borrow::Borrow;
 use alloc::boxed::Box;
 use core::cmp::Ordering;
@@ -318,6 +318,92 @@ where
     ) -> impl ExactSizeIterator<Item = &'b <V as ZeroMapKV<'a>>::GetType> {
         #[allow(clippy::unwrap_used)] // idx is in-range
         (0..self.values.zvl_len()).map(move |idx| self.values.zvl_get(idx).unwrap())
+    }
+}
+
+impl<'a, K, V> ZeroMap<'a, K, V>
+where
+    K: ZeroMapKV<'a, Container = ZeroVec<'a, K>> + ?Sized,
+    V: ZeroMapKV<'a> + ?Sized,
+    K: AsULE,
+{
+    /// Cast a `ZeroMap<K, V>` to `ZeroMap<P, V>` where `K` and `P` are [`AsULE`] types
+    /// with the same representation.
+    ///
+    /// # Unchecked Invariants
+    ///
+    /// If `K` and `P` have different ordering semantics, unexpected behavior may occur.
+    pub fn cast_zv_k_unchecked<P>(self) -> ZeroMap<'a, P, V>
+    where
+        P: AsULE<ULE = K::ULE> + ZeroMapKV<'a, Container = ZeroVec<'a, P>> + ?Sized,
+    {
+        ZeroMap {
+            keys: self.keys.cast(),
+            values: self.values,
+        }
+    }
+
+    /// Convert a `ZeroMap<K, V>` to `ZeroMap<P, V>` where `K` and `P` are [`AsULE`] types
+    /// with the same size.
+    ///
+    /// # Unchecked Invariants
+    ///
+    /// If `K` and `P` have different ordering semantics, unexpected behavior may occur.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `K::ULE` and `P::ULE` are not the same size.
+    pub fn try_convert_zv_k_unchecked<P>(self) -> Result<ZeroMap<'a, P, V>, ZeroVecError>
+    where
+        P: AsULE + ZeroMapKV<'a, Container = ZeroVec<'a, P>> + ?Sized,
+    {
+        Ok(ZeroMap {
+            keys: self.keys.try_into_converted()?,
+            values: self.values,
+        })
+    }
+}
+
+impl<'a, K, V> ZeroMap<'a, K, V>
+where
+    K: ZeroMapKV<'a> + ?Sized,
+    V: ZeroMapKV<'a, Container = ZeroVec<'a, V>> + ?Sized,
+    V: AsULE,
+{
+    /// Cast a `ZeroMap<K, V>` to `ZeroMap<K, P>` where `V` and `P` are [`AsULE`] types
+    /// with the same representation.
+    ///
+    /// # Unchecked Invariants
+    ///
+    /// If `V` and `P` have different ordering semantics, unexpected behavior may occur.
+    pub fn cast_zv_v_unchecked<P>(self) -> ZeroMap<'a, K, P>
+    where
+        P: AsULE<ULE = V::ULE> + ZeroMapKV<'a, Container = ZeroVec<'a, P>> + ?Sized,
+    {
+        ZeroMap {
+            keys: self.keys,
+            values: self.values.cast(),
+        }
+    }
+
+    /// Convert a `ZeroMap<K, V>` to `ZeroMap<K, P>` where `V` and `P` are [`AsULE`] types
+    /// with the same size.
+    ///
+    /// # Unchecked Invariants
+    ///
+    /// If `V` and `P` have different ordering semantics, unexpected behavior may occur.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `V::ULE` and `P::ULE` are not the same size.
+    pub fn try_convert_zv_v_unchecked<P>(self) -> Result<ZeroMap<'a, K, P>, ZeroVecError>
+    where
+        P: AsULE + ZeroMapKV<'a, Container = ZeroVec<'a, P>> + ?Sized,
+    {
+        Ok(ZeroMap {
+            keys: self.keys,
+            values: self.values.try_into_converted()?,
+        })
     }
 }
 

@@ -2,7 +2,8 @@
 /// generates a simplified version of the Rust AST that captures special
 /// types such as opaque structs, [`Box`], and [`Result`] with utilities
 /// for handling such types.
-pub(crate) mod attrs;
+pub mod attrs;
+pub use attrs::Attrs;
 
 mod methods;
 pub use methods::{BorrowedParams, Method, Param, SelfParam};

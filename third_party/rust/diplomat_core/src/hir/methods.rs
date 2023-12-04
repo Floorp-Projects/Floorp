@@ -5,12 +5,13 @@ use std::fmt::{self, Write};
 use smallvec::SmallVec;
 
 use super::{
-    paths, Docs, Ident, IdentBuf, LifetimeEnv, MaybeStatic, MethodLifetime, MethodLifetimes,
+    paths, Attrs, Docs, Ident, IdentBuf, LifetimeEnv, MaybeStatic, MethodLifetime, MethodLifetimes,
     OutType, SelfType, Slice, Type, TypeContext, TypeLifetime, TypeLifetimes,
 };
 
 /// A method exposed to Diplomat.
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct Method {
     pub docs: Docs,
     pub name: IdentBuf,
@@ -19,10 +20,12 @@ pub struct Method {
     pub param_self: Option<ParamSelf>,
     pub params: Vec<Param>,
     pub output: ReturnType,
+    pub attrs: Attrs,
 }
 
 /// Type that the method returns.
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum SuccessType {
     Writeable,
     OutType(OutType),
@@ -30,6 +33,7 @@ pub enum SuccessType {
 
 /// Whether or not the method returns a value or a result.
 #[derive(Debug)]
+#[allow(clippy::exhaustive_enums)] // this only exists for fallible/infallible, breaking changes for more complex returns are ok
 pub enum ReturnType {
     Infallible(Option<SuccessType>),
     Fallible(Option<SuccessType>, Option<OutType>),
@@ -37,12 +41,14 @@ pub enum ReturnType {
 
 /// The `self` parameter of a method.
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct ParamSelf {
     pub ty: SelfType,
 }
 
 /// A parameter in a method.
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct Param {
     pub name: IdentBuf,
     pub ty: Type,

@@ -1,5 +1,7 @@
 # writeable [![crates.io](https://img.shields.io/crates/v/writeable)](https://crates.io/crates/writeable)
 
+<!-- cargo-rdme start -->
+
 `writeable` is a utility crate of the [`ICU4X`] project.
 
 It includes [`Writeable`], a core trait representing an object that can be written to a
@@ -46,6 +48,8 @@ writeable::impl_display_with_writeable!(WelcomeMessage<'_>);
 ```
 
 [`ICU4X`]: ../icu/index.html
+
+<!-- cargo-rdme end -->
 
 ## More Information
 

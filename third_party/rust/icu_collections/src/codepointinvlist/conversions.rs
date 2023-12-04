@@ -2,7 +2,6 @@
 // called LICENSE at the top level of the ICU4X source tree
 // (online at: https://github.com/unicode-org/icu4x/blob/main/LICENSE ).
 
-use alloc::vec;
 use core::{
     convert::TryFrom,
     iter::FromIterator,
@@ -19,7 +18,7 @@ fn try_from_range<'data>(
 ) -> Result<CodePointInversionList<'data>, CodePointInversionListError> {
     let (from, till) = deconstruct_range(range);
     if from < till {
-        let set = vec![from, till];
+        let set = [from, till];
         let inv_list: ZeroVec<u32> = ZeroVec::alloc_from_slice(&set);
         #[allow(clippy::unwrap_used)] // valid
         Ok(CodePointInversionList::try_from_inversion_list(inv_list).unwrap())
@@ -171,16 +170,15 @@ mod tests {
 
     #[test]
     fn test_from_range_iterator() {
-        let ranges: Vec<RangeInclusive<u32>> = vec![
+        let ranges = [
             RangeInclusive::new(0, 0x3FFF),
             RangeInclusive::new(0x4000, 0x7FFF),
             RangeInclusive::new(0x8000, 0xBFFF),
             RangeInclusive::new(0xC000, 0xFFFF),
         ];
-        let ranges_iter = ranges.into_iter();
         let expected =
             CodePointInversionList::try_from_inversion_list_slice(&[0x0, 0x1_0000]).unwrap();
-        let actual = CodePointInversionList::from_iter(ranges_iter);
+        let actual = CodePointInversionList::from_iter(ranges);
         assert_eq!(expected, actual);
     }
 }

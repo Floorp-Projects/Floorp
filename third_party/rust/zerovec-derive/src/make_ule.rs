@@ -210,7 +210,7 @@ fn make_ule_enum_impl(
 
         impl #name {
             /// Attempt to construct the value from its corresponding integer,
-            /// returning None if not possible
+            /// returning `None` if not possible
             pub(crate) fn new_from_u8(value: u8) -> Option<Self> {
                 if value <= #max {
                     unsafe {
@@ -305,9 +305,7 @@ fn make_ule_struct_impl(
         quote!(
             impl core::cmp::PartialOrd for #ule_name {
                 fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
-                    let this = <#name as zerovec::ule::AsULE>::from_unaligned(*self);
-                    let other = <#name as zerovec::ule::AsULE>::from_unaligned(*other);
-                    <#name as core::cmp::PartialOrd>::partial_cmp(&this, &other)
+                    Some(self.cmp(other))
                 }
             }
 

@@ -51,8 +51,12 @@ mod script;
 mod variant;
 mod variants;
 
-pub use language::Language;
-pub use region::Region;
-pub use script::Script;
-pub use variant::Variant;
+#[doc(inline)]
+pub use language::{language, Language};
+#[doc(inline)]
+pub use region::{region, Region};
+#[doc(inline)]
+pub use script::{script, Script};
+#[doc(inline)]
+pub use variant::{variant, Variant};
 pub use variants::Variants;

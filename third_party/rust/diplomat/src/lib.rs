@@ -7,11 +7,10 @@ use diplomat_core::ast;
 mod enum_convert;
 mod transparent_convert;
 
-fn cfgs_to_stream(attrs: &[String]) -> proc_macro2::TokenStream {
-    attrs.iter().fold(quote!(), |prev, attr| {
-        let attr = attr.parse::<proc_macro2::TokenStream>().unwrap();
-        quote!(#prev #attr)
-    })
+fn cfgs_to_stream(attrs: &[Attribute]) -> proc_macro2::TokenStream {
+    attrs
+        .iter()
+        .fold(quote!(), |prev, attr| quote!(#prev #attr))
 }
 
 fn gen_params_at_boundary(param: &ast::Param, expanded_params: &mut Vec<FnArg>) {
@@ -197,7 +196,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         })
         .collect::<Vec<_>>();
 
-    let cfg = cfgs_to_stream(&m.cfg_attrs);
+    let cfg = cfgs_to_stream(&m.attrs.cfg);
 
     if writeable_flushes.is_empty() {
         Item::Fn(syn::parse_quote! {
@@ -241,7 +240,7 @@ impl AttributeInfo {
                     if seg == "opaque" {
                         opaque = true;
                         return false;
-                    } else if seg == "rust_link" || seg == "out" {
+                    } else if seg == "rust_link" || seg == "out" || seg == "attr" {
                         // diplomat-tool reads these, not diplomat::bridge.
                         // throw them away so rustc doesn't complain about unknown attributes
                         return false;
@@ -291,6 +290,12 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
             if info.opaque {
                 panic!("#[diplomat::opaque] not allowed on enums")
             }
+            for v in &mut e.variants {
+                let info = AttributeInfo::extract(&mut v.attrs);
+                if info.opaque {
+                    panic!("#[diplomat::opaque] not allowed on enum variants");
+                }
+            }
             *e = syn::parse_quote! {
                 #[repr(C)]
                 #e
@@ -331,7 +336,7 @@ fn gen_bridge(input: ItemMod) -> ItemMod {
             (quote! {}, quote! {})
         };
 
-        let cfg = cfgs_to_stream(custom_type.cfg_attrs());
+        let cfg = cfgs_to_stream(&custom_type.attrs().cfg);
 
         // for now, body is empty since all we need to do is drop the box
         // TODO(#13): change to take a `*mut` and handle DST boxes appropriately

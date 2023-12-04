@@ -23,7 +23,7 @@
 //! use icu::locid::extensions::unicode::{Key, Value};
 //! use icu::locid::Locale;
 //!
-//! let loc: Locale = "en-US-u-ca-buddhist-t-en-US-h0-hybrid-x-foo"
+//! let loc: Locale = "en-US-u-ca-buddhist-t-en-us-h0-hybrid-x-foo"
 //!     .parse()
 //!     .expect("Failed to parse.");
 //!

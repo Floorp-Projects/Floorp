@@ -395,6 +395,7 @@ pub(crate) struct LifetimeNode {
 
 /// A lifetime, analogous to [`syn::Lifetime`].
 #[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum Lifetime {
     /// The `'static` lifetime.
     Static,

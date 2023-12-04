@@ -75,7 +75,7 @@
   {
     "input": {
       "type": "Locale",
-      "identifier": "en-US-t-pl-Latn-DE"
+      "identifier": "en-US-t-pl-latn-de"
     },
     "output": {
       "type": "Locale",
@@ -125,7 +125,7 @@
   {
     "input": {
       "type": "Locale",
-      "identifier": "en-US-t-es-AR-x-foo"
+      "identifier": "en-US-t-es-ar-x-foo"
     },
     "output": {
       "type": "Locale",
@@ -142,7 +142,7 @@
   {
     "input": {
       "type": "Locale",
-      "identifier": "en-US-u-ca-buddhist-hc-h12-t-es-AR-h0-hybrid-x-private-foobar"
+      "identifier": "en-US-u-ca-buddhist-hc-h12-t-es-ar-h0-hybrid-x-private-foobar"
     },
     "output": {
       "type": "Locale",

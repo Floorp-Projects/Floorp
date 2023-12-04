@@ -73,12 +73,7 @@ where
     V: ?Sized,
 {
     fn clone(&self) -> Self {
-        ZeroMap2dBorrowed {
-            keys0: self.keys0,
-            joiner: self.joiner,
-            keys1: self.keys1,
-            values: self.values,
-        }
+        *self
     }
 }
 
