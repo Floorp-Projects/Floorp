@@ -32,16 +32,7 @@ scrollbar_prefs.push(["layout.scrollbars.always-layerize-track", true]);
 var timeout_prefs = prefs.slice(); // make a copy
 timeout_prefs.push(["apz.content_response_timeout", 0]);
 
-var smoothness_prefs = [
-  ["apz.test.logging_enabled", true],
-  // We'd want to test real wheel events rather than pan events.
-  ["apz.test.mac.synth_wheel_input", true],
-  // Use a longer animation duration to avoid the situation that the
-  // animation stops accidentally in between each wheel event.
-  // If the situation happens, scroll offsets will not change at the moment.
-  ["general.smoothScroll.mouseWheel.durationMaxMS", 1500],
-  ["general.smoothScroll.mouseWheel.durationMinMS", 1500]
-];
+var smoothness_prefs = getSmoothScrollPrefs("wheel");
 
 var subtests = [
   {"file": "helper_scroll_on_position_fixed.html", "prefs": prefs},
