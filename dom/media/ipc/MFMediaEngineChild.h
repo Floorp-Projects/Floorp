@@ -42,6 +42,7 @@ class MFMediaEngineChild final : public PMFMediaEngineChild {
   mozilla::ipc::IPCResult RecvNotifyEvent(MFMediaEngineEvent aEvent);
   mozilla::ipc::IPCResult RecvNotifyError(const MediaResult& aError);
   mozilla::ipc::IPCResult RecvUpdateStatisticData(const StatisticData& aData);
+  mozilla::ipc::IPCResult RecvNotifyResizing(uint32_t aWidth, uint32_t aHeight);
 
   nsISerialEventTarget* ManagerThread() { return mManagerThread; }
   void AssertOnManagerThread() const {
@@ -112,6 +113,7 @@ class MFMediaEngineWrapper final : public ExternalPlaybackEngine {
   uint64_t Id() const override { return mEngine->Id(); }
   void SetMediaInfo(const MediaInfo& aInfo) override;
   bool SetCDMProxy(CDMProxy* aProxy) override;
+  void NotifyResizing(uint32_t aWidth, uint32_t aHeight) override;
 
   nsISerialEventTarget* ManagerThread() { return mEngine->ManagerThread(); }
   void AssertOnManagerThread() const { mEngine->AssertOnManagerThread(); }

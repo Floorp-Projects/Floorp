@@ -222,9 +222,12 @@ void MFMediaEngineParent::HandleMediaEngineEvent(
       NotifyError(error, result);
       break;
     }
-    case MF_MEDIA_ENGINE_EVENT_FORMATCHANGE:
-      // TODO : add callback to notify resizing in bug 1867634.
+    case MF_MEDIA_ENGINE_EVENT_FORMATCHANGE: {
+      if (mMediaEngine->HasVideo()) {
+        NotifyVideoResizing();
+      }
       break;
+    }
     case MF_MEDIA_ENGINE_EVENT_FIRSTFRAMEREADY: {
       if (mMediaEngine->HasVideo()) {
         EnsureDcompSurfaceHandle();
@@ -585,6 +588,26 @@ void MFMediaEngineParent::AssertOnManagerThread() const {
   MOZ_ASSERT(mManagerThread->IsOnCurrentThread());
 }
 
+Maybe<gfx::IntSize> MFMediaEngineParent::DetectVideoSizeChange() {
+  AssertOnManagerThread();
+  MOZ_ASSERT(mMediaEngine);
+  MOZ_ASSERT(mMediaEngine->HasVideo());
+
+  DWORD width, height;
+  RETURN_PARAM_IF_FAILED(mMediaEngine->GetNativeVideoSize(&width, &height),
+                         Nothing());
+  if (width != mDisplayWidth || height != mDisplayHeight) {
+    ENGINE_MARKER_TEXT("MFMediaEngineParent,VideoSizeChange",
+                       nsPrintfCString("%lux%lu", width, height));
+    LOG("Updated video size [%lux%lu] -> [%lux%lu] ", mDisplayWidth,
+        mDisplayHeight, width, height);
+    mDisplayWidth = width;
+    mDisplayHeight = height;
+    return Some(gfx::IntSize{width, height});
+  }
+  return Nothing();
+}
+
 void MFMediaEngineParent::EnsureDcompSurfaceHandle() {
   AssertOnManagerThread();
   MOZ_ASSERT(mMediaEngine);
@@ -592,33 +615,34 @@ void MFMediaEngineParent::EnsureDcompSurfaceHandle() {
 
   ComPtr<IMFMediaEngineEx> mediaEngineEx;
   RETURN_VOID_IF_FAILED(mMediaEngine.As(&mediaEngineEx));
-  DWORD width, height;
-  RETURN_VOID_IF_FAILED(mMediaEngine->GetNativeVideoSize(&width, &height));
-  if (width != mDisplayWidth || height != mDisplayHeight) {
-    // Update stream size before asking for a handle. If we don't update the
-    // size, media engine will create the dcomp surface in a wrong size.
-    LOG("Update video size [%lux%lu] -> [%lux%lu] ", mDisplayWidth,
-        mDisplayHeight, width, height);
-    ENGINE_MARKER_TEXT("MFMediaEngineParent,UpdateVideoSize",
-                       nsPrintfCString("%lux%lu", width, height));
-    RECT rect = {0, 0, (LONG)width, (LONG)height};
-    RETURN_VOID_IF_FAILED(mediaEngineEx->UpdateVideoStream(
-        nullptr /* pSrc */, &rect, nullptr /* pBorderClr */));
-    mDisplayWidth = width;
-    mDisplayHeight = height;
-    LOG("Updated video size [%lux%lu] correctly", mDisplayWidth,
-        mDisplayHeight);
+
+  // Ensure that the width and height is already up-to-date.
+  gfx::IntSize size{mDisplayWidth, mDisplayHeight};
+  if (auto newSize = DetectVideoSizeChange()) {
+    size = *newSize;
   }
+
+  // Update stream size before asking for a handle. If we don't update the
+  // size, media engine will create the dcomp surface in a wrong size.
+  RECT rect = {0, 0, (LONG)size.width, (LONG)size.height};
+  RETURN_VOID_IF_FAILED(mediaEngineEx->UpdateVideoStream(
+      nullptr /* pSrc */, &rect, nullptr /* pBorderClr */));
 
   HANDLE surfaceHandle = INVALID_HANDLE_VALUE;
   RETURN_VOID_IF_FAILED(mediaEngineEx->GetVideoSwapchainHandle(&surfaceHandle));
   if (surfaceHandle && surfaceHandle != INVALID_HANDLE_VALUE) {
-    LOG("EnsureDcompSurfaceHandle, handle=%p, size=[%lux%lu]", surfaceHandle,
-        width, height);
-    mMediaSource->SetDCompSurfaceHandle(surfaceHandle,
-                                        gfx::IntSize{width, height});
+    LOG("EnsureDcompSurfaceHandle, handle=%p, size=[%dx%d]", surfaceHandle,
+        size.width, size.height);
+    mMediaSource->SetDCompSurfaceHandle(surfaceHandle, size);
   } else {
     NS_WARNING("SurfaceHandle is not ready yet");
+  }
+}
+
+void MFMediaEngineParent::NotifyVideoResizing() {
+  AssertOnManagerThread();
+  if (auto newSize = DetectVideoSizeChange()) {
+    Unused << SendNotifyResizing(newSize->width, newSize->height);
   }
 }
 
