@@ -250,7 +250,7 @@ html|input.tree-input {
   z-index: 2147483647;
 }
 
-@media (-moz-platform: windows) or (-moz-platform: linux) {
+@media not (-moz-platform: macos) {
   /* ::::: sort direction indicator :::::  */
   .treecol-sortdirection {
     list-style-image: url("chrome://global/skin/tree/sort-asc.svg");
