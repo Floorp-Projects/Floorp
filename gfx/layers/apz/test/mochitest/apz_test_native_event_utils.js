@@ -1946,3 +1946,14 @@ function getSmoothScrollPrefs(aInputType) {
   }
   return result;
 }
+
+function buildRelativeScrollSmoothnessVariants(aInputType, aScrollMethods) {
+  let subtests = [];
+  for (let scrollMethod of aScrollMethods) {
+    subtests.push({
+      file: `helper_relative_scroll_smoothness.html?input-type=${aInputType}&scroll-method=${scrollMethod}`,
+      prefs: getSmoothScrollPrefs(aInputType)
+    });
+  }
+  return subtests;
+}

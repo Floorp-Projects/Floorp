@@ -44,14 +44,13 @@ var subtests = [
   {"file": "helper_scroll_inactive_zindex.html", "prefs": prefs},
   {"file": "helper_scroll_over_scrollbar.html", "prefs": scrollbar_prefs},
   {"file": "helper_scroll_tables_perspective.html", "prefs": prefs},
-  {"file": "helper_relative_scroll_smoothness.html?input-type=wheel&scroll-method=scrollBy", prefs: smoothness_prefs },
-  {"file": "helper_relative_scroll_smoothness.html?input-type=wheel&scroll-method=scrollTo", prefs: smoothness_prefs },
-  {"file": "helper_relative_scroll_smoothness.html?input-type=wheel&scroll-method=scrollTop", prefs: smoothness_prefs },
   {"file": "helper_transform_end_on_wheel_scroll.html",
     prefs: [["general.smoothScroll", false],
              ["apz.test.mac.synth_wheel_input", true]]},
   {"file": "helper_scroll_anchoring_on_wheel.html", prefs: smoothness_prefs},
 ];
+
+subtests.push(...buildRelativeScrollSmoothnessVariants("wheel", ["scrollBy", "scrollTo", "scrollTop"]));
 
 // Only Windows has the test api implemented for this test.
 if (getPlatform() == "windows") {
