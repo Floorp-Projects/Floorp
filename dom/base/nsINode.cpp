@@ -37,6 +37,7 @@
 #include "mozilla/dom/DebuggerNotificationBinding.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/Link.h"
@@ -3609,6 +3610,38 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
                           aReparentScope, clone, aError);
         if (NS_WARN_IF(aError.Failed())) {
           return nullptr;
+        }
+      }
+    }
+  }
+
+  if (aClone && aNode->IsElement() &&
+      !nodeInfo->GetDocument()->IsStaticDocument()) {
+    // Clone the Shadow DOM
+    ShadowRoot* originalShadowRoot = aNode->AsElement()->GetShadowRoot();
+    if (originalShadowRoot && originalShadowRoot->IsClonable()) {
+      ShadowRootInit init;
+      init.mMode = originalShadowRoot->Mode();
+      init.mDelegatesFocus = originalShadowRoot->DelegatesFocus();
+      init.mSlotAssignment = originalShadowRoot->SlotAssignment();
+      init.mClonable = true;
+
+      RefPtr<ShadowRoot> newShadowRoot =
+          clone->AsElement()->AttachShadow(init, aError);
+      if (NS_WARN_IF(aError.Failed())) {
+        return nullptr;
+      }
+      newShadowRoot->SetIsDeclarative(originalShadowRoot->IsDeclarative());
+
+      if (aDeep) {
+        for (nsIContent* origChild = originalShadowRoot->GetFirstChild();
+             origChild; origChild = origChild->GetNextSibling()) {
+          nsCOMPtr<nsINode> child =
+              CloneAndAdopt(origChild, aClone, aDeep, nodeInfoManager,
+                            aReparentScope, newShadowRoot, aError);
+          if (NS_WARN_IF(aError.Failed())) {
+            return nullptr;
+          }
         }
       }
     }
