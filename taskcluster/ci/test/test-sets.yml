@@ -99,6 +99,7 @@ browsertime:
     - browsertime-speculative
     - browsertime-throttled
     - browsertime-pageload-benchmark
+    - browsertime-indexeddb
 
 browsertime-clang:
     - browsertime-tp6

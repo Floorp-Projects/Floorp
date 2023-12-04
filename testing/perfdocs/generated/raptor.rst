@@ -10495,6 +10495,2970 @@ Custom
 ------
 Browsertime tests that use a custom pageload test script. These use the pageload type, but may have other intentions.
 
+.. dropdown:: addMab1
+   :class-container: anchor-id-addMab1-c
+
+   **Owner**: DOM Lifecycle, Workers and Storage Team
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium, safari
+   * **browser cycles**: 1
+   * **browsertime args**: --browsertime.iterations=16384 --browsertime.chunk_size=1024 --browsertime.buffer_type=ArrayBuffer --browsertime.atomic=1
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile entries**: 131072000
+   * **gecko profile features**: js,stackwalk,cpu
+   * **gecko profile threads**: GeckoMain,DOM Worker,IndexedDB
+   * **lower is better**: true
+   * **measure**: cpuTime
+   * **output timeout**: 2000000
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm8-linux-firefox-example.manifest
+   * **subtest unit**: ms
+   * **test script**: indexeddb_write.js
+   * **test summary**: flatten
+   * **test url**: `<https://www.example.com>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMab1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMab1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMab1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMab1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMab1**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMab1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMab1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMab1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMab1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMab1**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMab1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMab1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMab1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMab1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMab1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMab1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMab1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMab1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMab1**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+
+.. dropdown:: addMabN
+   :class-container: anchor-id-addMabN-c
+
+   **Owner**: DOM Lifecycle, Workers and Storage Team
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium, safari
+   * **browser cycles**: 1
+   * **browsertime args**: --browsertime.iterations=16384 --browsertime.chunk_size=1024 --browsertime.buffer_type=ArrayBuffer --browsertime.atomic=0
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile entries**: 131072000
+   * **gecko profile features**: js,stackwalk,cpu
+   * **gecko profile threads**: GeckoMain,DOM Worker,IndexedDB
+   * **lower is better**: true
+   * **measure**: cpuTime
+   * **output timeout**: 2000000
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm8-linux-firefox-example.manifest
+   * **subtest unit**: ms
+   * **test script**: indexeddb_write.js
+   * **test summary**: flatten
+   * **test url**: `<https://www.example.com>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMabN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMabN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMabN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMabN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMabN**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMabN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMabN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMabN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMabN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMabN**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMabN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMabN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMabN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMabN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMabN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMabN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMabN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMabN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMabN**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+
+.. dropdown:: addMar1
+   :class-container: anchor-id-addMar1-c
+
+   **Owner**: DOM Lifecycle, Workers and Storage Team
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium, safari
+   * **browser cycles**: 1
+   * **browsertime args**: --browsertime.iterations=16384 --browsertime.chunk_size=1024 --browsertime.buffer_type=Array --browsertime.atomic=1
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile entries**: 131072000
+   * **gecko profile features**: js,stackwalk,cpu
+   * **gecko profile threads**: GeckoMain,DOM Worker,IndexedDB
+   * **lower is better**: true
+   * **measure**: cpuTime
+   * **output timeout**: 2000000
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm8-linux-firefox-example.manifest
+   * **subtest unit**: ms
+   * **test script**: indexeddb_write.js
+   * **test summary**: flatten
+   * **test url**: `<https://www.example.com>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMar1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMar1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMar1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMar1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMar1**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMar1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMar1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMar1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMar1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMar1**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMar1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMar1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMar1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMar1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMar1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMar1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMar1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMar1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMar1**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+
+.. dropdown:: addMarN
+   :class-container: anchor-id-addMarN-c
+
+   **Owner**: DOM Lifecycle, Workers and Storage Team
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium, safari
+   * **browser cycles**: 1
+   * **browsertime args**: --browsertime.iterations=16384 --browsertime.chunk_size=1024 --browsertime.buffer_type=Array --browsertime.atomic=0
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile entries**: 131072000
+   * **gecko profile features**: js,stackwalk,cpu
+   * **gecko profile threads**: GeckoMain,DOM Worker,IndexedDB
+   * **lower is better**: true
+   * **measure**: cpuTime
+   * **output timeout**: 2000000
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm8-linux-firefox-example.manifest
+   * **subtest unit**: ms
+   * **test script**: indexeddb_write.js
+   * **test summary**: flatten
+   * **test url**: `<https://www.example.com>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMarN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMarN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMarN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMarN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMarN**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMarN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMarN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMarN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMarN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMarN**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMarN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMarN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMarN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMarN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMarN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMarN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMarN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMarN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMarN**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+
+.. dropdown:: addMbl1
+   :class-container: anchor-id-addMbl1-c
+
+   **Owner**: DOM Lifecycle, Workers and Storage Team
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium, safari
+   * **browser cycles**: 1
+   * **browsertime args**: --browsertime.iterations=16384 --browsertime.chunk_size=1024 --browsertime.buffer_type=Blob --browsertime.atomic=1
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile entries**: 131072000
+   * **gecko profile features**: js,stackwalk,cpu
+   * **gecko profile threads**: GeckoMain,DOM Worker,IndexedDB
+   * **lower is better**: true
+   * **measure**: cpuTime
+   * **output timeout**: 2000000
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm8-linux-firefox-example.manifest
+   * **subtest unit**: ms
+   * **test script**: indexeddb_write.js
+   * **test summary**: flatten
+   * **test url**: `<https://www.example.com>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMbl1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMbl1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMbl1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMbl1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMbl1**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMbl1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMbl1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMbl1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMbl1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMbl1**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMbl1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMbl1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMbl1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMbl1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMbl1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMbl1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMbl1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMbl1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMbl1**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+
+.. dropdown:: addMblN
+   :class-container: anchor-id-addMblN-c
+
+   **Owner**: DOM Lifecycle, Workers and Storage Team
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium, safari
+   * **browser cycles**: 1
+   * **browsertime args**: --browsertime.iterations=16384 --browsertime.chunk_size=1024 --browsertime.buffer_type=Blob --browsertime.atomic=0
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile entries**: 131072000
+   * **gecko profile features**: js,stackwalk,cpu
+   * **gecko profile threads**: GeckoMain,DOM Worker,IndexedDB
+   * **lower is better**: true
+   * **measure**: cpuTime
+   * **output timeout**: 2000000
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm8-linux-firefox-example.manifest
+   * **subtest unit**: ms
+   * **test script**: indexeddb_write.js
+   * **test summary**: flatten
+   * **test url**: `<https://www.example.com>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMblN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMblN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMblN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMblN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMblN**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMblN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMblN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMblN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMblN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMblN**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMblN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMblN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMblN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMblN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMblN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addMblN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addMblN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addMblN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addMblN**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+
+.. dropdown:: addkAB1
+   :class-container: anchor-id-addkAB1-c
+
+   **Owner**: DOM Lifecycle, Workers and Storage Team
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium, safari
+   * **browser cycles**: 1
+   * **browsertime args**: --browsertime.iterations=128 --browsertime.chunk_size=1048576 --browsertime.buffer_type=ArrayBuffer --browsertime.atomic=1
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile entries**: 131072000
+   * **gecko profile features**: js,stackwalk,cpu
+   * **gecko profile threads**: GeckoMain,DOM Worker,IndexedDB
+   * **lower is better**: true
+   * **measure**: cpuTime
+   * **output timeout**: 2000000
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm8-linux-firefox-example.manifest
+   * **subtest unit**: ms
+   * **test script**: indexeddb_write.js
+   * **test summary**: flatten
+   * **test url**: `<https://www.example.com>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkAB1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkAB1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkAB1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkAB1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkAB1**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkAB1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkAB1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkAB1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkAB1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkAB1**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkAB1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkAB1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkAB1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkAB1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkAB1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkAB1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkAB1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkAB1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkAB1**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+
+.. dropdown:: addkABN
+   :class-container: anchor-id-addkABN-c
+
+   **Owner**: DOM Lifecycle, Workers and Storage Team
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium, safari
+   * **browser cycles**: 1
+   * **browsertime args**: --browsertime.iterations=128 --browsertime.chunk_size=1048576 --browsertime.buffer_type=ArrayBuffer --browsertime.atomic=0
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile entries**: 131072000
+   * **gecko profile features**: js,stackwalk,cpu
+   * **gecko profile threads**: GeckoMain,DOM Worker,IndexedDB
+   * **lower is better**: true
+   * **measure**: cpuTime
+   * **output timeout**: 2000000
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm8-linux-firefox-example.manifest
+   * **subtest unit**: ms
+   * **test script**: indexeddb_write.js
+   * **test summary**: flatten
+   * **test url**: `<https://www.example.com>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkABN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkABN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkABN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkABN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkABN**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkABN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkABN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkABN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkABN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkABN**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkABN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkABN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkABN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkABN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkABN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkABN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkABN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkABN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkABN**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+
+.. dropdown:: addkAR1
+   :class-container: anchor-id-addkAR1-c
+
+   **Owner**: DOM Lifecycle, Workers and Storage Team
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium, safari
+   * **browser cycles**: 1
+   * **browsertime args**: --browsertime.iterations=128 --browsertime.chunk_size=1048576 --browsertime.buffer_type=Array --browsertime.atomic=1
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile entries**: 131072000
+   * **gecko profile features**: js,stackwalk,cpu
+   * **gecko profile threads**: GeckoMain,DOM Worker,IndexedDB
+   * **lower is better**: true
+   * **measure**: cpuTime
+   * **output timeout**: 2000000
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm8-linux-firefox-example.manifest
+   * **subtest unit**: ms
+   * **test script**: indexeddb_write.js
+   * **test summary**: flatten
+   * **test url**: `<https://www.example.com>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkAR1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkAR1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkAR1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkAR1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkAR1**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkAR1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkAR1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkAR1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkAR1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkAR1**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkAR1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkAR1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkAR1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkAR1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkAR1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkAR1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkAR1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkAR1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkAR1**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+
+.. dropdown:: addkARN
+   :class-container: anchor-id-addkARN-c
+
+   **Owner**: DOM Lifecycle, Workers and Storage Team
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium, safari
+   * **browser cycles**: 1
+   * **browsertime args**: --browsertime.iterations=128 --browsertime.chunk_size=1048576 --browsertime.buffer_type=Array --browsertime.atomic=0
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile entries**: 131072000
+   * **gecko profile features**: js,stackwalk,cpu
+   * **gecko profile threads**: GeckoMain,DOM Worker,IndexedDB
+   * **lower is better**: true
+   * **measure**: cpuTime
+   * **output timeout**: 2000000
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm8-linux-firefox-example.manifest
+   * **subtest unit**: ms
+   * **test script**: indexeddb_write.js
+   * **test summary**: flatten
+   * **test url**: `<https://www.example.com>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkARN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkARN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkARN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkARN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkARN**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkARN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkARN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkARN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkARN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkARN**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkARN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkARN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkARN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkARN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkARN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkARN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkARN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkARN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkARN**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+
+.. dropdown:: addkBL1
+   :class-container: anchor-id-addkBL1-c
+
+   **Owner**: DOM Lifecycle, Workers and Storage Team
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium, safari
+   * **browser cycles**: 1
+   * **browsertime args**: --browsertime.iterations=128 --browsertime.chunk_size=1048576 --browsertime.buffer_type=Blob --browsertime.atomic=1
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile entries**: 131072000
+   * **gecko profile features**: js,stackwalk,cpu
+   * **gecko profile threads**: GeckoMain,DOM Worker,IndexedDB
+   * **lower is better**: true
+   * **measure**: cpuTime
+   * **output timeout**: 2000000
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm8-linux-firefox-example.manifest
+   * **subtest unit**: ms
+   * **test script**: indexeddb_write.js
+   * **test summary**: flatten
+   * **test url**: `<https://www.example.com>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkBL1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkBL1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkBL1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkBL1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkBL1**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkBL1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkBL1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkBL1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkBL1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkBL1**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkBL1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkBL1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkBL1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkBL1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkBL1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkBL1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkBL1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkBL1**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkBL1**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+
+.. dropdown:: addkBLN
+   :class-container: anchor-id-addkBLN-c
+
+   **Owner**: DOM Lifecycle, Workers and Storage Team
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium, safari
+   * **browser cycles**: 1
+   * **browsertime args**: --browsertime.iterations=128 --browsertime.chunk_size=1048576 --browsertime.buffer_type=Blob --browsertime.atomic=0
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile entries**: 131072000
+   * **gecko profile features**: js,stackwalk,cpu
+   * **gecko profile threads**: GeckoMain,DOM Worker,IndexedDB
+   * **lower is better**: true
+   * **measure**: cpuTime
+   * **output timeout**: 2000000
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm8-linux-firefox-example.manifest
+   * **subtest unit**: ms
+   * **test script**: indexeddb_write.js
+   * **test summary**: flatten
+   * **test url**: `<https://www.example.com>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkBLN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkBLN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkBLN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkBLN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkBLN**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkBLN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkBLN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkBLN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkBLN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkBLN**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkBLN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkBLN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkBLN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkBLN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkBLN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-addkBLN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-addkBLN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-addkBLN**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-addkBLN**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+
 .. dropdown:: browsertime
    :class-container: anchor-id-browsertime-c
 
@@ -10778,6 +13742,252 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - mozilla-beta
       * - **browsertime-regression-tests-firefox-constant-regression**
         - ❌
+        - ✅
+        - ❌
+        - ❌
+
+
+
+.. dropdown:: getkeyrng
+   :class-container: anchor-id-getkeyrng-c
+
+   **Owner**: DOM Lifecycle, Workers and Storage Team
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium, safari
+   * **browser cycles**: 1
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile entries**: 131072000
+   * **gecko profile features**: js,stackwalk,cpu
+   * **gecko profile threads**: GeckoMain,DOM Worker,IndexedDB
+   * **lower is better**: true
+   * **measure**: cpuTime
+   * **output timeout**: 2000000
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm8-linux-firefox-example.manifest
+   * **subtest unit**: ms
+   * **test script**: indexeddb_getkeyrange.js
+   * **test summary**: flatten
+   * **test url**: `<https://www.example.com>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-getkeyrng**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-getkeyrng**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-getkeyrng**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-getkeyrng**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-getkeyrng**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-getkeyrng**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-getkeyrng**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-getkeyrng**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-getkeyrng**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-getkeyrng**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-getkeyrng**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-getkeyrng**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-getkeyrng**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-getkeyrng**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-getkeyrng**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-firefox-getkeyrng**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-indexeddb-chrome-getkeyrng**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-chromium-getkeyrng**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-indexeddb-firefox-getkeyrng**
+        - ✅
         - ✅
         - ❌
         - ❌

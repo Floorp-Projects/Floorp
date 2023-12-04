@@ -802,3 +802,49 @@ browsertime-throttled:
     run-on-projects: []
     tier: 3
     treeherder-symbol: Btime(throttled)
+
+browsertime-indexeddb:
+    description: Raptor (browsertime) tests for IndexedDB
+    max-run-time: 2700
+    treeherder-symbol: Btime(idb)
+    limit-platforms:
+        by-app:
+            chrome:
+                - .*shippable.*
+            chromium:
+                - .*shippable.*
+            custom-car:
+                - .*64.*shippable.*
+            default: []
+    raptor:
+        apps: [firefox, chrome, chromium]
+        run-visual-metrics: false
+        subtests:
+            - addMab1
+            - addMabN
+            - addMar1
+            - addMarN
+            - addMbl1
+            - addMblN
+            - addkAB1
+            - addkABN
+            - addkAR1
+            - addkARN
+            - addkBL1
+            - addkBLN
+            - getkeyrng
+    run-on-projects:
+        by-app:
+            firefox:
+                by-test-platform:
+                    windows.*-32.*: []
+                    .*64.*shippable-qr/.*: [autoland, mozilla-central]
+                    default: []
+            default: []
+    tier:
+        by-app:
+            firefox: 2
+            default: 3
+    mozharness:
+        extra-options:
+            - --extra-profiler-run
