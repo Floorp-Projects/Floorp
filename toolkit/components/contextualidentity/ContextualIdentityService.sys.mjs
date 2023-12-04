@@ -4,16 +4,14 @@
 
 // The maximum valid numeric value for the userContextId.
 const MAX_USER_CONTEXT_ID = -1 >>> 0;
-const LAST_CONTAINERS_JSON_VERSION = 4;
+const LAST_CONTAINERS_JSON_VERSION = 5;
 const SAVE_DELAY_MS = 1500;
 const CONTEXTUAL_IDENTITY_ENABLED_PREF = "privacy.userContext.enabled";
 
 const lazy = {};
 
-ChromeUtils.defineLazyGetter(lazy, "gBrowserBundle", function () {
-  return Services.strings.createBundle(
-    "chrome://browser/locale/browser.properties"
-  );
+ChromeUtils.defineLazyGetter(lazy, "l10n", function () {
+  return new Localization(["toolkit/global/contextual-identity.ftl"], true);
 });
 
 ChromeUtils.defineLazyGetter(lazy, "gTextDecoder", function () {
@@ -66,26 +64,22 @@ _ContextualIdentityService.prototype = {
     {
       icon: "fingerprint",
       color: "blue",
-      l10nID: "userContextPersonal.label",
-      accessKey: "userContextPersonal.accesskey",
+      l10nId: "user-context-personal",
     },
     {
       icon: "briefcase",
       color: "orange",
-      l10nID: "userContextWork.label",
-      accessKey: "userContextWork.accesskey",
+      l10nId: "user-context-work",
     },
     {
       icon: "dollar",
       color: "green",
-      l10nID: "userContextBanking.label",
-      accessKey: "userContextBanking.accesskey",
+      l10nId: "user-context-banking",
     },
     {
       icon: "cart",
       color: "pink",
-      l10nID: "userContextShopping.label",
-      accessKey: "userContextShopping.accesskey",
+      l10nId: "user-context-shopping",
     },
   ],
   _systemIdentities: [
@@ -319,8 +313,7 @@ _ContextualIdentityService.prototype = {
       identity.name = name;
       identity.color = color;
       identity.icon = icon;
-      delete identity.l10nID;
-      delete identity.accessKey;
+      delete identity.l10nId;
 
       this.saveSoon();
       Services.obs.notifyObservers(
@@ -382,6 +375,11 @@ _ContextualIdentityService.prototype = {
 
     if (data.version == 3) {
       data = this.migrate3to4(data);
+      saveNeeded = true;
+    }
+
+    if (data.version == 4) {
+      data = this.migrate4to5(data);
       saveNeeded = true;
     }
 
@@ -484,18 +482,29 @@ _ContextualIdentityService.prototype = {
     );
   },
 
+  formatContextLabel(l10nId) {
+    const [msg] = lazy.l10n.formatMessagesSync([l10nId]);
+    for (let attr of msg.attributes) {
+      if (attr.name === "label") {
+        return attr.value;
+      }
+    }
+    return "";
+  },
+
   getUserContextLabel(userContextId) {
     let identity = this.getPublicIdentityFromId(userContextId);
-    if (!identity) {
-      return "";
-    }
 
     // We cannot localize the user-created identity names.
-    if (identity.name) {
+    if (identity?.name) {
       return identity.name;
     }
 
-    return lazy.gBrowserBundle.GetStringFromName(identity.l10nID);
+    if (identity?.l10nId) {
+      return this.formatContextLabel(identity.l10nId);
+    }
+
+    return "";
   },
 
   setTabStyle(tab) {
@@ -637,6 +646,38 @@ _ContextualIdentityService.prototype = {
     data.identities.push(webextStorageLocalIdentity);
 
     data.version = 4;
+
+    return data;
+  },
+
+  migrate4to5(data) {
+    // Migrating from 4 to 5 is:
+    // - replacing the StringBundle l10nID with a Fluent l10nId for default identities
+    // - dropping the accessKey property
+    // - increasing the version id.
+    //
+    // This migration was needed for Bug 1814969. See bug 1814969 for rationale.
+
+    for (let identity of data.identities) {
+      switch (identity.l10nID) {
+        case "userContextPersonal.label":
+          identity.l10nId = "user-context-personal";
+          break;
+        case "userContextWork.label":
+          identity.l10nId = "user-context-work";
+          break;
+        case "userContextBanking.label":
+          identity.l10nId = "user-context-banking";
+          break;
+        case "userContextShopping.label":
+          identity.l10nId = "user-context-shopping";
+          break;
+      }
+      delete identity.l10nID;
+      delete identity.accessKey;
+    }
+
+    data.version = 5;
 
     return data;
   },

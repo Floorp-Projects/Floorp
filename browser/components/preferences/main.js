@@ -747,13 +747,15 @@ var gMainPane = {
       this._sortColumn = document.getElementById("typeColumn");
     }
 
-    let browserBundle = document.getElementById("browserBundle");
-    appendSearchKeywords("browserContainersSettings", [
-      browserBundle.getString("userContextPersonal.label"),
-      browserBundle.getString("userContextWork.label"),
-      browserBundle.getString("userContextBanking.label"),
-      browserBundle.getString("userContextShopping.label"),
-    ]);
+    appendSearchKeywords(
+      "browserContainersSettings",
+      [
+        "user-context-personal",
+        "user-context-work",
+        "user-context-banking",
+        "user-context-shopping",
+      ].map(ContextualIdentityService.formatContextLabel)
+    );
 
     AppearanceChooser.init();
 

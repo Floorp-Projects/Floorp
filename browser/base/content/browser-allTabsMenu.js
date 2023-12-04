@@ -89,10 +89,11 @@ var gTabsPanel = {
       ContextualIdentityService.getPublicIdentities().forEach(identity => {
         let menuitem = document.createXULElement("toolbarbutton");
         menuitem.setAttribute("class", "subviewbutton subviewbutton-iconic");
-        menuitem.setAttribute(
-          "label",
-          ContextualIdentityService.getUserContextLabel(identity.userContextId)
-        );
+        if (identity.name) {
+          menuitem.setAttribute("label", identity.name);
+        } else {
+          document.l10n.setAttributes(menuitem, identity.l10nId);
+        }
         // The styles depend on this.
         menuitem.setAttribute("usercontextid", identity.userContextId);
         // The command handler depends on this.

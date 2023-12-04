@@ -194,24 +194,19 @@ function createUserContextMenu(
     event.target.firstChild.remove();
   }
 
-  let bundle = Services.strings.createBundle(
-    "chrome://browser/locale/browser.properties"
-  );
   let docfrag = document.createDocumentFragment();
 
   // If we are excluding a userContextId, we want to add a 'no-container' item.
   if (excludeUserContextId || showDefaultTab) {
     let menuitem = document.createXULElement("menuitem");
+    if (useAccessKeys) {
+      document.l10n.setAttributes(menuitem, "user-context-none");
+    } else {
+      const label =
+        ContextualIdentityService.formatContextLabel("user-context-none");
+      menuitem.setAttribute("label", label);
+    }
     menuitem.setAttribute("data-usercontextid", "0");
-    menuitem.setAttribute(
-      "label",
-      bundle.GetStringFromName("userContextNone.label")
-    );
-    menuitem.setAttribute(
-      "accesskey",
-      bundle.GetStringFromName("userContextNone.accesskey")
-    );
-
     if (!isContextMenu) {
       menuitem.setAttribute("command", "Browser:NewUserContextTab");
     }
@@ -229,16 +224,15 @@ function createUserContextMenu(
 
     let menuitem = document.createXULElement("menuitem");
     menuitem.setAttribute("data-usercontextid", identity.userContextId);
-    menuitem.setAttribute(
-      "label",
-      ContextualIdentityService.getUserContextLabel(identity.userContextId)
-    );
-
-    if (identity.accessKey && useAccessKeys) {
-      menuitem.setAttribute(
-        "accesskey",
-        bundle.GetStringFromName(identity.accessKey)
+    if (identity.name) {
+      menuitem.setAttribute("label", identity.name);
+    } else if (useAccessKeys) {
+      document.l10n.setAttributes(menuitem, identity.l10nId);
+    } else {
+      const label = ContextualIdentityService.formatContextLabel(
+        identity.l10nId
       );
+      menuitem.setAttribute("label", label);
     }
 
     menuitem.classList.add("menuitem-iconic");
@@ -257,15 +251,13 @@ function createUserContextMenu(
     docfrag.appendChild(document.createXULElement("menuseparator"));
 
     let menuitem = document.createXULElement("menuitem");
-    menuitem.setAttribute(
-      "label",
-      bundle.GetStringFromName("userContext.aboutPage.label")
-    );
     if (useAccessKeys) {
-      menuitem.setAttribute(
-        "accesskey",
-        bundle.GetStringFromName("userContext.aboutPage.accesskey")
+      document.l10n.setAttributes(menuitem, "user-context-manage-containers");
+    } else {
+      const label = ContextualIdentityService.formatContextLabel(
+        "user-context-manage-containers"
       );
+      menuitem.setAttribute("label", label);
     }
     menuitem.setAttribute("command", "Browser:OpenAboutContainers");
     docfrag.appendChild(menuitem);
