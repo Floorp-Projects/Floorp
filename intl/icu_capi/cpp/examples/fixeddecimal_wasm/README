@@ -1,0 +1,7 @@
+This folder contains a test for calling ICU4X from C++ compiled to WASM (via emscripten).
+
+You need the [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html) downloaded and sourced into your environment to run this.
+
+There are two ways to run the test. Firstly, you can call `make test`, which runs `node node-test.js` after building the appropriate WASM files. This runs a CLI test with the fixed decimal example in test.cpp.
+
+The other way is to run `make serve`, which will open a web page running test.cpp in your browser.

@@ -1,0 +1,34 @@
+{
+  "name": "icu4x-demo",
+  "version": "1.0.0",
+  "description": "A demo web application using ICU4X bindings.",
+  "type": "module",
+  "scripts": {
+    "clean": "rm dist/*",
+    "build": "webpack",
+    "start": "webpack serve --mode development --port 12345",
+    "tsc": "tsc -p ."
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@popperjs/core": "^2.11.5",
+    "bootstrap": "^5.2.0",
+    "data.either": "^1.5.2",
+    "icu4x": "file:../../package"
+  },
+  "devDependencies": {
+    "@types/bootstrap": "^5.2.1",
+    "autoprefixer": "^10.4.8",
+    "css-loader": "^6.7.1",
+    "postcss-loader": "^7.2.4",
+    "sass": "^1.54.0",
+    "sass-loader": "^13.0.2",
+    "style-loader": "^3.3.1",
+    "ts-loader": "^9.3.1",
+    "typescript": "^4.7.4",
+    "webpack": "^5.76.0",
+    "webpack-cli": "^4.10.0",
+    "webpack-dev-server": "^4.9.3"
+  }
+}

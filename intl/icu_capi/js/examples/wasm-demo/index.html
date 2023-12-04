@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset='utf8' />
+        <meta name='viewport' content='width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes' />
+        <title>WASM Demo</title>
+
+        <style>
+            #main {
+                margin-top: 3vh;
+                margin-bottom: 3vh;
+            }
+
+            @media (min-width: 768px) {
+                .demo-dropdown-menu {
+                    display: none !important;
+                }
+            }
+
+            @media (max-width: 767px) {
+                .demo-tab-menu {
+                    display: none !important;
+                }
+            }
+
+            .seg-delim {
+                color: red;
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- With Webpack -->
+        <script src='index.js'></script>
+        <!-- Without Webpack -->
+        <!--
+        <script type="importmap">
+            {
+                "imports": {
+                    "icu4x": "../icu4x/lib/index.js"
+                }
+            }
+        </script>
+        <script type="module" src='./dist/app.js'></script>
+        -->
+
+        <div id="main" class="container">
+
+            <div class="demo-dropdown-menu vstack gap-2">
+
+                <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                    Demos
+                    <!-- menu icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+                    </svg>
+                </button>
+
+                <div class="collapse" id="collapseExample">
+                    <div class="card card-body">
+                        <ul class="nav nav-pills mb-3 flex-column" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pills-fdf" type="button" role="tab" aria-controls="pills-fdf" aria-selected="true">Fixed Decimal Formatting</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-dtf" type="button" role="tab" aria-controls="pills-dtf" aria-selected="false">Date Time Formatting</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-seg" type="button" role="tab" aria-controls="pills-seg" aria-selected="false">Segmenter</button>
+                            </li>
+                        </ul>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="demo-tab-menu">
+                <ul class="nav nav-pills mb-3" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pills-fdf" type="button" role="tab" aria-controls="pills-fdf" aria-selected="true">Fixed Decimal Formatting</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-dtf" type="button" role="tab" aria-controls="pills-dtf" aria-selected="false">Date Time Formatting</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#pills-seg" type="button" role="tab" aria-controls="pills-seg" aria-selected="false">Segmenter</button>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="tab-content" id="pills-tabContent">
+                <div class="tab-pane show active" id="pills-fdf" role="tabpanel" aria-labelledby="pills-fdf-tab" tabindex="0">
+                    <div class="vstack gap-2">
+                        Locale
+                        <div class="btn-toolbar" role="toolbar" aria-label="Fixed Decimal Formatting options">
+                            <div class="btn-group" role="group" aria-label="Fixed Decimal Formatting Locale">
+                                <input type="radio" class="btn-check" name="fdf-locale" id="fdf-locale-en" value="en" checked>
+                                <label class="btn btn-outline-primary" for="fdf-locale-en">en</label>
+
+                                <input type="radio" class="btn-check" name="fdf-locale" id="fdf-locale-bn" value="bn">
+                                <label class="btn btn-outline-primary" for="fdf-locale-bn">bn</label>
+
+                                <div class="input-group">
+                                    <input type="radio" class="btn-check" name="fdf-locale" id="fdf-locale-other" value="other">
+                                    <label class="btn btn-outline-primary" for="fdf-locale-other">other</label>
+                                    <input type="text" id="fdf-locale-other-input" class="form-control" placeholder="Locale ID">
+                                </div>
+                            </div>
+                        </div>
+
+                        Grouping Strategy
+                        <div class="btn-toolbar" role="toolbar" aria-label="Fixed Decimal Formatting options">
+                            <div class="btn-group" role="group" aria-label="Fixed Decimal Formatting Locale">
+                                <input type="radio" class="btn-check" name="fdf-grouping" id="fdf-grouping-auto" value="Auto" checked>
+                                <label class="btn btn-outline-primary" for="fdf-grouping-auto">Auto</label>
+
+                                <input type="radio" class="btn-check" name="fdf-grouping" id="fdf-grouping-never" value="Never">
+                                <label class="btn btn-outline-primary" for="fdf-grouping-never">Never</label>
+
+                                <input type="radio" class="btn-check" name="fdf-grouping" id="fdf-grouping-always" value="Always">
+                                <label class="btn btn-outline-primary" for="fdf-grouping-always">Always</label>
+
+                                <input type="radio" class="btn-check" name="fdf-grouping" id="fdf-grouping-min2" value="Min2">
+                                <label class="btn btn-outline-primary" for="fdf-grouping-min2">Min2</label>
+                            </div>
+                        </div>
+
+                        Enter a number
+                        <input type="text" id='fdf-input' class="form-control" placeholder="3.141"></input>
+                        <div class="card">
+                            <div class="card-header">Formatted</div>
+                            <div class="card-body">
+                                <p id="fdf-formatted" class="card-text"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="pills-dtf" role="tabpanel" aria-labelledby="pills-dtf-tab" tabindex="0">
+                    <div class="vstack gap-2">
+                        Locale
+
+                        <div class="btn-toolbar" role="toolbar" aria-label="DateTime Formatting options">
+                            <div class="btn-group me-2" role="group" aria-label="DateTime Formatting Locale">
+                                <input type="radio" class="btn-check" name="dtf-locale" id="dtf-locale-en" value="en" checked>
+                                <label class="btn btn-outline-primary" for="dtf-locale-en">en</label>
+
+                                <input type="radio" class="btn-check" name="dtf-locale" id="dtf-locale-bn" value="bn">
+                                <label class="btn btn-outline-primary" for="dtf-locale-bn">bn</label>
+                                <input type="radio" class="btn-check" name="dtf-locale" id="dtf-locale-ja" value="ja">
+                                <label class="btn btn-outline-primary" for="dtf-locale-ja">ja</label>
+
+                                <div class="input-group">
+                                    <input type="radio" class="btn-check" name="dtf-locale" id="dtf-locale-other" value="other">
+                                    <label class="btn btn-outline-primary" for="dtf-locale-other">other</label>
+                                    <input type="text" id="dtf-locale-other-input" class="form-control" placeholder="Locale ID">
+                                </div>
+                            </div>
+                            <div class="input-group" role="group" aria-label="DateTime Formatting Locale">
+                                <span class="input-group-text">Calendar</span>
+                                <select name="dtf-calendar" class="form-select">
+                                    <option value="from-locale" selected>Default for locale</option>
+                                    <option value="buddhist">Buddhist</option>
+                                    <option value="chinese">Chinese</option>
+                                    <option value="coptic">Coptic</option>
+                                    <option value="dangi">Dangi</option>
+                                    <option value="ethiopic">Ethiopian</option>
+                                    <option value="gregory">Gregorian</option>
+                                    <option value="indian">Indian national</option>
+                                    <option value="islamicc">Islamic Civil</option>
+                                    <option value="islamic">Islamic Observational</option>
+                                    <option value="tbla">Islamic Tabular</option>
+                                    <option value="umalqura">Islamic Umm-al-Qura</option>
+                                    <option value="japanese">Japanese</option>
+                                    <option value="japanext">Japanese (historical eras)</option>
+                                    <option value="persian">Persian</option>
+                                    <option value="roc">Republic of China</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        Date length
+                        <div class="btn-toolbar" role="toolbar" aria-label="DateTime Formatting options">
+                            <div class="btn-group" role="group" aria-label="DateTime Formatting Locale">
+                                <input type="radio" class="btn-check" name="dtf-date-length" id="dtf-date-length-full" value="Full">
+                                <label class="btn btn-outline-primary" for="dtf-date-length-full">Full</label>
+
+                                <input type="radio" class="btn-check" name="dtf-date-length" id="dtf-date-length-long" value="Long">
+                                <label class="btn btn-outline-primary" for="dtf-date-length-long">Long</label>
+
+                                <input type="radio" class="btn-check" name="dtf-date-length" id="dtf-date-length-medium" value="Medium">
+                                <label class="btn btn-outline-primary" for="dtf-date-length-medium">Medium</label>
+
+                                <input type="radio" class="btn-check" name="dtf-date-length" id="dtf-date-length-short" value="Short" checked>
+                                <label class="btn btn-outline-primary" for="dtf-date-length-short">Short</label>
+                            </div>
+                        </div>
+
+                        Time length
+                        <div class="btn-toolbar" role="toolbar" aria-label="DateTime Formatting options">
+                            <div class="btn-group" role="group" aria-label="DateTime Formatting Locale"
+                                 title="Demo doesn't currently support full/long time styles as they need time zone support, which is available in ICU4X but not this demo">
+                                <input type="radio" class="btn-check" name="dtf-time-length" id="dtf-time-length-full" value="Full" disabled>
+                                <label class="btn btn-outline-primary" for="dtf-time-length-full">Full</label>
+
+                                <input type="radio" class="btn-check" name="dtf-time-length" id="dtf-time-length-long" value="Long" disabled>
+                                <label class="btn btn-outline-primary" for="dtf-time-length-long">Long</label>
+
+                                <input type="radio" class="btn-check" name="dtf-time-length" id="dtf-time-length-medium" value="Medium">
+                                <label class="btn btn-outline-primary" for="dtf-time-length-medium">Medium</label>
+
+                                <input type="radio" class="btn-check" name="dtf-time-length" id="dtf-time-length-short" value="Short" checked>
+                                <label class="btn btn-outline-primary" for="dtf-time-length-short">Short</label>
+                            </div>
+                        </div>
+
+                        Date
+                        <input type='datetime-local' id='dtf-input'>
+
+                        <div class="card">
+                            <div class="card-header">Formatted</div>
+                            <div class="card-body">
+                                <p id="dtf-formatted" class="card-text"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="pills-seg" role="tabpanel" aria-labelledby="pills-seg-tab" tabindex="0">
+                    <div class="vstack gap-2">
+                        Segmentation Model (note: LSTM not supported in Chinese/Japanese)
+                        <div class="btn-toolbar" role="toolbar" aria-label="Segmentation options">
+                            <div class="btn-group" role="group" aria-label="Segmentation model">
+                                <input type="radio" class="btn-check" name="segmenter-model" id="segmenter-model-auto" value="Auto" checked>
+                                <label class="btn btn-outline-primary" for="segmenter-model-auto">Auto</label>
+
+                                <input type="radio" class="btn-check" name="segmenter-model" id="segmenter-model-never" value="LSTM">
+                                <label class="btn btn-outline-primary" for="segmenter-model-never">LSTM</label>
+
+                                <input type="radio" class="btn-check" name="segmenter-model" id="segmenter-model-always" value="Dictionary">
+                                <label class="btn btn-outline-primary" for="segmenter-model-always">Dictionary</label>
+                            </div>
+                        </div>
+
+                        Enter a string
+                        <button id="seg-sample-japanese" type="button" class="btn btn-secondary">Sample Japanese</button>
+                        <button id="seg-sample-chinese" type="button" class="btn btn-secondary">Sample Chinese</button>
+                        <button id="seg-sample-thai" type="button" class="btn btn-secondary">Sample Thai</button>
+                        <input type="text" id='seg-input' class="form-control" placeholder="全部の人間は"></input>
+                        <div class="card">
+                            <div class="card-header">Segmented</div>
+                            <div class="card-body">
+                                <p id="seg-segmented" class="card-text"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="bigspinner">
+            <!--
+            The MIT License (MIT)
+
+            Copyright (c) 2014 Sam Herbert
+
+            Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+            The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+            THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+            -->
+            <svg width="135" height="135" viewBox="0 0 135 135" xmlns="http://www.w3.org/2000/svg" fill="#fff">
+                <path d="M67.447 58c5.523 0 10-4.477 10-10s-4.477-10-10-10-10 4.477-10 10 4.477 10 10 10zm9.448 9.447c0 5.523 4.477 10 10 10 5.522 0 10-4.477 10-10s-4.478-10-10-10c-5.523 0-10 4.477-10 10zm-9.448 9.448c-5.523 0-10 4.477-10 10 0 5.522 4.477 10 10 10s10-4.478 10-10c0-5.523-4.477-10-10-10zM58 67.447c0-5.523-4.477-10-10-10s-10 4.477-10 10 4.477 10 10 10 10-4.477 10-10z">
+                    <animateTransform
+                        attributeName="transform"
+                        type="rotate"
+                        from="0 67 67"
+                        to="-360 67 67"
+                        dur="2.5s"
+                        repeatCount="indefinite"/>
+                </path>
+                <path d="M28.19 40.31c6.627 0 12-5.374 12-12 0-6.628-5.373-12-12-12-6.628 0-12 5.372-12 12 0 6.626 5.372 12 12 12zm30.72-19.825c4.686 4.687 12.284 4.687 16.97 0 4.686-4.686 4.686-12.284 0-16.97-4.686-4.687-12.284-4.687-16.97 0-4.687 4.686-4.687 12.284 0 16.97zm35.74 7.705c0 6.627 5.37 12 12 12 6.626 0 12-5.373 12-12 0-6.628-5.374-12-12-12-6.63 0-12 5.372-12 12zm19.822 30.72c-4.686 4.686-4.686 12.284 0 16.97 4.687 4.686 12.285 4.686 16.97 0 4.687-4.686 4.687-12.284 0-16.97-4.685-4.687-12.283-4.687-16.97 0zm-7.704 35.74c-6.627 0-12 5.37-12 12 0 6.626 5.373 12 12 12s12-5.374 12-12c0-6.63-5.373-12-12-12zm-30.72 19.822c-4.686-4.686-12.284-4.686-16.97 0-4.686 4.687-4.686 12.285 0 16.97 4.686 4.687 12.284 4.687 16.97 0 4.687-4.685 4.687-12.283 0-16.97zm-35.74-7.704c0-6.627-5.372-12-12-12-6.626 0-12 5.373-12 12s5.374 12 12 12c6.628 0 12-5.373 12-12zm-19.823-30.72c4.687-4.686 4.687-12.284 0-16.97-4.686-4.686-12.284-4.686-16.97 0-4.687 4.686-4.687 12.284 0 16.97 4.686 4.687 12.284 4.687 16.97 0z">
+                    <animateTransform
+                        attributeName="transform"
+                        type="rotate"
+                        from="0 67 67"
+                        to="360 67 67"
+                        dur="8s"
+                        repeatCount="indefinite"/>
+                </path>
+            </svg>
+        </div>
+        <style type="text/css">
+            #bigspinner {
+                position: fixed;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+            #bigspinner svg {
+                position: absolute;
+                top: 10%;
+                width: 40%;
+                left: 30%;
+            }
+        </style>
+    </body>
+</html>
