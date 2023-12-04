@@ -3858,6 +3858,9 @@ class Document : public nsINode,
    */
   bool AllowsL10n() const;
 
+  void SetAllowDeclarativeShadowRoots(bool aAllowDeclarativeShadowRoots);
+  bool AllowsDeclarativeShadowRoots() const;
+
  protected:
   RefPtr<DocumentL10n> mDocumentL10n;
 
@@ -4819,6 +4822,8 @@ class Document : public nsINode,
 
   // Whether we're cloning the contents of an SVG use element.
   bool mCloningForSVGUse : 1;
+
+  bool mAllowDeclarativeShadowRoots : 1;
 
   // The fingerprinting protections overrides for this document. The value will
   // override the default enabled fingerprinting protections for this document.
