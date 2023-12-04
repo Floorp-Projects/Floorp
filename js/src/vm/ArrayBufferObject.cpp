@@ -1947,7 +1947,7 @@ ArrayBufferObject::extractStructuredCloneContents(
 /* static */
 bool ArrayBufferObject::ensureNonInline(JSContext* cx,
                                         Handle<ArrayBufferObject*> buffer) {
-  if (buffer->isDetached()) {
+  if (buffer->isDetached() || buffer->isPreparedForAsmJS()) {
     return true;
   }
 
@@ -1956,8 +1956,6 @@ bool ArrayBufferObject::ensureNonInline(JSContext* cx,
                               JSMSG_ARRAYBUFFER_LENGTH_PINNED);
     return false;
   }
-
-  MOZ_ASSERT(!buffer->isPreparedForAsmJS());
 
   BufferContents inlineContents = buffer->contents();
   if (inlineContents.kind() != INLINE_DATA) {
