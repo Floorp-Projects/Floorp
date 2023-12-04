@@ -22,7 +22,6 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsPrintfCString.h"
-#include "nsQuickSort.h"
 #include "nsEnumeratorUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/ArenaAllocatorExtensions.h"
