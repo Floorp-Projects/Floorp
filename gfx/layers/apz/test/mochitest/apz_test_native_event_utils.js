@@ -1910,3 +1910,39 @@ async function closeContextMenu() {
 
   await contextmenuClosedPromise;
 }
+
+// Get a list of prefs which should be used for a subtest which wants to
+// generate a smooth scroll animation using an input event. The smooth
+// scroll animation is slowed down so the test can perform other actions
+// while it's still in progress.
+function getSmoothScrollPrefs(aInputType) {
+  let result = [["apz.test.logging_enabled", true]];
+  if (aInputType == "wheel") {
+    // We want to test real wheel events rather than pan events.
+    result.push(["apz.test.mac.synth_wheel_input", true]);
+  } /* keyboard input */ else {
+    // The default verticalScrollDistance (which is 3) is too small for native
+    // keyboard scrolling, it sometimes produces same scroll offsets in the early
+    // stages of the smooth animation.
+    result.push(["toolkit.scrollbox.verticalScrollDistance", 5]);
+  }
+  // Use a longer animation duration to avoid the situation that the
+  // animation stops accidentally in between each arrow input event.
+  // If the situation happens, scroll offsets will not change at the moment.
+  if (aInputType == "wheel") {
+    result.push(
+      ...[
+        ["general.smoothScroll.mouseWheel.durationMaxMS", 1500],
+        ["general.smoothScroll.mouseWheel.durationMinMS", 1500],
+      ]
+    );
+  } /* keyboard input */ else {
+    result.push(
+      ...[
+        ["general.smoothScroll.lines.durationMaxMS", 1500],
+        ["general.smoothScroll.lines.durationMinMS", 1500],
+      ]
+    );
+  }
+  return result;
+}

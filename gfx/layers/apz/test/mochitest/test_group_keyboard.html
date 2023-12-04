@@ -9,18 +9,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
-var smoothness_prefs = [
-  ["apz.test.logging_enabled", true],
-  // The default verticalScrollDistance (which is 3) is too small for native
-  // keyboard scrolling, it sometimes produces same scroll offsets in the early
-  // stages of the smooth animation.
-  ["toolkit.scrollbox.verticalScrollDistance", 5],
-  // Use a longer animation duration to avoid the situation that the
-  // animation stops accidentally in between each arrow down key press.
-  // If the situation happens, scroll offsets will not change at the moment.
-  ["general.smoothScroll.lines.durationMaxMS", 1500],
-  ["general.smoothScroll.lines.durationMinMS", 1500]
-];
+var smoothness_prefs = getSmoothScrollPrefs("keyboard");
 
 var subtests = [
   {"file": "helper_key_scroll.html", prefs: [["apz.test.logging_enabled", true],
