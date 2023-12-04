@@ -277,3 +277,70 @@ nsMacShellService::ShowSecurityPreferences(const nsACString& aPaneID) {
   }
   return rv;
 }
+
+nsString ConvertCFStringToNSString(CFStringRef aSrc) {
+  nsString aDest;
+  auto len = ::CFStringGetLength(aSrc);
+  aDest.SetLength(len);
+  ::CFStringGetCharacters(aSrc, ::CFRangeMake(0, len),
+                          (UniChar*)aDest.BeginWriting());
+  return aDest;
+}
+
+NS_IMETHODIMP
+nsMacShellService::GetAvailableApplicationsForProtocol(
+    const nsACString& protocol, nsTArray<nsTArray<nsString>>& aHandlerPaths) {
+  class CFTypeRefAutoDeleter {
+   public:
+    CFTypeRefAutoDeleter(CFTypeRef ref) : mRef(ref) {}
+    ~CFTypeRefAutoDeleter() {
+      if (mRef != NULL) ::CFRelease(mRef);
+    }
+
+   private:
+    CFTypeRef mRef;
+  };
+
+  aHandlerPaths.Clear();
+  nsCString protocolSep = protocol + "://"_ns;
+  CFStringRef cfProtocol = ::CFStringCreateWithBytes(
+      kCFAllocatorDefault, (const UInt8*)protocolSep.BeginReading(),
+      protocolSep.Length(), kCFStringEncodingUTF8, false);
+  CFTypeRefAutoDeleter cfProtocolAuto(cfProtocol);
+  if (cfProtocol == NULL) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  CFURLRef protocolURL =
+      ::CFURLCreateWithString(kCFAllocatorDefault, cfProtocol, NULL);
+  CFTypeRefAutoDeleter cfProtocolURLAuto(protocolURL);
+  if (protocolURL == NULL) {
+    return NS_ERROR_MALFORMED_URI;
+  }
+  CFArrayRef appURLs = ::LSCopyApplicationURLsForURL(protocolURL, kLSRolesAll);
+  CFTypeRefAutoDeleter cfAppURLsAuto(appURLs);
+  if (appURLs == NULL) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  for (CFIndex i = 0; i < ::CFArrayGetCount(appURLs); i++) {
+    CFURLRef appURL = (CFURLRef)::CFArrayGetValueAtIndex(appURLs, i);
+    CFBundleRef appBundle = ::CFBundleCreate(kCFAllocatorDefault, appURL);
+    CFTypeRefAutoDeleter cfAppBundleAuto(appBundle);
+    if (appBundle == NULL) {
+      continue;
+    }
+    CFDictionaryRef appInfo = ::CFBundleGetInfoDictionary(appBundle);
+    if (appInfo == NULL) {
+      continue;
+    }
+    CFStringRef displayName =
+        (CFStringRef)::CFDictionaryGetValue(appInfo, kCFBundleNameKey);
+    if (displayName == NULL) {
+      continue;
+    }
+    CFStringRef appPath = ::CFURLGetString(appURL);
+    nsTArray<nsString> handlerPath = {ConvertCFStringToNSString(displayName),
+                                      ConvertCFStringToNSString(appPath)};
+    aHandlerPaths.AppendElement(handlerPath.Clone());
+  }
+  return NS_OK;
+}
