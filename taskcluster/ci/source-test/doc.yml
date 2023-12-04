@@ -14,6 +14,8 @@ generate:
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
+        env:
+            LC_ALL: C
         artifacts:
             - type: file
               name: public/docs.tar.gz
@@ -48,6 +50,7 @@ upload:
         docker-image: {in-tree: "lint"}
         max-run-time: 1800
         env:
+            LC_ALL: C
             MOZ_SOURCE_DOCS_USE_GOOGLE: "1"
         taskcluster-proxy: true
         artifacts:
