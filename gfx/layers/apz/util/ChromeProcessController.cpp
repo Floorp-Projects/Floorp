@@ -146,14 +146,8 @@ void ChromeProcessController::HandleDoubleTap(
   ZoomTarget zoomTarget =
       CalculateRectToZoomTo(document, aPoint, aDoubleTapToZoomMetrics);
 
-  uint32_t presShellId;
-  ScrollableLayerGuid::ViewID viewId;
-  if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(
-          document->GetDocumentElement(), &presShellId, &viewId)) {
-    mAPZCTreeManager->ZoomToRect(
-        ScrollableLayerGuid(aGuid.mLayersId, presShellId, viewId), zoomTarget,
-        ZoomToRectBehavior::DEFAULT_BEHAVIOR);
-  }
+  mAPZCTreeManager->ZoomToRect(aGuid, zoomTarget,
+                               ZoomToRectBehavior::DEFAULT_BEHAVIOR);
 }
 
 void ChromeProcessController::HandleTap(

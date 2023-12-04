@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<script src="apz_test_native_event_utils.js"></script>
+<script src="apz_test_utils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+}
+</style>
+<div id="target" style="width: 100px; height: 100px; position: absolute; top: 300px; left: 100px; background: blue;"></div>
+<script>
+  // Silence SimpleTest warning about missing assertions by having it wait
+  // indefinitely. We don't need to give it an explicit finish because the
+  // entire window this test runs in will be closed after the main browser test
+  // finished.
+  SimpleTest.waitForExplicitFinish();
+</script>
+</html>
