@@ -305,7 +305,7 @@ def setup_browsertime(config, tasks):
                 "macosx1300.*": [
                     "browsertime",
                     "macosx64-aarch64-geckodriver",
-                    "macosx64-aarch64-node-16"
+                    "macosx64-aarch64-node-16",
                 ],
                 "windows.*aarch64.*": [
                     "browsertime",

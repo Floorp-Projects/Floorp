@@ -25,7 +25,12 @@ def generate_frame_id_list_h(output, *ignore):
     for group in groups:
         for frame in group:
             output.write(
-                "FRAME_ID(%s, %s, %s)\n" % (frame.cls, frame.ty, "|".join("ClassFlags::%s" % flag for flag in sorted(frame.flags)))
+                "FRAME_ID(%s, %s, %s)\n"
+                % (
+                    frame.cls,
+                    frame.ty,
+                    "|".join("ClassFlags::%s" % flag for flag in sorted(frame.flags)),
+                )
             )
     for frame in FRAME_CLASSES:
         if not frame.is_concrete:

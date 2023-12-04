@@ -14,9 +14,10 @@ STEPS = {
         git remote add central hg::https://hg.mozilla.org/central
         """,
         "git remote remove unified",
-        "git remote remove central"
-    ]
+        "git remote remove central",
+    ],
 }
+
 
 def test_get_upstream_remote(repo):
     # Test is only relevant for Git.
@@ -32,13 +33,15 @@ def test_get_upstream_remote(repo):
 
     repo.execute_next_step()
     remote = vcs.get_mozilla_upstream_remote()
-    assert remote == "central", "Any other official looking remote should be returned second."
+    assert (
+        remote == "central"
+    ), "Any other official looking remote should be returned second."
 
     repo.execute_next_step()
     remote = vcs.get_mozilla_upstream_remote()
-    assert remote is None, "`None` should be returned if an official remote isn't found."
-
-
+    assert (
+        remote is None
+    ), "`None` should be returned if an official remote isn't found."
 
 
 if __name__ == "__main__":

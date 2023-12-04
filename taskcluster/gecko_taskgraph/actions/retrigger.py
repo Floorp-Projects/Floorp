@@ -200,9 +200,12 @@ def retrigger_action(parameters, graph_config, input, task_group_id, task_id):
 def rerun_action(parameters, graph_config, input, task_group_id, task_id):
     task = get_task_definition(task_id)
     parameters = dict(parameters)
-    decision_task_id, full_task_graph, label_to_taskid, label_to_taskids = fetch_graph_and_labels(
-        parameters, graph_config
-    )
+    (
+        decision_task_id,
+        full_task_graph,
+        label_to_taskid,
+        label_to_taskids,
+    ) = fetch_graph_and_labels(parameters, graph_config)
     label = task["metadata"]["name"]
     if task_id not in itertools.chain(*label_to_taskid.values()):
         # XXX the error message is wrong, we're also looking at label_to_taskid
@@ -261,9 +264,12 @@ def _rerun_task(task_id, label):
     },
 )
 def retrigger_multiple(parameters, graph_config, input, task_group_id, task_id):
-    decision_task_id, full_task_graph, label_to_taskid, label_to_taskids = fetch_graph_and_labels(
-        parameters, graph_config
-    )
+    (
+        decision_task_id,
+        full_task_graph,
+        label_to_taskid,
+        label_to_taskids,
+    ) = fetch_graph_and_labels(parameters, graph_config)
 
     suffixes = []
     for i, request in enumerate(input.get("requests", [])):
