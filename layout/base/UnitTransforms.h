@@ -77,6 +77,9 @@ enum class PixelCastJustification : uint8_t {
   // use CSS pixels) and code related to the scroll frame in APZ (which wants
   // such quantities in OuterCSS pixels).
   CSSPixelsOfSurroundingContent,
+  // The matrix has been converted to a conceptually different type by calling
+  // PreScale() and/or PostScale()
+  UntypedPrePostScale,
 };
 
 template <class TargetUnits, class SourceUnits>

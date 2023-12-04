@@ -71,9 +71,9 @@ struct ParamTraits<mozilla::gfx::Matrix> {
   }
 };
 
-template <>
-struct ParamTraits<mozilla::gfx::Matrix4x4> {
-  typedef mozilla::gfx::Matrix4x4 paramType;
+template <class SourceUnits, class TargetUnits, class T>
+struct ParamTraits<mozilla::gfx::Matrix4x4Typed<SourceUnits, TargetUnits, T>> {
+  typedef mozilla::gfx::Matrix4x4Typed<SourceUnits, TargetUnits, T> paramType;
 
   static void Write(MessageWriter* writer, const paramType& param) {
 #define Wr(_f) WriteParam(writer, param._f)
