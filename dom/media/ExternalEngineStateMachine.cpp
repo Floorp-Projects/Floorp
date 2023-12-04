@@ -486,6 +486,18 @@ void ExternalEngineStateMachine::CheckIfSeekCompleted() {
     return;
   }
 
+  // As seeking should be accurate and we can't control the exact timing inside
+  // the external media engine. We always set the newCurrentTime = seekTime
+  // so that the updated HTMLMediaElement.currentTime will always be the seek
+  // target.
+  if (state->GetTargetTime() != mCurrentPosition) {
+    LOG("Force adjusting current time (%" PRId64
+        ") to match to target (%" PRId64 ")",
+        mCurrentPosition.Ref().ToMicroseconds(),
+        state->GetTargetTime().ToMicroseconds());
+    mCurrentPosition = state->GetTargetTime();
+  }
+
   LOG("Seek completed");
   state->Resolve(__func__);
   mOnPlaybackEvent.Notify(MediaPlaybackEvent::Invalidate);
