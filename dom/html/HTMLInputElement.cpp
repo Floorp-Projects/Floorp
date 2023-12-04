@@ -29,6 +29,7 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_signon.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Try.h"
 #include "nsAttrValueInlines.h"
@@ -1426,10 +1427,15 @@ void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       aNameSpaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
 }
 
-void HTMLInputElement::BeforeSetForm(bool aBindToTree) {
+void HTMLInputElement::BeforeSetForm(HTMLFormElement* aForm, bool aBindToTree) {
   // No need to remove from radio group if we are just binding to tree.
   if (mType == FormControlType::InputRadio && !aBindToTree) {
     RemoveFromRadioGroup();
+  }
+
+  // Dispatch event when <input> @form is set
+  if (!aBindToTree) {
+    MaybeDispatchLoginManagerEvents(aForm);
   }
 }
 
@@ -4363,20 +4369,62 @@ nsresult HTMLInputElement::BindToTree(BindContext& aContext, nsINode& aParent) {
     AttachAndSetUAShadowRoot(NotifyUAWidgetSetup::Yes, DelegatesFocus::Yes);
   }
 
+  MaybeDispatchLoginManagerEvents(mForm);
+
+  return rv;
+}
+
+void HTMLInputElement::MaybeDispatchLoginManagerEvents(HTMLFormElement* aForm) {
+  // Don't disptach the event if the <input> is disconnected
+  // or belongs to a disconnected form
+  if (!IsInComposedDoc()) {
+    return;
+  }
+
+  nsString eventType;
+  Element* target = nullptr;
+
   if (mType == FormControlType::InputPassword) {
-    if (IsInComposedDoc()) {
-      AsyncEventDispatcher* dispatcher =
-          new AsyncEventDispatcher(this, u"DOMInputPasswordAdded"_ns,
-                                   CanBubble::eYes, ChromeOnlyDispatch::eYes);
-      dispatcher->PostDOMEvent();
+    // Don't fire another event if we have a pending event.
+    if (aForm && aForm->mHasPendingPasswordEvent) {
+      return;
+    }
+
+    // TODO(Bug 1864404): Use one event for formless and form inputs.
+    eventType = aForm ? u"DOMFormHasPassword"_ns : u"DOMInputPasswordAdded"_ns;
+
+    target = aForm ? static_cast<Element*>(aForm) : this;
+
+    if (aForm) {
+      aForm->mHasPendingPasswordEvent = true;
     }
 
 #ifdef EARLY_BETA_OR_EARLIER
-    Telemetry::Accumulate(Telemetry::PWMGR_PASSWORD_INPUT_IN_FORM, !!mForm);
+    Telemetry::Accumulate(Telemetry::PWMGR_PASSWORD_INPUT_IN_FORM, !!aForm);
 #endif
+  } else if (mType == FormControlType::InputEmail ||
+             mType == FormControlType::InputText) {
+    // Don't fire a username event if:
+    // - <input> is not part of a form
+    // - we have a pending event
+    // - username only forms are not supported
+    if (!aForm || aForm->mHasPendingPossibleUsernameEvent ||
+        !StaticPrefs::signon_usernameOnlyForm_enabled()) {
+      return;
+    }
+
+    eventType = u"DOMFormHasPossibleUsername"_ns;
+    target = aForm;
+
+    aForm->mHasPendingPossibleUsernameEvent = true;
+
+  } else {
+    return;
   }
 
-  return rv;
+  RefPtr<AsyncEventDispatcher> dispatcher = new AsyncEventDispatcher(
+      target, eventType, CanBubble::eYes, ChromeOnlyDispatch::eYes);
+  dispatcher->PostDOMEvent();
 }
 
 void HTMLInputElement::UnbindFromTree(bool aNullParent) {
@@ -4639,12 +4687,7 @@ void HTMLInputElement::HandleTypeChange(FormControlType aNewType,
     }
   }
 
-  if (mType == FormControlType::InputPassword && IsInComposedDoc()) {
-    AsyncEventDispatcher* dispatcher =
-        new AsyncEventDispatcher(this, u"DOMInputPasswordAdded"_ns,
-                                 CanBubble::eYes, ChromeOnlyDispatch::eYes);
-    dispatcher->PostDOMEvent();
-  }
+  MaybeDispatchLoginManagerEvents(mForm);
 
   if (IsInComposedDoc()) {
     if (CreatesDateTimeWidget(oldType)) {
