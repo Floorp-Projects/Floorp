@@ -11,6 +11,7 @@
 #include <functional>
 #include <limits>
 #include <stdlib.h>  // for div()
+#include <numeric>
 #include <type_traits>
 #include "gfxContext.h"
 #include "mozilla/AutoRestore.h"
@@ -161,7 +162,7 @@ static nscoord ResolveToDefiniteSize(const StyleTrackBreadth& aBreadth,
 // Synthesize a baseline from a border box.  For an alphabetical baseline
 // this is the end edge of the border box.  For a central baseline it's
 // the center of the border box.
-// https://drafts.csswg.org/css-align-3/#synthesize-baselines
+// https://drafts.csswg.org/css-align-3/#synthesize-baseline
 // For a 'first baseline' the measure is from the border-box start edge and
 // for a 'last baseline' the measure is from the border-box end edge.
 static nscoord SynthesizeBaselineFromBorderBox(BaselineSharingGroup aGroup,
@@ -5741,21 +5742,26 @@ void nsGridContainerFrame::Tracks::InitializeItemBaselines(
     // A grid container's subgridded axis doesn't have a baseline.
     return;
   }
+
   nsTArray<ItemBaselineData> firstBaselineItems;
   nsTArray<ItemBaselineData> lastBaselineItems;
-  WritingMode wm = aState.mWM;
-  ComputedStyle* containerSC = aState.mFrame->Style();
+  const WritingMode containerWM = aState.mWM;
+  ComputedStyle* containerStyle = aState.mFrame->Style();
+
   for (GridItemInfo& gridItem : aGridItems) {
     if (gridItem.IsSubgrid(mAxis)) {
       // A subgrid itself is never baseline-aligned.
       continue;
     }
+
     nsIFrame* child = gridItem.mFrame;
     uint32_t baselineTrack = kAutoLine;
     auto state = ItemState(0);
-    auto childWM = child->GetWritingMode();
-    const bool isOrthogonal = wm.IsOrthogonalTo(childWM);
+    const auto childWM = child->GetWritingMode();
+
+    const bool isOrthogonal = containerWM.IsOrthogonalTo(childWM);
     const bool isInlineAxis = mAxis == eLogicalAxisInline;  // i.e. columns
+
     // XXX update the line below to include orthogonal grid/table boxes
     // XXX since they have baselines in both dimensions. And flexbox with
     // XXX reversed main/cross axis?
@@ -5763,8 +5769,9 @@ void nsGridContainerFrame::Tracks::InitializeItemBaselines(
     if (itemHasBaselineParallelToTrack) {
       // [align|justify]-self:[last ]baseline.
       auto selfAlignment =
-          isOrthogonal ? child->StylePosition()->UsedJustifySelf(containerSC)._0
-                       : child->StylePosition()->UsedAlignSelf(containerSC)._0;
+          isOrthogonal
+              ? child->StylePosition()->UsedJustifySelf(containerStyle)._0
+              : child->StylePosition()->UsedAlignSelf(containerStyle)._0;
       selfAlignment &= ~StyleAlignFlags::FLAG_BITS;
       if (selfAlignment == StyleAlignFlags::BASELINE) {
         state |= ItemState::eFirstBaseline | ItemState::eSelfBaseline;
@@ -5798,13 +5805,14 @@ void nsGridContainerFrame::Tracks::InitializeItemBaselines(
           LogicalAxis alignAxis = GetOrthogonalAxis(mAxis);
           // |sameSide| is true if the container's start side in this axis is
           // the same as the child's start side, in the child's parallel axis.
-          bool sameSide = wm.ParallelAxisStartsOnSameSide(alignAxis, childWM);
+          bool sameSide =
+              containerWM.ParallelAxisStartsOnSameSide(alignAxis, childWM);
           if (selfAlignment == StyleAlignFlags::LEFT) {
-            selfAlignment = !isInlineAxis || wm.IsBidiLTR()
+            selfAlignment = !isInlineAxis || containerWM.IsBidiLTR()
                                 ? StyleAlignFlags::START
                                 : StyleAlignFlags::END;
           } else if (selfAlignment == StyleAlignFlags::RIGHT) {
-            selfAlignment = isInlineAxis && wm.IsBidiLTR()
+            selfAlignment = isInlineAxis && containerWM.IsBidiLTR()
                                 ? StyleAlignFlags::END
                                 : StyleAlignFlags::START;
           }
@@ -5852,57 +5860,112 @@ void nsGridContainerFrame::Tracks::InitializeItemBaselines(
       // XXX For now we just pass an unconstrined-bsize CB:
       LogicalSize cbSize(childWM, 0, NS_UNCONSTRAINEDSIZE);
       ::MeasuringReflow(child, aState.mReflowInput, rc, avail, cbSize);
+
       nscoord baseline;
       nsGridContainerFrame* grid = do_QueryFrame(child);
+      auto frameSize =
+          isInlineAxis ? child->ISize(containerWM) : child->BSize(containerWM);
+      auto margin = child->GetLogicalUsedMargin(containerWM);
+      auto alignSize =
+          frameSize + (isInlineAxis ? margin.IStartEnd(containerWM)
+                                    : margin.BStartEnd(containerWM));
+
+      // Check if the item crosses any tracks that is intrinsically sized.
+      auto range = gridItem.mArea.LineRangeForAxis(mAxis).Range();
+      auto isTrackAutoSize =
+          std::find_if(range.begin(), range.end(), [&](auto track) {
+            constexpr auto intrinsicSizeFlags = TrackSize::eIntrinsicMinSizing |
+                                                TrackSize::eIntrinsicMaxSizing |
+                                                TrackSize::eFitContent |
+                                                TrackSize::eFlexMaxSizing;
+            return (mSizes[track].mState & intrinsicSizeFlags) != 0;
+          }) != range.end();
+
+      const auto ItemParticipatesInBaselineAlignment = [&]() -> bool {
+        // If baseline alignment is specified on a grid item whose size in that
+        // axis depends on the size of an intrinsically-sized track, that item
+        // does not participate in baseline alignment, and instead uses its
+        // fallback alignment as if that were originally specified.
+        // https://drafts.csswg.org/css-grid-1/#row-align
+
+        if (!isTrackAutoSize) {
+          return true;
+        }
+
+        const auto IsDependentOnContainerSize = [](const auto& size) -> bool {
+          return size.HasPercent() || size.IsMozAvailable();
+        };
+
+        const nsStylePosition* stylePos = child->StylePosition();
+        bool isItemAutoSize =
+            IsDependentOnContainerSize(stylePos->BSize(containerWM)) ||
+            IsDependentOnContainerSize(stylePos->MinBSize(containerWM)) ||
+            IsDependentOnContainerSize(stylePos->MaxBSize(containerWM));
+
+        return !isItemAutoSize;
+      };
+
+      const auto CalculateAndAppendItemWithBaseline =
+          [&](BaselineSharingGroup aBaselineSharingGroup) {
+            const auto isFirstBaseline =
+                aBaselineSharingGroup == BaselineSharingGroup::First;
+            bool hasBaseline = false;
+            if (grid) {
+              if (isOrthogonal == isInlineAxis) {
+                baseline = grid->GetBBaseline(aBaselineSharingGroup);
+              } else {
+                baseline = grid->GetIBaseline(aBaselineSharingGroup);
+              }
+              hasBaseline = true;
+            } else {
+              hasBaseline = isFirstBaseline
+                                ? nsLayoutUtils::GetFirstLineBaseline(
+                                      containerWM, child, &baseline)
+                                : nsLayoutUtils::GetLastLineBaseline(
+                                      containerWM, child, &baseline);
+
+              if (!hasBaseline && ItemParticipatesInBaselineAlignment()) {
+                // TODO(tlouw): This should really be `aBaselineSharingGroup`,
+                // but then "last baseline" tests start to fail.
+                baseline = Baseline::SynthesizeBOffsetFromBorderBox(
+                    child, containerWM, BaselineSharingGroup::First);
+                hasBaseline = true;
+              }
+            }
+
+            if (hasBaseline) {
+              NS_ASSERTION(baseline != NS_INTRINSIC_ISIZE_UNKNOWN,
+                           "about to use an unknown baseline");
+
+              if (isFirstBaseline) {
+                baseline += isInlineAxis ? margin.IStart(containerWM)
+                                         : margin.BStart(containerWM);
+
+              } else {
+                if (!grid) {
+                  // Convert to distance from border-box end.
+                  baseline = frameSize - baseline;
+                }
+                baseline += isInlineAxis ? margin.IEnd(containerWM)
+                                         : margin.BEnd(containerWM);
+                state |= ItemState::eEndSideBaseline;
+              }
+
+              (isFirstBaseline ? firstBaselineItems : lastBaselineItems)
+                  .AppendElement(ItemBaselineData{baselineTrack, baseline,
+                                                  alignSize, &gridItem});
+            } else {
+              state &= ~ItemState::eAllBaselineBits;
+            }
+          };
+
       if (state & ItemState::eFirstBaseline) {
-        if (grid) {
-          if (isOrthogonal == isInlineAxis) {
-            baseline = grid->GetBBaseline(BaselineSharingGroup::First);
-          } else {
-            baseline = grid->GetIBaseline(BaselineSharingGroup::First);
-          }
-        }
-        if (grid || nsLayoutUtils::GetFirstLineBaseline(wm, child, &baseline)) {
-          NS_ASSERTION(baseline != NS_INTRINSIC_ISIZE_UNKNOWN,
-                       "about to use an unknown baseline");
-          auto frameSize = isInlineAxis ? child->ISize(wm) : child->BSize(wm);
-          auto m = child->GetLogicalUsedMargin(wm);
-          baseline += isInlineAxis ? m.IStart(wm) : m.BStart(wm);
-          auto alignSize =
-              frameSize + (isInlineAxis ? m.IStartEnd(wm) : m.BStartEnd(wm));
-          firstBaselineItems.AppendElement(ItemBaselineData(
-              {baselineTrack, baseline, alignSize, &gridItem}));
-        } else {
-          state &= ~ItemState::eAllBaselineBits;
-        }
+        CalculateAndAppendItemWithBaseline(BaselineSharingGroup::First);
       } else {
-        if (grid) {
-          if (isOrthogonal == isInlineAxis) {
-            baseline = grid->GetBBaseline(BaselineSharingGroup::Last);
-          } else {
-            baseline = grid->GetIBaseline(BaselineSharingGroup::Last);
-          }
-        }
-        if (grid || nsLayoutUtils::GetLastLineBaseline(wm, child, &baseline)) {
-          NS_ASSERTION(baseline != NS_INTRINSIC_ISIZE_UNKNOWN,
-                       "about to use an unknown baseline");
-          auto frameSize = isInlineAxis ? child->ISize(wm) : child->BSize(wm);
-          auto m = child->GetLogicalUsedMargin(wm);
-          if (!grid) {
-            // Convert to distance from border-box end.
-            baseline = frameSize - baseline;
-          }
-          auto descent = baseline + (isInlineAxis ? m.IEnd(wm) : m.BEnd(wm));
-          auto alignSize =
-              frameSize + (isInlineAxis ? m.IStartEnd(wm) : m.BStartEnd(wm));
-          lastBaselineItems.AppendElement(
-              ItemBaselineData({baselineTrack, descent, alignSize, &gridItem}));
-          state |= ItemState::eEndSideBaseline;
-        } else {
-          state &= ~ItemState::eAllBaselineBits;
-        }
+        CalculateAndAppendItemWithBaseline(BaselineSharingGroup::Last);
       }
     }
+
     MOZ_ASSERT(
         (state & (ItemState::eFirstBaseline | ItemState::eLastBaseline)) !=
             (ItemState::eFirstBaseline | ItemState::eLastBaseline),
@@ -5915,6 +5978,7 @@ void nsGridContainerFrame::Tracks::InitializeItemBaselines(
         !(state & (ItemState::eFirstBaseline | ItemState::eLastBaseline)) ==
             !(state & (ItemState::eSelfBaseline | ItemState::eContentBaseline)),
         "first/last bit requires self/content bit and vice versa");
+
     gridItem.mState[mAxis] |= state;
     gridItem.mBaselineOffset[mAxis] = nscoord(0);
   }
