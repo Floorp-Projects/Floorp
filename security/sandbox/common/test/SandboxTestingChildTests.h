@@ -507,6 +507,25 @@ void RunTestsContent(SandboxTestingChild* child) {
     return realpath("/etc/localtime", buf) ? 0 : -1;
   });
 
+  // Check that readlink truncates results longer than the buffer
+  // (rather than failing) and returns the total number of bytes
+  // actually written (not the size of the link or anything else).
+  {
+    char buf;
+    ssize_t rv = readlink("/etc/localtime", &buf, 1);
+    int err = errno;
+    if (rv == 1) {
+      child->SendReportTestResults("readlink truncate"_ns, true,
+                                   "expected 1, got 1"_ns);
+    } else if (rv < 0) {
+      nsPrintfCString msg("expected 1, got error: %s", strerror(err));
+      child->SendReportTestResults("readlink truncate"_ns, false, msg);
+    } else {
+      nsPrintfCString msg("expected 1, got %zd", rv);
+      child->SendReportTestResults("readlink truncate"_ns, false, msg);
+    }
+  }
+
 #  endif  // XP_LINUX
 
 #  ifdef XP_MACOSX

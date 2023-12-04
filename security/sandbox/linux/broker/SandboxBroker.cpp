@@ -1002,9 +1002,16 @@ void SandboxBroker::ThreadMain(void) {
                   free(resolvedBuf);
                 }
               }
-              resp.mError = respSize;
+              // Truncate the reply to the size of the client's
+              // buffer, matching the real readlink()'s behavior in
+              // that case, and being careful with the input data.
+              ssize_t callerSize =
+                  std::max(AssertedCast<ssize_t>(req.mBufSize), ssize_t(0));
+              respSize = std::min(respSize, callerSize);
+              resp.mError = AssertedCast<int>(respSize);
               ios[1].iov_base = &respBuf;
-              ios[1].iov_len = respSize;
+              ios[1].iov_len = ReleaseAssertedCast<size_t>(respSize);
+              MOZ_RELEASE_ASSERT(ios[1].iov_len <= sizeof(respBuf));
             } else {
               resp.mError = -errno;
             }
