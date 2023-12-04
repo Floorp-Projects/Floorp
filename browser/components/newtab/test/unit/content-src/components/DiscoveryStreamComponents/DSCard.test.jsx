@@ -257,6 +257,7 @@ describe("<DSCard>", () => {
             card_type: "organic",
             recommendation_id: undefined,
             tile_id: "fooidx",
+            shim: "click shim",
           },
         })
       );
