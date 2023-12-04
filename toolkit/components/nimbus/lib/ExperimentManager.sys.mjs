@@ -137,6 +137,15 @@ export class _ExperimentManager {
         return this.store.getAll().map(enrollment => enrollment.slug);
       },
     });
+    Object.defineProperty(context, "enrollmentsMap", {
+      get: async () => {
+        await this.store.ready();
+        return this.store.getAll().reduce((acc, enrollment) => {
+          acc[enrollment.slug] = enrollment.branch.slug;
+          return acc;
+        }, {});
+      },
+    });
     return context;
   }
 
