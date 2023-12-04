@@ -38,6 +38,17 @@ class ScrollAnimationMSDPhysics final : public ScrollAnimationPhysics {
   }
 
  protected:
+  // A wrapper around AxisPhysicsMSDModel which takes additional steps to avoid
+  // oscillating motion.
+  class NonOscillatingAxisPhysicsMSDModel : public AxisPhysicsMSDModel {
+   public:
+    NonOscillatingAxisPhysicsMSDModel(double aInitialPosition,
+                                      double aInitialDestination,
+                                      double aInitialVelocity,
+                                      double aSpringConstant,
+                                      double aDampingRatio);
+  };
+
   double ComputeSpringConstant(const TimeStamp& aTime);
   void SimulateUntil(const TimeStamp& aTime);
 
@@ -49,8 +60,8 @@ class ScrollAnimationMSDPhysics final : public ScrollAnimationPhysics {
   nsPoint mStartPos;
   nsPoint mDestination;
   TimeStamp mLastSimulatedTime;
-  AxisPhysicsMSDModel mModelX;
-  AxisPhysicsMSDModel mModelY;
+  NonOscillatingAxisPhysicsMSDModel mModelX;
+  NonOscillatingAxisPhysicsMSDModel mModelY;
   bool mIsFirstIteration;
 };
 
