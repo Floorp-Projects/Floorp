@@ -54,10 +54,10 @@ struct IndexDataValue final {
 
   IndexDataValue();
 
-#ifdef NS_BUILD_REFCNT_LOGGING
-  IndexDataValue(IndexDataValue&& aOther);
-
-  MOZ_COUNTED_DTOR(IndexDataValue)
+#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING)
+  IndexDataValue(IndexDataValue&& aOther) noexcept;
+#else
+  IndexDataValue(IndexDataValue&& aOther) = default;
 #endif
 
   IndexDataValue(IndexOrObjectStoreId aIndexId, bool aUnique,
@@ -65,6 +65,12 @@ struct IndexDataValue final {
 
   IndexDataValue(IndexOrObjectStoreId aIndexId, bool aUnique,
                  const Key& aPosition, const Key& aLocaleAwarePosition);
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+  MOZ_COUNTED_DTOR(IndexDataValue)
+#endif
+
+  IndexDataValue& operator=(IndexDataValue&& aOther) = default;
 
   bool operator==(const IndexDataValue& aOther) const;
 
