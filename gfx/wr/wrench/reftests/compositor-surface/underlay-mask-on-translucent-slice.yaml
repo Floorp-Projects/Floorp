@@ -1,0 +1,24 @@
+# Verify that a compositor surface with a mask, which is placed on
+# a translucent picture cache slice draws correctly.
+---
+root:
+  items:
+    - type: rect
+      bounds: [50, 50, 440, 338]
+      color: red
+    - type: clip
+      id: 3
+      complex:
+        - rect: [70, 70, 400, 298]
+          radius: 32
+    - type: scroll-frame
+      bounds: [50, 50, 200, 200]
+      items:
+        - type: yuv-image
+          format: planar
+          src-y: barn-y.png
+          src-u: barn-u.png
+          src-v: barn-v.png
+          bounds: [70, 70, 400, 298]
+          prefer-compositor-surface: true
+          clip-chain: [3]
