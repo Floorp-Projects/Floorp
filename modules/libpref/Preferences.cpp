@@ -74,6 +74,7 @@
 #include "nsIZipReader.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
+#include "nsQuickSort.h"
 #include "nsReadableUtils.h"
 #include "nsRefPtrHashtable.h"
 #include "nsRelativeFilePref.h"
@@ -4511,7 +4512,8 @@ static nsresult parsePrefData(const nsCString& aData, PrefValueKind aKind) {
   return NS_OK;
 }
 
-static int pref_CompareFileNames(nsIFile* aFile1, nsIFile* aFile2) {
+static int pref_CompareFileNames(nsIFile* aFile1, nsIFile* aFile2,
+                                 void* /* unused */) {
   nsAutoCString filename1, filename2;
   aFile1->GetNativeLeafName(filename1);
   aFile2->GetNativeLeafName(filename2);
@@ -4566,7 +4568,7 @@ static nsresult pref_LoadPrefsInDir(nsIFile* aDir) {
     return rv;
   }
 
-  prefFiles.Sort(pref_CompareFileNames);
+  prefFiles.Sort(pref_CompareFileNames, nullptr);
 
   uint32_t arrayCount = prefFiles.Count();
   uint32_t i;

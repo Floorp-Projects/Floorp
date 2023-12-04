@@ -47,6 +47,18 @@ class nsCOMArray_base {
 
   bool EnumerateBackwards(nsBaseArrayEnumFunc aFunc, void* aData) const;
 
+  typedef int (*nsISupportsComparatorFunc)(nsISupports* aElement1,
+                                           nsISupports* aElement2, void* aData);
+
+  struct nsISupportsComparatorContext {
+    nsISupportsComparatorFunc mComparatorFunc;
+    void* mData;
+  };
+
+  static int VoidStarComparator(const void* aElement1, const void* aElement2,
+                                void* aData);
+  void Sort(nsISupportsComparatorFunc aFunc, void* aData);
+
   bool InsertObjectAt(nsISupports* aObject, int32_t aIndex);
   void InsertElementAt(uint32_t aIndex, nsISupports* aElement);
   void InsertElementAt(uint32_t aIndex, already_AddRefed<nsISupports> aElement);
@@ -153,11 +165,10 @@ class nsCOMArray_base {
     return mArray.ShallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
- protected:
+ private:
   // the actual storage
   nsTArray<nsISupports*> mArray;
 
- private:
   // don't implement these, defaults will muck with refcounts!
   nsCOMArray_base& operator=(const nsCOMArray_base& aOther) = delete;
 };
@@ -286,23 +297,23 @@ class nsCOMArray : public nsCOMArray_base {
     nsCOMArray_base::ReplaceElementAt(aIndex, aElement);
   }
 
-  using TComparatorFunc = int (*)(T*, T*);
+  typedef int (*TComparatorFunc)(T* aElement1, T* aElement2, void* aData);
 
-  // The default sort function uses nsTArray::Sort.
-  // Note that the order of equal items is unstable with this.
-  void Sort(TComparatorFunc aFunc) {
-    mArray.Sort(
-        [aFunc](nsISupports* const& aLeft, nsISupports* const& aRight) -> int {
-          return aFunc(static_cast<T*>(aLeft), static_cast<T*>(aRight));
-        });
+  struct TComparatorContext {
+    TComparatorFunc mComparatorFunc;
+    void* mData;
+  };
+
+  static int nsISupportsComparator(nsISupports* aElement1,
+                                   nsISupports* aElement2, void* aData) {
+    auto ctx = static_cast<TComparatorContext*>(aData);
+    return (*ctx->mComparatorFunc)(static_cast<T*>(aElement1),
+                                   static_cast<T*>(aElement2), ctx->mData);
   }
 
-  // Sort with a stable algorithm, uses nsTArray::StableSort.
-  void StableSort(TComparatorFunc aFunc) {
-    mArray.StableSort(
-        [aFunc](nsISupports* const& aLeft, nsISupports* const& aRight) -> int {
-          return aFunc(static_cast<T*>(aLeft), static_cast<T*>(aRight));
-        });
+  void Sort(TComparatorFunc aFunc, void* aData) {
+    TComparatorContext ctx = {aFunc, aData};
+    nsCOMArray_base::Sort(nsISupportsComparator, &ctx);
   }
 
   // append an object, growing the array as necessary

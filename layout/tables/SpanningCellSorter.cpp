@@ -9,7 +9,7 @@
  */
 
 #include "SpanningCellSorter.h"
-#include "nsTArray.h"
+#include "nsQuickSort.h"
 #include "mozilla/HashFunctions.h"
 
 using namespace mozilla;
@@ -17,11 +17,13 @@ using namespace mozilla;
 // #define DEBUG_SPANNING_CELL_SORTER
 
 SpanningCellSorter::SpanningCellSorter()
-    : mState(ADDING), mHashTable(&HashTableOps, sizeof(HashTableEntry)) {
+    : mState(ADDING),
+      mHashTable(&HashTableOps, sizeof(HashTableEntry)),
+      mSortedHashTable(nullptr) {
   memset(mArray, 0, sizeof(mArray));
 }
 
-SpanningCellSorter::~SpanningCellSorter() = default;
+SpanningCellSorter::~SpanningCellSorter() { delete[] mSortedHashTable; }
 
 /* static */ const PLDHashTableOps SpanningCellSorter::HashTableOps = {
     HashTableHashKey, HashTableMatchEntry, PLDHashTable::MoveEntryStub,
@@ -71,19 +73,18 @@ bool SpanningCellSorter::AddCell(int32_t aColSpan, int32_t aRow, int32_t aCol) {
   return true;
 }
 
+/* static */
+int SpanningCellSorter::SortArray(const void* a, const void* b, void* closure) {
+  int32_t spanA = (*static_cast<HashTableEntry* const*>(a))->mColSpan;
+  int32_t spanB = (*static_cast<HashTableEntry* const*>(b))->mColSpan;
+
+  if (spanA < spanB) return -1;
+  if (spanA == spanB) return 0;
+  return 1;
+}
+
 SpanningCellSorter::Item* SpanningCellSorter::GetNext(int32_t* aColSpan) {
   NS_ASSERTION(mState != DONE, "done enumerating, stop calling");
-
-  // Our comparator needs the SpanningCellSorter private HashTableEntry
-  class HashTableEntryComparator {
-   public:
-    bool Equals(HashTableEntry* left, HashTableEntry* right) const {
-      return left->mColSpan == right->mColSpan;
-    }
-    bool LessThan(HashTableEntry* left, HashTableEntry* right) const {
-      return left->mColSpan < right->mColSpan;
-    }
-  };
 
   switch (mState) {
     case ADDING:
@@ -111,15 +112,14 @@ SpanningCellSorter::Item* SpanningCellSorter::GetNext(int32_t* aColSpan) {
       mState = ENUMERATING_HASH;
       mEnumerationIndex = 0;
       if (mHashTable.EntryCount() > 0) {
-        // This clear is a no-op if the array is empty and it makes us
-        // resilient against re-entrance.
-        mSortedHashTable.ClearAndRetainStorage();
-        mSortedHashTable.SetCapacity(mHashTable.EntryCount());
+        HashTableEntry** sh = new HashTableEntry*[mHashTable.EntryCount()];
+        int32_t j = 0;
         for (auto iter = mHashTable.ConstIter(); !iter.Done(); iter.Next()) {
-          mSortedHashTable.AppendElement(
-              static_cast<HashTableEntry*>(iter.Get()));
+          sh[j++] = static_cast<HashTableEntry*>(iter.Get());
         }
-        mSortedHashTable.Sort(HashTableEntryComparator());
+        NS_QuickSort(sh, mHashTable.EntryCount(), sizeof(sh[0]), SortArray,
+                     nullptr);
+        mSortedHashTable = sh;
       }
       [[fallthrough]];
     case ENUMERATING_HASH:

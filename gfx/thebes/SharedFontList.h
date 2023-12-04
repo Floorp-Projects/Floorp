@@ -248,8 +248,8 @@ struct Family {
              mVisibility == aRHS.mVisibility && mBundled == aRHS.mBundled &&
              mBadUnderline == aRHS.mBadUnderline;
     }
-    nsCString mKey;
-    nsCString mName;
+    const nsCString mKey;
+    const nsCString mName;
     uint32_t mIndex;
     FontVisibility mVisibility;
     bool mBundled;

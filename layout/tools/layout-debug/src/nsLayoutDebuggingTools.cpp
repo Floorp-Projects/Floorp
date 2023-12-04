@@ -13,6 +13,7 @@
 #include "nsIPrintSettingsService.h"
 
 #include "nsAtom.h"
+#include "nsQuickSort.h"
 
 #include "nsIContent.h"
 

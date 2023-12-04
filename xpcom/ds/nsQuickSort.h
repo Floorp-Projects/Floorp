@@ -18,13 +18,6 @@ extern "C" {
 #endif
 
 /**
- * You most probably want to not use this but std::sort or std::stable_sort
- * It will be removed eventually from the tree, see bug 1839052.
- *
- * Quicksort is recursive without limits and thus may make overflow the stack.
- * And while being close to optimal for randomized data for some edge cases
- * it can reach quadratic performance O(n*n) instead of O(n*log(n)).
- *
  * Parameters:
  *  1. the array to sort
  *  2. the number of elements in the array
@@ -36,9 +29,8 @@ extern "C" {
  *      + greater than zero if the second element should be before the first
  *  5. extra data to pass to comparison function
  */
-[[deprecated("Use std::sort or std::make/sort_heap instead.")]] void
-NS_QuickSort(void*, unsigned int, unsigned int,
-             int (*)(const void*, const void*, void*), void*);
+void NS_QuickSort(void*, unsigned int, unsigned int,
+                  int (*)(const void*, const void*, void*), void*);
 
 #ifdef __cplusplus
 }

@@ -34,6 +34,7 @@
 #include "nsAlgorithm.h"
 #include "nsDebug.h"
 #include "nsISupports.h"
+#include "nsQuickSort.h"
 #include "nsRegionFwd.h"
 #include "nsTArrayForwardDeclare.h"
 
@@ -966,13 +967,10 @@ struct CompareWrapper<T, U, false> {
 
   template <typename A, typename B>
   int Compare(A& aLeft, B& aRight) const {
-    if (LessThan(aLeft, aRight)) {
-      return -1;
-    }
     if (Equals(aLeft, aRight)) {
       return 0;
     }
-    return 1;
+    return LessThan(aLeft, aRight) ? -1 : 1;
   }
 
   template <typename A, typename B>
@@ -2365,44 +2363,41 @@ class nsTArray_Impl
   // Sorting
   //
 
+  // This function is meant to be used with the NS_QuickSort function.  It
+  // maps the callback API expected by NS_QuickSort to the Comparator API
+  // used by nsTArray_Impl.  See nsTArray_Impl::Sort.
+  template <class Comparator>
+  static int Compare(const void* aE1, const void* aE2, void* aData) {
+    const Comparator* c = reinterpret_cast<const Comparator*>(aData);
+    const value_type* a = static_cast<const value_type*>(aE1);
+    const value_type* b = static_cast<const value_type*>(aE2);
+    return c->Compare(*a, *b);
+  }
+
   // This method sorts the elements of the array.  It uses the LessThan
-  // method defined on the given Comparator object to collate elements or
-  // it wraps a tri-state comparison lambda into such a comparator.
-  // It uses std::sort. It expects value_type to be move assignable and
-  // constructible and uses those always, regardless of the chosen
-  // nsTArray_RelocationStrategy.
-  //
+  // method defined on the given Comparator object to collate elements.
   // @param aComp The Comparator used to collate elements.
   template <class Comparator>
   void Sort(const Comparator& aComp) {
-    static_assert(std::is_move_assignable_v<value_type>);
-    static_assert(std::is_move_constructible_v<value_type>);
-
     ::detail::CompareWrapper<Comparator, value_type> comp(aComp);
-    std::sort(begin(), end(), [&comp](const auto& left, const auto& right) {
-      return comp.LessThan(left, right);
-    });
+
+    NS_QuickSort(Elements(), Length(), sizeof(value_type),
+                 Compare<decltype(comp)>, &comp);
   }
 
   // A variation on the Sort method defined above that assumes that
-  // 'operator<' is defined for 'value_type'.
+  // 'operator<' is defined for value_type.
   void Sort() { Sort(nsDefaultComparator<value_type, value_type>()); }
 
   // This method sorts the elements of the array in a stable way (i.e. not
   // changing the relative order of elements considered equal by the
-  // Comparator).  It uses the LessThan method defined on the given Comparator
-  // object to collate elements.
-  // It uses std::stable_sort. It expects value_type to be move assignable and
-  // constructible and uses those always, regardless of the chosen
-  // nsTArray_RelocationStrategy.
-  //
+  // Comparator).  It uses the LessThan
+  // method defined on the given Comparator object to collate elements.
   // @param aComp The Comparator used to collate elements.
   template <class Comparator>
   void StableSort(const Comparator& aComp) {
-    static_assert(std::is_move_assignable_v<value_type>);
-    static_assert(std::is_move_constructible_v<value_type>);
-
     const ::detail::CompareWrapper<Comparator, value_type> comp(aComp);
+
     std::stable_sort(Elements(), Elements() + Length(),
                      [&comp](const auto& lhs, const auto& rhs) {
                        return comp.LessThan(lhs, rhs);
@@ -2410,7 +2405,7 @@ class nsTArray_Impl
   }
 
   // A variation on the StableSort method defined above that assumes that
-  // 'operator<' is defined for 'value_type'.
+  // 'operator<' is defined for value_type.
   void StableSort() {
     StableSort(nsDefaultComparator<value_type, value_type>());
   }

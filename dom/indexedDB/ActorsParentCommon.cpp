@@ -508,8 +508,8 @@ IndexDataValue::IndexDataValue() : mIndexId(0), mUnique(false) {
   MOZ_COUNT_CTOR(IndexDataValue);
 }
 
-#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING)
-IndexDataValue::IndexDataValue(IndexDataValue&& aOther) noexcept
+#ifdef NS_BUILD_REFCNT_LOGGING
+IndexDataValue::IndexDataValue(IndexDataValue&& aOther)
     : mIndexId(aOther.mIndexId),
       mPosition(std::move(aOther.mPosition)),
       mLocaleAwarePosition(std::move(aOther.mLocaleAwarePosition)),

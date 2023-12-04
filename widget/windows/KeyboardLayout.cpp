@@ -17,9 +17,9 @@
 #include "nsIUserIdleServiceInternal.h"
 #include "nsIWindowsRegKey.h"
 #include "nsPrintfCString.h"
+#include "nsQuickSort.h"
 #include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "nsTArray.h"
 #include "nsUnicharUtils.h"
 #include "nsWindowDbg.h"
 
@@ -4460,13 +4460,14 @@ void KeyboardLayout::LoadLayout(HKL aLayout) {
     for (uint32_t virtualKey = 0; virtualKey < 256; virtualKey++) {
       int32_t vki = GetKeyIndex(virtualKey);
       if (vki >= 0 && mVirtualKeys[vki].IsDeadKey(shiftState)) {
-        AutoTArray<DeadKeyEntry, 256> deadKeyArray;
-        uint32_t n = GetDeadKeyCombinations(
-            virtualKey, kbdState, shiftStatesWithBaseChars, deadKeyArray);
+        DeadKeyEntry deadKeyArray[256];
+        int32_t n = GetDeadKeyCombinations(
+            virtualKey, kbdState, shiftStatesWithBaseChars, deadKeyArray,
+            ArrayLength(deadKeyArray));
         const DeadKeyTable* dkt =
-            mVirtualKeys[vki].MatchingDeadKeyTable(deadKeyArray.Elements(), n);
+            mVirtualKeys[vki].MatchingDeadKeyTable(deadKeyArray, n);
         if (!dkt) {
-          dkt = AddDeadKeyTable(deadKeyArray.Elements(), n);
+          dkt = AddDeadKeyTable(deadKeyArray, n);
         }
         mVirtualKeys[vki].AttachDeadKeyTable(shiftState, dkt);
       }
@@ -4553,6 +4554,14 @@ inline int32_t KeyboardLayout::GetKeyIndex(uint8_t aVirtualKey) {
   return xlat[aVirtualKey];
 }
 
+int KeyboardLayout::CompareDeadKeyEntries(const void* aArg1, const void* aArg2,
+                                          void*) {
+  const DeadKeyEntry* arg1 = static_cast<const DeadKeyEntry*>(aArg1);
+  const DeadKeyEntry* arg2 = static_cast<const DeadKeyEntry*>(aArg2);
+
+  return arg1->BaseChar - arg2->BaseChar;
+}
+
 const DeadKeyTable* KeyboardLayout::AddDeadKeyTable(
     const DeadKeyEntry* aDeadKeyArray, uint32_t aEntries) {
   DeadKeyTableListEntry* next = mDeadKeyTableListHead;
@@ -4628,22 +4637,24 @@ void KeyboardLayout::DeactivateDeadKeyState() {
 
 bool KeyboardLayout::AddDeadKeyEntry(char16_t aBaseChar,
                                      char16_t aCompositeChar,
-                                     nsTArray<DeadKeyEntry>& aDeadKeyArray) {
-  auto dke = DeadKeyEntry(aBaseChar, aCompositeChar);
-  for (uint32_t index = 0; index < aDeadKeyArray.Length(); index++) {
-    if (aDeadKeyArray[index] == dke) {
+                                     DeadKeyEntry* aDeadKeyArray,
+                                     uint32_t aEntries) {
+  for (uint32_t index = 0; index < aEntries; index++) {
+    if (aDeadKeyArray[index].BaseChar == aBaseChar) {
       return false;
     }
   }
 
-  aDeadKeyArray.AppendElement(dke);
+  aDeadKeyArray[aEntries].BaseChar = aBaseChar;
+  aDeadKeyArray[aEntries].CompositeChar = aCompositeChar;
 
   return true;
 }
 
 uint32_t KeyboardLayout::GetDeadKeyCombinations(
     uint8_t aDeadKey, const PBYTE aDeadKeyKbdState,
-    uint16_t aShiftStatesWithBaseChars, nsTArray<DeadKeyEntry>& aDeadKeyArray) {
+    uint16_t aShiftStatesWithBaseChars, DeadKeyEntry* aDeadKeyArray,
+    uint32_t aMaxEntries) {
   bool deadKeyActive = false;
   uint32_t entries = 0;
   BYTE kbdState[256];
@@ -4684,14 +4695,14 @@ uint32_t KeyboardLayout::GetDeadKeyCombinations(
             char16_t baseChars[5];
             ret = ::ToUnicodeEx(virtualKey, 0, kbdState, (LPWSTR)baseChars,
                                 ArrayLength(baseChars), 0, mKeyboardLayout);
-            if (entries < aDeadKeyArray.Capacity()) {
+            if (entries < aMaxEntries) {
               switch (ret) {
                 case 1:
                   // Exactly one composite character produced. Now, when
                   // dead-key is not active, repeat the last character one more
                   // time to determine the base character.
                   if (AddDeadKeyEntry(baseChars[0], compositeChars[0],
-                                      aDeadKeyArray)) {
+                                      aDeadKeyArray, entries)) {
                     entries++;
                   }
                   deadKeyActive = false;
@@ -4719,7 +4730,7 @@ uint32_t KeyboardLayout::GetDeadKeyCombinations(
                   }
                   if (ret > 0 &&
                       AddDeadKeyEntry(baseChars[0], compositeChars[0],
-                                      aDeadKeyArray)) {
+                                      aDeadKeyArray, entries)) {
                     entries++;
                   }
                   // Inactivate dead-key state for current virtual keycode.
@@ -4767,8 +4778,8 @@ uint32_t KeyboardLayout::GetDeadKeyCombinations(
     deadKeyActive = EnsureDeadKeyActive(false, aDeadKey, aDeadKeyKbdState);
   }
 
-  aDeadKeyArray.Sort();
-
+  NS_QuickSort(aDeadKeyArray, entries, sizeof(DeadKeyEntry),
+               CompareDeadKeyEntries, nullptr);
   return entries;
 }
 
