@@ -170,7 +170,18 @@ impl<'a, E: TElement> OptimizationContext<'a, E> {
             // element we're mutating.
             // e.g. Given `:has(... .a ~ .b ...)`, we're the mutating element matching `... .a`,
             // if we find a sibling that matches the `... .a`, it can stand in for us.
-            return true;
+            debug_assert!(dependency.parent.is_some(), "No relative selector outer dependency?");
+            return dependency.parent.as_ref().map_or(false, |par| {
+                // ... However, if the standin sibling can be the anchor, we can't skip it, since
+                // that sibling should be invlidated to become the anchor.
+                !matches_selector(
+                    &par.selector,
+                    par.selector_offset,
+                    None,
+                    &sibling,
+                    &mut matching_context
+                )
+            });
         }
         // Ok, there's no standin element - but would this element have matched the upstream
         // selector anyway? If we don't, either the match exists somewhere far from us
