@@ -13,6 +13,7 @@
 
 #include "PLDHashTable.h"
 #include "nsDebug.h"
+#include "nsTArray.h"
 #include "StackArena.h"
 
 /**
@@ -73,11 +74,11 @@ class MOZ_STACK_CLASS SpanningCellSorter {
   static PLDHashNumber HashTableHashKey(const void* key);
   static bool HashTableMatchEntry(const PLDHashEntryHdr* hdr, const void* key);
 
-  static int SortArray(const void* a, const void* b, void* closure);
+  static int CompareHashTableEntry(HashTableEntry* a, HashTableEntry* b);
 
   /* state used only during enumeration */
   uint32_t mEnumerationIndex;  // into mArray or mSortedHashTable
-  HashTableEntry** mSortedHashTable;
+  nsTArray<HashTableEntry*> mSortedHashTable;
 
   /*
    * operator new is forbidden since we use the pres shell's stack
