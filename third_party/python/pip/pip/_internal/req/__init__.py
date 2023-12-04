@@ -36,6 +36,7 @@ def _validate_requirements(
 
 def install_given_reqs(
     requirements: List[InstallRequirement],
+    install_options: List[str],
     global_options: Sequence[str],
     root: Optional[str],
     home: Optional[str],
@@ -70,6 +71,7 @@ def install_given_reqs(
 
             try:
                 requirement.install(
+                    install_options,
                     global_options,
                     root=root,
                     home=home,

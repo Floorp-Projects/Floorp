@@ -210,15 +210,8 @@ class Configuration:
             # Ensure directory exists.
             ensure_dir(os.path.dirname(fname))
 
-            # Ensure directory's permission(need to be writeable)
-            try:
-                with open(fname, "w") as f:
-                    parser.write(f)
-            except OSError as error:
-                raise ConfigurationError(
-                    f"An error occurred while writing to the configuration file "
-                    f"{fname}: {error}"
-                )
+            with open(fname, "w") as f:
+                parser.write(f)
 
     #
     # Private routines

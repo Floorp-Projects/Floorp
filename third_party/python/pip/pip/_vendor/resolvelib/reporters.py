@@ -36,7 +36,7 @@ class BaseReporter(object):
         :param causes: The information on the collision that caused the backtracking.
         """
 
-    def rejecting_candidate(self, criterion, candidate):
+    def backtracking(self, candidate):
         """Called when rejecting a candidate during backtracking."""
 
     def pinning(self, candidate):

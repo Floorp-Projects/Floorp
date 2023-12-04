@@ -4,7 +4,6 @@ import re
 import sys
 import textwrap
 from abc import ABC, abstractmethod
-from pathlib import Path
 from typing import (
     Any,
     Dict,
@@ -339,7 +338,8 @@ class Syntax(JupyterMixin):
         Returns:
             [Syntax]: A Syntax object that may be printed to the console
         """
-        code = Path(path).read_text(encoding=encoding)
+        with open(path, "rt", encoding=encoding) as code_file:
+            code = code_file.read()
 
         if not lexer:
             lexer = cls.guess_lexer(path, code=code)
@@ -494,10 +494,7 @@ class Syntax(JupyterMixin):
 
                     # Skip over tokens until line start
                     while line_no < _line_start:
-                        try:
-                            _token_type, token = next(tokens)
-                        except StopIteration:
-                            break
+                        _token_type, token = next(tokens)
                         yield (token, None)
                         if token.endswith("\n"):
                             line_no += 1
@@ -590,6 +587,7 @@ class Syntax(JupyterMixin):
     def __rich_measure__(
         self, console: "Console", options: "ConsoleOptions"
     ) -> "Measurement":
+
         _, right, _, left = Padding.unpack(self.padding)
         padding = left + right
         if self.code_width is not None:
@@ -673,8 +671,6 @@ class Syntax(JupyterMixin):
             line_offset = max(0, start_line - 1)
         lines: Union[List[Text], Lines] = text.split("\n", allow_blank=ends_on_nl)
         if self.line_range:
-            if line_offset > len(lines):
-                return
             lines = lines[line_offset:end_line]
 
         if self.indent_guides and not options.ascii_only:
@@ -687,7 +683,7 @@ class Syntax(JupyterMixin):
             lines = (
                 Text("\n")
                 .join(lines)
-                .with_indent_guides(self.tab_size, style=style + Style(italic=False))
+                .with_indent_guides(self.tab_size, style=style)
                 .split("\n", allow_blank=True)
             )
 
@@ -829,6 +825,7 @@ def _get_code_index_for_syntax_position(
 
 
 if __name__ == "__main__":  # pragma: no cover
+
     import argparse
     import sys
 

@@ -16,7 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import functools
 import sys
 import threading
@@ -89,13 +88,51 @@ tornado = None  # type: ignore
 if t.TYPE_CHECKING:
     import types
 
-    from .retry import RetryBaseT
-    from .stop import StopBaseT
-    from .wait import WaitBaseT
+    from .wait import wait_base
+    from .stop import stop_base
 
 
-WrappedFnReturnT = t.TypeVar("WrappedFnReturnT")
-WrappedFn = t.TypeVar("WrappedFn", bound=t.Callable[..., t.Any])
+WrappedFn = t.TypeVar("WrappedFn", bound=t.Callable)
+_RetValT = t.TypeVar("_RetValT")
+
+
+@t.overload
+def retry(fn: WrappedFn) -> WrappedFn:
+    pass
+
+
+@t.overload
+def retry(*dargs: t.Any, **dkw: t.Any) -> t.Callable[[WrappedFn], WrappedFn]:  # noqa
+    pass
+
+
+def retry(*dargs: t.Any, **dkw: t.Any) -> t.Union[WrappedFn, t.Callable[[WrappedFn], WrappedFn]]:  # noqa
+    """Wrap a function with a new `Retrying` object.
+
+    :param dargs: positional arguments passed to Retrying object
+    :param dkw: keyword arguments passed to the Retrying object
+    """
+    # support both @retry and @retry() as valid syntax
+    if len(dargs) == 1 and callable(dargs[0]):
+        return retry()(dargs[0])
+    else:
+
+        def wrap(f: WrappedFn) -> WrappedFn:
+            if isinstance(f, retry_base):
+                warnings.warn(
+                    f"Got retry_base instance ({f.__class__.__name__}) as callable argument, "
+                    f"this will probably hang indefinitely (did you mean retry={f.__class__.__name__}(...)?)"
+                )
+            if iscoroutinefunction(f):
+                r: "BaseRetrying" = AsyncRetrying(*dargs, **dkw)
+            elif tornado and hasattr(tornado.gen, "is_coroutine_function") and tornado.gen.is_coroutine_function(f):
+                r = TornadoRetrying(*dargs, **dkw)
+            else:
+                r = Retrying(*dargs, **dkw)
+
+            return r.wraps(f)
+
+        return wrap
 
 
 class TryAgain(Exception):
@@ -179,7 +216,7 @@ class AttemptManager:
         exc_value: t.Optional[BaseException],
         traceback: t.Optional["types.TracebackType"],
     ) -> t.Optional[bool]:
-        if exc_type is not None and exc_value is not None:
+        if isinstance(exc_value, BaseException):
             self.retry_state.set_exception((exc_type, exc_value, traceback))
             return True  # Swallow exception.
         else:
@@ -192,9 +229,9 @@ class BaseRetrying(ABC):
     def __init__(
         self,
         sleep: t.Callable[[t.Union[int, float]], None] = sleep,
-        stop: "StopBaseT" = stop_never,
-        wait: "WaitBaseT" = wait_none(),
-        retry: "RetryBaseT" = retry_if_exception_type(),
+        stop: "stop_base" = stop_never,
+        wait: "wait_base" = wait_none(),
+        retry: retry_base = retry_if_exception_type(),
         before: t.Callable[["RetryCallState"], None] = before_nothing,
         after: t.Callable[["RetryCallState"], None] = after_nothing,
         before_sleep: t.Optional[t.Callable[["RetryCallState"], None]] = None,
@@ -217,8 +254,8 @@ class BaseRetrying(ABC):
     def copy(
         self,
         sleep: t.Union[t.Callable[[t.Union[int, float]], None], object] = _unset,
-        stop: t.Union["StopBaseT", object] = _unset,
-        wait: t.Union["WaitBaseT", object] = _unset,
+        stop: t.Union["stop_base", object] = _unset,
+        wait: t.Union["wait_base", object] = _unset,
         retry: t.Union[retry_base, object] = _unset,
         before: t.Union[t.Callable[["RetryCallState"], None], object] = _unset,
         after: t.Union[t.Callable[["RetryCallState"], None], object] = _unset,
@@ -275,9 +312,9 @@ class BaseRetrying(ABC):
                   statistics from each thread).
         """
         try:
-            return self._local.statistics  # type: ignore[no-any-return]
+            return self._local.statistics
         except AttributeError:
-            self._local.statistics = t.cast(t.Dict[str, t.Any], {})
+            self._local.statistics = {}
             return self._local.statistics
 
     def wraps(self, f: WrappedFn) -> WrappedFn:
@@ -293,10 +330,10 @@ class BaseRetrying(ABC):
         def retry_with(*args: t.Any, **kwargs: t.Any) -> WrappedFn:
             return self.copy(*args, **kwargs).wraps(f)
 
-        wrapped_f.retry = self  # type: ignore[attr-defined]
-        wrapped_f.retry_with = retry_with  # type: ignore[attr-defined]
+        wrapped_f.retry = self
+        wrapped_f.retry_with = retry_with
 
-        return wrapped_f  # type: ignore[return-value]
+        return wrapped_f
 
     def begin(self) -> None:
         self.statistics.clear()
@@ -311,15 +348,15 @@ class BaseRetrying(ABC):
                 self.before(retry_state)
             return DoAttempt()
 
-        is_explicit_retry = fut.failed and isinstance(fut.exception(), TryAgain)
-        if not (is_explicit_retry or self.retry(retry_state)):
+        is_explicit_retry = retry_state.outcome.failed and isinstance(retry_state.outcome.exception(), TryAgain)
+        if not (is_explicit_retry or self.retry(retry_state=retry_state)):
             return fut.result()
 
         if self.after is not None:
             self.after(retry_state)
 
         self.statistics["delay_since_first_attempt"] = retry_state.seconds_since_start
-        if self.stop(retry_state):
+        if self.stop(retry_state=retry_state):
             if self.retry_error_callback:
                 return self.retry_error_callback(retry_state)
             retry_exc = self.retry_error_cls(fut)
@@ -328,7 +365,7 @@ class BaseRetrying(ABC):
             raise retry_exc from fut.exception()
 
         if self.wait:
-            sleep = self.wait(retry_state)
+            sleep = self.wait(retry_state=retry_state)
         else:
             sleep = 0.0
         retry_state.next_action = RetryAction(sleep)
@@ -356,24 +393,14 @@ class BaseRetrying(ABC):
                 break
 
     @abstractmethod
-    def __call__(
-        self,
-        fn: t.Callable[..., WrappedFnReturnT],
-        *args: t.Any,
-        **kwargs: t.Any,
-    ) -> WrappedFnReturnT:
+    def __call__(self, fn: t.Callable[..., _RetValT], *args: t.Any, **kwargs: t.Any) -> _RetValT:
         pass
 
 
 class Retrying(BaseRetrying):
     """Retrying controller."""
 
-    def __call__(
-        self,
-        fn: t.Callable[..., WrappedFnReturnT],
-        *args: t.Any,
-        **kwargs: t.Any,
-    ) -> WrappedFnReturnT:
+    def __call__(self, fn: t.Callable[..., _RetValT], *args: t.Any, **kwargs: t.Any) -> _RetValT:
         self.begin()
 
         retry_state = RetryCallState(retry_object=self, fn=fn, args=args, kwargs=kwargs)
@@ -383,23 +410,17 @@ class Retrying(BaseRetrying):
                 try:
                     result = fn(*args, **kwargs)
                 except BaseException:  # noqa: B902
-                    retry_state.set_exception(sys.exc_info())  # type: ignore[arg-type]
+                    retry_state.set_exception(sys.exc_info())
                 else:
                     retry_state.set_result(result)
             elif isinstance(do, DoSleep):
                 retry_state.prepare_for_next_attempt()
                 self.sleep(do)
             else:
-                return do  # type: ignore[no-any-return]
+                return do
 
 
-if sys.version_info[1] >= 9:
-    FutureGenericT = futures.Future[t.Any]
-else:
-    FutureGenericT = futures.Future
-
-
-class Future(FutureGenericT):
+class Future(futures.Future):
     """Encapsulates a (future or past) attempted call to a target function."""
 
     def __init__(self, attempt_number: int) -> None:
@@ -472,15 +493,13 @@ class RetryCallState:
         fut.set_result(val)
         self.outcome, self.outcome_timestamp = fut, ts
 
-    def set_exception(
-        self, exc_info: t.Tuple[t.Type[BaseException], BaseException, "types.TracebackType| None"]
-    ) -> None:
+    def set_exception(self, exc_info: t.Tuple[t.Type[BaseException], BaseException, "types.TracebackType"]) -> None:
         ts = time.monotonic()
         fut = Future(self.attempt_number)
         fut.set_exception(exc_info[1])
         self.outcome, self.outcome_timestamp = fut, ts
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         if self.outcome is None:
             result = "none yet"
         elif self.outcome.failed:
@@ -494,115 +513,7 @@ class RetryCallState:
         return f"<{clsname} {id(self)}: attempt #{self.attempt_number}; slept for {slept}; last result: {result}>"
 
 
-@t.overload
-def retry(func: WrappedFn) -> WrappedFn:
-    ...
-
-
-@t.overload
-def retry(
-    sleep: t.Callable[[t.Union[int, float]], None] = sleep,
-    stop: "StopBaseT" = stop_never,
-    wait: "WaitBaseT" = wait_none(),
-    retry: "RetryBaseT" = retry_if_exception_type(),
-    before: t.Callable[["RetryCallState"], None] = before_nothing,
-    after: t.Callable[["RetryCallState"], None] = after_nothing,
-    before_sleep: t.Optional[t.Callable[["RetryCallState"], None]] = None,
-    reraise: bool = False,
-    retry_error_cls: t.Type["RetryError"] = RetryError,
-    retry_error_callback: t.Optional[t.Callable[["RetryCallState"], t.Any]] = None,
-) -> t.Callable[[WrappedFn], WrappedFn]:
-    ...
-
-
-def retry(*dargs: t.Any, **dkw: t.Any) -> t.Any:
-    """Wrap a function with a new `Retrying` object.
-
-    :param dargs: positional arguments passed to Retrying object
-    :param dkw: keyword arguments passed to the Retrying object
-    """
-    # support both @retry and @retry() as valid syntax
-    if len(dargs) == 1 and callable(dargs[0]):
-        return retry()(dargs[0])
-    else:
-
-        def wrap(f: WrappedFn) -> WrappedFn:
-            if isinstance(f, retry_base):
-                warnings.warn(
-                    f"Got retry_base instance ({f.__class__.__name__}) as callable argument, "
-                    f"this will probably hang indefinitely (did you mean retry={f.__class__.__name__}(...)?)"
-                )
-            r: "BaseRetrying"
-            if iscoroutinefunction(f):
-                r = AsyncRetrying(*dargs, **dkw)
-            elif tornado and hasattr(tornado.gen, "is_coroutine_function") and tornado.gen.is_coroutine_function(f):
-                r = TornadoRetrying(*dargs, **dkw)
-            else:
-                r = Retrying(*dargs, **dkw)
-
-            return r.wraps(f)
-
-        return wrap
-
-
 from pip._vendor.tenacity._asyncio import AsyncRetrying  # noqa:E402,I100
 
 if tornado:
     from pip._vendor.tenacity.tornadoweb import TornadoRetrying
-
-
-__all__ = [
-    "retry_base",
-    "retry_all",
-    "retry_always",
-    "retry_any",
-    "retry_if_exception",
-    "retry_if_exception_type",
-    "retry_if_exception_cause_type",
-    "retry_if_not_exception_type",
-    "retry_if_not_result",
-    "retry_if_result",
-    "retry_never",
-    "retry_unless_exception_type",
-    "retry_if_exception_message",
-    "retry_if_not_exception_message",
-    "sleep",
-    "sleep_using_event",
-    "stop_after_attempt",
-    "stop_after_delay",
-    "stop_all",
-    "stop_any",
-    "stop_never",
-    "stop_when_event_set",
-    "wait_chain",
-    "wait_combine",
-    "wait_exponential",
-    "wait_fixed",
-    "wait_incrementing",
-    "wait_none",
-    "wait_random",
-    "wait_random_exponential",
-    "wait_full_jitter",
-    "wait_exponential_jitter",
-    "before_log",
-    "before_nothing",
-    "after_log",
-    "after_nothing",
-    "before_sleep_log",
-    "before_sleep_nothing",
-    "retry",
-    "WrappedFn",
-    "TryAgain",
-    "NO_RESULT",
-    "DoAttempt",
-    "DoSleep",
-    "BaseAction",
-    "RetryAction",
-    "RetryError",
-    "AttemptManager",
-    "BaseRetrying",
-    "Retrying",
-    "Future",
-    "RetryCallState",
-    "AsyncRetrying",
-]
