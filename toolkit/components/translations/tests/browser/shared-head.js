@@ -23,6 +23,8 @@ const SPANISH_PAGE_URL_DOT_ORG =
   URL_ORG_PREFIX + DIR_PATH + "translations-tester-es.html";
 const NO_LANGUAGE_URL =
   URL_COM_PREFIX + DIR_PATH + "translations-tester-no-tag.html";
+const EMPTY_PDF_URL =
+  URL_COM_PREFIX + DIR_PATH + "translations-tester-empty-pdf-file.pdf";
 
 const PIVOT_LANGUAGE = "en";
 const LANGUAGE_PAIRS = [

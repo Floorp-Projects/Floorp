@@ -619,7 +619,14 @@ export class TranslationsParent extends JSWindowActorParent {
    * @param {string} scheme - The URI spec
    * @returns {boolean}
    */
-  static isRestrictedPage(scheme) {
+  static isRestrictedPage(gBrowser) {
+    const contentType = gBrowser.selectedBrowser.documentContentType;
+    const scheme = gBrowser.currentURI.scheme;
+
+    if (contentType === "application/pdf") {
+      return true;
+    }
+
     // Keep this logic up to date with TranslationsChild.prototype.#isRestrictedPage.
     switch (scheme) {
       case "https":
