@@ -43,10 +43,10 @@ void ScrollAnimationMSDPhysics::Update(const TimeStamp& aTime,
 
   mLastSimulatedTime = mStartTime;
   mDestination = aDestination;
-  mModelX = AxisPhysicsMSDModel(mStartPos.x, aDestination.x,
-                                aCurrentVelocity.width, springConstant, 1);
-  mModelY = AxisPhysicsMSDModel(mStartPos.y, aDestination.y,
-                                aCurrentVelocity.height, springConstant, 1);
+  mModelX = NonOscillatingAxisPhysicsMSDModel(
+      mStartPos.x, aDestination.x, aCurrentVelocity.width, springConstant, 1);
+  mModelY = NonOscillatingAxisPhysicsMSDModel(
+      mStartPos.y, aDestination.y, aCurrentVelocity.height, springConstant, 1);
   mIsFirstIteration = false;
 }
 
@@ -58,10 +58,12 @@ void ScrollAnimationMSDPhysics::ApplyContentShift(const CSSPoint& aShiftDelta) {
   nsPoint currentPosition = PositionAt(currentTime) + shiftDelta;
   nsSize currentVelocity = VelocityAt(currentTime);
   double springConstant = ComputeSpringConstant(currentTime);
-  mModelX = AxisPhysicsMSDModel(currentPosition.x, mDestination.x,
-                                currentVelocity.width, springConstant, 1);
-  mModelY = AxisPhysicsMSDModel(currentPosition.y, mDestination.y,
-                                currentVelocity.height, springConstant, 1);
+  mModelX = NonOscillatingAxisPhysicsMSDModel(currentPosition.x, mDestination.x,
+                                              currentVelocity.width,
+                                              springConstant, 1);
+  mModelY = NonOscillatingAxisPhysicsMSDModel(currentPosition.y, mDestination.y,
+                                              currentVelocity.height,
+                                              springConstant, 1);
 }
 
 double ScrollAnimationMSDPhysics::ComputeSpringConstant(
@@ -125,4 +127,30 @@ nsSize ScrollAnimationMSDPhysics::VelocityAt(const TimeStamp& aTime) {
   SimulateUntil(aTime);
   return nsSize(NSToCoordRound(mModelX.GetVelocity()),
                 NSToCoordRound(mModelY.GetVelocity()));
+}
+
+static double ClampVelocityToMaximum(double aVelocity, double aInitialPosition,
+                                     double aDestination,
+                                     double aSpringConstant) {
+  // Clamp velocity to the maximum value it could obtain if we started at this
+  // position with zero velocity (see bug 1866904 comment 3). With a damping
+  // ratio >= 1.0, this should be low enough to avoid overshooting the
+  // destination.
+  double velocityLimit =
+      sqrt(aSpringConstant) * abs(aDestination - aInitialPosition);
+  return clamped(aVelocity, -velocityLimit, velocityLimit);
+}
+
+ScrollAnimationMSDPhysics::NonOscillatingAxisPhysicsMSDModel::
+NonOscillatingAxisPhysicsMSDModel(double aInitialPosition,
+                                  double aInitialDestination,
+                                  double aInitialVelocity,
+                                  double aSpringConstant, double aDampingRatio)
+    : AxisPhysicsMSDModel(
+          aInitialPosition, aInitialDestination,
+          ClampVelocityToMaximum(aInitialVelocity, aInitialPosition,
+                                 aInitialDestination, aSpringConstant),
+          aSpringConstant, aDampingRatio) {
+  MOZ_ASSERT(aDampingRatio >= 1.0,
+             "Damping ratio must be >= 1.0 to avoid oscillation");
 }
