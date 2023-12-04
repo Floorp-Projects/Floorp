@@ -395,9 +395,15 @@ def run_raptor(command_context, **kwargs):
             verbose=verbose,
             xre=True,
         ):  # Equivalent to 'run_local' = True.
-            print("****************************************************************************")
-            print("Unable to verify device, please check your attached/connected android device")
-            print("****************************************************************************")
+            print(
+                "****************************************************************************"
+            )
+            print(
+                "Unable to verify device, please check your attached/connected android device"
+            )
+            print(
+                "****************************************************************************"
+            )
             return 1
         # Disable fission until geckoview supports fission by default.
         # Need fission on Android? Use '--setpref fission.autostart=true'
