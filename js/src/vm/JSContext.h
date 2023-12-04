@@ -891,11 +891,12 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   js::StructuredSpewer& spewer() { return structuredSpewer_.ref(); }
 #endif
 
-  // During debugger evaluations which need to observe native calls, JITs are
-  // completely disabled. This flag indicates whether we are in this state, and
-  // the debugger which initiated the evaluation. This debugger has other
-  // references on the stack and does not need to be traced.
-  js::ContextData<js::Debugger*> insideDebuggerEvaluationWithOnNativeCallHook;
+  // Debugger having set `exclusiveDebuggerOnEval` property to true
+  // want their evaluations and calls to be ignore by all other Debuggers
+  // except themself. This flag indicates whether we are in such debugger
+  // evaluation, and which debugger initiated the evaluation. This debugger
+  // has other references on the stack and does not need to be traced.
+  js::ContextData<js::Debugger*> insideExclusiveDebuggerOnEval;
 
 }; /* struct JSContext */
 
@@ -1016,18 +1017,18 @@ class AutoAssertNoPendingException {
 #endif
 };
 
-class MOZ_RAII AutoNoteDebuggerEvaluationWithOnNativeCallHook {
+class MOZ_RAII AutoNoteExclusiveDebuggerOnEval {
   JSContext* cx;
   Debugger* oldValue;
 
  public:
-  AutoNoteDebuggerEvaluationWithOnNativeCallHook(JSContext* cx, Debugger* dbg)
-      : cx(cx), oldValue(cx->insideDebuggerEvaluationWithOnNativeCallHook) {
-    cx->insideDebuggerEvaluationWithOnNativeCallHook = dbg;
+  AutoNoteExclusiveDebuggerOnEval(JSContext* cx, Debugger* dbg)
+      : cx(cx), oldValue(cx->insideExclusiveDebuggerOnEval) {
+    cx->insideExclusiveDebuggerOnEval = dbg;
   }
 
-  ~AutoNoteDebuggerEvaluationWithOnNativeCallHook() {
-    cx->insideDebuggerEvaluationWithOnNativeCallHook = oldValue;
+  ~AutoNoteExclusiveDebuggerOnEval() {
+    cx->insideExclusiveDebuggerOnEval = oldValue;
   }
 };
 

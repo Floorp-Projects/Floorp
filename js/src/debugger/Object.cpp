@@ -2431,8 +2431,10 @@ Maybe<Completion> DebuggerObject::call(JSContext* cx,
 
   // Note whether we are in an evaluation that might invoke the OnNativeCall
   // hook, so that the JITs will be disabled.
-  AutoNoteDebuggerEvaluationWithOnNativeCallHook noteEvaluation(
-      cx, dbg->observesNativeCalls() ? dbg : nullptr);
+  Maybe<AutoNoteExclusiveDebuggerOnEval> noteEvaluation;
+  if (dbg->isExclusiveDebuggerOnEval()) {
+    noteEvaluation.emplace(cx, dbg);
+  }
 
   // Call the function.
   LeaveDebuggeeNoExecute nnx(cx);

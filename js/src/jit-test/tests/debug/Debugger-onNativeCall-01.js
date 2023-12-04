@@ -57,12 +57,18 @@ for (let i = 0; i < 5; i++) {
   assertEqArray(rv, ["print", "get", "print", "set", "push", "call"]);
 
   // The onNativeCall hook is *not* called when in a debugger evaluation
-  // associated with a different debugger.
-  // But in this intermediate changeset, it requires the evaluating debugging to have
-  // a onNativeCall listener. The next changeset will introduce a new flag to make this
-  // second debugger exclusive.
-  dbg2.onNativeCall = function () {};
+  // associated with a different debugger using exclusiveDebuggerOnEval.
   rv.length = 0;
+  dbg2.exclusiveDebuggerOnEval = true;
+  assertEq(dbg2.exclusiveDebuggerOnEval, true);
   gdbg2.executeInGlobal(`f()`);
   assertEqArray(rv, []);
+
+  // The onNativeCall hook is called when that same distinct debugger
+  // doesn't have the exclusiveDebuggerOnEval flag set to true
+  rv.length = 0;
+  dbg2.exclusiveDebuggerOnEval = false;
+  assertEq(dbg2.exclusiveDebuggerOnEval, false);
+  gdbg2.executeInGlobal(`f()`);
+  assertEqArray(rv, ["print", "get", "print", "set", "push", "call"]);
 }

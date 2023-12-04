@@ -639,6 +639,11 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   bool allowUnobservedAsmJS;
   bool allowUnobservedWasm;
 
+  // When this flag is true, this debugger should be the only one to have its
+  // hooks called when it evaluates via Frame.evalWithBindings,
+  // Object.executeInGlobalWithBindings or Object.call.
+  bool exclusiveDebuggerOnEval;
+
   // Whether to enable code coverage on the Debuggee.
   bool collectCoverageInfo;
 
@@ -990,6 +995,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
 
   // Whether the Debugger instance needs to observe native call invocations.
   IsObserving observesNativeCalls() const;
+
+  bool isExclusiveDebuggerOnEval() const;
 
  private:
   [[nodiscard]] static bool ensureExecutionObservabilityOfFrame(
