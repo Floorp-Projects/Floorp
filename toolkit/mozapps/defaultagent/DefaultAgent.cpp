@@ -12,7 +12,6 @@
 
 #include "nsAutoRef.h"
 #include "nsDebug.h"
-#include "nsProxyRelease.h"
 #include "nsWindowsHelpers.h"
 #include "nsICommandLine.h"
 #include "nsString.h"
@@ -27,9 +26,6 @@
 #include "ScheduledTask.h"
 #include "SetDefaultBrowser.h"
 #include "Telemetry.h"
-#include "xpcpublic.h"
-#include "mozilla/dom/Promise.h"
-#include "mozilla/ErrorResult.h"
 
 #include "DefaultAgent.h"
 
@@ -364,37 +360,6 @@ DefaultAgent::SetDefaultBrowserUserChoice(
     const nsAString& aAumid, const nsTArray<nsString>& aExtraFileExtensions) {
   return default_agent::SetDefaultBrowserUserChoice(
       PromiseFlatString(aAumid).get(), aExtraFileExtensions);
-}
-
-NS_IMETHODIMP
-DefaultAgent::SetDefaultBrowserUserChoiceAsync(
-    const nsAString& aAumid, const nsTArray<nsString>& aExtraFileExtensions,
-    JSContext* aCx, dom::Promise** aPromise) {
-  ErrorResult rv;
-  RefPtr<dom::Promise> promise =
-      dom::Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
-  if (MOZ_UNLIKELY(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  // A holder to pass the promise through the background task and back to
-  // the main thread when finished.
-  auto promiseHolder = MakeRefPtr<nsMainThreadPtrHolder<dom::Promise>>(
-      "SetDefaultBrowserUserChoiceAsync promise", promise);
-
-  auto result = default_agent::SetDefaultBrowserUserChoiceAsync(
-      PromiseFlatString(aAumid).get(), aExtraFileExtensions,
-      [promiseHolder = std::move(promiseHolder)](nsresult result) {
-        dom::Promise* promise = promiseHolder.get()->get();
-        if (NS_SUCCEEDED(result)) {
-          promise->MaybeResolveWithUndefined();
-        } else {
-          promise->MaybeReject(result);
-        }
-      });
-
-  promise.forget(aPromise);
-  return result;
 }
 
 NS_IMETHODIMP
