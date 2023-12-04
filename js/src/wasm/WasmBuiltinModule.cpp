@@ -254,20 +254,19 @@ bool CompileBuiltinModule(JSContext* cx,
 
 static BuiltinModuleFuncId SelfTestFuncs[] = {BuiltinModuleFuncId::I8VecMul};
 
-static BuiltinModuleFuncId IntGemmFuncs[] = {
 #ifdef ENABLE_WASM_MOZ_INTGEMM
+static BuiltinModuleFuncId IntGemmFuncs[] = {
     BuiltinModuleFuncId::I8PrepareB,
     BuiltinModuleFuncId::I8PrepareBFromTransposed,
     BuiltinModuleFuncId::I8PrepareBFromQuantizedTransposed,
     BuiltinModuleFuncId::I8PrepareA,
     BuiltinModuleFuncId::I8PrepareBias,
     BuiltinModuleFuncId::I8MultiplyAndAddBias,
-    BuiltinModuleFuncId::I8SelectColumnsOfB
+    BuiltinModuleFuncId::I8SelectColumnsOfB};
 #endif  // ENABLE_WASM_MOZ_INTGEMM
-};
 
-static BuiltinModuleFuncId JSStringFuncs[] = {
 #ifdef ENABLE_WASM_JS_STRING_BUILTINS
+static BuiltinModuleFuncId JSStringFuncs[] = {
     BuiltinModuleFuncId::StringFromWTF16Array,
     BuiltinModuleFuncId::StringToWTF16Array,
     BuiltinModuleFuncId::StringFromCharCode,
@@ -278,17 +277,18 @@ static BuiltinModuleFuncId JSStringFuncs[] = {
     BuiltinModuleFuncId::StringConcatenate,
     BuiltinModuleFuncId::StringSubstring,
     BuiltinModuleFuncId::StringEquals,
-    BuiltinModuleFuncId::StringCompare
-#endif  // ENABLE_WASM_JS_STRING_BUILTINS
-};
+    BuiltinModuleFuncId::StringCompare};
 static const char* JSStringModuleName = "wasm:js-string";
+#endif  // ENABLE_WASM_JS_STRING_BUILTINS
 
 Maybe<BuiltinModuleId> wasm::ImportMatchesBuiltinModule(
     Span<const char> importName, BuiltinModuleIds enabledBuiltins) {
+#ifdef ENABLE_WASM_JS_STRING_BUILTINS
   if (enabledBuiltins.jsString &&
       importName == mozilla::MakeStringSpan(JSStringModuleName)) {
     return Some(BuiltinModuleId::JSString);
   }
+#endif  // ENABLE_WASM_JS_STRING_BUILTINS
   // Not supported for implicit instantiation yet
   MOZ_RELEASE_ASSERT(!enabledBuiltins.selfTest && !enabledBuiltins.intGemm);
   return Nothing();
@@ -296,6 +296,7 @@ Maybe<BuiltinModuleId> wasm::ImportMatchesBuiltinModule(
 
 Maybe<const BuiltinModuleFunc*> wasm::ImportMatchesBuiltinModuleFunc(
     mozilla::Span<const char> importName, BuiltinModuleId module) {
+#ifdef ENABLE_WASM_JS_STRING_BUILTINS
   // Not supported for implicit instantiation yet
   MOZ_RELEASE_ASSERT(module == BuiltinModuleId::JSString);
   for (BuiltinModuleFuncId funcId : JSStringFuncs) {
@@ -304,6 +305,7 @@ Maybe<const BuiltinModuleFunc*> wasm::ImportMatchesBuiltinModuleFunc(
       return Some(&func);
     }
   }
+#endif  // ENABLE_WASM_JS_STRING_BUILTINS
   return Nothing();
 }
 
