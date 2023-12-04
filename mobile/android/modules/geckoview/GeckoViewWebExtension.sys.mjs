@@ -576,7 +576,11 @@ class AddonInstallObserver {
     switch (aTopic) {
       case "addon-install-failed": {
         aSubject.wrappedJSObject.installs.forEach(install => {
-          const { addon, error, name: addonName } = install;
+          const { addon, error, name } = install;
+          // For some errors, we have a valid `addon` but not the `name` set on
+          // the `install` object yet so we check both here.
+          const addonName = name || addon?.name;
+
           this.onInstallationFailed(addon, addonName, error);
         });
         break;

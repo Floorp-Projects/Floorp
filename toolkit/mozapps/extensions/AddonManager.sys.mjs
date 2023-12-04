@@ -4049,6 +4049,8 @@ export var AddonManager = {
     ["ERROR_BLOCKLISTED", -10],
     // The add-on is incompatible (w.r.t. the compatibility range).
     ["ERROR_INCOMPATIBLE", -11],
+    // The add-on type is not supported by the platform.
+    ["ERROR_UNSUPPORTED_ADDON_TYPE", -12],
   ]),
   // The update check timed out
   ERROR_TIMEOUT: -1,

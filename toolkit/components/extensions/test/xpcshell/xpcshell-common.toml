@@ -549,6 +549,7 @@ skip-if = ["os == 'android'"] # Bug 1258975 on android.
 ["test_ext_telemetry.js"]
 
 ["test_ext_theme_experiments.js"]
+skip-if = ["os == 'android'"] # Themes aren't supported on android.
 
 ["test_ext_trustworthy_origin.js"]
 
@@ -658,6 +659,7 @@ skip-if = ["appname == 'thunderbird'"]
 ["test_resistfingerprinting_exempt.js"]
 
 ["test_site_permissions.js"]
+skip-if = ["os == 'android'"] # Site permissions aren't supported on android.
 
 ["test_webRequest_ancestors.js"]
 

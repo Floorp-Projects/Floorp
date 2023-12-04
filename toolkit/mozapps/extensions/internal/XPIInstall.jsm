@@ -1568,6 +1568,16 @@ class AddonInstall {
         ]);
       }
 
+      if (
+        AppConstants.platform == "android" &&
+        this.addon.type !== "extension"
+      ) {
+        return Promise.reject([
+          AddonManager.ERROR_UNSUPPORTED_ADDON_TYPE,
+          `Unsupported add-on type: ${this.addon.type}`,
+        ]);
+      }
+
       if (this.existingAddon) {
         // Check various conditions related to upgrades
         if (this.addon.id != this.existingAddon.id) {
