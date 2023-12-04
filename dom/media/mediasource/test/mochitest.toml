@@ -236,9 +236,6 @@ support-files = [
 
 ["test_ExperimentalAsync.html"]
 
-["test_FrameSelection.html"]
-skip-if = ["os == 'android'"] # bug 1341519, bug 1401090
-
 ["test_FrameSelection_mp4.html"]
 skip-if = [
   "os == 'win'", # bug 1487973,
