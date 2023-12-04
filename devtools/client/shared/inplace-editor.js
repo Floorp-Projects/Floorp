@@ -161,7 +161,16 @@ function isKeyIn(key, ...keys) {
  *        If true, show the suggestions in case that the current text becomes empty.
  *        Defaults to false.
  * @param {Boolean} options.focusEditableFieldAfterApply
+ *        If true, try to focus the next editable field after the input value is commited.
+ *        When set to true, focusEditableFieldContainerSelector is mandatory.
+ *        If no editable field can be found within the element retrieved with
+ *        focusEditableFieldContainerSelector, the focus will be moved to the next focusable
+ *        element (which won't be an editable field)
  * @param {String} options.focusEditableFieldContainerSelector
+ *        A CSS selector that will be used to retrieve the container element into which
+ *        the next focused element should be in, when focusEditableFieldAfterApply
+ *        is set to true. This allows to bail out if we can't find a suitable
+ *        focusable field.
  */
 function editableField(options) {
   return editableItem(options, function (element, event) {
