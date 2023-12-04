@@ -1,8 +1,6 @@
 ---
 black:
     description: Reformat python
-    include:
-        - mach
     exclude:
         - gfx/harfbuzz/src/meson.build
         - '**/*.mako.py'
