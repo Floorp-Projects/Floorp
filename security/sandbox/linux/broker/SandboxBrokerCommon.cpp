@@ -97,7 +97,7 @@ ssize_t SandboxBrokerCommon::RecvWithFd(int aFd, const iovec* aIO,
         // giving us an empty one, if errors prevent transferring the
         // fd.
         MOZ_DIAGNOSTIC_ASSERT(cmsg->cmsg_len != 0);
-        errno = EMSGSIZE;
+        errno = EPROTO;
         return -1;
       }
       *aPassedFdPtr = fds[0];
@@ -111,14 +111,18 @@ ssize_t SandboxBrokerCommon::RecvWithFd(int aFd, const iovec* aIO,
       close(*aPassedFdPtr);
       *aPassedFdPtr = -1;
     }
-    // MSG_CTRUNC usually means the fd was dropped due to fd
+    // MSG_CTRUNC usually means the attached fd was dropped due to fd
     // exhaustion in the receiving process, so map that to `EMFILE`.
+    // (It could also happen if the other process maliciously sends
+    // too many fds.)
+    //
     // MSG_TRUNC (truncation of the data part) shouldn't ever happen.
-    // (If the sender is malicious it can send too many bytes or fds,
-    // but this is about getting an accurate error message in genuine
-    // error cases.)
+    // However, it has happened in the past, due to accidentally
+    // sending more data than the receiver was expecting.  We assert
+    // that that doesn't happen (and, if it does, try to map it to a
+    // vaguely sensible error code).
     MOZ_DIAGNOSTIC_ASSERT((msg.msg_flags & MSG_TRUNC) == 0);
-    errno = EMFILE;
+    errno = (msg.msg_flags & MSG_CTRUNC) ? EMFILE : EPROTO;
     return -1;
   }
 
