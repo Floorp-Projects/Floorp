@@ -15,7 +15,7 @@ encoding_c_mem = "0.2.4"
 smoosh = { path = "../../frontend/smoosh", optional = true }
 mozglue-static = { path = "../../../../mozglue/static/rust" }
 gluesmith = { path = "../../fuzz-tests/gluesmith", optional = true }
-icu_capi = { version = "1.2.2", optional = true, default-features= false, features = ["any_provider", "icu_segmenter", "provider_test"] }
+icu_capi = { version = "1.4.0", optional = true, default-features= false, features = ["any_provider", "compiled_data", "icu_segmenter"] }
 
 [features]
 simd-accel = ['encoding_c/simd-accel']
