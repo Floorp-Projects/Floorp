@@ -834,7 +834,7 @@ class BaseFinder(object):
         if minify_js and not minify:
             raise ValueError("minify_js requires minify.")
 
-        self.base = base
+        self.base = mozpath.normsep(base)
         self._minify = minify
         self._minify_js = minify_js
         self._minify_js_verify_command = minify_js_verify_command
@@ -964,7 +964,7 @@ class FileFinder(BaseFinder):
         BaseFinder.__init__(self, base, **kargs)
         self.find_dotfiles = find_dotfiles
         self.find_executables = find_executables
-        self.ignore = ignore
+        self.ignore = tuple(mozpath.normsep(path) for path in ignore)
         self.ignore_broken_symlinks = ignore_broken_symlinks
 
     def _find(self, pattern):

@@ -844,14 +844,16 @@ class BuildReader(object):
             "obj*",
         }
 
+        # Also ignore any other directories that could be objdirs, but don't
+        # necessarily start with the string 'obj'.
+        objdir_finder = FileFinder(self.config.topsrcdir, ignore=ignores)
+        for path, _file in objdir_finder.find("*/config.status"):
+            ignores.add(os.path.dirname(path))
+        del objdir_finder
+
         self._relevant_mozbuild_finder = FileFinder(
             self.config.topsrcdir, ignore=ignores
         )
-
-        # Also ignore any other directories that could be objdirs, they don't
-        # necessarily start with the string 'obj'.
-        for path, f in self._relevant_mozbuild_finder.find("*/config.status"):
-            self._relevant_mozbuild_finder.ignore.add(os.path.dirname(path))
 
         max_workers = cpu_count()
         if sys.platform.startswith("win"):
