@@ -327,14 +327,14 @@ class InplaceEditor extends EventEmitter {
     // Pull out character codes for advanceChars, listing the
     // characters that should trigger a blur.
     if (typeof options.advanceChars === "function") {
-      this._advanceChars = options.advanceChars;
+      this.#advanceChars = options.advanceChars;
     } else {
       const advanceCharcodes = {};
       const advanceChars = options.advanceChars || "";
       for (let i = 0; i < advanceChars.length; i++) {
         advanceCharcodes[advanceChars.charCodeAt(i)] = true;
       }
-      this._advanceChars = charCode => charCode in advanceCharcodes;
+      this.#advanceChars = charCode => charCode in advanceCharcodes;
     }
 
     this.input.focus();
@@ -367,6 +367,14 @@ class InplaceEditor extends EventEmitter {
     this.#getGridNamesBeforeCompletion(options.getGridLineNames);
   }
   static CONTENT_TYPES = CONTENT_TYPES;
+
+  #advanceChars;
+  #applied;
+  #measurement;
+  #openPopupTimeout;
+  #pressedKey;
+  #preventSuggestions;
+  #selectedIndex;
 
   get currentInputValue() {
     const val = this.trimOutput ? this.input.value.trim() : this.input.value;
@@ -445,13 +453,13 @@ class InplaceEditor extends EventEmitter {
     // change the underlying element's text ourselves (we leave that
     // up to the client), and b) without tweaking the style of the
     // original element, it might wrap differently or something.
-    this._measurement = this.doc.createElementNS(
+    this.#measurement = this.doc.createElementNS(
       HTML_NS,
       this.multiline ? "pre" : "span"
     );
-    this._measurement.className = "autosizer";
-    this.elt.parentNode.appendChild(this._measurement);
-    const style = this._measurement.style;
+    this.#measurement.className = "autosizer";
+    this.elt.parentNode.appendChild(this.#measurement);
+    const style = this.#measurement.style;
     style.visibility = "hidden";
     style.position = "absolute";
     style.top = "0";
@@ -468,7 +476,7 @@ class InplaceEditor extends EventEmitter {
       }
     }
 
-    copyAllStyles(this.input, this._measurement);
+    copyAllStyles(this.input, this.#measurement);
     this.#updateSize();
   }
 
@@ -476,11 +484,11 @@ class InplaceEditor extends EventEmitter {
    * Clean up the mess created by _autosize().
    */
   #stopAutosize() {
-    if (!this._measurement) {
+    if (!this.#measurement) {
       return;
     }
-    this._measurement.remove();
-    delete this._measurement;
+    this.#measurement.remove();
+    this.#measurement = null;
   }
 
   /**
@@ -508,15 +516,15 @@ class InplaceEditor extends EventEmitter {
       content = content.replace(/ /g, unbreakableSpace);
     }
 
-    this._measurement.textContent = content;
+    this.#measurement.textContent = content;
 
     // Do not use offsetWidth: it will round floating width values.
-    let width = this._measurement.getBoundingClientRect().width;
+    let width = this.#measurement.getBoundingClientRect().width;
     if (this.multiline) {
       if (this.maxWidth) {
         width = Math.min(this.maxWidth, width);
       }
-      const height = this._measurement.getBoundingClientRect().height;
+      const height = this.#measurement.getBoundingClientRect().height;
       this.input.style.height = height + "px";
     }
     this.input.style.width = width + "px";
@@ -529,9 +537,9 @@ class InplaceEditor extends EventEmitter {
   #getInputCharDimensions() {
     // Just make the text content to be 'x' to get the width and height of any
     // character in a monospace font.
-    this._measurement.textContent = "x";
-    const width = this._measurement.clientWidth;
-    const height = this._measurement.clientHeight;
+    this.#measurement.textContent = "x";
+    const width = this.#measurement.clientWidth;
+    const height = this.#measurement.clientHeight;
     return { width, height };
   }
 
@@ -1012,7 +1020,7 @@ class InplaceEditor extends EventEmitter {
       this.popup.selectNextItem();
     }
 
-    this._selectedIndex = this.popup.selectedIndex;
+    this.#selectedIndex = this.popup.selectedIndex;
     const input = this.input;
     let pre = "";
 
@@ -1048,11 +1056,11 @@ class InplaceEditor extends EventEmitter {
    * Call the client's done handler and clear out.
    */
   #apply(event, direction) {
-    if (this._applied) {
+    if (this.#applied) {
       return null;
     }
 
-    this._applied = true;
+    this.#applied = true;
 
     if (this.done) {
       const val = this.cancelled ? this.initial : this.currentInputValue;
@@ -1070,8 +1078,8 @@ class InplaceEditor extends EventEmitter {
       this.popup.hidePopup();
     }
 
-    if (this._openPopupTimeout) {
-      this.doc.defaultView.clearTimeout(this._openPopupTimeout);
+    if (this.#openPopupTimeout) {
+      this.doc.defaultView.clearTimeout(this.#openPopupTimeout);
     }
   };
 
@@ -1128,12 +1136,12 @@ class InplaceEditor extends EventEmitter {
   #acceptPopupSuggestion() {
     let label, preLabel;
 
-    if (this._selectedIndex === undefined) {
+    if (this.#selectedIndex === undefined) {
       ({ label, preLabel } = this.popup.getItemAtIndex(
         this.popup.selectedIndex
       ));
     } else {
-      ({ label, preLabel } = this.popup.getItemAtIndex(this._selectedIndex));
+      ({ label, preLabel } = this.popup.getItemAtIndex(this.#selectedIndex));
     }
 
     const input = this.input;
@@ -1158,7 +1166,7 @@ class InplaceEditor extends EventEmitter {
     }
     const post = input.value.slice(input.selectionEnd, input.value.length);
     const item = this.popup.selectedItem;
-    this._selectedIndex = this.popup.selectedIndex;
+    this.#selectedIndex = this.popup.selectedIndex;
     const toComplete = item.label.slice(item.preLabel.length);
     input.value = pre + toComplete + post;
     input.setSelectionRange(
@@ -1191,7 +1199,7 @@ class InplaceEditor extends EventEmitter {
 
     // We want to autoclose some characters, remember the pressed key in order to process
     // it later on in maybeSuggestionCompletion().
-    this._pressedKey = event.key;
+    this.#pressedKey = event.key;
 
     const multilineNavigation =
       !this.#isSingleLine() && isKeyIn(key, "UP", "DOWN", "LEFT", "RIGHT");
@@ -1204,7 +1212,7 @@ class InplaceEditor extends EventEmitter {
     }
 
     if (isKeyIn(key, "PAGE_UP", "PAGE_DOWN")) {
-      this._preventSuggestions = true;
+      this.#preventSuggestions = true;
     }
 
     let cycling = false;
@@ -1243,7 +1251,7 @@ class InplaceEditor extends EventEmitter {
     if (this.multiline && event.shiftKey && isKeyIn(key, "RETURN")) {
       prevent = false;
     } else if (
-      this._advanceChars(event.charCode, input.value, input.selectionStart) ||
+      this.#advanceChars(event.charCode, input.value, input.selectionStart) ||
       isKeyIn(key, "RETURN", "TAB")
     ) {
       prevent = true;
@@ -1262,14 +1270,14 @@ class InplaceEditor extends EventEmitter {
       }
 
       // Now we don't want to suggest anything as we are moving out.
-      this._preventSuggestions = true;
+      this.#preventSuggestions = true;
       // But we still want to show suggestions for css values. i.e. moving out
       // of css property input box in forward direction
       if (
         this.contentType == CONTENT_TYPES.CSS_PROPERTY &&
         direction == FOCUS_FORWARD
       ) {
-        this._preventSuggestions = false;
+        this.#preventSuggestions = false;
       }
 
       if (isKeyIn(key, "TAB") && this.contentType == CONTENT_TYPES.CSS_MIXED) {
@@ -1315,7 +1323,7 @@ class InplaceEditor extends EventEmitter {
     } else if (isKeyIn(key, "ESCAPE")) {
       // Cancel and blur ourselves.
       // Now we don't want to suggest anything as we are moving out.
-      this._preventSuggestions = true;
+      this.#preventSuggestions = true;
       // Close the popup if open
       if (this.popup && this.popup.isOpen) {
         this.#hideAutocompletePopup();
@@ -1411,7 +1419,7 @@ class InplaceEditor extends EventEmitter {
    * Handle the input field's keyup event.
    */
   #onKeyup = () => {
-    this._applied = false;
+    this.#applied = false;
   };
 
   /**
@@ -1422,7 +1430,7 @@ class InplaceEditor extends EventEmitter {
     this.#doValidation();
 
     // Update size if we're autosizing.
-    if (this._measurement) {
+    if (this.#measurement) {
       this.#updateSize();
     }
 
@@ -1471,9 +1479,9 @@ class InplaceEditor extends EventEmitter {
     // |input.value| does not include currently typed character. Thus we perform
     // this method async.
     // eslint-disable-next-line complexity
-    this._openPopupTimeout = this.doc.defaultView.setTimeout(() => {
-      if (this._preventSuggestions) {
-        this._preventSuggestions = false;
+    this.#openPopupTimeout = this.doc.defaultView.setTimeout(() => {
+      if (this.#preventSuggestions) {
+        this.#preventSuggestions = false;
         return;
       }
       if (this.contentType == CONTENT_TYPES.PLAIN_TEXT) {
@@ -1689,17 +1697,17 @@ class InplaceEditor extends EventEmitter {
 
     // Autocomplete closing parenthesis if the last key pressed was "(" and the next
     // character is not a "word" character.
-    if (this._pressedKey == "(" && !isWordChar(nextChar)) {
+    if (this.#pressedKey == "(" && !isWordChar(nextChar)) {
       this.#updateValue(parts[0] + ")" + parts[1]);
     }
 
     // Skip inserting ")" if the next character is already a ")" (note that we actually
     // insert and remove the extra ")" here, as the input has already been modified).
-    if (this._pressedKey == ")" && nextChar == ")") {
+    if (this.#pressedKey == ")" && nextChar == ")") {
       this.#updateValue(parts[0] + parts[1].substring(1));
     }
 
-    this._pressedKey = null;
+    this.#pressedKey = null;
   }
 
   /**
