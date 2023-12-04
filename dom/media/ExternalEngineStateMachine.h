@@ -87,6 +87,14 @@ class ExternalEngineStateMachine final
         "ExternalEngineStateMachine::NotifyError",
         [self = RefPtr{this}, aError] { self->NotifyErrorInternal(aError); }));
   }
+  void NotifyResizing(uint32_t aWidth, uint32_t aHeight) {
+    // On the engine manager thread.
+    Unused << OwnerThread()->Dispatch(
+        NS_NewRunnableFunction("ExternalEngineStateMachine::NotifyResizing",
+                               [self = RefPtr{this}, aWidth, aHeight] {
+                                 self->NotifyResizingInternal(aWidth, aHeight);
+                               }));
+  }
 
   const char* GetStateStr() const;
 
@@ -215,6 +223,7 @@ class ExternalEngineStateMachine final
 
   void NotifyEventInternal(ExternalEngineEvent aEvent);
   void NotifyErrorInternal(const MediaResult& aError);
+  void NotifyResizingInternal(uint32_t aWidth, uint32_t aHeight);
 
   RefPtr<ShutdownPromise> Shutdown() override;
 
@@ -292,6 +301,9 @@ class ExternalEngineStateMachine final
   // Only used if setting CDM happens before the engine finishes initialization.
   MozPromiseHolder<SetCDMPromise> mSetCDMProxyPromise;
   MozPromiseRequestHolder<SetCDMPromise> mSetCDMProxyRequest;
+
+  // It would be zero for audio-only playback.
+  gfx::IntSize mVideoDisplay;
 };
 
 class ExternalPlaybackEngine {
@@ -319,6 +331,7 @@ class ExternalPlaybackEngine {
   virtual void NotifyEndOfStream(TrackInfo::TrackType aType) = 0;
   virtual void SetMediaInfo(const MediaInfo& aInfo) = 0;
   virtual bool SetCDMProxy(CDMProxy* aProxy) = 0;
+  virtual void NotifyResizing(uint32_t aWidth, uint32_t aHeight) = 0;
 
   ExternalEngineStateMachine* const MOZ_NON_OWNING_REF mOwner;
 };

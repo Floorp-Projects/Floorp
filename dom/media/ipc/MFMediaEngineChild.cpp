@@ -196,6 +196,12 @@ mozilla::ipc::IPCResult MFMediaEngineChild::RecvUpdateStatisticData(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult MFMediaEngineChild::RecvNotifyResizing(
+    uint32_t aWidth, uint32_t aHeight) {
+  mOwner->NotifyResizing(aWidth, aHeight);
+  return IPC_OK();
+}
+
 uint64_t MFMediaEngineChild::GetUpdatedRenderedFrames(
     const StatisticData& aData) {
   return mAccumulatedPresentedFramesFromPrevEngine
@@ -383,5 +389,14 @@ void MFMediaEngineWrapper::NotifyError(const MediaResult& aError) {
   WLOG("Received error: %s", aError.Description().get());
   mOwner->NotifyError(aError);
 }
+
+void MFMediaEngineWrapper::NotifyResizing(uint32_t aWidth, uint32_t aHeight) {
+  WLOG("Video resizing, new size [%u,%u]", aWidth, aHeight);
+  mOwner->NotifyResizing(aWidth, aHeight);
+}
+
+#undef CLOG
+#undef WLOG
+#undef WLOGV
 
 }  // namespace mozilla

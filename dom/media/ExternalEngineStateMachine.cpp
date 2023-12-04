@@ -310,6 +310,16 @@ void ExternalEngineStateMachine::OnMetadataRead(MetadataHolder&& aMetadata) {
   }
   MOZ_ASSERT(mDuration.Ref().isSome());
 
+  if (mInfo->HasVideo()) {
+    mVideoDisplay = mInfo->mVideo.mDisplay;
+  }
+
+  LOG("Metadata loaded : a=%s, v=%s, size=[%dx%d], duration=%s",
+      mInfo->HasAudio() ? mInfo->mAudio.mMimeType.get() : "none",
+      mInfo->HasVideo() ? mInfo->mVideo.mMimeType.get() : "none",
+      mVideoDisplay.width, mVideoDisplay.height,
+      mDuration.Ref()->ToString().get());
+
   mMetadataLoadedEvent.Notify(std::move(aMetadata.mInfo),
                               std::move(aMetadata.mTags),
                               MediaDecoderEventVisibility::Observable);
@@ -863,10 +873,10 @@ void ExternalEngineStateMachine::OnRequestVideo() {
             // Send image to PIP window.
             if (mSecondaryVideoContainer.Ref()) {
               mSecondaryVideoContainer.Ref()->SetCurrentFrame(
-                  mInfo->mVideo.mDisplay, aVideo->mImage, TimeStamp::Now());
+                  mVideoDisplay, aVideo->mImage, TimeStamp::Now());
             } else {
               mVideoFrameContainer->SetCurrentFrame(
-                  mInfo->mVideo.mDisplay, aVideo->mImage, TimeStamp::Now());
+                  mVideoDisplay, aVideo->mImage, TimeStamp::Now());
             }
           },
           [this, self](const MediaResult& aError) {
@@ -1085,6 +1095,13 @@ void ExternalEngineStateMachine::NotifyErrorInternal(
   } else {
     DecodeError(aError);
   }
+}
+
+void ExternalEngineStateMachine::NotifyResizingInternal(uint32_t aWidth,
+                                                        uint32_t aHeight) {
+  LOG("video resize from [%d,%d] to [%d,%d]", mVideoDisplay.width,
+      mVideoDisplay.height, aWidth, aHeight);
+  mVideoDisplay = gfx::IntSize{aWidth, aHeight};
 }
 
 void ExternalEngineStateMachine::RecoverFromCDMProcessCrashIfNeeded() {
