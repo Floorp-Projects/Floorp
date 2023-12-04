@@ -79,6 +79,7 @@ async function test(aTestFile) {
   let resolution = await getResolution();
   ok(resolution > 0,
      "The initial_resolution is " + resolution + ", which is some sane value");
+  let initial_resolution = resolution;
 
   let pos = await targetElementPosition();
   const iframe = document.querySelector("iframe");
@@ -97,11 +98,18 @@ async function test(aTestFile) {
 
   let zoomedOutState = cloneVisualViewport();
 
+  // Reset the scale to the initial one since in the `visible: overflow` case
+  // the second double-tap doesn't restore to the initial scale.
+  SpecialPowers.DOMWindowUtils.setResolutionAndScaleTo(initial_resolution);
+  await promiseApzFlushedRepaints();
+
   // Now load the document in an OOP iframe.
   iframeURL = iframeURL.replace(window.location.origin, "https://example.com");
   await setupIframe(iframeURL);
 
+  pos = await targetElementPosition();
   await doubleTapOn(iframe, pos.x + 10, pos.y + 10, useTouchpad);
+
   prev_resolution = resolution;
   resolution = await getResolution();
   ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
@@ -132,6 +140,10 @@ waitUntilApzStable()
 .then(async () => test("helper_doubletap_zoom_oopif_subframe-1.html"))
 // A test case where the layout scroll offset in the iframe isn't zero.
 .then(async () => test("helper_doubletap_zoom_oopif_subframe-2.html#target"))
+// A test case where the double-tap-to-zoom target element is `overflow: visible`.
+.then(async () => test("helper_doubletap_zoom_oopif_subframe-3.html#target"))
+// Similar to above but the target element has positive `margin-top`.
+.then(async () => test("helper_doubletap_zoom_oopif_subframe-4.html#target"))
 .then(subtestDone, subtestFailed);
 
   </script>
