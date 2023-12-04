@@ -1067,6 +1067,7 @@ class HTMLInputElement final : public TextControlElement,
 
   MOZ_CAN_RUN_SCRIPT void FreeData();
   TextControlState* GetEditorState() const;
+  void EnsureEditorState();
 
   MOZ_CAN_RUN_SCRIPT TextEditor* GetTextEditorFromState();
 
