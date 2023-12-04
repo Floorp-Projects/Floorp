@@ -155,8 +155,8 @@ nsFontMetrics::~nsFontMetrics() {
 void nsFontMetrics::Destroy() { mPresContext = nullptr; }
 
 // XXXTODO get rid of this macro
-#define ROUND_TO_TWIPS(x) (nscoord) floor(((x)*mP2A) + 0.5)
-#define CEIL_TO_TWIPS(x) (nscoord) ceil((x)*mP2A)
+#define ROUND_TO_TWIPS(x) (nscoord) floor(((x) * mP2A) + 0.5)
+#define CEIL_TO_TWIPS(x) (nscoord) ceil((x) * mP2A)
 
 static const gfxFont::Metrics& GetMetrics(
     const nsFontMetrics* aFontMetrics,

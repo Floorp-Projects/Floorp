@@ -424,7 +424,7 @@ static PREFER_INLINE WideRGBA8 blend_pixels(uint32_t* buf, PackedRGBA8 pdst,
   const WideRGBA8 ALPHA_OPAQUE = {0, 0, 0, 255, 0, 0, 0, 255,
                                   0, 0, 0, 255, 0, 0, 0, 255};
 
-// clang-format off
+  // clang-format off
   // Computes AA for the given pixel based on the offset of the pixel within
   // destination row. Given the initial coverage offsets for the left and right
   // edges, the offset is scaled by the slope and accumulated to find the
@@ -702,7 +702,7 @@ static PREFER_INLINE WideRGBA8 blend_pixels(uint32_t* buf, PackedRGBA8 pdst,
 
 static PREFER_INLINE WideR8 blend_pixels(uint8_t* buf, WideR8 dst, WideR8 src,
                                          int span = 4) {
-// clang-format off
+  // clang-format off
 #define BLEND_CASE_KEY(key)                          \
   case AA_##key:                                     \
     DO_AA(R8, src = muldiv256(src, aa));             \

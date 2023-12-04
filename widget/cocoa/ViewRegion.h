@@ -29,15 +29,16 @@ class ViewRegion {
    * Update the region.
    * @param aRegion  The new region.
    * @param aCoordinateConverter  The nsChildView to use for converting
-   *   LayoutDeviceIntRect device pixel coordinates into Cocoa NSRect coordinates.
+   *   LayoutDeviceIntRect device pixel coordinates into Cocoa NSRect
+   * coordinates.
    * @param aContainerView  The view that's going to be the superview of the
    *   NSViews which will be created for this region.
    * @param aViewCreationCallback  A block that instantiates new NSViews.
    * @return  Whether or not the region changed.
    */
   bool UpdateRegion(const mozilla::LayoutDeviceIntRegion& aRegion,
-                    const nsChildView& aCoordinateConverter, NSView* aContainerView,
-                    NSView* (^aViewCreationCallback)());
+                    const nsChildView& aCoordinateConverter,
+                    NSView* aContainerView, NSView* (^aViewCreationCallback)());
 
   /**
    * Return an NSView from the region, if there is any.

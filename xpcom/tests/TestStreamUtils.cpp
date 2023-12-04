@@ -39,9 +39,7 @@ static bool test_consume_stream() {
 
 typedef bool (*TestFunc)();
 #define DECL_TEST(name) \
-  {                     \
-#    name, name         \
-  }
+  { #name, name }
 
 static const struct Test {
   const char* name;

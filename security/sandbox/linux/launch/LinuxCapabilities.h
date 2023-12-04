@@ -27,7 +27,7 @@
 #endif
 #ifndef CAP_TO_INDEX
 #  define CAP_TO_INDEX(x) ((x) >> 5)
-#  define CAP_TO_MASK(x) (1 << ((x)&31))
+#  define CAP_TO_MASK(x) (1 << ((x) & 31))
 #endif
 
 namespace mozilla {

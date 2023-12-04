@@ -80,7 +80,8 @@
 - (void)uploadThread:(HTTPMultipartUpload*)post;
 - (void)uploadComplete:(NSData*)data;
 
-- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)theApplication;
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:
+    (NSApplication*)theApplication;
 - (void)applicationWillTerminate:(NSNotification*)aNotification;
 
 @end

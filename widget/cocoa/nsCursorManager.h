@@ -10,7 +10,8 @@
 #include "nsMacCursor.h"
 
 /*! @class      nsCursorManager
-    @abstract   Singleton service provides access to all cursors available in the application.
+    @abstract   Singleton service provides access to all cursors available in
+   the application.
     @discussion Use <code>nsCusorManager</code> to set the current cursor using
                 an XP <code>nsCusor</code> enum value.
                 <code>nsCursorManager</code> encapsulates the details of
@@ -46,14 +47,15 @@
 
 /*! @method     dispose
     @abstract   Releases the shared instance of the cursor manager.
-    @discussion Use dispose to clean up the cursor manager and associated cursors.
+    @discussion Use dispose to clean up the cursor manager and associated
+   cursors.
 */
 + (void)dispose;
 @end
 
 @interface NSCursor (Undocumented)
-// busyButClickableCursor is an undocumented NSCursor API, but has been in use since
-// at least OS X 10.4 and through 10.9.
+// busyButClickableCursor is an undocumented NSCursor API, but has been in use
+// since at least OS X 10.4 and through 10.9.
 + (NSCursor*)busyButClickableCursor;
 @end
 

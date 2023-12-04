@@ -22,7 +22,8 @@ class VideoCaptureIos : public VideoCaptureImpl {
   VideoCaptureIos();
   virtual ~VideoCaptureIos();
 
-  static rtc::scoped_refptr<VideoCaptureModule> Create(const char* device_unique_id_utf8);
+  static rtc::scoped_refptr<VideoCaptureModule> Create(
+      const char* device_unique_id_utf8);
 
   // Implementation of VideoCaptureImpl.
   int32_t StartCapture(const VideoCaptureCapability& capability) override;

@@ -27,9 +27,10 @@ class nsWindow final : public nsBaseWidget {
   // nsIWidget
   //
 
-  [[nodiscard]] virtual nsresult Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
-                                        const LayoutDeviceIntRect& aRect,
-                                        widget::InitData* aInitData = nullptr) override;
+  [[nodiscard]] virtual nsresult Create(
+      nsIWidget* aParent, nsNativeWidget aNativeParent,
+      const LayoutDeviceIntRect& aRect,
+      widget::InitData* aInitData = nullptr) override;
   virtual void Destroy() override;
   virtual void Show(bool aState) override;
   virtual void Enable(bool aState) override {}
@@ -46,7 +47,8 @@ class nsWindow final : public nsBaseWidget {
   virtual void SetSizeMode(nsSizeMode aMode) override;
   void EnteredFullScreen(bool aFullScreen);
   virtual void Resize(double aWidth, double aHeight, bool aRepaint) override;
-  virtual void Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
+  virtual void Resize(double aX, double aY, double aWidth, double aHeight,
+                      bool aRepaint) override;
   virtual LayoutDeviceIntRect GetScreenBounds() override;
   void ReportMoveEvent();
   void ReportSizeEvent();
@@ -58,13 +60,16 @@ class nsWindow final : public nsBaseWidget {
     // XXX: terrible
     return 326.0f;
   }
-  virtual double GetDefaultScaleInternal() override { return BackingScaleFactor(); }
+  virtual double GetDefaultScaleInternal() override {
+    return BackingScaleFactor();
+  }
   virtual int32_t RoundsWidgetCoordinatesTo() override;
 
   virtual nsresult SetTitle(const nsAString& aTitle) override { return NS_OK; }
 
   virtual void Invalidate(const LayoutDeviceIntRect& aRect) override;
-  virtual nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent, nsEventStatus& aStatus) override;
+  virtual nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
+                                 nsEventStatus& aStatus) override;
 
   void WillPaintWindow();
   bool PaintWindow(LayoutDeviceIntRegion aRegion);
@@ -73,7 +78,8 @@ class nsWindow final : public nsBaseWidget {
 
   // virtual nsresult
   // NotifyIME(const IMENotification& aIMENotification) override;
-  virtual void SetInputContext(const InputContext& aContext, const InputContextAction& aAction);
+  virtual void SetInputContext(const InputContext& aContext,
+                               const InputContextAction& aAction);
   virtual InputContext GetInputContext();
   /*
   virtual bool ExecuteNativeKeyBinding(

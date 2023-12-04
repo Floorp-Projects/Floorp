@@ -31,7 +31,9 @@ class nsPrintSettingsX : public nsPrintSettings {
   void SetDestination(uint16_t aDestination) { mDestination = aDestination; }
   void GetDestination(uint16_t* aDestination) { *aDestination = mDestination; }
 
-  void SetDisposition(const nsString& aDisposition) { mDisposition = aDisposition; }
+  void SetDisposition(const nsString& aDisposition) {
+    mDisposition = aDisposition;
+  }
   void GetDisposition(nsString& aDisposition) { aDisposition = mDisposition; }
 
   // Get a Cocoa NSPrintInfo that is configured with our current settings.
@@ -71,11 +73,13 @@ class nsPrintSettingsX : public nsPrintSettings {
   int GetCocoaUnit(int16_t aGeckoUnit);
 
   double PaperSizeFromCocoaPoints(double aPointsValue) {
-    return aPointsValue * (mPaperSizeUnit == kPaperSizeInches ? 1.0 / 72.0 : 25.4 / 72.0);
+    return aPointsValue *
+           (mPaperSizeUnit == kPaperSizeInches ? 1.0 / 72.0 : 25.4 / 72.0);
   }
 
   double CocoaPointsFromPaperSize(double aSizeUnitValue) {
-    return aSizeUnitValue * (mPaperSizeUnit == kPaperSizeInches ? 72.0 : 72.0 / 25.4);
+    return aSizeUnitValue *
+           (mPaperSizeUnit == kPaperSizeInches ? 72.0 : 72.0 / 25.4);
   }
 
   // Needed to correctly track the various job dispositions (spool, preview,

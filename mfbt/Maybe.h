@@ -120,22 +120,22 @@ class Maybe_CopyMove_Enabler;
   }                                                                         \
                                                                             \
   Maybe_CopyMove_Enabler& operator=(const Maybe_CopyMove_Enabler& aOther) { \
-    return downcast(*this).template operator=<T>(downcast(aOther));         \
+    return downcast(*this).template operator= <T>(downcast(aOther));        \
   }
 
-#define MOZ_MAYBE_MOVE_OPS()                                            \
-  constexpr Maybe_CopyMove_Enabler(Maybe_CopyMove_Enabler&& aOther) {   \
-    if (downcast(aOther).isSome()) {                                    \
-      downcast(*this).emplace(std::move(*downcast(aOther)));            \
-      downcast(aOther).reset();                                         \
-    }                                                                   \
-  }                                                                     \
-                                                                        \
-  constexpr Maybe_CopyMove_Enabler& operator=(                          \
-      Maybe_CopyMove_Enabler&& aOther) {                                \
-    downcast(*this).template operator=<T>(std::move(downcast(aOther))); \
-                                                                        \
-    return *this;                                                       \
+#define MOZ_MAYBE_MOVE_OPS()                                             \
+  constexpr Maybe_CopyMove_Enabler(Maybe_CopyMove_Enabler&& aOther) {    \
+    if (downcast(aOther).isSome()) {                                     \
+      downcast(*this).emplace(std::move(*downcast(aOther)));             \
+      downcast(aOther).reset();                                          \
+    }                                                                    \
+  }                                                                      \
+                                                                         \
+  constexpr Maybe_CopyMove_Enabler& operator=(                           \
+      Maybe_CopyMove_Enabler&& aOther) {                                 \
+    downcast(*this).template operator= <T>(std::move(downcast(aOther))); \
+                                                                         \
+    return *this;                                                        \
   }
 
 #define MOZ_MAYBE_DOWNCAST()                                          \

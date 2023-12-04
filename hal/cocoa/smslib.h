@@ -86,9 +86,9 @@ typedef struct sms_calibration {
 #define SMS_FAIL_OPENING (-3)
 //	- Failure if opened, but didn't get a connection
 #define SMS_FAIL_CONNECTION (-2)
-//	- Failure if couldn't access connction using given function and size. This
-//		is where the process would probably fail with a change in Apple's API.
-//		Driver problems often also cause failures here.
+//	- Failure if couldn't access connction using given function and size.
+// This 		is where the process would probably fail with a change
+// in Apple's API. 		Driver problems often also cause failures here.
 #define SMS_FAIL_ACCESS (-1)
 //	- Success!
 #define SMS_SUCCESS (0)

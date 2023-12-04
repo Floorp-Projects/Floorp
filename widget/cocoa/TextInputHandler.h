@@ -38,7 +38,8 @@ enum {
 
   kVK_PC_ContextMenu = 0x6E,
 
-  kVK_Powerbook_KeypadEnter = 0x34  // Enter on Powerbook's keyboard is different
+  kVK_Powerbook_KeypadEnter =
+      0x34  // Enter on Powerbook's keyboard is different
 };
 
 /**
@@ -139,7 +140,9 @@ class TISInputSourceWrapper {
    * initialized only when the IME mode is actually selected.  I.e, if IME mode
    * input source is initialized with LayoutID or SourceID, this returns null.
    */
-  TISInputSourceRef GetKeyboardLayoutInputSource() const { return mKeyboardLayout; }
+  TISInputSourceRef GetKeyboardLayoutInputSource() const {
+    return mKeyboardLayout;
+  }
   const UCKeyboardLayout* GetUCKeyboardLayout();
 
   bool IsOpenedIMEMode();
@@ -232,7 +235,8 @@ class TISInputSourceWrapper {
    *                              characters of aNativeKeyEvent.
    */
   void InitKeyEvent(NSEvent* aNativeKeyEvent, WidgetKeyboardEvent& aKeyEvent,
-                    bool aIsProcessedByIME, const nsAString* aInsertString = nullptr);
+                    bool aIsProcessedByIME,
+                    const nsAString* aInsertString = nullptr);
 
   /**
    * WillDispatchKeyboardEvent() computes aKeyEvent.mAlternativeCharCodes and
@@ -254,8 +258,10 @@ class TISInputSourceWrapper {
    *                              from the native key event.  This must be
    *                              eKeyPress event.
    */
-  void WillDispatchKeyboardEvent(NSEvent* aNativeKeyEvent, const nsAString* aInsertString,
-                                 uint32_t aIndexOfKeypress, WidgetKeyboardEvent& aKeyEvent);
+  void WillDispatchKeyboardEvent(NSEvent* aNativeKeyEvent,
+                                 const nsAString* aInsertString,
+                                 uint32_t aIndexOfKeypress,
+                                 WidgetKeyboardEvent& aKeyEvent);
 
   /**
    * ComputeGeckoKeyCode() returns Gecko keycode for aNativeKeyCode on current
@@ -267,7 +273,8 @@ class TISInputSourceWrapper {
    * @param aCmdIsPressed         TRUE if Cmd key is pressed.  Otherwise, FALSE.
    * @return                      The computed Gecko keycode.
    */
-  uint32_t ComputeGeckoKeyCode(UInt32 aNativeKeyCode, UInt32 aKbType, bool aCmdIsPressed);
+  uint32_t ComputeGeckoKeyCode(UInt32 aNativeKeyCode, UInt32 aKbType,
+                               bool aCmdIsPressed);
 
   /**
    * ComputeGeckoKeyNameIndex() returns Gecko key name index for the key.
@@ -283,7 +290,8 @@ class TISInputSourceWrapper {
    * @param aKbType               A native Keyboard Type value.  Typically,
    *                              this is a result of ::LMGetKbdType().
    */
-  static CodeNameIndex ComputeGeckoCodeNameIndex(UInt32 aNativeKeyCode, UInt32 aKbType);
+  static CodeNameIndex ComputeGeckoCodeNameIndex(UInt32 aNativeKeyCode,
+                                                 UInt32 aKbType);
 
   /**
    * TranslateToChar() checks if aNativeKeyEvent is a dead key.
@@ -308,7 +316,8 @@ class TISInputSourceWrapper {
    * @return                      If succeeded, TRUE.  Otherwise, FALSE.
    *                              Even if TRUE, aStr can be empty string.
    */
-  bool TranslateToString(UInt32 aKeyCode, UInt32 aModifiers, UInt32 aKbType, nsAString& aStr);
+  bool TranslateToString(UInt32 aKeyCode, UInt32 aModifiers, UInt32 aKbType,
+                         nsAString& aStr);
 
   /**
    * TranslateToChar() computes the inputted character from the native keyCode,
@@ -354,7 +363,8 @@ class TISInputSourceWrapper {
    */
   void ComputeInsertStringForCharCode(NSEvent* aNativeKeyEvent,
                                       const WidgetKeyboardEvent& aKeyEvent,
-                                      const nsAString* aInsertString, nsAString& aResult);
+                                      const nsAString* aInsertString,
+                                      nsAString& aResult);
 
   /**
    * IsPrintableKeyEvent() returns true if aNativeKeyEvent is caused by
@@ -432,15 +442,18 @@ class TextInputHandlerBase : public TextEventDispatcherListener {
    *                              characters of aNativeKeyEvent.
    */
   void InitKeyEvent(NSEvent* aNativeKeyEvent, WidgetKeyboardEvent& aKeyEvent,
-                    bool aIsProcessedByIME, const nsAString* aInsertString = nullptr);
+                    bool aIsProcessedByIME,
+                    const nsAString* aInsertString = nullptr);
 
   /**
    * SynthesizeNativeKeyEvent() is an implementation of
    * nsIWidget::SynthesizeNativeKeyEvent().  See the document in nsIWidget.h
    * for the detail.
    */
-  nsresult SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout, int32_t aNativeKeyCode,
-                                    uint32_t aModifierFlags, const nsAString& aCharacters,
+  nsresult SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
+                                    int32_t aNativeKeyCode,
+                                    uint32_t aModifierFlags,
+                                    const nsAString& aCharacters,
                                     const nsAString& aUnmodifiedCharacters);
 
   /**
@@ -590,14 +603,19 @@ class TextInputHandlerBase : public TextEventDispatcherListener {
     }
 
     bool IsDefaultPrevented() const {
-      return mKeyDownHandled || mKeyPressHandled || mCausedOtherKeyEvents || mCompositionDispatched;
+      return mKeyDownHandled || mKeyPressHandled || mCausedOtherKeyEvents ||
+             mCompositionDispatched;
     }
 
     bool CanDispatchKeyDownEvent() const { return !mKeyDownDispatched; }
 
-    bool CanDispatchKeyPressEvent() const { return !mKeyPressDispatched && !IsDefaultPrevented(); }
+    bool CanDispatchKeyPressEvent() const {
+      return !mKeyPressDispatched && !IsDefaultPrevented();
+    }
 
-    bool CanHandleCommand() const { return !mKeyDownHandled && !mKeyPressHandled; }
+    bool CanHandleCommand() const {
+      return !mKeyDownHandled && !mKeyPressHandled;
+    }
 
     bool IsProperKeyEvent(Command aCommand) const {
       if (NS_WARN_IF(!mKeyEvent)) {
@@ -605,101 +623,136 @@ class TextInputHandlerBase : public TextEventDispatcherListener {
       }
       KeyNameIndex keyNameIndex =
           TISInputSourceWrapper::ComputeGeckoKeyNameIndex([mKeyEvent keyCode]);
-      Modifiers modifiers = nsCocoaUtils::ModifiersForEvent(mKeyEvent) &
-                            (MODIFIER_SHIFT | MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META);
+      Modifiers modifiers =
+          nsCocoaUtils::ModifiersForEvent(mKeyEvent) &
+          (MODIFIER_SHIFT | MODIFIER_CONTROL | MODIFIER_ALT | MODIFIER_META);
       switch (aCommand) {
         case Command::InsertLineBreak:
-          return keyNameIndex == KEY_NAME_INDEX_Enter && modifiers == MODIFIER_CONTROL;
+          return keyNameIndex == KEY_NAME_INDEX_Enter &&
+                 modifiers == MODIFIER_CONTROL;
         case Command::InsertParagraph:
-          return keyNameIndex == KEY_NAME_INDEX_Enter && modifiers == MODIFIER_NONE;
+          return keyNameIndex == KEY_NAME_INDEX_Enter &&
+                 modifiers == MODIFIER_NONE;
         case Command::DeleteCharBackward:
-          return keyNameIndex == KEY_NAME_INDEX_Backspace && modifiers == MODIFIER_NONE;
+          return keyNameIndex == KEY_NAME_INDEX_Backspace &&
+                 modifiers == MODIFIER_NONE;
         case Command::DeleteToBeginningOfLine:
-          return keyNameIndex == KEY_NAME_INDEX_Backspace && modifiers == MODIFIER_META;
+          return keyNameIndex == KEY_NAME_INDEX_Backspace &&
+                 modifiers == MODIFIER_META;
         case Command::DeleteWordBackward:
-          return keyNameIndex == KEY_NAME_INDEX_Backspace && modifiers == MODIFIER_ALT;
+          return keyNameIndex == KEY_NAME_INDEX_Backspace &&
+                 modifiers == MODIFIER_ALT;
         case Command::DeleteCharForward:
-          return keyNameIndex == KEY_NAME_INDEX_Delete && modifiers == MODIFIER_NONE;
+          return keyNameIndex == KEY_NAME_INDEX_Delete &&
+                 modifiers == MODIFIER_NONE;
         case Command::DeleteWordForward:
-          return keyNameIndex == KEY_NAME_INDEX_Delete && modifiers == MODIFIER_ALT;
+          return keyNameIndex == KEY_NAME_INDEX_Delete &&
+                 modifiers == MODIFIER_ALT;
         case Command::InsertTab:
-          return keyNameIndex == KEY_NAME_INDEX_Tab && modifiers == MODIFIER_NONE;
+          return keyNameIndex == KEY_NAME_INDEX_Tab &&
+                 modifiers == MODIFIER_NONE;
         case Command::InsertBacktab:
-          return keyNameIndex == KEY_NAME_INDEX_Tab && modifiers == MODIFIER_SHIFT;
+          return keyNameIndex == KEY_NAME_INDEX_Tab &&
+                 modifiers == MODIFIER_SHIFT;
         case Command::CharNext:
-          return keyNameIndex == KEY_NAME_INDEX_ArrowRight && modifiers == MODIFIER_NONE;
+          return keyNameIndex == KEY_NAME_INDEX_ArrowRight &&
+                 modifiers == MODIFIER_NONE;
         case Command::SelectCharNext:
-          return keyNameIndex == KEY_NAME_INDEX_ArrowRight && modifiers == MODIFIER_SHIFT;
+          return keyNameIndex == KEY_NAME_INDEX_ArrowRight &&
+                 modifiers == MODIFIER_SHIFT;
         case Command::WordNext:
-          return keyNameIndex == KEY_NAME_INDEX_ArrowRight && modifiers == MODIFIER_ALT;
+          return keyNameIndex == KEY_NAME_INDEX_ArrowRight &&
+                 modifiers == MODIFIER_ALT;
         case Command::SelectWordNext:
           return keyNameIndex == KEY_NAME_INDEX_ArrowRight &&
                  modifiers == (MODIFIER_ALT | MODIFIER_SHIFT);
         case Command::EndLine:
-          return keyNameIndex == KEY_NAME_INDEX_ArrowRight && modifiers == MODIFIER_META;
+          return keyNameIndex == KEY_NAME_INDEX_ArrowRight &&
+                 modifiers == MODIFIER_META;
         case Command::SelectEndLine:
           return keyNameIndex == KEY_NAME_INDEX_ArrowRight &&
                  modifiers == (MODIFIER_META | MODIFIER_SHIFT);
         case Command::CharPrevious:
-          return keyNameIndex == KEY_NAME_INDEX_ArrowLeft && modifiers == MODIFIER_NONE;
+          return keyNameIndex == KEY_NAME_INDEX_ArrowLeft &&
+                 modifiers == MODIFIER_NONE;
         case Command::SelectCharPrevious:
-          return keyNameIndex == KEY_NAME_INDEX_ArrowLeft && modifiers == MODIFIER_SHIFT;
+          return keyNameIndex == KEY_NAME_INDEX_ArrowLeft &&
+                 modifiers == MODIFIER_SHIFT;
         case Command::WordPrevious:
-          return keyNameIndex == KEY_NAME_INDEX_ArrowLeft && modifiers == MODIFIER_ALT;
+          return keyNameIndex == KEY_NAME_INDEX_ArrowLeft &&
+                 modifiers == MODIFIER_ALT;
         case Command::SelectWordPrevious:
           return keyNameIndex == KEY_NAME_INDEX_ArrowLeft &&
                  modifiers == (MODIFIER_ALT | MODIFIER_SHIFT);
         case Command::BeginLine:
-          return keyNameIndex == KEY_NAME_INDEX_ArrowLeft && modifiers == MODIFIER_META;
+          return keyNameIndex == KEY_NAME_INDEX_ArrowLeft &&
+                 modifiers == MODIFIER_META;
         case Command::SelectBeginLine:
           return keyNameIndex == KEY_NAME_INDEX_ArrowLeft &&
                  modifiers == (MODIFIER_META | MODIFIER_SHIFT);
         case Command::LinePrevious:
-          return keyNameIndex == KEY_NAME_INDEX_ArrowUp && modifiers == MODIFIER_NONE;
+          return keyNameIndex == KEY_NAME_INDEX_ArrowUp &&
+                 modifiers == MODIFIER_NONE;
         case Command::SelectLinePrevious:
-          return keyNameIndex == KEY_NAME_INDEX_ArrowUp && modifiers == MODIFIER_SHIFT;
+          return keyNameIndex == KEY_NAME_INDEX_ArrowUp &&
+                 modifiers == MODIFIER_SHIFT;
         case Command::MoveTop:
-          return keyNameIndex == KEY_NAME_INDEX_ArrowUp && modifiers == MODIFIER_META;
+          return keyNameIndex == KEY_NAME_INDEX_ArrowUp &&
+                 modifiers == MODIFIER_META;
         case Command::SelectTop:
           return (keyNameIndex == KEY_NAME_INDEX_ArrowUp &&
                   modifiers == (MODIFIER_META | MODIFIER_SHIFT)) ||
-                 (keyNameIndex == KEY_NAME_INDEX_Home && modifiers == MODIFIER_SHIFT);
+                 (keyNameIndex == KEY_NAME_INDEX_Home &&
+                  modifiers == MODIFIER_SHIFT);
         case Command::LineNext:
-          return keyNameIndex == KEY_NAME_INDEX_ArrowDown && modifiers == MODIFIER_NONE;
+          return keyNameIndex == KEY_NAME_INDEX_ArrowDown &&
+                 modifiers == MODIFIER_NONE;
         case Command::SelectLineNext:
-          return keyNameIndex == KEY_NAME_INDEX_ArrowDown && modifiers == MODIFIER_SHIFT;
+          return keyNameIndex == KEY_NAME_INDEX_ArrowDown &&
+                 modifiers == MODIFIER_SHIFT;
         case Command::MoveBottom:
-          return keyNameIndex == KEY_NAME_INDEX_ArrowDown && modifiers == MODIFIER_META;
+          return keyNameIndex == KEY_NAME_INDEX_ArrowDown &&
+                 modifiers == MODIFIER_META;
         case Command::SelectBottom:
           return (keyNameIndex == KEY_NAME_INDEX_ArrowDown &&
                   modifiers == (MODIFIER_META | MODIFIER_SHIFT)) ||
-                 (keyNameIndex == KEY_NAME_INDEX_End && modifiers == MODIFIER_SHIFT);
+                 (keyNameIndex == KEY_NAME_INDEX_End &&
+                  modifiers == MODIFIER_SHIFT);
         case Command::ScrollPageUp:
-          return keyNameIndex == KEY_NAME_INDEX_PageUp && modifiers == MODIFIER_NONE;
+          return keyNameIndex == KEY_NAME_INDEX_PageUp &&
+                 modifiers == MODIFIER_NONE;
         case Command::SelectPageUp:
-          return keyNameIndex == KEY_NAME_INDEX_PageUp && modifiers == MODIFIER_SHIFT;
+          return keyNameIndex == KEY_NAME_INDEX_PageUp &&
+                 modifiers == MODIFIER_SHIFT;
         case Command::ScrollPageDown:
-          return keyNameIndex == KEY_NAME_INDEX_PageDown && modifiers == MODIFIER_NONE;
+          return keyNameIndex == KEY_NAME_INDEX_PageDown &&
+                 modifiers == MODIFIER_NONE;
         case Command::SelectPageDown:
-          return keyNameIndex == KEY_NAME_INDEX_PageDown && modifiers == MODIFIER_SHIFT;
+          return keyNameIndex == KEY_NAME_INDEX_PageDown &&
+                 modifiers == MODIFIER_SHIFT;
         case Command::ScrollBottom:
-          return keyNameIndex == KEY_NAME_INDEX_End && modifiers == MODIFIER_NONE;
+          return keyNameIndex == KEY_NAME_INDEX_End &&
+                 modifiers == MODIFIER_NONE;
         case Command::ScrollTop:
-          return keyNameIndex == KEY_NAME_INDEX_Home && modifiers == MODIFIER_NONE;
+          return keyNameIndex == KEY_NAME_INDEX_Home &&
+                 modifiers == MODIFIER_NONE;
         case Command::CancelOperation:
           return (keyNameIndex == KEY_NAME_INDEX_Escape &&
-                  (modifiers == MODIFIER_NONE || modifiers == MODIFIER_SHIFT)) ||
-                 ([mKeyEvent keyCode] == kVK_ANSI_Period && modifiers == MODIFIER_META);
+                  (modifiers == MODIFIER_NONE ||
+                   modifiers == MODIFIER_SHIFT)) ||
+                 ([mKeyEvent keyCode] == kVK_ANSI_Period &&
+                  modifiers == MODIFIER_META);
         case Command::Complete:
           return keyNameIndex == KEY_NAME_INDEX_Escape &&
-                 (modifiers == MODIFIER_ALT || modifiers == (MODIFIER_ALT | MODIFIER_SHIFT));
+                 (modifiers == MODIFIER_ALT ||
+                  modifiers == (MODIFIER_ALT | MODIFIER_SHIFT));
         default:
           return false;
       }
     }
 
-    void InitKeyEvent(TextInputHandlerBase* aHandler, WidgetKeyboardEvent& aKeyEvent,
-                      bool aIsProcessedByIME);
+    void InitKeyEvent(TextInputHandlerBase* aHandler,
+                      WidgetKeyboardEvent& aKeyEvent, bool aIsProcessedByIME);
 
     /**
      * GetUnhandledString() returns characters of the event which have not been
@@ -717,7 +770,8 @@ class TextInputHandlerBase : public TextEventDispatcherListener {
    */
   class AutoKeyEventStateCleaner {
    public:
-    explicit AutoKeyEventStateCleaner(TextInputHandlerBase* aHandler) : mHandler(aHandler) {}
+    explicit AutoKeyEventStateCleaner(TextInputHandlerBase* aHandler)
+        : mHandler(aHandler) {}
 
     ~AutoKeyEventStateCleaner() { mHandler->RemoveCurrentKeyEvent(); }
 
@@ -750,7 +804,8 @@ class TextInputHandlerBase : public TextEventDispatcherListener {
   /**
    * PushKeyEvent() adds the current key event to mCurrentKeyEvents.
    */
-  KeyEventState* PushKeyEvent(NSEvent* aNativeKeyEvent, uint32_t aUniqueId = 0) {
+  KeyEventState* PushKeyEvent(NSEvent* aNativeKeyEvent,
+                              uint32_t aUniqueId = 0) {
     uint32_t nestCount = mCurrentKeyEvents.Length();
     for (uint32_t i = 0; i < nestCount; i++) {
       // When the key event is caused by another key event, all key events
@@ -773,7 +828,8 @@ class TextInputHandlerBase : public TextEventDispatcherListener {
    * mCurrentKeyEvents.
    */
   void RemoveCurrentKeyEvent() {
-    NS_ASSERTION(mCurrentKeyEvents.Length() > 0, "RemoveCurrentKeyEvent() is called unexpectedly");
+    NS_ASSERTION(mCurrentKeyEvents.Length() > 0,
+                 "RemoveCurrentKeyEvent() is called unexpectedly");
     KeyEventState* keyEvent = mCurrentKeyEvents.PopLastElement();
     if (keyEvent == &mFirstKeyEvent) {
       keyEvent->Clear();
@@ -799,7 +855,9 @@ class TextInputHandlerBase : public TextEventDispatcherListener {
     KeyboardLayoutOverride() : mKeyboardLayout(0), mOverrideEnabled(false) {}
   };
 
-  const KeyboardLayoutOverride& KeyboardLayoutOverrideRef() const { return mKeyboardOverride; }
+  const KeyboardLayoutOverride& KeyboardLayoutOverrideRef() const {
+    return mKeyboardOverride;
+  }
 
   /**
    * IsPrintableChar() checks whether the unicode character is
@@ -857,11 +915,12 @@ class IMEInputHandler : public TextInputHandlerBase {
   NS_IMETHOD NotifyIME(TextEventDispatcher* aTextEventDispatcher,
                        const IMENotification& aNotification) override;
   NS_IMETHOD_(IMENotificationRequests) GetIMENotificationRequests() override;
-  NS_IMETHOD_(void) OnRemovedFrom(TextEventDispatcher* aTextEventDispatcher) override;
+  NS_IMETHOD_(void)
+  OnRemovedFrom(TextEventDispatcher* aTextEventDispatcher) override;
   NS_IMETHOD_(void)
   WillDispatchKeyboardEvent(TextEventDispatcher* aTextEventDispatcher,
-                            WidgetKeyboardEvent& aKeyboardEvent, uint32_t aIndexOfKeypress,
-                            void* aData) override;
+                            WidgetKeyboardEvent& aKeyboardEvent,
+                            uint32_t aIndexOfKeypress, void* aData) override;
 
  public:
   virtual bool OnDestroyWidget(nsChildView* aDestroyingWidget) override;
@@ -903,8 +962,8 @@ class IMEInputHandler : public TextInputHandlerBase {
    *                              an instance which is allocated as autorelease.
    *                              If this has some troubles, returns nil.
    */
-  NSAttributedString* GetAttributedSubstringFromRange(NSRange& aRange,
-                                                      NSRange* aActualRange = nullptr);
+  NSAttributedString* GetAttributedSubstringFromRange(
+      NSRange& aRange, NSRange* aActualRange = nullptr);
 
   /**
    * SelectedRange() returns current selected range.
@@ -941,7 +1000,8 @@ class IMEInputHandler : public TextInputHandlerBase {
    *                              If the length of aRange is 0, the width will
    *                              be 0.
    */
-  NSRect FirstRectForCharacterRange(NSRange& aRange, NSRange* aActualRange = nullptr);
+  NSRect FirstRectForCharacterRange(NSRange& aRange,
+                                    NSRange* aActualRange = nullptr);
 
   /**
    * CharacterIndexForPoint() returns an offset of a character at aPoint.
@@ -969,7 +1029,9 @@ class IMEInputHandler : public TextInputHandlerBase {
   bool IsIMEOpened();
   bool IsIMEEnabled() { return mIsIMEEnabled; }
   bool IsASCIICapableOnly() { return mIsASCIICapableOnly; }
-  bool IsEditableContent() const { return mIsIMEEnabled || mIsASCIICapableOnly; }
+  bool IsEditableContent() const {
+    return mIsIMEEnabled || mIsASCIICapableOnly;
+  }
   bool IgnoreIMECommit() { return mIgnoreIMECommit; }
 
   void CommitIMEComposition();
@@ -1062,8 +1124,9 @@ class IMEInputHandler : public TextInputHandlerBase {
   static bool sStaticMembersInitialized;
   static CFStringRef sLatestIMEOpenedModeInputSourceID;
   static void InitStaticMembers();
-  static void OnCurrentTextInputSourceChange(CFNotificationCenterRef aCenter, void* aObserver,
-                                             CFStringRef aName, const void* aObject,
+  static void OnCurrentTextInputSourceChange(CFNotificationCenterRef aCenter,
+                                             void* aObserver, CFStringRef aName,
+                                             const void* aObject,
                                              CFDictionaryRef aUserInfo);
 
   static void FlushPendingMethods(nsITimer* aTimer, void* aClosure);
@@ -1077,7 +1140,8 @@ class IMEInputHandler : public TextInputHandlerBase {
    * @param aSelectedRange        Current selected range (or caret position).
    * @return                      NS_TEXTRANGE_*.
    */
-  TextRangeType ConvertToTextRangeType(uint32_t aUnderlineStyle, NSRange& aSelectedRange);
+  TextRangeType ConvertToTextRangeType(uint32_t aUnderlineStyle,
+                                       NSRange& aSelectedRange);
 
   /**
    * GetRangeCount() computes the range count of aAttrString.
@@ -1100,8 +1164,8 @@ class IMEInputHandler : public TextInputHandlerBase {
    *                              NSUnderlineStyleAttributeName ranges in
    *                              aAttrString.
    */
-  already_AddRefed<mozilla::TextRangeArray> CreateTextRangeArray(NSAttributedString* aAttrString,
-                                                                 NSRange& aSelectedRange);
+  already_AddRefed<mozilla::TextRangeArray> CreateTextRangeArray(
+      NSAttributedString* aAttrString, NSRange& aSelectedRange);
 
   /**
    * DispatchCompositionStartEvent() dispatches a compositionstart event and
@@ -1126,7 +1190,8 @@ class IMEInputHandler : public TextInputHandlerBase {
    *                              Otherwise, e.g., canceled by the web page,
    *                              this returns false.
    */
-  bool DispatchCompositionChangeEvent(const nsString& aText, NSAttributedString* aAttrString,
+  bool DispatchCompositionChangeEvent(const nsString& aText,
+                                      NSAttributedString* aAttrString,
                                       NSRange& aSelectedRange);
 
   /**
@@ -1198,7 +1263,8 @@ class TextInputHandler : public IMEInputHandler {
    * @param aReplacementRange     The range which will be replaced with the
    *                              aAttrString instead of current selection.
    */
-  void InsertText(NSAttributedString* aAttrString, NSRange* aReplacementRange = nullptr);
+  void InsertText(NSAttributedString* aAttrString,
+                  NSRange* aReplacementRange = nullptr);
 
   /**
    * Handles aCommand.  This may cause dispatching an eKeyPress event.
@@ -1239,7 +1305,8 @@ class TextInputHandler : public IMEInputHandler {
     NSUInteger flags;
     unsigned short keyCode;
 
-    ModifierKey(NSUInteger aFlags, unsigned short aKeyCode) : flags(aFlags), keyCode(aKeyCode) {}
+    ModifierKey(NSUInteger aFlags, unsigned short aKeyCode)
+        : flags(aFlags), keyCode(aKeyCode) {}
 
     NSUInteger GetDeviceDependentFlags() const {
       return (flags & ~NSEventModifierFlagDeviceIndependentFlagsMask);
@@ -1256,13 +1323,15 @@ class TextInputHandler : public IMEInputHandler {
    * GetModifierKeyForNativeKeyCode() returns the stored ModifierKey for
    * the key.
    */
-  const ModifierKey* GetModifierKeyForNativeKeyCode(unsigned short aKeyCode) const;
+  const ModifierKey* GetModifierKeyForNativeKeyCode(
+      unsigned short aKeyCode) const;
 
   /**
    * GetModifierKeyForDeviceDependentFlags() returns the stored ModifierKey for
    * the device dependent flags.
    */
-  const ModifierKey* GetModifierKeyForDeviceDependentFlags(NSUInteger aFlags) const;
+  const ModifierKey* GetModifierKeyForDeviceDependentFlags(
+      NSUInteger aFlags) const;
 
   /**
    * DispatchKeyEventForFlagsChanged() dispatches keydown event or keyup event
@@ -1274,7 +1343,8 @@ class TextInputHandler : public IMEInputHandler {
    *                              Otherwise, i.e., to dispatch keyup event,
    *                              FALSE.
    */
-  void DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent, bool aDispatchKeyDown);
+  void DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
+                                       bool aDispatchKeyDown);
 };
 
 }  // namespace widget

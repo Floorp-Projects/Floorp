@@ -10,8 +10,8 @@
 
 // Implements support for the browser.theme.toolbar-theme pref.
 // Use MOZGlobalAppearance.sharedInstance.effectiveAppearance
-// in all places where you would like the global override to be respected. The effectiveAppearance
-// property can be key-value observed.
+// in all places where you would like the global override to be respected. The
+// effectiveAppearance property can be key-value observed.
 @interface MOZGlobalAppearance : NSObject <NSAppearanceCustomization>
 @property(class, readonly) MOZGlobalAppearance* sharedInstance;
 @end

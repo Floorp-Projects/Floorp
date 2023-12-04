@@ -15,10 +15,11 @@ class Runnable;
 }
 
 /*
- * MOZMenuOpeningCoordinator is a workaround for the fact that opening an NSMenu creates a nested
- * event loop. This event loop is only exited after the menu is closed. The caller of
- * NativeMenuMac::ShowAsContextMenu does not expect ShowAsContextMenu to create a nested event loop,
- * so we need to make sure to open the NSMenu asynchronously.
+ * MOZMenuOpeningCoordinator is a workaround for the fact that opening an NSMenu
+ * creates a nested event loop. This event loop is only exited after the menu is
+ * closed. The caller of NativeMenuMac::ShowAsContextMenu does not expect
+ * ShowAsContextMenu to create a nested event loop, so we need to make sure to
+ * open the NSMenu asynchronously.
  */
 
 @interface MOZMenuOpeningCoordinator : NSObject
@@ -26,10 +27,11 @@ class Runnable;
 + (instancetype)sharedInstance;
 
 // Queue aMenu for opening.
-// The menu will open from a new event loop tick so that its nested event loop does not block the
-// caller. If another menu's nested event loop is currently on the stack, we wait for that nested
-// event loop to unwind before opening aMenu. Returns a handle that can be passed to
-// cancelAsynchronousOpening:. Can only be called on the main thread.
+// The menu will open from a new event loop tick so that its nested event loop
+// does not block the caller. If another menu's nested event loop is currently
+// on the stack, we wait for that nested event loop to unwind before opening
+// aMenu. Returns a handle that can be passed to cancelAsynchronousOpening:. Can
+// only be called on the main thread.
 - (NSInteger)asynchronouslyOpenMenu:(NSMenu*)aMenu
                    atScreenPosition:(NSPoint)aPosition
                             forView:(NSView*)aView
@@ -41,11 +43,13 @@ class Runnable;
 - (void)cancelAsynchronousOpening:(NSInteger)aHandle;
 
 // This field is a terrible workaround for a gnarly problem.
-// It should be set to YES by the caller of -[NSMenu cancelTracking(WithoutAnimation)].
-// This field gets checked by the native event loop code in nsAppShell.mm to avoid calling
-// -[NSApplication nextEventMatchingMask:...] between the call to cancelTracking and the point at
-// which the menu has finished closing and unwound from its tracking event loop, because such calls
-// can interfere with menu closing and get us stuck in the menu event loop forever.
+// It should be set to YES by the caller of -[NSMenu
+// cancelTracking(WithoutAnimation)]. This field gets checked by the native
+// event loop code in nsAppShell.mm to avoid calling
+// -[NSApplication nextEventMatchingMask:...] between the call to cancelTracking
+// and the point at which the menu has finished closing and unwound from its
+// tracking event loop, because such calls can interfere with menu closing and
+// get us stuck in the menu event loop forever.
 @property(class) BOOL needToUnwindForMenuClosing;
 
 @end

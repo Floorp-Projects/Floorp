@@ -32,8 +32,8 @@ class NativeMenuMac : public NativeMenu,
   void ShowAsContextMenu(nsIFrame* aClickedFrame, const CSSIntPoint& aPosition,
                          bool aIsContextMenu) override;
   bool Close() override;
-  void ActivateItem(dom::Element* aItemElement, Modifiers aModifiers, int16_t aButton,
-                    ErrorResult& aRv) override;
+  void ActivateItem(dom::Element* aItemElement, Modifiers aModifiers,
+                    int16_t aButton, ErrorResult& aRv) override;
   void OpenSubmenu(dom::Element* aMenuElement) override;
   void CloseSubmenu(dom::Element* aMenuElement) override;
   RefPtr<dom::Element> Element() override;
@@ -50,7 +50,8 @@ class NativeMenuMac : public NativeMenu,
   // nsMenuX::Observer
   void OnMenuWillOpen(dom::Element* aPopupElement) override;
   void OnMenuDidOpen(dom::Element* aPopupElement) override;
-  void OnMenuWillActivateItem(dom::Element* aPopupElement, dom::Element* aMenuItemElement) override;
+  void OnMenuWillActivateItem(dom::Element* aPopupElement,
+                              dom::Element* aMenuItemElement) override;
   void OnMenuClosed(dom::Element* aPopupElement) override;
 
   NSMenu* NativeNSMenu() { return mMenu ? mMenu->NativeNSMenu() : nil; }

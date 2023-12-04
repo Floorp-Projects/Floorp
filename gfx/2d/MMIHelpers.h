@@ -12,7 +12,7 @@
 #define __MMI_HELPERS_H__
 
 #define __mm_packxxxx(_f, _D, _d, _s, _t)                                     \
-#  _f " %[" #_t "], %[" #_d "h], %[" #_s "h] \n\t" #_f " %[" #_D "l], %[" #_d \
+  #_f " %[" #_t "], %[" #_d "h], %[" #_s "h] \n\t" #_f " %[" #_D "l], %[" #_d \
       "l], %[" #_s                                                            \
       "l] \n\t"                                                               \
       "punpckhwd %[" #_D "h], %[" #_D "l], %[" #_t                            \
