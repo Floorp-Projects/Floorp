@@ -217,7 +217,7 @@ class OpenTabsInView extends ViewPage {
         ></h2>
         ${when(
           isSearchEnabled(),
-          () => html`<div class="search-container">
+          () => html`<div>
             <fxview-search-textbox
               data-l10n-id="firefoxview-search-text-box-opentabs"
               data-l10n-attrs="placeholder"

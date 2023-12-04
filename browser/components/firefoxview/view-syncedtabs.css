@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- @import url("chrome://global/skin/in-content/common.css");
+@import url("chrome://global/skin/in-content/common.css");
 
 .icon {
   display: inline-block;
@@ -14,7 +14,8 @@
   fill: currentColor;
 }
 
-.phone, .mobile {
+.phone,
+.mobile {
   background-image: url('chrome://browser/skin/device-phone.svg');
 }
 
@@ -42,12 +43,12 @@ h3.device-header {
   margin: 0;
 }
 
-h3.device-header:not([slot=header]) {
+h3.device-header:not([slot="header"]) {
   margin-block: 0.7em;
   margin-inline: 0.5em 0;
 }
 
-h3.device-header:not([slot=header]):not(:first-child) {
+h3.device-header:not([slot="header"]):not(:first-child) {
   margin-block-start: 1.6em;
 }
 
@@ -77,24 +78,20 @@ label {
   align-items: center;
 }
 
-.syncedtabs-footer {
+.syncedtabs-header {
   display: flex;
-  justify-content: end;
-  margin-block-end: 2rem;
+  justify-content: space-between;
+  height: 34px;
+  align-items: center;
 }
 
-.syncedtabs-footer button {
+.syncedtabs-header button {
   display: flex;
   align-items: center;
   min-width: unset;
-  margin-inline: 0;
-  padding: 0.5rem 0.7rem;
+  margin-inline-start: auto;
 }
 
-.syncedtabs-footer button .icon {
+.syncedtabs-header button .icon {
   margin-inline-end: 0.7rem;
-}
-
-.search-container {
-  margin-block-start: 35px;
 }

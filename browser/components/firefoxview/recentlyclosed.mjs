@@ -287,27 +287,29 @@ class RecentlyClosedTabsInView extends ViewPage {
         rel="stylesheet"
         href="chrome://browser/content/firefoxview/firefoxview-next.css"
       />
-      <link
-        rel="stylesheet"
-        href="chrome://browser/content/firefoxview/recentlyclosed.css"
-      />
-      <div class="sticky-container bottom-fade" ?hidden=${!this.selectedTab}>
-        <h2
-          class="page-header heading-large"
-          data-l10n-id="firefoxview-recently-closed-header"
-        ></h2>
-        ${when(
-          isSearchEnabled(),
-          () => html`<div class="search-container">
-            <fxview-search-textbox
-              .query=${this.searchQuery}
-              data-l10n-id="firefoxview-search-text-box-recentlyclosed"
-              data-l10n-attrs="placeholder"
-              @fxview-search-textbox-query=${this.onSearchQuery}
-            ></fxview-search-textbox>
-          </div>`
-        )}
-      </div>
+      ${when(
+        !this.recentBrowsing,
+        () => html`<div
+          class="sticky-container bottom-fade"
+          ?hidden=${!this.selectedTab}
+        >
+          <h2
+            class="page-header heading-large"
+            data-l10n-id="firefoxview-recently-closed-header"
+          ></h2>
+          ${when(
+            isSearchEnabled(),
+            () => html`<div>
+              <fxview-search-textbox
+                .query=${this.searchQuery}
+                data-l10n-id="firefoxview-search-text-box-recentlyclosed"
+                data-l10n-attrs="placeholder"
+                @fxview-search-textbox-query=${this.onSearchQuery}
+              ></fxview-search-textbox>
+            </div>`
+          )}
+        </div>`
+      )}
       <div class=${classMap({ "cards-container": this.selectedTab })}>
         <card-container
           shortPageName=${this.recentBrowsing ? "recentlyclosed" : null}

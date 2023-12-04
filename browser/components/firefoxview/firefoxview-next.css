@@ -121,6 +121,9 @@ fxview-tab-list.with-context-menu::part(secondary-button) {
   top: 0;
   padding-block: var(--fxview-margin-top) 33px;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 35px;
 }
 
 .sticky-container.bottom-fade {
