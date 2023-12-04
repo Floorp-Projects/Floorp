@@ -31,6 +31,8 @@ body {
 
 <script>
 const searchParams = new URLSearchParams(location.search);
+let strict = searchParams.get("strict") == "true";
+
 var intervalId;
 // Start periodic content expansions after we get a scroll event triggered by
 // a key press in test() function below, otherwise we may have same scroll
@@ -105,8 +107,11 @@ async function test() {
       continue;
     }
     ok(
-      record.scrollOffsetY > previousRecord.scrollOffsetY,
-      "scroll offset should be strictly monotonically increasing " +
+      strict
+        ? (record.scrollOffsetY > previousRecord.scrollOffsetY)
+        : (record.scrollOffsetY >= previousRecord.scrollOffsetY),
+      "scroll offset should be " +
+      (strict ? "strictly monotonically increasing " : "nondecreasing ") +
       "previous offset: " + previousRecord.scrollOffsetY +
       ", offset: " + record.scrollOffsetY
     );

@@ -1971,11 +1971,15 @@ function buildRelativeScrollSmoothnessVariants(aInputType, aScrollMethods) {
   let subtests = [];
   for (let scrollMethod of aScrollMethods) {
     subtests.push({
-      file: `helper_relative_scroll_smoothness.html?input-type=${aInputType}&scroll-method=${scrollMethod}`,
-      prefs: getSmoothScrollPrefs(aInputType, /* Bezier physics */ false)
+      file: `helper_relative_scroll_smoothness.html?input-type=${aInputType}&scroll-method=${scrollMethod}&strict=true`,
+      prefs: getSmoothScrollPrefs(aInputType, /* Bezier physics */ false),
     });
+    // For MSD physics, run the test with strict=false. The shape of the
+    // animation curve is highly timing dependent, and we can't guarantee
+    // that an animation will run long enough until the next input event
+    // arrives.
     subtests.push({
-      file: `helper_relative_scroll_smoothness.html?input-type=${aInputType}&scroll-method=${scrollMethod}`,
+      file: `helper_relative_scroll_smoothness.html?input-type=${aInputType}&scroll-method=${scrollMethod}&strict=false`,
       prefs: getSmoothScrollPrefs(aInputType, /* MSD physics */ true),
     });
   }
