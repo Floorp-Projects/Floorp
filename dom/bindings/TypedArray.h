@@ -676,36 +676,26 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
         JSObject* buffer =
             JS_GetArrayBufferViewBuffer(jsapi.cx(), view, &unused);
         if (!buffer) {
-          JS::Value bufferSlot = JS::GetReservedSlot(view, /* BUFFER_SLOT */ 0);
-          if (!bufferSlot.isObject()) {
-            if (JS_IsTypedArrayObject(view)) {
-              // ensureBufferObject would try to create a buffer, check length
-#  ifdef JS_64BIT
-              if (JS_GetArrayBufferViewByteLength(view) >
-                  size_t(8) * 1024 * 1024 * 1024) {
-                MOZ_CRASH(
-                    "Creating buffer for TypedArrayObject would fail (length "
-                    "is too large on 64-bit)");
-              }
-#  else
-              if (JS_GetArrayBufferViewByteLength(view) > INT32_MAX) {
-                MOZ_CRASH(
-                    "Creating buffer for TypedArrayObject would fail (length "
-                    "is too large on 32-bit)");
-              }
-#  endif
-            } else if (bufferSlot.isNull()) {
-              MOZ_CRASH("DataView with bufferSlot containing null");
-            } else if (bufferSlot.isBoolean()) {
-              MOZ_CRASH("DataView with bufferSlot containing boolean");
-            } else {
-              MOZ_CRASH("Huh?");
-            }
-          }
           if (JS_IsTypedArrayObject(view)) {
-            MOZ_CRASH(
-                "JS_GetArrayBufferViewBuffer failed for TypedArrayObject, "
-                "calling ensureBufferObject but length checked out ok?");
+            JS::Value bufferSlot =
+                JS::GetReservedSlot(view, /* BUFFER_SLOT */ 0);
+            if (bufferSlot.isNull()) {
+              MOZ_CRASH("TypedArrayObject with bufferSlot containing null");
+            } else if (bufferSlot.isBoolean()) {
+              MOZ_CRASH("TypedArrayObject with bufferSlot containing boolean");
+            } else if (bufferSlot.isObject()) {
+              if (!bufferSlot.toObjectOrNull()) {
+                MOZ_CRASH(
+                    "TypedArrayObject with bufferSlot containing null object");
+              } else {
+                MOZ_CRASH(
+                    "JS_GetArrayBufferViewBuffer failed but bufferSlot "
+                    "contains a non-null object");
+              }
+            } else {
+              MOZ_CRASH(
+                  "TypedArrayObject with bufferSlot containing weird value");
+            }
           } else {
             MOZ_CRASH("JS_GetArrayBufferViewBuffer failed for DataViewObject");
           }
