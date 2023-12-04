@@ -93,7 +93,7 @@ export class MigrationWizard extends HTMLElement {
                   <input type="checkbox"/><span default-data-l10n-id="migration-bookmarks-option-label" ie-edge-data-l10n-id="migration-favorites-option-label"></span>
                 </label>
                 <label id="logins-and-passwords" data-resource-type="PASSWORDS">
-                  <input type="checkbox"/><span data-l10n-id="migration-logins-and-passwords-option-label"></span>
+                  <input type="checkbox"/><span data-l10n-id="migration-passwords-option-label"></span>
                 </label>
                 <label id="history" data-resource-type="HISTORY">
                   <input type="checkbox"/><span data-l10n-id="migration-history-option-label"></span>
@@ -135,7 +135,7 @@ export class MigrationWizard extends HTMLElement {
 
               <div data-resource-type="PASSWORDS" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
-                <span data-l10n-id="migration-logins-and-passwords-option-label"></span>
+                <span data-l10n-id="migration-passwords-option-label"></span>
                 <span class="message-text deemphasized-text">&nbsp;</span>
                 <a class="support-text deemphasized-text"></a>
               </div>
