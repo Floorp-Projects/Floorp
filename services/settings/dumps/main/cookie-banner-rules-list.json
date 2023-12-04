@@ -1,6 +1,318 @@
 {
   "data": [
     {
+      "click": {},
+      "schema": 1700826062965,
+      "cookies": {
+        "optOut": [
+          {
+            "name": "cookieDeclined",
+            "value": "1"
+          }
+        ]
+      },
+      "domains": [
+        "grundstoff.net"
+      ],
+      "id": "ca62d977-4e2e-48ab-a186-055f9f3277e4",
+      "last_modified": 1701423955158
+    },
+    {
+      "click": {},
+      "schema": 1700826062965,
+      "cookies": {
+        "optOut": [
+          {
+            "name": "onleiheTracking",
+            "value": "false"
+          }
+        ]
+      },
+      "domains": [
+        "onleihe.de"
+      ],
+      "id": "c19b1009-d609-438c-8d7c-82fc7144eeaa",
+      "last_modified": 1701423955154
+    },
+    {
+      "click": {
+        "optIn": "button.cm-btn-success",
+        "optOut": "button.cm-btn-danger",
+        "presence": "div#klaro"
+      },
+      "schema": 1700826062965,
+      "cookies": {},
+      "domains": [
+        "karlsruhe.de"
+      ],
+      "id": "63b5c74c-67ae-47f2-b0ba-10c03132ad6f",
+      "last_modified": 1701423955150
+    },
+    {
+      "click": {
+        "optIn": "button.js-cookie-accept",
+        "optOut": "button.js-cookie-decline",
+        "presence": "div#toast-container"
+      },
+      "schema": 1700826062965,
+      "domains": [
+        "startnext.com"
+      ],
+      "id": "312f32e1-a6bf-4e87-b7a6-7480345823cf",
+      "last_modified": 1701423955146
+    },
+    {
+      "click": {
+        "optIn": ".consentAgree",
+        "optOut": "#consentDisagree",
+        "presence": "div.consent"
+      },
+      "schema": 1700826062965,
+      "cookies": {},
+      "domains": [
+        "strato.de"
+      ],
+      "id": "18b1dd86-aee5-4697-b601-4fa320a75dbe",
+      "last_modified": 1701423955143
+    },
+    {
+      "click": {},
+      "schema": 1700826062965,
+      "cookies": {
+        "optOut": [
+          {
+            "name": "hidecookie",
+            "value": "true"
+          }
+        ]
+      },
+      "domains": [
+        "vrn.de"
+      ],
+      "id": "0ae7f461-8705-4222-b8ee-afa03e5150ff",
+      "last_modified": 1701423955139
+    },
+    {
+      "click": {},
+      "schema": 1700826062965,
+      "cookies": {
+        "optOut": [
+          {
+            "name": "consent_functional",
+            "value": "DENY"
+          },
+          {
+            "name": "consent_marketing",
+            "value": "DENY"
+          },
+          {
+            "name": "consent_technical",
+            "value": "ALLOW"
+          },
+          {
+            "name": "consent_version",
+            "value": "2.6"
+          }
+        ]
+      },
+      "domains": [
+        "huk24.de"
+      ],
+      "id": "0fbacecc-fbda-4e4b-883f-9424790ccc74",
+      "last_modified": 1701423955135
+    },
+    {
+      "click": {},
+      "schema": 1700826062965,
+      "cookies": {
+        "optOut": [
+          {
+            "name": "cookiebanner",
+            "value": "closed"
+          }
+        ]
+      },
+      "domains": [
+        "thw.de"
+      ],
+      "id": "58226c30-e975-42f3-99e4-ca140b91e96c",
+      "last_modified": 1701423955130
+    },
+    {
+      "click": {},
+      "schema": 1700826062965,
+      "cookies": {
+        "optOut": [
+          {
+            "name": "cookie-preference",
+            "value": "1"
+          }
+        ]
+      },
+      "domains": [
+        "korodrogerie.de"
+      ],
+      "id": "cdd5646d-06b3-4fdf-8530-b7d8a93f03df",
+      "last_modified": 1701423955126
+    },
+    {
+      "click": {
+        "optIn": "button.cl-consent__btn",
+        "optOut": "button.cl-consent__close-link",
+        "presence": "div#cl-consent"
+      },
+      "schema": 1700826062965,
+      "cookies": {},
+      "domains": [
+        "hdblog.it",
+        "hdmotori.it"
+      ],
+      "id": "342bd7ca-6502-4df7-bd3a-0b884b51aaa7",
+      "last_modified": 1701423955123
+    },
+    {
+      "click": {},
+      "schema": 1700826062965,
+      "cookies": {
+        "optOut": [
+          {
+            "name": "cookies_accepted",
+            "value": "false"
+          }
+        ]
+      },
+      "domains": [
+        "mindfactory.de"
+      ],
+      "id": "aa077f01-0574-4f1b-ad1b-3225c4dc59f7",
+      "last_modified": 1701423955119
+    },
+    {
+      "click": {
+        "optIn": "button[data-qa=\"privacy-settings-action-info\"]",
+        "optOut": "button[data-qa=\"privacy-settings-action-close\"]",
+        "presence": "[data-qa=\"privacy-settings\"]"
+      },
+      "schema": 1700826062965,
+      "domains": [
+        "lieferando.de",
+        "just-eat.ch"
+      ],
+      "id": "31d9971f-e23d-4dd9-a891-99a85d97ad19",
+      "last_modified": 1701423955115
+    },
+    {
+      "click": {
+        "optIn": "button#cookieok",
+        "optOut": "button#cookiecancel",
+        "presence": "div#cookieconsent"
+      },
+      "schema": 1700826062965,
+      "cookies": {},
+      "domains": [
+        "reichelt.de"
+      ],
+      "id": "b81fc066-5cdd-4af6-b288-49de860e369a",
+      "last_modified": 1701423955111
+    },
+    {
+      "click": {
+        "optIn": "button#cookie-consent-button",
+        "presence": "dialog.consent"
+      },
+      "schema": 1700826062965,
+      "domains": [
+        "computerbase.de"
+      ],
+      "id": "2c73714d-0e9b-41a1-ad12-6bd15ddade67",
+      "last_modified": 1701423955107
+    },
+    {
+      "click": {
+        "optIn": "button.cm-btn-accept-all",
+        "optOut": "button.cm-btn-accept",
+        "presence": "div#klaro"
+      },
+      "schema": 1700826062965,
+      "cookies": {},
+      "domains": [
+        "lancom-systems.de"
+      ],
+      "id": "efc6f62d-8d53-4f52-9dd3-172d9b04f5de",
+      "last_modified": 1701423955104
+    },
+    {
+      "click": {
+        "optIn": "button.iubenda-cs-accept-btn",
+        "presence": "div#iubenda-cs-banner"
+      },
+      "schema": 1700826062965,
+      "cookies": {},
+      "domains": [
+        "ansa.it"
+      ],
+      "id": "8e55f0f4-262f-4d35-a461-47afea6e9069",
+      "last_modified": 1701423955100
+    },
+    {
+      "click": {
+        "optIn": ".sp_choice_type_11",
+        "presence": ".message-container > #notice",
+        "runContext": "child"
+      },
+      "schema": 1700826062965,
+      "cookies": {},
+      "domains": [
+        "thetimes.co.uk",
+        "qz.com",
+        "privacy-mgmt.com",
+        "independent.co.uk",
+        "gizmodo.com",
+        "e24.no",
+        "thesun.co.uk",
+        "thesun.ie",
+        "focus.de",
+        "bild.de",
+        "computerbild.de",
+        "bloomberg.com",
+        "t-online.de",
+        "wetteronline.de",
+        "chip.de",
+        "n-tv.de",
+        "newsnow.co.uk",
+        "telegraph.co.uk",
+        "theguardian.com",
+        "faz.net",
+        "sueddeutsche.de",
+        "rtl.de",
+        "gutefrage.net",
+        "express.de",
+        "tvspielfilm.de",
+        "finanzen.net",
+        "tag24.de",
+        "kino.de",
+        "heise.de",
+        "bunte.de",
+        "golem.de"
+      ],
+      "id": "d42bbaee-f96e-47e7-8e81-efc642518e97",
+      "last_modified": 1701423955095
+    },
+    {
+      "click": {
+        "optIn": "button[data-component-name=\"consent\"]",
+        "optOut": "button[data-component-name=\"reject\"]",
+        "presence": ".cookie-notice-banner"
+      },
+      "schema": 1700826062965,
+      "cookies": {},
+      "domains": [
+        "shopify.com"
+      ],
+      "id": "531324c9-83ba-4ba3-a488-3ebde87b10af",
+      "last_modified": 1701423955091
+    },
+    {
       "click": {
         "optOut": "#tmart-cookie-layer-only-necessary",
         "presence": ".cookieLayer"
@@ -1423,49 +1735,6 @@
       ],
       "id": "7BA8E4AF-438A-40FE-8941-F921AA1FEA2A",
       "last_modified": 1697710931606
-    },
-    {
-      "click": {
-        "optIn": ".sp_choice_type_11",
-        "presence": ".message-container > #notice",
-        "runContext": "child"
-      },
-      "schema": 1697557061727,
-      "cookies": {},
-      "domains": [
-        "thetimes.co.uk",
-        "qz.com",
-        "privacy-mgmt.com",
-        "independent.co.uk",
-        "gizmodo.com",
-        "e24.no",
-        "thesun.co.uk",
-        "thesun.ie",
-        "focus.de",
-        "bild.de",
-        "computerbild.de",
-        "bloomberg.com",
-        "t-online.de",
-        "wetteronline.de",
-        "chip.de",
-        "n-tv.de",
-        "newsnow.co.uk",
-        "telegraph.co.uk",
-        "theguardian.com",
-        "faz.net",
-        "sueddeutsche.de",
-        "rtl.de",
-        "gutefrage.net",
-        "express.de",
-        "tvspielfilm.de",
-        "finanzen.net",
-        "tag24.de",
-        "kino.de",
-        "heise.de",
-        "bunte.de"
-      ],
-      "id": "d42bbaee-f96e-47e7-8e81-efc642518e97",
-      "last_modified": 1697710931583
     },
     {
       "click": {
@@ -4189,19 +4458,6 @@
       ],
       "id": "4d4b2924-6e28-4d39-9a02-e31690746ab2",
       "last_modified": 1674560738364
-    },
-    {
-      "click": {
-        "optIn": "button.text-jalapeño-70",
-        "presence": "section.bottom-0"
-      },
-      "schema": 1674146203493,
-      "cookies": {},
-      "domains": [
-        "shopify.com"
-      ],
-      "id": "531324c9-83ba-4ba3-a488-3ebde87b10af",
-      "last_modified": 1674560738361
     },
     {
       "click": {
@@ -7883,5 +8139,5 @@
       "last_modified": 1670498155641
     }
   ],
-  "timestamp": 1700826062722
+  "timestamp": 1701423955158
 }
