@@ -72,8 +72,9 @@ window.addEventListener("scroll",  () => {
 async function test() {
   // Once this content starts scrolling, it triggers a 100ms jank every 300ms so
   // sending arrow down keys for 1500ms will cause some jank.
+  const TEST_DURATION_MS = 1500;
   const timeAtStart = performance.now();
-  while (performance.now() - timeAtStart < 1500) {
+  while (performance.now() - timeAtStart < TEST_DURATION_MS) {
     switch (searchParams.get("input-type")) {
       case "key":
         synthesizeKey("KEY_ArrowDown");
@@ -101,10 +102,19 @@ async function test() {
   const records = collectSampledScrollOffsets(document.scrollingElement);
 
   let previousRecord = { scrollOffsetY: 0, sampledTimeStamp: 0 };
+  let scrollStartTime = null;
   for (const record of records) {
     // Ignore offsets before scrolling.
     if (record.scrollOffsetY == 0) {
       continue;
+    }
+    // Ignore offsets after TEST_DURATION_MS has elapsed since the
+    // start of scrolling. Note that the sampled timestamps are
+    // in microseconds.
+    if (!scrollStartTime) {
+      scrollStartTime = record.sampledTimeStamp;
+    } else if (((record.sampledTimeStamp - scrollStartTime) / 1000) > TEST_DURATION_MS) {
+      break;
     }
     ok(
       strict
