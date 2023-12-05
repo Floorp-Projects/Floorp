@@ -3077,11 +3077,6 @@ PerformanceMainThread* nsPresContext::GetPerformanceMainThread() const {
   return nullptr;
 }
 
-void nsPresContext::UpdateHiddenByContentVisibilityForAnimations() {
-  mDocument->UpdateHiddenByContentVisibilityForAnimations();
-  TimelineManager()->UpdateHiddenByContentVisibilityForAnimations();
-}
-
 #ifdef DEBUG
 
 void nsPresContext::ValidatePresShellAndDocumentReleation() const {
