@@ -9,7 +9,7 @@
 
 // WARNING: This version number must match the WebAuthn level where the strings
 // below are defined.
-#define MOZ_WEBAUTHN_ENUM_STRINGS_VERSION 2
+#define MOZ_WEBAUTHN_ENUM_STRINGS_VERSION 3
 
 // https://www.w3.org/TR/webauthn-2/#enum-attestation-convey
 #define MOZ_WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE "none"
@@ -44,6 +44,7 @@
 #define MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_NFC "nfc"
 #define MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_BLE "ble"
 #define MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_INTERNAL "internal"
+#define MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_HYBRID "hybrid"
 // WARNING: Change version number when adding new values!
 
 #endif  // mozilla_dom_WebAuthnEnumStrings_h
