@@ -1,0 +1,9 @@
+import("../../webrtc.gni")
+
+config("libvpx_include_config") {
+  include_dirs = [ "/media/libvpx/libvpx" ]
+}
+
+rtc_library("libvpx") {
+  public_configs = [ ":libvpx_include_config" ]
+}
