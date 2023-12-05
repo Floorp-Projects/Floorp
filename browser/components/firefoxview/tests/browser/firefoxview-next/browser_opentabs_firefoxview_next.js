@@ -3,7 +3,7 @@
 
 /* import-globals-from ../head.js */
 
-const TEST_URL1 = "about:robot";
+const TEST_URL1 = "about:robots";
 const TEST_URL2 = "https://example.org/";
 const TEST_URL3 = "about:mozilla";
 
@@ -29,6 +29,33 @@ function getCards(openTabs) {
 async function getRowsForCard(card) {
   await TestUtils.waitForCondition(() => card.tabList.rowEls.length);
   return card.tabList.rowEls;
+}
+
+async function getContextMenuPanelListForCard(card) {
+  let menuContainer = card.shadowRoot.querySelector(
+    "view-opentabs-contextmenu"
+  );
+  ok(menuContainer, "Found the menuContainer for card");
+  await TestUtils.waitForCondition(
+    () => menuContainer.panelList,
+    "Waiting for the context menu's panel-list to be rendered"
+  );
+  ok(
+    menuContainer.panelList,
+    "Found the panelList in the card's view-opentabs-contextmenu"
+  );
+  return menuContainer.panelList;
+}
+
+async function openContextMenuForItem(tabItem, card) {
+  // click on the item's button element (more menu)
+  // and wait for the panel list to be shown
+  tabItem.buttonEl.click();
+  // NOTE: menu must populate with devices data before it can be rendered
+  // so the creation of the panel-list can be async
+  let panelList = await getContextMenuPanelListForCard(card);
+  await BrowserTestUtils.waitForEvent(panelList, "shown");
+  return panelList;
 }
 
 async function moreMenuSetup(document) {
@@ -62,10 +89,12 @@ async function moreMenuSetup(document) {
 
   return [cards, rows];
 }
+
 add_task(async function test_more_menus() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
     let win = browser.ownerGlobal;
+    let shown, menuHidden;
 
     gBrowser.selectedTab = gBrowser.visibleTabs[0];
     ok(
@@ -78,21 +107,13 @@ add_task(async function test_more_menus() {
     EventUtils.synthesizeKey("KEY_Enter", {}, win);
 
     let [cards, rows] = await moreMenuSetup(document);
-
     let firstTab = rows[0];
-    let panelList = cards[0].shadowRoot.querySelector(
-      "panel-list:not([submenu])"
-    );
-
-    // click on the first list items button element (more menu)
-    // and wait for the panel list to be shown
-    let shown = BrowserTestUtils.waitForEvent(panelList, "shown");
-    firstTab.buttonEl.click();
-    await shown;
+    // Open the panel list (more menu) from the first list item
+    let panelList = await openContextMenuForItem(firstTab, cards[0]);
 
     // Close Tab menu item
     info("Panel list shown. Clicking on panel-item");
-    let panelItem = cards[0].shadowRoot.querySelector(
+    let panelItem = panelList.querySelector(
       "panel-item[data-l10n-id=fxviewtabrow-close-tab]"
     );
     ok(panelItem, "Close Tab panel item exists");
@@ -109,13 +130,14 @@ add_task(async function test_more_menus() {
     ];
 
     // close a tab via the menu
+    menuHidden = BrowserTestUtils.waitForEvent(panelList, "hidden");
     panelItem.click();
-
+    await cards[0].getUpdateComplete();
+    await menuHidden;
     await telemetryEvent(contextMenuEvent);
 
     let visibleTabs = gBrowser.visibleTabs;
     is(visibleTabs.length, 2, "Expected to now have 2 open tabs");
-    await cards[0].getUpdateComplete();
 
     // Move Tab submenu item
     firstTab = rows[0];
@@ -132,7 +154,8 @@ add_task(async function test_more_menus() {
       `Last tab in tab strip is ${TEST_URL3}`
     );
 
-    let moveTabsPanelItem = cards[0].shadowRoot.querySelector(
+    panelList = await openContextMenuForItem(firstTab, cards[0]);
+    let moveTabsPanelItem = panelList.querySelector(
       "panel-item[data-l10n-id=fxviewtabrow-move-tab]"
     );
 
@@ -140,12 +163,6 @@ add_task(async function test_more_menus() {
       "panel-list[id=move-tab-menu]"
     );
     ok(moveTabsSubmenuList, "Move tabs submenu panel list exists");
-
-    // click on the first list items button element (more menu)
-    // and wait for the panel list to be shown again
-    shown = BrowserTestUtils.waitForEvent(panelList, "shown");
-    firstTab.buttonEl.click();
-    await shown;
 
     // navigate down to the "Move tabs" submenu option, and
     // open it with the right arrow key
@@ -167,8 +184,10 @@ add_task(async function test_more_menus() {
 
     // click on the first option, which should be "Move to the end" since
     // this is the first tab
+    menuHidden = BrowserTestUtils.waitForEvent(panelList, "hidden");
     EventUtils.synthesizeKey("KEY_Enter", {});
     await telemetryEvent(contextMenuEvent);
+    await menuHidden;
 
     visibleTabs = gBrowser.visibleTabs;
     is(
@@ -197,11 +216,9 @@ add_task(async function test_more_menus() {
     );
 
     // Copy Link menu item (copyLink function that's called is a member of Viewpage.mjs)
-    shown = BrowserTestUtils.waitForEvent(panelList, "shown");
-    firstTab.buttonEl.click();
-    await shown;
-
-    panelItem = cards[0].shadowRoot.querySelector(
+    panelList = await openContextMenuForItem(firstTab, cards[0]);
+    firstTab = rows[0];
+    panelItem = panelList.querySelector(
       "panel-item[data-l10n-id=fxviewtabrow-copy-link]"
     );
     ok(panelItem, "Copy link panel item exists");
@@ -217,7 +234,11 @@ add_task(async function test_more_menus() {
       ],
     ];
 
+    menuHidden = BrowserTestUtils.waitForEvent(panelList, "hidden");
     panelItem.click();
+    info("Waiting for menuHidden");
+    await menuHidden;
+    info("Waiting for telemetryEvent");
     await telemetryEvent(contextMenuEvent);
 
     let copiedText = SpecialPowers.getClipboardData(
@@ -251,24 +272,15 @@ add_task(async function test_send_device_submenu() {
 
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
+    let shown;
 
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
     let [cards, rows] = await moreMenuSetup(document);
 
     let firstTab = rows[0];
-    let panelList = cards[0].shadowRoot.querySelector(
-      "panel-list:not([submenu])"
-    );
+    let panelList = await openContextMenuForItem(firstTab, cards[0]);
 
-    await cards[0].getUpdateComplete();
-
-    // click on the first list items button element (more menu)
-    // and wait for the panel list to be shown
-    let shown = BrowserTestUtils.waitForEvent(panelList, "shown");
-    firstTab.buttonEl.click();
-    await shown;
-
-    let sendTabPanelItem = cards[0].shadowRoot.querySelector(
+    let sendTabPanelItem = panelList.querySelector(
       "panel-item[data-l10n-id=fxviewtabrow-send-tab]"
     );
 
@@ -312,10 +324,12 @@ add_task(async function test_send_device_submenu() {
     ];
 
     // click on the first device and verify it was "sent"
+    let menuHidden = BrowserTestUtils.waitForEvent(panelList, "hidden");
     EventUtils.synthesizeKey("KEY_Enter", {});
 
     expectation.verify();
     await telemetryEvent(contextMenuEvent);
+    await menuHidden;
 
     sandbox.restore();
     TabsSetupFlowManager.resetInternalState();
