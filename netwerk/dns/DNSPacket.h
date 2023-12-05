@@ -36,17 +36,6 @@ enum TrrType {
   TRRTYPE_HTTPSSVC = nsIDNSService::RESOLVE_TYPE_HTTPSSVC,  // 65
 };
 
-enum class DNSPacketStatus : uint8_t {
-  Unknown = 0,
-  Success,
-  KeyNotAvailable,
-  KeyNotUsable,
-  EncodeError,
-  EncryptError,
-  DecodeError,
-  DecryptError,
-};
-
 class DNSPacket {
  public:
   DNSPacket() = default;
@@ -72,7 +61,6 @@ class DNSPacket {
       nsClassHashtable<nsCStringHashKey, DOHresp>& aAdditionalRecords,
       uint32_t& aTTL);
 
-  DNSPacketStatus PacketStatus() const { return mStatus; }
   void SetOriginHost(const Maybe<nsCString>& aHost) { mOriginHost = aHost; }
 
  protected:
@@ -92,17 +80,10 @@ class DNSPacket {
       nsClassHashtable<nsCStringHashKey, DOHresp>& aAdditionalRecords,
       uint32_t& aTTL, const unsigned char* aBuffer, uint32_t aLen);
 
-  void SetDNSPacketStatus(DNSPacketStatus aStatus) {
-    if (mStatus == DNSPacketStatus::Unknown ||
-        mStatus == DNSPacketStatus::Success) {
-      mStatus = aStatus;
-    }
-  }
-
   // The response buffer.
   unsigned char mResponse[MAX_SIZE]{};
   unsigned int mBodySize = 0;
-  DNSPacketStatus mStatus = DNSPacketStatus::Unknown;
+  nsresult mStatus = NS_OK;
   Maybe<nsCString> mOriginHost;
 };
 
