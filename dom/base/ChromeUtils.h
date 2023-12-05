@@ -308,14 +308,6 @@ class ChromeUtils {
       GlobalObject& aGlobal, JSRFPTarget aTarget,
       const Nullable<uint64_t>& aOverriddenFingerprintingSettings);
 
-#ifdef MOZ_WMF_CDM
-  static already_AddRefed<Promise> GetWMFContentDecryptionModuleInformation(
-      GlobalObject& aGlobal, ErrorResult& aRv);
-#endif
-
-  static already_AddRefed<Promise> GetGMPContentDecryptionModuleInformation(
-      GlobalObject& aGlobal, ErrorResult& aRv);
-
  private:
   // Number of DevTools session debugging the current process
   static std::atomic<uint32_t> sDevToolsOpenedCount;
