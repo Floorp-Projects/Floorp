@@ -145,11 +145,10 @@ bool VideoBridgeChild::DeallocShmem(ipc::Shmem& aShmem) {
   return result;
 }
 
-PTextureChild* VideoBridgeChild::AllocPTextureChild(const SurfaceDescriptor&,
-                                                    ReadLockDescriptor&,
-                                                    const LayersBackend&,
-                                                    const TextureFlags&,
-                                                    const uint64_t& aSerial) {
+PTextureChild* VideoBridgeChild::AllocPTextureChild(
+    const SurfaceDescriptor&, ReadLockDescriptor&, const LayersBackend&,
+    const TextureFlags&, const dom::ContentParentId& aContentId,
+    const uint64_t& aSerial) {
   MOZ_ASSERT(CanSend());
   return TextureClient::CreateIPDLActor();
 }
@@ -164,11 +163,12 @@ void VideoBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
 
 PTextureChild* VideoBridgeChild::CreateTexture(
     const SurfaceDescriptor& aSharedData, ReadLockDescriptor&& aReadLock,
-    LayersBackend aLayersBackend, TextureFlags aFlags, uint64_t aSerial,
+    LayersBackend aLayersBackend, TextureFlags aFlags,
+    const dom::ContentParentId& aContentId, uint64_t aSerial,
     wr::MaybeExternalImageId& aExternalImageId) {
   MOZ_ASSERT(CanSend());
   return SendPTextureConstructor(aSharedData, std::move(aReadLock),
-                                 aLayersBackend, aFlags, aSerial);
+                                 aLayersBackend, aFlags, aContentId, aSerial);
 }
 
 bool VideoBridgeChild::IsSameProcess() const {

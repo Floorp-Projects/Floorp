@@ -1704,26 +1704,36 @@ BackgroundParentImpl::RecvEnsureRDDProcessAndCreateBridge(
     return IPC_FAIL(this, "must be a content actor");
   }
 
-  RDDProcessManager* rdd = RDDProcessManager::Get();
   using Type = std::tuple<const nsresult&,
                           Endpoint<mozilla::PRemoteDecoderManagerChild>&&>;
+
+  RefPtr<ThreadsafeContentParentHandle> parent =
+      BackgroundParent::GetContentParentHandle(this);
+  if (NS_WARN_IF(!parent)) {
+    aResolver(
+        Type(NS_ERROR_NOT_AVAILABLE, Endpoint<PRemoteDecoderManagerChild>()));
+    return IPC_OK();
+  }
+
+  RDDProcessManager* rdd = RDDProcessManager::Get();
   if (!rdd) {
     aResolver(
         Type(NS_ERROR_NOT_AVAILABLE, Endpoint<PRemoteDecoderManagerChild>()));
-  } else {
-    rdd->EnsureRDDProcessAndCreateBridge(OtherPid())
-        ->Then(GetCurrentSerialEventTarget(), __func__,
-               [resolver = std::move(aResolver)](
-                   mozilla::RDDProcessManager::EnsureRDDPromise::
-                       ResolveOrRejectValue&& aValue) mutable {
-                 if (aValue.IsReject()) {
-                   resolver(Type(aValue.RejectValue(),
-                                 Endpoint<PRemoteDecoderManagerChild>()));
-                   return;
-                 }
-                 resolver(Type(NS_OK, std::move(aValue.ResolveValue())));
-               });
+    return IPC_OK();
   }
+
+  rdd->EnsureRDDProcessAndCreateBridge(OtherPid(), parent->ChildID())
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [resolver = std::move(aResolver)](
+                 mozilla::RDDProcessManager::EnsureRDDPromise::
+                     ResolveOrRejectValue&& aValue) mutable {
+               if (aValue.IsReject()) {
+                 resolver(Type(aValue.RejectValue(),
+                               Endpoint<PRemoteDecoderManagerChild>()));
+                 return;
+               }
+               resolver(Type(NS_OK, std::move(aValue.ResolveValue())));
+             });
   return IPC_OK();
 }
 
@@ -1736,13 +1746,19 @@ BackgroundParentImpl::RecvEnsureUtilityProcessAndCreateBridge(
   }
 
   base::ProcessId otherPid = OtherPid();
+  RefPtr<ThreadsafeContentParentHandle> parent =
+      BackgroundParent::GetContentParentHandle(this);
+  if (NS_WARN_IF(!parent)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  dom::ContentParentId childId = parent->ChildID();
   nsCOMPtr<nsISerialEventTarget> managerThread = GetCurrentSerialEventTarget();
   if (!managerThread) {
     return IPC_FAIL_NO_REASON(this);
   }
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "BackgroundParentImpl::RecvEnsureUtilityProcessAndCreateBridge()",
-      [aResolver, managerThread, otherPid, aLocation]() {
+      [aResolver, managerThread, otherPid, childId, aLocation]() {
         RefPtr<UtilityProcessManager> upm =
             UtilityProcessManager::GetSingleton();
         using Type =
@@ -1758,7 +1774,7 @@ BackgroundParentImpl::RecvEnsureUtilityProcessAndCreateBridge(
               }));
         } else {
           SandboxingKind sbKind = GetSandboxingKindFromLocation(aLocation);
-          upm->StartProcessForRemoteMediaDecoding(otherPid, sbKind)
+          upm->StartProcessForRemoteMediaDecoding(otherPid, childId, sbKind)
               ->Then(managerThread, __func__,
                      [resolver = aResolver](
                          mozilla::ipc::UtilityProcessManager::
