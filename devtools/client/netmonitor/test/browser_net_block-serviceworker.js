@@ -29,6 +29,9 @@ add_task(async function () {
   info("Performing the service worker request");
   await performRequests(monitor, tab, 1);
 
+  info("Open the request blocking panel and block service-workers request");
+  store.dispatch(Actions.toggleRequestBlockingPanel());
+
   info("Block the image request from the service worker");
   await addBlockedRequest("service-workers/test-image.png", monitor);
 
