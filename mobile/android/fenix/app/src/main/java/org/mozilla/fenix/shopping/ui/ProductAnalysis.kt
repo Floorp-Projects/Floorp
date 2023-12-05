@@ -7,6 +7,7 @@ package org.mozilla.fenix.shopping.ui
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -467,6 +469,8 @@ private fun ProductRecommendation(
                         url = product.imageUrl,
                         modifier = Modifier.size(productRecommendationImageSize),
                         targetSize = productRecommendationImageSize,
+                        placeholder = { ImagePlaceholder() },
+                        fallback = { ImagePlaceholder() },
                     )
 
                     Text(
@@ -502,6 +506,25 @@ private fun ProductRecommendation(
             ),
             color = FirefoxTheme.colors.textSecondary,
             style = FirefoxTheme.typography.body2,
+        )
+    }
+}
+
+@Composable
+private fun ImagePlaceholder() {
+    Box(
+        modifier = Modifier
+            .size(productRecommendationImageSize)
+            .background(
+                color = FirefoxTheme.colors.layer3,
+                shape = RoundedCornerShape(8.dp),
+            ),
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_file_type_image),
+            contentDescription = null,
+            modifier = Modifier
+                .align(Alignment.Center),
         )
     }
 }

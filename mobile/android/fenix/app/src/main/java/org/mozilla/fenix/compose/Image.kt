@@ -35,6 +35,10 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * bounds defined by the width and height.
  * @param contentScale Optional scale parameter used to determine the aspect ratio scaling to be used
  * if the bounds are a different size from the intrinsic size of the [Painter].
+ * @param placeholder composable displayed while the image is still loading.
+ * By default set to a solid color in [DefaultImagePlaceholder].
+ * @param fallback composable displayed when the image fails loading.
+ * By default set to a solid color in [DefaultImagePlaceholder].
  */
 @Composable
 @Suppress("LongParameterList")
@@ -46,9 +50,11 @@ fun Image(
     contentDescription: String? = null,
     alignment: Alignment = Alignment.Center,
     contentScale: ContentScale = ContentScale.Fit,
+    placeholder: @Composable () -> Unit = { DefaultImagePlaceholder(modifier, contentDescription) },
+    fallback: @Composable () -> Unit = { DefaultImagePlaceholder(modifier, contentDescription) },
 ) {
     if (inComposePreview) {
-        DefaultImagePlaceholder(modifier = modifier)
+        placeholder()
     } else {
         ImageLoader(
             url = url,
@@ -66,9 +72,9 @@ fun Image(
                 )
             }
 
-            WithDefaultPlaceholder(modifier, contentDescription)
+            WithPlaceholder(placeholder)
 
-            WithDefaultFallback(modifier, contentDescription)
+            WithFallback(fallback)
         }
     }
 }

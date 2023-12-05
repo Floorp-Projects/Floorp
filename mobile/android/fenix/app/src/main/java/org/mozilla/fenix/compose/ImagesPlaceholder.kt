@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.ColorPainter
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mozilla.components.support.images.compose.loader.Fallback
@@ -19,38 +20,32 @@ import mozilla.components.support.images.compose.loader.Placeholder
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
- * Renders the app default image placeholder while the image is still getting loaded.
+ * Renders the app image placeholder while the image is still getting loaded.
  *
- * @param modifier [Modifier] allowing to control among others the dimensions and shape of the image.
- * @param contentDescription Text provided to accessibility services to describe what this image represents.
- * Defaults to [null] suited for an image used only for decorative purposes and not to be read by
- * accessibility services.
+ * @param placeholder [Composable] composable used during loading.
+ * By default, set to [DefaultImagePlaceholder] in [org.mozilla.fenix.compose.Image].
  */
 @Composable
-internal fun ImageLoaderScope.WithDefaultPlaceholder(
-    modifier: Modifier,
-    contentDescription: String? = null,
+internal fun ImageLoaderScope.WithPlaceholder(
+    placeholder: @Composable () -> Unit,
 ) {
     Placeholder {
-        DefaultImagePlaceholder(modifier, contentDescription)
+        placeholder()
     }
 }
 
 /**
- * Renders the app default image placeholder if loading the image failed.
+ * Renders the app image placeholder if loading image failed.
  *
- * @param modifier [Modifier] allowing to control among others the dimensions and shape of the image.
- * @param contentDescription Text provided to accessibility services to describe what this image represents.
- * Defaults to [null] suited for an image used only for decorative purposes and not to be read by
- * accessibility services.
+ * @param fallback [Painter] composable used if loading failed.
+ * By default, set to [DefaultImagePlaceholder] in [org.mozilla.fenix.compose.Image].
  */
 @Composable
-internal fun ImageLoaderScope.WithDefaultFallback(
-    modifier: Modifier,
-    contentDescription: String? = null,
+internal fun ImageLoaderScope.WithFallback(
+    fallback: @Composable () -> Unit,
 ) {
     Fallback {
-        DefaultImagePlaceholder(modifier, contentDescription)
+        fallback()
     }
 }
 
@@ -75,7 +70,7 @@ internal fun DefaultImagePlaceholder(
 private fun DefaultImagePlaceholderPreview() {
     FirefoxTheme {
         DefaultImagePlaceholder(
-            Modifier
+            modifier = Modifier
                 .size(200.dp, 100.dp)
                 .clip(RoundedCornerShape(8.dp)),
         )
