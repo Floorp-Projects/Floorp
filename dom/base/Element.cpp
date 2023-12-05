@@ -5045,4 +5045,8 @@ EditorBase* Element::GetEditorWithoutCreation() const {
   return docShell ? docShell->GetHTMLEditorInternal() : nullptr;
 }
 
+void Element::SetHTMLUnsafe(const nsAString& aHTML) {
+  nsContentUtils::SetHTMLUnsafe(this, this, aHTML);
+}
+
 }  // namespace mozilla::dom
