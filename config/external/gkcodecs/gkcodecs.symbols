@@ -75,6 +75,7 @@ vorbis_synthesis_pcmout
 vorbis_synthesis_read
 vorbis_synthesis_restart
 #ifndef MOZ_SYSTEM_LIBVPX
+vpx_codec_build_config
 vpx_codec_control_
 vpx_codec_dec_init_ver
 vpx_codec_decode
@@ -91,6 +92,8 @@ vpx_codec_get_caps
 vpx_codec_get_cx_data
 vpx_codec_get_frame
 vpx_codec_set_frame_buffer_functions
+vpx_codec_version
+vpx_codec_version_str
 vpx_codec_vp8_cx
 vpx_codec_vp8_dx
 vpx_codec_vp9_cx

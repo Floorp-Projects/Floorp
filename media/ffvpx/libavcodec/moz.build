@@ -51,6 +51,8 @@ SOURCES += [
     'libopus.c',
     'libopusdec.c',
     'libvorbisdec.c',
+    'libvpxdec.c',
+    'libvpxenc.c',
     'log2_tab.c',
     'mpegaudio.c',
     'mpegaudiodata.c',
@@ -138,6 +140,12 @@ LOCAL_INCLUDES += [
     '/media/libopus/include',
     '/media/libvorbis',
 ]
+
+if not CONFIG["MOZ_SYSTEM_LIBVPX"]:
+  LOCAL_INCLUDES += ['/media/libvpx']
+else:
+  CXXFLAGS += CONFIG["MOZ_LIBVPX_CFLAGS"]
+  OS_LIBS += CONFIG["MOZ_LIBVPX_LIBS"]
 
 if CONFIG['MOZ_LIBAV_FFT']:
     SOURCES += [

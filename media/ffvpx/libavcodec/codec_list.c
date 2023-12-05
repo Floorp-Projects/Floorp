@@ -44,4 +44,16 @@ static const FFCodec * const codec_list[] = {
 #if CONFIG_LIBOPUS_DECODER
     &ff_libopus_decoder,
 #endif
+#if CONFIG_LIBVPX_VP8_DECODER
+    &ff_libvpx_vp8_decoder,
+#endif
+#if CONFIG_LIBVPX_VP9_DECODER
+    &ff_libvpx_vp9_decoder,
+#endif
+#if CONFIG_LIBVPX_VP8_ENCODER
+    &ff_libvpx_vp8_encoder,
+#endif
+#if CONFIG_LIBVPX_VP9_ENCODER
+    &ff_libvpx_vp9_encoder,
+#endif
     NULL };
