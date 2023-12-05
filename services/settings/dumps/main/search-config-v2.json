@@ -125,89 +125,6 @@
           "environment": { "channel": ["esr"] },
           "partnerCode": "MOZR",
           "telemetrySuffix": "esr"
-        },
-        {
-          "environment": {
-            "distributions": ["sweetlabs-b-oem1", "sweetlabs-b-r-oem1"]
-          },
-          "partnerCode": "MZSL01",
-          "urls": {
-            "search": {
-              "params": [
-                { "name": "ptag", "value": "MOZZ0000000020" },
-                { "name": "pc", "value": "{partnerCode}" },
-                {
-                  "name": "form",
-                  "searchAccessPoint": {
-                    "contextmenu": "MOZCON",
-                    "searchbar": "MOZSBR",
-                    "homepage": "MOZSPG",
-                    "addressbar": "MOZLBR",
-                    "newtab": "MOZTSB"
-                  }
-                }
-              ]
-            }
-          },
-          "telemetrySuffix": "sweetlabs1"
-        },
-        {
-          "environment": {
-            "distributions": ["sweetlabs-b-oem2", "sweetlabs-b-r-oem2"]
-          },
-          "partnerCode": "MZSL02",
-          "urls": {
-            "search": {
-              "params": [
-                { "name": "ptag", "value": "MOZZ0000000020" },
-                { "name": "pc", "value": "{partnerCode}" },
-                {
-                  "name": "form",
-                  "searchAccessPoint": {
-                    "contextmenu": "MOZCON",
-                    "searchbar": "MOZSBR",
-                    "homepage": "MOZSPG",
-                    "addressbar": "MOZLBR",
-                    "newtab": "MOZTSB"
-                  }
-                }
-              ]
-            }
-          },
-          "telemetrySuffix": "sweetlabs2"
-        },
-        {
-          "environment": {
-            "distributions": ["sweetlabs-b-oem3", "sweetlabs-b-r-oem3"]
-          },
-          "partnerCode": "MZSL03",
-          "urls": {
-            "search": {
-              "params": [
-                { "name": "ptag", "value": "MOZZ0000000020" },
-                { "name": "pc", "value": "{partnerCode}" },
-                {
-                  "name": "form",
-                  "searchAccessPoint": {
-                    "contextmenu": "MOZCON",
-                    "searchbar": "MOZSBR",
-                    "homepage": "MOZSPG",
-                    "addressbar": "MOZLBR",
-                    "newtab": "MOZTSB"
-                  }
-                }
-              ]
-            }
-          },
-          "telemetrySuffix": "sweetlabs3"
-        },
-        {
-          "environment": {
-            "distributions": ["acer-003", "acer-004"],
-            "allRegionsAndLocales": true
-          },
-          "partnerCode": "MOZX",
-          "telemetrySuffix": "acer3-4"
         }
       ]
     },
@@ -3396,14 +3313,7 @@
         },
         "partnerCode": "firefox",
         "environment": { "locales": ["cs"] }
-      },
-      "variants": [
-        {
-          "environment": { "locales": ["cs"], "distributions": ["seznam"] },
-          "partnerCode": "FF_3",
-          "telemetrySuffix": "seznam"
-        }
-      ]
+      }
     },
     {
       "recordType": "engine",
@@ -4054,25 +3964,6 @@
         {
           "environment": { "distributions": ["MozillaOnline"] },
           "default": "baidu"
-        },
-        {
-          "environment": {
-            "distributions": [
-              "sweetlabs-b-oem1",
-              "sweetlabs-b-r-oem1",
-              "sweetlabs-b-oem2",
-              "sweetlabs-b-r-oem2",
-              "sweetlabs-b-oem3",
-              "sweetlabs-b-r-oem3",
-              "acer-003",
-              "acer-004"
-            ]
-          },
-          "default": "bing"
-        },
-        {
-          "environment": { "distributions": ["seznam"] },
-          "default": "seznam-cz"
         },
         { "environment": { "distributions": ["1und1"] }, "default": "1und1" },
         { "environment": { "distributions": ["webde"] }, "default": "webde" },
