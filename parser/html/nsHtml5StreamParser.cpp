@@ -1125,8 +1125,6 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
   mTreeBuilder->setScriptingEnabled(scriptingEnabled);
   mTreeBuilder->SetPreventScriptExecution(
       !((mMode == NORMAL) && scriptingEnabled));
-  mTreeBuilder->setAllowDeclarativeShadowRoots(
-      mExecutor->GetDocument()->AllowsDeclarativeShadowRoots());
   mTokenizer->start();
   mExecutor->Start();
   mExecutor->StartReadingFromStage();
