@@ -1052,7 +1052,8 @@ void WebGLContext::Present(WebGLFramebuffer* const xrFb,
 
 void WebGLContext::CopyToSwapChain(WebGLFramebuffer* const srcFb,
                                    const layers::TextureType consumerType,
-                                   const webgl::SwapChainOptions& options) {
+                                   const webgl::SwapChainOptions& options,
+                                   base::ProcessId pid) {
   const FuncScope funcScope(*this, "<CopyToSwapChain>");
   if (IsContextLost()) return;
 
@@ -1075,7 +1076,7 @@ void WebGLContext::CopyToSwapChain(WebGLFramebuffer* const srcFb,
   // read back the WebGL framebuffer into and push it as a remote texture.
   if (useAsync && srcFb->mSwapChain.mFactory->GetConsumerType() ==
                       layers::TextureType::Unknown) {
-    PushRemoteTexture(srcFb, srcFb->mSwapChain, nullptr, options);
+    PushRemoteTexture(srcFb, srcFb->mSwapChain, nullptr, options, pid);
     return;
   }
 
@@ -1099,14 +1100,15 @@ void WebGLContext::CopyToSwapChain(WebGLFramebuffer* const srcFb,
 
   if (useAsync) {
     PushRemoteTexture(srcFb, srcFb->mSwapChain, srcFb->mSwapChain.FrontBuffer(),
-                      options);
+                      options, pid);
   }
 }
 
 bool WebGLContext::PushRemoteTexture(WebGLFramebuffer* fb,
                                      gl::SwapChain& swapChain,
                                      std::shared_ptr<gl::SharedSurface> surf,
-                                     const webgl::SwapChainOptions& options) {
+                                     const webgl::SwapChainOptions& options,
+                                     base::ProcessId pid) {
   const auto onFailure = [&]() -> bool {
     GenerateWarning("Remote texture creation failed.");
     LoseContext();
@@ -1120,11 +1122,12 @@ bool WebGLContext::PushRemoteTexture(WebGLFramebuffer* fb,
   if (!mRemoteTextureOwner) {
     // Ensure we have a remote texture owner client for WebGLParent.
     const auto* outOfProcess = mHost ? mHost->mOwnerData.outOfProcess : nullptr;
-    if (!outOfProcess) {
+    if (outOfProcess) {
+      pid = outOfProcess->OtherPid();
+    } else if (pid == base::kInvalidProcessId) {
       return onFailure();
     }
-    mRemoteTextureOwner =
-        MakeRefPtr<layers::RemoteTextureOwnerClient>(outOfProcess->OtherPid());
+    mRemoteTextureOwner = MakeRefPtr<layers::RemoteTextureOwnerClient>(pid);
   }
 
   layers::RemoteTextureOwnerId ownerId = options.remoteTextureOwnerId;
