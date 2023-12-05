@@ -111,18 +111,34 @@ void VideoBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
   mClosed = true;
 
   mCompositorThreadHolder = nullptr;
-  ReleaseCompositorThread();
 }
 
 /* static */
 void VideoBridgeParent::Shutdown() {
+  CompositorThread()->Dispatch(NS_NewRunnableFunction(
+      "VideoBridgeParent::Shutdown",
+      []() -> void { VideoBridgeParent::ShutdownInternal(); }));
+}
+
+/* static */
+void VideoBridgeParent::ShutdownInternal() {
   sVideoBridgeParentShutDown = true;
 
-  auto videoBridgeFromProcess = sVideoBridgeFromProcess.Lock();
-  for (auto& bridgeParent : *videoBridgeFromProcess) {
-    if (bridgeParent) {
-      bridgeParent->ReleaseCompositorThread();
+  nsTArray<RefPtr<VideoBridgeParent>> bridges;
+
+  // We don't want to hold the sVideoBridgeFromProcess lock when the
+  // VideoBridgeParent objects are closed without holding a reference to them.
+  {
+    auto videoBridgeFromProcess = sVideoBridgeFromProcess.Lock();
+    for (auto& bridgeParent : *videoBridgeFromProcess) {
+      if (bridgeParent) {
+        bridges.AppendElement(bridgeParent);
+      }
     }
+  }
+
+  for (auto& bridge : bridges) {
+    bridge->Close();
   }
 }
 
@@ -147,10 +163,6 @@ void VideoBridgeParent::DoUnregisterExternalImages() {
       texture->MaybeDestroyRenderTexture();
     }
   }
-}
-
-void VideoBridgeParent::ReleaseCompositorThread() {
-  mCompositorThreadHolder = nullptr;
 }
 
 PTextureParent* VideoBridgeParent::AllocPTextureParent(

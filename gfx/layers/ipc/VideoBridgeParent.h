@@ -69,8 +69,8 @@ class VideoBridgeParent final : public PVideoBridgeParent,
 
   explicit VideoBridgeParent(VideoBridgeSource aSource);
   void Bind(Endpoint<PVideoBridgeParent>&& aEndpoint);
+  static void ShutdownInternal();
 
-  void ReleaseCompositorThread();
   void DoUnregisterExternalImages();
 
   RefPtr<CompositorThreadHolder> mCompositorThreadHolder;
