@@ -304,7 +304,11 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 skip-if = ["true"] # Bug 1814093
 
 ["browser_dbg-windowless-service-workers-reload.js"]
-skip-if = ["!serviceworker_e10s"] # parent intercept mode required.
+skip-if = [
+  "!serviceworker_e10s", # parent intercept mode required.
+  "os == 'linux'", # Bug 1767716
+  "win11_2009 && !debug", # Bug 1767716
+]
 
 ["browser_dbg-windowless-service-workers.js"]
 skip-if = [
