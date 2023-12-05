@@ -77,6 +77,7 @@ function convert_srcs_to_project_files {
   local source_list=$(grep -E '(\.c|\.h|\.S|\.s|\.asm)$' $1)
 
   # Remove vpx_config.c.
+  # The platform-specific vpx_config.c will be added into in moz.build later.
   source_list=$(echo "$source_list" | grep -v 'vpx_config\.c')
 
   # Remove include-only asm files (no object code emitted)
