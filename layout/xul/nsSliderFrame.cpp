@@ -1063,6 +1063,11 @@ void nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent) {
     return;
   }
 
+  if (aEvent->AsMouseEvent() &&
+      aEvent->AsMouseEvent()->mButton != MouseButton::ePrimary) {
+    return;
+  }
+
   nsIFrame* scrollbarBox = Scrollbar();
   nsContainerFrame* scrollFrame = scrollbarBox->GetParent();
   if (!scrollFrame) {
