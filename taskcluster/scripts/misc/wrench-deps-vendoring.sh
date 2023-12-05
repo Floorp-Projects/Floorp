@@ -12,7 +12,7 @@ cd $GECKO_PATH
 export PATH=$PATH:$MOZ_FETCHES_DIR/rustc/bin:$HOME/.cargo/bin
 cd gfx/wr/
 mkdir .cargo
-cargo vendor --sync ./Cargo.toml > .cargo/config
+cargo vendor --locked --sync ./Cargo.toml > .cargo/config
 mkdir wrench-deps
 mv vendor .cargo wrench-deps/
 mkdir wrench-deps/cargo-apk
