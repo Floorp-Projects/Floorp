@@ -158,7 +158,7 @@ class ArrayBufferDataStream {
     // UniFFI Pointers are **always** 8 bytes long. That is enforced
     // by the C++ and Rust Scaffolding code.
     readPointerSuggestStore() {
-        const pointerId = 2; // suggest:SuggestStore
+        const pointerId = 1; // suggest:SuggestStore
         const res = UniFFIScaffolding.readPointer(pointerId, this.dataView.buffer, this.pos);
         this.pos += 8;
         return res;
@@ -168,7 +168,7 @@ class ArrayBufferDataStream {
     // UniFFI Pointers are **always** 8 bytes long. That is enforced
     // by the C++ and Rust Scaffolding code.
     writePointerSuggestStore(value) {
-        const pointerId = 2; // suggest:SuggestStore
+        const pointerId = 1; // suggest:SuggestStore
         UniFFIScaffolding.writePointer(pointerId, value, this.dataView.buffer, this.pos);
         this.pos += 8;
     }
@@ -464,29 +464,20 @@ export class SuggestStore {
                 throw e;
             }
             return UniFFIScaffolding.callSync(
-                18, // suggest:uniffi_suggest_fn_constructor_suggeststore_new
+                4, // suggest:uniffi_suggest_fn_constructor_suggeststore_new
                 FfiConverterString.lower(path),
                 FfiConverterOptionalTypeRemoteSettingsConfig.lower(settingsConfig),
             )
         }
         return handleRustResult(functionCall(), liftResult, liftError);}
 
-    query(query) {
-        const liftResult = (result) => FfiConverterSequenceTypeSuggestion.lift(result);
+    clear() {
+        const liftResult = (result) => undefined;
         const liftError = (data) => FfiConverterTypeSuggestApiError.lift(data);
         const functionCall = () => {
-            try {
-                FfiConverterTypeSuggestionQuery.checkType(query)
-            } catch (e) {
-                if (e instanceof UniFFITypeError) {
-                    e.addItemDescriptionPart("query");
-                }
-                throw e;
-            }
             return UniFFIScaffolding.callAsync(
-                19, // suggest:uniffi_suggest_fn_method_suggeststore_query
+                5, // suggest:uniffi_suggest_fn_method_suggeststore_clear
                 FfiConverterTypeSuggestStore.lower(this),
-                FfiConverterTypeSuggestionQuery.lower(query),
             )
         }
         try {
@@ -494,18 +485,6 @@ export class SuggestStore {
         }  catch (error) {
             return Promise.reject(error)
         }
-    }
-
-    interrupt() {
-        const liftResult = (result) => undefined;
-        const liftError = null;
-        const functionCall = () => {
-            return UniFFIScaffolding.callSync(
-                20, // suggest:uniffi_suggest_fn_method_suggeststore_interrupt
-                FfiConverterTypeSuggestStore.lower(this),
-            )
-        }
-        return handleRustResult(functionCall(), liftResult, liftError);
     }
 
     ingest(constraints) {
@@ -521,7 +500,7 @@ export class SuggestStore {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                21, // suggest:uniffi_suggest_fn_method_suggeststore_ingest
+                6, // suggest:uniffi_suggest_fn_method_suggeststore_ingest
                 FfiConverterTypeSuggestStore.lower(this),
                 FfiConverterTypeSuggestIngestionConstraints.lower(constraints),
             )
@@ -533,13 +512,34 @@ export class SuggestStore {
         }
     }
 
-    clear() {
+    interrupt() {
         const liftResult = (result) => undefined;
+        const liftError = null;
+        const functionCall = () => {
+            return UniFFIScaffolding.callSync(
+                7, // suggest:uniffi_suggest_fn_method_suggeststore_interrupt
+                FfiConverterTypeSuggestStore.lower(this),
+            )
+        }
+        return handleRustResult(functionCall(), liftResult, liftError);
+    }
+
+    query(query) {
+        const liftResult = (result) => FfiConverterSequenceTypeSuggestion.lift(result);
         const liftError = (data) => FfiConverterTypeSuggestApiError.lift(data);
         const functionCall = () => {
+            try {
+                FfiConverterTypeSuggestionQuery.checkType(query)
+            } catch (e) {
+                if (e instanceof UniFFITypeError) {
+                    e.addItemDescriptionPart("query");
+                }
+                throw e;
+            }
             return UniFFIScaffolding.callAsync(
-                22, // suggest:uniffi_suggest_fn_method_suggeststore_clear
+                8, // suggest:uniffi_suggest_fn_method_suggeststore_query
                 FfiConverterTypeSuggestStore.lower(this),
+                FfiConverterTypeSuggestionQuery.lower(query),
             )
         }
         try {
@@ -1407,7 +1407,7 @@ export function rawSuggestionUrlMatches(rawUrl,url) {
                 throw e;
             }
             return UniFFIScaffolding.callSync(
-                23, // suggest:uniffi_suggest_fn_func_raw_suggestion_url_matches
+                9, // suggest:uniffi_suggest_fn_func_raw_suggestion_url_matches
                 FfiConverterString.lower(rawUrl),
                 FfiConverterString.lower(url),
             )
