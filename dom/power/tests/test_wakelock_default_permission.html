@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test Screen Wake Lock Permission Granted by Default</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    add_task(async function my_test() {
+      const status = await navigator.permissions.query({name:'screen-wake-lock'});
+      is(status.state, "granted", "Permission is granted by default");
+    });
+  </script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

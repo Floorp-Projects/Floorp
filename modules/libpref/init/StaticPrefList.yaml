@@ -3467,6 +3467,12 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
+# Prevent errors when using set_permission from permissions.sys.mjs
+- name: dom.screenwakelock.testing
+  type: bool
+  value: false
+  mirror: always
+
 # Whether to enable the JavaScript start-up cache. This causes one of the first
 # execution to record the bytecode of the JavaScript function used, and save it
 # in the existing cache entry. On the following loads of the same script, the

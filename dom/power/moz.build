@@ -32,6 +32,8 @@ UNIFIED_SOURCES += [
     "WakeLockSentinel.cpp",
 ]
 
+MOCHITEST_MANIFESTS += ["tests/mochitest.toml"]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
