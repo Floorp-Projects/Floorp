@@ -314,6 +314,11 @@ pub extern "C" fn wgpu_server_device_drop(global: &Global, self_id: id::DeviceId
     gfx_select!(self_id => global.device_drop(self_id))
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn wgpu_server_set_device_lost_callback(global: &Global, self_id: id::DeviceId, callback: wgc::device::DeviceLostClosureC) {
+    gfx_select!(self_id => global.device_set_device_lost_closure(self_id, wgc::device::DeviceLostClosure::from_c(callback)));
+}
+
 impl ShaderModuleCompilationMessage {
     fn set_error(&mut self, error: &CreateShaderModuleError, source: &str) {
         // The WebGPU spec says that if the message doesn't point to a particular position in
