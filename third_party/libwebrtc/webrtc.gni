@@ -286,7 +286,7 @@ declare_args() {
   # Disable these to not build components which can be externally provided.
   rtc_build_json = !build_with_mozilla
   rtc_build_libsrtp = !build_with_mozilla
-  rtc_build_libvpx = !build_with_mozilla
+  rtc_build_libvpx = true
   rtc_libvpx_build_vp9 = true
   rtc_build_opus = !build_with_mozilla
   rtc_build_ssl = !build_with_mozilla
