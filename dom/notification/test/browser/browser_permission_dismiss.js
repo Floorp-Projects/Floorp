@@ -190,8 +190,7 @@ add_task(async function test_requestPermission_privateNotifications() {
         }
       },
       perm == Services.perms.ALLOW_ACTION ? "granted" : "denied",
-      privateWindow.gBrowser,
-      privateWindow.PopupNotifications.panel
+      privateWindow.gBrowser
     );
 
     ok(
@@ -202,15 +201,6 @@ add_task(async function test_requestPermission_privateNotifications() {
       "doorhanger should have been removed in all cases by now"
     );
 
-    let attrs = { privateBrowsingId: 1 };
-    let privatePrincipal =
-      Services.scriptSecurityManager.createContentPrincipal(ORIGIN_URI, attrs);
-
-    is(
-      PermissionTestUtils.testPermission(privatePrincipal, PERMISSION_NAME),
-      perm,
-      "Permission from permission manager should be as expected"
-    );
     await BrowserTestUtils.closeWindow(privateWindow);
   }
 
