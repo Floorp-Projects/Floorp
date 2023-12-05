@@ -406,7 +406,7 @@ class TabManagerClass {
    * @returns {Promise}
    *     Promise that resolves when the given tab has been selected.
    */
-  selectTab(tab) {
+  async selectTab(tab) {
     if (!tab) {
       return Promise.resolve();
     }
@@ -420,7 +420,17 @@ class TabManagerClass {
 
     const selected = new lazy.EventPromise(ownerWindow, "TabSelect");
     tabBrowser.selectedTab = tab;
-    return selected;
+
+    await selected;
+
+    // Sometimes at that point window is not focused.
+    if (Services.focus.activeWindow != ownerWindow) {
+      const activated = new lazy.EventPromise(ownerWindow, "activate");
+      ownerWindow.focus();
+      return activated;
+    }
+
+    return Promise.resolve();
   }
 
   supportsTabs() {
