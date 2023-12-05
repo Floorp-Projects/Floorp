@@ -720,10 +720,9 @@ function BuildConditionSandbox(aURL) {
   sandbox.transparentScrollbars = Services.appinfo.widgetToolkit == "gtk";
 
   if (sandbox.Android) {
+    // This is currently used to distinguish Android 4.0.3 (SDK version 15)
+    // and later from Android 2.x
     sandbox.AndroidVersion = Services.sysinfo.getPropertyAsInt32("version");
-
-    // Some reftests need extra fuzz on the Android 13 Pixel 5 devices.
-    sandbox.Android13 = sandbox.AndroidVersion == "33";
 
     sandbox.emulator = readGfxInfo(gfxInfo, "adapterDeviceID").includes(
       "Android Emulator"
@@ -754,12 +753,16 @@ function BuildConditionSandbox(aURL) {
     "vendorSub",
     "product",
     "productSub",
+    "platform",
     "oscpu",
     "language",
     "misc",
   ];
   sandbox.http = new sandbox.Object();
   httpProps.forEach(x => (sandbox.http[x] = hh[x]));
+
+  // set to specific Android13 version (Pixel 5 in CI)
+  sandbox.Android13 = sandbox.Android && sandbox.http.platform == "Android 13";
 
   // Set OSX to be the Mac OS X version, as an integer, or undefined
   // for other platforms.  The integer is formed by 100 times the
