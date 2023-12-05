@@ -135,6 +135,7 @@ PREFS_GETTERS[Ci.nsIPrefBranch.PREF_BOOL] = (prefs, name) =>
 // session)
 const PREFS_UNIMPORTANT_LOCKED = [
   "dom.postMessage.sharedArrayBuffer.bypassCOOP_COEP.insecure.enabled",
+  "extensions.backgroundServiceWorkerEnabled.enabled",
   "privacy.restrict3rdpartystorage.url_decorations",
 ];
 
