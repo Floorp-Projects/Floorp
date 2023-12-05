@@ -186,7 +186,7 @@ static void vaapitest(const char* aRenderDevicePath) {
         } else if (!strncmp(profstr, "AV1", 3)) {
           codecs |= CODEC_HW_AV1;
         } else {
-          record_warning("VA-API test unknown profile.\n");
+          record_warning("VA-API test unknown profile.");
         }
         vaDestroyConfig(display, config);
         foundProfile = true;
