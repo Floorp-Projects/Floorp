@@ -12,10 +12,10 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.IBinder
+import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import androidx.work.Worker
 import androidx.work.WorkerParameters
 import mozilla.components.service.nimbus.messaging.FxNimbusMessaging
 import mozilla.components.service.nimbus.messaging.Message
@@ -32,21 +32,21 @@ const val CLICKED_MESSAGE_ID = "clickedMessageId"
 const val DISMISSED_MESSAGE_ID = "dismissedMessageId"
 
 /**
- * Background [Worker] that polls Nimbus for available [Message]s at a given interval.
+ * Background [CoroutineWorker] that polls Nimbus for available [Message]s at a given interval.
  * A [Notification] will be created using the configuration of the next highest priority [Message]
  * if it has not already been displayed.
  */
 class MessageNotificationWorker(
     context: Context,
     workerParameters: WorkerParameters,
-) : Worker(context, workerParameters) {
+) : CoroutineWorker(context, workerParameters) {
 
     @SuppressWarnings("ReturnCount")
-    override fun doWork(): Result {
+    override suspend fun doWork(): Result {
         val context = applicationContext
 
         val messagingStorage = context.components.analytics.messagingStorage
-        val messages = runBlockingIncrement { messagingStorage.getMessages() }
+        val messages = messagingStorage.getMessages()
         val nextMessage =
             messagingStorage.getNextMessage(FenixMessageSurfaceId.NOTIFICATION, messages)
                 ?: return Result.success()
@@ -67,7 +67,7 @@ class MessageNotificationWorker(
                 currentBootUniqueIdentifier,
             )
 
-        runBlockingIncrement { nimbusMessagingController.onMessageDisplayed(updatedMessage) }
+        nimbusMessagingController.onMessageDisplayed(updatedMessage)
 
         context.components.notificationsDelegate.notify(
             MESSAGE_TAG,
@@ -137,7 +137,7 @@ class MessageNotificationWorker(
         private const val MESSAGE_WORK_NAME = "org.mozilla.fenix.message.work"
 
         /**
-         * Initialize the [Worker] to begin polling Nimbus.
+         * Initialize the [CoroutineWorker] to begin polling Nimbus.
          */
         fun setMessageNotificationWorker(context: Context) {
             val messaging = FxNimbusMessaging.features.messaging
