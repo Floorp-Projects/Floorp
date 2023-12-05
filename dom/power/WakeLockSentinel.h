@@ -10,6 +10,7 @@
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/dom/WakeLockBinding.h"
 
 namespace mozilla::dom {
@@ -23,7 +24,9 @@ namespace mozilla::dom {
 class WakeLockSentinel final : public DOMEventTargetHelper {
  public:
   WakeLockSentinel(nsIGlobalObject* aOwnerWindow, WakeLockType aType)
-      : DOMEventTargetHelper(aOwnerWindow), mType(aType) {}
+      : DOMEventTargetHelper(aOwnerWindow),
+        mType(aType),
+        mCreationTime(TimeStamp::Now()) {}
 
  protected:
   ~WakeLockSentinel() {
@@ -67,8 +70,8 @@ class WakeLockSentinel final : public DOMEventTargetHelper {
    */
   bool mHoldsActualLock = false;
 
-  // Time when this object was created / the wake lock acquired.
-  TimeStamp mAcquireTime;
+  // Time when this object was created
+  TimeStamp mCreationTime;
 };
 
 }  // namespace mozilla::dom
