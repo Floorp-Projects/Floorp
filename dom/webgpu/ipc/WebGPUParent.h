@@ -126,6 +126,9 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvGenerateError(Maybe<RawId> aDeviceId, dom::GPUErrorFilter,
                                    const nsCString& message);
 
+  ipc::IPCResult RecvSetDeviceLostCallback(
+      RawId aDeviceId, std::function<void(mozilla::void_t)>&& aResolver);
+
   ipc::IPCResult GetFrontBufferSnapshot(
       IProtocol* aProtocol, const layers::RemoteTextureOwnerId& aOwnerId,
       Maybe<Shmem>& aShmem, gfx::IntSize& aSize);
@@ -168,6 +171,8 @@ class WebGPUParent final : public PWebGPUParent {
  private:
   static void MapCallback(ffi::WGPUBufferMapAsyncStatus aStatus,
                           uint8_t* aUserData);
+  static void DeviceLostCallback(uint8_t* aUserData, uint8_t aReason,
+                                 const char* aMessage);
   void DeallocBufferShmem(RawId aBufferId);
 
   void RemoveExternalTexture(RawId aTextureId);
