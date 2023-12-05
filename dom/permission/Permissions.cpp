@@ -68,6 +68,7 @@ CreatePermissionStatus(JSContext* aCx, JS::Handle<JSObject*> aPermission,
     case PermissionName::Notifications:
     case PermissionName::Push:
     case PermissionName::Persistent_storage:
+    case PermissionName::Screen_wake_lock:
       return PermissionStatus::Create(aWindow, permission.mName);
 
     default:

@@ -107,8 +107,8 @@ bool HasDefaultPref(const nsACString& aType) {
   // A list of permissions that can have a fallback default permission
   // set under the permissions.default.* pref.
   static const nsLiteralCString kPermissionsWithDefaults[] = {
-      "camera"_ns, "microphone"_ns, "geo"_ns, "desktop-notification"_ns,
-      "shortcuts"_ns};
+      "camera"_ns,    "microphone"_ns,      "geo"_ns, "desktop-notification"_ns,
+      "shortcuts"_ns, "screen-wake-lock"_ns};
 
   if (!aType.IsEmpty()) {
     for (const auto& perm : kPermissionsWithDefaults) {
