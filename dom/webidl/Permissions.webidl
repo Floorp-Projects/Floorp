@@ -13,8 +13,7 @@ enum PermissionName {
   "push",
   "persistent-storage",
   "midi",
-  "storage-access", // Defined in https://privacycg.github.io/storage-access/#permissions-integration
-  "screen-wake-lock" // Defined in https://w3c.github.io/screen-wake-lock/
+  "storage-access" // Defined in https://privacycg.github.io/storage-access/#permissions-integration
 };
 
 [GenerateInit]

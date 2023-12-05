@@ -1627,7 +1627,6 @@ STATIC_ATOMS = [
     Atom("onbeginEvent", "onbeginEvent"),
     Atom("onend", "onend"),
     Atom("onendEvent", "onendEvent"),
-    Atom("onrelease", "onrelease"),
     Atom("onrepeat", "onrepeat"),
     Atom("onrepeatEvent", "onrepeatEvent"),
     Atom("repeatCount", "repeatCount"),

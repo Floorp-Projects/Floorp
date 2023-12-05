@@ -4,19 +4,15 @@
 "use strict";
 
 Promise.resolve().then(async () => {
-  test_driver.set_test_context(window.parent);
-  await test_driver.set_permission({ name: 'screen-wake-lock' }, 'granted');
-
   try {
+    await test_driver.set_permission(
+        { name: 'screen-wake-lock' }, 'granted');
+
     const wakeLock = await navigator.wakeLock.request("screen");
-    window.parent.postMessage({ type: 'availability-result', enabled: true }, "*");
     await wakeLock.release();
+    window.parent.postMessage({ type: 'availability-result', enabled: true }, "*");
   } catch (e) {
-    if (e instanceof DOMException && e.name === "NotAllowedError") {
-      window.parent.postMessage({ type: 'availability-result', enabled: false }, "*");
-    } else {
-      throw e;
-    }
+    window.parent.postMessage({ type: 'availability-result', enabled: false }, "*");
   }
 });
 </script>

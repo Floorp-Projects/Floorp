@@ -19,7 +19,9 @@ XPCOM_MANIFESTS += [
     "components.conf",
 ]
 
-EXPORTS.mozilla.dom += ["WakeLock.h", "WakeLockJS.h", "WakeLockSentinel.h"]
+EXPORTS.mozilla.dom += [
+    "WakeLock.h",
+]
 
 EXPORTS.mozilla.dom.power += [
     "PowerManagerService.h",
@@ -28,11 +30,7 @@ EXPORTS.mozilla.dom.power += [
 UNIFIED_SOURCES += [
     "PowerManagerService.cpp",
     "WakeLock.cpp",
-    "WakeLockJS.cpp",
-    "WakeLockSentinel.cpp",
 ]
-
-MOCHITEST_MANIFESTS += ["tests/mochitest.toml"]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
