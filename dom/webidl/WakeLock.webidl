@@ -9,6 +9,7 @@
 
 [SecureContext, Exposed=(Window)]
 interface WakeLock {
+  [Throws]
   Promise<WakeLockSentinel> request(optional WakeLockType type = "screen");
 };
 

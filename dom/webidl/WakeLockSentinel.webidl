@@ -11,7 +11,7 @@
 interface WakeLockSentinel : EventTarget {
   readonly attribute boolean released;
   readonly attribute WakeLockType type;
-  [BinaryName="releaseLock"]
+  [BinaryName="releaseLock", Throws]
   Promise<undefined> release();
   attribute EventHandler onrelease;
 };

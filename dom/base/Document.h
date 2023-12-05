@@ -3540,6 +3540,8 @@ class Document : public nsINode,
 
   nsTHashSet<RefPtr<WakeLockSentinel>>& ActiveWakeLocks(WakeLockType aType);
 
+  void UnlockAllWakeLocks(WakeLockType aType);
+
   // ParentNode
   nsIHTMLCollection* Children();
   uint32_t ChildElementCount();
