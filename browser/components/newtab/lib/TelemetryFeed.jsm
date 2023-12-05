@@ -83,7 +83,6 @@ const STRUCTURED_INGESTION_ENDPOINT_PREF =
 // List of namespaces for the structured ingestion system.
 // They are defined in https://github.com/mozilla-services/mozilla-pipeline-schemas
 const STRUCTURED_INGESTION_NAMESPACE_AS = "activity-stream";
-const STRUCTURED_INGESTION_NAMESPACE_MS = "messaging-system";
 const STRUCTURED_INGESTION_NAMESPACE_CS = "contextual-services";
 
 // Used as the missing value for timestamps in the session ping
@@ -1033,13 +1032,6 @@ class TelemetryFeed {
     if (this.telemetryEnabled) {
       lazy.Telemetry.submitGleanPingForPing({ ...ping, pingType });
     }
-
-    this.sendStructuredIngestionEvent(
-      ping,
-      STRUCTURED_INGESTION_NAMESPACE_MS,
-      pingType,
-      "1"
-    );
   }
 
   /**

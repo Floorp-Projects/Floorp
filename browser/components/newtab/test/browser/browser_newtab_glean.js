@@ -3,6 +3,8 @@
 
 "use strict";
 
+requestLongerTimeout(10);
+
 const TELEMETRY_PREF =
   "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar";
 
