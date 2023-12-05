@@ -6,7 +6,6 @@
 
 #include "PersistentBufferProvider.h"
 
-#include "mozilla/layers/RemoteTextureMap.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -97,148 +96,65 @@ PersistentBufferProviderBasic::Create(gfx::IntSize aSize,
   return provider.forget();
 }
 
-static already_AddRefed<TextureClient> CreateTexture(
-    KnowsCompositor* aKnowsCompositor, gfx::SurfaceFormat aFormat,
-    gfx::IntSize aSize, bool aWillReadFrequently = false,
-    Maybe<RemoteTextureOwnerId> aRemoteTextureOwnerId = {}) {
-  TextureAllocationFlags flags = ALLOC_DEFAULT;
-  if (aWillReadFrequently) {
-    flags = TextureAllocationFlags(flags | ALLOC_DO_NOT_ACCELERATE);
-  }
-  if (aRemoteTextureOwnerId) {
-    flags = TextureAllocationFlags(flags | ALLOC_FORCE_REMOTE);
-  }
-  RefPtr<TextureClient> tc = TextureClient::CreateForDrawing(
-      aKnowsCompositor, aFormat, aSize, BackendSelector::Canvas,
-      TextureFlags::DEFAULT | TextureFlags::NON_BLOCKING_READ_LOCK, flags);
-  if (tc && aRemoteTextureOwnerId) {
-    if (TextureData* td = tc->GetInternalData()) {
-      td->SetRemoteTextureOwnerId(*aRemoteTextureOwnerId);
-    }
-  }
-  return tc.forget();
-}
-
-// static
-already_AddRefed<PersistentBufferProviderAccelerated>
-PersistentBufferProviderAccelerated::Create(gfx::IntSize aSize,
-                                            gfx::SurfaceFormat aFormat,
-                                            KnowsCompositor* aKnowsCompositor) {
-  if (!DrawTargetWebgl::CanCreate(aSize, aFormat)) {
-    return nullptr;
-  }
-
-  if (!aKnowsCompositor || !aKnowsCompositor->GetTextureForwarder() ||
-      !aKnowsCompositor->GetTextureForwarder()->IPCOpen()) {
-    return nullptr;
-  }
-
-  auto remoteTextureOwnerId = RemoteTextureOwnerId::GetNext();
-
-  RefPtr<TextureClient> texture = CreateTexture(
-      aKnowsCompositor, aFormat, aSize, false, Some(remoteTextureOwnerId));
-  if (!texture) {
-    return nullptr;
-  }
-
-  RefPtr<PersistentBufferProviderAccelerated> provider =
-      new PersistentBufferProviderAccelerated(texture);
-  return provider.forget();
-}
-
 PersistentBufferProviderAccelerated::PersistentBufferProviderAccelerated(
-    const RefPtr<TextureClient>& aTexture)
-    : mTexture(aTexture) {
+    DrawTarget* aDt)
+    : PersistentBufferProviderBasic(aDt) {
   MOZ_COUNT_CTOR(PersistentBufferProviderAccelerated);
+  MOZ_ASSERT(aDt->GetBackendType() == BackendType::WEBGL);
 }
 
 PersistentBufferProviderAccelerated::~PersistentBufferProviderAccelerated() {
   MOZ_COUNT_DTOR(PersistentBufferProviderAccelerated);
-  Destroy();
 }
 
-void PersistentBufferProviderAccelerated::Destroy() {
-  mSnapshot = nullptr;
-  mDrawTarget = nullptr;
+inline gfx::DrawTargetWebgl*
+PersistentBufferProviderAccelerated::GetDrawTargetWebgl() const {
+  return static_cast<gfx::DrawTargetWebgl*>(mDrawTarget.get());
+}
 
-  if (mTexture) {
-    if (mTexture->IsLocked()) {
-      MOZ_ASSERT(false);
-      mTexture->Unlock();
-    }
-    mTexture = nullptr;
-  }
+Maybe<layers::SurfaceDescriptor>
+PersistentBufferProviderAccelerated::GetFrontBuffer() {
+  return GetDrawTargetWebgl()->GetFrontBuffer();
 }
 
 already_AddRefed<gfx::DrawTarget>
 PersistentBufferProviderAccelerated::BorrowDrawTarget(
     const gfx::IntRect& aPersistedRect) {
-  if (!mDrawTarget) {
-    if (!mTexture->Lock(OpenMode::OPEN_READ_WRITE)) {
-      return nullptr;
-    }
-    mDrawTarget = mTexture->BorrowDrawTarget();
-    if (mDrawTarget) {
-      mDrawTarget->ClearRect(Rect(0, 0, 0, 0));
-      if (!mDrawTarget->IsValid()) {
-        mDrawTarget = nullptr;
-      }
-    }
-  }
-  return do_AddRef(mDrawTarget);
+  GetDrawTargetWebgl()->BeginFrame(aPersistedRect);
+  return PersistentBufferProviderBasic::BorrowDrawTarget(aPersistedRect);
 }
 
 bool PersistentBufferProviderAccelerated::ReturnDrawTarget(
     already_AddRefed<gfx::DrawTarget> aDT) {
-  {
-    RefPtr<gfx::DrawTarget> dt(aDT);
-    MOZ_ASSERT(mDrawTarget == dt);
-    if (!mDrawTarget) {
-      return false;
-    }
-    mDrawTarget = nullptr;
-  }
-  mTexture->Unlock();
-  return true;
+  bool result = PersistentBufferProviderBasic::ReturnDrawTarget(std::move(aDT));
+  GetDrawTargetWebgl()->EndFrame();
+  return result;
 }
 
 already_AddRefed<gfx::SourceSurface>
 PersistentBufferProviderAccelerated::BorrowSnapshot(gfx::DrawTarget* aTarget) {
-  if (mDrawTarget) {
-    MOZ_ASSERT(mTexture->IsLocked());
-  } else {
-    if (mTexture->IsLocked()) {
-      MOZ_ASSERT(false);
-      return nullptr;
-    }
-    if (!mTexture->Lock(OpenMode::OPEN_READ)) {
-      return nullptr;
-    }
-  }
-  mSnapshot = mTexture->BorrowSnapshot();
+  mSnapshot = GetDrawTargetWebgl()->GetOptimizedSnapshot(aTarget);
   return do_AddRef(mSnapshot);
 }
 
-void PersistentBufferProviderAccelerated::ReturnSnapshot(
-    already_AddRefed<gfx::SourceSurface> aSnapshot) {
-  RefPtr<SourceSurface> snapshot = aSnapshot;
-  MOZ_ASSERT(!snapshot || snapshot == mSnapshot);
-  mSnapshot = nullptr;
-  if (!mDrawTarget) {
-    mTexture->Unlock();
-  }
-}
-
-Maybe<SurfaceDescriptor> PersistentBufferProviderAccelerated::GetFrontBuffer() {
-  SurfaceDescriptor desc;
-  if (mTexture->GetInternalData()->Serialize(desc)) {
-    return Some(desc);
-  }
-  return Nothing();
-}
-
 bool PersistentBufferProviderAccelerated::RequiresRefresh() const {
-  return mTexture->GetInternalData()->RequiresRefresh();
+  return GetDrawTargetWebgl()->RequiresRefresh();
+}
+
+void PersistentBufferProviderAccelerated::OnMemoryPressure() {
+  GetDrawTargetWebgl()->OnMemoryPressure();
+}
+
+static already_AddRefed<TextureClient> CreateTexture(
+    KnowsCompositor* aKnowsCompositor, gfx::SurfaceFormat aFormat,
+    gfx::IntSize aSize, bool aWillReadFrequently) {
+  TextureAllocationFlags flags = ALLOC_DEFAULT;
+  if (aWillReadFrequently) {
+    flags = TextureAllocationFlags(flags | ALLOC_DO_NOT_ACCELERATE);
+  }
+  return TextureClient::CreateForDrawing(
+      aKnowsCompositor, aFormat, aSize, BackendSelector::Canvas,
+      TextureFlags::DEFAULT | TextureFlags::NON_BLOCKING_READ_LOCK, flags);
 }
 
 // static
@@ -282,6 +198,7 @@ PersistentBufferProviderShared::PersistentBufferProviderShared(
     gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
     KnowsCompositor* aKnowsCompositor, RefPtr<TextureClient>& aTexture,
     bool aWillReadFrequently)
+
     : mSize(aSize),
       mFormat(aFormat),
       mKnowsCompositor(aKnowsCompositor),

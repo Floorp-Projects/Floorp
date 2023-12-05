@@ -88,7 +88,6 @@ class WebRenderImageHost : public CompositableHost, public ImageComposite {
 
   std::deque<CompositableTextureHostRef> mPendingRemoteTextureWrappers;
   bool mWaitingReadyCallback = false;
-  bool mWaitForRemoteTextureOwner = true;
 
   Maybe<RemoteTextureOwnerId> mRemoteTextureOwnerIdOfPushCallback;
   base::ProcessId mForPidOfPushCallback;
