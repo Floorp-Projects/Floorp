@@ -7,6 +7,7 @@ include GraphicsMessages;
 include protocol PRemoteDecoderManager;
 include protocol PVideoBridge;
 
+using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
 using mozilla::media::MediaCodecsSupported from "MediaCodecsSupport.h";
 using mozilla::RemoteDecodeIn from "mozilla/RemoteDecoderManagerChild.h";
 
@@ -20,7 +21,7 @@ protocol PUtilityAudioDecoder
 {
 parent:
   async NewContentRemoteDecoderManager(
-            Endpoint<PRemoteDecoderManagerParent> endpoint);
+            Endpoint<PRemoteDecoderManagerParent> endpoint, ContentParentId parentId);
 
 #ifdef MOZ_WMF_MEDIA_ENGINE
   async InitVideoBridge(Endpoint<PVideoBridgeChild> endpoint,
