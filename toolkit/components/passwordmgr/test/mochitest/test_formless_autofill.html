@@ -123,8 +123,7 @@ add_task(async function test() {
     is(testInputs.length, tc.expectedInputValues.length, "Check number of inputs");
     for (let i = 0; i < tc.expectedInputValues.length; i++) {
       let expectedValue = tc.expectedInputValues[i];
-      is(testInputs[i].value, expectedValue,
-         "Check expected input value " + i + ": " + expectedValue);
+      is(testInputs[i].value, expectedValue, `Check expected input value ${i} : ${expectedValue}`);
     }
   }
 });
