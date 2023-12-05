@@ -528,6 +528,7 @@ DevToolsUtils.defineLazyGetter(this, "NetUtil", () => {
  *        - principal: the principal to use, if omitted, the request is loaded
  *                     with a content principal corresponding to the url being
  *                     loaded, using the origin attributes of the window, if any.
+ *        - headers: extra headers
  *        - cacheKey: when loading from cache, use this key to retrieve a cache
  *                    specific to a given SHEntry. (Allows loading POST
  *                    requests from cache)
@@ -550,6 +551,7 @@ function mainThreadFetch(
     window: null,
     charset: null,
     principal: null,
+    headers: null,
     cacheKey: 0,
   }
 ) {
@@ -580,6 +582,12 @@ function mainThreadFetch(
       // SHEntry and offer ways to restore POST requests from cache.
       if (aOptions.cacheKey != 0) {
         channel.cacheKey = aOptions.cacheKey;
+      }
+    }
+
+    if (aOptions.headers && channel instanceof Ci.nsIHttpChannel) {
+      for (const h in aOptions.headers) {
+        channel.setRequestHeader(h, aOptions.headers[h], /* aMerge = */ false);
       }
     }
 
