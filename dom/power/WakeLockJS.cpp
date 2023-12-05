@@ -9,23 +9,28 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WakeLockBinding.h"
 #include "mozilla/Hal.h"
 #include "nsCOMPtr.h"
+#include "nsCRT.h"
 #include "nsError.h"
 #include "nsIGlobalObject.h"
 #include "nsISupports.h"
 #include "nsPIDOMWindow.h"
 #include "nsContentPermissionHelper.h"
+#include "nsServiceManagerUtils.h"
 #include "nscore.h"
 #include "WakeLock.h"
 #include "WakeLockJS.h"
 #include "WakeLockSentinel.h"
 
 namespace mozilla::dom {
+
+#define MIN_BATTERY_LEVEL 0.05
 
 nsLiteralCString WakeLockJS::GetRequestErrorMessage(RequestError aRv) {
   switch (aRv) {
@@ -59,6 +64,11 @@ WakeLockJS::RequestError WakeLockJS::WakeLockAllowedForDocument(
     return RequestError::PolicyDisallowed;
   }
 
+  // Step 3. Deny wake lock for user agent specific reasons
+  if (!StaticPrefs::dom_screenwakelock_enabled()) {
+    return RequestError::PrefDisabled;
+  }
+
   // Step 4 check doc active
   if (!aDoc->IsActive()) {
     return RequestError::DocInactive;
@@ -74,6 +84,12 @@ WakeLockJS::RequestError WakeLockJS::WakeLockAllowedForDocument(
 
 // https://w3c.github.io/screen-wake-lock/#dfn-applicable-wake-lock
 static bool IsWakeLockApplicable(WakeLockType aType) {
+  hal::BatteryInformation batteryInfo;
+  hal::GetCurrentBatteryInformation(&batteryInfo);
+  if (batteryInfo.level() <= MIN_BATTERY_LEVEL && !batteryInfo.charging()) {
+    return false;
+  }
+
   // only currently supported wake lock type
   return aType == WakeLockType::Screen;
 }
@@ -98,6 +114,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WakeLockJS)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentActivity)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
 WakeLockJS::WakeLockJS(nsPIDOMWindowInner* aWindow) : mWindow(aWindow) {
@@ -178,6 +196,13 @@ void WakeLockJS::AttachListeners() {
       doc->AddSystemEventListener(u"visibilitychange"_ns, this, true, false);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   doc->RegisterActivityObserver(ToSupports(this));
+
+  hal::RegisterBatteryObserver(this);
+
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  MOZ_ASSERT(prefBranch);
+  rv = prefBranch->AddObserver("dom.screenwakelock.enabled", this, true);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 void WakeLockJS::DetachListeners() {
@@ -188,6 +213,25 @@ void WakeLockJS::DetachListeners() {
       doc->UnregisterActivityObserver(ToSupports(this));
     }
   }
+
+  hal::UnregisterBatteryObserver(this);
+
+  if (nsCOMPtr<nsIPrefBranch> prefBranch =
+          do_GetService(NS_PREFSERVICE_CONTRACTID)) {
+    prefBranch->RemoveObserver("dom.screenwakelock.enabled", this);
+  }
+}
+
+NS_IMETHODIMP WakeLockJS::Observe(nsISupports* aSubject, const char* aTopic,
+                                  const char16_t* aData) {
+  if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
+    if (!StaticPrefs::dom_screenwakelock_enabled()) {
+      nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
+      MOZ_ASSERT(doc);
+      doc->UnlockAllWakeLocks(WakeLockType::Screen);
+    }
+  }
+  return NS_OK;
 }
 
 void WakeLockJS::NotifyOwnerDocumentActivityChanged() {
@@ -212,6 +256,15 @@ NS_IMETHODIMP WakeLockJS::HandleEvent(Event* aEvent) {
   }
 
   return NS_OK;
+}
+
+void WakeLockJS::Notify(const hal::BatteryInformation& aBatteryInfo) {
+  if (aBatteryInfo.level() > MIN_BATTERY_LEVEL || aBatteryInfo.charging()) {
+    return;
+  }
+  nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
+  MOZ_ASSERT(doc);
+  doc->UnlockAllWakeLocks(WakeLockType::Screen);
 }
 
 }  // namespace mozilla::dom

@@ -9,10 +9,13 @@
 
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/HalBatteryInformation.h"
 #include "mozilla/dom/WakeLockBinding.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDocumentActivity.h"
+#include "nsIObserver.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsWeakReference.h"
 #include "nsWrapperCache.h"
 
 class nsPIDOMWindowInner;
@@ -38,10 +41,14 @@ namespace mozilla::dom {
  */
 class WakeLockJS final : public nsIDOMEventListener,
                          public nsWrapperCache,
-                         public nsIDocumentActivity {
+                         public hal::BatteryObserver,
+                         public nsIDocumentActivity,
+                         public nsIObserver,
+                         public nsSupportsWeakReference {
  public:
   NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_NSIDOCUMENTACTIVITY
+  NS_DECL_NSIOBSERVER
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS_AMBIGUOUS(WakeLockJS,
@@ -58,6 +65,8 @@ class WakeLockJS final : public nsIDOMEventListener,
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
+
+  void Notify(const hal::BatteryInformation& aBatteryInfo) override;
 
   already_AddRefed<Promise> Request(WakeLockType aType, ErrorResult& aRv);
 
@@ -81,8 +90,6 @@ class WakeLockJS final : public nsIDOMEventListener,
 
   Result<already_AddRefed<WakeLockSentinel>, RequestError> Obtain(
       WakeLockType aType);
-
-  void UnlockAll(WakeLockType aType);
 
   RefPtr<nsPIDOMWindowInner> mWindow;
 };
