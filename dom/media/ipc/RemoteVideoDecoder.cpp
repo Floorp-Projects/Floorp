@@ -228,7 +228,7 @@ MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
 
       if (texture) {
         if (!texture->IsAddedToCompositableClient()) {
-          texture->InitIPDLActor(mKnowsCompositor);
+          texture->InitIPDLActor(mKnowsCompositor, mParent->GetContentId());
           texture->SetAddedToCompositableClient();
         }
         needStorage = true;

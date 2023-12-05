@@ -191,6 +191,7 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
   // CompositableParentManager
   bool IsSameProcess() const override;
   base::ProcessId GetChildProcessId() override;
+  dom::ContentParentId GetContentId() override;
   void NotifyNotUsed(PTextureParent* aTexture,
                      uint64_t aTransactionId) override;
   void SendAsyncMessage(

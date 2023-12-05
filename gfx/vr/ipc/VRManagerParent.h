@@ -7,6 +7,7 @@
 #ifndef MOZILLA_GFX_VR_VRMANAGERPARENT_H
 #define MOZILLA_GFX_VR_VRMANAGERPARENT_H
 
+#include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/layers/CompositorThread.h"  // for CompositorThreadHolder
 #include "mozilla/layers/CompositableTransactionParent.h"  // need?
 #include "mozilla/gfx/PVRManagerParent.h"  // for PVRManagerParent
@@ -27,11 +28,13 @@ class VRManagerParent final : public PVRManagerParent {
   friend class PVRManagerParent;
 
  public:
-  explicit VRManagerParent(ProcessId aChildProcessId, bool aIsContentChild);
+  explicit VRManagerParent(ProcessId aChildProcessId,
+                           dom::ContentParentId aChildId, bool aIsContentChild);
 
   static already_AddRefed<VRManagerParent> CreateSameProcess();
   static bool CreateForGPUProcess(Endpoint<PVRManagerParent>&& aEndpoint);
-  static bool CreateForContent(Endpoint<PVRManagerParent>&& aEndpoint);
+  static bool CreateForContent(Endpoint<PVRManagerParent>&& aEndpoint,
+                               dom::ContentParentId aChildId);
   static void Shutdown();
 
   bool IsSameProcess() const;
@@ -85,6 +88,7 @@ class VRManagerParent final : public PVRManagerParent {
 
   // Keep the VRManager alive, until we have destroyed ourselves.
   RefPtr<VRManager> mVRManagerHolder;
+  dom::ContentParentId mChildId;
   bool mHaveEventListener;
   bool mHaveControllerListener;
   bool mIsContentChild;

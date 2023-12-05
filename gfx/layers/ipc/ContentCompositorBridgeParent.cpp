@@ -17,6 +17,7 @@
 #include "mozilla/layers/AnimationHelper.h"  // for CompositorAnimationStorage
 #include "mozilla/layers/APZCTreeManagerParent.h"  // for APZCTreeManagerParent
 #include "mozilla/layers/APZUpdater.h"             // for APZUpdater
+#include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
@@ -403,9 +404,9 @@ PTextureParent* ContentCompositorBridgeParent::AllocPTextureParent(
         << "Texture backend is wrong";
   }
 
-  return TextureHost::CreateIPDLActor(this, aSharedData, std::move(aReadLock),
-                                      aLayersBackend, aFlags, aSerial,
-                                      aExternalImageId);
+  return TextureHost::CreateIPDLActor(
+      this, aSharedData, std::move(aReadLock), aLayersBackend, aFlags,
+      mCompositorManager->GetContentId(), aSerial, aExternalImageId);
 }
 
 bool ContentCompositorBridgeParent::DeallocPTextureParent(

@@ -33,7 +33,8 @@ class UtilityAudioDecoderParent final : public PUtilityAudioDecoderParent {
   void Start(Endpoint<PUtilityAudioDecoderParent>&& aEndpoint);
 
   mozilla::ipc::IPCResult RecvNewContentRemoteDecoderManager(
-      Endpoint<PRemoteDecoderManagerParent>&& aEndpoint);
+      Endpoint<PRemoteDecoderManagerParent>&& aEndpoint,
+      const ContentParentId& aParentId);
 
 #ifdef MOZ_WMF_MEDIA_ENGINE
   mozilla::ipc::IPCResult RecvInitVideoBridge(

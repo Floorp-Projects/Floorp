@@ -15,7 +15,8 @@ namespace layers {
 class GPUVideoTextureHost : public TextureHost {
  public:
   static GPUVideoTextureHost* CreateFromDescriptor(
-      TextureFlags aFlags, const SurfaceDescriptorGPUVideo& aDescriptor);
+      const dom::ContentParentId& aContentId, TextureFlags aFlags,
+      const SurfaceDescriptorGPUVideo& aDescriptor);
 
   virtual ~GPUVideoTextureHost();
 
@@ -71,13 +72,17 @@ class GPUVideoTextureHost : public TextureHost {
 
   bool NeedsDeferredDeletion() const override;
 
+  const dom::ContentParentId& GetContentId() const { return mContentId; }
+
  protected:
-  GPUVideoTextureHost(TextureFlags aFlags,
+  GPUVideoTextureHost(const dom::ContentParentId& aContentId,
+                      TextureFlags aFlags,
                       const SurfaceDescriptorGPUVideo& aDescriptor);
 
   TextureHost* EnsureWrappedTextureHost();
 
   RefPtr<TextureHost> mWrappedTextureHost;
+  dom::ContentParentId mContentId;
   SurfaceDescriptorGPUVideo mDescriptor;
 };
 
