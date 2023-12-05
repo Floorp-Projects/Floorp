@@ -1457,10 +1457,14 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
         // FIXME(bug 1510861) are we using any hints that aren't allowed
         // in SandboxPolicyCommon now?
       case __NR_madvise:
-        // libc's realloc uses mremap (Bug 1286119); wasm does too (bug
-        // 1342385).
-      case __NR_mremap:
         return Allow();
+
+        // wasm uses mremap (always with zero flags)
+      case __NR_mremap: {
+        Arg<int> flags(3);
+        return If(flags == 0, Allow())
+            .Else(SandboxPolicyCommon::EvaluateSyscall(sysno));
+      }
 
         // Bug 1462640: Mesa libEGL uses mincore to test whether values
         // are pointers, for reasons.
