@@ -82,3 +82,7 @@ TESTING_JS_MODULES.dom.quota.test.modules.worker += [
     "modules/system/worker/Utils.js",
     "modules/system/worker/UtilsChild.js",
 ]
+
+MARIONETTE_UNIT_MANIFESTS += [
+    "marionette/manifest.ini",
+]
