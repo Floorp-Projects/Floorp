@@ -12,6 +12,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 const PERM_ACCESS_FINE_LOCATION = "android.permission.ACCESS_FINE_LOCATION";
 
+const MAPPED_TO_EXTENSION_PERMISSIONS = [
+  "persistent-storage",
+  // TODO(Bug 1336194): support geolocation manifest permission
+  // (see https://bugzilla.mozilla.org/show_bug.cgi?id=1336194#c17)l
+];
+
 export class GeckoViewPermissionChild extends GeckoViewActorChild {
   getMediaPermission(aPermission) {
     return this.eventDispatcher.sendRequestForResult({
@@ -35,6 +41,58 @@ export class GeckoViewPermissionChild extends GeckoViewActorChild {
     });
   }
 
+  // Some WebAPI permissions can be requested and granted to extensions through the
+  // the extension manifest.json, which the user have been already prompted for
+  // (e.g. at install time for the one listed in the manifest.json permissions property,
+  // or at runtime through the optional_permissions property and the permissions.request
+  // WebExtensions API method).
+  //
+  // WebAPI permission that are expected to be mapped to extensions permissions are listed
+  // in the MAPPED_TO_EXTENSION_PERMISSIONS array.
+  //
+  // @param {nsIContentPermissionType} perm
+  //        The WebAPI permission being requested
+  // @param {nsIContentPermissionRequest} aRequest
+  //        The nsIContentPermissionRequest as received by the promptPermission method.
+  //
+  // @returns {null | { allow: boolean, permission: Object }
+  //          Returns null if the request was not handled and should continue with the
+  //          regular permission prompting flow, otherwise it returns an object to
+  //          allow or disallow the permission request right away.
+  checkIfGrantedByExtensionPermissions(perm, aRequest) {
+    if (!aRequest.principal.addonPolicy) {
+      // Not an extension, continue with the regular permission prompting flow.
+      return null;
+    }
+
+    // Return earlier and continue with the regular permission prompting flow if the
+    // the permission is no one that can be requested from the extension manifest file.
+    if (!MAPPED_TO_EXTENSION_PERMISSIONS.includes(perm.type)) {
+      return null;
+    }
+
+    // Disallow if the extension is not active anymore.
+    if (!aRequest.principal.addonPolicy.active) {
+      return { allow: false };
+    }
+
+    // Check if the permission have been already granted to the extension, if it is allow it right away.
+    const isGranted =
+      Services.perms.testPermissionFromPrincipal(
+        aRequest.principal,
+        perm.type
+      ) === Services.perms.ALLOW_ACTION;
+    if (isGranted) {
+      return {
+        allow: true,
+        permission: { [perm.type]: Services.perms.ALLOW_ACTION },
+      };
+    }
+
+    // continue with the regular permission prompting flow otherwise.
+    return null;
+  }
+
   async promptPermission(aRequest) {
     // Only allow exactly one permission request here.
     const types = aRequest.types.QueryInterface(Ci.nsIArray);
@@ -43,6 +101,18 @@ export class GeckoViewPermissionChild extends GeckoViewActorChild {
     }
 
     const perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
+
+    // Check if the request principal is an extension principal and if the permission requested
+    // should be already granted based on the extension permissions (or disallowed right away
+    // because the extension is not enabled anymore.
+    const extensionResult = this.checkIfGrantedByExtensionPermissions(
+      perm,
+      aRequest
+    );
+    if (extensionResult) {
+      return extensionResult;
+    }
+
     if (
       perm.type === "desktop-notification" &&
       !aRequest.hasValidTransientUserGestureActivation &&
