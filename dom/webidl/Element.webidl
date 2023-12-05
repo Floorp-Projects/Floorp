@@ -276,6 +276,7 @@ dictionary ShadowRootInit {
   required ShadowRootMode mode;
   boolean delegatesFocus = false;
   SlotAssignmentMode slotAssignment = "named";
+  boolean clonable = false;
 };
 
 // https://dom.spec.whatwg.org/#element
