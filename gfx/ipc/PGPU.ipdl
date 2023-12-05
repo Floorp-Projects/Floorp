@@ -26,6 +26,7 @@ include "mozilla/ipc/ByteBufUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
 
 using base::ProcessId from "base/process.h";
+using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
 using mozilla::Telemetry::HistogramAccumulation from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::KeyedHistogramAccumulation from "mozilla/TelemetryComms.h";
@@ -80,10 +81,10 @@ parent:
   async PreferenceUpdate(Pref pref);
 
   // Create a new content-process compositor bridge.
-  async NewContentCompositorManager(Endpoint<PCompositorManagerParent> endpoint);
-  async NewContentImageBridge(Endpoint<PImageBridgeParent> endpoint);
-  async NewContentVRManager(Endpoint<PVRManagerParent> endpoint);
-  async NewContentRemoteDecoderManager(Endpoint<PRemoteDecoderManagerParent> endpoint);
+  async NewContentCompositorManager(Endpoint<PCompositorManagerParent> endpoint, ContentParentId childId);
+  async NewContentImageBridge(Endpoint<PImageBridgeParent> endpoint, ContentParentId childId);
+  async NewContentVRManager(Endpoint<PVRManagerParent> endpoint, ContentParentId childId);
+  async NewContentRemoteDecoderManager(Endpoint<PRemoteDecoderManagerParent> endpoint, ContentParentId childId);
 
   // Called to notify the GPU process of who owns a layersId.
   sync AddLayerTreeIdMapping(LayerTreeIdMapping mapping);

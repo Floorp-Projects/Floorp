@@ -30,7 +30,8 @@ class VideoBridgeParent final : public PVideoBridgeParent,
   static void Shutdown();
   static void UnregisterExternalImages();
 
-  TextureHost* LookupTexture(uint64_t aSerial);
+  TextureHost* LookupTexture(const dom::ContentParentId& aContentId,
+                             uint64_t aSerial);
 
   // PVideoBridgeParent
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -38,6 +39,7 @@ class VideoBridgeParent final : public PVideoBridgeParent,
                                       ReadLockDescriptor& aReadLock,
                                       const LayersBackend& aLayersBackend,
                                       const TextureFlags& aFlags,
+                                      const dom::ContentParentId& aContentId,
                                       const uint64_t& aSerial);
   bool DeallocPTextureParent(PTextureParent* actor);
 

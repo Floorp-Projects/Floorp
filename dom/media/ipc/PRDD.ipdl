@@ -17,6 +17,7 @@ include protocol PSandboxTesting;
 
 include "mozilla/ipc/ByteBufUtils.h";
 
+using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
 using mozilla::media::MediaCodecsSupported from "MediaCodecsSupport.h";
 
@@ -52,7 +53,7 @@ parent:
   async InitProfiler(Endpoint<PProfilerChild> endpoint);
 
   async NewContentRemoteDecoderManager(
-            Endpoint<PRemoteDecoderManagerParent> endpoint);
+            Endpoint<PRemoteDecoderManagerParent> endpoint, ContentParentId childId);
 
   async RequestMemoryReport(uint32_t generation,
                             bool anonymize,
