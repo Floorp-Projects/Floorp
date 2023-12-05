@@ -68,7 +68,4 @@ private fun Highlight.highlightsForType(highlightType: HighlightType) =
         HighlightType.SHIPPING -> shipping
         HighlightType.PACKAGING_AND_APPEARANCE -> appearance
         HighlightType.COMPETITIVENESS -> competitiveness
-    }?.map { it.surroundWithQuotes() }
-
-private fun String.surroundWithQuotes(): String =
-    "\"$this\""
+    }
