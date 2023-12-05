@@ -12162,6 +12162,14 @@
   value: false
   mirror: always
 
+# If true, a failed TRR request that contains an extended DNS error
+# matching the hardFail condition in DNSPacket.cpp will not be
+# retried with native DNS
+- name: network.trr.hard_fail_on_extended_error
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # The base URL of the `Learn more` button for skip reasons
 - name: network.trr_ui.skip_reason_learn_more_url
   type: String

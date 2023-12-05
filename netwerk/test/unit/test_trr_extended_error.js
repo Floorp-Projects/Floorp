@@ -46,7 +46,7 @@ add_task(async function setup() {
   );
 });
 
-add_task(async function test_extended_error_bogus() {
+add_task(async function test_extended_error_1() {
   await trrServer.registerDoHAnswers("something.foo", "A", {
     answers: [
       {
@@ -71,7 +71,7 @@ add_task(async function test_extended_error_bogus() {
         options: [
           {
             code: "EDNS_ERROR",
-            extended_error: 6, // DNSSEC_BOGUS
+            extended_error: 17, // Filtered
             text: "DNSSec bogus",
           },
         ],

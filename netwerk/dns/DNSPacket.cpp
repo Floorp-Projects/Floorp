@@ -25,20 +25,12 @@ static uint32_t get32bit(const unsigned char* aData, unsigned int index) {
          (aData[index + 2] << 8) | aData[index + 3];
 }
 
-// https://datatracker.ietf.org/doc/html/draft-ietf-dnsop-extended-error-16#section-4
+// https://datatracker.ietf.org/doc/html/rfc8914#name-defined-extended-dns-errors
 // This is a list of errors for which we should not fallback to Do53.
-// These are normally DNSSEC failures or explicit filtering performed by the
-// recursive resolver.
+// These are normally explicit filtering performed by the recursive resolver.
 bool hardFail(uint16_t code) {
   const uint16_t noFallbackErrors[] = {
       4,   // Forged answer (malware filtering)
-      6,   // DNSSEC Boggus
-      7,   // Signature expired
-      8,   // Signature not yet valid
-      9,   // DNSKEY Missing
-      10,  // RRSIG missing
-      11,  // No ZONE Key Bit set
-      12,  // NSEC Missing
       17,  // Filtered
   };
 
@@ -362,7 +354,6 @@ nsresult DNSPacket::EncodeRequest(nsCString& aBody, const nsACString& aHost,
     }
     if (labelLength > 63) {
       // too long label!
-      SetDNSPacketStatus(DNSPacketStatus::EncodeError);
       return NS_ERROR_ILLEGAL_VALUE;
     }
     if (labelLength > 0) {
@@ -464,7 +455,6 @@ nsresult DNSPacket::EncodeRequest(nsCString& aBody, const nsACString& aHost,
     }
   }
 
-  SetDNSPacketStatus(DNSPacketStatus::Success);
   return NS_OK;
 }
 
@@ -1030,7 +1020,9 @@ nsresult DNSPacket::DecodeInternal(
     // no entries were stored!
     LOG(("TRR: No entries were stored!\n"));
 
-    if (extendedError != UINT16_MAX && hardFail(extendedError)) {
+    if (extendedError != UINT16_MAX &&
+        StaticPrefs::network_trr_hard_fail_on_extended_error() &&
+        hardFail(extendedError)) {
       return NS_ERROR_DEFINITIVE_UNKNOWN_HOST;
     }
     return NS_ERROR_UNKNOWN_HOST;
@@ -1059,8 +1051,7 @@ nsresult DNSPacket::Decode(
   nsresult rv =
       DecodeInternal(aHost, aType, aCname, aAllowRFC1918, aResp, aTypeResult,
                      aAdditionalRecords, aTTL, mResponse, mBodySize);
-  SetDNSPacketStatus(NS_SUCCEEDED(rv) ? DNSPacketStatus::Success
-                                      : DNSPacketStatus::DecodeError);
+  mStatus = rv;
   return rv;
 }
 
