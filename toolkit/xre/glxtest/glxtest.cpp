@@ -172,7 +172,7 @@ typedef struct _drmDevice {
 static int x_error_handler(Display*, XErrorEvent* ev) {
   record_error(
       "X error, error_code=%d, "
-      "request_code=%d, minor_code=%d\n",
+      "request_code=%d, minor_code=%d",
       ev->error_code, ev->request_code, ev->minor_code);
   record_flush();
   _exit(EXIT_FAILURE);
