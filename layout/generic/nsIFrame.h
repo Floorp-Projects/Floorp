@@ -3303,8 +3303,10 @@ class nsIFrame : public nsQueryFrame {
    * Update the whether or not this frame is considered relevant content for the
    * purposes of `content-visibility: auto` according to the rules specified in
    * https://drafts.csswg.org/css-contain-2/#relevant-to-the-user.
+   * Returns true if the over-all relevancy changed.
    */
-  void UpdateIsRelevantContent(const ContentRelevancy& aRelevancyToUpdate);
+  [[nodiscard]] bool UpdateIsRelevantContent(
+      const ContentRelevancy& aRelevancyToUpdate);
 
   /**
    * Get the "type" of the frame.
