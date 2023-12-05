@@ -57,7 +57,6 @@
 }
 
 #close-button {
-  color: var(--icon-color);
   min-width: var(--shopping-close-button-size);
   min-height: var(--shopping-close-button-size);
   -moz-context-properties: fill;
@@ -66,6 +65,10 @@
   background-repeat: no-repeat;
   background-position: center;
   margin-inline-end: 0;
+
+  @media not (prefers-contrast) {
+    color: var(--icon-color);
+  }
 }
 
 #content {

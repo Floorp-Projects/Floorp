@@ -7,21 +7,43 @@
 :host {
   display: block;
   --shopping-card-border-color: light-dark(#f0f0f4, #52525e);
-  border: 1px solid var(--shopping-card-border-color);
   --shopping-card-border-radius: 8px;
+  --shopping-card-border-width: 1px;
+  --shopping-card-summary-border-radius: calc(var(--shopping-card-border-radius) - var(--shopping-card-border-width));
+  --shopping-card-padding: 12px;
   border-radius: var(--shopping-card-border-radius);
-  background-color: var(--in-content-page-background);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   box-sizing: border-box;
 }
 
 .shopping-card {
   display: flex;
+  border: var(--shopping-card-border-width) solid var(--shopping-card-border-color);
+  border-radius: var(--shopping-card-border-radius);
+  background-color: var(--in-content-page-background);
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
-  padding: 12px;
+  padding: var(--shopping-card-padding);
   position: relative;
+}
+
+/* For accordions, adjust padding and border so that focus outlines wrap around the summary. */
+:host([type="accordion"]) > .shopping-card {
+  padding: 0;
+
+  summary {
+    padding: var(--shopping-card-padding);
+    border-radius: var(--shopping-card-summary-border-radius);
+  }
+
+  #content {
+    padding: 0 var(--shopping-card-padding) var(--shopping-card-padding);
+  }
+
+  > details[open] > summary {
+    border-radius: var(--shopping-card-summary-border-radius) var(--shopping-card-summary-border-radius) 0 0;
+  }
 }
 
 button {
@@ -86,7 +108,7 @@ details > summary:focus-visible {
    * around the title.
    */
   position: absolute;
-  top: calc(50% - 12px);
+  top: calc(50% - var(--shopping-card-padding));
   /* This approximates the top/bottom 'padding' gap created by the abspos
    * above. It won't always be perfectly accurate, and that's OK. */
   inset-inline-end: -2px;
@@ -100,7 +122,7 @@ details[open] .chevron-icon {
   width: 100%;
   background-color: var(--in-content-page-background);
   box-shadow: 2px -10px 11px var(--in-content-page-background);
-  border-top: 1px solid var(--shopping-card-border-color);
+  border-top: var(--shopping-card-border-width) solid var(--shopping-card-border-color);
   border-radius: 0 0 var(--shopping-card-border-radius) var(--shopping-card-border-radius);
   position: absolute;
   bottom: 0;
@@ -120,12 +142,55 @@ details[open] .chevron-icon {
 }
 
 @media (prefers-color-scheme: dark) {
-  :host {
+  :host > .shopping-card {
     background-color: #42414d;
   }
 
   .show-more footer {
     background-color: #42414d;
     box-shadow: 2px -10px 11px #42414d;
+  }
+}
+
+@media (prefers-contrast) {
+  /* Style accordion card like a dropdown button. */
+  :host([type="accordion"]) > .shopping-card {
+    border: var(--shopping-card-border-width) solid ButtonText;
+
+    summary {
+      background-color: var(--button-background-color);
+      color: ButtonText;
+
+      #label-wrapper {
+        color: inherit;
+
+        > :is(#header, .chevron-icon) {
+          color: inherit;
+        }
+      }
+
+      .chevron-icon {
+        background-color: transparent;
+        border: none;
+      }
+
+      &:hover {
+        background-color: SelectedItemText;
+        border-color: SelectedItem;
+        color: SelectedItem;
+      }
+
+      &:hover:active {
+        border-color: ButtonText;
+      }
+    }
+
+    details[open] {
+      border-color: var(--shopping-card-border-color);
+
+      summary {
+        border-block-end: var(--shopping-card-border-width) solid ButtonText;
+      }
+    }
   }
 }
