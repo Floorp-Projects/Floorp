@@ -3,6 +3,10 @@ av_add_stable
 av_append_path_component
 av_asprintf
 av_basename
+#ifndef MOZ_FFVPX_AUDIOONLY
+av_base64_decode
+av_base64_encode
+#endif
 av_bprint_append_data
 av_bprint_channel_layout
 av_bprint_chars
@@ -89,6 +93,7 @@ av_fifo_alloc2
 av_fifo_alloc_array
 av_fifo_can_read
 av_fifo_drain
+av_fifo_drain2
 av_fifo_free
 av_fifo_freep
 av_fifo_freep2
@@ -96,6 +101,7 @@ av_fifo_generic_peek
 av_fifo_generic_read
 av_fifo_generic_write
 av_fifo_grow
+av_fifo_peek
 av_fifo_realloc2
 av_fifo_read
 av_fifo_reset
