@@ -390,10 +390,12 @@ class HostCompileFlags(BaseCompileFlags):
         BaseCompileFlags.__init__(self, context)
 
     def _optimize_flags(self):
-        # We don't use MOZ_OPTIMIZE here because we don't want
-        # --disable-optimize to make in-tree host tools slow. Doing so can
-        # potentially make build times significantly worse.
-        return self._context.config.substs.get("HOST_OPTIMIZE_FLAGS")
+        optimize_flags = []
+        if self._context.config.substs.get("CROSS_COMPILE"):
+            optimize_flags += self._context.config.substs.get("HOST_OPTIMIZE_FLAGS")
+        elif self._context.config.substs.get("MOZ_OPTIMIZE"):
+            optimize_flags += self._context.config.substs.get("MOZ_OPTIMIZE_FLAGS")
+        return optimize_flags
 
 
 class AsmFlags(BaseCompileFlags):
