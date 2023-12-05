@@ -27,6 +27,21 @@ class CompositorThreadHolder final {
 
   nsIThread* GetCompositorThread() const { return mCompositorThread; }
 
+  /**
+   * Returns true if the calling thread is the compositor thread. This works
+   * even if the CompositorThread has begun to shutdown.
+   */
+  bool IsInThread() {
+    bool rv = false;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mCompositorThread->IsOnCurrentThread(&rv)));
+    return rv;
+  }
+
+  nsresult Dispatch(already_AddRefed<nsIRunnable> event,
+                    uint32_t flags = nsIEventTarget::DISPATCH_NORMAL) {
+    return mCompositorThread->Dispatch(std::move(event), flags);
+  }
+
   static CompositorThreadHolder* GetSingleton();
 
   static bool IsActive() { return !!GetSingleton(); }
@@ -51,7 +66,7 @@ class CompositorThreadHolder final {
  private:
   ~CompositorThreadHolder();
 
-  nsCOMPtr<nsIThread> mCompositorThread;
+  const nsCOMPtr<nsIThread> mCompositorThread;
 
   static already_AddRefed<nsIThread> CreateCompositorThread();
 
