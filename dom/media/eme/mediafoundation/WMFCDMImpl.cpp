@@ -60,6 +60,12 @@ static void MFCDMCapabilitiesIPDLToKeySystemConfig(
   }
   aKeySystemConfig.mPersistentState = aCDMConfig.persistentState();
   aKeySystemConfig.mDistinctiveIdentifier = aCDMConfig.distinctiveID();
+
+  for (const auto& scheme : aCDMConfig.encryptionSchemes()) {
+    aKeySystemConfig.mEncryptionSchemes.AppendElement(
+        NS_ConvertUTF8toUTF16(CryptoSchemeToString(scheme)));
+  }
+
   EME_LOG("New Capabilities=%s",
           NS_ConvertUTF16toUTF8(aKeySystemConfig.GetDebugInfo()).get());
 }
