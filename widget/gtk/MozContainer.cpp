@@ -240,6 +240,7 @@ void moz_container_unrealize(GtkWidget* widget) {
                 (void*)window));
 
   gtk_widget_unregister_window(widget, window);
+  gtk_widget_set_window(widget, nullptr);
   gdk_window_destroy(window);
   gtk_widget_set_realized(widget, false);
 }
