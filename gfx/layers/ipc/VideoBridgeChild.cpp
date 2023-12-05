@@ -179,5 +179,10 @@ void VideoBridgeChild::HandleFatalError(const char* aMsg) {
   dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aMsg, OtherPid());
 }
 
+mozilla::ipc::IPCResult VideoBridgeChild::RecvPing(PingResolver&& aResolver) {
+  aResolver(void_t{});
+  return IPC_OK();
+}
+
 }  // namespace layers
 }  // namespace mozilla

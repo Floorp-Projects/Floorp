@@ -36,6 +36,8 @@ class VideoBridgeChild final : public PVideoBridgeChild,
                                     const uint64_t& aSerial);
   bool DeallocPTextureChild(PTextureChild* actor);
 
+  mozilla::ipc::IPCResult RecvPing(PingResolver&& aResolver);
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   // ISurfaceAllocator
