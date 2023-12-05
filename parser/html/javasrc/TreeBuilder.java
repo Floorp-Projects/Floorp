@@ -434,6 +434,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private boolean forceNoQuirks = false;
 
+    private boolean allowDeclarativeShadowRoots = false;
+
     // [NOCPP[
 
     private boolean reportingDoctype = true;
@@ -2958,6 +2960,20 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 || (("http://www.w3.org/1998/Math/MathML" == ns) && (stackNode.getGroup() == MI_MO_MN_MS_MTEXT));
     }
 
+    private T getDeclarativeShadowRoot(T currentNode, T templateNode, HtmlAttributes attributes) {
+        if (!isAllowDeclarativeShadowRoots()) {
+            return null;
+        }
+
+        String shadowRootMode = attributes.getValue(AttributeName.SHADOWROOTMODE);
+        if (shadowRootMode == null) {
+            return null;
+        }
+
+        boolean shadowRootDelegatesFocus = attributes.contains(AttributeName.SHADOWROOTDELEGATESFOCUS);
+        return getShadowRootFromHost(currentNode, templateNode, shadowRootMode, shadowRootDelegatesFocus);
+    }
+
     /**
      *
      * <p>
@@ -5302,9 +5318,17 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         T elt = createElement("http://www.w3.org/1999/xhtml", elementName.getName(), attributes, currentNode
                 // CPPONLY: , htmlCreator(elementName.getHtmlCreator())
                 );
-        appendElement(elt, currentNode);
         if (ElementName.TEMPLATE == elementName) {
-            elt = getDocumentFragmentForTemplate(elt);
+            T root = getDeclarativeShadowRoot(currentNode, elt, attributes);
+            if (root != null) {
+                setDocumentFragmentForTemplate(elt, root);
+                elt = root;
+            } else {
+                appendElement(elt, currentNode);
+                elt = getDocumentFragmentForTemplate(elt);
+            }
+        } else {
+            appendElement(elt, currentNode);
         }
         StackNode<T> node = createStackNode(elementName, elt
                 // [NOCPP[
@@ -5389,6 +5413,13 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     // [NOCPP[
     T getDocumentFragmentForTemplate(T template) {
         return template;
+    }
+
+    void setDocumentFragmentForTemplate(T template, T fragment) {
+    }
+
+    T getShadowRootFromHost(T host, T template, String shadowRootMode, boolean shadowRootDelegatesFocus) {
+        return null;
     }
 
     T getFormPointerForContext(T context) {
@@ -5509,6 +5540,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         } else {
             T currentNode = nodeFromStackWithBlinkCompat(currentPtr);
             elt = createElement("http://www.w3.org/1999/xhtml", name,
+
                     attributes, formOwner, currentNode
                     // CPPONLY: , htmlCreator(elementName.getHtmlCreator())
                     );
@@ -5891,6 +5923,14 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     // Redundant method retained because previously public.
     public void setIsSrcdocDocument(boolean isSrcdocDocument) {
         this.setForceNoQuirks(isSrcdocDocument);
+    }
+
+    public boolean isAllowDeclarativeShadowRoots() {
+        return allowDeclarativeShadowRoots;
+    }
+
+    public void setAllowDeclarativeShadowRoots(boolean allow) {
+        allowDeclarativeShadowRoots = allow;
     }
 
     // [NOCPP[
