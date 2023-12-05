@@ -55,6 +55,11 @@ if CONFIG['ANDROID_NDK']:
         '%%%s/sources/android/cpufeatures' % CONFIG['ANDROID_NDK']
     ]
 
+if CONFIG['OS_TARGET'] == 'Android':
+    SOURCES += [
+        '%%%s/sources/android/cpufeatures/cpu-features.c' % CONFIG['ANDROID_NDK'],
+    ]
+
 if CONFIG['MOZ_USE_PTHREADS']:
     DEFINES['HAVE_PTHREADS'] = True
 

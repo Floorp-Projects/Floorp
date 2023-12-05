@@ -1014,7 +1014,17 @@ system_headers = [
     'opus/opus.h',
     'opus/opus_multistream.h',
     'ogg/ogg.h',
-    'theora/theoradec.h'
+    'theora/theoradec.h',
+    'vpx/svc_context.h',
+    'vpx/vp8.h',
+    'vpx/vp8cx.h',
+    'vpx/vp8dx.h',
+    'vpx/vpx_codec.h',
+    'vpx/vpx_decoder.h',
+    'vpx/vpx_encoder.h',
+    'vpx/vpx_frame_buffer.h',
+    'vpx/vpx_image.h',
+    'vpx_mem/vpx_mem.h'
 ]
 
 if CONFIG['MOZ_X11']:
@@ -1292,17 +1302,6 @@ else:
 if CONFIG['MOZ_ENABLE_LIBPROXY']:
     system_headers += [
         'proxy.h',
-    ]
-
-if CONFIG['MOZ_SYSTEM_LIBVPX']:
-    system_headers += [
-        'vpx_mem/vpx_mem.h',
-        'vpx/svc_context.h',
-        'vpx/vp8cx.h',
-        'vpx/vp8dx.h',
-        'vpx/vpx_codec.h',
-        'vpx/vpx_decoder.h',
-        'vpx/vpx_encoder.h',
     ]
 
 if CONFIG['MOZ_SYSTEM_ICU']:
