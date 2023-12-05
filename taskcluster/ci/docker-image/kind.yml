@@ -226,7 +226,7 @@ jobs:
         parent: debian12-base
     partner-repack:
         symbol: I(PR)
-        parent: debian11-base
+        parent: debian12-base
         definition: partner-repack
     updatebot:
         symbol: I(3rdp)
