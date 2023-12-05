@@ -4,13 +4,13 @@
 
 const resultToUiData = {
   no_change: {
-    message: "about-logins-import-report-row-description-no-change",
+    message: "about-logins-import-report-row-description-no-change2",
   },
   modified: {
-    message: "about-logins-import-report-row-description-modified",
+    message: "about-logins-import-report-row-description-modified2",
   },
   added: {
-    message: "about-logins-import-report-row-description-added",
+    message: "about-logins-import-report-row-description-added2",
   },
   error: {
     message: "about-logins-import-report-row-description-error",
