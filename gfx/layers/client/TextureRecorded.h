@@ -40,6 +40,11 @@ class RecordedTextureData final : public TextureData {
 
   TextureFlags GetTextureFlags() const final;
 
+  void SetRemoteTextureOwnerId(
+      RemoteTextureOwnerId aRemoteTextureOwnerId) final;
+
+  bool RequiresRefresh() const final;
+
  private:
   DISALLOW_COPY_AND_ASSIGN(RecordedTextureData);
 
@@ -51,7 +56,10 @@ class RecordedTextureData final : public TextureData {
   gfx::SurfaceFormat mFormat;
   RefPtr<gfx::DrawTarget> mDT;
   RefPtr<gfx::SourceSurface> mSnapshot;
+  ThreadSafeWeakPtr<gfx::SourceSurface> mSnapshotWrapper;
   OpenMode mLockedMode;
+  layers::RemoteTextureId mLastRemoteTextureId;
+  layers::RemoteTextureOwnerId mRemoteTextureOwnerId;
 };
 
 }  // namespace layers

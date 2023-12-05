@@ -64,7 +64,6 @@
 #include "nsIMemoryReporter.h"
 #include "nsStyleUtil.h"
 #include "CanvasImageCache.h"
-#include "DrawTargetWebgl.h"
 
 #include <algorithm>
 
@@ -1356,7 +1355,31 @@ bool CanvasRenderingContext2D::CopyBufferProvider(
     return false;
   }
 
-  aTarget.CopySurface(snapshot, aCopyRect, IntPoint());
+  // If the DT has a writeable backing buffer, then try to use ReadInto to
+  // directly read into it. This can use fewer copies than CopySurface if the
+  // snapshot is not immediately available in a readable buffer.
+  bool success = false;
+  {
+    uint8_t* data = nullptr;
+    gfx::IntSize size;
+    int32_t stride = 0;
+    SurfaceFormat format = SurfaceFormat::UNKNOWN;
+    if (aTarget.LockBits(&data, &size, &stride, &format)) {
+      uint8_t* destPtr =
+          data + aCopyRect.y * stride + aCopyRect.x * BytesPerPixel(format);
+      if (RefPtr<DataSourceSurface> destSurface =
+              gfx::Factory::CreateWrappingDataSourceSurface(
+                  destPtr, stride, aCopyRect.Size(), format)) {
+        success = snapshot->ReadInto(destSurface, aCopyRect);
+      }
+      aTarget.ReleaseBits(data);
+    }
+  }
+
+  if (!success) {
+    aTarget.CopySurface(snapshot, aCopyRect, IntPoint());
+  }
+
   aOld.ReturnSnapshot(snapshot.forget());
   return true;
 }
@@ -1651,13 +1674,22 @@ bool CanvasRenderingContext2D::TryAcceleratedTarget(
   if (!mAllowAcceleration || GetEffectiveWillReadFrequently()) {
     return false;
   }
-  aOutDT = DrawTargetWebgl::Create(GetSize(), GetSurfaceFormat());
-  if (!aOutDT) {
+
+  if (!mCanvasElement) {
     return false;
   }
-
-  aOutProvider = new PersistentBufferProviderAccelerated(aOutDT);
-  return true;
+  WindowRenderer* renderer = WindowRendererFromCanvasElement(mCanvasElement);
+  if (!renderer) {
+    return false;
+  }
+  aOutProvider = PersistentBufferProviderAccelerated::Create(
+      GetSize(), GetSurfaceFormat(), renderer->AsKnowsCompositor());
+  if (!aOutProvider) {
+    return false;
+  }
+  aOutDT = aOutProvider->BorrowDrawTarget(IntRect());
+  MOZ_ASSERT(aOutDT);
+  return !!aOutDT;
 }
 
 bool CanvasRenderingContext2D::TrySharedTarget(

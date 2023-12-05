@@ -360,14 +360,15 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
   // here that would normally be initialized there.
   SkGraphics::Init();
 
-  if (gfxVars::RemoteCanvasEnabled()) {
+  bool useRemoteCanvas =
+      gfxVars::RemoteCanvasEnabled() || gfxVars::UseAcceleratedCanvas2D();
+  if (useRemoteCanvas) {
     gfxGradientCache::Init();
   }
 
 #if defined(XP_WIN)
   if (gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
-    if (DeviceManagerDx::Get()->CreateCompositorDevices() &&
-        gfxVars::RemoteCanvasEnabled()) {
+    if (DeviceManagerDx::Get()->CreateCompositorDevices() && useRemoteCanvas) {
       if (DeviceManagerDx::Get()->CreateCanvasDevice()) {
         gfxDWriteFont::InitDWriteSupport();
       } else {
