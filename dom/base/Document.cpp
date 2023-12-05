@@ -233,6 +233,7 @@
 #include "mozilla/dom/URL.h"
 #include "mozilla/dom/UseCounterMetrics.h"
 #include "mozilla/dom/UserActivation.h"
+#include "mozilla/dom/WakeLockSentinel.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/WindowGlobalChild.h"
@@ -2592,6 +2593,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
         mPendingFrameStaticClones[i].mStaticCloneOf);
   }
+
+  for (auto& tableEntry : tmp->mActiveLocks) {
+    ImplCycleCollectionTraverse(cb, *tableEntry.GetModifiableData(),
+                                "mActiveLocks entry", 0);
+  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Document)
@@ -2736,6 +2742,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
   }
 
   tmp->mPendingFrameStaticClones.Clear();
+
+  tmp->mActiveLocks.Clear();
 
   tmp->mInUnlinkOrDeletion = false;
 
@@ -18245,6 +18253,11 @@ already_AddRefed<Promise> Document::CompleteStorageAccessRequestFromSite(
           [promise] { promise->MaybeRejectWithUndefined(); });
 
   return promise.forget();
+}
+
+nsTHashSet<RefPtr<WakeLockSentinel>>& Document::ActiveWakeLocks(
+    WakeLockType aType) {
+  return mActiveLocks.LookupOrInsert(aType);
 }
 
 RefPtr<Document::AutomaticStorageAccessPermissionGrantPromise>
