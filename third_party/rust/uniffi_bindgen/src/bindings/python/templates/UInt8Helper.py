@@ -1,12 +1,12 @@
-class _UniffiConverterUInt8(_UniffiConverterPrimitiveInt):
+class FfiConverterUInt8(FfiConverterPrimitiveInt):
     CLASS_NAME = "u8"
     VALUE_MIN = 0
     VALUE_MAX = 2**8
 
     @staticmethod
     def read(buf):
-        return buf.read_u8()
+        return buf.readU8()
 
     @staticmethod
-    def write_unchecked(value, buf):
-        buf.write_u8(value)
+    def writeUnchecked(value, buf):
+        buf.writeU8(value)

@@ -125,8 +125,7 @@ impl<'a> SuggestDao<'a> {
 
     /// Fetches suggestions that match the given query from the database.
     pub fn fetch_suggestions(&self, query: &SuggestionQuery) -> Result<Vec<Suggestion>> {
-        let keyword_lowercased = &query.keyword.to_lowercase();
-        let (keyword_prefix, keyword_suffix) = split_keyword(keyword_lowercased);
+        let (keyword_prefix, keyword_suffix) = split_keyword(&query.keyword);
         let suggestions_limit = query.limit.unwrap_or(-1);
 
         let (mut statement, params) = if query
@@ -151,7 +150,7 @@ impl<'a> SuggestDao<'a> {
                     providers_to_sql_list(&query.providers),
                 ),
             )?, vec![
-                (":keyword", keyword_lowercased as &dyn ToSql),
+                (":keyword", &query.keyword as &dyn ToSql),
                 (":keyword_prefix", &keyword_prefix as &dyn ToSql),
                 (":suggestions_limit", &suggestions_limit as &dyn ToSql),
             ])
@@ -168,7 +167,7 @@ impl<'a> SuggestDao<'a> {
                     providers_to_sql_list(&query.providers),
                 ),
             )?, vec![
-                (":keyword", keyword_lowercased as &dyn ToSql),
+                (":keyword", &query.keyword as &dyn ToSql),
                 (":suggestions_limit", &suggestions_limit as &dyn ToSql),
             ])
         };
@@ -211,7 +210,7 @@ impl<'a> SuggestDao<'a> {
                                     title,
                                     url: cooked_url,
                                     raw_url,
-                                    full_keyword: full_keyword(keyword_lowercased, &keywords),
+                                    full_keyword: full_keyword(&query.keyword, &keywords),
                                     icon: row.get("icon")?,
                                     impression_url: row.get("impression_url")?,
                                     click_url: cooked_click_url,
@@ -234,7 +233,7 @@ impl<'a> SuggestDao<'a> {
                         Ok(Some(Suggestion::Wikipedia {
                             title,
                             url: raw_url,
-                            full_keyword: full_keyword(keyword_lowercased, &keywords),
+                            full_keyword: full_keyword(&query.keyword, &keywords),
                             icon,
                         }))
                     }

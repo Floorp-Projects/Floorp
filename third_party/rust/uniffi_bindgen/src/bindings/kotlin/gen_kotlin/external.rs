@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use super::CodeType;
-use crate::ComponentInterface;
+use crate::backend::{CodeType, Literal};
 
 #[derive(Debug)]
 pub struct ExternalCodeType {
@@ -17,11 +16,15 @@ impl ExternalCodeType {
 }
 
 impl CodeType for ExternalCodeType {
-    fn type_label(&self, _ci: &ComponentInterface) -> String {
+    fn type_label(&self) -> String {
         self.name.clone()
     }
 
     fn canonical_name(&self) -> String {
         format!("Type{}", self.name)
+    }
+
+    fn literal(&self, _literal: &Literal) -> String {
+        unreachable!("Can't have a literal of an external type");
     }
 }

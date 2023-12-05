@@ -154,11 +154,8 @@ pub impl FfiType {
             FfiType::ForeignExecutorCallback => {
                 unimplemented!("ForeignExecutorCallback not supported")
             }
-            FfiType::RustFutureHandle
-            | FfiType::RustFutureContinuationCallback
-            | FfiType::RustFutureContinuationData => {
-                unimplemented!("Rust async functions not supported")
-            }
+            FfiType::FutureCallback { .. } => unimplemented!("FutureCallback not supported"),
+            FfiType::FutureCallbackData => unimplemented!("FutureCallbackData not supported"),
         }
         .to_owned()
     }

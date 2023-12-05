@@ -2,9 +2,9 @@
 
 data class {{ type_name }} (
     {%- for field in rec.fields() %}
-    var {{ field.name()|var_name }}: {{ field|type_name(ci) -}}
+    var {{ field.name()|var_name }}: {{ field|type_name -}}
     {%- match field.default_value() %}
-        {%- when Some with(literal) %} = {{ literal|render_literal(field, ci) }}
+        {%- when Some with(literal) %} = {{ literal|render_literal(field) }}
         {%- else %}
     {%- endmatch -%}
     {% if !loop.last %}, {% endif %}
@@ -16,7 +16,6 @@ data class {{ type_name }} (
         {% call kt::destroy_fields(rec) %}
     }
     {% endif %}
-    companion object
 }
 
 public object {{ rec|ffi_converter_name }}: FfiConverterRustBuffer<{{ type_name }}> {

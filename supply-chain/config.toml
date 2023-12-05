@@ -151,10 +151,6 @@ audit-as-crates-io = false
 audit-as-crates-io = true
 notes = "Part of the wgpu repository, pinned as the rest of wgpu crates."
 
-[policy.oneshot]
-audit-as-crates-io = true
-notes = "Cloned from the official sources with an extra commit that doesn't affect moz-central"
-
 [policy.peek-poke]
 audit-as-crates-io = false
 
