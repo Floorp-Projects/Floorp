@@ -655,6 +655,7 @@ skip-if = [
   "os == 'android'",
   "socketprocess_networking",
   "os == 'win' && msix", # https://bugzilla.mozilla.org/show_bug.cgi?id=1808049
+  "apple_silicon", # https://bugzilla.mozilla.org/show_bug.cgi?id=1866067
 ]
 run-sequentially = "node server exceptions dont replay well"
 
