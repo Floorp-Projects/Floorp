@@ -8,7 +8,7 @@ defaults pref(gfx.font_rendering.fallback.async,false)
 # (First attempt is random-if(windows 7), due to intermittent failure with a
 # single missing character - see bug 1451723 & more generally bug 1392106.)
 pref(font.default.zh-CN,"serif") pref(font.default.zh-TW,"serif") pref(font.default.ja,"serif") pref(font.default.ko,"serif") == 1394311.htm 1394311-ref.htm
-pref(font.default.zh-CN,"sans-serif") pref(font.default.zh-TW,"sans-serif") pref(font.default.ja,"sans-serif") pref(font.default.ko,"sans-serif") skip-if(winWidget&&/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1394311.htm 1394311-ref.htm
+pref(font.default.zh-CN,"sans-serif") pref(font.default.zh-TW,"sans-serif") pref(font.default.ja,"sans-serif") pref(font.default.ko,"sans-serif") == 1394311.htm 1394311-ref.htm
 
 # tests for bug 1367860 (correct default generic font based on language)
 == 1367860-1.htm 1367860-ref.htm
@@ -63,9 +63,9 @@ random-if(cocoaWidget) != impact-bold.html impact.html # bug 539418
 == arial-variations-6.html arial-variations-6-ref.html
 
 # localized font family names should always match just as English names do
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),255-255,400-400) == localized-family-names-001.html localized-family-names-001-ref.html # Bug 1392106
+== localized-family-names-001.html localized-family-names-001-ref.html # Bug 1392106
 == localized-family-names-002.html localized-family-names-002-ref.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),255-255,2725-2725) == localized-family-names-003.html localized-family-names-003-ref.html # Bug 1392106
+== localized-family-names-003.html localized-family-names-003-ref.html # Bug 1392106
 == localized-family-names-004.html localized-family-names-004-ref.html
 
 # family names with escaped spaces shouldn't match the names without the spaces
@@ -134,11 +134,11 @@ skip-if(!cocoaWidget) != apple-symbols-1.html apple-symbols-1-notref.html
 # GTK and Windows 7 don't have full emoji and symbol font, so emoji-fallback-2
 # don't work well.
 == emoji-fallback-1.html emoji-fallback-1-ref.html
-skip-if(gtkWidget||/^Windows\x20NT\x206\.1/.test(http.oscpu)) == emoji-fallback-2.html emoji-fallback-2-ref.html
+skip-if(gtkWidget) == emoji-fallback-2.html emoji-fallback-2-ref.html
 == emoji-fallback-3.html emoji-fallback-3-ref.html
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) != emoji-keycap.html emoji-keycap-notref.html
+!= emoji-keycap.html emoji-keycap-notref.html
 # Dependent on Windows emoji font names, so not expected to be meaningful on other platforms:
-skip-if(!winWidget||/^Windows\x20NT\x206\.1/.test(http.oscpu)) != emoji-keycap-2.html emoji-keycap-2-notref.html
+skip-if(!winWidget) != emoji-keycap-2.html emoji-keycap-2-notref.html
 == emoji-skintone.html emoji-skintone-ref.html
 # Random on Android because font availability varies depending on the version/device.
 random-if(Android) != emoji-subregion-flag.html emoji-subregion-flag-notref.html

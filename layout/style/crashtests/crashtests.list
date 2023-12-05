@@ -208,11 +208,11 @@ load content-only-on-visited-before.html
 load font-face-truncated-src.html
 load large_border_image_width.html
 load link-transition-before.html
-skip-if(winWidget&&isDebugBuild&&/^Windows\x20NT\x206\.1/.test(http.oscpu)) load long-url-list-stack-overflow.html #Bug 1525117
+load long-url-list-stack-overflow.html #Bug 1525117
 skip-if(wayland) load scale-on-block-continuation.html  # wayland: bug 1856389
-skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&/^aarch64-msvc/.test(xulRuntime.XPCOMABI)) skip-if(AddressSanitizer) skip-if(ThreadSanitizer) load 1383981.html # Very sensitive to stack size.
-skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&/^aarch64-msvc/.test(xulRuntime.XPCOMABI)) skip-if(AddressSanitizer) skip-if(ThreadSanitizer) load 1383981-2.html
-skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&/^aarch64-msvc/.test(xulRuntime.XPCOMABI)) skip-if(AddressSanitizer) skip-if(ThreadSanitizer) load 1383981-3.html
+skip-if(AddressSanitizer) skip-if(ThreadSanitizer) load 1383981.html # Very sensitive to stack size.
+skip-if(AddressSanitizer) skip-if(ThreadSanitizer) load 1383981-2.html
+skip-if(AddressSanitizer) skip-if(ThreadSanitizer) load 1383981-3.html
 load 1384824-1.html
 load 1384824-2.html
 load 1386773.html

@@ -73,7 +73,7 @@ fuzzy(0-1,0-116) == invalidate-1a.html invalidate-1-ref.html
 fuzzy(0-1,0-117) == invalidate-1b.html invalidate-1-ref.html
 
 # test that border-radius is reduced for scrollbars
-fails-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-12,0-12) fuzzy-if(browserIsRemote&&layersGPUAccelerated&&/^Windows\x20NT\x206\.1/.test(http.oscpu),0-12,0-12) fuzzy-if(!Android,0-1,0-50) fuzzy-if(gtkWidget&&layersGPUAccelerated,0-12,0-12) == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html
+fails-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-12,0-12) fuzzy-if(!Android,0-1,0-50) fuzzy-if(gtkWidget&&layersGPUAccelerated,0-12,0-12) == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html
 fails-if(Android) == scrollbar-clamping-2.html scrollbar-clamping-2-ref.html
 
 # Test for bad corner joins.

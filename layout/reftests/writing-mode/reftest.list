@@ -143,7 +143,7 @@ test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLin
 == 1158549-1-vertical-block-size-constraints.html 1158549-1-vertical-block-size-constraints-ref.html
 == 1163238-orthogonal-auto-margins.html 1163238-orthogonal-auto-margins-ref.html
 == 1174450-intrinsic-sizing.html 1174450-intrinsic-sizing-ref.html
-skip-if(winWidget&&/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1175789-underline-overline-1.html 1175789-underline-overline-1-ref.html # bug 1442637
+== 1175789-underline-overline-1.html 1175789-underline-overline-1-ref.html # bug 1442637
 == 1188061-1-nsChangeHint_ClearAncestorIntrinsics.html 1188061-1-nsChangeHint_ClearAncestorIntrinsics-ref.html
 == 1188061-2-nsChangeHint_UpdateComputedBSize.html 1188061-2-nsChangeHint_UpdateComputedBSize-ref.html
 
@@ -182,11 +182,11 @@ fuzzy-if(Android,0-54,0-852) == 1302389-scrolled-rect-2d.html 1302389-scrolled-r
 
 == 1361631-mongolian-upright-1.html 1361631-mongolian-upright-1-ref.html
 == 1395926-vertical-upright-gpos-1.html 1395926-vertical-upright-gpos-1-ref.html
-fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1673510-1.html 1673510-1-ref.html # bug 1770273
+== 1673510-1.html 1673510-1-ref.html # bug 1770273
 
 # Suite of tests from Gérard Talbot in bug 1079151
 # Frequent Windows 7 load failed: timed out waiting for test to complete (waiting for onload scripts to complete), bug 1167155 and friends
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) include abspos/reftest.list
+include abspos/reftest.list
 
 # Tests for tables with vertical writing modes
 include tables/reftest.list

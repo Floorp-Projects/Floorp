@@ -141,9 +141,9 @@ skip-if(Android) == cjkcisvs-1.html cjkcisvs-1-ref.html # Android bug 1250229, B
 
 # Tests for bug 670900 - handling of 404 (not found) error in @font-face URL
 # (using Chunkfive font data returned from a .sjs file)
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) HTTP(..) == font-error-404-1.html font-error-404-1-ref.html # HTTP status 404, don't load
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) HTTP(..) == font-error-404-2.html font-error-404-2-ref.html # HTTP status 200, load # random on win7, see bug 1786796 comment 9
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) HTTP(..) != font-error-404-1.html font-error-404-2.html # sanity-check that the results differ
+HTTP(..) == font-error-404-1.html font-error-404-1-ref.html # HTTP status 404, don't load
+HTTP(..) == font-error-404-2.html font-error-404-2-ref.html # HTTP status 200, load # random on win7, see bug 1786796 comment 9
+HTTP(..) != font-error-404-1.html font-error-404-2.html # sanity-check that the results differ
 
 # Font load redirection
 HTTP(..) == font-redirect.html order-1-ref.html
@@ -166,49 +166,49 @@ fuzzy-if(OSX,198-198,172-172) == color-1b.html color-1-ref.html
 # These are skipped on Win7 because lack of font-variation support means the COLR table
 # in the test font CAhem.ttf will be dropped.
 defaults pref(gfx.font_rendering.colr_v1.enabled,true)
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-64,0-200) == colrv1-01.html#A colrv1-01-ref.html#A
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-32,0-200) == colrv1-01.html#B colrv1-01-ref.html#B
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-8,0-10100) == colrv1-01.html#C colrv1-01-ref.html#C
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-64,0-600) == colrv1-01.html#D colrv1-01-ref.html#D
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-64,0-398) == colrv1-01.html#E colrv1-01-ref.html#E
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-64,0-398) == colrv1-01.html#F colrv1-01-ref.html#F
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-64,0-596) == colrv1-01.html#G colrv1-01-ref.html#G
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-64,0-596) == colrv1-01.html#H colrv1-01-ref.html#H
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-64,0-10100) == colrv1-01.html#I colrv1-01-ref.html#I
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-64,0-6806) == colrv1-01.html#J colrv1-01-ref.html#J
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-1,0-748) == colrv1-01.html#K colrv1-01-ref.html#K
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-67,0-9494) == colrv1-01.html#L colrv1-01-ref.html#L
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-64,0-3578) == colrv1-01.html#M colrv1-01-ref.html#M
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-64,0-6116) == colrv1-01.html#N colrv1-01-ref.html#N
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-80,0-5491) == colrv1-01.html#O colrv1-01-ref.html#O
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-112,0-300) == colrv1-01.html#P colrv1-01-ref.html#P
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-149,0-484) == colrv1-01.html#Q colrv1-01-ref.html#Q
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-214,0-461) == colrv1-01.html#R colrv1-01-ref.html#R
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-255,0-373) == colrv1-01.html#S colrv1-01-ref.html#S
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-255,0-290) == colrv1-01.html#T colrv1-01-ref.html#T
+fuzzy(0-64,0-200) == colrv1-01.html#A colrv1-01-ref.html#A
+fuzzy(0-32,0-200) == colrv1-01.html#B colrv1-01-ref.html#B
+fuzzy(0-8,0-10100) == colrv1-01.html#C colrv1-01-ref.html#C
+fuzzy(0-64,0-600) == colrv1-01.html#D colrv1-01-ref.html#D
+fuzzy(0-64,0-398) == colrv1-01.html#E colrv1-01-ref.html#E
+fuzzy(0-64,0-398) == colrv1-01.html#F colrv1-01-ref.html#F
+fuzzy(0-64,0-596) == colrv1-01.html#G colrv1-01-ref.html#G
+fuzzy(0-64,0-596) == colrv1-01.html#H colrv1-01-ref.html#H
+fuzzy(0-64,0-10100) == colrv1-01.html#I colrv1-01-ref.html#I
+fuzzy(0-64,0-6806) == colrv1-01.html#J colrv1-01-ref.html#J
+fuzzy(0-1,0-748) == colrv1-01.html#K colrv1-01-ref.html#K
+fuzzy(0-67,0-9494) == colrv1-01.html#L colrv1-01-ref.html#L
+fuzzy(0-64,0-3578) == colrv1-01.html#M colrv1-01-ref.html#M
+fuzzy(0-64,0-6116) == colrv1-01.html#N colrv1-01-ref.html#N
+fuzzy(0-80,0-5491) == colrv1-01.html#O colrv1-01-ref.html#O
+fuzzy(0-112,0-300) == colrv1-01.html#P colrv1-01-ref.html#P
+fuzzy(0-149,0-484) == colrv1-01.html#Q colrv1-01-ref.html#Q
+fuzzy(0-214,0-461) == colrv1-01.html#R colrv1-01-ref.html#R
+fuzzy(0-255,0-373) == colrv1-01.html#S colrv1-01-ref.html#S
+fuzzy(0-255,0-290) == colrv1-01.html#T colrv1-01-ref.html#T
 
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-1,0-1) == colrv1-03.html colrv1-03-ref.html
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-1,0-1800) fuzzy-if(Android,0-64,0-37100) == colrv1-04.html colrv1-04-ref.html
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(Android,8-8,1484-1484) == colrv1-05.html colrv1-05-ref.html
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-1,0-291) == colrv1-06.html colrv1-06-ref.html
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy(0-128,0-264) == colrv1-07.html colrv1-07-ref.html
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == colrv1-08.html colrv1-08-ref.html
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == colrv1-09.html colrv1-09-ref.html
+fuzzy(0-1,0-1) == colrv1-03.html colrv1-03-ref.html
+fuzzy(0-1,0-1800) fuzzy-if(Android,0-64,0-37100) == colrv1-04.html colrv1-04-ref.html
+fuzzy-if(Android,8-8,1484-1484) == colrv1-05.html colrv1-05-ref.html
+fuzzy(0-1,0-291) == colrv1-06.html colrv1-06-ref.html
+fuzzy(0-128,0-264) == colrv1-07.html colrv1-07-ref.html
+== colrv1-08.html colrv1-08-ref.html
+== colrv1-09.html colrv1-09-ref.html
 defaults
 
 # Check that the tech(color-COLRv1) function responds to whether COLRv1 support is enabled.
 defaults pref(layout.css.font-tech.enabled,true)
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) pref(gfx.font_rendering.colr_v1.enabled,true) == colrv1-02.html colrv1-02a-ref.html
-skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) pref(gfx.font_rendering.colr_v1.enabled,false) == colrv1-02.html colrv1-02b-ref.html
+pref(gfx.font_rendering.colr_v1.enabled,true) == colrv1-02.html colrv1-02a-ref.html
+pref(gfx.font_rendering.colr_v1.enabled,false) == colrv1-02.html colrv1-02b-ref.html
 defaults
 
 == woff2-1.html woff2-1-ref.html
 == woff2-totalsfntsize.html woff2-totalsfntsize-ref.html
 
 # sanity tests for reflow behavior with downloadable fonts
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) HTTP(..) == reflow-sanity-1.html reflow-sanity-1-ref.html # random on win7, see bug 1786796 comment 9
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) HTTP(..) == reflow-sanity-1-data.html reflow-sanity-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) HTTP(..) == reflow-sanity-1.html reflow-sanity-1-data.html
+HTTP(..) == reflow-sanity-1.html reflow-sanity-1-ref.html # random on win7, see bug 1786796 comment 9
+HTTP(..) == reflow-sanity-1-data.html reflow-sanity-1-ref.html
+HTTP(..) == reflow-sanity-1.html reflow-sanity-1-data.html
 HTTP(..) == reflow-sanity-delay-1a.html reflow-sanity-1-ref.html
 HTTP(..) == reflow-sanity-delay-1b.html reflow-sanity-1-ref.html
 HTTP(..) == reflow-sanity-delay-1c.html reflow-sanity-1-ref.html
@@ -223,9 +223,9 @@ HTTP(..) == font-display-2.html font-display-2-ref.html # font load takes 4500ms
 # Testing hack for Meiryo
 == meiryo-en.html meiryo-ja.html
 == meiryo-en-bold.html meiryo-ja-bold.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),255-255,14462-14462) == meiryo-en-italic.html meiryo-ja-italic.html # Bug 1392106
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),255-255,14462-14462) == meiryo-en-oblique.html meiryo-ja-oblique.html # Bug 1392106
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),255-255,16299-16299) == meiryo-en-bolditalic.html meiryo-ja-bolditalic.html # Bug 1392106
+== meiryo-en-italic.html meiryo-ja-italic.html # Bug 1392106
+== meiryo-en-oblique.html meiryo-ja-oblique.html # Bug 1392106
+== meiryo-en-bolditalic.html meiryo-ja-bolditalic.html # Bug 1392106
 != meiryo-en-bold.html meiryo-en.html
 != meiryo-en-italic.html meiryo-en.html
 != meiryo-en-oblique.html meiryo-en.html
@@ -234,16 +234,16 @@ fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),255-255,16299-16299) == meiry
 
 # test support of variation-font format hints
 defaults pref(layout.css.font-variations.enabled,false)
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),0-255,0-2777) == variation-format-hint-1a.html variation-format-hint-1A-ref.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),0-255,0-2777) == variation-format-hint-1b.html variation-format-hint-1A-ref.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),0-255,0-2777) == variation-format-hint-1c.html variation-format-hint-1A-ref.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),0-255,0-2777) == variation-format-hint-1d.html variation-format-hint-1A-ref.html
+== variation-format-hint-1a.html variation-format-hint-1A-ref.html
+== variation-format-hint-1b.html variation-format-hint-1A-ref.html
+== variation-format-hint-1c.html variation-format-hint-1A-ref.html
+== variation-format-hint-1d.html variation-format-hint-1A-ref.html
 defaults pref(layout.css.font-variations.enabled,true)
 # Currently Windows 7 and macOS all fail on 
 # treeherder because our OS versions are too old to support variation fonts
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),0-255,0-2777) == variation-format-hint-1a.html variation-format-hint-1B-ttf-ref.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),0-255,0-2777) == variation-format-hint-1b.html variation-format-hint-1B-otf-ref.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),0-255,0-2777) == variation-format-hint-1c.html variation-format-hint-1B-woff-ref.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),0-255,0-2777) == variation-format-hint-1d.html variation-format-hint-1B-woff2-ref.html
+== variation-format-hint-1a.html variation-format-hint-1B-ttf-ref.html
+== variation-format-hint-1b.html variation-format-hint-1B-otf-ref.html
+== variation-format-hint-1c.html variation-format-hint-1B-woff-ref.html
+== variation-format-hint-1d.html variation-format-hint-1B-woff2-ref.html
 
 defaults

@@ -143,7 +143,7 @@ random-if(!winWidget) == arial-bold-lam-alef-1.html arial-bold-lam-alef-1-ref.ht
 == 745555-2.html 745555-2-ref.html
 == 820255.html 820255-ref.html
 != 1170688.html 1170688-ref.html
-fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1320665-cmap-format-13.html 1320665-cmap-format-13-ref.html # see bug 1320665 comments 8-9
+== 1320665-cmap-format-13.html 1320665-cmap-format-13-ref.html # see bug 1320665 comments 8-9
 == 1331339-script-extensions-shaping-1.html 1331339-script-extensions-shaping-1-ref.html
 skip-if(!cocoaWidget) != 1349308-1.html 1349308-notref.html # macOS-specific test for -apple-system glyph metrics
 fuzzy-if(Android,0-128,0-233) == 1463020-letter-spacing-text-transform-1.html 1463020-letter-spacing-text-transform-1-ref.html

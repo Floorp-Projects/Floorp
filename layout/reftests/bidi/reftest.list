@@ -50,8 +50,8 @@ random-if(cocoaWidget) == with-first-letter-2b.html with-first-letter-2-ref.html
 == 83958-1a.html 83958-1-ref.html
 == 83958-1b.html 83958-1-ref.html
 == 83958-1c.html 83958-1-ref.html
-fuzzy-if(Android,0-1,0-3) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,0-111,0-7) == 83958-2a.html 83958-2-ref.html
-fuzzy-if(Android,0-1,0-3) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,0-111,0-7) == 83958-2b.html 83958-2-ref.html
+fuzzy-if(Android,0-1,0-3) == 83958-2a.html 83958-2-ref.html
+fuzzy-if(Android,0-1,0-3) == 83958-2b.html 83958-2-ref.html
 == 115921-1.html 115921-1-ref.html
 == 115921-2.html 115921-2-ref.html
 == 151407-1.html 151407-1-ref.html
@@ -114,7 +114,7 @@ fuzzy-if(Android,0-1,0-1) == 613149-1b.html 613149-1-ref.html # Bug 1392106
 == 613149-2a.html 613149-2-ref.html # Bug 1392106
 fuzzy-if(Android,0-24,0-1) == 613149-2b.html 613149-2-ref.html # Bug 1392106
 == 613157-1.html 613157-1-ref.html
-fuzzy-if(winWidget,0-1,0-1) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,0-255,0-6) == 613157-2.html 613157-2-ref.html
+fuzzy-if(winWidget,0-1,0-1) == 613157-2.html 613157-2-ref.html
 == 662288-1.html 662288-1-ref.html # Bug 1392106
 == 670226-1.html 670226-1-ref.html
 == 676245-1.html 676245-1-ref.html
