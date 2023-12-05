@@ -20,6 +20,3 @@ skip-if = [
 
 ["browser_toolbarKeyNav.js"]
 support-files = ["!/browser/base/content/test/permissions/permissions.html"]
-skip-if = [
-  "apple_catalina && !debug", # Bug 1775713
-]
