@@ -7,11 +7,11 @@
 #ifndef gfx_layers_ipc_VideoBridgeParent_h_
 #define gfx_layers_ipc_VideoBridgeParent_h_
 
+#include "mozilla/Monitor.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/PVideoBridgeParent.h"
 
-namespace mozilla {
-namespace layers {
+namespace mozilla::layers {
 
 enum class VideoBridgeSource : uint8_t;
 class CompositorThreadHolder;
@@ -22,7 +22,7 @@ class VideoBridgeParent final : public PVideoBridgeParent,
  public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(VideoBridgeParent, HostIPCAllocator)
 
-  static VideoBridgeParent* GetSingleton(
+  static RefPtr<VideoBridgeParent> GetSingleton(
       const Maybe<VideoBridgeSource>& aSource);
 
   static void Open(Endpoint<PVideoBridgeParent>&& aEndpoint,
@@ -30,8 +30,10 @@ class VideoBridgeParent final : public PVideoBridgeParent,
   static void Shutdown();
   static void UnregisterExternalImages();
 
-  TextureHost* LookupTexture(const dom::ContentParentId& aContentId,
-                             uint64_t aSerial);
+  already_AddRefed<TextureHost> LookupTextureAsync(
+      const dom::ContentParentId& aContentId, uint64_t aSerial);
+  already_AddRefed<TextureHost> LookupTexture(
+      const dom::ContentParentId& aContentId, uint64_t aSerial);
 
   // PVideoBridgeParent
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -56,11 +58,11 @@ class VideoBridgeParent final : public PVideoBridgeParent,
   bool IPCOpen() const override { return !mClosed; }
 
   // IShmemAllocator
-  bool AllocShmem(size_t aSize, ipc::Shmem* aShmem) override;
+  bool AllocShmem(size_t aSize, mozilla::ipc::Shmem* aShmem) override;
 
-  bool AllocUnsafeShmem(size_t aSize, ipc::Shmem* aShmem) override;
+  bool AllocUnsafeShmem(size_t aSize, mozilla::ipc::Shmem* aShmem) override;
 
-  bool DeallocShmem(ipc::Shmem& aShmem) override;
+  bool DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
   void OnChannelError() override;
 
@@ -73,14 +75,13 @@ class VideoBridgeParent final : public PVideoBridgeParent,
 
   void DoUnregisterExternalImages();
 
-  RefPtr<CompositorThreadHolder> mCompositorThreadHolder;
-
-  std::map<uint64_t, PTextureParent*> mTextureMap;
-
+  Monitor mMonitor;
+  RefPtr<CompositorThreadHolder> mCompositorThreadHolder
+      MOZ_GUARDED_BY(mMonitor);
+  std::map<uint64_t, PTextureParent*> mTextureMap MOZ_GUARDED_BY(mMonitor);
   bool mClosed;
 };
 
-}  // namespace layers
-}  // namespace mozilla
+}  // namespace mozilla::layers
 
 #endif  // gfx_layers_ipc_VideoBridgeParent_h_
