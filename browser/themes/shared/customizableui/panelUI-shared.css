@@ -2083,7 +2083,9 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   }
 
   &.sent-view {
-    background-color: var(--color-background-success);
+    @media not (prefers-contrast) {
+      background-color: var(--color-background-success);
+    }
 
     > .panel-header {
       --arrowpanel-header-additional-element-width: 16px;
