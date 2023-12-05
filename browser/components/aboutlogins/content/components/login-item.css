@@ -210,29 +210,26 @@ input[name="password"] {
 }
 
 .reveal-password-checkbox {
-  /* !important is needed to override common.css styling for checkboxes */
-  background-color: transparent !important;
-  border-width: 0 !important;
-  background-image: url("resource://gre-resources/password.svg") !important;
-  margin-inline: 10px 0 !important;
+  appearance: none;
+  background-image: url("resource://gre-resources/password.svg");
+  margin-inline: 10px 0;
   cursor: pointer;
   -moz-context-properties: fill;
-  fill: currentColor !important;
-  color: inherit !important;
+  fill: currentColor;
+  color: inherit;
   opacity: var(--reveal-checkbox-opacity);
-  flex-shrink: 0;
-}
 
-.reveal-password-checkbox:hover {
-  opacity: var(--reveal-checkbox-opacity-hover);
-}
+  &:hover {
+    opacity: var(--reveal-checkbox-opacity-hover);
 
-.reveal-password-checkbox:hover:active {
-  opacity: var(--reveal-checkbox-opacity-active);
-}
+    &:active {
+      opacity: var(--reveal-checkbox-opacity-active);
+    }
+  }
 
-.reveal-password-checkbox:checked {
-  background-image: url("resource://gre-resources/password-hide.svg") !important;
+  &:checked {
+    background-image: url("resource://gre-resources/password-hide.svg");
+  }
 }
 
 .login-item-favicon {
