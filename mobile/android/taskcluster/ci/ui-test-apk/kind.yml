@@ -170,18 +170,72 @@ tasks:
                   key: firebaseToken
                   path: .firebase_token.json
                   json: true
+                - name: project/mobile/ci/testrail
+                  key: testrailCredentials
+                  path: .testrail_credentials.json
+                  json: true
             pre-commands:
                 - ["cd", "focus-android"]
             commands:
                 - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/target.arm64-v8a.apk>'}, '-O', app.apk]
                 - [wget, {artifact-reference: '<signed-apk-android-test/public/build/target.noarch.apk>'}, '-O', android-test.apk]
                 - ['automation/taskcluster/androidTest/ui-test.sh', 'arm-beta-tests', 'app.apk', 'android-test.apk', '1']
+                - [python3, automation/taskcluster/androidTest/testrail.py]
         treeherder:
             platform: 'focus-ui-test/opt'
             symbol: focus-beta(ui-test-arm-beta)
         worker:
             env:
                 GOOGLE_PROJECT: 'moz-focus-android'
+                PRODUCT_TYPE: Focus
+                RELEASE_TYPE: Beta
+        routes:
+            - notify.slack-channel.G016BC5FUHJ.on-completed
+        scopes:
+            - queue:route:notify.slack-channel.G016BC5FUHJ.on-completed
+                - notify:slack-channel:G016BC5FUHJ
+        extra:
+            notify:
+                # slackText: 'https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId} | ${task.metadata.name} | ${task.metadata.source}'
+                slackBlocks: |
+                    [
+                      {
+                        "type": "header",
+                        "text": {
+                          "type": "plain_text",
+                          "text": "firefox-android :tada: Testrail Release Milestone Creation :tada:\n "
+                        }
+                      },
+                      {
+                        "type": "divider"
+                      },
+                      {
+                        "type": "section",
+                        "text": {
+                          "type": "mrkdwn",
+                          "text": "*Testrail Release Milestone*: <https://testrail.stage.mozaws.net/index.php?/projects/overview/53|Milestone> :clown_face:"
+                        }
+                      },
+                      {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": "*Testrail Release Milestone* has been created"
+                        }
+                      },
+                      {
+                        "type": "divider"
+                      },
+                      {
+                        "type": "context",
+                        "elements": [
+                            {
+                                "type": "mrkdwn",
+                                "text": ":testops-notify: created by <https://mozilla-hub.atlassian.net/wiki/spaces/MTE/overview|Mobile Test Engineering>"
+                            }
+                        ]
+                      }
+                    ]
     fenix-arm-debug:
         attributes:
             shipping-product: fenix
@@ -253,18 +307,72 @@ tasks:
                   key: firebaseToken
                   path: .firebase_token.json
                   json: true
+                - name: project/mobile/ci/testrail
+                  key: testrailCredentials
+                  path: .testrail_credentials.json
+                  json: true
             pre-commands:
                 - ["cd", "fenix"]
             commands:
                 - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/target.arm64-v8a.apk>'}, '-O', app.apk]
                 - [wget, {artifact-reference: '<signed-apk-android-test/public/build/target.noarch.apk>'}, '-O', android-test.apk]
                 - [automation/taskcluster/androidTest/ui-test.sh, arm-beta-tests, app.apk, android-test.apk, '2']
+                - [python3, automation/taskcluster/androidTest/testrail.py]
         treeherder:
             platform: 'fenix-ui-test/opt'
             symbol: fenix-beta(ui-test-arm-beta)
         worker:
             env:
                 GOOGLE_PROJECT: moz-fenix
+                PRODUCT_TYPE: Firefox
+                RELEASE_TYPE: Beta
+        routes:
+            - notify.slack-channel.G016BC5FUHJ.on-completed
+        scopes:
+            - queue:route:notify.slack-channel.G016BC5FUHJ.on-completed
+                - notify:slack-channel:G016BC5FUHJ
+        extra:
+            notify:
+                # slackText: 'https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId} | ${task.metadata.name} | ${task.metadata.source}'
+                slackBlocks: |
+                    [
+                      {
+                        "type": "header",
+                        "text": {
+                          "type": "plain_text",
+                          "text": "firefox-android :tada: Testrail Release Milestone Creation :tada:\n "
+                        }
+                      },
+                      {
+                        "type": "divider"
+                      },
+                      {
+                        "type": "section",
+                        "text": {
+                          "type": "mrkdwn",
+                          "text": "*Testrail Release Milestone*: <https://testrail.stage.mozaws.net/index.php?/projects/overview/53|Milestone> :clown_face:"
+                        }
+                      },
+                      {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": "*Testrail Release Milestone* has been created"
+                        }
+                      },
+                      {
+                        "type": "divider"
+                      },
+                      {
+                        "type": "context",
+                        "elements": [
+                            {
+                                "type": "mrkdwn",
+                                "text": ":testops-notify: created by <https://mozilla-hub.atlassian.net/wiki/spaces/MTE/overview|Mobile Test Engineering>"
+                            }
+                        ]
+                      }
+                    ]
     fenix-arm-nightly:
         attributes:
             build-type: fenix-nightly-firebase
