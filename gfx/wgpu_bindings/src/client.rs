@@ -1272,6 +1272,21 @@ pub unsafe extern "C" fn wgpu_command_encoder_copy_texture_to_texture(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn wgpu_command_encoder_clear_buffer(
+    dst: wgc::id::BufferId,
+    offset: u64,
+    size: Option<&u64>,
+    bb: &mut ByteBuf,
+) {
+    let action = CommandEncoderAction::ClearBuffer {
+        dst,
+        offset,
+        size: size.cloned(),
+    };
+    *bb = make_byte_buf(&action);
+}
+
+#[no_mangle]
 pub extern "C" fn wgpu_command_encoder_push_debug_group(marker: &nsACString, bb: &mut ByteBuf) {
     let string = marker.to_string();
     let action = CommandEncoderAction::PushDebugGroup(string);
