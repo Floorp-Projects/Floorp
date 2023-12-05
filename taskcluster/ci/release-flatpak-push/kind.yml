@@ -37,5 +37,6 @@ job-defaults:
 jobs:
     firefox:
         shipping-product: firefox
+        flathub-scope: "flathub:firefox"
         treeherder:
             symbol: Flatpak(push)
