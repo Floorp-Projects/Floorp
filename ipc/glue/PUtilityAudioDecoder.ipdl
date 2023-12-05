@@ -10,6 +10,10 @@ include protocol PVideoBridge;
 using mozilla::media::MediaCodecsSupported from "MediaCodecsSupport.h";
 using mozilla::RemoteDecodeIn from "mozilla/RemoteDecoderManagerChild.h";
 
+#ifdef MOZ_WMF_CDM
+using mozilla::MFCDMCapabilitiesIPDL from "mozilla/PMFCDM.h";
+#endif
+
 namespace mozilla {
 
 namespace ipc {
@@ -28,6 +32,10 @@ parent:
                         ContentDeviceData contentDeviceData);
 
   async UpdateVar(GfxVarUpdate var);
+#endif
+
+#ifdef MOZ_WMF_CDM
+  async GetKeySystemCapabilities() returns (MFCDMCapabilitiesIPDL[] result);
 #endif
 
 child:
