@@ -999,8 +999,6 @@ WEBIDL_FILES = [
     "VRServiceTest.webidl",
     "VTTCue.webidl",
     "VTTRegion.webidl",
-    "WakeLock.webidl",
-    "WakeLockSentinel.webidl",
     "WaveShaperNode.webidl",
     "WebAuthentication.webidl",
     "WebGL2RenderingContext.webidl",

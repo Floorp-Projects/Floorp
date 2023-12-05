@@ -378,10 +378,3 @@ partial interface Navigator {
 partial interface Navigator {
   [SameObject] readonly attribute UserActivation userActivation;
 };
-
-// https://w3c.github.io/screen-wake-lock/#extensions-to-the-navigator-interface
-[SecureContext]
-partial interface Navigator {
-  [SameObject, Pref="dom.screenwakelock.enabled"]
-  readonly attribute WakeLock wakeLock;
-};
