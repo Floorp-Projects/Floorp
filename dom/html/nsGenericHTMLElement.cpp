@@ -2717,7 +2717,7 @@ bool nsGenericHTMLFormControlElement::DoesReadOnlyApply() const {
 void nsGenericHTMLFormControlElement::SetFormInternal(HTMLFormElement* aForm,
                                                       bool aBindToTree) {
   if (aForm) {
-    BeforeSetForm(aBindToTree);
+    BeforeSetForm(aForm, aBindToTree);
   }
 
   // keep a *weak* ref to the form here
