@@ -14,18 +14,12 @@
 #include "mozilla/layers/CanvasDrawEventRecorder.h"
 #include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/layers/PCanvasParent.h"
-#include "mozilla/layers/RemoteTextureMap.h"
 #include "mozilla/ipc/CrossProcessSemaphore.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 class TaskQueue;
-
-namespace gfx {
-class DrawTargetWebgl;
-class SharedContextWebgl;
-}  // namespace gfx
 
 namespace layers {
 
@@ -58,7 +52,6 @@ class CanvasTranslator final : public gfx::InlineTranslator,
    * CanvasEventRingBuffer.
    *
    * @param aTextureType the TextureType the translator will create
-   * @param aBackendType the BackendType for texture data
    * @param aReadHandle handle to the shared memory for the
    *        CanvasEventRingBuffer
    * @param aReaderSem reading blocked semaphore for the CanvasEventRingBuffer
@@ -67,7 +60,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
    *        pool for translation requests
    */
   ipc::IPCResult RecvInitTranslator(
-      const TextureType& aTextureType, const gfx::BackendType& aBackendType,
+      const TextureType& aTextureType,
       ipc::SharedMemoryBasic::Handle&& aReadHandle,
       CrossProcessSemaphoreHandle&& aReaderSem,
       CrossProcessSemaphoreHandle&& aWriterSem, const bool& aUseIPDLThread);
@@ -125,7 +118,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
    * @param aData the data to be written back to the writer
    * @param aSize the number of chars to write
    */
-  void ReturnWrite(const uint8_t* aData, size_t aSize) {
+  void ReturnWrite(const char* aData, size_t aSize) {
     mStream->ReturnWrite(aData, aSize);
   }
 
@@ -133,9 +126,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
    * Set the texture ID that will be used as a lookup for the texture created by
    * the next CreateDrawTarget.
    */
-  void SetNextTextureId(int64_t aNextTextureId, RemoteTextureOwnerId aOwnerId) {
+  void SetNextTextureId(int64_t aNextTextureId) {
     mNextTextureId = aNextTextureId;
-    mNextRemoteTextureOwnerId = aOwnerId;
   }
 
   /**
@@ -170,12 +162,6 @@ class CanvasTranslator final : public gfx::InlineTranslator,
    * @param aTextureId the texture ID to remove
    */
   void RemoveTexture(int64_t aTextureId);
-
-  bool LockTexture(int64_t aTextureId, OpenMode aMode, RemoteTextureId aId);
-  bool UnlockTexture(int64_t aTextureId, RemoteTextureId aId);
-
-  bool PushRemoteTexture(TextureData* aData, RemoteTextureId aId,
-                         RemoteTextureOwnerId aOwnerId);
 
   /**
    * Overriden to remove any DataSourceSurfaces associated with the RefPtr.
@@ -258,8 +244,6 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   UniquePtr<gfx::DataSourceSurface::ScopedMap> GetPreparedMap(
       gfx::ReferencePtr aSurface);
 
-  void PrepareShmem(int64_t aTextureId);
-
  private:
   ~CanvasTranslator();
 
@@ -273,14 +257,11 @@ class CanvasTranslator final : public gfx::InlineTranslator,
 
   void Deactivate();
 
-  void BlockCanvas();
-
   TextureData* CreateTextureData(TextureType aTextureType,
-                                 gfx::BackendType aBackendType,
                                  const gfx::IntSize& aSize,
                                  gfx::SurfaceFormat aFormat);
 
-  void ClearTextureInfo();
+  void AddSurfaceDescriptor(int64_t aTextureId, TextureData* atextureData);
 
   bool HandleExtensionEvent(int32_t aType);
 
@@ -288,17 +269,10 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   bool CheckForFreshCanvasDevice(int aLineNumber);
   void NotifyDeviceChanged();
 
-  bool EnsureSharedContextWebgl();
-  gfx::DrawTargetWebgl* GetDrawTargetWebgl(int64_t aTextureId) const;
-  void NotifyRequiresRefresh(int64_t aTextureId, bool aDispatch = true);
-  void CacheSnapshotShmem(int64_t aTextureId, bool aDispatch = true);
-
   RefPtr<TaskQueue> mTranslationTaskQueue;
 #if defined(XP_WIN)
   RefPtr<ID3D11Device> mDevice;
 #endif
-  RefPtr<gfx::SharedContextWebgl> mSharedContext;
-  RefPtr<RemoteTextureOwnerClient> mRemoteTextureOwner;
   // We hold the ring buffer as a UniquePtr so we can drop it once
   // mTranslationTaskQueue has shutdown to break a RefPtr cycle.
   UniquePtr<CanvasEventRingBuffer> mStream;
@@ -307,22 +281,13 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   // Sometimes during device reset our reference DrawTarget can be null, so we
   // hold the BackendType separately.
   gfx::BackendType mBackendType = gfx::BackendType::NONE;
-  struct TextureInfo {
-    UniquePtr<TextureData> mTextureData;
-    RefPtr<gfx::DrawTarget> mDrawTarget;
-    RemoteTextureOwnerId mRemoteTextureOwnerId;
-    bool mNotifiedRequiresRefresh = false;
-    // Ref-count of how active uses of the DT. Avoids deletion when locked.
-    int32_t mLocked = 1;
-  };
-  std::unordered_map<int64_t, TextureInfo> mTextureInfo;
+  typedef std::unordered_map<int64_t, UniquePtr<TextureData>> TextureMap;
+  TextureMap mTextureDatas;
   int64_t mNextTextureId = -1;
-  RemoteTextureOwnerId mNextRemoteTextureOwnerId;
   nsRefPtrHashtable<nsPtrHashKey<void>, gfx::DataSourceSurface> mDataSurfaces;
   gfx::ReferencePtr mMappedSurface;
   UniquePtr<gfx::DataSourceSurface::ScopedMap> mPreparedMap;
   Atomic<bool> mDeactivated{false};
-  Atomic<bool> mBlocked{false};
   bool mIsInTransaction = false;
   bool mDeviceResetInProgress = false;
 };

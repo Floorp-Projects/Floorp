@@ -39,7 +39,7 @@ class SharedSurfacesParent final {
 
   // Get without increasing the consumer count.
   static already_AddRefed<gfx::DataSourceSurface> Get(
-      const wr::ExternalImageId& aId, bool aAllowWait = false);
+      const wr::ExternalImageId& aId);
 
   // Get but also increase the consumer count. Must call Release after finished.
   static already_AddRefed<gfx::DataSourceSurface> Acquire(

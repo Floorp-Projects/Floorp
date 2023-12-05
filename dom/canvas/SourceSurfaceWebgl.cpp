@@ -17,7 +17,7 @@ SourceSurfaceWebgl::SourceSurfaceWebgl(DrawTargetWebgl* aDT)
 
 SourceSurfaceWebgl::SourceSurfaceWebgl(
     const RefPtr<TextureHandle>& aHandle,
-    const RefPtr<SharedContextWebgl>& aSharedContext)
+    const RefPtr<DrawTargetWebgl::SharedContext>& aSharedContext)
     : mFormat(aHandle->GetFormat()),
       mSize(aHandle->GetSize()),
       mSharedContext(aSharedContext),
@@ -117,7 +117,8 @@ void SourceSurfaceWebgl::GiveTexture(RefPtr<TextureHandle> aHandle) {
 
 // Handler for when the owner DrawTargetWebgl is destroying the cached texture
 // handle that has been allocated for this snapshot.
-void SourceSurfaceWebgl::OnUnlinkTexture(SharedContextWebgl* aContext) {
+void SourceSurfaceWebgl::OnUnlinkTexture(
+    DrawTargetWebgl::SharedContext* aContext) {
   // If we get here, then we must have copied a snapshot, which only happens
   // if the target changed.
   MOZ_ASSERT(!mDT);
@@ -141,7 +142,7 @@ already_AddRefed<SourceSurface> SourceSurfaceWebgl::ExtractSubrect(
     return nullptr;
   }
   RefPtr<TextureHandle> subHandle;
-  RefPtr<SharedContextWebgl> sharedContext;
+  RefPtr<DrawTargetWebgl::SharedContext> sharedContext;
   if (mDT) {
     // If this is still a snapshot linked to a target, then copy from the
     // target.

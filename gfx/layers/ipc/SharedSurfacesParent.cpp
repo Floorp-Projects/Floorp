@@ -27,7 +27,7 @@ StaticAutoPtr<SharedSurfacesParent> SharedSurfacesParent::sInstance;
 
 // Short wait to allow for a surface to be added, where the consumer has a
 // different thread route.
-static const TimeDuration kGetTimeout = TimeDuration::FromMilliseconds(1000);
+static const TimeDuration kGetTimeout = TimeDuration::FromMilliseconds(50);
 
 void SharedSurfacesParent::MappingTracker::NotifyExpiredLocked(
     SourceSurfaceSharedDataWrapper* aSurface,
@@ -95,7 +95,7 @@ void SharedSurfacesParent::Shutdown() {
 
 /* static */
 already_AddRefed<DataSourceSurface> SharedSurfacesParent::Get(
-    const wr::ExternalImageId& aId, bool aAllowWait) {
+    const wr::ExternalImageId& aId) {
   StaticMonitorAutoLock lock(sMonitor);
   if (!sInstance) {
     gfxCriticalNote << "SSP:Get " << wr::AsUint64(aId) << " shtd";
@@ -105,9 +105,6 @@ already_AddRefed<DataSourceSurface> SharedSurfacesParent::Get(
   RefPtr<SourceSurfaceSharedDataWrapper> surface;
   while (
       !sInstance->mSurfaces.Get(wr::AsUint64(aId), getter_AddRefs(surface))) {
-    if (!aAllowWait) {
-      return nullptr;
-    }
     CVStatus status = lock.Wait(kGetTimeout);
     if (status == CVStatus::Timeout) {
       return nullptr;

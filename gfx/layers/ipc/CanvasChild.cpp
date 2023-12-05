@@ -15,7 +15,6 @@
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/layers/CanvasDrawEventRecorder.h"
-#include "mozilla/layers/ImageDataSerializer.h"
 #include "nsIObserverService.h"
 #include "RecordedCanvasEventImpl.h"
 
@@ -55,11 +54,10 @@ class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceCanvasRecording, final)
 
   SourceSurfaceCanvasRecording(
-      int64_t aTextureId, const RefPtr<gfx::SourceSurface>& aRecordedSuface,
+      const RefPtr<gfx::SourceSurface>& aRecordedSuface,
       CanvasChild* aCanvasChild,
       const RefPtr<CanvasDrawEventRecorder>& aRecorder)
-      : mTextureId(aTextureId),
-        mRecordedSurface(aRecordedSuface),
+      : mRecordedSurface(aRecordedSuface),
         mCanvasChild(aCanvasChild),
         mRecorder(aRecorder) {
     // It's important that AddStoredObject is called first because that will
@@ -100,23 +98,11 @@ class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
     return do_AddRef(mDataSourceSurface);
   }
 
-  bool ReadInto(gfx::DataSourceSurface* aSurface,
-                const gfx::IntRect& aRect) final {
-    if (!NS_IsMainThread()) {
-      return false;
-    }
-    return mCanvasChild->ReadInto(mTextureId, mRecordedSurface, aSurface, aRect,
-                                  mDetached);
-  }
-
-  void DrawTargetWillChange() { mDetached = true; }
-
  private:
   void EnsureDataSurfaceOnMainThread() {
     // The data can only be retrieved on the main thread.
     if (!mDataSourceSurface && NS_IsMainThread()) {
-      mDataSourceSurface =
-          mCanvasChild->GetDataSurface(mTextureId, mRecordedSurface, mDetached);
+      mDataSourceSurface = mCanvasChild->GetDataSurface(mRecordedSurface);
     }
   }
 
@@ -134,12 +120,10 @@ class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
     aRecorder = nullptr;
   }
 
-  int64_t mTextureId;
   RefPtr<gfx::SourceSurface> mRecordedSurface;
   RefPtr<CanvasChild> mCanvasChild;
   RefPtr<CanvasDrawEventRecorder> mRecorder;
   RefPtr<gfx::DataSourceSurface> mDataSourceSurface;
-  bool mDetached = false;
 };
 
 CanvasChild::CanvasChild() = default;
@@ -171,13 +155,6 @@ ipc::IPCResult CanvasChild::RecvDeactivate() {
   return IPC_OK();
 }
 
-ipc::IPCResult CanvasChild::RecvBlockCanvas() {
-  if (auto* cm = gfx::CanvasManagerChild::Get()) {
-    cm->BlockCanvas();
-  }
-  return IPC_OK();
-}
-
 void CanvasChild::EnsureRecorder(TextureType aTextureType) {
   if (!mRecorder) {
     MOZ_ASSERT(mTextureType == TextureType::Unknown);
@@ -193,9 +170,7 @@ void CanvasChild::EnsureRecorder(TextureType aTextureType) {
     }
 
     if (CanSend()) {
-      gfx::BackendType backendType =
-          gfxPlatform::GetPlatform()->GetPreferredCanvasBackend();
-      Unused << SendInitTranslator(mTextureType, backendType, std::move(handle),
+      Unused << SendInitTranslator(mTextureType, std::move(handle),
                                    std::move(readerSem), std::move(writerSem),
                                    /* aUseIPDLThread */ false);
     }
@@ -318,7 +293,7 @@ bool CanvasChild::ShouldBeCleanedUp() const {
 }
 
 already_AddRefed<gfx::DrawTarget> CanvasChild::CreateDrawTarget(
-    int64_t aTextureId, gfx::IntSize aSize, gfx::SurfaceFormat aFormat) {
+    gfx::IntSize aSize, gfx::SurfaceFormat aFormat) {
   // We drop mRecorder in ActorDestroy to break the reference cycle.
   if (!mRecorder) {
     return nullptr;
@@ -328,9 +303,6 @@ already_AddRefed<gfx::DrawTarget> CanvasChild::CreateDrawTarget(
       gfx::BackendType::SKIA, gfx::IntSize(1, 1), aFormat);
   RefPtr<gfx::DrawTarget> dt = MakeAndAddRef<gfx::DrawTargetRecording>(
       mRecorder, dummyDt, gfx::IntRect(gfx::IntPoint(0, 0), aSize));
-
-  mTextureInfo.insert({aTextureId, {}});
-
   return dt.forget();
 }
 
@@ -344,37 +316,13 @@ void CanvasChild::RecordEvent(const gfx::RecordedEvent& aEvent) {
 }
 
 already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
-    int64_t aTextureId, const gfx::SourceSurface* aSurface, bool aDetached) {
-  gfx::IntSize ssSize = aSurface->GetSize();
-  gfx::SurfaceFormat ssFormat = aSurface->GetFormat();
-  int32_t dataStride =
-      gfx::GetAlignedStride<4>(ssSize.width, BytesPerPixel(ssFormat));
-  RefPtr<gfx::DataSourceSurface> dataSurface =
-      gfx::Factory::CreateDataSourceSurfaceWithStride(ssSize, ssFormat,
-                                                      dataStride);
-  if (!dataSurface) {
-    gfxWarning() << "Failed to create DataSourceSurface.";
-    return nullptr;
-  }
-
-  if (!ReadInto(aTextureId, aSurface, dataSurface, aSurface->GetRect(),
-                aDetached)) {
-    return nullptr;
-  }
-
-  return dataSurface.forget();
-}
-
-bool CanvasChild::ReadInto(int64_t aTextureId,
-                           const gfx::SourceSurface* aSurface,
-                           gfx::DataSourceSurface* aDataSurface,
-                           const gfx::IntRect& aRect, bool aDetached) {
+    const gfx::SourceSurface* aSurface) {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aSurface);
 
   // We drop mRecorder in ActorDestroy to break the reference cycle.
   if (!mRecorder) {
-    return false;
+    return nullptr;
   }
 
   // mTransactionsSinceGetDataSurface is used to determine if we want to prepare
@@ -386,117 +334,45 @@ bool CanvasChild::ReadInto(int64_t aTextureId,
   }
 
   if (!EnsureBeginTransaction()) {
-    return false;
-  }
-
-  // Shmem is only valid if the surface is the latest snapshot (not detached).
-  if (!aDetached) {
-    // If there is a shmem associated with this snapshot id, then we want to try
-    // read directly from the shmem contents into the destination buffer without
-    // going through the event ringbuffer.
-    auto it = mTextureInfo.find(aTextureId);
-    if (it != mTextureInfo.end() && it->second.mSnapshotShmem.IsReadable()) {
-      ipc::Shmem& shmem = it->second.mSnapshotShmem;
-      mRecorder->RecordEvent(RecordedPrepareShmem(aTextureId));
-      uint32_t checkpoint = mRecorder->CreateCheckpoint();
-      if (!mRecorder->WaitForCheckpoint(checkpoint)) {
-        gfxWarning() << "Timed out preparing Shmem.";
-        return true;
-      }
-      gfx::DataSourceSurface::ScopedMap map(aDataSurface,
-                                            gfx::DataSourceSurface::READ_WRITE);
-      if (!map.IsMapped()) {
-        gfxWarning() << "Failed mapping DataSourceSurface.";
-        return false;
-      }
-      gfx::IntSize size = aSurface->GetSize();
-      gfx::SurfaceFormat format = aSurface->GetFormat();
-      auto bpp = BytesPerPixel(format);
-      auto stride = ImageDataSerializer::ComputeRGBStride(format, size.width);
-      const uint8_t* srcPtr =
-          shmem.get<uint8_t>() + aRect.y * stride + aRect.x * bpp;
-      uint8_t* dstPtr = map.GetData();
-      for (int32_t y = 0; y < aRect.height; y++) {
-        memcpy(dstPtr, srcPtr, bpp * aRect.width);
-        srcPtr += stride;
-        dstPtr += map.GetStride();
-      }
-      return true;
-    }
+    return nullptr;
   }
 
   mRecorder->RecordEvent(RecordedPrepareDataForSurface(aSurface));
   uint32_t checkpoint = mRecorder->CreateCheckpoint();
 
-  gfx::DataSourceSurface::ScopedMap map(aDataSurface,
+  gfx::IntSize ssSize = aSurface->GetSize();
+  gfx::SurfaceFormat ssFormat = aSurface->GetFormat();
+  size_t dataFormatWidth = ssSize.width * BytesPerPixel(ssFormat);
+  RefPtr<gfx::DataSourceSurface> dataSurface =
+      gfx::Factory::CreateDataSourceSurfaceWithStride(ssSize, ssFormat,
+                                                      dataFormatWidth);
+  if (!dataSurface) {
+    gfxWarning() << "Failed to create DataSourceSurface.";
+    return nullptr;
+  }
+  gfx::DataSourceSurface::ScopedMap map(dataSurface,
                                         gfx::DataSourceSurface::READ_WRITE);
+  char* dest = reinterpret_cast<char*>(map.GetData());
   if (!mRecorder->WaitForCheckpoint(checkpoint)) {
     gfxWarning() << "Timed out preparing data for DataSourceSurface.";
-    return true;
+    return dataSurface.forget();
   }
 
-  if (!map.IsMapped()) {
-    gfxWarning() << "Failed mapping DataSourceSurface.";
-    return false;
-  }
+  mRecorder->RecordEvent(RecordedGetDataForSurface(aSurface));
+  mRecorder->ReturnRead(dest, ssSize.height * dataFormatWidth);
 
-  mRecorder->RecordEvent(RecordedGetDataForSurface(aSurface, aRect));
-  mRecorder->ReturnRead(map.GetData(), aDataSurface->GetSize(),
-                        BytesPerPixel(aDataSurface->GetFormat()),
-                        map.GetStride());
-
-  return true;
+  return dataSurface.forget();
 }
 
 already_AddRefed<gfx::SourceSurface> CanvasChild::WrapSurface(
-    const RefPtr<gfx::SourceSurface>& aSurface, int64_t aTextureId) {
+    const RefPtr<gfx::SourceSurface>& aSurface) {
   MOZ_ASSERT(aSurface);
   // We drop mRecorder in ActorDestroy to break the reference cycle.
   if (!mRecorder) {
     return nullptr;
   }
 
-  return MakeAndAddRef<SourceSurfaceCanvasRecording>(aTextureId, aSurface, this,
-                                                     mRecorder);
-}
-
-void CanvasChild::DetachSurface(const RefPtr<gfx::SourceSurface>& aSurface) {
-  if (auto* surface =
-          static_cast<SourceSurfaceCanvasRecording*>(aSurface.get())) {
-    surface->DrawTargetWillChange();
-  }
-}
-
-ipc::IPCResult CanvasChild::RecvNotifyRequiresRefresh(int64_t aTextureId) {
-  auto it = mTextureInfo.find(aTextureId);
-  if (it != mTextureInfo.end()) {
-    it->second.mRequiresRefresh = true;
-  }
-  return IPC_OK();
-}
-
-bool CanvasChild::RequiresRefresh(int64_t aTextureId) const {
-  auto it = mTextureInfo.find(aTextureId);
-  if (it != mTextureInfo.end()) {
-    return it->second.mRequiresRefresh;
-  }
-  return false;
-}
-
-ipc::IPCResult CanvasChild::RecvSnapshotShmem(
-    int64_t aTextureId, Shmem&& aShmem, SnapshotShmemResolver&& aResolve) {
-  auto it = mTextureInfo.find(aTextureId);
-  if (it != mTextureInfo.end()) {
-    it->second.mSnapshotShmem = std::move(aShmem);
-    aResolve(true);
-  } else {
-    aResolve(false);
-  }
-  return IPC_OK();
-}
-
-void CanvasChild::CleanupTexture(int64_t aTextureId) {
-  mTextureInfo.erase(aTextureId);
+  return MakeAndAddRef<SourceSurfaceCanvasRecording>(aSurface, this, mRecorder);
 }
 
 }  // namespace layers
