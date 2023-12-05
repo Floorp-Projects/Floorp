@@ -211,6 +211,30 @@ bool KeySystemConfig::IsSameKeySystem(const nsAString& aKeySystem) const {
   return mKeySystem.Equals(aKeySystem);
 }
 
+/* static */
+void KeySystemConfig::GetGMPKeySystemConfigs(dom::Promise* aPromise) {
+  MOZ_ASSERT(aPromise);
+  nsTArray<KeySystemConfig> keySystemConfigs;
+  const nsTArray<nsString> keySystemNames{
+      NS_ConvertUTF8toUTF16(kClearKeyKeySystemName),
+      NS_ConvertUTF8toUTF16(kWidevineKeySystemName),
+  };
+  FallibleTArray<dom::CDMInformation> cdmInfo;
+  for (const auto& name : keySystemNames) {
+    if (KeySystemConfig::CreateKeySystemConfigs(name, keySystemConfigs)) {
+      auto* info = cdmInfo.AppendElement(fallible);
+      if (!info) {
+        aPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+        return;
+      }
+      MOZ_ASSERT(keySystemConfigs.Length() == cdmInfo.Length());
+      info->mKeySystemName = name;
+      info->mCapabilities = keySystemConfigs.LastElement().GetDebugInfo();
+    }
+  }
+  aPromise->MaybeResolve(cdmInfo);
+}
+
 nsString KeySystemConfig::GetDebugInfo() const {
   nsString debugInfo;
   debugInfo.AppendLiteral(" key-system=");
