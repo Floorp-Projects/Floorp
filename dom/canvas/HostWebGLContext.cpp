@@ -55,7 +55,7 @@ UniquePtr<HostWebGLContext> HostWebGLContext::Create(
     const OwnerData& ownerData, const webgl::InitContextDesc& desc,
     webgl::InitContextResult* const out) {
   auto host = WrapUnique(new HostWebGLContext(ownerData));
-  auto webgl = WebGLContext::Create(*host, desc, out);
+  auto webgl = WebGLContext::Create(host.get(), desc, out);
   if (!webgl) return nullptr;
   return host;
 }

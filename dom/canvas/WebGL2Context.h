@@ -25,7 +25,7 @@ class WebGL2Context final : public WebGLContext {
   friend class WebGLContext;
 
  public:
-  WebGL2Context(HostWebGLContext& host, const webgl::InitContextDesc& desc)
+  WebGL2Context(HostWebGLContext* host, const webgl::InitContextDesc& desc)
       : WebGLContext(host, desc) {}
 
   virtual bool IsWebGL2() const override { return true; }

@@ -136,16 +136,18 @@ bool WebGLContext::LruPosition::IsInsertedLocked() const {
   return mItr != sLru.end();
 }
 
-WebGLContext::WebGLContext(HostWebGLContext& host,
+WebGLContext::WebGLContext(HostWebGLContext* host,
                            const webgl::InitContextDesc& desc)
     : gl(mGL_OnlyClearInDestroyResourcesAndContext),  // const reference
-      mHost(&host),
+      mHost(host),
       mResistFingerprinting(desc.resistFingerprinting),
       mOptions(desc.options),
       mPrincipalKey(desc.principalKey),
       mContextLossHandler(this),
       mRequestedSize(desc.size) {
-  host.mContext = this;
+  if (host) {
+    host->mContext = this;
+  }
   const FuncScope funcScope(*this, "<Create>");
 }
 
@@ -512,7 +514,7 @@ UniquePtr<webgl::FormatUsageAuthority> WebGLContext::CreateFormatUsage(
 }
 
 /*static*/
-RefPtr<WebGLContext> WebGLContext::Create(HostWebGLContext& host,
+RefPtr<WebGLContext> WebGLContext::Create(HostWebGLContext* host,
                                           const webgl::InitContextDesc& desc,
                                           webgl::InitContextResult* const out) {
   AUTO_PROFILER_LABEL("WebGLContext::Create", GRAPHICS);
@@ -739,7 +741,7 @@ void WebGLContext::LoseLruContextIfLimitExceeded() {
           "Exceeded %u live WebGL contexts for this principal, losing the "
           "least recently used one.",
           maxContextsPerPrincipal);
-      mHost->JsWarning(ToString(text));
+      JsWarning(ToString(text));
 
       for (const auto& context : sLru) {
         if (context->mPrincipalKey == mPrincipalKey) {
@@ -758,7 +760,7 @@ void WebGLContext::LoseLruContextIfLimitExceeded() {
         "Exceeded %u live WebGL contexts, losing the least "
         "recently used one.",
         maxContexts);
-    mHost->JsWarning(ToString(text));
+    JsWarning(ToString(text));
 
     const auto& context = sLru.front();
     MOZ_ASSERT(context != this);
@@ -1471,7 +1473,9 @@ void WebGLContext::CheckForContextLoss() {
 
 void WebGLContext::HandlePendingContextLoss() {
   mIsContextLost = true;
-  mHost->OnContextLoss(mPendingContextLossReason);
+  if (mHost) {
+    mHost->OnContextLoss(mPendingContextLossReason);
+  }
 }
 
 void WebGLContext::LoseContextLruLocked(const webgl::ContextLossReason reason) {
@@ -1876,6 +1880,17 @@ nsresult webgl::AvailabilityRunnable::Run() {
 
 // -
 
+void WebGLContext::JsWarning(const std::string& text) const {
+  if (mHost) {
+    mHost->JsWarning(text);
+  }
+#ifdef DEBUG
+  if (!mHost) {
+    NS_WARNING(text.c_str());
+  }
+#endif
+}
+
 void WebGLContext::GenerateErrorImpl(const GLenum errOrWarning,
                                      const std::string& text) const {
   auto err = errOrWarning;
@@ -1921,9 +1936,9 @@ void WebGLContext::GenerateErrorImpl(const GLenum errOrWarning,
 
   if (isPerfWarning) {
     const auto perfText = std::string("WebGL perf warning: ") + text;
-    mHost->JsWarning(perfText);
+    JsWarning(perfText);
   } else {
-    mHost->JsWarning(text);
+    JsWarning(text);
   }
   *pNumWarnings += 1;
 
@@ -1932,7 +1947,7 @@ void WebGLContext::GenerateErrorImpl(const GLenum errOrWarning,
         "After reporting %i, no further %s will be reported for this WebGL "
         "context.",
         int(*pNumWarnings), warningsType);
-    mHost->JsWarning(ToString(msg));
+    JsWarning(ToString(msg));
   }
 }
 
