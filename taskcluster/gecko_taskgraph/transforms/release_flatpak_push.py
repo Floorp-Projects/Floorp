@@ -26,7 +26,6 @@ push_flatpak_description_schema = Schema(
         Optional("scopes"): [str],
         Required("shipping-phase"): task_description_schema["shipping-phase"],
         Required("shipping-product"): task_description_schema["shipping-product"],
-        Required("flathub-scope"): str,
         Optional("extra"): task_description_schema["extra"],
         Optional("attributes"): task_description_schema["attributes"],
     }
@@ -62,7 +61,7 @@ def make_task_description(config, jobs):
             job.setdefault("scopes", []).append(
                 add_scope_prefix(
                     config,
-                    "{}:{}".format(job.pop("flathub-scope"), job["worker"]["channel"]),
+                    "flathub:firefox:{}".format(job["worker"]["channel"]),
                 )
             )
 
