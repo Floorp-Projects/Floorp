@@ -313,6 +313,9 @@ class ChromeUtils {
       GlobalObject& aGlobal, ErrorResult& aRv);
 #endif
 
+  static already_AddRefed<Promise> GetGMPContentDecryptionModuleInformation(
+      GlobalObject& aGlobal, ErrorResult& aRv);
+
  private:
   // Number of DevTools session debugging the current process
   static std::atomic<uint32_t> sDevToolsOpenedCount;

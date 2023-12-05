@@ -307,6 +307,13 @@ namespace ChromeUtils {
 #endif
 
   /**
+   * Returns the information about the GMP based content decryption
+   * modules, which would include key system names and their capabilities.
+   */
+  [NewObject]
+  Promise<sequence<CDMInformation>> getGMPContentDecryptionModuleInformation();
+
+  /**
    * IF YOU ADD NEW METHODS HERE, MAKE SURE THEY ARE THREAD-SAFE.
    */
 };
