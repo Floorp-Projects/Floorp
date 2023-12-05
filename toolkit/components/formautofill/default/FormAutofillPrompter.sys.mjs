@@ -26,12 +26,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
 ChromeUtils.defineLazyGetter(lazy, "log", () =>
   FormAutofill.defineLogGetter(lazy, "FormAutofillPrompter")
 );
-ChromeUtils.defineLazyGetter(lazy, "l10n", () => {
-  return new Localization(
-    ["browser/preferences/formAutofill.ftl", "branding/brand.ftl"],
-    true
-  );
-});
+const l10n = new Localization(
+  ["browser/preferences/formAutofill.ftl", "branding/brand.ftl"],
+  true
+);
 
 const { ENABLED_AUTOFILL_CREDITCARDS_PREF } = FormAutofill;
 
@@ -360,7 +358,7 @@ export class AutofillDoorhanger {
         return { label: param.label, accessKey: param.accessKey };
       }
 
-      const msg = lazy.l10n.formatMessagesSync([{ id: param.l10nId }])[0];
+      const msg = l10n.formatMessagesSync([{ id: param.l10nId }])[0];
       return {
         label: msg.attributes.find(x => x.name == "label").value,
         accessKey: msg.attributes.find(x => x.name == "accessKey").value,
@@ -909,7 +907,7 @@ CONTENT = {
     anchor: {
       id: "autofill-address-notification-icon",
       URL: "chrome://formautofill/content/formfill-anchor.svg",
-      tooltiptext: GetStringFromName("openAutofillMessagePanel"),
+      tooltiptext: l10n.formatValueSync("autofill-message-tooltip"),
     },
     header: {
       l10nId: "address-capture-save-doorhanger-header",
@@ -970,7 +968,7 @@ CONTENT = {
     anchor: {
       id: "autofill-address-notification-icon",
       URL: "chrome://formautofill/content/formfill-anchor.svg",
-      tooltiptext: GetStringFromName("openAutofillMessagePanel"),
+      tooltiptext: l10n.formatValueSync("autofill-message-tooltip"),
     },
     header: {
       l10nId: "address-capture-update-doorhanger-header",
@@ -1029,7 +1027,7 @@ CONTENT = {
     anchor: {
       id: "autofill-address-notification-icon",
       URL: "chrome://formautofill/content/formfill-anchor.svg",
-      tooltiptext: GetStringFromName("openAutofillMessagePanel"),
+      tooltiptext: l10n.formatValueSync("autofill-message-tooltip"),
     },
     header: {
       l10nId: "address-capture-edit-doorhanger-header",
@@ -1080,7 +1078,7 @@ CONTENT = {
     anchor: {
       id: "autofill-credit-card-notification-icon",
       URL: "chrome://formautofill/content/formfill-anchor.svg",
-      tooltiptext: GetStringFromName("openAutofillMessagePanel"),
+      tooltiptext: l10n.formatValueSync("autofill-message-tooltip"),
     },
     mainAction: {
       label: GetStringFromName("saveCreditCardLabel"),
@@ -1147,7 +1145,7 @@ CONTENT = {
     anchor: {
       id: "autofill-credit-card-notification-icon",
       URL: "chrome://formautofill/content/formfill-anchor.svg",
-      tooltiptext: GetStringFromName("openAutofillMessagePanel"),
+      tooltiptext: l10n.formatValueSync("autofill-message-tooltip"),
     },
     mainAction: {
       label: GetStringFromName("updateCreditCardLabel"),
