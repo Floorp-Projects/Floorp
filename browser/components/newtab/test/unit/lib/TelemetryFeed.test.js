@@ -39,7 +39,6 @@ describe("TelemetryFeed", () => {
   class PingCentre {
     sendPing() {}
     uninit() {}
-    sendStructuredIngestionPing() {}
   }
   class UTEventReporting {
     sendUserEvent() {}
@@ -1411,21 +1410,6 @@ describe("TelemetryFeed", () => {
       assert.calledWith(instance.utEvents.sendUserEvent, event);
     });
   });
-  describe("#sendStructuredIngestionEvent", () => {
-    it("should call PingCentre sendStructuredIngestionPing", async () => {
-      FAKE_GLOBAL_PREFS.set(TELEMETRY_PREF, true);
-      const event = {};
-      instance = new TelemetryFeed();
-      sandbox.stub(instance.pingCentre, "sendStructuredIngestionPing");
-
-      await instance.sendStructuredIngestionEvent(
-        event,
-        "http://foo.com/base/"
-      );
-
-      assert.calledWith(instance.pingCentre.sendStructuredIngestionPing, event);
-    });
-  });
   describe("#setLoadTriggerInfo", () => {
     it("should call saveSessionPerfData w/load_trigger_{ts,type} data", () => {
       sandbox.stub(global.Cu, "now").returns(12345);
@@ -2195,19 +2179,6 @@ describe("TelemetryFeed", () => {
     });
   });
   describe("#handleASRouterUserEvent", () => {
-    it("should call sendStructuredIngestionEvent on known pingTypes", async () => {
-      const data = {
-        action: "onboarding_user_event",
-        event: "IMPRESSION",
-        message_id: "12345",
-      };
-      instance = new TelemetryFeed();
-      sandbox.spy(instance, "sendStructuredIngestionEvent");
-
-      await instance.handleASRouterUserEvent({ data });
-
-      assert.calledOnce(instance.sendStructuredIngestionEvent);
-    });
     it("should call submitGleanPingForPing on known pingTypes when telemetry is enabled", async () => {
       const data = {
         action: "onboarding_user_event",
@@ -2234,12 +2205,18 @@ describe("TelemetryFeed", () => {
         message_id: "12345",
       };
       instance = new TelemetryFeed();
-      sandbox.spy(instance, "sendStructuredIngestionEvent");
+      instance._prefs.set(TELEMETRY_PREF, true);
 
+      sandbox.spy(
+        global.AboutWelcomeTelemetry.prototype,
+        "submitGleanPingForPing"
+      );
       await instance.handleASRouterUserEvent({ data });
 
       assert.calledOnce(global.console.error);
-      assert.notCalled(instance.sendStructuredIngestionEvent);
+      assert.notCalled(
+        global.AboutWelcomeTelemetry.prototype.submitGleanPingForPing
+      );
     });
   });
   describe("#isInCFRCohort", () => {

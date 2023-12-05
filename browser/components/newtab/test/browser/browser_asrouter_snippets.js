@@ -1,5 +1,8 @@
 "use strict";
 
+// Ask for more time for Verify.
+requestLongerTimeout(5);
+
 const { ASRouter } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );
@@ -135,12 +138,23 @@ add_task(async function test_snippets_telemetry() {
         `{"id":"snippets","enabled":true,"type":"remote","url":"https://example.com/browser/browser/components/newtab/test/browser/snippet.json","updateCycleInMs":0}`,
       ],
       ["browser.newtabpage.activity-stream.feeds.snippets", true],
+      ["browser.newtabpage.activity-stream.telemetry", true],
     ],
   });
-  const sendPingStub = sinon.stub(
-    TelemetryFeed.prototype,
-    "sendStructuredIngestionEvent"
-  );
+
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref(
+      "browser.newtabpage.activity-stream.telemetry"
+    );
+  });
+
+  Services.fog.testResetFOG();
+  let pingSubmitted = false;
+  GleanPings.messagingSystem.testBeforeNextSubmit(() => {
+    pingSubmitted = true;
+    Assert.equal(Glean.messagingSystem.pingType.testGetValue(), "snippets");
+  });
+
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -177,14 +191,6 @@ add_task(async function test_snippets_telemetry() {
     }
   );
 
-  Assert.ok(sendPingStub.callCount >= 1, "We registered some pings");
-  const snippetsPing = sendPingStub.args.find(args => args[2] === "snippets");
-  Assert.ok(snippetsPing, "Found the snippets ping");
-  Assert.equal(
-    snippetsPing[0].event,
-    "IMPRESSION",
-    "It's the correct ping type"
-  );
-
-  sendPingStub.restore();
+  await Services.fog.testFlushAllChildren();
+  Assert.ok(pingSubmitted, "Submitted Glean ping");
 });

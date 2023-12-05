@@ -193,10 +193,26 @@ add_setup(async function () {
 });
 
 add_task(async function test_cfr_notification_show() {
-  const sendPingStub = sinon.stub(
-    TelemetryFeed.prototype,
-    "sendStructuredIngestionEvent"
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref(
+      "browser.newtabpage.activity-stream.telemetry"
+    );
+    // Reset fog to clear pings here for private window test later.
+    Services.fog.testResetFOG();
+  });
+
+  Services.prefs.setBoolPref(
+    "browser.newtabpage.activity-stream.telemetry",
+    true
   );
+
+  Services.fog.testResetFOG();
+  let pingSubmitted = false;
+  GleanPings.messagingSystem.testBeforeNextSubmit(() => {
+    pingSubmitted = true;
+    Assert.equal(Glean.messagingSystem.source.testGetValue(), "CFR");
+  });
+
   // addRecommendation checks that scheme starts with http and host matches
   let browser = gBrowser.selectedBrowser;
   BrowserTestUtils.startLoadingURIString(browser, "http://example.com/");
@@ -249,10 +265,7 @@ add_task(async function test_cfr_notification_show() {
     "Should have removed the notification"
   );
 
-  Assert.ok(sendPingStub.callCount >= 1, "Recorded some events");
-  let cfrPing = sendPingStub.args.find(args => args[2] === "cfr");
-  Assert.equal(cfrPing[0].source, "CFR", "Got a CFR event");
-  sendPingStub.restore();
+  Assert.ok(pingSubmitted, "Recorded an event");
 });
 
 add_task(async function test_cfr_notification_show() {
@@ -849,11 +862,33 @@ add_task(async function test_heartbeat_tactic_2() {
 });
 
 add_task(async function test_cfr_doorhanger_in_private_window() {
-  const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
-  const sendPingStub = sinon.stub(
-    TelemetryFeed.prototype,
-    "sendStructuredIngestionEvent"
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref(
+      "browser.newtabpage.activity-stream.telemetry"
+    );
+  });
+  Services.prefs.setBoolPref(
+    "browser.newtabpage.activity-stream.telemetry",
+    true
   );
+
+  let pingSubmitted = false;
+  GleanPings.messagingSystem.testBeforeNextSubmit(() => {
+    pingSubmitted = true;
+    Assert.equal(Glean.messagingSystem.source.testGetValue(), "CFR");
+    Assert.equal(
+      Glean.messagingSystem.messageId.testGetValue(),
+      "n/a",
+      "Omitted message_id consistent with CFR telemetry policy"
+    );
+    Assert.equal(
+      Glean.messagingSystem.clientId.testGetValue(),
+      undefined,
+      "Omitted client_id consistent with CFR telemetry policy"
+    );
+  });
+
+  const win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
 
   const tab = await BrowserTestUtils.openNewForegroundTab(
     win.gBrowser,
@@ -893,20 +928,6 @@ add_task(async function test_cfr_doorhanger_in_private_window() {
   button.click();
   await hiddenPromise;
 
-  Assert.greater(sendPingStub.callCount, 0, "Recorded CFR telemetry");
-  const cfrPing = sendPingStub.args.find(args => args[2] === "cfr");
-  Assert.equal(cfrPing[0].source, "CFR", "Got a CFR event");
-  Assert.equal(
-    cfrPing[0].message_id,
-    "n/a",
-    "Omitted message_id consistent with CFR telemetry policy"
-  );
-  Assert.equal(
-    cfrPing[0].client_id,
-    undefined,
-    "Omitted client_id consistent with CFR telemetry policy"
-  );
-
-  sendPingStub.restore();
+  Assert.ok(pingSubmitted, "Submitted a CFR messaging system ping");
   await BrowserTestUtils.closeWindow(win);
 });

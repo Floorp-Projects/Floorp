@@ -41,10 +41,6 @@ add_task(async function test_pingPayload() {
   });
   Services.prefs.setBoolPref(TELEMETRY_PREF, true);
   const AWTelemetry = new AboutWelcomeTelemetry();
-  const stub = sinon.stub(
-    AWTelemetry.pingCentre,
-    "sendStructuredIngestionPing"
-  );
   sinon.stub(AWTelemetry, "_createPing").resolves({ event: "MOCHITEST" });
 
   let pingSubmitted = false;
@@ -53,13 +49,6 @@ add_task(async function test_pingPayload() {
     Assert.equal(Glean.messagingSystem.event.testGetValue(), "MOCHITEST");
   });
   await AWTelemetry.sendTelemetry();
-
-  equal(stub.callCount, 1, "Call was made");
-  // check the endpoint
-  ok(
-    stub.firstCall.args[1].includes("/messaging-system/onboarding"),
-    "Endpoint is correct"
-  );
 
   ok(pingSubmitted, "Glean ping was submitted");
 });
