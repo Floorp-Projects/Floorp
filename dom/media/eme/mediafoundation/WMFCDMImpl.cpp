@@ -29,47 +29,6 @@ bool WMFCDMImpl::Supports(const nsAString& aKeySystem) {
   return s;
 }
 
-static void MFCDMCapabilitiesIPDLToKeySystemConfig(
-    const MFCDMCapabilitiesIPDL& aCDMConfig,
-    KeySystemConfig& aKeySystemConfig) {
-  aKeySystemConfig.mKeySystem = aCDMConfig.keySystem();
-
-  for (const auto& type : aCDMConfig.initDataTypes()) {
-    aKeySystemConfig.mInitDataTypes.AppendElement(type);
-  }
-
-  for (const auto& type : aCDMConfig.sessionTypes()) {
-    aKeySystemConfig.mSessionTypes.AppendElement(type);
-  }
-
-  for (const auto& c : aCDMConfig.videoCapabilities()) {
-    if (!c.robustness().IsEmpty() &&
-        !aKeySystemConfig.mVideoRobustness.Contains(c.robustness())) {
-      aKeySystemConfig.mVideoRobustness.AppendElement(c.robustness());
-    }
-    aKeySystemConfig.mMP4.SetCanDecryptAndDecode(
-        NS_ConvertUTF16toUTF8(c.contentType()));
-  }
-  for (const auto& c : aCDMConfig.audioCapabilities()) {
-    if (!c.robustness().IsEmpty() &&
-        !aKeySystemConfig.mAudioRobustness.Contains(c.robustness())) {
-      aKeySystemConfig.mAudioRobustness.AppendElement(c.robustness());
-    }
-    aKeySystemConfig.mMP4.SetCanDecryptAndDecode(
-        NS_ConvertUTF16toUTF8(c.contentType()));
-  }
-  aKeySystemConfig.mPersistentState = aCDMConfig.persistentState();
-  aKeySystemConfig.mDistinctiveIdentifier = aCDMConfig.distinctiveID();
-
-  for (const auto& scheme : aCDMConfig.encryptionSchemes()) {
-    aKeySystemConfig.mEncryptionSchemes.AppendElement(
-        NS_ConvertUTF8toUTF16(CryptoSchemeToString(scheme)));
-  }
-
-  EME_LOG("New Capabilities=%s",
-          NS_ConvertUTF16toUTF8(aKeySystemConfig.GetDebugInfo()).get());
-}
-
 bool WMFCDMImpl::GetCapabilities(nsTArray<KeySystemConfig>& aOutConfigs) {
   nsCOMPtr<nsISerialEventTarget> backgroundTaskQueue;
   NS_CreateBackgroundTaskQueue(__func__, getter_AddRefs(backgroundTaskQueue));
