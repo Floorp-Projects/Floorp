@@ -1,0 +1,9 @@
+[DEFAULT]
+prefs = ["dom.screenwakelock.enabled=true"]
+scheme = "https"
+
+["test_wakelock_default_permission.html"]
+fail-if = ["xorigin"]  # cross-origin use requires permissions policy
+
+["test_dynamic_pref_change.html"]
+fail-if = ["xorigin"]  # cross-origin use requires permissions policy

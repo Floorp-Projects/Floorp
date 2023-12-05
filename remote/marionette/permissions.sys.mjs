@@ -114,6 +114,13 @@ permissions.set = function (
           `'Set Permission' did not work for storage-access'`
         );
     }
+  } else if (name === "screen-wake-lock") {
+    if (Services.prefs.getBoolPref("dom.screenwakelock.testing", false)) {
+      return;
+    }
+    throw new lazy.error.UnsupportedOperationError(
+      "'Set Permission' expected dom.screenwakelock.testing to be set"
+    );
   }
 
   throw new lazy.error.UnsupportedOperationError(
