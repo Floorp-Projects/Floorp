@@ -286,6 +286,8 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 skip-if = [
   "tsan", # Bug 1767724
   "release_or_beta", # requires dom.postMessage.sharedArrayBuffer.bypassCOOP_COEP.insecure.enabled
+  "os == 'linux'", # Bug 1767724
+  "apple_catalina && debug", # Bug 1767724
 ]
 
 ["browser_webconsole_console_profile_unavailable.js"]
