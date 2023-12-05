@@ -1898,6 +1898,8 @@ class MousePointer extends Pointer {
     mouseEvent.update(state, inputSource);
 
     lazy.event.synthesizeMouseAtPoint(targetX, targetY, mouseEvent, win);
+
+    state.clickTracker.reset();
   }
 }
 
