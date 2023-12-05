@@ -4946,6 +4946,7 @@
 
 # Whether the background.service_worker in the extension manifest.json file
 # is enabled.
+# all.js locks the pref to false when MOZ_WEBEXT_WEBIDL_ENABLED is false.
 - name: extensions.backgroundServiceWorker.enabled
   type: bool
   value: false

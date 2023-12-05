@@ -22,6 +22,7 @@ IGNORE_PREFS = {
     "browser.dom.window.dump.enabled",  # Uses the 'sticky' attribute.
     "apz.fling_curve_function_y2",  # This pref is a part of a series.
     "dom.postMessage.sharedArrayBuffer.bypassCOOP_COEP.insecure.enabled",  # NOQA: E501; Uses the 'locked' attribute.
+    "extensions.backgroundServiceWorkerEnabled.enabled",  # NOQA: E501; Uses the 'locked' attribute.
 }
 PATTERN = re.compile(r"\s*pref\(\s*\"(?P<pref>.+)\"\s*,\s*(?P<val>.+)\)\s*;.*")
 

@@ -508,6 +508,10 @@ bool WebExtensionPolicy::IsExtensionProcess(GlobalObject& aGlobal) {
 
 /* static */
 bool WebExtensionPolicy::BackgroundServiceWorkerEnabled(GlobalObject& aGlobal) {
+  // When MOZ_WEBEXT_WEBIDL_ENABLED is not set at compile time, extension APIs
+  // are not available to extension service workers. To avoid confusion, the
+  // extensions.backgroundServiceWorkerEnabled.enabled pref is locked to false
+  // in modules/libpref/init/all.js when MOZ_WEBEXT_WEBIDL_ENABLED is not set.
   return StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup();
 }
 

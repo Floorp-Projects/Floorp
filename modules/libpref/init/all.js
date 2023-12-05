@@ -1881,6 +1881,10 @@ pref("extensions.eventPages.enabled", true);
 pref("extensions.manifestV2.actionsPopupURLRestricted", false);
 // Whether "manifest_version: 3" extensions should be allowed to install successfully.
 pref("extensions.manifestV3.enabled", true);
+#ifndef MOZ_WEBEXT_WEBIDL_ENABLED
+  // Defined in StaticPrefList.yaml but overridden here to lock it.
+  pref("extensions.backgroundServiceWorker.enabled", false, locked);
+#endif
 // Whether to enable the updated openPopup API.
 #ifdef NIGHTLY_BUILD
   pref("extensions.openPopupWithoutUserGesture.enabled", true);
