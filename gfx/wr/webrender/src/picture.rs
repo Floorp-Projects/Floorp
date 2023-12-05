@@ -2463,20 +2463,30 @@ impl TileCacheInstance {
             return SurfacePromotionResult::Failed;
         }
 
-        // For now, only support a small (arbitrary) number of compositor surfaces.
-        if surface_kind == CompositorSurfaceKind::Overlay {
-            // Non-opaque compositor surfaces require sub-slices, as they are drawn
-            // as overlays.
-            if sub_slice_index == self.sub_slices.len() - 1 {
-                return SurfacePromotionResult::Failed;
-            }
+        // Each strategy has different restrictions on whether we can promote
+        match surface_kind {
+            CompositorSurfaceKind::Overlay => {
+                // For now, only support a small (arbitrary) number of compositor surfaces.
+                // Non-opaque compositor surfaces require sub-slices, as they are drawn
+                // as overlays.
+                if sub_slice_index == self.sub_slices.len() - 1 {
+                    return SurfacePromotionResult::Failed;
+                }
 
-            // If a complex clip is being applied to this primitive, it can't be
-            // promoted directly to a compositor surface unless it's opaque (in
-            // which case we draw as an underlay + alpha cutout)
-            if prim_clip_chain.needs_mask {
-                return SurfacePromotionResult::Failed;
+                // If a complex clip is being applied to this primitive, it can't be
+                // promoted directly to a compositor surface unless it's opaque (in
+                // which case we draw as an underlay + alpha cutout)
+                if prim_clip_chain.needs_mask {
+                    return SurfacePromotionResult::Failed;
+                }
             }
+            CompositorSurfaceKind::Underlay => {
+                // Underlay strategy relies on the slice being opaque if a mask is needed
+                if prim_clip_chain.needs_mask && self.backdrop.kind.is_none() {
+                    return SurfacePromotionResult::Failed;
+                }
+            }
+            CompositorSurfaceKind::Blit => unreachable!(),
         }
 
         // If not on the root picture cache, it has some kind of
