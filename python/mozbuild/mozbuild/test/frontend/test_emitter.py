@@ -335,7 +335,7 @@ class TestEmitterBasic(unittest.TestCase):
     def test_host_no_optimize_flags(self):
         reader = self.reader(
             "host-compile-flags",
-            extra_substs={"MOZ_OPTIMIZE": "", "MOZ_OPTIMIZE_FLAGS": ["-O2"]},
+            extra_substs={"MOZ_OPTIMIZE": "1", "MOZ_OPTIMIZE_FLAGS": ["-O2"]},
         )
         sources, ldflags, flags, lib, target_flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
@@ -344,7 +344,7 @@ class TestEmitterBasic(unittest.TestCase):
     def test_host_optimize_flags(self):
         reader = self.reader(
             "host-compile-flags",
-            extra_substs={"MOZ_OPTIMIZE": "1", "MOZ_OPTIMIZE_FLAGS": ["-O2"]},
+            extra_substs={"HOST_OPTIMIZE_FLAGS": ["-O2"]},
         )
         sources, ldflags, flags, lib, target_flags = self.read_topsrcdir(reader)
         self.assertIsInstance(flags, ComputedFlags)
