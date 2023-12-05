@@ -53,8 +53,6 @@ class Http3Server(object):
         self._proxyPort = -1
         if options.get("proxyPort"):
             self._proxyPort = options["proxyPort"]
-        self.outthread = None
-        self.errthread = None
 
     def ports(self):
         return self._ports
@@ -63,15 +61,9 @@ class Http3Server(object):
         return self._echConfig
 
     def read_streams(self, name, proc, pipe):
-        while True:
-            line = pipe.readline()
-            output = "stdout" if pipe == proc.stdout else "stderr"
-            if line:
-                self._log.info("server: %s [%s] %s" % (name, output, line))
-
-            # Check if process is dead
-            if proc.poll() is not None:
-                break
+        output = "stdout" if pipe == proc.stdout else "stderr"
+        for line in iter(pipe.readline, ""):
+            self._log.info("server: %s [%s] %s" % (name, output, line))
 
     def start(self):
         if not os.path.exists(self._http3ServerPath):
@@ -120,8 +112,6 @@ class Http3Server(object):
                 daemon=True
             )
             t2.start()
-            self.outthread = t1
-            self.errthread = t2
             if "server listening" in msg:
                 searchObj = re.search(
                     r"HTTP3 server listening on ports ([0-9]+), ([0-9]+), ([0-9]+), ([0-9]+) and ([0-9]+)."
@@ -160,12 +150,6 @@ class Http3Server(object):
                         self._log.info("Killing proc")
                         proc.kill()
                         break
-        if self.outthread is not None:
-            self.outthread.join()
-            del self.outthread
-        if self.errthread is not None:
-            self.errthread.join()
-            del self.errthread
         self._http3ServerProc = {}
 
 
