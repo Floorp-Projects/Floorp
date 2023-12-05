@@ -9,8 +9,6 @@ use glean_core::traits;
 
 use crate::{ErrorType, RecordedEvent};
 
-pub use glean_core::traits::NoExtraKeys;
-
 // We need to wrap the glean-core type: otherwise if we try to implement
 // the trait for the metric in `glean_core::metrics` we hit error[E0117]:
 // only traits defined in the current crate can be implemented for arbitrary
@@ -59,6 +57,31 @@ impl<K: traits::ExtraKeys> EventMetric<K> {
     }
 }
 
+#[inherent]
+impl<K: traits::ExtraKeys> traits::Event for EventMetric<K> {
+    type Extra = K;
+
+    pub fn record<M: Into<Option<<Self as traits::Event>::Extra>>>(&self, extra: M) {
+        let extra = extra
+            .into()
+            .map(|e| e.into_ffi_extra())
+            .unwrap_or_else(HashMap::new);
+        self.inner.record(extra);
+    }
+
+    pub fn test_get_value<'a, S: Into<Option<&'a str>>>(
+        &self,
+        ping_name: S,
+    ) -> Option<Vec<RecordedEvent>> {
+        let ping_name = ping_name.into().map(|s| s.to_string());
+        self.inner.test_get_value(ping_name)
+    }
+
+    pub fn test_get_num_recorded_errors(&self, error: ErrorType) -> i32 {
+        self.inner.test_get_num_recorded_errors(error)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -70,7 +93,7 @@ mod test {
         let _lock = lock_test();
         let _t = new_glean(None, true);
 
-        let metric: EventMetric<NoExtraKeys> = EventMetric::new(CommonMetricData {
+        let metric: EventMetric<traits::NoExtraKeys> = EventMetric::new(CommonMetricData {
             name: "event".into(),
             category: "test".into(),
             send_in_pings: vec!["test1".into()],
@@ -194,30 +217,5 @@ mod test {
         assert_eq!(Some(map), data[1].extra);
 
         assert_eq!(None, data[2].extra);
-    }
-}
-
-#[inherent]
-impl<K: traits::ExtraKeys> traits::Event for EventMetric<K> {
-    type Extra = K;
-
-    pub fn record<M: Into<Option<<Self as traits::Event>::Extra>>>(&self, extra: M) {
-        let extra = extra
-            .into()
-            .map(|e| e.into_ffi_extra())
-            .unwrap_or_else(HashMap::new);
-        self.inner.record(extra);
-    }
-
-    pub fn test_get_value<'a, S: Into<Option<&'a str>>>(
-        &self,
-        ping_name: S,
-    ) -> Option<Vec<RecordedEvent>> {
-        let ping_name = ping_name.into().map(|s| s.to_string());
-        self.inner.test_get_value(ping_name)
-    }
-
-    pub fn test_get_num_recorded_errors(&self, error: ErrorType) -> i32 {
-        self.inner.test_get_num_recorded_errors(error)
     }
 }

@@ -1,4 +1,4 @@
-use crate::util::{either_attribute_arg, parse_comma_separated, UniffiAttributeArgs};
+use crate::util::{either_attribute_arg, kw, parse_comma_separated, UniffiAttributeArgs};
 
 use proc_macro2::TokenStream;
 use quote::ToTokens;
@@ -7,15 +7,16 @@ use syn::{
     Attribute, LitStr, Meta, PathArguments, PathSegment, Token,
 };
 
-pub(crate) mod kw {
-    syn::custom_keyword!(async_runtime);
-    syn::custom_keyword!(callback_interface);
-}
-
 #[derive(Default)]
 pub struct ExportAttributeArguments {
     pub(crate) async_runtime: Option<AsyncRuntime>,
     pub(crate) callback_interface: Option<kw::callback_interface>,
+    pub(crate) constructor: Option<kw::constructor>,
+    // tried to make this a vec but that got messy quickly...
+    pub(crate) trait_debug: Option<kw::Debug>,
+    pub(crate) trait_display: Option<kw::Display>,
+    pub(crate) trait_hash: Option<kw::Hash>,
+    pub(crate) trait_eq: Option<kw::Eq>,
 }
 
 impl Parse for ExportAttributeArguments {
@@ -39,6 +40,31 @@ impl UniffiAttributeArgs for ExportAttributeArguments {
                 callback_interface: input.parse()?,
                 ..Self::default()
             })
+        } else if lookahead.peek(kw::constructor) {
+            Ok(Self {
+                constructor: input.parse()?,
+                ..Self::default()
+            })
+        } else if lookahead.peek(kw::Debug) {
+            Ok(Self {
+                trait_debug: input.parse()?,
+                ..Self::default()
+            })
+        } else if lookahead.peek(kw::Display) {
+            Ok(Self {
+                trait_display: input.parse()?,
+                ..Self::default()
+            })
+        } else if lookahead.peek(kw::Hash) {
+            Ok(Self {
+                trait_hash: input.parse()?,
+                ..Self::default()
+            })
+        } else if lookahead.peek(kw::Eq) {
+            Ok(Self {
+                trait_eq: input.parse()?,
+                ..Self::default()
+            })
         } else {
             Ok(Self::default())
         }
@@ -51,6 +77,11 @@ impl UniffiAttributeArgs for ExportAttributeArguments {
                 self.callback_interface,
                 other.callback_interface,
             )?,
+            constructor: either_attribute_arg(self.constructor, other.constructor)?,
+            trait_debug: either_attribute_arg(self.trait_debug, other.trait_debug)?,
+            trait_display: either_attribute_arg(self.trait_display, other.trait_display)?,
+            trait_hash: either_attribute_arg(self.trait_hash, other.trait_hash)?,
+            trait_eq: either_attribute_arg(self.trait_eq, other.trait_eq)?,
         })
     }
 }

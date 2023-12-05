@@ -55,7 +55,7 @@
 {%- when Type::Bytes %}
 {%- include "BytesHelper.py" %}
 
-{%- when Type::Enum(name) %}
+{%- when Type::Enum { name, module_path } %}
 {%- let e = ci.get_enum_definition(name).unwrap() %}
 {# For enums, there are either an error *or* an enum, they can't be both. #}
 {%- if ci.is_name_used_as_error(name) %}
@@ -64,10 +64,10 @@
 {%- include "EnumTemplate.py" %}
 {% endif %}
 
-{%- when Type::Record(name) %}
+{%- when Type::Record { name, module_path } %}
 {%- include "RecordTemplate.py" %}
 
-{%- when Type::Object { name, imp } %}
+{%- when Type::Object { name, module_path, imp } %}
 {%- include "ObjectTemplate.py" %}
 
 {%- when Type::Timestamp %}
@@ -76,22 +76,22 @@
 {%- when Type::Duration %}
 {%- include "DurationHelper.py" %}
 
-{%- when Type::Optional(inner_type) %}
+{%- when Type::Optional { inner_type } %}
 {%- include "OptionalTemplate.py" %}
 
-{%- when Type::Sequence(inner_type) %}
+{%- when Type::Sequence { inner_type } %}
 {%- include "SequenceTemplate.py" %}
 
-{%- when Type::Map(key_type, value_type) %}
+{%- when Type::Map { key_type, value_type } %}
 {%- include "MapTemplate.py" %}
 
-{%- when Type::CallbackInterface(id) %}
+{%- when Type::CallbackInterface { name: id, module_path } %}
 {%- include "CallbackInterfaceTemplate.py" %}
 
-{%- when Type::Custom { name, builtin } %}
+{%- when Type::Custom { name, module_path, builtin } %}
 {%- include "CustomType.py" %}
 
-{%- when Type::External { name, crate_name, kind } %}
+{%- when Type::External { name, module_path, namespace, kind, tagged } %}
 {%- include "ExternalTemplate.py" %}
 
 {%- when Type::ForeignExecutor %}
@@ -100,7 +100,3 @@
 {%- else %}
 {%- endmatch %}
 {%- endfor %}
-
-{%- if ci.has_async_fns() %}
-{%- include "AsyncTypes.py" %}
-{%- endif %}

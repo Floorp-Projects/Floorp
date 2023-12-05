@@ -1,13 +1,13 @@
-{%- let type_name = type_|error_type_name %}
-{%- let ffi_converter_name = type_|error_ffi_converter_name %}
-{%- let canonical_type_name = type_|error_canonical_name %}
+{%- let type_name = type_|type_name(ci) %}
+{%- let ffi_converter_name = type_|ffi_converter_name %}
+{%- let canonical_type_name = type_|canonical_name %}
 
 {% if e.is_flat() %}
 sealed class {{ type_name }}(message: String): Exception(message){% if contains_object_references %}, Disposable {% endif %} {
         // Each variant is a nested class
         // Flat enums carries a string error message, so no special implementation is necessary.
         {% for variant in e.variants() -%}
-        class {{ variant|error_variant|type_name }}(message: String) : {{ type_name }}(message)
+        class {{ variant|error_variant_name }}(message: String) : {{ type_name }}(message)
         {% endfor %}
 
     companion object ErrorHandler : CallStatusErrorHandler<{{ type_name }}> {
@@ -18,10 +18,10 @@ sealed class {{ type_name }}(message: String): Exception(message){% if contains_
 sealed class {{ type_name }}: Exception(){% if contains_object_references %}, Disposable {% endif %} {
     // Each variant is a nested class
     {% for variant in e.variants() -%}
-    {%- let variant_name = variant|error_variant|type_name %}
+    {%- let variant_name = variant|error_variant_name %}
     class {{ variant_name }}(
         {% for field in variant.fields() -%}
-        val {{ field.name()|var_name }}: {{ field|type_name}}{% if loop.last %}{% else %}, {% endif %}
+        val {{ field.name()|var_name }}: {{ field|type_name(ci) }}{% if loop.last %}{% else %}, {% endif %}
         {% endfor -%}
     ) : {{ type_name }}() {
         override val message
@@ -38,7 +38,7 @@ sealed class {{ type_name }}: Exception(){% if contains_object_references %}, Di
     override fun destroy() {
         when(this) {
             {%- for variant in e.variants() %}
-            is {{ type_name }}.{{ variant|error_variant|type_name }} -> {
+            is {{ type_name }}.{{ variant|error_variant_name }} -> {
                 {%- if variant.has_fields() %}
                 {% call kt::destroy_fields(variant) %}
                 {% else -%}
@@ -57,7 +57,7 @@ public object {{ e|ffi_converter_name }} : FfiConverterRustBuffer<{{ type_name }
         {% if e.is_flat() %}
             return when(buf.getInt()) {
             {%- for variant in e.variants() %}
-            {{ loop.index }} -> {{ type_name }}.{{ variant|error_variant|type_name }}({{ Type::String.borrow()|read_fn }}(buf))
+            {{ loop.index }} -> {{ type_name }}.{{ variant|error_variant_name }}({{ Type::String.borrow()|read_fn }}(buf))
             {%- endfor %}
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
@@ -65,7 +65,7 @@ public object {{ e|ffi_converter_name }} : FfiConverterRustBuffer<{{ type_name }
 
         return when(buf.getInt()) {
             {%- for variant in e.variants() %}
-            {{ loop.index }} -> {{ type_name }}.{{ variant|error_variant|type_name }}({% if variant.has_fields() %}
+            {{ loop.index }} -> {{ type_name }}.{{ variant|error_variant_name }}({% if variant.has_fields() %}
                 {% for field in variant.fields() -%}
                 {{ field|read_fn }}(buf),
                 {% endfor -%}
@@ -82,7 +82,7 @@ public object {{ e|ffi_converter_name }} : FfiConverterRustBuffer<{{ type_name }
         {%- else %}
         return when(value) {
             {%- for variant in e.variants() %}
-            is {{ type_name }}.{{ variant|error_variant|type_name }} -> (
+            is {{ type_name }}.{{ variant|error_variant_name }} -> (
                 // Add the size for the Int that specifies the variant plus the size needed for all fields
                 4
                 {%- for field in variant.fields() %}
@@ -97,7 +97,7 @@ public object {{ e|ffi_converter_name }} : FfiConverterRustBuffer<{{ type_name }
     override fun write(value: {{ type_name }}, buf: ByteBuffer) {
         when(value) {
             {%- for variant in e.variants() %}
-            is {{ type_name }}.{{ variant|error_variant|type_name }} -> {
+            is {{ type_name }}.{{ variant|error_variant_name }} -> {
                 buf.putInt({{ loop.index }})
                 {%- for field in variant.fields() %}
                 {{ field|write_fn }}(value.{{ field.name()|var_name }}, buf)

@@ -2,9 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use once_cell::sync::Lazy;
 use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap, HashSet};
+use std::fmt::Debug;
 
 use anyhow::{Context, Result};
 use askama::Template;
@@ -12,7 +14,7 @@ use heck::{ToLowerCamelCase, ToUpperCamelCase};
 use serde::{Deserialize, Serialize};
 
 use super::Bindings;
-use crate::backend::{CodeType, TemplateExpression};
+use crate::backend::TemplateExpression;
 use crate::interface::*;
 use crate::BindingsConfig;
 
@@ -26,6 +28,161 @@ mod miscellany;
 mod object;
 mod primitives;
 mod record;
+
+/// A trait tor the implementation.
+trait CodeType: Debug {
+    /// The language specific label used to reference this type. This will be used in
+    /// method signatures and property declarations.
+    fn type_label(&self) -> String;
+
+    /// A representation of this type label that can be used as part of another
+    /// identifier. e.g. `read_foo()`, or `FooInternals`.
+    ///
+    /// This is especially useful when creating specialized objects or methods to deal
+    /// with this type only.
+    fn canonical_name(&self) -> String {
+        self.type_label()
+    }
+
+    fn literal(&self, _literal: &Literal) -> String {
+        unimplemented!("Unimplemented for {}", self.type_label())
+    }
+
+    /// Name of the FfiConverter
+    ///
+    /// This is the object that contains the lower, write, lift, and read methods for this type.
+    fn ffi_converter_name(&self) -> String {
+        format!("FfiConverter{}", self.canonical_name())
+    }
+
+    // XXX - the below should be removed and replace with the ffi_converter_name reference in the template.
+    /// An expression for lowering a value into something we can pass over the FFI.
+    fn lower(&self) -> String {
+        format!("{}.lower", self.ffi_converter_name())
+    }
+
+    /// An expression for writing a value into a byte buffer.
+    fn write(&self) -> String {
+        format!("{}.write", self.ffi_converter_name())
+    }
+
+    /// An expression for lifting a value from something we received over the FFI.
+    fn lift(&self) -> String {
+        format!("{}.lift", self.ffi_converter_name())
+    }
+
+    /// An expression for reading a value from a byte buffer.
+    fn read(&self) -> String {
+        format!("{}.read", self.ffi_converter_name())
+    }
+
+    /// A list of imports that are needed if this type is in use.
+    /// Classes are imported exactly once.
+    fn imports(&self) -> Option<Vec<String>> {
+        None
+    }
+
+    /// Function to run at startup
+    fn initialization_fn(&self) -> Option<String> {
+        None
+    }
+}
+
+/// From <https://docs.swift.org/swift-book/documentation/the-swift-programming-language/lexicalstructure/#Keywords-and-Punctuation>
+static KEYWORDS: Lazy<HashSet<String>> = Lazy::new(|| {
+    [
+        // Keywords used in declarations:
+        "associatedtype",
+        "class",
+        "deinit",
+        "enum",
+        "extension",
+        "fileprivate",
+        "func",
+        "import",
+        "init",
+        "inout",
+        "internal",
+        "let",
+        "open",
+        "operator",
+        "private",
+        "precedencegroup",
+        "protocol",
+        "public",
+        "rethrows",
+        "static",
+        "struct",
+        "subscript",
+        "typealias",
+        "var",
+        // Keywords used in statements:
+        "break",
+        "case",
+        "catch",
+        "continue",
+        "default",
+        "defer",
+        "do",
+        "else",
+        "fallthrough",
+        "for",
+        "guard",
+        "if",
+        "in",
+        "repeat",
+        "return",
+        "throw",
+        "switch",
+        "where",
+        "while",
+        // Keywords used in expressions and types:
+        "Any",
+        "as",
+        "await",
+        "catch",
+        "false",
+        "is",
+        "nil",
+        "rethrows",
+        "self",
+        "Self",
+        "super",
+        "throw",
+        "throws",
+        "true",
+        "try",
+    ]
+    .iter()
+    .map(ToString::to_string)
+    .collect::<HashSet<_>>()
+});
+
+/// Quote a name for use in a context where keywords must be quoted
+pub fn quote_general_keyword(nm: String) -> String {
+    if KEYWORDS.contains(&nm) {
+        format!("`{nm}`")
+    } else {
+        nm
+    }
+}
+
+/// Per <https://docs.swift.org/swift-book/documentation/the-swift-programming-language/lexicalstructure/#Keywords-and-Punctuation> subset of keywords which need quoting in arg context.
+static ARG_KEYWORDS: Lazy<HashSet<String>> = Lazy::new(|| {
+    ["inout", "var", "let"]
+        .iter()
+        .map(ToString::to_string)
+        .collect::<HashSet<_>>()
+});
+
+/// Quote a name for use in arg context where fewer keywords must be quoted
+pub fn quote_arg_keyword(nm: String) -> String {
+    if ARG_KEYWORDS.contains(&nm) {
+        format!("`{nm}`")
+    } else {
+        nm
+    }
+}
 
 /// Config options for the caller to customize the generated Swift.
 ///
@@ -107,8 +264,6 @@ impl Config {
 }
 
 impl BindingsConfig for Config {
-    const TOML_KEY: &'static str = "swift";
-
     fn update_from_ci(&mut self, ci: &ComponentInterface) {
         self.module_name
             .get_or_insert_with(|| ci.namespace().into());
@@ -245,6 +400,7 @@ pub struct SwiftWrapper<'a> {
     ci: &'a ComponentInterface,
     type_helper_code: String,
     type_imports: BTreeSet<String>,
+    has_async_fns: bool,
 }
 impl<'a> SwiftWrapper<'a> {
     pub fn new(config: Config, ci: &'a ComponentInterface) -> Self {
@@ -256,6 +412,7 @@ impl<'a> SwiftWrapper<'a> {
             ci,
             type_helper_code,
             type_imports,
+            has_async_fns: ci.has_async_fns(),
         }
     }
 
@@ -268,6 +425,10 @@ impl<'a> SwiftWrapper<'a> {
             .iter_types()
             .map(|t| SwiftCodeOracle.find(t))
             .filter_map(|ct| ct.initialization_fn())
+            .chain(
+                self.has_async_fns
+                    .then(|| "uniffiInitContinuationCallback".into()),
+            )
             .collect()
     }
 }
@@ -302,16 +463,23 @@ impl SwiftCodeOracle {
             Type::Timestamp => Box::new(miscellany::TimestampCodeType),
             Type::Duration => Box::new(miscellany::DurationCodeType),
 
-            Type::Enum(id) => Box::new(enum_::EnumCodeType::new(id)),
+            Type::Enum { name, .. } => Box::new(enum_::EnumCodeType::new(name)),
             Type::Object { name, .. } => Box::new(object::ObjectCodeType::new(name)),
-            Type::Record(id) => Box::new(record::RecordCodeType::new(id)),
-            Type::CallbackInterface(id) => {
-                Box::new(callback_interface::CallbackInterfaceCodeType::new(id))
+            Type::Record { name, .. } => Box::new(record::RecordCodeType::new(name)),
+            Type::CallbackInterface { name, .. } => {
+                Box::new(callback_interface::CallbackInterfaceCodeType::new(name))
             }
             Type::ForeignExecutor => Box::new(executor::ForeignExecutorCodeType),
-            Type::Optional(inner) => Box::new(compounds::OptionalCodeType::new(*inner)),
-            Type::Sequence(inner) => Box::new(compounds::SequenceCodeType::new(*inner)),
-            Type::Map(key, value) => Box::new(compounds::MapCodeType::new(*key, *value)),
+            Type::Optional { inner_type } => {
+                Box::new(compounds::OptionalCodeType::new(*inner_type))
+            }
+            Type::Sequence { inner_type } => {
+                Box::new(compounds::SequenceCodeType::new(*inner_type))
+            }
+            Type::Map {
+                key_type,
+                value_type,
+            } => Box::new(compounds::MapCodeType::new(*key_type, *value_type)),
             Type::External { name, .. } => Box::new(external::ExternalCodeType::new(name)),
             Type::Custom { name, .. } => Box::new(custom::CustomCodeType::new(name)),
         }
@@ -328,17 +496,17 @@ impl SwiftCodeOracle {
 
     /// Get the idiomatic Swift rendering of a function name.
     fn fn_name(&self, nm: &str) -> String {
-        format!("`{}`", nm.to_string().to_lower_camel_case())
+        nm.to_string().to_lower_camel_case()
     }
 
     /// Get the idiomatic Swift rendering of a variable name.
     fn var_name(&self, nm: &str) -> String {
-        format!("`{}`", nm.to_string().to_lower_camel_case())
+        nm.to_string().to_lower_camel_case()
     }
 
     /// Get the idiomatic Swift rendering of an individual enum variant.
     fn enum_variant_name(&self, nm: &str) -> String {
-        format!("`{}`", nm.to_string().to_lower_camel_case())
+        nm.to_string().to_lower_camel_case()
     }
 
     fn ffi_type_label_raw(&self, ffi_type: &FfiType) -> String {
@@ -359,10 +527,10 @@ impl SwiftCodeOracle {
             FfiType::ForeignCallback => "ForeignCallback".into(),
             FfiType::ForeignExecutorHandle => "Int".into(),
             FfiType::ForeignExecutorCallback => "ForeignExecutorCallback".into(),
-            FfiType::FutureCallback { return_type } => {
-                format!("UniFfiFutureCallback{}", self.ffi_type_label(return_type))
+            FfiType::RustFutureContinuationCallback => "UniFfiRustFutureContinuation".into(),
+            FfiType::RustFutureHandle | FfiType::RustFutureContinuationData => {
+                "UnsafeMutableRawPointer".into()
             }
-            FfiType::FutureCallbackData => "UnsafeMutableRawPointer".into(),
         }
     }
 
@@ -370,7 +538,9 @@ impl SwiftCodeOracle {
         match ffi_type {
             FfiType::ForeignCallback
             | FfiType::ForeignExecutorCallback
-            | FfiType::FutureCallback { .. } => {
+            | FfiType::RustFutureHandle
+            | FfiType::RustFutureContinuationCallback
+            | FfiType::RustFutureContinuationData => {
                 format!("{} _Nonnull", self.ffi_type_label_raw(ffi_type))
             }
             _ => self.ffi_type_label_raw(ffi_type),
@@ -454,11 +624,12 @@ pub mod filters {
             FfiType::ForeignCallback => "ForeignCallback _Nonnull".into(),
             FfiType::ForeignExecutorCallback => "UniFfiForeignExecutorCallback _Nonnull".into(),
             FfiType::ForeignExecutorHandle => "size_t".into(),
-            FfiType::FutureCallback { return_type } => format!(
-                "UniFfiFutureCallback{} _Nonnull",
-                SwiftCodeOracle.ffi_type_label_raw(return_type)
-            ),
-            FfiType::FutureCallbackData => "void* _Nonnull".into(),
+            FfiType::RustFutureContinuationCallback => {
+                "UniFfiRustFutureContinuation _Nonnull".into()
+            }
+            FfiType::RustFutureHandle | FfiType::RustFutureContinuationData => {
+                "void* _Nonnull".into()
+            }
         })
     }
 
@@ -469,15 +640,26 @@ pub mod filters {
 
     /// Get the idiomatic Swift rendering of a function name.
     pub fn fn_name(nm: &str) -> Result<String, askama::Error> {
-        Ok(oracle().fn_name(nm))
+        Ok(quote_general_keyword(oracle().fn_name(nm)))
     }
 
     /// Get the idiomatic Swift rendering of a variable name.
     pub fn var_name(nm: &str) -> Result<String, askama::Error> {
-        Ok(oracle().var_name(nm))
+        Ok(quote_general_keyword(oracle().var_name(nm)))
     }
 
-    /// Get the idiomatic Swift rendering of an individual enum variant.
+    /// Get the idiomatic Swift rendering of an arguments name.
+    /// This is the same as the var name but quoting is not required.
+    pub fn arg_name(nm: &str) -> Result<String, askama::Error> {
+        Ok(quote_arg_keyword(oracle().var_name(nm)))
+    }
+
+    /// Get the idiomatic Swift rendering of an individual enum variant, quoted if it is a keyword (for use in e.g. declarations)
+    pub fn enum_variant_swift_quoted(nm: &str) -> Result<String, askama::Error> {
+        Ok(quote_general_keyword(oracle().enum_variant_name(nm)))
+    }
+
+    /// Get the idiomatic Swift rendering of an individual enum variant, for contexts (for use in non-declaration contexts where quoting is not needed)
     pub fn enum_variant_swift(nm: &str) -> Result<String, askama::Error> {
         Ok(oracle().enum_variant_name(nm))
     }
@@ -500,16 +682,6 @@ pub mod filters {
             match &result.throws_type {
                 Some(t) => SwiftCodeOracle.find(t).canonical_name(),
                 None => "".into(),
-            }
-        ))
-    }
-
-    pub fn future_continuation_type(result: &ResultType) -> Result<String, askama::Error> {
-        Ok(format!(
-            "CheckedContinuation<{}, Error>",
-            match &result.return_type {
-                Some(return_type) => type_name(return_type)?,
-                None => "()".into(),
             }
         ))
     }

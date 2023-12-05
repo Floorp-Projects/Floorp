@@ -28,7 +28,7 @@ class RustBufferBuilder
   end
 
   {% for typ in ci.iter_types() -%}
-  {%- let canonical_type_name = typ.canonical_name().borrow()|class_name_rb -%}
+  {%- let canonical_type_name = canonical_name(typ).borrow()|class_name_rb -%}
   {%- match typ -%}
 
   {% when Type::Int8 -%}
@@ -159,7 +159,7 @@ class RustBufferBuilder
     pack_into 4, 'L>', nanoseconds
   end
 
-  {% when Type::Object with { name: object_name, imp } -%}
+  {% when Type::Object with { name: object_name, module_path, imp } -%}
   # The Object type {{ object_name }}.
 
   def write_{{ canonical_type_name }}(obj)
@@ -167,7 +167,7 @@ class RustBufferBuilder
     pack_into(8, 'Q>', pointer.address)
   end
 
-  {% when Type::Enum with (enum_name) -%}
+  {% when Type::Enum { name: enum_name, module_path } -%}
   {% if !ci.is_name_used_as_error(enum_name) %}
   {%- let e = ci|get_enum_definition(enum_name) -%}
   # The Enum type {{ enum_name }}.
@@ -180,7 +180,7 @@ class RustBufferBuilder
     if v.{{ variant.name()|var_name_rb }}?
       pack_into(4, 'l>', {{ loop.index }})
       {%- for field in variant.fields() %}
-      self.write_{{ field.as_type().canonical_name().borrow()|class_name_rb }}(v.{{ field.name() }})
+      self.write_{{ canonical_name(field.as_type().borrow()).borrow()|class_name_rb }}(v.{{ field.name() }})
       {%- endfor %}
     end
     {%- endfor %}
@@ -188,48 +188,48 @@ class RustBufferBuilder
  end
    {% endif %}
 
-  {% when Type::Record with (record_name) -%}
+  {% when Type::Record { name: record_name, module_path } -%}
   {%- let rec = ci|get_record_definition(record_name) -%}
   # The Record type {{ record_name }}.
 
   def write_{{ canonical_type_name }}(v)
     {%- for field in rec.fields() %}
-    self.write_{{ field.as_type().canonical_name().borrow()|class_name_rb }}(v.{{ field.name()|var_name_rb }})
+    self.write_{{ canonical_name(field.as_type().borrow()).borrow()|class_name_rb }}(v.{{ field.name()|var_name_rb }})
     {%- endfor %}
   end
 
-  {% when Type::Optional with (inner_type) -%}
-  # The Optional<T> type for {{ inner_type.canonical_name() }}.
+  {% when Type::Optional { inner_type } -%}
+  # The Optional<T> type for {{ canonical_name(inner_type) }}.
 
   def write_{{ canonical_type_name }}(v)
     if v.nil?
       pack_into(1, 'c', 0)
     else
       pack_into(1, 'c', 1)
-      self.write_{{ inner_type.canonical_name().borrow()|class_name_rb }}(v)
+      self.write_{{ canonical_name(inner_type).borrow()|class_name_rb }}(v)
     end
   end
 
-  {% when Type::Sequence with (inner_type) -%}
-  # The Sequence<T> type for {{ inner_type.canonical_name() }}.
+  {% when Type::Sequence { inner_type } -%}
+  # The Sequence<T> type for {{ canonical_name(inner_type) }}.
 
   def write_{{ canonical_type_name }}(items)
     pack_into(4, 'l>', items.size)
 
     items.each do |item|
-      self.write_{{ inner_type.canonical_name().borrow()|class_name_rb }}(item)
+      self.write_{{ canonical_name(inner_type).borrow()|class_name_rb }}(item)
     end
   end
 
-  {% when Type::Map with (k, inner_type) -%}
-  # The Map<T> type for {{ inner_type.canonical_name() }}.
+  {% when Type::Map { key_type: k, value_type: inner_type } -%}
+  # The Map<T> type for {{ canonical_name(inner_type) }}.
 
   def write_{{ canonical_type_name }}(items)
     pack_into(4, 'l>', items.size)
 
     items.each do |k, v|
       write_String(k)
-      self.write_{{ inner_type.canonical_name().borrow()|class_name_rb }}(v)
+      self.write_{{ canonical_name(inner_type).borrow()|class_name_rb }}(v)
     end
   end
 

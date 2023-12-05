@@ -1,9 +1,13 @@
 {%- let rec = ci|get_record_definition(name) %}
 class {{ type_name }}:
+    {% for field in rec.fields() %}
+        {{- field.name()|var_name }}: "{{- field|type_name }}";
+    {%- endfor %}
 
+    @typing.no_type_check
     def __init__(self, {% for field in rec.fields() %}
-    {{- field.name()|var_name }}
-    {%- if field.default_value().is_some() %} = DEFAULT{% endif %}
+    {{- field.name()|var_name }}: "{{- field|type_name }}"
+    {%- if field.default_value().is_some() %} = _DEFAULT{% endif %}
     {%- if !loop.last %}, {% endif %}
     {%- endfor %}):
         {%- for field in rec.fields() %}
@@ -12,7 +16,7 @@ class {{ type_name }}:
         {%- when None %}
         self.{{ field_name }} = {{ field_name }}
         {%- when Some with(literal) %}
-        if {{ field_name }} is DEFAULT:
+        if {{ field_name }} is _DEFAULT:
             self.{{ field_name }} = {{ literal|literal_py(field) }}
         else:
             self.{{ field_name }} = {{ field_name }}
@@ -29,7 +33,7 @@ class {{ type_name }}:
         {%- endfor %}
         return True
 
-class {{ ffi_converter_name }}(FfiConverterRustBuffer):
+class {{ ffi_converter_name }}(_UniffiConverterRustBuffer):
     @staticmethod
     def read(buf):
         return {{ type_name }}(

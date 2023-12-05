@@ -10,8 +10,9 @@ use serde::{Deserialize, Serialize};
 use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap, HashSet};
+use std::fmt::Debug;
 
-use crate::backend::{CodeType, TemplateExpression};
+use crate::backend::TemplateExpression;
 use crate::interface::*;
 use crate::BindingsConfig;
 
@@ -25,6 +26,44 @@ mod miscellany;
 mod object;
 mod primitives;
 mod record;
+
+/// A trait tor the implementation.
+trait CodeType: Debug {
+    /// The language specific label used to reference this type. This will be used in
+    /// method signatures and property declarations.
+    fn type_label(&self) -> String;
+
+    /// A representation of this type label that can be used as part of another
+    /// identifier. e.g. `read_foo()`, or `FooInternals`.
+    ///
+    /// This is especially useful when creating specialized objects or methods to deal
+    /// with this type only.
+    fn canonical_name(&self) -> String {
+        self.type_label()
+    }
+
+    fn literal(&self, _literal: &Literal) -> String {
+        unimplemented!("Unimplemented for {}", self.type_label())
+    }
+
+    /// Name of the FfiConverter
+    ///
+    /// This is the object that contains the lower, write, lift, and read methods for this type.
+    fn ffi_converter_name(&self) -> String {
+        format!("FfiConverter{}", self.canonical_name())
+    }
+
+    /// A list of imports that are needed if this type is in use.
+    /// Classes are imported exactly once.
+    fn imports(&self) -> Option<Vec<String>> {
+        None
+    }
+
+    /// Function to run at startup
+    fn initialization_fn(&self) -> Option<String> {
+        None
+    }
+}
 
 // Taken from Python's `keyword.py` module.
 static KEYWORDS: Lazy<HashSet<String>> = Lazy::new(|| {
@@ -97,8 +136,6 @@ impl Config {
 }
 
 impl BindingsConfig for Config {
-    const TOML_KEY: &'static str = "python";
-
     fn update_from_ci(&mut self, ci: &ComponentInterface) {
         self.cdylib_name
             .get_or_insert_with(|| format!("uniffi_{}", ci.namespace()));
@@ -303,26 +340,22 @@ impl PythonCodeOracle {
             FfiType::Float64 => "ctypes.c_double".to_string(),
             FfiType::RustArcPtr(_) => "ctypes.c_void_p".to_string(),
             FfiType::RustBuffer(maybe_suffix) => match maybe_suffix {
-                Some(suffix) => format!("RustBuffer{suffix}"),
-                None => "RustBuffer".to_string(),
+                Some(suffix) => format!("_UniffiRustBuffer{suffix}"),
+                None => "_UniffiRustBuffer".to_string(),
             },
-            FfiType::ForeignBytes => "ForeignBytes".to_string(),
-            FfiType::ForeignCallback => "FOREIGN_CALLBACK_T".to_string(),
+            FfiType::ForeignBytes => "_UniffiForeignBytes".to_string(),
+            FfiType::ForeignCallback => "_UNIFFI_FOREIGN_CALLBACK_T".to_string(),
             // Pointer to an `asyncio.EventLoop` instance
             FfiType::ForeignExecutorHandle => "ctypes.c_size_t".to_string(),
-            FfiType::ForeignExecutorCallback => "UNIFFI_FOREIGN_EXECUTOR_CALLBACK_T".to_string(),
-            FfiType::FutureCallback { return_type } => {
-                format!(
-                    "uniffi_future_callback_t({})",
-                    Self::ffi_type_label(return_type),
-                )
-            }
-            FfiType::FutureCallbackData => "ctypes.c_size_t".to_string(),
+            FfiType::ForeignExecutorCallback => "_UNIFFI_FOREIGN_EXECUTOR_CALLBACK_T".to_string(),
+            FfiType::RustFutureHandle => "ctypes.c_void_p".to_string(),
+            FfiType::RustFutureContinuationCallback => "_UNIFFI_FUTURE_CONTINUATION_T".to_string(),
+            FfiType::RustFutureContinuationData => "ctypes.c_size_t".to_string(),
         }
     }
 }
 
-pub trait AsCodeType {
+trait AsCodeType {
     fn as_codetype(&self) -> Box<dyn CodeType>;
 }
 
@@ -353,16 +386,23 @@ impl<T: AsType> AsCodeType for T {
             Type::Timestamp => Box::new(miscellany::TimestampCodeType),
             Type::Duration => Box::new(miscellany::DurationCodeType),
 
-            Type::Enum(id) => Box::new(enum_::EnumCodeType::new(id)),
+            Type::Enum { name, .. } => Box::new(enum_::EnumCodeType::new(name)),
             Type::Object { name, .. } => Box::new(object::ObjectCodeType::new(name)),
-            Type::Record(id) => Box::new(record::RecordCodeType::new(id)),
-            Type::CallbackInterface(id) => {
-                Box::new(callback_interface::CallbackInterfaceCodeType::new(id))
+            Type::Record { name, .. } => Box::new(record::RecordCodeType::new(name)),
+            Type::CallbackInterface { name, .. } => {
+                Box::new(callback_interface::CallbackInterfaceCodeType::new(name))
             }
             Type::ForeignExecutor => Box::new(executor::ForeignExecutorCodeType),
-            Type::Optional(inner) => Box::new(compounds::OptionalCodeType::new(*inner)),
-            Type::Sequence(inner) => Box::new(compounds::SequenceCodeType::new(*inner)),
-            Type::Map(key, value) => Box::new(compounds::MapCodeType::new(*key, *value)),
+            Type::Optional { inner_type } => {
+                Box::new(compounds::OptionalCodeType::new(*inner_type))
+            }
+            Type::Sequence { inner_type } => {
+                Box::new(compounds::SequenceCodeType::new(*inner_type))
+            }
+            Type::Map {
+                key_type,
+                value_type,
+            } => Box::new(compounds::MapCodeType::new(*key_type, *value_type)),
             Type::External { name, .. } => Box::new(external::ExternalCodeType::new(name)),
             Type::Custom { name, .. } => Box::new(custom::CustomCodeType::new(name)),
         }
@@ -373,54 +413,41 @@ pub mod filters {
     use super::*;
     pub use crate::backend::filters::*;
 
-    pub fn type_name(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+    pub(super) fn type_name(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
         Ok(as_ct.as_codetype().type_label())
     }
 
-    pub fn ffi_converter_name(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
-        Ok(as_ct.as_codetype().ffi_converter_name())
+    pub(super) fn ffi_converter_name(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+        Ok(String::from("_Uniffi") + &as_ct.as_codetype().ffi_converter_name()[3..])
     }
 
-    pub fn canonical_name(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+    pub(super) fn canonical_name(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
         Ok(as_ct.as_codetype().canonical_name())
     }
 
-    pub fn lift_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+    pub(super) fn lift_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
         Ok(format!("{}.lift", ffi_converter_name(as_ct)?))
     }
 
-    pub fn lower_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+    pub(super) fn lower_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
         Ok(format!("{}.lower", ffi_converter_name(as_ct)?))
     }
 
-    pub fn read_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+    pub(super) fn read_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
         Ok(format!("{}.read", ffi_converter_name(as_ct)?))
     }
 
-    pub fn write_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+    pub(super) fn write_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
         Ok(format!("{}.write", ffi_converter_name(as_ct)?))
     }
 
-    // Name of the callback function we pass to Rust to complete an async call
-    pub fn async_callback_fn(result_type: &ResultType) -> Result<String, askama::Error> {
-        let return_string = match &result_type.return_type {
-            Some(t) => PythonCodeOracle.find(t).canonical_name().to_snake_case(),
-            None => "void".into(),
-        };
-        let throws_string = match &result_type.throws_type {
-            Some(t) => PythonCodeOracle.find(t).canonical_name().to_snake_case(),
-            None => "void".into(),
-        };
-        Ok(format!(
-            "uniffi_async_callback_{return_string}__{throws_string}"
-        ))
-    }
-
-    pub fn literal_py(literal: &Literal, as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+    pub(super) fn literal_py(
+        literal: &Literal,
+        as_ct: &impl AsCodeType,
+    ) -> Result<String, askama::Error> {
         Ok(as_ct.as_codetype().literal(literal))
     }
 
-    /// Get the Python syntax for representing a given low-level `FfiType`.
     pub fn ffi_type_name(type_: &FfiType) -> Result<String, askama::Error> {
         Ok(PythonCodeOracle::ffi_type_label(type_))
     }

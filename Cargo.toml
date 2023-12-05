@@ -51,7 +51,7 @@ resolver = "2"
 
 [workspace.dependencies]
 # Shared across multiple UniFFI consumers.
-uniffi = "0.24.3"
+uniffi = "0.25.2"
 
 # Explicitly specify what our profiles use.  The opt-level setting here is
 # a total fiction; see the setup of MOZ_RUST_DEFAULT_FLAGS for what the
@@ -203,13 +203,17 @@ warp = { git = "https://github.com/glandium/warp", rev = "4af45fae95bc98b0eba1ef
 malloc_size_of_derive = { path = "xpcom/rust/malloc_size_of_derive" }
 
 # application-services overrides to make updating them all simpler.
-interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "c82bccfa500813f273f4db0ead64fc73bfa2b34c" }
-sql-support = { git = "https://github.com/mozilla/application-services", rev = "c82bccfa500813f273f4db0ead64fc73bfa2b34c" }
-suggest = { git = "https://github.com/mozilla/application-services", rev = "c82bccfa500813f273f4db0ead64fc73bfa2b34c" }
-sync15 = { git = "https://github.com/mozilla/application-services", rev = "c82bccfa500813f273f4db0ead64fc73bfa2b34c" }
-tabs = { git = "https://github.com/mozilla/application-services", rev = "c82bccfa500813f273f4db0ead64fc73bfa2b34c" }
-viaduct = { git = "https://github.com/mozilla/application-services", rev = "c82bccfa500813f273f4db0ead64fc73bfa2b34c" }
-webext-storage = { git = "https://github.com/mozilla/application-services", rev = "c82bccfa500813f273f4db0ead64fc73bfa2b34c" }
+interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "5babdbc9756a879c906d12613bb764b3f99fe822" }
+sql-support = { git = "https://github.com/mozilla/application-services", rev = "5babdbc9756a879c906d12613bb764b3f99fe822" }
+suggest = { git = "https://github.com/mozilla/application-services", rev = "5babdbc9756a879c906d12613bb764b3f99fe822" }
+sync15 = { git = "https://github.com/mozilla/application-services", rev = "5babdbc9756a879c906d12613bb764b3f99fe822" }
+tabs = { git = "https://github.com/mozilla/application-services", rev = "5babdbc9756a879c906d12613bb764b3f99fe822" }
+viaduct = { git = "https://github.com/mozilla/application-services", rev = "5babdbc9756a879c906d12613bb764b3f99fe822" }
+webext-storage = { git = "https://github.com/mozilla/application-services", rev = "5babdbc9756a879c906d12613bb764b3f99fe822" }
+
+# Patch oneshot to disable the `loom` target, which we never use but causes many `loom` and many
+# other dependencies to be pulled in when running `mach vendor rust`
+oneshot = { git = "https://github.com/bendk/oneshot", tag = "v0.1.5-mozilla" }
 
 # Patch mio 0.6 to use winapi 0.3 and miow 0.3, getting rid of winapi 0.2.
 # There is not going to be new version of mio 0.6, mio now being >= 0.7.11.
@@ -217,8 +221,8 @@ webext-storage = { git = "https://github.com/mozilla/application-services", rev 
 path = "third_party/rust/mio-0.6.23"
 
 [patch."https://github.com/mozilla/uniffi-rs.git"]
-uniffi = "=0.24.3"
-uniffi_bindgen = "=0.24.3"
-uniffi_build = "=0.24.3"
-uniffi_macros = "=0.24.3"
+uniffi = "=0.25.2"
+uniffi_bindgen = "=0.25.2"
+uniffi_build = "=0.25.2"
+uniffi_macros = "=0.25.2"
 weedle2 = "=4.0.0"

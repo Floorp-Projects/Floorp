@@ -61,16 +61,16 @@
 {%- when Type::Duration %}
 {%- include "DurationHelper.swift" %}
 
-{%- when Type::CallbackInterface(name) %}
+{%- when Type::CallbackInterface { name, module_path } %}
 {%- include "CallbackInterfaceTemplate.swift" %}
 
 {%- when Type::ForeignExecutor %}
 {%- include "ForeignExecutorTemplate.swift" %}
 
-{%- when Type::Custom { name, builtin } %}
+{%- when Type::Custom { name, module_path, builtin } %}
 {%- include "CustomType.swift" %}
 
-{%- when Type::Enum(name) %}
+{%- when Type::Enum { name, module_path } %}
 {%- let e = ci.get_enum_definition(name).unwrap() %}
 {%- if ci.is_name_used_as_error(name) %}
 {%- include "ErrorTemplate.swift" %}
@@ -78,25 +78,21 @@
 {%- include "EnumTemplate.swift" %}
 {% endif %}
 
-{%- when Type::Object{ name, imp } %}
+{%- when Type::Object{ name, module_path, imp } %}
 {%- include "ObjectTemplate.swift" %}
 
-{%- when Type::Record(name) %}
+{%- when Type::Record { name, module_path } %}
 {%- include "RecordTemplate.swift" %}
 
-{%- when Type::Optional(inner_type) %}
+{%- when Type::Optional { inner_type } %}
 {%- include "OptionalTemplate.swift" %}
 
-{%- when Type::Sequence(inner_type) %}
+{%- when Type::Sequence { inner_type } %}
 {%- include "SequenceTemplate.swift" %}
 
-{%- when Type::Map(key_type, value_type) %}
+{%- when Type::Map { key_type, value_type } %}
 {%- include "MapTemplate.swift" %}
 
 {%- else %}
 {%- endmatch %}
 {%- endfor %}
-
-{%- if ci.has_async_fns() %}
-{%- include "AsyncTypes.swift" %}
-{%- endif %}
