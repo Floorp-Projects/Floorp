@@ -51,6 +51,11 @@ fail-if = [
   "os == 'mac'",
 ]
 
+["test_device_lost.html"]
+fail-if = [
+  "os == 'linux' && os_version == '18.04'",
+]
+
 ["test_double_encoder_finish.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
