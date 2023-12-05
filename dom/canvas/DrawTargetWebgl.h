@@ -289,7 +289,8 @@ class SharedContextWebgl : public mozilla::RefCounted<SharedContextWebgl>,
                      bool aTransformed = true, bool aClipped = true,
                      bool aAccelOnly = false, bool aForceUpdate = false,
                      const StrokeOptions* aStrokeOptions = nullptr,
-                     const PathVertexRange* aVertexRange = nullptr);
+                     const PathVertexRange* aVertexRange = nullptr,
+                     const Matrix* aRectXform = nullptr);
 
   already_AddRefed<TextureHandle> DrawStrokeMask(
       const PathVertexRange& aVertexRange, const IntSize& aSize);
@@ -298,7 +299,8 @@ class SharedContextWebgl : public mozilla::RefCounted<SharedContextWebgl>,
                      const StrokeOptions* aStrokeOptions = nullptr,
                      bool aAllowStrokeAlpha = false,
                      const ShadowOptions* aShadow = nullptr,
-                     bool aCacheable = true);
+                     bool aCacheable = true,
+                     const Matrix* aPathXform = nullptr);
 
   bool DrawGlyphsAccel(ScaledFont* aFont, const GlyphBuffer& aBuffer,
                        const Pattern& aPattern, const DrawOptions& aOptions,
@@ -379,6 +381,9 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   int32_t mLayerDepth = 0;
 
   RefPtr<TextureHandle> mSnapshotTexture;
+
+  // Cached unit circle path
+  RefPtr<Path> mUnitCirclePath;
 
   // Store a log of clips currently pushed so that they can be used to init
   // the clip state of temporary DTs.
@@ -497,6 +502,12 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
               const DrawOptions& aOptions = DrawOptions()) override;
   void Fill(const Path* aPath, const Pattern& aPattern,
             const DrawOptions& aOptions = DrawOptions()) override;
+  void FillCircle(const Point& aOrigin, float aRadius, const Pattern& aPattern,
+                  const DrawOptions& aOptions = DrawOptions()) override;
+  void StrokeCircle(const Point& aOrigin, float aRadius,
+                    const Pattern& aPattern,
+                    const StrokeOptions& aStrokeOptions = StrokeOptions(),
+                    const DrawOptions& aOptions = DrawOptions()) override;
 
   void SetPermitSubpixelAA(bool aPermitSubpixelAA) override;
   void FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
@@ -601,6 +612,9 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
                 const DrawOptions& aOptions,
                 const StrokeOptions* aStrokeOptions = nullptr,
                 bool aAllowStrokeAlpha = false);
+  void DrawCircle(const Point& aOrigin, float aRadius, const Pattern& aPattern,
+                  const DrawOptions& aOptions,
+                  const StrokeOptions* aStrokeOptions = nullptr);
 
   bool MarkChanged();
 
