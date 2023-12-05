@@ -21,13 +21,13 @@ class AndroidLogSink(
     /**
      * Low-level logging call.
      */
-    override fun log(priority: Log.Priority, tag: String?, throwable: Throwable?, message: String?) {
+    override fun log(priority: Log.Priority, tag: String?, throwable: Throwable?, message: String) {
         val logTag = tag(tag)
 
-        val logMessage: String = if (message != null && throwable != null) {
+        val logMessage: String = if (throwable != null) {
             "$message\n${throwable.getStacktraceAsString()}"
         } else {
-            message ?: (throwable?.getStacktraceAsString() ?: "(empty)")
+            message
         }
 
         android.util.Log.println(priority.value, logTag, logMessage)
@@ -35,7 +35,7 @@ class AndroidLogSink(
 
     private fun tag(candidate: String?): String {
         val tag = candidate ?: defaultTag
-        if (Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.N && tag.length > MAX_TAG_LENGTH) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N && tag.length > MAX_TAG_LENGTH) {
             return tag.substring(0, MAX_TAG_LENGTH)
         }
         return tag

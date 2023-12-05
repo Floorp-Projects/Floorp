@@ -23,7 +23,7 @@ class FenixLogSink(
         priority: Log.Priority,
         tag: String?,
         throwable: Throwable?,
-        message: String?,
+        message: String,
     ) {
         if (priority == Log.Priority.DEBUG && !logsDebug) {
             return

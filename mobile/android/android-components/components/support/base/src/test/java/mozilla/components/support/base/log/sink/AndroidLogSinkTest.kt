@@ -175,38 +175,6 @@ class AndroidLogSinkTest {
         )
     }
 
-    @Test
-    fun `Sink will print stacktrace of throwable`() {
-        val sink = AndroidLogSink()
-
-        sink.log(throwable = MockThrowable())
-
-        val logs = ShadowLog.getLogs()
-        assertEquals(1, logs.size)
-        assertEquals(
-            "java.lang.RuntimeException: This is broken\n\tat A\n\tat B\n\tat C",
-            logs.last().msg,
-        )
-    }
-
-    @Test
-    fun `Sink will print empty default message if no message and no throwable is provided`() {
-        val sink = AndroidLogSink()
-
-        sink.log()
-        sink.log(tag = "Tag")
-
-        val logs = ShadowLog.getLogs()
-
-        assertEquals(2, logs.size)
-
-        assertEquals("(empty)", logs[0].msg)
-        assertEquals("App", logs[0].tag)
-
-        assertEquals("(empty)", logs[1].msg)
-        assertEquals("Tag", logs[1].tag)
-    }
-
     private class MockThrowable : Throwable("Kaput") {
         override fun printStackTrace(writer: PrintWriter) {
             writer.write("java.lang.RuntimeException: This is broken\n\tat A\n\tat B\n\tat C")

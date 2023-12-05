@@ -27,7 +27,7 @@ class FenixLogSinkTest {
             "test",
             message = "test",
         )
-        verify(exactly = 0) { androidLogSink.log(any(), any(), any()) }
+        verify(exactly = 0) { androidLogSink.log(any(), any(), any(), any()) }
     }
 
     @Test

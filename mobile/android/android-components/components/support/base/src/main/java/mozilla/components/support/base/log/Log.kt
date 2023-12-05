@@ -49,7 +49,7 @@ object Log {
         priority: Priority = Priority.DEBUG,
         tag: String? = null,
         throwable: Throwable? = null,
-        message: String? = null,
+        message: String,
     ) {
         if (priority.value >= logLevel.value) {
             synchronized(sinks) {
