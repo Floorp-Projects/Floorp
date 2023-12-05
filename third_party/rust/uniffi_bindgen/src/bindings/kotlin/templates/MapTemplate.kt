@@ -1,16 +1,15 @@
-{%- let key_type_name = key_type|type_name %}
-{%- let value_type_name = value_type|type_name %}
+{%- let key_type_name = key_type|type_name(ci) %}
+{%- let value_type_name = value_type|type_name(ci) %}
 public object {{ ffi_converter_name }}: FfiConverterRustBuffer<Map<{{ key_type_name }}, {{ value_type_name }}>> {
     override fun read(buf: ByteBuffer): Map<{{ key_type_name }}, {{ value_type_name }}> {
-        // TODO: Once Kotlin's `buildMap` API is stabilized we should use it here.
-        val items : MutableMap<{{ key_type_name }}, {{ value_type_name }}> = mutableMapOf()
         val len = buf.getInt()
-        repeat(len) {
-            val k = {{ key_type|read_fn }}(buf)
-            val v = {{ value_type|read_fn }}(buf)
-            items[k] = v
+        return buildMap<{{ key_type_name }}, {{ value_type_name }}>(len) {
+            repeat(len) {
+                val k = {{ key_type|read_fn }}(buf)
+                val v = {{ value_type|read_fn }}(buf)
+                this[k] = v
+            }
         }
-        return items
     }
 
     override fun allocationSize(value: Map<{{ key_type_name }}, {{ value_type_name }}>): Int {

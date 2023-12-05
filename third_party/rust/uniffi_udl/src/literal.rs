@@ -2,111 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-//! # Support for literal values.
-//!
-//! This module provides support for interpreting literal values from the UDL,
-//! which appear in places such as default arguments.
+use anyhow::{bail, Result};
+use uniffi_meta::{LiteralMetadata, Radix, Type};
 
-use anyhow::{bail, ensure, Context, Result};
-use uniffi_meta::Checksum;
+// We are able to use LiteralMetadata directly.
+pub type Literal = LiteralMetadata;
 
-use super::types::Type;
-
-// Represents a literal value.
-// Used for e.g. default argument values.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Checksum)]
-pub enum Literal {
-    Boolean(bool),
-    String(String),
-    // Integers are represented as the widest representation we can.
-    // Number formatting vary with language and radix, so we avoid a lot of parsing and
-    // formatting duplication by using only signed and unsigned variants.
-    UInt(u64, Radix, Type),
-    Int(i64, Radix, Type),
-    // Pass the string representation through as typed in the UDL.
-    // This avoids a lot of uncertainty around precision and accuracy,
-    // though bindings for languages less sophisticated number parsing than WebIDL
-    // will have to do extra work.
-    Float(String, Type),
-    Enum(String, Type),
-    EmptySequence,
-    EmptyMap,
-    Null,
-}
-
-impl Literal {
-    pub(crate) fn from_metadata(
-        name: &str,
-        ty: &Type,
-        default: uniffi_meta::Literal,
-    ) -> Result<Self> {
-        Ok(match default {
-            uniffi_meta::Literal::Str { value } => {
-                ensure!(
-                    matches!(ty, Type::String),
-                    "field {name} of type {ty:?} can't have a default value of type string"
-                );
-                Self::String(value)
-            }
-            uniffi_meta::Literal::Int { base10_digits } => {
-                macro_rules! parse_int {
-                    ($ty:ident, $variant:ident) => {
-                        Self::$variant(
-                            base10_digits
-                                .parse::<$ty>()
-                                .with_context(|| format!("parsing default for field {}", name))?
-                                .into(),
-                            Radix::Decimal,
-                            ty.to_owned(),
-                        )
-                    };
-                }
-
-                match ty {
-                    Type::UInt8 => parse_int!(u8, UInt),
-                    Type::Int8 => parse_int!(i8, Int),
-                    Type::UInt16 => parse_int!(u16, UInt),
-                    Type::Int16 => parse_int!(i16, Int),
-                    Type::UInt32 => parse_int!(u32, UInt),
-                    Type::Int32 => parse_int!(i32, Int),
-                    Type::UInt64 => parse_int!(u64, UInt),
-                    Type::Int64 => parse_int!(i64, Int),
-                    _ => {
-                        bail!("field {name} of type {ty:?} can't have a default value of type integer");
-                    }
-                }
-            }
-            uniffi_meta::Literal::Float { base10_digits } => match ty {
-                Type::Float32 => Self::Float(base10_digits, Type::Float32),
-                Type::Float64 => Self::Float(base10_digits, Type::Float64),
-                _ => {
-                    bail!("field {name} of type {ty:?} can't have a default value of type float");
-                }
-            },
-            uniffi_meta::Literal::Bool { value } => {
-                ensure!(
-                    matches!(ty, Type::String),
-                    "field {name} of type {ty:?} can't have a default value of type boolean"
-                );
-                Self::Boolean(value)
-            }
-        })
-    }
-}
-
-// Represent the radix of integer literal values.
-// We preserve the radix into the generated bindings for readability reasons.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Checksum)]
-pub enum Radix {
-    Decimal = 10,
-    Octal = 8,
-    Hexadecimal = 16,
-}
-
+// Convert weedle/udl syntax.
 pub(super) fn convert_default_value(
     default_value: &weedle::literal::DefaultValue<'_>,
     type_: &Type,
-) -> Result<Literal> {
+) -> Result<LiteralMetadata> {
     fn convert_integer(literal: &weedle::literal::IntegerLit<'_>, type_: &Type) -> Result<Literal> {
         let (string, radix) = match literal {
             weedle::literal::IntegerLit::Dec(v) => (v.0, Radix::Decimal),
@@ -172,12 +78,14 @@ pub(super) fn convert_default_value(
             // trying to break default values with weird escapes and quotes.
             Literal::String(s.0.to_string())
         }
-        (weedle::literal::DefaultValue::EmptyArray(_), Type::Sequence(_)) => Literal::EmptySequence,
-        (weedle::literal::DefaultValue::String(s), Type::Enum(_)) => {
+        (weedle::literal::DefaultValue::EmptyArray(_), Type::Sequence { .. }) => {
+            Literal::EmptySequence
+        }
+        (weedle::literal::DefaultValue::String(s), Type::Enum { .. }) => {
             Literal::Enum(s.0.to_string(), type_.clone())
         }
-        (weedle::literal::DefaultValue::Null(_), Type::Optional(_)) => Literal::Null,
-        (_, Type::Optional(inner_type)) => convert_default_value(default_value, inner_type)?,
+        (weedle::literal::DefaultValue::Null(_), Type::Optional { .. }) => Literal::Null,
+        (_, Type::Optional { inner_type, .. }) => convert_default_value(default_value, inner_type)?,
 
         // We'll ensure the type safety in the convert_* number methods.
         (weedle::literal::DefaultValue::Integer(i), _) => convert_integer(i, type_)?,
@@ -218,14 +126,24 @@ mod test {
             matches!(parse_and_convert("\"TEST\"", Type::String)?, Literal::String(v) if v == "TEST")
         );
         assert!(
-            matches!(parse_and_convert("\"one\"", Type::Enum("E".into()))?, Literal::Enum(v, Type::Enum(e)) if v == "one" && e == "E")
+            matches!(parse_and_convert("\"one\"", Type::Enum { name: "E".into(), module_path: "".into() })?, Literal::Enum(v, Type::Enum { name, .. }) if v == "one" && name == "E")
         );
         assert!(matches!(
-            parse_and_convert("[]", Type::Sequence(Box::new(Type::String)))?,
+            parse_and_convert(
+                "[]",
+                Type::Sequence {
+                    inner_type: Box::new(Type::String)
+                }
+            )?,
             Literal::EmptySequence
         ));
         assert!(matches!(
-            parse_and_convert("null", Type::Optional(Box::new(Type::String)))?,
+            parse_and_convert(
+                "null",
+                Type::Optional {
+                    inner_type: Box::new(Type::String)
+                }
+            )?,
             Literal::Null
         ));
         Ok(())

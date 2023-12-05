@@ -10,6 +10,10 @@
 use super::Literal;
 use std::fmt::Debug;
 
+// XXX - Note that this trait is not used internally. It exists just to avoid an unnecessary
+// breaking change for external bindings which use this trait.
+// It is likely to be removed some time after 0.26.x.
+
 /// A Trait to help render types in a language specific format.
 pub trait CodeType: Debug {
     /// The language specific label used to reference this type. This will be used in

@@ -15,6 +15,11 @@ git = "https://github.com/FirefoxGraphics/wpf-gpu-raster"
 rev = "99979da091fd58fba8477e7fcdf5ec0727102916"
 replace-with = "vendored-sources"
 
+[source."git+https://github.com/bendk/oneshot?tag=v0.1.5-mozilla"]
+git = "https://github.com/bendk/oneshot"
+tag = "v0.1.5-mozilla"
+replace-with = "vendored-sources"
+
 [source."git+https://github.com/chris-zen/coremidi.git?rev=fc68464b5445caf111e41f643a2e69ccce0b4f83"]
 git = "https://github.com/chris-zen/coremidi.git"
 rev = "fc68464b5445caf111e41f643a2e69ccce0b4f83"
@@ -55,9 +60,9 @@ git = "https://github.com/mozilla-spidermonkey/jsparagus"
 rev = "64ba08e24749616de2344112f226d1ef4ba893ae"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/mozilla/application-services?rev=c82bccfa500813f273f4db0ead64fc73bfa2b34c"]
+[source."git+https://github.com/mozilla/application-services?rev=5babdbc9756a879c906d12613bb764b3f99fe822"]
 git = "https://github.com/mozilla/application-services"
-rev = "c82bccfa500813f273f4db0ead64fc73bfa2b34c"
+rev = "5babdbc9756a879c906d12613bb764b3f99fe822"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/mozilla/audioipc?rev=6be424d75f1367e70f2f5ddcacd6d0237e81a6a9"]
@@ -90,9 +95,9 @@ git = "https://github.com/mozilla/neqo"
 tag = "v0.6.8"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/mozilla/uniffi-rs.git?rev=c0e64b839018728d8153ce1758d391b7782e2e21"]
+[source."git+https://github.com/mozilla/uniffi-rs.git?rev=f2353fcbfde83207a0033301653bc69be86e4572"]
 git = "https://github.com/mozilla/uniffi-rs.git"
-rev = "c0e64b839018728d8153ce1758d391b7782e2e21"
+rev = "f2353fcbfde83207a0033301653bc69be86e4572"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/rust-lang/rust-bindgen?rev=86f3dbe846020e2ba573d6eb38d1434d0cbcbb40"]

@@ -14,11 +14,11 @@
 //!   "one",
 //!   "two"
 //! };
-//! # "##)?;
+//! # "##, "crate_name")?;
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 //!
-//! Will result in a [`Enum`] member being added to the resulting [`ComponentInterface`]:
+//! Will result in a [`Enum`] member being added to the resulting [`crate::ComponentInterface`]:
 //!
 //! ```
 //! # let ci = uniffi_bindgen::interface::ComponentInterface::from_webidl(r##"
@@ -27,7 +27,7 @@
 //! #   "one",
 //! #   "two"
 //! # };
-//! # "##)?;
+//! # "##, "crate_name")?;
 //! let e = ci.get_enum_definition("Example").unwrap();
 //! assert_eq!(e.name(), "Example");
 //! assert_eq!(e.variants().len(), 2);
@@ -49,7 +49,7 @@
 //!   One(u32 first);
 //!   Two(u32 first, string second);
 //! };
-//! # "##)?;
+//! # "##, "crate_name")?;
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 //!
@@ -64,7 +64,7 @@
 //! #   One(u32 first);
 //! #   Two(u32 first, string second);
 //! # };
-//! # "##)?;
+//! # "##, "crate_name")?;
 //! let e = ci.get_enum_definition("ExampleWithData").unwrap();
 //! assert_eq!(e.name(), "ExampleWithData");
 //! assert_eq!(e.variants().len(), 3);
@@ -86,11 +86,11 @@
 //!   "one",
 //!   "two"
 //! };
-//! # "##)?;
+//! # "##, "crate_name")?;
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 //!
-//! Will result in an [`Enum`] member with fieldless variants being added to the resulting [`ComponentInterface`]:
+//! Will result in an [`Enum`] member with fieldless variants being added to the resulting [`crate::ComponentInterface`]:
 //!
 //! ```
 //! # let ci = uniffi_bindgen::interface::ComponentInterface::from_webidl(r##"
@@ -100,7 +100,7 @@
 //! #   "one",
 //! #   "two"
 //! # };
-//! # "##)?;
+//! # "##, "crate_name")?;
 //! let err = ci.get_enum_definition("Example").unwrap();
 //! assert_eq!(err.name(), "Example");
 //! assert_eq!(err.variants().len(), 2);
@@ -122,11 +122,11 @@
 //!   two(string reason);
 //!   three(i32 x, i32 y);
 //! };
-//! # "##)?;
+//! # "##, "crate_name")?;
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 //!
-//! Will result in an [`Enum`] member with variants that have fields being added to the resulting [`ComponentInterface`]:
+//! Will result in an [`Enum`] member with variants that have fields being added to the resulting [`crate::ComponentInterface`]:
 //!
 //! ```
 //! # let ci = uniffi_bindgen::interface::ComponentInterface::from_webidl(r##"
@@ -137,7 +137,7 @@
 //! #   two(string reason);
 //! #   three(i32 x, i32 y);
 //! # };
-//! # "##)?;
+//! # "##, "crate_name")?;
 //! let err = ci.get_enum_definition("Example").unwrap();
 //! assert_eq!(err.name(), "Example");
 //! assert_eq!(err.variants().len(), 3);
@@ -155,12 +155,11 @@
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use uniffi_meta::Checksum;
 
 use super::record::Field;
-use super::types::{Type, TypeIterator};
-use super::{APIConverter, AsType, ComponentInterface};
+use super::{AsType, Type, TypeIterator};
 
 /// Represents an enum with named variants, each of which may have named
 /// and typed fields.
@@ -170,6 +169,7 @@ use super::{APIConverter, AsType, ComponentInterface};
 #[derive(Debug, Clone, PartialEq, Eq, Checksum)]
 pub struct Enum {
     pub(super) name: String,
+    pub(super) module_path: String,
     pub(super) variants: Vec<Variant>,
     // NOTE: `flat` is a misleading name and to make matters worse, has 2 different
     // meanings depending on the context :(
@@ -217,6 +217,7 @@ impl Enum {
         // We don't have that context here, so this is handled by our caller.
         Ok(Self {
             name: meta.name,
+            module_path: meta.module_path,
             variants: meta
                 .variants
                 .into_iter()
@@ -229,61 +230,10 @@ impl Enum {
 
 impl AsType for Enum {
     fn as_type(&self) -> Type {
-        Type::Enum(self.name.clone())
-    }
-}
-
-// Note that we have two `APIConverter` impls here - one for the `enum` case
-// and one for the `[Enum] interface` case.
-
-impl APIConverter<Enum> for weedle::EnumDefinition<'_> {
-    fn convert(&self, _ci: &mut ComponentInterface) -> Result<Enum> {
-        Ok(Enum {
-            name: self.identifier.0.to_string(),
-            variants: self
-                .values
-                .body
-                .list
-                .iter()
-                .map::<Result<_>, _>(|v| {
-                    Ok(Variant {
-                        name: v.0.to_string(),
-                        ..Default::default()
-                    })
-                })
-                .collect::<Result<Vec<_>>>()?,
-            // Enums declared using the `enum` syntax can never have variants with fields described in the UDL.
-            // So regardless of whether this enum has variants with fields or not, we lower it with
-            // a string representation of itself.
-            flat: true,
-        })
-    }
-}
-
-impl APIConverter<Enum> for weedle::InterfaceDefinition<'_> {
-    fn convert(&self, ci: &mut ComponentInterface) -> Result<Enum> {
-        if self.inheritance.is_some() {
-            bail!("interface inheritance is not supported for enum interfaces");
+        Type::Enum {
+            name: self.name.clone(),
+            module_path: self.module_path.clone(),
         }
-        // We don't need to check `self.attributes` here; if calling code has dispatched
-        // to this impl then we already know there was an `[Enum]` attribute.
-        Ok(Enum {
-            name: self.identifier.0.to_string(),
-            variants: self
-                .members
-                .body
-                .iter()
-                .map::<Result<Variant>, _>(|member| match member {
-                    weedle::interface::InterfaceMember::Operation(t) => Ok(t.convert(ci)?),
-                    _ => bail!(
-                        "interface member type {:?} not supported in enum interface",
-                        member
-                    ),
-                })
-                .collect::<Result<Vec<_>>>()?,
-            // Enums declared using the `[Enum] interface` syntax might have variants with fields.
-            flat: false,
-        })
     }
 }
 
@@ -329,77 +279,9 @@ impl TryFrom<uniffi_meta::VariantMetadata> for Variant {
     }
 }
 
-impl APIConverter<Variant> for weedle::interface::OperationInterfaceMember<'_> {
-    fn convert(&self, ci: &mut ComponentInterface) -> Result<Variant> {
-        if self.special.is_some() {
-            bail!("special operations not supported");
-        }
-        if let Some(weedle::interface::StringifierOrStatic::Stringifier(_)) = self.modifier {
-            bail!("stringifiers are not supported");
-        }
-        // OK, so this is a little weird.
-        // The syntax we use for enum interface members is `Name(type arg, ...);`, which parses
-        // as an anonymous operation where `Name` is the return type. We re-interpret it to
-        // use `Name` as the name of the variant.
-        if self.identifier.is_some() {
-            bail!("enum interface members must not have a method name");
-        }
-        let name: String = {
-            use weedle::types::{
-                NonAnyType::Identifier, ReturnType, SingleType::NonAny, Type::Single,
-            };
-            match &self.return_type {
-                ReturnType::Type(Single(NonAny(Identifier(id)))) => id.type_.0.to_owned(),
-                _ => bail!("enum interface members must have plain identifiers as names"),
-            }
-        };
-        Ok(Variant {
-            name,
-            fields: self
-                .args
-                .body
-                .list
-                .iter()
-                .map(|arg| arg.convert(ci))
-                .collect::<Result<Vec<_>>>()?,
-        })
-    }
-}
-
-impl APIConverter<Field> for weedle::argument::Argument<'_> {
-    fn convert(&self, ci: &mut ComponentInterface) -> Result<Field> {
-        match self {
-            weedle::argument::Argument::Single(t) => t.convert(ci),
-            weedle::argument::Argument::Variadic(_) => bail!("variadic arguments not supported"),
-        }
-    }
-}
-
-impl APIConverter<Field> for weedle::argument::SingleArgument<'_> {
-    fn convert(&self, ci: &mut ComponentInterface) -> Result<Field> {
-        let type_ = ci.resolve_type_expression(&self.type_)?;
-        if let Type::Object { .. } = type_ {
-            bail!("Objects cannot currently be used in enum variant data");
-        }
-        if self.default.is_some() {
-            bail!("enum interface variant fields must not have default values");
-        }
-        if self.attributes.is_some() {
-            bail!("enum interface variant fields must not have attributes");
-        }
-        // TODO: maybe we should use our own `Field` type here with just name and type,
-        // rather than appropriating record::Field..?
-        Ok(Field {
-            name: self.identifier.0.to_string(),
-            type_,
-            default: None,
-        })
-    }
-}
-
 #[cfg(test)]
 mod test {
-    use super::super::ffi::FfiType;
+    use super::super::{ComponentInterface, FfiType};
     use super::*;
 
     #[test]
@@ -410,7 +292,7 @@ mod test {
             // We should probably disallow this...
             enum Testing { "one", "two", "one" };
         "#;
-        let ci = ComponentInterface::from_webidl(UDL).unwrap();
+        let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
         assert_eq!(ci.enum_definitions().count(), 1);
         assert_eq!(
             ci.get_enum_definition("Testing").unwrap().variants().len(),
@@ -420,7 +302,7 @@ mod test {
 
     #[test]
     fn test_associated_data() {
-        const UDL: &str = r##"
+        const UDL: &str = r#"
             namespace test {
                 void takes_an_enum(TestEnum e);
                 void takes_an_enum_with_data(TestEnumWithData ed);
@@ -442,8 +324,8 @@ mod test {
                 One();
                 Two();
             };
-        "##;
-        let ci = ComponentInterface::from_webidl(UDL).unwrap();
+        "#;
+        let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
         assert_eq!(ci.enum_definitions().count(), 3);
         assert_eq!(ci.function_definitions().len(), 4);
 
@@ -502,7 +384,6 @@ mod test {
 
         // The enum declared via interface, but with no associated data.
         let ewd = ci.get_enum_definition("TestEnumWithoutData").unwrap();
-        assert!(!ewd.is_flat());
         assert_eq!(ewd.variants().len(), 2);
         assert_eq!(
             ewd.variants().iter().map(|v| v.name()).collect::<Vec<_>>(),
@@ -515,14 +396,20 @@ mod test {
         // (It might be nice to optimize these to pass as plain integers, but that's
         // difficult atop the current factoring of `ComponentInterface` and friends).
         let farg = ci.get_function_definition("takes_an_enum").unwrap();
-        assert_eq!(farg.arguments()[0].as_type(), Type::Enum("TestEnum".into()));
+        assert_eq!(
+            farg.arguments()[0].as_type(),
+            Type::Enum {
+                name: "TestEnum".into(),
+                module_path: "crate_name".into()
+            }
+        );
         assert_eq!(
             farg.ffi_func().arguments()[0].type_(),
             FfiType::RustBuffer(None)
         );
         let fret = ci.get_function_definition("returns_an_enum").unwrap();
         assert!(
-            matches!(fret.return_type(), Some(Type::Enum(name)) if name == "TestEnum" && !ci.is_name_used_as_error(name))
+            matches!(fret.return_type(), Some(Type::Enum { name, .. }) if name == "TestEnum" && !ci.is_name_used_as_error(name))
         );
         assert!(matches!(
             fret.ffi_func().return_type(),
@@ -535,7 +422,10 @@ mod test {
             .unwrap();
         assert_eq!(
             farg.arguments()[0].as_type(),
-            Type::Enum("TestEnumWithData".into())
+            Type::Enum {
+                name: "TestEnumWithData".into(),
+                module_path: "crate_name".into()
+            }
         );
         assert_eq!(
             farg.ffi_func().arguments()[0].type_(),
@@ -545,7 +435,7 @@ mod test {
             .get_function_definition("returns_an_enum_with_data")
             .unwrap();
         assert!(
-            matches!(fret.return_type(), Some(Type::Enum(name)) if name == "TestEnumWithData" && !ci.is_name_used_as_error(name))
+            matches!(fret.return_type(), Some(Type::Enum { name, .. }) if name == "TestEnumWithData" && !ci.is_name_used_as_error(name))
         );
         assert!(matches!(
             fret.ffi_func().return_type(),
@@ -561,7 +451,7 @@ mod test {
             [Error]
             enum Testing { "one", "two", "three" };
         "#;
-        let ci = ComponentInterface::from_webidl(UDL).unwrap();
+        let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
         assert_eq!(ci.enum_definitions().count(), 1);
         let error = ci.get_enum_definition("Testing").unwrap();
         assert_eq!(
@@ -585,7 +475,7 @@ mod test {
             [Error]
             enum Testing { "one", "two", "one" };
         "#;
-        let ci = ComponentInterface::from_webidl(UDL).unwrap();
+        let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
         assert_eq!(ci.enum_definitions().count(), 1);
         assert_eq!(
             ci.get_enum_definition("Testing").unwrap().variants().len(),
@@ -604,7 +494,7 @@ mod test {
                 Two(u8 code);
             };
         "#;
-        let ci = ComponentInterface::from_webidl(UDL).unwrap();
+        let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
         assert_eq!(ci.enum_definitions().count(), 1);
         let error: &Enum = ci.get_enum_definition("Testing").unwrap();
         assert_eq!(
@@ -617,5 +507,61 @@ mod test {
         );
         assert!(!error.is_flat());
         assert!(ci.is_name_used_as_error(&error.name));
+    }
+
+    #[test]
+    fn test_enum_variant_named_error() {
+        const UDL: &str = r#"
+            namespace test{};
+
+            [Enum]
+            interface Testing {
+                Normal(string first);
+                Error(string first);
+            };
+        "#;
+        let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
+        assert_eq!(ci.enum_definitions().count(), 1);
+        let testing: &Enum = ci.get_enum_definition("Testing").unwrap();
+        assert_eq!(
+            testing.variants()[0]
+                .fields()
+                .iter()
+                .map(|f| f.name())
+                .collect::<Vec<_>>(),
+            vec!["first"]
+        );
+        assert_eq!(
+            testing.variants()[0]
+                .fields()
+                .iter()
+                .map(|f| f.as_type())
+                .collect::<Vec<_>>(),
+            vec![Type::String]
+        );
+        assert_eq!(
+            testing.variants()[1]
+                .fields()
+                .iter()
+                .map(|f| f.name())
+                .collect::<Vec<_>>(),
+            vec!["first"]
+        );
+        assert_eq!(
+            testing.variants()[1]
+                .fields()
+                .iter()
+                .map(|f| f.as_type())
+                .collect::<Vec<_>>(),
+            vec![Type::String]
+        );
+        assert_eq!(
+            testing
+                .variants()
+                .iter()
+                .map(|v| v.name())
+                .collect::<Vec<_>>(),
+            vec!["Normal", "Error"]
+        );
     }
 }

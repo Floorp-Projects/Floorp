@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::backend::{CodeType, Literal};
+use super::CodeType;
+use crate::backend::Literal;
 use paste::paste;
 
 macro_rules! impl_code_type_for_miscellany {

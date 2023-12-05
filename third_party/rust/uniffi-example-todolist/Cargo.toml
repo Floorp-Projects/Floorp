@@ -29,15 +29,15 @@ once_cell = "1.12"
 thiserror = "1.0"
 
 [dependencies.uniffi]
-version = "0.24"
+version = "0.25"
 path = "../../uniffi"
 
 [dev-dependencies.uniffi]
-version = "0.24"
+version = "0.25"
 path = "../../uniffi"
 features = ["bindgen-tests"]
 
 [build-dependencies.uniffi]
-version = "0.24"
+version = "0.25"
 path = "../../uniffi"
 features = ["build"]

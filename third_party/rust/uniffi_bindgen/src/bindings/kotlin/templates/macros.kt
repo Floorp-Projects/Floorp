@@ -7,7 +7,7 @@
 {%- macro to_ffi_call(func) -%}
     {%- match func.throws_type() %}
     {%- when Some with (e) %}
-    rustCallWithError({{ e|error_type_name }})
+    rustCallWithError({{ e|type_name(ci) }})
     {%- else %}
     rustCall()
     {%- endmatch %} { _status ->
@@ -18,7 +18,7 @@
 {%- macro to_ffi_call_with_prefix(prefix, func) %}
     {%- match func.throws_type() %}
     {%- when Some with (e) %}
-    rustCallWithError({{ e|error_type_name }})
+    rustCallWithError({{ e|type_name(ci) }})
     {%- else %}
     rustCall()
     {%- endmatch %} { _status ->
@@ -42,9 +42,9 @@
 
 {% macro arg_list_decl(func) %}
     {%- for arg in func.arguments() -%}
-        {{ arg.name()|var_name }}: {{ arg|type_name -}}
+        {{ arg.name()|var_name }}: {{ arg|type_name(ci) }}
         {%- match arg.default_value() %}
-        {%- when Some with(literal) %} = {{ literal|render_literal(arg) }}
+        {%- when Some with(literal) %} = {{ literal|render_literal(arg, ci) }}
         {%- else %}
         {%- endmatch %}
         {%- if !loop.last %}, {% endif -%}
@@ -53,7 +53,7 @@
 
 {% macro arg_list_protocol(func) %}
     {%- for arg in func.arguments() -%}
-        {{ arg.name()|var_name }}: {{ arg|type_name -}}
+        {{ arg.name()|var_name }}: {{ arg|type_name(ci) }}
         {%- if !loop.last %}, {% endif -%}
     {%- endfor %}
 {%- endmacro %}

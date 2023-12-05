@@ -40,9 +40,13 @@ pub use anyhow::Result;
 
 pub mod ffi;
 mod ffi_converter_impls;
+mod ffi_converter_traits;
 pub mod metadata;
 
 pub use ffi::*;
+pub use ffi_converter_traits::{
+    ConvertError, FfiConverter, FfiConverterArc, Lift, LiftRef, LiftReturn, Lower, LowerReturn,
+};
 pub use metadata::*;
 
 // Re-export the libs that we use in the generated code,
@@ -54,6 +58,8 @@ pub mod deps {
     pub use bytes;
     pub use log;
     pub use static_assertions;
+    // Export this dependency for the 0.25 branch so that we can use it in `setup_scaffolding.rs`
+    pub use once_cell;
 }
 
 mod panichook;
@@ -127,168 +133,6 @@ macro_rules! assert_compatible_version {
     };
 }
 
-/// Trait defining how to transfer values via the FFI layer.
-///
-/// The `FfiConverter` trait defines how to pass values of a particular type back-and-forth over
-/// the uniffi generated FFI layer, both as standalone argument or return values, and as
-/// part of serialized compound data structures. `FfiConverter` is mainly used in generated code.
-/// The goal is to make it easy for the code generator to name the correct FFI-related function for
-/// a given type.
-///
-/// FfiConverter has a generic parameter, that's filled in with a type local to the UniFFI consumer crate.
-/// This allows us to work around the Rust orphan rules for remote types. See
-/// `https://mozilla.github.io/uniffi-rs/internals/lifting_and_lowering.html#code-generation-and-the-fficonverter-trait`
-/// for details.
-///
-/// ## Scope
-///
-/// It could be argued that FfiConverter handles too many concerns and should be split into
-/// separate traits (like `FfiLiftAndLower`, `FfiSerialize`, `FfiReturn`).  However, there are good
-/// reasons to keep all the functionality in one trait.
-///
-/// The main reason is that splitting the traits requires fairly complex blanket implementations,
-/// for example `impl<UT, T> FfiReturn<UT> for T: FfiLiftAndLower<UT>`.  Writing these impls often
-/// means fighting with `rustc` over what counts as a conflicting implementation.  In fact, as of
-/// Rust 1.66, that previous example conflicts with `impl<UT> FfiReturn<UT> for ()`, since other
-/// crates can implement `impl FfiReturn<MyLocalType> for ()`. In general, this path gets
-/// complicated very quickly and that distracts from the logic that we want to define, which is
-/// fairly simple.
-///
-/// The main downside of having a single `FfiConverter` trait is that we need to implement it for
-/// types that only support some of the functionality.  For example, `Result<>` supports returning
-/// values, but not lifting/lowering/serializing them.  This is a bit weird, but works okay --
-/// especially since `FfiConverter` is rarely used outside of generated code.
-///
-/// ## Safety
-///
-/// This is an unsafe trait (implementing it requires `unsafe impl`) because we can't guarantee
-/// that it's safe to pass your type out to foreign-language code and back again. Buggy
-/// implementations of this trait might violate some assumptions made by the generated code,
-/// or might not match with the corresponding code in the generated foreign-language bindings.
-///
-/// In general, you should not need to implement this trait by hand, and should instead rely on
-/// implementations generated from your component UDL via the `uniffi-bindgen scaffolding` command.
-pub unsafe trait FfiConverter<UT>: Sized {
-    /// The low-level type used for passing values of this type over the FFI.
-    ///
-    /// This must be a C-compatible type (e.g. a numeric primitive, a `#[repr(C)]` struct) into
-    /// which values of the target rust type can be converted.
-    ///
-    /// For complex data types, we currently recommend using `RustBuffer` and serializing
-    /// the data for transfer. In theory it could be possible to build a matching
-    /// `#[repr(C)]` struct for a complex data type and pass that instead, but explicit
-    /// serialization is simpler and safer as a starting point.
-    type FfiType;
-
-    /// The type that should be returned by scaffolding functions for this type.
-    ///
-    /// This is usually the same as `FfiType`, but `Result<>` has specialized handling.
-    type ReturnType: FfiDefault;
-
-    /// The `FutureCallback<T>` type used for async functions
-    ///
-    /// This is almost always `FutureCallback<Self::ReturnType>`.  The one exception is the
-    /// unit type, see that `FfiConverter` impl for details.
-    type FutureCallback: Copy;
-
-    /// Lower a rust value of the target type, into an FFI value of type Self::FfiType.
-    ///
-    /// This trait method is used for sending data from rust to the foreign language code,
-    /// by (hopefully cheaply!) converting it into something that can be passed over the FFI
-    /// and reconstructed on the other side.
-    ///
-    /// Note that this method takes an owned value; this allows it to transfer ownership in turn to
-    /// the foreign language code, e.g. by boxing the value and passing a pointer.
-    fn lower(obj: Self) -> Self::FfiType;
-
-    /// Lower this value for scaffolding function return
-    ///
-    /// This method converts values into the `Result<>` type that [rust_call] expects. For
-    /// successful calls, return `Ok(lower_return)`.  For errors that should be translated into
-    /// thrown exceptions on the foreign code, serialize the error into a RustBuffer and return
-    /// `Err(buf)`
-    fn lower_return(obj: Self) -> Result<Self::ReturnType, RustBuffer>;
-
-    /// Lift a rust value of the target type, from an FFI value of type Self::FfiType.
-    ///
-    /// This trait method is used for receiving data from the foreign language code in rust,
-    /// by (hopefully cheaply!) converting it from a low-level FFI value of type Self::FfiType
-    /// into a high-level rust value of the target type.
-    ///
-    /// Since we cannot statically guarantee that the foreign-language code will send valid
-    /// values of type Self::FfiType, this method is fallible.
-    fn try_lift(v: Self::FfiType) -> Result<Self>;
-
-    /// Lift a Rust value for a callback interface method result
-    fn lift_callback_return(buf: RustBuffer) -> Self {
-        try_lift_from_rust_buffer(buf).expect("Error reading callback interface result")
-    }
-
-    /// Lift a Rust value for a callback interface method error result
-    ///
-    /// This is called for "expected errors" -- the callback method returns a Result<> type and the
-    /// foreign code throws an exception that corresponds to the error type.
-    fn lift_callback_error(_buf: RustBuffer) -> Self {
-        panic!("Callback interface method returned unexpected error")
-    }
-
-    /// Lift a Rust value for an unexpected callback interface error
-    ///
-    /// The main reason this is called is when the callback interface throws an error type that
-    /// doesn't match the Rust trait definition.  It's also called for corner cases, like when the
-    /// foreign code doesn't follow the FFI contract.
-    ///
-    /// The default implementation panics unconditionally.  Errors used in callback interfaces
-    /// handle this using the `From<UnexpectedUniFFICallbackError>` impl that the library author
-    /// must provide.
-    fn handle_callback_unexpected_error(_e: UnexpectedUniFFICallbackError) -> Self {
-        panic!("Callback interface method returned unexpected error")
-    }
-
-    /// Write a rust value into a buffer, to send over the FFI in serialized form.
-    ///
-    /// This trait method can be used for sending data from rust to the foreign language code,
-    /// in cases where we're not able to use a special-purpose FFI type and must fall back to
-    /// sending serialized bytes.
-    ///
-    /// Note that this method takes an owned value because it's transferring ownership
-    /// to the foreign language code via the RustBuffer.
-    fn write(obj: Self, buf: &mut Vec<u8>);
-
-    /// Read a rust value from a buffer, received over the FFI in serialized form.
-    ///
-    /// This trait method can be used for receiving data from the foreign language code in rust,
-    /// in cases where we're not able to use a special-purpose FFI type and must fall back to
-    /// receiving serialized bytes.
-    ///
-    /// Since we cannot statically guarantee that the foreign-language code will send valid
-    /// serialized bytes for the target type, this method is fallible.
-    ///
-    /// Note the slightly unusual type here - we want a mutable reference to a slice of bytes,
-    /// because we want to be able to advance the start of the slice after reading an item
-    /// from it (but will not mutate the actual contents of the slice).
-    fn try_read(buf: &mut &[u8]) -> Result<Self>;
-
-    /// Invoke a `FutureCallback` to complete a async call
-    fn invoke_future_callback(
-        callback: Self::FutureCallback,
-        callback_data: *const (),
-        return_value: Self::ReturnType,
-        call_status: RustCallStatus,
-    );
-
-    /// Type ID metadata, serialized into a [MetadataBuffer]
-    const TYPE_ID_META: MetadataBuffer;
-}
-
-/// Implemented for exported interface types
-///
-/// Like, FfiConverter this has a generic parameter, that's filled in with a type local to the
-/// UniFFI consumer crate.
-pub trait Interface<UT>: Send + Sync + Sized {
-    const NAME: &'static str;
-}
-
 /// Struct to use when we want to lift/lower/serialize types inside the `uniffi` crate.
 struct UniFfiTag;
 
@@ -307,60 +151,6 @@ pub fn check_remaining(buf: &[u8], num_bytes: usize) -> Result<()> {
     Ok(())
 }
 
-/// Helper function to lower an `anyhow::Error` that's wrapping an error type
-pub fn lower_anyhow_error_or_panic<UT, E>(err: anyhow::Error, arg_name: &str) -> RustBuffer
-where
-    E: 'static + FfiConverter<UT> + Sync + Send + std::fmt::Debug + std::fmt::Display,
-{
-    match err.downcast::<E>() {
-        Ok(actual_error) => lower_into_rust_buffer(actual_error),
-        Err(ohno) => panic!("Failed to convert arg '{arg_name}': {ohno}"),
-    }
-}
-
-/// Helper function to create a RustBuffer with a single value
-pub fn lower_into_rust_buffer<T: FfiConverter<UT>, UT>(obj: T) -> RustBuffer {
-    let mut buf = ::std::vec::Vec::new();
-    T::write(obj, &mut buf);
-    RustBuffer::from_vec(buf)
-}
-
-/// Helper function to deserialize a RustBuffer with a single value
-pub fn try_lift_from_rust_buffer<T: FfiConverter<UT>, UT>(v: RustBuffer) -> Result<T> {
-    let vec = v.destroy_into_vec();
-    let mut buf = vec.as_slice();
-    let value = T::try_read(&mut buf)?;
-    match Buf::remaining(&buf) {
-        0 => Ok(value),
-        n => bail!("junk data left in buffer after lifting (count: {n})",),
-    }
-}
-
-/// Macro to implement returning values by simply lowering them and returning them
-///
-/// This is what we use for all FfiConverters except for `Result`.  This would be nicer as a
-/// trait default, but Rust doesn't support defaults on associated types.
-#[macro_export]
-macro_rules! ffi_converter_default_return {
-    ($uniffi_tag:ty) => {
-        type ReturnType = <Self as $crate::FfiConverter<$uniffi_tag>>::FfiType;
-        type FutureCallback = $crate::FutureCallback<Self::ReturnType>;
-
-        fn lower_return(v: Self) -> ::std::result::Result<Self::FfiType, $crate::RustBuffer> {
-            Ok(<Self as $crate::FfiConverter<$uniffi_tag>>::lower(v))
-        }
-
-        fn invoke_future_callback(
-            callback: Self::FutureCallback,
-            callback_data: *const (),
-            return_value: Self::ReturnType,
-            call_status: $crate::RustCallStatus,
-        ) {
-            callback(callback_data, return_value, call_status);
-        }
-    };
-}
-
 /// Macro to implement lowering/lifting using a `RustBuffer`
 ///
 /// For complex types where it's too fiddly or too unsafe to convert them into a special-purpose
@@ -374,143 +164,88 @@ macro_rules! ffi_converter_rust_buffer_lift_and_lower {
         type FfiType = $crate::RustBuffer;
 
         fn lower(v: Self) -> $crate::RustBuffer {
-            $crate::lower_into_rust_buffer::<Self, $uniffi_tag>(v)
+            let mut buf = ::std::vec::Vec::new();
+            <Self as $crate::FfiConverter<$uniffi_tag>>::write(v, &mut buf);
+            $crate::RustBuffer::from_vec(buf)
         }
 
         fn try_lift(buf: $crate::RustBuffer) -> $crate::Result<Self> {
-            $crate::try_lift_from_rust_buffer::<Self, $uniffi_tag>(buf)
+            let vec = buf.destroy_into_vec();
+            let mut buf = vec.as_slice();
+            let value = <Self as $crate::FfiConverter<$uniffi_tag>>::try_read(&mut buf)?;
+            match $crate::deps::bytes::Buf::remaining(&buf) {
+                0 => Ok(value),
+                n => $crate::deps::anyhow::bail!(
+                    "junk data left in buffer after lifting (count: {n})",
+                ),
+            }
         }
     };
 }
 
-/// Macro to implement `FfiConverter<T>` for a type by forwording all calls to another type
+/// Macro to implement `FfiConverter<T>` for a UniFfiTag using a different UniFfiTag
 ///
 /// This is used for external types
 #[macro_export]
 macro_rules! ffi_converter_forward {
+    // Forward a `FfiConverter` implementation
     ($T:ty, $existing_impl_tag:ty, $new_impl_tag:ty) => {
-        unsafe impl $crate::FfiConverter<$new_impl_tag> for $T {
-            type FfiType = <$T as $crate::FfiConverter<$existing_impl_tag>>::FfiType;
-            type ReturnType = <$T as $crate::FfiConverter<$existing_impl_tag>>::FfiType;
-            type FutureCallback = <$T as $crate::FfiConverter<$existing_impl_tag>>::FutureCallback;
+        ::uniffi::do_ffi_converter_forward!(
+            FfiConverter,
+            $T,
+            $T,
+            $existing_impl_tag,
+            $new_impl_tag
+        );
 
-            fn lower(obj: $T) -> Self::FfiType {
-                <$T as $crate::FfiConverter<$existing_impl_tag>>::lower(obj)
-            }
-
-            fn lower_return(
-                v: Self,
-            ) -> ::std::result::Result<Self::ReturnType, $crate::RustBuffer> {
-                <$T as $crate::FfiConverter<$existing_impl_tag>>::lower_return(v)
-            }
-
-            fn try_lift(v: Self::FfiType) -> $crate::Result<$T> {
-                <$T as $crate::FfiConverter<$existing_impl_tag>>::try_lift(v)
-            }
-
-            fn write(obj: $T, buf: &mut Vec<u8>) {
-                <$T as $crate::FfiConverter<$existing_impl_tag>>::write(obj, buf)
-            }
-
-            fn try_read(buf: &mut &[u8]) -> $crate::Result<$T> {
-                <$T as $crate::FfiConverter<$existing_impl_tag>>::try_read(buf)
-            }
-
-            fn invoke_future_callback(
-                callback: Self::FutureCallback,
-                callback_data: *const (),
-                return_value: Self::ReturnType,
-                call_status: $crate::RustCallStatus,
-            ) {
-                <$T as $crate::FfiConverter<$existing_impl_tag>>::invoke_future_callback(
-                    callback,
-                    callback_data,
-                    return_value,
-                    call_status,
-                )
-            }
-
-            const TYPE_ID_META: ::uniffi::MetadataBuffer =
-                <$T as $crate::FfiConverter<$existing_impl_tag>>::TYPE_ID_META;
-        }
+        $crate::derive_ffi_traits!(local $T);
     };
 }
 
-/// Macro to implement `FfiConverter<T>` for a trait
+/// Macro to implement `FfiConverterArc<T>` for a UniFfiTag using a different UniFfiTag
+///
+/// This is used for external types
 #[macro_export]
-macro_rules! ffi_converter_trait_decl {
-     ($T:ty, $name:expr, $uniffi_tag:ty) => {
-        use $crate::deps::bytes::{Buf, BufMut};
-        unsafe impl $crate::FfiConverter<$uniffi_tag> for std::sync::Arc<$T> {
-            type FfiType = *const std::os::raw::c_void;
-            $crate::ffi_converter_default_return!($uniffi_tag);
-            //type ReturnType = *const std::os::raw::c_void;
+macro_rules! ffi_converter_arc_forward {
+    ($T:ty, $existing_impl_tag:ty, $new_impl_tag:ty) => {
+        ::uniffi::do_ffi_converter_forward!(
+            FfiConverterArc,
+            ::std::sync::Arc<$T>,
+            $T,
+            $existing_impl_tag,
+            $new_impl_tag
+        );
 
-            fn lower(obj: std::sync::Arc<$T>) -> Self::FfiType {
-                Box::into_raw(Box::new(obj)) as *const std::os::raw::c_void
-            }
-
-            fn try_lift(v: Self::FfiType) -> $crate::Result<std::sync::Arc<$T>> {
-                let foreign_arc = Box::leak(unsafe { Box::from_raw(v as *mut std::sync::Arc<$T>) });
-                // Take a clone for our own use.
-                Ok(std::sync::Arc::clone(foreign_arc))
-            }
-
-            fn write(obj: std::sync::Arc<$T>, buf: &mut Vec<u8>) {
-                $crate::deps::static_assertions::const_assert!(std::mem::size_of::<*const std::ffi::c_void>() <= 8);
-                buf.put_u64(<Self as $crate::FfiConverter<$uniffi_tag>>::lower(obj) as u64);
-            }
-
-            fn try_read(buf: &mut &[u8]) -> $crate::Result<std::sync::Arc<$T>> {
-                $crate::deps::static_assertions::const_assert!(std::mem::size_of::<*const std::ffi::c_void>() <= 8);
-                $crate::check_remaining(buf, 8)?;
-                <Self as $crate::FfiConverter<$uniffi_tag>>::try_lift(buf.get_u64() as Self::FfiType)
-            }
-            const TYPE_ID_META: $crate::MetadataBuffer = $crate::MetadataBuffer::from_code($crate::metadata::codes::TYPE_INTERFACE).concat_str($name).concat_bool(true);
-        }
-    }
+        // Note: no need to call derive_ffi_traits! because there is a blanket impl for all Arc<T>
+    };
 }
 
-/// Macro to implement `FfiConverter<T>` for a callback interface
+// Generic code between the two macros above
+#[doc(hidden)]
 #[macro_export]
-macro_rules! ffi_converter_callback_interface {
-    ($trait:ident, $T:ty, $name:expr, $uniffi_tag:ty) => {
-        unsafe impl ::uniffi::FfiConverter<$uniffi_tag> for Box<dyn $trait> {
-            type FfiType = u64;
+macro_rules! do_ffi_converter_forward {
+    ($trait:ident, $rust_type:ty, $T:ty, $existing_impl_tag:ty, $new_impl_tag:ty) => {
+        unsafe impl $crate::$trait<$new_impl_tag> for $T {
+            type FfiType = <$T as $crate::$trait<$existing_impl_tag>>::FfiType;
 
-            // Lower and write are tricky to implement because we have a dyn trait as our type.  There's
-            // probably a way to, but this carries lots of thread safety risks, down to impedance
-            // mismatches between Rust and foreign languages, and our uncertainty around implementations of
-            // concurrent handlemaps.
-            //
-            // The use case for them is also quite exotic: it's passing a foreign callback back to the foreign
-            // language.
-            //
-            // Until we have some certainty, and use cases, we shouldn't use them.
-            fn lower(_obj: Box<dyn $trait>) -> Self::FfiType {
-                panic!("Lowering CallbackInterface not supported")
+            fn lower(obj: $rust_type) -> Self::FfiType {
+                <$T as $crate::$trait<$existing_impl_tag>>::lower(obj)
             }
 
-            fn write(_obj: Box<dyn $trait>, _buf: &mut std::vec::Vec<u8>) {
-                panic!("Writing CallbackInterface not supported")
+            fn try_lift(v: Self::FfiType) -> $crate::Result<$rust_type> {
+                <$T as $crate::$trait<$existing_impl_tag>>::try_lift(v)
             }
 
-            fn try_lift(v: Self::FfiType) -> uniffi::deps::anyhow::Result<Box<dyn $trait>> {
-                Ok(Box::new(<$T>::new(v)))
+            fn write(obj: $rust_type, buf: &mut Vec<u8>) {
+                <$T as $crate::$trait<$existing_impl_tag>>::write(obj, buf)
             }
 
-            fn try_read(buf: &mut &[u8]) -> uniffi::deps::anyhow::Result<Box<dyn $trait>> {
-                use uniffi::deps::bytes::Buf;
-                uniffi::check_remaining(buf, 8)?;
-                Self::try_lift(buf.get_u64())
+            fn try_read(buf: &mut &[u8]) -> $crate::Result<$rust_type> {
+                <$T as $crate::$trait<$existing_impl_tag>>::try_read(buf)
             }
 
-            ::uniffi::ffi_converter_default_return!($uniffi_tag);
-
-            const TYPE_ID_META: ::uniffi::MetadataBuffer = ::uniffi::MetadataBuffer::from_code(
-                ::uniffi::metadata::codes::TYPE_CALLBACK_INTERFACE,
-            )
-            .concat_str($name);
+            const TYPE_ID_META: ::uniffi::MetadataBuffer =
+                <$T as $crate::$trait<$existing_impl_tag>>::TYPE_ID_META;
         }
     };
 }
@@ -544,4 +279,46 @@ mod test {
             "Expected results after lowering and lifting to be equal"
         )
     }
+}
+
+#[cfg(test)]
+pub mod test_util {
+    use std::{error::Error, fmt};
+
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct TestError(pub String);
+
+    // Use FfiConverter to simplify lifting TestError out of RustBuffer to check it
+    unsafe impl<UT> FfiConverter<UT> for TestError {
+        ffi_converter_rust_buffer_lift_and_lower!(UniFfiTag);
+
+        fn write(obj: TestError, buf: &mut Vec<u8>) {
+            <String as FfiConverter<UniFfiTag>>::write(obj.0, buf);
+        }
+
+        fn try_read(buf: &mut &[u8]) -> Result<TestError> {
+            <String as FfiConverter<UniFfiTag>>::try_read(buf).map(TestError)
+        }
+
+        // Use a dummy value here since we don't actually need TYPE_ID_META
+        const TYPE_ID_META: MetadataBuffer = MetadataBuffer::new();
+    }
+
+    impl fmt::Display for TestError {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            write!(f, "{}", self.0)
+        }
+    }
+
+    impl Error for TestError {}
+
+    impl<T: Into<String>> From<T> for TestError {
+        fn from(v: T) -> Self {
+            Self(v.into())
+        }
+    }
+
+    derive_ffi_traits!(blanket TestError);
 }

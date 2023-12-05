@@ -5,13 +5,14 @@
 use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap, HashSet};
+use std::fmt::Debug;
 
 use anyhow::{Context, Result};
 use askama::Template;
 use heck::{ToLowerCamelCase, ToShoutySnakeCase, ToUpperCamelCase};
 use serde::{Deserialize, Serialize};
 
-use crate::backend::{CodeType, TemplateExpression};
+use crate::backend::TemplateExpression;
 use crate::interface::*;
 use crate::BindingsConfig;
 
@@ -19,7 +20,6 @@ mod callback_interface;
 mod compounds;
 mod custom;
 mod enum_;
-mod error;
 mod executor;
 mod external;
 mod miscellany;
@@ -27,6 +27,46 @@ mod object;
 mod primitives;
 mod record;
 mod variant;
+
+trait CodeType: Debug {
+    /// The language specific label used to reference this type. This will be used in
+    /// method signatures and property declarations.
+    fn type_label(&self, ci: &ComponentInterface) -> String;
+
+    /// A representation of this type label that can be used as part of another
+    /// identifier. e.g. `read_foo()`, or `FooInternals`.
+    ///
+    /// This is especially useful when creating specialized objects or methods to deal
+    /// with this type only.
+    fn canonical_name(&self) -> String;
+
+    fn literal(&self, _literal: &Literal, ci: &ComponentInterface) -> String {
+        unimplemented!("Unimplemented for {}", self.type_label(ci))
+    }
+
+    /// Name of the FfiConverter
+    ///
+    /// This is the object that contains the lower, write, lift, and read methods for this type.
+    /// Depending on the binding this will either be a singleton or a class with static methods.
+    ///
+    /// This is the newer way of handling these methods and replaces the lower, write, lift, and
+    /// read CodeType methods.  Currently only used by Kotlin, but the plan is to move other
+    /// backends to using this.
+    fn ffi_converter_name(&self) -> String {
+        format!("FfiConverter{}", self.canonical_name())
+    }
+
+    /// A list of imports that are needed if this type is in use.
+    /// Classes are imported exactly once.
+    fn imports(&self) -> Option<Vec<String>> {
+        None
+    }
+
+    /// Function to run at startup
+    fn initialization_fn(&self) -> Option<String> {
+        None
+    }
+}
 
 // config options to customize the generated Kotlin.
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
@@ -66,8 +106,6 @@ impl Config {
 }
 
 impl BindingsConfig for Config {
-    const TOML_KEY: &'static str = "kotlin";
-
     fn update_from_ci(&mut self, ci: &ComponentInterface) {
         self.package_name
             .get_or_insert_with(|| format!("uniffi.{}", ci.namespace()));
@@ -125,7 +163,7 @@ impl ImportRequirement {
 #[derive(Template)]
 #[template(syntax = "kt", escape = "none", path = "Types.kt")]
 pub struct TypeRenderer<'a> {
-    kotlin_config: &'a Config,
+    config: &'a Config,
     ci: &'a ComponentInterface,
     // Track included modules for the `include_once()` macro
     include_once_names: RefCell<HashSet<String>>,
@@ -134,9 +172,9 @@ pub struct TypeRenderer<'a> {
 }
 
 impl<'a> TypeRenderer<'a> {
-    fn new(kotlin_config: &'a Config, ci: &'a ComponentInterface) -> Self {
+    fn new(config: &'a Config, ci: &'a ComponentInterface) -> Self {
         Self {
-            kotlin_config,
+            config,
             ci,
             include_once_names: RefCell::new(HashSet::new()),
             imports: RefCell::new(BTreeSet::new()),
@@ -144,10 +182,13 @@ impl<'a> TypeRenderer<'a> {
     }
 
     // Get the package name for an external type
-    fn external_type_package_name(&self, crate_name: &str) -> String {
-        match self.kotlin_config.external_packages.get(crate_name) {
+    fn external_type_package_name(&self, module_path: &str, namespace: &str) -> String {
+        // config overrides are keyed by the crate name, default fallback is the namespace.
+        let crate_name = module_path.split("::").next().unwrap();
+        match self.config.external_packages.get(crate_name) {
             Some(name) => name.clone(),
-            None => crate_name.to_string(),
+            // unreachable in library mode - all deps are in our config with correct namespace.
+            None => format!("uniffi.{namespace}"),
         }
     }
 
@@ -195,6 +236,7 @@ pub struct KotlinWrapper<'a> {
     ci: &'a ComponentInterface,
     type_helper_code: String,
     type_imports: BTreeSet<ImportRequirement>,
+    has_async_fns: bool,
 }
 
 impl<'a> KotlinWrapper<'a> {
@@ -207,6 +249,7 @@ impl<'a> KotlinWrapper<'a> {
             ci,
             type_helper_code,
             type_imports,
+            has_async_fns: ci.has_async_fns(),
         }
     }
 
@@ -215,6 +258,10 @@ impl<'a> KotlinWrapper<'a> {
             .iter_types()
             .map(|t| KotlinCodeOracle.find(t))
             .filter_map(|ct| ct.initialization_fn())
+            .chain(
+                self.has_async_fns
+                    .then(|| "uniffiRustFutureContinuationCallback.register".into()),
+            )
             .collect()
     }
 
@@ -231,17 +278,20 @@ impl KotlinCodeOracle {
         type_.clone().as_type().as_codetype()
     }
 
-    fn find_as_error(&self, type_: &Type) -> Box<dyn CodeType> {
-        match type_ {
-            Type::Enum(id) => Box::new(error::ErrorCodeType::new(id.clone())),
-            // XXX - not sure how we are supposed to return askama::Error?
-            _ => panic!("unsupported type for error: {type_:?}"),
-        }
+    /// Get the idiomatic Kotlin rendering of a class name (for enums, records, errors, etc).
+    fn class_name(&self, ci: &ComponentInterface, nm: &str) -> String {
+        let name = nm.to_string().to_upper_camel_case();
+        // fixup errors.
+        ci.is_name_used_as_error(nm)
+            .then(|| self.convert_error_suffix(&name))
+            .unwrap_or(name)
     }
 
-    /// Get the idiomatic Kotlin rendering of a class name (for enums, records, errors, etc).
-    fn class_name(&self, nm: &str) -> String {
-        nm.to_string().to_upper_camel_case()
+    fn convert_error_suffix(&self, nm: &str) -> String {
+        match nm.strip_suffix("Error") {
+            None => nm.to_string(),
+            Some(stripped) => format!("{stripped}Exception"),
+        }
     }
 
     /// Get the idiomatic Kotlin rendering of a function name.
@@ -257,20 +307,6 @@ impl KotlinCodeOracle {
     /// Get the idiomatic Kotlin rendering of an individual enum variant.
     fn enum_variant_name(&self, nm: &str) -> String {
         nm.to_string().to_shouty_snake_case()
-    }
-
-    /// Get the idiomatic Kotlin rendering of an exception name
-    ///
-    /// This replaces "Error" at the end of the name with "Exception".  Rust code typically uses
-    /// "Error" for any type of error but in the Java world, "Error" means a non-recoverable error
-    /// and is distinguished from an "Exception".
-    fn error_name(&self, nm: &str) -> String {
-        // errors are a class in kotlin.
-        let name = self.class_name(nm);
-        match name.strip_suffix("Error") {
-            None => name,
-            Some(stripped) => format!("{stripped}Exception"),
-        }
     }
 
     fn ffi_type_label_by_value(ffi_type: &FfiType) -> String {
@@ -299,15 +335,16 @@ impl KotlinCodeOracle {
             FfiType::ForeignCallback => "ForeignCallback".to_string(),
             FfiType::ForeignExecutorHandle => "USize".to_string(),
             FfiType::ForeignExecutorCallback => "UniFfiForeignExecutorCallback".to_string(),
-            FfiType::FutureCallback { return_type } => {
-                format!("UniFfiFutureCallback{}", Self::ffi_type_label(return_type))
+            FfiType::RustFutureHandle => "Pointer".to_string(),
+            FfiType::RustFutureContinuationCallback => {
+                "UniFffiRustFutureContinuationCallbackType".to_string()
             }
-            FfiType::FutureCallbackData => "USize".to_string(),
+            FfiType::RustFutureContinuationData => "USize".to_string(),
         }
     }
 }
 
-pub trait AsCodeType {
+trait AsCodeType {
     fn as_codetype(&self) -> Box<dyn CodeType>;
 }
 
@@ -338,126 +375,87 @@ impl<T: AsType> AsCodeType for T {
             Type::Timestamp => Box::new(miscellany::TimestampCodeType),
             Type::Duration => Box::new(miscellany::DurationCodeType),
 
-            Type::Enum(id) => Box::new(enum_::EnumCodeType::new(id)),
+            Type::Enum { name, .. } => Box::new(enum_::EnumCodeType::new(name)),
             Type::Object { name, .. } => Box::new(object::ObjectCodeType::new(name)),
-            Type::Record(id) => Box::new(record::RecordCodeType::new(id)),
-            Type::CallbackInterface(id) => {
-                Box::new(callback_interface::CallbackInterfaceCodeType::new(id))
+            Type::Record { name, .. } => Box::new(record::RecordCodeType::new(name)),
+            Type::CallbackInterface { name, .. } => {
+                Box::new(callback_interface::CallbackInterfaceCodeType::new(name))
             }
             Type::ForeignExecutor => Box::new(executor::ForeignExecutorCodeType),
-            Type::Optional(inner) => Box::new(compounds::OptionalCodeType::new(*inner)),
-            Type::Sequence(inner) => Box::new(compounds::SequenceCodeType::new(*inner)),
-            Type::Map(key, value) => Box::new(compounds::MapCodeType::new(*key, *value)),
+            Type::Optional { inner_type } => {
+                Box::new(compounds::OptionalCodeType::new(*inner_type))
+            }
+            Type::Sequence { inner_type } => {
+                Box::new(compounds::SequenceCodeType::new(*inner_type))
+            }
+            Type::Map {
+                key_type,
+                value_type,
+            } => Box::new(compounds::MapCodeType::new(*key_type, *value_type)),
             Type::External { name, .. } => Box::new(external::ExternalCodeType::new(name)),
             Type::Custom { name, .. } => Box::new(custom::CustomCodeType::new(name)),
         }
     }
 }
 
-pub mod filters {
+mod filters {
     use super::*;
     pub use crate::backend::filters::*;
 
-    pub fn type_name(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
-        Ok(as_ct.as_codetype().type_label())
+    pub(super) fn type_name(
+        as_ct: &impl AsCodeType,
+        ci: &ComponentInterface,
+    ) -> Result<String, askama::Error> {
+        Ok(as_ct.as_codetype().type_label(ci))
     }
 
-    pub fn canonical_name(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+    pub(super) fn canonical_name(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
         Ok(as_ct.as_codetype().canonical_name())
     }
 
-    pub fn ffi_converter_name(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+    pub(super) fn ffi_converter_name(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
         Ok(as_ct.as_codetype().ffi_converter_name())
     }
 
-    pub fn lower_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+    pub(super) fn lower_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
         Ok(format!(
             "{}.lower",
             as_ct.as_codetype().ffi_converter_name()
         ))
     }
 
-    pub fn allocation_size_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+    pub(super) fn allocation_size_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
         Ok(format!(
             "{}.allocationSize",
             as_ct.as_codetype().ffi_converter_name()
         ))
     }
 
-    pub fn write_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+    pub(super) fn write_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
         Ok(format!(
             "{}.write",
             as_ct.as_codetype().ffi_converter_name()
         ))
     }
 
-    pub fn lift_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+    pub(super) fn lift_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
         Ok(format!("{}.lift", as_ct.as_codetype().ffi_converter_name()))
     }
 
-    pub fn read_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
+    pub(super) fn read_fn(as_ct: &impl AsCodeType) -> Result<String, askama::Error> {
         Ok(format!("{}.read", as_ct.as_codetype().ffi_converter_name()))
-    }
-
-    pub fn error_handler(result_type: &ResultType) -> Result<String, askama::Error> {
-        match &result_type.throws_type {
-            Some(error_type) => Ok(KotlinCodeOracle.error_name(&type_name(error_type)?)),
-            None => Ok("NullCallStatusErrorHandler".into()),
-        }
-    }
-
-    pub fn future_callback_handler(result_type: &ResultType) -> Result<String, askama::Error> {
-        let return_component = match &result_type.return_type {
-            Some(return_type) => KotlinCodeOracle.find(return_type).canonical_name(),
-            None => "Void".into(),
-        };
-        let throws_component = match &result_type.throws_type {
-            Some(throws_type) => {
-                format!("_{}", KotlinCodeOracle.find(throws_type).canonical_name())
-            }
-            None => "".into(),
-        };
-        Ok(format!(
-            "UniFfiFutureCallbackHandler{return_component}{throws_component}"
-        ))
-    }
-
-    pub fn future_continuation_type(result_type: &ResultType) -> Result<String, askama::Error> {
-        let return_type_name = match &result_type.return_type {
-            Some(t) => type_name(t)?,
-            None => "Unit".into(),
-        };
-        Ok(format!("Continuation<{return_type_name}>"))
     }
 
     pub fn render_literal(
         literal: &Literal,
-        as_ct: &impl AsCodeType,
+        as_ct: &impl AsType,
+        ci: &ComponentInterface,
     ) -> Result<String, askama::Error> {
-        Ok(as_ct.as_codetype().literal(literal))
-    }
-
-    /// Get the Kotlin syntax for representing a given low-level `FfiType`.
-    pub fn ffi_type_name(type_: &FfiType) -> Result<String, askama::Error> {
-        Ok(KotlinCodeOracle::ffi_type_label(type_))
+        Ok(as_ct.as_codetype().literal(literal, ci))
     }
 
     pub fn ffi_type_name_by_value(type_: &FfiType) -> Result<String, askama::Error> {
         Ok(KotlinCodeOracle::ffi_type_label_by_value(type_))
-    }
-
-    // Some FfiTypes have the same ffi_type_label - this makes a vec of them unique.
-    pub fn unique_ffi_types(
-        types: impl Iterator<Item = FfiType>,
-    ) -> Result<impl Iterator<Item = FfiType>, askama::Error> {
-        let mut seen = HashSet::new();
-        let mut result = Vec::new();
-        for t in types {
-            if seen.insert(KotlinCodeOracle::ffi_type_label(&t)) {
-                result.push(t)
-            }
-        }
-        Ok(result.into_iter())
     }
 
     /// Get the idiomatic Kotlin rendering of a function name.
@@ -470,39 +468,55 @@ pub mod filters {
         Ok(KotlinCodeOracle.var_name(nm))
     }
 
+    /// Get a String representing the name used for an individual enum variant.
     pub fn variant_name(v: &Variant) -> Result<String, askama::Error> {
         Ok(KotlinCodeOracle.enum_variant_name(v.name()))
     }
 
-    /// Get a codetype for idiomatic Kotlin rendering of an individual enum variant.
-    pub fn enum_variant(v: &Variant) -> Result<impl AsCodeType, askama::Error> {
-        Ok(v.clone())
+    pub fn error_variant_name(v: &Variant) -> Result<String, askama::Error> {
+        let name = v.name().to_string().to_upper_camel_case();
+        Ok(KotlinCodeOracle.convert_error_suffix(&name))
     }
 
-    /// Get a codetype for idiomatic Kotlin rendering of an individual enum variant
-    /// when used in an error.
-    pub fn error_variant(v: &Variant) -> Result<impl AsCodeType, askama::Error> {
-        Ok(variant::ErrorVariantCodeTypeProvider { v: v.clone() })
+    pub fn async_poll(
+        callable: impl Callable,
+        ci: &ComponentInterface,
+    ) -> Result<String, askama::Error> {
+        let ffi_func = callable.ffi_rust_future_poll(ci);
+        Ok(format!(
+            "{{ future, continuation -> _UniFFILib.INSTANCE.{ffi_func}(future, continuation) }}"
+        ))
     }
 
-    /// Some of the above filters have different versions to help when the type
-    /// is used as an error.
-    pub fn error_type_name(as_type: &impl AsType) -> Result<String, askama::Error> {
-        Ok(KotlinCodeOracle
-            .find_as_error(&as_type.as_type())
-            .type_label())
+    pub fn async_complete(
+        callable: impl Callable,
+        ci: &ComponentInterface,
+    ) -> Result<String, askama::Error> {
+        let ffi_func = callable.ffi_rust_future_complete(ci);
+        let call = format!("_UniFFILib.INSTANCE.{ffi_func}(future, continuation)");
+        let call = match callable.return_type() {
+            Some(Type::External {
+                kind: ExternalKind::DataClass,
+                name,
+                ..
+            }) => {
+                // Need to convert the RustBuffer from our package to the RustBuffer of the external package
+                let suffix = KotlinCodeOracle.class_name(ci, &name);
+                format!("{call}.let {{ RustBuffer{suffix}.create(it.capacity, it.len, it.data) }}")
+            }
+            _ => call,
+        };
+        Ok(format!("{{ future, continuation -> {call} }}"))
     }
 
-    pub fn error_canonical_name(as_type: &impl AsType) -> Result<String, askama::Error> {
-        Ok(KotlinCodeOracle
-            .find_as_error(&as_type.as_type())
-            .canonical_name())
-    }
-
-    pub fn error_ffi_converter_name(as_type: &impl AsType) -> Result<String, askama::Error> {
-        Ok(KotlinCodeOracle
-            .find_as_error(&as_type.as_type())
-            .ffi_converter_name())
+    pub fn async_free(
+        callable: impl Callable,
+        ci: &ComponentInterface,
+    ) -> Result<String, askama::Error> {
+        let ffi_func = callable.ffi_rust_future_free(ci);
+        Ok(format!(
+            "{{ future -> _UniFFILib.INSTANCE.{ffi_func}(future) }}"
+        ))
     }
 
     /// Remove the "`" chars we put around function/variable names

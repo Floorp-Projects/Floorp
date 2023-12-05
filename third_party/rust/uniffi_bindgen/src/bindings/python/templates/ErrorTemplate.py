@@ -7,17 +7,17 @@
 class {{ type_name }}(Exception):
     pass
 
-UniFFITemp{{ type_name }} = {{ type_name }}
+_UniffiTemp{{ type_name }} = {{ type_name }}
 
 class {{ type_name }}:  # type: ignore
     {%- for variant in e.variants() -%}
     {%- let variant_type_name = variant.name()|class_name -%}
     {%- if e.is_flat() %}
-    class {{ variant_type_name }}(UniFFITemp{{ type_name }}):
+    class {{ variant_type_name }}(_UniffiTemp{{ type_name }}):
         def __repr__(self):
             return "{{ type_name }}.{{ variant_type_name }}({})".format(repr(str(self)))
     {%- else %}
-    class {{ variant_type_name }}(UniFFITemp{{ type_name }}):
+    class {{ variant_type_name }}(_UniffiTemp{{ type_name }}):
         def __init__(self{% for field in variant.fields() %}, {{ field.name()|var_name }}{% endfor %}):
             {%- if variant.has_fields() %}
             super().__init__(", ".join([
@@ -34,17 +34,17 @@ class {{ type_name }}:  # type: ignore
         def __repr__(self):
             return "{{ type_name }}.{{ variant_type_name }}({})".format(str(self))
     {%- endif %}
-    UniFFITemp{{ type_name }}.{{ variant_type_name }} = {{ variant_type_name }}  # type: ignore
+    _UniffiTemp{{ type_name }}.{{ variant_type_name }} = {{ variant_type_name }} # type: ignore
     {%- endfor %}
 
-{{ type_name }} = UniFFITemp{{ type_name }}  # type: ignore
-del UniFFITemp{{ type_name }}
+{{ type_name }} = _UniffiTemp{{ type_name }} # type: ignore
+del _UniffiTemp{{ type_name }}
 
 
-class {{ ffi_converter_name }}(FfiConverterRustBuffer):
+class {{ ffi_converter_name }}(_UniffiConverterRustBuffer):
     @staticmethod
     def read(buf):
-        variant = buf.readI32()
+        variant = buf.read_i32()
         {%- for variant in e.variants() %}
         if variant == {{ loop.index }}:
             return {{ type_name }}.{{ variant.name()|class_name }}(
@@ -63,7 +63,7 @@ class {{ ffi_converter_name }}(FfiConverterRustBuffer):
     def write(value, buf):
         {%- for variant in e.variants() %}
         if isinstance(value, {{ type_name }}.{{ variant.name()|class_name }}):
-            buf.writeI32({{ loop.index }})
+            buf.write_i32({{ loop.index }})
             {%- for field in variant.fields() %}
             {{ field|write_fn }}(value.{{ field.name()|var_name }}, buf)
             {%- endfor %}

@@ -21,6 +21,7 @@ pub mod codes {
     pub const UDL_FILE: u8 = 8;
     pub const CALLBACK_INTERFACE: u8 = 9;
     pub const TRAIT_METHOD: u8 = 10;
+    pub const UNIFFI_TRAIT: u8 = 11;
     //pub const UNKNOWN: u8 = 255;
 
     // Type codes
@@ -57,6 +58,7 @@ pub mod codes {
     pub const LIT_INT: u8 = 1;
     pub const LIT_FLOAT: u8 = 2;
     pub const LIT_BOOL: u8 = 3;
+    pub const LIT_NULL: u8 = 4;
 }
 
 // Create a checksum for a MetadataBuffer

@@ -1,0 +1,55 @@
+name: Rust linting, formatting and audit
+on:
+  pull_request:
+    paths:
+      - .github/workflows/*.yml
+      - '**/*.rs'
+      - Cargo.toml
+      - Cargo.lock
+  workflow_dispatch:
+jobs:
+  clippy-linting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions-rs/toolchain@v1.0.6
+        with:
+          toolchain: stable
+          components: clippy
+          override: true
+
+      - name: Clippy check
+        run: |
+          export RUSTFLAGS="--deny warnings"
+          time cargo clippy --verbose
+
+  check-formatting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions-rs/toolchain@v1.0.6
+        with:
+          toolchain: stable
+          components: rustfmt
+          override: true
+
+      - name: Check formatting
+        run: |
+          rustfmt --version
+          cargo fmt -- --check
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install cargo-audit
+        uses: actions-rs/install@v0.1.2
+        with:
+          crate: cargo-audit
+          version: latest
+
+      - name: Audit
+        run: cargo audit

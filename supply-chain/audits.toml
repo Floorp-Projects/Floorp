@@ -2655,6 +2655,23 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.16.0 -> 1.17.1"
 
+[[audits.oneshot]]
+who = "Ben Dean-Kawamura <bdk@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.1.5"
+notes = "Small crate, reviewed by bendk.  There is a decent amount of unsafe code, but it's well tested and the crate has been well-used over the years."
+
+[[audits.oneshot]]
+who = "Ben Dean-Kawamura <bdk@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.1.5@git:1f3c657c8073aec4f0b6ebac7be33b4851644745"
+notes = """
+Small crate, reviewed by bendk.  There is a decent amount of unsafe code, but it's well tested and the crate has been well-used over the years.
+
+The git branch is my fork of the official code that removes the `loom` target to avoid pulling in that crate and its dependencies into moz-central.
+This doesn't change any of the functionality -- the `loom` target is only used for testing.
+"""
+
 [[audits.ordered-float]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"

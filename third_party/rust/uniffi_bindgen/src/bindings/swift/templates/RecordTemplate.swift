@@ -36,7 +36,7 @@ public struct {{ ffi_converter_name }}: FfiConverterRustBuffer {
     public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> {{ type_name }} {
         return try {{ type_name }}(
             {%- for field in rec.fields() %}
-            {{ field.name()|var_name }}: {{ field|read_fn }}(from: &buf)
+            {{ field.name()|arg_name }}: {{ field|read_fn }}(from: &buf)
             {%- if !loop.last %}, {% endif %}
             {%- endfor %}
         )

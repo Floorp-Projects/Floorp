@@ -225,9 +225,23 @@ user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
+[[publisher.glean]]
+version = "56.0.0"
+when = "2023-11-30"
+user-id = 48
+user-login = "badboy"
+user-name = "Jan-Erik Rediger"
+
 [[publisher.glean-core]]
 version = "55.0.0"
 when = "2023-10-23"
+user-id = 48
+user-login = "badboy"
+user-name = "Jan-Erik Rediger"
+
+[[publisher.glean-core]]
+version = "56.0.0"
+when = "2023-11-30"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
@@ -650,12 +664,26 @@ user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
+[[publisher.uniffi]]
+version = "0.25.2"
+when = "2023-11-20"
+user-id = 111105
+user-login = "mhammond"
+user-name = "Mark Hammond"
+
 [[publisher.uniffi_bindgen]]
 version = "0.24.3"
 when = "2023-08-01"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
+
+[[publisher.uniffi_bindgen]]
+version = "0.25.2"
+when = "2023-11-20"
+user-id = 111105
+user-login = "mhammond"
+user-name = "Mark Hammond"
 
 [[publisher.uniffi_build]]
 version = "0.24.3"
@@ -664,12 +692,26 @@ user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
+[[publisher.uniffi_build]]
+version = "0.25.2"
+when = "2023-11-20"
+user-id = 111105
+user-login = "mhammond"
+user-name = "Mark Hammond"
+
 [[publisher.uniffi_checksum_derive]]
 version = "0.24.3"
 when = "2023-08-01"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
+
+[[publisher.uniffi_checksum_derive]]
+version = "0.25.2"
+when = "2023-11-20"
+user-id = 111105
+user-login = "mhammond"
+user-name = "Mark Hammond"
 
 [[publisher.uniffi_core]]
 version = "0.24.3"
@@ -678,12 +720,26 @@ user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
+[[publisher.uniffi_core]]
+version = "0.25.2"
+when = "2023-11-20"
+user-id = 111105
+user-login = "mhammond"
+user-name = "Mark Hammond"
+
 [[publisher.uniffi_macros]]
 version = "0.24.3"
 when = "2023-08-01"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
+
+[[publisher.uniffi_macros]]
+version = "0.25.2"
+when = "2023-11-20"
+user-id = 111105
+user-login = "mhammond"
+user-name = "Mark Hammond"
 
 [[publisher.uniffi_meta]]
 version = "0.24.3"
@@ -692,12 +748,33 @@ user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
+[[publisher.uniffi_meta]]
+version = "0.25.2"
+when = "2023-11-20"
+user-id = 111105
+user-login = "mhammond"
+user-name = "Mark Hammond"
+
 [[publisher.uniffi_testing]]
 version = "0.24.3"
 when = "2023-08-01"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
+
+[[publisher.uniffi_testing]]
+version = "0.25.2"
+when = "2023-11-20"
+user-id = 111105
+user-login = "mhammond"
+user-name = "Mark Hammond"
+
+[[publisher.uniffi_udl]]
+version = "0.25.2"
+when = "2023-11-20"
+user-id = 111105
+user-login = "mhammond"
+user-name = "Mark Hammond"
 
 [[publisher.utf8_iter]]
 version = "1.0.3"
@@ -1468,6 +1545,78 @@ version = "0.10.6"
 who = "Brandon Pitman <bran@bran.land>"
 criteria = "safe-to-deploy"
 delta = "0.10.7 -> 0.10.8"
+
+[[audits.mozilla.wildcard-audits.uniffi]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 111105 # Mark Hammond (mhammond)
+start = "2021-11-22"
+end = "2024-11-28"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.wildcard-audits.uniffi_bindgen]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 111105 # Mark Hammond (mhammond)
+start = "2021-11-22"
+end = "2024-11-28"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.wildcard-audits.uniffi_build]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 111105 # Mark Hammond (mhammond)
+start = "2021-11-22"
+end = "2024-11-28"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.wildcard-audits.uniffi_checksum_derive]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 111105 # Mark Hammond (mhammond)
+start = "2023-11-20"
+end = "2024-11-28"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.wildcard-audits.uniffi_core]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 111105 # Mark Hammond (mhammond)
+start = "2023-11-20"
+end = "2024-11-28"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.wildcard-audits.uniffi_macros]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 111105 # Mark Hammond (mhammond)
+start = "2021-11-22"
+end = "2024-11-28"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.wildcard-audits.uniffi_meta]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 111105 # Mark Hammond (mhammond)
+start = "2023-11-20"
+end = "2024-11-28"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.wildcard-audits.uniffi_testing]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 111105 # Mark Hammond (mhammond)
+start = "2023-11-20"
+end = "2024-11-28"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
+
+[[audits.mozilla.wildcard-audits.uniffi_udl]]
+who = "Jan-Erik Rediger <jrediger@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 111105 # Mark Hammond (mhammond)
+start = "2023-11-20"
+end = "2024-11-28"
+aggregated-from = "https://raw.githubusercontent.com/mozilla/glean/main/supply-chain/audits.toml"
 
 [[audits.mozilla.wildcard-audits.zeitstempel]]
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
