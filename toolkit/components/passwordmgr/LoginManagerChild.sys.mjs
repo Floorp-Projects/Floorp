@@ -1565,7 +1565,7 @@ export class LoginManagerChild extends JSWindowActorChild {
         break;
       }
       case "DOMFormHasPassword": {
-        this.#onDOMFormHasPassword(event);
+        this.#onDOMFormHasPassword(event, this.document.defaultView);
         let formLike = lazy.LoginFormFactory.createFromForm(
           event.originalTarget
         );
@@ -1803,10 +1803,13 @@ export class LoginManagerChild extends JSWindowActorChild {
     return Services.cpmm.sharedData.get("isPrimaryPasswordSet");
   }
 
-  #onDOMFormHasPassword(event) {
+  #onDOMFormHasPassword(event, window) {
     if (!event.isTrusted) {
       return;
     }
+
+    this.setupProgressListener(window);
+
     const isPrimaryPasswordSet = this.#getIsPrimaryPasswordSet();
     let document = event.target.ownerDocument;
 
