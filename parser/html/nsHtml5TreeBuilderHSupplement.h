@@ -58,6 +58,13 @@ bool mActive;
 void documentMode(nsHtml5DocumentMode m);
 
 nsIContentHandle* getDocumentFragmentForTemplate(nsIContentHandle* aTemplate);
+void setDocumentFragmentForTemplate(nsIContentHandle* aTemplate,
+                                    nsIContentHandle* aFragment);
+
+nsIContentHandle* getShadowRootFromHost(nsIContentHandle* aHost,
+                                        nsIContentHandle* aTemplateNode,
+                                        nsHtml5String aShadowRootMode,
+                                        bool aShadowRootDelegatesFocus);
 
 nsIContentHandle* getFormPointerForContext(nsIContentHandle* aContext);
 
