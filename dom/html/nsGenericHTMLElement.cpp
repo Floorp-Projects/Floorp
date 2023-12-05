@@ -844,24 +844,21 @@ void nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       }
     } else if (aName == nsGkAtoms::inputmode ||
                aName == nsGkAtoms::enterkeyhint) {
-      nsPIDOMWindowOuter* window = OwnerDoc()->GetWindow();
-      if (window && window->GetFocusedElement() == this) {
-        if (IMEContentObserver* observer =
-                IMEStateManager::GetActiveContentObserver()) {
-          if (const nsPresContext* presContext =
-                  GetPresContext(eForComposedDoc)) {
-            if (observer->IsManaging(*presContext, this)) {
-              if (RefPtr<EditorBase> editor =
-                      nsContentUtils::GetActiveEditor(window)) {
-                IMEState newState;
-                editor->GetPreferredIMEState(&newState);
-                OwningNonNull<nsGenericHTMLElement> kungFuDeathGrip(*this);
-                IMEStateManager::UpdateIMEState(
-                    newState, kungFuDeathGrip, *editor,
-                    {IMEStateManager::UpdateIMEStateOption::ForceUpdate,
-                     IMEStateManager::UpdateIMEStateOption::
-                         DontCommitComposition});
-              }
+      if (nsFocusManager::GetFocusedElementStatic() == this) {
+        if (const nsPresContext* presContext =
+                GetPresContext(eForComposedDoc)) {
+          IMEContentObserver* observer =
+              IMEStateManager::GetActiveContentObserver();
+          if (observer && observer->IsObserving(*presContext, this)) {
+            if (RefPtr<EditorBase> editorBase = GetEditorWithoutCreation()) {
+              IMEState newState;
+              editorBase->GetPreferredIMEState(&newState);
+              OwningNonNull<nsGenericHTMLElement> kungFuDeathGrip(*this);
+              IMEStateManager::UpdateIMEState(
+                  newState, kungFuDeathGrip, *editorBase,
+                  {IMEStateManager::UpdateIMEStateOption::ForceUpdate,
+                   IMEStateManager::UpdateIMEStateOption::
+                       DontCommitComposition});
             }
           }
         }
@@ -2313,7 +2310,7 @@ bool nsGenericHTMLElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
   bool disallowOverridingFocusability = true;
   Maybe<int32_t> attrVal = GetTabIndexAttrValue();
 
-  if (IsEditableRoot()) {
+  if (IsEditingHost()) {
     // Editable roots should always be focusable.
     disallowOverridingFocusability = true;
 
@@ -2471,24 +2468,6 @@ void nsGenericHTMLElement::SyncEditorsOnSubtree(nsIContent* content) {
        child = child->GetNextSibling()) {
     SyncEditorsOnSubtree(child);
   }
-}
-
-bool nsGenericHTMLElement::IsEditableRoot() const {
-  if (!IsInComposedDoc()) {
-    return false;
-  }
-
-  if (IsInDesignMode()) {
-    return false;
-  }
-
-  if (GetContentEditableValue() != eTrue) {
-    return false;
-  }
-
-  nsIContent* parent = GetParent();
-
-  return !parent || !parent->HasFlag(NODE_IS_EDITABLE);
 }
 
 static void MakeContentDescendantsEditable(nsIContent* aContent) {

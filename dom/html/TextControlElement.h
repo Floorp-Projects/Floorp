@@ -37,7 +37,15 @@ class TextControlElement : public nsGenericHTMLFormControlElementWithState {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(
       TextControlElement, nsGenericHTMLFormControlElementWithState)
 
+  /**
+   * Return true always, i.e., even if this is an <input> but the type is not
+   * for a single line text control, this returns true.  Use
+   * IsSingleLineTextControlOrTextArea() if you want to know whether this may
+   * work with a TextEditor.
+   */
   bool IsTextControlElement() const final { return true; }
+
+  virtual bool IsSingleLineTextControlOrTextArea() const = 0;
 
   NS_IMPL_FROMNODE_HELPER(TextControlElement, IsTextControlElement())
 
@@ -113,7 +121,7 @@ class TextControlElement : public nsGenericHTMLFormControlElementWithState {
    * GetTextEditorWithoutCreation().
    */
   MOZ_CAN_RUN_SCRIPT virtual TextEditor* GetTextEditor() = 0;
-  virtual TextEditor* GetTextEditorWithoutCreation() = 0;
+  virtual TextEditor* GetTextEditorWithoutCreation() const = 0;
 
   /**
    * Get the selection controller object associated with the text editor.

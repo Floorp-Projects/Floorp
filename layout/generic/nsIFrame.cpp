@@ -4525,8 +4525,8 @@ nsresult nsIFrame::GetDataForTableSelection(
 }
 
 static bool IsEditingHost(const nsIFrame* aFrame) {
-  auto* element = nsGenericHTMLElement::FromNodeOrNull(aFrame->GetContent());
-  return element && element->IsEditableRoot();
+  nsIContent* content = aFrame->GetContent();
+  return content && content->IsEditingHost();
 }
 
 static StyleUserSelect UsedUserSelect(const nsIFrame* aFrame) {

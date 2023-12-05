@@ -182,7 +182,7 @@ TextEditor* HTMLTextAreaElement::GetTextEditor() {
   return mState->GetTextEditor();
 }
 
-TextEditor* HTMLTextAreaElement::GetTextEditorWithoutCreation() {
+TextEditor* HTMLTextAreaElement::GetTextEditorWithoutCreation() const {
   MOZ_ASSERT(mState);
   return mState->GetTextEditorWithoutCreation();
 }

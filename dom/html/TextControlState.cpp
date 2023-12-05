@@ -1545,7 +1545,7 @@ TextEditor* TextControlState::GetTextEditor() {
   return mTextEditor;
 }
 
-TextEditor* TextControlState::GetTextEditorWithoutCreation() {
+TextEditor* TextControlState::GetTextEditorWithoutCreation() const {
   return mTextEditor;
 }
 
