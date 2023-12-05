@@ -1079,6 +1079,8 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
     return mFontPaletteValueSet;
   }
 
+  void UpdateHiddenByContentVisibilityForAnimations();
+
  protected:
   friend class nsRunnableMethod<nsPresContext>;
   void ThemeChangedInternal();

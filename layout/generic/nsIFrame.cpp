@@ -7003,7 +7003,7 @@ bool nsIFrame::IsDescendantOfTopLayerElement() const {
   return false;
 }
 
-void nsIFrame::UpdateIsRelevantContent(
+bool nsIFrame::UpdateIsRelevantContent(
     const ContentRelevancy& aRelevancyToUpdate) {
   MOZ_ASSERT(StyleDisplay()->ContentVisibility(*this) ==
              StyleContentVisibility::Auto);
@@ -7053,7 +7053,7 @@ void nsIFrame::UpdateIsRelevantContent(
   }
 
   if (!overallRelevancyChanged) {
-    return;
+    return false;
   }
 
   HandleLastRememberedSize();
@@ -7075,6 +7075,7 @@ void nsIFrame::UpdateIsRelevantContent(
       new AsyncEventDispatcher(element, event.forget());
   DebugOnly<nsresult> rv = asyncDispatcher->PostDOMEvent();
   NS_ASSERTION(NS_SUCCEEDED(rv), "AsyncEventDispatcher failed to dispatch");
+  return true;
 }
 
 nsresult nsIFrame::CharacterDataChanged(const CharacterDataChangeInfo&) {
