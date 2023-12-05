@@ -8,7 +8,13 @@ import {
   map,
   when,
 } from "chrome://global/content/vendor/lit.all.mjs";
-import { isSearchEnabled, searchTabList } from "./helpers.mjs";
+import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
+import {
+  getLogger,
+  isSearchEnabled,
+  placeLinkOnClipboard,
+  searchTabList,
+} from "./helpers.mjs";
 import { ViewPage, ViewPageContent } from "./viewpage.mjs";
 
 const lazy = {};
@@ -16,9 +22,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   EveryWindow: "resource:///modules/EveryWindow.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-  UIState: "resource://services-sync/UIState.sys.mjs",
-  TabsSetupFlowManager:
-    "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () => {
@@ -27,7 +30,6 @@ ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   ).getFxAccountsSingleton();
 });
 
-const TOPIC_DEVICELIST_UPDATED = "fxaccounts:devicelist_updated";
 const TOPIC_CURRENT_BROWSER_CHANGED = "net:current-browser-id";
 
 /**
@@ -58,7 +60,6 @@ class OpenTabsInView extends ViewPage {
       this.currentWindow
     );
     this.boundObserve = (...args) => this.observe(...args);
-    this.devices = [];
     this.searchQuery = "";
   }
 
@@ -68,8 +69,6 @@ class OpenTabsInView extends ViewPage {
     }
     this._started = true;
 
-    Services.obs.addObserver(this.boundObserve, lazy.UIState.ON_UPDATE);
-    Services.obs.addObserver(this.boundObserve, TOPIC_DEVICELIST_UPDATED);
     Services.obs.addObserver(this.boundObserve, TOPIC_CURRENT_BROWSER_CHANGED);
 
     lazy.EveryWindow.registerCallback(
@@ -108,10 +107,6 @@ class OpenTabsInView extends ViewPage {
     // EveryWindow will invoke the callback for existing windows - including this one
     // So this._updateOpenTabsList will get called for the already-open window
 
-    if (this.currentWindow.gSync) {
-      this.devices = this.currentWindow.gSync.getSendTabTargets();
-    }
-
     for (let card of this.viewCards) {
       card.paused = false;
       card.viewVisibleCallback?.();
@@ -132,8 +127,6 @@ class OpenTabsInView extends ViewPage {
 
     lazy.EveryWindow.unregisterCallback(this.everyWindowCallbackId);
 
-    Services.obs.removeObserver(this.boundObserve, lazy.UIState.ON_UPDATE);
-    Services.obs.removeObserver(this.boundObserve, TOPIC_DEVICELIST_UPDATED);
     Services.obs.removeObserver(
       this.boundObserve,
       TOPIC_CURRENT_BROWSER_CHANGED
@@ -155,18 +148,6 @@ class OpenTabsInView extends ViewPage {
 
   async observe(subject, topic, data) {
     switch (topic) {
-      case lazy.UIState.ON_UPDATE:
-        if (!this.devices.length && lazy.TabsSetupFlowManager.fxaSignedIn) {
-          this.devices = this.currentWindow.gSync.getSendTabTargets();
-        }
-        break;
-      case TOPIC_DEVICELIST_UPDATED:
-        const deviceListUpdated =
-          await lazy.fxAccounts.device.refreshDeviceList();
-        if (deviceListUpdated) {
-          this.devices = this.currentWindow.gSync.getSendTabTargets();
-        }
-        break;
       case TOPIC_CURRENT_BROWSER_CHANGED:
         this.requestUpdate();
         break;
@@ -244,7 +225,6 @@ class OpenTabsInView extends ViewPage {
                 data-l10n-args="${JSON.stringify({
                   winID: currentWindowIndex,
                 })}"
-                .devices=${this.devices}
                 .searchQuery=${this.searchQuery}
               ></view-opentabs-card>
             `
@@ -259,7 +239,6 @@ class OpenTabsInView extends ViewPage {
               data-inner-id="${win.windowGlobalChild.innerWindowId}"
               data-l10n-id="firefoxview-opentabs-window-header"
               data-l10n-args="${JSON.stringify({ winID })}"
-              .devices=${this.devices}
               .searchQuery=${this.searchQuery}
             ></view-opentabs-card>
           `
@@ -297,7 +276,6 @@ class OpenTabsInView extends ViewPage {
       .tabs=${tabs}
       .recentBrowsing=${true}
       .paused=${this.paused}
-      .devices=${this.devices}
     ></view-opentabs-card>`;
   }
 
@@ -392,8 +370,6 @@ class OpenTabsInViewCard extends ViewPageContent {
     tabs: { type: Array },
     title: { type: String },
     recentBrowsing: { type: Boolean },
-    devices: { type: Array },
-    triggerNode: { type: Object },
     searchQuery: { type: String },
     searchResults: { type: Array },
   };
@@ -412,128 +388,16 @@ class OpenTabsInViewCard extends ViewPageContent {
 
   static queries = {
     cardEl: "card-container",
-    panelList: "panel-list",
+    tabContextMenu: "view-opentabs-contextmenu",
     tabList: "fxview-tab-list",
   };
 
-  closeTab(e) {
-    const tab = this.triggerNode.tabElement;
-    tab?.ownerGlobal.gBrowser.removeTab(tab);
-    this.recordContextMenuTelemetry("close-tab", e);
-  }
-
-  moveTabsToStart(e) {
-    const tab = this.triggerNode.tabElement;
-    tab?.ownerGlobal.gBrowser.moveTabsToStart(tab);
-    this.recordContextMenuTelemetry("move-tab-start", e);
-  }
-
-  moveTabsToEnd(e) {
-    const tab = this.triggerNode.tabElement;
-    tab?.ownerGlobal.gBrowser.moveTabsToEnd(tab);
-    this.recordContextMenuTelemetry("move-tab-end", e);
-  }
-
-  moveTabsToWindow(e) {
-    const tab = this.triggerNode.tabElement;
-    tab?.ownerGlobal.gBrowser.replaceTabsWithWindow(tab);
-    this.recordContextMenuTelemetry("move-tab-window", e);
-  }
-
-  moveMenuTemplate() {
-    const tab = this.triggerNode?.tabElement;
-    const browserWindow = tab?.ownerGlobal;
-    const position = tab?._tPos;
-    const tabs = browserWindow?.gBrowser.tabs || [];
-
-    return html`
-      <panel-list slot="submenu" id="move-tab-menu">
-        ${position > 0
-          ? html`<panel-item
-              @click=${this.moveTabsToStart}
-              data-l10n-id="fxviewtabrow-move-tab-start"
-              data-l10n-attrs="accesskey"
-            ></panel-item>`
-          : null}
-        ${position < tabs.length - 1
-          ? html`<panel-item
-              @click=${this.moveTabsToEnd}
-              data-l10n-id="fxviewtabrow-move-tab-end"
-              data-l10n-attrs="accesskey"
-            ></panel-item>`
-          : null}
-        <panel-item
-          @click=${this.moveTabsToWindow}
-          data-l10n-id="fxviewtabrow-move-tab-window"
-          data-l10n-attrs="accesskey"
-        ></panel-item>
-      </panel-list>
-    `;
-  }
-
-  async sendTabToDevice(e) {
-    let deviceId = e.target.getAttribute("device-id");
-    let device = this.devices.find(dev => dev.id == deviceId);
-
-    this.recordContextMenuTelemetry("send-tab-device", e);
-
-    if (device && this.triggerNode) {
-      await this.getWindow().gSync.sendTabToDevice(
-        this.triggerNode.url,
-        [device],
-        this.triggerNode.title
-      );
-    }
-  }
-
-  sendTabTemplate() {
-    return html` <panel-list slot="submenu" id="send-tab-menu">
-      ${this.devices.map(device => {
-        return html`
-          <panel-item @click=${this.sendTabToDevice} device-id=${device.id}
-            >${device.name}</panel-item
-          >
-        `;
-      })}
-    </panel-list>`;
-  }
-
-  panelListTemplate() {
-    return html`
-      <panel-list slot="menu" data-tab-type="opentabs">
-        <panel-item
-          data-l10n-id="fxviewtabrow-close-tab"
-          data-l10n-attrs="accesskey"
-          @click=${this.closeTab}
-        ></panel-item>
-        <panel-item
-          data-l10n-id="fxviewtabrow-move-tab"
-          data-l10n-attrs="accesskey"
-          submenu="move-tab-menu"
-        >
-          ${this.moveMenuTemplate()}
-        </panel-item>
-        <hr />
-        <panel-item
-          data-l10n-id="fxviewtabrow-copy-link"
-          data-l10n-attrs="accesskey"
-          @click=${this.copyLink}
-        ></panel-item>
-        ${this.devices.length >= 1
-          ? html`<panel-item
-              data-l10n-id="fxviewtabrow-send-tab"
-              data-l10n-attrs="accesskey"
-              submenu="send-tab-menu"
-              >${this.sendTabTemplate()}</panel-item
-            >`
-          : null}
-      </panel-list>
-    `;
-  }
-
   openContextMenu(e) {
-    this.triggerNode = e.originalTarget;
-    this.panelList.toggle(e.detail.originalEvent);
+    let { originalEvent } = e.detail;
+    this.tabContextMenu.toggle({
+      triggerNode: e.originalTarget,
+      originalEvent,
+    });
   }
 
   getMaxTabsLength() {
@@ -613,8 +477,8 @@ class OpenTabsInViewCard extends ViewPageContent {
             .maxTabsLength=${this.getMaxTabsLength()}
             .tabItems=${this.searchResults || getTabListItems(this.tabs)}
             .searchQuery=${this.searchQuery}
-            >${this.panelListTemplate()}</fxview-tab-list
-          >
+            ><view-opentabs-contextmenu slot="menu"></view-opentabs-contextmenu>
+          </fxview-tab-list>
         </div>
         ${!this.recentBrowsing
           ? html` <div
@@ -647,6 +511,192 @@ class OpenTabsInViewCard extends ViewPageContent {
   }
 }
 customElements.define("view-opentabs-card", OpenTabsInViewCard);
+
+/**
+ * A context menu of actions available for open tab list items.
+ */
+class OpenTabsContextMenu extends MozLitElement {
+  static properties = {
+    devices: { type: Array },
+    triggerNode: { type: Object },
+  };
+
+  static queries = {
+    panelList: "panel-list",
+  };
+
+  constructor() {
+    super();
+    this.triggerNode = null;
+    this.devices = [];
+  }
+
+  get logger() {
+    return getLogger("OpenTabsContextMenu");
+  }
+
+  get ownerViewPage() {
+    return this.ownerDocument.querySelector("view-opentabs");
+  }
+
+  async fetchDevices() {
+    const currentWindow = this.ownerViewPage.getWindow();
+    if (currentWindow?.gSync) {
+      try {
+        await lazy.fxAccounts.device.refreshDeviceList();
+      } catch (e) {
+        this.logger.warn("Could not refresh the FxA device list", e);
+      }
+      this.devices = currentWindow.gSync.getSendTabTargets();
+    }
+  }
+
+  async toggle({ triggerNode, originalEvent }) {
+    if (this.panelList?.open) {
+      // the menu will close so avoid all the other work to update its contents
+      this.panelList.toggle(originalEvent);
+      return;
+    }
+    this.triggerNode = triggerNode;
+    await this.fetchDevices();
+    await this.getUpdateComplete();
+    this.panelList.toggle(originalEvent);
+  }
+
+  copyLink(e) {
+    placeLinkOnClipboard(this.triggerNode.title, this.triggerNode.url);
+    this.ownerViewPage.recordContextMenuTelemetry("copy-link", e);
+  }
+
+  closeTab(e) {
+    const tab = this.triggerNode.tabElement;
+    tab?.ownerGlobal.gBrowser.removeTab(tab);
+    this.ownerViewPage.recordContextMenuTelemetry("close-tab", e);
+  }
+
+  moveTabsToStart(e) {
+    const tab = this.triggerNode.tabElement;
+    tab?.ownerGlobal.gBrowser.moveTabsToStart(tab);
+    this.ownerViewPage.recordContextMenuTelemetry("move-tab-start", e);
+  }
+
+  moveTabsToEnd(e) {
+    const tab = this.triggerNode.tabElement;
+    tab?.ownerGlobal.gBrowser.moveTabsToEnd(tab);
+    this.ownerViewPage.recordContextMenuTelemetry("move-tab-end", e);
+  }
+
+  moveTabsToWindow(e) {
+    const tab = this.triggerNode.tabElement;
+    tab?.ownerGlobal.gBrowser.replaceTabsWithWindow(tab);
+    this.ownerViewPage.recordContextMenuTelemetry("move-tab-window", e);
+  }
+
+  moveMenuTemplate() {
+    const tab = this.triggerNode?.tabElement;
+    if (!tab) {
+      return null;
+    }
+    const browserWindow = tab.ownerGlobal;
+    const tabs = browserWindow?.gBrowser.visibleTabs || [];
+    const position = tabs.indexOf(tab);
+
+    return html`
+      <panel-list slot="submenu" id="move-tab-menu">
+        ${position > 0
+          ? html`<panel-item
+              @click=${this.moveTabsToStart}
+              data-l10n-id="fxviewtabrow-move-tab-start"
+              data-l10n-attrs="accesskey"
+            ></panel-item>`
+          : null}
+        ${position < tabs.length - 1
+          ? html`<panel-item
+              @click=${this.moveTabsToEnd}
+              data-l10n-id="fxviewtabrow-move-tab-end"
+              data-l10n-attrs="accesskey"
+            ></panel-item>`
+          : null}
+        <panel-item
+          @click=${this.moveTabsToWindow}
+          data-l10n-id="fxviewtabrow-move-tab-window"
+          data-l10n-attrs="accesskey"
+        ></panel-item>
+      </panel-list>
+    `;
+  }
+
+  async sendTabToDevice(e) {
+    let deviceId = e.target.getAttribute("device-id");
+    let device = this.devices.find(dev => dev.id == deviceId);
+    const viewPage = this.ownerViewPage;
+    viewPage.recordContextMenuTelemetry("send-tab-device", e);
+
+    if (device && this.triggerNode) {
+      await viewPage
+        .getWindow()
+        .gSync.sendTabToDevice(
+          this.triggerNode.url,
+          [device],
+          this.triggerNode.title
+        );
+    }
+  }
+
+  sendTabTemplate() {
+    return html` <panel-list slot="submenu" id="send-tab-menu">
+      ${this.devices.map(device => {
+        return html`
+          <panel-item @click=${this.sendTabToDevice} device-id=${device.id}
+            >${device.name}</panel-item
+          >
+        `;
+      })}
+    </panel-list>`;
+  }
+
+  render() {
+    const tab = this.triggerNode?.tabElement;
+    if (!tab) {
+      return null;
+    }
+
+    return html`
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/firefoxview/firefoxview-next.css"
+      />
+      <panel-list data-tab-type="opentabs">
+        <panel-item
+          data-l10n-id="fxviewtabrow-close-tab"
+          data-l10n-attrs="accesskey"
+          @click=${this.closeTab}
+        ></panel-item>
+        <panel-item
+          data-l10n-id="fxviewtabrow-move-tab"
+          data-l10n-attrs="accesskey"
+          submenu="move-tab-menu"
+          >${this.moveMenuTemplate()}</panel-item
+        >
+        <hr />
+        <panel-item
+          data-l10n-id="fxviewtabrow-copy-link"
+          data-l10n-attrs="accesskey"
+          @click=${this.copyLink}
+        ></panel-item>
+        ${this.devices.length >= 1
+          ? html`<panel-item
+              data-l10n-id="fxviewtabrow-send-tab"
+              data-l10n-attrs="accesskey"
+              submenu="send-tab-menu"
+              >${this.sendTabTemplate()}</panel-item
+            >`
+          : null}
+      </panel-list>
+    `;
+  }
+}
+customElements.define("view-opentabs-contextmenu", OpenTabsContextMenu);
 
 /**
  * Convert a list of tabs into the format expected by the fxview-tab-list

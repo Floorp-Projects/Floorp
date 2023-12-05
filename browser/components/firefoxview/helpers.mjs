@@ -3,9 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const lazy = {};
+const loggersByName = new Map();
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+  Log: "resource://gre/modules/Log.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
@@ -25,6 +27,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 // Cutoff of 1.5 minutes + 1 second to determine what text string to display
 export const NOW_THRESHOLD_MS = 91000;
+
+// Configure logging level via this pref
+export const LOGGING_PREF = "browser.tabs.firefox-view.logLevel";
 
 export function formatURIForDisplay(uriString) {
   return lazy.BrowserUtils.formatURIStringForDisplay(uriString);
@@ -185,6 +190,25 @@ export function searchTabList(query, tabList) {
   return tabList.filter(
     ({ title, url }) => regex.test(title) || regex.test(url)
   );
+}
+
+/**
+ * Get or create a logger, whose log-level is controlled by a pref
+ *
+ * @param {string} loggerName - Creating named loggers helps differentiate log messages from different
+                                components or features.
+ */
+
+export function getLogger(loggerName) {
+  if (!loggersByName.has(loggerName)) {
+    let logger = lazy.Log.repository.getLogger(`FirefoxView.${loggerName}`);
+    logger.manageLevelFromPref(LOGGING_PREF);
+    logger.addAppender(
+      new lazy.Log.ConsoleAppender(new lazy.Log.BasicFormatter())
+    );
+    loggersByName.set(loggerName, logger);
+  }
+  return loggersByName.get(loggerName);
 }
 
 export function escapeHtmlEntities(text) {

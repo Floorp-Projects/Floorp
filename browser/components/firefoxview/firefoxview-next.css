@@ -151,6 +151,10 @@ fxview-tab-list.with-context-menu::part(secondary-button) {
   padding-inline: var(--fxview-card-padding-inline);
 }
 
+view-opentabs-contextmenu {
+  display: contents;
+}
+
 /* This should be supported within panel-{item,list} rather than modifying it */
 panel-item::part(button) {
   padding-inline-start: 12px;
