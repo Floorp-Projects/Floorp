@@ -107,6 +107,7 @@ class nsGetterAddRefs;
 namespace mozilla {
 class DeclarationBlock;
 class MappedDeclarationsBuilder;
+class EditorBase;
 class ErrorResult;
 class OOMReporter;
 class SMILAttr;
@@ -1259,6 +1260,16 @@ class Element : public FragmentOrElement {
    * scrollbars. Flushes layout.
    */
   MOZ_CAN_RUN_SCRIPT bool HasVisibleScrollbars();
+
+  /**
+   * Get an editor which handles user inputs when this element has focus.
+   * If this is a text control, return a TextEditor if it's already created.
+   * Otherwise, return nullptr.
+   * If this is not a text control but this is editable, return
+   * HTMLEditor which should've already been created.
+   * Otherwise, return nullptr.
+   */
+  EditorBase* GetEditorWithoutCreation() const;
 
  private:
   /**

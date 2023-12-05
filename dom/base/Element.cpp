@@ -31,6 +31,7 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/DeclarationBlock.h"
+#include "mozilla/EditorBase.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/ElementAnimationData.h"
@@ -40,6 +41,7 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/FullscreenChange.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/Likely.h"
 #include "mozilla/LinkedList.h"
@@ -61,6 +63,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_full_screen_api.h"
 #include "mozilla/TextControlElement.h"
+#include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/Try.h"
 #include "mozilla/TypedEnumBits.h"
@@ -4996,6 +4999,32 @@ bool Element::Translate() const {
     return parent->Translate();
   }
   return true;
+}
+
+EditorBase* Element::GetEditorWithoutCreation() const {
+  if (!IsInComposedDoc()) {
+    return nullptr;
+  }
+  const bool isInDesignMode = IsInDesignMode();
+  // Even if a text control element is an editing host, TextEditor handles
+  // user input.  Therefore, we should return TextEditor (or nullptr) in this
+  // case.  Note that text control element in the design mode does not work as
+  // a text control.  Therefore, in that case, we should return HTMLEditor.
+  if (!isInDesignMode) {
+    if (const auto* textControlElement = TextControlElement::FromNode(this)) {
+      if (textControlElement->IsSingleLineTextControlOrTextArea()) {
+        return static_cast<const TextControlElement*>(this)
+            ->GetTextEditorWithoutCreation();
+      }
+    }
+  }
+
+  if (!isInDesignMode && !IsEditable()) {
+    return nullptr;
+  }
+  // FYI: This never creates HTMLEditor immediately.
+  nsDocShell* docShell = nsDocShell::Cast(OwnerDoc()->GetDocShell());
+  return docShell ? docShell->GetHTMLEditorInternal() : nullptr;
 }
 
 }  // namespace mozilla::dom

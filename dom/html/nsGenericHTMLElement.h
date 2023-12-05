@@ -919,19 +919,6 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   // Used by A, AREA, LINK, and STYLE.
   already_AddRefed<nsIURI> GetHrefURIForAnchors() const;
 
- public:
-  /**
-   * Returns whether this element is an editable root. There are two types of
-   * editable roots:
-   *   1) the documentElement if the whole document is editable (for example for
-   *      desginMode=on)
-   *   2) an element that is marked editable with contentEditable=true and that
-   *      doesn't have a parent or whose parent is not editable.
-   * Note that this doesn't return input and textarea elements that haven't been
-   * made editable through contentEditable or designMode.
-   */
-  bool IsEditableRoot() const;
-
  private:
   void ChangeEditableState(int32_t aChange);
 };

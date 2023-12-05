@@ -139,11 +139,20 @@ class IMEContentObserver final : public nsStubMutationObserver,
                                             dom::Element* aElement,
                                             EditorBase& aEditorBase);
 
-  bool IsManaging(const nsPresContext& aPresContext,
-                  const dom::Element* aElement) const;
-  bool IsBeingInitializedFor(const nsPresContext& aPresContext,
-                             const dom::Element* aElement) const;
-  bool IsManaging(const TextComposition& aTextComposition) const;
+  /**
+   * Return true if this is observing editable content and aElement has focus.
+   * If aElement is a text control, check if this is observing its anonymous
+   * subtree.  Otherwise, check if this is observing the children of aElement in
+   * the DOM tree.  If aElement is nullptr, this returns true if entire the
+   * document is editable, e.g., in the designMode.
+   */
+  [[nodiscard]] bool IsObserving(const nsPresContext& aPresContext,
+                                 const dom::Element* aElement) const;
+
+  [[nodiscard]] bool IsBeingInitializedFor(const nsPresContext& aPresContext,
+                                           const dom::Element* aElement,
+                                           const EditorBase& aEditorBase) const;
+  bool IsObserving(const TextComposition& aTextComposition) const;
   bool WasInitializedWith(const EditorBase& aEditorBase) const {
     return mEditorBase == &aEditorBase;
   }

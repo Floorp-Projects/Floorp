@@ -74,6 +74,7 @@ class HTMLTextAreaElement final : public TextControlElement,
   void SetLastValueChangeWasInteractive(bool);
 
   // TextControlElement
+  bool IsSingleLineTextControlOrTextArea() const override { return true; }
   void SetValueChanged(bool aValueChanged) override;
   bool IsSingleLineTextControl() const override;
   bool IsTextArea() const override;
@@ -85,7 +86,7 @@ class HTMLTextAreaElement final : public TextControlElement,
   bool ValueChanged() const override;
   void GetTextEditorValue(nsAString& aValue) const override;
   MOZ_CAN_RUN_SCRIPT TextEditor* GetTextEditor() override;
-  TextEditor* GetTextEditorWithoutCreation() override;
+  TextEditor* GetTextEditorWithoutCreation() const override;
   nsISelectionController* GetSelectionController() override;
   nsFrameSelection* GetConstFrameSelection() override;
   TextControlState* GetTextControlState() const override { return mState; }
@@ -268,7 +269,7 @@ class HTMLTextAreaElement final : public TextControlElement,
   nsresult GetControllers(nsIControllers** aResult);
 
   MOZ_CAN_RUN_SCRIPT nsIEditor* GetEditorForBindings();
-  bool HasEditor() {
+  bool HasEditor() const {
     MOZ_ASSERT(mState);
     return !!mState->GetTextEditorWithoutCreation();
   }

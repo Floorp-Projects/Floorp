@@ -15,6 +15,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TextComposition.h"
+#include "mozilla/TextControlElement.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
@@ -456,22 +457,41 @@ bool IMEContentObserver::MaybeReinitialize(nsIWidget& aWidget,
   if (GetState() == eState_StoppedObserving) {
     Init(aWidget, aPresContext, aElement, aEditorBase);
   }
-  return IsManaging(aPresContext, aElement);
+  return IsObserving(aPresContext, aElement);
 }
 
-bool IMEContentObserver::IsManaging(const nsPresContext& aPresContext,
-                                    const Element* aElement) const {
-  return GetState() == eState_Observing &&
-         IsObservingContent(aPresContext, aElement);
+bool IMEContentObserver::IsObserving(const nsPresContext& aPresContext,
+                                     const Element* aElement) const {
+  if (GetState() != eState_Observing) {
+    return false;
+  }
+  // If aElement is not a text control, aElement is an editing host or entire
+  // the document is editable in the design mode.  Therefore, return false if
+  // we're observing an anonymous subtree of a text control.
+  if (!aElement || !aElement->IsTextControlElement() ||
+      !static_cast<const TextControlElement*>(aElement)
+           ->IsSingleLineTextControlOrTextArea()) {
+    if (mIsTextControl) {
+      return false;
+    }
+  }
+  // If aElement is a text control, return true if we're observing the anonymous
+  // subtree of aElement.  Therefore, return false if we're observing with
+  // HTMLEditor.
+  else if (!mIsTextControl) {
+    return false;
+  }
+  return IsObservingContent(aPresContext, aElement);
 }
 
 bool IMEContentObserver::IsBeingInitializedFor(
-    const nsPresContext& aPresContext, const Element* aElement) const {
-  return GetState() == eState_Initializing &&
+    const nsPresContext& aPresContext, const Element* aElement,
+    const EditorBase& aEditorBase) const {
+  return GetState() == eState_Initializing && mEditorBase == &aEditorBase &&
          IsObservingContent(aPresContext, aElement);
 }
 
-bool IMEContentObserver::IsManaging(
+bool IMEContentObserver::IsObserving(
     const TextComposition& aTextComposition) const {
   if (GetState() != eState_Observing) {
     return false;
@@ -483,9 +503,43 @@ bool IMEContentObserver::IsManaging(
   if (presContext != GetPresContext()) {
     return false;  // observing different document
   }
-  return IsObservingContent(
-      *presContext,
-      Element::FromNodeOrNull(aTextComposition.GetEventTargetNode()));
+  auto* const elementHavingComposition =
+      Element::FromNodeOrNull(aTextComposition.GetEventTargetNode());
+  bool isObserving = IsObservingContent(*presContext, elementHavingComposition);
+#ifdef DEBUG
+  if (isObserving) {
+    if (mIsTextControl) {
+      MOZ_ASSERT(elementHavingComposition);
+      MOZ_ASSERT(elementHavingComposition->IsTextControlElement(),
+                 "Should've never started to observe non-text-control element");
+      // XXX Our fake focus move has not been implemented properly. So, the
+      // following assertions may fail, but I don't like to make the failures
+      // cause crash even in debug builds because it may block developers to
+      // debug web-compat issues.  On the other hand, it'd be nice if we can
+      // detect the bug with automated tests.  Therefore, the following
+      // assertions are NS_ASSERTION.
+      NS_ASSERTION(static_cast<TextControlElement*>(elementHavingComposition)
+                       ->IsSingleLineTextControlOrTextArea(),
+                   "Should've stopped observing when the type is changed");
+      NS_ASSERTION(!elementHavingComposition->IsInDesignMode(),
+                   "Should've stopped observing when the design mode started");
+    } else if (elementHavingComposition) {
+      NS_ASSERTION(
+          !elementHavingComposition->IsTextControlElement() ||
+              !static_cast<TextControlElement*>(elementHavingComposition)
+                   ->IsSingleLineTextControlOrTextArea(),
+          "Should've never started to observe text-control element or "
+          "stopped observing it when the type is changed");
+    } else {
+      MOZ_ASSERT(presContext->GetPresShell());
+      MOZ_ASSERT(presContext->GetPresShell()->GetDocument());
+      NS_ASSERTION(
+          presContext->GetPresShell()->GetDocument()->IsInDesignMode(),
+          "Should be observing entire the document only in the design mode");
+    }
+  }
+#endif  // #ifdef DEBUG
+  return isObserving;
 }
 
 IMEContentObserver::State IMEContentObserver::GetState() const {
