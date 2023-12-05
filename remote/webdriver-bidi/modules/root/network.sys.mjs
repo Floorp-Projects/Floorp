@@ -591,6 +591,7 @@ class NetworkModule extends Module {
       return;
     }
 
+    const internalEventName = "network._beforeRequestSent";
     const protocolEventName = "network.beforeRequestSent";
 
     // Process the navigation to create potentially missing navigation ids
@@ -600,6 +601,19 @@ class NetworkModule extends Module {
       isNavigationRequest,
       browsingContext,
       requestData.url
+    );
+
+    // Always emit internal events, they are used to support the browsingContext
+    // navigate command.
+    // Bug 1861922: Replace internal events with a Network listener helper
+    // directly using the NetworkObserver.
+    this.emitEvent(
+      internalEventName,
+      {
+        navigation,
+        url: requestData.url,
+      },
+      this.#getContextInfo(browsingContext)
     );
 
     const isListening = this.messageHandler.eventsDispatcher.hasListener(
@@ -676,6 +690,11 @@ class NetworkModule extends Module {
         ? "network.responseStarted"
         : "network.responseCompleted";
 
+    const internalEventName =
+      name === "response-started"
+        ? "network._responseStarted"
+        : "network._responseCompleted";
+
     // Process the navigation to create potentially missing navigation ids
     // before the early return below.
     const navigation = this.#getNavigationId(
@@ -683,6 +702,19 @@ class NetworkModule extends Module {
       isNavigationRequest,
       browsingContext,
       requestData.url
+    );
+
+    // Always emit internal events, they are used to support the browsingContext
+    // navigate command.
+    // Bug 1861922: Replace internal events with a Network listener helper
+    // directly using the NetworkObserver.
+    this.emitEvent(
+      internalEventName,
+      {
+        navigation,
+        url: requestData.url,
+      },
+      this.#getContextInfo(browsingContext)
     );
 
     const isListening = this.messageHandler.eventsDispatcher.hasListener(
