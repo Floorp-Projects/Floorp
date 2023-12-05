@@ -1264,7 +1264,33 @@ class BrowsingContextModule extends Module {
     }
 
     const navigated = listener.start();
-    navigated.finally(async () => {
+
+    try {
+      const navigationId = lazy.registerNavigationId({
+        contextDetails: { context: webProgress.browsingContext },
+      });
+
+      await startNavigationFn();
+      await navigated;
+
+      if (shouldWaitForNavigationRequest) {
+        await onNavigationRequestCompleted;
+      }
+
+      let url;
+      if (wait === WaitCondition.None) {
+        // If wait condition is None, the navigation resolved before the current
+        // context has navigated.
+        url = listener.targetURI.spec;
+      } else {
+        url = listener.currentURI.spec;
+      }
+
+      return {
+        navigation: navigationId,
+        url,
+      };
+    } finally {
       if (listener.isStarted) {
         listener.stop();
       }
@@ -1279,37 +1305,9 @@ class BrowsingContextModule extends Module {
         wait === WaitCondition.Complete &&
         shouldWaitForNavigationRequest
       ) {
-        // We still need to make sure the navigation request has been received
-        // before performing the cleanup.
-        await onNavigationRequestCompleted;
         await unsubscribeNavigationListeners();
       }
-    });
-
-    const navigationId = lazy.registerNavigationId({
-      contextDetails: { context: webProgress.browsingContext },
-    });
-
-    await startNavigationFn();
-    await navigated;
-
-    if (shouldWaitForNavigationRequest) {
-      await onNavigationRequestCompleted;
     }
-
-    let url;
-    if (wait === WaitCondition.None) {
-      // If wait condition is None, the navigation resolved before the current
-      // context has navigated.
-      url = listener.targetURI.spec;
-    } else {
-      url = listener.currentURI.spec;
-    }
-
-    return {
-      navigation: navigationId,
-      url,
-    };
   }
 
   /**
