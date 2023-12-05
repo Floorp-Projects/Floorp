@@ -68,7 +68,8 @@ class WakeLockJS final : public nsIDOMEventListener,
     DocHidden,
     PolicyDisallowed,
     PrefDisabled,
-    InternalFailure
+    InternalFailure,
+    PermissionDenied
   };
 
   static nsLiteralCString GetRequestErrorMessage(RequestError aRv);

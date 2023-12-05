@@ -45,7 +45,8 @@ static const DelegateInfo sPermissionsMap[] = {
     {"microphone", u"microphone", DelegatePolicy::eDelegateUseFeaturePolicy},
     {"screen", u"display-capture", DelegatePolicy::eDelegateUseFeaturePolicy},
     {"xr", u"xr-spatial-tracking", DelegatePolicy::eDelegateUseFeaturePolicy},
-};
+    {"screen-wake-lock", u"screen-wake-lock",
+     DelegatePolicy::eDelegateUseFeaturePolicy}};
 
 static_assert(PermissionDelegateHandler::DELEGATED_PERMISSION_COUNT ==
                   (sizeof(sPermissionsMap) / sizeof(DelegateInfo)),
