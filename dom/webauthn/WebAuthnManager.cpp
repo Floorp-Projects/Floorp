@@ -88,6 +88,31 @@ static nsresult AssembleClientData(
   return NS_OK;
 }
 
+static uint8_t SerializeTransports(
+    const mozilla::dom::Sequence<nsString>& aTransports) {
+  uint8_t transports = 0;
+
+  // We ignore unknown transports for forward-compatibility, but this
+  // needs to be reviewed if values are added to the
+  // AuthenticatorTransport enum.
+  static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 3);
+  for (const nsAString& str : aTransports) {
+    if (str.EqualsLiteral(MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_USB)) {
+      transports |= MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_USB;
+    } else if (str.EqualsLiteral(MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_NFC)) {
+      transports |= MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_NFC;
+    } else if (str.EqualsLiteral(MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_BLE)) {
+      transports |= MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_BLE;
+    } else if (str.EqualsLiteral(
+                   MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_INTERNAL)) {
+      transports |= MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_INTERNAL;
+    } else if (str.EqualsLiteral(MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_HYBRID)) {
+      transports |= MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_HYBRID;
+    }
+  }
+  return transports;
+}
+
 nsresult GetOrigin(nsPIDOMWindowInner* aParent,
                    /*out*/ nsAString& aOrigin, /*out*/ nsACString& aHost) {
   MOZ_ASSERT(aParent);
@@ -352,6 +377,9 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
     CryptoBuffer cb;
     cb.Assign(s.mId);
     c.id() = cb;
+    if (s.mTransports.WasPassed()) {
+      c.transports() = SerializeTransports(s.mTransports.Value());
+    }
     excludeList.AppendElement(c);
   }
 
@@ -577,35 +605,9 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
       CryptoBuffer cb;
       cb.Assign(s.mId);
       c.id() = cb;
-
-      // Serialize transports.
       if (s.mTransports.WasPassed()) {
-        uint8_t transports = 0;
-
-        // We ignore unknown transports for forward-compatibility, but this
-        // needs to be reviewed if values are added to the
-        // AuthenticatorTransport enum.
-        static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 3);
-        for (const nsAString& str : s.mTransports.Value()) {
-          if (str.EqualsLiteral(MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_USB)) {
-            transports |= MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_USB;
-          } else if (str.EqualsLiteral(
-                         MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_NFC)) {
-            transports |= MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_NFC;
-          } else if (str.EqualsLiteral(
-                         MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_BLE)) {
-            transports |= MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_BLE;
-          } else if (str.EqualsLiteral(
-                         MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_INTERNAL)) {
-            transports |= MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_INTERNAL;
-          } else if (str.EqualsLiteral(
-                         MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_HYBRID)) {
-            transports |= MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_HYBRID;
-          }
-        }
-        c.transports() = transports;
+        c.transports() = SerializeTransports(s.mTransports.Value());
       }
-
       allowList.AppendElement(c);
     }
   }
