@@ -19,7 +19,8 @@ static const nsLiteralCString kPermissionTypes[] = {
     // "midi" is the only public permission but internally we have both "midi"
     // and "midi-sysex" (and yes, this is confusing).
     "midi"_ns,
-    "storage-access"_ns
+    "storage-access"_ns,
+    "screen-wake-lock"_ns
     // clang-format on
 };
 

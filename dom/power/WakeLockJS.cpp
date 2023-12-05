@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ErrorList.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Event.h"
@@ -18,6 +19,9 @@
 #include "nsIGlobalObject.h"
 #include "nsISupports.h"
 #include "nsPIDOMWindow.h"
+#include "nsContentPermissionHelper.h"
+#include "nscore.h"
+#include "WakeLock.h"
 #include "WakeLockJS.h"
 #include "WakeLockSentinel.h"
 
@@ -35,6 +39,8 @@ nsLiteralCString WakeLockJS::GetRequestErrorMessage(RequestError aRv) {
       return "The pref dom.screenwakelock.enabled is disabled."_ns;
     case RequestError::InternalFailure:
       return "A browser-internal error occured."_ns;
+    case RequestError::PermissionDenied:
+      return "Permission to request screen-wake-lock was denied."_ns;
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown error reason");
       return "Unknown error"_ns;
@@ -126,7 +132,7 @@ WakeLockJS::Obtain(WakeLockType aType) {
     lock->AcquireActualLock();
   }
 
-  // Steps 7.3.4., 7.3.5. Append lock to locks and resolve promise with lock
+  // Steps 7.3.4. append lock to locks
   doc->ActiveWakeLocks(aType).Insert(lock);
 
   return lock.forget();
@@ -148,16 +154,19 @@ already_AddRefed<Promise> WakeLockJS::Request(WakeLockType aType,
     return promise.forget();
   }
 
-  // Step 7.1. Requesting permission to use screen-wake-lock
-  // Note: implemented in a future part, for now always try to obtain
-  auto lockOrErr = Obtain(aType);
-  if (lockOrErr.isOk()) {
-    RefPtr<WakeLockSentinel> lock = lockOrErr.unwrap();
-    promise->MaybeResolve(lock);
-  } else {
-    promise->MaybeRejectWithNotAllowedError(
-        GetRequestErrorMessage(lockOrErr.unwrapErr()));
-  }
+  // For now, we don't check the permission as we always grant the lock
+  // Step 7.3. Queue a task
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "ObtainWakeLock", [aType, promise, self = RefPtr<WakeLockJS>(this)]() {
+        auto lockOrErr = self->Obtain(aType);
+        if (lockOrErr.isOk()) {
+          RefPtr<WakeLockSentinel> lock = lockOrErr.unwrap();
+          promise->MaybeResolve(lock);
+        } else {
+          promise->MaybeRejectWithNotAllowedError(
+              GetRequestErrorMessage(lockOrErr.unwrapErr()));
+        }
+      }));
 
   return promise.forget();
 }
