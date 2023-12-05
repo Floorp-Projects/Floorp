@@ -51,8 +51,6 @@ class TimelineManager {
                        const ComputedStyle* aComputedStyle,
                        ProgressTimelineType aType);
 
-  void UpdateHiddenByContentVisibilityForAnimations();
-
  private:
   template <typename StyleType, typename TimelineType>
   void DoUpdateTimelines(nsPresContext* aPresContext, dom::Element* aElement,

@@ -1953,22 +1953,6 @@ void Animation::SetHiddenByContentVisibility(bool hidden) {
   GetTimeline()->NotifyAnimationContentVisibilityChanged(this, !hidden);
 }
 
-void Animation::UpdateHiddenByContentVisibility() {
-  // To be consistent with nsIFrame::UpdateAnimationVisibility, here we only
-  // deal with CSSAnimation and CSSTransition.
-  if (!AsCSSAnimation() && !AsCSSTransition()) {
-    return;
-  }
-  NonOwningAnimationTarget target = GetTargetForAnimation();
-  if (!target) {
-    return;
-  }
-  if (auto* frame = target.mElement->GetPrimaryFrame()) {
-    SetHiddenByContentVisibility(
-        frame->IsHiddenByContentVisibilityOnAnyAncestor());
-  }
-}
-
 StickyTimeDuration Animation::IntervalStartTime(
     const StickyTimeDuration& aActiveDuration) const {
   MOZ_ASSERT(AsCSSTransition() || AsCSSAnimation(),

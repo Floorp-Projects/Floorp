@@ -3034,7 +3034,6 @@ class Document : public nsINode,
 
   DocumentTimeline* Timeline();
   LinkedList<DocumentTimeline>& Timelines() { return mTimelines; }
-  void UpdateHiddenByContentVisibilityForAnimations();
 
   SVGSVGElement* GetSVGRootElement() const;
 

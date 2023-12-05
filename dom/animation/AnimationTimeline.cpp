@@ -112,10 +112,4 @@ void AnimationTimeline::NotifyAnimationContentVisibilityChanged(
   }
 }
 
-void AnimationTimeline::UpdateHiddenByContentVisibility() {
-  for (Animation* animation : mAnimations) {
-    animation->UpdateHiddenByContentVisibility();
-  }
-}
-
 }  // namespace mozilla::dom
