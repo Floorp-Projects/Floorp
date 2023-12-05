@@ -12,6 +12,7 @@
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"  // for override
 #include "mozilla/RefPtr.h"      // for RefPtr, already_AddRefed, etc
+#include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/Point.h"  // for IntSize, IntPoint
@@ -528,8 +529,8 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
   static PTextureParent* CreateIPDLActor(
       HostIPCAllocator* aAllocator, const SurfaceDescriptor& aSharedData,
       ReadLockDescriptor&& aDescriptor, LayersBackend aLayersBackend,
-      TextureFlags aFlags, uint64_t aSerial,
-      const wr::MaybeExternalImageId& aExternalImageId);
+      TextureFlags aFlags, const dom::ContentParentId& aContentId,
+      uint64_t aSerial, const wr::MaybeExternalImageId& aExternalImageId);
   static bool DestroyIPDLActor(PTextureParent* actor);
 
   /**
@@ -545,6 +546,8 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
   static TextureHost* AsTextureHost(PTextureParent* actor);
 
   static uint64_t GetTextureSerial(PTextureParent* actor);
+
+  static dom::ContentParentId GetTextureContentId(PTextureParent* actor);
 
   /**
    * Return a pointer to the IPDLActor.

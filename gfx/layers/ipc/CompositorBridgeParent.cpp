@@ -119,6 +119,10 @@ CompositorBridgeParentBase::~CompositorBridgeParentBase() = default;
 
 ProcessId CompositorBridgeParentBase::GetChildProcessId() { return OtherPid(); }
 
+dom::ContentParentId CompositorBridgeParentBase::GetContentId() {
+  return mCompositorManager->GetContentId();
+}
+
 void CompositorBridgeParentBase::NotifyNotUsed(PTextureParent* aTexture,
                                                uint64_t aTransactionId) {
   RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
@@ -1725,9 +1729,9 @@ PTextureParent* CompositorBridgeParent::AllocPTextureParent(
     const LayersBackend& aLayersBackend, const TextureFlags& aFlags,
     const LayersId& aId, const uint64_t& aSerial,
     const wr::MaybeExternalImageId& aExternalImageId) {
-  return TextureHost::CreateIPDLActor(this, aSharedData, std::move(aReadLock),
-                                      aLayersBackend, aFlags, aSerial,
-                                      aExternalImageId);
+  return TextureHost::CreateIPDLActor(
+      this, aSharedData, std::move(aReadLock), aLayersBackend, aFlags,
+      mCompositorManager->GetContentId(), aSerial, aExternalImageId);
 }
 
 bool CompositorBridgeParent::DeallocPTextureParent(PTextureParent* actor) {

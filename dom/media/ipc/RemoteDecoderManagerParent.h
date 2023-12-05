@@ -8,6 +8,7 @@
 
 #include "GPUVideoImage.h"
 #include "mozilla/PRemoteDecoderManagerParent.h"
+#include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/layers/VideoBridgeChild.h"
 
 namespace mozilla {
@@ -25,7 +26,8 @@ class RemoteDecoderManagerParent final
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteDecoderManagerParent, override)
 
   static bool CreateForContent(
-      Endpoint<PRemoteDecoderManagerParent>&& aEndpoint);
+      Endpoint<PRemoteDecoderManagerParent>&& aEndpoint,
+      dom::ContentParentId aContentId);
 
   static bool CreateVideoBridgeToOtherProcess(
       Endpoint<layers::PVideoBridgeChild>&& aEndpoint);
@@ -55,6 +57,8 @@ class RemoteDecoderManagerParent final
   // Can be called from manager thread only
   PDMFactory& EnsurePDMFactory();
 
+  const dom::ContentParentId& GetContentId() const { return mContentId; }
+
  protected:
   PRemoteDecoderParent* AllocPRemoteDecoderParent(
       const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
@@ -78,7 +82,8 @@ class RemoteDecoderManagerParent final
   void ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override;
 
  private:
-  explicit RemoteDecoderManagerParent(nsISerialEventTarget* aThread);
+  RemoteDecoderManagerParent(nsISerialEventTarget* aThread,
+                             dom::ContentParentId aContentId);
   ~RemoteDecoderManagerParent();
 
   void Open(Endpoint<PRemoteDecoderManagerParent>&& aEndpoint);
@@ -88,6 +93,7 @@ class RemoteDecoderManagerParent final
 
   nsCOMPtr<nsISerialEventTarget> mThread;
   RefPtr<PDMFactory> mPDMFactory;
+  dom::ContentParentId mContentId;
 };
 
 }  // namespace mozilla

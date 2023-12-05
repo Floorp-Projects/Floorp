@@ -311,7 +311,8 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::StartUtility(
 
 RefPtr<UtilityProcessManager::StartRemoteDecodingUtilityPromise>
 UtilityProcessManager::StartProcessForRemoteMediaDecoding(
-    base::ProcessId aOtherProcess, SandboxingKind aSandbox) {
+    base::ProcessId aOtherProcess, dom::ContentParentId aChildId,
+    SandboxingKind aSandbox) {
   // Not supported kinds.
   if (aSandbox != SandboxingKind::GENERIC_UTILITY
 #ifdef MOZ_APPLEMEDIA
@@ -336,7 +337,8 @@ UtilityProcessManager::StartProcessForRemoteMediaDecoding(
   return StartUtility(uadc, aSandbox)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [self, uadc, aOtherProcess, aSandbox, remoteDecodingStart]() {
+          [self, uadc, aOtherProcess, aChildId, aSandbox,
+           remoteDecodingStart]() {
             RefPtr<UtilityProcessParent> parent =
                 self->GetProcessParent(aSandbox);
             if (!parent) {
@@ -363,8 +365,8 @@ UtilityProcessManager::StartProcessForRemoteMediaDecoding(
                   rv, __func__);
             }
 
-            if (!uadc->SendNewContentRemoteDecoderManager(
-                    std::move(parentPipe))) {
+            if (!uadc->SendNewContentRemoteDecoderManager(std::move(parentPipe),
+                                                          aChildId)) {
               MOZ_ASSERT(false, "SendNewContentRemoteDecoderManager failure");
               return StartRemoteDecodingUtilityPromise::CreateAndReject(
                   NS_ERROR_FAILURE, __func__);
