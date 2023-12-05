@@ -11825,12 +11825,12 @@
 
 - name: network.dns.max_high_priority_threads
   type: RelaxedAtomicUint32
-  value: 5
+  value: 40
   mirror: always
 
 - name: network.dns.max_any_priority_threads
   type: RelaxedAtomicUint32
-  value: 3
+  value: 24
   mirror: always
 
 # The proxy type. See nsIProtocolProxyService.idl
