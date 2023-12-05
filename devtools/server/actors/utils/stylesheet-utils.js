@@ -79,6 +79,10 @@ async function fetchStyleSheetText(styleSheet) {
     loadFromCache: true,
     policy: Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET,
     charset: getCSSCharset(styleSheet),
+    headers: {
+      // https://searchfox.org/mozilla-central/rev/68b1b0041a78abd06f19202558ccc4922e5ba759/netwerk/protocol/http/nsHttpHandler.cpp#124
+      accept: "text/css,*/*;q=0.1",
+    },
   };
 
   // Bug 1282660 - We use the system principal to load the default internal
@@ -102,6 +106,14 @@ async function fetchStyleSheetText(styleSheet) {
 
   try {
     result = await fetch(href, options);
+    if (result.contentType !== "text/css") {
+      console.warn(
+        `stylesheets: fetch from cache returned non-css content-type ` +
+          `${result.contentType} for ${href}, trying without cache.`
+      );
+      options.loadFromCache = false;
+      result = await fetch(href, options);
+    }
   } catch (e) {
     // The list of excluded protocols can be missing some protocols, try to use the
     // system principal if the first fetch failed.
