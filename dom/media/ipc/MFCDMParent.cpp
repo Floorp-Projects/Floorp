@@ -422,6 +422,9 @@ LPCWSTR MFCDMParent::GetCDMLibraryName(const nsString& aKeySystem) {
 }
 
 /* static */
+void MFCDMParent::Shutdown() { sFactoryMap.Clear(); }
+
+/* static */
 HRESULT MFCDMParent::GetOrCreateFactory(
     const nsString& aKeySystem,
     ComPtr<IMFContentDecryptionModuleFactory>& aFactoryOut) {

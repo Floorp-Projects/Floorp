@@ -67,6 +67,7 @@ UtilityAudioDecoderParent::~UtilityAudioDecoderParent() {
     gfx::gfxConfig::Shutdown();
     gfx::gfxVars::Shutdown();
     gfx::DeviceManagerDx::Shutdown();
+    MFCDMParent::Shutdown();
   }
 #endif
 }
