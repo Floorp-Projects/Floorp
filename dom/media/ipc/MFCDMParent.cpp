@@ -345,7 +345,6 @@ MFCDMParent::MFCDMParent(const nsAString& aKeySystem,
              ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM);
   MFCDM_PARENT_LOG("MFCDMParent created");
   mIPDLSelfRef = this;
-  LoadFactory();
   Register();
 
   mKeyMessageListener = mKeyMessageEvents.Connect(
@@ -354,6 +353,8 @@ MFCDMParent::MFCDMParent(const nsAString& aKeySystem,
       mManagerThread, this, &MFCDMParent::SendOnSessionKeyStatusesChanged);
   mExpirationListener = mExpirationEvents.Connect(
       mManagerThread, this, &MFCDMParent::SendOnSessionKeyExpiration);
+
+  RETURN_VOID_IF_FAILED(LoadFactory(mKeySystem, mFactory));
 }
 
 void MFCDMParent::ShutdownCDM() {
@@ -396,27 +397,31 @@ MFCDMParent::~MFCDMParent() {
   Unregister();
 }
 
-LPCWSTR MFCDMParent::GetCDMLibraryName() const {
+/* static */
+LPCWSTR MFCDMParent::GetCDMLibraryName(const nsString& aKeySystem) {
   // PlayReady is a built-in CDM on Windows, no need to load external library.
-  if (IsPlayReadyKeySystemAndSupported(mKeySystem)) {
+  if (IsPlayReadyKeySystemAndSupported(aKeySystem)) {
     return L"";
   }
-  if (IsWidevineExperimentKeySystemAndSupported(mKeySystem) ||
-      IsWidevineKeySystem(mKeySystem)) {
+  if (IsWidevineExperimentKeySystemAndSupported(aKeySystem) ||
+      IsWidevineKeySystem(aKeySystem)) {
     return sWidevineL1Path;
   }
   // TODO : support ClearKey
   return L"Unknown";
 }
 
-HRESULT MFCDMParent::LoadFactory() {
-  LPCWSTR libraryName = GetCDMLibraryName();
+/* static */
+HRESULT MFCDMParent::LoadFactory(
+    const nsString& aKeySystem,
+    ComPtr<IMFContentDecryptionModuleFactory>& aFactoryOut) {
+  LPCWSTR libraryName = GetCDMLibraryName(aKeySystem);
   const bool loadFromPlatform = wcslen(libraryName) == 0;
-  MFCDM_PARENT_LOG("Load factory for %s (libraryName=%ls)",
-                   NS_ConvertUTF16toUTF8(mKeySystem).get(), libraryName);
+  MFCDM_PARENT_SLOG("Load factory for %s (libraryName=%ls)",
+                    NS_ConvertUTF16toUTF8(aKeySystem).get(), libraryName);
 
-  MFCDM_PARENT_LOG("Create factory for %s",
-                   NS_ConvertUTF16toUTF8(mKeySystem).get());
+  MFCDM_PARENT_SLOG("Create factory for %s",
+                    NS_ConvertUTF16toUTF8(aKeySystem).get());
   ComPtr<IMFContentDecryptionModuleFactory> cdmFactory;
   if (loadFromPlatform) {
     ComPtr<IMFMediaEngineClassFactory4> clsFactory;
@@ -424,15 +429,15 @@ HRESULT MFCDMParent::LoadFactory() {
                                             nullptr, CLSCTX_INPROC_SERVER,
                                             IID_PPV_ARGS(&clsFactory)));
     MFCDM_RETURN_IF_FAILED(clsFactory->CreateContentDecryptionModuleFactory(
-        mKeySystem.get(), IID_PPV_ARGS(&cdmFactory)));
-    mFactory.Swap(cdmFactory);
-    MFCDM_PARENT_LOG("Loaded CDM from platform!");
+        aKeySystem.get(), IID_PPV_ARGS(&cdmFactory)));
+    aFactoryOut.Swap(cdmFactory);
+    MFCDM_PARENT_SLOG("Loaded CDM from platform!");
     return S_OK;
   }
 
   HMODULE handle = LoadLibraryW(libraryName);
   if (!handle) {
-    MFCDM_PARENT_LOG("Failed to load library %ls!", libraryName);
+    MFCDM_PARENT_SLOG("Failed to load library %ls!", libraryName);
     return E_FAIL;
   }
 
@@ -442,7 +447,7 @@ HRESULT MFCDMParent::LoadFactory() {
       (DllGetActivationFactoryFunc)GetProcAddress(handle,
                                                   "DllGetActivationFactory");
   if (!pDllGetActivationFactory) {
-    MFCDM_PARENT_LOG("Failed to get activation function!");
+    MFCDM_PARENT_SLOG("Failed to get activation function!");
     return E_FAIL;
   }
 
@@ -450,12 +455,12 @@ HRESULT MFCDMParent::LoadFactory() {
   // "<key_system>.ContentDecryptionModuleFactory". In addition, when querying
   // factory, need to use original Widevine key system name.
   nsString stringId;
-  if (IsWidevineExperimentKeySystemAndSupported(mKeySystem) ||
-      IsWidevineKeySystem(mKeySystem)) {
+  if (IsWidevineExperimentKeySystemAndSupported(aKeySystem) ||
+      IsWidevineKeySystem(aKeySystem)) {
     stringId.AppendLiteral("com.widevine.alpha.ContentDecryptionModuleFactory");
   }
-  MFCDM_PARENT_LOG("Query factory by classId '%s",
-                   NS_ConvertUTF16toUTF8(stringId).get());
+  MFCDM_PARENT_SLOG("Query factory by classId '%s",
+                    NS_ConvertUTF16toUTF8(stringId).get());
   ScopedHString classId(stringId);
   ComPtr<IActivationFactory> pFactory = NULL;
   MFCDM_RETURN_IF_FAILED(
@@ -463,8 +468,9 @@ HRESULT MFCDMParent::LoadFactory() {
 
   ComPtr<IInspectable> pInspectable;
   MFCDM_RETURN_IF_FAILED(pFactory->ActivateInstance(&pInspectable));
-  MFCDM_RETURN_IF_FAILED(pInspectable.As(&mFactory));
-  MFCDM_PARENT_LOG("Loaded %ls CDM from external library!", libraryName);
+  MFCDM_RETURN_IF_FAILED(pInspectable.As(&cdmFactory));
+  aFactoryOut.Swap(cdmFactory);
+  MFCDM_PARENT_SLOG("Loaded %ls CDM from external library!", libraryName);
   return S_OK;
 }
 
@@ -578,9 +584,79 @@ static bool IsKeySystemHWSecure(
   return false;
 }
 
-mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
-    const bool aIsHWSecure, GetCapabilitiesResolver&& aResolver) {
-  MFCDM_REJECT_IF(!mFactory, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+/* static */
+RefPtr<MFCDMParent::CapabilitiesPromise>
+MFCDMParent::GetAllKeySystemsCapabilities() {
+  MOZ_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsISerialEventTarget> backgroundTaskQueue;
+  if (NS_FAILED(NS_CreateBackgroundTaskQueue(
+          __func__, getter_AddRefs(backgroundTaskQueue)))) {
+    MFCDM_PARENT_SLOG(
+        "Failed to create task queue for all key systems capabilities!");
+    return CapabilitiesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                                __func__);
+  }
+
+  RefPtr<CapabilitiesPromise::Private> p =
+      new CapabilitiesPromise::Private(__func__);
+  enum SecureLevel : bool {
+    Software = false,
+    Hardware = true,
+  };
+  Unused << backgroundTaskQueue->Dispatch(NS_NewRunnableFunction(__func__, [p] {
+    MFCDM_PARENT_SLOG("GetAllKeySystemsCapabilities");
+    static const nsTArray<std::pair<nsString, SecureLevel>> kKeySystems{
+        std::pair<nsString, SecureLevel>(
+            NS_ConvertUTF8toUTF16(kPlayReadyKeySystemName),
+            SecureLevel::Software),
+        std::pair<nsString, SecureLevel>(
+            NS_ConvertUTF8toUTF16(kPlayReadyKeySystemHardware),
+            SecureLevel::Hardware),
+        std::pair<nsString, SecureLevel>(
+            NS_ConvertUTF8toUTF16(kWidevineExperimentKeySystemName),
+            SecureLevel::Hardware),
+        std::pair<nsString, SecureLevel>(
+            NS_ConvertUTF8toUTF16(kWidevineExperiment2KeySystemName),
+            SecureLevel::Hardware),
+    };
+    static CopyableTArray<MFCDMCapabilitiesIPDL> sCapabilities;
+    if (sCapabilities.IsEmpty()) {
+      for (const auto& keySystem : kKeySystems) {
+        // Only check the capabilites if the relative prefs for the key system
+        // are ON.
+        if (IsPlayReadyKeySystemAndSupported(keySystem.first) ||
+            IsWidevineExperimentKeySystemAndSupported(keySystem.first)) {
+          MFCDMCapabilitiesIPDL* c = sCapabilities.AppendElement();
+          GetCapabilities(keySystem.first, keySystem.second, nullptr, *c);
+        }
+      }
+    }
+    p->Resolve(sCapabilities, __func__);
+  }));
+  return p;
+}
+
+/* static */
+void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
+                                  const bool aIsHWSecure,
+                                  IMFContentDecryptionModuleFactory* aFactory,
+                                  MFCDMCapabilitiesIPDL& aCapabilitiesOut) {
+  aCapabilitiesOut.keySystem() = aKeySystem;
+  // WMF CDMs usually require these. See
+  // https://source.chromium.org/chromium/chromium/src/+/main:media/cdm/win/media_foundation_cdm_factory.cc;l=69-73;drc=b3ca5c09fa0aa07b7f9921501f75e43d80f3ba48
+  aCapabilitiesOut.persistentState() = KeySystemConfig::Requirement::Required;
+  aCapabilitiesOut.distinctiveID() = KeySystemConfig::Requirement::Required;
+
+  // Return empty capabilites for SWDRM on Windows 10 because it has the process
+  // leaking problem.
+  if (!IsWin11OrLater() && !aIsHWSecure) {
+    return;
+  }
+
+  ComPtr<IMFContentDecryptionModuleFactory> factory = aFactory;
+  if (!factory) {
+    RETURN_VOID_IF_FAILED(LoadFactory(aKeySystem, factory));
+  }
 
   // Widevine requires codec type to be four CC, PlayReady is fine with both.
   static auto convertCodecToFourCC =
@@ -614,53 +690,38 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
         return "none"_ns;
       };
 
-  MFCDMCapabilitiesIPDL capabilities;
-  capabilities.keySystem() = mKeySystem;
-  // WMF CDMs usually require these. See
-  // https://source.chromium.org/chromium/chromium/src/+/main:media/cdm/win/media_foundation_cdm_factory.cc;l=69-73;drc=b3ca5c09fa0aa07b7f9921501f75e43d80f3ba48
-  capabilities.persistentState() = KeySystemConfig::Requirement::Required;
-  capabilities.distinctiveID() = KeySystemConfig::Requirement::Required;
-
-  // TODO : check HW CDM creation
+  // TODO : add AV1
   static nsTArray<KeySystemConfig::EMECodecString> kVideoCodecs({
       KeySystemConfig::EME_CODEC_H264,
       KeySystemConfig::EME_CODEC_VP8,
       KeySystemConfig::EME_CODEC_VP9,
       KeySystemConfig::EME_CODEC_HEVC,
   });
+
   // Remember supported video codecs.
   // It will be used when collecting audio codec and encryption scheme
   // support.
   nsTArray<KeySystemConfig::EMECodecString> supportedVideoCodecs;
-
-  // Return empty capabilites for SWDRM on Windows 10 because it has the process
-  // leaking problem.
-  if (!IsWin11OrLater() && !aIsHWSecure) {
-    aResolver(std::move(capabilities));
-    return IPC_OK();
-  }
-
-  for (auto& codec : kVideoCodecs) {
+  for (const auto& codec : kVideoCodecs) {
     if (codec == KeySystemConfig::EME_CODEC_HEVC &&
         !StaticPrefs::media_wmf_hevc_enabled()) {
       continue;
     }
-    if (FactorySupports(mFactory, mKeySystem, convertCodecToFourCC(codec),
+    if (FactorySupports(factory, aKeySystem, convertCodecToFourCC(codec),
                         KeySystemConfig::EMECodecString(""), nsString(u""),
                         aIsHWSecure)) {
       MFCDMMediaCapability* c =
-          capabilities.videoCapabilities().AppendElement();
+          aCapabilitiesOut.videoCapabilities().AppendElement();
       c->contentType() = NS_ConvertUTF8toUTF16(codec);
       c->robustness() =
-          GetRobustnessStringForKeySystem(mKeySystem, aIsHWSecure);
-      MFCDM_PARENT_LOG("%s: +video:%s", __func__, codec.get());
+          GetRobustnessStringForKeySystem(aKeySystem, aIsHWSecure);
+      MFCDM_PARENT_SLOG("%s: +video:%s", __func__, codec.get());
       supportedVideoCodecs.AppendElement(codec);
     }
   }
   if (supportedVideoCodecs.IsEmpty()) {
     // Return a capabilities with no codec supported.
-    aResolver(std::move(capabilities));
-    return IPC_OK();
+    return;
   }
 
   static nsTArray<KeySystemConfig::EMECodecString> kAudioCodecs({
@@ -669,16 +730,16 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
       KeySystemConfig::EME_CODEC_OPUS,
       KeySystemConfig::EME_CODEC_VORBIS,
   });
-  for (auto& codec : kAudioCodecs) {
+  for (const auto& codec : kAudioCodecs) {
     if (FactorySupports(
-            mFactory, mKeySystem, convertCodecToFourCC(supportedVideoCodecs[0]),
+            factory, aKeySystem, convertCodecToFourCC(supportedVideoCodecs[0]),
             convertCodecToFourCC(codec), nsString(u""), aIsHWSecure)) {
       MFCDMMediaCapability* c =
-          capabilities.audioCapabilities().AppendElement();
+          aCapabilitiesOut.audioCapabilities().AppendElement();
       c->contentType() = NS_ConvertUTF8toUTF16(codec);
-      c->robustness() = GetRobustnessStringForKeySystem(mKeySystem, aIsHWSecure,
+      c->robustness() = GetRobustnessStringForKeySystem(aKeySystem, aIsHWSecure,
                                                         false /* isVideo */);
-      MFCDM_PARENT_LOG("%s: +audio:%s", __func__, codec.get());
+      MFCDM_PARENT_SLOG("%s: +audio:%s", __func__, codec.get());
     }
   }
 
@@ -692,16 +753,16 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
     bool ok = true;
     for (auto& codec : supportedVideoCodecs) {
       ok &= FactorySupports(
-          mFactory, mKeySystem, convertCodecToFourCC(codec), nsCString(""),
+          factory, aKeySystem, convertCodecToFourCC(codec), nsCString(""),
           scheme.second /* additional feature */, aIsHWSecure);
       if (!ok) {
         break;
       }
     }
     if (ok) {
-      capabilities.encryptionSchemes().AppendElement(scheme.first);
-      MFCDM_PARENT_LOG("%s: +scheme:%s", __func__,
-                       scheme.first == CryptoScheme::Cenc ? "cenc" : "cbcs");
+      aCapabilitiesOut.encryptionSchemes().AppendElement(scheme.first);
+      MFCDM_PARENT_SLOG("%s: +scheme:%s", __func__,
+                        scheme.first == CryptoScheme::Cenc ? "cenc" : "cbcs");
     }
   }
 
@@ -714,8 +775,8 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
 
   // For key system requires clearlead, every codec needs to have clear support.
   // If not, then we will remove the codec from supported codec.
-  if (RequireClearLead(mKeySystem)) {
-    for (const auto& schme : capabilities.encryptionSchemes()) {
+  if (RequireClearLead(aKeySystem)) {
+    for (const auto& schme : aCapabilitiesOut.encryptionSchemes()) {
       nsTArray<KeySystemConfig::EMECodecString> noClearLeadCodecs;
       for (const auto& codec : supportedVideoCodecs) {
         nsAutoString additionalFeature(u"encryption-type=");
@@ -733,29 +794,29 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
           additionalFeature.AppendLiteral(u"cbcs-clearlead,");
         }
         bool rv =
-            FactorySupports(mFactory, mKeySystem, convertCodecToFourCC(codec),
+            FactorySupports(factory, aKeySystem, convertCodecToFourCC(codec),
                             nsCString(""), additionalFeature, aIsHWSecure);
-        MFCDM_PARENT_LOG("clearlead %s IV 8 bytes %s %s",
-                         CryptoSchemeToString(schme), codec.get(),
-                         rv ? "supported" : "not supported");
+        MFCDM_PARENT_SLOG("clearlead %s IV 8 bytes %s %s",
+                          CryptoSchemeToString(schme), codec.get(),
+                          rv ? "supported" : "not supported");
         if (rv) {
           continue;
         }
         // Try 16 bytes IV.
         additionalFeature.AppendLiteral(u"encryption-iv-size=16,");
-        rv = FactorySupports(mFactory, mKeySystem, convertCodecToFourCC(codec),
+        rv = FactorySupports(factory, aKeySystem, convertCodecToFourCC(codec),
                              nsCString(""), additionalFeature, aIsHWSecure);
-        MFCDM_PARENT_LOG("clearlead %s IV 16 bytes %s %s",
-                         CryptoSchemeToString(schme), codec.get(),
-                         rv ? "supported" : "not supported");
+        MFCDM_PARENT_SLOG("clearlead %s IV 16 bytes %s %s",
+                          CryptoSchemeToString(schme), codec.get(),
+                          rv ? "supported" : "not supported");
         // Failed on both, so remove the codec from supported codec.
         if (!rv) {
           noClearLeadCodecs.AppendElement(codec);
         }
       }
       for (const auto& codec : noClearLeadCodecs) {
-        MFCDM_PARENT_LOG("%s: -video:%s", __func__, codec.get());
-        capabilities.videoCapabilities().RemoveElementsBy(
+        MFCDM_PARENT_SLOG("%s: -video:%s", __func__, codec.get());
+        aCapabilitiesOut.videoCapabilities().RemoveElementsBy(
             [&codec](const MFCDMMediaCapability& aCapbilities) {
               return aCapbilities.contentType() == NS_ConvertUTF8toUTF16(codec);
             });
@@ -765,13 +826,19 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
   }
 
   // TODO: don't hardcode
-  capabilities.initDataTypes().AppendElement(u"keyids");
-  capabilities.initDataTypes().AppendElement(u"cenc");
-  capabilities.sessionTypes().AppendElement(
+  aCapabilitiesOut.initDataTypes().AppendElement(u"keyids");
+  aCapabilitiesOut.initDataTypes().AppendElement(u"cenc");
+  aCapabilitiesOut.sessionTypes().AppendElement(
       KeySystemConfig::SessionType::Temporary);
-  capabilities.sessionTypes().AppendElement(
+  aCapabilitiesOut.sessionTypes().AppendElement(
       KeySystemConfig::SessionType::PersistentLicense);
+}
 
+mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
+    const bool aIsHWSecure, GetCapabilitiesResolver&& aResolver) {
+  MFCDM_REJECT_IF(!mFactory, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  MFCDMCapabilitiesIPDL capabilities;
+  GetCapabilities(mKeySystem, aIsHWSecure, mFactory.Get(), capabilities);
   aResolver(std::move(capabilities));
   return IPC_OK();
 }
