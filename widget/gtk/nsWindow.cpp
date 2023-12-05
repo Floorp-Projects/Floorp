@@ -474,9 +474,6 @@ void nsWindow::ReleaseGlobals() {
 }
 
 void nsWindow::DispatchActivateEvent(void) {
-  NS_ASSERTION(mContainer || mIsDestroyed,
-               "DispatchActivateEvent only intended for container windows");
-
 #ifdef ACCESSIBILITY
   DispatchActivateEventAccessible();
 #endif  // ACCESSIBILITY
@@ -2749,8 +2746,6 @@ void nsWindow::SetZIndex(int32_t aZIndex) {
     return;
   }
 
-  NS_ASSERTION(!mContainer, "Expected Mozilla child widget");
-
   // We skip the nsWindows that don't have mGdkWindows.
   // These are probably in the process of being destroyed.
   if (!mGdkWindow) {
@@ -3324,15 +3319,6 @@ static GdkCursor* GetCursorForImage(const nsIWidget::Cursor& aCursor,
 }
 
 void nsWindow::SetCursor(const Cursor& aCursor) {
-  // if we're not the toplevel window pass up the cursor request to
-  // the toplevel window to handle it.
-  if (!mContainer && mGdkWindow) {
-    if (nsWindow* window = GetContainerWindow()) {
-      window->SetCursor(aCursor);
-    }
-    return;
-  }
-
   if (mWidgetCursorLocked) {
     return;
   }
@@ -3344,10 +3330,6 @@ void nsWindow::SetCursor(const Cursor& aCursor) {
 
   mUpdateCursor = false;
   mCursor = aCursor;
-
-  if (!mContainer) {
-    return;
-  }
 
   // Try to set the cursor image first, and fall back to the numeric cursor.
   GdkCursor* imageCursor = GetCursorForImage(aCursor, GdkCeiledScaleFactor());
@@ -9838,7 +9820,7 @@ bool nsWindow::SetEGLNativeWindowSize(
 
   // See NS_NATIVE_EGL_WINDOW why we can't block here.
   if (mDestroyMutex.TryLock()) {
-    if (!mIsDestroyed && mContainer) {
+    if (!mIsDestroyed) {
       gint scale = GdkCeiledScaleFactor();
       LOG("nsWindow::SetEGLNativeWindowSize() %d x %d scale %d (unscaled %d x "
           "%d)",
