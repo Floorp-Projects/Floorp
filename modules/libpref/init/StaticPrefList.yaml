@@ -3461,6 +3461,12 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
+# Enable Screen Wake Lock API
+- name: dom.screenwakelock.enabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Whether to enable the JavaScript start-up cache. This causes one of the first
 # execution to record the bytecode of the JavaScript function used, and save it
 # in the existing cache entry. On the following loads of the same script, the

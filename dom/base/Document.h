@@ -54,6 +54,7 @@
 #include "mozilla/dom/TreeOrderedArray.h"
 #include "mozilla/dom/ViewportMetaData.h"
 #include "mozilla/dom/LargestContentfulPaint.h"
+#include "mozilla/dom/WakeLockBinding.h"
 #include "mozilla/glean/GleanMetrics.h"
 #include "nsAtom.h"
 #include "nsCOMArray.h"
@@ -276,6 +277,7 @@ class Touch;
 class TouchList;
 class TreeWalker;
 enum class ViewportFitType : uint8_t;
+class WakeLockSentinel;
 class WindowContext;
 class WindowGlobalChild;
 class WindowProxyHolder;
@@ -3536,6 +3538,8 @@ class Document : public nsINode,
   // https://drafts.csswg.org/cssom-view/#evaluate-media-queries-and-report-changes
   void EvaluateMediaQueriesAndReportChanges(bool aRecurse);
 
+  nsTHashSet<RefPtr<WakeLockSentinel>>& ActiveWakeLocks(WakeLockType aType);
+
   // ParentNode
   nsIHTMLCollection* Children();
   uint32_t ChildElementCount();
@@ -5164,6 +5168,10 @@ class Document : public nsINode,
   // 1)  We have no script global object.
   // 2)  We haven't had Destroy() called on us yet.
   nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
+
+  // Mapping of wake lock types to sets of wake locks sentinels
+  // https://w3c.github.io/screen-wake-lock/#internal-slots
+  nsTHashMap<WakeLockType, nsTHashSet<RefPtr<WakeLockSentinel>>> mActiveLocks;
 
   // The parsed viewport metadata of the last modified <meta name=viewport>
   // element.
