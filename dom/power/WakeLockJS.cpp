@@ -4,10 +4,84 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ErrorList.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/Event.h"
+#include "mozilla/dom/FeaturePolicyUtils.h"
+#include "mozilla/dom/Navigator.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/WakeLockBinding.h"
+#include "mozilla/Hal.h"
+#include "nsCOMPtr.h"
+#include "nsError.h"
+#include "nsIGlobalObject.h"
+#include "nsISupports.h"
 #include "nsPIDOMWindow.h"
 #include "WakeLockJS.h"
+#include "WakeLockSentinel.h"
 
 namespace mozilla::dom {
+
+nsLiteralCString WakeLockJS::GetRequestErrorMessage(RequestError aRv) {
+  switch (aRv) {
+    case RequestError::DocInactive:
+      return "The requesting document is inactive."_ns;
+    case RequestError::DocHidden:
+      return "The requesting document is hidden."_ns;
+    case RequestError::PolicyDisallowed:
+      return "A permissions policy does not allow screen-wake-lock for the requesting document."_ns;
+    case RequestError::PrefDisabled:
+      return "The pref dom.screenwakelock.enabled is disabled."_ns;
+    case RequestError::InternalFailure:
+      return "A browser-internal error occured."_ns;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown error reason");
+      return "Unknown error"_ns;
+  }
+}
+
+// https://w3c.github.io/screen-wake-lock/#the-request-method steps 2-5
+WakeLockJS::RequestError WakeLockJS::WakeLockAllowedForDocument(
+    Document* aDoc) {
+  if (!aDoc) {
+    return RequestError::InternalFailure;
+  }
+
+  // Step 2. check policy-controlled feature screen-wake-lock
+  if (!FeaturePolicyUtils::IsFeatureAllowed(aDoc, u"screen-wake-lock"_ns)) {
+    return RequestError::PolicyDisallowed;
+  }
+
+  // Step 4 check doc active
+  if (!aDoc->IsActive()) {
+    return RequestError::DocInactive;
+  }
+
+  // Step 5. check doc visible
+  if (aDoc->Hidden()) {
+    return RequestError::DocHidden;
+  }
+
+  return RequestError::Success;
+}
+
+// https://w3c.github.io/screen-wake-lock/#dfn-applicable-wake-lock
+static bool IsWakeLockApplicable(WakeLockType aType) {
+  // only currently supported wake lock type
+  return aType == WakeLockType::Screen;
+}
+
+// https://w3c.github.io/screen-wake-lock/#dfn-release-a-wake-lock
+void ReleaseWakeLock(Document* aDoc, WakeLockSentinel* aLock,
+                     WakeLockType aType) {
+  MOZ_ASSERT(aLock);
+  MOZ_ASSERT(aDoc);
+
+  RefPtr<WakeLockSentinel> kungFuDeathGrip = aLock;
+  aDoc->ActiveWakeLocks(aType).Remove(aLock);
+  aLock->NotifyLockReleased();
+}
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WakeLockJS, mWindow)
 
@@ -20,7 +94,11 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WakeLockJS)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentActivity)
 NS_INTERFACE_MAP_END
 
-WakeLockJS::WakeLockJS(nsPIDOMWindowInner* aWindow) : mWindow(aWindow) {}
+WakeLockJS::WakeLockJS(nsPIDOMWindowInner* aWindow) : mWindow(aWindow) {
+  AttachListeners();
+}
+
+WakeLockJS::~WakeLockJS() { DetachListeners(); }
 
 nsISupports* WakeLockJS::GetParentObject() const { return mWindow; }
 
@@ -29,12 +107,102 @@ JSObject* WakeLockJS::WrapObject(JSContext* aCx,
   return WakeLock_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<Promise> WakeLockJS::Request(WakeLockType aType) {
-  return nullptr;
+// https://w3c.github.io/screen-wake-lock/#the-request-method Step 7.3
+Result<already_AddRefed<WakeLockSentinel>, WakeLockJS::RequestError>
+WakeLockJS::Obtain(WakeLockType aType) {
+  // Step 7.3.1. check visibility again
+  nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
+  if (!doc) {
+    return Err(RequestError::InternalFailure);
+  }
+  if (doc->Hidden()) {
+    return Err(RequestError::DocHidden);
+  }
+  // Step 7.3.3. let lock be a new WakeLockSentinel
+  RefPtr<WakeLockSentinel> lock =
+      MakeRefPtr<WakeLockSentinel>(mWindow->AsGlobal(), aType);
+  // Step 7.3.2. acquire a wake lock
+  if (IsWakeLockApplicable(aType)) {
+    lock->AcquireActualLock();
+  }
+
+  // Steps 7.3.4., 7.3.5. Append lock to locks and resolve promise with lock
+  doc->ActiveWakeLocks(aType).Insert(lock);
+
+  return lock.forget();
 }
 
-void WakeLockJS::NotifyOwnerDocumentActivityChanged() {}
+// https://w3c.github.io/screen-wake-lock/#the-request-method
+already_AddRefed<Promise> WakeLockJS::Request(WakeLockType aType,
+                                              ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = mWindow->AsGlobal();
 
-NS_IMETHODIMP WakeLockJS::HandleEvent(Event* aEvent) { return NS_OK; }
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_FALSE(aRv.Failed(), nullptr);
+
+  // Steps 1-5
+  nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
+  RequestError rv = WakeLockAllowedForDocument(doc);
+  if (rv != RequestError::Success) {
+    promise->MaybeRejectWithNotAllowedError(GetRequestErrorMessage(rv));
+    return promise.forget();
+  }
+
+  // Step 7.1. Requesting permission to use screen-wake-lock
+  // Note: implemented in a future part, for now always try to obtain
+  auto lockOrErr = Obtain(aType);
+  if (lockOrErr.isOk()) {
+    RefPtr<WakeLockSentinel> lock = lockOrErr.unwrap();
+    promise->MaybeResolve(lock);
+  } else {
+    promise->MaybeRejectWithNotAllowedError(
+        GetRequestErrorMessage(lockOrErr.unwrapErr()));
+  }
+
+  return promise.forget();
+}
+
+void WakeLockJS::AttachListeners() {
+  nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
+  MOZ_ASSERT(doc);
+  DebugOnly<nsresult> rv =
+      doc->AddSystemEventListener(u"visibilitychange"_ns, this, true, false);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  doc->RegisterActivityObserver(ToSupports(this));
+}
+
+void WakeLockJS::DetachListeners() {
+  if (mWindow) {
+    if (nsCOMPtr<Document> doc = mWindow->GetExtantDoc()) {
+      doc->RemoveSystemEventListener(u"visibilitychange"_ns, this, true);
+
+      doc->UnregisterActivityObserver(ToSupports(this));
+    }
+  }
+}
+
+void WakeLockJS::NotifyOwnerDocumentActivityChanged() {
+  nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
+  MOZ_ASSERT(doc);
+  if (!doc->IsActive()) {
+    doc->UnlockAllWakeLocks(WakeLockType::Screen);
+  }
+}
+
+NS_IMETHODIMP WakeLockJS::HandleEvent(Event* aEvent) {
+  nsAutoString type;
+  aEvent->GetType(type);
+
+  if (type.EqualsLiteral("visibilitychange")) {
+    nsCOMPtr<Document> doc = do_QueryInterface(aEvent->GetTarget());
+    NS_ENSURE_STATE(doc);
+
+    if (doc->Hidden()) {
+      doc->UnlockAllWakeLocks(WakeLockType::Screen);
+    }
+  }
+
+  return NS_OK;
+}
 
 }  // namespace mozilla::dom
