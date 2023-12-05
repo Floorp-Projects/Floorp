@@ -421,29 +421,6 @@ ipc::IPCResult WebGPUParent::RecvInstanceRequestAdapter(
   return IPC_OK();
 }
 
-struct DeviceLostRequest {
-  RefPtr<WebGPUParent> mParent;
-  RawId mDeviceId;
-};
-
-/* static */ void WebGPUParent::DeviceLostCallback(uint8_t* aUserData,
-                                                   uint8_t aReason,
-                                                   const char* aMessage) {
-  auto req = std::unique_ptr<DeviceLostRequest>(
-      reinterpret_cast<DeviceLostRequest*>(aUserData));
-
-  // If aReason is 0, that corresponds to the "unknown" reason, which
-  // we treat as a Nothing() value. Any other value (which is positive)
-  // is mapped to the GPUDeviceLostReason values by subtracting 1.
-  Maybe<uint8_t> reason;
-  if (aReason > 0) {
-    uint8_t mappedReasonValue = (aReason - 1u);
-    reason = Some(mappedReasonValue);
-  }
-  nsAutoCString message(aMessage);
-  req->mParent->LoseDevice(req->mDeviceId, reason, message);
-}
-
 ipc::IPCResult WebGPUParent::RecvAdapterRequestDevice(
     RawId aAdapterId, const ipc::ByteBuf& aByteBuf, RawId aDeviceId,
     AdapterRequestDeviceResolver&& resolver) {
@@ -456,21 +433,10 @@ ipc::IPCResult WebGPUParent::RecvAdapterRequestDevice(
     MOZ_ASSERT(maybeError.isSome());
     LoseDevice(aDeviceId, Some(reasonDestroyed), maybeError->message);
     resolver(false);
-    return IPC_OK();
+  } else {
+    mErrorScopeStackByDevice.insert({aDeviceId, {}});
+    resolver(true);
   }
-
-  mErrorScopeStackByDevice.insert({aDeviceId, {}});
-
-  // Setup the device lost callback.
-  std::unique_ptr<DeviceLostRequest> request(
-      new DeviceLostRequest{this, aDeviceId});
-  ffi::WGPUDeviceLostClosureC callback = {
-      &DeviceLostCallback, reinterpret_cast<uint8_t*>(request.release())};
-  ffi::wgpu_server_set_device_lost_callback(mContext.get(), aDeviceId,
-                                            callback);
-
-  resolver(true);
-
   return IPC_OK();
 }
 
