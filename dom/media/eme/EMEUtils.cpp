@@ -186,4 +186,21 @@ void MFCDMCapabilitiesIPDLToKeySystemConfig(
 }
 #endif
 
+bool DoesKeySystemSupportClearLead(const nsAString& aKeySystem) {
+  // I believe that Widevine L3 supports clear-lead, but I couldn't find any
+  // official documentation to prove that. The only one I can find is that Shaka
+  // player mentions the clear lead feature. So we expect L3 should have that as
+  // well. But for HWDRM, Widevine L1 and SL3000 needs to rely on special checks
+  // to know whether clearlead is supported. That will be implemented by
+  // querying for special key system names.
+  // https://shaka-project.github.io/shaka-packager/html/documentation.html
+#ifdef MOZ_WMF_CDM
+  // TODO : implement new key system for PlayReady.
+  if (aKeySystem.EqualsLiteral(kWidevineExperiment2KeySystemName)) {
+    return true;
+  }
+#endif
+  return aKeySystem.EqualsLiteral(kWidevineKeySystemName);
+}
+
 }  // namespace mozilla
