@@ -4,15 +4,20 @@
 
 import os
 import re
+import sys
+from pathlib import Path
 
 from marionette_driver import Wait
-from marionette_harness import MarionetteTestCase
+
+sys.path.append(os.fspath(Path(__file__).parents[3] / "quota/test/marionette"))
+
+from quota_test_case import QuotaTestCase
 
 INDEXED_DB_PBM_PREF = "dom.indexedDB.privateBrowsing.enabled"
 QM_TESTING_PREF = "dom.quotaManager.testing"
 
 
-class IDBEncryptionPBM(MarionetteTestCase):
+class IDBEncryptionPBM(QuotaTestCase):
 
     """
     Bug1784966: Ensure IDB data gets encrypted in Private Browsing Mode.
@@ -114,7 +119,7 @@ class IDBEncryptionPBM(MarionetteTestCase):
             return self.idbStoragePath
 
         fullOriginMetadata = self.getFullOriginMetadata(
-            self.marionette.absolute_url("")[:-1] + "^privateBrowsingId=1"
+            "private", self.marionette.absolute_url("")[:-1] + "^privateBrowsingId=1"
         )
 
         storageOrigin = fullOriginMetadata["storageOrigin"]
@@ -128,38 +133,6 @@ class IDBEncryptionPBM(MarionetteTestCase):
 
         print("idb origin directory = " + self.idbStoragePath)
         return self.idbStoragePath
-
-    def getFullOriginMetadata(self, origin):
-        with self.marionette.using_context("chrome"):
-            res = self.marionette.execute_async_script(
-                """
-                    const [url, resolve] = arguments;
-
-                    function getOrigin() {
-                        return new Promise((resolve, reject) => {
-                            let context = "private"
-                            let principal = Services.scriptSecurityManager.
-                                createContentPrincipalFromOrigin(url);
-
-                            let qms = Services.qms;
-                            let req = qms.getFullOriginMetadata(context, principal);
-                            req.callback = () => {
-                                if (req.resultCode != 0) reject("Error!");
-                                resolve(req.result);
-                            };
-                        });
-                    }
-
-                    return getOrigin()
-                        .then((result) => resolve(result))
-                        .catch((error) => resolve(null));
-                """,
-                script_args=(origin,),
-                new_sandbox=False,
-            )
-
-            assert res is not None
-            return res
 
     def findDirObj(self, path, pattern, isFile):
         for obj in os.scandir(path):
