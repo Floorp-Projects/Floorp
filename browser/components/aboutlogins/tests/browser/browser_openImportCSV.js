@@ -366,9 +366,9 @@ add_task(async function test_open_import_all_four_detailed_report() {
       Assert.equal(errors, 1, "It should have one item as error");
       Assert.deepEqual(
         [
-          "about-logins-import-report-row-description-added",
-          "about-logins-import-report-row-description-modified",
-          "about-logins-import-report-row-description-no-change",
+          "about-logins-import-report-row-description-added2",
+          "about-logins-import-report-row-description-modified2",
+          "about-logins-import-report-row-description-no-change2",
           "about-logins-import-report-row-description-error-missing-field",
         ],
         rows,

@@ -33,17 +33,17 @@ function importReportDataHandler(event) {
       }
       document.l10n.setAttributes(
         detailedNewCount,
-        "about-logins-import-report-added",
+        "about-logins-import-report-added2",
         { count: report.added }
       );
       document.l10n.setAttributes(
         detailedExitingCount,
-        "about-logins-import-report-modified",
+        "about-logins-import-report-modified2",
         { count: report.modified }
       );
       document.l10n.setAttributes(
         detailedDuplicateCount,
-        "about-logins-import-report-no-change",
+        "about-logins-import-report-no-change2",
         { count: report.no_change }
       );
       document.l10n.setAttributes(

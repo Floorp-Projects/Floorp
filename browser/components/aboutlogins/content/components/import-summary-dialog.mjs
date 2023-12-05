@@ -39,17 +39,17 @@ export default class ImportSummaryDialog extends HTMLElement {
     this._updateCount(
       report.added,
       this._added,
-      "about-logins-import-dialog-items-added"
+      "about-logins-import-dialog-items-added2"
     );
     this._updateCount(
       report.modified,
       this._modified,
-      "about-logins-import-dialog-items-modified"
+      "about-logins-import-dialog-items-modified2"
     );
     this._updateCount(
       report.no_change,
       this._noChange,
-      "about-logins-import-dialog-items-no-change"
+      "about-logins-import-dialog-items-no-change2"
     );
     this._updateCount(
       report.error,
