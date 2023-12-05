@@ -5,12 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # The gkcodecs library contains code from third-party libraries implementing
-# encoding an decoding for particular audio codecs.
+# encoding an decoding for particular audio and video codecs.
 #
 # They are compiled in a separate shared library to be able to be available
 # both from libxul (when decoding using the codec integration layer Gecko
-# provides) and from ffmpeg (when decoding trough ffmpeg).
+# provides) and from ffmpeg (when decoding and encoding through ffmpeg).
 
 GeckoSharedLibrary("gkcodecs", linkage=None)
 SHARED_LIBRARY_NAME = "gkcodecs"
 SYMBOLS_FILE = "gkcodecs.symbols"
+if CONFIG["MOZ_SYSTEM_LIBVPX"]:
+    DEFINES["MOZ_SYSTEM_LIBVPX"] = True

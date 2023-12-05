@@ -7,6 +7,7 @@
 #include "VPXDecoder.h"
 
 #include <algorithm>
+#include <vpx/vpx_image.h>
 
 #include "BitReader.h"
 #include "BitWriter.h"
@@ -22,7 +23,6 @@
 #include "PerformanceRecorder.h"
 #include "prsystem.h"
 #include "VideoUtils.h"
-#include "vpx/vpx_image.h"
 
 #undef LOG
 #define LOG(arg, ...)                                                  \
