@@ -67,6 +67,7 @@ var gSearchPane = {
 
     let suggestsPref = Preferences.get("browser.search.suggest.enabled");
     let urlbarSuggestsPref = Preferences.get("browser.urlbar.suggest.searches");
+    let searchBarPref = Preferences.get("browser.search.widget.inNavBar");
     let privateSuggestsPref = Preferences.get(
       "browser.search.suggest.enabled.private"
     );
@@ -74,9 +75,16 @@ var gSearchPane = {
       this._updateSuggestionCheckboxes.bind(this);
     suggestsPref.on("change", updateSuggestionCheckboxes);
     urlbarSuggestsPref.on("change", updateSuggestionCheckboxes);
+    searchBarPref.on("change", updateSuggestionCheckboxes);
     let urlbarSuggests = document.getElementById("urlBarSuggestion");
     urlbarSuggests.addEventListener("command", () => {
       urlbarSuggestsPref.value = urlbarSuggests.checked;
+    });
+    let suggestionsInSearchFieldsCheckbox = document.getElementById(
+      "suggestionsInSearchFieldsCheckbox"
+    );
+    suggestionsInSearchFieldsCheckbox.addEventListener("command", () => {
+      urlbarSuggestsPref.value = suggestionsInSearchFieldsCheckbox.checked;
     });
     let privateWindowCheckbox = document.getElementById(
       "showSearchSuggestionsPrivateWindows"
@@ -182,14 +190,21 @@ var gSearchPane = {
       "browser.privatebrowsing.autostart"
     );
     let urlbarSuggests = document.getElementById("urlBarSuggestion");
+    let suggestionsInSearchFieldsCheckbox = document.getElementById(
+      "suggestionsInSearchFieldsCheckbox"
+    );
     let positionCheckbox = document.getElementById(
       "showSearchSuggestionsFirstCheckbox"
     );
     let privateWindowCheckbox = document.getElementById(
       "showSearchSuggestionsPrivateWindows"
     );
+    let urlbarSuggestsPref = Preferences.get("browser.urlbar.suggest.searches");
+    let searchBarPref = Preferences.get("browser.search.widget.inNavBar");
 
     urlbarSuggests.disabled = !suggestsPref.value || permanentPB;
+    urlbarSuggests.hidden = !searchBarPref.value;
+
     privateWindowCheckbox.disabled = !suggestsPref.value;
     privateWindowCheckbox.checked = Preferences.get(
       "browser.search.suggest.enabled.private"
@@ -198,12 +213,10 @@ var gSearchPane = {
       privateWindowCheckbox.checked = false;
     }
 
-    let urlbarSuggestsPref = Preferences.get("browser.urlbar.suggest.searches");
     urlbarSuggests.checked = urlbarSuggestsPref.value;
     if (urlbarSuggests.disabled) {
       urlbarSuggests.checked = false;
     }
-
     if (urlbarSuggests.checked) {
       positionCheckbox.disabled = false;
       // Update the checked state of the show-suggestions-first checkbox.  Note
@@ -214,6 +227,13 @@ var gSearchPane = {
     } else {
       positionCheckbox.disabled = true;
       positionCheckbox.checked = false;
+    }
+    if (
+      suggestionsInSearchFieldsCheckbox.checked &&
+      !searchBarPref.value &&
+      !urlbarSuggests.checked
+    ) {
+      urlbarSuggestsPref.value = true;
     }
 
     let permanentPBLabel = document.getElementById(
