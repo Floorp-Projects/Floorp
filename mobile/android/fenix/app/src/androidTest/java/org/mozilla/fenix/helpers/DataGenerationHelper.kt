@@ -22,6 +22,8 @@ import org.junit.Assert
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.utils.IntentUtils
+import java.time.LocalDate
+import java.time.LocalTime
 
 object DataGenerationHelper {
     val appContext: Context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -73,6 +75,33 @@ object DataGenerationHelper {
         val clipData = ClipData.newPlainText("label", message)
 
         clipBoard.setPrimaryClip(clipData)
+    }
+
+    /**
+     * Returns the date and time placeholder used in sponsored Fx suggest links.
+     */
+    fun getSponsoredFxSuggestPlaceHolder(): String {
+        val currentDate = LocalDate.now()
+        val currentTime = LocalTime.now()
+        val currentDay = currentDate.dayOfMonth
+        val currentMonth = currentDate.monthValue
+        val currentYear = currentDate.year
+        val currentHour = currentTime.hour
+        var placeholder: String
+
+        if (currentMonth < 10 && currentDay < 10 && currentHour < 10) {
+            placeholder = "$currentYear" + "0" + "$currentMonth" + "0" + "$currentDay" + "0" + "$currentHour"
+        } else if (currentMonth < 10 && currentDay < 10) {
+            placeholder = "$currentYear" + "0" + "$currentMonth" + "0" + "$currentDay$currentHour"
+        } else if (currentMonth < 10 && currentHour < 10) {
+            placeholder = "$currentYear" + "0" + "$currentMonth" + "$currentDay" + "0" + "$currentHour"
+        } else if (currentDay < 10 && currentHour < 10) {
+            placeholder = "$currentYear$currentMonth" + "0" + "$currentDay" + "0" + "$currentHour"
+        } else {
+            placeholder = "$currentYear$currentMonth$currentDay$currentHour"
+        }
+
+        return placeholder
     }
 
     /**

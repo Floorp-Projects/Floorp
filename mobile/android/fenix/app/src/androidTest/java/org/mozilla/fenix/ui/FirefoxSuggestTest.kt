@@ -9,7 +9,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.helpers.AppAndSystemHelper
+import org.mozilla.fenix.helpers.AppAndSystemHelper.runWithCondition
+import org.mozilla.fenix.helpers.DataGenerationHelper.getSponsoredFxSuggestPlaceHolder
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -20,6 +21,7 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
  */
 
 class FirefoxSuggestTest {
+
     @get:Rule
     val activityTestRule = AndroidComposeTestRule(
         HomeActivityTestRule(
@@ -33,22 +35,86 @@ class FirefoxSuggestTest {
         ),
     ) { it.activity }
 
+    private val sponsoredKeyWords: Map<String, List<String>> =
+        mapOf(
+            "Amazon" to
+                listOf(
+                    "Amazon.com - Official Site",
+                    "amazon.com/?tag=admarketus-20&ref=pd_sl_924ab4435c5a5c23aa2804307ee0669ab36f88caee841ce51d1f2ecb&mfadid=adm",
+                ),
+            "Nike" to
+                listOf(
+                    "Nike.com - Official Site",
+                    "nike.com/?cp=16423867261_search_318370984us128${getSponsoredFxSuggestPlaceHolder()}&mfadid=adm",
+                ),
+            "Macy" to listOf(
+                "macys.com - Official Site",
+                "macys.com/?cm_mmc=Google_AdMarketPlace-_-Privacy_Instant%20Suggest-_-319101130_Broad-_-kclickid__kenshoo_clickid_&m_sc=sem&m_sb=Admarketplace&m_tp=Search&m_ac=Admarketplace&m_ag=Instant%20Suggest&m_cn=Privacy&m_pi=kclickid__kenshoo_clickid__319101130us1201${getSponsoredFxSuggestPlaceHolder()}&mfadid=adm",
+            ),
+            "Spanx" to listOf(
+                "SPANX® -  Official Site",
+                "spanx.com/?utm_source=admarketplace&utm_medium=cpc&utm_campaign=privacy&utm_content=319093361us1202${getSponsoredFxSuggestPlaceHolder()}&mfadid=adm",
+            ),
+            "Bloom" to listOf(
+                "Bloomingdales.com - Official Site",
+                "bloomingdales.com/?cm_mmc=Admarketplace-_-Privacy-_-Privacy-_-privacy%20instant%20suggest-_-319093353us1228${getSponsoredFxSuggestPlaceHolder()}-_-kclickid__kenshoo_clickid_&mfadid=adm",
+            ),
+            "Groupon" to listOf(
+                "groupon.com - Discover & Save!",
+                "groupon.com/?utm_source=google&utm_medium=cpc&utm_campaign=us_dt_sea_ggl_txt_smp_sr_cbp_ch1_nbr_k*{keyword}_m*{match-type}_d*ADMRKT_319093357us1279${getSponsoredFxSuggestPlaceHolder()}&mfadid=adm",
+            ),
+        )
+
+    private val sponsoredKeyWord = sponsoredKeyWords.keys.random()
+
+    private val nonSponsoredKeyWords: Map<String, List<String>> =
+        mapOf(
+            "Marvel" to
+                listOf(
+                    "Wikipedia - Marvel Cinematic Universe",
+                    "wikipedia.org/wiki/Marvel_Cinematic_Universe",
+                ),
+            "Apple" to
+                listOf(
+                    "Wikipedia - Apple Inc.",
+                    "wikipedia.org/wiki/Apple_Inc",
+                ),
+            "Africa" to listOf(
+                "Wikipedia - African Union",
+                "wikipedia.org/wiki/African_Union",
+            ),
+            "Ultimate" to listOf(
+                "Wikipedia - Ultimate Fighting Championship",
+                "wikipedia.org/wiki/Ultimate_Fighting_Championship",
+            ),
+            "Youtube" to listOf(
+                "Wikipedia - YouTube",
+                "wikipedia.org/wiki/YouTube",
+            ),
+            "Fifa" to listOf(
+                "Wikipedia - FIFA World Cup",
+                "en.m.wikipedia.org/wiki/FIFA_World_Cup",
+            ),
+        )
+
+    private val nonSponsoredKeyWord = nonSponsoredKeyWords.keys.random()
+
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2348361
     @SmokeTest
     @Test
     fun verifyFirefoxSuggestSponsoredSearchResultsTest() {
-        AppAndSystemHelper.runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
+        runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
             navigationToolbar {
             }.clickUrlbar {
-                typeSearch(searchTerm = "Amazon")
+                typeSearch(searchTerm = sponsoredKeyWord)
                 verifySearchEngineSuggestionResults(
                     rule = activityTestRule,
                     searchSuggestions = arrayOf(
                         "Firefox Suggest",
-                        "Amazon.com - Official Site",
+                        sponsoredKeyWords.getValue(sponsoredKeyWord)[0],
                         "Sponsored",
                     ),
-                    searchTerm = "Amazon",
+                    searchTerm = sponsoredKeyWord,
                 )
             }
         }
@@ -57,18 +123,18 @@ class FirefoxSuggestTest {
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2348362
     @Test
     fun verifyFirefoxSuggestSponsoredSearchResultsWithPartialKeywordTest() {
-        AppAndSystemHelper.runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
+        runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
             navigationToolbar {
             }.clickUrlbar {
-                typeSearch(searchTerm = "Amaz")
+                typeSearch(searchTerm = sponsoredKeyWord.dropLast(1))
                 verifySearchEngineSuggestionResults(
                     rule = activityTestRule,
                     searchSuggestions = arrayOf(
                         "Firefox Suggest",
-                        "Amazon.com - Official Site",
+                        sponsoredKeyWords.getValue(sponsoredKeyWord)[0],
                         "Sponsored",
                     ),
-                    searchTerm = "Amaz",
+                    searchTerm = sponsoredKeyWord.dropLast(1),
                 )
             }
         }
@@ -77,24 +143,21 @@ class FirefoxSuggestTest {
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2348363
     @Test
     fun openFirefoxSuggestSponsoredSearchResultsTest() {
-        AppAndSystemHelper.runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
+        runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
             navigationToolbar {
             }.clickUrlbar {
-                typeSearch(searchTerm = "Amazon")
+                typeSearch(searchTerm = sponsoredKeyWord)
                 verifySearchEngineSuggestionResults(
                     rule = activityTestRule,
                     searchSuggestions = arrayOf(
                         "Firefox Suggest",
-                        "Amazon.com - Official Site",
+                        sponsoredKeyWords.getValue(sponsoredKeyWord)[0],
                         "Sponsored",
                     ),
-                    searchTerm = "Amazon",
+                    searchTerm = sponsoredKeyWord,
                 )
-            }.clickSearchSuggestion("Amazon.com - Official Site") {
-                waitForPageToLoad()
-                verifyUrl(
-                    "amazon.com/?tag=admarketus-20&ref=pd_sl_924ab4435c5a5c23aa2804307ee0669ab36f88caee841ce51d1f2ecb&mfadid=adm",
-                )
+            }.clickSearchSuggestion(sponsoredKeyWords.getValue(sponsoredKeyWord)[0]) {
+                verifyUrl(sponsoredKeyWords.getValue(sponsoredKeyWord)[1])
                 verifyTabCounter("1")
             }
         }
@@ -103,21 +166,21 @@ class FirefoxSuggestTest {
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2348369
     @Test
     fun verifyFirefoxSuggestSponsoredSearchResultsWithEditedKeywordTest() {
-        AppAndSystemHelper.runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
+        runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
             navigationToolbar {
             }.clickUrlbar {
-                typeSearch(searchTerm = "Amazon")
-                deleteSearchKeywordCharacters(numberOfDeletionSteps = 3)
+                typeSearch(searchTerm = sponsoredKeyWord)
+                deleteSearchKeywordCharacters(numberOfDeletionSteps = 1)
                 verifySearchEngineSuggestionResults(
                     rule = activityTestRule,
                     searchSuggestions = arrayOf(
                         "Firefox Suggest",
-                        "Amazon.com - Official Site",
+                        sponsoredKeyWords.getValue(sponsoredKeyWord)[0],
                         "Sponsored",
                     ),
-                    searchTerm = "Amazon",
+                    searchTerm = sponsoredKeyWord,
                     shouldEditKeyword = true,
-                    numberOfDeletionSteps = 3,
+                    numberOfDeletionSteps = 1,
                 )
             }
         }
@@ -127,17 +190,17 @@ class FirefoxSuggestTest {
     @SmokeTest
     @Test
     fun verifyFirefoxSuggestNonSponsoredSearchResultsTest() {
-        AppAndSystemHelper.runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
+        runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
             navigationToolbar {
             }.clickUrlbar {
-                typeSearch(searchTerm = "Marvel")
+                typeSearch(searchTerm = nonSponsoredKeyWord)
                 verifySearchEngineSuggestionResults(
                     rule = activityTestRule,
                     searchSuggestions = arrayOf(
                         "Firefox Suggest",
-                        "Wikipedia - Marvel Cinematic Universe",
+                        nonSponsoredKeyWords.getValue(nonSponsoredKeyWord)[0],
                     ),
-                    searchTerm = "Marvel",
+                    searchTerm = nonSponsoredKeyWord,
                 )
                 verifySuggestionsAreNotDisplayed(
                     rule = activityTestRule,
@@ -152,17 +215,17 @@ class FirefoxSuggestTest {
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2348375
     @Test
     fun verifyFirefoxSuggestNonSponsoredSearchResultsWithPartialKeywordTest() {
-        AppAndSystemHelper.runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
+        runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
             navigationToolbar {
             }.clickUrlbar {
-                typeSearch(searchTerm = "Marv")
+                typeSearch(searchTerm = nonSponsoredKeyWord.dropLast(1))
                 verifySearchEngineSuggestionResults(
                     rule = activityTestRule,
                     searchSuggestions = arrayOf(
                         "Firefox Suggest",
-                        "Wikipedia - Marvel Cinematic Universe",
+                        nonSponsoredKeyWords.getValue(nonSponsoredKeyWord)[0],
                     ),
-                    searchTerm = "Marv",
+                    searchTerm = nonSponsoredKeyWord.dropLast(1),
                 )
             }
         }
@@ -171,23 +234,21 @@ class FirefoxSuggestTest {
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2348376
     @Test
     fun openFirefoxSuggestNonSponsoredSearchResultsTest() {
-        AppAndSystemHelper.runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
+        runWithCondition(TestHelper.appContext.settings().enableFxSuggest) {
             navigationToolbar {
             }.clickUrlbar {
-                typeSearch(searchTerm = "Marvel")
+                typeSearch(searchTerm = nonSponsoredKeyWord)
                 verifySearchEngineSuggestionResults(
                     rule = activityTestRule,
                     searchSuggestions = arrayOf(
                         "Firefox Suggest",
-                        "Wikipedia - Marvel Cinematic Universe",
+                        nonSponsoredKeyWords.getValue(nonSponsoredKeyWord)[0],
                     ),
-                    searchTerm = "Marvel",
+                    searchTerm = nonSponsoredKeyWord,
                 )
-            }.clickSearchSuggestion("Wikipedia - Marvel Cinematic Universe") {
+            }.clickSearchSuggestion(nonSponsoredKeyWords.getValue(nonSponsoredKeyWord)[0]) {
                 waitForPageToLoad()
-                verifyUrl(
-                    "wikipedia.org/wiki/Marvel_Cinematic_Universe",
-                )
+                verifyUrl(nonSponsoredKeyWords.getValue(nonSponsoredKeyWord)[1])
             }
         }
     }
