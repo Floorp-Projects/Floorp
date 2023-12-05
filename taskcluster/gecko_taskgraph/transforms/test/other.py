@@ -335,39 +335,39 @@ def setup_browsertime(config, tasks):
 
         cd_fetches = {
             "android.*": [
-                "linux64-chromedriver-117",
                 "linux64-chromedriver-118",
                 "linux64-chromedriver-119",
+                "linux64-chromedriver-120",
             ],
             "linux.*": [
-                "linux64-chromedriver-117",
                 "linux64-chromedriver-118",
                 "linux64-chromedriver-119",
+                "linux64-chromedriver-120",
             ],
             "macosx1015.*": [
-                "mac64-chromedriver-117",
                 "mac64-chromedriver-118",
                 "mac64-chromedriver-119",
+                "mac64-chromedriver-120",
             ],
             "macosx1300.*": [
-                "mac-arm-chromedriver-117",
                 "mac-arm-chromedriver-118",
                 "mac-arm-chromedriver-119",
+                "mac-arm-chromedriver-120",
             ],
             "windows.*aarch64.*": [
-                "win32-chromedriver-117",
                 "win32-chromedriver-118",
                 "win32-chromedriver-119",
+                "win32-chromedriver-120",
             ],
             "windows.*-32.*": [
-                "win32-chromedriver-117",
                 "win32-chromedriver-118",
                 "win32-chromedriver-119",
+                "win32-chromedriver-120",
             ],
             "windows.*-64.*": [
-                "win32-chromedriver-117",
                 "win32-chromedriver-118",
                 "win32-chromedriver-119",
+                "win32-chromedriver-120",
             ],
         }
 
