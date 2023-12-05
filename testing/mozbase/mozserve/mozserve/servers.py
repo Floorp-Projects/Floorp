@@ -107,6 +107,21 @@ class Http3Server(object):
             # tell us it's started
             msg = process.stdout.readline()
             self._log.info("mozserve | http3 server msg: %s" % msg)
+            name = "http3server"
+            t1 = Thread(
+                target=self.read_streams,
+                args=(name, process, process.stdout),
+                daemon=True
+            )
+            t1.start()
+            t2 = Thread(
+                target=self.read_streams,
+                args=(name, process, process.stderr),
+                daemon=True
+            )
+            t2.start()
+            self.outthread = t1
+            self.errthread = t2
             if "server listening" in msg:
                 searchObj = re.search(
                     r"HTTP3 server listening on ports ([0-9]+), ([0-9]+), ([0-9]+), ([0-9]+) and ([0-9]+)."
@@ -121,21 +136,8 @@ class Http3Server(object):
                     self._ports["MOZHTTP3_PORT_PROXY"] = searchObj.group(4)
                     self._ports["MOZHTTP3_PORT_NO_RESPONSE"] = searchObj.group(5)
                     self._echConfig = searchObj.group(6)
-                name = "http3server"
-                t1 = Thread(
-                    target=self.read_streams,
-                    args=(name, process, process.stdout),
-                    daemon=True,
-                )
-                t1.start()
-                t2 = Thread(
-                    target=self.read_streams,
-                    args=(name, process, process.stderr),
-                    daemon=True,
-                )
-                t2.start()
-                self.outthread = t1
-                self.errthread = t2
+            else:
+                self._log.error("http3server failed to start?")
         except OSError as e:
             # This occurs if the subprocess couldn't be started
             self._log.error("Could not run the http3 server: %s" % (str(e)))
