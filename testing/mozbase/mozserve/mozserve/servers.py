@@ -103,13 +103,13 @@ class Http3Server(object):
             t1 = Thread(
                 target=self.read_streams,
                 args=(name, process, process.stdout),
-                daemon=True
+                daemon=True,
             )
             t1.start()
             t2 = Thread(
                 target=self.read_streams,
                 args=(name, process, process.stderr),
-                daemon=True
+                daemon=True,
             )
             t2.start()
             if "server listening" in msg:
