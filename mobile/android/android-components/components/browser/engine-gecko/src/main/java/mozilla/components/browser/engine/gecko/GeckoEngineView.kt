@@ -96,6 +96,27 @@ class GeckoEngineView @JvmOverloads constructor(
 
     init {
         addView(geckoView)
+
+        /**
+         * With the current design, we have a [NestedGeckoView] inside this
+         * [GeckoEngineView]. In our supported embedders, we wrap this with the
+         * AndroidX `SwipeRefreshLayout` to enable features like Pull-To-Refresh:
+         *
+         * ```
+         *  SwipeRefreshLayout
+         * └── GeckoEngineView
+         *    └── NestedGeckoView
+         * ```
+         *
+         * `SwipeRefreshLayout` only looks at the direct child to see if it has nested scrolling
+         * enabled. As we embed [NestedGeckoView] inside [GeckoEngineView], we change the hierarchy
+         * so that [NestedGeckoView] is no longer the direct child of `SwipeRefreshLayout`.
+         *
+         * To fix this we enable nested scrolling on the GeckoEngineView to emulate this
+         * information. This is required information for `View.requestDisallowInterceptTouchEvent`
+         * to work correctly in the [NestedGeckoView].
+         */
+        isNestedScrollingEnabled = true
     }
 
     /**
