@@ -8,6 +8,7 @@
 #define DOM_WAKELOCKSENTINEL_H_
 
 #include "js/TypeDecls.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/WakeLockBinding.h"
 
@@ -25,7 +26,10 @@ class WakeLockSentinel final : public DOMEventTargetHelper {
       : DOMEventTargetHelper(aOwnerWindow), mType(aType) {}
 
  protected:
-  ~WakeLockSentinel() = default;
+  ~WakeLockSentinel() {
+    MOZ_DIAGNOSTIC_ASSERT(mReleased);
+    MOZ_DIAGNOSTIC_ASSERT(!mHoldsActualLock);
+  }
 
  public:
   JSObject* WrapObject(JSContext* aCx,
@@ -36,12 +40,35 @@ class WakeLockSentinel final : public DOMEventTargetHelper {
   WakeLockType Type() const { return mType; }
 
   MOZ_CAN_RUN_SCRIPT
-  already_AddRefed<Promise> ReleaseLock();
+  already_AddRefed<Promise> ReleaseLock(ErrorResult& aRv);
+
+  MOZ_CAN_RUN_SCRIPT
+  void NotifyLockReleased();
 
   IMPL_EVENT_HANDLER(release);
 
+  // Acquire underlying system wake lock by modifying the HAL wake lock counter
+  void AcquireActualLock();
+
  private:
   WakeLockType mType;
+
+  bool mReleased = false;
+
+  /**
+   * To avoid user fingerprinting, WakeLockJS::Request will provide a
+   * WakeLockSentinel even if the lock type is not applicable or cannot be
+   * obtained.
+   * But when releasing this sentinel, we have to know whether
+   * AcquireActualLock was called.
+   *
+   * https://w3c.github.io/screen-wake-lock/#dfn-applicable-wake-lock
+   * https://w3c.github.io/screen-wake-lock/#the-request-method
+   */
+  bool mHoldsActualLock = false;
+
+  // Time when this object was created / the wake lock acquired.
+  TimeStamp mAcquireTime;
 };
 
 }  // namespace mozilla::dom
