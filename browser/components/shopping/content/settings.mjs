@@ -83,6 +83,10 @@ class ShoppingSettings extends MozLitElement {
         rel="stylesheet"
         href="chrome://browser/content/shopping/settings.css"
       />
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/shopping/shopping-page.css"
+      />
       <shopping-card
         data-l10n-id="shopping-settings-label"
         data-l10n-attrs="label"
@@ -91,6 +95,7 @@ class ShoppingSettings extends MozLitElement {
         <div id="shopping-settings-wrapper" slot="content">
           ${toggleMarkup}
           <button
+            class="shopping-button"
             id="shopping-settings-opt-out-button"
             data-l10n-id="shopping-settings-opt-out-button"
             @click=${this.onDisableShopping}

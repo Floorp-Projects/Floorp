@@ -66,7 +66,7 @@ class ShoppingMessageBar extends MozLitElement {
         ></span>
         <button
           id="message-bar-reanalysis-button"
-          class="small-button"
+          class="small-button shopping-button"
           data-l10n-id="shopping-message-bar-warning-stale-analysis-button"
           @click=${this.onClickAnalysisButton}
         ></button>
@@ -101,7 +101,7 @@ class ShoppingMessageBar extends MozLitElement {
       <button
         slot="actions"
         id="message-bar-report-product-available-btn"
-        class="small-button"
+        class="small-button shopping-button"
         data-l10n-id="shopping-message-bar-warning-product-not-available-button2"
         @click=${this.onClickProductAvailable}
       ></button>
@@ -204,6 +204,10 @@ class ShoppingMessageBar extends MozLitElement {
         <link
           rel="stylesheet"
           href="chrome://browser/content/shopping/shopping-message-bar.css"
+        />
+        <link
+          rel="stylesheet"
+          href="chrome://browser/content/shopping/shopping-page.css"
         />
         ${messageBarTemplate}
       `;

@@ -7,3 +7,22 @@
   background-color: var(--shopping-header-background);
   font: menu;
 }
+
+@media (prefers-contrast) {
+  button.shopping-button:enabled,
+  button.ghost-button:not(.semi-transparent):enabled {
+    background-color: ButtonFace;
+    border-color: ButtonText;
+    color: ButtonText;
+
+    &:hover {
+      background-color: SelectedItemText;
+      border-color: SelectedItem;
+      color: SelectedItem;
+    }
+
+    &:hover:active {
+      border-color: ButtonText;
+    }
+  }
+}

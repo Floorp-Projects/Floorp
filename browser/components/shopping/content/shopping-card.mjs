@@ -76,7 +76,7 @@ class ShoppingCard extends MozLitElement {
           <footer>
             <button
               aria-controls="content"
-              class="small-button"
+              class="small-button shopping-button"
               data-l10n-id="shopping-show-more-button"
               @click=${this.handleShowMoreButtonClick}
             ></button>
@@ -135,6 +135,10 @@ class ShoppingCard extends MozLitElement {
       <link
         rel="stylesheet"
         href="chrome://browser/content/shopping/shopping-card.css"
+      />
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/shopping/shopping-page.css"
       />
       <article
         class="shopping-card"

@@ -310,7 +310,7 @@ export class ShoppingContainer extends MozLitElement {
           </header>
           <button
             id="close-button"
-            class="ghost-button"
+            class="ghost-button shopping-button"
             data-l10n-id="shopping-close-button"
             @click=${this.handleClick}
           ></button>
