@@ -21,6 +21,8 @@ const PREFS = {
   SEND_MORE_INFO: "ui.new-webcompat-reporter.send-more-info-link",
   NEW_REPORT_ENDPOINT: "ui.new-webcompat-reporter.new-report-endpoint",
   REPORT_SITE_ISSUE_ENABLED: "extensions.webcompat-reporter.enabled",
+  PREFERS_CONTRAST_ENABLED: "layout.css.prefers-contrast.enabled",
+  USE_ACCESSIBILITY_THEME: "ui.useAccessibilityTheme",
 };
 
 function add_common_setup() {
