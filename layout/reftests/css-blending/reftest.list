@@ -24,13 +24,13 @@ fuzzy-if(azureSkia||gtkWidget,0-2,0-9600) fuzzy-if(appleSilicon,0-1,0-11200) fuz
 == background-blending-darken.html background-blending-darken-ref.svg
 == background-blending-difference.html background-blending-difference-ref.svg
 fuzzy(0-1,0-1600) == background-blending-exclusion.html background-blending-exclusion-ref.svg
-fuzzy-if(cocoaWidget||d2d||swgl||/^Windows\x20NT\x206\.1/.test(http.oscpu),0-1,0-1600) == background-blending-hard-light.html background-blending-hard-light-ref.svg
+fuzzy-if(cocoaWidget||d2d||swgl,0-1,0-1600) == background-blending-hard-light.html background-blending-hard-light-ref.svg
 fuzzy-if(d2d,0-1,0-9600) fuzzy-if(azureSkia||gtkWidget,0-1,0-11200) fuzzy-if(!geckoview,1-1,9600-11240) == background-blending-hue.html background-blending-hue-ref.svg
 == background-blending-lighten.html background-blending-lighten-ref.svg
 fuzzy-if(d2d,0-1,0-8000) fuzzy-if(azureSkia||gtkWidget,0-2,0-9600) fuzzy-if(appleSilicon,0-1,0-11200) fuzzy-if(swgl&&!Android,1-1,8000-9600) == background-blending-luminosity.html background-blending-luminosity-ref.svg
 fuzzy(0-1,0-1600) == background-blending-multiply.html background-blending-multiply-ref.svg
 == background-blending-normal.html background-blending-normal-ref.svg
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||azureSkia||gtkWidget,0-1,0-1600) == background-blending-overlay.html background-blending-overlay-ref.svg
+fuzzy-if(azureSkia||gtkWidget,0-1,0-1600) == background-blending-overlay.html background-blending-overlay-ref.svg
 fuzzy-if(d2d,0-1,0-3200) fuzzy-if(azureSkia||gtkWidget,0-2,0-12800) == background-blending-saturation.html background-blending-saturation-ref.svg
 fuzzy-if(d2d||azureSkia||gtkWidget,0-1,0-1600) == background-blending-screen.html background-blending-screen-ref.svg
 fuzzy-if(d2d||azureSkia||gtkWidget,0-10,0-4800) == background-blending-soft-light.html background-blending-soft-light-ref.svg

@@ -162,7 +162,7 @@ fuzzy(0-255,0-10) == img-novb-width-slice-1.html img-novb-width-all-1-ref.html
 == img-fragment-2b.html  img-fragment-2-ref.html
 == img-fragment-2c.html  img-fragment-2-ref.html
 
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),0-8,0-1) == list-simple-1.html list-simple-1-ref.html
+== list-simple-1.html list-simple-1-ref.html
 
 == svg-image-simple-1.svg lime100x100.svg
 == svg-image-simple-2.svg lime100x100.svg

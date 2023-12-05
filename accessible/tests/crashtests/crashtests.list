@@ -20,4 +20,4 @@ load 1838250.html
 
 # last_test_to_unload_testsuite.xhtml MUST be the last test in the list because it
 # is responsible for shutting down accessibility service affecting later tests.
-skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&/^aarch64-msvc/.test(xulRuntime.XPCOMABI)) load chrome://reftest/content/crashtests/accessible/tests/crashtests/last_test_to_unload_testsuite.xhtml
+load chrome://reftest/content/crashtests/accessible/tests/crashtests/last_test_to_unload_testsuite.xhtml

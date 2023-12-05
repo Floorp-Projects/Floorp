@@ -5,7 +5,7 @@ random == bug-364968.html bug-364968-ref.html
 == mozsetimageelement-02.html about:blank
 == image-outside-document-invalidate.html about:blank
 == canvas-outside-document-invalidate-01.html about:blank
-fails-if(azureSkia&&!winWidget) fails-if(cocoaWidget) fails-if(remoteCanvas&&swgl&&winWidget) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),255-255,800000-800000) == canvas-outside-document-invalidate-02.html about:blank # See bug 666800
+fails-if(azureSkia&&!winWidget) fails-if(cocoaWidget) fails-if(remoteCanvas&&swgl&&winWidget) == canvas-outside-document-invalidate-02.html about:blank # See bug 666800
 #fails with Skia due to Skia bug http://code.google.com/p/skia/issues/detail?id=568
 fuzzy-if(winWidget,47-129,47-54) == element-paint-simple.html element-paint-simple-ref.html
 == element-paint-repeated.html element-paint-repeated-ref.html

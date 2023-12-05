@@ -122,4 +122,4 @@ random-if(cocoaWidget) == subsuper-nofallback.html subsuper-nofallback-ref2.html
 == subsuper-fallback-size.html subsuper-fallback-size-ref.html
 
 # GPOS spacing adjustments in vertical mode -- subsetted opentype/cff test font fails to load on Win7
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),255-255,3200-3200) fuzzy-if(winWidget&&!swgl&&!/^Windows\x20NT\x206\.1/.test(http.oscpu),0-1,0-70) == 1376231-vertical-gpos-adjustments.html 1376231-vertical-gpos-adjustments-ref.html
+fuzzy-if(winWidget&&!swgl,0-1,0-70) == 1376231-vertical-gpos-adjustments.html 1376231-vertical-gpos-adjustments-ref.html

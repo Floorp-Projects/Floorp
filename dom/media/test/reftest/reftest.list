@@ -1,14 +1,14 @@
 skip-if(Android) fuzzy-if(OSX,0-80,0-76800) fuzzy-if(appleSilicon,0-80,0-76800) fuzzy-if(winWidget,0-62,0-76799) fuzzy-if(swgl&&winWidget,0-63,0-1969) fuzzy-if(gtkWidget&&layersGPUAccelerated,0-70,0-2032) HTTP(..) == short.mp4.firstframe.html short.mp4.firstframe-ref.html
 skip-if(Android) fuzzy-if(OSX,0-87,0-76797) fuzzy-if(appleSilicon,0-87,0-76797) fuzzy-if(winWidget,0-60,0-76797) fuzzy-if(gtkWidget&&layersGPUAccelerated,0-60,0-6070) HTTP(..) == short.mp4.lastframe.html short.mp4.lastframe-ref.html
 skip-if(Android) skip-if(cocoaWidget) skip-if(winWidget) fuzzy-if(gtkWidget&&layersGPUAccelerated,0-57,0-4282) fuzzy-if(OSX,55-80,4173-4417) HTTP(..) == bipbop_300_215kbps.mp4.lastframe.html bipbop_300_215kbps.mp4.lastframe-ref.html
-skip-if(Android) fuzzy-if(OSX,0-25,0-175921) fuzzy-if(appleSilicon,34-34,40100-40100) fuzzy-if(winWidget,0-71,0-179198) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&/^aarch64-msvc/.test(xulRuntime.XPCOMABI),0-255,0-179500) HTTP(..) == gizmo.mp4.seek.html gizmo.mp4.55thframe-ref.html
+skip-if(Android) fuzzy-if(OSX,0-25,0-175921) fuzzy-if(appleSilicon,34-34,40100-40100) fuzzy-if(winWidget,0-71,0-179198) HTTP(..) == gizmo.mp4.seek.html gizmo.mp4.55thframe-ref.html
 # Bug 1758718
-skip-if(Android) skip-if(MinGW) skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&/^aarch64-msvc/.test(xulRuntime.XPCOMABI)) skip-if(OSX) fuzzy(0-10,0-778236) == image-10bits-rendering-video.html image-10bits-rendering-ref.html
-skip-if(Android) skip-if(MinGW) skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&/^aarch64-msvc/.test(xulRuntime.XPCOMABI)) fuzzy(0-10,0-778536) fuzzy-if(appleSilicon,0-37,0-699614) == image-10bits-rendering-90-video.html image-10bits-rendering-90-ref.html
+skip-if(Android) skip-if(MinGW) skip-if(OSX) fuzzy(0-10,0-778236) == image-10bits-rendering-video.html image-10bits-rendering-ref.html
+skip-if(Android) skip-if(MinGW) fuzzy(0-10,0-778536) fuzzy-if(appleSilicon,0-37,0-699614) == image-10bits-rendering-90-video.html image-10bits-rendering-90-ref.html
 # Bug 1758718
 skip-if(Android) fuzzy(0-27,0-573106) skip-if(OSX) == image-10bits-rendering-720-video.html image-10bits-rendering-720-ref.html
 skip-if(Android) fuzzy(0-31,0-573249) fuzzy-if(appleSilicon,0-37,0-543189) == image-10bits-rendering-720-90-video.html image-10bits-rendering-720-90-ref.html
-skip-if(Android) fuzzy(0-84,0-771156) fails-if(useDrawSnapshot) skip-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == uneven_frame_duration_video.html uneven_frame_duration_video-ref.html # Skip on Windows 7 as the resolution of the video is too high for test machines and will fail in the decoder.
+skip-if(Android) fuzzy(0-84,0-771156) fails-if(useDrawSnapshot) == uneven_frame_duration_video.html uneven_frame_duration_video-ref.html # Skip on Windows 7 as the resolution of the video is too high for test machines and will fail in the decoder.
 # Set media.dormant-on-pause-timeout-ms to avoid decoders becoming dormant and busting test, skip on android as test is too noisy and unstable
 skip-if(Android) pref(media.dormant-on-pause-timeout-ms,-1) fuzzy(0-20,0-500) == frame_order_mp4.html frame_order_mp4-ref.html
 skip-if(Android) fuzzy(0-30,0-270000) == incorrect_display_in_bytestream_vp8.html incorrect_display_in_bytestream_vp8-ref.html
