@@ -145,6 +145,7 @@ class DesktopPartnerRepacks(AutomationMixin, BaseScript, VirtualenvMixin, Secret
         }
         status = self.run_command(
             [
+                sys.executable,
                 repo,
                 "init",
                 "--no-repo-verify",
@@ -157,7 +158,7 @@ class DesktopPartnerRepacks(AutomationMixin, BaseScript, VirtualenvMixin, Secret
         if status:
             return status
         return self.run_command(
-            [repo, "sync", "--current-branch", "--no-tags"],
+            [sys.executable, repo, "sync", "--current-branch", "--no-tags"],
             cwd=self.query_abs_dirs()["abs_work_dir"],
             partial_env=partial_env,
         )
