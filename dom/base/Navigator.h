@@ -45,6 +45,7 @@ class Clipboard;
 class LockManager;
 class HTMLMediaElement;
 class AudioContext;
+class WakeLockJS;
 }  // namespace dom
 namespace webgpu {
 class Instance;
@@ -129,6 +130,7 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   bool GlobalPrivacyControl();
   Geolocation* GetGeolocation(ErrorResult& aRv);
   Promise* GetBattery(ErrorResult& aRv);
+  dom::WakeLockJS* WakeLock();
 
   bool CanShare(const ShareData& aData);
   already_AddRefed<Promise> Share(const ShareData& aData, ErrorResult& aRv);
@@ -300,6 +302,7 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   RefPtr<Promise> mSharePromise;  // Web Share API related
   RefPtr<dom::LockManager> mLocks;
   RefPtr<dom::UserActivation> mUserActivation;
+  RefPtr<dom::WakeLockJS> mWakeLock;
 };
 
 }  // namespace mozilla::dom
