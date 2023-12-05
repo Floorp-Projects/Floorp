@@ -74,6 +74,8 @@
     <string name="preferences_debug_settings_toolbar_redesign" translatable="false">Enable Toolbar Redesign incomplete portions</string>
     <!-- Label for enabling Felt Privacy -->
     <string name="preferences_debug_felt_privacy" translatable="false">Enable Felt Privacy</string>
+    <!-- Label for enabling the Debug Drawer -->
+    <string name="preferences_debug_settings_debug_drawer" translatable="false">Enable Debug Drawer</string>
 
     <!-- A secret menu option in the tabs tray for making a tab inactive for testing. -->
     <string name="inactive_tabs_menu_item">Make inactive</string>

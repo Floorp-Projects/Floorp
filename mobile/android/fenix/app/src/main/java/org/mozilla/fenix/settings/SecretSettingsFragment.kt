@@ -6,15 +6,21 @@ package org.mozilla.fenix.settings
 
 import android.os.Bundle
 import androidx.core.content.edit
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
+import org.mozilla.fenix.debugsettings.data.debugDrawerEnabled
+import org.mozilla.fenix.debugsettings.data.debugSettings
+import org.mozilla.fenix.debugsettings.data.updateDebugDrawerEnabled
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
@@ -96,6 +102,23 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             isVisible = true
             isChecked = context.settings().feltPrivateBrowsingEnabled
             onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
+        lifecycleScope.launch {
+            val debugDataStore = requireContext().debugSettings
+
+            // During initial development, this will only be available in Nightly or Debug builds.
+            requirePreference<SwitchPreference>(R.string.pref_key_enable_debug_drawer).apply {
+                isVisible = Config.channel.isNightlyOrDebug
+                isChecked = debugDataStore.debugDrawerEnabled.first()
+                onPreferenceChangeListener =
+                    Preference.OnPreferenceChangeListener { _, newValue ->
+                        lifecycleScope.launch {
+                            debugDataStore.updateDebugDrawerEnabled(enabled = newValue as Boolean)
+                        }
+                        true
+                    }
+            }
         }
 
         // for performance reasons, this is only available in Nightly or Debug builds
