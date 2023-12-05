@@ -30,12 +30,12 @@ class WebAuthnService final : public nsIWebAuthnService {
   NS_DECL_NSIWEBAUTHNSERVICE
 
   WebAuthnService() {
-    Unused << authrs_service_constructor(getter_AddRefs(mTestService));
+    Unused << authrs_service_constructor(getter_AddRefs(mAuthrsService));
 #if defined(XP_WIN)
     if (WinWebAuthnService::AreWebAuthNApisAvailable()) {
       mPlatformService = new WinWebAuthnService();
     } else {
-      mPlatformService = mTestService;
+      mPlatformService = mAuthrsService;
     }
 #elif defined(MOZ_WIDGET_ANDROID)
     mPlatformService = new AndroidWebAuthnService();
@@ -44,18 +44,27 @@ class WebAuthnService final : public nsIWebAuthnService {
       mPlatformService = NewMacOSWebAuthnServiceIfAvailable();
     }
     if (!mPlatformService) {
-      mPlatformService = mTestService;
+      mPlatformService = mAuthrsService;
     }
 #else
-    mPlatformService = mTestService;
+    mPlatformService = mAuthrsService;
 #endif
   }
 
  private:
   ~WebAuthnService() = default;
 
+  nsIWebAuthnService* DefaultService() {
+    if (StaticPrefs::security_webauth_webauthn_enable_softtoken()) {
+      return mAuthrsService;
+    }
+    return mPlatformService;
+  }
+
+  nsIWebAuthnService* AuthrsService() { return mAuthrsService; }
+
+  nsCOMPtr<nsIWebAuthnService> mAuthrsService;
   nsCOMPtr<nsIWebAuthnService> mPlatformService;
-  nsCOMPtr<nsIWebAuthnService> mTestService;
 };
 
 }  // namespace mozilla::dom
