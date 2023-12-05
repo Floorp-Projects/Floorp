@@ -13,7 +13,6 @@ RUN apt-get update && \
       git \
       gzip \
       openssh-client \
-      python2 \
       unzip \
       zip
 
