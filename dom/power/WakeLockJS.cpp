@@ -7,6 +7,7 @@
 #include "ErrorList.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Logging.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTarget.h"
@@ -30,6 +31,8 @@
 #include "WakeLockSentinel.h"
 
 namespace mozilla::dom {
+
+static mozilla::LazyLogModule sLogger("ScreenWakeLock");
 
 #define MIN_BATTERY_LEVEL 0.05
 
@@ -104,6 +107,7 @@ void ReleaseWakeLock(Document* aDoc, WakeLockSentinel* aLock,
   RefPtr<WakeLockSentinel> kungFuDeathGrip = aLock;
   aDoc->ActiveWakeLocks(aType).Remove(aLock);
   aLock->NotifyLockReleased();
+  MOZ_LOG(sLogger, LogLevel::Debug, ("Released wake lock sentinel"));
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WakeLockJS, mWindow)
@@ -160,6 +164,7 @@ WakeLockJS::Obtain(WakeLockType aType) {
 // https://w3c.github.io/screen-wake-lock/#the-request-method
 already_AddRefed<Promise> WakeLockJS::Request(WakeLockType aType,
                                               ErrorResult& aRv) {
+  MOZ_LOG(sLogger, LogLevel::Debug, ("Received request for wake lock"));
   nsCOMPtr<nsIGlobalObject> global = mWindow->AsGlobal();
 
   RefPtr<Promise> promise = Promise::Create(global, aRv);
@@ -181,6 +186,8 @@ already_AddRefed<Promise> WakeLockJS::Request(WakeLockType aType,
         if (lockOrErr.isOk()) {
           RefPtr<WakeLockSentinel> lock = lockOrErr.unwrap();
           promise->MaybeResolve(lock);
+          MOZ_LOG(sLogger, LogLevel::Debug,
+                  ("Resolved promise with wake lock sentinel"));
         } else {
           promise->MaybeRejectWithNotAllowedError(
               GetRequestErrorMessage(lockOrErr.unwrapErr()));
