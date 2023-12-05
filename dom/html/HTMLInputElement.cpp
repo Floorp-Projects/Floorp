@@ -4381,9 +4381,6 @@ void HTMLInputElement::MaybeDispatchLoginManagerEvents(HTMLFormElement* aForm) {
       aForm->mHasPendingPasswordEvent = true;
     }
 
-#ifdef EARLY_BETA_OR_EARLIER
-    Telemetry::Accumulate(Telemetry::PWMGR_PASSWORD_INPUT_IN_FORM, !!aForm);
-#endif
   } else if (mType == FormControlType::InputEmail ||
              mType == FormControlType::InputText) {
     // Don't fire a username event if:
