@@ -36,7 +36,6 @@
   --in-content-button-text-color: var(--in-content-text-color);
   --in-content-button-text-color-hover: var(--in-content-text-color);
   --in-content-button-text-color-active: var(--in-content-button-text-color-hover);
-   /* button background states are also used for checkboxes and radiobuttons */
   --in-content-button-background: color-mix(in srgb, currentColor 7%, transparent);
   --in-content-button-background-hover: color-mix(in srgb, currentColor 14%, transparent);
   --in-content-button-background-active: color-mix(in srgb, currentColor 21%, transparent);
@@ -692,7 +691,7 @@ button.text-link {
 /* Add invisible vertical click-target */
 xul|*.radio-check,
 xul|*.checkbox-check,
-html|input:is([type="checkbox"], [type="radio"]) {
+html|input:where([type="checkbox"], [type="radio"]) {
   height: 16px;
   width: 16px;
   padding: 0;
