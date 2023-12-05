@@ -423,6 +423,7 @@ void CanvasEventRingBuffer::CheckAndSignalWriter() {
   do {
     switch (mWrite->state) {
       case State::Processing:
+      case State::Failed:
         return;
       case State::AboutToWait:
         // The writer is making a decision about whether to wait. So, we must
@@ -498,7 +499,7 @@ uint32_t CanvasEventRingBuffer::WaitForBytesToRead() {
   return mWrite->count - mOurCount;
 }
 
-void CanvasEventRingBuffer::ReturnWrite(const char* aData, size_t aSize) {
+void CanvasEventRingBuffer::ReturnWrite(const uint8_t* aData, size_t aSize) {
   uint32_t writeCount = mRead->returnCount;
   uint32_t bufPos = writeCount % StreamSize();
   uint32_t bufRemaining = StreamSize() - bufPos;
@@ -526,7 +527,13 @@ void CanvasEventRingBuffer::ReturnWrite(const char* aData, size_t aSize) {
   mRead->returnCount = writeCount;
 }
 
-void CanvasEventRingBuffer::ReturnRead(char* aOut, size_t aSize) {
+void CanvasEventRingBuffer::ReturnRead(uint8_t* aOut, const gfx::IntSize& aSize,
+                                       size_t aBPP, size_t aStride) {
+  if (aSize.IsEmpty()) {
+    return;
+  }
+  aStride = std::max(aStride, aBPP * size_t(aSize.width));
+
   // First wait for the event returning the data to be read.
   WaitForCheckpoint(mOurCount);
   uint32_t readCount = mWrite->returnCount;
@@ -542,29 +549,28 @@ void CanvasEventRingBuffer::ReturnRead(char* aOut, size_t aSize) {
     }
   }
 
-  uint32_t bufPos = readCount % StreamSize();
-  uint32_t bufRemaining = StreamSize() - bufPos;
-  uint32_t availableToRead =
-      std::min(bufRemaining, (mRead->returnCount - readCount));
-  while (availableToRead < aSize) {
-    if (availableToRead) {
-      memcpy(aOut, mBuf + bufPos, availableToRead);
-      readCount += availableToRead;
-      mWrite->returnCount = readCount;
-      bufPos = readCount % StreamSize();
-      bufRemaining = StreamSize() - bufPos;
-      aOut += availableToRead;
-      aSize -= availableToRead;
-    } else if (mWriterServices->ReaderClosed()) {
-      return;
+  uint8_t* outRow = aOut;
+  for (int32_t row = 0; row < aSize.height; row++) {
+    uint8_t* outPos = outRow;
+    uint32_t remainingRow = aSize.width * aBPP;
+    while (remainingRow > 0) {
+      uint32_t bufPos = readCount % StreamSize();
+      uint32_t bufRemaining = StreamSize() - bufPos;
+      uint32_t availableToRead =
+          std::min(bufRemaining, (mRead->returnCount - readCount));
+      if (availableToRead > 0) {
+        uint32_t availableRow = std::min(availableToRead, remainingRow);
+        memcpy(outPos, mBuf + bufPos, availableRow);
+        readCount += availableRow;
+        mWrite->returnCount = readCount;
+        outPos += availableRow;
+        remainingRow -= availableRow;
+      } else if (mWriterServices->ReaderClosed()) {
+        return;
+      }
     }
-
-    availableToRead = std::min(bufRemaining, (mRead->returnCount - readCount));
+    outRow += aStride;
   }
-
-  memcpy(aOut, mBuf + bufPos, aSize);
-  readCount += aSize;
-  mWrite->returnCount = readCount;
 }
 
 void CanvasDrawEventRecorder::StoreSourceSurfaceRecording(

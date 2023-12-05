@@ -516,7 +516,7 @@ PTextureChild* CompositorBridgeChild::CreateTexture(
 }
 
 already_AddRefed<CanvasChild> CompositorBridgeChild::GetCanvasChild() {
-  MOZ_ASSERT(gfx::gfxVars::RemoteCanvasEnabled());
+  MOZ_ASSERT(gfxPlatform::UseRemoteCanvas());
   if (auto* cm = gfx::CanvasManagerChild::Get()) {
     return cm->GetCanvasChild().forget();
   }

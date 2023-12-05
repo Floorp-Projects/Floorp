@@ -69,6 +69,7 @@ class SharedSurfaceTextureData;
 class TextureClientPool;
 #endif
 class TextureForwarder;
+struct RemoteTextureOwnerId;
 
 /**
  * TextureClient is the abstraction that allows us to share data between the
@@ -98,6 +99,9 @@ enum TextureAllocationFlags {
 
   // Do not use an accelerated texture type.
   ALLOC_DO_NOT_ACCELERATE = 1 << 8,
+
+  // Force allocation of remote/recorded texture, or fail if not possible.
+  ALLOC_FORCE_REMOTE = 1 << 9,
 };
 
 enum class BackendSelector { Content, Canvas };
@@ -222,6 +226,10 @@ class TextureData {
           canConcurrentlyReadLock(true) {}
   };
 
+  static TextureData* Create(
+      TextureType aTextureType, gfx::SurfaceFormat aFormat,
+      const gfx::IntSize& aSize, TextureAllocationFlags aAllocFlags,
+      gfx::BackendType aBackendType = gfx::BackendType::NONE);
   static TextureData* Create(TextureForwarder* aAllocator,
                              gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
                              KnowsCompositor* aKnowsCompositor,
@@ -310,6 +318,10 @@ class TextureData {
   virtual mozilla::ipc::FileDescriptor GetAcquireFence() {
     return mozilla::ipc::FileDescriptor();
   }
+
+  virtual void SetRemoteTextureOwnerId(RemoteTextureOwnerId) {}
+
+  virtual bool RequiresRefresh() const { return false; }
 
  protected:
   MOZ_COUNTED_DEFAULT_CTOR(TextureData)

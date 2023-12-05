@@ -700,6 +700,16 @@ class SourceSurface : public SupportsThreadSafeWeakPtr<SourceSurface> {
     return surface.forget();
   }
 
+  /**
+   * Attempts to read the contents of this surface into a destination data
+   * surface. This may simply return false to signal that this operation is
+   * not supported or is not efficient, in which case the caller should try
+   * to convert this surface to a data surface to read from it instead.
+   */
+  virtual bool ReadInto(DataSourceSurface* aSurface, const IntRect& aRect) {
+    return false;
+  }
+
   /** Tries to get this SourceSurface's native surface.  This will fail if aType
    * is not the type of this SourceSurface's native surface.
    */
