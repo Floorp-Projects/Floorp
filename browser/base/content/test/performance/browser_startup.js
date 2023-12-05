@@ -65,7 +65,8 @@ const startupPhases = {
         "resource://gre/modules/PlacesUtils.sys.mjs",
         "resource://gre/modules/Preferences.sys.mjs",
         "resource://gre/modules/SearchService.sys.mjs",
-        "resource://gre/modules/Sqlite.sys.mjs",
+        // Sqlite.sys.mjs commented out because of bug 1828735.
+        // "resource://gre/modules/Sqlite.sys.mjs"
       ]),
       services: new Set(["@mozilla.org/browser/search-service;1"]),
     },
