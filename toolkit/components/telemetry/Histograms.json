@@ -18173,5 +18173,29 @@
     "record_in_processes": ["all"],
     "labels": ["inits"],
     "releaseChannelCollection": "opt-out"
+  },
+  "SCREENWAKELOCK_HELD_DURATION_MS": {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["vhilla@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 240000,
+    "high": 28800000,
+    "n_buckets": 50,
+    "bug_numbers": [1589554],
+    "description": "How long a screen wake lock was held in ms"
+  },
+  "SCREENWAKELOCK_RELEASE_BATTERY_LEVEL_DISCHARGING": {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["vhilla@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 100,
+    "n_buckets": 50,
+    "bug_numbers": [1589554],
+    "description": "Battery level when discharging and the wake lock was released"
   }
 }
