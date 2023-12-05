@@ -310,43 +310,6 @@ export class FfiConverterOptionalTypeLine extends FfiConverterArrayBuffer {
     }
 }
 
-// Export the FFIConverter object to make external types work.
-export class FfiConverterOptionalTypePoint extends FfiConverterArrayBuffer {
-    static checkType(value) {
-        if (value !== undefined && value !== null) {
-            FfiConverterTypePoint.checkType(value)
-        }
-    }
-
-    static read(dataStream) {
-        const code = dataStream.readUint8(0);
-        switch (code) {
-            case 0:
-                return null
-            case 1:
-                return FfiConverterTypePoint.read(dataStream)
-            default:
-                throw UniFFIError(`Unexpected code: ${code}`);
-        }
-    }
-
-    static write(dataStream, value) {
-        if (value === null || value === undefined) {
-            dataStream.writeUint8(0);
-            return;
-        }
-        dataStream.writeUint8(1);
-        FfiConverterTypePoint.write(dataStream, value)
-    }
-
-    static computeSize(value) {
-        if (value === null || value === undefined) {
-            return 1;
-        }
-        return 1 + FfiConverterTypePoint.computeSize(value)
-    }
-}
-
 import {
   FfiConverterTypeLine,
   Line,
@@ -381,42 +344,8 @@ export function gradient(value) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                33, // external_types:uniffi_uniffi_fixture_external_types_fn_func_gradient
+                118, // external_types:uniffi_external_types_fn_func_gradient
                 FfiConverterOptionalTypeLine.lower(value),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
-}
-
-export function intersection(ln1,ln2) {
-
-        const liftResult = (result) => FfiConverterOptionalTypePoint.lift(result);
-        const liftError = null;
-        const functionCall = () => {
-            try {
-                FfiConverterTypeLine.checkType(ln1)
-            } catch (e) {
-                if (e instanceof UniFFITypeError) {
-                    e.addItemDescriptionPart("ln1");
-                }
-                throw e;
-            }
-            try {
-                FfiConverterTypeLine.checkType(ln2)
-            } catch (e) {
-                if (e instanceof UniFFITypeError) {
-                    e.addItemDescriptionPart("ln2");
-                }
-                throw e;
-            }
-            return UniFFIScaffolding.callAsync(
-                34, // external_types:uniffi_uniffi_fixture_external_types_fn_func_intersection
-                FfiConverterTypeLine.lower(ln1),
-                FfiConverterTypeLine.lower(ln2),
             )
         }
         try {

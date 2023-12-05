@@ -56,7 +56,7 @@ public struct {{ ffi_converter_name }}: FfiConverterRustBuffer {
         {% if e.is_flat() %}
 
         {% for variant in e.variants() %}
-        case .{{ variant.name()|class_name }}(_ /* message is ignored*/):
+        case let .{{ variant.name()|class_name }}(message):
             writeInt(&buf, Int32({{ loop.index }}))
         {%- endfor %}
 

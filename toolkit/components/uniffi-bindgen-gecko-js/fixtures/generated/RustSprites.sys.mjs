@@ -325,7 +325,7 @@ export class Sprite {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                99, // sprites:uniffi_uniffi_sprites_fn_constructor_sprite_new
+                94, // sprites:uniffi_sprites_fn_constructor_sprite_new
                 FfiConverterOptionalTypePoint.lower(initialPosition),
             )
         }
@@ -361,7 +361,7 @@ export class Sprite {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                100, // sprites:uniffi_uniffi_sprites_fn_constructor_sprite_new_relative_to
+                95, // sprites:uniffi_sprites_fn_constructor_sprite_new_relative_to
                 FfiConverterTypePoint.lower(reference),
                 FfiConverterTypeVector.lower(direction),
             )
@@ -377,33 +377,8 @@ export class Sprite {
         const liftError = null;
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                101, // sprites:uniffi_uniffi_sprites_fn_method_sprite_get_position
+                96, // sprites:uniffi_sprites_fn_method_sprite_get_position
                 FfiConverterTypeSprite.lower(this),
-            )
-        }
-        try {
-            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
-        }  catch (error) {
-            return Promise.reject(error)
-        }
-    }
-
-    moveBy(direction) {
-        const liftResult = (result) => undefined;
-        const liftError = null;
-        const functionCall = () => {
-            try {
-                FfiConverterTypeVector.checkType(direction)
-            } catch (e) {
-                if (e instanceof UniFFITypeError) {
-                    e.addItemDescriptionPart("direction");
-                }
-                throw e;
-            }
-            return UniFFIScaffolding.callAsync(
-                102, // sprites:uniffi_uniffi_sprites_fn_method_sprite_move_by
-                FfiConverterTypeSprite.lower(this),
-                FfiConverterTypeVector.lower(direction),
             )
         }
         try {
@@ -426,9 +401,34 @@ export class Sprite {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                103, // sprites:uniffi_uniffi_sprites_fn_method_sprite_move_to
+                97, // sprites:uniffi_sprites_fn_method_sprite_move_to
                 FfiConverterTypeSprite.lower(this),
                 FfiConverterTypePoint.lower(position),
+            )
+        }
+        try {
+            return functionCall().then((result) => handleRustResult(result, liftResult, liftError));
+        }  catch (error) {
+            return Promise.reject(error)
+        }
+    }
+
+    moveBy(direction) {
+        const liftResult = (result) => undefined;
+        const liftError = null;
+        const functionCall = () => {
+            try {
+                FfiConverterTypeVector.checkType(direction)
+            } catch (e) {
+                if (e instanceof UniFFITypeError) {
+                    e.addItemDescriptionPart("direction");
+                }
+                throw e;
+            }
+            return UniFFIScaffolding.callAsync(
+                98, // sprites:uniffi_sprites_fn_method_sprite_move_by
+                FfiConverterTypeSprite.lower(this),
+                FfiConverterTypeVector.lower(direction),
             )
         }
         try {
@@ -668,7 +668,7 @@ export function translate(position,direction) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                104, // sprites:uniffi_uniffi_sprites_fn_func_translate
+                99, // sprites:uniffi_sprites_fn_func_translate
                 FfiConverterTypePoint.lower(position),
                 FfiConverterTypeVector.lower(direction),
             )

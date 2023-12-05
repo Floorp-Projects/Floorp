@@ -7,7 +7,7 @@ public interface {{ type_name }}Interface {
     {% for meth in obj.methods() -%}
     {%- match meth.throws_type() -%}
     {%- when Some with (throwable) -%}
-    @Throws({{ throwable|type_name(ci) }}::class)
+    @Throws({{ throwable|error_type_name }}::class)
     {%- when None -%}
     {%- endmatch %}
     {% if meth.is_async() -%}
@@ -16,12 +16,11 @@ public interface {{ type_name }}Interface {
     fun {{ meth.name()|fn_name }}({% call kt::arg_list_decl(meth) %})
     {%- endif %}
     {%- match meth.return_type() -%}
-    {%- when Some with (return_type) %}: {{ return_type|type_name(ci) -}}
+    {%- when Some with (return_type) %}: {{ return_type|type_name -}}
     {%- when None -%}
     {%- endmatch -%}
 
     {% endfor %}
-    companion object
 }
 
 class {{ type_name }}(
@@ -52,42 +51,46 @@ class {{ type_name }}(
     {% for meth in obj.methods() -%}
     {%- match meth.throws_type() -%}
     {%- when Some with (throwable) %}
-    @Throws({{ throwable|type_name(ci) }}::class)
+    @Throws({{ throwable|error_type_name }}::class)
     {%- else -%}
     {%- endmatch -%}
     {%- if meth.is_async() %}
     @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-    override suspend fun {{ meth.name()|fn_name }}({%- call kt::arg_list_decl(meth) -%}){% match meth.return_type() %}{% when Some with (return_type) %} : {{ return_type|type_name(ci) }}{% when None %}{%- endmatch %} {
-        return uniffiRustCallAsync(
-            callWithPointer { thisPtr ->
-                _UniFFILib.INSTANCE.{{ meth.ffi_func().name() }}(
-                    thisPtr,
-                    {% call kt::arg_list_lowered(meth) %}
-                )
-            },
-            {{ meth|async_poll(ci) }},
-            {{ meth|async_complete(ci) }},
-            {{ meth|async_free(ci) }},
-            // lift function
-            {%- match meth.return_type() %}
-            {%- when Some(return_type) %}
-            { {{ return_type|lift_fn }}(it) },
-            {%- when None %}
-            { Unit },
-            {% endmatch %}
-            // Error FFI converter
-            {%- match meth.throws_type() %}
-            {%- when Some(e) %}
-            {{ e|type_name(ci) }}.ErrorHandler,
-            {%- when None %}
-            NullCallStatusErrorHandler,
-            {%- endmatch %}
-        )
+    override suspend fun {{ meth.name()|fn_name }}({%- call kt::arg_list_decl(meth) -%}){% match meth.return_type() %}{% when Some with (return_type) %} : {{ return_type|type_name }}{% when None %}{%- endmatch %} {
+        // Create a new `CoroutineScope` for this operation, suspend the coroutine, and call the
+        // scaffolding function, passing it one of the callback handlers from `AsyncTypes.kt`.
+        //
+        // Make sure to retain a reference to the callback handler to ensure that it's not GCed before
+        // it's invoked
+        var callbackHolder: {{ func.result_type().borrow()|future_callback_handler }}? = null
+        return coroutineScope {
+            val scope = this
+            return@coroutineScope suspendCoroutine { continuation ->
+                try {
+                    val callback = {{ meth.result_type().borrow()|future_callback_handler }}(continuation)
+                    callbackHolder = callback
+                    callWithPointer { thisPtr ->
+                        rustCall { status ->
+                            _UniFFILib.INSTANCE.{{ meth.ffi_func().name() }}(
+                                thisPtr,
+                                {% call kt::arg_list_lowered(meth) %}
+                                FfiConverterForeignExecutor.lower(scope),
+                                callback,
+                                USize(0),
+                                status,
+                            )
+                        }
+                    }
+                } catch (e: Exception) {
+                    continuation.resumeWithException(e)
+                }
+            }
+        }
     }
     {%- else -%}
     {%- match meth.return_type() -%}
     {%- when Some with (return_type) -%}
-    override fun {{ meth.name()|fn_name }}({% call kt::arg_list_protocol(meth) %}): {{ return_type|type_name(ci) }} =
+    override fun {{ meth.name()|fn_name }}({% call kt::arg_list_protocol(meth) %}): {{ return_type|type_name }} =
         callWithPointer {
             {%- call kt::to_ffi_call_with_prefix("it", meth) %}
         }.let {
@@ -110,8 +113,6 @@ class {{ type_name }}(
             {{ type_name }}({% call kt::to_ffi_call(cons) %})
         {% endfor %}
     }
-    {% else %}
-    companion object
     {% endif %}
 }
 

@@ -9,7 +9,7 @@ module UniFFILib
   ffi_lib '{{ config.cdylib_name() }}'
   {% endif %}
 
-  {% for func in ci.iter_ffi_function_definitions_non_async() -%}
+  {% for func in ci.iter_ffi_function_definitions() -%}
   attach_function :{{ func.name() }},
     {%- call rb::arg_list_ffi_decl(func) %},
     {% match func.return_type() %}{% when Some with (type_) %}{{ type_|type_ffi }}{% when None %}:void{% endmatch %}

@@ -11,8 +11,4 @@ pub fn gradient(value: Option<Line>) -> f64 {
     }
 }
 
-pub fn intersection(ln1: Line, ln2: Line) -> Option<Point> {
-    uniffi_geometry::intersection(ln1, ln2)
-}
-
 include!(concat!(env!("OUT_DIR"), "/external-types.uniffi.rs"));

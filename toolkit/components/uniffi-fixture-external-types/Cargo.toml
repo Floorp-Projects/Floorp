@@ -7,7 +7,7 @@ license = "MPL-2.0"
 publish = false
 
 [dependencies]
-uniffi-example-geometry = { git = "https://github.com/mozilla/uniffi-rs.git", rev = "f2353fcbfde83207a0033301653bc69be86e4572" }
+uniffi-example-geometry = { git = "https://github.com/mozilla/uniffi-rs.git", rev = "c0e64b839018728d8153ce1758d391b7782e2e21" }
 uniffi = { workspace = true }
 thiserror = "1.0"
 

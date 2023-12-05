@@ -1,9 +1,9 @@
-class _UniffiPointerManagerCPython:
+class UniFfiPointerManagerCPython:
     """
     Manage giving out pointers to Python objects on CPython
 
     This class is used to generate opaque pointers that reference Python objects to pass to Rust.
-    It assumes a CPython platform.  See _UniffiPointerManagerGeneral for the alternative.
+    It assumes a CPython platform.  See UniFfiPointerManagerGeneral for the alternative.
     """
 
     def new_pointer(self, obj):
@@ -30,11 +30,11 @@ class _UniffiPointerManagerCPython:
     def lookup(self, address):
         return ctypes.cast(address, ctypes.py_object).value
 
-class _UniffiPointerManagerGeneral:
+class UniFfiPointerManagerGeneral:
     """
     Manage giving out pointers to Python objects on non-CPython platforms
 
-    This has the same API as _UniffiPointerManagerCPython, but doesn't assume we're running on
+    This has the same API as UniFfiPointerManagerCPython, but doesn't assume we're running on
     CPython and is slightly slower.
 
     Instead of using real pointers, it maps integer values to objects and returns the keys as
@@ -63,6 +63,6 @@ class _UniffiPointerManagerGeneral:
 
 # Pick an pointer manager implementation based on the platform
 if platform.python_implementation() == 'CPython':
-    _UniffiPointerManager = _UniffiPointerManagerCPython # type: ignore
+    UniFfiPointerManager = UniFfiPointerManagerCPython  # type: ignore
 else:
-    _UniffiPointerManager = _UniffiPointerManagerGeneral # type: ignore
+    UniFfiPointerManager = UniFfiPointerManagerGeneral  # type: ignore

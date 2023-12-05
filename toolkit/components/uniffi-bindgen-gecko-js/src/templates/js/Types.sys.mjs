@@ -40,22 +40,22 @@
 {%- when Type::Float64 %}
 {%- include "Float64.sys.mjs" %}
 
-{%- when Type::Record { name, module_path } %}
+{%- when Type::Record with (name) %}
 {%- include "Record.sys.mjs" %}
 
-{%- when Type::Optional { inner_type } %}
+{%- when Type::Optional with (inner) %}
 {%- include "Optional.sys.mjs" %}
 
 {%- when Type::String %}
 {%- include "String.sys.mjs" %}
 
-{%- when Type::Sequence { inner_type } %}
+{%- when Type::Sequence with (inner) %}
 {%- include "Sequence.sys.mjs" %}
 
-{%- when Type::Map { key_type, value_type } %}
+{%- when Type::Map with (key_type, value_type) %}
 {%- include "Map.sys.mjs" %}
 
-{%- when Type::Enum { name, module_path } %}
+{%- when Type::Enum with (name) %}
 {%- let e = ci.get_enum_definition(name).unwrap() %}
 {# For enums, there are either an error *or* an enum, they can't be both. #}
 {%- if ci.is_name_used_as_error(name) %}
@@ -66,16 +66,16 @@
 {%- include "Enum.sys.mjs" %}
 {% endif %}
 
-{%- when Type::Object { name, imp, module_path } %}
+{%- when Type::Object with { name, imp } %}
 {%- include "Object.sys.mjs" %}
 
-{%- when Type::Custom { name, builtin, module_path } %}
+{%- when Type::Custom with { name, builtin } %}
 {%- include "CustomType.sys.mjs" %}
 
-{%- when Type::External { name, module_path, kind, namespace, tagged } %}
+{%- when Type::External with { name, crate_name, kind } %}
 {%- include "ExternalType.sys.mjs" %}
 
-{%- when Type::CallbackInterface { name, module_path } %}
+{%- when Type::CallbackInterface with (name) %}
 {%- include "CallbackInterface.sys.mjs" %}
 
 {%- else %}

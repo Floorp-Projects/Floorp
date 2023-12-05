@@ -1,4 +1,4 @@
-{%- let inner_type_name = inner_type|type_name(ci) %}
+{%- let inner_type_name = inner_type|type_name %}
 
 public object {{ ffi_converter_name }}: FfiConverterRustBuffer<List<{{ inner_type_name }}>> {
     override fun read(buf: ByteBuffer): List<{{ inner_type_name }}> {

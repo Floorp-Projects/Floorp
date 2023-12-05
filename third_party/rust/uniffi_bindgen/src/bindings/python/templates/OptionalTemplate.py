@@ -1,18 +1,18 @@
 {%- let inner_ffi_converter = inner_type|ffi_converter_name %}
 
-class {{ ffi_converter_name }}(_UniffiConverterRustBuffer):
+class {{ ffi_converter_name }}(FfiConverterRustBuffer):
     @classmethod
     def write(cls, value, buf):
         if value is None:
-            buf.write_u8(0)
+            buf.writeU8(0)
             return
 
-        buf.write_u8(1)
+        buf.writeU8(1)
         {{ inner_ffi_converter }}.write(value, buf)
 
     @classmethod
     def read(cls, buf):
-        flag = buf.read_u8()
+        flag = buf.readU8()
         if flag == 0:
             return None
         elif flag == 1:
