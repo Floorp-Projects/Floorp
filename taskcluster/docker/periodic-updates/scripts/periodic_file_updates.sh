@@ -426,7 +426,7 @@ function push_repo {
   then
     return 1
   fi
-  if ! ARC=$(command -v arc)
+  if ! ARC=$(command -v arc) && ! ARC=$(command -v arcanist)
   then
     return 1
   fi
