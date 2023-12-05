@@ -7,6 +7,7 @@
 #include "mozilla/EMEUtils.h"
 
 #include "jsfriendapi.h"
+#include "MediaData.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/dom/KeySystemNames.h"
 #include "mozilla/dom/UnionTypes.h"
@@ -126,6 +127,17 @@ bool IsHardwareDecryptionSupported(
     }
   }
   return supportHardwareDecryption;
+}
+
+const char* EncryptionSchemeStr(const CryptoScheme& aScheme) {
+  switch (aScheme) {
+    case CryptoScheme::None:
+      return "none";
+    case CryptoScheme::Cenc:
+      return "cenc";
+    case CryptoScheme::Cbcs:
+      return "cbcs";
+  }
 }
 
 }  // namespace mozilla

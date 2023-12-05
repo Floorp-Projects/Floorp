@@ -35,6 +35,11 @@
 #  include "gfxConfig.h"
 #endif
 
+#ifdef MOZ_WMF_CDM
+#  include "mozilla/MFCDMParent.h"
+#  include "mozilla/PMFCDM.h"
+#endif
+
 namespace mozilla::ipc {
 
 UtilityAudioDecoderParent::UtilityAudioDecoderParent()
@@ -164,6 +169,22 @@ IPCResult UtilityAudioDecoderParent::RecvUpdateVar(
     const GfxVarUpdate& aUpdate) {
   MOZ_ASSERT(mKind == SandboxingKind::MF_MEDIA_ENGINE_CDM);
   gfx::gfxVars::ApplyUpdate(aUpdate);
+  return IPC_OK();
+}
+#endif
+
+#ifdef MOZ_WMF_CDM
+IPCResult UtilityAudioDecoderParent::RecvGetKeySystemCapabilities(
+    GetKeySystemCapabilitiesResolver&& aResolver) {
+  MOZ_ASSERT(mKind == SandboxingKind::MF_MEDIA_ENGINE_CDM);
+  MFCDMParent::GetAllKeySystemsCapabilities()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [aResolver](CopyableTArray<MFCDMCapabilitiesIPDL>&& aCapabilities) {
+        aResolver(std::move(aCapabilities));
+      },
+      [aResolver](nsresult) {
+        aResolver(CopyableTArray<MFCDMCapabilitiesIPDL>());
+      });
   return IPC_OK();
 }
 #endif
