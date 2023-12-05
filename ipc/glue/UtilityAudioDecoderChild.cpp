@@ -19,12 +19,6 @@
 #  include "mozilla/layers/VideoBridgeUtils.h"
 #endif
 
-#ifdef MOZ_WMF_CDM
-#  include "mozilla/dom/Promise.h"
-#  include "mozilla/EMEUtils.h"
-#  include "mozilla/PMFCDM.h"
-#endif
-
 namespace mozilla::ipc {
 
 NS_IMETHODIMP UtilityAudioDecoderChildShutdownObserver::Observe(
@@ -176,51 +170,6 @@ bool UtilityAudioDecoderChild::CreateVideoBridge() {
       layers::VideoBridgeSource::MFMediaEngineCDMProcess);
   SendInitVideoBridge(std::move(childPipe), updates, contentDeviceData);
   return true;
-}
-#endif
-
-#ifdef MOZ_WMF_CDM
-void UtilityAudioDecoderChild::GetKeySystemCapabilities(
-    dom::Promise* aPromise) {
-  EME_LOG("Ask capabilities for all supported CDMs");
-  SendGetKeySystemCapabilities()->Then(
-      NS_GetCurrentThread(), __func__,
-      [promise = RefPtr<dom::Promise>(aPromise)](
-          CopyableTArray<MFCDMCapabilitiesIPDL>&& result) {
-        FallibleTArray<dom::CDMInformation> cdmInfo;
-        for (const auto& capabilities : result) {
-          EME_LOG("Received capabilities for %s",
-                  NS_ConvertUTF16toUTF8(capabilities.keySystem()).get());
-          for (const auto& v : capabilities.videoCapabilities()) {
-            EME_LOG("  capabilities: video=%s",
-                    NS_ConvertUTF16toUTF8(v.contentType()).get());
-          }
-          for (const auto& a : capabilities.audioCapabilities()) {
-            EME_LOG("  capabilities: audio=%s",
-                    NS_ConvertUTF16toUTF8(a.contentType()).get());
-          }
-          for (const auto& e : capabilities.encryptionSchemes()) {
-            EME_LOG("  capabilities: encryptionScheme=%s",
-                    EncryptionSchemeStr(e));
-          }
-          auto* info = cdmInfo.AppendElement(fallible);
-          if (!info) {
-            promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
-            return;
-          }
-          info->mKeySystemName = capabilities.keySystem();
-
-          KeySystemConfig config;
-          MFCDMCapabilitiesIPDLToKeySystemConfig(capabilities, config);
-          info->mCapabilities = config.GetDebugInfo();
-          info->mClearlead =
-              DoesKeySystemSupportClearLead(info->mKeySystemName);
-        }
-        promise->MaybeResolve(cdmInfo);
-      },
-      [](const mozilla::ipc::ResponseRejectReason& aReason) {
-        EME_LOG("IPC failure for GetKeySystemCapabilities!");
-      });
 }
 #endif
 
