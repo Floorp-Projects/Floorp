@@ -25,6 +25,7 @@ LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "!/third_party/libwebrtc/gen",
     "/ipc/chromium/src",
+    "/media/libvpx/libvpx/",
     "/media/libyuv/",
     "/media/libyuv/libyuv/include/",
     "/third_party/libwebrtc/",

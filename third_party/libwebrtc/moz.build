@@ -436,6 +436,7 @@ DIRS += [
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/types/span_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/types/variant_gn",
     "/third_party/libwebrtc/third_party/abseil-cpp/absl/utility/utility_gn",
+    "/third_party/libwebrtc/third_party/libvpx/libvpx_gn",
     "/third_party/libwebrtc/third_party/libyuv/libyuv_gn",
     "/third_party/libwebrtc/third_party/pffft/pffft_gn",
     "/third_party/libwebrtc/third_party/rnnoise/rnn_vad_gn",
