@@ -12819,6 +12819,11 @@
   value: 1
   mirror: always
 
+- name: permissions.default.screen-wake-lock
+  type: RelaxedAtomicUint32
+  value: 1
+  mirror: always
+
 - name: permissions.isolateBy.userContext
   type: RelaxedAtomicBool
   value: false
