@@ -478,7 +478,6 @@ skip-if = [
 ]
 
 ["test_ext_unlimitedStorage.html"]
-skip-if = ["os == 'android'"] # Bug 1845911 (GeckoView doesn't yet account for persistent-storage to be granted for extension requesting unlimitedStorage permission)
 
 ["test_ext_web_accessible_incognito.html"]
 skip-if = ["os == 'android'"] # bug 1397615, bug 1513544
