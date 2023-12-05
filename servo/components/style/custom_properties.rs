@@ -1316,19 +1316,25 @@ fn substitute_all(
                 break;
             }
             // Anything here is in a loop which can traverse to the
-            // variable we are handling, so remove it from the map, it's invalid
-            // at computed-value time.
-            context.map.remove(
-                context.stylist.get_custom_property_registration(&var_name),
+            // variable we are handling, so it's invalid at
+            // computed-value time.
+            handle_invalid_at_computed_value_time(
                 &var_name,
+                context.map,
+                context.computed_context.inherited_custom_properties(),
+                context.stylist,
+                context.computed_context.is_root_element()
             );
             in_loop = true;
         }
         if in_loop {
             // This variable is in loop. Resolve to invalid.
-            context.map.remove(
-                context.stylist.get_custom_property_registration(&name),
+            handle_invalid_at_computed_value_time(
                 &name,
+                context.map,
+                context.computed_context.inherited_custom_properties(),
+                context.stylist,
+                context.computed_context.is_root_element()
             );
             return None;
         }
