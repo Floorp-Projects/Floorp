@@ -1,6 +1,7 @@
 const SUGGEST_PREF_NAME = "browser.search.suggest.enabled";
 const URLBAR_SUGGEST_PREF_NAME = "browser.urlbar.suggest.searches";
 const PRIVATE_PREF_NAME = "browser.search.suggest.enabled.private";
+const SEARCHBAR_PREF_NAME = "browser.search.widget.inNavBar";
 
 let initialUrlbarSuggestValue;
 let initialSuggestionsInPrivateValue;
@@ -25,6 +26,7 @@ add_setup(async function () {
 // Open with suggestions enabled
 add_task(async function test_suggestions_start_enabled() {
   Services.prefs.setBoolPref(SUGGEST_PREF_NAME, true);
+  Services.prefs.setBoolPref(SEARCHBAR_PREF_NAME, true);
 
   await openPreferencesViaOpenPreferencesAPI("search", { leaveOpen: true });
 
@@ -101,6 +103,8 @@ add_task(async function test_suggestions_start_enabled() {
   Services.prefs.setBoolPref(SUGGEST_PREF_NAME, false);
   ok(!urlbarBox.checked, "Should have unchecked the urlbar box");
   ok(urlbarBox.disabled, "Should have disabled the urlbar box");
+  Services.prefs.setBoolPref(SEARCHBAR_PREF_NAME, false);
+  ok(urlbarBox.hidden, "Should have hidden the urlbar box");
   ok(!privateBox.checked, "Should have unchecked the private suggestions box");
   ok(privateBox.disabled, "Should have disabled the private suggestions box");
 
