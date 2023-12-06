@@ -36,6 +36,8 @@
 namespace mozilla {
 namespace net {
 
+#define SOCKET_THREAD_LONGTASK_MS 3
+
 LazyLogModule gSocketTransportLog("nsSocketTransport");
 LazyLogModule gUDPSocketLog("UDPSocket");
 LazyLogModule gTCPSocketLog("TCPSocket");
@@ -637,7 +639,7 @@ int32_t nsSocketTransportService::Poll(TimeDuration* pollDuration,
   SOCKET_LOG(("    timeout = %i milliseconds\n",
               PR_IntervalToMilliseconds(pollTimeout)));
 
-  int32_t rv;
+  int32_t n;
   {
 #ifdef MOZ_GECKO_PROFILER
     TimeStamp startTime = TimeStamp::Now();
@@ -648,7 +650,7 @@ int32_t nsSocketTransportService::Poll(TimeDuration* pollDuration,
     }
 #endif
 
-    rv = PR_Poll(firstPollEntry, pollCount, pollTimeout);
+    n = PR_Poll(firstPollEntry, pollCount, pollTimeout);
 
 #ifdef MOZ_GECKO_PROFILER
     if (pollTimeout != PR_INTERVAL_NO_WAIT) {
@@ -677,7 +679,7 @@ int32_t nsSocketTransportService::Poll(TimeDuration* pollDuration,
   SOCKET_LOG(("    ...returned after %i milliseconds\n",
               PR_IntervalToMilliseconds(PR_IntervalNow() - ts)));
 
-  return rv;
+  return n;
 }
 
 //-----------------------------------------------------------------------------
@@ -742,15 +744,19 @@ nsSocketTransportService::Init() {
 
   if (!XRE_IsContentProcess() ||
       StaticPrefs::network_allow_raw_sockets_in_content_processes_AtStartup()) {
-    nsresult rv = NS_NewNamedThread("Socket Thread", getter_AddRefs(thread),
-                                    this, {.stackSize = GetThreadStackSize()});
+    // Since we Poll, we can't use normal LongTask support in Main Process
+    nsresult rv =
+        NS_NewNamedThread("Socket Thread", getter_AddRefs(thread), this,
+                          {.stackSize = GetThreadStackSize(),
+                           .longTaskLength = Some(SOCKET_THREAD_LONGTASK_MS)});
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     // In the child process, we just want a regular nsThread with no socket
     // polling. So we don't want to run the nsSocketTransportService runnable on
     // it.
     nsresult rv =
-        NS_NewNamedThread("Socket Thread", getter_AddRefs(thread), nullptr);
+        NS_NewNamedThread("Socket Thread", getter_AddRefs(thread), nullptr,
+                          {.longTaskLength = Some(SOCKET_THREAD_LONGTASK_MS)});
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Set up some of the state that nsSocketTransportService::Run would set.
@@ -1367,6 +1373,13 @@ nsresult nsSocketTransportService::DoPollIteration(TimeDuration* pollDuration) {
   }
 
   now = PR_IntervalNow();
+  TimeStamp startTime;
+#ifdef MOZ_GECKO_PROFILER
+  bool profiling = profiler_thread_is_being_profiled_for_markers();
+  if (profiling) {
+    startTime = TimeStamp::Now();
+  }
+#endif
 
   if (n < 0) {
     SOCKET_LOG(("  PR_Poll error [%d] os error [%d]\n", PR_GetError(),
@@ -1423,6 +1436,36 @@ nsresult nsSocketTransportService::DoPollIteration(TimeDuration* pollDuration) {
       }
     }
   }
+#ifdef MOZ_GECKO_PROFILER
+  if (profiling) {
+    TimeStamp endTime = TimeStamp::Now();
+    if ((endTime - startTime).ToMilliseconds() >= SOCKET_THREAD_LONGTASK_MS) {
+      struct LongTaskMarker {
+        static constexpr Span<const char> MarkerTypeName() {
+          return MakeStringSpan("SocketThreadLongTask");
+        }
+        static void StreamJSONMarkerData(
+            baseprofiler::SpliceableJSONWriter& aWriter) {
+          aWriter.StringProperty("category", "LongTask");
+        }
+        static MarkerSchema MarkerTypeDisplay() {
+          using MS = MarkerSchema;
+          MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
+          schema.AddKeyLabelFormatSearchable("category", "Type",
+                                             MS::Format::String,
+                                             MS::Searchable::Searchable);
+          return schema;
+        }
+      };
+
+      profiler_add_marker(ProfilerString8View("LongTaskSocketProcessing"),
+                          geckoprofiler::category::OTHER,
+                          MarkerTiming::Interval(startTime, endTime),
+                          LongTaskMarker{});
+    }
+  }
+
+#endif
 
   return NS_OK;
 }
