@@ -27,10 +27,11 @@ nsTArray<CanvasManagerParent::ReplayTexture>
 bool CanvasManagerParent::sReplayTexturesEnabled(true);
 
 /* static */ void CanvasManagerParent::Init(
-    Endpoint<PCanvasManagerParent>&& aEndpoint) {
+    Endpoint<PCanvasManagerParent>&& aEndpoint,
+    const dom::ContentParentId& aContentId) {
   MOZ_ASSERT(layers::CompositorThreadHolder::IsInCompositorThread());
 
-  auto manager = MakeRefPtr<CanvasManagerParent>();
+  auto manager = MakeRefPtr<CanvasManagerParent>(aContentId);
 
   nsCOMPtr<nsIThread> owningThread =
       gfx::CanvasRenderThread::GetCanvasRenderThread();
@@ -203,7 +204,9 @@ CanvasManagerParent::WaitForReplayTexture(base::ProcessId aOtherPid,
   return desc;
 }
 
-CanvasManagerParent::CanvasManagerParent() = default;
+CanvasManagerParent::CanvasManagerParent(const dom::ContentParentId& aContentId)
+    : mContentId(aContentId) {}
+
 CanvasManagerParent::~CanvasManagerParent() = default;
 
 void CanvasManagerParent::Bind(Endpoint<PCanvasManagerParent>&& aEndpoint) {
@@ -220,7 +223,7 @@ void CanvasManagerParent::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 already_AddRefed<dom::PWebGLParent> CanvasManagerParent::AllocPWebGLParent() {
-  return MakeAndAddRef<dom::WebGLParent>();
+  return MakeAndAddRef<dom::WebGLParent>(mContentId);
 }
 
 already_AddRefed<webgpu::PWebGPUParent>

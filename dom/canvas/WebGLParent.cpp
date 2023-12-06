@@ -24,7 +24,9 @@ mozilla::ipc::IPCResult WebGLParent::RecvInitialize(
   return IPC_OK();
 }
 
-WebGLParent::WebGLParent() = default;
+WebGLParent::WebGLParent(const dom::ContentParentId& aContentId)
+    : mContentId(aContentId) {}
+
 WebGLParent::~WebGLParent() = default;
 
 // -

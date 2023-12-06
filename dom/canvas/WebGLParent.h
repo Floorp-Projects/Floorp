@@ -7,6 +7,7 @@
 #define WEBGLPARENT_H_
 
 #include "mozilla/GfxMessageUtils.h"
+#include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/dom/PWebGLParent.h"
 #include "mozilla/WeakPtr.h"
 
@@ -31,7 +32,7 @@ class WebGLParent : public PWebGLParent, public SupportsWeakPtr {
   mozilla::ipc::IPCResult RecvInitialize(const webgl::InitContextDesc&,
                                          webgl::InitContextResult* out);
 
-  WebGLParent();  // For IPDL
+  explicit WebGLParent(const dom::ContentParentId& aContentId);  // For IPDL
 
   using IPCResult = mozilla::ipc::IPCResult;
 
@@ -107,6 +108,8 @@ class WebGLParent : public PWebGLParent, public SupportsWeakPtr {
   IPCResult RecvValidateProgram(ObjectId id, bool* ret);
 
   // -
+
+  const dom::ContentParentId mContentId;
 
  private:
   ~WebGLParent();

@@ -27,6 +27,7 @@
 #include "ImageEncoder.h"
 #include "LayerUserData.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/HTMLVideoElement.h"
@@ -619,6 +620,15 @@ RefPtr<WebGLContext> WebGLContext::Create(HostWebGLContext& host,
   const auto UploadableSdTypes = [&]() {
     webgl::EnumMask<layers::SurfaceDescriptor::Type> types;
     types[layers::SurfaceDescriptor::TSurfaceDescriptorBuffer] = true;
+    // This is conditional on not using the Compositor thread because we may
+    // need to synchronize with the RDD process over the PVideoBridge protocol
+    // to wait for the texture to be available in the compositor process. We
+    // cannot block on the Compositor thread, so in that configuration, we would
+    // prefer to do the readback from the RDD which is guaranteed to work, and
+    // only block the owning thread for WebGL.
+    types[layers::SurfaceDescriptor::TSurfaceDescriptorGPUVideo] =
+        gfx::gfxVars::UseCanvasRenderThread() ||
+        !gfx::gfxVars::SupportsThreadsafeGL();
     if (webgl->gl->IsANGLE()) {
       types[layers::SurfaceDescriptor::TSurfaceDescriptorD3D10] = true;
       types[layers::SurfaceDescriptor::TSurfaceDescriptorDXGIYCbCr] = true;
@@ -1384,6 +1394,17 @@ void WebGLContext::DummyReadFramebufferOperation() {
   if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
     ErrorInvalidFramebufferOperation("Framebuffer must be complete.");
   }
+}
+
+dom::ContentParentId WebGLContext::GetContentId() const {
+  const auto* outOfProcess = mHost ? mHost->mOwnerData.outOfProcess : nullptr;
+  if (outOfProcess) {
+    return outOfProcess->mContentId;
+  }
+  if (XRE_IsContentProcess()) {
+    return dom::ContentChild::GetSingleton()->GetID();
+  }
+  return dom::ContentParentId();
 }
 
 bool WebGLContext::Has64BitTimestamps() const {

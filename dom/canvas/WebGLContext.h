@@ -17,6 +17,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/Nullable.h"
@@ -460,6 +461,8 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   static void EnumName(GLenum val, nsCString* out_name);
 
   void DummyReadFramebufferOperation();
+
+  dom::ContentParentId GetContentId() const;
 
   WebGLTexture* GetActiveTex(const GLenum texTarget) const;
 

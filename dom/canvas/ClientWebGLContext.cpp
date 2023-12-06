@@ -4414,27 +4414,53 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
         return Some(ToString(msg));
       }
 
-      if (sdType == layers::SurfaceDescriptor::TSurfaceDescriptorBuffer) {
-        const auto& sdb = sd.get_SurfaceDescriptorBuffer();
-        const auto& data = sdb.data();
-        if (data.type() == layers::MemoryOrShmem::TShmem) {
-          pShmem = &data.get_Shmem();
-        } else {
-          return Some(
-              std::string{"SurfaceDescriptorBuffer data is not Shmem."});
-        }
-      }
+      switch (sdType) {
+        default:
+          break;
+        case layers::SurfaceDescriptor::TSurfaceDescriptorBuffer: {
+          const auto& sdb = sd.get_SurfaceDescriptorBuffer();
+          const auto& data = sdb.data();
+          if (data.type() == layers::MemoryOrShmem::TShmem) {
+            pShmem = &data.get_Shmem();
+          } else {
+            return Some(
+                std::string{"SurfaceDescriptorBuffer data is not Shmem."});
+          }
+        } break;
+        case layers::SurfaceDescriptor::TSurfaceDescriptorD3D10: {
+          const auto& sdD3D = sd.get_SurfaceDescriptorD3D10();
+          const auto& inProcess = mNotLost->inProcess;
+          MOZ_ASSERT(desc->image);
+          keepAliveImage = desc->image;
 
-      if (sdType == layers::SurfaceDescriptor::TSurfaceDescriptorD3D10) {
-        const auto& sdD3D = sd.get_SurfaceDescriptorD3D10();
-        const auto& inProcess = mNotLost->inProcess;
-        MOZ_ASSERT(desc->image);
-        keepAliveImage = desc->image;
-
-        if (sdD3D.gpuProcessTextureId().isSome() && inProcess) {
-          return Some(
-              std::string{"gpuProcessTextureId works only in GPU process."});
-        }
+          if (sdD3D.gpuProcessTextureId().isSome() && inProcess) {
+            return Some(
+                std::string{"gpuProcessTextureId works only in GPU process."});
+          }
+        } break;
+        case layers::SurfaceDescriptor::TSurfaceDescriptorGPUVideo: {
+          const auto& inProcess = mNotLost->inProcess;
+          MOZ_ASSERT(desc->image);
+          keepAliveImage = desc->image;
+          if (inProcess) {
+            return Some(std::string{
+                "SurfaceDescriptorGPUVideo works only in GPU process."});
+          }
+          const auto& sdv = sd.get_SurfaceDescriptorGPUVideo();
+          if (sdv.type() != layers::SurfaceDescriptorGPUVideo::
+                                TSurfaceDescriptorRemoteDecoder) {
+            return Some(std::string{
+                "SurfaceDescriptorGPUVideo does not contain RemoteDecoder."});
+          }
+          const auto& sdrd = sdv.get_SurfaceDescriptorRemoteDecoder();
+          const auto& subdesc = sdrd.subdesc();
+          if (subdesc.type() !=
+              layers::RemoteDecoderVideoSubDescriptor::Tnull_t) {
+            return Some(
+                std::string{"SurfaceDescriptorGPUVideo does not contain "
+                            "RemoteDecoder null subdesc."});
+          }
+        } break;
       }
 
       switch (respecFormat) {
