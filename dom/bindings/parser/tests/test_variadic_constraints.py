@@ -1,3 +1,6 @@
+import WebIDL
+
+
 def WebIDLTest(parser, harness):
     threw = False
     try:
@@ -10,7 +13,7 @@ def WebIDLTest(parser, harness):
         )
         parser.finish()
 
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(
@@ -29,7 +32,7 @@ def WebIDLTest(parser, harness):
         """
         )
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(
@@ -49,7 +52,7 @@ def WebIDLTest(parser, harness):
         )
         parser.finish()
 
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(
@@ -68,7 +71,7 @@ def WebIDLTest(parser, harness):
         """
         )
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Should have thrown on variadic argument with default value.")

@@ -1,3 +1,6 @@
+import WebIDL
+
+
 def WebIDLTest(parser, harness):
     threw = False
     try:
@@ -11,7 +14,7 @@ def WebIDLTest(parser, harness):
         )
 
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Should have thrown for IdentifierConflictAcrossMembers1.")
@@ -29,7 +32,7 @@ def WebIDLTest(parser, harness):
         )
 
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Should have thrown for IdentifierConflictAcrossMembers2.")
@@ -47,7 +50,7 @@ def WebIDLTest(parser, harness):
         )
 
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Should have thrown for IdentifierConflictAcrossMembers3.")
@@ -65,7 +68,7 @@ def WebIDLTest(parser, harness):
         )
 
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Should have thrown for IdentifierConflictAcrossMembers4.")
@@ -83,7 +86,7 @@ def WebIDLTest(parser, harness):
         )
 
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(
@@ -106,7 +109,7 @@ def WebIDLTest(parser, harness):
         )
 
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(
@@ -126,7 +129,7 @@ def WebIDLTest(parser, harness):
         )
 
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Should have thrown for IdentifierConflictAcrossMembers7.")
@@ -144,7 +147,7 @@ def WebIDLTest(parser, harness):
         )
 
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Should have thrown for IdentifierConflictAcrossMembers8.")
@@ -162,7 +165,7 @@ def WebIDLTest(parser, harness):
         )
 
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Should have thrown for IdentifierConflictAcrossMembers9.")

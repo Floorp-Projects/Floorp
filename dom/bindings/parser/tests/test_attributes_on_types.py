@@ -1,3 +1,6 @@
+import WebIDL
+
+
 def WebIDLTest(parser, harness):
     # Basic functionality
     threw = False
@@ -42,7 +45,7 @@ def WebIDLTest(parser, harness):
         """
         )
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(not threw, "Should not have thrown on parsing normal")
@@ -178,7 +181,7 @@ def WebIDLTest(parser, harness):
         """
         )
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(not threw, "Should not have thrown on parsing normal")
@@ -343,7 +346,7 @@ def WebIDLTest(parser, harness):
         try:
             parser.parse(template % ("", "long"))
             parser.finish()
-        except Exception:
+        except WebIDL.WebIDLError:
             threw = True
         harness.ok(not threw, "Template for %s parses without attributes" % name)
         for attribute, type in ATTRIBUTES:
@@ -352,7 +355,7 @@ def WebIDLTest(parser, harness):
             try:
                 parser.parse(template % (attribute, type))
                 parser.finish()
-            except Exception:
+            except WebIDL.WebIDLError:
                 threw = True
             harness.ok(threw, "Should not allow %s on %s" % (attribute, name))
 
@@ -365,7 +368,7 @@ def WebIDLTest(parser, harness):
         """
         )
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Should not allow mixing [Clamp] and [EnforceRange]")
@@ -379,7 +382,7 @@ def WebIDLTest(parser, harness):
         """
         )
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Should not allow mixing [Clamp] and [EnforceRange]")
@@ -394,7 +397,7 @@ def WebIDLTest(parser, harness):
         """
         )
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Should not allow mixing [Clamp] and [EnforceRange] via typedefs")
@@ -409,7 +412,7 @@ def WebIDLTest(parser, harness):
         """
         )
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Should not allow mixing [Clamp] and [EnforceRange] via typedefs")
@@ -433,7 +436,7 @@ def WebIDLTest(parser, harness):
                 % type
             )
             parser.finish()
-        except Exception:
+        except WebIDL.WebIDLError:
             threw = True
 
         harness.ok(threw, "Should not allow [Clamp] on %s" % type)
@@ -448,7 +451,7 @@ def WebIDLTest(parser, harness):
                 % type
             )
             parser.finish()
-        except Exception:
+        except WebIDL.WebIDLError:
             threw = True
 
         harness.ok(threw, "Should not allow [EnforceRange] on %s" % type)
@@ -462,7 +465,7 @@ def WebIDLTest(parser, harness):
         """
         )
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Should not allow [LegacyNullToEmptyString] on long")
@@ -476,7 +479,7 @@ def WebIDLTest(parser, harness):
         """
         )
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Should not allow [LegacyNullToEmptyString] on JSString")
@@ -490,7 +493,7 @@ def WebIDLTest(parser, harness):
         """
         )
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(
@@ -506,7 +509,7 @@ def WebIDLTest(parser, harness):
         """
         )
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
     harness.ok(threw, "[AllowShared] only allowed on buffer source types")
 
@@ -519,7 +522,7 @@ def WebIDLTest(parser, harness):
         """
         )
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
     harness.ok(threw, "[AllowShared] must take no arguments")
 
@@ -535,7 +538,7 @@ def WebIDLTest(parser, harness):
         """
         )
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
     harness.ok(not threw, "Should allow type attributes on unresolved types")
     harness.check(
@@ -556,7 +559,7 @@ def WebIDLTest(parser, harness):
         """
         )
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
     harness.ok(not threw, "Should allow type attributes on typedefs")
     harness.check(

@@ -1,3 +1,6 @@
+import WebIDL
+
+
 def WebIDLTest(parser, harness):
     try:
         parser.parse(
@@ -8,7 +11,7 @@ def WebIDLTest(parser, harness):
         )
 
         harness.ok(False, "Should have thrown!")
-    except Exception:
+    except WebIDL.WebIDLError:
         harness.ok(True, "Parsing TestEmptyEnum enum should fail")
 
     parser.finish()

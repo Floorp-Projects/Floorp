@@ -1,3 +1,6 @@
+import WebIDL
+
+
 def firstArgType(method):
     return method.signatures()[0][1][0].type
 
@@ -141,7 +144,7 @@ def WebIDLTest(parser, harness):
         """
         )
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(
@@ -165,7 +168,7 @@ def WebIDLTest(parser, harness):
         """
         )
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Should throw when there is no distinguishing index")
@@ -398,7 +401,9 @@ def WebIDLTest(parser, harness):
         try:
             parser.parse(idl)
             parser.finish()
-        except Exception:
+        except WebIDL.WebIDLError:
+            threw = True
+        except AssertionError:
             threw = True
 
         if areDistinguishable(type1, type2):

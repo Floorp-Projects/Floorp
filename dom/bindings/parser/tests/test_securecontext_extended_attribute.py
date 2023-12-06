@@ -1,3 +1,6 @@
+import WebIDL
+
+
 def WebIDLTest(parser, harness):
     parser.parse(
         """
@@ -318,7 +321,7 @@ def WebIDLTest(parser, harness):
         """
         )
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
     harness.ok(threw, "[SecureContext] must take no arguments (testing on interface)")
 
@@ -337,7 +340,7 @@ def WebIDLTest(parser, harness):
         """
         )
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
     harness.ok(
         threw,
@@ -363,7 +366,7 @@ def WebIDLTest(parser, harness):
         """
         )
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
     harness.ok(
         not threw,
@@ -383,7 +386,7 @@ def WebIDLTest(parser, harness):
         """
         )
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
     harness.ok(
         threw, "[SecureContext] must not appear on an interface and interface member"
@@ -404,7 +407,7 @@ def WebIDLTest(parser, harness):
         """
         )
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
     harness.ok(
         threw,
@@ -429,7 +432,7 @@ def WebIDLTest(parser, harness):
         """
         )
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
     harness.ok(
         threw,
@@ -453,7 +456,7 @@ def WebIDLTest(parser, harness):
         """
         )
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
     harness.ok(
         threw,

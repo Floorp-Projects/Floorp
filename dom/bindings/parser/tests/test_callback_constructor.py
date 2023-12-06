@@ -59,7 +59,7 @@ def WebIDLTest(parser, harness):
         """
         )
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(
@@ -76,7 +76,7 @@ def WebIDLTest(parser, harness):
         """
         )
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(

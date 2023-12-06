@@ -162,7 +162,7 @@ def WebIDLTest(parser, harness):
         )
 
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Should have thrown on invalid Exposed value on interface.")
@@ -180,7 +180,7 @@ def WebIDLTest(parser, harness):
         )
 
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Should have thrown on invalid Exposed value on attribute.")
@@ -198,7 +198,7 @@ def WebIDLTest(parser, harness):
         )
 
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Should have thrown on invalid Exposed value on operation.")
@@ -216,7 +216,7 @@ def WebIDLTest(parser, harness):
         )
 
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Should have thrown on invalid Exposed value on constant.")
@@ -238,7 +238,7 @@ def WebIDLTest(parser, harness):
         )
 
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(
@@ -354,7 +354,7 @@ def WebIDLTest(parser, harness):
         )
 
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(
@@ -377,7 +377,7 @@ def WebIDLTest(parser, harness):
         )
 
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Should have thrown on a wildcard in an identifier list.")

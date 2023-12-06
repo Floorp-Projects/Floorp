@@ -1,3 +1,6 @@
+import WebIDL
+
+
 def WebIDLTest(parser, harness):
     threw = False
     try:
@@ -10,7 +13,7 @@ def WebIDLTest(parser, harness):
         )
 
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Attribute type must not be a sequence type")
@@ -28,7 +31,7 @@ def WebIDLTest(parser, harness):
         )
 
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "Attribute type must not be a union with a sequence member type")
@@ -46,7 +49,7 @@ def WebIDLTest(parser, harness):
         )
 
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(
@@ -67,7 +70,7 @@ def WebIDLTest(parser, harness):
         )
 
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(
