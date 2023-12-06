@@ -1053,20 +1053,6 @@ describe("TelemetryFeed", () => {
       assert.propertyVal(ping, "message_id", "moments_message_01");
     });
   });
-  describe("#applySnippetsPolicy", () => {
-    it("should include client_id", async () => {
-      const data = {
-        action: "snippets_user_event",
-        event: "IMPRESSION",
-        message_id: "snippets_message_01",
-      };
-      const { ping, pingType } = await instance.applySnippetsPolicy(data);
-
-      assert.equal(pingType, "snippets");
-      assert.propertyVal(ping, "client_id", FAKE_TELEMETRY_ID);
-      assert.propertyVal(ping, "message_id", "snippets_message_01");
-    });
-  });
   describe("#applyOnboardingPolicy", () => {
     it("should include client_id", async () => {
       const data = {
@@ -1177,9 +1163,9 @@ describe("TelemetryFeed", () => {
   describe("#createASRouterEvent", () => {
     it("should create a valid AS Router event", async () => {
       const data = {
-        action: "snippets_user_event",
+        action: "cfr_user_event",
         event: "CLICK",
-        message_id: "snippets_message_01",
+        message_id: "cfr_message_01",
       };
       const action = ac.ASRouterUserEvent(data);
       const { ping } = await instance.createASRouterEvent(action);
@@ -1198,30 +1184,6 @@ describe("TelemetryFeed", () => {
       await instance.createASRouterEvent(action);
 
       assert.calledOnce(instance.applyCFRPolicy);
-    });
-    it("should call applySnippetsPolicy if action equals to snippets_user_event", async () => {
-      const data = {
-        action: "snippets_user_event",
-        event: "IMPRESSION",
-        message_id: "snippets_message_01",
-      };
-      sandbox.stub(instance, "applySnippetsPolicy");
-      const action = ac.ASRouterUserEvent(data);
-      await instance.createASRouterEvent(action);
-
-      assert.calledOnce(instance.applySnippetsPolicy);
-    });
-    it("should call applySnippetsPolicy if action equals to snippets_local_testing_user_event", async () => {
-      const data = {
-        action: "snippets_local_testing_user_event",
-        event: "IMPRESSION",
-        message_id: "snippets_message_01",
-      };
-      sandbox.stub(instance, "applySnippetsPolicy");
-      const action = ac.ASRouterUserEvent(data);
-      await instance.createASRouterEvent(action);
-
-      assert.calledOnce(instance.applySnippetsPolicy);
     });
     it("should call applyOnboardingPolicy if action equals to onboarding_user_event", async () => {
       const data = {

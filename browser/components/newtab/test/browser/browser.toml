@@ -7,9 +7,6 @@ support-files = [
   "annotation_third.html",
   "head.js",
   "redirect_to.sjs",
-  "snippet.json",
-  "snippet_below_search_test.json",
-  "snippet_simple_test.json",
   "topstories.json",
   "file_pdf.PDF",
 ]
@@ -47,12 +44,6 @@ skip-if = ["os == 'linux' && bits == 64 && !debug"] # Bug 1643036
 
 ["browser_asrouter_momentspagehub.js"]
 tags = "remote-settings"
-
-["browser_asrouter_snippets.js"]
-https_first_disabled = true
-
-["browser_asrouter_snippets_dismiss.js"]
-support-files = ["../../../../base/content/aboutRobots-icon.png"]
 
 ["browser_asrouter_targeting.js"]
 

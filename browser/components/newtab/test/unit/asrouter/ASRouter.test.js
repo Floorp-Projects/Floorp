@@ -17,10 +17,9 @@ import { CFRPageActions } from "lib/CFRPageActions.jsm";
 import { GlobalOverrider } from "test/unit/utils";
 import { PanelTestProvider } from "lib/PanelTestProvider.sys.mjs";
 import ProviderResponseSchema from "content-src/asrouter/schemas/provider-response.schema.json";
-import { SnippetsTestMessageProvider } from "lib/SnippetsTestMessageProvider.sys.mjs";
 
 const MESSAGE_PROVIDER_PREF_NAME =
-  "browser.newtabpage.activity-stream.asrouter.providers.snippets";
+  "browser.newtabpage.activity-stream.asrouter.providers.cfr";
 const FAKE_PROVIDERS = [
   FAKE_LOCAL_PROVIDER,
   FAKE_REMOTE_PROVIDER,
@@ -153,7 +152,6 @@ describe("ASRouter", () => {
           cfr: "",
           "message-groups": "",
           "messaging-experiments": "",
-          snippets: "",
           "whats-new-panel": "",
         },
         totalBookmarksCount: {},
@@ -166,7 +164,6 @@ describe("ASRouter", () => {
         userPrefs: {
           cfrFeatures: true,
           cfrAddons: true,
-          snippets: true,
         },
         totalBlockedCount: {},
         blockedCountByType: {},
@@ -253,7 +250,6 @@ describe("ASRouter", () => {
       gURLBar: {},
       isSeparateAboutWelcome: true,
       AttributionCode: fakeAttributionCode,
-      SnippetsTestMessageProvider,
       PanelTestProvider,
       MacAttribution: { applicationPath: "" },
       ToolbarBadgeHub: FakeToolbarBadgeHub,
@@ -496,11 +492,6 @@ describe("ASRouter", () => {
       assert.lengthOf(Object.keys(Router.ALLOWLIST_HOSTS), 2);
       assert.propertyVal(
         Router.ALLOWLIST_HOSTS,
-        "snippets-admin.mozilla.org",
-        "preview"
-      );
-      assert.propertyVal(
-        Router.ALLOWLIST_HOSTS,
         "activity-stream-icons.services.mozilla.com",
         "production"
       );
@@ -545,7 +536,6 @@ describe("ASRouter", () => {
 
         await createRouterAndInit();
 
-        assert.property(Router._localProviders, "SnippetsTestMessageProvider");
         assert.property(Router._localProviders, "PanelTestProvider");
       });
       it("should not add the local test providers on init if devtools are disabled", async () => {
@@ -553,10 +543,6 @@ describe("ASRouter", () => {
 
         await createRouterAndInit();
 
-        assert.notProperty(
-          Router._localProviders,
-          "SnippetsTestMessageProvider"
-        );
         assert.notProperty(Router._localProviders, "PanelTestProvider");
       });
     });
@@ -580,18 +566,18 @@ describe("ASRouter", () => {
         id: "1",
         campaign: "foocampaign",
         targeting: "true",
-        groups: ["snippets"],
-        provider: "snippets",
+        groups: ["cfr"],
+        provider: "cfr",
       };
       const messageNotTargeted = {
         id: "2",
         campaign: "foocampaign",
-        groups: ["snippets"],
-        provider: "snippets",
+        groups: ["cfr"],
+        provider: "cfr",
       };
       await Router.setState({
         messages: [messageTargeted, messageNotTargeted],
-        providers: [{ id: "snippets" }],
+        providers: [{ id: "cfr" }],
       });
       fakeTargetingContext.evalWithDefault.resolves(false);
 
@@ -813,7 +799,12 @@ describe("ASRouter", () => {
       assert.notCalled(FakeMomentsPageHub.executeAction);
     });
     it("should route default to sending to content", () => {
-      Router.routeCFRMessage({ template: "snippets" }, browser, {}, true);
+      Router.routeCFRMessage(
+        { template: "some_other_template" },
+        browser,
+        {},
+        true
+      );
 
       assert.notCalled(FakeToolbarPanelHub.forceShowMessage);
       assert.notCalled(CFRPageActions.forceRecommendation);
@@ -1154,23 +1145,23 @@ describe("ASRouter", () => {
   describe("#handleMessageRequest", () => {
     beforeEach(async () => {
       await Router.setState(() => ({
-        providers: [{ id: "snippets" }, { id: "badge" }],
+        providers: [{ id: "cfr" }, { id: "badge" }],
       }));
     });
     it("should not return a blocked message", async () => {
       // Block all messages except the first
       await Router.setState(() => ({
         messages: [
-          { id: "foo", provider: "snippets", groups: ["snippets"] },
-          { id: "bar", provider: "snippets", groups: ["snippets"] },
+          { id: "foo", provider: "cfr", groups: ["cfr"] },
+          { id: "bar", provider: "cfr", groups: ["cfr"] },
         ],
         messageBlockList: ["foo"],
       }));
       await Router.handleMessageRequest({
-        provider: "snippets",
+        provider: "cfr",
       });
       assert.calledWithMatch(ASRouterTargeting.findMatchingMessage, {
-        messages: [{ id: "bar", provider: "snippets", groups: ["snippets"] }],
+        messages: [{ id: "bar", provider: "cfr", groups: ["cfr"] }],
       });
     });
     it("should not return a message from a disabled group", async () => {
@@ -1180,13 +1171,13 @@ describe("ASRouter", () => {
       // Block all messages except the first
       await Router.setState(() => ({
         messages: [
-          { id: "foo", provider: "snippets", groups: ["snippets"] },
-          { id: "bar", provider: "snippets", groups: ["snippets"] },
+          { id: "foo", provider: "cfr", groups: ["cfr"] },
+          { id: "bar", provider: "cfr", groups: ["cfr"] },
         ],
-        groups: [{ id: "snippets", enabled: false }],
+        groups: [{ id: "cfr", enabled: false }],
       }));
       const result = await Router.handleMessageRequest({
-        provider: "snippets",
+        provider: "cfr",
       });
       assert.isNull(result);
     });
@@ -1196,46 +1187,46 @@ describe("ASRouter", () => {
         messages: [
           {
             id: "foo",
-            provider: "snippets",
+            provider: "cfr",
             campaign: "foocampaign",
-            groups: ["snippets"],
+            groups: ["cfr"],
           },
-          { id: "bar", provider: "snippets", groups: ["snippets"] },
+          { id: "bar", provider: "cfr", groups: ["cfr"] },
         ],
         messageBlockList: ["foocampaign"],
       }));
 
       await Router.handleMessageRequest({
-        provider: "snippets",
+        provider: "cfr",
       });
       assert.calledWithMatch(ASRouterTargeting.findMatchingMessage, {
-        messages: [{ id: "bar", provider: "snippets", groups: ["snippets"] }],
+        messages: [{ id: "bar", provider: "cfr", groups: ["cfr"] }],
       });
     });
     it("should not return a message excluded by the provider", async () => {
       // There are only two providers; block the FAKE_LOCAL_PROVIDER, leaving
       // only FAKE_REMOTE_PROVIDER unblocked, which provides only one message
       await Router.setState(() => ({
-        providers: [{ id: "snippets", exclude: ["foo"] }],
+        providers: [{ id: "cfr", exclude: ["foo"] }],
       }));
 
       await Router.setState(() => ({
-        messages: [{ id: "foo", provider: "snippets" }],
+        messages: [{ id: "foo", provider: "cfr" }],
         messageBlockList: ["foocampaign"],
       }));
 
       const result = await Router.handleMessageRequest({
-        provider: "snippets",
+        provider: "cfr",
       });
       assert.isNull(result);
     });
     it("should not return a message if the frequency cap has been hit", async () => {
       sandbox.stub(Router, "isBelowFrequencyCaps").returns(false);
       await Router.setState(() => ({
-        messages: [{ id: "foo", provider: "snippets" }],
+        messages: [{ id: "foo", provider: "cfr" }],
       }));
       const result = await Router.handleMessageRequest({
-        provider: "snippets",
+        provider: "cfr",
       });
       assert.isNull(result);
     });
@@ -1244,15 +1235,15 @@ describe("ASRouter", () => {
         id: "1",
         campaign: "foocampaign",
         trigger: { id: "foo" },
-        groups: ["snippets"],
-        provider: "snippets",
+        groups: ["cfr"],
+        provider: "cfr",
       };
       const message2 = {
         id: "2",
         campaign: "foocampaign",
         trigger: { id: "bar" },
-        groups: ["snippets"],
-        provider: "snippets",
+        groups: ["cfr"],
+        provider: "cfr",
       };
       await Router.setState({ messages: [message2, message1] });
       // Just return the first message provided as arg
@@ -1276,10 +1267,10 @@ describe("ASRouter", () => {
       const message2 = {
         id: "2",
         campaign: "foocampaign",
-        template: "snippet",
+        template: "test_template",
         trigger: { id: "foo" },
-        groups: ["snippets"],
-        provider: "snippets",
+        groups: ["cfr"],
+        provider: "cfr",
       };
       await Router.setState({ messages: [message2, message1] });
       // Just return the first message provided as arg
@@ -1348,8 +1339,8 @@ describe("ASRouter", () => {
         id: "1",
         campaign: "foocampaign",
         trigger: { id: "foo" },
-        groups: ["snippets"],
-        provider: "snippets",
+        groups: ["cfr"],
+        provider: "cfr",
       };
       const message2 = {
         id: "2",
@@ -1370,34 +1361,6 @@ describe("ASRouter", () => {
       assert.propertyVal(options.trigger, "param", trigger.triggerParam);
       assert.propertyVal(options.trigger, "context", trigger.triggerContext);
     });
-    it("should cache snippets messages", async () => {
-      const trigger = {
-        triggerId: "foo",
-        triggerParam: "bar",
-        triggerContext: "context",
-      };
-      const message1 = {
-        id: "1",
-        provider: "snippets",
-        campaign: "foocampaign",
-        trigger: { id: "foo" },
-        groups: ["snippets"],
-      };
-      const message2 = {
-        id: "2",
-        campaign: "foocampaign",
-        trigger: { id: "bar" },
-        groups: ["snippets"],
-      };
-      await Router.setState({ messages: [message2, message1] });
-
-      Router.handleMessageRequest(trigger);
-
-      assert.calledOnce(ASRouterTargeting.findMatchingMessage);
-
-      const [options] = ASRouterTargeting.findMatchingMessage.firstCall.args;
-      assert.propertyVal(options, "shouldCache", true);
-    });
     it("should not cache badge messages", async () => {
       const trigger = {
         triggerId: "bar",
@@ -1406,10 +1369,10 @@ describe("ASRouter", () => {
       };
       const message1 = {
         id: "1",
-        provider: "snippets",
+        provider: "cfr",
         campaign: "foocampaign",
         trigger: { id: "foo" },
-        groups: ["snippets"],
+        groups: ["cfr"],
       };
       const message2 = {
         id: "2",
@@ -1434,25 +1397,25 @@ describe("ASRouter", () => {
         id: "1",
         campaign: "foocampaign",
         trigger: { id: "foo" },
-        groups: ["snippets"],
-        provider: "snippets",
+        groups: ["cfr"],
+        provider: "cfr",
       };
       const message2 = {
         id: "2",
         campaign: "foocampaign",
         trigger: { id: "bar" },
-        groups: ["snippets"],
-        provider: "snippets",
+        groups: ["cfr"],
+        provider: "cfr",
       };
       const message3 = {
         id: "3",
         campaign: "bazcampaign",
-        groups: ["snippets"],
-        provider: "snippets",
+        groups: ["cfr"],
+        provider: "cfr",
       };
       await Router.setState({
         messages: [message2, message1, message3],
-        groups: [{ id: "snippets", enabled: true }],
+        groups: [{ id: "cfr", enabled: true }],
       });
       // Just return the first message provided as arg
       ASRouterTargeting.findMatchingMessage.callsFake(args => args.messages);
@@ -1509,163 +1472,6 @@ describe("ASRouter", () => {
       // Grab the last call as #uninit() also involves multiple calls of `Services.prefs.removeObserver`.
       const call = global.Services.prefs.removeObserver.lastCall;
       assert.calledWithExactly(call, USE_REMOTE_L10N_PREF, Router);
-    });
-  });
-
-  describe("sendNewTabMessage", () => {
-    it("should construct an appropriate response message", async () => {
-      Router.loadMessagesFromAllProviders.resetHistory();
-      Router.loadMessagesFromAllProviders.onFirstCall().resolves();
-
-      let message = {
-        id: "foo",
-        provider: "snippets",
-        groups: ["snippets"],
-      };
-
-      await Router.setState({
-        messages: [message],
-        providers: [{ id: "snippets" }],
-      });
-
-      ASRouterTargeting.findMatchingMessage.callsFake(
-        ({ messages }) => messages[0]
-      );
-
-      let response = await Router.sendNewTabMessage({
-        tabId: 0,
-        browser: {},
-      });
-
-      assert.deepEqual(response.message, message);
-    });
-    it("should send an empty object message if no messages are available", async () => {
-      await Router.setState({ messages: [] });
-      let response = await Router.sendNewTabMessage({
-        tabId: 0,
-        browser: {},
-      });
-
-      assert.deepEqual(response.message, {});
-    });
-
-    describe("#addPreviewEndpoint", () => {
-      it("should make a request to the provided endpoint", async () => {
-        const url = "https://snippets-admin.mozilla.org/foo";
-        const browser = {};
-        browser.sendMessageToActor = sandbox.stub();
-
-        await Router.sendNewTabMessage({
-          endpoint: { url },
-          tabId: 0,
-          browser,
-        });
-
-        assert.calledWith(global.fetch, url);
-        assert.lengthOf(
-          Router.state.providers.filter(p => p.url === url),
-          0
-        );
-      });
-      it("should send EnterSnippetPreviewMode when adding a preview endpoint", async () => {
-        const url = "https://snippets-admin.mozilla.org/foo";
-        const browser = {};
-        browser.sendMessageToActor = sandbox.stub();
-
-        await Router.addPreviewEndpoint(url, browser);
-
-        assert.calledWithExactly(
-          browser.sendMessageToActor,
-          "EnterSnippetsPreviewMode",
-          {},
-          "ASRouter"
-        );
-      });
-      it("should not add a url that is not from an allowed host", async () => {
-        const url = "https://mozilla.org";
-        const browser = {};
-        browser.sendMessageToActor = sandbox.stub();
-
-        await Router.addPreviewEndpoint(url, browser);
-
-        assert.lengthOf(
-          Router.state.providers.filter(p => p.url === url),
-          0
-        );
-      });
-      it("should reject bad urls", async () => {
-        const url = "foo";
-        const browser = {};
-        browser.sendMessageToActor = sandbox.stub();
-
-        await Router.addPreviewEndpoint(url, browser);
-
-        assert.lengthOf(
-          Router.state.providers.filter(p => p.url === url),
-          0
-        );
-      });
-    });
-
-    it("should record telemetry for message request duration", async () => {
-      const startTelemetryStopwatch = sandbox.stub(
-        global.TelemetryStopwatch,
-        "start"
-      );
-      const finishTelemetryStopwatch = sandbox.stub(
-        global.TelemetryStopwatch,
-        "finish"
-      );
-      sandbox.stub(Router, "handleMessageRequest");
-      const tabId = 123;
-      await Router.sendNewTabMessage({
-        tabId,
-        browser: {},
-      });
-
-      // Called once for the messagesLoaded trigger and once for the above call.
-      assert.calledTwice(startTelemetryStopwatch);
-      assert.calledWithExactly(
-        startTelemetryStopwatch,
-        "MS_MESSAGE_REQUEST_TIME_MS",
-        { tabId }
-      );
-      assert.calledTwice(finishTelemetryStopwatch);
-      assert.calledWithExactly(
-        finishTelemetryStopwatch,
-        "MS_MESSAGE_REQUEST_TIME_MS",
-        { tabId }
-      );
-    });
-    it("should return the preview message if that's available and remove it from Router.state", async () => {
-      const expectedObj = {
-        id: "foo",
-        groups: ["preview"],
-        provider: "preview",
-      };
-      await Router.setState({
-        messages: [expectedObj],
-        providers: [{ id: "preview" }],
-      });
-
-      ASRouterTargeting.findMatchingMessage.callsFake(
-        ({ messages }) => expectedObj
-      );
-
-      Router.loadMessagesFromAllProviders.resetHistory();
-      Router.loadMessagesFromAllProviders.onFirstCall().resolves();
-
-      let response = await Router.sendNewTabMessage({
-        endpoint: { url: "foo.com" },
-        tabId: 0,
-        browser: {},
-      });
-
-      assert.deepEqual(response.message, expectedObj);
-
-      assert.isUndefined(
-        Router.state.messages.find(m => m.provider === "preview")
-      );
     });
   });
 
