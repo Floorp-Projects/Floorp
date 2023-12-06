@@ -10,8 +10,6 @@
 #include "mozilla/glean/bindings/jog/JOG.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Telemetry.h"
-#include <tuple>
-#include "mozilla/DataMutex.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
 
@@ -25,78 +23,6 @@ namespace mozilla::glean {
 
 using Telemetry::HistogramID;
 
-
-using MetricId = uint32_t; // Same type as in api/src/private/mod.rs
-using TimerId = uint64_t; // Same as in TimingDistribution.h.
-using MetricTimerTuple = std::tuple<MetricId, TimerId>;
-class MetricTimerTupleHashKey : public PLDHashEntryHdr {
- public:
-  using KeyType = const MetricTimerTuple&;
-  using KeyTypePointer = const MetricTimerTuple*;
-
-  explicit MetricTimerTupleHashKey(KeyTypePointer aKey) : mValue(*aKey) {}
-  MetricTimerTupleHashKey(MetricTimerTupleHashKey&& aOther)
-      : PLDHashEntryHdr(std::move(aOther)),
-        mValue(std::move(aOther.mValue)) {}
-  ~MetricTimerTupleHashKey() = default;
-
-  KeyType GetKey() const { return mValue; }
-  bool KeyEquals(KeyTypePointer aKey) const {
-    return std::get<0>(*aKey) == std::get<0>(mValue) && std::get<1>(*aKey) == std::get<1>(mValue);
-  }
-
-  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) {
-    // Chosen because this is how nsIntegralHashKey does it.
-    return HashGeneric(std::get<0>(*aKey), std::get<1>(*aKey));
-  }
-  enum { ALLOW_MEMMOVE = true };
-
- private:
-  const MetricTimerTuple mValue;
-};
-
-typedef StaticDataMutex<UniquePtr<nsTHashMap<MetricTimerTupleHashKey, TimeStamp>>> TimerToStampMutex;
-static inline Maybe<TimerToStampMutex::AutoLock> GetTimerIdToStartsLock() {
-  static TimerToStampMutex sTimerIdToStarts("sTimerIdToStarts");
-  auto lock = sTimerIdToStarts.Lock();
-  // GIFFT will work up to the end of AppShutdownTelemetry.
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMWillShutdown)) {
-    return Nothing();
-  }
-  if (!*lock) {
-    *lock = MakeUnique<nsTHashMap<MetricTimerTupleHashKey, TimeStamp>>();
-    RefPtr<nsIRunnable> cleanupFn = NS_NewRunnableFunction(__func__, [&] {
-      if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMWillShutdown)) {
-        auto lock = sTimerIdToStarts.Lock();
-        *lock = nullptr;  // deletes, see UniquePtr.h
-        return;
-      }
-      RunOnShutdown([&] {
-        auto lock = sTimerIdToStarts.Lock();
-        *lock = nullptr;  // deletes, see UniquePtr.h
-      }, ShutdownPhase::XPCOMWillShutdown);
-    });
-    // Both getting the main thread and dispatching to it can fail.
-    // In that event we leak. Grab a pointer so we have something to NS_RELEASE
-    // in that case.
-    nsIRunnable* temp = cleanupFn.get();
-    nsCOMPtr<nsIThread> mainThread;
-    if (NS_FAILED(NS_GetMainThread(getter_AddRefs(mainThread)))
-      || NS_FAILED(mainThread->Dispatch(cleanupFn.forget(), nsIThread::DISPATCH_NORMAL))
-    ) {
-      // Failed to dispatch cleanup routine.
-      // First, un-leak the runnable (but only if we actually attempted dispatch)
-      if (!cleanupFn) {
-        NS_RELEASE(temp);
-      }
-      // Next, cleanup immediately, and allow metrics to try again later.
-      *lock = nullptr;
-      return Nothing();
-    }
-  }
-  return Some(std::move(lock));
-}
 
 static Maybe<HistogramID> HistogramIdForMetric(uint32_t aId) {
   switch(aId) {

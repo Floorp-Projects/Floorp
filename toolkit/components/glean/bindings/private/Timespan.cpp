@@ -17,6 +17,77 @@ namespace mozilla::glean {
 
 namespace impl {
 
+namespace {
+class ScalarIDHashKey : public PLDHashEntryHdr {
+ public:
+  using KeyType = const ScalarID&;
+  using KeyTypePointer = const ScalarID*;
+
+  explicit ScalarIDHashKey(KeyTypePointer aKey) : mValue(*aKey) {}
+  ScalarIDHashKey(ScalarIDHashKey&& aOther)
+      : PLDHashEntryHdr(std::move(aOther)), mValue(std::move(aOther.mValue)) {}
+  ~ScalarIDHashKey() = default;
+
+  KeyType GetKey() const { return mValue; }
+  bool KeyEquals(KeyTypePointer aKey) const { return *aKey == mValue; }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+  static PLDHashNumber HashKey(KeyTypePointer aKey) {
+    return static_cast<std::underlying_type<ScalarID>::type>(*aKey);
+  }
+  enum { ALLOW_MEMMOVE = true };
+
+ private:
+  const ScalarID mValue;
+};
+}  // namespace
+
+using TimesToStartsMutex =
+    StaticDataMutex<UniquePtr<nsTHashMap<ScalarIDHashKey, TimeStamp>>>;
+static Maybe<TimesToStartsMutex::AutoLock> GetTimesToStartsLock() {
+  static TimesToStartsMutex sTimespanStarts("sTimespanStarts");
+  auto lock = sTimespanStarts.Lock();
+  // GIFFT will work up to the end of AppShutdownTelemetry.
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMWillShutdown)) {
+    return Nothing();
+  }
+  if (!*lock) {
+    *lock = MakeUnique<nsTHashMap<ScalarIDHashKey, TimeStamp>>();
+    RefPtr<nsIRunnable> cleanupFn = NS_NewRunnableFunction(__func__, [&] {
+      if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMWillShutdown)) {
+        auto lock = sTimespanStarts.Lock();
+        *lock = nullptr;  // deletes, see UniquePtr.h
+        return;
+      }
+      RunOnShutdown(
+          [&] {
+            auto lock = sTimespanStarts.Lock();
+            *lock = nullptr;  // deletes, see UniquePtr.h
+          },
+          ShutdownPhase::XPCOMWillShutdown);
+    });
+    // Both getting the main thread and dispatching to it can fail.
+    // In that event we leak. Grab a pointer so we have something to NS_RELEASE
+    // in that case.
+    nsIRunnable* temp = cleanupFn.get();
+    nsCOMPtr<nsIThread> mainThread;
+    if (NS_FAILED(NS_GetMainThread(getter_AddRefs(mainThread))) ||
+        NS_FAILED(mainThread->Dispatch(cleanupFn.forget(),
+                                       nsIThread::DISPATCH_NORMAL))) {
+      // Failed to dispatch cleanup routine.
+      // First, un-leak the runnable (but only if we actually attempted
+      // dispatch)
+      if (!cleanupFn) {
+        NS_RELEASE(temp);
+      }
+      // Next, cleanup immediately, and allow metrics to try again later.
+      *lock = nullptr;
+      return Nothing();
+    }
+  }
+  return Some(std::move(lock));
+}
+
 void TimespanMetric::Start() const {
   auto optScalarId = ScalarIdForMetric(mId);
   if (optScalarId) {
