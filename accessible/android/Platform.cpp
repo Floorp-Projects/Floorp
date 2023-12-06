@@ -163,10 +163,12 @@ void a11y::PlatformCaretMoveEvent(Accessible* aTarget, int32_t aOffset,
     // This is used mostly for find in page.
     Accessible* leaf = TextLeafPoint::GetCaret(aTarget).ActualizeCaret().mAcc;
     MOZ_ASSERT(leaf);
-    if (Accessible* result = AccessibleWrap::DoPivot(
-            leaf, java::SessionAccessibility::HTML_GRANULARITY_DEFAULT, true,
-            true)) {
-      sessionAcc->SendAccessibilityFocusedEvent(result);
+    if (leaf) {
+      if (Accessible* result = AccessibleWrap::DoPivot(
+              leaf, java::SessionAccessibility::HTML_GRANULARITY_DEFAULT, true,
+              true)) {
+        sessionAcc->SendAccessibilityFocusedEvent(result);
+      }
     }
   }
 
