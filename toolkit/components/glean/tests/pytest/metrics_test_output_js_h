@@ -69,7 +69,7 @@ Maybe<uint32_t> MetricByNameLookup(const nsACString&);
 Maybe<uint32_t> CategoryByNameLookup(const nsACString&);
 
 extern const category_entry_t sCategoryByNameLookupEntries[2];
-extern const metric_entry_t sMetricByNameLookupEntries[23];
+extern const metric_entry_t sMetricByNameLookupEntries[24];
 
 } // namespace mozilla::glean
 #endif // mozilla_GleanJSMetricsLookup_h
