@@ -109,12 +109,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
-  "snippetsUserPref",
-  "browser.newtabpage.activity-stream.feeds.snippets",
-  false
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
   "hasMigratedBookmarks",
   "browser.migrate.interactions.bookmarks",
   false
@@ -704,7 +698,6 @@ const TargetingGetters = {
     return {
       cfrFeatures: lazy.cfrFeaturesUserPref,
       cfrAddons: lazy.cfrAddonsUserPref,
-      snippets: lazy.snippetsUserPref,
     };
   },
   get totalBlockedCount() {

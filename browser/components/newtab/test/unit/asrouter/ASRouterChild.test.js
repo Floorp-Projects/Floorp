@@ -55,20 +55,5 @@ describe("ASRouterChild", () => {
         });
       });
     });
-    describe("use sends messages that need a response using sendQuery", () => {
-      it("NEWTAB_MESSAGE_REQUEST", () => {
-        const type = msg.NEWTAB_MESSAGE_REQUEST;
-        asRouterChild.asRouterMessage({
-          type,
-          data: {
-            something: 1,
-          },
-        });
-        sandbox.assert.calledOnce(asRouterChild.sendQuery);
-        sandbox.assert.calledWith(asRouterChild.sendQuery, type, {
-          something: 1,
-        });
-      });
-    });
   });
 });

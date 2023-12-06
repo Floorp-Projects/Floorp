@@ -7,7 +7,6 @@ import {
   actionTypes as at,
 } from "common/Actions.sys.mjs";
 import { ASRouterAdmin } from "content-src/components/ASRouterAdmin/ASRouterAdmin";
-import { ASRouterUISurface } from "../../asrouter/asrouter-content";
 import { ConfirmDialog } from "content-src/components/ConfirmDialog/ConfirmDialog";
 import { connect } from "react-redux";
 import { DiscoveryStreamBase } from "content-src/components/DiscoveryStreamBase/DiscoveryStreamBase";
@@ -208,12 +207,6 @@ export class BaseContent extends React.PureComponent {
       .filter(v => v)
       .join(" ");
 
-    const hasSnippet =
-      prefs["feeds.snippets"] &&
-      this.props.adminContent &&
-      this.props.adminContent.message &&
-      this.props.adminContent.message.id;
-
     return (
       <div>
         <CustomizeMenu
@@ -229,7 +222,7 @@ export class BaseContent extends React.PureComponent {
         />
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions*/}
         <div className={outerClassName} onClick={this.closeCustomizationMenu}>
-          <main className={hasSnippet ? "has-snippet" : ""}>
+          <main>
             {prefs.showSearch && (
               <div className="non-collapsible-section">
                 <ErrorBoundary>
@@ -243,12 +236,6 @@ export class BaseContent extends React.PureComponent {
                 </ErrorBoundary>
               </div>
             )}
-            <ASRouterUISurface
-              adminContent={this.props.adminContent}
-              appUpdateChannel={this.props.Prefs.values.appUpdateChannel}
-              fxaEndpoint={this.props.Prefs.values.fxa_endpoint}
-              dispatch={this.props.dispatch}
-            />
             <div className={`body-wrapper${initialized ? " on" : ""}`}>
               {isDiscoveryStream ? (
                 <ErrorBoundary className="borderless-error">

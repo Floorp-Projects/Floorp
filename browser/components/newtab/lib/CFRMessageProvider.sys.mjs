@@ -746,7 +746,6 @@ const CFR_MESSAGES = [
                 topsites: false,
                 highlights: false,
                 topstories: false,
-                snippets: false,
               },
             },
           },

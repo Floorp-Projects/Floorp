@@ -20,7 +20,6 @@ export const INITIAL_STATE = {
     customizeMenuVisible: false,
   },
   ASRouter: { initialized: false },
-  Snippets: { initialized: false },
   TopSites: {
     // Have we received real data from history yet?
     initialized: false,
@@ -291,8 +290,6 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
       return Object.assign({}, prevState, { rows: newRows });
     case at.UPDATE_SEARCH_SHORTCUTS:
       return { ...prevState, searchShortcuts: action.data.searchShortcuts };
-    case at.SNIPPETS_PREVIEW_MODE:
-      return { ...prevState, rows: [] };
     case at.SOV_UPDATED:
       const sov = {
         ready: action.data.ready,
@@ -526,25 +523,6 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
           ),
         })
       );
-    case at.SNIPPETS_PREVIEW_MODE:
-      return prevState.map(section => ({ ...section, rows: [] }));
-    default:
-      return prevState;
-  }
-}
-
-function Snippets(prevState = INITIAL_STATE.Snippets, action) {
-  switch (action.type) {
-    case at.SNIPPETS_DATA:
-      return Object.assign({}, prevState, { initialized: true }, action.data);
-    case at.SNIPPET_BLOCKED:
-      return Object.assign({}, prevState, {
-        blockList: prevState.blockList.concat(action.data),
-      });
-    case at.SNIPPETS_BLOCKLIST_CLEARED:
-      return Object.assign({}, prevState, { blockList: [] });
-    case at.SNIPPETS_RESET:
-      return INITIAL_STATE.Snippets;
     default:
       return prevState;
   }
@@ -867,7 +845,6 @@ export const reducers = {
   TopSites,
   App,
   ASRouter,
-  Snippets,
   Prefs,
   Dialog,
   Sections,

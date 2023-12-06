@@ -430,9 +430,6 @@
                     "highlights": {
                       "type": "boolean"
                     },
-                    "snippets": {
-                      "type": "boolean"
-                    },
                     "topstories": {
                       "type": "boolean"
                     }
@@ -441,7 +438,6 @@
                     "search",
                     "topsites",
                     "highlights",
-                    "snippets",
                     "topstories"
                   ],
                   "additionalProperties": false
