@@ -52,8 +52,6 @@
 #include "mozilla/ipc/UtilityProcessManager.h"
 #include "mozilla/ipc/UtilityProcessHost.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
-#include "mozilla/RemoteDecoderManagerChild.h"
-#include "mozilla/KeySystemConfig.h"
 #include "mozilla/WheelHandlingHelper.h"
 #include "IOActivityMonitor.h"
 #include "nsNativeTheme.h"
@@ -74,10 +72,6 @@
 #  ifdef XP_LINUX
 #    include <sys/prctl.h>
 #  endif
-#endif
-
-#ifdef MOZ_WMF_CDM
-#  include "mozilla/MFCDMParent.h"
 #endif
 
 namespace mozilla::dom {
@@ -1926,35 +1920,6 @@ void ChromeUtils::NotifyDevToolsOpened(GlobalObject& aGlobal) {
 void ChromeUtils::NotifyDevToolsClosed(GlobalObject& aGlobal) {
   MOZ_ASSERT(ChromeUtils::sDevToolsOpenedCount >= 1);
   ChromeUtils::sDevToolsOpenedCount--;
-}
-
-#ifdef MOZ_WMF_CDM
-/* static */
-already_AddRefed<Promise> ChromeUtils::GetWMFContentDecryptionModuleInformation(
-    GlobalObject& aGlobal, ErrorResult& aRv) {
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  MOZ_ASSERT(global);
-  RefPtr<Promise> domPromise = Promise::Create(global, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-  MOZ_ASSERT(domPromise);
-  MFCDMCapabilities::GetAllKeySystemsCapabilities(domPromise);
-  return domPromise.forget();
-}
-#endif
-
-already_AddRefed<Promise> ChromeUtils::GetGMPContentDecryptionModuleInformation(
-    GlobalObject& aGlobal, ErrorResult& aRv) {
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  MOZ_ASSERT(global);
-  RefPtr<Promise> domPromise = Promise::Create(global, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-  MOZ_ASSERT(domPromise);
-  KeySystemConfig::GetGMPKeySystemConfigs(domPromise);
-  return domPromise.forget();
 }
 
 }  // namespace mozilla::dom
