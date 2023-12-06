@@ -149,6 +149,44 @@ struct ModuleSingleStepState {
         mData{} {}
 };
 
+enum class InstructionFilter {
+  ALL = 0,
+  CALL_RET = 1,
+};
+
+template <InstructionFilter Filter>
+inline bool ShouldRecordInstruction(const uint8_t* aInstructionPointer) {
+  if constexpr (Filter == InstructionFilter::ALL) {
+    return true;
+  }
+  // Note: This filter does *not* exhaustively identify all call/ret
+  //       instructions. For example, prefixed instructions are not
+  //       currently recognized.
+  else if constexpr (Filter == InstructionFilter::CALL_RET) {
+    auto firstByte = aInstructionPointer[0];
+    // E8: CALL rel. Call near, relative.
+    if (firstByte == 0xe8) {
+      return true;
+    }
+    // FF /2: CALL r.	Call near, absolute indirect.
+    else if (firstByte == 0xff) {
+      auto secondByte = aInstructionPointer[1];
+      if ((secondByte & 0x38) == 0x10) {
+        return true;
+      }
+    }
+    // C3: RET. Near return.
+    else if (firstByte == 0xc3) {
+      return true;
+    }
+    // C2: RET imm. Near return and pop imm bytes.
+    else if (firstByte == 0xc2) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // This function runs aCallbackToRun instruction by instruction, recording
 // information about the paths taken within a specific module given by
 // aModulePath. It then calls aPostCollectionCallback with the collected data.
@@ -156,15 +194,17 @@ struct ModuleSingleStepState {
 // We store stores the collected data in stack, so that it is available in
 // crash reports in case we decide to crash from aPostCollectionCallback.
 // Remember to carefully estimate the stack usage when choosing NMaxSteps and
-// NMaxErrorStates.
+// NMaxErrorStates. Consider using an InstructionFilter if you need to reduce
+// the number of steps that get recorded.
 //
 // This function is typically useful on known-to-crash paths, where we can
 // replace the crash by a new single-stepped attempt at doing the operation
 // that just failed. If the operation fails while single-stepped, we'll be able
 // to produce a crash report that contains single step data, which may prove
 // useful to understand why the operation failed.
-template <int NMaxSteps, int NMaxErrorStates, typename CallbackToRun,
-          typename PostCollectionCallback>
+template <int NMaxSteps, int NMaxErrorStates,
+          InstructionFilter Filter = InstructionFilter::ALL,
+          typename CallbackToRun, typename PostCollectionCallback>
 nsresult CollectModuleSingleStepData(
     const wchar_t* aModulePath, CallbackToRun aCallbackToRun,
     PostCollectionCallback aPostCollectionCallback) {
@@ -192,27 +232,31 @@ nsresult CollectModuleSingleStepData(
         // Record data for the current step, if in module
         if (state.mModuleStart <= instructionPointer &&
             instructionPointer < state.mModuleEnd) {
-          // We record the instruction pointer
-          if (state.mSteps < NMaxSteps) {
-            state.mData.mStepsLog[state.mSteps] =
-                static_cast<uint32_t>(instructionPointer - state.mModuleStart);
-          }
-
-          // We record changes in the error state
-          auto currentErrorState{WinErrorState::Get()};
-          if (currentErrorState != state.mLastRecordedErrorState) {
-            state.mLastRecordedErrorState = currentErrorState;
-
-            if (state.mErrorStates < NMaxErrorStates) {
-              state.mData.mErrorStatesLog[state.mErrorStates] =
-                  currentErrorState;
-              state.mData.mStepsAtErrorState[state.mErrorStates] = state.mSteps;
+          if (ShouldRecordInstruction<Filter>(
+                  reinterpret_cast<uint8_t*>(instructionPointer))) {
+            // We record the instruction pointer
+            if (state.mSteps < NMaxSteps) {
+              state.mData.mStepsLog[state.mSteps] = static_cast<uint32_t>(
+                  instructionPointer - state.mModuleStart);
             }
 
-            ++state.mErrorStates;
-          }
+            // We record changes in the error state
+            auto currentErrorState{WinErrorState::Get()};
+            if (currentErrorState != state.mLastRecordedErrorState) {
+              state.mLastRecordedErrorState = currentErrorState;
 
-          ++state.mSteps;
+              if (state.mErrorStates < NMaxErrorStates) {
+                state.mData.mErrorStatesLog[state.mErrorStates] =
+                    currentErrorState;
+                state.mData.mStepsAtErrorState[state.mErrorStates] =
+                    state.mSteps;
+              }
+
+              ++state.mErrorStates;
+            }
+
+            ++state.mSteps;
+          }
         }
 
         // Continue single-stepping
