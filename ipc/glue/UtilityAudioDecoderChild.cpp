@@ -20,6 +20,7 @@
 #endif
 
 #ifdef MOZ_WMF_CDM
+#  include "mozilla/dom/Promise.h"
 #  include "mozilla/EMEUtils.h"
 #  include "mozilla/PMFCDM.h"
 #endif
@@ -179,11 +180,14 @@ bool UtilityAudioDecoderChild::CreateVideoBridge() {
 #endif
 
 #ifdef MOZ_WMF_CDM
-void UtilityAudioDecoderChild::GetKeySystemCapabilities() {
+void UtilityAudioDecoderChild::GetKeySystemCapabilities(
+    dom::Promise* aPromise) {
   EME_LOG("Ask capabilities for all supported CDMs");
   SendGetKeySystemCapabilities()->Then(
       NS_GetCurrentThread(), __func__,
-      [](CopyableTArray<MFCDMCapabilitiesIPDL>&& result) {
+      [promise = RefPtr<dom::Promise>(aPromise)](
+          CopyableTArray<MFCDMCapabilitiesIPDL>&& result) {
+        FallibleTArray<dom::CDMInformation> cdmInfo;
         for (const auto& capabilities : result) {
           EME_LOG("Received capabilities for %s",
                   NS_ConvertUTF16toUTF8(capabilities.keySystem()).get());
@@ -199,7 +203,18 @@ void UtilityAudioDecoderChild::GetKeySystemCapabilities() {
             EME_LOG("  capabilities: encryptionScheme=%s",
                     EncryptionSchemeStr(e));
           }
+          auto* info = cdmInfo.AppendElement(fallible);
+          if (!info) {
+            promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+            return;
+          }
+          info->mKeySystemName = capabilities.keySystem();
+
+          KeySystemConfig config;
+          MFCDMCapabilitiesIPDLToKeySystemConfig(capabilities, config);
+          info->mCapabilities = config.GetDebugInfo();
         }
+        promise->MaybeResolve(cdmInfo);
       },
       [](const mozilla::ipc::ResponseRejectReason& aReason) {
         EME_LOG("IPC failure for GetKeySystemCapabilities!");
