@@ -19,7 +19,7 @@
           "template": {
             "type": "string",
             "description": "An id matching an existing Activity Stream Router template",
-            "enum": ["simple_snippet"]
+            "enum": ["cfr_doorhanger"]
           },
           "bundled": {
             "type": "integer",

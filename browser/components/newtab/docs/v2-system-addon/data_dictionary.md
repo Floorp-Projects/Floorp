@@ -118,13 +118,13 @@ Schema definitions/validations that can be used for tests can be found in `syste
 ```js
 {
   "client_id": "n/a",
-  "action": ["snippets_user_event" | "onboarding_user_event"],
+  "action": ["onboarding_user_event"],
   "impression_id": "{005deed0-e3e4-4c02-a041-17405fd703f6}",
   "source": "pocket",
   "addon_version": "20180710100040",
   "locale": "en-US",
   "source": "NEWTAB_FOOTER_BAR",
-  "message_id": "some_snippet_id",
+  "message_id": "some_message_id",
   "event": "IMPRESSION",
   "event_context": "{\"view\":\"application_menu\"}"
 }
@@ -330,8 +330,6 @@ This encoding mapping was defined in `system-addon/lib/TelemetryFeed.jsm`
 | `showTopStories`  | 4 (00000100)           |
 +-------------------+------------------------+
 | `showHighlights`  | 8 (00001000)           |
-+-------------------+------------------------+
-| `showSnippets`    | 16 (00010000)          |
 +-------------------+------------------------+
 | `showSponsored`   | 32 (00100000)          |
 +-------------------+------------------------+

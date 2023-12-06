@@ -1,6 +1,6 @@
 # Targeting attributes
 
-When you create ASRouter messages such as snippets, contextual feature recommendations, or onboarding cards, you may choose to include **targeting information** with those messages.
+When you create ASRouter messages such as contextual feature recommendations or onboarding cards, you may choose to include **targeting information** with those messages.
 
 Targeting information must be captured in [an expression](./targeting-guide.md) that has access to the following attributes. You may combine and compare any of these attributes as needed.
 
@@ -410,9 +410,9 @@ type UnixEpochNumber = number;
 Information about cohort settings (from prefs, including shield studies) for each provider.
 
 #### Examples
-* Is the user in the "foo_test" cohort for snippets?
+* Is the user in the "foo_test" cohort for cfr?
 ```java
-providerCohorts.snippets == "foo_test"
+providerCohorts.cfr == "foo_test"
 ```
 
 #### Definition
@@ -660,7 +660,6 @@ userPrefs.cfrFeatures == false
 declare const userPrefs: {
   cfrFeatures: boolean;
   cfrAddons: boolean;
-  snippets: boolean;
 }
 ```
 
