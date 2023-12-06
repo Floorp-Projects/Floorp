@@ -6,17 +6,13 @@
 
 :root,
 :host(.anonymous-content-host) {
-  /* Base */
-  /* Do not use base tokens directly as they don't carry any meaning and are used to set our base. Refer to Application tokens below. */
-  /* Typography */
   /** Font size **/
-  --font-size-root: 15px;
+  --font-size-root: 15px;       /* Set at the `:root`. Do not use */
   --font-size-small: 0.867rem;  /* 13px */
   --font-size-large: 1.133rem;  /* 17px */
   --font-size-xlarge: 1.467rem; /* 22px */
   --font-size-xxlarge: 2.2rem;  /* 33px */
 
-  /* Application */
   /** Font weight **/
   --font-weight-light: 300;
 
@@ -28,10 +24,10 @@
 @media not (prefers-contrast) {
   :root,
   :host(.anonymous-content-host) {
-    /* Border */
+    /** Border **/
     --border-interactive-color: light-dark(var(--color-gray-60), var(--color-gray-50));
 
-    /* Button */
+    /** Button **/
     /* TODO Bug 1821203 - Gray use needs to be consolidated */
     --button-background-color: color-mix(in srgb, currentColor 7%, transparent);
     --button-background-color-hover: color-mix(in srgb, currentColor 14%, transparent);
@@ -43,7 +39,7 @@
     --link-color-active: var(--brand-color-accent-active);
     --link-color-visited: var(--link-color);
 
-    /* Color */
+    /** Color **/
     --color-accent-primary: var(--brand-color-accent);
     --color-accent-primary-hover: var(--brand-color-accent-hover);
     --color-accent-primary-active: var(--brand-color-accent-active);
@@ -53,7 +49,7 @@
     --brand-color-accent-active: light-dark(var(--color-blue-70), var(--color-cyan-20));
     --color-canvas: light-dark(var(--color-white), var(--color-gray-90));
 
-    /* Text */
+    /** Text **/
     --text-color: light-dark(var(--color-gray-100), var(--color-gray-05));
     --text-color-deemphasized: light-dark(
       color-mix(in srgb, currentColor 69%, transparent),
