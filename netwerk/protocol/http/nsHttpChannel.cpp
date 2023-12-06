@@ -1703,10 +1703,7 @@ nsresult nsHttpChannel::CallOnStartRequest() {
     nsAutoCString contentType;
     mResponseHead->ContentType(contentType);
 
-    if (contentType.Equals("multipart/x-mixed-replace"_ns) &&
-        ((mLoadInfo->GetExternalContentPolicyType() !=
-          ExtContentPolicyType::TYPE_DOCUMENT) ||
-         StaticPrefs::network_multipart_mixed_replace_enabled_for_document())) {
+    if (contentType.Equals("multipart/x-mixed-replace"_ns)) {
       nsCOMPtr<nsIStreamConverterService> convServ(
           do_GetService("@mozilla.org/streamConverters;1", &rv));
       if (NS_SUCCEEDED(rv)) {
