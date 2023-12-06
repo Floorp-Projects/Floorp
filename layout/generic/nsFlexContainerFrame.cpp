@@ -5606,9 +5606,9 @@ std::tuple<nscoord, nsReflowStatus> nsFlexContainerFrame::ReflowChildren(
       }
 
       if (!itemInPushedItems) {
-        const nscoord itemBSize = item.Frame()->BSize(flexWM);
+        const nscoord borderBoxBSize = item.Frame()->BSize(flexWM);
         const nscoord bEndEdgeAfterPerItemShift =
-            framePos.B(flexWM) + itemBSize;
+            framePos.B(flexWM) + borderBoxBSize;
 
         // The item (or a fragment thereof) was placed in this flex container
         // fragment. Update the max block-end edge with the item's block-end
@@ -5621,7 +5621,7 @@ std::tuple<nscoord, nsReflowStatus> nsFlexContainerFrame::ReflowChildren(
           // because bEndEdgeAfterPerItemShift is relative to the border-box.
           const nscoord bEndEdgeBeforePerItemShift =
               containerContentBoxOrigin.B(flexWM) +
-              *frameBPosBeforePerItemShift + itemBSize;
+              *frameBPosBeforePerItemShift + borderBoxBSize;
 
           if (bAxisMetrics.mMaxBEndEdge) {
             auto& [before, after] = *bAxisMetrics.mMaxBEndEdge;
