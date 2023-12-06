@@ -404,3 +404,7 @@ partial interface Element {
   [SecureContext, UseCounter, Throws, Pref="dom.security.setHTML.enabled"]
   undefined setHTML(DOMString aInnerHTML, optional SetHTMLOptions options = {});
 };
+
+partial interface Element {
+  undefined setHTMLUnsafe(DOMString html);
+};
