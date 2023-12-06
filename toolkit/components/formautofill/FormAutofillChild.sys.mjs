@@ -88,7 +88,7 @@ export class FormAutofillChild extends JSWindowActorChild {
         lazy.FormAutofillContent.identifyAutofillFields(
           this._nextHandleElement
         );
-      if (isAnyFieldIdentified) {
+      if (isAnyFieldIdentified && lazy.FormAutofill.captureOnFormRemoval) {
         this.registerDOMDocFetchSuccessEventListener(
           this._nextHandleElement.ownerDocument
         );
