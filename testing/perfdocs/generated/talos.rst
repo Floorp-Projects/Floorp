@@ -9509,13 +9509,6 @@ Extra Talos Tests
     :depth: 1
     :local:
 
-about_newtab_with_snippets
-==========================
-
-.. note::
-
-   add test details
-
 File IO
 -------
 

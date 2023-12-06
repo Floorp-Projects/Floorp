@@ -508,7 +508,7 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
 ```js
 {
   "event": "PREF_CHANGED",
-  "source": ["TOP_STORIES" | "POCKET_SPOCS" | "HIGHLIGHTS" | "SNIPPETS" | "TOP_SITES" | "SPONSORED_TOP_SITES"],
+  "source": ["TOP_STORIES" | "POCKET_SPOCS" | "HIGHLIGHTS" | "TOP_SITES" | "SPONSORED_TOP_SITES"],
   "value": "{\"status\":true|false,\"menu_source\":\"ABOUT_PREFERENCES|CUSTOMIZE_MENU\"}"
   "release_channel": "default",
   "experiments": {},
@@ -751,27 +751,7 @@ These pings record the impression and user interactions within Activity Stream R
 
 This reports the impression of Activity Stream Router.
 
-#### Snippets impression
-
-```js
-{
-  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
-  "action": "snippets_user_event",
-  "impression_id": "n/a",
-  "source": "SNIPPETS",
-  "addon_version": "20180710100040",
-  "locale": "en-US",
-  "experiments": {
-    "experiment_1": { "branch": "control" },
-    "experiment_2": { "branch": "treatment" }
-  },
-  "source": "NEWTAB_FOOTER_BAR",
-  "message_id": "some_snippet_id",
-  "event": "IMPRESSION"
-}
-```
-
-CFR impression ping has two forms, in which the message_id could be of different meanings.
+A CFR impression ping has two forms, in which the message_id could be of different meanings.
 
 #### CFR impression for all the prerelease channels and shield experiment
 
@@ -817,25 +797,6 @@ CFR impression ping has two forms, in which the message_id could be of different
 ### User interaction pings
 
 This reports the user's interaction with Activity Stream Router.
-
-#### Snippets interaction pings
-
-```js
-{
-  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
-  "action": "snippets_user_event",
-  "addon_version": "20180710100040",
-  "impression_id": "n/a",
-  "locale": "en-US",
-  "experiments": {
-    "experiment_1": { "branch": "control" },
-    "experiment_2": { "branch": "treatment" }
-  },
-  "source": "NEWTAB_FOOTER_BAR",
-  "message_id": "some_snippet_id",
-  "event": ["CLICK_BUTTION" | "BLOCK"]
-}
-```
 
 #### CFR interaction pings for all the prerelease channels and shield experiment
 
@@ -1100,7 +1061,7 @@ channels. Currently this is only used in experiments.
 
 ## Messaging-experiments pings
 
-As the new experiment platform, the Messaging experiment manager is now managing & operating all the experiments of Firefox Messaging System, including the first-run experience (about:welcome), CFR, Whats-new-panel, Moments Page, and Snippets.
+As the new experiment platform, the Messaging experiment manager is now managing & operating all the experiments of Firefox Messaging System, including the first-run experience (about:welcome), CFR, Whats-new-panel, and Moments Page.
 
 ### Enrollment & Unenrollment pings
 
@@ -1116,7 +1077,7 @@ Unlike other Activity Stream pings, this is a Firefox Events telemetry event, an
 {
   "category": "messaging_experiments",
   "method": "reach",
-  // any of ["cfr", "whats_new_panel", "moments_page", "snippets", "cfr_fxa"]
+  // any of ["cfr", "whats_new_panel", "moments_page", "cfr_fxa"]
   "object": "cfr"
   "value": "experiment_message_id",
   "extra_keys": {
