@@ -156,6 +156,12 @@ class Store {
   }
 
   async _initIndexedDB(telemetryKey) {
+    // "snippets" is the name of one storage space, but these days it is used
+    // not for snippet-related data (snippets were removed in bug 1715158),
+    // but storage for impression or session data for all ASRouter messages.
+    //
+    // We keep the name "snippets" to avoid having to do an IndexedDB database
+    // migration.
     this.dbStorage = new ActivityStreamStorage({
       storeNames: ["sectionPrefs", "snippets"],
     });
