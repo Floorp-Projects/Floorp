@@ -3023,7 +3023,7 @@ impl<'ctx> CoreStreamData<'ctx> {
                 if using_voice_processing_unit {
                     // VPIO will always use the sample rate of the input hw for both input and output,
                     // as reported to us. (We can override it but we cannot improve quality this way).
-                    p.rate = output_hw_desc.mSampleRate as _;
+                    p.rate = self.input_dev_desc.mSampleRate as _;
                 }
                 StreamParams::from(p)
             };

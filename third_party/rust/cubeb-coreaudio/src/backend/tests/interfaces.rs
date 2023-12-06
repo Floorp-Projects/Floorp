@@ -2,8 +2,8 @@ extern crate itertools;
 
 use self::itertools::iproduct;
 use super::utils::{
-    noop_data_callback, test_get_default_device, test_ops_context_operation,
-    test_ops_stream_operation, Scope,
+    get_devices_info_in_scope, noop_data_callback, test_device_channels_in_scope,
+    test_get_default_device, test_ops_context_operation, test_ops_stream_operation, Scope,
 };
 use super::*;
 
@@ -714,6 +714,45 @@ where
     );
 }
 
+fn test_stereo_input_duplex_stream_operation<F>(name: &'static str, operation: F)
+where
+    F: FnOnce(*mut ffi::cubeb_stream),
+{
+    let mut input_devices = get_devices_info_in_scope(Scope::Input);
+    input_devices.retain(|d| test_device_channels_in_scope(d.id, Scope::Input).unwrap_or(0) >= 2);
+    if input_devices.is_empty() {
+        println!("No stereo input device present. Skipping stereo-input test.");
+        return;
+    }
+
+    let mut input_params = ffi::cubeb_stream_params::default();
+    input_params.format = ffi::CUBEB_SAMPLE_FLOAT32NE;
+    input_params.rate = 48000;
+    input_params.channels = 2;
+    input_params.layout = ffi::CUBEB_LAYOUT_UNDEFINED;
+    input_params.prefs = ffi::CUBEB_STREAM_PREF_NONE;
+
+    let mut output_params = ffi::cubeb_stream_params::default();
+    output_params.format = ffi::CUBEB_SAMPLE_FLOAT32NE;
+    output_params.rate = 48000;
+    output_params.channels = 2;
+    output_params.layout = ffi::CUBEB_LAYOUT_UNDEFINED;
+    output_params.prefs = ffi::CUBEB_STREAM_PREF_NONE;
+
+    test_ops_stream_operation(
+        name,
+        input_devices[0].id as ffi::cubeb_devid,
+        &mut input_params,
+        ptr::null_mut(), // Use default output device.
+        &mut output_params,
+        4096, // TODO: Get latency by get_min_latency instead ?
+        Some(noop_data_callback),
+        None,            // No state callback.
+        ptr::null_mut(), // No user data pointer.
+        operation,
+    );
+}
+
 #[test]
 fn test_ops_stream_init_and_destroy() {
     test_default_output_stream_operation("stream: init and destroy", |_stream| {});
@@ -829,5 +868,27 @@ fn test_ops_stream_register_device_changed_callback() {
             unsafe { OPS.stream_register_device_changed_callback.unwrap()(stream, None) },
             ffi::CUBEB_OK
         );
+    });
+}
+
+#[test]
+fn test_ops_stereo_input_duplex_stream_init_and_destroy() {
+    test_stereo_input_duplex_stream_operation(
+        "stereo-input duplex stream: init and destroy",
+        |_stream| {},
+    );
+}
+
+#[test]
+fn test_ops_stereo_input_duplex_stream_start() {
+    test_stereo_input_duplex_stream_operation("stereo-input duplex stream: start", |stream| {
+        assert_eq!(unsafe { OPS.stream_start.unwrap()(stream) }, ffi::CUBEB_OK);
+    });
+}
+
+#[test]
+fn test_ops_stereo_input_duplex_stream_stop() {
+    test_stereo_input_duplex_stream_operation("stereo-input duplex stream: stop", |stream| {
+        assert_eq!(unsafe { OPS.stream_stop.unwrap()(stream) }, ffi::CUBEB_OK);
     });
 }
