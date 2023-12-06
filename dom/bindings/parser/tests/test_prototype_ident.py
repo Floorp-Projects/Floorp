@@ -1,3 +1,6 @@
+import WebIDL
+
+
 def WebIDLTest(parser, harness):
     threw = False
     try:
@@ -9,7 +12,7 @@ def WebIDLTest(parser, harness):
         """
         )
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "The identifier of a static attribute must not be 'prototype'")
@@ -25,7 +28,7 @@ def WebIDLTest(parser, harness):
         """
         )
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "The identifier of a static operation must not be 'prototype'")
@@ -41,7 +44,7 @@ def WebIDLTest(parser, harness):
         """
         )
         parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
 
     harness.ok(threw, "The identifier of a constant must not be 'prototype'")

@@ -74,7 +74,7 @@ def WebIDLTest(parser, harness):
             };
         """
         )
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
     harness.ok(threw, "[LenientFloat] only allowed on methods returning undefined")
 
@@ -89,7 +89,7 @@ def WebIDLTest(parser, harness):
             };
         """
         )
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
     harness.ok(
         threw, "[LenientFloat] only allowed on methods with unrestricted float args"
@@ -106,7 +106,7 @@ def WebIDLTest(parser, harness):
             };
         """
         )
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
     harness.ok(
         threw, "[LenientFloat] only allowed on methods with unrestricted float args (2)"
@@ -123,7 +123,7 @@ def WebIDLTest(parser, harness):
             };
         """
         )
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
     harness.ok(
         threw, "[LenientFloat] only allowed on methods with unrestricted float args (3)"
@@ -140,6 +140,6 @@ def WebIDLTest(parser, harness):
             };
         """
         )
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
     harness.ok(threw, "[LenientFloat] only allowed on writable attributes")
