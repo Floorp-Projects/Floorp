@@ -336,6 +336,10 @@ BROWSER_PROCESS += [
 
     # Kingsoft internet security (bug 1837246)
     DllBlocklistEntry("dghmpg64.dll", ALL_VERSIONS),
+
+    # Legacy DLL for digital signatures with ID cards from Spain (bug 1709082),
+    # up-to-date setups use DNIe_P11_x64.dll instead
+    DllBlocklistEntry("UsrDNIeCertStore.dll", ALL_VERSIONS),
 ]
 
 CHILD_PROCESSES += [
