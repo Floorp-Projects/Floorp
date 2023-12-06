@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::fmt;
 use std::os::raw::c_void;
 use std::slice;
@@ -82,29 +83,40 @@ fn process_data<T: Copy + std::ops::Add<Output = T>>(
     input_channels_to_ignore: usize,
     output_channel_count: usize,
 ) -> &'static [T] {
-    assert!(input_channel_count >= input_channels_to_ignore + output_channel_count); // Only support downmix.
+    assert!(
+        input_channels_to_ignore == 0
+            || input_channel_count >= input_channels_to_ignore + output_channel_count
+    );
     let input_slice = unsafe {
         slice::from_raw_parts_mut::<T>(data as *mut T, frame_count * input_channel_count)
     };
-    if input_channel_count == output_channel_count {
-        assert_eq!(input_channels_to_ignore, 0);
-        input_slice
-    } else {
-        if input_channels_to_ignore > 0 {
-            drop_first_n_channels_in_place(
-                input_channels_to_ignore,
+    match input_channel_count.cmp(&output_channel_count) {
+        Ordering::Equal => {
+            assert_eq!(input_channels_to_ignore, 0);
+            input_slice
+        }
+        Ordering::Greater => {
+            if input_channels_to_ignore > 0 {
+                drop_first_n_channels_in_place(
+                    input_channels_to_ignore,
+                    input_slice,
+                    frame_count,
+                    input_channel_count,
+                );
+            }
+            let new_count_remixed = remix_or_drop_channels(
+                input_channel_count - input_channels_to_ignore,
+                output_channel_count,
                 input_slice,
                 frame_count,
-                input_channel_count,
             );
+            unsafe { slice::from_raw_parts_mut::<T>(data as *mut T, new_count_remixed) }
         }
-        let new_count_remixed = remix_or_drop_channels(
-            input_channel_count - input_channels_to_ignore,
-            output_channel_count,
-            input_slice,
-            frame_count,
-        );
-        unsafe { slice::from_raw_parts_mut::<T>(data as *mut T, new_count_remixed) }
+        Ordering::Less => {
+            assert!(input_channel_count < output_channel_count);
+            // Upmix happens on pull.
+            input_slice
+        }
     }
 }
 
@@ -144,7 +156,10 @@ impl BufferManager {
         input_channels_to_ignore: usize,
         output_channel_count: usize,
     ) -> Self {
-        assert!(input_channel_count >= input_channels_to_ignore + output_channel_count);
+        assert!(
+            (input_channels_to_ignore == 0 && input_channel_count == 1)
+                || input_channel_count >= input_channels_to_ignore + output_channel_count
+        );
         // 8 times the expected callback size, to handle the input callback being caled multiple
         //   times in a row correctly.
         let buffer_element_count = output_channel_count * buffer_size_frames * 8;
@@ -179,19 +194,37 @@ impl BufferManager {
             }
         }
     }
-    fn channel_count(&self) -> usize {
+    fn stored_channel_count(&self) -> usize {
+        if self.output_channel_count > self.input_channel_count {
+            // This case allows upmix from mono on pull.
+            self.input_channel_count
+        } else {
+            // Other cases only downmix on push.
+            self.output_channel_count
+        }
+    }
+    fn input_channel_count(&self) -> usize {
+        self.input_channel_count
+    }
+    fn input_channels_to_ignore(&self) -> usize {
+        self.input_channels_to_ignore
+    }
+    fn output_channel_count(&self) -> usize {
         self.output_channel_count
     }
     pub fn push_data(&mut self, data: *mut c_void, frame_count: usize) {
-        let to_push = frame_count * self.output_channel_count;
+        let to_push = frame_count * self.stored_channel_count();
+        let input_channel_count = self.input_channel_count();
+        let input_channels_to_ignore = self.input_channels_to_ignore();
+        let output_channel_count = self.output_channel_count();
         let pushed = match &mut self.producer {
             RingBufferProducer::FloatRingBufferProducer(p) => {
                 let processed_input = process_data(
                     data,
                     frame_count,
-                    self.input_channel_count,
-                    self.input_channels_to_ignore,
-                    self.output_channel_count,
+                    input_channel_count,
+                    input_channels_to_ignore,
+                    output_channel_count,
                 );
                 p.push_slice(processed_input)
             }
@@ -199,14 +232,14 @@ impl BufferManager {
                 let processed_input = process_data(
                     data,
                     frame_count,
-                    self.input_channel_count,
-                    self.input_channels_to_ignore,
-                    self.output_channel_count,
+                    input_channel_count,
+                    input_channels_to_ignore,
+                    output_channel_count,
                 );
                 p.push_slice(processed_input)
             }
         };
-        assert!(pushed <= to_push, "We don't support upmix");
+        assert!(pushed <= to_push);
         if pushed != to_push {
             cubeb_alog!(
                 "Input ringbuffer full, could only push {} instead of {}",
@@ -216,67 +249,88 @@ impl BufferManager {
         }
     }
     fn pull_data(&mut self, data: *mut c_void, needed_samples: usize) {
+        assert_eq!(needed_samples % self.output_channel_count(), 0);
+        let needed_frames = needed_samples / self.output_channel_count();
+        let to_pull = needed_frames * self.stored_channel_count();
         match &mut self.consumer {
             IntegerRingBufferConsumer(p) => {
                 let input: &mut [i16] =
                     unsafe { slice::from_raw_parts_mut::<i16>(data as *mut i16, needed_samples) };
-                let read = p.pop_slice(input);
-                if read < needed_samples {
+                let pulled = p.pop_slice(input);
+                if pulled < to_pull {
                     cubeb_alog!(
                         "Underrun during input data pull: (needed: {}, available: {})",
-                        needed_samples,
-                        read
+                        to_pull,
+                        pulled
                     );
-                    for i in 0..(needed_samples - read) {
-                        input[read + i] = 0;
+                    for i in 0..(to_pull - pulled) {
+                        input[pulled + i] = 0;
+                    }
+                }
+                if needed_samples > to_pull {
+                    // Mono upmix. This can happen with voice processing.
+                    let mut write_idx = needed_samples - self.output_channel_count();
+                    for read_idx in (0..to_pull).rev() {
+                        for offset in 0..self.output_channel_count() {
+                            input[write_idx + offset] = input[read_idx];
+                        }
+                        write_idx -= self.output_channel_count();
                     }
                 }
             }
             FloatRingBufferConsumer(p) => {
                 let input: &mut [f32] =
                     unsafe { slice::from_raw_parts_mut::<f32>(data as *mut f32, needed_samples) };
-                let read = p.pop_slice(input);
-                if read < needed_samples {
+                let pulled = p.pop_slice(input);
+                if pulled < to_pull {
                     cubeb_alog!(
                         "Underrun during input data pull: (needed: {}, available: {})",
-                        needed_samples,
-                        read
+                        to_pull,
+                        pulled
                     );
-                    for i in 0..(needed_samples - read) {
-                        input[read + i] = 0.0;
+                    for i in 0..(to_pull - pulled) {
+                        input[pulled + i] = 0.0;
+                    }
+                }
+                if needed_samples > to_pull {
+                    // Mono upmix. This can happen with voice processing.
+                    let mut write_idx = needed_samples - self.output_channel_count();
+                    for read_idx in (0..to_pull).rev() {
+                        for offset in 0..self.output_channel_count() {
+                            input[write_idx + offset] = input[read_idx];
+                        }
+                        write_idx -= self.output_channel_count();
                     }
                 }
             }
         }
     }
     pub fn get_linear_data(&mut self, frame_count: usize) -> *mut c_void {
-        let sample_count = frame_count * self.channel_count();
+        let output_sample_count = frame_count * self.output_channel_count();
         let p = match &mut self.linear_buffer {
             LinearBuffer::IntegerLinearBuffer(b) => {
-                b.resize(sample_count, 0);
+                b.resize(output_sample_count, 0);
                 b.as_mut_ptr() as *mut c_void
             }
             LinearBuffer::FloatLinearBuffer(b) => {
-                b.resize(sample_count, 0.);
+                b.resize(output_sample_count, 0.);
                 b.as_mut_ptr() as *mut c_void
             }
         };
-        self.pull_data(p, sample_count);
+        self.pull_data(p, output_sample_count);
 
         p
     }
-    fn available_samples(&self) -> usize {
-        match &self.consumer {
+    pub fn available_frames(&self) -> usize {
+        assert_ne!(self.stored_channel_count(), 0);
+        let stored_samples = match &self.consumer {
             IntegerRingBufferConsumer(p) => p.len(),
             FloatRingBufferConsumer(p) => p.len(),
-        }
-    }
-    pub fn available_frames(&self) -> usize {
-        assert_ne!(self.channel_count(), 0);
-        self.available_samples() / self.channel_count()
+        };
+        stored_samples / self.stored_channel_count()
     }
     pub fn trim(&mut self, final_frame_count: usize) {
-        let final_sample_count = final_frame_count * self.channel_count();
+        let final_sample_count = final_frame_count * self.stored_channel_count();
         match &mut self.consumer {
             IntegerRingBufferConsumer(c) => {
                 let available = c.len();

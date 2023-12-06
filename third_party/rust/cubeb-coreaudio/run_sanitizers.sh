@@ -11,6 +11,9 @@ if [[ $toolchain != nightly* ]]; then
     exit
 fi
 
+# Bail out once getting an error.
+set -e
+
 # Ideally, sanitizers should be ("address" "leak" "memory" "thread") but
 # - `memory`: It doesn't works with target x86_64-apple-darwin
 # - `leak`: Get some errors that are out of our control. See:
