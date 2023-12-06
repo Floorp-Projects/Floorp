@@ -18983,4 +18983,9 @@ RadioGroupContainer& Document::OwnedRadioGroupContainer() {
   return *mRadioGroupContainer;
 }
 
+void Document::UpdateHiddenByContentVisibilityForAnimations() {
+  for (AnimationTimeline* timeline : Timelines()) {
+    timeline->UpdateHiddenByContentVisibility();
+  }
+}
 }  // namespace mozilla::dom

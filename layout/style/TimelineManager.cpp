@@ -168,4 +168,20 @@ void TimelineManager::DoUpdateTimelines(
   // siblings when mutating {scroll|view}-timeline-name.
 }
 
+void TimelineManager::UpdateHiddenByContentVisibilityForAnimations() {
+  for (auto* scrollTimelineCollection : mScrollTimelineCollections) {
+    for (ScrollTimeline* timeline :
+         scrollTimelineCollection->Timelines().Values()) {
+      timeline->UpdateHiddenByContentVisibility();
+    }
+  }
+
+  for (auto* viewTimelineCollection : mViewTimelineCollections) {
+    for (ViewTimeline* timeline :
+         viewTimelineCollection->Timelines().Values()) {
+      timeline->UpdateHiddenByContentVisibility();
+    }
+  }
+}
+
 }  // namespace mozilla

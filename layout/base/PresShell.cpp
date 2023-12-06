@@ -11950,8 +11950,15 @@ void PresShell::UpdateRelevancyOfContentVisibilityAutoFrames() {
     return;
   }
 
+  bool isRelevantContentChanged = false;
   for (nsIFrame* frame : mContentVisibilityAutoFrames) {
-    frame->UpdateIsRelevantContent(mContentVisibilityRelevancyToUpdate);
+    isRelevantContentChanged |=
+        frame->UpdateIsRelevantContent(mContentVisibilityRelevancyToUpdate);
+  }
+  if (isRelevantContentChanged) {
+    if (nsPresContext* presContext = GetPresContext()) {
+      presContext->UpdateHiddenByContentVisibilityForAnimations();
+    }
   }
 
   mContentVisibilityRelevancyToUpdate.clear();
@@ -11985,6 +11992,7 @@ PresShell::ProximityToViewportResult PresShell::DetermineProximityToViewport() {
   auto input = DOMIntersectionObserver::ComputeInput(
       *mDocument, /* aRoot = */ nullptr, &rootMargin);
 
+  bool isRelevantContentChanged = false;
   for (nsIFrame* frame : mContentVisibilityAutoFrames) {
     auto* element = frame->GetContent()->AsElement();
     result.mAnyScrollIntoViewFlag |=
@@ -12005,12 +12013,18 @@ PresShell::ProximityToViewportResult PresShell::DetermineProximityToViewport() {
             .Intersects();
     element->SetVisibleForContentVisibility(intersects);
     if (oldVisibility.isNothing() || *oldVisibility != intersects) {
-      frame->UpdateIsRelevantContent(ContentRelevancyReason::Visible);
+      isRelevantContentChanged |=
+          frame->UpdateIsRelevantContent(ContentRelevancyReason::Visible);
     }
 
     // 14.2.3.3
     if (checkForInitialDetermination && intersects) {
       result.mHadInitialDetermination = true;
+    }
+  }
+  if (isRelevantContentChanged) {
+    if (nsPresContext* presContext = GetPresContext()) {
+      presContext->UpdateHiddenByContentVisibilityForAnimations();
     }
   }
 

@@ -263,6 +263,17 @@ const nsIScrollableFrame* ScrollTimeline::GetScrollFrame() const {
   return nullptr;
 }
 
+void ScrollTimeline::NotifyAnimationContentVisibilityChanged(
+    Animation* aAnimation, bool aIsVisible) {
+  AnimationTimeline::NotifyAnimationContentVisibilityChanged(aAnimation,
+                                                             aIsVisible);
+  if (mAnimationOrder.isEmpty()) {
+    UnregisterFromScrollSource();
+  } else {
+    RegisterWithScrollSource();
+  }
+}
+
 // ------------------------------------
 // Methods of ProgressTimelineScheduler
 // ------------------------------------
