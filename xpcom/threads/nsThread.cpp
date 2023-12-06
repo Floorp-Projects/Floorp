@@ -550,8 +550,7 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
 #ifdef EARLY_BETA_OR_EARLIER
       mLastWakeupCheckTime(TimeStamp::Now()),
 #endif
-      mPerformanceCounterState(mNestedEventLoopDepth, mIsMainThread,
-                               aOptions.longTaskLength) {
+      mPerformanceCounterState(mNestedEventLoopDepth, mIsMainThread) {
 #if !(defined(XP_WIN) || defined(XP_MACOSX))
   MOZ_ASSERT(!mIsUiThread,
              "Non-main UI threads are only supported on Windows and macOS");
@@ -582,7 +581,7 @@ nsThread::nsThread()
 #ifdef EARLY_BETA_OR_EARLIER
       mLastWakeupCheckTime(TimeStamp::Now()),
 #endif
-      mPerformanceCounterState(mNestedEventLoopDepth) {
+      mPerformanceCounterState(mNestedEventLoopDepth, mIsMainThread) {
   MOZ_ASSERT(!NS_IsMainThread());
 }
 
@@ -1459,11 +1458,9 @@ void nsThreadShutdownContext::MarkCompleted() {
 namespace mozilla {
 PerformanceCounterState::Snapshot PerformanceCounterState::RunnableWillRun(
     TimeStamp aNow, bool aIsIdleRunnable) {
-  if (mIsMainThread && IsNestedRunnable()) {
+  if (IsNestedRunnable()) {
     // Flush out any accumulated time that should be accounted to the
-    // current runnable before we start running a nested runnable.  Don't
-    // do this for non-mainthread threads that may be running their own
-    // event loops, like SocketThread.
+    // current runnable before we start running a nested runnable.
     MaybeReportAccumulatedTime("nested runnable"_ns, aNow);
   }
 
@@ -1485,10 +1482,10 @@ void PerformanceCounterState::RunnableDidRun(const nsCString& aName,
   // We may not need the current timestamp; don't bother computing it if we
   // don't.
   TimeStamp now;
-  if (mLongTaskLength.isSome() || IsNestedRunnable()) {
+  if (mIsMainThread || IsNestedRunnable()) {
     now = TimeStamp::Now();
   }
-  if (mLongTaskLength.isSome()) {
+  if (mIsMainThread) {
     MaybeReportAccumulatedTime(aName, now);
   }
 
@@ -1508,7 +1505,9 @@ void PerformanceCounterState::MaybeReportAccumulatedTime(const nsCString& aName,
                                                          TimeStamp aNow) {
   MOZ_ASSERT(mCurrentTimeSliceStart,
              "How did we get here if we're not in a timeslice?");
-  if (!mLongTaskLength.isSome()) {
+
+  if (!mIsMainThread) {
+    // No one cares about this timeslice.
     return;
   }
 
@@ -1521,7 +1520,7 @@ void PerformanceCounterState::MaybeReportAccumulatedTime(const nsCString& aName,
 #endif
 
   // Long tasks only matter on the main thread.
-  if (duration.ToMilliseconds() >= mLongTaskLength.value()) {
+  if (mIsMainThread && duration.ToMilliseconds() > LONGTASK_BUSY_WINDOW_MS) {
     // Idle events (gc...) don't *really* count here
     if (!mCurrentRunnableIsIdleRunnable) {
       mLastLongNonIdleTaskEnd = aNow;

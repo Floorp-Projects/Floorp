@@ -308,9 +308,8 @@ nsresult nsThreadManager::Init() {
   RefPtr<ThreadEventQueue> synchronizedQueue =
       new ThreadEventQueue(std::move(queue), true);
 
-  mMainThread = new nsThread(
-      WrapNotNull(synchronizedQueue), nsThread::MAIN_THREAD,
-      {.stackSize = 0, .longTaskLength = Some(W3_LONGTASK_BUSY_WINDOW_MS)});
+  mMainThread = new nsThread(WrapNotNull(synchronizedQueue),
+                             nsThread::MAIN_THREAD, {.stackSize = 0});
 
   nsresult rv = mMainThread->InitCurrentThread();
   if (NS_FAILED(rv)) {
@@ -491,8 +490,8 @@ void nsThreadManager::UnregisterCurrentThread(nsThread& aThread) {
   // Ref-count balanced via ReleaseThread
 }
 
-// Not to be used for MainThread!
-nsThread* nsThreadManager::CreateCurrentThread(SynchronizedEventQueue* aQueue) {
+nsThread* nsThreadManager::CreateCurrentThread(
+    SynchronizedEventQueue* aQueue, nsThread::MainThreadFlag aMainThread) {
   // Make sure we don't have an nsThread yet.
   MOZ_ASSERT(!PR_GetThreadPrivate(mCurThreadIndex));
 
@@ -500,8 +499,8 @@ nsThread* nsThreadManager::CreateCurrentThread(SynchronizedEventQueue* aQueue) {
     return nullptr;
   }
 
-  RefPtr<nsThread> thread = new nsThread(
-      WrapNotNull(aQueue), nsThread::NOT_MAIN_THREAD, {.stackSize = 0});
+  RefPtr<nsThread> thread =
+      new nsThread(WrapNotNull(aQueue), aMainThread, {.stackSize = 0});
   if (NS_FAILED(thread->InitCurrentThread())) {
     return nullptr;
   }
