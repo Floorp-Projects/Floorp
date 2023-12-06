@@ -7,6 +7,7 @@ package org.mozilla.fenix.ui.robots
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
+import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
@@ -32,6 +33,8 @@ import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.isChecked
 import org.mozilla.fenix.helpers.isEnabled
+
+const val globalPrivacyControlSwitchText = "Tell websites not to share & sell data"
 
 /**
  * Implementation of Robot Pattern for the settings Enhanced Tracking Protection sub menu.
@@ -63,6 +66,33 @@ class SettingsSubMenuEnhancedTrackingProtectionRobot {
         allOf(
             withText("Enhanced Tracking Protection"),
             hasSibling(withResourceName("checkbox")),
+        ),
+    ).click()
+
+    fun scrollToGCPSettings(): ViewInteraction = onView(withId(R.id.recycler_view)).perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+            hasDescendant(withText(globalPrivacyControlSwitchText)),
+        ),
+    )
+    fun verifyGPCTextWithSwitchWidget() {
+        onView(
+            allOf(
+                withChild(withText(globalPrivacyControlSwitchText)),
+            ),
+        ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    }
+
+    fun verifyGPCSwitchEnabled(enabled: Boolean) {
+        onView(
+            allOf(
+                withChild(withText(globalPrivacyControlSwitchText)),
+            ),
+        ).check(matches(isChecked(enabled)))
+    }
+
+    fun switchGPCToggle() = onView(
+        allOf(
+            withChild(withText(globalPrivacyControlSwitchText)),
         ),
     ).click()
 

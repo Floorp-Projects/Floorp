@@ -146,4 +146,10 @@ object TestAssetHelper {
 
         return TestAsset(url, "", "")
     }
+
+    fun getGPCTestAsset(server: MockWebServer): TestAsset {
+        val url = server.url("pages/global_privacy_control.html").toString().toUri()!!
+
+        return TestAsset(url, "", "")
+    }
 }
