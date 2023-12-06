@@ -247,7 +247,7 @@ private fun AdjustedProductRatingCard(
         }
 
         Text(
-            text = stringResource(R.string.review_quality_check_adjusted_rating_description),
+            text = stringResource(R.string.review_quality_check_adjusted_rating_description_2),
             color = FirefoxTheme.colors.textPrimary,
             style = FirefoxTheme.typography.caption,
         )
