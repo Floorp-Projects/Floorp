@@ -14,9 +14,13 @@
 #include "nsThreadUtils.h"
 #include "TelemetryFixture.h"
 #include "TelemetryTestHelpers.h"
+#include "mozilla/glean/GleanMetrics.h"
+#include "mozilla/glean/fog_ffi_generated.h"
 
 using namespace mozilla;
 using namespace TelemetryTestHelpers;
+using namespace mozilla::glean;
+using namespace mozilla::glean::impl;
 using mozilla::Telemetry::ProcessID;
 
 #define EXPECTED_STRING "Nice, expected and creative string."
@@ -588,4 +592,31 @@ TEST_F(TelemetryTestFixture, TooManyKeys) {
   // Check 100 keys are present.
   CheckNumberOfProperties(kScalarName, cx.GetJSContext(), scalarsSnapshot, 100);
 #endif  // #ifndef DEBUG
+}
+
+TEST_F(TelemetryTestFixture, GleanLabeledGifft) {
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+  // Need to test-reset Glean so it's working
+  nsCString empty;
+  ASSERT_EQ(NS_OK, fog_test_reset(&empty, &empty));
+
+  ASSERT_EQ(mozilla::Nothing(),
+            test_only_ipc::a_labeled_counter.Get("hot_air"_ns)
+                .TestGetValue()
+                .unwrap());
+
+  const char* kScalarName = "telemetry.test.another_mirror_for_labeled_counter";
+  const uint32_t kExpectedUint = 1172017;
+  const int32_t kExpectedInt = (int32_t)1172017;
+
+  test_only_ipc::a_labeled_counter.Get("hot_air"_ns).Add(kExpectedInt);
+  ASSERT_EQ(kExpectedInt, test_only_ipc::a_labeled_counter.Get("hot_air"_ns)
+                              .TestGetValue()
+                              .unwrap()
+                              .ref());
+
+  JS::Rooted<JS::Value> scalarsSnapshot(cx.GetJSContext());
+  GetScalarsSnapshot(true, cx.GetJSContext(), &scalarsSnapshot);
+  CheckKeyedUintScalar(kScalarName, "hot_air", cx.GetJSContext(),
+                       scalarsSnapshot, kExpectedUint);
 }
