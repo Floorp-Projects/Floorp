@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { MESSAGE_TYPE_HASH } from "resource://activity-stream/common/ActorConstants.sys.mjs";
-
 import { ASRouterNewTabHook } from "resource://activity-stream/lib/ASRouterNewTabHook.sys.mjs";
 
 const { ASRouterDefaultConfig } = ChromeUtils.import(
@@ -87,16 +85,6 @@ export class ASRouterParent extends JSWindowActorParent {
 
   receiveMessage({ name, data }) {
     return ASRouterParent.tabs.loadingMessageHandler.then(handler => {
-      if (name === MESSAGE_TYPE_HASH.BLOCK_MESSAGE_BY_ID) {
-        return Promise.all([
-          handler.handleMessage(name, data, this.getTab()),
-          // All tabs should clear messages not just preloaded, for example
-          // two different windows can display the same snippet.
-          // ASRouter blocks snippets by campaign not by id so we just tell
-          // other tabs that this specific campaign was blocked.
-          ASRouterParent.tabs.messageAll("ClearMessages", [data.campaign]),
-        ]).then(([handleMessageResult]) => handleMessageResult);
-      }
       return handler.handleMessage(name, data, this.getTab());
     });
   }

@@ -79,27 +79,5 @@ describe("ASRouterParent", () => {
       assert.calledOnce(handleMessage);
       assert.equal(result, "handle-message-result");
     });
-    it("it messages all actors on BLOCK_MESSAGE_BY_ID messages", async () => {
-      const MESSAGE_ID = 1;
-      const result = await asRouterParent.receiveMessage({
-        name: msg.BLOCK_MESSAGE_BY_ID,
-        data: { id: MESSAGE_ID, campaign: "message-campaign" },
-      });
-      assert.calledOnce(handleMessage);
-      // Check that we correctly pass the tabId
-      assert.calledWithExactly(
-        handleMessage,
-        sinon.match.any,
-        sinon.match.any,
-        { id: sinon.match.number, browser: sinon.match.any }
-      );
-      assert.calledWithExactly(
-        ASRouterParent.tabs.messageAll,
-        "ClearMessages",
-        // When blocking an id the entire campaign is blocked
-        ["message-campaign"]
-      );
-      assert.equal(result, "handle-message-result");
-    });
   });
 });

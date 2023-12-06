@@ -89,20 +89,11 @@ class ASRouterParentProcessMessageHandler {
           browser,
         });
       }
-      case msg.NEWTAB_MESSAGE_REQUEST: {
-        return this._router.sendNewTabMessage({
-          ...data,
-          tabId,
-          browser,
-        });
-      }
 
       // ADMIN Messages
       case msg.ADMIN_CONNECT_STATE: {
         if (data && data.endpoint) {
-          return this._router
-            .addPreviewEndpoint(data.endpoint.url)
-            .then(() => this._router.loadMessagesFromAllProviders());
+          return this._router.loadMessagesFromAllProviders();
         }
         return this._router.updateTargetingParameters();
       }

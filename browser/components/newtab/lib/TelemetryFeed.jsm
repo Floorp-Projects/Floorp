@@ -68,7 +68,6 @@ const USER_PREFS_ENCODING = {
   "feeds.topsites": 1 << 1,
   "feeds.section.topstories": 1 << 2,
   "feeds.section.highlights": 1 << 3,
-  "feeds.snippets": 1 << 4,
   showSponsored: 1 << 5,
   "asrouter.userprefs.cfr.addons": 1 << 6,
   "asrouter.userprefs.cfr.features": 1 << 7,
@@ -612,10 +611,6 @@ class TelemetryFeed {
       case "cfr_user_event":
         event = await this.applyCFRPolicy(event);
         break;
-      case "snippets_local_testing_user_event":
-      case "snippets_user_event":
-        event = await this.applySnippetsPolicy(event);
-        break;
       case "badge_user_event":
       case "whats-new-panel_user_event":
         event = await this.applyWhatsNewPolicy(event);
@@ -719,16 +714,6 @@ class TelemetryFeed {
     }
     delete ping.action;
     return { ping, pingType: "moments" };
-  }
-
-  /**
-   * Per Bug 1485069, all the metrics for Snippets in AS router use client_id in
-   * all the release channels
-   */
-  async applySnippetsPolicy(ping) {
-    ping.client_id = await this.telemetryClientId;
-    delete ping.action;
-    return { ping, pingType: "snippets" };
   }
 
   /**

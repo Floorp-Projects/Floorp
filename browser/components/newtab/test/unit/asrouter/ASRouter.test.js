@@ -45,7 +45,6 @@ describe("ASRouter", () => {
   let previousSessionEnd;
   let fetchStub;
   let clock;
-  let getStringPrefStub;
   let fakeAttributionCode;
   let fakeTargetingContext;
   let FakeToolbarBadgeHub;
@@ -194,7 +193,7 @@ describe("ASRouter", () => {
         json: () => Promise.resolve({ messages: FAKE_REMOTE_MESSAGES }),
         headers: FAKE_RESPONSE_HEADERS,
       });
-    getStringPrefStub = sandbox.stub(global.Services.prefs, "getStringPref");
+    sandbox.stub(global.Services.prefs, "getStringPref");
 
     fakeAttributionCode = {
       allowedCodeKeys: ["foo", "bar", "baz"],
@@ -475,25 +474,6 @@ describe("ASRouter", () => {
       assert.lengthOf(
         Router.state.messages,
         FAKE_LOCAL_MESSAGES.length + FAKE_REMOTE_MESSAGES.length
-      );
-    });
-    it("should load additional allowed hosts", async () => {
-      getStringPrefStub.returns('["allow.com"]');
-      await createRouterAndInit();
-
-      assert.propertyVal(Router.ALLOWLIST_HOSTS, "allow.com", "preview");
-      // Should still include the defaults
-      assert.lengthOf(Object.keys(Router.ALLOWLIST_HOSTS), 3);
-    });
-    it("should fallback to defaults if pref parsing fails", async () => {
-      getStringPrefStub.returns("err");
-      await createRouterAndInit();
-
-      assert.lengthOf(Object.keys(Router.ALLOWLIST_HOSTS), 2);
-      assert.propertyVal(
-        Router.ALLOWLIST_HOSTS,
-        "activity-stream-icons.services.mozilla.com",
-        "production"
       );
     });
     it("should set state.previousSessionEnd from IndexedDB", async () => {
