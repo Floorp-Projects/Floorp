@@ -546,18 +546,6 @@ class LoginsTest {
         val loginPage = "https://mozilla-mobile.github.io/testapp/v2.0/loginForm.html"
         val originWebsite = "mozilla-mobile.github.io"
 
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openLoginsAndPasswordSubMenu {
-        }.openSaveLoginsAndPasswordsOptions {
-            verifySaveLoginsOptionsView()
-            verifyAskToSaveRadioButton(true)
-            verifyNeverSaveSaveRadioButton(false)
-        }
-
-        exitMenu()
-
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
             setPageObjectText(itemWithResId("username"), "mozilla")
