@@ -157,11 +157,6 @@ export const SpecialMessageActions = {
           ],
         ],
         [
-          // controls the snippets section
-          "browser.newtabpage.activity-stream.feeds.snippets",
-          layout.snippets,
-        ],
-        [
           // controls the topstories section
           "browser.newtabpage.activity-stream.feeds.system.topstories",
           layout.topstories,
@@ -478,7 +473,7 @@ export const SpecialMessageActions = {
         }
         const data = action.data;
         const url = await lazy.FxAccounts.config.promiseConnectAccountURI(
-          (data && data.entrypoint) || "snippets",
+          data && data.entrypoint,
           (data && data.extraParams) || {}
         );
         // Use location provided; if not specified, replace the current tab.
