@@ -76,6 +76,7 @@ class MozURL final {
   nsresult BaseDomain(nsACString& aBaseDomain) const {
     return mozurl_base_domain(this, &aBaseDomain);
   }
+  bool CannotBeABase() { return mozurl_cannot_be_a_base(this); }
 
   nsresult GetCommonBase(const MozURL* aOther, MozURL** aCommon) const {
     return mozurl_common_base(this, aOther, aCommon);

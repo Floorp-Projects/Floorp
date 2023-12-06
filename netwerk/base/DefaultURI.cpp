@@ -482,14 +482,27 @@ DefaultURI::Mutator::SetPathQueryRef(const nsACString& aPathQueryRef,
     return mMutator->GetStatus();
   }
 
-  nsAutoCString pathQueryRef(aPathQueryRef);
-  if (!StringBeginsWith(pathQueryRef, "/"_ns)) {
-    pathQueryRef.Insert('/', 0);
-  }
-
   RefPtr<MozURL> url;
   mMutator->Finalize(getter_AddRefs(url));
   mMutator = Nothing();
+
+  if (!url) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoCString pathQueryRef(aPathQueryRef);
+  if (url->CannotBeABase()) {
+    // If the base URL cannot be a base, then setting the pathQueryRef
+    // needs to change everything after the scheme.
+    pathQueryRef.Insert(":", 0);
+    pathQueryRef.Insert(url->Scheme(), 0);
+    // Clear the URL to make sure FromSpec creates an absolute URL
+    url = nullptr;
+  } else if (!StringBeginsWith(pathQueryRef, "/"_ns)) {
+    // If the base URL can be a base, make sure the path
+    // begins with a /
+    pathQueryRef.Insert('/', 0);
+  }
 
   auto result = MozURL::Mutator::FromSpec(pathQueryRef, url);
   if (result.isErr()) {
