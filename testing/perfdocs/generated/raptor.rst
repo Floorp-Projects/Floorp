@@ -30567,6 +30567,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
         - ❌
+      * - **browsertime-tp6m-webextensions-fenix-amazon-search-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
 
 
    .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
@@ -30605,6 +30610,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
       * - **browsertime-tp6m-live-geckoview-amazon-search-nofis**
         - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-webextensions-fenix-amazon-search-nofis**
+        - ✅
         - ❌
         - ❌
         - ❌
