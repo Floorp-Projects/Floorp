@@ -69,8 +69,7 @@ class nsThreadManager : public nsIThreadManager {
   // the thread that was created. GetCurrentThread() will also create a thread
   // (lazily), but it doesn't allow the queue or main-thread attributes to be
   // specified.
-  nsThread* CreateCurrentThread(mozilla::SynchronizedEventQueue* aQueue,
-                                nsThread::MainThreadFlag aMainThread);
+  nsThread* CreateCurrentThread(mozilla::SynchronizedEventQueue* aQueue);
 
   nsresult DispatchToBackgroundThread(nsIRunnable* aEvent,
                                       uint32_t aDispatchFlags);
