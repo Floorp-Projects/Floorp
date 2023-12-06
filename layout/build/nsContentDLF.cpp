@@ -314,7 +314,8 @@ nsresult nsContentDLF::CreateDocument(
   nsCOMPtr<nsIDocumentViewer> viewer = NS_NewDocumentViewer();
 
   doc->SetContainer(static_cast<nsDocShell*>(aContainer));
-  doc->SetAllowDeclarativeShadowRoots(true);
+  doc->SetAllowDeclarativeShadowRoots(
+      mozilla::StaticPrefs::dom_webcomponents_shadowdom_declarative_enabled());
 
   // Initialize the document to begin loading the data.  An
   // nsIStreamListener connected to the parser is returned in
