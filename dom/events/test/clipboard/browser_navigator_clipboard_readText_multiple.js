@@ -176,20 +176,14 @@ add_task(async function test_multiple_readText_from_cross_origin_frame() {
       "readText() from different origin child frame again before interacting with paste button"
     );
     const crossOriginFrame = browser.browsingContext.children[1];
-    const readTextRequest2 = SpecialPowers.spawn(
-      crossOriginFrame,
-      [],
-      async () => {
+    await Assert.rejects(
+      SpecialPowers.spawn(crossOriginFrame, [], async () => {
         content.document.notifyUserGestureActivation();
         return content.eval(`navigator.clipboard.readText();`);
-      }
+      }),
+      /NotAllowedError/,
+      "Second request should be rejected"
     );
-    // Give some time for the second request to arrive parent process.
-    await SpecialPowers.spawn(crossOriginFrame, [], async () => {
-      return new Promise(resolve => {
-        content.setTimeout(resolve, 0);
-      });
-    });
 
     info("Click paste button, both request should be resolved");
     await promiseClickPasteButton();
@@ -197,11 +191,6 @@ add_task(async function test_multiple_readText_from_cross_origin_frame() {
       await readTextRequest1,
       clipboardText,
       "First request should be resolved"
-    );
-    is(
-      await readTextRequest2,
-      clipboardText,
-      "Second request should be resolved"
     );
   });
 });
