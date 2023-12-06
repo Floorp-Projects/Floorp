@@ -125,7 +125,6 @@ def fresh_profile(profile, customization_data):
         extension = download_file(url, check_mozfetches=True)
         extensions.append(extension)
     logger.info("Installing addons")
-    new_profile.addons.install(extensions, unpack=True)
     new_profile.addons.install(extensions)
     shutil.copytree(new_profile.profile, profile)
     return profile
