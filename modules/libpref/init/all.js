@@ -282,14 +282,7 @@ pref("media.videocontrols.keyboard-tab-to-all-controls", true);
   pref("media.navigator.video.h264.max_mbps", 0);
   pref("media.peerconnection.video.vp9_enabled", true);
   pref("media.peerconnection.video.vp9_preferred", false);
-  #if defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
-  // XXX: It would be great to have a way to ensure this doesn't ride the
-  //      trains, but that causes nightlyasrelease bustage. No shiny things for
-  //      us.
-  pref("media.getusermedia.channels", 1);
-  #else
   pref("media.getusermedia.channels", 0);
-  #endif
   #if defined(ANDROID)
     pref("media.getusermedia.camera.off_while_disabled.enabled", false);
     pref("media.getusermedia.microphone.off_while_disabled.enabled", false);
