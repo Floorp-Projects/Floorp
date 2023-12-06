@@ -805,7 +805,7 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
   // For key system requires clearlead, every codec needs to have clear support.
   // If not, then we will remove the codec from supported codec.
   if (RequireClearLead(aKeySystem)) {
-    for (const auto& schme : aCapabilitiesOut.encryptionSchemes()) {
+    for (const auto& scheme : aCapabilitiesOut.encryptionSchemes()) {
       nsTArray<KeySystemConfig::EMECodecString> noClearLeadCodecs;
       for (const auto& codec : supportedVideoCodecs) {
         nsAutoString additionalFeature(u"encryption-type=");
@@ -817,7 +817,7 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
         // https://learn.microsoft.com/en-us/windows/win32/api/mfmediaengine/nf-mfmediaengine-imfextendeddrmtypesupport-istypesupportedex
         // [2]
         // https://learn.microsoft.com/en-us/playready/packaging/content-encryption-modes#initialization-vectors-ivs
-        if (schme == CryptoScheme::Cenc) {
+        if (scheme == CryptoScheme::Cenc) {
           additionalFeature.AppendLiteral(u"cenc-clearlead,");
         } else {
           additionalFeature.AppendLiteral(u"cbcs-clearlead,");
@@ -826,7 +826,7 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
             FactorySupports(factory, aKeySystem, convertCodecToFourCC(codec),
                             nsCString(""), additionalFeature, aIsHWSecure);
         MFCDM_PARENT_SLOG("clearlead %s IV 8 bytes %s %s",
-                          CryptoSchemeToString(schme), codec.get(),
+                          CryptoSchemeToString(scheme), codec.get(),
                           rv ? "supported" : "not supported");
         if (rv) {
           continue;
@@ -836,7 +836,7 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
         rv = FactorySupports(factory, aKeySystem, convertCodecToFourCC(codec),
                              nsCString(""), additionalFeature, aIsHWSecure);
         MFCDM_PARENT_SLOG("clearlead %s IV 16 bytes %s %s",
-                          CryptoSchemeToString(schme), codec.get(),
+                          CryptoSchemeToString(scheme), codec.get(),
                           rv ? "supported" : "not supported");
         // Failed on both, so remove the codec from supported codec.
         if (!rv) {
