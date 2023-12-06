@@ -299,18 +299,38 @@ static HRESULT CreateContentDecryptionModule(
   return S_OK;
 }
 
-// It's used for `IsTypeSupported` because Widevine's factory only takes
-// original key system string.
-static nsString GetOriginalKeySystem(const nsString& aKeySystem) {
+// Wrapper function for IMFContentDecryptionModuleFactory::IsTypeSupported.
+static bool IsTypeSupported(
+    const ComPtr<IMFContentDecryptionModuleFactory>& aFactory,
+    const nsString& aKeySystem, const nsString* aContentType = nullptr) {
+  nsString keySystem;
+  // Widevine's factory only takes original key system string.
   if (IsWidevineExperimentKeySystemAndSupported(aKeySystem)) {
-    return nsString(u"com.widevine.alpha");
+    keySystem.AppendLiteral(u"com.widevine.alpha");
   }
-  return aKeySystem;
+  // kPlayReadyHardwareClearLeadKeySystemName is our custom key system name,
+  // we should use kPlayReadyKeySystemHardware which is the real key system
+  // name.
+  else if (aKeySystem.EqualsLiteral(kPlayReadyHardwareClearLeadKeySystemName)) {
+    keySystem.AppendLiteral(kPlayReadyKeySystemHardware);
+  } else {
+    keySystem = aKeySystem;
+  }
+  return aFactory->IsTypeSupported(
+      keySystem.get(), aContentType ? aContentType->get() : nullptr);
 }
 
 static nsString MapKeySystem(const nsString& aKeySystem) {
+  // When website requests HW secure robustness for video by original Widevine
+  // key system name, it would be mapped to this key system which is for HWDRM.
   if (IsWidevineKeySystem(aKeySystem)) {
     return nsString(u"com.widevine.alpha.experiment");
+  }
+  // kPlayReadyHardwareClearLeadKeySystemName is our custom key system name,
+  // we should use kPlayReadyKeySystemHardware which is the real key system
+  // name.
+  if (aKeySystem.EqualsLiteral(kPlayReadyHardwareClearLeadKeySystemName)) {
+    return NS_ConvertUTF8toUTF16(kPlayReadyKeySystemHardware);
   }
   return aKeySystem;
 }
@@ -465,7 +485,7 @@ HRESULT MFCDMParent::LoadFactory(
                                             nullptr, CLSCTX_INPROC_SERVER,
                                             IID_PPV_ARGS(&clsFactory)));
     MFCDM_RETURN_IF_FAILED(clsFactory->CreateContentDecryptionModuleFactory(
-        aKeySystem.get(), IID_PPV_ARGS(&cdmFactory)));
+        MapKeySystem(aKeySystem).get(), IID_PPV_ARGS(&cdmFactory)));
     aFactoryOut.Swap(cdmFactory);
     MFCDM_PARENT_SLOG("Loaded CDM from platform!");
     return S_OK;
@@ -591,8 +611,7 @@ static bool FactorySupports(ComPtr<IMFContentDecryptionModuleFactory>& aFactory,
 
   // Checking capabilies from CDM's IsTypeSupported. Widevine implements this
   // method well.
-  bool support = aFactory->IsTypeSupported(
-      GetOriginalKeySystem(aKeySystem).get(), contentType.get());
+  bool support = IsTypeSupported(aFactory, aKeySystem, &contentType);
   MFCDM_PARENT_SLOG("IsTypeSupport=%d (key-system=%s, content-type=%s)",
                     support, NS_ConvertUTF16toUTF8(aKeySystem).get(),
                     NS_ConvertUTF16toUTF8(contentType).get());
@@ -603,7 +622,8 @@ static bool IsKeySystemHWSecure(
     const nsAString& aKeySystem,
     const nsTArray<MFCDMMediaCapability>& aCapabilities) {
   if (IsPlayReadyKeySystemAndSupported(aKeySystem)) {
-    if (aKeySystem.EqualsLiteral(kPlayReadyKeySystemHardware)) {
+    if (aKeySystem.EqualsLiteral(kPlayReadyKeySystemHardware) ||
+        aKeySystem.EqualsLiteral(kPlayReadyHardwareClearLeadKeySystemName)) {
       return true;
     }
     for (const auto& capabilities : aCapabilities) {
@@ -648,6 +668,9 @@ MFCDMParent::GetAllKeySystemsCapabilities() {
               SecureLevel::Software),
           std::pair<nsString, SecureLevel>(
               NS_ConvertUTF8toUTF16(kPlayReadyKeySystemHardware),
+              SecureLevel::Hardware),
+          std::pair<nsString, SecureLevel>(
+              NS_ConvertUTF8toUTF16(kPlayReadyHardwareClearLeadKeySystemName),
               SecureLevel::Hardware),
           std::pair<nsString, SecureLevel>(
               NS_ConvertUTF8toUTF16(kWidevineExperimentKeySystemName),
@@ -802,7 +825,8 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
   }
 
   static auto RequireClearLead = [](const nsString& aKeySystem) {
-    if (aKeySystem.EqualsLiteral(kWidevineExperiment2KeySystemName)) {
+    if (aKeySystem.EqualsLiteral(kWidevineExperiment2KeySystemName) ||
+        aKeySystem.EqualsLiteral(kPlayReadyHardwareClearLeadKeySystemName)) {
       return true;
     }
     return false;
@@ -900,8 +924,7 @@ mozilla::ipc::IPCResult MFCDMParent::RecvInit(
       RequirementToStr(aParams.distinctiveID()),
       RequirementToStr(aParams.persistentState()),
       IsKeySystemHWSecure(mKeySystem, aParams.videoCapabilities()));
-  MOZ_ASSERT(mFactory->IsTypeSupported(GetOriginalKeySystem(mKeySystem).get(),
-                                       nullptr));
+  MOZ_ASSERT(IsTypeSupported(mFactory, mKeySystem));
 
   MFCDM_REJECT_IF_FAILED(CreateContentDecryptionModule(
                              mFactory, MapKeySystem(mKeySystem), aParams, mCDM),

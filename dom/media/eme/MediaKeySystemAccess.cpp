@@ -178,6 +178,7 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
 #ifdef MOZ_WMF_CDM
       NS_ConvertUTF8toUTF16(kPlayReadyKeySystemName),
       NS_ConvertUTF8toUTF16(kPlayReadyKeySystemHardware),
+      NS_ConvertUTF8toUTF16(kPlayReadyHardwareClearLeadKeySystemName),
       NS_ConvertUTF8toUTF16(kWidevineExperimentKeySystemName),
       NS_ConvertUTF8toUTF16(kWidevineExperiment2KeySystemName),
 #endif

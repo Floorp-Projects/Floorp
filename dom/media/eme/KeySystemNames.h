@@ -37,6 +37,11 @@ inline constexpr char kPlayReadyKeySystemName[] =
     "com.microsoft.playready.recommendation";
 inline constexpr char kPlayReadyKeySystemHardware[] =
     "com.microsoft.playready.recommendation.3000";
+
+// A sub key system of `kPlayReadyKeySystemName` only used in experiments to
+// support hardware decryption with codecs that support clear lead.
+inline constexpr char kPlayReadyHardwareClearLeadKeySystemName[] =
+    "com.microsoft.playready.recommendation.clearlead";
 #endif
 }  // namespace mozilla
 
