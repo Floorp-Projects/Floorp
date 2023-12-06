@@ -3910,15 +3910,7 @@ var gCSSProperties = {
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: ["none"],
-    other_values: [
-      "normal",
-      "ignore",
-      "select-all",
-      "select-before",
-      "select-after",
-      "select-same",
-      "select-menu",
-    ],
+    other_values: ["normal", "ignore"],
     invalid_values: [],
   },
   "-moz-user-input": {
