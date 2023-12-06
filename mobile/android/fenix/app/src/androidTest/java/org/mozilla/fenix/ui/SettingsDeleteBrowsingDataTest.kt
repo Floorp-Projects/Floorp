@@ -219,6 +219,10 @@ class SettingsDeleteBrowsingDataTest {
             selectOnlyCookiesCheckBox()
             clickDeleteBrowsingDataButton()
             verifyDeleteBrowsingDataDialog()
+            clickDialogCancelButton()
+            verifyCookiesCheckBox(status = true)
+            clickDeleteBrowsingDataButton()
+            verifyDeleteBrowsingDataDialog()
             confirmDeletionAndAssertSnackbar()
             exitMenu()
         }
