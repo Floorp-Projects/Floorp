@@ -33,8 +33,10 @@ function finishTest() {
   SimpleTest.finish();
 }
 
-w = window.open("file_compressed_multipart");
-
+SpecialPowers.pushPrefEnv({set:
+  [["network.multipart-mixed-replace.enabled_for_document", true]]}, () => {
+  w = window.open("file_compressed_multipart");
+});
 </script>
 </pre>
 </body>

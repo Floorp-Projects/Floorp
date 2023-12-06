@@ -183,7 +183,9 @@ SimpleTest.waitForExplicitFinish();
 
 // load the test harness
 SpecialPowers.pushPrefEnv({
-  "set": [["security.data_uri.block_toplevel_data_uri_navigations", false],]
+  "set": [["security.data_uri.block_toplevel_data_uri_navigations", false],
+  ["network.multipart-mixed-replace.enabled_for_document", true],
+]
 }, function() {
   document.getElementById("harness").src = "file_x-frame-options_main.html";
 });

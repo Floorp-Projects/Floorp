@@ -8,6 +8,11 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 );
 const MULTIPART_URI = `${TEST_PATH}file_basic_multipart.sjs`;
 
+add_setup(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [["network.multipart-mixed-replace.enabled_for_document", true]],
+  });
+});
 add_task(async function viewsource_multipart_uri() {
   await BrowserTestUtils.withNewTab("about:blank", async browser => {
     BrowserTestUtils.startLoadingURIString(browser, MULTIPART_URI);
