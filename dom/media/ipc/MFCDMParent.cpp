@@ -10,7 +10,11 @@
 #include <propkeydef.h>   // For DEFINE_PROPERTYKEY() definition
 #include <propvarutil.h>  // For InitPropVariantFrom*()
 
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/KeySystemNames.h"
+#include "mozilla/ipc/UtilityAudioDecoderChild.h"
+#include "mozilla/ipc/UtilityProcessManager.h"
+#include "mozilla/ipc/UtilityProcessParent.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_media.h"
@@ -1065,6 +1069,76 @@ already_AddRefed<MFCDMProxy> MFCDMParent::GetMFCDMProxy() {
   }
   RefPtr<MFCDMProxy> proxy = new MFCDMProxy(mCDM.Get(), mId);
   return proxy.forget();
+}
+
+/* static */
+void MFCDMCapabilities::GetAllKeySystemsCapabilities(dom::Promise* aPromise) {
+  const static auto kSandboxKind = ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM;
+  LaunchMFCDMProcessIfNeeded(kSandboxKind)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [promise = RefPtr(aPromise)]() {
+            RefPtr<ipc::UtilityAudioDecoderChild> uadc =
+                ipc::UtilityAudioDecoderChild::GetSingleton(kSandboxKind);
+            if (NS_WARN_IF(!uadc)) {
+              promise->MaybeReject(NS_ERROR_FAILURE);
+              return;
+            }
+            uadc->GetKeySystemCapabilities(promise);
+          },
+          [promise = RefPtr(aPromise)](nsresult aError) {
+            promise->MaybeReject(NS_ERROR_FAILURE);
+          });
+}
+
+/* static */
+RefPtr<GenericNonExclusivePromise>
+MFCDMCapabilities::LaunchMFCDMProcessIfNeeded(ipc::SandboxingKind aSandbox) {
+  MOZ_ASSERT(aSandbox == ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM);
+  RefPtr<ipc::UtilityProcessManager> utilityProc =
+      ipc::UtilityProcessManager::GetSingleton();
+  if (NS_WARN_IF(!utilityProc)) {
+    NS_WARNING("Failed to get UtilityProcessManager");
+    return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                       __func__);
+  }
+
+  // Check if the MFCDM process exists or not. If not, launch it.
+  if (utilityProc->Process(aSandbox)) {
+    return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
+  }
+
+  RefPtr<ipc::UtilityAudioDecoderChild> uadc =
+      ipc::UtilityAudioDecoderChild::GetSingleton(aSandbox);
+  if (NS_WARN_IF(!uadc)) {
+    NS_WARNING("Failed to get UtilityAudioDecoderChild");
+    return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                       __func__);
+  }
+  return utilityProc->StartUtility(uadc, aSandbox)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [uadc, utilityProc, aSandbox]() {
+            RefPtr<ipc::UtilityProcessParent> parent =
+                utilityProc->GetProcessParent(aSandbox);
+            if (!parent) {
+              NS_WARNING("UtilityAudioDecoderParent lost in the middle");
+              return GenericNonExclusivePromise::CreateAndReject(
+                  NS_ERROR_FAILURE, __func__);
+            }
+
+            if (!uadc->CanSend()) {
+              NS_WARNING("UtilityAudioDecoderChild lost in the middle");
+              return GenericNonExclusivePromise::CreateAndReject(
+                  NS_ERROR_FAILURE, __func__);
+            }
+            return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
+          },
+          [](nsresult aError) {
+            NS_WARNING("Failed to start the MFCDM process!");
+            return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                               __func__);
+          });
 }
 
 #undef MFCDM_REJECT_IF_FAILED

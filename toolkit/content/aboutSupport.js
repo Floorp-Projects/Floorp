@@ -1105,6 +1105,94 @@ var snapshotFormatters = {
         .catch(e => {});
     }
 
+    function createCDMInfoRow(cdmInfo) {
+      function findElementInArray(array, name) {
+        const rv = array.find(element => element.includes(name));
+        return rv ? rv.split("=")[1] : "Unknown";
+      }
+
+      function getAudioRobustness(array) {
+        return findElementInArray(array, "audio-robustness");
+      }
+
+      function getVideoRobustness(array) {
+        return findElementInArray(array, "video-robustness");
+      }
+
+      function getSupportedCodecs(array) {
+        const mp4Content = findElementInArray(array, "MP4");
+        const webContent = findElementInArray(array, "WEBM");
+
+        const mp4DecodingAndDecryptingCodecs = mp4Content
+          .match(/decoding-and-decrypting:\[([^\]]*)\]/)[1]
+          .split(",");
+        const webmDecodingAndDecryptingCodecs = webContent
+          .match(/decoding-and-decrypting:\[([^\]]*)\]/)[1]
+          .split(",");
+
+        const mp4DecryptingOnlyCodecs = mp4Content
+          .match(/decrypting-only:\[([^\]]*)\]/)[1]
+          .split(",");
+        const webmDecryptingOnlyCodecs = webContent
+          .match(/decrypting-only:\[([^\]]*)\]/)[1]
+          .split(",");
+
+        // Combine and get unique codecs for decoding-and-decrypting (always)
+        // and decrypting-only (only set when it's not empty)
+        let rv = {};
+        rv.decodingAndDecrypting = [
+          ...new Set(
+            [
+              ...mp4DecodingAndDecryptingCodecs,
+              ...webmDecodingAndDecryptingCodecs,
+            ].filter(Boolean)
+          ),
+        ];
+        let temp = [
+          ...new Set(
+            [...mp4DecryptingOnlyCodecs, ...webmDecryptingOnlyCodecs].filter(
+              Boolean
+            )
+          ),
+        ];
+        if (temp.length) {
+          rv.decryptingOnly = temp;
+        }
+        return rv;
+      }
+
+      function getCapabilities(array) {
+        let capabilities = {};
+        capabilities.persistent = findElementInArray(array, "persistent");
+        capabilities.distinctive = findElementInArray(array, "distinctive");
+        capabilities.sessionType = findElementInArray(array, "sessionType");
+        capabilities.scheme = findElementInArray(array, "scheme");
+        capabilities.codec = getSupportedCodecs(array);
+        return JSON.stringify(capabilities);
+      }
+
+      const rvArray = cdmInfo.capabilities.split(" ");
+      return $.new("tr", [
+        $.new("td", cdmInfo.keySystemName),
+        $.new("td", getVideoRobustness(rvArray)),
+        $.new("td", getAudioRobustness(rvArray)),
+        $.new("td", getCapabilities(rvArray)),
+      ]);
+    }
+
+    async function insertContentDecryptionModuleInfo() {
+      let rows = [];
+      // Retrieve information from WMFCDM, only works when MOZ_WMF_CDM is true
+      if (ChromeUtils.getWMFContentDecryptionModuleInformation !== undefined) {
+        const cdmInfo =
+          await ChromeUtils.getWMFContentDecryptionModuleInformation();
+        for (let info of cdmInfo) {
+          rows.push(createCDMInfoRow(info));
+        }
+      }
+      $.append($("media-content-decryption-modules-tbody"), rows);
+    }
+
     // Basic information
     insertBasicInfo("audio-backend", data.currentAudioBackend);
     insertBasicInfo("max-audio-channels", data.currentMaxAudioChannels);
@@ -1258,6 +1346,9 @@ var snapshotFormatters = {
     if (["win", "macosx", "linux", "android"].includes(AppConstants.platform)) {
       insertBasicInfo("media-codec-support-info", supportInfo);
     }
+
+    // CDM info
+    insertContentDecryptionModuleInfo();
   },
 
   remoteAgent(data) {
