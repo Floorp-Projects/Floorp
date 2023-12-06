@@ -6132,8 +6132,8 @@ dependencies = [
 
 [[package]]
 name = "warp"
-version = "0.3.3"
-source = "git+https://github.com/glandium/warp?rev=4af45fae95bc98b0eba1ef0db17e1dac471bb23d#4af45fae95bc98b0eba1ef0db17e1dac471bb23d"
+version = "0.3.6"
+source = "git+https://github.com/seanmonstar/warp?rev=9d081461ae1167eb321585ce424f4fef6cf0092b#9d081461ae1167eb321585ce424f4fef6cf0092b"
 dependencies = [
  "bytes",
  "futures-channel",

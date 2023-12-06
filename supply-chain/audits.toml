@@ -4080,6 +4080,11 @@ who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-run"
 delta = "0.3.3 -> 0.3.3@git:4af45fae95bc98b0eba1ef0db17e1dac471bb23d"
 
+[[audits.warp]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-run"
+delta = "0.3.6 -> 0.3.6@git:9d081461ae1167eb321585ce424f4fef6cf0092b"
+
 [[audits.wasm-encoder]]
 who = "Ryan Hunt <rhunt@eqrion.net>"
 criteria = "safe-to-deploy"

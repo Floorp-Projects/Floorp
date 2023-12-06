@@ -30,11 +30,6 @@ git = "https://github.com/gfx-rs/wgpu"
 rev = "767ac03245ee937d3dc552edc13fe7ab0a860eec"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/glandium/warp?rev=4af45fae95bc98b0eba1ef0db17e1dac471bb23d"]
-git = "https://github.com/glandium/warp"
-rev = "4af45fae95bc98b0eba1ef0db17e1dac471bb23d"
-replace-with = "vendored-sources"
-
 [source."git+https://github.com/hsivonen/chardetng?rev=3484d3e3ebdc8931493aa5df4d7ee9360a90e76b"]
 git = "https://github.com/hsivonen/chardetng"
 rev = "3484d3e3ebdc8931493aa5df4d7ee9360a90e76b"
@@ -98,6 +93,11 @@ replace-with = "vendored-sources"
 [source."git+https://github.com/rust-lang/rust-bindgen?rev=86f3dbe846020e2ba573d6eb38d1434d0cbcbb40"]
 git = "https://github.com/rust-lang/rust-bindgen"
 rev = "86f3dbe846020e2ba573d6eb38d1434d0cbcbb40"
+replace-with = "vendored-sources"
+
+[source."git+https://github.com/seanmonstar/warp?rev=9d081461ae1167eb321585ce424f4fef6cf0092b"]
+git = "https://github.com/seanmonstar/warp"
+rev = "9d081461ae1167eb321585ce424f4fef6cf0092b"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/servo/rust-cssparser?rev=aaa966d9d6ae70c4b8a62bb5e3a14c068bb7dff0"]
