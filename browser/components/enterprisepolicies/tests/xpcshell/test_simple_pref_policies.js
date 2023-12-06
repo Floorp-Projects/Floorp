@@ -570,12 +570,10 @@ const POLICIES_TESTS = [
     policies: {
       FirefoxHome: {
         Pocket: false,
-        Snippets: false,
         Locked: true,
       },
     },
     lockedPrefs: {
-      "browser.newtabpage.activity-stream.feeds.snippets": false,
       "browser.newtabpage.activity-stream.feeds.system.topstories": false,
     },
   },
