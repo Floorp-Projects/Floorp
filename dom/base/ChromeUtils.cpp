@@ -1944,4 +1944,17 @@ already_AddRefed<Promise> ChromeUtils::GetWMFContentDecryptionModuleInformation(
 }
 #endif
 
+already_AddRefed<Promise> ChromeUtils::GetGMPContentDecryptionModuleInformation(
+    GlobalObject& aGlobal, ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  MOZ_ASSERT(global);
+  RefPtr<Promise> domPromise = Promise::Create(global, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+  MOZ_ASSERT(domPromise);
+  KeySystemConfig::GetGMPKeySystemConfigs(domPromise);
+  return domPromise.forget();
+}
+
 }  // namespace mozilla::dom
