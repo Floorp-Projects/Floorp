@@ -68,7 +68,7 @@ ${helpers.single_keyword(
 
 ${helpers.single_keyword(
     "-moz-user-focus",
-    "none ignore normal select-after select-before select-menu select-same select-all",
+    "none ignore normal",
     engines="gecko",
     gecko_ffi_name="mUserFocus",
     gecko_enum_prefix="StyleUserFocus",
