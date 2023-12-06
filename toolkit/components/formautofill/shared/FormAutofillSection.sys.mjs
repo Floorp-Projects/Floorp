@@ -898,7 +898,10 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
       this._handlePageHide.bind(this)
     );
     this.log.debug("Credit card subframe is pagehideing", this.handler.form);
-    this.handler.onFormSubmitted();
+
+    const formSubmissionReason =
+      FormAutofillUtils.FORM_SUBMISSION_REASON.IFRAME_PAGEHIDE;
+    this.handler.onFormSubmitted(formSubmissionReason);
   }
 
   /**
