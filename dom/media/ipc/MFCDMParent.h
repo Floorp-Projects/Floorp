@@ -140,6 +140,16 @@ class MFCDMParent final : public PMFCDMParent {
   MediaEventListener mExpirationListener;
 };
 
+// A helper class to display CDM capabilites in `about:support`.
+class MFCDMCapabilities {
+ public:
+  static void GetAllKeySystemsCapabilities(dom::Promise* aPromise);
+
+ private:
+  static RefPtr<GenericNonExclusivePromise> LaunchMFCDMProcessIfNeeded(
+      ipc::SandboxingKind aSandbox);
+};
+
 }  // namespace mozilla
 
 #endif  // DOM_MEDIA_IPC_MFCDMPARENT_H_

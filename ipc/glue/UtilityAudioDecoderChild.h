@@ -108,7 +108,7 @@ class UtilityAudioDecoderChild final : public PUtilityAudioDecoderChild
 #endif
 
 #ifdef MOZ_WMF_CDM
-  void GetKeySystemCapabilities();
+  void GetKeySystemCapabilities(dom::Promise* aPromise);
 #endif
 
  private:
