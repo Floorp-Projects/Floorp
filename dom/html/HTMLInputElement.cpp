@@ -5840,13 +5840,23 @@ void HTMLInputElement::ShowPicker(ErrorResult& aRv) {
     return;
   }
 
-  if (CreatesDateTimeWidget() && IsInComposedDoc()) {
-    if (RefPtr<Element> dateTimeBoxElement = GetDateTimeBoxElement()) {
-      // Event is dispatched to closed-shadow tree and doesn't bubble.
-      RefPtr<Document> doc = dateTimeBoxElement->OwnerDoc();
-      nsContentUtils::DispatchTrustedEvent(doc, dateTimeBoxElement,
-                                           u"MozDateTimeShowPickerForJS"_ns,
-                                           CanBubble::eNo, Cancelable::eNo);
+  if (!IsInComposedDoc()) {
+    return;
+  }
+
+  if (IsDateTimeTypeSupported(mType)) {
+    if (CreatesDateTimeWidget()) {
+      if (RefPtr<Element> dateTimeBoxElement = GetDateTimeBoxElement()) {
+        // Event is dispatched to closed-shadow tree and doesn't bubble.
+        RefPtr<Document> doc = dateTimeBoxElement->OwnerDoc();
+        nsContentUtils::DispatchTrustedEvent(doc, dateTimeBoxElement,
+                                             u"MozDateTimeShowPickerForJS"_ns,
+                                             CanBubble::eNo, Cancelable::eNo);
+      }
+    } else {
+      DateTimeValue value;
+      GetDateTimeInputBoxValue(value);
+      OpenDateTimePicker(value);
     }
   }
 }

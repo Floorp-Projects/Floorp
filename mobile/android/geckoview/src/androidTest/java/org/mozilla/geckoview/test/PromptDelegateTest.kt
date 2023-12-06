@@ -4,6 +4,7 @@
 
 package org.mozilla.geckoview.test
 
+import android.view.KeyEvent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
@@ -913,6 +914,72 @@ class PromptDelegateTest : BaseSessionTest(
         )
         mainSession.synthesizeTap(10, 10)
         sessionRule.waitForResult(result)
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test
+    fun dateMonthTestShowPicker() {
+        mainSession.loadTestPath(PROMPT_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        // type=month and type=week have no custom controls on all platforms.
+        // But mobile has the picker with dom.forms.datetime.others=true
+
+        mainSession.evaluateJS(
+            """
+            document.body.focus();
+            document.body.addEventListener('keydown', () => {
+                document.getElementById('monthexample').showPicker()
+            }, { once: true });
+            """.trimIndent(),
+        )
+        mainSession.pressKey(KeyEvent.KEYCODE_SPACE)
+
+        sessionRule.waitUntilCalled(object : PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onDateTimePrompt(session: GeckoSession, prompt: PromptDelegate.DateTimePrompt): GeckoResult<PromptDelegate.PromptResponse> {
+                assertThat("showPicker for <input type=month>", prompt.type, equalTo(PromptDelegate.DateTimePrompt.Type.MONTH))
+                return GeckoResult.fromValue(prompt.dismiss())
+            }
+        })
+
+        mainSession.evaluateJS(
+            """
+            document.body.focus();
+            document.body.addEventListener('keydown', () => {
+                document.getElementById('weekexample').showPicker()
+            }, { once: true });
+            """.trimIndent(),
+        )
+        mainSession.pressKey(KeyEvent.KEYCODE_SPACE)
+
+        sessionRule.waitUntilCalled(object : PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onDateTimePrompt(session: GeckoSession, prompt: PromptDelegate.DateTimePrompt): GeckoResult<PromptDelegate.PromptResponse> {
+                assertThat("showPicker for <input type=week>", prompt.type, equalTo(PromptDelegate.DateTimePrompt.Type.WEEK))
+                return GeckoResult.fromValue(prompt.dismiss())
+            }
+        })
+
+        // desktop has no type=time picker, but mobile has.
+
+        mainSession.evaluateJS(
+            """
+            document.body.focus();
+            document.body.addEventListener('keydown', () => {
+                document.getElementById('timeexample').showPicker()
+            }, { once: true });
+            """.trimIndent(),
+        )
+        mainSession.pressKey(KeyEvent.KEYCODE_SPACE)
+
+        sessionRule.waitUntilCalled(object : PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onDateTimePrompt(session: GeckoSession, prompt: PromptDelegate.DateTimePrompt): GeckoResult<PromptDelegate.PromptResponse> {
+                assertThat("showPicker for <input type=time>", prompt.type, equalTo(PromptDelegate.DateTimePrompt.Type.TIME))
+                return GeckoResult.fromValue(prompt.dismiss())
+            }
+        })
     }
 
     @Test fun fileTest() {
