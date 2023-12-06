@@ -1889,10 +1889,15 @@ pref("identity.fxaccounts.commands.missed.fetch_interval", 86400);
 #ifdef MOZ_WIDEVINE_EME
   pref("media.gmp-widevinecdm.visible", true);
   pref("media.gmp-widevinecdm.enabled", true);
-#ifdef MOZ_WMF_CDM
+#if defined(MOZ_WMF_CDM) && defined(_M_AMD64)
+  pref("media.gmp-widevinecdm-l1.forceInstall", false);
+#ifdef NIGHTLY_BUILD
+  pref("media.gmp-widevinecdm-l1.visible", true);
+  pref("media.gmp-widevinecdm-l1.enabled", true);
+#else
   pref("media.gmp-widevinecdm-l1.visible", false);
   pref("media.gmp-widevinecdm-l1.enabled", false);
-  pref("media.gmp-widevinecdm-l1.forceInstall", false);
+#endif
 #endif
 #endif
 
