@@ -100,13 +100,23 @@ CSSCoord MotionPathUtils::GetRayContainReferenceSize(nsIFrame* aFrame) {
   //
   // Note: Per the spec, border-box is treated as stroke-box in the SVG context,
   // https://drafts.csswg.org/css-box-4/#valdef-box-border-box
-  const auto size =
-      CSSSize::FromAppUnits((aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)
-                                 ? nsLayoutUtils::ComputeSVGReferenceRect(
-                                       aFrame, StyleGeometryBox::StrokeBox)
-                                 : nsLayoutUtils::ComputeHTMLReferenceRect(
-                                       aFrame, StyleGeometryBox::BorderBox))
-                                .Size());
+
+  // To calculate stroke bounds for an element with `non-scaling-stroke` we
+  // need to resolve its transform to its outer-svg, but to resolve that
+  // transform when it has `transform-box:stroke-box` (or `border-box`)
+  // may require its stroke bounds. There's no ideal way to break this
+  // cyclical dependency, but we break it by using the FillBox.
+  // https://github.com/w3c/csswg-drafts/issues/9640
+
+  const auto size = CSSSize::FromAppUnits(
+      (aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)
+           ? nsLayoutUtils::ComputeSVGReferenceRect(
+                 aFrame, aFrame->StyleSVGReset()->HasNonScalingStroke()
+                             ? StyleGeometryBox::FillBox
+                             : StyleGeometryBox::StrokeBox)
+           : nsLayoutUtils::ComputeHTMLReferenceRect(
+                 aFrame, StyleGeometryBox::BorderBox))
+          .Size());
   return std::max(size.width, size.height);
 }
 
