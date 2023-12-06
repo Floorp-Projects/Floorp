@@ -769,6 +769,12 @@ panel#feature-callout[arrow-position=inline-start-bottom] {
 .onboardingContainer.shopping .screen[pos=split] .section-main .main-content .legal-paragraph a {
   text-decoration: underline;
 }
+.onboardingContainer.shopping .screen[pos=split] .section-main .main-content .brand-logo {
+  width: 100%;
+  max-width: 294px;
+  max-height: 290px;
+  height: auto;
+}
 .onboardingContainer.shopping .screen[pos=split] .section-main .dismiss-button {
   top: 0;
   margin: 14px 10px;
@@ -828,6 +834,7 @@ panel#feature-callout[arrow-position=inline-start-bottom] {
   overflow: visible;
   font-size: 1em;
   gap: 12px;
+  width: 100%;
 }
 .onboardingContainer.shopping .screen[pos=split][layout=survey] .main-content .main-content-inner .multi-select-container .multi-select-item input {
   margin-block: 0;

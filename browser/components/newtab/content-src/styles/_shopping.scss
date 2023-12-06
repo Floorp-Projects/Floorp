@@ -89,6 +89,13 @@
           text-decoration: underline;
         }
       }
+
+      .brand-logo {
+        width: 100%;
+        max-width: 294px;
+        max-height: 290px;
+        height: auto;
+      }
     }
 
     .dismiss-button {
@@ -164,6 +171,7 @@
         overflow: visible;
         font-size: 1em;
         gap: 12px;
+        width: 100%;
 
         .multi-select-item input {
           margin-block: 0;
