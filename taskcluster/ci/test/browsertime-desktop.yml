@@ -214,7 +214,7 @@ browsertime-tp6-essential:
                         - --conditioned-profile=settled
                         - --extra-profiler-run
         raptor:
-            apps: [firefox, chrome]  # Disable non sp3 tests temporarily for CaR. Bug 1867809
+            apps: [firefox, chrome, custom-car]
             test: tp6
             run-visual-metrics:
                 by-test-platform:
@@ -345,9 +345,8 @@ browsertime-benchmark:
                         custom-car:
                             - [speedometer, sp]
                             - [speedometer3, sp3]
-                            # Disable non sp3 tests temporarily for CaR. Bug 1867809
-                            # - [motionmark-animometer-ramp, mm-ar]
-                            # - [motionmark-htmlsuite-ramp, mm-hr]
+                            - [motionmark-animometer-ramp, mm-ar]
+                            - [motionmark-htmlsuite-ramp, mm-hr]
                         default:
                             - ares6
                             - [assorted-dom, dom]
