@@ -300,6 +300,11 @@ class Perftest(object):
 
             loop = asyncio.get_event_loop()
             loop.run_until_complete(runner.one_run(scenario, "youtube"))
+        elif scenario == "settled-webext":
+            runner.prepare("settled", "webext")
+
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(runner.one_run("settled", "webext"))
         else:
             runner.prepare(scenario, "default")
 

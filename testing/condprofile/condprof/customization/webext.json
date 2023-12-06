@@ -1,0 +1,15 @@
+{
+  "name": "webext",
+  "addons": {
+    "uBlock": "https://addons.mozilla.org/firefox/downloads/file/4171020/ublock_origin-1.52.2.xpi"
+  },
+  "prefs": {
+    "gfx.webrender.precache-shaders": true,
+    "extensions.autoDisableScopes": 0,
+    "extensions.enabledScopes": 1,
+    "extensions.startupScanScopes": 1
+  },
+  "scenario": {
+    "full": { "max_urls": 150 }
+  }
+}
