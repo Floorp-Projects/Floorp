@@ -551,6 +551,7 @@ perfdocs-verify:
             - 'devtools/perfdocs/**'
             - 'taskcluster/**'
             - '**/perftest.ini'
+            - '**/perftest.toml'
             - 'python/mozperftest/**'
             - 'testing/awsy/**'
             - 'testing/raptor/**'
