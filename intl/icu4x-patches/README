@@ -6,6 +6,10 @@ A patch for Cargo.toml of icu_capi. Remove weak dependencies of unnecessary crat
 
 A patch for icu_capi for clang and static analysis.
 
+### 003-explicit.patch
+
+A patch for icu_capi to add explicit keyword
+
 ### empty.toml
 
 Empty toml data for trie_data for icu_segmenter_data.

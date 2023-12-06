@@ -93,7 +93,7 @@ class ICU4XWordSegmenter {
   ICU4XWordBreakIteratorLatin1 segment_latin1(const diplomat::span<const uint8_t> input) const;
   inline const capi::ICU4XWordSegmenter* AsFFI() const { return this->inner.get(); }
   inline capi::ICU4XWordSegmenter* AsFFIMut() { return this->inner.get(); }
-  inline ICU4XWordSegmenter(capi::ICU4XWordSegmenter* i) : inner(i) {}
+  inline explicit ICU4XWordSegmenter(capi::ICU4XWordSegmenter* i) : inner(i) {}
   ICU4XWordSegmenter() = default;
   ICU4XWordSegmenter(ICU4XWordSegmenter&&) noexcept = default;
   ICU4XWordSegmenter& operator=(ICU4XWordSegmenter&& other) noexcept = default;

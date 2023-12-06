@@ -82,6 +82,7 @@ log "Patching icu_capi"
 for patch in \
     001-Cargo.toml.patch \
     002-GH4109.patch \
+    003-explicit.patch \
 ; do
     patch -d ${top_src_dir} -p1 --no-backup-if-mismatch < ${top_src_dir}/intl/icu4x-patches/$patch
 done

@@ -58,7 +58,7 @@ class ICU4XLocaleFallbacker {
   diplomat::result<ICU4XLocaleFallbackerWithConfig, ICU4XError> for_config(ICU4XLocaleFallbackConfig config) const;
   inline const capi::ICU4XLocaleFallbacker* AsFFI() const { return this->inner.get(); }
   inline capi::ICU4XLocaleFallbacker* AsFFIMut() { return this->inner.get(); }
-  inline ICU4XLocaleFallbacker(capi::ICU4XLocaleFallbacker* i) : inner(i) {}
+  inline explicit ICU4XLocaleFallbacker(capi::ICU4XLocaleFallbacker* i) : inner(i) {}
   ICU4XLocaleFallbacker() = default;
   ICU4XLocaleFallbacker(ICU4XLocaleFallbacker&&) noexcept = default;
   ICU4XLocaleFallbacker& operator=(ICU4XLocaleFallbacker&& other) noexcept = default;
