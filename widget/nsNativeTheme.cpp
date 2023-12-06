@@ -105,6 +105,11 @@ NS_IMPL_ISUPPORTS(nsNativeTheme, nsITimerCallback, nsINamed)
       }
       break;
     }
+    case StyleAppearance::Toolbarbutton:
+      if (CheckBooleanAttr(aFrame, nsGkAtoms::open)) {
+        flags |= ElementState::HOVER | ElementState::ACTIVE;
+      }
+      break;
     case StyleAppearance::MenulistButton:
     case StyleAppearance::Menulist:
     case StyleAppearance::NumberInput:

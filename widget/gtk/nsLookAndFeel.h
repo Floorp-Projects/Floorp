@@ -99,7 +99,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     ColorPair mHeaderBarInactive;
     ColorPair mButton;
     ColorPair mButtonHover;
-    nscolor mButtonActiveText = kBlack;
+    ColorPair mButtonActive;
+    nscolor mButtonBorder = kBlack;
     nscolor mFrameOuterLightBorder = kBlack;
     nscolor mFrameInnerDarkBorder = kBlack;
     nscolor mOddCellBackground = kWhite;

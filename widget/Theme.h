@@ -185,7 +185,8 @@ class Theme : protected nsNativeTheme, public nsITheme {
                      bool aIsMeter);
   template <typename PaintBackendData>
   void PaintButton(nsIFrame*, PaintBackendData&, const LayoutDeviceRect&,
-                   const ElementState&, const Colors&, DPIRatio);
+                   StyleAppearance, const ElementState&, const Colors&,
+                   DPIRatio);
 
   static void PrefChangedCallback(const char*, void*) {
     LookAndFeel::NotifyChangedAllWindows(ThemeChangeKind::Layout);
