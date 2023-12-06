@@ -48,7 +48,6 @@
 #  include "jsapi.h"
 #  include "json/json.h"
 #  include "mozilla/Atomics.h"
-#  include "mozilla/BlocksRingBuffer.h"
 #  include "mozilla/DataMutex.h"
 #  include "mozilla/ProfileBufferEntrySerializationGeckoExtensions.h"
 #  include "mozilla/ProfileJSONWriter.h"
@@ -1207,49 +1206,6 @@ TEST(GeckoProfiler, ThreadRegistration_RegistrationEdgeCases)
 }
 
 #ifdef MOZ_GECKO_PROFILER
-
-TEST(BaseProfiler, BlocksRingBuffer)
-{
-  constexpr uint32_t MBSize = 256;
-  uint8_t buffer[MBSize * 3];
-  for (size_t i = 0; i < MBSize * 3; ++i) {
-    buffer[i] = uint8_t('A' + i);
-  }
-  BlocksRingBuffer rb(BlocksRingBuffer::ThreadSafety::WithMutex,
-                      &buffer[MBSize], MakePowerOfTwo32<MBSize>());
-
-  {
-    nsCString cs("nsCString"_ns);
-    nsString s(u"nsString"_ns);
-    nsAutoCString acs("nsAutoCString"_ns);
-    nsAutoString as(u"nsAutoString"_ns);
-    nsAutoCStringN<8> acs8("nsAutoCStringN"_ns);
-    nsAutoStringN<8> as8(u"nsAutoStringN"_ns);
-    JS::UniqueChars jsuc = JS_smprintf("%s", "JS::UniqueChars");
-
-    rb.PutObjects(cs, s, acs, as, acs8, as8, jsuc);
-  }
-
-  rb.ReadEach([](ProfileBufferEntryReader& aER) {
-    ASSERT_EQ(aER.ReadObject<nsCString>(), "nsCString"_ns);
-    ASSERT_EQ(aER.ReadObject<nsString>(), u"nsString"_ns);
-    ASSERT_EQ(aER.ReadObject<nsAutoCString>(), "nsAutoCString"_ns);
-    ASSERT_EQ(aER.ReadObject<nsAutoString>(), u"nsAutoString"_ns);
-    ASSERT_EQ(aER.ReadObject<nsAutoCStringN<8>>(), "nsAutoCStringN"_ns);
-    ASSERT_EQ(aER.ReadObject<nsAutoStringN<8>>(), u"nsAutoStringN"_ns);
-    auto jsuc2 = aER.ReadObject<JS::UniqueChars>();
-    ASSERT_TRUE(!!jsuc2);
-    ASSERT_TRUE(strcmp(jsuc2.get(), "JS::UniqueChars") == 0);
-  });
-
-  // Everything around the sub-buffer should be unchanged.
-  for (size_t i = 0; i < MBSize; ++i) {
-    ASSERT_EQ(buffer[i], uint8_t('A' + i));
-  }
-  for (size_t i = MBSize * 2; i < MBSize * 3; ++i) {
-    ASSERT_EQ(buffer[i], uint8_t('A' + i));
-  }
-}
 
 // Common JSON checks.
 

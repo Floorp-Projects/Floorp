@@ -92,7 +92,6 @@ EXPORTS.mozilla += [
     "public/BaseProfilerRAIIMacro.h",
     "public/BaseProfilerState.h",
     "public/BaseProfilerUtils.h",
-    "public/BlocksRingBuffer.h",
     "public/FailureLatch.h",
     "public/leb128iterator.h",
     "public/ModuloBuffer.h",
