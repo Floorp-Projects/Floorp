@@ -20,3 +20,15 @@ browser.jar:
   content/branding/aboutDialog.css
   content/branding/floorp-background.png
   content/branding/floorp-pb-toolbar-icon.ico    (../pbmode.ico)
+
+#ifdef XP_MACOSX
+   content/branding/document.ico                  (mac/document.ico)
+#endif
+
+#ifdef XP_WIN
+   content/branding/document.ico                  (windows/document.ico)
+#endif
+
+#ifdef XP_LINUX
+   content/branding/document.ico                  (linux/document.ico)
+#endif
