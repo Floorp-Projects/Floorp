@@ -124,6 +124,7 @@ struct KeySystemConfig {
   static bool Supports(const nsAString& aKeySystem);
   static bool CreateKeySystemConfigs(const nsAString& aKeySystem,
                                      nsTArray<KeySystemConfig>& aOutConfigs);
+  static void GetGMPKeySystemConfigs(dom::Promise* aPromise);
 
   KeySystemConfig() = default;
   ~KeySystemConfig() = default;
