@@ -10,6 +10,8 @@
 #include "mozilla/glean/bindings/jog/JOG.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Telemetry.h"
+#include <tuple>
+#include "mozilla/DataMutex.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
 
