@@ -1065,11 +1065,17 @@ void Theme::PaintProgress(nsIFrame* aFrame, PaintBackendData& aPaintData,
 template <typename PaintBackendData>
 void Theme::PaintButton(nsIFrame* aFrame, PaintBackendData& aPaintData,
                         const LayoutDeviceRect& aRect,
-                        const ElementState& aState, const Colors& aColors,
-                        DPIRatio aDpiRatio) {
+                        StyleAppearance aAppearance, const ElementState& aState,
+                        const Colors& aColors, DPIRatio aDpiRatio) {
   const CSSCoord radius = 4.0f;
   auto [backgroundColor, borderColor] =
       ComputeButtonColors(aState, aColors, aFrame);
+
+  if (aAppearance == StyleAppearance::Toolbarbutton &&
+      (!aState.HasState(ElementState::HOVER) ||
+       aState.HasState(ElementState::DISABLED))) {
+    borderColor = sTransparent;
+  }
 
   ThemeDrawing::PaintRoundedRectWithRadius(aPaintData, aRect, backgroundColor,
                                            borderColor, kButtonBorderWidth,
@@ -1328,8 +1334,8 @@ bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
     }
     case StyleAppearance::Button:
     case StyleAppearance::Toolbarbutton:
-      PaintButton(aFrame, aPaintData, devPxRect, elementState, colors,
-                  dpiRatio);
+      PaintButton(aFrame, aPaintData, devPxRect, aAppearance, elementState,
+                  colors, dpiRatio);
       break;
     case StyleAppearance::FocusOutline:
       PaintAutoStyleOutline(aFrame, aPaintData, devPxRect, colors, dpiRatio);

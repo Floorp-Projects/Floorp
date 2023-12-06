@@ -701,9 +701,10 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
       // 3-D shadow inner edge color
       aColor = mFrameInnerDarkBorder;
       break;
-
-    case ColorID::Threedlightshadow:
     case ColorID::Buttonborder:
+      aColor = mButtonBorder;
+      break;
+    case ColorID::Threedlightshadow:
     case ColorID::MozDisabledfield:
       aColor = mIsDark ? *GenericDarkColor(aID) : NS_RGB(0xE0, 0xE0, 0xE0);
       break;
@@ -719,14 +720,16 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
       aColor = mField.mFg;
       break;
     case ColorID::MozButtonhoverface:
-    case ColorID::MozButtonactiveface:
       aColor = mButtonHover.mBg;
       break;
     case ColorID::MozButtonhovertext:
       aColor = mButtonHover.mFg;
       break;
+    case ColorID::MozButtonactiveface:
+      aColor = mButtonActive.mBg;
+      break;
     case ColorID::MozButtonactivetext:
-      aColor = mButtonActiveText;
+      aColor = mButtonActive.mFg;
       break;
     case ColorID::MozMenuhover:
       aColor = mMenuHover.mBg;
@@ -2089,18 +2092,15 @@ void nsLookAndFeel::PerThemeData::Init() {
   }
 
   gtk_style_context_get_border_color(style, GTK_STATE_FLAG_NORMAL, &color);
-  mButton.mBg = GDK_RGBA_TO_NS_RGBA(color);
-  gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
-  mButton.mFg = GDK_RGBA_TO_NS_RGBA(color);
-  gtk_style_context_get_color(style, GTK_STATE_FLAG_PRELIGHT, &color);
-  mButtonHover.mFg = GDK_RGBA_TO_NS_RGBA(color);
-  gtk_style_context_get_color(style, GTK_STATE_FLAG_ACTIVE, &color);
-  mButtonActiveText = GDK_RGBA_TO_NS_RGBA(color);
-  gtk_style_context_get_background_color(style, GTK_STATE_FLAG_PRELIGHT,
-                                         &color);
-  mButtonHover.mBg = GDK_RGBA_TO_NS_RGBA(color);
+  mButtonBorder = GDK_RGBA_TO_NS_RGBA(color);
+  mButton = GetColorPair(style);
+  mButtonHover = GetColorPair(style, GTK_STATE_FLAG_PRELIGHT);
+  mButtonActive = GetColorPair(style, GTK_STATE_FLAG_ACTIVE);
   if (!NS_GET_A(mButtonHover.mBg)) {
     mButtonHover.mBg = mWindow.mBg;
+  }
+  if (!NS_GET_A(mButtonActive.mBg)) {
+    mButtonActive.mBg = mWindow.mBg;
   }
 
   // Combobox text color
