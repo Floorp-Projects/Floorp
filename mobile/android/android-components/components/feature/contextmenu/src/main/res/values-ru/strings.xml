@@ -13,13 +13,13 @@
     <!-- Text for context menu item to share the image with an other app. -->
     <string name="mozac_feature_contextmenu_share_image">Поделиться изображением</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
-    <string name="mozac_feature_contextmenu_copy_link">Скопировать ссылку</string>
+    <string name="mozac_feature_contextmenu_copy_link">Копировать ссылку</string>
     <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
-    <string name="mozac_feature_contextmenu_copy_image_location">Скопировать ссылку на изображение</string>
+    <string name="mozac_feature_contextmenu_copy_image_location">Копировать ссылку на изображение</string>
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">Сохранить изображение</string>
     <!-- Text for context menu item to copy the image to the clipboard. -->
-    <string name="mozac_feature_contextmenu_copy_image">Скопировать изображение</string>
+    <string name="mozac_feature_contextmenu_copy_image">Копировать изображение</string>
     <!-- Text for context menu item to save / download the file. -->
     <string name="mozac_feature_contextmenu_save_file_to_device">Сохранить файл на устройстве</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
@@ -35,7 +35,7 @@
     <!-- Text for context menu item to share the email with another app. -->
     <string name="mozac_feature_contextmenu_share_email_address">Поделиться адресом эл. почты</string>
     <!-- Text for context menu item to copy the email address to the clipboard. -->
-    <string name="mozac_feature_contextmenu_copy_email_address">Скопировать адрес эл. почты</string>
+    <string name="mozac_feature_contextmenu_copy_email_address">Копировать адрес эл. почты</string>
     <!-- Text for confirmation "snackbar" shown after copying a email address to the clipboard. -->
     <string name="mozac_feature_contextmenu_snackbar_email_address_copied">Адрес эл. почты скопирован в буфер обмена</string>
     <!-- Text for context menu item to add to a contact. -->

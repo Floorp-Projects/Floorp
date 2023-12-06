@@ -2133,7 +2133,7 @@
     <string name="synced_tabs_no_open_tabs">Ndaipóri tendayke ijurujáva</string>
 
     <!-- Content description for expanding a group of synced tabs. -->
-    <string name="synced_tabs_expand_group">Emyasãi tendayke aty mbojuehepyre</string>
+    <string name="synced_tabs_expand_group">Emoasãi tendayke aty mbojuehepyre</string>
     <!-- Content description for collapsing a group of synced tabs. -->
     <string name="synced_tabs_collapse_group">Emokañy tendayke aty mbojuehepyre</string>
 
@@ -2170,7 +2170,7 @@
     <string name="inactive_tabs_delete_all">Embotypaite tendayke ojeporu’ỹva</string>
 
     <!-- Content description for expanding the inactive tabs section. -->
-    <string name="inactive_tabs_expand_content_description">Emyasãi tendayke ojeporu’ỹva</string>
+    <string name="inactive_tabs_expand_content_description">Emoasãi tendayke ojeporu’ỹva</string>
     <!-- Content description for collapsing the inactive tabs section. -->
     <string name="inactive_tabs_collapse_content_description">Emomichĩ tendayke ojeporu’ỹva</string>
 
@@ -2284,7 +2284,7 @@
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
     <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Ehecháta ñemurã sapy’agua apopyre iporãvagui. Opaite ñemurã ojapova’erã oipotaháicha jehechajey porãverã. %s</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
-    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Ehecháta ñemurã sapy’apy’a apopyre oikóva rehegua. Romyasãi ñemurã apopyre jeroviaha añoite. %s</string>
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Ehecháta ñemurã sapy’apy’a apopyre oikóva rehegua. Romoasãi ñemurã apopyre jeroviaha añoite. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Eikuaave</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2327,7 +2327,7 @@
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
     <string name="review_quality_check_not_analyzable_info_title">Ndorohechajeykuaái ko marandu’i.</string>
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_body">Rombyasy, ndorohechajeykuaái marandu’i porãngue peteĩchagua apopyrépe. Techapyrã, jopói kuatia’atã ha ta’ãngamýi ñemyasãi, purahéi ha ñembosarái.</string>
+    <string name="review_quality_check_not_analyzable_info_body">Rombyasy, ndorohechajeykuaái marandu’i porãngue peteĩchagua apopyrépe. Techapyrã, jopói kuatia’atã ha ta’ãngamýi ñemoasãi, purahéi ha ñembosarái.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Marandu ojeporupotáma</string>
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
@@ -2412,9 +2412,9 @@
     <!-- Current state for elements that can be collapsed if interacting with them. Talkback will dictate this after a state change. -->
     <string name="a11y_state_label_collapsed">momichĩmbyre</string>
     <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
-    <string name="a11y_action_label_expand">myasãi</string>
+    <string name="a11y_action_label_expand">moasãi</string>
     <!-- Current state for elements that can be expanded if interacting with them. Talkback will dictate this after a state change. -->
-    <string name="a11y_state_label_expanded">myasãimbyre</string>
+    <string name="a11y_state_label_expanded">moasãimbyre</string>
     <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
     <string name="a11y_action_label_wallpaper_collection_learn_more">embojuruja juajuha eikuaave hag̃ua ko ñembyaty</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->

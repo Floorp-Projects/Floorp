@@ -1130,7 +1130,7 @@
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">Изменить</string>
     <!-- Bookmark overflow menu copy button -->
-    <string name="bookmark_menu_copy_button">Скопировать</string>
+    <string name="bookmark_menu_copy_button">Копировать</string>
     <!-- Bookmark overflow menu share button -->
     <string name="bookmark_menu_share_button">Поделиться</string>
     <!-- Bookmark overflow menu open in new tab button -->
@@ -1353,7 +1353,7 @@
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Недавно использованные</string>
     <!-- Text for the copy link action in the share screen. -->
-    <string name="share_copy_link_to_clipboard">Скопировать в буфер обмена</string>
+    <string name="share_copy_link_to_clipboard">Копировать в буфер обмена</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Скопировано в буфер обмена</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1794,11 +1794,11 @@
     <!-- Shown in snackbar to tell user that the username has been copied -->
     <string name="logins_username_copied">Имя пользователя скопировано в буфер обмена</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
-    <string name="saved_logins_copy_password">Скопировать пароль</string>
+    <string name="saved_logins_copy_password">Копировать пароль</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
     <string name="saved_logins_clear_password">Очистить пароль</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
-    <string name="saved_login_copy_username">Скопировать имя пользователя</string>
+    <string name="saved_login_copy_username">Копировать имя пользователя</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">Очистить имя пользователя</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->

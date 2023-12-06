@@ -54,7 +54,6 @@
     <string name="menu_remove_from_shortcuts">Xita da acceso ñama</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Nakuvi a jíía íyo</string>
     <string name="menu_settings">Ke´i</string>
     <string name="menu_about">Jiee ya´a</string>
     <string name="menu_help">Chinei</string>
@@ -310,6 +309,12 @@
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Ni´in ka̱a̱ na´a tɨɨ saa kuvi síne ka̱a̱ ya´a</string>
 
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string name="preference_security_biometric_summary2">Síne jíí na\'a tiin noo\'o de nchisonu accesos directos a xíín sa íyo nune iin sitio jíí %s.</string>
+
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
     <string name="preference_privacy_secure_mode">Ntu tuvi</string>
@@ -486,7 +491,10 @@
 
 
 
-  <string name="error_hostLookup_title">Ntu nani´í ka̱a̱ servidor</string>
+  <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
+    <string name="snackbar_added_to_shortcuts">Tee nuu acceso ñama!</string>
+
+    <string name="error_hostLookup_title">Ntu nani´í ka̱a̱ servidor</string>
 
 
 
@@ -611,6 +619,11 @@
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)
     %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
     <string name="your_rights_content2"><![CDATA[%1$s kuvi ni´inuma jiee <a href="%2$s"> tutu xitu Mozilla </a> jíí da inka tutu código nune.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[Código da fuente adicional %1$s íyo jíí <a href="%2$s"> licencias </a> nune jee kuvi sama código.]]></string>
 
     <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Sivɨ</string>
@@ -839,6 +852,10 @@
     <!-- Title for the prompt to enable search suggestions -->
     <string name="enable_search_suggestion_title2">¿Xituvi da sugerencias a nnánuku?</string>
 
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">Saa kuvi ni´inu tu´un chineí nánuku, %1$s nejika chu´un ichinu daa a teenu nu chu´un direcciones jii ka̱a̱ nánuku.</string>
+
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Ntuvi</string>
 
@@ -1022,6 +1039,13 @@
 
     <!-- This is the title of promote search widget dialog. -->
     <string name="promote_search_widget_dialog_title">¡Nná da a nnánukunu! 🎉</string>
+
+    <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
+    <string name="cfr_for_start_browsing">Kajie´e sesión yi yu\'u jee nakasɨdani rastreadores jíí inka amenazas ntaka jikanu nuu ka̱a̱ ya\'a.</string>
+
+    <!-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. "Focus") -->
+    <string name="promote_search_widget_dialog_subtitle">Xinodani jíí navegación yu\'u, je kajie\'e ñama inka íchi jíí widget %1$s nuu pantalla xinañu\'u.</string>
 
     <!-- This is te text from add search widget to home screen button .The button is located on
     promote search widget dialog. -->
