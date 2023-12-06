@@ -934,10 +934,11 @@ export var GeckoViewWebExtension = {
     return { extension: exported };
   },
 
-  async installWebExtension(aInstallId, aUri) {
+  async installWebExtension(aInstallId, aUri, installMethod) {
     const install = await lazy.AddonManager.getInstallForURL(aUri.spec, {
       telemetryInfo: {
         source: "geckoview-app",
+        method: installMethod || undefined,
       },
     });
     const promise = new Promise(resolve => {
@@ -1202,7 +1203,7 @@ export var GeckoViewWebExtension = {
       }
 
       case "GeckoView:WebExtension:Install": {
-        const { locationUri, installId } = aData;
+        const { locationUri, installId, installMethod } = aData;
         let uri;
         try {
           uri = Services.io.newURI(locationUri);
@@ -1212,7 +1213,11 @@ export var GeckoViewWebExtension = {
         }
 
         try {
-          const result = await this.installWebExtension(installId, uri);
+          const result = await this.installWebExtension(
+            installId,
+            uri,
+            installMethod
+          );
           if (result.extension) {
             aCallback.onSuccess(result);
           } else {

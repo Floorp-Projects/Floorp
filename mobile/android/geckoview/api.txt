@@ -2733,6 +2733,7 @@ package org.mozilla.geckoview {
     method @AnyThread public void enableExtensionProcessSpawning();
     method @AnyThread @NonNull public GeckoResult<WebExtension> ensureBuiltIn(@NonNull String, @Nullable String);
     method @Nullable @UiThread public WebExtensionController.PromptDelegate getPromptDelegate();
+    method @AnyThread @NonNull public GeckoResult<WebExtension> install(@NonNull String, @Nullable String);
     method @AnyThread @NonNull public GeckoResult<WebExtension> install(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<WebExtension> installBuiltIn(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<List<WebExtension>> list();
@@ -2744,6 +2745,8 @@ package org.mozilla.geckoview {
     method @AnyThread public void setTabActive(@NonNull GeckoSession, boolean);
     method @AnyThread @NonNull public GeckoResult<Void> uninstall(@NonNull WebExtension);
     method @AnyThread @NonNull public GeckoResult<WebExtension> update(@NonNull WebExtension);
+    field public static final String INSTALLATION_METHOD_FROM_FILE = "install-from-file";
+    field public static final String INSTALLATION_METHOD_MANAGER = "manager";
   }
 
   public static interface WebExtensionController.AddonManagerDelegate {
@@ -2774,6 +2777,9 @@ package org.mozilla.geckoview {
 
   public static interface WebExtensionController.ExtensionProcessDelegate {
     method @UiThread default public void onDisabledProcessSpawning();
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface WebExtensionController.InstallationMethod {
   }
 
   @UiThread public static interface WebExtensionController.PromptDelegate {

@@ -203,6 +203,9 @@ addonsManager:
         e.g. install events with source "about:addons" may have "install-from-file" or "url" as method),
         one of "amWebAPI", "drag-and-drop", "installTrigger", "install-from-file", "link",
         "management-webext-api", "sideload", "synthetic-install", "url", "product-updates".
+        e.g. install events with source "about:addons" may have "install-from-file" or "drag-and-drop" as method),
+        one of "amWebAPI", "drag-and-drop", "installTrigger", "install-from-file", "link", "management-webext-api",
+        "sideload", "synthetic-install", "url", "product-updates", "manager".
       num_strings: The number of permission description strings in the extension permission doorhanger
       updated_from: Determine if an update has been requested by the user or the application ("app" / "user")
       install_origins: This flag indicates whether install_origins is defined in the addon manifest. ("1" / "0")

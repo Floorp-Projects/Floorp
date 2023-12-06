@@ -1374,7 +1374,7 @@ public class GeckoViewActivity extends AppCompatActivity
                     final WebExtensionController controller =
                         sGeckoRuntime.getWebExtensionController();
                     controller.setPromptDelegate(sExtensionManager);
-                    return controller.install(uri);
+                    return controller.install(uri, null);
                   })
               .then(
                   extension ->

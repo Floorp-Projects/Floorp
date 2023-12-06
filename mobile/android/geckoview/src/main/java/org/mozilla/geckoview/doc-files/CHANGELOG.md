@@ -20,12 +20,14 @@ exclude: true
 - Added support for controlling `privacy.globalprivacycontrol.enabled` and `privacy.globalprivacycontrol.pbmode.enabled` and `privacy.globalprivacycontrol.functionality.enabled` via [`GeckoRuntimeSettings.Builder.globalPrivacyControlEnabled`][122.3]
 - Added named translations exceptions via [`TranslationsException`][122.4].
 - Added [`ERROR_UNSUPPORTED_ADDON_TYPE`][122.5] to `WebExtension.InstallException.ErrorCodes`. ([bug 1867873]({{bugzilla}}1867873))
+- Added [`WebExtensionController.install`][122.6] requires `WebExtensionController.InstallationMethod`.
 
 [122.1]: {{javadoc_uri}}/GeckoSession.html#reportBackInStock(String)
 [122.2]: {{javadoc_uri}}/GeckoSession.html#requestCreateAnalysis(String)
 [122.3]: {{javadoc_uri}}/GeckoRuntimeSettings.Builder.html#globalPrivacyControlEnabled(boolean)
 [122.4]: {{javadoc_uri}}/TranslationsController.TranslationsException.html
 [122.5]: {{javadoc_uri}}/WebExtension.InstallException.ErrorCodes.html#ERROR_UNSUPPORTED_ADDON_TYPE
+[122.6]: {{javadoc_uri}}/WebExtensionController.WebExtensionController.html#install(java.lang.String,java.lang.String,org.mozilla.geckoview.WebExtensionController.InstallationMethod)
 
 ## v121
 - Added runtime controller functions. [`RuntimeTranslation`][121.1] has options for retrieving translation languages and managing language models.
@@ -1490,4 +1492,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: be0f59f27ec3ce240c210d24ebee6a27050a1ff0
+[api-version]: e3f6e6e4d0c9b7f366c3c1a1895cda7276e944f2
