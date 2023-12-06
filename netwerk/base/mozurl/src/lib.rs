@@ -389,6 +389,12 @@ macro_rules! debug_assert_mut {
 }
 
 #[no_mangle]
+pub extern "C" fn mozurl_cannot_be_a_base(url: &mut MozURL) -> bool {
+    debug_assert_mut!(url);
+    url.cannot_be_a_base()
+}
+
+#[no_mangle]
 pub extern "C" fn mozurl_set_scheme(url: &mut MozURL, scheme: &nsACString) -> nsresult {
     debug_assert_mut!(url);
     let scheme = try_or_malformed!(str::from_utf8(scheme));
