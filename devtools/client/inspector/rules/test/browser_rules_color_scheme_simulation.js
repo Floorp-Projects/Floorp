@@ -21,12 +21,12 @@ add_task(async function () {
   ok(darkButton, "The dark color scheme simulation button exists");
 
   is(
-    isButtonChecked(lightButton),
+    isButtonPressed(lightButton),
     false,
     "At first, the light button isn't checked"
   );
   is(
-    isButtonChecked(darkButton),
+    isButtonPressed(darkButton),
     false,
     "At first, the dark button isn't checked"
   );
@@ -52,10 +52,10 @@ add_task(async function () {
 
   info("Click on the dark button");
   darkButton.click();
-  await waitFor(() => isButtonChecked(darkButton));
+  await waitFor(() => isButtonPressed(darkButton));
   ok(true, "The dark button is checked");
   is(
-    isButtonChecked(lightButton),
+    isButtonPressed(lightButton),
     false,
     "the light button state didn't change when enabling dark mode"
   );
@@ -85,13 +85,13 @@ add_task(async function () {
 
   info("Click the light button simulate light mode");
   lightButton.click();
-  await waitFor(() => isButtonChecked(lightButton));
+  await waitFor(() => isButtonPressed(lightButton));
   ok(true, "The button has the expected light state");
   // TODO: Actually simulate light mode. This might require to set the OS-level preference
   // to dark as the default state might consume the rule from the like scheme media query.
 
   is(
-    isButtonChecked(darkButton),
+    isButtonPressed(darkButton),
     false,
     "the dark button was unchecked when enabling light mode"
   );
@@ -100,7 +100,7 @@ add_task(async function () {
 
   info("Click the light button to disable simulation");
   lightButton.click();
-  await waitFor(() => !isButtonChecked(lightButton));
+  await waitFor(() => !isButtonPressed(lightButton));
   ok(true, "The button isn't checked anymore");
   await waitFor(() => divHasDefaultStyling());
   ok(true, "We're not simulating color-scheme anymore");
@@ -154,6 +154,6 @@ add_task(async function () {
   );
 });
 
-function isButtonChecked(el) {
-  return el.classList.contains("checked");
+function isButtonPressed(el) {
+  return el.getAttribute("aria-pressed") === "true";
 }

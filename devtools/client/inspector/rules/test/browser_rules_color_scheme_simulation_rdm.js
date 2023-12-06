@@ -35,7 +35,7 @@ add_task(async function () {
 
   info("Click on the dark button");
   darkButton.click();
-  await waitFor(() => isButtonChecked(darkButton));
+  await waitFor(() => isButtonPressed(darkButton));
   ok(true, "The dark button is checked");
 
   await waitFor(() => divHasDarkSchemeStyling());
@@ -49,7 +49,7 @@ add_task(async function () {
 
   info("Wait for a bit before checking dark mode is still enabled");
   await wait(1000);
-  ok(isButtonChecked(darkButton), "button is still checked");
+  ok(isButtonPressed(darkButton), "button is still checked");
   ok(
     await divHasDarkSchemeStyling(),
     "dark mode color-scheme simulation is still enabled"
@@ -57,14 +57,14 @@ add_task(async function () {
 
   info("Click the button to disable simulation");
   darkButton.click();
-  await waitFor(() => !isButtonChecked(darkButton));
+  await waitFor(() => !isButtonPressed(darkButton));
   ok(true, "The button isn't checked anymore");
   await waitFor(() => divHasDefaultStyling());
   ok(true, "We're not simulating color-scheme anymore");
 
   info("Check that enabling dark-mode simulation before RDM does work as well");
   darkButton.click();
-  await waitFor(() => isButtonChecked(darkButton));
+  await waitFor(() => isButtonPressed(darkButton));
   await waitFor(() => divHasDarkSchemeStyling());
   ok(
     true,
@@ -76,7 +76,7 @@ add_task(async function () {
 
   info("Click the button to disable simulation while RDM is still opened");
   darkButton.click();
-  await waitFor(() => !isButtonChecked(darkButton));
+  await waitFor(() => !isButtonPressed(darkButton));
   ok(true, "The button isn't checked anymore");
   await waitFor(() => divHasDefaultStyling());
   ok(true, "We're not simulating color-scheme anymore");
@@ -85,6 +85,6 @@ add_task(async function () {
   await closeRDM(tab);
 });
 
-function isButtonChecked(el) {
-  return el.classList.contains("checked");
+function isButtonPressed(el) {
+  return el.getAttribute("aria-pressed") === "true";
 }

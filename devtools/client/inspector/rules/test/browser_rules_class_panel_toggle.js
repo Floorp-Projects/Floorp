@@ -19,16 +19,26 @@ add_task(async function () {
   ok(panel, "The class panel exists");
   is(view.classPanel, panel, "The rule-view refers to the right element");
   ok(panel.hasAttribute("hidden"), "The panel is hidden");
+  is(
+    button.getAttribute("aria-pressed"),
+    "false",
+    "The button is not pressed by default"
+  );
+  is(
+    inspector.panelDoc.getElementById(button.getAttribute("aria-controls")),
+    panel,
+    "The class panel toggle button has valid aria-controls attribute"
+  );
 
   info("Click on the button to show the panel");
   button.click();
   ok(!panel.hasAttribute("hidden"), "The panel is shown");
-  ok(button.classList.contains("checked"), "The button is checked");
+  is(button.getAttribute("aria-pressed"), "true", "The button is pressed");
 
   info("Click again to hide the panel");
   button.click();
   ok(panel.hasAttribute("hidden"), "The panel is hidden");
-  ok(!button.classList.contains("checked"), "The button is unchecked");
+  is(button.getAttribute("aria-pressed"), "false", "The button is not pressed");
 
   info("Open the pseudo-class panel first, then the class panel");
   view.pseudoClassToggle.click();

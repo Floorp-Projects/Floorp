@@ -17,7 +17,11 @@ add_task(async function () {
   const button = inspector.panelDoc.querySelector("#print-simulation-toggle");
   ok(button, "The print simulation button exists");
 
-  ok(!button.classList.contains("checked"), "The print button is not checked");
+  is(
+    button.getAttribute("aria-pressed"),
+    "false",
+    "The print button is not pressed"
+  );
 
   // Helper to retrieve the background-color property of the selected element
   // All the test elements are expected to have a single background-color rule
@@ -40,8 +44,8 @@ add_task(async function () {
   info("Click on the button and wait for print media to be applied");
   button.click();
 
-  await waitFor(() => button.classList.contains("checked"));
-  ok(true, "The button is now checked");
+  await waitFor(() => button.getAttribute("aria-pressed") === "true");
+  ok(true, "The button is now pressed");
 
   await waitFor(() => ruleViewHasColor("#00f"));
   ok(
@@ -73,7 +77,7 @@ add_task(async function () {
   info("Click the button again to disable print simulation");
   button.click();
 
-  await waitFor(() => !button.classList.contains("checked"));
+  await waitFor(() => button.getAttribute("aria-pressed") === "false");
   ok(true, "The button is no longer checked");
 
   await waitFor(() => ruleViewHasColor("#f00"));
