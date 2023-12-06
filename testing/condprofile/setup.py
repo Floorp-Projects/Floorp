@@ -22,6 +22,7 @@ setup(
             [
                 "condprof/customization/default.json",
                 "condprof/customization/youtube.json",
+                "condprof/customization/webext.json",
             ],
         )
     ],
