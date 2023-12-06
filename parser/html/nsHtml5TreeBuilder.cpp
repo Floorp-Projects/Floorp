@@ -2093,6 +2093,23 @@ bool nsHtml5TreeBuilder::isSpecialParentInForeign(nsHtml5StackNode* stackNode) {
           (stackNode->getGroup() == MI_MO_MN_MS_MTEXT));
 }
 
+nsIContentHandle* nsHtml5TreeBuilder::getDeclarativeShadowRoot(
+    nsIContentHandle* currentNode, nsIContentHandle* templateNode,
+    nsHtml5HtmlAttributes* attributes) {
+  if (!isAllowDeclarativeShadowRoots()) {
+    return nullptr;
+  }
+  nsHtml5String shadowRootMode =
+      attributes->getValue(nsHtml5AttributeName::ATTR_SHADOWROOTMODE);
+  if (!shadowRootMode) {
+    return nullptr;
+  }
+  bool shadowRootDelegatesFocus =
+      attributes->contains(nsHtml5AttributeName::ATTR_SHADOWROOTDELEGATESFOCUS);
+  return getShadowRootFromHost(currentNode, templateNode, shadowRootMode,
+                               shadowRootDelegatesFocus);
+}
+
 nsHtml5String nsHtml5TreeBuilder::extractCharsetFromContent(
     nsHtml5String attributeValue, nsHtml5TreeBuilder* tb) {
   int32_t charsetState = CHARSET_INITIAL;
@@ -4218,9 +4235,18 @@ void nsHtml5TreeBuilder::appendToCurrentNodeAndPushElement(
   nsIContentHandle* elt =
       createElement(kNameSpaceID_XHTML, elementName->getName(), attributes,
                     currentNode, htmlCreator(elementName->getHtmlCreator()));
-  appendElement(elt, currentNode);
   if (nsHtml5ElementName::ELT_TEMPLATE == elementName) {
-    elt = getDocumentFragmentForTemplate(elt);
+    nsIContentHandle* root =
+        getDeclarativeShadowRoot(currentNode, elt, attributes);
+    if (root) {
+      setDocumentFragmentForTemplate(elt, root);
+      elt = root;
+    } else {
+      appendElement(elt, currentNode);
+      elt = getDocumentFragmentForTemplate(elt);
+    }
+  } else {
+    appendElement(elt, currentNode);
   }
   nsHtml5StackNode* node = createStackNode(elementName, elt);
   push(node);
@@ -4480,6 +4506,14 @@ void nsHtml5TreeBuilder::setForceNoQuirks(bool forceNoQuirks) {
 
 void nsHtml5TreeBuilder::setIsSrcdocDocument(bool isSrcdocDocument) {
   this->setForceNoQuirks(isSrcdocDocument);
+}
+
+bool nsHtml5TreeBuilder::isAllowDeclarativeShadowRoots() {
+  return allowDeclarativeShadowRoots;
+}
+
+void nsHtml5TreeBuilder::setAllowDeclarativeShadowRoots(bool allow) {
+  allowDeclarativeShadowRoots = allow;
 }
 
 void nsHtml5TreeBuilder::flushCharacters() {

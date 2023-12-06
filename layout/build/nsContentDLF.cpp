@@ -314,6 +314,7 @@ nsresult nsContentDLF::CreateDocument(
   nsCOMPtr<nsIDocumentViewer> viewer = NS_NewDocumentViewer();
 
   doc->SetContainer(static_cast<nsDocShell*>(aContainer));
+  doc->SetAllowDeclarativeShadowRoots(true);
 
   // Initialize the document to begin loading the data.  An
   // nsIStreamListener connected to the parser is returned in
