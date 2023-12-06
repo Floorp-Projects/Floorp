@@ -1217,7 +1217,8 @@ class PromptFeatureTest {
             Login(guid = "B", origin = "https://www.mozilla.org", username = "username2", password = "password")
 
         val loginPickerRequest = PromptRequest.SelectLoginPrompt(
-            listOf(login, login2),
+            logins = listOf(login, login2),
+            generatedPassword = null,
             onConfirm = { confirmedLogin = it },
             onDismiss = { onDismissWasCalled = true },
         )
@@ -1767,7 +1768,7 @@ class PromptFeatureTest {
 
         val login = Login(guid = "A", origin = "origin", username = "username", password = "password")
         val selectLoginRequest =
-            PromptRequest.SelectLoginPrompt(listOf(login), onLoginConfirm, onLoginDismiss)
+            PromptRequest.SelectLoginPrompt(listOf(login), null, onLoginConfirm, onLoginDismiss)
 
         whenever(loginPickerView.asView()).thenReturn(mock())
         whenever(loginPickerView.asView().visibility).thenReturn(View.VISIBLE)

@@ -31,7 +31,8 @@ class LoginPickerTest {
     var onDismissWasCalled = false
     var confirmedLogin: Login? = null
     private val request = PromptRequest.SelectLoginPrompt(
-        listOf(login, login2),
+        logins = listOf(login, login2),
+        generatedPassword = null,
         onConfirm = { confirmedLogin = it },
         onDismiss = { onDismissWasCalled = true },
     )

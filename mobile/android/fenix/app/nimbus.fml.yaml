@@ -331,6 +331,26 @@ features:
         type: Map<String, String>
         default: {}
 
+  fx-strong-password:
+    description: A feature that provides a generated strong password on sign up.
+    variables:
+      enabled:
+        description: >
+          When the feature is enabled and Firefox receives a Login event with an 
+          empty saved logins list, a suggested strong password prompt will be shown, 
+          allowing the user to use the generated password to fill in the password field 
+          for the new account that will be created. When the feature is disabled, 
+          there won't be any prompt displayed that would allow using a generated password.
+        type: Boolean
+        default: false
+    defaults:
+      - channel: developer
+        value:
+          enabled: true
+      - channel: nightly
+        value:
+          enabled: true
+
   fx-suggest:
     description: A feature that provides Firefox Suggest search suggestions.
     variables:

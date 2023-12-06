@@ -100,9 +100,7 @@ internal data class LoginDatasetBuilder(
 }
 
 internal fun Login.usernamePresentationOrFallback(context: Context): String {
-    return if (username.isNotEmpty()) {
-        username
-    } else {
+    return username.ifEmpty {
         context.getString(mozilla.components.feature.autofill.R.string.mozac_feature_autofill_popup_no_username)
     }
 }
