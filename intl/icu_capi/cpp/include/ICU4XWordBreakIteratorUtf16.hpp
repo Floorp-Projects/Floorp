@@ -51,7 +51,7 @@ class ICU4XWordBreakIteratorUtf16 {
   bool is_word_like() const;
   inline const capi::ICU4XWordBreakIteratorUtf16* AsFFI() const { return this->inner.get(); }
   inline capi::ICU4XWordBreakIteratorUtf16* AsFFIMut() { return this->inner.get(); }
-  inline ICU4XWordBreakIteratorUtf16(capi::ICU4XWordBreakIteratorUtf16* i) : inner(i) {}
+  inline explicit ICU4XWordBreakIteratorUtf16(capi::ICU4XWordBreakIteratorUtf16* i) : inner(i) {}
   ICU4XWordBreakIteratorUtf16() = default;
   ICU4XWordBreakIteratorUtf16(ICU4XWordBreakIteratorUtf16&&) noexcept = default;
   ICU4XWordBreakIteratorUtf16& operator=(ICU4XWordBreakIteratorUtf16&& other) noexcept = default;

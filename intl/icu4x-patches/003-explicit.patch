@@ -1,0 +1,242 @@
+diff --git a/intl/icu_capi/cpp/include/ICU4XDataProvider.hpp b/intl/icu_capi/cpp/include/ICU4XDataProvider.hpp
+--- a/intl/icu_capi/cpp/include/ICU4XDataProvider.hpp
++++ b/intl/icu_capi/cpp/include/ICU4XDataProvider.hpp
+@@ -109,17 +109,17 @@ class ICU4XDataProvider {
+   /**
+    * See the [Rust documentation for `new_with_fallbacker`](https://docs.rs/icu_provider_adapters/latest/icu_provider_adapters/fallback/struct.LocaleFallbackProvider.html#method.new_with_fallbacker) for more information.
+    * 
+    * Additional information: [1](https://docs.rs/icu_provider_adapters/latest/icu_provider_adapters/fallback/struct.LocaleFallbackProvider.html)
+    */
+   diplomat::result<std::monostate, ICU4XError> enable_locale_fallback_with(const ICU4XLocaleFallbacker& fallbacker);
+   inline const capi::ICU4XDataProvider* AsFFI() const { return this->inner.get(); }
+   inline capi::ICU4XDataProvider* AsFFIMut() { return this->inner.get(); }
+-  inline ICU4XDataProvider(capi::ICU4XDataProvider* i) : inner(i) {}
++  inline explicit ICU4XDataProvider(capi::ICU4XDataProvider* i) : inner(i) {}
+   ICU4XDataProvider() = default;
+   ICU4XDataProvider(ICU4XDataProvider&&) noexcept = default;
+   ICU4XDataProvider& operator=(ICU4XDataProvider&& other) noexcept = default;
+  private:
+   std::unique_ptr<capi::ICU4XDataProvider, ICU4XDataProviderDeleter> inner;
+ };
+ 
+ #include "ICU4XLocaleFallbacker.hpp"
+diff --git a/intl/icu_capi/cpp/include/ICU4XLineBreakIteratorLatin1.hpp b/intl/icu_capi/cpp/include/ICU4XLineBreakIteratorLatin1.hpp
+--- a/intl/icu_capi/cpp/include/ICU4XLineBreakIteratorLatin1.hpp
++++ b/intl/icu_capi/cpp/include/ICU4XLineBreakIteratorLatin1.hpp
+@@ -33,17 +33,17 @@ class ICU4XLineBreakIteratorLatin1 {
+    * Finds the next breakpoint. Returns -1 if at the end of the string or if the index is
+    * out of range of a 32-bit signed integer.
+    * 
+    * See the [Rust documentation for `next`](https://docs.rs/icu/latest/icu/segmenter/struct.LineBreakIterator.html#method.next) for more information.
+    */
+   int32_t next();
+   inline const capi::ICU4XLineBreakIteratorLatin1* AsFFI() const { return this->inner.get(); }
+   inline capi::ICU4XLineBreakIteratorLatin1* AsFFIMut() { return this->inner.get(); }
+-  inline ICU4XLineBreakIteratorLatin1(capi::ICU4XLineBreakIteratorLatin1* i) : inner(i) {}
++  inline explicit ICU4XLineBreakIteratorLatin1(capi::ICU4XLineBreakIteratorLatin1* i) : inner(i) {}
+   ICU4XLineBreakIteratorLatin1() = default;
+   ICU4XLineBreakIteratorLatin1(ICU4XLineBreakIteratorLatin1&&) noexcept = default;
+   ICU4XLineBreakIteratorLatin1& operator=(ICU4XLineBreakIteratorLatin1&& other) noexcept = default;
+  private:
+   std::unique_ptr<capi::ICU4XLineBreakIteratorLatin1, ICU4XLineBreakIteratorLatin1Deleter> inner;
+ };
+ 
+ 
+diff --git a/intl/icu_capi/cpp/include/ICU4XLineBreakIteratorUtf16.hpp b/intl/icu_capi/cpp/include/ICU4XLineBreakIteratorUtf16.hpp
+--- a/intl/icu_capi/cpp/include/ICU4XLineBreakIteratorUtf16.hpp
++++ b/intl/icu_capi/cpp/include/ICU4XLineBreakIteratorUtf16.hpp
+@@ -33,17 +33,17 @@ class ICU4XLineBreakIteratorUtf16 {
+    * Finds the next breakpoint. Returns -1 if at the end of the string or if the index is
+    * out of range of a 32-bit signed integer.
+    * 
+    * See the [Rust documentation for `next`](https://docs.rs/icu/latest/icu/segmenter/struct.LineBreakIterator.html#method.next) for more information.
+    */
+   int32_t next();
+   inline const capi::ICU4XLineBreakIteratorUtf16* AsFFI() const { return this->inner.get(); }
+   inline capi::ICU4XLineBreakIteratorUtf16* AsFFIMut() { return this->inner.get(); }
+-  inline ICU4XLineBreakIteratorUtf16(capi::ICU4XLineBreakIteratorUtf16* i) : inner(i) {}
++  inline explicit ICU4XLineBreakIteratorUtf16(capi::ICU4XLineBreakIteratorUtf16* i) : inner(i) {}
+   ICU4XLineBreakIteratorUtf16() = default;
+   ICU4XLineBreakIteratorUtf16(ICU4XLineBreakIteratorUtf16&&) noexcept = default;
+   ICU4XLineBreakIteratorUtf16& operator=(ICU4XLineBreakIteratorUtf16&& other) noexcept = default;
+  private:
+   std::unique_ptr<capi::ICU4XLineBreakIteratorUtf16, ICU4XLineBreakIteratorUtf16Deleter> inner;
+ };
+ 
+ 
+diff --git a/intl/icu_capi/cpp/include/ICU4XLocale.hpp b/intl/icu_capi/cpp/include/ICU4XLocale.hpp
+--- a/intl/icu_capi/cpp/include/ICU4XLocale.hpp
++++ b/intl/icu_capi/cpp/include/ICU4XLocale.hpp
+@@ -202,17 +202,17 @@ class ICU4XLocale {
+   /**
+    * Deprecated
+    * 
+    * Use `create_from_string("bn").
+    */
+   static ICU4XLocale create_bn();
+   inline const capi::ICU4XLocale* AsFFI() const { return this->inner.get(); }
+   inline capi::ICU4XLocale* AsFFIMut() { return this->inner.get(); }
+-  inline ICU4XLocale(capi::ICU4XLocale* i) : inner(i) {}
++  inline explicit ICU4XLocale(capi::ICU4XLocale* i) : inner(i) {}
+   ICU4XLocale() = default;
+   ICU4XLocale(ICU4XLocale&&) noexcept = default;
+   ICU4XLocale& operator=(ICU4XLocale&& other) noexcept = default;
+  private:
+   std::unique_ptr<capi::ICU4XLocale, ICU4XLocaleDeleter> inner;
+ };
+ 
+ 
+diff --git a/intl/icu_capi/cpp/include/ICU4XLocaleFallbackIterator.hpp b/intl/icu_capi/cpp/include/ICU4XLocaleFallbackIterator.hpp
+--- a/intl/icu_capi/cpp/include/ICU4XLocaleFallbackIterator.hpp
++++ b/intl/icu_capi/cpp/include/ICU4XLocaleFallbackIterator.hpp
+@@ -40,17 +40,17 @@ class ICU4XLocaleFallbackIterator {
+   /**
+    * Performs one step of the fallback algorithm, mutating the locale.
+    * 
+    * See the [Rust documentation for `step`](https://docs.rs/icu/latest/icu/locid_transform/fallback/struct.LocaleFallbackIterator.html#method.step) for more information.
+    */
+   void step();
+   inline const capi::ICU4XLocaleFallbackIterator* AsFFI() const { return this->inner.get(); }
+   inline capi::ICU4XLocaleFallbackIterator* AsFFIMut() { return this->inner.get(); }
+-  inline ICU4XLocaleFallbackIterator(capi::ICU4XLocaleFallbackIterator* i) : inner(i) {}
++  inline explicit ICU4XLocaleFallbackIterator(capi::ICU4XLocaleFallbackIterator* i) : inner(i) {}
+   ICU4XLocaleFallbackIterator() = default;
+   ICU4XLocaleFallbackIterator(ICU4XLocaleFallbackIterator&&) noexcept = default;
+   ICU4XLocaleFallbackIterator& operator=(ICU4XLocaleFallbackIterator&& other) noexcept = default;
+  private:
+   std::unique_ptr<capi::ICU4XLocaleFallbackIterator, ICU4XLocaleFallbackIteratorDeleter> inner;
+ };
+ 
+ #include "ICU4XLocale.hpp"
+diff --git a/intl/icu_capi/cpp/include/ICU4XLocaleFallbacker.hpp b/intl/icu_capi/cpp/include/ICU4XLocaleFallbacker.hpp
+--- a/intl/icu_capi/cpp/include/ICU4XLocaleFallbacker.hpp
++++ b/intl/icu_capi/cpp/include/ICU4XLocaleFallbacker.hpp
+@@ -53,17 +53,17 @@ class ICU4XLocaleFallbacker {
+    * 
+    * See the [Rust documentation for `for_config`](https://docs.rs/icu/latest/icu/locid_transform/fallback/struct.LocaleFallbacker.html#method.for_config) for more information.
+    * 
+    * Lifetimes: `this` must live at least as long as the output.
+    */
+   diplomat::result<ICU4XLocaleFallbackerWithConfig, ICU4XError> for_config(ICU4XLocaleFallbackConfig config) const;
+   inline const capi::ICU4XLocaleFallbacker* AsFFI() const { return this->inner.get(); }
+   inline capi::ICU4XLocaleFallbacker* AsFFIMut() { return this->inner.get(); }
+-  inline ICU4XLocaleFallbacker(capi::ICU4XLocaleFallbacker* i) : inner(i) {}
++  inline explicit ICU4XLocaleFallbacker(capi::ICU4XLocaleFallbacker* i) : inner(i) {}
+   ICU4XLocaleFallbacker() = default;
+   ICU4XLocaleFallbacker(ICU4XLocaleFallbacker&&) noexcept = default;
+   ICU4XLocaleFallbacker& operator=(ICU4XLocaleFallbacker&& other) noexcept = default;
+  private:
+   std::unique_ptr<capi::ICU4XLocaleFallbacker, ICU4XLocaleFallbackerDeleter> inner;
+ };
+ 
+ #include "ICU4XDataProvider.hpp"
+diff --git a/intl/icu_capi/cpp/include/ICU4XLocaleFallbackerWithConfig.hpp b/intl/icu_capi/cpp/include/ICU4XLocaleFallbackerWithConfig.hpp
+--- a/intl/icu_capi/cpp/include/ICU4XLocaleFallbackerWithConfig.hpp
++++ b/intl/icu_capi/cpp/include/ICU4XLocaleFallbackerWithConfig.hpp
+@@ -38,17 +38,17 @@ class ICU4XLocaleFallbackerWithConfig {
+    * 
+    * See the [Rust documentation for `fallback_for`](https://docs.rs/icu/latest/icu/locid_transform/fallback/struct.LocaleFallbacker.html#method.fallback_for) for more information.
+    * 
+    * Lifetimes: `this` must live at least as long as the output.
+    */
+   ICU4XLocaleFallbackIterator fallback_for_locale(const ICU4XLocale& locale) const;
+   inline const capi::ICU4XLocaleFallbackerWithConfig* AsFFI() const { return this->inner.get(); }
+   inline capi::ICU4XLocaleFallbackerWithConfig* AsFFIMut() { return this->inner.get(); }
+-  inline ICU4XLocaleFallbackerWithConfig(capi::ICU4XLocaleFallbackerWithConfig* i) : inner(i) {}
++  inline explicit ICU4XLocaleFallbackerWithConfig(capi::ICU4XLocaleFallbackerWithConfig* i) : inner(i) {}
+   ICU4XLocaleFallbackerWithConfig() = default;
+   ICU4XLocaleFallbackerWithConfig(ICU4XLocaleFallbackerWithConfig&&) noexcept = default;
+   ICU4XLocaleFallbackerWithConfig& operator=(ICU4XLocaleFallbackerWithConfig&& other) noexcept = default;
+  private:
+   std::unique_ptr<capi::ICU4XLocaleFallbackerWithConfig, ICU4XLocaleFallbackerWithConfigDeleter> inner;
+ };
+ 
+ #include "ICU4XLocale.hpp"
+diff --git a/intl/icu_capi/cpp/include/ICU4XWordBreakIteratorLatin1.hpp b/intl/icu_capi/cpp/include/ICU4XWordBreakIteratorLatin1.hpp
+--- a/intl/icu_capi/cpp/include/ICU4XWordBreakIteratorLatin1.hpp
++++ b/intl/icu_capi/cpp/include/ICU4XWordBreakIteratorLatin1.hpp
+@@ -46,17 +46,17 @@ class ICU4XWordBreakIteratorLatin1 {
+   /**
+    * Return true when break boundary is word-like such as letter/number/CJK
+    * 
+    * See the [Rust documentation for `is_word_like`](https://docs.rs/icu/latest/icu/segmenter/struct.WordBreakIterator.html#method.is_word_like) for more information.
+    */
+   bool is_word_like() const;
+   inline const capi::ICU4XWordBreakIteratorLatin1* AsFFI() const { return this->inner.get(); }
+   inline capi::ICU4XWordBreakIteratorLatin1* AsFFIMut() { return this->inner.get(); }
+-  inline ICU4XWordBreakIteratorLatin1(capi::ICU4XWordBreakIteratorLatin1* i) : inner(i) {}
++  inline explicit ICU4XWordBreakIteratorLatin1(capi::ICU4XWordBreakIteratorLatin1* i) : inner(i) {}
+   ICU4XWordBreakIteratorLatin1() = default;
+   ICU4XWordBreakIteratorLatin1(ICU4XWordBreakIteratorLatin1&&) noexcept = default;
+   ICU4XWordBreakIteratorLatin1& operator=(ICU4XWordBreakIteratorLatin1&& other) noexcept = default;
+  private:
+   std::unique_ptr<capi::ICU4XWordBreakIteratorLatin1, ICU4XWordBreakIteratorLatin1Deleter> inner;
+ };
+ 
+ 
+diff --git a/intl/icu_capi/cpp/include/ICU4XWordBreakIteratorUtf16.hpp b/intl/icu_capi/cpp/include/ICU4XWordBreakIteratorUtf16.hpp
+--- a/intl/icu_capi/cpp/include/ICU4XWordBreakIteratorUtf16.hpp
++++ b/intl/icu_capi/cpp/include/ICU4XWordBreakIteratorUtf16.hpp
+@@ -46,17 +46,17 @@ class ICU4XWordBreakIteratorUtf16 {
+   /**
+    * Return true when break boundary is word-like such as letter/number/CJK
+    * 
+    * See the [Rust documentation for `is_word_like`](https://docs.rs/icu/latest/icu/segmenter/struct.WordBreakIterator.html#method.is_word_like) for more information.
+    */
+   bool is_word_like() const;
+   inline const capi::ICU4XWordBreakIteratorUtf16* AsFFI() const { return this->inner.get(); }
+   inline capi::ICU4XWordBreakIteratorUtf16* AsFFIMut() { return this->inner.get(); }
+-  inline ICU4XWordBreakIteratorUtf16(capi::ICU4XWordBreakIteratorUtf16* i) : inner(i) {}
++  inline explicit ICU4XWordBreakIteratorUtf16(capi::ICU4XWordBreakIteratorUtf16* i) : inner(i) {}
+   ICU4XWordBreakIteratorUtf16() = default;
+   ICU4XWordBreakIteratorUtf16(ICU4XWordBreakIteratorUtf16&&) noexcept = default;
+   ICU4XWordBreakIteratorUtf16& operator=(ICU4XWordBreakIteratorUtf16&& other) noexcept = default;
+  private:
+   std::unique_ptr<capi::ICU4XWordBreakIteratorUtf16, ICU4XWordBreakIteratorUtf16Deleter> inner;
+ };
+ 
+ 
+diff --git a/intl/icu_capi/cpp/include/ICU4XWordBreakIteratorUtf8.hpp b/intl/icu_capi/cpp/include/ICU4XWordBreakIteratorUtf8.hpp
+--- a/intl/icu_capi/cpp/include/ICU4XWordBreakIteratorUtf8.hpp
++++ b/intl/icu_capi/cpp/include/ICU4XWordBreakIteratorUtf8.hpp
+@@ -46,17 +46,17 @@ class ICU4XWordBreakIteratorUtf8 {
+   /**
+    * Return true when break boundary is word-like such as letter/number/CJK
+    * 
+    * See the [Rust documentation for `is_word_like`](https://docs.rs/icu/latest/icu/segmenter/struct.WordBreakIterator.html#method.is_word_like) for more information.
+    */
+   bool is_word_like() const;
+   inline const capi::ICU4XWordBreakIteratorUtf8* AsFFI() const { return this->inner.get(); }
+   inline capi::ICU4XWordBreakIteratorUtf8* AsFFIMut() { return this->inner.get(); }
+-  inline ICU4XWordBreakIteratorUtf8(capi::ICU4XWordBreakIteratorUtf8* i) : inner(i) {}
++  inline explicit ICU4XWordBreakIteratorUtf8(capi::ICU4XWordBreakIteratorUtf8* i) : inner(i) {}
+   ICU4XWordBreakIteratorUtf8() = default;
+   ICU4XWordBreakIteratorUtf8(ICU4XWordBreakIteratorUtf8&&) noexcept = default;
+   ICU4XWordBreakIteratorUtf8& operator=(ICU4XWordBreakIteratorUtf8&& other) noexcept = default;
+  private:
+   std::unique_ptr<capi::ICU4XWordBreakIteratorUtf8, ICU4XWordBreakIteratorUtf8Deleter> inner;
+ };
+ 
+ 
+diff --git a/intl/icu_capi/cpp/include/ICU4XWordSegmenter.hpp b/intl/icu_capi/cpp/include/ICU4XWordSegmenter.hpp
+--- a/intl/icu_capi/cpp/include/ICU4XWordSegmenter.hpp
++++ b/intl/icu_capi/cpp/include/ICU4XWordSegmenter.hpp
+@@ -88,17 +88,17 @@ class ICU4XWordSegmenter {
+    * 
+    * See the [Rust documentation for `segment_latin1`](https://docs.rs/icu/latest/icu/segmenter/struct.WordSegmenter.html#method.segment_latin1) for more information.
+    * 
+    * Lifetimes: `this`, `input` must live at least as long as the output.
+    */
+   ICU4XWordBreakIteratorLatin1 segment_latin1(const diplomat::span<const uint8_t> input) const;
+   inline const capi::ICU4XWordSegmenter* AsFFI() const { return this->inner.get(); }
+   inline capi::ICU4XWordSegmenter* AsFFIMut() { return this->inner.get(); }
+-  inline ICU4XWordSegmenter(capi::ICU4XWordSegmenter* i) : inner(i) {}
++  inline explicit ICU4XWordSegmenter(capi::ICU4XWordSegmenter* i) : inner(i) {}
+   ICU4XWordSegmenter() = default;
+   ICU4XWordSegmenter(ICU4XWordSegmenter&&) noexcept = default;
+   ICU4XWordSegmenter& operator=(ICU4XWordSegmenter&& other) noexcept = default;
+  private:
+   std::unique_ptr<capi::ICU4XWordSegmenter, ICU4XWordSegmenterDeleter> inner;
+ };
+ 
+ #include "ICU4XDataProvider.hpp"

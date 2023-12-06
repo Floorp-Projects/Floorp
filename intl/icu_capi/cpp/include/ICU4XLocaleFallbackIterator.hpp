@@ -45,7 +45,7 @@ class ICU4XLocaleFallbackIterator {
   void step();
   inline const capi::ICU4XLocaleFallbackIterator* AsFFI() const { return this->inner.get(); }
   inline capi::ICU4XLocaleFallbackIterator* AsFFIMut() { return this->inner.get(); }
-  inline ICU4XLocaleFallbackIterator(capi::ICU4XLocaleFallbackIterator* i) : inner(i) {}
+  inline explicit ICU4XLocaleFallbackIterator(capi::ICU4XLocaleFallbackIterator* i) : inner(i) {}
   ICU4XLocaleFallbackIterator() = default;
   ICU4XLocaleFallbackIterator(ICU4XLocaleFallbackIterator&&) noexcept = default;
   ICU4XLocaleFallbackIterator& operator=(ICU4XLocaleFallbackIterator&& other) noexcept = default;

@@ -207,7 +207,7 @@ class ICU4XLocale {
   static ICU4XLocale create_bn();
   inline const capi::ICU4XLocale* AsFFI() const { return this->inner.get(); }
   inline capi::ICU4XLocale* AsFFIMut() { return this->inner.get(); }
-  inline ICU4XLocale(capi::ICU4XLocale* i) : inner(i) {}
+  inline explicit ICU4XLocale(capi::ICU4XLocale* i) : inner(i) {}
   ICU4XLocale() = default;
   ICU4XLocale(ICU4XLocale&&) noexcept = default;
   ICU4XLocale& operator=(ICU4XLocale&& other) noexcept = default;

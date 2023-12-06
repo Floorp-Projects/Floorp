@@ -43,7 +43,7 @@ class ICU4XLocaleFallbackerWithConfig {
   ICU4XLocaleFallbackIterator fallback_for_locale(const ICU4XLocale& locale) const;
   inline const capi::ICU4XLocaleFallbackerWithConfig* AsFFI() const { return this->inner.get(); }
   inline capi::ICU4XLocaleFallbackerWithConfig* AsFFIMut() { return this->inner.get(); }
-  inline ICU4XLocaleFallbackerWithConfig(capi::ICU4XLocaleFallbackerWithConfig* i) : inner(i) {}
+  inline explicit ICU4XLocaleFallbackerWithConfig(capi::ICU4XLocaleFallbackerWithConfig* i) : inner(i) {}
   ICU4XLocaleFallbackerWithConfig() = default;
   ICU4XLocaleFallbackerWithConfig(ICU4XLocaleFallbackerWithConfig&&) noexcept = default;
   ICU4XLocaleFallbackerWithConfig& operator=(ICU4XLocaleFallbackerWithConfig&& other) noexcept = default;
