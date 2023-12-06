@@ -7065,7 +7065,7 @@ class Tokenizer(object):
                     lexer=self.lexer,
                     lineno=self.lexer.lineno,
                     lexpos=self.lexer.lexpos,
-                    filename=self.filename,
+                    filename=self._filename,
                 )
             ],
         )

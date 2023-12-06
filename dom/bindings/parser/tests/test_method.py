@@ -327,7 +327,7 @@ def WebIDLTest(parser, harness):
         """
         )
         results = parser.finish()
-    except Exception:
+    except WebIDL.WebIDLError:
         threw = True
     harness.ok(threw, "Should not allow __noSuchMethod__ methods")
 
