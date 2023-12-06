@@ -174,23 +174,9 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
   }
 }
 
-.non-collapsible-section + .below-search-snippet-wrapper {
-  // If search is enabled, we need to invade its large bottom padding.
-  margin-top: -48px;
-}
-
 @media (height <= 700px) {
   .search-wrapper {
     padding: 0 0 30px;
-  }
-
-  .non-collapsible-section + .below-search-snippet-wrapper {
-    // In shorter windows, search doesn't have such a large padding.
-    margin-top: -14px;
-  }
-
-  .below-search-snippet-wrapper {
-    min-height: 0;
   }
 }
 
