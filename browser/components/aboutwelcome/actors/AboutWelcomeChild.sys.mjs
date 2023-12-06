@@ -366,7 +366,6 @@ const OPTIN_DEFAULT = {
             url: "chrome://browser/content/shopping/assets/optInLight.avif",
             darkModeImageURL:
               "chrome://browser/content/shopping/assets/optInDark.avif",
-            height: "172px",
             marginInline: "24px",
           },
           {
