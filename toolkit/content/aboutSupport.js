@@ -1177,6 +1177,7 @@ var snapshotFormatters = {
         $.new("td", getVideoRobustness(rvArray)),
         $.new("td", getAudioRobustness(rvArray)),
         $.new("td", getCapabilities(rvArray)),
+        $.new("td", cdmInfo.clearlead ? "Yes" : "No"),
       ]);
     }
 

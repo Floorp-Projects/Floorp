@@ -91,6 +91,8 @@ void MFCDMCapabilitiesIPDLToKeySystemConfig(
     const MFCDMCapabilitiesIPDL& aCDMConfig, KeySystemConfig& aKeySystemConfig);
 #endif
 
+bool DoesKeySystemSupportClearLead(const nsAString& aKeySystem);
+
 }  // namespace mozilla
 
 #endif  // EME_LOG_H_
