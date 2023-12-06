@@ -52,19 +52,6 @@ const PREFS_BEFORE_SECTIONS = () => [
   },
 ];
 
-const PREFS_AFTER_SECTIONS = () => [
-  {
-    id: "snippets",
-    pref: {
-      feed: "feeds.snippets",
-      titleString: "home-prefs-snippets-header",
-      descString: "home-prefs-snippets-description-new",
-    },
-    icon: "chrome://global/skin/icons/info.svg",
-    eventSource: "SNIPPETS",
-  },
-];
-
 class AboutPreferences {
   init() {
     Services.obs.addObserver(this, PREFERENCES_LOADED_EVENT);
@@ -133,7 +120,6 @@ class AboutPreferences {
     this.renderPreferences(window, [
       ...PREFS_BEFORE_SECTIONS(featureConfig),
       ...sections,
-      ...PREFS_AFTER_SECTIONS(featureConfig),
     ]);
   }
 
