@@ -16,6 +16,7 @@ import os
 import shutil
 import subprocess
 import tarfile
+import tempfile
 import textwrap
 from contextlib import contextmanager
 
@@ -464,22 +465,35 @@ def build_src(install_dir, host, targets, patches):
     clang = os.path.join(fetches, "clang")
     clang_bin = os.path.join(clang, "bin")
     clang_lib = os.path.join(clang, "lib")
+    sysroot = os.path.join(fetches, "sysroot")
 
-    env = os.environ.copy()
-    env.update(
-        {
-            "PATH": os.pathsep.join((clang_bin, os.environ["PATH"])),
-            "LD_LIBRARY_PATH": clang_lib,
-        }
-    )
+    # The rust build doesn't offer much in terms of overriding compiler flags
+    # when it builds LLVM's compiler-rt, but we want to build with a sysroot.
+    # So, we create wrappers for clang and clang++ that add the sysroot to the
+    # command line.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        for exe in ("clang", "clang++"):
+            tmp_exe = os.path.join(tmpdir, exe)
+            with open(tmp_exe, "w") as fh:
+                fh.write("#!/bin/sh\n")
+                fh.write(f'exec {clang_bin}/{exe} --sysroot={sysroot} "$@"\n')
+            os.chmod(tmp_exe, 0o755)
 
-    # x.py install does everything we need for us.
-    # If you're running into issues, consider using `-vv` to debug it.
-    command = ["python3", "x.py", "install", "-v", "--host", host]
-    for target in targets:
-        command.extend(["--target", target])
+        env = os.environ.copy()
+        env.update(
+            {
+                "PATH": os.pathsep.join((tmpdir, clang_bin, os.environ["PATH"])),
+                "LD_LIBRARY_PATH": clang_lib,
+            }
+        )
 
-    subprocess.check_call(command, stderr=subprocess.STDOUT, env=env, cwd=rust_dir)
+        # x.py install does everything we need for us.
+        # If you're running into issues, consider using `-vv` to debug it.
+        command = ["python3", "x.py", "install", "-v", "--host", host]
+        for target in targets:
+            command.extend(["--target", target])
+
+        subprocess.check_call(command, stderr=subprocess.STDOUT, env=env, cwd=rust_dir)
 
 
 def repack(
