@@ -270,6 +270,7 @@ class RetainedDisplayListBuilder {
 
   nsDisplayListBuilder mBuilder;
   RetainedDisplayList mList;
+  WeakFrame mPreviousCaret;
   RetainedDisplayListMetrics mMetrics;
   RetainedDisplayListData mData;
 };
