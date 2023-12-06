@@ -97,7 +97,6 @@ describe("ASRouterParent", () => {
         ASRouterParent.tabs.messageAll,
         "ClearMessages",
         // When blocking an id the entire campaign is blocked
-        // and all other snippets become invalid
         ["message-campaign"]
       );
       assert.equal(result, "handle-message-result");

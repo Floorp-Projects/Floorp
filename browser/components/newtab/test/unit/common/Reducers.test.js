@@ -2,7 +2,6 @@ import { INITIAL_STATE, insertPinned, reducers } from "common/Reducers.sys.mjs";
 const {
   TopSites,
   App,
-  Snippets,
   Prefs,
   Dialog,
   Sections,
@@ -256,11 +255,6 @@ describe("Reducers", () => {
         data: { searchShortcuts: shortcuts },
       });
       assert.deepEqual(shortcuts, nextState.searchShortcuts);
-    });
-    it("should remove all content on SNIPPETS_PREVIEW_MODE", () => {
-      const oldState = { rows: [{ url: "foo.com" }, { url: "bar.com" }] };
-      const nextState = TopSites(oldState, { type: at.SNIPPETS_PREVIEW_MODE });
-      assert.lengthOf(nextState.rows, 0);
     });
     it("should set sov positions and state", () => {
       const positions = [
@@ -741,13 +735,6 @@ describe("Reducers", () => {
       // old row is unchanged
       assert.equal(oldRow, oldState[0].rows[1]);
     });
-    it("should remove all content on SNIPPETS_PREVIEW_MODE", () => {
-      const previewMode = { type: at.SNIPPETS_PREVIEW_MODE };
-      const newState = Sections(oldState, previewMode);
-      newState.forEach(section => {
-        assert.lengthOf(section.rows, 0);
-      });
-    });
   });
   describe("#insertPinned", () => {
     let links;
@@ -817,45 +804,6 @@ describe("Reducers", () => {
       insertPinned(links, pinned);
 
       assert.equal(typeof pinned[0].isPinned, "undefined");
-    });
-  });
-  describe("Snippets", () => {
-    it("should return INITIAL_STATE by default", () => {
-      assert.equal(
-        Snippets(undefined, { type: "some_action" }),
-        INITIAL_STATE.Snippets
-      );
-    });
-    it("should set initialized to true on a SNIPPETS_DATA action", () => {
-      const state = Snippets(undefined, { type: at.SNIPPETS_DATA, data: {} });
-      assert.isTrue(state.initialized);
-    });
-    it("should set the snippet data on a SNIPPETS_DATA action", () => {
-      const data = { snippetsURL: "foo.com", version: 4 };
-      const state = Snippets(undefined, { type: at.SNIPPETS_DATA, data });
-      assert.propertyVal(state, "snippetsURL", data.snippetsURL);
-      assert.propertyVal(state, "version", data.version);
-    });
-    it("should reset to the initial state on a SNIPPETS_RESET action", () => {
-      const state = Snippets(
-        { initialized: true, foo: "bar" },
-        { type: at.SNIPPETS_RESET }
-      );
-      assert.equal(state, INITIAL_STATE.Snippets);
-    });
-    it("should set the new blocklist on SNIPPET_BLOCKED", () => {
-      const state = Snippets(
-        { blockList: [] },
-        { type: at.SNIPPET_BLOCKED, data: 1 }
-      );
-      assert.deepEqual(state.blockList, [1]);
-    });
-    it("should clear the blocklist on SNIPPETS_BLOCKLIST_CLEARED", () => {
-      const state = Snippets(
-        { blockList: [1, 2] },
-        { type: at.SNIPPETS_BLOCKLIST_CLEARED }
-      );
-      assert.deepEqual(state.blockList, []);
     });
   });
   describe("Pocket", () => {

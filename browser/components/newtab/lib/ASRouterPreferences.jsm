@@ -30,7 +30,6 @@ const DEFAULT_STATE = {
 };
 
 const USER_PREFERENCES = {
-  snippets: "browser.newtabpage.activity-stream.feeds.snippets",
   cfrAddons: "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons",
   cfrFeatures:
     "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
@@ -41,12 +40,6 @@ const USER_PREFERENCES = {
 const TARGETING_PREFERENCES = [FXA_USERNAME_PREF];
 
 const TEST_PROVIDERS = [
-  {
-    id: "snippets_local_testing",
-    type: "local",
-    localProvider: "SnippetsTestMessageProvider",
-    enabled: true,
-  },
   {
     id: "panel_local_testing",
     type: "local",

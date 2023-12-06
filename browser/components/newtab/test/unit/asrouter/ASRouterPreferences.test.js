@@ -9,7 +9,6 @@ const PROVIDER_PREF_BRANCH =
   "browser.newtabpage.activity-stream.asrouter.providers.";
 const DEVTOOLS_PREF =
   "browser.newtabpage.activity-stream.asrouter.devtoolsEnabled";
-const SNIPPETS_USER_PREF = "browser.newtabpage.activity-stream.feeds.snippets";
 const CFR_USER_PREF_ADDONS =
   "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons";
 const CFR_USER_PREF_FEATURES =
@@ -18,12 +17,11 @@ const CFR_USER_PREF_FEATURES =
 /** NUMBER_OF_PREFS_TO_OBSERVE includes:
  *  1. asrouter.providers. pref branch
  *  2. asrouter.devtoolsEnabled
- *  3. browser.newtabpage.activity-stream.feeds.snippets (user preference - snippets)
- *  4. browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons (user preference - cfr)
+ *  3. browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons (user preference - cfr)
  *  4. browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features (user preference - cfr)
  *  5. services.sync.username
  */
-const NUMBER_OF_PREFS_TO_OBSERVE = 6;
+const NUMBER_OF_PREFS_TO_OBSERVE = 5;
 
 describe("ASRouterPreferences", () => {
   let ASRouterPreferences;
@@ -324,20 +322,12 @@ describe("ASRouterPreferences", () => {
       assert.calledTwice(boolPrefStub);
     });
   });
-  describe("#getUserPreference(providerId)", () => {
-    it("should return the user preference for snippets", () => {
-      boolPrefStub.withArgs(SNIPPETS_USER_PREF).returns(true);
-      assert.isTrue(ASRouterPreferences.getUserPreference("snippets"));
-    });
-  });
   describe("#getAllUserPreferences", () => {
     it("should return all user preferences", () => {
-      boolPrefStub.withArgs(SNIPPETS_USER_PREF).returns(true);
       boolPrefStub.withArgs(CFR_USER_PREF_ADDONS).returns(false);
       boolPrefStub.withArgs(CFR_USER_PREF_FEATURES).returns(true);
       const result = ASRouterPreferences.getAllUserPreferences();
       assert.deepEqual(result, {
-        snippets: true,
         cfrAddons: false,
         cfrFeatures: true,
       });
@@ -389,8 +379,8 @@ describe("ASRouterPreferences", () => {
     });
     it("should set the given pref", () => {
       const setStub = sandbox.stub(global.Services.prefs, "setBoolPref");
-      ASRouterPreferences.setUserPreference("snippets", true);
-      assert.calledWith(setStub, SNIPPETS_USER_PREF, true);
+      ASRouterPreferences.setUserPreference("cfrAddons", true);
+      assert.calledWith(setStub, CFR_USER_PREF_ADDONS, true);
     });
   });
   describe("#resetProviderPref", () => {
@@ -399,7 +389,6 @@ describe("ASRouterPreferences", () => {
       FAKE_PROVIDERS.forEach(provider => {
         assert.calledWith(resetStub, getPrefNameForProvider(provider.id));
       });
-      assert.calledWith(resetStub, SNIPPETS_USER_PREF);
       assert.calledWith(resetStub, CFR_USER_PREF_ADDONS);
       assert.calledWith(resetStub, CFR_USER_PREF_FEATURES);
     });

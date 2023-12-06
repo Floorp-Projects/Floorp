@@ -326,7 +326,6 @@
   "resource://activity-stream/lib/SectionsManager.jsm": "browser/components/newtab/lib/SectionsManager.jsm",
   "resource://activity-stream/lib/ShortURL.jsm": "browser/components/newtab/lib/ShortURL.jsm",
   "resource://activity-stream/lib/SiteClassifier.jsm": "browser/components/newtab/lib/SiteClassifier.jsm",
-  "resource://activity-stream/lib/SnippetsTestMessageProvider.jsm": "browser/components/newtab/lib/SnippetsTestMessageProvider.jsm",
   "resource://activity-stream/lib/Spotlight.jsm": "browser/components/newtab/lib/Spotlight.jsm",
   "resource://activity-stream/lib/Store.jsm": "browser/components/newtab/lib/Store.jsm",
   "resource://activity-stream/lib/SystemTickFeed.jsm": "browser/components/newtab/lib/SystemTickFeed.jsm",

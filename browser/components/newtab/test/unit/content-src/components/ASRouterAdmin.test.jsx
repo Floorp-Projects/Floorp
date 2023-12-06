@@ -22,16 +22,16 @@ describe("ASRouterAdmin", () => {
   let FAKE_PROVIDER_PREF = [
     {
       enabled: true,
-      id: "snippets_local_testing",
-      localProvider: "SnippetsProvider",
+      id: "local_testing",
+      localProvider: "TestProvider",
       type: "local",
     },
   ];
   let FAKE_PROVIDER = [
     {
       enabled: true,
-      id: "snippets_local_testing",
-      localProvider: "SnippetsProvider",
+      id: "local_testing",
+      localProvider: "TestProvider",
       messages: [],
       type: "local",
     },

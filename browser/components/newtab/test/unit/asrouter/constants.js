@@ -4,22 +4,19 @@ export const PARENT_TO_CHILD_MESSAGE_NAME = "ASRouter:parent-to-child";
 export const FAKE_LOCAL_MESSAGES = [
   {
     id: "foo",
-    provider: "snippets",
-    template: "simple_snippet",
+    template: "milestone_message",
     content: { title: "Foo", body: "Foo123" },
   },
   {
     id: "foo1",
-    template: "simple_snippet",
-    provider: "snippets",
+    template: "fancy_template",
     bundled: 2,
     order: 1,
     content: { title: "Foo1", body: "Foo123-1" },
   },
   {
     id: "foo2",
-    template: "simple_snippet",
-    provider: "snippets",
+    template: "fancy_template",
     bundled: 2,
     order: 2,
     content: { title: "Foo2", body: "Foo123-2" },
@@ -32,20 +29,17 @@ export const FAKE_LOCAL_MESSAGES = [
   { id: "baz", content: { title: "Foo", body: "Foo123" } },
   {
     id: "newsletter",
-    provider: "snippets",
-    template: "newsletter_snippet",
+    template: "fancy_template",
     content: { title: "Foo", body: "Foo123" },
   },
   {
     id: "fxa",
-    provider: "snippets",
-    template: "fxa_signup_snippet",
+    template: "fancy_template",
     content: { title: "Foo", body: "Foo123" },
   },
   {
     id: "belowsearch",
-    provider: "snippets",
-    template: "simple_below_search_snippet",
+    template: "fancy_template",
     content: { text: "Foo" },
   },
 ];
@@ -65,7 +59,7 @@ export const FAKE_LOCAL_PROVIDERS = {
 export const FAKE_REMOTE_MESSAGES = [
   {
     id: "qux",
-    template: "simple_snippet",
+    template: "fancy_template",
     content: { title: "Qux", body: "hello world" },
   },
 ];

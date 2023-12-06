@@ -81,7 +81,7 @@ describe("ASRouterNewTabHook", () => {
       describe("connect", () => {
         it("before connection messageHandler methods are not called", async () => {
           routerParams.clearChildMessages([1]);
-          routerParams.clearChildProviders(["snippets"]);
+          routerParams.clearChildProviders(["test_provider"]);
           routerParams.updateAdminState({ messages: {} });
           assert.notCalled(messageHandler.clearChildMessages);
           assert.notCalled(messageHandler.clearChildProviders);
@@ -90,7 +90,7 @@ describe("ASRouterNewTabHook", () => {
         it("after connect updateAdminState and clearChildMessages calls are forwarded to handler", async () => {
           instance.connect(messageHandler);
           routerParams.clearChildMessages([1]);
-          routerParams.clearChildProviders(["snippets"]);
+          routerParams.clearChildProviders(["test_provider"]);
           routerParams.updateAdminState({ messages: {} });
           assert.called(messageHandler.clearChildMessages);
           assert.called(messageHandler.clearChildProviders);
@@ -98,11 +98,11 @@ describe("ASRouterNewTabHook", () => {
         });
         it("calls from before connection are dropped", async () => {
           routerParams.clearChildMessages([1]);
-          routerParams.clearChildProviders(["snippets"]);
+          routerParams.clearChildProviders(["test_provider"]);
           routerParams.updateAdminState({ messages: {} });
           instance.connect(messageHandler);
           routerParams.clearChildMessages([1]);
-          routerParams.clearChildProviders(["snippets"]);
+          routerParams.clearChildProviders(["test_provider"]);
           routerParams.updateAdminState({ messages: {} });
           assert.calledOnce(messageHandler.clearChildMessages);
           assert.calledOnce(messageHandler.clearChildProviders);
@@ -114,7 +114,7 @@ describe("ASRouterNewTabHook", () => {
           instance.connect(messageHandler);
           instance.disconnect();
           routerParams.clearChildMessages([1]);
-          routerParams.clearChildProviders(["snippets"]);
+          routerParams.clearChildProviders(["test_provider"]);
           routerParams.updateAdminState({ messages: {} });
           assert.notCalled(messageHandler.clearChildMessages);
           assert.notCalled(messageHandler.clearChildProviders);
