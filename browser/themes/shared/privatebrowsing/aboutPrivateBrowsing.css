@@ -256,7 +256,7 @@ p {
   .search-handoff-button:hover:not(.focused),
   .search-handoff-button:active,
   .search-handoff-button:enabled:hover:active {
-    border: 3px solid var(--in-content-border-color);
+    border: 3px solid ButtonText;
     border-radius: 6px;
     box-shadow: none;
 
@@ -271,9 +271,16 @@ p {
   .search-handoff-button:enabled:hover:active,
   .search-inner-wrapper .search-handoff-button:hover,
   .search-inner-wrapper .search-handoff-button:hover:active {
+    background-color: ButtonFace;
     background-image: url(chrome://global/skin/icons/search-glass.svg);
     background-repeat: no-repeat;
     background-size: 16px;
+    fill: ButtonText;
+
+    @media (prefers-contrast) {
+      border-color: ButtonText;
+      color: ButtonText;
+    }
 
     @media not (prefers-contrast) {
       background-color: #321c64;
@@ -283,9 +290,14 @@ p {
 
   .search-handoff-button.focused:not(.disabled) {
     border-width: 3px;
+
+    @media (prefers-contrast) {
+      outline: 2px solid SelectedItem;
+    }
   }
 
   .fake-textbox {
+    color: ButtonText;
     font-size: 0.87em;
     opacity: 1;
 
