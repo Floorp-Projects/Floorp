@@ -98,7 +98,7 @@
 @media not (prefers-contrast) {
   :root,
   :host(.anonymous-content-host) {
-    /* Color */
+    /** Color **/
     --color-background-information: light-dark(var(--color-blue-05), var(--color-blue-80));
     --color-background-success: light-dark(var(--color-green-05), var(--color-green-80));
     --color-background-warning: light-dark(var(--color-yellow-05), var(--color-yellow-80));
@@ -138,7 +138,7 @@
     --link-color-active: ActiveText;
     --link-color-visited: var(--link-color);
 
-    /* Color */
+    /** Color **/
     --color-canvas: Canvas;
     --color-background-information: var(--color-canvas);
     --color-background-success: var(--color-canvas);
@@ -156,7 +156,7 @@
     --icon-color-warning: var(--icon-color);
     --icon-color-critical: var(--icon-color);
 
-    /* Text */
+    /** Text **/
     --text-color: CanvasText;
     --text-color-deemphasized: inherit;
   }
@@ -166,13 +166,13 @@
        TODO(emilio): These seem rather sketchy */
     :root,
     :host(.anonymous-content-host) {
-      /* Border */
+      /** Border **/
       --border-interactive-color: ButtonText;
       --border-interactive-color-hover: SelectedItem;
       --border-interactive-color-active: ButtonText;
       --border-interactive-color-disabled: GrayText;
 
-      /* Color */
+      /** Color **/
       --color-accent-primary: ButtonText;
       --color-accent-primary-hover: SelectedItem;
       --color-accent-primary-active: SelectedItem;
