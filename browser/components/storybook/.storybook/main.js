@@ -20,6 +20,8 @@ module.exports = {
     `${projectRoot}/browser/components/aboutlogins/content/components/**/*.stories.mjs`,
     // Everything else
     "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx|md)",
+    // Design system files
+    `${projectRoot}/toolkit/themes/shared/design-system/**/*.stories.@(js|jsx|mjs|ts|tsx|md)`,
   ],
   addons: [
     "@storybook/addon-links",
