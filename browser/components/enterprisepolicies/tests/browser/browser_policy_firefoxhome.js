@@ -50,7 +50,6 @@ add_task(async function test_firefox_home_with_policy() {
         Search: false,
         TopSites: false,
         Highlights: false,
-        Snippets: false,
       },
     },
   });
@@ -96,7 +95,6 @@ add_task(async function test_firefoxhome_preferences_set() {
         Highlights: false,
         Pocket: false,
         SponsoredPocket: false,
-        Snippets: false,
         Locked: true,
       },
     },
@@ -111,7 +109,6 @@ add_task(async function test_firefoxhome_preferences_set() {
       Highlights: "browser.newtabpage.activity-stream.feeds.section.highlights",
       Pocket: "browser.newtabpage.activity-stream.feeds.section.topstories",
       SponsoredPocket: "browser.newtabpage.activity-stream.showSponsored",
-      Snippets: "browser.newtabpage.activity-stream.feeds.snippets",
     };
     for (let [section, preference] of Object.entries(data)) {
       is(
