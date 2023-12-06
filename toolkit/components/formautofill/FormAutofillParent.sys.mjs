@@ -575,6 +575,19 @@ export class FormAutofillParent extends JSWindowActorParent {
       return false;
     }
 
+    // Do not save address for regions that we don't support
+    if (
+      FormAutofill._isAutofillAddressesAvailable == "detect" &&
+      !FormAutofill.isAutofillAddressesAvailableInCountry(
+        newAddress.record.country
+      )
+    ) {
+      lazy.log.debug(
+        "Do not show the capture prompt for an unsupported region"
+      );
+      return false;
+    }
+
     return async () => {
       await lazy.FormAutofillPrompter.promptToSaveAddress(
         browser,
