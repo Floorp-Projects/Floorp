@@ -2,6 +2,16 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+registerCleanupFunction(async () => {
+  Services.prefs.clearUserPref("network.url.useDefaultURI");
+});
+
+add_setup(async function () {
+  // unknown-scheme://foo tests will fail with default URI
+  // see bug 1868413 (to re-enable)
+  Services.prefs.setBoolPref("network.url.useDefaultURI", false);
+});
+
 add_task(async function test_MatchPattern_matches() {
   function test(url, pattern, normalized = pattern, options = {}, explicit) {
     let uri = Services.io.newURI(url);
