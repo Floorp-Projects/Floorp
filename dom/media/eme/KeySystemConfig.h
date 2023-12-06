@@ -97,16 +97,20 @@ struct KeySystemConfig {
 
     EMECodecString GetDebugInfo() const {
       EMECodecString info;
-      info.AppendLiteral("decoding: [");
-      for (const auto& codec : mCodecsDecoded) {
-        info.Append(codec);
-        info.AppendLiteral(",");
+      info.AppendLiteral("decoding-and-decrypting:[");
+      for (size_t idx = 0; idx < mCodecsDecoded.Length(); idx++) {
+        info.Append(mCodecsDecoded[idx]);
+        if (idx + 1 < mCodecsDecoded.Length()) {
+          info.AppendLiteral(",");
+        }
       }
-      info.AppendLiteral("], ");
-      info.AppendLiteral("decrypting: [");
-      for (const auto& codec : mCodecsDecrypted) {
-        info.Append(codec);
-        info.AppendLiteral(",");
+      info.AppendLiteral("],");
+      info.AppendLiteral("decrypting-only:[");
+      for (size_t idx = 0; idx < mCodecsDecrypted.Length(); idx++) {
+        info.Append(mCodecsDecrypted[idx]);
+        if (idx + 1 < mCodecsDecrypted.Length()) {
+          info.AppendLiteral(",");
+        }
       }
       info.AppendLiteral("]");
       return info;
