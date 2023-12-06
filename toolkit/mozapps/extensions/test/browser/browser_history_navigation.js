@@ -114,7 +114,10 @@ function is_in_discovery(aManager, canGoBack, canGoForward) {
 
 async function expand_addon_element(aManagerWin, aId) {
   var addon = getAddonCard(aManagerWin, aId);
-  addon.click();
+  // Ensure that we send a click on the control that is accessible (while a
+  // mouse user could also activate a card by clicking on the entire container):
+  const addonLink = addon.querySelector(".addon-name-link");
+  addonLink.click();
 }
 
 function wait_for_page_load(browser) {

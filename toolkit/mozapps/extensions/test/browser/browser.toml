@@ -83,7 +83,7 @@ fail-if = ["a11y_checks"] # Bug 1854646 clicked div.addon-name-container, button
 fail-if = ["a11y_checks"] # Bug 1854646 clicked div.addon-name-container, button.category, div.card.addon, div.container may not be focusable
 
 ["browser_history_navigation.js"]
-fail-if = ["a11y_checks"] # Bug 1854646 clicked addon-card, button.category may not be focusable
+fail-if = ["a11y_checks"] # Bug 1854646 clicked button.category may not be focusable
 https_first_disabled = true
 
 ["browser_html_abuse_report.js"]
@@ -129,7 +129,7 @@ fail-if = ["a11y_checks"] # Bug 1854646 clicked div.text-container, button.categ
 https_first_disabled = true
 
 ["browser_html_scroll_restoration.js"]
-fail-if = ["a11y_checks"] # Bug 1854646 clicked addon-card, button#details-deck-button-permissions may not be focusable
+fail-if = ["a11y_checks"] # Bug 1854646 clicked button#details-deck-button-permissions may not be focusable
 skip-if = ["os == 'mac' && verify && debug"] # Bug 1850159
 
 ["browser_html_sitepermission_addons.js"]
