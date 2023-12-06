@@ -30,7 +30,6 @@ prefs = [
 
 ["browser_asrouter_cfr.js"]
 https_first_disabled = true
-skip-if = ["a11y_checks"] # Bug 1857056 for causing crashes
 
 ["browser_asrouter_experimentsAPILoader.js"]
 

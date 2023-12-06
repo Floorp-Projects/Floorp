@@ -192,7 +192,6 @@ skip-if = ["verify"]
 ["browser_982656_restore_defaults_builtin_widgets.js"]
 
 ["browser_984455_bookmarks_items_reparenting.js"]
-skip-if = ["a11y_checks"] # Bugs 1858041, 1857056, and 1854537 for causing intermittent crashes on Autoland
 
 ["browser_985815_propagate_setToolbarVisibility.js"]
 
