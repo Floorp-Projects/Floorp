@@ -87,9 +87,15 @@
         SimpleTest.finish();
       });
     }
+    SpecialPowers.pushPrefEnv({set:
+      [["network.multipart-mixed-replace.enabled_for_document", true]]},
+      () => {
+        runTest();
+      }
+    );
   </script>
 </head>
-<body onload="runTest();">
+<body>
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 <pre id="test"></pre>

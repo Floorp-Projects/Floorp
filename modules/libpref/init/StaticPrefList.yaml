@@ -11711,6 +11711,12 @@
   value: true
   mirror: always
 
+# Re-enables multipart/x-mixed-replace for DOCUMENT types
+- name: network.multipart-mixed-replace.enabled_for_document
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Enables `<link rel="modulepreload">` tag and `Link: rel=modulepreload`
 # response header handling.
 - name: network.modulepreload
