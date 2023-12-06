@@ -121,11 +121,9 @@ impl Settings {
         self.header_table_size
     }
 
-    /*
     pub fn set_header_table_size(&mut self, size: Option<u32>) {
         self.header_table_size = size;
     }
-    */
 
     pub fn load(head: Head, payload: &[u8]) -> Result<Settings, Error> {
         use self::Setting::*;
@@ -182,10 +180,10 @@ impl Settings {
                     }
                 }
                 Some(MaxFrameSize(val)) => {
-                    if val < DEFAULT_MAX_FRAME_SIZE || val > MAX_MAX_FRAME_SIZE {
-                        return Err(Error::InvalidSettingValue);
-                    } else {
+                    if DEFAULT_MAX_FRAME_SIZE <= val && val <= MAX_MAX_FRAME_SIZE {
                         settings.max_frame_size = Some(val);
+                    } else {
+                        return Err(Error::InvalidSettingValue);
                     }
                 }
                 Some(MaxHeaderListSize(val)) => {

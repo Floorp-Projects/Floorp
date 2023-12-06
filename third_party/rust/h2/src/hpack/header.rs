@@ -190,18 +190,18 @@ impl Header {
         use http::header;
 
         match *self {
-            Header::Field { ref name, .. } => match *name {
+            Header::Field { ref name, .. } => matches!(
+                *name,
                 header::AGE
-                | header::AUTHORIZATION
-                | header::CONTENT_LENGTH
-                | header::ETAG
-                | header::IF_MODIFIED_SINCE
-                | header::IF_NONE_MATCH
-                | header::LOCATION
-                | header::COOKIE
-                | header::SET_COOKIE => true,
-                _ => false,
-            },
+                    | header::AUTHORIZATION
+                    | header::CONTENT_LENGTH
+                    | header::ETAG
+                    | header::IF_MODIFIED_SINCE
+                    | header::IF_NONE_MATCH
+                    | header::LOCATION
+                    | header::COOKIE
+                    | header::SET_COOKIE
+            ),
             Header::Path(..) => true,
             _ => false,
         }
@@ -231,10 +231,10 @@ impl<'a> Name<'a> {
         match self {
             Name::Field(name) => Ok(Header::Field {
                 name: name.clone(),
-                value: HeaderValue::from_bytes(&*value)?,
+                value: HeaderValue::from_bytes(&value)?,
             }),
             Name::Authority => Ok(Header::Authority(BytesStr::try_from(value)?)),
-            Name::Method => Ok(Header::Method(Method::from_bytes(&*value)?)),
+            Name::Method => Ok(Header::Method(Method::from_bytes(&value)?)),
             Name::Scheme => Ok(Header::Scheme(BytesStr::try_from(value)?)),
             Name::Path => Ok(Header::Path(BytesStr::try_from(value)?)),
             Name::Protocol => Ok(Header::Protocol(Protocol::try_from(value)?)),

@@ -4,14 +4,14 @@ use super::{
 };
 use crate::codec::UserError;
 use crate::frame::{self, Reason};
-use crate::proto::{Error, Initiator};
+use crate::proto::{self, Error, Initiator};
 
 use bytes::Buf;
-use http;
-use std::task::{Context, Poll, Waker};
 use tokio::io::AsyncWrite;
 
+use std::cmp::Ordering;
 use std::io;
+use std::task::{Context, Poll, Waker};
 
 /// Manages state transitions related to outbound frames.
 #[derive(Debug)]
@@ -143,21 +143,26 @@ impl Send {
         // Update the state
         stream.state.send_open(end_stream)?;
 
-        if counts.peer().is_local_init(frame.stream_id()) {
-            // If we're waiting on a PushPromise anyway
-            // handle potentially queueing the stream at that point
-            if !stream.is_pending_push {
-                if counts.can_inc_num_send_streams() {
-                    counts.inc_num_send_streams(stream);
-                } else {
-                    self.prioritize.queue_open(stream);
-                }
-            }
+        let mut pending_open = false;
+        if counts.peer().is_local_init(frame.stream_id()) && !stream.is_pending_push {
+            self.prioritize.queue_open(stream);
+            pending_open = true;
         }
 
         // Queue the frame for sending
+        //
+        // This call expects that, since new streams are in the open queue, new
+        // streams won't be pushed on pending_send.
         self.prioritize
             .queue_frame(frame.into(), buffer, stream, task);
+
+        // Need to notify the connection when pushing onto pending_open since
+        // queue_frame only notifies for pending_send.
+        if pending_open {
+            if let Some(task) = task.take() {
+                task.wake();
+            }
+        }
 
         Ok(())
     }
@@ -333,12 +338,7 @@ impl Send {
 
     /// Current available stream send capacity
     pub fn capacity(&self, stream: &mut store::Ptr) -> WindowSize {
-        let available = stream.send_flow.available().as_size() as usize;
-        let buffered = stream.buffered_send_data;
-
-        available
-            .min(self.prioritize.max_buffer_size())
-            .saturating_sub(buffered) as WindowSize
+        stream.capacity(self.prioritize.max_buffer_size())
     }
 
     pub fn poll_reset(
@@ -456,57 +456,77 @@ impl Send {
             let old_val = self.init_window_sz;
             self.init_window_sz = val;
 
-            if val < old_val {
-                // We must decrease the (remote) window on every open stream.
-                let dec = old_val - val;
-                tracing::trace!("decrementing all windows; dec={}", dec);
+            match val.cmp(&old_val) {
+                Ordering::Less => {
+                    // We must decrease the (remote) window on every open stream.
+                    let dec = old_val - val;
+                    tracing::trace!("decrementing all windows; dec={}", dec);
 
-                let mut total_reclaimed = 0;
-                store.for_each(|mut stream| {
-                    let stream = &mut *stream;
+                    let mut total_reclaimed = 0;
+                    store.try_for_each(|mut stream| {
+                        let stream = &mut *stream;
 
-                    stream.send_flow.dec_send_window(dec);
+                        tracing::trace!(
+                            "decrementing stream window; id={:?}; decr={}; flow={:?}",
+                            stream.id,
+                            dec,
+                            stream.send_flow
+                        );
 
-                    // It's possible that decreasing the window causes
-                    // `window_size` (the stream-specific window) to fall below
-                    // `available` (the portion of the connection-level window
-                    // that we have allocated to the stream).
-                    // In this case, we should take that excess allocation away
-                    // and reassign it to other streams.
-                    let window_size = stream.send_flow.window_size();
-                    let available = stream.send_flow.available().as_size();
-                    let reclaimed = if available > window_size {
-                        // Drop down to `window_size`.
-                        let reclaim = available - window_size;
-                        stream.send_flow.claim_capacity(reclaim);
-                        total_reclaimed += reclaim;
-                        reclaim
-                    } else {
-                        0
-                    };
+                        // TODO: this decrement can underflow based on received frames!
+                        stream
+                            .send_flow
+                            .dec_send_window(dec)
+                            .map_err(proto::Error::library_go_away)?;
 
-                    tracing::trace!(
-                        "decremented stream window; id={:?}; decr={}; reclaimed={}; flow={:?}",
-                        stream.id,
-                        dec,
-                        reclaimed,
-                        stream.send_flow
-                    );
+                        // It's possible that decreasing the window causes
+                        // `window_size` (the stream-specific window) to fall below
+                        // `available` (the portion of the connection-level window
+                        // that we have allocated to the stream).
+                        // In this case, we should take that excess allocation away
+                        // and reassign it to other streams.
+                        let window_size = stream.send_flow.window_size();
+                        let available = stream.send_flow.available().as_size();
+                        let reclaimed = if available > window_size {
+                            // Drop down to `window_size`.
+                            let reclaim = available - window_size;
+                            stream
+                                .send_flow
+                                .claim_capacity(reclaim)
+                                .map_err(proto::Error::library_go_away)?;
+                            total_reclaimed += reclaim;
+                            reclaim
+                        } else {
+                            0
+                        };
 
-                    // TODO: Should this notify the producer when the capacity
-                    // of a stream is reduced? Maybe it should if the capacity
-                    // is reduced to zero, allowing the producer to stop work.
-                });
+                        tracing::trace!(
+                            "decremented stream window; id={:?}; decr={}; reclaimed={}; flow={:?}",
+                            stream.id,
+                            dec,
+                            reclaimed,
+                            stream.send_flow
+                        );
 
-                self.prioritize
-                    .assign_connection_capacity(total_reclaimed, store, counts);
-            } else if val > old_val {
-                let inc = val - old_val;
+                        // TODO: Should this notify the producer when the capacity
+                        // of a stream is reduced? Maybe it should if the capacity
+                        // is reduced to zero, allowing the producer to stop work.
 
-                store.try_for_each(|mut stream| {
-                    self.recv_stream_window_update(inc, buffer, &mut stream, counts, task)
-                        .map_err(Error::library_go_away)
-                })?;
+                        Ok::<_, proto::Error>(())
+                    })?;
+
+                    self.prioritize
+                        .assign_connection_capacity(total_reclaimed, store, counts);
+                }
+                Ordering::Greater => {
+                    let inc = val - old_val;
+
+                    store.try_for_each(|mut stream| {
+                        self.recv_stream_window_update(inc, buffer, &mut stream, counts, task)
+                            .map_err(Error::library_go_away)
+                    })?;
+                }
+                Ordering::Equal => (),
             }
         }
 

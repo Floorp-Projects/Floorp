@@ -11,8 +11,9 @@
 
 [package]
 edition = "2018"
+rust-version = "1.63"
 name = "h2"
-version = "0.3.15"
+version = "0.3.22"
 authors = [
     "Carl Lerche <me@carllerche.com>",
     "Sean McArthur <sean@seanmonstar.com>",
@@ -62,7 +63,7 @@ default-features = false
 version = "0.2"
 
 [dependencies.indexmap]
-version = "1.5.2"
+version = "2"
 features = ["std"]
 
 [dependencies.slab]
@@ -74,15 +75,18 @@ features = ["io-util"]
 
 [dependencies.tokio-util]
 version = "0.7.1"
-features = ["codec"]
+features = [
+    "codec",
+    "io",
+]
 
 [dependencies.tracing]
-version = "0.1.21"
+version = "0.1.35"
 features = ["std"]
 default-features = false
 
 [dev-dependencies.env_logger]
-version = "0.9"
+version = "0.10"
 default-features = false
 
 [dev-dependencies.hex]
@@ -111,13 +115,13 @@ features = [
 ]
 
 [dev-dependencies.tokio-rustls]
-version = "0.23.2"
+version = "0.24"
 
 [dev-dependencies.walkdir]
 version = "2.3.2"
 
 [dev-dependencies.webpki-roots]
-version = "0.22.2"
+version = "0.25"
 
 [features]
 stream = []

@@ -60,6 +60,10 @@ impl Settings {
                         codec.set_max_recv_header_list_size(max as usize);
                     }
 
+                    if let Some(val) = local.header_table_size() {
+                        codec.set_recv_header_table_size(val as usize);
+                    }
+
                     streams.apply_local_settings(local)?;
                     self.local = Local::Synced;
                     Ok(())

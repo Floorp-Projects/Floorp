@@ -556,8 +556,8 @@ impl PingPong {
     pub fn send_ping(&mut self, ping: Ping) -> Result<(), crate::Error> {
         // Passing a `Ping` here is just to be forwards-compatible with
         // eventually allowing choosing a ping payload. For now, we can
-        // just drop it.
-        drop(ping);
+        // just ignore it.
+        let _ = ping;
 
         self.inner.send_ping().map_err(|err| match err {
             Some(err) => err.into(),

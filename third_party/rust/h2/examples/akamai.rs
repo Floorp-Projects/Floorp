@@ -17,7 +17,7 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
 
     let tls_client_config = std::sync::Arc::new({
         let mut root_store = RootCertStore::empty();
-        root_store.add_server_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.0.iter().map(|ta| {
+        root_store.add_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.iter().map(|ta| {
             OwnedTrustAnchor::from_subject_spki_name_constraints(
                 ta.subject,
                 ta.spki,
@@ -50,10 +50,7 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
     {
         let (_, session) = tls.get_ref();
         let negotiated_protocol = session.alpn_protocol();
-        assert_eq!(
-            Some(ALPN_H2.as_bytes()),
-            negotiated_protocol.as_ref().map(|x| &**x)
-        );
+        assert_eq!(Some(ALPN_H2.as_bytes()), negotiated_protocol);
     }
 
     println!("Starting client handshake");

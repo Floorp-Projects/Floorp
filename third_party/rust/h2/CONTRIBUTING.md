@@ -5,7 +5,7 @@
 ## Getting Help ##
 
 If you have a question about the h2 library or have encountered problems using it, you may
-[file an issue][issue] or ask ask a question on the [Tokio Gitter][gitter].
+[file an issue][issue] or ask a question on the [Tokio Gitter][gitter].
 
 ## Submitting a Pull Request ##
 
@@ -15,7 +15,7 @@ Do you have an improvement?
 2. We will try to respond to your issue promptly.
 3. Fork this repo, develop and test your code changes. See the project's [README](README.md) for further information about working in this repository.
 4. Submit a pull request against this repo's `master` branch.
-6. Your branch may be merged once all configured checks pass, including:
+5. Your branch may be merged once all configured checks pass, including:
     - Code review has been completed.
     - The branch has passed tests in CI.
 

@@ -21,10 +21,16 @@ pub(super) struct Counts {
     num_recv_streams: usize,
 
     /// Maximum number of pending locally reset streams
-    max_reset_streams: usize,
+    max_local_reset_streams: usize,
 
     /// Current number of pending locally reset streams
-    num_reset_streams: usize,
+    num_local_reset_streams: usize,
+
+    /// Max number of "pending accept" streams that were remotely reset
+    max_remote_reset_streams: usize,
+
+    /// Current number of "pending accept" streams that were remotely reset
+    num_remote_reset_streams: usize,
 }
 
 impl Counts {
@@ -36,9 +42,19 @@ impl Counts {
             num_send_streams: 0,
             max_recv_streams: config.remote_max_initiated.unwrap_or(usize::MAX),
             num_recv_streams: 0,
-            max_reset_streams: config.local_reset_max,
-            num_reset_streams: 0,
+            max_local_reset_streams: config.local_reset_max,
+            num_local_reset_streams: 0,
+            max_remote_reset_streams: config.remote_reset_max,
+            num_remote_reset_streams: 0,
         }
+    }
+
+    /// Returns true when the next opened stream will reach capacity of outbound streams
+    ///
+    /// The number of client send streams is incremented in prioritize; send_request has to guess if
+    /// it should wait before allowing another request to be sent.
+    pub fn next_send_stream_will_reach_capacity(&self) -> bool {
+        self.max_send_streams <= (self.num_send_streams + 1)
     }
 
     /// Returns the current peer
@@ -90,7 +106,7 @@ impl Counts {
 
     /// Returns true if the number of pending reset streams can be incremented.
     pub fn can_inc_num_reset_streams(&self) -> bool {
-        self.max_reset_streams > self.num_reset_streams
+        self.max_local_reset_streams > self.num_local_reset_streams
     }
 
     /// Increments the number of pending reset streams.
@@ -101,7 +117,34 @@ impl Counts {
     pub fn inc_num_reset_streams(&mut self) {
         assert!(self.can_inc_num_reset_streams());
 
-        self.num_reset_streams += 1;
+        self.num_local_reset_streams += 1;
+    }
+
+    pub(crate) fn max_remote_reset_streams(&self) -> usize {
+        self.max_remote_reset_streams
+    }
+
+    /// Returns true if the number of pending REMOTE reset streams can be
+    /// incremented.
+    pub(crate) fn can_inc_num_remote_reset_streams(&self) -> bool {
+        self.max_remote_reset_streams > self.num_remote_reset_streams
+    }
+
+    /// Increments the number of pending REMOTE reset streams.
+    ///
+    /// # Panics
+    ///
+    /// Panics on failure as this should have been validated before hand.
+    pub(crate) fn inc_num_remote_reset_streams(&mut self) {
+        assert!(self.can_inc_num_remote_reset_streams());
+
+        self.num_remote_reset_streams += 1;
+    }
+
+    pub(crate) fn dec_num_remote_reset_streams(&mut self) {
+        assert!(self.num_remote_reset_streams > 0);
+
+        self.num_remote_reset_streams -= 1;
     }
 
     pub fn apply_remote_settings(&mut self, settings: &frame::Settings) {
@@ -194,8 +237,8 @@ impl Counts {
     }
 
     fn dec_num_reset_streams(&mut self) {
-        assert!(self.num_reset_streams > 0);
-        self.num_reset_streams -= 1;
+        assert!(self.num_local_reset_streams > 0);
+        self.num_local_reset_streams -= 1;
     }
 }
 

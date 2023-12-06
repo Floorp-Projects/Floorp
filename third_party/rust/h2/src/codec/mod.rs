@@ -95,6 +95,11 @@ impl<T, B> Codec<T, B> {
         self.framed_write().set_header_table_size(val)
     }
 
+    /// Set the decoder header table size size.
+    pub fn set_recv_header_table_size(&mut self, val: usize) {
+        self.inner.set_header_table_size(val)
+    }
+
     /// Set the max header list size that can be received.
     pub fn set_max_recv_header_list_size(&mut self, val: usize) {
         self.inner.set_max_header_list_size(val);

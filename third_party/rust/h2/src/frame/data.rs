@@ -16,7 +16,7 @@ pub struct Data<T = Bytes> {
     pad_len: Option<u8>,
 }
 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Default, Eq, PartialEq)]
 struct DataFlags(u8);
 
 const END_STREAM: u8 = 0x1;
@@ -148,7 +148,7 @@ impl<T: Buf> Data<T> {
     ///
     /// Panics if `dst` cannot contain the data frame.
     pub(crate) fn encode_chunk<U: BufMut>(&mut self, dst: &mut U) {
-        let len = self.data.remaining() as usize;
+        let len = self.data.remaining();
 
         assert!(dst.remaining_mut() >= len);
 
@@ -208,12 +208,6 @@ impl DataFlags {
     #[cfg(feature = "unstable")]
     fn set_padded(&mut self) {
         self.0 |= PADDED
-    }
-}
-
-impl Default for DataFlags {
-    fn default() -> Self {
-        DataFlags(0)
     }
 }
 

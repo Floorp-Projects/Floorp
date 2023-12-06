@@ -200,10 +200,7 @@ impl PingPong {
 
 impl ReceivedPing {
     pub(crate) fn is_shutdown(&self) -> bool {
-        match *self {
-            ReceivedPing::Shutdown => true,
-            _ => false,
-        }
+        matches!(*self, Self::Shutdown)
     }
 }
 

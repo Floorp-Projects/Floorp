@@ -26,10 +26,6 @@ pub(super) struct GoAway {
 /// were a `frame::GoAway`, it might appear like we eventually wanted to
 /// serialize it. We **only** want to be able to look up these fields at a
 /// later time.
-///
-/// (Technically, `frame::GoAway` should gain an opaque_debug_data field as
-/// well, and we wouldn't want to save that here to accidentally dump in logs,
-/// or waste struct space.)
 #[derive(Debug)]
 pub(crate) struct GoingAway {
     /// Stores the highest stream ID of a GOAWAY that has been sent.
