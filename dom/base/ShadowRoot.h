@@ -239,6 +239,9 @@ class ShadowRoot final : public DocumentFragment, public DocumentOrShadowRoot {
   void SetIsDeclarative(Declarative aIsDeclarative) {
     mIsDeclarative = aIsDeclarative;
   }
+  void SetIsDeclarative(bool aIsDeclarative) {
+    mIsDeclarative = aIsDeclarative ? Declarative::Yes : Declarative::No;
+  }
 
   bool IsClonable() const { return mIsClonable == Clonable::Yes; }
 
