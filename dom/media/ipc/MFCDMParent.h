@@ -36,6 +36,12 @@ class MFCDMParent final : public PMFCDMParent {
 
   static void SetWidevineL1Path(const char* aPath);
 
+  // Return capabilities from all key systems which the media foundation CDM
+  // supports.
+  using CapabilitiesPromise =
+      MozPromise<CopyableTArray<MFCDMCapabilitiesIPDL>, nsresult, true>;
+  static RefPtr<CapabilitiesPromise> GetAllKeySystemsCapabilities();
+
   static MFCDMParent* GetCDMById(uint64_t aId) {
     MOZ_ASSERT(sRegisteredCDMs.Contains(aId));
     return sRegisteredCDMs.Get(aId);
@@ -84,9 +90,16 @@ class MFCDMParent final : public PMFCDMParent {
  private:
   ~MFCDMParent();
 
-  LPCWSTR GetCDMLibraryName() const;
+  static LPCWSTR GetCDMLibraryName(const nsString& aKeySystem);
 
-  HRESULT LoadFactory();
+  static HRESULT LoadFactory(
+      const nsString& aKeySystem,
+      Microsoft::WRL::ComPtr<IMFContentDecryptionModuleFactory>& aFactoryOut);
+
+  static void GetCapabilities(const nsString& aKeySystem,
+                              const bool aIsHWSecure,
+                              IMFContentDecryptionModuleFactory* aFactory,
+                              MFCDMCapabilitiesIPDL& aCapabilitiesOut);
 
   void Register();
   void Unregister();
