@@ -11,7 +11,6 @@ const HIGHLIGHTS_ROWS_PREF =
   "browser.newtabpage.activity-stream.section.highlights.rows";
 const SEARCH_PREF = "browser.newtabpage.activity-stream.showSearch";
 const TOPSITES_PREF = "browser.newtabpage.activity-stream.feeds.topsites";
-const SNIPPETS_PREF = "browser.newtabpage.activity-stream.feeds.snippets";
 const TOPSTORIES_PREF =
   "browser.newtabpage.activity-stream.feeds.system.topstories";
 
@@ -36,7 +35,6 @@ add_setup(async function () {
       HIGHLIGHTS_ROWS_PREF,
       SEARCH_PREF,
       TOPSITES_PREF,
-      SNIPPETS_PREF,
     ].forEach(prefName => Services.prefs.clearUserPref(prefName));
   });
 });
@@ -76,7 +74,6 @@ add_task(async function test_CONFIGURE_HOMEPAGE_layout_prefs() {
         search: true,
         topsites: false,
         highlights: false,
-        snippets: false,
         topstories: false,
       },
     },
@@ -102,9 +99,5 @@ add_task(async function test_CONFIGURE_HOMEPAGE_layout_prefs() {
   Assert.ok(
     !Services.prefs.getBoolPref(TOPSTORIES_PREF),
     "Topstories are turned off"
-  );
-  Assert.ok(
-    !Services.prefs.getBoolPref(SNIPPETS_PREF),
-    "Snippets are turned off"
   );
 });
