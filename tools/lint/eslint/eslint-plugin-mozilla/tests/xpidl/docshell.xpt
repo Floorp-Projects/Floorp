@@ -2654,23 +2654,6 @@
       },
       {
         "flags": [
-          "hasretval"
-        ],
-        "name": "getSameTypeInProcessParentIgnoreBrowserBoundaries",
-        "params": [
-          {
-            "flags": [
-              "out"
-            ],
-            "type": {
-              "name": "nsIDocShell",
-              "tag": "TD_INTERFACE_TYPE"
-            }
-          }
-        ]
-      },
-      {
-        "flags": [
           "getter",
           "hasretval"
         ],

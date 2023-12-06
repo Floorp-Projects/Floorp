@@ -3124,26 +3124,17 @@ nsPIDOMWindowOuter* nsGlobalWindowOuter::GetInProcessScriptableParentOrNull() {
   return (nsGlobalWindowOuter::Cast(parent) == this) ? nullptr : parent;
 }
 
-/**
- * nsPIDOMWindow::GetParent (when called from C++) is just a wrapper around
- * GetRealParent.
- */
 already_AddRefed<nsPIDOMWindowOuter> nsGlobalWindowOuter::GetInProcessParent() {
   if (!mDocShell) {
     return nullptr;
   }
 
-  nsCOMPtr<nsIDocShell> parent;
-  mDocShell->GetSameTypeInProcessParentIgnoreBrowserBoundaries(
-      getter_AddRefs(parent));
-
-  if (parent) {
-    nsCOMPtr<nsPIDOMWindowOuter> win = parent->GetWindow();
-    return win.forget();
+  if (auto* parentBC = GetBrowsingContext()->GetParent()) {
+    if (auto* parent = parentBC->GetDOMWindow()) {
+      return do_AddRef(parent);
+    }
   }
-
-  nsCOMPtr<nsPIDOMWindowOuter> win(this);
-  return win.forget();
+  return do_AddRef(this);
 }
 
 static nsresult GetTopImpl(nsGlobalWindowOuter* aWin, nsIURI* aURIBeingLoaded,
