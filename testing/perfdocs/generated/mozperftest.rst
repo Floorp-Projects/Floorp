@@ -29,6 +29,62 @@ perftest_browser_xhtml_dom.js
 **Measures the size of the DOM**
 
 
+dom/serviceworkers/test/performance
+-----------------------------------
+Performance tests running through Mochitest for Service Workers
+
+test_caching.html
+=================
+
+:owner: DOM LWS
+:name: Service Worker Caching
+:Default options:
+
+::
+
+ --perfherder
+ --perfherder-metrics name:No cache,unit:ms,shouldAlert:True, name:Cached,unit:ms,shouldAlert:True, name:No cache again,unit:ms,shouldAlert:True
+ --verbose
+ --manifest perftest.toml
+ --manifest-flavor plain
+
+**Test service worker caching.**
+
+test_fetch.html
+===============
+
+:owner: DOM LWS
+:name: Service Worker Fetch
+:Default options:
+
+::
+
+ --perfherder
+ --perfherder-metrics name:Cold fetch,unit:ms,shouldAlert:True, name:Undisturbed fetch,unit:ms,shouldAlert:True, name:Intercepted fetch,unit:ms,shouldAlert:True, name:Liberated fetch,unit:ms,shouldAlert:True, name:Undisturbed XHR,unit:ms,shouldAlert:True, name:Intercepted XHR,unit:ms,shouldAlert:True, name:Liberated XHR,unit:ms,shouldAlert:True
+ --verbose
+ --manifest perftest.toml
+ --manifest-flavor plain
+
+**Test cold and warm fetches.**
+
+test_registration.html
+======================
+
+:owner: DOM LWS
+:name: Service Worker Registration
+:Default options:
+
+::
+
+ --perfherder
+ --perfherder-metrics name:Registration,unit:ms,shouldAlert:True, name:Activation,unit:ms,shouldAlert:True, name:Unregistration,unit:ms,shouldAlert:True
+ --verbose
+ --manifest perftest.toml
+ --manifest-flavor plain
+
+**Test registration, activation, and unregistration.**
+
+
 netwerk/test/perf
 -----------------
 Performance tests from the 'network/test/perf' folder.

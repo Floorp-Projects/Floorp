@@ -40,3 +40,10 @@ suites:
         description: "Performance tests from the 'browser/base/content/test' folder."
         tests:
             Dom-size: ""
+
+    dom/serviceworkers/test/performance:
+        description: "Performance tests running through Mochitest for Service Workers"
+        tests:
+            "Service Worker Caching": ""
+            "Service Worker Fetch": ""
+            "Service Worker Registration": ""
