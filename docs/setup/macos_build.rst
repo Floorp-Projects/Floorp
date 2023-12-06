@@ -118,6 +118,17 @@ You can now use the ``./mach run`` command to run your locally built Firefox!
 
 If your build fails, please reference the steps in the `Troubleshooting section <#troubleshooting>`_.
 
+Running outside the development environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To test your changes on another macOS system (or to keep that particular Firefox around after new builds), you can't just use the generated application bundle (``obj-*/dist/Nightly[Debug].app``), since it contains symbolic links to other built libraries. Instead, build a distributable disk image with:
+
+.. code-block:: shell
+
+   ./mach package
+
+Copy the resulting ``.dmg`` file from ``obj-*/dist/`` to the target system, then double-click it as usual to find an ``.app`` bundle containing all dependencies.
+
 Now the fun starts
 ------------------
 
