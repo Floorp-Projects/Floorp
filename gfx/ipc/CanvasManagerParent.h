@@ -7,6 +7,7 @@
 #define _include_gfx_ipc_CanvasManagerParent_h__
 
 #include "mozilla/gfx/PCanvasManagerParent.h"
+#include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/StaticMonitor.h"
 #include "mozilla/UniquePtr.h"
 #include "nsHashtablesFwd.h"
@@ -24,7 +25,8 @@ class CanvasManagerParent final : public PCanvasManagerParent {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CanvasManagerParent, override);
 
-  static void Init(Endpoint<PCanvasManagerParent>&& aEndpoint);
+  static void Init(Endpoint<PCanvasManagerParent>&& aEndpoint,
+                   const dom::ContentParentId& aContentId);
 
   static void Shutdown();
 
@@ -42,7 +44,7 @@ class CanvasManagerParent final : public PCanvasManagerParent {
   static UniquePtr<layers::SurfaceDescriptor> WaitForReplayTexture(
       base::ProcessId aOtherPid, int64_t aTextureId);
 
-  CanvasManagerParent();
+  explicit CanvasManagerParent(const dom::ContentParentId& aContentId);
 
   void Bind(Endpoint<PCanvasManagerParent>&& aEndpoint);
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -67,6 +69,7 @@ class CanvasManagerParent final : public PCanvasManagerParent {
 
   ~CanvasManagerParent() override;
 
+  const dom::ContentParentId mContentId;
   uint32_t mId = 0;
 
   using ManagerSet = nsTHashSet<RefPtr<CanvasManagerParent>>;

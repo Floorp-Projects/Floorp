@@ -11,6 +11,8 @@
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/ImageDataSerializer.h"
+#include "mozilla/layers/TextureHost.h"
+#include "mozilla/layers/VideoBridgeParent.h"
 #include "mozilla/RefPtr.h"
 #include "nsLayoutUtils.h"
 #include "WebGLBuffer.h"
@@ -299,6 +301,17 @@ static bool SDIsRGBBuffer(const layers::SurfaceDescriptor& sd) {
              layers::BufferDescriptor::TRGBDescriptor;
 }
 
+// Check if the surface descriptor describes a GPUVideo texture for which we
+// only have an opaque source/handle from SurfaceDescriptorRemoteDecoder to
+// derive the actual texture from.
+static bool SDIsNullRemoteDecoder(const layers::SurfaceDescriptor& sd) {
+  return sd.type() == layers::SurfaceDescriptor::TSurfaceDescriptorGPUVideo &&
+         sd.get_SurfaceDescriptorGPUVideo()
+                 .get_SurfaceDescriptorRemoteDecoder()
+                 .subdesc()
+                 .type() == layers::RemoteDecoderVideoSubDescriptor::Tnull_t;
+}
+
 // static
 std::unique_ptr<TexUnpackBlob> TexUnpackBlob::Create(
     const TexUnpackBlobDesc& desc) {
@@ -324,7 +337,9 @@ std::unique_ptr<TexUnpackBlob> TexUnpackBlob::Create(
       // Otherwise, TexUnpackImage will try to blit the surface descriptor as
       // if it can be mapped as a framebuffer, whereas the Shmem is still CPU
       // data.
-      if (SDIsRGBBuffer(*desc.sd)) return new TexUnpackSurface(desc);
+      if (SDIsRGBBuffer(*desc.sd) || SDIsNullRemoteDecoder(*desc.sd)) {
+        return new TexUnpackSurface(desc);
+      }
       return new TexUnpackImage(desc);
     }
     if (desc.dataSurf) {
@@ -874,15 +889,34 @@ bool TexUnpackSurface::TexOrSubImage(bool isSubImage, bool needsRespec,
   if (mDesc.sd) {
     // If we get here, we assume the SD describes an RGBA Shmem.
     const auto& sd = *(mDesc.sd);
-    MOZ_ASSERT(SDIsRGBBuffer(sd));
-    const auto& sdb = sd.get_SurfaceDescriptorBuffer();
-    const auto& rgb = sdb.desc().get_RGBDescriptor();
-    const auto& data = sdb.data();
-    MOZ_ASSERT(data.type() == layers::MemoryOrShmem::TShmem);
-    const auto& shmem = data.get_Shmem();
-    surf = gfx::Factory::CreateWrappingDataSourceSurface(
-        shmem.get<uint8_t>(), layers::ImageDataSerializer::GetRGBStride(rgb),
-        rgb.size(), rgb.format());
+    if (SDIsRGBBuffer(sd)) {
+      const auto& sdb = sd.get_SurfaceDescriptorBuffer();
+      const auto& rgb = sdb.desc().get_RGBDescriptor();
+      const auto& data = sdb.data();
+      MOZ_ASSERT(data.type() == layers::MemoryOrShmem::TShmem);
+      const auto& shmem = data.get_Shmem();
+      surf = gfx::Factory::CreateWrappingDataSourceSurface(
+          shmem.get<uint8_t>(), layers::ImageDataSerializer::GetRGBStride(rgb),
+          rgb.size(), rgb.format());
+    } else if (SDIsNullRemoteDecoder(sd)) {
+      const auto& sdrd = sd.get_SurfaceDescriptorGPUVideo()
+                             .get_SurfaceDescriptorRemoteDecoder();
+      RefPtr<layers::VideoBridgeParent> parent =
+          layers::VideoBridgeParent::GetSingleton(sdrd.source());
+      if (!parent) {
+        gfxCriticalNote << "TexUnpackSurface failed to get VideoBridgeParent";
+        return false;
+      }
+      RefPtr<layers::TextureHost> texture =
+          parent->LookupTexture(webgl->GetContentId(), sdrd.handle());
+      if (!texture) {
+        gfxCriticalNote << "TexUnpackSurface failed to get TextureHost";
+        return false;
+      }
+      surf = texture->GetAsSurface();
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Unexpected surface descriptor!");
+    }
     if (!surf) {
       gfxCriticalError() << "TexUnpackSurface failed to create wrapping "
                             "DataSourceSurface for Shmem.";

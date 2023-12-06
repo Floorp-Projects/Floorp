@@ -319,7 +319,7 @@ mozilla::ipc::IPCResult CompositorManagerParent::RecvReportMemory(
 
 mozilla::ipc::IPCResult CompositorManagerParent::RecvInitCanvasManager(
     Endpoint<PCanvasManagerParent>&& aEndpoint) {
-  gfx::CanvasManagerParent::Init(std::move(aEndpoint));
+  gfx::CanvasManagerParent::Init(std::move(aEndpoint), mContentId);
   return IPC_OK();
 }
 
