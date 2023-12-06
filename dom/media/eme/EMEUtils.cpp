@@ -12,6 +12,11 @@
 #include "mozilla/dom/KeySystemNames.h"
 #include "mozilla/dom/UnionTypes.h"
 
+#ifdef MOZ_WMF_CDM
+#  include "mozilla/PMFCDM.h"
+#  include "KeySystemConfig.h"
+#endif
+
 namespace mozilla {
 
 LogModule* GetEMELog() {
@@ -141,5 +146,46 @@ const char* EncryptionSchemeStr(const CryptoScheme& aScheme) {
       return "not-defined!";
   }
 }
+
+#ifdef MOZ_WMF_CDM
+void MFCDMCapabilitiesIPDLToKeySystemConfig(
+    const MFCDMCapabilitiesIPDL& aCDMConfig,
+    KeySystemConfig& aKeySystemConfig) {
+  aKeySystemConfig.mKeySystem = aCDMConfig.keySystem();
+
+  for (const auto& type : aCDMConfig.initDataTypes()) {
+    aKeySystemConfig.mInitDataTypes.AppendElement(type);
+  }
+
+  for (const auto& type : aCDMConfig.sessionTypes()) {
+    aKeySystemConfig.mSessionTypes.AppendElement(type);
+  }
+
+  for (const auto& c : aCDMConfig.videoCapabilities()) {
+    if (!c.robustness().IsEmpty() &&
+        !aKeySystemConfig.mVideoRobustness.Contains(c.robustness())) {
+      aKeySystemConfig.mVideoRobustness.AppendElement(c.robustness());
+    }
+    aKeySystemConfig.mMP4.SetCanDecryptAndDecode(
+        NS_ConvertUTF16toUTF8(c.contentType()));
+  }
+  for (const auto& c : aCDMConfig.audioCapabilities()) {
+    if (!c.robustness().IsEmpty() &&
+        !aKeySystemConfig.mAudioRobustness.Contains(c.robustness())) {
+      aKeySystemConfig.mAudioRobustness.AppendElement(c.robustness());
+    }
+    aKeySystemConfig.mMP4.SetCanDecryptAndDecode(
+        NS_ConvertUTF16toUTF8(c.contentType()));
+  }
+  aKeySystemConfig.mPersistentState = aCDMConfig.persistentState();
+  aKeySystemConfig.mDistinctiveIdentifier = aCDMConfig.distinctiveID();
+  for (const auto& scheme : aCDMConfig.encryptionSchemes()) {
+    aKeySystemConfig.mEncryptionSchemes.AppendElement(
+        NS_ConvertUTF8toUTF16(EncryptionSchemeStr(scheme)));
+  }
+  EME_LOG("New Capabilities=%s",
+          NS_ConvertUTF16toUTF8(aKeySystemConfig.GetDebugInfo()).get());
+}
+#endif
 
 }  // namespace mozilla

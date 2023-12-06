@@ -192,6 +192,16 @@ media-codec-support-unsupported = Unsupported
 media-codec-support-error = Codec support information unavailable. Try again after playing back a media file.
 media-codec-support-lack-of-extension = Install extension
 
+## Media Content Decryption Modules (CDM)
+## See EME Spec for more explanation for following technical terms
+## https://w3c.github.io/encrypted-media/
+
+media-content-decryption-modules-title = Content Decryption Modules Information
+media-key-system-name = Key System Name
+media-video-robustness = Video Robustness
+media-audio-robustness = Audio Robustness
+media-cdm-capabilities = Capabilities
+
 ##
 
 intl-title = Internationalization & Localization

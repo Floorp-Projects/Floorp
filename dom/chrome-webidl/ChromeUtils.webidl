@@ -297,6 +297,15 @@ namespace ChromeUtils {
   LibcConstants getLibcConstants();
 #endif
 
+#ifdef MOZ_WMF_CDM
+  /**
+   * Returns the information about all Media Foundation based content decryption
+   * modules, which would include key system names and their capabilities.
+   */
+  [NewObject]
+  Promise<sequence<CDMInformation>> getWMFContentDecryptionModuleInformation();
+#endif
+
   /**
    * IF YOU ADD NEW METHODS HERE, MAKE SURE THEY ARE THREAD-SAFE.
    */
@@ -1079,3 +1088,8 @@ dictionary LibcConstants {
 #endif
 };
 #endif
+
+dictionary CDMInformation {
+  required DOMString keySystemName;
+  required DOMString capabilities;
+};
