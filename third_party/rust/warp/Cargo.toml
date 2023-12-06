@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "warp"
-version = "0.3.3"
+version = "0.3.6"
 authors = ["Sean McArthur <sean@seanmonstar.com>"]
 autoexamples = true
 autotests = true
@@ -57,6 +57,10 @@ required-features = ["websocket"]
 
 [[example]]
 name = "query_string"
+
+[[example]]
+name = "multipart"
+required-features = ["multipart"]
 
 [[test]]
 name = "multipart"
@@ -107,14 +111,12 @@ features = [
     "client",
 ]
 
-[dependencies.multipart]
-version = "0.18"
-features = ["server"]
+[dependencies.multer]
+version = "2.1.0"
 optional = true
-default-features = false
 
 [dependencies.rustls-pemfile]
-version = "0.2"
+version = "1.0"
 optional = true
 
 [dependencies.tokio]
@@ -126,11 +128,11 @@ features = [
 ]
 
 [dependencies.tokio-rustls]
-version = "0.23"
+version = "0.24"
 optional = true
 
 [dependencies.tokio-tungstenite]
-version = "0.17"
+version = "0.20"
 optional = true
 
 [dependencies.tokio-util]
@@ -147,11 +149,10 @@ default-features = false
 
 [dev-dependencies]
 handlebars = "4.0"
-listenfd = "0.3"
-pretty_env_logger = "0.4"
+listenfd = "1.0"
+pretty_env_logger = "0.5"
 serde_derive = "1.0"
 tracing-log = "0.1"
-tracing-subscriber = "0.2.7"
 
 [dev-dependencies.tokio]
 version = "1.0"
@@ -163,6 +164,10 @@ features = [
 [dev-dependencies.tokio-stream]
 version = "0.1.1"
 features = ["net"]
+
+[dev-dependencies.tracing-subscriber]
+version = "0.3"
+features = ["env-filter"]
 
 [features]
 compression = [
@@ -178,6 +183,7 @@ default = [
     "multipart",
     "websocket",
 ]
+multipart = ["multer"]
 tls = [
     "tokio-rustls",
     "rustls-pemfile",
