@@ -24,6 +24,7 @@ treeherder:
         'Btime-P-nofis-fenix': 'Browsertime Power Usage Tests on Fenix without fission enabled'
         'Btime-live-nofis-fenix': 'Browsertime tests on Fenix without fission enabled using live sites'
         'Btime-nofis-fenix': 'Browsertime tests on Fenix without fission enabled'
+        'Btime-webext-nofis-fenix': 'Browsertime performance tests on Fenix with extensions and without fission enabled'
         'Btime-live-nofis': 'Browsertime tests on Firefox without fission enabled using live sites'
         'Btime-nofis-refbrow': 'Browsertime tests on reference browser without fission enabled'
         'Btime-live-nofis-ChR': 'Browsertime tests on Chrome without fission enabled using live sites'

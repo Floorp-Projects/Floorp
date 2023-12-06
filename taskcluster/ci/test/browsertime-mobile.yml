@@ -177,6 +177,36 @@ browsertime-tp6m-essential:
             refbrow: 2
             default: 3
 
+browsertime-tp6m-webextensions:
+    <<: *tp6m-defaults
+    description: Raptor (browsertime) tp6 page-load tests with webextensions installed on android
+    treeherder-symbol: Btime-webext(tp6m)
+    run-without-variant: false
+    mozharness:
+        extra-options:
+            - --chimera
+            - --browsertime-no-ffwindowrecorder
+            - --conditioned-profile=settled-webext
+            - --browser-cycles=5
+    raptor:
+        apps: [fenix]
+        run-visual-metrics: true
+        test: tp6m
+        subtests:
+            - [amazon-search, amazon-s]
+    fetches:
+        fetch:
+            - firefox-addons
+    run-on-projects:
+        by-app:
+            fenix:
+                by-test-platform:
+                    android-hw-(g5|a51).*shippable.*: [mozilla-central]
+                    default: []
+            default: []
+    # TODO(Bug 1867781): promote to tier 2 after confirming no issue have been caught while runing as tier 3.
+    tier: 3
+
 browsertime-youtube-playback-mobile:
     description: Browsertime YouTube Playback on Android
     treeherder-symbol: Btime(ytp)

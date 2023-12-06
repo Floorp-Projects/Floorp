@@ -477,6 +477,7 @@ android-hw-aarch64:
 android-hw-browsertime:
     - browsertime-tp6m
     - browsertime-tp6m-essential
+    - browsertime-tp6m-webextensions
     - browsertime-tp6m-live
     - browsertime-benchmark-speedometer-mobile
     - browsertime-benchmark-speedometer3-mobile
