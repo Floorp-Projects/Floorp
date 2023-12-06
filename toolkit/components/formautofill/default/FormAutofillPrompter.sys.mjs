@@ -1498,7 +1498,11 @@ export let FormAutofillPrompter = {
       action = await doorhanger.show();
 
       if (action == "edit-address") {
-        doorhanger = new AddressEditDoorhanger(browser, newRecord, flowId);
+        doorhanger = new AddressEditDoorhanger(
+          browser,
+          { ...oldRecord, ...newRecord },
+          flowId
+        );
         action = await doorhanger.show();
 
         // If users cancel the edit address doorhanger, show the save/update

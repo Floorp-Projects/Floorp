@@ -12,6 +12,8 @@ support-files = [
 
 ["browser_address_doorhanger_display.js"]
 
+["browser_address_doorhanger_invalid_fields.js"]
+
 ["browser_address_doorhanger_not_shown.js"]
 
 ["browser_address_doorhanger_state.js"]
