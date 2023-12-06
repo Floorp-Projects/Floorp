@@ -107,10 +107,6 @@ class UtilityAudioDecoderChild final : public PUtilityAudioDecoderChild
   bool CreateVideoBridge();
 #endif
 
-#ifdef MOZ_WMF_CDM
-  void GetKeySystemCapabilities(dom::Promise* aPromise);
-#endif
-
  private:
   explicit UtilityAudioDecoderChild(SandboxingKind aKind);
   ~UtilityAudioDecoderChild() = default;

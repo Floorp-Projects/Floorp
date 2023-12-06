@@ -9,7 +9,6 @@
 #include "EMEUtils.h"
 #include "GMPUtils.h"
 #include "KeySystemNames.h"
-#include "mozilla/dom/Promise.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "nsPrintfCString.h"
 
@@ -212,87 +211,41 @@ bool KeySystemConfig::IsSameKeySystem(const nsAString& aKeySystem) const {
   return mKeySystem.Equals(aKeySystem);
 }
 
-/* static */
-void KeySystemConfig::GetGMPKeySystemConfigs(dom::Promise* aPromise) {
-  MOZ_ASSERT(aPromise);
-  nsTArray<KeySystemConfig> keySystemConfigs;
-  const nsTArray<nsString> keySystemNames{
-      NS_ConvertUTF8toUTF16(kClearKeyKeySystemName),
-      NS_ConvertUTF8toUTF16(kWidevineKeySystemName),
-  };
-  FallibleTArray<dom::CDMInformation> cdmInfo;
-  for (const auto& name : keySystemNames) {
-    if (KeySystemConfig::CreateKeySystemConfigs(name, keySystemConfigs)) {
-      auto* info = cdmInfo.AppendElement(fallible);
-      if (!info) {
-        aPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
-        return;
-      }
-      MOZ_ASSERT(keySystemConfigs.Length() == cdmInfo.Length());
-      info->mKeySystemName = name;
-      info->mCapabilities = keySystemConfigs.LastElement().GetDebugInfo();
-      info->mClearlead = DoesKeySystemSupportClearLead(name);
-    }
-  }
-  aPromise->MaybeResolve(cdmInfo);
-}
-
 nsString KeySystemConfig::GetDebugInfo() const {
   nsString debugInfo;
-  debugInfo.AppendLiteral(" key-system=");
   debugInfo.Append(mKeySystem);
-  debugInfo.AppendLiteral(" init-data-type=[");
-  for (size_t idx = 0; idx < mInitDataTypes.Length(); idx++) {
-    debugInfo.Append(mInitDataTypes[idx]);
-    if (idx + 1 < mInitDataTypes.Length()) {
-      debugInfo.AppendLiteral(",");
-    }
+  debugInfo.AppendLiteral(",init-data-type=");
+  for (const auto& type : mInitDataTypes) {
+    debugInfo.Append(type);
+    debugInfo.AppendLiteral(",");
   }
-  debugInfo.AppendLiteral("]");
   debugInfo.AppendASCII(
-      nsPrintfCString(" persistent=%s", RequirementToStr(mPersistentState))
+      nsPrintfCString(",persistent=%s", RequirementToStr(mPersistentState))
           .get());
   debugInfo.AppendASCII(
-      nsPrintfCString(" distinctive=%s",
+      nsPrintfCString(",distinctive=%s",
                       RequirementToStr(mDistinctiveIdentifier))
           .get());
-  debugInfo.AppendLiteral(" sessionType=[");
-  for (size_t idx = 0; idx < mSessionTypes.Length(); idx++) {
-    debugInfo.AppendASCII(
-        nsPrintfCString("%s", SessionTypeToStr(mSessionTypes[idx])).get());
-    if (idx + 1 < mSessionTypes.Length()) {
-      debugInfo.AppendLiteral(",");
-    }
+  debugInfo.AppendLiteral(",sessionType=");
+  for (const auto& type : mSessionTypes) {
+    debugInfo.AppendASCII(nsPrintfCString("%s,", SessionTypeToStr(type)).get());
   }
-  debugInfo.AppendLiteral("]");
-  debugInfo.AppendLiteral(" video-robustness=");
-  for (size_t idx = 0; idx < mVideoRobustness.Length(); idx++) {
-    debugInfo.Append(mVideoRobustness[idx]);
-    if (idx + 1 < mVideoRobustness.Length()) {
-      debugInfo.AppendLiteral(",");
-    }
+  debugInfo.AppendLiteral(",video-robustness=");
+  for (const auto& robustness : mVideoRobustness) {
+    debugInfo.Append(robustness);
   }
-  debugInfo.AppendLiteral(" audio-robustness=");
-  for (size_t idx = 0; idx < mAudioRobustness.Length(); idx++) {
-    debugInfo.Append(mAudioRobustness[idx]);
-    if (idx + 1 < mAudioRobustness.Length()) {
-      debugInfo.AppendLiteral(",");
-    }
+  debugInfo.AppendLiteral(",audio-robustness=");
+  for (const auto& robustness : mAudioRobustness) {
+    debugInfo.Append(robustness);
   }
-  debugInfo.AppendLiteral(" scheme=[");
-  for (size_t idx = 0; idx < mEncryptionSchemes.Length(); idx++) {
-    debugInfo.Append(mEncryptionSchemes[idx]);
-    if (idx + 1 < mEncryptionSchemes.Length()) {
-      debugInfo.AppendLiteral(",");
-    }
+  debugInfo.AppendLiteral(",scheme=");
+  for (const auto& scheme : mEncryptionSchemes) {
+    debugInfo.Append(scheme);
   }
-  debugInfo.AppendLiteral("]");
-  debugInfo.AppendLiteral(" MP4={");
+  debugInfo.AppendLiteral(",MP4=");
   debugInfo.Append(NS_ConvertUTF8toUTF16(mMP4.GetDebugInfo()));
-  debugInfo.AppendLiteral("}");
-  debugInfo.AppendLiteral(" WEBM={");
+  debugInfo.AppendLiteral(",WEBM=");
   debugInfo.Append(NS_ConvertUTF8toUTF16(mWebM.GetDebugInfo()));
-  debugInfo.AppendLiteral("}");
   return debugInfo;
 }
 
