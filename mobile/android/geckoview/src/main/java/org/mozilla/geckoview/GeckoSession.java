@@ -3912,7 +3912,7 @@ public class GeckoSession {
         quality = message.getStringArray("quality");
         price = message.getStringArray("price");
         shipping = message.getStringArray("shipping");
-        appearance = message.getStringArray("appearance");
+        appearance = message.getStringArray("packaging/appearance");
         competitiveness = message.getStringArray("competitiveness");
       }
 
