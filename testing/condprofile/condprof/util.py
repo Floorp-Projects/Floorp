@@ -122,7 +122,7 @@ def fresh_profile(profile, customization_data):
     extensions = []
     for name, url in customization_data["addons"].items():
         logger.info("Downloading addon %s" % name)
-        extension = download_file(url)
+        extension = download_file(url, check_mozfetches=True)
         extensions.append(extension)
     logger.info("Installing addons")
     new_profile.addons.install(extensions, unpack=True)
@@ -185,15 +185,34 @@ def check_exists(archive, server=None, all_types=False):
     return exists, resp.headers
 
 
-def download_file(url, target=None):
+def check_mozfetches_dir(target):
+    logger.info("Checking for existence of: %s in MOZ_FETCHES_DIR" % target)
+    fetches = os.environ.get("MOZ_FETCHES_DIR")
+    if fetches is None:
+        return None
+    fetches_target = os.path.join(fetches, target)
+    if not os.path.exists(fetches_target):
+        return None
+    logger.info("Already fetched and available in MOZ_FETCHES_DIR: %s" % fetches_target)
+    return fetches_target
+
+
+def download_file(url, target=None, check_mozfetches=False):
+    if target is None:
+        target = url.split("/")[-1]
+
+    # check if the assets has been fetched through a taskgraph fetch task dependency.
+    if check_mozfetches:
+        filepath = check_mozfetches_dir(target)
+        if filepath is not None:
+            return filepath
+
     present, headers = check_exists(url)
     if not present:
         logger.info("Cannot find %r" % url)
         raise ArchiveNotFound(url)
 
     etag = headers.get("ETag")
-    if target is None:
-        target = url.split("/")[-1]
 
     logger.info("Checking for existence of: %s" % target)
     if os.path.exists(target):
