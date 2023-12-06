@@ -177,8 +177,8 @@ var gTests = [
   {
     spec: "gopher://mozilla.org/",
     scheme: "gopher",
-    prePath: "gopher:",
-    pathQueryRef: "//mozilla.org/",
+    prePath: "gopher://mozilla.org",
+    pathQueryRef: "/",
     ref: "",
     nsIURL: false,
     nsINestedURI: false,

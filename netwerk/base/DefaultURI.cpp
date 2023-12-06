@@ -150,6 +150,10 @@ NS_IMETHODIMP DefaultURI::GetPathQueryRef(nsACString& aPathQueryRef) {
 }
 
 NS_IMETHODIMP DefaultURI::Equals(nsIURI* other, bool* _retval) {
+  if (!other) {
+    *_retval = false;
+    return NS_OK;
+  }
   RefPtr<DefaultURI> otherUri;
   nsresult rv = other->QueryInterface(kDefaultURICID, getter_AddRefs(otherUri));
   if (NS_FAILED(rv)) {
@@ -162,6 +166,10 @@ NS_IMETHODIMP DefaultURI::Equals(nsIURI* other, bool* _retval) {
 }
 
 NS_IMETHODIMP DefaultURI::SchemeIs(const char* scheme, bool* _retval) {
+  if (!scheme) {
+    *_retval = false;
+    return NS_OK;
+  }
   *_retval = mURL->Scheme().Equals(scheme);
   return NS_OK;
 }

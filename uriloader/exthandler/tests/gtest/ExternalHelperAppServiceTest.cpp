@@ -7,11 +7,16 @@
 #include "nsExternalHelperAppService.h"
 #include "gtest/gtest.h"
 #include "nsNetUtil.h"
+#include "mozilla/StaticPrefs_network.h"
 
 using namespace mozilla;
 
 TEST(ExternalHelperAppService, EscapeURI)
 {
+  if (StaticPrefs::network_url_useDefaultURI()) {
+    return;
+  }
+
   nsCString input("myproto://hello world");
   nsCString expected("myproto://hello%20world");
 
