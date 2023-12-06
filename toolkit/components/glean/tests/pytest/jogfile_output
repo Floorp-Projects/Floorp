@@ -251,6 +251,15 @@
         }
       ],
       [
+        "counter",
+        "optimizable_counter_metric",
+        [
+          "metrics"
+        ],
+        "ping",
+        false
+      ],
+      [
         "quantity",
         "quantity_metric",
         [
