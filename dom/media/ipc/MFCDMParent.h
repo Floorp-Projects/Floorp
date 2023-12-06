@@ -36,6 +36,9 @@ class MFCDMParent final : public PMFCDMParent {
 
   static void SetWidevineL1Path(const char* aPath);
 
+  // Perform clean-up when shutting down the MFCDM process.
+  static void Shutdown();
+
   // Return capabilities from all key systems which the media foundation CDM
   // supports.
   using CapabilitiesPromise =

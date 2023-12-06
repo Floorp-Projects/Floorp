@@ -86,6 +86,7 @@ DEFINE_PROPERTYKEY(EME_CONTENTDECRYPTIONMODULE_ORIGIN_ID, 0x1218a3e2, 0xcfb0,
 StaticMutex sFactoryMutex;
 static nsTHashMap<nsStringHashKey, ComPtr<IMFContentDecryptionModuleFactory>>
     sFactoryMap;
+static CopyableTArray<MFCDMCapabilitiesIPDL> sCapabilities;
 
 // RAIIized PROPVARIANT. See
 // third_party/libwebrtc/modules/audio_device/win/core_audio_utility_win.h
@@ -422,6 +423,12 @@ LPCWSTR MFCDMParent::GetCDMLibraryName(const nsString& aKeySystem) {
 }
 
 /* static */
+void MFCDMParent::Shutdown() {
+  sFactoryMap.Clear();
+  sCapabilities.Clear();
+}
+
+/* static */
 HRESULT MFCDMParent::GetOrCreateFactory(
     const nsString& aKeySystem,
     ComPtr<IMFContentDecryptionModuleFactory>& aFactoryOut) {
@@ -630,26 +637,25 @@ MFCDMParent::GetAllKeySystemsCapabilities() {
       new CapabilitiesPromise::Private(__func__);
   Unused << backgroundTaskQueue->Dispatch(NS_NewRunnableFunction(__func__, [p] {
     MFCDM_PARENT_SLOG("GetAllKeySystemsCapabilities");
-    enum SecureLevel : bool {
-      Software = false,
-      Hardware = true,
-    };
-    static const nsTArray<std::pair<nsString, SecureLevel>> kKeySystems{
-        std::pair<nsString, SecureLevel>(
-            NS_ConvertUTF8toUTF16(kPlayReadyKeySystemName),
-            SecureLevel::Software),
-        std::pair<nsString, SecureLevel>(
-            NS_ConvertUTF8toUTF16(kPlayReadyKeySystemHardware),
-            SecureLevel::Hardware),
-        std::pair<nsString, SecureLevel>(
-            NS_ConvertUTF8toUTF16(kWidevineExperimentKeySystemName),
-            SecureLevel::Hardware),
-        std::pair<nsString, SecureLevel>(
-            NS_ConvertUTF8toUTF16(kWidevineExperiment2KeySystemName),
-            SecureLevel::Hardware),
-    };
-    static CopyableTArray<MFCDMCapabilitiesIPDL> sCapabilities;
     if (sCapabilities.IsEmpty()) {
+      enum SecureLevel : bool {
+        Software = false,
+        Hardware = true,
+      };
+      const nsTArray<std::pair<nsString, SecureLevel>> kKeySystems{
+          std::pair<nsString, SecureLevel>(
+              NS_ConvertUTF8toUTF16(kPlayReadyKeySystemName),
+              SecureLevel::Software),
+          std::pair<nsString, SecureLevel>(
+              NS_ConvertUTF8toUTF16(kPlayReadyKeySystemHardware),
+              SecureLevel::Hardware),
+          std::pair<nsString, SecureLevel>(
+              NS_ConvertUTF8toUTF16(kWidevineExperimentKeySystemName),
+              SecureLevel::Hardware),
+          std::pair<nsString, SecureLevel>(
+              NS_ConvertUTF8toUTF16(kWidevineExperiment2KeySystemName),
+              SecureLevel::Hardware),
+      };
       for (const auto& keySystem : kKeySystems) {
         // Only check the capabilites if the relative prefs for the key system
         // are ON.
