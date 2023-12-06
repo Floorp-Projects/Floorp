@@ -339,6 +339,10 @@ BROWSER_PROCESS += [
 
     # Microsoft Forefront Threat Management Gateway (bug 1459680)
     DllBlocklistEntry("fwcwsp64.dll", (7, 0, 7734, 100)),
+
+    # Legacy DLL for digital signatures with ID cards from Spain (bug 1709082),
+    # up-to-date setups use DNIe_P11_x64.dll instead
+    DllBlocklistEntry("UsrDNIeCertStore.dll", ALL_VERSIONS),
 ]
 
 CHILD_PROCESSES += [
