@@ -2299,7 +2299,7 @@ void SamplerThread::Run() {
   // Not *no*-stack-sampling means we do want stack sampling.
   const bool stackSampling = !ProfilerFeature::HasNoStackSampling(features);
 
-  // Use local BlocksRingBuffer&ProfileBuffer to capture the stack.
+  // Use local ProfileBuffer to capture the stack.
   // (This is to avoid touching the CorePS::CoreBuffer lock while
   // a thread is suspended, because that thread could be working with
   // the CorePS::CoreBuffer as well.)
