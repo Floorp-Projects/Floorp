@@ -10,7 +10,6 @@
 
 #if defined(XP_WIN)
 #  include "nsExceptionHandler.h"
-#  include "mozilla/WindowsDiagnostics.h"
 #endif
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
@@ -71,29 +70,7 @@ void UtilityProcessImpl::LoadLibraryOrCrash(LPCWSTR aLib) {
       break;
   }
 
-#  if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED) && defined(_M_X64)
-  static constexpr int kMaxStepsNtdll = 0x1800;
-  static constexpr int kMaxErrorStatesNtdll = 0x200;
-  using NtdllSingleStepData =
-      ModuleSingleStepData<kMaxStepsNtdll, kMaxErrorStatesNtdll>;
-
-  HMODULE module{};
-  nsresult rv =
-      CollectModuleSingleStepData<kMaxStepsNtdll, kMaxErrorStatesNtdll,
-                                  InstructionFilter::CALL_RET>(
-          L"ntdll.dll", [&module, aLib]() { module = ::LoadLibraryW(aLib); },
-          [&module](const NtdllSingleStepData& aData) {
-            // Crashing here gives access to the single step data on stack
-            MOZ_DIAGNOSTIC_ASSERT(
-                module, "Unable to preload module: collected single-step data");
-          });
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
-                        "Failed to collect single step data for LoadLibraryW");
-  // If we reach this point then somehow the single-stepped call succeeded and
-  // we can proceed
-#  else
   MOZ_CRASH_UNSAFE_PRINTF("Unable to preload module: 0x%lx", err);
-#  endif  // MOZ_DIAGNOSTIC_ASSERT_ENABLED && _M_X64
 }
 #endif  // defined(XP_WIN)
 
