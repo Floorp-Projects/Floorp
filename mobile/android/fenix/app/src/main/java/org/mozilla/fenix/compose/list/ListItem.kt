@@ -19,15 +19,23 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Favicon
+import org.mozilla.fenix.compose.annotation.LightDarkPreview
+import org.mozilla.fenix.compose.button.RadioButton
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private val LIST_ITEM_HEIGHT = 56.dp
@@ -206,6 +214,57 @@ fun IconListItem(
 }
 
 /**
+ * List item used to display a label with an optional description text and
+ * a [RadioButton] at the beginning.
+ *
+ * @param label The label in the list item.
+ * @param selected [Boolean] That indicates whether the [RadioButton] is currently selected.
+ * @param modifier [Modifier] to be applied to the layout.
+ * @param maxLabelLines An optional maximum number of lines for the label text to span.
+ * @param description An optional description text below the label.
+ * @param maxDescriptionLines An optional maximum number of lines for the description text to span.
+ * @param onClick Called when the user clicks on the item.
+ */
+@Composable
+fun RadioButtonListItem(
+    label: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    maxLabelLines: Int = 1,
+    description: String? = null,
+    maxDescriptionLines: Int = 1,
+    onClick: (() -> Unit),
+) {
+    ListItem(
+        label = label,
+        modifier = modifier
+            .clearAndSetSemantics {
+                this.selected = selected
+                role = Role.RadioButton
+                contentDescription = if (description != null) {
+                    "$label.$description"
+                } else {
+                    label
+                }
+            },
+        maxLabelLines = maxLabelLines,
+        description = description,
+        maxDescriptionLines = maxDescriptionLines,
+        onClick = onClick,
+        beforeListAction = {
+            RadioButton(
+                selected = selected,
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .size(ICON_SIZE)
+                    .clearAndSetSemantics {},
+                onClick = onClick,
+            )
+        },
+    )
+}
+
+/**
  * Base list item used to display a label with an optional description text and
  * the flexibility to add custom UI to either end of the item.
  *
@@ -362,6 +421,26 @@ private fun FaviconListItemPreview() {
                 onClick = { println("list item click") },
                 url = "",
             )
+        }
+    }
+}
+
+@Composable
+@LightDarkPreview
+private fun RadioButtonListItemPreview() {
+    val radioOptions =
+        listOf("Radio button first item", "Radio button second item", "Radio button third item")
+    val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[1]) }
+    FirefoxTheme {
+        Column(Modifier.background(FirefoxTheme.colors.layer1)) {
+            radioOptions.forEach { text ->
+                RadioButtonListItem(
+                    label = text,
+                    description = "$text description",
+                    onClick = { onOptionSelected(text) },
+                    selected = (text == selectedOption),
+                )
+            }
         }
     }
 }
