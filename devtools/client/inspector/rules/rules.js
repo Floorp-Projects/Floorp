@@ -1723,7 +1723,7 @@ CssRuleView.prototype = {
   showPseudoClassPanel() {
     this.hideClassPanel();
 
-    this.pseudoClassToggle.classList.add("checked");
+    this.pseudoClassToggle.setAttribute("aria-pressed", "true");
     this.pseudoClassCheckboxes.forEach(checkbox => {
       checkbox.setAttribute("tabindex", "0");
     });
@@ -1731,7 +1731,7 @@ CssRuleView.prototype = {
   },
 
   hidePseudoClassPanel() {
-    this.pseudoClassToggle.classList.remove("checked");
+    this.pseudoClassToggle.setAttribute("aria-pressed", "false");
     this.pseudoClassCheckboxes.forEach(checkbox => {
       checkbox.setAttribute("tabindex", "-1");
     });
@@ -1762,14 +1762,14 @@ CssRuleView.prototype = {
   showClassPanel() {
     this.hidePseudoClassPanel();
 
-    this.classToggle.classList.add("checked");
+    this.classToggle.setAttribute("aria-pressed", "true");
     this.classPanel.hidden = false;
 
     this.classListPreviewer.focusAddClassField();
   },
 
   hideClassPanel() {
-    this.classToggle.classList.remove("checked");
+    this.classToggle.setAttribute("aria-pressed", "false");
     this.classPanel.hidden = true;
   },
 
@@ -1803,13 +1803,15 @@ CssRuleView.prototype = {
 
   async _onToggleLightColorSchemeSimulation() {
     const shouldSimulateLightScheme =
-      this.colorSchemeLightSimulationButton.classList.toggle("checked");
+      this.colorSchemeLightSimulationButton.getAttribute("aria-pressed") !==
+      "true";
 
-    const darkColorSchemeEnabled =
-      this.colorSchemeDarkSimulationButton.classList.contains("checked");
-    if (shouldSimulateLightScheme && darkColorSchemeEnabled) {
-      this.colorSchemeDarkSimulationButton.classList.toggle("checked");
-    }
+    this.colorSchemeLightSimulationButton.setAttribute(
+      "aria-pressed",
+      shouldSimulateLightScheme
+    );
+
+    this.colorSchemeDarkSimulationButton.setAttribute("aria-pressed", "false");
 
     await this.inspector.commands.targetConfigurationCommand.updateConfiguration(
       {
@@ -1822,13 +1824,15 @@ CssRuleView.prototype = {
 
   async _onToggleDarkColorSchemeSimulation() {
     const shouldSimulateDarkScheme =
-      this.colorSchemeDarkSimulationButton.classList.toggle("checked");
+      this.colorSchemeDarkSimulationButton.getAttribute("aria-pressed") !==
+      "true";
 
-    const lightColorSchemeEnabled =
-      this.colorSchemeLightSimulationButton.classList.contains("checked");
-    if (shouldSimulateDarkScheme && lightColorSchemeEnabled) {
-      this.colorSchemeLightSimulationButton.classList.toggle("checked");
-    }
+    this.colorSchemeDarkSimulationButton.setAttribute(
+      "aria-pressed",
+      shouldSimulateDarkScheme
+    );
+
+    this.colorSchemeLightSimulationButton.setAttribute("aria-pressed", "false");
 
     await this.inspector.commands.targetConfigurationCommand.updateConfiguration(
       {
@@ -1840,7 +1844,9 @@ CssRuleView.prototype = {
   },
 
   async _onTogglePrintSimulation() {
-    const enabled = this.printSimulationButton.classList.toggle("checked");
+    const enabled =
+      this.printSimulationButton.getAttribute("aria-pressed") !== "true";
+    this.printSimulationButton.setAttribute("aria-pressed", enabled);
     await this.inspector.commands.targetConfigurationCommand.updateConfiguration(
       {
         printSimulationEnabled: enabled,

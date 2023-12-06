@@ -43,6 +43,20 @@ add_task(async function () {
   const { inspector, view } = await openRuleView();
   await selectNode("div", inspector);
 
+  info("Check that the toggle button exists");
+  const button = inspector.panelDoc.getElementById("pseudo-class-panel-toggle");
+  ok(button, "The pseudo-class panel toggle button exists");
+  is(
+    view.pseudoClassToggle,
+    button,
+    "The rule-view refers to the right element"
+  );
+  is(
+    inspector.panelDoc.getElementById(button.getAttribute("aria-controls")),
+    view.pseudoClassPanel,
+    "The pseudo-class panel toggle button has valid aria-controls attribute"
+  );
+
   await assertPseudoPanelClosed(view);
 
   info("Toggle the pseudo class panel open");
@@ -129,8 +143,12 @@ function assertPseudoRemoved(inspector, view, numRules) {
 
 function assertPseudoPanelOpened(view) {
   info("Check the opened state of the pseudo class panel");
-
   ok(!view.pseudoClassPanel.hidden, "Pseudo Class Panel Opened");
+  is(
+    view.pseudoClassToggle.getAttribute("aria-pressed"),
+    "true",
+    "The toggle button is pressed"
+  );
 
   for (const pseudo of PSEUDO_CLASSES) {
     const checkbox = getPseudoClassCheckbox(view, pseudo);
@@ -145,8 +163,12 @@ function assertPseudoPanelOpened(view) {
 
 function assertPseudoPanelClosed(view) {
   info("Check the closed state of the pseudo clas panel");
-
   ok(view.pseudoClassPanel.hidden, "Pseudo Class Panel Hidden");
+  is(
+    view.pseudoClassToggle.getAttribute("aria-pressed"),
+    "false",
+    "The toggle button is not pressed"
+  );
 
   for (const pseudo of PSEUDO_CLASSES) {
     const checkbox = getPseudoClassCheckbox(view, pseudo);
