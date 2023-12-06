@@ -2087,6 +2087,9 @@ class Element : public FragmentOrElement {
 
   virtual bool Translate() const;
 
+  MOZ_CAN_RUN_SCRIPT
+  virtual void SetHTMLUnsafe(const nsAString& aHTML);
+
  protected:
   enum class ReparseAttributes { No, Yes };
   /**

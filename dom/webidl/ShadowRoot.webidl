@@ -56,4 +56,8 @@ interface ShadowRoot : DocumentFragment
   boolean isUAWidget();
 };
 
+partial interface ShadowRoot {
+  undefined setHTMLUnsafe(DOMString html);
+};
+
 ShadowRoot includes DocumentOrShadowRoot;
