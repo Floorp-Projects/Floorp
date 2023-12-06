@@ -531,9 +531,8 @@ class nsFlexContainerFrame final : public nsContainerFrame,
    *                                   children of this fragment in this frame's
    *                                   coordinate space (as returned by
    *                                   ReflowChildren()).
-   * @param aAnyChildIncomplete true if any child being reflowed is incomplete;
-   *                            false otherwise (as returned by
-   *                            ReflowChildren()).
+   * @param aChildrenStatus the reflow status of children (as returned by
+   *                        ReflowChildren()).
    * @param aFlr the result returned by DoFlexLayout.
    *             Note: aFlr is mostly an "input" parameter, but we use
    *             aFlr.mAscent as an "in/out" parameter; it's initially the
@@ -548,7 +547,8 @@ class nsFlexContainerFrame final : public nsContainerFrame,
       nsReflowStatus& aStatus, const mozilla::LogicalSize& aContentBoxSize,
       const mozilla::LogicalMargin& aBorderPadding,
       const nscoord aConsumedBSize, const bool aMayNeedNextInFlow,
-      const nscoord aMaxBlockEndEdgeOfChildren, const bool aAnyChildIncomplete,
+      const nscoord aMaxBlockEndEdgeOfChildren,
+      const nsReflowStatus& aChildrenStatus,
       const FlexboxAxisTracker& aAxisTracker, FlexLayoutResult& aFlr);
 
   /**
@@ -571,10 +571,13 @@ class nsFlexContainerFrame final : public nsContainerFrame,
    *                      updated and become our PerFragmentFlexData.
    * @return nscoord the maximum block-end edge of children of this fragment in
    *                 flex container's coordinate space.
-   * @return bool true if any child being reflowed is incomplete; false
-   *              otherwise.
+   * @return nsReflowStatus the reflow status of children (i.e. flex items). If
+   *                        any child had an incomplete reflow status, then this
+   *                        will be Incomplete. Otherwise, if any child had an
+   *                        overflow-incomplete reflow status, this will be
+   *                        OverflowIncomplete.
    */
-  std::tuple<nscoord, bool> ReflowChildren(
+  std::tuple<nscoord, nsReflowStatus> ReflowChildren(
       const ReflowInput& aReflowInput, const nsSize& aContainerSize,
       const mozilla::LogicalSize& aAvailableSizeForItems,
       const mozilla::LogicalMargin& aBorderPadding,
