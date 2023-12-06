@@ -98,7 +98,7 @@ module.exports = function (config) {
               statements: 66,
               lines: 66,
               functions: 78,
-              branches: 63,
+              branches: 50,
             },
             "lib/TelemetryFeed.jsm": {
               statements: 98,

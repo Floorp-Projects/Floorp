@@ -57,8 +57,6 @@ $shadow-image-inset: inset 0 0 0 0.5px $black-15;
   --newtab-status-error: #{$red-60};
   --newtab-inner-box-shadow-color: #{$black-10};
   --newtab-overlay-color: color-mix(in srgb, var(--newtab-background-color) 85%, transparent);
-  --newtab-text-emphasis-background: #{$yellow-50};
-  --newtab-text-emphasis-text-color: #{$grey-90};
 
   @include textbox-focus(var(--newtab-primary-action-background));
 
