@@ -802,6 +802,44 @@ browsertime-throttled:
     tier: 3
     treeherder-symbol: Btime(throttled)
 
+browsertime-tp6-webextensions:
+    <<: *tp6-defaults
+    <<: *tp6-essential-defaults
+    description: Raptor (browsertime) tp6 page-load tests with webextensions installed on Firefox Desktop
+    raptor:
+        apps: [firefox]
+        test: tp6
+        run-visual-metrics: true
+        subtests:
+            - amazon
+    fetches:
+        fetch:
+            - firefox-addons
+    run-on-projects:
+        by-app:
+            firefox:
+                by-test-platform:
+                    windows.*-32.*: []
+                    macosx1100.*shippable.*: [mozilla-central]
+                    .*64(?!.*nightlyasrelease).*shippable-qr/.*: [trunk-only]
+                    default: []
+            default: []
+    mozharness:
+        extra-options:
+            by-test-platform:
+                windows10-64.*shippable.*-qr.*:
+                    - --chimera
+                    - --browsertime
+                    - --browsertime-no-ffwindowrecorder
+                    - --conditioned-profile=settled-webext
+                default:
+                    - --chimera
+                    - --browsertime
+                    - --conditioned-profile=settled-webext
+    # TODO(Bug 1867781): promote to tier 2 after confirming no issue have been caught while runing as tier 3.
+    tier: 3
+    treeherder-symbol: Btime-webext(tp6)
+
 browsertime-indexeddb:
     description: Raptor (browsertime) tests for IndexedDB
     max-run-time: 2700

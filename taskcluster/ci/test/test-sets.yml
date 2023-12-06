@@ -87,6 +87,7 @@ browsertime:
     - browsertime-tp6-bytecode
     - browsertime-tp6-live
     - browsertime-tp6-live-sheriffed
+    - browsertime-tp6-webextensions
     - browsertime-benchmark
     - browsertime-benchmark-wasm
     - browsertime-youtube-playback
@@ -107,6 +108,7 @@ browsertime-clang:
     - browsertime-tp6-bytecode
     - browsertime-tp6-live
     - browsertime-tp6-live-sheriffed
+    - browsertime-tp6-webextensions
     - browsertime-benchmark
     - browsertime-benchmark-wasm
     - browsertime-youtube-playback
