@@ -55,6 +55,7 @@ class TimelineCollection final
   // if it does not already exist.
   static TimelineCollection* Get(const dom::Element* aElement,
                                  PseudoStyleType aPseudoType);
+  const TimelineMap& Timelines() const { return mTimelines; }
 
  private:
   // The element. Weak reference is fine since it owns us.
