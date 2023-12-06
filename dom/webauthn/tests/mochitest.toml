@@ -14,7 +14,6 @@ prefs = [
   "security.webauth.webauthn_enable_usbtoken=false",
   "security.webauthn.ctap2=true",
   "security.webauthn.enable_conditional_mediation=true",
-  "security.webauthn.enable_macos_passkeys=false",
 ]
 
 ["test_webauthn_abort_signal.html"]
