@@ -10,13 +10,6 @@
 #include "js/TypeDecls.h"
 #include "nsIGlobalObject.h"
 #include "nsWrapperCache.h"
-#include "nsClassHashtable.h"
-#include "nsTHashMap.h"
-#include "mozilla/DataMutex.h"
-
-namespace mozilla::Telemetry {
-enum class ScalarID : uint32_t;
-}  // namespace mozilla::Telemetry
 
 namespace mozilla::glean {
 
@@ -32,15 +25,6 @@ class GleanMetric : public nsISupports, public nsWrapperCache {
   virtual ~GleanMetric() = default;
   nsCOMPtr<nsISupports> mParent;
 };
-
-typedef nsUint32HashKey SubmetricIdHashKey;
-typedef nsTHashMap<SubmetricIdHashKey,
-                   std::tuple<Telemetry::ScalarID, nsString>>
-    SubmetricToLabeledMirrorMapType;
-typedef StaticDataMutex<UniquePtr<SubmetricToLabeledMirrorMapType>>
-    SubmetricToMirrorMutex;
-
-Maybe<SubmetricToMirrorMutex::AutoLock> GetLabeledMirrorLock();
 
 }  // namespace mozilla::glean
 

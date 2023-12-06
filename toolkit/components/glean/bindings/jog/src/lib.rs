@@ -145,14 +145,8 @@ pub extern "C" fn jog_test_register_ping(
         .iter()
         .map(|reason| reason.to_string())
         .collect();
-    create_and_register_ping(
-        ping_name,
-        include_client_id,
-        send_if_empty,
-        precise_timestamps,
-        reason_codes,
-    )
-    .expect("Creation or registration of ping failed.") // permitted to panic in test-only method.
+    create_and_register_ping(ping_name, include_client_id, send_if_empty, precise_timestamps, reason_codes)
+        .expect("Creation or registration of ping failed.") // permitted to panic in test-only method.
 }
 
 fn create_and_register_ping(
