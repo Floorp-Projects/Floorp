@@ -92,6 +92,10 @@ class MFCDMParent final : public PMFCDMParent {
 
   static LPCWSTR GetCDMLibraryName(const nsString& aKeySystem);
 
+  static HRESULT GetOrCreateFactory(
+      const nsString& aKeySystem,
+      Microsoft::WRL::ComPtr<IMFContentDecryptionModuleFactory>& aFactoryOut);
+
   static HRESULT LoadFactory(
       const nsString& aKeySystem,
       Microsoft::WRL::ComPtr<IMFContentDecryptionModuleFactory>& aFactoryOut);
