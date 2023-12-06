@@ -107,6 +107,12 @@ var TabStateInternal = {
       tabData.floorpWorkspace = Services.prefs.getStringPref("floorp.browser.workspace.all").split(",")[0];
     }
 
+    let { tabStacksService } = ChromeUtils.importESModule(
+      "resource:///modules/tabStacksService.sys.mjs"
+    );
+
+    // TabStacks
+    tabData.floorpTabStackId = tab.getAttribute(tabStacksService.tabStacksTabAttributionId);
 
     // Private Container
     tabData.floorpDisableHistory = tab.getAttribute("floorp-disablehistory");

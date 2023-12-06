@@ -3157,6 +3157,11 @@
         let select = i == selectTab - 1;
         let tab;
         let tabWasReused = false;
+
+        let { tabStacksService } = ChromeUtils.importESModule(
+          "resource:///modules/tabStacksService.sys.mjs"
+        );
+        let floorpTabStackId = tabData.floorpTabStackId;
         let floorpWorkspace = tabData.floorpWorkspace ? tabData.floorpWorkspace : Services.prefs.getStringPref("floorp.browser.workspace.all").split(",")[0];
         let floorpSSB = tabData.floorpSSB;
         if (floorpSSB) {
@@ -3173,6 +3178,10 @@
           tabWasReused = true;
           tab = this.selectedTab;
           tab.setAttribute("floorpWorkspace", floorpWorkspace);
+
+          if (floorpTabStackId) {
+            tab.setAttribute(tabStacksService.tabStacksTabAttributionId, floorpTabStackId);
+          }
 
           if (floorpSSB) {
             tab.setAttribute("floorpSSB", floorpSSB);
@@ -3228,6 +3237,10 @@
           });
 
           tab.setAttribute("floorpWorkspace", floorpWorkspace);
+
+          if (floorpTabStackId) {
+            tab.setAttribute(tabStacksService.tabStacksTabAttributionId, floorpTabStackId);
+          }
 
           if (select) {
             tabToSelect = tab;
