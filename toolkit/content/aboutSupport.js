@@ -1182,10 +1182,15 @@ var snapshotFormatters = {
 
     async function insertContentDecryptionModuleInfo() {
       let rows = [];
+      // Retrieve information from GMPCDM
+      let cdmInfo =
+        await ChromeUtils.getGMPContentDecryptionModuleInformation();
+      for (let info of cdmInfo) {
+        rows.push(createCDMInfoRow(info));
+      }
       // Retrieve information from WMFCDM, only works when MOZ_WMF_CDM is true
       if (ChromeUtils.getWMFContentDecryptionModuleInformation !== undefined) {
-        const cdmInfo =
-          await ChromeUtils.getWMFContentDecryptionModuleInformation();
+        cdmInfo = await ChromeUtils.getWMFContentDecryptionModuleInformation();
         for (let info of cdmInfo) {
           rows.push(createCDMInfoRow(info));
         }
