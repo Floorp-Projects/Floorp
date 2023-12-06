@@ -10,7 +10,7 @@ function handleRequest(request, response) {
       response.write("hello");
       response.finish();
     },
-    3000 /* milliseconds */,
+    2500 /* milliseconds */,
     Ci.nsITimer.TYPE_ONE_SHOT
   );
 }
