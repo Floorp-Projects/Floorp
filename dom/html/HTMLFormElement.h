@@ -593,7 +593,7 @@ class HTMLFormElement final : public nsGenericHTMLElement,
 
   /**
    * Fire an event when the form is removed from the DOM tree. This is now only
-   * used by the password manager.
+   * used by the password manager and formautofill.
    */
   void MaybeFireFormRemoved();
 

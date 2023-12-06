@@ -1636,7 +1636,7 @@ class HTMLInputElement final : public TextControlElement,
 
   /**
    * Fire an event when the password input field is removed from the DOM tree.
-   * This is now only used by the password manager.
+   * This is now only used by the password manager and formautofill.
    */
   void MaybeFireInputPasswordRemoved();
 
