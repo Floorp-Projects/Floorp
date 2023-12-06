@@ -15,6 +15,12 @@
   :root {
     font-size: var(--font-size-root);
   }
+
+  a {
+    color: var(--link-color) !important;
+    text-decoration: underline !important;
+  }
+
   /* Override the default Storybook padding in favour of styles
    provided by our WithCommonStyles wrapper */
   .sb-show-main.sb-main-padded {
@@ -85,5 +91,118 @@
 
   table .sb-preview-font-size-small {
     font-size: var(--font-size-small);
+  }
+
+  .box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    &.width-max-content {
+      width: max-content;
+    }
+
+    &.relative {
+      position: relative;
+    }
+    &.absolute {
+      position: absolute;
+    }
+
+    &.justify-center {
+      justify-content: center;
+    }
+
+    &.align-center {
+      align-items: center;
+    }
+
+    &.align-end {
+      align-items: flex-end;
+    }
+
+    &.vertical {
+      flex-direction: column;
+    }
+
+    &.left {
+      left: 0;
+    }
+
+    &.right {
+      right: 0;
+    }
+
+    &.top {
+      top: 0;
+    }
+
+    & + h1,
+    & + h2,
+    & + h3 {
+      margin-top: 16px !important;
+    }
+  }
+
+  .post-it {
+    align-items: center;
+    background: linear-gradient(
+          to left bottom,
+          transparent 50%,
+          rgba(0, 0, 0, 0.4) 0
+        )
+        no-repeat 100% 0 / 1em 1em,
+      linear-gradient(-135deg, transparent 0.7em, var(--color-red-05) 0);
+    display: flex;
+    font-size: 14px !important;
+    height: 85px;
+    justify-content: center;
+    margin: 12px 0;
+    position: relative;
+    text-align: center;
+    width: 85px;
+
+    &.green {
+      background: linear-gradient(
+            to left bottom,
+            transparent 50%,
+            rgba(0, 0, 0, 0.4) 0
+          )
+          no-repeat 100% 0 / 1em 1em,
+        linear-gradient(-135deg, transparent 0.7em, var(--color-green-05) 0);
+    }
+
+    &.blue {
+      background: linear-gradient(
+            to left bottom,
+            transparent 50%,
+            rgba(0, 0, 0, 0.4) 0
+          )
+          no-repeat 100% 0 / 1em 1em,
+        linear-gradient(-135deg, transparent 0.7em, var(--color-blue-05) 0);
+    }
+
+    &.orange {
+      background: linear-gradient(
+            to left bottom,
+            transparent 50%,
+            rgba(0, 0, 0, 0.4) 0
+          )
+          no-repeat 100% 0 / 1em 1em,
+        linear-gradient(-135deg, transparent 0.7em, var(--color-yellow-05) 0);
+    }
+
+    &.big {
+      height: 160px;
+      width: 160px;
+    }
+
+    &.disabled {
+      opacity: 0.4;
+    }
+  }
+
+  .container-width-large {
+    min-width: 968px;
   }
 </style>
