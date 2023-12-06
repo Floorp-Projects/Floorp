@@ -213,6 +213,8 @@ void UtilityAudioDecoderChild::GetKeySystemCapabilities(
           KeySystemConfig config;
           MFCDMCapabilitiesIPDLToKeySystemConfig(capabilities, config);
           info->mCapabilities = config.GetDebugInfo();
+          info->mClearlead =
+              DoesKeySystemSupportClearLead(info->mKeySystemName);
         }
         promise->MaybeResolve(cdmInfo);
       },

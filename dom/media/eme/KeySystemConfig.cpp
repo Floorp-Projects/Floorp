@@ -231,6 +231,7 @@ void KeySystemConfig::GetGMPKeySystemConfigs(dom::Promise* aPromise) {
       MOZ_ASSERT(keySystemConfigs.Length() == cdmInfo.Length());
       info->mKeySystemName = name;
       info->mCapabilities = keySystemConfigs.LastElement().GetDebugInfo();
+      info->mClearlead = DoesKeySystemSupportClearLead(name);
     }
   }
   aPromise->MaybeResolve(cdmInfo);
