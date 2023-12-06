@@ -48,17 +48,6 @@ main {
   @media (min-width: $break-point-widest) {
     width: $wrapper-max-width-widest;
   }
-
-  &.has-snippet {
-    // Offset the snippets container so things at the bottom of the page are still
-    // visible when snippets are visible. Adjust for other spacing.
-    padding-bottom: $snippets-container-height - $section-spacing - $base-gutter;
-  }
-}
-
-.below-search-snippet.withButton {
-  margin: auto;
-  width: 100%;
 }
 
 .ds-outer-wrapper-search-alignment {
@@ -84,12 +73,6 @@ main {
 
     @media (min-width: $break-point-widest) {
       width: 986px;
-    }
-
-    &.has-snippet {
-      // Offset the snippets container so things at the bottom of the page are still
-      // visible when snippets are visible. Adjust for other spacing.
-      padding-bottom: $snippets-container-height - $section-spacing - $base-gutter;
     }
   }
 }
