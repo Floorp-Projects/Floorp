@@ -2049,13 +2049,29 @@ pub extern "C" fn wr_resource_updates_add_blob_image(
     bytes: &mut WrVecU8,
     visible_rect: DeviceIntRect,
 ) {
+    // If we're at risk of generating an excessive number of tiles, try making
+    // them larger so as to reduce the total number. This helps avoid swamping
+    // the Moz2dBlobRasterizer with too many parallel requests.
+    const TILE_COUNT_LIMIT: i32 = 8192;
+    const TILE_SIZE_LIMIT: u16 = 2048;
+    let mut adjusted = tile_size;
+    // Rather than some tricky computation involving the image dimensions, just
+    // keep doubling tile_size until the estimated count is reasonable, or size
+    // gets too big. The size limit means this loop won't execute more than a
+    // handful of times even in extreme cases.
+    while adjusted < TILE_SIZE_LIMIT
+        && ((descriptor.height / adjusted as i32 + 1) * (descriptor.width / adjusted as i32 + 1)) > TILE_COUNT_LIMIT
+    {
+        adjusted = adjusted * 2;
+    }
+
     txn.add_blob_image(
         image_key,
         descriptor.into(),
         Arc::new(bytes.flush_into_vec()),
         visible_rect,
-        if descriptor.format == ImageFormat::BGRA8 {
-            Some(tile_size)
+        if descriptor.format == ImageFormat::BGRA8 || adjusted > tile_size {
+            Some(adjusted)
         } else {
             None
         },
