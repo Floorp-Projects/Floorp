@@ -48,7 +48,6 @@ linux64-rust-dev:
     treeherder:
         symbol: TL(rust-dev)
     worker:
-        docker-image: {in-tree: deb11-toolchain-build}
         env:
             # Work around https://github.com/rust-lang/rust/issues/105967
             RUSTFLAGS_BOOTSTRAP: '-Clink-arg=-Wl,--undefined-version'
@@ -66,6 +65,7 @@ linux64-rust-dev:
             - rust-1.74.0
         toolchain:
             - linux64-clang-toolchain
+            - linux64-toolchain-sysroot
 
 linux64-rust-cross-1.74:
     description: "rust repack with macos and windows cross support"
