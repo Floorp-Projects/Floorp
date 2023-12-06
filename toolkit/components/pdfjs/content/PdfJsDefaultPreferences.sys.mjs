@@ -29,6 +29,7 @@ export const PdfJsDefaultPreferences = Object.freeze({
  "enablePrintAutoRotate": true,
  "enableScripting": true,
  "externalLinkTarget": 0,
+ "highlightEditorColors": "yellow=#FFFF98,green=#53FFBC,blue=#80EBFF,pink=#FFCBE6,red=#FF4F5F",
  "historyUpdateUrl": false,
  "ignoreDestinationZoom": false,
  "forcePageColors": false,

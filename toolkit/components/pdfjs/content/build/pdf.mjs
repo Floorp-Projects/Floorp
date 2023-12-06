@@ -54,6 +54,7 @@ __webpack_require__.d(__webpack_exports__, {
   AnnotationLayer: () => (/* reexport */ AnnotationLayer),
   AnnotationMode: () => (/* reexport */ AnnotationMode),
   CMapCompressionType: () => (/* reexport */ CMapCompressionType),
+  ColorPicker: () => (/* reexport */ ColorPicker),
   DOMSVGFactory: () => (/* reexport */ DOMSVGFactory),
   DrawLayer: () => (/* reexport */ DrawLayer),
   FeatureTest: () => (/* reexport */ util_FeatureTest),
@@ -136,7 +137,7 @@ const AnnotationEditorParamsType = {
   INK_THICKNESS: 22,
   INK_OPACITY: 23,
   HIGHLIGHT_COLOR: 31,
-  HIGHLIGHT_OPACITY: 32
+  HIGHLIGHT_DEFAULT_COLOR: 32
 };
 const PermissionFlag = {
   PRINT: 0x04,
@@ -1870,7 +1871,7 @@ class KeyboardManager {
     if (checker && !checker(self, event)) {
       return;
     }
-    callback.bind(self, ...args)();
+    callback.bind(self, ...args, event)();
     if (!bubbles) {
       event.stopPropagation();
       event.preventDefault();
@@ -1918,10 +1919,12 @@ class AnnotationEditorUIManager {
   #editorsToRescale = new Set();
   #filterFactory = null;
   #focusMainContainerTimeoutId = null;
+  #highlightColors = null;
   #idManager = new IdManager();
   #isEnabled = false;
   #isWaiting = false;
   #lastActiveElement = null;
+  #mainHighlightColorPicker = null;
   #mode = AnnotationEditorType.NONE;
   #selectedEditors = new Set();
   #pageColors = null;
@@ -1951,7 +1954,7 @@ class AnnotationEditorUIManager {
   static get _keyboardManager() {
     const proto = AnnotationEditorUIManager.prototype;
     const arrowChecker = self => {
-      return self.#container.contains(document.activeElement) && self.hasSomethingToControl();
+      return self.#container.contains(document.activeElement) && document.activeElement.tagName !== "BUTTON" && self.hasSomethingToControl();
     };
     const textInputChecker = (_self, {
       target: el
@@ -2006,7 +2009,7 @@ class AnnotationEditorUIManager {
       checker: arrowChecker
     }]]));
   }
-  constructor(container, viewer, altTextManager, eventBus, pdfDocument, pageColors) {
+  constructor(container, viewer, altTextManager, eventBus, pdfDocument, pageColors, highlightColors) {
     this.#container = container;
     this.#viewer = viewer;
     this.#altTextManager = altTextManager;
@@ -2018,6 +2021,7 @@ class AnnotationEditorUIManager {
     this.#annotationStorage = pdfDocument.annotationStorage;
     this.#filterFactory = pdfDocument.filterFactory;
     this.#pageColors = pageColors;
+    this.#highlightColors = highlightColors || null;
     this.viewParameters = {
       realScale: PixelsPerInch.PDF_TO_CSS_UNITS,
       rotation: 0
@@ -2054,6 +2058,12 @@ class AnnotationEditorUIManager {
   }
   get direction() {
     return shadow(this, "direction", getComputedStyle(this.#container).direction);
+  }
+  get highlightColors() {
+    return shadow(this, "highlightColors", this.#highlightColors ? new Map(this.#highlightColors.split(",").map(pair => pair.split("=").map(x => x.trim()))) : null);
+  }
+  setMainHighlightColorPicker(colorPicker) {
+    this.#mainHighlightColorPicker = colorPicker;
   }
   editAltText(editor) {
     this.#altTextManager?.editAltText(this, editor);
@@ -2376,9 +2386,13 @@ class AnnotationEditorUIManager {
     if (!this.#editorTypes) {
       return;
     }
-    if (type === AnnotationEditorParamsType.CREATE) {
-      this.currentLayer.addNewEditor();
-      return;
+    switch (type) {
+      case AnnotationEditorParamsType.CREATE:
+        this.currentLayer.addNewEditor();
+        return;
+      case AnnotationEditorParamsType.HIGHLIGHT_DEFAULT_COLOR:
+        this.#mainHighlightColorPicker?.updateColor(value);
+        break;
     }
     for (const editor of this.#selectedEditors) {
       editor.updateParams(type, value);
@@ -2921,6 +2935,7 @@ class AltText {
 
 class EditorToolbar {
   #toolbar = null;
+  #colorPicker = null;
   #editor;
   #buttons = null;
   constructor(editor) {
@@ -2970,6 +2985,7 @@ class EditorToolbar {
   }
   hide() {
     this.#toolbar.classList.add("hidden");
+    this.#colorPicker?.hideDropdown();
   }
   show() {
     this.#toolbar.classList.remove("hidden");
@@ -2985,17 +3001,25 @@ class EditorToolbar {
     });
     this.#buttons.append(button);
   }
-  addAltTextButton(button) {
-    this.#addListenersToElement(button);
-    this.#buttons.prepend(button, this.#divider);
-  }
   get #divider() {
     const divider = document.createElement("div");
     divider.className = "divider";
     return divider;
   }
+  addAltTextButton(button) {
+    this.#addListenersToElement(button);
+    this.#buttons.prepend(button, this.#divider);
+  }
+  addColorPicker(colorPicker) {
+    this.#colorPicker = colorPicker;
+    const button = colorPicker.renderButton();
+    this.#addListenersToElement(button);
+    this.#buttons.prepend(button, this.#divider);
+  }
   remove() {
     this.#toolbar.remove();
+    this.#colorPicker?.destroy();
+    this.#colorPicker = null;
   }
 }
 
@@ -3588,13 +3612,14 @@ class AnnotationEditor {
   }
   async addEditToolbar() {
     if (this.#editToolbar || this.#isInEditMode) {
-      return;
+      return this.#editToolbar;
     }
     this.#editToolbar = new EditorToolbar(this);
     this.div.append(this.#editToolbar.render());
     if (this.#altText) {
       this.#editToolbar.addAltTextButton(await this.#altText.render());
     }
+    return this.#editToolbar;
   }
   removeEditToolbar() {
     if (!this.#editToolbar) {
@@ -8235,7 +8260,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '4.0.283',
+    apiVersion: '4.0.321',
     data,
     password,
     disableAutoFetch,
@@ -9859,8 +9884,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = '4.0.283';
-const build = '59cf2ee5a';
+const version = '4.0.321';
+const build = 'f54cfe065';
 
 ;// CONCATENATED MODULE: ./src/display/text_layer.js
 
@@ -13389,6 +13414,160 @@ class FreeTextEditor extends AnnotationEditor {
   }
 }
 
+;// CONCATENATED MODULE: ./src/display/editor/color_picker.js
+
+
+
+class ColorPicker {
+  #boundKeyDown = this.#keyDown.bind(this);
+  #button = null;
+  #buttonSwatch = null;
+  #defaultColor;
+  #dropdown = null;
+  #dropdownWasFromKeyboard = false;
+  #isMainColorPicker = false;
+  #eventBus;
+  #uiManager = null;
+  static get _keyboardManager() {
+    return shadow(this, "_keyboardManager", new KeyboardManager([[["Escape", "mac+Escape"], ColorPicker.prototype._hideDropdownFromKeyboard], [[" ", "mac+ "], ColorPicker.prototype._colorSelectFromKeyboard], [["ArrowDown", "ArrowRight", "mac+ArrowDown", "mac+ArrowRight"], ColorPicker.prototype._moveToNext], [["ArrowUp", "ArrowLeft", "mac+ArrowUp", "mac+ArrowLeft"], ColorPicker.prototype._moveToPrevious], [["Home", "mac+Home"], ColorPicker.prototype._moveToBeginning], [["End", "mac+End"], ColorPicker.prototype._moveToEnd]]));
+  }
+  constructor({
+    editor = null,
+    uiManager = null
+  }) {
+    this.#isMainColorPicker = !editor;
+    this.#uiManager = editor?._uiManager || uiManager;
+    this.#eventBus = this.#uiManager._eventBus;
+    this.#defaultColor = editor?.color || this.#uiManager?.highlightColors.values().next().value || "#FFFF98";
+  }
+  renderButton() {
+    const button = this.#button = document.createElement("button");
+    button.className = "colorPicker";
+    button.tabIndex = "0";
+    button.setAttribute("data-l10n-id", "pdfjs-editor-colorpicker-button");
+    button.setAttribute("aria-haspopup", true);
+    button.addEventListener("click", this.#openDropdown.bind(this));
+    const swatch = this.#buttonSwatch = document.createElement("span");
+    swatch.className = "swatch";
+    swatch.style.backgroundColor = this.#defaultColor;
+    button.append(swatch);
+    return button;
+  }
+  renderMainDropdown() {
+    const dropdown = this.#dropdown = this.#getDropdownRoot(AnnotationEditorParamsType.HIGHLIGHT_DEFAULT_COLOR);
+    dropdown.setAttribute("aria-orientation", "horizontal");
+    dropdown.setAttribute("aria-labelledby", "highlightColorPickerLabel");
+    return dropdown;
+  }
+  #getDropdownRoot(paramType) {
+    const div = document.createElement("div");
+    div.addEventListener("contextmenu", noContextMenu);
+    div.className = "dropdown";
+    div.role = "listbox";
+    div.setAttribute("aria-multiselectable", false);
+    div.setAttribute("aria-orientation", "vertical");
+    div.setAttribute("data-l10n-id", "pdfjs-editor-colorpicker-dropdown");
+    for (const [name, color] of this.#uiManager.highlightColors) {
+      const button = document.createElement("button");
+      button.tabIndex = "0";
+      button.role = "option";
+      button.setAttribute("data-color", color);
+      button.title = name;
+      button.setAttribute("data-l10n-id", `pdfjs-editor-colorpicker-${name}`);
+      const swatch = document.createElement("span");
+      button.append(swatch);
+      swatch.className = "swatch";
+      swatch.style.backgroundColor = color;
+      button.setAttribute("aria-selected", color === this.#defaultColor);
+      button.addEventListener("click", this.#colorSelect.bind(this, paramType, color));
+      div.append(button);
+    }
+    div.addEventListener("keydown", this.#boundKeyDown);
+    return div;
+  }
+  #colorSelect(type, color, event) {
+    event.stopPropagation();
+    this.#eventBus.dispatch("switchannotationeditorparams", {
+      source: this,
+      type,
+      value: color
+    });
+  }
+  _colorSelectFromKeyboard(event) {
+    const color = event.target.getAttribute("data-color");
+    if (!color) {
+      return;
+    }
+    this.#colorSelect(color, event);
+  }
+  _moveToNext(event) {
+    if (event.target === this.#button) {
+      this.#dropdown.firstChild?.focus();
+      return;
+    }
+    event.target.nextSibling?.focus();
+  }
+  _moveToPrevious(event) {
+    event.target.previousSibling?.focus();
+  }
+  _moveToBeginning() {
+    this.#dropdown.firstChild?.focus();
+  }
+  _moveToEnd() {
+    this.#dropdown.lastChild?.focus();
+  }
+  #keyDown(event) {
+    ColorPicker._keyboardManager.exec(this, event);
+  }
+  #openDropdown(event) {
+    if (this.#dropdown && !this.#dropdown.classList.contains("hidden")) {
+      this.hideDropdown();
+      return;
+    }
+    this.#button.addEventListener("keydown", this.#boundKeyDown);
+    this.#dropdownWasFromKeyboard = event.detail === 0;
+    if (this.#dropdown) {
+      this.#dropdown.classList.remove("hidden");
+      return;
+    }
+    const root = this.#dropdown = this.#getDropdownRoot(AnnotationEditorParamsType.HIGHLIGHT_COLOR);
+    this.#button.append(root);
+  }
+  hideDropdown() {
+    this.#dropdown?.classList.add("hidden");
+  }
+  _hideDropdownFromKeyboard() {
+    if (this.#isMainColorPicker || !this.#dropdown || this.#dropdown.classList.contains("hidden")) {
+      return;
+    }
+    this.hideDropdown();
+    this.#button.removeEventListener("keydown", this.#boundKeyDown);
+    this.#button.focus({
+      preventScroll: true,
+      focusVisible: this.#dropdownWasFromKeyboard
+    });
+  }
+  updateColor(color) {
+    if (this.#buttonSwatch) {
+      this.#buttonSwatch.style.backgroundColor = color;
+    }
+    if (!this.#dropdown) {
+      return;
+    }
+    const i = this.#uiManager.highlightColors.values();
+    for (const child of this.#dropdown.children) {
+      child.setAttribute("aria-selected", i.next().value === color);
+    }
+  }
+  destroy() {
+    this.#button?.remove();
+    this.#button = null;
+    this.#buttonSwatch = null;
+    this.#dropdown?.remove();
+    this.#dropdown = null;
+  }
+}
+
 ;// CONCATENATED MODULE: ./src/display/editor/outliner.js
 class Outliner {
   #box;
@@ -13587,10 +13766,11 @@ class Outliner {
 
 
 
+
 class HighlightEditor extends AnnotationEditor {
   #boxes;
   #clipPathId = null;
-  #color;
+  #colorPicker = null;
   #focusOutlines = null;
   #highlightDiv = null;
   #highlightOutlines = null;
@@ -13598,8 +13778,8 @@ class HighlightEditor extends AnnotationEditor {
   #lastPoint = null;
   #opacity;
   #outlineId = null;
-  static _defaultColor = "#FFF066";
-  static _defaultOpacity = 0.4;
+  static _defaultColor = null;
+  static _defaultOpacity = 1;
   static _l10nPromise;
   static _type = "highlight";
   static _editorType = AnnotationEditorType.HIGHLIGHT;
@@ -13608,7 +13788,8 @@ class HighlightEditor extends AnnotationEditor {
       ...params,
       name: "highlightEditor"
     });
-    this.#color = params.color || HighlightEditor._defaultColor;
+    HighlightEditor._defaultColor ||= this._uiManager.highlightColors?.values().next().value || "#fff066";
+    this.color = params.color || HighlightEditor._defaultColor;
     this.#opacity = params.opacity || HighlightEditor._defaultOpacity;
     this.#boxes = params.boxes || null;
     this._isDraggable = false;
@@ -13637,11 +13818,8 @@ class HighlightEditor extends AnnotationEditor {
   }
   static updateDefaultParams(type, value) {
     switch (type) {
-      case AnnotationEditorParamsType.HIGHLIGHT_COLOR:
+      case AnnotationEditorParamsType.HIGHLIGHT_DEFAULT_COLOR:
         HighlightEditor._defaultColor = value;
-        break;
-      case AnnotationEditorParamsType.HIGHLIGHT_OPACITY:
-        HighlightEditor._defaultOpacity = value / 100;
         break;
     }
   }
@@ -13653,27 +13831,26 @@ class HighlightEditor extends AnnotationEditor {
       case AnnotationEditorParamsType.HIGHLIGHT_COLOR:
         this.#updateColor(value);
         break;
-      case AnnotationEditorParamsType.HIGHLIGHT_OPACITY:
-        this.#updateOpacity(value);
-        break;
     }
   }
   static get defaultPropertiesToUpdate() {
-    return [[AnnotationEditorParamsType.HIGHLIGHT_COLOR, HighlightEditor._defaultColor], [AnnotationEditorParamsType.HIGHLIGHT_OPACITY, Math.round(HighlightEditor._defaultOpacity * 100)]];
+    return [[AnnotationEditorParamsType.HIGHLIGHT_DEFAULT_COLOR, HighlightEditor._defaultColor]];
   }
   get propertiesToUpdate() {
-    return [[AnnotationEditorParamsType.HIGHLIGHT_COLOR, this.#color || HighlightEditor._defaultColor], [AnnotationEditorParamsType.HIGHLIGHT_OPACITY, Math.round(100 * (this.#opacity ?? HighlightEditor._defaultOpacity))]];
+    return [[AnnotationEditorParamsType.HIGHLIGHT_COLOR, this.color || HighlightEditor._defaultColor]];
   }
   #updateColor(color) {
     const savedColor = this.color;
     this.addCommands({
       cmd: () => {
-        this.#color = color;
+        this.color = color;
         this.parent.drawLayer.changeColor(this.#id, color);
+        this.#colorPicker?.updateColor(color);
       },
       undo: () => {
-        this.#color = savedColor;
+        this.color = savedColor;
         this.parent.drawLayer.changeColor(this.#id, savedColor);
+        this.#colorPicker?.updateColor(savedColor);
       },
       mustExec: true,
       type: AnnotationEditorParamsType.HIGHLIGHT_COLOR,
@@ -13681,23 +13858,26 @@ class HighlightEditor extends AnnotationEditor {
       keepUndo: true
     });
   }
-  #updateOpacity(opacity) {
-    opacity /= 100;
-    const savedOpacity = this.#opacity;
-    this.addCommands({
-      cmd: () => {
-        this.#opacity = opacity;
-        this.parent.drawLayer.changeOpacity(this.#id, opacity);
-      },
-      undo: () => {
-        this.#opacity = savedOpacity;
-        this.parent.drawLayer.changeOpacity(this.#id, savedOpacity);
-      },
-      mustExec: true,
-      type: AnnotationEditorParamsType.HIGHLIGHT_OPACITY,
-      overwriteIfSameType: true,
-      keepUndo: true
-    });
+  async addEditToolbar() {
+    const toolbar = await super.addEditToolbar();
+    if (!toolbar) {
+      return null;
+    }
+    if (this._uiManager.highlightColors) {
+      this.#colorPicker = new ColorPicker({
+        editor: this
+      });
+      toolbar.addColorPicker(this.#colorPicker);
+    }
+    return toolbar;
+  }
+  disableEditing() {
+    super.disableEditing();
+    this.div.classList.toggle("disabled", true);
+  }
+  enableEditing() {
+    super.enableEditing();
+    this.div.classList.toggle("disabled", false);
   }
   fixAndSetPosition() {
     return super.fixAndSetPosition(0);
@@ -13727,12 +13907,17 @@ class HighlightEditor extends AnnotationEditor {
     }
   }
   setParent(parent) {
+    let mustBeSelected = false;
     if (this.parent && !parent) {
       this.#cleanDrawLayer();
     } else if (parent) {
       this.#addToDrawLayer(parent);
+      mustBeSelected = !this.parent && this.div?.classList.contains("selectedEditor");
     }
     super.setParent(parent);
+    if (mustBeSelected) {
+      this.select();
+    }
   }
   #cleanDrawLayer() {
     if (this.#id === null || !this.parent) {
@@ -13750,7 +13935,7 @@ class HighlightEditor extends AnnotationEditor {
     ({
       id: this.#id,
       clipPathId: this.#clipPathId
-    } = parent.drawLayer.highlight(this.#highlightOutlines, this.#color, this.#opacity));
+    } = parent.drawLayer.highlight(this.#highlightOutlines, this.color, this.#opacity));
     if (this.#highlightDiv) {
       this.#highlightDiv.style.clipPath = this.#clipPathId;
     }
@@ -13876,7 +14061,7 @@ class HighlightEditor extends AnnotationEditor {
       color,
       quadPoints
     } = data;
-    editor.#color = Util.makeHexColor(...color);
+    editor.color = Util.makeHexColor(...color);
     editor.#opacity = data.opacity;
     const [pageWidth, pageHeight] = editor.pageDimensions;
     editor.width = (rect[2] - rect[0]) / pageWidth;
@@ -13898,7 +14083,7 @@ class HighlightEditor extends AnnotationEditor {
       return null;
     }
     const rect = this.getRect(0, 0);
-    const color = AnnotationEditor._colorManager.convert(this.#color);
+    const color = AnnotationEditor._colorManager.convert(this.color);
     return {
       annotationType: AnnotationEditorType.HIGHLIGHT,
       color,
@@ -14354,7 +14539,7 @@ class InkEditor extends AnnotationEditor {
     }
     this.setInForeground();
     event.preventDefault();
-    if (event.pointerType !== "mouse" && !this.div.contains(document.activeElement)) {
+    if (!this.div.contains(document.activeElement)) {
       this.div.focus({
         preventScroll: true
       });
@@ -15167,6 +15352,11 @@ class AnnotationEditorLayer {
   updateMode(mode = this.#uiManager.getMode()) {
     this.#cleanup();
     switch (mode) {
+      case AnnotationEditorType.NONE:
+        this.disableTextSelection();
+        this.togglePointerEvents(false);
+        this.disableClick();
+        break;
       case AnnotationEditorType.INK:
         this.addInkEditorIfNeeded(false);
         this.disableTextSelection();
@@ -15844,6 +16034,9 @@ class DrawLayer {
     this.#mapping.get(id).classList.remove(className);
   }
   remove(id) {
+    if (this.#parent === null) {
+      return;
+    }
     this.#mapping.get(id).remove();
     this.#mapping.delete(id);
   }
@@ -15868,8 +16061,9 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = '4.0.283';
-const pdfjsBuild = '59cf2ee5a';
+
+const pdfjsVersion = '4.0.321';
+const pdfjsBuild = 'f54cfe065';
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;
@@ -15879,6 +16073,7 @@ var __webpack_exports__AnnotationEditorUIManager = __webpack_exports__.Annotatio
 var __webpack_exports__AnnotationLayer = __webpack_exports__.AnnotationLayer;
 var __webpack_exports__AnnotationMode = __webpack_exports__.AnnotationMode;
 var __webpack_exports__CMapCompressionType = __webpack_exports__.CMapCompressionType;
+var __webpack_exports__ColorPicker = __webpack_exports__.ColorPicker;
 var __webpack_exports__DOMSVGFactory = __webpack_exports__.DOMSVGFactory;
 var __webpack_exports__DrawLayer = __webpack_exports__.DrawLayer;
 var __webpack_exports__FeatureTest = __webpack_exports__.FeatureTest;
@@ -15916,4 +16111,4 @@ var __webpack_exports__setLayerDimensions = __webpack_exports__.setLayerDimensio
 var __webpack_exports__shadow = __webpack_exports__.shadow;
 var __webpack_exports__updateTextLayer = __webpack_exports__.updateTextLayer;
 var __webpack_exports__version = __webpack_exports__.version;
-export { __webpack_exports__AbortException as AbortException, __webpack_exports__AnnotationEditorLayer as AnnotationEditorLayer, __webpack_exports__AnnotationEditorParamsType as AnnotationEditorParamsType, __webpack_exports__AnnotationEditorType as AnnotationEditorType, __webpack_exports__AnnotationEditorUIManager as AnnotationEditorUIManager, __webpack_exports__AnnotationLayer as AnnotationLayer, __webpack_exports__AnnotationMode as AnnotationMode, __webpack_exports__CMapCompressionType as CMapCompressionType, __webpack_exports__DOMSVGFactory as DOMSVGFactory, __webpack_exports__DrawLayer as DrawLayer, __webpack_exports__FeatureTest as FeatureTest, __webpack_exports__GlobalWorkerOptions as GlobalWorkerOptions, __webpack_exports__ImageKind as ImageKind, __webpack_exports__InvalidPDFException as InvalidPDFException, __webpack_exports__MissingPDFException as MissingPDFException, __webpack_exports__OPS as OPS, __webpack_exports__Outliner as Outliner, __webpack_exports__PDFDataRangeTransport as PDFDataRangeTransport, __webpack_exports__PDFDateString as PDFDateString, __webpack_exports__PDFWorker as PDFWorker, __webpack_exports__PasswordResponses as PasswordResponses, __webpack_exports__PermissionFlag as PermissionFlag, __webpack_exports__PixelsPerInch as PixelsPerInch, __webpack_exports__PromiseCapability as PromiseCapability, __webpack_exports__RenderingCancelledException as RenderingCancelledException, __webpack_exports__UnexpectedResponseException as UnexpectedResponseException, __webpack_exports__Util as Util, __webpack_exports__VerbosityLevel as VerbosityLevel, __webpack_exports__XfaLayer as XfaLayer, __webpack_exports__build as build, __webpack_exports__createValidAbsoluteUrl as createValidAbsoluteUrl, __webpack_exports__fetchData as fetchData, __webpack_exports__getDocument as getDocument, __webpack_exports__getFilenameFromUrl as getFilenameFromUrl, __webpack_exports__getPdfFilenameFromUrl as getPdfFilenameFromUrl, __webpack_exports__getXfaPageViewport as getXfaPageViewport, __webpack_exports__isDataScheme as isDataScheme, __webpack_exports__isPdfFile as isPdfFile, __webpack_exports__noContextMenu as noContextMenu, __webpack_exports__normalizeUnicode as normalizeUnicode, __webpack_exports__renderTextLayer as renderTextLayer, __webpack_exports__setLayerDimensions as setLayerDimensions, __webpack_exports__shadow as shadow, __webpack_exports__updateTextLayer as updateTextLayer, __webpack_exports__version as version };
+export { __webpack_exports__AbortException as AbortException, __webpack_exports__AnnotationEditorLayer as AnnotationEditorLayer, __webpack_exports__AnnotationEditorParamsType as AnnotationEditorParamsType, __webpack_exports__AnnotationEditorType as AnnotationEditorType, __webpack_exports__AnnotationEditorUIManager as AnnotationEditorUIManager, __webpack_exports__AnnotationLayer as AnnotationLayer, __webpack_exports__AnnotationMode as AnnotationMode, __webpack_exports__CMapCompressionType as CMapCompressionType, __webpack_exports__ColorPicker as ColorPicker, __webpack_exports__DOMSVGFactory as DOMSVGFactory, __webpack_exports__DrawLayer as DrawLayer, __webpack_exports__FeatureTest as FeatureTest, __webpack_exports__GlobalWorkerOptions as GlobalWorkerOptions, __webpack_exports__ImageKind as ImageKind, __webpack_exports__InvalidPDFException as InvalidPDFException, __webpack_exports__MissingPDFException as MissingPDFException, __webpack_exports__OPS as OPS, __webpack_exports__Outliner as Outliner, __webpack_exports__PDFDataRangeTransport as PDFDataRangeTransport, __webpack_exports__PDFDateString as PDFDateString, __webpack_exports__PDFWorker as PDFWorker, __webpack_exports__PasswordResponses as PasswordResponses, __webpack_exports__PermissionFlag as PermissionFlag, __webpack_exports__PixelsPerInch as PixelsPerInch, __webpack_exports__PromiseCapability as PromiseCapability, __webpack_exports__RenderingCancelledException as RenderingCancelledException, __webpack_exports__UnexpectedResponseException as UnexpectedResponseException, __webpack_exports__Util as Util, __webpack_exports__VerbosityLevel as VerbosityLevel, __webpack_exports__XfaLayer as XfaLayer, __webpack_exports__build as build, __webpack_exports__createValidAbsoluteUrl as createValidAbsoluteUrl, __webpack_exports__fetchData as fetchData, __webpack_exports__getDocument as getDocument, __webpack_exports__getFilenameFromUrl as getFilenameFromUrl, __webpack_exports__getPdfFilenameFromUrl as getPdfFilenameFromUrl, __webpack_exports__getXfaPageViewport as getXfaPageViewport, __webpack_exports__isDataScheme as isDataScheme, __webpack_exports__isPdfFile as isPdfFile, __webpack_exports__noContextMenu as noContextMenu, __webpack_exports__normalizeUnicode as normalizeUnicode, __webpack_exports__renderTextLayer as renderTextLayer, __webpack_exports__setLayerDimensions as setLayerDimensions, __webpack_exports__shadow as shadow, __webpack_exports__updateTextLayer as updateTextLayer, __webpack_exports__version as version };
