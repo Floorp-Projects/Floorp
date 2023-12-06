@@ -3781,7 +3781,8 @@ class Document : public nsINode,
   void SetNotifyFetchSuccess(bool aShouldNotify);
 
   // When this is set, removing a form or a password field from DOM
-  // sends a Chrome-only event. This is now only used by the password manager.
+  // sends a Chrome-only event. This is now only used by the password manager
+  // and formautofill.
   void SetNotifyFormOrPasswordRemoved(bool aShouldNotify);
 
   // This function is used by HTMLFormElement and HTMLInputElement to determin

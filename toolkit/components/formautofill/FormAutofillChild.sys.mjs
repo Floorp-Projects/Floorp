@@ -123,6 +123,23 @@ export class FormAutofillChild extends JSWindowActorChild {
   }
 
   /**
+   * After a DOMDocFetchSuccess event, we register an event listener for the DOMFormRemoved event
+   *
+   * @param {Document} document The document we want to be notified by of a DOMFormRemoved event
+   */
+  registerDOMFormRemovedEventListener(document) {
+    document.setNotifyFormOrPasswordRemoved(true);
+
+    // Is removed after a DOMFormRemoved event (bug 1864855)
+    /* eslint-disable mozilla/balanced-listeners */
+    this.docShell.chromeEventHandler.addEventListener(
+      "DOMFormRemoved",
+      this,
+      true
+    );
+  }
+
+  /**
    * After a DOMDocFetchSuccess event we remove the DOMDocFetchSuccess event listener
    *
    * @param {Document} document The document we are notified by of a DOMDocFetchSuccess event
@@ -131,6 +148,19 @@ export class FormAutofillChild extends JSWindowActorChild {
     document.setNotifyFetchSuccess(false);
     this.docShell.chromeEventHandler.removeEventListener(
       "DOMDocFetchSuccess",
+      this
+    );
+  }
+
+  /**
+   * After a DOMFormRemoved event we remove the DOMFormRemoved event listener
+   *
+   * @param {Document} document The document we are notified by of a DOMFormRemoved event
+   */
+  unregisterDOMFormRemovedEventListener(document) {
+    document.setNotifyFormOrPasswordRemoved(false);
+    this.docShell.chromeEventHandler.removeEventListener(
+      "DOMFormRemoved",
       this
     );
   }
@@ -148,7 +178,6 @@ export class FormAutofillChild extends JSWindowActorChild {
     if (!evt.isTrusted) {
       return;
     }
-
     if (this.shouldIgnoreFormAutofillEvent(evt)) {
       return;
     }
@@ -164,6 +193,10 @@ export class FormAutofillChild extends JSWindowActorChild {
         if (lazy.FormAutofill.isAutofillEnabled) {
           this.onDOMFormBeforeSubmit(evt);
         }
+        break;
+      }
+      case "DOMFormRemoved": {
+        this.onDOMFormRemoved(evt);
         break;
       }
       case "DOMDocFetchSuccess": {
@@ -213,11 +246,23 @@ export class FormAutofillChild extends JSWindowActorChild {
   onDOMFormBeforeSubmit(evt) {
     let formElement = evt.target;
 
-    if (!lazy.FormAutofill.isAutofillEnabled) {
-      return;
-    }
-
     lazy.FormAutofillContent.formSubmitted(formElement);
+  }
+
+  /**
+   * Handle the DOMFormRemoved event.
+   *
+   * Infers a form submission when the form is removed
+   * after a successful fetch or XHR request.
+   *
+   * @param {Event} evt DOMFormRemoved
+   */
+  onDOMFormRemoved(evt) {
+    const document = evt.composedTarget.ownerDocument;
+
+    // TODO: Infer a form submission (will be implemented P3)
+
+    this.unregisterDOMFormRemovedEventListener(document);
   }
 
   /**
@@ -230,7 +275,8 @@ export class FormAutofillChild extends JSWindowActorChild {
    */
   onDOMDocFetchSuccess(evt) {
     const document = evt.target;
-    // TODO: Register mutation observer to watch for form removal (implemented in P2)
+
+    this.registerDOMFormRemovedEventListener(document);
 
     this.unregisterDOMDocFetchSuccessEventListener(document);
   }
