@@ -13,7 +13,7 @@ pub enum Error {
     Io(io::ErrorKind, Option<String>),
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Initiator {
     User,
     Library,
@@ -38,6 +38,10 @@ impl Error {
 
     pub(crate) fn library_go_away(reason: Reason) -> Self {
         Self::GoAway(Bytes::new(), reason, Initiator::Library)
+    }
+
+    pub(crate) fn library_go_away_data(reason: Reason, debug_data: impl Into<Bytes>) -> Self {
+        Self::GoAway(debug_data.into(), reason, Initiator::Library)
     }
 
     pub(crate) fn remote_reset(stream_id: StreamId, reason: Reason) -> Self {
@@ -70,7 +74,7 @@ impl fmt::Display for Error {
 
 impl From<io::ErrorKind> for Error {
     fn from(src: io::ErrorKind) -> Self {
-        Error::Io(src.into(), None)
+        Error::Io(src, None)
     }
 }
 

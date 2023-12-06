@@ -78,8 +78,14 @@
 //! [`server::handshake`]: server/fn.handshake.html
 //! [`client::handshake`]: client/fn.handshake.html
 
-#![doc(html_root_url = "https://docs.rs/h2/0.3.15")]
-#![deny(missing_debug_implementations, missing_docs)]
+#![doc(html_root_url = "https://docs.rs/h2/0.3.22")]
+#![deny(
+    missing_debug_implementations,
+    missing_docs,
+    clippy::missing_safety_doc,
+    clippy::undocumented_unsafe_blocks
+)]
+#![allow(clippy::type_complexity, clippy::manual_range_contains)]
 #![cfg_attr(test, deny(warnings))]
 
 macro_rules! proto_err {

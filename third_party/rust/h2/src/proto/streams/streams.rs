@@ -118,7 +118,7 @@ where
         }
     }
 
-    pub fn set_target_connection_window_size(&mut self, size: WindowSize) {
+    pub fn set_target_connection_window_size(&mut self, size: WindowSize) -> Result<(), Reason> {
         let mut me = self.inner.lock().unwrap();
         let me = &mut *me;
 
@@ -140,6 +140,12 @@ where
             // TODO: ideally, OpaqueStreamRefs::new would do this, but we're holding
             // the lock, so it can't.
             me.refs += 1;
+
+            // Pending-accepted remotely-reset streams are counted.
+            if stream.state.is_remote_reset() {
+                me.counts.dec_num_remote_reset_streams();
+            }
+
             StreamRef {
                 opaque: OpaqueStreamRef::new(self.inner.clone(), stream),
                 send_buffer: self.send_buffer.clone(),
@@ -210,7 +216,7 @@ where
         mut request: Request<()>,
         end_of_stream: bool,
         pending: Option<&OpaqueStreamRef>,
-    ) -> Result<StreamRef<B>, SendError> {
+    ) -> Result<(StreamRef<B>, bool), SendError> {
         use super::stream::ContentLength;
         use http::Method;
 
@@ -292,10 +298,14 @@ where
         // the lock, so it can't.
         me.refs += 1;
 
-        Ok(StreamRef {
-            opaque: OpaqueStreamRef::new(self.inner.clone(), &mut stream),
-            send_buffer: self.send_buffer.clone(),
-        })
+        let is_full = me.counts.next_send_stream_will_reach_capacity();
+        Ok((
+            StreamRef {
+                opaque: OpaqueStreamRef::new(self.inner.clone(), &mut stream),
+                send_buffer: self.send_buffer.clone(),
+            },
+            is_full,
+        ))
     }
 
     pub(crate) fn is_extended_connect_protocol_enabled(&self) -> bool {
@@ -312,29 +322,29 @@ impl<B> DynStreams<'_, B> {
     pub fn recv_headers(&mut self, frame: frame::Headers) -> Result<(), Error> {
         let mut me = self.inner.lock().unwrap();
 
-        me.recv_headers(self.peer, &self.send_buffer, frame)
+        me.recv_headers(self.peer, self.send_buffer, frame)
     }
 
     pub fn recv_data(&mut self, frame: frame::Data) -> Result<(), Error> {
         let mut me = self.inner.lock().unwrap();
-        me.recv_data(self.peer, &self.send_buffer, frame)
+        me.recv_data(self.peer, self.send_buffer, frame)
     }
 
     pub fn recv_reset(&mut self, frame: frame::Reset) -> Result<(), Error> {
         let mut me = self.inner.lock().unwrap();
 
-        me.recv_reset(&self.send_buffer, frame)
+        me.recv_reset(self.send_buffer, frame)
     }
 
     /// Notify all streams that a connection-level error happened.
     pub fn handle_error(&mut self, err: proto::Error) -> StreamId {
         let mut me = self.inner.lock().unwrap();
-        me.handle_error(&self.send_buffer, err)
+        me.handle_error(self.send_buffer, err)
     }
 
     pub fn recv_go_away(&mut self, frame: &frame::GoAway) -> Result<(), Error> {
         let mut me = self.inner.lock().unwrap();
-        me.recv_go_away(&self.send_buffer, frame)
+        me.recv_go_away(self.send_buffer, frame)
     }
 
     pub fn last_processed_id(&self) -> StreamId {
@@ -343,22 +353,22 @@ impl<B> DynStreams<'_, B> {
 
     pub fn recv_window_update(&mut self, frame: frame::WindowUpdate) -> Result<(), Error> {
         let mut me = self.inner.lock().unwrap();
-        me.recv_window_update(&self.send_buffer, frame)
+        me.recv_window_update(self.send_buffer, frame)
     }
 
     pub fn recv_push_promise(&mut self, frame: frame::PushPromise) -> Result<(), Error> {
         let mut me = self.inner.lock().unwrap();
-        me.recv_push_promise(&self.send_buffer, frame)
+        me.recv_push_promise(self.send_buffer, frame)
     }
 
     pub fn recv_eof(&mut self, clear_pending_accept: bool) -> Result<(), ()> {
         let mut me = self.inner.lock().map_err(|_| ())?;
-        me.recv_eof(&self.send_buffer, clear_pending_accept)
+        me.recv_eof(self.send_buffer, clear_pending_accept)
     }
 
     pub fn send_reset(&mut self, id: StreamId, reason: Reason) {
         let mut me = self.inner.lock().unwrap();
-        me.send_reset(&self.send_buffer, id, reason)
+        me.send_reset(self.send_buffer, id, reason)
     }
 
     pub fn send_go_away(&mut self, last_processed_id: StreamId) {
@@ -442,7 +452,7 @@ impl Inner {
 
         let stream = self.store.resolve(key);
 
-        if stream.state.is_local_reset() {
+        if stream.state.is_local_error() {
             // Locally reset streams must ignore frames "for some time".
             // This is because the remote may have sent trailers before
             // receiving the RST_STREAM frame.
@@ -601,7 +611,7 @@ impl Inner {
         let actions = &mut self.actions;
 
         self.counts.transition(stream, |counts, stream| {
-            actions.recv.recv_reset(frame, stream);
+            actions.recv.recv_reset(frame, stream, counts)?;
             actions.send.handle_error(send_buffer, stream, counts);
             assert!(stream.state.is_closed());
             Ok(())
@@ -720,12 +730,16 @@ impl Inner {
                 }
 
                 // The stream must be receive open
-                stream.state.ensure_recv_open()?;
+                if !stream.state.ensure_recv_open()? {
+                    proto_err!(conn: "recv_push_promise: initiating stream is not opened");
+                    return Err(Error::library_go_away(Reason::PROTOCOL_ERROR));
+                }
+
                 stream.key()
             }
             None => {
                 proto_err!(conn: "recv_push_promise: initiating stream is in an invalid state");
-                return Err(Error::library_go_away(Reason::PROTOCOL_ERROR).into());
+                return Err(Error::library_go_away(Reason::PROTOCOL_ERROR));
             }
         };
 
@@ -806,7 +820,13 @@ impl Inner {
         let send_buffer = &mut *send_buffer;
 
         if actions.conn_error.is_none() {
-            actions.conn_error = Some(io::Error::from(io::ErrorKind::BrokenPipe).into());
+            actions.conn_error = Some(
+                io::Error::new(
+                    io::ErrorKind::BrokenPipe,
+                    "connection closed because of a broken pipe",
+                )
+                .into(),
+            );
         }
 
         tracing::trace!("Streams::recv_eof");
@@ -1146,7 +1166,7 @@ impl<B> StreamRef<B> {
             let mut child_stream = me.store.resolve(child_key);
             child_stream.unlink();
             child_stream.remove();
-            return Err(err.into());
+            return Err(err);
         }
 
         me.refs += 1;
@@ -1229,10 +1249,7 @@ impl<B> StreamRef<B> {
             .map_err(From::from)
     }
 
-    pub fn clone_to_opaque(&self) -> OpaqueStreamRef
-    where
-        B: 'static,
-    {
+    pub fn clone_to_opaque(&self) -> OpaqueStreamRef {
         self.opaque.clone()
     }
 
@@ -1345,12 +1362,13 @@ impl OpaqueStreamRef {
             .release_capacity(capacity, &mut stream, &mut me.actions.task)
     }
 
+    /// Clear the receive queue and set the status to no longer receive data frames.
     pub(crate) fn clear_recv_buffer(&mut self) {
         let mut me = self.inner.lock().unwrap();
         let me = &mut *me;
 
         let mut stream = me.store.resolve(self.key);
-
+        stream.is_recv = false;
         me.actions.recv.clear_recv_buffer(&mut stream);
     }
 
@@ -1392,7 +1410,7 @@ impl Clone for OpaqueStreamRef {
 
         OpaqueStreamRef {
             inner: self.inner.clone(),
-            key: self.key.clone(),
+            key: self.key,
         }
     }
 }

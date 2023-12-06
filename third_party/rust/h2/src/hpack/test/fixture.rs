@@ -52,8 +52,8 @@ fn test_story(story: Value) {
 
                 Case {
                     seqno: case.get("seqno").unwrap().as_u64().unwrap(),
-                    wire: wire,
-                    expect: expect,
+                    wire,
+                    expect,
                     header_table_size: size,
                 }
             })
@@ -100,7 +100,7 @@ fn test_story(story: Value) {
             let mut input: Vec<_> = case
                 .expect
                 .iter()
-                .map(|&(ref name, ref value)| {
+                .map(|(name, value)| {
                     Header::new(name.clone().into(), value.clone().into())
                         .unwrap()
                         .into()
@@ -142,10 +142,10 @@ fn key_str(e: &Header) -> &str {
 fn value_str(e: &Header) -> &str {
     match *e {
         Header::Field { ref value, .. } => value.to_str().unwrap(),
-        Header::Authority(ref v) => &**v,
+        Header::Authority(ref v) => v,
         Header::Method(ref m) => m.as_str(),
-        Header::Scheme(ref v) => &**v,
-        Header::Path(ref v) => &**v,
+        Header::Scheme(ref v) => v,
+        Header::Path(ref v) => v,
         Header::Protocol(ref v) => v.as_str(),
         Header::Status(ref v) => v.as_str(),
     }

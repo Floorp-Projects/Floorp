@@ -80,7 +80,7 @@ impl FuzzHpack {
                     let high = rng.gen_range(128..MAX_CHUNK * 2);
                     let low = rng.gen_range(0..high);
 
-                    frame.resizes.extend(&[low, high]);
+                    frame.resizes.extend([low, high]);
                 }
                 1..=3 => {
                     frame.resizes.push(rng.gen_range(128..MAX_CHUNK * 2));

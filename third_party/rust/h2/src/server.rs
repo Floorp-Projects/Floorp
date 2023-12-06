@@ -240,6 +240,10 @@ pub struct Builder {
     /// Maximum number of locally reset streams to keep at a time.
     reset_stream_max: usize,
 
+    /// Maximum number of remotely reset streams to allow in the pending
+    /// accept queue.
+    pending_accept_reset_stream_max: usize,
+
     /// Initial `Settings` frame to send as part of the handshake.
     settings: Settings,
 
@@ -364,7 +368,7 @@ where
 impl<T, B> Connection<T, B>
 where
     T: AsyncRead + AsyncWrite + Unpin,
-    B: Buf + 'static,
+    B: Buf,
 {
     fn handshake2(io: T, builder: Builder) -> Handshake<T, B> {
         let span = tracing::trace_span!("server_handshake");
@@ -413,7 +417,7 @@ where
     ) -> Poll<Option<Result<(Request<RecvStream>, SendResponse<B>), crate::Error>>> {
         // Always try to advance the internal state. Getting Pending also is
         // needed to allow this function to return Pending.
-        if let Poll::Ready(_) = self.poll_closed(cx)? {
+        if self.poll_closed(cx)?.is_ready() {
             // If the socket is closed, don't return anything
             // TODO: drop any pending streams
             return Poll::Ready(None);
@@ -576,13 +580,20 @@ where
     pub fn max_concurrent_recv_streams(&self) -> usize {
         self.connection.max_recv_streams()
     }
+
+    // Could disappear at anytime.
+    #[doc(hidden)]
+    #[cfg(feature = "unstable")]
+    pub fn num_wired_streams(&self) -> usize {
+        self.connection.num_wired_streams()
+    }
 }
 
 #[cfg(feature = "stream")]
 impl<T, B> futures_core::Stream for Connection<T, B>
 where
     T: AsyncRead + AsyncWrite + Unpin,
-    B: Buf + 'static,
+    B: Buf,
 {
     type Item = Result<(Request<RecvStream>, SendResponse<B>), crate::Error>;
 
@@ -635,6 +646,7 @@ impl Builder {
         Builder {
             reset_stream_duration: Duration::from_secs(proto::DEFAULT_RESET_STREAM_SECS),
             reset_stream_max: proto::DEFAULT_RESET_STREAM_MAX,
+            pending_accept_reset_stream_max: proto::DEFAULT_REMOTE_RESET_STREAM_MAX,
             settings: Settings::default(),
             initial_target_connection_window_size: None,
             max_send_buffer_size: proto::DEFAULT_MAX_SEND_BUFFER_SIZE,
@@ -875,6 +887,49 @@ impl Builder {
         self
     }
 
+    /// Sets the maximum number of pending-accept remotely-reset streams.
+    ///
+    /// Streams that have been received by the peer, but not accepted by the
+    /// user, can also receive a RST_STREAM. This is a legitimate pattern: one
+    /// could send a request and then shortly after, realize it is not needed,
+    /// sending a CANCEL.
+    ///
+    /// However, since those streams are now "closed", they don't count towards
+    /// the max concurrent streams. So, they will sit in the accept queue,
+    /// using memory.
+    ///
+    /// When the number of remotely-reset streams sitting in the pending-accept
+    /// queue reaches this maximum value, a connection error with the code of
+    /// `ENHANCE_YOUR_CALM` will be sent to the peer, and returned by the
+    /// `Future`.
+    ///
+    /// The default value is currently 20, but could change.
+    ///
+    /// # Examples
+    ///
+    ///
+    /// ```
+    /// # use tokio::io::{AsyncRead, AsyncWrite};
+    /// # use h2::server::*;
+    /// #
+    /// # fn doc<T: AsyncRead + AsyncWrite + Unpin>(my_io: T)
+    /// # -> Handshake<T>
+    /// # {
+    /// // `server_fut` is a future representing the completion of the HTTP/2
+    /// // handshake.
+    /// let server_fut = Builder::new()
+    ///     .max_pending_accept_reset_streams(100)
+    ///     .handshake(my_io);
+    /// # server_fut
+    /// # }
+    /// #
+    /// # pub fn main() {}
+    /// ```
+    pub fn max_pending_accept_reset_streams(&mut self, max: usize) -> &mut Self {
+        self.pending_accept_reset_stream_max = max;
+        self
+    }
+
     /// Sets the maximum send buffer size per stream.
     ///
     /// Once a stream has buffered up to (or over) the maximum, the stream's
@@ -882,7 +937,7 @@ impl Builder {
     /// stream have been written to the connection, the send buffer capacity
     /// will be freed up again.
     ///
-    /// The default is currently ~400MB, but may change.
+    /// The default is currently ~400KB, but may change.
     ///
     /// # Panics
     ///
@@ -1007,7 +1062,7 @@ impl Builder {
     pub fn handshake<T, B>(&self, io: T) -> Handshake<T, B>
     where
         T: AsyncRead + AsyncWrite + Unpin,
-        B: Buf + 'static,
+        B: Buf,
     {
         Connection::handshake2(io, self.clone())
     }
@@ -1262,7 +1317,7 @@ where
 impl<T, B: Buf> Future for Handshake<T, B>
 where
     T: AsyncRead + AsyncWrite + Unpin,
-    B: Buf + 'static,
+    B: Buf,
 {
     type Output = Result<Connection<T, B>, crate::Error>;
 
@@ -1305,6 +1360,7 @@ where
                             max_send_buffer_size: self.builder.max_send_buffer_size,
                             reset_stream_duration: self.builder.reset_stream_duration,
                             reset_stream_max: self.builder.reset_stream_max,
+                            remote_reset_stream_max: self.builder.pending_accept_reset_stream_max,
                             settings: self.builder.settings.clone(),
                         },
                     );
@@ -1451,8 +1507,13 @@ impl proto::Peer for Peer {
         }
 
         let has_protocol = pseudo.protocol.is_some();
-        if !is_connect && has_protocol {
-            malformed!("malformed headers: :protocol on non-CONNECT request");
+        if has_protocol {
+            if is_connect {
+                // Assert that we have the right type.
+                b = b.extension::<crate::ext::Protocol>(pseudo.protocol.unwrap());
+            } else {
+                malformed!("malformed headers: :protocol on non-CONNECT request");
+            }
         }
 
         if pseudo.status.is_some() {
@@ -1478,7 +1539,7 @@ impl proto::Peer for Peer {
         // A :scheme is required, except CONNECT.
         if let Some(scheme) = pseudo.scheme {
             if is_connect && !has_protocol {
-                malformed!(":scheme in CONNECT");
+                malformed!("malformed headers: :scheme in CONNECT");
             }
             let maybe_scheme = scheme.parse();
             let scheme = maybe_scheme.or_else(|why| {
@@ -1501,7 +1562,7 @@ impl proto::Peer for Peer {
 
         if let Some(path) = pseudo.path {
             if is_connect && !has_protocol {
-                malformed!(":path in CONNECT");
+                malformed!("malformed headers: :path in CONNECT");
             }
 
             // This cannot be empty

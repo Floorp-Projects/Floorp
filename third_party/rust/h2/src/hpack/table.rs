@@ -319,7 +319,7 @@ impl Table {
             let mut probe = probe + 1;
 
             probe_loop!(probe < self.indices.len(), {
-                let pos = &mut self.indices[probe as usize];
+                let pos = &mut self.indices[probe];
 
                 prev = match mem::replace(pos, Some(prev)) {
                     Some(p) => p,
@@ -404,7 +404,7 @@ impl Table {
 
         // Find the associated position
         probe_loop!(probe < self.indices.len(), {
-            debug_assert!(!self.indices[probe].is_none());
+            debug_assert!(self.indices[probe].is_some());
 
             let mut pos = self.indices[probe].unwrap();
 
@@ -656,12 +656,12 @@ fn to_raw_capacity(n: usize) -> usize {
 
 #[inline]
 fn desired_pos(mask: usize, hash: HashValue) -> usize {
-    (hash.0 & mask) as usize
+    hash.0 & mask
 }
 
 #[inline]
 fn probe_distance(mask: usize, hash: HashValue, current: usize) -> usize {
-    current.wrapping_sub(desired_pos(mask, hash)) & mask as usize
+    current.wrapping_sub(desired_pos(mask, hash)) & mask
 }
 
 fn hash_header(header: &Header) -> HashValue {

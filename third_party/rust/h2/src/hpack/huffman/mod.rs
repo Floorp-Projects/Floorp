@@ -112,7 +112,7 @@ mod test {
     #[test]
     fn decode_single_byte() {
         assert_eq!("o", decode(&[0b00111111]).unwrap());
-        assert_eq!("0", decode(&[0x0 + 7]).unwrap());
+        assert_eq!("0", decode(&[7]).unwrap());
         assert_eq!("A", decode(&[(0x21 << 2) + 3]).unwrap());
     }
 
@@ -138,7 +138,7 @@ mod test {
 
         dst.clear();
         encode(b"0", &mut dst);
-        assert_eq!(&dst[..], &[0x0 + 7]);
+        assert_eq!(&dst[..], &[7]);
 
         dst.clear();
         encode(b"A", &mut dst);
@@ -147,7 +147,7 @@ mod test {
 
     #[test]
     fn encode_decode_str() {
-        const DATA: &'static [&'static str] = &[
+        const DATA: &[&str] = &[
             "hello world",
             ":method",
             ":scheme",
@@ -184,8 +184,7 @@ mod test {
 
     #[test]
     fn encode_decode_u8() {
-        const DATA: &'static [&'static [u8]] =
-            &[b"\0", b"\0\0\0", b"\0\x01\x02\x03\x04\x05", b"\xFF\xF8"];
+        const DATA: &[&[u8]] = &[b"\0", b"\0\0\0", b"\0\x01\x02\x03\x04\x05", b"\xFF\xF8"];
 
         for s in DATA {
             let mut dst = BytesMut::with_capacity(s.len());

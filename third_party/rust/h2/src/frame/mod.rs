@@ -69,7 +69,7 @@ pub use crate::hpack::BytesStr;
 
 pub use self::settings::{
     DEFAULT_INITIAL_WINDOW_SIZE, DEFAULT_MAX_FRAME_SIZE, DEFAULT_SETTINGS_HEADER_TABLE_SIZE,
-    MAX_INITIAL_WINDOW_SIZE, MAX_MAX_FRAME_SIZE,
+    MAX_MAX_FRAME_SIZE,
 };
 
 pub type FrameSize = u32;
