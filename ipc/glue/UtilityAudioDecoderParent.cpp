@@ -69,6 +69,11 @@ UtilityAudioDecoderParent::~UtilityAudioDecoderParent() {
     gfx::DeviceManagerDx::Shutdown();
   }
 #endif
+#ifdef MOZ_WMF_CDM
+  if (mKind == SandboxingKind::MF_MEDIA_ENGINE_CDM) {
+    MFCDMParent::Shutdown();
+  }
+#endif
 }
 
 /* static */
