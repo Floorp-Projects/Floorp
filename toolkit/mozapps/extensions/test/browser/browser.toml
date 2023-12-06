@@ -68,7 +68,6 @@ fail-if = ["a11y_checks"] # Bug 1854646 clicked h1.header-name may not be focusa
 ["browser_colorwaybuiltins_migration.js"]
 skip-if = [
   "app-name != 'firefox'",
-  "a11y_checks", # Bugs 1854646 and 1857056 for causing crashes
 ]
 
 ["browser_dragdrop.js"]
