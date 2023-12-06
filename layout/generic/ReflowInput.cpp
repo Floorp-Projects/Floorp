@@ -2076,6 +2076,11 @@ LogicalSize ReflowInput::ComputeContainingBlockRectangle(
 
   if (aContainingBlockRI->mFlags.mTreatBSizeAsIndefinite) {
     cbSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
+  } else if (aContainingBlockRI->mPercentageBasisInBlockAxis) {
+    MOZ_ASSERT(cbSize.BSize(wm) == NS_UNCONSTRAINEDSIZE,
+               "Why provide a percentage basis when the containing block's "
+               "block-size is definite?");
+    cbSize.BSize(wm) = *aContainingBlockRI->mPercentageBasisInBlockAxis;
   }
 
   if (((mFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) &&

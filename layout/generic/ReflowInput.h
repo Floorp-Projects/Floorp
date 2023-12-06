@@ -354,6 +354,9 @@ struct ReflowInput : public SizeComputationInput {
   void SetComputedMaxBSize(nscoord aMaxBSize) {
     mComputedMaxSize.BSize(mWritingMode) = aMaxBSize;
   }
+  void SetPercentageBasisInBlockAxis(nscoord aBSize) {
+    mPercentageBasisInBlockAxis = Some(aBSize);
+  }
 
   mozilla::LogicalSize AvailableSize() const { return mAvailableSize; }
   mozilla::LogicalSize ComputedSize() const { return mComputedSize; }
@@ -1046,6 +1049,23 @@ struct ReflowInput : public SizeComputationInput {
   // Computed value for 'max-inline-size'/'max-block-size'.
   mozilla::LogicalSize mComputedMaxSize{mWritingMode, NS_UNCONSTRAINEDSIZE,
                                         NS_UNCONSTRAINEDSIZE};
+
+  // Percentage basis in the block axis for the purpose of percentage resolution
+  // on children.
+  //
+  // This will be ignored when mTreatBSizeAsIndefinite flag is true, or when a
+  // customized containing block size is provided via ReflowInput's constructor
+  // or Init(). When this percentage basis exists, it will be used to replace
+  // the containing block's ComputedBSize() in
+  // ComputeContainingBlockRectangle().
+  //
+  // This is currently used in a special scenario where we treat certain
+  // sized-to-content flex items as having an 'auto' block-size for their final
+  // reflow to accomodate fragmentation-imposed block-size growth. This sort of
+  // flex item does nonetheless have a known block-size (from the flex layout
+  // algorithm) that it needs to use as a definite percentage-basis for its
+  // children during its final reflow; and we represent that here.
+  Maybe<nscoord> mPercentageBasisInBlockAxis;
 
   // Cache the used line-height property.
   mutable nscoord mLineHeight = NS_UNCONSTRAINEDSIZE;
