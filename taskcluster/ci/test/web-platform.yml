@@ -259,7 +259,7 @@ web-platform-tests-webgpu:
             android.*: []  # Out of scope
             linux1804.*: []  # We don't support anything less than Mesa Lavapipe 22.1.2, so this is _out_.
             .*-wayland/debug.*: []  # https://bugzilla.mozilla.org/show_bug.cgi?id=1864700
-            default: ['trunk']
+            default: ['mozilla-central']
     mozharness:
         chunked: true
         extra-options:
