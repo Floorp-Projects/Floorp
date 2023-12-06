@@ -70,6 +70,21 @@ webidl ContentFrameMessageManager;
 webidl EventTarget;
 webidl Document;
 
+/**
+ * nsIDocShell is an interface corresponding to the native nsDocShell object,
+ * which is a legacy in-process object roughly corresponding to a 'browsing
+ * context', as created for a browser tab or an iframe, for example.
+ *
+ * nsIDocShell has a 1:1 relationship with its paired dom::BrowsingContext and
+ * nsGlobalWindowOuter. It may be replaced during navigation.
+ *
+ * See also the comment documenting dom::BrowsingContext and the documentation
+ * at:
+ *
+ * https://html.spec.whatwg.org/multipage/document-sequences.html#browsing-context
+ * https://firefox-source-docs.mozilla.org/dom/navigation/embedding.html
+ * https://firefox-source-docs.mozilla.org/dom/navigation/nav_replace.html
+ */
 [scriptable, builtinclass, uuid(049234fe-da10-478b-bc5d-bc6f9a1ba63d)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
