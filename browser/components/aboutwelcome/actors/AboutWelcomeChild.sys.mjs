@@ -839,6 +839,14 @@ export class AboutWelcomeShoppingChild extends AboutWelcomeChild {
       switch (
         productUrl // Insert the productUrl into content
       ) {
+        case "www.amazon.fr":
+        case "www.amazon.de":
+          optInScreen.content.subtitle.string_id =
+            "shopping-onboarding-single-subtitle";
+          optInScreen.content.subtitle.args = {
+            currentSite: "Amazon",
+          };
+          break;
         case "www.amazon.com":
           optInScreen.content.subtitle.args = {
             currentSite: "Amazon",
