@@ -4905,6 +4905,11 @@ nsFlexContainerFrame::CreateOrClearFlexContainerInfo() {
   return info;
 }
 
+nscoord nsFlexContainerFrame::FlexItemConsumedBSize(const FlexItem& aItem) {
+  nsSplittableFrame* f = do_QueryFrame(aItem.Frame());
+  return f ? ConsumedBSize(f) : 0;
+}
+
 void nsFlexContainerFrame::CreateFlexLineAndFlexItemInfo(
     ComputedFlexContainerInfo& aContainerInfo,
     const nsTArray<FlexLine>& aLines) {

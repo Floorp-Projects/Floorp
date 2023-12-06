@@ -19,6 +19,8 @@
 class nsSplittableFrame : public nsIFrame {
  public:
   NS_DECL_ABSTRACT_FRAME(nsSplittableFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsSplittableFrame)
+  NS_DECL_QUERYFRAME
 
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;
@@ -78,9 +80,7 @@ class nsSplittableFrame : public nsIFrame {
  protected:
   nsSplittableFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                     ClassID aID)
-      : nsIFrame(aStyle, aPresContext, aID),
-        mPrevContinuation(nullptr),
-        mNextContinuation(nullptr) {}
+      : nsIFrame(aStyle, aPresContext, aID) {}
 
   /**
    * Return the sum of the block-axis content size of our previous
@@ -94,6 +94,20 @@ class nsSplittableFrame : public nsIFrame {
    * multiple times in the same reflow is wasteful, but not an error.
    */
   nscoord CalcAndCacheConsumedBSize();
+
+  /**
+   * This static wrapper over CalcAndCacheConsumedBSize() is intended for a
+   * specific scenario where an nsSplittableFrame's subclass needs to access
+   * another subclass' consumed block-size. For ordinary use cases,
+   * CalcAndCacheConsumedBSize() should be called.
+   *
+   * This has the same requirements as CalcAndCacheConsumedBSize(). In
+   * particular, classes that call this are _required_ to call this at least
+   * once for each reflow.
+   */
+  static nscoord ConsumedBSize(nsSplittableFrame* aFrame) {
+    return aFrame->CalcAndCacheConsumedBSize();
+  }
 
   /**
    * Retrieve the effective computed block size of this frame, which is the
@@ -126,8 +140,8 @@ class nsSplittableFrame : public nsIFrame {
     return GetBlockLevelLogicalSkipSides(false);
   };
 
-  nsIFrame* mPrevContinuation;
-  nsIFrame* mNextContinuation;
+  nsIFrame* mPrevContinuation = nullptr;
+  nsIFrame* mNextContinuation = nullptr;
 };
 
 #endif /* nsSplittableFrame_h___ */

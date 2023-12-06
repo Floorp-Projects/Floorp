@@ -16,6 +16,10 @@
 
 using namespace mozilla;
 
+NS_QUERYFRAME_HEAD(nsSplittableFrame)
+  NS_QUERYFRAME_ENTRY(nsSplittableFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsIFrame)
+
 void nsSplittableFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                              nsIFrame* aPrevInFlow) {
   if (aPrevInFlow) {
