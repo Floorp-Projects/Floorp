@@ -51,6 +51,10 @@ have their hook functions called when this instance uses:
 * Debugger.Object.call
 When set to true, other Debugger instances are not notified.
 
+### `inspectNativeCallArguments`
+A boolean value, to be set to true in order to pass the two last
+arguments of `onNativeCall` hook.
+
 ### `uncaughtExceptionHook`
 Either `null` or a function that SpiderMonkey calls when a call to a
 debug event handler, breakpoint handler, or similar
@@ -167,6 +171,14 @@ has one of the following values:
 `get`: The native is the getter for a property which is being accessed.
 `set`: The native is the setter for a property being written to.
 `call`: Any call not fitting into the above categories.
+
+<i>object</i> is a [`Debugger.Object`][object] reference to the object
+ onto which the native method is called, if any.
+<i>args</i> is a [`Debugger.Object`][object] for the array of arguments
+being passed to the native function.
+
+The two last arguments, <i>object</i> and <i>args</i> are only passed
+if `Debugger.inspectNativeCallArguments` is set to true.
 
 This method should return a [resumption value][rv] specifying how the debuggee's
 execution should proceed. If a return value is overridden for a constructor
@@ -555,3 +567,4 @@ The functions described below are not called with a `this` value.
 [vf]: Debugger.Frame.md#visible-frames
 [tracking-allocs]: Debugger.Memory.md#trackingallocationsites
 [frame]: Debugger.Frame.md
+[object]: Debugger.Object.md

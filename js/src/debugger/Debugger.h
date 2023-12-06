@@ -644,6 +644,11 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   // Object.executeInGlobalWithBindings or Object.call.
   bool exclusiveDebuggerOnEval;
 
+  // When this flag is true, the onNativeCall hook is called with additional
+  // arguments which are the native function call arguments and well as a
+  // reference to the object on which the function call (if any).
+  bool inspectNativeCallArguments;
+
   // Whether to enable code coverage on the Debuggee.
   bool collectCoverageInfo;
 

@@ -534,6 +534,7 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
       allowUnobservedAsmJS(false),
       allowUnobservedWasm(false),
       exclusiveDebuggerOnEval(false),
+      inspectNativeCallArguments(false),
       collectCoverageInfo(false),
       observedGCs(cx->zone()),
       allocationsLog(cx),
@@ -2338,8 +2339,48 @@ bool Debugger::fireNativeCall(JSContext* cx, const CallArgs& args,
 
   RootedValue reasonval(cx, StringValue(reasonAtom));
 
+  bool ok = false;
   RootedValue rv(cx);
-  bool ok = js::Call(cx, fval, object, calleeval, reasonval, &rv);
+  if (inspectNativeCallArguments) {
+    RootedValue thisVal(cx, args.thisv());
+    // Ignore anything that may make wrapDebuggeeValue to throw
+    if (thisVal.isMagic() && thisVal.whyMagic() != JS_MISSING_ARGUMENTS &&
+        thisVal.whyMagic() != JS_UNINITIALIZED_LEXICAL) {
+      thisVal.setMagic(JS_OPTIMIZED_OUT);
+    }
+    if (!wrapDebuggeeValue(cx, &thisVal)) {
+      return false;
+    }
+
+    unsigned arrsize = args.length();
+    Rooted<ArrayObject*> arrobj(cx, NewDenseFullyAllocatedArray(cx, arrsize));
+    if (!arrobj) {
+      return false;
+    }
+    arrobj->ensureDenseInitializedLength(0, arrsize);
+    for (unsigned i = 0; i < arrsize; i++) {
+      RootedValue v(cx, args.get(i));
+      if (!wrapDebuggeeValue(cx, &v)) {
+        return false;
+      }
+      arrobj->setDenseElement(i, v);
+    }
+    RootedValue arrayval(cx, ObjectValue(*arrobj));
+    if (!wrapDebuggeeValue(cx, &arrayval)) {
+      return false;
+    }
+
+    FixedInvokeArgs<4> iargs(cx);
+    iargs[0].set(calleeval);
+    iargs[1].set(reasonval);
+    iargs[2].set(thisVal);
+    iargs[3].set(arrayval);
+
+    RootedValue thisv(cx, ObjectOrNullValue(object));
+    ok = js::Call(cx, fval, thisv, iargs, &rv);
+  } else {
+    ok = js::Call(cx, fval, object, calleeval, reasonval, &rv);
+  }
 
   return processHandlerResult(cx, ok, rv, NullFramePtr(), nullptr, resumeMode,
                               vp);
@@ -4143,6 +4184,8 @@ struct MOZ_STACK_CLASS Debugger::CallData {
   bool setAllowUnobservedWasm();
   bool getExclusiveDebuggerOnEval();
   bool setExclusiveDebuggerOnEval();
+  bool getInspectNativeCallArguments();
+  bool setInspectNativeCallArguments();
   bool getCollectCoverageInfo();
   bool setCollectCoverageInfo();
   bool getMemory();
@@ -4443,6 +4486,21 @@ bool Debugger::CallData::setExclusiveDebuggerOnEval() {
     return false;
   }
   dbg->exclusiveDebuggerOnEval = ToBoolean(args[0]);
+
+  args.rval().setUndefined();
+  return true;
+}
+
+bool Debugger::CallData::getInspectNativeCallArguments() {
+  args.rval().setBoolean(dbg->inspectNativeCallArguments);
+  return true;
+}
+
+bool Debugger::CallData::setInspectNativeCallArguments() {
+  if (!args.requireAtLeast(cx, "Debugger.set inspectNativeCallArguments", 1)) {
+    return false;
+  }
+  dbg->inspectNativeCallArguments = ToBoolean(args[0]);
 
   args.rval().setUndefined();
   return true;
@@ -6454,6 +6512,8 @@ const JSPropertySpec Debugger::properties[] = {
                   setCollectCoverageInfo),
     JS_DEBUG_PSGS("exclusiveDebuggerOnEval", getExclusiveDebuggerOnEval,
                   setExclusiveDebuggerOnEval),
+    JS_DEBUG_PSGS("inspectNativeCallArguments", getInspectNativeCallArguments,
+                  setInspectNativeCallArguments),
     JS_DEBUG_PSG("memory", getMemory),
     JS_STRING_SYM_PS(toStringTag, "Debugger", JSPROP_READONLY),
     JS_PS_END};
