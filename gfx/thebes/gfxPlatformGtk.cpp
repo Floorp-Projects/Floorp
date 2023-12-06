@@ -256,6 +256,11 @@ bool gfxPlatformGtk::InitVAAPIConfig(bool aForceEnabledByUser) {
                          "FEATURE_FAILURE_REQUIRES_EGL"_ns);
   }
 
+  if (!gfxVars::WebglUseHardware()) {
+    feature.Disable(FeatureStatus::Blocklisted,
+                    "DMABuf disabled with software rendering", failureId);
+  }
+
   // Configure zero-copy playback feature.
   if (feature.IsEnabled()) {
     FeatureState& featureZeroCopy =

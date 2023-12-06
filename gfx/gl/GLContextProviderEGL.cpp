@@ -1139,6 +1139,28 @@ RefPtr<GLContextEGL> GLContextEGL::CreateWithoutSurface(
     const std::shared_ptr<EglDisplay> egl, const GLContextCreateDesc& desc,
     nsACString* const out_failureId) {
   const auto WithUseGles = [&](const bool useGles) -> RefPtr<GLContextEGL> {
+#ifdef MOZ_WIDGET_GTK
+    // First try creating a context with no config and no surface, this is what
+    // we really want, and seems to be the only way to make selecting software
+    // Mesa init properly when it's not the first device.
+    if (egl->IsExtensionSupported(EGLExtension::KHR_no_config_context) &&
+        egl->IsExtensionSupported(EGLExtension::KHR_surfaceless_context)) {
+      // These extensions have been supported by mesa and nvidia drivers
+      // since 2014 or earlier, this is the preferred code path
+      auto fullDesc = GLContextDesc{desc};
+      fullDesc.isOffscreen = true;
+      RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(
+          egl, fullDesc, EGL_NO_CONFIG, EGL_NO_SURFACE, useGles, EGL_NO_CONFIG,
+          out_failureId);
+      if (gl) {
+        return gl;
+      }
+      NS_WARNING(
+          "Failed to create GLContext with no config and no surface, will try "
+          "ChooseConfig");
+    }
+#endif
+
     const EGLConfig surfaceConfig = ChooseConfig(*egl, desc, useGles);
     if (surfaceConfig == EGL_NO_CONFIG) {
       *out_failureId = "FEATURE_FAILURE_EGL_NO_CONFIG"_ns;
