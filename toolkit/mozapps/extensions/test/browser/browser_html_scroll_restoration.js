@@ -159,7 +159,11 @@ add_task(async function test_scroll_restoration() {
   // Switch from extension list to details view.
 
   let loaded = waitForViewLoad(win);
-  getAddonCard(win, EXT_ID_EXTENSION).click();
+  const addonCard = getAddonCard(win, EXT_ID_EXTENSION);
+  // Ensure that we send a click on the control that is accessible (while a
+  // mouse user could also activate a card by clicking on the entire container):
+  const addonCardLink = addonCard.querySelector(".addon-name-link");
+  addonCardLink.click();
   await loaded;
 
   checkScrollOffset(win, { top: 0, left: 0 }, "initial details view");
