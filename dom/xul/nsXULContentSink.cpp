@@ -170,7 +170,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(XULContentSinkImpl)
 
 NS_IMETHODIMP
 XULContentSinkImpl::DidBuildModel(bool aTerminated) {
-  nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
+  nsCOMPtr<Document> doc(mDocument);
   if (doc) {
     mPrototype->NotifyLoadDone();
     mDocument = nullptr;
@@ -200,16 +200,13 @@ XULContentSinkImpl::SetParser(nsParserBase* aParser) {
 
 void XULContentSinkImpl::SetDocumentCharset(
     NotNull<const Encoding*> aEncoding) {
-  nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
+  nsCOMPtr<Document> doc(mDocument);
   if (doc) {
     doc->SetDocumentCharacterSet(aEncoding);
   }
 }
 
-nsISupports* XULContentSinkImpl::GetTarget() {
-  nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
-  return ToSupports(doc);
-}
+nsISupports* XULContentSinkImpl::GetTarget() { return ToSupports(mDocument); }
 
 //----------------------------------------------------------------------
 
@@ -218,7 +215,7 @@ nsresult XULContentSinkImpl::Init(Document* aDocument,
   MOZ_ASSERT(aDocument != nullptr, "null ptr");
   if (!aDocument) return NS_ERROR_NULL_POINTER;
 
-  mDocument = do_GetWeakReference(aDocument);
+  mDocument = aDocument;
   mPrototype = aPrototype;
 
   mDocumentURL = mPrototype->GetURI();
@@ -412,7 +409,7 @@ XULContentSinkImpl::HandleEndElement(const char16_t* aName) {
 
       // If given a src= attribute, we must ignore script tag content.
       if (!script->mSrcURI && !script->HasStencil()) {
-        nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
+        nsCOMPtr<Document> doc(mDocument);
 
         script->mOutOfLine = false;
         if (doc) {
@@ -548,7 +545,7 @@ XULContentSinkImpl::ReportError(const char16_t* aErrorText,
 
   // return leaving the document empty if we're asked to not add a <parsererror>
   // root node
-  nsCOMPtr<Document> idoc = do_QueryReferent(mDocument);
+  nsCOMPtr<Document> idoc(mDocument);
   if (idoc && idoc->SuppressParserErrorElement()) {
     return NS_OK;
   };
@@ -725,7 +722,7 @@ nsresult XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
     return NS_OK;
   }
 
-  nsCOMPtr<Document> doc(do_QueryReferent(mDocument));
+  nsCOMPtr<Document> doc(mDocument);
   nsCOMPtr<nsIScriptGlobalObject> globalObject;
   if (doc) globalObject = do_QueryInterface(doc->GetWindow());
   RefPtr<nsXULPrototypeScript> script = new nsXULPrototypeScript(aLineNumber);
@@ -741,14 +738,10 @@ nsresult XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
     if (NS_SUCCEEDED(rv)) {
       if (!mSecMan)
         mSecMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-      if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<Document> doc = do_QueryReferent(mDocument, &rv);
-
-        if (NS_SUCCEEDED(rv)) {
-          rv = mSecMan->CheckLoadURIWithPrincipal(
-              doc->NodePrincipal(), script->mSrcURI,
-              nsIScriptSecurityManager::ALLOW_CHROME, doc->InnerWindowID());
-        }
+      if (NS_SUCCEEDED(rv) && doc) {
+        rv = mSecMan->CheckLoadURIWithPrincipal(
+            doc->NodePrincipal(), script->mSrcURI,
+            nsIScriptSecurityManager::ALLOW_CHROME, doc->InnerWindowID());
       }
     }
 

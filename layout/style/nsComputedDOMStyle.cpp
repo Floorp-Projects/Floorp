@@ -335,7 +335,7 @@ nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
   MOZ_ASSERT(aDocument);
   // TODO(emilio, bug 548397, https://github.com/w3c/csswg-drafts/issues/2403):
   // Should use aElement->OwnerDoc() instead.
-  mDocumentWeak = do_GetWeakReference(aDocument);
+  mDocumentWeak = aDocument;
   mElement = aElement;
   SetEnabledCallbacks(nsIMutationObserver::kParentChainChanged);
 }
@@ -992,13 +992,7 @@ bool nsComputedDOMStyle::NeedsToFlushLayout(nsCSSPropertyID aPropID) const {
 
 void nsComputedDOMStyle::Flush(Document& aDocument, FlushType aFlushType) {
   MOZ_ASSERT(mElement->IsInComposedDoc());
-
-#ifdef DEBUG
-  {
-    nsCOMPtr<Document> document = do_QueryReferent(mDocumentWeak);
-    MOZ_ASSERT(document == &aDocument);
-  }
-#endif
+  MOZ_ASSERT(mDocumentWeak == &aDocument);
 
   if (MOZ_UNLIKELY(&aDocument != mElement->OwnerDoc())) {
     aDocument.FlushPendingNotifications(aFlushType);
@@ -1028,7 +1022,7 @@ nsIFrame* nsComputedDOMStyle::GetOuterFrame() const {
 }
 
 void nsComputedDOMStyle::UpdateCurrentStyleSources(nsCSSPropertyID aPropID) {
-  nsCOMPtr<Document> document = do_QueryReferent(mDocumentWeak);
+  nsCOMPtr<Document> document(mDocumentWeak);
   if (!document) {
     ClearComputedStyle();
     return;
