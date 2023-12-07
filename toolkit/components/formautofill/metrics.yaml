@@ -75,6 +75,9 @@ formautofill.creditcards:
         cc_exp_year:
           description: Credit card expiration year result
           type: string
+        cc_number_multi_parts:
+          description: The count of input fields for splitting the Credit Card Number
+          type: quantity
 
   form_popup_shown:
     type: event
