@@ -394,6 +394,7 @@ browsertime-benchmark:
                             .*64.*shippable-qr/.*: [trunk, mozilla-release]
                             .*nightlyasrelease.*: [autoland]
                             default: []
+                    custom-car: [mozilla-central]
                     default: []
             unity-webgl:
                 by-app:
@@ -411,6 +412,7 @@ browsertime-benchmark:
                             .*64.*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
                             .*nightlyasrelease.*: [autoland]
                             default: []
+                    custom-car: [mozilla-central]
                     default: []
             default:
                 by-app:

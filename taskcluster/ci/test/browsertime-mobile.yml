@@ -350,6 +350,7 @@ browsertime-benchmark-speedometer-mobile:
                 by-test-platform:
                     android-hw-(g5|a51).*shippable-qr.*: [trunk]
                     default: []
+            cstm-car-m: [mozilla-central]
             default: []
     treeherder-symbol: Btime(sp)
     mozharness:
@@ -373,6 +374,7 @@ browsertime-benchmark-speedometer3-mobile:
                 by-test-platform:
                     android-hw-a51.*shippable-qr.*: [trunk-only]
                     default: []
+            cstm-car-m: [mozilla-central]
             default: []
     treeherder-symbol: Btime(sp3)
     mozharness:
