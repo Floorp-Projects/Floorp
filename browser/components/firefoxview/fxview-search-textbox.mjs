@@ -69,6 +69,8 @@ export default class FxviewSearchTextbox extends MozLitElement {
       ></input>
       <div
         class="clear-icon"
+        role="button"
+        tabindex="0"
         ?hidden=${!this.query}
         @click=${this.clear}
         data-l10n-id="firefoxview-search-text-box-clear-button"
