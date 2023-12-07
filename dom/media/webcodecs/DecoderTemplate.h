@@ -196,7 +196,7 @@ class DecoderTemplate : public DOMEventTargetHelper {
   void ScheduleOutputDecodedData(nsTArray<RefPtr<MediaData>>&& aData,
                                  const nsACString& aLabel);
 
-  void ScheduleDequeueEvent();
+  void ScheduleDequeueEventIfNeeded();
   nsresult FireEvent(nsAtom* aTypeWithOn, const nsAString& aEventType);
 
   void ProcessControlMessageQueue();

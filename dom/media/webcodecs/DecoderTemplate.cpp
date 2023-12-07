@@ -266,7 +266,7 @@ Result<Ok, nsresult> DecoderTemplate<DecoderType>::ResetInternal(
 
   if (mDecodeQueueSize > 0) {
     mDecodeQueueSize = 0;
-    ScheduleDequeueEvent();
+    ScheduleDequeueEventIfNeeded();
   }
 
   LOG("%s %p now has its message queue unblocked", DecoderType::Name.get(),
@@ -369,7 +369,7 @@ void DecoderTemplate<DecoderType>::ScheduleReportError(
 }
 
 template <typename DecoderType>
-void DecoderTemplate<DecoderType>::ScheduleDequeueEvent() {
+void DecoderTemplate<DecoderType>::ScheduleDequeueEventIfNeeded() {
   AssertIsOnOwningThread();
 
   if (mDequeueEventScheduled) {
@@ -377,20 +377,10 @@ void DecoderTemplate<DecoderType>::ScheduleDequeueEvent() {
   }
   mDequeueEventScheduled = true;
 
-  auto dispatcher = [self = RefPtr{this}] {
+  QueueATask("dequeue event task", [self = RefPtr{this}] {
     self->FireEvent(nsGkAtoms::ondequeue, u"dequeue"_ns);
     self->mDequeueEventScheduled = false;
-  };
-  nsISerialEventTarget* target = GetCurrentSerialEventTarget();
-
-  if (NS_IsMainThread()) {
-    MOZ_ALWAYS_SUCCEEDS(target->Dispatch(NS_NewRunnableFunction(
-        "ScheduleDequeueEvent Runnable (main)", dispatcher)));
-    return;
-  }
-
-  MOZ_ALWAYS_SUCCEEDS(target->Dispatch(NS_NewCancelableRunnableFunction(
-      "ScheduleDequeueEvent Runnable (worker)", dispatcher)));
+  });
 }
 
 template <typename DecoderType>
@@ -605,7 +595,7 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessDecodeMessage(
        msg->ToString().get());
 
   mDecodeQueueSize -= 1;
-  ScheduleDequeueEvent();
+  ScheduleDequeueEventIfNeeded();
 
   // Treat it like decode error if no DecoderAgent is available or the encoded
   // data is invalid.
