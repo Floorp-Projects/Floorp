@@ -285,19 +285,22 @@ Result<Ok, nsresult> DecoderTemplate<DecoderType>::CloseInternalWithAbort() {
 }
 
 template <typename DecoderType>
-Result<Ok, nsresult> DecoderTemplate<DecoderType>::CloseInternal(
-    const nsresult& aResult) {
+void DecoderTemplate<DecoderType>::CloseInternal(const nsresult& aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aResult != NS_ERROR_DOM_ABORT_ERR, "Use CloseInternalWithAbort");
 
-  MOZ_TRY(ResetInternal(aResult));
+  auto r = ResetInternal(aResult);
+  if (r.isErr()) {
+    nsCString name;
+    GetErrorName(r.unwrapErr(), name);
+    LOGE("Error in ResetInternal: %s", name.get());
+    MOZ_CRASH();
+  }
   mState = CodecState::Closed;
   nsCString error;
   GetErrorName(aResult, error);
-  LOGE("%s %p Close on error: %s", DecoderType::Name.get(), this,
-       error.get());
+  LOGE("%s %p Close on error: %s", DecoderType::Name.get(), this, error.get());
   ReportError(aResult);
-  return Ok();
 }
 
 template <typename DecoderType>

@@ -181,7 +181,7 @@ class DecoderTemplate : public DOMEventTargetHelper {
   Result<Ok, nsresult> ResetInternal(const nsresult& aResult);
   // Calling this method calls the error callback synchronously.
   MOZ_CAN_RUN_SCRIPT
-  Result<Ok, nsresult> CloseInternal(const nsresult& aResult);
+  void CloseInternal(const nsresult& aResult);
   // Calling this method doesn't call the error calback.
   Result<Ok, nsresult> CloseInternalWithAbort();
 
