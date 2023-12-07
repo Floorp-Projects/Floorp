@@ -308,9 +308,9 @@ nsresult nsThreadManager::Init() {
   RefPtr<ThreadEventQueue> synchronizedQueue =
       new ThreadEventQueue(std::move(queue), true);
 
-  mMainThread = new nsThread(
-      WrapNotNull(synchronizedQueue), nsThread::MAIN_THREAD,
-      {.stackSize = 0, .longTaskLength = Some(W3_LONGTASK_BUSY_WINDOW_MS)});
+  mMainThread =
+      new nsThread(WrapNotNull(synchronizedQueue), nsThread::MAIN_THREAD,
+                   {0, false, false, Some(W3_LONGTASK_BUSY_WINDOW_MS)});
 
   nsresult rv = mMainThread->InitCurrentThread();
   if (NS_FAILED(rv)) {
