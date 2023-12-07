@@ -35,8 +35,8 @@ BEGIN_TEST(testExternalStrings) {
   const unsigned N = 1000;
 
   for (unsigned i = 0; i < N; ++i) {
-    CHECK(JS_NewExternalString(cx, arr, arrlen, &callbacks1));
-    CHECK(JS_NewExternalString(cx, arr, arrlen, &callbacks2));
+    CHECK(JS_NewExternalUCString(cx, arr, arrlen, &callbacks1));
+    CHECK(JS_NewExternalUCString(cx, arr, arrlen, &callbacks2));
   }
 
   JS_GC(cx);

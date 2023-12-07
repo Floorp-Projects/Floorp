@@ -556,7 +556,7 @@ using JSHostCleanupFinalizationRegistryCallback =
  */
 struct JSExternalStringCallbacks {
   /**
-   * Finalizes external strings created by JS_NewExternalString. The finalizer
+   * Finalizes external strings created by JS_NewExternalUCString. The finalizer
    * can be called off the main thread.
    */
   virtual void finalize(char16_t* chars) const = 0;
@@ -1269,7 +1269,7 @@ extern JS_PUBLIC_API void JS_SetGCParametersBasedOnAvailableMemory(
  * Create a new JSString whose chars member refers to external memory, i.e.,
  * memory requiring application-specific finalization.
  */
-extern JS_PUBLIC_API JSString* JS_NewExternalString(
+extern JS_PUBLIC_API JSString* JS_NewExternalUCString(
     JSContext* cx, const char16_t* chars, size_t length,
     const JSExternalStringCallbacks* callbacks);
 
@@ -1280,13 +1280,13 @@ extern JS_PUBLIC_API JSString* JS_NewExternalString(
  * external string allocated by a previous call and |*allocatedExternal| is set
  * to false. If |*allocatedExternal| is false, |fin| won't be called.
  */
-extern JS_PUBLIC_API JSString* JS_NewMaybeExternalString(
+extern JS_PUBLIC_API JSString* JS_NewMaybeExternalUCString(
     JSContext* cx, const char16_t* chars, size_t length,
     const JSExternalStringCallbacks* callbacks, bool* allocatedExternal);
 
 /**
- * Return the 'callbacks' arg passed to JS_NewExternalString or
- * JS_NewMaybeExternalString.
+ * Return the 'callbacks' arg passed to JS_NewExternalUCString or
+ * JS_NewMaybeExternalUCString.
  */
 extern JS_PUBLIC_API const JSExternalStringCallbacks*
 JS_GetExternalStringCallbacks(JSString* str);

@@ -2134,15 +2134,15 @@ static bool FillWithRepresentatives(JSContext* cx, Handle<ArrayObject*> array,
   // External. Note that we currently only support TwoByte external strings.
   RootedString external1(cx), external2(cx);
   if constexpr (std::is_same_v<CharT, char16_t>) {
-    external1 = JS_NewExternalString(cx, (const char16_t*)chars, len,
-                                     &RepresentativeExternalStringCallbacks);
+    external1 = JS_NewExternalUCString(cx, (const char16_t*)chars, len,
+                                       &RepresentativeExternalStringCallbacks);
     if (!external1 || !AppendString(cx, array, index, external1)) {
       return false;
     }
     MOZ_ASSERT(external1->isExternal());
 
-    external2 = JS_NewExternalString(cx, (const char16_t*)chars, 2,
-                                     &RepresentativeExternalStringCallbacks);
+    external2 = JS_NewExternalUCString(cx, (const char16_t*)chars, 2,
+                                       &RepresentativeExternalStringCallbacks);
     if (!external2 || !AppendString(cx, array, index, external2)) {
       return false;
     }
