@@ -82,12 +82,14 @@ ICU’s locale data covers *all* ICU internationalization features, including on
 .. [#why-icudt-not-rebuilt-every-time]
    ``icudtNNE.dat`` isn’t compiled during a SpiderMonkey/Gecko build because it would require ICU command-line tools. And it’s a pain to either compile and run them during the build, or to require them as build dependencies.
 
-Local patching of ICU
----------------------
+Local patching of ICU and CLDR
+------------------------------
 
 We generally don’t patch our copy of ICU except for compelling need. When we do patch, we usually only apply reasonably small patches that have been reviewed and landed upstream (so that our patch will be obsolete when we next update ICU).
 
 Local patches are stored in the ``intl/icu-patches`` directory. They’re applied when ICU is updated, so merely updating ICU files in place won’t persist changes across an ICU update.
+
+Patching ICU also allows for patching some parts and uses of CLDR, the data backing ICU operations. Note that this does not include character data, which is `updated separately <https://wiki.mozilla.org/I18n:Updating_Unicode_version>`__, and that any such patching does not affect any other CLDR uses. In particular, Fluent localization depends on Rust crates which themselves depend on CLDR data directly and separately from ICU. Any CLDR patches should remain reasonably small; larger changes such as adding support for a new locale should be done upstream.
 
 Updating imported code
 ----------------------
