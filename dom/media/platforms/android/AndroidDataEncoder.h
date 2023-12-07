@@ -7,12 +7,10 @@
 
 #include "MediaData.h"
 #include "PlatformEncoderModule.h"
-#include "TimeUnits.h"
 
 #include "JavaCallbacksSupport.h"
 
 #include "mozilla/Maybe.h"
-#include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
 
 namespace mozilla {
