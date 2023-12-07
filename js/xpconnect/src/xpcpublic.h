@@ -240,6 +240,10 @@ inline void AssignFromStringBuffer(nsStringBuffer* buffer, size_t len,
                                    nsAString& dest) {
   buffer->ToString(len, dest);
 }
+inline void AssignFromStringBuffer(nsStringBuffer* buffer, size_t len,
+                                   nsACString& dest) {
+  buffer->ToString(len, dest);
+}
 
 // readable string conversions, static methods and members only
 class XPCStringConvert {
@@ -328,15 +332,19 @@ class XPCStringConvert {
       const char16_t** chars) {
     return JS::IsExternalUCString(str, callbacks, chars);
   }
+  static MOZ_ALWAYS_INLINE bool MaybeGetExternalStringChars(
+      JSString* str, const JSExternalStringCallbacks** callbacks,
+      const JS::Latin1Char** chars) {
+    return JS::IsExternalStringLatin1(str, callbacks, chars);
+  }
 
- public:
-  template <typename T>
-  static MOZ_ALWAYS_INLINE bool MaybeAssignUCStringChars(JSString* s,
-                                                         size_t len, T& dest) {
+  template <typename SrcCharT, typename DestCharT, typename T>
+  static MOZ_ALWAYS_INLINE bool MaybeAssignStringChars(JSString* s, size_t len,
+                                                       T& dest) {
     MOZ_ASSERT(len == JS::GetStringLength(s));
 
     const JSExternalStringCallbacks* callbacks;
-    const char16_t* chars;
+    const SrcCharT* chars;
     if (!MaybeGetExternalStringChars(s, &callbacks, &chars)) {
       return false;
     }
@@ -347,17 +355,31 @@ class XPCStringConvert {
       // the whole buffer; otherwise we have to copy.
       if (chars[len] == '\0') {
         AssignFromStringBuffer(
-            nsStringBuffer::FromData(const_cast<char16_t*>(chars)), len, dest);
+            nsStringBuffer::FromData(const_cast<SrcCharT*>(chars)), len, dest);
         return true;
       }
     } else if (callbacks == &sLiteralExternalString) {
-      // The characters represent a literal char16_t string constant
+      // The characters represent a literal string constant
       // compiled into libxul; we can just use it as-is.
-      dest.AssignLiteral(chars, len);
+      dest.AssignLiteral(reinterpret_cast<const DestCharT*>(chars), len);
       return true;
     }
 
     return false;
+  }
+
+ public:
+  template <typename T>
+  static MOZ_ALWAYS_INLINE bool MaybeAssignUCStringChars(JSString* s,
+                                                         size_t len, T& dest) {
+    return MaybeAssignStringChars<char16_t, char16_t>(s, len, dest);
+  }
+
+  template <typename T>
+  static MOZ_ALWAYS_INLINE bool MaybeAssignLatin1StringChars(JSString* s,
+                                                             size_t len,
+                                                             T& dest) {
+    return MaybeAssignStringChars<JS::Latin1Char, char>(s, len, dest);
   }
 
  private:
