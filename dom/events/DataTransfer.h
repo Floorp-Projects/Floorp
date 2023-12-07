@@ -426,8 +426,6 @@ class DataTransfer final : public nsISupports, public nsWrapperCache {
                                                      kImageRequestMime,
                                                      kPDFJSMime};
 
-  already_AddRefed<nsIGlobalObject> GetGlobal() const;
-
  protected:
   // caches text and uri-list data formats that exist in the drag service or
   // clipboard for retrieval later.

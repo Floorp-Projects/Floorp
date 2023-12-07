@@ -80,7 +80,7 @@ static nsresult AppendDOMNode(nsITransferable* aTransferable,
 // copy image as file promise onto the transferable
 static nsresult AppendImagePromise(nsITransferable* aTransferable,
                                    imgIRequest* aImgRequest,
-                                   nsINode* aImageNode);
+                                   nsIImageLoadingContent* aImageElement);
 #endif
 
 static nsresult EncodeForTextUnicode(nsIDocumentEncoder& aEncoder,
@@ -244,7 +244,6 @@ static nsresult CreateTransferable(
   NS_ENSURE_TRUE(aTransferable, NS_ERROR_NULL_POINTER);
 
   aTransferable->Init(aDocument.GetLoadContext());
-  aTransferable->SetRequestingPrincipal(aDocument.NodePrincipal());
   if (aEncodedDocumentWithContext.mUnicodeEncodingIsTextHTML) {
     // Set up a format converter so that clipboard flavor queries work.
     // This converter isn't really used for conversions.
@@ -459,14 +458,10 @@ nsresult nsCopySupport::ImageCopy(nsIImageLoadingContent* aImageElement,
                                   int32_t aCopyFlags) {
   nsresult rv;
 
-  nsCOMPtr<nsINode> imageNode = do_QueryInterface(aImageElement, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // create a transferable for putting data on the Clipboard
   nsCOMPtr<nsITransferable> trans(do_CreateInstance(kCTransferableCID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
   trans->Init(aLoadContext);
-  trans->SetRequestingPrincipal(imageNode->NodePrincipal());
 
   if (aCopyFlags & nsIDocumentViewerEdit::COPY_IMAGE_TEXT) {
     // get the location from the element
@@ -509,7 +504,7 @@ nsresult nsCopySupport::ImageCopy(nsIImageLoadingContent* aImageElement,
 
 #ifdef XP_WIN
     if (StaticPrefs::clipboard_imageAsFile_enabled()) {
-      rv = AppendImagePromise(trans, imgRequest, imageNode);
+      rv = AppendImagePromise(trans, imgRequest, aImageElement);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 #endif
@@ -598,10 +593,10 @@ static nsresult AppendDOMNode(nsITransferable* aTransferable,
 #ifdef XP_WIN
 static nsresult AppendImagePromise(nsITransferable* aTransferable,
                                    imgIRequest* aImgRequest,
-                                   nsINode* aImageNode) {
+                                   nsIImageLoadingContent* aImageElement) {
   nsresult rv;
 
-  NS_ENSURE_TRUE(aImgRequest && aImageNode, NS_OK);
+  NS_ENSURE_TRUE(aImgRequest, NS_OK);
 
   bool isMultipart;
   rv = aImgRequest->GetMultipart(&isMultipart);
@@ -609,6 +604,9 @@ static nsresult AppendImagePromise(nsITransferable* aTransferable,
   if (isMultipart) {
     return NS_OK;
   }
+
+  nsCOMPtr<nsINode> node = do_QueryInterface(aImageElement, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIMIMEService> mimeService = do_GetService("@mozilla.org/mime;1");
   if (NS_WARN_IF(!mimeService)) {
@@ -645,8 +643,8 @@ static nsresult AppendImagePromise(nsITransferable* aTransferable,
   rv = AppendString(aTransferable, validFileName, kFilePromiseDestFilename);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aTransferable->SetCookieJarSettings(
-      aImageNode->OwnerDoc()->CookieJarSettings());
+  aTransferable->SetRequestingPrincipal(node->NodePrincipal());
+  aTransferable->SetCookieJarSettings(node->OwnerDoc()->CookieJarSettings());
   aTransferable->SetContentPolicyType(nsIContentPolicy::TYPE_INTERNAL_IMAGE);
 
   // add the dataless file promise flavor

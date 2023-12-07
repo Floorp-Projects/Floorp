@@ -197,7 +197,6 @@ class nsBaseClipboard : public nsIClipboard {
   void RequestUserConfirmation(int32_t aClipboardType,
                                const nsTArray<nsCString>& aFlavorList,
                                mozilla::dom::WindowContext* aWindowContext,
-                               nsIPrincipal* aRequestingPrincipal,
                                nsIAsyncClipboardGetCallback* aCallback);
 
   // Track the pending request for each clipboard type separately. And only need
