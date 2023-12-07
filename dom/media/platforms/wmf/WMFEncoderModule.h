@@ -12,11 +12,14 @@
 namespace mozilla {
 class WMFEncoderModule final : public PlatformEncoderModule {
  public:
-  bool SupportsMimeType(const nsACString& aMimeType) const override;
+  virtual bool Supports(const EncoderConfig& aConfig) const override;
+  virtual bool SupportsCodec(CodecType aCodec) const override;
+
+  const char* GetName() const override { return "WMF Encoder Module"; }
 
   already_AddRefed<MediaDataEncoder> CreateVideoEncoder(
-      const CreateEncoderParams& aParams,
-      const bool aHardwareNotAllowed) const override;
+      const EncoderConfig& aConfig,
+      const RefPtr<TaskQueue>& aTaskQueue) const override;
 };
 
 }  // namespace mozilla
