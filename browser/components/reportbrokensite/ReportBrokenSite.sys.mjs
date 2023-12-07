@@ -19,7 +19,7 @@ class ViewState {
   currentTabWebcompatDetailsPromise;
   isURLValid = false;
   isDescriptionValid = false;
-  isReasonValid = false;
+  #isReasonValid = false;
 
   constructor(doc) {
     this.#doc = doc;
@@ -78,6 +78,12 @@ class ViewState {
     return this.#mainView.querySelector("#report-broken-site-popup-reason");
   }
 
+  get reasonInputValidationHelper() {
+    return this.#mainView.querySelector(
+      "#report-broken-site-popup-missing-reason-validation-helper"
+    );
+  }
+
   get reason() {
     const reason = this.reasonInput.selectedItem.id.replace(
       ViewState.REASON_CHOICES_ID_PREFIX,
@@ -107,21 +113,52 @@ class ViewState {
     this.isDescriptionValid = false;
 
     this.reason = "choose";
-    this.isReasonValid = false;
+    this.#isReasonValid = false;
+    this.toggleReasonValidationMessage(false);
   }
 
-  enableOrDisableSendButton(
-    isReasonEnabled,
-    isReasonOptional,
-    isDescriptionOptional
-  ) {
-    const isReasonOkay =
-      !isReasonEnabled || isReasonOptional || this.isReasonValid;
+  get isReasonValid() {
+    return this.#isReasonValid;
+  }
 
-    const isDescriptionOkay = isDescriptionOptional || this.isDescriptionValid;
+  set isReasonValid(isValid) {
+    this.#isReasonValid = isValid;
+    this.toggleReasonValidationMessage(!isValid);
+  }
 
-    this.sendButton.disabled =
-      !this.isURLValid || !isReasonOkay || !isDescriptionOkay;
+  toggleReasonValidationMessage(show) {
+    const validation = this.reasonInputValidationHelper;
+    validation.setCustomValidity(show ? "required" : "");
+    validation.reportValidity();
+  }
+
+  get isReasonOkay() {
+    const { reasonEnabled, reasonIsOptional } =
+      this.#doc.ownerGlobal.ReportBrokenSite;
+    return !reasonEnabled || reasonIsOptional || this.isReasonValid;
+  }
+
+  get isDescriptionOkay() {
+    const { descriptionIsOptional } = this.#doc.ownerGlobal.ReportBrokenSite;
+    return descriptionIsOptional || this.isDescriptionValid;
+  }
+
+  checkAndShowInputValidity() {
+    // This function focuses on the first invalid input (if any), updates the validity of
+    // the helper input for the reason drop-down (so CSS :invalid state is updated),
+    // and returns true if the form has an invalid input (false otherwise).
+    const { isURLValid, isReasonOkay, isDescriptionOkay } = this;
+    const validation = this.reasonInputValidationHelper;
+    validation.setCustomValidity(isReasonOkay ? "" : "missing");
+    validation.reportValidity();
+    if (!isURLValid) {
+      this.urlInput.focus();
+    } else if (!isReasonOkay) {
+      this.reasonInput.openMenu(true);
+    } else if (!isDescriptionOkay) {
+      this.descriptionInput.focus();
+    }
+    return !(isURLValid && isReasonOkay && isDescriptionOkay);
   }
 
   get sendMoreInfoLink() {
@@ -220,6 +257,18 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
   #reasonIsOptional = true;
   #descriptionIsOptional = true;
   #sendMoreInfoEnabled = true;
+
+  get reasonEnabled() {
+    return this.#reasonEnabled;
+  }
+
+  get reasonIsOptional() {
+    return this.#reasonIsOptional;
+  }
+
+  get descriptionIsOptional() {
+    return this.#descriptionIsOptional;
+  }
 
   constructor() {
     for (const [name, [pref, dflt]] of Object.entries({
@@ -368,6 +417,9 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
 
   #initMainView(state) {
     state.sendButton.addEventListener("command", async ({ target }) => {
+      if (state.checkAndShowInputValidity()) {
+        return;
+      }
       const multiview = target.closest("panelmultiview");
       this.#recordGleanEvent("send");
       await this.#sendReportAsGleanPing(state);
@@ -394,11 +446,6 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
       const newUrlValid = target.value && target.checkValidity();
       if (state.isURLValid != newUrlValid) {
         state.isURLValid = newUrlValid;
-        state.enableOrDisableSendButton(
-          this.#reasonEnabled,
-          this.#reasonIsOptional,
-          this.#descriptionIsOptional
-        );
       }
     });
 
@@ -406,11 +453,6 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
       const newDescValid = gDescriptionCheckRE.test(target.value);
       if (state.isDescriptionValid != newDescValid) {
         state.isDescriptionValid = newDescValid;
-        state.enableOrDisableSendButton(
-          this.#reasonEnabled,
-          this.#reasonIsOptional,
-          this.#descriptionIsOptional
-        );
       }
     });
 
@@ -420,11 +462,6 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
       const newValidity = choiceId !== ViewState.CHOOSE_A_REASON_OPT_ID;
       if (state.isReasonValid != newValidity) {
         state.isReasonValid = newValidity;
-        state.enableOrDisableSendButton(
-          this.#reasonEnabled,
-          this.#reasonIsOptional,
-          this.#descriptionIsOptional
-        );
       }
     });
 
@@ -478,12 +515,6 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
 
     state.descriptionLabelRequired.hidden = this.#descriptionIsOptional;
     state.descriptionLabelOptional.hidden = !this.#descriptionIsOptional;
-
-    state.enableOrDisableSendButton(
-      this.#reasonEnabled,
-      this.#reasonIsOptional,
-      this.#descriptionIsOptional
-    );
 
     this.#recordGleanEvent("opened", { source });
 

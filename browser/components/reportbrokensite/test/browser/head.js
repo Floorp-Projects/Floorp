@@ -38,6 +38,12 @@ function add_common_setup() {
   });
 }
 
+function clickAndAwait(toClick, evt, target) {
+  const menuPromise = BrowserTestUtils.waitForEvent(target, evt);
+  EventUtils.synthesizeMouseAtCenter(toClick, {}, window);
+  return menuPromise;
+}
+
 async function openTab(url, win) {
   const options = {
     gBrowser:
@@ -248,8 +254,24 @@ class ReportBrokenSiteHelper {
     return this.win.document.getElementById("report-broken-site-popup-url");
   }
 
+  get URLInvalidMessage() {
+    return this.win.document.getElementById(
+      "report-broken-site-popup-invalid-url-msg"
+    );
+  }
+
   get reasonInput() {
     return this.win.document.getElementById("report-broken-site-popup-reason");
+  }
+
+  get reasonDropdownPopup() {
+    return this.reasonInput.querySelector("menupopup");
+  }
+
+  get reasonRequiredMessage() {
+    return this.win.document.getElementById(
+      "report-broken-site-popup-missing-reason-msg"
+    );
   }
 
   get reasonLabelRequired() {
@@ -322,12 +344,49 @@ class ReportBrokenSiteHelper {
     );
   }
 
+  dismissDropdownPopup() {
+    const menuPromise = BrowserTestUtils.waitForEvent(
+      this.reasonDropdownPopup,
+      "popuphidden"
+    );
+    EventUtils.synthesizeKey("KEY_Escape");
+    return menuPromise;
+  }
+
   setDescription(value) {
     this.#setInput(this.descriptionTextarea, value);
   }
 
   isURL(expected) {
     is(this.URLInput.value, expected);
+  }
+
+  isURLInvalidMessageShown() {
+    ok(
+      BrowserTestUtils.is_visible(this.URLInvalidMessage),
+      "'Please enter a valid URL' message is shown"
+    );
+  }
+
+  isURLInvalidMessageHidden() {
+    ok(
+      !BrowserTestUtils.is_visible(this.URLInvalidMessage),
+      "'Please enter a valid URL' message is hidden"
+    );
+  }
+
+  isReasonNeededMessageShown() {
+    ok(
+      BrowserTestUtils.is_visible(this.reasonRequiredMessage),
+      "'Please choose a reason' message is shown"
+    );
+  }
+
+  isReasonNeededMessageHidden() {
+    ok(
+      !BrowserTestUtils.is_visible(this.reasonRequiredMessage),
+      "'Please choose a reason' message is hidden"
+    );
   }
 
   isSendButtonEnabled() {
