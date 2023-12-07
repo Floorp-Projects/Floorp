@@ -28,6 +28,7 @@
   --color-green-50: #017a40;
   --color-green-80: #004725;
   --color-red-05: #ffe8e8;
+  --color-red-20: #ff9aa2;
   --color-red-30: #f37f98;
   --color-red-50: #d7264c;
   --color-red-80: #690f22;
@@ -96,6 +97,7 @@
     --color-background-success: light-dark(var(--color-green-05), var(--color-green-80));
     --color-background-warning: light-dark(var(--color-yellow-05), var(--color-yellow-80));
     --color-background-critical: light-dark(var(--color-red-05), var(--color-red-80));
+    --color-error-outline: light-dark(var(--color-red-50), var(--color-red-20));
 
     /** Icon **/
     --icon-color: light-dark(var(--color-gray-70), var(--color-gray-05));
@@ -103,6 +105,9 @@
     --icon-color-success: light-dark(var(--color-green-50), var(--color-green-30));
     --icon-color-warning: light-dark(var(--color-yellow-50), var(--color-yellow-30));
     --icon-color-critical: light-dark(var(--color-red-50), var(--color-red-30));
+
+    /** Text **/
+    --text-color-error: light-dark(var(--color-red-50), var(--color-red-20));
   }
 }
 
@@ -138,6 +143,7 @@
     /* FIXME(emilio): These seem rather sketchy */
     --color-accent-primary-hover: ButtonText;
     --color-accent-primary-active: ButtonText;
+    --color-error-outline: var(--border-color);
 
     /** Icon **/
     --icon-color: var(--text-color);
@@ -148,6 +154,7 @@
 
     /* Text */
     --text-color: CanvasText;
+    --text-color-error: inherit;
     --text-color-deemphasized: inherit;
   }
 
