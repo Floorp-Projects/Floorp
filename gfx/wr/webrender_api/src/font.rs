@@ -63,6 +63,7 @@ pub struct NativeFontHandle {
 #[derive(Clone, Debug, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct NativeFontHandle {
     pub name: String,
+    pub path: String,
 }
 
 #[repr(C)]

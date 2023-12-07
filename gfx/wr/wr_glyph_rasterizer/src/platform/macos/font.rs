@@ -9,6 +9,7 @@ use core_foundation::base::TCFType;
 use core_foundation::dictionary::CFDictionary;
 use core_foundation::number::{CFNumber};
 use core_foundation::string::CFString;
+use core_foundation::url::{CFURL, kCFURLPOSIXPathStyle};
 use core_graphics::base::{kCGImageAlphaNoneSkipFirst, kCGImageAlphaPremultipliedFirst};
 use core_graphics::base::{kCGBitmapByteOrder32Little};
 use core_graphics::color_space::CGColorSpace;
@@ -19,7 +20,8 @@ use core_graphics::geometry::{CGAffineTransform, CGPoint, CGSize};
 use core_graphics::geometry::{CG_AFFINE_TRANSFORM_IDENTITY, CGRect};
 use core_text;
 use core_text::font::CTFont;
-use core_text::font_descriptor::{CTFontDescriptor, kCTFontDefaultOrientation, kCTFontVariationAttribute};
+use core_text::font_descriptor::{CTFontDescriptor, kCTFontDefaultOrientation};
+use core_text::font_descriptor::{kCTFontURLAttribute, kCTFontVariationAttribute};
 use core_text::font_manager;
 use euclid::default::Size2D;
 use crate::gamma_lut::{ColorLut, GammaLut};
@@ -282,7 +284,7 @@ impl FontContext {
         // we can't instantiate CTFonts via a descriptor. We're really
         // supposed to use CTFontCreateUIFontForLanguage, but for now
         // we just use the CGFont.
-        let desc = if native_font_handle.name.starts_with('.') {
+        let mut desc = if native_font_handle.name.starts_with('.') {
             let cg_font = match CGFont::from_name(&cf_name) {
                 Ok(cg_font) => cg_font,
                 Err(_) => {
@@ -299,6 +301,19 @@ impl FontContext {
         } else {
             core_text::font_descriptor::new_from_postscript_name(&cf_name)
         };
+
+        // If the NativeFontHandle includes a file path, add this to the descriptor
+        // to disambiguate cases where multiple installed fonts have the same psname.
+        if native_font_handle.path.len() > 0 {
+            let cf_path = CFString::new(&native_font_handle.path);
+            let url_attribute = unsafe { CFString::wrap_under_get_rule(kCTFontURLAttribute) };
+            let attrs = CFDictionary::from_CFType_pairs(&[
+                (url_attribute, CFURL::from_file_system_path(cf_path, kCFURLPOSIXPathStyle, false)),
+            ]);
+            if let Ok(desc_with_path) = desc.create_copy_with_attributes(attrs.to_untyped()) {
+                desc = desc_with_path;
+            }
+        }
 
         self.ct_font_descs
             .insert(*font_key, desc);

@@ -72,6 +72,10 @@ class UnscaledFontMac final : public UnscaledFont {
                                               uint32_t aVariationCount,
                                               const FontVariation* aVariations);
 
+  // Generate a font descriptor to send to WebRender. The descriptor consists
+  // of a string that concatenates the PostScript name of the font and the path
+  // to the font file, and an "index" that indicates the length of the psname
+  // part of the string (= starting offset of the path).
   bool GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton) override;
 
   CFArrayRef& CGAxesCache() { return mCGAxesCache; }
