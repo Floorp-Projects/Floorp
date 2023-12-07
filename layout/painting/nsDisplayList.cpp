@@ -8257,8 +8257,9 @@ bool nsDisplayBackdropFilters::CreateWebRenderCommands(
   bool initialized = true;
   if (!SVGIntegrationUtils::CreateWebRenderCSSFilters(filterChain, mFrame,
                                                       wrFilters) &&
-      !SVGIntegrationUtils::BuildWebRenderFilters(mFrame, filterChain,
-                                                  wrFilters, initialized)) {
+      !SVGIntegrationUtils::BuildWebRenderFilters(
+          mFrame, filterChain, StyleFilterType::BackdropFilter, wrFilters,
+          initialized)) {
     // TODO: If painting backdrop-filters on the content side is implemented,
     // consider returning false to fall back to that.
     wrFilters = {};
@@ -8372,6 +8373,7 @@ bool nsDisplayFilters::CreateWebRenderCommands(
   if (!SVGIntegrationUtils::CreateWebRenderCSSFilters(filterChain, mFrame,
                                                       wrFilters) &&
       !SVGIntegrationUtils::BuildWebRenderFilters(mFrame, filterChain,
+                                                  StyleFilterType::Filter,
                                                   wrFilters, initialized)) {
     if (mStyle) {
       // TODO(bug 1769223): Support fallback filters in the root code-path,
