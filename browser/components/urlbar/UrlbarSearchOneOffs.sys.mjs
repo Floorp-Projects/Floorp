@@ -142,7 +142,7 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
       <span class="urlbarView-dynamic-quickSuggestContextualOptIn-no-wrap urlbarView-no-wrap">
         <img class="urlbarView-dynamic-quickSuggestContextualOptIn-icon urlbarView-favicon" src="chrome://branding/content/icon32.png" />
         <span class="urlbarView-dynamic-quickSuggestContextualOptIn-text-container">
-          <strong class="urlbarView-dynamic-quickSuggestContextualOptIn-title urlbarView-title"></strong>
+          <strong class="urlbarView-dynamic-quickSuggestContextualOptIn-title"></strong>
           <span class="urlbarView-dynamic-quickSuggestContextualOptIn-description">
             <a class="urlbarView-dynamic-quickSuggestContextualOptIn-learn_more" data-l10n-name="learn-more-link" selectable="" name="learn_more" id="urlbarView-footer-quickSuggestContextualOptIn-learn_more"></a>
           </span>

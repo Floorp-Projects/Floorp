@@ -41,7 +41,6 @@ const VIEW_TEMPLATE = {
             {
               name: "title",
               tag: "strong",
-              classList: ["urlbarView-title"],
             },
             {
               name: "description",
