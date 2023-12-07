@@ -369,12 +369,10 @@ already_AddRefed<WebRenderAPI> WebRenderAPI::Clone() {
   wr::DocumentHandle* docHandle = nullptr;
   wr_api_clone(mDocHandle, &docHandle);
 
-  RefPtr<WebRenderAPI> renderApi =
-      new WebRenderAPI(docHandle, mId, mBackend, mCompositor, mMaxTextureSize,
-                       mUseANGLE, mUseDComp, mUseTripleBuffering,
-                       mSupportsExternalBufferTextures, mSyncHandle);
-  renderApi->mRootApi = this;  // Hold root api
-  renderApi->mRootDocumentApi = this;
+  RefPtr<WebRenderAPI> renderApi = new WebRenderAPI(
+      docHandle, mId, mBackend, mCompositor, mMaxTextureSize, mUseANGLE,
+      mUseDComp, mUseTripleBuffering, mSupportsExternalBufferTextures,
+      mSyncHandle, this, this);
 
   return renderApi.forget();
 }
@@ -383,13 +381,12 @@ wr::WrIdNamespace WebRenderAPI::GetNamespace() {
   return wr_api_get_namespace(mDocHandle);
 }
 
-WebRenderAPI::WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId,
-                           WebRenderBackend aBackend,
-                           WebRenderCompositor aCompositor,
-                           uint32_t aMaxTextureSize, bool aUseANGLE,
-                           bool aUseDComp, bool aUseTripleBuffering,
-                           bool aSupportsExternalBufferTextures,
-                           layers::SyncHandle aSyncHandle)
+WebRenderAPI::WebRenderAPI(
+    wr::DocumentHandle* aHandle, wr::WindowId aId, WebRenderBackend aBackend,
+    WebRenderCompositor aCompositor, uint32_t aMaxTextureSize, bool aUseANGLE,
+    bool aUseDComp, bool aUseTripleBuffering,
+    bool aSupportsExternalBufferTextures, layers::SyncHandle aSyncHandle,
+    wr::WebRenderAPI* aRootApi, wr::WebRenderAPI* aRootDocumentApi)
     : mDocHandle(aHandle),
       mId(aId),
       mBackend(aBackend),
@@ -401,7 +398,9 @@ WebRenderAPI::WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId,
       mSupportsExternalBufferTextures(aSupportsExternalBufferTextures),
       mCaptureSequence(false),
       mSyncHandle(aSyncHandle),
-      mRendererDestroyed(false) {}
+      mRendererDestroyed(false),
+      mRootApi(aRootApi),
+      mRootDocumentApi(aRootDocumentApi) {}
 
 WebRenderAPI::~WebRenderAPI() {
   if (!mRootDocumentApi) {
@@ -429,6 +428,13 @@ void WebRenderAPI::DestroyRenderer() {
   task.Wait();
 
   mRendererDestroyed = true;
+}
+
+wr::WebRenderAPI* WebRenderAPI::GetRootAPI() {
+  if (mRootApi) {
+    return mRootApi;
+  }
+  return this;
 }
 
 void WebRenderAPI::UpdateDebugFlags(uint32_t aFlags) {
