@@ -244,7 +244,7 @@ add_task(async function test_popup_opened() {
     {
       event_name: "formDetected",
       expected_extra: buildccFormv2Extra(
-        { cc_exp: "undetected" },
+        { cc_exp: "undetected", cc_number_multi_parts: 1 },
         "autocomplete"
       ),
     },
@@ -312,7 +312,12 @@ add_task(async function test_popup_opened_form_without_autocomplete() {
     {
       event_name: "formDetected",
       expected_extra: buildccFormv2Extra(
-        { cc_number: "1", cc_name: "1", cc_exp: "undetected" },
+        {
+          cc_number: "1",
+          cc_name: "1",
+          cc_exp: "undetected",
+          cc_number_multi_parts: 1,
+        },
         "regexp"
       ),
     },
@@ -368,7 +373,10 @@ add_task(
     await assertGleanTelemetry([
       {
         event_name: "formDetected",
-        expected_extra: buildccFormv2Extra({ cc_number: "1" }, "undetected"),
+        expected_extra: buildccFormv2Extra(
+          { cc_number: "1", cc_number_multi_parts: 1 },
+          "undetected"
+        ),
       },
       {
         event_name: "formPopupShown",
@@ -520,7 +528,7 @@ add_task(async function test_submit_creditCard_new() {
     {
       event_name: "formDetected",
       expected_extra: buildccFormv2Extra(
-        { cc_exp: "undetected" },
+        { cc_exp: "undetected", cc_number_multi_parts: 1 },
         "autocomplete"
       ),
     },
@@ -634,7 +642,7 @@ add_task(async function test_submit_creditCard_autofill() {
     {
       event_name: "formDetected",
       expected_extra: buildccFormv2Extra(
-        { cc_exp: "undetected" },
+        { cc_exp: "undetected", cc_number_multi_parts: 1 },
         "autocomplete"
       ),
     },
@@ -767,7 +775,7 @@ add_task(async function test_submit_creditCard_update() {
     {
       event_name: "formDetected",
       expected_extra: buildccFormv2Extra(
-        { cc_exp: "undetected" },
+        { cc_exp: "undetected", cc_number_multi_parts: 1 },
         "autocomplete"
       ),
     },
@@ -1043,7 +1051,7 @@ add_task(async function test_clear_creditCard_autofill() {
     {
       event_name: "formDetected",
       expected_extra: buildccFormv2Extra(
-        { cc_exp: "undetected" },
+        { cc_exp: "undetected", cc_number_multi_parts: 1 },
         "autocomplete"
       ),
     },
