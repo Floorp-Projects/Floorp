@@ -45,16 +45,9 @@ class AutofillTelemetryBase {
    * @param {string} undetected Default value when a field is not detected: 'undetected' (Glean) and 'false' in (Legacy)
    * @param {string} autocomplete Value when a field is identified with autocomplete property: 'autocomplete' (Glean), 'true' (Legacy)
    * @param {string} regexp Value when a field is identified with regex expression heuristics: 'regexp' (Glean), '0' (Legacy)
-   * @param {boolean} includeMultiPart Include multi part data or not
    * @returns {object} Extra keys to include in the form event
    */
-  #buildFormDetectedEventExtra(
-    section,
-    undetected,
-    autocomplete,
-    regexp,
-    includeMultiPart
-  ) {
+  #buildFormDetectedEventExtra(section, undetected, autocomplete, regexp) {
     let extra = this.#initFormEventExtra(undetected);
 
     let identified = new Set();
@@ -74,14 +67,6 @@ class AutofillTelemetryBase {
           confidence ? confidence.toString() : regexp
         );
       }
-
-      if (
-        detail.fieldName === "cc-number" &&
-        this.SUPPORTED_FIELDS[detail.fieldName] &&
-        includeMultiPart
-      ) {
-        extra.cc_number_multi_parts = detail.part ?? 1;
-      }
     });
     return extra;
   }
@@ -90,7 +75,7 @@ class AutofillTelemetryBase {
     this.recordFormEvent(
       "detected",
       section.flowId,
-      this.#buildFormDetectedEventExtra(section, "false", "true", "0", false)
+      this.#buildFormDetectedEventExtra(section, "false", "true", "0")
     );
 
     this.recordGleanFormEvent(
@@ -100,8 +85,7 @@ class AutofillTelemetryBase {
         section,
         "undetected",
         "autocomplete",
-        "regexp",
-        true
+        "regexp"
       )
     );
   }
