@@ -3281,6 +3281,10 @@ Element* nsINode::GetNearestInclusiveTargetPopoverForInvoker() const {
 }
 
 nsGenericHTMLElement* nsINode::GetEffectivePopoverTargetElement() const {
+  if (!StaticPrefs::dom_element_popover_enabled()) {
+    return nullptr;
+  }
+
   const auto* formControl =
       nsGenericHTMLFormControlElementWithState::FromNode(this);
   if (!formControl || formControl->IsDisabled() ||
