@@ -368,10 +368,17 @@ static MOZ_ALWAYS_INLINE bool MaybeEnterInterpreterTrampoline(JSContext* cx,
     auto p = jitRuntime->getInterpreterEntryMap()->lookup(script);
     if (p) {
       codeRaw = p->value().raw();
-    } else if (js::jit::JitCode* code =
-                   jitRuntime->generateEntryTrampolineForScript(cx, script)) {
+    } else {
+      js::jit::JitCode* code =
+          jitRuntime->generateEntryTrampolineForScript(cx, script);
+      if (!code) {
+        ReportOutOfMemory(cx);
+        return false;
+      }
+
       js::jit::EntryTrampoline entry(cx, code);
       if (!jitRuntime->getInterpreterEntryMap()->put(script, entry)) {
+        ReportOutOfMemory(cx);
         return false;
       }
       codeRaw = code->raw();
