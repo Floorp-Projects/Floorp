@@ -138,6 +138,7 @@ uint32_t MediaSourceDemuxer::GetNumberTracks(TrackType aType) const {
 
 already_AddRefed<MediaTrackDemuxer> MediaSourceDemuxer::GetTrackDemuxer(
     TrackType aType, uint32_t aTrackNumber) {
+  MonitorAutoLock mon(mMonitor);
   RefPtr<TrackBuffersManager> manager = GetManager(aType);
   if (!manager) {
     return nullptr;
@@ -194,6 +195,8 @@ void MediaSourceDemuxer::DoDetachSourceBuffer(
       [&aSourceBuffer](const RefPtr<TrackBuffersManager> aLinkedSourceBuffer) {
         return aLinkedSourceBuffer == aSourceBuffer;
       });
+
+  AutoTArray<RefPtr<MediaSourceTrackDemuxer>, 2> matchingDemuxers;
   {
     MonitorAutoLock mon(mMonitor);
     if (aSourceBuffer == mAudioTrack) {
@@ -202,18 +205,24 @@ void MediaSourceDemuxer::DoDetachSourceBuffer(
     if (aSourceBuffer == mVideoTrack) {
       mVideoTrack = nullptr;
     }
+
+    mDemuxers.RemoveElementsBy(
+        [&](RefPtr<MediaSourceTrackDemuxer>& elementRef) {
+          if (!elementRef->HasManager(aSourceBuffer)) {
+            return false;
+          }
+          matchingDemuxers.AppendElement(std::move(elementRef));
+          return true;
+        });
   }
 
-  for (auto& demuxer : mDemuxers) {
-    if (demuxer->HasManager(aSourceBuffer)) {
-      demuxer->DetachManager();
-    }
+  for (MediaSourceTrackDemuxer* demuxer : matchingDemuxers) {
+    demuxer->DetachManager();
   }
   ScanSourceBuffersForContent();
 }
 
 TrackInfo* MediaSourceDemuxer::GetTrackInfo(TrackType aTrack) {
-  MonitorAutoLock mon(mMonitor);
   switch (aTrack) {
     case TrackType::kAudioTrack:
       return &mInfo.mAudio;
@@ -225,7 +234,6 @@ TrackInfo* MediaSourceDemuxer::GetTrackInfo(TrackType aTrack) {
 }
 
 RefPtr<TrackBuffersManager> MediaSourceDemuxer::GetManager(TrackType aTrack) {
-  MonitorAutoLock mon(mMonitor);
   switch (aTrack) {
     case TrackType::kAudioTrack:
       return mAudioTrack;
@@ -287,6 +295,7 @@ MediaSourceTrackDemuxer::MediaSourceTrackDemuxer(MediaSourceDemuxer* aParent,
 }
 
 UniquePtr<TrackInfo> MediaSourceTrackDemuxer::GetInfo() const {
+  MonitorAutoLock mon(mParent->mMonitor);
   return mParent->GetTrackInfo(mType)->Clone();
 }
 
