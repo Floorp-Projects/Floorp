@@ -74,6 +74,10 @@ class SMILCompositor : public PLDHashEntryHdr {
     mCachedBaseValue = std::move(aOther->mCachedBaseValue);
   }
 
+  bool HasSameNumberOfAnimationFunctionsAs(const SMILCompositor& aOther) const {
+    return mAnimationFunctions.Length() == aOther.mAnimationFunctions.Length();
+  }
+
  private:
   // Create a SMILAttr for my target, on the heap.
   //

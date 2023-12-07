@@ -344,6 +344,14 @@ void SMILAnimationController::DoSample(bool aSkipUnchangedContainers) {
 
       if (lastCompositor) {
         compositor.StealCachedBaseValue(lastCompositor);
+        if (!lastCompositor->HasSameNumberOfAnimationFunctionsAs(compositor)) {
+          // If we have multiple animations on the same element, they share a
+          // compositor. If an active animation ends, it will no longer be in
+          // the compositor table. We need to force compositing to ensure we
+          // render the element with any remaining frozen animations even though
+          // they would not normally trigger compositing.
+          compositor.ToggleForceCompositing();
+        }
       }
     }
 
