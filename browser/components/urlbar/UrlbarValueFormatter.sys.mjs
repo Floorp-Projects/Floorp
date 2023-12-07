@@ -144,10 +144,16 @@ export class UrlbarValueFormatter {
     // Since doing a full URIFixup and offset calculations is expensive, we
     // keep the metadata cached in the browser itself, so when switching tabs
     // we can skip most of this.
-    if (browser._urlMetaData && browser._urlMetaData.inputValue == inputValue) {
+    if (
+      browser._urlMetaData &&
+      browser._urlMetaData.inputValue == this.urlbarInput.untrimmedValue
+    ) {
       return browser._urlMetaData.data;
     }
-    browser._urlMetaData = { inputValue, data: null };
+    browser._urlMetaData = {
+      inputValue: this.urlbarInput.untrimmedValue,
+      data: null,
+    };
 
     // Get the URL from the fixup service:
     let flags =

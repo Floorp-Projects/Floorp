@@ -160,3 +160,28 @@ add_task(async function () {
 
   await testVal("https://mozilla.org");
 });
+
+add_task(async function test_url_formatting_after_visiting_bookmarks() {
+  SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.trimURLs", true],
+      ["browser.urlbar.trimHttps", true],
+      ["browser.urlbar.formatting.enabled", true],
+    ],
+  });
+  await PlacesTestUtils.addBookmarkWithDetails({
+    uri: "https://something.example.com/test",
+  });
+  await search({
+    searchString: "something",
+    valueBefore: "something",
+    valueAfter: "something.example.com/",
+    placeholderAfter: "something.example.com/",
+  });
+  EventUtils.sendKey("DOWN");
+  EventUtils.sendKey("RETURN");
+  await BrowserTestUtils.browserLoaded(gBrowser, false, null, true);
+
+  UrlbarTestUtils.checkFormatting(window, "<something.>example.com</test>");
+  SpecialPowers.popPrefEnv();
+});
