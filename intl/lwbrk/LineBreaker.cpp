@@ -1093,6 +1093,15 @@ void LineBreaker::ComputeBreakPositions(
     LineBreakRule aLevel, bool aIsChineseOrJapanese, uint8_t* aBreakBefore) {
 #if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
   if (StaticPrefs::intl_icu4x_segmenter_enabled()) {
+    if (aLength == 1) {
+      // Although UAX#14 LB2 rule requires never breaking at the start of text
+      // (SOT), ICU4X line segmenter API is designed to match other segmenter in
+      // UAX#29 to always break at the start of text. Hence the optimization
+      // here to avoid calling into ICU4X line segmenter.
+      aBreakBefore[0] = 1;
+      return;
+    }
+
     memset(aBreakBefore, 0, aLength);
 
     CheckedInt<int32_t> length = aLength;
@@ -1253,6 +1262,15 @@ void LineBreaker::ComputeBreakPositions(const uint8_t* aChars, uint32_t aLength,
                                         uint8_t* aBreakBefore) {
 #if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
   if (StaticPrefs::intl_icu4x_segmenter_enabled()) {
+    if (aLength == 1) {
+      // Although UAX#14 LB2 rule requires never breaking at the start of text
+      // (SOT), ICU4X line segmenter API is designed to match other segmenter in
+      // UAX#29 to always break at the start of text. Hence the optimization
+      // here to avoid calling into ICU4X line segmenter.
+      aBreakBefore[0] = 1;
+      return;
+    }
+
     memset(aBreakBefore, 0, aLength);
 
     CheckedInt<int32_t> length = aLength;
