@@ -490,6 +490,32 @@ bool StringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
   return NonVoidStringToJsval(cx, str, rval);
 }
 
+/**
+ * As above, but for nsACString with latin-1 (non-UTF8) content.
+ */
+bool NonVoidLatin1StringToJsval(JSContext* cx, nsACString& str,
+                                JS::MutableHandle<JS::Value> rval);
+bool NonVoidLatin1StringToJsval(JSContext* cx, const nsACString& str,
+                                JS::MutableHandle<JS::Value> rval);
+
+inline bool Latin1StringToJsval(JSContext* cx, nsACString& str,
+                                JS::MutableHandle<JS::Value> rval) {
+  if (str.IsVoid()) {
+    rval.setNull();
+    return true;
+  }
+  return NonVoidLatin1StringToJsval(cx, str, rval);
+}
+
+inline bool Latin1StringToJsval(JSContext* cx, const nsACString& str,
+                                JS::MutableHandle<JS::Value> rval) {
+  if (str.IsVoid()) {
+    rval.setNull();
+    return true;
+  }
+  return NonVoidLatin1StringToJsval(cx, str, rval);
+}
+
 mozilla::BasePrincipal* GetRealmPrincipal(JS::Realm* realm);
 
 void NukeAllWrappersForRealm(JSContext* cx, JS::Realm* realm,
