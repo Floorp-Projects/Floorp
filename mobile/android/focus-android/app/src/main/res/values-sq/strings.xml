@@ -636,7 +636,7 @@
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)
     %2$s will be replaced with a URL linking to the GPL
     %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
-    <string name="your_rights_content5"><![CDATA[%1$s përdor gjithashtu një listë ndalimesh të furnizuar nga Disconnect, Inc., si vepra më vete dhe të pavarura, nën <a href="%2$s">GNU General Public License v3</a>, dhe të passhme prej <a href="%3$s">këtu</a>.]]></string>
+    <string name="your_rights_content5"><![CDATA[%1$s përdor gjithashtu një listë ndalimesh të furnizuar nga Disconnect, Inc., si vepra më vete dhe të pavarura, nën <a href="%2$s">GNU General Public License v3</a> dhe të passhme prej <a href="%3$s">këtu</a>.]]></string>
 
     <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Emër përdoruesi</string>
@@ -938,7 +938,7 @@
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">Bllokoni sajte potencialisht të rrezikshëm dhe të rrejshëm</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string name="preference_safe_browsing_summary">Bllokoni sajte të raportuar si të rrejshëm dhe sulmesh, sajte malware-i, dhe sajte software-i të padëshiruar.</string>
+    <string name="preference_safe_browsing_summary">Bllokoni sajte të raportuar si të rrejshëm dhe sulmesh, sajte malware-i dhe sajte software-i të padëshiruar.</string>
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Mënyra Vetëm-HTTPS</string>

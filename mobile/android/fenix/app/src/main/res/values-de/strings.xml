@@ -355,7 +355,7 @@
     <!-- Title for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">Wechseln Sie vom Handy zum Laptop und zurück</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title_2">Verschlüsseln Sie ihre Daten, wenn Sie geräteübergreifend arbeiten</string>
+    <string name="juno_onboarding_sign_in_title_2">Verschlüsseln Sie Ihre Daten, wenn Sie geräteübergreifend arbeiten</string>
     <!-- Description for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">Holen Sie sich die Tabs und Passwörter von Ihren anderen Geräten, um dort weiterzumachen, wo Sie aufgehört haben.</string>
     <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.

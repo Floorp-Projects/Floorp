@@ -339,6 +339,8 @@
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">El Firefox prioritza les persones sobre els beneficis i defensa la vostra privadesa blocant els elements de seguiment entre llocs.\n\nTrobareu més informació en l’avís de privadesa.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2">El nostre navegador sense ànim de lucre ajuda a evitar que les empreses us segueixin en secret al web.\n\nObteniu més informació al nostre avís de privadesa.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">avís de privadesa</string>
@@ -349,8 +351,13 @@
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Ara no</string>
     <!-- Title for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">Salteu del telèfon al portàtil, i viceversa</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title_2">Manteniu el xifrat quan passeu d\'un aparell a un altre</string>
     <!-- Description for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">Recupereu les pestanyes i les contrasenyes dels altres dispositius per continuar des d’on ho havíeu deixat.</string>
+    <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
+     Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_sign_in_description_2">Si teniu la sessió iniciada i sincronitzada, esteu més segur. Firefox xifra les contrasenyes, els marcadors i molt més.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Inicia la sessió</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -364,6 +371,9 @@
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Envieu pestanyes entre dispositius, gestioneu les baixades i obteniu consells per a treure el màxim profit del Firefox.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus_2">Envieu pestanyes de manera segura entre els vostres dispositius i descobriu altres funcions de privadesa al Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Activa les notificacions</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -2191,7 +2201,7 @@
     <string name="review_quality_check_grade_d_f_description">Ressenyes poc fiables</string>
 
     <!-- Text for title presenting the reliability of a product's reviews. -->
-    <string name="review_quality_check_grade_title">Són fiables aquestes revisions?</string>
+    <string name="review_quality_check_grade_title">Són fiables aquestes ressenyes?</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Valoració ajustada</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
@@ -2201,6 +2211,12 @@
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
     <string name="review_quality_check_explanation_title">Com es determina la qualitat de la ressenya</string>
 
+    <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_explanation_body_reliability">Usem tecnologia d\'IA de %s de Mozilla per a comprovar la fiabilitat de les ressenyes de productes. Això només us ajudarà a avaluar la qualitat de la ressenya, no la qualitat del producte.</string>
+    <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[Assignem a les ressenyes de cada producte una <b>puntuació alfabètica</b> de la A a la F.]]></string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB">Les ressenyes són fiables. Pensem que probablement són de clients reals honestos i no estan esbiaixades.</string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Creiem que les ressenyes són fiables.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
@@ -2209,10 +2225,24 @@
     <string name="review_quality_check_info_grade_info_DF">Les ressenyes són poc fiables. Creiem que poden ser falses o esbiaixades.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Creiem que les ressenyes són poc fiables.</string>
+    <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
+    <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[La <b>puntuació ajustada</b> només es basa en les ressenyes que creiem fiables.]]></string>
+    <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[Els <b>destacats</b> provenen de %s ressenyes dels darrers 80 dies que creiem que són fiables.]]></string>
+    <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
+    <string name="review_quality_check_info_learn_more">Més informació sobre %s.</string>
+    <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_info_learn_more_link" moz:RemovedIn="121" tools:ignore="UnusedResources">com %s de Mozilla determina la qualitat de la ressenya</string>
+    <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. -->
+    <string name="review_quality_check_info_learn_more_link_2">com determina %s la qualitat de la ressenya</string>
     <!-- Text for title of settings section. -->
     <string name="review_quality_check_settings_title">Paràmetres</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">Mostra anuncis al verificador de ressenyes</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Veureu anuncis ocasionals de productes rellevants. Tots els anuncis han de complir els nostres estàndards de qualitat de revisió. %s</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Veureu anuncis ocasionals de productes rellevants. Només anunciem productes amb ressenyes fiables. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Més informació</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2225,10 +2255,14 @@
     <string name="review_quality_check_powered_by_2">El verificador de ressenyes funciona amb tecnologia de %s</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s de Mozilla</string>
+    <!-- Text for title of warning card informing the user that the current analysis is outdated. -->
+    <string name="review_quality_check_outdated_analysis_warning_title" tools:ignore="UnusedResources">Nova informació per a comprovar</string>
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Comprova-ho ara</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
     <string name="review_quality_check_no_reviews_warning_title">Encara no hi ha prou ressenyes</string>
+    <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
+    <string name="review_quality_check_no_reviews_warning_body">Quan aquest producte tingui més ressenyes, podrem comprovar-ne la qualitat.</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">El producte no està disponible</string>
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
@@ -2251,6 +2285,12 @@
     <string name="review_quality_check_not_analyzable_info_title">No podem comprovar aquestes ressenyes</string>
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
     <string name="review_quality_check_not_analyzable_info_body">Malauradament, no podem comprovar la qualitat de les ressenyes per certs tipus de productes. Per exemple, targetes de regal, transmissions de vídeo, música i jocs.</string>
+    <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Informació disponible pròximament</string>
+    <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_body" tools:ignore="UnusedResources">Hauríem de tenir informació sobre les ressenyes del producte d\'aquí a 24 hores. Torneu més tard.</string>
+    <!-- Title for info card displayed to the user when analysis finished updating. -->
+    <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">L\'anàlisi està actualitzat</string>
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Entesos</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
@@ -2267,10 +2307,38 @@
     <string name="review_quality_check_no_analysis_body">Per saber si les ressenyes són fiables, comproveu-ne la qualitat. Només són 60 segons.</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
     <string name="review_quality_check_no_analysis_link">Comprova la qualitat de les ressenyes</string>
+    <!-- Headline for review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_title">Proveu la nostra guia de confiança per a ressenyes de productes</string>
+    <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description">Vegeu com de fiables són les ressenyes de productes a %1$s abans de comprar. El verificador de ressenyes, una funció experimental de %2$s, està integrat directament al navegador. També funciona a %3$s i %4$s.</string>
+    <!-- Description for review quality check contextual onboarding card. The first parameters is for retailer name (e.g. Amazon). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description_one_vendor">Vegeu com de fiables són les ressenyes de productes a %1$s abans de comprar. El verificador de ressenyes, una funció experimental de %2$s, està integrada directament en el navegador.</string>
+    <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more">Amb el poder de %1$s de Mozilla, us ajudem a evitar ressenyes esbiaixades i no autèntiques. El nostre model d\'IA sempre millora per a protegir-vos mentre compreu. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Més informació</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="121" tools:ignore="UnusedResources">En seleccionar «Sí, prova-ho», accepteu %1$s de %2$s i %3$s de Mozilla.</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
+    <string name="review_quality_check_contextual_onboarding_caption_2">En seleccionar «Sí, prova-ho», accepteu les polítiques i condicions següents de %1$s:</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="121" tools:ignore="UnusedResources">política de privadesa</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_2">Política de privadesa</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
+    <string name="review_quality_check_contextual_onboarding_terms_use" moz:RemovedIn="121" tools:ignore="UnusedResources">condicions d\'ús</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
+    <string name="review_quality_check_contextual_onboarding_terms_use_2">Condicions d\'ús</string>
+    <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_primary_button_text">Sí, prova-ho</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_secondary_button_text">Ara no</string>
+    <!-- Text for the first CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_first_cfr_message">Esbrineu si podeu confiar en les ressenyes d\'aquest producte abans de comprar-lo.</string>
+    <!-- Text displayed in the first CFR presenting the review quality check feature that opens the review checker when clicked. -->
+    <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">Prova el verificador de ressenyes</string>
+    <!-- Text for the second CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_second_cfr_message">Són fiables aquestes ressenyes? Comproveu-ho ara per a veure una puntuació ajustada.</string>
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Obre el verificador de ressenyes</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->
