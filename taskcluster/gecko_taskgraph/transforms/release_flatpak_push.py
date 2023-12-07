@@ -62,9 +62,10 @@ def make_task_description(config, jobs):
             job.setdefault("scopes", []).append(
                 add_scope_prefix(
                     config,
-                    "{}:{}".format(job.pop("flathub-scope"), job["worker"]["channel"]),
+                    "{}:{}".format(job["flathub-scope"], job["worker"]["channel"]),
                 )
             )
+        del job["flathub-scope"]
 
         yield job
 
