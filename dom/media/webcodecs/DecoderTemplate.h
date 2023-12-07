@@ -210,8 +210,7 @@ class DecoderTemplate : public DOMEventTargetHelper {
   // Queue a task to the control thread. This is to be used when a task needs to
   // perform multiple steps.
   template <typename Func>
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void QueueATask(const char* aName, Func&& aSteps);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void QueueATask(const char* aName, Func&& aSteps);
 
   MessageProcessedResult ProcessConfigureMessage(
       UniquePtr<ControlMessage>& aMessage);

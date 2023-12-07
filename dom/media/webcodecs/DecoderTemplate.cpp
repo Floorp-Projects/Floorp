@@ -466,7 +466,7 @@ void DecoderTemplate<DecoderType>::QueueATask(const char* aName,
                                               Func&& aSteps) {
   AssertIsOnOwningThread();
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(
-        NS_NewRunnableFunction(aName, std::forward<Func>(aSteps))));
+      NS_NewRunnableFunction(aName, std::forward<Func>(aSteps))));
 }
 
 template <typename DecoderType>
@@ -682,10 +682,10 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessDecodeMessage(
                           msgStr.get());
                      self->QueueATask(
                          "Output Decoded Data",
-                         [self = RefPtr{self},
-                          data = std::move(data)]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-                           self->OutputDecodedData(std::move(data));
-                         });
+                         [self = RefPtr{self}, data = std::move(data)]()
+                             MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+                               self->OutputDecodedData(std::move(data));
+                             });
                    }
                    self->ProcessControlMessageQueue();
                  })
@@ -759,15 +759,15 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessFlushMessage(
                      // above.
                      self->QueueATask(
                          "Error during flush runnable",
-                         [self = RefPtr{this},
-                          promise]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-                           promise->MaybeReject(
-                               NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
-                           self->mProcessingMessage.reset();
-                           MOZ_ASSERT(self->mState != CodecState::Closed);
-                           self->CloseInternal(
-                               NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
-                         });
+                         [self = RefPtr{this}, promise]()
+                             MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+                               promise->MaybeReject(
+                                   NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+                               self->mProcessingMessage.reset();
+                               MOZ_ASSERT(self->mState != CodecState::Closed);
+                               self->CloseInternal(
+                                   NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+                             });
                      return;
                    }
 
@@ -786,11 +786,11 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessFlushMessage(
                    RefPtr<Promise> promise = msg->TakePromise();
                    self->QueueATask(
                        "Flush: output decoding data task",
-                       [self = RefPtr{self}, promise,
-                        data = std::move(data)]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-                         self->OutputDecodedData(std::move(data));
-                         promise->MaybeResolveWithUndefined();
-                       });
+                       [self = RefPtr{self}, promise, data = std::move(data)]()
+                           MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+                             self->OutputDecodedData(std::move(data));
+                             promise->MaybeResolveWithUndefined();
+                           });
                    self->mProcessingMessage.reset();
                    self->ProcessControlMessageQueue();
                  })
