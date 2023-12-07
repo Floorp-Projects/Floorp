@@ -6,6 +6,7 @@
 
 #include "PlatformEncoderModule.h"
 #include "nsPrintfCString.h"
+#include "mozilla/ToString.h"
 
 namespace mozilla {
 
@@ -33,4 +34,64 @@ PlatformEncoderModule::AsyncCreateEncoder(const EncoderConfig& aEncoderConfig,
   return CreateEncoderPromise::CreateAndResolve(encoder, __func__);
 }
 
+template <typename T>
+nsCString MaybeToString(const Maybe<T>& aMaybe) {
+  return nsPrintfCString(
+      "%s", aMaybe.isSome() ? ToString(aMaybe.value()).c_str() : "nothing");
 }
+
+struct ConfigurationChangeToString {
+  nsCString operator()(const DimensionsChange& aDimensionsChange) {
+    return nsPrintfCString("Dimensions: %dx%d", aDimensionsChange.get().width,
+                           aDimensionsChange.get().height);
+  }
+  nsCString operator()(const DisplayDimensionsChange& aDisplayDimensionChange) {
+    if (aDisplayDimensionChange.get().isNothing()) {
+      return nsCString("Display dimensions: nothing");
+    }
+    gfx::IntSize displayDimensions = aDisplayDimensionChange.get().value();
+    return nsPrintfCString("Display dimensions: %dx%d", displayDimensions.width,
+                           displayDimensions.height);
+  }
+  nsCString operator()(const BitrateChange& aBitrateChange) {
+    if (aBitrateChange.get().isSome()) {
+      return nsLiteralCString("Bitrate: nothing");
+    }
+    return nsPrintfCString("Bitrate: %skbps",
+                           MaybeToString(aBitrateChange.get()).get());
+  }
+  nsCString operator()(const FramerateChange& aFramerateChange) {
+    if (aFramerateChange.get().isNothing()) {
+      return nsCString("Framerate: nothing");
+    }
+    return nsPrintfCString("Framerate: %lfHz", aFramerateChange.get().value());
+  }
+  nsCString operator()(const BitrateModeChange& aBitrateModeChange) {
+    return nsPrintfCString(
+        "Bitrate mode: %s",
+        aBitrateModeChange.get() == MediaDataEncoder::BitrateMode::Constant
+            ? "Constant"
+            : "Variable");
+  }
+  nsCString operator()(const UsageChange& aUsageChange) {
+    return nsPrintfCString(
+        "Usage mode: %s",
+        aUsageChange.get() == MediaDataEncoder::Usage::Realtime ? "Realtime"
+                                                                : "Recoding");
+  }
+  nsCString operator()(const ContentHintChange& aContentHintChange) {
+    return nsPrintfCString("Content hint: %s",
+                           MaybeToString(aContentHintChange.get()).get());
+  }
+};
+
+nsString EncoderConfigurationChangeList::ToString() const {
+  nsString rv(
+      NS_LITERAL_STRING_FROM_CSTRING("EncoderConfigurationChangeList:"_ns));
+  for (const EncoderConfigurationItem& change : mChanges) {
+    nsCString str = change.match(ConfigurationChangeToString());
+    rv.AppendPrintf("- %s\n", str.get());
+  }
+  return rv;
+}
+}  // namespace mozilla
