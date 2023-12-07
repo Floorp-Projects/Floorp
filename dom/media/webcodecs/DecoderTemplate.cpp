@@ -572,6 +572,15 @@ void DecoderTemplate<DecoderType>::CancelPendingControlMessages(
 }
 
 template <typename DecoderType>
+template <typename Func>
+void DecoderTemplate<DecoderType>::QueueATask(const char* aName,
+                                              Func&& aSteps) {
+  AssertIsOnOwningThread();
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(
+        NS_NewRunnableFunction(aName, std::forward<Func>(aSteps))));
+}
+
+template <typename DecoderType>
 MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
     UniquePtr<ControlMessage>& aMessage) {
   AssertIsOnOwningThread();
