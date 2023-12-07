@@ -2,8 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+if (findProject(":geckoview") != null) {
+    buildDir "${topobjdir}/gradle/build/mobile/android/samples-browser"
+}
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+
+if (findProject(":geckoview") != null) {
+    apply from: "${topsrcdir}/mobile/android/gradle/product_flavors.gradle"
+}
 
 android {
     defaultConfig {
@@ -26,7 +34,12 @@ android {
         }
     }
 
-    flavorDimensions "engine"
+    if (findProject(":geckoview") != null) {
+        project.configureProductFlavors.delegate = it
+        project.configureProductFlavors()
+    }
+
+    flavorDimensions += "engine"
 
     productFlavors {
         gecko {
