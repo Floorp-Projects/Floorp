@@ -43,7 +43,7 @@ static void FrameCallback(void* aEncoder, void* aFrameRefCon, OSStatus aStatus,
                           CMSampleBufferRef aSampleBuffer) {
   if (aStatus != noErr || !aSampleBuffer) {
     LOGE("VideoToolbox encoder returned no data status=%d sample=%p", aStatus,
-               aStatus, aSampleBuffer);
+         aSampleBuffer);
     aSampleBuffer = nullptr;
   } else if (aInfoFlags & kVTEncodeInfo_FrameDropped) {
     LOGE("frame tagged as dropped");
@@ -62,12 +62,54 @@ static bool SetAverageBitrate(VTCompressionSessionRef& aSession,
                               bitrate) == noErr;
 }
 
-static bool SetRealtimeProperties(VTCompressionSessionRef& aSession) {
+static bool SetConstantBitrate(VTCompressionSessionRef& aSession,
+                               uint32_t aBitsPerSec) {
+  int64_t bps(aBitsPerSec);
+  AutoCFRelease<CFNumberRef> bitrate(
+      CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &bps));
+  // Not available before macOS 13 -- this will fail cleanly when not supported
+  // but the symbol kVTCompressionPropertyKey_ConstantBitRate isn't available
+  // return VTSessionSetProperty(aSession,
+  //                             bitrate) == noErr;
+
+  if (__builtin_available(macos 13.0, *)) {
+    return VTSessionSetProperty(aSession,
+                                kVTCompressionPropertyKey_ConstantBitRate,
+                                bitrate) == noErr;
+  }
+  return false;
+}
+
+static bool SetBitrateAndMode(VTCompressionSessionRef& aSession,
+                              MediaDataEncoder::BitrateMode aBitrateMode,
+                              uint32_t aBitsPerSec) {
+  if (aBitrateMode == MediaDataEncoder::BitrateMode::Variable) {
+    return SetAverageBitrate(aSession, aBitsPerSec);
+  }
+  return SetConstantBitrate(aSession, aBitsPerSec);
+}
+
+static bool SetFrameRate(VTCompressionSessionRef& aSession, int64_t aFPS) {
+  AutoCFRelease<CFNumberRef> framerate(
+      CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &framerate));
+  return VTSessionSetProperty(aSession,
+                              kVTCompressionPropertyKey_ExpectedFrameRate,
+                              framerate) == noErr;
+}
+
+static bool SetRealtime(VTCompressionSessionRef& aSession, bool aEnabled) {
+  if (aEnabled) {
+    return VTSessionSetProperty(aSession, kVTCompressionPropertyKey_RealTime,
+                                kCFBooleanTrue) == noErr &&
+           VTSessionSetProperty(aSession,
+                                kVTCompressionPropertyKey_AllowFrameReordering,
+                                kCFBooleanFalse) == noErr;
+  }
   return VTSessionSetProperty(aSession, kVTCompressionPropertyKey_RealTime,
-                              kCFBooleanTrue) == noErr &&
+                              kCFBooleanFalse) == noErr &&
          VTSessionSetProperty(aSession,
                               kVTCompressionPropertyKey_AllowFrameReordering,
-                              kCFBooleanFalse) == noErr;
+                              kCFBooleanTrue) == noErr;
 }
 
 static bool SetProfileLevel(VTCompressionSessionRef& aSession,
@@ -518,6 +560,11 @@ static size_t NumberOfPlanes(MediaDataEncoder::PixelFormat aPixelFormat) {
 
 using namespace layers;
 
+static void ReleaseImageInterleaved(void* aReleaseRef,
+                                    const void* aBaseAddress) {
+  (static_cast<Image*>(aReleaseRef))->Release();
+}
+
 static void ReleaseImage(void* aImageGrip, const void* aDataPtr,
                          size_t aDataSize, size_t aNumOfPlanes,
                          const void** aPlanes) {
@@ -631,15 +678,15 @@ RefPtr<ShutdownPromise> AppleVTEncoder::ProcessShutdown() {
   return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
-RefPtr<GenericPromise> AppleVTEncoder::SetBitrate(
-    uint32_t aBitsPerSec) {
+RefPtr<GenericPromise> AppleVTEncoder::SetBitrate(uint32_t aBitsPerSec) {
   RefPtr<AppleVTEncoder> self = this;
   return InvokeAsync(mTaskQueue, __func__, [self, aBitsPerSec]() {
     MOZ_ASSERT(self->mSession);
-    return SetAverageBitrate(self->mSession, aBitsPerSec)
-               ? GenericPromise::CreateAndResolve(true, __func__)
-               : GenericPromise::CreateAndReject(
-                     NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR, __func__);
+    bool rv = SetBitrateAndMode(self->mSession, self->mConfig.mBitrateMode,
+                                aBitsPerSec);
+    return rv ? GenericPromise::CreateAndResolve(true, __func__)
+              : GenericPromise::CreateAndReject(
+                    NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR, __func__);
   });
 }
 
