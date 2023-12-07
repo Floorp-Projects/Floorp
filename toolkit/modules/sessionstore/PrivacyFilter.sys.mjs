@@ -24,6 +24,14 @@ export var PrivacyFilter = Object.freeze({
   filterSessionStorageData(data) {
     let retval = {};
 
+    if (lazy.PrivacyLevel.shouldSaveEverything()) {
+      return data;
+    }
+
+    if (!lazy.PrivacyLevel.canSaveAnything()) {
+      return null;
+    }
+
     for (let host of Object.keys(data)) {
       if (lazy.PrivacyLevel.check(host)) {
         retval[host] = data[host];
@@ -42,6 +50,14 @@ export var PrivacyFilter = Object.freeze({
    * @return object
    */
   filterFormData(data) {
+    if (lazy.PrivacyLevel.shouldSaveEverything()) {
+      return Object.keys(data).length ? data : null;
+    }
+
+    if (!lazy.PrivacyLevel.canSaveAnything()) {
+      return null;
+    }
+
     // If the given form data object has an associated URL that we are not
     // allowed to store data for, bail out. We explicitly discard data for any
     // children as well even if storing data for those frames would be allowed.
