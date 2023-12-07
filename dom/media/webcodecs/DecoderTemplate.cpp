@@ -288,7 +288,7 @@ Result<Ok, nsresult> DecoderTemplate<DecoderType>::CloseInternal(
     GetErrorName(aResult, error);
     LOGE("%s %p Close on error: %s", DecoderType::Name.get(), this,
          error.get());
-    ScheduleReportError(aResult);
+    ReportError(aResult);
   }
   return Ok();
 }
@@ -422,27 +422,18 @@ void DecoderTemplate<DecoderType>::ScheduleClose(const nsresult& aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == CodecState::Configured);
 
-  auto task = [self = RefPtr{this}, result = aResult] {
-    if (self->mState == CodecState::Closed) {
-      nsCString error;
-      GetErrorName(result, error);
-      LOGW("%s %p has been closed. Ignore close with %s",
-           DecoderType::Name.get(), self.get(), error.get());
-      return;
-    }
-    DebugOnly<Result<Ok, nsresult>> r = self->CloseInternal(result);
-    MOZ_ASSERT(r.value.isOk());
-  };
-  nsISerialEventTarget* target = GetCurrentSerialEventTarget();
-
-  if (NS_IsMainThread()) {
-    MOZ_ALWAYS_SUCCEEDS(target->Dispatch(
-        NS_NewRunnableFunction("ScheduleClose Runnable (main)", task)));
-    return;
-  }
-
-  MOZ_ALWAYS_SUCCEEDS(target->Dispatch(NS_NewCancelableRunnableFunction(
-      "ScheduleClose Runnable (worker)", task)));
+  NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+      "Async close runnable", [self = RefPtr{this}, result = aResult] {
+        if (self->mState == CodecState::Closed) {
+          nsCString error;
+          GetErrorName(result, error);
+          LOGW("%s %p has been closed. Ignore close with %s",
+               DecoderType::Name.get(), self.get(), error.get());
+          return;
+        }
+        DebugOnly<Result<Ok, nsresult>> r = self->CloseInternal(result);
+        MOZ_ASSERT(r.value.isOk());
+      }));
 }
 
 template <typename DecoderType>
@@ -592,6 +583,8 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
 
   DestroyDecoderAgentIfAny();
 
+  mMessageQueueBlocked = true;
+
   auto i = DecoderType::CreateTrackInfo(msg->Config());
   bool supported = !i.isErr() && DecoderType::IsSupported(msg->Config());
   bool decoderAgentCreated =
@@ -600,7 +593,9 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
   if (!supported || i.isErr() || !decoderAgentCreated) {
     nsCString errorMessage;
     if (i.isErr()) {
-      errorMessage.Append(errorMessage);
+      nsCString res;
+      GetErrorName(i.unwrapErr(), res);
+      errorMessage.AppendPrintf("CreateTrackInfo failed: %s", res.get());
     } else if (!supported) {
       errorMessage.Append("Not supported.");
     } else if (!decoderAgentCreated) {
@@ -609,15 +604,7 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
     LOGE("%s %p ProcessConfigureMessage error (sync): %s",
          DecoderType::Name.get(), this, errorMessage.get());
     mProcessingMessage.reset();
-    NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-        "ProcessConfigureMessage (async): invalid config",
-        [self = RefPtr(this), errorMessage] {
-          LOGE("%s %p ProcessConfigureMessage (async close): %s",
-               DecoderType::Name.get(), self.get(), errorMessage.get());
-          DebugOnly<Result<Ok, nsresult>> r =
-              self->CloseInternal(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-          MOZ_ASSERT(r.value.isOk());
-        }));
+    ScheduleClose(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return MessageProcessedResult::Processed;
   }
 
@@ -626,7 +613,6 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
 
   LOG("%s %p now blocks message-queue-processing", DecoderType::Name.get(),
       this);
-  mMessageQueueBlocked = true;
 
   bool preferSW = mActiveConfig->mHardwareAcceleration ==
                   HardwareAcceleration::Prefer_software;
