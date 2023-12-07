@@ -13,6 +13,10 @@ interface nsIEventTarget;
 interface nsIRunnable;
 interface nsIThread;
 
+%{ C++
+#include "mozilla/Maybe.h"
+%}
+
 [scriptable, function, uuid(039a227d-0cb7-44a5-a8f9-dbb7071979f2)]
 interface nsINestedEventLoopCondition : nsISupports
 {
@@ -72,6 +76,11 @@ interface nsIThreadManager : nsISupports
     // (Windows-only) Whether the thread should have a MessageLoop capable of
     // processing native UI events. Defaults to false.
     bool isUiThread = false;
+
+    // If set, long task markers will be collected for tasks
+    // longer than longTaskLength ms when profiling is enabled.
+    // See https://www.w3.org/TR/longtasks
+    mozilla::Maybe<uint32_t> longTaskLength;
   };
 %}
 
