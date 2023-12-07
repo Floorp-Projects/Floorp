@@ -22,9 +22,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-// Maximum number of rows to display in the select dropdown.
-const MAX_ROWS = 20;
-
 // Minimum elements required to show select search
 const SEARCH_MINIMUM_ELEMENTS = 40;
 
@@ -291,29 +288,10 @@ export var SelectParentHelper = {
     this._selectRect = rect;
     this._registerListeners(menulist.menupopup);
 
-    // Set the maximum height to show exactly MAX_ROWS items.
     let menupopup = menulist.menupopup;
-    let firstItem = menupopup.firstElementChild;
-    while (firstItem && firstItem.hidden) {
-      firstItem = firstItem.nextElementSibling;
-    }
-
-    let win = menulist.ownerGlobal;
-    if (firstItem) {
-      let itemHeight = firstItem.getBoundingClientRect().height;
-
-      // Include the padding and border on the popup.
-      let cs = win.getComputedStyle(menupopup);
-      let bpHeight =
-        parseFloat(cs.borderTopWidth) +
-        parseFloat(cs.borderBottomWidth) +
-        parseFloat(cs.paddingTop) +
-        parseFloat(cs.paddingBottom);
-      menupopup.style.maxHeight = itemHeight * MAX_ROWS + bpHeight + "px";
-    }
-
     menupopup.classList.toggle("isOpenedViaTouch", isOpenedViaTouch);
 
+    let win = menulist.ownerGlobal;
     if (browser) {
       browser.constrainPopup(menupopup);
     } else {

@@ -268,27 +268,6 @@ async function performLargePopupTests(win) {
     );
     await contentPainted;
   }
-
-  if (navigator.platform.indexOf("Mac") == 0) {
-    await SpecialPowers.spawn(browser, [], async function () {
-      let doc = content.document;
-      doc.body.style = "padding-top: 400px;";
-
-      let select = doc.getElementById("one");
-      select.options[41].selected = true;
-      select.focus();
-    });
-
-    await openSelectPopup("key", "select", win);
-
-    ok(
-      selectPopup.getBoundingClientRect().top >
-        browser.getBoundingClientRect().top,
-      "select popup appears over selected item"
-    );
-
-    await hideSelectPopup("escape", win);
-  }
 }
 
 // This test checks select elements with a large number of options to ensure that
