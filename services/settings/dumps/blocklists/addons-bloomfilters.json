@@ -3,6 +3,19 @@
     {
       "stash": {
         "blocked": [
+          "contact@currency-converter.com:1.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1701771235055,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1701887704220,
+      "id": "aee4c062-d837-4050-a2d2-e4e79c80b6b4",
+      "last_modified": 1701887760444
+    },
+    {
+      "stash": {
+        "blocked": [
           "nmextmozpm21@fabasoft.com:21.0.0.9",
           "nmextmozpm21@fabasoft.com:21.2.2.4",
           "nmextmozpm21@fabasoft.com:22.8.0.5",
@@ -2874,5 +2887,5 @@
       "last_modified": 1690223886167
     }
   ],
-  "timestamp": 1701282988323
+  "timestamp": 1701887760444
 }
