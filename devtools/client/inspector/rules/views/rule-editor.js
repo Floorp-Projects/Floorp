@@ -624,11 +624,16 @@ RuleEditor.prototype = {
           });
         }
 
-        const desugaredSelector = desugaredSelectors[i];
-        const matchedSelector =
-          this.rule.matchedDesugaredSelectors.includes(desugaredSelector);
-        const containerClass =
-          "ruleview-selector " + (matchedSelector ? "matched" : "unmatched");
+        let containerClass = "ruleview-selector ";
+
+        // Only add matched/unmatched class when the rule does have some matched
+        // selectors. We don't always have some (e.g. rules for pseudo elements)
+        if (this.rule.matchedDesugaredSelectors.length) {
+          const desugaredSelector = desugaredSelectors[i];
+          const matchedSelector =
+            this.rule.matchedDesugaredSelectors.includes(desugaredSelector);
+          containerClass += matchedSelector ? "matched" : "unmatched";
+        }
 
         const selectorContainer = createChild(this.selectorText, "span", {
           class: containerClass,
