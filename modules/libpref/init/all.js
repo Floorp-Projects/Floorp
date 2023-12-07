@@ -188,6 +188,13 @@ pref("pdfjs.enableXfa", true);
 // Enable adding an image in a pdf.
 pref("pdfjs.enableStampEditor", true);
 
+// Enable adding an image in a pdf.
+#if defined(EARLY_BETA_OR_EARLIER)
+  pref("pdfjs.enableHighlightEditor", true);
+#else
+  pref("pdfjs.enableHighlightEditor", false);
+#endif
+
 // Disable support for MathML
 pref("mathml.disabled",    false);
 
