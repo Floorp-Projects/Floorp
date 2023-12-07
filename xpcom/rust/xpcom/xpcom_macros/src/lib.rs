@@ -197,7 +197,7 @@ impl Interface {
             Ok(methods) => Ok(methods),
             Err(reason) => Err(syn::Error::new(
                 Span::call_site(),
-                &format!(
+                format!(
                     "Interface {} cannot be implemented in rust \
                      because {} is not supported yet",
                     self.name, reason
@@ -358,7 +358,7 @@ fn gen_inner_vtable(real: &ItemStruct, iface: &Interface) -> Result<TokenStream,
     let turbofish = ty_generics.as_turbofish();
     let vtable_init = iface
         .methods()?
-        .into_iter()
+        .iter()
         .map(|method| {
             let name = format_ident!("{}", method.name);
             quote! { #name : #name #turbofish, }
