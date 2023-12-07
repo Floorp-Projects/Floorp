@@ -153,6 +153,7 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
   Label handle_BaselineOrIonJS;
   Label handle_BaselineStub;
   Label handle_Rectifier;
+  Label handle_BaselineInterpreterEntry;
   Label handle_IonICCall;
   Label handle_Entry;
 
@@ -167,7 +168,7 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
   if (JitOptions.emitInterpreterEntryTrampoline) {
     masm.branch32(Assembler::Equal, scratch,
                   Imm32(FrameType::BaselineInterpreterEntry),
-                  &handle_Rectifier);  // Handle this similarly to rectifier.
+                  &handle_BaselineInterpreterEntry);
   }
   masm.branch32(Assembler::Equal, scratch, Imm32(FrameType::CppToJSJit),
                 &handle_Entry);
@@ -240,6 +241,20 @@ void JitRuntime::generateProfilerExitFrameTailStub(MacroAssembler& masm,
                             {FrameType::IonJS, FrameType::BaselineStub,
                              FrameType::CppToJSJit, FrameType::WasmToJSJit});
     masm.jump(&again);
+  }
+
+  if (JitOptions.emitInterpreterEntryTrampoline) {
+    masm.bind(&handle_BaselineInterpreterEntry);
+    {
+      // Unwrap the baseline interpreter entry frame and try again.
+      masm.loadPtr(Address(fpScratch, CallerFPOffset), fpScratch);
+      emitAssertPrevFrameType(
+          fpScratch, scratch,
+          {FrameType::IonJS, FrameType::BaselineJS, FrameType::BaselineStub,
+           FrameType::CppToJSJit, FrameType::WasmToJSJit, FrameType::IonICCall,
+           FrameType::Rectifier});
+      masm.jump(&again);
+    }
   }
 
   masm.bind(&handle_Entry);
