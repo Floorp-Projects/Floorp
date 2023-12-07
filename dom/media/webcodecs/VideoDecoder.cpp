@@ -171,7 +171,7 @@ struct MIMECreateParam {
   const Maybe<uint32_t> mHeight;
 };
 
-static nsTArray<nsCString> GuessMIMETypes(MIMECreateParam aParam) {
+static nsTArray<nsCString> GuessMIMETypes(const MIMECreateParam& aParam) {
   const auto codec = NS_ConvertUTF16toUTF8(aParam.mParsedCodec);
   nsTArray<nsCString> types;
   for (const nsCString& container : GuessContainers(aParam.mParsedCodec)) {
