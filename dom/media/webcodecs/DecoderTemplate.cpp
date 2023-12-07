@@ -7,6 +7,7 @@
 #include "DecoderTemplate.h"
 
 #include <atomic>
+#include <utility>
 
 #include "DecoderTypes.h"
 #include "MediaInfo.h"
@@ -377,7 +378,7 @@ void DecoderTemplate<DecoderType>::ScheduleDequeueEventIfNeeded() {
   }
   mDequeueEventScheduled = true;
 
-  QueueATask("dequeue event task", [self = RefPtr{this}] {
+  QueueATask("dequeue event task", [self = RefPtr{this}] MOZ_CAN_RUN_SCRIPT_BOUNDARY {
     self->FireEvent(nsGkAtoms::ondequeue, u"dequeue"_ns);
     self->mDequeueEventScheduled = false;
   });
@@ -511,10 +512,11 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
          DecoderType::Name.get(), this, errorMessage.get());
 
     mProcessingMessage.reset();
-    QueueATask("Error during flush runnable", [self = RefPtr{this}] {
-      MOZ_ASSERT(self->mState != CodecState::Closed);
-      self->CloseInternal(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    });
+    QueueATask("Error during flush runnable",
+               [self = RefPtr{this}]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+                 MOZ_ASSERT(self->mState != CodecState::Closed);
+                 self->CloseInternal(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+               });
     return MessageProcessedResult::Processed;
   }
 
@@ -533,7 +535,7 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
           GetCurrentSerialEventTarget(), __func__,
           [self = RefPtr{this}, id = mAgent->mId](
               const DecoderAgent::ConfigurePromise::ResolveOrRejectValue&
-                  aResult) {
+                  aResult) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
             MOZ_ASSERT(self->mProcessingMessage);
             MOZ_ASSERT(self->mProcessingMessage->AsConfigureMessage());
             MOZ_ASSERT(self->mState == CodecState::Configured);
@@ -556,13 +558,16 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
               // NotSupportedError so we log the exact error here.
               const MediaResult& error = aResult.RejectValue();
               LOGE("%s %p, DecodeAgent #%d failed to configure: %s",
-                   DecoderType::Name.get(), self.get(), id,
-                   error.Description().get());
+                  DecoderType::Name.get(), self.get(), id,
+                  error.Description().get());
 
-              self->QueueATask("Error during configure", [self = RefPtr{self}] {
-                MOZ_ASSERT(self->mState != CodecState::Closed);
-                self->CloseInternal(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
-              });
+              self->QueueATask(
+                  "Error during configure",
+                  [self = RefPtr{self}]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+                  MOZ_ASSERT(self->mState != CodecState::Closed);
+                  self->CloseInternal(
+                      NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+                  });
               return;
             }
 
@@ -599,12 +604,13 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessDecodeMessage(
 
   // Treat it like decode error if no DecoderAgent is available or the encoded
   // data is invalid.
-  auto closeOnError = [&]() {
+  auto closeOnError = [&]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
     mProcessingMessage.reset();
-    QueueATask("Error during configure", [self = RefPtr{this}] {
-      MOZ_ASSERT(self->mState != CodecState::Closed);
-      self->CloseInternal(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
-    });
+    QueueATask("Error during configure",
+               [self = RefPtr{this}]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+                 MOZ_ASSERT(self->mState != CodecState::Closed);
+                 self->CloseInternal(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+               });
     return MessageProcessedResult::Processed;
   };
 
@@ -626,7 +632,7 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessDecodeMessage(
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self = RefPtr{this}, id = mAgent->mId](
-              DecoderAgent::DecodePromise::ResolveOrRejectValue&& aResult) {
+              DecoderAgent::DecodePromise::ResolveOrRejectValue&& aResult) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
             MOZ_ASSERT(self->mProcessingMessage);
             MOZ_ASSERT(self->mProcessingMessage->AsDecodeMessage());
             MOZ_ASSERT(self->mState == CodecState::Configured);
@@ -649,12 +655,15 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessDecodeMessage(
               // with an EncodingError so we log the exact error here.
               const MediaResult& error = aResult.RejectValue();
               LOGE("%s %p, DecodeAgent #%d %s failed: %s",
-                   DecoderType::Name.get(), self.get(), id, msgStr.get(),
-                   error.Description().get());
-              self->QueueATask("Error during configure", [self = RefPtr{self}] {
-                MOZ_ASSERT(self->mState != CodecState::Closed);
-                self->CloseInternal(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
-              });
+                  DecoderType::Name.get(), self.get(), id, msgStr.get(),
+                  error.Description().get());
+              self->QueueATask(
+                  "Error during configure",
+                  [self = RefPtr{self}]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+                  MOZ_ASSERT(self->mState != CodecState::Closed);
+                  self->CloseInternal(
+                      NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+                  });
               return;
             }
 
@@ -669,7 +678,7 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessDecodeMessage(
                    DecoderType::Name.get(), self.get(), data.Length(),
                    msgStr.get());
               self->QueueATask("Output Decoded Data",
-                               [self = RefPtr{self}, data = std::move(data)] {
+                               [self = RefPtr{self}, data = std::move(data)] MOZ_CAN_RUN_SCRIPT_BOUNDARY {
                                  self->OutputDecodedData(std::move(data));
                                });
             }
@@ -712,7 +721,7 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessFlushMessage(
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self = RefPtr{this}, id = mAgent->mId,
-           this](DecoderAgent::DecodePromise::ResolveOrRejectValue&& aResult) {
+           this](DecoderAgent::DecodePromise::ResolveOrRejectValue&& aResult) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
             MOZ_ASSERT(self->mProcessingMessage);
             MOZ_ASSERT(self->mProcessingMessage->AsFlushMessage());
             MOZ_ASSERT(self->mState == CodecState::Configured);
@@ -743,7 +752,7 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessFlushMessage(
               // above.
               self->QueueATask("Error during flush runnable", [self =
                                                                    RefPtr{this},
-                                                               promise] {
+                                                               promise] MOZ_CAN_RUN_SCRIPT_BOUNDARY {
                 promise->MaybeReject(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
                 self->mProcessingMessage.reset();
                 MOZ_ASSERT(self->mState != CodecState::Closed);
@@ -767,7 +776,7 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessFlushMessage(
             RefPtr<Promise> promise = msg->TakePromise();
             self->QueueATask(
                 "Flush: output decoding data task",
-                [self = RefPtr{self}, promise, data = std::move(data)] {
+                [self = RefPtr{self}, promise, data = std::move(data)] MOZ_CAN_RUN_SCRIPT_BOUNDARY {
                   self->OutputDecodedData(std::move(data));
                   promise->MaybeResolveWithUndefined();
                 });
@@ -821,7 +830,7 @@ bool DecoderTemplate<DecoderType>::CreateDecoderAgent(
     // Clean up all the resources when worker is going away.
     RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
         workerPrivate, "DecoderTemplate::CreateDecoderAgent",
-        [self = RefPtr{this}]() {
+        [self = RefPtr{this}]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
           LOG("%s %p, worker is going away", DecoderType::Name.get(),
               self.get());
           Unused << self->ResetInternal(NS_ERROR_DOM_ABORT_ERR);
@@ -857,7 +866,7 @@ bool DecoderTemplate<DecoderType>::CreateDecoderAgent(
   mShutdownBlocker->ShutdownPromise()->Then(
       GetCurrentSerialEventTarget(), __func__,
       [self = RefPtr{this}, id = mAgent->mId,
-       ref = mWorkerRef](bool /* aUnUsed*/) {
+       ref = mWorkerRef](bool /* aUnUsed*/) MOZ_CAN_RUN_SCRIPT {
         LOG("%s %p gets xpcom-will-shutdown notification for DecodeAgent #%d",
             DecoderType::Name.get(), self.get(), id);
         Unused << self->ResetInternal(NS_ERROR_DOM_ABORT_ERR);
