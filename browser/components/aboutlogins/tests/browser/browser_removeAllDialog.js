@@ -32,7 +32,7 @@ async function activateLoginItemEdit(browser) {
   });
   function getLoginItemEditButton() {
     let loginItem = window.document.querySelector("login-item");
-    return loginItem.shadowRoot.querySelector("edit-button");
+    return loginItem.shadowRoot.querySelector(".edit-button");
   }
   await BrowserTestUtils.synthesizeMouseAtCenter(
     getLoginItemEditButton,
@@ -41,10 +41,10 @@ async function activateLoginItemEdit(browser) {
   );
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = content.document.querySelector("login-item");
-    let editButton = loginItem.shadowRoot
-      .querySelector("edit-button")
-      .shadowRoot.querySelector("button");
-    editButton.click();
+    loginItem.shadowRoot
+      .querySelector(".edit-button")
+      .shadowRoot.querySelector("button")
+      .click();
     await ContentTaskUtils.waitForCondition(
       () => loginItem.dataset.editing,
       "Waiting for login-item to enter edit mode"
@@ -57,7 +57,7 @@ async function activateCreateNewLogin(browser) {
   await SimpleTest.promiseFocus(browser);
   function getCreateNewLoginButton() {
     let loginList = window.document.querySelector("login-list");
-    return loginList.shadowRoot.querySelector("create-login-button");
+    return loginList.shadowRoot.querySelector(".create-login-button");
   }
   await BrowserTestUtils.synthesizeMouseAtCenter(
     getCreateNewLoginButton,

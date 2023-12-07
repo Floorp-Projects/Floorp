@@ -39,13 +39,13 @@ export default class LoginItem extends HTMLElement {
     this._cancelButton = this.shadowRoot.querySelector(".cancel-button");
     this._confirmDeleteDialog = document.querySelector("confirm-delete-dialog");
     this._copyPasswordButton = this.shadowRoot.querySelector(
-      "copy-password-button"
+      ".copy-password-button"
     );
     this._copyUsernameButton = this.shadowRoot.querySelector(
-      "copy-username-button"
+      ".copy-username-button"
     );
-    this._deleteButton = this.shadowRoot.querySelector("delete-button");
-    this._editButton = this.shadowRoot.querySelector("edit-button");
+    this._deleteButton = this.shadowRoot.querySelector(".delete-button");
+    this._editButton = this.shadowRoot.querySelector(".edit-button");
     this._errorMessage = this.shadowRoot.querySelector(".error-message");
     this._errorMessageLink = this._errorMessage.querySelector(
       ".error-message-link"
@@ -468,6 +468,12 @@ export default class LoginItem extends HTMLElement {
     }
   }
 
+  /*
+  Removed the functionality to disable copy button on click since it lead to a focus shift to "Sign in to Sync" every time
+  it was activated by keyboard navigation. This did not happen if the buttons were not disabled. This was done to avoid any 
+  accessibility concerns. These handleEvents for login-command-button will be extracted out in the follow up bug -> Bug 1844869.
+  */
+
   async handleCopyPasswordClick({ currentTarget }) {
     let primaryPasswordAuth = await promptForPrimaryPassword(
       "about-logins-copy-password-os-auth-dialog-message"
@@ -476,8 +482,8 @@ export default class LoginItem extends HTMLElement {
       return;
     }
     currentTarget.dataset.copied = true;
-    currentTarget.copiedText = true;
-    currentTarget.disabled = true;
+    currentTarget.l10nId = "login-item-copied-password-button-text";
+    currentTarget.class = "copied-button-text";
     let propertyToCopy = this._login.password;
     document.dispatchEvent(
       new CustomEvent("AboutLoginsCopyLoginDetail", {
@@ -488,15 +494,16 @@ export default class LoginItem extends HTMLElement {
     // If there is no username, this must be triggered by the password button,
     // don't enable otherCopyButton (username copy button) in this case.
     if (this._login.username) {
-      this._copyUsernameButton.copiedText = false;
-      this._copyUsernameButton.disabled = false;
+      this._copyUsernameButton.l10nId = "login-item-copy-username-button-text";
+      this._copyUsernameButton.class = "copy-button copy-username-button";
       delete this._copyUsernameButton.dataset.copied;
     }
     clearTimeout(this._copyUsernameTimeoutId);
     clearTimeout(this._copyPasswordTimeoutId);
     let timeoutId = setTimeout(() => {
       currentTarget.disabled = false;
-      currentTarget.copiedText = false;
+      currentTarget.l10nId = "login-item-copy-password-button-text";
+      currentTarget.class = "copy-button copy-password-button";
       delete currentTarget.dataset.copied;
     }, LoginItem.COPY_BUTTON_RESET_TIMEOUT);
     this._copyPasswordTimeoutId = timeoutId;
@@ -508,8 +515,8 @@ export default class LoginItem extends HTMLElement {
 
   async handleCopyUsernameClick({ currentTarget }) {
     currentTarget.dataset.copied = true;
-    currentTarget.copiedText = true;
-    currentTarget.disabled = true;
+    currentTarget.l10nId = "login-item-copied-username-button-text";
+    currentTarget.class = "copied-button-text";
     let propertyToCopy = this._login.username;
     document.dispatchEvent(
       new CustomEvent("AboutLoginsCopyLoginDetail", {
@@ -520,15 +527,16 @@ export default class LoginItem extends HTMLElement {
     // If there is no username, this must be triggered by the password button,
     // don't enable otherCopyButton (username copy button) in this case.
     if (this._login.username) {
-      this._copyPasswordButton.copiedText = false;
-      this._copyPasswordButton.disabled = false;
+      this._copyPasswordButton.l10nId = "login-item-copy-password-button-text";
+      this._copyPasswordButton.class = "copy-button copy-password-button";
       delete this._copyPasswordButton.dataset.copied;
     }
     clearTimeout(this._copyUsernameTimeoutId);
     clearTimeout(this._copyPasswordTimeoutId);
     let timeoutId = setTimeout(() => {
       currentTarget.disabled = false;
-      currentTarget.copiedText = false;
+      currentTarget.l10nId = "login-item-copy-username-button-text";
+      currentTarget.class = "copy-button copy-username-button";
       delete currentTarget.dataset.copied;
     }, LoginItem.COPY_BUTTON_RESET_TIMEOUT);
     this._copyUsernameTimeoutId = timeoutId;
@@ -791,8 +799,10 @@ export default class LoginItem extends HTMLElement {
       this._copyPasswordButton,
     ]) {
       currentTarget.disabled = false;
-      this._copyPasswordButton.copiedText = false;
-      this._copyUsernameButton.copiedText = false;
+      this._copyPasswordButton.l10nId = "login-item-copy-password-button-text";
+      this._copyPasswordButton.class = "copy-button copy-password-button";
+      this._copyUsernameButton.l10nId = "login-item-copy-username-button-text";
+      this._copyUsernameButton.class = "copy-button copy-username-button";
       delete currentTarget.dataset.copied;
     }
 

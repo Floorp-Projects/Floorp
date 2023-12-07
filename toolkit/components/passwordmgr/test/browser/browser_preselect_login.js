@@ -193,9 +193,9 @@ add_task(async function test_new_login_url_has_correct_hash() {
       await SpecialPowers.spawn(gBrowser, [], async () => {
         const loginList =
           content.document.querySelector("login-list").shadowRoot;
-        const createLoginButton = loginList
-          .querySelector("create-login-button")
-          .shadowRoot.querySelector("button");
+        const createLoginButton = loginList.querySelector(
+          "login-command-button.create-login-button"
+        );
 
         createLoginButton.click();
 
