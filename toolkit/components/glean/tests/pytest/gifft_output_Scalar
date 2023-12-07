@@ -177,10 +177,10 @@ static inline Maybe<ScalarID> ScalarIdForMetric(uint32_t aId) {
     case 16: { // test.nested.datetime_metric
       return Some(ScalarID::SOME_STILL_OTHER_STRING_SCALAR);
     }
-    case 20: { // test.nested.quantity_metric
+    case 21: { // test.nested.quantity_metric
       return Some(ScalarID::TELEMETRY_TEST_MIRROR_FOR_QUANTITY);
     }
-    case 23: { // test.nested.uuid_metric
+    case 24: { // test.nested.uuid_metric
       return Some(ScalarID::SOME_OTHER_STRING_SCALAR);
     }
     default: {

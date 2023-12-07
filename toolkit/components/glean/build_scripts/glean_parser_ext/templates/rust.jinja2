@@ -75,6 +75,7 @@ pub enum DynamicLabel { }
 {% for category_name, objs in all_objs.items() %}
 pub mod {{ category_name|snake_case }} {
     use crate::private::*;
+    #[allow(unused_imports)] // CommonMetricData might be unused, let's avoid warnings
     use glean::CommonMetricData;
     #[allow(unused_imports)] // HistogramType might be unusued, let's avoid warnings
     use glean::HistogramType;
@@ -91,6 +92,17 @@ pub mod {{ category_name|snake_case }} {
     /// generated from {{ category_name }}.{{ obj.name }}
     ///
     /// {{ obj.description|wordwrap() | replace('\n', '\n    /// ') }}
+    {% if obj.type == "counter" and obj.send_in_pings|length == 1 and not obj.disabled and obj.lifetime|rust == "Lifetime::Ping" %}
+    {# Use optimized CounterMetric ctor in a common case (esp. for Use Counters) #}
+    pub static {{ obj.name|snake_case }}: Lazy<{{ obj|type_name }}> = Lazy::new(|| {
+        CounterMetric::codegen_new(
+            {{obj|metric_id}},
+            "{{obj.category}}",
+            "{{obj.name}}",
+            "{{obj.send_in_pings[0]}}"
+        )
+    });
+    {% else %}
     pub static {{ obj.name|snake_case }}: Lazy<{{ obj|type_name }}> = Lazy::new(|| {
         {{ obj|ctor }}({{obj|metric_id}}.into(), CommonMetricData {
             {% for arg_name in common_metric_data_args if obj[arg_name] is defined %}
@@ -110,6 +122,7 @@ pub mod {{ category_name|snake_case }} {
         {%- endif -%})
         {% endif %}
     });
+    {% endif %}
 
     {% endfor %}
 }

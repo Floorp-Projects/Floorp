@@ -236,13 +236,22 @@ namespace test_nested {
   constexpr impl::DenominatorMetric external_denominator(19);
 
   /**
+   * generated from test.nested.optimizable_counter_metric
+   */
+  /**
+   * A multi-line
+     * description
+   */
+  constexpr impl::CounterMetric optimizable_counter_metric(20);
+
+  /**
    * generated from test.nested.quantity_metric
    */
   /**
    * A multi-line
      * description
    */
-  constexpr impl::QuantityMetric quantity_metric(20);
+  constexpr impl::QuantityMetric quantity_metric(21);
 
   /**
    * generated from test.nested.rate_metric
@@ -251,7 +260,7 @@ namespace test_nested {
    * A multi-line
      * description
    */
-  constexpr impl::RateMetric rate_metric(21);
+  constexpr impl::RateMetric rate_metric(22);
 
   /**
    * generated from test.nested.rate_with_external_denominator
@@ -260,7 +269,7 @@ namespace test_nested {
    * A multi-line
      * description
    */
-  constexpr impl::NumeratorMetric rate_with_external_denominator(22);
+  constexpr impl::NumeratorMetric rate_with_external_denominator(23);
 
   /**
    * generated from test.nested.uuid_metric
@@ -269,7 +278,7 @@ namespace test_nested {
    * A multi-line
      * description
    */
-  constexpr impl::UuidMetric uuid_metric(23);
+  constexpr impl::UuidMetric uuid_metric(24);
 
 }
 
