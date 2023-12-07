@@ -170,7 +170,7 @@ void SMILAnimationFunction::SampleAt(SMILTime aSampleTime,
 }
 
 void SMILAnimationFunction::SampleLastValue(uint32_t aRepeatIteration) {
-  if (mHasChanged || !mLastValue || mRepeatIteration != aRepeatIteration) {
+  if (!mLastValue || mRepeatIteration != aRepeatIteration) {
     mHasChanged = true;
   }
 
@@ -231,7 +231,7 @@ void SMILAnimationFunction::ComposeResult(const SMILAttr& aSMILAttr,
 
   } else if (mLastValue) {
     // Sampling last value
-    const SMILValue& last = values[values.Length() - 1];
+    const SMILValue& last = values.LastElement();
     result = last;
 
     // See comment in AccumulateResult: to-animation does not accumulate
@@ -471,11 +471,9 @@ nsresult SMILAnimationFunction::InterpolateResult(const SMILValueArray& aValues,
 nsresult SMILAnimationFunction::AccumulateResult(const SMILValueArray& aValues,
                                                  SMILValue& aResult) {
   if (!IsToAnimation() && GetAccumulate() && mRepeatIteration) {
-    const SMILValue& lastValue = aValues[aValues.Length() - 1];
-
     // If the target attribute type doesn't support addition, Add will
     // fail and we leave aResult untouched.
-    aResult.Add(lastValue, mRepeatIteration);
+    aResult.Add(aValues.LastElement(), mRepeatIteration);
   }
 
   return NS_OK;
@@ -833,7 +831,7 @@ void SMILAnimationFunction::CheckKeyTimes(uint32_t aNumValues) {
 
   // last value must be 1 for linear or spline calcModes
   if (calcMode != CALC_DISCRETE && numKeyTimes > 1 &&
-      mKeyTimes[numKeyTimes - 1] != 1.0) {
+      mKeyTimes.LastElement() != 1.0) {
     SetKeyTimesErrorFlag(true);
     return;
   }

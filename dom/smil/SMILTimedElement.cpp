@@ -235,12 +235,12 @@ SMILTimedElement::SMILTimedElement()
 
 SMILTimedElement::~SMILTimedElement() {
   // Unlink all instance times from dependent intervals
-  for (uint32_t i = 0; i < mBeginInstances.Length(); ++i) {
-    mBeginInstances[i]->Unlink();
+  for (RefPtr<SMILInstanceTime>& instance : mBeginInstances) {
+    instance->Unlink();
   }
   mBeginInstances.Clear();
-  for (uint32_t i = 0; i < mEndInstances.Length(); ++i) {
-    mEndInstances[i]->Unlink();
+  for (RefPtr<SMILInstanceTime>& instance : mEndInstances) {
+    instance->Unlink();
   }
   mEndInstances.Clear();
 
@@ -610,8 +610,8 @@ void SMILTimedElement::DoSampleAt(SMILTime aContainerTime, bool aEndOnly) {
           }
           // We are now in a consistent state to dispatch notifications
           if (didApplyEarlyEnd) {
-            NotifyChangedInterval(
-                mOldIntervals[mOldIntervals.Length() - 1].get(), false, true);
+            NotifyChangedInterval(mOldIntervals.LastElement().get(), false,
+                                  true);
           }
           if (mElementState == STATE_WAITING) {
             NotifyNewInterval();
@@ -1063,14 +1063,12 @@ void SMILTimedElement::BindToTree(Element& aContextElement) {
     AutoIntervalUpdateBatcher updateBatcher(*this);
 
     // Resolve references to other parts of the tree
-    uint32_t count = mBeginSpecs.Length();
-    for (uint32_t i = 0; i < count; ++i) {
-      mBeginSpecs[i]->ResolveReferences(aContextElement);
+    for (UniquePtr<SMILTimeValueSpec>& beginSpec : mBeginSpecs) {
+      beginSpec->ResolveReferences(aContextElement);
     }
 
-    count = mEndSpecs.Length();
-    for (uint32_t j = 0; j < count; ++j) {
-      mEndSpecs[j]->ResolveReferences(aContextElement);
+    for (UniquePtr<SMILTimeValueSpec>& endSpec : mEndSpecs) {
+      endSpec->ResolveReferences(aContextElement);
     }
   }
 
@@ -1080,28 +1078,22 @@ void SMILTimedElement::BindToTree(Element& aContextElement) {
 void SMILTimedElement::HandleTargetElementChange(Element* aNewTarget) {
   AutoIntervalUpdateBatcher updateBatcher(*this);
 
-  uint32_t count = mBeginSpecs.Length();
-  for (uint32_t i = 0; i < count; ++i) {
-    mBeginSpecs[i]->HandleTargetElementChange(aNewTarget);
+  for (UniquePtr<SMILTimeValueSpec>& beginSpec : mBeginSpecs) {
+    beginSpec->HandleTargetElementChange(aNewTarget);
   }
 
-  count = mEndSpecs.Length();
-  for (uint32_t j = 0; j < count; ++j) {
-    mEndSpecs[j]->HandleTargetElementChange(aNewTarget);
+  for (UniquePtr<SMILTimeValueSpec>& endSpec : mEndSpecs) {
+    endSpec->HandleTargetElementChange(aNewTarget);
   }
 }
 
 void SMILTimedElement::Traverse(nsCycleCollectionTraversalCallback* aCallback) {
-  uint32_t count = mBeginSpecs.Length();
-  for (uint32_t i = 0; i < count; ++i) {
-    SMILTimeValueSpec* beginSpec = mBeginSpecs[i].get();
+  for (UniquePtr<SMILTimeValueSpec>& beginSpec : mBeginSpecs) {
     MOZ_ASSERT(beginSpec, "null SMILTimeValueSpec in list of begin specs");
     beginSpec->Traverse(aCallback);
   }
 
-  count = mEndSpecs.Length();
-  for (uint32_t j = 0; j < count; ++j) {
-    SMILTimeValueSpec* endSpec = mEndSpecs[j].get();
+  for (UniquePtr<SMILTimeValueSpec>& endSpec : mEndSpecs) {
     MOZ_ASSERT(endSpec, "null SMILTimeValueSpec in list of end specs");
     endSpec->Traverse(aCallback);
   }
@@ -1111,16 +1103,12 @@ void SMILTimedElement::Unlink() {
   AutoIntervalUpdateBatcher updateBatcher(*this);
 
   // Remove dependencies on other elements
-  uint32_t count = mBeginSpecs.Length();
-  for (uint32_t i = 0; i < count; ++i) {
-    SMILTimeValueSpec* beginSpec = mBeginSpecs[i].get();
+  for (UniquePtr<SMILTimeValueSpec>& beginSpec : mBeginSpecs) {
     MOZ_ASSERT(beginSpec, "null SMILTimeValueSpec in list of begin specs");
     beginSpec->Unlink();
   }
 
-  count = mEndSpecs.Length();
-  for (uint32_t j = 0; j < count; ++j) {
-    SMILTimeValueSpec* endSpec = mEndSpecs[j].get();
+  for (UniquePtr<SMILTimeValueSpec>& endSpec : mEndSpecs) {
     MOZ_ASSERT(endSpec, "null SMILTimeValueSpec in list of end specs");
     endSpec->Unlink();
   }
@@ -1191,8 +1179,8 @@ void SMILTimedElement::ClearSpecs(TimeValueSpecList& aSpecs,
                                   RemovalTestFunction aRemove) {
   AutoIntervalUpdateBatcher updateBatcher(*this);
 
-  for (uint32_t i = 0; i < aSpecs.Length(); ++i) {
-    aSpecs[i]->Unlink();
+  for (UniquePtr<SMILTimeValueSpec>& spec : aSpecs) {
+    spec->Unlink();
   }
   aSpecs.Clear();
 
@@ -1356,9 +1344,7 @@ void SMILTimedElement::UnpreserveInstanceTimes(InstanceTimeList& aList) {
   const SMILInstanceTime* cutoff = mCurrentInterval ? mCurrentInterval->Begin()
                                    : prevInterval   ? prevInterval->Begin()
                                                     : nullptr;
-  uint32_t count = aList.Length();
-  for (uint32_t i = 0; i < count; ++i) {
-    SMILInstanceTime* instance = aList[i].get();
+  for (RefPtr<SMILInstanceTime>& instance : aList) {
     if (!cutoff || cutoff->Time().CompareTo(instance->Time()) < 0) {
       instance->UnmarkShouldPreserve();
     }
@@ -2113,9 +2099,9 @@ void SMILTimedElement::NotifyChangedInterval(SMILInterval* aInterval,
   InstanceTimeList times;
   aInterval->GetDependentTimes(times);
 
-  for (uint32_t i = 0; i < times.Length(); ++i) {
-    times[i]->HandleChangedInterval(container, aBeginObjectChanged,
-                                    aEndObjectChanged);
+  for (RefPtr<SMILInstanceTime>& time : times) {
+    time->HandleChangedInterval(container, aBeginObjectChanged,
+                                aEndObjectChanged);
   }
 }
 
@@ -2145,9 +2131,7 @@ const SMILInstanceTime* SMILTimedElement::GetEffectiveBeginInstance() const {
 }
 
 const SMILInterval* SMILTimedElement::GetPreviousInterval() const {
-  return mOldIntervals.IsEmpty()
-             ? nullptr
-             : mOldIntervals[mOldIntervals.Length() - 1].get();
+  return mOldIntervals.IsEmpty() ? nullptr : mOldIntervals.LastElement().get();
 }
 
 bool SMILTimedElement::HasClientInFillRange() const {
@@ -2157,8 +2141,8 @@ bool SMILTimedElement::HasClientInFillRange() const {
 }
 
 bool SMILTimedElement::EndHasEventConditions() const {
-  for (uint32_t i = 0; i < mEndSpecs.Length(); ++i) {
-    if (mEndSpecs[i]->IsEventBased()) return true;
+  for (const UniquePtr<SMILTimeValueSpec>& endSpec : mEndSpecs) {
+    if (endSpec->IsEventBased()) return true;
   }
   return false;
 }
@@ -2167,8 +2151,8 @@ bool SMILTimedElement::AreEndTimesDependentOn(
     const SMILInstanceTime* aBase) const {
   if (mEndInstances.IsEmpty()) return false;
 
-  for (uint32_t i = 0; i < mEndInstances.Length(); ++i) {
-    if (mEndInstances[i]->GetBaseTime() != aBase) {
+  for (const RefPtr<SMILInstanceTime>& endInstance : mEndInstances) {
+    if (endInstance->GetBaseTime() != aBase) {
       return false;
     }
   }

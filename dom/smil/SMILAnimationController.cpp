@@ -48,7 +48,7 @@ SMILAnimationController::SMILAnimationController(Document* aDoc)
 }
 
 SMILAnimationController::~SMILAnimationController() {
-  NS_ASSERTION(mAnimationElementTable.Count() == 0,
+  NS_ASSERTION(mAnimationElementTable.IsEmpty(),
                "Animation controller shouldn't be tracking any animation"
                " elements when it dies");
   NS_ASSERTION(!mRegisteredWithRefreshDriver,
@@ -183,9 +183,8 @@ void SMILAnimationController::Traverse(
     nsCycleCollectionTraversalCallback* aCallback) {
   // Traverse last compositor table
   if (mLastCompositorTable) {
-    for (auto iter = mLastCompositorTable->Iter(); !iter.Done(); iter.Next()) {
-      SMILCompositor* compositor = iter.Get();
-      compositor->Traverse(aCallback);
+    for (SMILCompositor& compositor : *mLastCompositorTable) {
+      compositor.Traverse(aCallback);
     }
   }
 }
@@ -339,14 +338,12 @@ void SMILAnimationController::DoSample(bool aSkipUnchangedContainers) {
   // no-longer-animated targets.)
   if (mLastCompositorTable) {
     // * Transfer over cached base values, from last sample's compositors
-    for (auto iter = currentCompositorTable->Iter(); !iter.Done();
-         iter.Next()) {
-      SMILCompositor* compositor = iter.Get();
+    for (SMILCompositor& compositor : *currentCompositorTable) {
       SMILCompositor* lastCompositor =
-          mLastCompositorTable->GetEntry(compositor->GetKey());
+          mLastCompositorTable->GetEntry(compositor.GetKey());
 
       if (lastCompositor) {
-        compositor->StealCachedBaseValue(lastCompositor);
+        compositor.StealCachedBaseValue(lastCompositor);
       }
     }
 
@@ -359,13 +356,13 @@ void SMILAnimationController::DoSample(bool aSkipUnchangedContainers) {
 
     // * For each entry that remains in prev sample's hash table (i.e. for
     // every target that's no longer animated), clear animation effects.
-    for (auto iter = mLastCompositorTable->Iter(); !iter.Done(); iter.Next()) {
-      iter.Get()->ClearAnimationEffects();
+    for (SMILCompositor& compositor : *mLastCompositorTable) {
+      compositor.ClearAnimationEffects();
     }
   }
 
   // return early if there are no active animations to avoid a style flush
-  if (currentCompositorTable->Count() == 0) {
+  if (currentCompositorTable->IsEmpty()) {
     mLastCompositorTable = nullptr;
     return;
   }
@@ -385,8 +382,8 @@ void SMILAnimationController::DoSample(bool aSkipUnchangedContainers) {
   // when the inherited value is *also* being animated, we really should be
   // traversing our animated nodes in an ancestors-first order (bug 501183)
   bool mightHavePendingStyleUpdates = false;
-  for (auto iter = currentCompositorTable->Iter(); !iter.Done(); iter.Next()) {
-    iter.Get()->ComposeAttribute(mightHavePendingStyleUpdates);
+  for (auto& compositor : *currentCompositorTable) {
+    compositor.ComposeAttribute(mightHavePendingStyleUpdates);
   }
 
   // Update last compositor table
@@ -458,15 +455,13 @@ void SMILAnimationController::DoMilestoneSamples() {
       break;
     }
 
-    nsTArray<RefPtr<mozilla::dom::SVGAnimationElement>> elements;
+    nsTArray<RefPtr<dom::SVGAnimationElement>> elements;
     for (SMILTimeContainer* container : mChildContainerTable.Keys()) {
       if (container->IsPausedByType(SMILTimeContainer::PAUSE_BEGIN)) {
         continue;
       }
       container->PopMilestoneElementsAtMilestone(nextMilestone, elements);
     }
-
-    uint32_t length = elements.Length();
 
     // During the course of a sampling we don't want to actually go backwards.
     // Due to negative offsets, early ends and the like, a timed element might
@@ -479,8 +474,7 @@ void SMILAnimationController::DoMilestoneSamples() {
     // dependencies will be appropriately resolved.
     sampleTime = std::max(nextMilestone.mTime, sampleTime);
 
-    for (uint32_t i = 0; i < length; ++i) {
-      SVGAnimationElement* elem = elements[i].get();
+    for (RefPtr<dom::SVGAnimationElement>& elem : elements) {
       MOZ_ASSERT(elem, "nullptr animation element in list");
       SMILTimeContainer* container = elem->GetTimeContainer();
       if (!container)
@@ -548,6 +542,7 @@ void SMILAnimationController::AddAnimationToCompositorTable(
     // Look up the compositor for our target, & add our animation function
     // to its list of animation functions.
     SMILCompositor* result = aCompositorTable->PutEntry(key);
+    aStyleFlushNeeded |= func.ValueNeedsReparsingEverySample();
     result->AddAnimationFunction(&func);
 
   } else if (func.HasChanged()) {
@@ -557,6 +552,7 @@ void SMILAnimationController::AddAnimationToCompositorTable(
     // it's got HasChanged() == true), so we need to make sure to recompose
     // its target.
     SMILCompositor* result = aCompositorTable->PutEntry(key);
+    aStyleFlushNeeded |= func.ValueNeedsReparsingEverySample();
     result->ToggleForceCompositing();
 
     // We've now made sure that |func|'s inactivity will be reflected as of
@@ -564,7 +560,6 @@ void SMILAnimationController::AddAnimationToCompositorTable(
     // trigger this same clause in future samples (until it changes again).
     func.ClearHasChanged();
   }
-  aStyleFlushNeeded |= func.ValueNeedsReparsingEverySample();
 }
 
 static inline bool IsTransformAttribute(int32_t aNamespaceID,
