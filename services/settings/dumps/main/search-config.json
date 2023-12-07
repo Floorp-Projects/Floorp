@@ -1,6 +1,120 @@
 {
   "data": [
     {
+      "schema": 1701806001667,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "cs"
+              ]
+            }
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "seznam-cz@search.mozilla.org"
+      },
+      "id": "c50dcc87-0192-4461-bb88-17a55ba181c7",
+      "last_modified": 1701806851414
+    },
+    {
+      "params": {
+        "searchUrlGetParams": [
+          {
+            "name": "ie",
+            "value": "utf-8"
+          },
+          {
+            "name": "wd",
+            "value": "{searchTerms}"
+          }
+        ],
+        "suggestUrlGetParams": [
+          {
+            "name": "ie",
+            "value": "utf-8"
+          },
+          {
+            "name": "action",
+            "value": "opensearch"
+          },
+          {
+            "name": "wd",
+            "value": "{searchTerms}"
+          }
+        ]
+      },
+      "schema": 1701806000003,
+      "appliesTo": [
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "ie",
+                "value": "utf-8"
+              },
+              {
+                "name": "wd",
+                "value": "{searchTerms}"
+              }
+            ],
+            "suggestUrlGetParams": [
+              {
+                "name": "ie",
+                "value": "utf-8"
+              },
+              {
+                "name": "action",
+                "value": "opensearch"
+              },
+              {
+                "name": "wd",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "orderHint": 3000,
+          "application": {
+            "distributions": [
+              "MozillaOnline"
+            ]
+          }
+        },
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "zh-CN"
+              ]
+            }
+          }
+        },
+        {
+          "default": "yes",
+          "included": {
+            "locales": {
+              "matches": [
+                "zh-CN"
+              ]
+            },
+            "regions": [
+              "cn"
+            ]
+          }
+        }
+      ],
+      "telemetryId": "baidu",
+      "webExtension": {
+        "id": "baidu@search.mozilla.org"
+      },
+      "id": "52dd490a-89e8-45f2-96b0-f2c72e157526",
+      "last_modified": 1701806851411
+    },
+    {
       "params": {
         "searchUrlGetParams": [
           {
@@ -13,7 +127,7 @@
           }
         ]
       },
-      "schema": 1695600005178,
+      "schema": 1701771233688,
       "appliesTo": [
         {
           "included": {
@@ -216,117 +330,6 @@
           "telemetryId": "bing-esr"
         },
         {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "ptag",
-                "value": "MOZZ0000000020"
-              },
-              {
-                "name": "pc",
-                "value": "MZSL01"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "override": true,
-          "application": {
-            "distributions": [
-              "sweetlabs-b-oem1",
-              "sweetlabs-b-r-oem1"
-            ]
-          }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "ptag",
-                "value": "MOZZ0000000020"
-              },
-              {
-                "name": "pc",
-                "value": "MZSL02"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "override": true,
-          "application": {
-            "distributions": [
-              "sweetlabs-b-oem2",
-              "sweetlabs-b-r-oem2"
-            ]
-          }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "ptag",
-                "value": "MOZZ0000000020"
-              },
-              {
-                "name": "pc",
-                "value": "MZSL03"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "override": true,
-          "application": {
-            "distributions": [
-              "sweetlabs-b-oem3",
-              "sweetlabs-b-r-oem3"
-            ]
-          }
-        },
-        {
-          "default": "yes",
-          "included": {
-            "everywhere": true
-          },
-          "application": {
-            "distributions": [
-              "acer-003",
-              "acer-004"
-            ]
-          }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "pc",
-                "value": "MOZX"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "override": true,
-          "application": {
-            "distributions": [
-              "acer-003",
-              "acer-004"
-            ]
-          }
-        },
-        {
           "override": true,
           "orderHint": 2500,
           "application": {
@@ -340,7 +343,7 @@
         "id": "bing@search.mozilla.org"
       },
       "id": "7ec766f6-639a-4618-91bc-33eb3d4378c6",
-      "last_modified": 1695659360044
+      "last_modified": 1701806851408
     },
     {
       "urls": {
@@ -728,111 +731,6 @@
       },
       "id": "c0b26c0e-63e6-4235-b2ce-5f16b6a8bf87",
       "last_modified": 1685625615515
-    },
-    {
-      "params": {
-        "searchUrlGetParams": [
-          {
-            "name": "ie",
-            "value": "utf-8"
-          },
-          {
-            "name": "wd",
-            "value": "{searchTerms}"
-          }
-        ],
-        "suggestUrlGetParams": [
-          {
-            "name": "ie",
-            "value": "utf-8"
-          },
-          {
-            "name": "action",
-            "value": "opensearch"
-          },
-          {
-            "name": "wd",
-            "value": "{searchTerms}"
-          }
-        ]
-      },
-      "schema": 1685384563001,
-      "appliesTo": [
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "ie",
-                "value": "utf-8"
-              },
-              {
-                "name": "wd",
-                "value": "{searchTerms}"
-              }
-            ],
-            "suggestUrlGetParams": [
-              {
-                "name": "ie",
-                "value": "utf-8"
-              },
-              {
-                "name": "action",
-                "value": "opensearch"
-              },
-              {
-                "name": "wd",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "override": true,
-          "orderHint": 3000,
-          "application": {
-            "distributions": [
-              "MozillaOnline"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "zh-CN"
-              ]
-            }
-          }
-        },
-        {
-          "default": "yes",
-          "included": {
-            "locales": {
-              "matches": [
-                "zh-CN"
-              ]
-            },
-            "regions": [
-              "cn"
-            ]
-          }
-        },
-        {
-          "default": "no",
-          "override": true,
-          "application": {
-            "distributions": [
-              "acer-003",
-              "acer-004"
-            ]
-          }
-        }
-      ],
-      "telemetryId": "baidu",
-      "webExtension": {
-        "id": "baidu@search.mozilla.org"
-      },
-      "id": "52dd490a-89e8-45f2-96b0-f2c72e157526",
-      "last_modified": 1685453218069
     },
     {
       "schema": 1674842123977,
@@ -2140,52 +2038,6 @@
       "last_modified": 1589299342030
     },
     {
-      "schema": 1588177651820,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "cs"
-              ]
-            }
-          }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "sourceid",
-                "value": "FF_3"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "included": {
-            "locales": {
-              "matches": [
-                "cs"
-              ]
-            }
-          },
-          "application": {
-            "distributions": [
-              "seznam"
-            ]
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "seznam-cz@search.mozilla.org"
-      },
-      "id": "c50dcc87-0192-4461-bb88-17a55ba181c7",
-      "last_modified": 1589299342027
-    },
-    {
       "schema": 1588177648193,
       "appliesTo": [
         {
@@ -2823,5 +2675,5 @@
       "last_modified": 1583937832210
     }
   ],
-  "timestamp": 1695659360044
+  "timestamp": 1701806851414
 }
