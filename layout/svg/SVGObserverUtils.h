@@ -8,6 +8,7 @@
 #define LAYOUT_SVG_SVGOBSERVERUTILS_H_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/SVGIntegrationUtils.h"
 #include "mozilla/dom/IDTracker.h"
 #include "FrameProperties.h"
 #include "nsID.h"
@@ -271,6 +272,8 @@ class SVGObserverUtils {
    * NOTE! A return value of eHasNoRefs does NOT mean that there are no filters
    * to be applied, only that there are no references to SVG filter elements.
    *
+   * @param aIsBackdrop whether we're observing a backdrop-filter or a filter.
+   *
    * XXX Callers other than ComputePostEffectsInkOverflowRect and
    * SVGUtils::GetPostFilterInkOverflowRect should not need to initiate
    * observing.  If we have a bug that causes invalidation (which would remove
@@ -280,8 +283,13 @@ class SVGObserverUtils {
    * that behavior just yet due to the regression potential.
    */
   static ReferenceState GetAndObserveFilters(
-      nsIFrame* aFilteredFrame, nsTArray<SVGFilterFrame*>* aFilterFrames);
+      nsIFrame* aFilteredFrame, nsTArray<SVGFilterFrame*>* aFilterFrames,
+      StyleFilterType aStyleFilterType = StyleFilterType::Filter);
 
+  /*
+   * NOTE! canvas doesn't have backdrop-filters so there's no StyleFilterType
+   * parameter.
+   */
   static ReferenceState GetAndObserveFilters(
       nsISupports* aObserverList, nsTArray<SVGFilterFrame*>* aFilterFrames);
 
@@ -424,12 +432,6 @@ class SVGObserverUtils {
    * invalidation changes for background-clip:text.
    */
   static Element* GetAndObserveBackgroundClip(nsIFrame* aFrame);
-
-  /**
-   * A helper function to resolve filter URL.
-   */
-  static already_AddRefed<URLAndReferrerInfo> GetFilterURI(
-      nsIFrame* aFrame, const StyleFilter& aFilter);
 
   /**
    * Return a baseURL for resolving a local-ref URL.

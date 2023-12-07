@@ -1033,9 +1033,10 @@ bool SVGIntegrationUtils::CreateWebRenderCSSFilters(
 
 bool SVGIntegrationUtils::BuildWebRenderFilters(
     nsIFrame* aFilteredFrame, Span<const StyleFilter> aFilters,
-    WrFiltersHolder& aWrFilters, bool& aInitialized) {
-  return FilterInstance::BuildWebRenderFilters(aFilteredFrame, aFilters,
-                                               aWrFilters, aInitialized);
+    StyleFilterType aStyleFilterType, WrFiltersHolder& aWrFilters,
+    bool& aInitialized) {
+  return FilterInstance::BuildWebRenderFilters(
+      aFilteredFrame, aFilters, aStyleFilterType, aWrFilters, aInitialized);
 }
 
 bool SVGIntegrationUtils::CanCreateWebRenderFiltersForFrame(nsIFrame* aFrame) {
@@ -1043,7 +1044,8 @@ bool SVGIntegrationUtils::CanCreateWebRenderFiltersForFrame(nsIFrame* aFrame) {
   auto filterChain = aFrame->StyleEffects()->mFilters.AsSpan();
   bool initialized = true;
   return CreateWebRenderCSSFilters(filterChain, aFrame, wrFilters) ||
-         BuildWebRenderFilters(aFrame, filterChain, wrFilters, initialized);
+         BuildWebRenderFilters(aFrame, filterChain, StyleFilterType::Filter,
+                               wrFilters, initialized);
 }
 
 bool SVGIntegrationUtils::UsesSVGEffectsNotSupportedInCompositor(

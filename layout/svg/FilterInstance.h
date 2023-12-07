@@ -138,7 +138,8 @@ class FilterInstance {
   static bool BuildWebRenderFilters(
       nsIFrame* aFilteredFrame,
       mozilla::Span<const mozilla::StyleFilter> aFilters,
-      WrFiltersHolder& aWrFilters, bool& aInitialized);
+      StyleFilterType aStyleFilterType, WrFiltersHolder& aWrFilters,
+      bool& aInitialized);
 
  private:
   /**
@@ -181,7 +182,8 @@ class FilterInstance {
   static bool BuildWebRenderFiltersImpl(
       nsIFrame* aFilteredFrame,
       mozilla::Span<const mozilla::StyleFilter> aFilters,
-      WrFiltersHolder& aWrFilters, bool& aInitialized);
+      StyleFilterType aStyleFilterType, WrFiltersHolder& aWrFilters,
+      bool& aInitialized);
 
   /**
    * Returns true if the filter instance was created successfully.
