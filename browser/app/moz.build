@@ -173,7 +173,7 @@ elif CONFIG["OS_ARCH"] == "Darwin":
 else:
     checkOSBuildFloorp = "linux"
 
-DEFINES["document_pdf".upper() + "_ICO"] = '"%s/%s/%s/%s/document-pdf.ico"' % (
+DEFINES["document_pdf".upper() + "_ICO"] = '"%s/%s/%s/%s/document_pdf.ico"' % (
     TOPSRCDIR,
     CONFIG["MOZ_BRANDING_DIRECTORY"],
     "content",
