@@ -3866,9 +3866,6 @@ class Document : public nsINode,
    */
   bool AllowsL10n() const;
 
-  void SetAllowDeclarativeShadowRoots(bool aAllowDeclarativeShadowRoots);
-  bool AllowsDeclarativeShadowRoots() const;
-
  protected:
   RefPtr<DocumentL10n> mDocumentL10n;
 
@@ -4831,8 +4828,6 @@ class Document : public nsINode,
   // Whether we're cloning the contents of an SVG use element.
   bool mCloningForSVGUse : 1;
 
-  bool mAllowDeclarativeShadowRoots : 1;
-
   // The fingerprinting protections overrides for this document. The value will
   // override the default enabled fingerprinting protections for this document.
   // This will only get populated if these is one that comes from the local
@@ -5347,9 +5342,6 @@ class Document : public nsINode,
   void LoadEventFired();
 
   RadioGroupContainer& OwnedRadioGroupContainer();
-
-  static already_AddRefed<Document> ParseHTMLUnsafe(GlobalObject& aGlobal,
-                                                    const nsAString& aHTML);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Document, NS_IDOCUMENT_IID)

@@ -1252,9 +1252,8 @@ bool Element::CanAttachShadowDOM() const {
 }
 
 // https://dom.spec.whatwg.org/commit-snapshots/1eadf0a4a271acc92013d1c0de8c730ac96204f9/#dom-element-attachshadow
-already_AddRefed<ShadowRoot> Element::AttachShadow(
-    const ShadowRootInit& aInit, ErrorResult& aError,
-    ShadowRootDeclarative aNewShadowIsDeclarative) {
+already_AddRefed<ShadowRoot> Element::AttachShadow(const ShadowRootInit& aInit,
+                                                   ErrorResult& aError) {
   /**
    * Step 1, 2, and 3.
    */
@@ -1264,41 +1263,25 @@ already_AddRefed<ShadowRoot> Element::AttachShadow(
   }
 
   /**
-   * 4. If element is a shadow host, then:
+   * 4. If this is a shadow host, then throw a "NotSupportedError" DOMException.
    */
-  if (RefPtr<ShadowRoot> root = GetShadowRoot()) {
-    /*
-     * 1. If element’s shadow root’s declarative is false, then throw an
-     *    "NotSupportedError" DOMException.
-     */
-    if (!root->IsDeclarative()) {
-      aError.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-      return nullptr;
-    }
-    // https://github.com/whatwg/dom/issues/1235
-    root->SetIsDeclarative(aNewShadowIsDeclarative);
-    /*
-     * 2. Otherwise, remove all of element’s shadow root’s children, in tree
-     *    order, and return.
-     */
-    root->ReplaceChildren(nullptr, aError);
-    return root.forget();
+  if (GetShadowRoot()) {
+    aError.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
   }
 
   if (StaticPrefs::dom_webcomponents_shadowdom_report_usage()) {
     OwnerDoc()->ReportShadowDOMUsage();
   }
 
-  return AttachShadowWithoutNameChecks(
-      aInit.mMode, DelegatesFocus(aInit.mDelegatesFocus), aInit.mSlotAssignment,
-      ShadowRootClonable(aInit.mClonable),
-      ShadowRootDeclarative(aNewShadowIsDeclarative));
+  return AttachShadowWithoutNameChecks(aInit.mMode,
+                                       DelegatesFocus(aInit.mDelegatesFocus),
+                                       aInit.mSlotAssignment);
 }
 
 already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
     ShadowRootMode aMode, DelegatesFocus aDelegatesFocus,
-    SlotAssignmentMode aSlotAssignment, ShadowRootClonable aClonable,
-    ShadowRootDeclarative aDeclarative) {
+    SlotAssignmentMode aSlotAssignment) {
   nsAutoScriptBlocker scriptBlocker;
 
   auto* nim = mNodeInfo->NodeInfoManager();
@@ -1322,9 +1305,8 @@ already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
    *    context object's node document, host is context object,
    *    and mode is init's mode.
    */
-  RefPtr<ShadowRoot> shadowRoot =
-      new (nim) ShadowRoot(this, aMode, aDelegatesFocus, aSlotAssignment,
-                           aClonable, aDeclarative, nodeInfo.forget());
+  RefPtr<ShadowRoot> shadowRoot = new (nim) ShadowRoot(
+      this, aMode, aDelegatesFocus, aSlotAssignment, nodeInfo.forget());
 
   if (NodeOrAncestorHasDirAuto()) {
     shadowRoot->SetAncestorHasDirAuto();
@@ -5043,10 +5025,6 @@ EditorBase* Element::GetEditorWithoutCreation() const {
   // FYI: This never creates HTMLEditor immediately.
   nsDocShell* docShell = nsDocShell::Cast(OwnerDoc()->GetDocShell());
   return docShell ? docShell->GetHTMLEditorInternal() : nullptr;
-}
-
-void Element::SetHTMLUnsafe(const nsAString& aHTML) {
-  nsContentUtils::SetHTMLUnsafe(this, this, aHTML);
 }
 
 }  // namespace mozilla::dom

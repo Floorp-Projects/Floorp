@@ -41,14 +41,11 @@ class nsHtml5StringParser : public nsParserBase {
    * @param aPreventScriptExecution true to prevent scripts from executing;
    * don't set to false when parsing into a target node that has been bound
    * to tree.
-   * @param aAllowDeclarativeShadowRoots allow the creation of declarative
-   * shadow roots.
    */
   nsresult ParseFragment(const nsAString& aSourceBuffer,
                          nsIContent* aTargetNode, nsAtom* aContextLocalName,
                          int32_t aContextNamespace, bool aQuirks,
-                         bool aPreventScriptExecution,
-                         bool aAllowDeclarativeShadowRoots);
+                         bool aPreventScriptExecution);
 
   /**
    * Parse an entire HTML document from a source string.
@@ -64,8 +61,7 @@ class nsHtml5StringParser : public nsParserBase {
 
   nsresult Tokenize(const nsAString& aSourceBuffer,
                     mozilla::dom::Document* aDocument,
-                    bool aScriptingEnabledForNoscriptParsing,
-                    bool aDeclarativeShadowRootsAllowed);
+                    bool aScriptingEnabledForNoscriptParsing);
 
   /**
    * The tree operation executor
