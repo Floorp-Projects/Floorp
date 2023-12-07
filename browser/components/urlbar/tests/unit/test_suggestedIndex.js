@@ -8,9 +8,6 @@
 const MAX_RESULTS = 10;
 
 add_task(async function suggestedIndex() {
-  // Initialize maxRichResults for sanity.
-  UrlbarPrefs.set("maxRichResults", MAX_RESULTS);
-
   let tests = [
     // no result spans > 1
     {
@@ -458,6 +455,42 @@ add_task(async function suggestedIndex() {
       spansByIndex: { 8: 2 },
       expected: indexes([0, 8], [10, 1]),
     },
+    {
+      desc: "{ suggestedIndex: 0, maxRichResults: 0 }",
+      maxRichResults: 0,
+      suggestedIndexes: [0],
+      expected: [],
+    },
+    {
+      desc: "{ suggestedIndex: 1, maxRichResults: 0 }",
+      maxRichResults: 0,
+      suggestedIndexes: [1],
+      expected: [],
+    },
+    {
+      desc: "{ suggestedIndex: -1, maxRichResults: 0 }",
+      maxRichResults: 0,
+      suggestedIndexes: [-1],
+      expected: [],
+    },
+    {
+      desc: "{ suggestedIndex: 0, maxRichResults: 1 }",
+      maxRichResults: 1,
+      suggestedIndexes: [0],
+      expected: indexes([10, 1]),
+    },
+    {
+      desc: "{ suggestedIndex: 1, maxRichResults: 1 }",
+      maxRichResults: 1,
+      suggestedIndexes: [1],
+      expected: indexes([10, 1]),
+    },
+    {
+      desc: "{ suggestedIndex: -1, maxRichResults: 1 }",
+      maxRichResults: 1,
+      suggestedIndexes: [-1],
+      expected: indexes([10, 1]),
+    },
   ];
 
   for (let test of tests) {
@@ -484,12 +517,15 @@ add_task(async function suggestedIndex() {
  * @param {number} [options.resultCount]
  *   Aside from the results with suggested indexes, this is the number of
  *   results that the provider will return.
+ * @param {number} [options.maxRichResults]
+ *   The `maxRichResults` pref will be set to this value.
  */
 async function doSuggestedIndexTest({
   suggestedIndexes,
   expected,
   spansByIndex = {},
   resultCount = MAX_RESULTS,
+  maxRichResults = MAX_RESULTS,
 }) {
   // Make resultCount history results.
   let results = [];
@@ -527,6 +563,7 @@ async function doSuggestedIndexTest({
   }
 
   // Set up the provider, etc.
+  UrlbarPrefs.set("maxRichResults", maxRichResults);
   let provider = registerBasicTestProvider(results);
   let context = createContext(undefined, { providers: [provider.name] });
   let controller = UrlbarTestUtils.newMockController();

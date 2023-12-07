@@ -12,7 +12,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 const MAX_RESULTS = 10;
-const MAX_RICH_RESULTS_PREF = "browser.urlbar.maxRichResults";
 
 // Default result groups used in the tests below.
 const RESULT_GROUPS = {
@@ -47,9 +46,6 @@ add_task(function setuo() {
 });
 
 add_task(async function test() {
-  // Set a specific maxRichResults for sanity's sake.
-  Services.prefs.setIntPref(MAX_RICH_RESULTS_PREF, MAX_RESULTS);
-
   // Create the default non-suggestedIndex results we'll use for tests that
   // don't specify `otherResults`.
   let basicResults = [
@@ -82,6 +78,9 @@ add_task(async function test() {
   //   that the provider should return. If not specified `basicResults` is used.
   // * {array} [resultGroups]
   //   The result groups to use. If not specified `RESULT_GROUPS` is used.
+  // * {number} [maxRichResults]
+  //   The `maxRichResults` pref will be set to this value. If not specified
+  //   `MAX_RESULTS` is used.
   let tests = [
     {
       desc: "First result in GENERAL",
@@ -465,6 +464,53 @@ add_task(async function test() {
         },
       ],
     },
+
+    {
+      desc: "Last result in REMOTE_SUGGESTION, maxRichResults too small to add any REMOTE_SUGGESTION",
+      maxRichResults: 2,
+      suggestedIndexResults: [
+        {
+          suggestedIndex: -1,
+          group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,
+        },
+      ],
+      expected: [
+        {
+          group: UrlbarUtils.RESULT_GROUP.FORM_HISTORY,
+          count: 1,
+        },
+        {
+          group: UrlbarUtils.RESULT_GROUP.GENERAL,
+          count: 1,
+        },
+        // The suggestedIndex result should not be added.
+      ],
+    },
+
+    {
+      desc: "Last result in REMOTE_SUGGESTION, maxRichResults just big enough to show one REMOTE_SUGGESTION",
+      maxRichResults: 3,
+      suggestedIndexResults: [
+        {
+          suggestedIndex: -1,
+          group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,
+        },
+      ],
+      expected: [
+        {
+          group: UrlbarUtils.RESULT_GROUP.FORM_HISTORY,
+          count: 1,
+        },
+        {
+          group: UrlbarUtils.RESULT_GROUP.GENERAL,
+          count: 1,
+        },
+        {
+          group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,
+          suggestedIndex: -1,
+        },
+      ],
+    },
   ];
 
   let controller = UrlbarTestUtils.newMockController();
@@ -475,10 +521,13 @@ add_task(async function test() {
     expected,
     resultGroups,
     otherResults,
+    maxRichResults = MAX_RESULTS,
   } of tests) {
     info(`Running test: ${desc}`);
 
     setResultGroups(resultGroups || RESULT_GROUPS);
+
+    UrlbarPrefs.set("maxRichResults", maxRichResults);
 
     // Make the array of all results and do a search.
     let results = (otherResults || basicResults).concat(
