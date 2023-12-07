@@ -38,7 +38,7 @@ def WebIDLTest(parser, harness):
         )
 
         results = parser.finish()
-    except AssertionError:
+    except WebIDL.WebIDLError:
         threw = True
     harness.ok(
         threw, "Should have thrown because record can't have undefined as value type."
