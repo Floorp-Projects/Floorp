@@ -8,7 +8,6 @@
 #define mozilla_PointerLockManager_h
 
 #include "mozilla/AlreadyAddRefed.h"
-#include "mozilla/WeakPtr.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsThreadUtils.h"
 
@@ -59,7 +58,7 @@ class PointerLockManager final {
 
    private:
     nsWeakPtr mElement;
-    WeakPtr<dom::Document> mDocument;
+    nsWeakPtr mDocument;
     bool mUserInputOrChromeCaller;
   };
 

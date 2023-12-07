@@ -57,14 +57,15 @@ class XPathEvaluatorParseContext : public txIParseContext {
   bool mIsCaseSensitive;
 };
 
-XPathEvaluator::XPathEvaluator(Document* aDocument) : mDocument(aDocument) {}
+XPathEvaluator::XPathEvaluator(Document* aDocument)
+    : mDocument(do_GetWeakReference(aDocument)) {}
 
 XPathEvaluator::~XPathEvaluator() = default;
 
 UniquePtr<XPathExpression> XPathEvaluator::CreateExpression(
     const nsAString& aExpression, XPathNSResolver* aResolver,
     ErrorResult& aRv) {
-  nsCOMPtr<Document> doc(mDocument);
+  nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
   XPathEvaluatorParseContext pContext(aResolver,
                                       !(doc && doc->IsHTMLDocument()));
   return CreateExpression(aExpression, &pContext, doc, aRv);
@@ -72,7 +73,7 @@ UniquePtr<XPathExpression> XPathEvaluator::CreateExpression(
 
 UniquePtr<XPathExpression> XPathEvaluator::CreateExpression(
     const nsAString& aExpression, nsINode* aResolver, ErrorResult& aRv) {
-  nsCOMPtr<Document> doc(mDocument);
+  nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
   XPathEvaluatorParseContext pContext(aResolver,
                                       !(doc && doc->IsHTMLDocument()));
   return CreateExpression(aExpression, &pContext, doc, aRv);
