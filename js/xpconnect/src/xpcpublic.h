@@ -250,7 +250,7 @@ class XPCStringConvert {
   static MOZ_ALWAYS_INLINE bool StringBufferToJSVal(
       JSContext* cx, nsStringBuffer* buf, uint32_t length,
       JS::MutableHandle<JS::Value> rval, bool* sharedBuffer) {
-    JSString* str = JS_NewMaybeExternalString(
+    JSString* str = JS_NewMaybeExternalUCString(
         cx, static_cast<char16_t*>(buf->Data()), length,
         &sDOMStringExternalString, sharedBuffer);
     if (!str) {
@@ -265,7 +265,7 @@ class XPCStringConvert {
                                           uint32_t length,
                                           JS::MutableHandle<JS::Value> rval) {
     bool ignored;
-    JSString* str = JS_NewMaybeExternalString(
+    JSString* str = JS_NewMaybeExternalUCString(
         cx, literal, length, &sLiteralExternalString, &ignored);
     if (!str) {
       return false;
@@ -291,7 +291,7 @@ class XPCStringConvert {
       JSString* str, const JSExternalStringCallbacks* desiredCallbacks,
       const char16_t** chars) {
     const JSExternalStringCallbacks* callbacks;
-    return JS::IsExternalString(str, &callbacks, chars) &&
+    return JS::IsExternalUCString(str, &callbacks, chars) &&
            callbacks == desiredCallbacks;
   }
 

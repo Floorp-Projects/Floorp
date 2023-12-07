@@ -397,7 +397,7 @@ MOZ_ALWAYS_INLINE JSLinearString* AtomToLinearString(JSAtom* atom) {
  * to a pointer to its two-byte storage.  (These pointers remain valid as long
  * as the provided string is kept alive.)
  */
-MOZ_ALWAYS_INLINE bool IsExternalString(
+MOZ_ALWAYS_INLINE bool IsExternalUCString(
     JSString* str, const JSExternalStringCallbacks** callbacks,
     const char16_t** chars) {
   shadow::String* s = shadow::AsShadowString(str);
