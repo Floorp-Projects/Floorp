@@ -55,7 +55,10 @@ add_task(async function testReasonDropdown() {
       ensureReasonRequired();
       rbs = await AppMenu().openReportBrokenSite();
       await rbs.isReasonRequired();
-      await rbs.isSendButtonDisabled();
+      await rbs.isSendButtonEnabled();
+      const { reasonDropdownPopup, sendButton } = rbs;
+      await clickAndAwait(sendButton, "popupshown", reasonDropdownPopup);
+      await rbs.dismissDropdownPopup();
       rbs.chooseReason("media");
       await rbs.isSendButtonEnabled();
       await clickSendAndCheckPing(rbs, "media");
