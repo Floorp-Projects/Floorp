@@ -40,6 +40,11 @@ const EventType REMOVE_SURFACE_ALIAS = EventType(EventType::LAST + 9);
 const EventType DEVICE_CHANGE_ACKNOWLEDGED = EventType(EventType::LAST + 10);
 const EventType NEXT_TEXTURE_ID = EventType(EventType::LAST + 11);
 const EventType TEXTURE_DESTRUCTION = EventType(EventType::LAST + 12);
+const EventType CHECKPOINT = EventType(EventType::LAST + 13);
+const EventType PAUSE_TRANSLATION = EventType(EventType::LAST + 14);
+const EventType RECYCLE_BUFFER = EventType(EventType::LAST + 15);
+const EventType DROP_BUFFER = EventType(EventType::LAST + 16);
+const EventType LAST_CANVAS_EVENT_TYPE = DROP_BUFFER;
 
 class RecordedCanvasBeginTransaction final
     : public RecordedEventDerived<RecordedCanvasBeginTransaction> {
@@ -344,31 +349,7 @@ class RecordedGetDataForSurface final
 
 inline bool RecordedGetDataForSurface::PlayCanvasEvent(
     CanvasTranslator* aTranslator) const {
-  gfx::SourceSurface* surface = aTranslator->LookupSourceSurface(mSurface);
-  if (!surface) {
-    return false;
-  }
-
-  UniquePtr<gfx::DataSourceSurface::ScopedMap> map =
-      aTranslator->GetPreparedMap(mSurface);
-  if (!map) {
-    return false;
-  }
-
-  int32_t dataFormatWidth =
-      surface->GetSize().width * BytesPerPixel(surface->GetFormat());
-  int32_t srcStride = map->GetStride();
-  if (dataFormatWidth > srcStride) {
-    return false;
-  }
-
-  char* src = reinterpret_cast<char*>(map->GetData());
-  char* endSrc = src + (map->GetSurface()->GetSize().height * srcStride);
-  while (src < endSrc) {
-    aTranslator->ReturnWrite(src, dataFormatWidth);
-    src += srcStride;
-  }
-
+  aTranslator->GetDataSurface(mSurface.mLongPtr);
   return true;
 }
 
@@ -576,6 +557,87 @@ RecordedTextureDestruction::RecordedTextureDestruction(S& aStream)
   ReadElement(aStream, mTextureId);
 }
 
+class RecordedCheckpoint final
+    : public RecordedEventDerived<RecordedCheckpoint> {
+ public:
+  RecordedCheckpoint() : RecordedEventDerived(CHECKPOINT) {}
+
+  template <class S>
+  MOZ_IMPLICIT RecordedCheckpoint(S& aStream)
+      : RecordedEventDerived(CHECKPOINT) {}
+
+  bool PlayCanvasEvent(CanvasTranslator* aTranslator) const {
+    aTranslator->CheckpointReached();
+    return true;
+  }
+
+  template <class S>
+  void Record(S& aStream) const {}
+
+  std::string GetName() const final { return "RecordedCheckpoint"; }
+};
+
+class RecordedPauseTranslation final
+    : public RecordedEventDerived<RecordedPauseTranslation> {
+ public:
+  RecordedPauseTranslation() : RecordedEventDerived(PAUSE_TRANSLATION) {}
+
+  template <class S>
+  MOZ_IMPLICIT RecordedPauseTranslation(S& aStream)
+      : RecordedEventDerived(PAUSE_TRANSLATION) {}
+
+  bool PlayCanvasEvent(CanvasTranslator* aTranslator) const {
+    aTranslator->PauseTranslation();
+    return true;
+  }
+
+  template <class S>
+  void Record(S& aStream) const {}
+
+  std::string GetName() const final { return "RecordedPauseTranslation"; }
+};
+
+class RecordedRecycleBuffer final
+    : public RecordedEventDerived<RecordedRecycleBuffer> {
+ public:
+  RecordedRecycleBuffer() : RecordedEventDerived(RECYCLE_BUFFER) {}
+
+  template <class S>
+  MOZ_IMPLICIT RecordedRecycleBuffer(S& aStream)
+      : RecordedEventDerived(RECYCLE_BUFFER) {}
+
+  bool PlayCanvasEvent(CanvasTranslator* aTranslator) const {
+    aTranslator->RecycleBuffer();
+    return true;
+  }
+
+  template <class S>
+  void Record(S& aStream) const {}
+
+  std::string GetName() const final { return "RecordedNextBuffer"; }
+};
+
+class RecordedDropBuffer final
+    : public RecordedEventDerived<RecordedDropBuffer> {
+ public:
+  RecordedDropBuffer() : RecordedEventDerived(DROP_BUFFER) {}
+
+  template <class S>
+  MOZ_IMPLICIT RecordedDropBuffer(S& aStream)
+      : RecordedEventDerived(DROP_BUFFER) {}
+
+  bool PlayCanvasEvent(CanvasTranslator* aTranslator) const {
+    // Use the next buffer without recycling which drops the current buffer.
+    aTranslator->NextBuffer();
+    return true;
+  }
+
+  template <class S>
+  void Record(S& aStream) const {}
+
+  std::string GetName() const final { return "RecordedDropAndMoveNextBuffer"; }
+};
+
 #define FOR_EACH_CANVAS_EVENT(f)                                   \
   f(CANVAS_BEGIN_TRANSACTION, RecordedCanvasBeginTransaction);     \
   f(CANVAS_END_TRANSACTION, RecordedCanvasEndTransaction);         \
@@ -589,7 +651,11 @@ RecordedTextureDestruction::RecordedTextureDestruction(S& aStream)
   f(REMOVE_SURFACE_ALIAS, RecordedRemoveSurfaceAlias);             \
   f(DEVICE_CHANGE_ACKNOWLEDGED, RecordedDeviceChangeAcknowledged); \
   f(NEXT_TEXTURE_ID, RecordedNextTextureId);                       \
-  f(TEXTURE_DESTRUCTION, RecordedTextureDestruction);
+  f(TEXTURE_DESTRUCTION, RecordedTextureDestruction);              \
+  f(CHECKPOINT, RecordedCheckpoint);                               \
+  f(PAUSE_TRANSLATION, RecordedPauseTranslation);                  \
+  f(RECYCLE_BUFFER, RecordedRecycleBuffer);                        \
+  f(DROP_BUFFER, RecordedDropBuffer);
 
 }  // namespace layers
 }  // namespace mozilla
