@@ -1,6 +1,25 @@
 {
   "data": [
     {
+      "name": "bergamot-translator",
+      "schema": 1701043206881,
+      "license": "MPL-2.0",
+      "release": "v0.4.5",
+      "version": "1.1",
+      "revision": "05a87784973b6e1cc591f1f1a9a05c5873d9971e",
+      "attachment": {
+        "hash": "3849a908cbd2fb5e4757c2be2bc65b5bd1af1e3098f48ded27a4d0a5efd4ada4",
+        "size": 5189510,
+        "filename": "bergamot-translator-worker.wasm",
+        "location": "main-workspace/translations-wasm/60c8ba7c-2966-4dd7-9d4b-38d42504c6e9.wasm",
+        "mimetype": "application/wasm"
+      },
+      "fx_release": "122.0a1",
+      "filter_expression": "env.channel == 'nightly' || env.channel == 'default'",
+      "id": "73c6f691-ba5e-4c98-9622-820a2cde16c0",
+      "last_modified": 1701359282479
+    },
+    {
       "name": "fasttext-wasm",
       "schema": 1681248641301,
       "license": "MIT",
@@ -55,5 +74,5 @@
       "last_modified": 1681500422542
     }
   ],
-  "timestamp": 1681500422552
+  "timestamp": 1701359282479
 }
