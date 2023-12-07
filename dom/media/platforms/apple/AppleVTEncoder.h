@@ -11,7 +11,6 @@
 #include <VideoToolbox/VideoToolbox.h>
 
 #include "PlatformEncoderModule.h"
-#include "TimeUnits.h"
 
 namespace mozilla {
 
@@ -21,13 +20,13 @@ class Image;
 
 class AppleVTEncoder final : public MediaDataEncoder {
  public:
-  using Config = H264Config;
-
-  AppleVTEncoder(const Config& aConfig, RefPtr<TaskQueue> aTaskQueue,
-                 const bool aHwardwareNotAllowed)
+  AppleVTEncoder(const EncoderConfig& aConfig,
+                 const RefPtr<TaskQueue>& aTaskQueue)
       : mConfig(aConfig),
         mTaskQueue(aTaskQueue),
-        mHardwareNotAllowed(aHwardwareNotAllowed),
+        mHardwareNotAllowed(
+            aConfig.mHardwarePreference ==
+            MediaDataEncoder::HardwarePreference::RequireSoftware),
         mFramesCompleted(false),
         mError(NS_OK),
         mSession(nullptr) {
@@ -39,7 +38,7 @@ class AppleVTEncoder final : public MediaDataEncoder {
   RefPtr<EncodePromise> Encode(const MediaData* aSample) override;
   RefPtr<EncodePromise> Drain() override;
   RefPtr<ShutdownPromise> Shutdown() override;
-  RefPtr<GenericPromise> SetBitrate(Rate aBitsPerSec) override;
+  RefPtr<GenericPromise> SetBitrate(uint32_t aBitsPerSec) override;
 
   nsCString GetDescriptionName() const override {
     MOZ_ASSERT(mSession);
@@ -51,7 +50,7 @@ class AppleVTEncoder final : public MediaDataEncoder {
 
  private:
   virtual ~AppleVTEncoder() { MOZ_ASSERT(!mSession); }
-  RefPtr<EncodePromise> ProcessEncode(RefPtr<const VideoData> aSample);
+  RefPtr<EncodePromise> ProcessEncode(const RefPtr<const VideoData>& aSample);
   void ProcessOutput(RefPtr<MediaRawData>&& aOutput);
   void ResolvePromise();
   RefPtr<EncodePromise> ProcessDrain();
@@ -63,7 +62,7 @@ class AppleVTEncoder final : public MediaDataEncoder {
                       const bool aAsAnnexB);
   void AssertOnTaskQueue() { MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn()); }
 
-  const Config mConfig;
+  EncoderConfig mConfig;
   const RefPtr<TaskQueue> mTaskQueue;
   const bool mHardwareNotAllowed;
   // Access only in mTaskQueue.
