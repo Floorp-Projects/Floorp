@@ -48,3 +48,6 @@ report-broken-site-panel-report-sent-header =
   .label = Your report has been sent
   .title = Your report has been sent
 report-broken-site-panel-report-sent-text = Thank you for helping { -brand-product-name } make the web more open, accessible, and better for everyone.
+
+report-broken-site-panel-invalid-url-label = Please enter a valid URL
+report-broken-site-panel-missing-reason-label = Please choose a reason

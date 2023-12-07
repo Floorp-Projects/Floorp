@@ -39,7 +39,11 @@
     <html:input id="report-broken-site-popup-url"
                 allow-arrow-navigation="true"
                 aria-describedby="report-broken-site-panel-intro"
-                type="url"/>
+                type="url" required="required" aria-required="true" />
+    <label id="report-broken-site-popup-invalid-url-msg"
+           class="invalid-message text-error"
+           role="alert"
+           data-l10n-id="report-broken-site-panel-invalid-url-label"/>
     <label id="report-broken-site-popup-reason-label"
            control="report-broken-site-popup-reason"
            hidden="true"
@@ -70,6 +74,12 @@
                   data-l10n-id="report-broken-site-panel-reason-other"/>
       </menupopup>
     </menulist>
+    <!-- menulist does not support :invalid, so we set custom validity on this input instead -->
+    <html:input id="report-broken-site-popup-missing-reason-validation-helper"/>
+    <label id="report-broken-site-popup-missing-reason-msg"
+           class="invalid-message text-error"
+           role="alert"
+           data-l10n-id="report-broken-site-panel-missing-reason-label"/>
     <label id="report-broken-site-popup-description-label"
            control="report-broken-site-popup-description"
            hidden="true"

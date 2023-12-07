@@ -114,15 +114,21 @@ async function testTabOrder(menu) {
 
   ensureReasonRequired();
   rbs = await menu.openReportBrokenSite();
-  rbs.sendButton.disabled = false;
   await ensureExpectedTabOrder(showsBackButton, true, true);
   await rbs.close();
+  rbs = await menu.openReportBrokenSite();
+  rbs.chooseReason("slow");
+  await ensureExpectedTabOrder(showsBackButton, true, true);
+  await rbs.clickCancel();
 
   ensureSendMoreInfoDisabled();
   rbs = await menu.openReportBrokenSite();
-  rbs.sendButton.disabled = false;
   await ensureExpectedTabOrder(showsBackButton, true, false);
   await rbs.close();
+  rbs = await menu.openReportBrokenSite();
+  rbs.chooseReason("slow");
+  await ensureExpectedTabOrder(showsBackButton, true, false);
+  await rbs.clickCancel();
 
   ensureReasonOptional();
   rbs = await menu.openReportBrokenSite();
