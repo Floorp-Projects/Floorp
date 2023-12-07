@@ -588,8 +588,10 @@ class WebExtensionTest : BaseSessionTest() {
         return map
     }
 
-    @Test
-    fun installUnsignedExtensionSignatureNotRequired() {
+    private fun testInstallUnsignedExtensionSignatureNotRequired(
+        extensionArchiveURL: String,
+        extensionName: String,
+    ) {
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
                 "xpinstall.signatures.required" to false,
@@ -603,10 +605,7 @@ class WebExtensionTest : BaseSessionTest() {
         })
 
         val borderify = sessionRule.waitForResult(
-            controller.install(
-                "resource://android/assets/web_extensions/borderify-unsigned.xpi",
-                null,
-            )
+            controller.install(extensionArchiveURL, null)
                 .then { extension ->
                     assertEquals(
                         extension!!.metaData.signedState,
@@ -616,12 +615,28 @@ class WebExtensionTest : BaseSessionTest() {
                         extension.metaData.blocklistState,
                         WebExtension.BlocklistStateFlags.NOT_BLOCKED,
                     )
-                    assertEquals(extension.metaData.name, "Borderify")
+                    assertEquals(extension.metaData.name, extensionName)
                     GeckoResult.fromValue(extension)
                 },
         )
 
         sessionRule.waitForResult(controller.uninstall(borderify))
+    }
+
+    @Test
+    fun installUnsignedExtensionSignatureNotRequired() {
+        testInstallUnsignedExtensionSignatureNotRequired(
+            extensionArchiveURL = "resource://android/assets/web_extensions/borderify-unsigned.xpi",
+            extensionName = "Borderify",
+        )
+    }
+
+    @Test
+    fun installUnsignedExtensionAsZipFile() {
+        testInstallUnsignedExtensionSignatureNotRequired(
+            extensionArchiveURL = "resource://android/assets/web_extensions/borderify-unsigned.zip",
+            extensionName = "Borderify",
+        )
     }
 
     @Test
@@ -633,6 +648,21 @@ class WebExtensionTest : BaseSessionTest() {
         )
         testInstallError(
             name = "borderify-unsigned.xpi",
+            expectedError = InstallException.ErrorCodes.ERROR_SIGNEDSTATE_REQUIRED,
+            expectedExtensionID = null,
+            expectedExtension = false,
+        )
+    }
+
+    @Test
+    fun installUnsignedExtensionSignatureRequiredAsZipFile() {
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                "xpinstall.signatures.required" to true,
+            ),
+        )
+        testInstallError(
+            name = "borderify-unsigned.zip",
             expectedError = InstallException.ErrorCodes.ERROR_SIGNEDSTATE_REQUIRED,
             expectedExtensionID = null,
             expectedExtension = false,
