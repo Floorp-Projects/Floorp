@@ -247,7 +247,7 @@ class XPCStringConvert {
                               JS::MutableHandle<JS::Value> vp);
 
   // Convert the given stringbuffer/length pair to a jsval
-  static MOZ_ALWAYS_INLINE bool StringBufferToJSVal(
+  static MOZ_ALWAYS_INLINE bool UCStringBufferToJSVal(
       JSContext* cx, nsStringBuffer* buf, uint32_t length,
       JS::MutableHandle<JS::Value> rval, bool* sharedBuffer) {
     JSString* str = JS_NewMaybeExternalUCString(
@@ -278,7 +278,7 @@ class XPCStringConvert {
                                         JS::MutableHandle<JS::Value> rval) {
     bool shared = false;
     nsStringBuffer* buf = atom->StringBuffer();
-    if (!StringBufferToJSVal(cx, buf, atom->GetLength(), rval, &shared)) {
+    if (!UCStringBufferToJSVal(cx, buf, atom->GetLength(), rval, &shared)) {
       return false;
     }
     if (shared) {
@@ -381,8 +381,8 @@ inline bool NonVoidStringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
     uint32_t length = str.StringBufferLength();
     nsStringBuffer* buf = str.StringBuffer();
     bool shared;
-    if (!XPCStringConvert::StringBufferToJSVal(cx, buf, length, rval,
-                                               &shared)) {
+    if (!XPCStringConvert::UCStringBufferToJSVal(cx, buf, length, rval,
+                                                 &shared)) {
       return false;
     }
     if (shared) {
