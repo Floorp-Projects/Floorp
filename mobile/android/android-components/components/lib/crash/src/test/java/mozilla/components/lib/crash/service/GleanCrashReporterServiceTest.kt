@@ -193,6 +193,15 @@ class GleanCrashReporterServiceTest {
                 breadcrumbs = arrayListOf(),
                 remoteType = null,
             )
+            val extensionProcessNativeCodeCrash = Crash.NativeCodeCrash(
+                0,
+                "",
+                true,
+                "",
+                Crash.NativeCodeCrash.PROCESS_TYPE_BACKGROUND_CHILD,
+                breadcrumbs = arrayListOf(),
+                remoteType = "extension",
+            )
 
             // Record some crashes
             service.record(uncaughtExceptionCrash)
@@ -200,6 +209,7 @@ class GleanCrashReporterServiceTest {
             service.record(uncaughtExceptionCrash)
             service.record(foregroundChildProcessNativeCodeCrash)
             service.record(backgroundChildProcessNativeCodeCrash)
+            service.record(extensionProcessNativeCodeCrash)
 
             // Make sure the file exists
             assertTrue("Persistence file must exist", service.file.exists())
@@ -256,6 +266,16 @@ class GleanCrashReporterServiceTest {
                 crashPingJson(0, "utility", 0, false),
                 lines.next(),
             )
+            assertEquals(
+                "element must be background child process native code crash",
+                crashCountJson(GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY),
+                lines.next(),
+            )
+            assertEquals(
+                "element must be extensions process crash ping",
+                crashPingJsonWithRemoteType(0, "content", 0, false, "extension"),
+                lines.next(),
+            )
             assertFalse(lines.hasNext())
         }
 
@@ -280,7 +300,7 @@ class GleanCrashReporterServiceTest {
             )
             assertEquals(
                 "Glean must record correct value",
-                1,
+                2,
                 CrashMetrics.crashCount[GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialBackgroundChildProcessNativeCrashValue,
             )
         }
