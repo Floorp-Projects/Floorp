@@ -381,8 +381,7 @@ void CacheIOThread::ThreadFunc() {
     auto queue =
         MakeRefPtr<ThreadEventQueue>(MakeUnique<mozilla::EventQueue>());
     nsCOMPtr<nsIThread> xpcomThread =
-        nsThreadManager::get().CreateCurrentThread(queue,
-                                                   nsThread::NOT_MAIN_THREAD);
+        nsThreadManager::get().CreateCurrentThread(queue);
 
     threadInternal = do_QueryInterface(xpcomThread);
     if (threadInternal) threadInternal->SetObserver(this);
