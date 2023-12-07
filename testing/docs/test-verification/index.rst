@@ -2,16 +2,16 @@ Test Verification
 =================
 
 When a changeset adds a new test, or modifies an existing test, the test
-verification (TV) test suite performs additional testing to help find
+verification (TV) test suite performs additional testing to help find
 intermittent failures in the modified test as quickly as possible. TV
 uses other test harnesses to run the test multiple times, sometimes in a
 variety of configurations. For instance, when a mochitest is
-modified, TV runs the mochitest harness in a verify mode on the modified
-mochitest. That test will be run 10 times, then the same test will be
-run another 5 times, each time in a new browser instance. Once this is
-done, the whole sequence will be repeated in the test chaos mode
-(setting MOZ_CHAOSMODE). If any test run fails then the failure is
-reported normally, testing ends, and the test suite reports the failure.
+modified, TV runs the mochitest harness in a verify mode on the modified
+mochitest. That test will be run 10 times, then the same test will be
+run another 5 times, each time in a new browser instance. Once this is
+done, the whole sequence will be repeated in the test chaos mode
+(setting MOZ_CHAOSMODE). If any test run fails then the failure is
+reported normally, testing ends, and the test suite reports the failure.
 
 Initially, there are some limitations:
 
@@ -38,7 +38,7 @@ Supported test harnesses accept the --verify option:
    mach xpcshell-test <test> --verify
 
 Multiple tests, even manifests or directories, can be verified at once,
-but this is generally not recommended. Verification is easier to
+but this is generally not recommended. Verification is easier to
 understand one test at a time!
 
 .. _Verification_steps:
@@ -59,10 +59,10 @@ are skipped.
 Verification summary
 ~~~~~~~~~~~~~~~~~~~~
 
-Test verification can produce a lot of output, much of it is repetitive.
+Test verification can produce a lot of output, much of it is repetitive.
 To help communicate what verification has been found, each test harness
-prints a summary for each file which has been verified. With each
-verification step, there is either a pass or fail status and an overall
+prints a summary for each file which has been verified. With each
+verification step, there is either a pass or fail status and an overall
 verification status, such as:
 
 ::
@@ -88,9 +88,9 @@ intermittently as soon as possible, so that a pass or fail result is
 communicated quickly and test resources are not wasted.
 
 Tests have a wide range of run-times, from milliseconds up to many
-minutes. Of course, a test that takes 5 minutes to run, may take a very
-long time to verify.  There may also be cases where many tests are being
-verified at one time. For instance, in automation a changeset might make
+minutes. Of course, a test that takes 5 minutes to run, may take a very
+long time to verify. There may also be cases where many tests are being
+verified at one time. For instance, in automation a changeset might make
 a trivial change to hundreds of tests at once, or a merge might result
 in a similar situation. Even if each test is reasonably quick to verify,
 the time required to verify all these files may be considerable.
@@ -108,8 +108,8 @@ step exceeds the max-verify-time, later steps are not run.
 In automation, the TV task uses --max-verify-time to try to limit
 verification to about 1 hour, regardless of how many tests are to be
 verified or how long each one runs. If verification is incomplete, the
-task does not fail. It reports success and is green in the treeherder,
-in addition the treeherder "Job Status" pane will also report
+task does not fail. It reports success and is green in the treeherder,
+in addition the treeherder "Job Status" pane will also report
 "Verification too long! Not all tests were verified."
 
 .. _Test_Verification_in_Automation:
@@ -118,15 +118,15 @@ Test Verification in Automation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In automation, the TV and TVw tasks run whenever a changeset contains
-modifications to a .js, .html, .xhtml or .xul file. The TV/TVw task
+modifications to a .js, .html, .xhtml or .xul file. The TV/TVw task
 itself checks test manifests to determine if any of the modified files
-are test files; if any of the files are tests, TV/TVw will verify those
+are test files; if any of the files are tests, TV/TVw will verify those
 tests.
 
 Treeherder status is:
 
 -  **Green**: All modified tests in supported suites were verified with
-   no test failures, or test verification did not have enough time to
+   no test failures, or test verification did not have enough time to
    verify one or more tests.
 -  **Orange**: One or more tests modified by this changeset failed
    verification. **Backout should be considered (but is not
@@ -172,7 +172,6 @@ using something like:
 
    mach try fuzzy <path-to-test>
 
- 
 
 .. _Skipping_Verification:
 
