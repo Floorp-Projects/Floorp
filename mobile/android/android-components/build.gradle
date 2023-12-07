@@ -9,6 +9,10 @@ import static org.gradle.api.tasks.testing.TestResult.ResultType
 
 buildscript {
     repositories {
+        if (!System.env.MOZ_AUTOMATION && gradle.mozconfig.substs.MOZ_ARTIFACT_BUILDS) {
+            mavenLocal()
+        }
+
         if (project.hasProperty("googleRepo")) {
             maven {
                 name "Google"
@@ -51,6 +55,10 @@ plugins {
 
 allprojects {
     repositories {
+        if (!System.env.MOZ_AUTOMATION && gradle.mozconfig.substs.MOZ_ARTIFACT_BUILDS) {
+            mavenLocal()
+        }
+
         if (project.hasProperty("googleRepo")) {
             maven {
                 name "Google"
