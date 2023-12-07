@@ -49,11 +49,11 @@ RaptorErrorList = (
         {"regex": re.compile(r"""run-as: Package '.*' is unknown"""), "level": DEBUG},
         {"substr": r"""raptorDebug""", "level": DEBUG},
         {
-            "regex": re.compile(r"""^raptor[a-zA-Z-]*( - )?( )?(?i)error(:)?"""),
+            "regex": re.compile(r"""(?i)^raptor[a-z-]*( - )?( )?error(:)?"""),
             "level": ERROR,
         },
         {
-            "regex": re.compile(r"""^raptor[a-zA-Z-]*( - )?( )?(?i)critical(:)?"""),
+            "regex": re.compile(r"""(?i)^raptor[a-z-]*( - )?( )?critical(:)?"""),
             "level": CRITICAL,
         },
         {
@@ -1189,11 +1189,11 @@ class Raptor(
         else:  # python version >= 3.8
             modules.extend(
                 [
-                    "numpy==1.22.0",
-                    "Pillow==9.0.0",
-                    "scipy==1.7.3",
+                    "numpy==1.23.5",
+                    "Pillow==9.2.0",
+                    "scipy==1.9.3",
                     "pyssim==0.4",
-                    "opencv-python==4.5.4.60",
+                    "opencv-python==4.7.0.72",
                 ]
             )
 

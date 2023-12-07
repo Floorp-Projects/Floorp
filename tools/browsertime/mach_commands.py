@@ -58,9 +58,10 @@ OPENCV_VERSION = "4.5.4.60"
 
 py3_minor = sys.version_info.minor
 if py3_minor > 7:
-    SCIPY_VERSION = "1.7.3"
-    NUMPY_VERSION = "1.22.0"
-    PILLOW_VERSION = "9.0.0"
+    SCIPY_VERSION = "1.9.3"
+    NUMPY_VERSION = "1.23.5"
+    PILLOW_VERSION = "9.2.0"
+    OPENCV_VERSION = "4.7.0.72"
 
 MIN_NODE_VERSION = "16.0.0"
 
