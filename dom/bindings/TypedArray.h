@@ -18,6 +18,7 @@
 #include "js/RootingAPI.h"              // JS::Rooted
 #include "js/ScalarType.h"              // JS::Scalar::Type
 #include "js/SharedArrayBuffer.h"
+#include "js/friend/ErrorMessages.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Buffer.h"
 #include "mozilla/ErrorResult.h"
@@ -673,15 +674,36 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
       if (!JS::IsArrayBufferViewShared(view)) {
         JSAutoRealm ar(jsapi.cx(), view);
         bool unused;
-        JSObject* buffer =
-            JS_GetArrayBufferViewBuffer(jsapi.cx(), view, &unused);
-        if (!buffer) {
+        bool noBuffer;
+        {
+          JSObject* buffer =
+              JS_GetArrayBufferViewBuffer(jsapi.cx(), view, &unused);
+          noBuffer = !buffer;
+        }
+        if (noBuffer) {
           if (JS_IsTypedArrayObject(view)) {
             JS::Value bufferSlot =
                 JS::GetReservedSlot(view, /* BUFFER_SLOT */ 0);
             if (bufferSlot.isNull()) {
               MOZ_CRASH("TypedArrayObject with bufferSlot containing null");
             } else if (bufferSlot.isBoolean()) {
+              // If we're here then TypedArrayObject::ensureHasBuffer must have
+              // failed in the call to JS_GetArrayBufferViewBuffer.
+              if (JS_IsThrowingOutOfMemory(jsapi.cx())) {
+                MOZ_CRASH("We did run out of memory!");
+              } else if (JS_IsExceptionPending(jsapi.cx())) {
+                JS::Rooted<JS::Value> exn(jsapi.cx());
+                if (JS_GetPendingException(jsapi.cx(), &exn) &&
+                    exn.isObject()) {
+                  JS::Rooted<JSObject*> exnObj(jsapi.cx(), &exn.toObject());
+                  JSErrorReport* err =
+                      JS_ErrorFromException(jsapi.cx(), exnObj);
+                  if (err && err->errorNumber == JSMSG_BAD_ARRAY_LENGTH) {
+                    MOZ_CRASH("Length was too big");
+                  }
+                }
+              }
+              // Did ArrayBufferObject::createBufferAndData fail without OOM?
               MOZ_CRASH("TypedArrayObject with bufferSlot containing boolean");
             } else if (bufferSlot.isObject()) {
               if (!bufferSlot.toObjectOrNull()) {
@@ -699,13 +721,6 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
           } else {
             MOZ_CRASH("JS_GetArrayBufferViewBuffer failed for DataViewObject");
           }
-        }
-
-        if (!JS::IsDetachedArrayBufferObject(buffer)) {
-          if (!JS::PinArrayBufferOrViewLength(buffer, true)) {
-            MOZ_CRASH("Length was pinned already!");
-          }
-          JS::PinArrayBufferOrViewLength(buffer, false);
         }
       }
     }
