@@ -135,10 +135,11 @@ static mozilla::wr::ComponentTransferFuncType FuncTypeToWr(uint8_t aFuncType) {
 
 bool FilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
                                            Span<const StyleFilter> aFilters,
+                                           StyleFilterType aStyleFilterType,
                                            WrFiltersHolder& aWrFilters,
                                            bool& aInitialized) {
-  bool status = BuildWebRenderFiltersImpl(aFilteredFrame, aFilters, aWrFilters,
-                                          aInitialized);
+  bool status = BuildWebRenderFiltersImpl(
+      aFilteredFrame, aFilters, aStyleFilterType, aWrFilters, aInitialized);
   if (!status) {
     aFilteredFrame->PresContext()->Document()->SetUseCounter(
         eUseCounter_custom_WrFilterFallback);
@@ -149,6 +150,7 @@ bool FilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
 
 bool FilterInstance::BuildWebRenderFiltersImpl(nsIFrame* aFilteredFrame,
                                                Span<const StyleFilter> aFilters,
+                                               StyleFilterType aStyleFilterType,
                                                WrFiltersHolder& aWrFilters,
                                                bool& aInitialized) {
   aWrFilters.filters.Clear();
@@ -160,7 +162,8 @@ bool FilterInstance::BuildWebRenderFiltersImpl(nsIFrame* aFilteredFrame,
     return true;
   }
   nsTArray<SVGFilterFrame*> filterFrames;
-  if (SVGObserverUtils::GetAndObserveFilters(aFilteredFrame, &filterFrames) ==
+  if (SVGObserverUtils::GetAndObserveFilters(aFilteredFrame, &filterFrames,
+                                             aStyleFilterType) ==
       SVGObserverUtils::eHasRefsSomeInvalid) {
     aInitialized = false;
     return true;
