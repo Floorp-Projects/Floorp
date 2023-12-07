@@ -78,9 +78,9 @@ add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
         "The 'alerts' option should be hidden when there are no breached or vulnerable logins in the list"
       );
 
-      let createButton = loginList.shadowRoot
-        .querySelector(".create-login-button")
-        .shadowRoot.querySelector("button");
+      let createButton = loginList.shadowRoot.querySelector(
+        "create-login-button"
+      );
       createButton.click();
 
       let loginItem = content.document.querySelector("login-item");

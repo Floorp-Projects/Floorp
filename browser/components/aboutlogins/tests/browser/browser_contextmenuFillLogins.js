@@ -55,9 +55,7 @@ if (OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
               loginItem._login.guid == login.guid
             );
           }, "Waiting for login item to get populated");
-          let editButton = loginItem.shadowRoot
-            .querySelector(".edit-button")
-            .shadowRoot.querySelector("button");
+          let editButton = loginItem.shadowRoot.querySelector("edit-button");
           editButton.click();
         }
       );
