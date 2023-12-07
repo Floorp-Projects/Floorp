@@ -69,7 +69,10 @@ class IdleTaskRunner {
   // period, or null if not running during idle time.
   void SetIdleDeadline(mozilla::TimeStamp aDeadline);
 
+  // If the timer is already active, SetTimer doesn't do anything.
   void SetTimer(TimeDuration aDelay, nsIEventTarget* aTarget);
+
+  void ResetTimer(TimeDuration aDelay);
 
   // Update the minimum idle time that this callback would be invoked for.
   void SetMinimumUsefulBudget(int64_t aMinimumUsefulBudget);

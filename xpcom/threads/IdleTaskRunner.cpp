@@ -259,6 +259,11 @@ void IdleTaskRunner::SetTimerInternal(TimeDuration aDelay) {
   if (mTimerActive) {
     return;
   }
+  ResetTimer(aDelay);
+}
+
+void IdleTaskRunner::ResetTimer(TimeDuration aDelay) {
+  mTimerActive = false;
 
   if (!mTimer) {
     mTimer = NS_NewTimer();
