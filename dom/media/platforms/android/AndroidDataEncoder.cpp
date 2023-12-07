@@ -8,18 +8,12 @@
 #include "H264.h"
 #include "MediaData.h"
 #include "MediaInfo.h"
-#include "SimpleMap.h"
 
 #include "ImageContainer.h"
+#include "libyuv/convert_from.h"
 #include "mozilla/Logging.h"
-#include "mozilla/ResultVariant.h"
-
-#include "nsMimeTypes.h"
-
-#include "libyuv.h"
 
 namespace mozilla {
-using media::TimeUnit;
 
 extern LazyLogModule sPEMLog;
 #define AND_ENC_LOG(arg, ...)                \
@@ -79,7 +73,7 @@ FormatResult ToMediaFormat(const EncoderConfig& aConfig) {
                                                  "fail to set bitrate mode")));
 
   rv = format->SetInteger(java::sdk::MediaFormat::KEY_BIT_RATE,
-                          aConfig.mBitsPerSec);
+                          AssertedCast<int>(aConfig.mBitrate));
   NS_ENSURE_SUCCESS(rv, FormatResult(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                                  "fail to set bitrate")));
 
@@ -97,8 +91,8 @@ FormatResult ToMediaFormat(const EncoderConfig& aConfig) {
   // Ensure interval >= 1. A negative value means no key frames are
   // requested after the first frame. A zero value means a stream
   // containing all key frames is requested.
-  int32_t intervalInSec =
-      std::max<size_t>(1, aConfig.mKeyframeInterval / aConfig.mFramerate);
+  int32_t intervalInSec = AssertedCast<int32_t>(
+      std::max<size_t>(1, aConfig.mKeyframeInterval / aConfig.mFramerate));
   rv = format->SetInteger(java::sdk::MediaFormat::KEY_I_FRAME_INTERVAL,
                           intervalInSec);
   NS_ENSURE_SUCCESS(rv,
@@ -216,11 +210,11 @@ RefPtr<MediaDataEncoder::EncodePromise> AndroidDataEncoder::ProcessEncode(
   }
 
   if (aSample->mKeyframe) {
-    mInputBufferInfo->Set(0, mYUVBuffer->Length(),
+    mInputBufferInfo->Set(0, AssertedCast<int32_t>(mYUVBuffer->Length()),
                           aSample->mTime.ToMicroseconds(),
                           java::sdk::MediaCodec::BUFFER_FLAG_SYNC_FRAME);
   } else {
-    mInputBufferInfo->Set(0, mYUVBuffer->Length(),
+    mInputBufferInfo->Set(0, AssertedCast<int32_t>(mYUVBuffer->Length()),
                           aSample->mTime.ToMicroseconds(), 0);
   }
 
@@ -229,9 +223,8 @@ RefPtr<MediaDataEncoder::EncodePromise> AndroidDataEncoder::ProcessEncode(
   if (mEncodedData.Length() > 0) {
     EncodedData pending = std::move(mEncodedData);
     return EncodePromise::CreateAndResolve(std::move(pending), __func__);
-  } else {
-    return EncodePromise::CreateAndResolve(EncodedData(), __func__);
   }
+  return EncodePromise::CreateAndResolve(EncodedData(), __func__);
 }
 
 class AutoRelease final {
@@ -464,7 +457,7 @@ RefPtr<ShutdownPromise> AndroidDataEncoder::ProcessShutdown() {
 RefPtr<GenericPromise> AndroidDataEncoder::SetBitrate(uint32_t aBitsPerSec) {
   RefPtr<AndroidDataEncoder> self(this);
   return InvokeAsync(mTaskQueue, __func__, [self, aBitsPerSec]() {
-    self->mJavaEncoder->SetBitrate(aBitsPerSec);
+    self->mJavaEncoder->SetBitrate(AssertedCast<int>(aBitsPerSec));
     return GenericPromise::CreateAndResolve(true, __func__);
   });
 }
