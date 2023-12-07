@@ -714,6 +714,8 @@ void nsINode::LastRelease() {
     // properties are bound to nsINode objects and the destructor functions of
     // the properties may want to use the owner document of the nsINode.
     AsDocument()->RemoveAllProperties();
+
+    AsDocument()->DropStyleSet();
   } else {
     if (HasProperties()) {
       // Strong reference to the document so that deleting properties can't

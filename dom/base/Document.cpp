@@ -2428,6 +2428,8 @@ Document::~Document() {
   UnregisterFromMemoryReportingForDataDocument();
 }
 
+void Document::DropStyleSet() { mStyleSet = nullptr; }
+
 NS_INTERFACE_TABLE_HEAD(Document)
   NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
   NS_INTERFACE_TABLE_BEGIN
@@ -11517,6 +11519,9 @@ void Document::Destroy() {
   if (mDocumentL10n) {
     mDocumentL10n->Destroy();
   }
+
+  MOZ_DIAGNOSTIC_ASSERT(!mPresShell);
+  DropStyleSet();
 }
 
 void Document::RemovedFromDocShell() {
