@@ -11,11 +11,17 @@ namespace mozilla {
 
 class AndroidEncoderModule final : public PlatformEncoderModule {
  public:
-  bool SupportsMimeType(const nsACString& aMimeType) const override;
+  AndroidEncoderModule() = default;
+  virtual ~AndroidEncoderModule() = default;
+  // aCodec is the full codec string
+  bool Supports(const EncoderConfig& aConfig) const override;
+  bool SupportsCodec(CodecType aCodec) const override;
+
+  const char* GetName() const override { return "Android Encoder Module"; }
 
   already_AddRefed<MediaDataEncoder> CreateVideoEncoder(
-      const CreateEncoderParams& aParams,
-      const bool aHardwareNotAllowed) const override;
+      const EncoderConfig& aConfig,
+      const RefPtr<TaskQueue>& aTaskQueue) const override;
 };
 
 }  // namespace mozilla
