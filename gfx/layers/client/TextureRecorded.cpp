@@ -23,7 +23,7 @@ RecordedTextureData::RecordedTextureData(
     already_AddRefed<CanvasChild> aCanvasChild, gfx::IntSize aSize,
     gfx::SurfaceFormat aFormat, TextureType aTextureType)
     : mCanvasChild(aCanvasChild), mSize(aSize), mFormat(aFormat) {
-  mCanvasChild->EnsureRecorder(aTextureType);
+  mCanvasChild->EnsureRecorder(aSize, aFormat, aTextureType);
 }
 
 RecordedTextureData::~RecordedTextureData() {
