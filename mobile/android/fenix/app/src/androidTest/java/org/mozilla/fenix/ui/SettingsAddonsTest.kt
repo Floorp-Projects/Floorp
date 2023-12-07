@@ -81,6 +81,7 @@ class SettingsAddonsTest {
                 ) {
                     clickInstallAddon(addonName)
                 }
+                verifyAddonDownloadOverlay()
                 verifyAddonPermissionPrompt(addonName)
                 cancelInstallAddon()
                 clickInstallAddon(addonName)

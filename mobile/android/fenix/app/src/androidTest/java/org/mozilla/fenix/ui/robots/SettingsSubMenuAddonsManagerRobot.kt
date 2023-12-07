@@ -55,6 +55,9 @@ class SettingsSubMenuAddonsManagerRobot {
     fun verifyAddonsListIsDisplayed(shouldBeDisplayed: Boolean) =
         assertUIObjectExists(addonsList(), exists = shouldBeDisplayed)
 
+    fun verifyAddonDownloadOverlay() =
+        onView(withText(R.string.mozac_add_on_install_progress_caption)).check(matches(isDisplayed()))
+
     fun verifyAddonPermissionPrompt(addonName: String) {
         mDevice.waitNotNull(Until.findObject(By.text("Add $addonName?")), waitingTime)
 
