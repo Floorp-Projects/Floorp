@@ -957,7 +957,7 @@ suites:
                         frame-rate mode thus reflecting the maximum scroll throughput per page.
                         To turn on ASAP mode, we set these preferences:
 
-                      ``preferences = {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1}``
+                      ``preferences = {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1}``
 
                       See also `tp5o_scroll <#tp5o_scroll>`_ which has relevant information for this test.
                 - **Example Data**
@@ -1028,7 +1028,7 @@ suites:
                         duration the sequence/animation took to complete. To turn on ASAP mode,
                         we set these preferences:
 
-                      ``preferences = {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1}``
+                      ``preferences = {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1}``
                 - **Example Data**
                     * 0;hixie-001.xml;562;555;508;521;522;520;499;510;492;514;502;504;500;521;510;506;511;505;495;517;520;512;503;504;502
                     * 1;hixie-002.xml;510;613;536;530;536;522;498;505;500;504;498;529;498;509;493;512;501;506;504;499;496;505;508;511;503
