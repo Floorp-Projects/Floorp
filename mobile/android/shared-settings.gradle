@@ -46,7 +46,15 @@ class Config {
 def setupProject(name, path, description) {
     settings.include(":$name")
 
-    project(":$name").projectDir = new File(rootDir, "../android-components/${path}")
+    def projectPath = "/mobile/android/android-components/${path}"
+    if (rootDir.toString().endsWith("android-components") ||
+            rootDir.toString().endsWith("focus-android") ||
+            rootDir.toString().endsWith("fenix")
+    ) {
+        projectPath = "../android-components/${path}"
+    }
+
+    project(":$name").projectDir = new File(rootDir, projectPath)
 
     // project(...) gives us a skeleton project that we can't set ext.* on
     gradle.beforeProject { project ->
@@ -74,8 +82,16 @@ def getManifestVersionString(componentsVersion) {
     return "${parts[0]}.${parts[1]}.${dateAndTime}";
 }
 
+def buildConfigPath = '/mobile/android/android-components/.buildconfig.yml'
+if (rootDir.toString().endsWith("android-components") ||
+        rootDir.toString().endsWith("focus-android") ||
+        rootDir.toString().endsWith("fenix")
+) {
+    buildConfigPath = '../android-components/.buildconfig.yml'
+}
+
 def yaml = new Yaml()
-def buildconfig = yaml.load(new File(rootDir, '../android-components/.buildconfig.yml').newInputStream())
+def buildconfig = yaml.load(new File(rootDir, buildConfigPath).newInputStream())
 
 buildconfig.projects.each { project ->
     // If we're building A-C, set up all projects, otherwise exclude samples e.g., if we're building Fenix or Focus.
@@ -86,8 +102,19 @@ buildconfig.projects.each { project ->
 }
 
 gradle.projectsLoaded { ->
-    def componentsVersion = new File(rootDir, '../version.txt').text.stripTrailing()
-    def configData = yaml.load(new File(rootDir, '../android-components/.config.yml').newInputStream())
+    def versionPath = '/mobile/android/version.txt'
+    def configPath = '/mobile/android/android-components/.config.yml'
+
+    if (rootDir.toString().endsWith("android-components") ||
+            rootDir.toString().endsWith("focus-android") ||
+            rootDir.toString().endsWith("fenix")
+    ) {
+        versionPath = '../version.txt'
+        configPath = '../android-components/.config.yml'
+    }
+
+    def componentsVersion = new File(rootDir, versionPath).text.stripTrailing()
+    def configData = yaml.load(new File(rootDir, configPath).newInputStream())
     String version = componentsVersion
 
     if (gradle.rootProject.hasProperty("nightlyVersion")) {
