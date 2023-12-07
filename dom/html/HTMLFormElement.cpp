@@ -49,7 +49,6 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_prompts.h"
-#include "mozilla/StaticPrefs_signon.h"
 #include "nsCategoryManagerUtils.h"
 #include "nsIContentInlines.h"
 #include "nsISimpleEnumerator.h"
@@ -161,10 +160,10 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLFormElement,
 
 // EventTarget
 void HTMLFormElement::AsyncEventRunning(AsyncEventDispatcher* aEvent) {
-  if (mFormPasswordEventDispatcher == aEvent) {
-    mFormPasswordEventDispatcher = nullptr;
-  } else if (mFormPossibleUsernameEventDispatcher == aEvent) {
-    mFormPossibleUsernameEventDispatcher = nullptr;
+  if (aEvent->mEventType == u"DOMFormHasPassword"_ns) {
+    mHasPendingPasswordEvent = false;
+  } else if (aEvent->mEventType == u"DOMFormHasPossibleUsername"_ns) {
+    mHasPendingPossibleUsernameEvent = false;
   }
 }
 
@@ -1169,34 +1168,6 @@ void HTMLFormElement::AssertDocumentOrder(
 }
 #endif
 
-void HTMLFormElement::PostPasswordEvent() {
-  // Don't fire another add event if we have a pending add event.
-  if (mFormPasswordEventDispatcher.get()) {
-    return;
-  }
-
-  mFormPasswordEventDispatcher =
-      new AsyncEventDispatcher(this, u"DOMFormHasPassword"_ns, CanBubble::eYes,
-                               ChromeOnlyDispatch::eYes);
-  mFormPasswordEventDispatcher->PostDOMEvent();
-}
-
-void HTMLFormElement::PostPossibleUsernameEvent() {
-  if (!StaticPrefs::signon_usernameOnlyForm_enabled()) {
-    return;
-  }
-
-  // Don't fire another event if we have a pending event.
-  if (mFormPossibleUsernameEventDispatcher) {
-    return;
-  }
-
-  mFormPossibleUsernameEventDispatcher =
-      new AsyncEventDispatcher(this, u"DOMFormHasPossibleUsername"_ns,
-                               CanBubble::eYes, ChromeOnlyDispatch::eYes);
-  mFormPossibleUsernameEventDispatcher->PostDOMEvent();
-}
-
 namespace {
 
 struct FormComparator {
@@ -1271,16 +1242,6 @@ nsresult HTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
 #endif
 
   auto type = fc->ControlType();
-
-  // If it is a password control, inform the password manager.
-  if (type == FormControlType::InputPassword) {
-    PostPasswordEvent();
-    // If the type is email or text, it is a username compatible input,
-    // inform the password manager.
-  } else if (type == FormControlType::InputEmail ||
-             type == FormControlType::InputText) {
-    PostPossibleUsernameEvent();
-  }
 
   // Default submit element handling
   if (fc->IsSubmitControl()) {

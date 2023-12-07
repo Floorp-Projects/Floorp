@@ -952,7 +952,7 @@ class HTMLInputElement final : public TextControlElement,
                     const nsAttrValue* aValue, const nsAttrValue* aOldValue,
                     nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
 
-  void BeforeSetForm(bool aBindToTree) override;
+  void BeforeSetForm(HTMLFormElement* aForm, bool aBindToTree) override;
 
   void AfterClearForm(bool aUnbindOrDelete) override;
 
@@ -1597,6 +1597,12 @@ class HTMLInputElement final : public TextControlElement,
            aType == FormControlType::InputRange ||
            aType == FormControlType::InputNumber;
   }
+
+  /**
+   * Call MaybeDispatchPasswordEvent or MaybeDispatchUsernameEvent
+   * in order to dispatch LoginManager events.
+   */
+  void MaybeDispatchLoginManagerEvents(HTMLFormElement* aForm);
 
   /**
    * Fire an event when the password input field is removed from the DOM tree.
