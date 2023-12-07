@@ -17,6 +17,8 @@ plugins {
     id 'FocusDependenciesPlugin'
 }
 
+ext.topsrcdir = rootProject.projectDir.absolutePath.minus("mobile/android/focus-android")
+
 apply from: file('../shared-settings.gradle')
 
 include ':app'

@@ -13,6 +13,8 @@ plugins {
     id 'mozac.GitHubPlugin'
 }
 
+ext.topsrcdir = rootProject.projectDir.absolutePath.minus("mobile/android/android-components")
+
 apply from: file('../shared-settings.gradle')
 
 buildCache {
