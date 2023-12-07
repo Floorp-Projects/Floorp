@@ -12,16 +12,14 @@
 namespace mozilla {
 class AppleEncoderModule final : public PlatformEncoderModule {
  public:
-  virtual ~AppleEncoderModule() = default;
+  AppleEncoderModule() {}
+  virtual ~AppleEncoderModule() {}
 
-  bool Supports(const EncoderConfig& aConfig) const override;
-  bool SupportsCodec(CodecType aCodec) const override;
-
-  const char* GetName() const override { return "Apple Encoder Module"; }
+  bool SupportsMimeType(const nsACString& aMimeType) const override;
 
   already_AddRefed<MediaDataEncoder> CreateVideoEncoder(
-      const EncoderConfig& aConfig,
-      const RefPtr<TaskQueue>& aTaskQueue) const override;
+      const CreateEncoderParams& aParams,
+      const bool aHardwareNotAllowed) const override;
 };
 
 }  // namespace mozilla

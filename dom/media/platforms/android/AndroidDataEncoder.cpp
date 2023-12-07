@@ -8,12 +8,18 @@
 #include "H264.h"
 #include "MediaData.h"
 #include "MediaInfo.h"
+#include "SimpleMap.h"
 
 #include "ImageContainer.h"
-#include "libyuv/convert_from.h"
 #include "mozilla/Logging.h"
+#include "mozilla/ResultVariant.h"
+
+#include "nsMimeTypes.h"
+
+#include "libyuv.h"
 
 namespace mozilla {
+using media::TimeUnit;
 
 extern LazyLogModule sPEMLog;
 #define AND_ENC_LOG(arg, ...)                \
@@ -32,23 +38,24 @@ extern LazyLogModule sPEMLog;
     }                                                                    \
   } while (0)
 
-RefPtr<MediaDataEncoder::InitPromise> AndroidDataEncoder::Init() {
+template <typename ConfigType>
+RefPtr<MediaDataEncoder::InitPromise> AndroidDataEncoder<ConfigType>::Init() {
   // Sanity-check the input size for Android software encoder fails to do it.
   if (mConfig.mSize.width == 0 || mConfig.mSize.height == 0) {
     return InitPromise::CreateAndReject(NS_ERROR_ILLEGAL_VALUE, __func__);
   }
 
   return InvokeAsync(mTaskQueue, this, __func__,
-                     &AndroidDataEncoder::ProcessInit);
+                     &AndroidDataEncoder<ConfigType>::ProcessInit);
 }
 
-static const char* MimeTypeOf(CodecType aCodec) {
+static const char* MimeTypeOf(MediaDataEncoder::CodecType aCodec) {
   switch (aCodec) {
-    case CodecType::H264:
+    case MediaDataEncoder::CodecType::H264:
       return "video/avc";
-    case CodecType::VP8:
+    case MediaDataEncoder::CodecType::VP8:
       return "video/x-vnd.on2.vp8";
-    case CodecType::VP9:
+    case MediaDataEncoder::CodecType::VP9:
       return "video/x-vnd.on2.vp9";
     default:
       return "";
@@ -57,10 +64,11 @@ static const char* MimeTypeOf(CodecType aCodec) {
 
 using FormatResult = Result<java::sdk::MediaFormat::LocalRef, MediaResult>;
 
-FormatResult ToMediaFormat(const EncoderConfig& aConfig) {
+template <typename ConfigType>
+FormatResult ToMediaFormat(const ConfigType& aConfig) {
   nsresult rv = NS_OK;
   java::sdk::MediaFormat::LocalRef format;
-  rv = java::sdk::MediaFormat::CreateVideoFormat(MimeTypeOf(aConfig.mCodec),
+  rv = java::sdk::MediaFormat::CreateVideoFormat(MimeTypeOf(aConfig.mCodecType),
                                                  aConfig.mSize.width,
                                                  aConfig.mSize.height, &format);
   NS_ENSURE_SUCCESS(
@@ -73,7 +81,7 @@ FormatResult ToMediaFormat(const EncoderConfig& aConfig) {
                                                  "fail to set bitrate mode")));
 
   rv = format->SetInteger(java::sdk::MediaFormat::KEY_BIT_RATE,
-                          AssertedCast<int>(aConfig.mBitrate));
+                          aConfig.mBitsPerSec);
   NS_ENSURE_SUCCESS(rv, FormatResult(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                                  "fail to set bitrate")));
 
@@ -91,8 +99,8 @@ FormatResult ToMediaFormat(const EncoderConfig& aConfig) {
   // Ensure interval >= 1. A negative value means no key frames are
   // requested after the first frame. A zero value means a stream
   // containing all key frames is requested.
-  int32_t intervalInSec = AssertedCast<int32_t>(
-      std::max<size_t>(1, aConfig.mKeyframeInterval / aConfig.mFramerate));
+  int32_t intervalInSec =
+      std::max<size_t>(1, aConfig.mKeyframeInterval / aConfig.mFramerate);
   rv = format->SetInteger(java::sdk::MediaFormat::KEY_I_FRAME_INTERVAL,
                           intervalInSec);
   NS_ENSURE_SUCCESS(rv,
@@ -102,7 +110,9 @@ FormatResult ToMediaFormat(const EncoderConfig& aConfig) {
   return format;
 }
 
-RefPtr<MediaDataEncoder::InitPromise> AndroidDataEncoder::ProcessInit() {
+template <typename ConfigType>
+RefPtr<MediaDataEncoder::InitPromise>
+AndroidDataEncoder<ConfigType>::ProcessInit() {
   AssertOnTaskQueue();
   MOZ_ASSERT(!mJavaEncoder);
 
@@ -113,7 +123,7 @@ RefPtr<MediaDataEncoder::InitPromise> AndroidDataEncoder::ProcessInit() {
   }
   mInputBufferInfo = bufferInfo;
 
-  FormatResult result = ToMediaFormat(mConfig);
+  FormatResult result = ToMediaFormat<ConfigType>(mConfig);
   if (result.isErr()) {
     return InitPromise::CreateAndReject(result.unwrapErr(), __func__);
   }
@@ -147,18 +157,20 @@ RefPtr<MediaDataEncoder::InitPromise> AndroidDataEncoder::ProcessInit() {
   return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
 }
 
-RefPtr<MediaDataEncoder::EncodePromise> AndroidDataEncoder::Encode(
+template <typename ConfigType>
+RefPtr<MediaDataEncoder::EncodePromise> AndroidDataEncoder<ConfigType>::Encode(
     const MediaData* aSample) {
   RefPtr<AndroidDataEncoder> self = this;
   MOZ_ASSERT(aSample != nullptr);
 
   RefPtr<const MediaData> sample(aSample);
-  return InvokeAsync(mTaskQueue, __func__,
-                     [self, sample]() { return self->ProcessEncode(sample); });
+  return InvokeAsync(mTaskQueue, __func__, [self, sample]() {
+    return self->ProcessEncode(std::move(sample));
+  });
 }
 
 static jni::ByteBuffer::LocalRef ConvertI420ToNV12Buffer(
-    RefPtr<const VideoData>& aSample, RefPtr<MediaByteBuffer>& aYUVBuffer,
+    RefPtr<const VideoData> aSample, RefPtr<MediaByteBuffer>& aYUVBuffer,
     int aStride, int aYPlaneHeight) {
   const layers::PlanarYCbCrImage* image = aSample->mImage->AsPlanarYCbCrImage();
   MOZ_ASSERT(image);
@@ -191,8 +203,9 @@ static jni::ByteBuffer::LocalRef ConvertI420ToNV12Buffer(
   return jni::ByteBuffer::New(aYUVBuffer->Elements(), aYUVBuffer->Length());
 }
 
-RefPtr<MediaDataEncoder::EncodePromise> AndroidDataEncoder::ProcessEncode(
-    const RefPtr<const MediaData>& aSample) {
+template <typename ConfigType>
+RefPtr<MediaDataEncoder::EncodePromise>
+AndroidDataEncoder<ConfigType>::ProcessEncode(RefPtr<const MediaData> aSample) {
   AssertOnTaskQueue();
 
   REJECT_IF_ERROR();
@@ -210,11 +223,11 @@ RefPtr<MediaDataEncoder::EncodePromise> AndroidDataEncoder::ProcessEncode(
   }
 
   if (aSample->mKeyframe) {
-    mInputBufferInfo->Set(0, AssertedCast<int32_t>(mYUVBuffer->Length()),
+    mInputBufferInfo->Set(0, mYUVBuffer->Length(),
                           aSample->mTime.ToMicroseconds(),
                           java::sdk::MediaCodec::BUFFER_FLAG_SYNC_FRAME);
   } else {
-    mInputBufferInfo->Set(0, AssertedCast<int32_t>(mYUVBuffer->Length()),
+    mInputBufferInfo->Set(0, mYUVBuffer->Length(),
                           aSample->mTime.ToMicroseconds(), 0);
   }
 
@@ -223,8 +236,9 @@ RefPtr<MediaDataEncoder::EncodePromise> AndroidDataEncoder::ProcessEncode(
   if (mEncodedData.Length() > 0) {
     EncodedData pending = std::move(mEncodedData);
     return EncodePromise::CreateAndResolve(std::move(pending), __func__);
+  } else {
+    return EncodePromise::CreateAndResolve(EncodedData(), __func__);
   }
-  return EncodePromise::CreateAndResolve(EncodedData(), __func__);
 }
 
 class AutoRelease final {
@@ -266,7 +280,8 @@ static RefPtr<MediaByteBuffer> ExtractCodecConfig(
   return avcc;
 }
 
-void AndroidDataEncoder::ProcessOutput(
+template <typename ConfigType>
+void AndroidDataEncoder<ConfigType>::ProcessOutput(
     java::Sample::GlobalRef&& aSample,
     java::SampleBuffer::GlobalRef&& aBuffer) {
   if (!mTaskQueue->IsCurrentThreadIn()) {
@@ -314,16 +329,9 @@ void AndroidDataEncoder::ProcessOutput(
                                        mConfig.mUsage == Usage::Realtime);
       return;
     }
-    RefPtr<MediaRawData> output;
-    if (mConfig.mCodec == CodecType::H264) {
-      output = GetOutputDataH264(
-          aBuffer, offset, size,
-          !!(flags & java::sdk::MediaCodec::BUFFER_FLAG_KEY_FRAME));
-    } else {
-      output = GetOutputData(
-          aBuffer, offset, size,
-          !!(flags & java::sdk::MediaCodec::BUFFER_FLAG_KEY_FRAME));
-    }
+    RefPtr<MediaRawData> output =
+        GetOutputData(aBuffer, offset, size,
+                      !!(flags & java::sdk::MediaCodec::BUFFER_FLAG_KEY_FRAME));
     output->mEOS = isEOS;
     output->mTime = media::TimeUnit::FromMicroseconds(presentationTimeUs);
     mEncodedData.AppendElement(std::move(output));
@@ -338,7 +346,8 @@ void AndroidDataEncoder::ProcessOutput(
   }
 }
 
-RefPtr<MediaRawData> AndroidDataEncoder::GetOutputData(
+template <typename ConfigType>
+RefPtr<MediaRawData> AndroidDataEncoder<ConfigType>::GetOutputData(
     java::SampleBuffer::Param aBuffer, const int32_t aOffset,
     const int32_t aSize, const bool aIsKeyFrame) {
   // Copy frame data from Java buffer.
@@ -356,8 +365,10 @@ RefPtr<MediaRawData> AndroidDataEncoder::GetOutputData(
   return output;
 }
 
-// AVC/H.264 frame can be in avcC or Annex B and needs extra conversion steps.
-RefPtr<MediaRawData> AndroidDataEncoder::GetOutputDataH264(
+// AVC/H.264 frame can be in avcC or Annex B and needs extra convertion steps.
+template <>
+RefPtr<MediaRawData>
+AndroidDataEncoder<MediaDataEncoder::H264Config>::GetOutputData(
     java::SampleBuffer::Param aBuffer, const int32_t aOffset,
     const int32_t aSize, const bool aIsKeyFrame) {
   auto output = MakeRefPtr<MediaRawData>();
@@ -397,12 +408,16 @@ RefPtr<MediaRawData> AndroidDataEncoder::GetOutputDataH264(
   return output;
 }
 
-RefPtr<MediaDataEncoder::EncodePromise> AndroidDataEncoder::Drain() {
+template <typename ConfigType>
+RefPtr<MediaDataEncoder::EncodePromise>
+AndroidDataEncoder<ConfigType>::Drain() {
   return InvokeAsync(mTaskQueue, this, __func__,
-                     &AndroidDataEncoder::ProcessDrain);
+                     &AndroidDataEncoder<ConfigType>::ProcessDrain);
 }
 
-RefPtr<MediaDataEncoder::EncodePromise> AndroidDataEncoder::ProcessDrain() {
+template <typename ConfigType>
+RefPtr<MediaDataEncoder::EncodePromise>
+AndroidDataEncoder<ConfigType>::ProcessDrain() {
   AssertOnTaskQueue();
   MOZ_ASSERT(mJavaEncoder);
   MOZ_ASSERT(mDrainPromise.IsEmpty());
@@ -431,12 +446,14 @@ RefPtr<MediaDataEncoder::EncodePromise> AndroidDataEncoder::ProcessDrain() {
   }
 }
 
-RefPtr<ShutdownPromise> AndroidDataEncoder::Shutdown() {
+template <typename ConfigType>
+RefPtr<ShutdownPromise> AndroidDataEncoder<ConfigType>::Shutdown() {
   return InvokeAsync(mTaskQueue, this, __func__,
-                     &AndroidDataEncoder::ProcessShutdown);
+                     &AndroidDataEncoder<ConfigType>::ProcessShutdown);
 }
 
-RefPtr<ShutdownPromise> AndroidDataEncoder::ProcessShutdown() {
+template <typename ConfigType>
+RefPtr<ShutdownPromise> AndroidDataEncoder<ConfigType>::ProcessShutdown() {
   AssertOnTaskQueue();
   if (mJavaEncoder) {
     mJavaEncoder->Release();
@@ -454,18 +471,24 @@ RefPtr<ShutdownPromise> AndroidDataEncoder::ProcessShutdown() {
   return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
-RefPtr<GenericPromise> AndroidDataEncoder::SetBitrate(uint32_t aBitsPerSec) {
+template <typename ConfigType>
+RefPtr<GenericPromise> AndroidDataEncoder<ConfigType>::SetBitrate(
+    const MediaDataEncoder::Rate aBitsPerSec) {
   RefPtr<AndroidDataEncoder> self(this);
   return InvokeAsync(mTaskQueue, __func__, [self, aBitsPerSec]() {
-    self->mJavaEncoder->SetBitrate(AssertedCast<int>(aBitsPerSec));
+    self->mJavaEncoder->SetBitrate(aBitsPerSec);
     return GenericPromise::CreateAndResolve(true, __func__);
   });
+
+  return nullptr;
 }
 
-void AndroidDataEncoder::Error(const MediaResult& aError) {
+template <typename ConfigType>
+void AndroidDataEncoder<ConfigType>::Error(const MediaResult& aError) {
   if (!mTaskQueue->IsCurrentThreadIn()) {
     nsresult rv = mTaskQueue->Dispatch(NewRunnableMethod<MediaResult>(
-        "AndroidDataEncoder::Error", this, &AndroidDataEncoder::Error, aError));
+        "AndroidDataEncoder::Error", this,
+        &AndroidDataEncoder<ConfigType>::Error, aError));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     Unused << rv;
     return;
@@ -475,21 +498,25 @@ void AndroidDataEncoder::Error(const MediaResult& aError) {
   mError = Some(aError);
 }
 
-void AndroidDataEncoder::CallbacksSupport::HandleInput(int64_t aTimestamp,
-                                                       bool aProcessed) {}
+template <typename ConfigType>
+void AndroidDataEncoder<ConfigType>::CallbacksSupport::HandleInput(
+    int64_t aTimestamp, bool aProcessed) {}
 
-void AndroidDataEncoder::CallbacksSupport::HandleOutput(
+template <typename ConfigType>
+void AndroidDataEncoder<ConfigType>::CallbacksSupport::HandleOutput(
     java::Sample::Param aSample, java::SampleBuffer::Param aBuffer) {
   MutexAutoLock lock(mMutex);
   if (mEncoder) {
-    mEncoder->ProcessOutput(aSample, aBuffer);
+    mEncoder->ProcessOutput(std::move(aSample), std::move(aBuffer));
   }
 }
 
-void AndroidDataEncoder::CallbacksSupport::HandleOutputFormatChanged(
-    java::sdk::MediaFormat::Param aFormat) {}
+template <typename ConfigType>
+void AndroidDataEncoder<ConfigType>::CallbacksSupport::
+    HandleOutputFormatChanged(java::sdk::MediaFormat::Param aFormat) {}
 
-void AndroidDataEncoder::CallbacksSupport::HandleError(
+template <typename ConfigType>
+void AndroidDataEncoder<ConfigType>::CallbacksSupport::HandleError(
     const MediaResult& aError) {
   MutexAutoLock lock(mMutex);
   if (mEncoder) {
@@ -497,6 +524,10 @@ void AndroidDataEncoder::CallbacksSupport::HandleError(
   }
 }
 
+// Force compiler to generate code.
+template class AndroidDataEncoder<MediaDataEncoder::H264Config>;
+template class AndroidDataEncoder<MediaDataEncoder::VP8Config>;
+template class AndroidDataEncoder<MediaDataEncoder::VP9Config>;
 }  // namespace mozilla
 
 #undef AND_ENC_LOG

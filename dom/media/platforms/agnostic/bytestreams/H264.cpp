@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "H264.h"
+#include <cmath>
 #include <limits>
 #include "AnnexB.h"
 #include "BitReader.h"
@@ -10,6 +11,7 @@
 #include "BufferReader.h"
 #include "ByteStreamsUtils.h"
 #include "ByteWriter.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Try.h"
@@ -297,7 +299,7 @@ class SPSNAL {
       MOZ_ASSERT(mLength / 8 <= mDecodedNAL->Length());
 
       if (memcmp(mDecodedNAL->Elements(), aOther.mDecodedNAL->Elements(),
-                 mLength / 8) != 0) {
+                 mLength / 8)) {
         return false;
       }
 
@@ -643,14 +645,14 @@ bool H264::DecodeSPS(const mozilla::MediaByteBuffer* aSPS, SPSData& aDest) {
   // Determine display size.
   if (aDest.sample_ratio > 1.0) {
     // Increase the intrinsic width
-    aDest.display_width = ConditionDimension(
-        AssertedCast<float>(aDest.pic_width) * aDest.sample_ratio);
+    aDest.display_width =
+        ConditionDimension(aDest.pic_width * aDest.sample_ratio);
     aDest.display_height = aDest.pic_height;
   } else {
     // Increase the intrinsic height
     aDest.display_width = aDest.pic_width;
-    aDest.display_height = ConditionDimension(
-        AssertedCast<float>(aDest.pic_height) / aDest.sample_ratio);
+    aDest.display_height =
+        ConditionDimension(aDest.pic_height / aDest.sample_ratio);
   }
 
   aDest.valid = true;
@@ -911,8 +913,6 @@ uint32_t H264::ComputeMaxRefFrames(const mozilla::MediaByteBuffer* aExtraData) {
       case 4:
         nalLen = reader.ReadU32().unwrapOr(0);
         break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("NAL length is up to 4 bytes");
     }
     if (!nalLen) {
       continue;
@@ -921,12 +921,11 @@ uint32_t H264::ComputeMaxRefFrames(const mozilla::MediaByteBuffer* aExtraData) {
     if (!p) {
       return FrameType::INVALID;
     }
-    int8_t nalType = AssertedCast<int8_t>(*p & 0x1f);
+    int8_t nalType = *p & 0x1f;
     if (nalType == H264_NAL_IDR_SLICE) {
       // IDR NAL.
       return FrameType::I_FRAME;
-    }
-    if (nalType == H264_NAL_SEI) {
+    } else if (nalType == H264_NAL_SEI) {
       RefPtr<mozilla::MediaByteBuffer> decodedNAL = DecodeNALUnit(p, nalLen);
       SEIRecoveryData data;
       if (DecodeRecoverySEI(decodedNAL, data)) {
@@ -1000,8 +999,6 @@ uint32_t H264::ComputeMaxRefFrames(const mozilla::MediaByteBuffer* aExtraData) {
         Unused << reader.ReadU32().map(
             [&](uint32_t x) mutable { return nalLen = x; });
         break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("NAL length size is at most 4 bytes");
     }
     const uint8_t* p = reader.Read(nalLen);
     if (!p) {
@@ -1315,7 +1312,7 @@ void H264::WriteExtraData(MediaByteBuffer* aDestExtraData,
   if (byteBuffer[0] != 1) {
     return mozilla::Err(NS_ERROR_FAILURE);
   }
-  AVCCConfig avcc{};
+  AVCCConfig avcc;
   avcc.mConfigurationVersion = byteBuffer[0];
   avcc.mAVCProfileIndication = byteBuffer[1];
   avcc.mProfileCompatibility = byteBuffer[2];
