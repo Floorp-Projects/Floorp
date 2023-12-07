@@ -18,11 +18,15 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.feature.search.ext.waitForSelectedOrDefaultSearchEngine
+import mozilla.components.feature.search.telemetry.SearchProviderModel
+import mozilla.components.feature.search.telemetry.SerpTelemetryRepository
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.android.content.res.readJSONObject
 import mozilla.telemetry.glean.Glean
 import mozilla.telemetry.glean.config.Configuration
 import org.mozilla.focus.BuildConfig
@@ -54,6 +58,8 @@ class GleanMetricsService(context: Context) : MetricsService {
     private val activationPing = ActivationPing(context)
 
     companion object {
+        // collection name to fetch from server for SERP telemetry
+        const val COLLECTION_NAME = "search-telemetry-v2"
         private val isEnabledByDefault: Boolean
             get() = !AppConstants.isKlarBuild
 
@@ -109,7 +115,17 @@ class GleanMetricsService(context: Context) : MetricsService {
         Glean.registerPings(Pings)
 
         if (telemetryEnabled) {
-            installSearchTelemetryExtensions(components, context)
+            CoroutineScope(Dispatchers.Main).launch {
+                val readJson = { context.assets.readJSONObject("search/search_telemetry_v2.json") }
+                val providerList = withContext(Dispatchers.IO) {
+                    SerpTelemetryRepository(
+                        rootStorageDirectory = context.filesDir,
+                        readJson = readJson,
+                        collectionName = COLLECTION_NAME,
+                    ).updateProviderList()
+                }
+                installSearchTelemetryExtensions(components, providerList)
+            }
         }
 
         // Do this immediately after init.
@@ -204,13 +220,14 @@ class GleanMetricsService(context: Context) : MetricsService {
     }
 
     @VisibleForTesting
-    internal fun installSearchTelemetryExtensions(components: Components, context: Context) {
+    internal suspend fun installSearchTelemetryExtensions(
+        components: Components,
+        providerList: List<SearchProviderModel>,
+    ) {
         val engine = components.engine
         components.store.apply {
-            CoroutineScope(Dispatchers.Main).launch {
-                components.adsTelemetry.install(engine, this@apply, context.filesDir)
-                components.searchTelemetry.install(engine, this@apply, context.filesDir)
-            }
+            components.adsTelemetry.install(engine, this@apply, providerList)
+            components.searchTelemetry.install(engine, this@apply, providerList)
         }
     }
 }

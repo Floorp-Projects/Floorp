@@ -31,7 +31,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
@@ -120,7 +120,7 @@ class InContentTelemetryTest {
         val extensionCaptor = argumentCaptor<ExtensionInfo>()
 
         runBlocking {
-            doReturn(Unit).`when`(telemetry).initializeProviderList(any())
+            doNothing().`when`(telemetry).setProviderList(any())
             telemetry.install(engine, store, mock())
         }
 

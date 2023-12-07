@@ -30,7 +30,8 @@ internal fun getTrackKey(
 
     if (provider.codeParamName.isNotEmpty()) {
         code = uri.getQueryParameter(provider.codeParamName)
-        if (code.isNullOrEmpty() && provider.telemetryId == "baidu" &&
+        if (code.isNullOrEmpty() &&
+            provider.telemetryId == "baidu" &&
             uri.toString().contains("from=")
         ) {
             code = uri.toString().substringAfter("from=", "")

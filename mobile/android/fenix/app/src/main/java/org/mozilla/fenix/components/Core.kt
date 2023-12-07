@@ -15,6 +15,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.browser.domains.autocomplete.BaseDomainAutocompleteProvider
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.engine.gecko.GeckoEngine
@@ -59,6 +60,7 @@ import mozilla.components.feature.search.middleware.AdsTelemetryMiddleware
 import mozilla.components.feature.search.middleware.SearchExtraParams
 import mozilla.components.feature.search.middleware.SearchMiddleware
 import mozilla.components.feature.search.region.RegionMiddleware
+import mozilla.components.feature.search.telemetry.SerpTelemetryRepository
 import mozilla.components.feature.search.telemetry.ads.AdsTelemetry
 import mozilla.components.feature.search.telemetry.incontent.InContentTelemetry
 import mozilla.components.feature.session.HistoryDelegate
@@ -85,6 +87,7 @@ import mozilla.components.service.pocket.Profile
 import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.support.base.worker.Frequency
+import mozilla.components.support.ktx.android.content.res.readJSONObject
 import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.BuildConfig
@@ -313,11 +316,18 @@ class Core(
             icons.install(engine, this)
 
             CoroutineScope(Dispatchers.Main).launch {
+                val readJson = { context.assets.readJSONObject("search/search_telemetry_v2.json") }
+                val providerList = withContext(Dispatchers.IO) {
+                    SerpTelemetryRepository(
+                        rootStorageDirectory = context.filesDir,
+                        readJson = readJson,
+                        collectionName = COLLECTION_NAME,
+                    ).updateProviderList()
+                }
                 // Install the "ads" WebExtension to get the links in an partner page.
-                adsTelemetry.install(engine, this@apply, context.filesDir)
-
+                adsTelemetry.install(engine, this@apply, providerList)
                 // Install the "cookies" WebExtension and tracks user interaction with SERPs.
-                searchTelemetry.install(engine, this@apply, context.filesDir)
+                searchTelemetry.install(engine, this@apply, providerList)
             }
 
             WebNotificationFeature(
@@ -603,5 +613,8 @@ class Core(
 
         // Maximum number of suggestions returned from shortcut search engine.
         const val METADATA_SHORTCUT_SUGGESTION_LIMIT = 20
+
+        // collection name to fetch from server for SERP telemetry
+        const val COLLECTION_NAME = "search-telemetry-v2"
     }
 }

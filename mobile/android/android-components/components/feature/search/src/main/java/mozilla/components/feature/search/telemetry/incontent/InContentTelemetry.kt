@@ -10,11 +10,11 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.search.telemetry.BaseSearchTelemetry
 import mozilla.components.feature.search.telemetry.ExtensionInfo
+import mozilla.components.feature.search.telemetry.SearchProviderModel
 import mozilla.components.feature.search.telemetry.getTrackKey
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.ktx.android.org.json.toList
 import org.json.JSONObject
-import java.io.File
 
 /**
  * Telemetry for knowing of in-web-content searches (including follow-on searches) and the provider used.
@@ -24,14 +24,18 @@ import java.io.File
  */
 class InContentTelemetry : BaseSearchTelemetry() {
 
-    override suspend fun install(engine: Engine, store: BrowserStore, rootStorageDirectory: File) {
+    override suspend fun install(
+        engine: Engine,
+        store: BrowserStore,
+        providerList: List<SearchProviderModel>,
+    ) {
         val info = ExtensionInfo(
             id = SEARCH_EXTENSION_ID,
             resourceUrl = SEARCH_EXTENSION_RESOURCE_URL,
             messageId = SEARCH_MESSAGE_ID,
         )
         installWebExtension(engine, store, info)
-        initializeProviderList(rootStorageDirectory)
+        setProviderList(providerList)
     }
 
     /**
@@ -44,18 +48,13 @@ class InContentTelemetry : BaseSearchTelemetry() {
 
     @VisibleForTesting
     internal fun trackPartnerUrlTypeMetric(url: String, cookies: List<JSONObject>) {
-        println("before trackPartnerUrlTypeMetric")
         val provider = getProviderForUrl(url) ?: return
-        println("After trackPartnerUrlTypeMetric")
         val uri = Uri.parse(url)
         val paramSet = uri.queryParameterNames
-        println("paramSet $paramSet")
         val containsQueryParam = provider.queryParamNames?.any { paramSet.contains(it) }
-        println("containsQueryParam $containsQueryParam")
         if (containsQueryParam == false) {
             return
         }
-        println("containsQueryParam $containsQueryParam")
         emitFact(
             IN_CONTENT_SEARCH,
             getTrackKey(provider, uri, cookies),

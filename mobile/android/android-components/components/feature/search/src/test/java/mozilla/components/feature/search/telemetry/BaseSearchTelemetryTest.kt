@@ -5,6 +5,7 @@
 package mozilla.components.feature.search.telemetry
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.support.test.any
@@ -16,8 +17,11 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
+import org.mockito.Mockito.doAnswer
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import java.io.File
 
 @RunWith(AndroidJUnit4::class)
@@ -27,27 +31,63 @@ class BaseSearchTelemetryTest {
     private lateinit var handler: BaseSearchTelemetry.SearchTelemetryMessageHandler
 
     @Mock
-    private lateinit var mockParser: SerpTelemetryFetcher
+    private lateinit var mockRepo: SerpTelemetryRepository
+
+    private val mockReadJson: () -> JSONObject = mock()
+    private val mockRootStorageDirectory: File = mock()
 
     private fun createMockProviderList(): List<SearchProviderModel> = listOf(
         SearchProviderModel(
-            schema = 1671479978127,
-            taggedCodes = listOf("abc", "xyz", "def"),
-            telemetryId = "google",
+            schema = 1698656464939,
+            taggedCodes = listOf("monline_7_dg"),
+            telemetryId = "baidu",
             organicCodes = emptyList(),
-            codeParamName = "tt",
-            queryParamNames = listOf("q"),
-            searchPageRegexp = "^https://www\\.example\\.org/",
-            extraAdServersRegexps = listOf("^https://www\\.google\\.(?:.+)/search"),
+            codeParamName = "tn",
+            queryParamNames = listOf("wd"),
+            searchPageRegexp = "^https://(?:m|www)\\\\.baidu\\\\.com/(?:s|baidu)",
+            followOnParamNames = listOf("oq"),
+            extraAdServersRegexps = listOf("^https?://www\\\\.baidu\\\\.com/baidu\\\\.php?"),
             expectedOrganicCodes = emptyList(),
         ),
     )
+
+    private val rawJson = """
+        {
+  "data": [
+    {
+      "schema": 1698656464939,
+      "taggedCodes": [
+        "monline_7_dg"
+      ],
+      "telemetryId": "baidu",
+      "organicCodes": [],
+      "codeParamName": "tn",
+      "queryParamNames": [
+        "wd"
+      ],
+      "searchPageRegexp": "^https://(?:m|www)\\.baidu\\.com/(?:s|baidu)",
+      "followOnParamNames": [
+        "oq"
+      ],
+      "extraAdServersRegexps": [
+        "^https?://www\\.baidu\\.com/baidu\\.php?"
+      ],
+      "id": "19c434a3-d173-4871-9743-290ac92a3f6a",
+      "last_modified": 1698666532326
+    }],
+  "timestamp": 16
+}
+    """.trimIndent()
 
     @Before
     fun setup() {
         baseTelemetry = spy(
             object : BaseSearchTelemetry() {
-                override suspend fun install(engine: Engine, store: BrowserStore, rootStorageDirectory: File) {
+                override suspend fun install(
+                    engine: Engine,
+                    store: BrowserStore,
+                    providerList: List<SearchProviderModel>,
+                ) {
                     // mock, do nothing
                 }
 
@@ -57,7 +97,7 @@ class BaseSearchTelemetryTest {
             },
         )
         handler = baseTelemetry.SearchTelemetryMessageHandler()
-        mockParser = SerpTelemetryFetcher(mock(), "test")
+        mockRepo = spy(SerpTelemetryRepository(mockRootStorageDirectory, mockReadJson, "test"))
     }
 
     @Test
@@ -102,6 +142,42 @@ class BaseSearchTelemetryTest {
 
         verify(baseTelemetry).processMessage(message)
     }
+
+    @Test
+    fun `GIVEN empty cacheResponse WHEN initializeProviderList is called THEN  update providerList`(): Unit =
+        runBlocking {
+            val localResponse = JSONObject(rawJson)
+            val cacheResponse: Pair<ULong, List<SearchProviderModel>> = Pair(0u, emptyList())
+
+            `when`(mockRepo.loadProvidersFromCache()).thenReturn(cacheResponse)
+            doAnswer {
+                localResponse
+            }.`when`(mockReadJson)()
+
+            `when`(mockRepo.parseLocalPreinstalledData(localResponse)).thenReturn(createMockProviderList())
+            doReturn(Unit).`when`(mockRepo).fetchRemoteResponse(any())
+
+            baseTelemetry.setProviderList(mockRepo.updateProviderList())
+
+            assertEquals(baseTelemetry.providerList.toString(), createMockProviderList().toString())
+        }
+
+    @Test
+    fun `GIVEN non-empty cacheResponse WHEN initializeProviderList is called THEN update providerList`(): Unit =
+        runBlocking {
+            val localResponse = JSONObject(rawJson)
+            val cacheResponse: Pair<ULong, List<SearchProviderModel>> = Pair(123u, createMockProviderList())
+
+            `when`(mockRepo.loadProvidersFromCache()).thenReturn(cacheResponse)
+            doAnswer {
+                localResponse
+            }.`when`(mockReadJson)()
+            doReturn(Unit).`when`(mockRepo).fetchRemoteResponse(any())
+
+            baseTelemetry.setProviderList(mockRepo.updateProviderList())
+
+            assertEquals(baseTelemetry.providerList.toString(), createMockProviderList().toString())
+        }
 
     fun getProviderForUrl(url: String): SearchProviderModel? {
         return createMockProviderList().find { provider ->

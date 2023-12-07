@@ -10,11 +10,11 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.search.telemetry.BaseSearchTelemetry
 import mozilla.components.feature.search.telemetry.ExtensionInfo
+import mozilla.components.feature.search.telemetry.SearchProviderModel
 import mozilla.components.feature.search.telemetry.getTrackKey
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.ktx.android.org.json.toList
 import org.json.JSONObject
-import java.io.File
 
 /**
  * Telemetry for knowing how often users see/click ads in search and from which provider.
@@ -31,7 +31,7 @@ class AdsTelemetry : BaseSearchTelemetry() {
     override suspend fun install(
         engine: Engine,
         store: BrowserStore,
-        rootStorageDirectory: File,
+        providerList: List<SearchProviderModel>,
     ) {
         val info = ExtensionInfo(
             id = ADS_EXTENSION_ID,
@@ -39,7 +39,7 @@ class AdsTelemetry : BaseSearchTelemetry() {
             messageId = ADS_MESSAGE_ID,
         )
         installWebExtension(engine, store, info)
-        initializeProviderList(rootStorageDirectory)
+        setProviderList(providerList)
     }
 
     override fun processMessage(message: JSONObject) {

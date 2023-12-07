@@ -21,20 +21,16 @@ import mozilla.components.support.base.facts.collect
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
 import org.json.JSONObject
-import java.io.File
-
-internal const val COLLECTION_NAME = "search-telemetry-v2"
 
 /**
  * Main configuration and functionality for tracking ads / web searches with specific providers.
  */
 abstract class BaseSearchTelemetry {
-    @VisibleForTesting
-    internal var providerList: List<SearchProviderModel>? = emptyList()
+    var providerList: List<SearchProviderModel>? = emptyList()
 
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
-    internal suspend fun initializeProviderList(rootStorageDirectory: File) {
-        providerList = SerpTelemetryFetcher(rootStorageDirectory, COLLECTION_NAME).fetchSearchProviders()
+    internal fun setProviderList(providerListSerp: List<SearchProviderModel>) {
+        providerList = providerListSerp
     }
 
     /**
@@ -48,7 +44,11 @@ abstract class BaseSearchTelemetry {
     /**
      * Install the web extensions that this functionality is based on and start listening for updates.
      */
-    abstract suspend fun install(engine: Engine, store: BrowserStore, rootStorageDirectory: File)
+    abstract suspend fun install(
+        engine: Engine,
+        store: BrowserStore,
+        providerList: List<SearchProviderModel>,
+    )
 
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     internal fun installWebExtension(
