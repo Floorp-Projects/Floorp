@@ -376,6 +376,11 @@ pub extern "C" fn neqo_http3conn_process_output_and_send(
                 }
             }
             Output::Callback(to) => {
+                if to.is_zero() {
+                    set_timer_func(context, 1);
+                    break;
+                }
+
                 let timeout = min(to, Duration::from_nanos(u64::MAX - 1));
                 accumulated_time += timeout;
                 if accumulated_time >= conn.max_accumlated_time {
