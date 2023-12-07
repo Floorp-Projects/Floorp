@@ -1,3 +1,14 @@
+pluginManagement {
+    includeBuild("${rootProject.projectDir.absolutePath}/mobile/android/android-components/plugins/dependencies")
+    includeBuild("${rootProject.projectDir.absolutePath}/mobile/android/android-components/plugins/publicsuffixlist")
+    includeBuild("${rootProject.projectDir.absolutePath}/mobile/android/android-components/plugins/github")
+}
+
+plugins {
+    id 'mozac.DependenciesPlugin'
+    id 'mozac.GitHubPlugin'
+}
+
 // You might think topsrcdir is '.', but that's not true when the Gradle build
 // is launched from within IntelliJ.
 ext.topsrcdir = rootProject.projectDir.absolutePath
@@ -16,12 +27,16 @@ include ':geckoview'
 include ':geckoview_example'
 include ':test_runner'
 include ':exoplayer2'
+include ':android-components'
+include ':samples-browser'
 
 project(':annotations').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/annotations")
 project(':geckoview').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/geckoview")
 project(':geckoview_example').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/geckoview_example")
 project(':test_runner').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/test_runner")
 project(':exoplayer2').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/exoplayer2")
+project(':android-components').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/android-components")
+project(':samples-browser').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/android-components/samples/browser")
 
 if (hasProperty("androidFormatLintTest")) {
     include ':androidFormatLintTest'
