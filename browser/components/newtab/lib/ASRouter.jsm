@@ -47,6 +47,12 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
 });
+XPCOMUtils.defineLazyGetter(lazy, "log", () => {
+  const { Logger } = ChromeUtils.importESModule(
+    "resource://messaging-system/lib/Logger.sys.mjs"
+  );
+  return new Logger("ASRouter");
+});
 const { actionCreators: ac } = ChromeUtils.importESModule(
   "resource://activity-stream/common/Actions.sys.mjs"
 );
@@ -625,6 +631,7 @@ class _ASRouter {
       this._onExperimentEnrollmentsUpdated.bind(this);
     this.forcePBWindow = this.forcePBWindow.bind(this);
     Services.telemetry.setEventRecordingEnabled(REACH_EVENT_CATEGORY, true);
+    this.messagesEnabledInAutomation = [];
   }
 
   async onPrefChange(prefName) {
@@ -1325,6 +1332,19 @@ class _ASRouter {
 
   routeCFRMessage(message, browser, trigger, force = false) {
     if (!message) {
+      return { message: {} };
+    }
+
+    // filter out messages we want to exclude from tests
+    if (
+      message.skip_in_tests &&
+      // `this.messagesEnabledInAutomation` should be stubbed in tests
+      !this.messagesEnabledInAutomation?.includes(message.id) &&
+      (Cu.isInAutomation || Services.env.exists("XPCSHELL_TEST_PROFILE_DIR"))
+    ) {
+      lazy.log.debug(
+        `Skipping message ${message.id} because ${message.skip_in_tests}`
+      );
       return { message: {} };
     }
 

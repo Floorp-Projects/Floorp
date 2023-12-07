@@ -72,6 +72,8 @@ skip-if = [
   "win11_2009", # Bug 1804349
 ]
 
+["browser_foxdoodle_set_default.js"]
+
 ["browser_feature_callout_panel.js"]
 
 ["browser_getScreenshots.js"]
