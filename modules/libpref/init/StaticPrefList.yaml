@@ -8527,7 +8527,7 @@
 # https://drafts.fxtf.org/motion-1/#valdef-offset-path-basic-shape
 - name: layout.css.motion-path-basic-shapes.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
@@ -8535,7 +8535,7 @@
 # https://drafts.fxtf.org/motion-1/#valdef-offset-path-coord-box
 - name: layout.css.motion-path-coord-box.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
