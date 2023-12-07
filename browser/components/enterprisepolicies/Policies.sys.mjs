@@ -1711,6 +1711,7 @@ export var Policies = {
     onBeforeAddons(manager, param) {
       let allowedPrefixes = [
         "accessibility.",
+        "alerts.",
         "app.update.",
         "browser.",
         "datareporting.policy.",
