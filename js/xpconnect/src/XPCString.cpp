@@ -99,7 +99,7 @@ bool XPCStringConvert::ReadableToJSVal(JSContext* cx, const nsAString& readable,
   nsStringBuffer* buf = nsStringBuffer::FromString(readable);
   if (buf) {
     bool shared;
-    if (!StringBufferToJSVal(cx, buf, length, vp, &shared)) {
+    if (!UCStringBufferToJSVal(cx, buf, length, vp, &shared)) {
       return false;
     }
     if (shared) {
