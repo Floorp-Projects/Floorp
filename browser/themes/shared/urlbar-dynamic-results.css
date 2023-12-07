@@ -29,6 +29,7 @@
   .search-one-offs[wrap] > .urlbarView-quickSuggestContextualOptIn-one-off-container > & {
     display: block;
     text-align: end;
+    white-space: normal;
 
     > .urlbarView-row-inner {
       display: block;
