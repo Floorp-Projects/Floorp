@@ -196,13 +196,8 @@ class DecoderTemplate : public DOMEventTargetHelper {
   void ScheduleOutputDecodedData(nsTArray<RefPtr<MediaData>>&& aData,
                                  const nsACString& aLabel);
 
-  void ScheduleClose(const nsresult& aResult);
-
   void ScheduleDequeueEvent();
   nsresult FireEvent(nsAtom* aTypeWithOn, const nsAString& aEventType);
-
-  void SchedulePromiseResolveOrReject(already_AddRefed<Promise> aPromise,
-                                      const nsresult& aResult);
 
   void ProcessControlMessageQueue();
   void CancelPendingControlMessages(const nsresult& aResult);
