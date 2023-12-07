@@ -32,6 +32,11 @@ h2,
   color: var(--text-color-deemphasized);
 }
 
+.text-error {
+  color: var(--text-color-error);
+  font-weight: var(--font-weight-bold);
+}
+
 .text-truncated-ellipsis {
   /* Will not work on `display: flex` items
     unless you wrap its contents with another element that has this class. */
