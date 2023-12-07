@@ -1,0 +1,10 @@
+[package]
+name = "oxilangtag-ffi"
+version = "0.1.0"
+license = "MPL-2.0"
+authors = ["Jonathan Kew <jkew@mozilla.com>"]
+edition = "2021"
+
+[dependencies]
+nsstring = { path = "../../../../xpcom/rust/nsstring" }
+oxilangtag = "0.1.3"
