@@ -172,7 +172,6 @@ class DecoderTemplate : public DOMEventTargetHelper {
       nsIGlobalObject* aGlobalObject, nsTArray<RefPtr<MediaData>>&& aData,
       ConfigTypeInternal& aConfig) = 0;
 
-  /* Internal member variables and functions */
  protected:
   // DecoderTemplate can run on either main thread or worker thread.
   void AssertIsOnOwningThread() const {
@@ -180,8 +179,11 @@ class DecoderTemplate : public DOMEventTargetHelper {
   }
 
   Result<Ok, nsresult> ResetInternal(const nsresult& aResult);
+  // Calling this method calls the error callback synchronously.
   MOZ_CAN_RUN_SCRIPT
   Result<Ok, nsresult> CloseInternal(const nsresult& aResult);
+  // Calling this method doesn't call the error calback.
+  Result<Ok, nsresult> CloseInternalWithAbort();
 
   MOZ_CAN_RUN_SCRIPT void ReportError(const nsresult& aResult);
   MOZ_CAN_RUN_SCRIPT void OutputDecodedData(
