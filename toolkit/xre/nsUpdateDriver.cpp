@@ -55,6 +55,8 @@
 #  include "nsWindowsHelpers.h"
 #  include "pathhash.h"
 #  include "WinUtils.h"
+#  include "WinDef.h"
+#  include "WinNT.h"
 #  define getcwd(path, size) _getcwd(path, size)
 #  define getpid() GetCurrentProcessId()
 #elif defined(XP_UNIX)
@@ -925,8 +927,8 @@ nsUpdateProcessor::GetServiceRegKeyExists(bool* aResult) {
 }
 
 NS_IMETHODIMP
-nsUpdateProcessor::RegisterApplicationRestartWithLaunchArgs(
-    const nsTArray<nsString>& argvExtra) {
+nsUpdateProcessor::AttemptAutomaticApplicationRestartWithLaunchArgs(
+    const nsTArray<nsString>& argvExtra, int32_t* pidRet) {
 #ifndef XP_WIN
   return NS_ERROR_NOT_IMPLEMENTED;
 #else
@@ -935,29 +937,46 @@ nsUpdateProcessor::RegisterApplicationRestartWithLaunchArgs(
   // the arguments the process was launched with.
   LPWSTR currentCommandLine = GetCommandLineW();
 
-  // Register a restart flag for the application based on the current
-  // command line. The program will then automatically restart
-  // upon termination.
-  // The application must have been running for a minimum of 60
-  // seconds for a restart to be correctly registered.
+  // Spawn a new process for the application based on the current
+  // command line with the -restart-pid <pid> flag. This flag
+  // can be used with MaybeWaitForProcessExit() to have
+  // the process wait until the parent process has exited.
   if (currentCommandLine) {
     // Append additional command line arguments to current command line for
-    // restart
-    nsTArray<const wchar_t*> additionalArgv(argvExtra.Length());
-    for (const nsString& arg : argvExtra) {
-      additionalArgv.AppendElement(static_cast<const wchar_t*>(arg.get()));
-    }
-
+    // restart.
     int currentArgc = 0;
-    LPWSTR* currentCommandLineArgv =
-        CommandLineToArgvW(currentCommandLine, &currentArgc);
-    UniquePtr<LPWSTR, LocalFreeDeleter> uniqueCurrentArgv(
-        currentCommandLineArgv);
-    mozilla::UniquePtr<wchar_t[]> restartCommandLine = mozilla::MakeCommandLine(
-        currentArgc, uniqueCurrentArgv.get(), additionalArgv.Length(),
-        additionalArgv.Elements());
-    ::RegisterApplicationRestart(restartCommandLine.get(),
-                                 RESTART_NO_CRASH | RESTART_NO_HANG);
+    UniquePtr<LPWSTR, LocalFreeDeleter> currentArgv(
+        CommandLineToArgvW(currentCommandLine, &currentArgc));
+    nsTArray<wchar_t*> restartCommandLineArgv(currentArgc + argvExtra.Length() +
+                                              2);
+    for (int i = 0; i < currentArgc; i++) {
+      restartCommandLineArgv.AppendElement(currentArgv.get()[i]);
+    }
+    for (const nsString& arg : argvExtra) {
+      restartCommandLineArgv.AppendElement(static_cast<wchar_t*>(arg.get()));
+    }
+    // Append -restart-pid flag and pid to restart command line.
+    DWORD pidCurrent = GetCurrentProcessId();
+    nsString pid;
+    pid.AppendInt(static_cast<uint32_t>(pidCurrent));
+    nsString pidFlag = u"-restart-pid"_ns;
+    restartCommandLineArgv.AppendElement(pidFlag.get());
+    restartCommandLineArgv.AppendElement(pid.get());
+
+    // Create new process that interacts with MaybeWaitForProcessExit()
+    // and sleeps until the original process is killed.
+    wchar_t exeName[MAX_PATH];
+    GetModuleFileNameW(NULL, exeName, MAX_PATH);
+    HANDLE childHandle;
+    WinLaunchChild(exeName, restartCommandLineArgv.Length(),
+                   restartCommandLineArgv.Elements(), nullptr, &childHandle);
+    *pidRet = GetProcessId(childHandle);
+    CloseHandle(childHandle);
+    if (!*pidRet) {
+      printf_stderr("*** ApplyUpdate: !pidRet ***\n");
+      return NS_ERROR_ABORT;
+    }
+    printf_stderr("*** ApplyUpdate: launched pidRet = %d ***\n", *pidRet);
 
     MOZ_LOG(sUpdateLog, mozilla::LogLevel::Debug,
             ("register application restart succeeded"));
@@ -968,4 +987,41 @@ nsUpdateProcessor::RegisterApplicationRestartWithLaunchArgs(
   }
   return NS_OK;
 #endif  // #ifndef XP_WIN
+}
+
+NS_IMETHODIMP
+nsUpdateProcessor::WaitForProcessExit(uint32_t pid, uint32_t timeoutMS) {
+#ifndef XP_WIN
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
+
+  nsAutoHandle hProcess(OpenProcess(SYNCHRONIZE, FALSE, pid));
+  if (!hProcess) {
+    // It's possible the pid is incorrect, or the process has exited.
+    // This isn't necessarily a failure state as if the process has
+    // already exited then that is the desired behavior.
+    MOZ_LOG(sUpdateLog, mozilla::LogLevel::Warning,
+            ("WaitForProcessExit(%d): failed to OpenProcess", pid));
+    return NS_OK;
+  }
+
+  // Wait up to timeoutMS milliseconds for termination.
+  DWORD waitRv = WaitForSingleObjectEx(hProcess, timeoutMS, FALSE);
+  if (waitRv != WAIT_OBJECT_0) {
+    if (waitRv == WAIT_TIMEOUT) {
+      MOZ_LOG(
+          sUpdateLog, mozilla::LogLevel::Debug,
+          ("WaitForProcessExit(%d): timed out after %d MS", pid, timeoutMS));
+      return NS_ERROR_ABORT;
+    }
+
+    MOZ_LOG(sUpdateLog, mozilla::LogLevel::Warning,
+            ("WaitForProcessExit(%d): unexpected error %lx", pid, waitRv));
+    return NS_ERROR_FAILURE;
+  }
+
+  MOZ_LOG(sUpdateLog, mozilla::LogLevel::Debug,
+          ("WaitForProcessExit(%d): success", pid));
+  return NS_OK;
+#endif  // XP_WIN
 }

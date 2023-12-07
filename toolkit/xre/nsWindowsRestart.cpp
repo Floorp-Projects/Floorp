@@ -115,7 +115,7 @@ static bool NeedToBreakAwayFromJob() {
  */
 
 BOOL WinLaunchChild(const wchar_t* exePath, int argc, wchar_t** argv,
-                    HANDLE userToken = nullptr, HANDLE* hProcess = nullptr);
+                    HANDLE userToken, HANDLE* hProcess);
 
 BOOL WinLaunchChild(const wchar_t* exePath, int argc, char** argv,
                     HANDLE userToken, HANDLE* hProcess) {
