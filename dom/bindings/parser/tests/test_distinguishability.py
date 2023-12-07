@@ -403,8 +403,6 @@ def WebIDLTest(parser, harness):
             parser.finish()
         except WebIDL.WebIDLError:
             threw = True
-        except AssertionError:
-            threw = True
 
         if areDistinguishable(type1, type2):
             harness.ok(

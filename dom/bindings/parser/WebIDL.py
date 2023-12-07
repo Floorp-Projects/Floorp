@@ -2980,7 +2980,12 @@ class IDLRecordType(IDLParametrizedType):
     def __init__(self, location, keyType, valueType):
         assert keyType.isString()
         assert keyType.isComplete()
-        assert not valueType.isUndefined()
+
+        if valueType.isUndefined():
+            raise WebIDLError(
+                "We don't support undefined as a Record's values' type",
+                [location, valueType.location],
+            )
 
         IDLParametrizedType.__init__(self, location, valueType.name, valueType)
         self.keyType = keyType
@@ -3524,8 +3529,11 @@ class IDLWrapperType(IDLType):
         ):
             return self.isNonCallbackInterface()
 
-        # Not much else |other| can be
-        assert other.isObject()
+        # Not much else |other| can be.
+        # any is the union of all non-union types, so it's not distinguishable
+        # from other unions (because it is a union itself), or from all
+        # non-union types (because it has all of them as its members).
+        assert other.isAny() or other.isObject()
         return False
 
     def isExposedInAllOf(self, exposureSet):
@@ -6345,16 +6353,27 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
             )
 
         # Can't overload special things!
-        assert not self.isGetter()
-        assert not method.isGetter()
-        assert not self.isSetter()
-        assert not method.isSetter()
-        assert not self.isDeleter()
-        assert not method.isDeleter()
-        assert not self.isStringifier()
-        assert not method.isStringifier()
-        assert not self.isHTMLConstructor()
-        assert not method.isHTMLConstructor()
+        if (
+            self.isGetter()
+            or method.isGetter()
+            or self.isSetter()
+            or method.isSetter()
+            or self.isDeleter()
+            or method.isDeleter()
+            or self.isStringifier()
+            or method.isStringifier()
+        ):
+            raise WebIDLError(
+                ("Can't overload a special operation"),
+                [self.location, method.location],
+            )
+        if self.isHTMLConstructor() or method.isHTMLConstructor():
+            raise WebIDLError(
+                (
+                    "An interface must contain only a single operation annotated with HTMLConstructor, and no others"
+                ),
+                [self.location, method.location],
+            )
 
         return self
 
