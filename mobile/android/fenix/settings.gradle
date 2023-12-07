@@ -19,6 +19,8 @@ plugins {
     id 'mozac.GitHubPlugin'
 }
 
+ext.topsrcdir = rootProject.projectDir.absolutePath.minus("mobile/android/fenix")
+
 apply from: file('../shared-settings.gradle')
 
 include ':app'
