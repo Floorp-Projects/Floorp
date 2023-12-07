@@ -205,10 +205,9 @@ def run_tools(mach_cmd, kwargs):
     from mozperftest.utils import ON_TRY, install_package
 
     mach_cmd.activate_virtualenv()
-    install_package(mach_cmd.virtualenv_manager, "opencv-python==4.5.4.60")
     install_package(
         mach_cmd.virtualenv_manager,
-        "mozperftest-tools==0.2.8",
+        "mozperftest-tools==0.2.9",
     )
 
     log_level = logging.INFO
