@@ -1258,6 +1258,8 @@ static_assert(sizeof(JSFatInlineString) % js::gc::CellAlignBytes == 0,
 class JSExternalString : public JSLinearString {
   friend class js::gc::CellAllocator;
 
+  JSExternalString(const JS::Latin1Char* chars, size_t length,
+                   const JSExternalStringCallbacks* callbacks);
   JSExternalString(const char16_t* chars, size_t length,
                    const JSExternalStringCallbacks* callbacks);
 
@@ -1265,7 +1267,15 @@ class JSExternalString : public JSLinearString {
   bool isExternal() const = delete;
   JSExternalString& asExternal() const = delete;
 
+  template <typename CharT>
+  static inline JSExternalString* newImpl(
+      JSContext* cx, const CharT* chars, size_t length,
+      const JSExternalStringCallbacks* callbacks);
+
  public:
+  static inline JSExternalString* new_(
+      JSContext* cx, const JS::Latin1Char* chars, size_t length,
+      const JSExternalStringCallbacks* callbacks);
   static inline JSExternalString* new_(
       JSContext* cx, const char16_t* chars, size_t length,
       const JSExternalStringCallbacks* callbacks);
@@ -1277,6 +1287,7 @@ class JSExternalString : public JSLinearString {
 
   // External chars are never allocated inline or in the nursery, so we can
   // safely expose this without requiring an AutoCheckCannotGC argument.
+  const JS::Latin1Char* latin1Chars() const { return rawLatin1Chars(); }
   const char16_t* twoByteChars() const { return rawTwoByteChars(); }
 
   // Only called by the GC for strings with the AllocKind::EXTERNAL_STRING
@@ -1627,7 +1638,8 @@ inline JSLinearString* NewStringCopyUTF8Z(
       cx, JS::UTF8Chars(utf8.c_str(), strlen(utf8.c_str())), heap);
 }
 
-JSString* NewMaybeExternalString(JSContext* cx, const char16_t* s, size_t n,
+template <typename CharT>
+JSString* NewMaybeExternalString(JSContext* cx, const CharT* s, size_t n,
                                  const JSExternalStringCallbacks* callbacks,
                                  bool* allocatedExternal,
                                  js::gc::Heap heap = js::gc::Heap::Default);

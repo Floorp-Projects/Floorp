@@ -309,12 +309,18 @@ class XPCStringConvert {
 
  private:
   struct LiteralExternalString : public JSExternalStringCallbacks {
+    void finalize(JS::Latin1Char* aChars) const override;
     void finalize(char16_t* aChars) const override;
+    size_t sizeOfBuffer(const JS::Latin1Char* aChars,
+                        mozilla::MallocSizeOf aMallocSizeOf) const override;
     size_t sizeOfBuffer(const char16_t* aChars,
                         mozilla::MallocSizeOf aMallocSizeOf) const override;
   };
   struct DOMStringExternalString : public JSExternalStringCallbacks {
+    void finalize(JS::Latin1Char* aChars) const override;
     void finalize(char16_t* aChars) const override;
+    size_t sizeOfBuffer(const JS::Latin1Char* aChars,
+                        mozilla::MallocSizeOf aMallocSizeOf) const override;
     size_t sizeOfBuffer(const char16_t* aChars,
                         mozilla::MallocSizeOf aMallocSizeOf) const override;
   };
