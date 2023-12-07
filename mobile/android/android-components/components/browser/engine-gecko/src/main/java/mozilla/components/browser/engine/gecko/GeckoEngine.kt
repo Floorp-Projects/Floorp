@@ -52,6 +52,7 @@ import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.ActionHandler
 import mozilla.components.concept.engine.webextension.EnableSource
+import mozilla.components.concept.engine.webextension.InstallationMethod
 import mozilla.components.concept.engine.webextension.TabHandler
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
@@ -256,12 +257,16 @@ class GeckoEngine(
      */
     override fun installWebExtension(
         url: String,
+        installationMethod: InstallationMethod?,
         onSuccess: ((WebExtension) -> Unit),
         onError: ((Throwable) -> Unit),
     ): CancellableOperation {
         require(!url.isResourceUrl()) { "url shouldn't be a resource url" }
 
-        val geckoResult = runtime.webExtensionController.install(url).apply {
+        val geckoResult = runtime.webExtensionController.install(
+            url,
+            installationMethod?.toGeckoInstallationMethod(),
+        ).apply {
             then(
                 {
                     onExtensionInstalled(it!!, onSuccess)
@@ -1370,5 +1375,13 @@ internal fun ContentBlockingController.LogEntry.BlockingData.getBlockedCategory(
         Event.BLOCKED_SOCIALTRACKING_CONTENT, Event.COOKIES_BLOCKED_SOCIALTRACKER -> TrackingCategory.MOZILLA_SOCIAL
         Event.BLOCKED_TRACKING_CONTENT -> TrackingCategory.SCRIPTS_AND_SUB_RESOURCES
         else -> TrackingCategory.NONE
+    }
+}
+
+internal fun InstallationMethod.toGeckoInstallationMethod(): String? {
+    return when (this) {
+        InstallationMethod.MANAGER -> WebExtensionController.INSTALLATION_METHOD_MANAGER
+        InstallationMethod.FROM_FILE -> WebExtensionController.INSTALLATION_METHOD_FROM_FILE
+        else -> null
     }
 }

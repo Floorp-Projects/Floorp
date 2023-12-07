@@ -43,6 +43,7 @@ interface WebExtensionRuntime {
      * @param url the url pointing to an XPI file. An error is thrown when a resource URL is passed.
      * @param onSuccess (optional) callback invoked if the extension was installed successfully,
      * providing access to the [WebExtension] object for bi-directional messaging.
+     * @param installationMethod (optional) the method used to install a [WebExtension].
      * @param onError (optional) callback invoked if there was an error installing the extension.
      * This callback is invoked with an [UnsupportedOperationException] in case the engine doesn't
      * have web extension support.
@@ -50,6 +51,7 @@ interface WebExtensionRuntime {
     @Suppress("LongParameterList")
     fun installWebExtension(
         url: String,
+        installationMethod: InstallationMethod? = null,
         onSuccess: ((WebExtension) -> Unit) = { },
         onError: ((Throwable) -> Unit) = { _ -> },
     ): CancellableOperation {

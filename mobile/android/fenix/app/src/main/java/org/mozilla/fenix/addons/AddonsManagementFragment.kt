@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
+import mozilla.components.concept.engine.webextension.InstallationMethod
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.AddonManagerException
@@ -177,6 +178,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
         }
         val installOperation = provideAddonManger().installAddon(
             url = addon.downloadUrl,
+            installationMethod = InstallationMethod.MANAGER,
             onSuccess = {
                 runIfFragmentIsAttached {
                     adapter?.updateAddon(it)

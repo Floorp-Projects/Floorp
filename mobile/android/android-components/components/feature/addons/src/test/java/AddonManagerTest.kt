@@ -26,6 +26,7 @@ import mozilla.components.concept.engine.webextension.DisabledFlags.Companion.BL
 import mozilla.components.concept.engine.webextension.DisabledFlags.Companion.SIGNATURE
 import mozilla.components.concept.engine.webextension.DisabledFlags.Companion.USER
 import mozilla.components.concept.engine.webextension.EnableSource
+import mozilla.components.concept.engine.webextension.InstallationMethod
 import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.addons.AddonManager.Companion.ADDON_ICON_SIZE
@@ -535,6 +536,7 @@ class AddonManagerTest {
         val manager = AddonManager(mock(), engine, mock(), mock())
         manager.installAddon(
             url = addon.downloadUrl,
+            installationMethod = InstallationMethod.MANAGER,
             onSuccess = {
                 installedAddon = it
             },
@@ -542,6 +544,7 @@ class AddonManagerTest {
 
         verify(engine).installWebExtension(
             any(),
+            eq(InstallationMethod.MANAGER),
             onSuccessCaptor.capture(),
             any(),
         )
@@ -568,15 +571,17 @@ class AddonManagerTest {
         val manager = AddonManager(mock(), engine, mock(), mock())
         manager.installAddon(
             url = addon.downloadUrl,
+            installationMethod = InstallationMethod.FROM_FILE,
             onError = { caught ->
                 throwable = caught
             },
         )
 
         verify(engine).installWebExtension(
-            any(),
-            any(),
-            onErrorCaptor.capture(),
+            url = any(),
+            installationMethod = eq(InstallationMethod.FROM_FILE),
+            onSuccess = any(),
+            onError = onErrorCaptor.capture(),
         )
 
         onErrorCaptor.value.invoke(IllegalStateException("test"))

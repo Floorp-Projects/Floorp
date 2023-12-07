@@ -23,6 +23,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.CancellableOperation
 import mozilla.components.concept.engine.webextension.DisabledFlags
 import mozilla.components.concept.engine.webextension.EnableSource
+import mozilla.components.concept.engine.webextension.InstallationMethod
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.concept.engine.webextension.isBlockListed
@@ -125,18 +126,21 @@ class AddonManager(
      *  within the APK file (e.g. resource://android/assets/extensions/my_web_ext) or to a
      *  local (e.g. resource://android/assets/extensions/my_web_ext.xpi) or remote
      *  (e.g. https://addons.mozilla.org/firefox/downloads/file/123/some_web_ext.xpi) XPI file.
+     * @param installationMethod (optional) the method used to install a [Addon].
      * @param onSuccess (optional) callback invoked if the addon was installed successfully,
      * providing access to the [Addon] object.
      * @param onError (optional) callback invoked if there was an error installing the addon.
      */
     fun installAddon(
         url: String,
+        installationMethod: InstallationMethod? = null,
         onSuccess: ((Addon) -> Unit) = { },
         onError: ((Throwable) -> Unit) = { _ -> },
     ): CancellableOperation {
         val pendingAction = addPendingAddonAction()
         return runtime.installWebExtension(
             url = url,
+            installationMethod = installationMethod,
             onSuccess = { ext ->
                 onAddonInstalled(ext, pendingAction, onSuccess)
             },

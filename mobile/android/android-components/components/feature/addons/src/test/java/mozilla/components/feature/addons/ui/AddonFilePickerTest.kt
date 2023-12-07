@@ -9,10 +9,12 @@ import android.net.Uri
 import androidx.activity.result.ActivityResultCaller
 import androidx.activity.result.ActivityResultLauncher
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.concept.engine.webextension.InstallationMethod
 import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.ui.AddonFilePicker
 import mozilla.components.feature.addons.ui.AddonOpenDocument
 import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
@@ -83,6 +85,11 @@ class AddonFilePickerTest {
 
         filePicker.handleUriSelected(uri)
 
-        verify(addonManager).installAddon(any<String>(), any(), any())
+        verify(addonManager).installAddon(
+            url = any<String>(),
+            installationMethod = eq(InstallationMethod.FROM_FILE),
+            onSuccess = any(),
+            onError = any(),
+        )
     }
 }
