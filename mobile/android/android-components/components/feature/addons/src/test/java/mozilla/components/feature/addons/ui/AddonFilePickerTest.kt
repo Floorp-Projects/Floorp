@@ -5,6 +5,7 @@
 package mozilla.components.feature.addons.mozilla.components.feature.addons.ui
 
 import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.result.ActivityResultCaller
 import androidx.activity.result.ActivityResultLauncher
@@ -18,6 +19,7 @@ import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -91,5 +93,15 @@ class AddonFilePickerTest {
             onSuccess = any(),
             onError = any(),
         )
+    }
+
+    @Test
+    fun `WHEN creating an intent from a AddonOpenDocument THEN it contains mime types for zips and xpi files`() {
+        val contractResult = AddonOpenDocument()
+
+        val intent = contractResult.createIntent(testContext, arrayOf())
+
+        val mimeTypes = intent.extras!!.getStringArray(Intent.EXTRA_MIME_TYPES)
+        assertArrayEquals(mimeTypes, arrayOf("application/x-xpinstall", "application/zip"))
     }
 }

@@ -74,7 +74,6 @@ class AddonFilePicker(
 
 internal open class AddonOpenDocument : ActivityResultContracts.OpenDocument() {
     override fun createIntent(context: Context, input: Array<String>): Intent {
-        // We're restricting the mime type to XPI files, because that's expected by GeckoView currently.
-        return super.createIntent(context, arrayOf("application/x-xpinstall"))
+        return super.createIntent(context, arrayOf("application/x-xpinstall", "application/zip"))
     }
 }
