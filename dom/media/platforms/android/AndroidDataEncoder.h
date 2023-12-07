@@ -28,6 +28,13 @@ class AndroidDataEncoder final : public MediaDataEncoder {
   RefPtr<EncodePromise> Drain() override;
   RefPtr<ShutdownPromise> Shutdown() override;
   RefPtr<GenericPromise> SetBitrate(uint32_t aBitsPerSec) override;
+  RefPtr<ReconfigurationPromise> Reconfigure(
+      const RefPtr<const EncoderConfigurationChangeList>& aConfigurationChanges)
+      override {
+    // General reconfiguration interface not implemented right now
+    return MediaDataEncoder::ReconfigurationPromise::CreateAndReject(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
+  };
 
   nsCString GetDescriptionName() const override { return "Android Encoder"_ns; }
 
