@@ -1,0 +1,11 @@
+[licenses]
+unlicensed = "deny"
+allow = [
+    "MIT",
+    "Apache-2.0"
+]
+default = "deny"
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
