@@ -1394,7 +1394,6 @@ Document::Document(const char* aContentType)
       mHasUserInteractionTimerScheduled(false),
       mShouldResistFingerprinting(false),
       mCloningForSVGUse(false),
-      mAllowDeclarativeShadowRoots(false),
       mXMLDeclarationBits(0),
       mOnloadBlockCount(0),
       mWriteLevel(0),
@@ -18989,41 +18988,4 @@ void Document::UpdateHiddenByContentVisibilityForAnimations() {
     timeline->UpdateHiddenByContentVisibility();
   }
 }
-
-void Document::SetAllowDeclarativeShadowRoots(
-    bool aAllowDeclarativeShadowRoots) {
-  mAllowDeclarativeShadowRoots = aAllowDeclarativeShadowRoots;
-}
-
-bool Document::AllowsDeclarativeShadowRoots() const {
-  return mAllowDeclarativeShadowRoots;
-}
-
-/* static */
-already_AddRefed<Document> Document::ParseHTMLUnsafe(GlobalObject& aGlobal,
-                                                     const nsAString& aHTML) {
-  nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), "about:blank");
-  if (!uri) {
-    return nullptr;
-  }
-
-  nsCOMPtr<Document> doc;
-  nsresult rv =
-      NS_NewHTMLDocument(getter_AddRefs(doc), aGlobal.GetSubjectPrincipal(),
-                         aGlobal.GetSubjectPrincipal());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-
-  doc->SetAllowDeclarativeShadowRoots(true);
-  doc->SetDocumentURI(uri);
-  rv = nsContentUtils::ParseDocumentHTML(aHTML, doc, false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-
-  return doc.forget();
-}
-
 }  // namespace mozilla::dom
