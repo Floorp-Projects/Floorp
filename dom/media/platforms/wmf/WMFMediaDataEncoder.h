@@ -16,20 +16,22 @@
 
 namespace mozilla {
 
-template <typename ConfigType>
 class WMFMediaDataEncoder final : public MediaDataEncoder {
  public:
-  WMFMediaDataEncoder(const ConfigType& aConfig, RefPtr<TaskQueue> aTaskQueue,
-                      const bool aHardwareNotAllowed)
+  WMFMediaDataEncoder(const EncoderConfig& aConfig,
+                      const RefPtr<TaskQueue>& aTaskQueue)
       : mConfig(aConfig),
         mTaskQueue(aTaskQueue),
-        mHardwareNotAllowed(aHardwareNotAllowed) {
+        mHardwareNotAllowed(aConfig.mHardwarePreference ==
+                            HardwarePreference::RequireSoftware ||
+                            aConfig.mHardwarePreference ==
+                            HardwarePreference::None) {
     MOZ_ASSERT(mTaskQueue);
   }
 
   RefPtr<InitPromise> Init() override {
     return InvokeAsync(mTaskQueue, this, __func__,
-                       &WMFMediaDataEncoder<ConfigType>::ProcessInit);
+                       &WMFMediaDataEncoder::ProcessInit);
   }
   RefPtr<EncodePromise> Encode(const MediaData* aSample) override {
     MOZ_ASSERT(aSample);
@@ -60,7 +62,7 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
           return ShutdownPromise::CreateAndResolve(true, __func__);
         });
   }
-  RefPtr<GenericPromise> SetBitrate(Rate aBitsPerSec) override {
+  RefPtr<GenericPromise> SetBitrate(uint32_t aBitsPerSec) override {
     return InvokeAsync(
         mTaskQueue, __func__,
         [self = RefPtr<WMFMediaDataEncoder>(this), aBitsPerSec]() {
@@ -72,8 +74,16 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
         });
   }
 
+  RefPtr<ReconfigurationPromise> Reconfigure(
+      const RefPtr<const EncoderConfigurationChangeList>& aConfigurationChanges)
+      override {
+    // General reconfiguration interface not implemented right now
+    return MediaDataEncoder::ReconfigurationPromise::CreateAndReject(
+        NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
+  };
+
   nsCString GetDescriptionName() const override {
-    return MFTEncoder::GetFriendlyName(CodecToSubtype(mConfig.mCodecType));
+    return MFTEncoder::GetFriendlyName(CodecToSubtype(mConfig.mCodec));
   }
 
  private:
@@ -135,13 +145,13 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
   }
 
   HRESULT InitMFTEncoder(RefPtr<MFTEncoder>& aEncoder) {
-    HRESULT hr = aEncoder->Create(CodecToSubtype(mConfig.mCodecType));
+    HRESULT hr = aEncoder->Create(CodecToSubtype(mConfig.mCodec));
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
     hr = SetMediaTypes(aEncoder, mConfig);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-    hr = aEncoder->SetModes(mConfig.mBitsPerSec);
+    hr = aEncoder->SetModes(mConfig.mBitrate);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
     return S_OK;
@@ -282,7 +292,7 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
 
   bool WriteFrameData(RefPtr<MediaRawData>& aDest, LockBuffer& aSrc,
                       bool aIsKeyframe) {
-    if (std::is_same_v<ConfigType, MediaDataEncoder::H264Config>) {
+    if (mConfig.mCodec == CodecType::H264) {
       size_t prependLength = 0;
       RefPtr<MediaByteBuffer> avccHeader;
       if (aIsKeyframe && mConfigData) {
@@ -324,7 +334,7 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
 
   void AssertOnTaskQueue() { MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn()); }
 
-  const ConfigType mConfig;
+  EncoderConfig mConfig;
   const RefPtr<TaskQueue> mTaskQueue;
   const bool mHardwareNotAllowed;
   RefPtr<MFTEncoder> mEncoder;
