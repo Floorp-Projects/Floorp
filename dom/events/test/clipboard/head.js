@@ -100,23 +100,15 @@ function isCloselyLeftOnTopOf(aCoordsP1, aCoordsP2, aDelta = 10) {
   );
 }
 
-async function promiseDismissPasteButton() {
+function promiseDismissPasteButton() {
   // nsXULPopupManager rollup is handled in widget code, so we have to
   // synthesize native mouse events.
-  await EventUtils.promiseNativeMouseEvent({
+  return EventUtils.promiseNativeMouseEvent({
     type: "click",
     target: document.body,
     // Relies on the assumption that the center of chrome document doesn't
     // overlay with the paste button showed for clipboard readText request.
     atCenter: true,
-  });
-  // Move mouse away to avoid subsequence tests showing paste button in
-  // thie dismissing location.
-  await EventUtils.promiseNativeMouseEvent({
-    type: "mousemove",
-    target: document.body,
-    offsetX: 100,
-    offsetY: 100,
   });
 }
 
