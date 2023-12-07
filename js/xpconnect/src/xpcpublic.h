@@ -250,13 +250,29 @@ class XPCStringConvert {
   static bool ReadableToJSVal(JSContext* cx, const nsAString& readable,
                               nsStringBuffer** sharedBuffer,
                               JS::MutableHandle<JS::Value> vp);
+  static bool Latin1ToJSVal(JSContext* cx, const nsACString& latin1,
+                            nsStringBuffer** sharedBuffer,
+                            JS::MutableHandle<JS::Value> vp);
 
   // Convert the given stringbuffer/length pair to a jsval
   static MOZ_ALWAYS_INLINE bool UCStringBufferToJSVal(
       JSContext* cx, nsStringBuffer* buf, uint32_t length,
       JS::MutableHandle<JS::Value> rval, bool* sharedBuffer) {
     JSString* str = JS_NewMaybeExternalUCString(
-        cx, static_cast<char16_t*>(buf->Data()), length,
+        cx, static_cast<const char16_t*>(buf->Data()), length,
+        &sDOMStringExternalString, sharedBuffer);
+    if (!str) {
+      return false;
+    }
+    rval.setString(str);
+    return true;
+  }
+
+  static MOZ_ALWAYS_INLINE bool Latin1StringBufferToJSVal(
+      JSContext* cx, nsStringBuffer* buf, uint32_t length,
+      JS::MutableHandle<JS::Value> rval, bool* sharedBuffer) {
+    JSString* str = JS_NewMaybeExternalStringLatin1(
+        cx, static_cast<const JS::Latin1Char*>(buf->Data()), length,
         &sDOMStringExternalString, sharedBuffer);
     if (!str) {
       return false;
@@ -271,6 +287,20 @@ class XPCStringConvert {
                                           JS::MutableHandle<JS::Value> rval) {
     bool ignored;
     JSString* str = JS_NewMaybeExternalUCString(
+        cx, literal, length, &sLiteralExternalString, &ignored);
+    if (!str) {
+      return false;
+    }
+    rval.setString(str);
+    return true;
+  }
+
+  static inline bool StringLiteralToJSVal(JSContext* cx,
+                                          const JS::Latin1Char* literal,
+                                          uint32_t length,
+                                          JS::MutableHandle<JS::Value> rval) {
+    bool ignored;
+    JSString* str = JS_NewMaybeExternalStringLatin1(
         cx, literal, length, &sLiteralExternalString, &ignored);
     if (!str) {
       return false;
