@@ -709,11 +709,6 @@ VideoDecoder::VideoDecoder(nsIGlobalObject* aParent,
   LOG("VideoDecoder %p ctor", this);
 }
 
-VideoDecoder::~VideoDecoder() {
-  LOG("VideoDecoder %p dtor", this);
-  Unused << ResetInternal(NS_ERROR_DOM_ABORT_ERR);
-}
-
 JSObject* VideoDecoder::WrapObject(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {
   AssertIsOnOwningThread();
