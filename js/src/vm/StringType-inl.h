@@ -589,22 +589,48 @@ inline JSExternalString::JSExternalString(
   d.s.u3.externalCallbacks = callbacks;
 }
 
-MOZ_ALWAYS_INLINE JSExternalString* JSExternalString::new_(
-    JSContext* cx, const char16_t* chars, size_t length,
+inline JSExternalString::JSExternalString(
+    const JS::Latin1Char* chars, size_t length,
+    const JSExternalStringCallbacks* callbacks) {
+  MOZ_ASSERT(callbacks);
+  setLengthAndFlags(length, EXTERNAL_FLAGS | LATIN1_CHARS_BIT);
+  d.s.u2.nonInlineCharsLatin1 = chars;
+  d.s.u3.externalCallbacks = callbacks;
+}
+
+template <typename CharT>
+/* static */
+MOZ_ALWAYS_INLINE JSExternalString* JSExternalString::newImpl(
+    JSContext* cx, const CharT* chars, size_t length,
     const JSExternalStringCallbacks* callbacks) {
   if (MOZ_UNLIKELY(!validateLength(cx, length))) {
     return nullptr;
   }
   auto* str = cx->newCell<JSExternalString>(chars, length, callbacks);
+
   if (!str) {
     return nullptr;
   }
-  size_t nbytes = length * sizeof(char16_t);
+  size_t nbytes = length * sizeof(CharT);
 
   MOZ_ASSERT(str->isTenured());
   js::AddCellMemory(str, nbytes, js::MemoryUse::StringContents);
 
   return str;
+}
+
+/* static */
+MOZ_ALWAYS_INLINE JSExternalString* JSExternalString::new_(
+    JSContext* cx, const JS::Latin1Char* chars, size_t length,
+    const JSExternalStringCallbacks* callbacks) {
+  return newImpl(cx, chars, length, callbacks);
+}
+
+/* static */
+MOZ_ALWAYS_INLINE JSExternalString* JSExternalString::new_(
+    JSContext* cx, const char16_t* chars, size_t length,
+    const JSExternalStringCallbacks* callbacks) {
+  return newImpl(cx, chars, length, callbacks);
 }
 
 inline js::NormalAtom::NormalAtom(size_t length, JS::Latin1Char** chars,
@@ -725,10 +751,17 @@ inline void js::FatInlineAtom::finalize(JS::GCContext* gcx) {
 inline void JSExternalString::finalize(JS::GCContext* gcx) {
   MOZ_ASSERT(JSString::isExternal());
 
-  size_t nbytes = length() * sizeof(char16_t);
-  gcx->removeCellMemory(this, nbytes, js::MemoryUse::StringContents);
+  if (hasLatin1Chars()) {
+    size_t nbytes = length() * sizeof(JS::Latin1Char);
+    gcx->removeCellMemory(this, nbytes, js::MemoryUse::StringContents);
 
-  callbacks()->finalize(const_cast<char16_t*>(rawTwoByteChars()));
+    callbacks()->finalize(const_cast<JS::Latin1Char*>(rawLatin1Chars()));
+  } else {
+    size_t nbytes = length() * sizeof(char16_t);
+    gcx->removeCellMemory(this, nbytes, js::MemoryUse::StringContents);
+
+    callbacks()->finalize(const_cast<char16_t*>(rawTwoByteChars()));
+  }
 }
 
 #endif /* vm_StringType_inl_h */

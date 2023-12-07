@@ -32,8 +32,19 @@ const XPCStringConvert::LiteralExternalString
 const XPCStringConvert::DOMStringExternalString
     XPCStringConvert::sDOMStringExternalString;
 
+void XPCStringConvert::LiteralExternalString::finalize(
+    JS::Latin1Char* aChars) const {
+  MOZ_CRASH("Unexpected");
+}
+
 void XPCStringConvert::LiteralExternalString::finalize(char16_t* aChars) const {
   // Nothing to do.
+}
+
+size_t XPCStringConvert::LiteralExternalString::sizeOfBuffer(
+    const JS::Latin1Char* aChars, mozilla::MallocSizeOf aMallocSizeOf) const {
+  MOZ_CRASH("Unexpected");
+  return 0;
 }
 
 size_t XPCStringConvert::LiteralExternalString::sizeOfBuffer(
@@ -43,9 +54,20 @@ size_t XPCStringConvert::LiteralExternalString::sizeOfBuffer(
 }
 
 void XPCStringConvert::DOMStringExternalString::finalize(
+    JS::Latin1Char* aChars) const {
+  MOZ_CRASH("Unexpected");
+}
+
+void XPCStringConvert::DOMStringExternalString::finalize(
     char16_t* aChars) const {
   nsStringBuffer* buf = nsStringBuffer::FromData(aChars);
   buf->Release();
+}
+
+size_t XPCStringConvert::DOMStringExternalString::sizeOfBuffer(
+    const JS::Latin1Char* aChars, mozilla::MallocSizeOf aMallocSizeOf) const {
+  MOZ_CRASH("Unexpected");
+  return 0;
 }
 
 size_t XPCStringConvert::DOMStringExternalString::sizeOfBuffer(

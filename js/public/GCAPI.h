@@ -556,9 +556,11 @@ using JSHostCleanupFinalizationRegistryCallback =
  */
 struct JSExternalStringCallbacks {
   /**
-   * Finalizes external strings created by JS_NewExternalUCString. The finalizer
-   * can be called off the main thread.
+   * Finalizes external strings created by JS_NewExternalStringLatin1 or
+   * JS_NewExternalUCString. The finalizer can be called off the main
+   * thread.
    */
+  virtual void finalize(JS::Latin1Char* chars) const = 0;
   virtual void finalize(char16_t* chars) const = 0;
 
   /**
@@ -569,6 +571,8 @@ struct JSExternalStringCallbacks {
    *
    * Implementations of this callback MUST NOT do anything that can cause GC.
    */
+  virtual size_t sizeOfBuffer(const JS::Latin1Char* chars,
+                              mozilla::MallocSizeOf mallocSizeOf) const = 0;
   virtual size_t sizeOfBuffer(const char16_t* chars,
                               mozilla::MallocSizeOf mallocSizeOf) const = 0;
 };
@@ -1269,6 +1273,9 @@ extern JS_PUBLIC_API void JS_SetGCParametersBasedOnAvailableMemory(
  * Create a new JSString whose chars member refers to external memory, i.e.,
  * memory requiring application-specific finalization.
  */
+extern JS_PUBLIC_API JSString* JS_NewExternalStringLatin1(
+    JSContext* cx, const JS::Latin1Char* chars, size_t length,
+    const JSExternalStringCallbacks* callbacks);
 extern JS_PUBLIC_API JSString* JS_NewExternalUCString(
     JSContext* cx, const char16_t* chars, size_t length,
     const JSExternalStringCallbacks* callbacks);
@@ -1280,13 +1287,17 @@ extern JS_PUBLIC_API JSString* JS_NewExternalUCString(
  * external string allocated by a previous call and |*allocatedExternal| is set
  * to false. If |*allocatedExternal| is false, |fin| won't be called.
  */
+extern JS_PUBLIC_API JSString* JS_NewMaybeExternalStringLatin1(
+    JSContext* cx, const JS::Latin1Char* chars, size_t length,
+    const JSExternalStringCallbacks* callbacks, bool* allocatedExternal);
 extern JS_PUBLIC_API JSString* JS_NewMaybeExternalUCString(
     JSContext* cx, const char16_t* chars, size_t length,
     const JSExternalStringCallbacks* callbacks, bool* allocatedExternal);
 
 /**
- * Return the 'callbacks' arg passed to JS_NewExternalUCString or
- * JS_NewMaybeExternalUCString.
+ * Return the 'callbacks' arg passed to JS_NewExternalStringLatin1,
+ * JS_NewExternalUCString, JS_NewMaybeExternalStringLatin1,
+ * or JS_NewMaybeExternalUCString.
  */
 extern JS_PUBLIC_API const JSExternalStringCallbacks*
 JS_GetExternalStringCallbacks(JSString* str);
