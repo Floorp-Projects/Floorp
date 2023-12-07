@@ -7,6 +7,7 @@
 #define nsXULContentSink_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/WeakPtr.h"
 #include "nsIExpatSink.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsIXMLContentSink.h"
@@ -131,7 +132,7 @@ class XULContentSinkImpl final : public nsIXMLContentSink, public nsIExpatSink {
   friend class ContextStack;
   ContextStack mContextStack;
 
-  nsWeakPtr mDocument;            // [OWNER]
+  mozilla::WeakPtr<mozilla::dom::Document> mDocument;
   nsCOMPtr<nsIURI> mDocumentURL;  // [OWNER]
 
   RefPtr<nsXULPrototypeDocument> mPrototype;  // [OWNER]

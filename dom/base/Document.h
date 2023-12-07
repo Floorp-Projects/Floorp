@@ -1901,7 +1901,7 @@ class Document : public nsINode,
    * in the in-process document tree. Returns nullptr if the document isn't
    * fullscreen.
    */
-  Document* GetFullscreenRoot();
+  Document* GetFullscreenRoot() const { return mFullscreenRoot; }
 
   size_t CountFullscreenElements() const;
 
@@ -1909,7 +1909,7 @@ class Document : public nsINode,
    * Sets the fullscreen root to aRoot. This stores a weak reference to aRoot
    * in this document.
    */
-  void SetFullscreenRoot(Document* aRoot);
+  void SetFullscreenRoot(Document* aRoot) { mFullscreenRoot = aRoot; }
 
   /**
    * Synchronously cleans up the fullscreen state on the given document.
@@ -5133,7 +5133,7 @@ class Document : public nsINode,
 
   // The root of the doc tree in which this document is in. This is only
   // non-null when this document is in fullscreen mode.
-  nsWeakPtr mFullscreenRoot;
+  WeakPtr<Document> mFullscreenRoot;
 
   RefPtr<DOMImplementation> mDOMImplementation;
 

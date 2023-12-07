@@ -322,7 +322,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   // We don't really have a good immutable representation of "presentation".
   // Given the way GetComputedStyle is currently used, we should just grab the
   // presshell, if any, from the document.
-  nsWeakPtr mDocumentWeak;
+  mozilla::WeakPtr<mozilla::dom::Document> mDocumentWeak;
   RefPtr<Element> mElement;
 
   /**
