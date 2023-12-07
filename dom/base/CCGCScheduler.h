@@ -191,6 +191,10 @@ class CCGCScheduler {
    */
   void EnsureGCRunner(TimeDuration aDelay);
 
+  // If GCRunner isn't active, this calls EnsureGCRunner(0). Otherwise the timer
+  // is reset.
+  void EnsureOrResetGCRunner();
+
   void EnsureCCRunner(TimeDuration aDelay, TimeDuration aBudget);
 
   // State modification

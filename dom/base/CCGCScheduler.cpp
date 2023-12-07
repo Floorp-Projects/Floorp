@@ -622,6 +622,16 @@ void CCGCScheduler::PokeMinorGC(JS::GCReason aReason) {
   EnsureGCRunner(0);
 }
 
+void CCGCScheduler::EnsureOrResetGCRunner() {
+  if (!mGCRunner) {
+    EnsureGCRunner(0);
+    return;
+  }
+
+  mGCRunner->ResetTimer(TimeDuration::FromMilliseconds(
+      StaticPrefs::javascript_options_gc_delay_interslice()));
+}
+
 void CCGCScheduler::EnsureGCRunner(TimeDuration aDelay) {
   if (mGCRunner) {
     return;

@@ -1873,7 +1873,7 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
         // If incremental GC wasn't triggered by GCTimerFired, we may not have a
         // runner to ensure all the slices are handled. So, create the runner
         // here.
-        sScheduler->EnsureGCRunner(0);
+        sScheduler->EnsureOrResetGCRunner();
       }
 
       if (sScheduler->IsCCNeeded(TimeStamp::Now(),
