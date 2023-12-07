@@ -5,7 +5,8 @@
 <panel id="report-broken-main-menu-panel"
        class="cui-widget-panel panel-no-padding"
        type="arrow"
-       role="document"
+       role="alertdialog"
+       aria-labelledby="report-broken-site-panel-intro"
        noautofocus="true"
        tabspecific="true"
        flip="slide"
@@ -30,9 +31,7 @@
   </box>
   <toolbarseparator></toolbarseparator>
   <vbox id="report-broken-site-panel-container"
-        class="panel-subview-body"
-        role="alertdialog"
-        aria-labelledby="report-broken-site-panel-intro">
+        class="panel-subview-body">
     <html:p data-l10n-id="report-broken-site-panel-intro"/>
     <label id="report-broken-site-popup-url-label"
            control="report-broken-site-popup-url"
