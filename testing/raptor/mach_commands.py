@@ -38,8 +38,14 @@ class RaptorRunner(MozbuildObject):
         sys_maj, sys_min = sys.version_info.major, sys.version_info.minor
         if sys_min > max_py_minor:
             raise PythonVersionException(
-                f"Please downgrade your Python version as Raptor does not yet support Python versions greater than {max_py_major}.{max_py_minor}. "
-                f"You seem to currently be using Python {sys_maj}.{sys_min}"
+                print(
+                    f"\tPlease downgrade your Python version as Raptor does not yet support Python "
+                    f"versions greater than {max_py_major}.{max_py_minor}."
+                    f"\n\tYou seem to currently be using Python {sys_maj}.{sys_min}."
+                    f"\n\tSee here for a possible solution in debugging your python environment: "
+                    f"https://firefox-source-docs.mozilla.org/testing/perfdocs/"
+                    f"debugging.html#debugging-local-python-environment"
+                )
             )
         self.init_variables(raptor_args, kwargs)
         self.make_config()
