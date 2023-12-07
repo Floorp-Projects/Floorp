@@ -79,8 +79,9 @@ class MediaSourceDemuxer : public MediaDataDemuxer,
   friend class MediaSourceTrackDemuxer;
   // Scan source buffers and update information.
   bool ScanSourceBuffersForContent();
-  RefPtr<TrackBuffersManager> GetManager(TrackInfo::TrackType aType);
-  TrackInfo* GetTrackInfo(TrackInfo::TrackType);
+  RefPtr<TrackBuffersManager> GetManager(TrackInfo::TrackType aType)
+      MOZ_REQUIRES(mMonitor);
+  TrackInfo* GetTrackInfo(TrackInfo::TrackType) MOZ_REQUIRES(mMonitor);
   void DoAttachSourceBuffer(RefPtr<TrackBuffersManager>&& aSourceBuffer);
   void DoDetachSourceBuffer(const RefPtr<TrackBuffersManager>& aSourceBuffer);
   bool OnTaskQueue() {
@@ -88,17 +89,16 @@ class MediaSourceDemuxer : public MediaDataDemuxer,
   }
 
   RefPtr<TaskQueue> mTaskQueue;
-  nsTArray<RefPtr<MediaSourceTrackDemuxer>> mDemuxers;
-
+  // Accessed on mTaskQueue or from destructor
   nsTArray<RefPtr<TrackBuffersManager>> mSourceBuffers;
-
   MozPromiseHolder<InitPromise> mInitPromise;
 
   // Monitor to protect members below across multiple threads.
-  mutable Monitor mMonitor MOZ_UNANNOTATED;
-  RefPtr<TrackBuffersManager> mAudioTrack;
-  RefPtr<TrackBuffersManager> mVideoTrack;
-  MediaInfo mInfo;
+  mutable Monitor mMonitor;
+  nsTArray<RefPtr<MediaSourceTrackDemuxer>> mDemuxers MOZ_GUARDED_BY(mMonitor);
+  RefPtr<TrackBuffersManager> mAudioTrack MOZ_GUARDED_BY(mMonitor);
+  RefPtr<TrackBuffersManager> mVideoTrack MOZ_GUARDED_BY(mMonitor);
+  MediaInfo mInfo MOZ_GUARDED_BY(mMonitor);
 };
 
 class MediaSourceTrackDemuxer
@@ -107,7 +107,8 @@ class MediaSourceTrackDemuxer
  public:
   MediaSourceTrackDemuxer(MediaSourceDemuxer* aParent,
                           TrackInfo::TrackType aType,
-                          TrackBuffersManager* aManager);
+                          TrackBuffersManager* aManager)
+      MOZ_REQUIRES(aParent->mMonitor);
 
   UniquePtr<TrackInfo> GetInfo() const override;
 
