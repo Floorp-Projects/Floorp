@@ -2068,13 +2068,38 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
     }
   }
 
+  input:invalid,
+  menulist:has(+ input:invalid) {
+    border-color: transparent;
+    outline: 2px solid var(--color-error-outline);
+    outline-offset: -1px;
+  }
+
+  > .panel-subview-body > label {
+    margin-block: 1.5em 0.5em;
+
+    &.invalid-message {
+      margin-block: 0.5em 0;
+      background-image: url("chrome://global/skin/icons/error.svg");
+      background-position: left center;
+      background-repeat: no-repeat;
+      -moz-context-properties: fill;
+      fill: var(--icon-color-critical);
+      padding-inline-start: calc(16px + 0.25em);
+
+      &:-moz-locale-dir(rtl) {
+        background-position-x: right;
+      }
+
+      input:valid + & {
+        display: none;
+      }
+    }
+  }
+
   &.main-view {
     p {
       margin-block: 0;
-    }
-
-    > .panel-subview-body > label {
-      margin-block: 1.5em 0.5em;
     }
 
     a {
@@ -2111,4 +2136,12 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 
 #report-broken-site-panel-container {
   padding: 8px 16px 16px;
+}
+
+/* <menulist> does not support :invalid, so we use setCustomValidity
+ * on a "helper" input. We must hide it with CSS, as using the HTML
+ * "hidden" attribute will also keep it from working with :invalid.
+ */
+#report-broken-site-popup-missing-reason-validation-helper {
+  display: none;
 }
