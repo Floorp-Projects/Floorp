@@ -382,3 +382,17 @@ test.nested:
       - https://bugzilla.mozilla.org/1704846/
     data_reviews:
       - https://example.com
+
+  optimizable_counter_metric:
+    type: counter
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: ping
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1635260/
+    data_reviews:
+      - https://example.com
