@@ -574,61 +574,91 @@ static void ReleaseImage(void* aImageGrip, const void* aDataPtr,
 CVPixelBufferRef AppleVTEncoder::CreateCVPixelBuffer(const Image* aSource) {
   AssertOnTaskQueue();
 
-  // TODO: support types other than YUV
-  PlanarYCbCrImage* image = const_cast<Image*>(aSource)->AsPlanarYCbCrImage();
-  if (!image || !image->GetData()) {
-    return nullptr;
-  }
-
-  OSType format = MapPixelFormat(mConfig.mSourcePixelFormat).ref();
-  size_t numPlanes = NumberOfPlanes(mConfig.mSourcePixelFormat);
-  const PlanarYCbCrImage::Data* yuv = image->GetData();
-  if (!yuv) {
-    return nullptr;
-  }
-  auto ySize = yuv->YDataSize();
-  auto cbcrSize = yuv->CbCrDataSize();
-  void* addresses[3] = {};
-  size_t widths[3] = {};
-  size_t heights[3] = {};
-  size_t strides[3] = {};
-  switch (numPlanes) {
-    case 3:
-      addresses[2] = yuv->mCrChannel;
-      widths[2] = cbcrSize.width;
-      heights[2] = cbcrSize.height;
-      strides[2] = yuv->mCbCrStride;
-      [[fallthrough]];
-    case 2:
-      addresses[1] = yuv->mCbChannel;
-      widths[1] = cbcrSize.width;
-      heights[1] = cbcrSize.height;
-      strides[1] = yuv->mCbCrStride;
-      [[fallthrough]];
-    case 1:
-      addresses[0] = yuv->mYChannel;
-      widths[0] = ySize.width;
-      heights[0] = ySize.height;
-      strides[0] = yuv->mYStride;
-      break;
-    default:
+  if (aSource->GetFormat() == ImageFormat::PLANAR_YCBCR) {
+    PlanarYCbCrImage* image = const_cast<Image*>(aSource)->AsPlanarYCbCrImage();
+    if (!image || !image->GetData()) {
       return nullptr;
-  }
+    }
 
-  CVPixelBufferRef buffer = nullptr;
-  image->AddRef();  // Grip input buffers.
-  CVReturn rv = CVPixelBufferCreateWithPlanarBytes(
-      kCFAllocatorDefault, yuv->mPictureRect.width, yuv->mPictureRect.height,
-      format, nullptr /* dataPtr */, 0 /* dataSize */, numPlanes, addresses,
-      widths, heights, strides, ReleaseImage /* releaseCallback */,
-      image /* releaseRefCon */, nullptr /* pixelBufferAttributes */, &buffer);
-  if (rv == kCVReturnSuccess) {
-    return buffer;
-    // |image| will be released in |ReleaseImage()|.
-  } else {
+    OSType format = MapPixelFormat(mConfig.mSourcePixelFormat).ref();
+    size_t numPlanes = NumberOfPlanes(mConfig.mSourcePixelFormat);
+    const PlanarYCbCrImage::Data* yuv = image->GetData();
+    if (!yuv) {
+      return nullptr;
+    }
+    auto ySize = yuv->YDataSize();
+    auto cbcrSize = yuv->CbCrDataSize();
+    void* addresses[3] = {};
+    size_t widths[3] = {};
+    size_t heights[3] = {};
+    size_t strides[3] = {};
+    switch (numPlanes) {
+      case 3:
+        addresses[2] = yuv->mCrChannel;
+        widths[2] = cbcrSize.width;
+        heights[2] = cbcrSize.height;
+        strides[2] = yuv->mCbCrStride;
+        [[fallthrough]];
+      case 2:
+        addresses[1] = yuv->mCbChannel;
+        widths[1] = cbcrSize.width;
+        heights[1] = cbcrSize.height;
+        strides[1] = yuv->mCbCrStride;
+        [[fallthrough]];
+      case 1:
+        addresses[0] = yuv->mYChannel;
+        widths[0] = ySize.width;
+        heights[0] = ySize.height;
+        strides[0] = yuv->mYStride;
+        break;
+      default:
+        return nullptr;
+    }
+
+    CVPixelBufferRef buffer = nullptr;
+    image->AddRef();  // Grip input buffers.
+    CVReturn rv = CVPixelBufferCreateWithPlanarBytes(
+        kCFAllocatorDefault, yuv->mPictureRect.width, yuv->mPictureRect.height,
+        format, nullptr /* dataPtr */, 0 /* dataSize */, numPlanes, addresses,
+        widths, heights, strides, ReleaseImage /* releaseCallback */,
+        image /* releaseRefCon */, nullptr /* pixelBufferAttributes */,
+        &buffer);
+    if (rv == kCVReturnSuccess) {
+      return buffer;
+      // |image| will be released in |ReleaseImage()|.
+    }
+    LOGE("CVPIxelBufferCreateWithPlanarBytes error");
     image->Release();
     return nullptr;
   }
+  if (aSource->GetFormat() == ImageFormat::MOZ2D_SURFACE) {
+    Image* source = const_cast<Image*>(aSource);
+    RefPtr<gfx::SourceSurface> surface = source->GetAsSourceSurface();
+    RefPtr<gfx::DataSourceSurface> dataSurface = surface->GetDataSurface();
+    gfx::DataSourceSurface::ScopedMap map(dataSurface,
+                                          gfx::DataSourceSurface::READ);
+    if (NS_WARN_IF(!map.IsMapped())) {
+      LOGE("Error scopedmap");
+      return nullptr;
+    }
+    OSType format = MapPixelFormat(mConfig.mSourcePixelFormat).ref();
+    CVPixelBufferRef buffer = nullptr;
+    source->AddRef();
+
+    CVReturn rv = CVPixelBufferCreateWithBytes(
+        kCFAllocatorDefault, aSource->GetSize().Width(),
+        aSource->GetSize().Height(), format, map.GetData(), map.GetStride(),
+        ReleaseImageInterleaved, source, nullptr, &buffer);
+    if (rv == kCVReturnSuccess) {
+      return buffer;
+      // |source| will be released in |ReleaseImageInterleaved()|.
+    }
+    LOGE("CVPIxelBufferCreateWithBytes error");
+    source->Release();
+    return nullptr;
+  }
+  LOGE("Image conversion not implemented in AppleVTEncoder");
+  return nullptr;
 }
 
 RefPtr<MediaDataEncoder::EncodePromise> AppleVTEncoder::Drain() {
