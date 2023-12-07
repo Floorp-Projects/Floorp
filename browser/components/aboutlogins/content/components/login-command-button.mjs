@@ -15,173 +15,62 @@ import {
 } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
-export const stylesTemplate = () => html`<link
-    rel="stylesheet"
-    href="chrome://global/skin/in-content/common.css"
-  />
-  <link
-    rel="stylesheet"
-    href="chrome://browser/content/aboutlogins/components/login-command-button.css"
-  />`;
-
-export const LoginCommandButton = ({
-  onClick,
-  l10nId,
-  icon,
-  variant,
-  disabled,
-  buttonText,
-}) => html`<button
-  class=${variant}
-  data-l10n-id=${ifDefined(l10nId)}
-  ?disabled=${disabled}
-  @click=${ifDefined(onClick)}
->
-  <img src=${ifDefined(icon)} role="presentation" />
-
-  <span data-l10n-id=${ifDefined(buttonText)}></span>
-</button>`;
-
-export class CreateLoginButton extends MozLitElement {
+export default class LoginCommandButton extends MozLitElement {
   static get properties() {
     return {
+      onClick: { type: Function, reflect: true },
+      l10nId: { type: String },
+      icon: { type: String },
+      variant: { type: String },
       disabled: { type: Boolean, reflect: true },
+      tooltip: { type: String },
     };
   }
 
   constructor() {
     super();
+    this.l10nId = undefined;
+    this.icon = "";
+    this.variant = "";
     this.disabled = false;
+    this.tooltip = "";
   }
+
   render() {
     return html`
-      ${stylesTemplate()}
-      ${LoginCommandButton({
-        l10nId: "create-new-login-button",
-        variant: "icon-button",
-        icon: "chrome://global/skin/icons/plus.svg",
-        disabled: this.disabled,
-      })}
+      <link
+        rel="stylesheet"
+        href="chrome://global/skin/in-content/common.css"
+      />
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/aboutlogins/components/login-command-button.css"
+      />
+
+      <!-- Keeping the data-l10n-id in a separate span tag for the correct formatting of 
+      img before the l10nid. Keeping it within the button will cause a different format and
+      would require us to use background-image in the css which defeats the objective to make the
+      component reusable. -->
+
+      <button
+        class=${this.variant}
+        ?disabled=${this.disabled}
+        @click=${ifDefined(this.onClick)}
+      >
+        ${when(
+          this.icon,
+          () => html` <img src=${this.icon} role="presentation" /> `,
+          () => null
+        )}
+
+        <!-- Keeping a class tag in the span element below primarily for the copy button
+        so that when it is clicked, the text changes to the corresponding successfully 'copied-text'
+        used in the css file. This change is made in login-item in Bug 1832680. -->
+
+        <span class=${this.class} data-l10n-id=${ifDefined(this.l10nId)}></span>
+      </button>
     `;
   }
 }
 
-export class EditButton extends MozLitElement {
-  static get properties() {
-    return {
-      disabled: { type: Boolean, reflect: true },
-    };
-  }
-
-  constructor() {
-    super();
-    this.disabled = false;
-  }
-  render() {
-    return html`
-      ${stylesTemplate()}
-      ${LoginCommandButton({
-        buttonText: "login-item-edit-button",
-        variant: "ghost-button",
-        icon: "chrome://global/skin/icons/edit.svg",
-        disabled: this.disabled,
-      })}
-    `;
-  }
-}
-
-export class DeleteButton extends MozLitElement {
-  static get properties() {
-    return {
-      disabled: { type: Boolean, reflect: true },
-    };
-  }
-
-  constructor() {
-    super();
-    this.disabled = false;
-  }
-  render() {
-    return html` ${stylesTemplate()}
-    ${LoginCommandButton({
-      buttonText: "about-logins-login-item-remove-button",
-      variant: "ghost-button",
-      icon: "chrome://global/skin/icons/delete.svg",
-      disabled: this.disabled,
-    })}`;
-  }
-}
-
-export class CopyUsernameButton extends MozLitElement {
-  static get properties() {
-    return {
-      copiedText: { type: Boolean, reflect: true },
-      disabled: { type: Boolean, reflect: true },
-    };
-  }
-
-  constructor() {
-    super();
-    this.copiedText = false;
-    this.disabled = false;
-  }
-  render() {
-    this.className = this.copiedText ? "copied-button" : "copy-button";
-    return html` ${stylesTemplate()}
-    ${when(
-      this.copiedText,
-      () =>
-        html`${LoginCommandButton({
-          buttonText: "login-item-copied-username-button-text",
-          icon: "chrome://global/skin/icons/check.svg",
-          disabled: this.disabled,
-        })}`,
-      () =>
-        html`${LoginCommandButton({
-          variant: "text-button",
-          buttonText: "login-item-copy-username-button-text",
-          disabled: this.disabled,
-        })}`
-    )}`;
-  }
-}
-
-export class CopyPasswordButton extends MozLitElement {
-  static get properties() {
-    return {
-      copiedText: { type: Boolean, reflect: true },
-      disabled: { type: Boolean, reflect: true },
-    };
-  }
-
-  constructor() {
-    super();
-    this.copiedText = false;
-    this.disabled = false;
-  }
-  render() {
-    this.className = this.copiedText ? "copied-button" : "copy-button";
-    return html` ${stylesTemplate()}
-    ${when(
-      this.copiedText,
-      () =>
-        html`${LoginCommandButton({
-          buttonText: "login-item-copied-password-button-text",
-          icon: "chrome://global/skin/icons/check.svg",
-          disabled: this.disabled,
-        })}`,
-      () =>
-        html`${LoginCommandButton({
-          variant: "text-button",
-          buttonText: "login-item-copy-password-button-text",
-          disabled: this.disabled,
-        })}`
-    )}`;
-  }
-}
-
-customElements.define("copy-password-button", CopyPasswordButton);
-customElements.define("copy-username-button", CopyUsernameButton);
-customElements.define("delete-button", DeleteButton);
-customElements.define("edit-button", EditButton);
-customElements.define("create-login-button", CreateLoginButton);
+customElements.define("login-command-button", LoginCommandButton);

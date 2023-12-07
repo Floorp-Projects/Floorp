@@ -148,7 +148,9 @@ add_task(async function test_login_item() {
       }, "Waiting for login item to get populated");
       Assert.ok(loginItemPopulated, "The login item should get populated");
 
-      let editButton = loginItem.shadowRoot.querySelector("edit-button");
+      let editButton = loginItem.shadowRoot
+        .querySelector(".edit-button")
+        .shadowRoot.querySelector("button");
       editButton.click();
     }
   );
@@ -158,7 +160,7 @@ add_task(async function test_login_item() {
     browser,
     [
       LoginHelper.loginToVanillaObject(TEST_LOGIN1),
-      "create-login-button",
+      ".create-login-button",
       CONCEALED_PASSWORD_TEXT,
     ],
     test_discard_dialog
@@ -169,7 +171,7 @@ add_task(async function test_login_item() {
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
     let editButton = loginItem.shadowRoot
-      .querySelector("edit-button")
+      .querySelector(".edit-button")
       .shadowRoot.querySelector("button");
     editButton.click();
   });
@@ -190,7 +192,7 @@ add_task(async function test_login_item() {
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
     let editButton = loginItem.shadowRoot
-      .querySelector("edit-button")
+      .querySelector(".edit-button")
       .shadowRoot.querySelector("button");
     editButton.click();
   });
@@ -246,7 +248,9 @@ add_task(async function test_login_item() {
       saveChangesButton.click();
 
       await ContentTaskUtils.waitForCondition(() => {
-        let editButton = loginItem.shadowRoot.querySelector("edit-button");
+        let editButton = loginItem.shadowRoot
+          .querySelector(".edit-button")
+          .shadowRoot.querySelector("button");
         return !editButton.disabled;
       }, "Waiting to exit edit mode");
 
@@ -295,7 +299,7 @@ add_task(async function test_login_item() {
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
     let editButton = loginItem.shadowRoot
-      .querySelector("edit-button")
+      .querySelector(".edit-button")
       .shadowRoot.querySelector("button");
     editButton.click();
   });
@@ -375,7 +379,7 @@ add_task(async function test_login_item() {
   await SpecialPowers.spawn(browser, [], async () => {
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
     let editButton = loginItem.shadowRoot
-      .querySelector("edit-button")
+      .querySelector(".edit-button")
       .shadowRoot.querySelector("button");
     editButton.click();
   });
@@ -399,7 +403,7 @@ add_task(async function test_login_item() {
         "LoginItem should be in 'edit' mode"
       );
       let deleteButton = loginItem.shadowRoot
-        .querySelector("delete-button")
+        .querySelector(".delete-button")
         .shadowRoot.querySelector("button");
       deleteButton.click();
       let confirmDeleteDialog = Cu.waiveXrays(

@@ -151,11 +151,11 @@ add_task(async function test_set_login() {
 
   ok(!gLoginItem.dataset.editing, "loginItem should not be in 'edit' mode");
   is(document.l10n.getAttributes(usernameInput).id, "about-logins-login-item-username", "username field should have default placeholder when username is not present and not editing");
-  let copyUsernameButton = gLoginItem.shadowRoot.querySelector("copy-username-button");
-  ok(copyUsernameButton.disabled, "The copy-username-button should be disabled if there is no username");
+  let copyUsernameButton = gLoginItem.shadowRoot.querySelector(".copy-username-button");
+  ok(copyUsernameButton.shadowRoot.querySelector("button").disabled, "The copy-username-button should be disabled if there is no username");
 
   usernameInput.placeholder = "dummy placeholder";
-  gLoginItem.shadowRoot.querySelector("edit-button").click();
+  gLoginItem.shadowRoot.querySelector(".edit-button").shadowRoot.querySelector("button").click();
   await asyncElementRendered();
   is(
     document.l10n.getAttributes(usernameInput).id,
@@ -216,15 +216,15 @@ add_task(async function test_edit_login() {
   gLoginItem.setLogin(TEST_LOGIN_1);
   let usernameInput = gLoginItem.shadowRoot.querySelector("input[name='username']");
   usernameInput.placeholder = "dummy placeholder";
-  gLoginItem.shadowRoot.querySelector("edit-button").click();
+  gLoginItem.shadowRoot.querySelector(".edit-button").shadowRoot.querySelector("button").click();
   await asyncElementRendered();
   await asyncElementRendered();
 
   ok(gLoginItem.dataset.editing, "loginItem should be in 'edit' mode");
-  ok(isHidden(gLoginItem.shadowRoot.querySelector("edit-button")), "edit button should be hidden in 'edit' mode");
+  ok(isHidden(gLoginItem.shadowRoot.querySelector(".edit-button")), "edit button should be hidden in 'edit' mode");
   ok(!gLoginItem.dataset.isNewLogin, "loginItem should not be in 'isNewLogin' mode");
-  let deleteButton = gLoginItem.shadowRoot.querySelector("delete-button");
-  ok(!deleteButton.disabled, "Delete button should be enabled when editing a login");
+  let deleteButton = gLoginItem.shadowRoot.querySelector(".delete-button");
+  ok(!deleteButton.shadowRoot.querySelector("button").disabled, "Delete button should be enabled when editing a login");
   ok(isHidden(gLoginItem._originInput), "Origin input should be hidden in edit mode");
   ok(!isHidden(gLoginItem._originDisplayInput), "Origin display link should be visible in edit mode");
   is(gLoginItem.shadowRoot.querySelector("a[name='origin']").getAttribute("href"), TEST_LOGIN_1.origin, "origin should be populated");
@@ -271,10 +271,10 @@ add_task(async function test_edit_login_keyboard_shortcut() {
   await asyncElementRendered();
 
   ok(gLoginItem.dataset.editing, "loginItem should be in 'edit' mode");
-  ok(isHidden(gLoginItem.shadowRoot.querySelector("edit-button")), "edit button should be hidden in 'edit' mode");
+  ok(isHidden(gLoginItem.shadowRoot.querySelector(".edit-button")), "edit button should be hidden in 'edit' mode");
   ok(!gLoginItem.dataset.isNewLogin, "loginItem should not be in 'isNewLogin' mode");
-  let deleteButton = gLoginItem.shadowRoot.querySelector("delete-button");
-  ok(!deleteButton.disabled, "Delete button should be enabled when editing a login");
+  let deleteButton = gLoginItem.shadowRoot.querySelector(".delete-button");
+  ok(!deleteButton.shadowRoot.querySelector("button").disabled, "Delete button should be enabled when editing a login");
   ok(isHidden(gLoginItem._originInput), "Origin input should be hidden in edit mode");
   ok(!isHidden(gLoginItem._originDisplayInput), "Origin display link should be visible in edit mode");
   is(gLoginItem.shadowRoot.querySelector("a[name='origin']").getAttribute("href"), TEST_LOGIN_1.origin, "origin should be populated");
@@ -314,7 +314,7 @@ add_task(async function test_edit_login_keyboard_shortcut() {
 
 add_task(async function test_edit_login_cancel() {
   gLoginItem.setLogin(TEST_LOGIN_1);
-  gLoginItem.shadowRoot.querySelector("edit-button").click();
+  gLoginItem.shadowRoot.querySelector(".edit-button").shadowRoot.querySelector("button").click();
   await asyncElementRendered();
 
   ok(gLoginItem.dataset.editing, "loginItem should be in 'edit' mode");
@@ -335,7 +335,7 @@ add_task(async function test_edit_login_cancel() {
 
 add_task(async function test_edit_login_cancel_keyboard_shortcut() {
   gLoginItem.setLogin(TEST_LOGIN_1);
-  gLoginItem.shadowRoot.querySelector("edit-button").click();
+  gLoginItem.shadowRoot.querySelector(".edit-button").shadowRoot.querySelector("button").click();
   await asyncElementRendered();
 
   ok(gLoginItem.dataset.editing, "loginItem should be in 'edit' mode");
@@ -370,7 +370,7 @@ add_task(async function test_reveal_password_change_selected_login() {
   is(passwordInput.type, "text", "Password should be unmasked when checkbox is clicked");
   ok(!isHidden(passwordInput), "Password input should be visible");
 
-  let editButton = gLoginItem.shadowRoot.querySelector("edit-button");
+  let editButton = gLoginItem.shadowRoot.querySelector(".edit-button").shadowRoot.querySelector("button");
   editButton.click();
   await asyncElementRendered();
   ok(!isHidden(passwordInput), "Password input should still be visible");
@@ -392,10 +392,10 @@ add_task(async function test_set_login_empty() {
   await asyncElementRendered();
 
   ok(gLoginItem.dataset.editing, "loginItem should be in 'edit' mode");
-  ok(isHidden(gLoginItem.shadowRoot.querySelector("edit-button")), "edit button should be hidden in 'edit' mode");
+  ok(isHidden(gLoginItem.shadowRoot.querySelector(".edit-button")), "edit button should be hidden in 'edit' mode");
   ok(gLoginItem.dataset.isNewLogin, "loginItem should be in 'isNewLogin' mode");
-  let deleteButton = gLoginItem.shadowRoot.querySelector("delete-button");
-  ok(deleteButton.disabled, "Delete button should be disabled when creating a login");
+  let deleteButton = gLoginItem.shadowRoot.querySelector(".delete-button");
+  ok(deleteButton.shadowRoot.querySelector("button").disabled, "Delete button should be disabled when creating a login");
   ok(!isHidden(gLoginItem._originInput), "Origin input should be visible in new login edit mode");
   ok(isHidden(gLoginItem._originDisplayInput), "Origin display should be hidden in new login edit mode");
   is(gLoginItem.shadowRoot.querySelector("input[name='origin']").value, "", "origin should be empty");
@@ -509,7 +509,7 @@ add_task(async function test_login_removed() {
 add_task(async function test_login_long_username_scrollLeft_reset() {
   let loginLongUsername = Object.assign({}, TEST_LOGIN_1, {username: "user2longnamelongnamelongnamelongnamelongname"});
   gLoginItem.setLogin(loginLongUsername);
-  gLoginItem.shadowRoot.querySelector("edit-button").click();
+  gLoginItem.shadowRoot.querySelector(".edit-button").shadowRoot.querySelector("button").click();
   await asyncElementRendered();
   await asyncElementRendered();
   let usernameInput = gLoginItem.shadowRoot.querySelector("input[name='username']");
@@ -522,26 +522,25 @@ add_task(async function test_copy_button_state() {
   gLoginItem.setLogin(TEST_LOGIN_1);
   await asyncElementRendered();
 
-  let copyUsernameButton = gLoginItem.shadowRoot.querySelector("copy-username-button");
-  ok(!copyUsernameButton.disabled, "The copy-username-button should be enabled");
+  let copyUsernameButton = gLoginItem.shadowRoot.querySelector(".copy-username-button");
+  ok(!copyUsernameButton.shadowRoot.querySelector("button").disabled, "The copy-username-button should be enabled");
 
-  let copyPasswordButton = gLoginItem.shadowRoot.querySelector("copy-password-button");
-  ok(!copyPasswordButton.disabled, "The copy-password-button should be enabled");
+  let copyPasswordButton = gLoginItem.shadowRoot.querySelector(".copy-password-button");
+  ok(!copyPasswordButton.shadowRoot.querySelector("button").disabled, "The copy-password-button should be enabled");
 
-  copyUsernameButton.click();
+  copyUsernameButton.shadowRoot.querySelector("button").click();
   await asyncElementRendered();
 
-  copyPasswordButton.click();
-  await asyncElementRendered();
+  copyPasswordButton.shadowRoot.querySelector("button").click();
 
   let loginNoUsername = Object.assign({}, TEST_LOGIN_2, {username: ""});
   gLoginItem.setLogin(loginNoUsername);
   await asyncElementRendered();
 
-  ok(copyUsernameButton.disabled, "The copy-username-button should be disabled when the username is empty");
-  ok(!copyPasswordButton.disabled, "The copy-password-button should be enabled");
+  ok(copyUsernameButton.shadowRoot.querySelector("button").disabled, "The copy-username-button should be disabled when the username is empty");
+  ok(!copyPasswordButton.shadowRoot.querySelector("button").disabled, "The copy-password-button should be enabled");
 
-  copyPasswordButton.click();
+  copyPasswordButton.shadowRoot.querySelector("button").click();
   });
 
   add_task(async function test_login_timeline_state() {

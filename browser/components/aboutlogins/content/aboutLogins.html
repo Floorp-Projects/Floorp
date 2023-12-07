@@ -183,7 +183,7 @@
       <div class="listHeader">
         <login-filter></login-filter>
         <div class="create-login-button-container">
-          <create-login-button></create-login-button>
+          <login-command-button class="create-login-button" data-l10n-id="create-login-button" icon="chrome://global/skin/icons/plus.svg" ></login-command-button>
         </div>
       </div>
       <div class="meta text-deemphasized">
@@ -282,12 +282,12 @@
                 <span class="new-login-title" data-l10n-id="login-item-new-login-title"></span>
               </h2>
               <div class="action-buttons">
-                <edit-button></edit-button>
+                <login-command-button class="edit-button" l10nId="login-item-edit-button" variant="ghost-button" icon="chrome://global/skin/icons/edit.svg" ></login-command-button>
                   <moz-button-group class="form-actions-row">
                     <button class="save-changes-button" type="submit"></button>
                     <button class="cancel-button" data-l10n-id="login-item-cancel-button" type="button"></button>
                   </moz-button-group>
-                <delete-button></delete-button>
+                <login-command-button class="delete-button" l10nId="about-logins-login-item-remove-button" variant="ghost-button" icon="chrome://global/skin/icons/delete.svg" ></login-command-button>
               </div>
            </div>
             <login-breach-alert></login-breach-alert>
@@ -318,7 +318,8 @@
                           dir="ltr"
                           readonly/>
                   </label>
-                  <copy-username-button class="copy-button"></copy-username-button>
+                  <login-command-button class="copy-button copy-username-button" l10nId="login-item-copy-username-button-text">
+                  </login-command-button>
                 </div>
                 <div class="detail-row">
                   <label class="detail-cell">
@@ -341,7 +342,8 @@
                       <password-warning></password-warning>
                     </div>
                   </label>
-                  <copy-password-button class="copy-button"></copy-password-button>
+                  <login-command-button class="copy-button copy-password-button" l10nId="login-item-copy-password-button-text" >
+                  </login-command-button>
                 </div>
               </div>
               <login-timeline hidden ></login-timeline>

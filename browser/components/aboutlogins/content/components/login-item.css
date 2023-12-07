@@ -53,9 +53,9 @@ form {
   flex-grow: 1;
 }
 
-:host([data-editing]) edit-button,
-:host([data-editing]) :is(.copy-button, .copied-button),
-:host([data-is-new-login]) delete-button,
+:host([data-editing]) .edit-button,
+:host([data-editing]) .copy-button,
+:host([data-is-new-login]) .delete-button,
 :host([data-is-new-login]) .origin-saved-value,
 :host([data-is-new-login]) login-timeline,
 :host([data-is-new-login]) .login-item-title,
@@ -152,7 +152,7 @@ input[name = "password"]:focus ~ password-warning {
   grid-column: 1;
 }
 
-.detail-grid > .detail-row > :is(.copy-button, .copied-button) {
+.detail-grid > .detail-row > .copy-button {
   grid-column: 2;
   margin-inline-start: 0; /* Reset button's margin so it doesn't affect the overall grid's width */
   justify-self: start;
@@ -186,14 +186,22 @@ moz-button-group,
   box-sizing: border-box;
 }
 
-.copy-button,
-.copied-button {
+.copy-button {
   margin-bottom: 0; /* Align button at the bottom of the row */
 }
 
-.copied-button[data-copied]:focus-visible {
+.copy-button:not([data-copied]) .copied-button-text,
+.copy-button[data-copied] .copy-button-text {
+  display: none;
+}
+
+.copy-button[data-copied]:-moz-focusring {
   outline-width: 0;
   box-shadow: none;
+}
+
+.copied-button-text:dir(rtl) {
+  background-position-x: right;
 }
 
 input.password-display,
