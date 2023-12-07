@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { GeckoViewUtils } from "resource://gre/modules/GeckoViewUtils.sys.mjs";
 import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
 
@@ -26,13 +25,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Management: "resource://gre/modules/Extension.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
-
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "mimeService",
-  "@mozilla.org/mime;1",
-  "nsIMIMEService"
-);
 
 const { debug, warn } = GeckoViewUtils.initLogging("Console");
 
@@ -947,14 +939,7 @@ export var GeckoViewWebExtension = {
       );
     });
 
-    const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-    const mimeType = lazy.mimeService.getTypeFromURI(aUri);
-    lazy.AddonManager.installAddonFromWebpage(
-      mimeType,
-      null,
-      systemPrincipal,
-      install
-    );
+    lazy.AddonManager.installAddonFromAOM(null, aUri, install);
 
     return promise;
   },
