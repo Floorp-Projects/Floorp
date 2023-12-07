@@ -38,6 +38,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentProcessMessageManager.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ResultExtensions.h"
@@ -1534,6 +1535,17 @@ bool gfxPlatformFontList::FindAndAddFamiliesLocked(
   bool allowHidden = bool(aFlags & FindFamiliesFlags::eSearchHiddenFamilies);
   FontVisibility visibilityLevel =
       aPresContext ? aPresContext->GetFontVisibility() : FontVisibility::User;
+
+  // If this font lookup is the result of resolving a CSS generic (not a direct
+  // font-family request by the page), and RFP settings allow generics to be
+  // unrestricted, bump the effective visibility level applied here so as to
+  // allow user-installed fonts to be used.
+  if (visibilityLevel < FontVisibility::User &&
+      aGeneric != StyleGenericFontFamily::None &&
+      !aPresContext->Document()->ShouldResistFingerprinting(
+          RFPTarget::FontVisibilityRestrictGenerics)) {
+      visibilityLevel = FontVisibility::User;
+  }
 
   if (SharedFontList()) {
     fontlist::Family* family = SharedFontList()->FindFamily(key);

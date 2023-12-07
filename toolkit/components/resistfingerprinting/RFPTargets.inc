@@ -91,6 +91,9 @@ ITEM_VALUE(CSSPointerCapabilities,      1llu << 57)
 ITEM_VALUE(WebGLRenderCapability,       1llu << 58)
 ITEM_VALUE(WebGLRenderInfo,             1llu << 59)
 ITEM_VALUE(SiteSpecificZoom,            1llu << 60)
+// Are font visibility restrictions applied when resolving a CSS <generic-family>?
+// (This may block the fonts selected in Preferences from actually being used.)
+ITEM_VALUE(FontVisibilityRestrictGenerics, 1llu << 61)
 
 // !!! Don't forget to update kDefaultFingerprintingProtections in nsRFPService.cpp
 // if necessary.
