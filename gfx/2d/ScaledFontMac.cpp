@@ -374,7 +374,7 @@ bool UnscaledFontMac::GetFontDescriptor(FontDescriptorOutput aCb,
     return false;
   }
 
-  char buf[256];
+  char buf[1024];
   const char* cstr = CFStringGetCStringPtr(psname, kCFStringEncodingUTF8);
   if (!cstr) {
     if (!CFStringGetCString(psname, buf, sizeof(buf), kCFStringEncodingUTF8)) {
@@ -383,7 +383,28 @@ bool UnscaledFontMac::GetFontDescriptor(FontDescriptorOutput aCb,
     cstr = buf;
   }
 
-  aCb(reinterpret_cast<const uint8_t*>(cstr), strlen(cstr), 0, aBaton);
+  nsAutoCString descriptor(cstr);
+  uint32_t psNameLen = descriptor.Length();
+
+  AutoRelease<CTFontRef> ctFont(
+      CTFontCreateWithGraphicsFont(mFont, 0, nullptr, nullptr));
+  AutoRelease<CFURLRef> fontUrl(
+      (CFURLRef)CTFontCopyAttribute(ctFont, kCTFontURLAttribute));
+  if (fontUrl) {
+    CFStringRef urlStr(CFURLCopyFileSystemPath(fontUrl, kCFURLPOSIXPathStyle));
+    cstr = CFStringGetCStringPtr(urlStr, kCFStringEncodingUTF8);
+    if (!cstr) {
+      if (!CFStringGetCString(urlStr, buf, sizeof(buf),
+                              kCFStringEncodingUTF8)) {
+        return false;
+      }
+      cstr = buf;
+    }
+    descriptor.Append(cstr);
+  }
+
+  aCb(reinterpret_cast<const uint8_t*>(descriptor.get()), descriptor.Length(),
+      psNameLen, aBaton);
   return true;
 }
 
@@ -763,17 +784,39 @@ already_AddRefed<UnscaledFont> UnscaledFontMac::CreateFromFontDescriptor(
     gfxWarning() << "Mac font descriptor is truncated.";
     return nullptr;
   }
-  CFStringRef name =
-      CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*)aData,
-                              aDataLength, kCFStringEncodingUTF8, false);
+  AutoRelease<CFStringRef> name(
+      CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*)aData, aIndex,
+                              kCFStringEncodingUTF8, false));
   if (!name) {
     return nullptr;
   }
   CGFontRef font = CGFontCreateWithFontName(name);
-  CFRelease(name);
   if (!font) {
     return nullptr;
   }
+
+  // If the descriptor included a font file path, apply that attribute and
+  // refresh the font in case it changed.
+  if (aIndex < aDataLength) {
+    AutoRelease<CFStringRef> path(CFStringCreateWithBytes(
+        kCFAllocatorDefault, (const UInt8*)aData + aIndex, aDataLength - aIndex,
+        kCFStringEncodingUTF8, false));
+    AutoRelease<CFURLRef> url(CFURLCreateWithFileSystemPath(
+        kCFAllocatorDefault, path, kCFURLPOSIXPathStyle, false));
+    AutoRelease<CFDictionaryRef> attrs(CFDictionaryCreate(
+        nullptr, (const void**)&kCTFontURLAttribute, (const void**)&url, 1,
+        &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
+    AutoRelease<CTFontRef> ctFont(
+        CTFontCreateWithGraphicsFont(font, 0.0, nullptr, nullptr));
+    AutoRelease<CTFontDescriptorRef> desc(CTFontCopyFontDescriptor(ctFont));
+    AutoRelease<CTFontDescriptorRef> newDesc(
+        CTFontDescriptorCreateCopyWithAttributes(desc, attrs));
+    AutoRelease<CTFontRef> newFont(
+        CTFontCreateWithFontDescriptor(newDesc, 0.0, nullptr));
+    CFRelease(font);
+    font = CTFontCopyGraphicsFont(newFont, nullptr);
+  }
+
   RefPtr<UnscaledFont> unscaledFont = new UnscaledFontMac(font);
   CFRelease(font);
   return unscaledFont.forget();

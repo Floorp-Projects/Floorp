@@ -2303,10 +2303,16 @@ fn read_font_descriptor(bytes: &mut WrVecU8, index: u32) -> NativeFontHandle {
 }
 
 #[cfg(target_os = "macos")]
-fn read_font_descriptor(bytes: &mut WrVecU8, _index: u32) -> NativeFontHandle {
+fn read_font_descriptor(bytes: &mut WrVecU8, index: u32) -> NativeFontHandle {
+    // On macOS, the descriptor string is a concatenation of the PostScript name
+    // and the font file path (to disambiguate cases where there are multiple
+    // faces with the same psname present). The index is the length of the psname
+    // portion of the descriptor (= starting offset of the path).
+    // Here, we split the descriptor into its two components for further use.
     let chars = bytes.flush_into_vec();
     NativeFontHandle {
-        name: String::from_utf8(chars).unwrap(),
+        name: String::from_utf8(chars[..index as usize].to_vec()).unwrap_or("".to_string()),
+        path: String::from_utf8(chars[index as usize..].to_vec()).unwrap_or("".to_string()),
     }
 }
 
