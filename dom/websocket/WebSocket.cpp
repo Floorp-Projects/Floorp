@@ -226,7 +226,7 @@ class WebSocketImpl final : public nsIInterfaceRequestor,
   nsCString mURI;
   nsCString mRequestedProtocolList;
 
-  nsWeakPtr mOriginDocument;
+  WeakPtr<Document> mOriginDocument;
 
   // Web Socket owner information:
   // - the script file name, UTF8 encoded.
@@ -1643,7 +1643,7 @@ nsresult WebSocketImpl::Init(JSContext* aCx, bool aIsSecure,
     rv = mWebSocket->CheckCurrentGlobalCorrectness();
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  mOriginDocument = do_GetWeakReference(originDoc);
+  mOriginDocument = originDoc;
 
   if (!mIsServerSide) {
     nsCOMPtr<nsIURI> uri;
@@ -1883,7 +1883,7 @@ nsresult WebSocketImpl::InitializeConnection(
 
   // manually adding loadinfo to the channel since it
   // was not set during channel creation.
-  nsCOMPtr<Document> doc = do_QueryReferent(mOriginDocument);
+  nsCOMPtr<Document> doc(mOriginDocument);
 
   // mOriginDocument has to be release on main-thread because WeakReferences
   // are not thread-safe.
