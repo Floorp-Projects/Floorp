@@ -820,12 +820,12 @@ already_AddRefed<MediaRawData> VideoDecoder::InputDataToMediaRawData(
 }
 
 nsTArray<RefPtr<VideoFrame>> VideoDecoder::DecodedDataToOutputType(
-    nsIGlobalObject* aGlobalObject, nsTArray<RefPtr<MediaData>>&& aData,
+    nsIGlobalObject* aGlobalObject, const nsTArray<RefPtr<MediaData>>&& aData,
     VideoDecoderConfigInternal& aConfig) {
   AssertIsOnOwningThread();
 
   nsTArray<RefPtr<VideoFrame>> frames;
-  for (RefPtr<MediaData>& data : aData) {
+  for (const RefPtr<MediaData>& data : aData) {
     MOZ_RELEASE_ASSERT(data->mType == MediaData::Type::VIDEO_DATA);
     RefPtr<const VideoData> d(data->As<const VideoData>());
     VideoColorSpaceInternal colorSpace = GuessColorSpace(d->mImage.get());

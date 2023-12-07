@@ -169,7 +169,7 @@ class DecoderTemplate : public DOMEventTargetHelper {
       UniquePtr<InputTypeInternal>&& aData, TrackInfo& aInfo,
       const ConfigTypeInternal& aConfig) = 0;
   virtual nsTArray<RefPtr<OutputType>> DecodedDataToOutputType(
-      nsIGlobalObject* aGlobalObject, nsTArray<RefPtr<MediaData>>&& aData,
+      nsIGlobalObject* aGlobalObject, const nsTArray<RefPtr<MediaData>>&& aData,
       ConfigTypeInternal& aConfig) = 0;
 
  protected:
@@ -187,7 +187,7 @@ class DecoderTemplate : public DOMEventTargetHelper {
 
   MOZ_CAN_RUN_SCRIPT void ReportError(const nsresult& aResult);
   MOZ_CAN_RUN_SCRIPT void OutputDecodedData(
-      nsTArray<RefPtr<MediaData>>&& aData);
+      const nsTArray<RefPtr<MediaData>>&& aData);
 
   class ErrorRunnable;
   void ScheduleReportError(const nsresult& aResult);
