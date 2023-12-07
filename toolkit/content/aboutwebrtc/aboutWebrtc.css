@@ -44,12 +44,36 @@ table {
   background-color: var(--in-content-box-background);
 }
 
-.section-heading > * {
-  display: inline-block;
+.autorefresh {
+  font-size: var(--font-size-small);
+  margin-inline-end: 0.5em;
 }
 
-.section-heading > button {
-  margin-inline: 1em;
+.section-heading {
+  display: flex;
+  align-items: center;
+
+  > h3,
+  > h4 {
+    margin-inline-end: 1em;
+  }
+
+  > .fold-trigger {
+    margin-inline-end: 1em;
+  }
+
+  > button {
+    margin-inline: 1em;
+  }
+}
+
+.fold-target {
+  border-inline-start: 1px solid var(--in-content-border-color);
+  padding-inline-start: 1em;
+
+  .section-body > & {
+    display: block;
+  }
 }
 
 .peer-connection > h3 {
@@ -214,7 +238,22 @@ div.fold-trigger {
   visibility: hidden;
 }
 
-.pref:hover > .copy-button {
+.prefList > li {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pathDisplay {
+  margin-inline-end: 1em;
+}
+
+.subsection-heading > h4 > span {
+  margin-inline-end: 0.5em;
+}
+
+.prefList > li:hover > .copy-button,
+.subsection-heading:hover > h4 > .copy-button {
   visibility: visible;
 }
 

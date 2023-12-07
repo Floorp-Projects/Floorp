@@ -10708,10 +10708,28 @@
 
 # WebRTC prefs follow
 
-# Enables auto refresh of stats by default
-- name: media.aboutwebrtc.auto_refresh
+# Enables auto refresh of peerconnection stats by default
+- name: media.aboutwebrtc.auto_refresh.peerconnection_section
   type: bool
   value: @IS_NOT_NIGHTLY_BUILD@
+  mirror: always
+
+# Enables auto refresh of the transport connection log by default
+- name: media.aboutwebrtc.auto_refresh.connection_log_section
+  type: bool
+  value: false
+  mirror: always
+
+# Enables auto refresh of user config by default
+- name: media.aboutwebrtc.auto_refresh.user_modified_config_section
+  type: bool
+  value: true
+  mirror: always
+
+# Enables auto refresh of media context by default
+- name: media.aboutwebrtc.auto_refresh.media_ctx_section
+  type: bool
+  value: false
   mirror: always
 
 # Enables RTCPeerConnection support. Note that, when true, this pref enables
