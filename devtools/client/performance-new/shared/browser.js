@@ -105,7 +105,6 @@ async function openProfilerTab(profilerViewMode) {
       forceNonPrivate: true,
       resolveOnContentBrowserCreated,
       userContextId: win.gBrowser?.contentPrincipal.userContextId,
-      relatedToCurrent: true,
     })
   );
   return contentBrowser;
