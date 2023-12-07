@@ -35,7 +35,7 @@ using mozilla::dom::WindowContext;
 static nsWeakPtr sLockedElement;
 
 // Reference to the document which requested pointer lock.
-static WeakPtr<Document> sLockedDoc;
+static nsWeakPtr sLockedDoc;
 
 // Reference to the BrowserParent requested pointer lock.
 static BrowserParent* sLockedRemoteTarget = nullptr;
@@ -51,7 +51,8 @@ already_AddRefed<dom::Element> PointerLockManager::GetLockedElement() {
 
 /* static */
 already_AddRefed<dom::Document> PointerLockManager::GetLockedDocument() {
-  return do_AddRef(sLockedDoc.get());
+  nsCOMPtr<Document> document = do_QueryReferent(sLockedDoc);
+  return document.forget();
 }
 
 /* static */
@@ -209,7 +210,7 @@ void PointerLockManager::ChangePointerLockedElement(
     MOZ_ASSERT(aElement->GetComposedDoc() == aDocument);
     aElement->SetPointerLock();
     sLockedElement = do_GetWeakReference(aElement);
-    sLockedDoc = aDocument;
+    sLockedDoc = do_GetWeakReference(aDocument);
     NS_ASSERTION(sLockedElement && sLockedDoc,
                  "aElement and this should support weak references!");
   } else {
@@ -333,13 +334,13 @@ PointerLockManager::PointerLockRequest::PointerLockRequest(
     Element* aElement, bool aUserInputOrChromeCaller)
     : mozilla::Runnable("PointerLockRequest"),
       mElement(do_GetWeakReference(aElement)),
-      mDocument(aElement->OwnerDoc()),
+      mDocument(do_GetWeakReference(aElement->OwnerDoc())),
       mUserInputOrChromeCaller(aUserInputOrChromeCaller) {}
 
 NS_IMETHODIMP
 PointerLockManager::PointerLockRequest::Run() {
   nsCOMPtr<Element> element = do_QueryReferent(mElement);
-  nsCOMPtr<Document> document(mDocument);
+  nsCOMPtr<Document> document = do_QueryReferent(mDocument);
 
   const char* error = nullptr;
   if (!element || !document || !element->GetComposedDoc()) {

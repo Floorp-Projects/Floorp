@@ -13,7 +13,6 @@
 
 // Local Includes
 // Helper Classes
-#include "mozilla/WeakPtr.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 #include "nsTHashMap.h"
@@ -1447,7 +1446,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   nsTArray<uint32_t> mScrollMarks;
 
-  nsTArray<mozilla::WeakPtr<Document>> mDataDocumentsForMemoryReporting;
+  nsTArray<nsWeakPtr> mDataDocumentsForMemoryReporting;
 
   static InnerWindowByIdTable* sInnerWindowsById;
 
