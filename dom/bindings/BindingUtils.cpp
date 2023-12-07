@@ -2734,6 +2734,11 @@ bool ConvertJSValueToByteString(BindingCallContext& cx, JS::Handle<JS::Value> v,
   JS::Rooted<JSString*> s(cx);
   if (v.isString()) {
     s = v.toString();
+
+    size_t length = JS::GetStringLength(s);
+    if (XPCStringConvert::MaybeAssignLatin1StringChars(s, length, result)) {
+      return true;
+    }
   } else {
     if (nullable && v.isNullOrUndefined()) {
       result.SetIsVoid(true);
