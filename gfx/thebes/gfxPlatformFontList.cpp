@@ -1544,7 +1544,7 @@ bool gfxPlatformFontList::FindAndAddFamiliesLocked(
       aGeneric != StyleGenericFontFamily::None &&
       !aPresContext->Document()->ShouldResistFingerprinting(
           RFPTarget::FontVisibilityRestrictGenerics)) {
-      visibilityLevel = FontVisibility::User;
+    visibilityLevel = FontVisibility::User;
   }
 
   if (SharedFontList()) {
