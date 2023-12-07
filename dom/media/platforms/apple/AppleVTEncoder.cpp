@@ -14,16 +14,14 @@
 #include "AnnexB.h"
 #include "H264.h"
 
-#include "libyuv.h"
-
 #include "AppleUtils.h"
 
 namespace mozilla {
 extern LazyLogModule sPEMLog;
-#define VTENC_LOGE(fmt, ...)                 \
+#define LOGE(fmt, ...)                       \
   MOZ_LOG(sPEMLog, mozilla::LogLevel::Error, \
           ("[AppleVTEncoder] %s: " fmt, __func__, ##__VA_ARGS__))
-#define VTENC_LOGD(fmt, ...)                 \
+#define LOGD(fmt, ...)                       \
   MOZ_LOG(sPEMLog, mozilla::LogLevel::Debug, \
           ("[AppleVTEncoder] %s: " fmt, __func__, ##__VA_ARGS__))
 
@@ -44,18 +42,18 @@ static void FrameCallback(void* aEncoder, void* aFrameRefCon, OSStatus aStatus,
                           VTEncodeInfoFlags aInfoFlags,
                           CMSampleBufferRef aSampleBuffer) {
   if (aStatus != noErr || !aSampleBuffer) {
-    VTENC_LOGE("VideoToolbox encoder returned no data status=%d sample=%p",
+    LOGE("VideoToolbox encoder returned no data status=%d sample=%p", aStatus,
                aStatus, aSampleBuffer);
     aSampleBuffer = nullptr;
   } else if (aInfoFlags & kVTEncodeInfo_FrameDropped) {
-    VTENC_LOGE("frame tagged as dropped");
+    LOGE("frame tagged as dropped");
     return;
   }
   (static_cast<AppleVTEncoder*>(aEncoder))->OutputFrame(aSampleBuffer);
 }
 
 static bool SetAverageBitrate(VTCompressionSessionRef& aSession,
-                              MediaDataEncoder::Rate aBitsPerSec) {
+                              uint32_t aBitsPerSec) {
   int64_t bps(aBitsPerSec);
   AutoCFRelease<CFNumberRef> bitrate(
       CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &bps));
@@ -73,15 +71,17 @@ static bool SetRealtimeProperties(VTCompressionSessionRef& aSession) {
 }
 
 static bool SetProfileLevel(VTCompressionSessionRef& aSession,
-                            AppleVTEncoder::H264Specific::ProfileLevel aValue) {
+                            H264_PROFILE aValue) {
   CFStringRef profileLevel = nullptr;
   switch (aValue) {
-    case AppleVTEncoder::H264Specific::ProfileLevel::BaselineAutoLevel:
+    case H264_PROFILE::H264_PROFILE_BASE:
       profileLevel = kVTProfileLevel_H264_Baseline_AutoLevel;
       break;
-    case AppleVTEncoder::H264Specific::ProfileLevel::MainAutoLevel:
+    case H264_PROFILE::H264_PROFILE_MAIN:
       profileLevel = kVTProfileLevel_H264_Main_AutoLevel;
       break;
+    default:
+      LOGE("Profile %d not handled", static_cast<int>(aValue));
   }
 
   return profileLevel ? VTSessionSetProperty(
@@ -94,6 +94,7 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
   MOZ_ASSERT(!mInited, "Cannot initialize encoder again without shutting down");
 
   if (mConfig.mSize.width == 0 || mConfig.mSize.height == 0) {
+    LOGE("width or height 0 in encoder init");
     return InitPromise::CreateAndReject(NS_ERROR_ILLEGAL_VALUE, __func__);
   }
 
@@ -101,6 +102,7 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
   AutoCFRelease<CFDictionaryRef> srcBufferAttr(
       BuildSourceImageBufferAttributes());
   if (!srcBufferAttr) {
+    LOGE("Failed to create source buffer attr");
     return InitPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
                     "fail to create source buffer attributes"),
@@ -113,36 +115,44 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
       &FrameCallback, this /* outputCallbackRefCon */, &mSession);
 
   if (status != noErr) {
+    LOGE("Failed to create compression session");
     return InitPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                     "fail to create encoder session"),
         __func__);
   }
 
-  if (!SetAverageBitrate(mSession, mConfig.mBitsPerSec)) {
+  if (mConfig.mUsage == Usage::Realtime && !SetRealtime(mSession, true)) {
+    LOGE("fail to configurate realtime properties");
     return InitPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                     "fail to configurate average bitrate"),
         __func__);
   }
 
-  if (mConfig.mUsage == Usage::Realtime && !SetRealtimeProperties(mSession)) {
-    VTENC_LOGE("fail to configurate realtime properties");
-    return InitPromise::CreateAndReject(
-        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                    "fail to configurate average bitrate"),
-        __func__);
+  if (mConfig.mBitrate) {
+    if (!SetBitrateAndMode(mSession, mConfig.mBitrateMode, mConfig.mBitrate)) {
+      LOGE("failed to set bitrate to %d and mode to %s", mConfig.mBitrate,
+           mConfig.mBitrateMode == MediaDataEncoder::BitrateMode::Constant
+               ? "constant"
+               : "variable");
+      return InitPromise::CreateAndReject(
+          MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                      "fail to configurate bitrate"),
+          __func__);
+    }
   }
 
   int64_t interval =
       mConfig.mKeyframeInterval > std::numeric_limits<int64_t>::max()
           ? std::numeric_limits<int64_t>::max()
-          : mConfig.mKeyframeInterval;
+          : AssertedCast<int64_t>(mConfig.mKeyframeInterval);
   AutoCFRelease<CFNumberRef> cf(
       CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt64Type, &interval));
   if (VTSessionSetProperty(mSession,
                            kVTCompressionPropertyKey_MaxKeyFrameInterval,
                            cf) != noErr) {
+    LOGE("Failed to set max keyframe interval");
     return InitPromise::CreateAndReject(
         MediaResult(
             NS_ERROR_DOM_MEDIA_FATAL_ERR,
@@ -152,12 +162,13 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
   }
 
   if (mConfig.mCodecSpecific) {
-    const H264Specific& specific = mConfig.mCodecSpecific.ref();
-    if (!SetProfileLevel(mSession, specific.mProfileLevel)) {
+    const H264Specific& specific = mConfig.mCodecSpecific->as<H264Specific>();
+    if (!SetProfileLevel(mSession, specific.mProfile)) {
+      LOGE("Failed to set profile level");
       return InitPromise::CreateAndReject(
           MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                       nsPrintfCString("fail to configurate profile level:%d",
-                                      int(specific.mProfileLevel))),
+                                      int(specific.mProfile))),
           __func__);
     }
   }
@@ -167,6 +178,7 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
       mSession, kVTCompressionPropertyKey_UsingHardwareAcceleratedVideoEncoder,
       kCFAllocatorDefault, &isUsingHW);
   mIsHardwareAccelerated = status == noErr && isUsingHW == kCFBooleanTrue;
+  LOGD("Using hw acceleration: %s", mIsHardwareAccelerated ? "yes" : "no");
   if (isUsingHW) {
     CFRelease(isUsingHW);
   }
@@ -201,7 +213,7 @@ static Maybe<OSType> MapPixelFormat(MediaDataEncoder::PixelFormat aFormat) {
 CFDictionaryRef AppleVTEncoder::BuildSourceImageBufferAttributes() {
   Maybe<OSType> fmt = MapPixelFormat(mConfig.mSourcePixelFormat);
   if (fmt.isNothing()) {
-    VTENC_LOGE("unsupported source pixel format");
+    LOGE("unsupported source pixel format");
     return nullptr;
   }
 
@@ -241,7 +253,7 @@ static size_t GetNumParamSets(CMFormatDescriptionRef aDescription) {
   OSStatus status = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(
       aDescription, 0, nullptr, nullptr, &numParamSets, nullptr);
   if (status != noErr) {
-    VTENC_LOGE("Cannot get number of parameter sets from format description");
+    LOGE("Cannot get number of parameter sets from format description");
   }
 
   return numParamSets;
@@ -256,7 +268,7 @@ static size_t GetParamSet(CMFormatDescriptionRef aDescription, size_t aIndex,
   if (CMVideoFormatDescriptionGetH264ParameterSetAtIndex(
           aDescription, aIndex, aDataPtr, &length, nullptr, &headerSize) !=
       noErr) {
-    VTENC_LOGE("fail to get parameter set from format description");
+    LOGE("failed to get parameter set from format description");
     return 0;
   }
   MOZ_ASSERT(headerSize == sizeof(kNALUStart), "Only support 4 byte header");
@@ -276,11 +288,11 @@ static bool WriteSPSPPS(MediaRawData* aDst,
       return false;
     }
     if (!writer->Append(kNALUStart, sizeof(kNALUStart))) {
-      VTENC_LOGE("Cannot write NAL unit start code");
+      LOGE("Cannot write NAL unit start code");
       return false;
     }
     if (!writer->Append(data, length)) {
-      VTENC_LOGE("Cannot write parameter set");
+      LOGE("Cannot write parameter set");
       return false;
     }
   }
@@ -293,19 +305,19 @@ static RefPtr<MediaByteBuffer> extractAvcc(
       aDescription,
       kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms);
   if (!list) {
-    VTENC_LOGE("fail to get atoms");
+    LOGE("fail to get atoms");
     return nullptr;
   }
   CFDataRef avcC = static_cast<CFDataRef>(
       CFDictionaryGetValue(static_cast<CFDictionaryRef>(list), CFSTR("avcC")));
   if (!avcC) {
-    VTENC_LOGE("fail to extract avcC");
+    LOGE("fail to extract avcC");
     return nullptr;
   }
   CFIndex length = CFDataGetLength(avcC);
   const UInt8* bytes = CFDataGetBytePtr(avcC);
   if (length <= 0 || !bytes) {
-    VTENC_LOGE("empty avcC");
+    LOGE("empty avcC");
     return nullptr;
   }
 
@@ -323,7 +335,7 @@ bool AppleVTEncoder::WriteExtraData(MediaRawData* aDst, CMSampleBufferRef aSrc,
   aDst->mKeyframe = true;
   CMFormatDescriptionRef desc = CMSampleBufferGetFormatDescription(aSrc);
   if (!desc) {
-    VTENC_LOGE("fail to get format description from sample");
+    LOGE("fail to get format description from sample");
     return false;
   }
 
@@ -349,14 +361,14 @@ static bool WriteNALUs(MediaRawData* aDst, CMSampleBufferRef aSrc,
   size_t srcRemaining = CMSampleBufferGetTotalSampleSize(aSrc);
   CMBlockBufferRef block = CMSampleBufferGetDataBuffer(aSrc);
   if (!block) {
-    VTENC_LOGE("Cannot get block buffer frome sample");
+    LOGE("Cannot get block buffer frome sample");
     return false;
   }
   UniquePtr<MediaRawDataWriter> writer(aDst->CreateWriter());
   size_t writtenLength = aDst->Size();
   // Ensure capacity.
   if (!writer->SetSize(writtenLength + srcRemaining)) {
-    VTENC_LOGE("Cannot allocate buffer");
+    LOGE("Cannot allocate buffer");
     return false;
   }
   size_t readLength = 0;
@@ -367,7 +379,7 @@ static bool WriteNALUs(MediaRawData* aDst, CMSampleBufferRef aSrc,
     if (CMBlockBufferCopyDataBytes(block, readLength, sizeof(unitSizeBytes),
                                    reinterpret_cast<uint32_t*>(
                                        unitSizeBytes)) != kCMBlockBufferNoErr) {
-      VTENC_LOGE("Cannot copy unit size bytes");
+      LOGE("Cannot copy unit size bytes");
       return false;
     }
     size_t unitSize =
@@ -388,7 +400,7 @@ static bool WriteNALUs(MediaRawData* aDst, CMSampleBufferRef aSrc,
     if (CMBlockBufferCopyDataBytes(block, readLength, unitSize,
                                    writer->Data() + writtenLength) !=
         kCMBlockBufferNoErr) {
-      VTENC_LOGE("Cannot copy unit data");
+      LOGE("Cannot copy unit data");
       return false;
     }
     readLength += unitSize;
@@ -400,6 +412,7 @@ static bool WriteNALUs(MediaRawData* aDst, CMSampleBufferRef aSrc,
 }
 
 void AppleVTEncoder::OutputFrame(CMSampleBufferRef aBuffer) {
+  LOGD("::OutputFrame");
   RefPtr<MediaRawData> output(new MediaRawData());
 
   bool asAnnexB = mConfig.mUsage == Usage::Realtime;
@@ -422,11 +435,13 @@ void AppleVTEncoder::ProcessOutput(RefPtr<MediaRawData>&& aOutput) {
     Unused << rv;
     return;
   }
+  LOGD("::ProcessOutput (%zu bytes)", !aOutput.get() ? 0 : aOutput->Size());
   AssertOnTaskQueue();
 
   if (aOutput) {
     mEncodedData.AppendElement(std::move(aOutput));
   } else {
+    LOGE("::ProcessOutput: fatal error");
     mError = NS_ERROR_DOM_MEDIA_FATAL_ERR;
   }
 }
@@ -442,7 +457,8 @@ RefPtr<MediaDataEncoder::EncodePromise> AppleVTEncoder::Encode(
 }
 
 RefPtr<MediaDataEncoder::EncodePromise> AppleVTEncoder::ProcessEncode(
-    RefPtr<const VideoData> aSample) {
+    const RefPtr<const VideoData>& aSample) {
+  LOGD("::ProcessEncode");
   AssertOnTaskQueue();
   MOZ_ASSERT(mSession);
 
@@ -473,6 +489,7 @@ RefPtr<MediaDataEncoder::EncodePromise> AppleVTEncoder::ProcessEncode(
       CMTimeMake(aSample->mDuration.ToMicroseconds(), USECS_PER_S), frameProps,
       nullptr /* sourceFrameRefcon */, &info);
   if (status != noErr) {
+    LOGE("VTCompressionSessionEncodeFrame error");
     return EncodePromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                           __func__);
   }
@@ -494,7 +511,7 @@ static size_t NumberOfPlanes(MediaDataEncoder::PixelFormat aPixelFormat) {
     case MediaDataEncoder::PixelFormat::YUV420SP_NV12:
       return 2;
     default:
-      VTENC_LOGE("Unsupported input pixel format");
+      LOGE("Unsupported input pixel format");
       return 0;
   }
 }
@@ -583,6 +600,7 @@ RefPtr<MediaDataEncoder::EncodePromise> AppleVTEncoder::ProcessDrain() {
   OSStatus status =
       VTCompressionSessionCompleteFrames(mSession, kCMTimeIndefinite);
   if (status != noErr) {
+    LOGE("VTCompressionSessionCompleteFrames error");
     return EncodePromise::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                           __func__);
   }
@@ -614,7 +632,7 @@ RefPtr<ShutdownPromise> AppleVTEncoder::ProcessShutdown() {
 }
 
 RefPtr<GenericPromise> AppleVTEncoder::SetBitrate(
-    MediaDataEncoder::Rate aBitsPerSec) {
+    uint32_t aBitsPerSec) {
   RefPtr<AppleVTEncoder> self = this;
   return InvokeAsync(mTaskQueue, __func__, [self, aBitsPerSec]() {
     MOZ_ASSERT(self->mSession);
@@ -624,5 +642,8 @@ RefPtr<GenericPromise> AppleVTEncoder::SetBitrate(
                      NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR, __func__);
   });
 }
+
+#undef LOGE
+#undef LOGD
 
 }  // namespace mozilla
