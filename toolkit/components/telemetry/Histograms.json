@@ -14674,13 +14674,6 @@
     "n_buckets": 50,
     "description": "Number of HTTP Auth logins"
   },
-  "PWMGR_PASSWORD_INPUT_IN_FORM": {
-    "record_in_processes": ["content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Whether an <input type=password> is associated with a <form> when it is added to a document"
-  },
   "PWMGR_PROMPT_REMEMBER_ACTION": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
