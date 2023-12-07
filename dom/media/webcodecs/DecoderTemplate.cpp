@@ -243,7 +243,7 @@ void DecoderTemplate<DecoderType>::Close(ErrorResult& aRv) {
 
   LOG("%s %p, Close", DecoderType::Name.get(), this);
 
-  if (auto r = CloseInternal(NS_ERROR_DOM_ABORT_ERR); r.isErr()) {
+  if (auto r = CloseInternalWithAbort(); r.isErr()) {
     aRv.Throw(r.unwrapErr());
   }
 }
@@ -275,21 +275,28 @@ Result<Ok, nsresult> DecoderTemplate<DecoderType>::ResetInternal(
 
   return Ok();
 }
+template <typename DecoderType>
+Result<Ok, nsresult> DecoderTemplate<DecoderType>::CloseInternalWithAbort() {
+  AssertIsOnOwningThread();
+
+  MOZ_TRY(ResetInternal(NS_ERROR_DOM_ABORT_ERR));
+  mState = CodecState::Closed;
+  return Ok();
+}
 
 template <typename DecoderType>
 Result<Ok, nsresult> DecoderTemplate<DecoderType>::CloseInternal(
     const nsresult& aResult) {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(aResult != NS_ERROR_DOM_ABORT_ERR, "Use CloseInternalWithAbort");
 
   MOZ_TRY(ResetInternal(aResult));
   mState = CodecState::Closed;
-  if (aResult != NS_ERROR_DOM_ABORT_ERR) {
-    nsCString error;
-    GetErrorName(aResult, error);
-    LOGE("%s %p Close on error: %s", DecoderType::Name.get(), this,
-         error.get());
-    ReportError(aResult);
-  }
+  nsCString error;
+  GetErrorName(aResult, error);
+  LOGE("%s %p Close on error: %s", DecoderType::Name.get(), this,
+       error.get());
+  ReportError(aResult);
   return Ok();
 }
 
