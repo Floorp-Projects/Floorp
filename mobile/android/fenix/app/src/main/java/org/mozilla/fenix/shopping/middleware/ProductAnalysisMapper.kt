@@ -27,6 +27,10 @@ private fun ProductAnalysis.toProductReview(): ProductReviewState =
         } else {
             ProductReviewState.Error.GenericError
         }
+    } else if (deletedProductReported) {
+        ProductReviewState.Error.ProductAlreadyReported
+    } else if (deletedProduct) {
+        ProductReviewState.Error.ProductNotAvailable
     } else if (notEnoughReviews && !needsAnalysis) {
         ProductReviewState.Error.NotEnoughReviews
     } else {

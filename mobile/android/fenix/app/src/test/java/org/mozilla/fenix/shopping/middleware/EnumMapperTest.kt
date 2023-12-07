@@ -23,11 +23,13 @@ class EnumMapperTest {
         val tablet = "TABLET"
         val wearable = "WEARABLE"
         val other = "other_type"
+        val otherWithSpace = "other type"
 
         assertEquals(DeviceType.PHONE, phone.asEnumOrDefault<DeviceType>())
         assertEquals(DeviceType.TABLET, tablet.asEnumOrDefault<DeviceType>())
         assertEquals(DeviceType.WEARABLE, wearable.asEnumOrDefault<DeviceType>())
         assertEquals(DeviceType.OTHER_TYPE, other.asEnumOrDefault<DeviceType>())
+        assertEquals(DeviceType.OTHER_TYPE, otherWithSpace.asEnumOrDefault<DeviceType>())
     }
 
     @Test

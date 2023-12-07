@@ -81,6 +81,9 @@ fun ReviewQualityCheckBottomSheet(
                     onReanalyzeClick = {
                         store.dispatch(ReviewQualityCheckAction.ReanalyzeProduct)
                     },
+                    onReportBackInStockClick = {
+                        store.dispatch(ReviewQualityCheckAction.ReportProductBackInStock)
+                    },
                     onProductRecommendationsEnabledStateChange = {
                         store.dispatch(ReviewQualityCheckAction.ToggleProductRecommendation)
                     },
@@ -141,6 +144,7 @@ private fun ProductReview(
     onFooterLinkClick: () -> Unit,
     onRecommendedProductClick: (aid: String, url: String) -> Unit,
     onProductRecommendationImpression: (aid: String) -> Unit,
+    onReportBackInStockClick: () -> Unit,
 ) {
     when (val productReviewState = state.productReviewState) {
         is AnalysisPresent -> {
@@ -167,6 +171,7 @@ private fun ProductReview(
         is ReviewQualityCheckState.OptedIn.ProductReviewState.Error -> {
             ProductAnalysisError(
                 error = productReviewState,
+                onReportBackInStockClick = onReportBackInStockClick,
                 productRecommendationsEnabled = state.productRecommendationsPreference,
                 productVendor = state.productVendor,
                 isSettingsExpanded = state.isSettingsExpanded,

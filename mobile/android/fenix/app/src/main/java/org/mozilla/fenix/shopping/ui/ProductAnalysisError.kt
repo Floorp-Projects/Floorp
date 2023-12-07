@@ -29,6 +29,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * Product analysis error UI
  *
  * @param error The error state to display.
+ * @param onReportBackInStockClick Invoked when the user clicks on the report back in stock button.
  * @param productRecommendationsEnabled The current state of the product recommendations toggle.
  * @param productVendor The vendor of the product.
  * @param isSettingsExpanded Whether or not the settings card is expanded.
@@ -43,9 +44,10 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param modifier Modifier to apply to the layout.
  */
 @Composable
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 fun ProductAnalysisError(
     error: ProductReviewState.Error,
+    onReportBackInStockClick: () -> Unit,
     productRecommendationsEnabled: Boolean?,
     productVendor: ReviewQualityCheckState.ProductVendor,
     isSettingsExpanded: Boolean,
@@ -98,14 +100,51 @@ fun ProductAnalysisError(
                     ReviewQualityCheckInfoType.Info,
                 )
             }
+
+            ProductReviewState.Error.ProductNotAvailable -> {
+                Triple(
+                    R.string.review_quality_check_product_availability_warning_title,
+                    R.string.review_quality_check_product_availability_warning_body,
+                    ReviewQualityCheckInfoType.Info,
+                )
+            }
+
+            ProductReviewState.Error.ProductAlreadyReported -> {
+                Triple(
+                    R.string.review_quality_check_analysis_requested_other_user_info_title,
+                    R.string.review_quality_check_analysis_requested_other_user_info_body,
+                    ReviewQualityCheckInfoType.Info,
+                )
+            }
+
+            ProductReviewState.Error.ThanksForReporting -> {
+                Triple(
+                    R.string.review_quality_check_analysis_requested_info_title,
+                    R.string.review_quality_check_analysis_requested_info_body,
+                    ReviewQualityCheckInfoType.Info,
+                )
+            }
         }
 
-        ReviewQualityCheckInfoCard(
-            title = stringResource(id = titleResourceId),
-            description = stringResource(id = descriptionResourceId),
-            type = type,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        if (error == ProductReviewState.Error.ProductNotAvailable) {
+            ReviewQualityCheckInfoCard(
+                title = stringResource(id = titleResourceId),
+                description = stringResource(id = descriptionResourceId),
+                type = type,
+                modifier = Modifier.fillMaxWidth(),
+                buttonText = InfoCardButtonText(
+                    text = stringResource(R.string.review_quality_check_product_availability_warning_action_2),
+                    onClick = onReportBackInStockClick,
+                ),
+            )
+        } else {
+            ReviewQualityCheckInfoCard(
+                title = stringResource(id = titleResourceId),
+                description = stringResource(id = descriptionResourceId),
+                type = type,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
 
         ReviewQualityInfoCard(
             productVendor = productVendor,
@@ -145,6 +184,7 @@ private fun ProductAnalysisErrorPreview() {
 
             ProductAnalysisError(
                 error = ProductReviewState.Error.NetworkError,
+                onReportBackInStockClick = { },
                 productRecommendationsEnabled = productRecommendationsEnabled,
                 productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
                 isSettingsExpanded = isSettingsExpanded,

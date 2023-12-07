@@ -197,5 +197,17 @@ private fun mapStateForUpdateAction(
                 }
             }
         }
+
+        ReviewQualityCheckAction.ReportProductBackInStock -> {
+            state.mapIfOptedIn {
+                if (it.productReviewState is ProductReviewState.Error.ProductNotAvailable) {
+                    it.copy(
+                        productReviewState = ProductReviewState.Error.ThanksForReporting,
+                    )
+                } else {
+                    it
+                }
+            }
+        }
     }
 }

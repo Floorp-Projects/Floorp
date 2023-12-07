@@ -334,4 +334,28 @@ class ProductAnalysisMapperTest {
 
         assertEquals(expected, actual)
     }
+
+    @Test
+    fun `WHEN product deleted is true and has not been reported THEN it is mapped to not available and not back in stock`() {
+        val actual = ProductAnalysisTestData.productAnalysis(
+            deletedProduct = true,
+            deletedProductReported = false,
+        ).toProductReviewState()
+
+        val expected =
+            ReviewQualityCheckState.OptedIn.ProductReviewState.Error.ProductNotAvailable
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `WHEN product deleted is true and has been reported THEN it is mapped to not available and back in stock`() {
+        val actual = ProductAnalysisTestData.productAnalysis(
+            deletedProduct = true,
+            deletedProductReported = true,
+        ).toProductReviewState()
+
+        val expected =
+            ReviewQualityCheckState.OptedIn.ProductReviewState.Error.ProductAlreadyReported
+        assertEquals(expected, actual)
+    }
 }

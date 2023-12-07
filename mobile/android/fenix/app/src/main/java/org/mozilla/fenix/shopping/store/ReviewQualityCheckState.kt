@@ -90,6 +90,21 @@ sealed interface ReviewQualityCheckState : State {
                  * Denotes a generic error has occurred.
                  */
                 object GenericError : Error
+
+                /**
+                 * Denotes a product is not available.
+                 */
+                object ProductNotAvailable : Error
+
+                /**
+                 * Denotes current user reported a product is back in stock.
+                 */
+                object ThanksForReporting : Error
+
+                /**
+                 * Denotes another user has already reported the product is back in stock.
+                 */
+                object ProductAlreadyReported : Error
             }
 
             /**

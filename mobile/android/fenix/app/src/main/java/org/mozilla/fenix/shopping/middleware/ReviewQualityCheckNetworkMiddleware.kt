@@ -56,24 +56,7 @@ class ReviewQualityCheckNetworkMiddleware(
         scope.launch {
             when (action) {
                 FetchProductAnalysis, RetryProductAnalysis -> {
-                    val productAnalysis = reviewQualityCheckService.fetchProductReview()
-                    val productReviewState = productAnalysis.toProductReviewState()
-
-                    // Here the ProductReviewState should only updated after the analysis status API
-                    // returns a result. This makes sure that the UI doesn't show the reanalyse
-                    // button in case the product analysis is already in progress on the backend.
-                    if (productReviewState.isAnalysisPresentOrNoAnalysisPresent() &&
-                        reviewQualityCheckService.analysisStatus()?.status.isPendingOrInProgress()
-                    ) {
-                        store.updateProductReviewState(productReviewState, true)
-                        store.dispatch(ReviewQualityCheckAction.RestoreReanalysis)
-                    } else {
-                        store.updateProductReviewState(productReviewState)
-                    }
-
-                    if (productReviewState is ProductReviewState.AnalysisPresent) {
-                        store.updateRecommendedProductState()
-                    }
+                    store.onFetch()
                 }
 
                 ReviewQualityCheckAction.ReanalyzeProduct,
@@ -81,6 +64,13 @@ class ReviewQualityCheckNetworkMiddleware(
                 ReviewQualityCheckAction.RestoreReanalysis,
                 -> {
                     store.onReanalyze()
+                }
+
+                ReviewQualityCheckAction.ReportProductBackInStock -> {
+                    val status = reviewQualityCheckService.reportBackInStock()
+                    if (status == ReportBackInStockStatusDto.NOT_DELETED) {
+                        store.onFetch()
+                    }
                 }
 
                 ReviewQualityCheckAction.ToggleProductRecommendation -> {
@@ -101,6 +91,27 @@ class ReviewQualityCheckNetworkMiddleware(
                     reviewQualityCheckService.recordRecommendedProductImpression(action.productAid)
                 }
             }
+        }
+    }
+
+    private suspend fun Store<ReviewQualityCheckState, ReviewQualityCheckAction>.onFetch() {
+        val productAnalysis = reviewQualityCheckService.fetchProductReview()
+        val productReviewState = productAnalysis.toProductReviewState()
+
+        // Here the ProductReviewState should only updated after the analysis status API
+        // returns a result. This makes sure that the UI doesn't show the reanalyse
+        // button in case the product analysis is already in progress on the backend.
+        if (productReviewState.isAnalysisPresentOrNoAnalysisPresent() &&
+            reviewQualityCheckService.analysisStatus()?.status.isPendingOrInProgress()
+        ) {
+            updateProductReviewState(productReviewState, true)
+            dispatch(ReviewQualityCheckAction.RestoreReanalysis)
+        } else {
+            updateProductReviewState(productReviewState)
+        }
+
+        if (productReviewState is ProductReviewState.AnalysisPresent) {
+            updateRecommendedProductState()
         }
     }
 

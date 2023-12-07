@@ -225,5 +225,5 @@ sealed interface ReviewQualityCheckAction : Action {
     /**
      * Triggered when the user reports a product is back in stock.
      */
-    object ReportProductBackInStock : TelemetryAction
+    object ReportProductBackInStock : NetworkAction, UpdateAction, TelemetryAction
 }
