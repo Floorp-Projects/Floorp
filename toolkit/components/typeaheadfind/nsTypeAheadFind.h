@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/WeakPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISelectionController.h"
@@ -20,6 +21,7 @@ class nsRange;
 namespace mozilla {
 class PresShell;
 namespace dom {
+class Document;
 class Element;
 class Selection;
 }  // namespace dom
@@ -134,7 +136,7 @@ class nsTypeAheadFind : public nsITypeAheadFind,
   // This is always the root of the subtree we're finding.
   nsWeakPtr mDocShell;
   // The document where we're currently searching.
-  nsWeakPtr mDocument;
+  mozilla::WeakPtr<mozilla::dom::Document> mDocument;
   nsWeakPtr mSelectionController;
   // Most recent match's controller
 };

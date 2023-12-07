@@ -36,10 +36,7 @@ class XPathEvaluator final : public NonRefcountedDOMObject {
   // WebIDL API
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aReflector);
-  Document* GetParentObject() {
-    nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
-    return doc;
-  }
+  Document* GetParentObject() { return mDocument; }
   static UniquePtr<XPathEvaluator> Constructor(const GlobalObject& aGlobal);
   UniquePtr<XPathExpression> CreateExpression(const nsAString& aExpression,
                                               XPathNSResolver* aResolver,
@@ -58,7 +55,7 @@ class XPathEvaluator final : public NonRefcountedDOMObject {
       ErrorResult& rv);
 
  private:
-  nsWeakPtr mDocument;
+  WeakPtr<Document> mDocument;
   RefPtr<txResultRecycler> mRecycler;
 };
 

@@ -6721,21 +6721,20 @@ void nsGlobalWindowInner::AddSizeOfIncludingThis(
 void nsGlobalWindowInner::RegisterDataDocumentForMemoryReporting(
     Document* aDocument) {
   aDocument->SetAddedToMemoryReportAsDataDocument();
-  mDataDocumentsForMemoryReporting.AppendElement(
-      do_GetWeakReference(aDocument));
+  mDataDocumentsForMemoryReporting.AppendElement(aDocument);
 }
 
 void nsGlobalWindowInner::UnregisterDataDocumentForMemoryReporting(
     Document* aDocument) {
-  nsWeakPtr doc = do_GetWeakReference(aDocument);
-  MOZ_ASSERT(mDataDocumentsForMemoryReporting.Contains(doc));
-  mDataDocumentsForMemoryReporting.RemoveElement(doc);
+  DebugOnly<bool> found =
+      mDataDocumentsForMemoryReporting.RemoveElement(aDocument);
+  MOZ_ASSERT(found);
 }
 
 void nsGlobalWindowInner::CollectDOMSizesForDataDocuments(
     nsWindowSizes& aSize) const {
-  for (const nsWeakPtr& ptr : mDataDocumentsForMemoryReporting) {
-    if (nsCOMPtr<Document> doc = do_QueryReferent(ptr)) {
+  for (Document* doc : mDataDocumentsForMemoryReporting) {
+    if (doc) {
       doc->DocAddSizeOfIncludingThis(aSize);
     }
   }
