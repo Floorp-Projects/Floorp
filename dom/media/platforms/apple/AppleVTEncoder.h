@@ -36,6 +36,9 @@ class AppleVTEncoder final : public MediaDataEncoder {
 
   RefPtr<InitPromise> Init() override;
   RefPtr<EncodePromise> Encode(const MediaData* aSample) override;
+  RefPtr<ReconfigurationPromise> Reconfigure(
+      const RefPtr<const EncoderConfigurationChangeList>& aConfigurationChanges)
+      override;
   RefPtr<EncodePromise> Drain() override;
   RefPtr<ShutdownPromise> Shutdown() override;
   RefPtr<GenericPromise> SetBitrate(uint32_t aBitsPerSec) override;
@@ -51,6 +54,9 @@ class AppleVTEncoder final : public MediaDataEncoder {
  private:
   virtual ~AppleVTEncoder() { MOZ_ASSERT(!mSession); }
   RefPtr<EncodePromise> ProcessEncode(const RefPtr<const VideoData>& aSample);
+  RefPtr<ReconfigurationPromise> ProcessReconfigure(
+      const RefPtr<const EncoderConfigurationChangeList>&
+          aConfigurationChanges);
   void ProcessOutput(RefPtr<MediaRawData>&& aOutput);
   void ResolvePromise();
   RefPtr<EncodePromise> ProcessDrain();
