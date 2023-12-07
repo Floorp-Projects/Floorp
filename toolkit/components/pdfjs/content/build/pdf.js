@@ -2186,6 +2186,10 @@ class WorkerTransport {
       if (pageProxy.objs.has(id)) {
         return;
       }
+      if (pageProxy._intentStates.size === 0) {
+        imageData?.bitmap?.close();
+        return;
+      }
       switch (type) {
         case "Image":
           pageProxy.objs.resolve(id, imageData);
