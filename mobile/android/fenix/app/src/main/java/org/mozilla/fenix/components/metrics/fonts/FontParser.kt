@@ -59,10 +59,18 @@ data class FontMetric(
  */
 object FontParser {
     /**
-     * Parse a font file and return a FontMetric object describing it
+     * Parse a font file and return a FontMetric object describing it.
+     * These functions are very similar, because this one is used in
+     * real devices, the other in unit tests. Outside tests, the
+     * FileInputStream does not support the reset() method
      */
     fun parse(path: String): FontMetric {
-        return parse(path, FileInputStream(path))
+        val hash = calculateFileHash(FileInputStream(path))
+        val fontDetails = FontMetric(path, hash)
+
+        readFontFile(FileInputStream(path), fontDetails)
+
+        return fontDetails
     }
 
     /**

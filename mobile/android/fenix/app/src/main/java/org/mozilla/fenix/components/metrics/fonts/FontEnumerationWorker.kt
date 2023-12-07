@@ -89,6 +89,7 @@ class FontEnumerationWorker(
         val submission = JSONObject()
 
         run {
+            submission.put("submission", kDesiredSubmissions)
             submission.put("brand", Build.BRAND)
             submission.put("device", Build.DEVICE)
             submission.put("hardware", Build.HARDWARE)
@@ -206,6 +207,6 @@ class FontEnumerationWorker(
          * we wish to perform another data collection effort on the Nightly
          * population.
          */
-        const val kDesiredSubmissions: Int = 2
+        const val kDesiredSubmissions: Int = 3
     }
 }
