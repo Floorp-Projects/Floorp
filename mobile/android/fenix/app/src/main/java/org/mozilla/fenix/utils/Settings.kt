@@ -1948,7 +1948,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     var enableRedesignToolbar by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_toolbar_use_redesign),
-        default = { false },
+        default = { FeatureFlags.completeToolbarRedesignEnabled },
         featureFlag = FeatureFlags.completeToolbarRedesignEnabled,
     )
 
