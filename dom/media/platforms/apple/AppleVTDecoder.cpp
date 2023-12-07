@@ -20,12 +20,10 @@
 #include "VPXDecoder.h"
 #include "VideoUtils.h"
 #include "gfxMacUtils.h"
-#include "gfxPlatform.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/gfx/gfxVars.h"
-#include "nsThreadUtils.h"
 
 #define LOG(...) DDMOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, __VA_ARGS__)
 #define LOGEX(_this, ...) \
