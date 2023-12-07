@@ -8549,7 +8549,7 @@
 # Is support for motion-path offset-position enabled?
 - name: layout.css.motion-path-offset-position.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
