@@ -4094,6 +4094,8 @@ class Document : public nsINode,
 
   bool MayHaveDOMActivateListeners() const;
 
+  void DropStyleSet();
+
  protected:
   // Returns the WindowContext for the document that we will contribute
   // page use counters to.
