@@ -5,6 +5,10 @@ import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 
 buildscript {
     repositories {
+        if (!System.env.MOZ_AUTOMATION && gradle.mozconfig.substs.MOZ_ARTIFACT_BUILDS) {
+            mavenLocal()
+        }
+
         google()
         mavenCentral()
         maven {
@@ -88,6 +92,10 @@ tasks.withType(DetektCreateBaselineTask).configureEach() {
 
 allprojects {
     repositories {
+        if (!System.env.MOZ_AUTOMATION && gradle.mozconfig.substs.MOZ_ARTIFACT_BUILDS) {
+            mavenLocal()
+        }
+
         google()
         mavenCentral()
         maven {

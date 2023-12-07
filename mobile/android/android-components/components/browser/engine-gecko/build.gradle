@@ -67,6 +67,8 @@ dependencies {
 
     if (findProject(":geckoview") != null) {
         api project(':geckoview')
+    } else if (gradle.mozconfig.substs.MOZ_ARTIFACT_BUILDS) {
+        api getGeckoViewDependency()
     } else {
         api ComponentsDependencies.mozilla_geckoview
     }
@@ -115,3 +117,62 @@ nimbus {
             ? gradle.getProperty('localProperties.autoPublish.application-services.dir') : null
 }
 ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)
+
+// Non-official versions are like "61.0a1", where "a1" is the milestone.
+// This simply strips that off, leaving "61.0" in this example.
+def getAppVersionWithoutMilestone() {
+    return gradle.mozconfig.substs.MOZ_APP_VERSION.replaceFirst(/a[0-9]/, "")
+}
+
+// Mimic Python: open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
+def getBuildId() {
+    return file("${gradle.mozconfig.topobjdir}/buildid.h").getText('utf-8').split()[2]
+}
+
+def getVersionNumber() {
+    def appVersion = getAppVersionWithoutMilestone()
+    def parts = appVersion.split('\\.')
+    def version = parts[0] + "." + parts[1] + "." + getBuildId()
+
+    if (!gradle.mozconfig.substs.MOZILLA_OFFICIAL && !gradle.mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
+        // Use -SNAPSHOT versions locally to enable the local GeckoView substitution flow.
+        version += "-SNAPSHOT"
+    }
+
+    return version
+}
+
+def getArtifactSuffix() {
+    def suffix = ""
+
+    // Release artifacts don't specify the channel, for the sake of simplicity.
+    if (gradle.mozconfig.substs.MOZ_UPDATE_CHANNEL != 'release') {
+        suffix += "-${gradle.mozconfig.substs.MOZ_UPDATE_CHANNEL}"
+    }
+
+    return suffix
+}
+
+def getArtifactId() {
+    def id = "geckoview" + getArtifactSuffix()
+
+    if (!gradle.mozconfig.substs.MOZ_ANDROID_GECKOVIEW_LITE) {
+        id += "-omni"
+    }
+
+    if (gradle.mozconfig.substs.MOZILLA_OFFICIAL && !gradle.mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
+        // In automation, per-architecture artifacts identify
+        // the architecture; multi-architecture artifacts don't.
+        // When building locally, we produce a "skinny AAR" with
+        // one target architecture masquerading as a "fat AAR"
+        // to enable Gradle composite builds to substitute this
+        // project into consumers easily.
+        id += "-${gradle.mozconfig.substs.ANDROID_CPU_ARCH}"
+    }
+
+    return id
+}
+
+def getGeckoViewDependency() {
+    return "org.mozilla.geckoview:${getArtifactId()}:${getVersionNumber()}"
+}
