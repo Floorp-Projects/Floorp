@@ -112,7 +112,7 @@ static constexpr uint32_t kVideoDroppedRatio = 5;
 
 // Fingerprinting protections that are enabled by default. This can be
 // overridden using the privacy.fingerprintingProtection.overrides pref.
-const RFPTarget kDefaultFingerintingProtections =
+const RFPTarget kDefaultFingerprintingProtections =
     RFPTarget::CanvasRandomization | RFPTarget::FontVisibilityLangPack;
 
 static constexpr uint32_t kSuspiciousFingerprintingActivityThreshold = 1;
@@ -128,7 +128,7 @@ static StaticRefPtr<nsRFPService> sRFPService;
 static bool sInitialized = false;
 
 // Actually enabled fingerprinting protections.
-static Atomic<RFPTarget> sEnabledFingerintingProtections;
+static Atomic<RFPTarget> sEnabledFingerprintingProtections;
 
 /* static */
 already_AddRefed<nsRFPService> nsRFPService::GetOrCreate() {
@@ -219,7 +219,7 @@ bool nsRFPService::IsRFPEnabledFor(
       return bool(aOverriddenFingerprintingSettings.ref() & aTarget);
     }
 
-    return bool(sEnabledFingerintingProtections & aTarget);
+    return bool(sEnabledFingerprintingProtections & aTarget);
   }
 
   return false;
@@ -235,10 +235,10 @@ void nsRFPService::UpdateFPPOverrideList() {
     return;
   }
 
-  RFPTarget enabled =
-      CreateOverridesFromText(targetOverrides, kDefaultFingerintingProtections);
+  RFPTarget enabled = CreateOverridesFromText(
+      targetOverrides, kDefaultFingerprintingProtections);
 
-  sEnabledFingerintingProtections = enabled;
+  sEnabledFingerprintingProtections = enabled;
 }
 
 /* static */
@@ -1736,7 +1736,7 @@ nsRFPService::SetFingerprintingOverrides(
         NS_ConvertUTF8toUTF16(overridesText),
         mFingerprintingOverrides.Contains(domainKey)
             ? mFingerprintingOverrides.Get(domainKey)
-            : sEnabledFingerintingProtections);
+            : sEnabledFingerprintingProtections);
 
     // The newly added one will replace the existing one for the given domain
     // key.
@@ -1756,7 +1756,7 @@ nsRFPService::SetFingerprintingOverrides(
 
 NS_IMETHODIMP
 nsRFPService::GetEnabledFingerprintingProtections(uint64_t* aProtections) {
-  RFPTarget enabled = sEnabledFingerintingProtections;
+  RFPTarget enabled = sEnabledFingerprintingProtections;
 
   *aProtections = uint64_t(enabled);
   return NS_OK;
