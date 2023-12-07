@@ -436,6 +436,8 @@ def build_src(install_dir, host, targets, patches):
         [dist]
         missing-tools = true
 
+        [llvm]
+        download-ci-llvm = false
         """.format(
             prefix=install_dir,
             omit_git_hash=omit_git_hash,
