@@ -2702,17 +2702,6 @@ void ConstructJSImplementation(const char* aContractId,
   }
 }
 
-bool NonVoidByteStringToJsval(JSContext* cx, const nsACString& str,
-                              JS::MutableHandle<JS::Value> rval) {
-  // ByteStrings are not UTF-8 encoded.
-  JSString* jsStr = JS_NewStringCopyN(cx, str.Data(), str.Length());
-  if (!jsStr) {
-    return false;
-  }
-  rval.setString(jsStr);
-  return true;
-}
-
 bool NormalizeUSVString(nsAString& aString) {
   return EnsureUTF16Validity(aString);
 }

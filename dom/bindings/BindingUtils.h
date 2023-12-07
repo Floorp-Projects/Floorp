@@ -2568,8 +2568,10 @@ already_AddRefed<T> ConstructJSImplementation(const char* aContractId,
  * As such, the string is not UTF-8 encoded.  Any UTF8 strings passed to these
  * methods will be mangled.
  */
-bool NonVoidByteStringToJsval(JSContext* cx, const nsACString& str,
-                              JS::MutableHandle<JS::Value> rval);
+inline bool NonVoidByteStringToJsval(JSContext* cx, const nsACString& str,
+                                     JS::MutableHandle<JS::Value> rval) {
+  return xpc::NonVoidLatin1StringToJsval(cx, str, rval);
+}
 inline bool ByteStringToJsval(JSContext* cx, const nsACString& str,
                               JS::MutableHandle<JS::Value> rval) {
   if (str.IsVoid()) {
