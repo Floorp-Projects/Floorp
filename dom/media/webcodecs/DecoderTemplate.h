@@ -180,6 +180,7 @@ class DecoderTemplate : public DOMEventTargetHelper {
   }
 
   Result<Ok, nsresult> ResetInternal(const nsresult& aResult);
+  MOZ_CAN_RUN_SCRIPT
   Result<Ok, nsresult> CloseInternal(const nsresult& aResult);
 
   MOZ_CAN_RUN_SCRIPT void ReportError(const nsresult& aResult);
