@@ -314,7 +314,7 @@ void DecoderTemplate<DecoderType>::ReportError(const nsresult& aResult) {
 
 template <typename DecoderType>
 void DecoderTemplate<DecoderType>::OutputDecodedData(
-    nsTArray<RefPtr<MediaData>>&& aData) {
+    const nsTArray<RefPtr<MediaData>>&& aData) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == CodecState::Configured);
   MOZ_ASSERT(mActiveConfig);
