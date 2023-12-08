@@ -263,6 +263,11 @@ interface nsIPromptService : nsISupports
   const unsigned long BUTTON_DELAY_ENABLE        = 1 << 26;
 
   /**
+   * Causes a spinner to be displayed in the dialog box.
+   */
+  const unsigned long SHOW_SPINNER               = 1 << 27;
+
+  /**
    * Selects the standard set of OK/Cancel buttons.
    */
   const unsigned long STD_OK_CANCEL_BUTTONS      = (BUTTON_TITLE_OK     * BUTTON_POS_0) +

@@ -83,6 +83,7 @@ function commonDialogOnLoad() {
     infoBody: document.getElementById("infoBody"),
     infoTitle: document.getElementById("infoTitle"),
     infoIcon: document.getElementById("infoIcon"),
+    spinnerContainer: document.getElementById("spinnerContainer"),
     checkbox: document.getElementById("checkbox"),
     checkboxContainer: document.getElementById("checkboxContainer"),
     button3: dialog.getButton("extra2"),

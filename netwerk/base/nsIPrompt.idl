@@ -56,6 +56,8 @@ interface nsIPrompt : nsISupports
     /* used for security dialogs, buttons are initially disabled */
     const unsigned long BUTTON_DELAY_ENABLE        = 1 << 26;
 
+    const unsigned long SHOW_SPINNER               = 1 << 27;
+
     const unsigned long STD_OK_CANCEL_BUTTONS      = (BUTTON_TITLE_OK * BUTTON_POS_0) +
                                                     (BUTTON_TITLE_CANCEL * BUTTON_POS_1);
     const unsigned long STD_YES_NO_BUTTONS         = (BUTTON_TITLE_YES * BUTTON_POS_0) +

@@ -8,11 +8,12 @@
 
 #include "mozilla/DataMutex.h"
 #include "mozilla/dom/WindowGlobalParent.h"
-#include "mozilla/Mutex.h"
 #include "nsIContentAnalysis.h"
 #include "nsProxyRelease.h"
 #include "nsString.h"
+#include "nsTHashMap.h"
 
+#include <atomic>
 #include <string>
 
 namespace content_analysis::sdk {
@@ -73,29 +74,64 @@ class ContentAnalysisRequest final : public nsIContentAnalysisRequest {
   RefPtr<dom::WindowGlobalParent> mWindowGlobalParent;
 };
 
+#define CONTENTANALYSIS_IID                          \
+  {                                                  \
+    0xa37bed74, 0x4b50, 0x443a, {                    \
+      0xbf, 0x58, 0xf4, 0xeb, 0xbd, 0x30, 0x67, 0xb4 \
+    }                                                \
+  }
+
 class ContentAnalysisResponse;
 class ContentAnalysis final : public nsIContentAnalysis {
  public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(CONTENTANALYSIS_IID)
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICONTENTANALYSIS
 
-  ContentAnalysis() = default;
+  ContentAnalysis();
 
  private:
   ~ContentAnalysis();
   // Remove unneeded copy constructor/assignment
   ContentAnalysis(const ContentAnalysis&) = delete;
   ContentAnalysis& operator=(ContentAnalysis&) = delete;
-  nsresult EnsureContentAnalysisClient();
+  nsresult CreateContentAnalysisClient(nsCString&& aPipePathName,
+                                       bool aIsPerUser);
   nsresult RunAnalyzeRequestTask(RefPtr<nsIContentAnalysisRequest> aRequest,
                                  RefPtr<nsIContentAnalysisCallback> aCallback);
   nsresult RunAcknowledgeTask(
       nsIContentAnalysisAcknowledgement* aAcknowledgement,
       const nsACString& aRequestToken);
+  nsresult CancelWithError(nsCString aRequestToken, nsresult aResult);
+  static RefPtr<ContentAnalysis> GetContentAnalysisFromService();
 
-  static StaticDataMutex<UniquePtr<content_analysis::sdk::Client>> sCaClient;
+  using ClientPromise =
+      MozPromise<std::shared_ptr<content_analysis::sdk::Client>, nsresult,
+                 false>;
+  RefPtr<ClientPromise::Private> mCaClientPromise;
+  // Only accessed from the main thread
+  bool mClientCreationAttempted;
+
+  class CallbackData {
+   public:
+    explicit CallbackData(
+        nsMainThreadPtrHandle<nsIContentAnalysisCallback>&& aCallbackHolder)
+        : mCallbackHolder(aCallbackHolder) {}
+
+    nsMainThreadPtrHandle<nsIContentAnalysisCallback> TakeCallbackHolder() {
+      return std::move(mCallbackHolder);
+    }
+    void SetCanceled() { mCallbackHolder = nullptr; }
+    bool Canceled() const { return !mCallbackHolder; }
+
+   private:
+    nsMainThreadPtrHandle<nsIContentAnalysisCallback> mCallbackHolder;
+  };
+  DataMutex<nsTHashMap<nsCString, CallbackData>> mCallbackMap;
   friend class ContentAnalysisResponse;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(ContentAnalysis, CONTENTANALYSIS_IID)
 
 class ContentAnalysisResponse final : public nsIContentAnalysisResponse {
  public:
