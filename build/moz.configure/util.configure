@@ -515,6 +515,12 @@ def project_flag(env=None, set_as_define=False, **kwargs):
         set_define(env, option_implementation)
 
 
+@template
+@imports(_from="mozbuild.configure.constants", _import="RaiseErrorOnUse")
+def obsolete_config(name, *, replacement):
+    set_config(name, RaiseErrorOnUse(f"{name} is obsolete. Use {replacement} instead."))
+
+
 # Hacks related to old-configure
 # ==============================
 
