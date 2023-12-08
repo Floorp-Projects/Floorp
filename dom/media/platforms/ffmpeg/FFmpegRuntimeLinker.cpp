@@ -22,6 +22,12 @@ class FFmpegDecoderModule {
   static already_AddRefed<PlatformDecoderModule> Create(FFmpegLibWrapper*);
 };
 
+template <int V>
+class FFmpegEncoderModule {
+ public:
+  static already_AddRefed<PlatformEncoderModule> Create(FFmpegLibWrapper*);
+};
+
 static FFmpegLibWrapper sLibAV;
 
 static const char* sLibs[] = {
@@ -173,8 +179,37 @@ already_AddRefed<PlatformDecoderModule> FFmpegRuntimeLinker::CreateDecoder() {
 
 /* static */
 already_AddRefed<PlatformEncoderModule> FFmpegRuntimeLinker::CreateEncoder() {
-  // TODO: Create a FFmpegEncoderModule here.
-  return nullptr;
+  if (!Init()) {
+    return nullptr;
+  }
+  RefPtr<PlatformEncoderModule> module;
+  switch (sLibAV.mVersion) {
+    case 53:
+      module = FFmpegEncoderModule<53>::Create(&sLibAV);
+      break;
+    case 54:
+      module = FFmpegEncoderModule<54>::Create(&sLibAV);
+      break;
+    case 55:
+    case 56:
+      module = FFmpegEncoderModule<55>::Create(&sLibAV);
+      break;
+    case 57:
+      module = FFmpegEncoderModule<57>::Create(&sLibAV);
+      break;
+    case 58:
+      module = FFmpegEncoderModule<58>::Create(&sLibAV);
+      break;
+    case 59:
+      module = FFmpegEncoderModule<59>::Create(&sLibAV);
+      break;
+    case 60:
+      module = FFmpegEncoderModule<60>::Create(&sLibAV);
+      break;
+    default:
+      module = nullptr;
+  }
+  return module.forget();
 }
 
 /* static */ const char* FFmpegRuntimeLinker::LinkStatusString() {
