@@ -9,7 +9,119 @@
 #include "FFmpegLog.h"
 #include "FFmpegRuntimeLinker.h"
 #include "VPXDecoder.h"
+#include "libavutil/pixfmt.h"
+#include "mozilla/dom/ImageBitmapBinding.h"
 #include "nsPrintfCString.h"
+
+// The ffmpeg namespace is introduced to avoid the PixelFormat's name conflicts
+// with MediaDataEncoder::PixelFormat in MediaDataEncoder class scope.
+namespace ffmpeg {
+
+#if LIBAVCODEC_VERSION_MAJOR < 54
+using FFmpegPixelFormat = enum PixelFormat;
+const FFmpegPixelFormat FFMPEG_PIX_FMT_NONE = FFmpegPixelFormat::PIX_FMT_NONE;
+const FFmpegPixelFormat FFMPEG_PIX_FMT_RGBA = FFmpegPixelFormat::PIX_FMT_RGBA;
+const FFmpegPixelFormat FFMPEG_PIX_FMT_BGRA = FFmpegPixelFormat::PIX_FMT_BGRA;
+const FFmpegPixelFormat FFMPEG_PIX_FMT_RGB24 = FFmpegPixelFormat::PIX_FMT_RGB24;
+const FFmpegPixelFormat FFMPEG_PIX_FMT_BGR24 = FFmpegPixelFormat::PIX_FMT_BGR24;
+const FFmpegPixelFormat FFMPEG_PIX_FMT_YUV444P =
+    FFmpegPixelFormat::PIX_FMT_YUV444P;
+const FFmpegPixelFormat FFMPEG_PIX_FMT_YUV422P =
+    FFmpegPixelFormat::PIX_FMT_YUV422P;
+const FFmpegPixelFormat FFMPEG_PIX_FMT_YUV420P =
+    FFmpegPixelFormat::PIX_FMT_YUV420P;
+const FFmpegPixelFormat FFMPEG_PIX_FMT_NV12 = FFmpegPixelFormat::PIX_FMT_NV12;
+const FFmpegPixelFormat FFMPEG_PIX_FMT_NV21 = FFmpegPixelFormat::PIX_FMT_NV21;
+#else
+using FFmpegPixelFormat = enum AVPixelFormat;
+const FFmpegPixelFormat FFMPEG_PIX_FMT_NONE =
+    FFmpegPixelFormat::AV_PIX_FMT_NONE;
+const FFmpegPixelFormat FFMPEG_PIX_FMT_RGBA =
+    FFmpegPixelFormat::AV_PIX_FMT_RGBA;
+const FFmpegPixelFormat FFMPEG_PIX_FMT_BGRA =
+    FFmpegPixelFormat::AV_PIX_FMT_BGRA;
+const FFmpegPixelFormat FFMPEG_PIX_FMT_RGB24 =
+    FFmpegPixelFormat::AV_PIX_FMT_RGB24;
+const FFmpegPixelFormat FFMPEG_PIX_FMT_BGR24 =
+    FFmpegPixelFormat::AV_PIX_FMT_BGR24;
+const FFmpegPixelFormat FFMPEG_PIX_FMT_YUV444P =
+    FFmpegPixelFormat::AV_PIX_FMT_YUV444P;
+const FFmpegPixelFormat FFMPEG_PIX_FMT_YUV422P =
+    FFmpegPixelFormat::AV_PIX_FMT_YUV422P;
+const FFmpegPixelFormat FFMPEG_PIX_FMT_YUV420P =
+    FFmpegPixelFormat::AV_PIX_FMT_YUV420P;
+const FFmpegPixelFormat FFMPEG_PIX_FMT_NV12 =
+    FFmpegPixelFormat::AV_PIX_FMT_NV12;
+const FFmpegPixelFormat FFMPEG_PIX_FMT_NV21 =
+    FFmpegPixelFormat::AV_PIX_FMT_NV21;
+#endif
+
+// TODO: WebCodecs' I420A should map to MediaDataEncoder::PixelFormat and then
+// to AV_PIX_FMT_YUVA420P here.
+static FFmpegPixelFormat ToSupportedFFmpegPixelFormat(
+    const mozilla::dom::ImageBitmapFormat& aFormat) {
+  switch (aFormat) {
+    case mozilla::dom::ImageBitmapFormat::RGBA32:
+      return FFMPEG_PIX_FMT_RGBA;
+    case mozilla::dom::ImageBitmapFormat::BGRA32:
+      return FFMPEG_PIX_FMT_BGRA;
+    case mozilla::dom::ImageBitmapFormat::RGB24:
+      return FFMPEG_PIX_FMT_RGB24;
+    case mozilla::dom::ImageBitmapFormat::BGR24:
+      return FFMPEG_PIX_FMT_BGR24;
+    case mozilla::dom::ImageBitmapFormat::YUV444P:
+      return FFMPEG_PIX_FMT_YUV444P;
+    case mozilla::dom::ImageBitmapFormat::YUV422P:
+      return FFMPEG_PIX_FMT_YUV422P;
+    case mozilla::dom::ImageBitmapFormat::YUV420P:
+      return FFMPEG_PIX_FMT_YUV420P;
+    case mozilla::dom::ImageBitmapFormat::YUV420SP_NV12:
+      return FFMPEG_PIX_FMT_NV12;
+    case mozilla::dom::ImageBitmapFormat::YUV420SP_NV21:
+      return FFMPEG_PIX_FMT_NV21;
+    case mozilla::dom::ImageBitmapFormat::GRAY8:
+      // Although GRAY8 can be map to a AVPixelFormat, it's unsupported for now.
+    case mozilla::dom::ImageBitmapFormat::HSV:
+    case mozilla::dom::ImageBitmapFormat::Lab:
+    case mozilla::dom::ImageBitmapFormat::DEPTH:
+    case mozilla::dom::ImageBitmapFormat::EndGuard_:
+      break;
+  }
+  return FFMPEG_PIX_FMT_NONE;
+}
+
+static const char* GetPixelFormatString(FFmpegPixelFormat aFormat) {
+  switch (aFormat) {
+    case FFMPEG_PIX_FMT_NONE:
+      return "none";
+    case FFMPEG_PIX_FMT_RGBA:
+      return "packed RGBA 8:8:8:8 (32bpp, RGBARGBA...)";
+    case FFMPEG_PIX_FMT_BGRA:
+      return "packed BGRA 8:8:8:8 (32bpp, BGRABGRA...)";
+    case FFMPEG_PIX_FMT_RGB24:
+      return "packed RGB 8:8:8 (24bpp, RGBRGB...)";
+    case FFMPEG_PIX_FMT_BGR24:
+      return "packed RGB 8:8:8 (24bpp, BGRBGR...)";
+    case FFMPEG_PIX_FMT_YUV444P:
+      return "planar YUV 4:4:4 (24bpp, 1 Cr & Cb sample per 1x1 Y samples)";
+    case FFMPEG_PIX_FMT_YUV422P:
+      return "planar YUV 4:2:2 (16bpp, 1 Cr & Cb sample per 2x1 Y samples)";
+    case FFMPEG_PIX_FMT_YUV420P:
+      return "planar YUV 4:2:0 (12bpp, 1 Cr & Cb sample per 2x2 Y samples)";
+    case FFMPEG_PIX_FMT_NV12:
+      return "planar YUV 4:2:0 (12bpp, 1 interleaved UV components per 1x1 Y "
+             "samples)";
+    case FFMPEG_PIX_FMT_NV21:
+      return "planar YUV 4:2:0 (12bpp, 1 interleaved VU components per 1x1 Y "
+             "samples)";
+    default:
+      break;
+  }
+  MOZ_ASSERT_UNREACHABLE("Unsupported pixel format");
+  return "unsupported";
+}
+
+};  // namespace ffmpeg
 
 namespace mozilla {
 
@@ -113,6 +225,19 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessInit() {
         __func__);
   }
   FFMPEGV_LOG("find codec: %s", codec->name);
+
+  ffmpeg::FFmpegPixelFormat fmt =
+      ffmpeg::ToSupportedFFmpegPixelFormat(mConfig.mSourcePixelFormat);
+  if (fmt == ffmpeg::FFMPEG_PIX_FMT_NONE) {
+    FFMPEGV_LOG(
+        "%s is unsupported format",
+        dom::ImageBitmapFormatValues::GetString(mConfig.mSourcePixelFormat)
+            .data());
+    return InitPromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
+                    RESULT_DETAIL("Pixel format is not supported")),
+        __func__);
+  }
 
   MOZ_ASSERT(!mCodecContext);
   if (!(mCodecContext = mLib->avcodec_alloc_context3(codec))) {
