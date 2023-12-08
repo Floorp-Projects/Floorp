@@ -35,6 +35,9 @@ let idToTextMap = new Map([
   [Ci.nsITrackingDBService.TRACKING_COOKIES_ID, "cookie"],
   [Ci.nsITrackingDBService.CRYPTOMINERS_ID, "cryptominer"],
   [Ci.nsITrackingDBService.FINGERPRINTERS_ID, "fingerprinter"],
+  // We map the suspicious fingerprinter to fingerprinter category to aggregate
+  // the number.
+  [Ci.nsITrackingDBService.SUSPICIOUS_FINGERPRINTERS_ID, "fingerprinter"],
   [Ci.nsITrackingDBService.SOCIAL_ID, "social"],
 ]);
 
@@ -393,8 +396,11 @@ export class AboutProtectionsParent extends JSWindowActorParent {
           let count = result.getResultByName("count");
           let type = result.getResultByName("type");
           let timestamp = result.getResultByName("timestamp");
-          dataToSend[timestamp] = dataToSend[timestamp] || { total: 0 };
-          dataToSend[timestamp][idToTextMap.get(type)] = count;
+          let typeStr = idToTextMap.get(type);
+          dataToSend[timestamp] = dataToSend[timestamp] ?? { total: 0 };
+          let currentCnt = dataToSend[timestamp][typeStr] ?? 0;
+          currentCnt += count;
+          dataToSend[timestamp][typeStr] = currentCnt;
           dataToSend[timestamp].total += count;
           // Record the largest amount of tracking events found per day,
           // to create the tallest column on the graph and compare other days to.
