@@ -8187,7 +8187,7 @@
 # Whether content-box and stroke-box are enabled for transform-box.
 - name: layout.css.transform-box-content-stroke.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
