@@ -3002,6 +3002,7 @@ impl CascadeData {
                 CssRule::Page(ref rule) => {
                     self.extra_data
                         .add_page(guard, rule, containing_rule_state.layer_id)?;
+                    handled = false;
                 },
                 _ => {
                     handled = false;
@@ -3243,6 +3244,7 @@ impl CascadeData {
                 CssRule::CounterStyle(..) |
                 CssRule::Supports(..) |
                 CssRule::Keyframes(..) |
+                CssRule::Margin(..) |
                 CssRule::Page(..) |
                 CssRule::Property(..) |
                 CssRule::Document(..) |

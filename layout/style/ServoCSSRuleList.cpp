@@ -104,6 +104,9 @@ css::Rule* ServoCSSRuleList::GetRule(uint32_t aIndex) {
       case StyleCssRuleType::Keyframe:
         MOZ_ASSERT_UNREACHABLE("keyframe rule cannot be here");
         return nullptr;
+      case StyleCssRuleType::Margin:
+        // Margin rules not implemented yet, see bug 1864737
+        return nullptr;
     }
     rule = CastToUint(ruleObj.forget().take());
     mRules[aIndex] = rule;
@@ -275,6 +278,9 @@ void ServoCSSRuleList::SetRawContents(RefPtr<StyleLockedCssRules> aNewRules,
       RULE_CASE_UNLOCKED(Container, Container)
       case StyleCssRuleType::Keyframe:
         MOZ_ASSERT_UNREACHABLE("keyframe rule cannot be here");
+        break;
+      case StyleCssRuleType::Margin:
+        // Margin rules not implemented yet, see bug 1864737
         break;
     }
 #undef RULE_CASE_WITH_PREFIX

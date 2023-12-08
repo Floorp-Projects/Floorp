@@ -66,11 +66,16 @@ where
             CssRule::FontFace(_) |
             CssRule::CounterStyle(_) |
             CssRule::Keyframes(_) |
-            CssRule::Page(_) |
+            CssRule::Margin(_) |
             CssRule::Property(_) |
             CssRule::LayerStatement(_) |
             CssRule::FontFeatureValues(_) |
             CssRule::FontPaletteValues(_) => None,
+            CssRule::Page(ref page_rule) => {
+                let page_rule = page_rule.read_with(guard);
+                let rules = page_rule.rules.read_with(guard);
+                Some(rules.0.iter())
+            },
             CssRule::Style(ref style_rule) => {
                 let style_rule = style_rule.read_with(guard);
                 style_rule

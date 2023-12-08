@@ -18,6 +18,7 @@ mod media_rule;
 mod namespace_rule;
 pub mod origin;
 mod page_rule;
+mod margin_rule;
 mod property_rule;
 mod rule_list;
 mod rule_parser;
@@ -56,6 +57,7 @@ pub use self::import_rule::ImportRule;
 pub use self::keyframes_rule::KeyframesRule;
 pub use self::layer_rule::{LayerBlockRule, LayerStatementRule};
 pub use self::loader::StylesheetLoader;
+pub use self::margin_rule::{MarginRule, MarginRuleType};
 pub use self::media_rule::MediaRule;
 pub use self::namespace_rule::NamespaceRule;
 pub use self::origin::{Origin, OriginSet, OriginSetIterator, PerOrigin, PerOriginIter};
@@ -244,11 +246,11 @@ impl Eq for UrlExtraData {}
 #[derive(Clone, Debug, ToShmem)]
 #[allow(missing_docs)]
 pub enum CssRule {
+    Style(Arc<Locked<StyleRule>>),
     // No Charset here, CSSCharsetRule has been removed from CSSOM
     // https://drafts.csswg.org/cssom/#changes-from-5-december-2013
     Namespace(Arc<NamespaceRule>),
     Import(Arc<Locked<ImportRule>>),
-    Style(Arc<Locked<StyleRule>>),
     Media(Arc<MediaRule>),
     Container(Arc<ContainerRule>),
     FontFace(Arc<Locked<FontFaceRule>>),
@@ -256,6 +258,7 @@ pub enum CssRule {
     FontPaletteValues(Arc<FontPaletteValuesRule>),
     CounterStyle(Arc<Locked<CounterStyleRule>>),
     Keyframes(Arc<Locked<KeyframesRule>>),
+    Margin(Arc<MarginRule>),
     Supports(Arc<SupportsRule>),
     Page(Arc<Locked<PageRule>>),
     Property(Arc<PropertyRule>),
@@ -291,6 +294,9 @@ impl CssRule {
             CssRule::FontPaletteValues(_) => 0,
             CssRule::CounterStyle(_) => 0,
             CssRule::Keyframes(_) => 0,
+            CssRule::Margin(ref arc) => {
+                arc.unconditional_shallow_size_of(ops) + arc.size_of(guard, ops)
+            },
             CssRule::Supports(ref arc) => {
                 arc.unconditional_shallow_size_of(ops) + arc.size_of(guard, ops)
             },
@@ -325,7 +331,7 @@ pub enum CssRuleType {
     Keyframes = 7,
     Keyframe = 8,
     // https://drafts.csswg.org/cssom/#the-cssrule-interface
-    // Margin = 9, // Not implemented yet.
+    Margin = 9,
     Namespace = 10,
     // https://drafts.csswg.org/css-counter-styles-3/#extentions-to-cssrule-interface
     CounterStyle = 11,
@@ -421,6 +427,7 @@ impl CssRule {
             CssRule::FontPaletteValues(_) => CssRuleType::FontPaletteValues,
             CssRule::CounterStyle(_) => CssRuleType::CounterStyle,
             CssRule::Keyframes(_) => CssRuleType::Keyframes,
+            CssRule::Margin(_) => CssRuleType::Margin,
             CssRule::Namespace(_) => CssRuleType::Namespace,
             CssRule::Supports(_) => CssRuleType::Supports,
             CssRule::Page(_) => CssRuleType::Page,
@@ -536,6 +543,9 @@ impl DeepCloneWithLock for CssRule {
                     lock.wrap(rule.deep_clone_with_lock(lock, guard, params)),
                 ))
             },
+            CssRule::Margin(ref arc) => {
+                CssRule::Margin(Arc::new(arc.deep_clone_with_lock(lock, guard, params)))
+            },
             CssRule::Supports(ref arc) => {
                 CssRule::Supports(Arc::new(arc.deep_clone_with_lock(lock, guard, params)))
             },
@@ -573,6 +583,7 @@ impl ToCssWithGuard for CssRule {
             CssRule::FontPaletteValues(ref rule) => rule.to_css(guard, dest),
             CssRule::CounterStyle(ref lock) => lock.read_with(guard).to_css(guard, dest),
             CssRule::Keyframes(ref lock) => lock.read_with(guard).to_css(guard, dest),
+            CssRule::Margin(ref rule) => rule.to_css(guard, dest),
             CssRule::Media(ref rule) => rule.to_css(guard, dest),
             CssRule::Supports(ref rule) => rule.to_css(guard, dest),
             CssRule::Page(ref lock) => lock.read_with(guard).to_css(guard, dest),

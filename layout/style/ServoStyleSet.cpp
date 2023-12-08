@@ -1010,6 +1010,9 @@ void ServoStyleSet::RuleChangedInternal(StyleSheet& aSheet, css::Rule& aRule,
       // FIXME: We should probably just forward to the parent @keyframes rule? I
       // think that'd do the right thing, but meanwhile...
       return MarkOriginsDirty(ToOriginFlags(aSheet.GetOrigin()));
+    case StyleCssRuleType::Margin:
+      // Margin rules not implemented yet, see bug 1864737
+      break;
   }
 
 #undef CASE_FOR
