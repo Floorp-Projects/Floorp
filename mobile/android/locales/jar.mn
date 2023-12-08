@@ -18,7 +18,6 @@
 
 @AB_CD@.jar:
 % locale browser @AB_CD@ %locale/@AB_CD@/browser/
-  locale/@AB_CD@/browser/browser.properties       (%chrome/browser.properties)
 
 # overrides for toolkit l10n, also for en-US
 # keep this file list in sync with l10n.toml and filter.py

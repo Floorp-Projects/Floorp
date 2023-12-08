@@ -45,7 +45,7 @@ Each permission will have a machine readable name that the embedder will use to
 produce user-facing internationalized strings. E.g. “bookmarks” gives access to
 bookmarks, “sessions” gives access to recently closed sessions. The full list
 of permissions that are currently shown to the UI in Firefox Desktop is
-available at: ``chrome/browser/browser.properties``
+available at: ``toolkit/global/extensionPermissions.ftl``
 
 ``WebExtension.MetaData`` properties expected to be set to absolute moz-extension urls
 (e.g. ``baseUrl`` and ``optionsPageUrl``) are not available yet right after installing
