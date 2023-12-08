@@ -5,24 +5,24 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 LOCAL_INCLUDES += [
-    '!/ipc/ipdl/_ipdlheaders',
-    '/ipc/chromium/src',
+    "!/ipc/ipdl/_ipdlheaders",
+    "/ipc/chromium/src",
 ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG["OS_ARCH"] == "WINNT":
     OS_LIBS += [
-        'shell32',
-        'dbghelp',
+        "shell32",
+        "dbghelp",
     ]
 
-    DEFINES['UNICODE'] = True
-    DEFINES['_UNICODE'] = True
-    DEFINES['_CRT_RAND_S'] = True
-    DEFINES['CERT_CHAIN_PARA_HAS_EXTRA_FIELDS'] = True
-    DEFINES['_SECURE_ATL'] = True
-    DEFINES['CHROMIUM_BUILD'] = True
-    DEFINES['U_STATIC_IMPLEMENTATION'] = True
-    DEFINES['WIN32'] = True
-    DEFINES['_WIN32'] = True
-    DEFINES['_WINDOWS'] = True
-    DEFINES['WIN32_LEAN_AND_MEAN'] = True
+    DEFINES["UNICODE"] = True
+    DEFINES["_UNICODE"] = True
+    DEFINES["_CRT_RAND_S"] = True
+    DEFINES["CERT_CHAIN_PARA_HAS_EXTRA_FIELDS"] = True
+    DEFINES["_SECURE_ATL"] = True
+    DEFINES["CHROMIUM_BUILD"] = True
+    DEFINES["U_STATIC_IMPLEMENTATION"] = True
+    DEFINES["WIN32"] = True
+    DEFINES["_WIN32"] = True
+    DEFINES["_WINDOWS"] = True
+    DEFINES["WIN32_LEAN_AND_MEAN"] = True

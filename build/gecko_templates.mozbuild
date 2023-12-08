@@ -4,9 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
 @template
-def GeckoBinary(linkage='dependent', mozglue=None):
-    '''Template for Gecko-related binaries.
+def GeckoBinary(linkage="dependent", mozglue=None):
+    """Template for Gecko-related binaries.
 
     This template is meant to be used in other templates.
 
@@ -21,104 +22,104 @@ def GeckoBinary(linkage='dependent', mozglue=None):
     so, what linkage to apply. Valid values are None (mozglue not linked),
     'program' (mozglue linked to an executable program), or 'library' (mozglue
     linked to a shared library).
-    '''
-    if linkage == 'dependent':
+    """
+    if linkage == "dependent":
         USE_LIBS += [
-            'nspr',
-            'xul-real',
+            "nspr",
+            "xul-real",
         ]
-    elif linkage == 'standalone':
-        DEFINES['XPCOM_GLUE'] = True
+    elif linkage == "standalone":
+        DEFINES["XPCOM_GLUE"] = True
 
         USE_LIBS += [
-            'xpcomglue',
+            "xpcomglue",
         ]
     elif linkage != None:
         error('`linkage` must be "dependent", "standalone" or None')
 
     if mozglue:
-        if mozglue == 'program':
-            USE_LIBS += ['mozglue']
-            DEFINES['MOZ_HAS_MOZGLUE'] = True
-            if CONFIG['MOZ_GLUE_IN_PROGRAM'] and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-                LDFLAGS += ['-rdynamic']
-        elif mozglue == 'library':
-            LIBRARY_DEFINES['MOZ_HAS_MOZGLUE'] = True
-            if not CONFIG['MOZ_GLUE_IN_PROGRAM']:
-                USE_LIBS += ['mozglue']
+        if mozglue == "program":
+            USE_LIBS += ["mozglue"]
+            DEFINES["MOZ_HAS_MOZGLUE"] = True
+            if CONFIG["MOZ_GLUE_IN_PROGRAM"] and CONFIG["CC_TYPE"] in ("clang", "gcc"):
+                LDFLAGS += ["-rdynamic"]
+        elif mozglue == "library":
+            LIBRARY_DEFINES["MOZ_HAS_MOZGLUE"] = True
+            if not CONFIG["MOZ_GLUE_IN_PROGRAM"]:
+                USE_LIBS += ["mozglue"]
         else:
             error('`mozglue` must be "program" or "library"')
 
 
 @template
-def GeckoProgram(name, linkage='standalone', **kwargs):
-    '''Template for program executables related to Gecko.
+def GeckoProgram(name, linkage="standalone", **kwargs):
+    """Template for program executables related to Gecko.
 
     `name` identifies the executable base name.
 
     See the documentation for `GeckoBinary` for other possible arguments,
     with the notable difference that the default for `linkage` is 'standalone'.
-    '''
+    """
     Program(name)
 
-    kwargs.setdefault('mozglue', 'program')
+    kwargs.setdefault("mozglue", "program")
 
     GeckoBinary(linkage=linkage, **kwargs)
 
 
 @template
 def GeckoSimplePrograms(names, **kwargs):
-    '''Template for simple program executables related to Gecko.
+    """Template for simple program executables related to Gecko.
 
     `names` identifies the executable base names for each executable.
 
     See the documentation for `GeckoBinary` for other possible arguments.
-    '''
+    """
     SimplePrograms(names)
 
-    kwargs.setdefault('mozglue', 'program')
+    kwargs.setdefault("mozglue", "program")
 
     GeckoBinary(**kwargs)
 
 
 @template
 def GeckoCppUnitTests(names, **kwargs):
-    '''Template for C++ unit tests related to Gecko.
+    """Template for C++ unit tests related to Gecko.
 
     `names` identifies the executable base names for each executable.
 
     See the documentation for `GeckoBinary` for other possible arguments.
-    '''
+    """
     CppUnitTests(names)
 
-    kwargs.setdefault('mozglue', 'program')
+    kwargs.setdefault("mozglue", "program")
 
     GeckoBinary(**kwargs)
 
 
 @template
 def GeckoSharedLibrary(name, output_category=None, **kwargs):
-    '''Template for shared libraries related to Gecko.
+    """Template for shared libraries related to Gecko.
 
     `name` identifies the library base name.
     See the documentation for `GeckoBinary` for other possible arguments.
-    '''
+    """
     SharedLibrary(name, output_category)
 
-    kwargs.setdefault('mozglue', 'library')
+    kwargs.setdefault("mozglue", "library")
 
     GeckoBinary(**kwargs)
 
 
 @template
 def GeckoFramework(name, output_category=None, **kwargs):
-    '''Template for OSX frameworks related to Gecko.
+    """Template for OSX frameworks related to Gecko.
 
     `name` identifies the library base name.
     See the documentation for `GeckoBinary` for other possible arguments.
-    '''
+    """
     Framework(name, output_category)
 
-    kwargs.setdefault('mozglue', 'library')
+    kwargs.setdefault("mozglue", "library")
 
     GeckoBinary(**kwargs)

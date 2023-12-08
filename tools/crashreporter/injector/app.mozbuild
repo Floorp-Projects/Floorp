@@ -3,12 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    '/toolkit/crashreporter/google-breakpad/src/common',
-    '/toolkit/crashreporter/google-breakpad/src/processor',
-    '/tools/crashreporter/injector',
+    "/toolkit/crashreporter/google-breakpad/src/common",
+    "/toolkit/crashreporter/google-breakpad/src/processor",
+    "/tools/crashreporter/injector",
 ]
 
-if CONFIG['OS_TARGET'] in ('Linux', 'Android'):
-   DIRS += [
-       '/toolkit/crashreporter/google-breakpad/src/common/linux',
-   ]
+if CONFIG["OS_TARGET"] in ("Linux", "Android"):
+    DIRS += [
+        "/toolkit/crashreporter/google-breakpad/src/common/linux",
+    ]

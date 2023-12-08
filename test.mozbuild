@@ -6,5 +6,5 @@
 # test, because of the requirement of the top-level directory containing
 # config/*.mk.
 DIRS += [
-    'python/mozbuild/mozbuild/test/backend/data/build',
+    "python/mozbuild/mozbuild/test/backend/data/build",
 ]

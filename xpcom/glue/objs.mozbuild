@@ -5,18 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 xpcom_glue_src_lcppsrcs = [
-    'FileUtils.cpp',
-    'MemUtils.cpp',
-    'XREAppData.cpp',
+    "FileUtils.cpp",
+    "MemUtils.cpp",
+    "XREAppData.cpp",
 ]
 
-xpcom_glue_src_cppsrcs = [
-    '/xpcom/glue/%s' % s for s in xpcom_glue_src_lcppsrcs
-]
+xpcom_glue_src_cppsrcs = ["/xpcom/glue/%s" % s for s in xpcom_glue_src_lcppsrcs]
 
-xpcom_gluens_src_lcppsrcs = [
-]
+xpcom_gluens_src_lcppsrcs = []
 
-xpcom_gluens_src_cppsrcs = [
-    '/xpcom/glue/%s' % s for s in xpcom_gluens_src_lcppsrcs
-]
+xpcom_gluens_src_cppsrcs = ["/xpcom/glue/%s" % s for s in xpcom_gluens_src_lcppsrcs]

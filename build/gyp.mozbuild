@@ -4,108 +4,106 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include('gyp_base.mozbuild')
+include("gyp_base.mozbuild")
 
-gyp_vars.update({
-    'lsan': 0,
-    'asan': 0,
-    'tsan': 1 if CONFIG['MOZ_TSAN'] else 0,
-    'ubsan' : 0,
-    'fuzzing' : 1 if CONFIG['FUZZING'] else 0,
-    'libfuzzer' : 1 if CONFIG['LIBFUZZER'] else 0,
-    'libfuzzer_fuzzer_no_link_flag' : 1 if CONFIG['HAVE_LIBFUZZER_FLAG_FUZZER_NO_LINK'] else 0,
-    'build_with_mozilla': 1,
-    'build_with_chromium': 0,
-    # 10.9 once we move to TC cross-compiles - bug 1270217
-    'mac_sdk_min': '10.9',
-    'mac_deployment_target': '10.9',
-    'use_official_google_api_keys': 0,
-    'have_clock_monotonic': 1 if CONFIG['HAVE_CLOCK_MONOTONIC'] else 0,
-    'have_ethtool_cmd_speed_hi': 1 if CONFIG['MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI'] else 0,
-    'include_alsa_audio': 1 if CONFIG['MOZ_ALSA'] else 0,
-    'include_pulse_audio': 1 if CONFIG['MOZ_PULSEAUDIO'] else 0,
-    # basic stuff for everything
-    'include_internal_video_render': 0,
-    'clang': 1 if CONFIG['CC_TYPE'] == 'clang' else 0,
-    'clang_cl': 1 if CONFIG['CC_TYPE'] == 'clang-cl' else 0,
-    'clang_use_chrome_plugins': 0,
-    'enable_protobuf': 0,
-    'include_tests': 0,
-    'enable_android_opensl': 1,
-    'enable_android_opensl_output': 0,
-    # use_system_lib* still seems to be in use in trunk/build
-    'use_system_libjpeg': 0,
-    'use_system_libvpx': 0,
-    'build_json': 0,
-    'build_libjpeg': 0,
-    'build_libyuv': 0,
-    'build_libvpx': 0,
-    'build_libevent': 0,
-    'build_ssl': 0,
-    'build_json': 0,
-    'build_icu': 0,
-    'build_opus': 0,
-    'libyuv_dir': '/media/libyuv/libyuv',
-    # don't use openssl
-    'use_openssl': 0,
-    # Must match build/gyp.mozbuild WEBRTC_BUILD_LIBEVENT
-    #'enable_libevent': 0, default according to OS
+gyp_vars.update(
+    {
+        "lsan": 0,
+        "asan": 0,
+        "tsan": 1 if CONFIG["MOZ_TSAN"] else 0,
+        "ubsan": 0,
+        "fuzzing": 1 if CONFIG["FUZZING"] else 0,
+        "libfuzzer": 1 if CONFIG["LIBFUZZER"] else 0,
+        "libfuzzer_fuzzer_no_link_flag": 1
+        if CONFIG["HAVE_LIBFUZZER_FLAG_FUZZER_NO_LINK"]
+        else 0,
+        "build_with_mozilla": 1,
+        "build_with_chromium": 0,
+        # 10.9 once we move to TC cross-compiles - bug 1270217
+        "mac_sdk_min": "10.9",
+        "mac_deployment_target": "10.9",
+        "use_official_google_api_keys": 0,
+        "have_clock_monotonic": 1 if CONFIG["HAVE_CLOCK_MONOTONIC"] else 0,
+        "have_ethtool_cmd_speed_hi": 1
+        if CONFIG["MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI"]
+        else 0,
+        "include_alsa_audio": 1 if CONFIG["MOZ_ALSA"] else 0,
+        "include_pulse_audio": 1 if CONFIG["MOZ_PULSEAUDIO"] else 0,
+        # basic stuff for everything
+        "include_internal_video_render": 0,
+        "clang": 1 if CONFIG["CC_TYPE"] == "clang" else 0,
+        "clang_cl": 1 if CONFIG["CC_TYPE"] == "clang-cl" else 0,
+        "clang_use_chrome_plugins": 0,
+        "enable_protobuf": 0,
+        "include_tests": 0,
+        "enable_android_opensl": 1,
+        "enable_android_opensl_output": 0,
+        # use_system_lib* still seems to be in use in trunk/build
+        "use_system_libjpeg": 0,
+        "use_system_libvpx": 0,
+        "build_json": 0,
+        "build_libjpeg": 0,
+        "build_libyuv": 0,
+        "build_libvpx": 0,
+        "build_libevent": 0,
+        "build_ssl": 0,
+        "build_json": 0,
+        "build_icu": 0,
+        "build_opus": 0,
+        "libyuv_dir": "/media/libyuv/libyuv",
+        # don't use openssl
+        "use_openssl": 0,
+        # Must match build/gyp.mozbuild WEBRTC_BUILD_LIBEVENT
+        #'enable_libevent': 0, default according to OS
+        "debug": 1 if CONFIG["DEBUG"] else 0,
+        "use_x11": 1 if CONFIG["MOZ_X11"] else 0,
+        "use_glib": 1 if CONFIG["GLIB_LIBS"] else 0,
+        # bug 1373485 - avoid pkg-config for gtk2 in webrtc
+        "use_gtk": 0,
+        # turn off mandatory use of NEON and instead use NEON detection
+        "arm_neon": 0,
+        "arm_neon_optional": 1,
+        # (for vp8) chromium sets to 0 also
+        "use_temporal_layers": 0,
+        # Creates AEC internal sample dump files in current directory
+        "aec_debug_dump": 1,
+        # codec enable/disables:
+        "include_g711": 1,
+        "include_opus": 1,
+        "include_g722": 1,
+        "include_ilbc": 0,
+        # We turn on ISAC because the AGC uses parts of it, and depend on the
+        # linker to throw away uneeded bits.
+        "include_isac": 1,
+        "include_pcm16b": 1,
+        #'rtc_opus_variable_complexity': 1,
+        "apm_debug_dump": 1,
+    }
+)
 
-    'debug': 1 if CONFIG['DEBUG'] else 0,
+if os == "Android":
+    gyp_vars.update(gtest_target_type="executable")
 
-    'use_x11': 1 if CONFIG['MOZ_X11'] else 0,
-    'use_glib': 1 if CONFIG['GLIB_LIBS'] else 0,
-    # bug 1373485 - avoid pkg-config for gtk2 in webrtc
-    'use_gtk': 0,
-
-     # turn off mandatory use of NEON and instead use NEON detection
-    'arm_neon': 0,
-    'arm_neon_optional': 1,
-
-    # (for vp8) chromium sets to 0 also
-    'use_temporal_layers': 0,
-
-    # Creates AEC internal sample dump files in current directory
-    'aec_debug_dump': 1,
-
-    # codec enable/disables:
-    'include_g711': 1,
-    'include_opus': 1,
-    'include_g722': 1,
-    'include_ilbc': 0,
-    # We turn on ISAC because the AGC uses parts of it, and depend on the
-    # linker to throw away uneeded bits.
-    'include_isac': 1,
-    'include_pcm16b': 1,
-
-    #'rtc_opus_variable_complexity': 1,
-
-    'apm_debug_dump': 1,
-})
-
-if os == 'Android':
-    gyp_vars.update(gtest_target_type='executable')
-
-if CONFIG['ARM_ARCH']:
-    if int(CONFIG['ARM_ARCH']) < 7:
-        gyp_vars['armv7'] = 0
-        gyp_vars['arm_neon_optional'] = 0
-    elif os == 'Android':
-        gyp_vars['armv7'] = 1
-        gyp_vars['arm_neon'] = 1
-        gyp_vars['build_with_neon'] = 1
+if CONFIG["ARM_ARCH"]:
+    if int(CONFIG["ARM_ARCH"]) < 7:
+        gyp_vars["armv7"] = 0
+        gyp_vars["arm_neon_optional"] = 0
+    elif os == "Android":
+        gyp_vars["armv7"] = 1
+        gyp_vars["arm_neon"] = 1
+        gyp_vars["build_with_neon"] = 1
     else:
         # CPU detection for ARM works on Android only.  armv7 always uses CPU
         # detection, so we have to set armv7=0 for non-Android target
-        gyp_vars['armv7'] = 0
+        gyp_vars["armv7"] = 0
     # For libyuv
-    gyp_vars['arm_version'] = int(CONFIG['ARM_ARCH'])
+    gyp_vars["arm_version"] = int(CONFIG["ARM_ARCH"])
 
-if CONFIG['MACOS_SDK_DIR']:
-    gyp_vars['mac_sdk_path'] = CONFIG['MACOS_SDK_DIR']
+if CONFIG["MACOS_SDK_DIR"]:
+    gyp_vars["mac_sdk_path"] = CONFIG["MACOS_SDK_DIR"]
 
-if not CONFIG['MOZ_SYSTEM_LIBVPX']:
-    gyp_vars['libvpx_dir'] =  '/media/libvpx/libvpx'
+if not CONFIG["MOZ_SYSTEM_LIBVPX"]:
+    gyp_vars["libvpx_dir"] = "/media/libvpx/libvpx"
 
-if not CONFIG['MOZ_SYSTEM_LIBEVENT']:
-    gyp_vars['libevent_dir'] = '/ipc/chromium/src/third_party/libevent'
+if not CONFIG["MOZ_SYSTEM_LIBEVENT"]:
+    gyp_vars["libevent_dir"] = "/ipc/chromium/src/third_party/libevent"

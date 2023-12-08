@@ -6,17 +6,21 @@
 
 # Some huge-mapping optimization instead of bounds checks on supported
 # platforms.
-if CONFIG['JS_CODEGEN_X64'] or CONFIG['JS_CODEGEN_ARM64'] or CONFIG['JS_CODEGEN_RISCV64']:
-    DEFINES['WASM_SUPPORTS_HUGE_MEMORY'] = True
+if (
+    CONFIG["JS_CODEGEN_X64"]
+    or CONFIG["JS_CODEGEN_ARM64"]
+    or CONFIG["JS_CODEGEN_RISCV64"]
+):
+    DEFINES["WASM_SUPPORTS_HUGE_MEMORY"] = True
 
 # Enables CACHEIR_LOGS to diagnose IC coverage, and
 # Structured spewer for diagnostics
-if CONFIG['MOZ_DEBUG'] or CONFIG['NIGHTLY_BUILD']:
-    DEFINES['JS_CACHEIR_SPEW'] = True
-    DEFINES['JS_STRUCTURED_SPEW'] = True
+if CONFIG["MOZ_DEBUG"] or CONFIG["NIGHTLY_BUILD"]:
+    DEFINES["JS_CACHEIR_SPEW"] = True
+    DEFINES["JS_STRUCTURED_SPEW"] = True
 
 # CTypes
-if CONFIG['JS_HAS_CTYPES']:
-    DEFINES['JS_HAS_CTYPES'] = True
-    if not CONFIG['MOZ_SYSTEM_FFI']:
-        DEFINES['FFI_BUILDING'] = True
+if CONFIG["JS_HAS_CTYPES"]:
+    DEFINES["JS_HAS_CTYPES"] = True
+    if not CONFIG["MOZ_SYSTEM_FFI"]:
+        DEFINES["FFI_BUILDING"] = True

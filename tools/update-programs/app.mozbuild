@@ -2,60 +2,60 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['MOZ_MAINTENANCE_SERVICE'] or \
-   CONFIG['MOZ_UPDATE_AGENT'] or \
-   CONFIG['MOZ_UPDATER']:
+if (
+    CONFIG["MOZ_MAINTENANCE_SERVICE"]
+    or CONFIG["MOZ_UPDATE_AGENT"]
+    or CONFIG["MOZ_UPDATER"]
+):
     DIRS += [
-        '/toolkit/mozapps/update/common',
+        "/toolkit/mozapps/update/common",
     ]
 
-if CONFIG['MOZ_DEFAULT_BROWSER_AGENT']:
+if CONFIG["MOZ_DEFAULT_BROWSER_AGENT"]:
     DIRS += [
-        '/toolkit/components/jsoncpp/src/lib_json',
-        '/toolkit/mozapps/defaultagent',
+        "/toolkit/components/jsoncpp/src/lib_json",
+        "/toolkit/mozapps/defaultagent",
     ]
 
-if CONFIG['MOZ_MAINTENANCE_SERVICE']:
-    DIRS += [
-        '/toolkit/components/maintenanceservice'
-    ]
+if CONFIG["MOZ_MAINTENANCE_SERVICE"]:
+    DIRS += ["/toolkit/components/maintenanceservice"]
 
-if CONFIG['MOZ_UPDATER']:
+if CONFIG["MOZ_UPDATER"]:
     # NSS (and NSPR).
     DIRS += [
-        '/modules/xz-embedded',
-        '/config/external/nspr',
-        '/config/external/sqlite',
-        '/config/external/zlib',
-        '/memory',
-        '/mfbt',
-        '/mozglue',
-        '/security',
+        "/modules/xz-embedded",
+        "/config/external/nspr",
+        "/config/external/sqlite",
+        "/config/external/zlib",
+        "/memory",
+        "/mfbt",
+        "/mozglue",
+        "/security",
     ]
 
     # The signing related bits of libmar depend on NSS.
     DIRS += [
-        '/modules/libmar',
-        '/other-licenses/bsdiff',
-        '/toolkit/mozapps/update/updater/bspatch',
-        '/toolkit/mozapps/update/updater',
+        "/modules/libmar",
+        "/other-licenses/bsdiff",
+        "/toolkit/mozapps/update/updater/bspatch",
+        "/toolkit/mozapps/update/updater",
     ]
 
 # Expose specific non-XPCOM headers when building standalone.
-if not CONFIG['MOZ_UPDATER']:
+if not CONFIG["MOZ_UPDATER"]:
     # When building the updater, we build /mozglue, which includes this.
     EXPORTS.mozilla += [
-        '/mozglue/misc/DynamicallyLinkedFunctionPtr.h',
+        "/mozglue/misc/DynamicallyLinkedFunctionPtr.h",
     ]
 
 EXPORTS.mozilla += [
-    '/toolkit/xre/CmdLineAndEnvUtils.h',
-    '/widget/windows/WinHeaderOnlyUtils.h',
+    "/toolkit/xre/CmdLineAndEnvUtils.h",
+    "/widget/windows/WinHeaderOnlyUtils.h",
 ]
 
 EXPORTS += [
-    '/xpcom/base/nsAutoRef.h',
-    '/xpcom/base/nsWindowsHelpers.h',
-    '/xpcom/string/nsCharTraits.h',
-    '/xpcom/string/nsUTF8Utils.h',
+    "/xpcom/base/nsAutoRef.h",
+    "/xpcom/base/nsWindowsHelpers.h",
+    "/xpcom/string/nsCharTraits.h",
+    "/xpcom/string/nsUTF8Utils.h",
 ]

@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    '/modules/libmar/src',
-    '/modules/libmar/tool',
-    '/other-licenses/bsdiff',
+    "/modules/libmar/src",
+    "/modules/libmar/tool",
+    "/other-licenses/bsdiff",
 ]
