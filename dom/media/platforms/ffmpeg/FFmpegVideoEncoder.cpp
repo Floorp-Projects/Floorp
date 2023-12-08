@@ -195,7 +195,8 @@ template <typename ConfigType>
 RefPtr<MediaDataEncoder::EncodePromise>
 FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Drain() {
   FFMPEGV_LOG("Drain");
-  return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
+  return InvokeAsync(mTaskQueue, this, __func__,
+                     &FFmpegVideoEncoder::ProcessDrain);
 }
 
 template <typename ConfigType>
@@ -344,6 +345,16 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessEncode(
 
   return EncodeWithModernAPIs(sample);
 #endif
+}
+
+template <typename ConfigType>
+RefPtr<MediaDataEncoder::EncodePromise>
+FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessDrain() {
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+
+  FFMPEGV_LOG("ProcessDrain");
+
+  return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 }
 
 template <typename ConfigType>
