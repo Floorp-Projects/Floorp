@@ -119,10 +119,22 @@ HRESULT RegisterTask(const wchar_t* uniqueToken,
                                    getter_AddRefs(taskFolder)))) {
     hr = rootFolder->CreateFolder(vendorBStr.get(), VARIANT{},
                                   getter_AddRefs(taskFolder));
+
     if (SUCCEEDED(hr)) {
       createdFolder = true;
-    } else if (hr != HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS)) {
-      // The folder already existing isn't an error, but anything else is.
+    } else if (hr == HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS)) {
+      // `CreateFolder` doesn't assign to the out pointer on
+      // `ERROR_ALREADY_EXISTS`, so try to get the folder again. This behavior
+      // is undocumented but was verified in a debugger.
+      HRESULT priorHr = hr;
+      hr = rootFolder->GetFolder(vendorBStr.get(), getter_AddRefs(taskFolder));
+
+      if (FAILED(hr)) {
+        LOG_ERROR(priorHr);
+        LOG_ERROR(hr);
+        return hr;
+      }
+    } else {
       LOG_ERROR(hr);
       return hr;
     }
