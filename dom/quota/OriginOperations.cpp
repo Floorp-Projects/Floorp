@@ -283,7 +283,7 @@ class StorageNameOp final : public QuotaRequestBase {
   void CloseDirectory() override;
 };
 
-class InitializedRequestBase : public QuotaRequestBase {
+class InitializedRequestBase : public ResolvableNormalOriginOp<bool> {
  protected:
   bool mInitialized;
 
@@ -308,7 +308,7 @@ class StorageInitializedOp final : public InitializedRequestBase {
 
   nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
 
-  void GetResponse(RequestResponse& aResponse) override;
+  bool GetResolveValue() override;
 };
 
 class TemporaryStorageInitializedOp final : public InitializedRequestBase {
@@ -323,7 +323,7 @@ class TemporaryStorageInitializedOp final : public InitializedRequestBase {
 
   nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
 
-  void GetResponse(RequestResponse& aResponse) override;
+  bool GetResolveValue() override;
 };
 
 class InitOp final : public ResolvableNormalOriginOp<bool> {
@@ -756,12 +756,12 @@ RefPtr<QuotaRequestBase> CreateStorageNameOp(
   return MakeRefPtr<StorageNameOp>(std::move(aQuotaManager));
 }
 
-RefPtr<QuotaRequestBase> CreateStorageInitializedOp(
+RefPtr<ResolvableNormalOriginOp<bool>> CreateStorageInitializedOp(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager) {
   return MakeRefPtr<StorageInitializedOp>(std::move(aQuotaManager));
 }
 
-RefPtr<QuotaRequestBase> CreateTemporaryStorageInitializedOp(
+RefPtr<ResolvableNormalOriginOp<bool>> CreateTemporaryStorageInitializedOp(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager) {
   return MakeRefPtr<TemporaryStorageInitializedOp>(std::move(aQuotaManager));
 }
@@ -1381,7 +1381,8 @@ void StorageNameOp::CloseDirectory() { AssertIsOnOwningThread(); }
 
 InitializedRequestBase::InitializedRequestBase(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager, const char* aName)
-    : QuotaRequestBase(std::move(aQuotaManager), aName), mInitialized(false) {
+    : ResolvableNormalOriginOp(std::move(aQuotaManager), aName),
+      mInitialized(false) {
   AssertIsOnOwningThread();
 }
 
@@ -1403,14 +1404,10 @@ nsresult StorageInitializedOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   return NS_OK;
 }
 
-void StorageInitializedOp::GetResponse(RequestResponse& aResponse) {
+bool StorageInitializedOp::GetResolveValue() {
   AssertIsOnOwningThread();
 
-  StorageInitializedResponse storageInitializedResponse;
-
-  storageInitializedResponse.initialized() = mInitialized;
-
-  aResponse = storageInitializedResponse;
+  return mInitialized;
 }
 
 nsresult TemporaryStorageInitializedOp::DoDirectoryWork(
@@ -1424,14 +1421,10 @@ nsresult TemporaryStorageInitializedOp::DoDirectoryWork(
   return NS_OK;
 }
 
-void TemporaryStorageInitializedOp::GetResponse(RequestResponse& aResponse) {
+bool TemporaryStorageInitializedOp::GetResolveValue() {
   AssertIsOnOwningThread();
 
-  TemporaryStorageInitializedResponse temporaryStorageInitializedResponse;
-
-  temporaryStorageInitializedResponse.initialized() = mInitialized;
-
-  aResponse = temporaryStorageInitializedResponse;
+  return mInitialized;
 }
 
 InitOp::InitOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,

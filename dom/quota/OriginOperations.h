@@ -66,10 +66,10 @@ RefPtr<QuotaUsageRequestBase> CreateGetOriginUsageOp(
 RefPtr<QuotaRequestBase> CreateStorageNameOp(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager);
 
-RefPtr<QuotaRequestBase> CreateStorageInitializedOp(
+RefPtr<ResolvableNormalOriginOp<bool>> CreateStorageInitializedOp(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager);
 
-RefPtr<QuotaRequestBase> CreateTemporaryStorageInitializedOp(
+RefPtr<ResolvableNormalOriginOp<bool>> CreateTemporaryStorageInitializedOp(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager);
 
 RefPtr<ResolvableNormalOriginOp<bool>> CreateInitOp(
