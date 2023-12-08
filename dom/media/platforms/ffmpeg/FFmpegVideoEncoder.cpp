@@ -29,47 +29,61 @@ AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(const nsACString& aMimeType) {
   return AV_CODEC_ID_NONE;
 }
 
-FFmpegVideoEncoder<LIBAV_VER>::FFmpegVideoEncoder(const FFmpegLibWrapper* aLib,
-                                                  AVCodecID aCodecID,
-                                                  RefPtr<TaskQueue> aTaskQueue)
-    : mLib(aLib), mCodecID(aCodecID), mTaskQueue(aTaskQueue), mCodecContext(nullptr) {
+template <typename ConfigType>
+FFmpegVideoEncoder<LIBAV_VER, ConfigType>::FFmpegVideoEncoder(
+    const FFmpegLibWrapper* aLib, AVCodecID aCodecID,
+    RefPtr<TaskQueue> aTaskQueue, const ConfigType& aConfig)
+    : mLib(aLib),
+      mCodecID(aCodecID),
+      mTaskQueue(aTaskQueue),
+      mConfig(aConfig),
+      mCodecContext(nullptr) {
   MOZ_ASSERT(mLib);
   MOZ_ASSERT(mTaskQueue);
 };
 
-RefPtr<MediaDataEncoder::InitPromise> FFmpegVideoEncoder<LIBAV_VER>::Init() {
+template <typename ConfigType>
+RefPtr<MediaDataEncoder::InitPromise>
+FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Init() {
   FFMPEGV_LOG("Init");
   return InvokeAsync(mTaskQueue, this, __func__,
                      &FFmpegVideoEncoder::ProcessInit);
 }
 
-RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<LIBAV_VER>::Encode(
-    const MediaData* aSample) {
+template <typename ConfigType>
+RefPtr<MediaDataEncoder::EncodePromise>
+FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Encode(const MediaData* aSample) {
   FFMPEGV_LOG("Encode");
   return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 }
 
-RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<LIBAV_VER>::Drain() {
+template <typename ConfigType>
+RefPtr<MediaDataEncoder::EncodePromise>
+FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Drain() {
   FFMPEGV_LOG("Drain");
   return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 }
 
-RefPtr<ShutdownPromise> FFmpegVideoEncoder<LIBAV_VER>::Shutdown() {
+template <typename ConfigType>
+RefPtr<ShutdownPromise> FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Shutdown() {
   FFMPEGV_LOG("Shutdown");
-  RefPtr<FFmpegVideoEncoder<LIBAV_VER>> self = this;
+  RefPtr<FFmpegVideoEncoder<LIBAV_VER, ConfigType>> self = this;
   return InvokeAsync(mTaskQueue, __func__, [self]() {
     self->ProcessShutdown();
     return self->mTaskQueue->BeginShutdown();
   });
 }
 
-RefPtr<GenericPromise> FFmpegVideoEncoder<LIBAV_VER>::SetBitrate(
+template <typename ConfigType>
+RefPtr<GenericPromise> FFmpegVideoEncoder<LIBAV_VER, ConfigType>::SetBitrate(
     Rate aBitsPerSec) {
   FFMPEGV_LOG("SetBitrate");
   return GenericPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 }
 
-nsCString FFmpegVideoEncoder<LIBAV_VER>::GetDescriptionName() const {
+template <typename ConfigType>
+nsCString FFmpegVideoEncoder<LIBAV_VER, ConfigType>::GetDescriptionName()
+    const {
 #ifdef USING_MOZFFVPX
   return "ffvpx video encoder"_ns;
 #else
@@ -83,8 +97,9 @@ nsCString FFmpegVideoEncoder<LIBAV_VER>::GetDescriptionName() const {
 #endif
 }
 
+template <typename ConfigType>
 RefPtr<MediaDataEncoder::InitPromise>
-FFmpegVideoEncoder<LIBAV_VER>::ProcessInit() {
+FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessInit() {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
 
   FFMPEGV_LOG("ProcessInit");
@@ -114,7 +129,8 @@ FFmpegVideoEncoder<LIBAV_VER>::ProcessInit() {
   return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
 }
 
-void FFmpegVideoEncoder<LIBAV_VER>::ProcessShutdown() {
+template <typename ConfigType>
+void FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessShutdown() {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
 
   FFMPEGV_LOG("ProcessShutdown");
@@ -124,5 +140,8 @@ void FFmpegVideoEncoder<LIBAV_VER>::ProcessShutdown() {
     mCodecContext = nullptr;
   }
 }
+
+template class FFmpegVideoEncoder<LIBAV_VER, MediaDataEncoder::VP8Config>;
+template class FFmpegVideoEncoder<LIBAV_VER, MediaDataEncoder::VP9Config>;
 
 }  // namespace mozilla
