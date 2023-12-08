@@ -65,7 +65,10 @@ dependencies {
     }
     implementation ComponentsDependencies.kotlin_coroutines
 
-    if (findProject(":geckoview") != null) {
+    if (System.env.MOZ_AUTOMATION) {
+        rootProject.logger.lifecycle("Getting geckoview in MOZ_AUTOMATION getArtifactId=${getArtifactId()} mozconfig=${gradle.mozconfig}")
+        api "org.mozilla.geckoview:${getArtifactId()}:+"
+    } else if (findProject(":geckoview") != null) {
         api project(':geckoview')
     } else if (gradle.mozconfig.substs.MOZ_ARTIFACT_BUILDS) {
         api getGeckoViewDependency()

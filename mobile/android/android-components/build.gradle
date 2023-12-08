@@ -13,6 +13,16 @@ buildscript {
             mavenLocal()
         }
 
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+            rootProject.logger.lifecycle("Adding GRADLE_MAVEN_REPOSITORIES ${repository}")
+            maven {
+                url repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
+                }
+            }
+        }
+
         if (project.hasProperty("googleRepo")) {
             maven {
                 name "Google"
@@ -57,6 +67,16 @@ allprojects {
     repositories {
         if (!System.env.MOZ_AUTOMATION && gradle.mozconfig.substs.MOZ_ARTIFACT_BUILDS) {
             mavenLocal()
+        }
+
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+            rootProject.logger.lifecycle("Adding GRADLE_MAVEN_REPOSITORIES ${repository}")
+            maven {
+                url repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
+                }
+            }
         }
 
         if (project.hasProperty("googleRepo")) {
