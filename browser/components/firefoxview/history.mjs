@@ -42,6 +42,7 @@ const IMPORT_HISTORY_DISMISSED_PREF =
 
 const SEARCH_DEBOUNCE_RATE_MS = 500;
 const SEARCH_DEBOUNCE_TIMEOUT_MS = 1000;
+const SEARCH_RESULTS_LIMIT = 300;
 
 class HistoryInView extends ViewPage {
   constructor() {
@@ -143,7 +144,7 @@ class HistoryInView extends ViewPage {
       try {
         this.searchResults = await this.placesQuery.searchHistory(
           this.searchQuery,
-          lazy.maxRowsPref
+          SEARCH_RESULTS_LIMIT
         );
       } catch (e) {
         // Connection interrupted, ignore.
