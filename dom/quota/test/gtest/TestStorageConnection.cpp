@@ -20,8 +20,6 @@
 #include "nsIURIMutator.h"
 #include "nss.h"
 
-#define QM_TEST_FAIL [](nsresult) { FAIL(); }
-
 namespace mozilla {
 
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedNSSContext, NSSInitContext,

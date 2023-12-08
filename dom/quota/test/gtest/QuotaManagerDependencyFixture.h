@@ -14,6 +14,8 @@
 #include "mozilla/dom/quota/ForwardDecls.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 
+#define QM_TEST_FAIL [](nsresult) { FAIL(); }
+
 namespace mozilla::dom::quota::test {
 
 class QuotaManagerDependencyFixture : public testing::Test {
