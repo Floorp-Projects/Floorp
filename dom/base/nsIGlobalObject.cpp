@@ -181,14 +181,14 @@ void nsIGlobalObject::ForEachGlobalTeardownObserver(
   // while we are iterating by copying the DETH references to a temporary
   // list.
   AutoTArray<RefPtr<GlobalTeardownObserver>, 64> targetList;
-  for (const GlobalTeardownObserver* deth = mGlobalTeardownObservers.getFirst();
-       deth; deth = deth->getNext()) {
-    targetList.AppendElement(const_cast<GlobalTeardownObserver*>(deth));
+  for (const GlobalTeardownObserver* gto = mGlobalTeardownObservers.getFirst();
+       gto; gto = gto->getNext()) {
+    targetList.AppendElement(const_cast<GlobalTeardownObserver*>(gto));
   }
 
   // Iterate the target list and call the function on each one.
   bool done = false;
-  for (auto target : targetList) {
+  for (auto& target : targetList) {
     // Check to see if a previous iteration's callback triggered the removal
     // of this target as a side-effect.  If it did, then just ignore it.
     if (target->GetOwnerGlobal() != this) {
