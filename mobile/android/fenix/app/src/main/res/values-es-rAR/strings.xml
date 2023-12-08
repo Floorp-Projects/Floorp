@@ -1479,7 +1479,7 @@
     <string name="preferences_delete_browsing_data">Eliminar datos de navegación</string>
 
     <!-- Title for the tabs item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_tabs_title_2">Abrir pestañas</string>
+    <string name="preferences_delete_browsing_data_tabs_title_2">Pestañas abiertas</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d pestañas</string>
     <!-- Title for the data and history items in Delete browsing data -->

@@ -114,8 +114,10 @@
     <string name="mozac_feature_addons_details">ਵੇਰਵੇ</string>
     <!-- Displays a page with all the permissions of an add-on. -->
     <string name="mozac_feature_addons_permissions">ਇਜਾਜ਼ਤਾਂ</string>
-    <!-- This is button that remove (uninstall an add-on). -->
+    <!-- This is a button to remove (i.e. uninstall) an add-on. -->
     <string name="mozac_feature_addons_remove">ਹਟਾਓ</string>
+    <!-- This is a button to report an add-on. -->
+    <string name="mozac_feature_addons_report">ਰਿਪੋਰਟ</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">%1$s ਨੂੰ ਜੋੜਨਾ ਹੈ?</string>
     <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
@@ -202,8 +204,6 @@
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">%2$s %3$s ਨਾਲ ਮੁਆਫ਼ਕ ਨਾ ਹੋਣ ਕਰਕੇ %1$s ਨੂੰ ਇੰਸਟਾਲ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਿਆ।</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted_1">ਸਥਿਰਤਾ ਜਾਂ ਸੁਰੱਖਿਆ ਸਮੱਸਿਆਵਾਂ ਖੜ੍ਹੀਆਂ ਕਰਨ ਦੇ ਖ਼ਤਰੇ ਕਰਕੇ %1$s ਨੂੰ ਇੰਸਟਾਲ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਿਆ।</string>
-    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">ਸਥਿਰਤਾ ਜਾਂ ਸੁਰੱਖਿਆ ਸਮੱਸਿਆਵਾਂ ਦਾ ਵੱਡਾ ਖ਼ਤਰਾ ਹੋਣ ਕਰਕੇ %1$s ਨੂੰ ਇੰਸਟਾਲ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਿਆ</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s ਕਾਮਯਾਬੀ ਨਾਲ ਸਮਰੱਥ ਕੀਤੀ</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
