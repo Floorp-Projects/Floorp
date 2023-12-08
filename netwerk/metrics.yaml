@@ -606,6 +606,195 @@ networking:
     expires: never
     telemetry_mirror: HTTP_UPLOAD_THROUGHPUT_MBPS_HTTP_3
 
+  http_1_upload_throughput_10_50:
+    type: custom_distribution
+    unit: mbps
+    range_min: 0
+    range_max: 5000
+    bucket_count: 100
+    histogram_type: exponential
+    description: >
+     The upload throughput for http/1.0, http/1.1 request size between 10MB and 50MB. Measured in megabits per second, Mbps.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1866739
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858256#c2
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    expires: never
+    telemetry_mirror: HTTP_UPLOAD_THROUGHPUT_MBPS_HTTP_1_10_50
+
+  http_1_upload_throughput_50_100:
+    type: custom_distribution
+    unit: mbps
+    range_min: 0
+    range_max: 5000
+    bucket_count: 100
+    histogram_type: exponential
+    description: >
+     The upload throughput for http/1.0, http/1.1 request size between 50MB and 100MB. Measured in megabits per second, Mbps.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1866739
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858256#c2
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    expires: never
+    telemetry_mirror: HTTP_UPLOAD_THROUGHPUT_MBPS_HTTP_1_50_100
+
+  http_1_upload_throughput_100:
+    type: custom_distribution
+    unit: mbps
+    range_min: 0
+    range_max: 5000
+    bucket_count: 100
+    histogram_type: exponential
+    description: >
+     The upload throughput for http/1.0, http/1.1 request size larger than 100MB. Measured in megabits per second, Mbps.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1866739
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858256#c2
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    expires: never
+    telemetry_mirror: HTTP_UPLOAD_THROUGHPUT_MBPS_HTTP_1_100
+
+  http_2_upload_throughput_10_50:
+    type: custom_distribution
+    unit: mbps
+    range_min: 0
+    range_max: 5000
+    bucket_count: 100
+    histogram_type: exponential
+    description: >
+     The upload throughput for http/2 request size between 10MB and 50MB. Measured in megabits per second, Mbps.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1866739
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858256#c2
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    expires: never
+    telemetry_mirror: HTTP_UPLOAD_THROUGHPUT_MBPS_HTTP_2_10_50
+
+  http_2_upload_throughput_50_100:
+    type: custom_distribution
+    unit: mbps
+    range_min: 0
+    range_max: 5000
+    bucket_count: 100
+    histogram_type: exponential
+    description: >
+     The upload throughput for http/2 request size between 50MB and 100MB. Measured in megabits per second, Mbps.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1866739
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858256#c2
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    expires: never
+    telemetry_mirror: HTTP_UPLOAD_THROUGHPUT_MBPS_HTTP_2_50_100
+
+  http_2_upload_throughput_100:
+    type: custom_distribution
+    unit: mbps
+    range_min: 0
+    range_max: 5000
+    bucket_count: 100
+    histogram_type: exponential
+    description: >
+     The upload throughput for http/2 request size larger than 100MB. Measured in megabits per second, Mbps.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1866739
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858256#c2
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    expires: never
+    telemetry_mirror: HTTP_UPLOAD_THROUGHPUT_MBPS_HTTP_2_100
+
+  http_3_upload_throughput_10_50:
+    type: custom_distribution
+    unit: mbps
+    range_min: 0
+    range_max: 5000
+    bucket_count: 100
+    histogram_type: exponential
+    description: >
+     The upload throughput for http/3 request size between 10MB and 50MB. Measured in megabits per second, Mbps.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1866739
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858256#c2
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    expires: never
+    telemetry_mirror: HTTP_UPLOAD_THROUGHPUT_MBPS_HTTP_3_10_50
+
+  http_3_upload_throughput_50_100:
+    type: custom_distribution
+    unit: mbps
+    range_min: 0
+    range_max: 5000
+    bucket_count: 100
+    histogram_type: exponential
+    description: >
+     The upload throughput for http/3 request size between 50MB and 100MB. Measured in megabits per second, Mbps.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1866739
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858256#c2
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    expires: never
+    telemetry_mirror: HTTP_UPLOAD_THROUGHPUT_MBPS_HTTP_3_50_100
+
+  http_3_upload_throughput_100:
+    type: custom_distribution
+    unit: mbps
+    range_min: 0
+    range_max: 5000
+    bucket_count: 100
+    histogram_type: exponential
+    description: >
+     The upload throughput for http/3 request size larger than 100MB. Measured in megabits per second, Mbps.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1866739
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858256#c2
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    expires: never
+    telemetry_mirror: HTTP_UPLOAD_THROUGHPUT_MBPS_HTTP_3_100
+
   residual_cache_folder_count:
     type: counter
     description: >
