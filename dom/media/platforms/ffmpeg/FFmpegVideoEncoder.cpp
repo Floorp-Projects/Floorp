@@ -10,6 +10,7 @@
 #include "FFmpegRuntimeLinker.h"
 #include "ImageContainer.h"
 #include "VPXDecoder.h"
+#include "libavutil/error.h"
 #include "libavutil/pixfmt.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/PodOperations.h"
@@ -24,8 +25,10 @@ namespace ffmpeg {
 
 #if LIBAVCODEC_VERSION_MAJOR >= 57
 using FFmpegBitRate = int64_t;
+constexpr size_t FFmpegErrorMaxStringSize = AV_ERROR_MAX_STRING_SIZE;
 #else
 using FFmpegBitRate = int;
+constexpr size_t FFmpegErrorMaxStringSize = 64;
 #endif
 
 #if LIBAVCODEC_VERSION_MAJOR < 54
@@ -136,6 +139,14 @@ static const char* GetPixelFormatString(FFmpegPixelFormat aFormat) {
 
 namespace mozilla {
 
+static nsCString MakeErrorString(const FFmpegLibWrapper* aLib, int aErrNum) {
+  MOZ_ASSERT(aLib);
+
+  char errStr[ffmpeg::FFmpegErrorMaxStringSize];
+  aLib->av_strerror(aErrNum, errStr, ffmpeg::FFmpegErrorMaxStringSize);
+  return nsCString(errStr);
+}
+
 template <>
 AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(const nsACString& aMimeType) {
 #if LIBAVCODEC_VERSION_MAJOR >= 54
@@ -183,6 +194,7 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Encode(const MediaData* aSample) {
   MOZ_ASSERT(aSample != nullptr);
 
   FFMPEGV_LOG("Encode");
+
   return InvokeAsync(
       mTaskQueue, __func__,
       [self = RefPtr<FFmpegVideoEncoder<LIBAV_VER, ConfigType>>(this),
@@ -308,7 +320,8 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessInit() {
 
   AVDictionary* options = nullptr;
   if (int ret = OpenCodecContext(codec, &options); ret < 0) {
-    FFMPEGV_LOG("failed to open %s avcodec: %d", codec->name, ret);
+    FFMPEGV_LOG("failed to open %s avcodec: %s", codec->name,
+                MakeErrorString(mLib, ret).get());
     return InitPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                     RESULT_DETAIL("Unable to open avcodec")),
@@ -339,7 +352,6 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessEncode(
   FFMPEGV_LOG("FFmpegVideoEncoder needs ffmpeg 58 at least.");
   return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 #else
-
   RefPtr<const VideoData> sample(aSample->As<const VideoData>());
   MOZ_ASSERT(sample);
 
@@ -509,8 +521,9 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::EncodeWithModernAPIs(
   mFrame->height = static_cast<int>(aSample->mImage->GetSize().height);
 
   // Allocate AVFrame data.
-  if (mLib->av_frame_get_buffer(mFrame, 0) < 0) {
-    FFMPEGV_LOG("failed to allocate frame data");
+  if (int ret = mLib->av_frame_get_buffer(mFrame, 0); ret < 0) {
+    FFMPEGV_LOG("failed to allocate frame data: %s",
+                MakeErrorString(mLib, ret).get());
     return EncodePromise::CreateAndReject(
         MediaResult(NS_ERROR_OUT_OF_MEMORY,
                     RESULT_DETAIL("Unable to allocate frame data")),
@@ -518,8 +531,9 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::EncodeWithModernAPIs(
   }
 
   // Make sure AVFrame is writable.
-  if (mLib->av_frame_make_writable(mFrame) < 0) {
-    FFMPEGV_LOG("failed to make frame writable");
+  if (int ret = mLib->av_frame_make_writable(mFrame); ret < 0) {
+    FFMPEGV_LOG("failed to make frame writable: %s",
+                MakeErrorString(mLib, ret).get());
     return EncodePromise::CreateAndReject(
         MediaResult(NS_ERROR_NOT_AVAILABLE,
                     RESULT_DETAIL("Unable to make frame writable")),
@@ -661,12 +675,13 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::EncodeWithModernAPIs(
 
   // Send frame and receive packets.
 
-  if (mLib->avcodec_send_frame(mCodecContext, mFrame) < 0) {
+  if (int ret = mLib->avcodec_send_frame(mCodecContext, mFrame); ret < 0) {
     // In theory, avcodec_send_frame could sent -EAGAIN to signal its internal
     // buffers is full. In practice this can't happen as we only feed one frame
     // at a time, and we immediately call avcodec_receive_packet right after.
     // TODO: Create a NS_ERROR_DOM_MEDIA_ENCODE_ERR in ErrorList.py?
-    FFMPEGV_LOG("avcodec_send_frame error");
+    FFMPEGV_LOG("avcodec_send_frame error: %s",
+                MakeErrorString(mLib, ret).get());
     return EncodePromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                     RESULT_DETAIL("avcodec_send_frame error")),
@@ -685,7 +700,8 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::EncodeWithModernAPIs(
     if (ret < 0) {
       // AVERROR_EOF is returned when the encoder has been fully flushed, but it
       // shouldn't happen here.
-      FFMPEGV_LOG("avcodec_receive_packet error");
+      FFMPEGV_LOG("avcodec_receive_packet error: %s",
+                  MakeErrorString(mLib, ret).get());
       return EncodePromise::CreateAndReject(
           MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                       RESULT_DETAIL("avcodec_receive_packet error")),
@@ -744,7 +760,8 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::DrainWithModernAPIs() {
       return EncodePromise::CreateAndResolve(EncodedData(), __func__);
     }
 
-    FFMPEGV_LOG("avcodec_send_frame error");
+    FFMPEGV_LOG("avcodec_send_frame error: %s",
+                MakeErrorString(mLib, ret).get());
     return EncodePromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                     RESULT_DETAIL("avcodec_send_frame error")),
@@ -762,7 +779,8 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::DrainWithModernAPIs() {
     if (ret < 0) {
       // avcodec_receive_packet should not result in a -EAGAIN once it's in
       // draining mode.
-      FFMPEGV_LOG("avcodec_receive_packet error");
+      FFMPEGV_LOG("avcodec_receive_packet error: %s",
+                  MakeErrorString(mLib, ret).get());
       return EncodePromise::CreateAndReject(
           MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                       RESULT_DETAIL("avcodec_receive_packet error")),
