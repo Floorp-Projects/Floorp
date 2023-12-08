@@ -553,7 +553,7 @@ void PDMFactory::CreateRddPDMs() {
 #ifdef MOZ_FFVPX
   if (StaticPrefs::media_ffvpx_enabled() &&
       StaticPrefs::media_rdd_ffvpx_enabled()) {
-    CreateAndStartupPDM<FFVPXRuntimeLinker>();
+    StartupPDM(FFVPXRuntimeLinker::CreateDecoder());
   }
 #endif
 #ifdef MOZ_FFMPEG
@@ -586,7 +586,7 @@ void PDMFactory::CreateUtilityPDMs() {
 #ifdef MOZ_FFVPX
     if (StaticPrefs::media_ffvpx_enabled() &&
         StaticPrefs::media_utility_ffvpx_enabled()) {
-      CreateAndStartupPDM<FFVPXRuntimeLinker>();
+      StartupPDM(FFVPXRuntimeLinker::CreateDecoder());
     }
 #endif
 #ifdef MOZ_FFMPEG
@@ -672,7 +672,7 @@ void PDMFactory::CreateContentPDMs() {
 #endif
 #ifdef MOZ_FFVPX
     if (StaticPrefs::media_ffvpx_enabled()) {
-      CreateAndStartupPDM<FFVPXRuntimeLinker>();
+      StartupPDM(FFVPXRuntimeLinker::CreateDecoder());
     }
 #endif
 #ifdef MOZ_FFMPEG
@@ -724,7 +724,7 @@ void PDMFactory::CreateDefaultPDMs() {
 #endif
 #ifdef MOZ_FFVPX
   if (StaticPrefs::media_ffvpx_enabled()) {
-    CreateAndStartupPDM<FFVPXRuntimeLinker>();
+    StartupPDM(FFVPXRuntimeLinker::CreateDecoder());
   }
 #endif
 #ifdef MOZ_FFMPEG
