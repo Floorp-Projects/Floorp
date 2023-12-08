@@ -4,41 +4,40 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['COMPILE_ENVIRONMENT']:
+if CONFIG["COMPILE_ENVIRONMENT"]:
     DIRS += [
-        '/js/src',
+        "/js/src",
     ]
 else:
     TEST_DIRS += [
-        '/js/src/tests',
+        "/js/src/tests",
     ]
 
-if CONFIG['JS_STANDALONE'] and CONFIG['OS_ARCH'] != 'WINNT':
+if CONFIG["JS_STANDALONE"] and CONFIG["OS_ARCH"] != "WINNT":
     DIRS += [
-        '/build/unix',
+        "/build/unix",
     ]
 
 DIRS += [
-    '/config/external/fdlibm',
-    '/config/external/nspr',
-    '/config/external/zlib',
-    '/memory',
-    '/mfbt',
-    '/mozglue',
+    "/config/external/fdlibm",
+    "/config/external/nspr",
+    "/config/external/zlib",
+    "/memory",
+    "/mfbt",
+    "/mozglue",
 ]
 
-if CONFIG['JS_HAS_INTL_API']:
+if CONFIG["JS_HAS_INTL_API"]:
     DIRS += [
-        '/config/external/icu',
+        "/config/external/icu",
     ]
 
-if CONFIG['COMPILE_ENVIRONMENT'] and CONFIG['BUILD_CTYPES']:
+if CONFIG["COMPILE_ENVIRONMENT"] and CONFIG["BUILD_CTYPES"]:
     DIRS += [
-        '/config/external/ffi',
+        "/config/external/ffi",
     ]
 
-if CONFIG['JS_STANDALONE'] and CONFIG['FUZZING']:
+if CONFIG["JS_STANDALONE"] and CONFIG["FUZZING"]:
     DIRS += [
-        '/tools/fuzzing/',
+        "/tools/fuzzing/",
     ]
-

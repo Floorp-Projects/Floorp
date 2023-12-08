@@ -6,6 +6,5 @@
 
 libfuzzer_flags = []
 
-if CONFIG['LIBFUZZER_FLAGS']:
-    libfuzzer_flags += CONFIG['LIBFUZZER_FLAGS']
-
+if CONFIG["LIBFUZZER_FLAGS"]:
+    libfuzzer_flags += CONFIG["LIBFUZZER_FLAGS"]

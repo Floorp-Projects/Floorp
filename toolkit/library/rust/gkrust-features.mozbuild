@@ -6,81 +6,85 @@
 
 gkrust_features = []
 
-if CONFIG['MOZ_DEBUG']:
+if CONFIG["MOZ_DEBUG"]:
     gkrust_features += [
-        'gecko_debug',
-        'gecko_refcount_logging',
+        "gecko_debug",
+        "gecko_refcount_logging",
     ]
 
-if CONFIG['MOZ_TSAN']:
-    gkrust_features += ['thread_sanitizer']
+if CONFIG["MOZ_TSAN"]:
+    gkrust_features += ["thread_sanitizer"]
 
-if CONFIG['MOZ_WEBRENDER_DEBUGGER']:
-    gkrust_features += ['webrender_debugger']
+if CONFIG["MOZ_WEBRENDER_DEBUGGER"]:
+    gkrust_features += ["webrender_debugger"]
 
-if CONFIG['MOZ_PULSEAUDIO']:
-    gkrust_features += ['cubeb_pulse_rust']
+if CONFIG["MOZ_PULSEAUDIO"]:
+    gkrust_features += ["cubeb_pulse_rust"]
 
-if CONFIG['MOZ_AUDIOUNIT_RUST']:
-    gkrust_features += ['cubeb_coreaudio_rust']
+if CONFIG["MOZ_AUDIOUNIT_RUST"]:
+    gkrust_features += ["cubeb_coreaudio_rust"]
 
-if CONFIG['MOZ_RUST_SIMD']:
-    gkrust_features += ['simd-accel']
+if CONFIG["MOZ_RUST_SIMD"]:
+    gkrust_features += ["simd-accel"]
 
 # This feature is not yet supported on all platforms, and this check needs to
 # match MOZ_CUBEB_REMOTING in CubebUtils.cpp.
-if CONFIG['OS_ARCH'] == 'Linux' or CONFIG['OS_ARCH'] == 'Darwin' or CONFIG['OS_ARCH'] == 'WINNT':
-    gkrust_features += ['cubeb-remoting']
+if (
+    CONFIG["OS_ARCH"] == "Linux"
+    or CONFIG["OS_ARCH"] == "Darwin"
+    or CONFIG["OS_ARCH"] == "WINNT"
+):
+    gkrust_features += ["cubeb-remoting"]
 
-if CONFIG['MOZ_MEMORY']:
-    gkrust_features += ['moz_memory']
+if CONFIG["MOZ_MEMORY"]:
+    gkrust_features += ["moz_memory"]
 
-if CONFIG['MOZ_PLACES']:
-    gkrust_features += ['moz_places']
+if CONFIG["MOZ_PLACES"]:
+    gkrust_features += ["moz_places"]
 
-if CONFIG['JS_ENABLE_SMOOSH']:
-    gkrust_features += ['smoosh']
+if CONFIG["JS_ENABLE_SMOOSH"]:
+    gkrust_features += ["smoosh"]
 
-if CONFIG['MOZ_GECKO_PROFILER']:
-    gkrust_features += ['gecko_profiler']
+if CONFIG["MOZ_GECKO_PROFILER"]:
+    gkrust_features += ["gecko_profiler"]
 
-if CONFIG['MOZ_GECKO_PROFILER_PARSE_ELF']:
-    gkrust_features += ['gecko_profiler_parse_elf']
+if CONFIG["MOZ_GECKO_PROFILER_PARSE_ELF"]:
+    gkrust_features += ["gecko_profiler_parse_elf"]
 
-if CONFIG['MOZ_BITS_DOWNLOAD']:
-    gkrust_features += ['bitsdownload']
+if CONFIG["MOZ_BITS_DOWNLOAD"]:
+    gkrust_features += ["bitsdownload"]
 
-if CONFIG['LIBFUZZER']:
-    gkrust_features += ['libfuzzer']
+if CONFIG["LIBFUZZER"]:
+    gkrust_features += ["libfuzzer"]
 
-if CONFIG['MOZ_WEBRTC']:
-    gkrust_features += ['webrtc']
+if CONFIG["MOZ_WEBRTC"]:
+    gkrust_features += ["webrtc"]
 
 # We need to tell Glean it is being built with Gecko.
-gkrust_features += ['glean_with_gecko']
+gkrust_features += ["glean_with_gecko"]
 
-if not CONFIG['MOZILLA_OFFICIAL']:
-    gkrust_features += ['glean_disable_upload']
+if not CONFIG["MOZILLA_OFFICIAL"]:
+    gkrust_features += ["glean_disable_upload"]
 
-if CONFIG['OS_TARGET'] != 'Android':
-    gkrust_features += ['glean_million_queue']
+if CONFIG["OS_TARGET"] != "Android":
+    gkrust_features += ["glean_million_queue"]
 
-if CONFIG['MOZ_ENABLE_DBUS']:
-    gkrust_features += ['with_dbus']
+if CONFIG["MOZ_ENABLE_DBUS"]:
+    gkrust_features += ["with_dbus"]
 
 if CONFIG["MOZ_CRASHREPORTER"]:
-    gkrust_features += ['crashreporter']
-    if CONFIG['MOZ_OXIDIZED_BREAKPAD']:
-        gkrust_features += ['oxidized_breakpad']
+    gkrust_features += ["crashreporter"]
+    if CONFIG["MOZ_OXIDIZED_BREAKPAD"]:
+        gkrust_features += ["oxidized_breakpad"]
 
 if CONFIG["MOZ_WEBMIDI_MIDIR_IMPL"]:
-    gkrust_features += ['webmidi_midir_impl']
+    gkrust_features += ["webmidi_midir_impl"]
 
 if CONFIG["MOZ_UNIFFI_FIXTURES"]:
-    gkrust_features += ['uniffi_fixtures']
+    gkrust_features += ["uniffi_fixtures"]
 
 if CONFIG["MOZ_ICU4X"]:
-    gkrust_features += ['icu4x']
+    gkrust_features += ["icu4x"]
 
 # This must remain last.
 gkrust_features = ["gkrust-shared/%s" % f for f in gkrust_features]

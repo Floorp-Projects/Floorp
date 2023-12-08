@@ -8,8 +8,8 @@
 # Gecko build performs equivalents elsewhere in its configuration.
 
 USE_LIBS += [
-    'jsrust',
-    'zlib',
+    "jsrust",
+    "zlib",
 ]
 
 if CONFIG["OS_ARCH"] == "WINNT":

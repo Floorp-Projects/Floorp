@@ -7,69 +7,69 @@
 # Also see <http://www.icu-project.org/repos/icu/tags/latest/icu4c/readme.html#RecBuild> for the
 # recommended build options when compiling ICU.
 # Don't use icu namespace automatically in client code.
-DEFINES['U_USING_ICU_NAMESPACE'] = 0
+DEFINES["U_USING_ICU_NAMESPACE"] = 0
 # Don't include obsolete header files.
-DEFINES['U_NO_DEFAULT_INCLUDE_UTF_HEADERS'] = 1
-DEFINES['U_HIDE_OBSOLETE_UTF_OLD_H'] = 1
+DEFINES["U_NO_DEFAULT_INCLUDE_UTF_HEADERS"] = 1
+DEFINES["U_HIDE_OBSOLETE_UTF_OLD_H"] = 1
 
 # Remove chunks of the library that we don't need (yet).
-DEFINES['UCONFIG_NO_LEGACY_CONVERSION'] = True
-DEFINES['UCONFIG_NO_TRANSLITERATION'] = True
-DEFINES['UCONFIG_NO_REGULAR_EXPRESSIONS'] = True
-DEFINES['UCONFIG_NO_BREAK_ITERATION'] = True
+DEFINES["UCONFIG_NO_LEGACY_CONVERSION"] = True
+DEFINES["UCONFIG_NO_TRANSLITERATION"] = True
+DEFINES["UCONFIG_NO_REGULAR_EXPRESSIONS"] = True
+DEFINES["UCONFIG_NO_BREAK_ITERATION"] = True
 
 # We don't need to pass data to and from legacy char* APIs.
-DEFINES['U_CHARSET_IS_UTF8'] = True
+DEFINES["U_CHARSET_IS_UTF8"] = True
 
 # Add 'explicit' keyword to UnicodeString constructors.
-DEFINES['UNISTR_FROM_CHAR_EXPLICIT'] = "explicit"
-DEFINES['UNISTR_FROM_STRING_EXPLICIT'] = "explicit"
+DEFINES["UNISTR_FROM_CHAR_EXPLICIT"] = "explicit"
+DEFINES["UNISTR_FROM_STRING_EXPLICIT"] = "explicit"
 
 # Disable dynamic loading of ICU data as a loadable library.
-DEFINES['U_ENABLE_DYLOAD'] = 0
+DEFINES["U_ENABLE_DYLOAD"] = 0
 
-if not CONFIG['HAVE_LANGINFO_CODESET']:
-    DEFINES['U_HAVE_NL_LANGINFO_CODESET'] = 0
+if not CONFIG["HAVE_LANGINFO_CODESET"]:
+    DEFINES["U_HAVE_NL_LANGINFO_CODESET"] = 0
 
-if CONFIG['MOZ_DEBUG']:
-    DEFINES['U_DEBUG'] = 1
+if CONFIG["MOZ_DEBUG"]:
+    DEFINES["U_DEBUG"] = 1
 
 # ICU requires RTTI
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-frtti']
-elif CONFIG['OS_TARGET'] == 'WINNT':
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
+    CXXFLAGS += ["-frtti"]
+elif CONFIG["OS_TARGET"] == "WINNT":
     # Remove the -GR- flag so we don't get a bunch of warning spam.
-    COMPILE_FLAGS['OS_CXXFLAGS'] = [
-        f for f in COMPILE_FLAGS['OS_CXXFLAGS'] if f != '-GR-'
-    ] + ['-GR']
+    COMPILE_FLAGS["OS_CXXFLAGS"] = [
+        f for f in COMPILE_FLAGS["OS_CXXFLAGS"] if f != "-GR-"
+    ] + ["-GR"]
 
 DisableStlWrapping()
 AllowCompilerWarnings()
 
 # We allow compiler warnings, but we can at least cut down on spammy
 # warnings that get triggered for every file.
-if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
+if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
     CFLAGS += [
-        '-Wno-c++20-compat',
-        '-Wno-comma',
-        '-Wno-implicit-const-int-float-conversion',
-        '-Wno-macro-redefined',
-        '-Wno-microsoft-include',
-        '-Wno-tautological-unsigned-enum-zero-compare',
-        '-Wno-unreachable-code-loop-increment',
-        '-Wno-unreachable-code-return',
+        "-Wno-c++20-compat",
+        "-Wno-comma",
+        "-Wno-implicit-const-int-float-conversion",
+        "-Wno-macro-redefined",
+        "-Wno-microsoft-include",
+        "-Wno-tautological-unsigned-enum-zero-compare",
+        "-Wno-unreachable-code-loop-increment",
+        "-Wno-unreachable-code-return",
     ]
     CXXFLAGS += [
-        '-Wno-c++20-compat',
-        '-Wno-comma',
-        '-Wno-implicit-const-int-float-conversion',
-        '-Wno-macro-redefined',
-        '-Wno-microsoft-include',
-        '-Wno-tautological-unsigned-enum-zero-compare',
-        '-Wno-unreachable-code-loop-increment',
-        '-Wno-unreachable-code-return',
+        "-Wno-c++20-compat",
+        "-Wno-comma",
+        "-Wno-implicit-const-int-float-conversion",
+        "-Wno-macro-redefined",
+        "-Wno-microsoft-include",
+        "-Wno-tautological-unsigned-enum-zero-compare",
+        "-Wno-unreachable-code-loop-increment",
+        "-Wno-unreachable-code-return",
     ]
 
 for k, v in DEFINES.items():
-    if k != 'UCONFIG_NO_LEGACY_CONVERSION':
+    if k != "UCONFIG_NO_LEGACY_CONVERSION":
         HOST_DEFINES[k] = v

@@ -5,14 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # ICU pkg-config flags
-CXXFLAGS += CONFIG['MOZ_ICU_CFLAGS']
+CXXFLAGS += CONFIG["MOZ_ICU_CFLAGS"]
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+if CONFIG["CC_TYPE"] in ("clang", "gcc"):
     # Error on bad printf-like format strings
-    CXXFLAGS += ['-Werror=format']
+    CXXFLAGS += ["-Werror=format"]
 
 # gcc is buggy and warns on our attempts to JS_PUBLIC_API our
 # forward-declarations or explicit template instantiations. See
 # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=50044
-if CONFIG['CC_TYPE'] == 'gcc':
-    CXXFLAGS += ['-Wno-attributes']
+if CONFIG["CC_TYPE"] == "gcc":
+    CXXFLAGS += ["-Wno-attributes"]

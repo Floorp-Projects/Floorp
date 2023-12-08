@@ -4,188 +4,191 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include('/js/app.mozbuild')
+include("/js/app.mozbuild")
 
 PYTHON_UNITTEST_MANIFESTS += [
-    '/layout/tools/reftest/selftest/python.ini',
-    '/testing/condprofile/condprof/tests/python.ini',
-    '/testing/marionette/harness/marionette_harness/tests/harness_unit/python.ini',
-    '/testing/mochitest/tests/python/python.ini',
-    '/testing/raptor/test/python.ini',
-    '/testing/talos/talos/unittests/python.ini'
+    "/layout/tools/reftest/selftest/python.ini",
+    "/testing/condprofile/condprof/tests/python.ini",
+    "/testing/marionette/harness/marionette_harness/tests/harness_unit/python.ini",
+    "/testing/mochitest/tests/python/python.ini",
+    "/testing/raptor/test/python.ini",
+    "/testing/talos/talos/unittests/python.ini",
 ]
 
 DIRS += [
-    '/tools',
-    '/xpcom/xpidl',
+    "/tools",
+    "/xpcom/xpidl",
 ]
 
-if CONFIG['COMPILE_ENVIRONMENT']:
+if CONFIG["COMPILE_ENVIRONMENT"]:
     DIRS += [
-        '/config/external',
-        '/security',
+        "/config/external",
+        "/security",
     ]
 
-if CONFIG['ENABLE_TESTS']:
+if CONFIG["ENABLE_TESTS"]:
     DIRS += [
-        '/toolkit/library/gtest/rust',
+        "/toolkit/library/gtest/rust",
     ]
 
-if not CONFIG['MOZ_OVERRIDE_GKRUST']:
+if not CONFIG["MOZ_OVERRIDE_GKRUST"]:
     DIRS += [
-        '/toolkit/library/rust',
+        "/toolkit/library/rust",
     ]
 
-if CONFIG['MOZ_SANDBOX']:
-    DIRS += ['/security/sandbox']
+if CONFIG["MOZ_SANDBOX"]:
+    DIRS += ["/security/sandbox"]
 
 if CONFIG["MOZ_USING_WASM_SANDBOXING"] and CONFIG["COMPILE_ENVIRONMENT"]:
     DIRS += ["/security/rlbox"]
 
 # the signing related bits of libmar depend on nss
-if CONFIG['MOZ_UPDATER']:
-    DIRS += ['/modules/libmar']
+if CONFIG["MOZ_UPDATER"]:
+    DIRS += ["/modules/libmar"]
 
 DIRS += [
-    '/config/external/freetype2',
-    '/xpcom',
-    '/modules/libpref',
-    '/intl',
-    '/netwerk',
+    "/config/external/freetype2",
+    "/xpcom",
+    "/modules/libpref",
+    "/intl",
+    "/netwerk",
 ]
 
-if CONFIG['MOZ_AUTH_EXTENSION']:
-    DIRS += ['/extensions/auth']
+if CONFIG["MOZ_AUTH_EXTENSION"]:
+    DIRS += ["/extensions/auth"]
 
-if CONFIG['MOZ_UPDATER'] and CONFIG['OS_TARGET'] != 'Android':
+if CONFIG["MOZ_UPDATER"] and CONFIG["OS_TARGET"] != "Android":
     DIRS += [
-        '/toolkit/mozapps/update/updater/bspatch',
-        '/other-licenses/bsdiff',
+        "/toolkit/mozapps/update/updater/bspatch",
+        "/other-licenses/bsdiff",
     ]
 
 # Gecko/Core components.
 
 DIRS += [
-    '/ipc',
-    '/hal',
-    '/js/loader',
-    '/js/xpconnect',
-    '/modules/libjar',
-    '/storage',
+    "/ipc",
+    "/hal",
+    "/js/loader",
+    "/js/xpconnect",
+    "/modules/libjar",
+    "/storage",
 ]
 
-if CONFIG['COMPILE_ENVIRONMENT']:
+if CONFIG["COMPILE_ENVIRONMENT"]:
     DIRS += [
-        '/media/libyuv',
+        "/media/libyuv",
     ]
 
 DIRS += [
-    '/extensions/permissions',
+    "/extensions/permissions",
 ]
 
-if CONFIG['MOZ_WEBRTC'] and CONFIG['COMPILE_ENVIRONMENT']:
+if CONFIG["MOZ_WEBRTC"] and CONFIG["COMPILE_ENVIRONMENT"]:
     DIRS += [
-        '/media/webrtc',
-        '/dom/media/webrtc/transport',
+        "/media/webrtc",
+        "/dom/media/webrtc/transport",
     ]
 
-if CONFIG['ENABLE_TESTS']:
-    DIRS += ['/testing/specialpowers']
+if CONFIG["ENABLE_TESTS"]:
+    DIRS += ["/testing/specialpowers"]
 
 DIRS += [
-    '/testing/gtest',
-    '/uriloader',
-    '/caps',
-    '/parser',
-    '/gfx',
-    '/image',
-    '/dom',
-    '/view',
-    '/widget',
-    '/editor',
-    '/layout',
-    '/docshell',
-    '/xpfe/appshell'
+    "/testing/gtest",
+    "/uriloader",
+    "/caps",
+    "/parser",
+    "/gfx",
+    "/image",
+    "/dom",
+    "/view",
+    "/widget",
+    "/editor",
+    "/layout",
+    "/docshell",
+    "/xpfe/appshell",
 ]
 
-if CONFIG['MOZ_UNIVERSALCHARDET']:
-    DIRS += ['/extensions/universalchardet']
+if CONFIG["MOZ_UNIVERSALCHARDET"]:
+    DIRS += ["/extensions/universalchardet"]
 
-if CONFIG['ACCESSIBILITY']:
-    DIRS += ['/accessible']
+if CONFIG["ACCESSIBILITY"]:
+    DIRS += ["/accessible"]
 else:
-    DIRS += ['/accessible/ipc']
+    DIRS += ["/accessible/ipc"]
 
 # toolkit
 
 # This must precede xpfe.
-if CONFIG['MOZ_JPROF']:
-    DIRS += ['/tools/jprof']
+if CONFIG["MOZ_JPROF"]:
+    DIRS += ["/tools/jprof"]
 
 DIRS += [
-    '/tools/code-coverage',
-    '/tools/performance',
-    '/tools/power',
-    '/tools/profiler',
-    '/extensions/spellcheck',
-    '/security/certverifier',
-    '/security/manager',
-    '/toolkit',
+    "/tools/code-coverage",
+    "/tools/performance",
+    "/tools/power",
+    "/tools/profiler",
+    "/extensions/spellcheck",
+    "/security/certverifier",
+    "/security/manager",
+    "/toolkit",
 ]
 
-if CONFIG['MOZ_PREF_EXTENSIONS']:
-    DIRS += ['/extensions/pref']
+if CONFIG["MOZ_PREF_EXTENSIONS"]:
+    DIRS += ["/extensions/pref"]
 
 DIRS += [
-    '/devtools',
-    '/toolkit/library',
-    '/services',
-    '/startupcache',
-    '/other-licenses/snappy',
+    "/devtools",
+    "/toolkit/library",
+    "/services",
+    "/startupcache",
+    "/other-licenses/snappy",
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     DIRS += [
-        '/media/mozva',
-        '/toolkit/system/gnome',
+        "/media/mozva",
+        "/toolkit/system/gnome",
     ]
 
-if CONFIG['ENABLE_WEBDRIVER']:
+if CONFIG["ENABLE_WEBDRIVER"]:
     DIRS += [
-        '/remote',
-        '/testing/firefox-ui',
-        '/testing/marionette',
-        '/toolkit/components/telemetry/tests/marionette',
+        "/remote",
+        "/testing/firefox-ui",
+        "/testing/marionette",
+        "/toolkit/components/telemetry/tests/marionette",
     ]
 
-if CONFIG['MOZ_GECKODRIVER'] and not CONFIG['MOZ_TSAN'] and not CONFIG['FUZZING_INTERFACES']:
-    DIRS += ['/testing/geckodriver']
+if (
+    CONFIG["MOZ_GECKODRIVER"]
+    and not CONFIG["MOZ_TSAN"]
+    and not CONFIG["FUZZING_INTERFACES"]
+):
+    DIRS += ["/testing/geckodriver"]
 
 DIRS += [
-    '/media/gmp-clearkey/0.1',
+    "/media/gmp-clearkey/0.1",
 ]
 
-if CONFIG['ENABLE_TESTS']:
+if CONFIG["ENABLE_TESTS"]:
     DIRS += [
-        '/testing/mochitest',
-        '/testing/xpcshell',
-        '/testing/tools/minidumpwriter',
-        '/testing/tools/screenshot',
-        '/testing/profiles',
-        '/testing/modules',
-        '/testing/runtimes',
-        '/testing/web-platform',
-        '/testing/extensions',
+        "/testing/mochitest",
+        "/testing/xpcshell",
+        "/testing/tools/minidumpwriter",
+        "/testing/tools/screenshot",
+        "/testing/profiles",
+        "/testing/modules",
+        "/testing/runtimes",
+        "/testing/web-platform",
+        "/testing/extensions",
     ]
 
-    if CONFIG['MOZ_MEMORY']:
-        DIRS += ['/memory/gtest']
+    if CONFIG["MOZ_MEMORY"]:
+        DIRS += ["/memory/gtest"]
 
-    if CONFIG['MOZ_WEBRTC']:
+    if CONFIG["MOZ_WEBRTC"]:
         DIRS += [
-            '/dom/media/webrtc/transport/test',
+            "/dom/media/webrtc/transport/test",
         ]
 
-if CONFIG['FUZZING']:
-    DIRS += ['/tools/fuzzing']
-
+if CONFIG["FUZZING"]:
+    DIRS += ["/tools/fuzzing"]

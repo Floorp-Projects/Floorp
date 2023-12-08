@@ -1,19 +1,22 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
+
 @template
 def Library(name):
     LIBRARY_NAME = name
+
 
 @template
 def SharedLibrary(name):
     FORCE_SHARED_LIB = True
     LIBRARY_NAME = name
 
+
 @template
 def Binary():
     # Add -lfoo for testing purposes.
-    OS_LIBS += ['foo']
+    OS_LIBS += ["foo"]
 
 
 @template

@@ -4,9 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
 @template
 def DevToolsModules(*modules):
-    '''Installs JS modules at a resource:// path that corresponds directly to
+    """Installs JS modules at a resource:// path that corresponds directly to
     their source tree location.
 
     For this to work as intended, a moz.build file should be placed in each
@@ -14,27 +15,30 @@ def DevToolsModules(*modules):
     its own directory.  Subdirectories should use their own moz.build.
 
     By following this pattern, there's less magic to require() and resource://
-    paths, since they now match the source tree.'''
+    paths, since they now match the source tree."""
 
     for m in modules:
-        if '/' in m:
-            error('DevToolsModules must be used from the same directory as ' +
-                  'the files to be installed.')
+        if "/" in m:
+            error(
+                "DevToolsModules must be used from the same directory as "
+                + "the files to be installed."
+            )
 
     # jar.mn manifest files are typically used to install files to chrome
     # locations.  Instead of doing this, use this DevToolsModules syntax via
     # moz.build files to do the installation so that we can enforce correct
     # paths based on source tree location.
     base = FINAL_TARGET_FILES.chrome.devtools.modules
-    for dir in RELATIVEDIR.split('/'):
+    for dir in RELATIVEDIR.split("/"):
         base = base[dir]
     base += [m for m in modules]
 
 
 @template
 def RenamedDevToolsModules(source, target):
-    ''' Helper function to ship a file (source) with a distinct name (target).
-    This will ship the file the same way DevToolsModule does it, to resource://devtools/'''
+    """Helper function to ship a file (source) with a distinct name (target).
+    This will ship the file the same way DevToolsModule does it, to resource://devtools/
+    """
 
     base = FINAL_TARGET_FILES.chrome.devtools.modules
     for dir in RELATIVEDIR.split("/"):

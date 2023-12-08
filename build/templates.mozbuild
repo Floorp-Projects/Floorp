@@ -4,73 +4,80 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
 @template
 def Binary():
-    '''Generic template for target binaries. Meant to be used by other
-    templates.'''
+    """Generic template for target binaries. Meant to be used by other
+    templates."""
 
     # Add -llog by default, since we use it all over the place.
-    if CONFIG['OS_TARGET'] == 'Android':
-        OS_LIBS += ['log']
+    if CONFIG["OS_TARGET"] == "Android":
+        OS_LIBS += ["log"]
 
 
 @template
 def Program(name):
-    '''Template for program executables.'''
+    """Template for program executables."""
     PROGRAM = name
 
     Binary()
 
 
 @template
-def SimplePrograms(names, ext='.cpp'):
-    '''Template for simple program executables.
+def SimplePrograms(names, ext=".cpp"):
+    """Template for simple program executables.
 
     Those have a single source with the same base name as the executable.
-    '''
+    """
     SIMPLE_PROGRAMS += names
-    SOURCES += ['%s%s' % (name, ext) for name in names]
+    SOURCES += ["%s%s" % (name, ext) for name in names]
 
     Binary()
 
 
 @template
-def CppUnitTests(names, ext='.cpp'):
-    '''Template for C++ unit tests.
+def CppUnitTests(names, ext=".cpp"):
+    """Template for C++ unit tests.
 
     Those have a single source with the same base name as the executable.
-    '''
-    COMPILE_FLAGS['EXTRA_INCLUDES'] = ['-I%s/dist/include' % TOPOBJDIR,
-                                       '-I%s/dist/include/testing' % TOPOBJDIR]
+    """
+    COMPILE_FLAGS["EXTRA_INCLUDES"] = [
+        "-I%s/dist/include" % TOPOBJDIR,
+        "-I%s/dist/include/testing" % TOPOBJDIR,
+    ]
     CPP_UNIT_TESTS += names
-    SOURCES += ['%s%s' % (name, ext) for name in names]
+    SOURCES += ["%s%s" % (name, ext) for name in names]
 
     Binary()
 
 
 @template
 def Library(name):
-    '''Template for libraries.'''
+    """Template for libraries."""
     LIBRARY_NAME = name
+
 
 @template
 def AllowCompilerWarnings():
-    COMPILE_FLAGS['WARNINGS_AS_ERRORS'] = []
-    WASM_FLAGS['WARNINGS_AS_ERRORS'] = []
+    COMPILE_FLAGS["WARNINGS_AS_ERRORS"] = []
+    WASM_FLAGS["WARNINGS_AS_ERRORS"] = []
+
 
 @template
 def DisableCompilerWarnings():
     # Keep the -Wno-* flags to disable warnings that may be enabled through other means.
     def filter(flags):
-        return [f for f in flags or [] if f.startswith('-Wno-')]
-    COMPILE_FLAGS['WARNINGS_CFLAGS'] = filter(CONFIG['WARNINGS_CFLAGS'])
-    COMPILE_FLAGS['WARNINGS_CXXFLAGS'] = filter(CONFIG['WARNINGS_CXXFLAGS'])
-    HOST_COMPILE_FLAGS['WARNINGS_CFLAGS'] = filter(CONFIG['WARNINGS_HOST_CFLAGS'])
-    HOST_COMPILE_FLAGS['WARNINGS_CXXFLAGS'] = filter(CONFIG['WARNINGS_HOST_CXXFLAGS'])
+        return [f for f in flags or [] if f.startswith("-Wno-")]
+
+    COMPILE_FLAGS["WARNINGS_CFLAGS"] = filter(CONFIG["WARNINGS_CFLAGS"])
+    COMPILE_FLAGS["WARNINGS_CXXFLAGS"] = filter(CONFIG["WARNINGS_CXXFLAGS"])
+    HOST_COMPILE_FLAGS["WARNINGS_CFLAGS"] = filter(CONFIG["WARNINGS_HOST_CFLAGS"])
+    HOST_COMPILE_FLAGS["WARNINGS_CXXFLAGS"] = filter(CONFIG["WARNINGS_HOST_CXXFLAGS"])
+
 
 @template
 def RustLibrary(name, features=None, output_category=None, is_gkrust=False):
-    '''Template for Rust libraries.'''
+    """Template for Rust libraries."""
     Library(name)
 
     IS_RUST_LIBRARY = True
@@ -94,7 +101,7 @@ def RustLibrary(name, features=None, output_category=None, is_gkrust=False):
 
 @template
 def SharedLibrary(name, output_category=None):
-    '''Template for shared libraries.'''
+    """Template for shared libraries."""
     Library(name)
 
     FORCE_SHARED_LIB = True
@@ -107,7 +114,7 @@ def SharedLibrary(name, output_category=None):
 
 @template
 def Framework(name, output_category=None):
-    '''Template for OSX Frameworks.'''
+    """Template for OSX Frameworks."""
     SharedLibrary(name, output_category)
 
     IS_FRAMEWORK = True
@@ -115,40 +122,43 @@ def Framework(name, output_category=None):
 
 @template
 def HostProgram(name):
-    '''Template for build tools executables.'''
+    """Template for build tools executables."""
     HOST_PROGRAM = name
 
 
 @template
-def HostSimplePrograms(names, ext='.cpp'):
-    '''Template for simple build tools executables.
+def HostSimplePrograms(names, ext=".cpp"):
+    """Template for simple build tools executables.
 
     Those have a single source with the same base name as the executable.
-    '''
+    """
     HOST_SIMPLE_PROGRAMS += names
-    HOST_SOURCES += ['%s%s' % (name.replace('host_', ''), ext)
-        for name in names]
+    HOST_SOURCES += ["%s%s" % (name.replace("host_", ""), ext) for name in names]
 
 
 @template
 def HostSharedLibrary(name):
-    '''Template for build tools libraries.'''
-    if name != 'clang-plugin':
-        error('Please make sure host shared library support is complete '
-              'before using for something else than the clang plugin')
+    """Template for build tools libraries."""
+    if name != "clang-plugin":
+        error(
+            "Please make sure host shared library support is complete "
+            "before using for something else than the clang plugin"
+        )
 
     HOST_LIBRARY_NAME = name
 
     FORCE_SHARED_LIB = True
 
+
 @template
 def HostLibrary(name):
-    '''Template for build tools libraries.'''
+    """Template for build tools libraries."""
     HOST_LIBRARY_NAME = name
+
 
 @template
 def HostRustLibrary(name, features=None):
-    '''Template for host Rust libraries.'''
+    """Template for host Rust libraries."""
     HostLibrary(name)
 
     IS_RUST_LIBRARY = True
@@ -158,23 +168,27 @@ def HostRustLibrary(name, features=None):
     if features:
         HOST_RUST_LIBRARY_FEATURES = features
 
+
 @template
 def DisableStlWrapping():
-    COMPILE_FLAGS['STL'] = []
+    COMPILE_FLAGS["STL"] = []
+
 
 @template
 def NoVisibilityFlags():
-    COMPILE_FLAGS['VISIBILITY'] = []
+    COMPILE_FLAGS["VISIBILITY"] = []
+
 
 @template
 def ForceInclude(*headers):
     """Force includes a set of header files in C++ compilations"""
-    if CONFIG['CC_TYPE'] == 'clang-cl':
-        include_flag = '-FI'
+    if CONFIG["CC_TYPE"] == "clang-cl":
+        include_flag = "-FI"
     else:
-        include_flag = '-include'
+        include_flag = "-include"
     for header in headers:
         CXXFLAGS += [include_flag, header]
+
 
 @template
 def GeneratedFile(name, *names, **kwargs):
@@ -182,20 +196,21 @@ def GeneratedFile(name, *names, **kwargs):
 
     You must pass in at least one generated file (the "name" argument). Other
     names can be included as positional arguments after "name"."""
-    script = kwargs.pop('script', None)
-    entry_point = kwargs.pop('entry_point', None)
-    inputs = kwargs.pop('inputs', [])
-    flags = kwargs.pop('flags', [])
-    force = kwargs.pop('force', False)
+    script = kwargs.pop("script", None)
+    entry_point = kwargs.pop("entry_point", None)
+    inputs = kwargs.pop("inputs", [])
+    flags = kwargs.pop("flags", [])
+    force = kwargs.pop("force", False)
     if kwargs:
-        error('Unrecognized argument(s) to GeneratedFile: %s' %
-              ', '.join(kwargs))
+        error("Unrecognized argument(s) to GeneratedFile: %s" % ", ".join(kwargs))
     if entry_point and not script:
-       error('entry_point cannot be provided if script is not provided')
-    if script and ':' in script:
-       error('script should not include a `:`. If you want to provide an '
-             'alternative entry point for your script, use the entry_point '
-             'parameter.')
+        error("entry_point cannot be provided if script is not provided")
+    if script and ":" in script:
+        error(
+            "script should not include a `:`. If you want to provide an "
+            "alternative entry point for your script, use the entry_point "
+            "parameter."
+        )
 
     key = (name,) + names if names else name
     GENERATED_FILES += [key]
@@ -203,18 +218,20 @@ def GeneratedFile(name, *names, **kwargs):
     if script and not entry_point:
         generated_file.script = script
     if script and entry_point:
-        generated_file.script = script + ':' + entry_point
+        generated_file.script = script + ":" + entry_point
     generated_file.inputs = inputs
     generated_file.flags = flags
     generated_file.force = force
+
 
 @template
 def CbindgenHeader(name, inputs):
     """Add one GENERATED_FILES by running RunCbindgen.py"""
 
-    inputs = ['!/config/cbindgen-metadata.json'] + inputs
-    GeneratedFile(name, script='/build/RunCbindgen.py',
-                  entry_point='generate', inputs=inputs)
+    inputs = ["!/config/cbindgen-metadata.json"] + inputs
+    GeneratedFile(
+        name, script="/build/RunCbindgen.py", entry_point="generate", inputs=inputs
+    )
 
 
-include('gecko_templates.mozbuild')
+include("gecko_templates.mozbuild")

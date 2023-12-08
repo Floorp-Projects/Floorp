@@ -10,33 +10,39 @@
 # start:
 # https://source.chromium.org/search?q=usage:%23if.*def.*%5B%5E_%5D$%20AND%20path:%5C.h%20AND%20path:%5Ethird_party%2Fwebrtc&ss=chromium
 
-if CONFIG['MOZ_WEBRTC']:
-    DEFINES['HAVE_UINT64_T'] = True
-    DEFINES['WEBRTC_MOZILLA_BUILD'] = True
-    DEFINES['RTC_ENABLE_VP9'] = True
+if CONFIG["MOZ_WEBRTC"]:
+    DEFINES["HAVE_UINT64_T"] = True
+    DEFINES["WEBRTC_MOZILLA_BUILD"] = True
+    DEFINES["RTC_ENABLE_VP9"] = True
 
-    if CONFIG['OS_TARGET'] != 'WINNT':
-        DEFINES['WEBRTC_POSIX'] = True
-        DEFINES['WEBRTC_BUILD_LIBEVENT'] = True
+    if CONFIG["OS_TARGET"] != "WINNT":
+        DEFINES["WEBRTC_POSIX"] = True
+        DEFINES["WEBRTC_BUILD_LIBEVENT"] = True
 
-    if CONFIG['OS_TARGET'] == 'Linux':
-        DEFINES['WEBRTC_LINUX'] = True
-        if CONFIG['CPU_ARCH'] == 'x86' or CONFIG['CPU_ARCH'] == 'x86_64' or  \
-           CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64' or \
-           (CONFIG['TARGET_ENDIANNESS'] == 'little' and CONFIG['CPU_ARCH'].startswith('mips')):
-            DEFINES['WEBRTC_USE_PIPEWIRE'] = True
-    elif CONFIG['OS_TARGET'] == 'Darwin':
-        DEFINES['WEBRTC_MAC'] = True
-    elif CONFIG['OS_TARGET'] == 'WINNT':
-        DEFINES['WEBRTC_WIN'] = True
-        DEFINES['RTC_ENABLE_WIN_WGC'] = True
-        DEFINES['HAVE_WINSOCK2_H'] = True
-    elif CONFIG['OS_TARGET'] in ('DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD'):
-        DEFINES['WEBRTC_BSD'] = True
-    elif CONFIG['OS_TARGET'] == 'Android':
-        DEFINES['WEBRTC_LINUX'] = True
-        DEFINES['WEBRTC_ANDROID'] = True
+    if CONFIG["OS_TARGET"] == "Linux":
+        DEFINES["WEBRTC_LINUX"] = True
+        if (
+            CONFIG["CPU_ARCH"] == "x86"
+            or CONFIG["CPU_ARCH"] == "x86_64"
+            or CONFIG["CPU_ARCH"] == "arm"
+            or CONFIG["CPU_ARCH"] == "aarch64"
+            or (
+                CONFIG["TARGET_ENDIANNESS"] == "little"
+                and CONFIG["CPU_ARCH"].startswith("mips")
+            )
+        ):
+            DEFINES["WEBRTC_USE_PIPEWIRE"] = True
+    elif CONFIG["OS_TARGET"] == "Darwin":
+        DEFINES["WEBRTC_MAC"] = True
+    elif CONFIG["OS_TARGET"] == "WINNT":
+        DEFINES["WEBRTC_WIN"] = True
+        DEFINES["RTC_ENABLE_WIN_WGC"] = True
+        DEFINES["HAVE_WINSOCK2_H"] = True
+    elif CONFIG["OS_TARGET"] in ("DragonFly", "FreeBSD", "NetBSD", "OpenBSD"):
+        DEFINES["WEBRTC_BSD"] = True
+    elif CONFIG["OS_TARGET"] == "Android":
+        DEFINES["WEBRTC_LINUX"] = True
+        DEFINES["WEBRTC_ANDROID"] = True
 
-    if CONFIG['MOZ_X11']:
-        DEFINES['WEBRTC_USE_X11'] = True
-
+    if CONFIG["MOZ_X11"]:
+        DEFINES["WEBRTC_USE_X11"] = True

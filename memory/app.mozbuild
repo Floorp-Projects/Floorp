@@ -6,13 +6,13 @@
 
 # Indirectly necessary for chromium's lock.h, included from LogAlloc.cpp
 EXPORTS.mozilla += [
-    '/mozglue/misc/Printf.h',
-    '/xpcom/base/Logging.h',
+    "/mozglue/misc/Printf.h",
+    "/xpcom/base/Logging.h",
 ]
 
 DIRS += [
-    '/memory',
-    '/mfbt',
+    "/memory",
+    "/mfbt",
 ]
 
 EXPORTS.mozilla += [

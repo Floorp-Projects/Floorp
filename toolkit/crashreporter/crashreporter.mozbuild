@@ -5,30 +5,30 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 LOCAL_INCLUDES += [
-    '/toolkit/crashreporter/breakpad-client',
-    '/toolkit/crashreporter/google-breakpad/src',
+    "/toolkit/crashreporter/breakpad-client",
+    "/toolkit/crashreporter/google-breakpad/src",
 ]
 
 # Suppress warnings in third-party code.
-if CONFIG['CC_TYPE'] == 'clang-cl':
+if CONFIG["CC_TYPE"] == "clang-cl":
     CXXFLAGS += [
-        '-Wno-macro-redefined',
+        "-Wno-macro-redefined",
     ]
-elif CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+elif CONFIG["CC_TYPE"] in ("clang", "gcc"):
     CXXFLAGS += [
-        '-Wno-unused-local-typedefs',
-        '-Wno-deprecated-declarations',
-        '-Wno-bool-compare',
-        '-Wno-unused-but-set-variable',
+        "-Wno-unused-local-typedefs",
+        "-Wno-deprecated-declarations",
+        "-Wno-bool-compare",
+        "-Wno-unused-but-set-variable",
     ]
 
-if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
-     CXXFLAGS += [
-         '-Wno-c++11-narrowing',
-     ]
+if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
+    CXXFLAGS += [
+        "-Wno-c++11-narrowing",
+    ]
 
 CXXFLAGS += [
-    '-Wno-implicit-fallthrough',
+    "-Wno-implicit-fallthrough",
 ]
 
-DEFINES['NO_STABS_SUPPORT'] = True
+DEFINES["NO_STABS_SUPPORT"] = True
