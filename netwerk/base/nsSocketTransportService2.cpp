@@ -1373,8 +1373,8 @@ nsresult nsSocketTransportService::DoPollIteration(TimeDuration* pollDuration) {
   }
 
   now = PR_IntervalNow();
-  TimeStamp startTime;
 #ifdef MOZ_GECKO_PROFILER
+  TimeStamp startTime;
   bool profiling = profiler_thread_is_being_profiled_for_markers();
   if (profiling) {
     startTime = TimeStamp::Now();
