@@ -5025,6 +5025,25 @@ bool CacheIRCompiler::emitObjectCreateResult(uint32_t templateObjectOffset) {
   return true;
 }
 
+bool CacheIRCompiler::emitObjectKeysResult(ObjOperandId objId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+  Register obj = allocator.useRegister(masm, objId);
+
+  // Our goal is only to record calls to Object.keys, to elide it when
+  // partially used, not to provide an alternative implementation.
+  {
+    callvm.prepare();
+    masm.Push(obj);
+
+    using Fn = JSObject* (*)(JSContext*, HandleObject);
+    callvm.call<Fn, jit::ObjectKeys>();
+  }
+
+  return true;
+}
+
 bool CacheIRCompiler::emitNewArrayFromLengthResult(
     uint32_t templateObjectOffset, Int32OperandId lengthId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

@@ -3454,6 +3454,16 @@ bool WarpCacheIRTranspiler::emitArrayJoinResult(ObjOperandId objId,
   return resumeAfter(join);
 }
 
+bool WarpCacheIRTranspiler::emitObjectKeysResult(ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* join = MObjectKeys::New(alloc(), obj);
+  addEffectful(join);
+
+  pushResult(join);
+  return resumeAfter(join);
+}
+
 bool WarpCacheIRTranspiler::emitPackedArrayPopResult(ObjOperandId arrayId) {
   MDefinition* array = getOperand(arrayId);
 

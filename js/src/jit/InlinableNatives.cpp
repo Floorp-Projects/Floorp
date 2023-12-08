@@ -288,6 +288,7 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::ObjectCreate:
     case InlinableNative::ObjectIs:
     case InlinableNative::ObjectIsPrototypeOf:
+    case InlinableNative::ObjectKeys:
     case InlinableNative::ObjectToString:
     case InlinableNative::TypedArrayConstructor:
 #ifdef FUZZING_JS_FUZZILLI

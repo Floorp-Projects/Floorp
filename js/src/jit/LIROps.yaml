@@ -1884,6 +1884,20 @@
   call_instruction: true
   mir_op: true
 
+- name: ObjectKeys
+  result_type: WordSized
+  operands:
+    object: WordSized
+  num_temps: 0
+  call_instruction: true
+
+- name: ObjectKeysLength
+  result_type: WordSized
+  operands:
+    object: WordSized
+  num_temps: 0
+  call_instruction: true
+
 - name: LoadUnboxedScalar
   result_type: WordSized
   operands:

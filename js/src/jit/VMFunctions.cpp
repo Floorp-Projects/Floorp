@@ -1397,6 +1397,22 @@ bool ObjectIsConstructor(JSObject* obj) {
   return obj->isConstructor();
 }
 
+JSObject* ObjectKeys(JSContext* cx, HandleObject obj) {
+  JS::RootedValueArray<3> argv(cx);
+  argv[0].setUndefined();   // rval
+  argv[1].setUndefined();   // this
+  argv[2].setObject(*obj);  // arg0
+  if (!js::obj_keys(cx, 1, argv.begin())) {
+    return nullptr;
+  }
+  return argv[0].toObjectOrNull();
+}
+
+bool ObjectKeysLength(JSContext* cx, HandleObject obj, int32_t* length) {
+  MOZ_ASSERT(!obj->is<ProxyObject>());
+  return js::obj_keys_length(cx, obj, *length);
+}
+
 void JitValuePreWriteBarrier(JSRuntime* rt, Value* vp) {
   AutoUnsafeCallWithABI unsafe;
   MOZ_ASSERT(vp->isGCThing());

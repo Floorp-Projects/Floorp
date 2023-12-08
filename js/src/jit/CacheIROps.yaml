@@ -1021,6 +1021,13 @@
     obj: ObjId
     sep: StringId
 
+- name: ObjectKeysResult
+  shared: true
+  transpile: true
+  cost_estimate: 6
+  args:
+    obj: ObjId
+
 - name: PackedArrayPopResult
   shared: true
   transpile: true
