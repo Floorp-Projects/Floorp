@@ -84,6 +84,15 @@ if __name__ == "__main__":
     )
     httpd.start(block=False)
 
+    sp3_httpd = MozHttpd(
+        port=8000,
+        docroot=os.path.join(
+            build.topsrcdir, "third_party", "webkit", "PerformanceTests", "Speedometer3"
+        ),
+        path_mappings=path_mappings,
+    )
+    sp3_httpd.start(block=False)
+    print("started SP3 server on port 8000")
     locations = ServerLocations()
     locations.add_host(host="127.0.0.1", port=PORT, options="primary,privileged")
 
@@ -107,6 +116,7 @@ if __name__ == "__main__":
             prefs.update(Preferences.read_prefs(path))
 
         interpolation = {"server": "%s:%d" % httpd.httpd.server_address}
+        sp3_interpolation = {"server": "%s:%d" % sp3_httpd.httpd.server_address}
         for k, v in prefs.items():
             if isinstance(v, string_types):
                 v = v.format(**interpolation)
@@ -170,6 +180,7 @@ if __name__ == "__main__":
                 print("Firefox output (%s):" % logfile)
                 with open(logfile) as f:
                     print(f.read())
+            sp3_httpd.stop()
             httpd.stop()
             get_crashreports(profilePath, name="Profile initialization")
             sys.exit(ret)
@@ -195,6 +206,7 @@ if __name__ == "__main__":
         )
         runner.start(debug_args=debug_args, interactive=interactive)
         ret = runner.wait()
+        sp3_httpd.stop()
         httpd.stop()
         if ret:
             print("Firefox exited with code %d during profiling" % ret)
