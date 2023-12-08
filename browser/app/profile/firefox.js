@@ -1919,6 +1919,9 @@ pref("browser.translation.neverForLanguages", "");
 // Enable Firefox translations powered by the Bergamot translations
 // engine https://browser.mt/.
 pref("browser.translations.enable", true);
+// Enable Firefox Select translations powered by Bergamot translations
+// engine https://browser.mt/.
+pref("browser.translations.select.enable", false);
 
 // Telemetry settings.
 // Determines if Telemetry pings can be archived locally.
