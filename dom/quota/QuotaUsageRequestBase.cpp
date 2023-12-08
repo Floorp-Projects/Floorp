@@ -41,7 +41,7 @@ Result<UsageInfo, nsresult> QuotaUsageRequestBase::GetUsageForOrigin(
   if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
     initialized = aQuotaManager.IsOriginInitialized(aOriginMetadata.mOrigin);
   } else {
-    initialized = aQuotaManager.IsTemporaryStorageInitialized();
+    initialized = aQuotaManager.IsTemporaryStorageInitializedInternal();
   }
 
   return GetUsageForOriginEntries(aQuotaManager, aPersistenceType,

@@ -1195,8 +1195,8 @@ nsresult OpenOp::DatabaseWork() {
               mOriginMetadata));
         }
 
-        QM_TRY(
-            MOZ_TO_RESULT(quotaManager->EnsureTemporaryStorageIsInitialized()));
+        QM_TRY(MOZ_TO_RESULT(
+            quotaManager->EnsureTemporaryStorageIsInitializedInternal()));
         QM_TRY_RETURN(quotaManager->EnsureTemporaryOriginIsInitialized(
             persistenceType, mOriginMetadata));
       }()

@@ -1304,7 +1304,8 @@ nsresult GetOriginUsageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
     // Ensure temporary storage is initialized. If temporary storage hasn't been
     // initialized yet, the method will initialize it by traversing the
     // repositories for temporary and default storage (including our origin).
-    QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureTemporaryStorageIsInitialized()));
+    QM_TRY(MOZ_TO_RESULT(
+        aQuotaManager.EnsureTemporaryStorageIsInitializedInternal()));
 
     // Get cached usage (the method doesn't have to stat any files). File usage
     // is not tracked in memory separately, so just add to the database usage.
@@ -1416,7 +1417,7 @@ nsresult TemporaryStorageInitializedOp::DoDirectoryWork(
 
   AUTO_PROFILER_LABEL("TemporaryStorageInitializedOp::DoDirectoryWork", OTHER);
 
-  mInitialized = aQuotaManager.IsTemporaryStorageInitialized();
+  mInitialized = aQuotaManager.IsTemporaryStorageInitializedInternal();
 
   return NS_OK;
 }
@@ -1485,7 +1486,8 @@ nsresult InitTemporaryStorageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   QM_TRY(OkIf(aQuotaManager.IsStorageInitializedInternal()),
          NS_ERROR_NOT_INITIALIZED);
 
-  QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureTemporaryStorageIsInitialized()));
+  QM_TRY(MOZ_TO_RESULT(
+      aQuotaManager.EnsureTemporaryStorageIsInitializedInternal()));
 
   return NS_OK;
 }
@@ -1597,7 +1599,7 @@ nsresult InitializeTemporaryOriginOp::DoDirectoryWork(
   QM_TRY(OkIf(aQuotaManager.IsStorageInitializedInternal()),
          NS_ERROR_NOT_INITIALIZED);
 
-  QM_TRY(OkIf(aQuotaManager.IsTemporaryStorageInitialized()),
+  QM_TRY(OkIf(aQuotaManager.IsTemporaryStorageInitializedInternal()),
          NS_ERROR_NOT_INITIALIZED);
 
   QM_TRY_UNWRAP(mCreated,
@@ -1716,7 +1718,7 @@ nsresult InitializeTemporaryClientOp::DoDirectoryWork(
   QM_TRY(MOZ_TO_RESULT(aQuotaManager.IsStorageInitializedInternal()),
          NS_ERROR_FAILURE);
 
-  QM_TRY(MOZ_TO_RESULT(aQuotaManager.IsTemporaryStorageInitialized()),
+  QM_TRY(MOZ_TO_RESULT(aQuotaManager.IsTemporaryStorageInitializedInternal()),
          NS_ERROR_FAILURE);
 
   QM_TRY(MOZ_TO_RESULT(
@@ -1779,7 +1781,8 @@ nsresult GetFullOriginMetadataOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   // Ensure temporary storage is initialized. If temporary storage hasn't
   // been initialized yet, the method will initialize it by traversing the
   // repositories for temporary and default storage (including our origin).
-  QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureTemporaryStorageIsInitialized()));
+  QM_TRY(MOZ_TO_RESULT(
+      aQuotaManager.EnsureTemporaryStorageIsInitializedInternal()));
 
   // Get metadata cached in memory (the method doesn't have to stat any
   // files).
@@ -2032,7 +2035,7 @@ void ClearRequestBase::DeleteFilesInternal(
             const bool initialized =
                 aPersistenceType == PERSISTENCE_TYPE_PERSISTENT
                     ? aQuotaManager.IsOriginInitialized(metadata.mOrigin)
-                    : aQuotaManager.IsTemporaryStorageInitialized();
+                    : aQuotaManager.IsTemporaryStorageInitializedInternal();
 
             // If it hasn't been initialized, we don't need to update the
             // quota and notify the removing client.
@@ -2460,7 +2463,7 @@ nsresult PersistOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
 
     // Origin directory has been successfully created.
     // Create OriginInfo too if temporary storage was already initialized.
-    if (aQuotaManager.IsTemporaryStorageInitialized()) {
+    if (aQuotaManager.IsTemporaryStorageInitializedInternal()) {
       timestamp = aQuotaManager.NoteOriginDirectoryCreated(
           originMetadata, /* aPersisted */ true);
     } else {
@@ -2495,7 +2498,7 @@ nsresult PersistOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
 
     // Directory metadata has been successfully updated.
     // Update OriginInfo too if temporary storage was already initialized.
-    if (aQuotaManager.IsTemporaryStorageInitialized()) {
+    if (aQuotaManager.IsTemporaryStorageInitializedInternal()) {
       aQuotaManager.PersistOrigin(originMetadata);
     }
   }
@@ -2552,7 +2555,8 @@ nsresult EstimateOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   // initialized yet, the method will initialize it by traversing the
   // repositories for temporary and default storage (including origins
   // belonging to our group).
-  QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureTemporaryStorageIsInitialized()));
+  QM_TRY(MOZ_TO_RESULT(
+      aQuotaManager.EnsureTemporaryStorageIsInitializedInternal()));
 
   // Get cached usage (the method doesn't have to stat any files).
   mUsageAndLimit = aQuotaManager.GetUsageAndLimitForEstimate(mOriginMetadata);

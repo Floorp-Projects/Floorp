@@ -6918,7 +6918,8 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
 
     // This ensures that usages for existings origin directories are cached in
     // memory.
-    QM_TRY(MOZ_TO_RESULT(quotaManager->EnsureTemporaryStorageIsInitialized()));
+    QM_TRY(MOZ_TO_RESULT(
+        quotaManager->EnsureTemporaryStorageIsInitializedInternal()));
 
     const UsageInfo usageInfo = quotaManager->GetUsageForClient(
         PERSISTENCE_TYPE_DEFAULT, mOriginMetadata,
