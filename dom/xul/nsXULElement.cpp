@@ -373,91 +373,54 @@ static bool IsNonList(mozilla::dom::NodeInfo* aNodeInfo) {
          !aNodeInfo->Equals(nsGkAtoms::richlistbox);
 }
 
-bool nsXULElement::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) {
-  /*
-   * Returns true if an element may be focused, and false otherwise. The inout
-   * argument aTabIndex will be set to the tab order index to be used; -1 for
-   * elements that should not be part of the tab order and a greater value to
-   * indicate its tab order.
-   *
-   * Confusingly, the supplied value for the aTabIndex argument may indicate
-   * whether the element may be focused as a result of the -moz-user-focus
-   * property, where -1 means no and 0 means yes.
-   *
-   * For controls, the element cannot be focused and is not part of the tab
-   * order if it is disabled.
-   *
-   * -moz-user-focus is overridden if a tabindex (even -1) is specified.
-   *
-   * Specifically, the behaviour for all XUL elements is as follows:
-   *  *aTabIndex = -1  no tabindex     Not focusable or tabbable
-   *  *aTabIndex = -1  tabindex="-1"   Focusable but not tabbable
-   *  *aTabIndex = -1  tabindex=">=0"  Focusable and tabbable
-   *  *aTabIndex >= 0  no tabindex     Focusable and tabbable
-   *  *aTabIndex >= 0  tabindex="-1"   Focusable but not tabbable
-   *  *aTabIndex >= 0  tabindex=">=0"  Focusable and tabbable
-   *
-   * If aTabIndex is null, then the tabindex is not computed, and
-   * true is returned for non-disabled controls and false otherwise.
-   */
-
-  // elements are not focusable by default
-  bool shouldFocus = false;
-
+// XUL elements are not focusable unless explicitly opted-into it with
+// -moz-user-focus: normal, or the tabindex attribute.
+Focusable nsXULElement::IsFocusableWithoutStyle(bool aWithMouse) {
 #ifdef XP_MACOSX
   // on Mac, mouse interactions only focus the element if it's a list,
   // or if it's a remote target, since the remote target must handle
   // the focus.
   if (aWithMouse && IsNonList(mNodeInfo) &&
       !EventStateManager::IsTopLevelRemoteTarget(this)) {
-    return false;
+    return {};
   }
 #endif
 
+  bool shouldFocus = false;
   nsCOMPtr<nsIDOMXULControlElement> xulControl = AsXULControl();
   if (xulControl) {
     // a disabled element cannot be focused and is not part of the tab order
     bool disabled;
     xulControl->GetDisabled(&disabled);
     if (disabled) {
-      if (aTabIndex) *aTabIndex = -1;
-      return false;
+      return {};
     }
     shouldFocus = true;
   }
 
-  if (aTabIndex) {
-    Maybe<int32_t> attrVal = GetTabIndexAttrValue();
-    if (attrVal.isSome()) {
-      // The tabindex attribute was specified, so the element becomes
-      // focusable.
-      shouldFocus = true;
-      *aTabIndex = attrVal.value();
-    } else {
-      // otherwise, if there is no tabindex attribute, just use the value of
-      // *aTabIndex to indicate focusability. Reset any supplied tabindex to 0.
-      shouldFocus = *aTabIndex >= 0;
-      if (shouldFocus) {
-        *aTabIndex = 0;
-      }
-    }
+  int32_t tabIndex = -1;
+  if (Maybe<int32_t> attrVal = GetTabIndexAttrValue()) {
+    // The tabindex attribute was specified, so the element becomes
+    // focusable.
+    shouldFocus = true;
+    tabIndex = attrVal.value();
+  }
 
-    if (xulControl && shouldFocus && sTabFocusModelAppliesToXUL &&
-        !(sTabFocusModel & eTabFocus_formElementsMask)) {
-      // By default, the tab focus model doesn't apply to xul element on any
-      // system but OS X. on OS X we're following it for UI elements (XUL) as
-      // sTabFocusModel is based on "Full Keyboard Access" system setting (see
-      // mac/nsILookAndFeel). both textboxes and list elements (i.e. trees and
-      // list) should always be focusable (textboxes are handled as html:input)
-      // For compatibility, we only do this for controls, otherwise elements
-      // like <browser> cannot take this focus.
-      if (IsNonList(mNodeInfo)) {
-        *aTabIndex = -1;
-      }
+  if (xulControl && shouldFocus && sTabFocusModelAppliesToXUL &&
+      !(sTabFocusModel & eTabFocus_formElementsMask)) {
+    // By default, the tab focus model doesn't apply to xul element on any
+    // system but OS X. on OS X we're following it for UI elements (XUL) as
+    // sTabFocusModel is based on "Full Keyboard Access" system setting (see
+    // mac/nsILookAndFeel). both textboxes and list elements (i.e. trees and
+    // list) should always be focusable (textboxes are handled as html:input)
+    // For compatibility, we only do this for controls, otherwise elements
+    // like <browser> cannot take this focus.
+    if (IsNonList(mNodeInfo)) {
+      tabIndex = -1;
     }
   }
 
-  return shouldFocus;
+  return {shouldFocus, tabIndex};
 }
 
 bool nsXULElement::HasMenu() {

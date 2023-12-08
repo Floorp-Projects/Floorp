@@ -154,33 +154,22 @@ bool SVGGraphicsElement::IsSVGFocusable(bool* aIsFocusable,
   // MathML elements, see bug 1586011.
   if (!IsInComposedDoc() || IsInDesignMode()) {
     // In designMode documents we only allow focusing the document.
-    if (aTabIndex) {
-      *aTabIndex = -1;
-    }
-
+    *aTabIndex = -1;
     *aIsFocusable = false;
-
     return true;
   }
 
-  int32_t tabIndex = TabIndex();
-
-  if (aTabIndex) {
-    *aTabIndex = tabIndex;
-  }
-
+  *aTabIndex = TabIndex();
   // If a tabindex is specified at all, or the default tabindex is 0, we're
   // focusable
-  *aIsFocusable = tabIndex >= 0 || GetTabIndexAttrValue().isSome();
-
+  *aIsFocusable = *aTabIndex >= 0 || GetTabIndexAttrValue().isSome();
   return false;
 }
 
-bool SVGGraphicsElement::IsFocusableInternal(int32_t* aTabIndex,
-                                             bool aWithMouse) {
-  bool isFocusable = false;
-  IsSVGFocusable(&isFocusable, aTabIndex);
-  return isFocusable;
+Focusable SVGGraphicsElement::IsFocusableWithoutStyle(bool aWithMouse) {
+  Focusable result;
+  IsSVGFocusable(&result.mFocusable, &result.mTabIndex);
+  return result;
 }
 
 }  // namespace mozilla::dom

@@ -25,10 +25,7 @@ class SVGDefsElement final : public SVGGraphicsElement {
 
  public:
   // defs elements are not focusable.
-  bool IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) override {
-    return nsIContent::IsFocusableInternal(aTabIndex, aWithMouse);
-  }
-
+  Focusable IsFocusableWithoutStyle(bool aWithMouse) override { return {}; }
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };
 

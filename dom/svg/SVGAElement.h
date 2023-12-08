@@ -53,7 +53,7 @@ class SVGAElement final : public SVGAElementBase,
   void UnbindFromTree(bool aNullParent = true) override;
 
   int32_t TabIndexDefault() override;
-  bool IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) override;
+  Focusable IsFocusableWithoutStyle(bool aWithMouse) override;
 
   void GetLinkTarget(nsAString& aTarget) override;
   already_AddRefed<nsIURI> GetHrefURI() const override;
