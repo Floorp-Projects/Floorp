@@ -7,6 +7,20 @@ from collections import OrderedDict
 from mozbuild.util import EnumString
 
 
+class RaiseErrorOnUse(str):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __eq__(self, other):
+        raise RuntimeError(self.msg)
+
+    def __ne__(self, other):
+        self.__eq__(other)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.msg!r})"
+
+
 class CompilerType(EnumString):
     POSSIBLE_VALUES = (
         "clang",
