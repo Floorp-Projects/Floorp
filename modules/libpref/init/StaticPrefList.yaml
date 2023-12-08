@@ -8655,6 +8655,13 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
+# Enables support for @margin rules.
+- name: layout.css.margin-rules.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Whether Properties and Values is enabled
 - name: layout.css.properties-and-values.enabled
   type: RelaxedAtomicBool
