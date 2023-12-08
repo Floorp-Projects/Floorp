@@ -348,14 +348,14 @@ struct GfxDriverInfo {
       sDeviceFamilies[static_cast<size_t>(DeviceFamily::Max)];
 
   static const nsAString& GetWindowProtocol(WindowProtocol id);
-  static nsAString* sWindowProtocol[static_cast<size_t>(WindowProtocol::Max)];
+  static nsString* sWindowProtocol[static_cast<size_t>(WindowProtocol::Max)];
 
   static const nsAString& GetDeviceVendor(DeviceVendor id);
   static const nsAString& GetDeviceVendor(DeviceFamily id);
-  static nsAString* sDeviceVendors[static_cast<size_t>(DeviceVendor::Max)];
+  static nsString* sDeviceVendors[static_cast<size_t>(DeviceVendor::Max)];
 
   static const nsAString& GetDriverVendor(DriverVendor id);
-  static nsAString* sDriverVendors[static_cast<size_t>(DriverVendor::Max)];
+  static nsString* sDriverVendors[static_cast<size_t>(DriverVendor::Max)];
 
   nsString mModel, mHardware, mProduct, mManufacturer;
 
