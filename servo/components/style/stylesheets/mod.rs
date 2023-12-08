@@ -393,6 +393,12 @@ impl CssRuleTypes {
     pub fn insert(&mut self, ty: CssRuleType) {
         self.0 |= ty.bit()
     }
+
+    /// Returns whether any of the types intersect.
+    #[inline]
+    pub fn intersects(self, other: Self) -> bool {
+        self.0 & other.0 != 0
+    }
 }
 
 #[allow(missing_docs)]
