@@ -47,6 +47,7 @@ static StaticRefPtr<CookieServiceChild> gCookieChildService;
 already_AddRefed<CookieServiceChild> CookieServiceChild::GetSingleton() {
   if (!gCookieChildService) {
     gCookieChildService = new CookieServiceChild();
+    gCookieChildService->Init();
     ClearOnShutdown(&gCookieChildService);
   }
 
@@ -56,9 +57,11 @@ already_AddRefed<CookieServiceChild> CookieServiceChild::GetSingleton() {
 NS_IMPL_ISUPPORTS(CookieServiceChild, nsICookieService,
                   nsISupportsWeakReference)
 
-CookieServiceChild::CookieServiceChild() {
-  NS_ASSERTION(IsNeckoChild(), "not a child process");
+CookieServiceChild::CookieServiceChild() { NeckoChild::InitNeckoChild(); }
 
+CookieServiceChild::~CookieServiceChild() { gCookieChildService = nullptr; }
+
+void CookieServiceChild::Init() {
   auto* cc = static_cast<mozilla::dom::ContentChild*>(gNeckoChild->Manager());
   if (cc->IsShuttingDown()) {
     return;
@@ -67,9 +70,8 @@ CookieServiceChild::CookieServiceChild() {
   // This corresponds to Release() in DeallocPCookieService.
   NS_ADDREF_THIS();
 
-  NeckoChild::InitNeckoChild();
-
-  // Create a child PCookieService actor.
+  // Create a child PCookieService actor. Don't do this in the constructor
+  // since it could release 'this' on failure
   gNeckoChild->SendPCookieServiceConstructor(this);
 
   mThirdPartyUtil = ThirdPartyUtil::GetInstance();
@@ -78,8 +80,6 @@ CookieServiceChild::CookieServiceChild() {
   mTLDService = do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
   NS_ASSERTION(mTLDService, "couldn't get TLDService");
 }
-
-CookieServiceChild::~CookieServiceChild() { gCookieChildService = nullptr; }
 
 void CookieServiceChild::TrackCookieLoad(nsIChannel* aChannel) {
   if (!CanSend()) {

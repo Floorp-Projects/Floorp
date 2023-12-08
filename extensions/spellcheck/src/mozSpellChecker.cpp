@@ -53,8 +53,11 @@ nsresult mozSpellChecker::Init() {
     mozilla::dom::ContentChild* contentChild =
         mozilla::dom::ContentChild::GetSingleton();
     MOZ_ASSERT(contentChild);
+    // mEngine is nulled in RemoteSpellcheckEngineChild(), so we don't need to
+    // worry about SendPRemoveSpellcheckEngineConstructor failing
     mEngine = new RemoteSpellcheckEngineChild(this);
-    contentChild->SendPRemoteSpellcheckEngineConstructor(mEngine);
+    MOZ_ALWAYS_TRUE(
+        contentChild->SendPRemoteSpellcheckEngineConstructor(mEngine));
   } else {
     mPersonalDictionary =
         do_GetService("@mozilla.org/spellchecker/personaldictionary;1");

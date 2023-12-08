@@ -18,7 +18,9 @@ PBenchmarkStorageChild* BenchmarkStorageChild::Instance() {
     sChild = new BenchmarkStorageChild();
     PContentChild* contentChild = dom::ContentChild::GetSingleton();
     MOZ_ASSERT(contentChild);
-    contentChild->SendPBenchmarkStorageConstructor();
+    if (!contentChild->SendPBenchmarkStorageConstructor()) {
+      MOZ_CRASH("SendPBenchmarkStorageConstructor failed");
+    }
   }
   MOZ_ASSERT(sChild);
   return sChild;

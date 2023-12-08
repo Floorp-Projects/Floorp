@@ -59,6 +59,10 @@ already_AddRefed<Promise> FileCreatorHelper::CreateFile(
   PFileCreatorChild* actor = actorChild->SendPFileCreatorConstructor(
       path, aBag.mType, aBag.mName, lastModified, aBag.mExistenceCheck,
       aIsFromNsIFile);
+  if (!actor) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
 
   static_cast<FileCreatorChild*>(actor)->SetPromise(promise);
   return promise.forget();

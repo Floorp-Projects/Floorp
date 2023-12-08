@@ -293,10 +293,12 @@ nsresult nsContentPermissionUtils::AskPermission(
     NS_ENSURE_SUCCESS(rv, rv);
 
     req->IPDLAddRef();
-    ContentChild::GetSingleton()->SendPContentPermissionRequestConstructor(
-        req, permArray, principal, topLevelPrincipal,
-        hasValidTransientUserGestureActivation,
-        isRequestDelegatedToUnsafeThirdParty, child->GetTabId());
+    if (!ContentChild::GetSingleton()->SendPContentPermissionRequestConstructor(
+            req, permArray, principal, topLevelPrincipal,
+            hasValidTransientUserGestureActivation,
+            isRequestDelegatedToUnsafeThirdParty, child->GetTabId())) {
+      return NS_ERROR_FAILURE;
+    }
     ContentPermissionRequestChildMap()[req.get()] = child->GetTabId();
 
     req->Sendprompt();

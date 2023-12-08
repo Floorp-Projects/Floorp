@@ -360,7 +360,10 @@ PaymentRequestChild* PaymentRequestManager::GetPaymentChild(
   aRequest->GetInternalId(requestId);
 
   PaymentRequestChild* paymentChild = new PaymentRequestChild(aRequest);
-  browserChild->SendPPaymentRequestConstructor(paymentChild);
+  if (!browserChild->SendPPaymentRequestConstructor(paymentChild)) {
+    // deleted by Constructor
+    return nullptr;
+  }
 
   return paymentChild;
 }

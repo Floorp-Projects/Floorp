@@ -514,8 +514,10 @@ WebSocketChannelChild::AsyncOpenNative(
   // This must be called before sending constructor message.
   SetupNeckoTarget();
 
-  gNeckoChild->SendPWebSocketConstructor(
-      this, browserChild, IPC::SerializedLoadContext(this), mSerial);
+  if (!gNeckoChild->SendPWebSocketConstructor(
+          this, browserChild, IPC::SerializedLoadContext(this), mSerial)) {
+    return NS_ERROR_UNEXPECTED;
+  }
   if (!SendAsyncOpen(uri, aOrigin, aOriginAttributes, aInnerWindowID, mProtocol,
                      mEncrypted, mPingInterval, mClientSetPingInterval,
                      mPingResponseTimeout, mClientSetPingTimeout, loadInfoArgs,

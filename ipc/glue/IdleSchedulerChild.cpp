@@ -140,8 +140,10 @@ IdleSchedulerChild* IdleSchedulerChild::GetMainThreadIdleScheduler() {
   ipc::PBackgroundChild* background =
       ipc::BackgroundChild::GetOrCreateForCurrentThread();
   if (background) {
+    // this is nulled out on our destruction, so we don't need to worry
     sMainThreadIdleScheduler = new ipc::IdleSchedulerChild();
-    background->SendPIdleSchedulerConstructor(sMainThreadIdleScheduler);
+    MOZ_ALWAYS_TRUE(
+        background->SendPIdleSchedulerConstructor(sMainThreadIdleScheduler));
   }
   return sMainThreadIdleScheduler;
 }

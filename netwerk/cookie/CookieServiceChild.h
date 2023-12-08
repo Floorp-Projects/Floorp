@@ -37,6 +37,8 @@ class CookieServiceChild final : public PCookieServiceChild,
 
   CookieServiceChild();
 
+  void Init();
+
   static already_AddRefed<CookieServiceChild> GetSingleton();
 
   void TrackCookieLoad(nsIChannel* aChannel);

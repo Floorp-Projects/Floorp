@@ -124,8 +124,8 @@ MediaResult RemoteVideoDecoderChild::InitIPDL(
 
   mIPDLSelfRef = this;
   VideoDecoderInfoIPDL decoderInfo(aVideoInfo, aFramerate);
-  Unused << manager->SendPRemoteDecoderConstructor(
-      this, decoderInfo, aOptions, aIdentifier, aMediaEngineId, aTrackingId);
+  MOZ_ALWAYS_TRUE(manager->SendPRemoteDecoderConstructor(
+      this, decoderInfo, aOptions, aIdentifier, aMediaEngineId, aTrackingId));
 
   return NS_OK;
 }

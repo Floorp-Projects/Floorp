@@ -103,7 +103,7 @@ RefPtr<MFCDMChild::RemotePromise> MFCDMChild::EnsureRemote() {
             }
 
             mIPDLSelfRef = this;
-            Unused << manager->SendPMFCDMConstructor(this, mKeySystem);
+            MOZ_ALWAYS_TRUE(manager->SendPMFCDMConstructor(this, mKeySystem));
             mState = NS_OK;
             mRemotePromiseHolder.ResolveIfExists(true, __func__);
           },

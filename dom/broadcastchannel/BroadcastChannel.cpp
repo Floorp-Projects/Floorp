@@ -255,10 +255,13 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
 
   PBroadcastChannelChild* actor = actorChild->SendPBroadcastChannelConstructor(
       storagePrincipalInfo, origin, nsString(aChannel));
+  if (!actor) {
+    // The PBackground actor is shutting down, return a 'generic' error.
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
 
   bc->mActor = static_cast<BroadcastChannelChild*>(actor);
-  MOZ_ASSERT(bc->mActor);
-
   bc->mActor->SetParent(bc);
   bc->mOriginForEvents = std::move(originForEvents);
 
