@@ -122,7 +122,21 @@ void QuotaManagerDependencyFixture::IsStorageInitialized(bool* aResult) {
     QuotaManager* quotaManager = QuotaManager::Get();
     ASSERT_TRUE(quotaManager);
 
-    *aResult = quotaManager->IsStorageInitialized();
+    bool done = false;
+
+    quotaManager->StorageInitialized()->Then(
+        GetCurrentSerialEventTarget(), __func__,
+        [aResult, &done](const BoolPromise::ResolveOrRejectValue& aValue) {
+          if (aValue.IsResolve()) {
+            *aResult = aValue.ResolveValue();
+          } else {
+            *aResult = false;
+          }
+
+          done = true;
+        });
+
+    SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 }
 
