@@ -1,3 +1,4 @@
+// |reftest| shell-option(--enable-symbols-as-weakmap-keys) skip-if(!xulRuntime.shell) -- requires shell-options
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/ */
 
