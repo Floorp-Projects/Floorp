@@ -23,10 +23,16 @@ bool FFmpegEncoderModule<V>::SupportsMimeType(
 template <int V>
 already_AddRefed<MediaDataEncoder> FFmpegEncoderModule<V>::CreateVideoEncoder(
     const CreateEncoderParams& aParams, const bool aHardwareNotAllowed) const {
-  // TODO: Create a FFmpegVideoDecoder only if we support the mime type
-  // specified in aParams.
+  AVCodecID codecId = GetFFmpegEncoderCodecId<V>(aParams.mConfig.mMimeType);
+  if (codecId == AV_CODEC_ID_NONE) {
+    FFMPEGV_LOG("No ffmpeg encoder for %s", aParams.mConfig.mMimeType.get());
+    return nullptr;
+  }
+
+  // TODO: Properly create a FFmpegVideoDecoder with parameters in aParams.
   RefPtr<MediaDataEncoder> encoder = new FFmpegVideoEncoder<V>(mLib);
-  FFMPEGV_LOG("ffmpeg video encoder: %s has been created",
+  FFMPEGV_LOG("ffmpeg %s encoder: %s has been created",
+              aParams.mConfig.mMimeType.get(),
               encoder->GetDescriptionName().get());
   return encoder.forget();
 }
