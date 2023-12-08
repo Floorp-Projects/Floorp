@@ -79,17 +79,17 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"]:
         "ppc.h",
     ]
 
-    if CONFIG["CPU_ARCH"] == "arm":
+    if CONFIG["TARGET_CPU"] == "arm":
         SOURCES += [
             "arm.cpp",
         ]
 
-    if CONFIG["CPU_ARCH"].startswith("mips"):
+    if CONFIG["TARGET_CPU"].startswith("mips"):
         SOURCES += [
             "mips.cpp",
         ]
 
-    if CONFIG["CPU_ARCH"].startswith("ppc"):
+    if CONFIG["TARGET_CPU"].startswith("ppc"):
         SOURCES += [
             "ppc.cpp",
         ]
@@ -106,7 +106,7 @@ USE_LIBS += [
 LIBRARY_DEFINES["IMPL_MFBT"] = True
 LIBRARY_DEFINES["MOZ_HAS_MOZGLUE"] = True
 
-if CONFIG["MOZ_LINKER"] and CONFIG["CPU_ARCH"] == "arm":
+if CONFIG["MOZ_LINKER"] and CONFIG["TARGET_CPU"] == "arm":
     LDFLAGS += ["-Wl,-version-script,%s/arm-eabi-filter" % SRCDIR]
 
 DIST_INSTALL = True

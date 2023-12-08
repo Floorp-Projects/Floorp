@@ -11,7 +11,7 @@ Library("icudata")
 LOCAL_INCLUDES += ["."]
 
 prefix = ""
-if (CONFIG["OS_ARCH"] == "WINNT" and CONFIG["CPU_ARCH"] == "x86") or CONFIG[
+if (CONFIG["OS_ARCH"] == "WINNT" and CONFIG["TARGET_CPU"] == "x86") or CONFIG[
     "OS_ARCH"
 ] == "Darwin":
     prefix = "_"

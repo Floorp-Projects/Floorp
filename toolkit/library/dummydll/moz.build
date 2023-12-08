@@ -11,7 +11,7 @@ SOURCES += [
     "dummydll.cpp",
 ]
 
-if CONFIG["CPU_ARCH"] == "x86_64":
+if CONFIG["TARGET_CPU"] == "x86_64":
     GeckoSharedLibrary("qipcap64")
 else:
     GeckoSharedLibrary("qipcap")

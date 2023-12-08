@@ -6,13 +6,13 @@
 
 do_rapl = False
 
-if CONFIG["OS_ARCH"] == "Darwin" and CONFIG["CPU_ARCH"] == "x86_64":
+if CONFIG["OS_ARCH"] == "Darwin" and CONFIG["TARGET_CPU"] == "x86_64":
     do_rapl = True
 
 if (
     CONFIG["OS_ARCH"] == "Linux"
     and CONFIG["OS_TARGET"] != "Android"
-    and CONFIG["CPU_ARCH"] in ("x86", "x86_64")
+    and CONFIG["TARGET_CPU"] in ("x86", "x86_64")
 ):
     do_rapl = True
 

@@ -174,7 +174,7 @@ if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["USE_X11"] = "1"
 
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
+if CONFIG["OS_TARGET"] == "Android" and CONFIG["TARGET_CPU"] == "x86":
 
     CXXFLAGS += [
         "-msse2",
@@ -185,20 +185,20 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
         "android_support"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
+if CONFIG["OS_TARGET"] == "Android" and CONFIG["TARGET_CPU"] == "x86_64":
 
     CXXFLAGS += [
         "-msse2"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86":
 
     CXXFLAGS += [
         "-msse2",
         "-msse2"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86_64":
 
     CXXFLAGS += [
         "-msse2"

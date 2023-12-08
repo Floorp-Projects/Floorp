@@ -23,7 +23,7 @@ LOCAL_INCLUDES += [
     '/media/libwebp',
 ]
 
-if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
+if CONFIG['TARGET_CPU'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
     SOURCES += [
         'alpha_processing_neon.c',
         'cost_neon.c',
@@ -40,7 +40,7 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
     for f in SOURCES:
       if f.endswith('neon.c'):
         SOURCES[f].flags += CONFIG['NEON_FLAGS']
-elif CONFIG['CPU_ARCH'] == 'aarch64':
+elif CONFIG['TARGET_CPU'] == 'aarch64':
     SOURCES += [
         'alpha_processing_neon.c',
         'cost_neon.c',
@@ -82,7 +82,7 @@ elif CONFIG['INTEL_ARCHITECTURE']:
         SOURCES[f].flags += CONFIG['SSE2_FLAGS']
       elif f.endswith('sse41.c'):
         SOURCES[f].flags += ['-msse4.1']
-elif CONFIG['CPU_ARCH'].startswith('mips'):
+elif CONFIG['TARGET_CPU'].startswith('mips'):
     SOURCES += [
         'alpha_processing_mips_dsp_r2.c',
         'cost_mips32.c',

@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Add assembler flags and includes
-if CONFIG['CPU_ARCH'] != 'aarch64':
+if CONFIG['TARGET_CPU'] != 'aarch64':
     ASFLAGS += CONFIG['FFVPX_ASFLAGS']
     ASFLAGS += ['-I%s/media/ffvpx/' % TOPSRCDIR]
     ASFLAGS += ['-I%s/media/ffvpx/libavcodec/x86/' % TOPSRCDIR]

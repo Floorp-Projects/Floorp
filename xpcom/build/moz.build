@@ -40,7 +40,7 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
         "PoisonIOInterposerBase.cpp",
         "PoisonIOInterposerMac.cpp",
     ]
-    if CONFIG["CPU_ARCH"] != "aarch64":
+    if CONFIG["TARGET_CPU"] != "aarch64":
         SOURCES += ["mach_override.c"]
         SOURCES["mach_override.c"].flags += ["-Wno-unused-function"]
 else:

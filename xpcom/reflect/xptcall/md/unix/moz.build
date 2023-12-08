@@ -9,23 +9,23 @@ if CONFIG["OS_ARCH"] == "Darwin":
         "xptcinvoke_darwin.cpp",
         "xptcstubs_darwin.cpp",
     ]
-    if CONFIG["CPU_ARCH"] == "ppc":
+    if CONFIG["TARGET_CPU"] == "ppc":
         SOURCES += [
             "!xptcstubs_asm_ppc_darwin.s",
             "xptcinvoke_asm_ppc_rhapsody.s",
         ]
-    if CONFIG["CPU_ARCH"] == "x86_64":
+    if CONFIG["TARGET_CPU"] == "x86_64":
         SOURCES += [
             "xptcinvoke_asm_x86_64_unix.S",
         ]
-    if CONFIG["CPU_ARCH"] == "aarch64":
+    if CONFIG["TARGET_CPU"] == "aarch64":
         SOURCES += [
             "xptcinvoke_asm_aarch64.S",
             "xptcstubs_asm_aarch64.S",
         ]
 
 if CONFIG["OS_ARCH"] == "GNU":
-    if CONFIG["CPU_ARCH"] == "x86":
+    if CONFIG["TARGET_CPU"] == "x86":
         SOURCES += ["xptcinvoke_gcc_x86_unix.cpp", "xptcstubs_gcc_x86_unix.cpp"]
 
 if CONFIG["OS_ARCH"] in (
@@ -37,17 +37,17 @@ if CONFIG["OS_ARCH"] in (
     "OpenBSD",
     "SunOS",
 ) or CONFIG["OS_ARCH"].startswith("GNU_"):
-    if CONFIG["CPU_ARCH"] == "x86_64":
+    if CONFIG["TARGET_CPU"] == "x86_64":
         SOURCES += [
             "xptcinvoke_asm_x86_64_unix.S",
             "xptcinvoke_x86_64_unix.cpp",
             "xptcstubs_x86_64_linux.cpp",
         ]
-    elif CONFIG["CPU_ARCH"] == "x86":
+    elif CONFIG["TARGET_CPU"] == "x86":
         SOURCES += ["xptcinvoke_gcc_x86_unix.cpp", "xptcstubs_gcc_x86_unix.cpp"]
 
 if CONFIG["OS_ARCH"] in ("Linux", "FreeBSD"):
-    if CONFIG["CPU_ARCH"] == "ia64":
+    if CONFIG["TARGET_CPU"] == "ia64":
         SOURCES += [
             "xptcinvoke_asm_ipf64.s",
             "xptcinvoke_ipf64.cpp",
@@ -55,7 +55,7 @@ if CONFIG["OS_ARCH"] in ("Linux", "FreeBSD"):
             "xptcstubs_ipf64.cpp",
         ]
 
-if CONFIG["CPU_ARCH"] == "Alpha":
+if CONFIG["TARGET_CPU"] == "Alpha":
     if CONFIG["OS_ARCH"] in ("Linux", "FreeBSD", "NetBSD"):
         SOURCES += [
             "xptcinvoke_linux_alpha.cpp",
@@ -67,7 +67,7 @@ if CONFIG["CPU_ARCH"] == "Alpha":
             "xptcstubs_alpha_openbsd.cpp",
         ]
 
-if CONFIG["CPU_ARCH"] == "arm":
+if CONFIG["TARGET_CPU"] == "arm":
     if CONFIG["OS_ARCH"] == "Linux":
         SOURCES += ["xptcinvoke_arm.cpp", "xptcstubs_arm.cpp"]
         CXXFLAGS += ["-O2"]
@@ -77,7 +77,7 @@ if CONFIG["CPU_ARCH"] == "arm":
             "xptcstubs_arm_netbsd.cpp",
         ]
 
-if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_ARCH"] in ("Bitrig", "OpenBSD"):
+if CONFIG["TARGET_CPU"] == "arm" and CONFIG["OS_ARCH"] in ("Bitrig", "OpenBSD"):
     SOURCES += [
         "xptcinvoke_arm_openbsd.cpp",
         "xptcstubs_arm_openbsd.cpp",
@@ -85,7 +85,7 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_ARCH"] in ("Bitrig", "OpenBSD"):
 
 if CONFIG["OS_ARCH"] == "HP-UX":
     if CONFIG["CC"] != "gcc":
-        if CONFIG["CPU_ARCH"] == "ia64":
+        if CONFIG["TARGET_CPU"] == "ia64":
             SOURCES += [
                 "xptcinvoke_asm_ipf32.s",
                 "xptcinvoke_ipf32.cpp",
@@ -101,7 +101,7 @@ if CONFIG["OS_ARCH"] == "HP-UX":
             ]
 
 if CONFIG["OS_ARCH"] == "Linux":
-    if CONFIG["CPU_ARCH"] == "hppa":
+    if CONFIG["TARGET_CPU"] == "hppa":
         if CONFIG["CC_TYPE"] in ("clang", "gcc"):
             SOURCES += [
                 "xptcinvoke_asm_parisc_linux.s",
@@ -113,14 +113,14 @@ if CONFIG["OS_ARCH"] == "Linux":
             error("Unknown C++ compiler, xptcall assembly will probably be incorrect.")
 
 if CONFIG["OS_ARCH"] in ("Linux", "FreeBSD", "NetBSD", "OpenBSD"):
-    if CONFIG["CPU_ARCH"] == "aarch64":
+    if CONFIG["TARGET_CPU"] == "aarch64":
         SOURCES += [
             "xptcinvoke_aarch64.cpp",
             "xptcinvoke_asm_aarch64.S",
             "xptcstubs_aarch64.cpp",
             "xptcstubs_asm_aarch64.S",
         ]
-    if CONFIG["CPU_ARCH"] == "mips64":
+    if CONFIG["TARGET_CPU"] == "mips64":
         SOURCES += [
             "xptcinvoke_asm_mips64.S",
             "xptcinvoke_mips64.cpp",
@@ -131,7 +131,7 @@ if CONFIG["OS_ARCH"] in ("Linux", "FreeBSD", "NetBSD", "OpenBSD"):
             ASFLAGS += [
                 "-fno-integrated-as",
             ]
-    if CONFIG["CPU_ARCH"] == "mips32":
+    if CONFIG["TARGET_CPU"] == "mips32":
         SOURCES += [
             "xptcinvoke_asm_mips.S",
             "xptcinvoke_mips.cpp",
@@ -166,7 +166,7 @@ if CONFIG["OS_ARCH"] == "AIX":
                 "xptcinvoke_asm_ppc_aix.s",
             ]
 
-if CONFIG["CPU_ARCH"] == "ppc":
+if CONFIG["TARGET_CPU"] == "ppc":
     if CONFIG["OS_ARCH"] in ("Linux", "FreeBSD"):
         SOURCES += [
             "xptcinvoke_asm_ppc_linux.S",
@@ -175,7 +175,7 @@ if CONFIG["CPU_ARCH"] == "ppc":
             "xptcstubs_ppc_linux.cpp",
         ]
 
-if CONFIG["CPU_ARCH"] == "ppc64":
+if CONFIG["TARGET_CPU"] == "ppc64":
     if CONFIG["OS_ARCH"] in ("Linux", "FreeBSD"):
         SOURCES += [
             "xptcinvoke_asm_ppc64_linux.S",
@@ -188,7 +188,7 @@ if CONFIG["CPU_ARCH"] == "ppc64":
                 "-fno-integrated-as",
             ]
 
-if CONFIG["OS_ARCH"] == "OpenBSD" and CONFIG["CPU_ARCH"] == "ppc":
+if CONFIG["OS_ARCH"] == "OpenBSD" and CONFIG["TARGET_CPU"] == "ppc":
     SOURCES += [
         "xptcinvoke_asm_ppc_openbsd.S",
         "xptcinvoke_ppc_openbsd.cpp",
@@ -196,7 +196,7 @@ if CONFIG["OS_ARCH"] == "OpenBSD" and CONFIG["CPU_ARCH"] == "ppc":
         "xptcstubs_ppc_openbsd.cpp",
     ]
 
-if CONFIG["OS_ARCH"] == "Linux" and CONFIG["CPU_ARCH"] == "sparc":
+if CONFIG["OS_ARCH"] == "Linux" and CONFIG["TARGET_CPU"] == "sparc":
     SOURCES += [
         "xptcinvoke_asm_sparc_linux_GCC3.s",
         "xptcinvoke_sparc_solaris.cpp",
@@ -204,7 +204,7 @@ if CONFIG["OS_ARCH"] == "Linux" and CONFIG["CPU_ARCH"] == "sparc":
         "xptcstubs_sparc_solaris.cpp",
     ]
 
-if CONFIG["OS_ARCH"] == "NetBSD" and CONFIG["CPU_ARCH"] == "sparc":
+if CONFIG["OS_ARCH"] == "NetBSD" and CONFIG["TARGET_CPU"] == "sparc":
     SOURCES += [
         "xptcinvoke_asm_sparc_netbsd.s",
         "xptcinvoke_sparc_netbsd.cpp",
@@ -212,7 +212,7 @@ if CONFIG["OS_ARCH"] == "NetBSD" and CONFIG["CPU_ARCH"] == "sparc":
         "xptcstubs_sparc_netbsd.cpp",
     ]
 
-if CONFIG["OS_ARCH"] == "OpenBSD" and CONFIG["CPU_ARCH"] == "sparc":
+if CONFIG["OS_ARCH"] == "OpenBSD" and CONFIG["TARGET_CPU"] == "sparc":
     SOURCES += [
         "xptcinvoke_asm_sparc_openbsd.s",
         "xptcinvoke_sparc_openbsd.cpp",
@@ -222,7 +222,7 @@ if CONFIG["OS_ARCH"] == "OpenBSD" and CONFIG["CPU_ARCH"] == "sparc":
 
 if (
     CONFIG["OS_ARCH"] in ("OpenBSD", "FreeBSD", "Linux", "SunOS")
-    and CONFIG["CPU_ARCH"] == "sparc64"
+    and CONFIG["TARGET_CPU"] == "sparc64"
 ):
     SOURCES += [
         "xptcinvoke_asm_sparc64_openbsd.s",
@@ -232,7 +232,7 @@ if (
     ]
 
 if CONFIG["OS_ARCH"] == "Linux":
-    if CONFIG["CPU_ARCH"] == "s390":
+    if CONFIG["TARGET_CPU"] == "s390":
         SOURCES += [
             "xptcinvoke_linux_s390.cpp",
             "xptcstubs_linux_s390.cpp",
@@ -243,7 +243,7 @@ if CONFIG["OS_ARCH"] == "Linux":
             "-fomit-frame-pointer",
             "-mbackchain",
         ]
-    elif CONFIG["CPU_ARCH"] == "s390x":
+    elif CONFIG["TARGET_CPU"] == "s390x":
         SOURCES += [
             "xptcinvoke_linux_s390x.cpp",
             "xptcstubs_linux_s390x.cpp",
@@ -259,7 +259,7 @@ if CONFIG["OS_ARCH"] == "Linux":
                 "-fno-integrated-as",
             ]
 
-if CONFIG["OS_ARCH"] == "Linux" and CONFIG["CPU_ARCH"] == "riscv64":
+if CONFIG["OS_ARCH"] == "Linux" and CONFIG["TARGET_CPU"] == "riscv64":
     SOURCES += [
         "xptcinvoke_asm_riscv64.S",
         "xptcinvoke_riscv64.cpp",
@@ -267,7 +267,7 @@ if CONFIG["OS_ARCH"] == "Linux" and CONFIG["CPU_ARCH"] == "riscv64":
         "xptcstubs_riscv64.cpp",
     ]
 
-if CONFIG["OS_ARCH"] == "Linux" and CONFIG["CPU_ARCH"] == "loongarch64":
+if CONFIG["OS_ARCH"] == "Linux" and CONFIG["TARGET_CPU"] == "loongarch64":
     SOURCES += [
         "xptcinvoke_asm_loongarch64.S",
         "xptcinvoke_loongarch64.cpp",

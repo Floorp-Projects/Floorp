@@ -54,7 +54,7 @@ def generate_res():
             cpu_arch_dict = {"x86_64": "_AMD64_", "x86": "_X86_", "aarch64": "_ARM64_"}
 
             # add a preprocessor #define that specifies the CPU architecture
-            cpu_arch_ppd = cpu_arch_dict[buildconfig.substs["CPU_ARCH"]]
+            cpu_arch_ppd = cpu_arch_dict[buildconfig.substs["TARGET_CPU"]]
 
             command.extend(("-D", cpu_arch_ppd))
 

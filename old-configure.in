@@ -100,7 +100,7 @@ case "$target" in
         AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
 
         MSVC_C_RUNTIME_DLL=vcruntime140.dll
-        if test -n "$IS_VS2019_OR_MORE" -a "$CPU_ARCH" != "x86"; then
+        if test -n "$IS_VS2019_OR_MORE" -a "$TARGET_CPU" != "x86"; then
             MSVC_C_RUNTIME_1_DLL=vcruntime140_1.dll
         fi
         MSVC_CXX_RUNTIME_DLL=msvcp140.dll
@@ -435,7 +435,7 @@ case "$target" in
         _DEFINES_CXXFLAGS="-FI $_objdir/mozilla-config.h -DMOZILLA_CLIENT"
         CFLAGS="$CFLAGS -Gy -Zc:inline"
         CXXFLAGS="$CXXFLAGS -Gy -Zc:inline"
-        if test "$CPU_ARCH" = "x86"; then
+        if test "$TARGET_CPU" = "x86"; then
             dnl VS2012+ defaults to -arch:SSE2. We want to target nothing
             dnl more recent, so set that explicitly here unless another
             dnl target arch has already been set.
@@ -788,7 +788,7 @@ AC_LANG_CPLUSPLUS
 
 ARM_ABI_PREFIX=
 if test "$GNU_CC"; then
-  if test "$CPU_ARCH" = "arm" ; then
+  if test "$TARGET_CPU" = "arm" ; then
     AC_CACHE_CHECK(for ARM EABI,
         ac_cv_gcc_arm_eabi,
         [AC_TRY_COMPILE([],
@@ -864,8 +864,8 @@ if test -n "${COMPILE_ENVIRONMENT}"; then
 fi
 
 TARGET_XPCOM_ABI=
-if test -n "${CPU_ARCH}" -a -n "${TARGET_COMPILER_ABI}"; then
-    TARGET_XPCOM_ABI="${CPU_ARCH}-${TARGET_COMPILER_ABI}"
+if test -n "${TARGET_CPU}" -a -n "${TARGET_COMPILER_ABI}"; then
+    TARGET_XPCOM_ABI="${TARGET_CPU}-${TARGET_COMPILER_ABI}"
     AC_DEFINE_UNQUOTED(TARGET_XPCOM_ABI, ["${TARGET_XPCOM_ABI}"])
 fi
 

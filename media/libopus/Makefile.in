@@ -5,7 +5,7 @@
 include $(topsrcdir)/config/rules.mk
 
 ifdef GNU_AS
-ifeq ($(CPU_ARCH),arm)
+ifeq ($(TARGET_CPU),arm)
 
 celt_pitch_xcorr_arm-gnu.s: celt/arm/armopts-gnu.S
 

@@ -125,7 +125,7 @@ UNIFIED_SOURCES += [
     "WebAudioUtils.cpp",
 ]
 
-if CONFIG["CPU_ARCH"] == "aarch64" or CONFIG["BUILD_ARM_NEON"]:
+if CONFIG["TARGET_CPU"] == "aarch64" or CONFIG["BUILD_ARM_NEON"]:
     DEFINES["USE_NEON"] = True
     LOCAL_INCLUDES += ["/third_party/xsimd/include"]
     SOURCES += ["AudioNodeEngineNEON.cpp"]

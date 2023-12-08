@@ -536,7 +536,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES['skia/src/opts/SkOpts_skx.cpp'].flags += skia_opt_flags
     SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += skia_opt_flags
     SOURCES['skia/src/opts/SkOpts_ssse3.cpp'].flags += skia_opt_flags
-elif CONFIG['CPU_ARCH'] == 'aarch64':
+elif CONFIG['TARGET_CPU'] == 'aarch64':
     SOURCES += [
         'skia/src/opts/SkOpts_crc32.cpp',
     ]
@@ -568,7 +568,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += ['-Dskvx=skvx_hsw', '-mavx2', '-mf16c', '-mfma']
     if not CONFIG["MOZ_CODE_COVERAGE"]:
         SOURCES['skia/src/opts/SkOpts_skx.cpp'].flags += ['-Dskvx=skvx_skx', '-mavx512f', '-mavx512dq', '-mavx512cd', '-mavx512bw', '-mavx512vl']
-elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+elif CONFIG['TARGET_CPU'] == 'aarch64' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     SOURCES['skia/src/opts/SkOpts_crc32.cpp'].flags += ['-Dskvx=skvx_crc32', '-march=armv8-a+crc']
 
 DEFINES['MOZ_SKIA'] = True
@@ -610,11 +610,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk', 'android'):
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     CXXFLAGS += CONFIG['MOZ_PANGO_CFLAGS']
 
-if CONFIG['CPU_ARCH'] in ('mips32', 'mips64'):
+if CONFIG['TARGET_CPU'] in ('mips32', 'mips64'):
     # The skia code uses `mips` as a variable, but it's a builtin preprocessor
     # macro on mips that expands to `1`.
     DEFINES['mips'] = False
 
 # Work around bug 1841199.
-if CONFIG['CPU_ARCH'] in ('mips32', 'mips64', 'ppc64'):
+if CONFIG['TARGET_CPU'] in ('mips32', 'mips64', 'ppc64'):
     DEFINES['musttail'] = 'nomusttail'

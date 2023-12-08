@@ -126,7 +126,7 @@ else:
     ):
         DEFINES["SYMBOL_UNDERSCORE"] = True
 
-    if CONFIG["OS_ARCH"] == "Darwin" and CONFIG["CPU_ARCH"] in ("arm", "aarch64"):
+    if CONFIG["OS_ARCH"] == "Darwin" and CONFIG["TARGET_CPU"] in ("arm", "aarch64"):
         DEFINES["FFI_EXEC_TRAMPOLINE_TABLE"] = True
         ffi_h_defines.append("FFI_EXEC_TRAMPOLINE_TABLE")
 

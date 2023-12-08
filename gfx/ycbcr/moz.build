@@ -25,7 +25,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
 
     # MSVC doesn't support MMX when targeting AMD64.
     if CONFIG['CC_TYPE'] == 'clang-cl':
-        if CONFIG['CPU_ARCH'] == 'x86':
+        if CONFIG['TARGET_CPU'] == 'x86':
             SOURCES += [
                 'yuv_convert_mmx.cpp',
             ]
@@ -34,8 +34,8 @@ if CONFIG['INTEL_ARCHITECTURE']:
         SOURCES['yuv_convert_mmx.cpp'].flags += CONFIG['MMX_FLAGS']
 
 if CONFIG['CC_TYPE'] == 'clang-cl':
-    if CONFIG['CPU_ARCH'] == 'x86_64' or \
-       (CONFIG['CPU_ARCH'] == 'x86' and CONFIG['CC_TYPE'] == 'clang-cl'):
+    if CONFIG['TARGET_CPU'] == 'x86_64' or \
+       (CONFIG['TARGET_CPU'] == 'x86' and CONFIG['CC_TYPE'] == 'clang-cl'):
         SOURCES += [
             'yuv_row_win64.cpp',
         ]
@@ -53,7 +53,7 @@ else:
         'yuv_row_other.cpp',
     ]
 
-if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['HAVE_ARM_NEON']:
+if CONFIG['TARGET_CPU'] == 'arm' and CONFIG['HAVE_ARM_NEON']:
     SOURCES += [
         'yuv_row_arm.s',
     ]

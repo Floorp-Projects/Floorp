@@ -30,7 +30,7 @@ CFLAGS += [
 stack_alignment = 0
 
 # Attaching config.asm file
-if CONFIG['CPU_ARCH'] == 'x86':
+if CONFIG['TARGET_CPU'] == 'x86':
     # Default stack alignment can be 4 bytes.
     if CONFIG['OS_TARGET'] == 'WINNT':
         stack_alignment = 4
@@ -43,7 +43,7 @@ if CONFIG['CPU_ARCH'] == 'x86':
             CFLAGS += ['-mstack-alignment=16']
         elif CONFIG['CC_TYPE'] == 'gcc':
             CFLAGS += ['-mpreferred-stack-boundary=4']
-elif CONFIG['CPU_ARCH'] == 'x86_64':
+elif CONFIG['TARGET_CPU'] == 'x86_64':
     # Default stack aligment is 16 bytes.
     stack_alignment = 16
     if CONFIG['OS_TARGET'] == 'Darwin':
@@ -54,18 +54,18 @@ elif CONFIG['CPU_ARCH'] == 'x86_64':
         # The rest of the platforms are all Linux-like: plain Linux
         # Android, OpenBSD, NetBSD, FreeBSD, DragonFly, SunOS
         ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/linux/' % TOPSRCDIR]
-elif CONFIG['CPU_ARCH'] == 'aarch64':
+elif CONFIG['TARGET_CPU'] == 'aarch64':
     stack_alignment = 16
     ASFLAGS += ['-I%s/dist/include/dav1d/' % TOPOBJDIR]
 else:
-    error('Cpu arch %s is not expected' % CONFIG['CPU_ARCH'])
+    error('Cpu arch %s is not expected' % CONFIG['TARGET_CPU'])
 
 # Set the macro here instead of config.h
 if stack_alignment == 0:
     error('Stack alignment cannot be zero.')
 DEFINES['STACK_ALIGNMENT'] = stack_alignment
 
-if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
+if CONFIG['TARGET_CPU'] in ('x86', 'x86_64'):
     ASFLAGS += ['-Dprivate_prefix=dav1d']
 
     SOURCES += [
@@ -78,7 +78,7 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
     ]
 
     # ASM source files
-    if CONFIG['CPU_ARCH'] == 'x86_64':
+    if CONFIG['TARGET_CPU'] == 'x86_64':
         # Empty file on all other archs. Nasm produces
         # an error when it compiles empty files.
         SOURCES += [
@@ -159,7 +159,7 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
                       entry_point='add_define', inputs=[relative_path + f],
                       flags=['BITDEPTH', '8'])
 
-elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
+elif CONFIG['TARGET_CPU'] == 'arm' or CONFIG['TARGET_CPU'] == 'aarch64':
     SOURCES += [
         '../../../third_party/dav1d/src/arm/cpu.c',
     ]
@@ -191,7 +191,7 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
                       flags=['BITDEPTH', '8'])
 
     # BITDEPTH .S files
-    if CONFIG['CPU_ARCH'] == 'aarch64':
+    if CONFIG['TARGET_CPU'] == 'aarch64':
         SOURCES += [
             '../../../third_party/dav1d/src/arm/64/cdef.S',
             '../../../third_party/dav1d/src/arm/64/cdef16.S',
@@ -214,7 +214,7 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
             '../../../third_party/dav1d/src/arm/64/msac.S',
             '../../../third_party/dav1d/src/arm/64/refmvs.S',
         ]
-    elif CONFIG['CPU_ARCH'] == 'arm':
+    elif CONFIG['TARGET_CPU'] == 'arm':
         SOURCES += [
             '../../../third_party/dav1d/src/arm/32/cdef.S',
             '../../../third_party/dav1d/src/arm/32/cdef16.S',
@@ -237,9 +237,9 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
             '../../../third_party/dav1d/src/arm/32/refmvs.S',
         ]
 
-if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
+if CONFIG['TARGET_CPU'] in ('x86', 'x86_64'):
     USE_NASM = True
-elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['OS_TARGET'] == 'WINNT':
+elif CONFIG['TARGET_CPU'] == 'aarch64' and CONFIG['OS_TARGET'] == 'WINNT':
     USE_INTEGRATED_CLANGCL_AS = True
 
 FINAL_LIBRARY = 'gkmedias'

@@ -30,7 +30,7 @@ UNIFIED_SOURCES += [
     'pngwutil.c'
 ]
 
-if CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
+if CONFIG['TARGET_CPU'] == 'arm' or CONFIG['TARGET_CPU'] == 'aarch64':
     DEFINES['MOZ_PNG_USE_ARM_NEON'] = True
     UNIFIED_SOURCES += [
         'arm/arm_init.c',
@@ -38,7 +38,7 @@ if CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
         'arm/palette_neon_intrinsics.c'
     ]
 
-    if CONFIG['CPU_ARCH'] == 'arm':
+    if CONFIG['TARGET_CPU'] == 'arm':
         SOURCES += [
             'arm/filter_neon.S'
         ]
@@ -50,7 +50,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
         'intel/intel_init.c'
     ]
 
-if CONFIG['CPU_ARCH'] in ('mips32', 'mips64'):
+if CONFIG['TARGET_CPU'] in ('mips32', 'mips64'):
     DEFINES['MOZ_PNG_USE_MIPS_MSA'] = True
     UNIFIED_SOURCES += [
         'mips/filter_msa_intrinsics.c',

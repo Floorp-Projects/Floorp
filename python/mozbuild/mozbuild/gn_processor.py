@@ -194,7 +194,7 @@ def filter_gn_config(path, gn_result, sandbox_vars, input_vars, gn_target):
     mozbuild_args = {
         "MOZ_DEBUG": "1" if input_vars.get("is_debug") else None,
         "OS_TARGET": oses[input_vars["target_os"]],
-        "CPU_ARCH": cpus.get(input_vars["target_cpu"], input_vars["target_cpu"]),
+        "TARGET_CPU": cpus.get(input_vars["target_cpu"], input_vars["target_cpu"]),
     }
     if "use_x11" in input_vars:
         mozbuild_args["MOZ_X11"] = "1" if input_vars["use_x11"] else None
@@ -573,13 +573,13 @@ def write_mozbuild(
                 (),
                 ("MOZ_DEBUG",),
                 ("OS_TARGET",),
-                ("CPU_ARCH",),
+                ("TARGET_CPU",),
                 ("MOZ_DEBUG", "OS_TARGET"),
                 ("OS_TARGET", "MOZ_X11"),
-                ("OS_TARGET", "CPU_ARCH"),
-                ("OS_TARGET", "CPU_ARCH", "MOZ_X11"),
-                ("OS_TARGET", "CPU_ARCH", "MOZ_DEBUG"),
-                ("OS_TARGET", "CPU_ARCH", "MOZ_DEBUG", "MOZ_X11"),
+                ("OS_TARGET", "TARGET_CPU"),
+                ("OS_TARGET", "TARGET_CPU", "MOZ_X11"),
+                ("OS_TARGET", "TARGET_CPU", "MOZ_DEBUG"),
+                ("OS_TARGET", "TARGET_CPU", "MOZ_DEBUG", "MOZ_X11"),
             ):
                 conditions = set()
                 for args in all_args:
@@ -621,8 +621,8 @@ def write_mozbuild(
         for attrs in (
             (),
             ("OS_TARGET",),
-            ("OS_TARGET", "CPU_ARCH"),
-            ("OS_TARGET", "CPU_ARCH", "MOZ_X11"),
+            ("OS_TARGET", "TARGET_CPU"),
+            ("OS_TARGET", "TARGET_CPU", "MOZ_X11"),
         ):
             conditions = set()
             for args in dirs_by_config.keys():

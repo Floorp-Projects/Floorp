@@ -171,12 +171,12 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "/third_party/libwebrtc/modules/video_capture/windows/video_capture_factory_windows.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "aarch64":
+if CONFIG["TARGET_CPU"] == "aarch64":
 
     DEFINES["WEBRTC_ARCH_ARM64"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
-if CONFIG["CPU_ARCH"] == "arm":
+if CONFIG["TARGET_CPU"] == "arm":
 
     CXXFLAGS += [
         "-mfpu=neon"
@@ -186,7 +186,7 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
-if CONFIG["CPU_ARCH"] == "mips32":
+if CONFIG["TARGET_CPU"] == "mips32":
 
     DEFINES["MIPS32_LE"] = True
     DEFINES["MIPS_FPU_LE"] = True
@@ -210,7 +210,7 @@ if CONFIG["CPU_ARCH"] == "mips32":
         "/third_party/libwebrtc/modules/video_capture/linux/video_capture_pipewire.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "mips64":
+if CONFIG["TARGET_CPU"] == "mips64":
 
     DEFINES["WEBRTC_USE_PIPEWIRE"] = True
     DEFINES["_GNU_SOURCE"] = True
@@ -232,11 +232,11 @@ if CONFIG["CPU_ARCH"] == "mips64":
         "/third_party/libwebrtc/modules/video_capture/linux/video_capture_pipewire.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86":
+if CONFIG["TARGET_CPU"] == "x86":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
 
-if CONFIG["CPU_ARCH"] == "x86_64":
+if CONFIG["TARGET_CPU"] == "x86_64":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
 
@@ -264,14 +264,14 @@ if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["USE_X11"] = "1"
 
-if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android":
+if CONFIG["OS_TARGET"] == "Android" and CONFIG["TARGET_CPU"] == "arm":
 
     OS_LIBS += [
         "android_support",
         "unwind"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
+if CONFIG["OS_TARGET"] == "Android" and CONFIG["TARGET_CPU"] == "x86":
 
     CXXFLAGS += [
         "-msse2"
@@ -281,7 +281,7 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
         "android_support"
     ]
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "aarch64":
 
     DEFINES["WEBRTC_USE_PIPEWIRE"] = True
     DEFINES["_GNU_SOURCE"] = True
@@ -303,7 +303,7 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/modules/video_capture/linux/video_capture_pipewire.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "arm":
 
     DEFINES["WEBRTC_USE_PIPEWIRE"] = True
     DEFINES["_GNU_SOURCE"] = True
@@ -325,7 +325,7 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/modules/video_capture/linux/video_capture_pipewire.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86":
 
     CXXFLAGS += [
         "-msse2"
@@ -351,7 +351,7 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/modules/video_capture/linux/video_capture_pipewire.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86_64":
 
     DEFINES["WEBRTC_USE_PIPEWIRE"] = True
     DEFINES["_GNU_SOURCE"] = True

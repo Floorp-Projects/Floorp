@@ -15,7 +15,7 @@ LOCAL_INCLUDES += [
     '/media/libwebp',
 ]
 
-if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
+if CONFIG['TARGET_CPU'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
     SOURCES += [
         'sharpyuv_neon.c',
     ]
@@ -23,7 +23,7 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
     for f in SOURCES:
       if f.endswith('neon.c'):
         SOURCES[f].flags += CONFIG['NEON_FLAGS']
-elif CONFIG['CPU_ARCH'] == 'aarch64':
+elif CONFIG['TARGET_CPU'] == 'aarch64':
     SOURCES += [
         'sharpyuv_neon.c',
     ]

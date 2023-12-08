@@ -58,12 +58,12 @@ if CONFIG["MOZ_DEBUG"] == "1":
     DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "1"
     DEFINES["_DEBUG"] = True
 
-if CONFIG["CPU_ARCH"] == "aarch64":
+if CONFIG["TARGET_CPU"] == "aarch64":
 
     DEFINES["WEBRTC_ARCH_ARM64"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
-if CONFIG["CPU_ARCH"] == "x86_64":
+if CONFIG["TARGET_CPU"] == "x86_64":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
 

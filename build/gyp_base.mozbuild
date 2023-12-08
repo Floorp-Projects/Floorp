@@ -36,4 +36,4 @@ arches = {
 }
 
 gyp_vars["host_arch"] = arches.get(CONFIG["HOST_CPU_ARCH"], CONFIG["HOST_CPU_ARCH"])
-gyp_vars["target_arch"] = arches.get(CONFIG["CPU_ARCH"], CONFIG["CPU_ARCH"])
+gyp_vars["target_arch"] = arches.get(CONFIG["TARGET_CPU"], CONFIG["TARGET_CPU"])

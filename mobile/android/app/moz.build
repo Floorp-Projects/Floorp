@@ -10,7 +10,7 @@ with Files("**"):
 for var in ("APP_NAME", "APP_VERSION"):
     DEFINES[var] = CONFIG["MOZ_%s" % var]
 
-for var in ("MOZ_UPDATER", "MOZ_APP_UA_NAME", "ANDROID_PACKAGE_NAME", "CPU_ARCH"):
+for var in ("MOZ_UPDATER", "MOZ_APP_UA_NAME", "ANDROID_PACKAGE_NAME", "TARGET_CPU"):
     DEFINES[var] = CONFIG[var]
 
 if CONFIG["MOZ_PKG_SPECIAL"]:

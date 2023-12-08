@@ -21,7 +21,7 @@ UNIFIED_SOURCES += [
 
 AllowCompilerWarnings()
 
-if CONFIG['CPU_ARCH'] == 'arm':
+if CONFIG['TARGET_CPU'] == 'arm':
     # Accept arm, armv7, etc.
     if CONFIG['MOZ_THUMB2']:
         DEFINES['XZ_DEC_ARMTHUMB'] = 1

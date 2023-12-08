@@ -4,7 +4,7 @@
 
 
 ifdef GNU_AS
-ifeq ($(CPU_ARCH),arm)
+ifeq ($(TARGET_CPU),arm)
 
 armfrag-gnu.s: armopts-gnu.S
 armidct-gnu.s: armopts-gnu.S

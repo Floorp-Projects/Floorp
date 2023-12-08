@@ -58,7 +58,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += ['-Dskvx=skvx_hsw', '-mavx2', '-mf16c', '-mfma']
     if not CONFIG["MOZ_CODE_COVERAGE"]:
         SOURCES['skia/src/opts/SkOpts_skx.cpp'].flags += ['-Dskvx=skvx_skx', '-mavx512f', '-mavx512dq', '-mavx512cd', '-mavx512bw', '-mavx512vl']
-elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+elif CONFIG['TARGET_CPU'] == 'aarch64' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     SOURCES['skia/src/opts/SkOpts_crc32.cpp'].flags += ['-Dskvx=skvx_crc32', '-march=armv8-a+crc']
 
 DEFINES['MOZ_SKIA'] = True
@@ -100,7 +100,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk', 'android'):
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     CXXFLAGS += CONFIG['MOZ_PANGO_CFLAGS']
 
-if CONFIG['CPU_ARCH'] in ('mips32', 'mips64'):
+if CONFIG['TARGET_CPU'] in ('mips32', 'mips64'):
     # The skia code uses `mips` as a variable, but it's a builtin preprocessor
     # macro on mips that expands to `1`.
     DEFINES['mips'] = False
@@ -387,12 +387,12 @@ def write_mozbuild(sources):
   write_cflags(f, sources['intel'], opt_allowlist, 'skia_opt_flags', 4)
 
   if sources['arm']:
-    f.write("elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):\n")
+    f.write("elif CONFIG['TARGET_CPU'] == 'arm' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):\n")
     write_sources(f, sources['arm'], 4)
     write_cflags(f, sources['arm'], opt_allowlist, 'skia_opt_flags', 4)
 
   if sources['arm64']:
-    f.write("elif CONFIG['CPU_ARCH'] == 'aarch64':\n")
+    f.write("elif CONFIG['TARGET_CPU'] == 'aarch64':\n")
     write_sources(f, sources['arm64'], 4)
     write_cflags(f, sources['arm64'], opt_allowlist, 'skia_opt_flags', 4)
 

@@ -13,22 +13,22 @@ LOCAL_INCLUDES += [
 
 # We currently only support building on Linux for fuzzing here, as guarded
 # in media/libaom/moz.build. More support can be added later if necessary.
-if CONFIG['CPU_ARCH'] == 'x86_64':
+if CONFIG['TARGET_CPU'] == 'x86_64':
     LOCAL_INCLUDES += [
         '/media/libaom/config/linux/x64/',
         '/media/libvpx/config/linux/x64/',
     ]
-elif CONFIG['CPU_ARCH'] == 'x86':
+elif CONFIG['TARGET_CPU'] == 'x86':
     LOCAL_INCLUDES += [
         '/media/libaom/config/linux/ia32/',
         '/media/libvpx/config/linux/ia32/',
     ]
-elif CONFIG['CPU_ARCH'] == 'arm':
+elif CONFIG['TARGET_CPU'] == 'arm':
     LOCAL_INCLUDES += [
         '/media/libaom/config/linux/arm/',
         '/media/libvpx/config/linux/arm/',
     ]
-elif CONFIG['CPU_ARCH'] == 'aarch64':
+elif CONFIG['TARGET_CPU'] == 'aarch64':
     LOCAL_INCLUDES += [
         '/media/libaom/config/generic/',
         '/media/libvpx/config/linux/arm64/',

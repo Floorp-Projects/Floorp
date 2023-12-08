@@ -7,7 +7,7 @@
 # osclientcerts is currently only implemented for Windows
 # osclientcerts transitively depends on winapi 0.2.8, which doesn't work with
 # AArch64
-if (CONFIG["OS_ARCH"] == "WINNT" and CONFIG["CPU_ARCH"] != "aarch64") or CONFIG[
+if (CONFIG["OS_ARCH"] == "WINNT" and CONFIG["TARGET_CPU"] != "aarch64") or CONFIG[
     "OS_ARCH"
 ] == "Darwin":
     DIRS += ["osclientcerts"]

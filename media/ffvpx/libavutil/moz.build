@@ -7,12 +7,12 @@
 # Due to duplicate file names, we compile libavutil/x86 in its own
 # moz.build file.
 if CONFIG['FFVPX_ASFLAGS']:
-    if CONFIG['CPU_ARCH'] == 'x86' or CONFIG['CPU_ARCH'] == 'x86_64':
+    if CONFIG['TARGET_CPU'] == 'x86' or CONFIG['TARGET_CPU'] == 'x86_64':
         DIRS += ['x86']
-    elif CONFIG['CPU_ARCH'] == 'arm':
+    elif CONFIG['TARGET_CPU'] == 'arm':
         DIRS += ['arm']
 
-if CONFIG['CPU_ARCH'] == 'aarch64':
+if CONFIG['TARGET_CPU'] == 'aarch64':
     DIRS += ['aarch64']
 
 SharedLibrary('mozavutil')

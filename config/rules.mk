@@ -143,7 +143,7 @@ endif
 endif # !GNU_CC
 endif # WINNT
 
-ifeq (arm-Darwin,$(CPU_ARCH)-$(OS_TARGET))
+ifeq (arm-Darwin,$(TARGET_CPU)-$(OS_TARGET))
 ifdef PROGRAM
 MOZ_PROGRAM_LDFLAGS += -Wl,-rpath -Wl,@executable_path/Frameworks
 endif
