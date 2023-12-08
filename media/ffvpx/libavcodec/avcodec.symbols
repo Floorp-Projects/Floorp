@@ -12,6 +12,7 @@ av_get_profile_name
 av_grow_packet
 av_init_packet
 av_new_packet
+av_packet_alloc
 av_packet_copy_props
 av_packet_free_side_data
 av_packet_from_data
@@ -71,6 +72,8 @@ avcodec_is_open
 avcodec_license
 avcodec_open2
 avcodec_receive_frame
+avcodec_receive_packet
+avcodec_send_frame
 avcodec_send_packet
 avcodec_string
 avcodec_version
