@@ -60,8 +60,9 @@ export var ChildCrashHandler = {
           return;
         }
 
-        // If dumpID is empty the process was likely killed by the system and we therefore do not
-        // want to report the crash.
+        // If dumpID is empty the process was likely killed by the system and
+        // we therefore do not want to report the crash. This includes most
+        // "expected" extensions process crashes on Android.
         const dumpID = aSubject.get("dumpID");
         if (!dumpID) {
           Services.telemetry
@@ -73,12 +74,6 @@ export var ChildCrashHandler = {
         debug`Notifying child process crash, dump ID ${dumpID}`;
         const [minidumpPath, extrasPath] = getPendingMinidump(dumpID);
 
-        // Report GPU process crashes as occuring in a background process, and others as foreground.
-        const processType =
-          aTopic === "compositor:process-aborted"
-            ? "BACKGROUND_CHILD"
-            : "FOREGROUND_CHILD";
-
         let remoteType = this.childMap.get(childID);
         this.childMap.delete(childID);
 
@@ -87,6 +82,13 @@ export var ChildCrashHandler = {
           // dynamic, and used to control the process pool to use.
           remoteType = remoteType.split("=")[0];
         }
+
+        // Report GPU and extension process crashes as occuring in a background
+        // process, and others as foreground.
+        const processType =
+          aTopic === "compositor:process-aborted" || remoteType === "extension"
+            ? "BACKGROUND_CHILD"
+            : "FOREGROUND_CHILD";
 
         lazy.EventDispatcher.instance.sendRequest({
           type: "GeckoView:ChildCrashReport",
