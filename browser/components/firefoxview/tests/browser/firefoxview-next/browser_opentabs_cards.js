@@ -431,3 +431,47 @@ add_task(async function search_open_tabs() {
   await SpecialPowers.popPrefEnv();
   await cleanup();
 });
+
+add_task(async function search_open_tabs_recent_browsing() {
+  const NUMBER_OF_TABS = 6;
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+  for (let i = 0; i < NUMBER_OF_TABS; i++) {
+    await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
+  }
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.firefox-view.search.enabled", true]],
+  });
+  await openFirefoxViewTab(window).then(async viewTab => {
+    const browser = viewTab.linkedBrowser;
+    await navigateToCategoryAndWait(browser.contentDocument, "recentbrowsing");
+    const recentBrowsing = browser.contentDocument.querySelector(
+      "view-recentbrowsing"
+    );
+
+    info("Input a search query.");
+    EventUtils.synthesizeMouseAtCenter(
+      recentBrowsing.searchTextbox,
+      {},
+      content
+    );
+    EventUtils.sendString(TEST_URL, content);
+    const slot = recentBrowsing.querySelector("[slot='opentabs']");
+    await TestUtils.waitForCondition(
+      () => slot.viewCards[0].tabList.rowEls.length === 5,
+      "Not all search results are shown yet."
+    );
+
+    info("Click the Show All link.");
+    const showAllLink = slot.viewCards[0].shadowRoot.querySelector(
+      "[data-l10n-id='firefoxview-show-all']"
+    );
+    EventUtils.synthesizeMouseAtCenter(showAllLink, {}, content);
+    await TestUtils.waitForCondition(
+      () => slot.viewCards[0].tabList.rowEls.length === NUMBER_OF_TABS,
+      "All search results are shown."
+    );
+    ok(BrowserTestUtils.is_hidden(showAllLink), "The show all link is hidden.");
+  });
+  await SpecialPowers.popPrefEnv();
+  await cleanup();
+});

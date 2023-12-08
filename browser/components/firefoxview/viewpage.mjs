@@ -121,8 +121,12 @@ export class ViewPage extends ViewPageContent {
   constructor() {
     super();
     this.selectedTab = false;
-    this.recentBrowsing = Boolean(this.closest("VIEW-RECENTBROWSING"));
+    this.recentBrowsing = Boolean(this.recentBrowsingElement);
     this.onVisibilityChange = this.onVisibilityChange.bind(this);
+  }
+
+  get recentBrowsingElement() {
+    return this.closest("VIEW-RECENTBROWSING");
   }
 
   onVisibilityChange(event) {

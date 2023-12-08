@@ -25,6 +25,7 @@ import {
   escapeHtmlEntities,
   isSearchEnabled,
   searchTabList,
+  MAX_TABS_FOR_RECENT_BROWSING,
 } from "./helpers.mjs";
 
 const SYNCED_TABS_CHANGED = "services.sync.tabs.changed";
@@ -41,7 +42,7 @@ class SyncedTabsInView extends ViewPage {
     this._id = Math.floor(Math.random() * 10e6);
     this.currentSyncedTabs = [];
     if (this.recentBrowsing) {
-      this.maxTabsLength = 6; // 5 tabs plus the device row
+      this.maxTabsLength = MAX_TABS_FOR_RECENT_BROWSING;
     } else {
       // Setting maxTabsLength to -1 for no max
       this.maxTabsLength = -1;
@@ -49,6 +50,7 @@ class SyncedTabsInView extends ViewPage {
     this.devices = [];
     this.fullyUpdated = false;
     this.searchQuery = "";
+    this.showAll = false;
   }
 
   static properties = {
@@ -58,6 +60,7 @@ class SyncedTabsInView extends ViewPage {
     _currentSetupStateIndex: { type: Number },
     devices: { type: Array },
     searchQuery: { type: String },
+    showAll: { type: Boolean },
   };
 
   static queries = {
@@ -82,6 +85,13 @@ class SyncedTabsInView extends ViewPage {
 
     this.updateStates();
     this.onVisibilityChange();
+
+    if (this.recentBrowsing) {
+      this.recentBrowsingElement.addEventListener(
+        "fxview-search-textbox-query",
+        this
+      );
+    }
   }
 
   stop() {
@@ -94,6 +104,13 @@ class SyncedTabsInView extends ViewPage {
 
     Services.obs.removeObserver(this.boundObserve, TOPIC_SETUPSTATE_CHANGED);
     Services.obs.removeObserver(this.boundObserve, SYNCED_TABS_CHANGED);
+
+    if (this.recentBrowsing) {
+      this.recentBrowsingElement.removeEventListener(
+        "fxview-search-textbox-query",
+        this
+      );
+    }
   }
 
   disconnectedCallback() {
@@ -139,6 +156,9 @@ class SyncedTabsInView extends ViewPage {
     }
     if (event.type == "change") {
       TabsSetupFlowManager.syncOpenTabs(event.target);
+    }
+    if (this.recentBrowsing && event.type === "fxview-search-textbox-query") {
+      this.onSearchQuery(event);
     }
   }
 
@@ -327,17 +347,10 @@ class SyncedTabsInView extends ViewPage {
   }
 
   noDeviceTabsTemplate(deviceName, deviceType, isSearchResultsEmpty = false) {
-    if (this.recentBrowsing) {
-      return html` ${this.deviceTemplate(deviceName, deviceType, [])}
-        <div
-          class="blackbox notabs"
-          data-l10n-id="firefoxview-syncedtabs-device-notabs"
-        ></div>`;
-    }
-    return html`<card-container
-      shortPageName=${this.recentBrowsing ? "syncedtabs" : null}
-    >
-      <h3 slot="header" class="device-header">
+    const template = html`<h3
+        slot=${ifDefined(this.recentBrowsing ? null : "header")}
+        class="device-header"
+      >
         <span class="icon ${deviceType}" role="presentation"></span>
         ${deviceName}
       </h3>
@@ -345,7 +358,7 @@ class SyncedTabsInView extends ViewPage {
         isSearchResultsEmpty,
         () => html`
           <div
-            slot="main"
+            slot=${ifDefined(this.recentBrowsing ? null : "main")}
             class="blackbox notabs"
             data-l10n-id="firefoxview-search-results-empty"
             data-l10n-args=${JSON.stringify({
@@ -355,17 +368,23 @@ class SyncedTabsInView extends ViewPage {
         `,
         () => html`
           <div
-            slot="main"
+            slot=${ifDefined(this.recentBrowsing ? null : "main")}
             class="blackbox notabs"
             data-l10n-id="firefoxview-syncedtabs-device-notabs"
           ></div>
         `
-      )}
-    </card-container>`;
+      )}`;
+    return this.recentBrowsing
+      ? template
+      : html`<card-container
+          shortPageName=${this.recentBrowsing ? "syncedtabs" : null}
+          >${template}</card-container
+        >`;
   }
 
   onSearchQuery(e) {
     this.searchQuery = e.detail.query;
+    this.showAll = false;
   }
 
   deviceTemplate(deviceName, deviceType, tabItems) {
@@ -382,7 +401,7 @@ class SyncedTabsInView extends ViewPage {
         hasPopup="menu"
         .tabItems=${ifDefined(tabItems)}
         .searchQuery=${this.searchQuery}
-        maxTabsLength=${this.maxTabsLength}
+        maxTabsLength=${this.showAll ? -1 : this.maxTabsLength}
         @fxview-tab-list-primary-action=${this.onOpenLink}
         @fxview-tab-list-secondary-action=${this.onContextMenu}
       >
@@ -419,49 +438,68 @@ class SyncedTabsInView extends ViewPage {
       let tabItems = this.searchQuery
         ? searchTabList(this.searchQuery, this.getTabItems(renderInfo[id].tabs))
         : this.getTabItems(renderInfo[id].tabs);
-      if (renderInfo[id].tabs.length) {
-        if (this.recentBrowsing) {
-          renderArray.push(
-            this.deviceTemplate(
+      if (tabItems.length) {
+        const template = this.recentBrowsing
+          ? this.deviceTemplate(
               renderInfo[id].name,
               renderInfo[id].deviceType,
               tabItems
             )
-          );
-        } else if (tabItems.length) {
-          // Device has synced tabs including some search results
-          renderArray.push(
-            html`<card-container
+          : html`<card-container
               shortPageName=${this.recentBrowsing ? "syncedtabs" : null}
               >${this.deviceTemplate(
                 renderInfo[id].name,
                 renderInfo[id].deviceType,
                 tabItems
-              )}</card-container
-            >`
-          );
-        } else {
-          // Device has synced tabs, but no search results with the current query
-          renderArray.push(
-            this.noDeviceTabsTemplate(
-              renderInfo[id].name,
-              renderInfo[id].deviceType,
-              true
-            )
-          );
+              )}
+            </card-container>`;
+        renderArray.push(template);
+        if (this.isShowAllLinkVisible(tabItems)) {
+          renderArray.push(html` <div class="show-all-link-container">
+            <div
+              class="show-all-link"
+              @click=${this.enableShowAll}
+              @keydown=${this.enableShowAll}
+              data-l10n-id="firefoxview-show-all"
+              tabindex="0"
+            ></div>
+          </div>`);
         }
       } else {
-        // Device has no synced tabs, should display empty tab list message
-        // rather than empty search results message
+        // Check renderInfo[id].tabs.length to determine whether to display an
+        // empty tab list message or empty search results message.
+        // If there are no synced tabs, we always display the empty tab list
+        // message, even if there is an active search query.
         renderArray.push(
           this.noDeviceTabsTemplate(
             renderInfo[id].name,
-            renderInfo[id].deviceType
+            renderInfo[id].deviceType,
+            Boolean(renderInfo[id].tabs.length)
           )
         );
       }
     }
     return renderArray;
+  }
+
+  isShowAllLinkVisible(tabItems) {
+    return (
+      this.recentBrowsing &&
+      this.searchQuery &&
+      tabItems.length > this.maxTabsLength &&
+      !this.showAll
+    );
+  }
+
+  enableShowAll(event) {
+    if (
+      event.type == "click" ||
+      (event.type == "keydown" && event.code == "Enter") ||
+      (event.type == "keydown" && event.code == "Space")
+    ) {
+      event.preventDefault();
+      this.showAll = true;
+    }
   }
 
   generateCardContent() {

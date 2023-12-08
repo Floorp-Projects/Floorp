@@ -95,3 +95,18 @@ label {
 .syncedtabs-header button .icon {
   margin-inline-end: 0.7rem;
 }
+
+.show-all-link-container {
+  display: flex;
+  justify-content: center;
+  color: var(--fxview-primary-action-background);
+  cursor: pointer;
+}
+
+.show-all-link {
+  text-decoration: underline;
+  display: inline-block;
+  outline-offset: 2px;
+  border-radius: 2px;
+  margin-block: 0.5rem;
+}
