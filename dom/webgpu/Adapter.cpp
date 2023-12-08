@@ -77,9 +77,6 @@ void AdapterInfo::GetWgpuBackend(nsString& s) const {
     case ffi::WGPUBackend_Dx12:
       s.AssignLiteral("Dx12");
       return;
-    case ffi::WGPUBackend_Dx11:
-      s.AssignLiteral("Dx11");
-      return;
     case ffi::WGPUBackend_Gl:
       s.AssignLiteral("Gl");
       return;
