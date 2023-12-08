@@ -699,8 +699,27 @@ RefPtr<MediaRawData> FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ToMediaRawData(
     AVPacket* aPacket) {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
   MOZ_ASSERT(aPacket);
-  // TODO: Implement this.
-  return nullptr;
+
+  // TODO: Do we need to check AV_PKT_FLAG_CORRUPT?
+
+  // Copy frame data from AVPacket.
+  auto data = MakeRefPtr<MediaRawData>();
+  UniquePtr<MediaRawDataWriter> writer(data->CreateWriter());
+  if (!writer->Append(aPacket->data, static_cast<size_t>(aPacket->size))) {
+    FFMPEGV_LOG("fail to allocate MediaRawData buffer");
+    return nullptr;  // OOM
+  }
+
+  data->mKeyframe = (aPacket->flags & AV_PKT_FLAG_KEY) != 0;
+  // The unit of pts, dts, and duration is AVCodecContext's time_base, which is
+  // the reciprocal of the frame rate.
+  data->mTime =
+      media::TimeUnit(aPacket->pts, static_cast<int64_t>(mConfig.mFramerate));
+  data->mDuration = media::TimeUnit(aPacket->duration,
+                                    static_cast<int64_t>(mConfig.mFramerate));
+  data->mTimecode =
+      media::TimeUnit(aPacket->dts, static_cast<int64_t>(mConfig.mFramerate));
+  return data;
 }
 
 template class FFmpegVideoEncoder<LIBAV_VER, MediaDataEncoder::VP8Config>;
