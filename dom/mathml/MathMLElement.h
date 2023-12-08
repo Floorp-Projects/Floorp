@@ -74,7 +74,7 @@ class MathMLElement final : public MathMLElementBase, public Link {
 
   int32_t TabIndexDefault() final;
 
-  bool IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) override;
+  Focusable IsFocusableWithoutStyle(bool aWithMouse) override;
   already_AddRefed<nsIURI> GetHrefURI() const override;
 
   void NodeInfoChanged(Document* aOldDoc) override {

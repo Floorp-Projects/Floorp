@@ -1564,24 +1564,23 @@ MOZ_CAN_RUN_SCRIPT static bool IsNextFocusableElementTextControl(
   if (!nextElement) {
     return false;
   }
-  bool focusable = false;
-  nextElement->IsHTMLFocusable(false, &focusable, nullptr);
-  if (!focusable) {
+
+  // FIXME: Should probably use nsIFrame::IsFocusable if possible, to account
+  // for things like visibility: hidden or so.
+  if (!nextElement->IsFocusableWithoutStyle(false)) {
     return false;
   }
 
   // Check readonly attribute.
   if (nextElement->IsHTMLElement(nsGkAtoms::textarea)) {
-    HTMLTextAreaElement* textAreaElement =
-        HTMLTextAreaElement::FromNodeOrNull(nextElement);
+    auto* textAreaElement = HTMLTextAreaElement::FromNode(nextElement);
     return !textAreaElement->ReadOnly();
   }
 
   // If neither textarea nor input, what element type?
   MOZ_DIAGNOSTIC_ASSERT(nextElement->IsHTMLElement(nsGkAtoms::input));
 
-  HTMLInputElement* inputElement =
-      HTMLInputElement::FromNodeOrNull(nextElement);
+  auto* inputElement = HTMLInputElement::FromNode(nextElement);
   return !inputElement->ReadOnly();
 }
 

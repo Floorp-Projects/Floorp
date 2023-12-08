@@ -612,43 +612,36 @@ void MathMLElement::SetIncrementScriptLevel(bool aIncrementScriptLevel,
 int32_t MathMLElement::TabIndexDefault() { return IsLink() ? 0 : -1; }
 
 // XXX Bug 1586011: Share logic with other element classes.
-bool MathMLElement::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) {
+Focusable MathMLElement::IsFocusableWithoutStyle(bool aWithMouse) {
   if (!IsInComposedDoc() || IsInDesignMode()) {
     // In designMode documents we only allow focusing the document.
-    if (aTabIndex) {
-      *aTabIndex = -1;
-    }
-    return false;
+    return {};
   }
 
   int32_t tabIndex = TabIndex();
-  if (aTabIndex) {
-    *aTabIndex = tabIndex;
-  }
-
   if (!IsLink()) {
     // If a tabindex is specified at all we're focusable
-    return GetTabIndexAttrValue().isSome();
+    if (GetTabIndexAttrValue().isSome()) {
+      return {true, tabIndex};
+    }
+    return {};
   }
 
   if (!OwnerDoc()->LinkHandlingEnabled()) {
-    return false;
+    return {};
   }
 
   // Links that are in an editable region should never be focusable, even if
   // they are in a contenteditable="false" region.
   if (nsContentUtils::IsNodeInEditableRegion(this)) {
-    if (aTabIndex) {
-      *aTabIndex = -1;
-    }
-    return false;
+    return {};
   }
 
-  if (aTabIndex && (sTabFocusModel & eTabFocus_linksMask) == 0) {
-    *aTabIndex = -1;
+  if ((sTabFocusModel & eTabFocus_linksMask) == 0) {
+    tabIndex = -1;
   }
 
-  return true;
+  return {true, tabIndex};
 }
 
 already_AddRefed<nsIURI> MathMLElement::GetHrefURI() const {

@@ -1032,16 +1032,6 @@ void nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   }
 }
 
-bool nsIContent::IsFocusable(int32_t* aTabIndex, bool aWithMouse) {
-  bool focusable = IsFocusableInternal(aTabIndex, aWithMouse);
-  // Ensure that the return value and aTabIndex are consistent in the case
-  // we're in userfocusignored context.
-  if (focusable || (aTabIndex && *aTabIndex != -1)) {
-    return focusable;
-  }
-  return false;
-}
-
 Element* nsIContent::GetAutofocusDelegate(bool aWithMouse) const {
   for (nsINode* node = GetFirstChild(); node; node = node->GetNextNode(this)) {
     auto* descendant = Element::FromNode(*node);
@@ -1068,7 +1058,7 @@ Element* nsIContent::GetFocusDelegate(bool aWithMouse) const {
     whereToLook = root;
   }
 
-  auto IsFocusable = [&](Element* aElement) -> nsIFrame::Focusable {
+  auto IsFocusable = [&](Element* aElement) -> Focusable {
     nsIFrame* frame = aElement->GetPrimaryFrame();
 
     if (!frame) {
@@ -1094,7 +1084,7 @@ Element* nsIContent::GetFocusDelegate(bool aWithMouse) const {
         return el;
       }
     } else if (!potentialFocus) {
-      if (nsIFrame::Focusable focusable = IsFocusable(el)) {
+      if (Focusable focusable = IsFocusable(el)) {
         if (IsHTMLElement(nsGkAtoms::dialog)) {
           if (focusable.mTabIndex >= 0) {
             // If focusTarget is a dialog element and descendant is sequentially
@@ -1134,11 +1124,9 @@ Element* nsIContent::GetFocusDelegate(bool aWithMouse) const {
   return potentialFocus;
 }
 
-bool nsIContent::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) {
-  if (aTabIndex) {
-    *aTabIndex = -1;  // Default, not tabbable
-  }
-  return false;
+Focusable nsIContent::IsFocusableWithoutStyle(bool aWithMouse) {
+  // Default, not tabbable
+  return {};
 }
 
 void nsIContent::SetAssignedSlot(HTMLSlotElement* aSlot) {

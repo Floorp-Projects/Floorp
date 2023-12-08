@@ -492,22 +492,16 @@ bool HTMLImageElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
   int32_t tabIndex = TabIndex();
 
   if (IsInComposedDoc() && FindImageMap()) {
-    if (aTabIndex) {
-      // Use tab index on individual map areas
-      *aTabIndex = (sTabFocusModel & eTabFocus_linksMask) ? 0 : -1;
-    }
+    // Use tab index on individual map areas.
+    *aTabIndex = (sTabFocusModel & eTabFocus_linksMask) ? 0 : -1;
     // Image map is not focusable itself, but flag as tabbable
     // so that image map areas get walked into.
     *aIsFocusable = false;
-
     return false;
   }
 
-  if (aTabIndex) {
-    // Can be in tab order if tabindex >=0 and form controls are tabbable.
-    *aTabIndex = (sTabFocusModel & eTabFocus_formElementsMask) ? tabIndex : -1;
-  }
-
+  // Can be in tab order if tabindex >=0 and form controls are tabbable.
+  *aTabIndex = (sTabFocusModel & eTabFocus_formElementsMask) ? tabIndex : -1;
   *aIsFocusable = IsFormControlDefaultFocusable(aWithMouse) &&
                   (tabIndex >= 0 || GetTabIndexAttrValue().isSome());
 
