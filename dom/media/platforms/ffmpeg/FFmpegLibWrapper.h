@@ -48,6 +48,35 @@ struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper {
     MissingFFMpegFunction,
     MissingLibAVFunction,
   };
+
+  static const char* LinkResultToString(LinkResult aResult) {
+    switch (aResult) {
+      case LinkResult::Success:
+        return "Success";
+      case LinkResult::NoProvidedLib:
+        return "NoProvidedLib";
+      case LinkResult::NoAVCodecVersion:
+        return "NoAVCodecVersion";
+      case LinkResult::CannotUseLibAV57:
+        return "CannotUseLibAV57";
+      case LinkResult::BlockedOldLibAVVersion:
+        return "BlockedOldLibAVVersion";
+      case LinkResult::UnknownFutureLibAVVersion:
+        return "UnknownFutureLibAVVersion";
+      case LinkResult::UnknownFutureFFMpegVersion:
+        return "UnknownFutureFFMpegVersion";
+      case LinkResult::UnknownOlderFFMpegVersion:
+        return "UnknownOlderFFMpegVersion";
+      case LinkResult::MissingFFMpegFunction:
+        return "MissingFFMpegFunction";
+      case LinkResult::MissingLibAVFunction:
+        return "MissingLibAVFunction";
+      default:
+        break;
+    }
+    return "Unknown";
+  }
+
   // Examine mAVCodecLib, mAVUtilLib and mVALib, and attempt to resolve
   // all symbols.
   // Upon failure, the entire object will be reset and any attached libraries

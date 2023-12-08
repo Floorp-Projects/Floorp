@@ -115,7 +115,9 @@ bool FFVPXRuntimeLinker::Init() {
     return false;
   }
   sFFVPXLib.mAVCodecLib = MozAVLink(libFile);
-  if (sFFVPXLib.Link() == FFmpegLibWrapper::LinkResult::Success) {
+  FFmpegLibWrapper::LinkResult res = sFFVPXLib.Link();
+  FFMPEGP_LOG("Link result: %s", FFmpegLibWrapper::LinkResultToString(res));
+  if (res == FFmpegLibWrapper::LinkResult::Success) {
     sLinkStatus = LinkStatus_SUCCEEDED;
     return true;
   }

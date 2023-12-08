@@ -83,7 +83,8 @@ bool FFmpegRuntimeLinker::Init() {
         PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
     if (sLibAV.mAVCodecLib) {
       sLibAV.mAVUtilLib = sLibAV.mAVCodecLib;
-      switch (sLibAV.Link()) {
+      FFmpegLibWrapper::LinkResult res = sLibAV.Link();
+      switch (res) {
         case FFmpegLibWrapper::LinkResult::Success:
           sLinkStatus = LinkStatus_SUCCEEDED;
           sLinkStatusLibraryName = lib;
@@ -130,6 +131,8 @@ bool FFmpegRuntimeLinker::Init() {
           }
           break;
       }
+      FFMPEGP_LOG("Failed to link %s: %s", lib,
+                  FFmpegLibWrapper::LinkResultToString(res));
     }
   }
 
