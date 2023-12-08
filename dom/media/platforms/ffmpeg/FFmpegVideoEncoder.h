@@ -16,6 +16,12 @@
 namespace mozilla {
 
 template <int V>
+AVCodecID GetFFmpegEncoderCodecId(const nsACString& aMimeType);
+
+template <>
+AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(const nsACString& aMimeType);
+
+template <int V>
 class FFmpegVideoEncoder {};
 
 // TODO: Bug 1860925: FFmpegDataEncoder
