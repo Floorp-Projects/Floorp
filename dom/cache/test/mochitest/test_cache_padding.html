@@ -112,6 +112,22 @@ SpecialPowers.pushPrefEnv({
   await clearStorage();
 
   let cache = await caches.open(name);
+
+  // XXX This arbitrary loop is a hack to restore the same growth database
+  // behavior as it was before the schema upgrade from version 28 to 29.
+  // XXX Obviously, this test shouldn't use the total usage (which includes
+  // both the database and the file usage) to compute the disk size of
+  // responses. It should use the file usage only. The problem is that the
+  // quota client implementation currently doesn't differentiate between the
+  // database and the file usage. Even if that gets fixed, there would be a
+  // problem with checking cached usage which currently doesn't differentiate
+  // between the database usage and the file usage as well.
+  for (let i = 0; i < 19; i++) {
+    const request = new Request("https://example.com/index" + i + ".html");
+    const response = new Response("hello world");
+    await cache.put(request, response);
+  }
+
   await waitForIOToComplete(cache, url);
   let usage1 = await verifyUsage();
 
