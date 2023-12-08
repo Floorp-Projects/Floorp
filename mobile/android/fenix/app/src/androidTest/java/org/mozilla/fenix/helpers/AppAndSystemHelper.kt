@@ -38,8 +38,10 @@ import org.junit.Assert.assertEquals
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
+import org.mozilla.fenix.helpers.Constants.PackageName.PIXEL_LAUNCHER
 import org.mozilla.fenix.helpers.Constants.PackageName.YOUTUBE_APP
 import org.mozilla.fenix.helpers.Constants.TAG
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.helpers.idlingresource.NetworkConnectionIdlingResource
@@ -295,12 +297,14 @@ object AppAndSystemHelper {
         )
     }
 
-    fun bringAppToForeground() {
-        mDevice.pressRecentApps()
-        mDevice.findObject(UiSelector().resourceId("${TestHelper.packageName}:id/container")).waitForExists(
-            TestAssetHelper.waitingTime,
-        )
-    }
+    /**
+     * Brings the app to foregorund by clicking it in the recent apps tray.
+     * The package name is related to the home screen experience for the Pixel phones produced by Google.
+     * The recent apps tray on API 30 will always display only 2 apps, even if previously were opened more.
+     * The index of the most recent opened app will always have index 2, meaning that the previously opened app will have index 1.
+     */
+    fun bringAppToForeground() =
+        mDevice.findObject(UiSelector().index(2).packageName(PIXEL_LAUNCHER)).clickAndWaitForNewWindow(waitingTimeShort)
 
     fun verifyKeyboardVisibility(isExpectedToBeVisible: Boolean = true) {
         mDevice.waitForIdle()
