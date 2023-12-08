@@ -17,6 +17,12 @@
 // with MediaDataEncoder::PixelFormat in MediaDataEncoder class scope.
 namespace ffmpeg {
 
+#if LIBAVCODEC_VERSION_MAJOR >= 57
+using FFmpegBitRate = int64_t;
+#else
+using FFmpegBitRate = int;
+#endif
+
 #if LIBAVCODEC_VERSION_MAJOR < 54
 using FFmpegPixelFormat = enum PixelFormat;
 const FFmpegPixelFormat FFMPEG_PIX_FMT_NONE = FFmpegPixelFormat::PIX_FMT_NONE;
@@ -248,9 +254,49 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessInit() {
         __func__);
   }
 
-  // TODO: setting mCodecContext.
+  // Set up AVCodecContext.
+  mCodecContext->pix_fmt = fmt;
+  mCodecContext->bit_rate =
+      static_cast<ffmpeg::FFmpegBitRate>(mConfig.mBitsPerSec);
+  mCodecContext->width = static_cast<int>(mConfig.mSize.width);
+  mCodecContext->height = static_cast<int>(mConfig.mSize.height);
+  mCodecContext->time_base =
+      AVRational{.num = 1, .den = static_cast<int>(mConfig.mFramerate)};
+#if LIBAVCODEC_VERSION_MAJOR >= 57
+  mCodecContext->framerate =
+      AVRational{.num = static_cast<int>(mConfig.mFramerate), .den = 1};
+#endif
+  mCodecContext->gop_size = static_cast<int>(mConfig.mKeyframeInterval);
+  // TODO: keyint_min, max_b_frame?
+  // TODO: VPX specific settings
+  // - if mConfig.mDenoising is set: av_opt_set_int(mCodecContext->priv_data,
+  // "noise_sensitivity", x, 0), where the x is from 0(disabled) to 6.
+  // - if mConfig.mAdaptiveQp is set: av_opt_set_int(mCodecContext->priv_data,
+  // "aq_mode", x, 0), where x is from 0 to 3: 0 - Disabled, 1 - Variance
+  // AQ(default), 2 - Complexity AQ, 3 - Cycle AQ.
+  // - if min and max rates are known (VBR?),
+  // av_opt_set(mCodecContext->priv_data, "minrate", x, 0) and
+  // av_opt_set(mCodecContext->priv_data, "maxrate", y, 0)
+  // - For real time usage:
+  // av_opt_set(mCodecContext->priv_data, "deadline", "realtime", 0)
+  // av_opt_set(mCodecContext->priv_data, "lag-in-frames", "0", 0)
+  // av_opt_set(mCodecContext->priv_data, "target_bitrate", x, 0)
+  // av_opt_set(mCodecContext->priv_data, "rc_buf_sz", x, 0)
+  // TODO: H264 specific settings.
+  // - for AVCC format: set mCodecContext->extradata and
+  // mCodecContext->extradata_size.
+  // - for AnnexB format: set mCodecContext->flags |=
+  // AV_CODEC_FLAG_GLOBAL_HEADER for start code.
+  // TODO: AV1 specific settings.
 
-  FFMPEGV_LOG("%s has been initialized", codec->name);
+  // TODO: Open mCodecContext.
+  FFMPEGV_LOG("%s has been initialized with format: %s, bitrate: %" PRIi64
+              ", width: %d, height: %d, time_base: %d/%d",
+              codec->name, ffmpeg::GetPixelFormatString(mCodecContext->pix_fmt),
+              static_cast<int64_t>(mCodecContext->bit_rate),
+              mCodecContext->width, mCodecContext->height,
+              mCodecContext->time_base.num, mCodecContext->time_base.den);
+
   return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
 }
 
@@ -261,6 +307,7 @@ void FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessShutdown() {
   FFMPEGV_LOG("ProcessShutdown");
 
   if (mCodecContext) {
+    // TODO: Close mCodecContext.
     mLib->av_freep(&mCodecContext);
     mCodecContext = nullptr;
   }
