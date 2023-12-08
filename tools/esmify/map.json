@@ -1072,7 +1072,6 @@
   "resource://testing-common/UrlClassifierTestUtils.jsm": "toolkit/components/url-classifier/tests/UrlClassifierTestUtils.jsm",
   "resource://testing-common/UrlbarTestUtils.jsm": "browser/components/urlbar/tests/UrlbarTestUtils.jsm",
   "resource://testing-common/XPCShellContentUtils.jsm": "testing/modules/XPCShellContentUtils.jsm",
-  "resource://testing-common/backgroundtasks/BackgroundTask_automaticrestart.jsm": "toolkit/components/backgroundtasks/tests/BackgroundTask_automaticrestart.jsm",
   "resource://testing-common/backgroundtasks/BackgroundTask_shouldprocessupdates.jsm": "toolkit/components/backgroundtasks/tests/BackgroundTask_shouldprocessupdates.jsm",
   "resource://testing-common/backgroundtasks/BackgroundTask_wait.jsm": "toolkit/components/backgroundtasks/tests/BackgroundTask_wait.jsm",
   "resource://testing-common/cookie_filtering_helper.jsm": "netwerk/test/browser/cookie_filtering_helper.jsm",

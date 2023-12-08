@@ -4882,32 +4882,6 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
 #endif
 
 #if defined(MOZ_UPDATER) && !defined(MOZ_WIDGET_ANDROID)
-#  ifdef XP_WIN
-  {
-    // When automatically restarting for a staged background update
-    // we want the child process to wait here so that the updater
-    // does not register two instances running and use that as a
-    // reason to not process updates. This function requires having
-    // -restart-pid <param> in the command line to function properly.
-    const char* restartPidString = nullptr;
-    if (ARG_FOUND == CheckArg("restart-pid", &restartPidString) &&
-        !CheckArg("test-only-automatic-restart-no-wait")) {
-      // pid should be first parameter following -restart-pid.
-      uint32_t pid = nsDependentCString(restartPidString).ToInteger(&rv, 10U);
-      if (NS_SUCCEEDED(rv) && pid > 0) {
-        printf_stderr(
-            "*** MaybeWaitForProcessExit: launched pidDWORD = %u ***\n", pid);
-        RefPtr<nsUpdateProcessor> updater = new nsUpdateProcessor();
-        if (NS_FAILED(
-                updater->WaitForProcessExit(pid, MAYBE_WAIT_TIMEOUT_MS))) {
-          NS_WARNING("Failed to MaybeWaitForProcessExit.");
-        }
-      } else {
-        NS_WARNING("Failed to parse pid from -restart-pid.");
-      }
-    }
-  }
-#  endif
   Maybe<ShouldNotProcessUpdatesReason> shouldNotProcessUpdatesReason =
       ShouldNotProcessUpdates(mDirProvider);
   if (shouldNotProcessUpdatesReason.isNothing()) {

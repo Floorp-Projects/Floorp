@@ -66,7 +66,6 @@ TESTING_JS_MODULES += [
 ]
 
 TESTING_JS_MODULES.backgroundtasks += [
-    "tests/BackgroundTask_automaticrestart.sys.mjs",
     "tests/BackgroundTask_backgroundtask_specific_pref.sys.mjs",
     "tests/BackgroundTask_crash.sys.mjs",
     "tests/BackgroundTask_file_exists.sys.mjs",
