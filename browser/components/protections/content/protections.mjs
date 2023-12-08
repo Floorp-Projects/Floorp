@@ -244,10 +244,11 @@ document.addEventListener("DOMContentLoaded", e => {
       "privacy.trackingprotection.cryptomining.enabled",
       false
     );
-    let fingerprintingEnabled = RPMGetBoolPref(
-      "privacy.trackingprotection.fingerprinting.enabled",
-      false
-    );
+    let fingerprintingEnabled =
+      RPMGetBoolPref(
+        "privacy.trackingprotection.fingerprinting.enabled",
+        false
+      ) || RPMGetBoolPref("privacy.fingerprintingProtection", false);
     let tpEnabled = RPMGetBoolPref("privacy.trackingprotection.enabled", false);
     let socialTracking = RPMGetBoolPref(
       "privacy.trackingprotection.socialtracking.enabled",
