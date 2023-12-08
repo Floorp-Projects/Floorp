@@ -19,16 +19,16 @@ fieldset {
   margin: 0 4px;
   padding: 0;
   border: none;
-}
 
-fieldset > legend {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 0.4em 0.7em;
-  background-color: var(--in-content-box-background);
-  border: 1px solid var(--in-content-box-border-color);
-  border-radius: 2px 2px 0 0;
-  user-select: none;
+  > legend {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0.4em 0.7em;
+    background-color: var(--in-content-box-background);
+    border: 1px solid var(--in-content-box-border-color);
+    border-radius: 2px 2px 0 0;
+    user-select: none;
+  }
 }
 
 option:nth-child(even) {
@@ -43,14 +43,13 @@ option:nth-child(even) {
   padding-inline: 0;
   border-top: none;
   border-radius: 0 0 2px 2px;
-}
 
-#addresses > option,
-#credit-cards > option {
-  display: flex;
-  align-items: center;
-  height: 1.6em;
-  padding-inline-start: 0.6em;
+  > option {
+    display: flex;
+    align-items: center;
+    height: 1.6em;
+    padding-inline-start: 0.6em;
+  }
 }
 
 #controls-container {
@@ -61,65 +60,71 @@ option:nth-child(even) {
   margin-inline-end: auto;
 }
 
-#credit-cards > option::before {
-  content: "";
-  background: url("icon-credit-card-generic.svg") no-repeat;
-  background-size: contain;
-  float: inline-start;
-  width: 16px;
-  height: 16px;
-  padding-inline-end: 10px;
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-
-/*
-  We use .png / @2x.png images where we don't yet have a vector version of a logo
-*/
-#credit-cards.branded > option[cc-type="amex"]::before {
-  background-image: url("third-party/cc-logo-amex.png");
-}
-
-#credit-cards.branded > option[cc-type="cartebancaire"]::before {
-  background-image: url("third-party/cc-logo-cartebancaire.png");
-}
-
-#credit-cards.branded > option[cc-type="diners"]::before {
-  background-image: url("third-party/cc-logo-diners.svg");
-}
-
-#credit-cards.branded > option[cc-type="discover"]::before {
-  background-image: url("third-party/cc-logo-discover.png");
-}
-
-#credit-cards.branded > option[cc-type="jcb"]::before {
-  background-image: url("third-party/cc-logo-jcb.svg");
-}
-
-#credit-cards.branded > option[cc-type="mastercard"]::before {
-  background-image: url("third-party/cc-logo-mastercard.svg");
-}
-
-#credit-cards.branded > option[cc-type="mir"]::before {
-  background-image: url("third-party/cc-logo-mir.svg");
-}
-
-#credit-cards.branded > option[cc-type="unionpay"]::before {
-  background-image: url("third-party/cc-logo-unionpay.svg");
-}
-
-#credit-cards.branded > option[cc-type="visa"]::before {
-  background-image: url("third-party/cc-logo-visa.svg");
-}
-
-@media (min-resolution: 1.1dppx) {
-  #credit-cards.branded > option[cc-type="amex"]::before {
-    background-image: url("third-party/cc-logo-amex@2x.png");
+#credit-cards {
+  > option::before {
+    content: "";
+    background: url("icon-credit-card-generic.svg") no-repeat;
+    background-size: contain;
+    float: inline-start;
+    width: 16px;
+    height: 16px;
+    padding-inline-end: 10px;
+    -moz-context-properties: fill;
+    fill: currentColor;
   }
-  #credit-cards.branded > option[cc-type="cartebancaire"]::before {
-    background-image: url("third-party/cc-logo-cartebancaire@2x.png");
-  }
-  #credit-cards.branded > option[cc-type="discover"]::before {
-    background-image: url("third-party/cc-logo-discover@2x.png");
+
+  /*
+    We use .png / @2x.png images where we don't yet have a vector version of a logo
+  */
+  &.branded > option {
+    &[cc-type="amex"]::before {
+      background-image: url("third-party/cc-logo-amex.png");
+    }
+
+    &[cc-type="cartebancaire"]::before {
+      background-image: url("third-party/cc-logo-cartebancaire.png");
+    }
+
+    &[cc-type="diners"]::before {
+      background-image: url("third-party/cc-logo-diners.svg");
+    }
+
+    &[cc-type="discover"]::before {
+      background-image: url("third-party/cc-logo-discover.png");
+    }
+
+    &[cc-type="jcb"]::before {
+      background-image: url("third-party/cc-logo-jcb.svg");
+    }
+
+    &[cc-type="mastercard"]::before {
+      background-image: url("third-party/cc-logo-mastercard.svg");
+    }
+
+    &[cc-type="mir"]::before {
+      background-image: url("third-party/cc-logo-mir.svg");
+    }
+
+    &[cc-type="unionpay"]::before {
+      background-image: url("third-party/cc-logo-unionpay.svg");
+    }
+
+    &[cc-type="visa"]::before {
+      background-image: url("third-party/cc-logo-visa.svg");
+    }
+
+    @media (min-resolution: 1.1dppx) {
+      &[cc-type="amex"]::before {
+        background-image: url("third-party/cc-logo-amex@2x.png");
+      }
+
+      &[cc-type="cartebancaire"]::before {
+        background-image: url("third-party/cc-logo-cartebancaire@2x.png");
+      }
+
+      &[cc-type="discover"]::before {
+        background-image: url("third-party/cc-logo-discover@2x.png");
+      }
+    }
   }
 }
