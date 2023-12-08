@@ -83,8 +83,8 @@
           },
           "uniqueItems": true
         },
-        "channel": {
-          "title": "Release Channel",
+        "channels": {
+          "title": "Release Channels",
           "description": "An array of release channels that this section applies to (not set = everywhere).",
           "type": "array",
           "items": {
