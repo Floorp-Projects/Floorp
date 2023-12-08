@@ -156,10 +156,10 @@ ifeq ($(MOZ_PKG_FORMAT),RPM)
       -DMOZ_APP_REMOTINGNAME='$(MOZ_APP_REMOTINGNAME)' \
       $(RPM_INCIDENTALS)/mozilla.desktop \
       -o $(RPMBUILD_SOURCEDIR)/$(MOZ_APP_NAME).desktop && \
-    rm -rf $(ABS_DIST)/$(TARGET_CPU) && \
+    rm -rf $(ABS_DIST)/$(TARGET_RAW_CPU) && \
     $(RPMBUILD) -bb \
     $(SPEC_FILE) \
-    --target $(TARGET_CPU) \
+    --target $(TARGET_RAW_CPU) \
     --buildroot $(RPMBUILD_TOPDIR)/BUILDROOT \
     --define 'moz_app_name $(MOZ_APP_NAME)' \
     --define 'moz_app_displayname $(MOZ_APP_DISPLAYNAME)' \
@@ -191,14 +191,14 @@ ifeq ($(MOZ_PKG_FORMAT),RPM)
   #For each of the main/tests rpms we want to make sure that
   #if they exist that they are in objdir/dist/ and that they get
   #uploaded and that they are beside the other build artifacts
-  MAIN_RPM= $(MOZ_APP_NAME)-$(MOZ_NUMERIC_APP_VERSION)-$(MOZ_RPM_RELEASE).$(BUILDID).$(TARGET_CPU)$(PKG_SUFFIX)
+  MAIN_RPM= $(MOZ_APP_NAME)-$(MOZ_NUMERIC_APP_VERSION)-$(MOZ_RPM_RELEASE).$(BUILDID).$(TARGET_RAW_CPU)$(PKG_SUFFIX)
   UPLOAD_EXTRA_FILES += $(MAIN_RPM)
-  RPM_CMD += && mv $(TARGET_CPU)/$(MAIN_RPM) $(ABS_DIST)/
+  RPM_CMD += && mv $(TARGET_RAW_CPU)/$(MAIN_RPM) $(ABS_DIST)/
 
   ifdef ENABLE_TESTS
-    TESTS_RPM=$(MOZ_APP_NAME)-tests-$(MOZ_NUMERIC_APP_VERSION)-$(MOZ_RPM_RELEASE).$(BUILDID).$(TARGET_CPU)$(PKG_SUFFIX)
+    TESTS_RPM=$(MOZ_APP_NAME)-tests-$(MOZ_NUMERIC_APP_VERSION)-$(MOZ_RPM_RELEASE).$(BUILDID).$(TARGET_RAW_CPU)$(PKG_SUFFIX)
     UPLOAD_EXTRA_FILES += $(TESTS_RPM)
-    RPM_CMD += && mv $(TARGET_CPU)/$(TESTS_RPM) $(ABS_DIST)/
+    RPM_CMD += && mv $(TARGET_RAW_CPU)/$(TESTS_RPM) $(ABS_DIST)/
   endif
 
   INNER_MAKE_PACKAGE = cd $(1) && $(RPM_CMD)
