@@ -29,9 +29,18 @@ AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(const nsACString& aMimeType) {
   return AV_CODEC_ID_NONE;
 }
 
+FFmpegVideoEncoder<LIBAV_VER>::FFmpegVideoEncoder(const FFmpegLibWrapper* aLib,
+                                                  AVCodecID aCodecID,
+                                                  RefPtr<TaskQueue> aTaskQueue)
+    : mLib(aLib), mCodecID(aCodecID), mTaskQueue(aTaskQueue), mCodecContext(nullptr) {
+  MOZ_ASSERT(mLib);
+  MOZ_ASSERT(mTaskQueue);
+};
+
 RefPtr<MediaDataEncoder::InitPromise> FFmpegVideoEncoder<LIBAV_VER>::Init() {
   FFMPEGV_LOG("Init");
-  return InitPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
+  return InvokeAsync(mTaskQueue, this, __func__,
+                     &FFmpegVideoEncoder::ProcessInit);
 }
 
 RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<LIBAV_VER>::Encode(
@@ -47,7 +56,11 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<LIBAV_VER>::Drain() {
 
 RefPtr<ShutdownPromise> FFmpegVideoEncoder<LIBAV_VER>::Shutdown() {
   FFMPEGV_LOG("Shutdown");
-  return ShutdownPromise::CreateAndReject(false, __func__);
+  RefPtr<FFmpegVideoEncoder<LIBAV_VER>> self = this;
+  return InvokeAsync(mTaskQueue, __func__, [self]() {
+    self->ProcessShutdown();
+    return self->mTaskQueue->BeginShutdown();
+  });
 }
 
 RefPtr<GenericPromise> FFmpegVideoEncoder<LIBAV_VER>::SetBitrate(
@@ -68,6 +81,48 @@ nsCString FFmpegVideoEncoder<LIBAV_VER>::GetDescriptionName() const {
 #  endif
   return nsPrintfCString("ffmpeg video encoder (%s)", lib);
 #endif
+}
+
+RefPtr<MediaDataEncoder::InitPromise>
+FFmpegVideoEncoder<LIBAV_VER>::ProcessInit() {
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+
+  FFMPEGV_LOG("ProcessInit");
+
+  AVCodec* codec = mLib->avcodec_find_encoder(mCodecID);
+  if (!codec) {
+    FFMPEGV_LOG("failed to find ffmpeg encoder for codec id %d", mCodecID);
+    return InitPromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                    RESULT_DETAIL("Unable to find codec")),
+        __func__);
+  }
+  FFMPEGV_LOG("find codec: %s", codec->name);
+
+  MOZ_ASSERT(!mCodecContext);
+  if (!(mCodecContext = mLib->avcodec_alloc_context3(codec))) {
+    FFMPEGV_LOG("failed to allocate ffmpeg context for codec %s", codec->name);
+    return InitPromise::CreateAndReject(
+        MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                    RESULT_DETAIL("Failed to initialize ffmpeg context")),
+        __func__);
+  }
+
+  // TODO: setting mCodecContext.
+
+  FFMPEGV_LOG("%s has been initialized", codec->name);
+  return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
+}
+
+void FFmpegVideoEncoder<LIBAV_VER>::ProcessShutdown() {
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+
+  FFMPEGV_LOG("ProcessShutdown");
+
+  if (mCodecContext) {
+    mLib->av_freep(&mCodecContext);
+    mCodecContext = nullptr;
+  }
 }
 
 }  // namespace mozilla
