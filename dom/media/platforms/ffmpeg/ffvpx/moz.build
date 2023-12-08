@@ -15,6 +15,7 @@ UNIFIED_SOURCES += [
     "../FFmpegDecoderModule.cpp",
     "../FFmpegEncoderModule.cpp",
     "../FFmpegVideoDecoder.cpp",
+    "../FFmpegVideoEncoder.cpp",
 ]
 SOURCES += [
     "FFVPXRuntimeLinker.cpp",

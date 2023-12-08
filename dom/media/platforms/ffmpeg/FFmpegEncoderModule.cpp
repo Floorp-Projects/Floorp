@@ -6,6 +6,8 @@
 
 #include "FFmpegEncoderModule.h"
 
+#include "FFmpegVideoEncoder.h"
+
 // This must be the last header included
 #include "FFmpegLibs.h"
 
@@ -21,11 +23,10 @@ bool FFmpegEncoderModule<V>::SupportsMimeType(
 template <int V>
 already_AddRefed<MediaDataEncoder> FFmpegEncoderModule<V>::CreateVideoEncoder(
     const CreateEncoderParams& aParams, const bool aHardwareNotAllowed) const {
-  MediaDataEncoder::CodecType ct =
-      CreateEncoderParams::CodecTypeForMime(aParams.mConfig.mMimeType);
-  // TODO: Create a FFmpegVideoDecoder if we support the mime type specified in
-  // aParams.
-  return nullptr;
+  // TODO: Create a FFmpegVideoDecoder only if we support the mime type
+  // specified in aParams.
+  RefPtr<MediaDataEncoder> encoder = new FFmpegVideoEncoder<V>(mLib);
+  return encoder.forget();
 }
 
 template class FFmpegEncoderModule<LIBAV_VER>;
