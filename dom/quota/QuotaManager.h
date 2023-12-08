@@ -380,6 +380,17 @@ class QuotaManager final : public BackgroundThreadObject {
   Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
   EnsureTemporaryClientIsInitialized(const ClientMetadata& aClientMetadata);
 
+  RefPtr<BoolPromise> InitializeTemporaryStorage();
+
+  RefPtr<BoolPromise> InitializeTemporaryStorage(
+      RefPtr<UniversalDirectoryLock> aDirectoryLock);
+
+  bool IsTemporaryStorageInitialized() const {
+    AssertIsOnOwningThread();
+
+    return mTemporaryStorageInitialized;
+  }
+
   nsresult EnsureTemporaryStorageIsInitializedInternal();
 
   RefPtr<BoolPromise> ClearStoragesForOrigin(
@@ -783,6 +794,7 @@ class QuotaManager final : public BackgroundThreadObject {
   int64_t mNextDirectoryLockId;
   uint64_t mShutdownStorageOpCount;
   bool mStorageInitialized;
+  bool mTemporaryStorageInitialized;
   bool mTemporaryStorageInitializedInternal;
   bool mCacheUsable;
 };

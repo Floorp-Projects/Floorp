@@ -150,7 +150,6 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
 
   switch (aParams.type()) {
     case RequestParams::TStorageNameParams:
-    case RequestParams::TInitTemporaryStorageParams:
       break;
 
     case RequestParams::TInitializePersistentOriginParams: {
@@ -365,9 +364,6 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
       case RequestParams::TStorageNameParams:
         return CreateStorageNameOp(quotaManager);
 
-      case RequestParams::TInitTemporaryStorageParams:
-        return CreateInitTemporaryStorageOp(quotaManager);
-
       case RequestParams::TInitializePersistentOriginParams:
         return CreateInitializePersistentOriginOp(quotaManager, aParams);
 
@@ -538,6 +534,24 @@ mozilla::ipc::IPCResult Quota::RecvInitializeTemporaryClient(
       ->InitializeTemporaryClient(aPersistenceType, aPrincipalInfo, aClientType)
       ->Then(GetCurrentSerialEventTarget(), __func__,
              BoolPromiseResolveOrRejectCallback(this, std::move(aResolve)));
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult Quota::RecvInitializeTemporaryStorage(
+    InitializeTemporaryStorageResolver&& aResolver) {
+  AssertIsOnBackgroundThread();
+
+  QM_TRY(MOZ_TO_RESULT(!QuotaManager::IsShuttingDown()),
+         ResolveBoolResponseAndReturn(aResolver));
+
+  QM_TRY_UNWRAP(const NotNull<RefPtr<QuotaManager>> quotaManager,
+                QuotaManager::GetOrCreate(),
+                ResolveBoolResponseAndReturn(aResolver));
+
+  quotaManager->InitializeTemporaryStorage()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      BoolPromiseResolveOrRejectCallback(this, std::move(aResolver)));
 
   return IPC_OK();
 }

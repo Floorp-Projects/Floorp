@@ -1663,6 +1663,7 @@ QuotaManager::QuotaManager(const nsAString& aBasePath,
       mNextDirectoryLockId(0),
       mShutdownStorageOpCount(0),
       mStorageInitialized(false),
+      mTemporaryStorageInitialized(false),
       mTemporaryStorageInitializedInternal(false),
       mCacheUsable(false) {
   AssertIsOnOwningThread();
@@ -5383,6 +5384,63 @@ QuotaManager::EnsureTemporaryClientIsInitialized(
   return std::pair(std::move(directory), created);
 }
 
+RefPtr<BoolPromise> QuotaManager::InitializeTemporaryStorage() {
+  AssertIsOnOwningThread();
+
+  // If temporary storage is initialized but there's a clear storage or
+  // shutdown storage operation already scheduled, we can't immediately resolve
+  // the promise and return from the function because the clear or shutdown
+  // storage operation uninitializes storage.
+  if (mTemporaryStorageInitialized && !mShutdownStorageOpCount) {
+    return BoolPromise::CreateAndResolve(true, __func__);
+  }
+
+  RefPtr<UniversalDirectoryLock> directoryLock = CreateDirectoryLockInternal(
+      Nullable<PersistenceType>(), OriginScope::FromNull(),
+      Nullable<Client::Type>(),
+      /* aExclusive */ false);
+
+  return directoryLock->Acquire()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [self = RefPtr(this),
+       directoryLock](const BoolPromise::ResolveOrRejectValue& aValue) mutable {
+        if (aValue.IsReject()) {
+          return BoolPromise::CreateAndReject(aValue.RejectValue(), __func__);
+        }
+
+        return self->InitializeTemporaryStorage(std::move(directoryLock));
+      });
+}
+
+RefPtr<BoolPromise> QuotaManager::InitializeTemporaryStorage(
+    RefPtr<UniversalDirectoryLock> aDirectoryLock) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aDirectoryLock);
+
+  if (mTemporaryStorageInitialized && !mShutdownStorageOpCount) {
+    return BoolPromise::CreateAndResolve(true, __func__);
+  }
+
+  auto initializeTemporaryStorageOp = CreateInitTemporaryStorageOp(
+      WrapMovingNotNullUnchecked(this), std::move(aDirectoryLock));
+
+  RegisterNormalOriginOp(*initializeTemporaryStorageOp);
+
+  initializeTemporaryStorageOp->RunImmediately();
+
+  return initializeTemporaryStorageOp->OnResults()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [self = RefPtr(this)](const BoolPromise::ResolveOrRejectValue& aValue) {
+        if (aValue.IsReject()) {
+          return BoolPromise::CreateAndReject(aValue.RejectValue(), __func__);
+        }
+
+        self->mTemporaryStorageInitialized = true;
+
+        return BoolPromise::CreateAndResolve(true, __func__);
+      });
+}
+
 nsresult QuotaManager::EnsureTemporaryStorageIsInitializedInternal() {
   AssertIsOnIOThread();
   MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
@@ -5509,6 +5567,7 @@ RefPtr<BoolPromise> QuotaManager::ClearStorage() {
           return BoolPromise::CreateAndReject(aValue.RejectValue(), __func__);
         }
 
+        self->mTemporaryStorageInitialized = false;
         self->mStorageInitialized = false;
 
         return BoolPromise::CreateAndResolve(true, __func__);
@@ -5536,6 +5595,7 @@ RefPtr<BoolPromise> QuotaManager::ShutdownStorage() {
           return BoolPromise::CreateAndReject(aValue.RejectValue(), __func__);
         }
 
+        self->mTemporaryStorageInitialized = false;
         self->mStorageInitialized = false;
 
         return BoolPromise::CreateAndResolve(true, __func__);
