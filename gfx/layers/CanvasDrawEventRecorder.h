@@ -7,195 +7,32 @@
 #ifndef mozilla_layers_CanvasDrawEventRecorder_h
 #define mozilla_layers_CanvasDrawEventRecorder_h
 
+#include <queue>
+
+#include "mozilla/Atomics.h"
 #include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/ipc/CrossProcessSemaphore.h"
 #include "mozilla/ipc/SharedMemoryBasic.h"
+#include "mozilla/layers/LayersTypes.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
+
+using EventType = gfx::RecordedEvent::EventType;
+
 namespace layers {
 
-static const uint8_t kCheckpointEventType = -1;
-static const uint8_t kDropBufferEventType = -2;
+typedef mozilla::ipc::SharedMemoryBasic::Handle Handle;
+typedef mozilla::CrossProcessSemaphoreHandle CrossProcessSemaphoreHandle;
 
-class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
+class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate,
+                                      public gfx::ContiguousBufferStream {
  public:
-  /**
-   * WriterServices allows consumers of CanvasEventRingBuffer to provide
-   * functions required by the write side of a CanvasEventRingBuffer without
-   * introducing unnecessary dependencies on IPC code.
-   */
-  class WriterServices {
-   public:
-    virtual ~WriterServices() = default;
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(CanvasDrawEventRecorder, final)
 
-    /**
-     * @returns true if the reader of the CanvasEventRingBuffer has permanently
-     *          stopped processing, otherwise returns false.
-     */
-    virtual bool ReaderClosed() = 0;
+  CanvasDrawEventRecorder();
 
-    /**
-     * Causes the reader to resume processing when it is in a stopped state.
-     */
-    virtual void ResumeReader() = 0;
-  };
-
-  /**
-   * ReaderServices allows consumers of CanvasEventRingBuffer to provide
-   * functions required by the read side of a CanvasEventRingBuffer without
-   * introducing unnecessary dependencies on IPC code.
-   */
-  class ReaderServices {
-   public:
-    virtual ~ReaderServices() = default;
-
-    /**
-     * @returns true if the writer of the CanvasEventRingBuffer has permanently
-     *          stopped processing, otherwise returns false.
-     */
-    virtual bool WriterClosed() = 0;
-  };
-
-  CanvasEventRingBuffer() {}
-
-  /**
-   * Initializes the shared memory used for the ringbuffer and footers.
-   * @param aOtherPid process ID to share the handles to
-   * @param aReadHandle handle to the shared memory for the buffer
-   */
-  bool InitBuffer(base::ProcessId aOtherPid,
-                  ipc::SharedMemoryBasic::Handle* aReadHandle);
-
-  /**
-   * Initialize the write side of a CanvasEventRingBuffer returning handles to
-   * the shared memory for the buffer and the two semaphores for waiting in the
-   * reader and the writer.
-   *
-   * @param aOtherPid process ID to share the handles to
-   * @param aReadHandle handle to the shared memory for the buffer
-   * @param aReaderSem reading blocked semaphore
-   * @param aWriterSem writing blocked semaphore
-   * @param aWriterServices provides functions required by the writer
-   * @returns true if initialization succeeds
-   */
-  bool InitWriter(base::ProcessId aOtherPid,
-                  ipc::SharedMemoryBasic::Handle* aReadHandle,
-                  CrossProcessSemaphoreHandle* aReaderSem,
-                  CrossProcessSemaphoreHandle* aWriterSem,
-                  UniquePtr<WriterServices> aWriterServices);
-
-  /**
-   * Initialize the read side of a CanvasEventRingBuffer.
-   *
-   * @param aReadHandle handle to the shared memory for the buffer
-   * @param aReaderSem reading blocked semaphore
-   * @param aWriterSem writing blocked semaphore
-   * @param aReaderServices provides functions required by the reader
-   * @returns true if initialization succeeds
-   */
-  bool InitReader(ipc::SharedMemoryBasic::Handle aReadHandle,
-                  CrossProcessSemaphoreHandle aReaderSem,
-                  CrossProcessSemaphoreHandle aWriterSem,
-                  UniquePtr<ReaderServices> aReaderServices);
-
-  /**
-   * Set a new buffer to resume after we have been stopped by the writer.
-   *
-   * @param aReadHandle handle to the shared memory for the buffer
-   * @returns true if initialization succeeds
-   */
-  bool SetNewBuffer(ipc::SharedMemoryBasic::Handle aReadHandle);
-
-  bool IsValid() const { return mSharedMemory; }
-
-  bool good() const final { return mGood; }
-
-  bool WriterFailed() const { return mWrite && mWrite->state == State::Failed; }
-
-  void SetIsBad() final {
-    mGood = false;
-    mRead->state = State::Failed;
-  }
-
-  void write(const char* const aData, const size_t aSize) final;
-
-  bool HasDataToRead();
-
-  /*
-   * This will put the reader into a stopped state if there is no more data to
-   * read. If this returns false the caller is responsible for continuing
-   * translation at a later point. If it returns false the writer will start the
-   * translation again when more data is written.
-   *
-   * @returns true if stopped
-   */
-  bool StopIfEmpty();
-
-  /*
-   * Waits for data to become available. This will wait for aTimeout duration
-   * aRetryCount number of times, checking to see if the other side is closed in
-   * between each one.
-   *
-   * @param aTimeout duration to wait
-   * @param aRetryCount number of times to retry
-   * @returns true if data is available to read.
-   */
-  bool WaitForDataToRead(TimeDuration aTimeout, int32_t aRetryCount);
-
-  uint8_t ReadNextEvent();
-
-  void read(char* const aOut, const size_t aSize) final;
-
-  /**
-   * Writes a checkpoint event to the buffer.
-   *
-   * @returns the write count after the checkpoint has been written
-   */
-  uint32_t CreateCheckpoint();
-
-  /**
-   * Waits until the given checkpoint has been read from the buffer.
-   *
-   * @params aCheckpoint the checkpoint to wait for
-   * @params aTimeout duration to wait while reader is not active
-   * @returns true if the checkpoint was reached, false if the reader is closed
-   *          or we timeout.
-   */
-  bool WaitForCheckpoint(uint32_t aCheckpoint);
-
-  /**
-   * Switch to a different sized buffer.
-   */
-  bool SwitchBuffer(base::ProcessId aOtherPid,
-                    ipc::SharedMemoryBasic::Handle* aHandle);
-
-  /**
-   * Used to send data back to the writer. This is done through the same shared
-   * memory so the writer must wait and read the response after it has submitted
-   * the event that uses this.
-   *
-   * @param aData the data to be written back to the writer
-   * @param aSize the number of chars to write
-   */
-  void ReturnWrite(const char* aData, size_t aSize);
-
-  /**
-   * Used to read data sent back from the reader via ReturnWrite. This is done
-   * through the same shared memory so the writer must wait until all expected
-   * data is read before writing new events to the buffer.
-   *
-   * @param aOut the pointer to read into
-   * @param aSize the number of chars to read
-   */
-  void ReturnRead(char* aOut, size_t aSize);
-
-  bool UsingLargeStream() { return mLargeStream; }
-
- protected:
-  bool WaitForAndRecalculateAvailableSpace() final;
-  void UpdateWriteTotalsBy(uint32_t aCount) final;
-
- private:
   enum class State : uint32_t {
     Processing,
 
@@ -212,89 +49,61 @@ class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
      */
     AboutToWait,
     Waiting,
+    Paused,
     Stopped,
     Failed,
   };
 
-  struct ReadFooter {
-    Atomic<uint32_t> count;
-    Atomic<uint32_t> returnCount;
-    Atomic<State> state;
+  struct Header {
+    Atomic<int64_t> eventCount;
+    Atomic<int64_t> writerWaitCount;
+    Atomic<State> writerState;
+    uint8_t padding1[44];
+    Atomic<int64_t> processedCount;
+    Atomic<State> readerState;
   };
 
-  struct WriteFooter {
-    Atomic<uint32_t> count;
-    Atomic<uint32_t> returnCount;
-    Atomic<uint32_t> requiredDifference;
-    Atomic<State> state;
+  class Helpers {
+   public:
+    virtual ~Helpers() = default;
+
+    virtual bool InitTranslator(const TextureType& aTextureType,
+                                Handle&& aReadHandle,
+                                nsTArray<Handle>&& aBufferHandles,
+                                const uint64_t& aBufferSize,
+                                CrossProcessSemaphoreHandle&& aReaderSem,
+                                CrossProcessSemaphoreHandle&& aWriterSem,
+                                const bool& aUseIPDLThread) = 0;
+
+    virtual bool AddBuffer(Handle&& aBufferHandle,
+                           const uint64_t& aBufferSize) = 0;
+
+    /**
+     * @returns true if the reader of the CanvasEventRingBuffer has permanently
+     *          stopped processing, otherwise returns false.
+     */
+    virtual bool ReaderClosed() = 0;
+
+    /**
+     * Causes the reader to resume processing when it is in a stopped state.
+     */
+    virtual bool RestartReader() = 0;
   };
 
-  CanvasEventRingBuffer(const CanvasEventRingBuffer&) = delete;
-  void operator=(const CanvasEventRingBuffer&) = delete;
+  bool Init(TextureType aTextureType, UniquePtr<Helpers> aHelpers);
 
-  void IncrementWriteCountBy(uint32_t aCount);
-
-  bool WaitForReadCount(uint32_t aReadCount, TimeDuration aTimeout);
-
-  bool WaitForAndRecalculateAvailableData();
-
-  void UpdateReadTotalsBy(uint32_t aCount);
-  void IncrementReadCountBy(uint32_t aCount);
-
-  void CheckAndSignalReader();
-
-  void CheckAndSignalWriter();
-
-  uint32_t WaitForBytesToWrite();
-
-  uint32_t WaitForBytesToRead();
-
-  uint32_t StreamSize();
-
-  RefPtr<ipc::SharedMemoryBasic> mSharedMemory;
-  UniquePtr<CrossProcessSemaphore> mReaderSemaphore;
-  UniquePtr<CrossProcessSemaphore> mWriterSemaphore;
-  UniquePtr<WriterServices> mWriterServices;
-  UniquePtr<ReaderServices> mReaderServices;
-  char* mBuf = nullptr;
-  uint32_t mOurCount = 0;
-  WriteFooter* mWrite = nullptr;
-  ReadFooter* mRead = nullptr;
-  bool mGood = false;
-  bool mLargeStream = true;
-};
-
-class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate {
- public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(CanvasDrawEventRecorder, final)
-  explicit CanvasDrawEventRecorder(){};
-
-  bool Init(base::ProcessId aOtherPid, ipc::SharedMemoryBasic::Handle* aHandle,
-            CrossProcessSemaphoreHandle* aReaderSem,
-            CrossProcessSemaphoreHandle* aWriterSem,
-            UniquePtr<CanvasEventRingBuffer::WriterServices> aWriterServices) {
-    return mOutputStream.InitWriter(aOtherPid, aHandle, aReaderSem, aWriterSem,
-                                    std::move(aWriterServices));
-  }
-
-  void RecordEvent(const gfx::RecordedEvent& aEvent) final {
-    if (!mOutputStream.good()) {
-      return;
-    }
-
-    aEvent.RecordToStream(mOutputStream);
-  }
+  /**
+   * Record an event for processing by the CanvasParent's CanvasTranslator.
+   * @param aEvent the event to record
+   */
+  void RecordEvent(const gfx::RecordedEvent& aEvent) final;
 
   void StoreSourceSurfaceRecording(gfx::SourceSurface* aSurface,
                                    const char* aReason) final;
 
   void Flush() final {}
 
-  void ReturnRead(char* aOut, size_t aSize) {
-    mOutputStream.ReturnRead(aOut, aSize);
-  }
-
-  uint32_t CreateCheckpoint() { return mOutputStream.CreateCheckpoint(); }
+  int64_t CreateCheckpoint();
 
   /**
    * Waits until the given checkpoint has been read by the translator.
@@ -303,19 +112,60 @@ class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate {
    * @returns true if the checkpoint was reached, false if the reader is closed
    *          or we timeout.
    */
-  bool WaitForCheckpoint(uint32_t aCheckpoint) {
-    return mOutputStream.WaitForCheckpoint(aCheckpoint);
-  }
+  bool WaitForCheckpoint(int64_t aCheckpoint);
 
-  bool UsingLargeStream() { return mOutputStream.UsingLargeStream(); }
+  TextureType GetTextureType() { return mTextureType; }
 
-  bool SwitchBuffer(base::ProcessId aOtherPid,
-                    ipc::SharedMemoryBasic::Handle* aHandle) {
-    return mOutputStream.SwitchBuffer(aOtherPid, aHandle);
-  }
+  void DropFreeBuffers();
+
+ protected:
+  gfx::ContiguousBuffer& GetContiguousBuffer(size_t aSize) final;
+
+  void IncrementEventCount() final;
 
  private:
-  CanvasEventRingBuffer mOutputStream;
+  void WriteInternalEvent(EventType aEventType);
+
+  void CheckAndSignalReader();
+
+  size_t mDefaultBufferSize;
+  uint32_t mMaxSpinCount;
+  uint32_t mDropBufferLimit;
+  uint32_t mDropBufferOnZero;
+
+  UniquePtr<Helpers> mHelpers;
+
+  TextureType mTextureType = TextureType::Unknown;
+  RefPtr<ipc::SharedMemoryBasic> mHeaderShmem;
+  Header* mHeader = nullptr;
+
+  struct CanvasBuffer : public gfx::ContiguousBuffer {
+    RefPtr<ipc::SharedMemoryBasic> shmem;
+
+    CanvasBuffer() : ContiguousBuffer(nullptr) {}
+
+    explicit CanvasBuffer(RefPtr<ipc::SharedMemoryBasic>&& aShmem)
+        : ContiguousBuffer(static_cast<char*>(aShmem->memory()),
+                           aShmem->Size()),
+          shmem(std::move(aShmem)) {}
+
+    size_t Capacity() { return shmem->Size(); }
+  };
+
+  struct RecycledBuffer {
+    RefPtr<ipc::SharedMemoryBasic> shmem;
+    int64_t eventCount = 0;
+    explicit RecycledBuffer(RefPtr<ipc::SharedMemoryBasic>&& aShmem,
+                            int64_t aEventCount)
+        : shmem(std::move(aShmem)), eventCount(aEventCount) {}
+    size_t Capacity() { return shmem->Size(); }
+  };
+
+  CanvasBuffer mCurrentBuffer;
+  std::queue<RecycledBuffer> mRecycledBuffers;
+
+  UniquePtr<CrossProcessSemaphore> mWriterSemaphore;
+  UniquePtr<CrossProcessSemaphore> mReaderSemaphore;
 };
 
 }  // namespace layers
