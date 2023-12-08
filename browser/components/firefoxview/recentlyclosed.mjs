@@ -8,7 +8,11 @@ import {
   ifDefined,
   when,
 } from "chrome://global/content/vendor/lit.all.mjs";
-import { isSearchEnabled, searchTabList } from "./helpers.mjs";
+import {
+  isSearchEnabled,
+  searchTabList,
+  MAX_TABS_FOR_RECENT_BROWSING,
+} from "./helpers.mjs";
 import { ViewPage } from "./viewpage.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/firefoxview/card-container.mjs";
@@ -37,14 +41,18 @@ class RecentlyClosedTabsInView extends ViewPage {
     this.boundObserve = (...args) => this.observe(...args);
     this.firstUpdateComplete = false;
     this.fullyUpdated = false;
-    this.maxTabsLength = this.recentBrowsing ? 5 : 25;
+    this.maxTabsLength = this.recentBrowsing
+      ? MAX_TABS_FOR_RECENT_BROWSING
+      : 25;
     this.recentlyClosedTabs = [];
     this.searchQuery = "";
     this.searchResults = null;
+    this.showAll = false;
   }
 
   static properties = {
     searchResults: { type: Array },
+    showAll: { type: Boolean },
   };
 
   static queries = {
@@ -80,6 +88,13 @@ class RecentlyClosedTabsInView extends ViewPage {
       this.boundObserve,
       SS_NOTIFY_BROWSER_SHUTDOWN_FLUSH
     );
+
+    if (this.recentBrowsing) {
+      this.recentBrowsingElement.addEventListener(
+        "fxview-search-textbox-query",
+        this
+      );
+    }
   }
 
   stop() {
@@ -96,11 +111,24 @@ class RecentlyClosedTabsInView extends ViewPage {
       this.boundObserve,
       SS_NOTIFY_BROWSER_SHUTDOWN_FLUSH
     );
+
+    if (this.recentBrowsing) {
+      this.recentBrowsingElement.removeEventListener(
+        "fxview-search-textbox-query",
+        this
+      );
+    }
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     this.stop();
+  }
+
+  handleEvent(event) {
+    if (this.recentBrowsing && event.type === "fxview-search-textbox-query") {
+      this.onSearchQuery(event);
+    }
   }
 
   // We remove all the observers when the instance is not visible to the user
@@ -137,10 +165,7 @@ class RecentlyClosedTabsInView extends ViewPage {
     }
     // sort the aggregated list to most-recently-closed first
     recentlyClosedTabsData.sort((a, b) => a.closedAt < b.closedAt);
-    this.recentlyClosedTabs = recentlyClosedTabsData.slice(
-      0,
-      this.maxTabsLength
-    );
+    this.recentlyClosedTabs = recentlyClosedTabsData;
     this.normalizeRecentlyClosedData();
     if (this.searchQuery) {
       this.#updateSearchResults();
@@ -343,7 +368,7 @@ class RecentlyClosedTabsInView extends ViewPage {
                 <fxview-tab-list
                   class="with-dismiss-button"
                   slot="main"
-                  .maxTabsLength=${this.maxTabsLength}
+                  .maxTabsLength=${this.showAll ? -1 : this.maxTabsLength}
                   .searchQuery=${ifDefined(
                     this.searchResults && this.searchQuery
                   )}
@@ -357,6 +382,17 @@ class RecentlyClosedTabsInView extends ViewPage {
             this.recentBrowsing && !this.recentlyClosedTabs.length,
             () => html` <div slot="main">${this.emptyMessageTemplate()}</div> `
           )}
+          ${when(
+            this.isShowAllLinkVisible(),
+            () => html` <div
+              @click=${this.enableShowAll}
+              @keydown=${this.enableShowAll}
+              data-l10n-id="firefoxview-show-all"
+              ?hidden=${!this.isShowAllLinkVisible()}
+              slot="footer"
+              tabindex="0"
+            ></div>`
+          )}
         </card-container>
         ${when(
           this.selectedTab && !this.recentlyClosedTabs.length,
@@ -368,6 +404,7 @@ class RecentlyClosedTabsInView extends ViewPage {
 
   onSearchQuery(e) {
     this.searchQuery = e.detail.query;
+    this.showAll = false;
     this.#updateSearchResults();
   }
 
@@ -375,6 +412,26 @@ class RecentlyClosedTabsInView extends ViewPage {
     this.searchResults = this.searchQuery
       ? searchTabList(this.searchQuery, this.recentlyClosedTabs)
       : null;
+  }
+
+  isShowAllLinkVisible() {
+    return (
+      this.recentBrowsing &&
+      this.searchQuery &&
+      this.searchResults.length > this.maxTabsLength &&
+      !this.showAll
+    );
+  }
+
+  enableShowAll(event) {
+    if (
+      event.type == "click" ||
+      (event.type == "keydown" && event.code == "Enter") ||
+      (event.type == "keydown" && event.code == "Space")
+    ) {
+      event.preventDefault();
+      this.showAll = true;
+    }
   }
 }
 customElements.define("view-recentlyclosed", RecentlyClosedTabsInView);

@@ -14,6 +14,7 @@ import {
   isSearchEnabled,
   placeLinkOnClipboard,
   searchTabList,
+  MAX_TABS_FOR_RECENT_BROWSING,
 } from "./helpers.mjs";
 import { ViewPage, ViewPageContent } from "./viewpage.mjs";
 
@@ -111,6 +112,13 @@ class OpenTabsInView extends ViewPage {
       card.paused = false;
       card.viewVisibleCallback?.();
     }
+
+    if (this.recentBrowsing) {
+      this.recentBrowsingElement.addEventListener(
+        "fxview-search-textbox-query",
+        this
+      );
+    }
   }
 
   disconnectedCallback() {
@@ -135,6 +143,13 @@ class OpenTabsInView extends ViewPage {
     for (let card of this.viewCards) {
       card.paused = true;
       card.viewHiddenCallback?.();
+    }
+
+    if (this.recentBrowsing) {
+      this.recentBrowsingElement.removeEventListener(
+        "fxview-search-textbox-query",
+        this
+      );
     }
   }
 
@@ -276,10 +291,15 @@ class OpenTabsInView extends ViewPage {
       .tabs=${tabs}
       .recentBrowsing=${true}
       .paused=${this.paused}
+      .searchQuery=${this.searchQuery}
     ></view-opentabs-card>`;
   }
 
   handleEvent({ detail, target, type }) {
+    if (this.recentBrowsing && type === "fxview-search-textbox-query") {
+      this.onSearchQuery({ detail });
+      return;
+    }
     const win = target.ownerGlobal;
     const tabs = this.windows.get(win);
     switch (type) {
@@ -372,6 +392,7 @@ class OpenTabsInViewCard extends ViewPageContent {
     recentBrowsing: { type: Boolean },
     searchQuery: { type: String },
     searchResults: { type: Array },
+    showAll: { type: Boolean },
   };
   static MAX_TABS_FOR_COMPACT_HEIGHT = 7;
 
@@ -384,6 +405,7 @@ class OpenTabsInViewCard extends ViewPageContent {
     this.devices = [];
     this.searchQuery = "";
     this.searchResults = null;
+    this.showAll = false;
   }
 
   static queries = {
@@ -401,12 +423,21 @@ class OpenTabsInViewCard extends ViewPageContent {
   }
 
   getMaxTabsLength() {
-    if (this.recentBrowsing) {
-      return 5;
+    if (this.recentBrowsing && !this.showAll) {
+      return MAX_TABS_FOR_RECENT_BROWSING;
     } else if (this.classList.contains("height-limited") && !this.showMore) {
       return OpenTabsInViewCard.MAX_TABS_FOR_COMPACT_HEIGHT;
     }
     return -1;
+  }
+
+  isShowAllLinkVisible() {
+    return (
+      this.recentBrowsing &&
+      this.searchQuery &&
+      this.searchResults.length > MAX_TABS_FOR_RECENT_BROWSING &&
+      !this.showAll
+    );
   }
 
   toggleShowMore(event) {
@@ -417,6 +448,17 @@ class OpenTabsInViewCard extends ViewPageContent {
     ) {
       event.preventDefault();
       this.showMore = !this.showMore;
+    }
+  }
+
+  enableShowAll(event) {
+    if (
+      event.type == "click" ||
+      (event.type == "keydown" && event.code == "Enter") ||
+      (event.type == "keydown" && event.code == "Space")
+    ) {
+      event.preventDefault();
+      this.showAll = true;
     }
   }
 
@@ -461,12 +503,14 @@ class OpenTabsInViewCard extends ViewPageContent {
         shortPageName=${this.recentBrowsing ? "opentabs" : null}
         ?showViewAll=${this.recentBrowsing}
       >
-        ${this.recentBrowsing
-          ? html`<h3
-              slot="header"
-              data-l10n-id=${"firefoxview-opentabs-header"}
-            ></h3>`
-          : html`<h3 slot="header">${this.title}</h3>`}
+        ${when(
+          this.recentBrowsing,
+          () => html`<h3
+            slot="header"
+            data-l10n-id="firefoxview-opentabs-header"
+          ></h3>`,
+          () => html`<h3 slot="header">${this.title}</h3>`
+        )}
         <div class="fxview-tab-list-container" slot="main">
           <fxview-tab-list
             class="with-context-menu"
@@ -480,8 +524,18 @@ class OpenTabsInViewCard extends ViewPageContent {
             ><view-opentabs-contextmenu slot="menu"></view-opentabs-contextmenu>
           </fxview-tab-list>
         </div>
-        ${!this.recentBrowsing
-          ? html` <div
+        ${when(
+          this.recentBrowsing,
+          () => html` <div
+            @click=${this.enableShowAll}
+            @keydown=${this.enableShowAll}
+            data-l10n-id="firefoxview-show-all"
+            ?hidden=${!this.isShowAllLinkVisible()}
+            slot="footer"
+            tabindex="0"
+          ></div>`,
+          () =>
+            html` <div
               @click=${this.toggleShowMore}
               @keydown=${this.toggleShowMore}
               data-l10n-id="${this.showMore
@@ -493,12 +547,15 @@ class OpenTabsInViewCard extends ViewPageContent {
               slot="footer"
               tabindex="0"
             ></div>`
-          : null}
+        )}
       </card-container>
     `;
   }
 
   willUpdate(changedProperties) {
+    if (changedProperties.has("searchQuery")) {
+      this.showAll = false;
+    }
     if (changedProperties.has("searchQuery") || changedProperties.has("tabs")) {
       this.updateSearchResults();
     }

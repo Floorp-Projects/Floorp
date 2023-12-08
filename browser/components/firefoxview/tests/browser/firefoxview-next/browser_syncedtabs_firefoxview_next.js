@@ -522,3 +522,68 @@ add_task(async function search_synced_tabs() {
   await SpecialPowers.popPrefEnv();
   await tearDown(sandbox);
 });
+
+add_task(async function search_synced_tabs_recent_browsing() {
+  const NUMBER_OF_TABS = 6;
+  TabsSetupFlowManager.resetInternalState();
+  const sandbox = setupRecentDeviceListMocks();
+  const tabClients = [
+    {
+      id: 1,
+      type: "client",
+      name: "My desktop",
+      clientType: "desktop",
+      tabs: Array(NUMBER_OF_TABS).fill({
+        type: "tab",
+        title: "Internet for people, not profits - Mozilla",
+        url: "https://www.mozilla.org/",
+        icon: "https://www.mozilla.org/media/img/favicons/mozilla/favicon.d25d81d39065.ico",
+        client: 1,
+      }),
+    },
+  ];
+  sandbox
+    .stub(SyncedTabs, "getRecentTabs")
+    .resolves(getMockTabData(tabClients));
+  sandbox.stub(SyncedTabs, "getTabClients").resolves(tabClients);
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.firefox-view.search.enabled", true]],
+  });
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    await navigateToCategoryAndWait(document, "recentbrowsing");
+    Services.obs.notifyObservers(null, UIState.ON_UPDATE);
+
+    info("Input a search query.");
+    const recentBrowsing = document.querySelector("view-recentbrowsing");
+    EventUtils.synthesizeMouseAtCenter(
+      recentBrowsing.searchTextbox,
+      {},
+      content
+    );
+    EventUtils.sendString("Mozilla", content);
+    const slot = recentBrowsing.querySelector("[slot='syncedtabs']");
+    await TestUtils.waitForCondition(
+      () => slot.fullyUpdated,
+      "Synced Tabs component is done updating."
+    );
+    await TestUtils.waitForCondition(
+      () => slot.tabLists[0].rowEls.length === 5,
+      "Not all search results are shown yet."
+    );
+
+    info("Click the Show All link.");
+    const showAllLink = await TestUtils.waitForCondition(() =>
+      slot.shadowRoot.querySelector("[data-l10n-id='firefoxview-show-all']")
+    );
+    showAllLink.click();
+    await TestUtils.waitForCondition(
+      () => slot.tabLists[0].rowEls.length === NUMBER_OF_TABS,
+      "All search results are shown."
+    );
+    ok(BrowserTestUtils.is_hidden(showAllLink), "The show all link is hidden.");
+  });
+  await SpecialPowers.popPrefEnv();
+  await tearDown(sandbox);
+});
