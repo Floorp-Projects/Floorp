@@ -464,14 +464,11 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::EncodeWithModernAPIs(
 
   // Check image format.
   const dom::ImageUtils imageUtils(aSample->mImage);
-  ffmpeg::FFmpegPixelFormat fmt = ffmpeg::FFMPEG_PIX_FMT_NONE;
-  // TODO: Support types other than YUV and NV.
-  if (aSample->mImage->AsPlanarYCbCrImage() || aSample->mImage->AsNVImage()) {
-    fmt = ffmpeg::ToSupportedFFmpegPixelFormat(imageUtils.GetFormat());
-  }
-  if (fmt == ffmpeg::FFMPEG_PIX_FMT_NONE) {
+  ffmpeg::FFmpegPixelFormat imgFmt =
+      ffmpeg::ToSupportedFFmpegPixelFormat(imageUtils.GetFormat());
+  if (imgFmt == ffmpeg::FFMPEG_PIX_FMT_NONE) {
     FFMPEGV_LOG(
-        "image type %s is not supported",
+        "image type %s is unsupported",
         dom::ImageBitmapFormatValues::GetString(imageUtils.GetFormat()).data());
     return EncodePromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
@@ -489,7 +486,9 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::EncodeWithModernAPIs(
   }
 
   // Set AVFrame properties for its internal data allocation.
-  mFrame->format = fmt;
+  // TODO: Need to convert image data into mConfig.mSourcePixelFormat format if
+  // their formats mismatch.
+  mFrame->format = imgFmt;
   mFrame->width = static_cast<int>(aSample->mImage->GetSize().width);
   mFrame->height = static_cast<int>(aSample->mImage->GetSize().height);
 
@@ -544,8 +543,7 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::EncodeWithModernAPIs(
                       RESULT_DETAIL("Input image is too big")),
           __func__);
     }
-  } else {
-    MOZ_ASSERT(aSample->mImage->AsNVImage());
+  } else if (aSample->mImage->AsNVImage()) {
     const layers::PlanarYCbCrData* data =
         aSample->mImage->AsNVImage()->GetData();
     if (!data) {
@@ -569,6 +567,59 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::EncodeWithModernAPIs(
       return EncodePromise::CreateAndReject(
           MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
                       RESULT_DETAIL("Input image is too big")),
+          __func__);
+    }
+  } else {
+    RefPtr<gfx::SourceSurface> surface = aSample->mImage->GetAsSourceSurface();
+    if (!surface) {
+      FFMPEGV_LOG("failed to get source surface of the image");
+      return EncodePromise::CreateAndReject(
+          MediaResult(NS_ERROR_NOT_AVAILABLE,
+                      RESULT_DETAIL("Unable to get source surface ")),
+          __func__);
+    }
+
+    RefPtr<gfx::DataSourceSurface> dataSurface = surface->GetDataSurface();
+    if (!dataSurface) {
+      FFMPEGV_LOG("failed to get data source surface of the image");
+      return EncodePromise::CreateAndReject(
+          MediaResult(NS_ERROR_NOT_AVAILABLE,
+                      RESULT_DETAIL("Unable to get data source surface ")),
+          __func__);
+    }
+
+    const gfx::SurfaceFormat format = dataSurface->GetFormat();
+    if (format != gfx::SurfaceFormat::R8G8B8A8 &&
+        format != gfx::SurfaceFormat::R8G8B8X8 &&
+        format != gfx::SurfaceFormat::B8G8R8A8 &&
+        format != gfx::SurfaceFormat::B8G8R8X8 &&
+        format != gfx::SurfaceFormat::R8G8B8 &&
+        format != gfx::SurfaceFormat::B8G8R8) {
+      FFMPEGV_LOG("surface format is unsupported");
+      return EncodePromise::CreateAndReject(
+          MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
+                      RESULT_DETAIL("Unsupported surface format")),
+          __func__);
+    }
+
+    gfx::DataSourceSurface::ScopedMap map(dataSurface,
+                                          gfx::DataSourceSurface::READ);
+    if (!map.IsMapped()) {
+      return EncodePromise::CreateAndReject(
+          MediaResult(NS_ERROR_NOT_AVAILABLE,
+                      RESULT_DETAIL("Unable to read image data")),
+          __func__);
+    }
+
+    // TODO: Gecko prefers BGRA. Does format always match
+    // mConfig.mSourcePixelFormat? gfx::SwizzleData if they mismatch.
+    uint8_t* buf = mFrame->data[0];
+    if (!CopyPlane(buf, map.GetData(), dataSurface->GetSize(),
+                   map.GetStride())) {
+      FFMPEGV_LOG("Input RGB-type image is too big");
+      return EncodePromise::CreateAndReject(
+          MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
+                      RESULT_DETAIL("Input RGB-type image is too big")),
           __func__);
     }
   }
