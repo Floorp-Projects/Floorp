@@ -139,14 +139,15 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(portableBaselineInterpreterWarmUpThreshold, 0);
 #endif
 
-  // Emit baseline interpreter and interpreter entry frames to distinguish which
-  // JSScript is being interpreted by external profilers.
-  // Enabled by default under --enable-perf, otherwise disabled.
-#if defined(JS_ION_PERF)
-  SET_DEFAULT(emitInterpreterEntryTrampoline, true);
-#else
-  SET_DEFAULT(emitInterpreterEntryTrampoline, false);
-#endif
+  // emitInterpreterEntryTrampoline and enableICFramePointers are used in
+  // combination with perf jitdump profiling.  The first will enable
+  // trampolines for interpreter and baseline interpreter frames to
+  // identify which function is being executed, and the latter enables
+  // frame pointers for IC stubs.  They are both enabled by default
+  // when the |IONPERF| environment variable is set.
+  bool perfEnabled = !!getenv("IONPERF");
+  SET_DEFAULT(emitInterpreterEntryTrampoline, perfEnabled);
+  SET_DEFAULT(enableICFramePointers, perfEnabled);
 
   // Whether the Baseline JIT is enabled.
   SET_DEFAULT(baselineJit, true);
@@ -350,7 +351,6 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(enableWatchtowerMegamorphic, true);
 
   SET_DEFAULT(onlyInlineSelfHosted, false);
-  SET_DEFAULT(enableICFramePointers, false);
 
   SET_DEFAULT(enableWasmJitExit, true);
   SET_DEFAULT(enableWasmJitEntry, true);
