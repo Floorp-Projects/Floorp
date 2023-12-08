@@ -205,7 +205,7 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Encode(const MediaData* aSample) {
 #else
   return InvokeAsync(
       mTaskQueue, __func__,
-      [self = RefPtr<FFmpegVideoEncoder<LIBAV_VER, ConfigType>>(this),
+      [self = RefPtr<FFmpegVideoEncoder<LIBAV_VER, ConfigType> >(this),
        sample = RefPtr<const MediaData>(aSample)]() {
         return self->ProcessEncode(std::move(sample));
       });
@@ -234,7 +234,7 @@ RefPtr<ShutdownPromise> FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Shutdown() {
   FFMPEGV_LOG("FFmpegVideoEncoder needs ffmpeg 58 at least.");
   return mTaskQueue->BeginShutdown();
 #else
-  RefPtr<FFmpegVideoEncoder<LIBAV_VER, ConfigType>> self = this;
+  RefPtr<FFmpegVideoEncoder<LIBAV_VER, ConfigType> > self = this;
   return InvokeAsync(mTaskQueue, __func__, [self]() {
     self->ProcessShutdown();
     return self->mTaskQueue->BeginShutdown();
