@@ -1098,6 +1098,7 @@ void Animation::UpdateRelevance() {
   if (wasRelevant && !mIsRelevant) {
     MutationObservers::NotifyAnimationRemoved(this);
   } else if (!wasRelevant && mIsRelevant) {
+    UpdateHiddenByContentVisibility();
     MutationObservers::NotifyAnimationAdded(this);
   }
 }
@@ -1963,9 +1964,14 @@ void Animation::UpdateHiddenByContentVisibility() {
   if (!target) {
     return;
   }
+  // If a CSS animation or CSS transition is no longer associated with an owning
+  // element, it behaves like a programmatic web animation, c-v shouldn't hide
+  // it.
+  bool hasOwningElement = IsMarkupAnimation(AsCSSAnimation()) ||
+                          IsMarkupAnimation(AsCSSTransition());
   if (auto* frame = target.mElement->GetPrimaryFrame()) {
     SetHiddenByContentVisibility(
-        frame->IsHiddenByContentVisibilityOnAnyAncestor());
+        hasOwningElement && frame->IsHiddenByContentVisibilityOnAnyAncestor());
   }
 }
 
