@@ -112,7 +112,10 @@ var TabStateInternal = {
     );
 
     // TabStacks
+    // TabStackId
     tabData.floorpTabStackId = tab.getAttribute(tabStacksService.tabStacksTabAttributionId);
+    // lastShowTabStackId
+    tabData.floorpLastShowTabStackId = tab.getAttribute(tabStacksService.tabStackLastShowId);
 
     // Private Container
     tabData.floorpDisableHistory = tab.getAttribute("floorp-disablehistory");

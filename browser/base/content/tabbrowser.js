@@ -3162,8 +3162,10 @@
           "resource:///modules/tabStacksService.sys.mjs"
         );
         let floorpTabStackId = tabData.floorpTabStackId;
+        let floorpLastShowTabStackId = tabData.floorpLastShowTabStackId;
         let floorpWorkspace = tabData.floorpWorkspace ? tabData.floorpWorkspace : Services.prefs.getStringPref("floorp.browser.workspace.all").split(",")[0];
         let floorpSSB = tabData.floorpSSB;
+
         if (floorpSSB) {
           window.close();
         }
@@ -3181,6 +3183,10 @@
 
           if (floorpTabStackId) {
             tab.setAttribute(tabStacksService.tabStacksTabAttributionId, floorpTabStackId);
+          }
+
+          if (floorpLastShowTabStackId) {
+            tab.setAttribute(tabStacksService.tabStackLastShowId, floorpLastShowTabStackId);
           }
 
           if (floorpSSB) {
@@ -3240,6 +3246,10 @@
 
           if (floorpTabStackId) {
             tab.setAttribute(tabStacksService.tabStacksTabAttributionId, floorpTabStackId);
+          }
+
+          if (floorpLastShowTabStackId) {
+            tab.setAttribute(tabStacksService.tabStackLastShowId, floorpLastShowTabStackId);
           }
 
           if (select) {
