@@ -76,11 +76,16 @@ static MOZ_ALWAYS_INLINE bool CanBeHeldWeakly(JSContext* cx,
     return true;
   }
 
+#ifdef NIGHTLY_BUILD
+  bool symbolsAsWeakMapKeysEnabled =
+      cx->realm()->creationOptions().getSymbolsAsWeakMapKeysEnabled();
+
   // 2. If v is a Symbol and KeyForSymbol(v) is undefined, return true.
-  if (value.isSymbol() &&
+  if (symbolsAsWeakMapKeysEnabled && value.isSymbol() &&
       value.toSymbol()->code() != JS::SymbolCode::InSymbolRegistry) {
     return true;
   }
+#endif
 
   // 3. Return false.
   return false;
