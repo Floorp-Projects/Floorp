@@ -8,6 +8,7 @@
 #include "AnnexB.h"
 #include "ImageContainer.h"
 #include "mozilla/AbstractThread.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/media/MediaUtils.h"  // For media::Await
 #include "nsMimeTypes.h"
@@ -44,7 +45,10 @@ static gfx::IntSize kImageSize(WIDTH, HEIGHT);
 
 class MediaDataEncoderTest : public testing::Test {
  protected:
-  void SetUp() override { mData.Init(kImageSize); }
+  void SetUp() override {
+    Preferences::SetBool("media.ffmpeg.encoder.enabled", true);
+    mData.Init(kImageSize);
+  }
 
   void TearDown() override { mData.Deinit(); }
 
