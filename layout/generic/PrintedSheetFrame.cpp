@@ -10,7 +10,6 @@
 
 #include <tuple>
 
-#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_print.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsPageContentFrame.h"
@@ -267,7 +266,8 @@ nsSize PrintedSheetFrame::ComputeSheetSize(const nsPresContext* aPresContext) {
     return sheetSize;
   }
 
-  if (!StaticPrefs::layout_css_page_orientation_enabled()) {
+  if (!StaticPrefs::
+          print_save_as_pdf_use_page_rule_size_as_paper_size_enabled()) {
     if (mPD->mPrintSettings->HasOrthogonalPagesPerSheet()) {
       std::swap(sheetSize.width, sheetSize.height);
     }

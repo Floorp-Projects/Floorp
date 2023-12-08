@@ -8,7 +8,7 @@
 #include "cairo.h"
 #include "cairo-pdf.h"
 #include "mozilla/AppShutdown.h"
-#include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_print.h"
 #include "nsContentUtils.h"
 #include "nsString.h"
 
@@ -76,7 +76,8 @@ already_AddRefed<PrintTargetPDF> PrintTargetPDF::CreateOrNull(
 }
 
 nsresult PrintTargetPDF::BeginPage(const IntSize& aSizeInPoints) {
-  if (StaticPrefs::layout_css_page_orientation_enabled()) {
+  if (StaticPrefs::
+          print_save_as_pdf_use_page_rule_size_as_paper_size_enabled()) {
     cairo_pdf_surface_set_size(mCairoSurface, aSizeInPoints.width,
                                aSizeInPoints.height);
     if (cairo_surface_status(mCairoSurface)) {
