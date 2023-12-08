@@ -1663,7 +1663,7 @@ QuotaManager::QuotaManager(const nsAString& aBasePath,
       mNextDirectoryLockId(0),
       mShutdownStorageOpCount(0),
       mStorageInitialized(false),
-      mTemporaryStorageInitialized(false),
+      mTemporaryStorageInitializedInternal(false),
       mCacheUsable(false) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!gInstance);
@@ -2644,7 +2644,7 @@ void QuotaManager::RemoveQuota() {
 nsresult QuotaManager::LoadQuota() {
   AssertIsOnIOThread();
   MOZ_ASSERT(mStorageConnection);
-  MOZ_ASSERT(!mTemporaryStorageInitialized);
+  MOZ_ASSERT(!mTemporaryStorageInitializedInternal);
 
   // A list of all unaccessed default or temporary origins.
   nsTArray<FullOriginMetadata> unaccessedOrigins;
@@ -2905,7 +2905,7 @@ nsresult QuotaManager::LoadQuota() {
 void QuotaManager::UnloadQuota() {
   AssertIsOnIOThread();
   MOZ_ASSERT(mStorageConnection);
-  MOZ_ASSERT(mTemporaryStorageInitialized);
+  MOZ_ASSERT(mTemporaryStorageInitializedInternal);
   MOZ_ASSERT(mCacheUsable);
 
   auto autoRemoveQuota = MakeScopeExit([&] { RemoveQuota(); });
@@ -5277,7 +5277,7 @@ QuotaManager::EnsureTemporaryOriginIsInitialized(
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
   MOZ_ASSERT(aOriginMetadata.mPersistenceType == aPersistenceType);
   MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
-  MOZ_DIAGNOSTIC_ASSERT(mTemporaryStorageInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(mTemporaryStorageInitializedInternal);
 
   const auto innerFunc = [&aOriginMetadata, this](const auto&)
       -> mozilla::Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult> {
@@ -5370,7 +5370,7 @@ QuotaManager::EnsureTemporaryClientIsInitialized(
   MOZ_ASSERT(aClientMetadata.mPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
   MOZ_ASSERT(Client::IsValidType(aClientMetadata.mClientType));
   MOZ_DIAGNOSTIC_ASSERT(IsStorageInitializedInternal());
-  MOZ_DIAGNOSTIC_ASSERT(IsTemporaryStorageInitialized());
+  MOZ_DIAGNOSTIC_ASSERT(IsTemporaryStorageInitializedInternal());
   MOZ_DIAGNOSTIC_ASSERT(IsTemporaryOriginInitialized(aClientMetadata));
 
   QM_TRY_UNWRAP(auto directory, GetOriginDirectory(aClientMetadata));
@@ -5383,13 +5383,13 @@ QuotaManager::EnsureTemporaryClientIsInitialized(
   return std::pair(std::move(directory), created);
 }
 
-nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
+nsresult QuotaManager::EnsureTemporaryStorageIsInitializedInternal() {
   AssertIsOnIOThread();
   MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
 
   const auto innerFunc =
       [&](const auto& firstInitializationAttempt) -> nsresult {
-    if (mTemporaryStorageInitialized) {
+    if (mTemporaryStorageInitializedInternal) {
       MOZ_ASSERT(firstInitializationAttempt.Recorded());
       return NS_OK;
     }
@@ -5412,7 +5412,7 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
 
     QM_TRY(MOZ_TO_RESULT(LoadQuota()));
 
-    mTemporaryStorageInitialized = true;
+    mTemporaryStorageInitializedInternal = true;
 
     CleanupTemporaryStorage();
 
@@ -5549,14 +5549,14 @@ void QuotaManager::ShutdownStorageInternal() {
     mInitializationInfo.ResetOriginInitializationInfos();
     mInitializedOrigins.Clear();
 
-    if (mTemporaryStorageInitialized) {
+    if (mTemporaryStorageInitializedInternal) {
       if (mCacheUsable) {
         UnloadQuota();
       } else {
         RemoveQuota();
       }
 
-      mTemporaryStorageInitialized = false;
+      mTemporaryStorageInitializedInternal = false;
     }
 
     ReleaseIOThreadObjects();
@@ -5737,7 +5737,7 @@ Maybe<FullOriginMetadata> QuotaManager::GetFullOriginMetadata(
     const OriginMetadata& aOriginMetadata) {
   AssertIsOnIOThread();
   MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
-  MOZ_DIAGNOSTIC_ASSERT(mTemporaryStorageInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(mTemporaryStorageInitializedInternal);
 
   MutexAutoLock lock(mQuotaMutex);
 

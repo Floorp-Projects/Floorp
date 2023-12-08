@@ -5,9 +5,9 @@
 
 /**
  * This test is mainly to verify initTemporaryStorage() does call
- * QuotaManager::EnsureTemporaryStorageIsInitialized() which does various
- * things, for example, it restores the directory metadata if it's broken or
- * missing.
+ * QuotaManager::EnsureTemporaryStorageIsInitializedInternal() which does
+ * various things, for example, it restores the directory metadata if it's
+ * broken or missing.
  */
 
 async function testSteps() {

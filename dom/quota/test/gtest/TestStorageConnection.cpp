@@ -32,7 +32,8 @@ namespace {
 void InitializeClientDirectory(const ClientMetadata& aClientMetadata) {
   QuotaManager* quotaManager = QuotaManager::Get();
 
-  QM_TRY(MOZ_TO_RESULT(quotaManager->EnsureTemporaryStorageIsInitialized()),
+  QM_TRY(MOZ_TO_RESULT(
+             quotaManager->EnsureTemporaryStorageIsInitializedInternal()),
          QM_TEST_FAIL);
 
   QM_TRY_INSPECT(const auto& directory,
