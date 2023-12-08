@@ -137,7 +137,7 @@ bool FFmpegRuntimeLinker::Init() {
 }
 
 /* static */
-already_AddRefed<PlatformDecoderModule> FFmpegRuntimeLinker::Create() {
+already_AddRefed<PlatformDecoderModule> FFmpegRuntimeLinker::CreateDecoder() {
   if (!Init()) {
     return nullptr;
   }

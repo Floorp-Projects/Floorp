@@ -559,7 +559,7 @@ void PDMFactory::CreateRddPDMs() {
 #ifdef MOZ_FFMPEG
   if (StaticPrefs::media_ffmpeg_enabled() &&
       StaticPrefs::media_rdd_ffmpeg_enabled() &&
-      !CreateAndStartupPDM<FFmpegRuntimeLinker>()) {
+      !StartupPDM(FFmpegRuntimeLinker::CreateDecoder())) {
     mFailureFlags += GetFailureFlagBasedOnFFmpegStatus(
         FFmpegRuntimeLinker::LinkStatusCode());
   }
@@ -592,7 +592,7 @@ void PDMFactory::CreateUtilityPDMs() {
 #ifdef MOZ_FFMPEG
     if (StaticPrefs::media_ffmpeg_enabled() &&
         StaticPrefs::media_utility_ffmpeg_enabled() &&
-        !CreateAndStartupPDM<FFmpegRuntimeLinker>()) {
+        !StartupPDM(FFmpegRuntimeLinker::CreateDecoder())) {
       mFailureFlags += GetFailureFlagBasedOnFFmpegStatus(
           FFmpegRuntimeLinker::LinkStatusCode());
     }
@@ -677,7 +677,7 @@ void PDMFactory::CreateContentPDMs() {
 #endif
 #ifdef MOZ_FFMPEG
     if (StaticPrefs::media_ffmpeg_enabled() &&
-        !CreateAndStartupPDM<FFmpegRuntimeLinker>()) {
+        !StartupPDM(FFmpegRuntimeLinker::CreateDecoder())) {
       mFailureFlags += GetFailureFlagBasedOnFFmpegStatus(
           FFmpegRuntimeLinker::LinkStatusCode());
     }
@@ -729,7 +729,7 @@ void PDMFactory::CreateDefaultPDMs() {
 #endif
 #ifdef MOZ_FFMPEG
   if (StaticPrefs::media_ffmpeg_enabled() &&
-      !CreateAndStartupPDM<FFmpegRuntimeLinker>()) {
+      !StartupPDM(FFmpegRuntimeLinker::CreateDecoder())) {
     mFailureFlags += GetFailureFlagBasedOnFFmpegStatus(
         FFmpegRuntimeLinker::LinkStatusCode());
   }
