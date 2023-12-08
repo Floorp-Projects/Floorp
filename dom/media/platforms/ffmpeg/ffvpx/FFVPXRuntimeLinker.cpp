@@ -32,6 +32,8 @@ class FFmpegEncoderModule {
 
 static FFmpegLibWrapper sFFVPXLib;
 
+StaticMutex FFVPXRuntimeLinker::sMutex;
+
 FFVPXRuntimeLinker::LinkStatus FFVPXRuntimeLinker::sLinkStatus =
     LinkStatus_INIT;
 
@@ -69,11 +71,13 @@ static PRLibrary* MozAVLink(nsIFile* aFile) {
 
 /* static */
 bool FFVPXRuntimeLinker::Init() {
+  // Enter critical section to set up ffvpx.
+  StaticMutexAutoLock lock(sMutex);
+
   if (sLinkStatus) {
     return sLinkStatus == LinkStatus_SUCCEEDED;
   }
 
-  MOZ_ASSERT(NS_IsMainThread());
   sLinkStatus = LinkStatus_FAILED;
 
 #ifdef MOZ_WIDGET_GTK
@@ -142,7 +146,9 @@ already_AddRefed<PlatformEncoderModule> FFVPXRuntimeLinker::CreateEncoder() {
 
 /* static */
 void FFVPXRuntimeLinker::GetRDFTFuncs(FFmpegRDFTFuncs* aOutFuncs) {
-  MOZ_ASSERT(sLinkStatus != LinkStatus_INIT);
+  []() MOZ_NO_THREAD_SAFETY_ANALYSIS {
+    MOZ_ASSERT(sLinkStatus != LinkStatus_INIT);
+  }();
   if (sFFVPXLib.av_rdft_init && sFFVPXLib.av_rdft_calc &&
       sFFVPXLib.av_rdft_end) {
     aOutFuncs->init = sFFVPXLib.av_rdft_init;
