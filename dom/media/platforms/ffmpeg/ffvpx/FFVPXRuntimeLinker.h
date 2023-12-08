@@ -8,6 +8,7 @@
 #define __FFVPXRuntimeLinker_h__
 
 #include "PlatformDecoderModule.h"
+#include "PlatformEncoderModule.h"
 
 struct FFmpegRDFTFuncs;
 
@@ -19,6 +20,7 @@ class FFVPXRuntimeLinker {
   static bool Init();
   // Main thread or after Init().
   static already_AddRefed<PlatformDecoderModule> CreateDecoder();
+  static already_AddRefed<PlatformEncoderModule> CreateEncoder();
 
   // Call (on any thread) after Init().
   static void GetRDFTFuncs(FFmpegRDFTFuncs* aOutFuncs);

@@ -18,6 +18,12 @@
 #  include "WMFEncoderModule.h"
 #endif
 
+#ifdef MOZ_FFVPX
+#  include "FFVPXRuntimeLinker.h"
+#endif
+
+#include "mozilla/StaticPrefs_media.h"
+
 namespace mozilla {
 
 LazyLogModule sPEMLog("PlatformEncoderModule");
@@ -34,6 +40,15 @@ PEMFactory::PEMFactory() {
 
 #ifdef XP_WIN
   mModules.AppendElement(new WMFEncoderModule());
+#endif
+
+#ifdef MOZ_FFVPX
+  if (StaticPrefs::media_ffvpx_enabled()) {
+    if (RefPtr<PlatformEncoderModule> pem =
+            FFVPXRuntimeLinker::CreateEncoder()) {
+      mModules.AppendElement(pem);
+    }
+  }
 #endif
 }
 
