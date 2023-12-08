@@ -23,13 +23,13 @@ namespace mozilla {
 
 extern LazyLogModule sPEMLog;
 
-static const GUID CodecToSubtype(CodecType aCodec) {
+static const GUID CodecToSubtype(MediaDataEncoder::CodecType aCodec) {
   switch (aCodec) {
-    case CodecType::H264:
+    case MediaDataEncoder::CodecType::H264:
       return MFVideoFormat_H264;
-    case CodecType::VP8:
+    case MediaDataEncoder::CodecType::VP8:
       return MFVideoFormat_VP80;
-    case CodecType::VP9:
+    case MediaDataEncoder::CodecType::VP9:
       return MFVideoFormat_VP90;
     default:
       MOZ_ASSERT(false, "Unsupported codec");
@@ -37,7 +37,7 @@ static const GUID CodecToSubtype(CodecType aCodec) {
   }
 }
 
-bool CanCreateWMFEncoder(CodecType aCodec) {
+bool CanCreateWMFEncoder(MediaDataEncoder::CodecType aCodec) {
   bool canCreate = false;
   mscom::EnsureMTA([&]() {
     if (!wmf::MediaFoundationInitializer::HasInitialized()) {
@@ -81,18 +81,35 @@ static already_AddRefed<MediaByteBuffer> ParseH264Parameters(
   return avcc.forget();
 }
 
-static uint32_t GetProfile(H264_PROFILE aProfileLevel) {
+static uint32_t GetProfile(
+    MediaDataEncoder::H264Specific::ProfileLevel aProfileLevel) {
   switch (aProfileLevel) {
-    case H264_PROFILE_BASE:
+    case MediaDataEncoder::H264Specific::ProfileLevel::BaselineAutoLevel:
       return eAVEncH264VProfile_Base;
-    case H264_PROFILE_MAIN:
+    case MediaDataEncoder::H264Specific::ProfileLevel::MainAutoLevel:
       return eAVEncH264VProfile_Main;
     default:
       return eAVEncH264VProfile_unknown;
   }
 }
 
-already_AddRefed<IMFMediaType> CreateInputType(EncoderConfig& aConfig) {
+template <typename Config>
+HRESULT SetMediaTypes(RefPtr<MFTEncoder>& aEncoder, Config& aConfig) {
+  RefPtr<IMFMediaType> inputType = CreateInputType(aConfig);
+  if (!inputType) {
+    return E_FAIL;
+  }
+
+  RefPtr<IMFMediaType> outputType = CreateOutputType(aConfig);
+  if (!outputType) {
+    return E_FAIL;
+  }
+
+  return aEncoder->SetMediaTypes(inputType, outputType);
+}
+
+template <typename Config>
+already_AddRefed<IMFMediaType> CreateInputType(Config& aConfig) {
   RefPtr<IMFMediaType> type;
   return SUCCEEDED(wmf::MFCreateMediaType(getter_AddRefs(type))) &&
                  SUCCEEDED(
@@ -109,12 +126,14 @@ already_AddRefed<IMFMediaType> CreateInputType(EncoderConfig& aConfig) {
              : nullptr;
 }
 
-already_AddRefed<IMFMediaType> CreateOutputType(EncoderConfig& aConfig) {
+template <typename Config>
+already_AddRefed<IMFMediaType> CreateOutputType(Config& aConfig) {
   RefPtr<IMFMediaType> type;
   if (FAILED(wmf::MFCreateMediaType(getter_AddRefs(type))) ||
       FAILED(type->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video)) ||
-      FAILED(type->SetGUID(MF_MT_SUBTYPE, CodecToSubtype(aConfig.mCodec))) ||
-      FAILED(type->SetUINT32(MF_MT_AVG_BITRATE, aConfig.mBitrate)) ||
+      FAILED(
+          type->SetGUID(MF_MT_SUBTYPE, CodecToSubtype(aConfig.mCodecType))) ||
+      FAILED(type->SetUINT32(MF_MT_AVG_BITRATE, aConfig.mBitsPerSec)) ||
       FAILED(type->SetUINT32(MF_MT_INTERLACE_MODE,
                              MFVideoInterlace_Progressive)) ||
       FAILED(
@@ -123,32 +142,24 @@ already_AddRefed<IMFMediaType> CreateOutputType(EncoderConfig& aConfig) {
                                 aConfig.mSize.height))) {
     return nullptr;
   }
-  if (aConfig.mCodecSpecific) {
-    if (aConfig.mCodecSpecific->is<H264Specific>()) {
-      if (FAILED(type->SetUINT32(
-              MF_MT_MPEG2_PROFILE,
-              GetProfile(
-                  aConfig.mCodecSpecific->as<H264Specific>().mProfile)))) {
-        return nullptr;
-      }
-    }
+  if (aConfig.mCodecSpecific &&
+      FAILED(SetCodecSpecific(type, aConfig.mCodecSpecific.ref()))) {
+    return nullptr;
   }
 
   return type.forget();
 }
 
-HRESULT SetMediaTypes(RefPtr<MFTEncoder>& aEncoder, EncoderConfig& aConfig) {
-  RefPtr<IMFMediaType> inputType = CreateInputType(aConfig);
-  if (!inputType) {
-    return E_FAIL;
-  }
+template <typename T>
+HRESULT SetCodecSpecific(IMFMediaType* aOutputType, const T& aSpecific) {
+  return S_OK;
+}
 
-  RefPtr<IMFMediaType> outputType = CreateOutputType(aConfig);
-  if (!outputType) {
-    return E_FAIL;
-  }
-
-  return aEncoder->SetMediaTypes(inputType, outputType);
+template <>
+HRESULT SetCodecSpecific(IMFMediaType* aOutputType,
+                         const MediaDataEncoder::H264Specific& aSpecific) {
+  return aOutputType->SetUINT32(MF_MT_MPEG2_PROFILE,
+                                GetProfile(aSpecific.mProfileLevel));
 }
 
 }  // namespace mozilla

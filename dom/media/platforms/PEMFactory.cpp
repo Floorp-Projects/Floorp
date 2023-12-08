@@ -6,8 +6,6 @@
 
 #include "PEMFactory.h"
 
-#include "PlatformEncoderModule.h"
-
 #ifdef MOZ_APPLEMEDIA
 #  include "AppleEncoderModule.h"
 #endif
@@ -24,152 +22,53 @@ namespace mozilla {
 
 LazyLogModule sPEMLog("PlatformEncoderModule");
 
-#define LOGE(fmt, ...)                       \
-  MOZ_LOG(sPEMLog, mozilla::LogLevel::Error, \
-          ("[PEMFactory] %s: " fmt, __func__, ##__VA_ARGS__))
-#define LOG(fmt, ...)                        \
-  MOZ_LOG(sPEMLog, mozilla::LogLevel::Debug, \
-          ("[PEMFactory] %s: " fmt, __func__, ##__VA_ARGS__))
-
 PEMFactory::PEMFactory() {
 #ifdef MOZ_APPLEMEDIA
   RefPtr<PlatformEncoderModule> m(new AppleEncoderModule());
-  mCurrentPEMs.AppendElement(m);
+  mModules.AppendElement(m);
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
-  mCurrentPEMs.AppendElement(new AndroidEncoderModule());
+  mModules.AppendElement(new AndroidEncoderModule());
 #endif
 
 #ifdef XP_WIN
-  mCurrentPEMs.AppendElement(new WMFEncoderModule());
+  mModules.AppendElement(new WMFEncoderModule());
 #endif
 }
 
+bool PEMFactory::SupportsMimeType(const nsACString& aMimeType) const {
+  for (auto m : mModules) {
+    if (m->SupportsMimeType(aMimeType)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 already_AddRefed<MediaDataEncoder> PEMFactory::CreateEncoder(
-    const EncoderConfig& aConfig, const RefPtr<TaskQueue>& aTaskQueue) {
-  RefPtr<PlatformEncoderModule> m = FindPEM(aConfig);
+    const CreateEncoderParams& aParams, const bool aHardwareNotAllowed) {
+  const TrackInfo& info = aParams.mConfig;
+  RefPtr<PlatformEncoderModule> m = FindPEM(info);
   if (!m) {
     return nullptr;
   }
 
-  return aConfig.IsVideo() ? m->CreateVideoEncoder(aConfig, aTaskQueue)
-                           : nullptr;
-}
-
-RefPtr<PlatformEncoderModule::CreateEncoderPromise>
-PEMFactory::CreateEncoderAsync(const EncoderConfig& aConfig,
-                               const RefPtr<TaskQueue>& aTaskQueue) {
-  return CheckAndMaybeCreateEncoder(aConfig, 0, aTaskQueue);
-}
-
-RefPtr<PlatformEncoderModule::CreateEncoderPromise>
-PEMFactory::CheckAndMaybeCreateEncoder(const EncoderConfig& aConfig,
-                                       uint32_t aIndex,
-                                       const RefPtr<TaskQueue>& aTaskQueue) {
-  for (uint32_t i = aIndex; i < mCurrentPEMs.Length(); i++) {
-    if (!mCurrentPEMs[i]->Supports(aConfig)) {
-      continue;
-    }
-    return CreateEncoderWithPEM(mCurrentPEMs[i], aConfig, aTaskQueue)
-        ->Then(
-            GetCurrentSerialEventTarget(), __func__,
-            [](RefPtr<MediaDataEncoder>&& aEncoder) {
-              return PlatformEncoderModule::CreateEncoderPromise::
-                  CreateAndResolve(std::move(aEncoder), __func__);
-            },
-            [self = RefPtr{this}, i, config = aConfig, aTaskQueue,
-             &aConfig](const MediaResult& aError) mutable {
-              // Try the next PEM.
-              return self->CheckAndMaybeCreateEncoder(aConfig, i + 1,
-                                                      aTaskQueue);
-            });
-  }
-  return PlatformEncoderModule::CreateEncoderPromise::CreateAndReject(
-      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                  nsPrintfCString("Error no encoder found for %d",
-                                  static_cast<int>(aConfig.mCodec))
-                      .get()),
-      __func__);
-}
-
-RefPtr<PlatformEncoderModule::CreateEncoderPromise>
-PEMFactory::CreateEncoderWithPEM(PlatformEncoderModule* aPEM,
-                                 const EncoderConfig& aConfig,
-                                 const RefPtr<TaskQueue>& aTaskQueue) {
-  MOZ_ASSERT(aPEM);
-  MediaResult result = NS_OK;
-
-  if (aConfig.IsAudio()) {
-    return aPEM->AsyncCreateEncoder(aConfig, aTaskQueue)
-        ->Then(
-            GetCurrentSerialEventTarget(), __func__,
-            [config = aConfig](RefPtr<MediaDataEncoder>&& aEncoder) {
-              RefPtr<MediaDataEncoder> decoder = std::move(aEncoder);
-              return PlatformEncoderModule::CreateEncoderPromise::
-                  CreateAndResolve(decoder, __func__);
-            },
-            [](const MediaResult& aError) {
-              return PlatformEncoderModule::CreateEncoderPromise::
-                  CreateAndReject(aError, __func__);
-            });
-  }
-
-  if (!aConfig.IsVideo()) {
-    return PlatformEncoderModule::CreateEncoderPromise::CreateAndReject(
-        MediaResult(
-            NS_ERROR_DOM_MEDIA_FATAL_ERR,
-            RESULT_DETAIL(
-                "Encoder configuration error, expected audio or video.")),
-        __func__);
-  }
-
-  return aPEM->AsyncCreateEncoder(aConfig, aTaskQueue);
-}
-
-bool PEMFactory::Supports(const EncoderConfig& aConfig) const {
-  RefPtr<PlatformEncoderModule> found;
-  for (const auto& m : mCurrentPEMs) {
-    if (m->Supports(aConfig)) {
-      // TODO name
-      LOG("Checking if %s supports codec %d: yes", m->GetName(),
-          static_cast<int>(aConfig.mCodec));
-      return true;
-    }
-    LOG("Checking if %s supports codec %d: no", m->GetName(),
-        static_cast<int>(aConfig.mCodec));
-  }
-  return false;
-}
-
-bool PEMFactory::SupportsCodec(CodecType aCodec) const {
-  for (const auto& m : mCurrentPEMs) {
-    if (m->SupportsCodec(aCodec)) {
-      // TODO name
-      LOG("Checking if %s supports codec %d: yes", m->GetName(),
-          static_cast<int>(aCodec));
-      return true;
-    }
-    LOG("Checking if %s supports codec %d: no", m->GetName(),
-        static_cast<int>(aCodec));
-  }
-  LOG("No PEM support %d", static_cast<int>(aCodec));
-  return false;
+  return info.IsVideo() ? m->CreateVideoEncoder(aParams, aHardwareNotAllowed)
+                        : nullptr;
 }
 
 already_AddRefed<PlatformEncoderModule> PEMFactory::FindPEM(
-    const EncoderConfig& aConfig) const {
+    const TrackInfo& aTrackInfo) const {
   RefPtr<PlatformEncoderModule> found;
-  for (const auto& m : mCurrentPEMs) {
-    if (m->Supports(aConfig)) {
+  for (auto m : mModules) {
+    if (m->SupportsMimeType(aTrackInfo.mMimeType)) {
       found = m;
       break;
     }
   }
+
   return found.forget();
 }
 
 }  // namespace mozilla
-
-#undef LOGE
-#undef LOG

@@ -11,23 +11,32 @@
 namespace mozilla {
 extern LazyLogModule sPEMLog;
 
-bool WMFEncoderModule::SupportsCodec(CodecType aCodecType) const {
-  return CanCreateWMFEncoder(aCodecType);
-}
-
-bool WMFEncoderModule::Supports(const EncoderConfig& aConfig) const {
-  if (aConfig.mCodec == CodecType::H264 &&
-      (aConfig.mCodecSpecific.isNothing() ||
-       !aConfig.mCodecSpecific->is<H264Specific>())) {
-    return false;
-  }
-  return SupportsCodec(aConfig.mCodec);
+bool WMFEncoderModule::SupportsMimeType(const nsACString& aMimeType) const {
+  return CanCreateWMFEncoder(CreateEncoderParams::CodecTypeForMime(aMimeType));
 }
 
 already_AddRefed<MediaDataEncoder> WMFEncoderModule::CreateVideoEncoder(
-    const EncoderConfig& aConfig, const RefPtr<TaskQueue>& aTaskQueue) const {
-  RefPtr<MediaDataEncoder> encoder(
-      new WMFMediaDataEncoder(aConfig, aTaskQueue));
+    const CreateEncoderParams& aParams, const bool aHardwareNotAllowed) const {
+  MediaDataEncoder::CodecType codec =
+      CreateEncoderParams::CodecTypeForMime(aParams.mConfig.mMimeType);
+  RefPtr<MediaDataEncoder> encoder;
+  switch (codec) {
+    case MediaDataEncoder::CodecType::H264:
+      encoder = new WMFMediaDataEncoder<MediaDataEncoder::H264Config>(
+          aParams.ToH264Config(), aParams.mTaskQueue, aHardwareNotAllowed);
+      break;
+    case MediaDataEncoder::CodecType::VP8:
+      encoder = new WMFMediaDataEncoder<MediaDataEncoder::VP8Config>(
+          aParams.ToVP8Config(), aParams.mTaskQueue, aHardwareNotAllowed);
+      break;
+    case MediaDataEncoder::CodecType::VP9:
+      encoder = new WMFMediaDataEncoder<MediaDataEncoder::VP9Config>(
+          aParams.ToVP9Config(), aParams.mTaskQueue, aHardwareNotAllowed);
+      break;
+    default:
+      // Do nothing.
+      break;
+  }
   return encoder.forget();
 }
 
