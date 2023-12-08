@@ -149,13 +149,11 @@ static nsCString MakeErrorString(const FFmpegLibWrapper* aLib, int aErrNum) {
 
 template <>
 AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(const nsACString& aMimeType) {
-#if LIBAVCODEC_VERSION_MAJOR >= 54
+#if LIBAVCODEC_VERSION_MAJOR >= 58
   if (VPXDecoder::IsVP8(aMimeType)) {
     return AV_CODEC_ID_VP8;
   }
-#endif
 
-#if LIBAVCODEC_VERSION_MAJOR >= 55
   if (VPXDecoder::IsVP9(aMimeType)) {
     return AV_CODEC_ID_VP9;
   }
@@ -184,8 +182,14 @@ template <typename ConfigType>
 RefPtr<MediaDataEncoder::InitPromise>
 FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Init() {
   FFMPEGV_LOG("Init");
+
+#if LIBAVCODEC_VERSION_MAJOR < 58
+  FFMPEGV_LOG("FFmpegVideoEncoder needs ffmpeg 58 at least.");
+  return InitPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
+#else
   return InvokeAsync(mTaskQueue, this, __func__,
                      &FFmpegVideoEncoder::ProcessInit);
+#endif
 }
 
 template <typename ConfigType>
@@ -195,30 +199,47 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Encode(const MediaData* aSample) {
 
   FFMPEGV_LOG("Encode");
 
+#if LIBAVCODEC_VERSION_MAJOR < 58
+  FFMPEGV_LOG("FFmpegVideoEncoder needs ffmpeg 58 at least.");
+  return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
+#else
   return InvokeAsync(
       mTaskQueue, __func__,
       [self = RefPtr<FFmpegVideoEncoder<LIBAV_VER, ConfigType>>(this),
        sample = RefPtr<const MediaData>(aSample)]() {
         return self->ProcessEncode(std::move(sample));
       });
+#endif
 }
 
 template <typename ConfigType>
 RefPtr<MediaDataEncoder::EncodePromise>
 FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Drain() {
   FFMPEGV_LOG("Drain");
+
+#if LIBAVCODEC_VERSION_MAJOR < 58
+  FFMPEGV_LOG("FFmpegVideoEncoder needs ffmpeg 58 at least.");
+  return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
+#else
   return InvokeAsync(mTaskQueue, this, __func__,
                      &FFmpegVideoEncoder::ProcessDrain);
+#endif
 }
 
 template <typename ConfigType>
 RefPtr<ShutdownPromise> FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Shutdown() {
   FFMPEGV_LOG("Shutdown");
+
+#if LIBAVCODEC_VERSION_MAJOR < 58
+  FFMPEGV_LOG("FFmpegVideoEncoder needs ffmpeg 58 at least.");
+  return mTaskQueue->BeginShutdown();
+#else
   RefPtr<FFmpegVideoEncoder<LIBAV_VER, ConfigType>> self = this;
   return InvokeAsync(mTaskQueue, __func__, [self]() {
     self->ProcessShutdown();
     return self->mTaskQueue->BeginShutdown();
   });
+#endif
 }
 
 template <typename ConfigType>
