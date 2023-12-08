@@ -6,6 +6,7 @@
 
 #include "FFmpegVideoEncoder.h"
 
+#include "FFmpegLog.h"
 #include "FFmpegRuntimeLinker.h"
 #include "VPXDecoder.h"
 #include "nsPrintfCString.h"
@@ -29,24 +30,29 @@ AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(const nsACString& aMimeType) {
 }
 
 RefPtr<MediaDataEncoder::InitPromise> FFmpegVideoEncoder<LIBAV_VER>::Init() {
+  FFMPEGV_LOG("Init");
   return InitPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 }
 
 RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<LIBAV_VER>::Encode(
     const MediaData* aSample) {
+  FFMPEGV_LOG("Encode");
   return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 }
 
 RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<LIBAV_VER>::Drain() {
+  FFMPEGV_LOG("Drain");
   return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 }
 
 RefPtr<ShutdownPromise> FFmpegVideoEncoder<LIBAV_VER>::Shutdown() {
+  FFMPEGV_LOG("Shutdown");
   return ShutdownPromise::CreateAndReject(false, __func__);
 }
 
 RefPtr<GenericPromise> FFmpegVideoEncoder<LIBAV_VER>::SetBitrate(
     Rate aBitsPerSec) {
+  FFMPEGV_LOG("SetBitrate");
   return GenericPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 }
 
