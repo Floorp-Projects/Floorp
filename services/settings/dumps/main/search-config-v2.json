@@ -122,7 +122,7 @@
       },
       "variants": [
         {
-          "environment": { "channel": ["esr"] },
+          "environment": { "channels": ["esr"] },
           "partnerCode": "MOZR",
           "telemetrySuffix": "esr"
         }
@@ -170,7 +170,7 @@
       },
       "variants": [
         {
-          "environment": { "channel": ["esr"] },
+          "environment": { "channels": ["esr"] },
           "partnerCode": "firefox-b-e",
           "telemetrySuffix": "b-e"
         },
@@ -193,7 +193,7 @@
           "telemetrySuffix": "b-1-d"
         },
         {
-          "environment": { "regions": ["us"], "channel": ["esr"] },
+          "environment": { "regions": ["us"], "channels": ["esr"] },
           "partnerCode": "firefox-b-1-e",
           "urls": {
             "search": {
@@ -267,7 +267,7 @@
       },
       "variants": [
         {
-          "environment": { "channel": ["esr"] },
+          "environment": { "channels": ["esr"] },
           "partnerCode": "ftsa",
           "telemetrySuffix": "esr"
         },
