@@ -38,6 +38,7 @@
 #include "mozilla/dom/DataTransferItemList.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/FileList.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -889,6 +890,17 @@ already_AddRefed<nsITransferable> DataTransfer::GetTransferable(
   }
   transferable->Init(aLoadContext);
 
+  // Set the principal of the global this DataTransfer was created for
+  // on the transferable for ReadWrite events (copy, cut, or dragstart).
+  //
+  // For other events, the data inside the transferable may originate
+  // from another origin or from the OS.
+  if (mMode == Mode::ReadWrite) {
+    if (nsCOMPtr<nsIGlobalObject> global = GetGlobal()) {
+      transferable->SetRequestingPrincipal(global->PrincipalOrNull());
+    }
+  }
+
   nsCOMPtr<nsIStorageStream> storageStream;
   nsCOMPtr<nsIObjectOutputStream> stream;
 
@@ -1234,6 +1246,18 @@ void DataTransfer::GetRealFormat(const nsAString& aInFormat,
   }
 
   aOutFormat.Assign(lowercaseFormat);
+}
+
+already_AddRefed<nsIGlobalObject> DataTransfer::GetGlobal() const {
+  nsCOMPtr<nsIGlobalObject> global;
+  // This is annoying, but DataTransfer may have various things as parent.
+  if (nsCOMPtr<EventTarget> target = do_QueryInterface(mParent)) {
+    global = target->GetOwnerGlobal();
+  } else if (RefPtr<Event> event = do_QueryObject(mParent)) {
+    global = event->GetParentObject();
+  }
+
+  return global.forget();
 }
 
 nsresult DataTransfer::CacheExternalData(const char* aFormat, uint32_t aIndex,

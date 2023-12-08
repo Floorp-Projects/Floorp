@@ -58,7 +58,9 @@ IPCResult ClipboardWriteRequestParent::RecvSetData(
     const IPCTransferable& aTransferable) {
   if (!mManager->ValidatePrincipal(
           aTransferable.requestingPrincipal(),
-          {ContentParent::ValidatePrincipalOptions::AllowNullPtr})) {
+          {ContentParent::ValidatePrincipalOptions::AllowNullPtr,
+           ContentParent::ValidatePrincipalOptions::AllowExpanded,
+           ContentParent::ValidatePrincipalOptions::AllowSystem})) {
     ContentParent::LogAndAssertFailedPrincipalValidationInfo(
         aTransferable.requestingPrincipal(), __func__);
   }

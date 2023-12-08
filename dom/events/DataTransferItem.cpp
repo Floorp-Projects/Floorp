@@ -15,7 +15,6 @@
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/DataTransferItemBinding.h"
 #include "mozilla/dom/Directory.h"
-#include "mozilla/dom/Event.h"
 #include "mozilla/dom/FileSystem.h"
 #include "mozilla/dom/FileSystemDirectoryEntry.h"
 #include "mozilla/dom/FileSystemFileEntry.h"
@@ -302,7 +301,7 @@ already_AddRefed<File> DataTransferItem::GetAsFile(
     if (RefPtr<Blob> blob = do_QueryObject(supports)) {
       mCachedFile = blob->ToFile();
     } else {
-      nsCOMPtr<nsIGlobalObject> global = GetGlobalFromDataTransfer();
+      nsCOMPtr<nsIGlobalObject> global = mDataTransfer->GetGlobal();
       if (NS_WARN_IF(!global)) {
         return nullptr;
       }
@@ -352,7 +351,7 @@ already_AddRefed<FileSystemEntry> DataTransferItem::GetAsEntry(
     return nullptr;
   }
 
-  nsCOMPtr<nsIGlobalObject> global = GetGlobalFromDataTransfer();
+  nsCOMPtr<nsIGlobalObject> global = mDataTransfer->GetGlobal();
   if (NS_WARN_IF(!global)) {
     return nullptr;
   }
@@ -428,7 +427,7 @@ already_AddRefed<File> DataTransferItem::CreateFileFromInputStream(
     return nullptr;
   }
 
-  nsCOMPtr<nsIGlobalObject> global = GetGlobalFromDataTransfer();
+  nsCOMPtr<nsIGlobalObject> global = mDataTransfer->GetGlobal();
   if (NS_WARN_IF(!global)) {
     return nullptr;
   }
@@ -491,18 +490,7 @@ void DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
 
   RefPtr<GASRunnable> runnable = new GASRunnable(aCallback, stringData);
 
-  // DataTransfer.mParent might be EventTarget, nsIGlobalObject, ClipboardEvent
-  // nsPIDOMWindowOuter, null
-  nsISupports* parent = mDataTransfer->GetParentObject();
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(parent);
-  if (parent && !global) {
-    if (nsCOMPtr<dom::EventTarget> target = do_QueryInterface(parent)) {
-      global = target->GetOwnerGlobal();
-    } else if (RefPtr<Event> event = do_QueryObject(parent)) {
-      global = event->GetParentObject();
-    }
-  }
-  if (global) {
+  if (nsCOMPtr<nsIGlobalObject> global = mDataTransfer->GetGlobal()) {
     rv = global->Dispatch(runnable.forget());
   } else {
     rv = NS_DispatchToMainThread(runnable);
@@ -592,24 +580,6 @@ already_AddRefed<nsIVariant> DataTransferItem::Data(nsIPrincipal* aPrincipal,
   }
 
   return variant.forget();
-}
-
-already_AddRefed<nsIGlobalObject>
-DataTransferItem::GetGlobalFromDataTransfer() {
-  nsCOMPtr<nsIGlobalObject> global;
-  // This is annoying, but DataTransfer may have various things as parent.
-  nsCOMPtr<EventTarget> target =
-      do_QueryInterface(mDataTransfer->GetParentObject());
-  if (target) {
-    global = target->GetOwnerGlobal();
-  } else {
-    RefPtr<Event> event = do_QueryObject(mDataTransfer->GetParentObject());
-    if (event) {
-      global = event->GetParentObject();
-    }
-  }
-
-  return global.forget();
 }
 
 }  // namespace mozilla::dom
