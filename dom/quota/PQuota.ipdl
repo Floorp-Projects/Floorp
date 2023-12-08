@@ -41,14 +41,6 @@ struct StorageNameParams
 {
 };
 
-struct StorageInitializedParams
-{
-};
-
-struct TemporaryStorageInitializedParams
-{
-};
-
 struct InitTemporaryStorageParams
 {
 };
@@ -123,8 +115,6 @@ struct ListOriginsParams
 union RequestParams
 {
   StorageNameParams;
-  StorageInitializedParams;
-  TemporaryStorageInitializedParams;
   InitTemporaryStorageParams;
   InitializePersistentOriginParams;
   InitializeTemporaryOriginParams;
@@ -150,6 +140,12 @@ parent:
   async PQuotaUsageRequest(UsageRequestParams params);
 
   async PQuotaRequest(RequestParams params);
+
+  async StorageInitialized()
+      returns(BoolResponse response);
+
+  async TemporaryStorageInitialized()
+      returns(BoolResponse response);
 
   async InitializeStorage()
       returns(BoolResponse response);

@@ -4940,6 +4940,19 @@ RefPtr<BoolPromise> QuotaManager::InitializeStorage(
       });
 }
 
+RefPtr<BoolPromise> QuotaManager::StorageInitialized() {
+  AssertIsOnOwningThread();
+
+  auto storageInitializedOp =
+      CreateStorageInitializedOp(WrapMovingNotNullUnchecked(this));
+
+  RegisterNormalOriginOp(*storageInitializedOp);
+
+  storageInitializedOp->RunImmediately();
+
+  return storageInitializedOp->OnResults();
+}
+
 nsresult QuotaManager::EnsureStorageIsInitializedInternal() {
   DiagnosticAssertIsOnIOThread();
 
@@ -5025,6 +5038,19 @@ nsresult QuotaManager::EnsureStorageIsInitializedInternal() {
   return ExecuteInitialization(
       Initialization::Storage,
       "dom::quota::FirstInitializationAttempt::Storage"_ns, innerFunc);
+}
+
+RefPtr<BoolPromise> QuotaManager::TemporaryStorageInitialized() {
+  AssertIsOnOwningThread();
+
+  auto temporaryStorageInitializedOp =
+      CreateTemporaryStorageInitializedOp(WrapMovingNotNullUnchecked(this));
+
+  RegisterNormalOriginOp(*temporaryStorageInitializedOp);
+
+  temporaryStorageInitializedOp->RunImmediately();
+
+  return temporaryStorageInitializedOp->OnResults();
 }
 
 RefPtr<UniversalDirectoryLockPromise> QuotaManager::OpenStorageDirectory(

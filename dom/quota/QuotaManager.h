@@ -322,6 +322,8 @@ class QuotaManager final : public BackgroundThreadObject {
   RefPtr<BoolPromise> InitializeStorage(
       RefPtr<UniversalDirectoryLock> aDirectoryLock);
 
+  RefPtr<BoolPromise> StorageInitialized();
+
   bool IsStorageInitialized() const {
     AssertIsOnOwningThread();
 
@@ -340,6 +342,8 @@ class QuotaManager final : public BackgroundThreadObject {
   {
   }
 #endif
+
+  RefPtr<BoolPromise> TemporaryStorageInitialized();
 
  private:
   nsresult EnsureStorageIsInitializedInternal();
