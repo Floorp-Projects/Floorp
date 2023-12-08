@@ -52,10 +52,7 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
   bool mRegistered;
   FlippedOnce<true> mPending;
   FlippedOnce<false> mInvalidated;
-
-#ifdef DEBUG
   FlippedOnce<false> mAcquired;
-#endif
 
  public:
   DirectoryLockImpl(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
@@ -180,6 +177,8 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
   NS_INLINE_DECL_REFCOUNTING(DirectoryLockImpl, override)
 
   int64_t Id() const override { return mId; }
+
+  bool Acquired() const override { return mAcquired; }
 
   void Acquire(RefPtr<OpenDirectoryListener> aOpenListener) override;
 

@@ -115,9 +115,7 @@ void DirectoryLockImpl::NotifyOpenListener() {
       mAcquirePromiseHolder.Reject(NS_ERROR_FAILURE, __func__);
     }
   } else {
-#ifdef DEBUG
     mAcquired.Flip();
-#endif
 
     if (mOpenListener) {
       (*mOpenListener)
