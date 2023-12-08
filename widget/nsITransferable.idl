@@ -194,12 +194,17 @@ interface nsITransferable : nsISupports
   [notxpcom, nostdcall] attribute boolean isPrivateData;
 
   /**
-   * The principal of the source dom node this transferable was
-   * created from and the contentPolicyType for the transferable.
-   * Note, currently only used on Windows for network principal and
-   * contentPolicyType information in clipboard and drag operations.
+   * The principal associated with this transferable. This could be either the
+   * node principal of the source DOM node from which this transferable was
+   * created, or the principal of the global from which this transferable was
+   * created.
+   * XXXedgar: Rename it to something more generic, bug 1867636.
    */
   [notxpcom, nostdcall] attribute nsIPrincipal requestingPrincipal;
+
+  /**
+   * the contentPolicyType for this transferable.
+   */
   [notxpcom, nostdcall] attribute nsContentPolicyType contentPolicyType;
 
   /**

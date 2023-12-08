@@ -12,6 +12,18 @@ skip-if = [
 ]
 support-files = ["simple_navigator_clipboard_keydown.html"]
 
+["browser_navigator_clipboard_contextmenu_suppression.js"]
+support-files = [
+  "file_toplevel.html",
+  "file_iframe.html",
+]
+
+["browser_navigator_clipboard_contextmenu_suppression_ext.js"]
+support-files = [
+  "file_toplevel.html",
+  "file_iframe.html",
+]
+
 ["browser_navigator_clipboard_read.js"]
 support-files = ["simple_navigator_clipboard_read.html"]
 fail-if = ["a11y_checks"] # Bug 1854502 clicked browser may not be accessible
