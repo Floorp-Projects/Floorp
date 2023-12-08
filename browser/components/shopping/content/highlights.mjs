@@ -33,6 +33,7 @@ class ReviewHighlights extends MozLitElement {
 
   static properties = {
     highlights: { type: Object },
+    lang: { type: String, reflect: true },
   };
 
   static get queries() {
@@ -86,9 +87,7 @@ class ReviewHighlights extends MozLitElement {
     highlightEl.l10nId = l10nId;
     highlightEl.highlightType = type;
     highlightEl.reviews = reviews;
-    // At present, en is only supported. Once we support more locales,
-    // update this attribute accordingly.
-    highlightEl.lang = "en";
+    highlightEl.lang = this.lang;
     return highlightEl;
   }
 
