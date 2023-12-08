@@ -267,6 +267,7 @@ export function PollPromise(func, options = {}) {
     timeout = null,
   } = options;
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  let didTimeOut = false;
 
   if (typeof func != "function") {
     throw new TypeError();
@@ -306,6 +307,7 @@ export function PollPromise(func, options = {}) {
             typeof end != "undefined" &&
             (start == end || new Date().getTime() >= end)
           ) {
+            didTimeOut = true;
             resolve(rejected);
           }
         })
@@ -319,7 +321,7 @@ export function PollPromise(func, options = {}) {
     timer.init(evalFn, interval, TYPE_REPEATING_SLACK);
   }).then(
     res => {
-      if (Number.isInteger(timeout)) {
+      if (didTimeOut) {
         lazy.logger.warn(`${errorMessage} after ${timeout} ms`);
       }
       timer.cancel();
