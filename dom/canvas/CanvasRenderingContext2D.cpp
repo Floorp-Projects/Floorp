@@ -5980,15 +5980,17 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
   RefPtr<DataSourceSurface> readback = snapshot->GetDataSurface();
   mBufferProvider->ReturnSnapshot(snapshot.forget());
 
-  // Check for site-specific permission.
-  CanvasUtils::ImageExtraction permission =
-      CanvasUtils::ImageExtraction::Unrestricted;
+  // Check for site-specific permission.  This check is not needed if the
+  // canvas was created with a docshell (that is only done for special
+  // internal uses).
+  bool usePlaceholder = false;
   if (mCanvasElement) {
-    permission = CanvasUtils::ImageExtractionResult(mCanvasElement, aCx,
-                                                    aSubjectPrincipal);
+    nsCOMPtr<Document> ownerDoc = mCanvasElement->OwnerDoc();
+    usePlaceholder = !CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx,
+                                                            aSubjectPrincipal);
   } else if (mOffscreenCanvas) {
-    permission = CanvasUtils::ImageExtractionResult(mOffscreenCanvas, aCx,
-                                                    aSubjectPrincipal);
+    usePlaceholder = mOffscreenCanvas->ShouldResistFingerprinting(
+        RFPTarget::CanvasImageExtractionPrompt);
   }
 
   // Clone the data source surface if canvas randomization is enabled. We need
@@ -5997,7 +5999,10 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
   //
   // Note that we don't need to clone if we will use the place holder because
   // the place holder doesn't use actual image data.
-  if (permission == CanvasUtils::ImageExtraction::Randomize) {
+  bool needRandomizePixels = false;
+  if (!usePlaceholder &&
+      ShouldResistFingerprinting(RFPTarget::CanvasRandomization)) {
+    needRandomizePixels = true;
     if (readback) {
       readback = CreateDataSourceSurfaceByCloning(readback);
     }
@@ -6010,12 +6015,12 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
 
   do {
     uint8_t* randomData;
-    if (permission == CanvasUtils::ImageExtraction::Placeholder) {
+    if (usePlaceholder) {
       // Since we cannot call any GC-able functions (like requesting the RNG
       // service) after we call JS_GetUint8ClampedArrayData, we will
       // pre-generate the randomness required for GeneratePlaceholderCanvasData.
       randomData = TryToGenerateRandomDataForPlaceholderCanvasData();
-    } else if (permission == CanvasUtils::ImageExtraction::Randomize) {
+    } else if (needRandomizePixels) {
       // Apply the random noises if canvan randomization is enabled. We don't
       // need to calculate random noises if we are going to use the place
       // holder.
@@ -6031,7 +6036,7 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
     uint8_t* data = JS_GetUint8ClampedArrayData(darray, &isShared, nogc);
     MOZ_ASSERT(!isShared);  // Should not happen, data was created above
 
-    if (permission == CanvasUtils::ImageExtraction::Placeholder) {
+    if (usePlaceholder) {
       FillPlaceholderCanvas(randomData, len.value(), data);
       break;
     }
