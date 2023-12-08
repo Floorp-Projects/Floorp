@@ -5436,17 +5436,6 @@ uint32_t computeSanitizationFlags(nsIPrincipal* aPrincipal, int32_t aFlags) {
 }
 
 /* static */
-bool AllowsUnsanitizedContentForAboutNewTab(nsIPrincipal* aPrincipal) {
-  if (StaticPrefs::dom_about_newtab_sanitization_enabled() ||
-      !aPrincipal->SchemeIs("about")) {
-    return false;
-  }
-  uint32_t aboutModuleFlags = 0;
-  aPrincipal->GetAboutModuleFlags(&aboutModuleFlags);
-  return aboutModuleFlags & nsIAboutModule::ALLOW_UNSANITIZED_CONTENT;
-}
-
-/* static */
 void nsContentUtils::SetHTMLUnsafe(FragmentOrElement* aTarget,
                                    Element* aContext,
                                    const nsAString& aSource) {
@@ -5514,8 +5503,7 @@ nsresult nsContentUtils::ParseFragmentHTML(
   // an about: scheme principal.
   bool shouldSanitize = nodePrincipal->IsSystemPrincipal() ||
                         nodePrincipal->SchemeIs("about") || aFlags >= 0;
-  if (shouldSanitize &&
-      !AllowsUnsanitizedContentForAboutNewTab(nodePrincipal)) {
+  if (shouldSanitize) {
     if (!doc->IsLoadedAsData()) {
       doc = nsContentUtils::CreateInertHTMLDocument(doc);
       if (!doc) {

@@ -87,15 +87,9 @@ interface nsIAboutModule : nsISupports
     const unsigned long URI_MUST_LOAD_IN_EXTENSION_PROCESS = (1 << 9);
 
     /**
-     * A flag that indicates that this about: URI needs to allow unsanitized content.
-     * Only to be used by about:home and about:newtab.
-     */
-    const unsigned long ALLOW_UNSANITIZED_CONTENT = (1 << 10);
-
-    /**
      * A flag that indicates that this about: URI is a secure chrome UI
      */
-    const unsigned long IS_SECURE_CHROME_UI = (1 << 11);
+    const unsigned long IS_SECURE_CHROME_UI = (1 << 10);
 
     /**
      * A method to get the flags that apply to a given about: URI.  The URI
