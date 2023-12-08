@@ -374,9 +374,11 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                         // If Firefox Suggest is enabled, register a worker to periodically ingest
                         // new search suggestions. The worker requires us to have called
                         // `GlobalFxSuggestDependencyProvider.initialize`, which we did before
-                        // scheduling these tasks.
+                        // scheduling these tasks. When disabled we stop the periodic work.
                         if (settings().enableFxSuggest) {
                             components.fxSuggest.ingestionScheduler.startPeriodicIngestion()
+                        } else {
+                            components.fxSuggest.ingestionScheduler.stopPeriodicIngestion()
                         }
                     }
                 }
