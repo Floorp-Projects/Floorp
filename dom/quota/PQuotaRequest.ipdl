@@ -18,10 +18,6 @@ struct StorageNameResponse
   nsString name;
 };
 
-struct InitTemporaryStorageResponse
-{
-};
-
 struct InitializePersistentOriginResponse
 {
   bool created;
@@ -65,7 +61,6 @@ union RequestResponse
 {
   nsresult;
   StorageNameResponse;
-  InitTemporaryStorageResponse;
   InitializePersistentOriginResponse;
   InitializeTemporaryOriginResponse;
   GetFullOriginMetadataResponse;

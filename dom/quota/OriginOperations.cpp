@@ -345,12 +345,12 @@ class InitOp final : public ResolvableNormalOriginOp<bool> {
   void CloseDirectory() override;
 };
 
-class InitTemporaryStorageOp final : public QuotaRequestBase {
+class InitTemporaryStorageOp final : public ResolvableNormalOriginOp<bool> {
   RefPtr<UniversalDirectoryLock> mDirectoryLock;
 
  public:
-  explicit InitTemporaryStorageOp(
-      MovingNotNull<RefPtr<QuotaManager>> aQuotaManager);
+  InitTemporaryStorageOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
+                         RefPtr<UniversalDirectoryLock> aDirectoryLock);
 
  private:
   ~InitTemporaryStorageOp() = default;
@@ -359,7 +359,7 @@ class InitTemporaryStorageOp final : public QuotaRequestBase {
 
   nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
 
-  void GetResponse(RequestResponse& aResponse) override;
+  bool GetResolveValue() override;
 
   void CloseDirectory() override;
 };
@@ -773,9 +773,11 @@ RefPtr<ResolvableNormalOriginOp<bool>> CreateInitOp(
                             std::move(aDirectoryLock));
 }
 
-RefPtr<QuotaRequestBase> CreateInitTemporaryStorageOp(
-    MovingNotNull<RefPtr<QuotaManager>> aQuotaManager) {
-  return MakeRefPtr<InitTemporaryStorageOp>(std::move(aQuotaManager));
+RefPtr<ResolvableNormalOriginOp<bool>> CreateInitTemporaryStorageOp(
+    MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
+    RefPtr<UniversalDirectoryLock> aDirectoryLock) {
+  return MakeRefPtr<InitTemporaryStorageOp>(std::move(aQuotaManager),
+                                            std::move(aDirectoryLock));
 }
 
 RefPtr<QuotaRequestBase> CreateInitializePersistentOriginOp(
@@ -1462,20 +1464,19 @@ void InitOp::CloseDirectory() {
 }
 
 InitTemporaryStorageOp::InitTemporaryStorageOp(
-    MovingNotNull<RefPtr<QuotaManager>> aQuotaManager)
-    : QuotaRequestBase(std::move(aQuotaManager),
-                       "dom::quota::InitTemporaryStorageOp") {
+    MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
+    RefPtr<UniversalDirectoryLock> aDirectoryLock)
+    : ResolvableNormalOriginOp(std::move(aQuotaManager),
+                               "dom::quota::InitTemporaryStorageOp"),
+      mDirectoryLock(std::move(aDirectoryLock)) {
   AssertIsOnOwningThread();
 }
 
 RefPtr<BoolPromise> InitTemporaryStorageOp::OpenDirectory() {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(mDirectoryLock);
 
-  mDirectoryLock = mQuotaManager->CreateDirectoryLockInternal(
-      Nullable<PersistenceType>(), OriginScope::FromNull(),
-      Nullable<Client::Type>(), /* aExclusive */ false);
-
-  return mDirectoryLock->Acquire();
+  return BoolPromise::CreateAndResolve(true, __func__);
 }
 
 nsresult InitTemporaryStorageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
@@ -1492,10 +1493,10 @@ nsresult InitTemporaryStorageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   return NS_OK;
 }
 
-void InitTemporaryStorageOp::GetResponse(RequestResponse& aResponse) {
+bool InitTemporaryStorageOp::GetResolveValue() {
   AssertIsOnOwningThread();
 
-  aResponse = InitTemporaryStorageResponse();
+  return true;
 }
 
 void InitTemporaryStorageOp::CloseDirectory() {

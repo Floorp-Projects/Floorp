@@ -41,10 +41,6 @@ struct StorageNameParams
 {
 };
 
-struct InitTemporaryStorageParams
-{
-};
-
 struct InitializePersistentOriginParams
 {
   PrincipalInfo principalInfo;
@@ -115,7 +111,6 @@ struct ListOriginsParams
 union RequestParams
 {
   StorageNameParams;
-  InitTemporaryStorageParams;
   InitializePersistentOriginParams;
   InitializeTemporaryOriginParams;
   GetFullOriginMetadataParams;
@@ -157,6 +152,9 @@ parent:
   async InitializeTemporaryClient(PersistenceType persistenceType,
                                   PrincipalInfo principalInfo,
                                   Type clientType)
+      returns(BoolResponse response);
+
+  async InitializeTemporaryStorage()
       returns(BoolResponse response);
 
   async ClearStoragesForOrigin(PersistenceType? persistenceType,

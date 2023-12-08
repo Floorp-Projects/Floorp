@@ -70,6 +70,9 @@ class Quota final : public PQuotaParent {
       const PrincipalInfo& aPrincipalInfo, const Type& aClientType,
       InitializeTemporaryClientResolver&& aResolve) override;
 
+  virtual mozilla::ipc::IPCResult RecvInitializeTemporaryStorage(
+      InitializeTemporaryStorageResolver&& aResolver) override;
+
   virtual mozilla::ipc::IPCResult RecvClearStoragesForOrigin(
       const Maybe<PersistenceType>& aPersistenceType,
       const PrincipalInfo& aPrincipalInfo, const Maybe<Type>& aClientType,

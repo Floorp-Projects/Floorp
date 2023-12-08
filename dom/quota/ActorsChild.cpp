@@ -352,7 +352,6 @@ mozilla::ipc::IPCResult QuotaRequestChild::Recv__delete__(
       HandleResponse(aResponse.get_StorageNameResponse().name());
       break;
 
-    case RequestResponse::TInitTemporaryStorageResponse:
     case RequestResponse::TResetOriginResponse:
     case RequestResponse::TPersistResponse:
       HandleResponse();
