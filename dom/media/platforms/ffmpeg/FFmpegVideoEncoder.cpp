@@ -10,6 +10,7 @@
 #include "FFmpegRuntimeLinker.h"
 #include "VPXDecoder.h"
 #include "libavutil/pixfmt.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "nsPrintfCString.h"
 
@@ -146,6 +147,9 @@ AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(const nsACString& aMimeType) {
 #endif
   return AV_CODEC_ID_NONE;
 }
+
+template <typename ConfigType>
+StaticMutex FFmpegVideoEncoder<LIBAV_VER, ConfigType>::sMutex;
 
 template <typename ConfigType>
 FFmpegVideoEncoder<LIBAV_VER, ConfigType>::FFmpegVideoEncoder(
@@ -289,7 +293,16 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessInit() {
   // AV_CODEC_FLAG_GLOBAL_HEADER for start code.
   // TODO: AV1 specific settings.
 
-  // TODO: Open mCodecContext.
+  AVDictionary* options = nullptr;
+  if (int ret = OpenCodecContext(codec, &options); ret < 0) {
+    FFMPEGV_LOG("failed to open %s avcodec: %d", codec->name, ret);
+    return InitPromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                    RESULT_DETAIL("Unable to open avcodec")),
+        __func__);
+  }
+  mLib->av_dict_free(&options);
+
   FFMPEGV_LOG("%s has been initialized with format: %s, bitrate: %" PRIi64
               ", width: %d, height: %d, time_base: %d/%d",
               codec->name, ffmpeg::GetPixelFormatString(mCodecContext->pix_fmt),
@@ -307,10 +320,27 @@ void FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessShutdown() {
   FFMPEGV_LOG("ProcessShutdown");
 
   if (mCodecContext) {
-    // TODO: Close mCodecContext.
+    CloseCodecContext();
     mLib->av_freep(&mCodecContext);
     mCodecContext = nullptr;
   }
+}
+
+template <typename ConfigType>
+int FFmpegVideoEncoder<LIBAV_VER, ConfigType>::OpenCodecContext(
+    const AVCodec* aCodec, AVDictionary** aOptions) {
+  MOZ_ASSERT(mCodecContext);
+
+  StaticMutexAutoLock mon(sMutex);
+  return mLib->avcodec_open2(mCodecContext, aCodec, aOptions);
+}
+
+template <typename ConfigType>
+void FFmpegVideoEncoder<LIBAV_VER, ConfigType>::CloseCodecContext() {
+  MOZ_ASSERT(mCodecContext);
+
+  StaticMutexAutoLock mon(sMutex);
+  mLib->avcodec_close(mCodecContext);
 }
 
 template class FFmpegVideoEncoder<LIBAV_VER, MediaDataEncoder::VP8Config>;
