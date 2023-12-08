@@ -30,7 +30,8 @@ already_AddRefed<MediaDataEncoder> FFmpegEncoderModule<V>::CreateVideoEncoder(
   }
 
   // TODO: Properly create a FFmpegVideoDecoder with parameters in aParams.
-  RefPtr<MediaDataEncoder> encoder = new FFmpegVideoEncoder<V>(mLib);
+  RefPtr<MediaDataEncoder> encoder =
+      new FFmpegVideoEncoder<V>(mLib, codecId, aParams.mTaskQueue);
   FFMPEGV_LOG("ffmpeg %s encoder: %s has been created",
               aParams.mConfig.mMimeType.get(),
               encoder->GetDescriptionName().get());
