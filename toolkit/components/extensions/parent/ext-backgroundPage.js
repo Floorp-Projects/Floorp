@@ -826,7 +826,7 @@ class BackgroundBuilder {
         switch (resetIdleDetails?.reason) {
           case "event":
             category = "reset_event";
-            break;
+            return; // not break; because too frequent, see bug 1868960.
           case "hasActiveNativeAppPorts":
             category = "reset_nativeapp";
             break;
@@ -838,7 +838,7 @@ class BackgroundBuilder {
             break;
           case "parentApiCall":
             category = "reset_parentapicall";
-            break;
+            return; // not break; because too frequent, see bug 1868960.
         }
 
         ExtensionTelemetry.eventPageIdleResult.histogramAdd({
