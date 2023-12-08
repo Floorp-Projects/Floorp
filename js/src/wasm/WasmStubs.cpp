@@ -607,7 +607,27 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   AutoCreatedBy acb(masm, "GenerateInterpEntry");
 
   AssertExpectedSP(masm);
+
+  // UBSAN expects that the word before a C++ function pointer is readable for
+  // some sort of generated assertion.
+  //
+  // These interp entry points can sometimes be output at the beginning of a
+  // code page allocation, which will cause access violations when called with
+  // UBSAN enabled.
+  //
+  // Insert some padding in this case by inserting a breakpoint before we align
+  // our code. This breakpoint will misalign the code buffer (which was aligned
+  // due to being at the beginning of the buffer), which will then be aligned
+  // and have at least one word of padding before this entry point.
+  if (masm.currentOffset() == 0) {
+    masm.breakpoint();
+  }
+
   masm.haltingAlign(CodeAlignment);
+
+  // Double check that the first word is available for UBSAN; see above.
+  static_assert(CodeAlignment >= sizeof(uintptr_t));
+  MOZ_ASSERT_IF(!masm.oom(), masm.currentOffset() >= sizeof(uintptr_t));
 
   offsets->begin = masm.currentOffset();
 
