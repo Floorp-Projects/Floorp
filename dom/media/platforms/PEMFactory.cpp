@@ -21,6 +21,9 @@
 #ifdef MOZ_FFVPX
 #  include "FFVPXRuntimeLinker.h"
 #endif
+#ifdef MOZ_FFMPEG
+#  include "FFmpegRuntimeLinker.h"
+#endif
 
 #include "mozilla/StaticPrefs_media.h"
 
@@ -46,6 +49,15 @@ PEMFactory::PEMFactory() {
   if (StaticPrefs::media_ffvpx_enabled()) {
     if (RefPtr<PlatformEncoderModule> pem =
             FFVPXRuntimeLinker::CreateEncoder()) {
+      mModules.AppendElement(pem);
+    }
+  }
+#endif
+
+#ifdef MOZ_FFMPEG
+  if (StaticPrefs::media_ffmpeg_enabled()) {
+    if (RefPtr<PlatformEncoderModule> pem =
+            FFmpegRuntimeLinker::CreateEncoder()) {
       mModules.AppendElement(pem);
     }
   }
