@@ -386,7 +386,7 @@ template <typename Delegate, typename Escape>
 class JS_PUBLIC_API EscapePrinter final : public GenericPrinter {
   size_t lengthOfSafeChars(const char* s, size_t len) {
     for (size_t i = 0; i < len; i++) {
-      if (!esc.isSafeChar(s[i])) {
+      if (!esc.isSafeChar(uint8_t(s[i]))) {
         return i;
       }
     }
@@ -412,7 +412,7 @@ class JS_PUBLIC_API EscapePrinter final : public GenericPrinter {
         b += index;
       }
       if (len) {
-        esc.convertInto(out, char16_t(*b));
+        esc.convertInto(out, char16_t(uint8_t(*b)));
         len -= 1;
         b += 1;
       }
@@ -420,11 +420,11 @@ class JS_PUBLIC_API EscapePrinter final : public GenericPrinter {
   }
 
   inline void putChar(const char c) override {
-    if (esc.isSafeChar(char16_t(c))) {
+    if (esc.isSafeChar(char16_t(uint8_t(c)))) {
       out.putChar(char(c));
       return;
     }
-    esc.convertInto(out, char16_t(c));
+    esc.convertInto(out, char16_t(uint8_t(c)));
   }
 
   inline void putChar(const JS::Latin1Char c) override {
