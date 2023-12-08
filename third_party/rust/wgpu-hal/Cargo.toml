@@ -81,6 +81,7 @@ package = "wgpu-types"
 [dev-dependencies]
 cfg-if = "1"
 env_logger = "0.10"
+glam = "0.24.2"
 
 [dev-dependencies.naga]
 version = "0.14.0"
@@ -93,17 +94,6 @@ features = ["android-native-activity"]
 
 [features]
 default = ["link"]
-dx11 = [
-    "naga/hlsl-out",
-    "d3d12",
-    "libloading",
-    "winapi/d3d11",
-    "winapi/std",
-    "winapi/d3d11_1",
-    "winapi/d3d11_2",
-    "winapi/d3d11sdklayers",
-    "winapi/dxgi1_6",
-]
 dx12 = [
     "naga/hlsl-out",
     "d3d12",

@@ -102,12 +102,10 @@ pub enum Backend {
     Metal = 2,
     /// Direct3D-12 (Windows)
     Dx12 = 3,
-    /// Direct3D-11 (Windows)
-    Dx11 = 4,
     /// OpenGL ES-3 (Linux, Android)
-    Gl = 5,
+    Gl = 4,
     /// WebGPU in the browser
-    BrowserWebGpu = 6,
+    BrowserWebGpu = 5,
 }
 
 impl Backend {
@@ -118,7 +116,6 @@ impl Backend {
             Backend::Vulkan => "vulkan",
             Backend::Metal => "metal",
             Backend::Dx12 => "dx12",
-            Backend::Dx11 => "dx11",
             Backend::Gl => "gl",
             Backend::BrowserWebGpu => "webgpu",
         }
@@ -158,8 +155,6 @@ bitflags::bitflags! {
         const METAL = 1 << Backend::Metal as u32;
         /// Supported on Windows 10
         const DX12 = 1 << Backend::Dx12 as u32;
-        /// Supported on Windows 7+
-        const DX11 = 1 << Backend::Dx11 as u32;
         /// Supported when targeting the web through webassembly
         const BROWSER_WEBGPU = 1 << Backend::BrowserWebGpu as u32;
         /// All the apis that wgpu offers first tier of support for.
@@ -172,8 +167,8 @@ bitflags::bitflags! {
         /// All the apis that wgpu offers second tier of support for. These may
         /// be unsupported/still experimental.
         ///
-        /// OpenGL + DX11
-        const SECONDARY = Self::GL.bits() | Self::DX11.bits();
+        /// OpenGL
+        const SECONDARY = Self::GL.bits();
     }
 }
 
@@ -665,7 +660,6 @@ bitflags::bitflags! {
         /// - DX12
         /// - Vulkan
         /// - Metal
-        /// - DX11 (emulated with uniforms)
         /// - OpenGL (emulated with uniforms)
         ///
         /// This is a native only feature.
@@ -681,7 +675,6 @@ bitflags::bitflags! {
         /// - DX12
         /// - Vulkan
         /// - Metal
-        /// - DX11
         /// - OpenGL
         ///
         /// This is a native only feature.
@@ -693,7 +686,6 @@ bitflags::bitflags! {
         /// - DX12
         /// - Vulkan
         /// - Metal (macOS 10.12+ only)
-        /// - DX11
         /// - OpenGL
         ///
         /// This is a native only feature.
@@ -772,7 +764,6 @@ bitflags::bitflags! {
         ///
         /// This is a native only feature.
         const VERTEX_ATTRIBUTE_64BIT = 1 << 53;
-
         /// Allows vertex shaders to have outputs which are not consumed
         /// by the fragment shader.
         ///
@@ -781,7 +772,6 @@ bitflags::bitflags! {
         /// - Metal
         /// - OpenGL
         const SHADER_UNUSED_VERTEX_OUTPUT = 1 << 54;
-
         /// Allows for creation of textures of format [`TextureFormat::NV12`]
         ///
         /// Supported platforms:
@@ -790,11 +780,25 @@ bitflags::bitflags! {
         ///
         /// This is a native only feature.
         const TEXTURE_FORMAT_NV12 = 1 << 55;
+        /// Allows for the creation of ray-tracing acceleration structures.
+        ///
+        /// Supported platforms:
+        /// - Vulkan
+        ///
+        /// This is a native-only feature.
+        const RAY_TRACING_ACCELERATION_STRUCTURE = 1 << 56;
 
-        // 55..59 available
+        // 57 available
 
         // Shader:
 
+        /// Allows for the creation of ray-tracing queries within shaders.
+        ///
+        /// Supported platforms:
+        /// - Vulkan
+        ///
+        /// This is a native-only feature.
+        const RAY_QUERY = 1 << 58;
         /// Enables 64-bit floating point types in SPIR-V shaders.
         ///
         /// Note: even when supported by GPU hardware, 64-bit floating point operations are
@@ -820,7 +824,6 @@ bitflags::bitflags! {
         ///
         /// Supported platforms:
         /// - Vulkan
-        /// - DX11 (feature level 10+)
         /// - DX12
         /// - Metal (some)
         /// - OpenGL (some)
@@ -834,7 +837,6 @@ bitflags::bitflags! {
         ///
         /// This is a native only feature.
         const SHADER_EARLY_DEPTH_TEST = 1 << 62;
-
         /// Allows two outputs from a shader to be used for blending.
         /// Note that dual-source blending doesn't support multiple render targets.
         ///
@@ -1076,7 +1078,7 @@ pub struct Limits {
     /// - Vulkan: 128-256 bytes
     /// - DX12: 256 bytes
     /// - Metal: 4096 bytes
-    /// - DX11 & OpenGL don't natively support push constants, and are emulated with uniforms,
+    /// - OpenGL doesn't natively support push constants, and are emulated with uniforms,
     ///   so this number is less useful but likely 256.
     pub max_push_constant_size: u32,
 
@@ -1421,13 +1423,13 @@ bitflags::bitflags! {
     pub struct DownlevelFlags: u32 {
         /// The device supports compiling and using compute shaders.
         ///
-        /// DX11 on FL10 level hardware, WebGL2, and GLES3.0 devices do not support compute.
+        /// WebGL2, and GLES3.0 devices do not support compute.
         const COMPUTE_SHADERS = 1 << 0;
         /// Supports binding storage buffers and textures to fragment shaders.
         const FRAGMENT_WRITABLE_STORAGE = 1 << 1;
         /// Supports indirect drawing and dispatching.
         ///
-        /// DX11 on FL10 level hardware, WebGL2, GLES 3.0, and Metal on Apple1/Apple2 GPUs do not support indirect.
+        /// WebGL2, GLES 3.0, and Metal on Apple1/Apple2 GPUs do not support indirect.
         const INDIRECT_EXECUTION = 1 << 2;
         /// Supports non-zero `base_vertex` parameter to direct indexed draw calls.
         ///
@@ -2888,6 +2890,11 @@ impl TextureFormat {
             Self::Depth24PlusStencil8 | Self::Depth32FloatStencil8 => true,
             _ => false,
         }
+    }
+
+    /// Returns `true` if the format is a multi-planar format
+    pub fn is_multi_planar_format(&self) -> bool {
+        matches!(*self, Self::NV12)
     }
 
     /// Returns `true` if the format has a color aspect
@@ -4927,7 +4934,7 @@ pub enum PresentMode {
     ///
     /// No tearing will be observed.
     ///
-    /// Supported on DX11/12 on Windows 10, NVidia on Vulkan and Wayland on Vulkan.
+    /// Supported on DX12 on Windows 10, NVidia on Vulkan and Wayland on Vulkan.
     ///
     /// This is traditionally called "Fast Vsync"
     Mailbox = 5,
@@ -6179,6 +6186,21 @@ pub enum BindingType {
         /// Dimension of the texture view that is going to be sampled.
         view_dimension: TextureViewDimension,
     },
+
+    /// A ray-tracing acceleration structure binding.
+    ///
+    /// Example WGSL syntax:
+    /// ```rust,ignore
+    /// @group(0) @binding(0)
+    /// var as: acceleration_structure;
+    /// ```
+    ///
+    /// Example GLSL syntax:
+    /// ```cpp,ignore
+    /// layout(binding = 0)
+    /// uniform accelerationStructureEXT as;
+    /// ```
+    AccelerationStructure,
 }
 
 impl BindingType {
@@ -6828,6 +6850,36 @@ impl Default for InstanceDescriptor {
         }
     }
 }
+
+bitflags::bitflags!(
+    /// Flags for acceleration structures
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+    pub struct AccelerationStructureFlags: u8 {
+        /// Allow for incremental updates (no change in size)
+        const ALLOW_UPDATE = 1 << 0;
+        /// Allow the acceleration structure to be compacted in a copy operation
+        const ALLOW_COMPACTION = 1 << 1;
+        /// Optimize for fast ray tracing performance
+        const PREFER_FAST_TRACE = 1 << 2;
+        /// Optimize for fast build time
+        const PREFER_FAST_BUILD = 1 << 3;
+        /// Optimize for low memory footprint (scratch and output)
+        const LOW_MEMORY = 1 << 4;
+    }
+);
+impl_bitflags!(AccelerationStructureFlags);
+
+bitflags::bitflags!(
+    /// Flags for acceleration structure geometries
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+    pub struct AccelerationStructureGeometryFlags: u8 {
+        /// Is OPAQUE
+        const OPAQUE = 1 << 0;
+        /// NO_DUPLICATE_ANY_HIT_INVOCATION
+        const NO_DUPLICATE_ANY_HIT_INVOCATION = 1 << 1;
+    }
+);
+impl_bitflags!(AccelerationStructureGeometryFlags);
 
 pub use send_sync::*;
 

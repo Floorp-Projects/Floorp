@@ -153,6 +153,7 @@ impl crate::Api for Api {
     type Sampler = Sampler;
     type QuerySet = QuerySet;
     type Fence = Fence;
+    type AccelerationStructure = ();
 
     type BindGroupLayout = BindGroupLayout;
     type BindGroup = BindGroup;
@@ -736,6 +737,7 @@ struct PrimitiveState {
     front_face: u32,
     cull_face: u32,
     unclipped_depth: bool,
+    polygon_mode: u32,
 }
 
 type InvalidatedAttachments = ArrayVec<u32, { crate::MAX_COLOR_ATTACHMENTS + 2 }>;
