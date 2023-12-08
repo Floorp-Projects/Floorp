@@ -44,6 +44,7 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
       // Due to current AVCodecContext binary incompatibility we can only
       // support FFmpeg 57 at this stage.
       Unlink();
+      FFMPEGP_LOG("FFmpeg 57 is banned due to binary incompatibility");
       return LinkResult::CannotUseLibAV57;
     }
 #ifdef MOZ_FFMPEG
@@ -52,6 +53,7 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
       // Refuse any libavcodec version prior to 54.35.1.
       // (Unless media.libavcodec.allow-obsolete==true)
       Unlink();
+      FFMPEGP_LOG("libavcodec version prior to 54.35.1 is too old");
       return LinkResult::BlockedOldLibAVVersion;
     }
 #endif
@@ -114,6 +116,9 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
                       // must be dealing with a later one.
                       : LinkResult::UnknownFutureLibAVVersion;
   }
+
+  FFMPEGP_LOG("version: 0x%x, macro: %d, micro: %d, isFFMpeg: %s", version,
+              macro, micro, isFFMpeg ? "yes" : "no");
 
 #define AV_FUNC_OPTION_SILENT(func, ver)                                \
   if ((ver) & version) {                                                \
