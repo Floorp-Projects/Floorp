@@ -38,7 +38,7 @@ def get_cmd_output(*args, **kwargs):
         close_fds=os.name != "nt",
         encoding=system_encoding,
         errors="replace",
-        **kwargs
+        **kwargs,
     )
     stdout, stderr = proc.communicate()
     return proc.wait(), stdout, stderr
