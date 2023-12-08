@@ -25,25 +25,35 @@ async protocol PCanvas {
 parent:
   /**
    * Initialize a CanvasTranslator for a particular TextureType, which
-   * translates events from a CanvasEventRingBuffer. aReadHandle is the shared
-   * memory handle for the ring buffer. aReaderSem and aWriterSem are handles
-   * for the semaphores to handle waiting on either side.
+   * translates events from shared memory buffers. aHeaderHandle is a shared
+   * memory handle for the control header. aBufferHandles are shared memory
+   * handles for the initial buffers for translation. aBufferSize is the size of
+   * each aBufferHandles' memory and the default size. aReaderSem and aWriterSem
+   * are handles for the semaphores to handle waiting on either side.
+   * aUseIPDLThread if true, use the IPDL thread instead of the worker pool for
+   * translation requests
    */
-  async InitTranslator(TextureType aTextureType, Handle aReadHandle,
+  async InitTranslator(TextureType aTextureType, Handle aHeaderHandle,
+                       Handle[] aBufferHandles, uint64_t aBufferSize,
                        CrossProcessSemaphoreHandle aReaderSem,
                        CrossProcessSemaphoreHandle aWriterSem,
                        bool aUseIPDLThread);
 
   /**
-   * Send a new buffer to resume translation after it's been stopped by writer.
+   * Restart the translation from a Stopped state.
    */
-  async NewBuffer(Handle aReadHandle);
+  async RestartTranslation();
 
   /**
-   * Used to tell the CanvasTranslator to start translating again after it has
-   * stopped due to a timeout waiting for events.
+   * Adds a new buffer to be translated. The current buffer will be recycled if
+   * it is of the default size. The translation will then be restarted.
    */
-  async ResumeTranslation();
+  async AddBuffer(Handle aBufferHandle, uint64_t aBufferSize);
+
+  /**
+   * Sets the shared memory to be used for readback.
+   */
+  async SetDataSurfaceBuffer(Handle aBufferHandle, uint64_t aBufferSize);
 
   async __delete__();
 
