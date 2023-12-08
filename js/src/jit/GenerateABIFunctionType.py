@@ -305,6 +305,157 @@ def arm64_simulator_dispatch(func_types):
     return contents
 
 
+# Generate the LoongArch64 argument loading for a func type
+def loongarch64_args(func_type):
+    # This must match ABIArgGenerator::next() in Assembler-loong64.cpp
+    contents = ""
+    numIntArgRegs = 8
+    numFloatArgRegs = 8
+    intRegIndex = 0
+    floatRegIndex = 0
+    stackOffset = 0
+    for i, arg in enumerate(func_type["args"]):
+        if i != 0:
+            contents += ", "
+
+        if arg == "General":
+            if intRegIndex == numIntArgRegs:
+                contents += f"sp_[{stackOffset}]"
+                stackOffset += 1
+            else:
+                contents += f"a{intRegIndex}_"
+                intRegIndex += 1
+        elif arg == "Int32":
+            if intRegIndex == numIntArgRegs:
+                contents += f"I32(sp_[{stackOffset}])"
+                stackOffset += 1
+            else:
+                contents += f"I32(a{intRegIndex}_)"
+                intRegIndex += 1
+        elif arg == "Int64":
+            if intRegIndex == numIntArgRegs:
+                contents += f"sp_[{stackOffset}]"
+                stackOffset += 1
+            else:
+                contents += f"a{intRegIndex}_"
+                intRegIndex += 1
+        elif arg == "Float32":
+            if floatRegIndex == numFloatArgRegs:
+                contents += f"*mozilla::BitwiseCast<float*>(sp_[{stackOffset}])"
+                stackOffset += 1
+            else:
+                contents += f"f{floatRegIndex}_s"
+                floatRegIndex += 1
+        elif arg == "Float64":
+            if floatRegIndex == numFloatArgRegs:
+                contents += f"mozilla::BitwiseCast<double>(sp_[{stackOffset}])"
+                stackOffset += 1
+            else:
+                contents += f"f{floatRegIndex}_d"
+                floatRegIndex += 1
+    assert intRegIndex <= numIntArgRegs
+    assert floatRegIndex <= numFloatArgRegs
+    return contents
+
+
+def loongarch64_simulator_dispatch(func_types):
+    contents = ""
+    for func_type in func_types:
+        args = loongarch64_args(func_type)
+        contents += f"case js::jit::Args_{func_type_name(func_type)}: {{\\\n"
+        contents += f"  auto target = reinterpret_cast<Prototype_{func_type_name(func_type)}>(nativeFn);\\\n"
+        contents += f"  auto ret = target({args});\\\n"
+        ret = func_type["ret"]
+        if ret == "General":
+            contents += "  setCallResult(ret);\\\n"
+        elif ret == "Int32":
+            contents += "  setCallResult(I64(ret));\\\n"
+        elif ret == "Int64":
+            contents += "  setCallResult(ret);\\\n"
+        elif ret == "Float32":
+            contents += "  setCallResultFloat(ret);\\\n"
+        elif ret == "Float64":
+            contents += "  setCallResultDouble(ret);\\\n"
+        contents += "  break;\\\n"
+        contents += "}\\\n"
+    return contents
+
+
+# Generate the MIPS64 argument loading for a func type
+def mips64_args(func_type):
+    # This must match ABIArgGenerator::next() in Assembler-mips64.cpp
+    contents = ""
+    numIntArgRegs = 8
+    numFloatArgRegs = 8
+    regIndex = 0
+    stackOffset = 0
+    for i, arg in enumerate(func_type["args"]):
+        if i != 0:
+            contents += ", "
+
+        if arg == "General":
+            if regIndex == numIntArgRegs:
+                contents += f"sp_[{stackOffset}]"
+                stackOffset += 1
+            else:
+                contents += f"a{regIndex}_"
+                regIndex += 1
+        elif arg == "Int32":
+            if regIndex == numIntArgRegs:
+                contents += f"I32(sp_[{stackOffset}])"
+                stackOffset += 1
+            else:
+                contents += f"I32(a{regIndex}_)"
+                regIndex += 1
+        elif arg == "Int64":
+            if regIndex == numIntArgRegs:
+                contents += f"sp_[{stackOffset}]"
+                stackOffset += 1
+            else:
+                contents += f"a{regIndex}_"
+                regIndex += 1
+        elif arg == "Float32":
+            if regIndex == numFloatArgRegs:
+                contents += f"*mozilla::BitwiseCast<float*>(sp_[{stackOffset}])"
+                stackOffset += 1
+            else:
+                contents += f"f{regIndex + 12}_s"
+                regIndex += 1
+        elif arg == "Float64":
+            if regIndex == numFloatArgRegs:
+                contents += f"mozilla::BitwiseCast<double>(sp_[{stackOffset}])"
+                stackOffset += 1
+            else:
+                contents += f"f{regIndex + 12}_d"
+                regIndex += 1
+    assert regIndex <= numIntArgRegs
+    assert numIntArgRegs == numFloatArgRegs
+    return contents
+
+
+def mips64_simulator_dispatch(func_types):
+    contents = ""
+    for func_type in func_types:
+        args = mips64_args(func_type)
+        contents += f"case js::jit::Args_{func_type_name(func_type)}: {{\\\n"
+        contents += f"  auto target = reinterpret_cast<Prototype_{func_type_name(func_type)}>(nativeFn);\\\n"
+        contents += f"  auto ret = target({args});\\\n"
+        ret = func_type["ret"]
+        if ret == "General":
+            contents += "  setCallResult(ret);\\\n"
+        elif ret == "Int32":
+            contents += "  setCallResult(I64(ret));\\\n"
+        elif ret == "Int64":
+            contents += "  setCallResult(ret);\\\n"
+        elif ret == "Float32":
+            contents += "  setCallResultFloat(ret);\\\n"
+        elif ret == "Float64":
+            contents += "  setCallResultDouble(ret);\\\n"
+        contents += "  break;\\\n"
+        contents += "}\\\n"
+    return contents
+
+
 def main(c_out, yaml_path):
     func_types = load_yaml(yaml_path)
 
@@ -334,6 +485,14 @@ def main(c_out, yaml_path):
 
     contents += "#define ABI_FUNCTION_TYPE_ARM32_SIM_DISPATCH \\\n"
     contents += arm32_simulator_dispatch(func_types)
+    contents += "\n"
+
+    contents += "#define ABI_FUNCTION_TYPE_LOONGARCH64_SIM_DISPATCH \\\n"
+    contents += loongarch64_simulator_dispatch(func_types)
+    contents += "\n"
+
+    contents += "#define ABI_FUNCTION_TYPE_MIPS64_SIM_DISPATCH \\\n"
+    contents += mips64_simulator_dispatch(func_types)
     contents += "\n"
 
     generate_header(c_out, "jit_ABIFunctionTypeGenerated_h", contents)
