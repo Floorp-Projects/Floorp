@@ -2691,8 +2691,8 @@ def repackage_msix(
     if not arch:
         # Only try to guess the arch when this is clearly a local build.
         if input.endswith("bin"):
-            if command_context.substs["TARGET_CPU"] in ("i686", "x86_64", "aarch64"):
-                arch = command_context.substs["TARGET_CPU"].replace("i686", "x86")
+            if command_context.substs["TARGET_CPU"] in ("x86", "x86_64", "aarch64"):
+                arch = command_context.substs["TARGET_CPU"]
 
         if not arch:
             command_context.log(
