@@ -13648,6 +13648,24 @@ void CodeGenerator::visitArrayJoin(LArrayJoin* lir) {
   masm.bind(&skipCall);
 }
 
+void CodeGenerator::visitObjectKeys(LObjectKeys* lir) {
+  Register object = ToRegister(lir->object());
+
+  pushArg(object);
+
+  using Fn = JSObject* (*)(JSContext*, HandleObject);
+  callVM<Fn, jit::ObjectKeys>(lir);
+}
+
+void CodeGenerator::visitObjectKeysLength(LObjectKeysLength* lir) {
+  Register object = ToRegister(lir->object());
+
+  pushArg(object);
+
+  using Fn = bool (*)(JSContext*, HandleObject, int32_t*);
+  callVM<Fn, jit::ObjectKeysLength>(lir);
+}
+
 void CodeGenerator::visitGetIteratorCache(LGetIteratorCache* lir) {
   LiveRegisterSet liveRegs = lir->safepoint()->liveRegs();
   TypedOrValueRegister val =

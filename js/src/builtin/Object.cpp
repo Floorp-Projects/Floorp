@@ -1889,6 +1889,112 @@ end:
   return true;
 }
 
+// Optimization dedicated for `Object.keys(..).length` JS pattern. This function
+// replicates TryEnumerableOwnPropertiesNative code, except that instead of
+// generating an array we only return the length of the array that would have
+// been generated.
+//
+// As opposed to TryEnumerableOwnPropertiesNative, this function only support
+// EnumerableOwnPropertiesKind::Keys variant.
+static bool CountEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
+                                               int32_t& rval, bool* optimized) {
+  *optimized = false;
+
+  // Use the fast path if |obj| has neither extra indexed properties nor a
+  // newEnumerate hook. String objects need to be special-cased, because
+  // they're only marked as indexed after their enumerate hook ran. And
+  // because their enumerate hook is slowish, it's more performant to
+  // exclude them directly instead of executing the hook first.
+  if (!obj->is<NativeObject>() || obj->as<NativeObject>().isIndexed() ||
+      obj->getClass()->getNewEnumerate() || obj->is<StringObject>()) {
+    return true;
+  }
+
+#ifdef ENABLE_RECORD_TUPLE
+  // Skip the optimized path in case of record and tuples.
+  if (obj->is<TupleObject>() || obj->is<RecordObject>()) {
+    return true;
+  }
+#endif
+
+  Handle<NativeObject*> nobj = obj.as<NativeObject>();
+
+  // Resolve lazy properties on |nobj|.
+  if (JSEnumerateOp enumerate = nobj->getClass()->getEnumerate()) {
+    if (!enumerate(cx, nobj)) {
+      return false;
+    }
+
+    // Ensure no extra indexed properties were added through enumerate().
+    if (nobj->isIndexed()) {
+      return true;
+    }
+  }
+
+  *optimized = true;
+
+  int32_t num_properties = 0;
+
+  // If possible, attempt to use the shape's iterator cache.
+  Rooted<PropertyIteratorObject*> piter(cx,
+                                        LookupInShapeIteratorCache(cx, nobj));
+  if (piter) {
+    NativeIterator* ni = piter->getNativeIterator();
+    MOZ_ASSERT(ni->isReusable());
+
+    // Guard against indexes.
+    if (!ni->mayHavePrototypeProperties()) {
+      rval = ni->numKeys();
+      return true;
+    }
+  }
+
+  for (uint32_t i = 0, len = nobj->getDenseInitializedLength(); i < len; i++) {
+    if (nobj->getDenseElement(i).isMagic(JS_ELEMENTS_HOLE)) {
+      continue;
+    }
+
+    num_properties += 1;
+  }
+
+  if (obj->is<TypedArrayObject>()) {
+    Handle<TypedArrayObject*> tobj = obj.as<TypedArrayObject>();
+    size_t len = tobj->length();
+
+    // Fail early if the typed array contains too many elements for a
+    // dense array, because we likely OOM anyway when trying to allocate
+    // more than 2GB for the properties vector. This also means we don't
+    // need to handle indices greater than MAX_INT32 in the loop below.
+    if (len > NativeObject::MAX_DENSE_ELEMENTS_COUNT) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+
+    MOZ_ASSERT(num_properties == 0, "typed arrays cannot have dense elements");
+    num_properties = len;
+  }
+
+  // All enumerable properties with string property keys are data
+  // properties. This allows us to collect the property values while
+  // iterating over the shape hierarchy without worrying over accessors
+  // modifying any state.
+
+  if (nobj->hasEnumerableProperty()) {
+    for (ShapePropertyIter<AllowGC::NoGC> iter(obj.as<NativeObject>()->shape());
+         !iter.done(); iter++) {
+      jsid id = iter->key();
+      if (!iter->enumerable() || id.isSymbol()) {
+        continue;
+      }
+      MOZ_ASSERT(!id.isInt(), "Unexpected indexed property");
+      num_properties += 1;
+    }
+  }
+
+  rval = num_properties;
+  return true;
+}
+
 // ES2018 draft rev c164be80f7ea91de5526b33d54e5c9321ed03d3f
 // 7.3.21 EnumerableOwnProperties ( O, kind )
 template <EnumerableOwnPropertiesKind kind>
@@ -2006,7 +2112,7 @@ static bool EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args) {
 
 // ES2018 draft rev c164be80f7ea91de5526b33d54e5c9321ed03d3f
 // 19.1.2.16 Object.keys ( O )
-static bool obj_keys(JSContext* cx, unsigned argc, Value* vp) {
+bool js::obj_keys(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSMethodProfilerEntry pseudoFrame(cx, "Object", "keys");
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -2030,6 +2136,26 @@ static bool obj_keys(JSContext* cx, unsigned argc, Value* vp) {
 
   // Steps 2-3.
   return GetOwnPropertyKeys(cx, obj, JSITER_OWNONLY, args.rval());
+}
+
+bool js::obj_keys_length(JSContext* cx, HandleObject obj, int32_t& length) {
+  bool optimized;
+  if (!CountEnumerableOwnPropertiesNative(cx, obj, length, &optimized)) {
+    return false;
+  }
+  if (optimized) {
+    return true;
+  }
+
+  // Object.keys: Steps 2-3.
+  // (GetOwnPropertyKeys / CountOwnPropertyKeys)
+  RootedIdVector keys(cx);
+  if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY, &keys)) {
+    return false;
+  }
+
+  length = keys.length();
+  return true;
 }
 
 // ES2018 draft rev c164be80f7ea91de5526b33d54e5c9321ed03d3f
@@ -2331,7 +2457,7 @@ static const JSFunctionSpec object_static_methods[] = {
                       "ObjectGetOwnPropertyDescriptor", 2, 0),
     JS_SELF_HOSTED_FN("getOwnPropertyDescriptors",
                       "ObjectGetOwnPropertyDescriptors", 1, 0),
-    JS_FN("keys", obj_keys, 1, 0),
+    JS_INLINABLE_FN("keys", obj_keys, 1, 0, ObjectKeys),
     JS_FN("values", obj_values, 1, 0),
     JS_FN("entries", obj_entries, 1, 0),
     JS_INLINABLE_FN("is", obj_is, 2, 0, ObjectIs),

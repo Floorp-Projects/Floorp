@@ -4109,6 +4109,25 @@ void LIRGenerator::visitArrayJoin(MArrayJoin* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitObjectKeys(MObjectKeys* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->type() == MIRType::Object);
+
+  auto* lir = new (alloc()) LObjectKeys(useRegisterAtStart(ins->object()));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
+void LIRGenerator::visitObjectKeysLength(MObjectKeysLength* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->type() == MIRType::Int32);
+
+  auto* lir =
+      new (alloc()) LObjectKeysLength(useRegisterAtStart(ins->object()));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitStringSplit(MStringSplit* ins) {
   MOZ_ASSERT(ins->type() == MIRType::Object);
   MOZ_ASSERT(ins->string()->type() == MIRType::String);

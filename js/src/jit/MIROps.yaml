@@ -1279,6 +1279,7 @@
   result_type: Int32
   movable: true
   congruent_to: if_operands_equal
+  folds_to: custom
   alias_set: custom
   compute_range: custom
   clone: true
@@ -1507,6 +1508,35 @@
   # MArrayJoin doesn't override |getAliasSet()|, because Array.prototype.join
   # might coerce the elements of the Array to strings. This coercion might
   # cause the evaluation of JavaScript code.
+
+# Object.prototype.keys. Used to elide it when possible.
+- name: ObjectKeys
+  operands:
+    object: Object
+  result_type: Object
+
+  # We can recover Object.keys on bailout as long as the object is not escaped
+  # or that the object is not mutated by any aliased calls in-between the
+  # instruction and the recovered location, as the recovered keys array might be
+  # different.
+  can_recover: custom
+
+# Used to fold Object.keys(obj).length into a single operation.
+#
+# This should not be used with a Proxy, as proxies can have a user-defined
+# `ownKeys` function which can have arbitrary outputs.
+#
+# This MIR node is created by folding an MObjectKeys with an MArrayLength, as
+# part of MArrayLength::foldsTo.
+- name: ObjectKeysLength
+  operands:
+    object: Object
+  result_type: Int32
+  movable: false
+  congruent_to: if_operands_equal
+  alias_set: custom
+  compute_range: custom
+  clone: true
 
 - name: LoadUnboxedScalar
   gen_boilerplate: false

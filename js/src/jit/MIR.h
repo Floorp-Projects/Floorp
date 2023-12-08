@@ -776,6 +776,10 @@ class MDefinition : public MNode {
   // (only counting MDefinitions, ignoring MResumePoints)
   bool hasOneDefUse() const;
 
+  // Test whether this MDefinition has exactly one live use. (only counting
+  // MDefinitions which are not recovered on bailout and ignoring MResumePoints)
+  bool hasOneLiveDefUse() const;
+
   // Test whether this MDefinition has at least one use.
   // (only counting MDefinitions, ignoring MResumePoints)
   bool hasDefUses() const;

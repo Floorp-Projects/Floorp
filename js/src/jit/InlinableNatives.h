@@ -149,6 +149,7 @@
   _(ObjectCreate)                                  \
   _(ObjectIs)                                      \
   _(ObjectIsPrototypeOf)                           \
+  _(ObjectKeys)                                    \
   _(ObjectToString)                                \
                                                    \
   _(TestBailout)                                   \
