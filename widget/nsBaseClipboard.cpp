@@ -17,6 +17,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "nsContentUtils.h"
+#include "nsFocusManager.h"
 #include "nsIClipboardOwner.h"
 #include "nsIPromptService.h"
 #include "nsError.h"
@@ -734,14 +735,24 @@ void nsBaseClipboard::RequestUserConfirmation(
 
   CanonicalBrowsingContext* cbc =
       CanonicalBrowsingContext::Cast(aWindowContext->GetBrowsingContext());
-  if (!cbc) {
+  MOZ_ASSERT(
+      cbc->IsContent(),
+      "Should not require user confirmation when access from chrome window");
+
+  RefPtr<CanonicalBrowsingContext> chromeTop = cbc->TopCrossChromeBoundary();
+  Document* chromeDoc = chromeTop ? chromeTop->GetDocument() : nullptr;
+  if (!chromeDoc || !chromeDoc->HasFocus(mozilla::IgnoreErrors())) {
+    MOZ_CLIPBOARD_LOG("%s: reject due to not in the focused window",
+                      __FUNCTION__);
     aCallback->OnError(NS_ERROR_FAILURE);
     return;
   }
 
-  RefPtr<CanonicalBrowsingContext> chromeTop = cbc->TopCrossChromeBoundary();
-  Document* chromeDoc = chromeTop ? chromeTop->GetDocument() : nullptr;
-  if (!chromeDoc) {
+  mozilla::dom::Element* activeElementInChromeDoc =
+      chromeDoc->GetActiveElement();
+  if (activeElementInChromeDoc != cbc->Top()->GetEmbedderElement()) {
+    // Reject if the request is not from web content that is in the focused tab.
+    MOZ_CLIPBOARD_LOG("%s: reject due to not in the focused tab", __FUNCTION__);
     aCallback->OnError(NS_ERROR_FAILURE);
     return;
   }
