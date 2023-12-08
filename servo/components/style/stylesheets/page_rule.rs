@@ -10,6 +10,7 @@ use crate::parser::{Parse, ParserContext};
 use crate::properties::PropertyDeclarationBlock;
 use crate::shared_lock::{DeepCloneParams, DeepCloneWithLock, Locked};
 use crate::shared_lock::{SharedRwLock, SharedRwLockReadGuard, ToCssWithGuard};
+use crate::stylesheets::CssRules;
 use crate::str::CssStringWriter;
 use crate::values::{AtomIdent, CustomIdent};
 use cssparser::{Parser, SourceLocation, Token};
@@ -276,6 +277,8 @@ impl Parse for PageSelectors {
 pub struct PageRule {
     /// Selectors of the page-rule
     pub selectors: PageSelectors,
+    /// Nested rules.
+    pub rules: Arc<Locked<CssRules>>,
     /// The declaration block this page rule contains.
     pub block: Arc<Locked<PropertyDeclarationBlock>>,
     /// The source position this rule was found at.
@@ -287,7 +290,9 @@ impl PageRule {
     #[cfg(feature = "gecko")]
     pub fn size_of(&self, guard: &SharedRwLockReadGuard, ops: &mut MallocSizeOfOps) -> usize {
         // Measurement of other fields may be added later.
-        self.block.unconditional_shallow_size_of(ops) +
+        self.rules.unconditional_shallow_size_of(ops) +
+            self.rules.read_with(guard).size_of(guard, ops) +
+            self.block.unconditional_shallow_size_of(ops) +
             self.block.read_with(guard).size_of(ops) +
             self.selectors.size_of(ops)
     }
@@ -313,18 +318,33 @@ impl ToCssWithGuard for PageRule {
     /// Serialization of PageRule is not specced, adapted from steps for
     /// StyleRule.
     fn to_css(&self, guard: &SharedRwLockReadGuard, dest: &mut CssStringWriter) -> fmt::Result {
+        // https://drafts.csswg.org/cssom/#serialize-a-css-rule
         dest.write_str("@page ")?;
         if !self.selectors.is_empty() {
             self.selectors.to_css(&mut CssWriter::new(dest))?;
             dest.write_char(' ')?;
         }
-        dest.write_str("{ ")?;
+        dest.write_char('{')?;
+
+        // TODO: share more/most of this with style rules
+        // https://bugzilla.mozilla.org/1867164
         let declaration_block = self.block.read_with(guard);
-        declaration_block.to_css(dest)?;
-        if !declaration_block.declarations().is_empty() {
-            dest.write_char(' ')?;
+        let has_declarations = !declaration_block.declarations().is_empty();
+
+        let rules = self.rules.read_with(guard);
+        if !rules.is_empty() {
+            if has_declarations {
+                dest.write_str("\n  ")?;
+                declaration_block.to_css(dest)?;
+            }
+            return rules.to_css_block_without_opening(guard, dest);
         }
-        dest.write_char('}')
+
+        if has_declarations {
+            dest.write_char(' ')?;
+            declaration_block.to_css(dest)?;
+        }
+        dest.write_str(" }")
     }
 }
 
@@ -333,11 +353,13 @@ impl DeepCloneWithLock for PageRule {
         &self,
         lock: &SharedRwLock,
         guard: &SharedRwLockReadGuard,
-        _params: &DeepCloneParams,
+        params: &DeepCloneParams,
     ) -> Self {
+        let rules = self.rules.read_with(&guard);
         PageRule {
             selectors: self.selectors.clone(),
             block: Arc::new(lock.wrap(self.block.read_with(&guard).clone())),
+            rules: Arc::new(lock.wrap(rules.deep_clone_with_lock(lock, guard, params))),
             source_location: self.source_location.clone(),
         }
     }
