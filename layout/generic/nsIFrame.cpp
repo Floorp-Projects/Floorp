@@ -10690,16 +10690,19 @@ Focusable nsIFrame::IsFocusable(bool aWithMouse, bool aCheckVisibility) {
     return {};
   }
 
-  auto focusable = mContent->IsFocusableWithoutStyle(aWithMouse);
-  auto* xul = nsXULElement::FromNode(mContent);
-  if (xul && !xul->GetXULBoolAttr(nsGkAtoms::disabled) &&
-      xul->GetTabIndexAttrValue().isNothing()) {
+  Focusable focusable;
+  if (auto* xul = nsXULElement::FromNode(mContent)) {
     // As a legacy special-case, -moz-user-focus controls focusability and
     // tabability of XUL elements in some circumstances (which default to
     // -moz-user-focus: ignore).
-    focusable.mFocusable = ui.UserFocus() == StyleUserFocus::Normal;
-    focusable.mTabIndex =
-        std::max(focusable.mTabIndex, focusable.mFocusable ? 0 : -1);
+    auto focusability = xul->GetXULFocusability(aWithMouse);
+    focusable.mFocusable = focusability.mForcedFocusable.valueOr(
+        ui.UserFocus() == StyleUserFocus::Normal);
+    if (focusable) {
+      focusable.mTabIndex = focusability.mForcedTabIndexIfFocusable.valueOr(0);
+    }
+  } else {
+    focusable = mContent->IsFocusableWithoutStyle(aWithMouse);
   }
 
   if (focusable) {

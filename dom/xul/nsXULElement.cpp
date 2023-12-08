@@ -373,41 +373,38 @@ static bool IsNonList(mozilla::dom::NodeInfo* aNodeInfo) {
          !aNodeInfo->Equals(nsGkAtoms::richlistbox);
 }
 
-// XUL elements are not focusable unless explicitly opted-into it with
-// -moz-user-focus: normal, or the tabindex attribute.
-Focusable nsXULElement::IsFocusableWithoutStyle(bool aWithMouse) {
+nsXULElement::XULFocusability nsXULElement::GetXULFocusability(
+    bool aWithMouse) {
 #ifdef XP_MACOSX
-  // on Mac, mouse interactions only focus the element if it's a list,
+  // On Mac, mouse interactions only focus the element if it's a list,
   // or if it's a remote target, since the remote target must handle
   // the focus.
   if (aWithMouse && IsNonList(mNodeInfo) &&
       !EventStateManager::IsTopLevelRemoteTarget(this)) {
-    return {};
+    return XULFocusability::NeverFocusable();
   }
 #endif
 
-  bool shouldFocus = false;
+  XULFocusability result;
   nsCOMPtr<nsIDOMXULControlElement> xulControl = AsXULControl();
   if (xulControl) {
-    // a disabled element cannot be focused and is not part of the tab order
+    // A disabled element cannot be focused and is not part of the tab order
     bool disabled;
     xulControl->GetDisabled(&disabled);
     if (disabled) {
-      return {};
+      return XULFocusability::NeverFocusable();
     }
-    shouldFocus = true;
+    result.mDefaultFocusable = true;
   }
-
-  int32_t tabIndex = -1;
   if (Maybe<int32_t> attrVal = GetTabIndexAttrValue()) {
     // The tabindex attribute was specified, so the element becomes
     // focusable.
-    shouldFocus = true;
-    tabIndex = attrVal.value();
+    result.mDefaultFocusable = true;
+    result.mForcedFocusable.emplace(true);
+    result.mForcedTabIndexIfFocusable.emplace(attrVal.value());
   }
-
-  if (xulControl && shouldFocus && sTabFocusModelAppliesToXUL &&
-      !(sTabFocusModel & eTabFocus_formElementsMask)) {
+  if (xulControl && sTabFocusModelAppliesToXUL &&
+      !(sTabFocusModel & eTabFocus_formElementsMask) && IsNonList(mNodeInfo)) {
     // By default, the tab focus model doesn't apply to xul element on any
     // system but OS X. on OS X we're following it for UI elements (XUL) as
     // sTabFocusModel is based on "Full Keyboard Access" system setting (see
@@ -415,12 +412,18 @@ Focusable nsXULElement::IsFocusableWithoutStyle(bool aWithMouse) {
     // list) should always be focusable (textboxes are handled as html:input)
     // For compatibility, we only do this for controls, otherwise elements
     // like <browser> cannot take this focus.
-    if (IsNonList(mNodeInfo)) {
-      tabIndex = -1;
-    }
+    result.mForcedTabIndexIfFocusable = Some(-1);
   }
+  return result;
+}
 
-  return {shouldFocus, tabIndex};
+// XUL elements are not focusable unless explicitly opted-into it with
+// -moz-user-focus: normal, or the tabindex attribute.
+Focusable nsXULElement::IsFocusableWithoutStyle(bool aWithMouse) {
+  const auto focusability = GetXULFocusability(aWithMouse);
+  const bool focusable = focusability.mDefaultFocusable;
+  return {focusable,
+          focusable ? focusability.mForcedTabIndexIfFocusable.valueOr(-1) : -1};
 }
 
 bool nsXULElement::HasMenu() {
