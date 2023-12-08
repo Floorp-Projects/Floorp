@@ -26,12 +26,14 @@
 #endif
 
 #include "mozilla/StaticPrefs_media.h"
+#include "mozilla/gfx/gfxVars.h"
 
 namespace mozilla {
 
 LazyLogModule sPEMLog("PlatformEncoderModule");
 
 PEMFactory::PEMFactory() {
+  gfx::gfxVars::Initialize();
 #ifdef MOZ_APPLEMEDIA
   RefPtr<PlatformEncoderModule> m(new AppleEncoderModule());
   mModules.AppendElement(m);
