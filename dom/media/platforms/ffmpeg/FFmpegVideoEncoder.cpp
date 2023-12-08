@@ -8,10 +8,14 @@
 
 #include "FFmpegLog.h"
 #include "FFmpegRuntimeLinker.h"
+#include "ImageContainer.h"
 #include "VPXDecoder.h"
 #include "libavutil/pixfmt.h"
+#include "mozilla/CheckedInt.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
+#include "mozilla/dom/ImageUtils.h"
 #include "nsPrintfCString.h"
 
 // The ffmpeg namespace is introduced to avoid the PixelFormat's name conflicts
@@ -329,18 +333,17 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessEncode(
 
   FFMPEGV_LOG("ProcessEncode");
 
+#if LIBAVCODEC_VERSION_MAJOR < 58
+  // TODO(Bug 1868253): implement encode with avcodec_encode_video2().
+  FFMPEGV_LOG("FFmpegVideoEncoder needs ffmpeg 58 at least.");
+  return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
+#else
+
   RefPtr<const VideoData> sample(aSample->As<const VideoData>());
   MOZ_ASSERT(sample);
 
-  if (!PrepareFrame()) {
-    FFMPEGV_LOG("failed to allocate frame");
-    return EncodePromise::CreateAndReject(
-        MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                    RESULT_DETAIL("Unable to allocate frame")),
-        __func__);
-  }
-
-  return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
+  return EncodeWithModernAPIs(sample);
+#endif
 }
 
 template <typename ConfigType>
@@ -413,6 +416,240 @@ void FFmpegVideoEncoder<LIBAV_VER, ConfigType>::DestroyFrame() {
 #endif
     mFrame = nullptr;
   }
+}
+
+// avcodec_send_frame and avcodec_receive_packet were introduced in version 58.
+#if LIBAVCODEC_VERSION_MAJOR >= 58
+// TODO: Bug 1868907 - Avoid copy in FFmpegVideoEncoder::Encode.
+static bool CopyPlane(uint8_t* aDst, const uint8_t* aSrc,
+                      const gfx::IntSize& aSize, int32_t aStride) {
+  int32_t height = aSize.height;
+  int32_t width = aSize.width;
+
+  MOZ_RELEASE_ASSERT(width <= aStride);
+
+  CheckedInt<size_t> size(height);
+  size *= aStride;
+
+  if (!size.isValid()) {
+    return false;
+  }
+
+  PodCopy(aDst, aSrc, size.value());
+  return true;
+}
+
+template <typename ConfigType>
+RefPtr<MediaDataEncoder::EncodePromise>
+FFmpegVideoEncoder<LIBAV_VER, ConfigType>::EncodeWithModernAPIs(
+    RefPtr<const VideoData> aSample) {
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+  MOZ_ASSERT(mCodecContext);
+  MOZ_ASSERT(aSample);
+
+  // Validate input.
+  if (!aSample->mImage) {
+    FFMPEGV_LOG("No image");
+    return EncodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_ILLEGAL_INPUT,
+                    RESULT_DETAIL("No image in sample")),
+        __func__);
+  } else if (aSample->mImage->GetSize().IsEmpty()) {
+    FFMPEGV_LOG("image width or height is invalid");
+    return EncodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_ILLEGAL_INPUT,
+                    RESULT_DETAIL("Invalid image size")),
+        __func__);
+  }
+
+  // Check image format.
+  const dom::ImageUtils imageUtils(aSample->mImage);
+  ffmpeg::FFmpegPixelFormat fmt = ffmpeg::FFMPEG_PIX_FMT_NONE;
+  // TODO: Support types other than YUV and NV.
+  if (aSample->mImage->AsPlanarYCbCrImage() || aSample->mImage->AsNVImage()) {
+    fmt = ffmpeg::ToSupportedFFmpegPixelFormat(imageUtils.GetFormat());
+  }
+  if (fmt == ffmpeg::FFMPEG_PIX_FMT_NONE) {
+    FFMPEGV_LOG(
+        "image type %s is not supported",
+        dom::ImageBitmapFormatValues::GetString(imageUtils.GetFormat()).data());
+    return EncodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
+                    RESULT_DETAIL("Unsupport image type")),
+        __func__);
+  }
+
+  // Allocate AVFrame.
+  if (!PrepareFrame()) {
+    FFMPEGV_LOG("failed to allocate frame");
+    return EncodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                    RESULT_DETAIL("Unable to allocate frame")),
+        __func__);
+  }
+
+  // Set AVFrame properties for its internal data allocation.
+  mFrame->format = fmt;
+  mFrame->width = static_cast<int>(aSample->mImage->GetSize().width);
+  mFrame->height = static_cast<int>(aSample->mImage->GetSize().height);
+
+  // Allocate AVFrame data.
+  if (mLib->av_frame_get_buffer(mFrame, 0) < 0) {
+    FFMPEGV_LOG("failed to allocate frame data");
+    return EncodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                    RESULT_DETAIL("Unable to allocate frame data")),
+        __func__);
+  }
+
+  // Make sure AVFrame is writable.
+  if (mLib->av_frame_make_writable(mFrame) < 0) {
+    FFMPEGV_LOG("failed to make frame writable");
+    return EncodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_NOT_AVAILABLE,
+                    RESULT_DETAIL("Unable to make frame writable")),
+        __func__);
+  }
+
+  // Fill AVFrame data.
+  if (aSample->mImage->AsPlanarYCbCrImage()) {
+    const layers::PlanarYCbCrData* data =
+        aSample->mImage->AsPlanarYCbCrImage()->GetData();
+    if (!data) {
+      FFMPEGV_LOG("No data in YCbCr image");
+      return EncodePromise::CreateAndReject(
+          MediaResult(NS_ERROR_ILLEGAL_INPUT,
+                      RESULT_DETAIL("Unable to get image data")),
+          __func__);
+    }
+
+    uint8_t* yPlane = mFrame->data[0];
+    uint8_t* uPlane = mFrame->data[1];
+    uint8_t* vPlane = mFrame->data[2];
+    // TODO: Handle alpha channel when AV_PIX_FMT_YUVA* is supported.
+
+    // TODO: Check mFrame->linesize?
+
+    // TODO: Evaluate if we need to take data->mYSkip, data->mCbSkip, and
+    // data->mCrSkip into account when cloning the data.
+    if (!CopyPlane(yPlane, data->mYChannel, data->YDataSize(),
+                   data->mYStride) ||
+        !CopyPlane(uPlane, data->mCbChannel, data->CbCrDataSize(),
+                   data->mCbCrStride) ||
+        !CopyPlane(vPlane, data->mCrChannel, data->CbCrDataSize(),
+                   data->mCbCrStride)) {
+      FFMPEGV_LOG("Input YCbCr image is too big");
+      return EncodePromise::CreateAndReject(
+          MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
+                      RESULT_DETAIL("Input image is too big")),
+          __func__);
+    }
+  } else {
+    MOZ_ASSERT(aSample->mImage->AsNVImage());
+    const layers::PlanarYCbCrData* data =
+        aSample->mImage->AsNVImage()->GetData();
+    if (!data) {
+      FFMPEGV_LOG("No data in NV image");
+      return EncodePromise::CreateAndReject(
+          MediaResult(NS_ERROR_ILLEGAL_INPUT,
+                      RESULT_DETAIL("Input image is too big")),
+          __func__);
+    }
+
+    uint8_t* yPlane = mFrame->data[0];
+    uint8_t* uvPlane = mFrame->data[1];
+
+    // TODO: Evaluate if we need to take data->mYSkip, data->mCbSkip, and
+    // data->mCrSkip into account when cloning the data.
+    if (!CopyPlane(yPlane, data->mYChannel, data->YDataSize(),
+                   data->mYStride) ||
+        !CopyPlane(uvPlane, data->mCbChannel, data->CbCrDataSize(),
+                   data->mCbCrStride)) {
+      FFMPEGV_LOG("Input NV image is too big");
+      return EncodePromise::CreateAndReject(
+          MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
+                      RESULT_DETAIL("Input image is too big")),
+          __func__);
+    }
+  }
+
+  FFMPEGV_LOG(
+      "Fill AVFrame with %s image data",
+      dom::ImageBitmapFormatValues::GetString(imageUtils.GetFormat()).data());
+
+  // Set presentation timestamp of the AVFrame.
+  // The unit of pts is AVCodecContext's time_base, which is the reciprocal of
+  // the frame rate.
+  mFrame->pts = aSample->mTime.ToTicksAtRate(mConfig.mFramerate);
+
+  // Initialize AVPacket.
+  AVPacket* pkt = mLib->av_packet_alloc();
+  if (!pkt) {
+    FFMPEGV_LOG("failed to allocate packet");
+    return EncodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                    RESULT_DETAIL("Unable to allocate packet")),
+        __func__);
+  }
+
+  // Send frame and receive packets.
+
+  if (mLib->avcodec_send_frame(mCodecContext, mFrame) < 0) {
+    // In theory, avcodec_send_frame could sent -EAGAIN to signal its internal
+    // buffers is full. In practice this can't happen as we only feed one frame
+    // at a time, and we immediately call avcodec_receive_packet right after.
+    // TODO: Create a NS_ERROR_DOM_MEDIA_ENCODE_ERR in ErrorList.py?
+    FFMPEGV_LOG("avcodec_send_frame error");
+    return EncodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                    RESULT_DETAIL("avcodec_send_frame error")),
+        __func__);
+  }
+
+  EncodedData output;
+  while (true) {
+    int ret = mLib->avcodec_receive_packet(mCodecContext, pkt);
+    if (ret == AVERROR(EAGAIN)) {
+      // The encoder is asking for more inputs.
+      FFMPEGV_LOG("encoder is asking for more input!");
+      break;
+    }
+
+    if (ret < 0) {
+      // AVERROR_EOF is returned when the encoder has been fully flushed, but it
+      // shouldn't happen here.
+      FFMPEGV_LOG("avcodec_receive_packet error");
+      return EncodePromise::CreateAndReject(
+          MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                      RESULT_DETAIL("avcodec_receive_packet error")),
+          __func__);
+    }
+
+    RefPtr<MediaRawData> d = ToMediaRawData(pkt);
+    mLib->av_packet_unref(pkt);
+    if (!d) {
+      FFMPEGV_LOG("failed to create a MediaRawData from the AVPacket");
+      return EncodePromise::CreateAndReject(
+          MediaResult(
+              NS_ERROR_OUT_OF_MEMORY,
+              RESULT_DETAIL("Unable to get MediaRawData from AVPacket")),
+          __func__);
+    }
+    output.AppendElement(std::move(d));
+  }
+
+  FFMPEGV_LOG("get %zu encoded data", output.Length());
+  return EncodePromise::CreateAndResolve(std::move(output), __func__);
+}
+#endif
+
+template <typename ConfigType>
+RefPtr<MediaRawData> FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ToMediaRawData(
+    AVPacket* aPacket) {
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+  MOZ_ASSERT(aPacket);
+  // TODO: Implement this.
+  return nullptr;
 }
 
 template class FFmpegVideoEncoder<LIBAV_VER, MediaDataEncoder::VP8Config>;
