@@ -119,7 +119,11 @@ JSObject* JSAPIRuntimeTest::createGlobal(JSPrincipals* principals) {
   JS::RealmOptions options;
   options.creationOptions()
       .setWeakRefsEnabled(JS::WeakRefSpecifier::EnabledWithCleanupSome)
-      .setSharedMemoryAndAtomicsEnabled(true);
+      .setSharedMemoryAndAtomicsEnabled(true)
+#ifdef NIGHTLY_BUILD
+      .setSymbolsAsWeakMapKeysEnabled(true)
+#endif
+      ;
   newGlobal = JS_NewGlobalObject(cx, getGlobalClass(), principals,
                                  JS::FireOnNewGlobalHook, options);
   if (!newGlobal) {

@@ -1,9 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 function run_test()
 {
+  if (!Services.prefs.getBoolPref("javascript.options.experimental.symbols_as_weakmap_keys")) {
+    return;
+  }
+
   var strKey = new String("strKey");
   var symKey = Symbol("symKey");
 
