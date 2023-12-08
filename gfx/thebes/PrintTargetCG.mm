@@ -8,7 +8,7 @@
 #include "cairo.h"
 #include "cairo-quartz.h"
 #include "mozilla/gfx/HelpersCairo.h"
-#include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_print.h"
 #include "nsObjCExceptions.h"
 #include "nsString.h"
 #include "nsIOutputStream.h"
@@ -229,7 +229,8 @@ nsresult PrintTargetCG::BeginPage(const IntSize& aSizeInPoints) {
 
   unsigned int width;
   unsigned int height;
-  if (StaticPrefs::layout_css_page_orientation_enabled()) {
+  if (StaticPrefs::
+          print_save_as_pdf_use_page_rule_size_as_paper_size_enabled()) {
     width = static_cast<unsigned int>(aSizeInPoints.width);
     height = static_cast<unsigned int>(aSizeInPoints.height);
   } else {
@@ -260,7 +261,8 @@ nsresult PrintTargetCG::BeginPage(const IntSize& aSizeInPoints) {
     // anyway. But Core Graphics output is better than Cairo's in some cases.
     //
     // For now, we support switching sheet orientation only:
-    if (StaticPrefs::layout_css_page_orientation_enabled()) {
+    if (StaticPrefs::
+            print_save_as_pdf_use_page_rule_size_as_paper_size_enabled()) {
       ::PMOrientation pageOrientation =
           width < height ? kPMPortrait : kPMLandscape;
       ::PMSetOrientation(mPageFormat, pageOrientation, kPMUnlocked);
