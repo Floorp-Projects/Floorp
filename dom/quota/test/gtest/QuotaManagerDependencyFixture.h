@@ -24,9 +24,9 @@ class QuotaManagerDependencyFixture : public testing::Test {
   static void ShutdownFixture();
 
   static void InitializeStorage();
-  static void IsStorageInitialized(bool* aResult);
-  static void AssertStorageIsInitialized();
-  static void AssertStorageIsNotInitialized();
+  static void StorageInitialized(bool* aResult);
+  static void AssertStorageInitialized();
+  static void AssertStorageNotInitialized();
   static void ShutdownStorage();
 
   static void ClearStoragesForOrigin(const OriginMetadata& aOriginMetadata);

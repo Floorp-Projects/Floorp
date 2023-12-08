@@ -115,7 +115,7 @@ void QuotaManagerDependencyFixture::InitializeStorage() {
 }
 
 // static
-void QuotaManagerDependencyFixture::IsStorageInitialized(bool* aResult) {
+void QuotaManagerDependencyFixture::StorageInitialized(bool* aResult) {
   ASSERT_TRUE(aResult);
 
   PerformOnBackgroundThread([aResult]() {
@@ -141,16 +141,16 @@ void QuotaManagerDependencyFixture::IsStorageInitialized(bool* aResult) {
 }
 
 // static
-void QuotaManagerDependencyFixture::AssertStorageIsInitialized() {
+void QuotaManagerDependencyFixture::AssertStorageInitialized() {
   bool result;
-  ASSERT_NO_FATAL_FAILURE(IsStorageInitialized(&result));
+  ASSERT_NO_FATAL_FAILURE(StorageInitialized(&result));
   ASSERT_TRUE(result);
 }
 
 // static
-void QuotaManagerDependencyFixture::AssertStorageIsNotInitialized() {
+void QuotaManagerDependencyFixture::AssertStorageNotInitialized() {
   bool result;
-  ASSERT_NO_FATAL_FAILURE(IsStorageInitialized(&result));
+  ASSERT_NO_FATAL_FAILURE(StorageInitialized(&result));
   ASSERT_FALSE(result);
 }
 

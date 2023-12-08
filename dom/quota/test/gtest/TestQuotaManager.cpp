@@ -26,7 +26,7 @@ class TestQuotaManager : public QuotaManagerDependencyFixture {
 TEST_F(TestQuotaManager, OpenStorageDirectory_OngoingWithScheduledShutdown) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -126,7 +126,7 @@ TEST_F(TestQuotaManager, OpenStorageDirectory_OngoingWithScheduledShutdown) {
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -137,7 +137,7 @@ TEST_F(TestQuotaManager,
        OpenStorageDirectory_OngoingWithExclusiveDirectoryLock) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -211,7 +211,7 @@ TEST_F(TestQuotaManager,
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -221,7 +221,7 @@ TEST_F(TestQuotaManager,
 TEST_F(TestQuotaManager, OpenStorageDirectory_Finished) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -270,7 +270,7 @@ TEST_F(TestQuotaManager, OpenStorageDirectory_Finished) {
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -280,7 +280,7 @@ TEST_F(TestQuotaManager, OpenStorageDirectory_Finished) {
 TEST_F(TestQuotaManager, OpenStorageDirectory_FinishedWithScheduledShutdown) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -349,7 +349,7 @@ TEST_F(TestQuotaManager, OpenStorageDirectory_FinishedWithScheduledShutdown) {
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -361,7 +361,7 @@ TEST_F(TestQuotaManager,
        OpenStorageDirectory_FinishedWithExclusiveClientDirectoryLock) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -424,7 +424,7 @@ TEST_F(TestQuotaManager,
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -434,7 +434,7 @@ TEST_F(TestQuotaManager,
 TEST_F(TestQuotaManager, OpenClientDirectory_OngoingWithScheduledShutdown) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -526,7 +526,7 @@ TEST_F(TestQuotaManager, OpenClientDirectory_OngoingWithScheduledShutdown) {
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -537,7 +537,7 @@ TEST_F(TestQuotaManager,
        OpenClientDirectory_OngoingWithExclusiveDirectoryLock) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -602,7 +602,7 @@ TEST_F(TestQuotaManager,
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -612,7 +612,7 @@ TEST_F(TestQuotaManager,
 TEST_F(TestQuotaManager, OpenClientDirectory_Finished) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -651,7 +651,7 @@ TEST_F(TestQuotaManager, OpenClientDirectory_Finished) {
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -661,7 +661,7 @@ TEST_F(TestQuotaManager, OpenClientDirectory_Finished) {
 TEST_F(TestQuotaManager, OpenClientDirectory_FinishedWithScheduledShutdown) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -721,7 +721,7 @@ TEST_F(TestQuotaManager, OpenClientDirectory_FinishedWithScheduledShutdown) {
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -733,7 +733,7 @@ TEST_F(TestQuotaManager,
        OpenClientDirectory_FinishedWithOtherExclusiveClientDirectoryLock) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -786,7 +786,7 @@ TEST_F(TestQuotaManager,
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -795,7 +795,7 @@ TEST_F(TestQuotaManager,
 TEST_F(TestQuotaManager, InitializeStorage_Simple) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -817,7 +817,7 @@ TEST_F(TestQuotaManager, InitializeStorage_Simple) {
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -826,7 +826,7 @@ TEST_F(TestQuotaManager, InitializeStorage_Simple) {
 TEST_F(TestQuotaManager, InitializeStorage_Ongoing) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -859,7 +859,7 @@ TEST_F(TestQuotaManager, InitializeStorage_Ongoing) {
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -869,7 +869,7 @@ TEST_F(TestQuotaManager, InitializeStorage_Ongoing) {
 TEST_F(TestQuotaManager, InitializeStorage_OngoingWithScheduledShutdown) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -903,7 +903,7 @@ TEST_F(TestQuotaManager, InitializeStorage_OngoingWithScheduledShutdown) {
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -913,7 +913,7 @@ TEST_F(TestQuotaManager, InitializeStorage_OngoingWithScheduledShutdown) {
 TEST_F(TestQuotaManager, InitializeStorage_OngoingWithExclusiveDirectoryLock) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -966,7 +966,7 @@ TEST_F(TestQuotaManager, InitializeStorage_OngoingWithExclusiveDirectoryLock) {
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -977,7 +977,7 @@ TEST_F(TestQuotaManager, InitializeStorage_OngoingWithExclusiveDirectoryLock) {
 TEST_F(TestQuotaManager, InitializeStorage_OngoingWithClientDirectoryLocks) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -1020,7 +1020,7 @@ TEST_F(TestQuotaManager, InitializeStorage_OngoingWithClientDirectoryLocks) {
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -1032,7 +1032,7 @@ TEST_F(TestQuotaManager,
        InitializeStorage_OngoingWithClientDirectoryLocksAndScheduledShutdown) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -1079,7 +1079,7 @@ TEST_F(TestQuotaManager,
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -1088,7 +1088,7 @@ TEST_F(TestQuotaManager,
 TEST_F(TestQuotaManager, InitializeStorage_Finished) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -1125,7 +1125,7 @@ TEST_F(TestQuotaManager, InitializeStorage_Finished) {
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -1135,7 +1135,7 @@ TEST_F(TestQuotaManager, InitializeStorage_Finished) {
 TEST_F(TestQuotaManager, InitializeStorage_FinishedWithScheduledShutdown) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -1183,7 +1183,7 @@ TEST_F(TestQuotaManager, InitializeStorage_FinishedWithScheduledShutdown) {
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -1194,7 +1194,7 @@ TEST_F(TestQuotaManager, InitializeStorage_FinishedWithScheduledShutdown) {
 TEST_F(TestQuotaManager, InitializeStorage_FinishedWithClientDirectoryLocks) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -1261,7 +1261,7 @@ TEST_F(TestQuotaManager, InitializeStorage_FinishedWithClientDirectoryLocks) {
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -1275,7 +1275,7 @@ TEST_F(TestQuotaManager,
        InitializeStorage_FinishedWithClientDirectoryLocksAndScheduledShutdown) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -1360,7 +1360,7 @@ TEST_F(TestQuotaManager,
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -1369,11 +1369,11 @@ TEST_F(TestQuotaManager,
 TEST_F(TestQuotaManager, ShutdownStorage_Simple) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   ASSERT_NO_FATAL_FAILURE(InitializeStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -1395,7 +1395,7 @@ TEST_F(TestQuotaManager, ShutdownStorage_Simple) {
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -1404,11 +1404,11 @@ TEST_F(TestQuotaManager, ShutdownStorage_Simple) {
 TEST_F(TestQuotaManager, ShutdownStorage_Ongoing) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   ASSERT_NO_FATAL_FAILURE(InitializeStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -1441,7 +1441,7 @@ TEST_F(TestQuotaManager, ShutdownStorage_Ongoing) {
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
@@ -1451,11 +1451,11 @@ TEST_F(TestQuotaManager, ShutdownStorage_Ongoing) {
 TEST_F(TestQuotaManager, ShutdownStorage_OngoingWithScheduledInitialization) {
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   ASSERT_NO_FATAL_FAILURE(InitializeStorage());
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageInitialized());
 
   PerformOnBackgroundThread([]() {
     QuotaManager* quotaManager = QuotaManager::Get();
@@ -1489,7 +1489,7 @@ TEST_F(TestQuotaManager, ShutdownStorage_OngoingWithScheduledInitialization) {
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
 
-  ASSERT_NO_FATAL_FAILURE(AssertStorageIsNotInitialized());
+  ASSERT_NO_FATAL_FAILURE(AssertStorageNotInitialized());
 
   ASSERT_NO_FATAL_FAILURE(ShutdownStorage());
 }
