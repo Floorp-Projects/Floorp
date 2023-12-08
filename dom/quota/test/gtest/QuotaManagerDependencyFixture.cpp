@@ -69,7 +69,7 @@ void QuotaManagerDependencyFixture::InitializeFixture() {
   nsresult rv = observer->Observe(nullptr, "profile-do-change", nullptr);
   ASSERT_NS_SUCCEEDED(rv);
 
-  ASSERT_NO_FATAL_FAILURE(StorageInitialized());
+  ASSERT_NO_FATAL_FAILURE(EnsureQuotaManager());
 
   QuotaManager* quotaManager = QuotaManager::Get();
   ASSERT_TRUE(quotaManager);
@@ -112,38 +112,6 @@ void QuotaManagerDependencyFixture::InitializeStorage() {
 
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
   });
-}
-
-// static
-void QuotaManagerDependencyFixture::StorageInitialized(bool* aResult) {
-  AutoJSAPI jsapi;
-
-  bool ok = jsapi.Init(xpc::PrivilegedJunkScope());
-  ASSERT_TRUE(ok);
-
-  nsCOMPtr<nsIQuotaManagerService> qms = QuotaManagerService::GetOrCreate();
-  ASSERT_TRUE(qms);
-
-  nsCOMPtr<nsIQuotaRequest> request;
-  nsresult rv = qms->StorageInitialized(getter_AddRefs(request));
-  ASSERT_NS_SUCCEEDED(rv);
-
-  RefPtr<RequestResolver> resolver = new RequestResolver();
-
-  rv = request->SetCallback(resolver);
-  ASSERT_NS_SUCCEEDED(rv);
-
-  SpinEventLoopUntil("Promise is fulfilled"_ns,
-                     [&resolver]() { return resolver->Done(); });
-
-  if (aResult) {
-    nsCOMPtr<nsIVariant> result;
-    rv = request->GetResult(getter_AddRefs(result));
-    ASSERT_NS_SUCCEEDED(rv);
-
-    rv = result->GetAsBool(aResult);
-    ASSERT_NS_SUCCEEDED(rv);
-  }
 }
 
 // static
@@ -247,6 +215,33 @@ OriginMetadata QuotaManagerDependencyFixture::GetOtherTestOriginMetadata() {
 // static
 ClientMetadata QuotaManagerDependencyFixture::GetOtherTestClientMetadata() {
   return {GetOtherTestOriginMetadata(), Client::SDB};
+}
+
+// static
+void QuotaManagerDependencyFixture::EnsureQuotaManager() {
+  AutoJSAPI jsapi;
+
+  bool ok = jsapi.Init(xpc::PrivilegedJunkScope());
+  ASSERT_TRUE(ok);
+
+  nsCOMPtr<nsIQuotaManagerService> qms = QuotaManagerService::GetOrCreate();
+  ASSERT_TRUE(qms);
+
+  // In theory, any nsIQuotaManagerService method which ensures quota manager
+  // on the PBackground thread, could be called here. `StorageName` was chosen
+  // because it doesn't need to do any directory locking or IO.
+  // XXX Consider adding a dedicated nsIQuotaManagerService method for this.
+  nsCOMPtr<nsIQuotaRequest> request;
+  nsresult rv = qms->StorageName(getter_AddRefs(request));
+  ASSERT_NS_SUCCEEDED(rv);
+
+  RefPtr<RequestResolver> resolver = new RequestResolver();
+
+  rv = request->SetCallback(resolver);
+  ASSERT_NS_SUCCEEDED(rv);
+
+  SpinEventLoopUntil("Promise is fulfilled"_ns,
+                     [&resolver]() { return resolver->Done(); });
 }
 
 nsCOMPtr<nsISerialEventTarget> QuotaManagerDependencyFixture::sBackgroundTarget;

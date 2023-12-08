@@ -24,7 +24,6 @@ class QuotaManagerDependencyFixture : public testing::Test {
   static void ShutdownFixture();
 
   static void InitializeStorage();
-  static void StorageInitialized(bool* aResult = nullptr);
   static void IsStorageInitialized(bool* aResult);
   static void AssertStorageIsInitialized();
   static void AssertStorageIsNotInitialized();
@@ -128,6 +127,8 @@ class QuotaManagerDependencyFixture : public testing::Test {
   static ClientMetadata GetOtherTestClientMetadata();
 
  private:
+  static void EnsureQuotaManager();
+
   static nsCOMPtr<nsISerialEventTarget> sBackgroundTarget;
 };
 
