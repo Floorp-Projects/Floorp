@@ -7,9 +7,26 @@
 #include "FFmpegVideoEncoder.h"
 
 #include "FFmpegRuntimeLinker.h"
+#include "VPXDecoder.h"
 #include "nsPrintfCString.h"
 
 namespace mozilla {
+
+template <>
+AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(const nsACString& aMimeType) {
+#if LIBAVCODEC_VERSION_MAJOR >= 54
+  if (VPXDecoder::IsVP8(aMimeType)) {
+    return AV_CODEC_ID_VP8;
+  }
+#endif
+
+#if LIBAVCODEC_VERSION_MAJOR >= 55
+  if (VPXDecoder::IsVP9(aMimeType)) {
+    return AV_CODEC_ID_VP9;
+  }
+#endif
+  return AV_CODEC_ID_NONE;
+}
 
 RefPtr<MediaDataEncoder::InitPromise> FFmpegVideoEncoder<LIBAV_VER>::Init() {
   return InitPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
