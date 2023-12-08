@@ -15,7 +15,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/gfx/CanvasManagerParent.h"
 #include "mozilla/gfx/Logging.h"
-#include "mozilla/layers/FenceD3D11.h"
 #include "mozilla/layers/GpuProcessD3D11TextureMap.h"
 #include "mozilla/layers/TextureD3D11.h"
 
@@ -26,7 +25,7 @@ RenderDXGITextureHost::RenderDXGITextureHost(
     HANDLE aHandle, Maybe<layers::GpuProcessTextureId>& aGpuProcessTextureId,
     uint32_t aArrayIndex, gfx::SurfaceFormat aFormat,
     gfx::ColorSpace2 aColorSpace, gfx::ColorRange aColorRange,
-    gfx::IntSize aSize, bool aHasKeyedMutex, gfx::FenceInfo& aAcquireFenceInfo)
+    gfx::IntSize aSize, bool aHasKeyedMutex)
     : mHandle(aHandle),
       mGpuProcessTextureId(aGpuProcessTextureId),
       mArrayIndex(aArrayIndex),
@@ -38,7 +37,6 @@ RenderDXGITextureHost::RenderDXGITextureHost(
       mColorRange(aColorRange),
       mSize(aSize),
       mHasKeyedMutex(aHasKeyedMutex),
-      mAcquireFenceInfo(aAcquireFenceInfo),
       mLocked(false) {
   MOZ_COUNT_CTOR_INHERITED(RenderDXGITextureHost, RenderTextureHost);
   MOZ_ASSERT((mFormat != gfx::SurfaceFormat::NV12 &&
@@ -358,20 +356,6 @@ wr::WrExternalImage RenderDXGITextureHost::Lock(uint8_t aChannelIndex,
 
 bool RenderDXGITextureHost::LockInternal() {
   if (!mLocked) {
-    if (mAcquireFenceInfo.mFenceHandle) {
-      if (!mAcquireFence) {
-        mAcquireFence = layers::FenceD3D11::CreateFromHandle(
-            mAcquireFenceInfo.mFenceHandle);
-      }
-      if (mAcquireFence) {
-        MOZ_ASSERT(mAcquireFenceInfo.mFenceHandle == mAcquireFence->mHandle);
-
-        mAcquireFence->Update(mAcquireFenceInfo.mFenceValue);
-        RefPtr<ID3D11Device> d3d11Device =
-            gfx::DeviceManagerDx::Get()->GetCompositorDevice();
-        mAcquireFence->Wait(d3d11Device);
-      }
-    }
     if (mKeyedMutex) {
       HRESULT hr = mKeyedMutex->AcquireSync(0, 10000);
       if (hr != S_OK) {
@@ -457,8 +441,7 @@ gfx::IntSize RenderDXGITextureHost::GetSize(uint8_t aChannelIndex) const {
 }
 
 bool RenderDXGITextureHost::SyncObjectNeeded() {
-  return mGpuProcessTextureId.isNothing() &&
-         (!mHasKeyedMutex || !mAcquireFenceInfo.mFenceHandle);
+  return mGpuProcessTextureId.isNothing() && !mHasKeyedMutex;
 }
 
 RenderDXGIYCbCrTextureHost::RenderDXGIYCbCrTextureHost(

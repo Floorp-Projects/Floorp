@@ -21,7 +21,6 @@
 #include "ipc/EnumSerializer.h"
 #include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
-#include "mozilla/gfx/FileHandleWrapper.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/ScaleFactor.h"
 #include "mozilla/gfx/ScaleFactors2D.h"
@@ -29,9 +28,7 @@
 #include "nsRect.h"
 #include "nsRegion.h"
 #include "mozilla/Array.h"
-#include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
-#include "mozilla/ipc/ProtocolMessageUtils.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/ShmemMessageUtils.h"
 
@@ -1189,24 +1186,6 @@ struct ParamTraits<mozilla::fontlist::Pointer> {
   }
 };
 
-template <>
-struct ParamTraits<mozilla::gfx::FenceInfo> {
-  typedef mozilla::gfx::FenceInfo paramType;
-
-  static void Write(MessageWriter* aWriter, const paramType& aParam) {
-    WriteParam(aWriter, aParam.mFenceHandle);
-    WriteParam(aWriter, aParam.mFenceValue);
-  }
-
-  static bool Read(MessageReader* aReader, paramType* aResult) {
-    if (!ReadParam(aReader, &aResult->mFenceHandle) ||
-        !ReadParam(aReader, &aResult->mFenceValue)) {
-      return false;
-    }
-    return true;
-  }
-};
-
 }  // namespace IPC
 
 namespace mozilla {
@@ -1256,43 +1235,6 @@ struct IPDLParamTraits<gfx::PaintFragment> {
     memcpy(aResult->mRecording.mData, shmem.get<uint8_t>(),
            shmem.Size<uint8_t>());
     aActor->DeallocShmem(shmem);
-    return true;
-  }
-};
-
-template <>
-struct IPDLParamTraits<gfx::FileHandleWrapper*> {
-  static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
-                    gfx::FileHandleWrapper* aParam) {
-    if (!aParam) {
-      WriteIPDLParam(aWriter, aActor, false);
-      return;
-    }
-    WriteIPDLParam(aWriter, aActor, true);
-
-    mozilla::ipc::FileDescriptor desc(aParam->GetHandle());
-    WriteIPDLParam(aWriter, aActor, desc);
-  }
-
-  static bool Read(IPC::MessageReader* aReader, IProtocol* aActor,
-                   RefPtr<gfx::FileHandleWrapper>* aResult) {
-    *aResult = nullptr;
-    bool notnull = false;
-    if (!ReadIPDLParam(aReader, aActor, &notnull)) {
-      return false;
-    }
-
-    if (!notnull) {
-      return true;
-    }
-
-    mozilla::ipc::FileDescriptor desc;
-    if (!ReadIPDLParam(aReader, aActor, &desc)) {
-      return false;
-    }
-    auto wrapper =
-        MakeRefPtr<gfx::FileHandleWrapper>(desc.TakePlatformHandle());
-    *aResult = std::move(wrapper);
     return true;
   }
 };
