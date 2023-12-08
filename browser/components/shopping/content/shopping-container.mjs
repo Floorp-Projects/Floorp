@@ -160,6 +160,28 @@ export class ShoppingContainer extends MozLitElement {
   }
 
   getAnalysisDetailsTemplate() {
+    /* At present, en is supported as the default language for reviews. As we support more sites,
+     * update `lang` accordingly if highlights need to be displayed in other languages. */
+    let lang;
+    let hostname;
+    try {
+      hostname = new URL(this.productUrl)?.hostname;
+    } catch (e) {
+      console.error(
+        `Unknown product url ${this.productUrl} for review highlights. Defaulting to en.`
+      );
+    }
+
+    switch (hostname) {
+      case "www.amazon.fr":
+        lang = "fr";
+        break;
+      case "www.amazon.de":
+        lang = "de";
+        break;
+      default:
+        lang = "en";
+    }
     return html`
       <review-reliability letter=${this.data.grade}></review-reliability>
       <adjusted-rating
@@ -167,6 +189,7 @@ export class ShoppingContainer extends MozLitElement {
       ></adjusted-rating>
       <review-highlights
         .highlights=${this.data.highlights}
+        lang=${lang}
       ></review-highlights>
     `;
   }
