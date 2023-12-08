@@ -53,6 +53,8 @@ class FFmpegVideoEncoder<LIBAV_VER, ConfigType> final
   int OpenCodecContext(const AVCodec* aCodec, AVDictionary** aOptions)
       MOZ_EXCLUDES(sMutex);
   void CloseCodecContext() MOZ_EXCLUDES(sMutex);
+  bool PrepareFrame();
+  void DestroyFrame();
 
   // This refers to a static FFmpegLibWrapper, so raw pointer is adequate.
   const FFmpegLibWrapper* mLib;
@@ -62,6 +64,7 @@ class FFmpegVideoEncoder<LIBAV_VER, ConfigType> final
 
   // mTaskQueue only.
   AVCodecContext* mCodecContext;
+  AVFrame* mFrame;
 
   // Provide critical-section for open/close mCodecContext.
   // TODO: Merge this with FFmpegDataDecoder's one.

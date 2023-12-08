@@ -159,7 +159,8 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::FFmpegVideoEncoder(
       mCodecID(aCodecID),
       mTaskQueue(aTaskQueue),
       mConfig(aConfig),
-      mCodecContext(nullptr) {
+      mCodecContext(nullptr),
+      mFrame(nullptr) {
   MOZ_ASSERT(mLib);
   MOZ_ASSERT(mTaskQueue);
 };
@@ -331,6 +332,14 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessEncode(
   RefPtr<const VideoData> sample(aSample->As<const VideoData>());
   MOZ_ASSERT(sample);
 
+  if (!PrepareFrame()) {
+    FFMPEGV_LOG("failed to allocate frame");
+    return EncodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                    RESULT_DETAIL("Unable to allocate frame")),
+        __func__);
+  }
+
   return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 }
 
@@ -339,6 +348,8 @@ void FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessShutdown() {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
 
   FFMPEGV_LOG("ProcessShutdown");
+
+  DestroyFrame();
 
   if (mCodecContext) {
     CloseCodecContext();
@@ -362,6 +373,46 @@ void FFmpegVideoEncoder<LIBAV_VER, ConfigType>::CloseCodecContext() {
 
   StaticMutexAutoLock mon(sMutex);
   mLib->avcodec_close(mCodecContext);
+}
+
+template <typename ConfigType>
+bool FFmpegVideoEncoder<LIBAV_VER, ConfigType>::PrepareFrame() {
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+
+  // TODO: Merge the duplicate part with FFmpegDataDecoder's PrepareFrame.
+#if LIBAVCODEC_VERSION_MAJOR >= 55
+  if (mFrame) {
+    mLib->av_frame_unref(mFrame);
+  } else {
+    mFrame = mLib->av_frame_alloc();
+  }
+#elif LIBAVCODEC_VERSION_MAJOR == 54
+  if (mFrame) {
+    mLib->avcodec_get_frame_defaults(mFrame);
+  } else {
+    mFrame = mLib->avcodec_alloc_frame();
+  }
+#else
+  mLib->av_freep(&mFrame);
+  mFrame = mLib->avcodec_alloc_frame();
+#endif
+  return !!mFrame;
+}
+
+template <typename ConfigType>
+void FFmpegVideoEncoder<LIBAV_VER, ConfigType>::DestroyFrame() {
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+  if (mFrame) {
+#if LIBAVCODEC_VERSION_MAJOR >= 55
+    mLib->av_frame_unref(mFrame);
+    mLib->av_frame_free(&mFrame);
+#elif LIBAVCODEC_VERSION_MAJOR == 54
+    mLib->avcodec_free_frame(&mFrame);
+#else
+    mLib->av_freep(&mFrame);
+#endif
+    mFrame = nullptr;
+  }
 }
 
 template class FFmpegVideoEncoder<LIBAV_VER, MediaDataEncoder::VP8Config>;
