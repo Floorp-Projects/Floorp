@@ -25,6 +25,13 @@ bool RecordedEvent::DoWithEventFromStream(
   return DoWithEvent(aStream, aType, aAction);
 }
 
+/* static */
+bool RecordedEvent::DoWithEventFromStream(
+    EventRingBuffer& aStream, EventType aType,
+    const std::function<bool(RecordedEvent*)>& aAction) {
+  return DoWithEvent(aStream, aType, aAction);
+}
+
 std::string RecordedEvent::GetEventName(EventType aType) {
   switch (aType) {
     case DRAWTARGETCREATION:

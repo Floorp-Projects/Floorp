@@ -12,6 +12,8 @@
 #include "mozilla/layers/PCanvasChild.h"
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/WeakPtr.h"
+#include "nsRefPtrHashtable.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 
@@ -36,7 +38,7 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
   /**
    * Release resources until they are next required.
    */
-  void ClearCachedResources();
+  static void ClearCachedResources();
 
   ipc::IPCResult RecvNotifyDeviceChanged();
 
@@ -47,8 +49,12 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
    *
    * @params aTextureType the TextureType to create in the CanvasTranslator.
    */
-  void EnsureRecorder(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                      TextureType aTextureType);
+  void EnsureRecorder(TextureType aTextureType);
+
+  /**
+   * Send a messsage to our CanvasParent to resume translation.
+   */
+  void ResumeTranslation();
 
   /**
    * Clean up IPDL actor.
@@ -105,8 +111,6 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
    */
   void RecordEvent(const gfx::RecordedEvent& aEvent);
 
-  int64_t CreateCheckpoint();
-
   /**
    * Wrap the given surface, so that we can provide a DataSourceSurface if
    * required.
@@ -135,27 +139,18 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
 
   ~CanvasChild() final;
 
-  bool EnsureDataSurfaceShmem(gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
-
-  void ReturnDataSurfaceShmem(
-      already_AddRefed<ipc::SharedMemoryBasic> aDataSurfaceShmem);
-
-  void DropFreeBuffersWhenDormant();
-
   static const uint32_t kCacheDataSurfaceThreshold = 10;
 
   static bool mDeactivated;
+  static bool mInForeground;
 
   RefPtr<CanvasDrawEventRecorder> mRecorder;
-
-  RefPtr<ipc::SharedMemoryBasic> mDataSurfaceShmem;
-  bool mDataSurfaceShmemAvailable = false;
-  int64_t mLastWriteLockCheckpoint = 0;
+  TextureType mTextureType = TextureType::Unknown;
+  uint32_t mLastWriteLockCheckpoint = 0;
   uint32_t mTransactionsSinceGetDataSurface = kCacheDataSurfaceThreshold;
   std::vector<RefPtr<gfx::SourceSurface>> mLastTransactionExternalSurfaces;
   bool mIsInTransaction = false;
   bool mHasOutstandingWriteLock = false;
-  bool mDormant = false;
 };
 
 }  // namespace layers
