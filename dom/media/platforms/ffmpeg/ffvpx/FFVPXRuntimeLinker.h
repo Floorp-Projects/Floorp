@@ -18,7 +18,7 @@ class FFVPXRuntimeLinker {
   // Main thread only.
   static bool Init();
   // Main thread or after Init().
-  static already_AddRefed<PlatformDecoderModule> Create();
+  static already_AddRefed<PlatformDecoderModule> CreateDecoder();
 
   // Call (on any thread) after Init().
   static void GetRDFTFuncs(FFmpegRDFTFuncs* aOutFuncs);

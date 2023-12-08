@@ -117,7 +117,7 @@ bool FFVPXRuntimeLinker::Init() {
 }
 
 /* static */
-already_AddRefed<PlatformDecoderModule> FFVPXRuntimeLinker::Create() {
+already_AddRefed<PlatformDecoderModule> FFVPXRuntimeLinker::CreateDecoder() {
   if (!Init()) {
     return nullptr;
   }
