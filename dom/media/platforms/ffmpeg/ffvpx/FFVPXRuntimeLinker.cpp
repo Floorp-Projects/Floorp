@@ -125,6 +125,12 @@ already_AddRefed<PlatformDecoderModule> FFVPXRuntimeLinker::CreateDecoder() {
 }
 
 /* static */
+already_AddRefed<PlatformEncoderModule> FFVPXRuntimeLinker::CreateEncoder() {
+  // TODO: Create a FFmpegEncoderModule here.
+  return nullptr;
+}
+
+/* static */
 void FFVPXRuntimeLinker::GetRDFTFuncs(FFmpegRDFTFuncs* aOutFuncs) {
   MOZ_ASSERT(sLinkStatus != LinkStatus_INIT);
   if (sFFVPXLib.av_rdft_init && sFFVPXLib.av_rdft_calc &&
