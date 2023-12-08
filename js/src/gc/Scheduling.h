@@ -519,7 +519,7 @@
    * JSGC_PARALLEL_MARKING_THRESHOLD_MB                                        \
    */                                                                          \
   _(JSGC_PARALLEL_MARKING_THRESHOLD_MB, size_t, parallelMarkingThresholdBytes, \
-    ConvertMB, NoCheck, 10 * 1024 * 1024)
+    ConvertMB, NoCheck, 4 * 1024 * 1024)
 
 namespace js {
 
