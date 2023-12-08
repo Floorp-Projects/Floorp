@@ -8,9 +8,13 @@
 
 #include "mozIStorageService.h"
 #include "mozStorageCID.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/quota/QuotaManagerService.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/gtest/MozAssertions.h"
+#include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIQuotaCallbacks.h"
@@ -189,31 +193,30 @@ void QuotaManagerDependencyFixture::ShutdownStorage() {
 // static
 void QuotaManagerDependencyFixture::ClearStoragesForOrigin(
     const OriginMetadata& aOriginMetadata) {
-  nsCOMPtr<nsIQuotaManagerService> qms = QuotaManagerService::GetOrCreate();
-  ASSERT_TRUE(qms);
+  PerformOnBackgroundThread([&aOriginMetadata]() {
+    QuotaManager* quotaManager = QuotaManager::Get();
+    ASSERT_TRUE(quotaManager);
 
-  nsCOMPtr<nsIScriptSecurityManager> ssm =
-      nsScriptSecurityManager::GetScriptSecurityManager();
-  ASSERT_TRUE(ssm);
+    nsCOMPtr<nsIPrincipal> principal =
+        BasePrincipal::CreateContentPrincipal(aOriginMetadata.mOrigin);
+    QM_TRY(MOZ_TO_RESULT(principal), QM_TEST_FAIL);
 
-  nsCOMPtr<nsIPrincipal> principal;
-  nsresult rv = ssm->CreateContentPrincipalFromOrigin(
-      aOriginMetadata.mOrigin, getter_AddRefs(principal));
-  ASSERT_NS_SUCCEEDED(rv);
+    mozilla::ipc::PrincipalInfo principalInfo;
+    QM_TRY(MOZ_TO_RESULT(PrincipalToPrincipalInfo(principal, &principalInfo)),
+           QM_TEST_FAIL);
 
-  nsCOMPtr<nsIQuotaRequest> request;
-  rv = qms->ClearStoragesForPrincipal(principal, VoidCString(), VoidString(),
-                                      getter_AddRefs(request));
-  ASSERT_NS_SUCCEEDED(rv);
+    bool done = false;
 
-  RefPtr<RequestResolver> resolver = new RequestResolver();
-  ASSERT_TRUE(resolver);
+    quotaManager
+        ->ClearStoragesForOrigin(/* aPersistenceType */ Nothing(),
+                                 principalInfo, /* aClientType */ Nothing())
+        ->Then(GetCurrentSerialEventTarget(), __func__,
+               [&done](const BoolPromise::ResolveOrRejectValue& aValue) {
+                 done = true;
+               });
 
-  rv = request->SetCallback(resolver);
-  ASSERT_NS_SUCCEEDED(rv);
-
-  SpinEventLoopUntil("Promise is fulfilled"_ns,
-                     [&resolver]() { return resolver->Done(); });
+    SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
+  });
 }
 
 // static
