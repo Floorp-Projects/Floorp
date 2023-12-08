@@ -20,7 +20,6 @@ using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using mozilla::gfx::IntRect from "mozilla/gfx/Rect.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
 using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
-using mozilla::gfx::FenceInfo from "mozilla/gfx/FileHandleWrapper.h";
 [MoveOnly] using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
 using gfxImageFormat from "gfxTypes.h";
 using mozilla::layers::MaybeVideoBridgeSource from "mozilla/layers/VideoBridgeUtils.h";
@@ -40,7 +39,6 @@ namespace layers {
   ColorSpace2 colorSpace;
   ColorRange colorRange;
   bool hasKeyedMutex;
-  FenceInfo? fenceInfo;
 };
 
 [Comparable] struct SurfaceDescriptorDXGIYCbCr {
