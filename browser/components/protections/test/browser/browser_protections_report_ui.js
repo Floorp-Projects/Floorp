@@ -510,6 +510,288 @@ add_task(async function test_graph_display() {
   BrowserTestUtils.removeTab(tab);
 });
 
+// Ensure that the number of suspicious fingerprinter is aggregated into the
+// fingerprinter category on about:protection page.
+add_task(async function test_suspicious_fingerprinter() {
+  // This creates the schema.
+  await TrackingDBService.saveEvents(JSON.stringify({}));
+  let db = await Sqlite.openConnection({ path: DB_PATH });
+
+  // Inserting data for today. It won't contain a fingerprinter entry but only
+  // a suspicious fingerprinter entry.
+  let date = new Date().toISOString();
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.TRACKERS_ID,
+    count: 1,
+    timestamp: date,
+  });
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.CRYPTOMINERS_ID,
+    count: 2,
+    timestamp: date,
+  });
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.SUSPICIOUS_FINGERPRINTERS_ID,
+    count: 2,
+    timestamp: date,
+  });
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.TRACKING_COOKIES_ID,
+    count: 4,
+    timestamp: date,
+  });
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.SOCIAL_ID,
+    count: 1,
+    timestamp: date,
+  });
+
+  // Inserting data for 1 day age. It contains both a fingerprinter entry and
+  // a suspicious fingerprinter entry.
+  date = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString();
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.TRACKERS_ID,
+    count: 1,
+    timestamp: date,
+  });
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.CRYPTOMINERS_ID,
+    count: 2,
+    timestamp: date,
+  });
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.FINGERPRINTERS_ID,
+    count: 1,
+    timestamp: date,
+  });
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.SUSPICIOUS_FINGERPRINTERS_ID,
+    count: 1,
+    timestamp: date,
+  });
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.TRACKING_COOKIES_ID,
+    count: 4,
+    timestamp: date,
+  });
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.SOCIAL_ID,
+    count: 1,
+    timestamp: date,
+  });
+
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    url: "about:protections",
+    gBrowser,
+  });
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
+    const DATA_TYPES = [
+      "cryptominer",
+      "fingerprinter",
+      "tracker",
+      "cookie",
+      "social",
+    ];
+    let allBars = null;
+    await ContentTaskUtils.waitForMutationCondition(
+      content.document.body,
+      { childList: true, subtree: true },
+      () => {
+        allBars = content.document.querySelectorAll(".graph-bar");
+        return !!allBars.length;
+      }
+    );
+    info("The graph has been built");
+
+    Assert.equal(allBars.length, 7, "7 bars have been found on the graph");
+
+    // Verify today's data. The fingerprinter category should take 20%.
+    Assert.equal(
+      allBars[6].querySelectorAll(".inner-bar").length,
+      DATA_TYPES.length,
+      "today has all of the data types shown"
+    );
+    Assert.equal(
+      allBars[6].querySelector(".tracker-bar").style.height,
+      "10%",
+      "trackers take 10%"
+    );
+    Assert.equal(
+      allBars[6].querySelector(".cryptominer-bar").style.height,
+      "20%",
+      "cryptominers take 20%"
+    );
+    Assert.equal(
+      allBars[6].querySelector(".fingerprinter-bar").style.height,
+      "20%",
+      "fingerprinters take 20%"
+    );
+    Assert.equal(
+      allBars[6].querySelector(".cookie-bar").style.height,
+      "40%",
+      "cross site tracking cookies take 40%"
+    );
+    Assert.equal(
+      allBars[6].querySelector(".social-bar").style.height,
+      "10%",
+      "social trackers take 10%"
+    );
+
+    // Verify one day age data. The fingerprinter category should take 20%.
+    Assert.equal(
+      allBars[5].querySelectorAll(".inner-bar").length,
+      DATA_TYPES.length,
+      "today has all of the data types shown"
+    );
+    Assert.equal(
+      allBars[5].querySelector(".tracker-bar").style.height,
+      "10%",
+      "trackers take 10%"
+    );
+    Assert.equal(
+      allBars[5].querySelector(".cryptominer-bar").style.height,
+      "20%",
+      "cryptominers take 20%"
+    );
+    Assert.equal(
+      allBars[5].querySelector(".fingerprinter-bar").style.height,
+      "20%",
+      "fingerprinters take 20%"
+    );
+    Assert.equal(
+      allBars[5].querySelector(".cookie-bar").style.height,
+      "40%",
+      "cross site tracking cookies take 40%"
+    );
+    Assert.equal(
+      allBars[5].querySelector(".social-bar").style.height,
+      "10%",
+      "social trackers take 10%"
+    );
+  });
+
+  // Use the TrackingDBService API to delete the data.
+  await TrackingDBService.clearAll();
+  // Make sure the data was deleted.
+  let rows = await db.execute(SQL.selectAll);
+  is(rows.length, 0, "length is 0");
+  await db.close();
+  BrowserTestUtils.removeTab(tab);
+});
+
+// Ensure that the number of suspicious fingerprinter is displayed even if the
+// fingerprinter blocking is disabled.
+add_task(async function test_suspicious_fingerprinter_without_fp_blocking() {
+  // Disable fingerprinter blocking
+  Services.prefs.setBoolPref(
+    "privacy.trackingprotection.fingerprinting.enabled",
+    false
+  );
+
+  // This creates the schema.
+  await TrackingDBService.saveEvents(JSON.stringify({}));
+  let db = await Sqlite.openConnection({ path: DB_PATH });
+
+  // Inserting data for today. It won't contain a fingerprinter entry but only
+  // a suspicious fingerprinter entry.
+  let date = new Date().toISOString();
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.TRACKERS_ID,
+    count: 1,
+    timestamp: date,
+  });
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.CRYPTOMINERS_ID,
+    count: 2,
+    timestamp: date,
+  });
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.SUSPICIOUS_FINGERPRINTERS_ID,
+    count: 2,
+    timestamp: date,
+  });
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.TRACKING_COOKIES_ID,
+    count: 4,
+    timestamp: date,
+  });
+  await db.execute(SQL.insertCustomTimeEvent, {
+    type: TrackingDBService.SOCIAL_ID,
+    count: 1,
+    timestamp: date,
+  });
+
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    url: "about:protections",
+    gBrowser,
+  });
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
+    const DATA_TYPES = [
+      "cryptominer",
+      "fingerprinter",
+      "tracker",
+      "cookie",
+      "social",
+    ];
+    let allBars = null;
+    await ContentTaskUtils.waitForMutationCondition(
+      content.document.body,
+      { childList: true, subtree: true },
+      () => {
+        allBars = content.document.querySelectorAll(".graph-bar");
+        return !!allBars.length;
+      }
+    );
+    info("The graph has been built");
+
+    Assert.equal(allBars.length, 7, "7 bars have been found on the graph");
+
+    // Verify today's data. The fingerprinter category should take 20%.
+    Assert.equal(
+      allBars[6].querySelectorAll(".inner-bar").length,
+      DATA_TYPES.length,
+      "today has all of the data types shown"
+    );
+    Assert.equal(
+      allBars[6].querySelector(".tracker-bar").style.height,
+      "10%",
+      "trackers take 10%"
+    );
+    Assert.equal(
+      allBars[6].querySelector(".cryptominer-bar").style.height,
+      "20%",
+      "cryptominers take 20%"
+    );
+    Assert.equal(
+      allBars[6].querySelector(".fingerprinter-bar").style.height,
+      "20%",
+      "fingerprinters take 20%"
+    );
+    Assert.equal(
+      allBars[6].querySelector(".cookie-bar").style.height,
+      "40%",
+      "cross site tracking cookies take 40%"
+    );
+    Assert.equal(
+      allBars[6].querySelector(".social-bar").style.height,
+      "10%",
+      "social trackers take 10%"
+    );
+  });
+
+  // Use the TrackingDBService API to delete the data.
+  await TrackingDBService.clearAll();
+  // Make sure the data was deleted.
+  let rows = await db.execute(SQL.selectAll);
+  is(rows.length, 0, "length is 0");
+  await db.close();
+  BrowserTestUtils.removeTab(tab);
+
+  Services.prefs.clearUserPref(
+    "privacy.trackingprotection.fingerprinting.enabled"
+  );
+});
+
 // Ensure that each type of tracker is hidden from the graph if there are no recorded
 // trackers of that type and the user has chosen to not block that type.
 add_task(async function test_etp_custom_settings() {
@@ -600,6 +882,7 @@ add_task(async function test_etp_custom_settings() {
     "privacy.trackingprotection.fingerprinting.enabled",
     false
   );
+  Services.prefs.setBoolPref("privacy.fingerprintingProtection", false);
   tab = await BrowserTestUtils.openNewForegroundTab({
     url: "about:protections",
     gBrowser,
@@ -645,6 +928,7 @@ add_task(async function test_etp_custom_settings() {
   Services.prefs.clearUserPref(
     "privacy.trackingprotection.fingerprinting.enabled"
   );
+  Services.prefs.clearUserPref("privacy.fingerprintingProtection");
   Services.prefs.clearUserPref(
     "privacy.trackingprotection.cryptomining.enabled"
   );
