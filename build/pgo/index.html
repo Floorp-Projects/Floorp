@@ -73,7 +73,7 @@
     "talos/tests/perf-reftest-singletons/tiny-traversal-singleton.html",
     "talos/tests/perf-reftest-singletons/window-named-property-get.html",
     "webkit/PerformanceTests/Speedometer/index.html",
-    "webkit/PerformanceTests/Speedometer3/index.html?startAutomatically=true",
+    "http://localhost:8000/index.html?startAutomatically=true",
     "webkit/PerformanceTests/webaudio/index.html?raptor&rendering-buffer-length=30",
   ];
   var defaultInterval = 2000;
@@ -87,12 +87,11 @@
   function loadURL() {
     var interval = defaultInterval;
     var testURL = list[idx++];
-    if (testURL.includes("webkit")) {
-      interval = 90000;
+    if (testURL.includes("webkit") || testURL.includes("localhost")) {
+      interval = 120000;
     }
     w.close();
     w = window.open(testURL);
-
     // Prevent the perf-reftest-singletons from calling alert()
     w.tpRecordTime = function () {};
 
