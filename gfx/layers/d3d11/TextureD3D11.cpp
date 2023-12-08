@@ -403,7 +403,8 @@ bool D3D11TextureData::SerializeSpecific(
   }
   *aOutDesc = SurfaceDescriptorD3D10(
       (WindowsHandle)sharedHandle, mGpuProcessTextureId, mArrayIndex, mFormat,
-      mSize, mColorSpace, mColorRange, /* hasKeyedMutex */ mHasKeyedMutex);
+      mSize, mColorSpace, mColorRange, /* hasKeyedMutex */ mHasKeyedMutex,
+      /* fenceInfo */ Nothing());
   return true;
 }
 
@@ -761,6 +762,9 @@ DXGITextureHostD3D11::DXGITextureHostD3D11(
       mHandle((HANDLE)aDescriptor.handle()),
       mFormat(aDescriptor.format()),
       mHasKeyedMutex(aDescriptor.hasKeyedMutex()),
+      mAcquireFenceInfo(aDescriptor.fenceInfo().isSome()
+                            ? aDescriptor.fenceInfo().ref()
+                            : gfx::FenceInfo()),
       mColorSpace(aDescriptor.colorSpace()),
       mColorRange(aDescriptor.colorRange()),
       mIsLocked(false) {}
@@ -912,7 +916,7 @@ void DXGITextureHostD3D11::CreateRenderTexture(
 
   RefPtr<wr::RenderDXGITextureHost> texture = new wr::RenderDXGITextureHost(
       mHandle, mGpuProcessTextureId, mArrayIndex, mFormat, mColorSpace,
-      mColorRange, mSize, mHasKeyedMutex);
+      mColorRange, mSize, mHasKeyedMutex, mAcquireFenceInfo);
   if (mFlags & TextureFlags::SOFTWARE_DECODED_VIDEO) {
     texture->SetIsSoftwareDecodedVideo();
   }
