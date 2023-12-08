@@ -214,26 +214,27 @@ add_task(
     let time = await extension.awaitMessage("done");
     ok(time > 100, `Background script suspended after ${time}ms.`);
 
-    assertHistogramCategoryNotEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT, {
-      category: "reset_parentapicall",
-      categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
-    });
+    // Disabled because the telemetry is too chatty, see bug 1868960.
+    // assertHistogramCategoryNotEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT, {
+    //   category: "reset_parentapicall",
+    //   categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    // });
 
-    assertHistogramCategoryNotEmpty(
-      WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID,
-      {
-        keyed: true,
-        key: extension.id,
-        category: "reset_parentapicall",
-        categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
-      }
-    );
+    // assertHistogramCategoryNotEmpty(
+    //   WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID,
+    //   {
+    //     keyed: true,
+    //     key: extension.id,
+    //     category: "reset_parentapicall",
+    //     categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    //   }
+    // );
 
-    assertGleanLabeledCounterNotEmpty({
-      metricId: "eventPageIdleResult",
-      gleanMetric: Glean.extensionsCounters.eventPageIdleResult,
-      expectedNotEmptyLabels: ["reset_parentapicall"],
-    });
+    // assertGleanLabeledCounterNotEmpty({
+    //   metricId: "eventPageIdleResult",
+    //   gleanMetric: Glean.extensionsCounters.eventPageIdleResult,
+    //   expectedNotEmptyLabels: ["reset_parentapicall"],
+    // });
 
     await extension.unload();
   }
@@ -417,25 +418,26 @@ add_task(
     await extension.awaitMessage("suspendCanceled");
     ok(true, "event caused suspend-canceled");
 
-    assertHistogramCategoryNotEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT, {
-      category: "reset_event",
-      categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
-    });
-    assertGleanLabeledCounterNotEmpty({
-      metricId: "eventPageIdleResult",
-      gleanMetric: Glean.extensionsCounters.eventPageIdleResult,
-      expectedNotEmptyLabels: ["reset_event"],
-    });
+    // Disabled because the telemetry is too chatty, see bug 1868960.
+    // assertHistogramCategoryNotEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT, {
+    //   category: "reset_event",
+    //   categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    // });
+    // assertGleanLabeledCounterNotEmpty({
+    //   metricId: "eventPageIdleResult",
+    //   gleanMetric: Glean.extensionsCounters.eventPageIdleResult,
+    //   expectedNotEmptyLabels: ["reset_event"],
+    // });
 
-    assertHistogramCategoryNotEmpty(
-      WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID,
-      {
-        keyed: true,
-        key: extension.id,
-        category: "reset_event",
-        categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
-      }
-    );
+    // assertHistogramCategoryNotEmpty(
+    //   WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID,
+    //   {
+    //     keyed: true,
+    //     key: extension.id,
+    //     category: "reset_event",
+    //     categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    //   }
+    // );
 
     await extension.awaitMessage("suspending");
     await promiseExtensionEvent(extension, "shutdown-background-script");
