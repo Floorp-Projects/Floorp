@@ -184,7 +184,6 @@ class OpenRecordClient : public FileIOClient {
 
   FileIO* mFileIO = nullptr;
   std::function<void(bool)> mOpenComplete;
-  ;
 };
 
 void OpenRecord(Host_10* aHost, const std::string& aRecordName,
