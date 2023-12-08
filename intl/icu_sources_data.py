@@ -175,7 +175,7 @@ def write_sources(mozbuild, sources, headers):
         def write_list(name, content):
             if content:
                 f.write("%s %s [\n" % (name, "=" if name.islower() else "+="))
-                f.write("".join("   '/%s',\n" % s for s in content))
+                f.write("".join('    "/%s",\n' % s for s in content))
                 f.write("]\n")
 
         write_list("sources", [s for s in sources if s not in UNUSED_SOURCES])
