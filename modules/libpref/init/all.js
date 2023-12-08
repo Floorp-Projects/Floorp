@@ -3620,6 +3620,10 @@ pref("browser.sanitizer.loglevel", "Warn");
 // engine https://browser.mt/. See Bug 971044. Note that this pref can be turned
 // on in different apps like Firefox Desktop, even if it's disabled by default here.
 pref("browser.translations.enable", false);
+// Enable Firefox Select translations powered by the Bergamot translations
+// engine https://browser.mt/. Note that this pref can be turned on in different apps
+// like Firefox Desktop, even if it's disabled by default here.
+pref("browser.translations.select.enable", false);
 // Set to "All" to see all logs, which are useful for debugging. Set to "Info" to see
 // the application logic logs, and not all of the translated messages, which can be
 // slow and overwhelming.
