@@ -211,39 +211,30 @@ void AsyncImagePipelineManager::UpdateAsyncImagePipeline(
 
 Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
     const wr::Epoch& aEpoch, const wr::PipelineId& aPipelineId,
-    AsyncImagePipeline* aPipeline, nsTArray<wr::ImageKey>& aKeys,
-    wr::TransactionBuilder& aSceneBuilderTxn,
-    wr::TransactionBuilder& aMaybeFastTxn, RemoteTextureInfoList* aList) {
+    AsyncImagePipeline* aPipeline, TextureHost* aTexture,
+    nsTArray<wr::ImageKey>& aKeys, wr::TransactionBuilder& aSceneBuilderTxn,
+    wr::TransactionBuilder& aMaybeFastTxn) {
   MOZ_ASSERT(aKeys.IsEmpty());
   MOZ_ASSERT(aPipeline);
 
-  TextureHost* texture =
-      aPipeline->mImageHost->GetAsTextureHostForComposite(this);
   TextureHost* previousTexture = aPipeline->mCurrentTexture.get();
 
-  if (texture == previousTexture) {
+  if (aTexture == previousTexture) {
     // The texture has not changed, just reuse previous ImageKeys.
     aKeys = aPipeline->mKeys.Clone();
     return Nothing();
   }
 
-  if (!texture || texture->NumSubTextures() == 0) {
+  if (!aTexture || aTexture->NumSubTextures() == 0) {
     // We don't have a new texture or texture does not have SubTextures, there
     // isn't much we can do.
     aKeys = aPipeline->mKeys.Clone();
     return Nothing();
   }
 
-  // Check if pending Remote texture exists.
-  auto* wrapper = texture->AsRemoteTextureHostWrapper();
-  if (aList && wrapper && wrapper->IsReadyForRendering()) {
-    aList->mList.emplace(wrapper->mTextureId, wrapper->mOwnerId,
-                         wrapper->mForPid);
-  }
+  aPipeline->mCurrentTexture = aTexture;
 
-  aPipeline->mCurrentTexture = texture;
-
-  WebRenderTextureHost* wrTexture = texture->AsWebRenderTextureHost();
+  WebRenderTextureHost* wrTexture = aTexture->AsWebRenderTextureHost();
   MOZ_ASSERT(wrTexture);
   if (!wrTexture) {
     gfxCriticalNote << "WebRenderTextureHost is not used";
@@ -254,7 +245,7 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
 
   // The non-external image code path falls back to converting the texture into
   // an rgb image.
-  auto numKeys = useExternalImage ? texture->NumSubTextures() : 1;
+  auto numKeys = useExternalImage ? aTexture->NumSubTextures() : 1;
   MOZ_ASSERT(numKeys > 0);
 
   // If we already had a texture and the format hasn't changed, better to reuse
@@ -262,13 +253,13 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
   auto backend = aSceneBuilderTxn.GetBackendType();
   bool canUpdate =
       !!previousTexture &&
-      previousTexture->GetTextureHostType() == texture->GetTextureHostType() &&
-      previousTexture->GetSize() == texture->GetSize() &&
-      previousTexture->GetFormat() == texture->GetFormat() &&
-      previousTexture->GetColorDepth() == texture->GetColorDepth() &&
-      previousTexture->NeedsYFlip() == texture->NeedsYFlip() &&
+      previousTexture->GetTextureHostType() == aTexture->GetTextureHostType() &&
+      previousTexture->GetSize() == aTexture->GetSize() &&
+      previousTexture->GetFormat() == aTexture->GetFormat() &&
+      previousTexture->GetColorDepth() == aTexture->GetColorDepth() &&
+      previousTexture->NeedsYFlip() == aTexture->NeedsYFlip() &&
       previousTexture->SupportsExternalCompositing(backend) ==
-          texture->SupportsExternalCompositing(backend) &&
+          aTexture->SupportsExternalCompositing(backend) &&
       aPipeline->mKeys.Length() == numKeys;
 
   if (!canUpdate) {
@@ -289,7 +280,7 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
   auto op = canUpdate ? TextureHost::UPDATE_IMAGE : TextureHost::ADD_IMAGE;
 
   if (!useExternalImage) {
-    return UpdateWithoutExternalImage(texture, aKeys[0], op, aMaybeFastTxn);
+    return UpdateWithoutExternalImage(aTexture, aKeys[0], op, aMaybeFastTxn);
   }
 
   wrTexture->MaybeNotifyForUse(aMaybeFastTxn);
@@ -379,18 +370,22 @@ void AsyncImagePipelineManager::ApplyAsyncImagesOfImageBridge(
     if (!pipeline->mImageHost->GetAsyncRef()) {
       continue;
     }
-    ApplyAsyncImageForPipeline(epoch, pipelineId, pipeline, aSceneBuilderTxn,
-                               aFastTxn, /* aList */ nullptr);
+    TextureHost* texture =
+        pipeline->mImageHost->GetAsTextureHostForComposite(this);
+
+    ApplyAsyncImageForPipeline(epoch, pipelineId, pipeline, texture,
+                               aSceneBuilderTxn, aFastTxn);
   }
 }
 
 void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
     const wr::Epoch& aEpoch, const wr::PipelineId& aPipelineId,
-    AsyncImagePipeline* aPipeline, wr::TransactionBuilder& aSceneBuilderTxn,
-    wr::TransactionBuilder& aMaybeFastTxn, RemoteTextureInfoList* aList) {
+    AsyncImagePipeline* aPipeline, TextureHost* aTexture,
+    wr::TransactionBuilder& aSceneBuilderTxn,
+    wr::TransactionBuilder& aMaybeFastTxn) {
   nsTArray<wr::ImageKey> keys;
-  auto op = UpdateImageKeys(aEpoch, aPipelineId, aPipeline, keys,
-                            aSceneBuilderTxn, aMaybeFastTxn, aList);
+  auto op = UpdateImageKeys(aEpoch, aPipelineId, aPipeline, aTexture, keys,
+                            aSceneBuilderTxn, aMaybeFastTxn);
 
   bool updateDisplayList =
       aPipeline->mInitialised &&
@@ -512,9 +507,19 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
   auto& maybeFastTxn = pipeline->mImageHost->GetAsyncRef() ? fastTxn : aTxn;
 
   wr::Epoch epoch = GetNextImageEpoch();
+  TextureHost* texture =
+      pipeline->mImageHost->GetAsTextureHostForComposite(this);
+  auto* wrapper = texture ? texture->AsRemoteTextureHostWrapper() : nullptr;
 
-  ApplyAsyncImageForPipeline(epoch, aPipelineId, pipeline, sceneBuilderTxn,
-                             maybeFastTxn, aList);
+  // Store pending remote texture that is used for waiting at WebRenderAPI.
+  if (aList && texture && wrapper && texture != pipeline->mCurrentTexture &&
+      texture->NumSubTextures() != 0 && wrapper->IsReadyForRendering()) {
+    aList->mList.emplace(wrapper->mTextureId, wrapper->mOwnerId,
+                         wrapper->mForPid);
+  }
+
+  ApplyAsyncImageForPipeline(epoch, aPipelineId, pipeline, texture,
+                             sceneBuilderTxn, maybeFastTxn);
 }
 
 void AsyncImagePipelineManager::SetEmptyDisplayList(
