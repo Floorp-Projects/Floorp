@@ -24,6 +24,12 @@ class FFmpegDecoderModule {
   static already_AddRefed<PlatformDecoderModule> Create(FFmpegLibWrapper*);
 };
 
+template <int V>
+class FFmpegEncoderModule {
+ public:
+  static already_AddRefed<PlatformEncoderModule> Create(FFmpegLibWrapper*);
+};
+
 static FFmpegLibWrapper sFFVPXLib;
 
 FFVPXRuntimeLinker::LinkStatus FFVPXRuntimeLinker::sLinkStatus =
@@ -126,8 +132,10 @@ already_AddRefed<PlatformDecoderModule> FFVPXRuntimeLinker::CreateDecoder() {
 
 /* static */
 already_AddRefed<PlatformEncoderModule> FFVPXRuntimeLinker::CreateEncoder() {
-  // TODO: Create a FFmpegEncoderModule here.
-  return nullptr;
+  if (!Init()) {
+    return nullptr;
+  }
+  return FFmpegEncoderModule<FFVPX_VERSION>::Create(&sFFVPXLib);
 }
 
 /* static */
