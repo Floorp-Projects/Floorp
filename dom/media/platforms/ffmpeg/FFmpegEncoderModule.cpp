@@ -6,6 +6,7 @@
 
 #include "FFmpegEncoderModule.h"
 
+#include "FFmpegLog.h"
 #include "FFmpegVideoEncoder.h"
 
 // This must be the last header included
@@ -26,6 +27,8 @@ already_AddRefed<MediaDataEncoder> FFmpegEncoderModule<V>::CreateVideoEncoder(
   // TODO: Create a FFmpegVideoDecoder only if we support the mime type
   // specified in aParams.
   RefPtr<MediaDataEncoder> encoder = new FFmpegVideoEncoder<V>(mLib);
+  FFMPEGV_LOG("ffmpeg video encoder: %s has been created",
+              encoder->GetDescriptionName().get());
   return encoder.forget();
 }
 
