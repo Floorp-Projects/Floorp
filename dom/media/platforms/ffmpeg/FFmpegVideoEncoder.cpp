@@ -175,8 +175,15 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Init() {
 template <typename ConfigType>
 RefPtr<MediaDataEncoder::EncodePromise>
 FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Encode(const MediaData* aSample) {
+  MOZ_ASSERT(aSample != nullptr);
+
   FFMPEGV_LOG("Encode");
-  return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
+  return InvokeAsync(
+      mTaskQueue, __func__,
+      [self = RefPtr<FFmpegVideoEncoder<LIBAV_VER, ConfigType>>(this),
+       sample = RefPtr<const MediaData>(aSample)]() {
+        return self->ProcessEncode(std::move(sample));
+      });
 }
 
 template <typename ConfigType>
@@ -311,6 +318,20 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessInit() {
               mCodecContext->time_base.num, mCodecContext->time_base.den);
 
   return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
+}
+
+template <typename ConfigType>
+RefPtr<MediaDataEncoder::EncodePromise>
+FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessEncode(
+    RefPtr<const MediaData> aSample) {
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+
+  FFMPEGV_LOG("ProcessEncode");
+
+  RefPtr<const VideoData> sample(aSample->As<const VideoData>());
+  MOZ_ASSERT(sample);
+
+  return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 }
 
 template <typename ConfigType>

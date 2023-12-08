@@ -47,6 +47,7 @@ class FFmpegVideoEncoder<LIBAV_VER, ConfigType> final
 
   // Methods only called on mTaskQueue.
   RefPtr<InitPromise> ProcessInit();
+  RefPtr<EncodePromise> ProcessEncode(RefPtr<const MediaData> aSample);
   void ProcessShutdown();
   // TODO: Share these with FFmpegDataDecoder.
   int OpenCodecContext(const AVCodec* aCodec, AVDictionary** aOptions)
