@@ -46,6 +46,7 @@ interface nsIContentAnalysisResponse : nsISupports
 
   // Values that do not appear in analysis.proto
   const unsigned long ALLOW = 1000;
+  const unsigned long CANCELED = 1001;
 
   [infallible] readonly attribute unsigned long action;
   [infallible] readonly attribute boolean shouldAllowContent;
@@ -160,7 +161,8 @@ interface nsIContentAnalysisCallback : nsISupports
 interface nsIContentAnalysis : nsISupports
 {
   /**
-   * True if content analysis should be consulted.
+   * True if content analysis should be consulted. Must only be accessed from
+   * the parent process's main thread.
    */
   readonly attribute bool isActive;
 
@@ -194,4 +196,11 @@ interface nsIContentAnalysis : nsISupports
    * from C++ since it takes a callback instead of returning a Promise.
    */
   void analyzeContentRequestCallback(in nsIContentAnalysisRequest aCar, in nsIContentAnalysisCallback callback);
+
+  /**
+   * Cancels the request that is in progress. This may not actually cancel the request
+   * with the analysis server, but it means that Gecko will immediately act like the request
+   * was denied.
+   */
+  void cancelContentAnalysisRequest(in ACString aRequestToken);
 };

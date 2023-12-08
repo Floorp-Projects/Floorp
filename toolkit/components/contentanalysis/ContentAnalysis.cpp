@@ -9,6 +9,7 @@
 #include "content_analysis/sdk/analysis_client.h"
 
 #include "base/process_util.h"
+#include "mozilla/Components.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ScopeExit.h"
@@ -31,6 +32,19 @@
 #  define SECURITY_WIN32 1
 #  include <security.h>
 #endif  // XP_WIN
+
+namespace mozilla::contentanalysis {
+
+LazyLogModule gContentAnalysisLog("contentanalysis");
+#define LOGD(...)                                        \
+  MOZ_LOG(mozilla::contentanalysis::gContentAnalysisLog, \
+          mozilla::LogLevel::Debug, (__VA_ARGS__))
+
+#define LOGE(...)                                        \
+  MOZ_LOG(mozilla::contentanalysis::gContentAnalysisLog, \
+          mozilla::LogLevel::Error, (__VA_ARGS__))
+
+}  // namespace mozilla::contentanalysis
 
 namespace {
 
@@ -71,9 +85,6 @@ static nsresult GetFileDisplayName(const nsString& aFilePath,
 }  // anonymous namespace
 
 namespace mozilla::contentanalysis {
-
-LazyLogModule gContentAnalysisLog("contentanalysis");
-#define LOGD(...) MOZ_LOG(gContentAnalysisLog, LogLevel::Debug, (__VA_ARGS__))
 
 NS_IMETHODIMP
 ContentAnalysisRequest::GetAnalysisType(uint32_t* aAnalysisType) {
@@ -144,25 +155,19 @@ ContentAnalysisRequest::GetWindowGlobalParent(
   return NS_OK;
 }
 
-/* static */
-StaticDataMutex<UniquePtr<content_analysis::sdk::Client>>
-    ContentAnalysis::sCaClient("ContentAnalysisClient");
+nsresult ContentAnalysis::CreateContentAnalysisClient(nsCString&& aPipePathName,
+                                                      bool aIsPerUser) {
+  MOZ_ASSERT(!NS_IsMainThread());
+  // This method should only be called once
+  MOZ_ASSERT(!mCaClientPromise->IsResolved());
 
-nsresult ContentAnalysis::EnsureContentAnalysisClient() {
-  auto caClientRef = sCaClient.Lock();
-  auto& caClient = caClientRef.ref();
-  if (caClient) {
-    return NS_OK;
-  }
-
-  nsAutoCString pipePathName;
-  Preferences::GetCString(kPipePathNamePref, pipePathName);
-  caClient.reset(
-      content_analysis::sdk::Client::Create(
-          {pipePathName.Data(), Preferences::GetBool(kIsPerUserPref)})
+  std::shared_ptr<content_analysis::sdk::Client> client(
+      content_analysis::sdk::Client::Create({aPipePathName.Data(), aIsPerUser})
           .release());
-  LOGD("Content analysis is %s", caClient ? "connected" : "not available");
-  return caClient ? NS_OK : NS_ERROR_NOT_AVAILABLE;
+  LOGD("Content analysis is %s", client ? "connected" : "not available");
+  mCaClientPromise->Resolve(client, __func__);
+
+  return NS_OK;
 }
 
 ContentAnalysisRequest::ContentAnalysisRequest(
@@ -562,26 +567,61 @@ NS_IMPL_CLASSINFO(ContentAnalysisResponse, nullptr, 0, {0});
 NS_IMPL_ISUPPORTS_CI(ContentAnalysisResponse, nsIContentAnalysisResponse);
 NS_IMPL_ISUPPORTS(ContentAnalysisCallback, nsIContentAnalysisCallback);
 NS_IMPL_ISUPPORTS(ContentAnalysisResult, nsIContentAnalysisResult);
-NS_IMPL_ISUPPORTS(ContentAnalysis, nsIContentAnalysis);
+NS_IMPL_ISUPPORTS(ContentAnalysis, nsIContentAnalysis, ContentAnalysis);
+
+ContentAnalysis::ContentAnalysis()
+    : mCaClientPromise(
+          new ClientPromise::Private("ContentAnalysis::ContentAnalysis")),
+      mClientCreationAttempted(false),
+      mCallbackMap("ContentAnalysis::mCallbackMap") {}
 
 ContentAnalysis::~ContentAnalysis() {
-  auto caClientRef = sCaClient.Lock();
-  auto& caClient = caClientRef.ref();
-  caClient = nullptr;
+  // Accessing mClientCreationAttempted so need to be on the main thread
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mClientCreationAttempted) {
+    // Reject the promise to avoid assertions when it gets destroyed
+    mCaClientPromise->Reject(NS_ERROR_ILLEGAL_DURING_SHUTDOWN, __func__);
+  }
 }
 
 NS_IMETHODIMP
 ContentAnalysis::GetIsActive(bool* aIsActive) {
   *aIsActive = false;
+  // Need to be on the main thread to read prefs
+  MOZ_ASSERT(NS_IsMainThread());
   // gAllowContentAnalysis is only set in the parent process
   MOZ_ASSERT(XRE_IsParentProcess());
   if (!gAllowContentAnalysis || !Preferences::GetBool(kIsDLPEnabledPref)) {
+    LOGD("Local DLP Content Analysis is not active");
     return NS_OK;
   }
+  *aIsActive = true;
+  LOGD("Local DLP Content Analysis is active");
+  // mClientCreationAttempted is only accessed on the main thread,
+  // so no need for synchronization here.
+  if (!mClientCreationAttempted) {
+    mClientCreationAttempted = true;
+    LOGD("Dispatching background task to create Content Analysis client");
 
-  nsresult rv = EnsureContentAnalysisClient();
-  *aIsActive = NS_SUCCEEDED(rv);
-  LOGD("Local DLP Content Analysis is %sactive", *aIsActive ? "" : "not ");
+    nsCString pipePathName;
+    nsresult rv = Preferences::GetCString(kPipePathNamePref, pipePathName);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mCaClientPromise->Reject(rv, __func__);
+      return rv;
+    }
+    bool isPerUser = Preferences::GetBool(kIsPerUserPref);
+    rv = NS_DispatchBackgroundTask(NS_NewCancelableRunnableFunction(
+        "ContentAnalysis::CreateContentAnalysisClient",
+        [owner = RefPtr{this}, pipePathName = std::move(pipePathName),
+         isPerUser]() mutable {
+          owner->CreateContentAnalysisClient(std::move(pipePathName),
+                                             isPerUser);
+        }));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mCaClientPromise->Reject(rv, __func__);
+      return rv;
+    }
+  }
   return NS_OK;
 }
 
@@ -596,6 +636,41 @@ ContentAnalysis::GetMightBeActive(bool* aMightBeActive) {
   return NS_OK;
 }
 
+nsresult ContentAnalysis::CancelWithError(nsCString aRequestToken,
+                                          nsresult aResult) {
+  return NS_DispatchToMainThread(NS_NewCancelableRunnableFunction(
+      "ContentAnalysis::RunAnalyzeRequestTask::HandleResponse",
+      [aResult, aRequestToken = std::move(aRequestToken)] {
+        RefPtr<ContentAnalysis> owner = GetContentAnalysisFromService();
+        if (!owner) {
+          // May be shutting down
+          return;
+        }
+        nsMainThreadPtrHandle<nsIContentAnalysisCallback> callbackHolder;
+        {
+          auto lock = owner->mCallbackMap.Lock();
+          auto callbackData = lock->Extract(aRequestToken);
+          if (callbackData.isSome()) {
+            callbackHolder = callbackData->TakeCallbackHolder();
+          }
+        }
+        if (callbackHolder) {
+          callbackHolder->Error(aResult);
+        }
+      }));
+}
+
+RefPtr<ContentAnalysis> ContentAnalysis::GetContentAnalysisFromService() {
+  RefPtr<ContentAnalysis> contentAnalysisService =
+      mozilla::components::nsIContentAnalysis::Service();
+  if (!contentAnalysisService) {
+    // May be shutting down
+    return nullptr;
+  }
+
+  return contentAnalysisService;
+}
+
 nsresult ContentAnalysis::RunAnalyzeRequestTask(
     RefPtr<nsIContentAnalysisRequest> aRequest,
     RefPtr<nsIContentAnalysisCallback> aCallback) {
@@ -603,14 +678,10 @@ nsresult ContentAnalysis::RunAnalyzeRequestTask(
   auto callbackCopy = aCallback;
   auto se = MakeScopeExit([&] {
     if (!NS_SUCCEEDED(rv)) {
-      LOGD("RunAnalyzeRequestTask failed");
+      LOGE("RunAnalyzeRequestTask failed");
       callbackCopy->Error(rv);
     }
   });
-
-  // The Client object from the SDK must be kept live as long as there are
-  // active transactions.
-  RefPtr<ContentAnalysis> owner = this;
 
   content_analysis::sdk::ContentAnalysisRequest pbRequest;
   rv = ConvertToProtobuf(aRequest, &pbRequest);
@@ -620,69 +691,142 @@ nsresult ContentAnalysis::RunAnalyzeRequestTask(
   LogRequest(&pbRequest);
 
   nsCString requestToken;
+  nsMainThreadPtrHandle<nsIContentAnalysisCallback> callbackHolderCopy(
+      new nsMainThreadPtrHolder<nsIContentAnalysisCallback>(
+          "content analysis callback", aCallback));
+  CallbackData callbackData(std::move(callbackHolderCopy));
   rv = aRequest->GetRequestToken(requestToken);
   NS_ENSURE_SUCCESS(rv, rv);
+  {
+    auto lock = mCallbackMap.Lock();
+    lock->InsertOrUpdate(requestToken, std::move(callbackData));
+  }
 
-  // The content analysis connection is synchronous so run in the background.
-  rv = NS_DispatchBackgroundTask(
-      NS_NewRunnableFunction(
-          "RunAnalyzeRequestTask",
-          [pbRequest = std::move(pbRequest), aCallback = std::move(aCallback),
-           requestToken = std::move(requestToken), owner] {
-            nsresult rv = NS_ERROR_FAILURE;
-            content_analysis::sdk::ContentAnalysisResponse pbResponse;
+  LOGD("Issuing ContentAnalysisRequest for token %s", requestToken.get());
+  LogRequest(&pbRequest);
 
-            auto resolveOnMainThread = MakeScopeExit([&] {
-              NS_DispatchToMainThread(NS_NewRunnableFunction(
-                  "ResolveOnMainThread",
-                  [rv, owner, aCallback = std::move(aCallback),
-                   pbResponse = std::move(pbResponse), requestToken]() mutable {
-                    if (NS_SUCCEEDED(rv)) {
+  mCaClientPromise->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [requestToken, pbRequest = std::move(pbRequest)](
+          std::shared_ptr<content_analysis::sdk::Client> client) {
+        // The content analysis call is synchronous so run in the background.
+        NS_DispatchBackgroundTask(
+            NS_NewCancelableRunnableFunction(
+                __func__,
+                [requestToken, pbRequest = std::move(pbRequest), client] {
+                  RefPtr<ContentAnalysis> owner =
+                      GetContentAnalysisFromService();
+                  if (!owner) {
+                    // May be shutting down
+                    return;
+                  }
+
+                  if (!client) {
+                    owner->CancelWithError(std::move(requestToken),
+                                           NS_ERROR_NOT_AVAILABLE);
+                    return;
+                  }
+                  {
+                    auto callbackMap = owner->mCallbackMap.Lock();
+                    if (!callbackMap->Contains(requestToken)) {
                       LOGD(
-                          "Content analysis resolving response promise for "
-                          "token %s",
+                          "RunAnalyzeRequestTask token %s has already been "
+                          "cancelled - not issuing request",
                           requestToken.get());
-                      RefPtr<ContentAnalysisResponse> response =
-                          ContentAnalysisResponse::FromProtobuf(
-                              std::move(pbResponse));
-                      if (response) {
+                      return;
+                    }
+                  }
+
+                  // Run request, then dispatch back to main thread to resolve
+                  // aCallback
+                  content_analysis::sdk::ContentAnalysisResponse pbResponse;
+                  int err = client->Send(pbRequest, &pbResponse);
+                  if (err != 0) {
+                    LOGE("RunAnalyzeRequestTask client transaction failed");
+                    owner->CancelWithError(std::move(requestToken),
+                                           NS_ERROR_FAILURE);
+                    return;
+                  }
+                  LOGD("Content analysis client transaction succeeded");
+                  LogResponse(&pbResponse);
+                  NS_DispatchToMainThread(NS_NewCancelableRunnableFunction(
+                      "ContentAnalysis::RunAnalyzeRequestTask::HandleResponse",
+                      [pbResponse = std::move(pbResponse)]() mutable {
+                        RefPtr<ContentAnalysis> owner =
+                            GetContentAnalysisFromService();
+                        if (!owner) {
+                          // May be shutting down
+                          return;
+                        }
+
+                        RefPtr<ContentAnalysisResponse> response =
+                            ContentAnalysisResponse::FromProtobuf(
+                                std::move(pbResponse));
+                        if (!response) {
+                          LOGE("Content analysis got invalid response!");
+                          return;
+                        }
+                        nsCString responseRequestToken;
+                        nsresult requestRv =
+                            response->GetRequestToken(responseRequestToken);
+                        if (NS_FAILED(requestRv)) {
+                          LOGE(
+                              "Content analysis couldn't get request token "
+                              "from response!");
+                          return;
+                        }
+
+                        Maybe<CallbackData> maybeCallbackData;
+                        {
+                          auto callbackMap = owner->mCallbackMap.Lock();
+                          maybeCallbackData =
+                              callbackMap->Extract(responseRequestToken);
+                        }
+                        if (maybeCallbackData.isNothing()) {
+                          LOGD(
+                              "Content analysis did not find callback for "
+                              "token %s",
+                              responseRequestToken.get());
+                          return;
+                        }
                         response->SetOwner(owner);
+                        if (maybeCallbackData->Canceled()) {
+                          // request has already been cancelled, so there's
+                          // nothing to do
+                          LOGD(
+                              "Content analysis got response but ignoring "
+                              "because it was already cancelled for token %s",
+                              responseRequestToken.get());
+                          return;
+                        }
+
+                        LOGD(
+                            "Content analysis resolving response promise for "
+                            "token %s",
+                            responseRequestToken.get());
                         nsCOMPtr<nsIObserverService> obsServ =
                             mozilla::services::GetObserverService();
+
                         obsServ->NotifyObservers(response, "dlp-response",
                                                  nullptr);
-                        aCallback->ContentResult(response);
-                      } else {
-                        aCallback->Error(NS_ERROR_FAILURE);
-                      }
-                    } else {
-                      aCallback->Error(rv);
-                    }
-                  }));
-            });
 
-            auto caClientRef = sCaClient.Lock();
-            auto& caClient = caClientRef.ref();
-            if (!caClient) {
-              LOGD("RunAnalyzeRequestTask failed to get client");
-              rv = NS_ERROR_NOT_AVAILABLE;
-              return;
-            }
-
-            // Run request, then dispatch back to main thread to resolve
-            // aPromise
-            int err = caClient->Send(pbRequest, &pbResponse);
-            if (err != 0) {
-              LOGD("RunAnalyzeRequestTask client transaction failed");
-              rv = NS_ERROR_FAILURE;
-              return;
-            }
-
-            LOGD("Content analysis client transaction succeeded");
-            LogResponse(&pbResponse);
-            rv = NS_OK;
-          }),
-      NS_DISPATCH_EVENT_MAY_BLOCK);
+                        nsMainThreadPtrHandle<nsIContentAnalysisCallback>
+                            callbackHolder =
+                                maybeCallbackData->TakeCallbackHolder();
+                        callbackHolder->ContentResult(response);
+                      }));
+                }),
+            NS_DISPATCH_EVENT_MAY_BLOCK);
+      },
+      [requestToken](nsresult rv) {
+        LOGD("RunAnalyzeRequestTask failed to get client");
+        RefPtr<ContentAnalysis> owner = GetContentAnalysisFromService();
+        if (!owner) {
+          // May be shutting down
+          return;
+        }
+        owner->CancelWithError(std::move(requestToken), rv);
+      });
 
   return rv;
 }
@@ -723,6 +867,37 @@ ContentAnalysis::AnalyzeContentRequestCallback(
 }
 
 NS_IMETHODIMP
+ContentAnalysis::CancelContentAnalysisRequest(const nsACString& aRequestToken) {
+  NS_DispatchToMainThread(NS_NewCancelableRunnableFunction(
+      "CancelContentAnalysisRequest",
+      [requestToken = nsCString{aRequestToken}]() {
+        RefPtr<ContentAnalysis> self = GetContentAnalysisFromService();
+        if (!self) {
+          // May be shutting down
+          return;
+        }
+
+        auto callbackMap = self->mCallbackMap.Lock();
+        auto entry = callbackMap->Lookup(requestToken);
+        LOGD("Content analysis cancelling request %s", requestToken.get());
+        if (entry) {
+          entry->SetCanceled();
+          RefPtr<ContentAnalysisResponse> cancelResponse =
+              ContentAnalysisResponse::FromAction(
+                  nsIContentAnalysisResponse::CANCELED, requestToken);
+          cancelResponse->SetOwner(self);
+          nsMainThreadPtrHandle<nsIContentAnalysisCallback> callbackHolder =
+              entry->TakeCallbackHolder();
+          callbackHolder->ContentResult(cancelResponse.get());
+        } else {
+          LOGD("Content analysis request not found when trying to cancel %s",
+               requestToken.get());
+        }
+      }));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 ContentAnalysisResponse::Acknowledge(
     nsIContentAnalysisAcknowledgement* aAcknowledgement) {
   MOZ_ASSERT(mOwner);
@@ -746,25 +921,37 @@ nsresult ContentAnalysis::RunAcknowledgeTask(
   LOGD("Issuing ContentAnalysisAcknowledgement");
   LogAcknowledgement(&pbAck);
 
-  // The Client object from the SDK must be kept live as long as there are
-  // active transactions.
-  RefPtr<ContentAnalysis> owner = this;
-
   // The content analysis connection is synchronous so run in the background.
   LOGD("RunAcknowledgeTask dispatching acknowledge task");
-  return NS_DispatchBackgroundTask(NS_NewRunnableFunction(
-      "RunAcknowledgeTask", [owner, pbAck = std::move(pbAck)] {
-        auto caClientRef = sCaClient.Lock();
-        auto& caClient = caClientRef.ref();
-        if (!caClient) {
-          LOGD("RunAcknowledgeTask failed to get the client");
-          return;
-        }
+  mCaClientPromise->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [pbAck = std::move(pbAck)](
+          std::shared_ptr<content_analysis::sdk::Client> client) {
+        NS_DispatchBackgroundTask(
+            NS_NewCancelableRunnableFunction(
+                __func__,
+                [pbAck = std::move(pbAck), client] {
+                  RefPtr<ContentAnalysis> owner =
+                      GetContentAnalysisFromService();
+                  if (!owner) {
+                    // May be shutting down
+                    return;
+                  }
+                  if (!client) {
+                    return;
+                  }
 
-        DebugOnly<int> err = caClient->Acknowledge(pbAck);
-        MOZ_ASSERT(err == 0);
-        LOGD("RunAcknowledgeTask sent transaction acknowledgement");
-      }));
+                  int err = client->Acknowledge(pbAck);
+                  MOZ_ASSERT(err == 0);
+                  LOGD(
+                      "RunAcknowledgeTask sent transaction acknowledgement, "
+                      "err=%d",
+                      err);
+                }),
+            NS_DISPATCH_EVENT_MAY_BLOCK);
+      },
+      [](nsresult rv) { LOGD("RunAcknowledgeTask failed to get the client"); });
+  return rv;
 }
 
 NS_IMETHODIMP ContentAnalysisCallback::ContentResult(
@@ -789,4 +976,7 @@ NS_IMETHODIMP ContentAnalysisCallback::Error(nsresult aError) {
 ContentAnalysisCallback::ContentAnalysisCallback(RefPtr<dom::Promise> aPromise)
     : mPromise(Some(new nsMainThreadPtrHolder<dom::Promise>(
           "content analysis promise", aPromise))) {}
+
+#undef LOGD
+#undef LOGE
 }  // namespace mozilla::contentanalysis

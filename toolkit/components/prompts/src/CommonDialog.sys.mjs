@@ -137,6 +137,10 @@ CommonDialog.prototype = {
       commonDialogEl.ownerDocument.title = title;
     }
 
+    if (this.ui.spinnerContainer && this.args.showSpinner) {
+      this.ui.spinnerContainer.hidden = false;
+    }
+
     // Set button labels and visibility
     //
     // This assumes that button0 defaults to a visible "ok" button, and

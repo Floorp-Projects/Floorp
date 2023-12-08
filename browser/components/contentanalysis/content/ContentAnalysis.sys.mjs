@@ -16,6 +16,13 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
+XPCOMUtils.defineLazyServiceGetter(
+  lazy,
+  "gContentAnalysis",
+  "@mozilla.org/contentanalysis;1",
+  Ci.nsIContentAnalysis
+);
+
 ChromeUtils.defineESModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
@@ -387,7 +394,10 @@ export const ContentAnalysis = {
   },
 
   _shouldShowBlockingNotification(aOperation) {
-    return false;
+    return !(
+      aOperation == Ci.nsIContentAnalysisRequest.FILE_DOWNLOADED ||
+      aOperation == Ci.nsIContentAnalysisRequest.PRINT
+    );
   },
 
   // This function also transforms the nameOrL10NId so we won't have to
@@ -486,7 +496,8 @@ export const ContentAnalysis = {
         content: this._getResourceNameFromNameOrL10NId(aResourceNameOrL10NId),
       }),
       Ci.nsIPromptService.BUTTON_POS_0 *
-        Ci.nsIPromptService.BUTTON_TITLE_CANCEL,
+        Ci.nsIPromptService.BUTTON_TITLE_CANCEL +
+        Ci.nsIPromptService.SHOW_SPINNER,
       null,
       null,
       null,
@@ -504,6 +515,7 @@ export const ContentAnalysis = {
         // This is also be called if the tab/window is closed while a request is in progress,
         // in which case we need to cancel the request.
         if (this.requestTokenToRequestInfo.delete(aRequestToken)) {
+          lazy.gContentAnalysis.cancelContentAnalysisRequest(aRequestToken);
           let dlpBusyView =
             this.dlpBusyViewsByTopBrowsingContext.getEntry(aBrowsingContext);
           if (dlpBusyView) {
