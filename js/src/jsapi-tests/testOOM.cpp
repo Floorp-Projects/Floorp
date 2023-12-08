@@ -33,22 +33,25 @@ END_TEST(testOOM)
 
 const uint32_t maxAllocsPerTest = 100;
 
-#  define START_OOM_TEST(name)                                    \
-    testName = name;                                              \
-    printf("Test %s: started: ", testName);                       \
-    for (oomAfter = 1; oomAfter < maxAllocsPerTest; ++oomAfter) { \
-      js::oom::simulator.simulateFailureAfter(                    \
-          js::oom::FailureSimulator::Kind::OOM, oomAfter,         \
-          js::THREAD_TYPE_MAIN, true)
+#  define START_OOM_TEST(name)                                      \
+    testName = name;                                                \
+    for (bool always : {false, true}) {                             \
+      const char* subTest = always ? "fail always" : "fail once";   \
+      printf("Test %s (%s): started: ", testName, subTest);         \
+      for (oomAfter = 1; oomAfter < maxAllocsPerTest; ++oomAfter) { \
+        js::oom::simulator.simulateFailureAfter(                    \
+            js::oom::FailureSimulator::Kind::OOM, oomAfter,         \
+            js::THREAD_TYPE_MAIN, always)
 
-#  define END_OOM_TEST                                                       \
-    if (!js::oom::HadSimulatedOOM()) {                                       \
-      printf("\nTest %s: finished with %" PRIu64 " allocations\n", testName, \
-             oomAfter - 1);                                                  \
-      break;                                                                 \
-    }                                                                        \
-    }                                                                        \
-    js::oom::simulator.reset();                                              \
+#  define END_OOM_TEST                                                  \
+    if (!js::oom::HadSimulatedOOM()) {                                  \
+      printf("\nTest %s (%s): finished with %" PRIu64 " allocations\n", \
+             testName, subTest, oomAfter - 1);                          \
+      break;                                                            \
+    }                                                                   \
+    }                                                                   \
+    }                                                                   \
+    js::oom::simulator.reset();                                         \
     CHECK(oomAfter != maxAllocsPerTest)
 
 #  define MARK_STAR printf("*");

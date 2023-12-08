@@ -833,7 +833,9 @@ bool GCRuntime::init(uint32_t maxbytes) {
   }
 #endif
 
-  initOrDisableParallelMarking();
+  if (!updateMarkersVector()) {
+    return false;
+  }
 
   {
     AutoLockGCBgAlloc lock(this);
@@ -1333,6 +1335,8 @@ void GCRuntime::assertNoMarkingWork() const {
 
 bool GCRuntime::initOrDisableParallelMarking() {
   // Attempt to initialize parallel marking state or disable it on failure.
+
+  MOZ_ASSERT(markers.length() != 0);
 
   if (!updateMarkersVector()) {
     parallelMarkingEnabled = false;
