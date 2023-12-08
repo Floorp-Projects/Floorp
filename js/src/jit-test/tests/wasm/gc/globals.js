@@ -161,3 +161,73 @@
   assertErrorMessage(() => importGlobalIntoType(mut_any, `(mut eqref)`), WebAssembly.LinkError, /global type mismatch/);
   importGlobalIntoType(mut_any, `(mut anyref)`);
 }
+
+// Importing globals with ref types
+{
+  const { struct, array, func } = wasmEvalText(`(module
+    (type (struct))
+    (type (array i32))
+    (func $f)
+    (global (export "struct") structref (struct.new 0))
+    (global (export "array") arrayref (array.new_fixed 1 0))
+    (global (export "func") funcref (ref.func $f))
+  )`).exports;
+
+  function importValueIntoType(v, t) {
+    wasmEvalText(`(module
+      (global (import "test" "v") ${t})
+    )`, { "test": { "v": v } });
+  }
+
+  assertErrorMessage(() => importValueIntoType(struct.value, `(mut structref)`), WebAssembly.LinkError, /global mutability mismatch/);
+
+  importValueIntoType(null, `structref`);
+  assertErrorMessage(() => importValueIntoType(null, `(ref struct)`), TypeError, /cannot pass null/);
+  assertErrorMessage(() => importValueIntoType(0, `structref`), TypeError, /can only pass/);
+  importValueIntoType(struct.value, `structref`);
+  assertErrorMessage(() => importValueIntoType(array.value, `structref`), TypeError, /can only pass/);
+
+  importValueIntoType(null, `i31ref`);
+  assertErrorMessage(() => importValueIntoType(null, `(ref i31)`), TypeError, /cannot pass null/);
+  importValueIntoType(0, `i31ref`);
+  assertErrorMessage(() => importValueIntoType(0.1, `i31ref`), TypeError, /can only pass/);
+  assertErrorMessage(() => importValueIntoType("test", `i31ref`), TypeError, /can only pass/);
+  assertErrorMessage(() => importValueIntoType(struct.value, `i31ref`), TypeError, /can only pass/);
+
+  importValueIntoType(null, `eqref`);
+  assertErrorMessage(() => importValueIntoType(null, `(ref eq)`), TypeError, /cannot pass null/);
+  assertErrorMessage(() => importValueIntoType(undefined, `(ref eq)`), TypeError, /can only pass/);
+  importValueIntoType(0, `eqref`);
+  assertErrorMessage(() => importValueIntoType(0.1, `eqref`), TypeError, /can only pass/);
+  assertErrorMessage(() => importValueIntoType((x)=>x, `eqref`), TypeError, /can only pass/);
+  assertErrorMessage(() => importValueIntoType("test", `eqref`), TypeError, /can only pass/);
+  importValueIntoType(struct.value, `eqref`);
+  assertErrorMessage(() => importValueIntoType(func.value, `eqref`), TypeError, /can only pass/);
+
+  importValueIntoType(null, `anyref`);
+  assertErrorMessage(() => importValueIntoType(null, `(ref any)`), TypeError, /cannot pass null/);
+  importValueIntoType(undefined, `(ref any)`);
+  importValueIntoType(0, `anyref`);
+  importValueIntoType(0.1, `anyref`);
+  importValueIntoType((x)=>x, `anyref`)
+  importValueIntoType("test", `anyref`);
+  importValueIntoType(struct.value, `anyref`);
+  importValueIntoType(func.value, `anyref`);
+
+  importValueIntoType(null, `externref`);
+  assertErrorMessage(() => importValueIntoType(null, `(ref extern)`), TypeError, /cannot pass null/);
+  importValueIntoType(undefined, `(ref extern)`);
+  importValueIntoType(0, `externref`);
+  importValueIntoType(0.1, `externref`);
+  importValueIntoType((x)=>x, `externref`)
+  importValueIntoType("test", `externref`);
+  importValueIntoType(struct.value, `externref`);
+  importValueIntoType(func.value, `externref`);
+
+  importValueIntoType(null, `funcref`);
+  assertErrorMessage(() => importValueIntoType(null, `(ref func)`), TypeError, /cannot pass null/);
+  assertErrorMessage(() => importValueIntoType(0, `funcref`), TypeError, /can only pass/);
+  assertErrorMessage(() => importValueIntoType((x)=>x, `funcref`), TypeError, /can only pass/);
+  importValueIntoType(func.value, `funcref`)
+  importValueIntoType(func.value, `(ref func)`)
+}

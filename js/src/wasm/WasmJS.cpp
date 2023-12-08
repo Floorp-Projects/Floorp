@@ -301,13 +301,6 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
             if (global.type() != ValType::I64 && !importFieldValue.isNumber()) {
               return ThrowBadImportType(cx, import.field, "Number");
             }
-          } else {
-            if (!global.type().isExternRef() &&
-                !importFieldValue.isObjectOrNull()) {
-              return ThrowBadImportType(cx, import.field,
-                                        "Object-or-null value required for "
-                                        "non-externref reference type");
-            }
           }
 
           if (global.isMutable()) {
