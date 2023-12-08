@@ -782,6 +782,7 @@ class DocAccessible : public HyperTextAccessible,
   PresShell* mPresShell;
 
   // Exclusively owned by IPDL so don't manually delete it!
+  // Cleared in ActorDestroy
   DocAccessibleChild* mIPCDoc;
 
   // These data structures map between LocalAccessibles and CacheDomains,

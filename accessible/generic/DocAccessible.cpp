@@ -1601,17 +1601,12 @@ void DocAccessible::DoInitialUpdate() {
         // RootAccessibles.
         MOZ_ASSERT(IsRoot());
         DocAccessibleChild* ipcDoc = IPCDoc();
-        if (ipcDoc) {
-          browserChild->SetTopLevelDocAccessibleChild(ipcDoc);
-        } else {
+        if (!ipcDoc) {
           ipcDoc = new DocAccessibleChild(this, browserChild);
+          MOZ_RELEASE_ASSERT(browserChild->SendPDocAccessibleConstructor(
+              ipcDoc, nullptr, 0, mDocumentNode->GetBrowsingContext()));
+          // trying to recover from this failing is problematic
           SetIPCDoc(ipcDoc);
-          // Subsequent initialization might depend on being able to get the
-          // top level DocAccessibleChild, so set that as early as possible.
-          browserChild->SetTopLevelDocAccessibleChild(ipcDoc);
-
-          browserChild->SendPDocAccessibleConstructor(
-              ipcDoc, nullptr, 0, mDocumentNode->GetBrowsingContext());
         }
       }
     }

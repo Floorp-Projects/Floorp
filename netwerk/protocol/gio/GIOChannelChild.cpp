@@ -123,12 +123,14 @@ GIOChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   // This must happen before the constructor message is sent.
   SetupNeckoTarget();
 
-  gNeckoChild->SendPGIOChannelConstructor(
-      this, browserChild, IPC::SerializedLoadContext(this), openArgs);
-
   // The socket transport layer in the chrome process now has a logical ref to
   // us until OnStopRequest is called.
   AddIPDLReference();
+
+  if (!gNeckoChild->SendPGIOChannelConstructor(
+          this, browserChild, IPC::SerializedLoadContext(this), openArgs)) {
+    return NS_ERROR_FAILURE;
+  }
 
   mIsPending = true;
   mWasOpened = true;

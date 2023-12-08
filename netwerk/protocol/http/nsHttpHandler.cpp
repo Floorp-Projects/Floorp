@@ -514,7 +514,7 @@ nsresult nsHttpHandler::InitConnectionMgr() {
     mConnMgr = new HttpConnectionMgrParent();
     RefPtr<nsHttpHandler> self = this;
     auto task = [self]() {
-      HttpConnectionMgrParent* parent =
+      RefPtr<HttpConnectionMgrParent> parent =
           self->mConnMgr->AsHttpConnectionMgrParent();
       Unused << SocketProcessParent::GetSingleton()
                     ->SendPHttpConnectionMgrConstructor(

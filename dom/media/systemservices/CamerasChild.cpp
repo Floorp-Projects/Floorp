@@ -41,25 +41,21 @@ class InitializeIPCThread : public Runnable {
       : Runnable("camera::InitializeIPCThread"), mCamerasChild(nullptr) {}
 
   NS_IMETHOD Run() override {
-    // Try to get the PBackground handle
+    // Get the PBackground handle
     ipc::PBackgroundChild* existingBackgroundChild =
-        ipc::BackgroundChild::GetForCurrentThread();
-    // If it's not spun up yet, block until it is, and retry
+        ipc::BackgroundChild::GetOrCreateForCurrentThread();
+    LOG(("BackgroundChild: %p", existingBackgroundChild));
     if (!existingBackgroundChild) {
-      LOG(("No existingBackgroundChild"));
-      existingBackgroundChild =
-          ipc::BackgroundChild::GetOrCreateForCurrentThread();
-      LOG(("BackgroundChild: %p", existingBackgroundChild));
-      if (!existingBackgroundChild) {
-        return NS_ERROR_FAILURE;
-      }
+      return NS_ERROR_FAILURE;
     }
 
     // Create CamerasChild
     // We will be returning the resulting pointer (synchronously) to our caller.
     mCamerasChild = static_cast<mozilla::camera::CamerasChild*>(
         existingBackgroundChild->SendPCamerasConstructor());
-
+    if (!mCamerasChild) {
+      return NS_ERROR_FAILURE;
+    }
     return NS_OK;
   }
 

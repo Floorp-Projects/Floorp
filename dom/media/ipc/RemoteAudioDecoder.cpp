@@ -56,8 +56,8 @@ MediaResult RemoteAudioDecoderChild::InitIPDL(
   }
 
   mIPDLSelfRef = this;
-  Unused << manager->SendPRemoteDecoderConstructor(
-      this, aAudioInfo, aOptions, Nothing(), aMediaEngineId, Nothing());
+  MOZ_ALWAYS_TRUE(manager->SendPRemoteDecoderConstructor(
+      this, aAudioInfo, aOptions, Nothing(), aMediaEngineId, Nothing()));
   return NS_OK;
 }
 

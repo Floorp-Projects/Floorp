@@ -133,7 +133,7 @@ ParentToParentFetchEventRespondWithResult ToParentToParent(
     copyArgs.preloadResponseEndArgs() = aArgs.preloadResponseEndArgs();
   }
 
-  FetchEventOpProxyParent* actor =
+  RefPtr<FetchEventOpProxyParent> actor =
       new FetchEventOpProxyParent(std::move(aReal), std::move(aPromise));
 
   // As long as the fetch event was pending, the FetchEventOpParent was

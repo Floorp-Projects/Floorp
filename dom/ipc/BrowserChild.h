@@ -583,16 +583,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   BrowsingContext* GetBrowsingContext() const { return mBrowsingContext; }
 
-#if defined(ACCESSIBILITY)
-  void SetTopLevelDocAccessibleChild(PDocAccessibleChild* aTopLevelChild) {
-    mTopLevelDocAccessibleChild = aTopLevelChild;
-  }
-
-  PDocAccessibleChild* GetTopLevelDocAccessibleChild() {
-    return mTopLevelDocAccessibleChild;
-  }
-#endif
-
   // The transform from the coordinate space of this BrowserChild to the
   // coordinate space of the native window its BrowserParent is in.
   mozilla::LayoutDeviceToLayoutDeviceMatrix4x4
@@ -839,9 +829,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   uintptr_t mNativeWindowHandle;
 #endif  // defined(XP_WIN)
 
-#if defined(ACCESSIBILITY)
-  PDocAccessibleChild* mTopLevelDocAccessibleChild;
-#endif
   int32_t mCancelContentJSEpoch;
 
   Maybe<LayoutDeviceToLayoutDeviceMatrix4x4> mChildToParentConversionMatrix;

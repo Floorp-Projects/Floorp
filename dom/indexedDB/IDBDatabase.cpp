@@ -609,7 +609,7 @@ RefPtr<IDBTransaction> IDBDatabase::Transaction(
     return nullptr;
   }
 
-  BackgroundTransactionChild* actor =
+  RefPtr<BackgroundTransactionChild> actor =
       new BackgroundTransactionChild(transaction.clonePtr());
 
   IDB_LOG_MARK_CHILD_TRANSACTION(
@@ -617,8 +617,12 @@ RefPtr<IDBTransaction> IDBDatabase::Transaction(
       transaction->LoggingSerialNumber(), IDB_LOG_STRINGIFY(this),
       IDB_LOG_STRINGIFY(*transaction));
 
-  MOZ_ALWAYS_TRUE(mBackgroundActor->SendPBackgroundIDBTransactionConstructor(
-      actor, sortedStoreNames, mode));
+  if (!mBackgroundActor->SendPBackgroundIDBTransactionConstructor(
+          actor, sortedStoreNames, mode)) {
+    IDB_REPORT_INTERNAL_ERR();
+    aRv.ThrowUnknownError("Failed to create IndexedDB transaction");
+    return nullptr;
+  }
 
   transaction->SetBackgroundActor(actor);
 
