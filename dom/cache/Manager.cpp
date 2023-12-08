@@ -102,7 +102,7 @@ class SetupAction final : public SyncDBAction {
     QM_TRY(MOZ_TO_RESULT(BodyCreateDir(*aDBDir)));
 
     // executes in its own transaction
-    QM_TRY(MOZ_TO_RESULT(db::CreateOrMigrateSchema(*aDBDir, *aConn)));
+    QM_TRY(MOZ_TO_RESULT(db::CreateOrMigrateSchema(*aConn)));
 
     // If the Context marker file exists, then the last session was
     // not cleanly shutdown.  In these cases sqlite will ensure that
@@ -913,11 +913,7 @@ class Manager::CachePutAllAction final : public DBAction {
     const nsresult rv = [this, &trans]() -> nsresult {
       QM_TRY(CollectEachInRange(mList, [this](Entry& e) -> nsresult {
         if (e.mRequestStream) {
-          QM_TRY_UNWRAP(int64_t bodyDiskSize,
-                        BodyFinalizeWrite(*mDBDir, e.mRequestBodyId));
-          e.mRequest.bodyDiskSize() = bodyDiskSize;
-        } else {
-          e.mRequest.bodyDiskSize() = 0;
+          QM_TRY(MOZ_TO_RESULT(BodyFinalizeWrite(*mDBDir, e.mRequestBodyId)));
         }
         if (e.mResponseStream) {
           // Gerenate padding size for opaque response if needed.
@@ -932,11 +928,7 @@ class Manager::CachePutAllAction final : public DBAction {
             mUpdatedPaddingSize += e.mResponse.paddingSize();
           }
 
-          QM_TRY_UNWRAP(int64_t bodyDiskSize,
-                        BodyFinalizeWrite(*mDBDir, e.mResponseBodyId));
-          e.mResponse.bodyDiskSize() = bodyDiskSize;
-        } else {
-          e.mResponse.bodyDiskSize() = 0;
+          QM_TRY(MOZ_TO_RESULT(BodyFinalizeWrite(*mDBDir, e.mResponseBodyId)));
         }
 
         QM_TRY_UNWRAP(

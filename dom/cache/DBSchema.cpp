@@ -8,7 +8,6 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "mozIStorageConnection.h"
-#include "mozIStorageFunction.h"
 #include "mozIStorageStatement.h"
 #include "mozStorageHelper.h"
 #include "mozilla/BasePrincipal.h"
@@ -22,13 +21,11 @@
 #include "mozilla/dom/ResponseBinding.h"
 #include "mozilla/dom/cache/CacheCommon.h"
 #include "mozilla/dom/cache/CacheTypes.h"
-#include "mozilla/dom/cache/FileUtils.h"
 #include "mozilla/dom/cache/SavedTypes.h"
 #include "mozilla/dom/cache/TypeUtils.h"
 #include "mozilla/dom/cache/Types.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/psm/TransportSecurityInfo.h"
-#include "mozilla/storage/Variant.h"
 #include "nsCOMPtr.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsComponentManagerUtils.h"
@@ -80,7 +77,7 @@ const int32_t kHackyDowngradeSchemaVersion = 25;
 const int32_t kHackyPaddingSizePresentVersion = 27;
 //
 // Update this whenever the DB schema is changed.
-const int32_t kLatestSchemaVersion = 29;
+const int32_t kLatestSchemaVersion = 28;
 // ---------
 // The following constants define the SQL schema.  These are defined in the
 // same order the SQL should be executed in CreateOrMigrateSchema().  They are
@@ -147,9 +144,7 @@ const char kTableEntries[] =
     "request_referrer_policy INTEGER NOT NULL, "
     "request_integrity TEXT NOT NULL, "
     "request_url_fragment TEXT NOT NULL, "
-    "response_padding_size INTEGER NULL, "
-    "request_body_disk_size INTEGER NULL, "
-    "response_body_disk_size INTEGER NULL "
+    "response_padding_size INTEGER NULL "
     // New columns must be added at the end of table to migrate and
     // validate properly.
     ")";
@@ -202,47 +197,6 @@ const char kTableStorage[] =
     "cache_id INTEGER NOT NULL REFERENCES caches(id), "
     "PRIMARY KEY(namespace, key) "
     ")";
-
-const char kTableUsageInfo[] =
-    "CREATE TABLE usage_info ("
-    "id INTEGER NOT NULL PRIMARY KEY, "
-    "total_disk_usage INTEGER NOT NULL "
-    ")";
-
-const char kTriggerEntriesInsert[] =
-    "CREATE TRIGGER entries_insert_trigger "
-    "AFTER INSERT ON entries "
-    "FOR EACH ROW "
-    "BEGIN "
-    "UPDATE usage_info SET total_disk_usage = total_disk_usage + "
-    "ifnull(NEW.request_body_disk_size, 0) + "
-    "ifnull(NEW.response_body_disk_size, 0) "
-    "WHERE usage_info.id = 1; "
-    "END";
-
-const char kTriggerEntriesUpdate[] =
-    "CREATE TRIGGER entries_update_trigger "
-    "AFTER UPDATE ON entries "
-    "FOR EACH ROW "
-    "BEGIN "
-    "UPDATE usage_info SET total_disk_usage = total_disk_usage - "
-    "ifnull(OLD.request_body_disk_size, 0) + "
-    "ifnull(NEW.request_body_disk_size, 0) - "
-    "ifnull(OLD.response_body_disk_size, 0) + "
-    "ifnull(NEW.response_body_disk_size, 0) "
-    "WHERE usage_info.id = 1; "
-    "END";
-
-const char kTriggerEntriesDelete[] =
-    "CREATE TRIGGER entries_delete_trigger "
-    "AFTER DELETE ON entries "
-    "FOR EACH ROW "
-    "BEGIN "
-    "UPDATE usage_info SET total_disk_usage = total_disk_usage - "
-    "ifnull(OLD.request_body_disk_size, 0) - "
-    "ifnull(OLD.response_body_disk_size, 0) "
-    "WHERE usage_info.id = 1; "
-    "END";
 
 // ---------
 // End schema definition
@@ -460,7 +414,7 @@ static Result<nsAutoCString, nsresult> HashCString(nsICryptoHash& aCrypto,
 Result<int32_t, nsresult> GetEffectiveSchemaVersion(
     mozIStorageConnection& aConn);
 nsresult Validate(mozIStorageConnection& aConn);
-nsresult Migrate(nsIFile& aDBDir, mozIStorageConnection& aConn);
+nsresult Migrate(mozIStorageConnection& aConn);
 }  // namespace
 
 class MOZ_RAII AutoDisableForeignKeyChecking {
@@ -524,7 +478,7 @@ nsresult IntegrityCheck(mozIStorageConnection& aConn) {
   return NS_OK;
 }
 
-nsresult CreateOrMigrateSchema(nsIFile& aDBDir, mozIStorageConnection& aConn) {
+nsresult CreateOrMigrateSchema(mozIStorageConnection& aConn) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   QM_TRY_UNWRAP(int32_t schemaVersion, GetEffectiveSchemaVersion(aConn));
@@ -550,7 +504,7 @@ nsresult CreateOrMigrateSchema(nsIFile& aDBDir, mozIStorageConnection& aConn) {
   if (migrating) {
     // A schema exists, but its not the current version.  Attempt to
     // migrate it to our new schema.
-    QM_TRY(MOZ_TO_RESULT(Migrate(aDBDir, aConn)));
+    QM_TRY(MOZ_TO_RESULT(Migrate(aConn)));
   } else {
     // There is no schema installed.  Create the database from scratch.
     QM_TRY(
@@ -573,16 +527,6 @@ nsresult CreateOrMigrateSchema(nsIFile& aDBDir, mozIStorageConnection& aConn) {
         aConn.ExecuteSimpleSQL(nsLiteralCString(kTableResponseUrlList))));
     QM_TRY(
         MOZ_TO_RESULT(aConn.ExecuteSimpleSQL(nsLiteralCString(kTableStorage))));
-    QM_TRY(MOZ_TO_RESULT(
-        aConn.ExecuteSimpleSQL(nsLiteralCString(kTableUsageInfo))));
-    QM_TRY(MOZ_TO_RESULT(aConn.ExecuteSimpleSQL(
-        nsLiteralCString("INSERT INTO usage_info VALUES(1, 0);"))));
-    QM_TRY(MOZ_TO_RESULT(
-        aConn.ExecuteSimpleSQL(nsLiteralCString(kTriggerEntriesInsert))));
-    QM_TRY(MOZ_TO_RESULT(
-        aConn.ExecuteSimpleSQL(nsLiteralCString(kTriggerEntriesUpdate))));
-    QM_TRY(MOZ_TO_RESULT(
-        aConn.ExecuteSimpleSQL(nsLiteralCString(kTriggerEntriesDelete))));
     QM_TRY(MOZ_TO_RESULT(aConn.SetSchemaVersion(kLatestSchemaVersion)));
     QM_TRY_UNWRAP(schemaVersion, GetEffectiveSchemaVersion(aConn));
   }
@@ -745,15 +689,6 @@ Result<int64_t, nsresult> FindOverallPaddingSize(mozIStorageConnection& aConn) {
       }));
 
   return overallPaddingSize;
-}
-
-Result<int64_t, nsresult> GetTotalDiskUsage(mozIStorageConnection& aConn) {
-  QM_TRY_INSPECT(
-      const auto& state,
-      quota::CreateAndExecuteSingleStepStatement(
-          aConn, "SELECT total_disk_usage FROM usage_info WHERE id = 1;"_ns));
-
-  QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_MEMBER(*state, GetInt64, 0));
 }
 
 Result<nsTArray<nsID>, nsresult> GetKnownBodyIds(mozIStorageConnection& aConn) {
@@ -1729,13 +1664,11 @@ nsresult InsertEntry(mozIStorageConnection& aConn, CacheId aCacheId,
                        "request_redirect, "
                        "request_integrity, "
                        "request_body_id, "
-                       "request_body_disk_size, "
                        "response_type, "
                        "response_status, "
                        "response_status_text, "
                        "response_headers_guard, "
                        "response_body_id, "
-                       "response_body_disk_size, "
                        "response_security_info_id, "
                        "response_principal_info, "
                        "response_padding_size, "
@@ -1757,13 +1690,11 @@ nsresult InsertEntry(mozIStorageConnection& aConn, CacheId aCacheId,
                        ":request_redirect, "
                        ":request_integrity, "
                        ":request_body_id, "
-                       ":request_body_disk_size, "
                        ":response_type, "
                        ":response_status, "
                        ":response_status_text, "
                        ":response_headers_guard, "
                        ":response_body_id, "
-                       ":response_body_disk_size, "
                        ":response_security_info_id, "
                        ":response_principal_info, "
                        ":response_padding_size, "
@@ -1828,9 +1759,6 @@ nsresult InsertEntry(mozIStorageConnection& aConn, CacheId aCacheId,
 
     QM_TRY(MOZ_TO_RESULT(BindId(*state, "request_body_id"_ns, aRequestBodyId)));
 
-    QM_TRY(MOZ_TO_RESULT(state->BindInt64ByName("request_body_disk_size"_ns,
-                                                aRequest.bodyDiskSize())));
-
     QM_TRY(MOZ_TO_RESULT(state->BindInt32ByName(
         "response_type"_ns, static_cast<int32_t>(aResponse.type()))));
 
@@ -1846,9 +1774,6 @@ nsresult InsertEntry(mozIStorageConnection& aConn, CacheId aCacheId,
 
     QM_TRY(
         MOZ_TO_RESULT(BindId(*state, "response_body_id"_ns, aResponseBodyId)));
-
-    QM_TRY(MOZ_TO_RESULT(state->BindInt64ByName("response_body_disk_size"_ns,
-                                                aResponse.bodyDiskSize())));
 
     if (!aResponse.securityInfo()) {
       QM_TRY(
@@ -2482,10 +2407,6 @@ nsresult Validate(mozIStorageConnection& aConn) {
       Expect("response_url_list", "table", kTableResponseUrlList),
       Expect("storage", "table", kTableStorage),
       Expect("sqlite_autoindex_storage_1", "index"),  // auto-gen by sqlite
-      Expect("usage_info", "table", kTableUsageInfo),
-      Expect("entries_insert_trigger", "trigger", kTriggerEntriesInsert),
-      Expect("entries_update_trigger", "trigger", kTriggerEntriesUpdate),
-      Expect("entries_delete_trigger", "trigger", kTriggerEntriesDelete),
   };
 
   // Read the schema from the sqlite_master table and compare.
@@ -2549,7 +2470,7 @@ nsresult Validate(mozIStorageConnection& aConn) {
 // Schema migration code
 // -----
 
-using MigrationFunc = nsresult (*)(nsIFile&, mozIStorageConnection&, bool&);
+using MigrationFunc = nsresult (*)(mozIStorageConnection&, bool&);
 struct Migration {
   int32_t mFromVersion;
   MigrationFunc mFunc;
@@ -2557,34 +2478,19 @@ struct Migration {
 
 // Declare migration functions here.  Each function should upgrade
 // the version by a single increment.  Don't skip versions.
-nsresult MigrateFrom15To16(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema);
-nsresult MigrateFrom16To17(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema);
-nsresult MigrateFrom17To18(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema);
-nsresult MigrateFrom18To19(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema);
-nsresult MigrateFrom19To20(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema);
-nsresult MigrateFrom20To21(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema);
-nsresult MigrateFrom21To22(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema);
-nsresult MigrateFrom22To23(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema);
-nsresult MigrateFrom23To24(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema);
-nsresult MigrateFrom24To25(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema);
-nsresult MigrateFrom25To26(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema);
-nsresult MigrateFrom26To27(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema);
-nsresult MigrateFrom27To28(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema);
-nsresult MigrateFrom28To29(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema);
+nsresult MigrateFrom15To16(mozIStorageConnection& aConn, bool& aRewriteSchema);
+nsresult MigrateFrom16To17(mozIStorageConnection& aConn, bool& aRewriteSchema);
+nsresult MigrateFrom17To18(mozIStorageConnection& aConn, bool& aRewriteSchema);
+nsresult MigrateFrom18To19(mozIStorageConnection& aConn, bool& aRewriteSchema);
+nsresult MigrateFrom19To20(mozIStorageConnection& aConn, bool& aRewriteSchema);
+nsresult MigrateFrom20To21(mozIStorageConnection& aConn, bool& aRewriteSchema);
+nsresult MigrateFrom21To22(mozIStorageConnection& aConn, bool& aRewriteSchema);
+nsresult MigrateFrom22To23(mozIStorageConnection& aConn, bool& aRewriteSchema);
+nsresult MigrateFrom23To24(mozIStorageConnection& aConn, bool& aRewriteSchema);
+nsresult MigrateFrom24To25(mozIStorageConnection& aConn, bool& aRewriteSchema);
+nsresult MigrateFrom25To26(mozIStorageConnection& aConn, bool& aRewriteSchema);
+nsresult MigrateFrom26To27(mozIStorageConnection& aConn, bool& aRewriteSchema);
+nsresult MigrateFrom27To28(mozIStorageConnection& aConn, bool& aRewriteSchema);
 // Configure migration functions to run for the given starting version.
 constexpr Migration sMigrationList[] = {
     Migration{15, MigrateFrom15To16}, Migration{16, MigrateFrom16To17},
@@ -2593,7 +2499,7 @@ constexpr Migration sMigrationList[] = {
     Migration{21, MigrateFrom21To22}, Migration{22, MigrateFrom22To23},
     Migration{23, MigrateFrom23To24}, Migration{24, MigrateFrom24To25},
     Migration{25, MigrateFrom25To26}, Migration{26, MigrateFrom26To27},
-    Migration{27, MigrateFrom27To28}, Migration{28, MigrateFrom28To29},
+    Migration{27, MigrateFrom27To28},
 };
 
 nsresult RewriteEntriesSchema(mozIStorageConnection& aConn) {
@@ -2616,7 +2522,7 @@ nsresult RewriteEntriesSchema(mozIStorageConnection& aConn) {
   return NS_OK;
 }
 
-nsresult Migrate(nsIFile& aDBDir, mozIStorageConnection& aConn) {
+nsresult Migrate(mozIStorageConnection& aConn) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   QM_TRY_UNWRAP(int32_t currentVersion, GetEffectiveSchemaVersion(aConn));
@@ -2632,7 +2538,7 @@ nsresult Migrate(nsIFile& aDBDir, mozIStorageConnection& aConn) {
     for (const auto& migration : sMigrationList) {
       if (migration.mFromVersion == currentVersion) {
         bool shouldRewrite = false;
-        QM_TRY(MOZ_TO_RESULT(migration.mFunc(aDBDir, aConn, shouldRewrite)));
+        QM_TRY(MOZ_TO_RESULT(migration.mFunc(aConn, shouldRewrite)));
         if (shouldRewrite) {
           rewriteSchema = true;
         }
@@ -2663,8 +2569,7 @@ nsresult Migrate(nsIFile& aDBDir, mozIStorageConnection& aConn) {
   return rv;
 }
 
-nsresult MigrateFrom15To16(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema) {
+nsresult MigrateFrom15To16(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   // Add the request_redirect column with a default value of "follow".  Note,
@@ -2683,8 +2588,7 @@ nsresult MigrateFrom15To16(nsIFile& aDBDir, mozIStorageConnection& aConn,
   return NS_OK;
 }
 
-nsresult MigrateFrom16To17(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema) {
+nsresult MigrateFrom16To17(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   // This migration path removes the response_redirected and
@@ -2799,8 +2703,7 @@ nsresult MigrateFrom16To17(nsIFile& aDBDir, mozIStorageConnection& aConn,
   return NS_OK;
 }
 
-nsresult MigrateFrom17To18(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema) {
+nsresult MigrateFrom17To18(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   // This migration is needed in order to remove "only-if-cached" RequestCache
@@ -2821,8 +2724,7 @@ nsresult MigrateFrom17To18(nsIFile& aDBDir, mozIStorageConnection& aConn,
   return NS_OK;
 }
 
-nsresult MigrateFrom18To19(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema) {
+nsresult MigrateFrom18To19(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   // This migration is needed in order to update the RequestMode values for
@@ -2846,8 +2748,7 @@ nsresult MigrateFrom18To19(nsIFile& aDBDir, mozIStorageConnection& aConn,
   return NS_OK;
 }
 
-nsresult MigrateFrom19To20(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema) {
+nsresult MigrateFrom19To20(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   // Add the request_referrer_policy column with a default value of
@@ -2866,8 +2767,7 @@ nsresult MigrateFrom19To20(nsIFile& aDBDir, mozIStorageConnection& aConn,
   return NS_OK;
 }
 
-nsresult MigrateFrom20To21(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema) {
+nsresult MigrateFrom20To21(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   // This migration creates response_url_list table to store response_url and
@@ -3001,8 +2901,7 @@ nsresult MigrateFrom20To21(nsIFile& aDBDir, mozIStorageConnection& aConn,
   return NS_OK;
 }
 
-nsresult MigrateFrom21To22(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema) {
+nsresult MigrateFrom21To22(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   // Add the request_integrity column.
@@ -3020,8 +2919,7 @@ nsresult MigrateFrom21To22(nsIFile& aDBDir, mozIStorageConnection& aConn,
   return NS_OK;
 }
 
-nsresult MigrateFrom22To23(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema) {
+nsresult MigrateFrom22To23(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   // The only change between 22 and 23 was a different snappy compression
@@ -3031,8 +2929,7 @@ nsresult MigrateFrom22To23(nsIFile& aDBDir, mozIStorageConnection& aConn,
   return NS_OK;
 }
 
-nsresult MigrateFrom23To24(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema) {
+nsresult MigrateFrom23To24(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   // Add the request_url_fragment column.
@@ -3047,8 +2944,7 @@ nsresult MigrateFrom23To24(nsIFile& aDBDir, mozIStorageConnection& aConn,
   return NS_OK;
 }
 
-nsresult MigrateFrom24To25(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema) {
+nsresult MigrateFrom24To25(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   // The only change between 24 and 25 was a new nsIContentPolicy type.
@@ -3057,8 +2953,7 @@ nsresult MigrateFrom24To25(nsIFile& aDBDir, mozIStorageConnection& aConn,
   return NS_OK;
 }
 
-nsresult MigrateFrom25To26(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema) {
+nsresult MigrateFrom25To26(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   // Add the response_padding_size column.
@@ -3079,8 +2974,7 @@ nsresult MigrateFrom25To26(nsIFile& aDBDir, mozIStorageConnection& aConn,
   return NS_OK;
 }
 
-nsresult MigrateFrom26To27(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema) {
+nsresult MigrateFrom26To27(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   QM_TRY(MOZ_TO_RESULT(aConn.SetSchemaVersion(kHackyDowngradeSchemaVersion)));
@@ -3088,8 +2982,7 @@ nsresult MigrateFrom26To27(nsIFile& aDBDir, mozIStorageConnection& aConn,
   return NS_OK;
 }
 
-nsresult MigrateFrom27To28(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema) {
+nsresult MigrateFrom27To28(mozIStorageConnection& aConn, bool& aRewriteSchema) {
   MOZ_ASSERT(!NS_IsMainThread());
 
   // In Bug 1264178, we added a column request_integrity into table entries.
@@ -3101,141 +2994,6 @@ nsresult MigrateFrom27To28(nsIFile& aDBDir, mozIStorageConnection& aConn,
                              "WHERE request_integrity is NULL;"_ns)));
 
   QM_TRY(MOZ_TO_RESULT(aConn.SetSchemaVersion(28)));
-
-  return NS_OK;
-}
-
-class BodyDiskSizeGetterFunction final : public mozIStorageFunction {
- public:
-  explicit BodyDiskSizeGetterFunction(nsCOMPtr<nsIFile> aDBDir)
-      : mDBDir(std::move(aDBDir)), mTotalDiskUsage(0) {}
-
-  NS_DECL_ISUPPORTS
-
-  int64_t TotalDiskUsage() const { return mTotalDiskUsage; }
-
- private:
-  ~BodyDiskSizeGetterFunction() = default;
-
-  NS_IMETHOD
-  OnFunctionCall(mozIStorageValueArray* aArguments,
-                 nsIVariant** aResult) override {
-    MOZ_ASSERT(aArguments);
-    MOZ_ASSERT(aResult);
-
-    AUTO_PROFILER_LABEL("BodyDiskSizeGetterFunction::OnFunctionCall", DOM);
-
-    uint32_t argc;
-    QM_TRY(MOZ_TO_RESULT(aArguments->GetNumEntries(&argc)));
-
-    if (argc != 1) {
-      NS_WARNING("Don't call me with the wrong number of arguments!");
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    int32_t type;
-    QM_TRY(MOZ_TO_RESULT(aArguments->GetTypeOfIndex(0, &type)));
-
-    if (type == mozIStorageStatement::VALUE_TYPE_NULL) {
-      nsCOMPtr<nsIVariant> result = new mozilla::storage::NullVariant();
-
-      result.forget(aResult);
-      return NS_OK;
-    }
-
-    if (type != mozIStorageStatement::VALUE_TYPE_TEXT) {
-      NS_WARNING("Don't call me with the wrong type of arguments!");
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    QM_TRY_INSPECT(const auto& idString,
-                   MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsAutoCString, aArguments,
-                                                     GetUTF8String, 0));
-
-    nsID id{};
-    QM_TRY(OkIf(id.Parse(idString.get())), Err(NS_ERROR_UNEXPECTED));
-
-    QM_TRY_INSPECT(
-        const auto& fileSize,
-        QM_OR_ELSE_WARN_IF(
-            // Expression.
-            GetBodyDiskSize(*mDBDir, id),
-            // Predicate.
-            ([](const nsresult rv) { return rv == NS_ERROR_FILE_NOT_FOUND; }),
-            // Fallback. If the file does no longer exist, treat
-            // it as 0-sized.
-            (ErrToOk<0, int64_t>)));
-
-    CheckedInt64 totalDiskUsage = mTotalDiskUsage + fileSize;
-    mTotalDiskUsage =
-        totalDiskUsage.isValid() ? totalDiskUsage.value() : INT64_MAX;
-
-    nsCOMPtr<nsIVariant> result =
-        new mozilla::storage::IntegerVariant(fileSize);
-
-    result.forget(aResult);
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIFile> mDBDir;
-  int64_t mTotalDiskUsage;
-};
-
-NS_IMPL_ISUPPORTS(BodyDiskSizeGetterFunction, mozIStorageFunction)
-
-nsresult MigrateFrom28To29(nsIFile& aDBDir, mozIStorageConnection& aConn,
-                           bool& aRewriteSchema) {
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  QM_TRY(MOZ_TO_RESULT(aConn.ExecuteSimpleSQL(
-      "ALTER TABLE entries "
-      "ADD COLUMN request_body_disk_size INTEGER NULL;"_ns)));
-
-  QM_TRY(MOZ_TO_RESULT(aConn.ExecuteSimpleSQL(
-      "ALTER TABLE entries "
-      "ADD COLUMN response_body_disk_size INTEGER NULL;"_ns)));
-
-  RefPtr<BodyDiskSizeGetterFunction> bodyDiskSizeGetter =
-      new BodyDiskSizeGetterFunction(&aDBDir);
-
-  constexpr auto bodyDiskSizeGetterName = "get_body_disk_size"_ns;
-
-  QM_TRY(MOZ_TO_RESULT(
-      aConn.CreateFunction(bodyDiskSizeGetterName, 1, bodyDiskSizeGetter)));
-
-  QM_TRY(MOZ_TO_RESULT(aConn.ExecuteSimpleSQL(
-      "UPDATE entries SET "
-      "request_body_disk_size = get_body_disk_size(request_body_id), "
-      "response_body_disk_size = get_body_disk_size(response_body_id);"_ns)));
-
-  QM_TRY(MOZ_TO_RESULT(aConn.RemoveFunction(bodyDiskSizeGetterName)));
-
-  QM_TRY(
-      MOZ_TO_RESULT(aConn.ExecuteSimpleSQL(nsLiteralCString(kTableUsageInfo))));
-
-  QM_TRY_INSPECT(
-      const auto& state,
-      MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
-          nsCOMPtr<mozIStorageStatement>, aConn, CreateStatement,
-          "INSERT INTO usage_info VALUES(1, :total_disk_usage);"_ns));
-
-  QM_TRY(MOZ_TO_RESULT(state->BindInt64ByName(
-      "total_disk_usage"_ns, bodyDiskSizeGetter->TotalDiskUsage())));
-
-  QM_TRY(MOZ_TO_RESULT(state->Execute()));
-
-  QM_TRY(MOZ_TO_RESULT(
-      aConn.ExecuteSimpleSQL(nsLiteralCString(kTriggerEntriesInsert))));
-
-  QM_TRY(MOZ_TO_RESULT(
-      aConn.ExecuteSimpleSQL(nsLiteralCString(kTriggerEntriesUpdate))));
-
-  QM_TRY(MOZ_TO_RESULT(
-      aConn.ExecuteSimpleSQL(nsLiteralCString(kTriggerEntriesDelete))));
-
-  QM_TRY(MOZ_TO_RESULT(aConn.SetSchemaVersion(29)));
-
-  aRewriteSchema = true;
 
   return NS_OK;
 }
