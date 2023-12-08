@@ -10,10 +10,10 @@ DUMP_SYMBOLS_FLAGS = --count-ctors
 
 ifdef CLANG_CL
 ifdef MOZ_PROFILE_USE
-ifeq (x86,$(CPU_ARCH))
+ifeq (x86,$(TARGET_CPU))
 PGO_LDFLAGS += -ORDER:@$(topsrcdir)/build/win32/orderfile.txt
 endif
-ifeq (x86_64,$(CPU_ARCH))
+ifeq (x86_64,$(TARGET_CPU))
 PGO_LDFLAGS += -ORDER:@$(topsrcdir)/build/win64/orderfile.txt
 endif
 endif

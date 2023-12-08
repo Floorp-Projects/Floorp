@@ -60,7 +60,7 @@ checks = [
     "seh",
 ]
 
-if buildconfig.substs["CPU_ARCH"] == "x86":
+if buildconfig.substs["TARGET_CPU"] == "x86":
     checks += [
         "safeSEH",
     ]

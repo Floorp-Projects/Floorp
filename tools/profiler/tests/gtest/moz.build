@@ -7,7 +7,7 @@
 if (
     CONFIG["MOZ_GECKO_PROFILER"]
     and CONFIG["OS_TARGET"] in ("Android", "Linux")
-    and CONFIG["CPU_ARCH"]
+    and CONFIG["TARGET_CPU"]
     in (
         "arm",
         "aarch64",

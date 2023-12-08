@@ -49,7 +49,7 @@ Makefile/moz.build practices
           'bar'
       ]
 
--  Use ``CONFIG['CPU_ARCH'] {=arm}`` to test for generic classes of
+-  Use ``CONFIG['TARGET_CPU'] {=arm}`` to test for generic classes of
    architecture rather than ``CONFIG['OS_TEST'] {=armv7}`` (re: bug 886689).
 
 

@@ -30,13 +30,13 @@ The rough steps are:
   "panic: assertion cv8_state.source_files != NULL failed at output/codeview.c:517"
   These files can be identified by the `%if ARCH_X86_64` conditional around the entire contents.
   To work around this error, move the sources to the moz.build block with the
-  `if CONFIG['CPU_ARCH'] == 'x86_64'` conditional.
+  `if CONFIG['TARGET_CPU'] == 'x86_64'` conditional.
   See https://bugzilla.mozilla.org/show_bug.cgi?id=1712832 and
       https://bugzilla.nasm.us/show_bug.cgi?id=3392658
 - Some files will be automatically added to the various autovendored_sources.mozbuild files.
   In the case of the asm dir, these may cause build failures on particular platforms which
   can be resolved by moving those out of autovendored_sources.mozbuild and into the regular
-  moz.build which has a condition on CONFIG['CPU_ARCH'].
+  moz.build which has a condition on CONFIG['TARGET_CPU'].
 - Files ending in _tmpl.c may be automatically added to SOURCES, resulting in build failures.
   To fix this, the file must be moved to the appropriate bitdepth_basenames list where
   generate_source.py will generate the templates into buildable source files. In general,

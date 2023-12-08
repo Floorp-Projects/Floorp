@@ -30,7 +30,7 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
     ]
 
     if CONFIG["OS_TARGET"] in ("Android", "Linux", "FreeBSD"):
-        if CONFIG["CPU_ARCH"] in ("arm", "aarch64", "x86", "x86_64", "mips64"):
+        if CONFIG["TARGET_CPU"] in ("arm", "aarch64", "x86", "x86_64", "mips64"):
             UNIFIED_SOURCES += [
                 "lul/AutoObjectMapper.cpp",
                 "lul/LulCommon.cpp",
@@ -44,7 +44,7 @@ if CONFIG["MOZ_GECKO_PROFILER"]:
         SOURCES += [
             "core/shared-libraries-linux.cc",
         ]
-        if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] != "FreeBSD":
+        if CONFIG["TARGET_CPU"] == "arm" and CONFIG["OS_TARGET"] != "FreeBSD":
             SOURCES += [
                 "core/EHABIStackWalk.cpp",
             ]

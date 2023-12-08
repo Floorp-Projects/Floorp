@@ -38,10 +38,10 @@ SOURCES += [
     'vp9mc_16bpp.asm',
 ]
 
-if CONFIG['CPU_ARCH'] == 'x86':
+if CONFIG['TARGET_CPU'] == 'x86':
     SOURCES += [ 'simple_idct.asm' ]
 
-if CONFIG['CPU_ARCH'] == 'x86_64':
+if CONFIG['TARGET_CPU'] == 'x86_64':
     SOURCES += [ 'simple_idct10.asm' ]
 
 if CONFIG['MOZ_LIBAV_FFT']:

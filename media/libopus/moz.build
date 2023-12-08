@@ -28,7 +28,7 @@ DEFINES["ENABLE_HARDENING"] = True
 # Don"t export symbols
 DEFINES["OPUS_EXPORT"] = ""
 
-if CONFIG["CPU_ARCH"] == "arm" and CONFIG["GNU_AS"]:
+if CONFIG["TARGET_CPU"] == "arm" and CONFIG["GNU_AS"]:
     DEFINES["OPUS_ARM_ASM"] = True
     DEFINES["OPUS_ARM_EXTERNAL_ASM"] = True
     DEFINES["OPUS_ARM_INLINE_ASM"] = True
@@ -89,7 +89,7 @@ if CONFIG["MOZ_SAMPLE_TYPE_FLOAT32"]:
 else:
     UNIFIED_SOURCES += silk_sources_fixed
 
-if CONFIG["CPU_ARCH"] in ("x86", "x86_64"):
+if CONFIG["TARGET_CPU"] in ("x86", "x86_64"):
     DEFINES["OPUS_HAVE_RTCD"] = True
     DEFINES["CPU_INFO_BY_ASM"] = True
     DEFINES["OPUS_X86_MAY_HAVE_SSE"] = True
@@ -114,7 +114,7 @@ if CONFIG["CPU_ARCH"] in ("x86", "x86_64"):
            f in silk_sources_fixed_sse4_1:
             SOURCES[f].flags += ["-msse4.1"]
 
-if CONFIG["CPU_ARCH"] == "arm" and CONFIG["GNU_AS"]:
+if CONFIG["TARGET_CPU"] == "arm" and CONFIG["GNU_AS"]:
     SOURCES += celt_sources_arm_rtcd
     SOURCES += [
         "!celt_pitch_xcorr_arm-gnu.s"
@@ -134,7 +134,7 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["GNU_AS"]:
     ]
     ASFLAGS += CONFIG["NEON_FLAGS"]
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["CC_TYPE"] in ("clang", "gcc"):
+if CONFIG["TARGET_CPU"] == "aarch64" and CONFIG["CC_TYPE"] in ("clang", "gcc"):
     DEFINES["OPUS_ARM_PRESUME_AARCH64_NEON_INTR"] = True
     DEFINES["OPUS_ARM_PRESUME_NEON"] = True
     DEFINES["OPUS_ARM_PRESUME_NEON_INTR"] = True

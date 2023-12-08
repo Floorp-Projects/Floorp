@@ -35,7 +35,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
     ]
     SOURCES['resample_sse.c'].flags += CONFIG['SSE2_FLAGS']
 
-if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
+if CONFIG['TARGET_CPU'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
     DEFINES['USE_NEON'] = True
     SOURCES += [
         'resample_neon.c'

@@ -87,7 +87,7 @@ if CONFIG['LIBJPEG_TURBO_USE_NASM']:
     USE_NASM = True
 
 if CONFIG['LIBJPEG_TURBO_SIMD_FLAGS']:
-    if CONFIG['CPU_ARCH'] == 'arm':
+    if CONFIG['TARGET_CPU'] == 'arm':
         LOCAL_INCLUDES += [
             '/media/libjpeg/simd/arm',
             '/media/libjpeg/simd/arm/aarch32',
@@ -126,7 +126,7 @@ if CONFIG['LIBJPEG_TURBO_SIMD_FLAGS']:
 
         for srcfile in simd_sources:
             SOURCES[srcfile].flags += CONFIG['LIBJPEG_TURBO_SIMD_FLAGS']
-    elif CONFIG['CPU_ARCH'] == 'aarch64':
+    elif CONFIG['TARGET_CPU'] == 'aarch64':
         LOCAL_INCLUDES += [
             '/media/libjpeg/simd/arm',
             '/media/libjpeg/simd/arm/aarch64',
@@ -165,7 +165,7 @@ if CONFIG['LIBJPEG_TURBO_SIMD_FLAGS']:
 
         for srcfile in simd_sources:
             SOURCES[srcfile].flags += CONFIG['LIBJPEG_TURBO_SIMD_FLAGS']
-    elif CONFIG['CPU_ARCH'] == 'mips32':
+    elif CONFIG['TARGET_CPU'] == 'mips32':
         SOURCES += [
             'simd/mips/jsimd.c',
             'simd/mips/jsimd_dspr2.S',
@@ -174,7 +174,7 @@ if CONFIG['LIBJPEG_TURBO_SIMD_FLAGS']:
             SOURCES['simd/mips/jsimd_dspr2.S'].flags += [
                 '-fno-integrated-as',
             ]
-    elif CONFIG['CPU_ARCH'] == 'mips64':
+    elif CONFIG['TARGET_CPU'] == 'mips64':
         LOCAL_INCLUDES += ['/media/libjpeg/simd/mips64']
         simd_sources = [
             'simd/mips64/jccolor-mmi.c',
@@ -195,7 +195,7 @@ if CONFIG['LIBJPEG_TURBO_SIMD_FLAGS']:
         ]
         for srcfile in simd_sources:
             SOURCES[srcfile].flags += CONFIG['LIBJPEG_TURBO_SIMD_FLAGS']
-    elif CONFIG['CPU_ARCH'] == 'x86_64':
+    elif CONFIG['TARGET_CPU'] == 'x86_64':
         SOURCES += [
             'simd/x86_64/jccolor-avx2.asm',
             'simd/x86_64/jccolor-sse2.asm',
@@ -226,7 +226,7 @@ if CONFIG['LIBJPEG_TURBO_SIMD_FLAGS']:
             'simd/x86_64/jsimd.c',
             'simd/x86_64/jsimdcpu.asm',
         ]
-    elif CONFIG['CPU_ARCH'] == 'x86':
+    elif CONFIG['TARGET_CPU'] == 'x86':
         SOURCES += [
             'simd/i386/jccolor-avx2.asm',
             'simd/i386/jccolor-mmx.asm',
@@ -274,7 +274,7 @@ if CONFIG['LIBJPEG_TURBO_SIMD_FLAGS']:
             'simd/i386/jsimd.c',
             'simd/i386/jsimdcpu.asm',
         ]
-elif CONFIG['CPU_ARCH'].startswith('ppc'):
+elif CONFIG['TARGET_CPU'].startswith('ppc'):
     # PowerPC has no assembly files, but still needs its own headers.
     LOCAL_INCLUDES += ['/media/libjpeg/simd/powerpc']
 
@@ -309,10 +309,10 @@ else: # No SIMD support?
 ASFLAGS += CONFIG['LIBJPEG_TURBO_SIMD_FLAGS']
 
 # Make sure the x86 & x86-64 ASM files can see the necessary includes.
-if CONFIG['CPU_ARCH'] == 'x86':
+if CONFIG['TARGET_CPU'] == 'x86':
     ASFLAGS += ['-I%s/media/libjpeg/simd/nasm/' % TOPSRCDIR]
     ASFLAGS += ['-I%s/media/libjpeg/simd/i386/' % TOPSRCDIR]
-if CONFIG['CPU_ARCH'] == 'x86_64':
+if CONFIG['TARGET_CPU'] == 'x86_64':
     ASFLAGS += ['-I%s/media/libjpeg/simd/nasm/' % TOPSRCDIR]
     ASFLAGS += ['-I%s/media/libjpeg/simd/x86_64/' % TOPSRCDIR]
 

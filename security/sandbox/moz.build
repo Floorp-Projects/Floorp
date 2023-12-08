@@ -173,7 +173,7 @@ elif CONFIG["OS_ARCH"] == "WINNT":
     # might call an import.
     SOURCES["chromium/sandbox/win/src/process_thread_interception.cc"].no_pgo = True
 
-    if CONFIG["CPU_ARCH"] in ("x86_64", "aarch64"):
+    if CONFIG["TARGET_CPU"] in ("x86_64", "aarch64"):
         SOURCES += [
             "chromium/sandbox/win/src/interceptors_64.cc",
             "chromium/sandbox/win/src/resolver_64.cc",

@@ -420,7 +420,7 @@ def emit_code(fd, pref_list_filename):
     if buildconfig.substs.get("MOZ_DEBUG"):
         pp.context["DEBUG"] = "1"
 
-    if buildconfig.substs.get("CPU_ARCH") == "aarch64":
+    if buildconfig.substs.get("TARGET_CPU") == "aarch64":
         pp.context["MOZ_AARCH64"] = True
 
     if buildconfig.substs.get("MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS"):

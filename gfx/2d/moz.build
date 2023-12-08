@@ -145,7 +145,7 @@ if CONFIG["INTEL_ARCHITECTURE"]:
     SOURCES["SwizzleSSE2.cpp"].flags += CONFIG["SSE2_FLAGS"]
     SOURCES["SwizzleSSSE3.cpp"].flags += CONFIG["SSSE3_FLAGS"]
     SOURCES["ssse3-scaler.c"].flags += CONFIG["SSSE3_FLAGS"]
-elif CONFIG["CPU_ARCH"].startswith("mips"):
+elif CONFIG["TARGET_CPU"].startswith("mips"):
     SOURCES += [
         "BlurLS3.cpp",
     ]
@@ -197,7 +197,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
         "MacIOSurface.cpp",
     ]
 
-if CONFIG["CPU_ARCH"] == "aarch64" or CONFIG["BUILD_ARM_NEON"]:
+if CONFIG["TARGET_CPU"] == "aarch64" or CONFIG["BUILD_ARM_NEON"]:
     SOURCES += [
         "BlurNEON.cpp",
         "ConvolutionFilterNEON.cpp",

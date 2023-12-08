@@ -21,12 +21,12 @@ if CONFIG["OS_ARCH"] == "Linux":
     DEFINES["HAVE_POINTER_LOCALTIME_R"] = True
     DEFINES["_GNU_SOURCE"] = True
     SOURCES += ["/nsprpub/pr/src/md/unix/linux.c"]
-    if CONFIG["CPU_ARCH"] == "x86_64":
+    if CONFIG["TARGET_CPU"] == "x86_64":
         SOURCES += ["/nsprpub/pr/src/md/unix/os_Linux_x86_64.s"]
-    elif CONFIG["CPU_ARCH"] == "x86":
+    elif CONFIG["TARGET_CPU"] == "x86":
         DEFINES["i386"] = True
         SOURCES += ["/nsprpub/pr/src/md/unix/os_Linux_x86.s"]
-    elif CONFIG["CPU_ARCH"] == "ppc":
+    elif CONFIG["TARGET_CPU"] == "ppc":
         SOURCES += ["/nsprpub/pr/src/md/unix/os_Linux_ppc.s"]
 elif CONFIG["OS_TARGET"] in ("FreeBSD", "OpenBSD", "NetBSD"):
     DEFINES["HAVE_BSD_FLOCK"] = True
@@ -56,11 +56,11 @@ elif CONFIG["OS_TARGET"] == "SunOS":
     DEFINES["_PR_INET6"] = True
     DEFINES["SOLARIS"] = True
     SOURCES += ["/nsprpub/pr/src/md/unix/solaris.c"]
-    if CONFIG["CPU_ARCH"] == "x86_64":
+    if CONFIG["TARGET_CPU"] == "x86_64":
         SOURCES += ["/nsprpub/pr/src/md/unix/os_SunOS_x86_64.s"]
-    elif CONFIG["CPU_ARCH"] == "x86":
+    elif CONFIG["TARGET_CPU"] == "x86":
         SOURCES += ["/nsprpub/pr/src/md/unix/os_SunOS_x86.s"]
-    elif CONFIG["CPU_ARCH"] == "sparc64":
+    elif CONFIG["TARGET_CPU"] == "sparc64":
         ASFLAGS += ["-x", "assembler-with-cpp", "-D_ASM"]
         SOURCES += ["/nsprpub/pr/src/md/unix/os_SunOS_sparcv9.s"]
 elif CONFIG["OS_TARGET"] == "WINNT":
@@ -80,14 +80,14 @@ elif CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["_PR_GLOBAL_THREADS_ONLY"] = True
     if not CONFIG["DEBUG"]:
         DEFINES["DO_NOT_WAIT_FOR_CONNECT_OVERLAPPED_OPERATIONS"] = True
-    if CONFIG["CPU_ARCH"] == "x86_64":
+    if CONFIG["TARGET_CPU"] == "x86_64":
         DEFINES["_AMD64_"] = True
-    elif CONFIG["CPU_ARCH"] == "x86":
+    elif CONFIG["TARGET_CPU"] == "x86":
         DEFINES["_X86_"] = True
-    elif CONFIG["CPU_ARCH"] == "aarch64":
+    elif CONFIG["TARGET_CPU"] == "aarch64":
         DEFINES["_ARM64_"] = True
     else:
-        error("Unsupported CPU_ARCH value: %s" % CONFIG["CPU_ARCH"])
+        error("Unsupported TARGET_CPU value: %s" % CONFIG["TARGET_CPU"])
 else:
     error(
         'Not a supported OS_TARGET for NSPR in moz.build: "%s". Use --with-system-nspr'

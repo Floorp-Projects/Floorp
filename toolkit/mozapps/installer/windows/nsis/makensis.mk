@@ -10,7 +10,7 @@ ABS_CONFIG_DIR := $(abspath $(CONFIG_DIR))
 
 SFX_MODULE ?= $(error SFX_MODULE is not defined)
 
-ifeq ($(CPU_ARCH), aarch64)
+ifeq ($(TARGET_CPU), aarch64)
 USE_UPX := 
 else
 ifneq (,$(UPX)$(MOZ_AUTOMATION))

@@ -500,14 +500,14 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "/third_party/libwebrtc/rtc_base/win32_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":
+if CONFIG["OS_TARGET"] == "Android" and CONFIG["TARGET_CPU"] == "aarch64":
 
     DIRS += [
         "/third_party/libwebrtc/common_audio/common_audio_neon_c_gn",
         "/third_party/libwebrtc/common_audio/common_audio_neon_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android":
+if CONFIG["OS_TARGET"] == "Android" and CONFIG["TARGET_CPU"] == "arm":
 
     DIRS += [
         "/third_party/libwebrtc/common_audio/common_audio_neon_c_gn",
@@ -515,7 +515,7 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android":
         "/third_party/libwebrtc/rtc_base/system/asm_defines_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
+if CONFIG["OS_TARGET"] == "Android" and CONFIG["TARGET_CPU"] == "x86":
 
     DIRS += [
         "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
@@ -524,7 +524,7 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
         "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/vector_math_avx2_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
+if CONFIG["OS_TARGET"] == "Android" and CONFIG["TARGET_CPU"] == "x86_64":
 
     DIRS += [
         "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
@@ -533,14 +533,14 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
         "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/vector_math_avx2_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Darwin":
+if CONFIG["OS_TARGET"] == "Darwin" and CONFIG["TARGET_CPU"] == "aarch64":
 
     DIRS += [
         "/third_party/libwebrtc/common_audio/common_audio_neon_c_gn",
         "/third_party/libwebrtc/common_audio/common_audio_neon_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Darwin":
+if CONFIG["OS_TARGET"] == "Darwin" and CONFIG["TARGET_CPU"] == "x86_64":
 
     DIRS += [
         "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
@@ -550,7 +550,7 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Darwin":
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "aarch64":
 
     DIRS += [
         "/third_party/libwebrtc/common_audio/common_audio_neon_c_gn",
@@ -564,7 +564,7 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/third_party/pipewire/pipewire_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "arm":
 
     DIRS += [
         "/third_party/libwebrtc/common_audio/common_audio_neon_c_gn",
@@ -579,7 +579,7 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/third_party/pipewire/pipewire_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "mips32" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "mips32":
 
     DIRS += [
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
@@ -591,7 +591,7 @@ if CONFIG["CPU_ARCH"] == "mips32" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/third_party/pipewire/pipewire_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "mips64" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "mips64":
 
     DIRS += [
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
@@ -603,7 +603,7 @@ if CONFIG["CPU_ARCH"] == "mips64" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/third_party/pipewire/pipewire_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86":
 
     DIRS += [
         "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
@@ -620,7 +620,7 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/third_party/pipewire/pipewire_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86_64":
 
     DIRS += [
         "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
@@ -637,14 +637,14 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/third_party/pipewire/pipewire_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "OpenBSD":
+if CONFIG["OS_TARGET"] == "OpenBSD" and CONFIG["TARGET_CPU"] == "aarch64":
 
     DIRS += [
         "/third_party/libwebrtc/common_audio/common_audio_neon_c_gn",
         "/third_party/libwebrtc/common_audio/common_audio_neon_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "OpenBSD":
+if CONFIG["OS_TARGET"] == "OpenBSD" and CONFIG["TARGET_CPU"] == "x86_64":
 
     DIRS += [
         "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
@@ -654,14 +654,14 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "OpenBSD":
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "WINNT":
+if CONFIG["OS_TARGET"] == "WINNT" and CONFIG["TARGET_CPU"] == "aarch64":
 
     DIRS += [
         "/third_party/libwebrtc/common_audio/common_audio_neon_c_gn",
         "/third_party/libwebrtc/common_audio/common_audio_neon_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "WINNT":
+if CONFIG["OS_TARGET"] == "WINNT" and CONFIG["TARGET_CPU"] == "x86":
 
     DIRS += [
         "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
@@ -671,7 +671,7 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "WINNT":
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "WINNT":
+if CONFIG["OS_TARGET"] == "WINNT" and CONFIG["TARGET_CPU"] == "x86_64":
 
     DIRS += [
         "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
@@ -681,14 +681,14 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "WINNT":
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "ppc64" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "ppc64":
 
     DIRS += [
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
         "/third_party/libwebrtc/modules/desktop_capture/primitives_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "riscv64" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "riscv64":
 
     DIRS += [
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",

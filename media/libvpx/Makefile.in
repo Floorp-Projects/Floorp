@@ -6,7 +6,7 @@
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(CPU_ARCH),arm)
+ifeq ($(TARGET_CPU),arm)
 ifdef GNU_AS
 # The ARM asm is written in ARM RVCT syntax, but we actually build it with
 # gas using GNU syntax. Add some rules to perform the conversion.

@@ -4,6 +4,6 @@
 
 # Workaround for alignment problems in gcov code. See
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1413570#c2.
-ifeq ($(CPU_ARCH),x86)
+ifeq ($(TARGET_CPU),x86)
 PROFILE_GEN_CFLAGS += -mno-sse2
 endif

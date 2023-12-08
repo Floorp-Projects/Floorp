@@ -10,7 +10,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["UNICODE"] = True
     DEFINES["_UNICODE"] = True
 
-    if CONFIG["CPU_ARCH"] == "x86_64":
+    if CONFIG["TARGET_CPU"] == "x86_64":
         UNIFIED_SOURCES += [
             "MozStackFrameSymbolizer.cpp",
             "Win64ModuleUnwindMetadata.cpp",

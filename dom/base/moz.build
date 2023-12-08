@@ -501,7 +501,7 @@ if CONFIG["MOZ_PLACES"]:
 # on win32 if we add these files to UNIFIED_SOURCES then the compiler generates
 # larger stack frames for some recursive functions that cause us to hit stack
 # overflows (see bug 1824565)
-if CONFIG["OS_ARCH"] == "WINNT" and CONFIG["CPU_ARCH"] == "x86":
+if CONFIG["OS_ARCH"] == "WINNT" and CONFIG["TARGET_CPU"] == "x86":
     SOURCES += [
         "CompressionStream.cpp",
         "DecompressionStream.cpp",
@@ -541,7 +541,7 @@ if CONFIG["INTEL_ARCHITECTURE"]:
 
 # Are we targeting PowerPC? If so, we can enable a SIMD version for
 # nsTextFragment.cpp as well.
-if CONFIG["CPU_ARCH"].startswith("ppc"):
+if CONFIG["TARGET_CPU"].startswith("ppc"):
     SOURCES += ["nsTextFragmentVMX.cpp"]
     SOURCES["nsTextFragmentVMX.cpp"].flags += CONFIG["PPC_VMX_FLAGS"]
 

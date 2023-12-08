@@ -1356,7 +1356,7 @@ if CONFIG["OS_TARGET"] in ("Android", "Linux", "FreeBSD"):
         "sys/auxv.h",
     ]
 
-if CONFIG["OS_TARGET"] == "Linux" and CONFIG["CPU_ARCH"].startswith("mips"):
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"].startswith("mips"):
     system_headers += [
         "sys/cachectl.h",
     ]

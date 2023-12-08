@@ -10,7 +10,7 @@ dnl ========================================================
 if test -n "$MOZ_ASAN"; then
     if test -n "$CLANG_CL"; then
         # Look for the ASan runtime binary
-        if test "$CPU_ARCH" = "x86_64"; then
+        if test "$TARGET_CPU" = "x86_64"; then
           MOZ_CLANG_RT_ASAN_LIB=clang_rt.asan_dynamic-x86_64.dll
         else
           MOZ_CLANG_RT_ASAN_LIB=clang_rt.asan_dynamic-i386.dll

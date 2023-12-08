@@ -16,7 +16,7 @@ EXPORTS.mozilla.interceptor += [
     "VMSharingPolicies.h",
 ]
 
-if CONFIG["CPU_ARCH"] == "aarch64":
+if CONFIG["TARGET_CPU"] == "aarch64":
     Library("interceptor")
 
     FINAL_LIBRARY = "mozglue"

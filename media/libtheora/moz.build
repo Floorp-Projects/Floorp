@@ -55,9 +55,9 @@ if CONFIG['INTEL_ARCHITECTURE']:
         if CONFIG['CC_TYPE'] == 'clang-cl':
             # clang-cl can't handle libtheora's inline asm.
             pass
-        elif CONFIG['OS_ARCH'] != 'WINNT' or CONFIG['CPU_ARCH'] != 'x86_64':
+        elif CONFIG['OS_ARCH'] != 'WINNT' or CONFIG['TARGET_CPU'] != 'x86_64':
             DEFINES['OC_X86_ASM'] = True
-            if CONFIG['CPU_ARCH'] == 'x86_64':
+            if CONFIG['TARGET_CPU'] == 'x86_64':
                 DEFINES['OC_X86_64_ASM'] = True
     if CONFIG['CC_TYPE'] == 'clang-cl':
         # clang-cl can't handle libtheora's inline asm.
@@ -80,7 +80,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
         ]
 
 if CONFIG['GNU_AS']:
-    if CONFIG['CPU_ARCH'] == 'arm':
+    if CONFIG['TARGET_CPU'] == 'arm':
         SOURCES += [
             'lib/arm/armcpu.c',
             'lib/arm/armstate.c',

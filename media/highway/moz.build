@@ -8,7 +8,7 @@ LOCAL_INCLUDES += [
     "/third_party/highway/",
 ]
 
-if CONFIG["CPU_ARCH"] == "ppc64" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["TARGET_CPU"] == "ppc64" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["TOOLCHAIN_MISS_ASM_HWCAP_H"] = True
 
 SOURCES += [

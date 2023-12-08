@@ -15,11 +15,11 @@ LOCAL_INCLUDES += [
 
 # We currently only support building on Linux for fuzzing here, as guarded
 # in media/libaom/moz.build. More support can be added later if necessary.
-if CONFIG['CPU_ARCH'] == 'x86_64':
+if CONFIG['TARGET_CPU'] == 'x86_64':
     LOCAL_INCLUDES += [
         '/media/libdav1d/asm/x86_64/',
     ]
-elif CONFIG['CPU_ARCH'] == 'x86':
+elif CONFIG['TARGET_CPU'] == 'x86':
     LOCAL_INCLUDES += [
         '/media/libdav1d/asm/x86_32/',
     ]

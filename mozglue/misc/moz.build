@@ -51,7 +51,7 @@ SOURCES += [
     "Uptime.cpp",
 ]
 
-if CONFIG["CPU_ARCH"].startswith("x86"):
+if CONFIG["TARGET_CPU"].startswith("x86"):
     SOURCES += [
         "SIMD_avx2.cpp",
         "SSE.cpp",

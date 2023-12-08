@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG["CPU_ARCH"] == "x86_64":
+if CONFIG["TARGET_CPU"] == "x86_64":
     if CONFIG["CC_TYPE"] in ("clang", "gcc"):
         SOURCES += [
             "xptcinvoke_x86_64.cpp",
@@ -14,7 +14,7 @@ if CONFIG["CPU_ARCH"] == "x86_64":
     else:
         SOURCES += ["xptcinvoke_x86_64.cpp", "xptcstubs_x86_64.cpp"]
         SOURCES += ["xptcinvoke_asm_x86_64.asm", "xptcstubs_asm_x86_64.asm"]
-elif CONFIG["CPU_ARCH"] == "x86":
+elif CONFIG["TARGET_CPU"] == "x86":
     if CONFIG["CC_TYPE"] in ("clang", "gcc"):
         SOURCES += [
             "xptcinvoke_x86_gnu.cpp",
@@ -27,7 +27,7 @@ elif CONFIG["CPU_ARCH"] == "x86":
             "xptcstubs.cpp",
         ]
         SOURCES["xptcinvoke_asm_x86_msvc.asm"].flags += ["-safeseh"]
-elif CONFIG["CPU_ARCH"] == "aarch64":
+elif CONFIG["TARGET_CPU"] == "aarch64":
     SOURCES += [
         "xptcinvoke_aarch64.cpp",
         "xptcstubs_aarch64.cpp",

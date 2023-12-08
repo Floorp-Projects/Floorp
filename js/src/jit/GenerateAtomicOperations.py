@@ -9,7 +9,7 @@
 import buildconfig
 
 is_64bit = "JS_64BIT" in buildconfig.defines
-cpu_arch = buildconfig.substs["CPU_ARCH"]
+cpu_arch = buildconfig.substs["TARGET_CPU"]
 is_gcc = buildconfig.substs["CC_TYPE"] == "gcc"
 
 

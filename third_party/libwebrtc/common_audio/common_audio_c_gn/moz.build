@@ -198,12 +198,12 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "aarch64":
+if CONFIG["TARGET_CPU"] == "aarch64":
 
     DEFINES["WEBRTC_ARCH_ARM64"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
-if CONFIG["CPU_ARCH"] == "arm":
+if CONFIG["TARGET_CPU"] == "arm":
 
     CFLAGS += [
         "-mfpu=neon"
@@ -213,7 +213,7 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
-if CONFIG["CPU_ARCH"] == "mips32":
+if CONFIG["TARGET_CPU"] == "mips32":
 
     DEFINES["MIPS32_LE"] = True
     DEFINES["MIPS_FPU_LE"] = True
@@ -232,7 +232,7 @@ if CONFIG["CPU_ARCH"] == "mips32":
         "/third_party/libwebrtc/common_audio/signal_processing/min_max_operations_mips.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "mips64":
+if CONFIG["TARGET_CPU"] == "mips64":
 
     DEFINES["_GNU_SOURCE"] = True
 
@@ -242,7 +242,7 @@ if CONFIG["CPU_ARCH"] == "mips64":
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "ppc64":
+if CONFIG["TARGET_CPU"] == "ppc64":
 
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
@@ -250,7 +250,7 @@ if CONFIG["CPU_ARCH"] == "ppc64":
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "riscv64":
+if CONFIG["TARGET_CPU"] == "riscv64":
 
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
@@ -258,11 +258,11 @@ if CONFIG["CPU_ARCH"] == "riscv64":
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86":
+if CONFIG["TARGET_CPU"] == "x86":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
 
-if CONFIG["CPU_ARCH"] == "x86_64":
+if CONFIG["TARGET_CPU"] == "x86_64":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
 
@@ -290,21 +290,21 @@ if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["USE_X11"] = "1"
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":
+if CONFIG["OS_TARGET"] == "Android" and CONFIG["TARGET_CPU"] == "aarch64":
 
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android":
+if CONFIG["OS_TARGET"] == "Android" and CONFIG["TARGET_CPU"] == "arm":
 
     OS_LIBS += [
         "android_support",
         "unwind"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
+if CONFIG["OS_TARGET"] == "Android" and CONFIG["TARGET_CPU"] == "x86":
 
     CFLAGS += [
         "-msse2"
@@ -319,14 +319,14 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
+if CONFIG["OS_TARGET"] == "Android" and CONFIG["TARGET_CPU"] == "x86_64":
 
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "aarch64":
 
     DEFINES["_GNU_SOURCE"] = True
 
@@ -336,7 +336,7 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "arm":
 
     DEFINES["_GNU_SOURCE"] = True
 
@@ -344,7 +344,7 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/common_audio/signal_processing/complex_fft.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86":
 
     CFLAGS += [
         "-msse2"
@@ -358,7 +358,7 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86_64":
 
     DEFINES["_GNU_SOURCE"] = True
 

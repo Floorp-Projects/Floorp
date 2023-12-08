@@ -421,7 +421,7 @@ class AsmFlags(BaseCompileFlags):
                     debug_flags += ["-F", "dwarf"]
             elif (
                 self._context.config.substs.get("OS_ARCH") == "WINNT"
-                and self._context.config.substs.get("CPU_ARCH") == "aarch64"
+                and self._context.config.substs.get("TARGET_CPU") == "aarch64"
             ):
                 # armasm64 accepts a paucity of options compared to ml/ml64.
                 pass

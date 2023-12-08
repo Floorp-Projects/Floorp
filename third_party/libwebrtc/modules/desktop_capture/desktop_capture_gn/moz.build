@@ -236,12 +236,12 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "/third_party/libwebrtc/modules/desktop_capture/window_finder_win.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "aarch64":
+if CONFIG["TARGET_CPU"] == "aarch64":
 
     DEFINES["WEBRTC_ARCH_ARM64"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
-if CONFIG["CPU_ARCH"] == "arm":
+if CONFIG["TARGET_CPU"] == "arm":
 
     CXXFLAGS += [
         "-mfpu=neon"
@@ -277,7 +277,7 @@ if CONFIG["CPU_ARCH"] == "arm":
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "mips32":
+if CONFIG["TARGET_CPU"] == "mips32":
 
     DEFINES["MIPS32_LE"] = True
     DEFINES["MIPS_FPU_LE"] = True
@@ -308,7 +308,7 @@ if CONFIG["CPU_ARCH"] == "mips32":
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "mips64":
+if CONFIG["TARGET_CPU"] == "mips64":
 
     DEFINES["WEBRTC_USE_PIPEWIRE"] = True
     DEFINES["_GNU_SOURCE"] = True
@@ -337,7 +337,7 @@ if CONFIG["CPU_ARCH"] == "mips64":
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "ppc64":
+if CONFIG["TARGET_CPU"] == "ppc64":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_USE_X11"] = True
@@ -365,7 +365,7 @@ if CONFIG["CPU_ARCH"] == "ppc64":
         "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "riscv64":
+if CONFIG["TARGET_CPU"] == "riscv64":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_USE_X11"] = True
@@ -393,11 +393,11 @@ if CONFIG["CPU_ARCH"] == "riscv64":
         "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86":
+if CONFIG["TARGET_CPU"] == "x86":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
 
-if CONFIG["CPU_ARCH"] == "x86_64":
+if CONFIG["TARGET_CPU"] == "x86_64":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
 
@@ -417,7 +417,7 @@ if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "WINNT":
 
     DEFINES["_HAS_ITERATOR_DEBUGGING"] = "0"
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "aarch64":
 
     DEFINES["WEBRTC_USE_PIPEWIRE"] = True
     DEFINES["_GNU_SOURCE"] = True
@@ -446,7 +446,7 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86":
 
     CXXFLAGS += [
         "-msse2"
@@ -479,7 +479,7 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86_64":
 
     DEFINES["WEBRTC_USE_PIPEWIRE"] = True
     DEFINES["_GNU_SOURCE"] = True
@@ -508,7 +508,7 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "aarch64":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_USE_X11"] = True
@@ -536,7 +536,7 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_T
         "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "arm" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "arm":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_USE_X11"] = True
@@ -564,7 +564,7 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGE
         "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "mips32" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "mips32":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_USE_X11"] = True
@@ -592,7 +592,7 @@ if CONFIG["CPU_ARCH"] == "mips32" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TA
         "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "mips64" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "mips64":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_USE_X11"] = True
@@ -620,7 +620,7 @@ if CONFIG["CPU_ARCH"] == "mips64" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TA
         "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_USE_X11"] = True
@@ -648,7 +648,7 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGE
         "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
+if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86_64":
 
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_USE_X11"] = True

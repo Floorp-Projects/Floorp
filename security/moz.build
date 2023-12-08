@@ -105,7 +105,7 @@ gyp_vars["enable_draft_hpke"] = 1
 
 # Clang can build NSS with its integrated assembler since version 9.
 if (
-    CONFIG["CPU_ARCH"] == "x86_64"
+    CONFIG["TARGET_CPU"] == "x86_64"
     and CONFIG["CC_TYPE"] == "clang"
     and int(CONFIG["CC_VERSION"].split(".")[0]) >= 9
 ):
@@ -153,7 +153,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "-DXP_WIN32",
         "-Wno-error=unused-function",  # bug 1856445
     ]
-    if CONFIG["CPU_ARCH"] == "x86":
+    if CONFIG["TARGET_CPU"] == "x86":
         # This should really be the default.
         sandbox_vars["ASFLAGS"] = ["-safeseh"]
 

@@ -78,7 +78,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES['pixman-sse2.c'].flags += CONFIG['SSE_FLAGS'] + CONFIG['SSE2_FLAGS']
     SOURCES['pixman-ssse3.c'].flags += CONFIG['SSSE3_FLAGS']
 # AArch64 NEON optimizations don't build on Windows and Mac out of the box.
-elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['OS_TARGET'] in ('Android', 'Linux', 'Darwin'):
+elif CONFIG['TARGET_CPU'] == 'aarch64' and CONFIG['OS_TARGET'] in ('Android', 'Linux', 'Darwin'):
     DEFINES['USE_ARM_A64_NEON'] = True
     if CONFIG['OS_TARGET'] == 'Darwin':
         DEFINES['ASM_LEADING_UNDERSCORE'] = True
@@ -88,7 +88,7 @@ elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['OS_TARGET'] in ('Android', 'Lin
         'pixman-arma64-neon-asm.S',
     ]
     SOURCES['pixman-arm-neon.c'].flags += ['-march=armv8-a']
-elif CONFIG['CPU_ARCH'] == 'arm':
+elif CONFIG['TARGET_CPU'] == 'arm':
     if CONFIG['HAVE_ARM_NEON']:
         DEFINES['USE_ARM_NEON'] = True
         SOURCES += [
@@ -104,7 +104,7 @@ elif CONFIG['CPU_ARCH'] == 'arm':
             'pixman-arm-simd-asm.S',
             'pixman-arm-simd.c',
         ]
-elif CONFIG['CPU_ARCH'] in ('ppc', 'ppc64'):
+elif CONFIG['TARGET_CPU'] in ('ppc', 'ppc64'):
     if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         DEFINES['USE_VMX'] = True
         SOURCES += ['pixman-vmx.c']

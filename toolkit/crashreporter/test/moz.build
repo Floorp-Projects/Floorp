@@ -28,7 +28,7 @@ SOURCES += [
     "ExceptionThrower.cpp",
 ]
 
-if CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CPU_ARCH"] == "x86_64":
+if CONFIG["OS_TARGET"] == "WINNT" and CONFIG["TARGET_CPU"] == "x86_64":
     if CONFIG["CC_TYPE"] not in ("gcc", "clang"):
         SOURCES += [
             "win64UnwindInfoTests.asm",
