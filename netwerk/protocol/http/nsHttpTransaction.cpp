@@ -3556,31 +3556,45 @@ void nsHttpTransaction::CollectTelemetryForUploads() {
     case HttpVersion::v1_0:
     case HttpVersion::v1_1:
       glean::networking::http_1_upload_throughput.AccumulateSamples({mpbs});
+      if (mRequestSize <= TELEMETRY_REQUEST_SIZE_50M) {
+        glean::networking::http_1_upload_throughput_10_50.AccumulateSamples(
+            {mpbs});
+      } else if (mRequestSize <= TELEMETRY_REQUEST_SIZE_100M) {
+        glean::networking::http_1_upload_throughput_50_100.AccumulateSamples(
+            {mpbs});
+      } else {
+        glean::networking::http_1_upload_throughput_100.AccumulateSamples(
+            {mpbs});
+      }
       break;
     case HttpVersion::v2_0:
       glean::networking::http_2_upload_throughput.AccumulateSamples({mpbs});
+      if (mRequestSize <= TELEMETRY_REQUEST_SIZE_50M) {
+        glean::networking::http_2_upload_throughput_10_50.AccumulateSamples(
+            {mpbs});
+      } else if (mRequestSize <= TELEMETRY_REQUEST_SIZE_100M) {
+        glean::networking::http_2_upload_throughput_50_100.AccumulateSamples(
+            {mpbs});
+      } else {
+        glean::networking::http_2_upload_throughput_100.AccumulateSamples(
+            {mpbs});
+      }
       break;
     case HttpVersion::v3_0:
       glean::networking::http_3_upload_throughput.AccumulateSamples({mpbs});
+      if (mRequestSize <= TELEMETRY_REQUEST_SIZE_50M) {
+        glean::networking::http_3_upload_throughput_10_50.AccumulateSamples(
+            {mpbs});
+      } else if (mRequestSize <= TELEMETRY_REQUEST_SIZE_100M) {
+        glean::networking::http_3_upload_throughput_50_100.AccumulateSamples(
+            {mpbs});
+      } else {
+        glean::networking::http_3_upload_throughput_100.AccumulateSamples(
+            {mpbs});
+      }
       break;
     default:
       break;
-  }
-
-  if ((mHttpVersion == HttpVersion::v3_0) || mSupportsHTTP3) {
-    nsAutoCString key((mHttpVersion == HttpVersion::v3_0) ? "uses_http3"
-                                                          : "supports_http3");
-    auto hist = Telemetry::HTTP3_UPLOAD_TIME_10M_100M;
-    if (mRequestSize <= TELEMETRY_REQUEST_SIZE_50M) {
-      key.Append("_10_50"_ns);
-    } else if (mRequestSize <= TELEMETRY_REQUEST_SIZE_100M) {
-      key.Append("_50_100"_ns);
-    } else {
-      hist = Telemetry::HTTP3_UPLOAD_TIME_GT_100M;
-    }
-
-    Telemetry::AccumulateTimeDelta(hist, key, mTimings.requestStart,
-                                   mTimings.responseStart);
   }
 }
 
