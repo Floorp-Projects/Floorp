@@ -657,25 +657,52 @@ interface nsIUpdateProcessor : nsISupports
   bool getServiceRegKeyExists();
 
   /**
-  * Registers an application restart upon program exit with the same
+  * Attempts to restart the application manually on program exit with the same
   * arguments it was started with, while accepting additional arguments.
-  * The application must have been running for a minimum of 60 seconds
-  * before invoking this function due to limitations in
-  * RegisterApplicationRestart.
   *
   * This function should only be called on Windows.
   *
-  * @param  argvExtra
-  *         An array of strings to be passed to the application upon
-  *         restart as additional arguments.
-  * @throws NS_ERROR_ABORT
-  *         If the application is in a restart loop.
-  * @throws NS_ERROR_NOT_IMPLEMENTED
-  *         If this is called on a non-Windows platform.
-  * @throws NS_ERROR_NOT_AVAILABLE
-  *         If the command line cannot be read.
+  * @param    argvExtra
+  *           An array of strings to be passed to the application upon
+  *           restart as additional arguments.
+  * @returns  pidRet
+  *           Returns the pid of a newly spawned child process. This value
+  *           is only valid if the function returns successfully.
+  * @throws   NS_ERROR_ABORT
+  *           If the child process failed to spawn correctly.
+  * @throws   NS_ERROR_NOT_IMPLEMENTED
+  *           If this is called on a non-Windows platform.
+  * @throws   NS_ERROR_NOT_AVAILABLE
+  *           If the command line cannot be read.
   */
-  void registerApplicationRestartWithLaunchArgs(in Array<AString> argvExtra);
+  long attemptAutomaticApplicationRestartWithLaunchArgs(in Array<AString> argvExtra);
+
+  /**
+  *   This function is meant to be used in conjunction with
+  *   RegisterApplicationRestartWithLaunchArgs() if you want the child process
+  *   that invokes this function to wait for the parent process
+  *   to finish execution. When the application has the argument
+  *   -restart-pid <pid> this function waits for the application with
+  *   <pid> to exit.
+  *
+  * This function should only be called on Windows.
+  *
+  *   @param   pid
+  *            Which process ID to wait for.
+  *   @param   timeoutMS
+  *            How long to wait for the process to exit in milliseconds.
+  *   @throws  NS_OK
+  *            On successful wait.
+  *   @throws  NS_ERROR_NOT_IMPLEMENTED
+  *            If this is called on a non-Windows platform.
+  *   @throws  NS_ERROR_INVALID_ARG
+  *            If -restart-pid has no pid parameter.
+  *   @throws  NS_ERROR_ILLEGAL_VALUE
+  *            If pid cannot be converted into unsigned int.
+  *   @throws  NS_ERROR_FAILURE
+  *            If timeout elapses without process exit.
+  */
+  void waitForProcessExit(in unsigned long pid, in unsigned long timeoutMS);
 };
 
 /**
