@@ -6,6 +6,7 @@
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <script src="helper_fission_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
   <script src="apz_test_utils.js"></script>
   <script>
 
@@ -85,6 +86,12 @@ async function promiseScrollInfoArrivalInOOPIF() {
   await Promise.all([scrollPromise, transformReceivedPromise]);
 }
 
+function isWindows11() {
+  return getPlatform() == "windows" &&
+    SpecialPowers.Services.sysinfo.getProperty("version", null) == "10.0" &&
+    SpecialPowers.Services.sysinfo.getProperty("build", null) == "22621";
+}
+
 // The actual test
 
 async function test() {
@@ -93,9 +100,17 @@ async function test() {
   await setup_in_oopif();
 
   let restyleCount = await observe_styling_in_oopif(5);
-  is(restyleCount, 0,
-     "Animation in an out-of-process iframe which is initially clipped out " +
-       "due to 'overflow: hidden' should be throttled");
+  // Allow 1 restyle count on Windows 11 since on our CIs there's something
+  // causing force flushing.
+  if (isWindows11()) {
+    ok(restyleCount <= 1,
+       "Animation in an out-of-process iframe which is initially clipped out " +
+         "due to 'overflow: hidden' should be throttled");
+  } else {
+    is(restyleCount, 0,
+       "Animation in an out-of-process iframe which is initially clipped out " +
+         "due to 'overflow: hidden' should be throttled");
+  }
 
   // Scroll synchronously to a position where the iframe gets visible.
   scroller.scrollTo(0, 1000);
