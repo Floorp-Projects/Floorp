@@ -219,14 +219,14 @@ class AsyncImagePipelineManager final {
   void ApplyAsyncImageForPipeline(const wr::Epoch& aEpoch,
                                   const wr::PipelineId& aPipelineId,
                                   AsyncImagePipeline* aPipeline,
+                                  TextureHost* aTexture,
                                   wr::TransactionBuilder& aSceneBuilderTxn,
-                                  wr::TransactionBuilder& aMaybeFastTxn,
-                                  RemoteTextureInfoList* aList);
+                                  wr::TransactionBuilder& aMaybeFastTxn);
   Maybe<TextureHost::ResourceUpdateOp> UpdateImageKeys(
       const wr::Epoch& aEpoch, const wr::PipelineId& aPipelineId,
-      AsyncImagePipeline* aPipeline, nsTArray<wr::ImageKey>& aKeys,
-      wr::TransactionBuilder& aSceneBuilderTxn,
-      wr::TransactionBuilder& aMaybeFastTxn, RemoteTextureInfoList* aList);
+      AsyncImagePipeline* aPipeline, TextureHost* aTexture,
+      nsTArray<wr::ImageKey>& aKeys, wr::TransactionBuilder& aSceneBuilderTxn,
+      wr::TransactionBuilder& aMaybeFastTxn);
   Maybe<TextureHost::ResourceUpdateOp> UpdateWithoutExternalImage(
       TextureHost* aTexture, wr::ImageKey aKey, TextureHost::ResourceUpdateOp,
       wr::TransactionBuilder& aTxn);
