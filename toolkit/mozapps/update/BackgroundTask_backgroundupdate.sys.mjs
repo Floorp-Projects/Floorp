@@ -46,6 +46,11 @@ export const backgroundTaskTimeoutSec = Services.prefs.getIntPref(
   10 * 60
 );
 
+// Add 65 second minimum run time to account for restartWithSameArgs
+// having a minimum 60 second run time to properly register a restart upon
+// program exit.
+const MINIMUM_RUN_TIME_BEFORE_RESTART_MS = 65 * 1000;
+
 /**
  * Verify that pre-conditions to update this installation (both persistent and
  * transient) are fulfilled, and if they are all fulfilled, pump the update
@@ -194,13 +199,13 @@ export async function maybeSubmitBackgroundUpdatePing() {
 export async function runBackgroundTask(commandLine) {
   let SLUG = "runBackgroundTask";
   lazy.log.error(`${SLUG}: backgroundupdate`);
-  let automaticRestartFound =
-    -1 != commandLine.findFlag("automatic-restart", false);
+  const taskStartTime = new Date().getTime();
+  let registeredRestartFound =
+    -1 !== commandLine.findFlag("registered-restart", false);
 
-  // Modify Glean metrics for a successful automatic restart.
-  if (automaticRestartFound) {
-    Glean.backgroundUpdate.automaticRestartSuccess.set(true);
-    lazy.log.debug(`${SLUG}: application automatic restart completed`);
+  // Modify Glean metrics for a successful registered restart.
+  if (registeredRestartFound) {
+    Glean.backgroundUpdate.registeredRestartSuccess.set(true);
   }
 
   // Help debugging.  This is a pared down version of
@@ -434,29 +439,36 @@ export async function runBackgroundTask(commandLine) {
   lazy.log.debug(
     `${SLUG}: Checking if staged background update is ready for restart`
   );
-  // If a restart loop is occurring then automaticRestartFound will be true.
+  // If a restart loop is occurring then registeredRestartFound will be true.
   if (
     updateStatus === lazy.AppUpdater.STATUS.READY_FOR_RESTART &&
-    !automaticRestartFound
+    !registeredRestartFound
   ) {
     lazy.log.debug(
-      `${SLUG}: Starting Firefox restart after staged background update`
+      `${SLUG}: Registering Firefox restart after staged background update, waiting for program to have a run time greater than 65 seconds`
     );
 
     // We need to restart Firefox with the same arguments to ensure
     // the background update continues from where it was before the restart.
+    // Wait for at least 65 seconds to ensure that the application
+    // has been open for long enough to correctly register a restart.
+    const taskRunTimeMs = new Date().getTime() - taskStartTime;
+    if (taskRunTimeMs < MINIMUM_RUN_TIME_BEFORE_RESTART_MS) {
+      await lazy.ExtensionUtils.promiseTimeout(
+        MINIMUM_RUN_TIME_BEFORE_RESTART_MS - taskRunTimeMs
+      );
+    }
+
     try {
       Cc["@mozilla.org/updates/update-processor;1"]
         .createInstance(Ci.nsIUpdateProcessor)
-        .attemptAutomaticApplicationRestartWithLaunchArgs([
-          "-automatic-restart",
-        ]);
-      // Report an attempted automatic restart.
-      Glean.backgroundUpdate.automaticRestartAttempted.set(true);
-      lazy.log.debug(`${SLUG}: automatic application restart queued`);
+        .registerApplicationRestartWithLaunchArgs(["-registered-restart"]);
+      lazy.log.debug(`${SLUG}: register application restart succeeded`);
+      // Report an attempted registered restart.
+      Glean.backgroundUpdate.registeredRestartAttempted.set(true);
     } catch (e) {
       lazy.log.error(
-        `${SLUG}: caught exception; failed to queue automatic application restart`,
+        `${SLUG}: caught exception; failed to register application restart`,
         e
       );
     }
