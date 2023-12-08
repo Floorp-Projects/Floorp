@@ -58,6 +58,7 @@ class FFmpegVideoEncoder<LIBAV_VER, ConfigType> final
   void DestroyFrame();
 #if LIBAVCODEC_VERSION_MAJOR >= 58
   RefPtr<EncodePromise> EncodeWithModernAPIs(RefPtr<const VideoData> aSample);
+  RefPtr<EncodePromise> DrainWithModernAPIs();
 #endif
   RefPtr<MediaRawData> ToMediaRawData(AVPacket* aPacket);
 

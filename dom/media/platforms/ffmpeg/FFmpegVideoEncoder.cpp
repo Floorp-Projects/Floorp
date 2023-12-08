@@ -354,7 +354,12 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessDrain() {
 
   FFMPEGV_LOG("ProcessDrain");
 
+#if LIBAVCODEC_VERSION_MAJOR < 58
+  FFMPEGV_LOG("FFmpegVideoEncoder needs ffmpeg 58 at least.");
   return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
+#else
+  return DrainWithModernAPIs();
+#endif
 }
 
 template <typename ConfigType>
@@ -680,6 +685,83 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::EncodeWithModernAPIs(
     if (ret < 0) {
       // AVERROR_EOF is returned when the encoder has been fully flushed, but it
       // shouldn't happen here.
+      FFMPEGV_LOG("avcodec_receive_packet error");
+      return EncodePromise::CreateAndReject(
+          MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                      RESULT_DETAIL("avcodec_receive_packet error")),
+          __func__);
+    }
+
+    RefPtr<MediaRawData> d = ToMediaRawData(pkt);
+    mLib->av_packet_unref(pkt);
+    if (!d) {
+      FFMPEGV_LOG("failed to create a MediaRawData from the AVPacket");
+      return EncodePromise::CreateAndReject(
+          MediaResult(
+              NS_ERROR_OUT_OF_MEMORY,
+              RESULT_DETAIL("Unable to get MediaRawData from AVPacket")),
+          __func__);
+    }
+    output.AppendElement(std::move(d));
+  }
+
+  FFMPEGV_LOG("get %zu encoded data", output.Length());
+  return EncodePromise::CreateAndResolve(std::move(output), __func__);
+}
+
+template <typename ConfigType>
+RefPtr<MediaDataEncoder::EncodePromise>
+FFmpegVideoEncoder<LIBAV_VER, ConfigType>::DrainWithModernAPIs() {
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+  MOZ_ASSERT(mCodecContext);
+
+  // TODO: Create a Result<EncodedData, nsresult> EncodeWithModernAPIs(AVFrame
+  // *aFrame) to merge the duplicate code below with EncodeWithModernAPIs above.
+
+  // Initialize AVPacket.
+  AVPacket* pkt = mLib->av_packet_alloc();
+  if (!pkt) {
+    FFMPEGV_LOG("failed to allocate packet");
+    return EncodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                    RESULT_DETAIL("Unable to allocate packet")),
+        __func__);
+  }
+
+  // TODO: Bug 1868906 - Allow continuing encoding after Drain().
+  // Enter draining mode by sending NULL to the avcodec_send_frame(). Note that
+  // this can leave the encoder in a permanent EOF state after draining. As a
+  // result, the encoder is unable to continue encoding. A new
+  // AVCodecContext/encoder creation is required if users need to encode after
+  // draining.
+  //
+  // TODO: Use `avcodec_flush_buffers` to drain the pending packets if
+  // AV_CODEC_CAP_ENCODER_FLUSH is set in mCodecContext->codec->capabilities.
+  if (int ret = mLib->avcodec_send_frame(mCodecContext, nullptr); ret < 0) {
+    if (ret == AVERROR_EOF) {
+      // The encoder has been flushed. Drain can be called multiple time.
+      FFMPEGV_LOG("encoder has been flushed!");
+      return EncodePromise::CreateAndResolve(EncodedData(), __func__);
+    }
+
+    FFMPEGV_LOG("avcodec_send_frame error");
+    return EncodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                    RESULT_DETAIL("avcodec_send_frame error")),
+        __func__);
+  }
+
+  EncodedData output;
+  while (true) {
+    int ret = mLib->avcodec_receive_packet(mCodecContext, pkt);
+    if (ret == AVERROR_EOF) {
+      FFMPEGV_LOG("encoder has no more output packet!");
+      break;
+    }
+
+    if (ret < 0) {
+      // avcodec_receive_packet should not result in a -EAGAIN once it's in
+      // draining mode.
       FFMPEGV_LOG("avcodec_receive_packet error");
       return EncodePromise::CreateAndReject(
           MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
