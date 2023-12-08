@@ -166,7 +166,7 @@ for icon in ("firefox", "document", "newwindow", "newtab", "pbmode"):
         icon,
     )
 
-if CONFIG["OS_TARGET"] == "WINNT"
+if CONFIG["OS_TARGET"] == "WINNT":
     checkOSBuildFloorp = "windows"
 elif CONFIG["OS_TARGET"] == "Darwin":
     checkOSBuildFloorp = "mac"
