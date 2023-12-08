@@ -596,7 +596,8 @@ static bool StateChangeMayAffectFrame(const Element& aElement,
 
 static bool RepaintForAppearance(nsIFrame& aFrame, const Element& aElement,
                                  ElementState aStateMask) {
-  if (aStateMask.HasAtLeastOneOfStates(ElementState::HOVER) &&
+  if (aStateMask.HasAtLeastOneOfStates(ElementState::HOVER |
+                                       ElementState::ACTIVE) &&
       aElement.IsAnyOfXULElements(nsGkAtoms::checkbox, nsGkAtoms::radio)) {
     // The checkbox inside these elements inherit hover state and so on, see
     // nsNativeTheme::GetContentState.
