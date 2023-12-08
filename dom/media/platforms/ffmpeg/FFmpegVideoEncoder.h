@@ -21,15 +21,16 @@ AVCodecID GetFFmpegEncoderCodecId(const nsACString& aMimeType);
 template <>
 AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(const nsACString& aMimeType);
 
-template <int V>
+template <int V, typename ConfigType>
 class FFmpegVideoEncoder {};
 
 // TODO: Bug 1860925: FFmpegDataEncoder
-template <>
-class FFmpegVideoEncoder<LIBAV_VER> final : public MediaDataEncoder {
+template <typename ConfigType>
+class FFmpegVideoEncoder<LIBAV_VER, ConfigType> final
+    : public MediaDataEncoder {
  public:
   FFmpegVideoEncoder(const FFmpegLibWrapper* aLib, AVCodecID aCodecID,
-                     RefPtr<TaskQueue> aTaskQueue);
+                     RefPtr<TaskQueue> aTaskQueue, const ConfigType& aConfig);
 
   /* MediaDataEncoder Methods */
   // All methods run on the task queue, except for GetDescriptionName.
@@ -51,6 +52,7 @@ class FFmpegVideoEncoder<LIBAV_VER> final : public MediaDataEncoder {
   const FFmpegLibWrapper* mLib;
   const AVCodecID mCodecID;
   const RefPtr<TaskQueue> mTaskQueue;
+  const ConfigType mConfig;
 
   // mTaskQueue only.
   AVCodecContext* mCodecContext;

@@ -29,9 +29,20 @@ already_AddRefed<MediaDataEncoder> FFmpegEncoderModule<V>::CreateVideoEncoder(
     return nullptr;
   }
 
-  // TODO: Properly create a FFmpegVideoDecoder with parameters in aParams.
-  RefPtr<MediaDataEncoder> encoder =
-      new FFmpegVideoEncoder<V>(mLib, codecId, aParams.mTaskQueue);
+  RefPtr<MediaDataEncoder> encoder;
+  switch (CreateEncoderParams::CodecTypeForMime(aParams.mConfig.mMimeType)) {
+    case MediaDataEncoder::CodecType::VP8:
+      encoder = new FFmpegVideoEncoder<V, MediaDataEncoder::VP8Config>(
+          mLib, codecId, aParams.mTaskQueue, aParams.ToVP8Config());
+      break;
+    case MediaDataEncoder::CodecType::VP9:
+      encoder = new FFmpegVideoEncoder<V, MediaDataEncoder::VP9Config>(
+          mLib, codecId, aParams.mTaskQueue, aParams.ToVP9Config());
+      break;
+    default:
+      FFMPEGV_LOG("No ffmpeg encoder for %s", aParams.mConfig.mMimeType.get());
+      return nullptr;
+  }
   FFMPEGV_LOG("ffmpeg %s encoder: %s has been created",
               aParams.mConfig.mMimeType.get(),
               encoder->GetDescriptionName().get());
