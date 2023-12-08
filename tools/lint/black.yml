@@ -10,6 +10,7 @@ black:
     extensions:
         - build
         - configure
+        - mozbuild
         - py
     support-files:
         - 'tools/lint/python/**'
