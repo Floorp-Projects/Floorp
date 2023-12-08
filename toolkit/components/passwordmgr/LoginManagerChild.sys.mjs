@@ -212,211 +212,228 @@ const observer = {
 
     switch (aEvent.type) {
       // Used to mask fields with filled generated passwords when blurred.
-      case "blur": {
-        if (docState.generatedPasswordFields.has(field)) {
-          docState._togglePasswordFieldMasking(field, false);
-        }
+      case "blur":
+        this.handleBlur(docState, field);
         break;
-      }
 
       // Used to watch for changes to username and password fields.
-      case "change": {
-        let formLikeRoot = lazy.FormLikeFactory.findRootForField(field);
-        if (!docState.fieldModificationsByRootElement.get(formLikeRoot)) {
-          lazy.log(
-            "Ignoring change event on form that hasn't been user-modified."
-          );
-          if (field.hasBeenTypePassword) {
-            // Send notification that the password field has not been changed.
-            // This is used only for testing.
-            loginManagerChild._ignorePasswordEdit();
-          }
-          break;
-        }
+      case "change":
+        this.handleChange(docState, field, loginManagerChild);
+        break;
 
-        docState.storeUserInput(field);
-        let detail = {
-          possibleValues: {
-            usernames: docState.possibleUsernames,
-            passwords: docState.possiblePasswords,
-          },
-        };
-        loginManagerChild.sendAsyncMessage(
-          "PasswordManager:updateDoorhangerSuggestions",
-          detail
+      case "input":
+        this.handleInput(
+          aEvent,
+          docState,
+          field,
+          loginManagerChild,
+          ownerDocument
         );
-
-        if (field.hasBeenTypePassword) {
-          let triggeredByFillingGenerated =
-            docState.generatedPasswordFields.has(field);
-          // Autosave generated password initial fills and subsequent edits
-          if (triggeredByFillingGenerated) {
-            loginManagerChild._passwordEditedOrGenerated(field, {
-              triggeredByFillingGenerated,
-            });
-          } else {
-            // Send a notification that we are not saving the edit to the password field.
-            // This is used only for testing.
-            loginManagerChild._ignorePasswordEdit();
-          }
-        }
         break;
-      }
 
-      case "input": {
-        let isPasswordType = lazy.LoginHelper.isPasswordFieldType(field);
-        // React to input into fields filled with generated passwords.
-        if (
-          docState.generatedPasswordFields.has(field) &&
-          // Depending on the edit, we may no longer want to consider
-          // the field a generated password field to avoid autosaving.
-          loginManagerChild._doesEventClearPrevFieldValue(aEvent)
-        ) {
-          docState._stopTreatingAsGeneratedPasswordField(field);
-        }
-
-        if (!isPasswordType && !lazy.LoginHelper.isUsernameFieldType(field)) {
-          break;
-        }
-
-        // React to input into potential username or password fields
-        let formLikeRoot = lazy.FormLikeFactory.findRootForField(field);
-
-        if (formLikeRoot !== aEvent.currentTarget) {
-          break;
-        }
-        // flag this form as user-modified for the closest form/root ancestor
-        let alreadyModified =
-          docState.fieldModificationsByRootElement.get(formLikeRoot);
-        let { login: filledLogin, userTriggered: fillWasUserTriggered } =
-          docState.fillsByRootElement.get(formLikeRoot) || {};
-
-        // don't flag as user-modified if the form was autofilled and doesn't appear to have changed
-        let isAutofillInput = filledLogin && !fillWasUserTriggered;
-        if (!alreadyModified && isAutofillInput) {
-          if (isPasswordType && filledLogin.password == field.value) {
-            lazy.log(
-              "Ignoring password input event that doesn't change autofilled values."
-            );
-            break;
-          }
-          if (
-            !isPasswordType &&
-            filledLogin.usernameField &&
-            filledLogin.username == field.value
-          ) {
-            lazy.log(
-              "Ignoring username input event that doesn't change autofilled values."
-            );
-            break;
-          }
-        }
-        docState.fieldModificationsByRootElement.set(formLikeRoot, true);
-        // Keep track of the modified formless password field to trigger form submission
-        // when it is removed from DOM.
-        let alreadyModifiedFormLessField = true;
-        if (!HTMLFormElement.isInstance(formLikeRoot)) {
-          alreadyModifiedFormLessField =
-            docState.formlessModifiedPasswordFields.has(field);
-          if (!alreadyModifiedFormLessField) {
-            docState.formlessModifiedPasswordFields.add(field);
-          }
-        }
-
-        // Infer form submission only when there has been an user interaction on the form
-        // or the formless password field.
-        if (
-          lazy.LoginHelper.formRemovalCaptureEnabled &&
-          (!alreadyModified || !alreadyModifiedFormLessField)
-        ) {
-          loginManagerChild.registerDOMDocFetchSuccessEventListener(
-            ownerDocument
-          );
-        }
-
-        if (
-          // When the password field value is cleared or entirely replaced we don't treat it as
-          // an autofilled form any more. We don't do the same for username edits to avoid snooping
-          // on the autofilled password in the resulting doorhanger
-          isPasswordType &&
-          loginManagerChild._doesEventClearPrevFieldValue(aEvent) &&
-          // Don't clear last recorded autofill if THIS is an autofilled value. This will be true
-          // when filling from the context menu.
-          filledLogin &&
-          filledLogin.password !== field.value
-        ) {
-          docState.fillsByRootElement.delete(formLikeRoot);
-        }
-
-        if (!lazy.LoginHelper.passwordEditCaptureEnabled) {
-          break;
-        }
-        if (field.hasBeenTypePassword) {
-          // When a field is filled with a generated password, we also fill a confirm password field
-          // if found. To do this, _fillConfirmFieldWithGeneratedPassword calls setUserInput, which fires
-          // an "input" event on the confirm password field. compareAndUpdatePreviouslySentValues will
-          // allow that message through due to triggeredByFillingGenerated, so early return here.
-          let form = lazy.LoginFormFactory.createFromField(field);
-          if (
-            docState.generatedPasswordFields.has(field) &&
-            docState._getFormFields(form).confirmPasswordField === field
-          ) {
-            break;
-          }
-          // Don't check for triggeredByFillingGenerated, as we do not want to autosave
-          // a field marked as a generated password field on every "input" event
-          loginManagerChild._passwordEditedOrGenerated(field);
-        } else {
-          let [usernameField, passwordField] =
-            docState.getUserNameAndPasswordFields(field);
-          if (field == usernameField && passwordField?.value) {
-            loginManagerChild._passwordEditedOrGenerated(passwordField, {
-              triggeredByFillingGenerated:
-                docState.generatedPasswordFields.has(passwordField),
-            });
-          }
-        }
+      case "keydown":
+        this.handleKeydown(aEvent, field, loginManagerChild, ownerDocument);
         break;
-      }
 
-      case "keydown": {
-        if (
-          field.value &&
-          (aEvent.keyCode == aEvent.DOM_VK_TAB ||
-            aEvent.keyCode == aEvent.DOM_VK_RETURN)
-        ) {
-          const autofillForm =
-            lazy.LoginHelper.autofillForms &&
-            !PrivateBrowsingUtils.isContentWindowPrivate(
-              ownerDocument.defaultView
-            );
-
-          if (autofillForm) {
-            loginManagerChild.onUsernameAutocompleted(field);
-          }
-        }
+      case "focus":
+        this.handleFocus(field, docState, aEvent.target);
         break;
-      }
 
-      case "focus": {
-        //@sg see if we can drop focusedField (aEvent.target) and use field (aEvent.composedTarget)
-        docState.onFocus(field, aEvent.target);
+      case "mousedown":
+        this.handleMousedown(aEvent.button);
         break;
-      }
-
-      case "mousedown": {
-        if (aEvent.button == 2) {
-          // Date.now() is used instead of event.timeStamp since
-          // dom.event.highrestimestamp.enabled isn't true on all channels yet.
-          gLastRightClickTimeStamp = Date.now();
-        }
-
-        break;
-      }
 
       default: {
         throw new Error("Unexpected event");
       }
+    }
+  },
+
+  handleBlur(docState, field) {
+    if (docState.generatedPasswordFields.has(field)) {
+      docState._togglePasswordFieldMasking(field, false);
+    }
+  },
+
+  handleChange(docState, field, loginManagerChild) {
+    let formLikeRoot = lazy.FormLikeFactory.findRootForField(field);
+    if (!docState.fieldModificationsByRootElement.get(formLikeRoot)) {
+      lazy.log("Ignoring change event on form that hasn't been user-modified.");
+      if (field.hasBeenTypePassword) {
+        // Send notification that the password field has not been changed.
+        // This is used only for testing.
+        loginManagerChild._ignorePasswordEdit();
+      }
+      return;
+    }
+
+    docState.storeUserInput(field);
+    let detail = {
+      possibleValues: {
+        usernames: docState.possibleUsernames,
+        passwords: docState.possiblePasswords,
+      },
+    };
+    loginManagerChild.sendAsyncMessage(
+      "PasswordManager:updateDoorhangerSuggestions",
+      detail
+    );
+
+    if (field.hasBeenTypePassword) {
+      let triggeredByFillingGenerated =
+        docState.generatedPasswordFields.has(field);
+      // Autosave generated password initial fills and subsequent edits
+      if (triggeredByFillingGenerated) {
+        loginManagerChild._passwordEditedOrGenerated(field, {
+          triggeredByFillingGenerated,
+        });
+      } else {
+        // Send a notification that we are not saving the edit to the password field.
+        // This is used only for testing.
+        loginManagerChild._ignorePasswordEdit();
+      }
+    }
+  },
+
+  handleInput(aEvent, docState, field, loginManagerChild, ownerDocument) {
+    let isPasswordType = lazy.LoginHelper.isPasswordFieldType(field);
+    // React to input into fields filled with generated passwords.
+    if (
+      docState.generatedPasswordFields.has(field) &&
+      // Depending on the edit, we may no longer want to consider
+      // the field a generated password field to avoid autosaving.
+      loginManagerChild._doesEventClearPrevFieldValue(aEvent)
+    ) {
+      docState._stopTreatingAsGeneratedPasswordField(field);
+    }
+
+    if (!isPasswordType && !lazy.LoginHelper.isUsernameFieldType(field)) {
+      return;
+    }
+
+    // React to input into potential username or password fields
+    let formLikeRoot = lazy.FormLikeFactory.findRootForField(field);
+
+    if (formLikeRoot !== aEvent.currentTarget) {
+      return;
+    }
+    // flag this form as user-modified for the closest form/root ancestor
+    let alreadyModified =
+      docState.fieldModificationsByRootElement.get(formLikeRoot);
+    let { login: filledLogin, userTriggered: fillWasUserTriggered } =
+      docState.fillsByRootElement.get(formLikeRoot) || {};
+
+    // don't flag as user-modified if the form was autofilled and doesn't appear to have changed
+    let isAutofillInput = filledLogin && !fillWasUserTriggered;
+    if (!alreadyModified && isAutofillInput) {
+      if (isPasswordType && filledLogin.password == field.value) {
+        lazy.log(
+          "Ignoring password input event that doesn't change autofilled values."
+        );
+        return;
+      }
+      if (
+        !isPasswordType &&
+        filledLogin.usernameField &&
+        filledLogin.username == field.value
+      ) {
+        lazy.log(
+          "Ignoring username input event that doesn't change autofilled values."
+        );
+        return;
+      }
+    }
+    docState.fieldModificationsByRootElement.set(formLikeRoot, true);
+    // Keep track of the modified formless password field to trigger form submission
+    // when it is removed from DOM.
+    let alreadyModifiedFormLessField = true;
+    if (!HTMLFormElement.isInstance(formLikeRoot)) {
+      alreadyModifiedFormLessField =
+        docState.formlessModifiedPasswordFields.has(field);
+      if (!alreadyModifiedFormLessField) {
+        docState.formlessModifiedPasswordFields.add(field);
+      }
+    }
+
+    // Infer form submission only when there has been an user interaction on the form
+    // or the formless password field.
+    if (
+      lazy.LoginHelper.formRemovalCaptureEnabled &&
+      (!alreadyModified || !alreadyModifiedFormLessField)
+    ) {
+      loginManagerChild.registerDOMDocFetchSuccessEventListener(ownerDocument);
+    }
+
+    if (
+      // When the password field value is cleared or entirely replaced we don't treat it as
+      // an autofilled form any more. We don't do the same for username edits to avoid snooping
+      // on the autofilled password in the resulting doorhanger
+      isPasswordType &&
+      loginManagerChild._doesEventClearPrevFieldValue(aEvent) &&
+      // Don't clear last recorded autofill if THIS is an autofilled value. This will be true
+      // when filling from the context menu.
+      filledLogin &&
+      filledLogin.password !== field.value
+    ) {
+      docState.fillsByRootElement.delete(formLikeRoot);
+    }
+
+    if (!lazy.LoginHelper.passwordEditCaptureEnabled) {
+      return;
+    }
+    if (field.hasBeenTypePassword) {
+      // When a field is filled with a generated password, we also fill a confirm password field
+      // if found. To do this, _fillConfirmFieldWithGeneratedPassword calls setUserInput, which fires
+      // an "input" event on the confirm password field. compareAndUpdatePreviouslySentValues will
+      // allow that message through due to triggeredByFillingGenerated, so early return here.
+      let form = lazy.LoginFormFactory.createFromField(field);
+      if (
+        docState.generatedPasswordFields.has(field) &&
+        docState._getFormFields(form).confirmPasswordField === field
+      ) {
+        return;
+      }
+      // Don't check for triggeredByFillingGenerated, as we do not want to autosave
+      // a field marked as a generated password field on every "input" event
+      loginManagerChild._passwordEditedOrGenerated(field);
+    } else {
+      let [usernameField, passwordField] =
+        docState.getUserNameAndPasswordFields(field);
+      if (field == usernameField && passwordField?.value) {
+        loginManagerChild._passwordEditedOrGenerated(passwordField, {
+          triggeredByFillingGenerated:
+            docState.generatedPasswordFields.has(passwordField),
+        });
+      }
+    }
+  },
+
+  handleKeydown(aEvent, field, loginManagerChild, ownerDocument) {
+    if (
+      field.value &&
+      (aEvent.keyCode == aEvent.DOM_VK_TAB ||
+        aEvent.keyCode == aEvent.DOM_VK_RETURN)
+    ) {
+      const autofillForm =
+        lazy.LoginHelper.autofillForms &&
+        !PrivateBrowsingUtils.isContentWindowPrivate(ownerDocument.defaultView);
+
+      if (autofillForm) {
+        loginManagerChild.onUsernameAutocompleted(field);
+      }
+    }
+  },
+
+  handleFocus(field, docState, target) {
+    //@sg see if we can drop focusedField (aEvent.target) and use field (aEvent.composedTarget)
+    docState.onFocus(field, target);
+  },
+
+  handleMousedown(button) {
+    if (button == 2) {
+      // Date.now() is used instead of event.timeStamp since
+      // dom.event.highrestimestamp.enabled isn't true on all channels yet.
+      gLastRightClickTimeStamp = Date.now();
     }
   },
 };
