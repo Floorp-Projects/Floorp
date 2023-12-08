@@ -171,6 +171,12 @@ already_AddRefed<PlatformDecoderModule> FFmpegRuntimeLinker::CreateDecoder() {
   return module.forget();
 }
 
+/* static */
+already_AddRefed<PlatformEncoderModule> FFmpegRuntimeLinker::CreateEncoder() {
+  // TODO: Create a FFmpegEncoderModule here.
+  return nullptr;
+}
+
 /* static */ const char* FFmpegRuntimeLinker::LinkStatusString() {
   switch (sLinkStatus) {
     case LinkStatus_INIT:
