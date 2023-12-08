@@ -70,11 +70,11 @@ avcodec_get_type
 avcodec_is_open
 avcodec_license
 avcodec_open2
+avcodec_receive_frame
+avcodec_send_packet
 avcodec_string
 avcodec_version
 avsubtitle_free
-avcodec_send_packet
-avcodec_receive_frame
 ff_init_vlc_from_lengths
 ff_init_vlc_sparse
 ff_mpa_freq_tab
