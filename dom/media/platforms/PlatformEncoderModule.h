@@ -155,6 +155,8 @@ class MediaDataEncoder {
   using EncodedData = nsTArray<RefPtr<MediaRawData>>;
   using EncodePromise =
       MozPromise<EncodedData, MediaResult, /* IsExclusive = */ true>;
+  using ReconfigurationPromise =
+      MozPromise<bool, MediaResult, /* IsExclusive = */ true>;
 
   // Initialize the encoder. It should be ready to encode once the returned
   // promise resolves. The encoder should do any initialization here, rather
@@ -169,6 +171,12 @@ class MediaDataEncoder {
   // returns will be resolved with already encoded MediaRawData at the moment,
   // or empty when there is none available yet.
   virtual RefPtr<EncodePromise> Encode(const MediaData* aSample) = 0;
+
+  // Attempt to reconfigure the encoder on the fly. This can fail if the
+  // underlying PEM doesn't support this type of reconfiguration.
+  virtual RefPtr<ReconfigurationPromise> Reconfigure(
+      const RefPtr<const EncoderConfigurationChangeList>&
+          aConfigurationChanges) = 0;
 
   // Causes all complete samples in the pipeline that can be encoded to be
   // output. It indicates that there is no more input sample to insert.
@@ -282,11 +290,70 @@ class EncoderConfig final {
   Maybe<CodecSpecific> mCodecSpecific;
 };
 
-
-
-  }
+// Wrap a type to make it unique. This allows using ergonomically in the Variant
+// below. Simply aliasing with `using` isn't enough, because typedefs in C++
+// don't produce strong types, so two integer variants result in
+// the same type, making it ambiguous to the Variant code.
+// T is the type to be wrapped. Phantom is a type that is only used to
+// disambiguate and should be unique in the program.
+template <typename T, typename Phantom>
+class StrongTypedef {
+ public:
+  explicit StrongTypedef(T const& value) : mValue(value) {}
+  explicit StrongTypedef(T&& value) : mValue(std::move(value)) {}
+  T& get() { return mValue; }
+  T const& get() const { return mValue; }
 
  private:
+  T mValue;
+};
+
+// Dimensions of the video frames
+using DimensionsChange =
+    StrongTypedef<gfx::IntSize, struct DimensionsChangeType>;
+// Expected display size of the encoded frames, can influence encoding
+using DisplayDimensionsChange =
+    StrongTypedef<Maybe<gfx::IntSize>, struct DisplayDimensionsChangeType>;
+// If present, the bitrate in kbps of the encoded stream. If absent, let the
+// platform decide.
+using BitrateChange = StrongTypedef<Maybe<uint32_t>, struct BitrateChangeType>;
+// If present, the expected framerate of the output video stream. If absent,
+// infer from the input frames timestamp.
+using FramerateChange =
+    StrongTypedef<Maybe<double>, struct FramerateChangeType>;
+// The bitrate mode (variable, constant) of the encoding
+using BitrateModeChange =
+    StrongTypedef<MediaDataEncoder::BitrateMode, struct BitrateModeChangeType>;
+// The usage for the encoded stream, this influence latency, ordering, etc.
+using UsageChange =
+    StrongTypedef<MediaDataEncoder::Usage, struct UsageChangeType>;
+// If present, the expected content of the video frames (screen, movie, etc.).
+// The value the string can have isn't decided just yet. When absent, the
+// encoder uses generic settings.
+using ContentHintChange =
+    StrongTypedef<Maybe<nsString>, struct ContentHintTypeType>;
+
+// A change to a parameter of an encoder instance.
+using EncoderConfigurationItem =
+    Variant<DimensionsChange, DisplayDimensionsChange, BitrateModeChange,
+            BitrateChange, FramerateChange, UsageChange, ContentHintChange>;
+
+// A list of changes to an encoder configuration, that _might_ be able to change
+// on the fly. Not all encoder modules can adjust their configuration on the
+// fly.
+struct EncoderConfigurationChangeList {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(EncoderConfigurationChangeList)
+  bool Empty() const { return mChanges.IsEmpty(); }
+  template <typename T>
+  void Push(const T& aItem) {
+    mChanges.AppendElement(aItem);
+  }
+  nsString ToString() const;
+
+  nsTArray<EncoderConfigurationItem> mChanges;
+
+ private:
+  ~EncoderConfigurationChangeList() = default;
 };
 
 }  // namespace mozilla
