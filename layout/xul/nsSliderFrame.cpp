@@ -614,13 +614,6 @@ void nsSliderFrame::Reflow(nsPresContext* aPresContext,
     thumbPos.y = NSToCoordRound(pos * mRatio);
   }
 
-  // Same to `snappedThumbLocation` in `nsSliderFrame::CurrentPositionChanged`,
-  // to avoid putting the scroll thumb at subpixel positions which cause
-  // needless invalidations
-  nscoord appUnitsPerPixel = PresContext()->AppUnitsPerDevPixel();
-  thumbPos =
-      ToAppUnits(thumbPos.ToNearestPixels(appUnitsPerPixel), appUnitsPerPixel);
-
   const LogicalPoint logicalPos(wm, thumbPos, availSize);
   // TODO: It seems like a lot of this stuff should really belong in the thumb's
   // reflow code rather than here, but since we rely on the frame tree structure
