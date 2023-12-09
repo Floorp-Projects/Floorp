@@ -50,8 +50,11 @@ TextureData* CanvasTranslator::CreateTextureData(TextureType aTextureType,
   return textureData;
 }
 
-CanvasTranslator::CanvasTranslator() {
-  mMaxSpinCount = StaticPrefs::gfx_canvas_remote_max_spin_count();
+CanvasTranslator::CanvasTranslator(const dom::ContentParentId& aContentId,
+                                   uint32_t aManagerId)
+    : mMaxSpinCount(StaticPrefs::gfx_canvas_remote_max_spin_count()),
+      mContentId(aContentId),
+      mManagerId(aManagerId) {
   mNextEventTimeout = TimeDuration::FromMilliseconds(
       StaticPrefs::gfx_canvas_remote_event_timeout_ms());
 
@@ -190,6 +193,7 @@ void CanvasTranslator::AddBuffer(ipc::SharedMemoryBasic::Handle&& aBufferHandle,
                                  size_t aBufferSize) {
   MOZ_ASSERT(IsInTaskQueue());
   MOZ_RELEASE_ASSERT(mHeader->readerState == State::Paused);
+  MOZ_ASSERT(mDefaultBufferSize != 0);
 
   // Default sized buffers will have been queued for recycling.
   if (mCurrentShmem.Size() == mDefaultBufferSize) {
@@ -302,6 +306,7 @@ void CanvasTranslator::ActorDestroy(ActorDestroyReason why) {
 
 void CanvasTranslator::FinishShutdown() {
   MOZ_ASSERT(gfx::CanvasRenderThread::IsInCanvasRenderThread());
+  gfx::CanvasManagerParent::RemoveReplayTextures(this);
 }
 
 bool CanvasTranslator::CheckDeactivated() {
