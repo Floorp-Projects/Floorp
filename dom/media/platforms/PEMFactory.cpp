@@ -53,7 +53,7 @@ PEMFactory::PEMFactory() {
 #endif
 
 #ifdef XP_WIN
-  mModules.AppendElement(new WMFEncoderModule());
+  mCurrentPEMs.AppendElement(new WMFEncoderModule());
 #endif
 
 #ifdef MOZ_FFVPX
