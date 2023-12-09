@@ -37,7 +37,7 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
   int32_t Shutdown() override;
 
   int32_t Encode(
-      const webrtc::VideoFrame& aFrame,
+      const webrtc::VideoFrame& aInputFrame,
       const std::vector<webrtc::VideoFrameType>* aFrameTypes) override;
 
   int32_t SetRates(
@@ -68,9 +68,9 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
   webrtc::SdpVideoFormat::Parameters mFormatParams;
   webrtc::CodecSpecificInfo mCodecSpecific;
   webrtc::BitrateAdjuster mBitrateAdjuster;
-  uint32_t mMaxFrameRate;
-  uint32_t mMinBitrateBps;
-  uint32_t mMaxBitrateBps;
+  uint32_t mMaxFrameRate = {0};
+  uint32_t mMinBitrateBps = {0};
+  uint32_t mMaxBitrateBps = {0};
 };
 
 }  // namespace mozilla
