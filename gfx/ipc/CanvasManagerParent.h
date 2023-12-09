@@ -16,6 +16,7 @@
 namespace mozilla {
 namespace layers {
 class CanvasTranslator;
+class HostIPCAllocator;
 class SurfaceDescriptor;
 }  // namespace layers
 
@@ -42,7 +43,7 @@ class CanvasManagerParent final : public PCanvasManagerParent {
   static void RemoveReplayTextures(layers::CanvasTranslator* aOwner);
 
   static UniquePtr<layers::SurfaceDescriptor> WaitForReplayTexture(
-      base::ProcessId aOtherPid, int64_t aTextureId);
+      layers::HostIPCAllocator* aAllocator, int64_t aTextureId);
 
   explicit CanvasManagerParent(const dom::ContentParentId& aContentId);
 
@@ -61,7 +62,7 @@ class CanvasManagerParent final : public PCanvasManagerParent {
 
  private:
   static UniquePtr<layers::SurfaceDescriptor> TakeReplayTexture(
-      base::ProcessId aOtherPid, int64_t aTextureId)
+      const dom::ContentParentId& aContentId, int64_t aTextureId)
       MOZ_REQUIRES(sReplayTexturesMonitor);
 
   static void ShutdownInternal();
@@ -76,9 +77,10 @@ class CanvasManagerParent final : public PCanvasManagerParent {
   static ManagerSet sManagers;
 
   struct ReplayTexture {
-    RefPtr<layers::CanvasTranslator> mOwner;
-    int64_t mId;
     UniquePtr<layers::SurfaceDescriptor> mDesc;
+    dom::ContentParentId mContentId;
+    int64_t mTextureId;
+    uint32_t mManagerId;
   };
 
   static StaticMonitor sReplayTexturesMonitor;

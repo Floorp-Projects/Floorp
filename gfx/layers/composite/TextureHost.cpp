@@ -244,8 +244,8 @@ already_AddRefed<TextureHost> TextureHost::Create(
       }
 
       UniquePtr<SurfaceDescriptor> realDesc =
-          gfx::CanvasManagerParent::WaitForReplayTexture(
-              aDeallocator->GetChildProcessId(), desc.textureId());
+          gfx::CanvasManagerParent::WaitForReplayTexture(aDeallocator,
+                                                         desc.textureId());
       if (!realDesc) {
         gfxCriticalNote << "Failed to get descriptor for recorded texture.";
         // Create a dummy to prevent any crashes due to missing IPDL actors.

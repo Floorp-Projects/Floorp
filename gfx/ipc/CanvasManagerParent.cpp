@@ -13,6 +13,7 @@
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/CanvasTranslator.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/webgpu/WebGPUParent.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
@@ -128,7 +129,8 @@ bool CanvasManagerParent::sReplayTexturesEnabled(true);
 
   StaticMonitorAutoLock lock(sReplayTexturesMonitor);
   sReplayTextures.AppendElement(
-      ReplayTexture{aOwner, aTextureId, std::move(desc)});
+      ReplayTexture{std::move(desc), aOwner->GetContentId(), aTextureId,
+                    aOwner->GetManagerId()});
   lock.NotifyAll();
 }
 
@@ -140,7 +142,9 @@ bool CanvasManagerParent::sReplayTexturesEnabled(true);
   while (i > 0) {
     --i;
     const auto& texture = sReplayTextures[i];
-    if (texture.mOwner == aOwner && texture.mId == aTextureId) {
+    if (texture.mContentId == aOwner->GetContentId() &&
+        texture.mTextureId == aTextureId) {
+      MOZ_ASSERT(texture.mManagerId == aOwner->GetManagerId());
       sReplayTextures.RemoveElementAt(i);
       break;
     }
@@ -155,14 +159,15 @@ bool CanvasManagerParent::sReplayTexturesEnabled(true);
   while (i > 0) {
     --i;
     const auto& texture = sReplayTextures[i];
-    if (texture.mOwner == aOwner) {
+    if (texture.mContentId == aOwner->GetContentId() &&
+        texture.mManagerId == aOwner->GetManagerId()) {
       sReplayTextures.RemoveElementAt(i);
     }
   }
 }
 
 /* static */ UniquePtr<layers::SurfaceDescriptor>
-CanvasManagerParent::TakeReplayTexture(base::ProcessId aOtherPid,
+CanvasManagerParent::TakeReplayTexture(const dom::ContentParentId& aContentId,
                                        int64_t aTextureId) {
   // While in theory this could be relatively expensive, the array is most
   // likely very small as the textures are removed during each composite.
@@ -170,7 +175,7 @@ CanvasManagerParent::TakeReplayTexture(base::ProcessId aOtherPid,
   while (i > 0) {
     --i;
     const auto& texture = sReplayTextures[i];
-    if (texture.mOwner->OtherPid() == aOtherPid && texture.mId == aTextureId) {
+    if (texture.mContentId == aContentId && texture.mTextureId == aTextureId) {
       UniquePtr<layers::SurfaceDescriptor> desc =
           std::move(sReplayTextures[i].mDesc);
       sReplayTextures.RemoveElementAt(i);
@@ -181,13 +186,24 @@ CanvasManagerParent::TakeReplayTexture(base::ProcessId aOtherPid,
 }
 
 /* static */ UniquePtr<layers::SurfaceDescriptor>
-CanvasManagerParent::WaitForReplayTexture(base::ProcessId aOtherPid,
+CanvasManagerParent::WaitForReplayTexture(layers::HostIPCAllocator* aAllocator,
                                           int64_t aTextureId) {
+  MOZ_ASSERT(!CanvasRenderThread::IsInCanvasRenderThread());
+
   StaticMonitorAutoLock lock(sReplayTexturesMonitor);
 
+  dom::ContentParentId contentId = aAllocator->GetContentId();
+
   UniquePtr<layers::SurfaceDescriptor> desc;
-  while (!(desc = TakeReplayTexture(aOtherPid, aTextureId))) {
+  while (!(desc = TakeReplayTexture(contentId, aTextureId))) {
     if (NS_WARN_IF(!sReplayTexturesEnabled)) {
+      return nullptr;
+    }
+
+    if (NS_WARN_IF(!aAllocator->IPCOpen())) {
+      // We don't know exactly which CanvasManagerParent/CanvasTranslator this
+      // is for, but we do know that the allocator points to the same process.
+      // Use this as a proxy to detect if the process was shutdown.
       return nullptr;
     }
 
@@ -214,6 +230,13 @@ void CanvasManagerParent::Bind(Endpoint<PCanvasManagerParent>&& aEndpoint) {
     NS_WARNING("Failed to bind CanvasManagerParent!");
     return;
   }
+
+#ifdef DEBUG
+  for (CanvasManagerParent* i : sManagers) {
+    MOZ_ASSERT_IF(i->mContentId == mContentId,
+                  i->OtherPidMaybeInvalid() == OtherPidMaybeInvalid());
+  }
+#endif
 
   sManagers.Insert(this);
 }
@@ -249,7 +272,8 @@ mozilla::ipc::IPCResult CanvasManagerParent::RecvInitialize(
 
 already_AddRefed<layers::PCanvasParent>
 CanvasManagerParent::AllocPCanvasParent() {
-  return MakeAndAddRef<layers::CanvasTranslator>();
+  MOZ_RELEASE_ASSERT(mId != 0);
+  return MakeAndAddRef<layers::CanvasTranslator>(mContentId, mId);
 }
 
 mozilla::ipc::IPCResult CanvasManagerParent::RecvGetSnapshot(
@@ -262,8 +286,7 @@ mozilla::ipc::IPCResult CanvasManagerParent::RecvGetSnapshot(
 
   IProtocol* actor = nullptr;
   for (CanvasManagerParent* i : sManagers) {
-    if (i->OtherPidMaybeInvalid() == OtherPidMaybeInvalid() &&
-        i->mId == aManagerId) {
+    if (i->mContentId == mContentId && i->mId == aManagerId) {
       actor = i->Lookup(aProtocolId);
       break;
     }
