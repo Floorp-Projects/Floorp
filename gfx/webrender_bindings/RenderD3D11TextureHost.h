@@ -7,15 +7,20 @@
 #ifndef MOZILLA_GFX_RENDERD3D11TEXTUREHOST_H
 #define MOZILLA_GFX_RENDERD3D11TEXTUREHOST_H
 
-#include "GLTypes.h"
-#include "RenderTextureHostSWGL.h"
-
 #include <d3d11.h>
+
+#include "GLTypes.h"
+#include "mozilla/gfx/FileHandleWrapper.h"
+#include "RenderTextureHostSWGL.h"
 
 struct ID3D11Texture2D;
 struct IDXGIKeyedMutex;
 
 namespace mozilla {
+
+namespace layers {
+class FenceD3D11;
+}  // namespace layers
 
 namespace wr {
 
@@ -24,7 +29,8 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
   RenderDXGITextureHost(
       HANDLE aHandle, Maybe<layers::GpuProcessTextureId>& aGpuProcessTextureId,
       uint32_t aArrayIndex, gfx::SurfaceFormat aFormat, gfx::ColorSpace2,
-      gfx::ColorRange aColorRange, gfx::IntSize aSize, bool aHasKeyedMutex);
+      gfx::ColorRange aColorRange, gfx::IntSize aSize, bool aHasKeyedMutex,
+      gfx::FenceInfo& aAcquireFenceInfo);
 
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL) override;
   void Unlock() override;
@@ -113,12 +119,15 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
 
   bool mIsSoftwareDecodedVideo = false;
 
+  RefPtr<layers::FenceD3D11> mAcquireFence;
+
  public:
   const gfx::SurfaceFormat mFormat;
   const gfx::ColorSpace2 mColorSpace;
   const gfx::ColorRange mColorRange;
   const gfx::IntSize mSize;
   const bool mHasKeyedMutex;
+  const gfx::FenceInfo mAcquireFenceInfo;
 
  private:
   bool mLocked;

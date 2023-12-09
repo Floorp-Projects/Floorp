@@ -244,10 +244,10 @@ RefPtr<TextureHost> TextureHostWrapperD3D11::CreateFromBufferTexture(
 
   auto colorSpace = ToColorSpace2(bufferTexture->GetYUVColorSpace());
 
-  auto descD3D10 =
-      SurfaceDescriptorD3D10(WindowsHandle(nullptr), Some(id),
-                             /* arrayIndex */ 0, gfx::SurfaceFormat::NV12, size,
-                             colorSpace, colorRange, /* hasKeyedMutex */ false);
+  auto descD3D10 = SurfaceDescriptorD3D10(
+      WindowsHandle(nullptr), Some(id),
+      /* arrayIndex */ 0, gfx::SurfaceFormat::NV12, size, colorSpace,
+      colorRange, /* hasKeyedMutex */ false, /* fenceInfo */ Nothing());
 
   RefPtr<DXGITextureHostD3D11> textureHostD3D11 =
       new DXGITextureHostD3D11(flags, descD3D10);
