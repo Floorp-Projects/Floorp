@@ -498,6 +498,13 @@ RefPtr<MediaDataEncoder::EncodePromise> AppleVTEncoder::Encode(
                                               std::move(sample));
 }
 
+RefPtr<MediaDataEncoder::ReconfigurationPromise> AppleVTEncoder::Reconfigure(
+    const RefPtr<const EncoderConfigurationChangeList>& aConfigurationChanges) {
+  return InvokeAsync<const RefPtr<const EncoderConfigurationChangeList>&>(
+      mTaskQueue, this, __func__, &AppleVTEncoder::ProcessReconfigure,
+      aConfigurationChanges);
+}
+
 RefPtr<MediaDataEncoder::EncodePromise> AppleVTEncoder::ProcessEncode(
     const RefPtr<const VideoData>& aSample) {
   LOGD("::ProcessEncode");
@@ -537,6 +544,51 @@ RefPtr<MediaDataEncoder::EncodePromise> AppleVTEncoder::ProcessEncode(
   }
 
   return EncodePromise::CreateAndResolve(std::move(mEncodedData), __func__);
+}
+
+RefPtr<MediaDataEncoder::ReconfigurationPromise>
+AppleVTEncoder::ProcessReconfigure(
+    const RefPtr<const EncoderConfigurationChangeList>& aConfigurationChanges) {
+  bool ok = false;
+  for (const auto& confChange : aConfigurationChanges->mChanges) {
+    ok |= confChange.match(
+        // Not supported yet
+        [&](const DimensionsChange& aChange) -> bool { return false; },
+        [&](const DisplayDimensionsChange& aChange) -> bool { return false; },
+        [&](const BitrateModeChange& aChange) -> bool {
+          mConfig.mBitrateMode = aChange.get();
+          return SetBitrateAndMode(mSession, mConfig.mBitrateMode,
+                                   mConfig.mBitrate);
+        },
+        [&](const BitrateChange& aChange) -> bool {
+          mConfig.mBitrate = aChange.get().refOr(0);
+          // 0 is the default in AppleVTEncoder: the encoder chooses the bitrate
+          // based on the content.
+          return SetBitrateAndMode(mSession, mConfig.mBitrateMode,
+                                   mConfig.mBitrate);
+        },
+        [&](const FramerateChange& aChange) -> bool {
+          // 0 means default, in VideoToolbox, and is valid, perform some light
+          // sanitation on other values.
+          double fps = aChange.get().refOr(0);
+          if (std::isnan(fps) || fps < 0 ||
+              int64_t(fps) > std::numeric_limits<int32_t>::max()) {
+            LOGE("Invalid fps of %lf", fps);
+            return false;
+          }
+          return SetFrameRate(mSession, AssertedCast<int64_t>(fps));
+        },
+        [&](const UsageChange& aChange) -> bool {
+          mConfig.mUsage = aChange.get();
+          return SetRealtime(mSession, aChange.get() == Usage::Realtime);
+        },
+        [&](const ContentHintChange& aChange) -> bool { return false; });
+  };
+  using P = MediaDataEncoder::ReconfigurationPromise;
+  if (ok) {
+    return P::CreateAndResolve(true, __func__);
+  }
+  return P::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
 }
 
 static size_t NumberOfPlanes(MediaDataEncoder::PixelFormat aPixelFormat) {
