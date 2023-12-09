@@ -17,10 +17,10 @@
 
 namespace mozilla {
 
-template <typename ConfigType>
 class AndroidDataEncoder final : public MediaDataEncoder {
  public:
-  AndroidDataEncoder(const ConfigType& aConfig, RefPtr<TaskQueue> aTaskQueue)
+  AndroidDataEncoder(const EncoderConfig& aConfig,
+                     const RefPtr<TaskQueue>& aTaskQueue)
       : mConfig(aConfig), mTaskQueue(aTaskQueue) {
     MOZ_ASSERT(mConfig.mSize.width > 0 && mConfig.mSize.height > 0);
     MOZ_ASSERT(mTaskQueue);
@@ -29,7 +29,7 @@ class AndroidDataEncoder final : public MediaDataEncoder {
   RefPtr<EncodePromise> Encode(const MediaData* aSample) override;
   RefPtr<EncodePromise> Drain() override;
   RefPtr<ShutdownPromise> Shutdown() override;
-  RefPtr<GenericPromise> SetBitrate(const Rate aBitsPerSec) override;
+  RefPtr<GenericPromise> SetBitrate(uint32_t aBitsPerSec) override;
 
   nsCString GetDescriptionName() const override { return "Android Encoder"_ns; }
 
@@ -62,7 +62,7 @@ class AndroidDataEncoder final : public MediaDataEncoder {
 
   // Methods only called on mTaskQueue.
   RefPtr<InitPromise> ProcessInit();
-  RefPtr<EncodePromise> ProcessEncode(RefPtr<const MediaData> aSample);
+  RefPtr<EncodePromise> ProcessEncode(const RefPtr<const MediaData>& aSample);
   RefPtr<EncodePromise> ProcessDrain();
   RefPtr<ShutdownPromise> ProcessShutdown();
   void ProcessInput();
@@ -71,13 +71,17 @@ class AndroidDataEncoder final : public MediaDataEncoder {
   RefPtr<MediaRawData> GetOutputData(java::SampleBuffer::Param aBuffer,
                                      const int32_t aOffset, const int32_t aSize,
                                      const bool aIsKeyFrame);
+  RefPtr<MediaRawData> GetOutputDataH264(java::SampleBuffer::Param aBuffer,
+                                         const int32_t aOffset,
+                                         const int32_t aSize,
+                                         const bool aIsKeyFrame);
   void Error(const MediaResult& aError);
 
   void AssertOnTaskQueue() const {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   }
 
-  const ConfigType mConfig;
+  EncoderConfig mConfig;
 
   RefPtr<TaskQueue> mTaskQueue;
 
@@ -99,8 +103,8 @@ class AndroidDataEncoder final : public MediaDataEncoder {
   // SPS/PPS NALUs for realtime usage, avcC otherwise.
   RefPtr<MediaByteBuffer> mConfigData;
 
-  enum class DrainState { DRAINED, DRAINABLE, DRAINING };
-  DrainState mDrainState;
+  enum class DrainState { DRAINABLE, DRAINING, DRAINED };
+  DrainState mDrainState = DrainState::DRAINABLE;
 
   Maybe<MediaResult> mError;
 };
