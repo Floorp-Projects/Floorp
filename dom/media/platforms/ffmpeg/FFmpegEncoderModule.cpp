@@ -15,36 +15,51 @@
 namespace mozilla {
 
 template <int V>
-bool FFmpegEncoderModule<V>::SupportsMimeType(
-    const nsACString& aMimeType) const {
-  return GetFFmpegEncoderCodecId<V>(aMimeType) != AV_CODEC_ID_NONE;
+bool FFmpegEncoderModule<V>::Supports(const EncoderConfig& aConfig) const {
+  if (aConfig.mCodec == CodecType::H264) {
+    if (!aConfig.mCodecSpecific ||
+        !aConfig.mCodecSpecific->is<H264Specific>()) {
+      return false;
+    }
+    H264Specific specific = aConfig.mCodecSpecific->as<H264Specific>();
+    int width = aConfig.mSize.width;
+    int height = aConfig.mSize.height;
+    if (width % 2 || !width) {
+      return false;
+    }
+    if (height % 2 || !height) {
+      return false;
+    }
+    if (specific.mProfile != H264_PROFILE_BASE &&
+        specific.mProfile != H264_PROFILE_MAIN) {
+      return false;
+    }
+    if (width > 4096 || height > 4096) {
+      return false;
+    }
+  }
+  // TODO: add more checks for VP8/VP9/AV1 here , similar to the checks above.
+  return SupportsCodec(aConfig.mCodec) != AV_CODEC_ID_NONE;
+}
+
+template <int V>
+bool FFmpegEncoderModule<V>::SupportsCodec(CodecType aCodec) const {
+  return GetFFmpegEncoderCodecId<V>(aCodec) != AV_CODEC_ID_NONE;
 }
 
 template <int V>
 already_AddRefed<MediaDataEncoder> FFmpegEncoderModule<V>::CreateVideoEncoder(
-    const CreateEncoderParams& aParams, const bool aHardwareNotAllowed) const {
-  AVCodecID codecId = GetFFmpegEncoderCodecId<V>(aParams.mConfig.mMimeType);
+    const EncoderConfig& aConfig, const RefPtr<TaskQueue>& aTaskQueue) const {
+  AVCodecID codecId = GetFFmpegEncoderCodecId<V>(aConfig.mCodec);
   if (codecId == AV_CODEC_ID_NONE) {
-    FFMPEGV_LOG("No ffmpeg encoder for %s", aParams.mConfig.mMimeType.get());
+    FFMPEGV_LOG("No ffmpeg encoder for %d", static_cast<int>(aConfig.mCodec));
     return nullptr;
   }
 
-  RefPtr<MediaDataEncoder> encoder;
-  switch (CreateEncoderParams::CodecTypeForMime(aParams.mConfig.mMimeType)) {
-    case MediaDataEncoder::CodecType::VP8:
-      encoder = new FFmpegVideoEncoder<V, MediaDataEncoder::VP8Config>(
-          mLib, codecId, aParams.mTaskQueue, aParams.ToVP8Config());
-      break;
-    case MediaDataEncoder::CodecType::VP9:
-      encoder = new FFmpegVideoEncoder<V, MediaDataEncoder::VP9Config>(
-          mLib, codecId, aParams.mTaskQueue, aParams.ToVP9Config());
-      break;
-    default:
-      FFMPEGV_LOG("No ffmpeg encoder for %s", aParams.mConfig.mMimeType.get());
-      return nullptr;
-  }
-  FFMPEGV_LOG("ffmpeg %s encoder: %s has been created",
-              aParams.mConfig.mMimeType.get(),
+  RefPtr<MediaDataEncoder> encoder =
+      new FFmpegVideoEncoder<V>(mLib, codecId, aTaskQueue, aConfig);
+  FFMPEGV_LOG("ffmpeg %d encoder: %s has been created",
+              static_cast<int>(aConfig.mCodec),
               encoder->GetDescriptionName().get());
   return encoder.forget();
 }

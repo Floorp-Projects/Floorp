@@ -17,29 +17,32 @@
 namespace mozilla {
 
 template <int V>
-AVCodecID GetFFmpegEncoderCodecId(const nsACString& aMimeType);
+AVCodecID GetFFmpegEncoderCodecId(CodecType aCodec);
 
 template <>
-AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(const nsACString& aMimeType);
+AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(CodecType aCodec);
 
-template <int V, typename ConfigType>
-class FFmpegVideoEncoder {};
+template <int V>
+class FFmpegVideoEncoder : public MediaDataEncoder {};
 
 // TODO: Bug 1860925: FFmpegDataEncoder
-template <typename ConfigType>
-class FFmpegVideoEncoder<LIBAV_VER, ConfigType> final
-    : public MediaDataEncoder {
+template <>
+class FFmpegVideoEncoder<LIBAV_VER> final : public MediaDataEncoder {
  public:
   FFmpegVideoEncoder(const FFmpegLibWrapper* aLib, AVCodecID aCodecID,
-                     RefPtr<TaskQueue> aTaskQueue, const ConfigType& aConfig);
+                     const RefPtr<TaskQueue>& aTaskQueue,
+                     const EncoderConfig& aConfig);
 
   /* MediaDataEncoder Methods */
   // All methods run on the task queue, except for GetDescriptionName.
   RefPtr<InitPromise> Init() override;
   RefPtr<EncodePromise> Encode(const MediaData* aSample) override;
+  RefPtr<ReconfigurationPromise> Reconfigure(
+      const RefPtr<const EncoderConfigurationChangeList>& aConfigurationChanges)
+      override;
   RefPtr<EncodePromise> Drain() override;
   RefPtr<ShutdownPromise> Shutdown() override;
-  RefPtr<GenericPromise> SetBitrate(Rate aBitsPerSec) override;
+  RefPtr<GenericPromise> SetBitrate(uint32_t aBitRate) override;
   nsCString GetDescriptionName() const override;
 
  private:
@@ -48,6 +51,9 @@ class FFmpegVideoEncoder<LIBAV_VER, ConfigType> final
   // Methods only called on mTaskQueue.
   RefPtr<InitPromise> ProcessInit();
   RefPtr<EncodePromise> ProcessEncode(RefPtr<const MediaData> aSample);
+  RefPtr<ReconfigurationPromise> ProcessReconfigure(
+      const RefPtr<const EncoderConfigurationChangeList>&
+          aConfigurationChanges);
   RefPtr<EncodePromise> ProcessDrain();
   void ProcessShutdown();
   // TODO: Share these with FFmpegDataDecoder.
@@ -66,7 +72,9 @@ class FFmpegVideoEncoder<LIBAV_VER, ConfigType> final
   const FFmpegLibWrapper* mLib;
   const AVCodecID mCodecID;
   const RefPtr<TaskQueue> mTaskQueue;
-  const ConfigType mConfig;
+
+  // set in constructor, modified when parameters change
+  EncoderConfig mConfig;
 
   // mTaskQueue only.
   AVCodecContext* mCodecContext;
