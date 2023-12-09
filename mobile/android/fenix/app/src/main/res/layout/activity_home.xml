@@ -18,12 +18,24 @@
         android:layout_width="match_parent"
         android:layout_height="56dp" />
 
-    <!--The navGraph is set dynamically in NavGraphProvider -->
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/container"
-        android:name="androidx.navigation.fragment.NavHostFragment"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:defaultNavHost="true"
-        app:navGraph="@navigation/nav_graph" />
+        android:layout_height="match_parent">
+
+        <!--The navGraph is set dynamically in NavGraphProvider -->
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/container"
+            android:name="androidx.navigation.fragment.NavHostFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:defaultNavHost="true"
+            app:navGraph="@navigation/nav_graph" />
+
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/debugOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+    </FrameLayout>
 </org.mozilla.fenix.perf.HomeActivityRootLinearLayout>

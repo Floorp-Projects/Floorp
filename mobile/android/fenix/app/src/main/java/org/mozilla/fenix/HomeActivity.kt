@@ -46,6 +46,7 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.state.action.ContentAction
@@ -100,6 +101,9 @@ import org.mozilla.fenix.components.metrics.BreadcrumbsRecorder
 import org.mozilla.fenix.components.metrics.GrowthDataWorker
 import org.mozilla.fenix.components.metrics.fonts.FontEnumerationWorker
 import org.mozilla.fenix.databinding.ActivityHomeBinding
+import org.mozilla.fenix.debugsettings.data.debugDrawerEnabled
+import org.mozilla.fenix.debugsettings.data.debugSettings
+import org.mozilla.fenix.debugsettings.ui.DebugOverlay
 import org.mozilla.fenix.exceptions.trackingprotection.TrackingProtectionExceptionsFragmentDirections
 import org.mozilla.fenix.experiments.ResearchSurfaceDialogFragment
 import org.mozilla.fenix.ext.alreadyOnDestination
@@ -158,6 +162,8 @@ import org.mozilla.fenix.tabhistory.TabHistoryDialogFragment
 import org.mozilla.fenix.tabstray.TabsTrayFragment
 import org.mozilla.fenix.tabstray.TabsTrayFragmentDirections
 import org.mozilla.fenix.theme.DefaultThemeManager
+import org.mozilla.fenix.theme.FirefoxTheme
+import org.mozilla.fenix.theme.Theme
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.trackingprotection.TrackingProtectionPanelDialogFragmentDirections
 import org.mozilla.fenix.utils.Settings
@@ -278,6 +284,31 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         window.decorView.layoutDirection = TextUtils.getLayoutDirectionFromLocale(Locale.getDefault())
 
         binding = ActivityHomeBinding.inflate(layoutInflater)
+
+        if (Config.channel.isNightlyOrDebug) {
+            lifecycleScope.launch {
+                debugSettings.debugDrawerEnabled
+                    .distinctUntilChanged()
+                    .collect { enabled ->
+                        with(binding.debugOverlay) {
+                            if (enabled) {
+                                visibility = View.VISIBLE
+
+                                setContent {
+                                    FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = false)) {
+                                        DebugOverlay()
+                                    }
+                                }
+                            } else {
+                                setContent {}
+
+                                visibility = View.GONE
+                            }
+                        }
+                    }
+            }
+        }
+
         setContentView(binding.root)
         ProfilerMarkers.addListenerForOnGlobalLayout(components.core.engine, this, binding.root)
 

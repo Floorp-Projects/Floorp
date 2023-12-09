@@ -13,7 +13,6 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onFirst
-import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
@@ -33,8 +32,10 @@ import org.mozilla.fenix.home.topsites.TopSitesTestTag
  */
 class ComposeTopSitesRobot(private val composeTestRule: HomeActivityComposeTestRule) {
 
-    fun verifyExistingTopSitesList() =
-        composeTestRule.onNodeWithTag(TopSitesTestTag.topSites).assertExists()
+    @OptIn(ExperimentalTestApi::class)
+    fun verifyExistingTopSitesList() {
+        composeTestRule.waitUntilExactlyOneExists(hasTestTag(TopSitesTestTag.topSites), timeoutMillis = waitingTime)
+    }
 
     @OptIn(ExperimentalTestApi::class)
     fun verifyExistingTopSiteItem(vararg titles: String) {
