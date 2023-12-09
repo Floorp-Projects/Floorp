@@ -61,7 +61,7 @@ PEMFactory::PEMFactory() {
       StaticPrefs::media_ffmpeg_encoder_enabled()) {
     if (RefPtr<PlatformEncoderModule> pem =
             FFVPXRuntimeLinker::CreateEncoder()) {
-      mModules.AppendElement(pem);
+      mCurrentPEMs.AppendElement(pem);
     }
   }
 #endif
@@ -71,7 +71,7 @@ PEMFactory::PEMFactory() {
       StaticPrefs::media_ffmpeg_encoder_enabled()) {
     if (RefPtr<PlatformEncoderModule> pem =
             FFmpegRuntimeLinker::CreateEncoder()) {
-      mModules.AppendElement(pem);
+      mCurrentPEMs.AppendElement(pem);
     }
   }
 #endif

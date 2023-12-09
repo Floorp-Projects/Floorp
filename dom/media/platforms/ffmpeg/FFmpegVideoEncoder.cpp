@@ -9,7 +9,6 @@
 #include "FFmpegLog.h"
 #include "FFmpegRuntimeLinker.h"
 #include "ImageContainer.h"
-#include "VPXDecoder.h"
 #include "libavutil/error.h"
 #include "libavutil/pixfmt.h"
 #include "mozilla/CheckedInt.h"
@@ -148,26 +147,24 @@ static nsCString MakeErrorString(const FFmpegLibWrapper* aLib, int aErrNum) {
 }
 
 template <>
-AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(const nsACString& aMimeType) {
+AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(CodecType aCodec) {
 #if LIBAVCODEC_VERSION_MAJOR >= 58
-  if (VPXDecoder::IsVP8(aMimeType)) {
+  if (aCodec == CodecType::VP8) {
     return AV_CODEC_ID_VP8;
   }
 
-  if (VPXDecoder::IsVP9(aMimeType)) {
+  if (aCodec == CodecType::VP9) {
     return AV_CODEC_ID_VP9;
   }
 #endif
   return AV_CODEC_ID_NONE;
 }
 
-template <typename ConfigType>
-StaticMutex FFmpegVideoEncoder<LIBAV_VER, ConfigType>::sMutex;
+StaticMutex FFmpegVideoEncoder<LIBAV_VER>::sMutex;
 
-template <typename ConfigType>
-FFmpegVideoEncoder<LIBAV_VER, ConfigType>::FFmpegVideoEncoder(
+FFmpegVideoEncoder<LIBAV_VER>::FFmpegVideoEncoder(
     const FFmpegLibWrapper* aLib, AVCodecID aCodecID,
-    RefPtr<TaskQueue> aTaskQueue, const ConfigType& aConfig)
+    const RefPtr<TaskQueue>& aTaskQueue, const EncoderConfig& aConfig)
     : mLib(aLib),
       mCodecID(aCodecID),
       mTaskQueue(aTaskQueue),
@@ -178,9 +175,7 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::FFmpegVideoEncoder(
   MOZ_ASSERT(mTaskQueue);
 };
 
-template <typename ConfigType>
-RefPtr<MediaDataEncoder::InitPromise>
-FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Init() {
+RefPtr<MediaDataEncoder::InitPromise> FFmpegVideoEncoder<LIBAV_VER>::Init() {
   FFMPEGV_LOG("Init");
 
 #if LIBAVCODEC_VERSION_MAJOR < 58
@@ -192,9 +187,8 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Init() {
 #endif
 }
 
-template <typename ConfigType>
-RefPtr<MediaDataEncoder::EncodePromise>
-FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Encode(const MediaData* aSample) {
+RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<LIBAV_VER>::Encode(
+    const MediaData* aSample) {
   MOZ_ASSERT(aSample != nullptr);
 
   FFMPEGV_LOG("Encode");
@@ -203,18 +197,24 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Encode(const MediaData* aSample) {
   FFMPEGV_LOG("FFmpegVideoEncoder needs ffmpeg 58 at least.");
   return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 #else
-  return InvokeAsync(
-      mTaskQueue, __func__,
-      [self = RefPtr<FFmpegVideoEncoder<LIBAV_VER, ConfigType> >(this),
-       sample = RefPtr<const MediaData>(aSample)]() {
-        return self->ProcessEncode(std::move(sample));
-      });
+  return InvokeAsync(mTaskQueue, __func__,
+                     [self = RefPtr<FFmpegVideoEncoder<LIBAV_VER> >(this),
+                      sample = RefPtr<const MediaData>(aSample)]() {
+                       return self->ProcessEncode(std::move(sample));
+                     });
 #endif
 }
 
-template <typename ConfigType>
-RefPtr<MediaDataEncoder::EncodePromise>
-FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Drain() {
+RefPtr<MediaDataEncoder::ReconfigurationPromise>
+FFmpegVideoEncoder<LIBAV_VER>::Reconfigure(
+    const RefPtr<const EncoderConfigurationChangeList>& aConfigurationChanges) {
+  return InvokeAsync<const RefPtr<const EncoderConfigurationChangeList>&>(
+      mTaskQueue, this, __func__,
+      &FFmpegVideoEncoder<LIBAV_VER>::ProcessReconfigure,
+      aConfigurationChanges);
+}
+
+RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<LIBAV_VER>::Drain() {
   FFMPEGV_LOG("Drain");
 
 #if LIBAVCODEC_VERSION_MAJOR < 58
@@ -226,15 +226,14 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Drain() {
 #endif
 }
 
-template <typename ConfigType>
-RefPtr<ShutdownPromise> FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Shutdown() {
+RefPtr<ShutdownPromise> FFmpegVideoEncoder<LIBAV_VER>::Shutdown() {
   FFMPEGV_LOG("Shutdown");
 
 #if LIBAVCODEC_VERSION_MAJOR < 58
   FFMPEGV_LOG("FFmpegVideoEncoder needs ffmpeg 58 at least.");
   return mTaskQueue->BeginShutdown();
 #else
-  RefPtr<FFmpegVideoEncoder<LIBAV_VER, ConfigType> > self = this;
+  RefPtr<FFmpegVideoEncoder<LIBAV_VER> > self = this;
   return InvokeAsync(mTaskQueue, __func__, [self]() {
     self->ProcessShutdown();
     return self->mTaskQueue->BeginShutdown();
@@ -242,16 +241,13 @@ RefPtr<ShutdownPromise> FFmpegVideoEncoder<LIBAV_VER, ConfigType>::Shutdown() {
 #endif
 }
 
-template <typename ConfigType>
-RefPtr<GenericPromise> FFmpegVideoEncoder<LIBAV_VER, ConfigType>::SetBitrate(
-    Rate aBitsPerSec) {
+RefPtr<GenericPromise> FFmpegVideoEncoder<LIBAV_VER>::SetBitrate(
+    uint32_t aBitrate) {
   FFMPEGV_LOG("SetBitrate");
   return GenericPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 }
 
-template <typename ConfigType>
-nsCString FFmpegVideoEncoder<LIBAV_VER, ConfigType>::GetDescriptionName()
-    const {
+nsCString FFmpegVideoEncoder<LIBAV_VER>::GetDescriptionName() const {
 #ifdef USING_MOZFFVPX
   return "ffvpx video encoder"_ns;
 #else
@@ -265,9 +261,8 @@ nsCString FFmpegVideoEncoder<LIBAV_VER, ConfigType>::GetDescriptionName()
 #endif
 }
 
-template <typename ConfigType>
 RefPtr<MediaDataEncoder::InitPromise>
-FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessInit() {
+FFmpegVideoEncoder<LIBAV_VER>::ProcessInit() {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
 
   FFMPEGV_LOG("ProcessInit");
@@ -307,7 +302,7 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessInit() {
   // Set up AVCodecContext.
   mCodecContext->pix_fmt = fmt;
   mCodecContext->bit_rate =
-      static_cast<ffmpeg::FFmpegBitRate>(mConfig.mBitsPerSec);
+      static_cast<ffmpeg::FFmpegBitRate>(mConfig.mBitrate);
   mCodecContext->width = static_cast<int>(mConfig.mSize.width);
   mCodecContext->height = static_cast<int>(mConfig.mSize.height);
   mCodecContext->time_base =
@@ -360,10 +355,8 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessInit() {
   return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
 }
 
-template <typename ConfigType>
 RefPtr<MediaDataEncoder::EncodePromise>
-FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessEncode(
-    RefPtr<const MediaData> aSample) {
+FFmpegVideoEncoder<LIBAV_VER>::ProcessEncode(RefPtr<const MediaData> aSample) {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
 
   FFMPEGV_LOG("ProcessEncode");
@@ -380,9 +373,45 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessEncode(
 #endif
 }
 
-template <typename ConfigType>
+RefPtr<MediaDataEncoder::ReconfigurationPromise>
+FFmpegVideoEncoder<LIBAV_VER>::ProcessReconfigure(
+    const RefPtr<const EncoderConfigurationChangeList>& aConfigurationChanges) {
+  bool ok = false;
+  for (const auto& confChange : aConfigurationChanges->mChanges) {
+    ok |= confChange.match(
+        // Not supported yet
+        [&](const DimensionsChange& aChange) -> bool { return false; },
+        [&](const DisplayDimensionsChange& aChange) -> bool { return false; },
+        [&](const BitrateModeChange& aChange) -> bool {
+          mConfig.mBitrateMode = aChange.get();
+          // TODO
+          return false;
+        },
+        [&](const BitrateChange& aChange) -> bool {
+          mConfig.mBitrate = aChange.get().refOr(0);
+          // TODO
+          return false;
+        },
+        [&](const FramerateChange& aChange) -> bool {
+          // TODO
+          return false;
+        },
+        [&](const UsageChange& aChange) -> bool {
+          // TODO
+          mConfig.mUsage = aChange.get();
+          return false;
+        },
+        [&](const ContentHintChange& aChange) -> bool { return false; });
+  };
+  using P = MediaDataEncoder::ReconfigurationPromise;
+  if (ok) {
+    return P::CreateAndResolve(true, __func__);
+  }
+  return P::CreateAndReject(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
+}
+
 RefPtr<MediaDataEncoder::EncodePromise>
-FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessDrain() {
+FFmpegVideoEncoder<LIBAV_VER>::ProcessDrain() {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
 
   FFMPEGV_LOG("ProcessDrain");
@@ -395,8 +424,7 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessDrain() {
 #endif
 }
 
-template <typename ConfigType>
-void FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessShutdown() {
+void FFmpegVideoEncoder<LIBAV_VER>::ProcessShutdown() {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
 
   FFMPEGV_LOG("ProcessShutdown");
@@ -410,25 +438,22 @@ void FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ProcessShutdown() {
   }
 }
 
-template <typename ConfigType>
-int FFmpegVideoEncoder<LIBAV_VER, ConfigType>::OpenCodecContext(
-    const AVCodec* aCodec, AVDictionary** aOptions) {
+int FFmpegVideoEncoder<LIBAV_VER>::OpenCodecContext(const AVCodec* aCodec,
+                                                    AVDictionary** aOptions) {
   MOZ_ASSERT(mCodecContext);
 
   StaticMutexAutoLock mon(sMutex);
   return mLib->avcodec_open2(mCodecContext, aCodec, aOptions);
 }
 
-template <typename ConfigType>
-void FFmpegVideoEncoder<LIBAV_VER, ConfigType>::CloseCodecContext() {
+void FFmpegVideoEncoder<LIBAV_VER>::CloseCodecContext() {
   MOZ_ASSERT(mCodecContext);
 
   StaticMutexAutoLock mon(sMutex);
   mLib->avcodec_close(mCodecContext);
 }
 
-template <typename ConfigType>
-bool FFmpegVideoEncoder<LIBAV_VER, ConfigType>::PrepareFrame() {
+bool FFmpegVideoEncoder<LIBAV_VER>::PrepareFrame() {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
 
   // TODO: Merge the duplicate part with FFmpegDataDecoder's PrepareFrame.
@@ -451,8 +476,7 @@ bool FFmpegVideoEncoder<LIBAV_VER, ConfigType>::PrepareFrame() {
   return !!mFrame;
 }
 
-template <typename ConfigType>
-void FFmpegVideoEncoder<LIBAV_VER, ConfigType>::DestroyFrame() {
+void FFmpegVideoEncoder<LIBAV_VER>::DestroyFrame() {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
   if (mFrame) {
 #if LIBAVCODEC_VERSION_MAJOR >= 55
@@ -488,10 +512,8 @@ static bool CopyPlane(uint8_t* aDst, const uint8_t* aSrc,
   return true;
 }
 
-template <typename ConfigType>
-RefPtr<MediaDataEncoder::EncodePromise>
-FFmpegVideoEncoder<LIBAV_VER, ConfigType>::EncodeWithModernAPIs(
-    RefPtr<const VideoData> aSample) {
+RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<
+    LIBAV_VER>::EncodeWithModernAPIs(RefPtr<const VideoData> aSample) {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
   MOZ_ASSERT(mCodecContext);
   MOZ_ASSERT(aSample);
@@ -746,9 +768,8 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::EncodeWithModernAPIs(
   return EncodePromise::CreateAndResolve(std::move(output), __func__);
 }
 
-template <typename ConfigType>
 RefPtr<MediaDataEncoder::EncodePromise>
-FFmpegVideoEncoder<LIBAV_VER, ConfigType>::DrainWithModernAPIs() {
+FFmpegVideoEncoder<LIBAV_VER>::DrainWithModernAPIs() {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
   MOZ_ASSERT(mCodecContext);
 
@@ -826,8 +847,7 @@ FFmpegVideoEncoder<LIBAV_VER, ConfigType>::DrainWithModernAPIs() {
 }
 #endif
 
-template <typename ConfigType>
-RefPtr<MediaRawData> FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ToMediaRawData(
+RefPtr<MediaRawData> FFmpegVideoEncoder<LIBAV_VER>::ToMediaRawData(
     AVPacket* aPacket) {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
   MOZ_ASSERT(aPacket);
@@ -853,8 +873,5 @@ RefPtr<MediaRawData> FFmpegVideoEncoder<LIBAV_VER, ConfigType>::ToMediaRawData(
       media::TimeUnit(aPacket->dts, static_cast<int64_t>(mConfig.mFramerate));
   return data;
 }
-
-template class FFmpegVideoEncoder<LIBAV_VER, MediaDataEncoder::VP8Config>;
-template class FFmpegVideoEncoder<LIBAV_VER, MediaDataEncoder::VP9Config>;
 
 }  // namespace mozilla

@@ -15,20 +15,20 @@ namespace mozilla {
 template <int V>
 class FFmpegEncoderModule final : public PlatformEncoderModule {
  public:
+  virtual ~FFmpegEncoderModule() = default;
   static already_AddRefed<PlatformEncoderModule> Create(
       FFmpegLibWrapper* aLib) {
     RefPtr<PlatformEncoderModule> pem = new FFmpegEncoderModule(aLib);
     return pem.forget();
   }
+  bool Supports(const EncoderConfig& aConfig) const override;
+  bool SupportsCodec(CodecType aCodec) const override;
 
-  virtual ~FFmpegEncoderModule() = default;
-
-  /* PlatformEncoderModule Methods */
-  bool SupportsMimeType(const nsACString& aMimeType) const override;
+  const char* GetName() const override { return "Apple Encoder Module"; }
 
   already_AddRefed<MediaDataEncoder> CreateVideoEncoder(
-      const CreateEncoderParams& aParams,
-      const bool aHardwareNotAllowed) const override;
+      const EncoderConfig& aConfig,
+      const RefPtr<TaskQueue>& aTaskQueue) const override;
 
  protected:
   explicit FFmpegEncoderModule(FFmpegLibWrapper* aLib) : mLib(aLib) {
