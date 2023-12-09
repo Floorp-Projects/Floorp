@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "H264.h"
-#include <cmath>
 #include <limits>
 #include "AnnexB.h"
 #include "BitReader.h"
@@ -11,7 +10,6 @@
 #include "BufferReader.h"
 #include "ByteStreamsUtils.h"
 #include "ByteWriter.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Try.h"
