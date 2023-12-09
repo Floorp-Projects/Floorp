@@ -158,7 +158,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["maxRichResults", 10],
 
   // Feature gate pref for mdn suggestions in the urlbar.
-  ["mdn.featureGate", false],
+  ["mdn.featureGate", true],
 
   // Comma-separated list of client variants to send to Merino
   ["merino.clientVariants", ""],
