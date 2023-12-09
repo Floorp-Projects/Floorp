@@ -53,7 +53,7 @@ struct SPSData {
   gfx::YUVColorSpace ColorSpace() const;
   gfx::ColorDepth ColorDepth() const;
 
-  bool valid;
+  bool valid = {};
 
   /* Decoded Members */
   /*
@@ -61,58 +61,58 @@ struct SPSData {
     pic_width = ((pic_width_in_mbs_minus1 + 1) * 16)
                 - (frame_crop_left_offset + frame_crop_right_offset) * 2
    */
-  uint32_t pic_width;
+  uint32_t pic_width = {};
   /*
     pic_height is the decoded height according to:
     pic_height = (2 - frame_mbs_only_flag) * ((pic_height_in_map_units_minus1 +
     1) * 16)
                  - (frame_crop_top_offset + frame_crop_bottom_offset) * 2
    */
-  uint32_t pic_height;
+  uint32_t pic_height = {};
 
-  bool interlaced;
+  bool interlaced = {};
 
   /*
    Displayed size.
    display_width and display_height are adjusted according to the display
    sample aspect ratio.
    */
-  uint32_t display_width;
-  uint32_t display_height;
+  uint32_t display_width = {};
+  uint32_t display_height = {};
 
-  float sample_ratio;
+  float sample_ratio = {};
 
-  uint32_t crop_left;
-  uint32_t crop_right;
-  uint32_t crop_top;
-  uint32_t crop_bottom;
+  uint32_t crop_left = {};
+  uint32_t crop_right = {};
+  uint32_t crop_top = {};
+  uint32_t crop_bottom = {};
 
   /*
     H264 decoding parameters according to ITU-T H.264 (T-REC-H.264-201402-I/en)
    http://www.itu.int/rec/T-REC-H.264-201402-I/en
    */
 
-  bool constraint_set0_flag;
-  bool constraint_set1_flag;
-  bool constraint_set2_flag;
-  bool constraint_set3_flag;
-  bool constraint_set4_flag;
-  bool constraint_set5_flag;
+  bool constraint_set0_flag = {};
+  bool constraint_set1_flag = {};
+  bool constraint_set2_flag = {};
+  bool constraint_set3_flag = {};
+  bool constraint_set4_flag = {};
+  bool constraint_set5_flag = {};
 
   /*
     profile_idc and level_idc indicate the profile and level to which the coded
     video sequence conforms when the SVC sequence parameter set is the active
     SVC sequence parameter set.
    */
-  uint8_t profile_idc;
-  uint8_t level_idc;
+  uint8_t profile_idc = {};
+  uint8_t level_idc = {};
 
   /*
     seq_parameter_set_id identifies the sequence parameter set that is referred
     to by the picture parameter set. The value of seq_parameter_set_id shall be
     in the range of 0 to 31, inclusive.
    */
-  uint8_t seq_parameter_set_id;
+  uint8_t seq_parameter_set_id = {};
 
   /*
     chroma_format_idc specifies the chroma sampling relative to the luma
@@ -122,7 +122,7 @@ struct SPSData {
     When profile_idc is equal to 183, chroma_format_idc shall be equal to 0
     (4:0:0 chroma format).
    */
-  uint8_t chroma_format_idc;
+  uint8_t chroma_format_idc = {};
 
   /*
     bit_depth_luma_minus8 specifies the bit depth of the samples of the luma
@@ -133,7 +133,7 @@ struct SPSData {
     When bit_depth_luma_minus8 is not present, it shall be inferred to be equal
     to 0. bit_depth_luma_minus8 shall be in the range of 0 to 6, inclusive.
   */
-  uint8_t bit_depth_luma_minus8;
+  uint8_t bit_depth_luma_minus8 = {};
 
   /*
     bit_depth_chroma_minus8 specifies the bit depth of the samples of the chroma
@@ -145,7 +145,7 @@ struct SPSData {
     equal to 0. bit_depth_chroma_minus8 shall be in the range of 0 to 6,
     inclusive.
   */
-  uint8_t bit_depth_chroma_minus8;
+  uint8_t bit_depth_chroma_minus8 = {};
 
   /*
     separate_colour_plane_flag equal to 1 specifies that the three colour
@@ -158,7 +158,7 @@ struct SPSData {
     that each use the monochrome coding syntax. In this case, each colour plane
     is associated with a specific colour_plane_id value.
    */
-  bool separate_colour_plane_flag;
+  bool separate_colour_plane_flag = {};
 
   /*
      seq_scaling_matrix_present_flag equal to 1 specifies that the flags
@@ -170,7 +170,7 @@ struct SPSData {
      i = 6..11. When seq_scaling_matrix_present_flag is not present, it shall be
      inferred to be equal to 0.
      */
-  bool seq_scaling_matrix_present_flag;
+  bool seq_scaling_matrix_present_flag = {};
 
   /*
     log2_max_frame_num_minus4 specifies the value of the variable
@@ -180,14 +180,14 @@ struct SPSData {
      MaxFrameNum = 2( log2_max_frame_num_minus4 + 4 ). The value of
     log2_max_frame_num_minus4 shall be in the range of 0 to 12, inclusive.
    */
-  uint8_t log2_max_frame_num;
+  uint8_t log2_max_frame_num = {};
 
   /*
     pic_order_cnt_type specifies the method to decode picture order
     count (as specified in subclause 8.2.1). The value of
     pic_order_cnt_type shall be in the range of 0 to 2, inclusive.
    */
-  uint8_t pic_order_cnt_type;
+  uint8_t pic_order_cnt_type = {};
 
   /*
     log2_max_pic_order_cnt_lsb_minus4 specifies the value of the
@@ -200,7 +200,7 @@ struct SPSData {
     The value of log2_max_pic_order_cnt_lsb_minus4 shall be in
     the range of 0 to 12, inclusive.
    */
-  uint8_t log2_max_pic_order_cnt_lsb;
+  uint8_t log2_max_pic_order_cnt_lsb = {};
 
   /*
     delta_pic_order_always_zero_flag equal to 1 specifies that
@@ -208,7 +208,7 @@ struct SPSData {
     not present in the slice headers of the sequence and shall
     be inferred to be equal to 0.
    */
-  bool delta_pic_order_always_zero_flag;
+  bool delta_pic_order_always_zero_flag = {};
 
   /*
     offset_for_non_ref_pic is used to calculate the picture
@@ -216,7 +216,7 @@ struct SPSData {
     8.2.1. The value of offset_for_non_ref_pic shall be in the
     range of -231 to 231 - 1, inclusive.
    */
-  int8_t offset_for_non_ref_pic;
+  int8_t offset_for_non_ref_pic = {};
 
   /*
     offset_for_top_to_bottom_field is used to calculate the
@@ -224,7 +224,7 @@ struct SPSData {
     subclause 8.2.1. The value of offset_for_top_to_bottom_field
     shall be in the range of -231 to 231 - 1, inclusive.
    */
-  int8_t offset_for_top_to_bottom_field;
+  int8_t offset_for_top_to_bottom_field = {};
 
   /*
     max_num_ref_frames specifies the maximum number of short-term and
@@ -236,7 +236,7 @@ struct SPSData {
     max_num_ref_frames shall be in the range of 0 to MaxDpbFrames (as
     specified in subclause A.3.1 or A.3.2), inclusive.
    */
-  uint32_t max_num_ref_frames;
+  uint32_t max_num_ref_frames = {};
 
   /*
     gaps_in_frame_num_value_allowed_flag specifies the allowed
@@ -244,20 +244,20 @@ struct SPSData {
     decoding process in case of an inferred gap between values of
     frame_num as specified in subclause 8.2.5.2.
    */
-  bool gaps_in_frame_num_allowed_flag;
+  bool gaps_in_frame_num_allowed_flag = {};
 
   /*
     pic_width_in_mbs_minus1 plus 1 specifies the width of each
     decoded picture in units of macroblocks.  16 macroblocks in a row
    */
-  uint32_t pic_width_in_mbs;
+  uint32_t pic_width_in_mbs = {};
 
   /*
     pic_height_in_map_units_minus1 plus 1 specifies the height in
     slice group map units of a decoded frame or field.  16
     macroblocks in each column.
    */
-  uint32_t pic_height_in_map_units;
+  uint32_t pic_height_in_map_units = {};
 
   /*
     frame_mbs_only_flag equal to 0 specifies that coded pictures of
@@ -266,7 +266,7 @@ struct SPSData {
     coded picture of the coded video sequence is a coded frame
     containing only frame macroblocks.
    */
-  bool frame_mbs_only_flag;
+  bool frame_mbs_only_flag = {};
 
   /*
     mb_adaptive_frame_field_flag equal to 0 specifies no
@@ -276,7 +276,7 @@ struct SPSData {
     macroblocks within frames. When mb_adaptive_frame_field_flag
     is not present, it shall be inferred to be equal to 0.
    */
-  bool mb_adaptive_frame_field_flag;
+  bool mb_adaptive_frame_field_flag = {};
 
   /*
     direct_8x8_inference_flag specifies the method used in the derivation
@@ -284,7 +284,7 @@ struct SPSData {
     as specified in clause 8.4.1.2. When frame_mbs_only_flag is equal to 0,
     direct_8x8_inference_flag shall be equal to 1.
   */
-  bool direct_8x8_inference_flag;
+  bool direct_8x8_inference_flag = {};
 
   /*
     frame_cropping_flag equal to 1 specifies that the frame cropping
@@ -292,11 +292,11 @@ struct SPSData {
     set. frame_cropping_flag equal to 0 specifies that the frame
     cropping offset parameters are not present.
    */
-  bool frame_cropping_flag;
-  uint32_t frame_crop_left_offset;
-  uint32_t frame_crop_right_offset;
-  uint32_t frame_crop_top_offset;
-  uint32_t frame_crop_bottom_offset;
+  bool frame_cropping_flag = {};
+  uint32_t frame_crop_left_offset = {};
+  uint32_t frame_crop_right_offset = {};
+  uint32_t frame_crop_top_offset = {};
+  uint32_t frame_crop_bottom_offset = {};
 
   // VUI Parameters
 
@@ -307,14 +307,14 @@ struct SPSData {
     the vui_parameters( ) syntax structure as specified in Annex E
     is not present.
    */
-  bool vui_parameters_present_flag;
+  bool vui_parameters_present_flag = {};
 
   /*
    aspect_ratio_info_present_flag equal to 1 specifies that
    aspect_ratio_idc is present. aspect_ratio_info_present_flag
    equal to 0 specifies that aspect_ratio_idc is not present.
    */
-  bool aspect_ratio_info_present_flag;
+  bool aspect_ratio_info_present_flag = {};
 
   /*
     aspect_ratio_idc specifies the value of the sample aspect
@@ -325,9 +325,9 @@ struct SPSData {
     present, aspect_ratio_idc value shall be inferred to be
     equal to 0.
    */
-  uint8_t aspect_ratio_idc;
-  uint32_t sar_width;
-  uint32_t sar_height;
+  uint8_t aspect_ratio_idc = {};
+  uint32_t sar_width = {};
+  uint32_t sar_height = {};
 
   /*
     video_signal_type_present_flag equal to 1 specifies that video_format,
@@ -335,7 +335,7 @@ struct SPSData {
     video_signal_type_present_flag equal to 0, specify that video_format,
     video_full_range_flag and colour_description_present_flag are not present.
    */
-  bool video_signal_type_present_flag;
+  bool video_signal_type_present_flag = {};
 
   /*
     overscan_info_present_flag equal to1 specifies that the
@@ -343,7 +343,7 @@ struct SPSData {
     equal to 0 or is not present, the preferred display method for the video
     signal is unspecified (Unspecified).
    */
-  bool overscan_info_present_flag;
+  bool overscan_info_present_flag = {};
   /*
     overscan_appropriate_flag equal to 1 indicates that the cropped decoded
     pictures output are suitable for display using overscan.
@@ -351,7 +351,7 @@ struct SPSData {
     pictures output contain visually important information in the entire region
     out to the edges of the cropping rectangle of the picture
    */
-  bool overscan_appropriate_flag;
+  bool overscan_appropriate_flag = {};
 
   /*
     video_format indicates the representation of the pictures as specified in
@@ -360,7 +360,7 @@ struct SPSData {
     element is not present, video_format value shall be inferred to be equal
     to 5. (Unspecified video format)
    */
-  uint8_t video_format;
+  uint8_t video_format = {};
 
   /*
     video_full_range_flag indicates the black level and range of the luma and
@@ -369,7 +369,7 @@ struct SPSData {
     When the video_full_range_flag syntax element is not present, the value of
     video_full_range_flag shall be inferred to be equal to 0.
    */
-  bool video_full_range_flag;
+  bool video_full_range_flag = {};
 
   /*
     colour_description_present_flag equal to1 specifies that colour_primaries,
@@ -377,7 +377,7 @@ struct SPSData {
     colour_description_present_flag equal to 0 specifies that colour_primaries,
     transfer_characteristics and matrix_coefficients are not present.
    */
-  bool colour_description_present_flag;
+  bool colour_description_present_flag = {};
 
   /*
     colour_primaries indicates the chromaticity coordinates of the source
@@ -387,7 +387,7 @@ struct SPSData {
     colour_primaries shall be inferred to be equal to 2 (the chromaticity is
     unspecified or is determined by the application).
    */
-  uint8_t colour_primaries;
+  uint8_t colour_primaries = {};
 
   /*
     transfer_characteristics indicates the opto-electronic transfer
@@ -399,21 +399,21 @@ struct SPSData {
     (the transfer characteristics are unspecified or are determined by the
     application).
    */
-  uint8_t transfer_characteristics;
+  uint8_t transfer_characteristics = {};
 
-  uint8_t matrix_coefficients;
-  bool chroma_loc_info_present_flag;
+  uint8_t matrix_coefficients = {};
+  bool chroma_loc_info_present_flag = {};
   /*
     The value of chroma_sample_loc_type_top_field and
     chroma_sample_loc_type_bottom_field shall be in the range of 0 to 5,
     inclusive
   */
-  uint8_t chroma_sample_loc_type_top_field;
-  uint8_t chroma_sample_loc_type_bottom_field;
+  uint8_t chroma_sample_loc_type_top_field = {};
+  uint8_t chroma_sample_loc_type_bottom_field = {};
 
-  bool scaling_matrix_present;
-  uint8_t scaling_matrix4x4[6][16];
-  uint8_t scaling_matrix8x8[6][64];
+  bool scaling_matrix_present = {};
+  uint8_t scaling_matrix4x4[6][16] = {};
+  uint8_t scaling_matrix8x8[6][64] = {};
 
   SPSData();
 };
