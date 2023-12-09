@@ -343,6 +343,10 @@ BROWSER_PROCESS += [
     # Legacy DLL for digital signatures with ID cards from Spain (bug 1709082),
     # up-to-date setups use DNIe_P11_x64.dll instead
     DllBlocklistEntry("UsrDNIeCertStore.dll", ALL_VERSIONS),
+
+    # old AMD JPEG decoder DLLs (bug 1328838)
+    DllBlocklistEntry("amf-wic-jpeg-decoder64.dll", ALL_VERSIONS),
+    DllBlocklistEntry("amf-wic-jpeg-decoder32.dll", ALL_VERSIONS),
 ]
 
 CHILD_PROCESSES += [
