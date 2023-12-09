@@ -114,8 +114,10 @@
     <string name="mozac_feature_addons_details">Nánar</string>
     <!-- Displays a page with all the permissions of an add-on. -->
     <string name="mozac_feature_addons_permissions">Heimildir</string>
-    <!-- This is button that remove (uninstall an add-on). -->
+    <!-- This is a button to remove (i.e. uninstall) an add-on. -->
     <string name="mozac_feature_addons_remove">Fjarlægja</string>
+    <!-- This is a button to report an add-on. -->
+    <string name="mozac_feature_addons_report">Tilkynna</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">Bæta %1$s við?</string>
     <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
@@ -202,8 +204,6 @@
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">Ekki tókst að setja inn %1$s þar sem hún er ekki samhæfð við %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted_1">Ekki tókst að setja inn %1$s þar sem viðbótin er þekkt fyrir að valda hrun eða öryggisvillum.</string>
-    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">Ekki tókst að setja inn %1$s þar sem það er þekkt fyrir að valda hruni eða öryggisvandamálum</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s var virkjað á árangursríkan hátt</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

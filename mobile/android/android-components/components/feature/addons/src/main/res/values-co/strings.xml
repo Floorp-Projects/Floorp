@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">Sapene di più nant’à i permessi</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Apprezzazione</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">Sapene di più nant’à stu modulu addiziunale</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Preferenze</string>
     <!-- Indicates the add-on is enabled. -->
@@ -112,8 +114,10 @@
     <string name="mozac_feature_addons_details">Detaglii</string>
     <!-- Displays a page with all the permissions of an add-on. -->
     <string name="mozac_feature_addons_permissions">Permessi</string>
-    <!-- This is button that remove (uninstall an add-on). -->
+    <!-- This is a button to remove (i.e. uninstall) an add-on. -->
     <string name="mozac_feature_addons_remove">Caccià</string>
+    <!-- This is a button to report an add-on. -->
+    <string name="mozac_feature_addons_report">Signalà</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">Aghjunghje %1$s ?</string>
     <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
@@ -161,13 +165,13 @@
     <!-- The content of the notification displayed when an add-on needs a new permission-->
     <string name="mozac_feature_addons_updater_notification_content_singular">Un permessu novu hè richiestu</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
-    <string name="mozac_feature_addons_updater_notification_channel">Rinnovi di i mudulli</string>
+    <string name="mozac_feature_addons_updater_notification_channel">Rinnovi di i moduli</string>
     <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
-    <string name="mozac_feature_addons_supported_checker_notification_channel">Verificazione di i mudulli addiziunali accettati</string>
+    <string name="mozac_feature_addons_supported_checker_notification_channel">Verificazione di i moduli addiziunali accettati</string>
     <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
-    <string name="mozac_feature_addons_supported_checker_notification_title">Novu mudullu addiziunale dispunibule</string>
+    <string name="mozac_feature_addons_supported_checker_notification_title">Novu modulu addiziunale dispunibule</string>
     <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
-    <string name="mozac_feature_addons_supported_checker_notification_title_plural">Novi mudulli addiziunali dispunibule</string>
+    <string name="mozac_feature_addons_supported_checker_notification_title_plural">Novi moduli addiziunali dispunibule</string>
     <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_one">Aghjunghje %1$s à %2$s</string>
     <!-- The content of the notification, this will be shown to the user when two newly supported add-ons are available. %1$s is the first add-on name. %2$s is the second add-on name. %3$s is the app name (in most cases Firefox). -->
@@ -175,13 +179,13 @@
     <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">Aghjunghjeli à %1$s</string>
     <!-- This is the caption for not yet supported screen caption -->
-    <string name="mozac_feature_addons_not_yet_supported_caption">A tecnolugia di i mudulli addiziunali di Firefox s’ammuderneghja. Sti mudulli impieganu una struttura chì ùn hè micca cunciliabile cù Firefox 75 è e so versioni precedente.</string>
+    <string name="mozac_feature_addons_not_yet_supported_caption">A tecnolugia di i moduli addiziunali di Firefox s’ammuderneghja. Sti moduli impieganu una struttura chì ùn hè micca cunciliabile cù Firefox 75 è e so versioni precedente.</string>
     <!-- This is the caption for not yet supported screen caption -->
     <string name="mozac_feature_addons_not_yet_supported_caption2">Simu in treccia di custruisce una prima selezzione d’estensioni ricumandate.</string>
     <!-- This is the caption for the add-on installation progress overlay -->
-    <string name="mozac_add_on_install_progress_caption">Scaricamentu è verificazione di u mudullu…</string>
+    <string name="mozac_add_on_install_progress_caption">Scaricamentu è verificazione di u modulu…</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
-    <string name="mozac_feature_addons_failed_to_query_add_ons">Impussibule d’ottene a lista di i mudulli addiziunali</string>
+    <string name="mozac_feature_addons_failed_to_query_add_ons">Impussibule d’ottene a lista di i moduli addiziunali</string>
     <!-- Error shown when unable to find a translation for an add-on field. %1$s is the locale of the user and %2$s is the default language of the add-on -->
     <string name="mozac_feature_addons_failed_to_translate">Traduzzione micca trova, nè per a lucale %1$s, nè per a lingua predefinita %2$s</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
@@ -200,8 +204,6 @@
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s ùn pò micca esse installatu perchè ùn hè micca cumpatibile cù %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted_1">%1$s ùn pò micca esse installatu perchè ci hè un risicu tamantu di cagiunà prublemi di stabilità o di sicurità.</string>
-    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">%1$s ùn pò micca esse installatu perchè ci hè un risicu tamantu di cagiunà prublemi di stabilità o di sicurità.</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">Attivazione riesciuta di %1$s</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
@@ -219,11 +221,11 @@
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">Impussibule di caccià %1$s</string>
     <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
-    <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">Stu mudullu hè statu impurtatu da una versione precedente di %1$s</string>
+    <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">Stu modulu hè statu impurtatu da una versione precedente di %1$s</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
-    <string name="mozac_feature_addons_unsupported_caption">1 mudullu addiziunale</string>
+    <string name="mozac_feature_addons_unsupported_caption">1 modulu addiziunale</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
-    <string name="mozac_feature_addons_unsupported_caption_plural">%1$s mudulli addiziunali</string>
+    <string name="mozac_feature_addons_unsupported_caption_plural">%1$s moduli addiziunali</string>
     <!-- Text link to a sumo page for learning more about unsupported add-ons. -->
     <string name="mozac_feature_addons_unsupported_learn_more">Sapene di più</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated. -->

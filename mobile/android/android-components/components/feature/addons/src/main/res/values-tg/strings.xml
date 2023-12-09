@@ -114,8 +114,10 @@
     <string name="mozac_feature_addons_details">Тафсилот</string>
     <!-- Displays a page with all the permissions of an add-on. -->
     <string name="mozac_feature_addons_permissions">Иҷозатҳо</string>
-    <!-- This is button that remove (uninstall an add-on). -->
+    <!-- This is a button to remove (i.e. uninstall) an add-on. -->
     <string name="mozac_feature_addons_remove">Тоза кардан</string>
+    <!-- This is a button to report an add-on. -->
+    <string name="mozac_feature_addons_report">Гузориш додан</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">%1$s-ро илова мекунед?</string>
     <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
@@ -202,8 +204,6 @@
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">«%1$s» насб карда намешавад, зеро ки он ба «%2$s %3$s» мувофиқат намекунад.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted_1">«%1$s» насб карда намешавад, зеро ки он барои ба вуҷуд овардани мушкилиҳои устуворӣ ва амниятӣ хатари баланд дорад.</string>
-    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">«%1$s» насб карда намешавад, зеро ки он барои ба вуҷуд овардани мушкилиҳои устуворӣ ва амниятӣ хатари баланд дорад.</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s бо муваффақият фаъол карда шуд</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

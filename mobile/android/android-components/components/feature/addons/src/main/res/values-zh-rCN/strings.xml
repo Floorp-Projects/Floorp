@@ -114,8 +114,10 @@
     <string name="mozac_feature_addons_details">详细信息</string>
     <!-- Displays a page with all the permissions of an add-on. -->
     <string name="mozac_feature_addons_permissions">权限</string>
-    <!-- This is button that remove (uninstall an add-on). -->
+    <!-- This is a button to remove (i.e. uninstall) an add-on. -->
     <string name="mozac_feature_addons_remove">移除</string>
+    <!-- This is a button to report an add-on. -->
+    <string name="mozac_feature_addons_report">举报</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">要添加“%1$s”吗？</string>
     <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
@@ -202,8 +204,6 @@
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s 未能安装，因为它与 %2$s %3$s 不兼容。</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted_1">无法安装“%1$s”，因为它很可能引发稳定性或安全性问题。</string>
-    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">无法安装“%1$s”，因为它很可能引发稳定性或安全性问题</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">成功启用 %1$s</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->

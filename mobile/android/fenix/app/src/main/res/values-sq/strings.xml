@@ -2373,4 +2373,6 @@
     <string name="a11y_action_label_read_article">lexoni artikullin</string>
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">që të mësoni më tepër, hapni lidhjen</string>
-    </resources>
+    <!-- Content description for headings announced by accessibility service. The first parameter is the text of the heading. Talkback will announce the first parameter and then speak the word "Heading" indicating to the user that this text is a heading for a section. -->
+    <string name="a11y_heading">%s, Krye</string>
+</resources>
