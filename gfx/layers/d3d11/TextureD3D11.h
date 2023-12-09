@@ -23,6 +23,11 @@
 #include "mozilla/layers/TextureHost.h"
 
 namespace mozilla {
+
+namespace gfx {
+struct FenceInfo;
+}
+
 namespace gl {
 class GLBlitHelper;
 }
@@ -384,6 +389,7 @@ class DXGITextureHostD3D11 : public TextureHost {
   HANDLE mHandle;
   gfx::SurfaceFormat mFormat;
   bool mHasKeyedMutex;
+  gfx::FenceInfo mAcquireFenceInfo;
 
  public:
   const gfx::ColorSpace2 mColorSpace;
