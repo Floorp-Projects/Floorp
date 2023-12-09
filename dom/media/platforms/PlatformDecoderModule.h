@@ -7,8 +7,6 @@
 #if !defined(PlatformDecoderModule_h_)
 #  define PlatformDecoderModule_h_
 
-#  include <queue>
-
 #  include "DecoderDoctorLogger.h"
 #  include "GMPCrashHelper.h"
 #  include "MediaCodecsSupport.h"
@@ -125,7 +123,7 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
   CreateDecoderParams(const CreateDecoderParams& aParams) = default;
 
   MOZ_IMPLICIT CreateDecoderParams(const CreateDecoderParamsForAsync& aParams)
-      : mConfig(*aParams.mConfig.get()),
+      : mConfig(*aParams.mConfig),
         mImageContainer(aParams.mImageContainer),
         mKnowsCompositor(aParams.mKnowsCompositor),
         mCrashHelper(aParams.mCrashHelper),
@@ -196,7 +194,7 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
     mUseNullDecoder = aUseNullDecoder;
   }
   void Set(NoWrapper aNoWrapper) { mNoWrapper = aNoWrapper; }
-  void Set(OptionSet aOptions) { mOptions = aOptions; }
+  void Set(const OptionSet& aOptions) { mOptions = aOptions; }
   void Set(VideoFrameRate aRate) { mRate = aRate; }
   void Set(layers::KnowsCompositor* aKnowsCompositor) {
     if (aKnowsCompositor) {
@@ -285,7 +283,7 @@ struct MOZ_STACK_CLASS SupportDecoderParams final {
     mUseNullDecoder = aUseNullDecoder;
   }
   void Set(media::NoWrapper aNoWrapper) { mNoWrapper = aNoWrapper; }
-  void Set(media::OptionSet aOptions) { mOptions = aOptions; }
+  void Set(const media::OptionSet& aOptions) { mOptions = aOptions; }
   void Set(media::VideoFrameRate aRate) { mRate = aRate; }
   void Set(layers::KnowsCompositor* aKnowsCompositor) {
     if (aKnowsCompositor) {
