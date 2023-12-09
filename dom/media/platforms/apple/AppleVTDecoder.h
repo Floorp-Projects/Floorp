@@ -31,7 +31,7 @@ class AppleVTDecoder final : public MediaDataDecoder,
 
   AppleVTDecoder(const VideoInfo& aConfig,
                  layers::ImageContainer* aImageContainer,
-                 CreateDecoderParams::OptionSet aOptions,
+                 const CreateDecoderParams::OptionSet& aOptions,
                  layers::KnowsCompositor* aKnowsCompositor,
                  Maybe<TrackingId> aTrackingId);
 
