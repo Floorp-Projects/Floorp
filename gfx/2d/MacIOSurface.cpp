@@ -231,7 +231,7 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateNV12OrP010Surface(
   auto colorSpace = CFTypeRefPtr<CGColorSpaceRef>::WrapUnderCreateRule(
       CGDisplayCopyColorSpace(CGMainDisplayID()));
   auto colorData = CFTypeRefPtr<CFDataRef>::WrapUnderCreateRule(
-      CGColorSpaceCopyICCProfile(colorSpace.get()));
+      CGColorSpaceCopyICCData(colorSpace.get()));
   IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceColorSpace"),
                     colorData.get());
 
@@ -293,7 +293,7 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateYUV422Surface(
   auto colorSpace = CFTypeRefPtr<CGColorSpaceRef>::WrapUnderCreateRule(
       CGDisplayCopyColorSpace(CGMainDisplayID()));
   auto colorData = CFTypeRefPtr<CFDataRef>::WrapUnderCreateRule(
-      CGColorSpaceCopyICCProfile(colorSpace.get()));
+      CGColorSpaceCopyICCData(colorSpace.get()));
   IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceColorSpace"),
                     colorData.get());
 
