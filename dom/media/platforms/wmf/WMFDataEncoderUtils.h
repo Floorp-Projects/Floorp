@@ -81,8 +81,7 @@ static already_AddRefed<MediaByteBuffer> ParseH264Parameters(
   return avcc.forget();
 }
 
-static uint32_t GetProfile(
-  H264_PROFILE aProfileLevel) {
+static uint32_t GetProfile(H264_PROFILE aProfileLevel) {
   switch (aProfileLevel) {
     case H264_PROFILE_BASE:
       return eAVEncH264VProfile_Base;
@@ -114,8 +113,7 @@ already_AddRefed<IMFMediaType> CreateOutputType(EncoderConfig& aConfig) {
   RefPtr<IMFMediaType> type;
   if (FAILED(wmf::MFCreateMediaType(getter_AddRefs(type))) ||
       FAILED(type->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video)) ||
-      FAILED(
-          type->SetGUID(MF_MT_SUBTYPE, CodecToSubtype(aConfig.mCodec))) ||
+      FAILED(type->SetGUID(MF_MT_SUBTYPE, CodecToSubtype(aConfig.mCodec))) ||
       FAILED(type->SetUINT32(MF_MT_AVG_BITRATE, aConfig.mBitrate)) ||
       FAILED(type->SetUINT32(MF_MT_INTERLACE_MODE,
                              MFVideoInterlace_Progressive)) ||
@@ -129,7 +127,8 @@ already_AddRefed<IMFMediaType> CreateOutputType(EncoderConfig& aConfig) {
     if (aConfig.mCodecSpecific->is<H264Specific>()) {
       if (FAILED(type->SetUINT32(
               MF_MT_MPEG2_PROFILE,
-              GetProfile(aConfig.mCodecSpecific->as<H264Specific>().mProfile)))) {
+              GetProfile(
+                  aConfig.mCodecSpecific->as<H264Specific>().mProfile)))) {
         return nullptr;
       }
     }

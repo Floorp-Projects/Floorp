@@ -23,9 +23,9 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
       : mConfig(aConfig),
         mTaskQueue(aTaskQueue),
         mHardwareNotAllowed(aConfig.mHardwarePreference ==
-                            HardwarePreference::RequireSoftware ||
+                                HardwarePreference::RequireSoftware ||
                             aConfig.mHardwarePreference ==
-                            HardwarePreference::None) {
+                                HardwarePreference::None) {
     MOZ_ASSERT(mTaskQueue);
   }
 
