@@ -23,7 +23,6 @@ const REMOTE_SETTINGS_DATA = [
 add_setup(async function () {
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
     remoteSettingsRecords: REMOTE_SETTINGS_DATA,
-    prefs: [["mdn.featureGate", true]],
   });
 });
 

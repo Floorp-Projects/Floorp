@@ -44,8 +44,6 @@ add_setup(async function init() {
     prefs: [
       ["suggest.quicksuggest.nonsponsored", true],
       ["suggest.quicksuggest.sponsored", false],
-      ["suggest.mdn", true],
-      ["mdn.featureGate", true],
     ],
   });
 });
@@ -124,11 +122,6 @@ add_task(async function disableByLocalPref() {
 // Check wheather the MDN suggestions will be shown by the setup of Nimbus
 // variable.
 add_task(async function nimbus() {
-  // Nimbus variable mdn.featureGate changes the pref in default branch
-  // (by setPref in FeatureManifest). So, as it will not override the user branch
-  // pref, should use default branch if the test needs Nimbus and needs to change
-  // mdn.featureGate in local.
-  UrlbarPrefs.clear("mdn.featureGate");
   const defaultPrefs = Services.prefs.getDefaultBranch("browser.urlbar.");
 
   const suggestion = REMOTE_SETTINGS_DATA[0].attachment[0];
