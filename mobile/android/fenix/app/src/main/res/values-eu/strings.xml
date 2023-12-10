@@ -644,6 +644,8 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Gehigarriak</string>
 
+    <!-- Preference for installing a local add-on -->
+    <string name="preferences_install_local_addon">Instalatu gehigarria fitxategitik</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Jakinarazpenak</string>
 
@@ -2258,8 +2260,6 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">%s(r)en iragarkia</string>
     <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
-    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources" moz:RemovedIn="119">Balorazioen egiaztatzailea %s(e)k hornituta.</string>
-    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
     <string name="review_quality_check_powered_by_2">Balorazioen egiaztatzailea %s(e)k hornituta</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">Mozillaren %s</string>
@@ -2320,6 +2320,8 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <string name="review_quality_check_contextual_onboarding_title">Probatu produktuen balorazioetarako gure fidatzeko gida</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
     <string name="review_quality_check_contextual_onboarding_description">Erosi aurretik, ikusi %1$s(e)ko produktuen balorazioak zenbateraino diren fidagarriak. Balorazioen egiaztatzailea, %2$s(e)n eginbide esperimentala, nabigatzailean integratuta dago. %3$s eta %4$s(e)n ere badabil.</string>
+    <!-- Description for review quality check contextual onboarding card. The first parameters is for retailer name (e.g. Amazon). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description_one_vendor">Erosi aurretik, ikusi %1$s(e)ko produktuen balorazioak zenbateraino diren fidagarriak. Balorazioen egiaztatzailea %2$s(e)n eginbide esperimentala da eta nabigatzailean integratuta dago.</string>
     <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_contextual_onboarding_learn_more">Mozillaren %1$s(r)en teknologia erabiliz, balorazio aurreiritzidun eta egiazkoak ez direnak saihesten laguntzen dizugu. Gure Adimen Artifizialeko modeloa uneoro ari da hobetzen zure erosketak babesteko. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
@@ -2386,4 +2388,6 @@ zure pasahitzak, laster-markak eta gehiago zifratzen du.</string>
     <string name="a11y_action_label_read_article">irakurri artikulua</string>
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">ireki lotura argibide gehiagorako</string>
+    <!-- Content description for headings announced by accessibility service. The first parameter is the text of the heading. Talkback will announce the first parameter and then speak the word "Heading" indicating to the user that this text is a heading for a section. -->
+    <string name="a11y_heading">%s, Goiburua</string>
 </resources>
