@@ -24,7 +24,7 @@ class FFmpegEncoderModule final : public PlatformEncoderModule {
   bool Supports(const EncoderConfig& aConfig) const override;
   bool SupportsCodec(CodecType aCodec) const override;
 
-  const char* GetName() const override { return "Apple Encoder Module"; }
+  const char* GetName() const override { return "FFmpeg Encoder Module"; }
 
   already_AddRefed<MediaDataEncoder> CreateVideoEncoder(
       const EncoderConfig& aConfig,
