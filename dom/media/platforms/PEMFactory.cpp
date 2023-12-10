@@ -118,8 +118,8 @@ PEMFactory::CheckAndMaybeCreateEncoder(const EncoderConfig& aConfig,
   }
   return PlatformEncoderModule::CreateEncoderPromise::CreateAndReject(
       MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                  nsPrintfCString("Error no encoder found for %d",
-                                  static_cast<int>(aConfig.mCodec))
+                  nsPrintfCString("Error no encoder found for %s",
+                                  GetCodecTypeString(aConfig.mCodec))
                       .get()),
       __func__);
 }
@@ -163,12 +163,12 @@ bool PEMFactory::Supports(const EncoderConfig& aConfig) const {
   for (const auto& m : mCurrentPEMs) {
     if (m->Supports(aConfig)) {
       // TODO name
-      LOG("Checking if %s supports codec %d: yes", m->GetName(),
-          static_cast<int>(aConfig.mCodec));
+      LOG("Checking if %s supports codec %s: yes", m->GetName(),
+          GetCodecTypeString(aConfig.mCodec));
       return true;
     }
-    LOG("Checking if %s supports codec %d: no", m->GetName(),
-        static_cast<int>(aConfig.mCodec));
+    LOG("Checking if %s supports codec %s: no", m->GetName(),
+        GetCodecTypeString(aConfig.mCodec));
   }
   return false;
 }
