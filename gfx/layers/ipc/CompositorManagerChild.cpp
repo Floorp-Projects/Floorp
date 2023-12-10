@@ -42,7 +42,7 @@ void CompositorManagerChild::InitSameProcess(uint32_t aNamespace,
   }
 
   RefPtr<CompositorManagerParent> parent =
-      CompositorManagerParent::CreateSameProcess();
+      CompositorManagerParent::CreateSameProcess(aNamespace);
   RefPtr<CompositorManagerChild> child =
       new CompositorManagerChild(parent, aProcessToken, aNamespace);
   if (NS_WARN_IF(!child->CanSend())) {

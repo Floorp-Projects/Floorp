@@ -64,7 +64,7 @@ parent:
              GfxInfoFeatureStatus[] features,
              uint32_t wrNamespace);
 
-  async InitCompositorManager(Endpoint<PCompositorManagerParent> endpoint);
+  async InitCompositorManager(Endpoint<PCompositorManagerParent> endpoint, uint32_t aNamespace);
   async InitVsyncBridge(Endpoint<PVsyncBridgeParent> endpoint);
   async InitImageBridge(Endpoint<PImageBridgeParent> endpoint);
   async InitVideoBridge(Endpoint<PVideoBridgeParent> endpoint, VideoBridgeSource aSource);
@@ -81,7 +81,7 @@ parent:
   async PreferenceUpdate(Pref pref);
 
   // Create a new content-process compositor bridge.
-  async NewContentCompositorManager(Endpoint<PCompositorManagerParent> endpoint, ContentParentId childId);
+  async NewContentCompositorManager(Endpoint<PCompositorManagerParent> endpoint, ContentParentId childId, uint32_t aNamespace);
   async NewContentImageBridge(Endpoint<PImageBridgeParent> endpoint, ContentParentId childId);
   async NewContentVRManager(Endpoint<PVRManagerParent> endpoint, ContentParentId childId);
   async NewContentRemoteDecoderManager(Endpoint<PRemoteDecoderManagerParent> endpoint, ContentParentId childId);
