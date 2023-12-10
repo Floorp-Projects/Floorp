@@ -40,6 +40,9 @@ enum class CodecType {
   Unknown,
 };
 
+// TODO: Automatically generate this (Bug 1865896)
+const char* GetCodecTypeString(const CodecType& aCodecType);
+
 struct H264Specific final {
   const H264_PROFILE mProfile;
 

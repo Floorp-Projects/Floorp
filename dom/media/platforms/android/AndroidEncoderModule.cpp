@@ -37,7 +37,8 @@ bool AndroidEncoderModule::Supports(const EncoderConfig& aConfig) const {
 already_AddRefed<MediaDataEncoder> AndroidEncoderModule::CreateVideoEncoder(
     const EncoderConfig& aConfig, const RefPtr<TaskQueue>& aTaskQueue) const {
   if (!Supports(aConfig)) {
-    AND_PEM_LOG("Unsupported codec type: %d", static_cast<int>(aConfig.mCodec));
+    AND_PEM_LOG("Unsupported codec type: %s",
+                GetCodecTypeString(aConfig.mCodec));
     return nullptr;
   }
   return MakeRefPtr<AndroidDataEncoder>(aConfig, aTaskQueue).forget();
