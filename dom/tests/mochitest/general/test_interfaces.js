@@ -250,6 +250,8 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "ClipboardEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "ClipboardItem", earlyBetaOrEarlier: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "CloseEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Comment", insecureContext: true },
