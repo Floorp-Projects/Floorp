@@ -395,8 +395,9 @@ bool GPUProcessManager::EnsureCompositorManagerChild() {
     return true;
   }
 
-  mGPUChild->SendInitCompositorManager(std::move(parentPipe));
-  CompositorManagerChild::Init(std::move(childPipe), AllocateNamespace(),
+  uint32_t cmNamespace = AllocateNamespace();
+  mGPUChild->SendInitCompositorManager(std::move(parentPipe), cmNamespace);
+  CompositorManagerChild::Init(std::move(childPipe), cmNamespace,
                                mProcessToken);
   return true;
 }
@@ -1149,7 +1150,8 @@ bool GPUProcessManager::CreateContentBridges(
     ipc::Endpoint<PVRManagerChild>* aOutVRBridge,
     ipc::Endpoint<PRemoteDecoderManagerChild>* aOutVideoManager,
     dom::ContentParentId aChildId, nsTArray<uint32_t>* aNamespaces) {
-  if (!CreateContentCompositorManager(aOtherProcess, aChildId,
+  const uint32_t cmNamespace = AllocateNamespace();
+  if (!CreateContentCompositorManager(aOtherProcess, aChildId, cmNamespace,
                                       aOutCompositor) ||
       !CreateContentImageBridge(aOtherProcess, aChildId, aOutImageBridge) ||
       !CreateContentVRManager(aOtherProcess, aChildId, aOutVRBridge)) {
@@ -1160,7 +1162,7 @@ bool GPUProcessManager::CreateContentBridges(
   CreateContentRemoteDecoderManager(aOtherProcess, aChildId, aOutVideoManager);
   // Allocates 3 namespaces(for CompositorManagerChild, CompositorBridgeChild
   // and ImageBridgeChild)
-  aNamespaces->AppendElement(AllocateNamespace());
+  aNamespaces->AppendElement(cmNamespace);
   aNamespaces->AppendElement(AllocateNamespace());
   aNamespaces->AppendElement(AllocateNamespace());
   return true;
@@ -1168,7 +1170,7 @@ bool GPUProcessManager::CreateContentBridges(
 
 bool GPUProcessManager::CreateContentCompositorManager(
     base::ProcessId aOtherProcess, dom::ContentParentId aChildId,
-    ipc::Endpoint<PCompositorManagerChild>* aOutEndpoint) {
+    uint32_t aNamespace, ipc::Endpoint<PCompositorManagerChild>* aOutEndpoint) {
   ipc::Endpoint<PCompositorManagerParent> parentPipe;
   ipc::Endpoint<PCompositorManagerChild> childPipe;
 
@@ -1189,8 +1191,10 @@ bool GPUProcessManager::CreateContentCompositorManager(
   }
 
   if (mGPUChild) {
-    mGPUChild->SendNewContentCompositorManager(std::move(parentPipe), aChildId);
+    mGPUChild->SendNewContentCompositorManager(std::move(parentPipe), aChildId,
+                                               aNamespace);
   } else if (!CompositorManagerParent::Create(std::move(parentPipe), aChildId,
+                                              aNamespace,
                                               /* aIsRoot */ false)) {
     return false;
   }

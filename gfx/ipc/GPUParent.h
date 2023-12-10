@@ -53,7 +53,7 @@ class GPUParent final : public PGPUParent {
                                    nsTArray<GfxInfoFeatureStatus>&& features,
                                    uint32_t wrNamespace);
   mozilla::ipc::IPCResult RecvInitCompositorManager(
-      Endpoint<PCompositorManagerParent>&& aEndpoint);
+      Endpoint<PCompositorManagerParent>&& aEndpoint, uint32_t aNamespace);
   mozilla::ipc::IPCResult RecvInitVsyncBridge(
       Endpoint<PVsyncBridgeParent>&& aVsyncEndpoint);
   mozilla::ipc::IPCResult RecvInitImageBridge(
@@ -76,7 +76,7 @@ class GPUParent final : public PGPUParent {
   mozilla::ipc::IPCResult RecvPreferenceUpdate(const Pref& pref);
   mozilla::ipc::IPCResult RecvNewContentCompositorManager(
       Endpoint<PCompositorManagerParent>&& aEndpoint,
-      const ContentParentId& aChildId);
+      const ContentParentId& aChildId, uint32_t aNamespace);
   mozilla::ipc::IPCResult RecvNewContentImageBridge(
       Endpoint<PImageBridgeParent>&& aEndpoint,
       const ContentParentId& aChildId);
