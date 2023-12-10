@@ -2519,10 +2519,11 @@
   value: true
   mirror: always
 
-# Disable clipboard.read(), clipboard.write() and ClipboardItem by default
+# Control whether clipboard.read(), clipboard.write() and ClipboardItem are exposed
+# to content.
 - name: dom.events.asyncClipboard.clipboardItem
   type: bool
-  value: false
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # Skips checking permission and user activation when accessing the clipboard.
@@ -2535,10 +2536,9 @@
   do_not_use_directly: true
 
 # Control whether `navigator.clipboard.readText()` is exposed to content.
-# Currently not supported by GeckoView, see bug 1776829.
 - name: dom.events.asyncClipboard.readText
   type: bool
-  value: false
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
   do_not_use_directly: true
 
