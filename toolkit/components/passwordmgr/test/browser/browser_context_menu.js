@@ -393,7 +393,7 @@ add_task(async function test_context_menu_username_login_fill() {
                   }
                   Assert.equal(
                     headerLabelID,
-                    "main-context-menu-use-saved-login",
+                    "main-context-menu-use-saved-password",
                     "top-level label is correct"
                   );
                   return true;
