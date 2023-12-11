@@ -5664,14 +5664,21 @@ void EditorBase::SwitchTextDirectionTo(TextDirection aTextDirection) {
 }
 
 nsresult EditorBase::SetTextDirectionTo(TextDirection aTextDirection) {
-  Element* rootElement = GetExposedRoot();
+  Element* const editingHostOrTextControlElement =
+      IsHTMLEditor() ? AsHTMLEditor()->ComputeEditingHost(
+                           HTMLEditor::LimitInBodyElement::No)
+                     : GetExposedRoot();
+  if (!editingHostOrTextControlElement) {  // Don't warn, HTMLEditor may have no
+                                           // active editing host
+    return NS_OK;
+  }
 
   if (aTextDirection == TextDirection::eLTR) {
     NS_ASSERTION(!IsLeftToRight(), "Unexpected mutually exclusive flag");
     mFlags &= ~nsIEditor::eEditorRightToLeft;
     mFlags |= nsIEditor::eEditorLeftToRight;
-    nsresult rv = rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir,
-                                       u"ltr"_ns, true);
+    nsresult rv = editingHostOrTextControlElement->SetAttr(
+        kNameSpaceID_None, nsGkAtoms::dir, u"ltr"_ns, true);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Element::SetAttr(nsGkAtoms::dir, ltr) failed");
     return rv;
@@ -5681,8 +5688,8 @@ nsresult EditorBase::SetTextDirectionTo(TextDirection aTextDirection) {
     NS_ASSERTION(!IsRightToLeft(), "Unexpected mutually exclusive flag");
     mFlags |= nsIEditor::eEditorRightToLeft;
     mFlags &= ~nsIEditor::eEditorLeftToRight;
-    nsresult rv = rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::dir,
-                                       u"rtl"_ns, true);
+    nsresult rv = editingHostOrTextControlElement->SetAttr(
+        kNameSpaceID_None, nsGkAtoms::dir, u"rtl"_ns, true);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Element::SetAttr(nsGkAtoms::dir, rtl) failed");
     return rv;
