@@ -53,29 +53,6 @@ interface nsIWindowsShellService : nsISupports
     in AString aAppUserModelId, in AString aShortcutFolder, in AString aShortcutName);
 
   /*
-   * Searches the %USERPROFILE%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
-   * folder and returns an array with the path of all shortcuts with a target matching the
-   * current Firefox install location. The AUMID isn't required here as we are only looking
-   * for the currently running binary, whether that's firefox.exe or the private browsing
-   * proxy executable.
-   *
-   * It is possible to return an empty array if no shortcuts are found.
-   *
-   * @return An array of paths for all launch on login shortcuts.s
-   *
-   * @throws NS_ERROR_ABORT
-   *         if instance cannot be created.
-   * @throws NS_ERROR_FILE_NOT_FOUND
-   *         if %USERPROFILE%\AppData\Roaming\ cannot be opened.
-   * @throws NS_ERROR_FAILURE
-   *         if the executable file cannot be found.
-   * @throws NS_ERROR_FILE_UNRECOGNIZED_PATH
-   *         if the executable file cannot be converted into a string.
-   */
-
-  Array<AString> getLaunchOnLoginShortcuts();
-
-  /*
    * Pin the current app to the taskbar. If aPrivateBrowsing is true, the
    * Private Browsing version of the app (with a different icon and launch
    * arguments) will be pinned instead.

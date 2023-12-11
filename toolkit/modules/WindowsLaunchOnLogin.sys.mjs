@@ -85,30 +85,6 @@ export var WindowsLaunchOnLogin = {
   },
 
   /**
-   * Gets a list of all launch on login shortcuts in the
-   * %USERNAME%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup folder
-   * that point to the current Firefox executable.
-   */
-  getLaunchOnLoginShortcutList() {
-    let shellService = Cc["@mozilla.org/browser/shell-service;1"].getService(
-      Ci.nsIWindowsShellService
-    );
-    return shellService.getLaunchOnLoginShortcuts();
-  },
-
-  /**
-   * Safely removes all launch on login shortcuts in the
-   * %USERNAME%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup folder
-   * that point to the current Firefox executable.
-   */
-  async removeLaunchOnLoginShortcuts() {
-    let shortcuts = this.getLaunchOnLoginShortcutList();
-    for (let i = 0; i < shortcuts.length; i++) {
-      await IOUtils.remove(shortcuts[i]);
-    }
-  },
-
-  /**
    * Checks if Windows launch on login was independently enabled or disabled
    * by the user in the Windows Startup Apps menu. The registry key that
    * stores this information should not be modified.
@@ -141,38 +117,6 @@ export var WindowsLaunchOnLogin = {
       console.error("Failed to open Windows registry", e);
     }
     return true;
-  },
-
-  /**
-   * Checks if Windows launch on login has an existing registry key or user-created shortcut in
-   * %USERNAME%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup. The registry key that
-   * stores this information should not be modified.
-   */
-  getLaunchOnLoginEnabled() {
-    let registryName = this.getLaunchOnLoginRegistryName();
-    let regExists = false;
-    let shortcutExists = false;
-    this.withLaunchOnLoginRegistryKey(wrk => {
-      try {
-        // Start by checking if registry key exists.
-        regExists = wrk.hasValue(registryName);
-      } catch (e) {
-        // We should only end up here if we fail to open the registry
-        console.error("Failed to open Windows registry", e);
-      }
-    });
-    if (!regExists) {
-      shortcutExists = !!this.getLaunchOnLoginShortcutList().length;
-    }
-    // Even if a user disables it later on we want the launch on login
-    // infobar to remain disabled as the user is aware of the option.
-    if (regExists || shortcutExists) {
-      Services.prefs.setBoolPref(
-        "browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt",
-        true
-      );
-    }
-    return regExists || shortcutExists;
   },
 
   /**

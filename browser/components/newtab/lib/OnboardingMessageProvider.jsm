@@ -990,8 +990,7 @@ const BASE_MESSAGES = () => [
       lifetime: 1,
     },
     trigger: { id: "defaultBrowserCheck" },
-    targeting: `source == 'newtab' && !launchOnLoginEnabled
-    && 'browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt'|preferenceValue == false
+    targeting: `source == 'newtab' && 'browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt'|preferenceValue == false
     && 'browser.startup.windowsLaunchOnLogin.enabled'|preferenceValue == true && isDefaultBrowser && !activeNotifications`,
   },
   {
@@ -1054,8 +1053,7 @@ const BASE_MESSAGES = () => [
       lifetime: 1,
     },
     trigger: { id: "defaultBrowserCheck" },
-    targeting: `source == 'newtab' && !launchOnLoginEnabled
-    && 'browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt'|preferenceValue == false
+    targeting: `source == 'newtab' && 'browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt'|preferenceValue == false
     && 'browser.startup.windowsLaunchOnLogin.enabled'|preferenceValue == true && isDefaultBrowser && !activeNotifications
     && messageImpressions.INFOBAR_LAUNCH_ON_LOGIN[messageImpressions.INFOBAR_LAUNCH_ON_LOGIN | length - 1]
     && messageImpressions.INFOBAR_LAUNCH_ON_LOGIN[messageImpressions.INFOBAR_LAUNCH_ON_LOGIN | length - 1] <
