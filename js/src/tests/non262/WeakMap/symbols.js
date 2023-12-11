@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-symbols-as-weakmap-keys) skip-if(!xulRuntime.shell) -- requires shell-options
+// |reftest| shell-option(--enable-symbols-as-weakmap-keys) skip-if(!xulRuntime.shell||!(this.hasOwnProperty('getBuildConfiguration')&&!getBuildConfiguration('release_or_beta'))) -- requires shell-options
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/licenses/publicdomain/ */
 
