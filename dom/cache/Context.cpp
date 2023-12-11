@@ -1113,30 +1113,29 @@ void Context::DoomTargetData() {
   MOZ_DIAGNOSTIC_ASSERT(!mData);
 }
 
-void Context::Stringify(nsACString& aData) {
+void Context::DoStringify(nsACString& aData) {
   NS_ASSERT_OWNINGTHREAD(Context);
 
-  constexpr auto kQuotaGenericDelimiterString = "|"_ns;
-
   aData.Append(
-      "Context ("_ns +
+      "Context "_ns + kStringifyStartInstance +
       //
-      "State:"_ns + IntToCString(mState) + kQuotaGenericDelimiterString +
+      "State:"_ns + IntToCString(mState) + kStringifyDelimiter +
       //
-      "OrphanedData:"_ns + IntToCString(mOrphanedData) +
-      kQuotaGenericDelimiterString +
+      "OrphanedData:"_ns + IntToCString(mOrphanedData) + kStringifyDelimiter +
       //
       "PendingActions:"_ns +
       IntToCString(static_cast<uint64_t>(mPendingActions.Length())) +
-      kQuotaGenericDelimiterString +
+      kStringifyDelimiter +
       //
       "DirectoryLock:"_ns + IntToCString(static_cast<bool>(mDirectoryLock)) +
-      kQuotaGenericDelimiterString +
+      kStringifyDelimiter +
       //
-      "NextContext:"_ns + IntToCString(static_cast<bool>(mNextContext)));
+      "NextContext:"_ns + IntToCString(static_cast<bool>(mNextContext)) +
+      //
+      kStringifyEndInstance);
 
   if (mNextContext) {
-    aData.Append(kQuotaGenericDelimiterString);
+    aData.Append(kStringifyDelimiter);
     mNextContext->Stringify(aData);
   };
 }

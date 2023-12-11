@@ -69,6 +69,7 @@ EXPORTS.mozilla.dom.quota += [
     "SerializationHelpers.h",
     "StorageHelpers.h",
     "StreamUtils.h",
+    "StringifyUtils.h",
     "UsageInfo.h",
 ]
 
@@ -117,6 +118,7 @@ UNIFIED_SOURCES += [
     "StorageHelpers.cpp",
     "StorageManager.cpp",
     "StreamUtils.cpp",
+    "StringifyUtils.cpp",
 ]
 
 IPDL_SOURCES += [
