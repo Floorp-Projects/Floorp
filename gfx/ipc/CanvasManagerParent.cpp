@@ -14,6 +14,7 @@
 #include "mozilla/layers/CanvasTranslator.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
+#include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/webgpu/WebGPUParent.h"
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
@@ -29,10 +30,12 @@ bool CanvasManagerParent::sReplayTexturesEnabled(true);
 
 /* static */ void CanvasManagerParent::Init(
     Endpoint<PCanvasManagerParent>&& aEndpoint,
+    layers::SharedSurfacesHolder* aSharedSurfacesHolder,
     const dom::ContentParentId& aContentId) {
   MOZ_ASSERT(layers::CompositorThreadHolder::IsInCompositorThread());
 
-  auto manager = MakeRefPtr<CanvasManagerParent>(aContentId);
+  auto manager =
+      MakeRefPtr<CanvasManagerParent>(aSharedSurfacesHolder, aContentId);
 
   nsCOMPtr<nsIThread> owningThread =
       gfx::CanvasRenderThread::GetCanvasRenderThread();
@@ -220,8 +223,10 @@ CanvasManagerParent::WaitForReplayTexture(layers::HostIPCAllocator* aAllocator,
   return desc;
 }
 
-CanvasManagerParent::CanvasManagerParent(const dom::ContentParentId& aContentId)
-    : mContentId(aContentId) {}
+CanvasManagerParent::CanvasManagerParent(
+    layers::SharedSurfacesHolder* aSharedSurfacesHolder,
+    const dom::ContentParentId& aContentId)
+    : mSharedSurfacesHolder(aSharedSurfacesHolder), mContentId(aContentId) {}
 
 CanvasManagerParent::~CanvasManagerParent() = default;
 
@@ -273,7 +278,8 @@ mozilla::ipc::IPCResult CanvasManagerParent::RecvInitialize(
 already_AddRefed<layers::PCanvasParent>
 CanvasManagerParent::AllocPCanvasParent() {
   MOZ_RELEASE_ASSERT(mId != 0);
-  return MakeAndAddRef<layers::CanvasTranslator>(mContentId, mId);
+  return MakeAndAddRef<layers::CanvasTranslator>(mSharedSurfacesHolder,
+                                                 mContentId, mId);
 }
 
 mozilla::ipc::IPCResult CanvasManagerParent::RecvGetSnapshot(

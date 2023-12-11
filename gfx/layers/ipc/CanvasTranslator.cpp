@@ -50,9 +50,11 @@ TextureData* CanvasTranslator::CreateTextureData(TextureType aTextureType,
   return textureData;
 }
 
-CanvasTranslator::CanvasTranslator(const dom::ContentParentId& aContentId,
-                                   uint32_t aManagerId)
-    : mMaxSpinCount(StaticPrefs::gfx_canvas_remote_max_spin_count()),
+CanvasTranslator::CanvasTranslator(
+    layers::SharedSurfacesHolder* aSharedSurfacesHolder,
+    const dom::ContentParentId& aContentId, uint32_t aManagerId)
+    : mSharedSurfacesHolder(aSharedSurfacesHolder),
+      mMaxSpinCount(StaticPrefs::gfx_canvas_remote_max_spin_count()),
       mContentId(aContentId),
       mManagerId(aManagerId) {
   mNextEventTimeout = TimeDuration::FromMilliseconds(
@@ -640,7 +642,7 @@ TextureData* CanvasTranslator::LookupTextureData(int64_t aTextureId) {
 
 already_AddRefed<gfx::SourceSurface> CanvasTranslator::LookupExternalSurface(
     uint64_t aKey) {
-  return SharedSurfacesParent::Get(wr::ToExternalImageId(aKey));
+  return mSharedSurfacesHolder->Get(wr::ToExternalImageId(aKey));
 }
 
 void CanvasTranslator::CheckpointReached() { CheckAndSignalWriter(); }
