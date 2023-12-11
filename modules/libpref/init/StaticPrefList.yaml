@@ -7522,7 +7522,7 @@
 # Experimental support for ArrayBuffer.prototype.transfer{,ToFixedLength}() in JavaScript.
 -   name: javascript.options.arraybuffer_transfer
     type: bool
-    value: false
+    value: true
     mirror: always
 
 #ifdef NIGHTLY_BUILD
