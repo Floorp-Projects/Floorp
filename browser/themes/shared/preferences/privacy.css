@@ -337,16 +337,8 @@
   margin-block-start: 2em;
 }
 
-/* DNS over HTTPS */
-
 #dohDescription,
 #dohLearnMore,
 #dohStatusSection {
   line-height: 1.8em;
-}
-
-/* Logins and Passwords */
-
-#openWindowsPasskeySettings {
-  margin-block-start: 2em;
 }

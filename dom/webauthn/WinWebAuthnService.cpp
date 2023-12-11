@@ -8,7 +8,6 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/Unused.h"
@@ -137,9 +136,7 @@ nsresult WinWebAuthnService::EnsureWinWebAuthnModuleLoaded() {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  DWORD version = gWinWebauthnGetApiVersionNumber();
-
-  if (version >= WEBAUTHN_API_VERSION_4) {
+  if (gWinWebauthnGetApiVersionNumber() >= WEBAUTHN_API_VERSION_4) {
     gWinWebauthnGetPlatformCredentialList =
         reinterpret_cast<decltype(WebAuthNGetPlatformCredentialList)*>(
             GetProcAddress(gWinWebAuthnModule,
@@ -153,11 +150,6 @@ nsresult WinWebAuthnService::EnsureWinWebAuthnModuleLoaded() {
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
-
-  NS_DispatchToMainThread(NS_NewRunnableFunction(__func__, [version]() {
-    Preferences::SetBool("security.webauthn.show_ms_settings_link",
-                         version >= WEBAUTHN_API_VERSION_7);
-  }));
 
   markModuleUnusable.release();
   return NS_OK;
