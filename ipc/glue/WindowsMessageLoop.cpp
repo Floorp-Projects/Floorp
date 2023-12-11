@@ -20,6 +20,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/PaintTracker.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsProcessMitigations.h"
 
@@ -89,7 +90,7 @@ const wchar_t kOldWndProcProp[] = L"MozillaIPCOldWndProc";
 // This isn't defined before Windows XP.
 enum { WM_XP_THEMECHANGED = 0x031A };
 
-nsTArray<HWND>* gNeuteredWindows = nullptr;
+static StaticAutoPtr<AutoTArray<HWND, 20>> gNeuteredWindows;
 
 typedef nsTArray<UniquePtr<DeferredMessage>> DeferredMessageArray;
 DeferredMessageArray* gDeferredMessages = nullptr;
@@ -636,7 +637,6 @@ MessageChannel::SyncStackFrame::SyncStackFrame(MessageChannel* channel)
   if (!mStaticPrev) {
     NS_ASSERTION(!gNeuteredWindows, "Should only set this once!");
     gNeuteredWindows = new AutoTArray<HWND, 20>();
-    NS_ASSERTION(gNeuteredWindows, "Out of memory!");
   }
 }
 
@@ -655,7 +655,6 @@ MessageChannel::SyncStackFrame::~SyncStackFrame() {
 
   if (!mStaticPrev) {
     NS_ASSERTION(gNeuteredWindows, "Bad pointer!");
-    delete gNeuteredWindows;
     gNeuteredWindows = nullptr;
   }
 }
