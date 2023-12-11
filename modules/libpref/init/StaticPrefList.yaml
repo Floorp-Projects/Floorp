@@ -15859,6 +15859,12 @@
 #endif
   mirror: always
 
+# Whether to render in to a child SurfaceControl rather than directly into the SurfaceView
+- name: widget.android.use-surfacecontrol
+  type: bool
+  value: true
+  mirror: once
+
 #---------------------------------------------------------------------------
 # Prefs starting with "zoom."
 #---------------------------------------------------------------------------
