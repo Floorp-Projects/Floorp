@@ -3361,12 +3361,7 @@ WithScope& WithEnvironmentObject::scope() const {
 }
 
 ModuleEnvironmentObject* js::GetModuleEnvironmentForScript(JSScript* script) {
-  ModuleObject* module = GetModuleObjectForScript(script);
-  if (!module) {
-    return nullptr;
-  }
-
-  return module->environment();
+  return GetModuleObjectForScript(script)->environment();
 }
 
 ModuleObject* js::GetModuleObjectForScript(JSScript* script) {
@@ -3375,7 +3370,8 @@ ModuleObject* js::GetModuleObjectForScript(JSScript* script) {
       return si.scope()->as<ModuleScope>().module();
     }
   }
-  return nullptr;
+
+  MOZ_CRASH("No module scope found for script");
 }
 
 static bool GetThisValueForDebuggerEnvironmentIterMaybeOptimizedOut(
