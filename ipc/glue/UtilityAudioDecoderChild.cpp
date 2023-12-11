@@ -218,8 +218,10 @@ void UtilityAudioDecoderChild::GetKeySystemCapabilities(
         }
         promise->MaybeResolve(cdmInfo);
       },
-      [](const mozilla::ipc::ResponseRejectReason& aReason) {
+      [promise = RefPtr<dom::Promise>(aPromise)](
+          const mozilla::ipc::ResponseRejectReason& aReason) {
         EME_LOG("IPC failure for GetKeySystemCapabilities!");
+        promise->MaybeReject(NS_ERROR_DOM_MEDIA_CDM_ERR);
       });
 }
 #endif
