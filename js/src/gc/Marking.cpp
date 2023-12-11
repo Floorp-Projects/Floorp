@@ -2526,7 +2526,7 @@ inline void SweepingTracer::onEdge(T** thingp, const char* name) {
   //  - atoms
   //  - the jitcode map
   //  - the mark queue
-  if (zone->isGCSweeping() && !cell->isMarkedAny()) {
+  if ((zone->isGCSweeping() || zone->isAtomsZone()) && !cell->isMarkedAny()) {
     *thingp = nullptr;
   }
 }
