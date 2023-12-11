@@ -16,3 +16,5 @@
 == checkbox-clamp-01.html checkbox-clamp-01-ref.html
 == checkbox-clamp-02.html checkbox-clamp-02-ref.html
 != checkbox-minimum-size.html checkbox-minimum-size-notref.html
+
+pref(ui.accentcolor,"#3daee9") pref("ui.accentcolortext","white") == accent-color-accentcolor.html accent-color-accentcolor-ref.html
