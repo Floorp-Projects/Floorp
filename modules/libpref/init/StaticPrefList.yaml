@@ -8367,14 +8367,14 @@
 # Is support for rect() enabled?
 - name: layout.css.basic-shape-rect.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
 # Is support for xywh() enabled?
 - name: layout.css.basic-shape-xywh.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
