@@ -524,6 +524,11 @@
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
     <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Pozwól</string>
 
+    <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
+    <string name="cookie_banner_cfr_title">%1$s właśnie odrzucił ciasteczka za Ciebie</string>
+    <!--Message for the cookie banner re-engagement CFR -->
+    <string name="cookie_banner_cfr_message">Mniej odwracania uwagi, mniej ciasteczek śledzących Cię na tej witrynie.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automatycznie próbuje łączyć się ze stronami za pomocą protokołu szyfrowania HTTPS w celu zwiększenia bezpieczeństwa.</string>
     <!-- Summary of https only preference if https only is set to off -->
@@ -634,6 +639,8 @@
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Dodatki</string>
 
+    <!-- Preference for installing a local add-on -->
+    <string name="preferences_install_local_addon">Zainstaluj dodatek z pliku</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Powiadomienia</string>
 
@@ -2201,4 +2208,6 @@
     <string name="a11y_action_label_read_article">przeczytać artykuł</string>
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">otworzyć odnośnik z informacjami</string>
+    <!-- Content description for headings announced by accessibility service. The first parameter is the text of the heading. Talkback will announce the first parameter and then speak the word "Heading" indicating to the user that this text is a heading for a section. -->
+    <string name="a11y_heading">%s, nagłówek</string>
 </resources>

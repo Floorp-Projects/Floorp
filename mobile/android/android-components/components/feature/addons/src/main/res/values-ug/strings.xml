@@ -117,7 +117,7 @@
     <!-- This is a button to remove (i.e. uninstall) an add-on. -->
     <string name="mozac_feature_addons_remove">چىقىرىۋىتىش</string>
     <!-- This is a button to report an add-on. -->
-    <string name="mozac_feature_addons_report">دوكلات</string>
+    <string name="mozac_feature_addons_report">پاش قىلىش</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title"> %1$s نى قوشامسىز؟</string>
     <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->

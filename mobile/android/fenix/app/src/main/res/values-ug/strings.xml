@@ -332,6 +332,8 @@
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox تور بېكەتتىكى ئىز قوغلىغۇچلارنى توسۇش ئارقىلىق كىشىلەرنى مەنپەئەتتىن ئۈستۈن قىلىدۇ ۋە شەخسىيىتىڭىزنى قوغدايدۇ.\n\nشەخسىيەت ئۇقتۇرۇشىمىزدىن كۆپرەك ئۆگىنەلەيسىز.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2">پايدا تاپمايدىغان ئورگان قوللايدىغان توركۆرگۈمىز شىركەتلەرنىڭ سىزنى مەخپىي ھالدا توردىن ئىزلىشىنى توختىتىشىغا ياردەم بېرىدۇ.\n\nشەخسىيەت ئۇقتۇرۇشى ھەققىدىكى تەپسىلات بىلدۈرگۈسى.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">شەخسىيەت ئۇقتۇرۇشى</string>
@@ -345,6 +347,9 @@
     <string name="juno_onboarding_sign_in_title_2">ئۈسكۈنىلەر ئارا ئالماشتۇرغاندا شىفىرلىنىدۇ</string>
     <!-- Description for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">باشقا ئۈسكۈنىلىرىڭىزدىكى بەتكۈچ ۋە ئىملارنى قەدەمداشلاپ، كەلگەن جايدىن داۋاملاشتۇرالايسىز.</string>
+    <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
+     Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_sign_in_description_2">تىزىمغا كىرىپ قەدەمداشلىسىڭىز، تېخىمۇ بىخەتەر بولىسىز. Firefox ئىم، خەتكۈچ ۋە باشقىلارنى مەخپىيلەشتۈرىدۇ.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">تىزىمغا كىرىڭ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -355,6 +360,12 @@
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus_2">ئۇقتۇرۇشلار Firefox ئارقىلىق تېخىمۇ بىخەتەر بولۇشىڭىزغا ياردەم بېرىدۇ</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">ئۈسكۈنىلەر ئارا بەتكۈچ ئەۋەتىپ، چۈشۈرۈشنى باشقۇرۇپ ۋە Firefox تىن ئەڭ ياخشى پايدىلىنىشقا ئائىت تەكلىپلەرگە ئېرىشەلەيسىز.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus_2">ئۈسكۈنىڭىز ئارىسىدا بەتكۈچلەرنى بىخەتەر ئەۋەتىپ، Firefox دىكى باشقا شەخسىيەت ئىقتىدارلىرىنى بايقايدۇ.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">ئۇقتۇرۇشنى ئاچ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -362,6 +373,9 @@
     <!-- Title for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Firefox ئىزدەش ئەپچەنى سىناڭ</string>
+    <!-- Description for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_description" tools:ignore="UnusedResources">باش ئېكرانىڭىزغا Firefox نى جايلاشتۇرسىڭىز، شەخسىيەتنى ئەڭ ئالدىنقى ئورۇنغا قويىدىغان تور كۆرگۈنى خالىغان ۋاقىتتا زىيارەت قىلالايسىز، ئۇ بېكەت ھالقىغان ئىز قوغلاشنى توسىدىغان تور كۆرگۈ.</string>
     <!-- Text for the button to add search widget on the device used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_add_search_widget_positive_button" tools:ignore="UnusedResources">Firefox ئەپچە قوش</string>
@@ -451,6 +465,8 @@
     <string name="reduce_cookie_banner_option_off" moz:RemovedIn="121" tools:ignore="UnusedResources">تاقاق</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on" moz:RemovedIn="121" tools:ignore="UnusedResources">ئوچۇق</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_summary_1" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s ئۆزلۈكىدىن cookie لوزۇنكىسىنىڭ cookie ئىلتىماسىنى رەت قىلىشنى سىنايدۇ.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">بۇ تور بېكەتكە تاقاق</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
