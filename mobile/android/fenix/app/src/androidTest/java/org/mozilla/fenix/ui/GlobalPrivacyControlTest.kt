@@ -47,6 +47,7 @@ class GlobalPrivacyControlTest {
         mockWebServer.shutdown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2429327
     @Test
     fun testGPCinNormalBrowsing() {
         navigationToolbar {
@@ -65,6 +66,7 @@ class GlobalPrivacyControlTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2429364
     @Test
     fun testGPCinPrivateBrowsing() {
         homeScreen { }.togglePrivateBrowsingMode()

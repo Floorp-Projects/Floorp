@@ -80,6 +80,8 @@ class EnhancedTrackingProtectionTest {
             verifyEnhancedTrackingProtectionLevelSelected("Standard (default)", true)
             verifyStandardOptionDescription()
             verifyStrictOptionDescription()
+            verifyGPCTextWithSwitchWidget()
+            verifyGPCSwitchEnabled(false)
             selectTrackingProtectionOption("Custom")
             verifyCustomTrackingProtectionSettings()
             scrollToElementByText("Standard (default)")
