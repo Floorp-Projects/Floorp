@@ -269,12 +269,12 @@ impl BufferManager {
                 }
                 if needed_samples > to_pull {
                     // Mono upmix. This can happen with voice processing.
-                    let mut write_idx = needed_samples - self.output_channel_count();
+                    let mut write_idx = needed_samples;
                     for read_idx in (0..to_pull).rev() {
+                        write_idx -= self.output_channel_count();
                         for offset in 0..self.output_channel_count() {
                             input[write_idx + offset] = input[read_idx];
                         }
-                        write_idx -= self.output_channel_count();
                     }
                 }
             }
@@ -294,12 +294,12 @@ impl BufferManager {
                 }
                 if needed_samples > to_pull {
                     // Mono upmix. This can happen with voice processing.
-                    let mut write_idx = needed_samples - self.output_channel_count();
+                    let mut write_idx = needed_samples;
                     for read_idx in (0..to_pull).rev() {
+                        write_idx -= self.output_channel_count();
                         for offset in 0..self.output_channel_count() {
                             input[write_idx + offset] = input[read_idx];
                         }
-                        write_idx -= self.output_channel_count();
                     }
                 }
             }
