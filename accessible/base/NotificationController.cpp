@@ -545,15 +545,15 @@ void NotificationController::ProcessMutationEvents() {
                     const AccTreeMutationEvent* b) const {
         int32_t aIdx = a->GetAccessible()->IndexInParent();
         int32_t bIdx = b->GetAccessible()->IndexInParent();
-        MOZ_ASSERT(aIdx >= 0 && bIdx >= 0 && aIdx != bIdx);
+        MOZ_ASSERT(aIdx >= 0 && bIdx >= 0 && (a == b || aIdx != bIdx));
         return aIdx < bIdx;
       }
       bool Equals(const AccTreeMutationEvent* a,
                   const AccTreeMutationEvent* b) const {
         DebugOnly<int32_t> aIdx = a->GetAccessible()->IndexInParent();
         DebugOnly<int32_t> bIdx = b->GetAccessible()->IndexInParent();
-        MOZ_ASSERT(aIdx >= 0 && bIdx >= 0 && aIdx != bIdx);
-        return false;
+        MOZ_ASSERT(aIdx >= 0 && bIdx >= 0 && (a == b || aIdx != bIdx));
+        return a == b;
       }
     };
 
