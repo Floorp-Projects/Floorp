@@ -13,6 +13,26 @@ XPCOMUtils.defineLazyScriptGetter(
 const TEST_URL = "https://example.com/";
 var gAuthenticatorId;
 
+/**
+ * Waits for the PopupNotifications button enable delay to expire so the
+ * Notification can be interacted with using the buttons.
+ */
+async function waitForPopupNotificationSecurityDelay() {
+  let notification = PopupNotifications.panel.firstChild.notification;
+  let notificationEnableDelayMS = Services.prefs.getIntPref(
+    "security.notification_enable_delay"
+  );
+  await TestUtils.waitForCondition(
+    () => {
+      let timeSinceShown = performance.now() - notification.timeShown;
+      return timeSinceShown > notificationEnableDelayMS;
+    },
+    "Wait for security delay to expire",
+    500,
+    50
+  );
+}
+
 add_task(async function test_setup_usbtoken() {
   return SpecialPowers.pushPrefEnv({
     set: [
@@ -481,6 +501,7 @@ async function test_no_fullscreen_dom() {
   ok(!document.fullscreenElement, "no DOM element is fullscreen");
 
   // Cancel the request.
+  await waitForPopupNotificationSecurityDelay();
   PopupNotifications.panel.firstElementChild.secondaryButton.click();
   await requestPromise;
 
