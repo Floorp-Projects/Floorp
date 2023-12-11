@@ -22,6 +22,11 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
 });
+ChromeUtils.defineLazyGetter(
+  lazy,
+  "l10n",
+  () => new Localization(["browser/preferences/preferences.ftl"], true)
+);
 
 const {
   ENABLED_AUTOFILL_ADDRESSES_PREF,
@@ -96,8 +101,9 @@ FormAutofillPreferences.prototype = {
       return;
     }
 
-    formAutofillGroupBoxLabelHeading.textContent =
-      this.bundle.GetStringFromName("autofillHeader");
+    formAutofillGroupBoxLabelHeading.textContent = lazy.l10n.formatValueSync(
+      "pane-privacy-autofill-header"
+    );
 
     if (showAddressUI) {
       let savedAddressesBtnWrapper = document.createXULElement("hbox");
@@ -120,11 +126,11 @@ FormAutofillPreferences.prototype = {
       addressAutofill.setAttribute("data-subcategory", "address-autofill");
       addressAutofillCheckbox.setAttribute(
         "label",
-        this.bundle.GetStringFromName("autofillAddressesCheckbox")
+        lazy.l10n.formatValueSync("autofill-addresses-checkbox")
       );
       savedAddressesBtn.setAttribute(
         "label",
-        this.bundle.GetStringFromName("savedAddressesBtnLabel")
+        lazy.l10n.formatValueSync("autofill-saved-addresses-button")
       );
       // Align the start to keep the savedAddressesBtn as original size
       // when addressAutofillCheckboxGroup's height is changed by a longer l10n string
@@ -187,12 +193,12 @@ FormAutofillPreferences.prototype = {
       );
       creditCardAutofillCheckbox.setAttribute(
         "label",
-        this.bundle.GetStringFromName("autofillCreditCardsCheckbox")
+        lazy.l10n.formatValueSync("autofill-payment-methods-checkbox-message")
       );
 
       savedCreditCardsBtn.setAttribute(
         "label",
-        this.bundle.GetStringFromName("savedCreditCardsBtnLabel")
+        lazy.l10n.formatValueSync("autofill-saved-payment-methods-button")
       );
       // Align the start to keep the savedCreditCardsBtn as original size
       // when creditCardAutofillCheckboxGroup's height is changed by a longer l10n string
@@ -201,6 +207,17 @@ FormAutofillPreferences.prototype = {
       creditCardAutofillLearnMore.setAttribute(
         "support-page",
         "credit-card-autofill"
+      );
+
+      let creditCardsAutofillDescription =
+        document.createXULElement("description");
+
+      creditCardsAutofillDescription.setAttribute("flex", "1");
+      creditCardsAutofillDescription.className = "indent tip-caption";
+      creditCardsAutofillDescription.setAttribute("data-l10n-attrs", "hidden");
+      creditCardsAutofillDescription.setAttribute(
+        "data-l10n-id",
+        "autofill-payment-methods-checkbox-submessage"
       );
 
       // Add preferences search support
@@ -226,6 +243,7 @@ FormAutofillPreferences.prototype = {
       creditCardAutofillCheckboxGroup.appendChild(creditCardAutofillLearnMore);
       creditCardAutofill.appendChild(savedCreditCardsBtnWrapper);
       savedCreditCardsBtnWrapper.appendChild(savedCreditCardsBtn);
+      formAutofillGroup.appendChild(creditCardsAutofillDescription);
 
       this.refs.creditCardAutofillCheckbox = creditCardAutofillCheckbox;
       this.refs.savedCreditCardsBtn = savedCreditCardsBtn;
@@ -240,7 +258,6 @@ FormAutofillPreferences.prototype = {
 
         reauthCheckboxGroup.classList.add("indent");
         reauthCheckbox.classList.add("tail-with-learn-more");
-        reauthCheckbox.setAttribute("flex", "1");
         reauthCheckbox.disabled = !FormAutofill.isAutofillCreditCardsEnabled;
 
         reauth.id = "creditCardReauthenticate";
@@ -248,19 +265,9 @@ FormAutofillPreferences.prototype = {
 
         reauth.setAttribute("data-subcategory", "reauth-credit-card-autofill");
 
-        let autofillReauthCheckboxLabel = "autofillReauthCheckbox";
-        // We reuse the if/else order from wizard markup to increase
-        // odds of consistent behavior.
-        if (AppConstants.platform == "macosx") {
-          autofillReauthCheckboxLabel += "Mac";
-        } else if (AppConstants.platform == "linux") {
-          autofillReauthCheckboxLabel += "Lin";
-        } else {
-          autofillReauthCheckboxLabel += "Win";
-        }
         reauthCheckbox.setAttribute(
           "label",
-          this.bundle.GetStringFromName(autofillReauthCheckboxLabel)
+          lazy.l10n.formatValueSync("autofill-reauth-checkbox")
         );
 
         reauthLearnMore.setAttribute(
