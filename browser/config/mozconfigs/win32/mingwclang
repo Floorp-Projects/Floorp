@@ -43,6 +43,8 @@ CXX="$MOZ_FETCHES_DIR/clang/bin/i686-w64-mingw32-clang++"
 CXXFLAGS="-fms-extensions"
 CFLAGS="$CFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
 CXXFLAGS="$CXXFLAGS -fcrash-diagnostics-dir=${UPLOAD_PATH}"
+CFLAGS="$CFLAGS -include _mingw.h"
+CXXFLAGS="$CXXFLAGS -include _mingw.h"
 
 # We want to make sure we use binutils and other binaries in the tooltool
 # package.
