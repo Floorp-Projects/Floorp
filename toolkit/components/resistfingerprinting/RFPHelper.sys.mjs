@@ -227,19 +227,13 @@ class _RFPHelper {
 
   _promptForLanguagePreference() {
     // Display two buttons, both with string titles.
-    let flags = Services.prompt.STD_YES_NO_BUTTONS;
-    let brandBundle = Services.strings.createBundle(
-      "chrome://branding/locale/brand.properties"
+    const l10n = new Localization(
+      ["toolkit/global/resistFingerPrinting.ftl"],
+      true
     );
-    let brandShortName = brandBundle.GetStringFromName("brandShortName");
-    let navigatorBundle = Services.strings.createBundle(
-      "chrome://browser/locale/browser.properties"
-    );
-    let message = navigatorBundle.formatStringFromName(
-      "privacy.spoof_english",
-      [brandShortName]
-    );
-    let response = Services.prompt.confirmEx(
+    const message = l10n.formatValueSync("privacy-spoof-english");
+    const flags = Services.prompt.STD_YES_NO_BUTTONS;
+    const response = Services.prompt.confirmEx(
       null,
       "",
       message,
