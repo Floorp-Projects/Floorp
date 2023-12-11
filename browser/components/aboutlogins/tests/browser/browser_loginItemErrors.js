@@ -116,7 +116,7 @@ add_task(async function test_showLoginItemErrors() {
         content.document.querySelector("login-item")
       );
       const editButton = loginItem.shadowRoot
-        .querySelector(".edit-button")
+        .querySelector("edit-button")
         .shadowRoot.querySelector("button");
       editButton.click();
 

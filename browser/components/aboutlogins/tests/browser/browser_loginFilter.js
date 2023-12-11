@@ -40,7 +40,7 @@ add_task(async function focus_filter_by_ctrl_f() {
 
     content.document
       .querySelector("login-list")
-      .shadowRoot.querySelector(".create-login-button")
+      .shadowRoot.querySelector("create-login-button")
       .shadowRoot.querySelector("button")
       .focus();
     Assert.notEqual(
