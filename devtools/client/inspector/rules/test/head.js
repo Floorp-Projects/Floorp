@@ -299,6 +299,12 @@ var addProperty = async function (
 
   info("Adding name " + name);
   editor.input.value = name;
+  is(
+    editor.input.getAttribute("aria-label"),
+    "New property name",
+    "New property name input has expected aria-label"
+  );
+
   const onNameAdded = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_TAB", {}, view.styleWindow);
   await onNameAdded;
@@ -324,6 +330,17 @@ var addProperty = async function (
   // triggers a ruleview-changed event (see bug 1209295).
   const onPreview = view.once("ruleview-changed");
   editor.input.value = value;
+
+  ok(
+    !!editor.input.getAttribute("aria-labelledby"),
+    "The value input has an aria-labelledby attribute…"
+  );
+  is(
+    editor.input.getAttribute("aria-labelledby"),
+    textProp.editor.nameSpan.id,
+    "…which references the property name input"
+  );
+
   view.debounce.flush();
   await onPreview;
 

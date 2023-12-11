@@ -45,6 +45,10 @@ const STYLE_INSPECTOR_PROPERTIES =
 const { LocalizationHelper } = require("resource://devtools/shared/l10n.js");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
 
+loader.lazyGetter(this, "NEW_PROPERTY_NAME_INPUT_LABEL", function () {
+  return STYLE_INSPECTOR_L10N.getStr("rule.newPropertyName.label");
+});
+
 const INDENT_SIZE = 2;
 const INDENT_STR = " ".repeat(INDENT_SIZE);
 
@@ -832,6 +836,7 @@ RuleEditor.prototype = {
       contentType: InplaceEditor.CONTENT_TYPES.CSS_PROPERTY,
       popup: this.ruleView.popup,
       cssProperties: this.rule.cssProperties,
+      inputAriaLabel: NEW_PROPERTY_NAME_INPUT_LABEL,
     });
 
     // Auto-close the input if multiple rules get pasted into new property.

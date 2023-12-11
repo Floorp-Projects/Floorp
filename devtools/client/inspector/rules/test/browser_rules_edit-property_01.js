@@ -100,6 +100,11 @@ async function testEditProperty(view, rule, name, value, isValid) {
     "The property name editor got focused"
   );
   let input = editor.input;
+  is(
+    input.getAttribute("aria-label"),
+    "Property name",
+    "Property name input has expected aria-label"
+  );
 
   info(
     "Entering a new property name, including : to commit and " +
