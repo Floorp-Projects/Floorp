@@ -35,6 +35,17 @@ class InfallibleAllocPolicy {
   }
 };
 
+template <typename Vector>
+void CheckContents(Vector& vector, size_t expectedLength) {
+  MOZ_RELEASE_ASSERT(vector.Length() == expectedLength);
+  size_t n = 0;
+  for (auto iter = vector.Iter(); !iter.Done(); iter.Next()) {
+    MOZ_RELEASE_ASSERT(iter.Get() == int(n));
+    n++;
+  }
+  MOZ_RELEASE_ASSERT(n == expectedLength);
+}
+
 // We want to test Append(), which is fallible and marked with
 // [[nodiscard]]. But we're using an infallible alloc policy, and so
 // don't really need to check the result. Casting to |void| works with clang
@@ -47,7 +58,7 @@ void TestBasics() {
   // A SegmentedVector with a POD element type.
   typedef SegmentedVector<int, 1024, InfallibleAllocPolicy> MyVector;
   MyVector v;
-  int i, n;
+  int i;
 
   MOZ_RELEASE_ASSERT(v.IsEmpty());
 
@@ -57,28 +68,14 @@ void TestBasics() {
     gDummy = v.Append(std::move(i));
   }
   MOZ_RELEASE_ASSERT(!v.IsEmpty());
-  MOZ_RELEASE_ASSERT(v.Length() == 100);
-
-  n = 0;
-  for (auto iter = v.Iter(); !iter.Done(); iter.Next()) {
-    MOZ_RELEASE_ASSERT(iter.Get() == n);
-    n++;
-  }
-  MOZ_RELEASE_ASSERT(n == 100);
+  CheckContents(v, 100);
 
   // Add another 900 elements, then re-check.
   for (; i < 1000; i++) {
     v.InfallibleAppend(std::move(i));
   }
   MOZ_RELEASE_ASSERT(!v.IsEmpty());
-  MOZ_RELEASE_ASSERT(v.Length() == 1000);
-
-  n = 0;
-  for (auto iter = v.Iter(); !iter.Done(); iter.Next()) {
-    MOZ_RELEASE_ASSERT(iter.Get() == n);
-    n++;
-  }
-  MOZ_RELEASE_ASSERT(n == 1000);
+  CheckContents(v, 1000);
 
   // Pop off all of the elements.
   MOZ_RELEASE_ASSERT(v.Length() == 1000);
@@ -112,12 +109,33 @@ void TestBasics() {
   MOZ_RELEASE_ASSERT(v.Length() == 700);
 
   // Verify the contents are what we expect.
-  n = 0;
-  for (auto iter = v.Iter(); !iter.Done(); iter.Next()) {
-    MOZ_RELEASE_ASSERT(iter.Get() == n);
-    n++;
+  CheckContents(v, 700);
+}
+
+void TestMoveAndSwap() {
+  typedef SegmentedVector<int, 32, InfallibleAllocPolicy> MyVector;
+  MyVector v;
+
+  for (int i = 0; i < 100; i++) {
+    (void)v.Append(i);
   }
-  MOZ_RELEASE_ASSERT(n == 700);
+  MOZ_RELEASE_ASSERT(!v.IsEmpty());
+  CheckContents(v, 100);
+
+  // Test move constructor.
+  MyVector w(std::move(v));
+  CheckContents(w, 100);
+  MOZ_RELEASE_ASSERT(v.IsEmpty());
+
+  // Test move assignment.
+  v = std::move(w);
+  CheckContents(v, 100);
+  MOZ_RELEASE_ASSERT(w.IsEmpty());
+
+  // Test swap.
+  std::swap(v, w);
+  CheckContents(w, 100);
+  MOZ_RELEASE_ASSERT(v.IsEmpty());
 }
 
 static size_t gNumDefaultCtors;
@@ -361,6 +379,7 @@ void TestIterator() {
 
 int main(void) {
   TestBasics();
+  TestMoveAndSwap();
   TestConstructorsAndDestructors();
   TestSegmentCapacitiesAndAlignments();
   TestIterator();
