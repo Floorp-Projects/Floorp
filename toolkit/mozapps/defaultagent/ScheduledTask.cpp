@@ -141,7 +141,7 @@ HRESULT RegisterTask(const wchar_t* uniqueToken,
   }
 
   auto cleanupFolder =
-      mozilla::MakeScopeExit([hr, createdFolder, &rootFolder, &vendorBStr] {
+      mozilla::MakeScopeExit([&hr, createdFolder, &rootFolder, &vendorBStr] {
         if (createdFolder && FAILED(hr)) {
           // If this fails, we can't really handle that intelligently, so
           // don't even bother to check the return code.
