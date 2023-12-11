@@ -42,6 +42,7 @@
 #include "nsIOService.h"
 #include "nsIPrincipal.h"
 #include "nsIXPConnect.h"
+#include "nsQuickSort.h"
 #include "nsUTF8Utils.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
