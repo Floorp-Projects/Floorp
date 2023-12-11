@@ -33,8 +33,8 @@ const permissionExceptionsL10n = {
     description: "permissions-exceptions-popup-desc",
   },
   "login-saving": {
-    window: "permissions-exceptions-saved-logins-window2",
-    description: "permissions-exceptions-saved-logins-desc",
+    window: "permissions-exceptions-saved-passwords-window",
+    description: "permissions-exceptions-saved-passwords-desc",
   },
   "https-only-load-insecure": {
     window: "permissions-exceptions-https-only-window2",
