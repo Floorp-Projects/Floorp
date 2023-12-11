@@ -632,10 +632,7 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
       pipCount: videos.length,
       pipDisabledCount: videos.reduce(
         (accumulator, currentVal) =>
-          accumulator +
-          (currentVal.getAttribute("disablePictureInPicture") === "true"
-            ? 1
-            : 0),
+          accumulator + (currentVal.disablePictureInPicture ? 1 : 0),
         0
       ),
     });
@@ -655,10 +652,7 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
       pipCount: videos.length,
       pipDisabledCount: videos.reduce(
         (accumulator, currentVal) =>
-          accumulator +
-          (currentVal.getAttribute("disablePictureInPicture") === "true"
-            ? 1
-            : 0),
+          accumulator + (currentVal.disablePictureInPicture ? 1 : 0),
         0
       ),
     });

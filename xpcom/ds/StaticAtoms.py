@@ -347,6 +347,7 @@ STATIC_ATOMS = [
     Atom("disableglobalhistory", "disableglobalhistory"),
     Atom("disablehistory", "disablehistory"),
     Atom("disablefullscreen", "disablefullscreen"),
+    Atom("disablepictureinpicture", "disablepictureinpicture"),
     Atom("disclosure_closed", "disclosure-closed"),
     Atom("disclosure_open", "disclosure-open"),
     Atom("display", "display"),
