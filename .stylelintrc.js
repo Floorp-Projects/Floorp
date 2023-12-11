@@ -258,7 +258,10 @@ module.exports = {
       extends: "stylelint-config-recommended-scss",
     },
     {
-      files: "browser/components/newtab/**",
+      files: [
+        "browser/components/aboutwelcome/**",
+        "browser/components/newtab/**",
+      ],
       customSyntax: "postcss-scss",
       extends: "stylelint-config-standard-scss",
       rules: {

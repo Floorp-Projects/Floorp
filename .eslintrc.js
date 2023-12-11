@@ -497,6 +497,7 @@ module.exports = {
       // enable only for paths actually using React to avoid false positives.
       extends: ["plugin:react-hooks/recommended"],
       files: [
+        "browser/components/aboutwelcome/**",
         "browser/components/newtab/**",
         "browser/components/pocket/**",
         "devtools/**",
