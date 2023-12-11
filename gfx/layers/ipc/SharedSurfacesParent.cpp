@@ -206,6 +206,8 @@ void SharedSurfacesParent::RemoveAll(uint32_t aNamespace) {
     return;
   }
 
+  auto* renderThread = wr::RenderThread::Get();
+
   // Note that the destruction of a parent may not be cheap if it still has a
   // lot of surfaces still bound that require unmapping.
   for (auto i = sInstance->mSurfaces.Iter(); !i.Done(); i.Next()) {
@@ -217,8 +219,9 @@ void SharedSurfacesParent::RemoveAll(uint32_t aNamespace) {
     if (surface->HasCreatorRef() &&
         surface->RemoveConsumer(/* aForCreator */ true)) {
       RemoveTrackingLocked(surface, lock);
-      wr::RenderThread::Get()->UnregisterExternalImage(
-          wr::ToExternalImageId(i.Key()));
+      if (renderThread) {
+        renderThread->UnregisterExternalImage(wr::ToExternalImageId(i.Key()));
+      }
       i.Remove();
     }
   }
