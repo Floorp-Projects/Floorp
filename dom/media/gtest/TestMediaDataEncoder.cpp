@@ -43,6 +43,7 @@ class MediaDataEncoderTest : public testing::Test {
  protected:
   void SetUp() override {
     Preferences::SetBool("media.ffmpeg.encoder.enabled", true);
+    Preferences::SetInt("logging.FFmpegVideo", 5);
     mData.Init(kImageSize);
   }
 
