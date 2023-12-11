@@ -18246,17 +18246,6 @@
     "bug_numbers": [1833105],
     "description": "The decrease in the length of the URL when strip on share is used, only if at least one parameter is stripped"
   },
-  "GVSV_AUDIO_STREAM_INITS": {
-    "bug_numbers": [1858954],
-    "description": "Incremented when an audio stream is initialized. For use as part of the GeckoView Streaming Validation.",
-    "expires_in_version": "123",
-    "kind": "categorical",
-    "alert_emails": ["pmcmanis@mozilla.com"],
-    "products": ["firefox", "geckoview_streaming"],
-    "record_in_processes": ["all"],
-    "labels": ["inits"],
-    "releaseChannelCollection": "opt-out"
-  },
   "SCREENWAKELOCK_HELD_DURATION_MS": {
     "record_in_processes": ["content"],
     "products": ["firefox"],
