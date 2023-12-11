@@ -254,6 +254,7 @@ macosx-arm64-custom-car:
             is_official_build=true,
             symbol_level=0,
             target_cpu="arm64",
+            use_v8_context_snapshot=false,
             v8_symbol_level=0
         ]
         toolchain-artifact: public/build/car_macosx_arm.tar.zst
