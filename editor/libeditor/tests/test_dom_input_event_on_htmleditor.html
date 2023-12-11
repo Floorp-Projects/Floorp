@@ -1162,8 +1162,9 @@ function runTests() {
     });
 
     function test_switching_text_direction_from_default(aTestData) {
+      const editingHost = aDocument.getElementById("editTarget") || aDocument.getElementById("eventTarget");
       try {
-        body.removeAttribute("dir");
+        editingHost.removeAttribute("dir");
         htmlEditor.flags &= ~SpecialPowers.Ci.nsIEditor.eEditorRightToLeft;
         htmlEditor.flags |= SpecialPowers.Ci.nsIEditor.eEditorLeftToRight; // XXX flags update is required, must be a bug.
         aDocument.documentElement.scrollTop; // XXX Update the body frame
@@ -1173,12 +1174,11 @@ function runTests() {
           aTestData,
           () => {
             SpecialPowers.doCommand(aWindow, "cmd_switchTextDirection");
-            // XXX If editing host is a descendant of `<body>`, this must be a bug.
             if (aTestData.cancelBeforeInput) {
-              is(body.getAttribute("dir"), null,
+              is(editingHost.getAttribute("dir"), null,
                 `${aDescription}dir attribute of the element shouldn't have been set by ${aTestData.action}`);
             } else {
-              is(body.getAttribute("dir"), "rtl",
+              is(editingHost.getAttribute("dir"), "rtl",
                 `${aDescription}dir attribute of the element should've been set to "rtl" by ${aTestData.action}`);
             }
           },
@@ -1196,7 +1196,7 @@ function runTests() {
           }
         );
       } finally {
-        body.removeAttribute("dir");
+        editingHost.removeAttribute("dir");
         htmlEditor.flags &= ~SpecialPowers.Ci.nsIEditor.eEditorRightToLeft;
         htmlEditor.flags |= SpecialPowers.Ci.nsIEditor.eEditorLeftToRight; // XXX flags update is required, must be a bug.
         aDocument.documentElement.scrollTop; // XXX Update the body frame
@@ -1212,8 +1212,9 @@ function runTests() {
     });
 
     function test_switching_text_direction_from_rtl_to_ltr(aTestData) {
+      const editingHost = aDocument.getElementById("editTarget") || aDocument.getElementById("eventTarget");
       try {
-        body.setAttribute("dir", "rtl");
+        editingHost.setAttribute("dir", "rtl");
         htmlEditor.flags &= ~SpecialPowers.Ci.nsIEditor.eEditorLeftToRight;
         htmlEditor.flags |= SpecialPowers.Ci.nsIEditor.eEditorRightToLeft; // XXX flags update is required, must be a bug.
         aDocument.documentElement.scrollTop; // XXX Update the body frame
@@ -1223,9 +1224,8 @@ function runTests() {
           aTestData,
           () => {
             SpecialPowers.doCommand(aWindow, "cmd_switchTextDirection");
-            // XXX If editing host is a descendant of `<body>`, this must be a bug.
             let expectedDirValue = aTestData.cancelBeforeInput ? "rtl" : "ltr";
-            is(body.getAttribute("dir"), expectedDirValue,
+            is(editingHost.getAttribute("dir"), expectedDirValue,
               `${aDescription}dir attribute of the element should be "${expectedDirValue}" after ${aTestData.action}`);
           },
           {
@@ -1242,7 +1242,7 @@ function runTests() {
           }
         );
       } finally {
-        body.removeAttribute("dir");
+        editingHost.removeAttribute("dir");
         htmlEditor.flags &= ~SpecialPowers.Ci.nsIEditor.eEditorRightToLeft;
         htmlEditor.flags |= SpecialPowers.Ci.nsIEditor.eEditorLeftToRight; // XXX flags update is required, must be a bug.
         aDocument.documentElement.scrollTop; // XXX Update the body frame
