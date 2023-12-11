@@ -10,6 +10,14 @@ llvm_profdata = check_prog(
     "LLVM_PROFDATA", ["llvm-profdata"], allow_missing=True, paths=clang_search_path
 )
 
+
+@depends_if(llvm_profdata)
+@checking("whether llvm-profdata supports 'order' subcommand")
+def llvm_profdata_order(profdata):
+    retcode, _, _ = get_cmd_output(profdata, "order", "--help")
+    return retcode == 0
+
+
 option(
     "--enable-profile-generate",
     env="MOZ_PROFILE_GENERATE",
@@ -42,7 +50,8 @@ option(
 
 option(
     "--with-pgo-profile-path",
-    help="Path to the directory with unmerged profile data to use during the build",
+    help="Path to the directory with unmerged profile data to use during the build"
+    ", or to a merged profdata file",
     nargs=1,
 )
 
@@ -79,9 +88,44 @@ def pgo_profile_path(path, pgo_use, profdata, build_env):
 set_config("PGO_PROFILE_PATH", pgo_profile_path)
 
 
-@depends(c_compiler, pgo_profile_path, target_is_windows)
+@depends(
+    "--enable-profile-use",
+    pgo_profile_path,
+    llvm_profdata,
+    llvm_profdata_order,
+    build_environment,
+)
+def orderfile_path(profile_use, path, profdata, profdata_order, build_env):
+    if not profile_use:
+        return None
+
+    if not profdata_order:
+        return None
+
+    topobjdir = build_env.topobjdir
+
+    orderfile = os.path.join(topobjdir, "orderfile.txt")
+    check_cmd_output(profdata, "order", path, "-o", orderfile)
+    return orderfile
+
+
+pgo_temporal = c_compiler.try_compile(
+    flags=["-fprofile-generate", "-mllvm", "-pgo-temporal-instrumentation"],
+    check_msg="whether the C compiler supports temporal instrumentation",
+    when="--enable-profile-generate",
+)
+
+
+@depends(
+    c_compiler,
+    select_linker,
+    pgo_profile_path,
+    orderfile_path,
+    target_is_windows,
+    pgo_temporal,
+)
 @imports("multiprocessing")
-def pgo_flags(compiler, profdata, target_is_windows):
+def pgo_flags(compiler, linker, profdata, orderfile, target_is_windows, pgo_temporal):
     if compiler.type == "gcc":
         return namespace(
             gen_cflags=["-fprofile-generate"],
@@ -98,7 +142,21 @@ def pgo_flags(compiler, profdata, target_is_windows):
         else:
             gen_ldflags = ["-fprofile-generate"]
 
+        use_ldflags = []
+        if orderfile:
+            if compiler.type == "clang-cl":
+                use_ldflags += ["-ORDERFILE:@" + orderfile]
+            elif linker.KIND == "lld":
+                use_ldflags += ["-Wl,--symbol-ordering-file", orderfile]
+
+        if use_ldflags:
+            log.info("Activating PGO-based orderfile")
+
         gen_cflags = [prefix + "-fprofile-generate"]
+
+        if pgo_temporal:
+            gen_cflags += ["-mllvm", "-pgo-temporal-instrumentation"]
+
         if target_is_windows:
             # native llvm-profdata.exe on Windows can't read profile data
             # if name compression is enabled (which cross-compiling enables
@@ -114,7 +172,7 @@ def pgo_flags(compiler, profdata, target_is_windows):
                 # come in via -Wbackend-plugin, so disable those too.
                 "-Wno-error=backend-plugin",
             ],
-            use_ldflags=[],
+            use_ldflags=use_ldflags,
         )
 
 
