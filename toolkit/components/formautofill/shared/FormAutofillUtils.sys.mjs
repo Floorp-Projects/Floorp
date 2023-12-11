@@ -41,8 +41,8 @@ const EDIT_ADDRESS_L10N_IDS = [
   "autofill-address-tel",
 ];
 const MANAGE_CREDITCARDS_L10N_IDS = [
-  "autofill-add-new-card-title",
-  "autofill-manage-credit-cards-title",
+  "autofill-add-card-title",
+  "autofill-manage-payment-methods-title",
 ];
 const EDIT_CREDITCARD_L10N_IDS = [
   "autofill-card-number",
