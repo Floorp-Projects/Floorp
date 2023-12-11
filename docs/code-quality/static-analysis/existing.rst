@@ -1,9 +1,9 @@
 Existing Infrastructure and Analysis
 ====================================
 
-This document is about how Static Analysis occurs at Mozilla: the Firefox-specific and general llvm clang-tidy checks that are run on submissions in Phabricator and how to run them locally.  For information about how to develop your own static analysis checks, please see `Writing New Firefox-Specific Checks </code-quality/static-analysis/writing-new/>`_.
+This document is about how Static Analysis occurs at Mozilla: the Firefox-specific and general llvm clang-tidy checks that are run on submissions in Phabricator and how to run them locally.  For information about how to develop your own static analysis checks, please see `Writing New Firefox-Specific Checks <../static-analysis/writing-new/index.html>`_.
 
-For linting, please see the `linting documentation </code-quality/lint/>`_.
+For linting, please see the `linting documentation <../lint/index.html>`_.
 
 For reviews, use the `#static-analysis-reviewers review group <https://phabricator.services.mozilla.com/project/view/120/>`__.
 Ask questions on `#static-analysis:mozilla.org <https://chat.mozilla.org/#/room/#static-analysis:mozilla.org>`__.
