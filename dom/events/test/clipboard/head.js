@@ -101,6 +101,13 @@ function isCloselyLeftOnTopOf(aCoordsP1, aCoordsP2, aDelta = 10) {
 }
 
 async function promiseDismissPasteButton() {
+  // We intentionally turn off this a11y check, because the following click
+  // is send on the <body> to dismiss the pending popup using an alternative way
+  // of the popup dismissal, where the other way like `Esc` key is available,
+  // therefore this test can be ignored.
+  AccessibilityUtils.setEnv({
+    mustHaveAccessibleRule: false,
+  });
   // nsXULPopupManager rollup is handled in widget code, so we have to
   // synthesize native mouse events.
   await EventUtils.promiseNativeMouseEvent({
@@ -118,6 +125,7 @@ async function promiseDismissPasteButton() {
     offsetX: 100,
     offsetY: 100,
   });
+  AccessibilityUtils.resetEnv();
 }
 
 // @param aBrowser browser object of the content tab.
