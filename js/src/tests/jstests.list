@@ -140,7 +140,11 @@ skip-if(!xulRuntime.shell) include test262/built-ins/Atomics/wait/jstests.list
 # property -- and right now, it's only defined for cross-site-isolated pages
 # that request it using COOP/COEP.
 fails-if(!xulRuntime.shell) script test262/built-ins/ArrayBuffer/prototype/byteLength/this-is-sharedarraybuffer.js
+fails-if(!xulRuntime.shell) script test262/built-ins/ArrayBuffer/prototype/detached/this-is-sharedarraybuffer-resizable.js
+fails-if(!xulRuntime.shell) script test262/built-ins/ArrayBuffer/prototype/detached/this-is-sharedarraybuffer.js
 fails-if(!xulRuntime.shell) script test262/built-ins/ArrayBuffer/prototype/slice/this-is-sharedarraybuffer.js
+fails-if(!xulRuntime.shell) script test262/built-ins/ArrayBuffer/prototype/transfer/this-is-sharedarraybuffer.js
+fails-if(!xulRuntime.shell) script test262/built-ins/ArrayBuffer/prototype/transferToFixedLength/this-is-sharedarraybuffer.js
 fails-if(!xulRuntime.shell) script test262/built-ins/Atomics/add/bigint/bad-range.js
 fails-if(!xulRuntime.shell) script test262/built-ins/Atomics/add/bigint/good-views.js
 fails-if(!xulRuntime.shell) script test262/built-ins/Atomics/add/validate-arraytype-before-index-coercion.js

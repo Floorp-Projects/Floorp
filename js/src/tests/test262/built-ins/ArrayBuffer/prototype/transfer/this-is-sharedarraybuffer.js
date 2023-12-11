@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-arraybuffer-transfer) skip-if(!this.hasOwnProperty('SharedArrayBuffer')||!ArrayBuffer.prototype.transfer||!xulRuntime.shell) -- SharedArrayBuffer,arraybuffer-transfer is not enabled unconditionally, requires shell-options
+// |reftest| skip-if(!this.hasOwnProperty('SharedArrayBuffer')) -- SharedArrayBuffer is not enabled unconditionally
 // Copyright (C) 2021 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---

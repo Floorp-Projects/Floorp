@@ -1,5 +1,3 @@
-// |jit-test| --enable-arraybuffer-transfer; skip-if: !ArrayBuffer.prototype.transfer
-
 let exp = wasmEvalText(`(module
     (memory 1)
     (export "mem" (memory 0))
