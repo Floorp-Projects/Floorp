@@ -47,27 +47,6 @@ Order CompareAddr(T* aAddr1, T* aAddr2) {
   return CompareInt(uintptr_t(aAddr1), uintptr_t(aAddr2));
 }
 
-// User-defined literals to make constants more legible
-constexpr size_t operator"" _KiB(unsigned long long int aNum) {
-  return size_t(aNum) * 1024;
-}
-
-constexpr size_t operator"" _KiB(long double aNum) {
-  return size_t(aNum * 1024);
-}
-
-constexpr size_t operator"" _MiB(unsigned long long int aNum) {
-  return size_t(aNum) * 1024_KiB;
-}
-
-constexpr size_t operator"" _MiB(long double aNum) {
-  return size_t(aNum * 1024_KiB);
-}
-
-constexpr double operator""_percent(long double aPercent) {
-  return double(aPercent) / 100;
-}
-
 // Helper for (fast) comparison of fractions without involving divisions or
 // floats.
 class Fraction {
