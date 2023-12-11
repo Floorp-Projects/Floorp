@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SMILTimeValue.h"
+#include "nsMathUtils.h"
 
 namespace mozilla {
 
@@ -37,6 +38,15 @@ int8_t SMILTimeValue::CompareTo(const SMILTimeValue& aOther) const {
   }
 
   return result;
+}
+
+void SMILTimeValue::SetMillis(double aMillis, Rounding aRounding) {
+  mState = STATE_DEFINITE;
+  mMilliseconds = NS_round(aMillis);
+  if (aRounding == Rounding::EnsureNonZero && !mMilliseconds && aMillis) {
+    // Ensure we don't round small values to zero.
+    mMilliseconds = std::copysign(1.0, aMillis);
+  }
 }
 
 }  // namespace mozilla

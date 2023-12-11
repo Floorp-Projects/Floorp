@@ -9,13 +9,13 @@
 
 #include "nsTArray.h"
 #include "nsStringFwd.h"
+#include "SMILTimeValue.h"
 
 namespace mozilla {
 
 class SMILAttr;
 class SMILKeySpline;
 class SMILRepeatCount;
-class SMILTimeValue;
 class SMILTimeValueSpecParams;
 class SMILValue;
 
@@ -72,7 +72,9 @@ class SMILParserUtils {
    * @param aResult  The parsed result. [OUT]
    * @return true if parsing succeeded, otherwise false.
    */
-  static bool ParseClockValue(const nsAString& aSpec, SMILTimeValue* aResult);
+  static bool ParseClockValue(const nsAString& aSpec,
+                              SMILTimeValue::Rounding aRounding,
+                              SMILTimeValue* aResult);
 
   /*
    * This method checks whether the given string looks like a negative number.
