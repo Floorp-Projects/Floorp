@@ -74,7 +74,6 @@
 #include "nsIZipReader.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
-#include "nsQuickSort.h"
 #include "nsReadableUtils.h"
 #include "nsRefPtrHashtable.h"
 #include "nsRelativeFilePref.h"
