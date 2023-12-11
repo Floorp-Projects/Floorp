@@ -3,3 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @import url("chrome://global/skin/in-content/common.css");
+
+#tag-pings:invalid + label > span {
+  font-weight: var(--font-weight-bold);
+  text-decoration: underline;
+  color: var(--text-color-error);
+}
