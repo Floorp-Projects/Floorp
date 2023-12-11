@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 plugins {
-    id "org.gradle.kotlin.kotlin-dsl" version "4.1.2"
+    id "org.gradle.kotlin.kotlin-dsl" version "4.2.1"
 }
 
 repositories {
