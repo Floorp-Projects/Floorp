@@ -5,6 +5,14 @@
 // This file is loaded into the browser window scope.
 /* eslint-env mozilla/browser-window */
 
+const {
+  FX_MONITOR_OAUTH_CLIENT_ID,
+  FX_RELAY_OAUTH_CLIENT_ID,
+  VPN_OAUTH_CLIENT_ID,
+} = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccountsCommon.sys.mjs"
+);
+
 const { UIState } = ChromeUtils.importESModule(
   "resource://services-sync/UIState.sys.mjs"
 );
@@ -348,6 +356,8 @@ var gSync = {
         "browser/appmenu.ftl",
         "browser/sync.ftl",
         "toolkit/branding/accounts.ftl",
+        // untranslated FTL
+        "preview/appmenu.ftl",
       ],
       true
     ));
@@ -405,6 +415,11 @@ var gSync = {
       this,
       "FXA_ENABLED",
       "identity.fxaccounts.enabled"
+    );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "PXI_TOOLBAR_ENABLED",
+      "identity.fxaccounts.toolbar.pxiToolbarEnabled"
     );
   },
 
@@ -492,6 +507,13 @@ var gSync = {
     fxaPanelView.addEventListener("ViewShowing", this);
     fxaPanelView.addEventListener("ViewHiding", this);
 
+    // If the experiment is enabled, we'll need to update the panels
+    // to show some different text to the user
+    if (this.PXI_TOOLBAR_ENABLED) {
+      this.updateFxAPanel(UIState.get());
+      this.updateCTAPanel();
+    }
+
     this._initialized = true;
   },
 
@@ -535,6 +557,14 @@ var gSync = {
       "PanelUI-fxa-menu-sync-prefs-button"
     );
     syncPrefsButtonEl.hidden = !UIState.get().syncEnabled;
+
+    // We should ensure that we do not show the sign out button
+    // if the user is not signed in
+    const signOutButtonEl = PanelMultiView.getViewNode(
+      document,
+      "PanelUI-fxa-menu-account-signout-button"
+    );
+    signOutButtonEl.hidden = !this.isSignedIn;
 
     panelview.syncedTabsPanelList = new SyncedTabsPanelList(
       panelview,
@@ -580,6 +610,7 @@ var gSync = {
     this.updateSyncButtonsTooltip(state);
     this.updateSyncStatus(state);
     this.updateFxAPanel(state);
+    this.updateCTAPanel(state);
     // Ensure we have something in the device list in the background.
     this.ensureFxaDevices();
   },
@@ -786,14 +817,28 @@ var gSync = {
           entrypoint_variation: fxaButtonVisibilityExperiment.branch.slug,
         };
       }
-
-      let panel =
-        anchor.id == "appMenu-fxa-label2"
-          ? PanelMultiView.getViewNode(document, "PanelUI-fxa")
-          : undefined;
-      this.openFxAEmailFirstPageFromFxaMenu(panel, extraParams);
-      PanelUI.hide();
+      // If we're signed out but have the PXI pref enabled
+      // we should show the PXI panel instead of taking the user
+      // straight to FxA sign-in
+      if (this.PXI_TOOLBAR_ENABLED) {
+        this.updateCTAPanel();
+        PanelUI.showSubView("PanelUI-fxa", anchor, aEvent);
+      } else {
+        let panel =
+          anchor.id == "appMenu-fxa-label2"
+            ? PanelMultiView.getViewNode(document, "PanelUI-fxa")
+            : undefined;
+        this.openFxAEmailFirstPageFromFxaMenu(panel, extraParams);
+        PanelUI.hide();
+      }
       return;
+    }
+    // If the user is signed in and we have the PXI pref enabled then add
+    // the pxi panel to the existing toolbar
+    if (this.PXI_TOOLBAR_ENABLED) {
+      this.updateCTAPanel();
+    } else {
+      PanelUI.showSubView("PanelUI-fxa", anchor, aEvent);
     }
 
     if (!gFxaToolbarAccessed) {
@@ -856,19 +901,33 @@ var gSync = {
       "fxa-manage-account-button"
     );
 
+    const signedInContainer = PanelMultiView.getViewNode(
+      document,
+      "PanelUI-signedin-panel"
+    );
+
     cadButtonEl.setAttribute("disabled", true);
     syncNowButtonEl.hidden = true;
+    signedInContainer.hidden = true;
     fxaMenuAccountButtonEl.classList.remove("subviewbutton-nav");
     fxaMenuAccountButtonEl.removeAttribute("closemenu");
     syncSetupButtonEl.removeAttribute("hidden");
 
-    let headerTitleL10nId = "appmenuitem-fxa-sign-in";
+    let headerTitleL10nId = this.PXI_TOOLBAR_ENABLED
+      ? "appmenuitem-moz-accounts-sign-in"
+      : "appmenuitem-fxa-sign-in";
     let headerDescription;
     if (state.status === UIState.STATUS_NOT_CONFIGURED) {
       mainWindowEl.style.removeProperty("--avatar-image-url");
       headerDescription = this.fluentStrings.formatValueSync(
         "appmenu-fxa-signed-in-label"
       );
+      // Signed out, expeirment enabled is the only state we want to hide the
+      // header description, so we make it empty and check for that when setting
+      // the value
+      if (this.PXI_TOOLBAR_ENABLED) {
+        headerDescription = "";
+      }
     } else if (state.status === UIState.STATUS_LOGIN_FAILED) {
       stateValue = "login-failed";
       headerTitleL10nId = "account-disconnected2";
@@ -895,6 +954,8 @@ var gSync = {
           mainWindowEl.style.removeProperty("--avatar-image-url");
         };
         img.src = state.avatarURL;
+        signedInContainer.hidden = false;
+        menuHeaderDescriptionEl.hidden = false;
       } else {
         mainWindowEl.style.removeProperty("--avatar-image-url");
       }
@@ -917,6 +978,8 @@ var gSync = {
 
     menuHeaderTitleEl.value =
       this.fluentStrings.formatValueSync(headerTitleL10nId);
+    // If we description is empty, we hide it
+    menuHeaderDescriptionEl.hidden = !headerDescription;
     menuHeaderDescriptionEl.value = headerDescription;
     // We remove the data-l10n-id attribute here to prevent the node's value
     // attribute from being overwritten by Fluent when the panel is moved
@@ -1957,6 +2020,95 @@ var gSync = {
     for (const item of toHide) {
       item.hidden = true;
     }
+  },
+
+  // This should only be shown if we have enabled the pxiPanel via
+  // an experiment or explicitly through prefs
+  updateCTAPanel() {
+    const mainPanelEl = PanelMultiView.getViewNode(
+      document,
+      "PanelUI-fxa-pxi-cta-menu"
+    );
+
+    const syncCtaEl = PanelMultiView.getViewNode(
+      document,
+      "PanelUI-fxa-menu-sync-button"
+    );
+    // If we're not in the experiment then we do not enable this at all
+    if (!this.PXI_TOOLBAR_ENABLED) {
+      // If we've previously shown this but got disabled
+      // we should ensure we hide the panel
+      mainPanelEl.hidden = true;
+      return;
+    }
+
+    // If we're already signed in an syncing, we shouldn't show the sync CTA
+    syncCtaEl.hidden = this.isSignedIn;
+
+    // ensure the container is visible
+    mainPanelEl.hidden = false;
+  },
+  async openMonitorLink(panel) {
+    this.emitFxaToolbarTelemetry("monitor_cta", panel);
+    await this.openPXILink(
+      FX_MONITOR_OAUTH_CLIENT_ID,
+      new URL("https://monitor.firefox.com"),
+      new URL("https://monitor.firefox.com/user/breaches")
+    );
+  },
+
+  async openRelayLink(panel) {
+    this.emitFxaToolbarTelemetry("relay_cta", panel);
+    await this.openPXILink(
+      FX_RELAY_OAUTH_CLIENT_ID,
+      new URL("https://relay.firefox.com"),
+      new URL("https://relay.firefox.com/accounts/profile")
+    );
+  },
+
+  async openVPNLink(panel) {
+    this.emitFxaToolbarTelemetry("vpn_cta", panel);
+    await this.openPXILink(
+      VPN_OAUTH_CLIENT_ID,
+      new URL("https://www.mozilla.org/en-US/products/vpn/"),
+      new URL("https://www.mozilla.org/en-US/products/vpn/")
+    );
+  },
+
+  // A generic opening based on
+  async openPXILink(clientId, defaultUrl, signedInUrl) {
+    const params = {
+      utm_medium: "firefox-desktop",
+      utm_source: "toolbar",
+      utm_campaign: "discovery",
+    };
+    const pxiSearchParams = new URLSearchParams(params);
+
+    if (!this.isSignedIn) {
+      // Add the base params + not signed in
+      defaultUrl.search = pxiSearchParams.toString();
+      defaultUrl.searchParams.append("utm_content", "notsignedin");
+      this.openLink(defaultUrl);
+      PanelUI.hide();
+      return;
+    }
+
+    // Note: This is a network call
+    let attachedClients = await fxAccounts.listAttachedOAuthClients();
+    // If we have at least one client based on clientId passed in
+    let hasPXIClient = attachedClients.some(c => !!c.id && c.id === clientId);
+
+    const url = hasPXIClient ? signedInUrl : defaultUrl;
+    // Add base params + signed in
+    url.search = pxiSearchParams.toString();
+    url.searchParams.append("utm_content", "signedIn");
+
+    this.openLink(url);
+    PanelUI.hide();
+  },
+
+  openLink(url) {
+    switchToTabHavingURI(url, true, { replaceQueryString: true });
   },
 
   QueryInterface: ChromeUtils.generateQI([

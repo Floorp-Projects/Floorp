@@ -14,6 +14,7 @@
   preview/enUS-searchFeatures.ftl                  (../components/urlbar/content/enUS-searchFeatures.ftl)
   preview/shopping.ftl                             (../components/shopping/content/shopping.ftl)
   preview/onboarding.ftl                           (../components/aboutwelcome/content/onboarding.ftl)
+  preview/appmenu.ftl                              (../../services/fxaccounts/content/appmenu.ftl)
   browser                                          (%browser/**/*.ftl)
 
 @AB_CD@.jar:
