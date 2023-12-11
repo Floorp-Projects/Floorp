@@ -27,17 +27,6 @@ ChromeUtils.defineESModuleGetters(this, {
   formAutofillStorage: "resource://autofill/FormAutofillStorage.sys.mjs",
 });
 
-const lazy = {};
-ChromeUtils.defineLazyGetter(
-  lazy,
-  "l10n",
-  () =>
-    new Localization([
-      "browser/preferences/formAutofill.ftl",
-      "branding/brand.ftl",
-    ])
-);
-
 this.log = null;
 ChromeUtils.defineLazyGetter(this, "log", () =>
   FormAutofill.defineLogGetter(this, "manageAddresses")
@@ -363,12 +352,13 @@ class ManageCreditCards extends ManageRecords {
   async openEditDialog(creditCard) {
     // Ask for reauth if user is trying to edit an existing credit card.
     if (creditCard) {
-      const reauthPasswordPromptMessage = await lazy.l10n.formatValue(
-        "autofill-edit-card-password-prompt"
+      const promptMessage = FormAutofillUtils.reauthOSPromptMessage(
+        "autofill-edit-payment-method-os-prompt-macos",
+        "autofill-edit-payment-method-os-prompt-windows",
+        "autofill-edit-payment-method-os-prompt-other"
       );
-      const loggedIn = await FormAutofillUtils.ensureLoggedIn(
-        reauthPasswordPromptMessage
-      );
+
+      const loggedIn = await FormAutofillUtils.ensureLoggedIn(promptMessage);
       if (!loggedIn.authenticated) {
         return;
       }
