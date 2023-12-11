@@ -365,7 +365,7 @@ LightType SVGFELightingElement::ComputeLightAttributes(
 bool SVGFELightingElement::AddLightingAttributes(
     mozilla::gfx::DiffuseLightingAttributes* aAttributes,
     SVGFilterInstance* aInstance) {
-  nsIFrame* frame = GetPrimaryFrame();
+  const auto* frame = GetPrimaryFrame();
   if (!frame) {
     return false;
   }
@@ -392,6 +392,19 @@ bool SVGFELightingElement::AddLightingAttributes(
   aAttributes->mColor = color;
 
   return true;
+}
+
+bool SVGFELightingElement::OutputIsTainted(
+    const nsTArray<bool>& aInputsAreTainted,
+    nsIPrincipal* aReferencePrincipal) {
+  if (const auto* frame = GetPrimaryFrame()) {
+    if (frame->Style()->StyleSVGReset()->mLightingColor.IsCurrentColor()) {
+      return true;
+    }
+  }
+
+  return SVGFELightingElementBase::OutputIsTainted(aInputsAreTainted,
+                                                   aReferencePrincipal);
 }
 
 bool SVGFELightingElement::AttributeAffectsRendering(int32_t aNameSpaceID,
