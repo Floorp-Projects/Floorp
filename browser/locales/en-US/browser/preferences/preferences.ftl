@@ -1048,6 +1048,8 @@ forms-windows-sso =
 forms-windows-sso-learn-more-link = Learn more
 forms-windows-sso-desc = Manage accounts in your device settings
 
+windows-passkey-settings-label = Manage passkeys in system settings
+
 ## OS Authentication dialog
 
 # This message can be seen by trying to add a Primary Password.
