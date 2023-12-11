@@ -78,13 +78,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "useOldClearHistoryDialog",
-  "privacy.sanitize.useOldClearHistoryDialog",
-  false
-);
-
 ChromeUtils.defineESModuleGetters(this, {
   DoHConfigController: "resource:///modules/DoHConfig.sys.mjs",
 });
@@ -2049,12 +2042,7 @@ var gPrivacyPane = {
       ts.value = 0;
     }
 
-    // Bug 1856418 We intend to remove the old dialog box
-    let dialogFile = useOldClearHistoryDialog
-      ? "sanitize.xhtml"
-      : "sanitize_v2.xhtml";
-
-    gSubDialog.open(`chrome://browser/content/${dialogFile}`, {
+    gSubDialog.open("chrome://browser/content/sanitize.xhtml", {
       features: "resizable=no",
       closingCallback: () => {
         // reset the timeSpan pref

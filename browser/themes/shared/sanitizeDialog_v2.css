@@ -45,19 +45,6 @@
   margin-inline: 4px;
 }
 
-.checkboxWithDescription {
-  padding: 8px 0;
-}
-
-.sanitizeCheckboxDescription {
-  padding: 0 24px;
-  line-height: normal;
-}
-
-#sanitizeDurationChoice {
-  margin-inline-end: 0;
-}
-
 dialog:not([inbrowserwindow]) #titleText {
   display: none;
 }

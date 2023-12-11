@@ -13,7 +13,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml"
   persist="lastSelected screenX screenY"
-  data-l10n-id="sanitize-dialog-title2"
+  data-l10n-id="sanitize-dialog-title"
   data-l10n-attrs="style"
 >
   <dialog buttons="accept,cancel">
@@ -31,10 +31,12 @@
         rel="stylesheet"
         href="chrome://browser/skin/sanitizeDialog.css"
       />
+
       <html:link
         rel="stylesheet"
-        href="chrome://browser/skin/sanitizeDialog_v2.css"
+        href="chrome://browser/content/sanitizeDialog.css"
       />
+
       <html:link rel="localization" href="browser/sanitize.ftl" />
     </linkset>
 
@@ -43,7 +45,7 @@
 
     <hbox id="SanitizeDurationBox" align="center">
       <label
-        data-l10n-id="clear-time-duration-prefix2"
+        data-l10n-id="clear-time-duration-prefix"
         control="sanitizeDurationChoice"
         id="sanitizeDurationLabel"
       />
@@ -96,61 +98,44 @@
     </vbox>
 
     <groupbox>
-      <hbox class="checkboxWithDescription">
-        <vbox>
+      <label><html:h2 data-l10n-id="history-section-label" /></label>
+      <hbox>
+        <vbox data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style">
           <checkbox
-            data-l10n-id="item-browsing-and-search"
+            data-l10n-id="item-history-and-downloads"
             preference="privacy.cpd.history"
           />
-        </vbox>
-      </hbox>
-      <hbox class="checkboxWithDescription">
-        <vbox>
           <checkbox
-            data-l10n-id="item-cookies-site-data"
+            data-l10n-id="item-active-logins"
+            preference="privacy.cpd.sessions"
+          />
+          <checkbox
+            data-l10n-id="item-form-search-history"
+            preference="privacy.cpd.formdata"
+          />
+        </vbox>
+        <vbox flex="1">
+          <checkbox
+            data-l10n-id="item-cookies"
             preference="privacy.cpd.cookies"
-            aria-describedby="cookies-site-data-description"
           />
-          <description
-            class="sanitizeCheckboxDescription text-deemphasized"
-            data-l10n-id="item-cookies-site-data-description"
-            id="cookies-site-data-description"
-          />
+          <checkbox data-l10n-id="item-cache" preference="privacy.cpd.cache" />
         </vbox>
       </hbox>
-      <hbox class="checkboxWithDescription">
-        <vbox>
+    </groupbox>
+    <groupbox>
+      <label><html:h2 data-l10n-id="data-section-label" /></label>
+      <hbox>
+        <vbox data-l10n-id="sanitize-prefs-style" data-l10n-attrs="style">
           <checkbox
-            data-l10n-id="item-cached-content"
-            preference="privacy.cpd.cache"
-            aria-describedby="cached-content-description"
-          />
-          <description
-            class="sanitizeCheckboxDescription text-deemphasized"
-            data-l10n-id="item-cached-content-description"
-            id="cached-content-description"
-          />
-        </vbox>
-      </hbox>
-      <hbox class="checkboxWithDescription">
-        <vbox>
-          <checkbox
-            data-l10n-id="item-site-prefs"
+            data-l10n-id="item-site-settings"
             preference="privacy.cpd.siteSettings"
-            aria-describedby="site-prefs-description"
-          />
-          <description
-            class="sanitizeCheckboxDescription text-deemphasized"
-            data-l10n-id="item-site-prefs-description"
-            id="site-prefs-description"
           />
         </vbox>
-      </hbox>
-      <hbox class="checkboxWithDescription">
-        <vbox>
+        <vbox flex="1">
           <checkbox
-            data-l10n-id="item-download-history"
-            preference="privacy.cpd.downloads"
+            data-l10n-id="item-offline-apps"
+            preference="privacy.cpd.offlineApps"
           />
         </vbox>
       </hbox>
