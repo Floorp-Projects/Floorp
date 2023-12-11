@@ -284,7 +284,7 @@
                 hidden="true"
                 oncommand="gContextMenu.useRelayMask();"/>
       <menuitem id="manage-saved-logins"
-                data-l10n-id="main-context-menu-manage-logins2"
+                data-l10n-id="main-context-menu-manage-passwords"
                 hidden="true"
                 oncommand="gContextMenu.openPasswordManager();"/>
       <menuseparator id="passwordmgr-items-separator"/>
