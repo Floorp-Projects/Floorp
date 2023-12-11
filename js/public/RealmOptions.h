@@ -228,16 +228,16 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
+  bool getArrayBufferTransferEnabled() const { return arrayBufferTransfer_; }
+  RealmCreationOptions& setArrayBufferTransferEnabled(bool flag) {
+    arrayBufferTransfer_ = flag;
+    return *this;
+  }
+
 #ifdef NIGHTLY_BUILD
   bool getNewSetMethodsEnabled() const { return newSetMethods_; }
   RealmCreationOptions& setNewSetMethodsEnabled(bool flag) {
     newSetMethods_ = flag;
-    return *this;
-  }
-
-  bool getArrayBufferTransferEnabled() const { return arrayBufferTransfer_; }
-  RealmCreationOptions& setArrayBufferTransferEnabled(bool flag) {
-    arrayBufferTransfer_ = flag;
     return *this;
   }
 
@@ -318,10 +318,12 @@ class JS_PUBLIC_API RealmCreationOptions {
 #ifdef NIGHTLY_BUILD
   // Pref for new Set.prototype methods.
   bool newSetMethods_ = false;
-  // Pref for ArrayBuffer.prototype.transfer{,ToFixedLength}() methods.
-  bool arrayBufferTransfer_ = false;
   bool symbolsAsWeakMapKeys_ = false;
 #endif
+
+  // Pref for ArrayBuffer.prototype.transfer{,ToFixedLength}() methods.
+  bool arrayBufferTransfer_ = false;
+
   bool secureContext_ = false;
   bool freezeBuiltins_ = false;
   bool forceUTC_ = false;
