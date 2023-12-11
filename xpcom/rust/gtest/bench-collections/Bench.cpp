@@ -268,11 +268,11 @@ class BenchCollections : public ::testing::Test {
 
  private:
   // Random values used in the benchmarks.
-  static void** sVals;
+  static void** sVals MOZ_GUARDED_BY(sValsMutex);
 
   // A mutex that protects all benchmark operations, ensuring that two
   // benchmarks never run concurrently.
-  static StaticMutex sValsMutex MOZ_UNANNOTATED;
+  static StaticMutex sValsMutex;
 };
 
 void** BenchCollections::sVals;
