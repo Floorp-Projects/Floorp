@@ -662,11 +662,11 @@ StyleSheet* ServoStyleSet::SheetAt(Origin aOrigin, size_t aIndex) const {
       Servo_StyleSet_GetSheetAt(mRawData.get(), aOrigin, aIndex));
 }
 
-ServoStyleSet::FirstPageSizeAndOrientation
-ServoStyleSet::GetFirstPageSizeAndOrientation(const nsAtom* aFirstPageName) {
-  FirstPageSizeAndOrientation retval;
+ServoStyleSet::PageSizeAndOrientation
+ServoStyleSet::GetDefaultPageSizeAndOrientation() {
+  PageSizeAndOrientation retval;
   const RefPtr<ComputedStyle> style =
-      ResolvePageContentStyle(aFirstPageName, StylePagePseudoClassFlags::FIRST);
+      ResolvePageContentStyle(nullptr, StylePagePseudoClassFlags::NONE);
   const StylePageSize& pageSize = style->StylePage()->mSize;
 
   if (pageSize.IsSize()) {
