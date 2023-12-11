@@ -150,6 +150,7 @@
 #include "mozilla/DoublyLinkedList.h"
 #include "mozilla/HelperMacros.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Literals.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/RandomNum.h"
 // Note: MozTaggedAnonymousMmap() could call an LD_PRELOADed mmap
