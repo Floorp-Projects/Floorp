@@ -41,6 +41,10 @@ loader.lazyRequireGetter(
   "resource://devtools/shared/inspector/css-logic.js",
   true
 );
+loader.lazyGetter(this, "PROPERTY_NAME_INPUT_LABEL", function () {
+  return l10n("rule.propertyName.label");
+});
+
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
@@ -327,6 +331,7 @@ TextPropertyEditor.prototype = {
         // what the user entered, close the editor, and focus the span so the user can
         // navigate with the keyboard as expected.
         stopOnReturn: true,
+        inputAriaLabel: PROPERTY_NAME_INPUT_LABEL,
       });
 
       // Auto blur name field on multiple CSS rules get pasted in.
@@ -428,6 +433,9 @@ TextPropertyEditor.prototype = {
         // what the user entered, close the editor, and focus the span so the user can
         // navigate with the keyboard as expected.
         stopOnReturn: true,
+        // Label the value input with the name span so screenreader users know what this
+        // applies to.
+        inputAriaLabelledBy: this.nameSpan.id,
       });
     }
   },

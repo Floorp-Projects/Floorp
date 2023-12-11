@@ -46,7 +46,6 @@ skip-if = ["verify && debug && os == 'win'"]
 ["browser_rules_add-property_01.js"]
 
 ["browser_rules_add-property_02.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_add-rule-and-property.js"]
 
@@ -228,7 +227,6 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_rules_edit-property_01.js"]
 
 ["browser_rules_edit-property_02.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_edit-property_03.js"]
 
