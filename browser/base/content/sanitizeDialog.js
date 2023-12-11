@@ -9,19 +9,6 @@ var { Sanitizer } = ChromeUtils.importESModule(
   "resource:///modules/Sanitizer.sys.mjs"
 );
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-const lazy = {};
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "USE_OLD_DIALOG",
-  "privacy.sanitize.useOldClearHistoryDialog",
-  false
-);
-
 Preferences.addAll([
   { id: "privacy.cpd.history", type: "bool" },
   { id: "privacy.cpd.formdata", type: "bool" },
@@ -62,10 +49,7 @@ var gSanitizePromptDialog = {
     }
 
     let OKButton = this._dialog.getButton("accept");
-    let okButtonLabel = lazy.USE_OLD_DIALOG
-      ? "sanitize-button-ok"
-      : "sanitize-button-ok2";
-    document.l10n.setAttributes(OKButton, okButtonLabel);
+    document.l10n.setAttributes(OKButton, "sanitize-button-ok");
 
     document.addEventListener("dialogaccept", function (e) {
       gSanitizePromptDialog.sanitize(e);
@@ -76,12 +60,10 @@ var gSanitizePromptDialog = {
     if (this.selectedTimespan === Sanitizer.TIMESPAN_EVERYTHING) {
       this.prepareWarning();
       this.warningBox.hidden = false;
-      if (lazy.USE_OLD_DIALOG) {
-        document.l10n.setAttributes(
-          document.documentElement,
-          "sanitize-dialog-title-everything"
-        );
-      }
+      document.l10n.setAttributes(
+        document.documentElement,
+        "sanitize-dialog-title-everything"
+      );
       let warningDesc = document.getElementById("sanitizeEverythingWarning");
       // Ensure we've translated and sized the warning.
       await document.l10n.translateFragment(warningDesc);
@@ -111,14 +93,10 @@ var gSanitizePromptDialog = {
           warningBox.previousElementSibling.getBoundingClientRect().bottom;
         window.resizeBy(0, diff);
       }
-
-      if (lazy.USE_OLD_DIALOG) {
-        document.l10n.setAttributes(
-          document.documentElement,
-          "sanitize-dialog-title-everything"
-        );
-      }
-
+      document.l10n.setAttributes(
+        document.documentElement,
+        "sanitize-dialog-title-everything"
+      );
       return;
     }
 
@@ -130,10 +108,10 @@ var gSanitizePromptDialog = {
       window.resizeBy(0, -diff);
       warningBox.hidden = true;
     }
-    let datal1OnId = lazy.USE_OLD_DIALOG
-      ? "sanitize-dialog-title"
-      : "sanitize-dialog-title2";
-    document.l10n.setAttributes(document.documentElement, datal1OnId);
+    document.l10n.setAttributes(
+      document.documentElement,
+      "sanitize-dialog-title"
+    );
   },
 
   sanitize(event) {
@@ -186,14 +164,10 @@ var gSanitizePromptDialog = {
    * Return the boolean prefs that correspond to the checkboxes on the dialog.
    */
   _getItemPrefs() {
-    return Preferences.getAll().filter(pref => {
-      // The timespan pref isn't a bool, so don't return it
-      if (pref.id == "privacy.sanitize.timeSpan") {
-        return false;
-      }
-      // In the old dialog, cpd.downloads isn't controlled by a checkbox
-      return !(lazy.USE_OLD_DIALOG && pref.id == "privacy.cpd.downloads");
-    });
+    return Preferences.getAll().filter(
+      p =>
+        p.id !== "privacy.sanitize.timeSpan" && p.id !== "privacy.cpd.downloads"
+    );
   },
 
   /**
@@ -229,25 +203,10 @@ var gSanitizePromptDialog = {
   updatePrefs() {
     Services.prefs.setIntPref(Sanitizer.PREF_TIMESPAN, this.selectedTimespan);
 
+    // Keep the pref for the download history in sync with the history pref.
     let historyValue = Preferences.get("privacy.cpd.history").value;
-
-    if (lazy.USE_OLD_DIALOG) {
-      // Keep the pref for the download history in sync with the history pref.
-      Preferences.get("privacy.cpd.downloads").value = historyValue;
-      Services.prefs.setBoolPref("privacy.cpd.downloads", historyValue);
-    }
-    // Bug 1861450 - Create new prefs and categories in Sanitizer for the new dialog box
-    // We intend to migrate these into new prefs and categories
-    // sync the prefs for Form data, offline apps and sessions as they are merged
-    // into history and cookies for the new clear history dialog
-    else {
-      Preferences.get("privacy.cpd.formdata").value = historyValue;
-
-      let cookiesValue = Preferences.get("privacy.cpd.cookies").value;
-      // Keep the pref for the session history in sync with the cookies pref.
-      Preferences.get("privacy.cpd.sessions").value = cookiesValue;
-      Preferences.get("privacy.cpd.offlineApps").value = cookiesValue;
-    }
+    Preferences.get("privacy.cpd.downloads").value = historyValue;
+    Services.prefs.setBoolPref("privacy.cpd.downloads", historyValue);
 
     // Now manually set the prefs from their corresponding preference
     // elements.
