@@ -27,8 +27,6 @@ using mozilla::layers::MaybeVideoBridgeSource from "mozilla/layers/VideoBridgeUt
 using mozilla::layers::RemoteTextureId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::RemoteTextureOwnerId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::GpuProcessTextureId from "mozilla/layers/LayersTypes.h";
-using mozilla::wr::ExternalImageSource from "mozilla/webrender/WebRenderTypes.h";
-using mozilla::wr::ExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 
 namespace mozilla {
 namespace layers {
@@ -180,12 +178,6 @@ namespace layers {
   Handle handle;
 };
 
-[Comparable] struct SurfaceDescriptorExternalImage
-{
-  ExternalImageSource source;
-  ExternalImageId id;
-};
-
 [Comparable] struct SurfaceDescriptorRecorded {
   int64_t textureId;
 };
@@ -209,7 +201,6 @@ namespace layers {
   SurfaceDescriptorRecorded;
   SurfaceDescriptorRemoteTexture;
   SurfaceDescriptorDcompSurface;
-  SurfaceDescriptorExternalImage;
   null_t;
 };
 

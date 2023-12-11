@@ -13,7 +13,6 @@
 #include "mozilla/RefPtr.h"                    // for already_AddRefed
 #include "mozilla/StaticPtr.h"                 // for StaticRefPtr
 #include "mozilla/gfx/UserData.h"              // for UserDataKey
-#include "mozilla/layers/LayersSurfaces.h"     // for SurfaceDescriptor
 #include "mozilla/webrender/WebRenderTypes.h"  // for wr::ImageKey
 #include "nsTArray.h"                          // for AutoTArray
 #include "nsThreadUtils.h"                     // for Runnable
@@ -64,14 +63,6 @@ class SharedSurfacesChild {
    * WebRender. This must be called from the main thread.
    */
   static nsresult Share(gfx::SourceSurface* aSurface, wr::ExternalImageId& aId);
-
-  /**
-   * Request that the surface be mapped into the compositor thread's memory
-   * space, and a valid ExternalImageId be generated for it for use with
-   * WebRender. This must be called from the main thread.
-   */
-  static nsresult Share(gfx::SourceSurface* aSurface,
-                        Maybe<SurfaceDescriptor>& aDesc);
 
   /**
    * Request that the surface be mapped into the compositor thread's memory

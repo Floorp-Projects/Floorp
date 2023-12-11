@@ -22,7 +22,6 @@ namespace layers {
 
 class CompositorBridgeParent;
 class CompositorThreadHolder;
-class SharedSurfacesHolder;
 
 class CompositorManagerParent final : public PCompositorManagerParent {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorManagerParent, final)
@@ -91,7 +90,6 @@ class CompositorManagerParent final : public PCompositorManagerParent {
   void DeferredDestroy();
 
   RefPtr<CompositorThreadHolder> mCompositorThreadHolder;
-  RefPtr<SharedSurfacesHolder> mSharedSurfacesHolder;
   AutoTArray<RefPtr<CompositorBridgeParent>, 1> mPendingCompositorBridges;
   const dom::ContentParentId mContentId;
   const uint32_t mNamespace;

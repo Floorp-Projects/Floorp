@@ -218,13 +218,6 @@ template <>
 struct ParamTraits<mozilla::wr::RenderReasons>
     : public PlainOldDataSerializer<mozilla::wr::RenderReasons> {};
 
-template <>
-struct ParamTraits<mozilla::wr::ExternalImageSource>
-    : public ContiguousEnumSerializer<mozilla::wr::ExternalImageSource,
-                                      mozilla::wr::ExternalImageSource::Unknown,
-                                      mozilla::wr::ExternalImageSource::Last> {
-};
-
 }  // namespace IPC
 
 #endif  // GFX_WEBRENDERMESSAGEUTILS_H
