@@ -2015,6 +2015,10 @@ phc:
       description: Whether to enable PHC
       type: boolean
       setPref: memory.phc.enabled
+    phcMinRamMB:
+      description: The minimum amount of RAM required to enable PHC
+      type: int
+      setPref: memory.phc.min_ram_mb
 
 mailto:
   description: Prefs to control aspects of the mailto handler
