@@ -2303,7 +2303,7 @@
     <!-- Translations feature-->
 
     <!-- Automatic translation preference screen -->
-    <!-- Title of the never translate site preference screen that will appear on the toolbar.-->
+    <!-- Title of the automatic translation preference screen that will appear on the toolbar.-->
     <string name="automatic_translation_toolbar_title_preference">Automatic translation</string>
     <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
     <string name="automatic_translation_header_preference">Select a language to manage ”always translate“ and ”never translate“ preferences.</string>
@@ -2328,10 +2328,10 @@
     <!-- Screen header presenting the never translate site preference feature. It will appear under the toolbar. -->
     <string name="never_translate_site_header_preference">To add a new site: Visit it and select “Never translate this site” from the translation menu.</string>
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
-     The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+             The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_item_list_content_description_preference">Remove %1$s</string>
     <!-- The Delete site dialogue title will appear when the user clicks on a list item.
-    The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+             The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_dialog_title_preference">Delete %1$s?</string>
     <!-- The Delete site dialogue positive button will appear when the user clicks on a list item. The site will be deleted. -->
     <string name="never_translate_site_dialog_confirm_delete_preference">Delete</string>
