@@ -157,11 +157,6 @@ export const Services = withNotImplementedError({
 });
 window.Services = Services;
 
-// Define mock for Localization
-window.Localization = function () {
-  return { formatValueSync: () => "" };
-};
-
 export const windowUtils = withNotImplementedError({
   removeManuallyManagedState: () => {},
   addManuallyManagedState: () => {},
