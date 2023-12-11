@@ -28,6 +28,7 @@ class TaskQueue;
 
 namespace layers {
 
+class SharedSurfacesHolder;
 class TextureData;
 
 class CanvasTranslator final : public gfx::InlineTranslator,
@@ -37,7 +38,8 @@ class CanvasTranslator final : public gfx::InlineTranslator,
 
   friend class PProtocolParent;
 
-  CanvasTranslator(const dom::ContentParentId& aContentId, uint32_t aManagerId);
+  CanvasTranslator(layers::SharedSurfacesHolder* aSharedSurfacesHolder,
+                   const dom::ContentParentId& aContentId, uint32_t aManagerId);
 
   const dom::ContentParentId& GetContentId() const { return mContentId; }
 
@@ -292,6 +294,7 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   void NotifyDeviceChanged();
 
   RefPtr<TaskQueue> mTranslationTaskQueue;
+  RefPtr<SharedSurfacesHolder> mSharedSurfacesHolder;
 #if defined(XP_WIN)
   RefPtr<ID3D11Device> mDevice;
 #endif
