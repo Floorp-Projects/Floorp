@@ -146,7 +146,7 @@ void CompositorManagerParent::BindComplete(bool aIsRoot) {
 }
 
 void CompositorManagerParent::ActorDestroy(ActorDestroyReason aReason) {
-  SharedSurfacesParent::DestroyProcess(OtherPid());
+  SharedSurfacesParent::RemoveAll(mNamespace);
 
   GetCurrentSerialEventTarget()->Dispatch(
       NewRunnableMethod("layers::CompositorManagerParent::DeferredDestroy",
@@ -302,7 +302,7 @@ mozilla::ipc::IPCResult CompositorManagerParent::RecvRemoveSharedSurface(
 mozilla::ipc::IPCResult CompositorManagerParent::RecvReportSharedSurfacesMemory(
     ReportSharedSurfacesMemoryResolver&& aResolver) {
   SharedSurfacesMemoryReport report;
-  SharedSurfacesParent::AccumulateMemoryReport(OtherPid(), report);
+  SharedSurfacesParent::AccumulateMemoryReport(mNamespace, report);
   aResolver(std::move(report));
   return IPC_OK();
 }

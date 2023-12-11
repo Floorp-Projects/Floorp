@@ -52,9 +52,9 @@ class SharedSurfacesParent final {
 
   static void Remove(const wr::ExternalImageId& aId);
 
-  static void DestroyProcess(base::ProcessId aPid);
+  static void RemoveAll(uint32_t aNamespace);
 
-  static void AccumulateMemoryReport(base::ProcessId aPid,
+  static void AccumulateMemoryReport(uint32_t aNamespace,
                                      SharedSurfacesMemoryReport& aReport);
 
   static bool AccumulateMemoryReport(SharedSurfacesMemoryReport& aReport);
