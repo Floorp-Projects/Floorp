@@ -3,11 +3,6 @@
 
 /* eslint-disable mozilla/valid-lazy */
 
-import {
-  CONTEXTUAL_SERVICES_PING_TYPES,
-  PartnerLinkAttribution,
-} from "resource:///modules/PartnerLinkAttribution.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -83,40 +78,6 @@ Object.defineProperty(lazy, "MerinoTestUtils", {
 });
 
 const DEFAULT_CONFIG = {};
-
-const DEFAULT_PING_PAYLOADS = {
-  [CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK]: {
-    advertiser: "testadvertiser",
-    block_id: 1,
-    context_id: () => actual => !!actual,
-    iab_category: "22 - Shopping",
-    improve_suggest_experience_checked: false,
-    match_type: "firefox-suggest",
-    request_id: null,
-    source: "remote-settings",
-  },
-  [CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION]: {
-    advertiser: "testadvertiser",
-    block_id: 1,
-    context_id: () => actual => !!actual,
-    improve_suggest_experience_checked: false,
-    match_type: "firefox-suggest",
-    reporting_url: "https://example.com/click",
-    request_id: null,
-    source: "remote-settings",
-  },
-  [CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION]: {
-    advertiser: "testadvertiser",
-    block_id: 1,
-    context_id: () => actual => !!actual,
-    improve_suggest_experience_checked: false,
-    is_clicked: false,
-    match_type: "firefox-suggest",
-    reporting_url: "https://example.com/impression",
-    request_id: null,
-    source: "remote-settings",
-  },
-};
 
 // The following properties and methods are copied from the test scope to the
 // test utils object so they can be easily accessed. Be careful about assuming a
@@ -639,130 +600,6 @@ class _QuickSuggestTestUtils {
       },
       options
     );
-  }
-
-  /**
-   * Creates a `sinon.sandbox` and `sinon.spy` that can be used to instrument
-   * the quick suggest custom telemetry pings. If `init` was called with a test
-   * scope where `registerCleanupFunction` is defined, the sandbox will
-   * automically be restored at the end of the test.
-   *
-   * @returns {object}
-   *   An object: { sandbox, spy, spyCleanup }
-   *   `spyCleanup` is a cleanup function that should be called if you're in a
-   *   browser chrome test and you did not also call `init`, or if you need to
-   *   remove the spy before the test ends for some other reason. You can ignore
-   *   it otherwise.
-   */
-  createTelemetryPingSpy() {
-    let sandbox = lazy.sinon.createSandbox();
-    let spy = sandbox.spy(
-      PartnerLinkAttribution._pingCentre,
-      "sendStructuredIngestionPing"
-    );
-    let spyCleanup = () => sandbox.restore();
-    this.registerCleanupFunction?.(spyCleanup);
-    return { sandbox, spy, spyCleanup };
-  }
-
-  /**
-   * Asserts that custom telemetry pings are recorded in the order they appear
-   * in the given `pings` array and that no other pings are recorded.
-   *
-   * @param {object} spy
-   *   A `sinon.spy` object. See `createTelemetryPingSpy()`. This method resets
-   *   the spy before returning.
-   * @param {Array} pings
-   *   The expected pings in the order they are expected to be recorded. Each
-   *   item in this array should be an object: `{ type, payload }`
-   *
-   *   {string} type
-   *     The ping's expected type, one of the `CONTEXTUAL_SERVICES_PING_TYPES`
-   *     values.
-   *   {object} payload
-   *     The ping's expected payload. For convenience, you can leave out
-   *     properties whose values are expected to be the default values defined
-   *     in `DEFAULT_PING_PAYLOADS`.
-   */
-  assertPings(spy, pings) {
-    let calls = spy.getCalls();
-    this.Assert.equal(
-      calls.length,
-      pings.length,
-      "Expected number of ping calls"
-    );
-
-    for (let i = 0; i < pings.length; i++) {
-      let ping = pings[i];
-      this.#log(
-        "assertPings",
-        `Checking ping at index ${i}, expected is: ` + JSON.stringify(ping)
-      );
-
-      // Add default properties to the expected payload for any that aren't
-      // already defined.
-      let { type, payload } = ping;
-      let defaultPayload = DEFAULT_PING_PAYLOADS[type];
-      this.Assert.ok(
-        defaultPayload,
-        `Sanity check: Default payload exists for type: ${type}`
-      );
-      payload = { ...defaultPayload, ...payload };
-
-      // Check the endpoint URL.
-      let call = calls[i];
-      let endpointURL = call.args[1];
-      this.Assert.ok(
-        endpointURL.includes(type),
-        `Endpoint URL corresponds to the expected ping type: ${type}`
-      );
-
-      // Check the payload.
-      let actualPayload = call.args[0];
-      this.#assertPingPayload(actualPayload, payload);
-    }
-
-    spy.resetHistory();
-  }
-
-  /**
-   * Helper for checking contextual services ping payloads.
-   *
-   * @param {object} actualPayload
-   *   The actual payload in the ping.
-   * @param {object} expectedPayload
-   *   An object describing the expected payload. Non-function values in this
-   *   object are checked for equality against the corresponding actual payload
-   *   values. Function values are called and passed the corresponding actual
-   *   values and should return true if the actual values are correct.
-   */
-  #assertPingPayload(actualPayload, expectedPayload) {
-    this.#log(
-      "#assertPingPayload",
-      "Checking ping payload. Actual: " +
-        JSON.stringify(actualPayload) +
-        " -- Expected (excluding function properties): " +
-        JSON.stringify(expectedPayload)
-    );
-
-    this.Assert.equal(
-      Object.entries(actualPayload).length,
-      Object.entries(expectedPayload).length,
-      "Payload has expected number of properties"
-    );
-
-    for (let [key, expectedValue] of Object.entries(expectedPayload)) {
-      let actualValue = actualPayload[key];
-      if (typeof expectedValue == "function") {
-        this.Assert.ok(expectedValue(actualValue), "Payload property: " + key);
-      } else {
-        this.Assert.equal(
-          actualValue,
-          expectedValue,
-          "Payload property: " + key
-        );
-      }
-    }
   }
 
   /**

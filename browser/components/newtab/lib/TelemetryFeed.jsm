@@ -82,7 +82,6 @@ const STRUCTURED_INGESTION_ENDPOINT_PREF =
 // List of namespaces for the structured ingestion system.
 // They are defined in https://github.com/mozilla-services/mozilla-pipeline-schemas
 const STRUCTURED_INGESTION_NAMESPACE_AS = "activity-stream";
-const STRUCTURED_INGESTION_NAMESPACE_CS = "contextual-services";
 
 // Used as the missing value for timestamps in the session ping
 const TIMESTAMP_MISSING_VALUE = -1;
@@ -892,24 +891,12 @@ class TelemetryFeed {
       return;
     }
 
-    let payload = {
-      ...data,
-      position: legacyTelemetryPosition,
-      context_id: lazy.contextId,
-    };
-    delete payload.type;
-    this.sendStructuredIngestionEvent(
-      payload,
-      STRUCTURED_INGESTION_NAMESPACE_CS,
-      pingType,
-      "1"
-    );
     Glean.topSites.pingType.set(pingType);
     Glean.topSites.position.set(legacyTelemetryPosition);
     Glean.topSites.source.set(source);
     Glean.topSites.tileId.set(tile_id);
-    if (payload.reporting_url) {
-      Glean.topSites.reportingUrl.set(payload.reporting_url);
+    if (data.reporting_url) {
+      Glean.topSites.reportingUrl.set(data.reporting_url);
     }
     Glean.topSites.advertiser.set(advertiser_name);
     Glean.topSites.contextId.set(lazy.contextId);

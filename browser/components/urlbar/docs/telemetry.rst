@@ -531,82 +531,21 @@ Custom pings for Contextual Services
 ------------------------------------
 
 Contextual Services currently has two features involving the address bar, top
-sites and Firefox Suggest. Top sites telemetry is described below. For Firefox
+sites and Firefox Suggest. Top sites telemetry is sent in the `"top-sites" ping`_,
+which is described in the linked Glean Dictionary page. For Firefox
 Suggest, see the :doc:`firefox-suggest-telemetry` document.
 
-Firefox sends the following `custom pings`_ to record impressions and clicks of
-the top sites feature.
-
-    .. _custom pings: https://docs.telemetry.mozilla.org/cookbooks/new_ping.html#sending-a-custom-ping
-
-Top Sites Impression
-~~~~~~~~~~~~~~~~~~~~
-
-  This records an impression when a sponsored top site is shown.
-
-  - ``context_id``
-    A UUID representing this user. Note that it's not client_id, nor can it be
-    used to link to a client_id.
-  - ``tile_id``
-    A unique identifier for the sponsored top site.
-  - ``source``
-    The browser location where the impression was displayed.
-  - ``position``
-    The placement of the top site (1-based).
-  - ``advertiser``
-    The Name of the advertiser.
-  - ``reporting_url``
-    The reporting URL of the sponsored top site, normally pointing to the ad
-    partner's reporting endpoint.
-  - ``version``
-    Firefox version.
-  - ``release_channel``
-    Firefox release channel.
-  - ``locale``
-    User's current locale.
+    .. _"top-sites" ping: https://mozilla.github.io/glean/book/user/pings/custom.html
 
 Changelog
-  Firefox 108.0
-    The impression ping is sent for Pocket sponsored tiles as well. Pocket sponsored tiles have different values for ``advertiser`` and ``reporting_url`` is null. [Bug 1794022_]
+  Firefox 122.0
+    PingCentre-sent custom pings removed. [Bug `1868580`_]
 
-  Firefox 87.0
-    Introduced. [Non_public_doc_]
+  Firefox 116.0
+    The "top-sites" ping is implemented. [Bug `1836283`_]
 
-.. _Non_public_doc: https://docs.google.com/document/d/1qLb4hUwR8YQj5QnjJtwxQIoDCPLQ6XuAmJPQ6_WmS4E/edit
-.. _1794022: https://bugzilla.mozilla.org/show_bug.cgi?id=1794022
-
-Top Sites Click
-~~~~~~~~~~~~~~~
-
-  This records a click ping when a sponsored top site is clicked by the user.
-
-  - ``context_id``
-    A UUID representing this user. Note that it's not client_id, nor can it be
-    used to link to a client_id.
-  - ``tile_id``
-    A unique identifier for the sponsored top site.
-  - ``source``
-    The browser location where the click was tirggered.
-  - ``position``
-    The placement of the top site (1-based).
-  - ``advertiser``
-    The Name of the advertiser.
-  - ``reporting_url``
-    The reporting URL of the sponsored top site, normally pointing to the ad
-    partner's reporting endpoint.
-  - ``version``
-    Firefox version.
-  - ``release_channel``
-    Firefox release channel.
-  - ``locale``
-    User's current locale.
-
-Changelog
-  Firefox 108.0
-    The click ping is sent for Pocket sponsored tiles as well. Pocket sponsored tiles have different values for ``advertiser`` and ``reporting_url`` is null. [Bug 1794022_]
-
-  Firefox 87.0
-    Introduced. [Non_public_doc_]
+.. _1868580: https://bugzilla.mozilla.org/show_bug.cgi?id=1868580
+.. _1836283: https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
 
 
 Other telemetry relevant to the Address Bar

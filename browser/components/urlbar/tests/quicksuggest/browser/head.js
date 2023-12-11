@@ -263,7 +263,6 @@ async function doImpressionOnlyTest({
   info("Starting impression-only test");
 
   Services.telemetry.clearEvents();
-  let { spy, spyCleanup } = QuickSuggestTestUtils.createTelemetryPingSpy();
 
   let expectedPings = expected.ping ? [expected.ping] : [];
   let gleanPingCount = watchGleanPings(expectedPings);
@@ -278,7 +277,6 @@ async function doImpressionOnlyTest({
       false,
       "Couldn't get suggestion row, stopping impression-only test"
     );
-    await spyCleanup();
     return;
   }
 
@@ -312,7 +310,6 @@ async function doImpressionOnlyTest({
       false,
       "Couldn't get a different selectable row with a URL, stopping impression-only test"
     );
-    await spyCleanup();
     return;
   }
 
@@ -335,9 +332,6 @@ async function doImpressionOnlyTest({
   info("Checking events. Expected: " + JSON.stringify([expected.event]));
   QuickSuggestTestUtils.assertEvents([expected.event]);
 
-  info("Checking pings. Expected: " + JSON.stringify(expectedPings));
-  QuickSuggestTestUtils.assertPings(spy, expectedPings);
-
   Assert.equal(
     expectedPings.length,
     gleanPingCount.value,
@@ -347,7 +341,6 @@ async function doImpressionOnlyTest({
   // Clean up.
   await PlacesUtils.history.clear();
   await UrlbarTestUtils.formHistory.clear();
-  await spyCleanup();
 
   info("Finished impression-only test");
 }
@@ -388,7 +381,6 @@ async function doClickTest({
   info("Starting click test");
 
   Services.telemetry.clearEvents();
-  let { spy, spyCleanup } = QuickSuggestTestUtils.createTelemetryPingSpy();
 
   let expectedPings = expected.pings ?? [];
   let gleanPingCount = watchGleanPings(expectedPings);
@@ -399,7 +391,6 @@ async function doClickTest({
   let row = await validateSuggestionRow(index, suggestion, providerName);
   if (!row) {
     Assert.ok(false, "Couldn't get suggestion row, stopping click test");
-    await spyCleanup();
     return;
   }
 
@@ -419,9 +410,6 @@ async function doClickTest({
   info("Checking events. Expected: " + JSON.stringify([expected.event]));
   QuickSuggestTestUtils.assertEvents([expected.event]);
 
-  info("Checking pings. Expected: " + JSON.stringify(expectedPings));
-  QuickSuggestTestUtils.assertPings(spy, expectedPings);
-
   Assert.equal(
     expectedPings.length,
     gleanPingCount.value,
@@ -429,7 +417,6 @@ async function doClickTest({
   );
 
   await PlacesUtils.history.clear();
-  await spyCleanup();
 
   info("Finished click test");
 }
@@ -475,7 +462,6 @@ async function doCommandTest({
   info("Starting command test: " + JSON.stringify({ commandOrArray }));
 
   Services.telemetry.clearEvents();
-  let { spy, spyCleanup } = QuickSuggestTestUtils.createTelemetryPingSpy();
 
   let expectedPings = expected.pings ?? [];
   let gleanPingCount = watchGleanPings(expectedPings);
@@ -486,7 +472,6 @@ async function doCommandTest({
   let row = await validateSuggestionRow(index, suggestion, providerName);
   if (!row) {
     Assert.ok(false, "Couldn't get suggestion row, stopping click test");
-    await spyCleanup();
     return;
   }
 
@@ -523,9 +508,6 @@ async function doCommandTest({
   info("Checking events. Expected: " + JSON.stringify([expected.event]));
   QuickSuggestTestUtils.assertEvents([expected.event]);
 
-  info("Checking pings. Expected: " + JSON.stringify(expectedPings));
-  QuickSuggestTestUtils.assertPings(spy, expectedPings);
-
   Assert.equal(
     expectedPings.length,
     gleanPingCount.value,
@@ -536,7 +518,6 @@ async function doCommandTest({
     await QuickSuggest.blockedSuggestions.clear();
   }
   await PlacesUtils.history.clear();
-  await spyCleanup();
 
   info("Finished command test: " + JSON.stringify({ commandOrArray }));
 }
