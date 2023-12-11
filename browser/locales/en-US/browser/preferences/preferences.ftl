@@ -992,37 +992,39 @@ sync-connect-another-device = Connect another device
 
 privacy-header = Browser Privacy
 
-## Privacy Section - Logins and Passwords
+## Privacy Section - Passwords
 
-# The search keyword isn't shown to users but is used to find relevant settings in about:preferences.
-pane-privacy-logins-and-passwords-header = Logins and Passwords
-    .searchkeywords = { -lockwise-brand-short-name }
+# "Logins" is the former term for "Passwords". Users should find password settings
+# by searching for the former term "logins". It's not displayed in the UI.
+pane-privacy-passwords-header = Passwords
+    .searchkeywords = logins
 
 # Checkbox to control whether UI is shown to users to save or fill logins/passwords.
-forms-ask-to-save-logins =
-    .label = Ask to save logins and passwords for websites
-    .accesskey = r
+forms-ask-to-save-passwords =
+    .label = Ask to save passwords
+    .accesskey = A
 forms-exceptions =
-    .label = Exceptions…
+    .label = Exceptions
     .accesskey = x
-forms-generate-passwords =
-    .label = Suggest and generate strong passwords
-    .accesskey = u
+forms-suggest-passwords =
+    .label = Suggest strong passwords
+    .accesskey = S
 forms-breach-alerts =
     .label = Show alerts about passwords for breached websites
     .accesskey = b
 forms-breach-alerts-learn-more-link = Learn more
-preferences-relay-integration-checkbox =
+preferences-relay-integration-checkbox2 =
     .label = Suggest { -relay-brand-name } email masks to protect your email address
+    .accesskey = r
 relay-integration-learn-more-link = Learn more
 
 # Checkbox which controls filling saved logins into fields automatically when they appear, in some cases without user interaction.
-forms-fill-logins-and-passwords =
-    .label = Autofill logins and passwords
-    .accesskey = i
-forms-saved-logins =
-    .label = Saved Logins…
-    .accesskey = L
+forms-fill-usernames-and-passwords =
+    .label = Fill usernames and passwords automatically
+    .accesskey = F
+forms-saved-passwords =
+    .label = Saved passwords
+    .accesskey = d
 forms-primary-pw-use =
     .label = Use a Primary Password
     .accesskey = U
