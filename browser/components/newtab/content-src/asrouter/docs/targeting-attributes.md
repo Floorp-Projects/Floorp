@@ -68,7 +68,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [userId](#userid)
 * [userMonthlyActivity](#usermonthlyactivity)
 * [userPrefersReducedMotion](#userprefersreducedmotion)
-* [useEmbeddedMigrationWizard][#useembeddedmigrationwizard]
+* [useEmbeddedMigrationWizard](#useembeddedmigrationwizard)
 * [userPrefs](#userprefs)
 * [usesFirefoxSync](#usesfirefoxsync)
 * [xpinstallEnabled](#xpinstallEnabled)
