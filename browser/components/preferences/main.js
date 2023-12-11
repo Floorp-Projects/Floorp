@@ -423,7 +423,15 @@ var gMainPane = {
       NimbusFeatures.windowsLaunchOnLogin.recordExposureEvent({
         once: true,
       });
-      if (NimbusFeatures.windowsLaunchOnLogin.getVariable("enabled")) {
+      // We do a check here for startWithLastProfile as we could
+      // have disabled the pref for the user before they're ever
+      // exposed to the experiment on a new profile.
+      if (
+        NimbusFeatures.windowsLaunchOnLogin.getVariable("enabled") &&
+        Cc["@mozilla.org/toolkit/profile-service;1"].getService(
+          Ci.nsIToolkitProfileService
+        ).startWithLastProfile
+      ) {
         document.getElementById("windowsLaunchOnLoginBox").hidden = false;
       }
     }
@@ -659,17 +667,8 @@ var gMainPane = {
         let launchOnLoginCheckbox = document.getElementById(
           "windowsLaunchOnLogin"
         );
-        let registryName = WindowsLaunchOnLogin.getLaunchOnLoginRegistryName();
-        WindowsLaunchOnLogin.withLaunchOnLoginRegistryKey(async wrk => {
-          try {
-            // Reflect registry key value in about:preferences
-            launchOnLoginCheckbox.checked = wrk.hasValue(registryName);
-          } catch (e) {
-            // We should only end up here if we fail to open the registry
-            console.error("Failed to open Windows registry", e);
-          }
-        });
-
+        launchOnLoginCheckbox.checked =
+          WindowsLaunchOnLogin.getLaunchOnLoginEnabled();
         let approvedByWindows = WindowsLaunchOnLogin.getLaunchOnLoginApproved();
         launchOnLoginCheckbox.disabled = !approvedByWindows;
         document.getElementById("windowsLaunchOnLoginDisabledBox").hidden =
@@ -1635,7 +1634,7 @@ var gMainPane = {
     startupPref.value = newValue;
   },
 
-  onWindowsLaunchOnLoginChange(event) {
+  async onWindowsLaunchOnLoginChange(event) {
     if (AppConstants.platform !== "win") {
       return;
     }
@@ -1647,8 +1646,9 @@ var gMainPane = {
         true
       );
     } else {
-      // windowsLaunchOnLogin has been unchecked: delete registry key
+      // windowsLaunchOnLogin has been unchecked: delete registry key and shortcut
       WindowsLaunchOnLogin.removeLaunchOnLoginRegistryKey();
+      await WindowsLaunchOnLogin.removeLaunchOnLoginShortcuts();
     }
   },
 

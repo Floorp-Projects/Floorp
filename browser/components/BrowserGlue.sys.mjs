@@ -1237,18 +1237,24 @@ BrowserGlue.prototype = {
         ].getService(Ci.nsIToolkitProfileService);
         if (
           AppConstants.platform == "win" &&
-          Services.prefs.getBoolPref(launchOnLoginPref) &&
           !profileSvc.startWithLastProfile
         ) {
           // If we don't start with last profile, the user
           // likely sees the profile selector on launch.
+          if (Services.prefs.getBoolPref(launchOnLoginPref)) {
+            Services.telemetry.setEventRecordingEnabled(
+              "launch_on_login",
+              true
+            );
+            Services.telemetry.recordEvent(
+              "launch_on_login",
+              "last_profile_disable",
+              "startup"
+            );
+          }
           Services.prefs.setBoolPref(launchOnLoginPref, false);
-          Services.telemetry.setEventRecordingEnabled("launch_on_login", true);
-          Services.telemetry.recordEvent(
-            "launch_on_login",
-            "last_profile_disable:",
-            "startup"
-          );
+          // Only remove registry key, not shortcut here as we can assume
+          // if a user manually created a shortcut they want this behavior.
           await lazy.WindowsLaunchOnLogin.removeLaunchOnLoginRegistryKey();
         }
         break;
