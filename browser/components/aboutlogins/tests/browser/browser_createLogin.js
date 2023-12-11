@@ -243,9 +243,7 @@ add_task(async function test_create_login() {
       let loginItem = Cu.waiveXrays(
         content.document.querySelector("login-item")
       );
-      let editButton = loginItem.shadowRoot
-        .querySelector(".edit-button")
-        .shadowRoot.querySelector("button");
+      let editButton = loginItem.shadowRoot.querySelector("edit-button");
       info("clicking on edit button");
       editButton.click();
     });

@@ -36,9 +36,9 @@ add_task(async function test() {
         );
       });
 
-      let testCases = [[TEST_LOGIN.username, ".copy-username-button"]];
+      let testCases = [[TEST_LOGIN.username, "copy-username-button"]];
       if (OSKeyStoreTestUtils.canTestOSKeyStoreLogin()) {
-        testCases[1] = [TEST_LOGIN.password, ".copy-password-button"];
+        testCases[1] = [TEST_LOGIN.password, "copy-password-button"];
       }
 
       for (let testCase of testCases) {
