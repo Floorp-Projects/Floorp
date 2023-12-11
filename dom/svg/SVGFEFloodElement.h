@@ -38,6 +38,9 @@ class SVGFEFloodElement final : public SVGFEFloodElementBase {
     return mStringAttributes[RESULT];
   }
 
+  bool OutputIsTainted(const nsTArray<bool>& aInputsAreTainted,
+                       nsIPrincipal* aReferencePrincipal) override;
+
   // nsIContent interface
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 

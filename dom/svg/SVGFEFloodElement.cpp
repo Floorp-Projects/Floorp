@@ -37,8 +37,7 @@ FilterPrimitiveDescription SVGFEFloodElement::GetPrimitiveDescription(
     const nsTArray<bool>& aInputsAreTainted,
     nsTArray<RefPtr<SourceSurface>>& aInputImages) {
   FloodAttributes atts;
-  nsIFrame* frame = GetPrimaryFrame();
-  if (frame) {
+  if (const auto* frame = GetPrimaryFrame()) {
     const nsStyleSVGReset* styleSVGReset = frame->Style()->StyleSVGReset();
     sRGBColor color(
         sRGBColor::FromABGR(styleSVGReset->mFloodColor.CalcColor(frame)));
@@ -48,6 +47,18 @@ FilterPrimitiveDescription SVGFEFloodElement::GetPrimitiveDescription(
     atts.mColor = sRGBColor();
   }
   return FilterPrimitiveDescription(AsVariant(std::move(atts)));
+}
+
+bool SVGFEFloodElement::OutputIsTainted(const nsTArray<bool>& aInputsAreTainted,
+                                        nsIPrincipal* aReferencePrincipal) {
+  if (const auto* frame = GetPrimaryFrame()) {
+    if (frame->Style()->StyleSVGReset()->mFloodColor.IsCurrentColor()) {
+      return true;
+    }
+  }
+
+  return SVGFEFloodElementBase::OutputIsTainted(aInputsAreTainted,
+                                                aReferencePrincipal);
 }
 
 //----------------------------------------------------------------------

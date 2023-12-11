@@ -184,6 +184,10 @@ class SVGFELightingElement : public SVGFELightingElementBase {
   SVGAnimatedString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
+
+  bool OutputIsTainted(const nsTArray<bool>& aInputsAreTainted,
+                       nsIPrincipal* aReferencePrincipal) override;
+
   void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) override;
 
  protected:

@@ -41,6 +41,10 @@ class SVGFEDropShadowElement final : public SVGFEDropShadowElementBase {
   SVGAnimatedString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
+
+  bool OutputIsTainted(const nsTArray<bool>& aInputsAreTainted,
+                       nsIPrincipal* aReferencePrincipal) override;
+
   void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) override;
 
   // nsIContent interface
