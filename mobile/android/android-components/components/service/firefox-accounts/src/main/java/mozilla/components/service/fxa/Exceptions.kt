@@ -37,6 +37,12 @@ typealias FxaOriginMismatchException = mozilla.appservices.fxaclient.FxaExceptio
 typealias FxaNoExistingAuthFlow = mozilla.appservices.fxaclient.FxaException.NoExistingAuthFlow
 
 /**
+ * Thrown when a scoped key was missing in the server response when requesting the OLD_SYNC scope.
+ */
+typealias FxaSyncScopedKeyMissingException =
+    mozilla.appservices.fxaclient.FxaException.SyncScopedKeyMissingInServerResponse
+
+/**
  * Thrown when the Rust library hits an unexpected error that isn't a panic.
  * This may indicate library misuse, network errors, etc.
  */

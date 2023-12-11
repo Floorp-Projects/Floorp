@@ -31,6 +31,7 @@ import mozilla.components.service.fxa.AccountOnDisk
 import mozilla.components.service.fxa.AccountStorage
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.FxaDeviceSettingsCache
+import mozilla.components.service.fxa.FxaSyncScopedKeyMissingException
 import mozilla.components.service.fxa.Result
 import mozilla.components.service.fxa.SecureAbove22AccountStorage
 import mozilla.components.service.fxa.ServerConfig
@@ -756,7 +757,23 @@ open class FxaAccountManager(
             return
         }
 
-        val accessToken = account.getAccessToken(SCOPE_SYNC)
+        val accessToken = try {
+            account.getAccessToken(SCOPE_SYNC)
+        } catch (e: FxaSyncScopedKeyMissingException) {
+            // We received an access token, but no sync key which means we can't really use the
+            // connected FxA account.  Throw an exception so that the account transitions to the
+            // `AuthenticationProblem` state.  Things should be fixed when the user re-logs in.
+            //
+            // This used to be thrown when the android-components code noticed the issue in
+            // `asSyncAuthInfo()`.  However, the application-services code now also checks for this
+            // and throws its own error.  To keep the flow above this the same, we catch the
+            // app-services exception and throw the android-components one.
+            //
+            // Eventually, we should remove AccessTokenUnexpectedlyWithoutKey and have the higher
+            // functions catch `FxaSyncScopedKeyMissingException` directly
+            // (https://bugzilla.mozilla.org/show_bug.cgi?id=1869862)
+            throw AccessTokenUnexpectedlyWithoutKey()
+        }
         val tokenServerUrl = if (accessToken != null) {
             // Only try to get the endpoint if we have an access token.
             account.getTokenServerEndpointURL()
