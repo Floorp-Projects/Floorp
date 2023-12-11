@@ -568,6 +568,22 @@ class Context::ActionRunnable final : public nsIRunnable,
     MOZ_DIAGNOSTIC_ASSERT(!mAction);
   }
 
+  void DoStringify(nsACString& aData) override {
+    aData.Append("ActionRunnable ("_ns +
+                 //
+                 "State:"_ns + IntToCString(mState) + kStringifyDelimiter +
+                 //
+                 "Action:"_ns + IntToCString(static_cast<bool>(mAction)) +
+                 kStringifyDelimiter +
+                 // TODO: We might want to have Action::Stringify, too.
+                 //
+                 "Context:"_ns + IntToCString(static_cast<bool>(mContext)) +
+                 kStringifyDelimiter +
+                 // We do not print out mContext as we most probably were called
+                 // by its Stringify.
+                 ")"_ns);
+  }
+
   void Clear() {
     NS_ASSERT_OWNINGTHREAD(ActionRunnable);
     MOZ_DIAGNOSTIC_ASSERT(mContext);
@@ -1123,8 +1139,29 @@ void Context::DoStringify(nsACString& aData) {
       //
       "OrphanedData:"_ns + IntToCString(mOrphanedData) + kStringifyDelimiter +
       //
+      "InitRunnable:"_ns + IntToCString(static_cast<bool>(mInitRunnable)) +
+      kStringifyDelimiter +
+      //
+      "InitAction:"_ns + IntToCString(static_cast<bool>(mInitAction)) +
+      kStringifyDelimiter +
+      //
       "PendingActions:"_ns +
       IntToCString(static_cast<uint64_t>(mPendingActions.Length())) +
+      kStringifyDelimiter +
+      //
+      "ActivityList:"_ns +
+      IntToCString(static_cast<uint64_t>(mActivityList.Length())));
+
+  if (mActivityList.Length() > 0) {
+    aData.Append(kStringifyStartSet);
+    for (auto activity : mActivityList.ForwardRange()) {
+      activity->Stringify(aData);
+      aData.Append(kStringifyDelimiter);
+    }
+    aData.Append(kStringifyEndSet);
+  };
+
+  aData.Append(
       kStringifyDelimiter +
       //
       "DirectoryLock:"_ns + IntToCString(static_cast<bool>(mDirectoryLock)) +
@@ -1138,6 +1175,8 @@ void Context::DoStringify(nsACString& aData) {
     aData.Append(kStringifyDelimiter);
     mNextContext->Stringify(aData);
   };
+
+  aData.Append(kStringifyEndInstance);
 }
 
 }  // namespace mozilla::dom::cache

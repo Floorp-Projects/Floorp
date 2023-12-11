@@ -44,6 +44,8 @@ class StreamList final : public Context::Activity,
   virtual bool MatchesCacheId(CacheId aCacheId) const override;
 
  private:
+  void DoStringify(nsACString& aData) override;
+
   struct Entry {
     explicit Entry(const nsID& aId, nsCOMPtr<nsIInputStream>&& aStream)
         : mId(aId), mStream(std::move(aStream)) {}

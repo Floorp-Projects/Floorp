@@ -105,7 +105,7 @@ class Context final : public SafeRefCounted<Context>, public Stringifyable {
   // interface and register themselves with the AddActivity().  When they are
   // destroyed they must call RemoveActivity().  This allows the Context to
   // cancel any outstanding Activity work when the Context is cancelled.
-  class Activity {
+  class Activity : public Stringifyable {
    public:
     virtual void Cancel() = 0;
     virtual bool MatchesCacheId(CacheId aCacheId) const = 0;
