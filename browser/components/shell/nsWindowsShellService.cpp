@@ -41,7 +41,6 @@
 
 #include <windows.h>
 #include <shellapi.h>
-#include <strsafe.h>
 #include <propvarutil.h>
 #include <propkey.h>
 
@@ -909,103 +908,6 @@ nsWindowsShellService::CreateShortcut(
       NS_DISPATCH_EVENT_MAY_BLOCK);
 
   promise.forget(aPromise);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindowsShellService::GetLaunchOnLoginShortcuts(
-    nsTArray<nsString>& aShortcutPaths) {
-  aShortcutPaths.Clear();
-
-  // Get AppData\\Roaming folder using a known folder ID
-  RefPtr<IKnownFolderManager> fManager;
-  RefPtr<IKnownFolder> roamingAppData;
-  LPWSTR roamingAppDataW;
-  nsString roamingAppDataNS;
-  HRESULT hr =
-      CoCreateInstance(CLSID_KnownFolderManager, nullptr, CLSCTX_INPROC_SERVER,
-                       IID_IKnownFolderManager, getter_AddRefs(fManager));
-  if (FAILED(hr)) {
-    return NS_ERROR_ABORT;
-  }
-  fManager->GetFolder(FOLDERID_RoamingAppData,
-                      roamingAppData.StartAssignment());
-  hr = roamingAppData->GetPath(0, &roamingAppDataW);
-  if (FAILED(hr)) {
-    return NS_ERROR_FILE_NOT_FOUND;
-  }
-
-  // Append startup folder to AppData\\Roaming
-  roamingAppDataNS.Assign(roamingAppDataW);
-  CoTaskMemFree(roamingAppDataW);
-  nsString startupFolder =
-      roamingAppDataNS +
-      u"\\Microsoft\\Windows\\Start Menu\\Programs\\Startup"_ns;
-  nsString startupFolderWildcard = startupFolder + u"\\*.lnk"_ns;
-
-  // Get known path for binary file for later comparison with shortcuts.
-  // Returns lowercase file path which should be fine for Windows as all
-  // directories and files are case-insensitive by default.
-  RefPtr<nsIFile> binFile;
-  nsString binPath;
-  nsresult rv = XRE_GetBinaryPath(binFile.StartAssignment());
-  if (FAILED(rv)) {
-    return NS_ERROR_FAILURE;
-  }
-  rv = binFile->GetPath(binPath);
-  if (FAILED(rv)) {
-    return NS_ERROR_FILE_UNRECOGNIZED_PATH;
-  }
-
-  // Check for if first file exists with a shortcut extension (.lnk)
-  WIN32_FIND_DATAW ffd;
-  HANDLE fileHandle = INVALID_HANDLE_VALUE;
-  fileHandle = FindFirstFileW(startupFolderWildcard.get(), &ffd);
-  if (fileHandle == INVALID_HANDLE_VALUE) {
-    // This means that no files were found in the folder which
-    // doesn't imply an error. Most of the time the user won't
-    // have any shortcuts here.
-    return NS_OK;
-  }
-
-  do {
-    // Extract shortcut target path from every
-    // shortcut in the startup folder.
-    nsString fileName(ffd.cFileName);
-    RefPtr<IShellLinkW> link;
-    RefPtr<IPersistFile> ppf;
-    nsString target;
-    target.SetLength(MAX_PATH);
-    CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
-                     IID_IShellLinkW, getter_AddRefs(link));
-    hr = link->QueryInterface(IID_IPersistFile, getter_AddRefs(ppf));
-    if (NS_WARN_IF(FAILED(hr))) {
-      continue;
-    }
-    nsString filePath = startupFolder + u"\\"_ns + fileName;
-    hr = ppf->Load(filePath.get(), STGM_READ);
-    if (NS_WARN_IF(FAILED(hr))) {
-      continue;
-    }
-    hr = link->Resolve(nullptr, SLR_NO_UI);
-    if (NS_WARN_IF(FAILED(hr))) {
-      continue;
-    }
-    hr = link->GetPath(target.get(), MAX_PATH, nullptr, 0);
-    if (NS_WARN_IF(FAILED(hr))) {
-      continue;
-    }
-
-    // If shortcut target matches known binary file value
-    // then add the path to the shortcut as a valid
-    // startup shortcut. This has to be a substring search as
-    // the user could have added unknown command line arguments
-    // to the shortcut.
-    if (_wcsnicmp(target.get(), binPath.get(), binPath.Length()) == 0) {
-      aShortcutPaths.AppendElement(filePath);
-    }
-  } while (FindNextFile(fileHandle, &ffd) != 0);
-  FindClose(fileHandle);
   return NS_OK;
 }
 
