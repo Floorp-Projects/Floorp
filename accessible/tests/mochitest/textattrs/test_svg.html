@@ -25,6 +25,9 @@
       const aDefAttrs = buildDefaultTextAttrs(a, "10pt");
       testTextAttrs(a, 0, {}, aDefAttrs, 0, 1);
 
+      const f3 = getNode("f3");
+      testTextAttrs(f3, 0, {}, defAttrs, 0, 2);
+
       SimpleTest.finish();
     }
 
@@ -46,6 +49,7 @@
       <foreignobject>f2</foreignobject>
     </g>
     <text><a href="#" id="a">a</a></text>
+    <foreignobject id="f3" role="button"><body>f3</body></foreignobject>
   </svg>
 
 </body>

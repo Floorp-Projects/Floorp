@@ -1409,11 +1409,12 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
     // accessibility property. If it's interesting we need it in the
     // accessibility hierarchy so that events or other accessibles can point to
     // it, or so that it can hold a state, etc.
-    if (content->IsHTMLElement() || content->IsMathMLElement()) {
-      // Interesting HTML/MathML container which may have selectable text and/or
-      // embedded objects
+    if (content->IsHTMLElement() || content->IsMathMLElement() ||
+        content->IsSVGElement(nsGkAtoms::foreignObject)) {
+      // Interesting container which may have selectable text and/or embedded
+      // objects.
       newAcc = new HyperTextAccessible(content, document);
-    } else {  // XUL, SVG, etc.
+    } else {  // XUL, other SVG, etc.
       // Interesting generic non-HTML container
       newAcc = new AccessibleWrap(content, document);
     }
