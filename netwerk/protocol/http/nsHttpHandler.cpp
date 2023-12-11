@@ -677,7 +677,8 @@ nsresult nsHttpHandler::GetIOService(nsIIOService** result) {
 }
 
 void nsHttpHandler::NotifyObservers(nsIChannel* chan, const char* event) {
-  LOG(("nsHttpHandler::NotifyObservers [chan=%p event=\"%s\"]\n", chan, event));
+  LOG(("nsHttpHandler::NotifyObservers [this=%p chan=%p event=\"%s\"]\n", this,
+       chan, event));
   nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
   if (obsService) obsService->NotifyObservers(chan, event, nullptr);
 }
