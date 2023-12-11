@@ -4512,8 +4512,7 @@ static nsresult parsePrefData(const nsCString& aData, PrefValueKind aKind) {
   return NS_OK;
 }
 
-static int pref_CompareFileNames(nsIFile* aFile1, nsIFile* aFile2,
-                                 void* /* unused */) {
+static int pref_CompareFileNames(nsIFile* aFile1, nsIFile* aFile2) {
   nsAutoCString filename1, filename2;
   aFile1->GetNativeLeafName(filename1);
   aFile2->GetNativeLeafName(filename2);
@@ -4568,7 +4567,7 @@ static nsresult pref_LoadPrefsInDir(nsIFile* aDir) {
     return rv;
   }
 
-  prefFiles.Sort(pref_CompareFileNames, nullptr);
+  prefFiles.Sort(pref_CompareFileNames);
 
   uint32_t arrayCount = prefFiles.Count();
   uint32_t i;
