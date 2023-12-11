@@ -333,6 +333,7 @@ export default class FxviewTabList extends MozLitElement {
 
   #emptySearchResultsTemplate() {
     return html` <fxview-empty-state
+      class="search-results"
       headerLabel="firefoxview-search-results-empty"
       .headerArgs=${{ query: this.searchQuery }}
       isInnerCard
