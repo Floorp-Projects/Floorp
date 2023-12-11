@@ -229,7 +229,7 @@ SMILTimedElement::SMILTimedElement()
       mDeleteCount(0),
       mUpdateIntervalRecursionDepth(0) {
   mSimpleDur.SetIndefinite();
-  mMin.SetMillis(0L);
+  mMin = SMILTimeValue::Zero();
   mMax.SetIndefinite();
 }
 
@@ -854,8 +854,9 @@ nsresult SMILTimedElement::SetSimpleDuration(const nsAString& aDurSpec) {
   if (dur.EqualsLiteral("media") || dur.EqualsLiteral("indefinite")) {
     duration.SetIndefinite();
   } else {
-    if (!SMILParserUtils::ParseClockValue(dur, &duration) ||
-        duration.GetMillis() == 0L) {
+    if (!SMILParserUtils::ParseClockValue(
+            dur, SMILTimeValue::Rounding::EnsureNonZero, &duration) ||
+        duration.IsZero()) {
       mSimpleDur.SetIndefinite();
       return NS_ERROR_FAILURE;
     }
@@ -882,10 +883,11 @@ nsresult SMILTimedElement::SetMin(const nsAString& aMinSpec) {
   const nsAString& min = SMILParserUtils::TrimWhitespace(aMinSpec);
 
   if (min.EqualsLiteral("media")) {
-    duration.SetMillis(0L);
+    duration = SMILTimeValue::Zero();
   } else {
-    if (!SMILParserUtils::ParseClockValue(min, &duration)) {
-      mMin.SetMillis(0L);
+    if (!SMILParserUtils::ParseClockValue(min, SMILTimeValue::Rounding::Nearest,
+                                          &duration)) {
+      mMin = SMILTimeValue::Zero();
       return NS_ERROR_FAILURE;
     }
   }
@@ -898,7 +900,7 @@ nsresult SMILTimedElement::SetMin(const nsAString& aMinSpec) {
 }
 
 void SMILTimedElement::UnsetMin() {
-  mMin.SetMillis(0L);
+  mMin = SMILTimeValue::Zero();
   UpdateCurrentInterval();
 }
 
@@ -912,8 +914,9 @@ nsresult SMILTimedElement::SetMax(const nsAString& aMaxSpec) {
   if (max.EqualsLiteral("media") || max.EqualsLiteral("indefinite")) {
     duration.SetIndefinite();
   } else {
-    if (!SMILParserUtils::ParseClockValue(max, &duration) ||
-        duration.GetMillis() == 0L) {
+    if (!SMILParserUtils::ParseClockValue(
+            max, SMILTimeValue::Rounding::EnsureNonZero, &duration) ||
+        duration.IsZero()) {
       mMax.SetIndefinite();
       return NS_ERROR_FAILURE;
     }
@@ -974,7 +977,8 @@ nsresult SMILTimedElement::SetRepeatDur(const nsAString& aRepeatDurSpec) {
   if (repeatDur.EqualsLiteral("indefinite")) {
     duration.SetIndefinite();
   } else {
-    if (!SMILParserUtils::ParseClockValue(repeatDur, &duration)) {
+    if (!SMILParserUtils::ParseClockValue(
+            repeatDur, SMILTimeValue::Rounding::EnsureNonZero, &duration)) {
       mRepeatDur.SetUnresolved();
       return NS_ERROR_FAILURE;
     }
@@ -1749,7 +1753,7 @@ SMILTime SMILTimedElement::ActiveTimeToSimpleTime(SMILTime aActiveTime,
   // Note that a negative aActiveTime will give us a negative value for
   // aRepeatIteration, which is bad because aRepeatIteration is unsigned
 
-  if (mSimpleDur.IsIndefinite() || mSimpleDur.GetMillis() == 0L) {
+  if (mSimpleDur.IsIndefinite() || mSimpleDur.IsZero()) {
     aRepeatIteration = 0;
     result = aActiveTime;
   } else {
