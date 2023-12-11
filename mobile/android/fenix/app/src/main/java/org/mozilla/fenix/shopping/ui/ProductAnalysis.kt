@@ -36,6 +36,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CollectionInfo
+import androidx.compose.ui.semantics.CollectionItemInfo
+import androidx.compose.ui.semantics.collectionInfo
+import androidx.compose.ui.semantics.collectionItemInfo
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -311,19 +315,52 @@ private fun HighlightsCard(
                     .fillMaxWidth()
                     .animateContentSize(animationSpec = spring()),
             ) {
-                highlightsToDisplay.forEach { highlight ->
-                    HighlightTitle(highlight.key)
+                highlightsToDisplay.onEachIndexed { indexHighlightTitle, highlight ->
+                    Box(
+                        modifier = Modifier.semantics {
+                            collectionInfo = CollectionInfo(rowCount = highlightsToDisplay.size, columnCount = 1)
+                        },
+                    ) {
+                        HighlightTitle(
+                            highlightType = highlight.key,
+                            modifier = Modifier.semantics {
+                                collectionItemInfo = CollectionItemInfo(
+                                    rowIndex = indexHighlightTitle,
+                                    rowSpan = 1,
+                                    columnIndex = 1,
+                                    columnSpan = 1,
+                                )
+                            },
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    highlight.value.forEach {
-                        HighlightText(it)
+                    Column(
+                        modifier = Modifier.semantics {
+                            collectionInfo =
+                                CollectionInfo(rowCount = highlight.value.size, columnCount = 1)
+                        },
+                    ) {
+                        highlight.value.onEachIndexed { index, text ->
+                            HighlightText(
+                                text = text,
+                                modifier = Modifier.semantics {
+                                    collectionItemInfo = CollectionItemInfo(
+                                        rowIndex = index,
+                                        rowSpan = 1,
+                                        columnIndex = 1,
+                                        columnSpan = 1,
+                                    )
+                                },
+                            )
 
-                        Spacer(modifier = Modifier.height(4.dp))
-                    }
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
 
-                    if (highlightsToDisplay.entries.last().key != highlight.key) {
-                        Spacer(modifier = Modifier.height(16.dp))
+                        if (highlightsToDisplay.entries.last().key != highlight.key) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
                     }
                 }
             }
@@ -370,9 +407,13 @@ private fun HighlightsCard(
 }
 
 @Composable
-private fun HighlightText(text: String) {
+private fun HighlightText(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier,
     ) {
         Spacer(modifier = Modifier.width(32.dp))
 
@@ -385,9 +426,13 @@ private fun HighlightText(text: String) {
 }
 
 @Composable
-private fun HighlightTitle(highlightType: HighlightType) {
+private fun HighlightTitle(
+    highlightType: HighlightType,
+    modifier: Modifier = Modifier,
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier,
     ) {
         val highlight = remember(highlightType) { highlightType.toHighlight() }
 
