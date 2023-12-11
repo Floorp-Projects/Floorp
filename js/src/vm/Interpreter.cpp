@@ -4477,7 +4477,6 @@ JSObject* js::BindVarOperation(JSContext* cx, JSObject* envChain) {
 
 JSObject* js::ImportMetaOperation(JSContext* cx, HandleScript script) {
   RootedObject module(cx, GetModuleObjectForScript(script));
-  MOZ_ASSERT(module);
   return GetOrCreateModuleMetaObject(cx, module);
 }
 

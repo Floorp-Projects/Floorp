@@ -6284,7 +6284,6 @@ bool BaselineCompilerCodeGen::emit_ImportMeta() {
   // calling GetModuleObjectForScript at compile-time.
 
   Rooted<ModuleObject*> module(cx, GetModuleObjectForScript(handler.script()));
-  MOZ_ASSERT(module);
 
   frame.syncStack(0);
 
