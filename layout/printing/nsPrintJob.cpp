@@ -1384,8 +1384,8 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
       }
     }
 
-    const ServoStyleSet::PageSizeAndOrientation sizeAndOrientation =
-        presShell->StyleSet()->GetDefaultPageSizeAndOrientation();
+    const ServoStyleSet::FirstPageSizeAndOrientation sizeAndOrientation =
+        presShell->StyleSet()->GetFirstPageSizeAndOrientation(firstPageName);
     // XXX Should we enable this for known save-to-PDF pseudo-printers once
     // bug 1826301 is fixed?
     if (mPrintSettings->GetOutputFormat() ==
