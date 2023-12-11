@@ -15,6 +15,16 @@ ChromeUtils.defineESModuleGetters(lazy, {
   LabelUtils: "resource://gre/modules/shared/LabelUtils.sys.mjs",
 });
 
+ChromeUtils.defineLazyGetter(
+  lazy,
+  "l10n",
+  () =>
+    new Localization(
+      ["toolkit/formautofill/formAutofill.ftl", "branding/brand.ftl"],
+      true
+    )
+);
+
 const { FIELD_STATES } = FormAutofillUtils;
 
 export class FormAutofillSection {
@@ -34,14 +44,21 @@ export class FormAutofillSection {
     this.filledRecordGUID = null;
 
     ChromeUtils.defineLazyGetter(this, "reauthPasswordPromptMessage", () => {
-      const brandShortName =
-        FormAutofillUtils.brandBundle.GetStringFromName("brandShortName");
       // The string name for Mac is changed because the value needed updating.
-      const platform = AppConstants.platform.replace("macosx", "macos");
-      return FormAutofillUtils.stringBundle.formatStringFromName(
-        `useCreditCardPasswordPrompt.${platform}`,
-        [brandShortName]
-      );
+      const platform = AppConstants.platform;
+      let messageID;
+
+      switch (platform) {
+        case "win":
+          messageID = "autofill-use-payment-method-os-prompt-windows";
+          break;
+        case "macosx":
+          messageID = "autofill-use-payment-method-os-prompt-macos";
+          break;
+        default:
+          messageID = "autofill-use-payment-method-os-prompt-other";
+      }
+      return lazy.l10n.formatValueSync(messageID);
     });
 
     ChromeUtils.defineLazyGetter(this, "log", () =>
@@ -1276,8 +1293,7 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
    * @override
    */
   async prepareFillingProfile(profile) {
-    // Prompt the OS login dialog to get the decrypted credit
-    // card number.
+    // Prompt the OS login dialog to get the decrypted credit card number.
     if (profile["cc-number-encrypted"]) {
       let decrypted = await this._decrypt(
         profile["cc-number-encrypted"],
