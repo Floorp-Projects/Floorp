@@ -4399,12 +4399,14 @@ int add_dir_entries(const NS_tchar* dirpath, ActionList* list) {
         rv = add_dir_entries(foundpath, list);
         if (rv) {
           LOG(("add_dir_entries error: " LOG_S ", err: %d", foundpath, rv));
+          FindClose(hFindFile);
           return rv;
         }
       } else {
         // Add the file to be removed to the ActionList.
         NS_tchar* quotedpath = get_quoted_path(foundpath);
         if (!quotedpath) {
+          FindClose(hFindFile);
           return PARSE_ERROR;
         }
 
@@ -4414,6 +4416,7 @@ int add_dir_entries(const NS_tchar* dirpath, ActionList* list) {
           LOG(("add_dir_entries Parse error on recurse: " LOG_S ", err: %d",
                quotedpath, rv));
           free(quotedpath);
+          FindClose(hFindFile);
           return rv;
         }
         free(quotedpath);
