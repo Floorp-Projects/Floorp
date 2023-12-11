@@ -728,10 +728,8 @@ xul|label[disabled="true"] {
   color: inherit;
 }
 
-html|input[type="checkbox"]:disabled,
-html|input[type="radio"]:disabled,
-xul|checkbox[disabled="true"],
-xul|radio[disabled="true"],
+xul|checkbox[disabled="true"] > .checkbox-label-box,
+xul|radio[disabled="true"] > .radio-label-box,
 xul|label[disabled="true"] {
   opacity: 0.5;
 }
