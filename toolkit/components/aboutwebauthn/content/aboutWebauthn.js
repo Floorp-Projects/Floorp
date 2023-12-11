@@ -220,12 +220,21 @@ var AboutWebauthnManagerJS = {
         row.insertCell(0).appendChild(key_node);
         row.insertCell(1).appendChild(value_node);
         var delete_button = document.createElement("button");
+        delete_button.classList.add("delete-button");
         delete_button.classList.add("credentials-button");
-        // TODO: Garbage-can symbol instead? See https://bugzilla.mozilla.org/show_bug.cgi?id=1859727
-        delete_button.setAttribute(
+        let garbage_icon = document.createElement("img");
+        garbage_icon.setAttribute(
+          "src",
+          "chrome://global/skin/icons/delete.svg"
+        );
+        garbage_icon.classList.add("delete-icon");
+        delete_button.appendChild(garbage_icon);
+        let delete_text = document.createElement("span");
+        delete_text.setAttribute(
           "data-l10n-id",
           "about-webauthn-delete-button"
         );
+        delete_button.appendChild(delete_text);
         delete_button.addEventListener("click", function () {
           let context = document.getElementById("confirmation-context");
           context.textContent = key_text + " - " + value_text;
