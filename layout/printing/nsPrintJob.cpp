@@ -1374,8 +1374,18 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
 
   RefPtr<PresShell> presShell = aPO->mPresShell;
   {
-    const ServoStyleSet::PageSizeAndOrientation sizeAndOrientation =
-        presShell->StyleSet()->GetDefaultPageSizeAndOrientation();
+    // Get the initial page name. Even though we haven't done any page-name
+    // fragmentation (that happens during block reflow), this will still be
+    // valid to find the first page's name.
+    const nsAtom* firstPageName = nsGkAtoms::_empty;
+    if (const Element* const rootElement = aPO->mDocument->GetRootElement()) {
+      if (const nsIFrame* const rootFrame = rootElement->GetPrimaryFrame()) {
+        firstPageName = rootFrame->ComputePageValue();
+      }
+    }
+
+    const ServoStyleSet::FirstPageSizeAndOrientation sizeAndOrientation =
+        presShell->StyleSet()->GetFirstPageSizeAndOrientation(firstPageName);
     // XXX Should we enable this for known save-to-PDF pseudo-printers once
     // bug 1826301 is fixed?
     if (mPrintSettings->GetOutputFormat() ==
