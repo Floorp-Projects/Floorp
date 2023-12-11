@@ -13260,17 +13260,18 @@ void NewArrayIRGenerator::trackAttached(const char* name) {
 }
 
 // Allocation sites are usually created during baseline compilation, but we also
-// need to created them when an IC stub is added to a baseline compiled script
+// need to create them when an IC stub is added to a baseline compiled script
 // and when trial inlining.
 static gc::AllocSite* MaybeCreateAllocSite(jsbytecode* pc,
                                            BaselineFrame* frame) {
   MOZ_ASSERT(BytecodeOpCanHaveAllocSite(JSOp(*pc)));
 
   JSScript* outerScript = frame->outerScript();
-  bool inInterpreter = frame->runningInInterpreter();
+  bool hasBaselineScript = outerScript->hasBaselineScript();
   bool isInlined = frame->icScript()->isInlined();
 
-  if (inInterpreter && !isInlined) {
+  if (!hasBaselineScript && !isInlined) {
+    MOZ_ASSERT(frame->runningInInterpreter());
     return outerScript->zone()->unknownAllocSite(JS::TraceKind::Object);
   }
 
