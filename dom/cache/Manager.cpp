@@ -24,6 +24,7 @@
 #include "mozilla/dom/cache/Types.h"
 #include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/ClientImpl.h"
+#include "mozilla/dom/quota/StringifyUtils.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozStorageHelper.h"
@@ -387,32 +388,15 @@ class Manager::Factory {
 
     if (sFactory && !sFactory->mManagerList.IsEmpty()) {
       data.Append(
-          "Managers: "_ns +
+          "ManagerList: "_ns +
           IntToCString(static_cast<uint64_t>(sFactory->mManagerList.Length())) +
-          " ("_ns);
+          kStringifyStartSet);
 
       for (const auto& manager : sFactory->mManagerList.NonObservingRange()) {
-        data.AppendLiteral("[");
-        data.Append(quota::AnonymizedOriginString(
-            manager->GetManagerId().QuotaOrigin()));
-
-        data.AppendLiteral(": ");
-
-        data.Append(manager->GetState() == State::Open ? "Open"_ns
-                                                       : "Closing"_ns);
-        data.AppendLiteral(", ");
-
-        if (manager->mContext) {
-          manager->mContext->Stringify(data);
-        } else {
-          data.AppendLiteral("No Context");
-        }
-        data.AppendLiteral(", ");
-
-        data.AppendLiteral("]");
+        manager->Stringify(data);
       }
 
-      data.AppendLiteral(" ) ");
+      data.Append(kStringifyEndSet);
       if (sFactory->mPotentiallyUnreleasedCSCP.Length() > 0) {
         data.Append(
             "There have been CSCP instances whose"
@@ -2196,6 +2180,25 @@ void Manager::MaybeAllowContextToClose() {
 
     pinnedContext->AllowToClose();
   }
+}
+
+void Manager::DoStringify(nsACString& aData) {
+  aData.Append("Manager "_ns + kStringifyStartInstance +
+               //
+               "Origin:"_ns +
+               quota::AnonymizedOriginString(GetManagerId().QuotaOrigin()) +
+               kStringifyDelimiter +
+               //
+               "State:"_ns + IntToCString(mState) + kStringifyDelimiter);
+
+  aData.AppendLiteral("Context:");
+  if (mContext) {
+    mContext->Stringify(aData);
+  } else {
+    aData.AppendLiteral("0");
+  }
+
+  aData.Append(kStringifyEndInstance);
 }
 
 }  // namespace mozilla::dom::cache
