@@ -3985,9 +3985,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
    * **browser cycles**: 1
-   * **browsertime args**: --browsertime.speedometer_iterations=5
    * **cold**: true
-   * **custom data**: true
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile entries**: 14000000
@@ -3998,12 +3996,10 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **page timeout**: 600000
    * **repository**: https://github.com/WebKit/Speedometer
    * **repository revision**: abea7b89b97028d61e8f0536cd92bba4fe5fc17a
-   * **submetric summary method**: mean
    * **subtest lower is better**: true
-   * **subtest name filters**: tests/,s3/
    * **subtest unit**: ms
+   * **support class**: speedometer3.py
    * **test script**: speedometer3.js
-   * **test summary**: flatten
    * **test url**: `<http://\<host\>:\<port\>/index.html>`__
    * **type**: benchmark
    * **unit**: score
@@ -4319,9 +4315,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: fenix, geckoview, refbrow, chrome-m, cstm-car-m
    * **browser cycles**: 1
-   * **browsertime args**: --browsertime.speedometer_iterations=5
    * **cold**: true
-   * **custom data**: true
    * **expected**: pass
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
@@ -4331,12 +4325,10 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **page timeout**: 420000
    * **repository**: https://github.com/WebKit/Speedometer
    * **repository revision**: abea7b89b97028d61e8f0536cd92bba4fe5fc17a
-   * **submetric summary method**: mean
    * **subtest lower is better**: true
-   * **subtest name filters**: tests/,s3/
    * **subtest unit**: ms
+   * **support class**: speedometer3.py
    * **test script**: speedometer3.js
-   * **test summary**: flatten
    * **test url**: `<http://\<host\>:\<port\>/index.html>`__
    * **type**: benchmark
    * **unit**: score
