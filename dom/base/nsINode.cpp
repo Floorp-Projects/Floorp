@@ -3625,7 +3625,7 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
       !nodeInfo->GetDocument()->IsStaticDocument()) {
     // Clone the Shadow DOM
     ShadowRoot* originalShadowRoot = aNode->AsElement()->GetShadowRoot();
-    if (originalShadowRoot && originalShadowRoot->IsClonable()) {
+    if (originalShadowRoot && originalShadowRoot->Clonable()) {
       ShadowRootInit init;
       init.mMode = originalShadowRoot->Mode();
       init.mDelegatesFocus = originalShadowRoot->DelegatesFocus();

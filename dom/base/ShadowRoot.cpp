@@ -51,8 +51,8 @@ NS_IMPL_RELEASE_INHERITED(ShadowRoot, DocumentFragment)
 
 ShadowRoot::ShadowRoot(Element* aElement, ShadowRootMode aMode,
                        Element::DelegatesFocus aDelegatesFocus,
-                       SlotAssignmentMode aSlotAssignment, Clonable aIsClonable,
-                       Declarative aDeclarative,
+                       SlotAssignmentMode aSlotAssignment,
+                       IsClonable aIsClonable, Declarative aDeclarative,
                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : DocumentFragment(std::move(aNodeInfo)),
       DocumentOrShadowRoot(this),

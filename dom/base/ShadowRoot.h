@@ -43,7 +43,7 @@ class ShadowRoot final : public DocumentFragment, public DocumentOrShadowRoot {
   friend class DocumentOrShadowRoot;
 
   using Declarative = Element::ShadowRootDeclarative;
-  using Clonable = Element::ShadowRootClonable;
+  using IsClonable = Element::ShadowRootClonable;
 
  public:
   NS_IMPL_FROMNODE_HELPER(ShadowRoot, IsShadowRoot());
@@ -53,7 +53,7 @@ class ShadowRoot final : public DocumentFragment, public DocumentOrShadowRoot {
 
   ShadowRoot(Element* aElement, ShadowRootMode aMode,
              Element::DelegatesFocus aDelegatesFocus,
-             SlotAssignmentMode aSlotAssignment, Clonable aClonable,
+             SlotAssignmentMode aSlotAssignment, IsClonable aClonable,
              Declarative aDeclarative,
              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
@@ -81,6 +81,7 @@ class ShadowRoot final : public DocumentFragment, public DocumentOrShadowRoot {
     return mDelegatesFocus == Element::DelegatesFocus::Yes;
   }
   SlotAssignmentMode SlotAssignment() const { return mSlotAssignment; }
+  bool Clonable() const { return mIsClonable == IsClonable::Yes; }
   bool IsClosed() const { return mMode == ShadowRootMode::Closed; }
 
   void RemoveSheetFromStyles(StyleSheet&);
@@ -243,8 +244,6 @@ class ShadowRoot final : public DocumentFragment, public DocumentOrShadowRoot {
     mIsDeclarative = aIsDeclarative ? Declarative::Yes : Declarative::No;
   }
 
-  bool IsClonable() const { return mIsClonable == Clonable::Yes; }
-
   MOZ_CAN_RUN_SCRIPT
   void SetHTMLUnsafe(const nsAString& aHTML);
 
@@ -289,7 +288,7 @@ class ShadowRoot final : public DocumentFragment, public DocumentOrShadowRoot {
   Declarative mIsDeclarative;
 
   // https://dom.spec.whatwg.org/#shadowroot-clonable
-  Clonable mIsClonable;
+  const IsClonable mIsClonable;
 
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };
