@@ -1,5 +1,3 @@
-// |jit-test| --enable-arraybuffer-transfer; skip-if: !ArrayBuffer.prototype.transfer
-
 const gb = 1 * 1024 * 1024 * 1024;
 
 const smallByteLength = 1024;
