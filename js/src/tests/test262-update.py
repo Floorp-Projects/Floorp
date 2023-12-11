@@ -41,6 +41,7 @@ FEATURE_CHECK_NEEDED = {
     "decorators": "!(this.hasOwnProperty('getBuildConfiguration')&&getBuildConfiguration('decorators'))",  # Bug 1435869
     "iterator-helpers": "!this.hasOwnProperty('Iterator')",  # Bug 1568906
     "arraybuffer-transfer": "!ArrayBuffer.prototype.transfer",  # Bug 1519163
+    "symbols-as-weakmap-keys": "!(this.hasOwnProperty('getBuildConfiguration')&&!getBuildConfiguration('release_or_beta'))",
 }
 RELEASE_OR_BETA = set([])
 SHELL_OPTIONS = {

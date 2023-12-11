@@ -104,6 +104,7 @@ BEGIN_TEST(testWeakMap_setWeakMapEntry_invalid_key) {
 }
 END_TEST(testWeakMap_setWeakMapEntry_invalid_key)
 
+#ifdef NIGHTLY_BUILD
 BEGIN_TEST(testWeakMap_basicOperations_symbols_as_keys) {
   JS::RootedObject map(cx, JS::NewWeakMapObject(cx));
   CHECK(IsWeakMapObject(map));
@@ -141,6 +142,7 @@ BEGIN_TEST(testWeakMap_basicOperations_symbols_as_keys) {
   return true;
 }
 END_TEST(testWeakMap_basicOperations_symbols_as_keys)
+#endif
 
 BEGIN_TEST(testWeakMap_keyDelegates) {
   AutoLeaveZeal nozeal(cx);
