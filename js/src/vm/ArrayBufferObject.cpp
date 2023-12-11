@@ -348,19 +348,15 @@ static const JSPropertySpec arraybuffer_properties[] = {
 
 static const JSFunctionSpec arraybuffer_proto_functions[] = {
     JS_SELF_HOSTED_FN("slice", "ArrayBufferSlice", 2, 0),
-#ifdef NIGHTLY_BUILD
     JS_FN("transfer", ArrayBufferObject::transfer, 0, 0),
     JS_FN("transferToFixedLength", ArrayBufferObject::transferToFixedLength, 0,
           0),
-#endif
     JS_FS_END,
 };
 
 static const JSPropertySpec arraybuffer_proto_properties[] = {
     JS_PSG("byteLength", ArrayBufferObject::byteLengthGetter, 0),
-#ifdef NIGHTLY_BUILD
     JS_PSG("detached", ArrayBufferObject::detachedGetter, 0),
-#endif
     JS_STRING_SYM_PS(toStringTag, "ArrayBuffer", JSPROP_READONLY),
     JS_PS_END,
 };
@@ -415,7 +411,6 @@ bool ArrayBufferObject::byteLengthGetter(JSContext* cx, unsigned argc,
   return CallNonGenericMethod<IsArrayBuffer, byteLengthGetterImpl>(cx, args);
 }
 
-#ifdef NIGHTLY_BUILD
 /**
  * ArrayBufferCopyAndDetach ( arrayBuffer, newLength, preserveResizability )
  *
@@ -555,7 +550,6 @@ bool ArrayBufferObject::transferToFixedLength(JSContext* cx, unsigned argc,
   return CallNonGenericMethod<IsArrayBuffer, transferToFixedLengthImpl>(cx,
                                                                         args);
 }
-#endif
 
 /*
  * ArrayBuffer.isView(obj); ES6 (Dec 2013 draft) 24.1.3.1

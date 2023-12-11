@@ -747,9 +747,10 @@ bool shell::enableArrayGrouping = false;
 // Pref for new Set.prototype methods.
 bool shell::enableNewSetMethods = false;
 // Pref for ArrayBuffer.prototype.transfer{,ToFixedLength}() methods.
-bool shell::enableArrayBufferTransfer = false;
 bool shell::enableSymbolsAsWeakMapKeys = false;
 #endif
+
+bool shell::enableArrayBufferTransfer = false;
 bool shell::enableImportAssertions = false;
 #ifdef JS_GC_ZEAL
 uint32_t shell::gZealBits = 0;
@@ -4133,9 +4134,9 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setShadowRealmsEnabled(enableShadowRealms)
       .setWellFormedUnicodeStringsEnabled(enableWellFormedUnicodeStrings)
       .setArrayGroupingEnabled(enableArrayGrouping)
+      .setArrayBufferTransferEnabled(enableArrayBufferTransfer)
 #ifdef NIGHTLY_BUILD
       .setNewSetMethodsEnabled(enableNewSetMethods)
-      .setArrayBufferTransferEnabled(enableArrayBufferTransfer)
       .setSymbolsAsWeakMapKeysEnabled(enableSymbolsAsWeakMapKeys)
 #endif
       ;
@@ -12202,10 +12203,10 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableArrayGrouping = !op.getBoolOption("disable-array-grouping");
 #ifdef NIGHTLY_BUILD
   enableNewSetMethods = op.getBoolOption("enable-new-set-methods");
-  enableArrayBufferTransfer = op.getBoolOption("enable-arraybuffer-transfer");
   enableSymbolsAsWeakMapKeys =
       op.getBoolOption("enable-symbols-as-weakmap-keys");
 #endif
+  enableArrayBufferTransfer = op.getBoolOption("enable-arraybuffer-transfer");
   enableImportAssertions = op.getBoolOption("enable-import-assertions");
   useFdlibmForSinCosTan = op.getBoolOption("use-fdlibm-for-sin-cos-tan");
 
