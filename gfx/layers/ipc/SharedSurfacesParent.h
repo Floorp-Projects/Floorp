@@ -129,33 +129,6 @@ class SharedSurfacesParent final {
   MappingTracker mTracker;
 };
 
-/**
- * Helper class that is used to keep SourceSurfaceSharedDataWrapper objects
- * around as long as one of the dependent IPDL actors is still alive and may
- * reference them for a given PCompositorManager namespace.
- */
-class SharedSurfacesHolder final {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedSurfacesHolder)
-
- public:
-  explicit SharedSurfacesHolder(uint32_t aNamespace) : mNamespace(aNamespace) {}
-
-  already_AddRefed<gfx::DataSourceSurface> Get(const wr::ExternalImageId& aId) {
-    uint32_t extNamespace = static_cast<uint32_t>(wr::AsUint64(aId) >> 32);
-    if (NS_WARN_IF(extNamespace != mNamespace)) {
-      MOZ_ASSERT_UNREACHABLE("Wrong namespace?");
-      return nullptr;
-    }
-
-    return SharedSurfacesParent::Get(aId);
-  }
-
- private:
-  ~SharedSurfacesHolder() { SharedSurfacesParent::RemoveAll(mNamespace); }
-
-  uint32_t mNamespace;
-};
-
 }  // namespace layers
 }  // namespace mozilla
 

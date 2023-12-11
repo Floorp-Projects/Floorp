@@ -117,7 +117,6 @@ CompositorManagerParent::CreateSameProcessWidgetCompositorBridge(
 CompositorManagerParent::CompositorManagerParent(
     dom::ContentParentId aContentId, uint32_t aNamespace)
     : mCompositorThreadHolder(CompositorThreadHolder::GetSingleton()),
-      mSharedSurfacesHolder(MakeRefPtr<SharedSurfacesHolder>(aNamespace)),
       mContentId(aContentId),
       mNamespace(aNamespace) {}
 
@@ -147,6 +146,8 @@ void CompositorManagerParent::BindComplete(bool aIsRoot) {
 }
 
 void CompositorManagerParent::ActorDestroy(ActorDestroyReason aReason) {
+  SharedSurfacesParent::RemoveAll(mNamespace);
+
   GetCurrentSerialEventTarget()->Dispatch(
       NewRunnableMethod("layers::CompositorManagerParent::DeferredDestroy",
                         this, &CompositorManagerParent::DeferredDestroy));
@@ -348,8 +349,7 @@ mozilla::ipc::IPCResult CompositorManagerParent::RecvReportMemory(
 
 mozilla::ipc::IPCResult CompositorManagerParent::RecvInitCanvasManager(
     Endpoint<PCanvasManagerParent>&& aEndpoint) {
-  gfx::CanvasManagerParent::Init(std::move(aEndpoint), mSharedSurfacesHolder,
-                                 mContentId);
+  gfx::CanvasManagerParent::Init(std::move(aEndpoint), mContentId);
   return IPC_OK();
 }
 

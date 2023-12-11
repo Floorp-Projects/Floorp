@@ -17,7 +17,6 @@ namespace mozilla {
 namespace layers {
 class CanvasTranslator;
 class HostIPCAllocator;
-class SharedSurfacesHolder;
 class SurfaceDescriptor;
 }  // namespace layers
 
@@ -28,7 +27,6 @@ class CanvasManagerParent final : public PCanvasManagerParent {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CanvasManagerParent, override);
 
   static void Init(Endpoint<PCanvasManagerParent>&& aEndpoint,
-                   layers::SharedSurfacesHolder* aSharedSurfacesHolder,
                    const dom::ContentParentId& aContentId);
 
   static void Shutdown();
@@ -47,8 +45,7 @@ class CanvasManagerParent final : public PCanvasManagerParent {
   static UniquePtr<layers::SurfaceDescriptor> WaitForReplayTexture(
       layers::HostIPCAllocator* aAllocator, int64_t aTextureId);
 
-  CanvasManagerParent(layers::SharedSurfacesHolder* aSharedSurfacesHolder,
-                      const dom::ContentParentId& aContentId);
+  explicit CanvasManagerParent(const dom::ContentParentId& aContentId);
 
   void Bind(Endpoint<PCanvasManagerParent>&& aEndpoint);
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -73,7 +70,6 @@ class CanvasManagerParent final : public PCanvasManagerParent {
 
   ~CanvasManagerParent() override;
 
-  RefPtr<layers::SharedSurfacesHolder> mSharedSurfacesHolder;
   const dom::ContentParentId mContentId;
   uint32_t mId = 0;
 

@@ -903,8 +903,6 @@ static inline wr::HasScrollLinkedEffect ToWrHasScrollLinkedEffect(
                                 : wr::HasScrollLinkedEffect::No;
 }
 
-enum class ExternalImageSource : uint8_t { Unknown = 0, SharedSurfaces, Last };
-
 }  // namespace wr
 }  // namespace mozilla
 
