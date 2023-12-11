@@ -15,7 +15,11 @@ import mozilla.components.concept.engine.webextension.InstallationMethod
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManager
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.android.net.getFileName
 import mozilla.components.support.ktx.android.net.toFileUri
+import java.io.File
+
+private const val XPI_DIR = "XPIs"
 
 /**
  * Allows to launch a file picker to select an add-on file.
@@ -52,13 +56,15 @@ class AddonFilePicker(
     }
 
     internal fun handleUriSelected(uri: Uri?) {
-        uri?.let {
-            val fileUri = convertToFileUri(uri)
+        uri?.let { safeUri ->
+            val fileUri = convertToFileUri(safeUri)
             val onSuccess: ((Addon) -> Unit) = {
                 logger.info("Add-on from $fileUri installed successfully")
+                removeTemporaryFile(safeUri)
             }
             val onError: ((Throwable) -> Unit) = { throwable ->
                 logger.error("Unable to install add-on from $fileUri", throwable)
+                removeTemporaryFile(safeUri)
             }
             addonManager.installAddon(
                 fileUri,
@@ -69,7 +75,12 @@ class AddonFilePicker(
         }
     }
 
-    internal fun convertToFileUri(uri: Uri): String = uri.toFileUri(context, "XPIs").toString()
+    internal fun removeTemporaryFile(fileUri: Uri) {
+        val contentResolver = context.contentResolver
+        File(File(context.cacheDir, XPI_DIR), fileUri.getFileName(contentResolver)).delete()
+    }
+
+    internal fun convertToFileUri(uri: Uri): String = uri.toFileUri(context, XPI_DIR).toString()
 }
 
 internal open class AddonOpenDocument : ActivityResultContracts.OpenDocument() {
