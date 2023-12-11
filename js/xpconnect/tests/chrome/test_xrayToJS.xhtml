@@ -219,6 +219,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   // DO NOT CHANGE WTIHOUT REVIEW FROM AN XPCONNECT PEER.
   var gPrototypeProperties = {};
   var gConstructorProperties = {};
+  // Properties which cannot be invoked if callable without potentially
+  // rendering the object useless.
+  var gStatefulProperties = {};
   function constructorProps(arr) {
     // Some props live on all constructors
     return arr.concat(["prototype", "length", "name"]);
@@ -294,12 +297,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
                       "withResolvers", Symbol.species]);
 
   gPrototypeProperties.ArrayBuffer =
-    ["constructor", "byteLength", "slice", Symbol.toStringTag];
+    ["constructor", "byteLength", "detached", "slice", Symbol.toStringTag, "transfer", "transferToFixedLength"];
   gConstructorProperties.ArrayBuffer =
     constructorProps(["isView", Symbol.species]);
+  gStatefulProperties.ArrayBuffer = ["transfer", "transferToFixedLength"]
 
-  gPrototypeProperties.SharedArrayBuffer = ["constructor", "slice", "byteLength", Symbol.toStringTag];
+  gPrototypeProperties.SharedArrayBuffer = ["constructor", "slice", "byteLength", "detached", Symbol.toStringTag, "transfer", "transferToFixedLength"];
   gConstructorProperties.SharedArrayBuffer = constructorProps([Symbol.species]);
+  gStatefulProperties.SharedArrayBuffer = ["transfer", "transferToFixedLength"]
 
   gPrototypeProperties.Map =
     ["constructor", "size", Symbol.toStringTag, "get", "has", "set", "delete",
@@ -359,7 +364,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     return !!Object.getOwnPropertyDescriptor(obj, name).get;
   }
 
-  function testProtoCallables(protoCallables, xray, xrayProto, localProto) {
+  function testProtoCallables(protoCallables, xray, xrayProto, localProto, callablesExcluded) {
+    // Handle undefined callablesExcluded.
+    let dontCall = callablesExcluded ?? [];
     for (let name of protoCallables) {
       info("Running tests for property: " + name);
       // Test both methods and getter properties.
@@ -384,7 +391,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
       is(lookupCallable(xray), method, "Proto props resolve on the instance");
       let local = lookupCallable(localProto);
       is(method.length, local.length, "Function.length identical");
-      if (!method.length) {
+      if (!method.length && !dontCall.includes(name)) {
         is(method.call(xray) + "", local.call(xray) + "",
            "Xray and local method results stringify identically");
 
@@ -470,12 +477,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     let protoCallables = protoProps.filter(name => propertyIsGetter(localProto, name, classname) ||
                                                    typeof localProto[name] == 'function' &&
                                                    name != 'constructor');
+    let callablesExcluded = gStatefulProperties[classname];
     ok(!!protoCallables.length, "Need something to test");
     is(xrayProto, iwin[classname].prototype, "Xray proto is correct");
     is(xrayProto, xray.__proto__, "Proto accessors agree");
     var protoProto = classname == "Object" ? null : iwin.Object.prototype;
     is(Object.getPrototypeOf(xrayProto), protoProto, "proto proto is correct");
-    testProtoCallables(protoCallables, xray, xrayProto, localProto);
+    testProtoCallables(protoCallables, xray, xrayProto, localProto, callablesExcluded);
     is(Object.getOwnPropertyNames(xrayProto).sort().toSource(),
        protoProps.toSource(), "getOwnPropertyNames works");
     is(Object.getOwnPropertySymbols(xrayProto).map(uneval).sort().toSource(),
