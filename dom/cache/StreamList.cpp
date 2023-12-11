@@ -145,6 +145,31 @@ bool StreamList::MatchesCacheId(CacheId aCacheId) const {
   return aCacheId == mCacheId;
 }
 
+void StreamList::DoStringify(nsACString& aData) {
+  aData.Append("StreamList "_ns + kStringifyStartInstance +
+               //
+               "List:"_ns +
+               IntToCString(static_cast<uint64_t>(mList.Length())) +
+               kStringifyDelimiter +
+               //
+               "Activated:"_ns + IntToCString(mActivated) + ")"_ns +
+               kStringifyDelimiter +
+               //
+               "Manager:"_ns + IntToCString(static_cast<bool>(mManager)));
+  if (mManager) {
+    aData.Append(" "_ns);
+    mManager->Stringify(aData);
+  }
+  aData.Append(kStringifyDelimiter +
+               //
+               "Context:"_ns + IntToCString(static_cast<bool>(mContext)));
+  if (mContext) {
+    aData.Append(" "_ns);
+    mContext->Stringify(aData);
+  }
+  aData.Append(kStringifyEndInstance);
+}
+
 StreamList::~StreamList() {
   NS_ASSERT_OWNINGTHREAD(StreamList);
   MOZ_DIAGNOSTIC_ASSERT(!mStreamControl);
