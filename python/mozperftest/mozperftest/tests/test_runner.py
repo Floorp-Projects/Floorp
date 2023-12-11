@@ -25,6 +25,7 @@ def test_tools():
             main(["tools"])
 
 
+@mock.patch("mozperftest.utils.install_package")
 @mock.patch("mozperftest.PerftestToolsArgumentParser")
 def test_side_by_side(arg, patched_mozperftest_tools):
     with mock.patch(
@@ -33,6 +34,8 @@ def test_side_by_side(arg, patched_mozperftest_tools):
         "mozperftest.runner._create_artifacts_dir", return_value="fake_path"
     ) as _, mock.patch(
         "mozperftest.runner._save_params", return_value="fake_path"
+    ) as _, mock.patch(
+        "sys.modules", return_value=mock.MagicMock()
     ) as _:
         main(
             [
