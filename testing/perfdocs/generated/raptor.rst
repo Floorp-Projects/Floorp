@@ -3984,7 +3984,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
-   * **browser cycles**: 1
+   * **browser cycles**: 5
    * **cold**: true
    * **expected**: pass
    * **expose browser profiler**: true
@@ -4314,7 +4314,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
    * **alert threshold**: 2.0
    * **apps**: fenix, geckoview, refbrow, chrome-m, cstm-car-m
-   * **browser cycles**: 1
+   * **browser cycles**: 5
    * **cold**: true
    * **expected**: pass
    * **gecko profile entries**: 14000000
