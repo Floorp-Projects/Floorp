@@ -9,6 +9,7 @@
 #include "mozilla/RefPtr.h"
 #include "nscore.h"
 #include "nsString.h"
+#include "nsTArray.h"
 #include "nsWindow.h"
 #include "nsWindowDefs.h"
 #include "mozilla/Attributes.h"
@@ -130,6 +131,17 @@ class MOZ_STACK_CLASS UniCharsAndModifiers final {
 struct DeadKeyEntry {
   char16_t BaseChar;
   char16_t CompositeChar;
+
+  DeadKeyEntry(char16_t aBaseChar, char16_t aCompositeChar)
+      : BaseChar(aBaseChar), CompositeChar(aCompositeChar) {}
+
+  bool operator<(const DeadKeyEntry& aOther) const {
+    return this->BaseChar < aOther.BaseChar;
+  }
+
+  bool operator==(const DeadKeyEntry& aOther) const {
+    return this->BaseChar == aOther.BaseChar;
+  }
 };
 
 class DeadKeyTable {
@@ -963,17 +975,14 @@ class KeyboardLayout {
   bool mHasAltGr;
 
   static inline int32_t GetKeyIndex(uint8_t aVirtualKey);
-  static int CompareDeadKeyEntries(const void* aArg1, const void* aArg2,
-                                   void* aData);
   static bool AddDeadKeyEntry(char16_t aBaseChar, char16_t aCompositeChar,
-                              DeadKeyEntry* aDeadKeyArray, uint32_t aEntries);
+                              nsTArray<DeadKeyEntry>& aDeadKeyArray);
   bool EnsureDeadKeyActive(bool aIsActive, uint8_t aDeadKey,
                            const PBYTE aDeadKeyKbdState);
   uint32_t GetDeadKeyCombinations(uint8_t aDeadKey,
                                   const PBYTE aDeadKeyKbdState,
                                   uint16_t aShiftStatesWithBaseChars,
-                                  DeadKeyEntry* aDeadKeyArray,
-                                  uint32_t aMaxEntries);
+                                  nsTArray<DeadKeyEntry>& aDeadKeyArray);
   /**
    * Activates or deactivates dead key state.
    */
