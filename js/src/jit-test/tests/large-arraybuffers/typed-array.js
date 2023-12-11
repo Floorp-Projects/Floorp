@@ -125,7 +125,8 @@ function testIterators() {
     } catch (e) {
         ex = e;
     }
-    assertEq(ex, "out of memory");
+    const msg = ex + "";
+    assertEq(msg.includes("out of memory") || msg.includes("InternalError: allocation size overflow"), true);
 }
 testIterators();
 

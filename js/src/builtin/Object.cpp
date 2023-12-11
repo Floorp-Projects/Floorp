@@ -1648,7 +1648,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
     // more than 2GB for the properties vector. This also means we don't
     // need to handle indices greater than MAX_INT32 in the loop below.
     if (len > NativeObject::MAX_DENSE_ELEMENTS_COUNT) {
-      ReportOutOfMemory(cx);
+      ReportOversizedAllocation(cx, JSMSG_ALLOC_OVERFLOW);
       return false;
     }
 
@@ -1966,7 +1966,7 @@ static bool CountEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
     // more than 2GB for the properties vector. This also means we don't
     // need to handle indices greater than MAX_INT32 in the loop below.
     if (len > NativeObject::MAX_DENSE_ELEMENTS_COUNT) {
-      ReportOutOfMemory(cx);
+      ReportOversizedAllocation(cx, JSMSG_ALLOC_OVERFLOW);
       return false;
     }
 
