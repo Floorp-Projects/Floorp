@@ -1316,63 +1316,13 @@ A Feature Callout can be dismissed by clicking its dismiss button directly or pr
 }
 ```
 
-## Sponsored TopSites pings
+## Glean pings for New Tab and related modules
 
-These record the impression and click pings for the Sponsored TopSites.
-
-### Impression ping for the sponsored TopSites
-
-```js
-{
-  "context_id": "{94642acb-4996-034b-916c-147da723cc41}",
-  "advertiser": "test-advertiser",
-  "tile_id": 42,
-  "source": "newtab",
-  "position": 1,
-  "reporting_url": "https://test.reporting.net/static?id=7RHzfOIWHG7kJnEYgGeuJm7vJ%3DEkiFXwxYIZjF8XgClWfC 8%2B7R4dHQ8zjmENj%3DNwxwz%2FJmdw7R4dHQfz4Z2ZfplnHG3Z5FwqgCfX4ZLafC2mfBINI9HuiF2 z4Z2ZfplnHmcux%3DcvImauiF2zfQlWfpDX7R3%2Bx%3DDuiF2zfLyy",
-  "version": "76.0a1",
-  "locale": "en-US",
-  "release_channel": "default",
-  "experiments": {
-    "exp_id_foo": {
-      "branch": "control"
-    },
-    "exp_id_bar": {
-      "branch": "treatment"
-    }
-  }
-}
-```
-
-### Click ping for the sponsored TopSites
-
-```js
-{
-  "context_id": "{94642acb-4996-034b-916c-147da723cc41}",
-  "tile_id": 42,
-  "source": "newtab",
-  "position": 1,
-  "advertiser": "test-advertiser",
-  "reporting_url": "https://test.reporting.net/ctp?version=16.0.0&key=1598991514900100001.1&ci=15 98991514792.12747&ctag=1598291839300100006&aespFlag=altinst",
-  "version": "76.0a1",
-  "locale": "en-US",
-  "release_channel": "default",
-  "experiments": {
-    "exp_id_foo": {
-      "branch": "control"
-    },
-    "exp_id_bar": {
-      "branch": "treatment"
-    }
-  }
-}
-```
-
-## Glean "newtab" ping
-
-Unlike the other data collections, this is a
-[Glean Ping](https://mozilla.github.io/glean/book/user/pings/index.html)
-that batches events and metadata about newtab sessions.
-
-You can find full documentation about this ping and its contents in
-[its Glean Dictionary entry](https://dictionary.telemetry.mozilla.org/apps/firefox_desktop/pings/newtab).
+Glean pings are documented on their respective pages on the Glean Dictionary.
+The ones collected on Firefox Home (New Tab) include:
+* ["newtab"](https://dictionary.telemetry.mozilla.org/apps/firefox_desktop/pings/newtab)
+* ["pocket-button"](https://dictionary.telemetry.mozilla.org/apps/firefox_desktop/pings/pocket-button)
+* ["top-sites"](https://dictionary.telemetry.mozilla.org/apps/firefox_desktop/pings/top-sites)
+* ["quick-suggest"](https://dictionary.telemetry.mozilla.org/apps/firefox_desktop/pings/quick-suggest)
+* ["messaging-system"](https://dictionary.telemetry.mozilla.org/apps/firefox_desktop/pings/messaging-system)
+* ["spoc"](https://dictionary.telemetry.mozilla.org/apps/firefox_desktop/pings/spoc)

@@ -41,12 +41,7 @@ const REMOTE_SETTINGS_RESULTS = [
   },
 ];
 
-// Spy for the custom impression/click sender
-let spy;
-
 add_setup(async function () {
-  ({ spy } = QuickSuggestTestUtils.createTelemetryPingSpy());
-
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
   await UrlbarTestUtils.formHistory.clear();
@@ -97,7 +92,6 @@ async function doBasicBlockTest({ block }) {
 }
 
 async function doOneBasicBlockTest({ result, block }) {
-  spy.resetHistory();
   let index = 2;
   let suggested_index = -1;
   let suggested_index_relative_to_group = true;
@@ -208,43 +202,6 @@ async function doOneBasicBlockTest({ result, block }) {
         match_type,
         position: String(index),
         suggestion_type: isSponsored ? "sponsored" : "nonsponsored",
-      },
-    },
-  ]);
-
-  // Check the custom telemetry pings.
-  let source = UrlbarPrefs.get("quicksuggest.rustEnabled")
-    ? "rust"
-    : "remote-settings";
-  QuickSuggestTestUtils.assertPings(spy, [
-    {
-      type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
-      payload: {
-        source,
-        match_type,
-        suggested_index,
-        suggested_index_relative_to_group,
-        advertiser: result.advertiser.toLowerCase(),
-        block_id: expectedBlockId,
-        is_clicked: false,
-        position: index,
-        reporting_url:
-          UrlbarPrefs.get("quicksuggest.rustEnabled") && !isSponsored
-            ? undefined
-            : result.impression_url,
-      },
-    },
-    {
-      type: CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK,
-      payload: {
-        source,
-        match_type,
-        suggested_index,
-        suggested_index_relative_to_group,
-        advertiser: result.advertiser.toLowerCase(),
-        block_id: expectedBlockId,
-        iab_category: result.iab_category,
-        position: index,
       },
     },
   ]);

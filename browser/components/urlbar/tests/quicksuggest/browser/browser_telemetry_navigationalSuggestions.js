@@ -297,7 +297,6 @@ async function doTest({
     : [];
 
   Services.telemetry.clearEvents();
-  let { spy, spyCleanup } = QuickSuggestTestUtils.createTelemetryPingSpy();
 
   await QuickSuggestTestUtils.withExperiment({
     valueOverrides,
@@ -342,10 +341,6 @@ async function doTest({
   info("Checking events");
   QuickSuggestTestUtils.assertEvents(events);
 
-  info("Checking pings");
-  QuickSuggestTestUtils.assertPings(spy, []);
-
-  await spyCleanup();
   await PlacesUtils.history.clear();
   MerinoTestUtils.server.response.body.suggestions = [MERINO_SUGGESTION];
 }

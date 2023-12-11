@@ -14,8 +14,6 @@ run-if = ["os == 'win'"] # Test of a Windows-specific feature
 
 ["test_LaterRun.js"]
 
-["test_PartnerLinkAttribution.js"]
-
 ["test_PingCentre.js"]
 
 ["test_ProfileCounter.js"]

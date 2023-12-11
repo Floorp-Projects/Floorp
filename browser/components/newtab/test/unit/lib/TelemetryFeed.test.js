@@ -2199,7 +2199,7 @@ describe("TelemetryFeed", () => {
     });
   });
   describe("#handleTopSitesSponsoredImpressionStats", () => {
-    it("should call sendStructuredIngestionEvent on an impression event", async () => {
+    it("should add to keyed scalar on an impression event", async () => {
       const data = {
         type: "impression",
         tile_id: 42,
@@ -2208,7 +2208,6 @@ describe("TelemetryFeed", () => {
         reporting_url: "https://test.reporting.net/",
       };
       instance = new TelemetryFeed();
-      sandbox.spy(instance, "sendStructuredIngestionEvent");
       sandbox.spy(Services.telemetry, "keyedScalarAdd");
 
       await instance.handleTopSitesSponsoredImpressionStats({ data });
@@ -2221,26 +2220,8 @@ describe("TelemetryFeed", () => {
         "newtab_1",
         1
       );
-
-      assert.calledOnce(instance.sendStructuredIngestionEvent);
-
-      const { args } = instance.sendStructuredIngestionEvent.firstCall;
-      // payload
-      assert.deepEqual(args[0], {
-        context_id: FAKE_UUID,
-        tile_id: 42,
-        source: "newtab",
-        position: 1,
-        reporting_url: "https://test.reporting.net/",
-      });
-      // namespace
-      assert.equal(args[1], "contextual-services");
-      // docType
-      assert.equal(args[2], "topsites-impression");
-      // version
-      assert.equal(args[3], "1");
     });
-    it("should call sendStructuredIngestionEvent on a click event", async () => {
+    it("should add to keyed scalar on a click event", async () => {
       const data = {
         type: "click",
         tile_id: 42,
@@ -2249,7 +2230,6 @@ describe("TelemetryFeed", () => {
         reporting_url: "https://test.reporting.net/",
       };
       instance = new TelemetryFeed();
-      sandbox.spy(instance, "sendStructuredIngestionEvent");
       sandbox.spy(Services.telemetry, "keyedScalarAdd");
 
       await instance.handleTopSitesSponsoredImpressionStats({ data });
@@ -2262,24 +2242,6 @@ describe("TelemetryFeed", () => {
         "newtab_1",
         1
       );
-
-      assert.calledOnce(instance.sendStructuredIngestionEvent);
-
-      const { args } = instance.sendStructuredIngestionEvent.firstCall;
-      // payload
-      assert.deepEqual(args[0], {
-        context_id: FAKE_UUID,
-        tile_id: 42,
-        source: "newtab",
-        position: 1,
-        reporting_url: "https://test.reporting.net/",
-      });
-      // namespace
-      assert.equal(args[1], "contextual-services");
-      // docType
-      assert.equal(args[2], "topsites-click");
-      // version
-      assert.equal(args[3], "1");
     });
     it("should record a Glean topsites.impression event on an impression event", async () => {
       const data = {
