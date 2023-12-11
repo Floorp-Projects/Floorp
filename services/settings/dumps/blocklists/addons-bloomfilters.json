@@ -3,6 +3,32 @@
     {
       "stash": {
         "blocked": [
+          "beidconnect@bosa.be:0.0.10",
+          "teamgolinks@gmail.com:2.6.1",
+          "beidconnect@bosa.be:0.0.11",
+          "beidconnect@bosa.be:0.0.8",
+          "{598c25df-bc02-44ce-bdfb-0866ce2c69e4}:1.10.10",
+          "extension@navig-fr.com:1.0.0.0",
+          "teamgolinks@gmail.com:2.6.3",
+          "addonY219@freshyserch.com:1.23.1102",
+          "teamgolinks@gmail.com:2.6.2",
+          "support@currency-converter.com:1.0",
+          "teamgolinks@gmail.com:2.6.0",
+          "beidconnect@bosa.be:0.0.9",
+          "addonY219@freshyserch.com:1.23.1013",
+          "addonY219@freshyserch.com:1.23.1109"
+        ],
+        "unblocked": []
+      },
+      "schema": 1701887760644,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1701952504811,
+      "id": "6ce95613-1a74-4912-99ba-45df2dd724bf",
+      "last_modified": 1701952559443
+    },
+    {
+      "stash": {
+        "blocked": [
           "contact@currency-converter.com:1.0"
         ],
         "unblocked": []
@@ -2887,5 +2913,5 @@
       "last_modified": 1690223886167
     }
   ],
-  "timestamp": 1701887760444
+  "timestamp": 1701952559443
 }

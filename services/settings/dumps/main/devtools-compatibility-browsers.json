@@ -1,6 +1,15 @@
 {
   "data": [
     {
+      "name": "Edge",
+      "schema": 1702166707858,
+      "status": "current",
+      "version": "120",
+      "browserid": "edge",
+      "id": "74e217cb-3eb9-44b3-82d4-c14d54e78187",
+      "last_modified": 1702283211298
+    },
+    {
       "name": "Opera Android",
       "schema": 1701561907381,
       "status": "current",
@@ -116,15 +125,6 @@
       "browserid": "edge",
       "id": "52bfc592-a35d-4208-ba7b-0810d88970d0",
       "last_modified": 1701078578061
-    },
-    {
-      "name": "Edge",
-      "schema": 1700557930623,
-      "status": "beta",
-      "version": "120",
-      "browserid": "edge",
-      "id": "74e217cb-3eb9-44b3-82d4-c14d54e78187",
-      "last_modified": 1701078578058
     },
     {
       "name": "Opera",
@@ -280,15 +280,6 @@
       "last_modified": 1699453952042
     },
     {
-      "name": "Edge",
-      "schema": 1699401908780,
-      "status": "current",
-      "version": "119",
-      "browserid": "edge",
-      "id": "eff1cf87-5add-4876-95db-5b84238437ab",
-      "last_modified": 1699453951977
-    },
-    {
       "name": "Node.js",
       "schema": 1695216243625,
       "status": "esr",
@@ -334,5 +325,5 @@
       "last_modified": 1645448267500
     }
   ],
-  "timestamp": 1701778564580
+  "timestamp": 1702283211301
 }
