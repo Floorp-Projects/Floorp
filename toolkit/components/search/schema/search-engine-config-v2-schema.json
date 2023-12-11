@@ -100,7 +100,7 @@
           "type": "string",
           "pattern": "^[a-zA-Z0-9-]{0,100}$"
         },
-        "applicationId": {
+        "applications": {
           "title": "Application Identifiers",
           "description": "The application(s) this section applies to (default/not specified is everywhere).",
           "type": "array",
