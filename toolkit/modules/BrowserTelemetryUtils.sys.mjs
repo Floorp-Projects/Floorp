@@ -68,9 +68,6 @@ export var BrowserTelemetryUtils = {
       this._lastRecordSiteOrigin = currentTime;
 
       histogram.add(originCount);
-      Glean.fogValidation.gvsvNumberOfUniqueSiteOriginsAllTabs.accumulateSamples(
-        [originCount]
-      );
     }
   },
 };

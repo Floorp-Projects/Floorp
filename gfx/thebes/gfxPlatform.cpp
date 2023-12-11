@@ -1060,8 +1060,6 @@ void gfxPlatform::ReportTelemetry() {
                          uint32_t(rect.Height()));
     Telemetry::ScalarSet(Telemetry::ScalarID::GFX_DISPLAY_PRIMARY_WIDTH,
                          uint32_t(rect.Width()));
-    mozilla::glean::fog_validation::gvsv_primary_height.Set(rect.Height());
-    mozilla::glean::fog_validation::gvsv_primary_width.Set(rect.Width());
   }
 
   nsString adapterDesc;
