@@ -105,16 +105,20 @@ ColorPalette::ColorPalette(nscolor aAccent, nscolor aForeground) {
 }
 
 ThemeAccentColor::ThemeAccentColor(const ComputedStyle& aStyle,
-                                   ColorScheme aScheme) {
+                                   ColorScheme aScheme)
+    : mDefaultPalette(aScheme == ColorScheme::Light ? &sDefaultLightPalette
+                                                    : &sDefaultDarkPalette) {
   const auto& color = aStyle.StyleUI()->mAccentColor;
-  if (color.IsColor()) {
-    mAccentColor.emplace(
-        ColorPalette::EnsureOpaque(color.AsColor().CalcColor(aStyle)));
-  } else {
-    MOZ_ASSERT(color.IsAuto());
-    mDefaultPalette = aScheme == ColorScheme::Light ? &sDefaultLightPalette
-                                                    : &sDefaultDarkPalette;
+  if (color.IsAuto()) {
+    return;
   }
+  MOZ_ASSERT(color.IsColor());
+  nscolor accentColor =
+      ColorPalette::EnsureOpaque(color.AsColor().CalcColor(aStyle));
+  if (sRGBColor::FromABGR(accentColor) == mDefaultPalette->mAccent) {
+    return;
+  }
+  mAccentColor.emplace(accentColor);
 }
 
 sRGBColor ThemeAccentColor::Get() const {
