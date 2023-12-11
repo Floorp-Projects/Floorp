@@ -71,12 +71,22 @@ module.exports = async function (context, commands) {
       context.log.error("Benchmark timed out. Aborting...");
       return false;
     }
-    let data = await commands.js.run(
+    let internal_data = await commands.js.run(
       `return this.benchmarkClient._measuredValuesList;`
     );
-    context.log.info("Value of benchmark data: ", data);
+    context.log.info("Value of internal benchmark iterations: ", internal_data);
 
-    commands.measure.addObject({ browsertime_benchmark: { s3: data } });
+    let data = await commands.js.run(`
+      const values = this.benchmarkClient._computeResults(this.benchmarkClient._measuredValuesList, "ms");
+      const score = this.benchmarkClient._computeResults(this.benchmarkClient._measuredValuesList, "score");
+      return {
+        score,
+        values: values.formattedMean,
+      };
+    `);
+    context.log.info("Value of summarized benchmark data: ", data);
+
+    commands.measure.addObject({ s3: data, s3_internal: internal_data });
   }
 
   return true;
