@@ -44,8 +44,8 @@ class txNodeSorter {
     txXPathResultComparator* mComparator;
   };
 
-  static int compareNodes(const void* aIndexA, const void* aIndexB,
-                          void* aSortData);
+  static int compareNodes(uint32_t aIndexA, uint32_t aIndexB,
+                          SortData& aSortData);
   static bool calcSortValue(txObject*& aSortValue, SortKey* aKey,
                             SortData* aSortData, uint32_t aNodeIndex);
   txList mSortKeys;
