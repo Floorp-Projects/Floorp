@@ -750,7 +750,7 @@ bool shell::enableNewSetMethods = false;
 bool shell::enableSymbolsAsWeakMapKeys = false;
 #endif
 
-bool shell::enableArrayBufferTransfer = false;
+bool shell::enableArrayBufferTransfer = true;
 bool shell::enableImportAssertions = false;
 #ifdef JS_GC_ZEAL
 uint32_t shell::gZealBits = 0;
@@ -11681,8 +11681,8 @@ bool InitOptionParser(OptionParser& op) {
                         "(Well-Formed Unicode Strings) (default: Enabled)") ||
       !op.addBoolOption('\0', "enable-new-set-methods",
                         "Enable New Set methods") ||
-      !op.addBoolOption('\0', "enable-arraybuffer-transfer",
-                        "Enable ArrayBuffer.prototype.transfer() methods") ||
+      !op.addBoolOption('\0', "disable-arraybuffer-transfer",
+                        "Disable ArrayBuffer.prototype.transfer() methods") ||
       !op.addBoolOption('\0', "enable-symbols-as-weakmap-keys",
                         "Enable Symbols As WeakMap keys") ||
       !op.addBoolOption('\0', "enable-top-level-await",
@@ -12206,7 +12206,7 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableSymbolsAsWeakMapKeys =
       op.getBoolOption("enable-symbols-as-weakmap-keys");
 #endif
-  enableArrayBufferTransfer = op.getBoolOption("enable-arraybuffer-transfer");
+  enableArrayBufferTransfer = !op.getBoolOption("disable-arraybuffer-transfer");
   enableImportAssertions = op.getBoolOption("enable-import-assertions");
   useFdlibmForSinCosTan = op.getBoolOption("use-fdlibm-for-sin-cos-tan");
 
