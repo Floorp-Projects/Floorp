@@ -18,6 +18,7 @@ add_task(async function () {
   await testAdvanceCharCommit(doc);
   await testAdvanceCharsFunction(doc);
   await testEscapeCancel(doc);
+  await testInputAriaLabel(doc);
 
   host.destroy();
   gBrowser.removeCurrentTab();
@@ -152,6 +153,43 @@ function testEscapeCancel(doc) {
       doc
     );
   });
+}
+
+function testInputAriaLabel(doc) {
+  info("Testing that inputAriaLabel works as expected");
+  doc.body.innerHTML = "";
+
+  let element = createSpan(doc);
+  editableField({
+    element,
+    inputAriaLabel: "TEST_ARIA_LABEL",
+  });
+
+  info("Clicking on the inplace-editor field to turn to edit mode");
+  element.click();
+  let input = doc.querySelector("input");
+  is(
+    input.getAttribute("aria-label"),
+    "TEST_ARIA_LABEL",
+    "Input has expected aria-label"
+  );
+
+  info("Testing that inputAriaLabelledBy works as expected");
+  doc.body.innerHTML = "";
+  element = createSpan(doc);
+  editableField({
+    element,
+    inputAriaLabelledBy: "TEST_ARIA_LABELLED_BY",
+  });
+
+  info("Clicking on the inplace-editor field to turn to edit mode");
+  element.click();
+  input = doc.querySelector("input");
+  is(
+    input.getAttribute("aria-labelledby"),
+    "TEST_ARIA_LABELLED_BY",
+    "Input has expected aria-labelledby"
+  );
 }
 
 function onDone(value, isCommit, resolve) {

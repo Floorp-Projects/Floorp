@@ -171,6 +171,10 @@ function isKeyIn(key, ...keys) {
  *        the next focused element should be in, when focusEditableFieldAfterApply
  *        is set to true. This allows to bail out if we can't find a suitable
  *        focusable field.
+ * @param {String} options.inputAriaLabel
+ *        Optional aria-label attribute value that will be added to the input.
+ * @param {String} options.inputAriaLabelledBy
+ *        Optional aria-labelled-by attribute value that will be added to the input.
  */
 function editableField(options) {
   return editableItem(options, function (element, event) {
@@ -322,7 +326,7 @@ class InplaceEditor extends EventEmitter {
       );
     }
 
-    this.#createInput();
+    this.#createInput(options);
 
     // Hide the provided element and add our editor.
     this.originalDisplay = this.elt.style.display;
@@ -415,7 +419,16 @@ class InplaceEditor extends EventEmitter {
     return val;
   }
 
-  #createInput() {
+  /**
+   * Create the input element.
+   *
+   * @param {Object} options
+   * @param {String} options.inputAriaLabel
+   *        Optional aria-label attribute value that will be added to the input.
+   * @param {String} options.inputAriaLabelledBy
+   *        Optional aria-labelledby attribute value that will be added to the input.
+   */
+  #createInput(options = {}) {
     this.input = this.doc.createElementNS(
       HTML_NS,
       this.multiline ? "textarea" : "input"
@@ -432,6 +445,12 @@ class InplaceEditor extends EventEmitter {
 
     this.input.classList.add("styleinspector-propertyeditor");
     this.input.value = this.initial;
+    if (options.inputAriaLabel) {
+      this.input.setAttribute("aria-label", options.inputAriaLabel);
+    } else if (options.inputAriaLabelledBy) {
+      this.input.setAttribute("aria-labelledby", options.inputAriaLabelledBy);
+    }
+
     if (!this.preserveTextStyles) {
       copyTextStyles(this.elt, this.input);
     }
