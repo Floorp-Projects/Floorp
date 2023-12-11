@@ -8,11 +8,6 @@
   padding-bottom: 0;
 }
 
-/* Implements editBookmarkPanel resizing on folderTree un-collapse. */
-#editBMPanel_folderTree {
-  min-width: 27em;
-}
-
 #editBMPanel_newFolderButton {
   appearance: none;
   margin: 0;
