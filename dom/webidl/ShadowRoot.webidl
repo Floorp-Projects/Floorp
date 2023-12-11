@@ -27,6 +27,8 @@ interface ShadowRoot : DocumentFragment
   readonly attribute ShadowRootMode mode;
   readonly attribute boolean delegatesFocus;
   readonly attribute SlotAssignmentMode slotAssignment;
+  [Pref="dom.webcomponents.shadowdom.declarative.enabled"]
+  readonly attribute boolean clonable;
   readonly attribute Element host;
   attribute EventHandler onslotchange;
 
