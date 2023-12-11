@@ -77,3 +77,13 @@ label {
   display: inline-block;
   margin-inline-end: 5px;
 }
+
+.delete-icon {
+  margin-inline-end: 5px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.delete-button {
+  display: inline-flex;
+}
