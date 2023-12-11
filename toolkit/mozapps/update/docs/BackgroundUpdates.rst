@@ -32,14 +32,12 @@ Lifecycle
 When background updates are possible, the background update task will be invoked
 every 7 hours (by default).  The first invocation initiates an update download
 which proceeds after the task exits using Windows BITS.  The second invocation
-prepares and stages the update.  The third invocation installs the update as it
-starts up, and then checks for a newer update, possibly initiating another
-update download.  The cycle then continues.  If the user launches Firefox at any
-point in this process, it will take over.  If the background update task is
-invoked while Firefox proper is running, the task exits without doing any work.
-In the future, the second invocation will stage and then restart to finish
-installing the update, rather than waiting for the third invocation (see `bug
-1704855 <https://bugzilla.mozilla.org/show_bug.cgi?id=1704855>`__).
+prepares and stages the update. Since `bug 1704855 <https://bugzilla.mozilla.org/show_bug.cgi?id=1704855>`__,
+this second invocation restarts automatically and installs the update as it
+starts up, and then checks for a newer update, possibly initiating another update
+download.  The cycle then continues. If the user launches Firefox at any point
+in this process, it will take over. If the background update task is invoked
+while Firefox proper is running, the task exits without doing any work.
 
 .. _background-updates-determining:
 
@@ -207,12 +205,11 @@ Staging
 
 The background update task will follow the update staging setting in the user’s
 default profile. The default setting is to enable staging, so most users will
-have it. In the future, background update tasks will recognize when an update
-has been staged and try to restart to finalize the staged update (see `bug
-1704855 <https://bugzilla.mozilla.org/show_bug.cgi?id=1704855>`__). Background
-tasks cannot finalize a staged update in all cases however; for one example, see
-`bug 1695797 <https://bugzilla.mozilla.org/show_bug.cgi?id=1695797>`__, where we
-ensure that background tasks do not finalize a staged update while other
+have it. Background update tasks recognize when an update has been staged and
+try to restart to finalize the staged update. Background tasks cannot
+finalize a staged update in all cases however; for one example, see
+`bug 1695797 <https://bugzilla.mozilla.org/show_bug.cgi?id=1695797>`__, where
+we ensure that background tasks do not finalize a staged update while other
 instances of the application are running.
 
 Staging is enabled by default because it provides a marked improvement in
