@@ -13945,6 +13945,13 @@
   mirror: always
   rust: true
 
+# Show the Windows Passkey settings link in about:preferences. This is
+# set to true if we find that webauthn.dll is sufficiently recent.
+- name: security.webauthn.show_ms_settings_link
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Block Worker/SharedWorker scripts with wrong MIME type.
 - name: security.block_Worker_with_wrong_mime
   type: bool
