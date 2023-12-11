@@ -1064,6 +1064,27 @@ primary-password-os-auth-dialog-message-win = To create a Primary Password, ente
 primary-password-os-auth-dialog-message-macosx = create a Primary Password
 master-password-os-auth-dialog-caption = { -brand-full-name }
 
+## Privacy section - Autofill
+
+pane-privacy-autofill-header = Autofill
+autofill-addresses-checkbox = Save and fill addresses
+    .accesskey = a
+autofill-saved-addresses-button = Saved addresses
+    .accesskey = S
+autofill-payment-methods-checkbox-message = Save and fill payment methods
+    .accesskey = m
+autofill-payment-methods-checkbox-submessage = Includes credit and debit cards
+    .accesskey = I
+autofill-saved-payment-methods-button = Saved payment methods
+    .accesskey = v
+autofill-reauth-checkbox = { PLATFORM() ->
+            [macos] Require macOS authentication to fill and edit payment methods.
+            [windows] Require Windows authentication to fill and edit payment methods.
+            [linux] Require Linux authentication to fill and edit payment methods.
+           *[other] Require authentication to fill and edit payment methods.
+        }
+    .accesskey = o
+
 ## Privacy Section - History
 
 history-header = History
