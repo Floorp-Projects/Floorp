@@ -200,7 +200,7 @@ void SharedSurfacesParent::AddSameProcess(const wr::ExternalImageId& aId,
 }
 
 /* static */
-void SharedSurfacesParent::DestroyProcess(base::ProcessId aPid) {
+void SharedSurfacesParent::RemoveAll(uint32_t aNamespace) {
   StaticMutexAutoLock lock(sMutex);
   if (!sInstance) {
     return;
@@ -209,8 +209,12 @@ void SharedSurfacesParent::DestroyProcess(base::ProcessId aPid) {
   // Note that the destruction of a parent may not be cheap if it still has a
   // lot of surfaces still bound that require unmapping.
   for (auto i = sInstance->mSurfaces.Iter(); !i.Done(); i.Next()) {
+    if (static_cast<uint32_t>(i.Key() >> 32) != aNamespace) {
+      continue;
+    }
+
     SourceSurfaceSharedDataWrapper* surface = i.Data();
-    if (surface->GetCreatorPid() == aPid && surface->HasCreatorRef() &&
+    if (surface->HasCreatorRef() &&
         surface->RemoveConsumer(/* aForCreator */ true)) {
       RemoveTrackingLocked(surface, lock);
       wr::RenderThread::Get()->UnregisterExternalImage(
@@ -345,21 +349,23 @@ void SharedSurfacesParent::ExpireMap(
 
 /* static */
 void SharedSurfacesParent::AccumulateMemoryReport(
-    base::ProcessId aPid, SharedSurfacesMemoryReport& aReport) {
+    uint32_t aNamespace, SharedSurfacesMemoryReport& aReport) {
   StaticMutexAutoLock lock(sMutex);
   if (!sInstance) {
     return;
   }
 
   for (const auto& entry : sInstance->mSurfaces) {
-    SourceSurfaceSharedDataWrapper* surface = entry.GetData();
-    if (surface->GetCreatorPid() == aPid) {
-      aReport.mSurfaces.insert(std::make_pair(
-          entry.GetKey(),
-          SharedSurfacesMemoryReport::SurfaceEntry{
-              aPid, surface->GetSize(), surface->Stride(),
-              surface->GetConsumers(), surface->HasCreatorRef()}));
+    if (static_cast<uint32_t>(entry.GetKey() >> 32) != aNamespace) {
+      continue;
     }
+
+    SourceSurfaceSharedDataWrapper* surface = entry.GetData();
+    aReport.mSurfaces.insert(std::make_pair(
+        entry.GetKey(),
+        SharedSurfacesMemoryReport::SurfaceEntry{
+            surface->GetCreatorPid(), surface->GetSize(), surface->Stride(),
+            surface->GetConsumers(), surface->HasCreatorRef()}));
   }
 }
 
