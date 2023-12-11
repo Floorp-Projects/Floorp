@@ -118,12 +118,12 @@ permissions-exceptions-popup-window2 =
     .style = { permissions-window2.style }
 permissions-exceptions-popup-desc = You can specify which websites are allowed to open pop-up windows. Type the exact address of the site you want to allow and then click Allow.
 
-## Exceptions - Saved Logins
+## Exceptions - Saved Passwords
 
-permissions-exceptions-saved-logins-window2 =
-    .title = Exceptions - Saved Logins
+permissions-exceptions-saved-passwords-window =
+    .title = Exceptions - Saved Passwords
     .style = { permissions-window2.style }
-permissions-exceptions-saved-logins-desc = Logins for the following websites will not be saved
+permissions-exceptions-saved-passwords-desc = { -brand-short-name } won’t save passwords for sites listed here.
 
 ## Exceptions - Add-ons
 
