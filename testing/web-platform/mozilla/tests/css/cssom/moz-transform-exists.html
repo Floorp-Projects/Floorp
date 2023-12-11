@@ -7,9 +7,16 @@
 <script>
 test(function() {
   let el = document.documentElement;
+
   assert_true("MozTransform" in el.style, "MozTransform exists");
+  assert_true("MozTransformOrigin" in el.style, "MozTransformOrigin also exists");
+
   el.style.MozTransform = "scale(1)";
   assert_not_equals(el.MozTransform, "", "MozTransform sets the value");
+  el.style.MozTransformOrigin = "0 0";
+  assert_not_equals(el.MozTransformOrigin, "", "MozTransformOrigin sets the value");
+
   assert_equals(el.transform, el.MozTransform, "MozTransform is an alias of transform");
+  assert_equals(el.transformOrigin, el.MozTransformOrigin, "MozTransformOrigin is an alias of transformOrigin");
 });
 </script>
