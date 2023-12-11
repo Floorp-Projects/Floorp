@@ -529,6 +529,17 @@ reftest.Runner = class {
         lazy.logger.debug(
           `rhs canvas size ${rhs.canvas.width}x${rhs.canvas.height}`
         );
+        if (
+          lhs.canvas.width != rhs.canvas.width ||
+          lhs.canvas.height != rhs.canvas.height
+        ) {
+          msg =
+            `Got different page sizes; test is ` +
+            `${lhs.canvas.width}x${lhs.canvas.height}px, ref is ` +
+            `${rhs.canvas.width}x${rhs.canvas.height}px`;
+          passed = false;
+          break;
+        }
         try {
           pixelsDifferent = this.windowUtils.compareCanvases(
             lhs.canvas,
