@@ -8,6 +8,7 @@
 #define mozilla_dom_HTMLVideoElement_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "Units.h"
@@ -123,6 +124,14 @@ class HTMLVideoElement final : public HTMLMediaElement {
   void OnSecondaryVideoOutputFirstFrameRendered();
 
   void OnVisibilityChange(Visibility aNewVisibility) override;
+
+  bool DisablePictureInPicture() const {
+    return GetBoolAttr(nsGkAtoms::disablepictureinpicture);
+  }
+
+  void SetDisablePictureInPicture(bool aValue, ErrorResult& aError) {
+    SetHTMLBoolAttr(nsGkAtoms::disablepictureinpicture, aValue, aError);
+  }
 
  protected:
   virtual ~HTMLVideoElement();

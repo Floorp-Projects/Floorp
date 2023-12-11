@@ -154,7 +154,7 @@ this.VideoControlsWidget = class {
       prefs[
         "media.videocontrols.picture-in-picture.respect-disablePictureInPicture"
       ] &&
-      someVideo.getAttribute("disablePictureInPicture") === "true"
+      someVideo.disablePictureInPicture
     ) {
       return false;
     }

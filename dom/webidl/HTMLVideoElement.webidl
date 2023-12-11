@@ -13,7 +13,6 @@
 
 [Exposed=Window,
  InstrumentedProps=(cancelVideoFrameCallback,
-                    disablePictureInPicture,
                     onenterpictureinpicture,
                     onleavepictureinpicture,
                     playsInline,
@@ -80,4 +79,9 @@ partial interface HTMLVideoElement {
 partial interface HTMLVideoElement {
   [Pref="media.mediasource.enabled", NewObject]
   VideoPlaybackQuality getVideoPlaybackQuality();
+};
+
+// https://w3c.github.io/picture-in-picture/#htmlvideoelement-extensions
+partial interface HTMLVideoElement {
+  [CEReactions, SetterThrows] attribute boolean disablePictureInPicture;
 };
