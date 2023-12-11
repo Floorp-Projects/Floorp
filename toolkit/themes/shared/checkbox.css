@@ -8,6 +8,14 @@
 checkbox {
   align-items: center;
   margin: 4px 2px;
+
+  &[disabled="true"][native] {
+    color: GrayText;
+  }
+
+  &[disabled="true"]:not([native]) > .checkbox-label-box {
+    opacity: 0.4;
+  }
 }
 
 .checkbox-icon {
@@ -20,12 +28,6 @@ checkbox {
 
 .checkbox-label {
   margin: 1px 0;
-}
-
-/* ..... disabled state ..... */
-
-checkbox[disabled="true"] {
-  opacity: 0.4;
 }
 
 /* ::::: checkmark image ::::: */
@@ -74,10 +76,6 @@ checkbox[disabled="true"] {
      * always work reliably because of bug 503833. */
     vertical-align: top;
   }
-}
-
-checkbox[native][disabled="true"] {
-  color: GrayText;
 }
 
 @media (-moz-platform: windows) or (-moz-platform: linux) {
