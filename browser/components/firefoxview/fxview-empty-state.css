@@ -45,22 +45,29 @@
   margin-block: 0;
   font-size: 1.46rem;
   font-weight: 300;
-  display: flex;
   align-items: center;
   gap: 8px;
-}
 
-.icon[hidden], .header[hidden] {
-  display: none;
+  :host(.search-results) & {
+    font-size: unset;
+  }
+
+  &:not([hidden]) {
+    display: flex;
+  }
 }
 
 .icon {
   background-position: center center;
   background-repeat: no-repeat;
-  display: inline-block;
   width: 20px;
   height: 20px;
+
+  &:not([hidden]) {
+    display: inline-block;
+  }
 }
+
 
 .info {
   -moz-context-properties: fill;
