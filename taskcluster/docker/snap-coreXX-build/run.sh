@@ -66,7 +66,7 @@ if [ "${TRY}" = "1" ]; then
   # shellcheck disable=SC2016
   sed -ri 's|MOZ_SOURCE_REPO=\$\{REPO\}|MOZ_SOURCE_REPO=${GECKO_HEAD_REPOSITORY}|g' snapcraft.yaml
   # shellcheck disable=SC2016
-  sed -ri 's|MOZ_SOURCE_CHANGESET=\$\{REVISION\}|MOZ_SOURCE_CHANGESET=${REVISION}|g' snapcraft.yaml
+  sed -ri 's|MOZ_SOURCE_CHANGESET=\$\{REVISION\}|MOZ_SOURCE_CHANGESET=${GECKO_HEAD_REV}|g' snapcraft.yaml
   # shellcheck disable=SC2016
   sed -ri 's|hg clone --stream \$REPO -u \$REVISION|cp -r \$SNAPCRAFT_PROJECT_DIR/gecko/. |g' snapcraft.yaml
 fi
