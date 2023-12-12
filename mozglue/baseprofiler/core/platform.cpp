@@ -2348,14 +2348,9 @@ void SamplerThread::Run() {
           // create Buffer entries for each counter
           buffer.AddEntry(ProfileBufferEntry::CounterId(counter));
           buffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
-          // XXX support keyed maps of counts
-          // In the future, we'll support keyed counters - for example, counters
-          // with a key which is a thread ID. For "simple" counters we'll just
-          // use a key of 0.
           int64_t count;
           uint64_t number;
           counter->Sample(count, number);
-          buffer.AddEntry(ProfileBufferEntry::CounterKey(0));
           buffer.AddEntry(ProfileBufferEntry::Count(count));
           if (number) {
             buffer.AddEntry(ProfileBufferEntry::Number(number));
