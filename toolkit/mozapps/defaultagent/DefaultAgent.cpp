@@ -319,7 +319,7 @@ DefaultAgent::DoTask(const nsAString& aUniqueToken, const bool aForce) {
   // So we'll just bail if we can't get the mutex quickly.
   RegistryMutex regMutex;
   if (!regMutex.Acquire()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   // Check that Firefox ran recently, if not then stop here.

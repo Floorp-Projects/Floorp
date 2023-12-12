@@ -90,6 +90,7 @@ int wmain(int argc, wchar_t** argv) {
       TIMEOUT = 4,
       DISABLED_BY_POLICY = 11,
       INVALID_ARGUMENT = 12,
+      MUTEX_NOT_LOCKABLE = 13,
     };
 
     switch (exitCode) {
@@ -105,6 +106,8 @@ int wmain(int argc, wchar_t** argv) {
         return HRESULT_FROM_WIN32(ERROR_ACCESS_DISABLED_BY_POLICY);
       case INVALID_ARGUMENT:
         return E_INVALIDARG;
+      case MUTEX_NOT_LOCKABLE:
+        return HRESULT_FROM_WIN32(ERROR_SHARING_VIOLATION);
       default:
         return E_UNEXPECTED;
     }
