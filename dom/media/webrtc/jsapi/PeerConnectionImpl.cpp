@@ -2293,13 +2293,17 @@ void PeerConnectionImpl::GetCapabilities(
 
   GetDefaultRtpExtensions(headers);
 
+  const bool redUlpfecEnabled =
+      Preferences::GetBool("media.navigator.video.red_ulpfec_enabled", false);
+
   // Use the codecs for kind to fill out the RTCRtpCodecCapability
   for (const auto& codec : codecs) {
     // To avoid misleading information on codec capabilities skip those
     // not signaled for audio/video (webrtc-datachannel)
-    // and any disabled by default (ulpfec and red).
-    if (codec->mName == "webrtc-datachannel" || codec->mName == "ulpfec" ||
-        codec->mName == "red") {
+    // and any disabled by pref (ulpfec and red).
+    if (codec->mName == "webrtc-datachannel" ||
+        codec->mName == "ulpfec" && !redUlpfecEnabled ||
+        codec->mName == "red" && !redUlpfecEnabled) {
       continue;
     }
 
