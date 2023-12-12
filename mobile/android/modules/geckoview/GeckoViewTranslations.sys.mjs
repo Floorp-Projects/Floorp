@@ -88,9 +88,23 @@ export class GeckoViewTranslations extends GeckoViewModule {
         });
         break;
       case "TranslationsParent:LanguageState":
+        const {
+          detectedLanguages,
+          requestedTranslationPair,
+          error,
+          isEngineReady,
+        } = aEvent.detail.actor.languageState;
+
+        const data = {
+          detectedLanguages,
+          requestedTranslationPair,
+          error,
+          isEngineReady,
+        };
+
         this.eventDispatcher.sendRequest({
           type: "GeckoView:Translations:StateChange",
-          data: aEvent.detail,
+          data,
         });
         break;
     }

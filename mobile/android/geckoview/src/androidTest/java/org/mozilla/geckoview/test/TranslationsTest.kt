@@ -45,6 +45,7 @@ class TranslationsTest : BaseSessionTest() {
                 "browser.translations.automaticallyPopup" to true,
                 "intl.accept_languages" to "en",
                 "browser.translations.geckoview.enableAllTestMocks" to true,
+                "browser.translations.simulateUnsupportedEngine" to false,
             ),
         )
     }
@@ -79,14 +80,18 @@ class TranslationsTest : BaseSessionTest() {
         var expectedTranslateEvent = JSONObject(
             """
             {
-            "detectedLanguages": {
-              "userLangTag": "en",
-              "isDocLangTagSupported": true,
-              "docLangTag": "es"
-            },
-            "requestedTranslationPair": null,
-            "error": null,
-            "isEngineReady": false
+            "actor":{
+                "languageState":{
+                    "detectedLanguages": {
+                      "userLangTag": "en",
+                      "isDocLangTagSupported": true,
+                      "docLangTag": "es"
+                    },
+                    "requestedTranslationPair": null,
+                    "error": null,
+                    "isEngineReady": false
+                    }
+                }
             }
             """.trimIndent(),
         )
