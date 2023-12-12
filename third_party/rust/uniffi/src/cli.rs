@@ -47,7 +47,9 @@ enum Commands {
         #[clap(long = "library")]
         library_mode: bool,
 
-        /// When `--library` is passed, only generate bindings for one crate
+        /// When `--library` is passed, only generate bindings for one crate.
+        /// When `--library` is not passed, use this as the crate name instead of attempting to
+        /// locate and parse Cargo.toml.
         #[clap(long = "crate")]
         crate_name: Option<String>,
 
@@ -69,8 +71,8 @@ enum Commands {
         udl_file: Utf8PathBuf,
     },
 
-    /// Print the JSON representation of the interface from a dynamic library
-    PrintJson {
+    /// Print a debug representation of the interface from a dynamic library
+    PrintRepr {
         /// Path to the library file (.so, .dll, .dylib, or .a)
         path: Utf8PathBuf,
     },
@@ -104,15 +106,13 @@ pub fn run_main() -> anyhow::Result<()> {
                     &source, crate_name, &language, &out_dir, !no_format,
                 )?;
             } else {
-                if crate_name.is_some() {
-                    panic!("--crate requires --library.")
-                }
                 uniffi_bindgen::generate_bindings(
                     &source,
                     config.as_deref(),
                     language,
                     out_dir.as_deref(),
                     lib_file.as_deref(),
+                    crate_name.as_deref(),
                     !no_format,
                 )?;
             }
@@ -128,8 +128,8 @@ pub fn run_main() -> anyhow::Result<()> {
                 !no_format,
             )?;
         }
-        Commands::PrintJson { path } => {
-            uniffi_bindgen::print_json(&path)?;
+        Commands::PrintRepr { path } => {
+            uniffi_bindgen::print_repr(&path)?;
         }
     };
     Ok(())

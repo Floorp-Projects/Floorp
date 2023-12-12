@@ -41,11 +41,11 @@ class ConcurrentHandleMap:
 # to free the callback once it's dropped by Rust.
 IDX_CALLBACK_FREE = 0
 # Return codes for callback calls
-UNIFFI_CALLBACK_SUCCESS = 0
-UNIFFI_CALLBACK_ERROR = 1
-UNIFFI_CALLBACK_UNEXPECTED_ERROR = 2
+_UNIFFI_CALLBACK_SUCCESS = 0
+_UNIFFI_CALLBACK_ERROR = 1
+_UNIFFI_CALLBACK_UNEXPECTED_ERROR = 2
 
-class FfiConverterCallbackInterface:
+class _UniffiConverterCallbackInterface:
     _handle_map = ConcurrentHandleMap()
 
     def __init__(self, cb):
@@ -64,7 +64,7 @@ class FfiConverterCallbackInterface:
 
     @classmethod
     def read(cls, buf):
-        handle = buf.readU64()
+        handle = buf.read_u64()
         cls.lift(handle)
 
     @classmethod
@@ -74,4 +74,4 @@ class FfiConverterCallbackInterface:
 
     @classmethod
     def write(cls, cb, buf):
-        buf.writeU64(cls.lower(cb))
+        buf.write_u64(cls.lower(cb))

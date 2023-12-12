@@ -242,6 +242,8 @@ impl fmt::Display for CallbackError {
     }
 }
 
+impl std::error::Error for CallbackError {}
+
 impl From<uniffi::UnexpectedUniFFICallbackError> for CallbackError {
     fn from(_: uniffi::UnexpectedUniFFICallbackError) -> CallbackError {
         CallbackError::UnexpectedError

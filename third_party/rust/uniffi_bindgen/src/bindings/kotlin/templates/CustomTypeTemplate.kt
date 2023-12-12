@@ -1,4 +1,4 @@
-{%- match kotlin_config.custom_types.get(name.as_str())  %}
+{%- match config.custom_types.get(name.as_str())  %}
 {%- when None %}
 {#- Define the type using typealiases to the builtin #}
 /**
@@ -6,12 +6,12 @@
  * is needed because the UDL type name is used in function/method signatures.
  * It's also what we have an external type that references a custom type.
  */
-public typealias {{ name }} = {{ builtin|type_name }}
+public typealias {{ name }} = {{ builtin|type_name(ci) }}
 public typealias {{ ffi_converter_name }} = {{ builtin|ffi_converter_name }}
 
 {%- when Some with (config) %}
 
-{%- let ffi_type_name=builtin.ffi_type().borrow()|ffi_type_name_by_value %}
+{%- let ffi_type_name=builtin|ffi_type|ffi_type_name_by_value %}
 
 {# When the config specifies a different type name, create a typealias for it #}
 {%- match config.type_name %}

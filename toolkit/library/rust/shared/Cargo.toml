@@ -69,17 +69,19 @@ origin-trials-ffi = { path = "../../../../dom/origin-trials/ffi" }
 jog = { path = "../../../components/glean/bindings/jog" }
 dap_ffi = { path = "../../../components/telemetry/dap/ffi" }
 data-encoding-ffi = { path = "../../../../dom/fs/parent/rust/data-encoding-ffi" }
-uniffi-example-arithmetic = { git = "https://github.com/mozilla/uniffi-rs.git", rev = "c0e64b839018728d8153ce1758d391b7782e2e21", optional = true }
-uniffi-example-geometry = { git = "https://github.com/mozilla/uniffi-rs.git", rev = "c0e64b839018728d8153ce1758d391b7782e2e21", optional = true }
-uniffi-example-rondpoint = { git = "https://github.com/mozilla/uniffi-rs.git", rev = "c0e64b839018728d8153ce1758d391b7782e2e21", optional = true }
-uniffi-example-sprites = { git = "https://github.com/mozilla/uniffi-rs.git", rev = "c0e64b839018728d8153ce1758d391b7782e2e21", optional = true }
-uniffi-example-todolist = { git = "https://github.com/mozilla/uniffi-rs.git", rev = "c0e64b839018728d8153ce1758d391b7782e2e21", optional = true }
+uniffi-example-arithmetic = { git = "https://github.com/mozilla/uniffi-rs.git", rev = "afb29ebdc1d9edf15021b1c5332fc9f285bbe13b", optional = true }
+uniffi-example-geometry = { git = "https://github.com/mozilla/uniffi-rs.git", rev = "afb29ebdc1d9edf15021b1c5332fc9f285bbe13b", optional = true }
+uniffi-example-rondpoint = { git = "https://github.com/mozilla/uniffi-rs.git", rev = "afb29ebdc1d9edf15021b1c5332fc9f285bbe13b", optional = true }
+uniffi-example-sprites = { git = "https://github.com/mozilla/uniffi-rs.git", rev = "afb29ebdc1d9edf15021b1c5332fc9f285bbe13b", optional = true }
+uniffi-example-todolist = { git = "https://github.com/mozilla/uniffi-rs.git", rev = "afb29ebdc1d9edf15021b1c5332fc9f285bbe13b", optional = true }
 uniffi-example-custom-types = { path = "../../../components/uniffi-example-custom-types/", optional = true }
 uniffi-fixture-callbacks = { path = "../../../components/uniffi-fixture-callbacks/", optional = true }
 uniffi-fixture-external-types = { path = "../../../components/uniffi-fixture-external-types/", optional = true }
 binary_http = { path = "../../../../netwerk/protocol/http/binary_http" }
 oblivious_http = { path = "../../../../netwerk/protocol/http/oblivious_http" }
 mime-guess-ffi = { path = "../../../../dom/fs/parent/rust/mime-guess-ffi" }
+# Explicitly list the `uniffi_core` dependency so we can enable the `extern-rustbuffer` feature.
+uniffi_core = { version = "0.25.2", features = ["extern-rustbuffer"] }
 
 # Note: `modern_sqlite` means rusqlite's bindings file be for a sqlite with
 # version less than or equal to what we link to. This isn't a problem because we

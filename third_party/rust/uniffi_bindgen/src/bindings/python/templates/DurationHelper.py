@@ -4,11 +4,11 @@ Duration = datetime.timedelta
 # There is a loss of precision when converting from Rust durations,
 # which are accurate to the nanosecond,
 # to Python durations, which are only accurate to the microsecond.
-class FfiConverterDuration(FfiConverterRustBuffer):
+class _UniffiConverterDuration(_UniffiConverterRustBuffer):
     @staticmethod
     def read(buf):
-        seconds = buf.readU64()
-        microseconds = buf.readU32() / 1.0e3
+        seconds = buf.read_u64()
+        microseconds = buf.read_u32() / 1.0e3
         return datetime.timedelta(seconds=seconds, microseconds=microseconds)
 
     @staticmethod
@@ -17,5 +17,5 @@ class FfiConverterDuration(FfiConverterRustBuffer):
         nanoseconds = value.microseconds * 1000
         if seconds < 0:
             raise ValueError("Invalid duration, must be non-negative")
-        buf.writeI64(seconds)
-        buf.writeU32(nanoseconds)
+        buf.write_i64(seconds)
+        buf.write_u32(nanoseconds)

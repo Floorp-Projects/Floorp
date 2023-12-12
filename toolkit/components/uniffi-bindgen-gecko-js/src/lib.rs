@@ -38,12 +38,6 @@ struct CliArgs {
 
     #[clap(long, value_name = "FILE")]
     fixture_cpp_path: Utf8PathBuf,
-
-    #[clap(long, num_args = 1.., value_name = "FILES")]
-    udl_files: Vec<Utf8PathBuf>,
-
-    #[clap(long, num_args = 1.., value_name = "FILES")]
-    fixture_udl_files: Vec<Utf8PathBuf>,
 }
 
 /// Configuration for all components, read from `uniffi.toml`
@@ -52,6 +46,11 @@ type ConfigMap = HashMap<String, Config>;
 /// Configuration for a single Component
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Config {
+    crate_name: String,
+    udl_file: String,
+    #[serde(default)]
+    fixture: bool,
+    #[serde(default)]
     receiver_thread: ReceiverThreadConfig,
 }
 
@@ -118,7 +117,7 @@ pub fn run_main() -> Result<()> {
     let args = CliArgs::parse();
     let config_map: ConfigMap =
         toml::from_str(include_str!("../config.toml")).expect("Error parsing config.toml");
-    let components = ComponentUniverse::new(args.udl_files, args.fixture_udl_files, config_map)?;
+    let components = ComponentUniverse::new(config_map)?;
     let function_ids = FunctionIds::new(&components);
     let object_ids = ObjectIds::new(&components);
     let callback_ids = CallbackIds::new(&components);

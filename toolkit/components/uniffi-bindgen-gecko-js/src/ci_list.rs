@@ -26,22 +26,10 @@ pub struct ComponentUniverse {
 }
 
 impl ComponentUniverse {
-    pub fn new(
-        udl_files: Vec<Utf8PathBuf>,
-        fixture_udl_files: Vec<Utf8PathBuf>,
-        config_map: ConfigMap,
-    ) -> Result<Self> {
-        let components = udl_files
-            .into_iter()
-            .map(|udl_file| parse_udl_file(udl_file, &config_map))
-            .collect::<Result<Vec<_>>>()?;
-        let fixture_components = fixture_udl_files
-            .into_iter()
-            .map(|udl_file| parse_udl_file(udl_file, &config_map))
-            .collect::<Result<Vec<_>>>()?;
+    pub fn new(config_map: ConfigMap) -> Result<Self> {
         let universe = Self {
-            components,
-            fixture_components,
+            components: parse_udl_files(&config_map, false)?,
+            fixture_components: parse_udl_files(&config_map, true)?,
         };
         universe.check_udl_namespaces_unique()?;
         universe.check_callback_interfaces()?;
@@ -83,14 +71,29 @@ impl ComponentUniverse {
     }
 }
 
-fn parse_udl_file(
-    udl_file: Utf8PathBuf,
+fn parse_udl_files(
     config_map: &ConfigMap,
-) -> Result<(ComponentInterface, Config)> {
-    let udl = std::fs::read_to_string(&udl_file).context("Error reading UDL file")?;
-    let ci = ComponentInterface::from_webidl(&udl).context("Failed to parse UDL")?;
-    let config = config_map.get(ci.namespace()).cloned().unwrap_or_default();
-    Ok((ci, config))
+    fixture: bool,
+) -> Result<Vec<(ComponentInterface, Config)>> {
+    // Sort config entries to ensure consistent output
+    let mut entries: Vec<_> = config_map.iter().collect();
+    entries.sort_by_key(|(key, _)| *key);
+    entries
+        .into_iter()
+        .filter_map(|(_, config)| {
+            if config.fixture == fixture {
+                Some(parse_udl_file(&config).map(|ci| (ci, config.clone())))
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+fn parse_udl_file(config: &Config) -> Result<ComponentInterface> {
+    let udl_file = Utf8PathBuf::from(&config.udl_file);
+    let udl = std::fs::read_to_string(udl_file).context("Error reading UDL file")?;
+    ComponentInterface::from_webidl(&udl, &config.crate_name).context("Failed to parse UDL")
 }
 
 pub struct FunctionIds<'a> {

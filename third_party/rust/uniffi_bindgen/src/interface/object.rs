@@ -21,12 +21,12 @@
 //!   constructor(string? name);
 //!   string my_name();
 //! };
-//! # "##)?;
+//! # "##, "crate_name")?;
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 //!
 //! Will result in an [`Object`] member with one [`Constructor`] and one [`Method`] being added
-//! to the resulting [`ComponentInterface`]:
+//! to the resulting [`crate::ComponentInterface`]:
 //!
 //! ```
 //! # let ci = uniffi_bindgen::interface::ComponentInterface::from_webidl(r##"
@@ -35,7 +35,7 @@
 //! #   constructor(string? name);
 //! #   string my_name();
 //! # };
-//! # "##)?;
+//! # "##, "crate_name")?;
 //! let obj = ci.get_object_definition("Example").unwrap();
 //! assert_eq!(obj.name(), "Example");
 //! assert_eq!(obj.constructors().len(), 1);
@@ -50,24 +50,21 @@
 //! # let ci = uniffi_bindgen::interface::ComponentInterface::from_webidl(r##"
 //! # namespace example {};
 //! # interface Example {};
-//! # "##)?;
+//! # "##, "crate_name")?;
 //! let obj = ci.get_object_definition("Example").unwrap();
 //! assert_eq!(obj.name(), "Example");
 //! assert_eq!(obj.constructors().len(), 0);
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 
-use std::convert::TryFrom;
-use std::{collections::HashSet, iter};
+use std::iter;
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use uniffi_meta::Checksum;
 
-use super::attributes::{ConstructorAttributes, InterfaceAttributes, MethodAttributes};
 use super::ffi::{FfiArgument, FfiFunction, FfiType};
 use super::function::{Argument, Callable};
-use super::types::{ObjectImpl, Type, TypeIterator};
-use super::{APIConverter, AsType, ComponentInterface};
+use super::{AsType, ObjectImpl, Type, TypeIterator};
 
 /// An "object" is an opaque type that is passed around by reference, can
 /// have methods called on it, and so on - basically your classic Object Oriented Programming
@@ -88,6 +85,7 @@ pub struct Object {
     pub(super) name: String,
     /// How this object is implemented in Rust
     pub(super) imp: ObjectImpl,
+    pub(super) module_path: String,
     pub(super) constructors: Vec<Constructor>,
     pub(super) methods: Vec<Method>,
     // The "trait" methods - they have a (presumably "well known") name, and
@@ -105,17 +103,6 @@ pub struct Object {
 }
 
 impl Object {
-    pub(super) fn new(name: String, imp: ObjectImpl) -> Self {
-        Self {
-            name,
-            imp,
-            constructors: Default::default(),
-            methods: Default::default(),
-            uniffi_traits: Default::default(),
-            ffi_func_free: Default::default(),
-        }
-    }
-
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -185,12 +172,8 @@ impl Object {
             )
     }
 
-    pub fn derive_ffi_funcs(&mut self, ci_namespace: &str) -> Result<()> {
-        // The name is already set if the function is defined through a proc-macro invocation
-        // rather than in UDL. Don't overwrite it in that case.
-        if self.ffi_func_free.name().is_empty() {
-            self.ffi_func_free.name = uniffi_meta::free_fn_symbol_name(ci_namespace, &self.name);
-        }
+    pub fn derive_ffi_funcs(&mut self) -> Result<()> {
+        assert!(!self.ffi_func_free.name().is_empty());
         self.ffi_func_free.arguments = vec![FfiArgument {
             name: "ptr".to_string(),
             type_: FfiType::RustArcPtr(self.name.to_string()),
@@ -199,13 +182,13 @@ impl Object {
         self.ffi_func_free.is_object_free_function = true;
 
         for cons in self.constructors.iter_mut() {
-            cons.derive_ffi_func(ci_namespace, &self.name);
+            cons.derive_ffi_func();
         }
         for meth in self.methods.iter_mut() {
-            meth.derive_ffi_func(ci_namespace, &self.name)?;
+            meth.derive_ffi_func()?;
         }
         for ut in self.uniffi_traits.iter_mut() {
-            ut.derive_ffi_func(ci_namespace, &self.name)?;
+            ut.derive_ffi_func()?;
         }
 
         Ok(())
@@ -223,130 +206,50 @@ impl Object {
     }
 }
 
-impl APIConverter<Object> for weedle::InterfaceDefinition<'_> {
-    fn convert(&self, ci: &mut ComponentInterface) -> Result<Object> {
-        if self.inheritance.is_some() {
-            bail!("interface inheritance is not supported");
-        }
-        let attributes = match &self.attributes {
-            Some(attrs) => InterfaceAttributes::try_from(attrs)?,
-            None => Default::default(),
-        };
-
-        let name = self.identifier.0;
-        let object_impl = attributes.object_impl();
-
-        let mut object = Object::new(name.to_string(), object_impl);
-        // Convert each member into a constructor or method, guarding against duplicate names.
-        let mut member_names = HashSet::new();
-        for member in &self.members.body {
-            match member {
-                weedle::interface::InterfaceMember::Constructor(t) => {
-                    let mut cons: Constructor = t.convert(ci)?;
-                    if object_impl == ObjectImpl::Trait {
-                        bail!(
-                            "Trait interfaces can not have constructors: \"{}\"",
-                            cons.name()
-                        )
-                    }
-                    if !member_names.insert(cons.name.clone()) {
-                        bail!("Duplicate interface member name: \"{}\"", cons.name())
-                    }
-                    cons.set_object_name(ci.namespace(), object.name.clone());
-                    object.constructors.push(cons);
-                }
-                weedle::interface::InterfaceMember::Operation(t) => {
-                    let mut method: Method = t.convert(ci)?;
-                    if !member_names.insert(method.name.clone()) {
-                        bail!("Duplicate interface member name: \"{}\"", method.name())
-                    }
-                    method.set_object_info(ci.namespace(), &object);
-                    object.methods.push(method);
-                }
-                _ => bail!("no support for interface member type {:?} yet", member),
-            }
-        }
-        // A helper for our trait methods
-        let mut make_trait_method =
-            |name: &str, arguments: Vec<Argument>, return_type: Option<Type>| -> Result<Method> {
-                // need to add known types as they aren't explicitly referenced in
-                // the UDL
-                if let Some(ref return_type) = return_type {
-                    ci.types.add_known_type(return_type);
-                }
-                for arg in &arguments {
-                    ci.types.add_known_type(&arg.type_);
-                }
-                Ok(Method {
-                    // The name is used to create the ffi function for the method.
-                    name: name.to_string(),
-                    object_name: object.name.clone(),
-                    checksum_fn_name: Default::default(), // gets filled in later.
-                    is_async: false,
-                    object_impl,
-                    arguments,
-                    return_type,
-                    ffi_func: Default::default(),
-                    throws: None,
-                    takes_self_by_arc: false,
-                    checksum_override: None,
-                })
-            };
-        // synthesize the trait methods.
-        for trait_name in attributes.get_traits() {
-            let trait_method = match trait_name.as_str() {
-                "Debug" => UniffiTrait::Debug {
-                    fmt: make_trait_method("uniffi_trait_debug", vec![], Some(Type::String))?,
-                },
-                "Display" => UniffiTrait::Display {
-                    fmt: make_trait_method("uniffi_trait_display", vec![], Some(Type::String))?,
-                },
-                "Eq" => UniffiTrait::Eq {
-                    eq: make_trait_method(
-                        "uniffi_trait_eq_eq",
-                        vec![Argument {
-                            name: "other".to_string(),
-                            type_: Type::Object {
-                                name: object.name().to_string(),
-                                imp: object_impl,
-                            },
-                            by_ref: true,
-                            default: None,
-                            optional: false,
-                        }],
-                        Some(Type::Boolean),
-                    )?,
-                    ne: make_trait_method(
-                        "uniffi_trait_eq_ne",
-                        vec![Argument {
-                            name: "other".to_string(),
-                            type_: Type::Object {
-                                name: object.name().to_string(),
-                                imp: object_impl,
-                            },
-                            by_ref: true,
-                            default: None,
-                            optional: false,
-                        }],
-                        Some(Type::Boolean),
-                    )?,
-                },
-                "Hash" => UniffiTrait::Hash {
-                    hash: make_trait_method("uniffi_trait_hash", vec![], Some(Type::UInt64))?,
-                },
-                _ => bail!("Invalid trait name: {}", trait_name),
-            };
-            object.uniffi_traits.push(trait_method);
-        }
-        Ok(object)
-    }
-}
-
 impl AsType for Object {
     fn as_type(&self) -> Type {
         Type::Object {
             name: self.name.clone(),
+            module_path: self.module_path.clone(),
             imp: self.imp,
+        }
+    }
+}
+
+impl From<uniffi_meta::ObjectMetadata> for Object {
+    fn from(meta: uniffi_meta::ObjectMetadata) -> Self {
+        let ffi_free_name = meta.free_ffi_symbol_name();
+        Object {
+            module_path: meta.module_path,
+            name: meta.name,
+            imp: meta.imp,
+            constructors: Default::default(),
+            methods: Default::default(),
+            uniffi_traits: Default::default(),
+            ffi_func_free: FfiFunction {
+                name: ffi_free_name,
+                ..Default::default()
+            },
+        }
+    }
+}
+
+impl From<uniffi_meta::UniffiTraitMetadata> for UniffiTrait {
+    fn from(meta: uniffi_meta::UniffiTraitMetadata) -> Self {
+        match meta {
+            uniffi_meta::UniffiTraitMetadata::Debug { fmt } => {
+                UniffiTrait::Debug { fmt: fmt.into() }
+            }
+            uniffi_meta::UniffiTraitMetadata::Display { fmt } => {
+                UniffiTrait::Display { fmt: fmt.into() }
+            }
+            uniffi_meta::UniffiTraitMetadata::Eq { eq, ne } => UniffiTrait::Eq {
+                eq: eq.into(),
+                ne: ne.into(),
+            },
+            uniffi_meta::UniffiTraitMetadata::Hash { hash } => {
+                UniffiTrait::Hash { hash: hash.into() }
+            }
         }
     }
 }
@@ -359,6 +262,7 @@ impl AsType for Object {
 pub struct Constructor {
     pub(super) name: String,
     pub(super) object_name: String,
+    pub(super) object_module_path: String,
     pub(super) arguments: Vec<Argument>,
     // We don't include the FFIFunc in the hash calculation, because:
     //  - it is entirely determined by the other fields,
@@ -370,10 +274,9 @@ pub struct Constructor {
     pub(super) ffi_func: FfiFunction,
     pub(super) throws: Option<Type>,
     pub(super) checksum_fn_name: String,
-    // Force a checksum value.  This is used for functions from the proc-macro code, which uses a
-    // different checksum method.
+    // Force a checksum value, or we'll fallback to the trait.
     #[checksum_ignore]
-    pub(super) checksum_override: Option<u16>,
+    pub(super) checksum: Option<u16>,
 }
 
 impl Constructor {
@@ -398,8 +301,7 @@ impl Constructor {
     }
 
     pub fn checksum(&self) -> u16 {
-        self.checksum_override
-            .unwrap_or_else(|| uniffi_meta::checksum(self))
+        self.checksum.unwrap_or_else(|| uniffi_meta::checksum(self))
     }
 
     pub fn throws(&self) -> bool {
@@ -418,33 +320,14 @@ impl Constructor {
         self.name == "new"
     }
 
-    fn derive_ffi_func(&mut self, ci_namespace: &str, obj_name: &str) {
-        // The name is already set if the function is defined through a proc-macro invocation
-        // rather than in UDL. Don't overwrite it in that case.
-        if self.ffi_func.name.is_empty() {
-            self.ffi_func.name =
-                uniffi_meta::constructor_symbol_name(ci_namespace, obj_name, &self.name);
-        }
-
+    fn derive_ffi_func(&mut self) {
+        assert!(!self.ffi_func.name().is_empty());
         self.ffi_func.arguments = self.arguments.iter().map(Into::into).collect();
-        self.ffi_func.return_type = Some(FfiType::RustArcPtr(obj_name.to_string()));
+        self.ffi_func.return_type = Some(FfiType::RustArcPtr(self.object_name.clone()));
     }
 
     pub fn iter_types(&self) -> TypeIterator<'_> {
         Box::new(self.arguments.iter().flat_map(Argument::iter_types))
-    }
-
-    fn set_object_name(&mut self, ci_namespace: &str, object_name: String) {
-        // This is when we setup checksum_fn_name for objects defined in the UDL.  However, don't
-        // overwrite checksum_fn_name if we got it from the proc-macro metadata.
-        if self.checksum_fn_name.is_empty() {
-            self.checksum_fn_name = uniffi_meta::constructor_checksum_symbol_name(
-                ci_namespace,
-                &object_name,
-                &self.name,
-            );
-        }
-        self.object_name = object_name;
     }
 }
 
@@ -461,35 +344,13 @@ impl From<uniffi_meta::ConstructorMetadata> for Constructor {
         Self {
             name: meta.name,
             object_name: meta.self_name,
+            object_module_path: meta.module_path,
             arguments,
             ffi_func,
             throws: meta.throws.map(Into::into),
             checksum_fn_name,
-            checksum_override: Some(meta.checksum),
+            checksum: meta.checksum,
         }
-    }
-}
-
-impl APIConverter<Constructor> for weedle::interface::ConstructorInterfaceMember<'_> {
-    fn convert(&self, ci: &mut ComponentInterface) -> Result<Constructor> {
-        let attributes = match &self.attributes {
-            Some(attr) => ConstructorAttributes::try_from(attr)?,
-            None => Default::default(),
-        };
-        let throws = attributes
-            .get_throws_err()
-            .map(|name| ci.get_type(name).expect("invalid throws type"));
-        Ok(Constructor {
-            name: String::from(attributes.get_name().unwrap_or("new")),
-            // We don't know the name of the containing `Object` at this point, fill it in later.
-            object_name: Default::default(),
-            // Also fill in checksum_fn_name later, since it depends on object_name
-            checksum_fn_name: Default::default(),
-            arguments: self.args.body.list.convert(ci)?,
-            ffi_func: Default::default(),
-            throws,
-            checksum_override: None,
-        })
     }
 }
 
@@ -501,6 +362,7 @@ impl APIConverter<Constructor> for weedle::interface::ConstructorInterfaceMember
 pub struct Method {
     pub(super) name: String,
     pub(super) object_name: String,
+    pub(super) object_module_path: String,
     pub(super) is_async: bool,
     pub(super) object_impl: ObjectImpl,
     pub(super) arguments: Vec<Argument>,
@@ -516,10 +378,9 @@ pub struct Method {
     pub(super) throws: Option<Type>,
     pub(super) takes_self_by_arc: bool,
     pub(super) checksum_fn_name: String,
-    // Force a checksum value.  This is used for functions from the proc-macro code, which uses a
-    // different checksum method.
+    // Force a checksum value, or we'll fallback to the trait.
     #[checksum_ignore]
-    pub(super) checksum_override: Option<u16>,
+    pub(super) checksum: Option<u16>,
 }
 
 impl Method {
@@ -544,6 +405,7 @@ impl Method {
             // is contained in the proper `TypeUniverse`, but this works for now.
             type_: Type::Object {
                 name: self.object_name.clone(),
+                module_path: self.object_module_path.clone(),
                 imp: self.object_impl,
             },
             by_ref: !self.takes_self_by_arc,
@@ -568,8 +430,7 @@ impl Method {
     }
 
     pub fn checksum(&self) -> u16 {
-        self.checksum_override
-            .unwrap_or_else(|| uniffi_meta::checksum(self))
+        self.checksum.unwrap_or_else(|| uniffi_meta::checksum(self))
     }
 
     pub fn throws(&self) -> bool {
@@ -588,13 +449,8 @@ impl Method {
         self.takes_self_by_arc
     }
 
-    pub fn derive_ffi_func(&mut self, ci_namespace: &str, obj_name: &str) -> Result<()> {
-        // The name is already set if the function is defined through a proc-macro invocation
-        // rather than in UDL. Don't overwrite it in that case.
-        if self.ffi_func.name.is_empty() {
-            self.ffi_func.name =
-                uniffi_meta::method_symbol_name(ci_namespace, obj_name, &self.name);
-        }
+    pub fn derive_ffi_func(&mut self) -> Result<()> {
+        assert!(!self.ffi_func.name().is_empty());
         self.ffi_func.init(
             self.return_type.as_ref().map(Into::into),
             self.full_arguments().iter().map(Into::into),
@@ -609,17 +465,6 @@ impl Method {
                 .flat_map(Argument::iter_types)
                 .chain(self.return_type.iter().flat_map(Type::iter_types)),
         )
-    }
-
-    fn set_object_info(&mut self, ci_namespace: &str, object: &Object) {
-        // This is when we setup checksum_fn_name for objects defined in the UDL.  However, don't
-        // overwrite checksum_fn_name if we got it from the proc-macro metadata.
-        if self.checksum_fn_name.is_empty() {
-            self.checksum_fn_name =
-                uniffi_meta::method_checksum_symbol_name(ci_namespace, &object.name, &self.name);
-        }
-        self.object_name = object.name.clone();
-        self.object_impl = object.imp;
     }
 }
 
@@ -640,89 +485,44 @@ impl From<uniffi_meta::MethodMetadata> for Method {
         Self {
             name: meta.name,
             object_name: meta.self_name,
+            object_module_path: meta.module_path,
             is_async,
-            object_impl: ObjectImpl::Struct,
+            object_impl: ObjectImpl::Struct, // will be filled in later
             arguments,
             return_type,
             ffi_func,
             throws: meta.throws.map(Into::into),
-            takes_self_by_arc: false, // not yet supported by procmacros?
+            takes_self_by_arc: meta.takes_self_by_arc,
             checksum_fn_name,
-            checksum_override: Some(meta.checksum),
+            checksum: meta.checksum,
         }
     }
 }
 
 impl From<uniffi_meta::TraitMethodMetadata> for Method {
     fn from(meta: uniffi_meta::TraitMethodMetadata) -> Self {
+        let ffi_name = meta.ffi_symbol_name();
         let checksum_fn_name = meta.checksum_symbol_name();
         let return_type = meta.return_type.map(Into::into);
         let arguments = meta.inputs.into_iter().map(Into::into).collect();
+        let ffi_func = FfiFunction {
+            name: ffi_name,
+            ..FfiFunction::default()
+        };
         Self {
             name: meta.name,
             object_name: meta.trait_name,
+            object_module_path: meta.module_path,
             is_async: false,
             arguments,
             return_type,
             throws: meta.throws.map(Into::into),
-            takes_self_by_arc: false, // not yet supported by procmacros?
+            takes_self_by_arc: meta.takes_self_by_arc,
             checksum_fn_name,
-            checksum_override: Some(meta.checksum),
-            // These are placeholder values that don't affect any behavior since we don't create
-            // scaffolding functions for callback interface methods
-            ffi_func: FfiFunction::default(),
+            checksum: meta.checksum,
+            ffi_func,
             object_impl: ObjectImpl::Struct,
         }
-    }
-}
-
-impl APIConverter<Method> for weedle::interface::OperationInterfaceMember<'_> {
-    fn convert(&self, ci: &mut ComponentInterface) -> Result<Method> {
-        if self.special.is_some() {
-            bail!("special operations not supported");
-        }
-        if self.modifier.is_some() {
-            bail!("method modifiers are not supported")
-        }
-        let return_type = ci.resolve_return_type_expression(&self.return_type)?;
-        let attributes = MethodAttributes::try_from(self.attributes.as_ref())?;
-
-        let throws = match attributes.get_throws_err() {
-            Some(name) => match ci.get_type(name) {
-                Some(t) => {
-                    ci.note_name_used_as_error(name);
-                    Some(t)
-                }
-                None => bail!("unknown type for error: {name}"),
-            },
-            None => None,
-        };
-
-        let takes_self_by_arc = attributes.get_self_by_arc();
-        Ok(Method {
-            name: match self.identifier {
-                None => bail!("anonymous methods are not supported {:?}", self),
-                Some(id) => {
-                    let name = id.0.to_string();
-                    if name == "new" {
-                        bail!("the method name \"new\" is reserved for the default constructor");
-                    }
-                    name
-                }
-            },
-            // We don't know the name of the containing `Object` at this point, fill it in later.
-            object_name: Default::default(),
-            // Also fill in checksum_fn_name later, since it depends on the object name
-            checksum_fn_name: Default::default(),
-            is_async: false,
-            object_impl: ObjectImpl::Struct, // We'll fill this in later too.
-            arguments: self.args.body.list.convert(ci)?,
-            return_type,
-            ffi_func: Default::default(),
-            throws,
-            takes_self_by_arc,
-            checksum_override: None,
-        })
     }
 }
 
@@ -749,16 +549,16 @@ impl UniffiTrait {
         )
     }
 
-    pub fn derive_ffi_func(&mut self, ci_namespace: &str, obj_name: &str) -> Result<()> {
+    pub fn derive_ffi_func(&mut self) -> Result<()> {
         match self {
             UniffiTrait::Display { fmt: m }
             | UniffiTrait::Debug { fmt: m }
             | UniffiTrait::Hash { hash: m } => {
-                m.derive_ffi_func(ci_namespace, obj_name)?;
+                m.derive_ffi_func()?;
             }
             UniffiTrait::Eq { eq, ne } => {
-                eq.derive_ffi_func(ci_namespace, obj_name)?;
-                ne.derive_ffi_func(ci_namespace, obj_name)?;
+                eq.derive_ffi_func()?;
+                ne.derive_ffi_func()?;
             }
         }
         Ok(())
@@ -773,12 +573,17 @@ impl Callable for Constructor {
     fn return_type(&self) -> Option<Type> {
         Some(Type::Object {
             name: self.object_name.clone(),
+            module_path: self.object_module_path.clone(),
             imp: ObjectImpl::Struct,
         })
     }
 
     fn throws_type(&self) -> Option<Type> {
         self.throws_type().cloned()
+    }
+
+    fn is_async(&self) -> bool {
+        false
     }
 }
 
@@ -794,10 +599,15 @@ impl Callable for Method {
     fn throws_type(&self) -> Option<Type> {
         self.throws_type().cloned()
     }
+
+    fn is_async(&self) -> bool {
+        self.is_async
+    }
 }
 
 #[cfg(test)]
 mod test {
+    use super::super::ComponentInterface;
     use super::*;
 
     #[test]
@@ -809,19 +619,25 @@ mod test {
                 sequence<u32> code_points_of_name();
             };
         "#;
-        let ci = ComponentInterface::from_webidl(UDL).unwrap();
+        let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
         assert_eq!(ci.object_definitions().len(), 1);
         ci.get_object_definition("Testing").unwrap();
 
         assert_eq!(ci.iter_types().count(), 6);
-        assert!(ci.iter_types().any(|t| t.canonical_name() == "u16"));
-        assert!(ci.iter_types().any(|t| t.canonical_name() == "u32"));
-        assert!(ci.iter_types().any(|t| t.canonical_name() == "Sequenceu32"));
-        assert!(ci.iter_types().any(|t| t.canonical_name() == "string"));
+        assert!(ci.iter_types().any(|t| t == &Type::UInt16));
+        assert!(ci.iter_types().any(|t| t == &Type::UInt32));
+        assert!(ci.iter_types().any(|t| t
+            == &Type::Sequence {
+                inner_type: Box::new(Type::UInt32)
+            }));
+        assert!(ci.iter_types().any(|t| t == &Type::String));
+        assert!(ci.iter_types().any(|t| t
+            == &Type::Optional {
+                inner_type: Box::new(Type::String)
+            }));
         assert!(ci
             .iter_types()
-            .any(|t| t.canonical_name() == "Optionalstring"));
-        assert!(ci.iter_types().any(|t| t.canonical_name() == "TypeTesting"));
+            .any(|t| matches!(t, Type::Object { name, ..} if name == "Testing")));
     }
 
     #[test]
@@ -834,7 +650,7 @@ mod test {
                 constructor(u32 v);
             };
         "#;
-        let ci = ComponentInterface::from_webidl(UDL).unwrap();
+        let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
         assert_eq!(ci.object_definitions().len(), 1);
 
         let obj = ci.get_object_definition("Testing").unwrap();
@@ -864,7 +680,7 @@ mod test {
                 constructor(u32 v);
             };
         "#;
-        let ci = ComponentInterface::from_webidl(UDL).unwrap();
+        let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
         assert_eq!(ci.object_definitions().len(), 1);
 
         let obj = ci.get_object_definition("Testing").unwrap();
@@ -891,7 +707,7 @@ mod test {
                 void new(u32 v);
             };
         "#;
-        let err = ComponentInterface::from_webidl(UDL).unwrap_err();
+        let err = ComponentInterface::from_webidl(UDL, "crate_name").unwrap_err();
         assert_eq!(
             err.to_string(),
             "the method name \"new\" is reserved for the default constructor"
@@ -907,7 +723,7 @@ mod test {
                 constructor(u32 v);
             };
         "#;
-        let err = ComponentInterface::from_webidl(UDL).unwrap_err();
+        let err = ComponentInterface::from_webidl(UDL, "crate_name").unwrap_err();
         assert_eq!(err.to_string(), "Duplicate interface member name: \"new\"");
 
         const UDL2: &str = r#"
@@ -918,7 +734,7 @@ mod test {
                 constructor(u32 v);
             };
         "#;
-        let err = ComponentInterface::from_webidl(UDL2).unwrap_err();
+        let err = ComponentInterface::from_webidl(UDL2, "crate_name").unwrap_err();
         assert_eq!(err.to_string(), "Duplicate interface member name: \"new\"");
     }
 
@@ -932,7 +748,7 @@ mod test {
             interface ATrait {
             };
         "#;
-        let ci = ComponentInterface::from_webidl(UDL).unwrap();
+        let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
         let obj = ci.get_object_definition("NotATrait").unwrap();
         assert_eq!(obj.imp.rust_name_for(&obj.name), "r#NotATrait");
         let obj = ci.get_object_definition("ATrait").unwrap();
@@ -948,7 +764,7 @@ mod test {
                 constructor();
             };
         "#;
-        let err = ComponentInterface::from_webidl(UDL).unwrap_err();
+        let err = ComponentInterface::from_webidl(UDL, "crate_name").unwrap_err();
         assert_eq!(
             err.to_string(),
             "Trait interfaces can not have constructors: \"new\""

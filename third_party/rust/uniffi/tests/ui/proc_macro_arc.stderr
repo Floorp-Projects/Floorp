@@ -1,35 +1,22 @@
-error[E0277]: the trait bound `Foo: Interface<UniFfiTag>` is not satisfied
+error[E0277]: the trait bound `Foo: FfiConverterArc<UniFfiTag>` is not satisfied
   --> tests/ui/proc_macro_arc.rs:10:1
    |
 10 | #[uniffi::export]
-   | ^^^^^^^^^^^^^^^^^ the trait `Interface<UniFfiTag>` is not implemented for `Foo`
+   | ^^^^^^^^^^^^^^^^^ the trait `FfiConverterArc<UniFfiTag>` is not implemented for `Foo`
    |
-   = help: the trait `FfiConverter<UT>` is implemented for `Arc<T>`
+   = help: the trait `LowerReturn<UT>` is implemented for `Arc<T>`
    = note: required for `Arc<Foo>` to implement `FfiConverter<UniFfiTag>`
+   = note: required for `Arc<Foo>` to implement `Lower<UniFfiTag>`
+   = note: required for `Arc<Foo>` to implement `LowerReturn<UniFfiTag>`
    = note: this error originates in the attribute macro `uniffi::export` (in Nightly builds, run with -Z macro-backtrace for more info)
 
-note: erroneous constant used
-  --> tests/ui/proc_macro_arc.rs:10:1
-   |
-10 | #[uniffi::export]
-   | ^^^^^^^^^^^^^^^^^
-   |
-   = note: this note originates in the attribute macro `uniffi::export` (in Nightly builds, run with -Z macro-backtrace for more info)
-
-error[E0277]: the trait bound `child::Foo: Interface<UniFfiTag>` is not satisfied
+error[E0277]: the trait bound `child::Foo: FfiConverterArc<UniFfiTag>` is not satisfied
   --> tests/ui/proc_macro_arc.rs:20:5
    |
 20 |     #[uniffi::export]
-   |     ^^^^^^^^^^^^^^^^^ the trait `Interface<UniFfiTag>` is not implemented for `child::Foo`
+   |     ^^^^^^^^^^^^^^^^^ the trait `FfiConverterArc<UniFfiTag>` is not implemented for `child::Foo`
    |
-   = help: the trait `FfiConverter<UT>` is implemented for `Arc<T>`
+   = help: the trait `Lift<UT>` is implemented for `Arc<T>`
    = note: required for `Arc<child::Foo>` to implement `FfiConverter<UniFfiTag>`
+   = note: required for `Arc<child::Foo>` to implement `Lift<UniFfiTag>`
    = note: this error originates in the attribute macro `uniffi::export` (in Nightly builds, run with -Z macro-backtrace for more info)
-
-note: erroneous constant used
-  --> tests/ui/proc_macro_arc.rs:20:5
-   |
-20 |     #[uniffi::export]
-   |     ^^^^^^^^^^^^^^^^^
-   |
-   = note: this note originates in the attribute macro `uniffi::export` (in Nightly builds, run with -Z macro-backtrace for more info)

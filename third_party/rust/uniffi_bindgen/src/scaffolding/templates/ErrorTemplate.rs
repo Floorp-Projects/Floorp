@@ -7,16 +7,12 @@
 // public so other crates can refer to it via an `[External='crate'] typedef`
 #}
 
-#[::uniffi::ffi_converter_error(
-    tag = crate::UniFfiTag,
+#[::uniffi::derive_error_for_udl(
     {% if e.is_flat() -%}
     flat_error,
     {% if ci.should_generate_error_read(e) -%}
     with_try_read,
     {%- endif %}
-    {%- endif %}
-    {%- if ci.is_callback_interface_throws_type(e.as_type()) %}
-    handle_unknown_callback_error,
     {%- endif %}
 )]
 enum r#{{ e.name() }} {
