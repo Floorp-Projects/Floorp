@@ -11341,6 +11341,12 @@
   value: 0 # accept all cookies
   mirror: always
 
+# Changes cookieBehavior=5 to block third-party cookies by default
+- name: network.cookie.cookieBehavior.optInPartitioning
+  type: bool
+  value: false
+  mirror: always
+
 # Stale threshold for cookies in seconds.
 - name: network.cookie.staleThreshold
   type: uint32_t

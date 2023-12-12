@@ -439,8 +439,8 @@ CookieService::GetCookieStringFromDocument(Document* aDocument,
       continue;
     }
 
-    if (thirdParty &&
-        !CookieCommons::ShouldIncludeCrossSiteCookieForDocument(cookie)) {
+    if (thirdParty && !CookieCommons::ShouldIncludeCrossSiteCookieForDocument(
+                          cookie, aDocument)) {
       continue;
     }
 
@@ -572,8 +572,8 @@ CookieService::SetCookieStringFromDocument(Document* aDocument,
     }
   }
 
-  if (thirdParty &&
-      !CookieCommons::ShouldIncludeCrossSiteCookieForDocument(cookie)) {
+  if (thirdParty && !CookieCommons::ShouldIncludeCrossSiteCookieForDocument(
+                        cookie, aDocument)) {
     return NS_OK;
   }
 
@@ -1791,6 +1791,22 @@ CookieStatus CookieService::CheckPrefs(
   if (aIsForeign) {
     if (aCookieJarSettings->GetCookieBehavior() ==
             nsICookieService::BEHAVIOR_REJECT_FOREIGN &&
+        !aStorageAccessPermissionGranted) {
+      COOKIE_LOGFAILURE(!aCookieHeader.IsVoid(), aHostURI, aCookieHeader,
+                        "context is third party");
+      CookieLogging::LogMessageToConsole(
+          aCRC, aHostURI, nsIScriptError::warningFlag,
+          CONSOLE_REJECTION_CATEGORY, "CookieRejectedThirdParty"_ns,
+          AutoTArray<nsString, 1>{
+              NS_ConvertUTF8toUTF16(aCookieHeader),
+          });
+      *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN;
+      return STATUS_REJECTED;
+    }
+
+    if (aCookieJarSettings->GetCookieBehavior() ==
+            nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN &&
+        StaticPrefs::network_cookie_cookieBehavior_optInPartitioning() &&
         !aStorageAccessPermissionGranted) {
       COOKIE_LOGFAILURE(!aCookieHeader.IsVoid(), aHostURI, aCookieHeader,
                         "context is third party");
