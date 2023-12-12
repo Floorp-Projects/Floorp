@@ -1,0 +1,4 @@
+[DEFAULT]
+
+["test_extension_serviceworkers_purged_on_pref_disabled.py"]
+["test_temporary_extension_serviceworkers_not_persisted.py"]

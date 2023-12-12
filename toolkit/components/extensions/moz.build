@@ -132,6 +132,7 @@ XPCSHELL_TESTS_MANIFESTS += [
 # in builds where they are enabled (currently only on Nightly builds).
 if CONFIG["MOZ_WEBEXT_WEBIDL_ENABLED"]:
     BROWSER_CHROME_MANIFESTS += ["test/browser/browser-serviceworker.toml"]
+    MARIONETTE_UNIT_MANIFESTS += ["test/marionette/manifest-serviceworker.toml"]
     XPCSHELL_TESTS_MANIFESTS += [
         "test/xpcshell/webidl-api/xpcshell.toml",
         "test/xpcshell/xpcshell-serviceworker.ini",
