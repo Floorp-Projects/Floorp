@@ -376,7 +376,7 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
     if (it != mTextureInfo.end() && it->second.mSnapshotShmem.IsReadable()) {
       ipc::Shmem& shmem = it->second.mSnapshotShmem;
       mRecorder->RecordEvent(RecordedPrepareShmem(aTextureId));
-      uint32_t checkpoint = mRecorder->CreateCheckpoint();
+      auto checkpoint = CreateCheckpoint();
       mRecorder->WaitForCheckpoint(checkpoint);
       gfx::IntSize size = aSurface->GetSize();
       gfx::SurfaceFormat format = aSurface->GetFormat();
