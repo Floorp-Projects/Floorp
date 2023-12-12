@@ -2,18 +2,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<panel id="report-broken-main-menu-panel"
-       class="cui-widget-panel panel-no-padding"
-       type="arrow"
-       role="alertdialog"
-       aria-labelledby="report-broken-site-panel-intro"
-       noautofocus="true"
-       tabspecific="true"
-       flip="slide"
-       orient="vertical">
-  <panelmultiview mainViewId="report-broken-site-popup-mainView"/>
-</panel>
-
 <panelview id="report-broken-site-popup-mainView"
            class="report-broken-site-view main-view PanelUI-subView"
            role="document"
@@ -21,8 +9,8 @@
            data-l10n-attrs="title"
            hidden="true"
            showheader="true">
-  <!-- Once bug 1864957 is fixed, the wants-back-button attribute here
-       should probably be removed, as well as in PanelMultiView.sys.mjs.
+  <!-- wants-back-button will be removed in bug 1869574
+       (and also from PanelMultiView.sys.mjs)
   -->
   <box class="panel-header" wants-back-button="true">
     <html:h1 role="heading" aria-level="1">

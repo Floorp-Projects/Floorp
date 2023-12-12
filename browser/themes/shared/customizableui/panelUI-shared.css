@@ -433,8 +433,7 @@ panelview[id^=PanelUI-webext-] {
 /* The Report Broken Site panel can be opened from the Help menu
  * in the menubar, which isn't a descendant of #appMenu-popup.
  * Target it specifically in this rule to make it the same width
- * as if it was a standard panelview opened from the app menu.
- * This hack should probably be removed once bug 1864957 is fixed. */
+ * as if it was a standard panelview opened from the app menu. */
 #report-broken-site-popup-mainView[mainview],
 #PanelUI-fxa {
   width: 22.5em;
