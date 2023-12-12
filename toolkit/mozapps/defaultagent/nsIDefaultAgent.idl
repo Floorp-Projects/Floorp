@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsICommandLine.idl"
+ #include "nsISupports.idl"
 
 [scriptable, uuid(edc38cb5-b6f6-4aeb-bd45-7be8e00fc364)]
 interface nsIDefaultAgent : nsISupports

@@ -102,7 +102,7 @@ export async function runBackgroundTask(commandLine) {
       defaultAgent.doTask(aumid, force);
 
       // Bug 1857333: We wait for arbitrary time for Glean to submit telemetry.
-      console.error("Pinged glean, waiting for submission.");
+      console.info("Pinged glean, waiting for submission.");
       await new Promise(resolve => setTimeout(resolve, 5000));
 
       return EXIT_CODE.SUCCESS;
