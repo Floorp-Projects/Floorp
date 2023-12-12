@@ -86,6 +86,8 @@ XPCOM_MANIFESTS += [
     "components.conf",
 ]
 
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]
+
 # If defines are added to this list that are required by the Cache,
 # SetDefaultBrowser, or their dependencies (Registry, EventLog, common),
 # tests/gtest/moz.build will need to be updated as well.
