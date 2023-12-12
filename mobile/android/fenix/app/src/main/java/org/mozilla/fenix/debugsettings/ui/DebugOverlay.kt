@@ -36,7 +36,7 @@ fun DebugOverlay() {
         modifier = Modifier.fillMaxSize(),
     ) {
         FloatingActionButton(
-            icon = painterResource(R.drawable.ic_new),
+            icon = painterResource(R.drawable.ic_debug_transparent_fire_24),
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .padding(start = 16.dp),
