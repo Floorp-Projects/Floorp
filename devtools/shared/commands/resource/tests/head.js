@@ -135,3 +135,17 @@ async function triggerNetworkRequests(browser, commands) {
     });
   }
 }
+
+/**
+ * Get the stylesheet text for a given stylesheet resource.
+ *
+ * @param {Object} styleSheetResource
+ * @returns Promise<String>
+ */
+async function getStyleSheetResourceText(styleSheetResource) {
+  const styleSheetsFront = await styleSheetResource.targetFront.getFront(
+    "stylesheets"
+  );
+  const res = await styleSheetsFront.getText(styleSheetResource.resourceId);
+  return res.string();
+}

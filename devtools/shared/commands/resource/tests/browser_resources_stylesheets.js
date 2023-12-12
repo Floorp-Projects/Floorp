@@ -669,10 +669,7 @@ async function assertResource(resource, expected) {
     ResourceCommand.TYPES.STYLESHEET,
     "Resource type is correct"
   );
-  const styleSheetsFront = await resource.targetFront.getFront("stylesheets");
-  const styleText = (
-    await styleSheetsFront.getText(resource.resourceId)
-  ).str.trim();
+  const styleText = (await getStyleSheetResourceText(resource)).trim();
   is(styleText, expected.styleText, "Style text is correct");
   is(resource.href, expected.href, "href is correct");
   is(resource.nodeHref, expected.nodeHref, "nodeHref is correct");
