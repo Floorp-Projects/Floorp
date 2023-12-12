@@ -479,7 +479,7 @@
 
 <!-- Passwords -->
 <groupbox id="passwordsGroup" orient="vertical" data-category="panePrivacy" data-subcategory="logins" hidden="true">
-  <label><html:h2 data-l10n-id="pane-privacy-logins-and-passwords-header" data-l10n-attrs="searchkeywords"/></label>
+  <label><html:h2 data-l10n-id="pane-privacy-passwords-header" data-l10n-attrs="searchkeywords"/></label>
 
   <vbox id="passwordSettings">
     <hbox id="passwordManagerExtensionContent"
@@ -497,20 +497,19 @@
       <vbox flex="1">
         <hbox>
           <checkbox id="savePasswords"
-                    data-l10n-id="forms-ask-to-save-logins"
+                    data-l10n-id="forms-ask-to-save-passwords"
                     preference="signon.rememberSignons"
                     flex="1" />
         </hbox>
         <hbox class="indent" flex="1">
           <checkbox id="passwordAutofillCheckbox"
-                    data-l10n-id="forms-fill-logins-and-passwords"
-                    search-l10n-id="forms-fill-logins-and-passwords.label"
+                    data-l10n-id="forms-fill-usernames-and-passwords"
                     preference="signon.autofillForms"
                     flex="1" />
         </hbox>
         <hbox class="indent" id="generatePasswordsBox" flex="1">
           <checkbox id="generatePasswords"
-                    data-l10n-id="forms-generate-passwords"
+                    data-l10n-id="forms-suggest-passwords"
                     preference="signon.generation.enabled"
                     flex="1" />
         </hbox>
@@ -529,14 +528,14 @@
         <button id="showPasswords"
                 is="highlightable-button"
                 class="accessory-button"
-                data-l10n-id="forms-saved-logins"
+                data-l10n-id="forms-saved-passwords"
                 preference="pref.privacy.disable_button.view_passwords"/>
       </vbox>
     </hbox>
     <hbox class="indent" id="relayIntegrationBox" flex="1" align="center">
       <checkbox id="relayIntegration"
                 class="tail-with-learn-more"
-                data-l10n-id="preferences-relay-integration-checkbox"/>
+                data-l10n-id="preferences-relay-integration-checkbox2"/>
       <html:a id="relayIntegrationLearnMoreLink" class="learnMore"
              data-l10n-id="relay-integration-learn-more-link"/>
     </hbox>
