@@ -1,0 +1,117 @@
+diff -Nru pygobject-3.26.1/debian/changelog pygobject-3.26.1/debian/changelog
+--- pygobject-3.26.1/debian/changelog	2019-01-29 21:46:03.000000000 +0900
++++ pygobject-3.26.1/debian/changelog	2023-12-08 09:22:32.000000000 +0900
+@@ -1,3 +1,9 @@
++pygobject (3.26.1-2ubuntu1.ub18moz1) bionic; urgency=medium
++
++  * Backport fix for python 3.8 support.
++
++ -- Mike Hommey <mhommey@mozilla.com>  Fri, 08 Dec 2023 09:22:32 +0900
++
+ pygobject (3.26.1-2ubuntu1) bionic; urgency=medium
+
+   * Update Vcs fields for ubuntu/bionic branch
+diff -Nru pygobject-3.26.1/debian/patches/python3.8.patch pygobject-3.26.1/debian/patches/python3.8.patch
+--- pygobject-3.26.1/debian/patches/python3.8.patch	1970-01-01 09:00:00.000000000 +0900
++++ pygobject-3.26.1/debian/patches/python3.8.patch	2023-12-08 09:22:32.000000000 +0900
+@@ -0,0 +1,94 @@
++Description: Backport fix for python 3.8 support
++
++Original upstream patch:
++https://gitlab.gnome.org/GNOME/pygobject/-/commit/bfc759c9c0bb
++
++Original backport to 3.28:
++https://svnweb.freebsd.org/ports/head/devel/pygobject3-common/files/patch-python38?view=markup&pathrev=537996
++
++--- pygobject-3.26.1.orig/gi/gimodule.c
+++++ pygobject-3.26.1/gi/gimodule.c
++@@ -689,7 +689,10 @@ PYGLIB_MODULE_START(_gi, "_gi")
++     pygi_error_register_types (module);
++     _pygi_repository_register_types (module);
++     _pygi_info_register_types (module);
+++    pygobject_type_register_types (module_dict);
+++    pygobject_pointer_register_types (module_dict);
++     _pygi_struct_register_types (module);
+++    pygobject_boxed_register_types (module_dict);
++     _pygi_boxed_register_types (module);
++     _pygi_ccallback_register_types (module);
++     pygi_resulttuple_register_types (module);
++@@ -703,12 +706,9 @@ PYGLIB_MODULE_START(_gi, "_gi")
++     pygobject_register_features (module_dict);
++     pygobject_register_version_tuples (module_dict);
++     pygobject_register_warnings (module_dict);
++-    pygobject_type_register_types (module_dict);
++     pygobject_object_register_types (module_dict);
++     pygobject_interface_register_types (module_dict);
++     pygobject_paramspec_register_types (module_dict);
++-    pygobject_boxed_register_types (module_dict);
++-    pygobject_pointer_register_types (module_dict);
++     pygobject_enum_register_types (module_dict);
++     pygobject_flags_register_types (module_dict);
++
++--- pygobject-3.26.1.orig/gi/pygboxed.c
+++++ pygobject-3.26.1/gi/pygboxed.c
++@@ -162,6 +162,7 @@ pyg_register_boxed(PyObject *dict, const
++     if (!type->tp_dealloc)  type->tp_dealloc  = (destructor)pyg_boxed_dealloc;
++
++     Py_TYPE(type) = &PyType_Type;
+++    g_assert (Py_TYPE (&PyGBoxed_Type) != NULL);
++     type->tp_base = &PyGBoxed_Type;
++
++     if (PyType_Ready(type) < 0) {
++--- pygobject-3.26.1.orig/gi/pygi-boxed.c
+++++ pygobject-3.26.1/gi/pygi-boxed.c
++@@ -242,6 +242,7 @@ void
++ _pygi_boxed_register_types (PyObject *m)
++ {
++     Py_TYPE(&PyGIBoxed_Type) = &PyType_Type;
+++    g_assert (Py_TYPE (&PyGBoxed_Type) != NULL);
++     PyGIBoxed_Type.tp_base = &PyGBoxed_Type;
++     PyGIBoxed_Type.tp_new = (newfunc) _boxed_new;
++     PyGIBoxed_Type.tp_init = (initproc) _boxed_init;
++--- pygobject-3.26.1.orig/gi/pygi-struct.c
+++++ pygobject-3.26.1/gi/pygi-struct.c
++@@ -221,6 +221,7 @@ void
++ _pygi_struct_register_types (PyObject *m)
++ {
++     Py_TYPE(&PyGIStruct_Type) = &PyType_Type;
+++    g_assert (Py_TYPE (&PyGPointer_Type) != NULL);
++     PyGIStruct_Type.tp_base = &PyGPointer_Type;
++     PyGIStruct_Type.tp_new = (newfunc) _struct_new;
++     PyGIStruct_Type.tp_init = (initproc) _struct_init;
++--- pygobject-3.26.1.orig/gi/pyginterface.c
+++++ pygobject-3.26.1/gi/pyginterface.c
++@@ -72,6 +72,7 @@ pyg_register_interface(PyObject *dict, c
++     PyObject *o;
++
++     Py_TYPE(type) = &PyType_Type;
+++    g_assert (Py_TYPE (&PyGInterface_Type) != NULL);
++     type->tp_base = &PyGInterface_Type;
++
++     if (PyType_Ready(type) < 0) {
++--- pygobject-3.26.1.orig/gi/pygpointer.c
+++++ pygobject-3.26.1/gi/pygpointer.c
++@@ -117,6 +117,7 @@ pyg_register_pointer(PyObject *dict, con
++     if (!type->tp_dealloc) type->tp_dealloc = (destructor)pyg_pointer_dealloc;
++
++     Py_TYPE(type) = &PyType_Type;
+++    g_assert (Py_TYPE (&PyGPointer_Type) != NULL);
++     type->tp_base = &PyGPointer_Type;
++
++     if (PyType_Ready(type) < 0) {
++--- pygobject-3.26.1.orig/gi/pygtype.c
+++++ pygobject-3.26.1/gi/pygtype.c
++@@ -345,6 +345,7 @@ pyg_type_wrapper_new(GType type)
++ {
++     PyGTypeWrapper *self;
++
+++    g_assert (Py_TYPE (&PyGTypeWrapper_Type) != NULL);
++     self = (PyGTypeWrapper *)PyObject_NEW(PyGTypeWrapper,
++ 					  &PyGTypeWrapper_Type);
++     if (self == NULL)
+diff -Nru pygobject-3.26.1/debian/patches/series pygobject-3.26.1/debian/patches/series
+--- pygobject-3.26.1/debian/patches/series	2019-01-29 21:46:03.000000000 +0900
++++ pygobject-3.26.1/debian/patches/series	2023-12-08 09:22:20.000000000 +0900
+@@ -1 +1,2 @@
+ fix-tests-with-newest-glib.patch
++python3.8.patch
