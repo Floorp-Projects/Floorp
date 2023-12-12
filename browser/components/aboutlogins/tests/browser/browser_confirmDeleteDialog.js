@@ -37,23 +37,23 @@ add_task(async function test() {
     ]);
 
     Assert.equal(
-      title.textContent,
-      "Remove this login?",
+      title.dataset.l10nId,
+      "about-logins-confirm-delete-dialog-title",
       "Title contents should match l10n attribute set on outer element"
     );
     Assert.equal(
-      message.textContent,
-      "This action cannot be undone.",
+      message.dataset.l10nId,
+      "about-logins-confirm-delete-dialog-message",
       "Message contents should match l10n attribute set on outer element"
     );
     Assert.equal(
-      cancelButton.textContent,
-      "Cancel",
+      cancelButton.dataset.l10nId,
+      "confirmation-dialog-cancel-button",
       "Cancel button contents should match l10n attribute set on outer element"
     );
     Assert.equal(
-      confirmDeleteButton.textContent,
-      "Remove",
+      confirmDeleteButton.dataset.l10nId,
+      "about-logins-confirm-remove-dialog-confirm-button",
       "Remove button contents should match l10n attribute set on outer element"
     );
 
