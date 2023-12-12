@@ -12,6 +12,7 @@
     import * as scriptTestsData from "./support/script-tests-data.js";
     import * as linkTestsData from "./support/link-tests-data.js";
     import * as fontfaceTestsData from "./support/font-face-tests-data.js";
+    import * as imageTestsData from "./support/image-tests-data.js";
 
     const kTopicHttpOnOpeningRequest = "http-on-opening-request";
 
@@ -43,7 +44,9 @@
       return (new Set(fileNames)).size == fileNames.length;
     }
 
-    const kTestGroups = [scriptTestsData, linkTestsData, fontfaceTestsData];
+    const kTestGroups = [
+      scriptTestsData, linkTestsData, fontfaceTestsData, imageTestsData
+    ];
 
     const kSupportFolderName = "support";
 
