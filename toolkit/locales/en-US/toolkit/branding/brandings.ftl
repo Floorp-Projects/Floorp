@@ -15,6 +15,8 @@
 ## https://mozilla-l10n.github.io/styleguides/mozilla_general/#brands-copyright-and-trademark
 
 -facebook-container-brand-name = Facebook Container
+-lockwise-brand-name = Firefox Lockwise
+-lockwise-brand-short-name = Lockwise
 -monitor-brand-name = Firefox Monitor
 -monitor-brand-short-name = Monitor
 -pocket-brand-name = Pocket

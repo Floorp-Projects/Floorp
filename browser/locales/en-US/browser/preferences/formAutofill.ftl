@@ -4,11 +4,11 @@
 
 ## The address and credit card autofill management dialog in browser preferences
 
-autofill-manage-addresses-title = Saved addresses
+autofill-manage-addresses-title = Saved Addresses
 autofill-manage-addresses-list-header = Addresses
 
-autofill-manage-payment-methods-title = Saved payment methods
-autofill-manage-cards-list-header = Cards
+autofill-manage-credit-cards-title = Saved Credit Cards
+autofill-manage-credit-cards-list-header = Credit Cards
 
 autofill-manage-dialog =
     .style = min-width: 560px
@@ -46,9 +46,9 @@ address-capture-edit-address-button =
 
 
 # The dialog title for creating addresses in browser preferences.
-autofill-add-address-title = Add address
+autofill-add-new-address-title = Add New Address
 # The dialog title for editing addresses in browser preferences.
-autofill-edit-address-title = Edit address
+autofill-edit-address-title = Edit Address
 
 autofill-address-name = Name
 autofill-address-given-name = First Name
@@ -121,9 +121,9 @@ autofill-country-warning-message = Form Autofill is currently available only for
 autofill-message-tooltip = View message about autofill
 
 # The dialog title for creating credit cards in browser preferences.
-autofill-add-card-title = Add card
+autofill-add-new-card-title = Add New Credit Card
 # The dialog title for editing credit cards in browser preferences.
-autofill-edit-card-title2 = Edit card
+autofill-edit-card-title = Edit Credit Card
 
 # In macOS, this string is preceded by the operating system with "Firefox is trying to ",
 # and has a period added to its end. Make sure to test in your locale.
