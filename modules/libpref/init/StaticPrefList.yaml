@@ -13930,7 +13930,7 @@
 # Dispatch WebAuthn requests to the macOS platform API
 - name: security.webauthn.enable_macos_passkeys
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Dispatch WebAuthn requests to authenticator-rs
