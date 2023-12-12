@@ -252,5 +252,5 @@ device-migration-fxa-spotlight-older-device-body = An account keeps your importa
 device-migration-fxa-spotlight-older-device-primary-button = Create an account
 
 device-migration-fxa-spotlight-getting-new-device-header-2 = New device in your future?
-device-migration-fxa-spotlight-getting-new-device-body = Back up your data now, so you’re ready to go when your device arrives.
+device-migration-fxa-spotlight-getting-new-device-body-2 = Follow a few simple steps to bring your bookmarks, history, and passwords with you when you get started on a new device.
 device-migration-fxa-spotlight-getting-new-device-primary-button = How to back up my data
