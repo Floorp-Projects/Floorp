@@ -2275,14 +2275,14 @@ ALIGN function_align
     vpbroadcastd        xm4, [base+z_filter_k-4+r3*4+12*2]
     punpckhqdq          xm3, xm3      ; 34 44 44 44
     pmaddubsw           xm3, xm4
-    movd                xm4, r6m      ; max_width
-    pminsw              xm4, xm15
-    vpbroadcastb        xm4, xm4
+    vpbroadcastd        xm4, r6m      ; max_width
+    packssdw            xm4, xm4
     paddw               xm0, xm2
     paddw               xm0, xm3
     pmulhrsw            xm0, xm13
-    psubb               xm4, [base+pb_1to32]
+    packsswb            xm4, xm4
     psrlq               xm1, 8
+    psubb               xm4, [base+pb_1to32]
     packuswb            xm0, xm0
     vpblendvb           xm0, xm1, xm4
     movd           [rsp+65], xm0
@@ -2324,14 +2324,14 @@ ALIGN function_align
     vpbroadcastd         m3, [base+z_filter_k-4+r3*4+12*2]
     pshufb               m2, m4
     pmaddubsw            m2, m3
-    movd                xm4, r7m ; max_height
-    pminsw              xm4, xm15
-    vpbroadcastb        xm4, xm4
-    psubb               xm4, [base+pb_16to1]
+    vpbroadcastd        xm4, r7m ; max_height
+    packssdw            xm4, xm4
     paddw                m1, m0
     paddw                m1, m2
     pmulhrsw             m1, m13
+    packsswb            xm4, xm4
     vextracti128        xm0, m1, 1
+    psubb               xm4, [base+pb_16to1]
     packuswb            xm0, xm1
     vpblendvb           xm0, [rsp+48], xm4
     mova           [rsp+48], xm0
@@ -2465,14 +2465,14 @@ ALIGN function_align
     pmaddubsw           xm2, xm4
     vpbroadcastd        xm4, [base+z_filter_k-4+r3*4+12*2]
     pmaddubsw           xm3, xm4
-    movd                xm4, r6m ; max_width
-    pminuw              xm4, xm15
-    vpbroadcastb        xm4, xm4
+    vpbroadcastd        xm4, r6m ; max_width
+    packssdw            xm4, xm4
     paddw               xm0, xm2
     paddw               xm0, xm3
     pmulhrsw            xm0, xm13
-    psubb               xm4, [base+pb_1to32]
+    packsswb            xm4, xm4
     psrldq              xm1, 1
+    psubb               xm4, [base+pb_1to32]
     packuswb            xm0, xm0
     vpblendvb           xm0, xm1, xm4
     movq           [rsp+65], xm0
@@ -2530,14 +2530,14 @@ ALIGN function_align
     vinserti128          m2, [rsp+43], 1
     pshufb               m0, m2, m0
     pmaddubsw            m0, m7
-    movd                xm7, r7m ; max_height
+    vpbroadcastd         m7, r7m ; max_height
     pshufb               m1, m2, m1
     pmaddubsw            m1, m8
     pshufb               m2, m4
     pmaddubsw            m2, m9
-    pminsw              xm7, xm15
+    packssdw             m7, m7
     paddw                m1, m0
-    vpbroadcastb         m7, xm7
+    packsswb             m7, m7
     paddw                m1, m2
     pmulhrsw             m1, m13
     psubb                m7, [base+pb_32to1]
@@ -2679,14 +2679,14 @@ ALIGN function_align
     shufps               m2, m1, q2121                ; 12 23 34 45 56 67 78 89   89 9a ab bc cd de ef ff
     pmaddubsw            m2, m4
     pmaddubsw            m1, m5
-    movd                xm4, r6m ; max_width
-    pminsw              xm4, xm15
-    vpbroadcastb        xm4, xm4
+    vpbroadcastd        xm4, r6m ; max_width
+    packssdw            xm4, xm4
     paddw                m0, m2
     paddw                m0, m1
     pmulhrsw             m0, m13
-    psubb               xm4, [base+pb_1to32]
+    packsswb            xm4, xm4
     vextracti128        xm2, m0, 1
+    psubb               xm4, [base+pb_1to32]
     packuswb            xm0, xm2
     vpblendvb           xm0, xm6, xm4
     movu           [rsp+65], xm0
@@ -2703,9 +2703,9 @@ ALIGN function_align
     vpbroadcastd         m8, [base+z_filter_k-4+r3*4+12*1]
     vpbroadcastd         m9, [base+z_filter_k-4+r3*4+12*2]
 .w16_filter_left:
-    movd                xm6, r7m ; max_height
-    pminsw              xm6, xm15
-    vpbroadcastb         m6, xm6
+    vpbroadcastd         m6, r7m ; max_height
+    packssdw             m6, m6
+    packsswb             m6, m6
     cmp                  hd, 32
     jl .w16_filter_left_h16
     vpbroadcastd        xm0, [base+pb_5]
@@ -2916,9 +2916,9 @@ ALIGN function_align
     vinserti128          m6, [base+z_filter_s+22], 1 ; 56 67 78 89 9a ab bc cd   ab bc cd de ef ff ff ff
     movu                xm3, [tlq+ 6]
     vinserti128          m3, [tlq+17], 1
-    movd                xm0, r6m ; max_width
-    pminsw              xm0, xm15
-    vpbroadcastb        m10, xm0
+    vpbroadcastd        m10, r6m ; max_width
+    packssdw            m10, m10
+    packsswb            m10, m10
 .w32_filter_above:
     pshufb               m0, m1, m5
     shufps               m4, m5, m6, q1021           ; 12 23 34 45 56 67 78 89   67 78 89 9a ab bc cd de
@@ -2974,20 +2974,20 @@ ALIGN function_align
     paddw                m0, m3
     movu                xm2, [tlq+36]
     vinserti128          m2, [tlq+49], 1
+    vpbroadcastd        m10, r6m ; max_width
     pshufb               m4, m2, m4
     pmaddubsw            m4, m7
     pshufb               m3, m2, m6
     pmaddubsw            m3, m8
     pshufb               m2, m5
     pmaddubsw            m2, m9
-    movd                xm5, r6m ; max_width
-    pminsw              xm5, xm15
-    vpbroadcastb        m10, xm5
+    packssdw            m10, m10
     paddw                m3, m4
     paddw                m2, m3
     vpbroadcastd         m3, [base+pb_32]
     pmulhrsw             m0, m13
     pmulhrsw             m2, m13
+    packsswb            m10, m10
     mova                xm5, [base+z_filter_s]
     vinserti128          m5, [base+z_filter_s+6], 1
     psubb                m3, m10, m3
