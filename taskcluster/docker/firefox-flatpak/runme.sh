@@ -75,6 +75,7 @@ cp -v "$SCRIPT_DIRECTORY/org.mozilla.firefox.desktop" "$WORKSPACE"
 cp -v "$SCRIPT_DIRECTORY/policies.json" "$WORKSPACE"
 cp -v "$SCRIPT_DIRECTORY/default-preferences.js" "$WORKSPACE"
 cp -v "$SCRIPT_DIRECTORY/launch-script.sh" "$WORKSPACE"
+cp -v "$SCRIPT_DIRECTORY/firefox-symbolic.svg" "$WORKSPACE"
 cd "${WORKSPACE}"
 
 flatpak remote-add --user --if-not-exists --from flathub https://dl.flathub.org/repo/flathub.flatpakrepo
@@ -125,6 +126,7 @@ install -D -m644 -t "${appdir}/share/applications" org.mozilla.firefox.desktop
 for size in 16 32 48 64 128; do
     install -D -m644 "${appdir}/lib/firefox/browser/chrome/icons/default/default${size}.png" "${appdir}/share/icons/hicolor/${size}x${size}/apps/org.mozilla.firefox.png"
 done
+install -D -m644 firefox-symbolic.svg "${appdir}/share/icons/hicolor/symbolic/apps/org.mozilla.firefox-symbolic.svg"
 mkdir -p "${appdir}/lib/ffmpeg"
 mkdir -p "${appdir}/etc/firefox"
 
