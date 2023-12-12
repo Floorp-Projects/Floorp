@@ -87,48 +87,6 @@ const EXCLUDED_TAGS = new Set([
   "TEXTAREA",
 ]);
 
-// Tags that are treated as assumed inline. This list has been created by heuristics
-// and excludes some commonly inline tags, due to how they are used practically.
-//
-// An actual list of inline elements is available here:
-// https://developer.mozilla.org/en-US/docs/Web/HTML/Inline_elements#list_of_inline_elements
-const INLINE_TAGS = new Set([
-  "ABBR",
-  "B",
-  "CODE",
-  "DEL",
-  "EM",
-  "I",
-  "INS",
-  "KBD",
-  "MARK",
-  "MATH",
-  "OUTPUT",
-  "Q",
-  "RUBY",
-  "SMALL",
-  "STRONG",
-  "SUB",
-  "SUP",
-  "TIME",
-  "U",
-  "VAR",
-  "WBR",
-
-  // These are not really inline, but bergamot-translator treats these as
-  // sentence-breaking.
-  "BR",
-  "TD",
-  "TH",
-  "LI",
-]);
-
-/**
- * Tags that can't reliably be assumed to be inline or block elements. They default
- * to inline, but are often used as block elements.
- */
-const GENERIC_TAGS = new Set(["A", "SPAN"]);
-
 /**
  * Options used by the mutation observer
  */
@@ -1360,44 +1318,24 @@ function isNodeQueued(node, queuedNodes) {
 }
 
 /**
- * Test whether this node should be treated as a wrapper of text, e.g.
- * a `<p>`, or as a wrapper for block elements, e.g. `<div>`, based on
- * its ratio of assumed inline elements, and assumed "block" elements. If it is a wrapper
- * of block elements, then it needs more subdividing. This algorithm is based on
- * heuristics and is a best effort attempt at sorting contents without actually computing
- * the style of every element.
+ * Reads the elements computed style and determines if the element is inline or not.
  *
- * If it's a Text node, it's inline and doesn't need subdividing.
- *
- *  "Lorem ipsum"
- *
- * If it is mostly filled with assumed "inline" elements, treat it as inline.
- *   <p>
- *     Lorem ipsum dolor sit amet, consectetur adipiscing elit.
- *     <b>Nullam ut finibus nibh</b>, at tincidunt tellus.
- *   </p>
- *
- *   Since it has 3 "inline" elements.
- *     1. "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
- *     2. <b>Nullam ut finibus nibh</b>
- *     3. ", at tincidunt tellus."
- *
- * If it's mostly filled with block elements, do not treat it as inline, as it will
- * need more subdividing.
- *
- *   <section>
- *     Lorem ipsum <strong>dolor sit amet.</strong>
- *     <div>Nullam ut finibus nibh, at tincidunt tellus.</div>
- *     <div>Morbi pharetra mauris sed nisl mollis molestie.</div>
- *     <div>Donec et nibh sit amet velit tincidunt auctor.</div>
- *   </section>
- *
- *   This node has 2 presumed "inline" elements:
- *       1 "Lorem ipsum"
- *       2. <strong>dolor sit amet.</strong>.
- *
- *   And the 3 div "block" elements. Since 3 "block" elements > 2 "inline" elements,
- *   it is presumed to be "inline".
+ * @param {Element} element
+ */
+function getIsInline(element) {
+  const win = element.ownerGlobal;
+  if (element.namespaceURI === "http://www.w3.org/2000/svg") {
+    // SVG elements will report as inline, but there is no block layout in SVG.
+    // Treat every SVG element as being block so that every node will be subdivided.
+    return false;
+  }
+  return win.getComputedStyle(element).display === "inline";
+}
+
+/**
+ * Determine if this element is an inline element or a block element. Inline elements
+ * should be sent as a contiguous chunk of text, while block elements should be further
+ * subdivided before sending them in for translation.
  *
  * @param {Node} node
  * @returns {boolean}
@@ -1408,51 +1346,28 @@ function nodeNeedsSubdividing(node) {
     return false;
   }
 
-  let inlineElements = 0;
-  let blockElements = 0;
-
-  if (node.nodeName === "TR") {
-    // TR elements always need subdividing, since the cells are the individual "inline"
-    // units. For instance the following would be invalid markup:
-    //
-    //   <tr>
-    //     This is <b>invalid</b>
-    //   </tr>
-    //
-    // You will always have the following, which will need more subdividing.
-    //
-    //   <tr>
-    //     <td>This is <b>valid</b>.</td>
-    //     <td>This is still valid.</td>
-    //   </tr>
-    return true;
+  if (getIsInline(node)) {
+    return false;
   }
 
   for (let child of node.childNodes) {
     switch (child.nodeType) {
       case Node.TEXT_NODE:
-        if (!isNodeTextEmpty(child)) {
-          inlineElements += 1;
-        }
-        break;
+        // Keep checking for more inline or text nodes.
+        continue;
       case Node.ELEMENT_NODE: {
-        // Property access can be expensive, so destructure the required properties.
-        const { nodeName } = child;
-        if (INLINE_TAGS.has(nodeName)) {
-          inlineElements += 1;
-        } else if (GENERIC_TAGS.has(nodeName) && !nodeNeedsSubdividing(child)) {
-          inlineElements += 1;
-        } else {
-          blockElements += 1;
+        if (getIsInline(child)) {
+          // Keep checking for more inline or text nodes.
+          continue;
         }
-        break;
+        // A child element is not inline, so subdivide this node further.
+        return true;
       }
       default:
-        break;
+        return true;
     }
   }
-
-  return inlineElements < blockElements;
+  return false;
 }
 
 /**

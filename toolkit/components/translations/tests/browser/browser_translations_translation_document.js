@@ -26,19 +26,25 @@ async function createDoc(html, options) {
   const parser = new DOMParser();
   const document = parser.parseFromString(html, "text/html");
 
-  let translationsDocument;
+  // For some reason, the document <body> here from the DOMParser is "display: flex" by
+  // default. Ensure that it is "display: block" instead, otherwise the children of the
+  // <body> will not be "display: inline".
+  document.body.style.display = "block";
 
-  translationsDocument = new TranslationsDocument(
-    document,
-    "en",
-    0, // This is a fake innerWindowID
-    options?.mockedTranslatorPort ?? createMockedTranslatorPort(),
-    () => {
-      throw new Error("Cannot request a new port");
-    },
-    performance.now(),
-    () => performance.now()
-  );
+  const translate = () => {
+    info("Creating the TranslationsDocument.");
+    return new TranslationsDocument(
+      document,
+      "en",
+      0, // This is a fake innerWindowID
+      options?.mockedTranslatorPort ?? createMockedTranslatorPort(),
+      () => {
+        throw new Error("Cannot request a new port");
+      },
+      performance.now(),
+      () => performance.now()
+    );
+  };
 
   /**
    * Test utility to check that the document matches the expected markup
@@ -65,16 +71,11 @@ async function createDoc(html, options) {
     }
   }
 
-  function translate() {
-    info("Running translation.");
-    translationsDocument.addRootElement(document.body);
-  }
-
   function cleanup() {
     SpecialPowers.popPrefEnv();
   }
 
-  return { translate, htmlMatches, cleanup, translationsDocument, document };
+  return { htmlMatches, cleanup, translate, document };
 }
 
 add_task(async function test_translated_div_element() {
@@ -144,8 +145,7 @@ add_task(async function test_no_text_trees() {
 });
 
 add_task(async function test_translated_title() {
-  const { cleanup, document, translationsDocument } =
-    await createDoc(/* html */ `
+  const { cleanup, document, translate } = await createDoc(/* html */ `
     <!DOCTYPE html>
     <html>
     <head>
@@ -158,10 +158,7 @@ add_task(async function test_translated_title() {
     </html>
   `);
 
-  info("The title element is the only <head> element that is used as a root.");
-  translationsDocument.addRootElement(
-    document.getElementsByTagName("title")[0]
-  );
+  translate();
 
   const translatedTitle = "THIS IS AN ACTUAL FULL PAGE.";
   try {
@@ -196,15 +193,21 @@ add_task(async function test_translated_nested_elements() {
     /* html */ `
       <div class="menu-main-menu-container">
         <ul class="menu-list">
-          <li class="menu-item menu-item-top-level" data-moz-translations-id="0">
-            <a href="/" data-moz-translations-id="1">LATEST WORK</a>
+          <li class="menu-item menu-item-top-level">
+            <a href="/" data-moz-translations-id="0">
+              LATEST WORK
+            </a>
           </li>
-          <li class="menu-item menu-item-top-level" data-moz-translations-id="2">
-            <a href="/category/interactive/" data-moz-translations-id="3">CREATIVE CODING</a>
+          <li class="menu-item menu-item-top-level">
+            <a href="/category/interactive/" data-moz-translations-id="0">
+              CREATIVE CODING
+            </a>
           </li>
-          <li id="menu-id-categories" class="menu-item menu-item-top-level" data-moz-translations-id="4">
-            <a href="#" data-moz-translations-id="5">
-              <span class="category-arrow" data-moz-translations-id="6">CATEGORIES</span>
+          <li id="menu-id-categories" class="menu-item menu-item-top-level">
+            <a href="#" data-moz-translations-id="0">
+              <span class="category-arrow" data-moz-translations-id="1">
+                CATEGORIES
+              </span>
             </a>
           </li>
         </ul>
@@ -394,6 +397,7 @@ add_task(async function test_comments() {
     "Comments do not affect things.",
     /* html */ `
     <div>
+      <!-- These will be ignored in the translation. -->
       THIS IS TRANSLATED.
     </div>
     `
@@ -436,6 +440,50 @@ add_task(async function test_translation_batching() {
       </b>
       .
     </div>
+    `
+  );
+
+  cleanup();
+});
+
+/**
+ * Test the inline/block behavior on what is sent in for a translation.
+ */
+add_task(async function test_translation_inline_styling() {
+  const { document, translate, htmlMatches, cleanup } = await createDoc(
+    /* html */ `
+      Bare text is sent in a batch.
+      <span>
+        Inline text is sent in a <b>batch</b>.
+      </span>
+      <span id="spanAsBlock">
+        Display "block" overrides the inline designation.
+      </span>
+    `,
+    { mockedTranslatorPort: createBatchedMockedTranslatorPort() }
+  );
+
+  info("Setting a span as display: block.");
+  const span = document.getElementById("spanAsBlock");
+  span.style.display = "block";
+  is(span.ownerGlobal.getComputedStyle(span).display, "block");
+
+  translate();
+
+  await htmlMatches(
+    "Span as a display: block",
+    /* html */ `
+      aaaa aaaa aa aaaa aa a aaaaa.
+      <span>
+        bbbbbb bbbb bb bbbb bb b
+        <b data-moz-translations-id="0">
+          bbbbb
+        </b>
+        .
+      </span>
+      <span id="spanAsBlock" style="display: block;">
+        ccccccc "ccccc" ccccccccc ccc cccccc ccccccccccc.
+      </span>
     `
   );
 
@@ -565,7 +613,7 @@ add_task(async function test_many_inlines() {
 });
 
 /**
- * Test the "presumed" inline content behavior.
+ * Test a mix of inline text and block elements.
  */
 add_task(async function test_presumed_inlines1() {
   const { translate, htmlMatches, cleanup } = await createDoc(
@@ -581,12 +629,12 @@ add_task(async function test_presumed_inlines1() {
   translate();
 
   await htmlMatches(
-    "Mixing a text node with otherwise block elements will send it all in as one batch.",
+    "Mixing a text node with block elements will send in two batches.",
     /* html */ `
     <div>
       aaaa aaaa
-      <div data-moz-translations-id="0">
-        aaaaa aaaaaaa
+      <div>
+        bbbbb bbbbbbb
       </div>
     </div>
     `
@@ -613,15 +661,15 @@ add_task(async function test_presumed_inlines2() {
   translate();
 
   await htmlMatches(
-    "Conflicting inline and block elements will be sent in together if there are more inlines",
+    "A mix of inline and blocks will be sent in separately.",
     /* html */ `
     <div>
       aaaa aaaa
-      <span data-moz-translations-id="0">
-        aaaaaa
+      <span>
+        bbbbbb
       </span>
-      <div data-moz-translations-id="1">
-        aaaaa aaaaaaa
+      <div>
+        ccccc ccccccc
       </div>
     </div>
     `
