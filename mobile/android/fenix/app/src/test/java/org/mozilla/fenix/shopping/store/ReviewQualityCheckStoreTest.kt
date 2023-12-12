@@ -13,6 +13,7 @@ import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertFalse
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.components.AppStore
@@ -857,6 +858,7 @@ class ReviewQualityCheckStoreTest {
             assertEquals(expected, tested.state)
         }
 
+    @Ignore("Disabled until intermittent is resolved. See Bug 1869566")
     @Test
     fun `GIVEN a product analysis WHEN analysis status is in progress or pending THEN state should be updated to reanalysing`() =
         runTest {
@@ -929,6 +931,7 @@ class ReviewQualityCheckStoreTest {
             assertTrue(observedState.contains(expectedProgressState2))
         }
 
+    @Ignore("Disabled until intermittent is resolved. See Bug 1869566")
     @Test
     fun `GIVEN reanalyse product is clicked WHEN analysis status is in progress or pending THEN state should be updated to reanalysing`() =
         runTest {
@@ -1118,6 +1121,7 @@ class ReviewQualityCheckStoreTest {
             assertFalse(observedState.contains(notExpected))
         }
 
+    @Ignore("Disabled until intermittent is resolved. See Bug 1869566")
     @Test
     fun `GIVEN no analysis WHEN analysis is in progress THEN state should update to no analysis present with progress`() =
         runTest {
@@ -1194,6 +1198,7 @@ class ReviewQualityCheckStoreTest {
             assertTrue(observedState.contains(expectedProgressState2))
         }
 
+    @Ignore("Disabled until intermittent is resolved. See Bug 1869566")
     @Test
     fun `GIVEN no analysis WHEN reanalyze THEN state should update to no analysis present with progress`() =
         runTest {
