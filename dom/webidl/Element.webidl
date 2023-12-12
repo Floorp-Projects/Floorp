@@ -202,6 +202,9 @@ dictionary ScrollIntoViewOptions : ScrollOptions {
 dictionary CheckVisibilityOptions {
   boolean checkOpacity = false;
   boolean checkVisibilityCSS = false;
+  boolean contentVisibilityAuto = false;
+  boolean opacityProperty = false;
+  boolean visibilityProperty = false;
   [ChromeOnly] boolean flush = true;
 };
 
