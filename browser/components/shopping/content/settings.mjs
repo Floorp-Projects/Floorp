@@ -44,6 +44,7 @@ class ShoppingSettings extends MozLitElement {
     // is never flipped, leaving the toolbar button in the active state.
     RPMSetPref("browser.shopping.experience2023.active", false);
     RPMSetPref("browser.shopping.experience2023.optedIn", 2);
+    Glean.shopping.surfaceOptOutButtonClicked.record();
   }
 
   fakespotLinkClicked(e) {
