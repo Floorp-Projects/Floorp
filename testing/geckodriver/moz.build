@@ -25,3 +25,6 @@ SPHINX_TREES["/testing/geckodriver"] = "doc"
 
 with Files("doc/**"):
     SCHEDULES.exclusive = ["docs"]
+
+COMPILE_FLAGS["BASE_INCLUDES"] = []
+HOST_COMPILE_FLAGS["BASE_INCLUDES"] = []

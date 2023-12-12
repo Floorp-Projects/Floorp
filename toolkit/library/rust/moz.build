@@ -56,3 +56,6 @@ if CONFIG["MOZ_BITS_DOWNLOAD"]:
 EXPORTS += [
     "/third_party/rust/rure/include/rure.h",
 ]
+
+COMPILE_FLAGS["BASE_INCLUDES"] = []
+HOST_COMPILE_FLAGS["BASE_INCLUDES"] = []
