@@ -137,7 +137,7 @@ class CacheImpl {
 class BackingTexture {
  public:
   BackingTexture(const IntSize& aSize, SurfaceFormat aFormat,
-                 const RefPtr<WebGLTextureJS>& aTexture);
+                 const RefPtr<WebGLTexture>& aTexture);
 
   SurfaceFormat GetFormat() const { return mFormat; }
   IntSize GetSize() const { return mSize; }
@@ -149,7 +149,7 @@ class BackingTexture {
 
   size_t UsedBytes() const { return UsedBytes(GetFormat(), GetSize()); }
 
-  const RefPtr<WebGLTextureJS>& GetWebGLTexture() const { return mTexture; }
+  const RefPtr<WebGLTexture>& GetWebGLTexture() const { return mTexture; }
 
   bool IsInitialized() const { return mFlags & INITIALIZED; }
   void MarkInitialized() { mFlags |= INITIALIZED; }
@@ -160,7 +160,7 @@ class BackingTexture {
  protected:
   IntSize mSize;
   SurfaceFormat mFormat;
-  RefPtr<WebGLTextureJS> mTexture;
+  RefPtr<WebGLTexture> mTexture;
 
  private:
   enum Flags : uint8_t {
@@ -195,7 +195,7 @@ class TextureHandle : public RefCounted<TextureHandle>,
 
   virtual void UpdateSize(const IntSize& aSize) {}
 
-  virtual void Cleanup(DrawTargetWebgl::SharedContext& aContext) {}
+  virtual void Cleanup(SharedContextWebgl& aContext) {}
 
   virtual ~TextureHandle() {}
 
@@ -250,7 +250,7 @@ class SharedTexture : public RefCounted<SharedTexture>, public BackingTexture {
   MOZ_DECLARE_REFCOUNTED_TYPENAME(SharedTexture)
 
   SharedTexture(const IntSize& aSize, SurfaceFormat aFormat,
-                const RefPtr<WebGLTextureJS>& aTexture);
+                const RefPtr<WebGLTexture>& aTexture);
 
   already_AddRefed<SharedTextureHandle> Allocate(const IntSize& aSize);
   bool Free(const SharedTextureHandle& aHandle);
@@ -280,7 +280,7 @@ class SharedTextureHandle : public TextureHandle {
 
   BackingTexture* GetBackingTexture() override { return mTexture.get(); }
 
-  void Cleanup(DrawTargetWebgl::SharedContext& aContext) override;
+  void Cleanup(SharedContextWebgl& aContext) override;
 
   const RefPtr<SharedTexture>& GetOwner() const { return mTexture; }
 
@@ -297,7 +297,7 @@ class StandaloneTexture : public TextureHandle, public BackingTexture {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(StandaloneTexture, override)
 
   StandaloneTexture(const IntSize& aSize, SurfaceFormat aFormat,
-                    const RefPtr<WebGLTextureJS>& aTexture);
+                    const RefPtr<WebGLTexture>& aTexture);
 
   Type GetType() const override { return Type::STANDALONE; }
 
@@ -315,7 +315,7 @@ class StandaloneTexture : public TextureHandle, public BackingTexture {
 
   void UpdateSize(const IntSize& aSize) override { mSize = aSize; }
 
-  void Cleanup(DrawTargetWebgl::SharedContext& aContext) override;
+  void Cleanup(SharedContextWebgl& aContext) override;
 };
 
 // GlyphCacheEntry stores rendering metadata for a rendered text run, as well
