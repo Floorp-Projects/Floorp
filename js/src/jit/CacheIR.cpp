@@ -10898,6 +10898,7 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
     case InlinableNative::IntlGuardToPluralRules:
     case InlinableNative::IntlGuardToRelativeTimeFormat:
     case InlinableNative::IntlGuardToSegmenter:
+    case InlinableNative::IntlGuardToSegments:
       return tryAttachGuardToClass(native);
 
     // Slot intrinsics.

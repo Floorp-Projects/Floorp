@@ -74,6 +74,9 @@ included_inclnames_to_ignore = set(
         "fdlibm.h",  # fdlibm
         "FuzzerDefs.h",  # included without a path
         "FuzzingInterface.h",  # included without a path
+        "ICU4XGraphemeClusterSegmenter.h",  # ICU4X
+        "ICU4XSentenceSegmenter.h",  # ICU4X
+        "ICU4XWordSegmenter.h",  # ICU4X
         "mozmemory.h",  # included without a path
         "pratom.h",  # NSPR
         "prcvar.h",  # NSPR

@@ -241,6 +241,7 @@
   MACRO_(GetTypeError, "GetTypeError")                                         \
   MACRO_(global, "global")                                                     \
   MACRO_(globalThis, "globalThis")                                             \
+  MACRO_(granularity, "granularity")                                           \
   MACRO_(group, "group")                                                       \
   MACRO_(groupBy, "groupBy")                                                   \
   MACRO_(groups, "groups")                                                     \

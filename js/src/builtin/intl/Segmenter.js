@@ -179,6 +179,38 @@ function Intl_Segmenter_supportedLocalesOf(locales /*, options*/) {
 }
 
 /**
+ * Intl.Segmenter.prototype.segment ( string )
+ *
+ * Create a new Segments object.
+ */
+function Intl_Segmenter_segment(value) {
+  // Step 1.
+  var segmenter = this;
+
+  // Step 2.
+  if (
+    !IsObject(segmenter) ||
+    (segmenter = intl_GuardToSegmenter(segmenter)) === null
+  ) {
+    return callFunction(
+      intl_CallSegmenterMethodIfWrapped,
+      this,
+      value,
+      "Intl_Segmenter_segment"
+    );
+  }
+
+  // Ensure the Segmenter internals are resolved.
+  getSegmenterInternals(segmenter);
+
+  // Step 3.
+  var string = ToString(value);
+
+  // Step 4.
+  return intl_CreateSegmentsObject(segmenter, string);
+}
+
+/**
  * Intl.Segmenter.prototype.resolvedOptions ()
  *
  * Returns the resolved options for a Segmenter object.
@@ -209,4 +241,120 @@ function Intl_Segmenter_resolvedOptions() {
 
   // Step 5.
   return options;
+}
+
+/**
+ * CreateSegmentDataObject ( segmenter, string, startIndex, endIndex )
+ */
+function CreateSegmentDataObject(string, boundaries) {
+  assert(typeof string === "string", "CreateSegmentDataObject");
+  assert(
+    IsPackedArray(boundaries) && boundaries.length === 3,
+    "CreateSegmentDataObject"
+  );
+
+  var startIndex = boundaries[0];
+  assert(
+    typeof startIndex === "number" && (startIndex | 0) === startIndex,
+    "startIndex is an int32-value"
+  );
+
+  var endIndex = boundaries[1];
+  assert(
+    typeof endIndex === "number" && (endIndex | 0) === endIndex,
+    "endIndex is an int32-value"
+  );
+
+  // In our implementation |granularity| is encoded in |isWordLike|.
+  var isWordLike = boundaries[2];
+  assert(
+    typeof isWordLike === "boolean" || isWordLike === undefined,
+    "isWordLike is either a boolean or undefined"
+  );
+
+  // Step 1 (Not applicable).
+
+  // Step 2.
+  assert(startIndex >= 0, "startIndex is a positive number");
+
+  // Step 3.
+  assert(
+    endIndex <= string.length,
+    "endIndex is less-than-equals the string length"
+  );
+
+  // Step 4.
+  assert(startIndex < endIndex, "startIndex is strictly less than endIndex");
+
+  // Step 6.
+  var segment = SubstringKernel(
+    string,
+    startIndex | 0,
+    (endIndex - startIndex) | 0
+  );
+
+  // Steps 5, 7-12.
+  if (isWordLike === undefined) {
+    return {
+      segment,
+      index: startIndex,
+      input: string,
+    };
+  }
+
+  return {
+    segment,
+    index: startIndex,
+    input: string,
+    isWordLike,
+  };
+}
+
+/**
+ * %Segments.prototype%.containing ( index )
+ *
+ * Return a Segment Data object describing the segment at the given index. If
+ * the index exceeds the string bounds, undefined is returned.
+ */
+function Intl_Segments_containing(index) {
+  // Step 1.
+  var segments = this;
+
+  // Step 2.
+  if (
+    !IsObject(segments) ||
+    (segments = intl_GuardToSegments(segments)) === null
+  ) {
+    return callFunction(
+      intl_CallSegmentsMethodIfWrapped,
+      this,
+      index,
+      "Intl_Segments_containing"
+    );
+  }
+
+  // Step 3 (not applicable).
+
+  // Step 4.
+  var string = UnsafeGetStringFromReservedSlot(
+    segments,
+    INTL_SEGMENTS_STRING_SLOT
+  );
+
+  // Step 5.
+  var len = string.length;
+
+  // Step 6.
+  var n = ToInteger(index);
+
+  // Step 7.
+  if (n < 0 || n >= len) {
+    return undefined;
+  }
+
+  // Steps 8-9.
+  var boundaries = intl_FindSegmentBoundaries(segments, n | 0);
+
+  // Step 10.
+  return CreateSegmentDataObject(string, boundaries);
 }
