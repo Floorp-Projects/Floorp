@@ -177,6 +177,10 @@ bool IsClusterExtenderExcludingJoiners(uint32_t aCh, uint8_t aCategory) {
 }
 
 uint32_t CountGraphemeClusters(Span<const char16_t> aText) {
+  if (aText.IsEmpty()) {
+    // Fast path for empty text.
+    return 0;
+  }
   intl::GraphemeClusterBreakIteratorUtf16 iter(aText);
   uint32_t result = 0;
   while (iter.Next()) {
