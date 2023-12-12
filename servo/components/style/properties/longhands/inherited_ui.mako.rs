@@ -68,7 +68,7 @@ ${helpers.single_keyword(
 
 ${helpers.single_keyword(
     "-moz-user-focus",
-    "none ignore normal",
+    "normal none ignore",
     engines="gecko",
     gecko_ffi_name="mUserFocus",
     gecko_enum_prefix="StyleUserFocus",

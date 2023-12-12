@@ -3909,8 +3909,8 @@ var gCSSProperties = {
     domProp: "MozUserFocus",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
-    initial_values: ["none"],
-    other_values: ["normal", "ignore"],
+    initial_values: ["normal"],
+    other_values: ["none", "ignore"],
     invalid_values: [],
   },
   "-moz-user-input": {
