@@ -22,5 +22,6 @@
         "hw.lcd.density": "320",
         "disk.dataPartition.size": "4000MB",
         "sdcard.size": "600M"
-    }
+    },
+    "emulator_prewarm": false
 }
