@@ -113,8 +113,18 @@ struct StartupCacheEntry {
         mRequestedOrder(0),
         mRequested(true) {}
 
+  // std::pair is not trivially move assignable/constructible, so make our own.
+  struct KeyValuePair {
+    const nsCString* first;
+    StartupCacheEntry* second;
+    KeyValuePair(const nsCString* aKeyPtr, StartupCacheEntry* aValuePtr)
+        : first(aKeyPtr), second(aValuePtr) {}
+  };
+  static_assert(std::is_trivially_move_assignable<KeyValuePair>::value);
+  static_assert(std::is_trivially_move_constructible<KeyValuePair>::value);
+
   struct Comparator {
-    using Value = std::pair<const nsCString*, StartupCacheEntry*>;
+    using Value = KeyValuePair;
 
     bool Equals(const Value& a, const Value& b) const {
       return a.second->mRequestedOrder == b.second->mRequestedOrder;
