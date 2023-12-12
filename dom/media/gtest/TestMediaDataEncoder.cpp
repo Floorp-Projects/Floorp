@@ -423,6 +423,43 @@ TEST_F(MediaDataEncoderTest, VP8Encodes) {
   });
 }
 
+#if defined(XP_LINUX) && !defined(ANDROID) && \
+    (defined(MOZ_FFMPEG) || defined(MOZ_FFVPX))
+TEST_F(MediaDataEncoderTest, VP8EncodeAfterDrain) {
+  RUN_IF_SUPPORTED(CodecType::VP8, [this]() {
+    RefPtr<MediaDataEncoder> e = CreateVP8Encoder();
+    EnsureInit(e);
+
+    MediaDataEncoder::EncodedData output = Encode(e, NUM_FRAMES, mData);
+    EXPECT_EQ(output.Length(), NUM_FRAMES);
+    for (auto frame : output) {
+      VPXDecoder::VPXStreamInfo info;
+      EXPECT_TRUE(
+          VPXDecoder::GetStreamInfo(*frame, info, VPXDecoder::Codec::VP8));
+      EXPECT_EQ(info.mKeyFrame, frame->mKeyframe);
+      if (info.mKeyFrame) {
+        EXPECT_EQ(info.mImage, kImageSize);
+      }
+    }
+    output.Clear();
+
+    output = Encode(e, NUM_FRAMES, mData);
+    EXPECT_EQ(output.Length(), NUM_FRAMES);
+    for (auto frame : output) {
+      VPXDecoder::VPXStreamInfo info;
+      EXPECT_TRUE(
+          VPXDecoder::GetStreamInfo(*frame, info, VPXDecoder::Codec::VP8));
+      EXPECT_EQ(info.mKeyFrame, frame->mKeyframe);
+      if (info.mKeyFrame) {
+        EXPECT_EQ(info.mImage, kImageSize);
+      }
+    }
+
+    WaitForShutdown(e);
+  });
+}
+#endif
+
 TEST_F(MediaDataEncoderTest, VP9Create) {
   RUN_IF_SUPPORTED(CodecType::VP9, []() {
     RefPtr<MediaDataEncoder> e = CreateVP9Encoder();
@@ -478,3 +515,40 @@ TEST_F(MediaDataEncoderTest, VP9Encodes) {
     WaitForShutdown(e);
   });
 }
+
+#if defined(XP_LINUX) && !defined(ANDROID) && \
+    (defined(MOZ_FFMPEG) || defined(MOZ_FFVPX))
+TEST_F(MediaDataEncoderTest, VP9EncodeAfterDrain) {
+  RUN_IF_SUPPORTED(CodecType::VP9, [this]() {
+    RefPtr<MediaDataEncoder> e = CreateVP9Encoder();
+    EnsureInit(e);
+
+    MediaDataEncoder::EncodedData output = Encode(e, NUM_FRAMES, mData);
+    EXPECT_EQ(output.Length(), NUM_FRAMES);
+    for (auto frame : output) {
+      VPXDecoder::VPXStreamInfo info;
+      EXPECT_TRUE(
+          VPXDecoder::GetStreamInfo(*frame, info, VPXDecoder::Codec::VP9));
+      EXPECT_EQ(info.mKeyFrame, frame->mKeyframe);
+      if (info.mKeyFrame) {
+        EXPECT_EQ(info.mImage, kImageSize);
+      }
+    }
+    output.Clear();
+
+    output = Encode(e, NUM_FRAMES, mData);
+    EXPECT_EQ(output.Length(), NUM_FRAMES);
+    for (auto frame : output) {
+      VPXDecoder::VPXStreamInfo info;
+      EXPECT_TRUE(
+          VPXDecoder::GetStreamInfo(*frame, info, VPXDecoder::Codec::VP9));
+      EXPECT_EQ(info.mKeyFrame, frame->mKeyframe);
+      if (info.mKeyFrame) {
+        EXPECT_EQ(info.mImage, kImageSize);
+      }
+    }
+
+    WaitForShutdown(e);
+  });
+}
+#endif
