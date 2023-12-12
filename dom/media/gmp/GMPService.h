@@ -62,8 +62,8 @@ class GeckoMediaPluginService : public mozIGeckoMediaPluginService,
 #endif
 
   // mozIGeckoMediaPluginService
-  NS_IMETHOD GetThread(nsIThread** aThread) override;
-  nsresult GetThreadLocked(nsIThread** aThread);
+  NS_IMETHOD GetThread(nsIThread** aThread) override MOZ_EXCLUDES(mMutex);
+  nsresult GetThreadLocked(nsIThread** aThread) MOZ_REQUIRES(mMutex);
   NS_IMETHOD GetGMPVideoDecoder(
       GMPCrashHelper* aHelper, nsTArray<nsCString>* aTags,
       const nsACString& aNodeId,
@@ -108,19 +108,19 @@ class GeckoMediaPluginService : public mozIGeckoMediaPluginService,
 
   static nsCOMPtr<nsIAsyncShutdownClient> GetShutdownBarrier();
 
-  Mutex mMutex MOZ_UNANNOTATED;  // Protects mGMPThread, mPluginCrashHelpers,
-                                 // mGMPThreadShutdown and some members in
-                                 // derived classes.
+  Mutex mMutex;  // Protects mGMPThread, mPluginCrashHelpers,
+                 // mGMPThreadShutdown and some members in
+                 // derived classes.
 
   const nsCOMPtr<nsISerialEventTarget> mMainThread;
 
-  nsCOMPtr<nsIThread> mGMPThread;
-  bool mGMPThreadShutdown;
+  nsCOMPtr<nsIThread> mGMPThread MOZ_GUARDED_BY(mMutex);
+  bool mGMPThreadShutdown MOZ_GUARDED_BY(mMutex);
   bool mShuttingDownOnGMPThread;
   Atomic<bool> mXPCOMWillShutdown;
 
   nsClassHashtable<nsUint32HashKey, nsTArray<RefPtr<GMPCrashHelper>>>
-      mPluginCrashHelpers;
+      mPluginCrashHelpers MOZ_GUARDED_BY(mMutex);
 };
 
 }  // namespace gmp
