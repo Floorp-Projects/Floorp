@@ -38,8 +38,8 @@ ub18-python-psutil:
             sha256: a0ca4560d25fcfe5b7407d2cb21318f0635f2c3559898efce1679eef35b61f05
         name: python-psutil
         pre-build-command: >-
-            apt-get install python3.7-dev python3.7-dbg &&
-            export DEBPYTHON3_SUPPORTED="3.7"
+            apt-get install python3.8-dev python3.8-dbg &&
+            export DEBPYTHON3_SUPPORTED="3.8"
 
 ub18-pygobject:
     description: "pygobject for Ubuntu bionic"
@@ -51,8 +51,8 @@ ub18-pygobject:
             sha256: b77f84885d9b6d2c03422ecb3bf69d50dd0607d3456154943671e5a1f87946aa
         name: pygobject
         pre-build-command: >-
-            apt-get install python3.7-dev python3.7-dbg &&
-            export DEBPYTHON3_SUPPORTED="3.6,3.7"
+            apt-get install python3.8-dev python3.8-dbg &&
+            export DEBPYTHON3_SUPPORTED="3.6,3.8"
 
 ub18-pyatspi:
     description: "pyatspi for Ubuntu bionic"
@@ -66,8 +66,8 @@ ub18-pyatspi:
         pre-build-command: >-
             sed -i s/\\basync\\b/asynchronous/ pyatspi/registry.py &&
             EDITOR=cat dpkg-source --commit . sync &&
-            apt-get install python3.7-dev python3.7-dbg &&
-            export DEBPYTHON3_SUPPORTED="3.6,3.7"
+            apt-get install python3.8-dev python3.8-dbg &&
+            export DEBPYTHON3_SUPPORTED="3.6,3.8"
 
 ub18-python-zstandard:
     description: "python-zstandard for Ubuntu bionic"
@@ -79,8 +79,8 @@ ub18-python-zstandard:
             sha256: 31d12fcd942dd8dbf52ca5f6b1bbe287f44e5d551a081a983ff3ea2082867863
         name: python-zstandard
         pre-build-command: >-
-            apt-get install python3.7-dev &&
-            export DEBPYTHON3_SUPPORTED="3.7" &&
+            apt-get install python3.8-dev &&
+            export DEBPYTHON3_SUPPORTED="3.8" &&
             debchange -v 0.19.0-1.ub18moz --distribution bionic "Mozilla backport for bionic"
 
 ub18-mercurial:
@@ -92,9 +92,9 @@ ub18-mercurial:
             url: https://www.mercurial-scm.org/release/mercurial-6.4.3.tar.gz
             sha256: a77fb62d325934a83a00b2fc6db109f44c67b86768fc40490366f513640c7f64
         pre-build-command: >-
-            apt-get install python3.7-dev &&
-            export DEB_HG_PYTHON_VERSIONS="3.7" &&
-            export DEBPYTHON3_SUPPORTED="3.7" &&
+            apt-get install python3.8-dev &&
+            export DEB_HG_PYTHON_VERSIONS="3.8" &&
+            export DEBPYTHON3_SUPPORTED="3.8" &&
             cp -r contrib/packaging/debian debian &&
             sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.ub18moz1/" \
                          -e "s/__DATE__/$(date --rfc-2822)/" \
