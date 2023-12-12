@@ -163,6 +163,74 @@ performance.
 """.strip()
 
 
+def check_for_hgrc_state_dir_mismatch(state_dir):
+    ignore_hgrc_state_dir_mismatch = os.environ.get(
+        "MACH_IGNORE_HGRC_STATE_DIR_MISMATCH", ""
+    )
+    if ignore_hgrc_state_dir_mismatch:
+        return
+
+    import subprocess
+
+    result = subprocess.run(
+        ["hg", "config", "--source", "-T", "json"], capture_output=True, text=True
+    )
+
+    if result.returncode:
+        print("Failed to run 'hg config'. hg configuration checks will be skipped.")
+        return
+
+    import json
+
+    try:
+        json_data = json.loads(result.stdout)
+    except json.JSONDecodeError as e:
+        print(
+            f"Error parsing 'hg config' JSON: {e}\n\n"
+            f"hg configuration checks will be skipped."
+        )
+        return
+
+    mismatched_paths = []
+    pattern = re.compile(r"(.*\.mozbuild)[\\/](.*)")
+    for entry in json_data:
+        if not entry["name"].startswith("extensions."):
+            continue
+
+        extension_path = entry["value"]
+        match = pattern.search(extension_path)
+        if match:
+            extension = entry["name"]
+            source_path = entry["source"]
+            state_dir_from_hgrc = Path(match.group(1))
+            extension_suffix = match.group(2)
+
+            if state_dir != state_dir_from_hgrc:
+                expected_extension_path = state_dir / extension_suffix
+
+                mismatched_paths.append(
+                    f"Extension: '{extension}' found in config file '{source_path}'\n"
+                    f" Current: {extension_path}\n"
+                    f" Expected: {expected_extension_path}\n"
+                )
+
+    if mismatched_paths:
+        hgrc_state_dir_mismatch_error_message = (
+            f"Paths for extensions in your hgrc file appear to be referencing paths that are not in "
+            f"the current '.mozbuild' state directory.\nYou may have set the `MOZBUILD_STATE_PATH` "
+            f"environment variable and/or moved the `.mozbuild` directory. You should update the "
+            f"paths for the following extensions manually to be inside '{state_dir}'\n"
+            f"(If you instead wish to hide this error, set 'MACH_IGNORE_HGRC_STATE_DIR_MISMATCH=1' "
+            f"in your environment variables and restart your shell before rerunning mach).\n\n"
+            f"You can either use the command 'hg config --edit' to make changes to your hg "
+            f"configuration or manually edit the 'config file' specified for each extension "
+            f"below:\n\n"
+        )
+        hgrc_state_dir_mismatch_error_message += "".join(mismatched_paths)
+
+        raise Exception(hgrc_state_dir_mismatch_error_message)
+
+
 class Bootstrapper(object):
     """Main class that performs system bootstrap."""
 
@@ -286,6 +354,9 @@ class Bootstrapper(object):
         subprocess.check_call((sys.executable, str(mach_binary), "install-moz-phab"))
 
     def bootstrap(self, settings):
+        state_dir = Path(get_state_dir())
+        check_for_hgrc_state_dir_mismatch(state_dir)
+
         if self.choice is None:
             applications = APPLICATIONS
             # Like ['1. Firefox for Desktop', '2. Firefox for Android Artifact Mode', ...].
@@ -331,7 +402,6 @@ class Bootstrapper(object):
                 )
                 return 1
 
-        state_dir = Path(get_state_dir())
         self.instance.state_dir = state_dir
 
         hg = to_optional_path(which("hg"))
