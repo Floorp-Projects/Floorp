@@ -79,7 +79,9 @@ class XPCShell(Layer):
         # let's grab the manifest
         manifest = Path(test.parent, "xpcshell.ini")
         if not manifest.exists():
-            raise FileNotFoundError(str(manifest))
+            manifest = Path(test.parent, "xpcshell.toml")
+            if not manifest.exists():
+                raise FileNotFoundError(str(manifest))
 
         nodejs = self.get_arg("nodejs")
         if nodejs is not None:
