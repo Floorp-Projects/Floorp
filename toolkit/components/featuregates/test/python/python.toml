@@ -1,0 +1,4 @@
+[DEFAULT]
+subsuite = "featuregates"
+
+["test_gen_feature_definitions.py"]

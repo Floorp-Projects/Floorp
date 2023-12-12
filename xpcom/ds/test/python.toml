@@ -1,0 +1,4 @@
+[DEFAULT]
+subsuite = "xpcom"
+
+["test_dafsa.py"]

@@ -8,8 +8,8 @@ with Files("**"):
     BUG_COMPONENT = ("Firefox Build System", "Task Configuration")
 
 PYTHON_UNITTEST_MANIFESTS += [
-    "gecko_taskgraph/test/python.ini",
-    "test/python.ini",
+    "gecko_taskgraph/test/python.toml",
+    "test/python.toml",
 ]
 SPHINX_TREES["/taskcluster"] = "docs"
 SPHINX_PYTHON_PACKAGE_DIRS += ["gecko_taskgraph"]

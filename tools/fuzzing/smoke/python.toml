@@ -1,0 +1,5 @@
+[DEFAULT]
+subsuite = "fuzzing"
+
+["test_grizzly.py"]
+requirements = "tools/fuzzing/smoke/grizzly_requirements.txt"

@@ -184,7 +184,7 @@ with Files("mozwebidlcodegen/**.py"):
 
 
 PYTHON_UNITTEST_MANIFESTS += [
-    "mozwebidlcodegen/test/python.ini",
+    "mozwebidlcodegen/test/python.toml",
 ]
 
 if CONFIG["CC_TYPE"] == "gcc":

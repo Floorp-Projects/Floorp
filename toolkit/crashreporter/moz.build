@@ -114,7 +114,7 @@ if CONFIG["MOZ_CRASHREPORTER"]:
     ]
 
     PYTHON_UNITTEST_MANIFESTS += [
-        "tools/python.ini",
+        "tools/python.toml",
     ]
 
     include("/toolkit/crashreporter/crashreporter.mozbuild")

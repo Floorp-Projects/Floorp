@@ -67,13 +67,13 @@ with Files("mach/docs/**"):
     SCHEDULES.exclusive = ["docs"]
 
 PYTHON_UNITTEST_MANIFESTS += [
-    "mach/mach/test/python.ini",
-    "mozboot/mozboot/test/python.ini",
-    "mozbuild/mozbuild/repackaging/test/python.ini",
-    "mozbuild/mozbuild/test/python.ini",
-    "mozbuild/mozpack/test/python.ini",
-    "mozlint/test/python.ini",
-    "mozrelease/test/python.ini",
-    "mozterm/test/python.ini",
-    "mozversioncontrol/test/python.ini",
+    "mach/mach/test/python.toml",
+    "mozboot/mozboot/test/python.toml",
+    "mozbuild/mozbuild/repackaging/test/python.toml",
+    "mozbuild/mozbuild/test/python.toml",
+    "mozbuild/mozpack/test/python.toml",
+    "mozlint/test/python.toml",
+    "mozrelease/test/python.toml",
+    "mozterm/test/python.toml",
+    "mozversioncontrol/test/python.toml",
 ]

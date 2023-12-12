@@ -1,0 +1,26 @@
+[DEFAULT]
+subsuite = "mozversioncontrol"
+
+["test_branch.py"]
+
+["test_commit.py"]
+
+["test_context_manager.py"]
+
+["test_create_try_commit.py"]
+
+["test_get_branch_nodes.py"]
+
+["test_get_commit_patches.py"]
+
+["test_get_upstream_remote.py"]
+
+["test_push_to_try.py"]
+
+["test_remove_current_commit.py"]
+
+["test_update.py"]
+
+["test_workdir_outgoing.py"]
+
+["test_working_directory.py"]

@@ -27,7 +27,7 @@ if CONFIG["HOST_OS_ARCH"] != "WINNT":
     HostProgram("nsinstall_real")
 
 PYTHON_UNITTEST_MANIFESTS += [
-    "tests/python.ini",
+    "tests/python.toml",
 ]
 
 if CONFIG["CC_TYPE"] in ("clang", "gcc") and CONFIG["MOZ_OPTIMIZE"]:

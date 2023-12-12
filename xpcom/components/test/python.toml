@@ -1,0 +1,4 @@
+[DEFAULT]
+subsuite = "xpcom"
+
+["test_gen_static_components.py"]
