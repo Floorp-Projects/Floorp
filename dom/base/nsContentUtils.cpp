@@ -846,6 +846,19 @@ nsresult nsContentUtils::Init() {
   if (XRE_IsParentProcess()) {
     AsyncPrecreateStringBundles();
 
+#if defined(MOZ_WIDGET_ANDROID)
+    // On Android, at-shutdown ping submission isn't reliable
+    // (( because, on Android, we usually get killed, not shut down )).
+    // To have a chance at submitting the ping, aim for idle after startup.
+    nsresult rv = NS_DispatchToCurrentThreadQueue(
+        NS_NewRunnableFunction(
+            "AndroidUseCounterPingSubmitter",
+            []() { glean_pings::UseCounters.Submit("idle_startup"_ns); }),
+        EventQueuePriority::Idle);
+    // This is mostly best-effort, so if it goes awry, just log.
+    Unused << NS_WARN_IF(NS_FAILED(rv));
+#endif  // defined(MOZ_WIDGET_ANDROID)
+
     RunOnShutdown(
         [&] { glean_pings::UseCounters.Submit("app_shutdown_confirmed"_ns); },
         ShutdownPhase::AppShutdownConfirmed);
