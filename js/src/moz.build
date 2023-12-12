@@ -478,6 +478,7 @@ if CONFIG["JS_HAS_INTL_API"]:
         "builtin/intl/NumberFormat.cpp",
         "builtin/intl/PluralRules.cpp",
         "builtin/intl/RelativeTimeFormat.cpp",
+        "builtin/intl/Segmenter.cpp",
         "builtin/intl/SharedIntlData.cpp",
     ]
 
@@ -600,6 +601,7 @@ selfhosted_inputs = [
         "builtin/intl/PluralRules.js",
         "builtin/intl/RelativeTimeFormat.js",
         "builtin/intl/SanctionedSimpleUnitIdentifiersGenerated.js",
+        "builtin/intl/Segmenter.js",
     ]
     if CONFIG["JS_HAS_INTL_API"]
     else []

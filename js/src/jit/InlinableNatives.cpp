@@ -14,6 +14,7 @@
 #  include "builtin/intl/NumberFormat.h"
 #  include "builtin/intl/PluralRules.h"
 #  include "builtin/intl/RelativeTimeFormat.h"
+#  include "builtin/intl/Segmenter.h"
 #endif
 #include "builtin/MapObject.h"
 #include "js/experimental/JitInfo.h"
@@ -52,6 +53,8 @@ const JSClass* js::jit::InlinableNativeGuardToClass(InlinableNative native) {
       return &PluralRulesObject::class_;
     case InlinableNative::IntlGuardToRelativeTimeFormat:
       return &RelativeTimeFormatObject::class_;
+    case InlinableNative::IntlGuardToSegmenter:
+      return &SegmenterObject::class_;
 #else
     case InlinableNative::IntlGuardToCollator:
     case InlinableNative::IntlGuardToDateTimeFormat:
@@ -60,6 +63,7 @@ const JSClass* js::jit::InlinableNativeGuardToClass(InlinableNative native) {
     case InlinableNative::IntlGuardToNumberFormat:
     case InlinableNative::IntlGuardToPluralRules:
     case InlinableNative::IntlGuardToRelativeTimeFormat:
+    case InlinableNative::IntlGuardToSegmenter:
       MOZ_CRASH("Intl API disabled");
 #endif
 
@@ -158,6 +162,7 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::IntlGuardToNumberFormat:
     case InlinableNative::IntlGuardToPluralRules:
     case InlinableNative::IntlGuardToRelativeTimeFormat:
+    case InlinableNative::IntlGuardToSegmenter:
     case InlinableNative::IsRegExpObject:
     case InlinableNative::IsPossiblyWrappedRegExpObject:
     case InlinableNative::RegExpMatcher:

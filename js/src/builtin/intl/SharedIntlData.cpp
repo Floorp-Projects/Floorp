@@ -534,6 +534,7 @@ bool js::intl::SharedIntlData::isSupportedLocale(JSContext* cx,
     case SupportedLocaleKind::NumberFormat:
     case SupportedLocaleKind::PluralRules:
     case SupportedLocaleKind::RelativeTimeFormat:
+    case SupportedLocaleKind::Segmenter:
       *supported = supportedLocales.has(lookup);
       return true;
   }
@@ -557,6 +558,7 @@ js::ArrayObject* js::intl::SharedIntlData::availableLocalesOf(
     case SupportedLocaleKind::NumberFormat:
     case SupportedLocaleKind::PluralRules:
     case SupportedLocaleKind::RelativeTimeFormat:
+    case SupportedLocaleKind::Segmenter:
       localeSet = &supportedLocales;
       break;
     default:

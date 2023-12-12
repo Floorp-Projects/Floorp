@@ -283,6 +283,7 @@
   MACRO_(InitializeNumberFormat, "InitializeNumberFormat")                     \
   MACRO_(InitializePluralRules, "InitializePluralRules")                       \
   MACRO_(InitializeRelativeTimeFormat, "InitializeRelativeTimeFormat")         \
+  MACRO_(InitializeSegmenter, "InitializeSegmenter")                           \
   MACRO_(inLeapYear, "inLeapYear")                                             \
   MACRO_(innermost, "innermost")                                               \
   MACRO_(inNursery, "inNursery")                                               \
