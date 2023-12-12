@@ -25,7 +25,8 @@ menu =
 about-logins-menu-menuitem-import-from-another-browser = Import from Another Browser…
 about-logins-menu-menuitem-import-from-a-file = Import from a File…
 about-logins-menu-menuitem-export-logins = Export Logins…
-about-logins-menu-menuitem-remove-all-logins = Remove All Logins…
+# Item that appears when the user clicks the ⋯  menu
+about-logins-menu-menuitem-remove-all-logins2 = Remove All Passwords…
 menu-menuitem-preferences =
   { PLATFORM() ->
       [windows] Options
@@ -175,8 +176,10 @@ confirmation-dialog-cancel-button = Cancel
 confirmation-dialog-dismiss-button =
   .title = Cancel
 
-about-logins-confirm-remove-dialog-title = Remove this login?
-confirm-delete-dialog-message = This action cannot be undone.
+# Title for modal to confirm the removal of one saved password
+about-logins-confirm-delete-dialog-title = Remove password?
+# Message for modal to confirm the removal of one saved password
+about-logins-confirm-delete-dialog-message = You cannot undo this action.
 about-logins-confirm-remove-dialog-confirm-button = Remove
 
 ## Variables
@@ -188,32 +191,38 @@ about-logins-confirm-remove-all-dialog-confirm-button-label =
     *[other] Remove All
   }
 
-about-logins-confirm-remove-all-dialog-checkbox-label =
+# Checkbox for modal to confirm the removal of saved passwords
+about-logins-confirm-remove-all-dialog-checkbox-label2 =
   { $count ->
-     [1] Yes, remove this login
-    *[other] Yes, remove these logins
+     [1] Yes, remove password
+    *[other] Yes, remove passwords
   }
 
-about-logins-confirm-remove-all-dialog-title =
+# Title for modal to confirm the removal of all saved passwords when user is NOT synced
+about-logins-confirm-remove-all-dialog-title2 =
   { $count ->
-     [one] Remove { $count } login?
-    *[other] Remove all { $count } logins?
+     [one] Remove { $count } password?
+    *[other] Remove all { $count } passwords?
   }
-about-logins-confirm-remove-all-dialog-message =
+# Message for modal to confirm the removal of saved passwords when user is NOT synced
+about-logins-confirm-remove-all-dialog-message2 =
   { $count ->
-     [1] This will remove the login you’ve saved to { -brand-short-name } and any breach alerts that appear here. You won’t be able to undo this action.
-    *[other] This will remove the logins you’ve saved to { -brand-short-name } and any breach alerts that appear here. You won’t be able to undo this action.
+     [1] This will remove the password saved to { -brand-short-name } and any breach alerts. You cannot undo this action.
+    *[other] This will remove the passwords saved to { -brand-short-name } and any breach alerts. You cannot undo this action.
   }
 
-about-logins-confirm-remove-all-sync-dialog-title =
+# Title for modal to confirm the removal of all saved passwords when user IS SYNCED
+about-logins-confirm-remove-all-sync-dialog-title2 =
   { $count ->
-     [one] Remove { $count } login from all devices?
-    *[other] Remove all { $count } logins from all devices?
+     [one] Remove { $count } password from all devices?
+    *[other] Remove all { $count } passwords from all devices?
   }
-about-logins-confirm-remove-all-sync-dialog-message2=
+
+# Message for modal to confirm the removal of saved passwords when user IS synced.
+about-logins-confirm-remove-all-sync-dialog-message3 =
   { $count ->
-     [1] This will remove the login you’ve saved to { -brand-short-name } on all devices synced to your account. This will also remove breach alerts that appear here. You won’t be able to undo this action.
-    *[other] This will remove all logins you’ve saved to { -brand-short-name } on all devices synced to your account. This will also remove breach alerts that appear here. You won’t be able to undo this action.
+    [1] This will remove the passwords saved to { -brand-short-name } on all your synced devices. This will also remove any breach alerts that appear here. You cannot undo this action.
+    *[other] This will remove all passwords saved to { -brand-short-name } on all your synced devices. This will also remove any breach alerts that appear here. You cannot undo this action."
   }
 
 ##
