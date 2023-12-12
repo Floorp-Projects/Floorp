@@ -24,6 +24,9 @@ permalink: /changelog/
   * `NestedGeckoView` now disallows touch interception until we receive a response from `GeckoView#onTouchEventForDetailResult`. [Bug 1847305](https://bugzilla.mozilla.org/show_bug.cgi?id=1847305)
   * Add `globalPrivacyControlEnabled` setting to allow enabling Global Privacy Control in normal browsing. This is always enabled in private browsing. [Bug 1865357](https://bugzilla.mozilla.org/show_bug.cgi?id=1865357)
 
+* **samples-browser**
+  * Use `VerticalSwipeRefreshLayout` from AndroidComponents instead of AndroidX `SwipeRefreshLayout` to represent better Fenix behavior  
+
 # 121.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v120..releases_v121)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v121/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
