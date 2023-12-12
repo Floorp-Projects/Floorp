@@ -83,6 +83,9 @@ run-if = ["os == 'mac'"]
 ["test_Safari_history.js"]
 run-if = ["os == 'mac'"]
 
+["test_Safari_history_strange_entries.js"]
+run-if = ["os == 'mac'"]
+
 ["test_Safari_permissions.js"]
 run-if = ["os == 'mac'"]
 
