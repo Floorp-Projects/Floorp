@@ -15864,7 +15864,7 @@
 # Whether to render in to a child SurfaceControl rather than directly into the SurfaceView
 - name: widget.android.use-surfacecontrol
   type: bool
-  value: true
+  value: false
   mirror: once
 
 #---------------------------------------------------------------------------
