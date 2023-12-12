@@ -156,14 +156,14 @@ window.addEventListener("AboutLoginsRemoveAllLoginsDialog", () => {
   let loginItem = document.querySelector("login-item");
   let options = {};
   if (fxaLoggedIn && passwordSyncEnabled) {
-    options.title = "about-logins-confirm-remove-all-sync-dialog-title2";
-    options.message = "about-logins-confirm-remove-all-sync-dialog-message3";
+    options.title = "about-logins-confirm-remove-all-sync-dialog-title";
+    options.message = "about-logins-confirm-remove-all-sync-dialog-message2";
   } else {
-    options.title = "about-logins-confirm-remove-all-dialog-title2";
-    options.message = "about-logins-confirm-remove-all-dialog-message2";
+    options.title = "about-logins-confirm-remove-all-dialog-title";
+    options.message = "about-logins-confirm-remove-all-dialog-message";
   }
   options.confirmCheckboxLabel =
-    "about-logins-confirm-remove-all-dialog-checkbox-label2";
+    "about-logins-confirm-remove-all-dialog-checkbox-label";
   options.confirmButtonLabel =
     "about-logins-confirm-remove-all-dialog-confirm-button-label";
   options.count = numberOfLogins;
