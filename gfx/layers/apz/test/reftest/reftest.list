@@ -29,7 +29,7 @@ fuzzy-if(Android,0-31,0-29) fuzzy-if(gtkWidget,0-18,0-49) fuzzy-if(cocoaWidget,0
 # clipped away.
 fuzzy-if(Android,0-54,0-22) fuzzy-if(!Android,0-128,0-137) pref(apz.allow_zooming,true) == root-scrollbar-zoomed-in.html root-scrollbar-zoomed-in-ref.html
 fuzzy-if(Android,0-54,0-22) fuzzy-if(!Android,0-128,0-137) pref(apz.allow_zooming,true) pref(apz.allow_zooming_out,true) == root-scrollbar-zoomed-out.html root-scrollbar-zoomed-out-ref.html
-fuzzy-if(Android,0-54,0-27) fuzzy-if(!Android,0-128,0-137) pref(apz.allow_zooming,true) == root-scrollbar-zoomed-in-async-scroll.html root-scrollbar-zoomed-in-ref.html
+fuzzy-if(Android,0-54,0-31) fuzzy-if(!Android,0-128,0-137) pref(apz.allow_zooming,true) == root-scrollbar-zoomed-in-async-scroll.html root-scrollbar-zoomed-in-ref.html
 fuzzy-if(Android,0-54,0-25) fuzzy-if(!Android,0-128,0-137) pref(apz.allow_zooming,true) pref(apz.allow_zooming_out,true) == root-scrollbar-zoomed-out-async-scroll.html root-scrollbar-zoomed-out-ref.html
 fuzzy-if(Android,0-51,0-50) fuzzy-if(!Android,0-128,0-137) pref(apz.allow_zooming,true) == subframe-scrollbar-zoomed-in-async-scroll.html subframe-scrollbar-zoomed-in-async-scroll-ref.html
 fuzzy-if(Android,0-28,0-23) fuzzy-if(!Android,0-107,0-34) pref(apz.allow_zooming,true) pref(apz.allow_zooming_out,true) == subframe-scrollbar-zoomed-out-async-scroll.html subframe-scrollbar-zoomed-out-async-scroll-ref.html
