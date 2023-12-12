@@ -37,3 +37,6 @@ elif CONFIG["OS_ARCH"] == "WINNT":
         "userenv",
         "ws2_32",
     ]
+
+COMPILE_FLAGS["BASE_INCLUDES"] = []
+HOST_COMPILE_FLAGS["BASE_INCLUDES"] = []

@@ -14,3 +14,6 @@ RustLibrary(
     gkrust_features,
     output_category=None if CONFIG["LINK_GTEST_DURING_COMPILE"] else "gtest",
 )
+
+COMPILE_FLAGS["BASE_INCLUDES"] = []
+HOST_COMPILE_FLAGS["BASE_INCLUDES"] = []
