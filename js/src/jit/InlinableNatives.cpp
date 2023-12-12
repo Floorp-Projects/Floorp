@@ -57,6 +57,8 @@ const JSClass* js::jit::InlinableNativeGuardToClass(InlinableNative native) {
       return &SegmenterObject::class_;
     case InlinableNative::IntlGuardToSegments:
       return &SegmentsObject::class_;
+    case InlinableNative::IntlGuardToSegmentIterator:
+      return &SegmentIteratorObject::class_;
 #else
     case InlinableNative::IntlGuardToCollator:
     case InlinableNative::IntlGuardToDateTimeFormat:
@@ -67,6 +69,7 @@ const JSClass* js::jit::InlinableNativeGuardToClass(InlinableNative native) {
     case InlinableNative::IntlGuardToRelativeTimeFormat:
     case InlinableNative::IntlGuardToSegmenter:
     case InlinableNative::IntlGuardToSegments:
+    case InlinableNative::IntlGuardToSegmentIterator:
       MOZ_CRASH("Intl API disabled");
 #endif
 
@@ -167,6 +170,7 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::IntlGuardToRelativeTimeFormat:
     case InlinableNative::IntlGuardToSegmenter:
     case InlinableNative::IntlGuardToSegments:
+    case InlinableNative::IntlGuardToSegmentIterator:
     case InlinableNative::IsRegExpObject:
     case InlinableNative::IsPossiblyWrappedRegExpObject:
     case InlinableNative::RegExpMatcher:

@@ -138,6 +138,7 @@ const JSClass SegmentsObject::class_ = {
 
 static const JSFunctionSpec segments_methods[] = {
     JS_SELF_HOSTED_FN("containing", "Intl_Segments_containing", 1, 0),
+    JS_SELF_HOSTED_SYM_FN(iterator, "Intl_Segments_iterator", 0, 0),
     JS_FS_END,
 };
 
@@ -154,6 +155,48 @@ bool GlobalObject::initSegmentsProto(JSContext* cx,
   }
 
   global->initBuiltinProto(ProtoKind::SegmentsProto, proto);
+  return true;
+}
+
+const JSClass SegmentIteratorObject::class_ = {
+    "Intl.SegmentIterator",
+    JSCLASS_HAS_RESERVED_SLOTS(SegmentIteratorObject::SLOT_COUNT),
+};
+
+static const JSFunctionSpec segment_iterator_methods[] = {
+    JS_SELF_HOSTED_FN("next", "Intl_SegmentIterator_next", 0, 0),
+    JS_FS_END,
+};
+
+static const JSPropertySpec segment_iterator_properties[] = {
+    JS_STRING_SYM_PS(toStringTag, "Segmenter String Iterator", JSPROP_READONLY),
+    JS_PS_END,
+};
+
+bool GlobalObject::initSegmentIteratorProto(JSContext* cx,
+                                            Handle<GlobalObject*> global) {
+  Rooted<JSObject*> iteratorProto(
+      cx, GlobalObject::getOrCreateIteratorPrototype(cx, global));
+  if (!iteratorProto) {
+    return false;
+  }
+
+  Rooted<JSObject*> proto(
+      cx, GlobalObject::createBlankPrototypeInheriting<PlainObject>(
+              cx, iteratorProto));
+  if (!proto) {
+    return false;
+  }
+
+  if (!JS_DefineFunctions(cx, proto, segment_iterator_methods)) {
+    return false;
+  }
+
+  if (!JS_DefineProperties(cx, proto, segment_iterator_properties)) {
+    return false;
+  }
+
+  global->initBuiltinProto(ProtoKind::SegmentIteratorProto, proto);
   return true;
 }
 
@@ -538,6 +581,32 @@ bool js::intl_CreateSegmentsObject(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+bool js::intl_CreateSegmentIterator(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+
+  Rooted<SegmentsObject*> segments(cx,
+                                   &args[0].toObject().as<SegmentsObject>());
+
+  Rooted<JSObject*> proto(
+      cx, GlobalObject::getOrCreateSegmentIteratorPrototype(cx, cx->global()));
+  if (!proto) {
+    return false;
+  }
+
+  auto* iterator = NewObjectWithGivenProto<SegmentIteratorObject>(cx, proto);
+  if (!iterator) {
+    return false;
+  }
+
+  iterator->setSegmenter(segments->getSegmenter());
+  iterator->setString(segments->getString());
+  iterator->setIndex(0);
+
+  args.rval().setObject(*iterator);
+  return true;
+}
+
 bool js::intl_FindSegmentBoundaries(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
@@ -574,6 +643,55 @@ bool js::intl_FindSegmentBoundaries(JSContext* cx, unsigned argc, Value* vp) {
       }
       break;
   }
+
+  auto* result = CreateBoundaries(cx, boundaries, granularity);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setObject(*result);
+  return true;
+}
+
+bool js::intl_FindNextSegmentBoundaries(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+
+  Rooted<SegmentIteratorObject*> iterator(
+      cx, &args[0].toObject().as<SegmentIteratorObject>());
+
+  Rooted<JSLinearString*> string(cx, iterator->getString()->ensureLinear(cx));
+  if (!string) {
+    return false;
+  }
+
+  int32_t index = iterator->getIndex();
+  MOZ_ASSERT(index >= 0);
+  MOZ_ASSERT(uint32_t(index) < string->length());
+
+  SegmenterGranularity granularity = iterator->getSegmenter()->getGranularity();
+
+  Boundaries boundaries{};
+  switch (granularity) {
+    case SegmenterGranularity::Grapheme:
+      if (!GraphemeBoundaries(cx, string, index, &boundaries)) {
+        return false;
+      }
+      break;
+    case SegmenterGranularity::Word:
+      if (!WordBoundaries(cx, string, index, &boundaries)) {
+        return false;
+      }
+      break;
+    case SegmenterGranularity::Sentence:
+      if (!SentenceBoundaries(cx, string, index, &boundaries)) {
+        return false;
+      }
+      break;
+  }
+
+  iterator->setIndex(boundaries.endIndex);
 
   auto* result = CreateBoundaries(cx, boundaries, granularity);
   if (!result) {
