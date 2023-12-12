@@ -617,7 +617,7 @@ export class LoginManagerPrompter {
           lazy.log.debug("Showing the ConfirmationHint");
           anchor.ownerGlobal.ConfirmationHint.show(
             anchor,
-            "confirmation-hint-login-removed"
+            "confirmation-hint-password-removed"
           );
         },
       });
