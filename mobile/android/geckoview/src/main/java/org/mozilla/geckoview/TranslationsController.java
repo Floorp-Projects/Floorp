@@ -1057,6 +1057,9 @@ public class TranslationsController {
         } else if (ON_STATE_CHANGE_EVENT.equals(event)) {
           final GeckoBundle data = message.getBundle("data");
           final TranslationState translationState = TranslationState.fromBundle(data);
+          if (DEBUG) {
+            Log.d(LOGTAG, "received translation state: " + translationState);
+          }
           delegate.onTranslationStateChange(mSession, translationState);
           if (translationState != null
               && translationState.detectedLanguages != null
