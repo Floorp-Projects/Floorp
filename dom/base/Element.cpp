@@ -702,27 +702,36 @@ bool Element::CheckVisibility(const CheckVisibilityOptions& aOptions) {
     return false;
   }
 
-  if (f->IsHiddenByContentVisibilityOnAnyAncestor(
-          nsIFrame::IncludeContentVisibility::Hidden)) {
+  EnumSet includeContentVisibility = {
+      nsIFrame::IncludeContentVisibility::Hidden};
+  if (aOptions.mContentVisibilityAuto) {
+    includeContentVisibility += nsIFrame::IncludeContentVisibility::Auto;
+  }
+  // Steps 2 and 5
+  if (f->IsHiddenByContentVisibilityOnAnyAncestor(includeContentVisibility)) {
     // 2. If a shadow-including ancestor of this has content-visibility: hidden,
     // return false.
+    // 5. If a shadow-including ancestor of this skips its content due to
+    // has content-visibility: auto, return false.
     return false;
   }
 
-  if (aOptions.mCheckOpacity && f->Style()->IsInOpacityZeroSubtree()) {
+  if ((aOptions.mOpacityProperty || aOptions.mCheckOpacity) &&
+      f->Style()->IsInOpacityZeroSubtree()) {
     // 3. If the checkOpacity dictionary member of options is true, and this, or
     // a shadow-including ancestor of this, has a computed opacity value of 0,
     // return false.
     return false;
   }
 
-  if (aOptions.mCheckVisibilityCSS && !f->StyleVisibility()->IsVisible()) {
+  if ((aOptions.mVisibilityProperty || aOptions.mCheckVisibilityCSS) &&
+      !f->StyleVisibility()->IsVisible()) {
     // 4. If the checkVisibilityCSS dictionary member of options is true, and
     // this is invisible, return false.
     return false;
   }
 
-  // 5. Return true
+  // 6. Return true
   return true;
 }
 
