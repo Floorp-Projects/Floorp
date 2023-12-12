@@ -173,17 +173,6 @@ class PrefsFeed {
       value: handoffToAwesomebarPrefValue,
     });
 
-    // Read the pref for the cached default engine name from firefox.js and
-    // store it in our internal list of prefs to watch
-    let placeholderPrefValue = Services.prefs.getStringPref(
-      "browser.urlbar.placeholderName",
-      ""
-    );
-    values["urlbar.placeholderName"] = placeholderPrefValue;
-    this._prefMap.set("urlbar.placeholderName", {
-      value: placeholderPrefValue,
-    });
-
     // Add experiment values and default values
     values.featureConfig = lazy.NimbusFeatures.newtab.getAllVariables() || {};
     values.pocketConfig =
