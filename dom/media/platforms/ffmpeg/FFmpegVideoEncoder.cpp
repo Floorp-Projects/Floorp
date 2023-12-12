@@ -796,7 +796,6 @@ FFmpegVideoEncoder<LIBAV_VER>::DrainWithModernAPIs() {
         __func__);
   }
 
-  // TODO: Bug 1868906 - Allow continuing encoding after Drain().
   // Enter draining mode by sending NULL to the avcodec_send_frame(). Note that
   // this can leave the encoder in a permanent EOF state after draining. As a
   // result, the encoder is unable to continue encoding. A new
@@ -853,7 +852,15 @@ FFmpegVideoEncoder<LIBAV_VER>::DrainWithModernAPIs() {
   }
 
   FFMPEGV_LOG("get %zu encoded data", output.Length());
-  return EncodePromise::CreateAndResolve(std::move(output), __func__);
+
+  // TODO: Evaluate a better solution (Bug 1869466)
+  // TODO: Only re-create AVCodecContext when avcodec_flush_buffers is
+  // unavailable.
+  ShutdownInternal();
+  MediaResult r = InitInternal();
+  return NS_FAILED(r)
+             ? EncodePromise::CreateAndReject(r, __func__)
+             : EncodePromise::CreateAndResolve(std::move(output), __func__);
 }
 #endif
 
