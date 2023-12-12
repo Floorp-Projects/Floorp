@@ -127,12 +127,12 @@ interface nsICookieBannerService : nsISupports {
   void removeAllDomainPrefs(in boolean aIsPrivate);
 
   /**
-   * Return if we have run the cookie banner handling code for the given site
+   * Return true if we should stop cookie banner clicking for the given site in
    * this session.
    */
-  boolean hasExecutedForSite(in ACString aSite,
-                             in bool aIsTopLevel,
-                             in bool aIsPrivate);
+  boolean shouldStopBannerClickingForSite(in ACString aSite,
+                                          in bool aIsTopLevel,
+                                          in bool aIsPrivate);
 
   /**
    * Mark that the cookie banner handling code was executed for the given site

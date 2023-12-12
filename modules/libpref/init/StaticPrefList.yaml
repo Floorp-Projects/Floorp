@@ -2039,11 +2039,14 @@
   value: 31536000
   mirror: always
 
-# Whether the banner clicking code only get executed once when the site is
-# loaded in the browsing session.
-- name: cookiebanners.bannerClicking.executeOnce
-  type: bool
-  value: true
+# How many times per site and site load to check for cookie banners after which
+# the mechanism is considered on cooldown for the site in the current browsing
+# session. If the threshold is set to zero, banner clicking won't be considered
+# as being on cooldown regardless of how many times the site is loaded. The
+# maximum value for the retry is 255, any value over than that will be capped.
+- name: cookiebanners.bannerClicking.maxTriesPerSiteAndSession
+  type: uint32_t
+  value: 3
   mirror: always
 
 #---------------------------------------------------------------------------
