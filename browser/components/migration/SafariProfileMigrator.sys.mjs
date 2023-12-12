@@ -425,16 +425,20 @@ async function GetHistoryResource() {
 
       let pageInfos = [];
       for (let row of historyRows) {
-        pageInfos.push({
-          title: row.getResultByName("history_title"),
-          url: new URL(row.getResultByName("history_url")),
-          visits: [
-            {
-              transition: lazy.PlacesUtils.history.TRANSITIONS.TYPED,
-              date: parseNSDate(row.getResultByName("history_time")),
-            },
-          ],
-        });
+        try {
+          pageInfos.push({
+            title: row.getResultByName("history_title"),
+            url: new URL(row.getResultByName("history_url")),
+            visits: [
+              {
+                transition: lazy.PlacesUtils.history.TRANSITIONS.TYPED,
+                date: parseNSDate(row.getResultByName("history_time")),
+              },
+            ],
+          });
+        } catch (e) {
+          console.error("Could not create a history row: ", e);
+        }
       }
       await MigrationUtils.insertVisitsWrapper(pageInfos);
 
