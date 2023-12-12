@@ -71,6 +71,7 @@
   _(IntlGuardToPluralRules)                        \
   _(IntlGuardToRelativeTimeFormat)                 \
   _(IntlGuardToSegmenter)                          \
+  _(IntlGuardToSegments)                           \
                                                    \
   _(MapGet)                                        \
   _(MapHas)                                        \

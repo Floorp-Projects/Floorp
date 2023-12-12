@@ -507,6 +507,11 @@ else:
         "threading/posix/PosixThread.cpp",
     ]
 
+if CONFIG["JS_HAS_INTL_API"] and CONFIG["MOZ_ICU4X"]:
+    LOCAL_INCLUDES += [
+        "/intl/icu_capi/c/include",
+    ]
+
 if CONFIG["JS_HAS_CTYPES"]:
     SOURCES += [
         "ctypes/CTypes.cpp",
