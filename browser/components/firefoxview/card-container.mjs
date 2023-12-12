@@ -23,7 +23,12 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
  * @property {boolean} toggleDisabled - Optional property given if the card container should not be collapsible
  */
 class CardContainer extends MozLitElement {
-  initiallyExpanded = true;
+  constructor() {
+    super();
+    this.initiallyExpanded = true;
+    this.isExpanded = false;
+    this.visible = false;
+  }
 
   static properties = {
     sectionLabel: { type: String },
@@ -35,6 +40,7 @@ class CardContainer extends MozLitElement {
     shortPageName: { type: String },
     showViewAll: { type: Boolean },
     toggleDisabled: { type: Boolean },
+    visible: { type: Boolean },
   };
 
   static queries = {
@@ -69,6 +75,8 @@ class CardContainer extends MozLitElement {
     }
     this.isExpanded = this.detailsExpanded;
 
+    this.updateTabLists();
+
     if (!this.shortPageName) {
       return;
     }
@@ -99,6 +107,21 @@ class CardContainer extends MozLitElement {
         composed: true,
       })
     );
+  }
+
+  willUpdate(changes) {
+    if (changes.has("visible")) {
+      this.updateTabLists();
+    }
+  }
+
+  updateTabLists() {
+    let tabLists = this.querySelectorAll("fxview-tab-list");
+    if (tabLists) {
+      tabLists.forEach(tabList => {
+        tabList.updatesPaused = !this.visible || !this.isExpanded;
+      });
+    }
   }
 
   render() {

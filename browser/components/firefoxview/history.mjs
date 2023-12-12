@@ -75,6 +75,8 @@ class HistoryInView extends ViewPage {
       SEARCH_DEBOUNCE_RATE_MS,
       SEARCH_DEBOUNCE_TIMEOUT_MS
     );
+
+    this.toggleVisibilityInCardContainer();
   }
 
   async connectedCallback() {
@@ -117,6 +119,8 @@ class HistoryInView extends ViewPage {
     if (!this.searchTask.isFinalized) {
       this.searchTask.finalize();
     }
+
+    this.toggleVisibilityInCardContainer();
   }
 
   disconnectedCallback() {
@@ -357,6 +361,9 @@ class HistoryInView extends ViewPage {
 
   updated() {
     this.fullyUpdated = true;
+    if (this.lists?.length) {
+      this.toggleVisibilityInCardContainer();
+    }
   }
 
   panelListTemplate() {
