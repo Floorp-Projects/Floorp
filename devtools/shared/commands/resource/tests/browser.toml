@@ -100,6 +100,8 @@ skip-if = [
 
 ["browser_resources_stylesheets.js"]
 
+["browser_resources_stylesheets_header.js"]
+
 ["browser_resources_stylesheets_import.js"]
 
 ["browser_resources_stylesheets_navigation.js"]
