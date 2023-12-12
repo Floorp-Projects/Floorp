@@ -72,6 +72,7 @@
   _(IntlGuardToRelativeTimeFormat)                 \
   _(IntlGuardToSegmenter)                          \
   _(IntlGuardToSegments)                           \
+  _(IntlGuardToSegmentIterator)                    \
                                                    \
   _(MapGet)                                        \
   _(MapHas)                                        \

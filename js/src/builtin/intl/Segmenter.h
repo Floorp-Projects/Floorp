@@ -98,6 +98,54 @@ class SegmentsObject : public NativeObject {
   void setString(JSString* str) { setFixedSlot(STRING_SLOT, StringValue(str)); }
 };
 
+class SegmentIteratorObject : public NativeObject {
+ public:
+  static const JSClass class_;
+
+  static constexpr uint32_t SEGMENTER_SLOT = 0;
+  static constexpr uint32_t STRING_SLOT = 1;
+  static constexpr uint32_t INDEX_SLOT = 2;
+  static constexpr uint32_t SLOT_COUNT = 3;
+
+  static_assert(STRING_SLOT == INTL_SEGMENT_ITERATOR_STRING_SLOT,
+                "STRING_SLOT must match self-hosting define for string slot");
+
+  static_assert(INDEX_SLOT == INTL_SEGMENT_ITERATOR_INDEX_SLOT,
+                "INDEX_SLOT must match self-hosting define for index slot");
+
+  SegmenterObject* getSegmenter() const {
+    const auto& slot = getFixedSlot(SEGMENTER_SLOT);
+    if (slot.isUndefined()) {
+      return nullptr;
+    }
+    return &slot.toObject().as<SegmenterObject>();
+  }
+
+  void setSegmenter(SegmenterObject* segmenter) {
+    setFixedSlot(SEGMENTER_SLOT, ObjectOrNullValue(segmenter));
+  }
+
+  JSString* getString() const {
+    const auto& slot = getFixedSlot(STRING_SLOT);
+    if (slot.isUndefined()) {
+      return nullptr;
+    }
+    return slot.toString();
+  }
+
+  void setString(JSString* str) { setFixedSlot(STRING_SLOT, StringValue(str)); }
+
+  int32_t getIndex() const {
+    const auto& slot = getFixedSlot(INDEX_SLOT);
+    if (slot.isUndefined()) {
+      return 0;
+    }
+    return slot.toInt32();
+  }
+
+  void setIndex(int32_t index) { setFixedSlot(INDEX_SLOT, Int32Value(index)); }
+};
+
 /**
  * Create a new Segments object.
  *
@@ -105,6 +153,14 @@ class SegmentsObject : public NativeObject {
  */
 [[nodiscard]] extern bool intl_CreateSegmentsObject(JSContext* cx,
                                                     unsigned argc, Value* vp);
+
+/**
+ * Create a new Segment Iterator object.
+ *
+ * Usage: iterator = intl_CreateSegmentIterator(segments)
+ */
+[[nodiscard]] extern bool intl_CreateSegmentIterator(JSContext* cx,
+                                                     unsigned argc, Value* vp);
 
 /**
  * Find the next and the preceding segment boundaries for the given index. The
@@ -117,6 +173,19 @@ class SegmentsObject : public NativeObject {
  */
 [[nodiscard]] extern bool intl_FindSegmentBoundaries(JSContext* cx,
                                                      unsigned argc, Value* vp);
+
+/**
+ * Find the next segment boundaries starting from the current iterator index.
+ * The iterator mustn't have been completed.
+ *
+ * Return a three-element array object `[startIndex, endIndex, wordLike]`, where
+ * `wordLike` is either a boolean or undefined for non-word segmenters.
+ *
+ * Usage: boundaries = intl_FindNextSegmentBoundaries(iterator)
+ */
+[[nodiscard]] extern bool intl_FindNextSegmentBoundaries(JSContext* cx,
+                                                         unsigned argc,
+                                                         Value* vp);
 
 }  // namespace js
 

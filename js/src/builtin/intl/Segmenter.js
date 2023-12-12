@@ -358,3 +358,81 @@ function Intl_Segments_containing(index) {
   // Step 10.
   return CreateSegmentDataObject(string, boundaries);
 }
+
+/**
+ * %Segments.prototype% [ @@iterator ] ()
+ *
+ * Create a new Segment Iterator object.
+ */
+function Intl_Segments_iterator() {
+  // Step 1.
+  var segments = this;
+
+  // Step 2.
+  if (
+    !IsObject(segments) ||
+    (segments = intl_GuardToSegments(segments)) === null
+  ) {
+    return callFunction(
+      intl_CallSegmentsMethodIfWrapped,
+      this,
+      "Intl_Segments_iterator"
+    );
+  }
+
+  // Steps 3-5.
+  return intl_CreateSegmentIterator(segments);
+}
+
+/**
+ * %SegmentIterator.prototype%.next ()
+ *
+ * Advance the Segment iterator to the next segment within the string.
+ */
+function Intl_SegmentIterator_next() {
+  // Step 1.
+  var iterator = this;
+
+  // Step 2.
+  if (
+    !IsObject(iterator) ||
+    (iterator = intl_GuardToSegmentIterator(iterator)) === null)
+  {
+    return callFunction(
+      intl_CallSegmentIteratorMethodIfWrapped,
+      this,
+      "Intl_SegmentIterator_next"
+    );
+  }
+
+  // Step 3 (Not applicable).
+
+  // Step 4.
+  var string = UnsafeGetStringFromReservedSlot(
+    iterator,
+    INTL_SEGMENT_ITERATOR_STRING_SLOT
+  );
+
+  // Step 5.
+  var index = UnsafeGetInt32FromReservedSlot(
+    iterator,
+    INTL_SEGMENT_ITERATOR_INDEX_SLOT
+  );
+
+  var result = { value: undefined, done: false };
+
+  // Step 7.
+  if (index === string.length) {
+    result.done = true;
+    return result;
+  }
+
+  // Steps 6, 8.
+  var boundaries = intl_FindNextSegmentBoundaries(iterator);
+
+  // Step 9.
+  result.value = CreateSegmentDataObject(string, boundaries);
+
+  // Step 10.
+  return result;
+}
