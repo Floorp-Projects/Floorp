@@ -29,6 +29,7 @@ use crate::properties_and_values::registry::{
 use crate::rule_cache::{RuleCache, RuleCacheConditions};
 use crate::rule_collector::RuleCollector;
 use crate::rule_tree::{CascadeLevel, RuleTree, StrongRuleNode, StyleSource};
+use crate::sharing::RevalidationResult;
 use crate::selector_map::{PrecomputedHashMap, PrecomputedHashSet, SelectorMap, SelectorMapEntry};
 use crate::selector_parser::{PerPseudoElementMap, PseudoElement, SelectorImpl, SnapshotMap};
 use crate::shared_lock::{Locked, SharedRwLockReadGuard, StylesheetGuards};
@@ -66,7 +67,6 @@ use selectors::parser::{
 };
 use selectors::visitor::{SelectorListKind, SelectorVisitor};
 use servo_arc::{Arc, ArcBorrow};
-use smallbitvec::SmallBitVec;
 use smallvec::SmallVec;
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
@@ -1471,7 +1471,7 @@ impl Stylist {
         bloom: Option<&BloomFilter>,
         selector_caches: &mut SelectorCaches,
         needs_selector_flags: NeedsSelectorFlags,
-    ) -> SmallBitVec
+    ) -> RevalidationResult
     where
         E: TElement,
     {
@@ -1491,7 +1491,9 @@ impl Stylist {
         // This means we're guaranteed to get the same rulehash buckets for all
         // the lookups, which means that the bitvecs are comparable. We verify
         // this in the caller by asserting that the bitvecs are same-length.
-        let mut results = SmallBitVec::new();
+        let mut result = RevalidationResult::default();
+        let mut relevant_attributes = &mut result.relevant_attributes;
+        let selectors_matched = &mut result.selectors_matched;
 
         let matches_document_rules =
             element.each_applicable_non_document_style_rule_data(|data, host| {
@@ -1499,8 +1501,9 @@ impl Stylist {
                     data.selectors_for_cache_revalidation.lookup(
                         element,
                         self.quirks_mode,
+                        Some(&mut relevant_attributes),
                         |selector_and_hashes| {
-                            results.push(matches_selector(
+                            selectors_matched.push(matches_selector(
                                 &selector_and_hashes.selector,
                                 selector_and_hashes.selector_offset,
                                 Some(&selector_and_hashes.hashes),
@@ -1521,8 +1524,9 @@ impl Stylist {
             data.selectors_for_cache_revalidation.lookup(
                 element,
                 self.quirks_mode,
+                Some(&mut relevant_attributes),
                 |selector_and_hashes| {
-                    results.push(matches_selector(
+                    selectors_matched.push(matches_selector(
                         &selector_and_hashes.selector,
                         selector_and_hashes.selector_offset,
                         Some(&selector_and_hashes.hashes),
@@ -1534,7 +1538,7 @@ impl Stylist {
             );
         }
 
-        results
+        result
     }
 
     /// Computes styles for a given declaration with parent_style.
@@ -2470,15 +2474,7 @@ impl CascadeData {
             state_dependencies: ElementState::empty(),
             document_state_dependencies: DocumentState::empty(),
             mapped_ids: PrecomputedHashSet::default(),
-            // NOTE: We disable attribute bucketing for revalidation because we
-            // rely on the buckets to match, but we don't want to just not share
-            // style across elements with different attributes.
-            //
-            // An alternative to this would be to perform a style sharing check
-            // like may_match_different_id_rules which would check that the
-            // attribute buckets match on all scopes. But that seems
-            // somewhat gnarly.
-            selectors_for_cache_revalidation: SelectorMap::new_without_attribute_bucketing(),
+            selectors_for_cache_revalidation: SelectorMap::new(),
             animations: Default::default(),
             custom_property_registrations: Default::default(),
             layer_id: Default::default(),

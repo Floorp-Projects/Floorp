@@ -71,6 +71,7 @@ use crate::context::{SharedStyleContext, StyleContext};
 use crate::dom::{SendElement, TElement};
 use crate::properties::ComputedValues;
 use crate::rule_tree::StrongRuleNode;
+use crate::selector_map::RelevantAttributes;
 use crate::style_resolver::{PrimaryStyle, ResolvedElementStyles};
 use crate::stylist::Stylist;
 use crate::values::AtomIdent;
@@ -117,6 +118,44 @@ impl OpaqueComputedValues {
     }
 }
 
+/// The results from the revalidation step.
+///
+/// Rather than either:
+///
+///  * Plainly rejecting sharing for elements with different attributes (which would be unfortunate
+///    because a lot of elements have different attributes yet those attributes are not
+///    style-relevant).
+///
+///  * Having to give up on per-attribute bucketing, which would be unfortunate because it
+///    increases the cost of revalidation for pages with lots of global attribute selectors (see
+///    bug 1868316).
+///
+///  * We also store the style-relevant attributes for these elements, in order to guarantee that
+///    we end up looking at the same selectors.
+///
+#[derive(Debug, Default)]
+pub struct RevalidationResult {
+    /// A bit for each selector matched. This is sound because we guarantee we look up into the
+    /// same buckets via the pre-revalidation checks and relevant_attributes.
+    pub selectors_matched: SmallBitVec,
+    /// The set of attributes of this element that were relevant for its style.
+    pub relevant_attributes: RelevantAttributes,
+}
+
+impl PartialEq for RevalidationResult {
+    fn eq(&self, other: &Self) -> bool {
+        if self.relevant_attributes != other.relevant_attributes {
+            return false;
+        }
+
+        // This assert "ensures", to some extent, that the two candidates have matched the
+        // same rulehash buckets, and as such, that the bits we're comparing represent the
+        // same set of selectors.
+        debug_assert_eq!(self.selectors_matched.len(), other.selectors_matched.len());
+        self.selectors_matched == other.selectors_matched
+    }
+}
+
 /// Some data we want to avoid recomputing all the time while trying to share
 /// style.
 #[derive(Debug, Default)]
@@ -141,7 +180,7 @@ pub struct ValidationData {
 
     /// The cached result of matching this entry against the revalidation
     /// selectors.
-    revalidation_match_results: Option<SmallBitVec>,
+    revalidation_match_results: Option<RevalidationResult>,
 }
 
 impl ValidationData {
@@ -230,7 +269,7 @@ impl ValidationData {
         selector_caches: &mut SelectorCaches,
         bloom_known_valid: bool,
         needs_selector_flags: NeedsSelectorFlags,
-    ) -> &SmallBitVec
+    ) -> &RevalidationResult
     where
         E: TElement,
     {
@@ -320,7 +359,7 @@ impl<E: TElement> StyleSharingCandidate<E> {
         stylist: &Stylist,
         bloom: &StyleBloom<E>,
         selector_caches: &mut SelectorCaches,
-    ) -> &SmallBitVec {
+    ) -> &RevalidationResult {
         self.validation_data.revalidation_match_results(
             self.element,
             stylist,
@@ -386,7 +425,7 @@ impl<E: TElement> StyleSharingTarget<E> {
         stylist: &Stylist,
         bloom: &StyleBloom<E>,
         selector_caches: &mut SelectorCaches,
-    ) -> &SmallBitVec {
+    ) -> &RevalidationResult {
         // It's important to set the selector flags. Otherwise, if we succeed in
         // sharing the style, we may not set the slow selector flags for the
         // right elements (which may not necessarily be |element|), causing
