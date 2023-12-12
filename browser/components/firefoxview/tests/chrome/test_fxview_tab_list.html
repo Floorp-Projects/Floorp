@@ -146,6 +146,7 @@
   add_setup(function setup() {
     fxviewTabList.addEventListener("fxview-tab-list-primary-action", onPrimaryAction);
     fxviewTabList.addEventListener("fxview-tab-list-secondary-action", onSecondaryAction);
+    fxviewTabList.updatesPaused = false;
   });
 
   /**
