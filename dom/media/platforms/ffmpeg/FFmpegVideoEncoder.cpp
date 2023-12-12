@@ -266,93 +266,10 @@ FFmpegVideoEncoder<LIBAV_VER>::ProcessInit() {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
 
   FFMPEGV_LOG("ProcessInit");
-
-  AVCodec* codec = mLib->avcodec_find_encoder(mCodecID);
-  if (!codec) {
-    FFMPEGV_LOG("failed to find ffmpeg encoder for codec id %d", mCodecID);
-    return InitPromise::CreateAndReject(
-        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                    RESULT_DETAIL("Unable to find codec")),
-        __func__);
-  }
-  FFMPEGV_LOG("find codec: %s", codec->name);
-
-  ffmpeg::FFmpegPixelFormat fmt =
-      ffmpeg::ToSupportedFFmpegPixelFormat(mConfig.mSourcePixelFormat);
-  if (fmt == ffmpeg::FFMPEG_PIX_FMT_NONE) {
-    FFMPEGV_LOG(
-        "%s is unsupported format",
-        dom::ImageBitmapFormatValues::GetString(mConfig.mSourcePixelFormat)
-            .data());
-    return InitPromise::CreateAndReject(
-        MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
-                    RESULT_DETAIL("Pixel format is not supported")),
-        __func__);
-  }
-
-  MOZ_ASSERT(!mCodecContext);
-  if (!(mCodecContext = mLib->avcodec_alloc_context3(codec))) {
-    FFMPEGV_LOG("failed to allocate ffmpeg context for codec %s", codec->name);
-    return InitPromise::CreateAndReject(
-        MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                    RESULT_DETAIL("Failed to initialize ffmpeg context")),
-        __func__);
-  }
-
-  // Set up AVCodecContext.
-  mCodecContext->pix_fmt = fmt;
-  mCodecContext->bit_rate =
-      static_cast<ffmpeg::FFmpegBitRate>(mConfig.mBitrate);
-  mCodecContext->width = static_cast<int>(mConfig.mSize.width);
-  mCodecContext->height = static_cast<int>(mConfig.mSize.height);
-  mCodecContext->time_base =
-      AVRational{.num = 1, .den = static_cast<int>(mConfig.mFramerate)};
-#if LIBAVCODEC_VERSION_MAJOR >= 57
-  mCodecContext->framerate =
-      AVRational{.num = static_cast<int>(mConfig.mFramerate), .den = 1};
-#endif
-  mCodecContext->gop_size = static_cast<int>(mConfig.mKeyframeInterval);
-  // TODO: keyint_min, max_b_frame?
-  // TODO: VPX specific settings
-  // - if mConfig.mDenoising is set: av_opt_set_int(mCodecContext->priv_data,
-  // "noise_sensitivity", x, 0), where the x is from 0(disabled) to 6.
-  // - if mConfig.mAdaptiveQp is set: av_opt_set_int(mCodecContext->priv_data,
-  // "aq_mode", x, 0), where x is from 0 to 3: 0 - Disabled, 1 - Variance
-  // AQ(default), 2 - Complexity AQ, 3 - Cycle AQ.
-  // - if min and max rates are known (VBR?),
-  // av_opt_set(mCodecContext->priv_data, "minrate", x, 0) and
-  // av_opt_set(mCodecContext->priv_data, "maxrate", y, 0)
-  // - For real time usage:
-  // av_opt_set(mCodecContext->priv_data, "deadline", "realtime", 0)
-  // av_opt_set(mCodecContext->priv_data, "lag-in-frames", "0", 0)
-  // av_opt_set(mCodecContext->priv_data, "target_bitrate", x, 0)
-  // av_opt_set(mCodecContext->priv_data, "rc_buf_sz", x, 0)
-  // TODO: H264 specific settings.
-  // - for AVCC format: set mCodecContext->extradata and
-  // mCodecContext->extradata_size.
-  // - for AnnexB format: set mCodecContext->flags |=
-  // AV_CODEC_FLAG_GLOBAL_HEADER for start code.
-  // TODO: AV1 specific settings.
-
-  AVDictionary* options = nullptr;
-  if (int ret = OpenCodecContext(codec, &options); ret < 0) {
-    FFMPEGV_LOG("failed to open %s avcodec: %s", codec->name,
-                MakeErrorString(mLib, ret).get());
-    return InitPromise::CreateAndReject(
-        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                    RESULT_DETAIL("Unable to open avcodec")),
-        __func__);
-  }
-  mLib->av_dict_free(&options);
-
-  FFMPEGV_LOG("%s has been initialized with format: %s, bitrate: %" PRIi64
-              ", width: %d, height: %d, time_base: %d/%d",
-              codec->name, ffmpeg::GetPixelFormatString(mCodecContext->pix_fmt),
-              static_cast<int64_t>(mCodecContext->bit_rate),
-              mCodecContext->width, mCodecContext->height,
-              mCodecContext->time_base.num, mCodecContext->time_base.den);
-
-  return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
+  MediaResult r = InitInternal();
+  return NS_FAILED(r)
+             ? InitPromise::CreateAndReject(r, __func__)
+             : InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
 }
 
 RefPtr<MediaDataEncoder::EncodePromise>
@@ -436,6 +353,91 @@ void FFmpegVideoEncoder<LIBAV_VER>::ProcessShutdown() {
     mLib->av_freep(&mCodecContext);
     mCodecContext = nullptr;
   }
+}
+
+MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+
+  FFMPEGV_LOG("InitInternal");
+
+  AVCodec* codec = mLib->avcodec_find_encoder(mCodecID);
+  if (!codec) {
+    FFMPEGV_LOG("failed to find ffmpeg encoder for codec id %d", mCodecID);
+    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                       RESULT_DETAIL("Unable to find codec"));
+  }
+  FFMPEGV_LOG("find codec: %s", codec->name);
+
+  ffmpeg::FFmpegPixelFormat fmt =
+      ffmpeg::ToSupportedFFmpegPixelFormat(mConfig.mSourcePixelFormat);
+  if (fmt == ffmpeg::FFMPEG_PIX_FMT_NONE) {
+    FFMPEGV_LOG(
+        "%s is unsupported format",
+        dom::ImageBitmapFormatValues::GetString(mConfig.mSourcePixelFormat)
+            .data());
+    return MediaResult(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR,
+                       RESULT_DETAIL("Pixel format is not supported"));
+  }
+
+  MOZ_ASSERT(!mCodecContext);
+  if (!(mCodecContext = mLib->avcodec_alloc_context3(codec))) {
+    FFMPEGV_LOG("failed to allocate ffmpeg context for codec %s", codec->name);
+    return MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                       RESULT_DETAIL("Failed to initialize ffmpeg context"));
+  }
+
+  // Set up AVCodecContext.
+  mCodecContext->pix_fmt = fmt;
+  mCodecContext->bit_rate =
+      static_cast<ffmpeg::FFmpegBitRate>(mConfig.mBitrate);
+  mCodecContext->width = static_cast<int>(mConfig.mSize.width);
+  mCodecContext->height = static_cast<int>(mConfig.mSize.height);
+  mCodecContext->time_base =
+      AVRational{.num = 1, .den = static_cast<int>(mConfig.mFramerate)};
+#if LIBAVCODEC_VERSION_MAJOR >= 57
+  mCodecContext->framerate =
+      AVRational{.num = static_cast<int>(mConfig.mFramerate), .den = 1};
+#endif
+  mCodecContext->gop_size = static_cast<int>(mConfig.mKeyframeInterval);
+  // TODO: keyint_min, max_b_frame?
+  // TODO: VPX specific settings
+  // - if mConfig.mDenoising is set: av_opt_set_int(mCodecContext->priv_data,
+  // "noise_sensitivity", x, 0), where the x is from 0(disabled) to 6.
+  // - if mConfig.mAdaptiveQp is set: av_opt_set_int(mCodecContext->priv_data,
+  // "aq_mode", x, 0), where x is from 0 to 3: 0 - Disabled, 1 - Variance
+  // AQ(default), 2 - Complexity AQ, 3 - Cycle AQ.
+  // - if min and max rates are known (VBR?),
+  // av_opt_set(mCodecContext->priv_data, "minrate", x, 0) and
+  // av_opt_set(mCodecContext->priv_data, "maxrate", y, 0)
+  // - For real time usage:
+  // av_opt_set(mCodecContext->priv_data, "deadline", "realtime", 0)
+  // av_opt_set(mCodecContext->priv_data, "lag-in-frames", "0", 0)
+  // av_opt_set(mCodecContext->priv_data, "target_bitrate", x, 0)
+  // av_opt_set(mCodecContext->priv_data, "rc_buf_sz", x, 0)
+  // TODO: H264 specific settings.
+  // - for AVCC format: set mCodecContext->extradata and
+  // mCodecContext->extradata_size.
+  // - for AnnexB format: set mCodecContext->flags |=
+  // AV_CODEC_FLAG_GLOBAL_HEADER for start code.
+  // TODO: AV1 specific settings.
+
+  AVDictionary* options = nullptr;
+  if (int ret = OpenCodecContext(codec, &options); ret < 0) {
+    FFMPEGV_LOG("failed to open %s avcodec: %s", codec->name,
+                MakeErrorString(mLib, ret).get());
+    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                       RESULT_DETAIL("Unable to open avcodec"));
+  }
+  mLib->av_dict_free(&options);
+
+  FFMPEGV_LOG("%s has been initialized with format: %s, bitrate: %" PRIi64
+              ", width: %d, height: %d, time_base: %d/%d",
+              codec->name, ffmpeg::GetPixelFormatString(mCodecContext->pix_fmt),
+              static_cast<int64_t>(mCodecContext->bit_rate),
+              mCodecContext->width, mCodecContext->height,
+              mCodecContext->time_base.num, mCodecContext->time_base.den);
+
+  return MediaResult(NS_OK);
 }
 
 int FFmpegVideoEncoder<LIBAV_VER>::OpenCodecContext(const AVCodec* aCodec,
