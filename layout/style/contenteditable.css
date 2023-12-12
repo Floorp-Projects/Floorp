@@ -55,7 +55,6 @@ a:link:read-write {
 *|*:read-write > textarea:read-only {
   user-select: all;
   -moz-user-input: auto !important;
-  -moz-user-focus: none !important;
 }
 
 /* XXX Still need a better way of blocking other events to these widgets */
@@ -70,7 +69,6 @@ input[contenteditable="true"][type="radio"],
 input[contenteditable="true"][type="file"] {
   user-select: all;
   -moz-user-input: none !important;
-  -moz-user-focus: none !important;
 }
 
 *|*:read-write > input[type="hidden"],
@@ -201,7 +199,6 @@ a[\_moz_anonclass="mozTableAddColumnBefore"] {
   background-repeat: no-repeat;
   background-position: center center;
   user-select: none;
-  -moz-user-focus: none !important;
 }
 
 a[\_moz_anonclass="mozTableAddColumnBefore"]:hover {
@@ -223,7 +220,6 @@ a[\_moz_anonclass="mozTableAddColumnAfter"] {
   background-repeat: no-repeat;
   background-position: center center;
   user-select: none;
-  -moz-user-focus: none !important;
 }
 
 a[\_moz_anonclass="mozTableAddColumnAfter"]:hover {
@@ -245,7 +241,6 @@ a[\_moz_anonclass="mozTableRemoveColumn"] {
   background-repeat: no-repeat;
   background-position: center center;
   user-select: none;
-  -moz-user-focus: none !important;
 }
 
 a[\_moz_anonclass="mozTableRemoveColumn"]:hover {
@@ -267,7 +262,6 @@ a[\_moz_anonclass="mozTableAddRowBefore"] {
   background-repeat: no-repeat;
   background-position: center center;
   user-select: none;
-  -moz-user-focus: none !important;
 }
 
 a[\_moz_anonclass="mozTableAddRowBefore"]:hover {
@@ -289,7 +283,6 @@ a[\_moz_anonclass="mozTableAddRowAfter"] {
   background-repeat: no-repeat;
   background-position: center center;
   user-select: none;
-  -moz-user-focus: none !important;
 }
 
 a[\_moz_anonclass="mozTableAddRowAfter"]:hover {
@@ -311,7 +304,6 @@ a[\_moz_anonclass="mozTableRemoveRow"] {
   background-repeat: no-repeat;
   background-position: center center;
   user-select: none;
-  -moz-user-focus: none !important;
 }
 
 a[\_moz_anonclass="mozTableRemoveRow"]:hover {
