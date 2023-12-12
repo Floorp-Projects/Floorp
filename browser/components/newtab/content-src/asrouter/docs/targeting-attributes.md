@@ -48,6 +48,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [launchOnLoginEnabled](#launchonloginenabled)
 * [locale](#locale)
 * [localeLanguageCode](#localelanguagecode)
+* [memoryMB](#memorymb)
 * [messageImpressions](#messageimpressions)
 * [needsUpdate](#needsupdate)
 * [newtabSettings](#newtabsettings)
@@ -718,6 +719,16 @@ declare const attachedFxAOAuthClients: Promise<OAuthClient[]>
 
 ```
 declare const platformName = "linux" | "win" | "macosx" | "android" | "other";
+```
+
+### `memoryMB`
+
+The amount of RAM available to Firefox, in megabytes.
+
+#### Definition
+
+```ts
+declare const memoryMB = number;
 ```
 
 ### `messageImpressions`
