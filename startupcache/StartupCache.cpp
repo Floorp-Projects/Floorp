@@ -268,8 +268,6 @@ Result<Ok, nsresult> StartupCache::LoadArchive() {
   MOZ_ASSERT(NS_IsMainThread(), "Can only load startup cache on main thread");
   if (gIgnoreDiskCache) return Err(NS_ERROR_FAILURE);
 
-  mTableLock.AssertCurrentThreadOwns();
-
   MOZ_TRY(mCacheData.init(mFile));
   auto size = mCacheData.size();
   if (CanPrefetchMemory()) {
@@ -400,6 +398,14 @@ nsresult StartupCache::GetBuffer(const char* id, const char** outbuf,
     if (!mCacheData.initialized()) {
       return NS_ERROR_NOT_AVAILABLE;
     }
+    // It is impossible for a write to be pending here. This is because
+    // we just checked mCacheData.initialized(), and this is reset before
+    // writing to the cache. It's not re-initialized unless we call
+    // LoadArchive(), either from Init() (which must have already happened) or
+    // InvalidateCache(). InvalidateCache() locks the mutex, so a write can't be
+    // happening.
+    // Also, WriteToDisk() requires mTableLock, so while it's writing we can't
+    // be here.
 
     size_t totalRead = 0;
     size_t totalWritten = 0;
