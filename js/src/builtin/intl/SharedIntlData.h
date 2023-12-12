@@ -243,7 +243,8 @@ class SharedIntlData {
     ListFormat,
     NumberFormat,
     PluralRules,
-    RelativeTimeFormat
+    RelativeTimeFormat,
+    Segmenter,
   };
 
   /**

@@ -240,9 +240,11 @@ bool js::intl_BestAvailableLocale(JSContext* cx, unsigned argc, Value* vp) {
       kind = SupportedLocaleKind::NumberFormat;
     } else if (StringEqualsLiteral(typeStr, "PluralRules")) {
       kind = SupportedLocaleKind::PluralRules;
-    } else {
-      MOZ_ASSERT(StringEqualsLiteral(typeStr, "RelativeTimeFormat"));
+    } else if (StringEqualsLiteral(typeStr, "RelativeTimeFormat")) {
       kind = SupportedLocaleKind::RelativeTimeFormat;
+    } else {
+      MOZ_ASSERT(StringEqualsLiteral(typeStr, "Segmenter"));
+      kind = SupportedLocaleKind::Segmenter;
     }
   }
 
@@ -415,10 +417,14 @@ bool js::intl_supportedLocaleOrFallback(JSContext* cx, unsigned argc,
   // Note: We don't test the supported locales of the remaining Intl service
   // constructors, because the set of supported locales is exactly equal to
   // the set of supported locales of Intl.DateTimeFormat.
-  for (auto kind :
-       {SupportedLocaleKind::DisplayNames, SupportedLocaleKind::ListFormat,
-        SupportedLocaleKind::NumberFormat, SupportedLocaleKind::PluralRules,
-        SupportedLocaleKind::RelativeTimeFormat}) {
+  for (auto kind : {
+           SupportedLocaleKind::DisplayNames,
+           SupportedLocaleKind::ListFormat,
+           SupportedLocaleKind::NumberFormat,
+           SupportedLocaleKind::PluralRules,
+           SupportedLocaleKind::RelativeTimeFormat,
+           SupportedLocaleKind::Segmenter,
+       }) {
     JSLinearString* supported;
     JS_TRY_VAR_OR_RETURN_FALSE(
         cx, supported, BestAvailableLocale(cx, kind, candidate, nullptr));
@@ -882,10 +888,21 @@ static bool IntlClassFinish(JSContext* cx, HandleObject intl,
   // Add the constructor properties.
   RootedId ctorId(cx);
   RootedValue ctorValue(cx);
-  for (const auto& protoKey :
-       {JSProto_Collator, JSProto_DateTimeFormat, JSProto_DisplayNames,
-        JSProto_ListFormat, JSProto_Locale, JSProto_NumberFormat,
-        JSProto_PluralRules, JSProto_RelativeTimeFormat}) {
+  for (const auto& protoKey : {
+           JSProto_Collator,
+           JSProto_DateTimeFormat,
+           JSProto_DisplayNames,
+           JSProto_ListFormat,
+           JSProto_Locale,
+           JSProto_NumberFormat,
+           JSProto_PluralRules,
+           JSProto_RelativeTimeFormat,
+           JSProto_Segmenter,
+       }) {
+    if (GlobalObject::skipDeselectedConstructor(cx, protoKey)) {
+      continue;
+    }
+
     JSObject* ctor = GlobalObject::getOrCreateConstructor(cx, protoKey);
     if (!ctor) {
       return false;

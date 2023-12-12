@@ -8741,6 +8741,8 @@ static bool GetAvailableLocalesOf(JSContext* cx, unsigned argc, Value* vp) {
       kind = SupportedLocaleKind::PluralRules;
     } else if (StringEqualsLiteral(typeStr, "RelativeTimeFormat")) {
       kind = SupportedLocaleKind::RelativeTimeFormat;
+    } else if (StringEqualsLiteral(typeStr, "Segmenter")) {
+      kind = SupportedLocaleKind::Segmenter;
     } else {
       ReportUsageErrorASCII(cx, callee, "Unsupported Intl constructor name");
       return false;

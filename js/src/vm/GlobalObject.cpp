@@ -21,6 +21,7 @@
 #  include "builtin/intl/NumberFormat.h"
 #  include "builtin/intl/PluralRules.h"
 #  include "builtin/intl/RelativeTimeFormat.h"
+#  include "builtin/intl/Segmenter.h"
 #endif
 #include "builtin/FinalizationRegistryObject.h"
 #include "builtin/MapObject.h"
@@ -190,6 +191,13 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
     case JSProto_PluralRules:
     case JSProto_RelativeTimeFormat:
       return false;
+
+    case JSProto_Segmenter:
+#  if defined(MOZ_ICU4X) && defined(NIGHTLY_BUILD)
+      return false;
+#  else
+      return true;
+#  endif
 #endif
 
 #ifdef JS_HAS_TEMPORAL_API

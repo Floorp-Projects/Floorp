@@ -109,6 +109,7 @@
   REAL_IF_INTL(NumberFormat, OCLASP(NumberFormat))                          \
   REAL_IF_INTL(PluralRules, OCLASP(PluralRules))                            \
   REAL_IF_INTL(RelativeTimeFormat, OCLASP(RelativeTimeFormat))              \
+  REAL_IF_INTL(Segmenter, OCLASP(Segmenter))                                \
   REAL(Reflect, CLASP(Reflect))                                             \
   REAL(WeakSet, OCLASP(WeakSet))                                            \
   REAL(TypedArray, &js::TypedArrayObject::sharedTypedArrayPrototypeClass)   \
