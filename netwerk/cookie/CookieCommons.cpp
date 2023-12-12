@@ -471,11 +471,18 @@ already_AddRefed<nsICookieJarSettings> CookieCommons::GetCookieJarSettings(
 }
 
 // static
-bool CookieCommons::ShouldIncludeCrossSiteCookieForDocument(Cookie* aCookie) {
+bool CookieCommons::ShouldIncludeCrossSiteCookieForDocument(
+    Cookie* aCookie, dom::Document* aDocument) {
   MOZ_ASSERT(aCookie);
+  MOZ_ASSERT(aDocument);
 
   int32_t sameSiteAttr = 0;
   aCookie->GetSameSite(&sameSiteAttr);
+
+  if (aDocument->CookieJarSettings()->GetPartitionForeign() &&
+      StaticPrefs::network_cookie_cookieBehavior_optInPartitioning()) {
+    return false;
+  }
 
   return sameSiteAttr == nsICookie::SAMESITE_NONE;
 }

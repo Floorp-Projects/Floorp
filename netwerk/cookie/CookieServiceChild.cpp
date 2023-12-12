@@ -319,8 +319,8 @@ CookieServiceChild::GetCookieStringFromDocument(dom::Document* aDocument,
       continue;
     }
 
-    if (thirdParty &&
-        !CookieCommons::ShouldIncludeCrossSiteCookieForDocument(cookie)) {
+    if (thirdParty && !CookieCommons::ShouldIncludeCrossSiteCookieForDocument(
+                          cookie, aDocument)) {
       continue;
     }
 
@@ -399,8 +399,8 @@ CookieServiceChild::SetCookieStringFromDocument(
     }
   }
 
-  if (thirdParty &&
-      !CookieCommons::ShouldIncludeCrossSiteCookieForDocument(cookie)) {
+  if (thirdParty && !CookieCommons::ShouldIncludeCrossSiteCookieForDocument(
+                        cookie, aDocument)) {
     return NS_OK;
   }
 
