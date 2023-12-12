@@ -572,6 +572,21 @@ add_task(async function test_search() {
       () => tabList.shadowRoot.querySelector("fxview-empty-state"),
       "There are no matching search results."
     );
+
+    info("Clear the search query with keyboard.");
+    EventUtils.synthesizeMouseAtCenter(searchTextbox.clearButton, {}, content);
+
+    is(
+      recentlyClosedComponent.shadowRoot.activeElement,
+      searchTextbox,
+      "Search input is focused"
+    );
+    EventUtils.synthesizeKey("KEY_Tab", {}, content);
+    EventUtils.synthesizeKey("KEY_Enter", {}, content);
+    await TestUtils.waitForCondition(
+      () => listElem.rowEls.length === expectedURLs.length,
+      "The original list is restored."
+    );
   });
   await cleanup();
 });
