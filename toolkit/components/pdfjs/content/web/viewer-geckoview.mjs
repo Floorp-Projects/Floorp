@@ -2928,12 +2928,10 @@ class PDFScriptingManager {
   #pdfDocument = null;
   #pdfViewer = null;
   #ready = false;
-  #sandboxBundleSrc = null;
   #scripting = null;
   #willPrintCapability = null;
   constructor({
     eventBus,
-    sandboxBundleSrc = null,
     externalServices = null,
     docProperties = null
   }) {
@@ -3243,9 +3241,7 @@ class PDFScriptingManager {
     if (this.#scripting) {
       throw new Error("#initScripting: Scripting already exists.");
     }
-    return this.#externalServices.createScripting({
-      sandboxBundleSrc: this.#sandboxBundleSrc
-    });
+    return this.#externalServices.createScripting();
   }
   async #destroyScripting() {
     if (!this.#scripting) {
@@ -5046,7 +5042,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '4.0.321';
+    const viewerVersion = '4.0.347';
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -6613,7 +6609,7 @@ class DefaultExternalServices {
   static async createL10n() {
     throw new Error("Not implemented: createL10n");
   }
-  static createScripting(options) {
+  static createScripting() {
     throw new Error("Not implemented: createScripting");
   }
   static updateEditorStates(data) {
@@ -6793,7 +6789,6 @@ const PDFViewerApplication = {
     this.findController = findController;
     const pdfScriptingManager = new PDFScriptingManager({
       eventBus,
-      sandboxBundleSrc: null,
       externalServices,
       docProperties: this._scriptingDocProperties.bind(this)
     });
@@ -9103,7 +9098,7 @@ class FirefoxExternalServices extends DefaultExternalServices {
     const [localeProperties] = await Promise.all([FirefoxCom.requestAsync("getLocaleProperties", null), document.l10n.ready]);
     return new L10n(localeProperties, document.l10n);
   }
-  static createScripting(options) {
+  static createScripting() {
     return FirefoxScripting;
   }
   static async getNimbusExperimentData() {
@@ -9267,8 +9262,8 @@ PDFPrintServiceFactory.instance = {
 
 
 
-const pdfjsVersion = '4.0.321';
-const pdfjsBuild = 'f54cfe065';
+const pdfjsVersion = '4.0.347';
+const pdfjsBuild = '76e3e5202';
 const AppConstants = null;
 window.PDFViewerApplication = PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;
