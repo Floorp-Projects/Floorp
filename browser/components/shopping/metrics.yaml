@@ -622,3 +622,20 @@ shopping:
           Whether the toggle was used to enable or disable ads. Possible values
           are `enabled` and `disabled`.
         type: string
+
+  surface_opt_out_button_clicked:
+    type: event
+    description: |
+      The user clicked the button in the settings panel to turn off the shopping experience.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1869413
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1869413
+    data_sensitivity:
+      - interaction
+    expires: 134
+    notification_emails:
+      - betling@mozilla.com
+      - fx-desktop-shopping-eng@mozilla.com
+    send_in_pings:
+      - events

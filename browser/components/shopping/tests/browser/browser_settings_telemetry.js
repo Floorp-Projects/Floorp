@@ -52,3 +52,51 @@ add_task(async function test_shopping_setting_update() {
 
   await SpecialPowers.popPrefEnv();
 });
+
+add_task(async function test_shopping_settings_ads_enabled() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.shopping.experience2023.optedIn", 1]],
+  });
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      await SpecialPowers.spawn(
+        browser,
+        [MOCK_ANALYZED_PRODUCT_RESPONSE],
+        async mockData => {
+          let shoppingContainer =
+            content.document.querySelector(
+              "shopping-container"
+            ).wrappedJSObject;
+
+          shoppingContainer.data = Cu.cloneInto(mockData, content);
+          shoppingContainer.adsEnabled = true;
+          await shoppingContainer.updateComplete;
+
+          let shoppingSettings = shoppingContainer.settingsEl;
+          ok(shoppingSettings, "Got the shopping-settings element");
+
+          let optOutButton = shoppingSettings.optOutButtonEl;
+          ok(optOutButton, "There should be an opt-out button");
+
+          optOutButton.click();
+        }
+      );
+    }
+  );
+
+  await Services.fog.testFlushAllChildren();
+  var optOutClickedEvents =
+    Glean.shopping.surfaceOptOutButtonClicked.testGetValue();
+
+  Assert.equal(optOutClickedEvents.length, 1);
+  Assert.equal(optOutClickedEvents[0].category, "shopping");
+  Assert.equal(optOutClickedEvents[0].name, "surface_opt_out_button_clicked");
+  await SpecialPowers.popPrefEnv();
+});
