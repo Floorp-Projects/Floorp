@@ -41,6 +41,9 @@ add_task(async function () {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
     leaveOpen: true,
   });
-  await evaluateSearchResults("sites will not be saved", "passwordsGroup");
+  await evaluateSearchResults(
+    "won’t save passwords for sites listed here",
+    "passwordsGroup"
+  );
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
