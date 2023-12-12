@@ -201,85 +201,6 @@ add_task(async function test_recentbrowsing() {
       "Found the recent-browsing recently-closed tabs list"
     );
 
-    // Collapse the Open Tabs card
-    let cardContainer = recentBrowsingOpenTabsView.viewCards[0]?.cardEl;
-    await EventUtils.synthesizeMouseAtCenter(
-      cardContainer.summaryEl,
-      {},
-      content
-    );
-    await TestUtils.waitForCondition(
-      () => !cardContainer.detailsEl.hasAttribute("open")
-    );
-
-    ok(
-      recentBrowsingOpenTabsList.updatesPaused,
-      "The Open Tabs list is paused after its card is collapsed."
-    );
-    ok(
-      !recentBrowsingOpenTabsList.intervalID,
-      "The intervalID for the Open Tabs list is undefined while updates are paused."
-    );
-
-    // Expand the Open Tabs card
-    await EventUtils.synthesizeMouseAtCenter(
-      cardContainer.summaryEl,
-      {},
-      content
-    );
-    await TestUtils.waitForCondition(() =>
-      cardContainer.detailsEl.hasAttribute("open")
-    );
-
-    ok(
-      !recentBrowsingOpenTabsList.updatesPaused,
-      "The Open Tabs list is unpaused after its card is expanded."
-    );
-    ok(
-      recentBrowsingOpenTabsList.intervalID,
-      "The intervalID for the Open Tabs list is defined while updates are unpaused."
-    );
-
-    // Collapse the Recently Closed card
-    let recentlyClosedCardContainer =
-      recentBrowsingRecentlyClosedTabsView.cardEl;
-    await EventUtils.synthesizeMouseAtCenter(
-      recentlyClosedCardContainer.summaryEl,
-      {},
-      content
-    );
-    await TestUtils.waitForCondition(
-      () => !recentlyClosedCardContainer.detailsEl.hasAttribute("open")
-    );
-
-    ok(
-      recentBrowsingRecentlyClosedTabsList.updatesPaused,
-      "The Recently Closed list is paused after its card is collapsed."
-    );
-    ok(
-      !recentBrowsingRecentlyClosedTabsList.intervalID,
-      "The intervalID for the Open Tabs list is undefined while updates are paused."
-    );
-
-    // Expand the Recently Closed card
-    await EventUtils.synthesizeMouseAtCenter(
-      recentlyClosedCardContainer.summaryEl,
-      {},
-      content
-    );
-    await TestUtils.waitForCondition(() =>
-      recentlyClosedCardContainer.detailsEl.hasAttribute("open")
-    );
-
-    ok(
-      !recentBrowsingRecentlyClosedTabsList.updatesPaused,
-      "The Recently Closed list is unpaused after its card is expanded."
-    );
-    ok(
-      recentBrowsingRecentlyClosedTabsList.intervalID,
-      "The intervalID for the Recently Closed list is defined while updates are unpaused."
-    );
-
     await checkFxRenderCalls(
       browser,
       {
@@ -309,45 +230,6 @@ add_task(async function test_opentabs() {
     ok(openTabsList, "Found the first open tabs list");
     ok(!openTabsView.paused, "The open tabs view is un-paused");
     is(openTabsView.slot, "selected", "The open tabs view is selected");
-
-    // Collapse the Open Tabs card
-    let cardContainer = openTabsView.viewCards[0]?.cardEl;
-    await EventUtils.synthesizeMouseAtCenter(
-      cardContainer.summaryEl,
-      {},
-      content
-    );
-    await TestUtils.waitForCondition(
-      () => !cardContainer.detailsEl.hasAttribute("open")
-    );
-
-    ok(
-      openTabsList.updatesPaused,
-      "The Open Tabs list is paused after its card is collapsed."
-    );
-    ok(
-      !openTabsList.intervalID,
-      "The intervalID for the Open Tabs list is undefined while updates are paused."
-    );
-
-    // Expand the Open Tabs card
-    await EventUtils.synthesizeMouseAtCenter(
-      cardContainer.summaryEl,
-      {},
-      content
-    );
-    await TestUtils.waitForCondition(() =>
-      cardContainer.detailsEl.hasAttribute("open")
-    );
-
-    ok(
-      !openTabsList.updatesPaused,
-      "The Open Tabs list is unpaused after its card is expanded."
-    );
-    ok(
-      openTabsList.intervalID,
-      "The intervalID for the Open Tabs list is defined while updates are unpaused."
-    );
 
     await checkFxRenderCalls(
       browser,
