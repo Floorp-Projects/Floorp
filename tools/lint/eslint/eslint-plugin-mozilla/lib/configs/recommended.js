@@ -53,10 +53,10 @@ module.exports = {
       },
     },
     {
-      files: ["**/*.mjs", "**/*.jsm"],
+      files: ["**/*.mjs", "**/*.jsm", "**/?(*.)worker.?(m)js"],
       rules: {
-        // Modules are far easier to check for no-unused-vars on a global scope,
-        // than our content files. Hence we turn that on here.
+        // Modules and workers are far easier to check for no-unused-vars on a
+        // global scope, than our content files. Hence we turn that on here.
         "no-unused-vars": [
           "error",
           {
