@@ -209,7 +209,7 @@ class StartupCache : public nsIMemoryReporter {
 
   friend class StartupCacheInfo;
 
-  Result<Ok, nsresult> LoadArchive();
+  Result<Ok, nsresult> LoadArchive() MOZ_REQUIRES(mTableLock);
   nsresult Init();
 
   // Returns a file pointer for the cache file with the given name in the
