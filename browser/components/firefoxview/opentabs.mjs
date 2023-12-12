@@ -481,15 +481,15 @@ class OpenTabsInViewCard extends ViewPageContent {
   }
 
   viewVisibleCallback() {
-    this.getRootNode().host.toggleVisibilityInCardContainer(true);
+    if (this.tabList) {
+      this.tabList.visible = true;
+    }
   }
 
   viewHiddenCallback() {
-    this.getRootNode().host.toggleVisibilityInCardContainer(true);
-  }
-
-  firstUpdated() {
-    this.getRootNode().host.toggleVisibilityInCardContainer(true);
+    if (this.tabList) {
+      this.tabList.visible = false;
+    }
   }
 
   render() {

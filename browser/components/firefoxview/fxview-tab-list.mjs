@@ -59,7 +59,7 @@ export default class FxviewTabList extends MozLitElement {
     this.maxTabsLength = 25;
     this.tabItems = [];
     this.compactRows = false;
-    this.updatesPaused = true;
+    this.visible = false;
     this.#register();
   }
 
@@ -71,7 +71,7 @@ export default class FxviewTabList extends MozLitElement {
     hasPopup: { type: String },
     maxTabsLength: { type: Number },
     tabItems: { type: Array },
-    updatesPaused: { type: Boolean },
+    visible: { type: Boolean },
     searchQuery: { type: String },
   };
 
@@ -86,10 +86,10 @@ export default class FxviewTabList extends MozLitElement {
       this.tabItems.length - 1
     );
 
-    if (changes.has("dateTimeFormat") || changes.has("updatesPaused")) {
+    if (changes.has("dateTimeFormat")) {
       this.clearIntervalTimer();
       if (
-        !this.updatesPaused &&
+        this.visible &&
         this.dateTimeFormat == "relative" &&
         !window.IS_STORYBOOK
       ) {
@@ -140,8 +140,10 @@ export default class FxviewTabList extends MozLitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    this.ownerDocument.addEventListener("visibilitychange", this);
+    this.visible = this.ownerDocument.visibilityState == "visible";
     if (
-      !this.updatesPaused &&
+      this.visible &&
       this.dateTimeFormat === "relative" &&
       !window.IS_STORYBOOK
     ) {
@@ -151,7 +153,20 @@ export default class FxviewTabList extends MozLitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    this.ownerDocument.removeEventListener("visibilitychange", this);
     this.clearIntervalTimer();
+  }
+
+  handleEvent(event) {
+    if (event.type == "visibilitychange") {
+      this.visible = this.ownerDocument.visibilityState == "visible";
+      if (this.visible) {
+        this.startIntervalTimer();
+        this.onIntervalUpdate();
+      } else {
+        this.clearIntervalTimer();
+      }
+    }
   }
 
   async getUpdateComplete() {
@@ -237,13 +252,8 @@ export default class FxviewTabList extends MozLitElement {
     }
   }
 
-  shouldUpdate(changes) {
-    if (changes.has("updatesPaused")) {
-      if (this.updatesPaused) {
-        this.clearIntervalTimer();
-      }
-    }
-    return !this.updatesPaused;
+  shouldUpdate() {
+    return this.visible;
   }
 
   itemTemplate = (tabItem, i) => {
@@ -733,13 +743,6 @@ export class VirtualList extends MozLitElement {
       }
       this.triggerIntersectionObserver();
     }
-  }
-
-  recalculateAfterWindowResize() {
-    this.maxRenderCountEstimate = Math.max(
-      40,
-      2 * Math.ceil(window.innerHeight / this.itemHeightEstimate)
-    );
   }
 
   firstUpdated() {

@@ -182,8 +182,6 @@ class SyncedTabsInView extends ViewPage {
         isVisible ? "closed" : "hidden"
       );
     }
-
-    this.toggleVisibilityInCardContainer();
   }
 
   async observe(subject, topic, errorState) {
@@ -671,7 +669,6 @@ class SyncedTabsInView extends ViewPage {
 
   updated() {
     this.fullyUpdated = true;
-    this.toggleVisibilityInCardContainer();
   }
 
   sendTabTelemetry(numTabs) {

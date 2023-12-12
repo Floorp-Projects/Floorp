@@ -95,8 +95,6 @@ class RecentlyClosedTabsInView extends ViewPage {
         this
       );
     }
-
-    this.toggleVisibilityInCardContainer();
   }
 
   stop() {
@@ -120,8 +118,6 @@ class RecentlyClosedTabsInView extends ViewPage {
         this
       );
     }
-
-    this.toggleVisibilityInCardContainer();
   }
 
   disconnectedCallback() {
@@ -144,11 +140,6 @@ class RecentlyClosedTabsInView extends ViewPage {
   // or the instance becomes visible to the user
   viewVisibleCallback() {
     this.start();
-  }
-
-  firstUpdated() {
-    this.firstUpdateComplete = true;
-    this.toggleVisibilityInCardContainer();
   }
 
   getTabStateValue(tab, key) {
@@ -269,6 +260,10 @@ class RecentlyClosedTabsInView extends ViewPage {
 
   willUpdate() {
     this.fullyUpdated = false;
+  }
+
+  firstUpdated() {
+    this.firstUpdateComplete = true;
   }
 
   updated() {
