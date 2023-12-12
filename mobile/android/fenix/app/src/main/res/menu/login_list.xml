@@ -10,5 +10,5 @@
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:iconTint="?attr/textPrimary"
         android:contentDescription="@string/preferences_passwords_saved_logins_search"
-        app:showAsAction="ifRoom|collapseActionView" />
+        app:showAsAction="collapseActionView|always" />
 </menu>

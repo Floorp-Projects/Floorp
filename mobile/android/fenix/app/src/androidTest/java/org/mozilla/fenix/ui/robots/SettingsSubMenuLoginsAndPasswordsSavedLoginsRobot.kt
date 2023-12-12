@@ -118,7 +118,7 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
         )
 
     fun searchLogin(searchTerm: String) =
-        itemContainingText(getStringResource(R.string.preferences_passwords_saved_logins_search)).setText(searchTerm)
+        itemWithResId("$packageName:id/search").setText(searchTerm)
 
     fun verifySavedLoginsSectionUsername(username: String) =
         mDevice.waitNotNull(Until.findObjects(By.text(username)))

@@ -607,14 +607,12 @@ class LoginsTest {
             revealPassword()
             verifyPasswordSaved("firefox")
         }.goBackToSavedLogins {
-            clickSearchLoginButton()
             searchLogin("android")
             viewSavedLoginDetails(originWebsite)
             verifyLoginItemUsername("android")
             revealPassword()
             verifyPasswordSaved("firefox")
         }.goBackToSavedLogins {
-            clickSearchLoginButton()
             searchLogin("AnDrOiD")
             viewSavedLoginDetails(originWebsite)
             verifyLoginItemUsername("android")
@@ -654,14 +652,12 @@ class LoginsTest {
             revealPassword()
             verifyPasswordSaved("firefox")
         }.goBackToSavedLogins {
-            clickSearchLoginButton()
             searchLogin("mozilla")
             viewSavedLoginDetails(originWebsite)
             verifyLoginItemUsername("android")
             revealPassword()
             verifyPasswordSaved("firefox")
         }.goBackToSavedLogins {
-            clickSearchLoginButton()
             searchLogin("MoZiLlA")
             viewSavedLoginDetails(originWebsite)
             verifyLoginItemUsername("android")

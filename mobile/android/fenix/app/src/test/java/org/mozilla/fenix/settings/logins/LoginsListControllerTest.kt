@@ -33,12 +33,14 @@ class LoginsListControllerTest {
     private val sortingStrategy: SortingStrategy = SortingStrategy.Alphabetically
     private val navController: NavController = mockk(relaxed = true)
     private val browserNavigator: (String, Boolean, BrowserDirection) -> Unit = mockk(relaxed = true)
+    private val addLoginCallback: () -> Unit = mockk(relaxed = true)
     private val controller =
         LoginsListController(
             loginsFragmentStore = store,
             navController = navController,
             browserNavigator = browserNavigator,
             settings = settings,
+            addLoginCallback = addLoginCallback,
         )
 
     @Test
