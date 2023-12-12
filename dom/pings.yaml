@@ -33,6 +33,10 @@ use-counters:
     app_shutdown_confirmed: |
       Submitted when we reach `ShutdownPhase::AppShutdownConfirmed`.
       (Any later and the network might have been torn down.)
+    idle_startup: |
+      (Android only)
+      Submitted when the thread init'ing DOM's contentutils has an idle moment.
+      Acts as a safety net for platforms (like Android) that don't get to gracefully shut down.
   include_client_id: true
   send_if_empty: false
   bugs:
