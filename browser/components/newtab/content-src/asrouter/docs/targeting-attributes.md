@@ -11,6 +11,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [activeNotifications](#activenotifications)
 * [addonsInfo](#addonsinfo)
 * [addressesSaved](#addressessaved)
+* [archBits](#archbits)
 * [attachedFxAOAuthClients](#attachedfxaoauthclients)
 * [attributionData](#attributiondata)
 * [backgroundTaskName](#backgroundtaskname)
@@ -586,6 +587,16 @@ addressesSaved > 1
 
 ```ts
 declare const addressesSaved: Promise<number>
+```
+
+### `archBits`
+
+The number of bits used to represent a pointer in this build.
+
+#### Definition
+
+```ts
+declare const archBits: number;
 ```
 
 ### `xpinstallEnabled`

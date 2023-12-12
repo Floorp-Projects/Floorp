@@ -1693,3 +1693,9 @@ add_task(async function check_primaryResolution() {
     "Height property should return a number"
   );
 });
+
+add_task(async function check_archBits() {
+  const bits = ASRouterTargeting.Environment.archBits;
+  is(typeof bits, "number", "archBits should be a number");
+  ok(bits === 32 || bits === 64, "archBits is either 32 or 64");
+});
