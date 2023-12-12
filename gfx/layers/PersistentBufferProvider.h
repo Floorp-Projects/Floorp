@@ -24,11 +24,11 @@ class ClientWebGLContext;
 namespace gfx {
 class SourceSurface;
 class DrawTarget;
-class DrawTargetWebgl;
 }  // namespace gfx
 
 namespace layers {
 
+struct RemoteTextureOwnerId;
 class TextureClient;
 
 /**
@@ -104,12 +104,7 @@ class PersistentBufferProvider : public RefCounted<PersistentBufferProvider>,
    */
   virtual bool RequiresRefresh() const { return false; }
 
-  /**
-   * Provide a WebGL front buffer for compositing, if available.
-   */
-  virtual Maybe<layers::SurfaceDescriptor> GetFrontBuffer() {
-    return Nothing();
-  }
+  virtual Maybe<SurfaceDescriptor> GetFrontBuffer() { return Nothing(); }
 };
 
 class PersistentBufferProviderBasic : public PersistentBufferProvider {
@@ -146,17 +141,16 @@ class PersistentBufferProviderBasic : public PersistentBufferProvider {
   RefPtr<gfx::SourceSurface> mSnapshot;
 };
 
-class PersistentBufferProviderAccelerated
-    : public PersistentBufferProviderBasic {
+class PersistentBufferProviderAccelerated : public PersistentBufferProvider {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PersistentBufferProviderAccelerated,
                                           override)
 
-  explicit PersistentBufferProviderAccelerated(gfx::DrawTarget* aTarget);
+  static already_AddRefed<PersistentBufferProviderAccelerated> Create(
+      gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+      KnowsCompositor* aKnowsCompositor);
 
   bool IsAccelerated() const override { return true; }
-
-  Maybe<layers::SurfaceDescriptor> GetFrontBuffer() override;
 
   already_AddRefed<gfx::DrawTarget> BorrowDrawTarget(
       const gfx::IntRect& aPersistedRect) override;
@@ -166,14 +160,27 @@ class PersistentBufferProviderAccelerated
   already_AddRefed<gfx::SourceSurface> BorrowSnapshot(
       gfx::DrawTarget* aTarget) override;
 
+  void ReturnSnapshot(already_AddRefed<gfx::SourceSurface> aSnapshot) override;
+
+  bool PreservesDrawingState() const override { return true; }
+
+  void OnShutdown() override { Destroy(); }
+
+  Maybe<SurfaceDescriptor> GetFrontBuffer() override;
+
   bool RequiresRefresh() const override;
 
-  void OnMemoryPressure() override;
-
  protected:
+  explicit PersistentBufferProviderAccelerated(
+      const RefPtr<TextureClient>& aTexture);
   ~PersistentBufferProviderAccelerated() override;
 
-  gfx::DrawTargetWebgl* GetDrawTargetWebgl() const;
+  void Destroy();
+
+  RefPtr<TextureClient> mTexture;
+
+  RefPtr<gfx::DrawTarget> mDrawTarget;
+  RefPtr<gfx::SourceSurface> mSnapshot;
 };
 
 /**

@@ -2,6 +2,6 @@
 # e.g. filter: blur(3px) grayscale(0.5) invert(0.2);
 
 # Some platforms render this complex filter chain a little differently, and that's ok.
-fuzzy(4-6,12000-19950) fuzzy-if(swgl,5-10,13600-20260) fuzzy-if(Android&&device&&!swgl,6-6,19986-19986) == long-chain.html long-chain-ref.html # Win10: Bug 1258241
+fuzzy(4-10,12000-20260) == long-chain.html long-chain-ref.html # Win10: Bug 1258241
 == moz-element.html moz-element-ref.html
-fuzzy-if(!useDrawSnapshot,13-15,7670-7982) fuzzy-if(!useDrawSnapshot&&swgl,11-12,14052-14056) fuzzy-if(Android&&device&&!swgl,13-13,13505-13505) == same-filter.html same-filter-ref.html
+fuzzy(0-15,0-14056) == same-filter.html same-filter-ref.html

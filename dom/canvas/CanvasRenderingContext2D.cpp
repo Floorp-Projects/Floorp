@@ -64,7 +64,6 @@
 #include "nsIMemoryReporter.h"
 #include "nsStyleUtil.h"
 #include "CanvasImageCache.h"
-#include "DrawTargetWebgl.h"
 
 #include <algorithm>
 
@@ -1357,6 +1356,7 @@ bool CanvasRenderingContext2D::CopyBufferProvider(
   }
 
   aTarget.CopySurface(snapshot, aCopyRect, IntPoint());
+
   aOld.ReturnSnapshot(snapshot.forget());
   return true;
 }
@@ -1651,13 +1651,22 @@ bool CanvasRenderingContext2D::TryAcceleratedTarget(
   if (!mAllowAcceleration || GetEffectiveWillReadFrequently()) {
     return false;
   }
-  aOutDT = DrawTargetWebgl::Create(GetSize(), GetSurfaceFormat());
-  if (!aOutDT) {
+
+  if (!mCanvasElement) {
     return false;
   }
-
-  aOutProvider = new PersistentBufferProviderAccelerated(aOutDT);
-  return true;
+  WindowRenderer* renderer = WindowRendererFromCanvasElement(mCanvasElement);
+  if (!renderer) {
+    return false;
+  }
+  aOutProvider = PersistentBufferProviderAccelerated::Create(
+      GetSize(), GetSurfaceFormat(), renderer->AsKnowsCompositor());
+  if (!aOutProvider) {
+    return false;
+  }
+  aOutDT = aOutProvider->BorrowDrawTarget(IntRect());
+  MOZ_ASSERT(aOutDT);
+  return !!aOutDT;
 }
 
 bool CanvasRenderingContext2D::TrySharedTarget(

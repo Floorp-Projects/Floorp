@@ -165,7 +165,13 @@ void CanvasManagerChild::DeactivateCanvas() {
   }
 }
 
+void CanvasManagerChild::BlockCanvas() { mBlocked = true; }
+
 RefPtr<layers::CanvasChild> CanvasManagerChild::GetCanvasChild() {
+  if (mBlocked) {
+    return nullptr;
+  }
+
   if (!mActive) {
     MOZ_ASSERT(!mCanvasChild);
     return nullptr;

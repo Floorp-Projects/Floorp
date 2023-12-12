@@ -67,16 +67,13 @@ class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate,
    public:
     virtual ~Helpers() = default;
 
-    virtual bool InitTranslator(const TextureType& aTextureType,
-                                Handle&& aReadHandle,
-                                nsTArray<Handle>&& aBufferHandles,
-                                const uint64_t& aBufferSize,
-                                CrossProcessSemaphoreHandle&& aReaderSem,
-                                CrossProcessSemaphoreHandle&& aWriterSem,
-                                const bool& aUseIPDLThread) = 0;
+    virtual bool InitTranslator(
+        TextureType aTextureType, gfx::BackendType aBackendType,
+        Handle&& aReadHandle, nsTArray<Handle>&& aBufferHandles,
+        uint64_t aBufferSize, CrossProcessSemaphoreHandle&& aReaderSem,
+        CrossProcessSemaphoreHandle&& aWriterSem, bool aUseIPDLThread) = 0;
 
-    virtual bool AddBuffer(Handle&& aBufferHandle,
-                           const uint64_t& aBufferSize) = 0;
+    virtual bool AddBuffer(Handle&& aBufferHandle, uint64_t aBufferSize) = 0;
 
     /**
      * @returns true if the reader of the CanvasEventRingBuffer has permanently
@@ -90,7 +87,8 @@ class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate,
     virtual bool RestartReader() = 0;
   };
 
-  bool Init(TextureType aTextureType, UniquePtr<Helpers> aHelpers);
+  bool Init(TextureType aTextureType, gfx::BackendType aBackendType,
+            UniquePtr<Helpers> aHelpers);
 
   /**
    * Record an event for processing by the CanvasParent's CanvasTranslator.
