@@ -836,12 +836,6 @@ EngineStore.prototype = {
     this._engines[index][aProp] = aNewValue;
     aEngine.originalEngine[aProp] = aNewValue;
   },
-
-  reloadIcons() {
-    this._engines.forEach(function (e) {
-      e.iconURI = e.originalEngine.iconURI;
-    });
-  },
 };
 
 function EngineView(aEngineStore) {
