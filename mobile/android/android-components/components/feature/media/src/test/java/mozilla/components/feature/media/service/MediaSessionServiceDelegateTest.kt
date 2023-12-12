@@ -7,6 +7,7 @@ package mozilla.components.feature.media.service
 import android.app.ForegroundServiceStartNotAllowedException
 import android.app.Notification
 import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Build
@@ -440,7 +441,7 @@ class MediaSessionServiceDelegateTest {
 
         delegate.registerBecomingNoisyListenerIfNeeded(mock())
 
-        verify(context, never()).registerReceiver(any(), any())
+        verify(context, never()).registerReceiver(any(), any(), eq(Context.RECEIVER_NOT_EXPORTED))
     }
 
     @Test
@@ -459,7 +460,11 @@ class MediaSessionServiceDelegateTest {
         val context = spy(testContext)
         val delegate = MediaSessionServiceDelegate(context, mock(), mock(), mock(), mock())
         delegate.noisyAudioStreamReceiver = mock()
-        context.registerReceiver(delegate.noisyAudioStreamReceiver, delegate.intentFilter)
+        context.registerReceiver(
+            delegate.noisyAudioStreamReceiver,
+            delegate.intentFilter,
+            Context.RECEIVER_NOT_EXPORTED,
+        )
         val receiverCaptor = argumentCaptor<BroadcastReceiver>()
 
         delegate.unregisterBecomingNoisyListenerIfNeeded()
