@@ -7,26 +7,6 @@ import subprocess
 
 from mach.decorators import Command, SubCommand
 
-# IMPORTANT: Please Request review from a DOM peer before
-# committing to using UniFFI. There are other ways to consume Rust from
-# JavaScript that might fit your use case better.
-UDL_FILES = [
-    "third_party/rust/sync15/src/sync15.udl",
-    "third_party/rust/tabs/src/tabs.udl",
-    "third_party/rust/suggest/src/suggest.udl",
-    "third_party/rust/remote_settings/src/remote_settings.udl",
-]
-
-FIXTURE_UDL_FILES = [
-    "third_party/rust/uniffi-example-geometry/src/geometry.udl",
-    "third_party/rust/uniffi-example-arithmetic/src/arithmetic.udl",
-    "third_party/rust/uniffi-example-rondpoint/src/rondpoint.udl",
-    "third_party/rust/uniffi-example-sprites/src/sprites.udl",
-    "third_party/rust/uniffi-example-todolist/src/todolist.udl",
-    "toolkit/components/uniffi-fixture-callbacks/src/callbacks.udl",
-    "toolkit/components/uniffi-example-custom-types/src/custom-types.udl",
-    "toolkit/components/uniffi-fixture-external-types/src/external-types.udl",
-]
 CPP_PATH = "toolkit/components/uniffi-js/UniFFIGeneratedScaffolding.cpp"
 JS_DIR = "toolkit/components/uniffi-bindgen-gecko-js/components/generated"
 FIXTURE_CPP_PATH = "toolkit/components/uniffi-js/UniFFIFixtureScaffolding.cpp"
@@ -81,10 +61,6 @@ def generate_command(command_context):
         "--fixture-cpp-path",
         FIXTURE_CPP_PATH,
     ]
-    if UDL_FILES:
-        cmdline += ["--udl-files"] + UDL_FILES
-    if FIXTURE_UDL_FILES:
-        cmdline += ["--fixture-udl-files"] + FIXTURE_UDL_FILES
     subprocess.check_call(cmdline, cwd=command_context.topsrcdir)
     return 0
 

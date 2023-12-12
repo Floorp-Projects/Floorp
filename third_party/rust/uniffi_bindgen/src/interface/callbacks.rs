@@ -13,12 +13,12 @@
 //! callback interface Example {
 //!   string hello();
 //! };
-//! # "##)?;
+//! # "##, "crate_name")?;
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 //!
 //! Will result in a [`CallbackInterface`] member being added to the resulting
-//! [`ComponentInterface`]:
+//! [`crate::ComponentInterface`]:
 //!
 //! ```
 //! # let ci = uniffi_bindgen::interface::ComponentInterface::from_webidl(r##"
@@ -26,24 +26,23 @@
 //! # callback interface Example {
 //! #  string hello();
 //! # };
-//! # "##)?;
+//! # "##, "crate_name")?;
 //! let callback = ci.get_callback_interface_definition("Example").unwrap();
 //! assert_eq!(callback.name(), "Example");
 //! assert_eq!(callback.methods()[0].name(), "hello");
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 
-use anyhow::{bail, Result};
 use uniffi_meta::Checksum;
 
 use super::ffi::{FfiArgument, FfiFunction, FfiType};
 use super::object::Method;
-use super::types::{ObjectImpl, Type, TypeIterator};
-use super::{APIConverter, AsType, ComponentInterface};
+use super::{AsType, Type, TypeIterator};
 
 #[derive(Debug, Clone, Checksum)]
 pub struct CallbackInterface {
     pub(super) name: String,
+    pub(super) module_path: String,
     pub(super) methods: Vec<Method>,
     // We don't include the FFIFunc in the hash calculation, because:
     //  - it is entirely determined by the other fields,
@@ -56,9 +55,10 @@ pub struct CallbackInterface {
 }
 
 impl CallbackInterface {
-    pub fn new(name: String) -> CallbackInterface {
+    pub fn new(name: String, module_path: String) -> CallbackInterface {
         CallbackInterface {
             name,
+            module_path,
             methods: Default::default(),
             ffi_init_callback: Default::default(),
         }
@@ -76,9 +76,9 @@ impl CallbackInterface {
         &self.ffi_init_callback
     }
 
-    pub(super) fn derive_ffi_funcs(&mut self, ci_namespace: &str) {
+    pub(super) fn derive_ffi_funcs(&mut self) {
         self.ffi_init_callback.name =
-            uniffi_meta::init_callback_fn_symbol_name(ci_namespace, &self.name);
+            uniffi_meta::init_callback_fn_symbol_name(&self.module_path, &self.name);
         self.ffi_init_callback.arguments = vec![FfiArgument {
             name: "callback_stub".to_string(),
             type_: FfiType::ForeignCallback,
@@ -93,47 +93,16 @@ impl CallbackInterface {
 
 impl AsType for CallbackInterface {
     fn as_type(&self) -> Type {
-        Type::CallbackInterface(self.name.clone())
-    }
-}
-
-impl APIConverter<CallbackInterface> for weedle::CallbackInterfaceDefinition<'_> {
-    fn convert(&self, ci: &mut ComponentInterface) -> Result<CallbackInterface> {
-        if self.attributes.is_some() {
-            bail!("callback interface attributes are not supported yet");
+        Type::CallbackInterface {
+            name: self.name.clone(),
+            module_path: self.module_path.clone(),
         }
-        if self.inheritance.is_some() {
-            bail!("callback interface inheritance is not supported");
-        }
-        let mut object = CallbackInterface::new(self.identifier.0.to_string());
-        for member in &self.members.body {
-            match member {
-                weedle::interface::InterfaceMember::Operation(t) => {
-                    let mut method: Method = t.convert(ci)?;
-                    // A CallbackInterface is described in Rust as a trait, but uniffi
-                    // generates a struct implementing the trait and passes the concrete version
-                    // of that.
-                    // This really just reflects the fact that CallbackInterface and Object
-                    // should be merged; we'd still need a way to ask for a struct delegating to
-                    // foreign implementations be done.
-                    // But currently they are passed as a concrete type with no associated types.
-                    method.object_name = object.name.clone();
-                    method.object_impl = ObjectImpl::Struct;
-                    object.methods.push(method);
-                }
-                _ => bail!(
-                    "no support for callback interface member type {:?} yet",
-                    member
-                ),
-            }
-        }
-        Ok(object)
     }
 }
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use super::super::ComponentInterface;
 
     #[test]
     fn test_empty_interface() {
@@ -142,7 +111,7 @@ mod test {
             // Weird, but allowed.
             callback interface Testing {};
         "#;
-        let ci = ComponentInterface::from_webidl(UDL).unwrap();
+        let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
         assert_eq!(ci.callback_interface_definitions().len(), 1);
         assert_eq!(
             ci.get_callback_interface_definition("Testing")
@@ -165,7 +134,7 @@ mod test {
                 u64 too();
             };
         "#;
-        let ci = ComponentInterface::from_webidl(UDL).unwrap();
+        let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
         assert_eq!(ci.callback_interface_definitions().len(), 2);
 
         let callbacks_one = ci.get_callback_interface_definition("One").unwrap();

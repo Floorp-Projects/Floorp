@@ -81,7 +81,7 @@ mod test {
     use super::*;
     #[test]
     fn test_foreignbytes_access() {
-        let v = vec![1u8, 2, 3];
+        let v = [1u8, 2, 3];
         let fbuf = unsafe { ForeignBytes::from_raw_parts(v.as_ptr(), 3) };
         assert_eq!(fbuf.len(), 3);
         assert_eq!(fbuf.as_slice(), &[1u8, 2, 3]);
@@ -111,7 +111,7 @@ mod test {
     #[test]
     #[should_panic]
     fn test_foreignbytes_provided_len_must_be_non_negative() {
-        let v = vec![0u8, 1, 2];
+        let v = [0u8, 1, 2];
         let fbuf = unsafe { ForeignBytes::from_raw_parts(v.as_ptr(), -1) };
         fbuf.as_slice();
     }

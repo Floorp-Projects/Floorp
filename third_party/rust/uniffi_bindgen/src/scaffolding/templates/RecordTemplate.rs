@@ -8,7 +8,7 @@
 // public so other crates can refer to it via an `[External='crate'] typedef`
 #}
 
-#[::uniffi::ffi_converter_record(tag = crate::UniFfiTag)]
+#[::uniffi::derive_record_for_udl]
 struct r#{{ rec.name() }} {
     {%- for field in rec.fields() %}
     r#{{ field.name() }}: {{ field.as_type().borrow()|type_rs }},

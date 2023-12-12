@@ -46,27 +46,21 @@
 
 use std::{
     collections::{btree_map::Entry, BTreeMap, BTreeSet, HashSet},
-    convert::TryFrom,
     iter,
 };
 
 use anyhow::{anyhow, bail, ensure, Result};
 
-pub mod types;
-pub use types::{AsType, ExternalKind, ObjectImpl, Type};
-use types::{TypeIterator, TypeUniverse};
+pub mod universe;
+pub use uniffi_meta::{AsType, ExternalKind, ObjectImpl, Type};
+use universe::{TypeIterator, TypeUniverse};
 
-mod attributes;
 mod callbacks;
 pub use callbacks::CallbackInterface;
 mod enum_;
 pub use enum_::{Enum, Variant};
 mod function;
 pub use function::{Argument, Callable, Function, ResultType};
-mod literal;
-pub use literal::{Literal, Radix};
-mod namespace;
-pub use namespace::Namespace;
 mod object;
 pub use object::{Constructor, Method, Object, UniffiTrait};
 mod record;
@@ -74,13 +68,12 @@ pub use record::{Field, Record};
 
 pub mod ffi;
 pub use ffi::{FfiArgument, FfiFunction, FfiType};
-use uniffi_meta::{ConstructorMetadata, ObjectMetadata, TraitMethodMetadata};
-
-// This needs to match the minor version of the `uniffi` crate.  See
-// `docs/uniffi-versioning.md` for details.
-//
-// Once we get to 1.0, then we'll need to update the scheme to something like 100 + major_version
-const UNIFFI_CONTRACT_VERSION: u32 = 22;
+pub use uniffi_meta::Radix;
+use uniffi_meta::{
+    ConstructorMetadata, LiteralMetadata, NamespaceMetadata, ObjectMetadata, TraitMethodMetadata,
+    UniffiTraitMetadata, UNIFFI_CONTRACT_VERSION,
+};
+pub type Literal = LiteralMetadata;
 
 /// The main public interface for this module, representing the complete details of an interface exposed
 /// by a rust component and the details of consuming it via an extern-C FFI layer.
@@ -90,8 +83,6 @@ pub struct ComponentInterface {
     // We can't checksum `self.types`, but its contents are implied by the other fields
     // anyway, so it's safe to ignore it.
     pub(super) types: TypeUniverse,
-    /// The unique prefix that we'll use for namespacing when exposing this component's API.
-    namespace: String,
     /// The high-level API provided by the component.
     enums: BTreeMap<String, Enum>,
     records: BTreeMap<String, Record>,
@@ -105,36 +96,53 @@ pub struct ComponentInterface {
 }
 
 impl ComponentInterface {
-    /// Parse a `ComponentInterface` from a string containing a WebIDL definition.
-    pub fn from_webidl(idl: &str) -> Result<Self> {
-        let mut ci = Self::default();
-        // There's some lifetime thing with the errors returned from weedle::Definitions::parse
-        // that my own lifetime is too short to worry about figuring out; unwrap and move on.
+    pub fn new(crate_name: &str) -> Self {
+        assert!(!crate_name.is_empty());
+        Self {
+            types: TypeUniverse::new(NamespaceMetadata {
+                crate_name: crate_name.to_string(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        }
+    }
 
-        // Note we use `weedle::Definitions::parse` instead of `weedle::parse` so
-        // on parse errors we can see how far weedle got, which helps locate the problem.
-        use weedle::Parse; // this trait must be in scope for parse to work.
-        let (remaining, defns) = weedle::Definitions::parse(idl.trim()).unwrap();
-        if !remaining.is_empty() {
-            println!("Error parsing the IDL. Text remaining to be parsed is:");
-            println!("{remaining}");
-            bail!("parse error");
+    /// Parse a `ComponentInterface` from a string containing a WebIDL definition.
+    pub fn from_webidl(idl: &str, module_path: &str) -> Result<Self> {
+        ensure!(
+            !module_path.is_empty(),
+            "you must specify a valid crate name"
+        );
+        let group = uniffi_udl::parse_udl(idl, module_path)?;
+        Self::from_metadata(group)
+    }
+
+    /// Create a `ComponentInterface` from a `MetadataGroup`
+    /// Public so that external binding generators can use it.
+    pub fn from_metadata(group: uniffi_meta::MetadataGroup) -> Result<Self> {
+        let mut ci = Self {
+            types: TypeUniverse::new(group.namespace.clone()),
+            ..Default::default()
+        };
+        ci.add_metadata(group)?;
+        Ok(ci)
+    }
+
+    /// Add a metadata group to a `ComponentInterface`.
+    pub fn add_metadata(&mut self, group: uniffi_meta::MetadataGroup) -> Result<()> {
+        if self.types.namespace.name.is_empty() {
+            self.types.namespace = group.namespace.clone();
+        } else if self.types.namespace != group.namespace {
+            bail!(
+                "Namespace mismatch: {:?} - {:?}",
+                group.namespace,
+                self.types.namespace
+            );
         }
         // Unconditionally add the String type, which is used by the panic handling
-        ci.types.add_known_type(&Type::String);
-        // We process the WebIDL definitions in two passes.
-        // First, go through and look for all the named types.
-        ci.types.add_type_definitions_from(defns.as_slice())?;
-        // With those names resolved, we can build a complete representation of the API.
-        APIBuilder::process(&defns, &mut ci)?;
-
-        // The following two methods will be called later anyways, but we call them here because
-        // it's convenient for UDL-only tests.
-        ci.check_consistency()?;
-        // Now that the high-level API is settled, we can derive the low-level FFI.
-        ci.derive_ffi_funcs()?;
-
-        Ok(ci)
+        self.types.add_known_type(&uniffi_meta::Type::String)?;
+        crate::macro_metadata::add_group_to_ci(self, group)?;
+        Ok(())
     }
 
     /// The string namespace within which this API should be presented to the caller.
@@ -142,7 +150,7 @@ impl ComponentInterface {
     /// This string would typically be used to prefix function names in the FFI, to build
     /// a package or module name for the foreign language, etc.
     pub fn namespace(&self) -> &str {
-        self.namespace.as_str()
+        &self.types.namespace.name
     }
 
     pub fn uniffi_contract_version(&self) -> u32 {
@@ -242,14 +250,24 @@ impl ComponentInterface {
         self.is_name_used_as_error(&e.name) && (fielded || used_in_callback_interface)
     }
 
-    /// Get details about all `Type::External` types
-    pub fn iter_external_types(&self) -> impl Iterator<Item = (&String, &String, ExternalKind)> {
+    /// Get details about all `Type::External` types.
+    /// Returns an iterator of (name, crate_name, kind)
+    pub fn iter_external_types(
+        &self,
+    ) -> impl Iterator<Item = (&String, String, ExternalKind, bool)> {
         self.types.iter_known_types().filter_map(|t| match t {
             Type::External {
                 name,
-                crate_name,
+                module_path,
                 kind,
-            } => Some((name, crate_name, *kind)),
+                tagged,
+                ..
+            } => Some((
+                name,
+                module_path.split("::").next().unwrap().to_string(),
+                *kind,
+                *tagged,
+            )),
             _ => None,
         })
     }
@@ -257,7 +275,7 @@ impl ComponentInterface {
     /// Get details about all `Type::Custom` types
     pub fn iter_custom_types(&self) -> impl Iterator<Item = (&String, &Type)> {
         self.types.iter_known_types().filter_map(|t| match t {
-            Type::Custom { name, builtin } => Some((name, &**builtin)),
+            Type::Custom { name, builtin, .. } => Some((name, &**builtin)),
             _ => None,
         })
     }
@@ -270,10 +288,6 @@ impl ComponentInterface {
     /// Get a specific type
     pub fn get_type(&self, name: &str) -> Option<Type> {
         self.types.get_type_definition(name)
-    }
-
-    pub fn is_callback_interface_throws_type(&self, type_: Type) -> bool {
-        self.callback_interface_throws_types.contains(&type_)
     }
 
     /// Iterate over all types contained in the given item.
@@ -304,29 +318,27 @@ impl ComponentInterface {
     pub fn contains_optional_types(&self) -> bool {
         self.types
             .iter_known_types()
-            .any(|t| matches!(t, Type::Optional(_)))
+            .any(|t| matches!(t, Type::Optional { .. }))
     }
 
     /// Check whether the interface contains any sequence types
     pub fn contains_sequence_types(&self) -> bool {
         self.types
             .iter_known_types()
-            .any(|t| matches!(t, Type::Sequence(_)))
+            .any(|t| matches!(t, Type::Sequence { .. }))
     }
 
     /// Check whether the interface contains any map types
     pub fn contains_map_types(&self) -> bool {
         self.types
             .iter_known_types()
-            .any(|t| matches!(t, Type::Map(_, _)))
+            .any(|t| matches!(t, Type::Map { .. }))
     }
 
-    /// The namespace to use in FFI-level function definitions.
-    ///
-    /// The value returned by this method is used as a prefix to namespace all UDL-defined FFI
-    /// functions used in this ComponentInterface.
-    pub fn ffi_namespace(&self) -> &str {
-        &self.namespace
+    // The namespace to use in crate-level FFI function definitions. Not used as the ffi
+    // namespace for types - each type has its own `module_path` which is used for them.
+    fn ffi_namespace(&self) -> &str {
+        &self.types.namespace.crate_name
     }
 
     /// Builtin FFI function to get the current contract version
@@ -417,6 +429,115 @@ impl ComponentInterface {
         }
     }
 
+    /// Builtin FFI function to set the Rust Future continuation callback
+    pub fn ffi_rust_future_continuation_callback_set(&self) -> FfiFunction {
+        FfiFunction {
+            name: format!(
+                "ffi_{}_rust_future_continuation_callback_set",
+                self.ffi_namespace()
+            ),
+            arguments: vec![FfiArgument {
+                name: "callback".to_owned(),
+                type_: FfiType::RustFutureContinuationCallback,
+            }],
+            return_type: None,
+            is_async: false,
+            has_rust_call_status_arg: false,
+            is_object_free_function: false,
+        }
+    }
+
+    /// Builtin FFI function to poll a Rust future.
+    pub fn ffi_rust_future_poll(&self, return_ffi_type: Option<FfiType>) -> FfiFunction {
+        FfiFunction {
+            name: self.rust_future_ffi_fn_name("rust_future_poll", return_ffi_type),
+            is_async: false,
+            arguments: vec![
+                FfiArgument {
+                    name: "handle".to_owned(),
+                    type_: FfiType::RustFutureHandle,
+                },
+                // Data to pass to the continuation
+                FfiArgument {
+                    name: "uniffi_callback".to_owned(),
+                    type_: FfiType::RustFutureContinuationData,
+                },
+            ],
+            return_type: None,
+            has_rust_call_status_arg: false,
+            is_object_free_function: false,
+        }
+    }
+
+    /// Builtin FFI function to complete a Rust future and get it's result.
+    ///
+    /// We generate one of these for each FFI return type.
+    pub fn ffi_rust_future_complete(&self, return_ffi_type: Option<FfiType>) -> FfiFunction {
+        FfiFunction {
+            name: self.rust_future_ffi_fn_name("rust_future_complete", return_ffi_type.clone()),
+            is_async: false,
+            arguments: vec![FfiArgument {
+                name: "handle".to_owned(),
+                type_: FfiType::RustFutureHandle,
+            }],
+            return_type: return_ffi_type,
+            has_rust_call_status_arg: true,
+            is_object_free_function: false,
+        }
+    }
+
+    /// Builtin FFI function for cancelling a Rust Future
+    pub fn ffi_rust_future_cancel(&self, return_ffi_type: Option<FfiType>) -> FfiFunction {
+        FfiFunction {
+            name: self.rust_future_ffi_fn_name("rust_future_cancel", return_ffi_type),
+            is_async: false,
+            arguments: vec![FfiArgument {
+                name: "handle".to_owned(),
+                type_: FfiType::RustFutureHandle,
+            }],
+            return_type: None,
+            has_rust_call_status_arg: false,
+            is_object_free_function: false,
+        }
+    }
+
+    /// Builtin FFI function for freeing a Rust Future
+    pub fn ffi_rust_future_free(&self, return_ffi_type: Option<FfiType>) -> FfiFunction {
+        FfiFunction {
+            name: self.rust_future_ffi_fn_name("rust_future_free", return_ffi_type),
+            is_async: false,
+            arguments: vec![FfiArgument {
+                name: "handle".to_owned(),
+                type_: FfiType::RustFutureHandle,
+            }],
+            return_type: None,
+            has_rust_call_status_arg: false,
+            is_object_free_function: false,
+        }
+    }
+
+    fn rust_future_ffi_fn_name(&self, base_name: &str, return_ffi_type: Option<FfiType>) -> String {
+        let namespace = self.ffi_namespace();
+        match return_ffi_type {
+            Some(t) => match t {
+                FfiType::UInt8 => format!("ffi_{namespace}_{base_name}_u8"),
+                FfiType::Int8 => format!("ffi_{namespace}_{base_name}_i8"),
+                FfiType::UInt16 => format!("ffi_{namespace}_{base_name}_u16"),
+                FfiType::Int16 => format!("ffi_{namespace}_{base_name}_i16"),
+                FfiType::UInt32 => format!("ffi_{namespace}_{base_name}_u32"),
+                FfiType::Int32 => format!("ffi_{namespace}_{base_name}_i32"),
+                FfiType::UInt64 => format!("ffi_{namespace}_{base_name}_u64"),
+                FfiType::Int64 => format!("ffi_{namespace}_{base_name}_i64"),
+                FfiType::Float32 => format!("ffi_{namespace}_{base_name}_f32"),
+                FfiType::Float64 => format!("ffi_{namespace}_{base_name}_f64"),
+                FfiType::RustArcPtr(_) => format!("ffi_{namespace}_{base_name}_pointer"),
+                FfiType::RustBuffer(_) => format!("ffi_{namespace}_{base_name}_rust_buffer"),
+                _ => unimplemented!("FFI return type: {t:?}"),
+            },
+            None => format!("ffi_{namespace}_{base_name}_void"),
+        }
+    }
+
     /// Does this interface contain async functions?
     pub fn has_async_fns(&self) -> bool {
         self.iter_ffi_function_definitions().any(|f| f.is_async())
@@ -448,8 +569,20 @@ impl ComponentInterface {
         self.iter_user_ffi_function_definitions()
             .cloned()
             .chain(self.iter_rust_buffer_ffi_function_definitions())
+            .chain(self.iter_futures_ffi_function_definitons())
             .chain(self.iter_checksum_ffi_functions())
             .chain(self.ffi_foreign_executor_callback_set())
+            .chain([self.ffi_uniffi_contract_version()])
+    }
+
+    /// Alternate version of iter_ffi_function_definitions for languages that don't support async
+    pub fn iter_ffi_function_definitions_non_async(
+        &self,
+    ) -> impl Iterator<Item = FfiFunction> + '_ {
+        self.iter_user_ffi_function_definitions()
+            .cloned()
+            .chain(self.iter_rust_buffer_ffi_function_definitions())
+            .chain(self.iter_checksum_ffi_functions())
             .chain([self.ffi_uniffi_contract_version()])
     }
 
@@ -485,13 +618,47 @@ impl ComponentInterface {
         .into_iter()
     }
 
+    /// List all FFI functions definitions for async functionality.
+    pub fn iter_futures_ffi_function_definitons(&self) -> impl Iterator<Item = FfiFunction> + '_ {
+        let all_possible_return_ffi_types = [
+            Some(FfiType::UInt8),
+            Some(FfiType::Int8),
+            Some(FfiType::UInt16),
+            Some(FfiType::Int16),
+            Some(FfiType::UInt32),
+            Some(FfiType::Int32),
+            Some(FfiType::UInt64),
+            Some(FfiType::Int64),
+            Some(FfiType::Float32),
+            Some(FfiType::Float64),
+            // RustBuffer and RustArcPtr have an inner field which doesn't affect the rust future
+            // complete scaffolding function, so we just use a placeholder value here.
+            Some(FfiType::RustArcPtr("".to_owned())),
+            Some(FfiType::RustBuffer(None)),
+            None,
+        ];
+
+        iter::once(self.ffi_rust_future_continuation_callback_set()).chain(
+            all_possible_return_ffi_types
+                .into_iter()
+                .flat_map(|return_type| {
+                    [
+                        self.ffi_rust_future_poll(return_type.clone()),
+                        self.ffi_rust_future_cancel(return_type.clone()),
+                        self.ffi_rust_future_free(return_type.clone()),
+                        self.ffi_rust_future_complete(return_type),
+                    ]
+                }),
+        )
+    }
+
     /// The ffi_foreign_executor_callback_set FFI function
     ///
     /// We only include this in the FFI if the `ForeignExecutor` type is actually used
     pub fn ffi_foreign_executor_callback_set(&self) -> Option<FfiFunction> {
         if self.types.contains(&Type::ForeignExecutor) {
             Some(FfiFunction {
-                name: "uniffi_foreign_executor_callback_set".into(),
+                name: format!("ffi_{}_foreign_executor_callback_set", self.ffi_namespace()),
                 arguments: vec![FfiArgument {
                     name: "callback".into(),
                     type_: FfiType::ForeignExecutorCallback,
@@ -554,58 +721,11 @@ impl ComponentInterface {
 
     // Private methods for building a ComponentInterface.
     //
-
-    /// Resolve a weedle type expression into a `Type`.
-    ///
-    /// This method uses the current state of our `TypeUniverse` to turn a weedle type expression
-    /// into a concrete `Type` (or error if the type expression is not well defined). It abstracts
-    /// away the complexity of walking weedle's type struct hierarchy by dispatching to the `TypeResolver`
-    /// trait.
-    fn resolve_type_expression<T: types::TypeResolver>(&mut self, expr: T) -> Result<Type> {
-        self.types.resolve_type_expression(expr)
-    }
-
-    /// Resolve a weedle `ReturnType` expression into an optional `Type`.
-    ///
-    /// This method is similar to `resolve_type_expression`, but tailored specifically for return types.
-    /// It can return `None` to represent a non-existent return value.
-    fn resolve_return_type_expression(
-        &mut self,
-        expr: &weedle::types::ReturnType<'_>,
-    ) -> Result<Option<Type>> {
-        Ok(match expr {
-            weedle::types::ReturnType::Undefined(_) => None,
-            weedle::types::ReturnType::Type(t) => {
-                // Older versions of WebIDL used `void` for functions that don't return a value,
-                // while newer versions have replaced it with `undefined`. Special-case this for
-                // backwards compatibility for our consumers.
-                use weedle::types::{NonAnyType::Identifier, SingleType::NonAny, Type::Single};
-                match t {
-                    Single(NonAny(Identifier(id))) if id.type_.0 == "void" => None,
-                    _ => Some(self.resolve_type_expression(t)?),
-                }
-            }
-        })
-    }
-
-    /// Called by `APIBuilder` impls to add a newly-parsed namespace definition to the `ComponentInterface`.
-    fn add_namespace_definition(&mut self, defn: Namespace) -> Result<()> {
-        if !self.namespace.is_empty() {
-            bail!("duplicate namespace definition");
-        }
-        self.namespace = defn.name;
-        Ok(())
-    }
-
     /// Called by `APIBuilder` impls to add a newly-parsed enum definition to the `ComponentInterface`.
     pub(super) fn add_enum_definition(&mut self, defn: Enum) -> Result<()> {
         match self.enums.entry(defn.name().to_owned()) {
             Entry::Vacant(v) => {
-                for variant in defn.variants() {
-                    for field in variant.fields() {
-                        self.types.add_known_type(&field.as_type());
-                    }
-                }
+                self.types.add_known_types(defn.iter_types())?;
                 v.insert(defn);
             }
             Entry::Occupied(o) => {
@@ -624,13 +744,11 @@ impl ComponentInterface {
         Ok(())
     }
 
-    /// Called by `APIBuilder` impls to add a newly-parsed record definition to the `ComponentInterface`.
+    /// Adds a newly-parsed record definition to the `ComponentInterface`.
     pub(super) fn add_record_definition(&mut self, defn: Record) -> Result<()> {
         match self.records.entry(defn.name().to_owned()) {
             Entry::Vacant(v) => {
-                for field in defn.fields() {
-                    self.types.add_known_type(&field.as_type());
-                }
+                self.types.add_known_types(defn.iter_types())?;
                 v.insert(defn);
             }
             Entry::Occupied(o) => {
@@ -651,25 +769,15 @@ impl ComponentInterface {
 
     /// Called by `APIBuilder` impls to add a newly-parsed function definition to the `ComponentInterface`.
     pub(super) fn add_function_definition(&mut self, defn: Function) -> Result<()> {
-        for arg in &defn.arguments {
-            self.types.add_known_type(&arg.type_);
-        }
-        if let Some(ty) = &defn.return_type {
-            self.types.add_known_type(ty);
-        }
-
         // Since functions are not a first-class type, we have to check for duplicates here
         // rather than relying on the type-finding pass to catch them.
         if self.functions.iter().any(|f| f.name == defn.name) {
             bail!("duplicate function definition: \"{}\"", defn.name);
         }
-        if !matches!(self.types.get_type_definition(defn.name()), None) {
+        if self.types.get_type_definition(defn.name()).is_some() {
             bail!("Conflicting type definition for \"{}\"", defn.name());
         }
-        if defn.is_async() {
-            // Async functions depend on the foreign executor
-            self.types.add_known_type(&Type::ForeignExecutor);
-        }
+        self.types.add_known_types(defn.iter_types())?;
         self.functions.push(defn);
 
         Ok(())
@@ -680,46 +788,41 @@ impl ComponentInterface {
             .ok_or_else(|| anyhow!("add_constructor_meta: object {} not found", &meta.self_name))?;
         let defn: Constructor = meta.into();
 
-        for arg in &defn.arguments {
-            self.types.add_known_type(&arg.type_);
-        }
+        self.types.add_known_types(defn.iter_types())?;
         object.constructors.push(defn);
 
         Ok(())
     }
 
     pub(super) fn add_method_meta(&mut self, meta: impl Into<Method>) -> Result<()> {
-        let defn: Method = meta.into();
-        let object = get_object(&mut self.objects, &defn.object_name)
-            .ok_or_else(|| anyhow!("add_method_meta: object {} not found", &defn.object_name))?;
+        let mut method: Method = meta.into();
+        let object = get_object(&mut self.objects, &method.object_name)
+            .ok_or_else(|| anyhow!("add_method_meta: object {} not found", &method.object_name))?;
 
-        for arg in &defn.arguments {
-            self.types.add_known_type(&arg.type_);
-        }
-        if let Some(ty) = &defn.return_type {
-            self.types.add_known_type(ty);
-        }
-        if defn.is_async() {
-            // Async functions depend on the foreign executor
-            self.types.add_known_type(&Type::ForeignExecutor);
-        }
-        object.methods.push(defn);
-
+        self.types.add_known_types(method.iter_types())?;
+        method.object_impl = object.imp;
+        object.methods.push(method);
         Ok(())
     }
 
-    pub(super) fn add_object_meta(&mut self, meta: ObjectMetadata) {
-        let free_name = meta.free_ffi_symbol_name();
-        let mut obj = Object::new(meta.name, ObjectImpl::from_is_trait(meta.is_trait));
-        obj.ffi_func_free.name = free_name;
-        self.types.add_known_type(&obj.as_type());
-        self.add_object_definition(obj);
+    pub(super) fn add_uniffitrait_meta(&mut self, meta: UniffiTraitMetadata) -> Result<()> {
+        let object = get_object(&mut self.objects, meta.self_name())
+            .ok_or_else(|| anyhow!("add_uniffitrait_meta: object not found"))?;
+        let ut: UniffiTrait = meta.into();
+        self.types.add_known_types(ut.iter_types())?;
+        object.uniffi_traits.push(ut);
+        Ok(())
+    }
+
+    pub(super) fn add_object_meta(&mut self, meta: ObjectMetadata) -> Result<()> {
+        self.add_object_definition(meta.into())
     }
 
     /// Called by `APIBuilder` impls to add a newly-parsed object definition to the `ComponentInterface`.
-    fn add_object_definition(&mut self, defn: Object) {
-        // Note that there will be no duplicates thanks to the previous type-finding pass.
+    fn add_object_definition(&mut self, defn: Object) -> Result<()> {
+        self.types.add_known_types(defn.iter_types())?;
         self.objects.push(defn);
+        Ok(())
     }
 
     pub(super) fn note_name_used_as_error(&mut self, name: &str) {
@@ -732,12 +835,6 @@ impl ComponentInterface {
 
     /// Called by `APIBuilder` impls to add a newly-parsed callback interface definition to the `ComponentInterface`.
     pub(super) fn add_callback_interface_definition(&mut self, defn: CallbackInterface) {
-        // Note that there will be no duplicates thanks to the previous type-finding pass.
-        for method in defn.methods() {
-            if let Some(error) = method.throws_type() {
-                self.callback_interface_throws_types.insert(error.clone());
-            }
-        }
         self.callback_interfaces.push(defn);
     }
 
@@ -754,7 +851,12 @@ impl ComponentInterface {
                     meta.index,
                 );
             }
-            cbi.methods.push(meta.into());
+            let method: Method = meta.into();
+            if let Some(error) = method.throws_type() {
+                self.callback_interface_throws_types.insert(error.clone());
+            }
+            self.types.add_known_types(method.iter_types())?;
+            cbi.methods.push(method);
         } else {
             self.add_method_meta(meta)?;
         }
@@ -767,23 +869,15 @@ impl ComponentInterface {
     /// as a whole, and which can only be detected after we've finished defining
     /// the entire interface.
     pub fn check_consistency(&self) -> Result<()> {
-        if self.namespace.is_empty() {
+        if self.namespace().is_empty() {
             bail!("missing namespace definition");
         }
 
-        // To keep codegen tractable, enum variant names must not shadow type names.
-        for e in self.enums.values() {
-            // Not sure why this was deemed important for "normal" enums but
-            // not those used as errors, but this is what we've always done.
-            if !self.is_name_used_as_error(&e.name) {
-                for variant in &e.variants {
-                    if self.types.get_type_definition(variant.name()).is_some() {
-                        bail!(
-                            "Enum variant names must not shadow type names: \"{}\"",
-                            variant.name()
-                        )
-                    }
-                }
+        // Because functions aren't first class types, we need to check here that
+        // a function name hasn't already been used as a type name.
+        for f in self.functions.iter() {
+            if self.types.get_type_definition(f.name()).is_some() {
+                bail!("Conflicting type definition for \"{}\"", f.name());
             }
         }
 
@@ -795,13 +889,13 @@ impl ComponentInterface {
                         "Object `{name}` has no definition"
                     );
                 }
-                Type::Record(name) => {
+                Type::Record { name, .. } => {
                     ensure!(
                         self.records.contains_key(name),
                         "Record `{name}` has no definition",
                     );
                 }
-                Type::Enum(name) => {
+                Type::Enum { name, .. } => {
                     ensure!(
                         self.enums.contains_key(name),
                         "Enum `{name}` has no definition",
@@ -819,15 +913,14 @@ impl ComponentInterface {
     /// This should only be called after the high-level types have been completed defined, otherwise
     /// the resulting set will be missing some entries.
     pub fn derive_ffi_funcs(&mut self) -> Result<()> {
-        let ci_namespace = self.ffi_namespace().to_owned();
         for func in self.functions.iter_mut() {
-            func.derive_ffi_func(&ci_namespace)?;
+            func.derive_ffi_func()?;
         }
         for obj in self.objects.iter_mut() {
-            obj.derive_ffi_funcs(&ci_namespace)?;
+            obj.derive_ffi_funcs()?;
         }
         for callback in self.callback_interfaces.iter_mut() {
-            callback.derive_ffi_funcs(&ci_namespace);
+            callback.derive_ffi_funcs();
         }
         Ok(())
     }
@@ -886,13 +979,13 @@ impl<'a> RecursiveTypeIterator<'a> {
     /// Add a new type to the queue of pending types, if not previously seen.
     fn add_pending_type(&mut self, type_: &'a Type) {
         match type_ {
-            Type::Record(nm)
-            | Type::Enum(nm)
-            | Type::Object { name: nm, .. }
-            | Type::CallbackInterface(nm) => {
-                if !self.seen.contains(nm.as_str()) {
+            Type::Record { name, .. }
+            | Type::Enum { name, .. }
+            | Type::Object { name, .. }
+            | Type::CallbackInterface { name, .. } => {
+                if !self.seen.contains(name.as_str()) {
                     self.pending.push(type_);
-                    self.seen.insert(nm.as_str());
+                    self.seen.insert(name.as_str());
                 }
             }
             _ => (),
@@ -911,14 +1004,16 @@ impl<'a> RecursiveTypeIterator<'a> {
             // to a non-existent type, we just leave the existing iterator in place and allow the recursive
             // call to `next()` to try again with the next pending type.
             let next_iter = match next_type {
-                Type::Record(nm) => self.ci.get_record_definition(nm).map(Record::iter_types),
-                Type::Enum(name) => self.ci.get_enum_definition(name).map(Enum::iter_types),
-                Type::Object { name: nm, .. } => {
-                    self.ci.get_object_definition(nm).map(Object::iter_types)
+                Type::Record { name, .. } => {
+                    self.ci.get_record_definition(name).map(Record::iter_types)
                 }
-                Type::CallbackInterface(nm) => self
+                Type::Enum { name, .. } => self.ci.get_enum_definition(name).map(Enum::iter_types),
+                Type::Object { name, .. } => {
+                    self.ci.get_object_definition(name).map(Object::iter_types)
+                }
+                Type::CallbackInterface { name, .. } => self
                     .ci
-                    .get_callback_interface_definition(nm)
+                    .get_callback_interface_definition(name)
                     .map(CallbackInterface::iter_types),
                 _ => None,
             };
@@ -947,104 +1042,12 @@ impl<'a> Iterator for RecursiveTypeIterator<'a> {
     }
 }
 
-/// Trait to help build a `ComponentInterface` from WedIDL syntax nodes.
-///
-/// This trait does structural matching on the various weedle AST nodes and
-/// uses them to build up the records, enums, objects etc in the provided
-/// `ComponentInterface`.
-trait APIBuilder {
-    fn process(&self, ci: &mut ComponentInterface) -> Result<()>;
-}
-
-/// Add to a `ComponentInterface` from a list of weedle definitions,
-/// by processing each in turn.
-impl<T: APIBuilder> APIBuilder for Vec<T> {
-    fn process(&self, ci: &mut ComponentInterface) -> Result<()> {
-        for item in self {
-            item.process(ci)?;
-        }
-        Ok(())
-    }
-}
-
-/// Add to a `ComponentInterface` from a weedle definition.
-/// This is conceptually the root of the parser, and dispatches to implementations
-/// for the various specific WebIDL types that we support.
-impl APIBuilder for weedle::Definition<'_> {
-    fn process(&self, ci: &mut ComponentInterface) -> Result<()> {
-        match self {
-            weedle::Definition::Namespace(d) => d.process(ci)?,
-            weedle::Definition::Enum(d) => {
-                // We check if the enum represents an error...
-                let attrs = attributes::EnumAttributes::try_from(d.attributes.as_ref())?;
-                if attrs.contains_error_attr() {
-                    let e = d.convert(ci)?;
-                    ci.note_name_used_as_error(&e.name);
-                    ci.add_enum_definition(e)?;
-                } else {
-                    let e = d.convert(ci)?;
-                    ci.add_enum_definition(e)?;
-                }
-            }
-            weedle::Definition::Dictionary(d) => {
-                let rec = d.convert(ci)?;
-                ci.add_record_definition(rec)?;
-            }
-            weedle::Definition::Interface(d) => {
-                let attrs = attributes::InterfaceAttributes::try_from(d.attributes.as_ref())?;
-                if attrs.contains_enum_attr() {
-                    let e = d.convert(ci)?;
-                    ci.add_enum_definition(e)?;
-                } else if attrs.contains_error_attr() {
-                    let e: Enum = d.convert(ci)?;
-                    ci.note_name_used_as_error(&e.name);
-                    ci.add_enum_definition(e)?;
-                } else {
-                    let obj = d.convert(ci)?;
-                    ci.add_object_definition(obj);
-                }
-            }
-            weedle::Definition::CallbackInterface(d) => {
-                let obj = d.convert(ci)?;
-                ci.add_callback_interface_definition(obj);
-            }
-            // everything needed for typedefs is done in finder.rs.
-            weedle::Definition::Typedef(_) => {}
-            _ => bail!("don't know how to deal with {:?}", self),
-        }
-        Ok(())
-    }
-}
-
-/// Trait to help convert WedIDL syntax nodes into `ComponentInterface` objects.
-///
-/// This trait does structural matching on the various weedle AST nodes and converts
-/// them into appropriate structs that we can use to build up the contents of a
-/// `ComponentInterface`. It is basically the `TryFrom` trait except that the conversion
-/// always happens in the context of a given `ComponentInterface`, which is used for
-/// resolving e.g. type definitions.
-///
-/// The difference between this trait and `APIBuilder` is that `APIConverter` treats the
-/// `ComponentInterface` as a read-only data source for resolving types, while `APIBuilder`
-/// actually mutates the `ComponentInterface` to add new definitions.
-trait APIConverter<T> {
-    fn convert(&self, ci: &mut ComponentInterface) -> Result<T>;
-}
-
-/// Convert a list of weedle items into a list of `ComponentInterface` items,
-/// by doing a direct item-by-item mapping.
-impl<U, T: APIConverter<U>> APIConverter<Vec<U>> for Vec<T> {
-    fn convert(&self, ci: &mut ComponentInterface) -> Result<Vec<U>> {
-        self.iter().map(|v| v.convert(ci)).collect::<Result<_>>()
-    }
-}
-
 // Helpers for functions/methods/constructors which all have the same "throws" semantics.
 fn throws_name(throws: &Option<Type>) -> Option<&str> {
     // Type has no `name()` method, just `canonical_name()` which isn't what we want.
     match throws {
         None => None,
-        Some(Type::Enum(name)) => Some(name),
+        Some(Type::Enum { name, .. }) => Some(name),
         _ => panic!("unknown throw type: {throws:?}"),
     }
 }
@@ -1067,12 +1070,12 @@ mod test {
                 u32 field;
             };
         "#;
-        let err = ComponentInterface::from_webidl(UDL).unwrap_err();
+        let err = ComponentInterface::from_webidl(UDL, "crate_name").unwrap_err();
         assert_eq!(
             err.to_string(),
             "Conflicting type definition for `Testing`! \
-             existing definition: Object { name: \"Testing\", imp: Struct }, \
-             new definition: Record(\"Testing\")"
+             existing definition: Object { module_path: \"crate_name\", name: \"Testing\", imp: Struct }, \
+             new definition: Record { module_path: \"crate_name\", name: \"Testing\" }"
         );
 
         const UDL2: &str = r#"
@@ -1083,11 +1086,12 @@ mod test {
             [Error]
             enum Testing { "three", "four" };
         "#;
-        let err = ComponentInterface::from_webidl(UDL2).unwrap_err();
+        let err = ComponentInterface::from_webidl(UDL2, "crate_name").unwrap_err();
         assert_eq!(
             err.to_string(),
             "Mismatching definition for enum `Testing`!\nexisting definition: Enum {
     name: \"Testing\",
+    module_path: \"crate_name\",
     variants: [
         Variant {
             name: \"one\",
@@ -1102,6 +1106,7 @@ mod test {
 },
 new definition: Enum {
     name: \"Testing\",
+    module_path: \"crate_name\",
     variants: [
         Variant {
             name: \"three\",
@@ -1124,34 +1129,8 @@ new definition: Enum {
                 "one", "two"
             };
         "#;
-        let err = ComponentInterface::from_webidl(UDL3).unwrap_err();
-        assert_eq!(
-            err.to_string(),
-            "Conflicting type definition for \"Testing\""
-        );
-    }
-
-    #[test]
-    fn test_enum_variant_names_dont_shadow_types() {
-        // There are some edge-cases during codegen where we don't know how to disambiguate
-        // between an enum variant reference and a top-level type reference, so we
-        // disallow it in order to give a more scrutable error to the consumer.
-        const UDL: &str = r#"
-            namespace test{};
-            interface Testing {
-                constructor();
-            };
-            [Enum]
-            interface HardToCodegenFor {
-                Testing();
-                OtherVariant(u32 field);
-            };
-        "#;
-        let err = ComponentInterface::from_webidl(UDL).unwrap_err();
-        assert_eq!(
-            err.to_string(),
-            "Enum variant names must not shadow type names: \"Testing\""
-        );
+        let err = ComponentInterface::from_webidl(UDL3, "crate_name").unwrap_err();
+        assert!(format!("{err:#}").contains("Conflicting type definition for \"Testing\""));
     }
 
     #[test]
@@ -1166,7 +1145,9 @@ new definition: Enum {
         // check that `contains_optional_types` returns true when there is an Optional type in the interface
         assert!(ci
             .types
-            .add_type_definition("TestOptional{}", Type::Optional(Box::new(Type::String)))
+            .add_known_type(&Type::Optional {
+                inner_type: Box::new(Type::String)
+            })
             .is_ok());
         assert!(ci.contains_optional_types());
     }
@@ -1183,9 +1164,12 @@ new definition: Enum {
         // check that `contains_sequence_types` returns true when there is a Sequence type in the interface
         assert!(ci
             .types
-            .add_type_definition("TestSequence{}", Type::Sequence(Box::new(Type::UInt64)))
+            .add_known_type(&Type::Sequence {
+                inner_type: Box::new(Type::UInt64)
+            })
             .is_ok());
         assert!(ci.contains_sequence_types());
+        assert!(ci.types.contains(&Type::UInt64));
     }
 
     #[test]
@@ -1200,12 +1184,14 @@ new definition: Enum {
         // check that `contains_map_types` returns true when there is a Map type in the interface
         assert!(ci
             .types
-            .add_type_definition(
-                "Map{}",
-                Type::Map(Box::new(Type::String), Box::new(Type::Boolean))
-            )
+            .add_known_type(&Type::Map {
+                key_type: Box::new(Type::String),
+                value_type: Box::new(Type::Boolean)
+            })
             .is_ok());
         assert!(ci.contains_map_types());
+        assert!(ci.types.contains(&Type::String));
+        assert!(ci.types.contains(&Type::Boolean));
     }
 
     #[test]
@@ -1216,9 +1202,10 @@ new definition: Enum {
                 void tester(Testing foo);
             };
         "#;
-        let ci = ComponentInterface::from_webidl(UDL).unwrap();
+        let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
         assert!(!ci.item_contains_unsigned_types(&Type::Object {
             name: "Testing".into(),
+            module_path: "".into(),
             imp: ObjectImpl::Struct,
         }));
     }
@@ -1237,9 +1224,10 @@ new definition: Enum {
                 u64 baz;
             };
         "#;
-        let ci = ComponentInterface::from_webidl(UDL).unwrap();
+        let ci = ComponentInterface::from_webidl(UDL, "crate_name").unwrap();
         assert!(ci.item_contains_unsigned_types(&Type::Object {
             name: "TestObj".into(),
+            module_path: "".into(),
             imp: ObjectImpl::Struct,
         }));
     }

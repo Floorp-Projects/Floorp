@@ -1,5 +1,5 @@
 {%- let cbi = ci|get_callback_interface_definition(name) %}
-{%- let type_name = cbi|type_name %}
+{%- let type_name = cbi|type_name(ci) %}
 {%- let foreign_callback = format!("ForeignCallback{}", canonical_type_name) %}
 
 {% if self.include_once_check("CallbackInterfaceRuntime.kt") %}{% include "CallbackInterfaceRuntime.kt" %}{% endif %}
@@ -13,16 +13,17 @@ public interface {{ type_name }} {
     {% for meth in cbi.methods() -%}
     fun {{ meth.name()|fn_name }}({% call kt::arg_list_decl(meth) %})
     {%- match meth.return_type() -%}
-    {%- when Some with (return_type) %}: {{ return_type|type_name -}}
+    {%- when Some with (return_type) %}: {{ return_type|type_name(ci) -}}
     {%- else -%}
     {%- endmatch %}
     {% endfor %}
+    companion object
 }
 
 // The ForeignCallback that is passed to Rust.
 internal class {{ foreign_callback }} : ForeignCallback {
     @Suppress("TooGenericExceptionCaught")
-    override fun invoke(handle: Handle, method: Int, argsData: Pointer, argsLen: Int, outBuf: RustBufferByReference): Int {
+    override fun callback(handle: Handle, method: Int, argsData: Pointer, argsLen: Int, outBuf: RustBufferByReference): Int {
         val cb = {{ ffi_converter_name }}.lift(handle)
         return when (method) {
             IDX_CALLBACK_FREE -> {
@@ -104,7 +105,7 @@ internal class {{ foreign_callback }} : ForeignCallback {
         {%- when Some(error_type) %}
         fun makeCallAndHandleError()  : Int = try {
             makeCall()
-        } catch (e: {{ error_type|error_type_name }}) {
+        } catch (e: {{ error_type|type_name(ci) }}) {
             // Expected error, serialize it into outBuf
             outBuf.setValue({{ error_type|ffi_converter_name }}.lowerIntoRustBuffer(e))
             UNIFFI_CALLBACK_ERROR

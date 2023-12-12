@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-//! # Attribute definitions for a `ComponentInterface`.
+//! # Attribute definitions for a `InterfaceCollector`.
 //!
 //! This module provides some conveniences for working with attribute definitions
 //! from WebIDL. When encountering a weedle `ExtendedAttribute` node, use `TryFrom`
@@ -14,16 +14,13 @@
 //! all handled by a single abstraction. This might need to be refactored in future
 //! if we grow significantly more complicated attribute handling.
 
-use crate::interface::types::ExternalKind;
 use anyhow::{bail, Result};
-use uniffi_meta::Checksum;
-
-use super::types::ObjectImpl;
+use uniffi_meta::{Checksum, ExternalKind, ObjectImpl};
 
 /// Represents an attribute parsed from UDL, like `[ByRef]` or `[Throws]`.
 ///
 /// This is a convenience enum for parsing UDL attributes and erroring out if we encounter
-/// any unsupported ones. These don't convert directly into parts of a `ComponentInterface`, but
+/// any unsupported ones. These don't convert directly into parts of a `InterfaceCollector`, but
 /// may influence the properties of things like functions and arguments.
 #[derive(Debug, Clone, Checksum)]
 pub(super) enum Attribute {
@@ -38,6 +35,7 @@ pub(super) enum Attribute {
     External {
         crate_name: String,
         kind: ExternalKind,
+        export: bool,
     },
     // Custom type on the scaffolding side
     Custom,
@@ -54,7 +52,7 @@ impl Attribute {
     }
 }
 
-/// Convert a weedle `ExtendedAttribute` into an `Attribute` for a `ComponentInterface` member,
+/// Convert a weedle `ExtendedAttribute` into an `Attribute` for a `InterfaceCollector` member,
 /// or error out if the attribute is not supported.
 impl TryFrom<&weedle::attribute::ExtendedAttribute<'_>> for Attribute {
     type Error = anyhow::Error;
@@ -80,10 +78,22 @@ impl TryFrom<&weedle::attribute::ExtendedAttribute<'_>> for Attribute {
                     "External" => Ok(Attribute::External {
                         crate_name: name_from_id_or_string(&identity.rhs),
                         kind: ExternalKind::DataClass,
+                        export: false,
+                    }),
+                    "ExternalExport" => Ok(Attribute::External {
+                        crate_name: name_from_id_or_string(&identity.rhs),
+                        kind: ExternalKind::DataClass,
+                        export: true,
                     }),
                     "ExternalInterface" => Ok(Attribute::External {
                         crate_name: name_from_id_or_string(&identity.rhs),
                         kind: ExternalKind::Interface,
+                        export: false,
+                    }),
+                    "ExternalInterfaceExport" => Ok(Attribute::External {
+                        crate_name: name_from_id_or_string(&identity.rhs),
+                        kind: ExternalKind::Interface,
+                        export: true,
                     }),
                     _ => anyhow::bail!(
                         "Attribute identity Identifier not supported: {:?}",
@@ -487,6 +497,14 @@ impl TypedefAttributes {
             _ => None,
         })
     }
+
+    pub(super) fn external_tagged(&self) -> Option<bool> {
+        // If it was "exported" via a proc-macro the FfiConverter was not tagged.
+        self.0.iter().find_map(|attr| match attr {
+            Attribute::External { export, .. } => Some(!*export),
+            _ => None,
+        })
+    }
 }
 
 impl TryFrom<&weedle::attribute::ExtendedAttributeList<'_>> for TypedefAttributes {
@@ -630,7 +648,7 @@ mod test {
 
         let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[]").unwrap();
         let attrs = FunctionAttributes::try_from(&node).unwrap();
-        assert!(matches!(attrs.get_throws_err(), None));
+        assert!(attrs.get_throws_err().is_none());
     }
 
     #[test]
@@ -678,12 +696,12 @@ mod test {
         let (_, node) = weedle::attribute::ExtendedAttributeList::parse("[Throws=Error]").unwrap();
         let attrs = ConstructorAttributes::try_from(&node).unwrap();
         assert!(matches!(attrs.get_throws_err(), Some("Error")));
-        assert!(matches!(attrs.get_name(), None));
+        assert!(attrs.get_name().is_none());
 
         let (_, node) =
             weedle::attribute::ExtendedAttributeList::parse("[Name=MyFactory]").unwrap();
         let attrs = ConstructorAttributes::try_from(&node).unwrap();
-        assert!(matches!(attrs.get_throws_err(), None));
+        assert!(attrs.get_throws_err().is_none());
         assert!(matches!(attrs.get_name(), Some("MyFactory")));
 
         let (_, node) =

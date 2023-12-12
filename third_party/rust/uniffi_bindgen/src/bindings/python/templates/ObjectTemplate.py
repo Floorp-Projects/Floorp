@@ -15,7 +15,7 @@ class {{ type_name }}:
         # In case of partial initialization of instances.
         pointer = getattr(self, "_pointer", None)
         if pointer is not None:
-            rust_call(_UniFFILib.{{ obj.ffi_object_free().name() }}, pointer)
+            _rust_call(_UniffiLib.{{ obj.ffi_object_free().name() }}, pointer)
 
     # Used by alternative constructors or any methods which return this type.
     @classmethod
@@ -67,7 +67,7 @@ class {{ type_name }}:
 class {{ ffi_converter_name }}:
     @classmethod
     def read(cls, buf):
-        ptr = buf.readU64()
+        ptr = buf.read_u64()
         if ptr == 0:
             raise InternalError("Raw pointer value was null")
         return cls.lift(ptr)
@@ -75,8 +75,8 @@ class {{ ffi_converter_name }}:
     @classmethod
     def write(cls, value, buf):
         if not isinstance(value, {{ type_name }}):
-            raise TypeError("Expected {{ type_name }} instance, {} found".format(value.__class__.__name__))
-        buf.writeU64(cls.lower(value))
+            raise TypeError("Expected {{ type_name }} instance, {} found".format(type(value).__name__))
+        buf.write_u64(cls.lower(value))
 
     @staticmethod
     def lift(value):
