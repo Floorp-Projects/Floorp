@@ -21,6 +21,7 @@ UNIFIED_SOURCES += [
     "SetDefaultBrowser.cpp",
     "Telemetry.cpp",
     "UtfConvert.cpp",
+    "WindowsMutex.cpp",
 ]
 
 SOURCES += [
@@ -40,6 +41,7 @@ SOURCES["Notification.cpp"].flags += [
 
 EXPORTS.mozilla += [
     "DefaultAgent.h",
+    "WindowsMutex.h",
 ]
 
 USE_LIBS += [
@@ -75,6 +77,7 @@ OS_LIBS += [
 
 XPIDL_SOURCES += [
     "nsIDefaultAgent.idl",
+    "nsIWindowsMutex.idl",
 ]
 
 XPIDL_MODULE = "default-agent"

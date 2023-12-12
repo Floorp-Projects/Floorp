@@ -1,0 +1,62 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+ #include "nsISupports.idl"
+
+/**
+* Interact with Windows named mutexes.
+*
+* Generally you don't want a Windows named mutex, you want one of the many Gecko
+* locking primitives. But when you do want cross-application instance or even
+* cross-installation coordination, a Windows named mutex might be an
+* appropriate tool.
+*/
+[scriptable, uuid(26f09999-c26e-4b72-8747-5adaefa0914c)]
+interface nsIWindowsMutex : nsISupports
+{
+  /**
+  * Locks the mutex.
+  *
+  * Note that this will not block waiting to lock. It attempts to lock the mutex
+  * and if it can't immediately, NS_ERROR_NOT_AVAILABLE will be thrown.
+  *
+  * This function succeeds when an abandoned mutex is found, therefore is
+  * inappropriate for use if an abandoned mutex might imply the locked resource
+  * is in a corrupt state.
+  *
+  * @throws NS_ERROR_NOT_AVAILABLE
+  *         If unable to lock the mutex.
+  */
+  void tryLock();
+
+  /**
+  * Returns whether the mutex is locked.
+  *
+  * @return {boolean} true if locked, false if unlocked.
+  */
+  bool isLocked();
+
+  /**
+  * Unlocks the mutex.
+  * @throws NS_ERROR_UNEXPECTED
+  *         If unable to release mutex.
+  */
+  void unlock();
+};
+
+[scriptable, uuid(d54fe2b7-438f-4629-9706-1acda5b51088)]
+interface nsIWindowsMutexFactory : nsISupports {
+  /**
+  * Creates a Windows named mutex.
+  *
+  * @param {AString} aName
+  *        The system-wide name of the mutex.
+  * @return {nsIWindowsMutex}
+  *         The created Windows mutex.
+  * @throws NS_ERROR_NOT_AVAILABLE
+  *         If unable to create mutex.
+  */
+  nsIWindowsMutex createMutex(in AString aName);
+};
