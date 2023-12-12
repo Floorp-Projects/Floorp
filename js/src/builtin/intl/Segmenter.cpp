@@ -9,6 +9,7 @@
 #include "builtin/intl/Segmenter.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/Range.h"
 #include "mozilla/UniquePtr.h"
 
@@ -45,11 +46,25 @@
 
 using namespace js;
 
+const JSClassOps SegmenterObject::classOps_ = {
+    nullptr,                    // addProperty
+    nullptr,                    // delProperty
+    nullptr,                    // enumerate
+    nullptr,                    // newEnumerate
+    nullptr,                    // resolve
+    nullptr,                    // mayResolve
+    SegmenterObject::finalize,  // finalize
+    nullptr,                    // call
+    nullptr,                    // construct
+    nullptr,                    // trace
+};
+
 const JSClass SegmenterObject::class_ = {
     "Intl.Segmenter",
     JSCLASS_HAS_RESERVED_SLOTS(SegmenterObject::SLOT_COUNT) |
-        JSCLASS_HAS_CACHED_PROTO(JSProto_Segmenter),
-    nullptr,
+        JSCLASS_HAS_CACHED_PROTO(JSProto_Segmenter) |
+        JSCLASS_FOREGROUND_FINALIZE,
+    &SegmenterObject::classOps_,
     &SegmenterObject::classSpec_,
 };
 
@@ -131,9 +146,24 @@ static bool Segmenter(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+const JSClassOps SegmentsObject::classOps_ = {
+    nullptr,                   // addProperty
+    nullptr,                   // delProperty
+    nullptr,                   // enumerate
+    nullptr,                   // newEnumerate
+    nullptr,                   // resolve
+    nullptr,                   // mayResolve
+    SegmentsObject::finalize,  // finalize
+    nullptr,                   // call
+    nullptr,                   // construct
+    nullptr,                   // trace
+};
+
 const JSClass SegmentsObject::class_ = {
     "Intl.Segments",
-    JSCLASS_HAS_RESERVED_SLOTS(SegmentsObject::SLOT_COUNT),
+    JSCLASS_HAS_RESERVED_SLOTS(SegmentsObject::SLOT_COUNT) |
+        JSCLASS_FOREGROUND_FINALIZE,
+    &SegmentsObject::classOps_,
 };
 
 static const JSFunctionSpec segments_methods[] = {
@@ -158,9 +188,24 @@ bool GlobalObject::initSegmentsProto(JSContext* cx,
   return true;
 }
 
+const JSClassOps SegmentIteratorObject::classOps_ = {
+    nullptr,                          // addProperty
+    nullptr,                          // delProperty
+    nullptr,                          // enumerate
+    nullptr,                          // newEnumerate
+    nullptr,                          // resolve
+    nullptr,                          // mayResolve
+    SegmentIteratorObject::finalize,  // finalize
+    nullptr,                          // call
+    nullptr,                          // construct
+    nullptr,                          // trace
+};
+
 const JSClass SegmentIteratorObject::class_ = {
     "Intl.SegmentIterator",
-    JSCLASS_HAS_RESERVED_SLOTS(SegmentIteratorObject::SLOT_COUNT),
+    JSCLASS_HAS_RESERVED_SLOTS(SegmentIteratorObject::SLOT_COUNT) |
+        JSCLASS_FOREGROUND_FINALIZE,
+    &SegmentIteratorObject::classOps_,
 };
 
 static const JSFunctionSpec segment_iterator_methods[] = {
@@ -213,11 +258,15 @@ struct Boundaries {
 
 /**
  * Find the segmentation boundary for the string character whose position is
- * |index|.
+ * |index|. The end position of the last segment boundary is |previousIndex|.
  */
 template <class T>
-static Boundaries FindBoundaryFrom(const T& iter, int32_t index) {
-  int32_t previous = 0;
+static Boundaries FindBoundaryFrom(const T& iter, int32_t previousIndex,
+                                   int32_t index) {
+  MOZ_ASSERT(previousIndex <= index,
+             "previous index must not exceed the search index");
+
+  int32_t previous = previousIndex;
   while (true) {
     // Find the next possible break index.
     int32_t next = iter.next();
@@ -238,67 +287,17 @@ static Boundaries FindBoundaryFrom(const T& iter, int32_t index) {
 
 template <typename Interface>
 class SegmenterBreakIteratorType {
-  struct Deleter {
-    void operator()(typename Interface::BreakIterator* ptr) const {
-      Interface::destroy(ptr);
-    }
-  };
-  mozilla::UniquePtr<typename Interface::BreakIterator, Deleter> impl_;
-
-  static const auto* toUnsigned(const JS::Latin1Char* chars) {
-    return reinterpret_cast<const uint8_t*>(chars);
-  }
-
-  static const auto* toUnsigned(const char16_t* chars) {
-    return reinterpret_cast<const uint16_t*>(chars);
-  }
+  typename Interface::BreakIterator* impl_;
 
  public:
-  SegmenterBreakIteratorType(
-      typename Interface::Segmenter* segmenter,
-      mozilla::Span<const typename Interface::Char> chars) {
-    impl_.reset(
-        Interface::create(segmenter, toUnsigned(chars.data()), chars.size()));
+  explicit SegmenterBreakIteratorType(void* impl)
+      : impl_(static_cast<typename Interface::BreakIterator*>(impl)) {
+    MOZ_ASSERT(impl);
   }
 
-  int32_t next() const { return Interface::next(impl_.get()); }
+  int32_t next() const { return Interface::next(impl_); }
 
-  bool isWordLike() const { return Interface::isWordLike(impl_.get()); }
-};
-
-template <typename Interface>
-class SegmenterType {
-  struct Deleter {
-    void operator()(typename Interface::Segmenter* ptr) const {
-      Interface::destroy(ptr);
-    }
-  };
-  mozilla::UniquePtr<typename Interface::Segmenter, Deleter> impl_;
-
- public:
-  SegmenterType() {
-    auto result = Interface::create(mozilla::intl::GetDataProvider());
-    if (result.is_ok) {
-      impl_.reset(result.ok);
-    }
-  }
-
-  explicit operator bool() const { return bool(impl_); }
-
-  Boundaries find(const JSLinearString* string, int32_t index) {
-    // Tell the analysis ICU4X functions can't GC.
-    JS::AutoSuppressGCAnalysis nogc;
-
-    if (string->hasLatin1Chars()) {
-      auto chars = string->latin1Range(nogc);
-      typename Interface::BreakIteratorLatin1 iter(impl_.get(), chars);
-      return FindBoundaryFrom(iter, index);
-    } else {
-      auto chars = string->twoByteRange(nogc);
-      typename Interface::BreakIteratorTwoByte iter(impl_.get(), chars);
-      return FindBoundaryFrom(iter, index);
-    }
-  }
+  bool isWordLike() const { return Interface::isWordLike(impl_); }
 };
 
 #if defined(MOZ_ICU4X)
@@ -435,6 +434,19 @@ struct SentenceSegmenter {
 };
 #endif
 
+/**
+ * Create a new ICU4X segmenter instance.
+ */
+template <typename Interface>
+static typename Interface::Segmenter* CreateSegmenter(JSContext* cx) {
+  auto result = Interface::create(mozilla::intl::GetDataProvider());
+  if (!result.is_ok) {
+    intl::ReportInternalError(cx);
+    return nullptr;
+  }
+  return result.ok;
+}
+
 static bool EnsureInternalsResolved(JSContext* cx,
                                     Handle<SegmenterObject*> segmenter) {
   if (segmenter->getLocale()) {
@@ -474,54 +486,345 @@ static bool EnsureInternalsResolved(JSContext* cx,
     }
   }
 
+#if defined(MOZ_ICU4X)
+  switch (granularity) {
+    case SegmenterGranularity::Grapheme: {
+      auto* seg = CreateSegmenter<GraphemeClusterSegmenter>(cx);
+      if (!seg) {
+        return false;
+      }
+      segmenter->setSegmenter(seg);
+      break;
+    }
+    case SegmenterGranularity::Word: {
+      auto* seg = CreateSegmenter<WordSegmenter>(cx);
+      if (!seg) {
+        return false;
+      }
+      segmenter->setSegmenter(seg);
+      break;
+    }
+    case SegmenterGranularity::Sentence: {
+      auto* seg = CreateSegmenter<SentenceSegmenter>(cx);
+      if (!seg) {
+        return false;
+      }
+      segmenter->setSegmenter(seg);
+      break;
+    }
+  }
+#endif
+
   segmenter->setLocale(locale);
   segmenter->setGranularity(granularity);
 
   return true;
 }
 
-static bool GraphemeBoundaries(JSContext* cx, Handle<JSLinearString*> string,
-                               int32_t index, Boundaries* boundaries) {
-#if defined(MOZ_ICU4X)
-  SegmenterType<GraphemeClusterSegmenter> segmenter{};
-  if (!segmenter) {
-    intl::ReportInternalError(cx);
-    return false;
-  }
+/**
+ * Destroy an ICU4X segmenter instance.
+ */
+template <typename Interface>
+static void DestroySegmenter(void* seg) {
+  auto* segmenter = static_cast<typename Interface::Segmenter*>(seg);
+  Interface::destroy(segmenter);
+}
 
-  *boundaries = segmenter.find(string, index);
-  return true;
+void SegmenterObject::finalize(JS::GCContext* gcx, JSObject* obj) {
+  MOZ_ASSERT(gcx->onMainThread());
+
+  auto& segmenter = obj->as<SegmenterObject>();
+  if (void* seg = segmenter.getSegmenter()) {
+#if defined(MOZ_ICU4X)
+    switch (segmenter.getGranularity()) {
+      case SegmenterGranularity::Grapheme: {
+        DestroySegmenter<GraphemeClusterSegmenter>(seg);
+        break;
+      }
+      case SegmenterGranularity::Word: {
+        DestroySegmenter<WordSegmenter>(seg);
+        break;
+      }
+      case SegmenterGranularity::Sentence: {
+        DestroySegmenter<SentenceSegmenter>(seg);
+        break;
+      }
+    }
+#else
+    MOZ_CRASH("ICU4X disabled");
+#endif
+  }
+}
+
+/**
+ * Destroy an ICU4X break iterator instance.
+ */
+template <typename Interface>
+static void DestroyBreakIterator(void* brk) {
+  auto* breakIterator = static_cast<typename Interface::BreakIterator*>(brk);
+  Interface::destroy(breakIterator);
+}
+
+/**
+ * Destroy the ICU4X break iterator attached to |segments|.
+ */
+template <typename T>
+static void DestroyBreakIterator(const T* segments) {
+#if defined(MOZ_ICU4X)
+  void* brk = segments->getBreakIterator();
+  MOZ_ASSERT(brk);
+
+  bool isLatin1 = segments->getString()->hasLatin1Chars();
+
+  switch (segments->getGranularity()) {
+    case SegmenterGranularity::Grapheme: {
+      if (isLatin1) {
+        DestroyBreakIterator<GraphemeClusterSegmenterBreakIteratorLatin1>(brk);
+      } else {
+        DestroyBreakIterator<GraphemeClusterSegmenterBreakIteratorTwoByte>(brk);
+      }
+      break;
+    }
+    case SegmenterGranularity::Word: {
+      if (isLatin1) {
+        DestroyBreakIterator<WordSegmenterBreakIteratorLatin1>(brk);
+      } else {
+        DestroyBreakIterator<WordSegmenterBreakIteratorTwoByte>(brk);
+      }
+      break;
+    }
+    case SegmenterGranularity::Sentence: {
+      if (isLatin1) {
+        DestroyBreakIterator<SentenceSegmenterBreakIteratorLatin1>(brk);
+      } else {
+        DestroyBreakIterator<SentenceSegmenterBreakIteratorTwoByte>(brk);
+      }
+      break;
+    }
+  }
 #else
   MOZ_CRASH("ICU4X disabled");
 #endif
 }
 
-static bool WordBoundaries(JSContext* cx, Handle<JSLinearString*> string,
-                           int32_t index, Boundaries* boundaries) {
-#if defined(MOZ_ICU4X)
-  SegmenterType<WordSegmenter> segmenter{};
-  if (!segmenter) {
-    intl::ReportInternalError(cx);
-    return false;
+void SegmentsObject::finalize(JS::GCContext* gcx, JSObject* obj) {
+  MOZ_ASSERT(gcx->onMainThread());
+
+  auto* segments = &obj->as<SegmentsObject>();
+  bool isLatin1 = segments->getString()->hasLatin1Chars();
+
+  if (void* chars = segments->getStringChars()) {
+    size_t length = segments->getString()->length();
+    if (isLatin1) {
+      intl::RemoveICUCellMemory(gcx, segments, length * sizeof(JS::Latin1Char));
+    } else {
+      intl::RemoveICUCellMemory(gcx, segments, length * sizeof(char16_t));
+    }
+    js_free(chars);
   }
 
-  *boundaries = segmenter.find(string, index);
-  return true;
+  if (segments->getBreakIterator()) {
+    DestroyBreakIterator(segments);
+  }
+}
+
+void SegmentIteratorObject::finalize(JS::GCContext* gcx, JSObject* obj) {
+  MOZ_ASSERT(gcx->onMainThread());
+
+  auto* iterator = &obj->as<SegmentIteratorObject>();
+  bool isLatin1 = iterator->getString()->hasLatin1Chars();
+
+  if (void* chars = iterator->getStringChars()) {
+    size_t length = iterator->getString()->length();
+    if (isLatin1) {
+      intl::RemoveICUCellMemory(gcx, iterator, length * sizeof(JS::Latin1Char));
+    } else {
+      intl::RemoveICUCellMemory(gcx, iterator, length * sizeof(char16_t));
+    }
+    js_free(chars);
+  }
+
+  if (iterator->getBreakIterator()) {
+    DestroyBreakIterator(iterator);
+  }
+}
+
+template <typename Iterator, typename T>
+static Boundaries FindBoundaryFrom(Handle<T*> segments, int32_t index) {
+  MOZ_ASSERT(0 <= index && uint32_t(index) < segments->getString()->length());
+
+  Iterator iter(segments->getBreakIterator());
+  return FindBoundaryFrom(iter, segments->getIndex(), index);
+}
+
+template <typename T>
+static Boundaries GraphemeBoundaries(Handle<T*> segments, int32_t index) {
+#if defined(MOZ_ICU4X)
+  if (segments->getString()->hasLatin1Chars()) {
+    return FindBoundaryFrom<GraphemeClusterSegmenter::BreakIteratorLatin1>(
+        segments, index);
+  }
+  return FindBoundaryFrom<GraphemeClusterSegmenter::BreakIteratorTwoByte>(
+      segments, index);
 #else
   MOZ_CRASH("ICU4X disabled");
 #endif
 }
 
-static bool SentenceBoundaries(JSContext* cx, Handle<JSLinearString*> string,
-                               int32_t index, Boundaries* boundaries) {
+template <typename T>
+static Boundaries WordBoundaries(Handle<T*> segments, int32_t index) {
 #if defined(MOZ_ICU4X)
-  SegmenterType<SentenceSegmenter> segmenter{};
-  if (!segmenter) {
-    intl::ReportInternalError(cx);
+  if (segments->getString()->hasLatin1Chars()) {
+    return FindBoundaryFrom<WordSegmenter::BreakIteratorLatin1>(segments,
+                                                                index);
+  }
+  return FindBoundaryFrom<WordSegmenter::BreakIteratorTwoByte>(segments, index);
+#else
+  MOZ_CRASH("ICU4X disabled");
+#endif
+}
+
+template <typename T>
+static Boundaries SentenceBoundaries(Handle<T*> segments, int32_t index) {
+#if defined(MOZ_ICU4X)
+  if (segments->getString()->hasLatin1Chars()) {
+    return FindBoundaryFrom<SentenceSegmenter::BreakIteratorLatin1>(segments,
+                                                                    index);
+  }
+  return FindBoundaryFrom<SentenceSegmenter::BreakIteratorTwoByte>(segments,
+                                                                   index);
+#else
+  MOZ_CRASH("ICU4X disabled");
+#endif
+}
+
+/**
+ * Ensure the string characters have been copied into |segments| in preparation
+ * for passing the string characters to ICU4X.
+ */
+template <typename T>
+static bool EnsureStringChars(JSContext* cx, Handle<T*> segments) {
+  if (segments->hasStringChars()) {
+    return true;
+  }
+
+  Rooted<JSLinearString*> string(cx, segments->getString()->ensureLinear(cx));
+  if (!string) {
     return false;
   }
 
-  *boundaries = segmenter.find(string, index);
+  size_t length = string->length();
+
+  JS::AutoCheckCannotGC nogc;
+  if (string->hasLatin1Chars()) {
+    auto chars = DuplicateString(cx, string->latin1Chars(nogc), length);
+    if (!chars) {
+      return false;
+    }
+    segments->setLatin1Chars(chars.release());
+
+    intl::AddICUCellMemory(segments, length * sizeof(JS::Latin1Char));
+  } else {
+    auto chars = DuplicateString(cx, string->twoByteChars(nogc), length);
+    if (!chars) {
+      return false;
+    }
+    segments->setTwoByteChars(chars.release());
+
+    intl::AddICUCellMemory(segments, length * sizeof(char16_t));
+  }
+  return true;
+}
+
+/**
+ * Create a new ICU4X break iterator instance.
+ */
+template <typename Interface, typename T>
+static auto* CreateBreakIterator(Handle<T*> segments) {
+  void* segmenter = segments->getSegmenter()->getSegmenter();
+  MOZ_ASSERT(segmenter);
+
+  void* chars = segments->getStringChars();
+  MOZ_ASSERT(chars);
+
+  size_t length = segments->getString()->length();
+
+  using Unsigned = typename mozilla::UnsignedStdintTypeForSize<sizeof(
+      typename Interface::Char)>::Type;
+
+  auto* seg = static_cast<const typename Interface::Segmenter*>(segmenter);
+  auto* ch = static_cast<const Unsigned*>(chars);
+  return Interface::create(seg, ch, length);
+}
+
+/**
+ * Ensure |segments| has a break iterator whose current segment index is at most
+ * |index|.
+ */
+template <typename T>
+static bool EnsureBreakIterator(JSContext* cx, Handle<T*> segments,
+                                int32_t index) {
+  if (segments->getBreakIterator()) {
+    // Reuse the break iterator if its current segment index is at most |index|.
+    if (index >= segments->getIndex()) {
+      return true;
+    }
+
+    // Reverse iteration not supported. Destroy the previous break iterator and
+    // start from fresh.
+    DestroyBreakIterator(segments.get());
+
+    // Reset internal state.
+    segments->setBreakIterator(nullptr);
+    segments->setIndex(0);
+  }
+
+  // Ensure the string characters can be passed to ICU4X.
+  if (!EnsureStringChars(cx, segments)) {
+    return false;
+  }
+
+#if defined(MOZ_ICU4X)
+  bool isLatin1 = segments->getString()->hasLatin1Chars();
+
+  // Create a new break iterator based on the granularity and character type.
+  void* brk;
+  switch (segments->getGranularity()) {
+    case SegmenterGranularity::Grapheme: {
+      if (isLatin1) {
+        brk = CreateBreakIterator<GraphemeClusterSegmenterBreakIteratorLatin1>(
+            segments);
+      } else {
+        brk = CreateBreakIterator<GraphemeClusterSegmenterBreakIteratorTwoByte>(
+            segments);
+      }
+      break;
+    }
+    case SegmenterGranularity::Word: {
+      if (isLatin1) {
+        brk = CreateBreakIterator<WordSegmenterBreakIteratorLatin1>(segments);
+      } else {
+        brk = CreateBreakIterator<WordSegmenterBreakIteratorTwoByte>(segments);
+      }
+      break;
+    }
+    case SegmenterGranularity::Sentence: {
+      if (isLatin1) {
+        brk =
+            CreateBreakIterator<SentenceSegmenterBreakIteratorLatin1>(segments);
+      } else {
+        brk = CreateBreakIterator<SentenceSegmenterBreakIteratorTwoByte>(
+            segments);
+      }
+      break;
+    }
+  }
+
+  MOZ_RELEASE_ASSERT(brk);
+  segments->setBreakIterator(brk);
+
+  MOZ_ASSERT(segments->getIndex() == 0, "index is initially zero");
+
   return true;
 #else
   MOZ_CRASH("ICU4X disabled");
@@ -550,6 +853,37 @@ static ArrayObject* CreateBoundaries(JSContext* cx, Boundaries boundaries,
   return result;
 }
 
+template <typename T>
+static ArrayObject* FindSegmentBoundaries(JSContext* cx, Handle<T*> segments,
+                                          int32_t index) {
+  // Ensure break iteration can start at |index|.
+  if (!EnsureBreakIterator(cx, segments, index)) {
+    return nullptr;
+  }
+
+  // Find the actual segment boundaries.
+  Boundaries boundaries{};
+  switch (segments->getGranularity()) {
+    case SegmenterGranularity::Grapheme: {
+      boundaries = GraphemeBoundaries(segments, index);
+      break;
+    }
+    case SegmenterGranularity::Word: {
+      boundaries = WordBoundaries(segments, index);
+      break;
+    }
+    case SegmenterGranularity::Sentence: {
+      boundaries = SentenceBoundaries(segments, index);
+      break;
+    }
+  }
+
+  // Remember the end index of the current boundary segment.
+  segments->setIndex(boundaries.endIndex);
+
+  return CreateBoundaries(cx, boundaries, segments->getGranularity());
+}
+
 bool js::intl_CreateSegmentsObject(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
@@ -575,7 +909,9 @@ bool js::intl_CreateSegmentsObject(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   segments->setSegmenter(segmenter);
+  segments->setGranularity(segmenter->getGranularity());
   segments->setString(string);
+  segments->setIndex(0);
 
   args.rval().setObject(*segments);
   return true;
@@ -600,6 +936,7 @@ bool js::intl_CreateSegmentIterator(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   iterator->setSegmenter(segments->getSegmenter());
+  iterator->setGranularity(segments->getGranularity());
   iterator->setString(segments->getString());
   iterator->setIndex(0);
 
@@ -614,37 +951,12 @@ bool js::intl_FindSegmentBoundaries(JSContext* cx, unsigned argc, Value* vp) {
   Rooted<SegmentsObject*> segments(cx,
                                    &args[0].toObject().as<SegmentsObject>());
 
-  Rooted<JSLinearString*> string(cx, segments->getString()->ensureLinear(cx));
-  if (!string) {
-    return false;
-  }
-
   int32_t index = args[1].toInt32();
   MOZ_ASSERT(index >= 0);
-  MOZ_ASSERT(uint32_t(index) < string->length());
+  MOZ_ASSERT(uint32_t(index) < segments->getString()->length());
 
-  SegmenterGranularity granularity = segments->getSegmenter()->getGranularity();
-
-  Boundaries boundaries{};
-  switch (granularity) {
-    case SegmenterGranularity::Grapheme:
-      if (!GraphemeBoundaries(cx, string, index, &boundaries)) {
-        return false;
-      }
-      break;
-    case SegmenterGranularity::Word:
-      if (!WordBoundaries(cx, string, index, &boundaries)) {
-        return false;
-      }
-      break;
-    case SegmenterGranularity::Sentence:
-      if (!SentenceBoundaries(cx, string, index, &boundaries)) {
-        return false;
-      }
-      break;
-  }
-
-  auto* result = CreateBoundaries(cx, boundaries, granularity);
+  auto* result = FindSegmentBoundaries(
+      cx, static_cast<Handle<SegmentsObject*>>(segments), index);
   if (!result) {
     return false;
   }
@@ -661,39 +973,12 @@ bool js::intl_FindNextSegmentBoundaries(JSContext* cx, unsigned argc,
   Rooted<SegmentIteratorObject*> iterator(
       cx, &args[0].toObject().as<SegmentIteratorObject>());
 
-  Rooted<JSLinearString*> string(cx, iterator->getString()->ensureLinear(cx));
-  if (!string) {
-    return false;
-  }
-
   int32_t index = iterator->getIndex();
   MOZ_ASSERT(index >= 0);
-  MOZ_ASSERT(uint32_t(index) < string->length());
+  MOZ_ASSERT(uint32_t(index) < iterator->getString()->length());
 
-  SegmenterGranularity granularity = iterator->getSegmenter()->getGranularity();
-
-  Boundaries boundaries{};
-  switch (granularity) {
-    case SegmenterGranularity::Grapheme:
-      if (!GraphemeBoundaries(cx, string, index, &boundaries)) {
-        return false;
-      }
-      break;
-    case SegmenterGranularity::Word:
-      if (!WordBoundaries(cx, string, index, &boundaries)) {
-        return false;
-      }
-      break;
-    case SegmenterGranularity::Sentence:
-      if (!SentenceBoundaries(cx, string, index, &boundaries)) {
-        return false;
-      }
-      break;
-  }
-
-  iterator->setIndex(boundaries.endIndex);
-
-  auto* result = CreateBoundaries(cx, boundaries, granularity);
+  auto* result = FindSegmentBoundaries(
+      cx, static_cast<Handle<SegmentIteratorObject*>>(iterator), index);
   if (!result) {
     return false;
   }

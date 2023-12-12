@@ -17,6 +17,10 @@
 struct JS_PUBLIC_API JSContext;
 class JSString;
 
+namespace JS {
+class GCContext;
+}
+
 namespace js {
 
 enum class SegmenterGranularity : int8_t { Grapheme, Word, Sentence };
@@ -29,7 +33,8 @@ class SegmenterObject : public NativeObject {
   static constexpr uint32_t INTERNALS_SLOT = 0;
   static constexpr uint32_t LOCALE_SLOT = 1;
   static constexpr uint32_t GRANULARITY_SLOT = 2;
-  static constexpr uint32_t SLOT_COUNT = 3;
+  static constexpr uint32_t SEGMENTER_SLOT = 3;
+  static constexpr uint32_t SLOT_COUNT = 4;
 
   static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
                 "INTERNALS_SLOT must match self-hosting define for internals "
@@ -60,8 +65,23 @@ class SegmenterObject : public NativeObject {
                  Int32Value(static_cast<int32_t>(granularity)));
   }
 
+  void* getSegmenter() const {
+    const auto& slot = getFixedSlot(SEGMENTER_SLOT);
+    if (slot.isUndefined()) {
+      return nullptr;
+    }
+    return slot.toPrivate();
+  }
+
+  void setSegmenter(void* brk) {
+    setFixedSlot(SEGMENTER_SLOT, PrivateValue(brk));
+  }
+
  private:
   static const ClassSpec classSpec_;
+  static const JSClassOps classOps_;
+
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
 };
 
 class SegmentsObject : public NativeObject {
@@ -70,7 +90,11 @@ class SegmentsObject : public NativeObject {
 
   static constexpr uint32_t SEGMENTER_SLOT = 0;
   static constexpr uint32_t STRING_SLOT = 1;
-  static constexpr uint32_t SLOT_COUNT = 2;
+  static constexpr uint32_t STRING_CHARS_SLOT = 2;
+  static constexpr uint32_t INDEX_SLOT = 3;
+  static constexpr uint32_t GRANULARITY_SLOT = 4;
+  static constexpr uint32_t BREAK_ITERATOR_SLOT = 5;
+  static constexpr uint32_t SLOT_COUNT = 6;
 
   static_assert(STRING_SLOT == INTL_SEGMENTS_STRING_SLOT,
                 "STRING_SLOT must match self-hosting define for string slot");
@@ -96,6 +120,66 @@ class SegmentsObject : public NativeObject {
   }
 
   void setString(JSString* str) { setFixedSlot(STRING_SLOT, StringValue(str)); }
+
+  bool hasStringChars() const {
+    return !getFixedSlot(STRING_CHARS_SLOT).isUndefined();
+  }
+
+  void* getStringChars() const {
+    const auto& slot = getFixedSlot(STRING_CHARS_SLOT);
+    if (slot.isUndefined()) {
+      return nullptr;
+    }
+    return slot.toPrivate();
+  }
+
+  void setLatin1Chars(JS::Latin1Char* chars) {
+    setFixedSlot(STRING_CHARS_SLOT, PrivateValue(chars));
+  }
+
+  void setTwoByteChars(char16_t* chars) {
+    setFixedSlot(STRING_CHARS_SLOT, PrivateValue(chars));
+  }
+
+  int32_t getIndex() const {
+    const auto& slot = getFixedSlot(INDEX_SLOT);
+    if (slot.isUndefined()) {
+      return 0;
+    }
+    return slot.toInt32();
+  }
+
+  void setIndex(int32_t index) { setFixedSlot(INDEX_SLOT, Int32Value(index)); }
+
+  SegmenterGranularity getGranularity() const {
+    const auto& slot = getFixedSlot(GRANULARITY_SLOT);
+    if (slot.isUndefined()) {
+      return SegmenterGranularity::Grapheme;
+    }
+    return static_cast<SegmenterGranularity>(slot.toInt32());
+  }
+
+  void setGranularity(SegmenterGranularity granularity) {
+    setFixedSlot(GRANULARITY_SLOT,
+                 Int32Value(static_cast<int32_t>(granularity)));
+  }
+
+  void* getBreakIterator() const {
+    const auto& slot = getFixedSlot(BREAK_ITERATOR_SLOT);
+    if (slot.isUndefined()) {
+      return nullptr;
+    }
+    return slot.toPrivate();
+  }
+
+  void setBreakIterator(void* brk) {
+    setFixedSlot(BREAK_ITERATOR_SLOT, PrivateValue(brk));
+  }
+
+ private:
+  static const JSClassOps classOps_;
+
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
 };
 
 class SegmentIteratorObject : public NativeObject {
@@ -104,8 +188,11 @@ class SegmentIteratorObject : public NativeObject {
 
   static constexpr uint32_t SEGMENTER_SLOT = 0;
   static constexpr uint32_t STRING_SLOT = 1;
-  static constexpr uint32_t INDEX_SLOT = 2;
-  static constexpr uint32_t SLOT_COUNT = 3;
+  static constexpr uint32_t STRING_CHARS_SLOT = 2;
+  static constexpr uint32_t INDEX_SLOT = 3;
+  static constexpr uint32_t GRANULARITY_SLOT = 4;
+  static constexpr uint32_t BREAK_ITERATOR_SLOT = 5;
+  static constexpr uint32_t SLOT_COUNT = 6;
 
   static_assert(STRING_SLOT == INTL_SEGMENT_ITERATOR_STRING_SLOT,
                 "STRING_SLOT must match self-hosting define for string slot");
@@ -135,6 +222,26 @@ class SegmentIteratorObject : public NativeObject {
 
   void setString(JSString* str) { setFixedSlot(STRING_SLOT, StringValue(str)); }
 
+  bool hasStringChars() const {
+    return !getFixedSlot(STRING_CHARS_SLOT).isUndefined();
+  }
+
+  void* getStringChars() const {
+    const auto& slot = getFixedSlot(STRING_CHARS_SLOT);
+    if (slot.isUndefined()) {
+      return nullptr;
+    }
+    return slot.toPrivate();
+  }
+
+  void setLatin1Chars(JS::Latin1Char* chars) {
+    setFixedSlot(STRING_CHARS_SLOT, PrivateValue(chars));
+  }
+
+  void setTwoByteChars(char16_t* chars) {
+    setFixedSlot(STRING_CHARS_SLOT, PrivateValue(chars));
+  }
+
   int32_t getIndex() const {
     const auto& slot = getFixedSlot(INDEX_SLOT);
     if (slot.isUndefined()) {
@@ -144,6 +251,36 @@ class SegmentIteratorObject : public NativeObject {
   }
 
   void setIndex(int32_t index) { setFixedSlot(INDEX_SLOT, Int32Value(index)); }
+
+  SegmenterGranularity getGranularity() const {
+    const auto& slot = getFixedSlot(GRANULARITY_SLOT);
+    if (slot.isUndefined()) {
+      return SegmenterGranularity::Grapheme;
+    }
+    return static_cast<SegmenterGranularity>(slot.toInt32());
+  }
+
+  void setGranularity(SegmenterGranularity granularity) {
+    setFixedSlot(GRANULARITY_SLOT,
+                 Int32Value(static_cast<int32_t>(granularity)));
+  }
+
+  void* getBreakIterator() const {
+    const auto& slot = getFixedSlot(BREAK_ITERATOR_SLOT);
+    if (slot.isUndefined()) {
+      return nullptr;
+    }
+    return slot.toPrivate();
+  }
+
+  void setBreakIterator(void* brk) {
+    setFixedSlot(BREAK_ITERATOR_SLOT, PrivateValue(brk));
+  }
+
+ private:
+  static const JSClassOps classOps_;
+
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
 };
 
 /**
