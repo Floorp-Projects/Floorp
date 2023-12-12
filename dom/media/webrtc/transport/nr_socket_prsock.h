@@ -270,7 +270,8 @@ class NrUdpSocketIpc : public NrSocketIpc {
 
   DISALLOW_COPY_ASSIGN(NrUdpSocketIpc);
 
-  nsresult SetAddress();  // Set the local address from parent info.
+  nsresult SetAddress()
+      MOZ_REQUIRES(monitor_);  // Set the local address from parent info.
 
   // Main or private thread executors of the NrSocketBase APIs
   void create_i(const nsACString& host, const uint16_t port);
