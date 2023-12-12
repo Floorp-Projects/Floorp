@@ -10,10 +10,7 @@
 <div id="parent"></div>
 
 <script>
-  let test;
   let result = [];
-
-  window.onload = startTest;
 
   function createInlineModuleScript(source) {
     let parent = document.getElementById("parent");
@@ -23,8 +20,8 @@
     parent.appendChild(script);
   }
 
-  function startTest() {
-    test = async_test("Execution order of non-parser created inline module scripts");
+  promise_test(async test => {
+    await new Promise(resolve => window.onload = resolve);
 
     createInlineModuleScript(`
       import {} from "./support/empty_module.js";
@@ -35,12 +32,9 @@
       result.push(2);
     `);
 
-    setTimeout(checkResult, 1);
-  }
-
-  function checkResult() {
+    await test.step_wait(() => result.length == 2, "Wait for both scripts to be executed", 1000);
     test.step(() => assert_array_equals(result, [2, 1],
                                         "Check expected execution order"));
     test.done();
-  }
+  }, "Execution order of non-parser created inline module scripts");
 </script>
