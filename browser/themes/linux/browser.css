@@ -7,10 +7,6 @@
 
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-:root {
-  --sidebar-border-color: ThreeDShadow;
-}
-
 /**
  * We intentionally do not include browser-custom-colors.css,
  * instead choosing to fall back to system colours and transparencies

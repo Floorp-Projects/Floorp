@@ -112,6 +112,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     nscolor mComboBoxText = kBlack;
     ColorPair mField;
     ColorPair mWindow;
+    ColorPair mSidebar;
+    nscolor mSidebarBorder = kBlack;
 
     nscolor mMozWindowActiveBorder = kBlack;
     nscolor mMozWindowInactiveBorder = kBlack;

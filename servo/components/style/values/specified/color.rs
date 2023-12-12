@@ -310,9 +310,15 @@ pub enum SystemColor {
     /// Text color of disabled text on toolbars.
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozMacDisabledtoolbartext,
-    /// The background of a macOS sidebar.
+    /// The background of a sidebar.
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
-    MozMacSidebar,
+    MozSidebar,
+    /// The foreground color of a sidebar.
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    MozSidebartext,
+    /// The border color of a sidebar.
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    MozSidebarborder,
 
     /// Theme accent color.
     /// https://drafts.csswg.org/css-color-4/#valdef-system-color-accentcolor

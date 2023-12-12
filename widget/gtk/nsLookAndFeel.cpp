@@ -719,6 +719,15 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::Fieldtext:
       aColor = mField.mFg;
       break;
+    case ColorID::MozSidebar:
+      aColor = mSidebar.mBg;
+      break;
+    case ColorID::MozSidebartext:
+      aColor = mSidebar.mFg;
+      break;
+    case ColorID::MozSidebarborder:
+      aColor = mSidebarBorder;
+      break;
     case ColorID::MozButtonhoverface:
       aColor = mButtonHover.mBg;
       break;
@@ -2025,6 +2034,7 @@ void nsLookAndFeel::PerThemeData::Init() {
   mField.mBg = GDK_RGBA_TO_NS_RGBA(bgColor);
   gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
   mField.mFg = GDK_RGBA_TO_NS_RGBA(color);
+  mSidebar = mField;
 
   // Selected text and background
   {
@@ -2143,6 +2153,7 @@ void nsLookAndFeel::PerThemeData::Init() {
     style = GetStyleContext(MOZ_GTK_FRAME);
     GetBorderColors(style, &mFrameOuterLightBorder, &mFrameInnerDarkBorder);
   }
+  mSidebarBorder = mFrameInnerDarkBorder;
 
   // Some themes have a unified menu bar, and support window dragging on it
   gboolean supports_menubar_drag = FALSE;
