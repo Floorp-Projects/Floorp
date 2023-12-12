@@ -359,11 +359,12 @@ extensions.quarantined_domains:
       Number of domains listed in the quarantined domains list pref for the client during
       this session.
     lifetime: application
-    expires: 123
+    expires: 130
     notification_emails:
       - addons-dev-internal@mozilla.com
     bugs:
       - https://bugzilla.mozilla.org/1840615/
+      - https://bugzilla.mozilla.org/1866199/
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1840615
     data_sensitivity:
@@ -375,11 +376,12 @@ extensions.quarantined_domains:
     description: >
       SHA1 cryptographic hash of the quarantined domains string pref.
     lifetime: application
-    expires: 123
+    expires: 130
     notification_emails:
       - addons-dev-internal@mozilla.com
     bugs:
       - https://bugzilla.mozilla.org/1841683/
+      - https://bugzilla.mozilla.org/1866199/
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1840615#c2
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841683
@@ -396,11 +398,12 @@ extensions.quarantined_domains:
       startup and so this metric lifetime can be set to application and expect
       it to be always set to the value got from the RemoteSettings collection.
     lifetime: application
-    expires: 123
+    expires: 130
     notification_emails:
       - addons-dev-internal@mozilla.com
     bugs:
       - https://bugzilla.mozilla.org/1841683/
+      - https://bugzilla.mozilla.org/1866199/
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841683
     data_sensitivity:
