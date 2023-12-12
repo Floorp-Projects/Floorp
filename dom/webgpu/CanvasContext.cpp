@@ -16,6 +16,7 @@
 #include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/WebRenderCanvasRenderer.h"
 #include "mozilla/StaticPrefs_privacy.h"
+#include "mozilla/SVGObserverUtils.h"
 #include "ipc/WebGPUChild.h"
 
 namespace mozilla {
@@ -133,6 +134,9 @@ void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aConfig) {
 
   mTexture->mTargetContext = this;
   mBridge = aConfig.mDevice->GetBridge();
+  if (mCanvasElement) {
+    mWaitingCanvasRendererInitialized = true;
+  }
 
   ForceNewFrame();
 }
@@ -183,14 +187,18 @@ RefPtr<Texture> CanvasContext::GetCurrentTexture(ErrorResult& aRv) {
 }
 
 void CanvasContext::MaybeQueueSwapChainPresent() {
-  if (mPendingSwapChainPresent) {
+  if (mPendingSwapChainPresent || mWaitingCanvasRendererInitialized) {
     return;
   }
 
   mPendingSwapChainPresent = true;
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(
-      NewCancelableRunnableMethod("CanvasContext::SwapChainPresent", this,
-                                  &CanvasContext::SwapChainPresent)));
+
+  if (mCanvasElement) {
+    SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
+    mCanvasElement->InvalidateCanvasContent(nullptr);
+  } else if (mOffscreenCanvas) {
+    mOffscreenCanvas->QueueCommitToCompositor();
+  }
 }
 
 void CanvasContext::SwapChainPresent() {
@@ -241,6 +249,9 @@ bool CanvasContext::InitializeCanvasRenderer(
 
   aRenderer->Initialize(data);
   aRenderer->SetDirty();
+
+  mWaitingCanvasRendererInitialized = false;
+
   return true;
 }
 
@@ -308,6 +319,17 @@ already_AddRefed<mozilla::gfx::SourceSurface> CanvasContext::GetSurfaceSnapshot(
   return cm->GetSnapshot(cm->Id(), mBridge->Id(), mRemoteTextureOwnerId,
                          mGfxFormat, /* aPremultiply */ false,
                          /* aYFlip */ false);
+}
+
+Maybe<layers::SurfaceDescriptor> CanvasContext::GetFrontBuffer(
+    WebGLFramebufferJS*, const bool) {
+  if (mPendingSwapChainPresent) {
+    SwapChainPresent();
+    MOZ_ASSERT(!mPendingSwapChainPresent);
+  }
+  // With remote texture push callback, a new pushed remote texture is notifiled
+  // from RemoteTextureMap to WebRenderImageHost.
+  return Nothing();
 }
 
 void CanvasContext::ForceNewFrame() {
