@@ -282,7 +282,24 @@ FxAccountsClient.prototype = {
     }
     return this._request("/oauth/authorization", "POST", credentials, body);
   },
-
+  /**
+   * Exchanges an OAuth authorization code with a refresh token, access tokens and an optional JWE representing scoped keys
+   *
+   * @param String code: OAuth authorization code
+   * @param String verifier: OAuth PKCE verifier
+   * @param String clientId: OAuth client ID
+   *
+   * @returns { Object } object containing `refresh_token`, `access_token` and `keys_jwe`
+   **/
+  async oauthToken(code, verifier, clientId) {
+    const body = {
+      grant_type: "authorization_code",
+      code,
+      client_id: clientId,
+      code_verifier: verifier,
+    };
+    return this._request("/oauth/token", "POST", null, body);
+  },
   /**
    * Destroy an OAuth access token or refresh token.
    *

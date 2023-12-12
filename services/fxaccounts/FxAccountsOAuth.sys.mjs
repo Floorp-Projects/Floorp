@@ -2,6 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  jwcrypto: "resource://services-crypto/jwcrypto.sys.mjs",
+});
+
 import {
   FX_OAUTH_CLIENT_ID,
   SCOPE_PROFILE,
@@ -11,6 +17,12 @@ import {
 
 const VALID_SCOPES = [SCOPE_PROFILE, SCOPE_PROFILE_WRITE, SCOPE_OLD_SYNC];
 
+export const ERROR_INVALID_SCOPES = "INVALID_SCOPES";
+export const ERROR_INVALID_STATE = "INVALID_STATE";
+export const ERROR_SYNC_SCOPE_NOT_GRANTED = "ERROR_SYNC_SCOPE_NOT_GRANTED";
+export const ERROR_NO_KEYS_JWE = "ERROR_NO_KEYS_JWE";
+export const ERROR_OAUTH_FLOW_ABANDONED = "ERROR_OAUTH_FLOW_ABANDONED";
+
 /**
  * Handles all logic and state related to initializing, and completing OAuth flows
  * with FxA
@@ -19,8 +31,15 @@ const VALID_SCOPES = [SCOPE_PROFILE, SCOPE_PROFILE_WRITE, SCOPE_OLD_SYNC];
  */
 export class FxAccountsOAuth {
   #flow;
-  constructor() {
+  #fxaClient;
+  /**
+   * Creates a new FxAccountsOAuth
+   *
+   * @param { Object } fxaClient: The fxa client used to send http request to the oauth server
+   */
+  constructor(fxaClient) {
     this.#flow = {};
+    this.#fxaClient = fxaClient;
   }
 
   /**
@@ -56,6 +75,13 @@ export class FxAccountsOAuth {
     return this.#flow[state];
   }
 
+  /* Returns the number of flows, used by tests
+   *
+   */
+  numOfFlows() {
+    return Object.keys(this.#flow).length;
+  }
+
   /**
    * Begins an OAuth flow, to be completed with a an OAuth code and state.
    *
@@ -81,10 +107,10 @@ export class FxAccountsOAuth {
    */
   async beginOAuthFlow(scopes) {
     if (
-      !Array.isArray(scopes) &&
-      scopes.some(scope => !VALID_SCOPES.contains(scope))
+      !Array.isArray(scopes) ||
+      scopes.some(scope => !VALID_SCOPES.includes(scope))
     ) {
-      throw new Error("Invalid scopes");
+      throw new Error(ERROR_INVALID_SCOPES);
     }
     const queryParams = {
       client_id: FX_OAUTH_CLIENT_ID,
@@ -136,8 +162,57 @@ export class FxAccountsOAuth {
     this.addFlow(stateB64, {
       key: privateKey,
       verifier: codeVerifierB64,
-      requestedScopes: scopes,
+      requestedScopes: scopes.join(" "),
     });
     return queryParams;
+  }
+
+  /** Completes an OAuth flow and invalidates any other ongoing flows
+   * @param { string } code: OAuth authorization code provided by running an OAuth flow
+   * @param { string } state: The state first provided by `beginOAuthFlow`, then roundtripped through the server
+   *
+   * @returns { Object }: Returns an object representing the result of completing the oauth flow.
+   *   The object includes the following:
+   *     - 'scopedKeys': The encryption keys provided by the server, already decrypted
+   *     - 'refreshToken': The refresh token provided by the server
+   *     - 'accessToken': The access token provided by the server
+   * */
+  async completeOAuthFlow(code, state) {
+    const flow = this.getFlow(state);
+    if (!flow) {
+      throw new Error(ERROR_INVALID_STATE);
+    }
+    const { key, verifier, requestedScopes } = flow;
+    const { keys_jwe, refresh_token, access_token, scope } =
+      await this.#fxaClient.oauthToken(code, verifier, FX_OAUTH_CLIENT_ID);
+    if (
+      requestedScopes.includes(SCOPE_OLD_SYNC) &&
+      !scope.includes(SCOPE_OLD_SYNC)
+    ) {
+      throw new Error(ERROR_SYNC_SCOPE_NOT_GRANTED);
+    }
+    if (scope.includes(SCOPE_OLD_SYNC) && !keys_jwe) {
+      throw new Error(ERROR_NO_KEYS_JWE);
+    }
+    let scopedKeys;
+    if (keys_jwe) {
+      scopedKeys = JSON.parse(
+        new TextDecoder().decode(await lazy.jwcrypto.decryptJWE(keys_jwe, key))
+      );
+    }
+
+    // We make sure no other flow snuck in, and completed before we did
+    if (!this.getFlow(state)) {
+      throw new Error(ERROR_OAUTH_FLOW_ABANDONED);
+    }
+
+    // Clear all flows, so any in-flight or future flows trigger an error as the browser
+    // would have been signed in
+    this.clearAllFlows();
+    return {
+      scopedKeys,
+      refreshToken: refresh_token,
+      accessToken: access_token,
+    };
   }
 }
