@@ -1393,30 +1393,24 @@ static void JSONRootCheck(const Json::Value& aRoot,
       EXPECT_HAS_JSON(counter["name"], String);
       EXPECT_HAS_JSON(counter["category"], String);
       EXPECT_HAS_JSON(counter["description"], String);
-      GET_JSON(sampleGroups, counter["sample_groups"], Array);
-      for (const Json::Value& sampleGroup : sampleGroups) {
-        ASSERT_TRUE(sampleGroup.isObject());
-        EXPECT_HAS_JSON(sampleGroup["id"], UInt);
-
-        GET_JSON(samples, sampleGroup["samples"], Object);
-        GET_JSON(samplesSchema, samples["schema"], Object);
-        EXPECT_GE(samplesSchema.size(), 3u);
-        GET_JSON_VALUE(samplesTime, samplesSchema["time"], UInt);
-        GET_JSON_VALUE(samplesNumber, samplesSchema["number"], UInt);
-        GET_JSON_VALUE(samplesCount, samplesSchema["count"], UInt);
-        GET_JSON(samplesData, samples["data"], Array);
-        double previousTime = 0.0;
-        for (const Json::Value& sample : samplesData) {
-          ASSERT_TRUE(sample.isArray());
-          GET_JSON_VALUE(time, sample[samplesTime], Double);
-          EXPECT_GE(time, previousTime);
-          previousTime = time;
-          if (sample.isValidIndex(samplesNumber)) {
-            EXPECT_HAS_JSON(sample[samplesNumber], UInt64);
-          }
-          if (sample.isValidIndex(samplesCount)) {
-            EXPECT_HAS_JSON(sample[samplesCount], Int64);
-          }
+      GET_JSON(samples, counter["samples"], Object);
+      GET_JSON(samplesSchema, samples["schema"], Object);
+      EXPECT_GE(samplesSchema.size(), 3u);
+      GET_JSON_VALUE(samplesTime, samplesSchema["time"], UInt);
+      GET_JSON_VALUE(samplesNumber, samplesSchema["number"], UInt);
+      GET_JSON_VALUE(samplesCount, samplesSchema["count"], UInt);
+      GET_JSON(samplesData, samples["data"], Array);
+      double previousTime = 0.0;
+      for (const Json::Value& sample : samplesData) {
+        ASSERT_TRUE(sample.isArray());
+        GET_JSON_VALUE(time, sample[samplesTime], Double);
+        EXPECT_GE(time, previousTime);
+        previousTime = time;
+        if (sample.isValidIndex(samplesNumber)) {
+          EXPECT_HAS_JSON(sample[samplesNumber], UInt64);
+        }
+        if (sample.isValidIndex(samplesCount)) {
+          EXPECT_HAS_JSON(sample[samplesCount], Int64);
         }
       }
     }
@@ -3572,56 +3566,42 @@ TEST(GeckoProfiler, Counters)
       if (name == "TestCounter") {
         EXPECT_EQ_JSON(counter["category"], String, COUNTER_NAME);
         EXPECT_EQ_JSON(counter["description"], String, COUNTER_DESCRIPTION);
-        GET_JSON(sampleGroups, counter["sample_groups"], Array);
-        for (const Json::Value& sampleGroup : sampleGroups) {
-          ASSERT_TRUE(sampleGroup.isObject());
-          EXPECT_EQ_JSON(sampleGroup["id"], UInt, 0u);
-
-          GET_JSON(samples, sampleGroup["samples"], Object);
-          GET_JSON(samplesSchema, samples["schema"], Object);
-          EXPECT_GE(samplesSchema.size(), 3u);
-          GET_JSON_VALUE(samplesNumber, samplesSchema["number"], UInt);
-          GET_JSON_VALUE(samplesCount, samplesSchema["count"], UInt);
-          GET_JSON(samplesData, samples["data"], Array);
-          for (const Json::Value& sample : samplesData) {
-            ASSERT_TRUE(sample.isArray());
-            ASSERT_LT(nextExpectedTestCounter, expectedTestCountersCount);
-            EXPECT_EQ_JSON(
-                sample[samplesNumber], UInt64,
-                expectedTestCounters[nextExpectedTestCounter].mNumber);
-            EXPECT_EQ_JSON(
-                sample[samplesCount], Int64,
-                expectedTestCounters[nextExpectedTestCounter].mCount);
-            ++nextExpectedTestCounter;
-          }
+        GET_JSON(samples, counter["samples"], Object);
+        GET_JSON(samplesSchema, samples["schema"], Object);
+        EXPECT_GE(samplesSchema.size(), 3u);
+        GET_JSON_VALUE(samplesNumber, samplesSchema["number"], UInt);
+        GET_JSON_VALUE(samplesCount, samplesSchema["count"], UInt);
+        GET_JSON(samplesData, samples["data"], Array);
+        for (const Json::Value& sample : samplesData) {
+          ASSERT_TRUE(sample.isArray());
+          ASSERT_LT(nextExpectedTestCounter, expectedTestCountersCount);
+          EXPECT_EQ_JSON(sample[samplesNumber], UInt64,
+                         expectedTestCounters[nextExpectedTestCounter].mNumber);
+          EXPECT_EQ_JSON(sample[samplesCount], Int64,
+                         expectedTestCounters[nextExpectedTestCounter].mCount);
+          ++nextExpectedTestCounter;
         }
       } else if (name == "TestCounter2") {
         EXPECT_TRUE(expectCounter2);
 
         EXPECT_EQ_JSON(counter["category"], String, COUNTER_NAME2);
         EXPECT_EQ_JSON(counter["description"], String, COUNTER_DESCRIPTION2);
-        GET_JSON(sampleGroups, counter["sample_groups"], Array);
-        for (const Json::Value& sampleGroup : sampleGroups) {
-          ASSERT_TRUE(sampleGroup.isObject());
-          EXPECT_EQ_JSON(sampleGroup["id"], UInt, 0u);
-
-          GET_JSON(samples, sampleGroup["samples"], Object);
-          GET_JSON(samplesSchema, samples["schema"], Object);
-          EXPECT_GE(samplesSchema.size(), 3u);
-          GET_JSON_VALUE(samplesNumber, samplesSchema["number"], UInt);
-          GET_JSON_VALUE(samplesCount, samplesSchema["count"], UInt);
-          GET_JSON(samplesData, samples["data"], Array);
-          for (const Json::Value& sample : samplesData) {
-            ASSERT_TRUE(sample.isArray());
-            ASSERT_LT(nextExpectedTestCounter2, expectedTestCounters2Count);
-            EXPECT_EQ_JSON(
-                sample[samplesNumber], UInt64,
-                expectedTestCounters2[nextExpectedTestCounter2].mNumber);
-            EXPECT_EQ_JSON(
-                sample[samplesCount], Int64,
-                expectedTestCounters2[nextExpectedTestCounter2].mCount);
-            ++nextExpectedTestCounter2;
-          }
+        GET_JSON(samples, counter["samples"], Object);
+        GET_JSON(samplesSchema, samples["schema"], Object);
+        EXPECT_GE(samplesSchema.size(), 3u);
+        GET_JSON_VALUE(samplesNumber, samplesSchema["number"], UInt);
+        GET_JSON_VALUE(samplesCount, samplesSchema["count"], UInt);
+        GET_JSON(samplesData, samples["data"], Array);
+        for (const Json::Value& sample : samplesData) {
+          ASSERT_TRUE(sample.isArray());
+          ASSERT_LT(nextExpectedTestCounter2, expectedTestCounters2Count);
+          EXPECT_EQ_JSON(
+              sample[samplesNumber], UInt64,
+              expectedTestCounters2[nextExpectedTestCounter2].mNumber);
+          EXPECT_EQ_JSON(
+              sample[samplesCount], Int64,
+              expectedTestCounters2[nextExpectedTestCounter2].mCount);
+          ++nextExpectedTestCounter2;
         }
       }
     }

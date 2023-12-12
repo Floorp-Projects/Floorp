@@ -948,15 +948,13 @@ void ProfileBuffer::StreamProfilerOverheadToJSON(
   });
 }
 
-struct CounterKeyedSample {
+struct CounterSample {
   double mTime;
   uint64_t mNumber;
   int64_t mCount;
 };
 
-using CounterKeyedSamples = Vector<CounterKeyedSample>;
-
-using CounterMap = HashMap<uint64_t, CounterKeyedSamples>;
+using CounterSamples = Vector<CounterSample>;
 
 // HashMap lookup, if not found, a default value is inserted.
 // Returns reference to (existing or new) value inside the HashMap.
@@ -993,41 +991,38 @@ void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
     // Valid sequence in the buffer:
     // CounterID
     // Time
-    // ( CounterKey Count Number? )*
+    // ( Count Number? )*
     //
     // And the JSON (example):
     // "counters": {
     //  "name": "malloc",
     //  "category": "Memory",
     //  "description": "Amount of allocated memory",
-    //  "sample_groups": {
-    //   "id": 0,
-    //   "samples": {
-    //    "schema": {"time": 0, "number": 1, "count": 2},
-    //    "data": [
-    //     [
-    //      16117.033968000002,
-    //      2446216,
-    //      6801320
-    //     ],
-    //     [
-    //      16118.037638,
-    //      2446216,
-    //      6801320
-    //     ],
+    //  "samples": {
+    //   "schema": {"time": 0, "count": 1, "number": 2},
+    //   "data": [
+    //    [
+    //     16117.033968000002,
+    //     2446216,
+    //     6801320
     //    ],
-    //   }
-    //  }
-    // },
+    //    [
+    //     16118.037638,
+    //     2446216,
+    //     6801320
+    //    ],
+    //   ],
+    //  },
+    // }
 
     // Build the map of counters and populate it
-    HashMap<void*, CounterMap> counters;
+    HashMap<void*, CounterSamples> counters;
 
     while (e.Has()) {
       // skip all non-Counters, including if we start in the middle of a counter
       if (e.Get().IsCounterId()) {
         void* id = e.Get().GetPtr();
-        CounterMap& counter = LookupOrAdd(counters, id);
+        CounterSamples& data = LookupOrAdd(counters, id);
         e.Next();
         if (!e.Has() || !e.Get().IsTime()) {
           ERROR_AND_CONTINUE("expected a Time entry");
@@ -1035,25 +1030,20 @@ void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
         double time = e.Get().GetDouble();
         e.Next();
         if (time >= aSinceTime) {
-          while (e.Has() && e.Get().IsCounterKey()) {
-            uint64_t key = e.Get().GetUint64();
-            CounterKeyedSamples& data = LookupOrAdd(counter, key);
-            e.Next();
-            if (!e.Has() || !e.Get().IsCount()) {
-              ERROR_AND_CONTINUE("expected a Count entry");
-            }
-            int64_t count = e.Get().GetUint64();
-            e.Next();
-            uint64_t number;
-            if (!e.Has() || !e.Get().IsNumber()) {
-              number = 0;
-            } else {
-              number = e.Get().GetInt64();
-              e.Next();
-            }
-            CounterKeyedSample sample = {time, number, count};
-            MOZ_RELEASE_ASSERT(data.append(sample));
+          if (!e.Has() || !e.Get().IsCount()) {
+            ERROR_AND_CONTINUE("expected a Count entry");
           }
+          int64_t count = e.Get().GetUint64();
+          e.Next();
+          uint64_t number;
+          if (!e.Has() || !e.Get().IsNumber()) {
+            number = 0;
+          } else {
+            number = e.Get().GetInt64();
+            e.Next();
+          }
+          CounterSample sample = {time, number, count};
+          MOZ_RELEASE_ASSERT(data.append(sample));
         } else {
           // skip counter sample - only need to skip the initial counter
           // id, then let the loop at the top skip the rest
@@ -1062,14 +1052,18 @@ void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
         e.Next();
       }
     }
-    // we have a map of a map of counter entries; dump them to JSON
+    // we have a map of counter entries; dump them to JSON
     if (counters.count() == 0) {
       return;
     }
 
     aWriter.StartArrayProperty("counters");
     for (auto iter = counters.iter(); !iter.done(); iter.next()) {
-      CounterMap& counter = iter.get().value();
+      CounterSamples& samples = iter.get().value();
+      size_t size = samples.length();
+      if (size == 0) {
+        continue;
+      }
       const BaseProfilerCount* base_counter =
           static_cast<const BaseProfilerCount*>(iter.get().key());
 
@@ -1080,70 +1074,51 @@ void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
       aWriter.StringProperty("description",
                              MakeStringSpan(base_counter->mDescription));
 
-      aWriter.StartArrayProperty("sample_groups");
-      for (auto counter_iter = counter.iter(); !counter_iter.done();
-           counter_iter.next()) {
-        CounterKeyedSamples& samples = counter_iter.get().value();
-        uint64_t key = counter_iter.get().key();
-
-        size_t size = samples.length();
-        if (size == 0) {
-          continue;
+      bool hasNumber = false;
+      for (size_t i = 0; i < size; i++) {
+        if (samples[i].mNumber != 0) {
+          hasNumber = true;
+          break;
         }
-
-        bool hasNumber = false;
-        for (size_t i = 0; i < size; i++) {
-          if (samples[i].mNumber != 0) {
-            hasNumber = true;
-            break;
-          }
-        }
-
-        aWriter.StartObjectElement();
-        {
-          aWriter.IntProperty("id", static_cast<int64_t>(key));
-          aWriter.StartObjectProperty("samples");
-          {
-            JSONSchemaWriter schema(aWriter);
-            schema.WriteField("time");
-            schema.WriteField("count");
-            if (hasNumber) {
-              schema.WriteField("number");
-            }
-          }
-
-          aWriter.StartArrayProperty("data");
-          uint64_t previousNumber = 0;
-          int64_t previousCount = 0;
-          for (size_t i = 0; i < size; i++) {
-            // Encode as deltas, and only encode if different than the last
-            // sample
-            if (i == 0 || samples[i].mNumber != previousNumber ||
-                samples[i].mCount != previousCount) {
-              MOZ_ASSERT(i == 0 || samples[i].mTime >= samples[i - 1].mTime);
-              MOZ_ASSERT(samples[i].mNumber >= previousNumber);
-              MOZ_ASSERT(samples[i].mNumber - previousNumber <=
-                         uint64_t(std::numeric_limits<int64_t>::max()));
-
-              AutoArraySchemaWriter writer(aWriter);
-              writer.TimeMsElement(TIME, samples[i].mTime);
-              writer.IntElement(COUNT, samples[i].mCount - previousCount);
-              if (hasNumber) {
-                writer.IntElement(
-                    NUMBER,
-                    static_cast<int64_t>(samples[i].mNumber - previousNumber));
-              }
-              previousNumber = samples[i].mNumber;
-              previousCount = samples[i].mCount;
-            }
-          }
-          aWriter.EndArray();   // data
-          aWriter.EndObject();  // samples
-        }
-        aWriter.EndObject();  // sample_groups item
       }
-      aWriter.EndArray();  // sample groups
-      aWriter.End();       // for each counter
+
+      aWriter.StartObjectProperty("samples");
+      {
+        JSONSchemaWriter schema(aWriter);
+        schema.WriteField("time");
+        schema.WriteField("count");
+        if (hasNumber) {
+          schema.WriteField("number");
+        }
+      }
+
+      aWriter.StartArrayProperty("data");
+      uint64_t previousNumber = 0;
+      int64_t previousCount = 0;
+      for (size_t i = 0; i < size; i++) {
+        // Encode as deltas, and only encode if different than the last
+        // sample
+        if (i == 0 || samples[i].mNumber != previousNumber ||
+            samples[i].mCount != previousCount) {
+          MOZ_ASSERT(i == 0 || samples[i].mTime >= samples[i - 1].mTime);
+          MOZ_ASSERT(samples[i].mNumber >= previousNumber);
+          MOZ_ASSERT(samples[i].mNumber - previousNumber <=
+                     uint64_t(std::numeric_limits<int64_t>::max()));
+
+          AutoArraySchemaWriter writer(aWriter);
+          writer.TimeMsElement(TIME, samples[i].mTime);
+          writer.IntElement(COUNT, samples[i].mCount - previousCount);
+          if (hasNumber) {
+            writer.IntElement(NUMBER, static_cast<int64_t>(samples[i].mNumber -
+                                                           previousNumber));
+          }
+          previousNumber = samples[i].mNumber;
+          previousCount = samples[i].mCount;
+        }
+      }
+      aWriter.EndArray();   // data
+      aWriter.EndObject();  // samples
+      aWriter.End();        // for each counter
     }
     aWriter.EndArray();  // counters
   });
@@ -1261,7 +1236,6 @@ bool ProfileBuffer::DuplicateLastSample(BaseProfilerThreadId aThreadId,
               ProfileBufferEntry::Time(
                   (TimeStamp::Now() - aProcessStartTime).ToMilliseconds()));
           break;
-        case ProfileBufferEntry::Kind::CounterKey:
         case ProfileBufferEntry::Kind::Number:
         case ProfileBufferEntry::Kind::Count:
         case ProfileBufferEntry::Kind::Responsiveness:

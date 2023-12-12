@@ -43,7 +43,6 @@ static constexpr size_t ProfileBufferEntryNumChars = 8;
   MACRO(TimeBeforeCompactStack, double, sizeof(double))           \
   MACRO(TimeBeforeSameSample, double, sizeof(double))             \
   MACRO(CounterId, void*, sizeof(void*))                          \
-  MACRO(CounterKey, uint64_t, sizeof(uint64_t))                   \
   MACRO(Number, uint64_t, sizeof(uint64_t))                       \
   MACRO(Count, int64_t, sizeof(int64_t))                          \
   MACRO(ProfilerOverheadTime, double, sizeof(double))             \
