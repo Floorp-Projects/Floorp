@@ -1324,8 +1324,9 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       const delta = (newRadiusPx - origRadius) * ratio;
       const newRadius = `${round(value + delta, unit)}${unit}`;
 
+      const position = cx !== "" ? ` at ${cx} ${cy}` : "";
       const circleDef =
-        `circle(${newRadius} at ${cx} ${cy}) ${this.geometryBox}`.trim();
+        `circle(${newRadius}${position}) ${this.geometryBox}`.trim();
 
       this.emit("highlighter-event", {
         type: "shape-change",
@@ -1410,6 +1411,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       pageY
     );
     const { rx, ry, cx, cy } = this.coordUnits;
+    const position = cx !== "" ? ` at ${cx} ${cy}` : "";
 
     if (point === "center") {
       const { unitX, unitY, valueX, valueY, ratioX, ratioY, x, y } =
@@ -1433,7 +1435,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       const newRadius = `${round(value + delta, unit)}${unit}`;
 
       const ellipseDef =
-        `ellipse(${newRadius} ${ry} at ${cx} ${cy}) ${this.geometryBox}`.trim();
+        `ellipse(${newRadius} ${ry}${position}) ${this.geometryBox}`.trim();
 
       this.emit("highlighter-event", {
         type: "shape-change",
@@ -1447,7 +1449,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       const newRadius = `${round(value + delta, unit)}${unit}`;
 
       const ellipseDef =
-        `ellipse(${rx} ${newRadius} at ${cx} ${cy}) ${this.geometryBox}`.trim();
+        `ellipse(${rx} ${newRadius}${position}) ${this.geometryBox}`.trim();
 
       this.emit("highlighter-event", {
         type: "shape-change",
