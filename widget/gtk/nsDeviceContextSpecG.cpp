@@ -276,6 +276,12 @@ gboolean nsDeviceContextSpecGTK::PrinterEnumerator(GtkPrinter* aPrinter,
                                                    gpointer aData) {
   nsDeviceContextSpecGTK* spec = (nsDeviceContextSpecGTK*)aData;
 
+  if (spec->mHasEnumerationFoundAMatch) {
+    // We're already done, but we're letting the enumeration run its course,
+    // to avoid a GTK bug.
+    return FALSE;
+  }
+
   // Find the printer whose name matches the one inside the settings.
   nsString printerName;
   nsresult rv = spec->mPrintSettings->GetPrinterName(printerName);
@@ -293,7 +299,14 @@ gboolean nsDeviceContextSpecGTK::PrinterEnumerator(GtkPrinter* aPrinter,
       NS_DispatchToCurrentThread(
           NewRunnableMethod("nsDeviceContextSpecGTK::StartPrintJob", spec,
                             &nsDeviceContextSpecGTK::StartPrintJob));
-      return TRUE;
+
+      // We're already done, but we need to let the enumeration run its course,
+      // to avoid a GTK bug. So we record that we've found a match and
+      // then return FALSE.
+      // TODO: If/when we can be sure that GTK handles this OK, we could
+      // return TRUE to avoid some needless enumeration.
+      spec->mHasEnumerationFoundAMatch = true;
+      return FALSE;
     }
   }
 
@@ -317,6 +330,7 @@ void nsDeviceContextSpecGTK::StartPrintJob() {
 }
 
 void nsDeviceContextSpecGTK::EnumeratePrinters() {
+  mHasEnumerationFoundAMatch = false;
   gtk_enumerate_printers(&nsDeviceContextSpecGTK::PrinterEnumerator, this,
                          nullptr, TRUE);
 }
