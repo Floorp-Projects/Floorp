@@ -14,7 +14,6 @@
 #include "nsDebug.h"
 #include "nsProxyRelease.h"
 #include "nsWindowsHelpers.h"
-#include "nsICommandLine.h"
 #include "nsString.h"
 
 #include "common.h"
