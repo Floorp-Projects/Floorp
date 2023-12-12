@@ -1,4 +1,4 @@
-// |reftest| skip -- Intl.Segmenter is not supported
+// |reftest| skip-if(!Intl.Segmenter) -- Intl.Segmenter is not enabled unconditionally
 // Copyright 2019 Leo Balter. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

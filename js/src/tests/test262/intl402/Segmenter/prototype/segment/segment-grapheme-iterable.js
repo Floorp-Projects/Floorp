@@ -1,4 +1,4 @@
-// |reftest| skip -- Intl.Segmenter is not supported
+// |reftest| skip-if(!Intl.Segmenter) -- Intl.Segmenter is not enabled unconditionally
 // Copyright 2018 the V8 project authors. All rights reserved.
 // Copyright 2020 Apple Inc. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
