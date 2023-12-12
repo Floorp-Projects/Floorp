@@ -1754,6 +1754,7 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
   CACHEOP_CASE_UNIMPL(StoreDenseElementHole)
   CACHEOP_CASE_UNIMPL(ArrayPush)
   CACHEOP_CASE_UNIMPL(ArrayJoinResult)
+  CACHEOP_CASE_UNIMPL(ObjectKeysResult)
   CACHEOP_CASE_UNIMPL(PackedArrayPopResult)
   CACHEOP_CASE_UNIMPL(PackedArrayShiftResult)
   CACHEOP_CASE_UNIMPL(PackedArraySliceResult)
