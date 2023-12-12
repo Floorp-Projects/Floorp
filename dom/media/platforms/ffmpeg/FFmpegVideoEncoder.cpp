@@ -346,13 +346,7 @@ void FFmpegVideoEncoder<LIBAV_VER>::ProcessShutdown() {
 
   FFMPEGV_LOG("ProcessShutdown");
 
-  DestroyFrame();
-
-  if (mCodecContext) {
-    CloseCodecContext();
-    mLib->av_freep(&mCodecContext);
-    mCodecContext = nullptr;
-  }
+  ShutdownInternal();
 }
 
 MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
@@ -438,6 +432,20 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
               mCodecContext->time_base.num, mCodecContext->time_base.den);
 
   return MediaResult(NS_OK);
+}
+
+void FFmpegVideoEncoder<LIBAV_VER>::ShutdownInternal() {
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+
+  FFMPEGV_LOG("ShutdownInternal");
+
+  DestroyFrame();
+
+  if (mCodecContext) {
+    CloseCodecContext();
+    mLib->av_freep(&mCodecContext);
+    mCodecContext = nullptr;
+  }
 }
 
 int FFmpegVideoEncoder<LIBAV_VER>::OpenCodecContext(const AVCodec* aCodec,
