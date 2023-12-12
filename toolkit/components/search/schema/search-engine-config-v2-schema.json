@@ -310,9 +310,6 @@
                 "type": "string",
                 "enum": ["general", "unknown"]
               },
-              "environment": {
-                "$ref": "#/definitions/environment"
-              },
               "name": {
                 "title": "Name",
                 "description": "The user visible name for the search engine.",
@@ -331,7 +328,7 @@
                 "$ref": "#/definitions/urls"
               }
             },
-            "required": ["name", "urls", "classification", "environment"]
+            "required": ["name", "urls", "classification"]
           },
           "variants": {
             "title": "Variants",
@@ -363,7 +360,7 @@
             }
           }
         },
-        "required": ["recordType", "identifier", "base"]
+        "required": ["recordType", "identifier", "base", "variants"]
       }
     },
     {

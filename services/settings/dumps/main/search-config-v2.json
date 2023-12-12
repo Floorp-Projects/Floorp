@@ -31,96 +31,98 @@
             "searchTermParamName": "query"
           }
         },
-        "partnerCode": "MOZI",
-        "environment": {
-          "locales": [
-            "ach",
-            "af",
-            "an",
-            "ar",
-            "ast",
-            "az",
-            "bn",
-            "bs",
-            "ca",
-            "ca-valencia",
-            "cak",
-            "cs",
-            "cy",
-            "da",
-            "de",
-            "dsb",
-            "el",
-            "en-CA",
-            "en-GB",
-            "en-US",
-            "eo",
-            "es-CL",
-            "es-ES",
-            "es-MX",
-            "eu",
-            "fa",
-            "ff",
-            "fi",
-            "fr",
-            "fur",
-            "fy-NL",
-            "gd",
-            "gl",
-            "gn",
-            "gu-IN",
-            "he",
-            "hi-IN",
-            "hr",
-            "hsb",
-            "hy-AM",
-            "ia",
-            "id",
-            "is",
-            "it",
-            "ja",
-            "ja-JP-macos",
-            "ka",
-            "kab",
-            "km",
-            "kn",
-            "lij",
-            "lo",
-            "lt",
-            "meh",
-            "mk",
-            "ms",
-            "my",
-            "nb-NO",
-            "ne-NP",
-            "nl",
-            "nn-NO",
-            "oc",
-            "pa-IN",
-            "pt-BR",
-            "rm",
-            "ro",
-            "sc",
-            "sco",
-            "son",
-            "sq",
-            "sr",
-            "sv-SE",
-            "te",
-            "th",
-            "tl",
-            "tr",
-            "trs",
-            "uk",
-            "ur",
-            "uz",
-            "wo",
-            "xh",
-            "zh-CN"
-          ]
-        }
+        "partnerCode": "MOZI"
       },
       "variants": [
+        {
+          "environment": {
+            "locales": [
+              "ach",
+              "af",
+              "an",
+              "ar",
+              "ast",
+              "az",
+              "bn",
+              "bs",
+              "ca",
+              "ca-valencia",
+              "cak",
+              "cs",
+              "cy",
+              "da",
+              "de",
+              "dsb",
+              "el",
+              "en-CA",
+              "en-GB",
+              "en-US",
+              "eo",
+              "es-CL",
+              "es-ES",
+              "es-MX",
+              "eu",
+              "fa",
+              "ff",
+              "fi",
+              "fr",
+              "fur",
+              "fy-NL",
+              "gd",
+              "gl",
+              "gn",
+              "gu-IN",
+              "he",
+              "hi-IN",
+              "hr",
+              "hsb",
+              "hy-AM",
+              "ia",
+              "id",
+              "is",
+              "it",
+              "ja",
+              "ja-JP-macos",
+              "ka",
+              "kab",
+              "km",
+              "kn",
+              "lij",
+              "lo",
+              "lt",
+              "meh",
+              "mk",
+              "ms",
+              "my",
+              "nb-NO",
+              "ne-NP",
+              "nl",
+              "nn-NO",
+              "oc",
+              "pa-IN",
+              "pt-BR",
+              "rm",
+              "ro",
+              "sc",
+              "sco",
+              "son",
+              "sq",
+              "sr",
+              "sv-SE",
+              "te",
+              "th",
+              "tl",
+              "tr",
+              "trs",
+              "uk",
+              "ur",
+              "uz",
+              "wo",
+              "xh",
+              "zh-CN"
+            ]
+          }
+        },
         {
           "environment": { "channels": ["esr"] },
           "partnerCode": "MOZR",
@@ -165,10 +167,10 @@
             "searchTermParamName": "q"
           }
         },
-        "partnerCode": "firefox-b-d",
-        "environment": { "allRegionsAndLocales": true }
+        "partnerCode": "firefox-b-d"
       },
       "variants": [
+        { "environment": { "allRegionsAndLocales": true } },
         {
           "environment": { "channels": ["esr"] },
           "partnerCode": "firefox-b-e",
@@ -262,10 +264,10 @@
             "searchTermParamName": "q"
           }
         },
-        "partnerCode": "ffab",
-        "environment": { "allRegionsAndLocales": true }
+        "partnerCode": "ffab"
       },
       "variants": [
+        { "environment": { "allRegionsAndLocales": true } },
         {
           "environment": { "channels": ["esr"] },
           "partnerCode": "ftsa",
@@ -299,9 +301,9 @@
             ],
             "searchTermParamName": "wd"
           }
-        },
-        "environment": { "locales": ["zh-CN"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["zh-CN"] } }]
     },
     {
       "recordType": "engine",
@@ -321,111 +323,115 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": {
-          "allRegionsAndLocales": true,
-          "excludedLocales": [
-            "af",
-            "an",
-            "ar",
-            "ast",
-            "az",
-            "be",
-            "bg",
-            "bn",
-            "br",
-            "bs",
-            "ca",
-            "ca-valencia",
-            "cs",
-            "cy",
-            "da",
-            "de",
-            "dsb",
-            "el",
-            "eo",
-            "cak",
-            "es-AR",
-            "es-CL",
-            "es-ES",
-            "es-MX",
-            "trs",
-            "et",
-            "eu",
-            "fa",
-            "fi",
-            "fr",
-            "ff",
-            "son",
-            "fy-NL",
-            "ga-IE",
-            "gd",
-            "gl",
-            "gn",
-            "gu-IN",
-            "hi-IN",
-            "he",
-            "hr",
-            "hsb",
-            "hu",
-            "hy-AM",
-            "ia",
-            "id",
-            "is",
-            "ja",
-            "ja-JP-macos",
-            "ka",
-            "kab",
-            "kk",
-            "km",
-            "kn",
-            "ko",
-            "it",
-            "fur",
-            "sc",
-            "lij",
-            "lo",
-            "lt",
-            "ltg",
-            "lv",
-            "mk",
-            "mr",
-            "ms",
-            "my",
-            "nb-NO",
-            "ne-NP",
-            "nl",
-            "nn-NO",
-            "oc",
-            "pa-IN",
-            "pl",
-            "szl",
-            "pt-BR",
-            "pt-PT",
-            "rm",
-            "ro",
-            "ru",
-            "si",
-            "sk",
-            "sl",
-            "sq",
-            "sr",
-            "sv-SE",
-            "ta",
-            "te",
-            "th",
-            "tl",
-            "tr",
-            "uk",
-            "ur",
-            "uz",
-            "vi",
-            "wo",
-            "zh-CN",
-            "zh-TW"
-          ]
         }
-      }
+      },
+      "variants": [
+        {
+          "environment": {
+            "allRegionsAndLocales": true,
+            "excludedLocales": [
+              "af",
+              "an",
+              "ar",
+              "ast",
+              "az",
+              "be",
+              "bg",
+              "bn",
+              "br",
+              "bs",
+              "ca",
+              "ca-valencia",
+              "cs",
+              "cy",
+              "da",
+              "de",
+              "dsb",
+              "el",
+              "eo",
+              "cak",
+              "es-AR",
+              "es-CL",
+              "es-ES",
+              "es-MX",
+              "trs",
+              "et",
+              "eu",
+              "fa",
+              "fi",
+              "fr",
+              "ff",
+              "son",
+              "fy-NL",
+              "ga-IE",
+              "gd",
+              "gl",
+              "gn",
+              "gu-IN",
+              "hi-IN",
+              "he",
+              "hr",
+              "hsb",
+              "hu",
+              "hy-AM",
+              "ia",
+              "id",
+              "is",
+              "ja",
+              "ja-JP-macos",
+              "ka",
+              "kab",
+              "kk",
+              "km",
+              "kn",
+              "ko",
+              "it",
+              "fur",
+              "sc",
+              "lij",
+              "lo",
+              "lt",
+              "ltg",
+              "lv",
+              "mk",
+              "mr",
+              "ms",
+              "my",
+              "nb-NO",
+              "ne-NP",
+              "nl",
+              "nn-NO",
+              "oc",
+              "pa-IN",
+              "pl",
+              "szl",
+              "pt-BR",
+              "pt-PT",
+              "rm",
+              "ro",
+              "ru",
+              "si",
+              "sk",
+              "sl",
+              "sq",
+              "sr",
+              "sv-SE",
+              "ta",
+              "te",
+              "th",
+              "tl",
+              "tr",
+              "uk",
+              "ur",
+              "uz",
+              "vi",
+              "wo",
+              "zh-CN",
+              "zh-TW"
+            ]
+          }
+        }
+      ]
     },
     {
       "recordType": "engine",
@@ -445,9 +451,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["af"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["af"] } }]
     },
     {
       "recordType": "engine",
@@ -467,9 +473,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["an"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["an"] } }]
     },
     {
       "recordType": "engine",
@@ -489,9 +495,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["ar"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ar"] } }]
     },
     {
       "recordType": "engine",
@@ -511,9 +517,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["ast"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ast"] } }]
     },
     {
       "recordType": "engine",
@@ -533,9 +539,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["az"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["az"] } }]
     },
     {
       "recordType": "engine",
@@ -555,9 +561,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["bg"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["bg"] } }]
     },
     {
       "recordType": "engine",
@@ -577,9 +583,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["br"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["br"] } }]
     },
     {
       "recordType": "engine",
@@ -599,9 +605,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["bs"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["bs"] } }]
     },
     {
       "recordType": "engine",
@@ -621,9 +627,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["cy"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["cy"] } }]
     },
     {
       "recordType": "engine",
@@ -643,9 +649,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["da"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["da"] } }]
     },
     {
       "recordType": "engine",
@@ -665,9 +671,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["de"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["de"] } }]
     },
     {
       "recordType": "engine",
@@ -687,9 +693,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["dsb"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["dsb"] } }]
     },
     {
       "recordType": "engine",
@@ -709,9 +715,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["el"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["el"] } }]
     },
     {
       "recordType": "engine",
@@ -731,9 +737,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["eo"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["eo"] } }]
     },
     {
       "recordType": "engine",
@@ -753,9 +759,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["et"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["et"] } }]
     },
     {
       "recordType": "engine",
@@ -775,9 +781,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["eu"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["eu"] } }]
     },
     {
       "recordType": "engine",
@@ -797,9 +803,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["fa"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["fa"] } }]
     },
     {
       "recordType": "engine",
@@ -819,9 +825,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["fi"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["fi"] } }]
     },
     {
       "recordType": "engine",
@@ -841,9 +847,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["fy-NL"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["fy-NL"] } }]
     },
     {
       "recordType": "engine",
@@ -863,9 +869,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["ga-IE"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ga-IE"] } }]
     },
     {
       "recordType": "engine",
@@ -885,9 +891,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["gd"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["gd"] } }]
     },
     {
       "recordType": "engine",
@@ -907,9 +913,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["gl"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["gl"] } }]
     },
     {
       "recordType": "engine",
@@ -929,9 +935,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["gn"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["gn"] } }]
     },
     {
       "recordType": "engine",
@@ -951,9 +957,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["he"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["he"] } }]
     },
     {
       "recordType": "engine",
@@ -973,9 +979,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["hr"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["hr"] } }]
     },
     {
       "recordType": "engine",
@@ -995,9 +1001,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["hsb"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["hsb"] } }]
     },
     {
       "recordType": "engine",
@@ -1017,9 +1023,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["hu"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["hu"] } }]
     },
     {
       "recordType": "engine",
@@ -1039,9 +1045,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["ia"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ia"] } }]
     },
     {
       "recordType": "engine",
@@ -1061,9 +1067,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["id"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["id"] } }]
     },
     {
       "recordType": "engine",
@@ -1083,9 +1089,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["is"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["is"] } }]
     },
     {
       "recordType": "engine",
@@ -1105,9 +1111,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["ka"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ka"] } }]
     },
     {
       "recordType": "engine",
@@ -1127,9 +1133,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["kab"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["kab"] } }]
     },
     {
       "recordType": "engine",
@@ -1149,9 +1155,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["kk"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["kk"] } }]
     },
     {
       "recordType": "engine",
@@ -1171,9 +1177,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["km"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["km"] } }]
     },
     {
       "recordType": "engine",
@@ -1193,9 +1199,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["kn"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["kn"] } }]
     },
     {
       "recordType": "engine",
@@ -1215,9 +1221,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["lij"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["lij"] } }]
     },
     {
       "recordType": "engine",
@@ -1237,9 +1243,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["lo"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["lo"] } }]
     },
     {
       "recordType": "engine",
@@ -1259,9 +1265,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["lt"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["lt"] } }]
     },
     {
       "recordType": "engine",
@@ -1281,9 +1287,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["ltg"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ltg"] } }]
     },
     {
       "recordType": "engine",
@@ -1303,9 +1309,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["lv"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["lv"] } }]
     },
     {
       "recordType": "engine",
@@ -1325,9 +1331,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["mk"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["mk"] } }]
     },
     {
       "recordType": "engine",
@@ -1347,9 +1353,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["mr"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["mr"] } }]
     },
     {
       "recordType": "engine",
@@ -1369,9 +1375,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["ms"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ms"] } }]
     },
     {
       "recordType": "engine",
@@ -1391,9 +1397,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["my"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["my"] } }]
     },
     {
       "recordType": "engine",
@@ -1413,9 +1419,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["nl"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["nl"] } }]
     },
     {
       "recordType": "engine",
@@ -1435,9 +1441,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["oc"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["oc"] } }]
     },
     {
       "recordType": "engine",
@@ -1457,9 +1463,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["rm"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["rm"] } }]
     },
     {
       "recordType": "engine",
@@ -1479,9 +1485,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["ro"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ro"] } }]
     },
     {
       "recordType": "engine",
@@ -1501,9 +1507,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["ru"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ru"] } }]
     },
     {
       "recordType": "engine",
@@ -1523,9 +1529,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["si"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["si"] } }]
     },
     {
       "recordType": "engine",
@@ -1545,9 +1551,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["sk"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["sk"] } }]
     },
     {
       "recordType": "engine",
@@ -1567,9 +1573,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["sl"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["sl"] } }]
     },
     {
       "recordType": "engine",
@@ -1589,9 +1595,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["sq"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["sq"] } }]
     },
     {
       "recordType": "engine",
@@ -1611,9 +1617,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["sr"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["sr"] } }]
     },
     {
       "recordType": "engine",
@@ -1633,9 +1639,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["sv-SE"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["sv-SE"] } }]
     },
     {
       "recordType": "engine",
@@ -1655,9 +1661,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["ta"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ta"] } }]
     },
     {
       "recordType": "engine",
@@ -1677,9 +1683,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["te"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["te"] } }]
     },
     {
       "recordType": "engine",
@@ -1699,9 +1705,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["th"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["th"] } }]
     },
     {
       "recordType": "engine",
@@ -1721,9 +1727,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["tl"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["tl"] } }]
     },
     {
       "recordType": "engine",
@@ -1743,9 +1749,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["tr"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["tr"] } }]
     },
     {
       "recordType": "engine",
@@ -1765,9 +1771,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["uk"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["uk"] } }]
     },
     {
       "recordType": "engine",
@@ -1787,9 +1793,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["ur"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ur"] } }]
     },
     {
       "recordType": "engine",
@@ -1809,9 +1815,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["uz"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["uz"] } }]
     },
     {
       "recordType": "engine",
@@ -1831,9 +1837,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["vi"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["vi"] } }]
     },
     {
       "recordType": "engine",
@@ -1853,9 +1859,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["wo"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["wo"] } }]
     },
     {
       "recordType": "engine",
@@ -1875,9 +1881,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["zh-CN"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["zh-CN"] } }]
     },
     {
       "recordType": "engine",
@@ -1900,9 +1906,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["zh-TW"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["zh-TW"] } }]
     },
     {
       "recordType": "engine",
@@ -1922,9 +1928,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["be"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["be"] } }]
     },
     {
       "recordType": "engine",
@@ -1944,9 +1950,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["be"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["be"] } }]
     },
     {
       "recordType": "engine",
@@ -1966,9 +1972,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["bn", "bn-BD", "bn-IN"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["bn", "bn-BD", "bn-IN"] } }]
     },
     {
       "recordType": "engine",
@@ -1988,9 +1994,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["ca", "ca-valencia"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ca", "ca-valencia"] } }]
     },
     {
       "recordType": "engine",
@@ -2010,11 +2016,15 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": {
-          "locales": ["cak", "es-AR", "es-CL", "es-ES", "es-MX", "trs"]
         }
-      }
+      },
+      "variants": [
+        {
+          "environment": {
+            "locales": ["cak", "es-AR", "es-CL", "es-ES", "es-MX", "trs"]
+          }
+        }
+      ]
     },
     {
       "recordType": "engine",
@@ -2034,9 +2044,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["cs"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["cs"] } }]
     },
     {
       "recordType": "engine",
@@ -2056,9 +2066,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["ff", "fr", "son"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ff", "fr", "son"] } }]
     },
     {
       "recordType": "engine",
@@ -2078,9 +2088,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["gu-IN"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["gu-IN"] } }]
     },
     {
       "recordType": "engine",
@@ -2100,9 +2110,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["hi-IN"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["hi-IN"] } }]
     },
     {
       "recordType": "engine",
@@ -2122,9 +2132,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["hy-AM"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["hy-AM"] } }]
     },
     {
       "recordType": "engine",
@@ -2144,9 +2154,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["fur", "it", "sc"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["fur", "it", "sc"] } }]
     },
     {
       "recordType": "engine",
@@ -2166,9 +2176,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["ja", "ja-JP-macos"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ja", "ja-JP-macos"] } }]
     },
     {
       "recordType": "engine",
@@ -2188,9 +2198,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["ko"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ko"] } }]
     },
     {
       "recordType": "engine",
@@ -2210,9 +2220,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["nb-NO"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["nb-NO"] } }]
     },
     {
       "recordType": "engine",
@@ -2232,9 +2242,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["ne-NP"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ne-NP"] } }]
     },
     {
       "recordType": "engine",
@@ -2254,9 +2264,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["nn-NO"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["nn-NO"] } }]
     },
     {
       "recordType": "engine",
@@ -2276,9 +2286,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["pa-IN"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["pa-IN"] } }]
     },
     {
       "recordType": "engine",
@@ -2298,9 +2308,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["pt-BR", "pt-PT"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["pt-BR", "pt-PT"] } }]
     },
     {
       "recordType": "engine",
@@ -2320,9 +2330,9 @@
             "params": [{ "name": "action", "value": "opensearch" }],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["pl", "szl"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["pl", "szl"] } }]
     },
     {
       "recordType": "engine",
@@ -2352,9 +2362,11 @@
             "searchTermParamName": "kwd"
           }
         },
-        "partnerCode": "5338192028",
-        "environment": { "locales": ["en-US"], "regions": ["us"] }
-      }
+        "partnerCode": "5338192028"
+      },
+      "variants": [
+        { "environment": { "locales": ["en-US"], "regions": ["us"] } }
+      ]
     },
     {
       "recordType": "engine",
@@ -2384,11 +2396,15 @@
             "searchTermParamName": "kwd"
           }
         },
-        "partnerCode": "5338192028",
-        "environment": {
-          "locales": ["an", "ast", "ca", "ca-valencia", "es-ES", "eu", "gl"]
+        "partnerCode": "5338192028"
+      },
+      "variants": [
+        {
+          "environment": {
+            "locales": ["an", "ast", "ca", "ca-valencia", "es-ES", "eu", "gl"]
+          }
         }
-      }
+      ]
     },
     {
       "recordType": "engine",
@@ -2418,9 +2434,9 @@
             "searchTermParamName": "kwd"
           }
         },
-        "partnerCode": "5338192028",
-        "environment": { "locales": ["br", "fr", "wo"] }
-      }
+        "partnerCode": "5338192028"
+      },
+      "variants": [{ "environment": { "locales": ["br", "fr", "wo"] } }]
     },
     {
       "recordType": "engine",
@@ -2450,12 +2466,16 @@
             "searchTermParamName": "kwd"
           }
         },
-        "partnerCode": "5338192028",
-        "environment": {
-          "locales": ["br", "en-US", "fr", "wo", "fy-NL", "nl"],
-          "regions": ["be"]
+        "partnerCode": "5338192028"
+      },
+      "variants": [
+        {
+          "environment": {
+            "locales": ["br", "en-US", "fr", "wo", "fy-NL", "nl"],
+            "regions": ["be"]
+          }
         }
-      }
+      ]
     },
     {
       "recordType": "engine",
@@ -2485,13 +2505,17 @@
             "searchTermParamName": "kwd"
           }
         },
-        "partnerCode": "5338192028",
-        "environment": {
-          "locales": ["br", "en-US", "fr", "wo"],
-          "regions": ["ca"]
-        }
+        "partnerCode": "5338192028"
       },
-      "variants": [{ "environment": { "locales": ["en-CA"] } }]
+      "variants": [
+        {
+          "environment": {
+            "locales": ["br", "en-US", "fr", "wo"],
+            "regions": ["ca"]
+          }
+        },
+        { "environment": { "locales": ["en-CA"] } }
+      ]
     },
     {
       "recordType": "engine",
@@ -2521,13 +2545,17 @@
             "searchTermParamName": "kwd"
           }
         },
-        "partnerCode": "5338192028",
-        "environment": {
-          "locales": ["br", "de", "dsb", "en-US", "fr", "hsb", "wo"],
-          "regions": ["ch"]
-        }
+        "partnerCode": "5338192028"
       },
-      "variants": [{ "environment": { "locales": ["rm"] } }]
+      "variants": [
+        {
+          "environment": {
+            "locales": ["br", "de", "dsb", "en-US", "fr", "hsb", "wo"],
+            "regions": ["ch"]
+          }
+        },
+        { "environment": { "locales": ["rm"] } }
+      ]
     },
     {
       "recordType": "engine",
@@ -2557,10 +2585,10 @@
             "searchTermParamName": "kwd"
           }
         },
-        "partnerCode": "5338192028",
-        "environment": { "locales": ["cy", "en-GB", "gd"] }
+        "partnerCode": "5338192028"
       },
       "variants": [
+        { "environment": { "locales": ["cy", "en-GB", "gd"] } },
         { "environment": { "locales": ["sco"], "regions": ["gb"] } },
         { "environment": { "locales": ["en-US"], "regions": ["gb"] } }
       ]
@@ -2593,12 +2621,16 @@
             "searchTermParamName": "kwd"
           }
         },
-        "partnerCode": "5338192028",
-        "environment": {
-          "locales": ["cy", "en-GB", "en-US", "gd"],
-          "regions": ["au"]
+        "partnerCode": "5338192028"
+      },
+      "variants": [
+        {
+          "environment": {
+            "locales": ["cy", "en-GB", "en-US", "gd"],
+            "regions": ["au"]
+          }
         }
-      }
+      ]
     },
     {
       "recordType": "engine",
@@ -2628,13 +2660,17 @@
             "searchTermParamName": "kwd"
           }
         },
-        "partnerCode": "5338192028",
-        "environment": {
-          "locales": ["cy", "en-GB", "en-US", "gd"],
-          "regions": ["ie"]
-        }
+        "partnerCode": "5338192028"
       },
-      "variants": [{ "environment": { "locales": ["ga-IE"] } }]
+      "variants": [
+        {
+          "environment": {
+            "locales": ["cy", "en-GB", "en-US", "gd"],
+            "regions": ["ie"]
+          }
+        },
+        { "environment": { "locales": ["ga-IE"] } }
+      ]
     },
     {
       "recordType": "engine",
@@ -2664,12 +2700,16 @@
             "searchTermParamName": "kwd"
           }
         },
-        "partnerCode": "5338192028",
-        "environment": {
-          "locales": ["de", "dsb", "hsb"],
-          "excludedRegions": ["at", "ch"]
+        "partnerCode": "5338192028"
+      },
+      "variants": [
+        {
+          "environment": {
+            "locales": ["de", "dsb", "hsb"],
+            "excludedRegions": ["at", "ch"]
+          }
         }
-      }
+      ]
     },
     {
       "recordType": "engine",
@@ -2699,9 +2739,13 @@
             "searchTermParamName": "kwd"
           }
         },
-        "partnerCode": "5338192028",
-        "environment": { "locales": ["de", "dsb", "hsb"], "regions": ["at"] }
-      }
+        "partnerCode": "5338192028"
+      },
+      "variants": [
+        {
+          "environment": { "locales": ["de", "dsb", "hsb"], "regions": ["at"] }
+        }
+      ]
     },
     {
       "recordType": "engine",
@@ -2731,10 +2775,10 @@
             "searchTermParamName": "kwd"
           }
         },
-        "partnerCode": "5338192028",
-        "environment": { "locales": ["fy-NL", "nl"] }
+        "partnerCode": "5338192028"
       },
       "variants": [
+        { "environment": { "locales": ["fy-NL", "nl"] } },
         { "environment": { "locales": ["en-US"], "regions": ["nl"] } }
       ]
     },
@@ -2766,9 +2810,9 @@
             "searchTermParamName": "kwd"
           }
         },
-        "partnerCode": "5338192028",
-        "environment": { "locales": ["fur", "it", "lij", "sc"] }
-      }
+        "partnerCode": "5338192028"
+      },
+      "variants": [{ "environment": { "locales": ["fur", "it", "lij", "sc"] } }]
     },
     {
       "recordType": "engine",
@@ -2782,10 +2826,10 @@
             "base": "https://www.amazon.com/s",
             "searchTermParamName": "k"
           }
-        },
-        "environment": { "regions": ["us"] }
+        }
       },
-      "notes": "Amazon.com (us only)"
+      "notes": "Amazon.com (us only)",
+      "variants": [{ "environment": { "regions": ["us"] } }]
     },
     {
       "recordType": "engine",
@@ -2799,76 +2843,80 @@
             "base": "https://www.amazon.com/s",
             "searchTermParamName": "k"
           }
-        },
-        "environment": {
-          "locales": [
-            "ach",
-            "af",
-            "ar",
-            "az",
-            "bg",
-            "cak",
-            "cy",
-            "da",
-            "el",
-            "en-GB",
-            "en-US",
-            "eo",
-            "es-AR",
-            "eu",
-            "fa",
-            "ga-IE",
-            "gd",
-            "gl",
-            "gn",
-            "hr",
-            "hy-AM",
-            "ia",
-            "is",
-            "ka",
-            "km",
-            "lt",
-            "mk",
-            "ms",
-            "my",
-            "nb-NO",
-            "nn-NO",
-            "pt-PT",
-            "ro",
-            "si",
-            "sq",
-            "sr",
-            "th",
-            "tl",
-            "trs",
-            "uz"
-          ],
-          "excludedRegions": [
-            "at",
-            "au",
-            "be",
-            "ca",
-            "ch",
-            "cn",
-            "de",
-            "es",
-            "fr",
-            "gb",
-            "ie",
-            "in",
-            "it",
-            "jp",
-            "mc",
-            "nl",
-            "pt",
-            "se",
-            "sm",
-            "us",
-            "va"
-          ]
         }
       },
-      "notes": "Amazon.com (row)"
+      "notes": "Amazon.com (row)",
+      "variants": [
+        {
+          "environment": {
+            "locales": [
+              "ach",
+              "af",
+              "ar",
+              "az",
+              "bg",
+              "cak",
+              "cy",
+              "da",
+              "el",
+              "en-GB",
+              "en-US",
+              "eo",
+              "es-AR",
+              "eu",
+              "fa",
+              "ga-IE",
+              "gd",
+              "gl",
+              "gn",
+              "hr",
+              "hy-AM",
+              "ia",
+              "is",
+              "ka",
+              "km",
+              "lt",
+              "mk",
+              "ms",
+              "my",
+              "nb-NO",
+              "nn-NO",
+              "pt-PT",
+              "ro",
+              "si",
+              "sq",
+              "sr",
+              "th",
+              "tl",
+              "trs",
+              "uz"
+            ],
+            "excludedRegions": [
+              "at",
+              "au",
+              "be",
+              "ca",
+              "ch",
+              "cn",
+              "de",
+              "es",
+              "fr",
+              "gb",
+              "ie",
+              "in",
+              "it",
+              "jp",
+              "mc",
+              "nl",
+              "pt",
+              "se",
+              "sm",
+              "us",
+              "va"
+            ]
+          }
+        }
+      ]
     },
     {
       "recordType": "engine",
@@ -2882,22 +2930,26 @@
             "base": "https://www.amazon.in/s",
             "searchTermParamName": "k"
           }
-        },
-        "environment": {
-          "locales": [
-            "bn",
-            "bn-IN",
-            "gu-IN",
-            "kn",
-            "mr",
-            "pa-IN",
-            "ta",
-            "te",
-            "ur"
-          ],
-          "regions": ["in"]
         }
-      }
+      },
+      "variants": [
+        {
+          "environment": {
+            "locales": [
+              "bn",
+              "bn-IN",
+              "gu-IN",
+              "kn",
+              "mr",
+              "pa-IN",
+              "ta",
+              "te",
+              "ur"
+            ],
+            "regions": ["in"]
+          }
+        }
+      ]
     },
     {
       "recordType": "engine",
@@ -2911,10 +2963,12 @@
             "base": "https://www.amazon.fr/s",
             "searchTermParamName": "k"
           }
-        },
-        "environment": { "regions": ["fr", "mc"] }
+        }
       },
-      "variants": [{ "environment": { "locales": ["fr"], "regions": ["be"] } }]
+      "variants": [
+        { "environment": { "regions": ["fr", "mc"] } },
+        { "environment": { "locales": ["fr"], "regions": ["be"] } }
+      ]
     },
     {
       "recordType": "engine",
@@ -2933,9 +2987,9 @@
             ],
             "searchTermParamName": "field-keywords"
           }
-        },
-        "environment": { "regions": ["jp"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "regions": ["jp"] } }]
     },
     {
       "recordType": "engine",
@@ -2949,9 +3003,9 @@
             "base": "https://www.amazon.it/s",
             "searchTermParamName": "k"
           }
-        },
-        "environment": { "regions": ["it", "sm", "va"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "regions": ["it", "sm", "va"] } }]
     },
     {
       "recordType": "engine",
@@ -2965,9 +3019,9 @@
             "base": "https://www.amazon.de/s",
             "searchTermParamName": "k"
           }
-        },
-        "environment": { "regions": ["at", "ch", "de"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "regions": ["at", "ch", "de"] } }]
     },
     {
       "recordType": "engine",
@@ -2981,9 +3035,9 @@
             "base": "https://www.amazon.co.uk/s",
             "searchTermParamName": "k"
           }
-        },
-        "environment": { "regions": ["gb", "ie"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "regions": ["gb", "ie"] } }]
     },
     {
       "recordType": "engine",
@@ -2997,9 +3051,9 @@
             "base": "https://www.amazon.com.au/s",
             "searchTermParamName": "k"
           }
-        },
-        "environment": { "regions": ["au"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "regions": ["au"] } }]
     },
     {
       "recordType": "engine",
@@ -3013,9 +3067,9 @@
             "base": "https://www.amazon.ca/s",
             "searchTermParamName": "k"
           }
-        },
-        "environment": { "regions": ["ca"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "regions": ["ca"] } }]
     },
     {
       "recordType": "engine",
@@ -3029,10 +3083,10 @@
             "base": "https://www.amazon.nl/s",
             "searchTermParamName": "k"
           }
-        },
-        "environment": { "regions": ["nl"] }
+        }
       },
       "variants": [
+        { "environment": { "regions": ["nl"] } },
         { "environment": { "regions": ["be"], "excludedLocales": ["fr"] } }
       ]
     },
@@ -3048,9 +3102,9 @@
             "base": "https://www.amazon.es/s",
             "searchTermParamName": "k"
           }
-        },
-        "environment": { "regions": ["es", "pt"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "regions": ["es", "pt"] } }]
     },
     {
       "recordType": "engine",
@@ -3064,9 +3118,9 @@
             "base": "https://www.amazon.se/s",
             "searchTermParamName": "k"
           }
-        },
-        "environment": { "regions": ["se"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "regions": ["se"] } }]
     },
     {
       "recordType": "engine",
@@ -3080,9 +3134,9 @@
             "base": "https://www.amazon.cn/s",
             "searchTermParamName": "k"
           }
-        },
-        "environment": { "regions": ["cn"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "regions": ["cn"] } }]
     },
     {
       "recordType": "engine",
@@ -3100,9 +3154,9 @@
             "params": [{ "name": "mozhint", "value": "1" }],
             "searchTermParamName": "q"
           }
-        },
-        "environment": { "locales": ["pl", "szl"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["pl", "szl"] } }]
     },
     {
       "recordType": "engine",
@@ -3116,9 +3170,9 @@
             "params": [{ "name": "sourceid", "value": "Mozilla-search" }],
             "searchTermParamName": "string"
           }
-        },
-        "environment": { "locales": ["pl", "szl"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["pl", "szl"] } }]
     },
     {
       "recordType": "engine",
@@ -3140,9 +3194,9 @@
             ],
             "searchTermParamName": "q"
           }
-        },
-        "environment": { "distributions": ["gmx"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "distributions": ["gmx"] } }]
     },
     {
       "recordType": "engine",
@@ -3160,9 +3214,9 @@
             "base": "https://shopping.gmx.net/suggest/ca/",
             "searchTermParamName": "q"
           }
-        },
-        "environment": { "distributions": ["gmx"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "distributions": ["gmx"] } }]
     },
     {
       "recordType": "engine",
@@ -3185,9 +3239,9 @@
             ],
             "searchTermParamName": "q"
           }
-        },
-        "environment": { "distributions": ["gmxcouk"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "distributions": ["gmxcouk"] } }]
     },
     {
       "recordType": "engine",
@@ -3210,9 +3264,9 @@
             ],
             "searchTermParamName": "q"
           }
-        },
-        "environment": { "distributions": ["gmxes"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "distributions": ["gmxes"] } }]
     },
     {
       "recordType": "engine",
@@ -3235,9 +3289,9 @@
             ],
             "searchTermParamName": "q"
           }
-        },
-        "environment": { "distributions": ["gmxfr"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "distributions": ["gmxfr"] } }]
     },
     {
       "recordType": "engine",
@@ -3257,12 +3311,16 @@
             "searchTermParamName": "q"
           }
         },
-        "partnerCode": "firefoxqwant",
-        "environment": {
-          "locales": ["fr"],
-          "distributions": ["qwant-001", "qwant-002"]
+        "partnerCode": "firefoxqwant"
+      },
+      "variants": [
+        {
+          "environment": {
+            "locales": ["fr"],
+            "distributions": ["qwant-001", "qwant-002"]
+          }
         }
-      }
+      ]
     },
     {
       "recordType": "engine",
@@ -3283,10 +3341,10 @@
             "searchTermParamName": "q"
           }
         },
-        "partnerCode": "brz-moz",
-        "environment": { "locales": ["fr"] }
+        "partnerCode": "brz-moz"
       },
       "variants": [
+        { "environment": { "locales": ["fr"] } },
         {
           "environment": { "distributions": ["qwant-001", "qwant-002"] },
           "partnerCode": "firefoxqwant",
@@ -3311,9 +3369,9 @@
             "searchTermParamName": "phrase"
           }
         },
-        "partnerCode": "firefox",
-        "environment": { "locales": ["cs"] }
-      }
+        "partnerCode": "firefox"
+      },
+      "variants": [{ "environment": { "locales": ["cs"] } }]
     },
     {
       "recordType": "engine",
@@ -3335,9 +3393,9 @@
             ],
             "searchTermParamName": "q"
           }
-        },
-        "environment": { "distributions": ["1und1"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "distributions": ["1und1"] } }]
     },
     {
       "recordType": "engine",
@@ -3359,9 +3417,9 @@
             ],
             "searchTermParamName": "q"
           }
-        },
-        "environment": { "distributions": ["webde"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "distributions": ["webde"] } }]
     },
     {
       "recordType": "engine",
@@ -3383,9 +3441,9 @@
             ],
             "searchTermParamName": "q"
           }
-        },
-        "environment": { "distributions": ["mail.com"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "distributions": ["mail.com"] } }]
     },
     {
       "recordType": "engine",
@@ -3403,9 +3461,9 @@
             ],
             "searchTermParamName": "sitem"
           }
-        },
-        "environment": { "locales": ["ja", "ja-JP-macos"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ja", "ja-JP-macos"] } }]
     },
     {
       "recordType": "engine",
@@ -3418,9 +3476,9 @@
             "base": "https://azerdict.com/english/",
             "searchTermParamName": "word"
           }
-        },
-        "environment": { "locales": ["az"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["az"] } }]
     },
     {
       "recordType": "engine",
@@ -3434,9 +3492,9 @@
             "params": [{ "name": "sourceid", "value": "Mozilla-search" }],
             "searchTermParamName": "OPP"
           }
-        },
-        "environment": { "locales": ["nb-NO", "nn-NO"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["nb-NO", "nn-NO"] } }]
     },
     {
       "recordType": "engine",
@@ -3450,9 +3508,9 @@
             "params": [{ "name": "FF-SearchBox", "value": "1" }],
             "searchTermParamName": "q"
           }
-        },
-        "environment": { "locales": ["sl"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["sl"] } }]
     },
     {
       "recordType": "engine",
@@ -3477,9 +3535,9 @@
             ],
             "searchTermParamName": "q"
           }
-        },
-        "environment": { "locales": ["vi"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["vi"] } }]
     },
     {
       "recordType": "engine",
@@ -3501,9 +3559,9 @@
             "params": [{ "name": "DA", "value": "JU2" }],
             "searchTermParamName": "q"
           }
-        },
-        "environment": { "locales": ["ko"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ko"] } }]
     },
     {
       "recordType": "engine",
@@ -3523,9 +3581,9 @@
             "searchTermParamName": "q"
           }
         },
-        "partnerCode": "mzl",
-        "environment": { "locales": ["de"] }
-      }
+        "partnerCode": "mzl"
+      },
+      "variants": [{ "environment": { "locales": ["de"] } }]
     },
     {
       "recordType": "engine",
@@ -3539,9 +3597,9 @@
             "params": [{ "name": "lang", "value": "engcro" }],
             "searchTermParamName": "word"
           }
-        },
-        "environment": { "locales": ["hr"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["hr"] } }]
     },
     {
       "recordType": "engine",
@@ -3554,9 +3612,9 @@
             "base": "https://www.faclair.com/",
             "searchTermParamName": "txtSearch"
           }
-        },
-        "environment": { "locales": ["gd"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["gd"] } }]
     },
     {
       "recordType": "engine",
@@ -3573,9 +3631,9 @@
             ],
             "searchTermParamName": "q"
           }
-        },
-        "environment": { "locales": ["nb-NO", "nn-NO"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["nb-NO", "nn-NO"] } }]
     },
     {
       "recordType": "engine",
@@ -3597,9 +3655,9 @@
             ],
             "searchTermParamName": "q"
           }
-        },
-        "environment": { "locales": ["de", "dsb", "hsb", "rm"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["de", "dsb", "hsb", "rm"] } }]
     },
     {
       "recordType": "engine",
@@ -3621,9 +3679,9 @@
             ],
             "searchTermParamName": "key"
           }
-        },
-        "environment": { "locales": ["th"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["th"] } }]
     },
     {
       "recordType": "engine",
@@ -3637,9 +3695,9 @@
             "params": [{ "name": "sourceid", "value": "Searchmodule_3" }],
             "searchTermParamName": "q"
           }
-        },
-        "environment": { "locales": ["cs"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["cs"] } }]
     },
     {
       "recordType": "engine",
@@ -3652,9 +3710,9 @@
             "base": "https://www.mercadolibre.com.ar/jm/search",
             "searchTermParamName": "as_word"
           }
-        },
-        "environment": { "locales": ["es-AR"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["es-AR"] } }]
     },
     {
       "recordType": "engine",
@@ -3667,9 +3725,9 @@
             "base": "https://www.mercadolibre.cl/jm/search",
             "searchTermParamName": "as_word"
           }
-        },
-        "environment": { "locales": ["es-CL"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["es-CL"] } }]
     },
     {
       "recordType": "engine",
@@ -3682,9 +3740,9 @@
             "base": "https://www.mercadolibre.com.mx/jm/search",
             "searchTermParamName": "as_word"
           }
-        },
-        "environment": { "locales": ["es-MX"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["es-MX"] } }]
     },
     {
       "recordType": "engine",
@@ -3697,9 +3755,9 @@
             "base": "https://www.mercadolivre.com.br/jm/search",
             "searchTermParamName": "as_word"
           }
-        },
-        "environment": { "locales": ["pt-BR"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["pt-BR"] } }]
     },
     {
       "recordType": "engine",
@@ -3726,9 +3784,9 @@
             ],
             "searchTermParamName": "q"
           }
-        },
-        "environment": { "locales": ["ko"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ko"] } }]
     },
     {
       "recordType": "engine",
@@ -3742,9 +3800,9 @@
             "params": [{ "name": "source", "value": "1" }],
             "searchTermParamName": "q"
           }
-        },
-        "environment": { "locales": ["sl"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["sl"] } }]
     },
     {
       "recordType": "engine",
@@ -3757,9 +3815,9 @@
             "base": "https://www.pazaruvaj.com/CategorySearch.php",
             "searchTermParamName": "st"
           }
-        },
-        "environment": { "locales": ["bg"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["bg"] } }]
     },
     {
       "recordType": "engine",
@@ -3773,9 +3831,9 @@
             "base": "https://www.priberam.pt/dlpo/firefox.aspx",
             "searchTermParamName": "pal"
           }
-        },
-        "environment": { "locales": ["pt-PT"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["pt-PT"] } }]
     },
     {
       "recordType": "engine",
@@ -3792,9 +3850,9 @@
             "base": "https://www.prisjakt.nu/plugins/opensearch/suggestions.php",
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["sv-SE"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["sv-SE"] } }]
     },
     {
       "recordType": "engine",
@@ -3811,9 +3869,9 @@
             ],
             "searchTermParamName": "q"
           }
-        },
-        "environment": { "locales": ["zh-TW"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["zh-TW"] } }]
     },
     {
       "recordType": "engine",
@@ -3831,9 +3889,9 @@
             "base": "https://www.salidzini.lv/search_suggest_opensearch.php",
             "searchTermParamName": "q"
           }
-        },
-        "environment": { "locales": ["ltg", "lv"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ltg", "lv"] } }]
     },
     {
       "recordType": "engine",
@@ -3843,9 +3901,9 @@
         "classification": "unknown",
         "urls": {
           "search": { "base": "https://tyda.se/", "searchTermParamName": "w" }
-        },
-        "environment": { "locales": ["sv-SE"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["sv-SE"] } }]
     },
     {
       "recordType": "engine",
@@ -3863,9 +3921,9 @@
             ],
             "searchTermParamName": "q"
           }
-        },
-        "environment": { "locales": ["hu"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["hu"] } }]
     },
     {
       "recordType": "engine",
@@ -3886,9 +3944,9 @@
             ],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["te"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["te"] } }]
     },
     {
       "recordType": "engine",
@@ -3909,9 +3967,9 @@
             ],
             "searchTermParamName": "search"
           }
-        },
-        "environment": { "locales": ["oc"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["oc"] } }]
     },
     {
       "recordType": "engine",
@@ -3929,9 +3987,9 @@
             "searchTermParamName": "p"
           }
         },
-        "partnerCode": "mozff",
-        "environment": { "locales": ["ja", "ja-JP-macos"] }
-      }
+        "partnerCode": "mozff"
+      },
+      "variants": [{ "environment": { "locales": ["ja", "ja-JP-macos"] } }]
     },
     {
       "recordType": "engine",
@@ -3949,9 +4007,9 @@
             ],
             "searchTermParamName": "p"
           }
-        },
-        "environment": { "locales": ["ja", "ja-JP-macos"] }
-      }
+        }
+      },
+      "variants": [{ "environment": { "locales": ["ja", "ja-JP-macos"] } }]
     },
     {
       "recordType": "defaultEngines",
