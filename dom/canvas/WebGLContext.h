@@ -312,7 +312,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   mutable FuncScope* mFuncScope = nullptr;
 
  public:
-  static RefPtr<WebGLContext> Create(HostWebGLContext&,
+  static RefPtr<WebGLContext> Create(HostWebGLContext*,
                                      const webgl::InitContextDesc&,
                                      webgl::InitContextResult* out);
 
@@ -320,7 +320,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   void FinishInit();
 
  protected:
-  WebGLContext(HostWebGLContext&, const webgl::InitContextDesc&);
+  WebGLContext(HostWebGLContext*, const webgl::InitContextDesc&);
   virtual ~WebGLContext();
 
   RefPtr<layers::CompositableHost> mCompositableHost;
@@ -451,6 +451,8 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   void ErrorInvalidEnumArg(const char* argName, GLenum val) const;
 
   static const char* ErrorName(GLenum error);
+
+  void JsWarning(const std::string& text) const;
 
   /**
    * Return displayable name for GLenum.
