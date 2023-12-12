@@ -44,6 +44,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [isMajorUpgrade](#ismajorupgrade)
 * [isRTAMO](#isrtamo)
 * [isWhatsNewPanelEnabled](#iswhatsnewpanelenabled)
+* [launchOnLoginEnabled](#launchonloginenabled)
 * [locale](#locale)
 * [localeLanguageCode](#localelanguagecode)
 * [messageImpressions](#messageimpressions)
@@ -284,6 +285,14 @@ firefoxVersion > 63
 
 ```ts
 declare const firefoxVersion: number;
+```
+
+### `launchOnLoginEnabled`
+
+Is the launch on login option enabled?
+
+```ts
+declare const launchOnLoginEnabled: boolean;
 ```
 
 ### `locale`
