@@ -700,11 +700,9 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
         const appMenuPopup = document.getElementById("appMenu-popup");
         appMenuPopup?.hidePopup();
 
-        // See bug 1864957; we should be able to use showSubView here
-        ownerGlobal.PanelMultiView.openPopup(
-          document.getElementById("report-broken-main-menu-panel"),
-          document.getElementById("PanelUI-menu-button"),
-          { position: "bottomright topright" }
+        ownerGlobal.PanelUI.showSubView(
+          ReportBrokenSite.MAIN_PANELVIEW_ID,
+          ownerGlobal.PanelUI.menuButton
         );
         break;
     }
