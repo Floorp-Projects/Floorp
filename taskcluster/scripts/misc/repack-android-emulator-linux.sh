@@ -10,7 +10,7 @@ mkdir -p $UPLOAD_DIR
 cd $GECKO_PATH
 ./mach python python/mozboot/mozboot/android.py --emulator-only --no-interactive --list-packages
 
-# Bug XXXX: override emulator to a known working version
+# Bug 1868944: override emulator to a known working version
 curl -L http://dl.google.com/android/repository/emulator-linux_x64-10696886.zip > /tmp/emulator.zip
 cd /builds/worker/.mozbuild/android-sdk-linux
 rm -rf emulator
