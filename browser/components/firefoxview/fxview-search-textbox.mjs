@@ -41,9 +41,15 @@ export default class FxviewSearchTextbox extends MozLitElement {
   }
 
   clear(event) {
-    this.query = "";
-    event.preventDefault();
-    this.#dispatchQueryEvent();
+    if (
+      event.type == "click" ||
+      (event.type == "keydown" && event.code == "Enter") ||
+      (event.type == "keydown" && event.code == "Space")
+    ) {
+      this.query = "";
+      event.preventDefault();
+      this.#dispatchQueryEvent();
+    }
   }
 
   #dispatchQueryEvent() {
@@ -73,6 +79,7 @@ export default class FxviewSearchTextbox extends MozLitElement {
         tabindex="0"
         ?hidden=${!this.query}
         @click=${this.clear}
+        @keydown=${this.clear}
         data-l10n-id="firefoxview-search-text-box-clear-button"
       ></div>
     </div>`;

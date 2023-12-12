@@ -518,6 +518,61 @@ add_task(async function search_synced_tabs() {
           .length === deviceTwoTabs.length,
       "The new devices's list is restored."
     );
+
+    info("Input a search query.");
+    EventUtils.synthesizeMouseAtCenter(
+      syncedTabsComponent.searchTextbox,
+      {},
+      content
+    );
+    EventUtils.sendString("Mozilla", content);
+    await TestUtils.waitForCondition(
+      () => syncedTabsComponent.fullyUpdated,
+      "Synced Tabs component is done updating."
+    );
+    cards = syncedTabsComponent.cardEls;
+    deviceOneTabs = cards[0].querySelector("fxview-tab-list").rowEls;
+    deviceTwoTabs = cards[1].querySelector("fxview-tab-list");
+    await TestUtils.waitForCondition(
+      () => deviceOneTabs.length === 1,
+      "There is one matching search result for the first device."
+    );
+    await TestUtils.waitForCondition(
+      () => !deviceTwoTabs,
+      "There are no matching search results for the second device."
+    );
+
+    info("Clear the search query with keyboard.");
+    is(
+      syncedTabsComponent.shadowRoot.activeElement,
+      syncedTabsComponent.searchTextbox,
+      "Search input is focused"
+    );
+    EventUtils.synthesizeKey("KEY_Tab", {}, content);
+    ok(
+      syncedTabsComponent.searchTextbox.clearButton.matches(":focus-visible"),
+      "Clear Search button is focused"
+    );
+    EventUtils.synthesizeKey("KEY_Enter", {}, content);
+    await TestUtils.waitForCondition(
+      () => syncedTabsComponent.fullyUpdated,
+      "Synced Tabs component is done updating."
+    );
+    cards = syncedTabsComponent.cardEls;
+    deviceOneTabs = cards[0].querySelector("fxview-tab-list").rowEls;
+    deviceTwoTabs = cards[1].querySelector("fxview-tab-list").rowEls;
+    await TestUtils.waitForCondition(
+      () =>
+        syncedTabsComponent.cardEls[0].querySelector("fxview-tab-list").rowEls
+          .length === deviceOneTabs.length,
+      "The original device's list is restored."
+    );
+    await TestUtils.waitForCondition(
+      () =>
+        syncedTabsComponent.cardEls[1].querySelector("fxview-tab-list").rowEls
+          .length === deviceTwoTabs.length,
+      "The new devices's list is restored."
+    );
   });
   await SpecialPowers.popPrefEnv();
   await tearDown(sandbox);

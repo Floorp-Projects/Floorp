@@ -469,5 +469,33 @@ add_task(async function test_search_history() {
         historyComponent.cards.length ===
         historyComponent.historyMapByDate.length
     );
+
+    info("Input a bogus search query.");
+    EventUtils.synthesizeMouseAtCenter(searchTextbox, {}, content);
+    EventUtils.sendString("Bogus Query", content);
+    await TestUtils.waitForCondition(() => {
+      const tabList = historyComponent.lists[0];
+      return tabList?.shadowRoot.querySelector("fxview-empty-state");
+    }, "There are no matching search results.");
+
+    info("Clear the search query with keyboard.");
+    is(
+      historyComponent.shadowRoot.activeElement,
+      searchTextbox,
+      "Search input is focused"
+    );
+    EventUtils.synthesizeKey("KEY_Tab", {}, content);
+    ok(
+      searchTextbox.clearButton.matches(":focus-visible"),
+      "Clear Search button is focused"
+    );
+    EventUtils.synthesizeKey("KEY_Enter", {}, content);
+    await BrowserTestUtils.waitForMutationCondition(
+      historyComponent.shadowRoot,
+      { childList: true, subtree: true },
+      () =>
+        historyComponent.cards.length ===
+        historyComponent.historyMapByDate.length
+    );
   });
 });
