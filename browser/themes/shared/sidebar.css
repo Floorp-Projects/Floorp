@@ -5,8 +5,9 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 :root {
-  --sidebar-background-color: Field;
-  --sidebar-text-color: FieldText;
+  --sidebar-background-color: -moz-sidebar;
+  --sidebar-text-color: -moz-sidebartext;
+  --sidebar-border-color: -moz-sidebarborder;
 }
 
 #sidebar-box {

@@ -6,10 +6,6 @@
 @import url("chrome://browser/skin/contextmenu.css");
 @import url("chrome://browser/skin/browser-custom-colors.css");
 
-:root {
-  --sidebar-border-color: ThreeDLightShadow;
-}
-
 #menubar-items {
   flex-direction: column; /* for flex hack */
   justify-content: normal; /* align the menubar to the top also in customize mode */

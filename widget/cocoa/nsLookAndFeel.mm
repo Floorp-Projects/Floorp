@@ -179,9 +179,13 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
     case ColorID::MozMacDefaultbuttontext:
       color = NS_RGB(0xFF, 0xFF, 0xFF);
       break;
-    case ColorID::MozMacSidebar:
+    case ColorID::MozSidebar:
       color = aScheme == ColorScheme::Light ? NS_RGB(0xf6, 0xf6, 0xf6)
                                             : NS_RGB(0x2d, 0x2d, 0x2d);
+      break;
+    case ColorID::MozSidebarborder:
+      // hsla(240, 5%, 5%, .1)
+      color = NS_RGBA(12, 12, 13, 26);
       break;
     case ColorID::MozButtonactivetext:
       // Pre-macOS 12, pressed buttons were filled with the highlight color and
@@ -194,6 +198,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       break;
     case ColorID::Menutext:
     case ColorID::Infotext:
+    case ColorID::MozSidebartext:
       color = GetColorFromNSColor(NSColor.textColor);
       break;
     case ColorID::Windowtext:
