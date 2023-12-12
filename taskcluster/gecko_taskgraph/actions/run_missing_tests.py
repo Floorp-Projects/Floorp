@@ -30,20 +30,19 @@ def run_missing_tests(parameters, graph_config, input, task_group_id, task_id):
     decision_task_id, full_task_graph, label_to_taskid, _ = fetch_graph_and_labels(
         parameters, graph_config
     )
+    parameters_writable = dict(parameters)
+    parameters_writable["backstop"] = True
     target_tasks = get_artifact(decision_task_id, "public/target-tasks.json")
 
-    # The idea here is to schedule all tasks of the `test` kind that were
-    # targetted but did not appear in the final task-graph -- those were the
-    # optimized tasks.
+    # Schedule all tasks of the `test` kind even if they had been already
+    # scheduled before because this time they can contain more and different
+    # test manifests which earlier did not appear in the final task-graph --
+    # those were the optimized tasks.
     to_run = []
-    already_run = 0
     for label in target_tasks:
         task = full_task_graph.tasks[label]
         if task.kind != "test":
             continue  # not a test
-        if label in label_to_taskid:
-            already_run += 1
-            continue
         to_run.append(label)
 
     create_tasks(
@@ -53,10 +52,9 @@ def run_missing_tests(parameters, graph_config, input, task_group_id, task_id):
         label_to_taskid,
         parameters,
         decision_task_id,
+        "all",
     )
 
     logger.info(
-        "Out of {} test tasks, {} already existed and the action created {}".format(
-            already_run + len(to_run), already_run, len(to_run)
-        )
+        f"The action created {len(to_run)} test tasks"
     )
