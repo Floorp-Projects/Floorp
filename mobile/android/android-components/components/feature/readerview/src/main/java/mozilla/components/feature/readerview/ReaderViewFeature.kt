@@ -303,7 +303,6 @@ class ReaderViewFeature(
         return readerBaseUrl?.let { it + "readerview.html?url=$encodedUrl&id=$id&colorScheme=$colorScheme" }
     }
 
-    @VisibleForTesting
     companion object {
         private val logger = Logger("ReaderView")
 
