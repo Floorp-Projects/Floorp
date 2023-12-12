@@ -955,9 +955,9 @@ sync-engine-addresses =
     .tooltiptext = Postal addresses you’ve saved (desktop only)
     .accesskey = e
 
-sync-engine-payment-methods =
+sync-engine-payment-methods2 =
     .label = Payment methods
-    .tooltiptext = Names, card numbers, and expiry dates (desktop only)
+    .tooltiptext = Names, card numbers, and expiry dates
     .accesskey = n
 
 sync-engine-addons =
