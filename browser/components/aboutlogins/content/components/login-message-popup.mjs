@@ -51,7 +51,7 @@ export class PasswordWarning extends MozLitElement {
 export class OriginWarning extends MozLitElement {
   render() {
     return html`${stylesTemplate()}
-    ${MessagePopup({ l10nid: "about-logins-origin-tooltip" })}`;
+    ${MessagePopup({ l10nid: "about-logins-origin-tooltip2" })}`;
   }
 }
 

@@ -78,6 +78,11 @@ const augmentVanillaLoginObject = login => {
   });
 };
 
+const EXPORT_PASSWORD_OS_AUTH_DIALOG_MESSAGE_IDS = {
+  win: "about-logins-export-password-os-auth-dialog-message2-win",
+  macosx: "about-logins-export-password-os-auth-dialog-message2-macosx",
+};
+
 export class AboutLoginsParent extends JSWindowActorParent {
   async receiveMessage(message) {
     if (!this.browsingContext.embedderElement) {
@@ -378,9 +383,13 @@ export class AboutLoginsParent extends JSWindowActorParent {
     // the proper auth_details for Telemetry.
     // See bug 1614874 for Linux support.
     if (lazy.OSKeyStore.canReauth()) {
-      let messageId =
-        "about-logins-export-password-os-auth-dialog-message-" +
-        AppConstants.platform;
+      const messageId =
+        EXPORT_PASSWORD_OS_AUTH_DIALOG_MESSAGE_IDS[AppConstants.platform];
+      if (!messageId) {
+        throw new Error(
+          `AboutLoginsParent: Cannot find l10n id for platform ${AppConstants.platform} for export passwords os auth dialog message`
+        );
+      }
       [messageText, captionText] = await lazy.AboutLoginsL10n.formatMessages([
         {
           id: messageId,

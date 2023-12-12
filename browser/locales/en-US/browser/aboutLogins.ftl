@@ -95,11 +95,12 @@ about-logins-intro-import2 = If your logins are saved outside of { -brand-produc
 
 ## Login
 
-login-item-new-login-title = Create New Login
+# Header for adding a password
+about-logins-login-item-new-login-title = Add password
 login-item-edit-button = Edit
 about-logins-login-item-remove-button = Remove
 login-item-origin-label = Website address
-about-logins-origin-tooltip = Make sure this matches the exact address of the website where you log in.
+about-logins-origin-tooltip2 = Enter the full address and make sure it’s an exact match for where you sign in.
 # Variables
 #   $webTitle (String) - Website title of the password being changed.
 about-logins-edit-password-tooltip = Make sure you’re saving your current password for this site. Changing the password here does not change it with { $webTitle }.
@@ -116,7 +117,7 @@ login-item-password-reveal-checkbox =
   .aria-label = Show password
 login-item-copy-password-button-text = Copy
 login-item-copied-password-button-text = Copied!
-login-item-save-changes-button = Save Changes
+about-logins-login-item-save-changes-button = Save
 login-item-save-new-button = Save
 login-item-cancel-button = Cancel
 
@@ -140,10 +141,10 @@ about-logins-os-auth-dialog-caption = { -brand-full-name }
 ## notes are only valid for English. Please test in your respected locale.
 
 # This message can be seen when attempting to edit a login in about:logins on Windows.
-about-logins-edit-login-os-auth-dialog-message-win = To edit your login, enter your Windows login credentials. This helps protect the security of your accounts.
+about-logins-edit-login-os-auth-dialog-message2-win = To edit your password, enter your Windows login credentials. This helps protect the security of your accounts.
 # This message can be seen when attempting to edit a login in about:logins
 # On MacOS, only provide the reason that account verification is needed. Do not put a complete sentence here.
-about-logins-edit-login-os-auth-dialog-message-macosx = edit the saved login
+about-logins-edit-login-os-auth-dialog-message2-macosx = edit the saved password
 
 # This message can be seen when attempting to reveal a password in about:logins on Windows.
 about-logins-reveal-password-os-auth-dialog-message-win = To view your password, enter your Windows login credentials. This helps protect the security of your accounts.
@@ -158,10 +159,10 @@ about-logins-copy-password-os-auth-dialog-message-win = To copy your password, e
 about-logins-copy-password-os-auth-dialog-message-macosx = copy the saved password
 
 # This message can be seen when attempting to export a password in about:logins on Windows.
-about-logins-export-password-os-auth-dialog-message-win = To export your logins, enter your Windows login credentials. This helps protect the security of your accounts.
+about-logins-export-password-os-auth-dialog-message2-win = To export your passwords, enter your Windows login credentials. This helps protect the security of your accounts.
 # This message can be seen when attempting to export a password in about:logins
 # On MacOS, only provide the reason that account verification is needed. Do not put a complete sentence here.
-about-logins-export-password-os-auth-dialog-message-macosx = export saved logins and passwords
+about-logins-export-password-os-auth-dialog-message2-macosx = export saved passwords
 
 ## Primary Password notification
 
