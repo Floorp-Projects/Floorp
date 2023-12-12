@@ -22,7 +22,7 @@ const ADDRESS_REFERENCES_EXT = "addressReferencesExt.js";
 const ADDRESSES_COLLECTION_NAME = "addresses";
 const CREDITCARDS_COLLECTION_NAME = "creditCards";
 const MANAGE_ADDRESSES_L10N_IDS = [
-  "autofill-add-new-address-title",
+  "autofill-add-address-title",
   "autofill-manage-addresses-title",
 ];
 const EDIT_ADDRESS_L10N_IDS = [
