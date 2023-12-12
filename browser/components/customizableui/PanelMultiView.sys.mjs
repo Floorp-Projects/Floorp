@@ -784,6 +784,12 @@ export var PanelMultiView = class extends AssociatedToNode {
     let prevPanelView = this.openViews[this.openViews.length - 1];
     let nextPanelView = this.openViews[this.openViews.length - 2];
 
+    // See bug 1869092. panelviews like the confirmation of Report Broken Site
+    // have no back buttons, and so should not allow going back.
+    if (!prevPanelView.node.querySelector(".subviewbutton-back")) {
+      return;
+    }
+
     // Like in the showSubView method, do not re-enter navigation while it is
     // in progress, and make the view inactive immediately. From this point
     // onwards, "await" statements can be used safely.
