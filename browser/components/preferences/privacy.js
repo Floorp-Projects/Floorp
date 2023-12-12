@@ -886,6 +886,14 @@ var gPrivacyPane = {
     }
   },
 
+  initWebAuthn() {
+    document.getElementById("openWindowsPasskeySettings").hidden =
+      !Services.prefs.getBoolPref(
+        "security.webauthn.show_ms_settings_link",
+        true
+      );
+  },
+
   /**
    * Sets up the UI for the number of days of history to keep, and updates the
    * label of the "Clear Now..." button.
@@ -1195,6 +1203,8 @@ var gPrivacyPane = {
     this.initHttpsOnly();
 
     this.initDoH();
+
+    this.initWebAuthn();
 
     // Notify observers that the UI is now ready
     Services.obs.notifyObservers(window, "privacy-pane-loaded");

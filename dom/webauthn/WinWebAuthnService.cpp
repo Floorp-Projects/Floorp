@@ -8,6 +8,7 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/Unused.h"
@@ -136,7 +137,9 @@ nsresult WinWebAuthnService::EnsureWinWebAuthnModuleLoaded() {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (gWinWebauthnGetApiVersionNumber() >= WEBAUTHN_API_VERSION_4) {
+  DWORD version = gWinWebauthnGetApiVersionNumber();
+
+  if (version >= WEBAUTHN_API_VERSION_4) {
     gWinWebauthnGetPlatformCredentialList =
         reinterpret_cast<decltype(WebAuthNGetPlatformCredentialList)*>(
             GetProcAddress(gWinWebAuthnModule,
@@ -149,6 +152,16 @@ nsresult WinWebAuthnService::EnsureWinWebAuthnModuleLoaded() {
           gWinWebauthnFreePlatformCredentialList)) {
       return NS_ERROR_NOT_AVAILABLE;
     }
+  }
+
+  // Bug 1869584: In some of our tests, a content process can end up here due to
+  // a call to WinWebAuthnService::AreWebAuthNApisAvailable. This causes us to
+  // fail an assertion in Preferences::SetBool, which is parent-process only.
+  if (XRE_IsParentProcess()) {
+    NS_DispatchToMainThread(NS_NewRunnableFunction(__func__, [version]() {
+      Preferences::SetBool("security.webauthn.show_ms_settings_link",
+                           version >= WEBAUTHN_API_VERSION_7);
+    }));
   }
 
   markModuleUnusable.release();
