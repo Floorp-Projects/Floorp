@@ -56,6 +56,7 @@ class FFmpegVideoEncoder<LIBAV_VER> final : public MediaDataEncoder {
           aConfigurationChanges);
   RefPtr<EncodePromise> ProcessDrain();
   void ProcessShutdown();
+  MediaResult InitInternal();
   // TODO: Share these with FFmpegDataDecoder.
   int OpenCodecContext(const AVCodec* aCodec, AVDictionary** aOptions)
       MOZ_EXCLUDES(sMutex);
