@@ -520,11 +520,11 @@ continue_loading:
   return ret;
 }
 
-#if defined(NIGHTLY_BUILD)
+#if defined(BLOCK_LOADLIBRARY_INJECTION)
 // Map of specific thread proc addresses we should block. In particular,
 // LoadLibrary* APIs which indicate DLL injection
 static void* gStartAddressesToBlock[4];
-#endif  // defined(NIGHTLY_BUILD)
+#endif  // defined(BLOCK_LOADLIBRARY_INJECTION)
 
 static bool ShouldBlockThread(void* aStartAddress) {
   // Allows crashfirefox.exe to continue to work. Also if your threadproc is
@@ -533,7 +533,7 @@ static bool ShouldBlockThread(void* aStartAddress) {
     return false;
   }
 
-#if defined(NIGHTLY_BUILD)
+#if defined(BLOCK_LOADLIBRARY_INJECTION)
   for (auto p : gStartAddressesToBlock) {
     if (p == aStartAddress) {
       return true;
@@ -596,7 +596,7 @@ MFBT_API void DllBlocklist_Initialize(uint32_t aInitFlags) {
     }
   }
 
-#if defined(NIGHTLY_BUILD)
+#if defined(BLOCK_LOADLIBRARY_INJECTION)
   // Populate a list of thread start addresses to block.
   HMODULE hKernel = GetModuleHandleW(L"kernel32.dll");
   if (hKernel) {
