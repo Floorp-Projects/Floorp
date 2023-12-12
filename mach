@@ -10,7 +10,7 @@ import subprocess
 import traceback
 from textwrap import dedent, fill
 
-MIN_PYTHON_VERSION = (3, 7)
+MIN_PYTHON_VERSION = (3, 8)
 MAX_PYTHON_VERSION_TO_CONSIDER = (3, 11)
 
 
@@ -80,7 +80,7 @@ def try_alternate_python3_executables(args):
 
 
 def main(args):
-    # Ensure we are running Python 3.7+. We run this check as soon as
+    # Ensure we are running Python 3.8+. We run this check as soon as
     # possible to avoid a cryptic import/usage error.
     if sys.version_info < MIN_PYTHON_VERSION:
         print(

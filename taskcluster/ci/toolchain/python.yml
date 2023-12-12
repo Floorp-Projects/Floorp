@@ -12,17 +12,6 @@ job-defaults:
     run:
         script: build-cpython.sh
 
-linux64-python-3.7:
-    treeherder:
-        symbol: TL(python3.7)
-    run:
-        toolchain-artifact: public/build/python.tar.zst
-    fetches:
-        fetch:
-            - cpython-3.7.15
-    worker:
-        docker-image: {in-tree: ubuntu1804-build-python}
-
 linux64-python-3.8:
     treeherder:
         symbol: TL(python)

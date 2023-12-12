@@ -20,7 +20,7 @@ they are running in the JS shell environment.
 
 * REQUIREMENTS
 
-Python 3.7. This is already a standard requirement for building our tree.
+Python 3.8. This is already a standard requirement for building our tree.
 
 * RUNNING THE TESTS
 

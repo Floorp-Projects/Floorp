@@ -37,9 +37,9 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
       make \
       mercurial \
       patch \
-      python3.7 \
-      python3.7-dev \
-      python3.7-venv \
+      python3.8 \
+      python3.8-dev \
+      python3.8-venv \
       python3-distutils-extra \
       python3-minimal \
       python3-zstandard \
@@ -50,7 +50,7 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
       zstd \
     && /usr/local/sbin/clean_packages.sh $DOCKER_IMAGE_PACKAGES
 
-RUN test $(readlink /usr/bin/python3) = python3.6 && ln -sf python3.7 /usr/bin/python3
+RUN test $(readlink /usr/bin/python3) = python3.6 && ln -sf python3.8 /usr/bin/python3
 
 # %include testing/mozharness/external_tools/robustcheckout.py
 COPY topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py
