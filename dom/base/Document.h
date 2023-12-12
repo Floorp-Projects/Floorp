@@ -995,6 +995,12 @@ class Document : public nsINode,
   bool IsInitialDocument() const { return mIsInitialDocumentInWindow; }
 
   /**
+   * Ask this document whether it has ever been a initial document in its
+   * window.
+   */
+  bool IsEverInitialDocument() const { return mIsEverInitialDocumentInWindow; }
+
+  /**
    * Tell this document that it's the initial document in its window.  See
    * comments on mIsInitialDocumentInWindow for when this should be called.
    */
@@ -4554,6 +4560,11 @@ class Document : public nsINode,
   // documents created to satisfy a GetDocument() on a window when there's no
   // document in it.
   bool mIsInitialDocumentInWindow : 1;
+
+  // True if this document has ever been the initial document for a window. This
+  // is useful to determine if a document that was the initial document at one
+  // point, and became non-initial later.
+  bool mIsEverInitialDocumentInWindow : 1;
 
   bool mIgnoreDocGroupMismatches : 1;
 

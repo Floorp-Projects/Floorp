@@ -1237,7 +1237,7 @@ bool nsPresContext::UserInputEventsAllowed() {
   }
 
   // Special document
-  if (Document()->IsInitialDocument()) {
+  if (Document()->IsEverInitialDocument()) {
     return true;
   }
 

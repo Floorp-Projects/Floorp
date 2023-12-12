@@ -1309,6 +1309,7 @@ Document::Document(const char* aContentType)
       mMayNeedFontPrefsUpdate(true),
       mMathMLEnabled(false),
       mIsInitialDocumentInWindow(false),
+      mIsEverInitialDocumentInWindow(false),
       mIgnoreDocGroupMismatches(false),
       mLoadedAsData(false),
       mAddedToMemoryReportingAsDataDocument(false),
@@ -18688,6 +18689,10 @@ nsIPrincipal* Document::GetPrincipalForPrefBasedHacks() const {
 
 void Document::SetIsInitialDocument(bool aIsInitialDocument) {
   mIsInitialDocumentInWindow = aIsInitialDocument;
+
+  if (aIsInitialDocument && !mIsEverInitialDocumentInWindow) {
+    mIsEverInitialDocumentInWindow = aIsInitialDocument;
+  }
 
   // Asynchronously tell the parent process that we are, or are no longer, the
   // initial document. This happens async.
