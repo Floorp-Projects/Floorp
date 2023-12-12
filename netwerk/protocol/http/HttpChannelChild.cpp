@@ -857,10 +857,7 @@ class RecordStopRequestDelta final {
 
  private:
   ~RecordStopRequestDelta() {
-    MOZ_ASSERT_IF(StaticPrefs::network_send_OnDataFinished(),
-                  !mOnDataFinishedTime.IsNull());
-    MOZ_ASSERT(!mOnStopRequestTime.IsNull());
-    if (mOnDataFinishedTime.IsNull()) {
+    if (mOnDataFinishedTime.IsNull() || mOnStopRequestTime.IsNull()) {
       return;
     }
 
