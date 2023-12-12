@@ -1019,6 +1019,60 @@ InterceptedHttpChannel::SetFetchHandlerFinish(TimeStamp aTimeStamp) {
 }
 
 NS_IMETHODIMP
+InterceptedHttpChannel::SetLaunchServiceWorkerStart(TimeStamp aTimeStamp) {
+  mServiceWorkerLaunchStart = aTimeStamp;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::GetLaunchServiceWorkerStart(TimeStamp* aRetVal) {
+  MOZ_ASSERT(aRetVal);
+  *aRetVal = mServiceWorkerLaunchStart;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::SetLaunchServiceWorkerEnd(TimeStamp aTimeStamp) {
+  mServiceWorkerLaunchEnd = aTimeStamp;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::GetLaunchServiceWorkerEnd(TimeStamp* aRetVal) {
+  MOZ_ASSERT(aRetVal);
+  *aRetVal = mServiceWorkerLaunchEnd;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::GetDispatchFetchEventStart(TimeStamp* aRetVal) {
+  MOZ_ASSERT(aRetVal);
+  *aRetVal = mTimeStamps.mInterceptionStart;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::GetDispatchFetchEventEnd(TimeStamp* aRetVal) {
+  MOZ_ASSERT(aRetVal);
+  *aRetVal = mTimeStamps.mFetchHandlerStart;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::GetHandleFetchEventStart(TimeStamp* aRetVal) {
+  MOZ_ASSERT(aRetVal);
+  *aRetVal = mTimeStamps.mFetchHandlerStart;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::GetHandleFetchEventEnd(TimeStamp* aRetVal) {
+  MOZ_ASSERT(aRetVal);
+  *aRetVal = mTimeStamps.mFetchHandlerFinish;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 InterceptedHttpChannel::GetIsReset(bool* aResult) {
   *aResult = mInterceptionReset;
   return NS_OK;

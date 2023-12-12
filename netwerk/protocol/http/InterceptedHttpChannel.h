@@ -143,7 +143,6 @@ class InterceptedHttpChannel final
     void RecordTime(Status&& aStatus,
                     TimeStamp&& aTimeStamp = TimeStamp::Now());
 
-   private:
     // The time stamp which the intercepted channel is created and async opend.
     TimeStamp mInterceptionStart;
 
@@ -158,6 +157,7 @@ class InterceptedHttpChannel final
     // which remote worker sends result back.
     TimeStamp mFetchHandlerFinish;
 
+   private:
     // The stage of interception.
     enum Stage {
       InterceptionStart,
@@ -216,6 +216,9 @@ class InterceptedHttpChannel final
   void MaybeCallStatusAndProgress();
 
   void MaybeCallBodyCallback();
+
+  TimeStamp mServiceWorkerLaunchStart;
+  TimeStamp mServiceWorkerLaunchEnd;
 
  public:
   static already_AddRefed<InterceptedHttpChannel> CreateForInterception(
@@ -290,6 +293,18 @@ class InterceptedHttpChannel final
       WebTransportSessionEventListener* aListener) override {
     return NS_OK;
   }
+
+  NS_IMETHOD SetLaunchServiceWorkerStart(TimeStamp aTimeStamp) override;
+  NS_IMETHOD GetLaunchServiceWorkerStart(TimeStamp* aRetVal) override;
+
+  NS_IMETHOD SetLaunchServiceWorkerEnd(TimeStamp aTimeStamp) override;
+  NS_IMETHOD GetLaunchServiceWorkerEnd(TimeStamp* aRetVal) override;
+
+  NS_IMETHOD GetDispatchFetchEventStart(TimeStamp* aRetVal) override;
+  NS_IMETHOD GetDispatchFetchEventEnd(TimeStamp* aRetVal) override;
+
+  NS_IMETHOD GetHandleFetchEventStart(TimeStamp* aRetVal) override;
+  NS_IMETHOD GetHandleFetchEventEnd(TimeStamp* aRetVal) override;
 
   void DoNotifyListenerCleanup() override;
 
