@@ -155,7 +155,6 @@ export let RemotePageAccessManager = {
       ],
       RPMSendQuery: [
         "IsPromoBlocked",
-        "ShouldShowSearch",
         "ShouldShowSearchBanner",
         "ShouldShowPromo",
         "SpecialMessageActionDispatch",

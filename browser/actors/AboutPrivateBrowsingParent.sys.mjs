@@ -27,7 +27,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 ChromeUtils.defineESModuleGetters(lazy, {
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
 
 // We only show the private search banner once per browser session.
@@ -118,16 +117,6 @@ export class AboutPrivateBrowsingParent extends JSWindowActorParent {
         urlBar.addEventListener("compositionstart", checkFirstChange);
         urlBar.addEventListener("paste", checkFirstChange);
         break;
-      }
-      case "ShouldShowSearch": {
-        let engineName = Services.prefs.getStringPref(
-          "browser.urlbar.placeholderName.private",
-          ""
-        );
-        let shouldHandOffToSearchMode = lazy.UrlbarPrefs.get(
-          "shouldHandOffToSearchMode"
-        );
-        return [engineName, shouldHandOffToSearchMode];
       }
       case "ShouldShowSearchBanner": {
         // If this is a pre-loaded private browsing new tab, then we don't want
