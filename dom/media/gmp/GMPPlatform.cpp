@@ -87,10 +87,10 @@ class GMPSyncRunnable final {
  private:
   ~GMPSyncRunnable() = default;
 
-  bool mDone;
+  bool mDone MOZ_GUARDED_BY(mMonitor);
   GMPTask* mTask;
   MessageLoop* mMessageLoop;
-  Monitor mMonitor MOZ_UNANNOTATED;
+  Monitor mMonitor;
 };
 
 class GMPThreadImpl : public GMPThread {
@@ -104,7 +104,7 @@ class GMPThreadImpl : public GMPThread {
 
  private:
   Mutex mMutex MOZ_UNANNOTATED;
-  base::Thread mThread;
+  base::Thread mThread MOZ_GUARDED_BY(mMutex);
 };
 
 GMPErr CreateThread(GMPThread** aThread) {
@@ -141,14 +141,14 @@ GMPErr SyncRunOnMainThread(GMPTask* aTask) {
   return GMPNoErr;
 }
 
-class GMPMutexImpl : public GMPMutex {
+class MOZ_CAPABILITY("mutex") GMPMutexImpl : public GMPMutex {
  public:
   GMPMutexImpl();
   virtual ~GMPMutexImpl();
 
   // GMPMutex
-  void Acquire() override;
-  void Release() override;
+  void Acquire() override MOZ_CAPABILITY_ACQUIRE();
+  void Release() override MOZ_CAPABILITY_RELEASE();
   void Destroy() override;
 
  private:

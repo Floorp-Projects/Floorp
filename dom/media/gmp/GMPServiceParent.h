@@ -116,7 +116,8 @@ class GeckoMediaPluginServiceParent final
 
   already_AddRefed<GMPParent> FindPluginForAPIFrom(
       size_t aSearchStartIndex, const nsACString& aAPI,
-      const nsTArray<nsCString>& aTags, size_t* aOutPluginIndex);
+      const nsTArray<nsCString>& aTags, size_t* aOutPluginIndex)
+      MOZ_REQUIRES(mMutex);
 
   nsresult GetNodeId(const nsAString& aOrigin, const nsAString& aTopLevelOrigin,
                      const nsAString& aGMPName, nsACString& aOutId);
@@ -195,7 +196,7 @@ class GeckoMediaPluginServiceParent final
   };
 
   // Protected by mMutex from the base class.
-  nsTArray<RefPtr<GMPParent>> mPlugins;
+  nsTArray<RefPtr<GMPParent>> mPlugins MOZ_GUARDED_BY(mMutex);
 
   // True if we've inspected MOZ_GMP_PATH on the GMP thread and loaded any
   // plugins found there into mPlugins.
@@ -231,7 +232,7 @@ class GeckoMediaPluginServiceParent final
 
   // Synchronization for barrier that ensures we've loaded GMPs from
   // MOZ_GMP_PATH before allowing GetContentParentFrom() to proceed.
-  Monitor mInitPromiseMonitor MOZ_UNANNOTATED;
+  Monitor mInitPromiseMonitor;
   MozMonitoredPromiseHolder<GenericPromise> mInitPromise;
   bool mLoadPluginsFromDiskComplete;
 
