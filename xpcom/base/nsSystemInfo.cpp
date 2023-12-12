@@ -974,6 +974,12 @@ nsresult nsSystemInfo::Init() {
   SetUint64Property(u"memsize"_ns, PR_GetPhysicalMemorySize());
   SetUint32Property(u"umask"_ns, nsSystemInfo::gUserUmask);
 
+#ifdef HAVE_64BIT_BUILD
+  SetUint32Property(u"archbits"_ns, 64);
+#else
+  SetUint32Property(u"archbits"_ns, 32);
+#endif
+
   uint64_t virtualMem = 0;
 
 #if defined(XP_WIN)
