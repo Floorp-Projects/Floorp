@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>fetchpriority</title>
+</head>
+<body>
+<script>
+  onload = function() {
+    const kData = [
+        { src: "../resources/square_25px_x_25px.png?1", fetchPriority: "low" },
+        { src: "../resources/square_25px_x_25px.png?2", fetchPriority: "high" },
+        { src: "../resources/square_25px_x_25px.png?3", fetchPriority: "auto" },
+        { src: "../resources/square_25px_x_25px.png?4"},
+    ];
+
+    let numberOfLoads = 0;
+    for (const data of kData) {
+        const imgElement = document.createElement("img");
+
+        if ("fetchPriority" in data) {
+            imgElement.fetchPriority = data.fetchPriority;
+        }
+
+        imgElement.addEventListener("load", () => {
+          ++numberOfLoads;
+          if (numberOfLoads == kData.length) {
+            opener.postMessage("ChildLoaded");
+          }
+        }, { once: "true"});
+
+        imgElement.alt = "a";
+        imgElement.src = data.src;
+
+        // Don't append `imgElement` to the document to prevent re-
+        // priotiziation.
+    }
+  }
+</script>
+</body>
+</html>
