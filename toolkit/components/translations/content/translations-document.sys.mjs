@@ -1052,7 +1052,7 @@ function updateElement(translationsDocument, element) {
     }
 
     // The translated tree dictates the order.
-    const translatedNodes = translatedTree.childNodes;
+    const translatedNodes = [...translatedTree.childNodes];
     for (
       let translatedIndex = 0;
       translatedIndex < translatedNodes.length;
