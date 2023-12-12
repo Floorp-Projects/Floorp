@@ -33,7 +33,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import mozilla.components.feature.downloads.toMegabyteOrKilobyteString
 import org.mozilla.fenix.R
@@ -170,9 +173,9 @@ private fun LanguageItemPreference(
 ) {
     val description: String =
         if (item.state.type == DownloadLanguageItemTypePreference.PivotLanguage) {
-            "(" + stringResource(id = R.string.download_languages_default_system_language_require_preference) + ")"
+            stringResource(id = R.string.download_languages_default_system_language_require_preference)
         } else {
-            "(" + item.languageModel.size.toMegabyteOrKilobyteString() + ")"
+            item.languageModel.size.toMegabyteOrKilobyteString()
         }
 
     val contentDescription =
@@ -316,7 +319,6 @@ private fun IconDownloadLanguageItemPreference(item: DownloadLanguageItemPrefere
  * @param label The label in the list item.
  * @param modifier [Modifier] to be applied to the layout.
  * @param description An description text right next the label.
- * @param maxDescriptionLines An optional maximum number of lines for the description text to span.
  * @param enabled Controls the enabled state. When false, onClick,
  * and this modifier will appear disabled for accessibility services.
  * @param onClick Called when the user clicks on the item.
@@ -327,7 +329,6 @@ private fun TextListItemInlineDescription(
     label: String,
     modifier: Modifier = Modifier,
     description: String,
-    maxDescriptionLines: Int = 1,
     enabled: Boolean = true,
     onClick: (() -> Unit),
     icon: @Composable RowScope.() -> Unit = {},
@@ -347,19 +348,22 @@ private fun TextListItemInlineDescription(
                 .padding(horizontal = 16.dp, vertical = 6.dp)
                 .weight(1f),
         ) {
-            Text(
-                text = label,
-                color = FirefoxTheme.colors.textPrimary,
-                style = FirefoxTheme.typography.subtitle1,
-                maxLines = 1,
+            val text = stringResource(
+                R.string.download_languages_language_item_preference,
+                label,
+                description,
             )
 
             Text(
-                text = description,
-                modifier = Modifier.padding(horizontal = 5.dp),
-                color = FirefoxTheme.colors.textSecondary,
+                buildAnnotatedString {
+                    withStyle(style = SpanStyle(color = FirefoxTheme.colors.textPrimary)) {
+                        append(label)
+                    }
+                    withStyle(style = SpanStyle(color = FirefoxTheme.colors.textSecondary)) {
+                        append(text.substringAfter(label))
+                    }
+                },
                 style = FirefoxTheme.typography.subtitle1,
-                maxLines = maxDescriptionLines,
             )
         }
         IconButton(

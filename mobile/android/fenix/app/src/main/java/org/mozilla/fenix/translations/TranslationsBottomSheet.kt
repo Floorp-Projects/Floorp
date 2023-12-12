@@ -126,9 +126,19 @@ internal fun TranslationsOptionsAnimation(
 }
 
 @Composable
-internal fun TranslationsDialog(onSettingClicked: () -> Unit) {
+internal fun TranslationsDialog(
+    learnMoreUrl: String,
+    showFirstTimeTranslation: Boolean,
+    onSettingClicked: () -> Unit,
+    onLearnMoreClicked: () -> Unit,
+    onTranslateButtonClick: () -> Unit,
+) {
     TranslationsDialogBottomSheet(
+        learnMoreUrl = learnMoreUrl,
+        showFirstTimeTranslation = showFirstTimeTranslation,
         onSettingClicked = onSettingClicked,
+        onLearnMoreClicked = onLearnMoreClicked,
+        onTranslateButtonClick = onTranslateButtonClick,
     )
 }
 

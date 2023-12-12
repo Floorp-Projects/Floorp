@@ -58,6 +58,7 @@ object SupportUtils {
         UNSIGNED_ADDONS("unsigned-addons"),
         REVIEW_QUALITY_CHECK("review_checker_mobile"),
         FX_SUGGEST("search-suggestions-firefox"),
+        TRANSLATIONS("android-translation"),
     }
 
     enum class MozillaPage(internal val path: String) {

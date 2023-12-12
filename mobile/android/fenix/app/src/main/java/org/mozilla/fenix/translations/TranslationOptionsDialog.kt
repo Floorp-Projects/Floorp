@@ -68,7 +68,7 @@ fun TranslationOptionsDialog(
             TextListItem(
                 label = stringResource(
                     id = R.string.translation_option_bottom_sheet_about_translations,
-                    formatArgs = arrayOf(stringResource(R.string.app_name)),
+                    formatArgs = arrayOf(stringResource(R.string.firefox)),
                 ),
                 modifier = Modifier
                     .fillMaxWidth()

@@ -23,7 +23,11 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -47,9 +51,11 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
                 val bottomSheet = findViewById<View?>(R.id.design_bottom_sheet)
                 bottomSheet?.setBackgroundResource(android.R.color.transparent)
                 behavior = BottomSheetBehavior.from(bottomSheet)
+                behavior?.state = BottomSheetBehavior.STATE_EXPANDED
             }
         }
 
+    @Suppress("LongMethod")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -92,10 +98,24 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
                                     }
                                 },
                             ) {
+                                val learnMoreUrl = SupportUtils.getSumoURLForTopic(
+                                    context,
+                                    SupportUtils.SumoTopic.TRANSLATIONS,
+                                )
                                 TranslationsDialog(
+                                    learnMoreUrl = learnMoreUrl,
+                                    showFirstTimeTranslation = context.settings().showFirstTimeTranslation,
                                     onSettingClicked = {
                                         translationsVisibility = false
                                     },
+                                    onLearnMoreClicked = {
+                                        (requireActivity() as HomeActivity).openToBrowserAndLoad(
+                                            searchTermOrURL = learnMoreUrl,
+                                            newTab = true,
+                                            from = BrowserDirection.FromTranslationsDialogFragment,
+                                        )
+                                    },
+                                    onTranslateButtonClick = {},
                                 )
                             }
                         }

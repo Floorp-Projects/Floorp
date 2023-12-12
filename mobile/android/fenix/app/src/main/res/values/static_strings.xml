@@ -122,29 +122,4 @@
     <string name="review_quality_check_retailer_name_amazon">Amazon</string>
     <string name="review_quality_check_retailer_name_bestbuy">Best Buy</string>
     <string name="review_quality_check_retailer_name_walmart">Walmart</string>
-
-    <string name="translations_bottom_sheet_title">Translate this page?</string>
-    <string name="translations_bottom_sheet_translate_from">Translate from</string>
-    <string name="translations_bottom_sheet_translate_to">Translate to</string>
-    <string name="translations_bottom_sheet_negative_button">Not now</string>
-    <string name="translations_bottom_sheet_positive_button">Translate</string>
-
-    <string name="translation_option_bottom_sheet_title">Translation Options</string>
-    <string name="translation_option_bottom_sheet_always_translate">Always offer to translate</string>
-    <string name="translation_option_bottom_sheet_always_translate_in_language">Always translate %1$s</string>
-    <string name="translation_option_bottom_sheet_never_translate_in_language">Never translate %1$s</string>
-    <string name="translation_option_bottom_sheet_never_translate_site">Never translate this site</string>
-    <string name="translation_option_bottom_sheet_translation_settings">Translation settings</string>
-    <string name="translation_option_bottom_sheet_about_translations">About translations in %1$s</string>
-
-    <string name="translation_settings_toolbar_title">Translations</string>
-    <string name="translation_settings_translation_preference">Translation preferences</string>
-    <string name="translation_settings_offer_to_translate">Offer to translate when possible</string>
-    <string name="translation_settings_always_download">Always download languages  in data saving mode</string>
-    <string name="translation_settings_automatic_translation">Automatic translation</string>
-    <string name="translation_settings_automatic_never_translate_sites">Never translate these sites</string>
-    <string name="translation_settings_download_language">Download languages</string>
-
-    <string name="translations_bottom_sheet_translating_in_progress">In progress</string>
-    <string name="translations_bottom_sheet_translating_in_progress_content_description">Translating in Progress</string>
 </resources>
