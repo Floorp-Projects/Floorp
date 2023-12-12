@@ -520,11 +520,12 @@ Result<Ok, nsresult> StartupCache::WriteToDisk() {
   MOZ_TRY(mFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
                                   0644, &fd.rwget()));
 
-  nsTArray<std::pair<const nsCString*, StartupCacheEntry*>> entries;
+  nsTArray<StartupCacheEntry::KeyValuePair> entries(mTable.count());
   for (auto iter = mTable.iter(); !iter.done(); iter.next()) {
     if (iter.get().value().mRequested) {
-      entries.AppendElement(
-          std::make_pair(&iter.get().key(), &iter.get().value()));
+      StartupCacheEntry::KeyValuePair kv(&iter.get().key(),
+                                         &iter.get().value());
+      entries.AppendElement(kv);
     }
   }
 
@@ -535,8 +536,8 @@ Result<Ok, nsresult> StartupCache::WriteToDisk() {
   entries.Sort(StartupCacheEntry::Comparator());
   loader::OutputBuffer buf;
   for (auto& e : entries) {
-    auto key = e.first;
-    auto value = e.second;
+    auto* key = e.first;
+    auto* value = e.second;
     auto uncompressedSize = value->mUncompressedSize;
     // Set the mHeaderOffsetInFile so we can go back and edit the offset.
     value->mHeaderOffsetInFile = buf.cursor();
