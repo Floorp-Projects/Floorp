@@ -11,6 +11,9 @@ job-defaults:
         max-run-time: 7200
     run:
         script: build-cpython.sh
+        resources:
+            - 'build/psutil_requirements.txt'
+            - 'build/zstandard_requirements.txt'
 
 linux64-python-3.8:
     treeherder:
