@@ -97,6 +97,7 @@ class TopSitesPagerAdapter(
         }
 
         override fun areContentsTheSame(oldItem: List<TopSite>, newItem: List<TopSite>): Boolean {
+            @Suppress("DiffUtilEquals")
             return newItem.zip(oldItem).all { (new, old) -> new == old }
         }
 
