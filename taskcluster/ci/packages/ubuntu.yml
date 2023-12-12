@@ -50,6 +50,7 @@ ub18-pygobject:
             url: http://archive.ubuntu.com/ubuntu/pool/main/p/pygobject/pygobject_3.26.1-2ubuntu1.dsc
             sha256: b77f84885d9b6d2c03422ecb3bf69d50dd0607d3456154943671e5a1f87946aa
         name: pygobject
+        patch: pygobject.diff
         pre-build-command: >-
             apt-get install python3.8-dev python3.8-dbg &&
             export DEBPYTHON3_SUPPORTED="3.6,3.8"
