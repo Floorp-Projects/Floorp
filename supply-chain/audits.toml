@@ -3870,11 +3870,6 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.9.0 -> 0.9.1"
 
-[[audits.unic-langid]]
-who = "Eemeli Aro <eemeli@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "0.9.1 -> 0.9.3"
-
 [[audits.unic-langid-impl]]
 who = "Zibi Braniecki <zibi@unicode.org>"
 criteria = "safe-to-deploy"
@@ -3884,12 +3879,6 @@ version = "0.9.0"
 who = "Makoto Kato <m_kato@ga2.so-net.ne.jp>"
 criteria = "safe-to-deploy"
 delta = "0.9.0 -> 0.9.1"
-
-[[audits.unic-langid-impl]]
-who = "Eemeli Aro <eemeli@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "0.9.1 -> 0.9.3"
-notes = "I have authored the upstream changes included here."
 
 [[audits.unic-langid-macros]]
 who = "Zibi Braniecki <zibi@unicode.org>"

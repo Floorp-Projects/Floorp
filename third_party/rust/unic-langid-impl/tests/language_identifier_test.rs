@@ -146,20 +146,10 @@ fn test_matches_as_range() {
 
 #[test]
 fn test_character_direction() {
-    let en_us: LanguageIdentifier = "en-US".parse().unwrap();
-    assert_eq!(en_us.character_direction(), CharacterDirection::LTR);
-
-    let ar_af: LanguageIdentifier = "ar-AF".parse().unwrap();
-    assert_eq!(ar_af.character_direction(), CharacterDirection::RTL);
-
-    let ks: LanguageIdentifier = "ks".parse().unwrap();
-    assert_eq!(ks.character_direction(), CharacterDirection::RTL);
-
-    let ks_deva: LanguageIdentifier = "ks-Deva".parse().unwrap();
-    assert_eq!(ks_deva.character_direction(), CharacterDirection::LTR);
-
-    let mn_mong: LanguageIdentifier = "mn-Mong".parse().unwrap();
-    assert_eq!(mn_mong.character_direction(), CharacterDirection::TTB);
+    let langid: LanguageIdentifier = "en-US".parse().unwrap();
+    let langid2: LanguageIdentifier = "ar-AF".parse().unwrap();
+    assert_eq!(langid.character_direction(), CharacterDirection::LTR);
+    assert_eq!(langid2.character_direction(), CharacterDirection::RTL);
 }
 
 #[test]
