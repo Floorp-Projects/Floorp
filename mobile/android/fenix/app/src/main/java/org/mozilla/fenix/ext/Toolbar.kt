@@ -33,6 +33,7 @@ fun Toolbar.setToolbarColors(@ColorInt foreground: Int, @ColorInt background: In
     }
 }
 
+@Suppress("RestrictedApi")
 private fun themeActionMenuView(item: ActionMenuView, colorFilter: ColorFilter?) {
     item.forEach { innerChild ->
         if (innerChild is ActionMenuItemView) {

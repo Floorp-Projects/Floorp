@@ -121,7 +121,7 @@ class FenixSnackbar private constructor(
          * Suppressing ComplexCondition. Yes it's unfortunately complex but that's the nature
          * of the snackbar handling by Android. It will be simpler once dynamic toolbar is always on.
          */
-        @Suppress("ComplexCondition")
+        @Suppress("ComplexCondition", "RestrictedApi")
         fun make(
             view: View,
             duration: Int = LENGTH_LONG,
