@@ -1,0 +1,12 @@
+[DEFAULT]
+subsuite = "telemetry-integration-tests"
+
+["test_deletion_request_ping.py"]
+
+["test_event_ping.py"]
+
+["test_main_tab_scalars.py"]
+
+["test_search_counts_across_sessions.py"]
+
+["test_subsession_management.py"]

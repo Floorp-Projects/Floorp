@@ -73,7 +73,7 @@ CRAMTEST_MANIFESTS += [
 ]
 
 PYTHON_UNITTEST_MANIFESTS += [
-    "fuzzing/smoke/python.ini",
-    "lint/test/python.ini",
-    "tryselect/test/python.ini",
+    "fuzzing/smoke/python.toml",
+    "lint/test/python.toml",
+    "tryselect/test/python.toml",
 ]

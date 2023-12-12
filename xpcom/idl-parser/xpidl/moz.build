@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 PYTHON_UNITTEST_MANIFESTS += [
-    "python.ini",
+    "python.toml",
 ]
 
 GeneratedFile("xpidl.stub", script="header.py", entry_point="main")

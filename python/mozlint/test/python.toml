@@ -1,0 +1,18 @@
+[DEFAULT]
+subsuite = "mozlint"
+
+["test_cli.py"]
+
+["test_editor.py"]
+
+["test_formatters.py"]
+
+["test_parser.py"]
+
+["test_pathutils.py"]
+
+["test_result.py"]
+
+["test_roller.py"]
+
+["test_types.py"]

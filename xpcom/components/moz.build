@@ -79,5 +79,5 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
 include("/ipc/chromium/chromium-config.mozbuild")
 
 PYTHON_UNITTEST_MANIFESTS += [
-    "test/python.ini",
+    "test/python.toml",
 ]

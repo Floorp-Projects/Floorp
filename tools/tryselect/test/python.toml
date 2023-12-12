@@ -1,0 +1,29 @@
+[DEFAULT]
+subsuite = "try"
+
+["test_again.py"]
+
+["test_auto.py"]
+
+["test_chooser.py"]
+
+["test_fuzzy.py"]
+
+["test_mozharness_integration.py"]
+
+["test_perf.py"]
+
+["test_perfcomparators.py"]
+
+["test_presets.py"]
+# Modifies "task_duration_history.json" in .mozbuild. Since other tests depend on this file, this test
+# shouldn't be run in parallel with those other tests.
+sequential = true
+
+["test_release.py"]
+
+["test_scriptworker.py"]
+
+["test_task_configs.py"]
+
+["test_tasks.py"]

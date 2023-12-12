@@ -1,0 +1,16 @@
+[DEFAULT]
+subsuite = "fog"
+
+["test_gifft.py"]
+
+["test_glean_parser_cpp.py"]
+
+["test_glean_parser_js.py"]
+
+["test_glean_parser_rust.py"]
+
+["test_jogfile_output.py"]
+
+["test_no_expired_metrics.py"]
+
+["test_yaml_indices.py"]

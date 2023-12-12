@@ -73,6 +73,6 @@ FINAL_LIBRARY = "xul"
 
 # Must be defined unconditionally (TC tasks doesn't account for build
 # configs and these tests do not depend on the bindings to be enabled).
-PYTHON_UNITTEST_MANIFESTS += ["test/python.ini"]
+PYTHON_UNITTEST_MANIFESTS += ["test/python.toml"]
 
 include("/tools/fuzzing/libfuzzer-config.mozbuild")

@@ -136,7 +136,7 @@ GeneratedFile(
 )
 
 PYTHON_UNITTEST_MANIFESTS += [
-    "test/python.ini",
+    "test/python.toml",
 ]
 
 XPCOM_MANIFESTS += [

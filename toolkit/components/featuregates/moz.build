@@ -10,7 +10,7 @@ with Files("**"):
 SPHINX_TREES["featuregates"] = "docs"
 
 XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.toml"]
-PYTHON_UNITTEST_MANIFESTS += ["test/python/python.ini"]
+PYTHON_UNITTEST_MANIFESTS += ["test/python/python.toml"]
 
 JAR_MANIFESTS += ["jar.mn"]
 

@@ -1,0 +1,10 @@
+[DEFAULT]
+subsuite = "mozrelease"
+
+["test_balrog.py"]
+
+["test_buglist_creator.py"]
+
+["test_update_verify.py"]
+
+["test_versions.py"]
