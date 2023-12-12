@@ -119,17 +119,17 @@ add_task(async function test_remove_all_dialog_l10n() {
     ]);
     Assert.equal(
       title.dataset.l10nId,
-      "about-logins-confirm-remove-all-dialog-title2",
+      "about-logins-confirm-remove-all-dialog-title",
       "Title contents should match l10n-id attribute set on element"
     );
     Assert.equal(
       message.dataset.l10nId,
-      "about-logins-confirm-remove-all-dialog-message2",
+      "about-logins-confirm-remove-all-dialog-message",
       "Message contents should match l10n-id attribute set on element"
     );
     Assert.equal(
       label.dataset.l10nId,
-      "about-logins-confirm-remove-all-dialog-checkbox-label2",
+      "about-logins-confirm-remove-all-dialog-checkbox-label",
       "Label contents should match l10n-id attribute set on outer element"
     );
     Assert.equal(
@@ -272,7 +272,7 @@ add_task(async function test_remove_all_dialog_remove_logins() {
     );
     Assert.equal(
       title.dataset.l10nId,
-      "about-logins-confirm-remove-all-dialog-title2",
+      "about-logins-confirm-remove-all-dialog-title",
       "Title contents should match l10n-id attribute set on element"
     );
     Assert.equal(
@@ -282,7 +282,7 @@ add_task(async function test_remove_all_dialog_remove_logins() {
     );
     Assert.equal(
       message.dataset.l10nId,
-      "about-logins-confirm-remove-all-dialog-message2",
+      "about-logins-confirm-remove-all-dialog-message",
       "Message contents should match l10n-id attribute set on element"
     );
     Assert.equal(
@@ -292,7 +292,7 @@ add_task(async function test_remove_all_dialog_remove_logins() {
     );
     Assert.equal(
       label.dataset.l10nId,
-      "about-logins-confirm-remove-all-dialog-checkbox-label2",
+      "about-logins-confirm-remove-all-dialog-checkbox-label",
       "Label contents should match l10n-id attribute set on outer element"
     );
     Assert.equal(
