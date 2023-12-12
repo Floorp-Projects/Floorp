@@ -6,6 +6,7 @@ package org.mozilla.fenix.shopping.store
 
 import androidx.compose.runtime.Immutable
 import mozilla.components.lib.state.State
+import java.text.NumberFormat
 
 private const val NUMBER_OF_HIGHLIGHTS_FOR_COMPACT_MODE = 2
 
@@ -94,17 +95,17 @@ sealed interface ReviewQualityCheckState : State {
             /**
              * Denotes no analysis is present for the product the user is browsing.
              *
-             * @property progress The progress of the analysis, ranges from 0-100.
+             * @property progress The [Progress] of the analysis, ranges from 0-100.
+             * Default value is -1, which means analysis is not in progress.
              */
             data class NoAnalysisPresent(
-                val progress: Float? = null,
+                val progress: Progress = Progress(-1f),
             ) : ProductReviewState {
-                /**
-                 * Normalized progress, ranges from 0-1.
-                 */
-                val normalizedProgress: Float? = progress?.div(100)
 
-                val isReanalyzing: Boolean = normalizedProgress != null && normalizedProgress < 100f
+                /**
+                 * Whether or not the progress bar is visible.
+                 */
+                val isProgressBarVisible: Boolean = progress.value != -1f
             }
 
             /**
@@ -168,14 +169,9 @@ sealed interface ReviewQualityCheckState : State {
                     /**
                      * Denotes reanalysis is in progress.
                      *
-                     * @property progress The progress of the analysis, ranges from 0-100.
+                     * @property progress The [Progress] of the analysis, ranges from 0-100.
                      */
-                    data class Reanalyzing(val progress: Float) : AnalysisStatus {
-                        /**
-                         * Normalized progress ranging from 0-1f.
-                         */
-                        val normalizedProgress: Float = progress / 100f
-                    }
+                    data class Reanalyzing(val progress: Progress) : AnalysisStatus
 
                     /**
                      * Denotes a product needs analysis.
@@ -186,6 +182,29 @@ sealed interface ReviewQualityCheckState : State {
                      * Denotes a product analysis is up to date.
                      */
                     object UpToDate : AnalysisStatus
+                }
+            }
+
+            /**
+             * Progress of the analysis, ranges from 0-100.
+             *
+             * @property value The value of the progress.
+             */
+            data class Progress(val value: Float) {
+                /**
+                 * Normalized progress, ranges from 0-1.
+                 */
+                val normalizedProgress: Float = value / 100f
+
+                /**
+                 * Percentage formatted progress ranging from 0-100%.
+                 */
+                val formattedProgress: String = FORMATTER.format(normalizedProgress)
+
+                companion object {
+                    private val FORMATTER = NumberFormat.getPercentInstance().apply {
+                        maximumFractionDigits = 0
+                    }
                 }
             }
         }

@@ -10,8 +10,8 @@ import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mozilla.fenix.shopping.ProductAnalysisTestData
-import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.AnalysisStatus
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.HighlightsInfo
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.Progress
 
 class ReviewQualityCheckStateTest {
 
@@ -227,22 +227,21 @@ class ReviewQualityCheckStateTest {
     }
 
     @Test
-    fun `WHEN analysis status has progress THEN normalized progress should match`() {
-        val analysisStatus = AnalysisStatus.Reanalyzing(progress = 61.6f)
-        assertEquals(analysisStatus.normalizedProgress, 0.616f)
+    fun `WHEN progress has a positive value THEN normalized progress should match`() {
+        val progress = Progress(61.6f)
+        assertEquals(0.616f, progress.normalizedProgress)
     }
 
     @Test
-    fun `WHEN no analysis is present with progress THEN normalized progress should match and isReanalyzing is true`() {
+    fun `WHEN no analysis is present with progress THEN normalized progress should match and progress bar is visible`() {
         val analysis = ProductAnalysisTestData.noAnalysisPresent(progress = 61.6f)
-        assertTrue(analysis.isReanalyzing)
-        assertEquals(analysis.normalizedProgress, 0.616f)
+        assertTrue(analysis.isProgressBarVisible)
+        assertEquals(0.616f, analysis.progress.normalizedProgress)
     }
 
     @Test
-    fun `WHEN no analysis is present with null progress THEN normalized progress should match and isReanalyzing is true`() {
-        val analysis = ProductAnalysisTestData.noAnalysisPresent(progress = null)
-        assertFalse(analysis.isReanalyzing)
-        assertEquals(analysis.normalizedProgress, null)
+    fun `WHEN no analysis is present with negative progress THEN progress bar is not visible`() {
+        val analysis = ProductAnalysisTestData.noAnalysisPresent(progress = -1f)
+        assertFalse(analysis.isProgressBarVisible)
     }
 }

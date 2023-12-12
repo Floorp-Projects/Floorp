@@ -38,6 +38,7 @@ import org.mozilla.fenix.shopping.middleware.ReviewQualityCheckPreferences
 import org.mozilla.fenix.shopping.middleware.ReviewQualityCheckPreferencesMiddleware
 import org.mozilla.fenix.shopping.middleware.ReviewQualityCheckService
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.AnalysisStatus
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.Progress
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.ProductVendor
 import java.util.Locale
 
@@ -908,7 +909,7 @@ class ReviewQualityCheckStoreTest {
 
             val expectedProgressState1 = ReviewQualityCheckState.OptedIn(
                 productReviewState = ProductAnalysisTestData.analysisPresent(
-                    analysisStatus = AnalysisStatus.Reanalyzing(61.6f),
+                    analysisStatus = AnalysisStatus.Reanalyzing(Progress(61.6f)),
                 ),
                 productRecommendationsPreference = false,
                 productRecommendationsExposure = true,
@@ -917,7 +918,7 @@ class ReviewQualityCheckStoreTest {
 
             val expectedProgressState2 = expectedProgressState1.copy(
                 productReviewState = ProductAnalysisTestData.analysisPresent(
-                    analysisStatus = AnalysisStatus.Reanalyzing(92.52f),
+                    analysisStatus = AnalysisStatus.Reanalyzing(Progress(92.52f)),
                 ),
             )
 
@@ -987,7 +988,7 @@ class ReviewQualityCheckStoreTest {
 
             val expectedProgressState1 = ReviewQualityCheckState.OptedIn(
                 productReviewState = ProductAnalysisTestData.analysisPresent(
-                    analysisStatus = AnalysisStatus.Reanalyzing(30f),
+                    analysisStatus = AnalysisStatus.Reanalyzing(Progress(30f)),
                 ),
                 productRecommendationsPreference = false,
                 productRecommendationsExposure = true,
@@ -996,13 +997,13 @@ class ReviewQualityCheckStoreTest {
 
             val expectedProgressState2 = expectedProgressState1.copy(
                 productReviewState = ProductAnalysisTestData.analysisPresent(
-                    analysisStatus = AnalysisStatus.Reanalyzing(61.6f),
+                    analysisStatus = AnalysisStatus.Reanalyzing(Progress(61.6f)),
                 ),
             )
 
             val expectedProgressState3 = expectedProgressState1.copy(
                 productReviewState = ProductAnalysisTestData.analysisPresent(
-                    analysisStatus = AnalysisStatus.Reanalyzing(92.52f),
+                    analysisStatus = AnalysisStatus.Reanalyzing(Progress(92.52f)),
                 ),
             )
 
@@ -1059,7 +1060,7 @@ class ReviewQualityCheckStoreTest {
 
             val notExpected = ReviewQualityCheckState.OptedIn(
                 productReviewState = ProductAnalysisTestData.analysisPresent(
-                    analysisStatus = AnalysisStatus.Reanalyzing(0f),
+                    analysisStatus = AnalysisStatus.Reanalyzing(Progress(0f)),
                 ),
                 productRecommendationsPreference = false,
                 productRecommendationsExposure = true,
@@ -1107,7 +1108,7 @@ class ReviewQualityCheckStoreTest {
 
             val notExpected = ReviewQualityCheckState.OptedIn(
                 productReviewState = ProductAnalysisTestData.analysisPresent(
-                    analysisStatus = AnalysisStatus.Reanalyzing(0f),
+                    analysisStatus = AnalysisStatus.Reanalyzing(Progress(0f)),
                 ),
                 productRecommendationsPreference = false,
                 productRecommendationsExposure = true,

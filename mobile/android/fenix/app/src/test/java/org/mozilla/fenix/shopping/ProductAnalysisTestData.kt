@@ -7,6 +7,7 @@ package org.mozilla.fenix.shopping
 import mozilla.components.concept.engine.shopping.Highlight
 import mozilla.components.concept.engine.shopping.ProductAnalysis
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.AnalysisStatus
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.HighlightsInfo
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.RecommendedProductState
@@ -47,8 +48,8 @@ object ProductAnalysisTestData {
         analysisStatus: AnalysisStatus = AnalysisStatus.UpToDate,
         highlightsInfo: HighlightsInfo? = null,
         recommendedProductState: RecommendedProductState = RecommendedProductState.Initial,
-    ): ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent =
-        ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent(
+    ): ProductReviewState.AnalysisPresent =
+        ProductReviewState.AnalysisPresent(
             productId = productId,
             productUrl = productUrl,
             reviewGrade = reviewGrade,
@@ -59,9 +60,9 @@ object ProductAnalysisTestData {
         )
 
     fun noAnalysisPresent(
-        progress: Float? = 0f,
-    ): ReviewQualityCheckState.OptedIn.ProductReviewState.NoAnalysisPresent =
-        ReviewQualityCheckState.OptedIn.ProductReviewState.NoAnalysisPresent(
-            progress = progress,
+        progress: Float = -1f,
+    ): ProductReviewState.NoAnalysisPresent =
+        ProductReviewState.NoAnalysisPresent(
+            progress = ProductReviewState.Progress(progress),
         )
 }

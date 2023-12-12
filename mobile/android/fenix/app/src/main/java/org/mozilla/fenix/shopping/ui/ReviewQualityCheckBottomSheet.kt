@@ -191,7 +191,7 @@ private fun ProductReview(
             }
 
             NoAnalysis(
-                isAnalyzing = productReviewState.isReanalyzing,
+                noAnalysisPresent = productReviewState,
                 onAnalyzeClick = onAnalyzeClick,
                 productRecommendationsEnabled = state.productRecommendationsPreference,
                 productVendor = state.productVendor,

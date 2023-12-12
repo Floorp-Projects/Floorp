@@ -29,16 +29,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.NoAnalysisPresent
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.Progress
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * No analysis UI for review quality check content.
  *
- * @param isAnalyzing Whether or not the displayed product is being analyzed.
+ * @param noAnalysisPresent The state of the analysis progress.
  * @param productRecommendationsEnabled The current state of the product recommendations toggle.
  * @param productVendor The vendor of the product.
  * @param isSettingsExpanded Whether or not the settings card is expanded.
@@ -56,7 +60,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 @Suppress("LongParameterList")
 @Composable
 fun NoAnalysis(
-    isAnalyzing: Boolean,
+    noAnalysisPresent: NoAnalysisPresent,
     productRecommendationsEnabled: Boolean?,
     productVendor: ReviewQualityCheckState.ProductVendor,
     isSettingsExpanded: Boolean,
@@ -74,7 +78,7 @@ fun NoAnalysis(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        ReviewQualityNoAnalysisCard(isAnalyzing, onAnalyzeClick)
+        ReviewQualityNoAnalysisCard(noAnalysisPresent, onAnalyzeClick)
 
         ReviewQualityInfoCard(
             productVendor = productVendor,
@@ -100,7 +104,7 @@ fun NoAnalysis(
 
 @Composable
 private fun ReviewQualityNoAnalysisCard(
-    isAnalyzing: Boolean,
+    noAnalysisPresent: NoAnalysisPresent,
     onAnalyzeClick: () -> Unit,
 ) {
     ReviewQualityCheckCard(
@@ -117,18 +121,22 @@ private fun ReviewQualityNoAnalysisCard(
 
         Spacer(Modifier.height(8.dp))
 
-        if (isAnalyzing) {
+        if (noAnalysisPresent.isProgressBarVisible) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IndeterminateProgressIndicator(
-                    Modifier.size(24.dp),
+                DeterminateProgressIndicator(
+                    progress = noAnalysisPresent.progress.normalizedProgress,
+                    modifier = Modifier.size(24.dp),
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    text = stringResource(id = R.string.review_quality_check_analysis_in_progress_warning_title),
+                    text = stringResource(
+                        id = R.string.review_quality_check_analysis_in_progress_warning_title_2,
+                        noAnalysisPresent.progress.formattedProgress,
+                    ),
                     style = FirefoxTheme.typography.headline8,
                     color = FirefoxTheme.colors.textPrimary,
                     modifier = Modifier.fillMaxWidth(),
@@ -181,9 +189,21 @@ private fun ReviewQualityNoAnalysisCard(
     }
 }
 
+private class NoAnalysisPreviewModelParameterProvider :
+    PreviewParameterProvider<NoAnalysisPresent> {
+    override val values: Sequence<NoAnalysisPresent>
+        get() = sequenceOf(
+            NoAnalysisPresent(),
+            NoAnalysisPresent(Progress(50f)),
+            NoAnalysisPresent(Progress(100f)),
+        )
+}
+
 @Composable
 @LightDarkPreview
-private fun NoAnalysisPreview() {
+private fun NoAnalysisPreview(
+    @PreviewParameter(NoAnalysisPreviewModelParameterProvider::class) noAnalysisPresent: NoAnalysisPresent,
+) {
     FirefoxTheme {
         Box(
             modifier = Modifier
@@ -197,7 +217,7 @@ private fun NoAnalysisPreview() {
             var isInfoExpanded by remember { mutableStateOf(false) }
 
             NoAnalysis(
-                isAnalyzing = isAnalyzing,
+                noAnalysisPresent = noAnalysisPresent,
                 onAnalyzeClick = { isAnalyzing = !isAnalyzing },
                 productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
                 productRecommendationsEnabled = productRecommendationsEnabled,

@@ -111,16 +111,16 @@ fun ProductAnalysis(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        when (productAnalysis.analysisStatus) {
-            AnalysisStatus.NeedsAnalysis -> {
+        when (val analysisStatus = productAnalysis.analysisStatus) {
+            is AnalysisStatus.NeedsAnalysis -> {
                 ReanalyzeCard(onReanalyzeClick = onReanalyzeClick)
             }
 
             is AnalysisStatus.Reanalyzing -> {
-                ReanalysisInProgressCard()
+                ReanalysisInProgress(analysisStatus)
             }
 
-            AnalysisStatus.UpToDate -> {
+            is AnalysisStatus.UpToDate -> {
                 // no-op
             }
         }
@@ -195,12 +195,27 @@ private fun ReanalyzeCard(
 }
 
 @Composable
-private fun ReanalysisInProgressCard() {
-    ReviewQualityCheckInfoCard(
-        title = stringResource(R.string.review_quality_check_reanalysis_in_progress_warning_title),
-        type = ReviewQualityCheckInfoType.Loading,
-        modifier = Modifier.fillMaxWidth(),
-    )
+private fun ReanalysisInProgress(reanalyzing: AnalysisStatus.Reanalyzing) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(vertical = 8.dp),
+    ) {
+        DeterminateProgressIndicator(
+            progress = reanalyzing.progress.normalizedProgress,
+            modifier = Modifier.size(24.dp),
+        )
+
+        Text(
+            text = stringResource(
+                id = R.string.review_quality_check_analysis_in_progress_warning_title_2,
+                reanalyzing.progress.formattedProgress,
+            ),
+            style = FirefoxTheme.typography.subtitle1,
+            color = FirefoxTheme.colors.textPrimary,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 }
 
 @Composable
@@ -272,7 +287,8 @@ private fun HighlightsCard(
                 highlightsInfo.highlightsForCompactMode
             }
         }
-        val titleContentDescription = headingResource(id = R.string.review_quality_check_highlights_title)
+        val titleContentDescription =
+            headingResource(id = R.string.review_quality_check_highlights_title)
 
         Text(
             text = stringResource(R.string.review_quality_check_highlights_title),
@@ -391,16 +407,17 @@ private fun HighlightTitle(highlightType: HighlightType) {
     }
 }
 
-private fun Modifier.extendWidthToParentBorder(): Modifier = this.layout { measurable, constraints ->
-    val placeable = measurable.measure(
-        constraints.copy(
-            maxWidth = constraints.maxWidth + combinedParentHorizontalPadding.roundToPx(),
-        ),
-    )
-    layout(placeable.width, placeable.height) {
-        placeable.place(0, 0)
+private fun Modifier.extendWidthToParentBorder(): Modifier =
+    this.layout { measurable, constraints ->
+        val placeable = measurable.measure(
+            constraints.copy(
+                maxWidth = constraints.maxWidth + combinedParentHorizontalPadding.roundToPx(),
+            ),
+        )
+        layout(placeable.width, placeable.height) {
+            placeable.place(0, 0)
+        }
     }
-}
 
 private fun HighlightType.toHighlight() =
     when (this) {
@@ -596,7 +613,14 @@ private class ProductAnalysisPreviewModelParameterProvider :
                 analysisStatus = AnalysisStatus.NeedsAnalysis,
             ),
             ProductAnalysisPreviewModel(
-                analysisStatus = AnalysisStatus.Reanalyzing(50.0f),
+                analysisStatus = AnalysisStatus.Reanalyzing(
+                    ReviewQualityCheckState.OptedIn.ProductReviewState.Progress(40f),
+                ),
+            ),
+            ProductAnalysisPreviewModel(
+                analysisStatus = AnalysisStatus.Reanalyzing(
+                    ReviewQualityCheckState.OptedIn.ProductReviewState.Progress(95f),
+                ),
             ),
             ProductAnalysisPreviewModel(
                 reviewGrade = null,

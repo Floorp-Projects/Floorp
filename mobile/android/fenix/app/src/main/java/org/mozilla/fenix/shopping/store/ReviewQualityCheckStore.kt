@@ -131,12 +131,20 @@ private fun mapStateForUpdateAction(
                 when (it.productReviewState) {
                     is ProductReviewState.AnalysisPresent -> {
                         val productReviewState =
-                            it.productReviewState.copy(analysisStatus = AnalysisStatus.Reanalyzing(0f))
+                            it.productReviewState.copy(
+                                analysisStatus = AnalysisStatus.Reanalyzing(
+                                    ProductReviewState.Progress(0f),
+                                ),
+                            )
                         it.copy(productReviewState = productReviewState)
                     }
 
                     is ProductReviewState.NoAnalysisPresent -> {
-                        it.copy(productReviewState = it.productReviewState.copy(progress = 0f))
+                        it.copy(
+                            productReviewState = it.productReviewState.copy(
+                                progress = ProductReviewState.Progress(0f),
+                            ),
+                        )
                     }
 
                     else -> {
@@ -168,7 +176,7 @@ private fun mapStateForUpdateAction(
                     is ProductReviewState.NoAnalysisPresent -> {
                         it.copy(
                             productReviewState = it.productReviewState.copy(
-                                progress = action.progress.toFloat(),
+                                progress = ProductReviewState.Progress(action.progress.toFloat()),
                             ),
                         )
                     }
@@ -176,7 +184,9 @@ private fun mapStateForUpdateAction(
                     is ProductReviewState.AnalysisPresent -> {
                         it.copy(
                             productReviewState = it.productReviewState.copy(
-                                analysisStatus = AnalysisStatus.Reanalyzing(action.progress.toFloat()),
+                                analysisStatus = AnalysisStatus.Reanalyzing(
+                                    ProductReviewState.Progress(action.progress.toFloat()),
+                                ),
                             ),
                         )
                     }
