@@ -64,6 +64,10 @@ void WebRenderCanvasRendererAsync::EnsurePipeline() {
       CompositableHandleOwner::WebRenderBridge);
 }
 
+bool WebRenderCanvasRendererAsync::HasPipeline() {
+  return mPipelineId.isSome();
+}
+
 void WebRenderCanvasRendererAsync::ClearCachedResources() {
   if (mPipelineId.isSome()) {
     mManager->RemovePipelineIdForCompositable(mPipelineId.ref());
