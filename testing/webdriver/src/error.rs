@@ -149,8 +149,6 @@ pub enum ErrorStatus {
     /// [command]: ../command/index.html
     UnknownMethod,
 
-    UnknownPath,
-
     /// Indicates that a [command] that should have executed properly is not
     /// currently supported.
     UnsupportedOperation,
@@ -206,9 +204,9 @@ impl ErrorStatus {
             UnableToCaptureScreen => "unable to capture screen",
             UnableToSetCookie => "unable to set cookie",
             UnexpectedAlertOpen => "unexpected alert open",
-            UnknownCommand | UnknownError => "unknown error",
+            UnknownError => "unknown error",
             UnknownMethod => "unknown method",
-            UnknownPath => "unknown command",
+            UnknownCommand => "unknown command",
             UnsupportedOperation => "unsupported operation",
         }
     }
@@ -246,7 +244,6 @@ impl ErrorStatus {
             UnknownCommand => StatusCode::NOT_FOUND,
             UnknownError => StatusCode::INTERNAL_SERVER_ERROR,
             UnknownMethod => StatusCode::METHOD_NOT_ALLOWED,
-            UnknownPath => StatusCode::NOT_FOUND,
             UnsupportedOperation => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
