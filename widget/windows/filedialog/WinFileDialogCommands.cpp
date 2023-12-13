@@ -312,8 +312,6 @@ void LogProcessingError(LogModule* aModule, ipc::IProtocol* aCaller,
 template <typename Res, typename Action, size_t N>
 RefPtr<Promise<Res>> SpawnFileDialogThread(const char (&where)[N],
                                            Action action) {
-  static mozilla::LazyLogModule sLogWFD("FileDialog");
-
   RefPtr<nsIThread> thread;
   {
     nsresult rv = NS_NewNamedThread("File Dialog", getter_AddRefs(thread),
@@ -329,7 +327,7 @@ RefPtr<Promise<Res>> SpawnFileDialogThread(const char (&where)[N],
     static_assert(
         std::is_same_v<uint32_t, std::underlying_type_t<decltype(res)>>);
     if (NS_FAILED(res)) {
-      MOZ_LOG(sLogWFD, LogLevel::Warning,
+      MOZ_LOG(sLogFileDialog, LogLevel::Warning,
               ("thread->AsyncShutdown() failed: res=0x%08" PRIX32,
                static_cast<uint32_t>(res)));
     }
@@ -366,14 +364,14 @@ RefPtr<Promise<Res>> SpawnFileDialogThread(const char (&where)[N],
 
     mozilla::mscom::STARegion staRegion;
     if (!staRegion) {
-      MOZ_LOG(sLogWFD, LogLevel::Error,
+      MOZ_LOG(sLogFileDialog, LogLevel::Error,
               ("COM init failed on file dialog thread: hr = %08lx",
                staRegion.GetHResult()));
 
       APTTYPE at;
       APTTYPEQUALIFIER atq;
       HRESULT const hr = ::CoGetApartmentType(&at, &atq);
-      MOZ_LOG(sLogWFD, LogLevel::Error,
+      MOZ_LOG(sLogFileDialog, LogLevel::Error,
               ("  current COM apartment state: hr = %08lX, APTTYPE = "
                "%08X, APTTYPEQUALIFIER = %08X",
                hr, at, atq));

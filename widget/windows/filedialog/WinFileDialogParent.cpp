@@ -12,18 +12,16 @@
 #include "mozilla/ipc/UtilityProcessManager.h"
 #include "nsISupports.h"
 
-mozilla::LazyLogModule sLogWFD("FileDialog");
-
 namespace mozilla::widget::filedialog {
 
 static size_t sOpenDialogActors = 0;
 
 WinFileDialogParent::WinFileDialogParent() {
-  MOZ_LOG(sLogWFD, LogLevel::Info, ("%s %p", __PRETTY_FUNCTION__, this));
+  MOZ_LOG(sLogFileDialog, LogLevel::Info, ("%s %p", __PRETTY_FUNCTION__, this));
 }
 
 WinFileDialogParent::~WinFileDialogParent() {
-  MOZ_LOG(sLogWFD, LogLevel::Info, ("%s %p", __PRETTY_FUNCTION__, this));
+  MOZ_LOG(sLogFileDialog, LogLevel::Info, ("%s %p", __PRETTY_FUNCTION__, this));
 }
 
 PWinFileDialogParent::nsresult WinFileDialogParent::BindToUtilityProcess(
@@ -54,7 +52,7 @@ PWinFileDialogParent::nsresult WinFileDialogParent::BindToUtilityProcess(
 }
 
 void WinFileDialogParent::ProcessingError(Result aCode, const char* aReason) {
-  detail::LogProcessingError(sLogWFD, this, aCode, aReason);
+  detail::LogProcessingError(sLogFileDialog, this, aCode, aReason);
 }
 
 ProcessProxy::ProcessProxy(RefPtr<WFDP>&& obj)
@@ -71,7 +69,7 @@ ProcessProxy::Contents::~Contents() {
   // ... and possibly the process
   if (!--sOpenDialogActors) {
     MOZ_LOG(
-        sLogWFD, LogLevel::Info,
+        sLogFileDialog, LogLevel::Info,
         ("%s: killing the WINDOWS_FILE_DIALOG process (no more live actors)",
          __PRETTY_FUNCTION__));
     ipc::UtilityProcessManager::GetSingleton()->CleanShutdown(

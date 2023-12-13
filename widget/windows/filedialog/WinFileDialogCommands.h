@@ -8,6 +8,7 @@
 #define widget_windows_filedialog_WinFileDialogCommands_h__
 
 #include "ipc/EnumSerializer.h"
+#include "mozilla/Logging.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/ipc/MessageLink.h"
 #include "mozilla/widget/filedialog/WinFileDialogCommandsDefn.h"
@@ -17,6 +18,8 @@ struct IFileDialog;
 struct IFileOpenDialog;
 
 namespace mozilla::widget::filedialog {
+
+extern LazyLogModule sLogFileDialog;
 
 enum class FileDialogType : uint8_t { Open, Save };
 
