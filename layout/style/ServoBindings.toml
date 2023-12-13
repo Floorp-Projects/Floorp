@@ -438,6 +438,7 @@ cbindgen-types = [
     { gecko = "StyleDisplay", servo = "crate::values::specified::Display" },
     { gecko = "StyleDisplayMode", servo = "crate::gecko::media_features::DisplayMode" },
     { gecko = "StylePlatform", servo = "crate::gecko::media_features::Platform" },
+    { gecko = "StyleGtkThemeFamily", servo = "crate::gecko::media_features::GtkThemeFamily" },
     { gecko = "StylePrefersColorScheme", servo = "crate::gecko::media_features::PrefersColorScheme" },
     { gecko = "StyleScripting", servo = "crate::gecko::media_features::Scripting" },
     { gecko = "StyleDynamicRange", servo = "crate::gecko::media_features::DynamicRange" },

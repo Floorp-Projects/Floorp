@@ -996,6 +996,11 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::GTKCSDCloseButtonPosition:
       aResult = mCSDCloseButtonPosition;
       break;
+    case IntID::GTKThemeFamily: {
+      EnsureInit();
+      aResult = int32_t(EffectiveTheme().mFamily);
+      break;
+    }
     case IntID::UseAccessibilityTheme:
     // If high contrast is enabled, enable prefers-reduced-transparency media
     // query as well as there is no dedicated option.
@@ -1782,7 +1787,7 @@ void nsLookAndFeel::PerThemeData::Init() {
     if (StringBeginsWith(mName, "Yaru"_ns)) {
       return ThemeFamily::Yaru;
     }
-    return ThemeFamily::Other;
+    return ThemeFamily::Unknown;
   }();
 
   GtkStyleContext* style;

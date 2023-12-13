@@ -189,6 +189,7 @@ static const char sIntPrefs[][45] = {
     "ui.videoDynamicRange",
     "ui.panelAnimations",
     "ui.hideCursorWhileTyping",
+    "ui.gtkThemeFamily",
 };
 
 static_assert(ArrayLength(sIntPrefs) == size_t(LookAndFeel::IntID::End),
