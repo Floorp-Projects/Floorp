@@ -11,7 +11,6 @@ include "mozilla/layers/CanvasTranslator.h";
 [MoveOnly] using mozilla::CrossProcessSemaphoreHandle from "mozilla/ipc/CrossProcessSemaphore.h";
 using mozilla::layers::TextureType from "mozilla/layers/LayersTypes.h";
 [MoveOnly] using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
-using mozilla::gfx::BackendType from "mozilla/gfx/Types.h";
 
 namespace mozilla {
 namespace layers {
@@ -34,9 +33,8 @@ parent:
    * aUseIPDLThread if true, use the IPDL thread instead of the worker pool for
    * translation requests
    */
-  async InitTranslator(TextureType aTextureType, BackendType aBackendType,
-                       Handle aHeaderHandle, Handle[] aBufferHandles,
-                       uint64_t aBufferSize,
+  async InitTranslator(TextureType aTextureType, Handle aHeaderHandle,
+                       Handle[] aBufferHandles, uint64_t aBufferSize,
                        CrossProcessSemaphoreHandle aReaderSem,
                        CrossProcessSemaphoreHandle aWriterSem,
                        bool aUseIPDLThread);
@@ -69,22 +67,6 @@ child:
    * Deactivate remote canvas, which will cause fall back to software.
    */
   async Deactivate();
-
-  /**
-   * Block further accelerated canvases from being created, but allow existing
-   * canvases to continue processing.
-   */
-  async BlockCanvas();
-
-  /**
-   * Notify that a remote accelerated canvas requires a fallback refresh.
-   */
-  async NotifyRequiresRefresh(int64_t aTextureId);
-
-  /**
-   * Cache the shmem of the framebuffer for snapshotting.
-   */
-  async SnapshotShmem(int64_t aTextureId, Shmem aShmem) returns (bool aSuccess);
 };
 
 } // layers

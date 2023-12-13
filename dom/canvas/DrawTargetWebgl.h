@@ -15,8 +15,6 @@
 #include "mozilla/WeakPtr.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/ipc/Shmem.h"
-#include "mozilla/layers/LayersTypes.h"
-
 #include <vector>
 
 namespace WGR {
@@ -26,18 +24,18 @@ struct PathBuilder;
 
 namespace mozilla {
 
-class WebGLContext;
-class WebGLBuffer;
-class WebGLFramebuffer;
-class WebGLProgram;
-class WebGLRenderbuffer;
-class WebGLTexture;
-class WebGLUniformLocation;
-class WebGLVertexArray;
+class ClientWebGLContext;
+class WebGLBufferJS;
+class WebGLFramebufferJS;
+class WebGLProgramJS;
+class WebGLRenderbufferJS;
+class WebGLTextureJS;
+class WebGLUniformLocationJS;
+class WebGLVertexArrayJS;
 
-namespace gl {
-class GLContext;
-}  // namespace gl
+namespace layers {
+class SurfaceDescriptor;
+}
 
 namespace gfx {
 
@@ -56,275 +54,6 @@ class GlyphCache;
 class PathCache;
 struct PathVertexRange;
 
-// SharedContextWebgl stores most of the actual WebGL state that may be used by
-// any number of DrawTargetWebgl's that use it. Foremost, it holds the actual
-// WebGL client context, programs, and buffers for mapping to WebGL.
-// Secondarily, it holds shared caches for surfaces, glyphs, paths, and
-// shadows so that each DrawTargetWebgl does not require its own cache. It is
-// important that SetTarget is called to install the current DrawTargetWebgl
-// before actually using the SharedContext, as the individual framebuffers
-// and viewport are still maintained in DrawTargetWebgl itself.
-class SharedContextWebgl : public mozilla::RefCounted<SharedContextWebgl>,
-                           public mozilla::SupportsWeakPtr {
-  friend class DrawTargetWebgl;
-  friend class SourceSurfaceWebgl;
-  friend class TextureHandle;
-  friend class SharedTextureHandle;
-  friend class StandaloneTexture;
-
- public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(SharedContextWebgl)
-
-  static already_AddRefed<SharedContextWebgl> Create();
-
-  ~SharedContextWebgl();
-
-  gl::GLContext* GetGLContext();
-
-  void EnterTlsScope();
-  void ExitTlsScope();
-
-  bool IsContextLost() const;
-
- private:
-  SharedContextWebgl();
-
-  WeakPtr<DrawTargetWebgl> mCurrentTarget;
-  IntSize mViewportSize;
-  // The current integer-aligned scissor rect.
-  IntRect mClipRect;
-  // The current fractional AA'd clip rect bounds.
-  Rect mClipAARect;
-
-  RefPtr<WebGLContext> mWebgl;
-
-  // Avoid spurious state changes by caching last used state.
-  RefPtr<WebGLProgram> mLastProgram;
-  RefPtr<WebGLTexture> mLastTexture;
-  RefPtr<WebGLTexture> mLastClipMask;
-
-  // WebGL shader resources
-  RefPtr<WebGLBuffer> mPathVertexBuffer;
-  RefPtr<WebGLVertexArray> mPathVertexArray;
-  // The current insertion offset into the GPU path buffer.
-  uint32_t mPathVertexOffset = 0;
-  // The maximum size of the GPU path buffer.
-  uint32_t mPathVertexCapacity = 0;
-  // The maximum supported type complexity of a GPU path.
-  uint32_t mPathMaxComplexity = 0;
-  // Whether to accelerate stroked paths with AAStroke.
-  bool mPathAAStroke = true;
-  // Whether to accelerate stroked paths with WGR.
-  bool mPathWGRStroke = false;
-
-  WGR::PathBuilder* mWGRPathBuilder = nullptr;
-  // Temporary buffer for generating WGR output into.
-  UniquePtr<WGR::OutputVertex[]> mWGROutputBuffer;
-
-  RefPtr<WebGLProgram> mSolidProgram;
-  Maybe<uint32_t> mSolidProgramViewport;
-  Maybe<uint32_t> mSolidProgramAA;
-  Maybe<uint32_t> mSolidProgramTransform;
-  Maybe<uint32_t> mSolidProgramColor;
-  Maybe<uint32_t> mSolidProgramClipMask;
-  Maybe<uint32_t> mSolidProgramClipBounds;
-  RefPtr<WebGLProgram> mImageProgram;
-  Maybe<uint32_t> mImageProgramViewport;
-  Maybe<uint32_t> mImageProgramAA;
-  Maybe<uint32_t> mImageProgramTransform;
-  Maybe<uint32_t> mImageProgramTexMatrix;
-  Maybe<uint32_t> mImageProgramTexBounds;
-  Maybe<uint32_t> mImageProgramColor;
-  Maybe<uint32_t> mImageProgramSwizzle;
-  Maybe<uint32_t> mImageProgramSampler;
-  Maybe<uint32_t> mImageProgramClipMask;
-  Maybe<uint32_t> mImageProgramClipBounds;
-
-  struct SolidProgramUniformState {
-    Maybe<Array<float, 2>> mViewport;
-    Maybe<Array<float, 1>> mAA;
-    Maybe<Array<float, 6>> mTransform;
-    Maybe<Array<float, 4>> mColor;
-    Maybe<Array<float, 4>> mClipBounds;
-  } mSolidProgramUniformState;
-
-  struct ImageProgramUniformState {
-    Maybe<Array<float, 2>> mViewport;
-    Maybe<Array<float, 1>> mAA;
-    Maybe<Array<float, 6>> mTransform;
-    Maybe<Array<float, 6>> mTexMatrix;
-    Maybe<Array<float, 4>> mTexBounds;
-    Maybe<Array<float, 4>> mColor;
-    Maybe<Array<float, 1>> mSwizzle;
-    Maybe<Array<float, 4>> mClipBounds;
-  } mImageProgramUniformState;
-
-  // Scratch framebuffer used to wrap textures for miscellaneous utility ops.
-  RefPtr<WebGLFramebuffer> mScratchFramebuffer;
-  // Buffer filled with zero data for initializing textures.
-  RefPtr<WebGLBuffer> mZeroBuffer;
-  size_t mZeroSize = 0;
-  // 1x1 texture with solid white mask for disabling clipping
-  RefPtr<WebGLTexture> mNoClipMask;
-
-  uint32_t mMaxTextureSize = 0;
-  bool mRasterizationTruncates = false;
-
-  // The current blending operation.
-  CompositionOp mLastCompositionOp = CompositionOp::OP_SOURCE;
-  // The constant blend color used for the blending operation.
-  Maybe<DeviceColor> mLastBlendColor;
-
-  // The cached scissor state. Operations that rely on scissor state should
-  // take care to enable or disable the cached scissor state as necessary.
-  bool mScissorEnabled = false;
-  IntRect mLastScissor = {-1, -1, -1, -1};
-
-  // A most-recently-used list of allocated texture handles.
-  LinkedList<RefPtr<TextureHandle>> mTextureHandles;
-  size_t mNumTextureHandles = 0;
-  // User data key linking a SourceSurface with its TextureHandle.
-  UserDataKey mTextureHandleKey = {0};
-  // User data key linking a SourceSurface with its shadow blur TextureHandle.
-  UserDataKey mShadowTextureKey = {0};
-  // User data key linking a ScaledFont with its GlyphCache.
-  UserDataKey mGlyphCacheKey = {0};
-  // List of all GlyphCaches currently allocated to fonts.
-  LinkedList<GlyphCache> mGlyphCaches;
-  // Cache of rasterized paths.
-  UniquePtr<PathCache> mPathCache;
-  // Collection of allocated shared texture pages that may be shared amongst
-  // many handles.
-  std::vector<RefPtr<SharedTexture>> mSharedTextures;
-  // Collection of allocated standalone textures that have a single assigned
-  // handle.
-  std::vector<RefPtr<StandaloneTexture>> mStandaloneTextures;
-  size_t mUsedTextureMemory = 0;
-  size_t mTotalTextureMemory = 0;
-  // The total reserved memory for empty texture pages that are kept around
-  // for future allocations.
-  size_t mEmptyTextureMemory = 0;
-  // A memory pressure event may signal from another thread that caches should
-  // be cleared if possible.
-  Atomic<bool> mShouldClearCaches;
-  // The total number of DrawTargetWebgls using this shared context.
-  size_t mDrawTargetCount = 0;
-  // Whether we are inside a scoped usage of TLS MakeCurrent, and what previous
-  // value to restore it to when exiting the scope.
-  Maybe<bool> mTlsScope;
-
-  bool Initialize();
-  bool CreateShaders();
-  void ResetPathVertexBuffer(bool aChanged = true);
-
-  void BlendFunc(GLenum aSrcFactor, GLenum aDstFactor);
-  void SetBlendState(CompositionOp aOp,
-                     const Maybe<DeviceColor>& aColor = Nothing());
-
-  void SetClipRect(const Rect& aClipRect);
-  void SetClipRect(const IntRect& aClipRect) { SetClipRect(Rect(aClipRect)); }
-  bool SetClipMask(const RefPtr<WebGLTexture>& aTex);
-  bool SetNoClipMask();
-  bool HasClipMask() const {
-    return mLastClipMask && mLastClipMask != mNoClipMask;
-  }
-
-  Maybe<uint32_t> GetUniformLocation(const RefPtr<WebGLProgram>& prog,
-                                     const std::string& aName) const;
-
-  template <class T, size_t N>
-  void UniformData(GLenum aFuncElemType, const Maybe<uint32_t>& aLoc,
-                   const Array<T, N>& aData);
-
-  // Avoids redundant UniformData calls by caching the previously set value.
-  template <class T, size_t N>
-  void MaybeUniformData(GLenum aFuncElemType, const Maybe<uint32_t>& aLoc,
-                        const Array<T, N>& aData, Maybe<Array<T, N>>& aCached);
-
-  bool IsCurrentTarget(DrawTargetWebgl* aDT) const {
-    return aDT == mCurrentTarget;
-  }
-  bool SetTarget(DrawTargetWebgl* aDT);
-
-  // Reset the current target.
-  void ClearTarget() { mCurrentTarget = nullptr; }
-  // Reset the last used texture to force binding next use.
-  void ClearLastTexture(bool aFullClear = false);
-
-  bool SupportsPattern(const Pattern& aPattern);
-
-  void EnableScissor(const IntRect& aRect);
-  void DisableScissor();
-
-  void SetTexFilter(WebGLTexture* aTex, bool aFilter);
-  void InitTexParameters(WebGLTexture* aTex, bool aFilter = true);
-
-  bool ReadInto(uint8_t* aDstData, int32_t aDstStride, SurfaceFormat aFormat,
-                const IntRect& aBounds, TextureHandle* aHandle = nullptr);
-  already_AddRefed<DataSourceSurface> ReadSnapshot(
-      TextureHandle* aHandle = nullptr);
-  already_AddRefed<TextureHandle> WrapSnapshot(const IntSize& aSize,
-                                               SurfaceFormat aFormat,
-                                               RefPtr<WebGLTexture> aTex);
-  already_AddRefed<TextureHandle> CopySnapshot(
-      const IntRect& aRect, TextureHandle* aHandle = nullptr);
-
-  already_AddRefed<WebGLTexture> GetCompatibleSnapshot(
-      SourceSurface* aSurface) const;
-  bool IsCompatibleSurface(SourceSurface* aSurface) const;
-
-  bool UploadSurface(DataSourceSurface* aData, SurfaceFormat aFormat,
-                     const IntRect& aSrcRect, const IntPoint& aDstOffset,
-                     bool aInit, bool aZero = false,
-                     const RefPtr<WebGLTexture>& aTex = nullptr);
-  already_AddRefed<TextureHandle> AllocateTextureHandle(
-      SurfaceFormat aFormat, const IntSize& aSize, bool aAllowShared = true,
-      bool aRenderable = false);
-  void DrawQuad();
-  void DrawTriangles(const PathVertexRange& aRange);
-  bool DrawRectAccel(const Rect& aRect, const Pattern& aPattern,
-                     const DrawOptions& aOptions,
-                     Maybe<DeviceColor> aMaskColor = Nothing(),
-                     RefPtr<TextureHandle>* aHandle = nullptr,
-                     bool aTransformed = true, bool aClipped = true,
-                     bool aAccelOnly = false, bool aForceUpdate = false,
-                     const StrokeOptions* aStrokeOptions = nullptr,
-                     const PathVertexRange* aVertexRange = nullptr,
-                     const Matrix* aRectXform = nullptr);
-
-  already_AddRefed<TextureHandle> DrawStrokeMask(
-      const PathVertexRange& aVertexRange, const IntSize& aSize);
-  bool DrawPathAccel(const Path* aPath, const Pattern& aPattern,
-                     const DrawOptions& aOptions,
-                     const StrokeOptions* aStrokeOptions = nullptr,
-                     bool aAllowStrokeAlpha = false,
-                     const ShadowOptions* aShadow = nullptr,
-                     bool aCacheable = true,
-                     const Matrix* aPathXform = nullptr);
-
-  bool DrawGlyphsAccel(ScaledFont* aFont, const GlyphBuffer& aBuffer,
-                       const Pattern& aPattern, const DrawOptions& aOptions,
-                       const StrokeOptions* aStrokeOptions,
-                       bool aUseSubpixelAA);
-
-  void PruneTextureHandle(const RefPtr<TextureHandle>& aHandle);
-  bool PruneTextureMemory(size_t aMargin = 0, bool aPruneUnused = true);
-
-  bool RemoveSharedTexture(const RefPtr<SharedTexture>& aTexture);
-  bool RemoveStandaloneTexture(const RefPtr<StandaloneTexture>& aTexture);
-
-  void UnlinkSurfaceTextures();
-  void UnlinkSurfaceTexture(const RefPtr<TextureHandle>& aHandle);
-  void UnlinkGlyphCaches();
-
-  void OnMemoryPressure();
-  void ClearAllTextures();
-  void ClearEmptyTextureMemory();
-  void ClearCachesIfNecessary();
-
-  void CachePrefs();
-};
-
 // DrawTargetWebgl implements a subset of the DrawTarget API suitable for use
 // by CanvasRenderingContext2D. It maps these to a client WebGL context so that
 // they can be accelerated where possible by WebGL. It manages both routing to
@@ -335,17 +64,20 @@ class SharedContextWebgl : public mozilla::RefCounted<SharedContextWebgl>,
 // WebGL context so that data can be more easily interchanged between them and
 // also to enable more reasonable limiting of resource usage.
 class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
+  friend class SharedTextureHandle;
+  friend class StandaloneTexture;
+  friend class TextureHandle;
   friend class SourceSurfaceWebgl;
-  friend class SharedContextWebgl;
+  friend class AutoSaveContext;
 
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTargetWebgl, override)
 
  private:
   IntSize mSize;
-  RefPtr<WebGLFramebuffer> mFramebuffer;
-  RefPtr<WebGLTexture> mTex;
-  RefPtr<WebGLTexture> mClipMask;
+  RefPtr<WebGLFramebufferJS> mFramebuffer;
+  RefPtr<WebGLTextureJS> mTex;
+  RefPtr<WebGLTextureJS> mClipMask;
   // The integer-aligned, scissor-compatible conservative bounds of the clip.
   IntRect mClipBounds;
   // The fractional, AA'd bounds of the clip rect, if applicable.
@@ -355,7 +87,6 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   RefPtr<DrawTargetSkia> mSkiaNoClip;
   // The Shmem backing the Skia DT, if applicable.
   mozilla::ipc::Shmem mShmem;
-  mozilla::ipc::IProtocol* mShmemAllocator = nullptr;
   // The currently cached snapshot of the WebGL context
   RefPtr<DataSourceSurface> mSnapshot;
   // Whether the framebuffer is still in the initially clear state.
@@ -368,8 +99,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   bool mSkiaLayerClear = false;
   // Whether or not the WebGL context has valid contents and is being drawn to
   bool mWebglValid = true;
-  // Whether or not the clip state has changed since last used by
-  // SharedContextWebgl.
+  // Whether or not the clip state has changed since last used by SharedContext.
   bool mClipChanged = true;
   // Whether or not the clip state needs to be refreshed. Sometimes the clip
   // state may be overwritten and require a refresh later, even though it has
@@ -381,9 +111,6 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   int32_t mLayerDepth = 0;
 
   RefPtr<TextureHandle> mSnapshotTexture;
-
-  // Cached unit circle path
-  RefPtr<Path> mUnitCirclePath;
 
   // Store a log of clips currently pushed so that they can be used to init
   // the clip state of temporary DTs.
@@ -427,21 +154,269 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
   UsageProfile mProfile;
 
-  RefPtr<SharedContextWebgl> mSharedContext;
+  // SharedContext stores most of the actual WebGL state that may be used by
+  // any number of DrawTargetWebgl's that use it. Foremost, it holds the actual
+  // WebGL client context, programs, and buffers for mapping to WebGL.
+  // Secondarily, it holds shared caches for surfaces, glyphs, paths, and
+  // shadows so that each DrawTargetWebgl does not require its own cache. It is
+  // important that SetTarget is called to install the current DrawTargetWebgl
+  // before actually using the SharedContext, as the individual framebuffers
+  // and viewport are still maintained in DrawTargetWebgl itself.
+  class SharedContext : public mozilla::RefCounted<SharedContext>,
+                        public mozilla::SupportsWeakPtr {
+   public:
+    MOZ_DECLARE_REFCOUNTED_TYPENAME(SharedContext)
+
+    SharedContext();
+    ~SharedContext();
+
+    WeakPtr<DrawTargetWebgl> mCurrentTarget;
+    IntSize mViewportSize;
+    // The current integer-aligned scissor rect.
+    IntRect mClipRect;
+    // The current fractional AA'd clip rect bounds.
+    Rect mClipAARect;
+
+    RefPtr<ClientWebGLContext> mWebgl;
+
+    // Avoid spurious state changes by caching last used state.
+    RefPtr<WebGLProgramJS> mLastProgram;
+    RefPtr<WebGLTextureJS> mLastTexture;
+    RefPtr<WebGLTextureJS> mLastClipMask;
+
+    // WebGL shader resources
+    RefPtr<WebGLBufferJS> mPathVertexBuffer;
+    RefPtr<WebGLVertexArrayJS> mPathVertexArray;
+    // The current insertion offset into the GPU path buffer.
+    uint32_t mPathVertexOffset = 0;
+    // The maximum size of the GPU path buffer.
+    uint32_t mPathVertexCapacity = 0;
+    // The maximum supported type complexity of a GPU path.
+    uint32_t mPathMaxComplexity = 0;
+    // Whether to accelerate stroked paths with AAStroke.
+    bool mPathAAStroke = true;
+    // Whether to accelerate stroked paths with WGR.
+    bool mPathWGRStroke = false;
+
+    WGR::PathBuilder* mWGRPathBuilder = nullptr;
+    // Temporary buffer for generating WGR output into.
+    UniquePtr<WGR::OutputVertex[]> mWGROutputBuffer;
+
+    RefPtr<WebGLProgramJS> mSolidProgram;
+    RefPtr<WebGLUniformLocationJS> mSolidProgramViewport;
+    RefPtr<WebGLUniformLocationJS> mSolidProgramAA;
+    RefPtr<WebGLUniformLocationJS> mSolidProgramTransform;
+    RefPtr<WebGLUniformLocationJS> mSolidProgramColor;
+    RefPtr<WebGLUniformLocationJS> mSolidProgramClipMask;
+    RefPtr<WebGLUniformLocationJS> mSolidProgramClipBounds;
+    RefPtr<WebGLProgramJS> mImageProgram;
+    RefPtr<WebGLUniformLocationJS> mImageProgramViewport;
+    RefPtr<WebGLUniformLocationJS> mImageProgramAA;
+    RefPtr<WebGLUniformLocationJS> mImageProgramTransform;
+    RefPtr<WebGLUniformLocationJS> mImageProgramTexMatrix;
+    RefPtr<WebGLUniformLocationJS> mImageProgramTexBounds;
+    RefPtr<WebGLUniformLocationJS> mImageProgramColor;
+    RefPtr<WebGLUniformLocationJS> mImageProgramSwizzle;
+    RefPtr<WebGLUniformLocationJS> mImageProgramSampler;
+    RefPtr<WebGLUniformLocationJS> mImageProgramClipMask;
+    RefPtr<WebGLUniformLocationJS> mImageProgramClipBounds;
+
+    struct SolidProgramUniformState {
+      Maybe<Array<float, 2>> mViewport;
+      Maybe<Array<float, 1>> mAA;
+      Maybe<Array<float, 6>> mTransform;
+      Maybe<Array<float, 4>> mColor;
+      Maybe<Array<float, 4>> mClipBounds;
+    } mSolidProgramUniformState;
+
+    struct ImageProgramUniformState {
+      Maybe<Array<float, 2>> mViewport;
+      Maybe<Array<float, 1>> mAA;
+      Maybe<Array<float, 6>> mTransform;
+      Maybe<Array<float, 6>> mTexMatrix;
+      Maybe<Array<float, 4>> mTexBounds;
+      Maybe<Array<float, 4>> mColor;
+      Maybe<Array<float, 1>> mSwizzle;
+      Maybe<Array<float, 4>> mClipBounds;
+    } mImageProgramUniformState;
+
+    // Scratch framebuffer used to wrap textures for miscellaneous utility ops.
+    RefPtr<WebGLFramebufferJS> mScratchFramebuffer;
+    // Buffer filled with zero data for initializing textures.
+    RefPtr<WebGLBufferJS> mZeroBuffer;
+    size_t mZeroSize = 0;
+    // 1x1 texture with solid white mask for disabling clipping
+    RefPtr<WebGLTextureJS> mNoClipMask;
+
+    uint32_t mMaxTextureSize = 0;
+    bool mRasterizationTruncates = false;
+
+    // The current blending operation.
+    CompositionOp mLastCompositionOp = CompositionOp::OP_SOURCE;
+    // The constant blend color used for the blending operation.
+    Maybe<DeviceColor> mLastBlendColor;
+
+    // The cached scissor state. Operations that rely on scissor state should
+    // take care to enable or disable the cached scissor state as necessary.
+    bool mScissorEnabled = false;
+    IntRect mLastScissor = {-1, -1, -1, -1};
+
+    // A most-recently-used list of allocated texture handles.
+    LinkedList<RefPtr<TextureHandle>> mTextureHandles;
+    size_t mNumTextureHandles = 0;
+    // User data key linking a SourceSurface with its TextureHandle.
+    UserDataKey mTextureHandleKey = {0};
+    // User data key linking a SourceSurface with its shadow blur TextureHandle.
+    UserDataKey mShadowTextureKey = {0};
+    // User data key linking a ScaledFont with its GlyphCache.
+    UserDataKey mGlyphCacheKey = {0};
+    // List of all GlyphCaches currently allocated to fonts.
+    LinkedList<GlyphCache> mGlyphCaches;
+    // Cache of rasterized paths.
+    UniquePtr<PathCache> mPathCache;
+    // Collection of allocated shared texture pages that may be shared amongst
+    // many handles.
+    std::vector<RefPtr<SharedTexture>> mSharedTextures;
+    // Collection of allocated standalone textures that have a single assigned
+    // handle.
+    std::vector<RefPtr<StandaloneTexture>> mStandaloneTextures;
+    size_t mUsedTextureMemory = 0;
+    size_t mTotalTextureMemory = 0;
+    // The total reserved memory for empty texture pages that are kept around
+    // for future allocations.
+    size_t mEmptyTextureMemory = 0;
+    // A memory pressure event may signal from another thread that caches should
+    // be cleared if possible.
+    Atomic<bool> mShouldClearCaches;
+    // Whether the Shmem is currently being processed by the remote side. If so,
+    // we need to wait for processing to complete before any further commands
+    // modifying the Skia DT can proceed.
+    bool mWaitForShmem = false;
+
+    const Matrix& GetTransform() const { return mCurrentTarget->mTransform; }
+
+    bool IsContextLost() const;
+
+    bool Initialize();
+    bool CreateShaders();
+    void ResetPathVertexBuffer(bool aChanged = true);
+
+    void SetBlendState(CompositionOp aOp,
+                       const Maybe<DeviceColor>& aBlendColor = Nothing());
+
+    void SetClipRect(const Rect& aClipRect);
+    void SetClipRect(const IntRect& aClipRect) { SetClipRect(Rect(aClipRect)); }
+    bool SetClipMask(const RefPtr<WebGLTextureJS>& aTex);
+    bool SetNoClipMask();
+    bool HasClipMask() const {
+      return mLastClipMask && mLastClipMask != mNoClipMask;
+    }
+
+    // Avoids redundant UniformData calls by caching the previously set value.
+    template <class T, size_t N>
+    void MaybeUniformData(GLenum aFuncElemType,
+                          const WebGLUniformLocationJS* const aLoc,
+                          const Array<T, N>& aData,
+                          Maybe<Array<T, N>>& aCached);
+
+    bool IsCurrentTarget(DrawTargetWebgl* aDT) const {
+      return aDT == mCurrentTarget;
+    }
+    bool SetTarget(DrawTargetWebgl* aDT);
+
+    // Reset the current target.
+    void ClearTarget() { mCurrentTarget = nullptr; }
+    // Reset the last used texture to force binding next use.
+    void ClearLastTexture(bool aFullClear = false);
+
+    bool SupportsPattern(const Pattern& aPattern);
+
+    void EnableScissor(const IntRect& aRect);
+    void DisableScissor();
+
+    void SetTexFilter(WebGLTextureJS* aTex, bool aFilter);
+    void InitTexParameters(WebGLTextureJS* aTex, bool aFilter = true);
+
+    bool ReadInto(uint8_t* aDstData, int32_t aDstStride, SurfaceFormat aFormat,
+                  const IntRect& aBounds, TextureHandle* aHandle = nullptr);
+    already_AddRefed<DataSourceSurface> ReadSnapshot(
+        TextureHandle* aHandle = nullptr);
+    already_AddRefed<TextureHandle> WrapSnapshot(const IntSize& aSize,
+                                                 SurfaceFormat aFormat,
+                                                 RefPtr<WebGLTextureJS> aTex);
+    already_AddRefed<TextureHandle> CopySnapshot(
+        const IntRect& aRect, TextureHandle* aHandle = nullptr);
+
+    already_AddRefed<WebGLTextureJS> GetCompatibleSnapshot(
+        SourceSurface* aSurface) const;
+    bool IsCompatibleSurface(SourceSurface* aSurface) const;
+
+    bool UploadSurface(DataSourceSurface* aData, SurfaceFormat aFormat,
+                       const IntRect& aSrcRect, const IntPoint& aDstOffset,
+                       bool aInit, bool aZero = false,
+                       const RefPtr<WebGLTextureJS>& aTex = nullptr);
+    already_AddRefed<TextureHandle> AllocateTextureHandle(
+        SurfaceFormat aFormat, const IntSize& aSize, bool aAllowShared = true,
+        bool aRenderable = false);
+    bool DrawRectAccel(const Rect& aRect, const Pattern& aPattern,
+                       const DrawOptions& aOptions,
+                       Maybe<DeviceColor> aMaskColor = Nothing(),
+                       RefPtr<TextureHandle>* aHandle = nullptr,
+                       bool aTransformed = true, bool aClipped = true,
+                       bool aAccelOnly = false, bool aForceUpdate = false,
+                       const StrokeOptions* aStrokeOptions = nullptr,
+                       const PathVertexRange* aVertexRange = nullptr);
+
+    already_AddRefed<TextureHandle> DrawStrokeMask(
+        const PathVertexRange& aVertexRange, const IntSize& aSize);
+    bool DrawPathAccel(const Path* aPath, const Pattern& aPattern,
+                       const DrawOptions& aOptions,
+                       const StrokeOptions* aStrokeOptions = nullptr,
+                       bool aAllowStrokeAlpha = false,
+                       const ShadowOptions* aShadow = nullptr,
+                       bool aCacheable = true);
+
+    bool DrawGlyphsAccel(ScaledFont* aFont, const GlyphBuffer& aBuffer,
+                         const Pattern& aPattern, const DrawOptions& aOptions,
+                         const StrokeOptions* aStrokeOptions,
+                         bool aUseSubpixelAA);
+
+    void PruneTextureHandle(const RefPtr<TextureHandle>& aHandle);
+    bool PruneTextureMemory(size_t aMargin = 0, bool aPruneUnused = true);
+
+    bool RemoveSharedTexture(const RefPtr<SharedTexture>& aTexture);
+    bool RemoveStandaloneTexture(const RefPtr<StandaloneTexture>& aTexture);
+
+    void UnlinkSurfaceTextures();
+    void UnlinkSurfaceTexture(const RefPtr<TextureHandle>& aHandle);
+    void UnlinkGlyphCaches();
+
+    void OnMemoryPressure();
+    void ClearAllTextures();
+    void ClearEmptyTextureMemory();
+    void ClearCachesIfNecessary();
+
+    void WaitForShmem(DrawTargetWebgl* aTarget);
+
+    void CachePrefs();
+  };
+
+  RefPtr<SharedContext> mSharedContext;
+
+  static MOZ_THREAD_LOCAL(SharedContext*) sSharedContext;
+
+  // Try to keep around the shared context for the main thread in case canvases
+  // are rapidly recreated and destroyed.
+  static RefPtr<SharedContext> sMainSharedContext;
 
  public:
   DrawTargetWebgl();
   ~DrawTargetWebgl();
 
-  static bool CanCreate(const IntSize& aSize, SurfaceFormat aFormat);
-  static already_AddRefed<DrawTargetWebgl> Create(
-      const IntSize& aSize, SurfaceFormat aFormat,
-      ipc::IProtocol* aShmemAllocator,
-      const RefPtr<SharedContextWebgl>& aSharedContext);
+  static already_AddRefed<DrawTargetWebgl> Create(const IntSize& aSize,
+                                                  SurfaceFormat aFormat);
 
-  bool Init(const IntSize& aSize, SurfaceFormat aFormat,
-            ipc::IProtocol* aShmemAllocator,
-            const RefPtr<SharedContextWebgl>& aSharedContext);
+  bool Init(const IntSize& aSize, SurfaceFormat aFormat);
 
   bool IsValid() const override;
 
@@ -451,7 +426,6 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   BackendType GetBackendType() const override { return BackendType::WEBGL; }
   IntSize GetSize() const override { return mSize; }
 
-  void PrepareData();
   already_AddRefed<SourceSurface> GetDataSnapshot();
   already_AddRefed<SourceSurface> Snapshot() override;
   already_AddRefed<SourceSurface> GetOptimizedSnapshot(DrawTarget* aTarget);
@@ -502,12 +476,6 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
               const DrawOptions& aOptions = DrawOptions()) override;
   void Fill(const Path* aPath, const Pattern& aPattern,
             const DrawOptions& aOptions = DrawOptions()) override;
-  void FillCircle(const Point& aOrigin, float aRadius, const Pattern& aPattern,
-                  const DrawOptions& aOptions = DrawOptions()) override;
-  void StrokeCircle(const Point& aOrigin, float aRadius,
-                    const Pattern& aPattern,
-                    const StrokeOptions& aStrokeOptions = StrokeOptions(),
-                    const DrawOptions& aOptions = DrawOptions()) override;
 
   void SetPermitSubpixelAA(bool aPermitSubpixelAA) override;
   void FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
@@ -564,9 +532,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   void SetTransform(const Matrix& aTransform) override;
   void* GetNativeSurface(NativeSurfaceType aType) override;
 
-  void CopyToSwapChain(layers::RemoteTextureId aId,
-                       layers::RemoteTextureOwnerId aOwnerId,
-                       base::ProcessId aPid = base::kInvalidProcessId);
+  Maybe<layers::SurfaceDescriptor> GetFrontBuffer();
 
   void OnMemoryPressure() { mSharedContext->OnMemoryPressure(); }
 
@@ -574,10 +540,6 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     std::stringstream stream;
     stream << "DrawTargetWebgl(" << this << ")";
     return stream.str();
-  }
-
-  Maybe<mozilla::ipc::Shmem> GetShmem() const {
-    return mShmem.IsWritable() ? Some(mShmem) : Nothing();
   }
 
  private:
@@ -612,9 +574,6 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
                 const DrawOptions& aOptions,
                 const StrokeOptions* aStrokeOptions = nullptr,
                 bool aAllowStrokeAlpha = false);
-  void DrawCircle(const Point& aOrigin, float aRadius, const Pattern& aPattern,
-                  const DrawOptions& aOptions,
-                  const StrokeOptions* aStrokeOptions = nullptr);
 
   bool MarkChanged();
 
@@ -622,7 +581,14 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   void FlattenSkia();
   bool FlushFromSkia();
 
+  void WaitForShmem() {
+    if (mSharedContext->mWaitForShmem) {
+      mSharedContext->WaitForShmem(this);
+    }
+  }
+
   void MarkSkiaChanged(bool aOverwrite = false) {
+    WaitForShmem();
     if (aOverwrite) {
       mSkiaValid = true;
       mSkiaLayer = false;
@@ -655,7 +621,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   struct AutoRestoreContext {
     DrawTargetWebgl* mTarget;
     Rect mClipAARect;
-    RefPtr<WebGLTexture> mLastClipMask;
+    RefPtr<WebGLTextureJS> mLastClipMask;
 
     explicit AutoRestoreContext(DrawTargetWebgl* aTarget);
 

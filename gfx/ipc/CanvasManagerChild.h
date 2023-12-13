@@ -49,7 +49,6 @@ class CanvasManagerChild final : public PCanvasManagerChild {
   void EndCanvasTransaction();
   void ClearCachedResources();
   void DeactivateCanvas();
-  void BlockCanvas();
 
   RefPtr<layers::CanvasChild> GetCanvasChild();
 
@@ -64,7 +63,6 @@ class CanvasManagerChild final : public PCanvasManagerChild {
   RefPtr<webgpu::WebGPUChild> mWebGPUChild;
   const uint32_t mId;
   bool mActive = true;
-  bool mBlocked = false;
 
   static MOZ_THREAD_LOCAL(CanvasManagerChild*) sLocalManager;
   static Atomic<uint32_t> sNextId;
