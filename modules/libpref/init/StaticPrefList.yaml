@@ -11839,19 +11839,19 @@
 # Whether we can send OnDataFinished to html5parser in content process directly
 - name: network.send_OnDataFinished.html5parser
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether we can send OnDataFinished in the content process
 - name: network.send_OnDataFinished
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether we can send OnDataAvailable to content process directly.
 - name: network.send_OnDataFinished.nsInputStreamPump
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether we can send send OnDataFinished only after dispatching
