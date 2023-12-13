@@ -25,6 +25,24 @@ add_setup(async function setup() {
   });
 });
 
+function makeChan(uri) {
+  let chan = NetUtil.newChannel({
+    uri,
+    loadUsingSystemPrincipal: true,
+  }).QueryInterface(Ci.nsIHttpChannel);
+  chan.loadFlags = Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
+  return chan;
+}
+
+function httpChannelOpenPromise(chan, flags) {
+  return new Promise(resolve => {
+    function finish(req, buffer) {
+      resolve([req, buffer]);
+    }
+    chan.asyncOpen(new ChannelListener(finish, null, flags));
+  });
+}
+
 async function channelOpenPromise(url, msg) {
   let conn = new WebSocketConnection();
   await conn.open(url);
@@ -257,6 +275,37 @@ async function test_h2_ws_with_h2_proxy() {
   await proxy.stop();
 }
 
+async function test_bug_1848013() {
+  Services.prefs.setBoolPref("network.http.http2.websockets", true);
+
+  let proxy = new NodeHTTPProxyServer();
+  await proxy.start();
+
+  registerCleanupFunction(async () => {
+    await wss.stop();
+    await proxy.stop();
+  });
+
+  let wss = new NodeWebSocketHttp2Server();
+  await wss.start();
+  Assert.notEqual(wss.port(), null);
+  await wss.registerMessageHandler((data, ws) => {
+    ws.send(data);
+  });
+
+  // To create a h2 connection before the websocket one.
+  let chan = makeChan(`https://localhost:${wss.port()}/`);
+  await httpChannelOpenPromise(chan, CL_ALLOW_UNKNOWN_CL);
+
+  let url = `wss://localhost:${wss.port()}`;
+  const msg = "test h2 websocket with h1 insecure proxy";
+  let [status, res] = await channelOpenPromise(url, msg);
+  Assert.equal(status, Cr.NS_OK);
+  Assert.deepEqual(res, [msg]);
+
+  await proxy.stop();
+}
+
 add_task(test_h1_websocket_direct);
 add_task(test_h2_websocket_direct);
 add_task(test_h1_ws_with_secure_h1_proxy);
@@ -265,3 +314,4 @@ add_task(test_h1_ws_with_h2_proxy);
 add_task(test_h2_ws_with_h1_insecure_proxy);
 add_task(test_h2_ws_with_h1_secure_proxy);
 add_task(test_h2_ws_with_h2_proxy);
+add_task(test_bug_1848013);
