@@ -39,23 +39,27 @@ fn get_feature_string(kind: ImageBufferKind, texture_external_version: TextureEx
         (ImageBufferKind::TextureRect, _) => "TEXTURE_RECT",
         (ImageBufferKind::TextureExternal, TextureExternalVersion::ESSL3) => "TEXTURE_EXTERNAL",
         (ImageBufferKind::TextureExternal, TextureExternalVersion::ESSL1) => "TEXTURE_EXTERNAL_ESSL1",
+        (ImageBufferKind::TextureExternalBT709, _) => "TEXTURE_EXTERNAL_BT709",
     }
 }
 
-fn has_platform_support(kind: ImageBufferKind, gl_type: &GlType) -> bool {
-    match (kind, gl_type) {
+fn has_platform_support(kind: ImageBufferKind, device: &Device) -> bool {
+    match (kind, device.gl().get_type()) {
         (ImageBufferKind::Texture2D, _) => true,
-        (ImageBufferKind::TextureRect, &GlType::Gles) => false,
-        (ImageBufferKind::TextureRect, &GlType::Gl) => true,
-        (ImageBufferKind::TextureExternal, &GlType::Gles) => true,
-        (ImageBufferKind::TextureExternal, &GlType::Gl) => false,
+        (ImageBufferKind::TextureRect, GlType::Gles) => false,
+        (ImageBufferKind::TextureRect, GlType::Gl) => true,
+        (ImageBufferKind::TextureExternal, GlType::Gles) => true,
+        (ImageBufferKind::TextureExternal, GlType::Gl) => false,
+        (ImageBufferKind::TextureExternalBT709, GlType::Gles) => device.supports_extension("GL_EXT_YUV_target"),
+        (ImageBufferKind::TextureExternalBT709, GlType::Gl) => false,
     }
 }
 
-pub const IMAGE_BUFFER_KINDS: [ImageBufferKind; 3] = [
+pub const IMAGE_BUFFER_KINDS: [ImageBufferKind; 4] = [
     ImageBufferKind::Texture2D,
     ImageBufferKind::TextureRect,
     ImageBufferKind::TextureExternal,
+    ImageBufferKind::TextureExternalBT709,
 ];
 
 const ADVANCED_BLEND_FEATURE: &str = "ADVANCED_BLEND";
@@ -830,7 +834,7 @@ impl Shaders {
             cs_scale.push(None);
         }
         for image_buffer_kind in &IMAGE_BUFFER_KINDS {
-            if has_platform_support(*image_buffer_kind, &gl_type) {
+            if has_platform_support(*image_buffer_kind, device) {
                 let feature_string = get_feature_string(
                     *image_buffer_kind,
                     texture_external_version,
@@ -933,7 +937,7 @@ impl Shaders {
             brush_fast_image.push(None);
         }
         for buffer_kind in 0 .. IMAGE_BUFFER_KINDS.len() {
-            if !has_platform_support(IMAGE_BUFFER_KINDS[buffer_kind], &gl_type)
+            if !has_platform_support(IMAGE_BUFFER_KINDS[buffer_kind], device)
                 // Brush shaders are not ESSL1 compatible
                 || (IMAGE_BUFFER_KINDS[buffer_kind] == ImageBufferKind::TextureExternal
                     && texture_external_version == TextureExternalVersion::ESSL1)
@@ -988,7 +992,7 @@ impl Shaders {
             brush_yuv_image.push(None);
         }
         for image_buffer_kind in &IMAGE_BUFFER_KINDS {
-            if has_platform_support(*image_buffer_kind, &gl_type) {
+            if has_platform_support(*image_buffer_kind, device) {
                 yuv_features.push("YUV");
                 fast_path_features.push("FAST_PATH");
 
@@ -1361,7 +1365,7 @@ impl CompositorShaders {
         }
 
         for image_buffer_kind in &IMAGE_BUFFER_KINDS {
-            if !has_platform_support(*image_buffer_kind, &gl_type) {
+            if !has_platform_support(*image_buffer_kind, device) {
                 continue;
             }
 
@@ -1486,7 +1490,10 @@ fn get_shader_feature_flags(gl_type: GlType, texture_external_version: TextureEx
         GlType::Gl => ShaderFeatureFlags::GL,
         GlType::Gles => {
             let texture_external_flag = match texture_external_version {
-                TextureExternalVersion::ESSL3 => ShaderFeatureFlags::TEXTURE_EXTERNAL,
+                TextureExternalVersion::ESSL3 => {
+                    ShaderFeatureFlags::TEXTURE_EXTERNAL
+                        | ShaderFeatureFlags::TEXTURE_EXTERNAL_BT709
+                }
                 TextureExternalVersion::ESSL1 => ShaderFeatureFlags::TEXTURE_EXTERNAL_ESSL1,
             };
             ShaderFeatureFlags::GLES | texture_external_flag
