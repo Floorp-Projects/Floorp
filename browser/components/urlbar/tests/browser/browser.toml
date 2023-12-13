@@ -666,6 +666,8 @@ support-files = ["file_userTypedValue.html"]
 
 ["browser_view_emptyResultSet.js"]
 
+["browser_view_removedSelectedElement.js"]
+
 ["browser_view_resultDisplay.js"]
 
 ["browser_view_resultTypes_display.js"]
