@@ -105,7 +105,7 @@ add_task(async function test_cmp_telemetry() {
     set: [
       ["cookiebanners.service.mode", Ci.nsICookieBannerService.MODE_REJECT],
       ["cookiebanners.service.enableGlobalRules", true],
-      ["cookiebanners.bannerClicking.maxTriesPerSiteAndSession", 0],
+      ["cookiebanners.bannerClicking.executeOnce", false],
     ],
   });
 

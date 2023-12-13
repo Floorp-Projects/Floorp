@@ -914,25 +914,13 @@ nsCookieBannerService::RemoveAllDomainPrefs(const bool aIsPrivate) {
 }
 
 NS_IMETHODIMP
-nsCookieBannerService::ShouldStopBannerClickingForSite(const nsACString& aSite,
-                                                       const bool aIsTopLevel,
-                                                       const bool aIsPrivate,
-                                                       bool* aShouldStop) {
+nsCookieBannerService::HasExecutedForSite(const nsACString& aSite,
+                                          const bool aIsTopLevel,
+                                          const bool aIsPrivate,
+                                          bool* aHasExecuted) {
   if (!mIsInitialized) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-
-  uint8_t threshold =
-      StaticPrefs::cookiebanners_bannerClicking_maxTriesPerSiteAndSession();
-
-  // Don't stop banner clicking if the pref is set to zero.
-  if (threshold == 0) {
-    *aShouldStop = false;
-    return NS_OK;
-  }
-
-  // Ensure we won't use an overflowed threshold.
-  threshold = std::min(threshold, std::numeric_limits<uint8_t>::max());
 
   auto entry = mExecutedDataForSites.MaybeGet(aSite);
 
@@ -941,16 +929,14 @@ nsCookieBannerService::ShouldStopBannerClickingForSite(const nsACString& aSite,
   }
 
   auto& data = entry.ref();
-  uint8_t cnt = 0;
 
   if (aIsPrivate) {
-    cnt = aIsTopLevel ? data.countExecutedInTopPrivate
-                      : data.countExecutedInFramePrivate;
+    *aHasExecuted = aIsTopLevel ? data.hasExecutedInTopPrivate
+                                : data.hasExecutedInFramePrivate;
   } else {
-    cnt = aIsTopLevel ? data.countExecutedInTop : data.countExecutedInFrame;
+    *aHasExecuted =
+        aIsTopLevel ? data.hasExecutedInTop : data.hasExecutedInFrame;
   }
-
-  *aShouldStop = cnt >= threshold;
 
   return NS_OK;
 }
@@ -966,27 +952,19 @@ nsCookieBannerService::MarkSiteExecuted(const nsACString& aSite,
   }
 
   auto& data = mExecutedDataForSites.LookupOrInsert(aSite);
-  uint8_t* count = nullptr;
 
   if (aIsPrivate) {
     if (aIsTopLevel) {
-      count = &data.countExecutedInTopPrivate;
+      data.hasExecutedInTopPrivate = true;
     } else {
-      count = &data.countExecutedInFramePrivate;
+      data.hasExecutedInFramePrivate = true;
     }
   } else {
     if (aIsTopLevel) {
-      count = &data.countExecutedInTop;
+      data.hasExecutedInTop = true;
     } else {
-      count = &data.countExecutedInFrame;
+      data.hasExecutedInFrame = true;
     }
-  }
-
-  MOZ_ASSERT(count);
-
-  // Ensure we never overflow.
-  if (*count < std::numeric_limits<uint8_t>::max()) {
-    (*count) += 1;
   }
 
   return NS_OK;
@@ -1008,16 +986,16 @@ nsCookieBannerService::RemoveExecutedRecordForSite(const nsACString& aSite,
   auto data = entry.Data();
 
   if (aIsPrivate) {
-    data.countExecutedInTopPrivate = 0;
-    data.countExecutedInFramePrivate = 0;
+    data.hasExecutedInTopPrivate = false;
+    data.hasExecutedInFramePrivate = false;
   } else {
-    data.countExecutedInTop = 0;
-    data.countExecutedInFrame = 0;
+    data.hasExecutedInTop = false;
+    data.hasExecutedInFrame = false;
   }
 
   // We can remove the entry if there is no flag set after removal.
-  if (!data.countExecutedInTop && !data.countExecutedInFrame &&
-      !data.countExecutedInTopPrivate && !data.countExecutedInFramePrivate) {
+  if (!data.hasExecutedInTop && !data.hasExecutedInFrame &&
+      !data.hasExecutedInTopPrivate && !data.hasExecutedInFramePrivate) {
     entry.Remove();
   }
 
@@ -1034,16 +1012,16 @@ nsCookieBannerService::RemoveAllExecutedRecords(const bool aIsPrivate) {
     auto& data = iter.Data();
     // Clear the flags.
     if (aIsPrivate) {
-      data.countExecutedInTopPrivate = 0;
-      data.countExecutedInFramePrivate = 0;
+      data.hasExecutedInTopPrivate = false;
+      data.hasExecutedInFramePrivate = false;
     } else {
-      data.countExecutedInTop = 0;
-      data.countExecutedInFrame = 0;
+      data.hasExecutedInTop = false;
+      data.hasExecutedInFrame = false;
     }
 
     // Remove the entry if there is no flag set.
-    if (!data.countExecutedInTop && !data.countExecutedInFrame &&
-        !data.countExecutedInTopPrivate && !data.countExecutedInFramePrivate) {
+    if (!data.hasExecutedInTop && !data.hasExecutedInFrame &&
+        !data.hasExecutedInTopPrivate && !data.hasExecutedInFramePrivate) {
       iter.Remove();
     }
   }

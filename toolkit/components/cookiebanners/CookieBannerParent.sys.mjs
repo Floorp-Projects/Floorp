@@ -24,9 +24,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
-  "maxTriesPerSiteAndSession",
-  "cookiebanners.bannerClicking.maxTriesPerSiteAndSession",
-  3
+  "executeOnce",
+  "cookiebanners.bannerClicking.executeOnce",
+  true
 );
 
 ChromeUtils.defineLazyGetter(lazy, "CookieBannerL10n", () => {
@@ -200,12 +200,12 @@ export class CookieBannerParent extends JSWindowActorParent {
       }
     }
 
-    // Check if we previously executed banner clicking for the site. If the pref
-    // instructs to always execute banner clicking, we will set it to
+    // Check if we previously executed banner clicking for the site before. If
+    // the pref instructs to always execute banner clicking, we will set it to
     // false.
     let hasExecuted = false;
-    if (lazy.maxTriesPerSiteAndSession > 0) {
-      hasExecuted = Services.cookieBanners.shouldStopBannerClickingForSite(
+    if (lazy.executeOnce) {
+      hasExecuted = Services.cookieBanners.hasExecutedForSite(
         domain,
         this.#isTopLevel,
         this.#isPrivateBrowsing
