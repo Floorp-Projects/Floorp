@@ -157,8 +157,9 @@ static FilePathResult GetPingFilePath(std::wstring& uuid) {
 static mozilla::WindowsError SendDesktopTelemetryPing(
     const std::string defaultBrowser, const std::string previousDefaultBrowser,
     const std::string defaultPdf, const std::string osVersion,
-    const std::string osLocale, const std::string notificationType,
-    const std::string notificationShown, const std::string notificationAction,
+    const std::string prevOSVersion, const std::string osLocale,
+    const std::string notificationType, const std::string notificationShown,
+    const std::string notificationAction,
     const std::string prevNotificationAction) {
   // Fill in the ping JSON object.
   Json::Value ping;
@@ -168,6 +169,7 @@ static mozilla::WindowsError SendDesktopTelemetryPing(
   ping["previous_default_browser"] = previousDefaultBrowser;
   ping["default_pdf_viewer_raw"] = defaultPdf;
   ping["os_version"] = osVersion;
+  ping["previous_os_version"] = prevOSVersion;
   ping["os_locale"] = osLocale;
   ping["notification_type"] = notificationType;
   ping["notification_shown"] = notificationShown;
@@ -310,6 +312,36 @@ static TelemetryFieldResult GetAndUpdatePreviousDefaultBrowser(
     return TelemetryFieldResult(mozilla::WindowsError::FromHResult(hr));
   }
   return oldCurrentDefault;
+}
+
+// This both retrieves a value from the registry and writes new data
+// (`currentOSVersion`) to the same value. If there is no value stored,
+// `currentOSVersion` is returned instead.
+//
+// The value we retrieve here will only be updated when we are sending a ping to
+// ensure that pings don't miss a Windows OS version transition.
+static TelemetryFieldResult GetAndUpdatePreviousOSVersion(
+    const std::string& currentOSVersion) {
+  const wchar_t* registryValueName = L"PingCurrentOSVersion";
+
+  MaybeStringResult readResult =
+      RegistryGetValueString(IsPrefixed::Unprefixed, registryValueName);
+  if (readResult.isErr()) {
+    HRESULT hr = readResult.unwrapErr().AsHResult();
+    LOG_ERROR_MESSAGE(L"Unable to read registry: %#X", hr);
+    return TelemetryFieldResult(mozilla::WindowsError::FromHResult(hr));
+  }
+  mozilla::Maybe<std::string> maybeValue = readResult.unwrap();
+  std::string oldOSVersion = maybeValue.valueOr(currentOSVersion);
+
+  mozilla::WindowsErrorResult<mozilla::Ok> writeResult = RegistrySetValueString(
+      IsPrefixed::Unprefixed, registryValueName, currentOSVersion.c_str());
+  if (writeResult.isErr()) {
+    HRESULT hr = writeResult.unwrapErr().AsHResult();
+    LOG_ERROR_MESSAGE(L"Unable to write registry: %#X", hr);
+    return TelemetryFieldResult(mozilla::WindowsError::FromHResult(hr));
+  }
+  return oldOSVersion;
 }
 
 // If notifications actions occurred, we want to make sure a ping gets sent for
@@ -504,7 +536,20 @@ HRESULT SendDefaultAgentPing(
 
     // Don't update the registry's default browser data until we are sure we
     // want to send a ping. Otherwise it could be updated to reflect a ping we
-    // never sent.
+    // never sent.  Same logic for witnessing Windows updates, but they're less
+    // valuable, so try (and potentially fail) those first.
+    TelemetryFieldResult previousOSVersionResult =
+        GetAndUpdatePreviousOSVersion(osVersion);
+    if (previousOSVersionResult.isErr()) {
+      return previousOSVersionResult.unwrapErr().AsHResult();
+    }
+    std::string prevOSVersion = previousOSVersionResult.unwrap();
+
+    mozilla::glean::system::os_version.Set(
+        nsDependentCString(osVersion.c_str()));
+    mozilla::glean::system::previous_os_version.Set(
+        nsDependentCString(prevOSVersion.c_str()));
+
     TelemetryFieldResult previousDefaultBrowserResult =
         GetAndUpdatePreviousDefaultBrowser(currentDefaultBrowser,
                                            browserInfo.previousDefaultBrowser);
@@ -522,8 +567,8 @@ HRESULT SendDefaultAgentPing(
 
     return SendDesktopTelemetryPing(
                currentDefaultBrowser, previousDefaultBrowser, currentDefaultPdf,
-               osVersion, osLocale, notificationType, notificationShown,
-               notificationAction, prevNotificationAction)
+               osVersion, prevOSVersion, osLocale, notificationType,
+               notificationShown, notificationAction, prevNotificationAction)
         .AsHResult();
   }();
 
