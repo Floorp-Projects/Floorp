@@ -588,6 +588,22 @@ var PrintUtils = {
   },
 };
 
+/**
+ * This class implements a custom element that contains a nested <browser>
+ * element. When the user asks to print a document, we create an instance of
+ * this class and ask the platform code to create a static clone of the
+ * document (a snapshot that won't change due to script running, etc.) in the
+ * contained <browser> element.
+ *
+ * To display a print preview to the user, an instance of this element is added
+ * to the tab-modal print preview dialog. As the user changes print preview
+ * settings, we may actually end up with multiple instances: one for a preview
+ * of the original document, one for a preview of the focused frame, and one
+ * for the selected text.
+ *
+ * To print without displaying a print preview, an instance of this class is
+ * appended, hidden, to the end of the top-level chrome browser's document.
+ */
 class PrintPreview extends MozElements.BaseControl {
   constructor({
     sourceBrowsingContext,
