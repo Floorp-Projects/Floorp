@@ -194,6 +194,18 @@ public class ContentBlocking {
       }
 
       /**
+       * Set whether or not email tracker blocking is enabled in private mode.
+       *
+       * @param enabled A boolean indicating whether or not email tracker blocking should be enabled
+       *     in private mode.
+       * @return The builder instance.
+       */
+      public @NonNull Builder emailTrackerBlockingPrivateMode(final boolean enabled) {
+        getSettings().setEmailTrackerBlockingPrivateBrowsing(enabled);
+        return this;
+      }
+
+      /**
        * Set whether or not strict social tracking protection is enabled. This will block resources
        * from loading if they are on the social tracking protection list, rather than just blocking
        * cookies as with normal social tracking protection.
@@ -399,6 +411,10 @@ public class ContentBlocking {
 
     /* package */ final Pref<Boolean> mEtb =
         new Pref<Boolean>("privacy.trackingprotection.emailtracking.enabled", false);
+
+    /* package */ final Pref<Boolean> mEtbPrivateBrowsing =
+        new Pref<Boolean>("privacy.trackingprotection.emailtracking.pbmode.enabled", false);
+
     /* package */ final Pref<String> mEtbList =
         new Pref<String>(
             "urlclassifier.features.emailtracking.blocklistTables",
@@ -820,6 +836,26 @@ public class ContentBlocking {
      */
     public @NonNull Settings setCookieBannerGlobalRulesSubFramesEnabled(final boolean enabled) {
       mCbhGlobalRulesSubFramesEnabled.commit(enabled);
+      return this;
+    }
+
+    /**
+     * Indicates if email tracker blocking is enabled in private mode.
+     *
+     * @return Indicates if email tracker blocking is enabled or disabled in private mode.
+     */
+    public @NonNull Boolean getEmailTrackerBlockingPrivateBrowsingEnabled() {
+      return mEtbPrivateBrowsing.get();
+    }
+
+    /**
+     * Sets whether email tracker blocking is enabled in private mode.
+     *
+     * @param enabled A boolean indicating whether or not to enable.
+     * @return This Settings instance.
+     */
+    public @NonNull Settings setEmailTrackerBlockingPrivateBrowsing(final boolean enabled) {
+      mEtbPrivateBrowsing.commit(enabled);
       return this;
     }
 

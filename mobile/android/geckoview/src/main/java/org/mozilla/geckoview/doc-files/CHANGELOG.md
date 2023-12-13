@@ -22,6 +22,7 @@ exclude: true
 - Added [`ERROR_UNSUPPORTED_ADDON_TYPE`][122.5] to `WebExtension.InstallException.ErrorCodes`. ([bug 1867873]({{bugzilla}}1867873))
 - Added [`WebExtensionController.install`][122.6] requires `WebExtensionController.InstallationMethod`.
 - Added runtime options to set and get specific "never translate this site" preferences on [`RuntimeTranslation`][121.1].
+- Added APIs for toggling `privacy.trackingprotection.emailtracking.pbmode.enabled`. ([bug 1866927]({{bugzilla}}1866927).
 
 [122.1]: {{javadoc_uri}}/GeckoSession.html#reportBackInStock(String)
 [122.2]: {{javadoc_uri}}/GeckoSession.html#requestCreateAnalysis(String)
@@ -1493,4 +1494,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 642e5e914bf46e017fd8fc7688ba4ffd42b6bf0b
+[api-version]: f7c22c0432d655ccbacc41695256df77e03d090b

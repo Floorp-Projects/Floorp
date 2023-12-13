@@ -90,6 +90,9 @@
     <string name="key_global_privacy_control_enabled">global_privacy_control_enabled</string>
     <item type="bool" name="global_privacy_control_enabled_default">false</item>
 
+    <string name="key_etb_private_mode_enabled">etb_private_mode_enabled</string>
+    <item type="bool" name="etb_private_mode_enabled_default">false</item>
+
     <string name="key_user_agent_override">user_agent_override</string>
     <string name="user_agent_override_default"></string>
     <string-array name="user_agent_override_display_names">

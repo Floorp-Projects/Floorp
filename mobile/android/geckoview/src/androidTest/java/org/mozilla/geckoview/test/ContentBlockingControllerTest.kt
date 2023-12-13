@@ -492,6 +492,32 @@ class ContentBlockingControllerTest : BaseSessionTest() {
     }
 
     @Test
+    fun toggleEmailTrackingForPrivateBrowsingMode() {
+        // check default value
+        val contentBlocking = sessionRule.runtime.settings.contentBlocking
+
+        val originalPref = sessionRule.getPrefs(
+            "privacy.trackingprotection.emailtracking.pbmode.enabled",
+        )
+        assertThat(
+            "Expect correct default value which is off",
+            originalPref[0] as Boolean,
+            equalTo(false),
+        )
+
+        contentBlocking.setEmailTrackerBlockingPrivateBrowsing(true)
+
+        val updatedPref = sessionRule.getPrefs(
+            "privacy.trackingprotection.emailtracking.pbmode.enabled",
+        )
+        assertThat(
+            "Expect new value which is on",
+            updatedPref[0] as Boolean,
+            equalTo(true),
+        )
+    }
+
+    @Test
     fun toggleEmailTrackingWhenETBAddedToAntiTrackingList() {
         // check default value
         val contentBlocking = sessionRule.runtime.settings.contentBlocking
