@@ -55,6 +55,7 @@ export class ShoppingContainer extends MozLitElement {
       shoppingMessageBarEl: "shopping-message-bar",
       recommendedAdEl: "recommended-ad",
       loadingEl: "#loading-wrapper",
+      closeButtonEl: "#close-button",
     };
   }
 
@@ -82,6 +83,12 @@ export class ShoppingContainer extends MozLitElement {
     );
   }
 
+  updated() {
+    if (this.focusCloseButton) {
+      this.closeButtonEl.focus();
+    }
+  }
+
   async _update({
     data,
     showOnboarding,
@@ -91,6 +98,7 @@ export class ShoppingContainer extends MozLitElement {
     adsEnabledByUser,
     isAnalysisInProgress,
     analysisProgress,
+    focusCloseButton,
   }) {
     // If we're not opted in or there's no shopping URL in the main browser,
     // the actor will pass `null`, which means this will clear out any existing
@@ -104,6 +112,7 @@ export class ShoppingContainer extends MozLitElement {
     this.adsEnabled = adsEnabled;
     this.adsEnabledByUser = adsEnabledByUser;
     this.analysisProgress = analysisProgress;
+    this.focusCloseButton = focusCloseButton;
   }
 
   _updateRecommendations({ recommendationData }) {
@@ -338,7 +347,7 @@ export class ShoppingContainer extends MozLitElement {
             @click=${this.handleClick}
           ></button>
         </div>
-        <div id="content" aria-busy=${!this.data}>
+        <div id="content" aria-live="polite" aria-busy=${!this.data}>
           <slot name="multi-stage-message-slot"></slot>
           ${sidebarContent} ${!hideFooter ? this.getFooterTemplate() : null}
         </div>

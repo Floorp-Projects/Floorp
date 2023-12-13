@@ -177,7 +177,7 @@ export class ShoppingSidebarChild extends RemotePageChild {
     // Force re-fetching things if needed by clearing the last product URI:
     this.#productURI = null;
     // Then let content know.
-    this.updateContent();
+    this.updateContent({ focusCloseButton: true });
   }
 
   adsEnabledByUserChanged() {
@@ -211,6 +211,7 @@ export class ShoppingSidebarChild extends RemotePageChild {
   async updateContent({
     haveUpdatedURI = false,
     isPolledRequest = false,
+    focusCloseButton = false,
   } = {}) {
     // updateContent is an async function, and when we're off making requests or doing
     // other things asynchronously, the actor can be destroyed, the user
@@ -241,6 +242,7 @@ export class ShoppingSidebarChild extends RemotePageChild {
         showOnboarding: !this.canFetchAndShowData,
         data: null,
         recommendationData: null,
+        focusCloseButton,
       });
     }
     if (this.canFetchAndShowData) {
