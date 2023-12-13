@@ -9,10 +9,10 @@ dupe-manifest = true
 tags = "condprof"
 
 # Following tests are not working currently when dFPI is enabled. So, we put
-# these tests here instead of mochitest-common.ini so that these tests won't run
+# these tests here instead of mochitest-common.toml so that these tests won't run
 # when dFPI is enabled.
 
-["include:mochitest-common.ini"]
+["include:mochitest-common.toml"]
 
 ["test_cookie_fetch.html"]
 
