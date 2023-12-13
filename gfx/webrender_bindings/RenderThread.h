@@ -459,26 +459,30 @@ class RenderThread final {
     }
   };
 
-  Mutex mRenderTextureMapLock MOZ_UNANNOTATED;
+  Mutex mRenderTextureMapLock;
   std::unordered_map<wr::ExternalImageId, RefPtr<RenderTextureHost>,
                      ExternalImageIdHashFn>
-      mRenderTextures;
+      mRenderTextures MOZ_GUARDED_BY(mRenderTextureMapLock);
   std::unordered_map<wr::ExternalImageId, RefPtr<RenderTextureHost>,
                      ExternalImageIdHashFn>
-      mSyncObjectNeededRenderTextures;
+      mSyncObjectNeededRenderTextures MOZ_GUARDED_BY(mRenderTextureMapLock);
   std::list<std::pair<RenderTextureOp, RefPtr<RenderTextureHost>>>
-      mRenderTextureOps;
+      mRenderTextureOps MOZ_GUARDED_BY(mRenderTextureMapLock);
 
   // Used to remove all RenderTextureHost that are going to be removed by
   // a deferred callback and remove them right away without waiting for the
   // callback. On device reset we have to remove all GL related resources right
   // away.
-  std::list<RefPtr<RenderTextureHost>> mRenderTexturesDeferred;
+  std::list<RefPtr<RenderTextureHost>> mRenderTexturesDeferred
+      MOZ_GUARDED_BY(mRenderTextureMapLock);
 
-  RefPtr<nsIRunnable> mRenderTextureOpsRunnable;
+  RefPtr<nsIRunnable> mRenderTextureOpsRunnable
+      MOZ_GUARDED_BY(mRenderTextureMapLock);
 
+  // Set from MainThread, read from either MainThread or RenderThread
   bool mHasShutdown;
 
+  // Only accessed from the RenderThread
   bool mHandlingDeviceReset;
   bool mHandlingWebRenderError;
 };
