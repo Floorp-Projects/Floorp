@@ -41,7 +41,7 @@ class AndroidSurfaceTextureData : public TextureData {
  public:
   static already_AddRefed<TextureClient> CreateTextureClient(
       AndroidSurfaceTextureHandle aHandle, gfx::IntSize aSize, bool aContinuous,
-      gl::OriginPos aOriginPos, bool aHasAlpha,
+      gl::OriginPos aOriginPos, bool aHasAlpha, bool aForceBT709ColorSpace,
       Maybe<gfx::Matrix4x4> aTransformOverride, LayersIPCChannel* aAllocator,
       TextureFlags aFlags);
 
@@ -62,13 +62,14 @@ class AndroidSurfaceTextureData : public TextureData {
  protected:
   AndroidSurfaceTextureData(AndroidSurfaceTextureHandle aHandle,
                             gfx::IntSize aSize, bool aContinuous,
-                            bool aHasAlpha,
+                            bool aHasAlpha, bool aForceBT709ColorSpace,
                             Maybe<gfx::Matrix4x4> aTransformOverride);
 
   const AndroidSurfaceTextureHandle mHandle;
   const gfx::IntSize mSize;
   const bool mContinuous;
   const bool mHasAlpha;
+  const bool mForceBT709ColorSpace;
   const Maybe<gfx::Matrix4x4> mTransformOverride;
 };
 
