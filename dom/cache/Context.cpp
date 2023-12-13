@@ -1038,20 +1038,6 @@ void Context::OnQuotaInit(
   MOZ_DIAGNOSTIC_ASSERT(mInitRunnable);
   mInitRunnable = nullptr;
 
-  if (aDirectoryMetadata) {
-    mDirectoryMetadata.emplace(*aDirectoryMetadata);
-
-    MOZ_DIAGNOSTIC_ASSERT(!mCipherKeyManager);
-    mCipherKeyManager = aCipherKeyManager;
-
-    MOZ_DIAGNOSTIC_ASSERT_IF(mDirectoryMetadata->mIsPrivate, mCipherKeyManager);
-  }
-
-  // Always save the directory lock to ensure QuotaManager does not shutdown
-  // before the Context has gone away.
-  MOZ_DIAGNOSTIC_ASSERT(!mDirectoryLock);
-  mDirectoryLock = aDirectoryLock;
-
   // If we opening the context failed, but we were not explicitly canceled,
   // still treat the entire context as canceled.  We don't want to allow
   // new actions to be dispatched.  We also cannot leave the context in
@@ -1069,6 +1055,20 @@ void Context::OnQuotaInit(
     // Context will destruct after return here and last ref is released.
     return;
   }
+
+  MOZ_DIAGNOSTIC_ASSERT(!mDirectoryMetadata);
+  mDirectoryMetadata = aDirectoryMetadata;
+  MOZ_DIAGNOSTIC_ASSERT(mDirectoryMetadata);
+
+  // Always save the directory lock to ensure QuotaManager does not shutdown
+  // before the Context has gone away.
+  MOZ_DIAGNOSTIC_ASSERT(!mDirectoryLock);
+  mDirectoryLock = aDirectoryLock;
+  MOZ_DIAGNOSTIC_ASSERT(mDirectoryLock);
+
+  MOZ_DIAGNOSTIC_ASSERT(!mCipherKeyManager);
+  mCipherKeyManager = aCipherKeyManager;
+  MOZ_DIAGNOSTIC_ASSERT_IF(mDirectoryMetadata->mIsPrivate, mCipherKeyManager);
 
   MOZ_DIAGNOSTIC_ASSERT(mState == STATE_CONTEXT_INIT);
   mState = STATE_CONTEXT_READY;
