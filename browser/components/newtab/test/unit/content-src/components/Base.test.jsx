@@ -3,7 +3,7 @@ import {
   BaseContent,
   PrefsButton,
 } from "content-src/components/Base/Base";
-import { ASRouterAdmin } from "content-src/components/ASRouterAdmin/ASRouterAdmin";
+import { DiscoveryStreamAdmin } from "content-src/components/DiscoveryStreamAdmin/DiscoveryStreamAdmin";
 import { ErrorBoundary } from "content-src/components/ErrorBoundary/ErrorBoundary";
 import React from "react";
 import { Search } from "content-src/components/Search/Search";
@@ -47,24 +47,24 @@ describe("<Base>", () => {
     );
   });
 
-  it("should render an ASRouterAdmin if the devtools pref is true", () => {
+  it("should render an DiscoveryStreamAdmin if the devtools pref is true", () => {
     const wrapper = shallow(
       <Base
         {...DEFAULT_PROPS}
         Prefs={{ values: { "asrouter.devtoolsEnabled": true } }}
       />
     );
-    assert.lengthOf(wrapper.find(ASRouterAdmin), 1);
+    assert.lengthOf(wrapper.find(DiscoveryStreamAdmin), 1);
   });
 
-  it("should not render an ASRouterAdmin if the devtools pref is false", () => {
+  it("should not render an DiscoveryStreamAdmin if the devtools pref is false", () => {
     const wrapper = shallow(
       <Base
         {...DEFAULT_PROPS}
         Prefs={{ values: { "asrouter.devtoolsEnabled": false } }}
       />
     );
-    assert.lengthOf(wrapper.find(ASRouterAdmin), 0);
+    assert.lengthOf(wrapper.find(DiscoveryStreamAdmin), 0);
   });
 });
 
