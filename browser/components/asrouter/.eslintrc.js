@@ -19,32 +19,27 @@ module.exports = {
   overrides: [
     {
       // Only mark the files as modules which are actually modules.
-      // TODO: Add "tests/unit/**" to this list once we get our tests built.
-      files: ["content-src/**"],
+      files: ["content-src/**", "tests/unit/**"],
       parserOptions: {
         sourceType: "module",
       },
     },
     {
-      // TODO: Add ./*.js and tests/unit/** to this list if necessary
-      files: ["./*.js", "content-src/**"],
+      files: ["./*.js", "content-src/**", "tests/unit/**"],
       env: {
         node: true,
       },
     },
-    /* TODO: Turn this rule on when I move the tests over.
-      {
-        // Use a configuration that's appropriate for modules, workers and
-        // non-production files.
-        files: ["modules/*.jsm", "tests/**"],
-        rules: {
-          "no-implicit-globals": "off",
-        },
-      },
-      */
     {
-      // TODO: Add "tests/unit/**" to this list once we get our tests built.
-      files: ["content-src/**"],
+      // Use a configuration that's appropriate for modules, workers and
+      // non-production files.
+      files: ["tests/**"],
+      rules: {
+        "no-implicit-globals": "off",
+      },
+    },
+    {
+      files: ["content-src/**", "tests/unit/**"],
       rules: {
         // Disallow commonjs in these directories.
         "import/no-commonjs": 2,
@@ -52,28 +47,27 @@ module.exports = {
         "react/jsx-no-bind": 0,
       },
     },
-    /* TODO: Turn this rule on when I move the tests over.
-      {
-        // These tests simulate the browser environment.
-        files: "tests/unit/**",
-        env: {
-          browser: true,
-          mocha: true,
-        },
-        globals: {
-          assert: true,
-          chai: true,
-          sinon: true,
-        },
+    {
+      // These tests simulate the browser environment.
+      files: "tests/unit/**",
+      env: {
+        browser: true,
+        mocha: true,
       },
-      {
-        files: "tests/**",
-        rules: {
-          "func-name-matching": 0,
-          "lines-between-class-members": 0,
-          "require-await": 0,
-        },
-      },*/
+      globals: {
+        assert: true,
+        chai: true,
+        sinon: true,
+      },
+    },
+    {
+      files: "tests/**",
+      rules: {
+        "func-name-matching": 0,
+        "lines-between-class-members": 0,
+        "require-await": 0,
+      },
+    },
   ],
   rules: {
     "fetch-options/no-fetch-credentials": "error",
