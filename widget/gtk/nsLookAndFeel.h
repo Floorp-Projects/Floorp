@@ -93,8 +93,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     ColorPair mButtonHover;
     ColorPair mButtonActive;
     nscolor mButtonBorder = kBlack;
-    nscolor mFrameOuterLightBorder = kBlack;
-    nscolor mFrameInnerDarkBorder = kBlack;
+    nscolor mThreeDHighlight = kBlack;
+    nscolor mThreeDShadow = kBlack;
     nscolor mOddCellBackground = kWhite;
     nscolor mNativeHyperLinkText = kBlack;
     nscolor mNativeVisitedHyperLinkText = kBlack;
@@ -104,6 +104,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     nscolor mComboBoxText = kBlack;
     ColorPair mField;
     ColorPair mWindow;
+    ColorPair mDialog;
     ColorPair mSidebar;
     nscolor mSidebarBorder = kBlack;
 
@@ -195,6 +196,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   bool ConfigureAltTheme();
   void ConfigureAndInitializeAltTheme();
   void ConfigureFinalEffectiveTheme();
+  void MaybeApplyAdwaitaOverrides();
 };
 
 #endif
