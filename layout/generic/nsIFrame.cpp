@@ -1379,6 +1379,7 @@ void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   RemoveStateBits(NS_FRAME_SIMPLE_EVENT_REGIONS | NS_FRAME_SIMPLE_DISPLAYLIST);
 
   mMayHaveRoundedCorners = true;
+  mIsStackingContext = ComputeIsStackingContext();
 }
 
 void nsIFrame::HandleLastRememberedSize() {
@@ -4180,7 +4181,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   const bool isPositioned = disp->IsPositionedStyle();
   const bool isStackingContext =
       aFlags.contains(DisplayChildFlag::ForceStackingContext) ||
-      child->IsStackingContext(disp, effects);
+      child->IsStackingContext();
 
   if (pseudoStackingContext || isStackingContext || isPositioned ||
       placeholder || (!isSVG && disp->IsFloating(child)) ||
@@ -10978,18 +10979,19 @@ void nsIFrame::SetParent(nsContainerFrame* aParent) {
   }
 }
 
-bool nsIFrame::IsStackingContext(const nsStyleDisplay* aStyleDisplay,
-                                 const nsStyleEffects* aStyleEffects) {
+bool nsIFrame::ComputeIsStackingContext() const {
+  const auto* disp = StyleDisplay();
+  const auto* effects = StyleEffects();
   // Properties that influence the output of this function should be handled in
   // change_bits_for_longhand as well.
-  if (HasOpacity(aStyleDisplay, aStyleEffects, nullptr)) {
+  if (HasOpacity(disp, effects, nullptr)) {
     return true;
   }
   if (IsTransformed()) {
     return true;
   }
-  auto willChange = aStyleDisplay->mWillChange.bits;
-  if (aStyleDisplay->IsContainPaint() || aStyleDisplay->IsContainLayout() ||
+  auto willChange = disp->mWillChange.bits;
+  if (disp->IsContainPaint() || disp->IsContainLayout() ||
       willChange & StyleWillChangeBits::CONTAIN) {
     if (SupportsContainLayoutAndPaint()) {
       return true;
@@ -10997,7 +10999,7 @@ bool nsIFrame::IsStackingContext(const nsStyleDisplay* aStyleDisplay,
   }
   // strictly speaking, 'perspective' doesn't require visual atomicity,
   // but the spec says it acts like the rest of these
-  if (aStyleDisplay->HasPerspectiveStyle() ||
+  if (disp->HasPerspectiveStyle() ||
       willChange & StyleWillChangeBits::PERSPECTIVE) {
     if (SupportsCSSTransforms()) {
       return true;
@@ -11009,15 +11011,11 @@ bool nsIFrame::IsStackingContext(const nsStyleDisplay* aStyleDisplay,
       return true;
     }
   }
-  return aStyleEffects->mMixBlendMode != StyleBlend::Normal ||
+  return effects->mMixBlendMode != StyleBlend::Normal ||
          SVGIntegrationUtils::UsingEffectsForFrame(this) ||
-         aStyleDisplay->IsPositionForcingStackingContext() ||
-         aStyleDisplay->mIsolation != StyleIsolation::Auto ||
+         disp->IsPositionForcingStackingContext() ||
+         disp->mIsolation != StyleIsolation::Auto ||
          willChange & StyleWillChangeBits::STACKING_CONTEXT_UNCONDITIONAL;
-}
-
-bool nsIFrame::IsStackingContext() {
-  return IsStackingContext(StyleDisplay(), StyleEffects());
 }
 
 static bool IsFrameScrolledOutOfView(const nsIFrame* aTarget,
