@@ -17,6 +17,8 @@ enum WidgetNodeType : int;
 struct _GtkStyle;
 typedef struct _GDBusProxy GDBusProxy;
 typedef struct _GtkCssProvider GtkCssProvider;
+typedef struct _GFile GFile;
+typedef struct _GFileMonitor GFileMonitor;
 
 namespace mozilla {
 enum class StyleGtkThemeFamily : uint8_t;
@@ -162,6 +164,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
   uint32_t mDBusID = 0;
   RefPtr<GDBusProxy> mDBusSettingsProxy;
+  RefPtr<GFile> mKdeColors;
+  RefPtr<GFileMonitor> mKdeColorsMonitor;
   mozilla::Maybe<ColorScheme> mColorSchemePreference;
   int32_t mCaretBlinkTime = 0;
   int32_t mCaretBlinkCount = -1;

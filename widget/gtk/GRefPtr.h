@@ -27,6 +27,7 @@ struct GObjectRefPtrTraits {
 
 GOBJECT_TRAITS(GtkWidget)
 GOBJECT_TRAITS(GFile)
+GOBJECT_TRAITS(GFileMonitor)
 GOBJECT_TRAITS(GMenu)
 GOBJECT_TRAITS(GMenuItem)
 GOBJECT_TRAITS(GSimpleAction)
