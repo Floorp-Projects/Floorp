@@ -2421,20 +2421,79 @@ export class TranslationsParent extends JSWindowActorParent {
    *  False if never-translate was disabled for this site.
    */
   setNeverTranslateSitePermissions(neverTranslate) {
-    const perms = Services.perms;
     const { documentPrincipal } = this.browsingContext.currentWindowGlobal;
+    return TranslationsParent.#setNeverTranslateSiteByPrincipal(
+      neverTranslate,
+      documentPrincipal
+    );
+  }
+
+  /**
+   * Sets the never-translate site permissions by creating a principal from the URL origin
+   * and setting or unsetting the DENY_ACTION on the permission.
+   *
+   * @param {string} neverTranslate - The never translate setting to use.
+   * @param {string} urlOrigin - The url origin to set the permission for.
+   * @returns {boolean}
+   *  True if never-translate was enabled for this origin.
+   *  False if never-translate was disabled for this origin.
+   */
+  static setNeverTranslateSiteByOrigin(neverTranslate, urlOrigin) {
+    const principal =
+      Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+        urlOrigin
+      );
+    return TranslationsParent.#setNeverTranslateSiteByPrincipal(
+      neverTranslate,
+      principal
+    );
+  }
+
+  /**
+   * Sets the never-translate site permissions by adding DENY_ACTION to
+   * the specified site principal.
+   *
+   * @param {string} neverTranslate - The never translate setting.
+   * @param {string} principal - The principal that should have the permission attached.
+   * @returns {boolean}
+   *  True if never-translate was enabled for this principal.
+   *  False if never-translate was disabled for this principal.
+   */
+  static #setNeverTranslateSiteByPrincipal(neverTranslate, principal) {
+    const perms = Services.perms;
 
     if (!neverTranslate) {
-      perms.removeFromPrincipal(documentPrincipal, TRANSLATIONS_PERMISSION);
+      perms.removeFromPrincipal(principal, TRANSLATIONS_PERMISSION);
       return false;
     }
 
     perms.addFromPrincipal(
-      documentPrincipal,
+      principal,
       TRANSLATIONS_PERMISSION,
       perms.DENY_ACTION
     );
     return true;
+  }
+
+  /**
+   * Creates a list of URLs that have a translations permission set on the resource.
+   * These are the sites to never translate.
+   *
+   * @returns {Array<string>} String array with the URL of the sites that have the never translate permission.
+   */
+  static listNeverTranslateSites() {
+    const neverTranslateSites = [];
+    for (const perm of Services.perms.getAllByTypes([
+      TRANSLATIONS_PERMISSION,
+    ])) {
+      if (perm.capability === Services.perms.DENY_ACTION) {
+        neverTranslateSites.push(perm.principal.origin);
+      }
+    }
+    let stripProtocol = s => s?.replace(/^\w+:/, "") || "";
+    return neverTranslateSites.sort((a, b) => {
+      return stripProtocol(a).localeCompare(stripProtocol(b));
+    });
   }
 
   /**
