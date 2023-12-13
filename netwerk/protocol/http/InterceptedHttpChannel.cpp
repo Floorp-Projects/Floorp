@@ -1019,6 +1019,22 @@ InterceptedHttpChannel::SetFetchHandlerFinish(TimeStamp aTimeStamp) {
 }
 
 NS_IMETHODIMP
+InterceptedHttpChannel::SetRemoteWorkerLaunchStart(TimeStamp aTimeStamp) {
+  mServiceWorkerLaunchStart = aTimeStamp > mTimeStamps.mInterceptionStart
+                                  ? aTimeStamp
+                                  : mTimeStamps.mInterceptionStart;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InterceptedHttpChannel::SetRemoteWorkerLaunchEnd(TimeStamp aTimeStamp) {
+  mServiceWorkerLaunchEnd = aTimeStamp > mTimeStamps.mInterceptionStart
+                                ? aTimeStamp
+                                : mTimeStamps.mInterceptionStart;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 InterceptedHttpChannel::SetLaunchServiceWorkerStart(TimeStamp aTimeStamp) {
   mServiceWorkerLaunchStart = aTimeStamp;
   return NS_OK;
