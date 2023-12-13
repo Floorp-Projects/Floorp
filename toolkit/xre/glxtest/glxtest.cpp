@@ -192,6 +192,8 @@ extern "C" {
 static void get_pci_status() {
   log("GLX_TEST: get_pci_status start\n");
 
+#if !defined(XP_FREEBSD) && !defined(XP_NETBSD) && !defined(XP_OPENBSD) && \
+    !defined(XP_SOLARIS)
   if (access("/sys/bus/pci/", F_OK) != 0 &&
       access("/sys/bus/pci_express/", F_OK) != 0) {
     record_warning("cannot access /sys/bus/pci");
@@ -272,6 +274,7 @@ static void get_pci_status() {
   }
 
   pci_cleanup(pacc);
+#endif
 
   log("GLX_TEST: get_pci_status finished\n");
 }
