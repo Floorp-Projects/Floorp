@@ -77,7 +77,7 @@
 
 #downloadsListBox > richlistitem[verdict="Insecure"] .downloadDetails,
 #downloadsListBox > richlistitem[verdict="Malware"] .downloadDetails {
-  color: light-dark(#C50042, #FF848B);
+  color: var(--text-color-error);
   /* The details text usually gets an opacity reduction, but for the error
      states we disable that, because it would reduce the contrast too much. */
   opacity: inherit;
