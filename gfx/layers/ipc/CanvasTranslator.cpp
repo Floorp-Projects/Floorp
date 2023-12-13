@@ -219,6 +219,11 @@ ipc::IPCResult CanvasTranslator::RecvAddBuffer(
 void CanvasTranslator::AddBuffer(ipc::SharedMemoryBasic::Handle&& aBufferHandle,
                                  size_t aBufferSize) {
   MOZ_ASSERT(IsInTaskQueue());
+  if (mHeader->readerState == State::Failed) {
+    // We failed before we got to the pause event.
+    return;
+  }
+
   MOZ_RELEASE_ASSERT(mHeader->readerState == State::Paused);
   MOZ_ASSERT(mDefaultBufferSize != 0);
 
@@ -258,6 +263,11 @@ ipc::IPCResult CanvasTranslator::RecvSetDataSurfaceBuffer(
 void CanvasTranslator::SetDataSurfaceBuffer(
     ipc::SharedMemoryBasic::Handle&& aBufferHandle, size_t aBufferSize) {
   MOZ_ASSERT(IsInTaskQueue());
+  if (mHeader->readerState == State::Failed) {
+    // We failed before we got to the pause event.
+    return;
+  }
+
   MOZ_RELEASE_ASSERT(mHeader->readerState == State::Paused);
 
   if (!CreateAndMapShmem(mDataSurfaceShmem, std::move(aBufferHandle),
@@ -504,6 +514,7 @@ void CanvasTranslator::TranslateRecording() {
               gfxCriticalNote << "Failed to read event type: "
                               << recordedEvent->GetType();
             }
+            mHeader->readerState = State::Failed;
             return false;
           }
 
@@ -523,6 +534,7 @@ void CanvasTranslator::TranslateRecording() {
       } else {
         gfxCriticalNote << "Failed to play canvas event type: " << eventType;
       }
+      mHeader->readerState = State::Failed;
     }
 
     mHeader->processedCount++;
