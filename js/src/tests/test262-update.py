@@ -39,10 +39,13 @@ FEATURE_CHECK_NEEDED = {
     "WeakRef": "!this.hasOwnProperty('WeakRef')",
     "decorators": "!(this.hasOwnProperty('getBuildConfiguration')&&getBuildConfiguration('decorators'))",  # Bug 1435869
     "iterator-helpers": "!this.hasOwnProperty('Iterator')",  # Bug 1568906
-    "symbols-as-weakmap-keys": "!(this.hasOwnProperty('getBuildConfiguration')&&!getBuildConfiguration('release_or_beta'))",
     "Intl.Segmenter": "!Intl.Segmenter",  # Bug 1423593
 }
-RELEASE_OR_BETA = set([])
+RELEASE_OR_BETA = set(
+    [
+        "symbols-as-weakmap-keys",
+    ]
+)
 SHELL_OPTIONS = {
     "import-assertions": "--enable-import-assertions",
     "ShadowRealm": "--enable-shadow-realms",
