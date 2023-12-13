@@ -91,6 +91,7 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   void MaybeQueueSwapChainPresent();
   void SwapChainPresent();
   void ForceNewFrame();
+  void InvalidateCanvasContent();
 
  private:
   gfx::IntSize mCanvasSize;

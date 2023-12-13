@@ -187,18 +187,17 @@ RefPtr<Texture> CanvasContext::GetCurrentTexture(ErrorResult& aRv) {
 }
 
 void CanvasContext::MaybeQueueSwapChainPresent() {
-  if (mPendingSwapChainPresent || mWaitingCanvasRendererInitialized) {
+  if (mPendingSwapChainPresent) {
     return;
   }
 
   mPendingSwapChainPresent = true;
 
-  if (mCanvasElement) {
-    SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
-    mCanvasElement->InvalidateCanvasContent(nullptr);
-  } else if (mOffscreenCanvas) {
-    mOffscreenCanvas->QueueCommitToCompositor();
+  if (mWaitingCanvasRendererInitialized) {
+    return;
   }
+
+  InvalidateCanvasContent();
 }
 
 void CanvasContext::SwapChainPresent() {
@@ -250,6 +249,9 @@ bool CanvasContext::InitializeCanvasRenderer(
   aRenderer->Initialize(data);
   aRenderer->SetDirty();
 
+  if (mWaitingCanvasRendererInitialized) {
+    InvalidateCanvasContent();
+  }
   mWaitingCanvasRendererInitialized = false;
 
   return true;
@@ -348,6 +350,20 @@ void CanvasContext::ForceNewFrame() {
     data.mIsOpaque = false;
     data.mOwnerId = mRemoteTextureOwnerId;
     mOffscreenCanvas->UpdateDisplayData(data);
+  }
+}
+
+void CanvasContext::InvalidateCanvasContent() {
+  if (!mCanvasElement && !mOffscreenCanvas) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    return;
+  }
+
+  if (mCanvasElement) {
+    SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
+    mCanvasElement->InvalidateCanvasContent(nullptr);
+  } else if (mOffscreenCanvas) {
+    mOffscreenCanvas->QueueCommitToCompositor();
   }
 }
 
