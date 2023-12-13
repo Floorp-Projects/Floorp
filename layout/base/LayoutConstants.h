@@ -64,7 +64,7 @@ enum class ComputeSizeFlag : uint8_t {
    * https://drafts.csswg.org/css-grid/#min-size-auto
    * https://drafts.csswg.org/css-align-3/#valdef-justify-self-stretch
    */
-  IApplyAutoMinSize,  // only has an effect when eShrinkWrap is false
+  IApplyAutoMinSize,  // Only has an effect when the ShrinkWrap bit is unset.
 };
 using ComputeSizeFlags = mozilla::EnumSet<ComputeSizeFlag>;
 

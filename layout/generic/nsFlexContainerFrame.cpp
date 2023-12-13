@@ -1433,7 +1433,7 @@ void nsFlexContainerFrame::GenerateFlexItemForChild(
   // (This reflow input will _not_ be used for reflow.)
   ReflowInput childRI(PresContext(), aParentReflowInput, aChildFrame,
                       aParentReflowInput.ComputedSize(childWM), Nothing(), {},
-                      sizeOverrides);
+                      sizeOverrides, {ComputeSizeFlag::ShrinkWrap});
 
   // FLEX GROW & SHRINK WEIGHTS
   // --------------------------
@@ -2076,8 +2076,7 @@ nscoord nsFlexContainerFrame::MeasureFlexItemContentBSize(
 
   ReflowInput childRIForMeasuringBSize(
       PresContext(), aParentReflowInput, aFlexItem.Frame(), availSize,
-      Nothing(), ReflowInput::InitFlag::CallerWillInit, sizeOverrides);
-  childRIForMeasuringBSize.Init(PresContext());
+      Nothing(), {}, sizeOverrides, {ComputeSizeFlag::ShrinkWrap});
 
   // When measuring flex item's content block-size, disregard the item's
   // min-block-size and max-block-size by resetting both to to their
@@ -5285,7 +5284,8 @@ nsFlexContainerFrame::FlexLayoutResult nsFlexContainerFrame::DoFlexLayout(
         LogicalSize availSize = aReflowInput.ComputedSize(wm);
         availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
         ReflowInput childReflowInput(PresContext(), aReflowInput, item.Frame(),
-                                     availSize, Nothing(), {}, sizeOverrides);
+                                     availSize, Nothing(), {}, sizeOverrides,
+                                     {ComputeSizeFlag::ShrinkWrap});
         if (item.IsBlockAxisMainAxis() && item.TreatBSizeAsIndefinite()) {
           childReflowInput.mFlags.mTreatBSizeAsIndefinite = true;
         }
@@ -6166,7 +6166,8 @@ nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(
   }
 
   ReflowInput childReflowInput(PresContext(), aReflowInput, aItem.Frame(),
-                               aAvailableSize, Nothing(), {}, sizeOverrides);
+                               aAvailableSize, Nothing(), {}, sizeOverrides,
+                               {ComputeSizeFlag::ShrinkWrap});
   if (overrideBSizeWithAuto) {
     // If we use 'auto' to override the item's block-size, set the item's
     // original block-size to min-size as a lower bound.
