@@ -101,8 +101,7 @@ import org.mozilla.fenix.components.metrics.BreadcrumbsRecorder
 import org.mozilla.fenix.components.metrics.GrowthDataWorker
 import org.mozilla.fenix.components.metrics.fonts.FontEnumerationWorker
 import org.mozilla.fenix.databinding.ActivityHomeBinding
-import org.mozilla.fenix.debugsettings.data.debugDrawerEnabled
-import org.mozilla.fenix.debugsettings.data.debugSettings
+import org.mozilla.fenix.debugsettings.data.DefaultDebugSettingsRepository
 import org.mozilla.fenix.debugsettings.ui.DebugOverlay
 import org.mozilla.fenix.exceptions.trackingprotection.TrackingProtectionExceptionsFragmentDirections
 import org.mozilla.fenix.experiments.ResearchSurfaceDialogFragment
@@ -287,7 +286,12 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         if (Config.channel.isNightlyOrDebug) {
             lifecycleScope.launch {
-                debugSettings.debugDrawerEnabled
+                val debugSettingsRepository = DefaultDebugSettingsRepository(
+                    context = this@HomeActivity,
+                    writeScope = this,
+                )
+
+                debugSettingsRepository.debugDrawerEnabled
                     .distinctUntilChanged()
                     .collect { enabled ->
                         with(binding.debugOverlay) {

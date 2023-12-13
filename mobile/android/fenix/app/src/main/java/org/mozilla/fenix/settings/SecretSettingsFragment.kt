@@ -18,9 +18,7 @@ import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
-import org.mozilla.fenix.debugsettings.data.debugDrawerEnabled
-import org.mozilla.fenix.debugsettings.data.debugSettings
-import org.mozilla.fenix.debugsettings.data.updateDebugDrawerEnabled
+import org.mozilla.fenix.debugsettings.data.DefaultDebugSettingsRepository
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
@@ -34,6 +32,11 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        val debugSettingsRepository = DefaultDebugSettingsRepository(
+            context = requireContext(),
+            writeScope = lifecycleScope,
+        )
+
         setPreferencesFromResource(R.xml.secret_settings_preferences, rootKey)
 
         requirePreference<SwitchPreference>(R.string.pref_key_allow_third_party_root_certs).apply {
@@ -105,17 +108,13 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
         }
 
         lifecycleScope.launch {
-            val debugDataStore = requireContext().debugSettings
-
             // During initial development, this will only be available in Nightly or Debug builds.
             requirePreference<SwitchPreference>(R.string.pref_key_enable_debug_drawer).apply {
                 isVisible = Config.channel.isNightlyOrDebug
-                isChecked = debugDataStore.debugDrawerEnabled.first()
+                isChecked = debugSettingsRepository.debugDrawerEnabled.first()
                 onPreferenceChangeListener =
                     Preference.OnPreferenceChangeListener { _, newValue ->
-                        lifecycleScope.launch {
-                            debugDataStore.updateDebugDrawerEnabled(enabled = newValue as Boolean)
-                        }
+                        debugSettingsRepository.setDebugDrawerEnabled(enabled = newValue as Boolean)
                         true
                     }
             }
