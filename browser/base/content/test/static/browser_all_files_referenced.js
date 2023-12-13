@@ -44,6 +44,8 @@ var gExceptionPaths = [
   // Exclude the form autofill path that has been moved out of the extensions to
   // toolkit, see bug 1691821.
   "resource://gre-resources/autofill/",
+  // Localization file added programatically in FormAutofillSection.sys.mjs
+  "resource://gre/localization/en-US/toolkit/formautofill",
 
   // Exclude all search-extensions because they aren't referenced by filename
   "resource://search-extensions/",
