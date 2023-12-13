@@ -160,6 +160,7 @@ async function testPressingKey(key, tabToMatch, makePromise, followUp) {
     REPORTABLE_PAGE_URL,
     async function (browser) {
       for (const menu of [AppMenu(), ProtectionsPanel(), HelpMenu()]) {
+        info(`Opening RBS on ${menu.menuDescription}`);
         const rbs = await menu.openReportBrokenSite();
         const promise = makePromise(rbs);
         if (tabToMatch) {

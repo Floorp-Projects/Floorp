@@ -432,7 +432,6 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
       const multiview = target.closest("panelmultiview");
       this.#recordGleanEvent("send");
       await this.#sendReportAsGleanPing(state);
-      state.reportSentView.hidden = false;
       multiview.showSubView("report-broken-site-popup-reportSentView");
       state.reset();
     });
@@ -505,8 +504,6 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
     } else if (!state.url) {
       state.resetURLToCurrentTab();
     }
-
-    state.mainView.hidden = false;
 
     const { sendMoreInfoLink } = state;
     const { sendMoreInfoEndpoint } = this;
