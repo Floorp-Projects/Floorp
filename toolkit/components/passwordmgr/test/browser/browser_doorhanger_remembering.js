@@ -634,7 +634,7 @@ add_task(async function test_changeUPLoginOnUPForm_dont() {
       Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
       Assert.equal(
         notif.message,
-        "Update login for example.com?",
+        "Update password for example.com?",
         "Check message"
       );
 
@@ -675,7 +675,7 @@ add_task(async function test_changeUPLoginOnUPForm_remove() {
       Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
       Assert.equal(
         notif.message,
-        "Update login for example.com?",
+        "Update password for example.com?",
         "Check message"
       );
 
@@ -716,7 +716,7 @@ add_task(async function test_changeUPLoginOnUPForm_change() {
       Assert.ok(!notif.dismissed, "doorhanger is not dismissed");
       Assert.equal(
         notif.message,
-        "Update login for example.com?",
+        "Update password for example.com?",
         "Check message"
       );
 
@@ -854,7 +854,7 @@ add_task(async function test_checkUPSaveText() {
       Assert.ok(notif, "got notification popup");
       // Check the text, which comes from the localized saveLoginMsg string.
       let notificationText = notif.message;
-      let expectedText = "Save login for example.com?";
+      let expectedText = "Save password for example.com?";
       Assert.equal(
         notificationText,
         expectedText,
