@@ -44,7 +44,6 @@ UniquePtr<char16_t[], nsFilePicker::FreeDeleter>
     nsFilePicker::sLastUsedUnicodeDirectory;
 
 using mozilla::LogLevel;
-static mozilla::LazyLogModule sLogFileDialog("FileDialog");
 
 #define MAX_EXTENSION_LENGTH 10
 
@@ -121,6 +120,8 @@ static auto ShowRemote(HWND parent, ActionType&& action)
   if (!wfda) {
     return fail();
   }
+
+  using mozilla::widget::filedialog::sLogFileDialog;
 
   // WORKAROUND FOR UNDOCUMENTED BEHAVIOR: `IFileDialog::Show` disables the
   // top-level ancestor of its provided owner-window. If the modal window's
@@ -286,6 +287,7 @@ struct LocalAndOrRemote {
 nsFilePicker::FPPromise<filedialog::Results> nsFilePicker::ShowFilePickerRemote(
     HWND parent, filedialog::FileDialogType type,
     nsTArray<filedialog::Command> const& commands) {
+  using mozilla::widget::filedialog::sLogFileDialog;
   return mozilla::detail::ShowRemote(
       parent, [parent, type, commands = commands.Clone()](
                   filedialog::WinFileDialogParent* p) {
@@ -298,9 +300,12 @@ nsFilePicker::FPPromise<filedialog::Results> nsFilePicker::ShowFilePickerRemote(
 /* static */
 nsFilePicker::FPPromise<nsString> nsFilePicker::ShowFolderPickerRemote(
     HWND parent, nsTArray<filedialog::Command> const& commands) {
+  using mozilla::widget::filedialog::sLogFileDialog;
   return mozilla::detail::ShowRemote(
       parent, [parent, commands = commands.Clone()](
                   filedialog::WinFileDialogParent* p) {
+        MOZ_LOG(sLogFileDialog, LogLevel::Info,
+                ("%s: p = [%p]", __PRETTY_FUNCTION__, p));
         return p->SendShowFolderDialog((uintptr_t)parent, commands);
       });
 }
@@ -589,6 +594,7 @@ nsresult nsFilePicker::Open(nsIFilePickerShownCallback* aCallback) {
         callback->Done(retValue);
       },
       [callback = RefPtr(aCallback)](HRESULT err) {
+        using mozilla::widget::filedialog::sLogFileDialog;
         MOZ_LOG(sLogFileDialog, LogLevel::Error,
                 ("nsFilePicker: Show failed with hr=0x%08lX", err));
         callback->Done(ResultCode::returnCancel);

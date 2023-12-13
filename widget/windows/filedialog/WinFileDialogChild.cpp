@@ -15,9 +15,9 @@
 #include "mozilla/widget/filedialog/WinFileDialogCommands.h"
 #include "nsPrintfCString.h"
 
-static mozilla::LazyLogModule sLogFileDialog("FileDialog");
-
 namespace mozilla::widget::filedialog {
+
+/* extern */ mozilla::LazyLogModule sLogFileDialog("FileDialog");
 
 WinFileDialogChild::WinFileDialogChild() {
   MOZ_LOG(sLogFileDialog, LogLevel::Info, ("%s %p", __PRETTY_FUNCTION__, this));
