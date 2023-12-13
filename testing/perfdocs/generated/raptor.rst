@@ -3654,6 +3654,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: fenix, geckoview, refbrow, chrome-m, cstm-car-m
    * **expected**: pass
+   * **expose browser profiler**: true
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: false
@@ -4317,6 +4318,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **browser cycles**: 5
    * **cold**: true
    * **expected**: pass
+   * **expose browser profiler**: true
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **host from parent**: false
@@ -5342,6 +5344,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: geckoview, refbrow, fenix, chrome-m
    * **expected**: pass
+   * **expose browser profiler**: true
    * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: false
