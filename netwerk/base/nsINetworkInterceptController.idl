@@ -144,6 +144,12 @@ interface nsIInterceptedChannel : nsISupports
     [noscript]
     void SetFetchHandlerFinish(in TimeStamp aTimeStamp);
 
+    [noscript]
+    void SetRemoteWorkerLaunchStart(in TimeStamp aTimeStamp);
+
+    [noscript]
+    void SetRemoteWorkerLaunchEnd(in TimeStamp aTimeStamp);
+
     /**
      * This method indicates if the ServiceWorker Interception is reset to
      * network or not.
