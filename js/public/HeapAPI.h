@@ -514,13 +514,18 @@ namespace detail {
 
 static MOZ_ALWAYS_INLINE ChunkBase* GetCellChunkBase(const Cell* cell) {
   MOZ_ASSERT(cell);
-  return reinterpret_cast<ChunkBase*>(uintptr_t(cell) & ~ChunkMask);
+  auto* chunk = reinterpret_cast<ChunkBase*>(uintptr_t(cell) & ~ChunkMask);
+  MOZ_ASSERT(chunk->runtime);
+  return chunk;
 }
 
 static MOZ_ALWAYS_INLINE TenuredChunkBase* GetCellChunkBase(
     const TenuredCell* cell) {
   MOZ_ASSERT(cell);
-  return reinterpret_cast<TenuredChunkBase*>(uintptr_t(cell) & ~ChunkMask);
+  auto* chunk =
+      reinterpret_cast<TenuredChunkBase*>(uintptr_t(cell) & ~ChunkMask);
+  MOZ_ASSERT(chunk->runtime);
+  return chunk;
 }
 
 static MOZ_ALWAYS_INLINE JS::Zone* GetTenuredGCThingZone(const uintptr_t addr) {
