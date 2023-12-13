@@ -41,6 +41,10 @@ class OwningHTMLCanvasElementOrOffscreenCanvas;
 class WebGLChild;
 }  // namespace dom
 
+namespace gfx {
+class DrawTargetWebgl;
+}
+
 namespace webgl {
 class AvailabilityRunnable;
 class TexUnpackBlob;
@@ -749,6 +753,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   friend class webgl::ObjectJS;
   friend class webgl::ProgramKeepAlive;
   friend class webgl::ShaderKeepAlive;
+  friend class gfx::DrawTargetWebgl;
 
   // ----------------------------- Lifetime and DOM ---------------------------
  public:
@@ -1088,6 +1093,8 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   RefPtr<gfx::DataSourceSurface> BackBufferSnapshot();
   [[nodiscard]] bool DoReadPixels(const webgl::ReadPixelsDesc&,
                                   Range<uint8_t>) const;
+  [[nodiscard]] bool DoReadPixels(const webgl::ReadPixelsDesc&,
+                                  const mozilla::ipc::Shmem&) const;
   uvec2 DrawingBufferSize();
 
   // -
@@ -1492,6 +1499,12 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
                   GLenum usage, GLuint srcElemOffset = 0,
                   GLuint srcElemCountOverride = 0);
 
+  void RawBufferData(GLenum target, const uint8_t* srcBytes, size_t srcLen,
+                     GLenum usage);
+  void RawBufferSubData(GLenum target, WebGLsizeiptr dstByteOffset,
+                        const uint8_t* srcBytes, size_t srcLen,
+                        bool unsynchronized = false);
+
   void BufferSubData(GLenum target, WebGLsizeiptr dstByteOffset,
                      const dom::ArrayBufferView& src, GLuint srcElemOffset = 0,
                      GLuint srcElemCountOverride = 0);
@@ -1609,6 +1622,9 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
                   GLenum internalFormat, const ivec3& size) const;
 
   // Primitive tex upload functions
+  void RawTexImage(uint32_t level, GLenum respecFormat, uvec3 offset,
+                   const webgl::PackingInfo& pi,
+                   webgl::TexUnpackBlobDesc&&) const;
   void TexImage(uint8_t funcDims, GLenum target, GLint level,
                 GLenum respecFormat, const ivec3& offset,
                 const Maybe<ivec3>& size, GLint border,
