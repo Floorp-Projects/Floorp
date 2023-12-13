@@ -509,7 +509,7 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_longstring_getter.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
+skip-if = ["a11y_checks"] # Bugs 1849028 and 1858041 clicked BUTTON.arrow is inconsistently not focusable
 
 ["browser_webconsole_message_categories.js"]
 

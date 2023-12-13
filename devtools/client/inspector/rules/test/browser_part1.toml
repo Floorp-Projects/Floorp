@@ -206,7 +206,7 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_rules_edit-property-commit.js"]
 
 ["browser_rules_edit-property-computed.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
+skip-if = ["a11y_checks"] # Bugs 1849028 and 1858041 clicked span.ruleview-expander.theme-twisty is inconsistently not accessible
 
 ["browser_rules_edit-property-increments.js"]
 
