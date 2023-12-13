@@ -88,7 +88,6 @@ namespace layers {
   IntSize size;
   SurfaceFormat format;
   bool continuous;
-  bool forceBT709ColorSpace;
   Matrix4x4? transformOverride;
 };
 

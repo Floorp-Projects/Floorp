@@ -155,7 +155,6 @@ pub fn get_gl_target(target: ImageBufferKind) -> gl::GLuint {
         ImageBufferKind::Texture2D => gl::TEXTURE_2D,
         ImageBufferKind::TextureRect => gl::TEXTURE_RECTANGLE,
         ImageBufferKind::TextureExternal => gl::TEXTURE_EXTERNAL_OES,
-        ImageBufferKind::TextureExternalBT709 => gl::TEXTURE_EXTERNAL_OES,
     }
 }
 

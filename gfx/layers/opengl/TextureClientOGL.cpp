@@ -38,7 +38,7 @@ class CompositableForwarder;
 
 already_AddRefed<TextureClient> AndroidSurfaceTextureData::CreateTextureClient(
     AndroidSurfaceTextureHandle aHandle, gfx::IntSize aSize, bool aContinuous,
-    gl::OriginPos aOriginPos, bool aHasAlpha, bool aForceBT709ColorSpace,
+    gl::OriginPos aOriginPos, bool aHasAlpha,
     Maybe<gfx::Matrix4x4> aTransformOverride, LayersIPCChannel* aAllocator,
     TextureFlags aFlags) {
   if (aOriginPos == gl::OriginPos::BottomLeft) {
@@ -47,19 +47,17 @@ already_AddRefed<TextureClient> AndroidSurfaceTextureData::CreateTextureClient(
 
   return TextureClient::CreateWithData(
       new AndroidSurfaceTextureData(aHandle, aSize, aContinuous, aHasAlpha,
-                                    aForceBT709ColorSpace, aTransformOverride),
+                                    aTransformOverride),
       aFlags, aAllocator);
 }
 
 AndroidSurfaceTextureData::AndroidSurfaceTextureData(
     AndroidSurfaceTextureHandle aHandle, gfx::IntSize aSize, bool aContinuous,
-    bool aHasAlpha, bool aForceBT709ColorSpace,
-    Maybe<gfx::Matrix4x4> aTransformOverride)
+    bool aHasAlpha, Maybe<gfx::Matrix4x4> aTransformOverride)
     : mHandle(aHandle),
       mSize(aSize),
       mContinuous(aContinuous),
       mHasAlpha(aHasAlpha),
-      mForceBT709ColorSpace(aForceBT709ColorSpace),
       mTransformOverride(aTransformOverride) {
   MOZ_ASSERT(mHandle);
 }
@@ -78,7 +76,7 @@ bool AndroidSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
   aOutDescriptor = SurfaceTextureDescriptor(
       mHandle, mSize,
       mHasAlpha ? gfx::SurfaceFormat::R8G8B8A8 : gfx::SurfaceFormat::R8G8B8X8,
-      mContinuous, mForceBT709ColorSpace, mTransformOverride);
+      mContinuous, mTransformOverride);
   return true;
 }
 
@@ -161,7 +159,6 @@ bool AndroidNativeWindowTextureData::Serialize(
     SurfaceDescriptor& aOutDescriptor) {
   aOutDescriptor = SurfaceTextureDescriptor(
       mSurface->GetHandle(), mSize, mFormat, false /* not continuous */,
-      false /* do not override colorspace */,
       Some(gfx::Matrix4x4()) /* always use identity transform */);
   return true;
 }
