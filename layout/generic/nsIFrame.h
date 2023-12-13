@@ -661,7 +661,8 @@ class nsIFrame : public nsQueryFrame {
         mHasPaddingChange(false),
         mInScrollAnchorChain(false),
         mHasColumnSpanSiblings(false),
-        mDescendantMayDependOnItsStaticPosition(false) {
+        mDescendantMayDependOnItsStaticPosition(false),
+        mIsStackingContext(false) {
     MOZ_ASSERT(mComputedStyle);
     MOZ_ASSERT(mPresContext);
     mozilla::PodZero(&mOverflow);
@@ -4175,8 +4176,11 @@ class nsIFrame : public nsQueryFrame {
   /**
    * Determines if this frame is a stacking context.
    */
-  bool IsStackingContext(const nsStyleDisplay*, const nsStyleEffects*);
-  bool IsStackingContext();
+  bool IsStackingContext() const {
+    MOZ_ASSERT(mIsStackingContext == ComputeIsStackingContext());
+    return mIsStackingContext;
+  }
+  bool ComputeIsStackingContext() const;
 
   // Whether we should paint backgrounds or not.
   struct ShouldPaintBackground {
@@ -5191,6 +5195,9 @@ class nsIFrame : public nsQueryFrame {
    * move).
    */
   bool mDescendantMayDependOnItsStaticPosition : 1;
+
+  // Whether we currently are a stacking context.
+  bool mIsStackingContext : 1;
 
  protected:
   // Helpers
