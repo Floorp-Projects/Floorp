@@ -9,6 +9,41 @@
 Changelog
 =========
 
+12.1.1
+------
+
+    * Update readme with a section on adoption, and a section on the history of the project 
+
+    * Fix/avx512vnni implementation
+
+    * Fix regression on XSIMD_NO_SUPPORTED_ARCHITECTURE
+
+12.1.0
+------
+
+    * Fix various problems with architecture version handling
+
+    * Specialize xsimd::compress for riscv
+
+    * Provide stubs for various avx512xx architectures
+
+12.0.0
+------
+
+    * Fix sincos implementation to cope with Emscripten
+    
+    * Upgraded minimal version of cmake to remove deprecation warning
+
+    * Fixed constants::signmask for GCC when using ffast-math
+
+    * Add RISC-V Vector support
+
+    * Generic, simple implementation fox xsimd::compress
+
+    * Disable batch of bools, and suggest using batch_bool instead
+
+    * Add an option to skip installation
+
 11.2.0
 ------
 

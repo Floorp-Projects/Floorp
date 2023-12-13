@@ -112,6 +112,7 @@ namespace xsimd
     template <class T, class A>
     class batch : public types::simd_register<T, A>, public types::integral_only_operators<T, A>
     {
+        static_assert(!std::is_same<T, bool>::value, "use xsimd::batch_bool<T, A> instead of xsimd::batch<bool, A>");
 
     public:
         static constexpr std::size_t size = sizeof(types::simd_register<T, A>) / sizeof(T); ///< Number of scalar elements in this batch.
