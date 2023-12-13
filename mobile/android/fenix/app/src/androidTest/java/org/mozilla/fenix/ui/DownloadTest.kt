@@ -8,6 +8,7 @@ import androidx.core.net.toUri
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -131,6 +132,7 @@ class DownloadTest {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/451563
+    @Ignore("Failing: Bug https://bugzilla.mozilla.org/show_bug.cgi?id=1813521")
     @SmokeTest
     @Test
     fun pauseResumeCancelDownloadTest() {
