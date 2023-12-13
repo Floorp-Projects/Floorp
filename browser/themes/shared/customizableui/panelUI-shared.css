@@ -2085,8 +2085,9 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
     }
   }
 
-  input:invalid,
-  menulist:has(+ input:invalid) {
+  /* The menulist:has hack here should go away in bug 1869823 */
+  input:invalid:not(:focus-visible),
+  menulist:has(+ input:invalid):not(:focus-visible) {
     border-color: transparent;
     outline: 2px solid var(--color-error-outline);
     outline-offset: -1px;
