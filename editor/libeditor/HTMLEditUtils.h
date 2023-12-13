@@ -208,6 +208,12 @@ class HTMLEditUtils final {
   [[nodiscard]] static bool IsDisplayInsideFlowRoot(const Element& aElement);
 
   /**
+   * Return true if aElement is a flex item or a grid item.  This works only
+   * when aElement has a primary frame.
+   */
+  [[nodiscard]] static bool IsFlexOrGridItem(const Element& aElement);
+
+  /**
    * IsRemovableInlineStyleElement() returns true if aElement is an inline
    * element and can be removed or split to in order to modifying inline
    * styles.
