@@ -44,45 +44,6 @@ nsresult SetDefaultBrowserUserChoice(
     const nsTArray<nsString>& aExtraFileExtensions = nsTArray<nsString>());
 
 /*
- * Set the default browser by writing the UserChoice registry keys,
- * asynchronously. Call this method from the main thread only.
- * The actual work will happen on a background thread, but the
- * completionCallback will get executed on the main thread.
- *
- * This sets the associations for https, http, .html, and .htm, and
- * optionally for additional extra file extensions and then calls the supplied
- * callback.
- *
- * When the agent is run with set-default-browser-user-choice,
- * the exit code is the result of this function.
- *
- * @param aAumi The AUMI of the installation to set as default.
- *
- * @param aExtraFileExtensions Optional array of extra file association pairs to
- * set as default, like `[ ".pdf", "FirefoxPDF" ]`.
- *
- * @param completionCallback Optional callback to be called when the operation
- * actually completes. Called on the main thread.
- *
- * @return NS_OK                    All associations set and checked
- *                                  successfully.
- *         NS_ERROR_WDBA_NO_PROGID  The ProgID classes had not been registered.
- *         NS_ERROR_WDBA_HASH_CHECK The existing UserChoice Hash could not be
- *                                  verified.
- *         NS_ERROR_WDBA_REJECTED   UserChoice was set, but checking the default
- *                                  did not return our ProgID.
- *         NS_ERROR_WDBA_BUILD      The existing UserChoice Hash was verified,
- *                                  but we're on an older, unsupported Windows
- *                                  build, so do not attempt to update the
- *                                  UserChoice hash.
- *         NS_ERROR_FAILURE         other failure
- */
-nsresult SetDefaultBrowserUserChoiceAsync(
-    const wchar_t* aAumi,
-    const nsTArray<nsString>& aExtraFileExtensions = nsTArray<nsString>(),
-    std::function<void(nsresult)> completionCallback = [](nsresult nv) {});
-
-/*
  * Set the default extension handlers for the given file extensions by writing
  * the UserChoice registry keys.
  *

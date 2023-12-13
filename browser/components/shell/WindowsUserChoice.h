@@ -10,6 +10,7 @@
 
 #include "ErrorList.h"  // for nsresult
 #include "mozilla/UniquePtr.h"
+#include "nsString.h"
 
 /*
  * Check the UserChoice Hashes for https, http, .html, .htm
@@ -59,6 +60,14 @@ CheckUserChoiceHashResult CheckUserChoiceHash(const wchar_t* aExt,
  * @return The path, or nullptr on failure.
  */
 mozilla::UniquePtr<wchar_t[]> GetAssociationKeyPath(const wchar_t* aExt);
+
+/*
+ * Appends the registry path for the given association, file extension or
+ * protocol to the parameter string.
+ *
+ * @return The path, or nullptr on failure.
+ */
+nsresult AppendAssociationKeyPath(const wchar_t* aExt, nsString& output);
 
 /*
  * Get the current user's SID
