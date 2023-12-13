@@ -467,7 +467,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       freeTask(this),
       decommitTask(this),
       nursery_(this),
-      storeBuffer_(rt, nursery()),
+      storeBuffer_(rt),
       lastAllocRateUpdateTime(TimeStamp::Now()) {
 }
 
