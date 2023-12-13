@@ -170,6 +170,7 @@ let ShellServiceInternal = {
   getDefaultPDFHandler() {
     const knownBrowserPrefixes = [
       "AppXq0fevzme2pys62n3e0fbqa7peapykr8v", // Edge before Blink, per https://stackoverflow.com/a/32724723.
+      "AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723", // Another pre-Blink Edge identifier. See Bug 1858729.
       "Brave", // For "BraveFile".
       "Chrome", // For "ChromeHTML".
       "Firefox", // For "FirefoxHTML-*" or "FirefoxPDF-*".  Need to take from other installations of Firefox!

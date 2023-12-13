@@ -145,11 +145,16 @@ static BrowserResult GetDefaultBrowser() {
         // "AppX[hash]" as expected. It is unclear if the EdgeWithEdgeHTML and
         // EdgeWithBlink ProgIDs would differ if the latter is changed into a
         // package containing Edge.
-        constexpr std::wstring_view progIdEdgeHtml{
+        constexpr std::wstring_view progIdEdgeHtml1{
             L"AppXq0fevzme2pys62n3e0fbqa7peapykr8v"};
+        // Apparently there is at least one other ProgID used by EdgeHTML Edge.
+        constexpr std::wstring_view progIdEdgeHtml2{
+            L"AppXd4nrz8ff68srnhf9t5a8sbjyar1cr723"};
 
-        if (!wcsnicmp(registeredApp.get(), progIdEdgeHtml.data(),
-                      progIdEdgeHtml.length())) {
+        if (!wcsnicmp(registeredApp.get(), progIdEdgeHtml1.data(),
+                      progIdEdgeHtml1.length()) ||
+            !wcsnicmp(registeredApp.get(), progIdEdgeHtml2.data(),
+                      progIdEdgeHtml2.length())) {
           return Browser::EdgeWithEdgeHTML;
         }
       }
