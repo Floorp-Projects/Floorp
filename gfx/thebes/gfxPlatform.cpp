@@ -3249,6 +3249,12 @@ static void AcceleratedCanvas2DPrefChangeCallback(const char*, void*) {
     feature.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
   }
 
+  if (StaticPrefs::gfx_canvas_remote_worker_threads_AtStartup() != 0) {
+    feature.ForceDisable(FeatureStatus::Failed,
+                         "Disabled with non-zero canvas worker threads",
+                         "FEATURE_FAILURE_DISABLE_BY_CANVAS_WORKER_THREADS"_ns);
+  }
+
   gfxVars::SetUseAcceleratedCanvas2D(feature.IsEnabled());
 }
 
