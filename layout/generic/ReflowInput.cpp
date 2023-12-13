@@ -2390,10 +2390,6 @@ void ReflowInput::InitConstraints(
             mCBReflowInput->GetWritingMode().IsOrthogonalTo(mWritingMode)) {
           mComputeSizeFlags += ComputeSizeFlag::ShrinkWrap;
         }
-
-        if (alignCB->IsFlexContainerFrame()) {
-          mComputeSizeFlags += ComputeSizeFlag::ShrinkWrap;
-        }
       }
 
       if (cbSize.ISize(wm) == NS_UNCONSTRAINEDSIZE) {
