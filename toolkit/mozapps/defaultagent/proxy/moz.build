@@ -9,13 +9,8 @@ Program("default-browser-agent")
 SPHINX_TREES["default-browser-agent"] = "docs"
 
 UNIFIED_SOURCES += [
-    "../DefaultBrowser.cpp",
     "../EventLog.cpp",
-    "../Registry.cpp",
-    "../ScheduledTask.cpp",
-    "../UtfConvert.cpp",
-    "/mfbt/Poison.cpp",
-    "/mfbt/Unused.cpp",
+    "../ScheduledTaskRemove.cpp",
     "main.cpp",
 ]
 
