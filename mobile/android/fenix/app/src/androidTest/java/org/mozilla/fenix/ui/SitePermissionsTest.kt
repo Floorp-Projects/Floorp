@@ -15,7 +15,6 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assume.assumeTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -98,7 +97,6 @@ class SitePermissionsTest {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2334294
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1815395")
     @Test
     fun blockAudioVideoPermissionRememberingTheDecisionTest() {
         assumeTrue(cameraManager.cameraIdList.isNotEmpty())
@@ -122,7 +120,6 @@ class SitePermissionsTest {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/251388
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1815395")
     @Test
     fun allowAudioVideoPermissionRememberingTheDecisionTest() {
         assumeTrue(cameraManager.cameraIdList.isNotEmpty())
@@ -164,7 +161,6 @@ class SitePermissionsTest {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2334190
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1815395")
     @Test
     fun blockMicrophonePermissionRememberingTheDecisionTest() {
         assumeTrue(micManager.microphones.isNotEmpty())
@@ -187,7 +183,6 @@ class SitePermissionsTest {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/251387
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1815395")
     @Test
     fun allowMicrophonePermissionRememberingTheDecisionTest() {
         assumeTrue(micManager.microphones.isNotEmpty())
@@ -228,7 +223,6 @@ class SitePermissionsTest {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2334077
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1815395")
     @Test
     fun blockCameraPermissionRememberingTheDecisionTest() {
         assumeTrue(cameraManager.cameraIdList.isNotEmpty())
@@ -251,7 +245,6 @@ class SitePermissionsTest {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/251386
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1815395")
     @Test
     fun allowCameraPermissionRememberingTheDecisionTest() {
         assumeTrue(cameraManager.cameraIdList.isNotEmpty())

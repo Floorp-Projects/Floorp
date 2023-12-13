@@ -450,7 +450,6 @@ class SettingsSitePermissionsTest {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1923417
-    @Ignore("Flaky, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1829889")
     @Test
     fun verifyDRMControlledContentPermissionSettingsTest() {
         navigationToolbar {

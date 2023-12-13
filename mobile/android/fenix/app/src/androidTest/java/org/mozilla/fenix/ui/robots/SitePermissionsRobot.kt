@@ -119,7 +119,7 @@ class SitePermissionsRobot {
 
     fun verifyDRMContentPermissionPrompt(url: String) {
         try {
-            assertUIObjectExists(itemWithText("Allow $url to store data in persistent storage?"))
+            assertUIObjectExists(itemWithText("Allow $url to play DRM-controlled content?"))
             assertItemTextEquals(denyPagePermissionButton, expectedText = "Don’t allow")
             assertItemTextEquals(allowPagePermissionButton, expectedText = "Allow")
         } catch (e: AssertionError) {
@@ -127,7 +127,7 @@ class SitePermissionsRobot {
             }.openThreeDotMenu {
             }.refreshPage {
             }.clickRequestDRMControlledContentAccessButton {
-                assertUIObjectExists(itemWithText("Allow $url to store data in persistent storage?"))
+                assertUIObjectExists(itemWithText("Allow $url to play DRM-controlled content?"))
                 assertItemTextEquals(denyPagePermissionButton, expectedText = "Don’t allow")
                 assertItemTextEquals(allowPagePermissionButton, expectedText = "Allow")
             }
