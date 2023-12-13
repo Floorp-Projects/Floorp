@@ -101,6 +101,8 @@ support-files = [
 
 ["test_engine_selector.js"]
 
+["test_engine_selector_defaults.js"]
+
 ["test_engine_selector_application.js"]
 
 ["test_engine_selector_application_distribution.js"]
