@@ -25,6 +25,7 @@ Here's the format of the ping data, with example values for each property:
       build_channel: <string>, // ex. "nightly", or "beta", or "release"
       version: <string>, // ex. "72.0.2"
       os_version: <string>, // ex. 10.0.18363.592
+      previous_os_version: <string>, // ex. 10.0.18363.591
       os_locale: <string>, // ex. en-US
       default_browser: <string>, // ex. "firefox"
       previous_default_browser: <string>, // ex. "edge"
@@ -45,7 +46,15 @@ The Firefox version.
 
 ``os_version``
 --------------
-The Windows version number. Below Windows 10, this is in the format ``[major].[minor].[build]``; for Windows 10, the format is ``10.0.[build].[UBR]``.
+The current Windows version number. Below Windows 10, this is in the format ``[major].[minor].[build]``; for Windows 10, the format is ``10.0.[build].[UBR]``.
+
+``previous_os_version``
+-----------------------
+The Windows OS version before it was changed to the current setting. The possible values are the same as for ``os_version``.
+
+The OS does not keep track of the previous OS version, so the agent records this information itself. That means that it will be inaccurate until the first time the default is changed after the agent task begins running. Before then, the value of ``previous_os_version`` will be the same as ``os_version``.
+
+This value is updated every time the Default Agent runs, so when the default browser is first changed the values for ``os_version`` and ``previous_os_version`` will be different. But on subsequent executions of the Default Agent, the two values will be the same.
 
 ``os_locale``
 -------------
