@@ -10081,7 +10081,7 @@
 # Allow using ffmpeg encoder
 -   name: media.ffmpeg.encoder.enabled
     type: RelaxedAtomicBool
-    value: false
+    value: @IS_NOT_NIGHTLY_BUILD@
     mirror: always
 
 #if defined(MOZ_FFMPEG) || defined(MOZ_FFVPX)
