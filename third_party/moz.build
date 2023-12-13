@@ -62,7 +62,7 @@ with Files('sqlite3/**'):
     BUG_COMPONENT = ('Toolkit', 'Storage')
 
 with Files('rlbox/**'):
-    BUG_COMPONENT = ('Firefox Build System', 'General')
+    BUG_COMPONENT = ('Core', 'Security: RLBox')
 
 with Files("libwebrtc/**"):
     BUG_COMPONENT = ("Core", "WebRTC")
@@ -83,10 +83,10 @@ with Files('picosha2/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
 with Files('rlbox_wasm2c_sandbox/**'):
-    BUG_COMPONENT = ('Firefox Build System', 'General')
+    BUG_COMPONENT = ('Core', 'Security: RLBox')
 
 with Files('wasm2c/**'):
-    BUG_COMPONENT = ('Firefox Build System', 'General')
+    BUG_COMPONENT = ('Core', 'Security: RLBox')
 
 with Files('WinToast/**'):
     BUG_COMPONENT = ('Toolkit', 'General')

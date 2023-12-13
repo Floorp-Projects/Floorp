@@ -4,6 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Security: RLBox")
+
 EXPORTS.mozilla.rlbox += [
     "/third_party/rlbox/include/rlbox.hpp",
     "/third_party/rlbox/include/rlbox_app_pointer.hpp",
