@@ -461,8 +461,8 @@ Context::QuotaInitRunnable::Run() {
       mInitAction->CompleteOnInitiatingThread(mResult);
 
       mContext->OnQuotaInit(mResult, mDirectoryMetadata,
-                            std::move(mDirectoryLock),
-                            std::move(mCipherKeyManager));
+                            mDirectoryLock.forget(),
+                            mCipherKeyManager.forget());
 
       mState = STATE_COMPLETE;
 
@@ -1031,12 +1031,26 @@ void Context::DispatchAction(SafeRefPtr<Action> aAction, bool aDoomData) {
 
 void Context::OnQuotaInit(
     nsresult aRv, const Maybe<CacheDirectoryMetadata>& aDirectoryMetadata,
-    RefPtr<DirectoryLock> aDirectoryLock,
-    RefPtr<CipherKeyManager> aCipherKeyManager) {
+    already_AddRefed<DirectoryLock> aDirectoryLock,
+    already_AddRefed<CipherKeyManager> aCipherKeyManager) {
   NS_ASSERT_OWNINGTHREAD(Context);
 
   MOZ_DIAGNOSTIC_ASSERT(mInitRunnable);
   mInitRunnable = nullptr;
+
+  if (aDirectoryMetadata) {
+    mDirectoryMetadata.emplace(*aDirectoryMetadata);
+
+    MOZ_DIAGNOSTIC_ASSERT(!mCipherKeyManager);
+    mCipherKeyManager = aCipherKeyManager;
+
+    MOZ_DIAGNOSTIC_ASSERT_IF(mDirectoryMetadata->mIsPrivate, mCipherKeyManager);
+  }
+
+  // Always save the directory lock to ensure QuotaManager does not shutdown
+  // before the Context has gone away.
+  MOZ_DIAGNOSTIC_ASSERT(!mDirectoryLock);
+  mDirectoryLock = aDirectoryLock;
 
   // If we opening the context failed, but we were not explicitly canceled,
   // still treat the entire context as canceled.  We don't want to allow
@@ -1055,20 +1069,6 @@ void Context::OnQuotaInit(
     // Context will destruct after return here and last ref is released.
     return;
   }
-
-  MOZ_DIAGNOSTIC_ASSERT(!mDirectoryMetadata);
-  mDirectoryMetadata = aDirectoryMetadata;
-  MOZ_DIAGNOSTIC_ASSERT(mDirectoryMetadata);
-
-  // Always save the directory lock to ensure QuotaManager does not shutdown
-  // before the Context has gone away.
-  MOZ_DIAGNOSTIC_ASSERT(!mDirectoryLock);
-  mDirectoryLock = std::move(aDirectoryLock);
-  MOZ_DIAGNOSTIC_ASSERT(mDirectoryLock);
-
-  MOZ_DIAGNOSTIC_ASSERT(!mCipherKeyManager);
-  mCipherKeyManager = std::move(aCipherKeyManager);
-  MOZ_DIAGNOSTIC_ASSERT_IF(mDirectoryMetadata->mIsPrivate, mCipherKeyManager);
 
   MOZ_DIAGNOSTIC_ASSERT(mState == STATE_CONTEXT_INIT);
   mState = STATE_CONTEXT_READY;
