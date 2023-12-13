@@ -9,8 +9,7 @@ Various modules provide shared utilities to the other components:
 Implements a Map-like storage or urlbar related preferences. The values are kept
 up-to-date.
 
-.. highlight:: JavaScript
-.. code::
+.. code:: JavaScript
 
   // Always use browser.urlbar. relative branch, except for the preferences in
   // PREF_OTHER_DEFAULTS.

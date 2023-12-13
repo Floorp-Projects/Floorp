@@ -47,7 +47,7 @@ When the user closes the tab or navigates to a different URI, prompts associated
 with the given tab are closed.
 In this case an exception will be thrown:
 
-.. code-block::
+.. code-block:: JavaScript
 
     /*
     Exception: prompt aborted by user

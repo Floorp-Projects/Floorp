@@ -65,7 +65,7 @@ takes the action identified by that line, otherwise the chrome registry
 ignores that line (and prints a warning message in the runtime error
 console).
 
-.. code::
+.. code:: text
 
    locale packagename localename path/to/files
    skin packagename skinname path/to/files
@@ -81,7 +81,7 @@ Manifest instructions
 comments
 ~~~~~~~~
 
-.. code::
+.. code:: text
 
    # this line is a comment - you can put here whatever you want
 
@@ -152,7 +152,7 @@ locale
 
 A locale package is registered with the line:
 
-.. code::
+.. code:: text
 
    locale packagename localename uri/to/files/ [flags]
 
@@ -167,7 +167,7 @@ skin
 
 A skin package is registered with the line:
 
-.. code::
+.. code:: text
 
    skin packagename skinname uri/to/files/ [flags]
 
@@ -183,7 +183,7 @@ style
 Style overlays (custom CSS which will be applied to a chrome page) are
 registered with the following syntax:
 
-.. code::
+.. code:: text
 
    style chrome://URI-to-style chrome://stylesheet-URI [flags]
 
@@ -195,7 +195,7 @@ file provided by the application or XULRunner. In order to allow for
 this, the chrome registration manifest allows for "override"
 instructions:
 
-.. code::
+.. code:: text
 
    override chrome://package/type/original-uri.whatever new-resolved-URI [flags]
 
@@ -212,7 +212,7 @@ resource
 
 Aliases can be created using the ``resource`` instruction:
 
-.. code::
+.. code:: text
 
    resource aliasname uri/to/files/ [flags]
 
@@ -239,7 +239,7 @@ Extensions may install into multiple applications. There may be chrome
 registration lines which only apply to one particular application. The
 flag
 
-.. code::
+.. code:: text
 
    application=app-ID
 
@@ -264,7 +264,7 @@ Extensions may install into multiple versions of an application. There
 may be chrome registration lines which only apply to a particular
 application version. The flag
 
-.. code::
+.. code:: text
 
    appversion=version
    appversion<version
@@ -287,7 +287,7 @@ This is particularly true for binary components. If there are chrome
 registration lines which only apply to a particular Gecko version, the
 flag
 
-.. code::
+.. code:: text
 
    platformversion=version
    platformversion<version
@@ -333,7 +333,7 @@ Extensions (or themes) may offer different features depending on the
 operating system on which Firefox is running. The value is compared to
 the value of `OS_TARGET` for the platform.
 
-.. code::
+.. code:: text
 
    os=WINNT
    os=Darwin
@@ -345,7 +345,7 @@ An extension or theme may need to operate differently depending on which
 version of an operating system is running. For example, a theme may wish
 to adopt a different look on Mac OS X 10.5 than 10.4:
 
-.. code::
+.. code:: text
 
    osversion>=10.5
 

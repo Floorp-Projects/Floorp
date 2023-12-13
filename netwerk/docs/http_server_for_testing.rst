@@ -69,13 +69,13 @@ Running the server
 From test suites, the server should be importable as a testing-only JS
 module:
 
-.. code:: javascript
+.. code:: JavaScript
 
    ChromeUtils.import("resource://testing-common/httpd.js");
 
 Once you've done that, you can create a new server as follows:
 
-.. code:: javascript
+.. code:: JavaScript
 
    let server = new HttpServer(); // Or nsHttpServer() if you don't use ChromeUtils.import.
 
@@ -128,7 +128,7 @@ handlers) it serves. To modify the headers for a file, create a sibling
 file with the first file's name followed by ``^headers^``. Here's an
 example of how such a file might look:
 
-.. code::
+.. code:: text
 
    HTTP 404 I want a cool HTTP description!
    Content-Type: text/plain
@@ -164,7 +164,7 @@ will generate. That function acts exactly like the ``handle`` function
 on the ``nsIHttpRequestHandler`` interface. First, tell the server what
 extension you're using:
 
-.. code:: javascript
+.. code:: JavaScript
 
    const SJS_EXTENSION = "cgi";
    server.registerContentType(SJS_EXTENSION, "sjs");
@@ -172,7 +172,7 @@ extension you're using:
 Now just create an SJS with the extension ``cgi`` and write whatever you
 want. For example:
 
-.. code:: javascript
+.. code:: JavaScript
 
    function handleRequest(request, response)
    {
@@ -201,7 +201,7 @@ every time processing occurs. To support stateful SJS behavior, the
 following functions have been added to the global scope in which a SJS
 handler executes, providing a simple key-value state storage mechanism:
 
-.. code::
+.. code:: JavaScript
 
    /*
     * v : T means v is of type T
@@ -247,7 +247,7 @@ request handler needs to store information from a first request of it
 for use in processing a second request of it — say, for example, if you
 wanted to implement a request handler implementing a counter:
 
-.. code:: javascript
+.. code:: JavaScript
 
    /**
     * Generates a response whose body is "0", "1", "2", and so on. each time a
@@ -323,7 +323,7 @@ when a particular event occurs.
 single string argument and returns the object or ``null`` directly. In
 SJS, however, the process to return the value is slightly different:
 
-.. code:: javascript
+.. code:: JavaScript
 
    function handleRequest(request, response)
    {
@@ -366,7 +366,7 @@ that the response will be written and finished by the handler. Here's an
 example of an SJS file which writes some data, waits five seconds, and
 then writes some more data and finishes the response:
 
-.. code:: javascript
+.. code:: JavaScript
 
    var timer = null;
 
@@ -423,7 +423,7 @@ through httpd.js would throw an exception) and which has a header that
 spans multiple lines (httpd.js responses otherwise generate only
 single-line headers):
 
-.. code:: javascript
+.. code:: JavaScript
 
    function handleRequest(request, response)
    {

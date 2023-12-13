@@ -392,7 +392,7 @@ be declared in GeckoView's ``AndroidManifest.xml``.
 
 For example, this is the definition of the ``media`` process:
 
-.. code-block::
+.. code-block:: xml
 
   <service
           android:name="org.mozilla.gecko.media.MediaManager"

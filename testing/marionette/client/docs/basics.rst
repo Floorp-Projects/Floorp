@@ -24,8 +24,9 @@ Getting the Client
 The Python client is officially supported. To install it, first make sure you
 have `pip installed`_ then run:
 
-.. parsed-literal::
-   pip install marionette_driver
+.. code-block:: bash
+
+   $ pip install marionette_driver
 
 It's highly recommended to use virtualenv_ when installing Marionette to avoid
 package conflicts and other general nastiness.
@@ -53,7 +54,8 @@ A session is a single instance of a Marionette client connected to a Marionette
 server. Before you can start executing commands, you need to start a session
 with :func:`start_session() <Marionette.start_session>`:
 
-.. parsed-literal::
+.. code-block:: python
+
    from marionette_driver.marionette import Marionette
 
    client = Marionette('127.0.0.1', port=2828)
@@ -77,7 +79,8 @@ appropriate context.
 Use :func:`~Marionette.switch_to_window` to execute commands in the context of a
 new window:
 
-.. parsed-literal::
+.. code-block:: python
+
    original_window = client.current_window_handle
    for handle in client.window_handles:
        if handle != original_window:
@@ -88,7 +91,8 @@ new window:
 Similarly, use :func:`~Marionette.switch_to_frame` to execute commands in the
 context of a new frame (e.g an <iframe> element):
 
-.. parsed-literal::
+.. code-block:: python
+
    iframe = client.find_element(By.TAG_NAME, 'iframe')
    client.switch_to_frame(iframe)
 
@@ -97,12 +101,13 @@ privileged scope where you can access things like the Firefox UI itself.
 Content scope is where things like webpages live. You can switch between
 `chrome` and `content` using the :func:`~Marionette.set_context` and :func:`~Marionette.using_context` functions:
 
-.. parsed-literal::
+.. code-block:: python
+
    client.set_context(client.CONTEXT_CONTENT)
    # content scope
    with client.using_context(client.CONTEXT_CHROME):
        #chrome scope
-       ... do stuff ...
+       pass  # ... do stuff ...
    # content scope restored
 
 
@@ -114,7 +119,8 @@ move through the back/forward cache using :func:`~Marionette.go_forward` and
 :func:`~Marionette.go_back` respectively. To retrieve the currently
 open website, use :func:`~Marionette.get_url`:
 
-.. parsed-literal::
+.. code-block:: python
+
    url = 'http://mozilla.org'
    client.navigate(url)
    client.go_back()
@@ -129,7 +135,8 @@ In order to inspect or manipulate actual DOM elements, they must first be found
 using the :func:`~Marionette.find_element` or :func:`~Marionette.find_elements`
 methods:
 
-.. parsed-literal::
+.. code-block:: python
+
    from marionette_driver.marionette import WebElement
    element = client.find_element(By.ID, 'my-id')
    assert type(element) == WebElement
@@ -140,7 +147,8 @@ For a full list of valid search strategies, see :doc:`advanced/findelement`.
 
 Now that an element has been found, it's possible to manipulate it:
 
-.. parsed-literal::
+.. code-block:: python
+
    element.click()
    element.send_keys('hello!')
    print(element.get_attribute('style'))
@@ -162,7 +170,8 @@ functions. They accomplish what their names suggest, the former executes some
 synchronous JavaScript, while the latter provides a callback mechanism for
 running asynchronous JavaScript:
 
-.. parsed-literal::
+.. code-block:: python
+
    result = client.execute_script("return arguments[0] + arguments[1];",
                                   script_args=[2, 3])
    assert result == 5
@@ -170,7 +179,8 @@ running asynchronous JavaScript:
 The async method works the same way, except it won't return until the
 `resolve()` function is called:
 
-.. parsed-literal::
+.. code-block:: python
+
    result = client.execute_async_script("""
        let [resolve] = arguments;
        setTimeout(function() {

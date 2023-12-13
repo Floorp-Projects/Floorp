@@ -63,7 +63,7 @@ Use `fu2::function` as a wrapper for copyable function wrappers and `fu2::unique
 The standard implementation `std::function` and `fu2::function` are convertible to each other, see [the chapter convertibility of functions](#convertibility-of-functions) for details.
 
 A function wrapper is declared as following:
-```c++
+```cpp
 fu2::function<void(int, float) const>
 // Return type ~^   ^     ^     ^
 // Parameters  ~~~~~|~~~~~|     ^
@@ -98,7 +98,7 @@ fu2::function<void(int, float) const>
 
 `fu2::function` and `fu2::unique_function` (non copyable) are easy to use:
 
-```c++
+```cpp
 fu2::function<void() const> fun = [] {
   // ...
 };
@@ -111,7 +111,7 @@ fun();
 
 `fu2::unique_function` also works with non copyable functors/ lambdas.
 
-```c++
+```cpp
 fu2::unique_function<bool() const> fun = [ptr = std::make_unique<bool>(true)] {
   return *ptr;
 };
@@ -127,7 +127,7 @@ otherfun();
 
 A `fu2::function_view` can be used to create a non owning view on a persistent object. Note that the view is only valid as long as the object lives.
 
-```c++
+```cpp
 auto callable = [ptr = std::make_unique<bool>(true)] {
   return *ptr;
 };
@@ -164,7 +164,7 @@ fu2::function_view<bool() const> view(callable);
 | fu2::unique_function     | No            | Yes                  | No            |
 | std::function            | Yes           | Yes                  | Yes           |
 
-```c++
+```cpp
 fu2::function<void()> fun = []{};
 // OK
 std::function<void()> std_fun = fun;
@@ -197,14 +197,14 @@ struct my_capacity {
 
 The following code defines an owning  function with a variadic signature which is copyable and sfo optimization is disabled:
 
-```c++
+```cpp
 template<typename Signature>
 using my_function = fu2::function_base<true, true, fu2::capacity_none, true, false, Signature>;
 ```
 
 The following code defines a non copyable function which just takes 1 argument, and has a huge capacity for internal sfo optimization. Also it must be called as r-value.
 
-```c++
+```cpp
 template<typename Arg>
 using my_consumer = fu2::function_base<true, false, fu2::capacity_fixed<100U>,
                                        true, false, void(Arg)&&>;

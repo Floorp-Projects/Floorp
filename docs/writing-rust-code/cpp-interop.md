@@ -128,7 +128,7 @@ which will be placed in `$OBJDIR/dist/include/mozilla/intl/`.
 
 Finally, include the generated header into a C++ file and call the function.
 
-```c++
+```cpp
 #include "mozilla/intl/unic_langid_ffi_generated.h"
 
 using namespace mozilla::intl::ffi;
@@ -159,7 +159,7 @@ extern "C" {
 }
 ```
 
-```c++
+```cpp
 ffi::FluentPlatform FluentBuiltInGetPlatform() {
   return ffi::FluentPlatform::Linux;
 }
@@ -201,7 +201,7 @@ pub unsafe extern "C" fn unic_langid_as_string(
 
 Next, in a C++ header define a destructor via `DefaultDelete`.
 
-```c++
+```cpp
 #include "mozilla/intl/unic_langid_ffi_generated.h"
 #include "mozilla/UniquePtr.h"
 
@@ -224,7 +224,7 @@ free the code, which might lead to strange behaviour!)
 
 Finally, implement the class.
 
-```c++
+```cpp
 class Locale {
 public:
   explicit Locale(const nsACString& aLocale)

@@ -223,7 +223,7 @@ Add a notice at the top of both examples that these APIs are only available in F
 
 > **Note**: C++ APIs are only available in Firefox Desktop.
 
-```c++
+```cpp
 #include "mozilla/glean/GleanMetrics.h"
 
 mozilla::glean::category_name::metric_name.Api(args);
@@ -231,7 +231,7 @@ mozilla::glean::category_name::metric_name.Api(args);
 
 There are test APIs available too:
 
-```c++
+```cpp
 #include "mozilla/glean/GleanMetrics.h"
 
 ASSERT_EQ(value, mozilla::glean::category_name::metric_name.TestGetValue().ref());

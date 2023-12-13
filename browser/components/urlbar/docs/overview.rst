@@ -22,8 +22,7 @@ The UrlbarQueryContext
 The *UrlbarQueryContext* object describes a single instance of a search.
 It is augmented as it progresses through the system, with various information:
 
-.. highlight:: JavaScript
-.. code::
+.. code:: JavaScript
 
   UrlbarQueryContext {
     allowAutofill; // {boolean} If true, providers are allowed to return
@@ -101,8 +100,7 @@ used by the user to restrict the search to specific result type (See the
   The tokenizer uses heuristics to determine each token's type, as such the
   consumer may want to check the value before applying filters.
 
-.. highlight:: JavaScript
-.. code::
+.. code:: JavaScript
 
   UrlbarProvidersManager {
     registerProvider(providerObj);
@@ -135,8 +133,7 @@ implementation details may vary deeply among different providers.
   Internal providers can access the Places database through the
   *PlacesUtils.promiseLargeCacheDBConnection* utility.
 
-.. highlight:: JavaScript
-.. code::
+.. code:: JavaScript
 
   class UrlbarProvider {
     /**
@@ -213,8 +210,7 @@ indicated by the UrlbarQueryContext.muxer property.
   The Muxer is a replaceable component, as such what is described here is a
   reference for the default View, but may not be valid for other implementations.
 
-.. highlight:: JavaScript
-.. code::
+.. code:: JavaScript
 
   class UrlbarMuxer {
     /**
@@ -248,8 +244,7 @@ View (e.g. showing/hiding a panel). It is also responsible for reporting Telemet
 
   Each *View* has a different *Controller* instance.
 
-.. highlight:: JavaScript
-.. code::
+.. code:: JavaScript
 
   UrlbarController {
     async startQuery(queryContext);
@@ -278,8 +273,7 @@ user and handling their input.
 
 Implements an input box *View*, owns an *UrlbarView*.
 
-.. highlight:: JavaScript
-.. code::
+.. code:: JavaScript
 
   UrlbarInput {
     constructor(options = { textbox, panel });
@@ -323,8 +317,7 @@ Implements an input box *View*, owns an *UrlbarView*.
 
 Represents the base *View* implementation, communicates with the *Controller*.
 
-.. highlight:: JavaScript
-.. code::
+.. code:: JavaScript
 
   UrlbarView {
     // Manage View visibility.
@@ -359,7 +352,7 @@ properties, supported by all of the results.
 
   Result types are also enumerated by *UrlbarUtils.RESULT_TYPE*.
 
-.. code-block::
+.. code-block:: JavaScript
 
   UrlbarResult {
     constructor(resultType, payload);
@@ -384,8 +377,7 @@ properties, supported by all of the results.
 
 The following RESULT_TYPEs are supported:
 
-.. highlight:: JavaScript
-.. code::
+.. code:: JavaScript
 
     // An open tab.
     // Payload: { icon, url, userContextId }

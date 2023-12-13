@@ -30,7 +30,7 @@ gDevTools
 
 The ``gDevTools`` API can be used to register new tools, themes and handle toolboxes for different tabs and windows. To use the ``gDevTools`` API from an add-on, it can be imported with following snippet
 
-.. code-block::
+.. code-block:: JavaScript
 
   const { gDevTools } = require("resource:///modules/devtools/gDevTools.jsm");
 
@@ -501,7 +501,7 @@ Example
 
 Here's a minimal definition for a tool.
 
-.. code-block:: javascript
+.. code-block:: JavaScript
 
   let def = {
     id: "my-tool",
@@ -561,7 +561,7 @@ Example
 
 Here's a basic template for a ToolPanel implementation.
 
-.. code-block:: javascript
+.. code-block:: JavaScript
 
   // In the ToolDefinition object, do
   //   build: (window, target) => new MyPanel(window, target),
@@ -642,7 +642,7 @@ Examples
 
 Here's a few examples using the ``gDevTools`` object.
 
-.. code-block:: javascript
+.. code-block:: JavaScript
 
   let onInit = (eventName, toolbox, netmonitor) => console.log("Netmonitor initialized!");
 
@@ -751,7 +751,7 @@ Examples
 
 Register a tool
 
-.. code-block:: javascript
+.. code-block:: JavaScript
 
   gDevTools.registerTool({
     // FIXME: missing key related properties.
@@ -775,7 +775,7 @@ Register a tool
 
 Open a tool, or select it if the toolbox is already open:
 
-.. code-block:: javascript
+.. code-block:: JavaScript
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   let toolbox = gDevTools.openToolbox(target, null, "inspector");
@@ -788,7 +788,7 @@ Open a tool, or select it if the toolbox is already open:
 
 Add a sidebar to an existing tool:
 
-.. code-block:: javascript
+.. code-block:: JavaScript
 
   let sidebar = new ToolSidebar(xulTabbox, toolPanel, "toolId");
   sidebar.addTab("tab1", "chrome://browser/content/.../tab1.xhtml", true);

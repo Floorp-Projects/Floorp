@@ -14,7 +14,7 @@ Running Test262 locally
 
 The jstests shell harness is in ``js/src/tests/jstests.py``. It can be invoked using
 
-.. code::
+.. code:: bash
 
     ./mach jstests
 
@@ -22,7 +22,7 @@ Note that mach will generally find the JS shell itself; the --shell argument can
 
 Test262 includes a lot of tests. When working on a specific feature, it is often useful to specify a subset of tests:
 
-.. code::
+.. code:: bash
 
     ./mach jstests TEST_PATH_SUBSTRING [TEST_PATH_SUBSTRING_2 ...]
 
@@ -35,13 +35,13 @@ This runs all tests whose paths contain any TEST_PATH_SUBSTRING. To exclude test
 
 For a complete list of options, use:
 
-.. code::
+.. code:: bash
 
     ./mach jstests -- -h
 
 The Test262 tests can also be run in the browser, using:
 
-.. code::
+.. code:: bash
 
    ./mach jstestbrowser
 
@@ -54,13 +54,13 @@ Running jit-tests locally
 
 The jit-test shell harness is in ``js/src/jit-test/jit_test.py``. It can be invoked using
 
-.. code::
+.. code:: bash
 
     ./mach jit-test
 
 Basic usage of ``mach jit-test`` is similar to ``mach jstests``. A subset of tests can be specified:
 
-.. code::
+.. code:: bash
 
     ./mach jit-test TEST_PATH_SUBSTRING [TEST_PATH_SUBSTRING_2 ...]
 

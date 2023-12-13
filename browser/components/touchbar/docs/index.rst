@@ -57,8 +57,7 @@ and so on. Inputs are defined in the ``gBuiltInInputs`` object `in that file`_.
 When creating a new object in ``gBuiltInInputs``, the available properties are
 documented in the JSDoc for ``TouchBarInput``:
 
-.. highlight:: JavaScript
-.. code::
+.. code:: JavaScript
 
   /**
    * A representation of a Touch Bar input.
@@ -131,8 +130,7 @@ Popover
   be defined in the ``children`` property of the parent. Popovers can also be
   shown and hidden programmatically, by calling
 
-  .. highlight:: JavaScript
-  .. code::
+  .. code:: JavaScript
 
     gTouchBarUpdater.showPopover(
       TouchBarHelper.baseWindow,
@@ -160,8 +158,8 @@ Examples
 Some examples of ``gBuiltInInputs`` objects follow.
 
 A simple button
-  .. highlight:: JavaScript
-  .. code::
+
+  .. code:: JavaScript
 
     Back: {
       title: "back",
@@ -176,8 +174,7 @@ A simple button
 The search popover
   This is the input that occupies the Touch Bar when the address bar is focused.
 
-  .. highlight:: JavaScript
-  .. code::
+  .. code:: JavaScript
 
     SearchPopover: {
       title: "search-popover",

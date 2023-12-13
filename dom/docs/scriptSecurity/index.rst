@@ -258,7 +258,7 @@ Expanded principal
 
 An expanded principal is specified as an array of origins:
 
-.. code::
+.. code:: JavaScript
 
    ["http://mozilla.org", "http://moz.org"]
 

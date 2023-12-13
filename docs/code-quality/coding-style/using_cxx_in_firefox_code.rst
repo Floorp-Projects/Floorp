@@ -748,7 +748,7 @@ globals affect startup time! But sometimes we have to do ugly things.)
 
 Non-portable example:
 
-.. code-block:: c++
+.. code-block:: cpp
 
    FooBarClass static_object(87, 92);
 
@@ -766,7 +766,7 @@ probably long gone by now, but even with the feature working correctly,
 there are so many problems with correctly ordering C++ constructors that
 it's easier to just have an init function:
 
-.. code-block:: c++
+.. code-block:: cpp
 
    static FooBarClass* static_object;
 
@@ -840,7 +840,7 @@ Make header files compatible with C and C++
 
 Non-portable example:
 
-.. code-block:: c++
+.. code-block:: cpp
 
    /*oldCheader.h*/
    int existingCfunction(char*);
@@ -866,7 +866,7 @@ fine.)
 
 Portable example:
 
-.. code-block:: c++
+.. code-block:: cpp
 
    /* oldCheader.h*/
    PR_BEGIN_EXTERN_C
@@ -906,7 +906,7 @@ constructor as private and not supply a definition. While you're at it,
 do the same for the assignment operator used for assignment of objects
 of the same class. Example:
 
-.. code-block:: c++
+.. code-block:: cpp
 
    class Foo {
      ...
@@ -936,7 +936,7 @@ Type scalar constants to avoid unexpected ambiguities
 
 Non-portable code:
 
-.. code-block:: c++
+.. code-block:: cpp
 
    class FooClass {
      // having such similar signatures
@@ -959,7 +959,7 @@ method calls.
 
 Portable code:
 
-.. code-block:: c++
+.. code-block:: cpp
 
    class FooClass {
      // having such similar signatures
@@ -1017,7 +1017,7 @@ favorite platform that you never use.
 
 Bad code example:
 
-.. code-block:: c++
+.. code-block:: cpp
 
    #ifdef MOZ_ENABLE_JPEG_FOUR_BILLION
    #include <stdlib.h>   // <--- don't do this
@@ -1051,7 +1051,7 @@ Some compilers do not pack the bits when different bitfields are given
 different types. For example, the following struct might have a size of
 8 bytes, even though it would fit in 1:
 
-.. code-block:: c++
+.. code-block:: cpp
 
    struct {
      char ch: 1;
