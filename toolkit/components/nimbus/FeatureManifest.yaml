@@ -1490,6 +1490,12 @@ fxaButtonVisibility:
       description: True if the Firefox Accounts toolbar button should be visible when not signed in.
       type: boolean
       setPref: identity.fxaccounts.toolbar.defaultVisible
+    pxiToolbarEnabled:
+      description: >-
+        True if we're enabling the PXI dropdown menu for the FxA toolbar button instead of
+        taking the user straight to login
+      type: boolean
+      setPref: identity.fxaccounts.toolbar.pxiToolbarEnabled
 
 legacyHeartbeat:
   description: Normandy Heartbeat exposed to Nimbus
