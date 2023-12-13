@@ -28,6 +28,7 @@
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/ProfilerLabels.h"
+#  include "AndroidBuild.h"
 #endif
 
 #if defined(MOZ_X11)
@@ -690,6 +691,21 @@ class GLLibraryEGL final {
   } mSymbols = {};
 };
 
+static bool ShouldLeakEglDisplay() {
+  // We are seeing crashes in eglTerminate on the Samsung S22 family of devices
+  // running Android 14, so we leak the EGLDisplay rather than call
+  // eglTerminate.
+#ifdef MOZ_WIDGET_ANDROID
+  if (jni::GetAPIVersion() >= 34) {
+    const auto board = java::sdk::Build::BOARD()->ToString();
+    if (board.EqualsASCII("s5e9925")) {
+      return true;
+    }
+  }
+#endif
+  return false;
+}
+
 class EglDisplay final {
  public:
   const RefPtr<GLLibraryEGL> mLib;
@@ -739,7 +755,13 @@ class EglDisplay final {
 
   // -
 
-  EGLBoolean fTerminate() { return mLib->fTerminate(mDisplay); }
+  EGLBoolean fTerminate() {
+    static const bool shouldLeak = ShouldLeakEglDisplay();
+    if (shouldLeak) {
+      return LOCAL_EGL_TRUE;
+    }
+    return mLib->fTerminate(mDisplay);
+  }
 
   EGLBoolean fMakeCurrent(EGLSurface draw, EGLSurface read,
                           EGLContext ctx) const {
