@@ -8,8 +8,6 @@ import { showConfirmation } from "resource://gre/modules/FillHelpers.sys.mjs";
 
 const lazy = {};
 
-/* eslint-disable block-scoped-var, no-var */
-
 ChromeUtils.defineESModuleGetters(lazy, {
   LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
 });
@@ -21,10 +19,8 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIAutoCompleteSimpleSearch"
 );
 
-ChromeUtils.defineLazyGetter(lazy, "strBundle", () => {
-  return Services.strings.createBundle(
-    "chrome://passwordmgr/locale/passwordmgr.properties"
-  );
+ChromeUtils.defineLazyGetter(lazy, "l10n", () => {
+  return new Localization(["toolkit/passwordmgr/passwordmgr.ftl"], true);
 });
 
 const LoginInfo = Components.Constructor(
@@ -201,35 +197,24 @@ export class LoginManagerPrompter {
       `Got autoSavedLoginGuid: ${autoSavedLoginGuid} and autoFilledLoginGuid ${autoFilledLoginGuid}.`
     );
 
-    let saveMsgNames = {
-      prompt: login.username === "" ? "saveLoginMsgNoUser2" : "saveLoginMsg2",
-      buttonLabel: "saveLoginButtonAllow.label",
-      buttonAccessKey: "saveLoginButtonAllow.accesskey",
-      secondaryButtonLabel: "saveLoginButtonDeny.label",
-      secondaryButtonAccessKey: "saveLoginButtonDeny.accesskey",
+    let saveMessageIds = {
+      prompt: "password-manager-save-password-message",
+      mainButton: "password-manager-save-password-button-allow",
+      secondaryButton: "password-manager-save-password-button-deny",
     };
 
-    let changeMsgNames = {
-      prompt:
-        login.username === "" ? "updateLoginMsgNoUser3" : "updateLoginMsg3",
-      buttonLabel: "updateLoginButtonText",
-      buttonAccessKey: "updateLoginButtonAccessKey",
-      secondaryButtonLabel: "updateLoginButtonDeny.label",
-      secondaryButtonAccessKey: "updateLoginButtonDeny.accesskey",
+    let changeMessageIds = {
+      prompt: messageStringID ?? "password-manager-update-password-message",
+      mainButton: "password-manager-password-password-button-allow",
+      secondaryButton: "password-manager-update-password-button-deny",
     };
 
-    let initialMsgNames =
-      type == "password-save" ? saveMsgNames : changeMsgNames;
+    let initialMessageIds =
+      type == "password-save" ? saveMessageIds : changeMessageIds;
 
-    if (messageStringID) {
-      changeMsgNames.prompt = messageStringID;
-    }
-
+    let promptId = initialMessageIds.prompt;
     let host = this._getShortDisplayHost(login.origin);
-    let promptMsg =
-      type == "password-save"
-        ? this._getLocalizedString(saveMsgNames.prompt, [host])
-        : this._getLocalizedString(changeMsgNames.prompt, [host]);
+    let promptMessage = lazy.l10n.formatValueSync(promptId, { host });
 
     let histogramName =
       type == "password-save"
@@ -280,23 +265,23 @@ export class LoginManagerPrompter {
         foundLogins,
         autoSavedLoginGuid
       );
-      let msgNames = !logins.length ? saveMsgNames : changeMsgNames;
+      let messageIds = !logins.length ? saveMessageIds : changeMessageIds;
 
       // Update the label based on whether this will be a new login or not.
-      let label = this._getLocalizedString(msgNames.buttonLabel);
-      let accessKey = this._getLocalizedString(msgNames.buttonAccessKey);
+
+      let mainButton = this.getLabelAndAccessKey(messageIds.mainButton);
 
       // Update the labels for the next time the panel is opened.
-      currentNotification.mainAction.label = label;
-      currentNotification.mainAction.accessKey = accessKey;
+      currentNotification.mainAction.label = mainButton.label;
+      currentNotification.mainAction.accessKey = mainButton.accessKey;
 
       // Update the labels in real time if the notification is displayed.
       let element = [...currentNotification.owner.panel.childNodes].find(
         n => n.notification == currentNotification
       );
       if (element) {
-        element.setAttribute("buttonlabel", label);
-        element.setAttribute("buttonaccesskey", accessKey);
+        element.setAttribute("buttonlabel", mainButton.label);
+        element.setAttribute("buttonaccesskey", mainButton.accessKey);
         updateButtonStatus(element);
       }
     };
@@ -485,10 +470,12 @@ export class LoginManagerPrompter {
       PWMGR_PROMPT_UPDATE_ACTION: true,
     };
 
+    let mainButton = this.getLabelAndAccessKey(initialMessageIds.mainButton);
+
     // The main action is the "Save" or "Update" button.
     let mainAction = {
-      label: this._getLocalizedString(initialMsgNames.buttonLabel),
-      accessKey: this._getLocalizedString(initialMsgNames.buttonAccessKey),
+      label: mainButton.label,
+      accessKey: mainButton.accessKey,
       callback: async () => {
         const eventTypeMapping = {
           "password-save": {
@@ -555,12 +542,14 @@ export class LoginManagerPrompter {
       },
     };
 
+    let secondaryButton = this.getLabelAndAccessKey(
+      initialMessageIds.secondaryButton
+    );
+
     let secondaryActions = [
       {
-        label: this._getLocalizedString(initialMsgNames.secondaryButtonLabel),
-        accessKey: this._getLocalizedString(
-          initialMsgNames.secondaryButtonAccessKey
-        ),
+        label: secondaryButton.label,
+        accessKey: secondaryButton.accessKey,
         callback: () => {
           histogram.add(PROMPT_NOTNOW_OR_DONTUPDATE);
           Services.obs.notifyObservers(
@@ -574,9 +563,12 @@ export class LoginManagerPrompter {
     ];
     // Include a "Never for this site" button when saving a new password.
     if (type == "password-save") {
+      let neverSaveButton = this.getLabelAndAccessKey(
+        "password-manager-save-password-button-never"
+      );
       secondaryActions.push({
-        label: this._getLocalizedString("saveLoginButtonNever.label"),
-        accessKey: this._getLocalizedString("saveLoginButtonNever.accesskey"),
+        label: neverSaveButton.label,
+        accessKey: neverSaveButton.accessKey,
         callback: () => {
           histogram.add(PROMPT_NEVER);
           Services.obs.notifyObservers(
@@ -590,13 +582,15 @@ export class LoginManagerPrompter {
       });
     }
 
+    let updatePasswordButtonDelete = this.getLabelAndAccessKey(
+      "password-manager-update-password-button-delete"
+    );
+
     // Include a "Delete this login" button when updating an existing password
     if (type == "password-change") {
       secondaryActions.push({
-        label: this._getLocalizedString("updateLoginButtonDelete.label"),
-        accessKey: this._getLocalizedString(
-          "updateLoginButtonDelete.accesskey"
-        ),
+        label: updatePasswordButtonDelete.label,
+        accessKey: updatePasswordButtonDelete.accessKey,
         callback: async () => {
           histogram.add(PROMPT_DELETE);
           Services.obs.notifyObservers(
@@ -623,10 +617,11 @@ export class LoginManagerPrompter {
       });
     }
 
-    let usernamePlaceholder = this._getLocalizedString("noUsernamePlaceholder");
-    let togglePasswordLabel = this._getLocalizedString("togglePasswordLabel");
-    let togglePasswordAccessKey = this._getLocalizedString(
-      "togglePasswordAccessKey2"
+    let usernamePlaceholder = lazy.l10n.formatValueSync(
+      "password-manager-no-username-placeholder"
+    );
+    let togglePassword = this.getLabelAndAccessKey(
+      "password-manager-toggle-password"
     );
 
     // .wrappedJSObject needed here -- see bug 422974 comment 5.
@@ -715,8 +710,9 @@ export class LoginManagerPrompter {
                 )
               ) {
                 toggleBtn.addEventListener("command", onVisibilityToggle);
-                toggleBtn.setAttribute("label", togglePasswordLabel);
-                toggleBtn.setAttribute("accesskey", togglePasswordAccessKey);
+
+                toggleBtn.setAttribute("label", togglePassword.label);
+                toggleBtn.setAttribute("accesskey", togglePassword.accessKey);
 
                 let hideToggle =
                   lazy.LoginHelper.isPrimaryPasswordSet() ||
@@ -728,7 +724,8 @@ export class LoginManagerPrompter {
                   // one that is already saved and we don't want to reveal
                   // it as the submitter of this form may not be the account
                   // owner, they may just be using the saved password.
-                  (messageStringID == "updateLoginMsgAddUsername2" &&
+                  (messageStringID ==
+                    "password-manager-update-login-add-username" &&
                     login.timePasswordChanged <
                       Date.now() - VISIBILITY_TOGGLE_MAX_PW_AGE_MS);
                 toggleBtn.hidden = hideToggle;
@@ -790,7 +787,7 @@ export class LoginManagerPrompter {
     let notification = PopupNotifications.show(
       browser,
       notificationID,
-      promptMsg,
+      promptMessage,
       "password-notification-icon",
       mainAction,
       secondaryActions,
@@ -857,7 +854,7 @@ export class LoginManagerPrompter {
       // If the saved password matches the password we're prompting with then we
       // are only prompting to let the user add a username since there was one in
       // the form. Change the message so the purpose of the prompt is clearer.
-      messageStringID = "updateLoginMsgAddUsername2";
+      messageStringID = "password-manager-update-login-add-username";
     }
 
     let notification = LoginManagerPrompter._showLoginCaptureDoorhanger(
@@ -906,19 +903,21 @@ export class LoginManagerPrompter {
       `Prompting user to change passowrd for username with count: ${logins.length}.`
     );
 
-    var usernames = logins.map(
-      l => l.username || LoginManagerPrompter._getLocalizedString("noUsername")
+    const noUsernamePlaceholder = lazy.l10n.formatValueSync(
+      "password-manager-no-username-placeholder"
     );
-    var dialogText =
-      LoginManagerPrompter._getLocalizedString("userSelectText2");
-    var dialogTitle = LoginManagerPrompter._getLocalizedString(
-      "passwordChangeTitle"
+    const usernames = logins.map(l => l.username || noUsernamePlaceholder);
+    const dialogText = lazy.l10n.formatValueSync(
+      "password-manager-select-username"
     );
-    var selectedIndex = { value: null };
+    const dialogTitle = lazy.l10n.formatValueSync(
+      "password-manager-confirm-password-change"
+    );
+    const selectedIndex = { value: null };
 
     // If user selects ok, outparam.value is set to the index
     // of the selected username.
-    var ok = Services.prompt.select(
+    const ok = Services.prompt.select(
       browser.ownerGlobal,
       dialogTitle,
       dialogText,
@@ -927,9 +926,9 @@ export class LoginManagerPrompter {
     );
     if (ok) {
       // Now that we know which login to use, modify its password.
-      var selectedLogin = logins[selectedIndex.value];
+      const selectedLogin = logins[selectedIndex.value];
       lazy.log.debug(`Updating password for origin: ${aNewLogin.origin}.`);
-      var newLoginWithUsername = Cc[
+      const newLoginWithUsername = Cc[
         "@mozilla.org/login-manager/loginInfo;1"
       ].createInstance(Ci.nsILoginInfo);
       newLoginWithUsername.init(
@@ -951,8 +950,8 @@ export class LoginManagerPrompter {
    * Helper method to update and persist an existing nsILoginInfo object with new property values.
    */
   static _updateLogin(login, aNewLogin) {
-    var now = Date.now();
-    var propBag = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+    const now = Date.now();
+    const propBag = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
       Ci.nsIWritablePropertyBag
     );
     propBag.setProperty("formActionOrigin", aNewLogin.formActionOrigin);
@@ -973,21 +972,18 @@ export class LoginManagerPrompter {
   }
 
   /**
-   * Can be called as:
-   *   _getLocalizedString("key1");
-   *   _getLocalizedString("key2", ["arg1"]);
-   *   _getLocalizedString("key3", ["arg1", "arg2"]);
-   *   (etc)
+   * Retrieves the message of the given id from fluent
+   * and extracts the label and accesskey
    *
-   * Returns the localized string for the specified key,
-   * formatted if required.
-   *
+   * @param {String} id message id
+   * @returns label and accesskey
    */
-  static _getLocalizedString(key, formatArgs) {
-    if (formatArgs) {
-      return lazy.strBundle.formatStringFromName(key, formatArgs);
-    }
-    return lazy.strBundle.GetStringFromName(key);
+  static getLabelAndAccessKey(id) {
+    const msg = lazy.l10n.formatMessagesSync([id])[0];
+    return {
+      label: msg.attributes.find(x => x.name == "label").value,
+      accessKey: msg.attributes.find(x => x.name == "accesskey").value,
+    };
   }
 
   /**
@@ -996,14 +992,14 @@ export class LoginManagerPrompter {
    * "ftp://www.site.co.uk" --> "site.co.uk".
    */
   static _getShortDisplayHost(aURIString) {
-    var displayHost;
+    let displayHost;
 
-    var idnService = Cc["@mozilla.org/network/idn-service;1"].getService(
+    const idnService = Cc["@mozilla.org/network/idn-service;1"].getService(
       Ci.nsIIDNService
     );
     try {
-      var uri = Services.io.newURI(aURIString);
-      var baseDomain = Services.eTLD.getBaseDomain(uri);
+      const uri = Services.io.newURI(aURIString);
+      const baseDomain = Services.eTLD.getBaseDomain(uri);
       displayHost = idnService.convertToDisplayIDN(baseDomain, {});
     } catch (e) {
       lazy.log.warn(`Couldn't process supplied URIString: ${aURIString}`);
