@@ -245,7 +245,7 @@ class Browsertime(Perftest):
         any test with the `expose_browser_profiler` field set true (e.g. benchmark tests).
         """
         return (
-            extra_profiler_run
+            (self.config["gecko_profile"] or extra_profiler_run)
             and test.get("expose_browser_profiler")
             and self.config["app"] in GECKO_PROFILER_APPS + TRACE_APPS
         )
