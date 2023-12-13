@@ -7,6 +7,7 @@
 #include <appmodel.h>
 #include <shlobj.h>  // for SHChangeNotify and IApplicationAssociationRegistration
 #include <functional>
+#include <timeapi.h>
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
@@ -67,6 +68,77 @@ static bool AddMillisecondsToSystemTime(SYSTEMTIME& aSystemTime,
 
   aSystemTime = tmpSystemTime;
   return true;
+}
+
+/*
+ * Takes two times: the start time and the current time, and returns the number
+ * of seconds left before the current time hits the next minute from the start
+ * time. Used to check if we are within the same minute as the start time and
+ * how much time we have left to perform an operation in the same minute.
+ *
+ * Used with user choice hashes, which have to be written to the registry
+ * in the same minute as they are generated.
+ *
+ * Example 1:
+ * operationStartTime - 10m 20s 800ms
+ * currentTime - 10m 22s 0ms
+ * The next minute is 11, so the return value is 11m - 10m 22s 0ms, converted to
+ * milliseconds.
+ *
+ * Example 2:
+ * operationStartTime - 10m 59s 800ms
+ * currentTime - 11m 0s 0ms
+ * The next minute is 11, but the minute the operation started on was 10, so the
+ * time to the next minute is 0 (because the current time is already at the next
+ * minute).
+ *
+ * @param operationStartTime
+ * @param currentTime
+ *
+ * @returns     the number of milliseconds left from the current time to the
+ * next minute from operationStartTime, or zero if the currentTime is already at
+ * the next minute or greater
+ */
+static WORD GetMillisecondsToNextMinute(SYSTEMTIME operationStartTime,
+                                        SYSTEMTIME currentTime) {
+  SYSTEMTIME operationStartTimeMinute = operationStartTime;
+  SYSTEMTIME currentTimeMinute = currentTime;
+
+  // Zero out the seconds and milliseconds so that we can confirm they are the
+  // same minutes
+  operationStartTimeMinute.wSecond = 0;
+  operationStartTimeMinute.wMilliseconds = 0;
+
+  currentTimeMinute.wSecond = 0;
+  currentTimeMinute.wMilliseconds = 0;
+
+  // Convert to a 64 bit value so we can compare them directly
+  FILETIME fileTime1;
+  FILETIME fileTime2;
+  if (!::SystemTimeToFileTime(&operationStartTimeMinute, &fileTime1) ||
+      !::SystemTimeToFileTime(&currentTimeMinute, &fileTime2)) {
+    // Error: report that there is 0 milliseconds till the next minute
+    return 0;
+  }
+
+  // The minutes for both times have to be the same, so confirm that they are,
+  // and if they aren't, return 0 milliseconds to indicate that we're already
+  // not on the minute that operationStartTime was on
+  if ((fileTime1.dwLowDateTime != fileTime2.dwLowDateTime) ||
+      (fileTime1.dwHighDateTime != fileTime2.dwHighDateTime)) {
+    return 0;
+  }
+
+  // The minutes are the same; determine the number of milliseconds left until
+  // the next minute
+  const WORD secondsToMilliseconds = 1000;
+  const WORD minutesToSeconds = 60;
+
+  // 1 minute converted to milliseconds - (the current second converted to
+  // milliseconds + the current milliseconds)
+  return (1 * minutesToSeconds * secondsToMilliseconds) -
+         ((currentTime.wSecond * secondsToMilliseconds) +
+          currentTime.wMilliseconds);
 }
 
 // Compare two SYSTEMTIMEs as FILETIME after clearing everything
@@ -180,43 +252,15 @@ static bool LaunchExecutable(
   return false;
 }
 
-static bool LaunchReg(int aArgsLength, const wchar_t* const* aArgs,
-                      bool emitMessageOnError) {
-  mozilla::UniquePtr<wchar_t[]> exePath =
-      mozilla::MakeUnique<wchar_t[]>(MAX_PATH + 1);
-  if (!ConstructSystem32Path(L"reg.exe", exePath.get(), MAX_PATH + 1)) {
-    LOG_ERROR_MESSAGE(L"Failed to construct path to reg.exe");
-    return false;
-  }
-
-  return LaunchExecutable(
-      exePath.get(), aArgsLength, aArgs,
-      [emitMessageOnError](DWORD exitCode, const wchar_t* regCmdLine) {
-        // N.b.: `reg.exe` returns 0 (unchanged) or 2 (changed) on success.
-        bool success = (exitCode == 0 || exitCode == 2);
-        if (!success && emitMessageOnError) {
-          LOG_ERROR_MESSAGE(L"%s returned failure exitCode %d", regCmdLine,
-                            exitCode);
-        }
-        return success;
-      });
-}
-
-static bool LaunchPowershell(const wchar_t* command) {
+static bool LaunchPowershell(const wchar_t* command,
+                             const wchar_t* powershellPath) {
   const wchar_t* args[] = {
+      L"-NoProfile",  // ensure nothing is monkeying with powershell
       L"-c",
       command,
   };
 
-  mozilla::UniquePtr<wchar_t[]> exePath =
-      mozilla::MakeUnique<wchar_t[]>(MAX_PATH + 1);
-  if (!ConstructSystem32Path(L"WindowsPowershell\\v1.0\\powershell.exe",
-                             exePath.get(), MAX_PATH + 1)) {
-    LOG_ERROR_MESSAGE(L"Failed to construct path to powershell.exe");
-    return false;
-  }
-
-  return LaunchExecutable(exePath.get(), mozilla::ArrayLength(args), args,
+  return LaunchExecutable(powershellPath, mozilla::ArrayLength(args), args,
                           [](DWORD exitCode, const wchar_t* regCmdLine) {
                             bool success = (exitCode == 0);
                             if (!success) {
@@ -228,103 +272,15 @@ static bool LaunchPowershell(const wchar_t* command) {
                           });
 }
 
-static mozilla::UniquePtr<wchar_t[]>
-CreatePowershellCommandToRemoveDenyAccessToFileExtRegKey(
-    const wchar_t* assocKeyPath) {
-  const wchar_t* formatString =
-      LR"($path = '%s\UserChoice' ; )"
-      LR"(Get-Acl -Path "HKCU:$path" | fl ; )"
-      LR"($key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey($path,[Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree,[System.Security.AccessControl.RegistryRights]::ChangePermissions) ; )"
-      LR"($acl = $key.GetAccessControl() ; )"
-      LR"($rule = New-Object System.Security.AccessControl.RegistryAccessRule([Security.Principal.WindowsIdentity]::GetCurrent().Name, 'SetValue', 'Deny') ; )"
-      LR"($acl.RemoveAccessRule($rule) ; )"
-      LR"($key.SetAccessControl($acl) ; )"
-      LR"(Get-Acl -Path "HKCU:$path" | fl)";
-
-  int bufferSize = _scwprintf(formatString, assocKeyPath);
-  ++bufferSize;  // Extra character for terminating null
-  mozilla::UniquePtr<wchar_t[]> command =
-      mozilla::MakeUnique<wchar_t[]>(bufferSize);
-  _snwprintf_s(command.get(), bufferSize, _TRUNCATE, formatString,
-               assocKeyPath);
-
-  return command;
-}
-
-static bool SetUserChoiceCommand(const wchar_t* aExt, const wchar_t* aProgID,
-                                 const wchar_t* aHash) {
-  auto assocKeyPath = GetAssociationKeyPath(aExt);
-  if (!assocKeyPath) {
+static bool FindPowershell(mozilla::UniquePtr<wchar_t[]>& powershellPath) {
+  auto exePath = mozilla::MakeUnique<wchar_t[]>(MAX_PATH + 1);
+  if (!ConstructSystem32Path(L"WindowsPowershell\\v1.0\\powershell.exe",
+                             exePath.get(), MAX_PATH + 1)) {
+    LOG_ERROR_MESSAGE(L"Failed to construct path to powershell.exe");
     return false;
   }
 
-  const wchar_t* formatString = L"HKCU\\%s\\UserChoice";
-  int bufferSize = _scwprintf(formatString, assocKeyPath.get());
-  ++bufferSize;  // Extra character for terminating null
-  mozilla::UniquePtr<wchar_t[]> userChoiceKeyPath =
-      mozilla::MakeUnique<wchar_t[]>(bufferSize);
-  _snwprintf_s(userChoiceKeyPath.get(), bufferSize, _TRUNCATE, formatString,
-               assocKeyPath.get());
-
-  const wchar_t* deleteArgs[] = {
-      L"DELETE",
-      userChoiceKeyPath.get(),
-      L"/F",
-  };
-
-  // Note that calling delete on the registry keys the first time is expected to
-  // fail in many cases so we do not log an error message in that case.
-  if (!LaunchReg(mozilla::ArrayLength(deleteArgs), deleteArgs,
-                 /* emitMessageOnError */ false)) {
-    // If the delete failed the first time, assume it was a permissions issue
-    // and work around it.
-
-    auto command = CreatePowershellCommandToRemoveDenyAccessToFileExtRegKey(
-        assocKeyPath.get());
-    bool canDeleteKey = LaunchPowershell(command.get());
-
-    if (canDeleteKey) {
-      // The permissions on the key were changed; try to delete again.
-      // This time, log the error on failure.
-      if (!LaunchReg(mozilla::ArrayLength(deleteArgs), deleteArgs,
-                     /* emitMessageOnError */ true)) {
-        return false;
-      }
-    } else {
-      return false;
-    }
-  }
-
-  // Like REG ADD [ROOT\]RegKey /V ValueName [/T DataType] [/S Separator] [/D
-  // Data] [/F] [/reg:32] [/reg:64]
-
-  const wchar_t* progIDArgs[] = {
-      L"ADD",    userChoiceKeyPath.get(),
-      L"/F",     L"/V",
-      L"ProgID", L"/T",
-      L"REG_SZ", L"/D",
-      aProgID,
-  };
-
-  if (!LaunchReg(mozilla::ArrayLength(progIDArgs), progIDArgs,
-                 /* emitMessageOnError */ true)) {
-    // LaunchReg will have logged an error message already.
-    return false;
-  }
-
-  const wchar_t* hashArgs[] = {
-      L"ADD",    userChoiceKeyPath.get(),
-      L"/F",     L"/V",
-      L"Hash",   L"/T",
-      L"REG_SZ", L"/D",
-      aHash,
-  };
-  if (!LaunchReg(mozilla::ArrayLength(hashArgs), hashArgs,
-                 /* emitMessageOnError */ true)) {
-    // LaunchReg will have logged an error message already.
-    return false;
-  }
-
+  powershellPath.swap(exePath);
   return true;
 }
 
@@ -337,16 +293,18 @@ static bool SetUserChoiceCommand(const wchar_t* aExt, const wchar_t* aProgID,
  * @param aExt      File type or protocol to associate
  * @param aSid      Current user's string SID
  * @param aProgID   ProgID to use for the asociation
+ * @param inMsix    Are we running from in an msix package?
  *
  * @return true if successful, false on error.
  */
 static bool SetUserChoice(const wchar_t* aExt, const wchar_t* aSid,
-                          const wchar_t* aProgID) {
-  // This might be slow to query, so do it before generating timestamps and
-  // hashes.
-  UINT32 pfnLen = 0;
-  bool inMsix =
-      GetCurrentPackageFullName(&pfnLen, nullptr) != APPMODEL_ERROR_NO_PACKAGE;
+                          const wchar_t* aProgID, bool inMsix) {
+  if (inMsix) {
+    LOG_ERROR_MESSAGE(
+        L"SetUserChoice should not be called on MSIX builds. Call "
+        L"SetDefaultExtensionHandlersUserChoiceImplMsix instead.");
+    return false;
+  }
 
   SYSTEMTIME hashTimestamp;
   ::GetSystemTime(&hashTimestamp);
@@ -378,13 +336,8 @@ static bool SetUserChoice(const wchar_t* aExt, const wchar_t* aSid,
     }
   }
 
-  if (inMsix) {
-    // We're in an MSIX package, thus need to use reg.exe.
-    return SetUserChoiceCommand(aExt, aProgID, hash.get());
-  } else {
-    // We're outside of an MSIX package and can use the Win32 Registry API.
-    return SetUserChoiceRegistry(aExt, aProgID, std::move(hash));
-  }
+  // We're outside of an MSIX package and can use the Win32 Registry API.
+  return SetUserChoiceRegistry(aExt, aProgID, std::move(hash));
 }
 
 static bool VerifyUserDefault(const wchar_t* aExt, const wchar_t* aProgID) {
@@ -463,34 +416,6 @@ nsresult SetDefaultBrowserUserChoice(
   return rv;
 }
 
-nsresult SetDefaultBrowserUserChoiceAsync(
-    const wchar_t* aAumi, const nsTArray<nsString>& aExtraFileExtensions,
-    std::function<void(nsresult)> completionCallback) {
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
-
-  // make a copy of the AUMI string
-  auto len = wcslen(aAumi);
-  mozilla::UniquePtr<wchar_t[]> aumi = mozilla::MakeUnique<wchar_t[]>(len + 1);
-  wcscpy_s(aumi.get(), len + 1, aAumi);
-
-  return NS_DispatchBackgroundTask(
-      NS_NewRunnableFunction(
-          "SetDefaultBrowserUserChoiceAsync",
-          [aumi = std::move(aumi), completionCallback,
-           aExtraFileExtensions =
-               CopyableTArray<nsString>(aExtraFileExtensions)] {
-            nsresult rv =
-                SetDefaultBrowserUserChoice(aumi.get(), aExtraFileExtensions);
-
-            NS_DispatchToMainThread(NS_NewRunnableFunction(
-                "SetDefaultBrowserUserChoiceAsync callback",
-                [rv, completionCallback] { completionCallback(rv); }));
-          }),
-      NS_DISPATCH_EVENT_MAY_BLOCK);
-}
-
 nsresult SetDefaultExtensionHandlersUserChoice(
     const wchar_t* aAumi, const nsTArray<nsString>& aFileExtensions) {
   auto sid = GetCurrentUserStringSid();
@@ -510,6 +435,259 @@ nsresult SetDefaultExtensionHandlersUserChoice(
   return rv;
 }
 
+/*
+ * Takes the list of file extension pairs and fills a list of program ids for
+ * each pair.
+ *
+ * @param aFileExtensions array of file association pairs to
+ * set as default, like `[ ".pdf", "FirefoxPDF" ]`.
+ */
+static nsresult GenerateProgramIDs(const nsTArray<nsString>& aFileExtensions,
+                                   nsTArray<nsString>& progIDs) {
+  for (size_t i = 0; i + 1 < aFileExtensions.Length(); i += 2) {
+    const wchar_t* fileExtension = aFileExtensions[i].get();
+
+    // Formatting the ProgID here prevents using this helper to target arbitrary
+    // ProgIDs.
+    mozilla::UniquePtr<wchar_t[]> progID;
+    nsresult rv = GetMsixProgId(fileExtension, progID);
+    if (NS_FAILED(rv)) {
+      LOG_ERROR_MESSAGE(L"Failed to retrieve MSIX progID for %s",
+                        fileExtension);
+      return rv;
+    }
+
+    progIDs.AppendElement(nsString(progID.get()));
+  }
+
+  return NS_OK;
+}
+
+/*
+ * Takes the list of file extension pairs and a matching list of program ids for
+ * each of those pairs and verifies that the system is successfully to match
+ * each.
+ *
+ * @param aFileExtensions array of file association pairs to set as default,
+ * like `[ ".pdf", "FirefoxPDF" ]`.
+ * @param aProgIDs array of program ids. The order of this array matches the
+ * file extensions parameter.
+ */
+static nsresult VerifyUserDefaults(const nsTArray<nsString>& aFileExtensions,
+                                   const nsTArray<nsString>& aProgIDs) {
+  for (size_t i = 0; i + 1 < aFileExtensions.Length(); i += 2) {
+    const wchar_t* fileExtension = aFileExtensions[i].get();
+
+    if (!VerifyUserDefault(fileExtension, aProgIDs[i / 2].get())) {
+      return NS_ERROR_WDBA_REJECTED;
+    }
+  }
+
+  return NS_OK;
+}
+
+/*
+ * Queries the system for the minimum resolution (or tick time) in milliseconds
+ * that can be used with ::Sleep. If a Sleep is not triggered with a time
+ * divisible by the tick time, control can return to the thread before the time
+ * specified to Sleep.
+ *
+ * @param defaultValue  what to return if the system query fails.
+ */
+static UINT GetSystemSleepIntervalInMilliseconds(UINT defaultValue) {
+  TIMECAPS timeCapabilities;
+  bool timeCapsFetchSuccessful =
+      (MMSYSERR_NOERROR ==
+       timeGetDevCaps(&timeCapabilities, sizeof(timeCapabilities)));
+  if (!timeCapsFetchSuccessful) {
+    return defaultValue;
+  }
+
+  return timeCapabilities.wPeriodMin > 0 ? timeCapabilities.wPeriodMin
+                                         : defaultValue;
+}
+
+/*
+ * MSIX implementation o SetDefaultExtensionHandlersUserChoice.
+ *
+ * Due to the fact that MSIX builds run in a virtual, walled off environment,
+ * calling into the Win32 registry APIs doesn't work to set registry keys.
+ * MSIX builds access a virtual registry.
+ *
+ * Sends a "script" via command line to Powershell to modify the registry
+ * in an executable that is outside of the walled garden MSIX FX package
+ * environment, which is the only way to do that so far. Only works
+ * on slightly older versions of Windows 11 (older than 23H2).
+ *
+ * This was originally done using calls to Reg.exe, but permissions can't
+ * be changed that way, requiring using Powershell to call into .Net functions
+ * directly. Launching Powershell is slow (on the order of a second on some
+ * systems) so this method jams the calls to do everything into one launch of
+ * Powershell, to make it as quick as possible.
+ *
+ */
+nsresult SetDefaultExtensionHandlersUserChoiceImplMsix(
+    const wchar_t* aAumi, const wchar_t* const aSid,
+    const nsTArray<nsString>& aFileExtensions) {
+  mozilla::UniquePtr<wchar_t[]> exePath;
+  if (!FindPowershell(exePath)) {
+    LOG_ERROR_MESSAGE(L"Could not locate Powershell");
+    return NS_ERROR_FAILURE;
+  }
+
+  // The following is the start of the script that will be sent to Powershell.
+  // In includes a function; calls to the function get appended per file
+  // extension, done below.
+  nsString startScript(
+      uR"(
+function Set-DefaultHandlerRegistry($Path, $ProgID, $Hash) {
+  $Path = "$Path\UserChoice"
+  $CurrentUser = [Microsoft.Win32.Registry]::CurrentUser
+  $ReadWriteSubTreePerm = [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree
+  try {
+    $CurrentUser.DeleteSubKeyTree($Path, $false)
+    $key = $CurrentUser.CreateSubKey($Path, $ReadWriteSubTreePerm)
+  } catch {
+    $key = $CurrentUser.OpenSubKey($Path, $ReadWriteSubTreePerm, [System.Security.AccessControl.RegistryRights]::ChangePermissions)
+    $acl = $key.GetAccessControl()
+    $CurrentName = [Security.Principal.WindowsIdentity]::GetCurrent().Name
+    $rule = New-Object System.Security.AccessControl.RegistryAccessRule($CurrentName, 'SetValue', 'Deny')
+    $acl.RemoveAccessRule($rule)
+    $key.SetAccessControl($acl)
+    $key.Close()
+
+    $key = $CurrentUser.OpenSubKey($Path, $ReadWriteSubTreePerm)
+  }
+
+  $StringType = [Microsoft.Win32.RegistryValueKind]::String
+  $key.SetValue('ProgID', $ProgID, $StringType)
+  $key.SetValue('Hash', $Hash, $StringType)
+}
+
+)");  // Newlines in the above powershell script at the end are important!!!
+
+  // NOTE!!!! CreateProcess / calling things on the command line has a character
+  // count limit. For CMD.exe, it's 8K. For CreateProcessW, it's technically
+  // 32K. I can't find documentation about Powershell, but think 8K is safe to
+  // assume as a good maximum. The above script is about 1000 characters, and we
+  // will append another 100 characters at most per extension, so we'd need to
+  // be setting about 70 handlers at once to worry about the theoretical limit.
+  // Which we won't do. So the length shouldn't be a problem.
+  if (aFileExtensions.Length() >= 70) {
+    LOG_ERROR_MESSAGE(
+        L"SetDefaultExtensionHandlersUserChoiceImplMsix can't cope with 70 or "
+        L"more file extensions at once. Please break it up into multiple calls "
+        L"with fewer extensions per call.");
+    return NS_ERROR_FAILURE;
+  }
+
+  // NOTE!!!!
+  // User choice hashes have to be generated and written to the registry in the
+  // same minute. So we do everything we can upfront before we get to the hash
+  // generation, to ensure that hash generation and the call to Powershell to
+  // write to the registry has as much time as possible to run.
+
+  // Program ID fetch / generation might be slow, so do that ahead of time.
+  nsTArray<nsString> progIDs;
+  nsresult rv = GenerateProgramIDs(aFileExtensions, progIDs);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsString scriptBuffer;
+
+  // Everyting in the loop below should succeed or fail reasonably fast (within
+  // 20 milliseconds or something well under a second) besides the Powershell
+  // call. The Powershell call itself will either fail or succeed and break out
+  // of the loop, so repeating 10 times should be fine and is mostly to allow
+  // for getting the timing right with the user choice hash generation happening
+  // in the same minute - meaning this should likely only happen twice through
+  // the loop at most.
+  for (int i = 0; i < 10; i++) {
+    // Pre-allocate the memory for the scriptBuffer upfront so that we don't
+    // have to keep allocating every time Append is called.
+    const int scriptBufferCapacity = 16 * 1024;
+    scriptBuffer = startScript;
+    scriptBuffer.SetCapacity(scriptBufferCapacity);
+
+    SYSTEMTIME hashTimestamp;
+    ::GetSystemTime(&hashTimestamp);
+
+    // Time critical stuff starts here:
+
+    for (size_t i = 0; i + 1 < aFileExtensions.Length(); i += 2) {
+      const wchar_t* fileExtension = aFileExtensions[i].get();
+
+      // Append a line to the script buffer in the form:
+      // Set-DefaultHandlerRegistry $RegistryKeyPath $ProgID $UserChoiceHash
+
+      // Use Append to minimize string allocation and processing
+
+      scriptBuffer.AppendLiteral(u"Set-DefaultHandlerRegistry ");
+      rv = AppendAssociationKeyPath(fileExtension, scriptBuffer);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      scriptBuffer.AppendLiteral(u" ");
+
+      scriptBuffer.Append(progIDs[i / 2].get());
+      scriptBuffer.AppendLiteral(u" ");
+
+      auto hash = GenerateUserChoiceHash(fileExtension, aSid,
+                                         progIDs[i / 2].get(), hashTimestamp);
+      if (!hash) {
+        return NS_ERROR_FAILURE;
+      }
+
+      scriptBuffer.Append(hash.get());
+      scriptBuffer.AppendLiteral(u"\n");
+    }
+
+    // The hash changes at the end of each minute, so check that the hash should
+    // be the same by the time we're done writing.
+    const ULONGLONG kWriteTimingThresholdMilliseconds = 2000;
+
+    // Generating the hash could have taken some time, so figure out what time
+    // we are at right now.
+    SYSTEMTIME writeEndTimestamp;
+    ::GetSystemTime(&writeEndTimestamp);
+
+    // Check if we have enough time to launch Powershell or if we should sleep
+    // to the next minute and try again
+    auto millisecondsLeftUntilNextMinute =
+        GetMillisecondsToNextMinute(hashTimestamp, writeEndTimestamp);
+    if (millisecondsLeftUntilNextMinute >= kWriteTimingThresholdMilliseconds) {
+      break;
+    }
+
+    LOG_ERROR_MESSAGE(
+        L"Hash is too close to next minute, sleeping until next minute to "
+        L"ensure that hash generation matches write to registry.");
+
+    UINT sleepUntilNextMinuteBufferMilliseconds =
+        GetSystemSleepIntervalInMilliseconds(
+            50);  // Default to 50ms if we can't figure out the right interval
+                  // to sleep for
+    ::Sleep(millisecondsLeftUntilNextMinute +
+            (sleepUntilNextMinuteBufferMilliseconds * 2));
+
+    // Try again, if we have any attempts left
+  }
+
+  // Call Powershell to set the registry keys now - this is the really time
+  // consuming thing 250ms to launch on a VM in a reasonably fast case, possibly
+  // a lot slower on other systems
+  bool powershellSuccessful =
+      LaunchPowershell(scriptBuffer.get(), exePath.get());
+  if (!powershellSuccessful) {
+    // If powershell failed, it likely means that something got mucked with
+    // the registry and that Windows is popping up notifications to the user,
+    // so don't try again right now, so as to not overwhelm the user and annoy
+    // them.
+    return NS_ERROR_FAILURE;
+  }
+
+  // Validate now
+  return VerifyUserDefaults(aFileExtensions, progIDs);
+}
+
 nsresult SetDefaultExtensionHandlersUserChoiceImpl(
     const wchar_t* aAumi, const wchar_t* const aSid,
     const nsTArray<nsString>& aFileExtensions) {
@@ -517,14 +695,17 @@ nsresult SetDefaultExtensionHandlersUserChoiceImpl(
   bool inMsix =
       GetCurrentPackageFullName(&pfnLen, nullptr) != APPMODEL_ERROR_NO_PACKAGE;
 
+  if (inMsix) {
+    return SetDefaultExtensionHandlersUserChoiceImplMsix(aAumi, aSid,
+                                                         aFileExtensions);
+  }
+
   for (size_t i = 0; i + 1 < aFileExtensions.Length(); i += 2) {
-    const wchar_t* extraFileExtension =
-        PromiseFlatString(aFileExtensions[i]).get();
-    const wchar_t* extraProgIDRoot =
-        PromiseFlatString(aFileExtensions[i + 1]).get();
+    const wchar_t* extraFileExtension = aFileExtensions[i].get();
+    const wchar_t* extraProgIDRoot = aFileExtensions[i + 1].get();
     // Formatting the ProgID here prevents using this helper to target arbitrary
     // ProgIDs.
-    UniquePtr<wchar_t[]> extraProgID;
+    mozilla::UniquePtr<wchar_t[]> extraProgID;
     if (inMsix) {
       nsresult rv = GetMsixProgId(extraFileExtension, extraProgID);
       if (NS_FAILED(rv)) {
@@ -540,7 +721,7 @@ nsresult SetDefaultExtensionHandlersUserChoiceImpl(
       }
     }
 
-    if (!SetUserChoice(extraFileExtension, aSid, extraProgID.get())) {
+    if (!SetUserChoice(extraFileExtension, aSid, extraProgID.get(), inMsix)) {
       return NS_ERROR_FAILURE;
     }
 

@@ -370,6 +370,10 @@ NS_IMETHODIMP
 DefaultAgent::SetDefaultBrowserUserChoiceAsync(
     const nsAString& aAumid, const nsTArray<nsString>& aExtraFileExtensions,
     JSContext* aCx, dom::Promise** aPromise) {
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+
   ErrorResult rv;
   RefPtr<dom::Promise> promise =
       dom::Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
@@ -382,16 +386,29 @@ DefaultAgent::SetDefaultBrowserUserChoiceAsync(
   auto promiseHolder = MakeRefPtr<nsMainThreadPtrHolder<dom::Promise>>(
       "SetDefaultBrowserUserChoiceAsync promise", promise);
 
-  auto result = default_agent::SetDefaultBrowserUserChoiceAsync(
-      PromiseFlatString(aAumid).get(), aExtraFileExtensions,
-      [promiseHolder = std::move(promiseHolder)](nsresult result) {
-        dom::Promise* promise = promiseHolder.get()->get();
-        if (NS_SUCCEEDED(result)) {
-          promise->MaybeResolveWithUndefined();
-        } else {
-          promise->MaybeReject(result);
-        }
-      });
+  nsresult result = NS_DispatchBackgroundTask(
+      NS_NewRunnableFunction(
+          "SetDefaultBrowserUserChoiceAsync",
+          // Make a local copy of the aAudmid parameter which is a reference
+          // which will go out of scope
+          [aumid = nsString(aAumid), promiseHolder = std::move(promiseHolder),
+           aExtraFileExtensions =
+               CopyableTArray<nsString>(aExtraFileExtensions)] {
+            nsresult rv = default_agent::SetDefaultBrowserUserChoice(
+                PromiseFlatString(aumid).get(), aExtraFileExtensions);
+
+            NS_DispatchToMainThread(NS_NewRunnableFunction(
+                "SetDefaultBrowserUserChoiceAsync callback",
+                [rv, promiseHolder = std::move(promiseHolder)] {
+                  dom::Promise* promise = promiseHolder.get()->get();
+                  if (NS_SUCCEEDED(rv)) {
+                    promise->MaybeResolveWithUndefined();
+                  } else {
+                    promise->MaybeReject(rv);
+                  }
+                }));
+          }),
+      NS_DISPATCH_EVENT_MAY_BLOCK);
 
   promise.forget(aPromise);
   return result;
