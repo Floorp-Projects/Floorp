@@ -316,13 +316,15 @@ void AutoRedirectVetoNotifier::ReportRedirectResult(nsresult aRv) {
 //-----------------------------------------------------------------------------
 
 nsHttpChannel::nsHttpChannel() : HttpAsyncAborter<nsHttpChannel>(this) {
-  LOG(("Creating nsHttpChannel [this=%p]\n", this));
+  LOG(("Creating nsHttpChannel [this=%p, nsIChannel=%p]\n", this,
+       static_cast<nsIChannel*>(this)));
   mChannelCreationTime = PR_Now();
   mChannelCreationTimestamp = TimeStamp::Now();
 }
 
 nsHttpChannel::~nsHttpChannel() {
-  LOG(("Destroying nsHttpChannel [this=%p]\n", this));
+  LOG(("Destroying nsHttpChannel [this=%p, nsIChannel=%p]\n", this,
+       static_cast<nsIChannel*>(this)));
 
   if (LOG_ENABLED()) {
     nsCString webExtension;
