@@ -934,7 +934,7 @@ void IonScript::Destroy(JS::GCContext* gcx, IonScript* script) {
       continue;
     }
     if (lock.isNothing()) {
-      lock.emplace(&gcx->runtime()->gc.storeBuffer());
+      lock.emplace(gcx->runtimeFromAnyThread());
     }
     script->nurseryObjects()[i] = HeapPtr<JSObject*>();
   }

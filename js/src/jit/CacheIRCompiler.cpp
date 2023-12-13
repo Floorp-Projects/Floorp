@@ -1217,7 +1217,7 @@ ICCacheIRStub* ICCacheIRStub::clone(JSContext* cx, ICStubSpace& newSpace) {
 
   // Because this can be called during sweeping when discarding JIT code, we
   // have to lock the store buffer
-  gc::AutoLockStoreBuffer lock(&cx->runtime()->gc.storeBuffer());
+  gc::AutoLockStoreBuffer lock(cx->runtime());
 
   uint32_t field = 0;
   while (true) {

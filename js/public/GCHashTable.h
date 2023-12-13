@@ -394,7 +394,7 @@ class WeakCache<
 
   bool empty() override { return map.empty(); }
 
-  size_t traceWeak(JSTracer* trc, js::gc::StoreBuffer* sbToLock) override {
+  size_t traceWeak(JSTracer* trc, NeedsLock needsLock) override {
     size_t steps = map.count();
 
     // Create an Enum and sweep the table entries.
@@ -405,8 +405,8 @@ class WeakCache<
     // Potentially take a lock while the Enum's destructor is called as this can
     // rehash/resize the table and access the store buffer.
     mozilla::Maybe<js::gc::AutoLockStoreBuffer> lock;
-    if (sbToLock) {
-      lock.emplace(sbToLock);
+    if (needsLock) {
+      lock.emplace(trc->runtime());
     }
     e.reset();
 
@@ -594,7 +594,7 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>> final
   explicit WeakCache(JSRuntime* rt, Args&&... args)
       : WeakCacheBase(rt), set(std::forward<Args>(args)...) {}
 
-  size_t traceWeak(JSTracer* trc, js::gc::StoreBuffer* sbToLock) override {
+  size_t traceWeak(JSTracer* trc, NeedsLock needsLock) override {
     size_t steps = set.count();
 
     // Create an Enum and sweep the table entries. It's not necessary to take
@@ -607,8 +607,8 @@ class WeakCache<GCHashSet<T, HashPolicy, AllocPolicy>> final
     // can access the store buffer, we need to take a lock for this if we're
     // called off main thread.
     mozilla::Maybe<js::gc::AutoLockStoreBuffer> lock;
-    if (sbToLock) {
-      lock.emplace(sbToLock);
+    if (needsLock) {
+      lock.emplace(trc->runtime());
     }
     e.reset();
 
