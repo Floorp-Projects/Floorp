@@ -1236,7 +1236,7 @@ void nsCocoaWindow::SetTransparencyMode(TransparencyMode aMode) {
   }
 
   BOOL isTransparent = aMode == TransparencyMode::Transparent;
-  BOOL currentTransparency = mWindow.isOpaque;
+  BOOL currentTransparency = !mWindow.isOpaque;
   if (isTransparent == currentTransparency) {
     return;
   }
