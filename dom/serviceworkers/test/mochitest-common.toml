@@ -1,0 +1,494 @@
+[DEFAULT]
+tags = "condprof"
+support-files = [
+  "abrupt_completion_worker.js",
+  "worker.js",
+  "worker2.js",
+  "worker3.js",
+  "fetch_event_worker.js",
+  "parse_error_worker.js",
+  "activate_event_error_worker.js",
+  "install_event_worker.js",
+  "install_event_error_worker.js",
+  "simpleregister/index.html",
+  "simpleregister/ready.html",
+  "controller/index.html",
+  "unregister/index.html",
+  "unregister/unregister.html",
+  "workerUpdate/update.html",
+  "sw_clients/simple.html",
+  "sw_clients/service_worker_controlled.html",
+  "match_all_worker.js",
+  "match_all_advanced_worker.js",
+  "worker_unregister.js",
+  "worker_update.js",
+  "message_posting_worker.js",
+  "fetch/index.html",
+  "fetch/fetch_worker_script.js",
+  "fetch/fetch_tests.js",
+  "fetch/deliver-gzip.sjs",
+  "fetch/redirect.sjs",
+  "fetch/real-file.txt",
+  "fetch/cookie/cookie_test.js",
+  "fetch/cookie/register.html",
+  "fetch/cookie/unregister.html",
+  "fetch/hsts/hsts_test.js",
+  "fetch/hsts/embedder.html",
+  "fetch/hsts/image.html",
+  "fetch/hsts/image-20px.png",
+  "fetch/hsts/image-40px.png",
+  "fetch/hsts/realindex.html",
+  "fetch/hsts/register.html",
+  "fetch/hsts/register.html^headers^",
+  "fetch/hsts/unregister.html",
+  "fetch/https/index.html",
+  "fetch/https/register.html",
+  "fetch/https/unregister.html",
+  "fetch/https/https_test.js",
+  "fetch/https/clonedresponse/index.html",
+  "fetch/https/clonedresponse/register.html",
+  "fetch/https/clonedresponse/unregister.html",
+  "fetch/https/clonedresponse/https_test.js",
+  "fetch/imagecache/image-20px.png",
+  "fetch/imagecache/image-40px.png",
+  "fetch/imagecache/imagecache_test.js",
+  "fetch/imagecache/index.html",
+  "fetch/imagecache/postmortem.html",
+  "fetch/imagecache/register.html",
+  "fetch/imagecache/unregister.html",
+  "fetch/imagecache-maxage/index.html",
+  "fetch/imagecache-maxage/image-20px.png",
+  "fetch/imagecache-maxage/image-40px.png",
+  "fetch/imagecache-maxage/maxage_test.js",
+  "fetch/imagecache-maxage/register.html",
+  "fetch/imagecache-maxage/unregister.html",
+  "fetch/importscript-mixedcontent/register.html",
+  "fetch/importscript-mixedcontent/unregister.html",
+  "fetch/importscript-mixedcontent/https_test.js",
+  "fetch/interrupt.sjs",
+  "fetch/origin/index.sjs",
+  "fetch/origin/index-to-https.sjs",
+  "fetch/origin/realindex.html",
+  "fetch/origin/realindex.html^headers^",
+  "fetch/origin/register.html",
+  "fetch/origin/unregister.html",
+  "fetch/origin/origin_test.js",
+  "fetch/origin/https/index-https.sjs",
+  "fetch/origin/https/realindex.html",
+  "fetch/origin/https/realindex.html^headers^",
+  "fetch/origin/https/register.html",
+  "fetch/origin/https/unregister.html",
+  "fetch/origin/https/origin_test.js",
+  "fetch/requesturl/index.html",
+  "fetch/requesturl/redirect.sjs",
+  "fetch/requesturl/redirector.html",
+  "fetch/requesturl/register.html",
+  "fetch/requesturl/requesturl_test.js",
+  "fetch/requesturl/secret.html",
+  "fetch/requesturl/unregister.html",
+  "fetch/sandbox/index.html",
+  "fetch/sandbox/intercepted_index.html",
+  "fetch/sandbox/register.html",
+  "fetch/sandbox/unregister.html",
+  "fetch/sandbox/sandbox_test.js",
+  "fetch/upgrade-insecure/upgrade-insecure_test.js",
+  "fetch/upgrade-insecure/embedder.html",
+  "fetch/upgrade-insecure/embedder.html^headers^",
+  "fetch/upgrade-insecure/image.html",
+  "fetch/upgrade-insecure/image-20px.png",
+  "fetch/upgrade-insecure/image-40px.png",
+  "fetch/upgrade-insecure/realindex.html",
+  "fetch/upgrade-insecure/register.html",
+  "fetch/upgrade-insecure/unregister.html",
+  "match_all_properties_worker.js",
+  "match_all_clients/match_all_controlled.html",
+  "test_serviceworker_interfaces.js",
+  "serviceworker_wrapper.js",
+  "message_receiver.html",
+  "serviceworker_not_sharedworker.js",
+  "match_all_client/match_all_client_id.html",
+  "match_all_client_id_worker.js",
+  "source_message_posting_worker.js",
+  "scope/scope_worker.js",
+  "redirect_serviceworker.sjs",
+  "importscript.sjs",
+  "importscript_worker.js",
+  "bug1151916_worker.js",
+  "bug1151916_driver.html",
+  "bug1240436_worker.js",
+  "notificationclick.html",
+  "notificationclick-otherwindow.html",
+  "notificationclick.js",
+  "notificationclick_focus.html",
+  "notificationclick_focus.js",
+  "notificationclose.html",
+  "notificationclose.js",
+  "worker_updatefoundevent.js",
+  "worker_updatefoundevent2.js",
+  "updatefoundevent.html",
+  "empty.html",
+  "empty.js",
+  "notification_constructor_error.js",
+  "notification_get_sw.js",
+  "notification/register.html",
+  "sanitize/frame.html",
+  "sanitize/register.html",
+  "sanitize/example_check_and_unregister.html",
+  "sanitize_worker.js",
+  "streamfilter_server.sjs",
+  "streamfilter_worker.js",
+  "swa/worker_scope_different.js",
+  "swa/worker_scope_different.js^headers^",
+  "swa/worker_scope_different2.js",
+  "swa/worker_scope_different2.js^headers^",
+  "swa/worker_scope_precise.js",
+  "swa/worker_scope_precise.js^headers^",
+  "swa/worker_scope_too_deep.js",
+  "swa/worker_scope_too_deep.js^headers^",
+  "swa/worker_scope_too_narrow.js",
+  "swa/worker_scope_too_narrow.js^headers^",
+  "claim_oninstall_worker.js",
+  "claim_worker_1.js",
+  "claim_worker_2.js",
+  "claim_clients/client.html",
+  "force_refresh_worker.js",
+  "sw_clients/refresher.html",
+  "sw_clients/refresher_compressed.html",
+  "sw_clients/refresher_compressed.html^headers^",
+  "sw_clients/refresher_cached.html",
+  "sw_clients/refresher_cached_compressed.html",
+  "sw_clients/refresher_cached_compressed.html^headers^",
+  "strict_mode_warning.js",
+  "skip_waiting_installed_worker.js",
+  "skip_waiting_scope/index.html",
+  "thirdparty/iframe1.html",
+  "thirdparty/iframe2.html",
+  "thirdparty/register.html",
+  "thirdparty/unregister.html",
+  "thirdparty/sw.js",
+  "thirdparty/worker.js",
+  "register_https.html",
+  "gzip_redirect_worker.js",
+  "sw_clients/navigator.html",
+  "eval_worker.js",
+  "test_eval_allowed.html^headers^",
+  "opaque_intercept_worker.js",
+  "notify_loaded.js",
+  "fetch/plugin/worker.js",
+  "fetch/plugin/plugins.html",
+  "eventsource/*",
+  "sw_clients/file_blob_upload_frame.html",
+  "redirect_post.sjs",
+  "xslt_worker.js",
+  "xslt/*",
+  "unresolved_fetch_worker.js",
+  "header_checker.sjs",
+  "openWindow_worker.js",
+  "redirect.sjs",
+  "open_window/client.sjs",
+  "lorem_script.js",
+  "file_blob_response_worker.js",
+  "file_js_cache_cleanup.js",
+  "file_js_cache.html",
+  "file_js_cache_with_sri.html",
+  "file_js_cache.js",
+  "file_js_cache_save_after_load.html",
+  "file_js_cache_save_after_load.js",
+  "file_js_cache_syntax_error.html",
+  "file_js_cache_syntax_error.js",
+  "!/dom/security/test/cors/file_CrossSiteXHR_server.sjs",
+  "!/dom/notification/test/mochitest/MockServices.js",
+  "!/dom/notification/test/mochitest/NotificationTest.js",
+  "blocking_install_event_worker.js",
+  "sw_bad_mime_type.js",
+  "sw_bad_mime_type.js^headers^",
+  "error_reporting_helpers.js",
+  "fetch.js",
+  "hello.html",
+  "create_another_sharedWorker.html",
+  "sharedWorker_fetch.js",
+  "async_waituntil_worker.js",
+  "lazy_worker.js",
+  "nofetch_handler_worker.js",
+  "service_worker.js",
+  "service_worker_client.html",
+  "utils.js",
+  "sw_storage_not_allow.js",
+  "update_worker.sjs",
+  "self_update_worker.sjs",
+  "!/dom/events/test/event_leak_utils.js",
+  "onmessageerror_worker.js",
+  "pref/fetch_nonexistent_file.html",
+  "pref/intercept_nonexistent_file_sw.js",
+]
+
+["test_abrupt_completion.html"]
+skip-if = ["os == 'linux'"] # Bug 1615164
+
+["test_async_waituntil.html"]
+
+["test_bad_script_cache.html"]
+
+["test_bug1151916.html"]
+
+["test_bug1240436.html"]
+
+["test_bug1408734.html"]
+
+["test_claim.html"]
+
+["test_claim_oninstall.html"]
+
+["test_controller.html"]
+
+["test_cross_origin_url_after_redirect.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_devtools_bypass_serviceworker.html"]
+
+["test_empty_serviceworker.html"]
+
+["test_enabled_pref.html"]
+
+["test_error_reporting.html"]
+skip-if = ["serviceworker_e10s"]
+
+["test_escapedSlashes.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_eval_allowed.html"]
+
+["test_event_listener_leaks.html"]
+
+["test_fetch_event.html"]
+skip-if = ["debug"] # Bug 1262224
+
+["test_fetch_event_with_thirdpartypref.html"]
+skip-if = ["debug"] # Bug 1262224
+
+["test_fetch_integrity.html"]
+skip-if = ["serviceworker_e10s"]
+support-files = [
+  "console_monitor.js",
+]
+
+["test_file_blob_response.html"]
+
+["test_file_blob_upload.html"]
+
+["test_file_upload.html"]
+skip-if = ["os == 'android'"] #Bug 1430182
+support-files = [
+  "script_file_upload.js",
+  "sw_file_upload.js",
+  "server_file_upload.sjs",
+]
+
+["test_force_refresh.html"]
+
+["test_gzip_redirect.html"]
+
+["test_hsts_upgrade_intercept.html"]
+skip-if = [
+  "win11_2009 && !debug", # Bug 1797751
+  "os == 'linux' && bits == 64 && debug", # Bug 1749068
+  "apple_catalina && !debug", # Bug 1717091
+]
+scheme = "https"
+
+["test_imagecache.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_imagecache_max_age.html"]
+skip-if = [
+  "os == 'linux' && bits == 64 && !debug && asan && os_version == '18.04'", # Bug 1585668
+  "display == 'wayland' && os_version == '22.04' && debug",  # Bug 1856980
+  "http3",
+  "http2",
+]
+
+["test_importscript.html"]
+
+["test_install_event.html"]
+
+["test_install_event_gc.html"]
+skip-if = ["xorigin"] # JavaScript error: http://mochi.xorigin-test:8888/tests/SimpleTest/TestRunner.js, line 157: SecurityError: Permission denied to access property "wrappedJSObject" on cross-origin object
+
+["test_installation_simple.html"]
+
+["test_match_all.html"]
+
+["test_match_all_advanced.html"]
+
+["test_match_all_client_id.html"]
+skip-if = [
+  "os == 'android'",
+  "http3",
+  "http2",
+]
+
+["test_match_all_client_properties.html"]
+skip-if = ["os == 'android'"]
+
+["test_navigationPreload_disable_crash.html"]
+scheme = "https"
+skip-if = ["os == 'linux' && bits == 64 && debug"] # Bug 1749068
+
+["test_navigator.html"]
+
+["test_nofetch_handler.html"]
+
+["test_not_intercept_plugin.html"]
+skip-if = ["serviceworker_e10s"] # leaks InterceptedHttpChannel and others things
+
+["test_notification_constructor_error.html"]
+
+["test_notification_get.html"]
+skip-if = ["xorigin"] # Bug 1792790
+
+["test_notification_openWindow.html"]
+skip-if = [
+  "os == 'android'",  # Bug 1620052
+  "xorigin",  # JavaScript error: http://mochi.xorigin-test:8888/tests/SimpleTest/TestRunner.js, line 157: SecurityError: Permission denied to access property "wrappedJSObject" on cross-origin object
+  "http3",
+  "http2",
+]
+support-files = [
+  "notification_openWindow_worker.js",
+  "file_notification_openWindow.html",
+]
+tags = "openwindow"
+
+["test_notificationclick-otherwindow.html"]
+skip-if = ["xorigin"] # Bug 1792790
+
+["test_notificationclick.html"]
+skip-if = ["xorigin"] # Bug 1792790
+
+["test_notificationclick_focus.html"]
+skip-if = ["xorigin"] # Bug 1792790
+
+["test_notificationclose.html"]
+skip-if = ["xorigin"] # Bug 1792790
+
+["test_onmessageerror.html"]
+skip-if = ["xorigin"] # Bug 1792790
+
+["test_opaque_intercept.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_origin_after_redirect.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_origin_after_redirect_cached.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_origin_after_redirect_to_https.html"]
+
+["test_origin_after_redirect_to_https_cached.html"]
+
+["test_post_message.html"]
+
+["test_post_message_advanced.html"]
+
+["test_post_message_source.html"]
+
+["test_register_base.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_register_https_in_http.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_sandbox_intercept.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_sanitize.html"]
+
+["test_scopes.html"]
+
+["test_script_loader_intercepted_js_cache.html"]
+skip-if = ["serviceworker_e10s"]
+
+["test_self_update_worker.html"]
+skip-if = [
+  "serviceworker_e10s",
+  "os == 'android'",
+]
+
+["test_service_worker_allowed.html"]
+
+["test_serviceworker.html"]
+
+["test_serviceworker_header.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_serviceworker_interfaces.html"]
+
+["test_serviceworker_not_sharedworker.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_skip_waiting.html"]
+
+["test_streamfilter.html"]
+
+["test_strict_mode_warning.html"]
+
+["test_third_party_iframes.html"]
+support-files = [
+  "window_party_iframes.html",
+]
+
+["test_unregister.html"]
+
+["test_unresolved_fetch_interception.html"]
+skip-if = [
+  "verify",
+  "serviceworker_e10s",
+]
+
+["test_workerUnregister.html"]
+
+["test_workerUpdate.html"]
+
+["test_worker_reference_gc_timeout.html"]
+
+["test_workerupdatefoundevent.html"]
+
+["test_xslt.html"]
+skip-if = [
+  "http3",
+  "http2",
+]

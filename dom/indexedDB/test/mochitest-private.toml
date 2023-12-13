@@ -1,0 +1,20 @@
+[DEFAULT]
+dupe-manifest = true
+prefs = [
+  "browser.privatebrowsing.autostart=true",
+  "dom.indexedDB.privateBrowsing.enabled=true",
+  "extensions.blocklist.enabled=false",
+]
+tags = "indexedDB indexedDB-private"
+
+["include:mochitest-common.toml"]
+
+["test_file_os_delete.html"]
+skip-if = ["true"] # Bug 1819284: Run test_file_os_delete only for regular manifest.
+
+["test_file_put_deleted.html"]
+skip-if = ["verify"] # Bug 1829690: Investigate failing test_file_put_delete.html in verify mode for PBM.
+
+["test_storage_manager_estimate.html"]
+scheme = "https"
+skip-if = ["xorigin"]

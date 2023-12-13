@@ -1,0 +1,5 @@
+[DEFAULT]
+
+["test_node_execute_loop.js"]
+run-sequentially = "node server exceptions dont replay well"
+skip-if = ["verify"] # running it once hangs forever so don't run it in a loop.
