@@ -87,7 +87,7 @@ uniffi_core = { version = "0.25.2", features = ["extern-rustbuffer"] }
 # version less than or equal to what we link to. This isn't a problem because we
 # tend to keep this up to date, but it needs to be taken into consideration when
 # changing this version.
-rusqlite = { version = "0.29.0", features = ["modern_sqlite", "in_gecko"] }
+rusqlite = { workspace = true, features = ["modern_sqlite", "in_gecko"] }
 
 fluent = { version = "0.16.0", features = ["fluent-pseudo"] }
 fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
