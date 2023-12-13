@@ -1346,6 +1346,7 @@ export const LoginHelper = {
     if (
       !(
         acFieldName == "username" ||
+        acFieldName == "webauthn" ||
         // Bug 1540154: Some sites use tel/email on their username fields.
         acFieldName == "email" ||
         acFieldName == "tel" ||
