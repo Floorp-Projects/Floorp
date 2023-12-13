@@ -35,6 +35,7 @@
 #include "nsQueryObject.h"
 #include "nsSerializationHelper.h"
 #include "nsFrameLoader.h"
+#include "nsIScriptSecurityManager.h"
 
 #include "mozilla/dom/JSWindowActorBinding.h"
 #include "mozilla/dom/JSWindowActorChild.h"
@@ -585,6 +586,34 @@ void WindowGlobalChild::SetDocumentURI(nsIURI* aDocumentURI) {
       BrowsingContext()->BrowserId(), InnerWindowId(),
       nsContentUtils::TruncatedURLForDisplay(aDocumentURI, 1024),
       embedderInnerWindowID, BrowsingContext()->UsePrivateBrowsing());
+
+  if (StaticPrefs::dom_security_setdocumenturi()) {
+    auto isLoadableViaInternet = [](nsIURI* uri) {
+      return (uri && (net::SchemeIsHTTP(uri) || net::SchemeIsHTTPS(uri)));
+    };
+    if (isLoadableViaInternet(aDocumentURI)) {
+      nsCOMPtr<nsIURI> principalURI = mDocumentPrincipal->GetURI();
+      if (mDocumentPrincipal->GetIsNullPrincipal()) {
+        nsCOMPtr<nsIPrincipal> precursor =
+            mDocumentPrincipal->GetPrecursorPrincipal();
+        if (precursor) {
+          principalURI = precursor->GetURI();
+        }
+      }
+
+      if (isLoadableViaInternet(principalURI)) {
+        nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+
+        if (!NS_SUCCEEDED(ssm->CheckSameOriginURI(principalURI, aDocumentURI,
+                                                  false, false))) {
+          MOZ_DIAGNOSTIC_ASSERT(false,
+                                "Setting DocumentURI with a different origin "
+                                "than principal URI");
+        }
+      }
+    }
+  }
+
   mDocumentURI = aDocumentURI;
   SendUpdateDocumentURI(aDocumentURI);
 }
