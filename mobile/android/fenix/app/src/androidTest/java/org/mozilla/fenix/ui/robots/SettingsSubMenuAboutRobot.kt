@@ -124,7 +124,8 @@ private fun assertCurrentTimestamp() {
 private fun assertWhatIsNewInFirefoxPreview() {
     aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
 
-    onView(withText("What’s new in $appName"))
+    val firefox = TestHelper.appContext.getString(R.string.firefox)
+    onView(withText("What’s new in $firefox"))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .perform(click())
 }
