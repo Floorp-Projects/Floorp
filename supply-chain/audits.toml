@@ -1190,6 +1190,11 @@ notes = """
 Mozilla-developed package.
 """
 
+[[audits.cubeb-backend]]
+who = "Andreas Pehrson <apehrson@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.10.3 -> 0.10.7"
+
 [[audits.cubeb-core]]
 who = "Matthew Gregan <kinetik@flim.org>"
 criteria = "safe-to-deploy"
@@ -1216,6 +1221,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.10.3 -> 0.10.4"
 
+[[audits.cubeb-core]]
+who = "Andreas Pehrson <apehrson@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.10.4 -> 0.10.7"
+
 [[audits.cubeb-sys]]
 who = "Matthew Gregan <kinetik@flim.org>"
 criteria = "safe-to-deploy"
@@ -1236,6 +1246,11 @@ delta = "0.10.2 -> 0.10.3"
 notes = """
 Mozilla-developed package.
 """
+
+[[audits.cubeb-sys]]
+who = "Andreas Pehrson <apehrson@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.10.3 -> 0.10.7"
 
 [[audits.d3d12]]
 who = "Jim Blandy <jimb@red-bean.com>"

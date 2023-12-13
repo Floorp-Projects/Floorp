@@ -1,5 +1,5 @@
-#include "gtest/gtest.h"
 #include "cubeb_utils.h"
+#include "gtest/gtest.h"
 
 TEST(cubeb, auto_array)
 {
@@ -9,7 +9,6 @@ TEST(cubeb, auto_array)
 
   ASSERT_EQ(array2.length(), 0u);
   ASSERT_EQ(array2.capacity(), 10u);
-
 
   for (uint32_t i = 0; i < 10; i++) {
     a[i] = i;
@@ -39,7 +38,7 @@ TEST(cubeb, auto_array)
     ASSERT_EQ(b[i], i);
     ASSERT_EQ(array.data()[i], 5 + i);
   }
-  uint32_t* bb = b + 5;
+  uint32_t * bb = b + 5;
   array.pop(bb, 5);
 
   ASSERT_EQ(array.capacity(), 10u);
@@ -69,4 +68,3 @@ TEST(cubeb, auto_array)
   ASSERT_EQ(array.length(), 15u);
   ASSERT_EQ(array.capacity(), 20u);
 }
-
