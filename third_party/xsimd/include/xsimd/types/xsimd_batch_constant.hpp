@@ -88,7 +88,7 @@ namespace xsimd
 #define MAKE_BINARY_OP(OP, NAME)                                                            \
     template <bool... OtherValues>                                                          \
     constexpr auto operator OP(batch_bool_constant<batch_type, OtherValues...> other) const \
-        ->decltype(apply<NAME>(*this, other))                                               \
+        -> decltype(apply<NAME>(*this, other))                                              \
     {                                                                                       \
         return apply<NAME>(*this, other);                                                   \
     }
@@ -199,7 +199,7 @@ namespace xsimd
 #define MAKE_BINARY_OP(OP, NAME)                                                       \
     template <value_type... OtherValues>                                               \
     constexpr auto operator OP(batch_constant<batch_type, OtherValues...> other) const \
-        ->decltype(apply<NAME>(*this, other))                                          \
+        -> decltype(apply<NAME>(*this, other))                                         \
     {                                                                                  \
         return apply<NAME>(*this, other);                                              \
     }

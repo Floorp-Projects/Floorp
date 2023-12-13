@@ -40,7 +40,6 @@ namespace xsimd
 #if XSIMD_WITH_WASM
     namespace types
     {
-        XSIMD_DECLARE_SIMD_REGISTER(bool, wasm, v128_t);
         XSIMD_DECLARE_SIMD_REGISTER(signed char, wasm, v128_t);
         XSIMD_DECLARE_SIMD_REGISTER(unsigned char, wasm, v128_t);
         XSIMD_DECLARE_SIMD_REGISTER(char, wasm, v128_t);

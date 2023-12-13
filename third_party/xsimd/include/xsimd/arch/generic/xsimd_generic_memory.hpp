@@ -32,6 +32,60 @@ namespace xsimd
 
         using namespace types;
 
+        // compress
+        namespace detail
+        {
+            template <class IT, class A, class I, size_t... Is>
+            inline batch<IT, A> create_compress_swizzle_mask(I bitmask, ::xsimd::detail::index_sequence<Is...>)
+            {
+                batch<IT, A> swizzle_mask(IT(0));
+                alignas(A::alignment()) IT mask_buffer[batch<IT, A>::size] = { Is... };
+                size_t inserted = 0;
+                for (size_t i = 0; i < sizeof...(Is); ++i)
+                    if ((bitmask >> i) & 1u)
+                        std::swap(mask_buffer[inserted++], mask_buffer[i]);
+                return batch<IT, A>::load_aligned(&mask_buffer[0]);
+            }
+        }
+
+        template <typename A, typename T>
+        inline batch<T, A>
+        compress(batch<T, A> const& x, batch_bool<T, A> const& mask,
+                 kernel::requires_arch<generic>) noexcept
+        {
+            using IT = as_unsigned_integer_t<T>;
+            constexpr std::size_t size = batch_bool<T, A>::size;
+            auto bitmask = mask.mask();
+            auto z = select(mask, x, batch<T, A>((T)0));
+            auto compress_mask = detail::create_compress_swizzle_mask<IT, A>(bitmask, ::xsimd::detail::make_index_sequence<size>());
+            return swizzle(z, compress_mask);
+        }
+
+        // expand
+        namespace detail
+        {
+            template <class IT, class A, class I, size_t... Is>
+            inline batch<IT, A> create_expand_swizzle_mask(I bitmask, ::xsimd::detail::index_sequence<Is...>)
+            {
+                batch<IT, A> swizzle_mask(IT(0));
+                IT j = 0;
+                (void)std::initializer_list<bool> { ((swizzle_mask = insert(swizzle_mask, j, index<Is>())), (j += ((bitmask >> Is) & 1u)), true)... };
+                return swizzle_mask;
+            }
+        }
+
+        template <typename A, typename T>
+        inline batch<T, A>
+        expand(batch<T, A> const& x, batch_bool<T, A> const& mask,
+               kernel::requires_arch<generic>) noexcept
+        {
+            constexpr std::size_t size = batch_bool<T, A>::size;
+            auto bitmask = mask.mask();
+            auto swizzle_mask = detail::create_expand_swizzle_mask<as_unsigned_integer_t<T>, A>(bitmask, ::xsimd::detail::make_index_sequence<size>());
+            auto z = swizzle(x, swizzle_mask);
+            return select(mask, z, batch<T, A>(T(0)));
+        }
+
         // extract_pair
         template <class A, class T>
         inline batch<T, A> extract_pair(batch<T, A> const& self, batch<T, A> const& other, std::size_t i, requires_arch<generic>) noexcept
