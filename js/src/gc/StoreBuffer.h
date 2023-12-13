@@ -466,8 +466,6 @@ class StoreBuffer {
     }
   }
 
-  Mutex lock_ MOZ_UNANNOTATED;
-
   MonoTypeBuffer<ValueEdge> bufferVal;
   MonoTypeBuffer<StringPtrEdge> bufStrCell;
   MonoTypeBuffer<BigIntPtrEdge> bufBigIntCell;
@@ -592,10 +590,6 @@ class StoreBuffer {
                               JS::GCSizes* sizes);
 
   void checkEmpty() const;
-
-  // For use by the GC only.
-  void lock() { lock_.lock(); }
-  void unlock() { lock_.unlock(); }
 };
 
 // A set of cells in an arena used to implement the whole cell store buffer.

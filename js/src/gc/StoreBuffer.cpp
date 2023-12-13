@@ -15,16 +15,6 @@
 using namespace js;
 using namespace js::gc;
 
-JS_PUBLIC_API void js::gc::LockStoreBuffer(StoreBuffer* sb) {
-  MOZ_ASSERT(sb);
-  sb->lock();
-}
-
-JS_PUBLIC_API void js::gc::UnlockStoreBuffer(StoreBuffer* sb) {
-  MOZ_ASSERT(sb);
-  sb->unlock();
-}
-
 #ifdef DEBUG
 void StoreBuffer::checkAccess() const {
   // The GC runs tasks that may access the storebuffer in parallel and so must
@@ -32,7 +22,7 @@ void StoreBuffer::checkAccess() const {
   // thread.
   if (runtime_->heapState() != JS::HeapState::Idle) {
     MOZ_ASSERT(!CurrentThreadIsGCMarking());
-    lock_.assertOwnedByCurrentThread();
+    runtime_->gc.assertCurrentThreadHasLockedStoreBuffer();
   } else {
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
   }
@@ -78,8 +68,7 @@ void StoreBuffer::GenericBuffer::trace(JSTracer* trc, StoreBuffer* owner) {
 }
 
 StoreBuffer::StoreBuffer(JSRuntime* rt, Nursery& nursery)
-    : lock_(mutexid::StoreBuffer),
-      runtime_(rt),
+    : runtime_(rt),
       nursery_(nursery),
       aboutToOverflow_(false),
       enabled_(false),
