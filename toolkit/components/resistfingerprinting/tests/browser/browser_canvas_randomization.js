@@ -19,27 +19,25 @@ var TEST_CASES = [
   {
     name: "CanvasRenderingContext2D.getImageData() but constant color",
     shouldBeRandomized: false,
-    extractCanvasData(browser) {
-      return SpecialPowers.spawn(browser, [], _ => {
-        const canvas = content.document.createElement("canvas");
-        canvas.width = 100;
-        canvas.height = 100;
+    extractCanvasData() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 100;
+      canvas.height = 100;
 
-        const context = canvas.getContext("2d");
+      const context = canvas.getContext("2d");
 
-        context.fillStyle = "#EE2222";
-        context.fillRect(0, 0, 100, 100);
+      context.fillStyle = "#EE2222";
+      context.fillRect(0, 0, 100, 100);
 
-        // Add the canvas element to the document
-        content.document.body.appendChild(canvas);
+      // Add the canvas element to the document
+      document.body.appendChild(canvas);
 
-        const imageData = context.getImageData(0, 0, 100, 100);
+      const imageData = context.getImageData(0, 0, 100, 100);
 
-        // Access the data again.
-        const imageDataSecond = context.getImageData(0, 0, 100, 100);
+      // Access the data again.
+      const imageDataSecond = context.getImageData(0, 0, 100, 100);
 
-        return [imageData.data, imageDataSecond.data];
-      });
+      return [imageData.data, imageDataSecond.data];
     },
     isDataRandomized(name, data1, data2, isCompareOriginal) {
       let diffCnt = countDifferencesInUint8Arrays(data1, data2);
@@ -64,29 +62,27 @@ var TEST_CASES = [
   {
     name: "CanvasRenderingContext2D.getImageData().",
     shouldBeRandomized: true,
-    extractCanvasData(browser) {
-      return SpecialPowers.spawn(browser, [], _ => {
-        const canvas = content.document.createElement("canvas");
-        canvas.width = 100;
-        canvas.height = 100;
+    extractCanvasData() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 100;
+      canvas.height = 100;
 
-        const context = canvas.getContext("2d");
+      const context = canvas.getContext("2d");
 
-        context.fillStyle = "#EE2222";
-        context.fillRect(0, 0, 100, 100);
-        context.fillStyle = "#2222EE";
-        context.fillRect(20, 20, 100, 100);
+      context.fillStyle = "#EE2222";
+      context.fillRect(0, 0, 100, 100);
+      context.fillStyle = "#2222EE";
+      context.fillRect(20, 20, 100, 100);
 
-        // Add the canvas element to the document
-        content.document.body.appendChild(canvas);
+      // Add the canvas element to the document
+      document.body.appendChild(canvas);
 
-        const imageData = context.getImageData(0, 0, 100, 100);
+      const imageData = context.getImageData(0, 0, 100, 100);
 
-        // Access the data again.
-        const imageDataSecond = context.getImageData(0, 0, 100, 100);
+      // Access the data again.
+      const imageDataSecond = context.getImageData(0, 0, 100, 100);
 
-        return [imageData.data, imageDataSecond.data];
-      });
+      return [imageData.data, imageDataSecond.data];
     },
     isDataRandomized(name, data1, data2, isCompareOriginal) {
       let diffCnt = countDifferencesInUint8Arrays(data1, data2);
@@ -111,29 +107,27 @@ var TEST_CASES = [
   {
     name: "HTMLCanvasElement.toDataURL() with a 2d context",
     shouldBeRandomized: true,
-    extractCanvasData(browser) {
-      return SpecialPowers.spawn(browser, [], _ => {
-        const canvas = content.document.createElement("canvas");
-        canvas.width = 100;
-        canvas.height = 100;
+    extractCanvasData() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 100;
+      canvas.height = 100;
 
-        const context = canvas.getContext("2d");
+      const context = canvas.getContext("2d");
 
-        context.fillStyle = "#EE2222";
-        context.fillRect(0, 0, 100, 100);
-        context.fillStyle = "#2222EE";
-        context.fillRect(20, 20, 100, 100);
+      context.fillStyle = "#EE2222";
+      context.fillRect(0, 0, 100, 100);
+      context.fillStyle = "#2222EE";
+      context.fillRect(20, 20, 100, 100);
 
-        // Add the canvas element to the document
-        content.document.body.appendChild(canvas);
+      // Add the canvas element to the document
+      document.body.appendChild(canvas);
 
-        const dataURL = canvas.toDataURL();
+      const dataURL = canvas.toDataURL();
 
-        // Access the data again.
-        const dataURLSecond = canvas.toDataURL();
+      // Access the data again.
+      const dataURLSecond = canvas.toDataURL();
 
-        return [dataURL, dataURLSecond];
-      });
+      return [dataURL, dataURLSecond];
     },
     isDataRandomized(name, data1, data2) {
       return data1 !== data2;
@@ -142,33 +136,31 @@ var TEST_CASES = [
   {
     name: "HTMLCanvasElement.toDataURL() with a webgl context",
     shouldBeRandomized: true,
-    extractCanvasData(browser) {
-      return SpecialPowers.spawn(browser, [], _ => {
-        const canvas = content.document.createElement("canvas");
+    extractCanvasData() {
+      const canvas = document.createElement("canvas");
 
-        const context = canvas.getContext("webgl");
+      const context = canvas.getContext("webgl");
 
-        context.enable(context.SCISSOR_TEST);
-        context.scissor(0, 0, 100, 100);
-        context.clearColor(1, 0.2, 0.2, 1);
-        context.clear(context.COLOR_BUFFER_BIT);
-        context.scissor(15, 15, 30, 15);
-        context.clearColor(0.2, 1, 0.2, 1);
-        context.clear(context.COLOR_BUFFER_BIT);
-        context.scissor(50, 50, 15, 15);
-        context.clearColor(0.2, 0.2, 1, 1);
-        context.clear(context.COLOR_BUFFER_BIT);
+      context.enable(context.SCISSOR_TEST);
+      context.scissor(0, 0, 100, 100);
+      context.clearColor(1, 0.2, 0.2, 1);
+      context.clear(context.COLOR_BUFFER_BIT);
+      context.scissor(15, 15, 30, 15);
+      context.clearColor(0.2, 1, 0.2, 1);
+      context.clear(context.COLOR_BUFFER_BIT);
+      context.scissor(50, 50, 15, 15);
+      context.clearColor(0.2, 0.2, 1, 1);
+      context.clear(context.COLOR_BUFFER_BIT);
 
-        // Add the canvas element to the document
-        content.document.body.appendChild(canvas);
+      // Add the canvas element to the document
+      document.body.appendChild(canvas);
 
-        const dataURL = canvas.toDataURL();
+      const dataURL = canvas.toDataURL();
 
-        // Access the data again.
-        const dataURLSecond = canvas.toDataURL();
+      // Access the data again.
+      const dataURLSecond = canvas.toDataURL();
 
-        return [dataURL, dataURLSecond];
-      });
+      return [dataURL, dataURLSecond];
     },
     isDataRandomized(name, data1, data2) {
       return data1 !== data2;
@@ -177,38 +169,36 @@ var TEST_CASES = [
   {
     name: "HTMLCanvasElement.toDataURL() with a bitmaprenderer context",
     shouldBeRandomized: true,
-    extractCanvasData(browser) {
-      return SpecialPowers.spawn(browser, [], async _ => {
-        const canvas = content.document.createElement("canvas");
-        canvas.width = 100;
-        canvas.height = 100;
+    async extractCanvasData() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 100;
+      canvas.height = 100;
 
-        const context = canvas.getContext("2d");
+      const context = canvas.getContext("2d");
 
-        context.fillStyle = "#EE2222";
-        context.fillRect(0, 0, 100, 100);
-        context.fillStyle = "#2222EE";
-        context.fillRect(20, 20, 100, 100);
+      context.fillStyle = "#EE2222";
+      context.fillRect(0, 0, 100, 100);
+      context.fillStyle = "#2222EE";
+      context.fillRect(20, 20, 100, 100);
 
-        // Add the canvas element to the document
-        content.document.body.appendChild(canvas);
+      // Add the canvas element to the document
+      document.body.appendChild(canvas);
 
-        const bitmapCanvas = content.document.createElement("canvas");
-        bitmapCanvas.width = 100;
-        bitmapCanvas.heigh = 100;
-        content.document.body.appendChild(bitmapCanvas);
+      const bitmapCanvas = document.createElement("canvas");
+      bitmapCanvas.width = 100;
+      bitmapCanvas.heigh = 100;
+      document.body.appendChild(bitmapCanvas);
 
-        let bitmap = await content.createImageBitmap(canvas);
-        const bitmapContext = bitmapCanvas.getContext("bitmaprenderer");
-        bitmapContext.transferFromImageBitmap(bitmap);
+      let bitmap = await createImageBitmap(canvas);
+      const bitmapContext = bitmapCanvas.getContext("bitmaprenderer");
+      bitmapContext.transferFromImageBitmap(bitmap);
 
-        const dataURL = bitmapCanvas.toDataURL();
+      const dataURL = bitmapCanvas.toDataURL();
 
-        // Access the data again.
-        const dataURLSecond = bitmapCanvas.toDataURL();
+      // Access the data again.
+      const dataURLSecond = bitmapCanvas.toDataURL();
 
-        return [dataURL, dataURLSecond];
-      });
+      return [dataURL, dataURLSecond];
     },
     isDataRandomized(name, data1, data2) {
       return data1 !== data2;
@@ -217,45 +207,43 @@ var TEST_CASES = [
   {
     name: "HTMLCanvasElement.toBlob() with a 2d context",
     shouldBeRandomized: true,
-    extractCanvasData(browser) {
-      return SpecialPowers.spawn(browser, [], async _ => {
-        const canvas = content.document.createElement("canvas");
-        canvas.width = 100;
-        canvas.height = 100;
+    async extractCanvasData() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 100;
+      canvas.height = 100;
 
-        const context = canvas.getContext("2d");
+      const context = canvas.getContext("2d");
 
-        context.fillStyle = "#EE2222";
-        context.fillRect(0, 0, 100, 100);
-        context.fillStyle = "#2222EE";
-        context.fillRect(20, 20, 100, 100);
+      context.fillStyle = "#EE2222";
+      context.fillRect(0, 0, 100, 100);
+      context.fillStyle = "#2222EE";
+      context.fillRect(20, 20, 100, 100);
 
-        // Add the canvas element to the document
-        content.document.body.appendChild(canvas);
+      // Add the canvas element to the document
+      document.body.appendChild(canvas);
 
-        let data = await new content.Promise(resolve => {
-          canvas.toBlob(blob => {
-            let fileReader = new content.FileReader();
-            fileReader.onload = () => {
-              resolve(fileReader.result);
-            };
-            fileReader.readAsArrayBuffer(blob);
-          });
+      let data = await new Promise(resolve => {
+        canvas.toBlob(blob => {
+          let fileReader = new FileReader();
+          fileReader.onload = () => {
+            resolve(fileReader.result);
+          };
+          fileReader.readAsArrayBuffer(blob);
         });
-
-        // Access the data again.
-        let dataSecond = await new content.Promise(resolve => {
-          canvas.toBlob(blob => {
-            let fileReader = new content.FileReader();
-            fileReader.onload = () => {
-              resolve(fileReader.result);
-            };
-            fileReader.readAsArrayBuffer(blob);
-          });
-        });
-
-        return [data, dataSecond];
       });
+
+      // Access the data again.
+      let dataSecond = await new Promise(resolve => {
+        canvas.toBlob(blob => {
+          let fileReader = new FileReader();
+          fileReader.onload = () => {
+            resolve(fileReader.result);
+          };
+          fileReader.readAsArrayBuffer(blob);
+        });
+      });
+
+      return [data, dataSecond];
     },
     isDataRandomized(name, data1, data2) {
       let diffCnt = countDifferencesInArrayBuffers(data1, data2);
@@ -266,43 +254,41 @@ var TEST_CASES = [
   {
     name: "HTMLCanvasElement.toBlob() with a webgl context",
     shouldBeRandomized: true,
-    extractCanvasData(browser) {
-      return SpecialPowers.spawn(browser, [], async _ => {
-        const canvas = content.document.createElement("canvas");
+    async extractCanvasData() {
+      const canvas = document.createElement("canvas");
 
-        const context = canvas.getContext("webgl");
+      const context = canvas.getContext("webgl");
 
-        context.enable(context.SCISSOR_TEST);
-        context.scissor(0, 0, 100, 100);
-        context.clearColor(1, 0.2, 0.2, 1);
-        context.clear(context.COLOR_BUFFER_BIT);
-        context.scissor(15, 15, 30, 15);
-        context.clearColor(0.2, 1, 0.2, 1);
-        context.clear(context.COLOR_BUFFER_BIT);
-        context.scissor(50, 50, 15, 15);
-        context.clearColor(0.2, 0.2, 1, 1);
-        context.clear(context.COLOR_BUFFER_BIT);
+      context.enable(context.SCISSOR_TEST);
+      context.scissor(0, 0, 100, 100);
+      context.clearColor(1, 0.2, 0.2, 1);
+      context.clear(context.COLOR_BUFFER_BIT);
+      context.scissor(15, 15, 30, 15);
+      context.clearColor(0.2, 1, 0.2, 1);
+      context.clear(context.COLOR_BUFFER_BIT);
+      context.scissor(50, 50, 15, 15);
+      context.clearColor(0.2, 0.2, 1, 1);
+      context.clear(context.COLOR_BUFFER_BIT);
 
-        // Add the canvas element to the document
-        content.document.body.appendChild(canvas);
+      // Add the canvas element to the document
+      document.body.appendChild(canvas);
 
-        let data = await new content.Promise(resolve => {
-          canvas.toBlob(blob => {
-            let fileReader = new content.FileReader();
-            fileReader.onload = () => {
-              resolve(fileReader.result);
-            };
-            fileReader.readAsArrayBuffer(blob);
-          });
+      let data = await new Promise(resolve => {
+        canvas.toBlob(blob => {
+          let fileReader = new FileReader();
+          fileReader.onload = () => {
+            resolve(fileReader.result);
+          };
+          fileReader.readAsArrayBuffer(blob);
         });
-
-        // We don't get the consistent blob data on second access with webgl
-        // context regardless of the canvas randomization. So, we report the
-        // same data here to not fail the test. Ideally, we should look into
-        // why this happens, but it's not caused by canvas randomization.
-
-        return [data, data];
       });
+
+      // We don't get the consistent blob data on second access with webgl
+      // context regardless of the canvas randomization. So, we report the
+      // same data here to not fail the test. Ideally, we should look into
+      // why this happens, but it's not caused by canvas randomization.
+
+      return [data, data];
     },
     isDataRandomized(name, data1, data2) {
       let diffCnt = countDifferencesInArrayBuffers(data1, data2);
@@ -313,54 +299,52 @@ var TEST_CASES = [
   {
     name: "HTMLCanvasElement.toBlob() with a bitmaprenderer context",
     shouldBeRandomized: true,
-    extractCanvasData(browser) {
-      return SpecialPowers.spawn(browser, [], async _ => {
-        const canvas = content.document.createElement("canvas");
-        canvas.width = 100;
-        canvas.height = 100;
+    async extractCanvasData() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 100;
+      canvas.height = 100;
 
-        const context = canvas.getContext("2d");
+      const context = canvas.getContext("2d");
 
-        context.fillStyle = "#EE2222";
-        context.fillRect(0, 0, 100, 100);
-        context.fillStyle = "#2222EE";
-        context.fillRect(20, 20, 100, 100);
+      context.fillStyle = "#EE2222";
+      context.fillRect(0, 0, 100, 100);
+      context.fillStyle = "#2222EE";
+      context.fillRect(20, 20, 100, 100);
 
-        // Add the canvas element to the document
-        content.document.body.appendChild(canvas);
+      // Add the canvas element to the document
+      document.body.appendChild(canvas);
 
-        const bitmapCanvas = content.document.createElement("canvas");
-        bitmapCanvas.width = 100;
-        bitmapCanvas.heigh = 100;
-        content.document.body.appendChild(bitmapCanvas);
+      const bitmapCanvas = document.createElement("canvas");
+      bitmapCanvas.width = 100;
+      bitmapCanvas.heigh = 100;
+      document.body.appendChild(bitmapCanvas);
 
-        let bitmap = await content.createImageBitmap(canvas);
-        const bitmapContext = bitmapCanvas.getContext("bitmaprenderer");
-        bitmapContext.transferFromImageBitmap(bitmap);
+      let bitmap = await createImageBitmap(canvas);
+      const bitmapContext = bitmapCanvas.getContext("bitmaprenderer");
+      bitmapContext.transferFromImageBitmap(bitmap);
 
-        let data = await new content.Promise(resolve => {
-          bitmapCanvas.toBlob(blob => {
-            let fileReader = new content.FileReader();
-            fileReader.onload = () => {
-              resolve(fileReader.result);
-            };
-            fileReader.readAsArrayBuffer(blob);
-          });
+      let data = await new Promise(resolve => {
+        bitmapCanvas.toBlob(blob => {
+          let fileReader = new FileReader();
+          fileReader.onload = () => {
+            resolve(fileReader.result);
+          };
+          fileReader.readAsArrayBuffer(blob);
         });
-
-        // Access the data again.
-        let dataSecond = await new content.Promise(resolve => {
-          bitmapCanvas.toBlob(blob => {
-            let fileReader = new content.FileReader();
-            fileReader.onload = () => {
-              resolve(fileReader.result);
-            };
-            fileReader.readAsArrayBuffer(blob);
-          });
-        });
-
-        return [data, dataSecond];
       });
+
+      // Access the data again.
+      let dataSecond = await new Promise(resolve => {
+        bitmapCanvas.toBlob(blob => {
+          let fileReader = new FileReader();
+          fileReader.onload = () => {
+            resolve(fileReader.result);
+          };
+          fileReader.readAsArrayBuffer(blob);
+        });
+      });
+
+      return [data, dataSecond];
     },
     isDataRandomized(name, data1, data2) {
       let diffCnt = countDifferencesInArrayBuffers(data1, data2);
@@ -371,40 +355,24 @@ var TEST_CASES = [
   {
     name: "OffscreenCanvas.convertToBlob() with a 2d context",
     shouldBeRandomized: true,
-    extractCanvasData(browser) {
-      return SpecialPowers.spawn(browser, [], async _ => {
-        let offscreenCanvas = new content.OffscreenCanvas(100, 100);
+    async extractCanvasData() {
+      let offscreenCanvas = new OffscreenCanvas(100, 100);
 
-        const context = offscreenCanvas.getContext("2d");
+      const context = offscreenCanvas.getContext("2d");
 
-        context.fillStyle = "#EE2222";
-        context.fillRect(0, 0, 100, 100);
-        context.fillStyle = "#2222EE";
-        context.fillRect(20, 20, 100, 100);
+      context.fillStyle = "#EE2222";
+      context.fillRect(0, 0, 100, 100);
+      context.fillStyle = "#2222EE";
+      context.fillRect(20, 20, 100, 100);
 
-        let blob = await offscreenCanvas.convertToBlob();
+      let blob = await offscreenCanvas.convertToBlob();
+      let data = await blob.arrayBuffer();
 
-        let data = await new content.Promise(resolve => {
-          let fileReader = new content.FileReader();
-          fileReader.onload = () => {
-            resolve(fileReader.result);
-          };
-          fileReader.readAsArrayBuffer(blob);
-        });
+      // Access the data again.
+      let blobSecond = await offscreenCanvas.convertToBlob();
+      let dataSecond = await blobSecond.arrayBuffer();
 
-        // Access the data again.
-        let blobSecond = await offscreenCanvas.convertToBlob();
-
-        let dataSecond = await new content.Promise(resolve => {
-          let fileReader = new content.FileReader();
-          fileReader.onload = () => {
-            resolve(fileReader.result);
-          };
-          fileReader.readAsArrayBuffer(blobSecond);
-        });
-
-        return [data, dataSecond];
-      });
+      return [data, dataSecond];
     },
     isDataRandomized(name, data1, data2) {
       let diffCnt = countDifferencesInArrayBuffers(data1, data2);
@@ -415,46 +383,30 @@ var TEST_CASES = [
   {
     name: "OffscreenCanvas.convertToBlob() with a webgl context",
     shouldBeRandomized: true,
-    extractCanvasData(browser) {
-      return SpecialPowers.spawn(browser, [], async _ => {
-        let offscreenCanvas = new content.OffscreenCanvas(100, 100);
+    async extractCanvasData() {
+      let offscreenCanvas = new OffscreenCanvas(100, 100);
 
-        const context = offscreenCanvas.getContext("webgl");
+      const context = offscreenCanvas.getContext("webgl");
 
-        context.enable(context.SCISSOR_TEST);
-        context.scissor(0, 0, 100, 100);
-        context.clearColor(1, 0.2, 0.2, 1);
-        context.clear(context.COLOR_BUFFER_BIT);
-        context.scissor(15, 15, 30, 15);
-        context.clearColor(0.2, 1, 0.2, 1);
-        context.clear(context.COLOR_BUFFER_BIT);
-        context.scissor(50, 50, 15, 15);
-        context.clearColor(0.2, 0.2, 1, 1);
-        context.clear(context.COLOR_BUFFER_BIT);
+      context.enable(context.SCISSOR_TEST);
+      context.scissor(0, 0, 100, 100);
+      context.clearColor(1, 0.2, 0.2, 1);
+      context.clear(context.COLOR_BUFFER_BIT);
+      context.scissor(15, 15, 30, 15);
+      context.clearColor(0.2, 1, 0.2, 1);
+      context.clear(context.COLOR_BUFFER_BIT);
+      context.scissor(50, 50, 15, 15);
+      context.clearColor(0.2, 0.2, 1, 1);
+      context.clear(context.COLOR_BUFFER_BIT);
 
-        let blob = await offscreenCanvas.convertToBlob();
+      let blob = await offscreenCanvas.convertToBlob();
+      let data = await blob.arrayBuffer();
 
-        let data = await new content.Promise(resolve => {
-          let fileReader = new content.FileReader();
-          fileReader.onload = () => {
-            resolve(fileReader.result);
-          };
-          fileReader.readAsArrayBuffer(blob);
-        });
+      // Access the data again.
+      let blobSecond = await offscreenCanvas.convertToBlob();
+      let dataSecond = await blobSecond.arrayBuffer();
 
-        // Access the data again.
-        let blobSecond = await offscreenCanvas.convertToBlob();
-
-        let dataSecond = await new content.Promise(resolve => {
-          let fileReader = new content.FileReader();
-          fileReader.onload = () => {
-            resolve(fileReader.result);
-          };
-          fileReader.readAsArrayBuffer(blobSecond);
-        });
-
-        return [data, dataSecond];
-      });
+      return [data, dataSecond];
     },
     isDataRandomized(name, data1, data2) {
       let diffCnt = countDifferencesInArrayBuffers(data1, data2);
@@ -465,46 +417,30 @@ var TEST_CASES = [
   {
     name: "OffscreenCanvas.convertToBlob() with a bitmaprenderer context",
     shouldBeRandomized: true,
-    extractCanvasData(browser) {
-      return SpecialPowers.spawn(browser, [], async _ => {
-        let offscreenCanvas = new content.OffscreenCanvas(100, 100);
+    async extractCanvasData() {
+      let offscreenCanvas = new OffscreenCanvas(100, 100);
 
-        const context = offscreenCanvas.getContext("2d");
+      const context = offscreenCanvas.getContext("2d");
 
-        context.fillStyle = "#EE2222";
-        context.fillRect(0, 0, 100, 100);
-        context.fillStyle = "#2222EE";
-        context.fillRect(20, 20, 100, 100);
+      context.fillStyle = "#EE2222";
+      context.fillRect(0, 0, 100, 100);
+      context.fillStyle = "#2222EE";
+      context.fillRect(20, 20, 100, 100);
 
-        const bitmapCanvas = new content.OffscreenCanvas(100, 100);
+      const bitmapCanvas = new OffscreenCanvas(100, 100);
 
-        let bitmap = await content.createImageBitmap(offscreenCanvas);
-        const bitmapContext = bitmapCanvas.getContext("bitmaprenderer");
-        bitmapContext.transferFromImageBitmap(bitmap);
+      let bitmap = await createImageBitmap(offscreenCanvas);
+      const bitmapContext = bitmapCanvas.getContext("bitmaprenderer");
+      bitmapContext.transferFromImageBitmap(bitmap);
 
-        let blob = await bitmapCanvas.convertToBlob();
+      let blob = await bitmapCanvas.convertToBlob();
+      let data = await blob.arrayBuffer();
 
-        let data = await new content.Promise(resolve => {
-          let fileReader = new content.FileReader();
-          fileReader.onload = () => {
-            resolve(fileReader.result);
-          };
-          fileReader.readAsArrayBuffer(blob);
-        });
+      // Access the data again.
+      let blobSecond = await bitmapCanvas.convertToBlob();
+      let dataSecond = await blobSecond.arrayBuffer();
 
-        // Access the data again.
-        let blobSecond = await bitmapCanvas.convertToBlob();
-
-        let dataSecond = await new content.Promise(resolve => {
-          let fileReader = new content.FileReader();
-          fileReader.onload = () => {
-            resolve(fileReader.result);
-          };
-          fileReader.readAsArrayBuffer(blobSecond);
-        });
-
-        return [data, dataSecond];
-      });
+      return [data, dataSecond];
     },
     isDataRandomized(name, data1, data2) {
       let diffCnt = countDifferencesInArrayBuffers(data1, data2);
@@ -515,25 +451,23 @@ var TEST_CASES = [
   {
     name: "CanvasRenderingContext2D.getImageData() with a offscreen canvas",
     shouldBeRandomized: true,
-    extractCanvasData(browser) {
-      return SpecialPowers.spawn(browser, [], async _ => {
-        let offscreenCanvas = new content.OffscreenCanvas(100, 100);
+    extractCanvasData() {
+      let offscreenCanvas = new OffscreenCanvas(100, 100);
 
-        const context = offscreenCanvas.getContext("2d");
+      const context = offscreenCanvas.getContext("2d");
 
-        // Draw a red rectangle
-        context.fillStyle = "#EE2222";
-        context.fillRect(0, 0, 100, 100);
-        context.fillStyle = "#2222EE";
-        context.fillRect(20, 20, 100, 100);
+      // Draw a red rectangle
+      context.fillStyle = "#EE2222";
+      context.fillRect(0, 0, 100, 100);
+      context.fillStyle = "#2222EE";
+      context.fillRect(20, 20, 100, 100);
 
-        const imageData = context.getImageData(0, 0, 100, 100);
+      const imageData = context.getImageData(0, 0, 100, 100);
 
-        // Access the data again.
-        const imageDataSecond = context.getImageData(0, 0, 100, 100);
+      // Access the data again.
+      const imageDataSecond = context.getImageData(0, 0, 100, 100);
 
-        return [imageData.data, imageDataSecond.data];
-      });
+      return [imageData.data, imageDataSecond.data];
     },
     isDataRandomized(name, data1, data2, isCompareOriginal) {
       let diffCnt = countDifferencesInUint8Arrays(data1, data2);
@@ -556,6 +490,14 @@ var TEST_CASES = [
     },
   },
 ];
+
+function runExtractCanvasData(test, tab) {
+  let code = test.extractCanvasData.toString();
+  return SpecialPowers.spawn(tab.linkedBrowser, [code], async code => {
+    let result = await content.eval(`({${code}}).extractCanvasData()`);
+    return result;
+  });
+}
 
 async function runTest(enabled) {
   // Enable/Disable CanvasRandomization by the RFP target overrides.
@@ -588,7 +530,7 @@ async function runTest(enabled) {
     // Clear telemetry before starting test.
     Services.fog.testResetFOG();
 
-    let data = await test.extractCanvasData(tab.linkedBrowser);
+    let data = await runExtractCanvasData(test, tab);
     let result = test.isDataRandomized(test.name, data[0], test.originalData);
 
     if (test.shouldBeRandomized) {
@@ -612,7 +554,7 @@ async function runTest(enabled) {
       `The data of first and second access should be the same for ${test.name}.`
     );
 
-    let privateData = await test.extractCanvasData(privateTab.linkedBrowser);
+    let privateData = await runExtractCanvasData(test, privateTab);
 
     // Check if we add noise to canvas data in private windows.
     result = test.isDataRandomized(
@@ -687,7 +629,7 @@ add_setup(async function () {
 
   // Extract the original canvas data without random noise.
   for (let test of TEST_CASES) {
-    let data = await test.extractCanvasData(tab.linkedBrowser);
+    let data = await runExtractCanvasData(test, tab);
     test.originalData = data[0];
   }
 
