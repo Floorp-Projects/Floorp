@@ -215,6 +215,17 @@ nsLookAndFeel::nsLookAndFeel() {
         },
         this, nullptr);
   }
+  if (IsKdeDesktopEnvironment()) {
+    GUniquePtr<gchar> path(
+        g_strconcat(g_get_user_config_dir(), "/gtk-3.0/colors.css", NULL));
+    mKdeColors = dont_AddRef(g_file_new_for_path(path.get()));
+    mKdeColorsMonitor = dont_AddRef(
+        g_file_monitor_file(mKdeColors.get(), G_FILE_MONITOR_NONE, NULL, NULL));
+    if (mKdeColorsMonitor) {
+      g_signal_connect(mKdeColorsMonitor.get(), "changed",
+                       G_CALLBACK(settings_changed_cb), NULL);
+    }
+  }
 }
 
 nsLookAndFeel::~nsLookAndFeel() {
