@@ -318,6 +318,10 @@ def old_configure_for(old_configure_path, extra_env=None):
                 c: [
                     (k[1:-1], v[1:-1] if isinstance(v, str) else v)
                     for k, v in raw_config[c]
+                    # Eventually we'll want to filter out all lowercase keys. (bug 1869127)
+                    # For now, we only filter out the most problematic one that
+                    # we know is unused.
+                    if k != " target_cpu "
                 ]
                 for c in ("substs", "defines")
             }
