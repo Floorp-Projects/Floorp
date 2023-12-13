@@ -1281,6 +1281,7 @@ void RenderThread::NotifyWebRenderError(WebRenderError aError) {
 }
 
 void RenderThread::HandleWebRenderError(WebRenderError aError) {
+  MOZ_ASSERT(IsInRenderThread());
   if (mHandlingWebRenderError) {
     return;
   }
