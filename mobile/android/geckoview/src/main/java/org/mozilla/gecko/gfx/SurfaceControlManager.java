@@ -34,7 +34,8 @@ public class SurfaceControlManager {
 
   private static final SurfaceControlManager sInstance = new SurfaceControlManager();
 
-  private WeakHashMap<SurfaceControl, SurfaceControl> mChildSurfaceControls = new WeakHashMap<>();
+  private final WeakHashMap<SurfaceControl, SurfaceControl> mChildSurfaceControls =
+      new WeakHashMap<>();
 
   @WrapForJNI
   public static SurfaceControlManager getInstance() {
@@ -68,10 +69,12 @@ public class SurfaceControlManager {
       mChildSurfaceControls.put(parent, child);
     }
 
-    new SurfaceControl.Transaction()
-        .setVisibility(child, true)
-        .setBufferSize(child, width, height)
-        .apply();
+    final SurfaceControl.Transaction transaction =
+        new SurfaceControl.Transaction()
+            .setVisibility(child, true)
+            .setBufferSize(child, width, height);
+    transaction.apply();
+    transaction.close();
 
     return new Surface(child);
   }
@@ -94,10 +97,13 @@ public class SurfaceControlManager {
   @WrapForJNI(exceptionMode = "abort")
   public synchronized void onGpuProcessLoss() {
     for (final SurfaceControl child : mChildSurfaceControls.values()) {
-      // We could reparent the child SurfaceControl to null here to immediately remove it from the
-      // tree. However, this will result in a black screen while we wait for the new compositor to
-      // be created. It's preferable for the user to see the old content instead, so simply call
-      // release().
+      // Explicitly reparenting the old SurfaceControl to null ensures SurfaceFlinger does not hold
+      // on to it. We used to not do this in order to avoid a blank screen until we resume rendering
+      // in to a new SurfaceControl, but on some devices this was causing glitches.
+      final SurfaceControl.Transaction transaction =
+          new SurfaceControl.Transaction().reparent(child, null);
+      transaction.apply();
+      transaction.close();
       child.release();
     }
     mChildSurfaceControls.clear();
