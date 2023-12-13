@@ -103,6 +103,50 @@ function logAccessDeniedWarning(window, callerInfo, extensionPolicy) {
   Services.console.logMessage(error);
 }
 
+function extensionAllowedToInspectPrincipal(extensionPolicy, principal) {
+  if (principal.isNullPrincipal) {
+    // data: and sandboxed documents.
+    //
+    // Rather than returning true unconditionally, we go through additional
+    // checks to prevent execution in sandboxed documents created by principals
+    // that extensions cannot access otherwise.
+    principal = principal.precursorPrincipal;
+    if (!principal) {
+      // Top-level about:blank, etc.
+      return true;
+    }
+  }
+  if (!principal.isContentPrincipal) {
+    return false;
+  }
+  const principalURI = principal.URI;
+  if (principalURI.schemeIs("https") || principalURI.schemeIs("http")) {
+    if (WebExtensionPolicy.isRestrictedURI(principalURI)) {
+      return false;
+    }
+    if (extensionPolicy.quarantinedFromURI(principalURI)) {
+      return false;
+    }
+    // Common case: http(s) allowed.
+    return true;
+  }
+
+  if (principalURI.schemeIs("moz-extension")) {
+    // Ordinarily, we don't allow extensions to execute arbitrary code in
+    // their own context. The devtools.inspectedWindow.eval API is a special
+    // case - this can only be used through the devtools_page feature, which
+    // requires the user to open the developer tools first. If an extension
+    // really wants to debug itself, we let it do so.
+    return extensionPolicy.id === principal.addonId;
+  }
+
+  if (principalURI.schemeIs("file")) {
+    return true;
+  }
+
+  return false;
+}
+
 class CustomizedReload {
   constructor(params) {
     this.docShell = params.targetActor.window.docShell;
@@ -508,57 +552,22 @@ class WebExtensionInspectedWindowActor extends Actor {
       });
     }
 
-    // Log the error for the user to know that the extension request has been denied
-    // (the extension may not warn the user at all).
-    const logEvalDenied = () => {
+    if (
+      !extensionAllowedToInspectPrincipal(
+        extensionPolicy,
+        window.document.nodePrincipal
+      )
+    ) {
+      // Log the error for the user to know that the extension request has been
+      // denied (the extension may not warn the user at all).
       logAccessDeniedWarning(window, callerInfo, extensionPolicy);
-    };
 
-    if (isSystemPrincipalWindow(window)) {
-      logEvalDenied();
-
-      // On denied JS evaluation, report it to the extension using the same data format
-      // used in the corresponding chrome API method to report issues that are
-      // not exceptions raised in the evaluated javascript code.
+      // The error message is generic here. If access is disallowed, we do not
+      // expose the URL either.
       return createExceptionInfoResult({
         description: "Inspector protocol error: %s",
         details: [
-          "This target has a system principal. inspectedWindow.eval denied.",
-        ],
-      });
-    }
-
-    const docPrincipalURI = window.document.nodePrincipal.URI;
-
-    // Deny on document principals listed as restricted or
-    // related to the about: pages (only about:blank and about:srcdoc are
-    // allowed and their are expected to not have their about URI associated
-    // to the principal).
-    if (
-      WebExtensionPolicy.isRestrictedURI(docPrincipalURI) ||
-      docPrincipalURI.schemeIs("about")
-    ) {
-      logEvalDenied();
-
-      return createExceptionInfoResult({
-        description: "Inspector protocol error: %s %s",
-        details: [
           "This extension is not allowed on the current inspected window origin",
-          docPrincipalURI.spec,
-        ],
-      });
-    }
-
-    const windowAddonId = window.document.nodePrincipal.addonId;
-
-    if (windowAddonId && extensionPolicy.id !== windowAddonId) {
-      logEvalDenied();
-
-      return createExceptionInfoResult({
-        description: "Inspector protocol error: %s on %s",
-        details: [
-          "This extension is not allowed to access this extension page.",
-          window.document.location.origin,
         ],
       });
     }
