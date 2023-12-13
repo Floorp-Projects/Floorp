@@ -420,6 +420,84 @@ class PromptDelegateTest : BaseSessionTest(
 
     @Test
     @WithDisplay(width = 100, height = 100)
+    fun selectTestShowPicker() {
+        mainSession.loadTestPath(SELECT_HTML_PATH)
+        sessionRule.waitForPageStop()
+
+        mainSession.evaluateJS(
+            """
+            document.body.focus();
+            document.body.addEventListener('keydown', () => {
+                document.getElementById('simple').showPicker()
+            });
+            """.trimIndent(),
+        )
+        mainSession.pressKey(KeyEvent.KEYCODE_SPACE)
+
+        sessionRule.waitUntilCalled(object : PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onChoicePrompt(session: GeckoSession, prompt: PromptDelegate.ChoicePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                assertThat("Should not be multiple", prompt.type, equalTo(PromptDelegate.ChoicePrompt.Type.SINGLE))
+                assertThat("There should be two choices", prompt.choices.size, equalTo(2))
+                assertThat("First choice is correct", prompt.choices[0].label, equalTo("ABC"))
+                assertThat("Second choice is correct", prompt.choices[1].label, equalTo("DEF"))
+                return null
+            }
+        })
+
+        mainSession.loadTestPath(SELECT_MULTIPLE_HTML_PATH)
+        sessionRule.waitForPageStop()
+
+        mainSession.evaluateJS(
+            """
+            document.body.focus();
+            document.body.addEventListener('keydown', () => {
+                document.getElementById('multiple').showPicker()
+            });
+            """.trimIndent(),
+        )
+        mainSession.pressKey(KeyEvent.KEYCODE_SPACE)
+
+        sessionRule.waitUntilCalled(object : PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onChoicePrompt(session: GeckoSession, prompt: PromptDelegate.ChoicePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                assertThat("Should be multiple", prompt.type, equalTo(PromptDelegate.ChoicePrompt.Type.MULTIPLE))
+                assertThat("There should be three choices", prompt.choices.size, equalTo(3))
+                assertThat("First choice is correct", prompt.choices[0].label, equalTo("ABC"))
+                assertThat("Second choice is correct", prompt.choices[1].label, equalTo("DEF"))
+                assertThat("Third choice is correct", prompt.choices[2].label, equalTo("GHI"))
+                return null
+            }
+        })
+
+        mainSession.loadTestPath(SELECT_LISTBOX_HTML_PATH)
+        sessionRule.waitForPageStop()
+
+        mainSession.evaluateJS(
+            """
+            document.body.focus();
+            document.body.addEventListener('keydown', () => {
+                document.getElementById('multiple').showPicker()
+            });
+            """.trimIndent(),
+        )
+        mainSession.pressKey(KeyEvent.KEYCODE_SPACE)
+
+        sessionRule.waitUntilCalled(object : PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onChoicePrompt(session: GeckoSession, prompt: PromptDelegate.ChoicePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                assertThat("Should not be multiple", prompt.type, equalTo(PromptDelegate.ChoicePrompt.Type.SINGLE))
+                assertThat("There should be three choices", prompt.choices.size, equalTo(3))
+                assertThat("First choice is correct", prompt.choices[0].label, equalTo("ABC"))
+                assertThat("Second choice is correct", prompt.choices[1].label, equalTo("DEF"))
+                assertThat("Third choice is correct", prompt.choices[2].label, equalTo("GHI"))
+                return null
+            }
+        })
+    }
+
+    @Test
+    @WithDisplay(width = 100, height = 100)
     fun selectTestUpdate() {
         mainSession.loadTestPath(SELECT_HTML_PATH)
         sessionRule.waitForPageStop()
