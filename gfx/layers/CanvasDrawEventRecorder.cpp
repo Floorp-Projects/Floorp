@@ -155,6 +155,12 @@ void CanvasDrawEventRecorder::WriteInternalEvent(EventType aEventType) {
 
 gfx::ContiguousBuffer& CanvasDrawEventRecorder::GetContiguousBuffer(
     size_t aSize) {
+  if (!mCurrentBuffer.IsValid()) {
+    // If the current buffer is invalid then we've already failed previously.
+    MOZ_ASSERT(mHeader->writerState == State::Failed);
+    return mCurrentBuffer;
+  }
+
   // We make sure that our buffer can hold aSize + 1 to ensure we always have
   // room for the end of buffer event.
 
