@@ -687,8 +687,9 @@ ICScript* TrialInliner::createInlinedICScript(JSFunction* target,
   uint32_t initialWarmUpCount = JitOptions.trialInliningInitialWarmUpCount;
 
   uint32_t depth = icScript_->depth() + 1;
-  UniquePtr<ICScript> inlinedICScript(new (raw) ICScript(
-      initialWarmUpCount, fallbackStubsOffset, allocSize, depth, root));
+  UniquePtr<ICScript> inlinedICScript(
+      new (raw) ICScript(initialWarmUpCount, fallbackStubsOffset, allocSize,
+                         depth, targetScript->length(), root));
 
   inlinedICScript->initICEntries(cx(), targetScript);
 
@@ -959,6 +960,23 @@ void InliningRoot::purgeStubs(Zone* zone) {
 void InliningRoot::resetWarmUpCounts(uint32_t count) {
   for (auto& inlinedScript : inlinedScripts_) {
     inlinedScript->resetWarmUpCount(count);
+  }
+}
+
+#ifdef DEBUG
+bool InliningRoot::hasActiveICScript() const {
+  for (auto& inlinedScript : inlinedScripts_) {
+    if (inlinedScript->active()) {
+      return true;
+    }
+  }
+  return false;
+}
+#endif
+
+void InliningRoot::resetAllActiveFlags() {
+  for (auto& inlinedScript : inlinedScripts_) {
+    inlinedScript->resetActive();
   }
 }
 

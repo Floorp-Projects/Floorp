@@ -89,6 +89,11 @@ class InliningRoot {
   void purgeStubs(Zone* zone);
   void resetWarmUpCounts(uint32_t count);
 
+#ifdef DEBUG
+  bool hasActiveICScript() const;
+#endif
+  void resetAllActiveFlags();
+
   JSScript* owningScript() const { return owningScript_; }
 
   size_t totalBytecodeSize() const { return totalBytecodeSize_; }

@@ -44,7 +44,7 @@ JitScript::JitScript(JSScript* script, Offset fallbackStubsOffset,
       icScript_(script->getWarmUpCount(),
                 fallbackStubsOffset - offsetOfICScript(),
                 endOffset - offsetOfICScript(),
-                /*depth=*/0) {
+                /*depth=*/0, script->length()) {
   // Ensure the baselineScript_ and ionScript_ fields match the BaselineDisabled
   // and IonDisabled script flags.
   if (!script->canBaselineCompile()) {
@@ -140,7 +140,7 @@ void JSScript::maybeReleaseJitScript(JS::GCContext* gcx) {
   MOZ_ASSERT(hasJitScript());
 
   if (zone()->jitZone()->keepJitScripts() || jitScript()->hasBaselineScript() ||
-      jitScript()->active()) {
+      jitScript()->icScript()->active()) {
     return;
   }
 
@@ -290,6 +290,25 @@ void JitScript::resetWarmUpCount(uint32_t count) {
   icScript_.resetWarmUpCount(count);
   if (hasInliningRoot()) {
     inliningRoot()->resetWarmUpCounts(count);
+  }
+}
+
+#ifdef DEBUG
+bool JitScript::hasActiveICScript() const {
+  if (icScript_.active()) {
+    return true;
+  }
+  if (hasInliningRoot() && inliningRoot()->hasActiveICScript()) {
+    return true;
+  }
+  return false;
+}
+#endif
+
+void JitScript::resetAllActiveFlags() {
+  icScript_.resetActive();
+  if (hasInliningRoot()) {
+    inliningRoot()->resetAllActiveFlags();
   }
 }
 
@@ -584,14 +603,14 @@ void jit::JitSpewBaselineICStats(JSScript* script, const char* dumpReason) {
 }
 #endif
 
-static void MarkActiveJitScriptsAndCopyStubs(
+static void MarkActiveICScriptsAndCopyStubs(
     JSContext* cx, const JitActivationIterator& activation,
     ICStubSpace& newStubSpace) {
   for (OnlyJSJitFrameIter iter(activation); !iter.done(); ++iter) {
     const JSJitFrameIter& frame = iter.frame();
     switch (frame.type()) {
       case FrameType::BaselineJS:
-        frame.script()->jitScript()->setActive();
+        frame.script()->jitScript()->icScript()->setActive();
         break;
       case FrameType::BaselineStub: {
         auto* layout = reinterpret_cast<BaselineStubFrameLayout*>(frame.fp());
@@ -608,17 +627,17 @@ static void MarkActiveJitScriptsAndCopyStubs(
               frame.exitFrame()->as<LazyLinkExitFrameLayout>();
           JSScript* script =
               ScriptFromCalleeToken(ll->jsFrame()->calleeToken());
-          script->jitScript()->setActive();
+          script->jitScript()->icScript()->setActive();
         }
         break;
       case FrameType::Bailout:
       case FrameType::IonJS: {
         // Keep the JitScript and BaselineScript around, since bailouts from
         // the ion jitcode need to re-enter into the Baseline code.
-        frame.script()->jitScript()->setActive();
+        frame.script()->jitScript()->icScript()->setActive();
         for (InlineFrameIterator inlineIter(cx, &frame); inlineIter.more();
              ++inlineIter) {
-          inlineIter.script()->jitScript()->setActive();
+          inlineIter.script()->jitScript()->icScript()->setActive();
         }
         break;
       }
@@ -627,15 +646,15 @@ static void MarkActiveJitScriptsAndCopyStubs(
   }
 }
 
-void jit::MarkActiveJitScriptsAndCopyStubs(Zone* zone,
-                                           ICStubSpace& newStubSpace) {
+void jit::MarkActiveICScriptsAndCopyStubs(Zone* zone,
+                                          ICStubSpace& newStubSpace) {
   if (zone->isAtomsZone()) {
     return;
   }
   JSContext* cx = TlsContext.get();
   for (JitActivationIterator iter(cx); !iter.done(); ++iter) {
     if (iter->compartment()->zone() == zone) {
-      MarkActiveJitScriptsAndCopyStubs(cx, iter, newStubSpace);
+      MarkActiveICScriptsAndCopyStubs(cx, iter, newStubSpace);
     }
   }
 }

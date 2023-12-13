@@ -3191,7 +3191,7 @@ bool Debugger::updateExecutionObservabilityOfFrames(
 static inline void MarkJitScriptActiveIfObservable(
     JSScript* script, const DebugAPI::ExecutionObservableSet& obs) {
   if (obs.shouldRecompileOrInvalidate(script)) {
-    script->jitScript()->setActive();
+    script->jitScript()->icScript()->setActive();
   }
 }
 
@@ -3279,10 +3279,10 @@ static bool UpdateExecutionObservabilityOfScriptsInZone(
   // discard the BaselineScript on scripts that have no IonScript.
   for (size_t i = 0; i < scripts.length(); i++) {
     MOZ_ASSERT_IF(scripts[i]->isDebuggee(), observing);
-    if (!scripts[i]->jitScript()->active()) {
+    if (!scripts[i]->jitScript()->icScript()->active()) {
       FinishDiscardBaselineScript(gcx, scripts[i]);
     }
-    scripts[i]->jitScript()->resetActive();
+    scripts[i]->jitScript()->icScript()->resetActive();
   }
 
   // Iterate through all wasm instances to find ones that need to be updated.
