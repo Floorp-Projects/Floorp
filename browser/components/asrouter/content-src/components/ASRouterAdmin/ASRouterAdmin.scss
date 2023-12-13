@@ -1,0 +1,353 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* stylelint-disable max-nesting-depth */
+
+@import '../../../../newtab/content-src/styles/variables';
+@import '../../../../newtab/content-src/styles/theme';
+@import '../../../../newtab/content-src/styles/icons';
+@import '../../../../newtab/content-src/asrouter/components/Button/Button';
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Ubuntu, 'Helvetica Neue', sans-serif;
+}
+
+/**
+ * These styles are copied verbatim from _activity-stream.scss in order to maintain
+ * a continuity of styling while also decoupling from the newtab code. This should
+ * be removed when about:asrouter starts using the default in-content style sheets.
+ */
+.button,
+.actions button {
+  background-color: var(--newtab-button-secondary-color);
+  border: $border-primary;
+  border-radius: 4px;
+  color: inherit;
+  cursor: pointer;
+  margin-bottom: 15px;
+  padding: 10px 30px;
+  white-space: nowrap;
+
+  &:hover:not(.dismiss),
+  &:focus:not(.dismiss) {
+    box-shadow: $shadow-primary;
+    transition: box-shadow 150ms;
+  }
+
+  &.dismiss {
+    background-color: transparent;
+    border: 0;
+    padding: 0;
+    text-decoration: underline;
+  }
+
+  // Blue button
+  &.primary,
+  &.done {
+    background-color: var(--newtab-primary-action-background);
+    border: solid 1px var(--newtab-primary-action-background);
+    color: var(--newtab-primary-element-text-color);
+    margin-inline-start: auto;
+  }
+}
+
+.asrouter-admin {
+  max-width: 1300px;
+  $border-color: var(--newtab-border-color);
+  $monospace: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono',
+    'Source Code Pro', monospace;
+  $sidebar-width: 240px;
+
+  font-size: 14px;
+  padding-inline-start: $sidebar-width;
+  color: var(--newtab-text-primary-color);
+
+  &.collapsed {
+    display: none;
+  }
+
+  .sidebar {
+    inset-inline-start: 0;
+    position: fixed;
+    width: $sidebar-width;
+
+    ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    li a {
+      padding: 10px 34px;
+      display: block;
+      color: var(--lwt-sidebar-text-color);
+
+      &:hover {
+        background: var(--newtab-background-color-secondary);
+      }
+    }
+  }
+
+  h1 {
+    font-weight: 200;
+    font-size: 32px;
+  }
+
+  h2 .button,
+  p .button {
+    font-size: 14px;
+    padding: 6px 12px;
+    margin-inline-start: 5px;
+    margin-bottom: 0;
+  }
+
+  .general-textarea {
+    direction: ltr;
+    width: 740px;
+    height: 500px;
+    overflow: auto;
+    resize: none;
+    border-radius: 4px;
+    display: flex;
+  }
+
+  .wnp-textarea {
+    direction: ltr;
+    width: 740px;
+    height: 500px;
+    overflow: auto;
+    resize: none;
+    border-radius: 4px;
+    display: flex;
+  }
+
+  .json-button {
+    display: inline-flex;
+    font-size: 10px;
+    padding: 4px 10px;
+    margin-bottom: 6px;
+    margin-inline-end: 4px;
+
+    &:hover {
+      background-color: var(--newtab-element-hover-color);
+      box-shadow: none;
+    }
+  }
+
+  table {
+    border-collapse: collapse;
+
+    &.minimal-table {
+      border-collapse: collapse;
+      border: 1px solid $border-color;
+
+      td {
+        padding: 8px;
+      }
+
+      td:first-child {
+        width: 1%;
+        white-space: nowrap;
+      }
+
+      td:not(:first-child) {
+        font-family: $monospace;
+      }
+    }
+
+    &.errorReporting {
+      tr {
+        border: 1px solid var(--newtab-background-color-secondary);
+      }
+
+      td {
+        padding: 4px;
+
+        &[rowspan] {
+          border: 1px solid var(--newtab-background-color-secondary);
+        }
+      }
+    }
+  }
+
+  .sourceLabel {
+    background: var(--newtab-background-color-secondary);
+    padding: 2px 5px;
+    border-radius: 3px;
+
+    &.isDisabled {
+      background: $email-input-invalid;
+      color: var(--newtab-status-error);
+    }
+  }
+
+  .message-item {
+    &:first-child td {
+      border-top: 1px solid $border-color;
+    }
+
+    td {
+      vertical-align: top;
+      padding: 8px;
+      border-bottom: 1px solid $border-color;
+
+      &.min {
+        width: 1%;
+        white-space: nowrap;
+      }
+
+      &.message-summary {
+        width: 60%;
+      }
+
+      &.button-column {
+        width: 15%;
+      }
+
+      &:first-child {
+        border-inline-start: 1px solid $border-color;
+      }
+
+      &:last-child {
+        border-inline-end: 1px solid $border-color;
+      }
+    }
+
+    &.blocked {
+      .message-id,
+      .message-summary {
+        opacity: 0.5;
+      }
+
+      .message-id {
+        opacity: 0.5;
+      }
+    }
+
+    .message-id {
+      font-family: $monospace;
+      font-size: 12px;
+    }
+  }
+
+  .providerUrl {
+    font-size: 12px;
+  }
+
+  pre {
+    background: var(--newtab-background-color-secondary);
+    margin: 0;
+    padding: 8px;
+    font-size: 12px;
+    max-width: 750px;
+    overflow: auto;
+    font-family: $monospace;
+  }
+
+  .errorState {
+    border: $input-error-border;
+  }
+
+  .helpLink {
+    padding: 10px;
+    display: flex;
+    background: $black-10;
+    border-radius: 3px;
+    align-items: center;
+
+    a {
+      text-decoration: underline;
+    }
+
+    .icon {
+      min-width: 18px;
+      min-height: 18px;
+    }
+  }
+
+  .ds-component {
+    margin-bottom: 20px;
+  }
+
+  .modalOverlayInner {
+    height: 80%;
+  }
+
+  .clearButton {
+    border: 0;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+
+    &:hover {
+      background: var(--newtab-element-hover-color);
+    }
+  }
+
+  .collapsed {
+    display: none;
+  }
+
+  .icon {
+    display: inline-table;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+  }
+
+  .button {
+    &:disabled,
+    &:disabled:active {
+      opacity: 0.5;
+      cursor: unset;
+      box-shadow: none;
+    }
+  }
+
+  .impressions-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .impressions-item {
+      display: flex;
+      flex-flow: column nowrap;
+      padding: 8px;
+      border: 1px solid $border-color;
+      border-radius: 5px;
+
+      .impressions-inner-box {
+        display: flex;
+        flex-flow: row nowrap;
+        gap: 8px;
+      }
+
+      .impressions-category {
+        font-size: 1.15em;
+        white-space: nowrap;
+        flex-grow: 0.1;
+      }
+
+      .impressions-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        button {
+          margin: 0;
+        }
+      }
+
+      .impressions-editor {
+        display: flex;
+        flex-grow: 1.5;
+
+        .general-textarea {
+          width: auto;
+          flex-grow: 1;
+        }
+      }
+    }
+  }
+}
