@@ -1,0 +1,546 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* stylelint-disable max-nesting-depth */
+:root {
+  --newtab-background-color: #F9F9FB;
+  --newtab-background-color-secondary: #FFF;
+  --newtab-text-primary-color: #15141a;
+  --newtab-primary-action-background: #0061e0;
+  --newtab-primary-action-background-pocket: #008078;
+  --newtab-text-secondary-color: color-mix(in srgb, var(--newtab-text-primary-color) 70%, transparent);
+  --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 90%, #000);
+  --newtab-element-active-color: color-mix(in srgb, var(--newtab-background-color) 80%, #000);
+  --newtab-element-secondary-color: color-mix(in srgb, currentColor 5%, transparent);
+  --newtab-element-secondary-hover-color: color-mix(in srgb, currentColor 12%, transparent);
+  --newtab-element-secondary-active-color: color-mix(in srgb, currentColor 25%, transparent);
+  --newtab-primary-element-hover-color: color-mix(in srgb, var(--newtab-primary-action-background) 90%, #000);
+  --newtab-primary-element-hover-pocket-color: color-mix(in srgb, var(--newtab-primary-action-background-pocket) 90%, #000);
+  --newtab-primary-element-active-color: color-mix(in srgb, var(--newtab-primary-action-background) 80%, #000);
+  --newtab-primary-element-text-color: #FFF;
+  --newtab-primary-action-background-dimmed: color-mix(in srgb, var(--newtab-primary-action-background) 25%, transparent);
+  --newtab-primary-action-background-pocket-dimmed: color-mix(in srgb, var(--newtab-primary-action-background-pocket) 25%, transparent);
+  --newtab-border-color: color-mix(in srgb, var(--newtab-background-color) 75%, #000);
+  --newtab-wordmark-color: #20123A;
+  --newtab-status-success: #058B00;
+  --newtab-status-error: #D70022;
+  --newtab-inner-box-shadow-color: rgba(0, 0, 0, 0.1);
+  --newtab-overlay-color: color-mix(in srgb, var(--newtab-background-color) 85%, transparent);
+  --newtab-textbox-focus-color: var(--newtab-primary-action-background);
+  --newtab-textbox-focus-boxshadow: 0 0 0 1px var(--newtab-primary-action-background), 0 0 0 4px rgba(var(--newtab-primary-action-background), 0.3);
+  --newtab-button-secondary-color: inherit;
+}
+:root[lwt-newtab-brighttext] {
+  --newtab-background-color: #2B2A33;
+  --newtab-background-color-secondary: #42414d;
+  --newtab-text-primary-color: #fbfbfe;
+  --newtab-primary-action-background: #00ddff;
+  --newtab-primary-action-background-pocket: #00ddff;
+  --newtab-primary-action-background-pocket-dimmed: color-mix(in srgb, var(--newtab-primary-action-background) 25%, transparent);
+  --newtab-primary-element-hover-color: color-mix(in srgb, var(--newtab-primary-action-background) 55%, #FFF);
+  --newtab-primary-element-hover-pocket-color: color-mix(in srgb, var(--newtab-primary-action-background-pocket) 55%, #FFF);
+  --newtab-element-hover-color: color-mix(in srgb, var(--newtab-background-color) 80%, #FFF);
+  --newtab-element-active-color: color-mix(in srgb, var(--newtab-background-color) 60%, #FFF);
+  --newtab-element-secondary-color: color-mix(in srgb, currentColor 10%, transparent);
+  --newtab-element-secondary-hover-color: color-mix(in srgb, currentColor 17%, transparent);
+  --newtab-element-secondary-active-color: color-mix(in srgb, currentColor 30%, transparent);
+  --newtab-border-color: color-mix(in srgb, var(--newtab-background-color) 75%, #FFF);
+  --newtab-primary-element-text-color: #2b2a33;
+  --newtab-wordmark-color: #fbfbfe;
+  --newtab-status-success: #7C6;
+}
+
+@media (prefers-contrast) {
+  :root {
+    --newtab-text-secondary-color: var(--newtab-text-primary-color);
+  }
+}
+.icon {
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  -moz-context-properties: fill;
+  display: inline-block;
+  color: var(--newtab-text-primary-color);
+  fill: currentColor;
+  height: 16px;
+  vertical-align: middle;
+  width: 16px;
+}
+.icon.icon-spacer {
+  margin-inline-end: 8px;
+}
+.icon.icon-small-spacer {
+  margin-inline-end: 6px;
+}
+.icon.icon-button-style {
+  fill: var(--newtab-text-secondary-color);
+  border: 0;
+}
+.icon.icon-button-style:focus, .icon.icon-button-style:hover {
+  fill: var(--newtab-text-primary-color);
+}
+.icon.icon-bookmark-added {
+  background-image: url("chrome://browser/skin/bookmark.svg");
+}
+.icon.icon-bookmark-hollow {
+  background-image: url("chrome://browser/skin/bookmark-hollow.svg");
+}
+.icon.icon-clear-input {
+  background-image: url("chrome://global/skin/icons/close-fill.svg");
+}
+.icon.icon-delete {
+  background-image: url("chrome://global/skin/icons/delete.svg");
+}
+.icon.icon-search {
+  background-image: url("chrome://global/skin/icons/search-glass.svg");
+}
+.icon.icon-modal-delete {
+  flex-shrink: 0;
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-modal-delete-20.svg");
+  background-size: 32px;
+  height: 32px;
+  width: 32px;
+}
+.icon.icon-mail {
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-mail-16.svg");
+}
+.icon.icon-dismiss {
+  background-image: url("chrome://global/skin/icons/close.svg");
+}
+.icon.icon-info {
+  background-image: url("chrome://global/skin/icons/info.svg");
+}
+.icon.icon-new-window {
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-newWindow-16.svg");
+}
+.icon.icon-new-window:dir(rtl) {
+  transform: scaleX(-1);
+}
+.icon.icon-new-window-private {
+  background-image: url("chrome://browser/skin/privateBrowsing.svg");
+}
+.icon.icon-settings {
+  background-image: url("chrome://global/skin/icons/settings.svg");
+}
+.icon.icon-pin {
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-pin-16.svg");
+}
+.icon.icon-pin:dir(rtl) {
+  transform: scaleX(-1);
+}
+.icon.icon-unpin {
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-unpin-16.svg");
+}
+.icon.icon-unpin:dir(rtl) {
+  transform: scaleX(-1);
+}
+.icon.icon-edit {
+  background-image: url("chrome://global/skin/icons/edit.svg");
+}
+.icon.icon-pocket {
+  background-image: url("chrome://global/skin/icons/pocket.svg");
+}
+.icon.icon-pocket-save {
+  background-image: url("chrome://global/skin/icons/pocket.svg");
+  fill: #FFF;
+}
+.icon.icon-pocket-delete {
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-pocket-delete-16.svg");
+}
+.icon.icon-pocket-archive {
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-pocket-archive-16.svg");
+}
+.icon.icon-history-item {
+  background-image: url("chrome://browser/skin/history.svg");
+}
+.icon.icon-trending {
+  background-image: url("chrome://browser/skin/trending.svg");
+  transform: translateY(2px);
+}
+.icon.icon-now {
+  background-image: url("chrome://browser/skin/history.svg");
+}
+.icon.icon-topsites {
+  background-image: url("chrome://browser/skin/topsites.svg");
+}
+.icon.icon-pin-small {
+  background-image: url("chrome://browser/skin/pin-12.svg");
+  background-size: 12px;
+  height: 12px;
+  width: 12px;
+}
+.icon.icon-pin-small:dir(rtl) {
+  transform: scaleX(-1);
+}
+.icon.icon-check {
+  background-image: url("chrome://global/skin/icons/check.svg");
+}
+.icon.icon-download {
+  background-image: url("chrome://browser/skin/downloads/downloads.svg");
+}
+.icon.icon-copy {
+  background-image: url("chrome://global/skin/icons/edit-copy.svg");
+}
+.icon.icon-open-file {
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-open-file-16.svg");
+}
+.icon.icon-webextension {
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-webextension-16.svg");
+}
+.icon.icon-highlights {
+  background-image: url("chrome://global/skin/icons/highlights.svg");
+}
+.icon.icon-arrowhead-down {
+  background-image: url("chrome://global/skin/icons/arrow-down.svg");
+}
+.icon.icon-arrowhead-down-small {
+  background-image: url("chrome://global/skin/icons/arrow-down-12.svg");
+  background-size: 12px;
+  height: 12px;
+  width: 12px;
+}
+.icon.icon-arrowhead-forward-small {
+  background-image: url("chrome://global/skin/icons/arrow-right-12.svg");
+  background-size: 12px;
+  height: 12px;
+  width: 12px;
+}
+.icon.icon-arrowhead-forward-small:dir(rtl) {
+  background-image: url("chrome://global/skin/icons/arrow-left-12.svg");
+}
+.icon.icon-arrowhead-up {
+  background-image: url("chrome://global/skin/icons/arrow-up.svg");
+}
+.icon.icon-add {
+  background-image: url("chrome://global/skin/icons/plus.svg");
+}
+.icon.icon-minimize {
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-minimize-16.svg");
+}
+.icon.icon-maximize {
+  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-maximize-16.svg");
+}
+.icon.icon-arrow {
+  background-image: url("chrome://global/skin/icons/arrow-right-12.svg");
+}
+
+.ASRouterButton {
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  border-radius: 2px;
+  border: 0;
+  font-family: inherit;
+  padding: 8px 15px;
+  margin-inline-start: 12px;
+  color: inherit;
+  cursor: pointer;
+}
+.tall .ASRouterButton {
+  margin-inline-start: 20px;
+}
+.ASRouterButton.test-only {
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  display: block;
+  visibility: hidden;
+}
+.ASRouterButton.primary {
+  border: 1px solid var(--newtab-primary-action-background);
+  background-color: var(--newtab-primary-action-background);
+  color: var(--newtab-primary-element-text-color);
+}
+.ASRouterButton.primary:hover {
+  background-color: var(--newtab-primary-element-hover-color);
+}
+.ASRouterButton.primary:active {
+  background-color: var(--newtab-primary-element-active-color);
+}
+.ASRouterButton.slim {
+  border: 1px solid var(--newtab-border-color);
+  margin-inline-start: 0;
+  font-size: 12px;
+  padding: 6px 12px;
+}
+.ASRouterButton.slim:hover, .ASRouterButton.slim:focus {
+  box-shadow: 0 0 0 5px var(--newtab-element-secondary-color);
+  transition: box-shadow 150ms;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Ubuntu, "Helvetica Neue", sans-serif;
+}
+
+/**
+ * These styles are copied verbatim from _activity-stream.scss in order to maintain
+ * a continuity of styling while also decoupling from the newtab code. This should
+ * be removed when about:asrouter starts using the default in-content style sheets.
+ */
+.button,
+.actions button {
+  background-color: var(--newtab-button-secondary-color);
+  border: 1px solid var(--newtab-border-color);
+  border-radius: 4px;
+  color: inherit;
+  cursor: pointer;
+  margin-bottom: 15px;
+  padding: 10px 30px;
+  white-space: nowrap;
+}
+.button:hover:not(.dismiss), .button:focus:not(.dismiss),
+.actions button:hover:not(.dismiss),
+.actions button:focus:not(.dismiss) {
+  box-shadow: 0 0 0 5px var(--newtab-element-secondary-color);
+  transition: box-shadow 150ms;
+}
+.button.dismiss,
+.actions button.dismiss {
+  background-color: transparent;
+  border: 0;
+  padding: 0;
+  text-decoration: underline;
+}
+.button.primary, .button.done,
+.actions button.primary,
+.actions button.done {
+  background-color: var(--newtab-primary-action-background);
+  border: solid 1px var(--newtab-primary-action-background);
+  color: var(--newtab-primary-element-text-color);
+  margin-inline-start: auto;
+}
+
+.asrouter-admin {
+  max-width: 1300px;
+  font-size: 14px;
+  padding-inline-start: 240px;
+  color: var(--newtab-text-primary-color);
+}
+.asrouter-admin.collapsed {
+  display: none;
+}
+.asrouter-admin .sidebar {
+  inset-inline-start: 0;
+  position: fixed;
+  width: 240px;
+}
+.asrouter-admin .sidebar ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.asrouter-admin .sidebar li a {
+  padding: 10px 34px;
+  display: block;
+  color: var(--lwt-sidebar-text-color);
+}
+.asrouter-admin .sidebar li a:hover {
+  background: var(--newtab-background-color-secondary);
+}
+.asrouter-admin h1 {
+  font-weight: 200;
+  font-size: 32px;
+}
+.asrouter-admin h2 .button,
+.asrouter-admin p .button {
+  font-size: 14px;
+  padding: 6px 12px;
+  margin-inline-start: 5px;
+  margin-bottom: 0;
+}
+.asrouter-admin .general-textarea {
+  direction: ltr;
+  width: 740px;
+  height: 500px;
+  overflow: auto;
+  resize: none;
+  border-radius: 4px;
+  display: flex;
+}
+.asrouter-admin .wnp-textarea {
+  direction: ltr;
+  width: 740px;
+  height: 500px;
+  overflow: auto;
+  resize: none;
+  border-radius: 4px;
+  display: flex;
+}
+.asrouter-admin .json-button {
+  display: inline-flex;
+  font-size: 10px;
+  padding: 4px 10px;
+  margin-bottom: 6px;
+  margin-inline-end: 4px;
+}
+.asrouter-admin .json-button:hover {
+  background-color: var(--newtab-element-hover-color);
+  box-shadow: none;
+}
+.asrouter-admin table {
+  border-collapse: collapse;
+}
+.asrouter-admin table.minimal-table {
+  border-collapse: collapse;
+  border: 1px solid var(--newtab-border-color);
+}
+.asrouter-admin table.minimal-table td {
+  padding: 8px;
+}
+.asrouter-admin table.minimal-table td:first-child {
+  width: 1%;
+  white-space: nowrap;
+}
+.asrouter-admin table.minimal-table td:not(:first-child) {
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace;
+}
+.asrouter-admin table.errorReporting tr {
+  border: 1px solid var(--newtab-background-color-secondary);
+}
+.asrouter-admin table.errorReporting td {
+  padding: 4px;
+}
+.asrouter-admin table.errorReporting td[rowspan] {
+  border: 1px solid var(--newtab-background-color-secondary);
+}
+.asrouter-admin .sourceLabel {
+  background: var(--newtab-background-color-secondary);
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+.asrouter-admin .sourceLabel.isDisabled {
+  background: rgba(215, 0, 34, 0.3);
+  color: var(--newtab-status-error);
+}
+.asrouter-admin .message-item:first-child td {
+  border-top: 1px solid var(--newtab-border-color);
+}
+.asrouter-admin .message-item td {
+  vertical-align: top;
+  padding: 8px;
+  border-bottom: 1px solid var(--newtab-border-color);
+}
+.asrouter-admin .message-item td.min {
+  width: 1%;
+  white-space: nowrap;
+}
+.asrouter-admin .message-item td.message-summary {
+  width: 60%;
+}
+.asrouter-admin .message-item td.button-column {
+  width: 15%;
+}
+.asrouter-admin .message-item td:first-child {
+  border-inline-start: 1px solid var(--newtab-border-color);
+}
+.asrouter-admin .message-item td:last-child {
+  border-inline-end: 1px solid var(--newtab-border-color);
+}
+.asrouter-admin .message-item.blocked .message-id,
+.asrouter-admin .message-item.blocked .message-summary {
+  opacity: 0.5;
+}
+.asrouter-admin .message-item.blocked .message-id {
+  opacity: 0.5;
+}
+.asrouter-admin .message-item .message-id {
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace;
+  font-size: 12px;
+}
+.asrouter-admin .providerUrl {
+  font-size: 12px;
+}
+.asrouter-admin pre {
+  background: var(--newtab-background-color-secondary);
+  margin: 0;
+  padding: 8px;
+  font-size: 12px;
+  max-width: 750px;
+  overflow: auto;
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace;
+}
+.asrouter-admin .errorState {
+  border: 1px solid var(--newtab-status-error);
+}
+.asrouter-admin .helpLink {
+  padding: 10px;
+  display: flex;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+  align-items: center;
+}
+.asrouter-admin .helpLink a {
+  text-decoration: underline;
+}
+.asrouter-admin .helpLink .icon {
+  min-width: 18px;
+  min-height: 18px;
+}
+.asrouter-admin .ds-component {
+  margin-bottom: 20px;
+}
+.asrouter-admin .modalOverlayInner {
+  height: 80%;
+}
+.asrouter-admin .clearButton {
+  border: 0;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+}
+.asrouter-admin .clearButton:hover {
+  background: var(--newtab-element-hover-color);
+}
+.asrouter-admin .collapsed {
+  display: none;
+}
+.asrouter-admin .icon {
+  display: inline-table;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+}
+.asrouter-admin .button:disabled, .asrouter-admin .button:disabled:active {
+  opacity: 0.5;
+  cursor: unset;
+  box-shadow: none;
+}
+.asrouter-admin .impressions-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.asrouter-admin .impressions-section .impressions-item {
+  display: flex;
+  flex-flow: column nowrap;
+  padding: 8px;
+  border: 1px solid var(--newtab-border-color);
+  border-radius: 5px;
+}
+.asrouter-admin .impressions-section .impressions-item .impressions-inner-box {
+  display: flex;
+  flex-flow: row nowrap;
+  gap: 8px;
+}
+.asrouter-admin .impressions-section .impressions-item .impressions-category {
+  font-size: 1.15em;
+  white-space: nowrap;
+  flex-grow: 0.1;
+}
+.asrouter-admin .impressions-section .impressions-item .impressions-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.asrouter-admin .impressions-section .impressions-item .impressions-buttons button {
+  margin: 0;
+}
+.asrouter-admin .impressions-section .impressions-item .impressions-editor {
+  display: flex;
+  flex-grow: 1.5;
+}
+.asrouter-admin .impressions-section .impressions-item .impressions-editor .general-textarea {
+  width: auto;
+  flex-grow: 1;
+}
