@@ -210,3 +210,8 @@ skip-if = ["verify && debug && os == 'mac'"]
 
 ["test_xhr_method_case.html"]
 skip-if = ["http2"]
+
+["test_url_perf.html"]
+# test to check the performance of URL parsing.
+# No need to run in CI.
+skip-if = ["true"]
