@@ -338,6 +338,10 @@ FRAME_STATE_BIT(FlexContainer, 23, NS_STATE_FLEX_DID_PUSH_ITEMS)
 // We've merged some OverflowList children since last reflow.
 FRAME_STATE_BIT(FlexContainer, 24, NS_STATE_FLEX_HAS_CHILD_NIFS)
 
+// True if the next reflow of this frame should generate computed info metrics.
+// These are used by devtools to reveal details of the layout process.
+FRAME_STATE_BIT(FlexContainer, 25, NS_STATE_FLEX_COMPUTED_INFO)
+
 // == Frame state bits that apply to grid container frames ====================
 
 FRAME_STATE_GROUP(GridContainer, nsGridContainerFrame)
@@ -379,6 +383,10 @@ FRAME_STATE_BIT(GridContainer, 28, NS_STATE_GRID_IS_COL_MASONRY)
 // True if the container has masonry layout in its block axis.
 // (mutually exclusive with NS_STATE_GRID_IS_COL_MASONRY)
 FRAME_STATE_BIT(GridContainer, 29, NS_STATE_GRID_IS_ROW_MASONRY)
+
+// True if the next reflow of this frame should generate computed info metrics.
+// These are used by devtools to reveal details of the layout process.
+FRAME_STATE_BIT(GridContainer, 30, NS_STATE_GRID_COMPUTED_INFO)
 
 // == Frame state bits that apply to SVG frames ===============================
 
