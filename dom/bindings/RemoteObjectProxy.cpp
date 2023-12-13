@@ -123,7 +123,7 @@ const char* RemoteObjectProxyBase::className(
     JSContext* aCx, JS::Handle<JSObject*> aProxy) const {
   MOZ_ASSERT(js::IsProxy(aProxy));
 
-  return "Object";
+  return NamesOfInterfacesWithProtos(mPrototypeID);
 }
 
 void RemoteObjectProxyBase::GetOrCreateProxyObject(
