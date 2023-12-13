@@ -455,8 +455,10 @@ void Zone::forceDiscardJitCode(JS::GCContext* gcx,
         }
 
         // If we did not release the JitScript, we need to purge IC stubs
-        // because the ICStubSpace will be purged below.
-        jitScript->purgeStubs(script);
+        // because the ICStubSpace will be purged below. Also purge all
+        // trial-inlined ICScripts that are not active on the stack.
+        jitScript->purgeInactiveICScripts();
+        jitScript->purgeStubs(script, newStubSpace);
 
         if (options.resetNurseryAllocSites ||
             options.resetPretenuredAllocSites) {

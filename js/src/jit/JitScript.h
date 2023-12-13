@@ -101,6 +101,15 @@ static IonScript* const IonCompilingScriptPtr =
  * BaselineScript and IonScript/WarpScript to which it
  * corresponds. They can be destroyed and recreated, and the ICScript
  * will remain valid.
+ *
+ * When we discard JIT code, we mark ICScripts that are active on the stack as
+ * active and then purge all of the inactive ICScripts. We also purge ICStubs,
+ * including the CallInlinedFunction stub at the trial inining call site, and
+ * reset the ICStates to allow trial inlining again later.
+ *
+ * If there's a BaselineFrame for an inlined ICScript, we'll preserve both this
+ * ICScript and the IC chain for the call site in the caller's ICScript.
+ * See ICScript::purgeStubs and ICScript::purgeInactiveICScripts.
  */
 
 class alignas(uintptr_t) ICScript final : public TrailingArray {
@@ -173,7 +182,9 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
   void removeInlinedChild(uint32_t pcOffset);
   bool hasInlinedChild(uint32_t pcOffset);
 
-  void purgeStubs(Zone* zone);
+  void purgeStubs(Zone* zone, ICStubSpace& newStubSpace);
+
+  void purgeInactiveICScripts();
 
   bool active() const { return active_; }
   void setActive() { active_ = true; }
@@ -429,7 +440,9 @@ class alignas(uintptr_t) JitScript final
 
   void trace(JSTracer* trc);
   void traceWeak(JSTracer* trc);
-  void purgeStubs(JSScript* script);
+  void purgeStubs(JSScript* script, ICStubSpace& newStubSpace);
+
+  void purgeInactiveICScripts();
 
   ICEntry& icEntryFromPCOffset(uint32_t pcOffset) {
     return icScript_.icEntryFromPCOffset(pcOffset);

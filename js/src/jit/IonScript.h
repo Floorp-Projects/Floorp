@@ -106,6 +106,11 @@ class alignas(8) IonScript final : public TrailingArray {
   // Flag set if IonScript was compiled with profiling enabled.
   bool hasProfilingInstrumentation_ = false;
 
+  // If true, this IonScript was active on the stack when we discarded JIT code
+  // and inactive ICScripts. This means we should use the generic ICScripts for
+  // inlined functions when we bail out.
+  bool purgedICScripts_ = false;
+
   // Number of bytes this function reserves on the stack for slots spilled by
   // the register allocator.
   uint32_t localSlotsSize_ = 0;
@@ -354,6 +359,9 @@ class alignas(8) IonScript final : public TrailingArray {
   bool hasProfilingInstrumentation() const {
     return hasProfilingInstrumentation_;
   }
+
+  bool purgedICScripts() const { return purgedICScripts_; }
+  void notePurgedICScripts() { purgedICScripts_ = true; }
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     return mallocSizeOf(this);

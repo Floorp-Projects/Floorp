@@ -67,6 +67,7 @@ class ICCacheIRStub;
 class ICEntry;
 class ICFallbackStub;
 class ICScript;
+class ICStubSpace;
 
 /*
  * An InliningRoot is owned by a JitScript. In turn, it owns the set
@@ -86,8 +87,10 @@ class InliningRoot {
 
   uint32_t numInlinedScripts() const { return inlinedScripts_.length(); }
 
-  void purgeStubs(Zone* zone);
+  void purgeStubs(Zone* zone, ICStubSpace& newStubSpace);
   void resetWarmUpCounts(uint32_t count);
+
+  void purgeInactiveICScripts();
 
 #ifdef DEBUG
   bool hasActiveICScript() const;
