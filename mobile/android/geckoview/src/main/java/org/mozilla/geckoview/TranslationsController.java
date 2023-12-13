@@ -63,6 +63,12 @@ public class TranslationsController {
     private static final String SET_LANGUAGE_SETTINGS_EVENT =
         "GeckoView:Translations:SetLanguageSettings";
 
+    private static final String GET_SPECIFIED_SITES_SETTINGS_EVENT =
+        "GeckoView:Translations:GetNeverTranslateSpecifiedSites";
+
+    private static final String SET_SPECIFIED_SITE_SETTINGS_EVENT =
+        "GeckoView:Translations:SetNeverTranslateSpecifiedSite";
+
     /**
      * Checks if the device can use the supplied model binary files for translations.
      *
@@ -314,6 +320,64 @@ public class TranslationsController {
       bundle.putString("language", languageCode);
       bundle.putString("languageSetting", String.valueOf(languageSetting));
       return EventDispatcher.getInstance().queryVoid(SET_LANGUAGE_SETTINGS_EVENT, bundle);
+    }
+
+    /**
+     * Gets the list of sites that have a never translate site preference set. Should be used for
+     * retrieving a list for global preference setting outside of a specific site.
+     *
+     * <p>Recommend using: {@link SessionTranslation#getNeverTranslateSiteSetting()} to query the
+     * current session's site's never translate preferences.
+     *
+     * @return A list of display ready site URIs to set preferences for.
+     */
+    @AnyThread
+    public static @NonNull GeckoResult<List<String>> getNeverTranslateSiteList() {
+      if (DEBUG) {
+        Log.d(LOGTAG, "Retrieving specified never translate site settings");
+      }
+      return EventDispatcher.getInstance()
+          .queryBundle(GET_SPECIFIED_SITES_SETTINGS_EVENT)
+          .map(
+              bundle -> {
+                try {
+                  final String[] neverTranslateSites = bundle.getStringArray("sites");
+                  if (neverTranslateSites != null) {
+                    return Arrays.asList(neverTranslateSites);
+                  }
+                } catch (final Exception e) {
+                  Log.d(LOGTAG, "Could not deserialize the sites.");
+                  return null;
+                }
+                return null;
+              });
+    }
+
+    /**
+     * Sets whether the specified site should be translated or not. This function should be used for
+     * global updates to the never translate list.
+     *
+     * <p>Please use: {@link SessionTranslation#setNeverTranslateSiteSetting(Boolean)} when the
+     * session is currently on the site to adjust the permissions for.
+     *
+     * @param origin A site origin URI that will have the specified never translate permission set.
+     *     Recommend using URI values returned from {@link #getNeverTranslateSiteList()} and using
+     *     the session to set a given site to ensure proper scope when possible.
+     * @param neverTranslate Should be set to true if the site should never be translated or false
+     *     if it should be translated.
+     * @return Void if the operation to set the value completed or exceptionally if an issue
+     *     occurred.
+     */
+    @AnyThread
+    public static @NonNull GeckoResult<Void> setNeverTranslateSpecifiedSite(
+        final @NonNull Boolean neverTranslate, final @NonNull String origin) {
+      if (DEBUG) {
+        Log.d(LOGTAG, "Setting never translate for specified site uri origin: " + origin);
+      }
+      final GeckoBundle bundle = new GeckoBundle(2);
+      bundle.putBoolean("neverTranslate", neverTranslate);
+      bundle.putString("origin", origin);
+      return EventDispatcher.getInstance().queryVoid(SET_SPECIFIED_SITE_SETTINGS_EVENT, bundle);
     }
 
     /** Options for managing the translation language models. */
