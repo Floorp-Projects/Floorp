@@ -171,10 +171,7 @@ static nsAutoCString MakeCaseInsensitiveShellGlob(const char* aPattern) {
 NS_IMPL_ISUPPORTS(nsFilePicker, nsIFilePicker)
 
 nsFilePicker::nsFilePicker()
-    : mSelectedType(0),
-      mRunning(false),
-      mAllowURLs(false),
-      mFileChooserDelegate(nullptr) {
+    : mSelectedType(0), mAllowURLs(false), mFileChooserDelegate(nullptr) {
   mUseNativeFileChooser =
       widget::ShouldUsePortal(widget::PortalKind::FilePicker);
 }
@@ -407,7 +404,7 @@ nsresult nsFilePicker::Show(nsIFilePicker::ResultCode* aReturn) {
   nsresult rv = Open(nullptr);
   if (NS_FAILED(rv)) return rv;
 
-  while (mRunning) {
+  while (mFileChooser) {
     g_main_context_iteration(nullptr, TRUE);
   }
 
@@ -418,7 +415,7 @@ nsresult nsFilePicker::Show(nsIFilePicker::ResultCode* aReturn) {
 NS_IMETHODIMP
 nsFilePicker::Open(nsIFilePickerShownCallback* aCallback) {
   // Can't show two dialogs concurrently with the same filepicker
-  if (mRunning) return NS_ERROR_NOT_AVAILABLE;
+  if (mFileChooser) return NS_ERROR_NOT_AVAILABLE;
 
   NS_ConvertUTF16toUTF8 title(mTitle);
 
@@ -564,11 +561,21 @@ nsFilePicker::Open(nsIFilePickerShownCallback* aCallback) {
   gtk_file_chooser_set_do_overwrite_confirmation(GTK_FILE_CHOOSER(file_chooser),
                                                  TRUE);
 
-  mRunning = true;
+  mFileChooser = file_chooser;
   mCallback = aCallback;
   NS_ADDREF_THIS();
   g_signal_connect(file_chooser, "response", G_CALLBACK(OnResponse), this);
   GtkFileChooserShow(file_chooser);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFilePicker::Close() {
+  if (mFileChooser) {
+    // Call ourself as done.
+    Done(mFileChooser, GTK_RESPONSE_CLOSE);
+  }
 
   return NS_OK;
 }
@@ -630,7 +637,7 @@ bool nsFilePicker::WarnForNonReadableFile(void* file_chooser) {
 }
 
 void nsFilePicker::Done(void* file_chooser, gint response) {
-  mRunning = false;
+  mFileChooser = nullptr;
 
   nsIFilePicker::ResultCode result;
   switch (response) {

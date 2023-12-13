@@ -54,6 +54,7 @@ class nsFilePickerProxy : public nsBaseFilePicker,
       nsISimpleEnumerator** aValue) override;
 
   NS_IMETHOD Open(nsIFilePickerShownCallback* aCallback) override;
+  NS_IMETHOD Close() override;
 
   // PFilePickerChild
   virtual mozilla::ipc::IPCResult Recv__delete__(
