@@ -921,7 +921,7 @@ void BaselineInterpreter::toggleCodeCoverageInstrumentation(bool enable) {
 
 void jit::FinishDiscardBaselineScript(JS::GCContext* gcx, JSScript* script) {
   MOZ_ASSERT(script->hasBaselineScript());
-  MOZ_ASSERT(!script->jitScript()->active());
+  MOZ_ASSERT(!script->jitScript()->icScript()->active());
 
   BaselineScript* baseline =
       script->jitScript()->clearBaselineScript(gcx, script);

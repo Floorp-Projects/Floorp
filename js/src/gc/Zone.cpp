@@ -406,13 +406,14 @@ void Zone::forceDiscardJitCode(JS::GCContext* gcx,
   jit::ICStubSpace newStubSpace;
 
 #ifdef DEBUG
-  // Assert no JitScripts are marked as active.
-  jitZone()->forEachJitScript(
-      [](jit::JitScript* jitScript) { MOZ_ASSERT(!jitScript->active()); });
+  // Assert no ICScripts are marked as active.
+  jitZone()->forEachJitScript([](jit::JitScript* jitScript) {
+    MOZ_ASSERT(!jitScript->hasActiveICScript());
+  });
 #endif
 
-  // Mark JitScripts on the stack as active and copy active Baseline stubs.
-  jit::MarkActiveJitScriptsAndCopyStubs(this, newStubSpace);
+  // Mark ICScripts on the stack as active and copy active Baseline stubs.
+  jit::MarkActiveICScriptsAndCopyStubs(this, newStubSpace);
 
   // Invalidate all Ion code in this zone.
   jit::InvalidateAll(gcx, this);
@@ -423,7 +424,8 @@ void Zone::forceDiscardJitCode(JS::GCContext* gcx,
         jit::FinishInvalidation(gcx, script);
 
         // Discard baseline script if it's not marked as active.
-        if (jitScript->hasBaselineScript() && !jitScript->active()) {
+        if (jitScript->hasBaselineScript() &&
+            !jitScript->icScript()->active()) {
           jit::FinishDiscardBaselineScript(gcx, script);
         }
 
@@ -462,8 +464,8 @@ void Zone::forceDiscardJitCode(JS::GCContext* gcx,
                                      options.resetPretenuredAllocSites);
         }
 
-        // Reset the active flag.
-        jitScript->resetActive();
+        // Reset the active flag of each ICScript.
+        jitScript->resetAllActiveFlags();
 
         // Optionally trace weak edges in remaining JitScripts.
         if (options.traceWeakJitScripts) {
