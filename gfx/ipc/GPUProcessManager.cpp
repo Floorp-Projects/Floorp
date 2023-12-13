@@ -228,6 +228,16 @@ bool GPUProcessManager::LaunchGPUProcess() {
   mProcessAttemptLastTime = newTime;
   mProcessStable = false;
 
+  // If the process is launched whilst we're in the background it may never get
+  // a chance to be declared stable before it is killed again. We don't want
+  // this happening repeatedly to result in the GPU process being disabled, so
+  // we assume that processes launched whilst in the background are stable.
+  if (!mAppInForeground) {
+    gfxCriticalNote
+        << "GPU process is being launched whilst app is in background";
+    mProcessStable = true;
+  }
+
   std::vector<std::string> extraArgs;
   ipc::ProcessChild::AddPlatformBuildID(extraArgs);
 
@@ -1346,7 +1356,9 @@ void GPUProcessManager::MapLayerTreeId(LayersId aLayersId,
 
 void GPUProcessManager::UnmapLayerTreeId(LayersId aLayersId,
                                          base::ProcessId aOwningId) {
-  nsresult rv = EnsureGPUReady();
+  // Only call EnsureGPUReady() if we have already launched the process, to
+  // avoid launching a new process unnecesarily. (eg if we are backgrounded)
+  nsresult rv = mProcess ? EnsureGPUReady() : NS_ERROR_NOT_AVAILABLE;
   if (NS_WARN_IF(rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN)) {
     return;
   }
@@ -1354,7 +1366,7 @@ void GPUProcessManager::UnmapLayerTreeId(LayersId aLayersId,
   if (NS_SUCCEEDED(rv)) {
     mGPUChild->SendRemoveLayerTreeIdMapping(
         LayerTreeIdMapping(aLayersId, aOwningId));
-  } else {
+  } else if (!mProcess) {
     CompositorBridgeParent::DeallocateLayerTreeId(aLayersId);
   }
 
