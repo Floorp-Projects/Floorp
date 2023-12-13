@@ -577,8 +577,8 @@ already_AddRefed<nsHttpConnection> Http2Session::CreateTunnelStream(
       this, mCurrentBrowserId, aHttpTransaction->ConnectionInfo(),
       aIsWebSocket);
 
-  RefPtr<nsHttpConnection> newConn =
-      refStream->CreateHttpConnection(aHttpTransaction, aCallbacks, aRtt);
+  RefPtr<nsHttpConnection> newConn = refStream->CreateHttpConnection(
+      aHttpTransaction, aCallbacks, aRtt, aIsWebSocket);
 
   mTunnelStreams.AppendElement(std::move(refStream));
   return newConn.forget();
