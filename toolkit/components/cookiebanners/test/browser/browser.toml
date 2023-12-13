@@ -13,7 +13,7 @@ support-files = [
 ["browser_bannerClicking_events.js"]
 support-files = ["file_banner.html"]
 
-["browser_bannerClicking_stopExecuteAfterSeveralAttempt.js"]
+["browser_bannerClicking_executeOnce.js"]
 
 ["browser_bannerClicking_globalRules_telemetry.js"]
 

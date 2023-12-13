@@ -10,11 +10,10 @@ let { ForgetAboutSite } = ChromeUtils.importESModule(
 add_setup(async function () {
   await clickTestSetup();
 
-  // Set the pref to enable stopping executing cookie banner handling after
-  // several tries.
+  // Enable the pref to once execute cookie banner handling once per domain.
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["cookiebanners.bannerClicking.maxTriesPerSiteAndSession", 1],
+      ["cookiebanners.bannerClicking.executeOnce", true],
       ["cookiebanners.service.mode", Ci.nsICookieBannerService.MODE_REJECT],
     ],
   });
@@ -25,8 +24,8 @@ add_setup(async function () {
 });
 
 // Ensure the banner clicking doesn't execute at the second load if the
-// stopExecuteAfterAttempt feature is enabled.
-add_task(async function testStopExecuteAfterOneAttempt() {
+// executeOnce feature is enabled.
+add_task(async function testExecuteOnce() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["cookiebanners.service.mode", Ci.nsICookieBannerService.MODE_REJECT],
@@ -34,7 +33,6 @@ add_task(async function testStopExecuteAfterOneAttempt() {
         "cookiebanners.service.mode.privateBrowsing",
         Ci.nsICookieBannerService.MODE_REJECT,
       ],
-      ["cookiebanners.bannerClicking.maxTriesPerSiteAndSession", 1],
     ],
   });
 
@@ -116,96 +114,11 @@ add_task(async function testStopExecuteAfterOneAttempt() {
   Services.cookieBanners.removeAllExecutedRecords(true);
 });
 
-// Ensure the banner clicking doesn't execute after several attempts if the
-// stopExecuteAfterAttempt feature is enabled.
-add_task(async function testStopExecuteAfterSeveralAttempts() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["cookiebanners.service.mode", Ci.nsICookieBannerService.MODE_REJECT],
-      [
-        "cookiebanners.service.mode.privateBrowsing",
-        Ci.nsICookieBannerService.MODE_REJECT,
-      ],
-      ["cookiebanners.bannerClicking.maxTriesPerSiteAndSession", 2],
-    ],
-  });
-
-  insertTestClickRules();
-
-  // Open the domain and ensure the banner is clicked.
-  await openPageAndVerify({
-    win: window,
-    domain: TEST_DOMAIN_A,
-    testURL: TEST_PAGE_A,
-    visible: false,
-    expected: "OptOut",
-  });
-
-  // Open the domain in the second time and the banner should be clicked,
-  await openPageAndVerify({
-    win: window,
-    domain: TEST_DOMAIN_A,
-    testURL: TEST_PAGE_A,
-    visible: false,
-    expected: "OptOut",
-  });
-
-  // Open the domain in the third time, the the banner shouldn't be hidden nor
-  // the banner is clicked.
-  await openPageAndVerify({
-    win: window,
-    domain: TEST_DOMAIN_A,
-    testURL: TEST_PAGE_A,
-    visible: true,
-    expected: "NoClick",
-  });
-
-  // Test in the private browsing mode.
-  let pbmWindow = await BrowserTestUtils.openNewBrowserWindow({
-    private: true,
-  });
-
-  // Open the domain in PBM and ensure the banner is clicked.
-  await openPageAndVerify({
-    win: pbmWindow,
-    domain: TEST_DOMAIN_A,
-    testURL: TEST_PAGE_A,
-    visible: false,
-    expected: "OptOut",
-  });
-
-  // Open the domain in the second time and the banner should be clicked,
-  await openPageAndVerify({
-    win: pbmWindow,
-    domain: TEST_DOMAIN_A,
-    testURL: TEST_PAGE_A,
-    visible: false,
-    expected: "OptOut",
-  });
-
-  // Open the domain in PBM third time and the banner shouldn't be hidden nor
-  // the banner is clicked.
-  await openPageAndVerify({
-    win: pbmWindow,
-    domain: TEST_DOMAIN_A,
-    testURL: TEST_PAGE_A,
-    visible: true,
-    expected: "NoClick",
-  });
-
-  await BrowserTestUtils.closeWindow(pbmWindow);
-
-  // Clean the records.
-  Services.cookieBanners.removeAllExecutedRecords(false);
-  Services.cookieBanners.removeAllExecutedRecords(true);
-});
-
 // Ensure that ForgetAboutSite clears the handled record properly.
-add_task(async function testForgetAboutSiteWithStopExecuteAfterOneAttempt() {
+add_task(async function testForgetAboutSiteWithExecuteOnce() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["cookiebanners.service.mode", Ci.nsICookieBannerService.MODE_REJECT],
-      ["cookiebanners.bannerClicking.maxTriesPerSiteAndSession", 1],
     ],
   });
 
@@ -249,11 +162,10 @@ add_task(async function testForgetAboutSiteWithStopExecuteAfterOneAttempt() {
 });
 
 // Ensure the ClearDataService clears the handled record properly.
-add_task(async function testClearDataServiceWithStopExecuteAfterOneAttempt() {
+add_task(async function testClearDataServiceWithExecuteOnce() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["cookiebanners.service.mode", Ci.nsICookieBannerService.MODE_REJECT],
-      ["cookiebanners.bannerClicking.maxTriesPerSiteAndSession", 1],
     ],
   });
 
