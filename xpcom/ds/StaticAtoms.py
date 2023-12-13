@@ -2250,6 +2250,7 @@ STATIC_ATOMS = [
     Atom("_moz_mac_big_sur_theme", "-moz-mac-big-sur-theme"),
     Atom("_moz_mac_rtl", "-moz-mac-rtl"),
     Atom("_moz_platform", "-moz-platform"),
+    Atom("_moz_gtk_theme_family", "-moz-gtk-theme-family"),
     Atom("_moz_menubar_drag", "-moz-menubar-drag"),
     Atom("_moz_device_pixel_ratio", "-moz-device-pixel-ratio"),
     Atom("_moz_device_orientation", "-moz-device-orientation"),

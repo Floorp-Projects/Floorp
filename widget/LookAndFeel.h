@@ -308,6 +308,9 @@ class LookAndFeel {
     /* Whether we should hide the cursor while typing */
     HideCursorWhileTyping,
 
+    /* The StyleGtkThemeFamily of the current GTK theme. */
+    GTKThemeFamily,
+
     /*
      * Not an ID; used to define the range of valid IDs.  Must be last.
      */
