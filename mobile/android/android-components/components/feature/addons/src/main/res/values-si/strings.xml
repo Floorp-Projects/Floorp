@@ -112,8 +112,10 @@
     <string name="mozac_feature_addons_details">විස්තර</string>
     <!-- Displays a page with all the permissions of an add-on. -->
     <string name="mozac_feature_addons_permissions">අවසර</string>
-    <!-- This is button that remove (uninstall an add-on). -->
+    <!-- This is a button to remove (i.e. uninstall) an add-on. -->
     <string name="mozac_feature_addons_remove">ඉවත් කරන්න</string>
+    <!-- This is a button to report an add-on. -->
+    <string name="mozac_feature_addons_report">වාර්තා කරන්න</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">%1$s එක් කරන්නද?</string>
     <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
@@ -200,8 +202,6 @@
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">%2$s %3$s සමඟ නොගැළපෙන නිසා %1$s ස්ථාපනයට නොහැකිය.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted_1">ඉහළ අවදානමක් සහිත ආරක්‍ෂණ හෝ ස්ථායි ගැටළු තිබෙන නිසා %1$s ස්ථාපනයට නොහැකිය.</string>
-    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">ඉහළ අවදානමක් සහිත ආරක්‍ෂණ හෝ ස්ථායි ගැටළු තිබෙන නිසා %1$s ස්ථාපනයට නොහැකිය.</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled">%1$s සාර්ථකව සබල විය</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
