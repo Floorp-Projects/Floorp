@@ -44,7 +44,7 @@ describe("DiscoveryStreamAdmin", () => {
     );
   });
   it("should render a DS section", () => {
-    assert.equal(wrapper.find("h2").at(0).text(), "Discovery Stream");
+    assert.equal(wrapper.find("h1").at(0).text(), "Discovery Stream Admin");
   });
 
   describe("#DiscoveryStream", () => {

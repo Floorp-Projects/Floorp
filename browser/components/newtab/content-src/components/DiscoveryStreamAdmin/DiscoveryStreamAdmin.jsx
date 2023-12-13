@@ -403,18 +403,14 @@ export class DiscoveryStreamAdminInner extends React.PureComponent {
           <p className="helpLink">
             <span className="icon icon-small-spacer icon-info" />{" "}
             <span>
-              Need help using these tools? Check out our{" "}
-              <a
-                target="blank"
-                href="https://firefox-source-docs.mozilla.org/browser/components/newtab/content-src/asrouter/docs/debugging-docs.html"
-              >
-                documentation
+              Need to access the ASRouter Admin dev tools?{" "}
+              <a target="blank" href="about:asrouter">
+                Click here
               </a>
             </span>
           </p>
 
           <React.Fragment>
-            <h2>Discovery Stream</h2>
             <DiscoveryStreamAdminUI
               state={{
                 DiscoveryStream: this.props.DiscoveryStream,
