@@ -147,7 +147,7 @@ class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate,
                            aShmem->Size()),
           shmem(std::move(aShmem)) {}
 
-    size_t Capacity() { return shmem->Size(); }
+    size_t Capacity() { return shmem ? shmem->Size() : 0; }
   };
 
   struct RecycledBuffer {
