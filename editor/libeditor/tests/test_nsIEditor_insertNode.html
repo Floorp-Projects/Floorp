@@ -1,0 +1,214 @@
+<!doctype>
+<html>
+<head>
+<meta charset="utf-8">
+<title>nsIEditor.insertNode</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<script>
+"use strict";
+
+function stringifyInputEvent(aEvent) {
+  if (!aEvent) {
+    return "null";
+  }
+  return `${aEvent.type}: { inputType=${aEvent.inputType} }`;
+}
+
+function getRangeDescription(range) {
+  function getNodeDescription(node) {
+    if (!node) {
+      return "null";
+    }
+    switch (node.nodeType) {
+      case Node.TEXT_NODE:
+        return `${node.nodeName} "${node.data}"`;
+      case Node.ELEMENT_NODE:
+        return `<${node.nodeName.toLowerCase()}>`;
+      default:
+        return `${node.nodeName}`;
+    }
+  }
+  if (range === null) {
+    return "null";
+  }
+  if (range === undefined) {
+    return "undefined";
+  }
+  return range.startContainer == range.endContainer &&
+    range.startOffset == range.endOffset
+    ? `(${getNodeDescription(range.startContainer)}, ${range.startOffset})`
+    : `(${getNodeDescription(range.startContainer)}, ${
+        range.startOffset
+      }) - (${getNodeDescription(range.endContainer)}, ${range.endOffset})`;
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  const editingHost = document.querySelector("div[contenteditable]");
+  const editor =
+    SpecialPowers.wrap(window).docShell.editingSession.getEditorForWindow(window);
+
+  editingHost.focus();
+
+  let events = [];
+  editingHost.addEventListener("input", event => events.push(event));
+
+  (function test_insert_text_to_start() {
+    editor.insertNode(document.createTextNode("abc"), editingHost, 0);
+    is(
+      editingHost.innerHTML,
+      "abc<br>",
+      "test_insert_text_to_start: insertNode() should insert new text node at start of the container"
+    );
+    is(
+      events.length,
+      1,
+      "test_insert_text_to_start: Only one input event should be fired when insertNode() inserts a text node"
+    );
+    is(
+      stringifyInputEvent(events[0]),
+      stringifyInputEvent({ type: "input", inputType: "" }),
+      "test_insert_text_to_start: input event should be fired when inserting a node"
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      getRangeDescription({
+        startContainer: editingHost,
+        startOffset: 1,
+        endContainer: editingHost,
+        endOffset: 1,
+      }),
+      "test_insert_text_to_start: insertNode() should collapse selection after the inserted text node"
+    );
+  })();
+
+  (function test_insert_span_to_big_index() {
+    events = [];
+    editingHost.innerHTML = "abc";
+    const span = document.createElement("span");
+    span.textContent = "def";
+    editor.insertNode(span, editingHost, 1000);
+    is(
+      editingHost.innerHTML,
+      "abc<span>def</span>",
+      "test_insert_span_to_big_index: insertNode() with big index should insert new node at end of the container"
+    );
+    is(
+      events.length,
+      1,
+      "test_insert_span_to_big_index: Only one input event should be fired when insertNode() inserts a node"
+    );
+    is(
+      stringifyInputEvent(events[0]),
+      stringifyInputEvent({ type: "input", inputType: "" }),
+      "test_insert_span_to_big_index: input event should be fired when inserting a node"
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      getRangeDescription({
+        startContainer: editingHost,
+        startOffset: 2,
+        endContainer: editingHost,
+        endOffset: 2,
+      }),
+      "test_insert_span_to_big_index: insertNode() should collapse selection after the inserted node"
+    );
+  })();
+
+  (function test_preserve_selection() {
+    events = [];
+    editingHost.innerHTML = "abc";
+    const span = document.createElement("span");
+    span.textContent = "def";
+    getSelection().collapse(editingHost, 0);
+    editor.insertNode(span, editingHost, 1, true);
+    is(
+      editingHost.innerHTML,
+      "abc<span>def</span>",
+      "test_preserve_selection: insertNode() should insert new node at end of the container"
+    );
+    is(
+      events.length,
+      1,
+      "test_preserve_selection: Only one input event should be fired when insertNode() inserts a node"
+    );
+    is(
+      stringifyInputEvent(events[0]),
+      stringifyInputEvent({ type: "input", inputType: "" }),
+      "test_preserve_selection: input event should be fired when inserting a node"
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      getRangeDescription({
+        startContainer: editingHost,
+        startOffset: 0,
+        endContainer: editingHost,
+        endOffset: 0,
+      }),
+      "test_preserve_selection: insertNode() should not collapse selection after the inserted node"
+    );
+  })();
+
+  (function test_not_preserve_selection_nested_by_beforeinput() {
+    editingHost.innerHTML = "abc";
+    const span1 = document.createElement("span");
+    span1.textContent = "def";
+    const span2 = document.createElement("span");
+    span2.textContent = "ghi";
+    getSelection().collapse(editingHost, 0);
+    editingHost.addEventListener("beforeinput", () => {
+      editor.insertNode(span1, editingHost, 1);
+    }, {once: true});
+    editor.insertNode(span2, editingHost, 2, true);
+    is(
+      editingHost.innerHTML,
+      "abc<span>def</span><span>ghi</span>",
+      "test_not_preserve_selection_nested_by_beforeinput: both insertNode() should work"
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      getRangeDescription({
+        startContainer: editingHost,
+        startOffset: 2,
+        endContainer: editingHost,
+        endOffset: 2,
+      }),
+      "test_not_preserve_selection_nested_by_beforeinput: only insertNode() called in beforeinput listener should update selection"
+    );
+  })();
+
+  (function test_not_preserve_selection_nested_by_input() {
+    editingHost.innerHTML = "abc";
+    const span1 = document.createElement("span");
+    span1.textContent = "def";
+    const span2 = document.createElement("span");
+    span2.textContent = "ghi";
+    getSelection().collapse(editingHost, 0);
+    editingHost.addEventListener("input", () => {
+      editor.insertNode(span2, editingHost, 2);
+    }, {once: true});
+    editor.insertNode(span1, editingHost, 1, true);
+    is(
+      editingHost.innerHTML,
+      "abc<span>def</span><span>ghi</span>",
+      "test_not_preserve_selection_nested_by_input: both insertNode() should work"
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      getRangeDescription({
+        startContainer: editingHost,
+        startOffset: 3,
+        endContainer: editingHost,
+        endOffset: 3,
+      }),
+      "test_not_preserve_selection_nested_by_input: only insertNode() called in input listener should update selection"
+    );
+  })();
+
+  SimpleTest.finish();
+});
+</script>
+</head>
+<body><div contenteditable><br></div></body>
+</html>
