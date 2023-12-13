@@ -29,5 +29,3 @@ skip-if = ["os == 'win' && bits == 32"] # Bug 1713464
 ["browser_trrSelection_disable.js"]
 
 ["browser_userInterference.js"]
-
-["browser_doh_region.js"]
