@@ -490,11 +490,15 @@ skip-if = ["xorigin"] # Testing internal API for comm-central
 
 ["test_nsIEditor_clearUndoRedo.html"]
 
+["test_nsIEditor_deleteNode.html"]
+
 ["test_nsIEditor_documentCharacterSet.html"]
 
 ["test_nsIEditor_documentIsEmpty.html"]
 
 ["test_nsIEditor_insertLineBreak.html"]
+
+["test_nsIEditor_insertNode.html"]
 
 ["test_nsIEditor_isSelectionEditable.html"]
 

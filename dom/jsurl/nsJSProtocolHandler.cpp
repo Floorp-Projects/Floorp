@@ -48,6 +48,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "nsContentSecurityManager.h"
+#include "DefaultURI.h"
 
 #include "mozilla/LoadInfo.h"
 #include "mozilla/Maybe.h"
@@ -1184,6 +1185,20 @@ nsJSProtocolHandler::GetScheme(nsACString& result) {
   rv = mutator.Finalize(url);
   if (NS_FAILED(rv)) {
     return rv;
+  }
+
+  // use DefaultURI to check for validity when we have possible hostnames
+  // since nsSimpleURI doesn't know about hostnames
+  auto pos = aSpec.Find("javascript:");
+  if (pos != kNotFound) {
+    nsDependentCSubstring rest(aSpec, pos + sizeof("javascript:") - 1, -1);
+    if (StringBeginsWith(rest, "//"_ns)) {
+      nsCOMPtr<nsIURI> uriWithHost;
+      rv = NS_MutateURI(new mozilla::net::DefaultURI::Mutator())
+               .SetSpec(aSpec)
+               .Finalize(uriWithHost);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   url.forget(result);

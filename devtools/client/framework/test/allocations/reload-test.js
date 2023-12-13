@@ -61,6 +61,9 @@ function createPanelReloadTest(recordName, toolId) {
     // the main DevTools loader, which keeps the module loaded until the
     // shutdown of Firefox
     await testScript(toolbox);
+    // Running it a second time is helpful for the debugger which allocates different objects
+    // on the second run... which would be taken as leak otherwise.
+    await testScript(toolbox);
 
     await startRecordingAllocations({
       alsoRecordContentProcess: true,

@@ -8,9 +8,9 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Storage: IndexedDB")
 
 MOCHITEST_MANIFESTS += [
-    "test/mochitest-intl-api.ini",
-    "test/mochitest-private.ini",
-    "test/mochitest-regular.ini",
+    "test/mochitest-intl-api.toml",
+    "test/mochitest-private.toml",
+    "test/mochitest-regular.toml",
 ]
 
 BROWSER_CHROME_MANIFESTS += ["test/browser.toml"]

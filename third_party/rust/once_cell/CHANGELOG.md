@@ -4,6 +4,10 @@
 
 - 
 
+## 1.19.0
+
+- Use `portable-atomic` instead of `atomic-polyfill`, [#251](https://github.com/matklad/once_cell/pull/251).
+
 ## 1.18.0
 
 - `MSRV` is updated to 1.60.0 to take advantage of `dep:` syntax for cargo features,

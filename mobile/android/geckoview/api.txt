@@ -2276,12 +2276,14 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public static GeckoResult<Long> checkPairDownloadSize(@NonNull TranslationsController.SessionTranslation.TranslationPair);
     method @AnyThread @NonNull public static GeckoResult<String> getLanguageSetting(@NonNull String);
     method @AnyThread @NonNull public static GeckoResult<Map<String,String>> getLanguageSettings();
+    method @AnyThread @NonNull public static GeckoResult<List<String>> getNeverTranslateSiteList();
     method @AnyThread @NonNull public static GeckoResult<Boolean> isTranslationsEngineSupported();
     method @AnyThread @NonNull public static GeckoResult<List<TranslationsController.RuntimeTranslation.LanguageModel>> listModelDownloadStates();
     method @AnyThread @NonNull public static GeckoResult<TranslationsController.RuntimeTranslation.TranslationSupport> listSupportedLanguages();
     method @AnyThread @NonNull public static GeckoResult<Void> manageLanguageModel(@NonNull TranslationsController.RuntimeTranslation.ModelManagementOptions);
     method @AnyThread @NonNull public static GeckoResult<List<String>> preferredLanguages();
     method @AnyThread @NonNull public static GeckoResult<Void> setLanguageSettings(@NonNull String, @NonNull String);
+    method @AnyThread @NonNull public static GeckoResult<Void> setNeverTranslateSpecifiedSite(@NonNull Boolean, @NonNull String);
     field public static final String ALL = "all";
     field public static final String ALWAYS = "always";
     field public static final String CACHE = "cache";

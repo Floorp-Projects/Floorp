@@ -417,9 +417,15 @@ class GCRuntime {
   void lockGC() { lock.lock(); }
   void unlockGC() { lock.unlock(); }
 
+  void lockStoreBuffer() { storeBufferLock.lock(); }
+  void unlockStoreBuffer() { storeBufferLock.unlock(); }
+
 #ifdef DEBUG
   void assertCurrentThreadHasLockedGC() const {
     lock.assertOwnedByCurrentThread();
+  }
+  void assertCurrentThreadHasLockedStoreBuffer() const {
+    storeBufferLock.assertOwnedByCurrentThread();
   }
 #endif  // DEBUG
 
@@ -1346,10 +1352,16 @@ class GCRuntime {
    */
   friend class js::AutoLockGC;
   friend class js::AutoLockGCBgAlloc;
-  js::Mutex lock MOZ_UNANNOTATED;
+  Mutex lock MOZ_UNANNOTATED;
+
+  /*
+   * Lock used to synchronise access to the store buffer during parallel
+   * sweeping.
+   */
+  Mutex storeBufferLock MOZ_UNANNOTATED;
 
   /* Lock used to synchronise access to delayed marking state. */
-  js::Mutex delayedMarkingLock MOZ_UNANNOTATED;
+  Mutex delayedMarkingLock MOZ_UNANNOTATED;
 
   friend class BackgroundSweepTask;
   friend class BackgroundFreeTask;

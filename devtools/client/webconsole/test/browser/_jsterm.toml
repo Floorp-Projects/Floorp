@@ -1,0 +1,283 @@
+[DEFAULT]
+tags = "devtools"
+subsuite = "devtools"
+support-files = [
+  "head.js",
+  "test-autocomplete-in-stackframe.html",
+  "test-autocomplete-mapped.html",
+  "test-autocomplete-mapped.js",
+  "test-autocomplete-mapped.js.map",
+  "test-autocomplete-mapped.src.js",
+  "test-block-action.html",
+  "test-block-action-style.css",
+  "test-console-evaluation-context-selector-child.html",
+  "test-console-evaluation-context-selector.html",
+  "test-console.html",
+  "test-dynamic-import.html",
+  "test-dynamic-import.mjs",
+  "test-iframe-child.html",
+  "test-iframe-parent.html",
+  "test_jsterm_screenshot_command.html",
+  "test-mangled-function.js",
+  "test-mangled-function.js.map",
+  "test-mangled-function.src.js",
+  "test-simple-function.html",
+  "test-simple-function.js",
+  "!/devtools/client/shared/test/shared-head.js",
+  "!/devtools/client/debugger/test/mochitest/shared-head.js",
+  "!/devtools/client/framework/browser-toolbox/test/helpers-browser-toolbox.js",
+  "!/devtools/client/shared/test/telemetry-test-helpers.js",
+  "!/devtools/client/shared/test/highlighter-test-actor.js",
+   "../../../../../toolkit/components/reader/test/readerModeArticle.html",
+]
+
+["browser_jsterm_add_edited_input_to_history.js"]
+
+["browser_jsterm_autocomplete-properties-with-non-alphanumeric-names.js"]
+skip-if = ["debug && os == 'win' && bits == 32"] # Bug 1620856
+
+["browser_jsterm_autocomplete_accept_no_scroll.js"]
+
+["browser_jsterm_autocomplete_array_no_index.js"]
+
+["browser_jsterm_autocomplete_arrow_keys.js"]
+skip-if = ["debug && os == 'win' && bits == 32"] # Bug 1620856
+
+["browser_jsterm_autocomplete_await.js"]
+
+["browser_jsterm_autocomplete_cached_results.js"]
+
+["browser_jsterm_autocomplete_commands.js"]
+
+["browser_jsterm_autocomplete_control_space.js"]
+
+["browser_jsterm_autocomplete_crossdomain_iframe.js"]
+
+["browser_jsterm_autocomplete_del_key.js"]
+
+["browser_jsterm_autocomplete_disabled.js"]
+
+["browser_jsterm_autocomplete_eager_evaluation.js"]
+
+["browser_jsterm_autocomplete_escape_key.js"]
+
+["browser_jsterm_autocomplete_expression_variables.js"]
+
+["browser_jsterm_autocomplete_extraneous_closing_brackets.js"]
+
+["browser_jsterm_autocomplete_getters_cache.js"]
+
+["browser_jsterm_autocomplete_getters_cancel.js"]
+
+["browser_jsterm_autocomplete_getters_confirm.js"]
+
+["browser_jsterm_autocomplete_getters_learn_more_link.js"]
+fail-if = ["a11y_checks"] # Bug 1849028
+
+["browser_jsterm_autocomplete_helpers.js"]
+
+["browser_jsterm_autocomplete_in_chrome_tab.js"]
+
+["browser_jsterm_autocomplete_in_debugger_stackframe.js"]
+
+["browser_jsterm_autocomplete_inside_text.js"]
+
+["browser_jsterm_autocomplete_mapped_variables.js"]
+skip-if = [
+  "http3", # Bug 1829298
+  "http2",
+  "a11y_checks", # Bugs 1849028 and 1802390 - clicked <input> is inconsistently not accessible
+]
+
+["browser_jsterm_autocomplete_native_getters.js"]
+
+["browser_jsterm_autocomplete_nav_and_tab_key.js"]
+
+["browser_jsterm_autocomplete_null.js"]
+skip-if = ["tsan"] # bug 1778033
+
+["browser_jsterm_autocomplete_paste_undo.js"]
+
+["browser_jsterm_autocomplete_race_on_enter.js"]
+
+["browser_jsterm_autocomplete_return_key.js"]
+
+["browser_jsterm_autocomplete_return_key_no_selection.js"]
+
+["browser_jsterm_autocomplete_toggle.js"]
+
+["browser_jsterm_autocomplete_width.js"]
+
+["browser_jsterm_autocomplete_will_navigate.js"]
+
+["browser_jsterm_await.js"]
+
+["browser_jsterm_await_assignments.js"]
+
+["browser_jsterm_await_concurrent.js"]
+
+["browser_jsterm_await_concurrent_same_result.js"]
+
+["browser_jsterm_await_dynamic_import.js"]
+
+["browser_jsterm_await_error.js"]
+
+["browser_jsterm_await_helper_dollar_underscore.js"]
+
+["browser_jsterm_await_paused.js"]
+skip-if = ["debug"] # crashes on "Unexpected UpdateTransformLayer hint" bug 1570685
+
+["browser_jsterm_block_command.js"]
+
+["browser_jsterm_commands.js"]
+
+["browser_jsterm_completion.js"]
+
+["browser_jsterm_completion_bracket.js"]
+
+["browser_jsterm_completion_bracket_cached_results.js"]
+
+["browser_jsterm_completion_case_sensitivity.js"]
+
+["browser_jsterm_completion_dollar_underscore.js"]
+
+["browser_jsterm_completion_dollar_zero.js"]
+
+["browser_jsterm_completion_perfect_match.js"]
+
+["browser_jsterm_content_defined_helpers.js"]
+
+["browser_jsterm_context_menu_labels.js"]
+
+["browser_jsterm_copy_command.js"]
+
+["browser_jsterm_ctrl_a_select_all.js"]
+
+["browser_jsterm_ctrl_key_nav.js"]
+run-if = ["os == 'mac'"] # The tested ctrl+key shortcuts are OSX only
+
+["browser_jsterm_document_no_xray.js"]
+
+["browser_jsterm_eager_evaluation.js"]
+
+["browser_jsterm_eager_evaluation_element_highlight.js"]
+
+["browser_jsterm_eager_evaluation_in_debugger_stackframe.js"]
+
+["browser_jsterm_eager_evaluation_warnings.js"]
+
+["browser_jsterm_editor.js"]
+
+["browser_jsterm_editor_code_folding.js"]
+
+["browser_jsterm_editor_disabled_history_nav_with_keyboard.js"]
+
+["browser_jsterm_editor_enter.js"]
+
+["browser_jsterm_editor_execute.js"]
+
+["browser_jsterm_editor_execute_selection.js"]
+
+["browser_jsterm_editor_gutter.js"]
+
+["browser_jsterm_editor_onboarding.js"]
+
+["browser_jsterm_editor_resize.js"]
+fail-if = ["a11y_checks"] # Bug 1849028
+
+["browser_jsterm_editor_reverse_search_button.js"]
+
+["browser_jsterm_editor_reverse_search_keyboard_navigation.js"]
+
+["browser_jsterm_editor_toggle_keyboard_shortcut.js"]
+
+["browser_jsterm_editor_toolbar.js"]
+
+["browser_jsterm_error_docs.js"]
+
+["browser_jsterm_error_outside_valid_range.js"]
+
+["browser_jsterm_evaluation_context_selector.js"]
+
+["browser_jsterm_evaluation_context_selector_iframe_picker.js"]
+
+["browser_jsterm_evaluation_context_selector_inspector.js"]
+
+["browser_jsterm_evaluation_context_selector_pause_in_debugger.js"]
+
+["browser_jsterm_evaluation_context_selector_targets_update.js"]
+skip-if = [
+  "http3", # Bug 1829298
+  "http2",
+]
+
+["browser_jsterm_evaluation_notification_original_variable_mapping_warning.js"]
+
+["browser_jsterm_file_load_save_keyboard_shortcut.js"]
+
+["browser_jsterm_focus_reload.js"]
+
+["browser_jsterm_helper_clear.js"]
+
+["browser_jsterm_helper_dollar.js"]
+
+["browser_jsterm_helper_dollar_dollar.js"]
+
+["browser_jsterm_helper_dollar_x.js"]
+
+["browser_jsterm_helper_help.js"]
+
+["browser_jsterm_helper_keys_values.js"]
+
+["browser_jsterm_helpers_no_override.js"]
+
+["browser_jsterm_hide_when_devtools_chrome_enabled_false.js"]
+fail-if = ["a11y_checks"] # Bug 1849028
+
+["browser_jsterm_history.js"]
+
+["browser_jsterm_history_arrow_keys.js"]
+
+["browser_jsterm_history_command.js"]
+
+["browser_jsterm_history_nav.js"]
+
+["browser_jsterm_history_persist.js"]
+
+["browser_jsterm_insert_tab_when_overflows_no_scroll.js"]
+
+["browser_jsterm_inspect.js"]
+
+["browser_jsterm_inspect_panels.js"]
+
+["browser_jsterm_instance_of.js"]
+
+["browser_jsterm_middle_click_paste.js"]
+fail-if = ["a11y_checks"] # Bug 1849028
+
+["browser_jsterm_multiline.js"]
+
+["browser_jsterm_no_input_and_tab_key_pressed.js"]
+
+["browser_jsterm_null_undefined.js"]
+
+["browser_jsterm_popup_close_on_tab_switch.js"]
+
+["browser_jsterm_screenshot_command_clipboard.js"]
+
+["browser_jsterm_screenshot_command_file.js"]
+
+["browser_jsterm_screenshot_command_fixed_header.js"]
+
+["browser_jsterm_screenshot_command_selector.js"]
+
+["browser_jsterm_screenshot_command_user.js"]
+
+["browser_jsterm_screenshot_command_warnings.js"]
+skip-if = ["os == 'linux' && bits == 64 && !debug"] # Bug 1701439
+
+["browser_jsterm_selfxss.js"]
+
+["browser_jsterm_syntax_highlight_output.js"]
+
+["browser_jsterm_trace_command.js"]

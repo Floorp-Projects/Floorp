@@ -842,3 +842,13 @@ void AutoSelectGCHeap::onNurseryCollectionEnd() {
 
   heap_ = gc::Heap::Tenured;
 }
+
+JS_PUBLIC_API void js::gc::LockStoreBuffer(JSRuntime* runtime) {
+  MOZ_ASSERT(runtime);
+  runtime->gc.lockStoreBuffer();
+}
+
+JS_PUBLIC_API void js::gc::UnlockStoreBuffer(JSRuntime* runtime) {
+  MOZ_ASSERT(runtime);
+  runtime->gc.unlockStoreBuffer();
+}

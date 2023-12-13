@@ -2039,11 +2039,14 @@
   value: 31536000
   mirror: always
 
-# Whether the banner clicking code only get executed once when the site is
-# loaded in the browsing session.
-- name: cookiebanners.bannerClicking.executeOnce
-  type: bool
-  value: true
+# How many times per site and site load to check for cookie banners after which
+# the mechanism is considered on cooldown for the site in the current browsing
+# session. If the threshold is set to zero, banner clicking won't be considered
+# as being on cooldown regardless of how many times the site is loaded. The
+# maximum value for the retry is 255, any value over than that will be capped.
+- name: cookiebanners.bannerClicking.maxTriesPerSiteAndSession
+  type: uint32_t
+  value: 3
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -3789,6 +3792,12 @@
 - name: dom.security.credentialmanagement.identity.reject_delay.duration_ms
   type: uint32_t
   value: 120000
+  mirror: always
+
+# SetDocumentURI security option, enforces origin check
+- name: dom.security.setdocumenturi
+  type: bool
+  value: true
   mirror: always
 
 # Whether or not selection events on text controls are enabled.
@@ -7327,7 +7336,7 @@
 # If true, we use UAX14/29 compatible segmenter rules using ICU4X
 - name: intl.icu4x.segmenter.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -11836,19 +11845,19 @@
 # Whether we can send OnDataFinished to html5parser in content process directly
 - name: network.send_OnDataFinished.html5parser
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether we can send OnDataFinished in the content process
 - name: network.send_OnDataFinished
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether we can send OnDataAvailable to content process directly.
 - name: network.send_OnDataFinished.nsInputStreamPump
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether we can send send OnDataFinished only after dispatching
@@ -15514,6 +15523,12 @@
 
 # Whether we honor the scrollbar colors from the gtk theme.
 - name: widget.gtk.theme-scrollbar-colors.enabled
+  type: bool
+  value: true
+  mirror: always
+
+# Whether libadwaita colors are used rather than the default ones.
+- name: widget.gtk.libadwaita-colors.enabled
   type: bool
   value: true
   mirror: always

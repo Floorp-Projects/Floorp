@@ -48,6 +48,8 @@ class FilePickerParent : public PFilePickerParent {
       const nsString& aDisplaySpecialDirectory, const nsString& aOkButtonLabel,
       const nsIFilePicker::CaptureTarget& aCapture);
 
+  mozilla::ipc::IPCResult RecvClose();
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   class FilePickerShownCallback : public nsIFilePickerShownCallback {

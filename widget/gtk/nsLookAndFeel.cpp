@@ -530,13 +530,17 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::Background:    // desktop background
     case ColorID::Window:
     case ColorID::Windowframe:
-    case ColorID::MozDialog:
     case ColorID::MozCombobox:
       aColor = mWindow.mBg;
       break;
     case ColorID::Windowtext:
-    case ColorID::MozDialogtext:
       aColor = mWindow.mFg;
+      break;
+    case ColorID::MozDialog:
+      aColor = mDialog.mBg;
+      break;
+    case ColorID::MozDialogtext:
+      aColor = mDialog.mFg;
       break;
     case ColorID::IMESelectedRawTextBackground:
     case ColorID::IMESelectedConvertedTextBackground:
@@ -692,14 +696,14 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
       // 3-D highlighted edge color
     case ColorID::Threedhighlight:
       // 3-D highlighted outer edge color
-      aColor = mFrameOuterLightBorder;
+      aColor = mThreeDHighlight;
       break;
 
     case ColorID::Buttonshadow:
       // 3-D shadow edge color
     case ColorID::Threedshadow:
       // 3-D shadow inner edge color
-      aColor = mFrameInnerDarkBorder;
+      aColor = mThreeDShadow;
       break;
     case ColorID::Buttonborder:
       aColor = mButtonBorder;
@@ -996,6 +1000,11 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::GTKCSDCloseButtonPosition:
       aResult = mCSDCloseButtonPosition;
       break;
+    case IntID::GTKThemeFamily: {
+      EnsureInit();
+      aResult = int32_t(EffectiveTheme().mFamily);
+      break;
+    }
     case IntID::UseAccessibilityTheme:
     // If high contrast is enabled, enable prefers-reduced-transparency media
     // query as well as there is no dedicated option.
@@ -1164,50 +1173,6 @@ bool nsLookAndFeel::PerThemeData::GetFont(FontID aID, nsString& aFontName,
   return true;
 }
 
-// Check color contrast according to
-// https://www.w3.org/TR/AERT/#color-contrast
-static bool HasGoodContrastVisibility(GdkRGBA& aColor1, GdkRGBA& aColor2) {
-  int32_t luminosityDifference = NS_LUMINOSITY_DIFFERENCE(
-      GDK_RGBA_TO_NS_RGBA(aColor1), GDK_RGBA_TO_NS_RGBA(aColor2));
-  if (luminosityDifference < NS_SUFFICIENT_LUMINOSITY_DIFFERENCE) {
-    return false;
-  }
-
-  double colorDifference = std::abs(aColor1.red - aColor2.red) +
-                           std::abs(aColor1.green - aColor2.green) +
-                           std::abs(aColor1.blue - aColor2.blue);
-  return (colorDifference * 255.0 > 500.0);
-}
-
-// Check if the foreground/background colors match with default white/black
-// html page colors.
-static bool IsGtkThemeCompatibleWithHTMLColors() {
-  GdkRGBA white = {1.0, 1.0, 1.0};
-  GdkRGBA black = {0.0, 0.0, 0.0};
-
-  GtkStyleContext* style = GetStyleContext(MOZ_GTK_WINDOW);
-
-  GdkRGBA textColor;
-  gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &textColor);
-
-  // Theme text color and default white html page background
-  if (!HasGoodContrastVisibility(textColor, white)) {
-    return false;
-  }
-
-  GdkRGBA backgroundColor;
-  gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL,
-                                         &backgroundColor);
-
-  // Theme background color and default white html page background
-  if (HasGoodContrastVisibility(backgroundColor, white)) {
-    return false;
-  }
-
-  // Theme background color and default black text color
-  return HasGoodContrastVisibility(backgroundColor, black);
-}
-
 static nsCString GetGtkSettingsStringKey(const char* aKey) {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   nsCString ret;
@@ -1344,10 +1309,69 @@ bool nsLookAndFeel::ConfigureAltTheme() {
   return false;
 }
 
+// We override some adwaita colors from GTK3 to LibAdwaita, see:
+// https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/named-colors.html
+void nsLookAndFeel::MaybeApplyAdwaitaOverrides() {
+  auto& dark = mSystemTheme.mIsDark ? mSystemTheme : mAltTheme;
+  auto& light = mSystemTheme.mIsDark ? mAltTheme : mSystemTheme;
+
+  // Unconditional special case for Adwaita-dark: In GTK3 we don't have more
+  // proper accent colors, so we use the selected background colors. Those
+  // colors, however, don't have much contrast in dark mode (see bug 1741293).
+  if (dark.mFamily == ThemeFamily::Adwaita) {
+    dark.mAccent = {NS_RGB(0x35, 0x84, 0xe4), NS_RGB(0xff, 0xff, 0xff)};
+    dark.mSelectedText = dark.mAccent;
+  }
+
+  if (light.mFamily == ThemeFamily::Adwaita) {
+    light.mAccent = {NS_RGB(0x35, 0x84, 0xe4), NS_RGB(0xff, 0xff, 0xff)};
+    light.mSelectedText = light.mAccent;
+  }
+
+  if (!StaticPrefs::widget_gtk_libadwaita_colors_enabled()) {
+    return;
+  }
+
+  if (light.mFamily == ThemeFamily::Adwaita ||
+      light.mFamily == ThemeFamily::Yaru) {
+    // #323232 is rgba(0,0,0,.8) over #fafafa.
+    light.mWindow =
+        light.mDialog = {NS_RGB(0xfa, 0xfa, 0xfa), NS_RGB(0x32, 0x32, 0x32)};
+    light.mField = {NS_RGB(0xff, 0xff, 0xff), NS_RGB(0x32, 0x32, 0x32)};
+
+    // We use the sidebar colors for the headerbar in light mode background
+    // because it creates much better contrast. GTK headerbar colors are white,
+    // and meant to "blend" with the contents otherwise.
+    // #2f2f2f is rgba(0,0,0,.8) over #ebebeb.
+    light.mSidebar = light.mHeaderBar =
+        light.mTitlebar = {NS_RGB(0xeb, 0xeb, 0xeb), NS_RGB(0x2f, 0x2f, 0x2f)};
+    light.mHeaderBarInactive = light.mTitlebarInactive = {
+        NS_RGB(0xf2, 0xf2, 0xf2), NS_RGB(0x98, 0x98, 0x98)};
+    light.mThreeDShadow = NS_RGB(0xe0, 0xe0, 0xe0);
+    light.mSidebarBorder = NS_RGBA(0, 0, 0, 18);
+  }
+
+  if (dark.mFamily == ThemeFamily::Adwaita ||
+      dark.mFamily == ThemeFamily::Yaru) {
+    dark.mWindow = {NS_RGB(0x24, 0x24, 0x24), NS_RGB(0xff, 0xff, 0xff)};
+    dark.mDialog = {NS_RGB(0x38, 0x38, 0x38), NS_RGB(0xff, 0xff, 0xff)};
+    dark.mField = {NS_RGB(0x3a, 0x3a, 0x3a), NS_RGB(0xff, 0xff, 0xff)};
+    dark.mSidebar = dark.mHeaderBar =
+        dark.mTitlebar = {NS_RGB(0x30, 0x30, 0x30), NS_RGB(0xff, 0xff, 0xff)};
+    dark.mHeaderBarInactive = dark.mTitlebarInactive = {
+        NS_RGB(0x24, 0x24, 0x24), NS_RGB(0x92, 0x92, 0x92)};
+    // headerbar_shade_color
+    dark.mThreeDShadow = NS_RGB(0x1f, 0x1f, 0x1f);
+    dark.mSidebarBorder = NS_RGBA(0, 0, 0, 92);
+  }
+}
+
 void nsLookAndFeel::ConfigureAndInitializeAltTheme() {
   const bool fellBackToDefaultTheme = !ConfigureAltTheme();
 
   mAltTheme.Init();
+
+  MaybeApplyAdwaitaOverrides();
 
   // Some of the alt theme colors we can grab from the system theme, if we fell
   // back to the default light / dark themes.
@@ -1366,20 +1390,6 @@ void nsLookAndFeel::ConfigureAndInitializeAltTheme() {
     if (StaticPrefs::widget_gtk_alt_theme_accent()) {
       mAltTheme.mAccent = mSystemTheme.mAccent;
     }
-  }
-
-  // Special case for Adwaita: In GTK3 we don't have more proper accent colors,
-  // so we use the selected background colors. Those colors, however, don't have
-  // much contrast in dark mode (see bug 1741293). We know, however, that GTK4
-  // uses the light accent color for the dark theme, see:
-  //
-  //   https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/named-colors.html#accent-colors
-  //
-  // So we manually do that.
-  if (mSystemTheme.mFamily == ThemeFamily::Adwaita) {
-    auto& dark = mSystemTheme.mIsDark ? mSystemTheme : mAltTheme;
-    auto& light = mSystemTheme.mIsDark ? mAltTheme : mSystemTheme;
-    dark.mAccent = light.mAccent;
   }
 
   // Right now we're using the opposite color-scheme theme, make sure to record
@@ -1782,7 +1792,7 @@ void nsLookAndFeel::PerThemeData::Init() {
     if (StringBeginsWith(mName, "Yaru"_ns)) {
       return ThemeFamily::Yaru;
     }
-    return ThemeFamily::Other;
+    return ThemeFamily::Unknown;
   }();
 
   GtkStyleContext* style;
@@ -1793,9 +1803,6 @@ void nsLookAndFeel::PerThemeData::Init() {
   mPreferDarkTheme = GetPreferDarkTheme();
 
   mIsDark = GetThemeIsDark();
-
-  mCompatibleWithHTMLLightColors =
-      !mIsDark && IsGtkThemeCompatibleWithHTMLColors();
 
   GdkRGBA color;
   // Some themes style the <trough>, while others style the <scrollbar>
@@ -1885,9 +1892,7 @@ void nsLookAndFeel::PerThemeData::Init() {
 
   // Window colors
   style = GetStyleContext(MOZ_GTK_WINDOW);
-
-  mWindow.mFg = GetTextColor(style);
-  mWindow.mBg = GetBackgroundColor(style, mWindow.mFg);
+  mWindow = mDialog = GetColorPair(style);
 
   gtk_style_context_get_border_color(style, GTK_STATE_FLAG_NORMAL, &color);
   mMozWindowActiveBorder = GDK_RGBA_TO_NS_RGBA(color);
@@ -2148,12 +2153,12 @@ void nsLookAndFeel::PerThemeData::Init() {
   // node.
   style = GetStyleContext(MOZ_GTK_FRAME_BORDER);
   bool themeUsesColors =
-      GetBorderColors(style, &mFrameOuterLightBorder, &mFrameInnerDarkBorder);
+      GetBorderColors(style, &mThreeDHighlight, &mThreeDShadow);
   if (!themeUsesColors) {
     style = GetStyleContext(MOZ_GTK_FRAME);
-    GetBorderColors(style, &mFrameOuterLightBorder, &mFrameInnerDarkBorder);
+    GetBorderColors(style, &mThreeDHighlight, &mThreeDShadow);
   }
-  mSidebarBorder = mFrameInnerDarkBorder;
+  mSidebarBorder = mThreeDShadow;
 
   // Some themes have a unified menu bar, and support window dragging on it
   gboolean supports_menubar_drag = FALSE;

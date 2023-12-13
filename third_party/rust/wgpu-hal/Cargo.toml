@@ -52,7 +52,7 @@ required-features = ["gles"]
 arrayvec = "0.7"
 bitflags = "2"
 log = "0.4"
-once_cell = "1.18.0"
+once_cell = "1.19.0"
 parking_lot = ">=0.11,<0.13"
 raw-window-handle = "0.6"
 rustc-hash = "1.1"

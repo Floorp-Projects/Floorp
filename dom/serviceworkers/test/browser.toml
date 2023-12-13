@@ -1,4 +1,4 @@
 [DEFAULT]
 dupe-manifest = true
 
-["include:browser-common.ini"]
+["include:browser-common.toml"]

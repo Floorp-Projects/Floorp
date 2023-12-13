@@ -485,6 +485,32 @@ export const GeckoViewTranslationsSettings = {
         }
         break;
       }
+
+      case "GeckoView:Translations:GetNeverTranslateSpecifiedSites":
+        try {
+          const neverTranslateList =
+            lazy.TranslationsParent.listNeverTranslateSites();
+          aCallback.onSuccess({ sites: neverTranslateList });
+        } catch (error) {
+          aCallback.onError(
+            `Could not get list of never translate sites: ${error}`
+          );
+        }
+        break;
+
+      case "GeckoView:Translations:SetNeverTranslateSpecifiedSite":
+        try {
+          lazy.TranslationsParent.setNeverTranslateSiteByOrigin(
+            aData.neverTranslate,
+            aData.origin
+          );
+          aCallback.onSuccess();
+        } catch (error) {
+          aCallback.onError(
+            `Could not set never translate site setting: ${error}`
+          );
+        }
+        break;
     }
   },
 };

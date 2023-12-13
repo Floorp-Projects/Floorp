@@ -210,6 +210,11 @@ interface nsIFilePicker : nsISupports
   void open(in nsIFilePickerShownCallback aFilePickerShownCallback);
 
  /**
+  * Closes the file dialog if open.
+  */
+  void close();
+
+ /**
   * The picker's mode, as set by the 'mode' argument passed to init()
   * (one of the modeOpen et. al. constants specified above).
   */

@@ -1009,6 +1009,55 @@ size_t js::gc::TenuringTracer::moveBigIntToTenured(JS::BigInt* dst,
   return size;
 }
 
+template <typename Key>
+/* static */
+inline HashNumber DeduplicationStringHasher<Key>::hash(const Lookup& lookup) {
+  JS::AutoCheckCannotGC nogc;
+  HashNumber strHash;
+
+  // Include flags in the hash. A string relocation overlay stores either the
+  // nursery root base chars or the dependent string nursery base, but does not
+  // indicate which one. If strings with different string types were
+  // deduplicated, for example, a dependent string gets deduplicated into an
+  // extensible string, the base chain would be broken and the root base would
+  // be unreachable.
+
+  if (lookup->asLinear().hasLatin1Chars()) {
+    strHash = mozilla::HashString(lookup->asLinear().latin1Chars(nogc),
+                                  lookup->length());
+  } else {
+    MOZ_ASSERT(lookup->asLinear().hasTwoByteChars());
+    strHash = mozilla::HashString(lookup->asLinear().twoByteChars(nogc),
+                                  lookup->length());
+  }
+
+  return mozilla::HashGeneric(strHash, lookup->zone(), lookup->flags());
+}
+
+template <typename Key>
+/* static */
+MOZ_ALWAYS_INLINE bool DeduplicationStringHasher<Key>::match(
+    const Key& key, const Lookup& lookup) {
+  if (!key->sameLengthAndFlags(*lookup) ||
+      key->asTenured().zone() != lookup->zone() ||
+      key->asTenured().getAllocKind() != lookup->getAllocKind()) {
+    return false;
+  }
+
+  JS::AutoCheckCannotGC nogc;
+
+  if (key->asLinear().hasLatin1Chars()) {
+    MOZ_ASSERT(lookup->asLinear().hasLatin1Chars());
+    return EqualChars(key->asLinear().latin1Chars(nogc),
+                      lookup->asLinear().latin1Chars(nogc), lookup->length());
+  }
+
+  MOZ_ASSERT(key->asLinear().hasTwoByteChars());
+  MOZ_ASSERT(lookup->asLinear().hasTwoByteChars());
+  return EqualChars(key->asLinear().twoByteChars(nogc),
+                    lookup->asLinear().twoByteChars(nogc), lookup->length());
+}
+
 MinorSweepingTracer::MinorSweepingTracer(JSRuntime* rt)
     : GenericTracerImpl(rt, JS::TracerKind::MinorSweeping,
                         JS::WeakMapTraceAction::TraceKeysAndValues) {

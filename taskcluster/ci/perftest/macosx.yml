@@ -117,7 +117,8 @@ http3:
         symbol: perftest(http3)
     attributes:
         batch: false
-        cron: true
+        # Disabled due to bug 1849400
+        cron: false
     run:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&

@@ -281,6 +281,11 @@ mozilla::ipc::IPCResult FilePickerParent::RecvOpen(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult FilePickerParent::RecvClose() {
+  mFilePicker->Close();
+  return IPC_OK();
+}
+
 void FilePickerParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (mCallback) {
     mCallback->Destroy();

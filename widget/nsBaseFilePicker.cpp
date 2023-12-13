@@ -204,6 +204,12 @@ nsBaseFilePicker::Open(nsIFilePickerShownCallback* aCallback) {
 #endif
 
 NS_IMETHODIMP
+nsBaseFilePicker::Close() {
+  NS_WARNING("Unimplemented nsFilePicker::Close");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBaseFilePicker::AppendFilters(int32_t aFilterMask) {
   nsCOMPtr<nsIStringBundleService> stringService =
       mozilla::components::StringBundle::Service();

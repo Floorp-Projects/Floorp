@@ -11,6 +11,7 @@
 #include <filesystem>
 
 #include "../ScheduledTask.h"
+#include "../ScheduledTaskRemove.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 
 using namespace mozilla::default_agent;

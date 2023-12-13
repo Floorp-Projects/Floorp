@@ -169,6 +169,10 @@ add_task(async function test_delete_executed_record() {
     "cookiebanners.service.mode",
     Ci.nsICookieBannerService.MODE_REJECT
   );
+  Services.prefs.setIntPref(
+    "cookiebanners.bannerClicking.maxTriesPerSiteAndSession",
+    1
+  );
 
   // Test nsIClearDataService.deleteDataFromHost
   info("Adding a record for example.com");
@@ -176,7 +180,11 @@ add_task(async function test_delete_executed_record() {
 
   info("Verify that the record is properly added");
   Assert.ok(
-    Services.cookieBanners.hasExecutedForSite("example.com", true, false),
+    Services.cookieBanners.shouldStopBannerClickingForSite(
+      "example.com",
+      true,
+      false
+    ),
     "The record is properly set."
   );
 
@@ -194,7 +202,11 @@ add_task(async function test_delete_executed_record() {
 
   info("Verify that the exception is deleted");
   Assert.ok(
-    !Services.cookieBanners.hasExecutedForSite("example.com", true, false),
+    !Services.cookieBanners.shouldStopBannerClickingForSite(
+      "example.com",
+      true,
+      false
+    ),
     "The record is properly cleared."
   );
 
@@ -204,7 +216,11 @@ add_task(async function test_delete_executed_record() {
 
   info("Verify that the record is properly added");
   Assert.ok(
-    Services.cookieBanners.hasExecutedForSite("example.com", true, false),
+    Services.cookieBanners.shouldStopBannerClickingForSite(
+      "example.com",
+      true,
+      false
+    ),
     "The record is properly set."
   );
 
@@ -222,7 +238,11 @@ add_task(async function test_delete_executed_record() {
 
   info("Verify that the exception is deleted");
   Assert.ok(
-    !Services.cookieBanners.hasExecutedForSite("example.com", true, false),
+    !Services.cookieBanners.shouldStopBannerClickingForSite(
+      "example.com",
+      true,
+      false
+    ),
     "The record is properly cleared."
   );
 
@@ -232,7 +252,11 @@ add_task(async function test_delete_executed_record() {
 
   info("Verify that the record is properly added");
   Assert.ok(
-    Services.cookieBanners.hasExecutedForSite("example.com", true, false),
+    Services.cookieBanners.shouldStopBannerClickingForSite(
+      "example.com",
+      true,
+      false
+    ),
     "The record is properly set."
   );
 
@@ -255,7 +279,11 @@ add_task(async function test_delete_executed_record() {
 
   info("Verify that the exception is deleted");
   Assert.ok(
-    !Services.cookieBanners.hasExecutedForSite("example.com", true, false),
+    !Services.cookieBanners.shouldStopBannerClickingForSite(
+      "example.com",
+      true,
+      false
+    ),
     "The record is properly cleared."
   );
 
@@ -265,7 +293,11 @@ add_task(async function test_delete_executed_record() {
 
   info("Verify that the record is properly added");
   Assert.ok(
-    Services.cookieBanners.hasExecutedForSite("example.com", true, false),
+    Services.cookieBanners.shouldStopBannerClickingForSite(
+      "example.com",
+      true,
+      false
+    ),
     "The record is properly set."
   );
 
@@ -281,9 +313,16 @@ add_task(async function test_delete_executed_record() {
 
   info("Verify that the exception is deleted");
   Assert.ok(
-    !Services.cookieBanners.hasExecutedForSite("example.com", true, false),
+    !Services.cookieBanners.shouldStopBannerClickingForSite(
+      "example.com",
+      true,
+      false
+    ),
     "The record is properly cleared."
   );
 
   Services.prefs.clearUserPref("cookiebanners.service.mode");
+  Services.prefs.clearUserPref(
+    "cookiebanners.bannerClicking.maxTriesPerSiteAndSession"
+  );
 });

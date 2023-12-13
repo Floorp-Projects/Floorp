@@ -24,6 +24,7 @@
 #include "Policy.h"
 #include "Registry.h"
 #include "ScheduledTask.h"
+#include "ScheduledTaskRemove.h"
 #include "SetDefaultBrowser.h"
 #include "Telemetry.h"
 #include "xpcpublic.h"

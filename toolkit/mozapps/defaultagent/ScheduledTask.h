@@ -18,12 +18,6 @@ namespace mozilla::default_agent {
 HRESULT RegisterTask(const wchar_t* uniqueToken, BSTR startTime = nullptr);
 HRESULT UpdateTask(const wchar_t* uniqueToken);
 
-enum class WhichTasks {
-  WdbaTaskOnly,
-  AllTasksForInstallation,
-};
-HRESULT RemoveTasks(const wchar_t* uniqueToken, WhichTasks tasksToRemove);
-
 }  // namespace mozilla::default_agent
 
 #endif  // __DEFAULT_BROWSER_AGENT_SCHEDULED_TASK_H__

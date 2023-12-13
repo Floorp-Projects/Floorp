@@ -394,6 +394,15 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
       reportSiteIssue.hidden = this.enabled || !this.reportSiteIssueEnabledPref;
       reportSiteIssue.disabled = !canReportUrl;
     }
+
+    // "Site not working?" on the protections panel should be hidden when
+    // Report Broken Site is visible (bug 1868527).
+    const siteNotWorking = document.getElementById(
+      "protections-popup-tp-switch-section-footer"
+    );
+    if (siteNotWorking) {
+      siteNotWorking.hidden = this.enabled;
+    }
   }
 
   #checkPrefs(whichChanged) {

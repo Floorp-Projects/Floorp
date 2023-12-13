@@ -7,6 +7,7 @@
   <script src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="../../../satchel/test/satchel_common.js"></script>
   <script type="text/javascript" src="pwmgr_common.js"></script>
+  <script type="text/javascript" src="../../../../../dom/webauthn/tests/u2futil.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -898,6 +899,41 @@ This tests the login manager in a secure setting using https. A similar test fil
     await untilAutocompletePopupClosed();
     is(form.uname.value, "user", "username is set");
     is(form.pword.value, "pass", "password is set");
+  });
+
+  add_named_task("webauthn", async () => {
+    await setStoredLoginsDuringTask();
+    const form = setContentForTask(`<form id="form1" action="https://autocomplete">
+    <input type="text" name="uname" autocomplete="webauthn">
+    <input type="password" name="pword" autocomplete="current-password webauthn">
+  </form>`);
+
+    // Set up a virtual authenticator with a credential for this site.
+    let authenticatorId = await addVirtualAuthenticator();
+    addCredential(authenticatorId, document.domain);
+
+    // Start a conditionally mediated WebAuthn request.
+    let challenge = crypto.getRandomValues(new Uint8Array(16));
+    let publicKey = { challenge, rpId: document.domain };
+    let webauthnPromise = navigator.credentials.get( { publicKey, mediation: "conditional" });
+
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "no_saved_logins", "form has not been filled due to no saved logins");
+
+    // Ensure that focusing on either input shows the popup
+    form.uname.focus();
+    await popupByArrowDown();
+
+    form.pword.focus();
+    await popupByArrowDown();
+
+    // Check first entry
+    synthesizeKey("KEY_ArrowDown");
+    synthesizeKey("KEY_Enter");
+    await untilAutocompletePopupClosed();
+
+    let credential = await webauthnPromise;
+    is(credential.type, "public-key", "received a webauthn credential");
   });
 </script>
 </pre>
