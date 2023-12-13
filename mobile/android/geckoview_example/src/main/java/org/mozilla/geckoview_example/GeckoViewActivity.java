@@ -672,6 +672,17 @@ public class GeckoViewActivity extends AppCompatActivity
         }
       };
 
+  private final BooleanSetting mEtbPrivateModeEnabled =
+      new BooleanSetting(
+          R.string.key_etb_private_mode_enabled,
+          R.bool.etb_private_mode_enabled_default,
+          /* reloadCurrentSession */ true) {
+        @Override
+        public void setValue(final GeckoRuntimeSettings settings, final Boolean value) {
+          settings.getContentBlocking().setEmailTrackerBlockingPrivateBrowsing(value);
+        }
+      };
+
   private final BooleanSetting mExtensionsProcessEnabled =
       new BooleanSetting(
           R.string.key_extensions_process_enabled,
@@ -859,6 +870,7 @@ public class GeckoViewActivity extends AppCompatActivity
                   .cookieBehavior(ContentBlocking.CookieBehavior.ACCEPT_NON_TRACKERS)
                   .cookieBehaviorPrivateMode(ContentBlocking.CookieBehavior.ACCEPT_NON_TRACKERS)
                   .enhancedTrackingProtectionLevel(ContentBlocking.EtpLevel.DEFAULT)
+                  .emailTrackerBlockingPrivateMode(mEtbPrivateModeEnabled.value())
                   .build())
           .crashHandler(ExampleCrashHandler.class)
           .preferredColorScheme(mPreferredColorScheme.value())

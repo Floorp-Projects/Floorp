@@ -537,6 +537,7 @@ package org.mozilla.geckoview {
     method public int getCookieBehavior();
     method public int getCookieBehaviorPrivateMode();
     method public boolean getCookiePurging();
+    method @NonNull public Boolean getEmailTrackerBlockingPrivateBrowsingEnabled();
     method public int getEnhancedTrackingProtectionLevel();
     method @NonNull public String[] getQueryParameterStrippingAllowList();
     method public boolean getQueryParameterStrippingEnabled();
@@ -556,6 +557,7 @@ package org.mozilla.geckoview {
     method @NonNull public ContentBlocking.Settings setCookieBehavior(int);
     method @NonNull public ContentBlocking.Settings setCookieBehaviorPrivateMode(int);
     method @NonNull public ContentBlocking.Settings setCookiePurging(boolean);
+    method @NonNull public ContentBlocking.Settings setEmailTrackerBlockingPrivateBrowsing(boolean);
     method @NonNull public ContentBlocking.Settings setEnhancedTrackingProtectionLevel(int);
     method @NonNull public ContentBlocking.Settings setQueryParameterStrippingAllowList(@NonNull String...);
     method @NonNull public ContentBlocking.Settings setQueryParameterStrippingEnabled(boolean);
@@ -580,6 +582,7 @@ package org.mozilla.geckoview {
     method @NonNull public ContentBlocking.Settings.Builder cookieBehavior(int);
     method @NonNull public ContentBlocking.Settings.Builder cookieBehaviorPrivateMode(int);
     method @NonNull public ContentBlocking.Settings.Builder cookiePurging(boolean);
+    method @NonNull public ContentBlocking.Settings.Builder emailTrackerBlockingPrivateMode(boolean);
     method @NonNull public ContentBlocking.Settings.Builder enhancedTrackingProtectionLevel(int);
     method @NonNull public ContentBlocking.Settings.Builder queryParameterStrippingAllowList(@NonNull String...);
     method @NonNull public ContentBlocking.Settings.Builder queryParameterStrippingEnabled(boolean);
