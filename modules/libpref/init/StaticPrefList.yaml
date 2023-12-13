@@ -5633,13 +5633,13 @@
   mirror: always
 
 - name: gfx.canvas.accelerated.max-draw-target-count
-  type: RelaxedAtomicUint32
+  type: RelaxedAtomicInt32
   value: 200
   mirror: always
 
 - name: gfx.canvas.accelerated.max-size
   type: RelaxedAtomicInt32
-  value: 8192
+  value: 0
   mirror: always
 
 - name: gfx.canvas.accelerated.min-size

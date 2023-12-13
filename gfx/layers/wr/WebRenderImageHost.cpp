@@ -143,7 +143,6 @@ void WebRenderImageHost::PushPendingRemoteTexture(
       // Clear when RemoteTextureOwner is different.
       mPendingRemoteTextureWrappers.clear();
       mWaitingReadyCallback = false;
-      mWaitForRemoteTextureOwner = true;
     }
   }
 
@@ -223,8 +222,7 @@ void WebRenderImageHost::UseRemoteTexture() {
 
     std::function<void(const RemoteTextureInfo&)> function;
     RemoteTextureMap::Get()->GetRemoteTextureForDisplayList(
-        wrapper, std::move(function), mWaitForRemoteTextureOwner);
-    mWaitForRemoteTextureOwner = false;
+        wrapper, std::move(function));
   }
 
   if (!texture ||
