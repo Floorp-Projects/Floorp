@@ -106,6 +106,18 @@ class StoreBuffer {
     MonoTypeBuffer(const MonoTypeBuffer& other) = delete;
     MonoTypeBuffer& operator=(const MonoTypeBuffer& other) = delete;
 
+    MonoTypeBuffer(MonoTypeBuffer&& other)
+        : stores_(std::move(other.stores_)), last_(std::move(other.last_)) {
+      other.clear();
+    }
+    MonoTypeBuffer& operator=(MonoTypeBuffer&& other) {
+      if (&other != this) {
+        this->~MonoTypeBuffer();
+        new (this) MonoTypeBuffer(std::move(other));
+      }
+      return *this;
+    }
+
     void clear() {
       last_ = T();
       stores_.clear();
@@ -166,6 +178,23 @@ class StoreBuffer {
     WholeCellBuffer(const WholeCellBuffer& other) = delete;
     WholeCellBuffer& operator=(const WholeCellBuffer& other) = delete;
 
+    WholeCellBuffer(WholeCellBuffer&& other)
+        : storage_(std::move(other.storage_)),
+          stringHead_(other.stringHead_),
+          nonStringHead_(other.nonStringHead_),
+          last_(other.last_) {
+      other.stringHead_ = nullptr;
+      other.nonStringHead_ = nullptr;
+      other.last_ = nullptr;
+    }
+    WholeCellBuffer& operator=(WholeCellBuffer&& other) {
+      if (&other != this) {
+        this->~WholeCellBuffer();
+        new (this) WholeCellBuffer(std::move(other));
+      }
+      return *this;
+    }
+
     [[nodiscard]] bool init();
 
     void clear();
@@ -203,6 +232,16 @@ class StoreBuffer {
 
     GenericBuffer(const GenericBuffer& other) = delete;
     GenericBuffer& operator=(const GenericBuffer& other) = delete;
+
+    GenericBuffer(GenericBuffer&& other)
+        : storage_(std::move(other.storage_)) {}
+    GenericBuffer& operator=(GenericBuffer&& other) {
+      if (&other != this) {
+        this->~GenericBuffer();
+        new (this) GenericBuffer(std::move(other));
+      }
+      return *this;
+    }
 
     [[nodiscard]] bool init();
 
@@ -490,7 +529,14 @@ class StoreBuffer {
   bool markingNondeduplicatable;
 #endif
 
-  explicit StoreBuffer(JSRuntime* rt, Nursery& nursery);
+  explicit StoreBuffer(JSRuntime* rt);
+
+  StoreBuffer(const StoreBuffer& other) = delete;
+  StoreBuffer& operator=(const StoreBuffer& other) = delete;
+
+  StoreBuffer(StoreBuffer&& other);
+  StoreBuffer& operator=(StoreBuffer&& other);
+
   [[nodiscard]] bool enable();
 
   void disable();

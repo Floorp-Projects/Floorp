@@ -67,9 +67,9 @@ void StoreBuffer::GenericBuffer::trace(JSTracer* trc, StoreBuffer* owner) {
   }
 }
 
-StoreBuffer::StoreBuffer(JSRuntime* rt, Nursery& nursery)
+StoreBuffer::StoreBuffer(JSRuntime* rt)
     : runtime_(rt),
-      nursery_(nursery),
+      nursery_(rt->gc.nursery()),
       aboutToOverflow_(false),
       enabled_(false),
       mayHavePointersToDeadCells_(false)
@@ -79,6 +79,40 @@ StoreBuffer::StoreBuffer(JSRuntime* rt, Nursery& nursery)
       markingNondeduplicatable(false)
 #endif
 {
+}
+
+StoreBuffer::StoreBuffer(StoreBuffer&& other)
+    : bufferVal(std::move(other.bufferVal)),
+      bufStrCell(std::move(other.bufStrCell)),
+      bufBigIntCell(std::move(other.bufBigIntCell)),
+      bufObjCell(std::move(other.bufObjCell)),
+      bufferSlot(std::move(other.bufferSlot)),
+      bufferWasmAnyRef(std::move(other.bufferWasmAnyRef)),
+      bufferWholeCell(std::move(other.bufferWholeCell)),
+      bufferGeneric(std::move(other.bufferGeneric)),
+      runtime_(other.runtime_),
+      nursery_(other.nursery_),
+      aboutToOverflow_(other.aboutToOverflow_),
+      enabled_(other.enabled_),
+      mayHavePointersToDeadCells_(other.mayHavePointersToDeadCells_)
+#ifdef DEBUG
+      ,
+      mEntered(other.mEntered),
+      markingNondeduplicatable(other.markingNondeduplicatable)
+#endif
+{
+  MOZ_ASSERT(enabled_);
+  MOZ_ASSERT(!mEntered);
+  MOZ_ASSERT(!markingNondeduplicatable);
+  other.disable();
+}
+
+StoreBuffer& StoreBuffer::operator=(StoreBuffer&& other) {
+  if (&other != this) {
+    this->~StoreBuffer();
+    new (this) StoreBuffer(std::move(other));
+  }
+  return *this;
 }
 
 void StoreBuffer::checkEmpty() const { MOZ_ASSERT(isEmpty()); }

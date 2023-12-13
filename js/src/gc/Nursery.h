@@ -46,7 +46,6 @@
   _(UpdateJitActivations, "updtIn")           \
   _(FreeMallocedBuffers, "frSlts")            \
   _(FreeTrailerBlocks, "frTrBs")              \
-  _(ClearStoreBuffer, "clrSB")                \
   _(ClearNursery, "clear")                    \
   _(PurgeStringToAtomCache, "pStoA")          \
   _(Pretenure, "pretnr")

@@ -1467,10 +1467,6 @@ js::Nursery::CollectionResult js::Nursery::doCollection(AutoGCSession& session,
   clear();
   endProfile(ProfileKey::ClearNursery);
 
-  startProfile(ProfileKey::ClearStoreBuffer);
-  gc->storeBuffer().clear();
-  endProfile(ProfileKey::ClearStoreBuffer);
-
   // Purge the StringToAtomCache. This has to happen at the end because the
   // cache is used when tenuring strings.
   startProfile(ProfileKey::PurgeStringToAtomCache);
@@ -1496,8 +1492,20 @@ void js::Nursery::traceRoots(AutoGCSession& session, TenuringTracer& mover) {
     AutoSuppressProfilerSampling suppressProfiler(
         runtime()->mainContextFromOwnThread());
 
-    // Trace the store buffer. This must happen first.
-    StoreBuffer& sb = gc->storeBuffer();
+    // Trace the store buffer, which must happen first.
+
+    // Create an empty store buffer on the stack and swap it with the main store
+    // buffer, clearing it.
+    StoreBuffer sb(runtime());
+    {
+      AutoEnterOOMUnsafeRegion oomUnsafe;
+      if (!sb.enable()) {
+        oomUnsafe.crash("Nursery::traceRoots");
+      }
+    }
+    std::swap(sb, gc->storeBuffer());
+    MOZ_ASSERT(gc->storeBuffer().isEnabled());
+    MOZ_ASSERT(gc->storeBuffer().isEmpty());
 
     // Strings in the whole cell buffer must be traced first, in order to mark
     // tenured dependent strings' bases as non-deduplicatable. The rest of
@@ -1531,6 +1539,8 @@ void js::Nursery::traceRoots(AutoGCSession& session, TenuringTracer& mover) {
     gc->traceRuntimeForMinorGC(&mover, session);
     endProfile(ProfileKey::MarkRuntime);
   }
+
+  MOZ_ASSERT(gc->storeBuffer().isEmpty());
 
   startProfile(ProfileKey::MarkDebugger);
   {
