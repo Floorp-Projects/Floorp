@@ -48,6 +48,8 @@ SOURCES += [
     'jfdctfst.c',
     'jfdctint.c',
     'jrevdct.c',
+    'libaom.c',
+    'libaomenc.c',
     'libopus.c',
     'libopusdec.c',
     'libvorbisdec.c',
