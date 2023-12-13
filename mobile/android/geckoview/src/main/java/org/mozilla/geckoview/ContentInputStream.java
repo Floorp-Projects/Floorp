@@ -28,8 +28,6 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 
   private static final byte[][] HEADERS = {{'%', 'P', 'D', 'F', '-'}};
 
-  private static final String[] ALLOWED_AUTHORITIES = {"com.google"};
-
   private AssetFileDescriptor mFd;
 
   ContentInputStream(final @NonNull String aUri) {
@@ -83,30 +81,6 @@ import org.mozilla.gecko.annotation.WrapForJNI;
     return info.exported;
   }
 
-  private static boolean isInAllowList(final @NonNull Context aCtx, final @NonNull Uri aUri) {
-    // For reference:
-    //   https://developer.android.com/topic/security/risks/content-resolver#mitigations_2
-    final String authority = aUri.getAuthority();
-    final PackageManager packageManager = aCtx.getPackageManager();
-    if (authority == null || packageManager == null) {
-      return false;
-    }
-    // Make sure we've a provider for this authority.
-    final ProviderInfo info = packageManager.resolveContentProvider(authority, 0);
-    if (info == null) {
-      return false;
-    }
-
-    for (final String allowedAuthority : ALLOWED_AUTHORITIES) {
-      if (info.authority.startsWith(allowedAuthority)) {
-        return true;
-      }
-    }
-
-    Log.d(LOGTAG, "The authority isn't in the allow list: " + info.authority);
-    return false;
-  }
-
   private static boolean wasGrantedPermission(
       final @NonNull Context aCtx, final @NonNull Uri aUri) {
     // For reference:
@@ -143,9 +117,15 @@ import org.mozilla.gecko.annotation.WrapForJNI;
     final Context context = GeckoAppShell.getApplicationContext();
 
     try {
-      if ((isExported(context, uri) || isInAllowList(context, uri))
-              && wasGrantedPermission(context, uri)
-          || belongsToCurrentApplication(context, uri)) {
+      // The check for this criteria is based on recommendations in
+      // https://developer.android.com/privacy-and-security/risks/content-resolver#mitigations_2
+      // The documentation recommends checking:
+      // 1. If URI targets our app (belongsToCurrentApplication)
+      // 2. OR if targeted provider is exported (isExported)
+      // 3. OR if granted explicit permission (wasGrantedPermission)
+      if (belongsToCurrentApplication(context, uri)
+          || isExported(context, uri)
+          || wasGrantedPermission(context, uri)) {
         final ContentResolver cr = context.getContentResolver();
         cr.openAssetFileDescriptor(uri, "r").close();
         Log.d(LOGTAG, "The uri is readable: " + uri);
