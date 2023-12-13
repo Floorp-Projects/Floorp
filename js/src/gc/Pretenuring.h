@@ -141,7 +141,9 @@ class AllocSite {
 
   // Whether this site has a script associated with it. This is not true if
   // this site is for a wasm site.
-  bool hasScript() const { return rawScript() != uintptr_t(WasmScript); }
+  bool hasScript() const {
+    return rawScript() && rawScript() != uintptr_t(WasmScript);
+  }
   JSScript* script() const {
     MOZ_ASSERT(hasScript());
     return reinterpret_cast<JSScript*>(rawScript());

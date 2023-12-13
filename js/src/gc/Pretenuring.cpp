@@ -328,7 +328,8 @@ bool AllocSite::maybeResetState() {
 }
 
 void AllocSite::trace(JSTracer* trc) {
-  if (JSScript* s = script()) {
+  if (hasScript()) {
+    JSScript* s = script();
     TraceManuallyBarrieredEdge(trc, &s, "AllocSite script");
     if (s != script()) {
       setScript(s);
@@ -389,6 +390,8 @@ void AllocSite::printInfoHeader(JS::GCReason reason, double promotionRate) {
   fprintf(stderr,
           "Pretenuring info after %s minor GC with %4.1f%% promotion rate:\n",
           ExplainGCReason(reason), promotionRate * 100.0);
+  fprintf(stderr, "  %-16s %-16s %-16s %-8s %-8s %-6s %-10s\n", "site", "zone",
+          "script/kind", "nallocs", "tenures", "prate", "state");
 }
 
 /* static */
@@ -404,7 +407,7 @@ void AllocSite::printInfoFooter(size_t sitesCreated, size_t sitesActive,
 void AllocSite::printInfo(bool hasPromotionRate, double promotionRate,
                           bool wasInvalidated) const {
   // Zone.
-  fprintf(stderr, "  %p %p", this, zone());
+  fprintf(stderr, "  %16p %16p", this, zone());
 
   // Script, or which kind of catch-all site this is.
   if (!hasScript()) {
