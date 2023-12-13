@@ -29,9 +29,9 @@ class ContentAnalysisRequest final : public nsIContentAnalysisRequest {
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTENTANALYSISREQUEST
 
-  ContentAnalysisRequest(unsigned long aAnalysisType, nsString&& aString,
+  ContentAnalysisRequest(AnalysisType aAnalysisType, nsString&& aString,
                          bool aStringIsFilePath, nsCString&& aSha256Digest,
-                         nsString&& aUrl, unsigned long aResourceNameType,
+                         nsString&& aUrl, OperationType aOperationType,
                          dom::WindowGlobalParent* aWindowGlobalParent);
 
  private:
@@ -41,7 +41,7 @@ class ContentAnalysisRequest final : public nsIContentAnalysisRequest {
   ContentAnalysisRequest& operator=(ContentAnalysisRequest&) = delete;
 
   // See nsIContentAnalysisRequest for values
-  unsigned long mAnalysisType;
+  AnalysisType mAnalysisType;
 
   // Text content to analyze.  Only one of textContent or filePath is defined.
   nsString mTextContent;
@@ -66,7 +66,7 @@ class ContentAnalysisRequest final : public nsIContentAnalysisRequest {
   nsCString mRequestToken;
 
   // Type of text to display, see nsIContentAnalysisRequest for values
-  unsigned long mOperationTypeForDisplay;
+  OperationType mOperationTypeForDisplay;
 
   // String to display if mOperationTypeForDisplay is
   // OPERATION_CUSTOMDISPLAYSTRING
@@ -149,7 +149,7 @@ class ContentAnalysisResponse final : public nsIContentAnalysisResponse {
   NS_DECL_NSICONTENTANALYSISRESPONSE
 
   static RefPtr<ContentAnalysisResponse> FromAction(
-      unsigned long aAction, const nsACString& aRequestToken);
+      Action aAction, const nsACString& aRequestToken);
 
   void SetOwner(RefPtr<ContentAnalysis> aOwner);
 
@@ -160,13 +160,12 @@ class ContentAnalysisResponse final : public nsIContentAnalysisResponse {
   ContentAnalysisResponse& operator=(ContentAnalysisResponse&) = delete;
   explicit ContentAnalysisResponse(
       content_analysis::sdk::ContentAnalysisResponse&& aResponse);
-  ContentAnalysisResponse(unsigned long aAction,
-                          const nsACString& aRequestToken);
+  ContentAnalysisResponse(Action aAction, const nsACString& aRequestToken);
   static already_AddRefed<ContentAnalysisResponse> FromProtobuf(
       content_analysis::sdk::ContentAnalysisResponse&& aResponse);
 
-  // See nsIContentAnalysisResponse for values
-  uint32_t mAction;
+  // Action requested by the agent
+  Action mAction;
 
   // Identifier for the corresponding nsIContentAnalysisRequest
   nsCString mRequestToken;
@@ -187,14 +186,13 @@ class ContentAnalysisAcknowledgement final
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICONTENTANALYSISACKNOWLEDGEMENT
 
-  ContentAnalysisAcknowledgement(unsigned long aResult,
-                                 unsigned long aFinalAction);
+  ContentAnalysisAcknowledgement(Result aResult, FinalAction aFinalAction);
 
  private:
   ~ContentAnalysisAcknowledgement() = default;
 
-  unsigned long mResult;
-  unsigned long mFinalAction;
+  Result mResult;
+  FinalAction mFinalAction;
 };
 
 class ContentAnalysisCallback final : public nsIContentAnalysisCallback {
