@@ -140,16 +140,16 @@ class ReportBrokenSiteHelper {
     this.win = sourceMenu.win;
   }
 
+  getViewNode(id) {
+    return PanelMultiView.getViewNode(this.win.document, id);
+  }
+
   get mainView() {
-    return this.win.document.getElementById(
-      "report-broken-site-popup-mainView"
-    );
+    return this.getViewNode("report-broken-site-popup-mainView");
   }
 
   get sentView() {
-    return this.win.document.getElementById(
-      "report-broken-site-popup-reportSentView"
-    );
+    return this.getViewNode("report-broken-site-popup-reportSentView");
   }
 
   get openPanel() {
@@ -249,19 +249,16 @@ class ReportBrokenSiteHelper {
   }
 
   // UI element getters
-
   get URLInput() {
-    return this.win.document.getElementById("report-broken-site-popup-url");
+    return this.getViewNode("report-broken-site-popup-url");
   }
 
   get URLInvalidMessage() {
-    return this.win.document.getElementById(
-      "report-broken-site-popup-invalid-url-msg"
-    );
+    return this.getViewNode("report-broken-site-popup-invalid-url-msg");
   }
 
   get reasonInput() {
-    return this.win.document.getElementById("report-broken-site-popup-reason");
+    return this.getViewNode("report-broken-site-popup-reason");
   }
 
   get reasonDropdownPopup() {
@@ -269,33 +266,23 @@ class ReportBrokenSiteHelper {
   }
 
   get reasonRequiredMessage() {
-    return this.win.document.getElementById(
-      "report-broken-site-popup-missing-reason-msg"
-    );
+    return this.getViewNode("report-broken-site-popup-missing-reason-msg");
   }
 
   get reasonLabelRequired() {
-    return this.win.document.getElementById(
-      "report-broken-site-popup-reason-label"
-    );
+    return this.getViewNode("report-broken-site-popup-reason-label");
   }
 
   get reasonLabelOptional() {
-    return this.win.document.getElementById(
-      "report-broken-site-popup-reason-optional-label"
-    );
+    return this.getViewNode("report-broken-site-popup-reason-optional-label");
   }
 
   get descriptionTextarea() {
-    return this.win.document.getElementById(
-      "report-broken-site-popup-description"
-    );
+    return this.getViewNode("report-broken-site-popup-description");
   }
 
   get sendMoreInfoLink() {
-    return this.win.document.getElementById(
-      "report-broken-site-popup-send-more-info-link"
-    );
+    return this.getViewNode("report-broken-site-popup-send-more-info-link");
   }
 
   get backButton() {
@@ -303,21 +290,15 @@ class ReportBrokenSiteHelper {
   }
 
   get sendButton() {
-    return this.win.document.getElementById(
-      "report-broken-site-popup-send-button"
-    );
+    return this.getViewNode("report-broken-site-popup-send-button");
   }
 
   get cancelButton() {
-    return this.win.document.getElementById(
-      "report-broken-site-popup-cancel-button"
-    );
+    return this.getViewNode("report-broken-site-popup-cancel-button");
   }
 
   get okayButton() {
-    return this.win.document.getElementById(
-      "report-broken-site-popup-okay-button"
-    );
+    return this.getViewNode("report-broken-site-popup-okay-button");
   }
 
   // Test helpers
@@ -334,9 +315,7 @@ class ReportBrokenSiteHelper {
   }
 
   chooseReason(value) {
-    const item = this.win.document.getElementById(
-      `report-broken-site-popup-reason-${value}`
-    );
+    const item = this.getViewNode(`report-broken-site-popup-reason-${value}`);
     const input = this.reasonInput;
     input.selectedItem = item;
     input.dispatchEvent(
@@ -498,6 +477,10 @@ class MenuHelper {
     this.win = win;
   }
 
+  getViewNode(id) {
+    return PanelMultiView.getViewNode(this.win.document, id);
+  }
+
   get showsBackButton() {
     return true;
   }
@@ -567,10 +550,7 @@ class AppMenuHelper extends MenuHelper {
   menuDescription = "AppMenu";
 
   get reportBrokenSite() {
-    return this.win.PanelMultiView.getViewNode(
-      this.win.document,
-      "appMenu-report-broken-site-button"
-    );
+    return this.getViewNode("appMenu-report-broken-site-button");
   }
 
   get reportSiteIssue() {
@@ -578,10 +558,7 @@ class AppMenuHelper extends MenuHelper {
   }
 
   get popup() {
-    return this.win.PanelMultiView.getViewNode(
-      this.win.document,
-      "appMenu-popup"
-    );
+    return this.win.document.getElementById("appMenu-popup");
   }
 
   async open() {
@@ -599,24 +576,15 @@ class AppMenuHelpSubmenuHelper extends MenuHelper {
   menuDescription = "AppMenu help sub-menu";
 
   get reportBrokenSite() {
-    return this.win.PanelMultiView.getViewNode(
-      this.win.document,
-      "appMenu_help_reportBrokenSite"
-    );
+    return this.getViewNode("appMenu_help_reportBrokenSite");
   }
 
   get reportSiteIssue() {
-    return this.win.PanelMultiView.getViewNode(
-      this.win.document,
-      "appMenu_help_reportSiteIssue"
-    );
+    return this.getViewNode("appMenu_help_reportSiteIssue");
   }
 
   get popup() {
-    return this.win.PanelMultiView.getViewNode(
-      this.win.document,
-      "appMenu-popup"
-    );
+    return this.win.document.getElementById("appMenu-popup");
   }
 
   async open() {
@@ -625,8 +593,7 @@ class AppMenuHelpSubmenuHelper extends MenuHelper {
     const anchor = this.win.document.getElementById("PanelUI-menu-button");
     this.win.PanelUI.showHelpView(anchor);
 
-    const appMenuHelpSubview =
-      this.win.document.getElementById("PanelUI-helpView");
+    const appMenuHelpSubview = this.getViewNode("PanelUI-helpView");
     await BrowserTestUtils.waitForEvent(appMenuHelpSubview, "ViewShown");
   }
 
@@ -645,31 +612,19 @@ class HelpMenuHelper extends MenuHelper {
   }
 
   get reportBrokenSite() {
-    return this.win.PanelMultiView.getViewNode(
-      this.win.document,
-      "help_reportBrokenSite"
-    );
+    return this.win.document.getElementById("help_reportBrokenSite");
   }
 
   get reportSiteIssue() {
-    return this.win.PanelMultiView.getViewNode(
-      this.win.document,
-      "help_reportSiteIssue"
-    );
+    return this.win.document.getElementById("help_reportSiteIssue");
   }
 
   get popup() {
-    return this.win.PanelMultiView.getViewNode(
-      this.win.document,
-      "PanelUI-helpView"
-    );
+    return this.getViewNode("PanelUI-helpView");
   }
 
   get helpMenu() {
-    return this.win.PanelMultiView.getViewNode(
-      this.win.document,
-      "menu_HelpPopup"
-    );
+    return this.win.document.getElementById("menu_HelpPopup");
   }
 
   async openReportBrokenSite() {
@@ -720,10 +675,7 @@ class ProtectionsPanelHelper extends MenuHelper {
 
   get reportBrokenSite() {
     this.win.gProtectionsHandler._initializePopup();
-    return this.win.PanelMultiView.getViewNode(
-      this.win.document,
-      "protections-popup-report-broken-site-button"
-    );
+    return this.getViewNode("protections-popup-report-broken-site-button");
   }
 
   get reportSiteIssue() {
@@ -732,10 +684,7 @@ class ProtectionsPanelHelper extends MenuHelper {
 
   get popup() {
     this.win.gProtectionsHandler._initializePopup();
-    return this.win.PanelMultiView.getViewNode(
-      this.win.document,
-      "protections-popup"
-    );
+    return this.win.document.getElementById("protections-popup");
   }
 
   async open() {
@@ -753,7 +702,7 @@ class ProtectionsPanelHelper extends MenuHelper {
     if (this.opened) {
       const popup = this.popup;
       const promise = BrowserTestUtils.waitForEvent(popup, "popuphidden");
-      this.win.PanelMultiView.hidePopup(popup, false);
+      PanelMultiView.hidePopup(popup, false);
       await promise;
     }
   }
