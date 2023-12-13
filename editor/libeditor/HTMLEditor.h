@@ -174,7 +174,9 @@ class HTMLEditor final : public EditorBase,
   bool CanPaste(int32_t aClipboardType) const final;
   using EditorBase::CanPaste;
 
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD DeleteNode(nsINode* aNode) final;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD DeleteNode(nsINode* aNode,
+                                           bool aPreseveSelection,
+                                           uint8_t aOptionalArgCount) final;
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD InsertLineBreak() final;
 
