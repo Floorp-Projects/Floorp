@@ -559,7 +559,6 @@
                  data-l10n-id="appmenuitem-fxa-sign-in"/>
           <label id="fxa-menu-header-description"
                  crop="end"
-                 hidden="true"
                  data-l10n-id="fxa-menu-turn-on-sync"/>
         </vbox>
       </toolbarbutton>
@@ -580,7 +579,6 @@
                  crop="end"/>
         </hbox>
       </toolbarbutton>
-      <vbox id="PanelUI-signedin-panel" hidden="true">
       <toolbarbutton id="PanelUI-fxa-menu-setup-sync-button"
                       class="subviewbutton"
                       data-l10n-id="appmenu-fxa-setup-sync"
@@ -602,59 +600,15 @@
                       data-l10n-id="fxa-menu-sync-settings"
                       hidden="true"
                       oncommand="gSync.openPrefsFromFxaMenu('sync_settings', this);"/>
-      <toolbarseparator id="PanelUI-sign-out-separator" />
+      <toolbarseparator id="PanelUI-sign-out-separator"/>
       <toolbarbutton id="PanelUI-fxa-menu-account-signout-button"
               class="subviewbutton"
               data-l10n-id="fxa-menu-sign-out"
-              oncommand="gSync.disconnect();"
-              hidden="true"/>
-      </vbox>
-      <!-- updateCTAPanel will control if we show this panel -->
-      <vbox id="PanelUI-fxa-pxi-cta-menu">
-        <toolbarbutton id="PanelUI-fxa-menu-sync-button" class="subviewbutton subviewbutton-iconic"
-          oncommand="gSync.openPrefsFromFxaMenu('sync_cta', this);">
-          <vbox flex="1">
-            <label id="fxa-menu-header-title" crop="end" data-l10n-id="sync-menu-title" />
-            <label id="cta-menu-header-description" crop="end" data-l10n-id="sync-menu-description" />
-          </vbox>
-          <toolbarseparator id="PanelUI-remote-tabs-separator" />
-        </toolbarbutton>
-        <toolbarseparator id="PanelUI-remote-tabs-separator" />
-        <toolbarbutton id="PanelUI-fxa-menu-monitor-button" class="subviewbutton subviewbutton-iconic"
-          oncommand="gSync.openMonitorLink(this)">
-          <vbox flex="1">
-            <hbox>
-              <image class="PanelUI-fxa-menu-monitor-button ctaMenuLogo" role="presentation" />
-              <label id="fxa-menu-header-title" crop="end" data-l10n-id="pxi-menu-monitor-title" />
-            </hbox>
-            <label id="cta-menu-header-description" crop="end" data-l10n-id="pxi-menu-monitor-description" />
-          </vbox>
-        </toolbarbutton>
-        <toolbarbutton id="PanelUI-fxa-menu-relay-button" class="subviewbutton subviewbutton-iconic"
-          oncommand="gSync.openRelayLink(this)">
-          <vbox flex="1">
-            <hbox>
-              <image class="PanelUI-fxa-menu-relay-button ctaMenuLogo" role="presentation" />
-              <label id="fxa-menu-header-title" crop="end" data-l10n-id="pxi-menu-relay-title" />
-            </hbox>
-            <label id="cta-menu-header-description" crop="end" data-l10n-id="pxi-menu-relay-description" />
-          </vbox>
-        </toolbarbutton>
-        <toolbarbutton id="PanelUI-fxa-menu-vpn-button" class="subviewbutton subviewbutton-iconic"
-          oncommand="gSync.openVPNLink(this)">
-          <vbox flex="1">
-            <hbox>
-              <image class="PanelUI-fxa-menu-vpn-button ctaMenuLogo" role="presentation" />
-              <label id="fxa-menu-header-title" crop="end" data-l10n-id="pxi-menu-vpn-title" />
-            </hbox>
-            <label id="cta-menu-header-description" crop="end" data-l10n-id="pxi-menu-vpn-description" />
-          </vbox>
-        </toolbarbutton>
-      </vbox>
+              oncommand="gSync.disconnect();"/>
+      <toolbarseparator id="PanelUI-remote-tabs-separator"/>
       <deck id="PanelUI-fxa-remotetabs-deck">
         <!-- Sync is ready to Sync and the "tabs" engine is enabled -->
         <vbox id="PanelUI-fxa-remotetabs-tabspane">
-          <toolbarseparator id="PanelUI-remote-tabs-separator" />
           <vbox id="PanelUI-fxa-remotetabs-tabslist"
           notabsforclientlabel="appmenu-remote-tabs-notabs"
           />
