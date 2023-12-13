@@ -125,5 +125,3 @@ fuzzy-if(winWidget,0-94,0-1575) fuzzy-if(cocoaWidget,0-1,0-34) == 1304353-text-g
 == 1850284-1.html 1850284-1-ref.html
 
 != 1850727-1.html 1850727-1-ref.html
-
-== transformed-line-stroke.html transformed-line-stroke-ref.html
