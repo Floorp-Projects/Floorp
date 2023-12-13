@@ -138,8 +138,12 @@ details[open] .chevron-icon {
   height: 200px;
 }
 
-.show-more ::slotted(div) {
+:host(:not([showMoreButtonDisabled])) .show-more ::slotted(div) {
   margin-block-end: 4rem;
+}
+
+:host([showMoreButtonDisabled]) footer {
+  display: none;
 }
 
 @media (prefers-color-scheme: dark) {

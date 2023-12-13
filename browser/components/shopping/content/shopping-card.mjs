@@ -6,6 +6,7 @@
 import { html, ifDefined } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
+const MIN_SHOW_MORE_HEIGHT = 200;
 /**
  * A card container to be used in the shopping sidebar. There are three card types.
  * The default type where no type attribute is required and the card will have no extra functionality.
@@ -26,6 +27,7 @@ class ShoppingCard extends MozLitElement {
   static get queries() {
     return {
       detailsEl: "#shopping-details",
+      contentEl: "#content",
     };
   }
 
@@ -117,8 +119,7 @@ class ShoppingCard extends MozLitElement {
         : "shopping-show-more-button"
     );
     // toggle content expanded attribute
-    e.target.parentElement.parentElement.attributes.expanded.value =
-      this._isExpanded;
+    this.contentEl.attributes.expanded.value = this._isExpanded;
 
     let action = this._isExpanded ? "expanded" : "collapsed";
     Glean.shopping.surfaceShowMoreReviewsButtonClicked.record({
@@ -126,8 +127,58 @@ class ShoppingCard extends MozLitElement {
     });
   }
 
+  enableShowMoreButton() {
+    this._isExpanded = false;
+    this.toggleAttribute("showMoreButtonDisabled", false);
+    this.contentEl.attributes.expanded.value = false;
+  }
+
+  disableShowMoreButton() {
+    this._isExpanded = true;
+    this.toggleAttribute("showMoreButtonDisabled", true);
+    this.contentEl.attributes.expanded.value = true;
+  }
+
   handleChevronButtonClick() {
     this.detailsEl.open = !this.detailsEl.open;
+  }
+
+  firstUpdated() {
+    if (this.type !== "show-more") {
+      return;
+    }
+
+    let contentSlot = this.shadowRoot.querySelector("slot[name='content']");
+    let contentSlotEls = contentSlot.assignedElements();
+    if (!contentSlotEls.length) {
+      return;
+    }
+
+    let slottedDiv = contentSlotEls[0];
+
+    this.handleContentSlotResize = this.handleContentSlotResize.bind(this);
+    this.contentResizeObserver = new ResizeObserver(
+      this.handleContentSlotResize
+    );
+    this.contentResizeObserver.observe(slottedDiv);
+  }
+
+  disconnectedCallback() {
+    this.contentResizeObserver.disconnect();
+  }
+
+  handleContentSlotResize(entries) {
+    for (let entry of entries) {
+      if (entry.contentRect.height === 0) {
+        return;
+      }
+
+      if (entry.contentRect.height < MIN_SHOW_MORE_HEIGHT) {
+        this.disableShowMoreButton();
+      } else if (this.hasAttribute("showMoreButtonDisabled")) {
+        this.enableShowMoreButton();
+      }
+    }
   }
 
   render() {

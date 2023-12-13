@@ -62,11 +62,30 @@ CardTypeAccordion.args = {
   type: "accordion",
 };
 
-export const CardTypeShowMore = Template.bind({});
-CardTypeShowMore.args = {
+export const CardTypeShowMoreButtonDisabled = Template.bind({});
+CardTypeShowMoreButtonDisabled.args = {
   ...DefaultCard.args,
   content: `Lorem ipsum dolor sit amet, consectetur adipiscing elit.
   Nunc velit turpis, mollis a ultricies vitae, accumsan ut augue.
   In a eros ac dolor hendrerit varius et at mauris.`,
+  type: "show-more",
+};
+
+export const CardTypeShowMore = Template.bind({});
+CardTypeShowMore.args = {
+  ...DefaultCard.args,
+  content: `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  Posuere morbi leo urna molestie at elementum.
+  Felis donec et odio pellentesque.
+  Malesuada fames ac turpis egestas maecenas pharetra convallis posuere morbi. Varius duis at consectetur lorem donec massa sapien faucibus et.
+  Et tortor consequat id porta nibh venenatis.
+  Adipiscing diam donec adipiscing tristique risus nec feugiat in fermentum.
+  Viverra accumsan in nisl nisi scelerisque eu ultrices vitae.
+  Gravida neque convallis a cras.
+  Fringilla est ullamcorper eget nulla.
+  Habitant morbi tristique senectus et netus.
+  Quam vulputate dignissim suspendisse in est ante in.
+  Feugiat vivamus at augue eget arcu dictum varius duis.
+  Est pellentesque elit ullamcorper dignissim cras tincidunt lobortis feugiat vivamus. Ultricies integer quis auctor elit.`,
   type: "show-more",
 };
