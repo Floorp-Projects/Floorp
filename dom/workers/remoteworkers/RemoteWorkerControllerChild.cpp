@@ -28,6 +28,7 @@ RemoteWorkerControllerChild::RemoteWorkerControllerChild(
     RefPtr<RemoteWorkerObserver> aObserver)
     : mObserver(std::move(aObserver)) {
   AssertIsOnMainThread();
+  mRemoteWorkerLaunchStart = TimeStamp::Now();
   MOZ_ASSERT(mObserver);
 }
 
@@ -35,6 +36,16 @@ PFetchEventOpChild* RemoteWorkerControllerChild::AllocPFetchEventOpChild(
     const ParentToParentServiceWorkerFetchEventOpArgs& aArgs) {
   MOZ_CRASH("PFetchEventOpChild actors must be manually constructed!");
   return nullptr;
+}
+
+TimeStamp RemoteWorkerControllerChild::GetRemoteWorkerLaunchStart() {
+  MOZ_ASSERT(mRemoteWorkerLaunchStart);
+  return mRemoteWorkerLaunchStart;
+}
+
+TimeStamp RemoteWorkerControllerChild::GetRemoteWorkerLaunchEnd() {
+  MOZ_ASSERT(mRemoteWorkerLaunchEnd);
+  return mRemoteWorkerLaunchEnd;
 }
 
 bool RemoteWorkerControllerChild::DeallocPFetchEventOpChild(
@@ -68,6 +79,7 @@ IPCResult RemoteWorkerControllerChild::RecvCreationFailed() {
 
 IPCResult RemoteWorkerControllerChild::RecvCreationSucceeded() {
   AssertIsOnMainThread();
+  mRemoteWorkerLaunchEnd = TimeStamp::Now();
 
   if (mObserver) {
     mObserver->CreationSucceeded();
@@ -79,6 +91,7 @@ IPCResult RemoteWorkerControllerChild::RecvCreationSucceeded() {
 IPCResult RemoteWorkerControllerChild::RecvErrorReceived(
     const ErrorValue& aError) {
   AssertIsOnMainThread();
+  mRemoteWorkerLaunchEnd = TimeStamp::Now();
 
   if (mObserver) {
     mObserver->ErrorReceived(aError);

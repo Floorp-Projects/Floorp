@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Graphics: WebGPU")
 
 MOCHITEST_MANIFESTS += [
-    "mochitest/mochitest-no-pref.ini",
+    "mochitest/mochitest-no-pref.toml",
     "mochitest/mochitest.toml",
 ]
 

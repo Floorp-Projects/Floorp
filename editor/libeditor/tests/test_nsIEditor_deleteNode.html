@@ -1,0 +1,242 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>nsIEditor.insertNode</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<script>
+"use strict";
+
+function stringifyInputEvent(aEvent) {
+  if (!aEvent) {
+    return "null";
+  }
+  return `${aEvent.type}: { inputType=${aEvent.inputType} }`;
+}
+
+function getRangeDescription(range) {
+  function getNodeDescription(node) {
+    if (!node) {
+      return "null";
+    }
+    switch (node.nodeType) {
+      case Node.TEXT_NODE:
+        return `${node.nodeName} "${node.data}"`;
+      case Node.ELEMENT_NODE:
+        return `<${node.nodeName.toLowerCase()}>`;
+      default:
+        return `${node.nodeName}`;
+    }
+  }
+  if (range === null) {
+    return "null";
+  }
+  if (range === undefined) {
+    return "undefined";
+  }
+  return range.startContainer == range.endContainer &&
+    range.startOffset == range.endOffset
+    ? `(${getNodeDescription(range.startContainer)}, ${range.startOffset})`
+    : `(${getNodeDescription(range.startContainer)}, ${
+        range.startOffset
+      }) - (${getNodeDescription(range.endContainer)}, ${range.endOffset})`;
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  const editingHost = document.querySelector("div[contenteditable]");
+  const editor =
+    SpecialPowers.wrap(window).docShell.editingSession.getEditorForWindow(window);
+
+  editingHost.focus();
+
+  let events = [];
+  editingHost.addEventListener("input", event => events.push(event));
+
+  (function test_delete_node_before_selection() {
+    editingHost.innerHTML = "<span>abc</span><span>def</span>";
+    getSelection().collapse(editingHost.querySelector("span + span").firstChild, 0);
+    editor.deleteNode(editingHost.querySelector("span"));
+    is(
+      editingHost.innerHTML,
+      "<span>def</span>",
+      "test_delete_node_before_selection: deleteNode() should delete the node"
+    );
+    is(
+      events.length,
+      1,
+      "test_delete_node_before_selection: Only one input event should be fired when deleteNode() deletes a node"
+    );
+    is(
+      stringifyInputEvent(events[0]),
+      stringifyInputEvent({ type: "input", inputType: "" }),
+      "test_delete_node_before_selection: input event should be fired when deleting a node"
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      getRangeDescription({
+        startContainer: editingHost.firstChild.firstChild,
+        startOffset: 0,
+        endContainer: editingHost.firstChild.firstChild,
+        endOffset: 0,
+      }),
+      "test_delete_node_before_selection: selection shouldn't be updated"
+    );
+  })();
+
+  (function test_delete_node_after_selection() {
+    events = [];
+    editingHost.innerHTML = "<span>abc</span><span>def</span>";
+    getSelection().collapse(editingHost.querySelector("span").firstChild, 0);
+    editor.deleteNode(editingHost.querySelector("span + span"));
+    is(
+      editingHost.innerHTML,
+      "<span>abc</span>",
+      "test_delete_node_after_selection: deleteNode() should delete the node"
+    );
+    is(
+      events.length,
+      1,
+      "test_delete_node_after_selection: Only one input event should be fired when deleteNode() deletes a node"
+    );
+    is(
+      stringifyInputEvent(events[0]),
+      stringifyInputEvent({ type: "input", inputType: "" }),
+      "test_delete_node_after_selection: input event should be fired when deleting a node"
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      getRangeDescription({
+        startContainer: editingHost.firstChild.firstChild,
+        startOffset: 0,
+        endContainer: editingHost.firstChild.firstChild,
+        endOffset: 0,
+      }),
+      "test_delete_node_after_selection: selection shouldn't be updated"
+    );
+  })();
+
+  (function test_delete_node_containing_selection() {
+    events = [];
+    editingHost.innerHTML = "<span>abc</span><span>def</span>";
+    getSelection().collapse(editingHost.querySelector("span").firstChild, 0);
+    editor.deleteNode(editingHost.querySelector("span"));
+    is(
+      editingHost.innerHTML,
+      "<span>def</span>",
+      "test_delete_node_containing_selection: deleteNode() should delete the node"
+    );
+    is(
+      events.length,
+      1,
+      "test_delete_node_containing_selection: Only one input event should be fired when deleteNode() deletes a node"
+    );
+    is(
+      stringifyInputEvent(events[0]),
+      stringifyInputEvent({ type: "input", inputType: "" }),
+      "test_delete_node_containing_selection: input event should be fired when deleting a node"
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      getRangeDescription({
+        startContainer: editingHost,
+        startOffset: 0,
+        endContainer: editingHost,
+        endOffset: 0,
+      }),
+      "test_delete_node_containing_selection: selection should be updated whether node was"
+    );
+  })();
+
+  (function test_delete_node_containing_selection_with_preserving_selection() {
+    events = [];
+    editingHost.innerHTML = "<span>abc</span><span>def</span>";
+    getSelection().collapse(editingHost.querySelector("span").firstChild, 0);
+    editor.deleteNode(editingHost.querySelector("span"), true);
+    is(
+      editingHost.innerHTML,
+      "<span>def</span>",
+      "test_delete_node_containing_selection_with_preserving_selection: deleteNode() should delete the node"
+    );
+    is(
+      events.length,
+      1,
+      "test_delete_node_containing_selection_with_preserving_selection: Only one input event should be fired when deleteNode() deletes a node"
+    );
+    is(
+      stringifyInputEvent(events[0]),
+      stringifyInputEvent({ type: "input", inputType: "" }),
+      "test_delete_node_containing_selection_with_preserving_selection: input event should be fired when deleting a node"
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      getRangeDescription({
+        startContainer: editingHost,
+        startOffset: 0,
+        endContainer: editingHost,
+        endOffset: 0,
+      }),
+      "test_delete_node_containing_selection_with_preserving_selection: selection should be updated whether node was"
+    );
+  })();
+
+  (function test_not_preserve_selection_nested_by_beforeinput() {
+    editingHost.innerHTML = "<span>abc</span><span>ghi</span>";
+    const span = document.createElement("span");
+    span.textContent = "def";
+    getSelection().collapse(editingHost, 0);
+    editingHost.addEventListener("beforeinput", () => {
+      editor.insertNode(span, editingHost, 1);
+    }, {once: true});
+    editor.deleteNode(editingHost.querySelector("span + span"), true);
+    is(
+      editingHost.innerHTML,
+      "<span>abc</span><span>def</span>",
+      "test_not_preserve_selection_nested_by_beforeinput: both insertNode() and deleteNode() should work"
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      getRangeDescription({
+        startContainer: editingHost,
+        startOffset: 2,
+        endContainer: editingHost,
+        endOffset: 2,
+      }),
+      "test_not_preserve_selection_nested_by_beforeinput: only insertNode() called in beforeinput listener should update selection"
+    );
+  })();
+
+  (function test_not_preserve_selection_nested_by_input() {
+    editingHost.innerHTML = "<span>abc</span><span>ghi</span>";
+    const span = document.createElement("span");
+    span.textContent = "def";
+    getSelection().collapse(editingHost, 0);
+    editingHost.addEventListener("input", () => {
+      editor.insertNode(span, editingHost, 1);
+    }, {once: true});
+    editor.deleteNode(editingHost.querySelector("span + span"), true);
+    is(
+      editingHost.innerHTML,
+      "<span>abc</span><span>def</span>",
+      "test_not_preserve_selection_nested_by_input: both insertNode() and deleteNode() should work"
+    );
+    is(
+      getRangeDescription(getSelection().getRangeAt(0)),
+      getRangeDescription({
+        startContainer: editingHost,
+        startOffset: 2,
+        endContainer: editingHost,
+        endOffset: 2,
+      }),
+      "test_not_preserve_selection_nested_by_input: only insertNode() called in input listener should update selection"
+    );
+  })();
+
+  SimpleTest.finish();
+});
+
+</script>
+</head>
+<body><div contenteditable><br></div></body>
+</html>

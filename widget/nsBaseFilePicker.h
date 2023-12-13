@@ -34,6 +34,7 @@ class nsBaseFilePicker : public nsIFilePicker {
 #ifndef XP_WIN
   NS_IMETHOD Open(nsIFilePickerShownCallback* aCallback) override;
 #endif
+  NS_IMETHOD Close() override;
   NS_IMETHOD AppendFilters(int32_t filterMask) override;
   NS_IMETHOD AppendRawFilter(const nsAString& aFilter) override;
   NS_IMETHOD GetCapture(nsIFilePicker::CaptureTarget* aCapture) override;

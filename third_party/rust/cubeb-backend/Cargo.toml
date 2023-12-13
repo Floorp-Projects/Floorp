@@ -11,7 +11,7 @@
 
 [package]
 name = "cubeb-backend"
-version = "0.10.3"
+version = "0.10.7"
 authors = ["Dan Glastonbury <dglastonbury@mozilla.com>"]
 description = """
 Bindings to libcubeb internals to facilitate implementing cubeb backends in rust.
@@ -23,7 +23,7 @@ license = "ISC"
 repository = "https://github.com/mozilla/cubeb-rs"
 
 [dependencies.cubeb-core]
-version = "0.10.3"
+version = "0.10.7"
 
 [features]
 gecko-in-tree = ["cubeb-core/gecko-in-tree"]

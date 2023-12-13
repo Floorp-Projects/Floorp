@@ -43,6 +43,7 @@
 #include "mozilla/dom/PRemoteWorkerControllerChild.h"
 #include "mozilla/dom/ServiceWorkerRegistrationInfo.h"
 #include "mozilla/net/NeckoChannelParams.h"
+#include "mozilla/dom/RemoteWorkerControllerChild.h"
 
 namespace mozilla::dom {
 
@@ -307,6 +308,14 @@ mozilla::ipc::IPCResult FetchEventOpChild::RecvAsyncLog(
 mozilla::ipc::IPCResult FetchEventOpChild::RecvRespondWith(
     ParentToParentFetchEventRespondWithResult&& aResult) {
   AssertIsOnMainThread();
+
+  RefPtr<RemoteWorkerControllerChild> mgr =
+      static_cast<RemoteWorkerControllerChild*>(Manager());
+
+  mInterceptedChannel->SetRemoteWorkerLaunchStart(
+      mgr->GetRemoteWorkerLaunchStart());
+  mInterceptedChannel->SetRemoteWorkerLaunchEnd(
+      mgr->GetRemoteWorkerLaunchEnd());
 
   switch (aResult.type()) {
     case ParentToParentFetchEventRespondWithResult::

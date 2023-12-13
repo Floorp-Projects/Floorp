@@ -18,6 +18,7 @@ UNIFIED_SOURCES += [
     "Policy.cpp",
     "Registry.cpp",
     "ScheduledTask.cpp",
+    "ScheduledTaskRemove.cpp",
     "SetDefaultBrowser.cpp",
     "Telemetry.cpp",
     "UtfConvert.cpp",

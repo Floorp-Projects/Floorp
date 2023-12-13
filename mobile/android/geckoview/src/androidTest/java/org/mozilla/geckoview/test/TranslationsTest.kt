@@ -419,6 +419,38 @@ class TranslationsTest : BaseSessionTest() {
     }
 
     @Test
+    fun testNeverTranslateSpecificSite() {
+        mainSession.loadTestPath(TRANSLATIONS_ES)
+        mainSession.waitForPageStop()
+
+        // Get never translate list using Runtime API (if any) and clear never translate settings
+        var listOfSitesNeverToTranslate = sessionRule.waitForResult(RuntimeTranslation.getNeverTranslateSiteList())
+        for (site in listOfSitesNeverToTranslate) {
+            sessionRule.waitForResult(RuntimeTranslation.setNeverTranslateSpecifiedSite(false, site))
+        }
+
+        // Get never translate list using Runtime API
+        listOfSitesNeverToTranslate = sessionRule.waitForResult(RuntimeTranslation.getNeverTranslateSiteList())
+        assertTrue("Expect there to be no never translate sites set.", listOfSitesNeverToTranslate.isEmpty())
+
+        // Set site using Session API and confirm set
+        sessionRule.waitForResult(sessionRule.session.sessionTranslation!!.setNeverTranslateSiteSetting(true))
+        var sessionNeverTranslateSetting = sessionRule.waitForResult(sessionRule.session.sessionTranslation!!.neverTranslateSiteSetting)
+        assertTrue("Expect never translate to be true after setting using session API.", sessionNeverTranslateSetting)
+
+        // Get list again using Runtime API
+        listOfSitesNeverToTranslate = sessionRule.waitForResult(RuntimeTranslation.getNeverTranslateSiteList())
+        assertTrue("Expect there to be one site in the list after setting.", listOfSitesNeverToTranslate.size == 1)
+
+        // Unset using Runtime API
+        sessionRule.waitForResult(RuntimeTranslation.setNeverTranslateSpecifiedSite(false, listOfSitesNeverToTranslate[0]))
+
+        // Check unset again using Session API
+        sessionNeverTranslateSetting = sessionRule.waitForResult(sessionRule.session.sessionTranslation!!.neverTranslateSiteSetting)
+        assertTrue("Expect never translate to be false after unsetting using runtime API.", !sessionNeverTranslateSetting)
+    }
+
+    @Test
     fun testBCP47PrefSetting() {
         // Only test when running locally in Android Studio (not ./mach geckoview-junit)
         // Remote settings and translations behaves the same as production when ran from Android Studio.

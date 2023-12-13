@@ -1,6 +1,6 @@
 use core::panic::{RefUnwindSafe, UnwindSafe};
 
-use atomic_polyfill::{AtomicBool, Ordering};
+use portable_atomic::{AtomicBool, Ordering};
 use critical_section::{CriticalSection, Mutex};
 
 use crate::unsync;

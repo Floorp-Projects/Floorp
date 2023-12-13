@@ -78,21 +78,6 @@
   color: var(--toolbar-color);
 }
 
-#nav-bar:not([tabs-hidden="true"]) {
-  /* This is needed for some toolbar button animations. Gross :( */
-  position: relative;
-}
-
-@media (prefers-contrast) {
-  #nav-bar:not(:-moz-lwtheme) {
-    box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 ThreeDShadow;
-  }
-}
-
-#nav-bar:-moz-lwtheme {
-  box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 var(--lwt-tabs-border-color, rgba(0,0,0,.3));
-}
-
 #print-preview-toolbar:not(:-moz-lwtheme) {
   appearance: auto;
   -moz-default-appearance: toolbox;

@@ -54,5 +54,4 @@ More patterns and use-cases are in the [docs](https://docs.rs/once_cell/)!
 * [async_once_cell](https://crates.io/crates/async_once_cell)
 * [generic_once_cell](https://crates.io/crates/generic_once_cell) (bring your own mutex)
 
-The API of `once_cell` is being proposed for inclusion in
-[`std`](https://github.com/rust-lang/rfcs/pull/2788).
+Parts of `once_cell` API are included into `std` [as of Rust 1.70.0](https://github.com/rust-lang/rust/pull/105587).

@@ -48,6 +48,7 @@
     --tab-icon-overlay-stroke: light-dark(rgb(255, 255, 255), rgb(66, 65, 77));
     --tab-icon-overlay-fill: light-dark(rgb(91, 91, 102), rgb(251, 251, 254));
     --tab-attention-icon-color: light-dark(rgb(42, 195, 162), rgb(84, 255, 189));
+    --tabs-navbar-shadow-color: transparent;
 
     --toolbox-non-lwt-bgcolor: light-dark(rgb(240, 240, 244), rgb(28, 27, 34));
     --toolbox-non-lwt-textcolor: light-dark(rgb(21, 20, 26), rgb(251, 251, 254));

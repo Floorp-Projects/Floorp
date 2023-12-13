@@ -10,6 +10,55 @@ $schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
 $tags:
   - 'Toolkit :: Default Browser Agent'
 
+system:
+  os_version:
+    type: string
+    description: >
+      The current Windows OS version, usually as a dotted quad ("x.y.z.w") with
+      Windows Update Build Revision (UBR), but potentially as a dotted triple
+      ("x.y.z") without UBR.
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1850149
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1850149
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - default-agent
+
+  previous_os_version:
+    type: string
+    description: >
+      The Windows OS version before it was changed to the current setting. The
+      possible values are the same as for `system.os_version`.
+
+      The OS does not keep track of the previous OS version, so the agent
+      records this information itself. That means that it will be inaccurate
+      until the first time the default is changed after the agent task begins
+      running. Before then, the value of `previous_os_version` will be the same
+      as `os_version`.
+
+      This value is updated every time the Default Agent runs, so when the
+      default browser is first changed the values for `os_version` and
+      `previous_os_version` will be different. But on subsequent executions of
+      the Default Agent, the two values will be the same.
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1850149
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1850149
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - default-agent
+
 system_default:
   browser:
     type: string

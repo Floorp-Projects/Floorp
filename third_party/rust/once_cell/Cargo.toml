@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.60"
 name = "once_cell"
-version = "1.18.0"
+version = "1.19.0"
 authors = ["Aleksey Kladov <aleksey.kladov@gmail.com>"]
 exclude = [
     "*.png",
@@ -37,6 +37,7 @@ repository = "https://github.com/matklad/once_cell"
 
 [package.metadata.docs.rs]
 all-features = true
+rustdoc-args = ["--generate-link-to-definition"]
 
 [[example]]
 name = "bench"
@@ -62,10 +63,6 @@ required-features = ["std"]
 name = "test_synchronization"
 required-features = ["std"]
 
-[dependencies.atomic-polyfill]
-version = "1"
-optional = true
-
 [dependencies.critical-section]
 version = "1"
 optional = true
@@ -74,6 +71,10 @@ optional = true
 version = "0.9.3"
 optional = true
 default_features = false
+
+[dependencies.portable-atomic]
+version = "1"
+optional = true
 
 [dev-dependencies.critical-section]
 version = "1.1.1"
@@ -87,7 +88,7 @@ alloc = ["race"]
 atomic-polyfill = ["critical-section"]
 critical-section = [
     "dep:critical-section",
-    "dep:atomic-polyfill",
+    "portable-atomic",
 ]
 default = ["std"]
 parking_lot = ["dep:parking_lot_core"]

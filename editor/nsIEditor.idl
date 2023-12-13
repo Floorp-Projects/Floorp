@@ -476,27 +476,50 @@ interface nsIEditor  : nsISupports
   void cloneAttributes(in Element aDestElement, in Element aSourceElement);
 
   /**
-   * insertNode inserts aNode into aParent at aPosition.
+   * insertNode inserts aNode into aParent at aPosition and this operation is
+   * undoable.
    * No checking is done to verify the legality of the insertion.
    * That is the responsibility of the caller.
-   * @param aNode     The DOM Node to insert.
-   * @param aParent   The node to insert the new object into
-   * @param aPosition The place in aParent to insert the new node
-   *                  0=first child, 1=second child, etc.
-   *                  any number > number of current children = last child
+   * TODO: Move this method to nsIHTMLEditor, TextEditor does not allow chrome
+   * script to customize its anonymous subtree.
+   *
+   * @param aNode               The DOM Node to insert.
+   * @param aParent             The node to insert the new object into
+   * @param aPosition           The place in aParent to insert the new node
+   *                            0=first child, 1=second child, etc.
+   *                            If larger than number of children of aParent,
+   *                            this will append aNode into aParent.
+   * @param aPreseveSelection   The default value is false.  If set to true,
+   *                            the insert node handler does not update
+   *                            Selection.
+   *                            FYI: If somebody handles `beforeinput` event or
+   *                            `input` event caused by this and it does
+   *                            something undoable, selection may be changed by
+   *                            that.
    */
-  [can_run_script]
+  [optional_argc, can_run_script]
   void insertNode(in Node node,
                   in Node parent,
-                  in unsigned long aPosition);
+                  in unsigned long aPosition,
+                  [optional] in boolean aPreserveSelection);
 
 
   /**
-   * deleteNode removes aChild from aParent.
-   * @param aChild    The node to delete
+   * deleteNode removes aChild from aParent and this operation is undobable.
+   * TODO: Move this method to nsIHTMLEditor, TextEditor does not allow chrome
+   * script to customize its anonymous subtree.
+   *
+   * @param aChild              The node to delete
+   * @param aPreseveSelection   The default value is false.  If set to true,
+   *                            the insert node handler does not update
+   *                            Selection.
+   *                            FYI: If somebody handles `beforeinput` event or
+   *                            `input` event caused by this and it does
+   *                            something undoable, selection may be changed by
+   *                            that.
    */
-  [can_run_script]
-  void deleteNode(in Node child);
+  [optional_argc, can_run_script]
+  void deleteNode(in Node child, [optional] in boolean aPreserveSelection);
 
 /* ------------ Output methods -------------- */
 

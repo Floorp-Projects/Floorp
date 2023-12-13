@@ -70,18 +70,6 @@
   }
 }
 
-/* Draw the bottom border of the tabs toolbar when titlebar isn't using vibrancy */
-:root:not([inFullscreen], [tabsintitlebar]) #nav-bar:not([tabs-hidden="true"]),
-#nav-bar:not([tabs-hidden="true"]):-moz-lwtheme {
-  box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 var(--lwt-tabs-border-color, rgba(0,0,0,.3));
-}
-
-#nav-bar:not([tabs-hidden="true"]) {
-  /* The toolbar buttons that animate are only visible when the #TabsToolbar is not collapsed.
-     The animations use position:absolute and require a positioned #nav-bar. */
-  position: relative;
-}
-
 /* ----- BOOKMARK TOOLBAR ----- */
 
 #nav-bar-customization-target > #wrapper-personal-bookmarks > #personal-bookmarks {

@@ -8,11 +8,41 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 /**
- * We intentionally do not include browser-custom-colors.css,
- * instead choosing to fall back to system colours and transparencies
- * in order to accomodate the wider variety of system themes on that
- * platform.
+ * We intentionally do not include browser-custom-colors.css, instead choosing to
+ * fall back to system colors and transparencies in order to accommodate the
+ * wider variety of GTK system themes.
+ *
+ * We still want to do some of the tweaks that browser-custom-colors does, like
+ * disabling the toolbar field border and backgrounds.
  */
+@media not (prefers-contrast) {
+  :root:not(:-moz-lwtheme) {
+    --toolbar-field-border-color: transparent;
+
+    /* These colors don't exactly match the default dark color that buttons and
+     * textfields have in Adwaita[1][2], which would end up computing to
+     * rgba(0, 0, 0, .8 * .1) and rgba(255, 255, 255, 1 * .1) for light and
+     * dark, respectively.
+     *
+     * Instead, for the light theme we use .05 alpha, to increase the contrast
+     * of the text. For the dark theme, we use a darker background, which works
+     * because the toolbar background applies some white unconditionally, and
+     * matches what our default themes do in other platforms too.
+     *
+     * [1]: https://gitlab.gnome.org/GNOME/libadwaita/-/blob/42c04e038f19b2123560da662692d65480a67931/src/stylesheet/widgets/_buttons.scss#L1
+     * [2]: https://gitlab.gnome.org/GNOME/libadwaita/-/blob/42c04e038f19b2123560da662692d65480a67931/src/stylesheet/widgets/_entries.scss#L9
+     */
+    --toolbar-field-background-color: light-dark(rgba(0, 0, 0, .05), rgba(0, 0, 0, .3));
+    --toolbar-field-color: inherit;
+
+    @media (-moz-gtk-theme-family) {
+      --tabs-navbar-shadow-color: transparent;
+      @media (prefers-color-scheme: light) {
+        --urlbar-box-bgcolor: #fafafa;
+      }
+    }
+  }
+}
 
 #menubar-items {
   flex-direction: column; /* for flex hack */
@@ -73,12 +103,6 @@
     appearance: none;
     border-style: none;
   }
-}
-
-#nav-bar:not([tabs-hidden="true"]) {
-  box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 var(--lwt-tabs-border-color, rgba(0,0,0,.3));
-  /* This is needed for some toolbar button animations. Gross :( */
-  position: relative;
 }
 
 /* Bookmark menus */

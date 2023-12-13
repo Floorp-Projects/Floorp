@@ -20,6 +20,10 @@ const ALWAYS_TRANSLATE_LANGS_PREF =
 const NEVER_TRANSLATE_LANGS_PREF =
   "browser.translations.neverTranslateLanguages";
 
+ChromeUtils.defineESModuleGetters(this, {
+  TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
+});
+
 function Tree(aId, aData) {
   this._data = aData;
   this._tree = document.getElementById(aId);
@@ -103,18 +107,7 @@ var gTranslationsSettings = {
     }
 
     // Load site permissions into an array.
-    this._neverTranslateSites = [];
-    for (const perm of Services.perms.getAllByTypes([
-      TRANSLATIONS_PERMISSION,
-    ])) {
-      if (perm.capability === Services.perms.DENY_ACTION) {
-        this._neverTranslateSites.push(perm.principal.origin);
-      }
-    }
-    let stripProtocol = s => s?.replace(/^\w+:/, "") || "";
-    this._neverTranslateSites.sort((a, b) => {
-      return stripProtocol(a).localeCompare(stripProtocol(b));
-    });
+    this._neverTranslateSites = TranslationsParent.listNeverTranslateSites();
 
     // Load language tags into arrays.
     this._alwaysTranslateLangs = this.getAlwaysTranslateLanguages();
@@ -381,9 +374,7 @@ var gTranslationsSettings = {
     let removedNeverTranslateSites =
       this._neverTranslateSiteTree.getSelectedItems();
     for (let origin of removedNeverTranslateSites) {
-      let principal =
-        Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
-      Services.perms.removeFromPrincipal(principal, TRANSLATIONS_PERMISSION);
+      TranslationsParent.setNeverTranslateSiteByOrigin(false, origin);
     }
   },
 
@@ -419,9 +410,7 @@ var gTranslationsSettings = {
     );
 
     for (let origin of removedNeverTranslateSites) {
-      let principal =
-        Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
-      Services.perms.removeFromPrincipal(principal, TRANSLATIONS_PERMISSION);
+      TranslationsParent.setNeverTranslateSiteByOrigin(false, origin);
     }
 
     this.onSelectNeverTranslateSite();

@@ -464,7 +464,7 @@ void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
   traceWeakFinalizationObserverEdges(trc, zone);
 
   for (auto* cache : zone->weakCaches()) {
-    cache->traceWeak(trc, nullptr);
+    cache->traceWeak(trc, JS::detail::WeakCacheBase::DontLockStoreBuffer);
   }
 
   if (jit::JitZone* jitZone = zone->jitZone()) {
@@ -817,7 +817,7 @@ void GCRuntime::updateRuntimePointersToRelocatedCells(AutoGCSession& session) {
   // Sweep everything to fix up weak pointers.
   jit::JitRuntime::TraceWeakJitcodeGlobalTable(rt, &trc);
   for (JS::detail::WeakCacheBase* cache : rt->weakCaches()) {
-    cache->traceWeak(&trc, nullptr);
+    cache->traceWeak(&trc, JS::detail::WeakCacheBase::DontLockStoreBuffer);
   }
 
   if (rt->hasJitRuntime() && rt->jitRuntime()->hasInterpreterEntryMap()) {

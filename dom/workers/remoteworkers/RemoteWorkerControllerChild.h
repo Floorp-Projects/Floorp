@@ -33,6 +33,9 @@ class RemoteWorkerControllerChild final : public PRemoteWorkerControllerChild {
 
   void MaybeSendDelete();
 
+  TimeStamp GetRemoteWorkerLaunchStart();
+  TimeStamp GetRemoteWorkerLaunchEnd();
+
  private:
   ~RemoteWorkerControllerChild() = default;
 
@@ -57,6 +60,9 @@ class RemoteWorkerControllerChild final : public PRemoteWorkerControllerChild {
   RefPtr<RemoteWorkerObserver> mObserver;
 
   bool mIPCActive = true;
+
+  TimeStamp mRemoteWorkerLaunchStart;
+  TimeStamp mRemoteWorkerLaunchEnd;
 };
 
 }  // namespace mozilla::dom

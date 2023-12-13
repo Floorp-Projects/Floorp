@@ -24,7 +24,10 @@ export class PromptFactory {
     switch (aEvent.type) {
       case "mozshowdropdown":
       case "mozshowdropdown-sourcetouch":
-        this._handleSelect(aEvent.composedTarget, /* aIsDropDown = */ true);
+        this._handleSelect(
+          aEvent.composedTarget,
+          aEvent.composedTarget.isCombobox
+        );
         break;
       case "MozOpenDateTimePicker":
         this._handleDateTime(aEvent.composedTarget);

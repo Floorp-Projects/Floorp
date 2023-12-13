@@ -29,7 +29,6 @@ async function runMainTest(aInput, aDesc, aExpectedScheme) {
       window,
       value: aInput,
     });
-    await TestUtils.waitForTick();
     EventUtils.synthesizeKey("KEY_Enter");
     await loaded;
 
@@ -48,7 +47,6 @@ async function runCanonizedTest(aInput, aDesc, aExpectedScheme) {
       window,
       value: aInput,
     });
-    await TestUtils.waitForTick();
     EventUtils.synthesizeKey("KEY_Enter", { ctrlKey: true });
     await loaded;
 
@@ -73,7 +71,6 @@ async function runNewTabTest(aInput, aDesc, aExpectedScheme) {
         window,
         value: aInput,
       });
-      await TestUtils.waitForTick();
       EventUtils.synthesizeKey("KEY_Enter", { altKey: true });
       const newTab = await newTabPromise;
 
@@ -101,7 +98,6 @@ async function runNewWindowTest(aInput, aDesc, aExpectedScheme) {
       window,
       value: aInput,
     });
-    await TestUtils.waitForTick();
     EventUtils.synthesizeKey("KEY_Enter", { shiftKey: true });
     const newWindow = await newWindowPromise;
 

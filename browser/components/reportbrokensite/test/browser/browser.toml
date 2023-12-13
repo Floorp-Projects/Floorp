@@ -15,6 +15,8 @@ support-files = [
 
 ["browser_report_site_issue_fallback.js"]
 
+["browser_site_not_working_fallback.js"]
+
 ["browser_send_more_info.js"]
 
 ["browser_back_buttons.js"]

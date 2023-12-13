@@ -34,6 +34,11 @@ let { Preferences } = ChromeUtils.importESModule(
 add_setup(async function () {
   await UrlClassifierTestUtils.addTestTrackers();
 
+  // Disable Report Broken Site, as it hides "Site not working?" when enabled.
+  await SpecialPowers.pushPrefEnv({
+    set: [["ui.new-webcompat-reporter.enabled", false]],
+  });
+
   registerCleanupFunction(() => {
     // Clear prefs that are touched in this test again for sanity.
     Services.prefs.clearUserPref(TP_PREF);

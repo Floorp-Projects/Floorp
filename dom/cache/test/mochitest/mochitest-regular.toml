@@ -4,7 +4,6 @@
 
 [DEFAULT]
 dupe-manifest = true
-
 tags = "dom-cache-api dom-cache-api-regular"
 
-["include:mochitest-common.ini"]
+["include:mochitest-common.toml"]

@@ -735,7 +735,7 @@ class IntervalSet {
     }
 
     bool LessThan(const ElemType& aT1, const ElemType& aT2) const {
-      return aT1.mStart - aT1.mFuzz < aT2.mStart + aT2.mFuzz;
+      return aT1.mStart < aT2.mStart;
     }
   };
 };

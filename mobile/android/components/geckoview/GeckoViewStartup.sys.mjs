@@ -210,6 +210,8 @@ export class GeckoViewStartup {
             "GeckoView:Translations:GetLanguageSetting",
             "GeckoView:Translations:GetLanguageSettings",
             "GeckoView:Translations:SetLanguageSettings",
+            "GeckoView:Translations:GetNeverTranslateSpecifiedSites",
+            "GeckoView:Translations:SetNeverTranslateSpecifiedSite",
           ],
         });
 

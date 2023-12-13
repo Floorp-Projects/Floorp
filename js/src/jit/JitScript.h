@@ -101,17 +101,28 @@ static IonScript* const IonCompilingScriptPtr =
  * BaselineScript and IonScript/WarpScript to which it
  * corresponds. They can be destroyed and recreated, and the ICScript
  * will remain valid.
+ *
+ * When we discard JIT code, we mark ICScripts that are active on the stack as
+ * active and then purge all of the inactive ICScripts. We also purge ICStubs,
+ * including the CallInlinedFunction stub at the trial inining call site, and
+ * reset the ICStates to allow trial inlining again later.
+ *
+ * If there's a BaselineFrame for an inlined ICScript, we'll preserve both this
+ * ICScript and the IC chain for the call site in the caller's ICScript.
+ * See ICScript::purgeStubs and ICScript::purgeInactiveICScripts.
  */
 
 class alignas(uintptr_t) ICScript final : public TrailingArray {
  public:
   ICScript(uint32_t warmUpCount, Offset fallbackStubsOffset, Offset endOffset,
-           uint32_t depth, InliningRoot* inliningRoot = nullptr)
+           uint32_t depth, uint32_t bytecodeSize,
+           InliningRoot* inliningRoot = nullptr)
       : inliningRoot_(inliningRoot),
         warmUpCount_(warmUpCount),
         fallbackStubsOffset_(fallbackStubsOffset),
         endOffset_(endOffset),
-        depth_(depth) {}
+        depth_(depth),
+        bytecodeSize_(bytecodeSize) {}
 
   bool isInlined() const { return depth_ > 0; }
 
@@ -141,6 +152,8 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
   InliningRoot* inliningRoot() const { return inliningRoot_; }
   uint32_t depth() const { return depth_; }
 
+  uint32_t bytecodeSize() const { return bytecodeSize_; }
+
   void resetWarmUpCount(uint32_t count) { warmUpCount_ = count; }
 
   static constexpr size_t offsetOfFirstStub(uint32_t entryIndex) {
@@ -169,7 +182,13 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
   void removeInlinedChild(uint32_t pcOffset);
   bool hasInlinedChild(uint32_t pcOffset);
 
-  void purgeStubs(Zone* zone);
+  void purgeStubs(Zone* zone, ICStubSpace& newStubSpace);
+
+  void purgeInactiveICScripts();
+
+  bool active() const { return active_; }
+  void setActive() { active_ = true; }
+  void resetActive() { active_ = false; }
 
   void trace(JSTracer* trc);
   bool traceWeak(JSTracer* trc);
@@ -208,6 +227,13 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
 
   // The inlining depth of this ICScript. 0 for the inlining root.
   uint32_t depth_;
+
+  // Bytecode size of the JSScript corresponding to this ICScript.
+  uint32_t bytecodeSize_;
+
+  // Flag set when discarding JIT code to indicate this script is on the stack
+  // and should not be discarded.
+  bool active_ = false;
 
   Offset icEntriesOffset() const { return offsetOfICEntries(); }
   Offset fallbackStubsOffset() const { return fallbackStubsOffset_; }
@@ -305,10 +331,6 @@ class alignas(uintptr_t) JitScript final
   Offset endOffset_ = 0;
 
   struct Flags {
-    // Flag set when discarding JIT code to indicate this script is on the stack
-    // and type information and JIT code should not be discarded.
-    bool active : 1;
-
     // True if this script entered Ion via OSR at a loop header.
     bool hadIonOSR : 1;
   };
@@ -358,9 +380,10 @@ class alignas(uintptr_t) JitScript final
 
   uint32_t numICEntries() const { return icScript_.numICEntries(); }
 
-  bool active() const { return flags_.active; }
-  void setActive() { flags_.active = true; }
-  void resetActive() { flags_.active = false; }
+#ifdef DEBUG
+  bool hasActiveICScript() const;
+#endif
+  void resetAllActiveFlags();
 
   void ensureProfileString(JSContext* cx, JSScript* script);
 
@@ -417,7 +440,9 @@ class alignas(uintptr_t) JitScript final
 
   void trace(JSTracer* trc);
   void traceWeak(JSTracer* trc);
-  void purgeStubs(JSScript* script);
+  void purgeStubs(JSScript* script, ICStubSpace& newStubSpace);
+
+  void purgeInactiveICScripts();
 
   ICEntry& icEntryFromPCOffset(uint32_t pcOffset) {
     return icScript_.icEntryFromPCOffset(pcOffset);
@@ -548,9 +573,9 @@ class MOZ_RAII AutoKeepJitScripts {
   inline ~AutoKeepJitScripts();
 };
 
-// Mark JitScripts on the stack as active, so that they are not discarded
+// Mark ICScripts on the stack as active, so that they are not discarded
 // during GC, and copy active Baseline IC stubs to the new stub space.
-void MarkActiveJitScriptsAndCopyStubs(Zone* zone, ICStubSpace& newStubSpace);
+void MarkActiveICScriptsAndCopyStubs(Zone* zone, ICStubSpace& newStubSpace);
 
 #ifdef JS_STRUCTURED_SPEW
 void JitSpewBaselineICStats(JSScript* script, const char* dumpReason);

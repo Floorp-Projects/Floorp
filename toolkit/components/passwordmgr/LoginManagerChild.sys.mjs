@@ -812,6 +812,12 @@ export class LoginFormState {
       return;
     }
 
+    // The login manager is responsible for fields with the "webauthn" credential type.
+    let acCredentialType = focusedField.getAutocompleteInfo()?.credentialType;
+    if (acCredentialType == "webauthn") {
+      lazy.gFormFillService.markAsLoginManagerField(focusedField);
+    }
+
     lazy.log("Opening the autocomplete popup.");
     lazy.gFormFillService.showPopup();
   }

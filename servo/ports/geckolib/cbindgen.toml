@@ -104,6 +104,7 @@ include = [
   "DisplayInside",
   "DisplayMode",
   "Platform",
+  "GtkThemeFamily",
   "PrefersColorScheme",
   "PrefersContrast",
   "DynamicRange",

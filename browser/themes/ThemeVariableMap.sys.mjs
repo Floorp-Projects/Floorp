@@ -56,10 +56,9 @@ export const ThemeVariableMap = [
     },
   ],
   [
-    "--lwt-tabs-border-color",
+    "--tabs-navbar-shadow-color",
     {
       lwtProperty: "toolbar_top_separator",
-      optionalElementID: "navigator-toolbox",
     },
   ],
   [

@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty('Intl')||(!this.Intl.Segmenter&&!this.hasOwnProperty('addIntlExtras')))
+// |reftest| skip-if(!this.hasOwnProperty('Intl')||!this.Intl.Segmenter)
 
 // https://www.unicode.org/reports/tr29/#Word_Boundary_Rules
 

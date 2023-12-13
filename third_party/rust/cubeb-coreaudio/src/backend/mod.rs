@@ -663,9 +663,6 @@ extern "C" fn audiounit_output_callback(
         output_frames
     );
 
-    // If `input_buffer` is non-null but `input_frames` is zero and this is the first call to
-    // resampler, then we will hit an assertion in resampler code since no internal buffer will be
-    // allocated in the resampler due to zero `input_frames`
     let outframes = stm.core_stream_data.resampler.fill(
         input_buffer,
         if input_buffer.is_null() {
@@ -2592,7 +2589,12 @@ impl<'ctx> CoreStreamData<'ctx> {
 
     fn create_audiounits(&mut self) -> Result<(device_info, device_info)> {
         self.debug_assert_is_on_stream_queue();
-        let should_use_voice_processing_unit = self.has_input() && self.has_output();
+        let should_use_voice_processing_unit = self.has_input()
+            && self.has_output()
+            && self
+                .input_stream_params
+                .prefs()
+                .contains(StreamPrefs::VOICE);
 
         let should_use_aggregate_device = {
             // It's impossible to create an aggregate device from an aggregate device, and it's

@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Networking performance test: url parsing</title>
+</head>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+
+  // this test is just used locally to get an idea of how long url parsing takes
+  "use strict";
+
+  let runs = 20000;
+  let timeToCreateDataUrl = 0;
+  let timeToCreateDataSlashUrl = 0;
+  let timeToCreateJsUrl = 0;
+  let timeToCreateJsSlashUrl = 0;
+
+  // data scheme
+  add_task(async () => {
+    let before = new Date().getTime();
+    for (let i = 0; i < runs; i++) {
+      new URL("data:,test" + i);
+    }
+    let after = new Date().getTime();
+    timeToCreateDataUrl = after - before;
+    dump(
+      "Time to create data url (milliseconds): " + timeToCreateDataUrl + "\n"
+    );
+  });
+
+  // data://
+  add_task(async () => {
+    let before = new Date().getTime();
+    for (let i = 0; i < runs; i++) {
+      new URL("data://,test" + i);
+    }
+    let after = new Date().getTime();
+    timeToCreateDataSlashUrl = after - before;
+    dump(
+      "Time to create data // url (milliseconds): " + timeToCreateDataSlashUrl + "\n"
+    );
+  });
+
+  // javascript scheme
+  add_task(async () => {
+    let beforeJs = new Date().getTime();
+    for (let i = 0; i < runs; i++) {
+      new URL("javascript:,test" + i);
+    }
+    let afterJs = new Date().getTime();
+    timeToCreateJsUrl = afterJs - beforeJs;
+    dump(
+      "Time to create JS url (milliseconds): " + timeToCreateJsUrl + "\n"
+    );
+  });
+
+  // javascript://
+  add_task(async () => {
+    let beforeJs = new Date().getTime();
+    for (let i = 0; i < runs; i++) {
+      new URL("javascript://,test" + i);
+    }
+    let afterJs = new Date().getTime();
+    timeToCreateJsSlashUrl = afterJs - beforeJs;
+    dump(
+      "Time to create JS // url (milliseconds): " + timeToCreateJsSlashUrl + "\n"
+    );
+  });
+
+  ok("finished");
+
+</script>
+<body>
+</body>
+</html>

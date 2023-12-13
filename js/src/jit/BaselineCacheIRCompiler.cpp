@@ -2642,8 +2642,11 @@ ICAttachResult js::jit::AttachBaselineCacheIRStub(
       stub->setTrialInliningState(writer.trialInliningState());
       break;
     case TrialInliningState::MonomorphicInlined:
+      stub->setTrialInliningState(TrialInliningState::Failure);
+      break;
     case TrialInliningState::Inlined:
       stub->setTrialInliningState(TrialInliningState::Failure);
+      icScript->removeInlinedChild(stub->pcOffset());
       break;
     case TrialInliningState::Failure:
       break;

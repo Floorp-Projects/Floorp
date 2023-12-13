@@ -1,0 +1,10 @@
+[DEFAULT]
+subsuite = "webgpu"
+run-if = ["release_or_beta"]
+
+# Even if the pref were enabled, WebGPU is only available in secure contexts.
+#
+# See spec WebIDL, like this: https://www.w3.org/TR/webgpu/#navigatorgpu
+scheme = "https"
+
+["test_disabled.html"]
