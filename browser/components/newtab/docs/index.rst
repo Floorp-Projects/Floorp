@@ -99,6 +99,15 @@ running
   ./mach npm test --prefix=browser/components/newtab &&
   ./mach npm run debugcoverage --prefix=browser/components/newtab
 
+Discovery Stream Developer tools
+--------------------------------
+
+You can access the developer tools for the Discovery Stream components of about:newtab by
+visiting `about:config` and setting `browser.newtabpage.activity-stream.asrouter.devtoolsEnabled`
+to `true`.
+
+Then, go to any `about:newtab` page and click on the wrench icon in the top-right corner.
+
 Detailed Docs
 -------------
 .. toctree::
