@@ -9668,17 +9668,6 @@ Document* Document::Open(const Optional<nsAString>& /* unused */,
     }
   }
 
-  // document.open() inherits the CSP from the opening document.
-  // Please create an actual copy of the CSP (do not share the same
-  // reference) otherwise appending a new policy within the opened
-  // document will be incorrectly propagated to the opening doc.
-  nsCOMPtr<nsIContentSecurityPolicy> csp = callerDoc->GetCsp();
-  if (csp) {
-    RefPtr<nsCSPContext> cspToInherit = new nsCSPContext();
-    cspToInherit->InitFromOther(static_cast<nsCSPContext*>(csp.get()));
-    mCSP = cspToInherit;
-  }
-
   // At this point we know this is a valid-enough document.open() call
   // and not a no-op.  Increment our use counter.
   SetUseCounter(eUseCounter_custom_DocumentOpen);

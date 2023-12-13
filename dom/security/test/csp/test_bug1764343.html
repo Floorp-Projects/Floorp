@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1764343 - CSP inheritance for same-origin iframes</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+  <meta http-equiv="Content-Security-Policy" content="style-src 'unsafe-inline'; script-src 'nonce-parent' 'nonce-a' 'nonce-b' 'nonce-c'; img-src 'self' data:">
+</head>
+<body>
+  <iframe id="sameOriginMetaFrame"></iframe>
+  <iframe id="aboutBlankMetaFrame"></iframe>
+<script nonce='parent'>
+SimpleTest.waitForExplicitFinish();
+
+const NEW_HTML =`
+  <head>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'nonce-a' 'nonce-c' 'nonce-d';">
+  </head>
+  <body>
+    <style>
+      body { background-color: rgb(255, 0, 0); }
+    </style>
+    <script nonce="a">
+      document.a = true;
+    <\/script>
+    <script nonce="b">
+      document.b = true;
+    <\/script>
+    <script nonce="c">
+      document.c = true;
+    <\/script>
+    <script nonce="d">
+      document.d = true;
+    <\/script>
+    <img id="testInlineImage"></img>
+  </body>
+  `;
+
+// test file's CSP meta tags shouldn't overwrite same-origin iframe's CSP meta tags
+async function testBlocked() {
+  info("testBlocked");
+
+  let sameOriginMetaFrame = document.getElementById("sameOriginMetaFrame");
+  let onFrameLoad = new Promise(resolve => {
+    sameOriginMetaFrame.addEventListener('load', resolve, {once: true});
+  });
+  sameOriginMetaFrame.src = 'file_bug1764343.html';
+  await onFrameLoad;
+
+  let doc = sameOriginMetaFrame.contentDocument;
+  doc.open();
+  doc.write(NEW_HTML);
+
+  let bgcolor = window.getComputedStyle(doc.body).getPropertyValue("background-color");
+  is(bgcolor, "rgba(0, 0, 0, 0)", "inital background value in FF should be 'transparent'");
+
+  let img = doc.getElementById("testInlineImage");
+  let onImgError = new Promise(resolve => {
+    img.addEventListener('error', resolve, {once: true});
+  });
+  img.src = "//mochi.test:8888/tests/image/test/mochitest/blue.png";
+  await onImgError;
+  is(img.complete, false, "image should not be loaded");
+
+  // Make sure that CSP policy can further restrict (no 'nonce-b'), but not weak (adding 'nonce-c' or 'nonce-d')
+  is(doc.a, true, "doc.a should be true (script 'nonce-a' allowed)");
+  is(doc.b, undefined, "doc.b should be undefined (script 'nonce-b' blocked)");
+  is(doc.c, undefined, "doc.c should be undefined (script 'nonce-c' blocked)");
+  is(doc.d, undefined, "doc.d should be undefined (script 'nonce-d' blocked)");
+}
+
+  // test file's CSP meta tags should apply to about blank iframe's CSP meta tags
+async function testNotBlocked() {
+  info("testNotBlocked");
+
+  let aboutBlankMetaFrame = document.getElementById("aboutBlankMetaFrame");
+  let onFrameLoad = new Promise(resolve => {
+    aboutBlankMetaFrame.addEventListener('load', resolve, {once: true});
+  });
+  aboutBlankMetaFrame.src = 'about:blank';
+  await onFrameLoad;
+
+  let doc = aboutBlankMetaFrame.contentDocument;
+  doc.open();
+  doc.write(NEW_HTML);
+
+  let bgcolor = window.getComputedStyle(doc.body).getPropertyValue("background-color");
+  is(bgcolor, "rgb(255, 0, 0)", "background value should be updated to red");
+
+  let img = doc.getElementById("testInlineImage");
+  let onImgLoad = new Promise(resolve => {
+    img.addEventListener('load', resolve, {once: true});
+  });
+  img.src = "//mochi.test:8888/tests/image/test/mochitest/blue.png";
+  await onImgLoad;
+  is(img.complete, true, "image should be loaded");
+
+  // New HTML contains 'nonce-a/c/d' and no CSP in about:blank.
+  // (Can not weaken parent with 'nonce-d')
+  is(doc.a, true, "doc.a should be true (script 'nonce-a' allowed)");
+  is(doc.b, undefined, "doc.b should be undefined (script 'nonce-b' blocked)");
+  is(doc.c, true, "doc.c should be true (script 'nonce-c' allowed)");
+  is(doc.d, undefined, "doc.d should be true (script 'nonce-d' blocked)");
+}
+
+(async function () {
+  await testBlocked();
+  await testNotBlocked();
+  SimpleTest.finish();
+})();
+</script>
+</body>
+</html>
