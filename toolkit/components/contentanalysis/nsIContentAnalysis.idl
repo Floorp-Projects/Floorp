@@ -56,8 +56,9 @@ interface nsIContentAnalysisResponse : nsISupports
 
   /**
    * Acknowledge receipt of an analysis response.
-   * Should always be called after successful resolution of the promise
-   * from AnalyzeContentRequest.
+   * If false is passed for aAutoAcknowledge to AnalyzeContentRequest,
+   * the caller is responsible for calling this after successful
+   * resolution of the promise.
    */
   void acknowledge(in nsIContentAnalysisAcknowledgement aCaa);
 };
@@ -185,22 +186,39 @@ interface nsIContentAnalysis : nsISupports
    * The resulting Promise resolves to a nsIContentAnalysisResponse,
    * which may take some time to get from the analysis server.  It will
    * be rejected, with an string error description, if any error occurs.
-   * A successful nsIContentAnalysisResponse must be acknowledged.
-   * See @nsIContentAnalysisResponse.
+   *
+   * @param aCar
+   *        The request to analyze.
+   * @param aAutoAcknowledge
+   *        Whether to send an acknowledge message to the agent after the agent sends a response.
+   *        Passing false means that the caller is responsible for
+   *        calling nsIContentAnalysisResponse::acknowledge(), unless the request is cancelled.
    */
   [implicit_jscontext]
-  Promise analyzeContentRequest(in nsIContentAnalysisRequest aCar);
+  Promise analyzeContentRequest(in nsIContentAnalysisRequest aCar, in bool aAutoAcknowledge);
 
   /**
    * Same functionality as AnalyzeContentRequest(), but more convenient to call
    * from C++ since it takes a callback instead of returning a Promise.
+   *
+   * @param aCar
+   *        The request to analyze.
+   * @param aAutoAcknowledge
+   *        Whether to send an acknowledge message to the agent after the agent sends a response.
+   *        Passing false means that the caller is responsible for
+   *        calling nsIContentAnalysisResponse::acknowledge(), unless the request is cancelled.
+   * @param callback
+   *        Callbacks to be called when the agent sends a response message (or when there is an error).
    */
-  void analyzeContentRequestCallback(in nsIContentAnalysisRequest aCar, in nsIContentAnalysisCallback callback);
+  void analyzeContentRequestCallback(in nsIContentAnalysisRequest aCar, in bool aAutoAcknowledge, in nsIContentAnalysisCallback callback);
 
   /**
    * Cancels the request that is in progress. This may not actually cancel the request
    * with the analysis server, but it means that Gecko will immediately act like the request
    * was denied.
+   *
+   * @param aRequestToken
+   *        The token for the request to cancel.
    */
   void cancelContentAnalysisRequest(in ACString aRequestToken);
 };
