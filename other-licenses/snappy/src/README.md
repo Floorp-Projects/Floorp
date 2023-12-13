@@ -90,13 +90,13 @@ your calling file, and link against the compiled library.
 
 There are many ways to call Snappy, but the simplest possible is
 
-```c++
+```cpp
 snappy::Compress(input.data(), input.size(), &output);
 ```
 
 and similarly
 
-```c++
+```cpp
 snappy::Uncompress(input.data(), input.size(), &output);
 ```
 

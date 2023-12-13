@@ -408,7 +408,7 @@ Declaring a Log Module
 
 Note: Log module names can only contain specific characters. The first character must be a lowercase or uppercase ASCII char, underscore, dash, or dot. Subsequent characters may be any of those, or an ASCII digit.
 
-.. code-block:: c++
+.. code-block:: cpp
 
   #include "mozilla/Logging.h"
 
@@ -455,7 +455,7 @@ A basic interface is provided in the form of 2 macros and an enum class.
 Example Usage
 -------------
 
-.. code-block:: c++
+.. code-block:: cpp
 
   #include "mozilla/Logging.h"
 

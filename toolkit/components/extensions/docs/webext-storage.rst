@@ -83,7 +83,7 @@ For example, this interface defines the following method:
 As you will notice, the 3rd arg is another interface, `mozIExtensionStorageCallback`, also
 defined in that IDL file. This is a small, generic interface defined as:
 
-.. code-block::
+.. code-block:: cpp
 
     interface mozIExtensionStorageCallback : nsISupports {
         // Called when the operation completes. Operations that return a result,

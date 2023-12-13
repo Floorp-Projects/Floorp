@@ -19,7 +19,7 @@ Short example, details below.
 
 Note: Most marker-related identifiers are in the ``mozilla`` namespace, to be added where necessary.
 
-.. code-block:: c++
+.. code-block:: cpp
 
     // Record a simple marker with the category of DOM.
     PROFILER_MARKER_UNTYPED("Marker Name", DOM);
@@ -30,7 +30,7 @@ Note: Most marker-related identifiers are in the ``mozilla`` namespace, to be ad
     // Record a custom marker of type `ExampleNumberMarker` (see definition below).
     PROFILER_MARKER("Number", OTHER, MarkerOptions{}, ExampleNumberMarker, 42);
 
-.. code-block:: c++
+.. code-block:: cpp
 
     // Marker type definition.
     struct ExampleNumberMarker {
@@ -60,7 +60,7 @@ Header to Include
 If the compilation unit only defines and records untyped, text, and/or its own markers, include
 `the main profiler markers header <https://searchfox.org/mozilla-central/source/tools/profiler/public/ProfilerMarkers.h>`_:
 
-.. code-block:: c++
+.. code-block:: cpp
 
     #include "mozilla/ProfilerMarkers.h"
 
@@ -68,7 +68,7 @@ If it also records one of the other common markers defined in
 `ProfilerMarkerTypes.h <https://searchfox.org/mozilla-central/source/tools/profiler/public/ProfilerMarkerTypes.h>`_,
 include that one instead:
 
-.. code-block:: c++
+.. code-block:: cpp
 
     #include "mozilla/ProfilerMarkerTypes.h"
 
@@ -76,7 +76,7 @@ And if it uses any other profiler functions (e.g., labels), use
 `the main Gecko Profiler header <https://searchfox.org/mozilla-central/source/tools/profiler/public/GeckoProfiler.h>`_
 instead:
 
-.. code-block:: c++
+.. code-block:: cpp
 
     #include "GeckoProfiler.h"
 
@@ -84,7 +84,7 @@ The above works from source files that end up in libxul, which is true for the m
 of Firefox source code. But some files live outside of libxul, such as mfbt, in which
 case the advice is the same but the equivalent headers are from the Base Profiler instead:
 
-.. code-block:: c++
+.. code-block:: cpp
 
     #include "mozilla/BaseProfilerMarkers.h" // Only own/untyped/text markers
     #include "mozilla/BaseProfilerMarkerTypes.h" // Only common markers
@@ -96,7 +96,7 @@ Untyped Markers
 Untyped markers don't carry any information apart from common marker data:
 Name, category, options.
 
-.. code-block:: c++
+.. code-block:: cpp
 
     PROFILER_MARKER_UNTYPED(
         // Name, and category pair.
@@ -151,7 +151,7 @@ Text Markers
 Text markers are very common, they carry an extra text as a fourth argument, in addition to
 the marker name. Use the following macro:
 
-.. code-block:: c++
+.. code-block:: cpp
 
     PROFILER_MARKER_TEXT(
         // Name, category pair, options.
@@ -173,7 +173,7 @@ Other Typed Markers
 From C++ code, a marker of some type ``YourMarker`` (details about type definition follow) can be
 recorded like this:
 
-.. code-block:: c++
+.. code-block:: cpp
 
     PROFILER_MARKER(
         "YourMarker name", OTHER,
@@ -193,7 +193,7 @@ After the first three common arguments (like in ``PROFILER_MARKER_UNTYPED``), th
 To capture time intervals around some important operations, it is common to store a timestamp, do the work,
 and then record a marker, e.g.:
 
-.. code-block:: c++
+.. code-block:: cpp
 
     void DoTimedWork() {
       TimeStamp start = TimeStamp::Now();
@@ -208,7 +208,7 @@ This is especially useful if there are multiple scope exit points.
 
 ``AUTO_PROFILER_MARKER_TEXT`` is `the only one implemented <https://searchfox.org/mozilla-central/search?q=id%3AAUTO_PROFILER_MARKER_TEXT`_ at this time.
 
-.. code-block:: c++
+.. code-block:: cpp
 
     void MaybeDoTimedWork(bool aDoIt) {
       AUTO_PROFILER_MARKER_TEXT("Timed work", OTHER, "Details");
@@ -249,7 +249,7 @@ markers of that type in C++.
 By convention, the suffix "Marker" is recommended to better distinguish them
 from non-profiler entities in the source.
 
-.. code-block:: c++
+.. code-block:: cpp
 
     struct YourMarker {
 
@@ -262,7 +262,7 @@ markers in the profiler storage, and to identify them uniquely on profiler.firef
 
 This name is defined in a special static member function ``MarkerTypeName``:
 
-.. code-block:: c++
+.. code-block:: cpp
 
     // …
       static constexpr Span<const char> MarkerTypeName() {
@@ -284,7 +284,7 @@ The first function parameters is always ``SpliceableJSONWriter& aWriter``,
 it will be used to stream the data as JSON, to later be read by
 profiler.firefox.com.
 
-.. code-block:: c++
+.. code-block:: cpp
 
     // …
       static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter,
@@ -310,7 +310,7 @@ in binary form (i.e., there are no optimizable ``move`` operations).
 For example, here's how to handle a string, a 64-bit number, another string, and
 a timestamp:
 
-.. code-block:: c++
+.. code-block:: cpp
 
     // …
                                        const ProfilerString8View& aString,
@@ -334,7 +334,7 @@ how it should be displayed on profiler.firefox.com (see next section).
 
 Here's how the above functions parameters could be streamed:
 
-.. code-block:: c++
+.. code-block:: cpp
 
     // …
         aWriter.StringProperty("myString", aString);
@@ -355,7 +355,7 @@ displayed on profiler.firefox.com.
 The static member function ``MarkerTypeDisplay`` returns an opaque ``MarkerSchema``
 object, which will be forwarded to profiler.firefox.com.
 
-.. code-block:: c++
+.. code-block:: cpp
 
     // …
       static MarkerSchema MarkerTypeDisplay() {
@@ -363,7 +363,7 @@ object, which will be forwarded to profiler.firefox.com.
 The ``MarkerSchema`` type will be used repeatedly, so for convenience we can define
 a local type alias:
 
-.. code-block:: c++
+.. code-block:: cpp
 
     // …
         using MS = MarkerSchema;
@@ -377,7 +377,7 @@ full list <https://searchfox.org/mozilla-central/define?q=T_mozilla%3A%3AMarkerS
 Here is the most common set of locations, showing markers of that type in both the
 Marker Chart and the Marker Table panels:
 
-.. code-block:: c++
+.. code-block:: cpp
 
     // …
         MS schema(MS::Location::MarkerChart, MS::Location::MarkerTable);
@@ -394,7 +394,7 @@ The arguments is a string that may refer to marker data within braces:
 For example, here's how to set the Marker Chart label to show the marker name and the
 ``myBytes`` number of bytes:
 
-.. code-block:: c++
+.. code-block:: cpp
 
     // …
         schema.SetChartLabel("{marker.name} – {marker.data.myBytes}");
@@ -424,7 +424,7 @@ Each row may either be:
 
 * Or a fixed label and value strings, using ``MarkerSchema::AddStaticLabelValue``.
 
-.. code-block:: c++
+.. code-block:: cpp
 
     // …
         schema.AddKeyLabelFormatSearchable(
@@ -438,7 +438,7 @@ Each row may either be:
 
 Finally the ``schema`` object is returned from the function:
 
-.. code-block:: c++
+.. code-block:: cpp
 
     // …
         return schema;
@@ -449,7 +449,7 @@ compulsory functions, to make the code clearer.
 
 And that is the end of the marker definition ``struct``.
 
-.. code-block:: c++
+.. code-block:: cpp
 
     // …
     };

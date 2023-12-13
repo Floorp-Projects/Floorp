@@ -12,7 +12,7 @@ tasks should run on your push.
 
 To use:
 
-.. code-block::
+.. code-block:: bash
 
    $ mach try auto
 

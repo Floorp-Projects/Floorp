@@ -122,7 +122,7 @@ WebIDL Interfaces
 WebIDL interfaces are also valid XPIDL types. To declare a WebIDL interface in
 XPIDL, write:
 
-.. code-block::
+.. code-block:: JavaScript
 
     webidl InterfaceName;
 
@@ -148,7 +148,7 @@ the ``cenum`` construct can be used to group constants together. Constants
 grouped in a ``cenum`` will be reflected as-if they were declared directly on
 the interface, in Rust and Javascript code.
 
-.. code-block::
+.. code-block:: JavaScript
 
    cenum MyCEnum : 8 {
      eSomeValue,  // starts at 0

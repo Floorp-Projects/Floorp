@@ -64,7 +64,7 @@ Adjusting the build configuration
 Create the build configuration file ``.mozconfig`` with the following
 content in your Mozilla-central directory:
 
-.. code::
+.. code:: bash
 
    mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/objdir-ff-msan
 
@@ -139,7 +139,7 @@ execute this script in the ``js/src/`` subdirectory and pass a directory
 name as the first parameter. The build will then be created in a new
 subdirectory with that name.
 
-.. code::
+.. code:: bash
 
    #! /bin/sh
 
@@ -156,7 +156,7 @@ subdirectory with that name.
        CXX="$LLVM_ROOT/build/bin/clang++" \
        CFLAGS="-fsanitize=memory" \
        CXXFLAGS="-fsanitize=memory" \
-       LDFLAGS=""-fsanitize=memory" \
+       LDFLAGS="-fsanitize=memory" \
                ../configure --enable-debug --enable-optimize --enable-memory-sanitizer --disable-jemalloc --enable-posix-nspr-emulation
        make -j 8
    fi

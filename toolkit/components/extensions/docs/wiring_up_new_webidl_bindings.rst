@@ -9,7 +9,7 @@ added in alphabetic order and nearby the other WebExtensions API bindings alread
 (look for the ``ExtensionBrowser`` webidl definition and the other existing WebIDL bindings related to the
 WebExtensions APIs):
 
-.. code-block::
+.. code-block:: text
 
     # WebExtension API
     ...
@@ -33,12 +33,12 @@ The new ``.webidl`` file has to be also listed in "dom/webidl/moz.build", it sho
   API bindings, **if the generated `.webidl` includes preprocessing macros** (e.g. when part of an API
   is not available in all builds, e.g. subset of APIs that are only available in Desktop builds).
 
-.. code-block::
+.. code-block:: text
 
     # WebExtensions API.
     WEBIDL_FILES += [
       ...
-      "ExtensionRuntime.webidl"
+      "ExtensionRuntime.webidl",
       ...
     ]
 
@@ -62,7 +62,7 @@ where the other WebIDL bindings are being listed. Similarly, the new ``.h`` coun
 ``EXPORTS.mozilla.extensions`` (which ensures that the header file will be placed into the path set earlier
 in ``dom/bindings/Bindings.conf``):
 
-.. code-block::
+.. code-block:: text
 
     # WebExtensions API namespaces.
     UNIFIED_SOURCES += [
@@ -83,7 +83,7 @@ Wiring up the new API into ``dom/webidl/ExtensionBrowser.webidl``
 To make the new WebIDL bindings part of the ``browser`` global, a new attribute has to be added to
 ``dom/webidl/ExtensionBrowser.webidl``:
 
-.. code-block::
+.. code-block:: cpp
 
     // `browser.runtime` API namespace.
     [Replaceable, SameObject, BinaryName="GetExtensionRuntime",
@@ -103,7 +103,7 @@ C++ class as defined in ``toolkit/components/extensions/webidl-api/ExtensionBrow
 - the definition of a new corresponding **public method** (by convention named ``GetExtensionMyNamespace``)
 - a ``RefPtr`` as a new **private data member named** (by convention named ``mExtensionMyNamespace``)
 
-.. code-block::
+.. code-block:: cpp
 
     ...
     namespace extensions {
@@ -130,7 +130,7 @@ And then in its ``toolkit/components/extensions/webidl-api/ExtensionBrowser.cpp`
 - the addition of the new private member data ``RefPtr`` in the ``NS_IMPL_CYCLE_COLLECTION_UNLINK``
   and ``NS_IMPL_CYCLE_COLLECTION_TRAVERSE`` macros
 
-.. code-block::
+.. code-block:: cpp
 
     ...
     #include "mozilla/extensions/ExtensionRuntime.h"

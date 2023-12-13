@@ -25,7 +25,7 @@ Perform a debug build of Gecko.
 1. Edit your ``mozconfig`` file and add the following lines. These will
    ensure that the build includes debug checks and symbols.
 
-.. code::
+.. code:: text
 
    ac_add_options --enable-debug
 
@@ -33,7 +33,7 @@ Perform a debug build of Gecko.
    ``mozconfig`` if present. ``./mach configure`` will not allow
    artifact builds to be enabled when generating a debug build.
 
-.. code::
+.. code:: text
 
    # ac_add_options --enable-artifact-builds
 
@@ -113,7 +113,7 @@ Debug Native code in Android Studio
    debug window, and then select the ``lldb`` console tab. Type the
    following into the console:
 
-.. code::
+.. code:: text
 
    b <file>.cpp:<line number>
 
@@ -200,7 +200,7 @@ track allocations correctly Gecko must be built with ``jemalloc`` disabled.
 Additionally, the native memory profiler appears to only work with ``aarch64``
 builds.  The following must therefore be present in your ``mozconfig`` file:
 
-.. code::
+.. code:: text
 
    ac_add_options --target=aarch64
    ac_add_options --disable-jemalloc
@@ -212,7 +212,7 @@ found, therefore in order for the profile to be symbolicated you must prevent
 symbols being stripped during the build process. To do so, add the following to
 your ``mozconfig``:
 
-.. code::
+.. code:: text
 
    ac_add_options STRIP_FLAGS=--strip-debug
 

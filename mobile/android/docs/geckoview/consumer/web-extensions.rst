@@ -123,7 +123,7 @@ Note: extension can only send messages from content scripts if
 explicitly authorized by the app by adding
 ``nativeMessagingFromContent`` in the manifest.json file, e.g.
 
-.. code::
+.. code:: json
 
      "permissions": [
        "nativeMessaging",
@@ -219,7 +219,7 @@ found on the page. Note that our ``nativeApp`` identifier used for
 /assets/messaging/messaging.js
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code:: javascript
+.. code:: JavaScript
 
    let manifest = document.querySelector("head > link[rel=manifest]");
    if (manifest) {
@@ -301,7 +301,7 @@ For this example, the extension side will do the following:
 /assets/messaging/background.js
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: javascript
+.. code:: JavaScript
 
    // Establish connection with app
    let port = browser.runtime.connectNative("browser");

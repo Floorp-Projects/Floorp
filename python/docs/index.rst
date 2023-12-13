@@ -47,7 +47,7 @@ There's two ways of using 3rd-party Python dependencies:
 To add a ``pip install``-d package dependency, add it to your site's
 ``python/sites/<site>.txt`` manifest file:
 
-.. code::
+.. code:: text
 
     ...
     pypi:new-package==<version>
@@ -74,7 +74,7 @@ Next, add that package and any new transitive dependencies (you'll see them adde
 ``third_party/python/requirements.txt``) to the associated site's dependency manifest in
 ``python/sites/<site>.txt``:
 
-.. code::
+.. code:: text
 
     ...
     vendored:third_party/python/new-package

@@ -21,7 +21,7 @@ Example: how to execute GenerateWebIDLBindings.py
 As an example, the following shell command generates (or regenerates if one exists) the webidl bindings
 for the `runtime` API namespace:
 
-.. code-block:: sh
+.. code-block:: bash
 
     $ export SCRIPT_DIR="toolkit/components/extensions/webidl-api"
     $ mach python $SCRIPT_DIR/GenerateWebIDLBindings.py -- runtime
@@ -38,7 +38,7 @@ this command will generates a `.webdil` file named `dom/webidl/ExtensionRuntime.
   offer to print a diff of the changes (or just continue without changing the existing webidl file
   if the content is exactly the same):
 
-.. code-block::
+.. code-block:: console
 
     $ mach python $SCRIPT_DIR/GenerateWebIDLBindings.py -- runtime
 

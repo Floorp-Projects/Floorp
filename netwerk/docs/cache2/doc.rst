@@ -338,7 +338,7 @@ arguments of :ref:`nsILoadContextInfo <nsILoadContextInfo>`. The form is followi
 pending in `bug
 968593 <https://bugzilla.mozilla.org/show_bug.cgi?id=968593>`__):
 
-.. code::
+.. code:: JavaScript
 
    a,b,i1009,p,
 

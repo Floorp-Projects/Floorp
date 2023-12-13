@@ -27,7 +27,7 @@ You can open the Browser Console in one of two ways:
 
 You can also start the Browser Console by launching Firefox from the command line and passing the ``-jsconsole`` argument:
 
-.. code-block::
+.. code-block:: bash
 
   /Applications/FirefoxAurora.app/Contents/MacOS/firefox-bin -jsconsole
 

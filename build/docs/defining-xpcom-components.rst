@@ -229,7 +229,7 @@ file:
 
 ``Foo.h``
 
-.. code-block:: c++
+.. code-block:: cpp
 
     class Foo final : public nsISupports {
      public:
@@ -238,7 +238,7 @@ file:
 
 ``Foo.cpp``
 
-.. code-block:: c++
+.. code-block:: cpp
 
     already_AddRefed<Foo> Foo::GetSingleton() {
       // ...
@@ -257,7 +257,7 @@ using a template specialization on an incomplete type:
 
 ``Foo.cpp``
 
-.. code-block:: c++
+.. code-block:: cpp
 
     NS_IMPL_COMPONENT_FACTORY(Foo) {
       return do_AddRef(new Foo()).downcast<nsISupports>();

@@ -201,7 +201,7 @@ While running the test files locally they will be executed once for each manifes
 where they are included, to restrict the run to just the "background service
 workers mode" specify the ``sw-webextensions`` tag:
 
-.. code-block::
+.. code-block:: bash
 
    mach xpcshell-test --tag sw-webextensions path/to/test/file.js
 
@@ -241,6 +241,6 @@ While executing the test files locally they will run once for each manifest file
 where they are included, to restrict the run to just the "background service
 workers mode" specify the ``sw-webextensions`` tag:
 
-.. code-block::
+.. code-block:: bash
 
    mach mochitest --tag sw-webextensions path/to/test/file.js
