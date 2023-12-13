@@ -41,6 +41,7 @@
   --chrome-content-separator-color: ThreeDShadow;
 
   --tabs-navbar-shadow-size: 1px;
+  --tabs-navbar-shadow-color: ThreeDShadow;
 
   --panelui-subview-transition-duration: 150ms;
 
@@ -95,6 +96,7 @@
 
     --link-color: light-dark(rgb(0, 97, 224), rgb(0, 221, 255));
     --chrome-content-separator-color: rgba(0,0,0,.3);
+    --tabs-navbar-shadow-color: light-dark(rgba(0,0,0,.1), rgba(0,0,0,.3));
 
     @media not (prefers-contrast) {
       --focus-outline-color: light-dark(#0061E0, #00DDFF);
@@ -180,6 +182,13 @@
 
 :root[sessionrestored] #nav-bar:-moz-lwtheme {
   transition: var(--ext-theme-background-transition);
+}
+
+#nav-bar:not([tabs-hidden="true"]) {
+  /* The toolbar buttons that animate are only visible when the #TabsToolbar is not collapsed.
+     The animations use position:absolute and require a positioned #nav-bar. */
+  position: relative;
+  box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 var(--tabs-navbar-shadow-color);
 }
 
 /* Bookmarks toolbar */

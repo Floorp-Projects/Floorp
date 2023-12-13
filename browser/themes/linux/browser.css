@@ -35,9 +35,11 @@
     --toolbar-field-background-color: light-dark(rgba(0, 0, 0, .05), rgba(0, 0, 0, .3));
     --toolbar-field-color: inherit;
 
-    @media (-moz-gtk-theme-family) and (prefers-color-scheme: light) {
-      /* Use a slightly lighter box bgcolor for known themes */
-      --urlbar-box-bgcolor: #fafafa;
+    @media (-moz-gtk-theme-family) {
+      --tabs-navbar-shadow-color: transparent;
+      @media (prefers-color-scheme: light) {
+        --urlbar-box-bgcolor: #fafafa;
+      }
     }
   }
 }
@@ -100,15 +102,6 @@
     color: var(--toolbar-color);
     appearance: none;
     border-style: none;
-  }
-}
-
-#nav-bar:not([tabs-hidden="true"]) {
-  /* This is needed for some toolbar button animations. Gross :( */
-  position: relative;
-  box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 light-dark(rgba(0,0,0,.1), rgba(0,0,0,.3));
-  &:-moz-lwtheme {
-    box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 var(--lwt-tabs-border-color, rgba(0,0,0,.3));
   }
 }
 
