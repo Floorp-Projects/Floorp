@@ -9,8 +9,6 @@
 
 add_common_setup();
 
-requestLongerTimeout(2);
-
 function pressKeyAndAwait(event, key, config = {}) {
   const win = config.window || window;
   if (!event.then) {
@@ -251,25 +249,6 @@ add_task(async function testBackButtons() {
         await pressKeyAndAwait(promise, "KEY_Enter");
         menu.close();
       }
-    }
-  );
-});
-
-add_task(async function testLeftArrowDoesNotGoBackOnSentView() {
-  ensureReportBrokenSitePreffedOn();
-  await BrowserTestUtils.withNewTab(
-    REPORTABLE_PAGE_URL,
-    async function (browser) {
-      const rbs = await AppMenu().openReportBrokenSite();
-      await rbs.clickSend();
-      EventUtils.synthesizeKey("KEY_ArrowLeft", {}, window);
-      const focus = await pressKeyAndGetFocus("VK_TAB");
-      is(
-        focus.id,
-        "report-broken-site-popup-okay-button",
-        "Report sent view is still open"
-      );
-      rbs.close();
     }
   );
 });

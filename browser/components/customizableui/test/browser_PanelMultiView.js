@@ -222,7 +222,6 @@ add_task(async function test_setup() {
 
     gPanelViewLabels[i] = document.createXULElement("label");
     gPanelViewLabels[i].setAttribute("value", "PanelView " + i);
-    gPanelViewLabels[i].classList.add("subviewbutton-back"); // so we can goBack (see bug 1869092)
     gPanelViews[i].appendChild(gPanelViewLabels[i]);
   }
 
