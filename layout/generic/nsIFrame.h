@@ -661,8 +661,7 @@ class nsIFrame : public nsQueryFrame {
         mHasPaddingChange(false),
         mInScrollAnchorChain(false),
         mHasColumnSpanSiblings(false),
-        mDescendantMayDependOnItsStaticPosition(false),
-        mShouldGenerateComputedInfo(false) {
+        mDescendantMayDependOnItsStaticPosition(false) {
     MOZ_ASSERT(mComputedStyle);
     MOZ_ASSERT(mPresContext);
     mozilla::PodZero(&mOverflow);
@@ -4915,13 +4914,6 @@ class nsIFrame : public nsQueryFrame {
     mDescendantMayDependOnItsStaticPosition = aValue;
   }
 
-  bool ShouldGenerateComputedInfo() const {
-    return mShouldGenerateComputedInfo;
-  }
-  void SetShouldGenerateComputedInfo(bool aValue) {
-    mShouldGenerateComputedInfo = aValue;
-  }
-
   /**
    * Returns the hit test area of the frame.
    */
@@ -5199,13 +5191,6 @@ class nsIFrame : public nsQueryFrame {
    * move).
    */
   bool mDescendantMayDependOnItsStaticPosition : 1;
-
-  /**
-   * True if the next reflow of this frame should generate computed info
-   * metrics. These are used by devtools to reveal details of the layout
-   * process.
-   */
-  bool mShouldGenerateComputedInfo : 1;
 
  protected:
   // Helpers
