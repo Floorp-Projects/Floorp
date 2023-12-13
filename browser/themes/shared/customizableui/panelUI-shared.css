@@ -751,7 +751,11 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
 
 #fxa-menu-header-description {
   color: var(--text-color-deemphasized);
-  font-weight: 600;
+  font-weight: var(--font-weight-bold);
+}
+
+#cta-menu-header-description {
+  color: var(--text-color-deemphasized);
 }
 
 #PanelUI-appMenu-fxa-label-last-synced {
@@ -764,8 +768,22 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
   list-style-image: url(chrome://browser/skin/fxa/send.svg);
 }
 
+.ctaMenuLogo {
+  width: 16px;
+  height: 16px;
+  margin-inline-start: 5px;
+}
+
 #PanelUI-fxa-menu-monitor-button {
   list-style-image: url(chrome://browser/skin/fxa/monitor.svg);
+}
+
+#PanelUI-fxa-menu-relay-button {
+  list-style-image: url(chrome://browser/content/logos/relay.svg);
+}
+
+#PanelUI-fxa-menu-vpn-button {
+  list-style-image: url(chrome://browser/content/logos/vpn-dark.svg);
 }
 
 :root:not([fxastatus="signedin"]) #PanelUI-fxa-menu-connect-device-button {
