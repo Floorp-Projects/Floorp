@@ -286,6 +286,30 @@ bool ICScript::hasInlinedChild(uint32_t pcOffset) {
   return false;
 }
 
+void ICScript::purgeInactiveICScripts() {
+  MOZ_ASSERT(inliningRoot());
+
+  if (!inlinedChildren_) {
+    return;
+  }
+
+  inlinedChildren_->eraseIf(
+      [](const CallSite& callsite) { return !callsite.callee_->active(); });
+
+  if (inlinedChildren_->empty()) {
+    inlinedChildren_.reset();
+    return;
+  }
+
+  // We have an active callee ICScript. This means the current ICScript must be
+  // active too.
+  MOZ_ASSERT(active());
+
+  for (CallSite& callsite : *inlinedChildren_) {
+    callsite.callee_->purgeInactiveICScripts();
+  }
+}
+
 void JitScript::resetWarmUpCount(uint32_t count) {
   icScript_.resetWarmUpCount(count);
   if (hasInliningRoot()) {
@@ -418,7 +442,25 @@ ICEntry* ICScript::interpreterICEntryFromPCOffset(uint32_t pcOffset) {
   return nullptr;
 }
 
-void JitScript::purgeStubs(JSScript* script) {
+void JitScript::purgeInactiveICScripts() {
+  if (!hasInliningRoot()) {
+    return;
+  }
+
+  icScript()->purgeInactiveICScripts();
+
+  inliningRoot()->purgeInactiveICScripts();
+  if (inliningRoot()->numInlinedScripts() == 0) {
+    inliningRoot_.reset();
+    icScript()->inliningRoot_ = nullptr;
+  } else {
+    // If a callee script is active on the stack, the root script must be active
+    // too.
+    MOZ_ASSERT(icScript()->active());
+  }
+}
+
+void JitScript::purgeStubs(JSScript* script, ICStubSpace& newStubSpace) {
   MOZ_ASSERT(script->jitScript() == this);
 
   Zone* zone = script->zone();
@@ -433,19 +475,53 @@ void JitScript::purgeStubs(JSScript* script) {
 
   JitSpew(JitSpew_BaselineIC, "Purging optimized stubs");
 
-  icScript()->purgeStubs(zone);
+  icScript()->purgeStubs(zone, newStubSpace);
   if (hasInliningRoot()) {
-    inliningRoot()->purgeStubs(zone);
+    inliningRoot()->purgeStubs(zone, newStubSpace);
   }
 
   notePurgedStubs();
 }
 
-void ICScript::purgeStubs(Zone* zone) {
+void ICScript::purgeStubs(Zone* zone, ICStubSpace& newStubSpace) {
   for (size_t i = 0; i < numICEntries(); i++) {
     ICEntry& entry = icEntry(i);
     ICFallbackStub* fallback = fallbackStub(i);
+
+    // If this is a trial inlining call site and the callee's ICScript hasn't
+    // been discarded, clone the IC chain instead of purging stubs. In this case
+    // both the current ICScript and the callee's inlined ICScript must be
+    // active on the stack.
+    //
+    // We can't purge the IC stubs in this case because it'd confuse trial
+    // inlining if we try to inline again later and we already have an ICScript
+    // for this call site.
+    if (fallback->trialInliningState() == TrialInliningState::Inlined &&
+        hasInlinedChild(fallback->pcOffset())) {
+      MOZ_ASSERT(active());
+      MOZ_ASSERT(findInlinedChild(fallback->pcOffset())->active());
+
+      JSRuntime* rt = zone->runtimeFromMainThread();
+      ICCacheIRStub* prev = nullptr;
+      ICStub* stub = entry.firstStub();
+      while (stub != fallback) {
+        ICCacheIRStub* clone = stub->toCacheIRStub()->clone(rt, newStubSpace);
+        if (prev) {
+          prev->setNext(clone);
+        } else {
+          entry.setFirstStub(clone);
+        }
+        MOZ_ASSERT(stub->toCacheIRStub()->next() == clone->next());
+        prev = clone;
+        stub = clone->next();
+      }
+      continue;
+    }
+
+    MOZ_ASSERT(!hasInlinedChild(fallback->pcOffset()));
+
     fallback->discardStubs(zone, &entry);
+    fallback->state().reset();
   }
 }
 
@@ -611,12 +687,17 @@ static void MarkActiveICScriptsAndCopyStubs(
     switch (frame.type()) {
       case FrameType::BaselineJS:
         frame.script()->jitScript()->icScript()->setActive();
+        // If the frame is using a trial-inlining ICScript, we have to preserve
+        // it too.
+        if (frame.baselineFrame()->icScript()->isInlined()) {
+          frame.baselineFrame()->icScript()->setActive();
+        }
         break;
       case FrameType::BaselineStub: {
         auto* layout = reinterpret_cast<BaselineStubFrameLayout*>(frame.fp());
         if (layout->maybeStubPtr() && !layout->maybeStubPtr()->isFallback()) {
           ICCacheIRStub* stub = layout->maybeStubPtr()->toCacheIRStub();
-          ICCacheIRStub* newStub = stub->clone(cx, newStubSpace);
+          ICCacheIRStub* newStub = stub->clone(cx->runtime(), newStubSpace);
           layout->setStubPtr(newStub);
         }
         break;
@@ -639,6 +720,9 @@ static void MarkActiveICScriptsAndCopyStubs(
              ++inlineIter) {
           inlineIter.script()->jitScript()->icScript()->setActive();
         }
+        // Because we're purging ICScripts, the bailout machinery should use
+        // the generic ICScript for inlined callees.
+        frame.ionScript()->notePurgedICScripts();
         break;
       }
       default:;

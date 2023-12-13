@@ -6,6 +6,8 @@
 
 #include "jit/TrialInlining.h"
 
+#include "mozilla/DebugOnly.h"
+
 #include "jit/BaselineCacheIRCompiler.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
@@ -951,9 +953,9 @@ bool InliningRoot::traceWeak(JSTracer* trc) {
   return allSurvived;
 }
 
-void InliningRoot::purgeStubs(Zone* zone) {
+void InliningRoot::purgeStubs(Zone* zone, ICStubSpace& newStubSpace) {
   for (auto& inlinedScript : inlinedScripts_) {
-    inlinedScript->purgeStubs(zone);
+    inlinedScript->purgeStubs(zone, newStubSpace);
   }
 }
 
@@ -961,6 +963,24 @@ void InliningRoot::resetWarmUpCounts(uint32_t count) {
   for (auto& inlinedScript : inlinedScripts_) {
     inlinedScript->resetWarmUpCount(count);
   }
+}
+
+void InliningRoot::purgeInactiveICScripts() {
+  mozilla::DebugOnly<uint32_t> totalSize = owningScript_->length();
+
+  for (auto& inlinedScript : inlinedScripts_) {
+    if (inlinedScript->active()) {
+      totalSize += inlinedScript->bytecodeSize();
+    } else {
+      MOZ_ASSERT(inlinedScript->bytecodeSize() < totalBytecodeSize_);
+      totalBytecodeSize_ -= inlinedScript->bytecodeSize();
+    }
+  }
+
+  MOZ_ASSERT(totalBytecodeSize_ == totalSize);
+
+  inlinedScripts_.eraseIf(
+      [](auto& inlinedScript) { return !inlinedScript->active(); });
 }
 
 #ifdef DEBUG
