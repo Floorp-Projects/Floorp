@@ -13,24 +13,26 @@ interface nsIContentAnalysisAcknowledgement : nsISupports
   // These values must stay synchronized with ContentAnalysisAcknowledgement
   // in analysis.proto!
   // Acknowledgement of analysis response.
-  // The response was handled as specified by the agent.
-  const unsigned long SUCCESS = 1;
-  // The response from the agent was not properly formatted.
-  const unsigned long INVALID_RESPONSE = 2;
-  // The response from the agent was too late.
-  const unsigned long TOO_LATE = 3;
+  cenum Result: 32 {
+    eSuccess = 1, // The response was handled as specified by the agent.
+    eInvalidResponse = 2, // The response from the agent was not properly formatted.
+    eTooLate = 3, // The response from the agent was too late.
+  };
 
-  readonly attribute unsigned long result;
+  readonly attribute nsIContentAnalysisAcknowledgement_Result result;
 
   // These values must stay synchronized with ContentAnalysisAcknowledgement
   // in analysis.proto!
-  const unsigned long ACTION_UNSPECIFIED = 0;
-  const unsigned long ALLOW = 1;
-  const unsigned long REPORT_ONLY = 2;
-  const unsigned long WARN = 3;
-  const unsigned long BLOCK = 4;
+  // The final action that the browser took with this request.
+  cenum FinalAction : 32 {
+    eUnspecified = 0,
+    eAllow = 1,
+    eReportOnly = 2,
+    eWarn = 3,
+    eBlock = 4,
+  };
 
-  readonly attribute unsigned long finalAction;
+  readonly attribute nsIContentAnalysisAcknowledgement_FinalAction finalAction;
 };
 
 [scriptable, builtinclass, uuid(89088c61-15f6-4ace-a880-a1b5ea47ca66)]
@@ -39,16 +41,17 @@ interface nsIContentAnalysisResponse : nsISupports
   // These values must stay synchronized with ContentAnalysisResponse
   // in analysis.proto!
   // Action requested in response to a successful analysis.
-  const unsigned long ACTION_UNSPECIFIED = 0;
-  const unsigned long REPORT_ONLY = 1;
-  const unsigned long WARN = 2;
-  const unsigned long BLOCK = 3;
+  cenum Action : 32 {
+    eUnspecified = 0,
+    eReportOnly = 1,
+    eWarn = 2,
+    eBlock = 3,
+    // Values that do not appear in analysis.proto
+    eAllow = 1000,
+    eCanceled = 1001,
+  };
 
-  // Values that do not appear in analysis.proto
-  const unsigned long ALLOW = 1000;
-  const unsigned long CANCELED = 1001;
-
-  [infallible] readonly attribute unsigned long action;
+  [infallible] readonly attribute nsIContentAnalysisResponse_Action action;
   [infallible] readonly attribute boolean shouldAllowContent;
 
   // Identifier for the corresponding nsIContentAnalysisRequest
@@ -102,20 +105,23 @@ interface nsIContentAnalysisRequest : nsISupports
   // in analysis.proto!
   // Type of analysis being requested.
   // For meaning, see analysis.proto in the content analysis module.
-  const unsigned long ANALYSIS_CONNECTOR_UNSPECIFIED = 0;
-  const unsigned long FILE_DOWNLOADED = 1;
-  const unsigned long FILE_ATTACHED = 2;
-  const unsigned long BULK_DATA_ENTRY = 3;
-  const unsigned long PRINT = 4;
-  const unsigned long FILE_TRANSFER = 5;
-
-  readonly attribute unsigned long analysisType;
+  cenum AnalysisType : 32 {
+    eUnspecified = 0,
+    eFileDownloaded = 1,
+    eFileAttached = 2,
+    eBulkDataEntry = 3,
+    ePrint = 4,
+    eFileTransfer = 5,
+  };
+  readonly attribute nsIContentAnalysisRequest_AnalysisType analysisType;
 
   // Enumeration of what operation is happening, to be displayed to the user
-  const unsigned long OPERATION_CUSTOMDISPLAYSTRING = 0;
-  const unsigned long OPERATION_CLIPBOARD = 1;
-  const unsigned long OPERATION_DROPPEDTEXT = 2;
-  readonly attribute unsigned long operationTypeForDisplay;
+  cenum OperationType : 32 {
+    eCustomDisplayString = 0,
+    eClipboard = 1,
+    eDroppedText = 2,
+  };
+  readonly attribute nsIContentAnalysisRequest_OperationType operationTypeForDisplay;
   readonly attribute AString operationDisplayString;
 
   // Text content to analyze.  Only one of textContent or filePath is defined.

@@ -30,7 +30,8 @@ class ContentAnalysisResult : public nsIContentAnalysisResult {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICONTENTANALYSISRESULT
  public:
-  static RefPtr<ContentAnalysisResult> FromAction(uint32_t aAction) {
+  static RefPtr<ContentAnalysisResult> FromAction(
+      nsIContentAnalysisResponse::Action aAction) {
     auto result =
         RefPtr<ContentAnalysisResult>(new ContentAnalysisResult(aAction));
     return result;
@@ -53,7 +54,8 @@ class ContentAnalysisResult : public nsIContentAnalysisResult {
       if (JS_GetProperty(aCx, handle, "action", &actionValue)) {
         if (actionValue.isNumber()) {
           double actionNumber = actionValue.toNumber();
-          return FromAction(static_cast<uint32_t>(actionNumber));
+          return FromAction(
+              static_cast<nsIContentAnalysisResponse::Action>(actionNumber));
         }
       }
     }
@@ -70,9 +72,9 @@ class ContentAnalysisResult : public nsIContentAnalysisResult {
       if (JS_GetProperty(aCx, handle, "shouldAllowContent",
                          &shouldAllowValue)) {
         if (shouldAllowValue.isTrue()) {
-          return FromAction(nsIContentAnalysisResponse::ALLOW);
+          return FromAction(nsIContentAnalysisResponse::Action::eAllow);
         } else if (shouldAllowValue.isFalse()) {
-          return FromAction(nsIContentAnalysisResponse::BLOCK);
+          return FromAction(nsIContentAnalysisResponse::Action::eBlock);
         } else {
           return FromNoResult(NoContentAnalysisResult::ERROR_OTHER);
         }
@@ -82,11 +84,12 @@ class ContentAnalysisResult : public nsIContentAnalysisResult {
   }
 
  private:
-  explicit ContentAnalysisResult(uint32_t aAction) : mValue(aAction) {}
+  explicit ContentAnalysisResult(nsIContentAnalysisResponse::Action aAction)
+      : mValue(aAction) {}
   explicit ContentAnalysisResult(NoContentAnalysisResult aResult)
       : mValue(aResult) {}
   virtual ~ContentAnalysisResult() = default;
-  Variant<uint32_t, NoContentAnalysisResult> mValue;
+  Variant<nsIContentAnalysisResponse::Action, NoContentAnalysisResult> mValue;
   friend struct IPC::ParamTraits<ContentAnalysisResult>;
   friend struct IPC::ParamTraits<ContentAnalysisResult*>;
   friend struct IPC::ParamTraits<RefPtr<ContentAnalysisResult>>;
@@ -103,6 +106,13 @@ struct ParamTraits<mozilla::contentanalysis::NoContentAnalysisResult>
           mozilla::contentanalysis::NoContentAnalysisResult,
           static_cast<mozilla::contentanalysis::NoContentAnalysisResult>(0),
           mozilla::contentanalysis::NoContentAnalysisResult::LAST_VALUE> {};
+
+template <>
+struct ParamTraits<nsIContentAnalysisResponse::Action>
+    : public ContiguousEnumSerializerInclusive<
+          nsIContentAnalysisResponse::Action,
+          nsIContentAnalysisResponse::Action::eUnspecified,
+          nsIContentAnalysisResponse::Action::eCanceled> {};
 
 template <>
 struct ParamTraits<mozilla::contentanalysis::ContentAnalysisResult> {
