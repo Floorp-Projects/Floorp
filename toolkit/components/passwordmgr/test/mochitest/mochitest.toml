@@ -11,6 +11,9 @@ prefs = [
   "signon.relatedRealms.enabled=true",
   "signon.usernameOnlyForm.enabled=true",
   "signon.usernameOnlyForm.lookupThreshold=100",
+  "security.webauth.webauthn_enable_softtoken=true",
+  "security.webauth.webauthn_enable_usbtoken=false",
+  "security.webauthn.enable_conditional_mediation=true",
 ]
 support-files = [
   "../../../prompts/test/chromeScript.js",
