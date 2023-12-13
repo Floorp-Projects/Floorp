@@ -254,8 +254,7 @@ Maybe<layers::SurfaceDescriptor>
 SharedSurface_SurfaceTexture::ToSurfaceDescriptor() {
   return Some(layers::SurfaceTextureDescriptor(
       mSurface->GetHandle(), mDesc.size, gfx::SurfaceFormat::R8G8B8A8,
-      false /* Do NOT override colorspace */, false /* NOT continuous */,
-      Nothing() /* Do not override transform */));
+      false /* NOT continuous */, Nothing() /* Do not override transform */));
 }
 
 SurfaceFactory_SurfaceTexture::SurfaceFactory_SurfaceTexture(GLContext& gl)

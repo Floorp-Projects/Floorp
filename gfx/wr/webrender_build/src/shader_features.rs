@@ -15,8 +15,7 @@ bitflags! {
         const DITHERING = 1 << 10;
         const TEXTURE_EXTERNAL = 1 << 11;
         const TEXTURE_EXTERNAL_ESSL1 = 1 << 12;
-        const TEXTURE_EXTERNAL_BT709 = 1 << 13;
-        const DEBUG = 1 << 14;
+        const DEBUG = 1 << 13;
     }
 }
 
@@ -138,9 +137,6 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
     }
     if flags.contains(ShaderFeatureFlags::TEXTURE_EXTERNAL) {
         texture_types.push("TEXTURE_EXTERNAL");
-    }
-    if flags.contains(ShaderFeatureFlags::TEXTURE_EXTERNAL_BT709) {
-        texture_types.push("TEXTURE_EXTERNAL_BT709");
     }
     let mut image_features: Vec<String> = Vec::new();
     for texture_type in &texture_types {

@@ -67,17 +67,6 @@ class RenderOrReleaseOutput {
   java::Sample::GlobalRef mSample;
 };
 
-static bool areSmpte432ColorPrimariesBuggy() {
-  if (jni::GetAPIVersion() >= 34) {
-    const auto socManufacturer =
-        java::sdk::Build::SOC_MANUFACTURER()->ToString();
-    if (socManufacturer.EqualsASCII("Google")) {
-      return true;
-    }
-  }
-  return false;
-}
-
 class RemoteVideoDecoder final : public RemoteDataDecoder {
  public:
   // Render the output to the surface when the frame is sent
@@ -413,16 +402,9 @@ class RemoteVideoDecoder final : public RemoteDataDecoder {
     }
 
     if (ok && (size > 0 || presentationTimeUs >= 0)) {
-      // On certain devices SMPTE 432 color primaries are rendered incorrectly,
-      // so we force BT709 to be used instead. The magic number 10 comes from
-      // libstagefright's kColorStandardDCI_P3.
-      static bool isSmpte432Buggy = areSmpte432ColorPrimariesBuggy();
-      bool forceBT709ColorSpace = isSmpte432Buggy && mColorSpace == Some(10);
-
       RefPtr<layers::Image> img = new layers::SurfaceTextureImage(
           mSurfaceHandle, inputInfo.mImageSize, false /* NOT continuous */,
-          gl::OriginPos::BottomLeft, mConfig.HasAlpha(), forceBT709ColorSpace,
-          mTransformOverride);
+          gl::OriginPos::BottomLeft, mConfig.HasAlpha(), mTransformOverride);
       img->AsSurfaceTextureImage()->RegisterSetCurrentCallback(
           std::move(releaseSample));
 
