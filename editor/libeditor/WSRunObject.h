@@ -183,6 +183,10 @@ class MOZ_STACK_CLASS WSScanResult final {
    */
   nsIContent* GetContent() const { return mContent; }
 
+  [[nodiscard]] bool ContentIsElement() const {
+    return mContent && mContent->IsElement();
+  }
+
   /**
    * The following accessors makes it easier to understand each callers.
    */

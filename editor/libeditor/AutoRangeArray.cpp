@@ -909,8 +909,15 @@ nsresult AutoRangeArray::ExtendRangeToWrapStartAndEndLinesContainingBoundaries(
   }
 
   EditorDOMPoint startPoint(aRange.StartRef()), endPoint(aRange.EndRef());
-  AutoRangeArray::UpdatePointsToSelectAllChildrenIfCollapsedInEmptyBlockElement(
-      startPoint, endPoint, aEditingHost);
+
+  // If we're joining blocks, we call this for selecting a line to move.
+  // Therefore, we don't want to select the ancestor blocks in this case
+  // even if they are empty.
+  if (aEditSubAction != EditSubAction::eMergeBlockContents) {
+    AutoRangeArray::
+        UpdatePointsToSelectAllChildrenIfCollapsedInEmptyBlockElement(
+            startPoint, endPoint, aEditingHost);
+  }
 
   // Make a new adjusted range to represent the appropriate block content.
   // This is tricky.  The basic idea is to push out the range endpoints to
