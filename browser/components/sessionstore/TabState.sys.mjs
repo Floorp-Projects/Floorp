@@ -107,15 +107,15 @@ var TabStateInternal = {
       tabData.floorpWorkspace = Services.prefs.getStringPref("floorp.browser.workspace.all").split(",")[0];
     }
 
-    let { tabStacksService } = ChromeUtils.importESModule(
-      "resource:///modules/tabStacksService.sys.mjs"
+    let { workspacesService } = ChromeUtils.importESModule(
+      "resource:///modules/workspacesService.sys.mjs"
     );
 
-    // TabStacks
-    // TabStackId
-    tabData.floorpTabStackId = tab.getAttribute(tabStacksService.tabStacksTabAttributionId);
-    // lastShowTabStackId
-    tabData.floorpLastShowTabStackId = tab.getAttribute(tabStacksService.tabStackLastShowId);
+    // Workspaces
+    // WorkspaceId
+    tabData.floorpWorkspaceId = tab.getAttribute(workspacesService.workspacesTabAttributionId);
+    // lastShowWorkspaceId
+    tabData.floorpLastShowWorkspaceId = tab.getAttribute(workspacesService.workspaceLastShowId);
 
     // Private Container
     tabData.floorpDisableHistory = tab.getAttribute("floorp-disablehistory");
