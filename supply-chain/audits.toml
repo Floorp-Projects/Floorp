@@ -1303,6 +1303,11 @@ who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.7.0@git:ba3d6898f18c25bb5a2b8ba18790134b97758e83 -> 0.7.0@git:3ec547cdcaaa14488327d8f1b5f7736278c4178d"
 
+[[audits.d3d12]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.7.0@git:ff7b2c399301cca9bcbc5b19a869feb3c29ef785 -> 0.7.0@git:6dc9ccab8592645fda3204be1cfb5929fd7f924d"
+
 [[audits.darling]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -2603,6 +2608,11 @@ delta = "0.14.0@git:a820a3ffba468cbb87c2a7e7bbe37065ed5207ee -> 0.14.0@git:767ac
 who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.14.0@git:ba3d6898f18c25bb5a2b8ba18790134b97758e83 -> 0.14.0@git:3ec547cdcaaa14488327d8f1b5f7736278c4178d"
+
+[[audits.naga]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.14.0@git:ff7b2c399301cca9bcbc5b19a869feb3c29ef785 -> 0.14.0@git:6dc9ccab8592645fda3204be1cfb5929fd7f924d"
 
 [[audits.net2]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -4405,6 +4415,11 @@ who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.18.0@git:ba3d6898f18c25bb5a2b8ba18790134b97758e83 -> 0.18.0@git:3ec547cdcaaa14488327d8f1b5f7736278c4178d"
 
+[[audits.wgpu-core]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.18.0@git:ff7b2c399301cca9bcbc5b19a869feb3c29ef785 -> 0.18.0@git:6dc9ccab8592645fda3204be1cfb5929fd7f924d"
+
 [[audits.wgpu-hal]]
 who = "Dzmitry Malyshau <kvark@fastmail.com>"
 criteria = "safe-to-deploy"
@@ -4483,6 +4498,11 @@ who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.18.0@git:ba3d6898f18c25bb5a2b8ba18790134b97758e83 -> 0.18.0@git:3ec547cdcaaa14488327d8f1b5f7736278c4178d"
 
+[[audits.wgpu-hal]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.18.0@git:ff7b2c399301cca9bcbc5b19a869feb3c29ef785 -> 0.18.0@git:6dc9ccab8592645fda3204be1cfb5929fd7f924d"
+
 [[audits.wgpu-types]]
 who = "Dzmitry Malyshau <kvark@fastmail.com>"
 criteria = "safe-to-deploy"
@@ -4560,6 +4580,11 @@ delta = "0.18.0@git:a820a3ffba468cbb87c2a7e7bbe37065ed5207ee -> 0.18.0@git:767ac
 who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.18.0@git:ba3d6898f18c25bb5a2b8ba18790134b97758e83 -> 0.18.0@git:3ec547cdcaaa14488327d8f1b5f7736278c4178d"
+
+[[audits.wgpu-types]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.18.0@git:ff7b2c399301cca9bcbc5b19a869feb3c29ef785 -> 0.18.0@git:6dc9ccab8592645fda3204be1cfb5929fd7f924d"
 
 [[audits.whatsys]]
 who = "Bobby Holley <bobbyholley@gmail.com>"

@@ -20,7 +20,7 @@
 //! architectures versus `Relaxed`.
 
 #[cfg(feature = "critical-section")]
-use atomic_polyfill as atomic;
+use portable_atomic as atomic;
 #[cfg(not(feature = "critical-section"))]
 use core::sync::atomic;
 
