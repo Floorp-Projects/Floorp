@@ -72,10 +72,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
     ThemeFamily mFamily{0};
 
-    // NOTE(emilio): This is unused, but if we need to we can use it to override
-    // system colors with standins like we do for the non-native theme.
-    bool mCompatibleWithHTMLLightColors = false;
-
     // Cached fonts
     nsString mDefaultFontName;
     nsString mButtonFontName;

@@ -1169,50 +1169,6 @@ bool nsLookAndFeel::PerThemeData::GetFont(FontID aID, nsString& aFontName,
   return true;
 }
 
-// Check color contrast according to
-// https://www.w3.org/TR/AERT/#color-contrast
-static bool HasGoodContrastVisibility(GdkRGBA& aColor1, GdkRGBA& aColor2) {
-  int32_t luminosityDifference = NS_LUMINOSITY_DIFFERENCE(
-      GDK_RGBA_TO_NS_RGBA(aColor1), GDK_RGBA_TO_NS_RGBA(aColor2));
-  if (luminosityDifference < NS_SUFFICIENT_LUMINOSITY_DIFFERENCE) {
-    return false;
-  }
-
-  double colorDifference = std::abs(aColor1.red - aColor2.red) +
-                           std::abs(aColor1.green - aColor2.green) +
-                           std::abs(aColor1.blue - aColor2.blue);
-  return (colorDifference * 255.0 > 500.0);
-}
-
-// Check if the foreground/background colors match with default white/black
-// html page colors.
-static bool IsGtkThemeCompatibleWithHTMLColors() {
-  GdkRGBA white = {1.0, 1.0, 1.0};
-  GdkRGBA black = {0.0, 0.0, 0.0};
-
-  GtkStyleContext* style = GetStyleContext(MOZ_GTK_WINDOW);
-
-  GdkRGBA textColor;
-  gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &textColor);
-
-  // Theme text color and default white html page background
-  if (!HasGoodContrastVisibility(textColor, white)) {
-    return false;
-  }
-
-  GdkRGBA backgroundColor;
-  gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL,
-                                         &backgroundColor);
-
-  // Theme background color and default white html page background
-  if (HasGoodContrastVisibility(backgroundColor, white)) {
-    return false;
-  }
-
-  // Theme background color and default black text color
-  return HasGoodContrastVisibility(backgroundColor, black);
-}
-
 static nsCString GetGtkSettingsStringKey(const char* aKey) {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   nsCString ret;
@@ -1798,9 +1754,6 @@ void nsLookAndFeel::PerThemeData::Init() {
   mPreferDarkTheme = GetPreferDarkTheme();
 
   mIsDark = GetThemeIsDark();
-
-  mCompatibleWithHTMLLightColors =
-      !mIsDark && IsGtkThemeCompatibleWithHTMLColors();
 
   GdkRGBA color;
   // Some themes style the <trough>, while others style the <scrollbar>
