@@ -137,18 +137,16 @@ bool WebGLContext::LruPosition::IsInsertedLocked() const {
   return mItr != sLru.end();
 }
 
-WebGLContext::WebGLContext(HostWebGLContext* host,
+WebGLContext::WebGLContext(HostWebGLContext& host,
                            const webgl::InitContextDesc& desc)
     : gl(mGL_OnlyClearInDestroyResourcesAndContext),  // const reference
-      mHost(host),
+      mHost(&host),
       mResistFingerprinting(desc.resistFingerprinting),
       mOptions(desc.options),
       mPrincipalKey(desc.principalKey),
       mContextLossHandler(this),
       mRequestedSize(desc.size) {
-  if (host) {
-    host->mContext = this;
-  }
+  host.mContext = this;
   const FuncScope funcScope(*this, "<Create>");
 }
 
@@ -515,7 +513,7 @@ UniquePtr<webgl::FormatUsageAuthority> WebGLContext::CreateFormatUsage(
 }
 
 /*static*/
-RefPtr<WebGLContext> WebGLContext::Create(HostWebGLContext* host,
+RefPtr<WebGLContext> WebGLContext::Create(HostWebGLContext& host,
                                           const webgl::InitContextDesc& desc,
                                           webgl::InitContextResult* const out) {
   AUTO_PROFILER_LABEL("WebGLContext::Create", GRAPHICS);
@@ -751,7 +749,7 @@ void WebGLContext::LoseLruContextIfLimitExceeded() {
           "Exceeded %u live WebGL contexts for this principal, losing the "
           "least recently used one.",
           maxContextsPerPrincipal);
-      JsWarning(ToString(text));
+      mHost->JsWarning(ToString(text));
 
       for (const auto& context : sLru) {
         if (context->mPrincipalKey == mPrincipalKey) {
@@ -770,7 +768,7 @@ void WebGLContext::LoseLruContextIfLimitExceeded() {
         "Exceeded %u live WebGL contexts, losing the least "
         "recently used one.",
         maxContexts);
-    JsWarning(ToString(text));
+    mHost->JsWarning(ToString(text));
 
     const auto& context = sLru.front();
     MOZ_ASSERT(context != this);
@@ -1062,8 +1060,7 @@ void WebGLContext::Present(WebGLFramebuffer* const xrFb,
 
 void WebGLContext::CopyToSwapChain(WebGLFramebuffer* const srcFb,
                                    const layers::TextureType consumerType,
-                                   const webgl::SwapChainOptions& options,
-                                   base::ProcessId pid) {
+                                   const webgl::SwapChainOptions& options) {
   const FuncScope funcScope(*this, "<CopyToSwapChain>");
   if (IsContextLost()) return;
 
@@ -1086,7 +1083,7 @@ void WebGLContext::CopyToSwapChain(WebGLFramebuffer* const srcFb,
   // read back the WebGL framebuffer into and push it as a remote texture.
   if (useAsync && srcFb->mSwapChain.mFactory->GetConsumerType() ==
                       layers::TextureType::Unknown) {
-    PushRemoteTexture(srcFb, srcFb->mSwapChain, nullptr, options, pid);
+    PushRemoteTexture(srcFb, srcFb->mSwapChain, nullptr, options);
     return;
   }
 
@@ -1110,15 +1107,14 @@ void WebGLContext::CopyToSwapChain(WebGLFramebuffer* const srcFb,
 
   if (useAsync) {
     PushRemoteTexture(srcFb, srcFb->mSwapChain, srcFb->mSwapChain.FrontBuffer(),
-                      options, pid);
+                      options);
   }
 }
 
 bool WebGLContext::PushRemoteTexture(WebGLFramebuffer* fb,
                                      gl::SwapChain& swapChain,
                                      std::shared_ptr<gl::SharedSurface> surf,
-                                     const webgl::SwapChainOptions& options,
-                                     base::ProcessId pid) {
+                                     const webgl::SwapChainOptions& options) {
   const auto onFailure = [&]() -> bool {
     GenerateWarning("Remote texture creation failed.");
     LoseContext();
@@ -1132,12 +1128,11 @@ bool WebGLContext::PushRemoteTexture(WebGLFramebuffer* fb,
   if (!mRemoteTextureOwner) {
     // Ensure we have a remote texture owner client for WebGLParent.
     const auto* outOfProcess = mHost ? mHost->mOwnerData.outOfProcess : nullptr;
-    if (outOfProcess) {
-      pid = outOfProcess->OtherPid();
-    } else if (pid == base::kInvalidProcessId) {
+    if (!outOfProcess) {
       return onFailure();
     }
-    mRemoteTextureOwner = MakeRefPtr<layers::RemoteTextureOwnerClient>(pid);
+    mRemoteTextureOwner =
+        MakeRefPtr<layers::RemoteTextureOwnerClient>(outOfProcess->OtherPid());
   }
 
   layers::RemoteTextureOwnerId ownerId = options.remoteTextureOwnerId;
@@ -1497,9 +1492,7 @@ void WebGLContext::CheckForContextLoss() {
 
 void WebGLContext::HandlePendingContextLoss() {
   mIsContextLost = true;
-  if (mHost) {
-    mHost->OnContextLoss(mPendingContextLossReason);
-  }
+  mHost->OnContextLoss(mPendingContextLossReason);
 }
 
 void WebGLContext::LoseContextLruLocked(const webgl::ContextLossReason reason) {
@@ -1904,17 +1897,6 @@ nsresult webgl::AvailabilityRunnable::Run() {
 
 // -
 
-void WebGLContext::JsWarning(const std::string& text) const {
-  if (mHost) {
-    mHost->JsWarning(text);
-  }
-#ifdef DEBUG
-  if (!mHost) {
-    NS_WARNING(text.c_str());
-  }
-#endif
-}
-
 void WebGLContext::GenerateErrorImpl(const GLenum errOrWarning,
                                      const std::string& text) const {
   auto err = errOrWarning;
@@ -1960,9 +1942,9 @@ void WebGLContext::GenerateErrorImpl(const GLenum errOrWarning,
 
   if (isPerfWarning) {
     const auto perfText = std::string("WebGL perf warning: ") + text;
-    JsWarning(perfText);
+    mHost->JsWarning(perfText);
   } else {
-    JsWarning(text);
+    mHost->JsWarning(text);
   }
   *pNumWarnings += 1;
 
@@ -1971,7 +1953,7 @@ void WebGLContext::GenerateErrorImpl(const GLenum errOrWarning,
         "After reporting %i, no further %s will be reported for this WebGL "
         "context.",
         int(*pNumWarnings), warningsType);
-    JsWarning(ToString(msg));
+    mHost->JsWarning(ToString(msg));
   }
 }
 

@@ -319,36 +319,6 @@ static bool ShouldRemoteTextureType(TextureType aTextureType,
 }
 
 /* static */
-TextureData* TextureData::Create(TextureType aTextureType,
-                                 gfx::SurfaceFormat aFormat,
-                                 const gfx::IntSize& aSize,
-                                 TextureAllocationFlags aAllocFlags,
-                                 gfx::BackendType aBackendType) {
-  switch (aTextureType) {
-#ifdef XP_WIN
-    case TextureType::D3D11:
-      return D3D11TextureData::Create(aSize, aFormat, aAllocFlags);
-#endif
-
-#ifdef MOZ_WIDGET_GTK
-    case TextureType::DMABUF:
-      return DMABUFTextureData::Create(aSize, aFormat, aBackendType);
-#endif
-
-#ifdef XP_MACOSX
-    case TextureType::MacIOSurface:
-      return MacIOSurfaceTextureData::Create(aSize, aFormat, aBackendType);
-#endif
-#ifdef MOZ_WIDGET_ANDROID
-    case TextureType::AndroidNativeWindow:
-      return AndroidNativeWindowTextureData::Create(aSize, aFormat);
-#endif
-    default:
-      return nullptr;
-  }
-}
-
-/* static */
 TextureData* TextureData::Create(TextureForwarder* aAllocator,
                                  gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
                                  KnowsCompositor* aKnowsCompositor,
@@ -358,17 +328,11 @@ TextureData* TextureData::Create(TextureForwarder* aAllocator,
   TextureType textureType =
       GetTextureType(aFormat, aSize, aKnowsCompositor, aSelector, aAllocFlags);
 
-  if ((aAllocFlags & ALLOC_FORCE_REMOTE) ||
-      ShouldRemoteTextureType(textureType, aSelector)) {
+  if (ShouldRemoteTextureType(textureType, aSelector)) {
     RefPtr<CanvasChild> canvasChild = aAllocator->GetCanvasChild();
     if (canvasChild) {
       return new RecordedTextureData(canvasChild.forget(), aSize, aFormat,
                                      textureType);
-    }
-    if (aAllocFlags & ALLOC_FORCE_REMOTE) {
-      // If we must be remote, but there is no canvas child, then falling back
-      // is not possible.
-      return nullptr;
     }
 
     // We don't have a CanvasChild, but are supposed to be remote.
@@ -376,15 +340,33 @@ TextureData* TextureData::Create(TextureForwarder* aAllocator,
     textureType = TextureType::Unknown;
   }
 
-  gfx::BackendType moz2DBackend = gfx::BackendType::NONE;
-
 #if defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
-  moz2DBackend = BackendTypeForBackendSelector(
+  gfx::BackendType moz2DBackend = BackendTypeForBackendSelector(
       aKnowsCompositor->GetCompositorBackendType(), aSelector);
 #endif
 
-  return TextureData::Create(textureType, aFormat, aSize, aAllocFlags,
-                             moz2DBackend);
+  switch (textureType) {
+#ifdef XP_WIN
+    case TextureType::D3D11:
+      return D3D11TextureData::Create(aSize, aFormat, aAllocFlags);
+#endif
+
+#ifdef MOZ_WIDGET_GTK
+    case TextureType::DMABUF:
+      return DMABUFTextureData::Create(aSize, aFormat, moz2DBackend);
+#endif
+
+#ifdef XP_MACOSX
+    case TextureType::MacIOSurface:
+      return MacIOSurfaceTextureData::Create(aSize, aFormat, moz2DBackend);
+#endif
+#ifdef MOZ_WIDGET_ANDROID
+    case TextureType::AndroidNativeWindow:
+      return AndroidNativeWindowTextureData::Create(aSize, aFormat);
+#endif
+    default:
+      return nullptr;
+  }
 }
 
 /* static */
@@ -533,7 +515,6 @@ void TextureClient::Destroy() {
   }
 
   mBorrowedDrawTarget = nullptr;
-  mBorrowedSnapshot = false;
   mReadLock = nullptr;
 
   RefPtr<TextureChild> actor = mActor;
@@ -689,7 +670,6 @@ void TextureClient::Unlock() {
 
     mBorrowedDrawTarget = nullptr;
   }
-  mBorrowedSnapshot = false;
 
   if (mOpenMode & OpenMode::OPEN_WRITE) {
     mUpdated = true;
@@ -826,7 +806,6 @@ void TextureClient::EndDraw() {
   MOZ_ASSERT(mBorrowedDrawTarget->refCount() <= mExpectedDtRefs);
 
   mBorrowedDrawTarget = nullptr;
-  mBorrowedSnapshot = false;
   mData->EndDraw();
 }
 
@@ -834,9 +813,7 @@ already_AddRefed<gfx::SourceSurface> TextureClient::BorrowSnapshot() {
   MOZ_ASSERT(mIsLocked);
 
   RefPtr<gfx::SourceSurface> surface = mData->BorrowSnapshot();
-  if (surface) {
-    mBorrowedSnapshot = true;
-  } else {
+  if (!surface) {
     RefPtr<gfx::DrawTarget> drawTarget = BorrowDrawTarget();
     if (!drawTarget) {
       return nullptr;
@@ -845,15 +822,6 @@ already_AddRefed<gfx::SourceSurface> TextureClient::BorrowSnapshot() {
   }
 
   return surface.forget();
-}
-
-void TextureClient::ReturnSnapshot(
-    already_AddRefed<gfx::SourceSurface> aSnapshot) {
-  RefPtr<gfx::SourceSurface> snapshot = aSnapshot;
-  if (mBorrowedSnapshot) {
-    mData->ReturnSnapshot(snapshot.forget());
-    mBorrowedSnapshot = false;
-  }
 }
 
 bool TextureClient::BorrowMappedData(MappedTextureData& aMap) {
@@ -1191,10 +1159,6 @@ already_AddRefed<TextureClient> TextureClient::CreateForDrawing(
 
   if (data) {
     return MakeAndAddRef<TextureClient>(data, aTextureFlags, aAllocator);
-  }
-  if (aAllocFlags & ALLOC_FORCE_REMOTE) {
-    // If we must be remote, but allocation failed, then don't fall back.
-    return nullptr;
   }
 
   // Can't do any better than a buffer texture client.
