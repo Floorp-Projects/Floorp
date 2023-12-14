@@ -57,7 +57,7 @@ class WebAuthnSupport {
     const formattedLabels = await lazy.strings.formatValues(labels);
     for (let i = 0; i < credentials.length; i++) {
       yield new ParentAutocompleteOption(
-        "chrome://browser/content/logos/passkey.svg",
+        "chrome://browser/content/logos/etp-mobile.svg", // Bug 1867622: replace this with final icon
         credentials[i].userName,
         formattedLabels[i],
         "PasswordManager:promptForAuthenticator",
@@ -75,7 +75,7 @@ class WebAuthnSupport {
     // list. If the user selects this entry, the WebAuthn transaction will
     // proceed using the modal UI.
     yield new ParentAutocompleteOption(
-      "chrome://browser/content/logos/passkey.svg",
+      "chrome://browser/content/logos/etp-mobile.svg", // Bug 1867622: replace this with final icon
       formattedLabels[formattedLabels.length - 1],
       "",
       "PasswordManager:promptForAuthenticator",
