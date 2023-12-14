@@ -25,7 +25,7 @@ function checkDecoratorContext(name) {
     assertEq(typeof value, "function");
     assertEq(context.kind, "class");
     assertEq(context.name, name);
-    assertEq(typeof context.addInitializer, "object");
+    assertEq(typeof context.addInitializer, "undefined");
     // return undefined
   }
 }
