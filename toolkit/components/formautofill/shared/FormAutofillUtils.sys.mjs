@@ -18,7 +18,7 @@ ChromeUtils.defineLazyGetter(
   "l10n",
   () =>
     new Localization(
-      ["toolkit/formautofill/formautofill.ftl", "branding/brand.ftl"],
+      ["toolkit/formautofill/formAutofill.ftl", "branding/brand.ftl"],
       true
     )
 );
