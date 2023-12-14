@@ -2055,6 +2055,7 @@ dependencies = [
 name = "geckodriver"
 version = "0.33.0"
 dependencies = [
+ "anyhow",
  "base64 0.21.3",
  "chrono",
  "clap",
@@ -2073,6 +2074,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "tempfile",
+ "thiserror",
  "unicode-segmentation",
  "url",
  "uuid",

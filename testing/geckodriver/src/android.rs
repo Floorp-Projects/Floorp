@@ -3,9 +3,9 @@ use mozdevice::{AndroidStorage, Device, Host, UnixPathBuf};
 use mozprofile::profile::Profile;
 use serde::Serialize;
 use serde_yaml::{Mapping, Value};
-use std::fmt;
 use std::io;
 use std::time;
+use thiserror::Error;
 use webdriver::error::{ErrorStatus, WebDriverError};
 
 // TODO: avoid port clashes across GeckoView-vehicles.
@@ -20,47 +20,22 @@ const CONFIG_FILE_HEADING: &str = r#"## GeckoView configuration YAML
 
 pub type Result<T> = std::result::Result<T, AndroidError>;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum AndroidError {
+    #[error("Activity for package '{0}' not found")]
     ActivityNotFound(String),
-    Device(mozdevice::DeviceError),
-    IO(io::Error),
+
+    #[error(transparent)]
+    Device(#[from] mozdevice::DeviceError),
+
+    #[error(transparent)]
+    IO(#[from] io::Error),
+
+    #[error("Package '{0}' not found")]
     PackageNotFound(String),
-    Serde(serde_yaml::Error),
-}
 
-impl fmt::Display for AndroidError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            AndroidError::ActivityNotFound(ref package) => {
-                write!(f, "Activity for package '{}' not found", package)
-            }
-            AndroidError::Device(ref message) => message.fmt(f),
-            AndroidError::IO(ref message) => message.fmt(f),
-            AndroidError::PackageNotFound(ref package) => {
-                write!(f, "Package '{}' not found", package)
-            }
-            AndroidError::Serde(ref message) => message.fmt(f),
-        }
-    }
-}
-
-impl From<io::Error> for AndroidError {
-    fn from(value: io::Error) -> AndroidError {
-        AndroidError::IO(value)
-    }
-}
-
-impl From<mozdevice::DeviceError> for AndroidError {
-    fn from(value: mozdevice::DeviceError) -> AndroidError {
-        AndroidError::Device(value)
-    }
-}
-
-impl From<serde_yaml::Error> for AndroidError {
-    fn from(value: serde_yaml::Error) -> AndroidError {
-        AndroidError::Serde(value)
-    }
+    #[error(transparent)]
+    Serde(#[from] serde_yaml::Error),
 }
 
 impl From<AndroidError> for WebDriverError {
