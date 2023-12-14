@@ -1176,13 +1176,13 @@ class Artifacts(object):
             return "android-arm" + target_suffix
 
         target_64bit = False
-        if self._substs["target_cpu"] == "x86_64":
+        if self._substs["TARGET_CPU"] == "x86_64":
             target_64bit = True
 
         if self._defines.get("XP_LINUX", False):
             return ("linux64" if target_64bit else "linux") + target_suffix
         if self._defines.get("XP_WIN", False):
-            if self._substs["target_cpu"] == "aarch64":
+            if self._substs["TARGET_CPU"] == "aarch64":
                 return "win64-aarch64" + target_suffix
             return ("win64" if target_64bit else "win32") + target_suffix
         if self._defines.get("XP_MACOSX", False):
