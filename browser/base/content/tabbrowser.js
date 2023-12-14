@@ -3158,8 +3158,8 @@
         let tab;
         let tabWasReused = false;
 
-        let { workspacesService } = ChromeUtils.importESModule(
-          "resource:///modules/workspacesService.sys.mjs"
+        let { WorkspacesService } = ChromeUtils.importESModule(
+          "resource:///modules/WorkspacesService.sys.mjs"
         );
         let floorpWorkspaceId = tabData.floorpWorkspaceId;
         let floorpLastShowWorkspaceId = tabData.floorpLastShowWorkspaceId;
@@ -3182,11 +3182,11 @@
           tab.setAttribute("floorpWorkspace", floorpWorkspace);
 
           if (floorpWorkspaceId) {
-            tab.setAttribute(workspacesService.workspacesTabAttributionId, floorpWorkspaceId);
+            tab.setAttribute(WorkspacesService.workspacesTabAttributionId, floorpWorkspaceId);
           }
 
           if (floorpLastShowWorkspaceId) {
-            tab.setAttribute(workspacesService.workspaceLastShowId, floorpLastShowWorkspaceId);
+            tab.setAttribute(WorkspacesService.workspaceLastShowId, floorpLastShowWorkspaceId);
           }
 
           if (floorpSSB) {
@@ -3245,11 +3245,11 @@
           tab.setAttribute("floorpWorkspace", floorpWorkspace);
 
           if (floorpWorkspaceId) {
-            tab.setAttribute(workspacesService.workspacesTabAttributionId, floorpWorkspaceId);
+            tab.setAttribute(WorkspacesService.workspacesTabAttributionId, floorpWorkspaceId);
           }
 
           if (floorpLastShowWorkspaceId) {
-            tab.setAttribute(workspacesService.workspaceLastShowId, floorpLastShowWorkspaceId);
+            tab.setAttribute(WorkspacesService.workspaceLastShowId, floorpLastShowWorkspaceId);
           }
 
           if (select) {
