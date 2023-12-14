@@ -99,10 +99,14 @@ nsMenuX::nsMenuX(nsMenuParentX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner,
     nsMenuBarX::sNativeEventTarget = [[NativeMenuItemTarget alloc] init];
   }
 
+  bool shouldShowServices = false;
   if (mContent->IsElement()) {
     mContent->AsElement()->GetAttr(nsGkAtoms::label, mLabel);
+
+    shouldShowServices =
+        mContent->AsElement()->HasAttr(nsGkAtoms::showservicesmenu);
   }
-  mNativeMenu = CreateMenuWithGeckoString(mLabel);
+  mNativeMenu = CreateMenuWithGeckoString(mLabel, shouldShowServices);
 
   // register this menu to be notified when changes are made to our content
   // object
@@ -838,7 +842,8 @@ nsresult nsMenuX::GetEnabled(bool* aIsEnabled) {
   return NS_OK;
 }
 
-GeckoNSMenu* nsMenuX::CreateMenuWithGeckoString(nsString& aMenuTitle) {
+GeckoNSMenu* nsMenuX::CreateMenuWithGeckoString(nsString& aMenuTitle,
+                                                bool aShowServices) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   NSString* title = [NSString stringWithCharacters:(UniChar*)aMenuTitle.get()
@@ -849,6 +854,10 @@ GeckoNSMenu* nsMenuX::CreateMenuWithGeckoString(nsString& aMenuTitle) {
   // We don't want this menu to auto-enable menu items because then Cocoa
   // overrides our decisions and things get incorrectly enabled/disabled.
   myMenu.autoenablesItems = NO;
+
+  // Only show "Services", "Autofill" and similar entries provided by macOS
+  // if our caller wants them:
+  myMenu.allowsContextMenuPlugIns = aShowServices;
 
   // we used to install Carbon event handlers here, but since NSMenu* doesn't
   // create its underlying MenuRef until just before display, we delay until

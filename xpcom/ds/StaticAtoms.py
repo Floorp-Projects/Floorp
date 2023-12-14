@@ -1147,6 +1147,7 @@ STATIC_ATOMS = [
     Atom("shape", "shape"),
     Atom("show", "show"),
     Atom("showcaret", "showcaret"),
+    Atom("showservicesmenu", "showservicesmenu"),
     Atom("sibling", "sibling"),
     Atom("simple", "simple"),
     Atom("simp_chinese_formal", "simp-chinese-formal"),
