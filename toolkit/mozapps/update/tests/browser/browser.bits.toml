@@ -1,0 +1,135 @@
+[DEFAULT]
+run-if = ["os == 'win'"] # "BITS is only available on Windows."
+skip-if = [
+  "msix", # Updater is disabled in MSIX builds
+]
+dupe-manifest = true
+tags = "appupdate bits"
+head = "head.js"
+support-files = [
+  "../data/shared.js",
+  "../data/sharedUpdateXML.js",
+  "../data/app_update.sjs",
+  "downloadPage.html",
+  "testConstants.js",
+]
+
+prefs = [
+  "app.update.BITS.enabled=true",
+ "app.update.langpack.enabled=true",
+]
+
+# BITS Download Tests
+#####################
+
+# About Dialog Application Update Tests
+
+["browser_aboutDialog_bc_downloaded.js"]
+
+["browser_aboutDialog_bc_downloaded_staged.js"]
+
+["browser_aboutDialog_bc_downloaded_staging.js"]
+
+["browser_aboutDialog_bc_downloaded_stagingFailure.js"]
+
+["browser_aboutDialog_bc_downloading.js"]
+
+["browser_aboutDialog_bc_downloading_notify.js"]
+
+["browser_aboutDialog_bc_downloading_staging.js"]
+
+["browser_aboutDialog_bc_multiUpdate.js"]
+
+["browser_aboutDialog_fc_downloadAuto.js"]
+
+["browser_aboutDialog_fc_downloadAuto_staging.js"]
+
+["browser_aboutDialog_fc_downloadOptIn.js"]
+
+["browser_aboutDialog_fc_downloadOptIn_staging.js"]
+
+["browser_aboutDialog_fc_patch_completeBadSize.js"]
+
+["browser_aboutDialog_fc_patch_partialBadSize.js"]
+
+["browser_aboutDialog_fc_patch_partialBadSize_complete.js"]
+
+["browser_aboutDialog_fc_patch_partialBadSize_completeBadSize.js"]
+
+# about:preferences Application Update Tests
+
+["browser_aboutPrefs_bc_downloaded.js"]
+
+["browser_aboutPrefs_bc_downloaded_staged.js"]
+
+["browser_aboutPrefs_bc_downloaded_staging.js"]
+
+["browser_aboutPrefs_bc_downloaded_stagingFailure.js"]
+
+["browser_aboutPrefs_bc_downloading.js"]
+
+["browser_aboutPrefs_bc_downloading_staging.js"]
+
+["browser_aboutPrefs_bc_multiUpdate.js"]
+
+["browser_aboutPrefs_fc_downloadAuto.js"]
+
+["browser_aboutPrefs_fc_downloadAuto_staging.js"]
+
+["browser_aboutPrefs_fc_downloadOptIn.js"]
+
+["browser_aboutPrefs_fc_downloadOptIn_staging.js"]
+
+["browser_aboutPrefs_fc_patch_completeBadSize.js"]
+
+["browser_aboutPrefs_fc_patch_partialBadSize.js"]
+
+["browser_aboutPrefs_fc_patch_partialBadSize_complete.js"]
+
+["browser_aboutPrefs_fc_patch_partialBadSize_completeBadSize.js"]
+
+# Doorhanger Application Update Tests
+
+["browser_doorhanger_bc_downloadAutoFailures.js"]
+
+["browser_doorhanger_bc_downloadAutoFailures_bgWin.js"]
+
+["browser_doorhanger_bc_downloadOptIn.js"]
+
+["browser_doorhanger_bc_downloadOptIn_bgWin.js"]
+
+["browser_doorhanger_bc_downloadOptIn_staging.js"]
+
+["browser_doorhanger_bc_downloaded.js"]
+
+["browser_doorhanger_bc_downloaded_disableBITS.js"]
+
+["browser_doorhanger_bc_downloaded_staged.js"]
+
+["browser_doorhanger_bc_multiUpdate.js"]
+
+["browser_doorhanger_bc_multiUpdate_promptWaitTime.js"]
+
+["browser_doorhanger_bc_patch_completeBadSize.js"]
+
+["browser_doorhanger_bc_patch_partialBadSize.js"]
+
+["browser_doorhanger_bc_patch_partialBadSize_complete.js"]
+
+["browser_doorhanger_bc_patch_partialBadSize_completeBadSize.js"]
+
+["browser_doorhanger_sp_patch_completeApplyFailure.js"]
+
+["browser_doorhanger_sp_patch_partialApplyFailure.js"]
+
+["browser_doorhanger_sp_patch_partialApplyFailure_complete.js"]
+
+["browser_doorhanger_sp_patch_partialApplyFailure_completeBadSize.js"]
+
+["browser_doorhanger_sp_patch_partialApplyFailure_complete_staging.js"]
+
+# Telemetry Update Ping Tests
+
+["browser_telemetry_updatePing_downloaded_ready.js"]
+
+["browser_telemetry_updatePing_staged_ready.js"]
