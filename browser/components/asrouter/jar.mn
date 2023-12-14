@@ -1,0 +1,9 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+browser.jar:
+  content/browser/asrouter/asrouter-admin.html                           (content/asrouter-admin.html)
+  content/browser/asrouter/asrouter-admin.bundle.js                      (content/asrouter-admin.bundle.js)
+  content/browser/asrouter/components/ASRouterAdmin/ASRouterAdmin.css    (content/components/ASRouterAdmin/ASRouterAdmin.css)
+  content/browser/asrouter/render.js                                     (content/render.js)

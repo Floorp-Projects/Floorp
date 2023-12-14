@@ -26,6 +26,7 @@ obj*/
 browser/components/pocket/content/panels/css/main.compiled.css
 browser/components/newtab/**/*.css
 browser/components/aboutwelcome/**/*.css
+browser/components/asrouter/**/*.css
 
 # Note that the debugger has its own stylelint setup, but that currently
 # produces errors. Bug 1831302 tracks making this better

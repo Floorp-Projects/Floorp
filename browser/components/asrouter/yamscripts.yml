@@ -1,0 +1,44 @@
+# This file compiles to package.json scripts.
+# When you add or modify anything, you *MUST* run:
+#      npm run yamscripts
+# to compile your changes.
+
+scripts:
+  # bundle: Build all assets for ASRouter
+  bundle:
+    admin: webpack-cli --config webpack.asrouter-admin.config.js
+    css: sass content-src:content --no-source-map
+
+  # watchmc:  Automatically rebuild when files are changed. NOTE: Includes sourcemaps, do not use for profiling/perf testing.
+  watchmc:
+    _parallel: true
+    bundle: =>bundle:admin -- --env development -w
+    css: =>bundle:css -- --source-map --embed-sources --embed-source-map -w
+
+  testmc:
+    lint: =>lint
+    build: =>bundle:admin
+    unit: karma start karma.mc.config.js
+
+  tddmc: karma start karma.mc.config.js --tdd
+
+  debugcoverage: open logs/coverage/lcov-report/index.html
+
+  # lint: Run various linters with mach or local dev dependencies
+  lint:
+    codespell: (cd $npm_package_config_mc_root && ./mach lint -l codespell $npm_package_config_asrouter_path)
+    eslint: (cd $npm_package_config_mc_root && ./mach lint -l eslint $npm_package_config_asrouter_path)
+    license: (cd $npm_package_config_mc_root && ./mach lint -l license $npm_package_config_asrouter_path)
+    stylelint: (cd $npm_package_config_mc_root && ./mach lint -l stylelint $npm_package_config_asrouter_path)
+
+  # test: Run all tests once
+  test: =>testmc
+
+  # tdd: Run content tests continuously
+  tdd: =>tddmc
+
+  fix:
+    # Note that since we're currently running eslint-plugin-prettier,
+    # running fix:eslint will also reformat changed JS files using prettier.
+    eslint: =>lint:eslint -- --fix
+    stylelint: =>lint:stylelint -- --fix
