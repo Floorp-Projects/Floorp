@@ -18,35 +18,22 @@ use serde_json::{Map, Value};
 use std::collections::BTreeMap;
 use std::default::Default;
 use std::ffi::OsString;
-use std::fmt::{self, Display};
 use std::fs;
 use std::io;
 use std::io::BufWriter;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::str::{self, FromStr};
+use thiserror::Error;
 use webdriver::capabilities::{BrowserCapabilities, Capabilities};
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Error)]
 enum VersionError {
-    VersionError(mozversion::Error),
+    #[error(transparent)]
+    VersionError(#[from] mozversion::Error),
+    #[error("No binary provided")]
     MissingBinary,
-}
-
-impl From<mozversion::Error> for VersionError {
-    fn from(err: mozversion::Error) -> VersionError {
-        VersionError::VersionError(err)
-    }
-}
-
-impl Display for VersionError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            VersionError::VersionError(ref x) => x.fmt(f),
-            VersionError::MissingBinary => "No binary provided".fmt(f),
-        }
-    }
 }
 
 impl From<VersionError> for WebDriverError {
@@ -397,8 +384,6 @@ pub enum ProfileType {
     #[default]
     Temporary,
 }
-
-
 
 /// Rust representation of `moz:firefoxOptions`.
 ///
