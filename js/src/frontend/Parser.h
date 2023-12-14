@@ -1336,6 +1336,9 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
       TokenPos propNamePos);
 
 #ifdef ENABLE_DECORATORS
+  FunctionNodeResult synthesizeAddInitializerFunction(
+      TaggedParserAtomIndex initializers, YieldHandling yieldHandling);
+
   ClassMethodResult synthesizeAccessor(
       Node propName, TokenPos propNamePos, TaggedParserAtomIndex propAtom,
       TaggedParserAtomIndex privateStateNameAtom, bool isStatic,

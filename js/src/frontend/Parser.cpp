@@ -3460,6 +3460,12 @@ bool GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(
     if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dot_initializers_())) {
       return false;
     }
+#ifdef ENABLE_DECORATORS
+    if (!noteUsedName(TaggedParserAtomIndex::WellKnown::
+                          dot_instanceExtraInitializers_())) {
+      return false;
+    }
+#endif
   }
 
   // See below for an explanation why arrow function parameters and arrow
@@ -7716,6 +7722,14 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
                           DeclarationKind::Let, pos())) {
       return false;
     }
+
+#ifdef ENABLE_DECORATORS
+    if (!noteDeclaredName(
+            TaggedParserAtomIndex::WellKnown::dot_instanceExtraInitializers_(),
+            DeclarationKind::Let, pos())) {
+      return false;
+    }
+#endif
   }
 
   // Calling toString on constructors need to return the source text for
@@ -7809,6 +7823,14 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
       return false;
     }
 
+#ifdef ENABLE_DECORATORS
+    if (!noteDeclaredName(
+            TaggedParserAtomIndex::WellKnown::dot_instanceExtraInitializers_(),
+            DeclarationKind::Let, pos(), ClosedOver::Yes)) {
+      return false;
+    }
+#endif
+
     // synthesizeConstructor assigns to classStmt.constructorBox
     TokenPos synthesizedBodyPos(classStartOffset, classEndOffset);
     FunctionNodeType synthesizedCtor;
@@ -7870,6 +7892,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
              anyChars.isCurrentTokenType(TokenKind::Class));
 
   ListNodeType decorators = null();
+  FunctionNodeType addInitializerFunction = null();
   if (anyChars.isCurrentTokenType(TokenKind::At)) {
     MOZ_TRY_VAR(decorators, decoratorList(yieldHandling));
     TokenKind next;
@@ -7881,6 +7904,13 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
       return errorResult();
     }
   }
+
+  // See Bug 1868461, we should only do this if there are decorators present.
+  MOZ_TRY_VAR(
+      addInitializerFunction,
+      synthesizeAddInitializerFunction(
+          TaggedParserAtomIndex::WellKnown::dot_instanceExtraInitializers_(),
+          yieldHandling));
 #else
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Class));
 #endif
@@ -8088,7 +8118,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
 
   return handler_.newClass(nameNode, classHeritage, classBlock,
 #ifdef ENABLE_DECORATORS
-                           decorators,
+                           decorators, addInitializerFunction,
 #endif
                            TokenPos(classStartOffset, classEndOffset));
 }
@@ -8207,6 +8237,13 @@ bool GeneralParser<ParseHandler, Unit>::synthesizeConstructorBody(
   if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dot_initializers_())) {
     return false;
   }
+
+#ifdef ENABLE_DECORATORS
+  if (!noteUsedName(
+          TaggedParserAtomIndex::WellKnown::dot_instanceExtraInitializers_())) {
+    return false;
+  }
+#endif
 
   if (hasHeritage == HasHeritage::Yes) {
     // |super()| implicitly reads |new.target|.
@@ -8705,6 +8742,112 @@ GeneralParser<ParseHandler, Unit>::synthesizePrivateMethodInitializer(
 }
 
 #ifdef ENABLE_DECORATORS
+template <class ParseHandler, typename Unit>
+typename ParseHandler::FunctionNodeResult
+GeneralParser<ParseHandler, Unit>::synthesizeAddInitializerFunction(
+    TaggedParserAtomIndex initializers, YieldHandling yieldHandling) {
+  if (!abortIfSyntaxParser()) {
+    return errorResult();
+  }
+
+  // TODO: Add support for static and class extra initializers, see bug 1868220
+  // and bug 1868221.
+  MOZ_ASSERT(
+      initializers ==
+      TaggedParserAtomIndex::WellKnown::dot_instanceExtraInitializers_());
+
+  TokenPos propNamePos = pos();
+
+  // Synthesize an addInitializer function that can be used to append to
+  // .initializers
+  FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Statement;
+  FunctionAsyncKind asyncKind = FunctionAsyncKind::SyncFunction;
+  GeneratorKind generatorKind = GeneratorKind::NotGenerator;
+  bool isSelfHosting = options().selfHostingMode;
+  FunctionFlags flags =
+      InitialFunctionFlags(syntaxKind, generatorKind, asyncKind, isSelfHosting);
+
+  FunctionNodeType funNode;
+  MOZ_TRY_VAR(funNode, handler_.newFunction(syntaxKind, propNamePos));
+
+  Directives directives(true);
+  FunctionBox* funbox =
+      newFunctionBox(funNode, TaggedParserAtomIndex::null(), flags,
+                     propNamePos.begin, directives, generatorKind, asyncKind);
+  if (!funbox) {
+    return errorResult();
+  }
+  funbox->initWithEnclosingParseContext(pc_, syntaxKind);
+
+  ParseContext* outerpc = pc_;
+  SourceParseContext funpc(this, funbox, /* newDirectives = */ nullptr);
+  if (!funpc.init()) {
+    return errorResult();
+  }
+  pc_->functionScope().useAsVarScope(pc_);
+
+  // Takes a single parameter, `initializer`.
+  ParamsBodyNodeType params;
+  MOZ_TRY_VAR(params, handler_.newParamsBody(propNamePos));
+
+  handler_.setFunctionFormalParametersAndBody(funNode, params);
+
+  constexpr bool disallowDuplicateParams = true;
+  bool duplicatedParam = false;
+  if (!notePositionalFormalParameter(
+          funNode, TaggedParserAtomIndex::WellKnown::initializer(), pos().begin,
+          disallowDuplicateParams, &duplicatedParam)) {
+    return null();
+  }
+  MOZ_ASSERT(!duplicatedParam);
+  MOZ_ASSERT(pc_->positionalFormalParameterNames().length() == 1);
+
+  funbox->setLength(1);
+  funbox->setArgCount(1);
+  setFunctionStartAtCurrentToken(funbox);
+
+  // Like private method initializers, the addInitializer method is not created
+  // with a body of synthesized AST nodes. Instead, the body is left empty and
+  // the initializer is synthesized at the bytecode level. See
+  // DecoratorEmitter::emitCreateAddInitializerFunction.
+  ListNodeType stmtList;
+  MOZ_TRY_VAR(stmtList, handler_.newStatementList(propNamePos));
+
+  if (!noteUsedName(initializers)) {
+    return null();
+  }
+
+  bool canSkipLazyClosedOverBindings = handler_.reuseClosedOverBindings();
+  if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
+    return null();
+  }
+  if (!pc_->declareNewTarget(usedNames_, canSkipLazyClosedOverBindings)) {
+    return null();
+  }
+
+  LexicalScopeNodeType addInitializerBody;
+  MOZ_TRY_VAR(addInitializerBody,
+              finishLexicalScope(pc_->varScope(), stmtList,
+                                 ScopeKind::FunctionLexical));
+  handler_.setBeginPosition(addInitializerBody, stmtList);
+  handler_.setEndPosition(addInitializerBody, stmtList);
+  handler_.setFunctionBody(funNode, addInitializerBody);
+
+  // Set field-initializer lambda boundary to start at property name and end
+  // after method body.
+  setFunctionStartAtPosition(funbox, propNamePos);
+  setFunctionEndFromCurrentToken(funbox);
+
+  if (!finishFunction()) {
+    return errorResult();
+  }
+
+  if (!leaveInnerFunction(outerpc)) {
+    return errorResult();
+  }
+
+  return funNode;
+}
 
 template <class ParseHandler, typename Unit>
 typename ParseHandler::ClassMethodResult
@@ -10591,6 +10734,12 @@ typename ParseHandler::NodeResult GeneralParser<ParseHandler, Unit>::memberExpr(
                 TaggedParserAtomIndex::WellKnown::dot_initializers_())) {
           return errorResult();
         }
+#ifdef ENABLE_DECORATORS
+        if (!noteUsedName(TaggedParserAtomIndex::WellKnown::
+                              dot_instanceExtraInitializers_())) {
+          return null();
+        }
+#endif
       } else {
         MOZ_TRY_VAR(nextMember,
                     memberCall(tt, lhs, yieldHandling, possibleError));

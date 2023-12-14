@@ -402,11 +402,12 @@ class FullParseHandler {
                            LexicalScopeNodeType memberBlock,
 #ifdef ENABLE_DECORATORS
                            ListNodeType decorators,
+                           FunctionNodeType addInitializerFunction,
 #endif
                            const TokenPos& pos) {
     return newResult<ClassNode>(name, heritage, memberBlock,
 #ifdef ENABLE_DECORATORS
-                                decorators,
+                                decorators, addInitializerFunction,
 #endif
                                 pos);
   }
