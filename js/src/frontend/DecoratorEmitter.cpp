@@ -812,8 +812,14 @@ bool DecoratorEmitter::emitInitializeFieldOrAccessor() {
 
 bool DecoratorEmitter::emitCallExtraInitializers(
     TaggedParserAtomIndex extraInitializers) {
+  // Support for static and class extra initializers will be added in
+  // bug 1868220 and bug 1868221.
+  MOZ_ASSERT(
+      extraInitializers ==
+      TaggedParserAtomIndex::WellKnown::dot_instanceExtraInitializers_());
+
   if (!bce_->emitGetName(extraInitializers)) {
-    //              [stack] ARRAY
+    //          [stack] ARRAY
     return false;
   }
 
@@ -834,9 +840,6 @@ bool DecoratorEmitter::emitCallExtraInitializers(
   }
 
   InternalWhileEmitter wh(bce_);
-  // At this point, we have no context to determine offsets in the
-  // code for this while statement. Ideally, it would correspond to
-  // the field we're initializing.
   if (!wh.emitCond()) {
     //          [stack] ARRAY LENGTH INDEX
     return false;
@@ -886,7 +889,7 @@ bool DecoratorEmitter::emitCallExtraInitializers(
 
   // Callee is always internal function.
   if (!bce_->emitCall(JSOp::CallIgnoresRv, 0)) {
-    //            [stack] ARRAY LENGTH INDEX INITIALIZER THIS RVAL
+    //            [stack] ARRAY LENGTH INDEX RVAL
     return false;
   }
 

@@ -1,6 +1,8 @@
 // |jit-test| skip-if: !getBuildConfiguration("decorators")
 load(libdir + "asserts.js");
 
+let extraInitializerCalled = {};
+
 function checkDecoratorContext(kind, isPrivate, isStatic, name) {
   return function (value, context) {
     if (kind == "field") {
@@ -16,7 +18,7 @@ function checkDecoratorContext(kind, isPrivate, isStatic, name) {
     assertEq(context.static, isStatic);
     assertEq(context.name, name);
     assertEq(typeof context.addInitializer, "function");
-    context.addInitializer(() => {});
+    context.addInitializer(() => {extraInitializerCalled[context.name] = true;});
     // return undefined
   }
 }
@@ -27,3 +29,5 @@ class C {
 }
 
 let c = new C();
+assertEq(extraInitializerCalled["x"], true);
+assertEq(extraInitializerCalled["y accessor storage"], true);

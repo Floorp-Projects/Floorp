@@ -10755,6 +10755,11 @@ bool BytecodeEmitter::emitInitializeInstanceMembers(
       return false;
     }
     // 5. Return unused.
+
+    if (!de.emitCallExtraInitializers(TaggedParserAtomIndex::WellKnown::
+                                          dot_instanceExtraInitializers_())) {
+      return false;
+    }
 #endif
   }
   return true;
