@@ -28,7 +28,7 @@ function checkDecoratorContext(kind, isPrivate, isStatic, name) {
     assertEq(context.private, isPrivate);
     assertEq(context.static, isStatic);
     assertEq(context.name, name);
-    assertEq(typeof context.addInitializer, "undefined");
+    assertEq(typeof context.addInitializer, "function");
   }
 }
 

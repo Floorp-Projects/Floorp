@@ -163,9 +163,9 @@ bool DecoratorEmitter::emitApplyDecoratorsToFieldDefinition(
     ParseNode* key, ListNode* decorators, bool isStatic) {
   // This method creates a new array to contain initializers added by decorators
   // to the stack. start:
-  //          [stack]
+  //          [stack] ADDINIT
   // end:
-  //          [stack] ARRAY
+  //          [stack] ADDINIT ARRAY
 
   // Decorators Proposal
   // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-applydecoratorstoelementdefinition.
@@ -177,22 +177,22 @@ bool DecoratorEmitter::emitApplyDecoratorsToFieldDefinition(
   // If we're apply decorators to a field, we'll push a new array to the stack
   // to hold newly created initializers.
   if (!bce_->emitUint32Operand(JSOp::NewArray, 1)) {
-    //          [stack] ARRAY
+    //          [stack] ADDINIT ARRAY
     return false;
   }
 
   if (!emitPropertyKey(key)) {
-    //          [stack] ARRAY NAME
+    //          [stack] ADDINIT ARRAY NAME
     return false;
   }
 
   if (!bce_->emitUint32Operand(JSOp::InitElemArray, 0)) {
-    //          [stack] ARRAY
+    //          [stack] ADDINIT ARRAY
     return false;
   }
 
   if (!bce_->emit1(JSOp::One)) {
-    //          [stack] ARRAY INDEX
+    //          [stack] ADDINIT ARRAY INDEX
     return false;
   }
 
@@ -211,40 +211,39 @@ bool DecoratorEmitter::emitApplyDecoratorsToFieldDefinition(
       return false;
     }
 
-    // TODO!!! For now, we push undefined for addInitializerFunction
-    if (!bce_->emit1(JSOp::Undefined)) {
-      //          [stack] VAL ADDINIT
+    if (!bce_->emitDupAt(2)) {
+      //          [stack] ADDINIT ARRAY INDEX ADDINIT
       return false;
     }
 
     if (!emitCallDecoratorForElement(Kind::Field, key, isStatic, decorator)) {
-      //          [stack] ARRAY INDEX RETVAL
+      //          [stack] ADDINIT ARRAY INDEX RETVAL
       return false;
     }
 
     // Step 5.i. Set decorationState.[[Finished]] to true.
     if (!emitUpdateDecorationState()) {
-      //          [stack] ARRAY INDEX RETVAL
+      //          [stack] ADDINIT ARRAY INDEX RETVAL
       return false;
     }
 
     // We need to check if the decorator returned undefined, a callable value,
     // or any other value.
     if (!emitCheckIsUndefined()) {
-      //          [stack] ARRAY INDEX RETVAL ISUNDEFINED
+      //          [stack] ADDINIT ARRAY INDEX RETVAL ISUNDEFINED
       return false;
     }
 
     InternalIfEmitter ie(bce_);
     if (!ie.emitThenElse()) {
-      //          [stack] ARRAY INDEX RETVAL
+      //          [stack] ADDINIT ARRAY INDEX RETVAL
       return false;
     }
 
     // Pop the undefined RETVAL from the stack, leaving the original value in
     // place.
     if (!bce_->emitPopN(1)) {
-      //          [stack] ARRAY INDEX
+      //          [stack] ADDINIT ARRAY INDEX
       return false;
     }
 
@@ -253,13 +252,14 @@ bool DecoratorEmitter::emitApplyDecoratorsToFieldDefinition(
     }
 
     // Step 5.l.i. If IsCallable(newValue) is true, then
+
     if (!bce_->emitCheckIsCallable()) {
       //              [stack] ARRAY INDEX RETVAL ISCALLABLE_RESULT
       return false;
     }
 
     if (!ie.emitThenElse()) {
-      //          [stack] ARRAY INDEX RETVAL
+      //          [stack] ADDINIT ARRAY INDEX RETVAL
       return false;
     }
 
@@ -267,7 +267,7 @@ bool DecoratorEmitter::emitApplyDecoratorsToFieldDefinition(
     // Step 5.j.i. If IsCallable(initializer) is true, append initializer to
     //             elementRecord.[[Initializers]].
     if (!bce_->emit1(JSOp::InitElemInc)) {
-      //          [stack] ARRAY INDEX
+      //          [stack] ADDINIT ARRAY INDEX
       return false;
     }
 
@@ -280,7 +280,7 @@ bool DecoratorEmitter::emitApplyDecoratorsToFieldDefinition(
     }
 
     if (!bce_->emitPopN(1)) {
-      //          [stack] ARRAY INDEX
+      //          [stack] ADDINIT ARRAY INDEX
       return false;
     }
 
@@ -296,16 +296,16 @@ bool DecoratorEmitter::emitApplyDecoratorsToFieldDefinition(
 
   // Pop INDEX
   return bce_->emitPopN(1);
-  //          [stack] ARRAY
+  //          [stack] ADDINIT ARRAY
 }
 
 bool DecoratorEmitter::emitApplyDecoratorsToAccessorDefinition(
     ParseNode* key, ListNode* decorators, bool isStatic) {
   // This method creates a new array to contain initializers added by decorators
   // to the stack. start:
-  //          [stack] GETTER SETTER
+  //          [stack] ADDINIT GETTER SETTER
   // end:
-  //          [stack] GETTER SETTER ARRAY
+  //          [stack] ADDINIT GETTER SETTER ARRAY
   MOZ_ASSERT(key->is<NameNode>());
 
   // Decorators Proposal
@@ -318,22 +318,22 @@ bool DecoratorEmitter::emitApplyDecoratorsToAccessorDefinition(
   // If we're applying decorators to a field, we'll push a new array to the
   // stack to hold newly created initializers.
   if (!bce_->emitUint32Operand(JSOp::NewArray, 1)) {
-    //          [stack] GETTER SETTER ARRAY
+    //          [stack] ADDINIT GETTER SETTER ARRAY
     return false;
   }
 
   if (!bce_->emitGetPrivateName(&key->as<NameNode>())) {
-    //          [stack] GETTER SETTER ARRAY NAME
+    //          [stack] ADDINIT GETTER SETTER ARRAY NAME
     return false;
   }
 
   if (!bce_->emitUint32Operand(JSOp::InitElemArray, 0)) {
-    //          [stack] GETTER SETTER ARRAY
+    //          [stack] ADDINIT GETTER SETTER ARRAY
     return false;
   }
 
   if (!bce_->emit1(JSOp::One)) {
-    //          [stack] GETTER SETTER ARRAY INDEX
+    //          [stack] ADDINIT GETTER SETTER ARRAY INDEX
     return false;
   }
 
@@ -355,7 +355,7 @@ bool DecoratorEmitter::emitApplyDecoratorsToAccessorDefinition(
     // Step 5.g.i. Set value to OrdinaryObjectCreate(%Object.prototype%).
     ObjectEmitter oe(bce_);
     if (!oe.emitObject(2)) {
-      //          [stack] GETTER SETTER ARRAY INDEX VALUE
+      //          [stack] ADDINIT GETTER SETTER ARRAY INDEX VALUE
       return false;
     }
 
@@ -366,12 +366,12 @@ bool DecoratorEmitter::emitApplyDecoratorsToAccessorDefinition(
       return false;
     }
     if (!bce_->emitDupAt(4)) {
-      //          [stack] GETTER SETTER ARRAY INDEX VALUE GETTER
+      //          [stack] ADDINIT GETTER SETTER ARRAY INDEX VALUE GETTER
       return false;
     }
     if (!oe.emitInit(frontend::AccessorType::None,
                      frontend::TaggedParserAtomIndex::WellKnown::get())) {
-      //          [stack] GETTER SETTER ARRAY INDEX VALUE
+      //          [stack] ADDINIT GETTER SETTER ARRAY INDEX VALUE
       return false;
     }
 
@@ -382,23 +382,22 @@ bool DecoratorEmitter::emitApplyDecoratorsToAccessorDefinition(
       return false;
     }
     if (!bce_->emitDupAt(3)) {
-      //          [stack] GETTER SETTER ARRAY INDEX VALUE SETTER
+      //          [stack] ADDINIT GETTER SETTER ARRAY INDEX VALUE SETTER
       return false;
     }
     if (!oe.emitInit(frontend::AccessorType::None,
                      frontend::TaggedParserAtomIndex::WellKnown::set())) {
-      //          [stack] GETTER SETTER ARRAY INDEX VALUE
+      //          [stack] ADDINIT GETTER SETTER ARRAY INDEX VALUE
       return false;
     }
 
     if (!oe.emitEnd()) {
-      //          [stack] GETTER SETTER ARRAY INDEX VALUE
+      //          [stack] ADDINIT GETTER SETTER ARRAY INDEX VALUE
       return false;
     }
 
-    // TODO!!! For now, we push undefined for addInitializerFunction
-    if (!bce_->emit1(JSOp::Undefined)) {
-      //          [stack] GETTER SETTER ARRAY INDEX VALUE ADDINIT
+    if (!bce_->emitDupAt(5)) {
+      //          [stack] ADDINIT GETTER SETTER ARRAY INDEX VALUE ADDINIT
       return false;
     }
 
@@ -406,33 +405,33 @@ bool DecoratorEmitter::emitApplyDecoratorsToAccessorDefinition(
     //           « value, context »).
     if (!emitCallDecoratorForElement(Kind::Accessor, key, isStatic,
                                      decorator)) {
-      //          [stack] GETTER SETTER ARRAY INDEX RETVAL
+      //          [stack] ADDINIT GETTER SETTER ARRAY INDEX RETVAL
       return false;
     }
 
     // Step 5.k. Set decorationState.[[Finished]] to true.
     if (!emitUpdateDecorationState()) {
-      //          [stack] GETTER SETTER ARRAY INDEX RETVAL
+      //          [stack] ADDINIT GETTER SETTER ARRAY INDEX RETVAL
       return false;
     }
 
     // We need to check if the decorator returned undefined, a callable value,
     // or any other value.
     if (!emitCheckIsUndefined()) {
-      //          [stack] GETTER SETTER ARRAY INDEX RETVAL ISUNDEFINED
+      //          [stack] ADDINIT GETTER SETTER ARRAY INDEX RETVAL ISUNDEFINED
       return false;
     }
 
     InternalIfEmitter ie(bce_);
     if (!ie.emitThenElse()) {
-      //          [stack] GETTER SETTER ARRAY INDEX RETVAL
+      //          [stack] ADDINIT GETTER SETTER ARRAY INDEX RETVAL
       return false;
     }
 
     // Pop the undefined RETVAL from the stack, leaving the original values in
     // place.
     if (!bce_->emitPopN(1)) {
-      //          [stack] GETTER SETTER ARRAY INDEX
+      //          [stack] ADDINIT GETTER SETTER ARRAY INDEX
       return false;
     }
 
@@ -445,7 +444,7 @@ bool DecoratorEmitter::emitApplyDecoratorsToAccessorDefinition(
     //              exception. (Reordered)
     if (!bce_->emit2(JSOp::CheckIsObj,
                      uint8_t(CheckIsObjectKind::DecoratorReturn))) {
-      //          [stack] GETTER SETTER ARRAY INDEX RETVAL
+      //          [stack] ADDINIT GETTER SETTER ARRAY INDEX RETVAL
       return false;
     }
 
@@ -482,7 +481,7 @@ bool DecoratorEmitter::emitApplyDecoratorsToAccessorDefinition(
 
     // Pop RETVAL from stack
     if (!bce_->emitPopN(1)) {
-      //          [stack] GETTER SETTER ARRAY INDEX
+      //          [stack] ADDINIT GETTER SETTER ARRAY INDEX
       return false;
     }
 
@@ -493,7 +492,7 @@ bool DecoratorEmitter::emitApplyDecoratorsToAccessorDefinition(
 
   // Pop INDEX
   return bce_->emitPopN(1);
-  //          [stack] GETTER SETTER ARRAY
+  //          [stack] ADDINIT GETTER SETTER ARRAY
 }
 
 bool DecoratorEmitter::emitApplyDecoratorsToClassDefinition(
