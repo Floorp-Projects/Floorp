@@ -188,7 +188,7 @@ module.exports = function (config) {
               functions: 60,
               branches: 50,
             },
-            "content-src/components/ASRouterAdmin/*.jsx": {
+            "content-src/components/DiscoveryStreamAdmin/*.jsx": {
               statements: 0,
               lines: 0,
               functions: 0,
