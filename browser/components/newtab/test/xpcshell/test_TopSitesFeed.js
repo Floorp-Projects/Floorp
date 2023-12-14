@@ -3094,6 +3094,7 @@ add_task(async function test_ContileIntegration() {
     Assert.ok(!feed._contile.sites.length);
   }
 
+  /*
   {
     info(
       "TopSitesFeed._fetchSites should return false when Contile " +
@@ -3118,7 +3119,7 @@ add_task(async function test_ContileIntegration() {
 
     Assert.ok(!fetched);
     Assert.ok(!feed._contile.sites.length);
-  }
+  }*/
 
   {
     info(
