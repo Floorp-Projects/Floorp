@@ -393,6 +393,12 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
       AVRational{.num = static_cast<int>(mConfig.mFramerate), .den = 1};
 #endif
   mCodecContext->gop_size = static_cast<int>(mConfig.mKeyframeInterval);
+  if (mConfig.mUsage == MediaDataEncoder::Usage::Realtime) {
+    mLib->av_opt_set(mCodecContext->priv_data, "deadline", "realtime", 0);
+    // Explicitly ask encoder do not keep in flight at any one time for
+    // lookahead purposes.
+    mLib->av_opt_set(mCodecContext->priv_data, "lag-in-frames", "0", 0);
+  }
   // TODO: keyint_min, max_b_frame?
   // TODO: VPX specific settings
   // - if mConfig.mDenoising is set: av_opt_set_int(mCodecContext->priv_data,
@@ -403,11 +409,6 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
   // - if min and max rates are known (VBR?),
   // av_opt_set(mCodecContext->priv_data, "minrate", x, 0) and
   // av_opt_set(mCodecContext->priv_data, "maxrate", y, 0)
-  // - For real time usage:
-  // av_opt_set(mCodecContext->priv_data, "deadline", "realtime", 0)
-  // av_opt_set(mCodecContext->priv_data, "lag-in-frames", "0", 0)
-  // av_opt_set(mCodecContext->priv_data, "target_bitrate", x, 0)
-  // av_opt_set(mCodecContext->priv_data, "rc_buf_sz", x, 0)
   // TODO: H264 specific settings.
   // - for AVCC format: set mCodecContext->extradata and
   // mCodecContext->extradata_size.
