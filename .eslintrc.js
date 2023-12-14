@@ -233,6 +233,7 @@ module.exports = {
         "browser/components/Browser*",
         "browser/components/aboutlogins/**",
         "browser/components/aboutwelcome/**",
+        "browser/components/asrouter/**",
         "browser/components/attribution/**",
         "browser/components/customizableui/**",
         "browser/components/downloads/**",
@@ -498,6 +499,7 @@ module.exports = {
       extends: ["plugin:react-hooks/recommended"],
       files: [
         "browser/components/aboutwelcome/**",
+        "browser/components/asrouter/**",
         "browser/components/newtab/**",
         "browser/components/pocket/**",
         "devtools/**",
