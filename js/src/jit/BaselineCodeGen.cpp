@@ -564,6 +564,8 @@ static bool CreateAllocSitesForCacheIRStub(JSScript* script,
   const CacheIRStubInfo* stubInfo = stub->stubInfo();
   uint8_t* stubData = stub->stubDataStart();
 
+  ICScript* icScript = script->jitScript()->icScript();
+
   uint32_t field = 0;
   size_t offset = 0;
   while (true) {
@@ -576,7 +578,7 @@ static bool CreateAllocSitesForCacheIRStub(JSScript* script,
       gc::AllocSite* site =
           stubInfo->getPtrStubField<ICCacheIRStub, gc::AllocSite>(stub, offset);
       if (site->kind() == gc::AllocSite::Kind::Unknown) {
-        gc::AllocSite* newSite = script->createAllocSite();
+        gc::AllocSite* newSite = icScript->createAllocSite(script);
         if (!newSite) {
           return false;
         }

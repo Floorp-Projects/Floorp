@@ -13278,7 +13278,7 @@ static gc::AllocSite* MaybeCreateAllocSite(jsbytecode* pc,
     return outerScript->zone()->unknownAllocSite(JS::TraceKind::Object);
   }
 
-  return outerScript->createAllocSite();
+  return frame->icScript()->createAllocSite(outerScript);
 }
 
 AttachDecision NewArrayIRGenerator::tryAttachArrayObject() {

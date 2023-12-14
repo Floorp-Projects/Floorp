@@ -55,12 +55,14 @@ JitScript::JitScript(JSScript* script, Offset fallbackStubsOffset,
   }
 }
 
-#ifdef DEBUG
-JitScript::~JitScript() {
+ICScript::~ICScript() {
   // The contents of the AllocSite LifoAlloc are removed and freed separately
   // after the next minor GC. See prepareForDestruction.
   MOZ_ASSERT(allocSitesSpace_.isEmpty());
+}
 
+#ifdef DEBUG
+JitScript::~JitScript() {
   // BaselineScript and IonScript must have been destroyed at this point.
   MOZ_ASSERT(!hasBaselineScript());
   MOZ_ASSERT(!hasIonScript());
@@ -370,11 +372,16 @@ void JitScript::forEachICScript(const F& f) const {
   }
 }
 
-void JitScript::prepareForDestruction(Zone* zone) {
+void ICScript::prepareForDestruction(Zone* zone) {
   // Defer freeing AllocSite memory until after the next minor GC, because the
   // nursery can point to these alloc sites.
   JSRuntime* rt = zone->runtimeFromMainThread();
   rt->gc.queueAllLifoBlocksForFreeAfterMinorGC(&allocSitesSpace_);
+}
+
+void JitScript::prepareForDestruction(Zone* zone) {
+  forEachICScript(
+      [&](ICScript* script) { script->prepareForDestruction(zone); });
 
   // Trigger write barriers.
   owningScript_ = nullptr;
@@ -764,22 +771,24 @@ InliningRoot* JitScript::getOrCreateInliningRoot(JSContext* cx,
   return inliningRoot_.get();
 }
 
-gc::AllocSite* JitScript::createAllocSite(JSScript* script) {
-  MOZ_ASSERT(script->jitScript() == this);
+gc::AllocSite* ICScript::createAllocSite(JSScript* outerScript) {
+  // The script must be the outer script.
+  MOZ_ASSERT(outerScript->jitScript()->icScript() == this ||
+             (inliningRoot() && inliningRoot()->owningScript() == outerScript));
 
-  Nursery& nursery = script->runtimeFromMainThread()->gc.nursery();
+  Nursery& nursery = outerScript->runtimeFromMainThread()->gc.nursery();
   if (!nursery.canCreateAllocSite()) {
     // Don't block attaching an optimized stub, but don't process allocations
     // for this site.
-    return script->zone()->unknownAllocSite(JS::TraceKind::Object);
+    return outerScript->zone()->unknownAllocSite(JS::TraceKind::Object);
   }
 
   if (!allocSites_.reserve(allocSites_.length() + 1)) {
     return nullptr;
   }
 
-  auto* site = allocSitesSpace_.new_<gc::AllocSite>(script->zone(), script,
-                                                    JS::TraceKind::Object);
+  auto* site = allocSitesSpace_.new_<gc::AllocSite>(
+      outerScript->zone(), outerScript, JS::TraceKind::Object);
   if (!site) {
     return nullptr;
   }
@@ -797,16 +806,36 @@ bool JitScript::resetAllocSites(bool resetNurserySites,
 
   bool anyReset = false;
 
-  for (gc::AllocSite* site : allocSites_) {
-    if ((resetNurserySites && site->initialHeap() == gc::Heap::Default) ||
-        (resetPretenuredSites && site->initialHeap() == gc::Heap::Tenured)) {
-      if (site->maybeResetState()) {
-        anyReset = true;
+  forEachICScript([&](ICScript* script) {
+    for (gc::AllocSite* site : script->allocSites_) {
+      if ((resetNurserySites && site->initialHeap() == gc::Heap::Default) ||
+          (resetPretenuredSites && site->initialHeap() == gc::Heap::Tenured)) {
+        if (site->maybeResetState()) {
+          anyReset = true;
+        }
       }
     }
-  }
+  });
 
   return anyReset;
+}
+
+void JitScript::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                                       size_t* data, size_t* allocSites) const {
+  *data += mallocSizeOf(this);
+
+  forEachICScript([=](const ICScript* script) {
+    // |data| already includes the outer ICScript because it's part of the
+    // JitScript.
+    if (script != &icScript_) {
+      *data += mallocSizeOf(script);
+    }
+
+    // |data| already includes the LifoAlloc and Vector, so use
+    // sizeOfExcludingThis.
+    *allocSites += script->allocSitesSpace_.sizeOfExcludingThis(mallocSizeOf);
+    *allocSites += script->allocSites_.sizeOfExcludingThis(mallocSizeOf);
+  });
 }
 
 JitScript* ICScript::outerJitScript() {
