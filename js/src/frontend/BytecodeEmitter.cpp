@@ -11823,6 +11823,17 @@ bool BytecodeEmitter::emitClass(
         return false;
       }
 
+#ifdef ENABLE_DECORATORS
+      // TODO: See bug 1868220 for support for static extra initializers. We
+      // should only call this code if we know decorators are present, see bug
+      // 1868461.
+      if (!ce.prepareForExtraInitializers(
+              TaggedParserAtomIndex::WellKnown::
+                  dot_instanceExtraInitializers_())) {
+        return false;
+      }
+#endif
+
       // Any class with field initializers will have a constructor
       if (!emitCreateMemberInitializers(ce, classMembers,
                                         FieldPlacement::Instance
