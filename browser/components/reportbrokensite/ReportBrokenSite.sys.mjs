@@ -39,14 +39,6 @@ class ViewState {
     return ViewState.#cache.get(doc) ?? new ViewState(doc);
   }
 
-  get mainPanelview() {
-    return this.#mainView;
-  }
-
-  get reportSentPanelview() {
-    return this.#reportSentView;
-  }
-
   get urlInput() {
     return this.#mainView.querySelector("#report-broken-site-popup-url");
   }
@@ -346,7 +338,10 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
         .addEventListener("popupshown", this.updateParentMenu.bind(this));
     }
 
-    state.mainPanelview.addEventListener("ViewShowing", ({ target }) => {
+    ownerGlobal.PanelMultiView.getViewNode(
+      document,
+      ReportBrokenSite.MAIN_PANELVIEW_ID
+    ).addEventListener("ViewShowing", ({ target }) => {
       const { selectedBrowser } = target.ownerGlobal.gBrowser;
       let source = "helpMenu";
       switch (target.closest("panelmultiview")?.id) {
@@ -358,22 +353,6 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
           break;
       }
       this.#onMainViewShown(source, selectedBrowser);
-    });
-
-    // Make sure the URL input is focused when the main view pops up.
-    state.mainPanelview.addEventListener("ViewShown", () => {
-      const panelview = ownerGlobal.PanelView.forNode(state.mainPanelview);
-      panelview.selectedElement = state.urlInput;
-      panelview.focusSelectedElement();
-    });
-
-    // Make sure the Okay button is focused when the report sent view pops up.
-    state.reportSentPanelview.addEventListener("ViewShown", () => {
-      const panelview = ownerGlobal.PanelView.forNode(
-        state.reportSentPanelview
-      );
-      panelview.selectedElement = state.okayButton;
-      panelview.focusSelectedElement();
     });
   }
 
