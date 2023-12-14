@@ -184,8 +184,8 @@ class Context final : public SafeRefCounted<Context>, public Stringifyable {
   void DispatchAction(SafeRefPtr<Action> aAction, bool aDoomData = false);
   void OnQuotaInit(nsresult aRv,
                    const Maybe<CacheDirectoryMetadata>& aDirectoryMetadata,
-                   already_AddRefed<DirectoryLock> aDirectoryLock,
-                   already_AddRefed<CipherKeyManager> aCipherKeyManager);
+                   RefPtr<DirectoryLock> aDirectoryLock,
+                   RefPtr<CipherKeyManager> aCipherKeyManager);
 
   SafeRefPtr<ThreadsafeHandle> CreateThreadsafeHandle();
 
