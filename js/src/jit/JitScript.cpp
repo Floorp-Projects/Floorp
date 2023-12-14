@@ -311,29 +311,23 @@ void ICScript::purgeInactiveICScripts() {
 }
 
 void JitScript::resetWarmUpCount(uint32_t count) {
-  icScript_.resetWarmUpCount(count);
-  if (hasInliningRoot()) {
-    inliningRoot()->resetWarmUpCounts(count);
-  }
+  forEachICScript([&](ICScript* script) { script->resetWarmUpCount(count); });
 }
 
 #ifdef DEBUG
 bool JitScript::hasActiveICScript() const {
-  if (icScript_.active()) {
-    return true;
-  }
-  if (hasInliningRoot() && inliningRoot()->hasActiveICScript()) {
-    return true;
-  }
-  return false;
+  bool hasActive = false;
+  forEachICScript([&](const ICScript* script) {
+    if (script->active()) {
+      hasActive = true;
+    }
+  });
+  return hasActive;
 }
 #endif
 
 void JitScript::resetAllActiveFlags() {
-  icScript_.resetActive();
-  if (hasInliningRoot()) {
-    inliningRoot()->resetAllActiveFlags();
-  }
+  forEachICScript([](ICScript* script) { script->resetActive(); });
 }
 
 void JitScript::ensureProfileString(JSContext* cx, JSScript* script) {
@@ -358,6 +352,22 @@ void JitScript::Destroy(Zone* zone, JitScript* script) {
   script->remove();
 
   js_delete(script);
+}
+
+template <typename F>
+void JitScript::forEachICScript(const F& f) {
+  f(&icScript_);
+  if (hasInliningRoot()) {
+    inliningRoot()->forEachInlinedScript(f);
+  }
+}
+
+template <typename F>
+void JitScript::forEachICScript(const F& f) const {
+  f(&icScript_);
+  if (hasInliningRoot()) {
+    inliningRoot()->forEachInlinedScript(f);
+  }
 }
 
 void JitScript::prepareForDestruction(Zone* zone) {
@@ -475,10 +485,8 @@ void JitScript::purgeStubs(JSScript* script, ICStubSpace& newStubSpace) {
 
   JitSpew(JitSpew_BaselineIC, "Purging optimized stubs");
 
-  icScript()->purgeStubs(zone, newStubSpace);
-  if (hasInliningRoot()) {
-    inliningRoot()->purgeStubs(zone, newStubSpace);
-  }
+  forEachICScript(
+      [&](ICScript* script) { script->purgeStubs(zone, newStubSpace); });
 
   notePurgedStubs();
 }

@@ -87,21 +87,20 @@ class InliningRoot {
 
   uint32_t numInlinedScripts() const { return inlinedScripts_.length(); }
 
-  void purgeStubs(Zone* zone, ICStubSpace& newStubSpace);
-  void resetWarmUpCounts(uint32_t count);
-
   void purgeInactiveICScripts();
-
-#ifdef DEBUG
-  bool hasActiveICScript() const;
-#endif
-  void resetAllActiveFlags();
 
   JSScript* owningScript() const { return owningScript_; }
 
   size_t totalBytecodeSize() const { return totalBytecodeSize_; }
 
   void addToTotalBytecodeSize(size_t size) { totalBytecodeSize_ += size; }
+
+  template <typename F>
+  void forEachInlinedScript(const F& f) const {
+    for (auto& script : inlinedScripts_) {
+      f(script.get());
+    }
+  }
 
  private:
   HeapPtr<JSScript*> owningScript_;
