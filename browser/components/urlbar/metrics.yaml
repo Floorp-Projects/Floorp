@@ -601,7 +601,7 @@ urlbar:
       - interaction
     notification_emails:
       - fx-search-telemetry@mozilla.com
-    expires: 123
+    expires: 128
 
   pref_max_results:
     lifetime: application
