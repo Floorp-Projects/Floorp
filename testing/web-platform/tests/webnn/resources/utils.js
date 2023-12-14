@@ -354,6 +354,7 @@ const PrecisionMetrics = {
   squeeze: {ULP: {float32: 0, float16: 0}},
   tanh: {ATOL: {float32: 1/1024, float16: 1/512}},
   transpose: {ULP: {float32: 0, float16: 0}},
+  where: {ULP: {float32: 0, float16: 0}},
 };
 
 /**
@@ -691,6 +692,15 @@ const buildSplit = (operationName, builder, resources) => {
   resources.expected.forEach((resourceDict, index) => {
     namedOutputOperand[resourceDict.name] = outputOperands[index];
   });
+  return namedOutputOperand;
+};
+
+const buildWhere = (operationName, builder, resources) => {
+  // MLOperand where(MLOperand condition, MLOperand trueValues, MLOperand falseValues);
+  const namedOutputOperand = {};
+  const [conditionOperand, trueValuesOperand, falseValuesOperand] = createMultiInputOperands(builder, resources);
+  // invoke builder.where()
+  namedOutputOperand[resources.expected.name] = builder[operationName](conditionOperand, trueValuesOperand, falseValuesOperand);
   return namedOutputOperand;
 };
 
