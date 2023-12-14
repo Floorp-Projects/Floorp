@@ -173,6 +173,7 @@ enum class GLRenderer {
   GalliumLlvmpipe,
   IntelHD3000,
   MicrosoftBasicRenderDriver,
+  SamsungXclipse920,
   Other
 };
 

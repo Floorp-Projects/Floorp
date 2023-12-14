@@ -657,6 +657,7 @@ bool GLContext::InitImpl() {
       "Gallium 0.4 on llvmpipe",
       "Intel HD Graphics 3000 OpenGL Engine",
       "Microsoft Basic Render Driver",
+      "Samsung Xclipse 920",
       "Unknown"};
 
   mRenderer = GLRenderer::Other;
@@ -753,6 +754,10 @@ bool GLContext::InitImpl() {
     if (IsMesa()) {
       // DrawElementsInstanced hangs the driver.
       MarkUnsupported(GLFeature::robust_buffer_access_behavior);
+    }
+
+    if (Renderer() == GLRenderer::SamsungXclipse920) {
+      MarkUnsupported(GLFeature::invalidate_framebuffer);
     }
   }
 
