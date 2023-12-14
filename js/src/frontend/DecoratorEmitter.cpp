@@ -810,6 +810,105 @@ bool DecoratorEmitter::emitInitializeFieldOrAccessor() {
   //          [stack]
 }
 
+bool DecoratorEmitter::emitCallExtraInitializers(
+    TaggedParserAtomIndex extraInitializers) {
+  if (!bce_->emitGetName(extraInitializers)) {
+    //              [stack] ARRAY
+    return false;
+  }
+
+  if (!bce_->emit1(JSOp::Dup)) {
+    //          [stack] ARRAY ARRAY
+    return false;
+  }
+
+  if (!bce_->emitAtomOp(JSOp::GetProp,
+                        TaggedParserAtomIndex::WellKnown::length())) {
+    //          [stack] ARRAY LENGTH
+    return false;
+  }
+
+  if (!bce_->emit1(JSOp::Zero)) {
+    //          [stack] ARRAY LENGTH INDEX
+    return false;
+  }
+
+  InternalWhileEmitter wh(bce_);
+  // At this point, we have no context to determine offsets in the
+  // code for this while statement. Ideally, it would correspond to
+  // the field we're initializing.
+  if (!wh.emitCond()) {
+    //          [stack] ARRAY LENGTH INDEX
+    return false;
+  }
+
+  if (!bce_->emit1(JSOp::Dup)) {
+    //          [stack] ARRAY LENGTH INDEX INDEX
+    return false;
+  }
+
+  if (!bce_->emitDupAt(2)) {
+    //          [stack] ARRAY LENGTH INDEX INDEX LENGTH
+    return false;
+  }
+
+  if (!bce_->emit1(JSOp::Lt)) {
+    //          [stack] ARRAY LENGTH INDEX BOOL
+    return false;
+  }
+
+  if (!wh.emitBody()) {
+    //          [stack] ARRAY LENGTH INDEX
+    return false;
+  }
+
+  if (!bce_->emitDupAt(2)) {
+    //          [stack] ARRAY LENGTH INDEX ARRAY
+    return false;
+  }
+
+  if (!bce_->emitDupAt(1)) {
+    //          [stack] ARRAY LENGTH INDEX ARRAY INDEX
+    return false;
+  }
+
+  // Retrieve initializer
+  if (!bce_->emit1(JSOp::GetElem)) {
+    //            [stack] ARRAY LENGTH INDEX INITIALIZER
+    return false;
+  }
+
+  // This is guaranteed to run after super(), so we don't need TDZ checks.
+  if (!bce_->emitGetName(TaggedParserAtomIndex::WellKnown::dot_this_())) {
+    //            [stack] ARRAY LENGTH INDEX INITIALIZER THIS
+    return false;
+  }
+
+  // Callee is always internal function.
+  if (!bce_->emitCall(JSOp::CallIgnoresRv, 0)) {
+    //            [stack] ARRAY LENGTH INDEX INITIALIZER THIS RVAL
+    return false;
+  }
+
+  if (!bce_->emit1(JSOp::Pop)) {
+    //            [stack] ARRAY LENGTH INDEX
+    return false;
+  }
+
+  if (!bce_->emit1(JSOp::Inc)) {
+    //            [stack] ARRAY LENGTH INDEX
+    return false;
+  }
+
+  if (!wh.emitEnd()) {
+    //          [stack] ARRAY LENGTH INDEX
+    return false;
+  }
+
+  return bce_->emitPopN(3);
+  //            [stack]
+}
+
 bool DecoratorEmitter::emitPropertyKey(ParseNode* key) {
   if (key->is<NameNode>()) {
     NameNode* keyAsNameNode = &key->as<NameNode>();
