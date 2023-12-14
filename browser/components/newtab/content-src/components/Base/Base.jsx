@@ -6,7 +6,7 @@ import {
   actionCreators as ac,
   actionTypes as at,
 } from "common/Actions.sys.mjs";
-import { DiscoveryStreamAdmin } from "content-src/components/DiscoveryStreamAdmin/DiscoveryStreamAdmin";
+import { ASRouterAdmin } from "content-src/components/ASRouterAdmin/ASRouterAdmin";
 import { ConfirmDialog } from "content-src/components/ConfirmDialog/ConfirmDialog";
 import { connect } from "react-redux";
 import { DiscoveryStreamBase } from "content-src/components/DiscoveryStreamBase/DiscoveryStreamBase";
@@ -93,7 +93,7 @@ export class _Base extends React.PureComponent {
         <React.Fragment>
           <BaseContent {...this.props} adminContent={this.state} />
           {isDevtoolsEnabled ? (
-            <DiscoveryStreamAdmin notifyContent={this.notifyContent} />
+            <ASRouterAdmin notifyContent={this.notifyContent} />
           ) : null}
         </React.Fragment>
       </ErrorBoundary>

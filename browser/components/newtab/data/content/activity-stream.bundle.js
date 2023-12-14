@@ -529,12 +529,170 @@ const actionUtils = {
   _RouteMessage,
 };
 
+;// CONCATENATED MODULE: ./common/ActorConstants.sys.mjs
+/* vim: set ts=2 sw=2 sts=2 et tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const MESSAGE_TYPE_LIST = [
+  "BLOCK_MESSAGE_BY_ID",
+  "USER_ACTION",
+  "IMPRESSION",
+  "TRIGGER",
+  // PB is Private Browsing
+  "PBNEWTAB_MESSAGE_REQUEST",
+  "DOORHANGER_TELEMETRY",
+  "TOOLBAR_BADGE_TELEMETRY",
+  "TOOLBAR_PANEL_TELEMETRY",
+  "MOMENTS_PAGE_TELEMETRY",
+  "INFOBAR_TELEMETRY",
+  "SPOTLIGHT_TELEMETRY",
+  "TOAST_NOTIFICATION_TELEMETRY",
+  "AS_ROUTER_TELEMETRY_USER_EVENT",
+
+  // Admin types
+  "ADMIN_CONNECT_STATE",
+  "UNBLOCK_MESSAGE_BY_ID",
+  "UNBLOCK_ALL",
+  "BLOCK_BUNDLE",
+  "UNBLOCK_BUNDLE",
+  "DISABLE_PROVIDER",
+  "ENABLE_PROVIDER",
+  "EVALUATE_JEXL_EXPRESSION",
+  "EXPIRE_QUERY_CACHE",
+  "FORCE_ATTRIBUTION",
+  "FORCE_WHATSNEW_PANEL",
+  "FORCE_PRIVATE_BROWSING_WINDOW",
+  "CLOSE_WHATSNEW_PANEL",
+  "OVERRIDE_MESSAGE",
+  "MODIFY_MESSAGE_JSON",
+  "RESET_PROVIDER_PREF",
+  "SET_PROVIDER_USER_PREF",
+  "RESET_GROUPS_STATE",
+  "RESET_MESSAGE_STATE",
+  "RESET_SCREEN_IMPRESSIONS",
+  "EDIT_STATE",
+];
+
+const MESSAGE_TYPE_HASH = MESSAGE_TYPE_LIST.reduce((hash, value) => {
+  hash[value] = value;
+  return hash;
+}, {});
+
+;// CONCATENATED MODULE: ./content-src/asrouter/asrouter-utils.js
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+const ASRouterUtils = {
+  addListener(listener) {
+    if (__webpack_require__.g.ASRouterAddParentListener) {
+      __webpack_require__.g.ASRouterAddParentListener(listener);
+    }
+  },
+
+  removeListener(listener) {
+    if (__webpack_require__.g.ASRouterRemoveParentListener) {
+      __webpack_require__.g.ASRouterRemoveParentListener(listener);
+    }
+  },
+
+  sendMessage(action) {
+    if (__webpack_require__.g.ASRouterMessage) {
+      return __webpack_require__.g.ASRouterMessage(action);
+    }
+
+    throw new Error(`Unexpected call:\n${JSON.stringify(action, null, 3)}`);
+  },
+
+  blockById(id, options) {
+    return ASRouterUtils.sendMessage({
+      type: MESSAGE_TYPE_HASH.BLOCK_MESSAGE_BY_ID,
+      data: {
+        id,
+        ...options
+      }
+    });
+  },
+
+  modifyMessageJson(content) {
+    return ASRouterUtils.sendMessage({
+      type: MESSAGE_TYPE_HASH.MODIFY_MESSAGE_JSON,
+      data: {
+        content
+      }
+    });
+  },
+
+  executeAction(button_action) {
+    return ASRouterUtils.sendMessage({
+      type: MESSAGE_TYPE_HASH.USER_ACTION,
+      data: button_action
+    });
+  },
+
+  unblockById(id) {
+    return ASRouterUtils.sendMessage({
+      type: MESSAGE_TYPE_HASH.UNBLOCK_MESSAGE_BY_ID,
+      data: {
+        id
+      }
+    });
+  },
+
+  blockBundle(bundle) {
+    return ASRouterUtils.sendMessage({
+      type: MESSAGE_TYPE_HASH.BLOCK_BUNDLE,
+      data: {
+        bundle
+      }
+    });
+  },
+
+  unblockBundle(bundle) {
+    return ASRouterUtils.sendMessage({
+      type: MESSAGE_TYPE_HASH.UNBLOCK_BUNDLE,
+      data: {
+        bundle
+      }
+    });
+  },
+
+  overrideMessage(id) {
+    return ASRouterUtils.sendMessage({
+      type: MESSAGE_TYPE_HASH.OVERRIDE_MESSAGE,
+      data: {
+        id
+      }
+    });
+  },
+
+  editState(key, value) {
+    return ASRouterUtils.sendMessage({
+      type: MESSAGE_TYPE_HASH.EDIT_STATE,
+      data: {
+        [key]: value
+      }
+    });
+  },
+
+  sendTelemetry(ping) {
+    return ASRouterUtils.sendMessage(actionCreators.ASRouterUserEvent(ping));
+  },
+
+  getPreviewEndpoint() {
+    return null;
+  }
+
+};
 ;// CONCATENATED MODULE: external "ReactRedux"
 const external_ReactRedux_namespaceObject = ReactRedux;
 ;// CONCATENATED MODULE: external "React"
 const external_React_namespaceObject = React;
 var external_React_default = /*#__PURE__*/__webpack_require__.n(external_React_namespaceObject);
-;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamAdmin/SimpleHashRouter.jsx
+;// CONCATENATED MODULE: ./content-src/components/ASRouterAdmin/SimpleHashRouter.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -573,8 +731,169 @@ class SimpleHashRouter extends (external_React_default()).PureComponent {
   }
 
 }
-;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamAdmin/DiscoveryStreamAdmin.jsx
+;// CONCATENATED MODULE: ./content-src/components/ASRouterAdmin/CopyButton.jsx
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const CopyButton = ({
+  className,
+  label,
+  copiedLabel,
+  inputSelector,
+  transformer,
+  ...props
+}) => {
+  const [copied, setCopied] = (0,external_React_namespaceObject.useState)(false);
+  const timeout = (0,external_React_namespaceObject.useRef)(null);
+  const onClick = (0,external_React_namespaceObject.useCallback)(() => {
+    let text = document.querySelector(inputSelector).value;
+
+    if (transformer) {
+      text = transformer(text);
+    }
+
+    navigator.clipboard.writeText(text);
+    clearTimeout(timeout.current);
+    setCopied(true);
+    timeout.current = setTimeout(() => setCopied(false), 1500);
+  }, [inputSelector, transformer]);
+  return /*#__PURE__*/external_React_default().createElement("button", _extends({
+    className: className,
+    onClick: e => onClick()
+  }, props), copied && copiedLabel || label);
+};
+;// CONCATENATED MODULE: ./content-src/components/ASRouterAdmin/ImpressionsSection.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+const stringify = json => JSON.stringify(json, null, 2);
+
+const ImpressionsSection = ({
+  messageImpressions,
+  groupImpressions,
+  screenImpressions
+}) => {
+  const handleSaveMessageImpressions = (0,external_React_namespaceObject.useCallback)(newImpressions => {
+    ASRouterUtils.editState("messageImpressions", newImpressions);
+  }, []);
+  const handleSaveGroupImpressions = (0,external_React_namespaceObject.useCallback)(newImpressions => {
+    ASRouterUtils.editState("groupImpressions", newImpressions);
+  }, []);
+  const handleSaveScreenImpressions = (0,external_React_namespaceObject.useCallback)(newImpressions => {
+    ASRouterUtils.editState("screenImpressions", newImpressions);
+  }, []);
+  const handleResetMessageImpressions = (0,external_React_namespaceObject.useCallback)(() => {
+    ASRouterUtils.sendMessage({
+      type: "RESET_MESSAGE_STATE"
+    });
+  }, []);
+  const handleResetGroupImpressions = (0,external_React_namespaceObject.useCallback)(() => {
+    ASRouterUtils.sendMessage({
+      type: "RESET_GROUPS_STATE"
+    });
+  }, []);
+  const handleResetScreenImpressions = (0,external_React_namespaceObject.useCallback)(() => {
+    ASRouterUtils.sendMessage({
+      type: "RESET_SCREEN_IMPRESSIONS"
+    });
+  }, []);
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    className: "impressions-section"
+  }, /*#__PURE__*/external_React_default().createElement(ImpressionsItem, {
+    impressions: messageImpressions,
+    label: "Message Impressions",
+    description: "Message impressions are stored in an object, where each key is a message ID and each value is an array of timestamps. They are cleaned up when a message with that ID stops existing in ASRouter state (such as at the end of an experiment).",
+    onSave: handleSaveMessageImpressions,
+    onReset: handleResetMessageImpressions
+  }), /*#__PURE__*/external_React_default().createElement(ImpressionsItem, {
+    impressions: groupImpressions,
+    label: "Group Impressions",
+    description: "Group impressions are stored in an object, where each key is a group ID and each value is an array of timestamps. They are never cleaned up.",
+    onSave: handleSaveGroupImpressions,
+    onReset: handleResetGroupImpressions
+  }), /*#__PURE__*/external_React_default().createElement(ImpressionsItem, {
+    impressions: screenImpressions,
+    label: "Screen Impressions",
+    description: "Screen impressions are stored in an object, where each key is a screen ID and each value is the most recent timestamp that screen was shown. They are never cleaned up.",
+    onSave: handleSaveScreenImpressions,
+    onReset: handleResetScreenImpressions
+  }));
+};
+
+const ImpressionsItem = ({
+  impressions,
+  label,
+  description,
+  validator,
+  onSave,
+  onReset
+}) => {
+  const [json, setJson] = (0,external_React_namespaceObject.useState)(stringify(impressions));
+  const modified = (0,external_React_namespaceObject.useRef)(false);
+  const isValidJson = (0,external_React_namespaceObject.useCallback)(text => {
+    try {
+      JSON.parse(text);
+      return validator ? validator(text) : true;
+    } catch (e) {
+      return false;
+    }
+  }, [validator]);
+  const jsonIsInvalid = (0,external_React_namespaceObject.useMemo)(() => !isValidJson(json), [json, isValidJson]);
+  const handleChange = (0,external_React_namespaceObject.useCallback)(e => {
+    setJson(e.target.value);
+    modified.current = true;
+  }, []);
+  const handleSave = (0,external_React_namespaceObject.useCallback)(() => {
+    if (jsonIsInvalid) {
+      return;
+    }
+
+    const newImpressions = JSON.parse(json);
+    modified.current = false;
+    onSave(newImpressions);
+  }, [json, jsonIsInvalid, onSave]);
+  const handleReset = (0,external_React_namespaceObject.useCallback)(() => {
+    modified.current = false;
+    onReset();
+  }, [onReset]);
+  (0,external_React_namespaceObject.useEffect)(() => {
+    if (!modified.current) {
+      setJson(stringify(impressions));
+    }
+  }, [impressions]);
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    className: "impressions-item"
+  }, /*#__PURE__*/external_React_default().createElement("span", {
+    className: "impressions-category"
+  }, label), description ? /*#__PURE__*/external_React_default().createElement("p", {
+    className: "impressions-description"
+  }, description) : null, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "impressions-inner-box"
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "impressions-buttons"
+  }, /*#__PURE__*/external_React_default().createElement("button", {
+    className: "button primary",
+    disabled: jsonIsInvalid,
+    onClick: handleSave
+  }, "Save"), /*#__PURE__*/external_React_default().createElement("button", {
+    className: "button reset",
+    onClick: handleReset
+  }, "Reset")), /*#__PURE__*/external_React_default().createElement("div", {
+    className: "impressions-editor"
+  }, /*#__PURE__*/external_React_default().createElement("textarea", {
+    className: "general-textarea",
+    value: json,
+    onChange: handleChange
+  }))));
+};
+;// CONCATENATED MODULE: ./content-src/components/ASRouterAdmin/ASRouterAdmin.jsx
+function ASRouterAdmin_extends() { ASRouterAdmin_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return ASRouterAdmin_extends.apply(this, arguments); }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -584,7 +903,10 @@ function _extends() { _extends = Object.assign || function (target) { for (var i
 
 
 
-const Row = props => /*#__PURE__*/external_React_default().createElement("tr", _extends({
+
+
+
+const Row = props => /*#__PURE__*/external_React_default().createElement("tr", ASRouterAdmin_extends({
   className: "message-item"
 }, props), props.children);
 
@@ -623,6 +945,27 @@ class ToggleStoryButton extends (external_React_default()).PureComponent {
     return /*#__PURE__*/external_React_default().createElement("button", {
       onClick: this.handleClick
     }, "collapse/open");
+  }
+
+}
+class ToggleMessageJSON extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick() {
+    this.props.toggleJSON(this.props.msgId);
+  }
+
+  render() {
+    let iconName = this.props.isCollapsed ? "icon icon-arrowhead-forward-small" : "icon icon-arrowhead-down-small";
+    return /*#__PURE__*/external_React_default().createElement("button", {
+      className: "clearButton",
+      onClick: this.handleClick
+    }, /*#__PURE__*/external_React_default().createElement("span", {
+      className: iconName
+    }));
   }
 
 }
@@ -677,7 +1020,7 @@ class Personalization extends (external_React_default()).PureComponent {
   }
 
 }
-class DiscoveryStreamAdminUI extends (external_React_default()).PureComponent {
+class DiscoveryStreamAdmin extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
     this.restorePrefDefaults = this.restorePrefDefaults.bind(this);
@@ -876,32 +1219,968 @@ class DiscoveryStreamAdminUI extends (external_React_default()).PureComponent {
   }
 
 }
-class DiscoveryStreamAdminInner extends (external_React_default()).PureComponent {
+class ASRouterAdminInner extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
+    this.handleEnabledToggle = this.handleEnabledToggle.bind(this);
+    this.handleUserPrefToggle = this.handleUserPrefToggle.bind(this);
+    this.onChangeMessageFilter = this.onChangeMessageFilter.bind(this);
+    this.onChangeMessageGroupsFilter = this.onChangeMessageGroupsFilter.bind(this);
+    this.unblockAll = this.unblockAll.bind(this);
+    this.handleClearAllImpressionsByProvider = this.handleClearAllImpressionsByProvider.bind(this);
+    this.handleExpressionEval = this.handleExpressionEval.bind(this);
+    this.onChangeTargetingParameters = this.onChangeTargetingParameters.bind(this);
+    this.onChangeAttributionParameters = this.onChangeAttributionParameters.bind(this);
+    this.setAttribution = this.setAttribution.bind(this);
+    this.onCopyTargetingParams = this.onCopyTargetingParams.bind(this);
+    this.onNewTargetingParams = this.onNewTargetingParams.bind(this);
+    this.handleOpenPB = this.handleOpenPB.bind(this);
+    this.selectPBMessage = this.selectPBMessage.bind(this);
+    this.resetPBJSON = this.resetPBJSON.bind(this);
+    this.resetPBMessageState = this.resetPBMessageState.bind(this);
+    this.toggleJSON = this.toggleJSON.bind(this);
+    this.toggleAllMessages = this.toggleAllMessages.bind(this);
+    this.resetGroups = this.resetGroups.bind(this);
+    this.onMessageFromParent = this.onMessageFromParent.bind(this);
+    this.setStateFromParent = this.setStateFromParent.bind(this);
     this.setState = this.setState.bind(this);
+    this.state = {
+      messageFilter: "all",
+      messageGroupsFilter: "all",
+      collapsedMessages: [],
+      modifiedMessages: [],
+      selectedPBMessage: "",
+      evaluationStatus: {},
+      stringTargetingParameters: null,
+      newStringTargetingParameters: null,
+      copiedToClipboard: false,
+      attributionParameters: {
+        source: "addons.mozilla.org",
+        medium: "referral",
+        campaign: "non-fx-button",
+        content: `rta:${btoa("uBlock0@raymondhill.net")}`,
+        experiment: "ua-onboarding",
+        variation: "chrome",
+        ua: "Google Chrome 123",
+        dltoken: "00000000-0000-0000-0000-000000000000"
+      }
+    };
+  }
+
+  onMessageFromParent({
+    type,
+    data
+  }) {
+    // These only exists due to onPrefChange events in ASRouter
+    switch (type) {
+      case "UpdateAdminState":
+        {
+          this.setStateFromParent(data);
+          break;
+        }
+    }
+  }
+
+  setStateFromParent(data) {
+    this.setState(data);
+
+    if (!this.state.stringTargetingParameters) {
+      const stringTargetingParameters = {};
+
+      for (const param of Object.keys(data.targetingParameters)) {
+        stringTargetingParameters[param] = JSON.stringify(data.targetingParameters[param], null, 2);
+      }
+
+      this.setState({
+        stringTargetingParameters
+      });
+    }
+  }
+
+  componentWillMount() {
+    ASRouterUtils.addListener(this.onMessageFromParent);
+    const endpoint = ASRouterUtils.getPreviewEndpoint();
+    ASRouterUtils.sendMessage({
+      type: "ADMIN_CONNECT_STATE",
+      data: {
+        endpoint
+      }
+    }).then(this.setStateFromParent);
+  }
+
+  handleBlock(msg) {
+    return () => ASRouterUtils.blockById(msg.id);
+  }
+
+  handleUnblock(msg) {
+    return () => ASRouterUtils.unblockById(msg.id);
+  }
+
+  resetJSON(msg) {
+    // reset the displayed JSON for the given message
+    document.getElementById(`${msg.id}-textarea`).value = JSON.stringify(msg, null, 2); // remove the message from the list of modified IDs
+
+    let index = this.state.modifiedMessages.indexOf(msg.id);
+    this.setState(prevState => ({
+      modifiedMessages: [...prevState.modifiedMessages.slice(0, index), ...prevState.modifiedMessages.slice(index + 1)]
+    }));
+  }
+
+  handleOverride(id) {
+    return () => ASRouterUtils.overrideMessage(id).then(state => {
+      this.setStateFromParent(state);
+      this.props.notifyContent({
+        message: state.message
+      });
+    });
+  }
+
+  resetPBMessageState() {
+    // Iterate over Private Browsing messages and block/unblock each one to clear impressions
+    const PBMessages = this.state.messages.filter(message => message.template === "pb_newtab"); // messages from state go here
+
+    PBMessages.forEach(message => {
+      if (message !== null && message !== void 0 && message.id) {
+        ASRouterUtils.blockById(message.id);
+        ASRouterUtils.unblockById(message.id);
+      }
+    }); // Clear the selected messages & radio buttons
+
+    document.getElementById("clear radio").checked = true;
+    this.selectPBMessage("clear");
+  }
+
+  resetPBJSON(msg) {
+    // reset the displayed JSON for the given message
+    document.getElementById(`${msg.id}-textarea`).value = JSON.stringify(msg, null, 2);
+  }
+
+  handleOpenPB() {
+    ASRouterUtils.sendMessage({
+      type: "FORCE_PRIVATE_BROWSING_WINDOW",
+      data: {
+        message: {
+          content: this.state.selectedPBMessage
+        }
+      }
+    });
+  }
+
+  expireCache() {
+    ASRouterUtils.sendMessage({
+      type: "EXPIRE_QUERY_CACHE"
+    });
+  }
+
+  resetPref() {
+    ASRouterUtils.sendMessage({
+      type: "RESET_PROVIDER_PREF"
+    });
+  }
+
+  resetGroups(id, value) {
+    ASRouterUtils.sendMessage({
+      type: "RESET_GROUPS_STATE"
+    }).then(this.setStateFromParent);
+  }
+
+  handleExpressionEval() {
+    const context = {};
+
+    for (const param of Object.keys(this.state.stringTargetingParameters)) {
+      const value = this.state.stringTargetingParameters[param];
+      context[param] = value ? JSON.parse(value) : null;
+    }
+
+    ASRouterUtils.sendMessage({
+      type: "EVALUATE_JEXL_EXPRESSION",
+      data: {
+        expression: this.refs.expressionInput.value,
+        context
+      }
+    }).then(this.setStateFromParent);
+  }
+
+  onChangeTargetingParameters(event) {
+    const {
+      name
+    } = event.target;
+    const {
+      value
+    } = event.target;
+    this.setState(({
+      stringTargetingParameters
+    }) => {
+      let targetingParametersError = null;
+      const updatedParameters = { ...stringTargetingParameters
+      };
+      updatedParameters[name] = value;
+
+      try {
+        JSON.parse(value);
+      } catch (e) {
+        console.error(`Error parsing value of parameter ${name}`);
+        targetingParametersError = {
+          id: name
+        };
+      }
+
+      return {
+        copiedToClipboard: false,
+        evaluationStatus: {},
+        stringTargetingParameters: updatedParameters,
+        targetingParametersError
+      };
+    });
+  }
+
+  unblockAll() {
+    return ASRouterUtils.sendMessage({
+      type: "UNBLOCK_ALL"
+    }).then(this.setStateFromParent);
+  }
+
+  handleClearAllImpressionsByProvider() {
+    const providerId = this.state.messageFilter;
+
+    if (!providerId) {
+      return;
+    }
+
+    const userPrefInfo = this.state.userPrefs;
+    const isUserEnabled = providerId in userPrefInfo ? userPrefInfo[providerId] : true;
+    ASRouterUtils.sendMessage({
+      type: "DISABLE_PROVIDER",
+      data: providerId
+    });
+
+    if (!isUserEnabled) {
+      ASRouterUtils.sendMessage({
+        type: "SET_PROVIDER_USER_PREF",
+        data: {
+          id: providerId,
+          value: true
+        }
+      });
+    }
+
+    ASRouterUtils.sendMessage({
+      type: "ENABLE_PROVIDER",
+      data: providerId
+    });
+  }
+
+  handleEnabledToggle(event) {
+    const provider = this.state.providerPrefs.find(p => p.id === event.target.dataset.provider);
+    const userPrefInfo = this.state.userPrefs;
+    const isUserEnabled = provider.id in userPrefInfo ? userPrefInfo[provider.id] : true;
+    const isSystemEnabled = provider.enabled;
+    const isEnabling = event.target.checked;
+
+    if (isEnabling) {
+      if (!isUserEnabled) {
+        ASRouterUtils.sendMessage({
+          type: "SET_PROVIDER_USER_PREF",
+          data: {
+            id: provider.id,
+            value: true
+          }
+        });
+      }
+
+      if (!isSystemEnabled) {
+        ASRouterUtils.sendMessage({
+          type: "ENABLE_PROVIDER",
+          data: provider.id
+        });
+      }
+    } else {
+      ASRouterUtils.sendMessage({
+        type: "DISABLE_PROVIDER",
+        data: provider.id
+      });
+    }
+
+    this.setState({
+      messageFilter: "all"
+    });
+  }
+
+  handleUserPrefToggle(event) {
+    const action = {
+      type: "SET_PROVIDER_USER_PREF",
+      data: {
+        id: event.target.dataset.provider,
+        value: event.target.checked
+      }
+    };
+    ASRouterUtils.sendMessage(action);
+    this.setState({
+      messageFilter: "all"
+    });
+  }
+
+  onChangeMessageFilter(event) {
+    this.setState({
+      messageFilter: event.target.value
+    });
+  }
+
+  onChangeMessageGroupsFilter(event) {
+    this.setState({
+      messageGroupsFilter: event.target.value
+    });
+  } // Simulate a copy event that sets to clipboard all targeting paramters and values
+
+
+  onCopyTargetingParams(event) {
+    const stringTargetingParameters = { ...this.state.stringTargetingParameters
+    };
+
+    for (const key of Object.keys(stringTargetingParameters)) {
+      // If the value is not set the parameter will be lost when we stringify
+      if (stringTargetingParameters[key] === undefined) {
+        stringTargetingParameters[key] = null;
+      }
+    }
+
+    const setClipboardData = e => {
+      e.preventDefault();
+      e.clipboardData.setData("text", JSON.stringify(stringTargetingParameters, null, 2));
+      document.removeEventListener("copy", setClipboardData);
+      this.setState({
+        copiedToClipboard: true
+      });
+    };
+
+    document.addEventListener("copy", setClipboardData);
+    document.execCommand("copy");
+  }
+
+  onNewTargetingParams(event) {
+    this.setState({
+      newStringTargetingParameters: event.target.value
+    });
+    event.target.classList.remove("errorState");
+    this.refs.targetingParamsEval.innerText = "";
+
+    try {
+      const stringTargetingParameters = JSON.parse(event.target.value);
+      this.setState({
+        stringTargetingParameters
+      });
+    } catch (e) {
+      event.target.classList.add("errorState");
+      this.refs.targetingParamsEval.innerText = e.message;
+    }
+  }
+
+  toggleJSON(msgId) {
+    if (this.state.collapsedMessages.includes(msgId)) {
+      let index = this.state.collapsedMessages.indexOf(msgId);
+      this.setState(prevState => ({
+        collapsedMessages: [...prevState.collapsedMessages.slice(0, index), ...prevState.collapsedMessages.slice(index + 1)]
+      }));
+    } else {
+      this.setState(prevState => ({
+        collapsedMessages: prevState.collapsedMessages.concat(msgId)
+      }));
+    }
+  }
+
+  handleChange(msgId) {
+    if (!this.state.modifiedMessages.includes(msgId)) {
+      this.setState(prevState => ({
+        modifiedMessages: prevState.modifiedMessages.concat(msgId)
+      }));
+    }
+  }
+
+  renderMessageItem(msg) {
+    const isBlockedByGroup = this.state.groups.filter(group => msg.groups.includes(group.id)).some(group => !group.enabled);
+    const msgProvider = this.state.providers.find(provider => provider.id === msg.provider) || {};
+    const isProviderExcluded = msgProvider.exclude && msgProvider.exclude.includes(msg.id);
+    const isMessageBlocked = this.state.messageBlockList.includes(msg.id) || this.state.messageBlockList.includes(msg.campaign);
+    const isBlocked = isMessageBlocked || isBlockedByGroup || isProviderExcluded;
+    const impressions = this.state.messageImpressions[msg.id] ? this.state.messageImpressions[msg.id].length : 0;
+    const isCollapsed = this.state.collapsedMessages.includes(msg.id);
+    const isModified = this.state.modifiedMessages.includes(msg.id);
+    const aboutMessagePreviewSupported = ["infobar", "spotlight", "cfr_doorhanger"].includes(msg.template);
+    let itemClassName = "message-item";
+
+    if (isBlocked) {
+      itemClassName += " blocked";
+    }
+
+    return /*#__PURE__*/external_React_default().createElement("tr", {
+      className: itemClassName,
+      key: `${msg.id}-${msg.provider}`
+    }, /*#__PURE__*/external_React_default().createElement("td", {
+      className: "message-id"
+    }, /*#__PURE__*/external_React_default().createElement("span", null, msg.id, " ", /*#__PURE__*/external_React_default().createElement("br", null))), /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement(ToggleMessageJSON, {
+      msgId: `${msg.id}`,
+      toggleJSON: this.toggleJSON,
+      isCollapsed: isCollapsed
+    })), /*#__PURE__*/external_React_default().createElement("td", {
+      className: "button-column"
+    }, /*#__PURE__*/external_React_default().createElement("button", {
+      className: `button ${isBlocked ? "" : " primary"}`,
+      onClick: isBlocked ? this.handleUnblock(msg) : this.handleBlock(msg)
+    }, isBlocked ? "Unblock" : "Block"), // eslint-disable-next-line no-nested-ternary
+    isBlocked ? null : isModified ? /*#__PURE__*/external_React_default().createElement("button", {
+      className: "button restore" // eslint-disable-next-line react/jsx-no-bind
+      ,
+      onClick: e => this.resetJSON(msg)
+    }, "Reset") : /*#__PURE__*/external_React_default().createElement("button", {
+      className: "button show",
+      onClick: this.handleOverride(msg.id)
+    }, "Show"), isBlocked ? null : /*#__PURE__*/external_React_default().createElement("button", {
+      className: "button modify" // eslint-disable-next-line react/jsx-no-bind
+      ,
+      onClick: e => this.modifyJson(msg)
+    }, "Modify"), aboutMessagePreviewSupported ? /*#__PURE__*/external_React_default().createElement(CopyButton, {
+      transformer: text => `about:messagepreview?json=${encodeURIComponent(btoa(text))}`,
+      label: "Share",
+      copiedLabel: "Copied!",
+      inputSelector: `#${msg.id}-textarea`,
+      className: "button share"
+    }) : null, /*#__PURE__*/external_React_default().createElement("br", null), "(", impressions, " impressions)"), /*#__PURE__*/external_React_default().createElement("td", {
+      className: "message-summary"
+    }, isBlocked && /*#__PURE__*/external_React_default().createElement("tr", null, "Block reason:", isBlockedByGroup && " Blocked by group", isProviderExcluded && " Excluded by provider", isMessageBlocked && " Message blocked"), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("pre", {
+      className: isCollapsed ? "collapsed" : "expanded"
+    }, /*#__PURE__*/external_React_default().createElement("textarea", {
+      id: `${msg.id}-textarea`,
+      name: msg.id,
+      className: "general-textarea",
+      disabled: isBlocked // eslint-disable-next-line react/jsx-no-bind
+      ,
+      onChange: e => this.handleChange(msg.id)
+    }, JSON.stringify(msg, null, 2))))));
+  }
+
+  selectPBMessage(msgId) {
+    if (msgId === "clear") {
+      this.setState({
+        selectedPBMessage: ""
+      });
+    } else {
+      let selected = document.getElementById(`${msgId} radio`);
+      let msg = JSON.parse(document.getElementById(`${msgId}-textarea`).value);
+
+      if (selected.checked) {
+        this.setState({
+          selectedPBMessage: msg === null || msg === void 0 ? void 0 : msg.content
+        });
+      } else {
+        this.setState({
+          selectedPBMessage: ""
+        });
+      }
+    }
+  }
+
+  modifyJson(content) {
+    const message = JSON.parse(document.getElementById(`${content.id}-textarea`).value);
+    return ASRouterUtils.modifyMessageJson(message).then(state => {
+      this.setStateFromParent(state);
+      this.props.notifyContent({
+        message: state.message
+      });
+    });
+  }
+
+  renderPBMessageItem(msg) {
+    const isBlocked = this.state.messageBlockList.includes(msg.id) || this.state.messageBlockList.includes(msg.campaign);
+    const impressions = this.state.messageImpressions[msg.id] ? this.state.messageImpressions[msg.id].length : 0;
+    const isCollapsed = this.state.collapsedMessages.includes(msg.id);
+    let itemClassName = "message-item";
+
+    if (isBlocked) {
+      itemClassName += " blocked";
+    }
+
+    return /*#__PURE__*/external_React_default().createElement("tr", {
+      className: itemClassName,
+      key: `${msg.id}-${msg.provider}`
+    }, /*#__PURE__*/external_React_default().createElement("td", {
+      className: "message-id"
+    }, /*#__PURE__*/external_React_default().createElement("span", null, msg.id, " ", /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("br", null), "(", impressions, " impressions)")), /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement(ToggleMessageJSON, {
+      msgId: `${msg.id}`,
+      toggleJSON: this.toggleJSON,
+      isCollapsed: isCollapsed
+    })), /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("input", {
+      type: "radio",
+      id: `${msg.id} radio`,
+      name: "PB_message_radio",
+      style: {
+        marginBottom: 20
+      },
+      onClick: () => this.selectPBMessage(msg.id),
+      disabled: isBlocked
+    }), /*#__PURE__*/external_React_default().createElement("button", {
+      className: `button ${isBlocked ? "" : " primary"}`,
+      onClick: isBlocked ? this.handleUnblock(msg) : this.handleBlock(msg)
+    }, isBlocked ? "Unblock" : "Block"), /*#__PURE__*/external_React_default().createElement("button", {
+      className: "ASRouterButton slim button",
+      onClick: e => this.resetPBJSON(msg)
+    }, "Reset JSON")), /*#__PURE__*/external_React_default().createElement("td", {
+      className: `message-summary`
+    }, /*#__PURE__*/external_React_default().createElement("pre", {
+      className: isCollapsed ? "collapsed" : "expanded"
+    }, /*#__PURE__*/external_React_default().createElement("textarea", {
+      id: `${msg.id}-textarea`,
+      className: "wnp-textarea",
+      name: msg.id
+    }, JSON.stringify(msg, null, 2)))));
+  }
+
+  toggleAllMessages(messagesToShow) {
+    if (this.state.collapsedMessages.length) {
+      this.setState({
+        collapsedMessages: []
+      });
+    } else {
+      Array.prototype.forEach.call(messagesToShow, msg => {
+        this.setState(prevState => ({
+          collapsedMessages: prevState.collapsedMessages.concat(msg.id)
+        }));
+      });
+    }
+  }
+
+  renderMessages() {
+    if (!this.state.messages) {
+      return null;
+    }
+
+    const messagesToShow = this.state.messageFilter === "all" ? this.state.messages : this.state.messages.filter(message => message.provider === this.state.messageFilter && message.template !== "pb_newtab");
+    return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("button", {
+      className: "ASRouterButton slim" // eslint-disable-next-line react/jsx-no-bind
+      ,
+      onClick: e => this.toggleAllMessages(messagesToShow)
+    }, "Collapse/Expand All"), /*#__PURE__*/external_React_default().createElement("p", {
+      className: "helpLink"
+    }, /*#__PURE__*/external_React_default().createElement("span", {
+      className: "icon icon-small-spacer icon-info"
+    }), " ", /*#__PURE__*/external_React_default().createElement("span", null, "To modify a message, change the JSON and click 'Modify' to see your changes. Click 'Reset' to restore the JSON to the original. Click 'Share' to copy a link to the clipboard that can be used to preview the message by opening the link in Nightly/local builds.")), /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, messagesToShow.map(msg => this.renderMessageItem(msg)))));
+  }
+
+  renderMessagesByGroup() {
+    if (!this.state.messages) {
+      return null;
+    }
+
+    const messagesToShow = this.state.messageGroupsFilter === "all" ? this.state.messages.filter(m => m.groups.length) : this.state.messages.filter(message => message.groups.includes(this.state.messageGroupsFilter));
+    return /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, messagesToShow.map(msg => this.renderMessageItem(msg))));
+  }
+
+  renderPBMessages() {
+    if (!this.state.messages) {
+      return null;
+    }
+
+    const messagesToShow = this.state.messages.filter(message => message.template === "pb_newtab");
+    return /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, messagesToShow.map(msg => this.renderPBMessageItem(msg))));
+  }
+
+  renderMessageFilter() {
+    if (!this.state.providers) {
+      return null;
+    }
+
+    return /*#__PURE__*/external_React_default().createElement("p", null, /*#__PURE__*/external_React_default().createElement("button", {
+      className: "unblock-all ASRouterButton test-only",
+      onClick: this.unblockAll
+    }, "Unblock All Snippets"), "Show messages from", " ", /*#__PURE__*/external_React_default().createElement("select", {
+      value: this.state.messageFilter,
+      onChange: this.onChangeMessageFilter
+    }, /*#__PURE__*/external_React_default().createElement("option", {
+      value: "all"
+    }, "all providers"), this.state.providers.map(provider => /*#__PURE__*/external_React_default().createElement("option", {
+      key: provider.id,
+      value: provider.id
+    }, provider.id))), this.state.messageFilter !== "all" && !this.state.messageFilter.includes("_local_testing") ? /*#__PURE__*/external_React_default().createElement("button", {
+      className: "button messages-reset",
+      onClick: this.handleClearAllImpressionsByProvider
+    }, "Reset All") : null);
+  }
+
+  renderMessageGroupsFilter() {
+    if (!this.state.groups) {
+      return null;
+    }
+
+    return /*#__PURE__*/external_React_default().createElement("p", null, "Show messages from ", /*#__PURE__*/external_React_default().createElement("select", {
+      value: this.state.messageGroupsFilter,
+      onChange: this.onChangeMessageGroupsFilter
+    }, /*#__PURE__*/external_React_default().createElement("option", {
+      value: "all"
+    }, "all groups"), this.state.groups.map(group => /*#__PURE__*/external_React_default().createElement("option", {
+      key: group.id,
+      value: group.id
+    }, group.id))));
+  }
+
+  renderTableHead() {
+    return /*#__PURE__*/external_React_default().createElement("thead", null, /*#__PURE__*/external_React_default().createElement("tr", {
+      className: "message-item"
+    }, /*#__PURE__*/external_React_default().createElement("td", {
+      className: "min"
+    }), /*#__PURE__*/external_React_default().createElement("td", {
+      className: "min"
+    }, "Provider ID"), /*#__PURE__*/external_React_default().createElement("td", null, "Source"), /*#__PURE__*/external_React_default().createElement("td", {
+      className: "min"
+    }, "Cohort"), /*#__PURE__*/external_React_default().createElement("td", {
+      className: "min"
+    }, "Last Updated")));
+  }
+
+  renderProviders() {
+    const providersConfig = this.state.providerPrefs;
+    const providerInfo = this.state.providers;
+    const userPrefInfo = this.state.userPrefs;
+    return /*#__PURE__*/external_React_default().createElement("table", null, this.renderTableHead(), /*#__PURE__*/external_React_default().createElement("tbody", null, providersConfig.map((provider, i) => {
+      const isTestProvider = provider.id.includes("_local_testing");
+      const info = providerInfo.find(p => p.id === provider.id) || {};
+      const isUserEnabled = provider.id in userPrefInfo ? userPrefInfo[provider.id] : true;
+      const isSystemEnabled = isTestProvider || provider.enabled;
+      let label = "local";
+
+      if (provider.type === "remote") {
+        label = /*#__PURE__*/external_React_default().createElement("span", null, "endpoint (", /*#__PURE__*/external_React_default().createElement("a", {
+          className: "providerUrl",
+          target: "_blank",
+          href: info.url,
+          rel: "noopener noreferrer"
+        }, info.url), ")");
+      } else if (provider.type === "remote-settings") {
+        label = `remote settings (${provider.collection})`;
+      } else if (provider.type === "remote-experiments") {
+        label = /*#__PURE__*/external_React_default().createElement("span", null, "remote settings (", /*#__PURE__*/external_React_default().createElement("a", {
+          className: "providerUrl",
+          target: "_blank",
+          href: "https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/nimbus-desktop-experiments/records",
+          rel: "noopener noreferrer"
+        }, "nimbus-desktop-experiments"), ")");
+      }
+
+      let reasonsDisabled = [];
+
+      if (!isSystemEnabled) {
+        reasonsDisabled.push("system pref");
+      }
+
+      if (!isUserEnabled) {
+        reasonsDisabled.push("user pref");
+      }
+
+      if (reasonsDisabled.length) {
+        label = `disabled via ${reasonsDisabled.join(", ")}`;
+      }
+
+      return /*#__PURE__*/external_React_default().createElement("tr", {
+        className: "message-item",
+        key: i
+      }, /*#__PURE__*/external_React_default().createElement("td", null, isTestProvider ? /*#__PURE__*/external_React_default().createElement("input", {
+        type: "checkbox",
+        disabled: true,
+        readOnly: true,
+        checked: true
+      }) : /*#__PURE__*/external_React_default().createElement("input", {
+        type: "checkbox",
+        "data-provider": provider.id,
+        checked: isUserEnabled && isSystemEnabled,
+        onChange: this.handleEnabledToggle
+      })), /*#__PURE__*/external_React_default().createElement("td", null, provider.id), /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("span", {
+        className: `sourceLabel${isUserEnabled && isSystemEnabled ? "" : " isDisabled"}`
+      }, label)), /*#__PURE__*/external_React_default().createElement("td", null, provider.cohort), /*#__PURE__*/external_React_default().createElement("td", {
+        style: {
+          whiteSpace: "nowrap"
+        }
+      }, info.lastUpdated ? new Date(info.lastUpdated).toLocaleString() : ""));
+    })));
+  }
+
+  renderTargetingParameters() {
+    // There was no error and the result is truthy
+    const success = this.state.evaluationStatus.success && !!this.state.evaluationStatus.result;
+    const result = JSON.stringify(this.state.evaluationStatus.result, null, 2) || "(Empty result)";
+    return /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("h2", null, "Evaluate JEXL expression"))), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("p", null, /*#__PURE__*/external_React_default().createElement("textarea", {
+      ref: "expressionInput",
+      rows: "10",
+      cols: "60",
+      placeholder: "Evaluate JEXL expressions and mock parameters by changing their values below"
+    })), /*#__PURE__*/external_React_default().createElement("p", null, "Status:", " ", /*#__PURE__*/external_React_default().createElement("span", {
+      ref: "evaluationStatus"
+    }, success ? "✅" : "❌", ", Result: ", result))), /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("button", {
+      className: "ASRouterButton secondary",
+      onClick: this.handleExpressionEval
+    }, "Evaluate"))), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("h2", null, "Modify targeting parameters"))), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("button", {
+      className: "ASRouterButton secondary",
+      onClick: this.onCopyTargetingParams,
+      disabled: this.state.copiedToClipboard
+    }, this.state.copiedToClipboard ? "Parameters copied!" : "Copy parameters"))), this.state.stringTargetingParameters && Object.keys(this.state.stringTargetingParameters).map((param, i) => {
+      const value = this.state.stringTargetingParameters[param];
+      const errorState = this.state.targetingParametersError && this.state.targetingParametersError.id === param;
+      const className = errorState ? "errorState" : "";
+      const inputComp = (value && value.length) > 30 ? /*#__PURE__*/external_React_default().createElement("textarea", {
+        name: param,
+        className: className,
+        value: value,
+        rows: "10",
+        cols: "60",
+        onChange: this.onChangeTargetingParameters
+      }) : /*#__PURE__*/external_React_default().createElement("input", {
+        name: param,
+        className: className,
+        value: value,
+        onChange: this.onChangeTargetingParameters
+      });
+      return /*#__PURE__*/external_React_default().createElement("tr", {
+        key: i
+      }, /*#__PURE__*/external_React_default().createElement("td", null, param), /*#__PURE__*/external_React_default().createElement("td", null, inputComp));
+    })));
+  }
+
+  onChangeAttributionParameters(event) {
+    const {
+      name,
+      value
+    } = event.target;
+    this.setState(({
+      attributionParameters
+    }) => {
+      const updatedParameters = { ...attributionParameters
+      };
+      updatedParameters[name] = value;
+      return {
+        attributionParameters: updatedParameters
+      };
+    });
+  }
+
+  setAttribution(e) {
+    ASRouterUtils.sendMessage({
+      type: "FORCE_ATTRIBUTION",
+      data: this.state.attributionParameters
+    }).then(this.setStateFromParent);
+  }
+
+  _getGroupImpressionsCount(id, frequency) {
+    if (frequency) {
+      return this.state.groupImpressions[id] ? this.state.groupImpressions[id].length : 0;
+    }
+
+    return "n/a";
+  }
+
+  renderAttributionParamers() {
+    return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("h2", null, " Attribution Parameters "), /*#__PURE__*/external_React_default().createElement("p", null, " ", "This forces the browser to set some attribution parameters, useful for testing the Return To AMO feature. Clicking on 'Force Attribution', with the default values in each field, will demo the Return To AMO flow with the addon called 'uBlock Origin'. If you wish to try different attribution parameters, enter them in the text boxes. If you wish to try a different addon with the Return To AMO flow, make sure the 'content' text box has a string that is 'rta:base64(addonID)', the base64 string of the addonID prefixed with 'rta:'. The addon must currently be a recommended addon on AMO. Then click 'Force Attribution'. Clicking on 'Force Attribution' with blank text boxes reset attribution data."), /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("b", null, " Source ")), /*#__PURE__*/external_React_default().createElement("td", null, " ", /*#__PURE__*/external_React_default().createElement("input", {
+      type: "text",
+      name: "source",
+      placeholder: "addons.mozilla.org",
+      value: this.state.attributionParameters.source,
+      onChange: this.onChangeAttributionParameters
+    }), " ")), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("b", null, " Medium ")), /*#__PURE__*/external_React_default().createElement("td", null, " ", /*#__PURE__*/external_React_default().createElement("input", {
+      type: "text",
+      name: "medium",
+      placeholder: "referral",
+      value: this.state.attributionParameters.medium,
+      onChange: this.onChangeAttributionParameters
+    }), " ")), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("b", null, " Campaign ")), /*#__PURE__*/external_React_default().createElement("td", null, " ", /*#__PURE__*/external_React_default().createElement("input", {
+      type: "text",
+      name: "campaign",
+      placeholder: "non-fx-button",
+      value: this.state.attributionParameters.campaign,
+      onChange: this.onChangeAttributionParameters
+    }), " ")), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("b", null, " Content ")), /*#__PURE__*/external_React_default().createElement("td", null, " ", /*#__PURE__*/external_React_default().createElement("input", {
+      type: "text",
+      name: "content",
+      placeholder: `rta:${btoa("uBlock0@raymondhill.net")}`,
+      value: this.state.attributionParameters.content,
+      onChange: this.onChangeAttributionParameters
+    }), " ")), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("b", null, " Experiment ")), /*#__PURE__*/external_React_default().createElement("td", null, " ", /*#__PURE__*/external_React_default().createElement("input", {
+      type: "text",
+      name: "experiment",
+      placeholder: "ua-onboarding",
+      value: this.state.attributionParameters.experiment,
+      onChange: this.onChangeAttributionParameters
+    }), " ")), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("b", null, " Variation ")), /*#__PURE__*/external_React_default().createElement("td", null, " ", /*#__PURE__*/external_React_default().createElement("input", {
+      type: "text",
+      name: "variation",
+      placeholder: "chrome",
+      value: this.state.attributionParameters.variation,
+      onChange: this.onChangeAttributionParameters
+    }), " ")), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("b", null, " User Agent ")), /*#__PURE__*/external_React_default().createElement("td", null, " ", /*#__PURE__*/external_React_default().createElement("input", {
+      type: "text",
+      name: "ua",
+      placeholder: "Google Chrome 123",
+      value: this.state.attributionParameters.ua,
+      onChange: this.onChangeAttributionParameters
+    }), " ")), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement("b", null, " Download Token ")), /*#__PURE__*/external_React_default().createElement("td", null, " ", /*#__PURE__*/external_React_default().createElement("input", {
+      type: "text",
+      name: "dltoken",
+      placeholder: "00000000-0000-0000-0000-000000000000",
+      value: this.state.attributionParameters.dltoken,
+      onChange: this.onChangeAttributionParameters
+    }), " ")), /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("td", null, " ", /*#__PURE__*/external_React_default().createElement("button", {
+      className: "ASRouterButton primary button",
+      onClick: this.setAttribution
+    }, " ", "Force Attribution", " "), " "))));
+  }
+
+  renderErrorMessage({
+    id,
+    errors
+  }) {
+    const providerId = /*#__PURE__*/external_React_default().createElement("td", {
+      rowSpan: errors.length
+    }, id); // .reverse() so that the last error (most recent) is first
+
+    return errors.map(({
+      error,
+      timestamp
+    }, cellKey) => /*#__PURE__*/external_React_default().createElement("tr", {
+      key: cellKey
+    }, cellKey === errors.length - 1 ? providerId : null, /*#__PURE__*/external_React_default().createElement("td", null, error.message), /*#__PURE__*/external_React_default().createElement("td", null, relativeTime(timestamp)))).reverse();
+  }
+
+  renderErrors() {
+    const providersWithErrors = this.state.providers && this.state.providers.filter(p => p.errors && p.errors.length);
+
+    if (providersWithErrors && providersWithErrors.length) {
+      return /*#__PURE__*/external_React_default().createElement("table", {
+        className: "errorReporting"
+      }, /*#__PURE__*/external_React_default().createElement("thead", null, /*#__PURE__*/external_React_default().createElement("tr", null, /*#__PURE__*/external_React_default().createElement("th", null, "Provider ID"), /*#__PURE__*/external_React_default().createElement("th", null, "Message"), /*#__PURE__*/external_React_default().createElement("th", null, "Timestamp"))), /*#__PURE__*/external_React_default().createElement("tbody", null, providersWithErrors.map(this.renderErrorMessage)));
+    }
+
+    return /*#__PURE__*/external_React_default().createElement("p", null, "No errors");
+  }
+
+  renderPBTab() {
+    if (!this.state.messages) {
+      return null;
+    }
+
+    let messagesToShow = this.state.messages.filter(message => message.template === "pb_newtab");
+    return /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("p", {
+      className: "helpLink"
+    }, /*#__PURE__*/external_React_default().createElement("span", {
+      className: "icon icon-small-spacer icon-info"
+    }), " ", /*#__PURE__*/external_React_default().createElement("span", null, "To view an available message, select its radio button and click \"Open a Private Browsing Window\".", /*#__PURE__*/external_React_default().createElement("br", null), "To modify a message, make changes to the JSON first, then select the radio button. (To make new changes, click \"Reset Message State\", make your changes, and reselect the radio button.)", /*#__PURE__*/external_React_default().createElement("br", null), "Click \"Reset Message State\" to clear all message impressions and view messages in a clean state.", /*#__PURE__*/external_React_default().createElement("br", null), "Note that ContentSearch functions do not work in debug mode.")), /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("button", {
+      className: "ASRouterButton primary button",
+      onClick: this.handleOpenPB
+    }, "Open a Private Browsing Window"), /*#__PURE__*/external_React_default().createElement("button", {
+      className: "ASRouterButton primary button",
+      style: {
+        marginInlineStart: 12
+      },
+      onClick: this.resetPBMessageState
+    }, "Reset Message State"), /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("input", {
+      type: "radio",
+      id: `clear radio`,
+      name: "PB_message_radio",
+      value: "clearPBMessage",
+      style: {
+        display: "none"
+      }
+    }), /*#__PURE__*/external_React_default().createElement("h2", null, "Messages"), /*#__PURE__*/external_React_default().createElement("button", {
+      className: "ASRouterButton slim button" // eslint-disable-next-line react/jsx-no-bind
+      ,
+      onClick: e => this.toggleAllMessages(messagesToShow)
+    }, "Collapse/Expand All"), this.renderPBMessages()));
+  }
+
+  getSection() {
+    const [section] = this.props.location.routes;
+
+    switch (section) {
+      case "private":
+        return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("h2", null, "Private Browsing Messages"), this.renderPBTab());
+
+      case "targeting":
+        return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("h2", null, "Targeting Utilities"), /*#__PURE__*/external_React_default().createElement("button", {
+          className: "button",
+          onClick: this.expireCache
+        }, "Expire Cache"), " ", "(This expires the cache in ASR Targeting for bookmarks and top sites)", this.renderTargetingParameters(), this.renderAttributionParamers());
+
+      case "groups":
+        return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("h2", null, "Message Groups"), /*#__PURE__*/external_React_default().createElement("button", {
+          className: "button",
+          onClick: this.resetGroups
+        }, "Reset group impressions"), /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("thead", null, /*#__PURE__*/external_React_default().createElement("tr", {
+          className: "message-item"
+        }, /*#__PURE__*/external_React_default().createElement("td", null, "Enabled"), /*#__PURE__*/external_React_default().createElement("td", null, "Impressions count"), /*#__PURE__*/external_React_default().createElement("td", null, "Custom frequency"), /*#__PURE__*/external_React_default().createElement("td", null, "User preferences"))), /*#__PURE__*/external_React_default().createElement("tbody", null, this.state.groups && this.state.groups.map(({
+          id,
+          enabled,
+          frequency,
+          userPreferences = []
+        }, index) => /*#__PURE__*/external_React_default().createElement(Row, {
+          key: id
+        }, /*#__PURE__*/external_React_default().createElement("td", null, /*#__PURE__*/external_React_default().createElement(TogglePrefCheckbox, {
+          checked: enabled,
+          pref: id,
+          disabled: true
+        })), /*#__PURE__*/external_React_default().createElement("td", null, this._getGroupImpressionsCount(id, frequency)), /*#__PURE__*/external_React_default().createElement("td", null, JSON.stringify(frequency, null, 2)), /*#__PURE__*/external_React_default().createElement("td", null, userPreferences.join(", ")))))), this.renderMessageGroupsFilter(), this.renderMessagesByGroup());
+
+      case "impressions":
+        return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("h2", null, "Impressions"), /*#__PURE__*/external_React_default().createElement(ImpressionsSection, {
+          messageImpressions: this.state.messageImpressions,
+          groupImpressions: this.state.groupImpressions,
+          screenImpressions: this.state.screenImpressions
+        }));
+
+      case "ds":
+        return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("h2", null, "Discovery Stream"), /*#__PURE__*/external_React_default().createElement(DiscoveryStreamAdmin, {
+          state: {
+            DiscoveryStream: this.props.DiscoveryStream,
+            Personalization: this.props.Personalization
+          },
+          otherPrefs: this.props.Prefs.values,
+          dispatch: this.props.dispatch
+        }));
+
+      case "errors":
+        return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("h2", null, "ASRouter Errors"), this.renderErrors());
+
+      default:
+        return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("h2", null, "Message Providers", " ", /*#__PURE__*/external_React_default().createElement("button", {
+          title: "Restore all provider settings that ship with Firefox",
+          className: "button",
+          onClick: this.resetPref
+        }, "Restore default prefs")), this.state.providers ? this.renderProviders() : null, /*#__PURE__*/external_React_default().createElement("h2", null, "Messages"), this.renderMessageFilter(), this.renderMessages());
+    }
   }
 
   render() {
     return /*#__PURE__*/external_React_default().createElement("div", {
-      className: `discoverystream-admin ${this.props.collapsed ? "collapsed" : "expanded"}`
-    }, /*#__PURE__*/external_React_default().createElement("main", {
+      className: `asrouter-admin ${this.props.collapsed ? "collapsed" : "expanded"}`
+    }, /*#__PURE__*/external_React_default().createElement("aside", {
+      className: "sidebar"
+    }, /*#__PURE__*/external_React_default().createElement("ul", null, /*#__PURE__*/external_React_default().createElement("li", null, /*#__PURE__*/external_React_default().createElement("a", {
+      href: "#devtools"
+    }, "General")), /*#__PURE__*/external_React_default().createElement("li", null, /*#__PURE__*/external_React_default().createElement("a", {
+      href: "#devtools-private"
+    }, "Private Browsing")), /*#__PURE__*/external_React_default().createElement("li", null, /*#__PURE__*/external_React_default().createElement("a", {
+      href: "#devtools-targeting"
+    }, "Targeting")), /*#__PURE__*/external_React_default().createElement("li", null, /*#__PURE__*/external_React_default().createElement("a", {
+      href: "#devtools-groups"
+    }, "Message Groups")), /*#__PURE__*/external_React_default().createElement("li", null, /*#__PURE__*/external_React_default().createElement("a", {
+      href: "#devtools-impressions"
+    }, "Impressions")), /*#__PURE__*/external_React_default().createElement("li", null, /*#__PURE__*/external_React_default().createElement("a", {
+      href: "#devtools-ds"
+    }, "Discovery Stream")), /*#__PURE__*/external_React_default().createElement("li", null, /*#__PURE__*/external_React_default().createElement("a", {
+      href: "#devtools-errors"
+    }, "Errors")))), /*#__PURE__*/external_React_default().createElement("main", {
       className: "main-panel"
-    }, /*#__PURE__*/external_React_default().createElement("h1", null, "Discovery Stream Admin"), /*#__PURE__*/external_React_default().createElement("p", {
+    }, /*#__PURE__*/external_React_default().createElement("h1", null, "AS Router Admin"), /*#__PURE__*/external_React_default().createElement("p", {
       className: "helpLink"
     }, /*#__PURE__*/external_React_default().createElement("span", {
       className: "icon icon-small-spacer icon-info"
-    }), " ", /*#__PURE__*/external_React_default().createElement("span", null, "Need to access the ASRouter Admin dev tools?", " ", /*#__PURE__*/external_React_default().createElement("a", {
+    }), " ", /*#__PURE__*/external_React_default().createElement("span", null, "Need help using these tools? Check out our", " ", /*#__PURE__*/external_React_default().createElement("a", {
       target: "blank",
-      href: "about:asrouter"
-    }, "Click here"))), /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement(DiscoveryStreamAdminUI, {
-      state: {
-        DiscoveryStream: this.props.DiscoveryStream,
-        Personalization: this.props.Personalization
-      },
-      otherPrefs: this.props.Prefs.values,
-      dispatch: this.props.dispatch
-    }))));
+      href: "https://firefox-source-docs.mozilla.org/browser/components/newtab/content-src/asrouter/docs/debugging-docs.html"
+    }, "documentation"))), this.getSection()));
   }
 
 }
@@ -918,7 +2197,7 @@ class CollapseToggle extends (external_React_default()).PureComponent {
     const {
       props
     } = this;
-    return props.location.hash && props.location.hash.startsWith("#devtools");
+    return props.location.hash && (props.location.hash.startsWith("#asrouter") || props.location.hash.startsWith("#devtools"));
   }
 
   onCollapseToggle(e) {
@@ -946,6 +2225,7 @@ class CollapseToggle extends (external_React_default()).PureComponent {
 
   componentWillUnmount() {
     __webpack_require__.g.document.body.classList.remove("no-scroll");
+    ASRouterUtils.removeListener(this.onMessageFromParent);
   }
 
   render() {
@@ -961,25 +2241,25 @@ class CollapseToggle extends (external_React_default()).PureComponent {
       href: "#devtools",
       title: label,
       "aria-label": label,
-      className: `discoverystream-admin-toggle ${isCollapsed ? "collapsed" : "expanded"}`,
+      className: `asrouter-toggle ${isCollapsed ? "collapsed" : "expanded"}`,
       onClick: this.renderAdmin ? this.onCollapseToggle : null
     }, /*#__PURE__*/external_React_default().createElement("span", {
       className: "icon icon-devtools"
-    })), renderAdmin ? /*#__PURE__*/external_React_default().createElement(DiscoveryStreamAdminInner, _extends({}, props, {
+    })), renderAdmin ? /*#__PURE__*/external_React_default().createElement(ASRouterAdminInner, ASRouterAdmin_extends({}, props, {
       collapsed: this.state.collapsed
     })) : null);
   }
 
 }
 
-const _DiscoveryStreamAdmin = props => /*#__PURE__*/external_React_default().createElement(SimpleHashRouter, null, /*#__PURE__*/external_React_default().createElement(CollapseToggle, props));
+const _ASRouterAdmin = props => /*#__PURE__*/external_React_default().createElement(SimpleHashRouter, null, /*#__PURE__*/external_React_default().createElement(CollapseToggle, props));
 
-const DiscoveryStreamAdmin = (0,external_ReactRedux_namespaceObject.connect)(state => ({
+const ASRouterAdmin = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   Sections: state.Sections,
   DiscoveryStream: state.DiscoveryStream,
   Personalization: state.Personalization,
   Prefs: state.Prefs
-}))(_DiscoveryStreamAdmin);
+}))(_ASRouterAdmin);
 ;// CONCATENATED MODULE: ./content-src/components/ConfirmDialog/ConfirmDialog.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -9696,7 +10976,7 @@ class _Base extends (external_React_default()).PureComponent {
       className: "base-content-fallback"
     }, /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement(BaseContent, Base_extends({}, this.props, {
       adminContent: this.state
-    })), isDevtoolsEnabled ? /*#__PURE__*/external_React_default().createElement(DiscoveryStreamAdmin, {
+    })), isDevtoolsEnabled ? /*#__PURE__*/external_React_default().createElement(ASRouterAdmin, {
       notifyContent: this.notifyContent
     }) : null));
   }

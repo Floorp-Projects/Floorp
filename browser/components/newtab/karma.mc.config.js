@@ -97,8 +97,8 @@ module.exports = function (config) {
             "content-src/asrouter/asrouter-utils.js": {
               statements: 66,
               lines: 66,
-              functions: 76,
-              branches: 33,
+              functions: 78,
+              branches: 50,
             },
             "lib/TelemetryFeed.jsm": {
               statements: 98,
@@ -188,7 +188,7 @@ module.exports = function (config) {
               functions: 60,
               branches: 50,
             },
-            "content-src/components/DiscoveryStreamAdmin/*.jsx": {
+            "content-src/components/ASRouterAdmin/*.jsx": {
               statements: 0,
               lines: 0,
               functions: 0,

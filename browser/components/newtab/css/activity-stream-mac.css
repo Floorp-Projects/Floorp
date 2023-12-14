@@ -2165,7 +2165,7 @@ main section {
 }
 
 /* stylelint-disable max-nesting-depth */
-.discoverystream-admin-toggle {
+.asrouter-toggle {
   position: fixed;
   top: 50px;
   inset-inline-end: 15px;
@@ -2174,21 +2174,21 @@ main section {
   z-index: 1;
   border-radius: 2px;
 }
-.discoverystream-admin-toggle .icon-devtools {
+.asrouter-toggle .icon-devtools {
   background-image: url("chrome://global/skin/icons/developer.svg");
   padding: 15px;
 }
-.discoverystream-admin-toggle:dir(rtl) {
+.asrouter-toggle:dir(rtl) {
   transform: scaleX(-1);
 }
-.discoverystream-admin-toggle:hover {
+.asrouter-toggle:hover {
   background: var(--newtab-element-hover-color);
 }
-.discoverystream-admin-toggle.expanded {
+.asrouter-toggle.expanded {
   background: rgba(0, 0, 0, 0.2);
 }
 
-.discoverystream-admin {
+.asrouter-admin {
   position: fixed;
   top: 0;
   inset-inline-start: 0;
@@ -2201,40 +2201,40 @@ main section {
   padding-inline-start: 240px;
   color: var(--newtab-text-primary-color);
 }
-.discoverystream-admin.collapsed {
+.asrouter-admin.collapsed {
   display: none;
 }
-.discoverystream-admin .sidebar {
+.asrouter-admin .sidebar {
   inset-inline-start: 0;
   position: fixed;
   width: 240px;
   padding: 30px 20px;
 }
-.discoverystream-admin .sidebar ul {
+.asrouter-admin .sidebar ul {
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.discoverystream-admin .sidebar li a {
+.asrouter-admin .sidebar li a {
   padding: 10px 34px;
   display: block;
   color: var(--lwt-sidebar-text-color);
 }
-.discoverystream-admin .sidebar li a:hover {
+.asrouter-admin .sidebar li a:hover {
   background: var(--newtab-background-color-secondary);
 }
-.discoverystream-admin h1 {
+.asrouter-admin h1 {
   font-weight: 200;
   font-size: 32px;
 }
-.discoverystream-admin h2 .button,
-.discoverystream-admin p .button {
+.asrouter-admin h2 .button,
+.asrouter-admin p .button {
   font-size: 14px;
   padding: 6px 12px;
   margin-inline-start: 5px;
   margin-bottom: 0;
 }
-.discoverystream-admin .general-textarea {
+.asrouter-admin .general-textarea {
   direction: ltr;
   width: 740px;
   height: 500px;
@@ -2243,7 +2243,7 @@ main section {
   border-radius: 4px;
   display: flex;
 }
-.discoverystream-admin .wnp-textarea {
+.asrouter-admin .wnp-textarea {
   direction: ltr;
   width: 740px;
   height: 500px;
@@ -2252,92 +2252,92 @@ main section {
   border-radius: 4px;
   display: flex;
 }
-.discoverystream-admin .json-button {
+.asrouter-admin .json-button {
   display: inline-flex;
   font-size: 10px;
   padding: 4px 10px;
   margin-bottom: 6px;
   margin-inline-end: 4px;
 }
-.discoverystream-admin .json-button:hover {
+.asrouter-admin .json-button:hover {
   background-color: var(--newtab-element-hover-color);
   box-shadow: none;
 }
-.discoverystream-admin table {
+.asrouter-admin table {
   border-collapse: collapse;
   width: 100%;
 }
-.discoverystream-admin table.minimal-table {
+.asrouter-admin table.minimal-table {
   border-collapse: collapse;
   border: 1px solid var(--newtab-border-color);
 }
-.discoverystream-admin table.minimal-table td {
+.asrouter-admin table.minimal-table td {
   padding: 8px;
 }
-.discoverystream-admin table.minimal-table td:first-child {
+.asrouter-admin table.minimal-table td:first-child {
   width: 1%;
   white-space: nowrap;
 }
-.discoverystream-admin table.minimal-table td:not(:first-child) {
+.asrouter-admin table.minimal-table td:not(:first-child) {
   font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace;
 }
-.discoverystream-admin table.errorReporting tr {
+.asrouter-admin table.errorReporting tr {
   border: 1px solid var(--newtab-background-color-secondary);
 }
-.discoverystream-admin table.errorReporting td {
+.asrouter-admin table.errorReporting td {
   padding: 4px;
 }
-.discoverystream-admin table.errorReporting td[rowspan] {
+.asrouter-admin table.errorReporting td[rowspan] {
   border: 1px solid var(--newtab-background-color-secondary);
 }
-.discoverystream-admin .sourceLabel {
+.asrouter-admin .sourceLabel {
   background: var(--newtab-background-color-secondary);
   padding: 2px 5px;
   border-radius: 3px;
 }
-.discoverystream-admin .sourceLabel.isDisabled {
+.asrouter-admin .sourceLabel.isDisabled {
   background: rgba(215, 0, 34, 0.3);
   color: var(--newtab-status-error);
 }
-.discoverystream-admin .message-item:first-child td {
+.asrouter-admin .message-item:first-child td {
   border-top: 1px solid var(--newtab-border-color);
 }
-.discoverystream-admin .message-item td {
+.asrouter-admin .message-item td {
   vertical-align: top;
   padding: 8px;
   border-bottom: 1px solid var(--newtab-border-color);
 }
-.discoverystream-admin .message-item td.min {
+.asrouter-admin .message-item td.min {
   width: 1%;
   white-space: nowrap;
 }
-.discoverystream-admin .message-item td.message-summary {
+.asrouter-admin .message-item td.message-summary {
   width: 60%;
 }
-.discoverystream-admin .message-item td.button-column {
+.asrouter-admin .message-item td.button-column {
   width: 15%;
 }
-.discoverystream-admin .message-item td:first-child {
+.asrouter-admin .message-item td:first-child {
   border-inline-start: 1px solid var(--newtab-border-color);
 }
-.discoverystream-admin .message-item td:last-child {
+.asrouter-admin .message-item td:last-child {
   border-inline-end: 1px solid var(--newtab-border-color);
 }
-.discoverystream-admin .message-item.blocked .message-id,
-.discoverystream-admin .message-item.blocked .message-summary {
+.asrouter-admin .message-item.blocked .message-id,
+.asrouter-admin .message-item.blocked .message-summary {
   opacity: 0.5;
 }
-.discoverystream-admin .message-item.blocked .message-id {
+.asrouter-admin .message-item.blocked .message-id {
   opacity: 0.5;
 }
-.discoverystream-admin .message-item .message-id {
+.asrouter-admin .message-item .message-id {
   font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace;
   font-size: 12px;
 }
-.discoverystream-admin .providerUrl {
+.asrouter-admin .providerUrl {
   font-size: 12px;
 }
-.discoverystream-admin pre {
+.asrouter-admin pre {
   background: var(--newtab-background-color-secondary);
   margin: 0;
   padding: 8px;
@@ -2346,87 +2346,87 @@ main section {
   overflow: auto;
   font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace;
 }
-.discoverystream-admin .errorState {
+.asrouter-admin .errorState {
   border: 1px solid var(--newtab-status-error);
 }
-.discoverystream-admin .helpLink {
+.asrouter-admin .helpLink {
   padding: 10px;
   display: flex;
   background: rgba(0, 0, 0, 0.1);
   border-radius: 3px;
   align-items: center;
 }
-.discoverystream-admin .helpLink a {
+.asrouter-admin .helpLink a {
   text-decoration: underline;
 }
-.discoverystream-admin .helpLink .icon {
+.asrouter-admin .helpLink .icon {
   min-width: 18px;
   min-height: 18px;
 }
-.discoverystream-admin .ds-component {
+.asrouter-admin .ds-component {
   margin-bottom: 20px;
 }
-.discoverystream-admin .modalOverlayInner {
+.asrouter-admin .modalOverlayInner {
   height: 80%;
 }
-.discoverystream-admin .clearButton {
+.asrouter-admin .clearButton {
   border: 0;
   padding: 4px;
   border-radius: 4px;
   display: flex;
 }
-.discoverystream-admin .clearButton:hover {
+.asrouter-admin .clearButton:hover {
   background: var(--newtab-element-hover-color);
 }
-.discoverystream-admin .collapsed {
+.asrouter-admin .collapsed {
   display: none;
 }
-.discoverystream-admin .icon {
+.asrouter-admin .icon {
   display: inline-table;
   cursor: pointer;
   width: 18px;
   height: 18px;
 }
-.discoverystream-admin .button:disabled, .discoverystream-admin .button:disabled:active {
+.asrouter-admin .button:disabled, .asrouter-admin .button:disabled:active {
   opacity: 0.5;
   cursor: unset;
   box-shadow: none;
 }
-.discoverystream-admin .impressions-section {
+.asrouter-admin .impressions-section {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
-.discoverystream-admin .impressions-section .impressions-item {
+.asrouter-admin .impressions-section .impressions-item {
   display: flex;
   flex-flow: column nowrap;
   padding: 8px;
   border: 1px solid var(--newtab-border-color);
   border-radius: 5px;
 }
-.discoverystream-admin .impressions-section .impressions-item .impressions-inner-box {
+.asrouter-admin .impressions-section .impressions-item .impressions-inner-box {
   display: flex;
   flex-flow: row nowrap;
   gap: 8px;
 }
-.discoverystream-admin .impressions-section .impressions-item .impressions-category {
+.asrouter-admin .impressions-section .impressions-item .impressions-category {
   font-size: 1.15em;
   white-space: nowrap;
   flex-grow: 0.1;
 }
-.discoverystream-admin .impressions-section .impressions-item .impressions-buttons {
+.asrouter-admin .impressions-section .impressions-item .impressions-buttons {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-.discoverystream-admin .impressions-section .impressions-item .impressions-buttons button {
+.asrouter-admin .impressions-section .impressions-item .impressions-buttons button {
   margin: 0;
 }
-.discoverystream-admin .impressions-section .impressions-item .impressions-editor {
+.asrouter-admin .impressions-section .impressions-item .impressions-editor {
   display: flex;
   flex-grow: 1.5;
 }
-.discoverystream-admin .impressions-section .impressions-item .impressions-editor .general-textarea {
+.asrouter-admin .impressions-section .impressions-item .impressions-editor .general-textarea {
   width: auto;
   flex-grow: 1;
 }

@@ -1594,7 +1594,6 @@ describe("ASRouter", () => {
         userPrefs: ASRouterPreferences.getAllUserPreferences(),
         targetingParameters: {},
         errors: Router.errors,
-        devtoolsEnabled: ASRouterPreferences.devtoolsEnabled,
       });
 
       assert.deepEqual(msg, expected);

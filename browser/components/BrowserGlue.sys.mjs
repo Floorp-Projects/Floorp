@@ -581,7 +581,6 @@ let JSWINDOWACTORS = {
     includeChrome: true,
     allFrames: true,
     matches: [
-      "about:asrouter",
       "about:home",
       "about:newtab",
       "about:welcome",
@@ -797,7 +796,6 @@ let JSWINDOWACTORS = {
       },
     },
     matches: [
-      "about:asrouter*",
       "about:home*",
       "about:newtab*",
       "about:welcome*",
