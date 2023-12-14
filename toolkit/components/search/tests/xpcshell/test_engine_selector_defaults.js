@@ -11,52 +11,70 @@ const CONFIG = [
   {
     recordType: "engine",
     identifier: "global-default",
-    base: {
-      environment: {
-        allRegionsAndLocales: true,
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+        },
       },
-    },
+    ],
   },
   {
     recordType: "engine",
     identifier: "global-default-private",
-    base: {
-      environment: {
-        allRegionsAndLocales: true,
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+        },
       },
-    },
+    ],
   },
   {
     recordType: "engine",
     identifier: "default-specific-location",
-    base: {
-      environment: {
-        allRegionsAndLocales: true,
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+        },
       },
-    },
+    ],
   },
   {
     recordType: "engine",
     identifier: "default-specific-distro",
-    base: {
-      environment: {
-        allRegionsAndLocales: true,
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+        },
       },
-    },
+    ],
   },
   {
     recordType: "engine",
     identifier: "default-starts-with-ca",
-    base: {
-      environment: { locales: ["en-US"], regions: ["CA"] },
-    },
+    base: {},
+    variants: [
+      {
+        environment: { locales: ["en-US"], regions: ["CA"] },
+      },
+    ],
   },
   {
     recordType: "engine",
     identifier: "default-starts-with-us",
-    base: {
-      environment: { locales: ["en-US"], regions: ["US"] },
-    },
+    base: {},
+    variants: [
+      {
+        environment: { locales: ["en-US"], regions: ["US"] },
+      },
+    ],
   },
   {
     recordType: "defaultEngines",
@@ -85,36 +103,49 @@ const CONFIG = [
       },
     ],
   },
+  {
+    recordType: "engineOrders",
+    orders: [],
+  },
 ];
 
 const CONFIG_DEFAULTS_OVERRIDE = [
   {
     recordType: "engine",
     identifier: "engine-global",
-    base: {
-      environment: {
-        allRegionsAndLocales: true,
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+        },
       },
-    },
+    ],
   },
   {
     recordType: "engine",
     identifier: "engine-locale-de",
-    base: {
-      environment: {
-        locales: ["de"],
+    base: {},
+    variants: [
+      {
+        environment: {
+          locales: ["de"],
+        },
       },
-    },
+    ],
   },
   {
     recordType: "engine",
     identifier: "engine-distro",
-    base: {
-      environment: {
-        distributions: ["distro"],
-        regions: ["FR"],
+    base: {},
+    variants: [
+      {
+        environment: {
+          distributions: ["distro"],
+          regions: ["FR"],
+        },
       },
-    },
+    ],
   },
   {
     recordType: "defaultEngines",
@@ -129,6 +160,10 @@ const CONFIG_DEFAULTS_OVERRIDE = [
         default: "engine-distro",
       },
     ],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
   },
 ];
 

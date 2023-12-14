@@ -4047,7 +4047,7 @@
       "orders": [
         {
           "environment": { "distributions": ["MozillaOnline"] },
-          "order": ["baidu", "bing", "google", "amazondotcn", "wikipedia"]
+          "order": ["baidu", "bing", "google", "amazondotcn", "wikipedia*"]
         },
         {
           "environment": { "distributions": ["qwant-001", "qwant-002"] },
