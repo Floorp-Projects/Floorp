@@ -7,3 +7,32 @@ browser.jar:
   content/activity-stream/aboutwelcome/aboutwelcome.css (./content/aboutwelcome.css)
   res/activity-stream/aboutwelcome/aboutwelcome.html (./content/aboutwelcome.html)
   res/activity-stream/aboutwelcome/aboutwelcome.bundle.js (./content/aboutwelcome.bundle.js)
+
+# This section is for image assets for about:welcome. These are currently
+# placed in the chrome://activity-stream/ path to provide backwards compability
+# with live experiments using these assets at those paths. Removal of this
+# backwards compability is tracked in bug 1866935.
+  content/activity-stream/data/content/assets/confetti.svg                                  (./assets/confetti.svg)
+  content/activity-stream/data/content/assets/device-migration.svg                          (./assets/device-migration.svg)
+  content/activity-stream/data/content/assets/fox-doodle-waving.gif                         (./assets/fox-doodle-waving.gif)
+  content/activity-stream/data/content/assets/fox-doodle-waving-static.png                  (./assets/fox-doodle-waving-static.png)
+  content/activity-stream/data/content/assets/heart.webp                                    (./assets/heart.webp)
+  content/activity-stream/data/content/assets/long-zap.svg                                  (./assets/long-zap.svg)
+  content/activity-stream/data/content/assets/mobile-download-qr-existing-user-cn.svg       (./assets/mobile-download-qr-existing-user-cn.svg)
+  content/activity-stream/data/content/assets/mobile-download-qr-existing-user.svg          (./assets/mobile-download-qr-existing-user.svg)
+  content/activity-stream/data/content/assets/mobile-download-qr-new-user-cn.svg            (./assets/mobile-download-qr-new-user-cn.svg)
+  content/activity-stream/data/content/assets/mobile-download-qr-new-user.svg               (./assets/mobile-download-qr-new-user.svg)
+  content/activity-stream/data/content/assets/mr-amo-collection.svg                         (./assets/mr-amo-collection.svg)
+  content/activity-stream/data/content/assets/mr-gratitude.svg                              (./assets/mr-gratitude.svg)
+  content/activity-stream/data/content/assets/mr-import.svg                                 (./assets/mr-import.svg)
+  content/activity-stream/data/content/assets/mr-mobilecrosspromo.svg                       (./assets/mr-mobilecrosspromo.svg)
+  content/activity-stream/data/content/assets/mr-pinprivate.svg                             (./assets/mr-pinprivate.svg)
+  content/activity-stream/data/content/assets/mr-pintaskbar.svg                             (./assets/mr-pintaskbar.svg)
+  content/activity-stream/data/content/assets/mr-privacysegmentation.svg                    (./assets/mr-privacysegmentation.svg)
+  content/activity-stream/data/content/assets/mr-rtamo-background-image.svg                 (./assets/mr-rtamo-background-image.svg)
+  content/activity-stream/data/content/assets/mr-settodefault.svg                           (./assets/mr-settodefault.svg)
+  content/activity-stream/data/content/assets/noodle-C.svg                                  (./assets/noodle-C.svg)
+  content/activity-stream/data/content/assets/noodle-outline-L.svg                          (./assets/noodle-outline-L.svg)
+  content/activity-stream/data/content/assets/noodle-solid-L.svg                            (./assets/noodle-solid-L.svg)
+  content/activity-stream/data/content/assets/person-typing.svg                             (./assets/person-typing.svg)
+  content/activity-stream/data/content/assets/short-zap.svg                                 (./assets/short-zap.svg)
