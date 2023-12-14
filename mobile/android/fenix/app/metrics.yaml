@@ -2663,7 +2663,7 @@ metrics:
     notification_emails:
       - android-probes@mozilla.com
       - tom@mozilla.com
-    expires: 122
+    expires: 124
 
 customize_home:
   most_visited_sites:

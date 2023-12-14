@@ -13,7 +13,7 @@ class FontParserTest {
          Changing the below constant causes _all_ Nightly users to send a (large) Telemetry event containing
          their font information. Do not change this value unless you explicitly intend this.
          */
-        assertEquals(3, FontEnumerationWorker.kDesiredSubmissions)
+        assertEquals(4, FontEnumerationWorker.kDesiredSubmissions)
     }
 
     @Test

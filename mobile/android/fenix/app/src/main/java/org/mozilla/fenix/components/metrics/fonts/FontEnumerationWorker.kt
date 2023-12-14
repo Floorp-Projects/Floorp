@@ -207,6 +207,6 @@ class FontEnumerationWorker(
          * we wish to perform another data collection effort on the Nightly
          * population.
          */
-        const val kDesiredSubmissions: Int = 3
+        const val kDesiredSubmissions: Int = 4
     }
 }
