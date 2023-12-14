@@ -24,8 +24,8 @@ origin:
   license-file: COPYING
 
 updatebot:
-  maintainer-phab: chew
-  maintainer-bz: ngrunbaum@mozilla.com
+  maintainer-phab: ng
+  maintainer-bz: na-g@nostrum.com
   tasks:
     - type: vendoring
       enabled: true
