@@ -52,7 +52,12 @@ const SHOWN_ON_NEWTAB_PREF = "feeds.topsites";
 const SHOW_SPONSORED_PREF = "showSponsoredTopSites";
 const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
 const CONTILE_CACHE_PREF = "browser.topsites.contile.cachedTiles";
-const CONTILE_CACHE_VALID_FOR_PREF = "browser.topsites.contile.cacheValidFor";
+
+// This pref controls how long the contile cache is valid for in seconds.
+const CONTILE_CACHE_VALID_FOR_SECONDS_PREF =
+  "browser.topsites.contile.cacheValidFor";
+// This pref records when the last contile fetch occurred, as a UNIX timestamp
+// in seconds.
 const CONTILE_CACHE_LAST_FETCH_PREF = "browser.topsites.contile.lastFetch";
 
 function FakeTippyTopProvider() {}
@@ -1680,8 +1685,11 @@ add_task(async function test_onAction_part_3() {
       "when SHOW_SPONSORED_PREF is false"
   );
   Services.prefs.setStringPref(CONTILE_CACHE_PREF, "[]");
-  Services.prefs.setIntPref(CONTILE_CACHE_LAST_FETCH_PREF, 15 * 60 * 1000);
-  Services.prefs.setIntPref(CONTILE_CACHE_VALID_FOR_PREF, Date.now());
+  Services.prefs.setIntPref(
+    CONTILE_CACHE_LAST_FETCH_PREF,
+    Math.round(Date.now() / 1000)
+  );
+  Services.prefs.setIntPref(CONTILE_CACHE_VALID_FOR_SECONDS_PREF, 15 * 60);
   prefChangeAction = {
     type: at.PREF_CHANGED,
     data: { name: SHOW_SPONSORED_PREF, value: false },
@@ -1692,7 +1700,9 @@ add_task(async function test_onAction_part_3() {
   feed.onAction(prefChangeAction);
   Assert.ok(!Services.prefs.prefHasUserValue(CONTILE_CACHE_PREF));
   Assert.ok(!Services.prefs.prefHasUserValue(CONTILE_CACHE_LAST_FETCH_PREF));
-  Assert.ok(!Services.prefs.prefHasUserValue(CONTILE_CACHE_VALID_FOR_PREF));
+  Assert.ok(
+    !Services.prefs.prefHasUserValue(CONTILE_CACHE_VALID_FOR_SECONDS_PREF)
+  );
 
   sandbox.restore();
 });
@@ -3094,7 +3104,6 @@ add_task(async function test_ContileIntegration() {
     Assert.ok(!feed._contile.sites.length);
   }
 
-  /*
   {
     info(
       "TopSitesFeed._fetchSites should return false when Contile " +
@@ -3102,11 +3111,13 @@ add_task(async function test_ContileIntegration() {
     );
     NimbusFeatures.newtab.getVariable.returns(true);
     Services.prefs.setStringPref(CONTILE_CACHE_PREF, "[]");
+    const THIRTY_MINUTES_AGO_IN_SECONDS =
+      Math.round(Date.now() / 1000) - 60 * 30;
     Services.prefs.setIntPref(
       CONTILE_CACHE_LAST_FETCH_PREF,
-      Date.now() - 1000 * 60 * 30
+      THIRTY_MINUTES_AGO_IN_SECONDS
     );
-    Services.prefs.setIntPref(CONTILE_CACHE_VALID_FOR_PREF, 1000 * 60 * 15);
+    Services.prefs.setIntPref(CONTILE_CACHE_VALID_FOR_SECONDS_PREF, 60 * 15);
 
     let { feed, fetchStub } = prepFeed(getTopSitesFeedForTest(sandbox));
 
@@ -3119,7 +3130,7 @@ add_task(async function test_ContileIntegration() {
 
     Assert.ok(!fetched);
     Assert.ok(!feed._contile.sites.length);
-  }*/
+  }
 
   {
     info(
@@ -3229,7 +3240,7 @@ add_task(async function test_ContileIntegration() {
       JSON.stringify(tiles)
     );
     Assert.equal(
-      Services.prefs.getIntPref(CONTILE_CACHE_VALID_FOR_PREF),
+      Services.prefs.getIntPref(CONTILE_CACHE_VALID_FOR_SECONDS_PREF),
       11322
     );
   }
@@ -3259,7 +3270,7 @@ add_task(async function test_ContileIntegration() {
     ];
 
     Services.prefs.setStringPref(CONTILE_CACHE_PREF, JSON.stringify(tiles));
-    Services.prefs.setIntPref(CONTILE_CACHE_VALID_FOR_PREF, 1000 * 60 * 15);
+    Services.prefs.setIntPref(CONTILE_CACHE_VALID_FOR_SECONDS_PREF, 60 * 15);
     Services.prefs.setIntPref(
       CONTILE_CACHE_LAST_FETCH_PREF,
       Math.round(Date.now() / 1000)
@@ -3284,7 +3295,7 @@ add_task(async function test_ContileIntegration() {
     NimbusFeatures.newtab.getVariable.returns(true);
     let { feed, fetchStub } = prepFeed(getTopSitesFeedForTest(sandbox));
     Services.prefs.setStringPref(CONTILE_CACHE_PREF, "[]");
-    Services.prefs.setIntPref(CONTILE_CACHE_VALID_FOR_PREF, 0);
+    Services.prefs.setIntPref(CONTILE_CACHE_VALID_FOR_SECONDS_PREF, 0);
     Services.prefs.setIntPref(CONTILE_CACHE_LAST_FETCH_PREF, 0);
 
     fetchStub.resolves({
@@ -3320,7 +3331,7 @@ add_task(async function test_ContileIntegration() {
       },
     ];
     Services.prefs.setStringPref(CONTILE_CACHE_PREF, JSON.stringify(tiles));
-    Services.prefs.setIntPref(CONTILE_CACHE_VALID_FOR_PREF, 1000 * 60 * 15);
+    Services.prefs.setIntPref(CONTILE_CACHE_VALID_FOR_SECONDS_PREF, 60 * 15);
     Services.prefs.setIntPref(
       CONTILE_CACHE_LAST_FETCH_PREF,
       Math.round(Date.now() / 1000)
