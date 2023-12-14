@@ -8,9 +8,10 @@
 
 use super::generated::{
     shorthands, AllShorthand, ComputedValues, LogicalGroupSet, LonghandIdSet,
-    NonCustomPropertyIdSet, PropertyDeclaration, PropertyDeclarationId, PropertyId, ShorthandId,
+    NonCustomPropertyIdSet, PropertyDeclaration, PropertyId, ShorthandId,
     SourcePropertyDeclaration, SourcePropertyDeclarationDrain, SubpropertiesVec,
 };
+use super::property_declaration::PropertyDeclarationId;
 use crate::applicable_declarations::CascadePriority;
 use crate::context::QuirksMode;
 use crate::custom_properties::{self, ComputedCustomProperties, CustomPropertiesBuilder};

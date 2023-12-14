@@ -11,12 +11,14 @@ use crate::custom_properties::CustomPropertiesBuilder;
 use crate::dom::TElement;
 use crate::font_metrics::FontMetricsOrientation;
 use crate::logical_geometry::WritingMode;
-use crate::properties::declaration_block::{DeclarationImportanceIterator, Importance};
-use crate::properties::generated::{
-    CSSWideKeyword, ComputedValues, LonghandId, LonghandIdSet, PrioritaryPropertyId,
-    PropertyDeclaration, PropertyDeclarationId, PropertyFlags,
-    ShorthandsWithPropertyReferencesCache, StyleBuilder, CASCADE_PROPERTY,
-    PRIORITARY_PROPERTY_COUNT,
+use crate::properties::{
+    declaration_block::{DeclarationImportanceIterator, Importance},
+    generated::{
+        CSSWideKeyword, ComputedValues, LonghandId, LonghandIdSet, PrioritaryPropertyId,
+        PropertyDeclaration, PropertyFlags, ShorthandsWithPropertyReferencesCache, StyleBuilder,
+        CASCADE_PROPERTY, PRIORITARY_PROPERTY_COUNT,
+    },
+    property_declaration::PropertyDeclarationId,
 };
 use crate::rule_cache::{RuleCache, RuleCacheConditions};
 use crate::rule_tree::{CascadeLevel, StrongRuleNode};
