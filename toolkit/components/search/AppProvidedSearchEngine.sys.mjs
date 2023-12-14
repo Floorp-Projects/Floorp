@@ -158,6 +158,7 @@ export class AppProvidedSearchEngine extends SearchEngine {
    *   The search engine configuration for application provided engines.
    */
   #init(engineConfig) {
+    this._orderHint = engineConfig.orderHint;
     this._telemetryId = engineConfig.identifier;
 
     if (engineConfig.telemetrySuffix) {
@@ -191,7 +192,6 @@ export class AppProvidedSearchEngine extends SearchEngine {
 
     // this._initWithDetails(config);
 
-    // this._orderHint = config.orderHint; // TODO add order hint in searchEngineSelector for sorting engines.
     // this._sendAttributionRequest = config.sendAttributionRequest ?? false; // TODO check if we need to this?
     // if (details.iconURL) {
     //   this._setIcon(details.iconURL, true);

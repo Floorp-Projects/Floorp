@@ -11,46 +11,62 @@ const CONFIG_EVERYWHERE = [
   {
     recordType: "engine",
     identifier: "engine-everywhere",
-    base: {
-      environment: {
-        allRegionsAndLocales: true,
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+        },
       },
-    },
+    ],
   },
   {
     recordType: "engine",
     identifier: "engine-everywhere-except-en-US",
-    base: {
-      environment: {
-        allRegionsAndLocales: true,
-        excludedLocales: ["en-US"],
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+          excludedLocales: ["en-US"],
+        },
       },
-    },
+    ],
   },
   {
     recordType: "engine",
     identifier: "engine-everywhere-except-FI",
-    base: {
-      environment: {
-        allRegionsAndLocales: true,
-        excludedRegions: ["FI"],
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+          excludedRegions: ["FI"],
+        },
       },
-    },
+    ],
   },
   {
     recordType: "engine",
     identifier: "engine-everywhere-except-en-CA-and-CA",
-    base: {
-      environment: {
-        allRegionsAndLocales: true,
-        excludedRegions: ["CA"],
-        excludedLocales: ["en-CA"],
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+          excludedRegions: ["CA"],
+          excludedLocales: ["en-CA"],
+        },
       },
-    },
+    ],
   },
   {
     recordType: "defaultEngines",
     specificDefaults: [],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
   },
 ];
 
@@ -58,16 +74,23 @@ const CONFIG_EXPERIMENT = [
   {
     recordType: "engine",
     identifier: "engine-experiment",
-    base: {
-      environment: {
-        allRegionsAndLocales: true,
-        experiment: "experiment",
+    base: {},
+    variants: [
+      {
+        environment: {
+          allRegionsAndLocales: true,
+          experiment: "experiment",
+        },
       },
-    },
+    ],
   },
   {
     recordType: "defaultEngines",
     specificDefaults: [],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
   },
 ];
 
@@ -75,54 +98,73 @@ const CONFIG_LOCALES_AND_REGIONS = [
   {
     recordType: "engine",
     identifier: "engine-canada",
-    base: {
-      environment: {
-        locales: ["en-CA"],
-        regions: ["CA"],
+    base: {},
+    variants: [
+      {
+        environment: {
+          locales: ["en-CA"],
+          regions: ["CA"],
+        },
       },
-    },
+    ],
   },
   {
     recordType: "engine",
     identifier: "engine-exclude-regions",
-    base: {
-      environment: {
-        locales: ["en-GB"],
-        excludedRegions: ["US"],
+    base: {},
+    variants: [
+      {
+        environment: {
+          locales: ["en-GB"],
+          excludedRegions: ["US"],
+        },
       },
-    },
+    ],
   },
   {
     recordType: "engine",
     identifier: "engine-specific-locale-in-all-regions",
-    base: {
-      environment: {
-        locales: ["en-US"],
+    base: {},
+    variants: [
+      {
+        environment: {
+          locales: ["en-US"],
+        },
       },
-    },
+    ],
   },
   {
     recordType: "engine",
     identifier: "engine-exclude-locale",
-    base: {
-      environment: {
-        excludedLocales: ["fr"],
-        regions: ["BE"],
+    base: {},
+    variants: [
+      {
+        environment: {
+          excludedLocales: ["fr"],
+          regions: ["BE"],
+        },
       },
-    },
+    ],
   },
   {
     recordType: "engine",
     identifier: "engine-specific-region-with-any-locales",
-    base: {
-      environment: {
-        regions: ["FI"],
+    base: {},
+    variants: [
+      {
+        environment: {
+          regions: ["FI"],
+        },
       },
-    },
+    ],
   },
   {
     recordType: "defaultEngines",
     specificDefaults: [],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
   },
 ];
 
@@ -130,55 +172,74 @@ const CONFIG_DISTRIBUTION = [
   {
     recordType: "engine",
     identifier: "engine-distribution-1",
-    base: {
-      environment: {
-        distributions: ["distribution-1"],
+    base: {},
+    variants: [
+      {
+        environment: {
+          distributions: ["distribution-1"],
+        },
       },
-    },
+    ],
   },
   {
     recordType: "engine",
-    identifier: ["engine-multiple-distributions"],
-    base: {
-      environment: {
-        distributions: ["distribution-2", "distribution-3"],
+    identifier: "engine-multiple-distributions",
+    base: {},
+    variants: [
+      {
+        environment: {
+          distributions: ["distribution-2", "distribution-3"],
+        },
       },
-    },
+    ],
   },
   {
     recordType: "engine",
     identifier: "engine-distribution-region-locales",
-    base: {
-      environment: {
-        distributions: ["distribution-4"],
-        locales: ["fi"],
-        regions: ["FI"],
+    base: {},
+    variants: [
+      {
+        environment: {
+          distributions: ["distribution-4"],
+          locales: ["fi"],
+          regions: ["FI"],
+        },
       },
-    },
+    ],
   },
   {
     recordType: "engine",
     identifier: "engine-distribution-experiment",
-    base: {
-      environment: {
-        distributions: ["distribution-5"],
-        experiment: "experiment",
+    base: {},
+    variants: [
+      {
+        environment: {
+          distributions: ["distribution-5"],
+          experiment: "experiment",
+        },
       },
-    },
+    ],
   },
   {
     recordType: "engine",
     identifier: "engine-distribution-excluded",
-    base: {
-      environment: {
-        distributions: ["distribution-include"],
-        excludedDistributions: ["distribution-exclude"],
+    base: {},
+    variants: [
+      {
+        environment: {
+          distributions: ["distribution-include"],
+          excludedDistributions: ["distribution-exclude"],
+        },
       },
-    },
+    ],
   },
   {
     recordType: "defaultEngines",
     specificDefaults: [],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
   },
 ];
 

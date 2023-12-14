@@ -153,56 +153,75 @@ export class SearchEngineSelector {
     if (!this._configuration) {
       await this.getEngineConfiguration();
     }
+
     lazy.logConsole.debug(
       `fetchEngineConfiguration ${locale}:${region}:${channel}:${distroID}:${experiment}:${appName}:${version}`
     );
-    let engines = [];
-    let defaultsConfig;
 
     appName = appName.toLowerCase();
     version = version.toLowerCase();
     locale = locale.toLowerCase();
     region = region.toLowerCase();
 
+    let engines = [];
+    let defaultsConfig;
+    let engineOrders;
+    let userEnv = {
+      appName,
+      version,
+      locale,
+      region,
+      channel,
+      distroID,
+      experiment,
+    };
+
     for (let config of this._configuration) {
       if (config.recordType == "defaultEngines") {
         defaultsConfig = config;
+      }
+
+      if (config.recordType == "engineOrders") {
+        engineOrders = config;
       }
 
       if (config.recordType !== "engine") {
         continue;
       }
 
-      if (
-        this.#matchesUserEnvironment(config.base, {
-          appName,
-          version,
-          locale,
-          region,
-          channel,
-          distroID,
-          experiment,
-        })
-      ) {
-        let engine = this.#copyObject({}, config.base);
-        engine.identifier = config.identifier;
-        engines.push(engine);
+      let variants =
+        config.variants?.filter(variant =>
+          this.#matchesUserEnvironment(variant, userEnv)
+        ) ?? [];
+
+      if (!variants.length) {
+        continue;
       }
+
+      let engine = this.#copyObject({}, config.base);
+      engine.identifier = config.identifier;
+
+      // Variants are applied to the base engine cumulatively.
+      for (let variant of variants) {
+        engine = this.#copyObject(engine, variant);
+      }
+
+      engines.push(engine);
     }
 
     let { defaultEngine, privateDefault } = this.#defaultEngines(
       engines,
       defaultsConfig,
-      {
-        appName,
-        version,
-        locale,
-        region,
-        channel,
-        distroID,
-        experiment,
-      }
+      userEnv
     );
+
+    for (const orderData of engineOrders.orders) {
+      let environment = orderData.environment;
+
+      if (this.#matchesUserEnvironment({ environment }, userEnv)) {
+        this.#setEngineOrders(engines, orderData.order, userEnv);
+      }
+    }
 
     engines.sort(this._sort.bind(this, defaultEngine, privateDefault));
 
@@ -254,7 +273,7 @@ export class SearchEngineSelector {
    * Object.assign but ignore some keys
    *
    * @param {object} target - Object to copy to.
-   * @param {object} source - Object top copy from.
+   * @param {object} source - Object to copy from.
    * @returns {object} - The source object.
    */
   #copyObject(target, source) {
@@ -322,7 +341,17 @@ export class SearchEngineSelector {
         user.locale,
         config.environment
       ) &&
-      this.#matchesDistribution(user.distroID, config.environment.distributions)
+      this.#matchesDistribution(
+        user.distroID,
+        config.environment.distributions
+      ) &&
+      this.#matchesVersions(
+        config.environment.minVersion,
+        config.environment.maxVersion,
+        user.version
+      ) &&
+      this.#matchesChannel(config.environment.channels, user.channel) &&
+      this.#matchesApplication(config.environment.applications, user.appName)
     );
   }
 
@@ -342,6 +371,64 @@ export class SearchEngineSelector {
     }
 
     return configDistro?.includes(userDistro);
+  }
+
+  /**
+   * @param {string} minVersion
+   *  The minimum version supported.
+   * @param {string} maxVersion
+   *  The maximum version supported.
+   * @param {string} userVersion
+   *  The user's version.
+   * @returns {boolean}
+   *  True if the user's version is within the range of the min and max versions
+   *  supported.
+   */
+  #matchesVersions(minVersion, maxVersion, userVersion) {
+    // If there's no versions for this engineConfig, ignore the check.
+    if (!minVersion && !maxVersion) {
+      return true;
+    }
+
+    return (
+      (minVersion && Services.vc.compare(userVersion, minVersion) < 0) ||
+      (maxVersion && Services.vc.compare(userVersion, maxVersion) > 0)
+    );
+  }
+
+  /**
+   * @param {Array} configChannels
+   *  Release channels such as nightly, beta, release, esr.
+   * @param {string} userChannel
+   *  The user's channel.
+   * @returns {boolean}
+   *  True if the user's channel is included in the config channels.
+   */
+  #matchesChannel(configChannels, userChannel) {
+    // If there's no channels for this engineConfig, ignore the check.
+    if (!configChannels) {
+      return true;
+    }
+
+    return configChannels.includes(userChannel);
+  }
+
+  /**
+   * @param {Array} configApps
+   *  The applications such as firefox, firefox-android, firefox-ios,
+   *  focus-android, and focus-ios.
+   * @param {string} userApp
+   *  The user's application.
+   * @returns {boolean}
+   *  True if the user's application is included in the config applications.
+   */
+  #matchesApplication(configApps, userApp) {
+    // If there's no config Applications for this engineConfig, ignore the check.
+    if (!configApps) {
+      return true;
+    }
+
+    return configApps.includes(userApp);
   }
 
   /**
@@ -518,5 +605,36 @@ export class SearchEngineSelector {
     );
 
     return engine;
+  }
+
+  /**
+   * Sets the orderHint number for the engines.
+   *
+   * @param {Array} engines
+   *  The engines for the user environment.
+   * @param {Array} orderedEngines
+   *  The ordering of engines. Engines in the beginning of the list get a higher
+   *  orderHint number.
+   * @param {object} userEnv
+   *   The user's environment.
+   */
+  #setEngineOrders(engines, orderedEngines, userEnv) {
+    let orderNumber = orderedEngines.length;
+
+    for (const engine of orderedEngines) {
+      let foundEngine;
+
+      if (engine.endsWith("*")) {
+        let match = engine.slice(0, -1);
+        foundEngine = engines.find(e => e.identifier.startsWith(match));
+      } else {
+        foundEngine = engines.find(e => e.identifier == engine);
+      }
+
+      if (foundEngine) {
+        foundEngine.orderHint = orderNumber;
+        orderNumber -= 1;
+      }
+    }
   }
 }

@@ -457,10 +457,10 @@
                 "order": {
                   "title": "Engine Order",
                   "type": "array",
-                  "description": "The order of the engines for the associated environment. If engines are present for the user but not included in this list, they will follow after the ones in this list in alphabetical order.",
+                  "description": "The order of the engines for the associated environment. If engines are present for the user but not included in this list, they will follow after the ones in this list in alphabetical order. If an individual entry is suffixed with a star, matching is applied on a \"starts with\" basis.",
                   "items": {
                     "type": "string",
-                    "pattern": "^[a-zA-Z0-9-_]*$"
+                    "pattern": "^[a-zA-Z0-9-_]*\\*?$"
                   }
                 }
               },
