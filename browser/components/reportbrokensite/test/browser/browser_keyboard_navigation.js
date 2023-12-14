@@ -54,6 +54,10 @@ async function ensureTabOrder(order, win = window) {
 
 async function tabTo(match, win = window) {
   const config = { window: win };
+  const { activeElement } = win.document;
+  if (activeElement?.matches(match)) {
+    return activeElement;
+  }
   let initial = await pressKeyAndGetFocus("VK_TAB", config);
   let target = initial;
   do {
@@ -70,11 +74,13 @@ async function ensureExpectedTabOrder(
   expectReason,
   expectSendMoreInfo
 ) {
+  const { activeElement } = window.document;
+  is(
+    activeElement?.id,
+    "report-broken-site-popup-url",
+    "URL is already focused"
+  );
   const order = [];
-  if (expectBackButton) {
-    order.push(".subviewbutton-back");
-  }
-  order.push("#report-broken-site-popup-url");
   if (expectReason) {
     order.push("#report-broken-site-popup-reason");
   }
@@ -88,7 +94,10 @@ async function ensureExpectedTabOrder(
     "#report-broken-site-popup-cancel-button",
     "#report-broken-site-popup-send-button",
   ]);
-  order.push(order[0]); // check that we've cycled back
+  if (expectBackButton) {
+    order.push(".subviewbutton-back");
+  }
+  order.push("#report-broken-site-popup-url"); // check that we've cycled back
   return ensureTabOrder(order);
 }
 
@@ -160,7 +169,9 @@ async function testPressingKey(key, tabToMatch, makePromise, followUp) {
     REPORTABLE_PAGE_URL,
     async function (browser) {
       for (const menu of [AppMenu(), ProtectionsPanel(), HelpMenu()]) {
-        info(`Opening RBS on ${menu.menuDescription}`);
+        info(
+          `Opening RBS to test pressing ${key} for ${tabToMatch} on ${menu.menuDescription}`
+        );
         const rbs = await menu.openReportBrokenSite();
         const promise = makePromise(rbs);
         if (tabToMatch) {
@@ -209,7 +220,7 @@ add_task(async function testSendAndOkay() {
   await testPressingKey(
     "KEY_Enter",
     "#report-broken-site-popup-send-button",
-    rbs => BrowserTestUtils.waitForEvent(rbs.sentView, "ViewShown"),
+    rbs => rbs.awaitReportSentViewOpened(),
     async rbs => {
       await tabTo("#report-broken-site-popup-okay-button");
       const promise = BrowserTestUtils.waitForEvent(rbs.sentView, "ViewHiding");
@@ -230,7 +241,7 @@ add_task(async function testESCOnSent() {
   await testPressingKey(
     "KEY_Enter",
     "#report-broken-site-popup-send-button",
-    rbs => BrowserTestUtils.waitForEvent(rbs.sentView, "ViewShown"),
+    rbs => rbs.awaitReportSentViewOpened(),
     async rbs => {
       const promise = BrowserTestUtils.waitForEvent(rbs.sentView, "ViewHiding");
       await pressKeyAndAwait(promise, "KEY_Escape");

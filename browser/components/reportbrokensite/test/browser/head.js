@@ -163,16 +163,16 @@ class ReportBrokenSiteHelper {
   async open(triggerMenuItem) {
     const window = triggerMenuItem.ownerGlobal;
     const shownPromise = BrowserTestUtils.waitForEvent(
-      window,
-      "ViewShown",
-      true,
-      e => e.target.classList.contains("report-broken-site-view")
+      this.mainView,
+      "ViewShown"
     );
+    const focusPromise = BrowserTestUtils.waitForEvent(this.URLInput, "focus");
     await EventUtils.synthesizeMouseAtCenter(triggerMenuItem, {}, window);
     await shownPromise;
+    await focusPromise;
   }
 
-  async #assertClickAndViewChanges(button, view, newView) {
+  async #assertClickAndViewChanges(button, view, newView, newFocus) {
     ok(view.closest("panel").hasAttribute("panelopen"), "Panel is open");
     ok(BrowserTestUtils.is_visible(button), "Button is visible");
     ok(!button.disabled, "Button is enabled");
@@ -186,15 +186,26 @@ class ReportBrokenSiteHelper {
     } else {
       promises.push(BrowserTestUtils.waitForEvent(view, "ViewHiding"));
     }
+    if (newFocus) {
+      promises.push(BrowserTestUtils.waitForEvent(newFocus, "focus"));
+    }
     EventUtils.synthesizeMouseAtCenter(button, {}, this.win);
     await Promise.all(promises);
+  }
+
+  async awaitReportSentViewOpened() {
+    await Promise.all([
+      BrowserTestUtils.waitForEvent(this.sentView, "ViewShown"),
+      BrowserTestUtils.waitForEvent(this.okayButton, "focus"),
+    ]);
   }
 
   async clickSend() {
     await this.#assertClickAndViewChanges(
       this.sendButton,
       this.mainView,
-      this.sentView
+      this.sentView,
+      this.okayButton
     );
   }
 
