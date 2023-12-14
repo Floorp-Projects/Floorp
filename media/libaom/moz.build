@@ -122,7 +122,7 @@ LOCAL_INCLUDES += [
 if CONFIG['OS_TARGET'] == 'Linux':
     # For fuzzing, We only support building on Linux currently.
     include('/tools/fuzzing/libfuzzer-config.mozbuild')
-    if CONFIG['FUZZING_INTERFACES']:
+    if CONFIG['FUZZING_INTERFACES'] and not CONFIG['MOZ_DEBUG']:
         TEST_DIRS += [
             'test/fuzztest'
     ]
