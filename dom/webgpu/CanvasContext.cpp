@@ -200,11 +200,11 @@ void CanvasContext::MaybeQueueSwapChainPresent() {
   InvalidateCanvasContent();
 }
 
-void CanvasContext::SwapChainPresent() {
+Maybe<layers::SurfaceDescriptor> CanvasContext::SwapChainPresent() {
   mPendingSwapChainPresent = false;
   if (!mBridge || !mBridge->IsOpen() || mRemoteTextureOwnerId.isNothing() ||
       !mTexture) {
-    return;
+    return Nothing();
   }
   mLastRemoteTextureId = Some(layers::RemoteTextureId::GetNext());
   mBridge->SwapChainPresent(mTexture->mId, *mLastRemoteTextureId,
@@ -213,6 +213,8 @@ void CanvasContext::SwapChainPresent() {
     mTexture->Destroy();
     mNewTextureRequested = true;
   }
+  return Some(layers::SurfaceDescriptorRemoteTexture(*mLastRemoteTextureId,
+                                                     *mRemoteTextureOwnerId));
 }
 
 bool CanvasContext::UpdateWebRenderCanvasData(
@@ -325,12 +327,15 @@ already_AddRefed<mozilla::gfx::SourceSurface> CanvasContext::GetSurfaceSnapshot(
 
 Maybe<layers::SurfaceDescriptor> CanvasContext::GetFrontBuffer(
     WebGLFramebufferJS*, const bool) {
+  // With canvas element, remote texture push callback pushes remote texture
+  // from RemoteTextureMap to WebRenderImageHost. With offscreen canvas, the
+  // push callback is not used. remote texture is notified from
+  // ShareableCanvasRenderer to WebRenderImageHost.
   if (mPendingSwapChainPresent) {
-    SwapChainPresent();
+    auto desc = SwapChainPresent();
     MOZ_ASSERT(!mPendingSwapChainPresent);
+    return desc;
   }
-  // With remote texture push callback, a new pushed remote texture is notifiled
-  // from RemoteTextureMap to WebRenderImageHost.
   return Nothing();
 }
 
