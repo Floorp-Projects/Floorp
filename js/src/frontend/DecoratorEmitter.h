@@ -44,6 +44,9 @@ class MOZ_STACK_CLASS DecoratorEmitter {
   [[nodiscard]] bool emitCreateAddInitializerFunction(
       FunctionNode* addInitializerFunction, TaggedParserAtomIndex initializers);
 
+  [[nodiscard]] bool emitCallExtraInitializers(
+      TaggedParserAtomIndex extraInitializers);
+
  private:
   [[nodiscard]] bool emitPropertyKey(ParseNode* key);
 
