@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 
+#include <cstdio>
 #include <string>
 
 #include "sandbox/win/src/ipc_tags.h"
@@ -78,8 +79,17 @@ NTSTATUS SignedPolicy::CreateSectionAction(
 
   // The only action supported is ASK_BROKER which means create the requested
   // section as specified.
-  if (ASK_BROKER != eval_result)
+  if (ASK_BROKER != eval_result) {
+#if defined(DEBUG)
+    fwprintf(stderr,
+             L"Prespawn CIG: SignedPolicy::CreateSectionAction failure "
+             L"(ASK_BROKER != eval_result) (pid=%u)\n",
+             client_info.process_id);
+#endif  // DEBUG
+    // (This should be an error NTSTATUS, not a boolean that converts to
+    // STATUS_SUCCESS, but let's keep the code as it is for now.)
     return false;
+  }
 
   HANDLE local_section_handle = nullptr;
   NTSTATUS status = NtCreateSection(&local_section_handle,
@@ -87,13 +97,26 @@ NTSTATUS SignedPolicy::CreateSectionAction(
                                         SECTION_MAP_READ | SECTION_MAP_EXECUTE,
                                     nullptr, 0, PAGE_EXECUTE, SEC_IMAGE,
                                     local_file_handle.Get());
-  if (!local_section_handle)
+  if (!local_section_handle) {
+#if defined(DEBUG)
+    fwprintf(stderr,
+             L"Prespawn CIG: SignedPolicy::CreateSectionAction failure "
+             L"(!local_section_handle) (pid=%u)\n",
+             client_info.process_id);
+#endif  // DEBUG
     return status;
+  }
 
   // Duplicate section handle back to the target.
   if (!::DuplicateHandle(::GetCurrentProcess(), local_section_handle,
                          client_info.process, target_section_handle, 0, false,
                          DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS)) {
+#if defined(DEBUG)
+    fwprintf(stderr,
+             L"Prespawn CIG: SignedPolicy::CreateSectionAction failure "
+             L"(!DuplicateHandle) (pid=%u)\n",
+             client_info.process_id);
+#endif  // DEBUG
     return STATUS_ACCESS_DENIED;
   }
   return status;
