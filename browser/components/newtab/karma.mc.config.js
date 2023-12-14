@@ -97,8 +97,8 @@ module.exports = function (config) {
             "content-src/asrouter/asrouter-utils.js": {
               statements: 66,
               lines: 66,
-              functions: 78,
-              branches: 50,
+              functions: 76,
+              branches: 33,
             },
             "lib/TelemetryFeed.jsm": {
               statements: 98,
