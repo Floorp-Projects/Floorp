@@ -70,7 +70,14 @@ bool DecoratorEmitter::emitApplyDecoratorsToElementDefinition(
       return false;
     }
 
+    // TODO: See Bug 1869000 to support addInitializer for methods.
+    if (!bce_->emit1(JSOp::Undefined)) {
+      //          [stack] VAL ADDINIT
+      return false;
+    }
+
     if (!emitCallDecoratorForElement(kind, key, isStatic, decorator)) {
+      //          [stack] RETVAL
       return false;
     }
 
@@ -201,6 +208,12 @@ bool DecoratorEmitter::emitApplyDecoratorsToFieldDefinition(
     ParseNode* decorator = *it;
     // Step 5.a. Let decorationState be the Record { [[Finished]]: false }.
     if (!emitDecorationState()) {
+      return false;
+    }
+
+    // TODO!!! For now, we push undefined for addInitializerFunction
+    if (!bce_->emit1(JSOp::Undefined)) {
+      //          [stack] VAL ADDINIT
       return false;
     }
 
@@ -383,6 +396,12 @@ bool DecoratorEmitter::emitApplyDecoratorsToAccessorDefinition(
       return false;
     }
 
+    // TODO!!! For now, we push undefined for addInitializerFunction
+    if (!bce_->emit1(JSOp::Undefined)) {
+      //          [stack] GETTER SETTER ARRAY INDEX VALUE ADDINIT
+      return false;
+    }
+
     // Step 5.j. Let newValue be ? Call(decorator, decoratorReceiver,
     //           « value, context »).
     if (!emitCallDecoratorForElement(Kind::Accessor, key, isStatic,
@@ -522,6 +541,12 @@ bool DecoratorEmitter::emitApplyDecoratorsToClassDefinition(
 
     // Step 1.d. Let context be CreateDecoratorContextObject(class, className,
     //           extraInitializers, decorationState).
+    // TODO: See Bug 1868221 for support for addInitializer for class
+    // decorators.
+    if (!bce_->emit1(JSOp::Undefined)) {
+      //          [stack] CTOR CALLEE THIS CTOR ADDINIT
+      return false;
+    }
     if (!emitCreateDecoratorContextObject(Kind::Class, key, false,
                                           decorator->pn_pos)) {
       //          [stack] CTOR CALLEE THIS CTOR context
@@ -838,14 +863,16 @@ bool DecoratorEmitter::emitCallDecoratorForElement(Kind kind, ParseNode* key,
   // to the decorator to be on top of the stack. For methods, getters and
   // setters this is the method itself. For accessors it is an object
   // containing the getter and setter associated with the accessor.
-  //          [stack] VAL?
+  // This method also expects the addInitializerFunction to be present on
+  // the top of the stack.
+  //          [stack] VAL? ADDINIT
   // Prepare to call decorator
   CallOrNewEmitter cone(bce_, JSOp::Call,
                         CallOrNewEmitter::ArgumentsKind::Other,
                         ValueUsage::WantValue);
 
   if (!bce_->emitCalleeAndThis(decorator, nullptr, cone)) {
-    //          [stack] VAL? CALLEE THIS
+    //          [stack] VAL? ADDINIT CALLEE THIS
     return false;
   }
 
@@ -856,7 +883,7 @@ bool DecoratorEmitter::emitCallDecoratorForElement(Kind kind, ParseNode* key,
   if (kind == Kind::Field) {
     // Step 5.c. Let value be undefined.
     if (!bce_->emit1(JSOp::Undefined)) {
-      //          [stack] CALLEE THIS undefined
+      //          [stack] ADDINIT CALLEE THIS undefined
       return false;
     }
   } else if (kind == Kind::Getter || kind == Kind::Method ||
@@ -866,8 +893,8 @@ bool DecoratorEmitter::emitCallDecoratorForElement(Kind kind, ParseNode* key,
     // Step 5.f. Else if kind is setter, set value to elementRecord.[[Set]].
     // The DecoratorEmitter expects the method to already be on the stack.
     // We dup the value here so we can use it as an argument to the decorator.
-    if (!bce_->emitDupAt(2)) {
-      //          [stack] VAL CALLEE THIS VAL
+    if (!bce_->emitDupAt(3)) {
+      //          [stack] VAL ADDINIT CALLEE THIS VAL
       return false;
     }
   } else {
@@ -876,13 +903,17 @@ bool DecoratorEmitter::emitCallDecoratorForElement(Kind kind, ParseNode* key,
     // For accessor decorators, we've already created the value object prior
     // to calling this method.
     MOZ_ASSERT(kind == Kind::Accessor);
-    if (!bce_->emitPickN(2)) {
-      //          [stack] CALLEE THIS VAL
+    if (!bce_->emitPickN(3)) {
+      //          [stack] ADDINIT CALLEE THIS VAL
       return false;
     }
   }
   // Step 5.b. Let context be CreateDecoratorContextObject(kind, key,
   //           extraInitializers, decorationState, isStatic).
+  if (!bce_->emitPickN(3)) {
+    //          [stack] VAL? CALLEE THIS VAL ADDINIT
+    return false;
+  }
   if (!emitCreateDecoratorContextObject(kind, key, isStatic,
                                         decorator->pn_pos)) {
     //          [stack] VAL? CALLEE THIS VAL context
@@ -1065,11 +1096,14 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
                                                         ParseNode* key,
                                                         bool isStatic,
                                                         TokenPos pos) {
+  // We expect the addInitializerFunction to already be on the stack.
+  //          [stack] ADDINIT
+
   // Step 1. Let contextObj be OrdinaryObjectCreate(%Object.prototype%).
   ObjectEmitter oe(bce_);
   size_t propertyCount = kind == Kind::Class ? 3 : 6;
   if (!oe.emitObject(propertyCount)) {
-    //          [stack] context
+    //          [stack] ADDINIT context
     return false;
   }
   if (!oe.prepareForPropValue(pos.begin, PropertyEmitter::Kind::Prototype)) {
@@ -1109,14 +1143,14 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
       break;
   }
   if (!bce_->emitStringOp(JSOp::String, kindStr)) {
-    //          [stack] context kindStr
+    //          [stack] ADDINIT context kindStr
     return false;
   }
 
   // Step 8. Perform ! CreateDataPropertyOrThrow(contextObj, "kind", kindStr).
   if (!oe.emitInit(frontend::AccessorType::None,
                    frontend::TaggedParserAtomIndex::WellKnown::kind())) {
-    //          [stack] context
+    //          [stack] ADDINIT context
     return false;
   }
   // Step 9. If kind is not class, then
@@ -1133,7 +1167,7 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
     }
     if (!oe.emitInit(frontend::AccessorType::None,
                      frontend::TaggedParserAtomIndex::WellKnown::access())) {
-      //          [stack] context
+      //          [stack] ADDINIT context
       return false;
     }
     // Step 9.b. If isStatic is present, perform
@@ -1142,12 +1176,12 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
       return false;
     }
     if (!bce_->emit1(isStatic ? JSOp::True : JSOp::False)) {
-      //          [stack] context isStatic
+      //          [stack] ADDINIT context isStatic
       return false;
     }
     if (!oe.emitInit(frontend::AccessorType::None,
                      frontend::TaggedParserAtomIndex::WellKnown::static_())) {
-      //          [stack] context
+      //          [stack] ADDINIT context
       return false;
     }
     // Step 9.c. If name is a Private Name, then
@@ -1160,12 +1194,12 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
     }
     if (!bce_->emit1(key->isKind(ParseNodeKind::PrivateName) ? JSOp::True
                                                              : JSOp::False)) {
-      //          [stack] context private
+      //          [stack] ADDINIT context private
       return false;
     }
     if (!oe.emitInit(frontend::AccessorType::None,
                      frontend::TaggedParserAtomIndex::WellKnown::private_())) {
-      //          [stack] context
+      //          [stack] ADDINIT context
       return false;
     }
     // Step 9.c.ii. Perform ! CreateDataPropertyOrThrow(contextObj,
@@ -1187,7 +1221,7 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
     }
     if (!oe.emitInit(frontend::AccessorType::None,
                      frontend::TaggedParserAtomIndex::WellKnown::name())) {
-      //          [stack] context
+      //          [stack] ADDINIT context
       return false;
     }
   } else {
@@ -1207,7 +1241,7 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
     }
     if (!oe.emitInit(frontend::AccessorType::None,
                      frontend::TaggedParserAtomIndex::WellKnown::name())) {
-      //          [stack] context
+      //          [stack] ADDINIT context
       return false;
     }
   }
@@ -1217,8 +1251,7 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
     return false;
   }
 
-  // TODO: For now, we'll pass undefined as the addInitializer function
-  if (!bce_->emit1(JSOp::Undefined)) {
+  if (!bce_->emitPickN(1)) {
     //          [stack] context ADDINIT
     return false;
   }
