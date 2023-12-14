@@ -95,6 +95,8 @@ for f in SOURCES:
     elif f.endswith('avx2.c'):
         SOURCES[f].flags += ['-mavx2']
 
+SOURCES += [ 'build_config.c' ]
+
 # Suppress warnings in third-party code.
 CFLAGS += [
     '-Wno-sign-compare',
