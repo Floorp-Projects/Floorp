@@ -168,6 +168,8 @@ struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper {
   int (*av_dict_set)(AVDictionary** pm, const char* key, const char* value,
                      int flags);
   void (*av_dict_free)(AVDictionary** m);
+  int (*av_opt_set)(void* obj, const char* name, const char* val,
+                    int search_flags);
 
   // libavutil v55 and later only
   AVFrame* (*av_frame_alloc)();
