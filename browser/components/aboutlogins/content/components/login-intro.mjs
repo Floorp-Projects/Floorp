@@ -38,9 +38,7 @@ export default class LoginIntro extends HTMLElement {
   }
 
   updateState(syncState) {
-    let l10nId = syncState.loggedIn
-      ? "about-logins-login-intro-heading-logged-in"
-      : "about-logins-login-intro-heading-logged-out2";
+    let l10nId = "about-logins-login-intro-heading-message";
     document.l10n.setAttributes(
       this.shadowRoot.querySelector(".heading"),
       l10nId
