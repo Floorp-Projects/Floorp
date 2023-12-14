@@ -221,6 +221,10 @@ void ICScript::trace(JSTracer* trc) {
     ICEntry& ent = icEntry(i);
     ent.trace(trc);
   }
+
+  for (gc::AllocSite* site : allocSites_) {
+    site->trace(trc);
+  }
 }
 
 bool ICScript::traceWeak(JSTracer* trc) {
@@ -771,10 +775,23 @@ InliningRoot* JitScript::getOrCreateInliningRoot(JSContext* cx,
   return inliningRoot_.get();
 }
 
-gc::AllocSite* ICScript::createAllocSite(JSScript* outerScript) {
+gc::AllocSite* ICScript::getOrCreateAllocSite(JSScript* outerScript,
+                                              uint32_t pcOffset) {
   // The script must be the outer script.
   MOZ_ASSERT(outerScript->jitScript()->icScript() == this ||
              (inliningRoot() && inliningRoot()->owningScript() == outerScript));
+
+  // The pcOffset must be for this (maybe inlined) script.
+  MOZ_ASSERT(pcOffset < bytecodeSize());
+
+  for (gc::AllocSite* site : allocSites_) {
+    if (site->pcOffset() == pcOffset) {
+      MOZ_ASSERT(site->isNormal());
+      MOZ_ASSERT(site->script() == outerScript);
+      MOZ_ASSERT(site->traceKind() == JS::TraceKind::Object);
+      return site;
+    }
+  }
 
   Nursery& nursery = outerScript->runtimeFromMainThread()->gc.nursery();
   if (!nursery.canCreateAllocSite()) {
@@ -788,7 +805,7 @@ gc::AllocSite* ICScript::createAllocSite(JSScript* outerScript) {
   }
 
   auto* site = allocSitesSpace_.new_<gc::AllocSite>(
-      outerScript->zone(), outerScript, JS::TraceKind::Object);
+      outerScript->zone(), outerScript, pcOffset, JS::TraceKind::Object);
   if (!site) {
     return nullptr;
   }
