@@ -7,7 +7,6 @@ package mozilla.components.feature.fxsuggest
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import mozilla.appservices.suggest.SuggestApiException
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -25,12 +24,12 @@ internal class FxSuggestIngestionWorker(
     override suspend fun doWork(): Result {
         logger.info("Ingesting new suggestions")
         val storage = GlobalFxSuggestDependencyProvider.requireStorage()
-        return try {
-            storage.ingest()
+        val success = storage.ingest()
+        return if (success) {
             logger.info("Successfully ingested new suggestions")
             Result.success()
-        } catch (suggestError: SuggestApiException) {
-            logger.error("Failed to ingest new suggestions", suggestError)
+        } else {
+            logger.error("Failed to ingest new suggestions")
             Result.retry()
         }
     }

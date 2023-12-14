@@ -8,21 +8,17 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.ListenableWorker
 import androidx.work.await
 import androidx.work.testing.TestListenableWorkerBuilder
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
-import mozilla.appservices.suggest.SuggestApiException
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
-import java.io.IOException
 
 @RunWith(AndroidJUnit4::class)
 class FxSuggestIngestionWorkerTest {
@@ -41,7 +37,7 @@ class FxSuggestIngestionWorkerTest {
 
     @Test
     fun workSucceeds() = runTest {
-        whenever(storage.ingest(any())).thenReturn(Unit)
+        whenever(storage.ingest(any())).thenReturn(true)
 
         val worker = TestListenableWorkerBuilder<FxSuggestIngestionWorker>(testContext).build()
 
@@ -53,9 +49,7 @@ class FxSuggestIngestionWorkerTest {
 
     @Test
     fun workShouldRetry() = runTest {
-        whenever(storage.ingest(any())).then {
-            throw SuggestApiException.Other("Mercury in retrograde")
-        }
+        whenever(storage.ingest(any())).thenReturn(false)
 
         val worker = TestListenableWorkerBuilder<FxSuggestIngestionWorker>(testContext).build()
 
@@ -63,21 +57,5 @@ class FxSuggestIngestionWorkerTest {
 
         verify(storage).ingest(any())
         assertEquals(ListenableWorker.Result.retry(), result)
-    }
-
-    @Test
-    fun workShouldRethrow() = runTest {
-        whenever(storage.ingest(any())).then {
-            throw IOException()
-        }
-
-        val worker = TestListenableWorkerBuilder<FxSuggestIngestionWorker>(testContext).build()
-
-        assertThrows(IOException::class.java) {
-            runBlocking {
-                worker.startWork().await()
-            }
-        }
-        verify(storage).ingest(any())
     }
 }
