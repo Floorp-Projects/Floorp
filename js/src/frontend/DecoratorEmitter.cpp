@@ -8,7 +8,9 @@
 
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/CallOrNewEmitter.h"
+#include "frontend/FunctionEmitter.h"
 #include "frontend/IfEmitter.h"
+#include "frontend/LexicalScopeEmitter.h"
 #include "frontend/NameAnalysisTypes.h"
 #include "frontend/ObjectEmitter.h"
 #include "frontend/ParseNode.h"
@@ -917,13 +919,146 @@ bool DecoratorEmitter::emitCheckIsUndefined() {
   //          [stack] VAL ISUNDEFINED
 }
 
-bool DecoratorEmitter::emitCreateAddInitializerFunction() {
-  // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1800724.
-  ObjectEmitter oe(bce_);
-  if (!oe.emitObject(0)) {
+bool DecoratorEmitter::emitCreateAddInitializerFunction(
+    FunctionNode* addInitializerFunction, TaggedParserAtomIndex initializers) {
+  // This synthesizes a function corresponding to this JavaScript code:
+  // function(initializer) {
+  //   if (IsCallable(initializer)) {
+  //     initializers[initializers.length++] = initializer;
+  //   } else {
+  //     throw DecoratorInvalidReturnType;
+  //   }
+  // }
+  MOZ_ASSERT(addInitializerFunction);
+  // TODO: Add support for static and class extra initializers, see bug 1868220
+  // and bug 1868221.
+  MOZ_ASSERT(
+      initializers ==
+      TaggedParserAtomIndex::WellKnown::dot_instanceExtraInitializers_());
+
+  FunctionEmitter fe(bce_, addInitializerFunction->funbox(),
+                     FunctionSyntaxKind::Statement,
+                     FunctionEmitter::IsHoisted::No);
+  if (!fe.prepareForNonLazy()) {
     return false;
   }
-  return oe.emitEnd();
+
+  BytecodeEmitter bce2(bce_, addInitializerFunction->funbox());
+  if (!bce2.init()) {
+    return false;
+  }
+
+  FunctionScriptEmitter fse(&bce2, addInitializerFunction->funbox(),
+                            mozilla::Nothing(), mozilla::Nothing());
+  if (!fse.prepareForParameters()) {
+    return false;
+  }
+
+  if (!bce2.emitFunctionFormalParameters(addInitializerFunction->body())) {
+    return false;
+  }
+
+  if (!fse.prepareForBody()) {
+    return false;
+  }
+
+  LexicalScopeNode* lexicalScope = addInitializerFunction->body()->body();
+  LexicalScopeEmitter lse(&bce2);
+  if (lexicalScope->isEmptyScope()) {
+    if (!lse.emitEmptyScope()) {
+      return false;
+    }
+  } else {
+    if (!lse.emitScope(lexicalScope->kind(), lexicalScope->scopeBindings())) {
+      return false;
+    }
+  }
+
+  NameLocation loc =
+      bce2.lookupName(TaggedParserAtomIndex::WellKnown::initializer());
+  MOZ_ASSERT(loc.kind() == NameLocation::Kind::ArgumentSlot);
+
+  if (!bce2.emitArgOp(JSOp::GetArg, loc.argumentSlot())) {
+    //          [stack] INITIALIZER
+    return false;
+  }
+
+  if (!bce2.emitCheckIsCallable()) {
+    //          [stack] INITIALIZER ISCALLABLE
+    return false;
+  }
+
+  InternalIfEmitter ifCallable(&bce2);
+  if (!ifCallable.emitThenElse()) {
+    //          [stack] INITIALIZER
+    return false;
+  }
+
+  loc = bce2.lookupName(initializers);
+  MOZ_ASSERT(loc.kind() == NameLocation::Kind::EnvironmentCoordinate);
+  if (!bce2.emitEnvCoordOp(JSOp::GetAliasedVar, loc.environmentCoordinate())) {
+    //          [stack] INITIALIZER ARRAY
+    return false;
+  }
+  if (!bce2.emitEnvCoordOp(JSOp::CheckAliasedLexical,
+                           loc.environmentCoordinate())) {
+    //          [stack] INITIALIZER ARRAY
+    return false;
+  }
+  if (!bce2.emit1(JSOp::Dup)) {
+    //          [stack] INITIALIZER ARRAY ARRAY
+    return false;
+  }
+  if (!bce2.emitAtomOp(JSOp::GetProp,
+                       TaggedParserAtomIndex::WellKnown::length())) {
+    //          [stack] INITIALIZER ARRAY LENGTH
+    return false;
+  }
+  if (!bce2.emitPickN(2)) {
+    //          [stack] ARRAY LENGTH INITIALIZER
+    return false;
+  }
+  if (!bce2.emit1(JSOp::InitElemInc)) {
+    //          [stack] ARRAY LENGTH
+    return false;
+  }
+  if (!bce2.emitPopN(2)) {
+    //          [stack]
+    return false;
+  }
+
+  if (!ifCallable.emitElse()) {
+    //          [stack] INITIALIZER
+    return false;
+  }
+
+  if (!bce2.emitPopN(1)) {
+    //          [stack]
+    return false;
+  }
+  if (!bce2.emit2(JSOp::ThrowMsg,
+                  uint8_t(ThrowMsgKind::DecoratorInvalidReturnType))) {
+    return false;
+  }
+
+  if (!ifCallable.emitEnd()) {
+    return false;
+  }
+
+  if (!lse.emitEnd()) {
+    return false;
+  }
+
+  if (!fse.emitEndBody()) {
+    return false;
+  }
+
+  if (!fse.intoStencil()) {
+    return false;
+  }
+
+  return fe.emitNonLazyEnd();
+  //          [stack] ADDINIT
 }
 
 bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
@@ -1081,8 +1216,10 @@ bool DecoratorEmitter::emitCreateDecoratorContextObject(Kind kind,
   if (!oe.prepareForPropValue(pos.begin, PropertyEmitter::Kind::Prototype)) {
     return false;
   }
-  if (!emitCreateAddInitializerFunction()) {
-    //          [stack] context addInitializer
+
+  // TODO: For now, we'll pass undefined as the addInitializer function
+  if (!bce_->emit1(JSOp::Undefined)) {
+    //          [stack] context ADDINIT
     return false;
   }
   // Step 12. Perform ! CreateDataPropertyOrThrow(contextObj, "addInitializer",
