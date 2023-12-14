@@ -102,7 +102,7 @@ bool DecoratorEmitter::emitApplyDecoratorsToElementDefinition(
     }
 
     // Step 5.l.i. If IsCallable(newValue) is true, then
-    if (!emitCheckIsCallable()) {
+    if (!bce_->emitCheckIsCallable()) {
       //              [stack] VAL RETVAL ISCALLABLE_RESULT
       return false;
     }
@@ -238,7 +238,7 @@ bool DecoratorEmitter::emitApplyDecoratorsToFieldDefinition(
     }
 
     // Step 5.l.i. If IsCallable(newValue) is true, then
-    if (!emitCheckIsCallable()) {
+    if (!bce_->emitCheckIsCallable()) {
       //              [stack] ARRAY INDEX RETVAL ISCALLABLE_RESULT
       return false;
     }
@@ -562,7 +562,7 @@ bool DecoratorEmitter::emitApplyDecoratorsToClassDefinition(
 
     // Step 1.g. If IsCallable(newDef) is true, then
     // Step 1.g.i. Set classDef to newDef.
-    if (!emitCheckIsCallable()) {
+    if (!bce_->emitCheckIsCallable()) {
       //              [stack] CTOR NEWCTOR ISCALLABLE_RESULT
       return false;
     }
@@ -917,27 +917,6 @@ bool DecoratorEmitter::emitCheckIsUndefined() {
   //          [stack] VAL ISUNDEFINED
 }
 
-bool DecoratorEmitter::emitCheckIsCallable() {
-  // This emits code to check if the value at the top of the stack is
-  // callable. The value is left on the stack.
-  //            [stack] VAL
-  if (!bce_->emitAtomOp(JSOp::GetIntrinsic,
-                        TaggedParserAtomIndex::WellKnown::IsCallable())) {
-    //            [stack] VAL ISCALLABLE
-    return false;
-  }
-  if (!bce_->emit1(JSOp::Undefined)) {
-    //            [stack] VAL ISCALLABLE UNDEFINED
-    return false;
-  }
-  if (!bce_->emitDupAt(2)) {
-    //            [stack] VAL ISCALLABLE UNDEFINED VAL
-    return false;
-  }
-  return bce_->emitCall(JSOp::Call, 1);
-  //              [stack] VAL ISCALLABLE_RESULT
-}
-
 bool DecoratorEmitter::emitCreateAddInitializerFunction() {
   // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1800724.
   ObjectEmitter oe(bce_);
@@ -1165,7 +1144,7 @@ bool DecoratorEmitter::emitHandleNewValueField(TaggedParserAtomIndex atom,
   if (!ifCallable.emitElseIf(mozilla::Nothing())) {
     return false;
   }
-  if (!emitCheckIsCallable()) {
+  if (!bce_->emitCheckIsCallable()) {
     //          [stack] GETTER SETTER ARRAY INDEX RETVAL
     //                  NEW_VALUE ISCALLABLE_RESULT
     return false;

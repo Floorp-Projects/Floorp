@@ -56,8 +56,6 @@ class MOZ_STACK_CLASS DecoratorEmitter {
 
   [[nodiscard]] bool emitCheckIsUndefined();
 
-  [[nodiscard]] bool emitCheckIsCallable();
-
   [[nodiscard]] bool emitCreateAddInitializerFunction();
 
   [[nodiscard]] bool emitCreateDecoratorContextObject(Kind kind, ParseNode* key,
