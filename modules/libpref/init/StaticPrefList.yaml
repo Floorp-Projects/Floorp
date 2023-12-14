@@ -8661,7 +8661,7 @@
 # Enables support for different CSS page sizes on each page when printing.
 - name: layout.css.allow-mixed-page-sizes
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Enables support for @margin rules.
