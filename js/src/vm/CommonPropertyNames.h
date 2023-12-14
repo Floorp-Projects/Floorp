@@ -151,6 +151,8 @@
   MACRO_(dot_fieldKeys_, ".fieldKeys")                                         \
   MACRO_(dot_generator_, ".generator")                                         \
   MACRO_(dot_initializers_, ".initializers")                                   \
+  IF_DECORATORS(                                                               \
+      MACRO_(dot_instanceExtraInitializers_, ".instanceExtraInitializers"))    \
   MACRO_(dot_newTarget_, ".newTarget")                                         \
   MACRO_(dot_privateBrand_, ".privateBrand")                                   \
   MACRO_(dot_staticFieldKeys_, ".staticFieldKeys")                             \
@@ -285,6 +287,7 @@
   MACRO_(InitializePluralRules, "InitializePluralRules")                       \
   MACRO_(InitializeRelativeTimeFormat, "InitializeRelativeTimeFormat")         \
   MACRO_(InitializeSegmenter, "InitializeSegmenter")                           \
+  IF_DECORATORS(MACRO_(initializer, "initializer"))                            \
   MACRO_(inLeapYear, "inLeapYear")                                             \
   MACRO_(innermost, "innermost")                                               \
   MACRO_(inNursery, "inNursery")                                               \
