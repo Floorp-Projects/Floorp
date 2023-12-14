@@ -174,7 +174,18 @@ export class ViewPage extends ViewPageContent {
     }
     if (tabLists.length && cards.length) {
       cards.forEach(cardEl => {
-        cardEl.visible = !this.paused;
+        if (cardEl.visible !== !this.paused) {
+          cardEl.visible = !this.paused;
+        } else if (
+          cardEl.isExpanded &&
+          tabLists[0].updatesPaused !== this.paused
+        ) {
+          // If card is already visible and expanded but tab-list has updatesPaused,
+          // update the tab-list updatesPaused prop from here instead of card-container
+          tabLists.forEach(tabList => {
+            tabList.updatesPaused = this.paused;
+          });
+        }
       });
     }
   }
