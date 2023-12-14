@@ -64,7 +64,7 @@ add_task(async function test_no_logins_class() {
         content.document.l10n.getAttributes(
           loginIntro.shadowRoot.querySelector(".heading")
         ).id,
-        "about-logins-login-intro-heading-logged-out2",
+        "about-logins-login-intro-heading-message",
         "The default message should be the non-logged-in message"
       );
       Assert.ok(
@@ -80,7 +80,7 @@ add_task(async function test_no_logins_class() {
         content.document.l10n.getAttributes(
           loginIntro.shadowRoot.querySelector(".heading")
         ).id,
-        "about-logins-login-intro-heading-logged-in",
+        "about-logins-login-intro-heading-message",
         "When logged in the message should update"
       );
 

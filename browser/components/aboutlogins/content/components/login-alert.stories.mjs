@@ -19,7 +19,7 @@ export const BasicLoginAlert = ({ variant, icon }) => {
     <login-alert
       .variant=${variant}
       .icon=${icon}
-      titleId="about-logins-login-intro-heading-logged-in"
+      titleId="about-logins-login-intro-heading-message"
     >
       <a slot="action"> Some action </a>
       <div slot="content">
