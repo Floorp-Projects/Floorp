@@ -2136,10 +2136,6 @@ class JSScript : public js::BaseScript {
   // invariants of debuggee compartments, scripts, and frames.
   inline bool isDebuggee() const;
 
-  // Create an allocation site associated with this script/JitScript to track
-  // nursery allocations.
-  js::gc::AllocSite* createAllocSite();
-
   // A helper class to prevent relazification of the given function's script
   // while it's holding on to it.  This class automatically roots the script.
   class AutoDelazify;

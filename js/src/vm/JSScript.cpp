@@ -3247,10 +3247,6 @@ void JSScript::resetWarmUpCounterToDelayIonCompilation() {
   }
 }
 
-gc::AllocSite* JSScript::createAllocSite() {
-  return jitScript()->createAllocSite(this);
-}
-
 #if defined(DEBUG) || defined(JS_JITSPEW)
 
 void JSScript::dump(JSContext* cx) {

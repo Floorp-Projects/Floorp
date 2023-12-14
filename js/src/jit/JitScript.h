@@ -124,6 +124,8 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
         depth_(depth),
         bytecodeSize_(bytecodeSize) {}
 
+  ~ICScript();
+
   bool isInlined() const { return depth_ > 0; }
 
   void initICEntries(JSContext* cx, JSScript* script);
@@ -190,6 +192,10 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
   void setActive() { active_ = true; }
   void resetActive() { active_ = false; }
 
+  gc::AllocSite* createAllocSite(JSScript* outerScript);
+
+  void prepareForDestruction(Zone* zone);
+
   void trace(JSTracer* trc);
   bool traceWeak(JSTracer* trc);
 
@@ -213,6 +219,11 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
 
   // ICScripts that have been inlined into this ICScript.
   js::UniquePtr<Vector<CallSite>> inlinedChildren_;
+
+  // List of allocation sites referred to by ICs in this script.
+  static constexpr size_t AllocSiteChunkSize = 256;
+  LifoAlloc allocSitesSpace_{AllocSiteChunkSize};
+  Vector<gc::AllocSite*, 0, SystemAllocPolicy> allocSites_;
 
   // Number of times this copy of the script has been called or has had
   // backedges taken.  Reset if the script's JIT code is forcibly discarded.
@@ -349,11 +360,6 @@ class alignas(uintptr_t) JitScript final
   bool hasPurgedStubs_ = false;
 #endif
 
-  // List of allocation sites referred to by ICs in this script.
-  static constexpr size_t AllocSiteChunkSize = 256;
-  LifoAlloc allocSitesSpace_{AllocSiteChunkSize};
-  Vector<gc::AllocSite*, 0, SystemAllocPolicy> allocSites_;
-
   // Value of the warmup counter when the last IC stub was attached,
   // used for Ion hints.
   uint32_t warmUpCountAtLastICStub_ = 0;
@@ -416,14 +422,7 @@ class alignas(uintptr_t) JitScript final
   void prepareForDestruction(Zone* zone);
 
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t* data,
-                              size_t* allocSites) const {
-    *data += mallocSizeOf(this);
-
-    // |data| already includes the LifoAlloc and Vector, so use
-    // sizeOfExcludingThis.
-    *allocSites += allocSitesSpace_.sizeOfExcludingThis(mallocSizeOf);
-    *allocSites += allocSites_.sizeOfExcludingThis(mallocSizeOf);
-  }
+                              size_t* allocSites) const;
 
   ICEntry& icEntry(size_t index) { return icScript_.icEntry(index); }
 
@@ -453,8 +452,6 @@ class alignas(uintptr_t) JitScript final
   EnvironmentObject* templateEnvironment() const { return templateEnv_.ref(); }
 
   bool usesEnvironmentChain() const { return *usesEnvironmentChain_; }
-
-  gc::AllocSite* createAllocSite(JSScript* script);
 
   bool resetAllocSites(bool resetNurserySites, bool resetPretenuredSites);
 

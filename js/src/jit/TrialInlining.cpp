@@ -967,8 +967,15 @@ void InliningRoot::purgeInactiveICScripts() {
 
   MOZ_ASSERT(totalBytecodeSize_ == totalSize);
 
-  inlinedScripts_.eraseIf(
-      [](auto& inlinedScript) { return !inlinedScript->active(); });
+  Zone* zone = owningScript_->zone();
+
+  inlinedScripts_.eraseIf([zone](auto& inlinedScript) {
+    if (inlinedScript->active()) {
+      return false;
+    }
+    inlinedScript->prepareForDestruction(zone);
+    return true;
+  });
 }
 
 }  // namespace jit
