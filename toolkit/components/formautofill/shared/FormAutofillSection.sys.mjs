@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { FormAutofillUtils } from "resource://gre/modules/shared/FormAutofillUtils.sys.mjs";
 import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
 
@@ -14,16 +13,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://gre/modules/shared/FormAutofillNameUtils.sys.mjs",
   LabelUtils: "resource://gre/modules/shared/LabelUtils.sys.mjs",
 });
-
-ChromeUtils.defineLazyGetter(
-  lazy,
-  "l10n",
-  () =>
-    new Localization(
-      ["toolkit/formautofill/formautofill.ftl", "branding/brand.ftl"],
-      true
-    )
-);
 
 const { FIELD_STATES } = FormAutofillUtils;
 
@@ -42,24 +31,6 @@ export class FormAutofillSection {
 
     this.handler = handler;
     this.filledRecordGUID = null;
-
-    ChromeUtils.defineLazyGetter(this, "reauthPasswordPromptMessage", () => {
-      // The string name for Mac is changed because the value needed updating.
-      const platform = AppConstants.platform;
-      let messageID;
-
-      switch (platform) {
-        case "win":
-          messageID = "autofill-use-payment-method-os-prompt-windows";
-          break;
-        case "macosx":
-          messageID = "autofill-use-payment-method-os-prompt-macos";
-          break;
-        default:
-          messageID = "autofill-use-payment-method-os-prompt-other";
-      }
-      return lazy.l10n.formatValueSync(messageID);
-    });
 
     ChromeUtils.defineLazyGetter(this, "log", () =>
       FormAutofill.defineLogGetter(this, "FormAutofillHandler")
@@ -1295,9 +1266,14 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
   async prepareFillingProfile(profile) {
     // Prompt the OS login dialog to get the decrypted credit card number.
     if (profile["cc-number-encrypted"]) {
+      const promptMessage = FormAutofillUtils.reauthOSPromptMessage(
+        "autofill-use-payment-method-os-prompt-macos",
+        "autofill-use-payment-method-os-prompt-windows",
+        "autofill-use-payment-method-os-prompt-other"
+      );
       let decrypted = await this._decrypt(
         profile["cc-number-encrypted"],
-        this.reauthPasswordPromptMessage
+        promptMessage
       );
 
       if (!decrypted) {
