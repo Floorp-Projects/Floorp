@@ -309,6 +309,7 @@ class CustomTabsTest {
             verifyEnhancedTrackingProtectionSheetStatus(status = "ON", state = true)
         }.toggleEnhancedTrackingProtectionFromSheet {
             verifyEnhancedTrackingProtectionSheetStatus(status = "OFF", state = false)
+        }.closeEnhancedTrackingProtectionSheet {
         }
 
         openAppFromExternalLink(customTabPage.url.toString())
