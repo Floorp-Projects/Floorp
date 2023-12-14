@@ -747,13 +747,13 @@ export class SearchSuggestionController {
   #newSearchSuggestionEntry(suggestion, richSuggestionData, trending) {
     if (richSuggestionData && (!trending || this.richSuggestionsEnabled)) {
       // We have valid rich suggestions.
-      let args = {
-        matchPrefix: richSuggestionData?.mp,
-        tail: richSuggestionData?.t,
-        trending,
-      };
+      let args = { trending };
 
-      if (this.richSuggestionsEnabled) {
+      // RichSuggestions come with icon and tail data, we only want one or the other
+      if (!richSuggestionData?.i) {
+        args.matchPrefix = richSuggestionData?.mp;
+        args.tail = richSuggestionData?.t;
+      } else if (this.richSuggestionsEnabled) {
         args.icon = richSuggestionData?.i;
         args.description = richSuggestionData?.a;
       }

@@ -325,6 +325,43 @@ async function addTestTailSuggestionsEngine(suggestionsFn = null) {
   return engine;
 }
 
+/**
+ * Creates a function that can be provided to the new engine
+ * utility function to mimic a search engine that returns
+ * rich suggestions.
+ *
+ * @param {string} searchStr
+ *        The string being searched for.
+ *
+ * @returns {object}
+ *        A JSON object mimicing the data format returned by
+ *        a search engine.
+ */
+function defaultRichSuggestionsFn(searchStr) {
+  let suffixes = ["toronto", "tunisia", "tacoma", "taipei"];
+  return [
+    "what time is it in t",
+    suffixes.map(s => searchStr + s.slice(1)),
+    [],
+    {
+      "google:irrelevantparameter": [],
+      "google:suggestdetail": suffixes.map((suffix, i) => {
+        // Set every other suggestion as a rich suggestion so we can
+        // test how they are handled and ordered when interleaved.
+        if (i % 2) {
+          return {};
+        }
+        return {
+          a: "description",
+          dc: "#FFFFFF",
+          i: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==",
+          t: "Title",
+        };
+      }),
+    },
+  ];
+}
+
 async function addOpenPages(uri, count = 1, userContextId = 0) {
   for (let i = 0; i < count; i++) {
     await UrlbarProviderOpenTabs.registerOpenTab(

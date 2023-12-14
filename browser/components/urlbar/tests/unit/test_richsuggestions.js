@@ -2,18 +2,16 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests that rich suggestion results are ordered in the
- * same order they were returned from the API.
+ * Tests that rich suggestion results results are shown without
+ * rich data if richSuggestions are disabled.
  */
 
 const SUGGEST_ENABLED_PREF = "browser.search.suggest.enabled";
 const RICH_SUGGESTIONS_PREF = "browser.urlbar.richSuggestions.featureGate";
-
 const QUICKACTIONS_URLBAR_PREF = "quickactions.enabled";
 
 add_setup(async function () {
   let engine = await addTestTailSuggestionsEngine(defaultRichSuggestionsFn);
-
   // Install the test engine.
   let oldDefaultEngine = await Services.search.getDefault();
   registerCleanupFunction(async () => {
@@ -32,17 +30,13 @@ add_setup(async function () {
 });
 
 /**
- * Tests that non-tail suggestion providers still return results correctly when
- * the tailSuggestions pref is enabled.
+ * Test that suggestions with rich data are still shown
  */
-add_task(async function test_richsuggestions_order() {
+add_task(async function test_richsuggestions_disabled() {
+  Services.prefs.setBoolPref(RICH_SUGGESTIONS_PREF, false);
+
   const query = "what time is it in t";
   let context = createContext(query, { isPrivate: false });
-
-  let defaultRichResult = {
-    engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
-    isRichSuggestion: true,
-  };
 
   await check_results({
     context,
@@ -51,22 +45,18 @@ add_task(async function test_richsuggestions_order() {
         engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
         heuristic: true,
       }),
-      makeSearchResult(
-        context,
-        Object.assign(defaultRichResult, {
-          suggestion: query + "oronto",
-        })
-      ),
+      makeSearchResult(context, {
+        engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
+        suggestion: query + "oronto",
+      }),
       makeSearchResult(context, {
         engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
         suggestion: query + "unisia",
       }),
-      makeSearchResult(
-        context,
-        Object.assign(defaultRichResult, {
-          suggestion: query + "acoma",
-        })
-      ),
+      makeSearchResult(context, {
+        engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
+        suggestion: query + "acoma",
+      }),
       makeSearchResult(context, {
         engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
         suggestion: query + "aipei",

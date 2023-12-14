@@ -160,6 +160,8 @@ skip-if = ["!sync"]
 
 ["test_resultGroups.js"]
 
+["test_richsuggestions.js"]
+
 ["test_richsuggestions_order.js"]
 
 ["test_search_engine_restyle.js"]
