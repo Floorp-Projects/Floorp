@@ -46,6 +46,7 @@ add_task(async function test() {
 
       rbs.setURL("");
       rbs.chooseReason("choose");
+      window.ownerGlobal.document.activeElement?.blur();
       await clickAndAwait(sendButton, "focus", URLInput);
       rbs.isURLInvalidMessageShown();
       rbs.isReasonNeededMessageShown();
