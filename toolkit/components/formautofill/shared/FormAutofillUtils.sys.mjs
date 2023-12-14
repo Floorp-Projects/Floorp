@@ -4,6 +4,7 @@
 
 import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -12,6 +13,15 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://gre/modules/shared/FormAutofillNameUtils.sys.mjs",
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
 });
+ChromeUtils.defineLazyGetter(
+  lazy,
+  "l10n",
+  () =>
+    new Localization(
+      ["toolkit/formautofill/formautofill.ftl", "branding/brand.ftl"],
+      true
+    )
+);
 
 export let FormAutofillUtils;
 
@@ -1186,6 +1196,35 @@ FormAutofillUtils = {
       ccExpYear: "cc-exp-year",
     };
     return MAP[key];
+  },
+  /**
+   * Generates the localized os dialog message that
+   * prompts the user to reauthenticate
+   *
+   * @param {string} msgMac fluent message id for macos clients
+   * @param {string} msgWin fluent message id for windows clients
+   * @param {string} msgOther fluent message id for other clients
+   * @param {string} msgLin (optional) fluent message id for linux clients
+   * @returns {string} localized os prompt message
+   */
+  reauthOSPromptMessage(msgMac, msgWin, msgOther, msgLin = null) {
+    const platform = AppConstants.platform;
+    let messageID;
+
+    switch (platform) {
+      case "win":
+        messageID = msgWin;
+        break;
+      case "macosx":
+        messageID = msgMac;
+        break;
+      case "linux":
+        messageID = msgLin ?? msgOther;
+        break;
+      default:
+        messageID = msgOther;
+    }
+    return lazy.l10n.formatValueSync(messageID);
   },
 };
 
