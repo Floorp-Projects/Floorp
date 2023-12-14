@@ -953,18 +953,6 @@ bool InliningRoot::traceWeak(JSTracer* trc) {
   return allSurvived;
 }
 
-void InliningRoot::purgeStubs(Zone* zone, ICStubSpace& newStubSpace) {
-  for (auto& inlinedScript : inlinedScripts_) {
-    inlinedScript->purgeStubs(zone, newStubSpace);
-  }
-}
-
-void InliningRoot::resetWarmUpCounts(uint32_t count) {
-  for (auto& inlinedScript : inlinedScripts_) {
-    inlinedScript->resetWarmUpCount(count);
-  }
-}
-
 void InliningRoot::purgeInactiveICScripts() {
   mozilla::DebugOnly<uint32_t> totalSize = owningScript_->length();
 
@@ -981,23 +969,6 @@ void InliningRoot::purgeInactiveICScripts() {
 
   inlinedScripts_.eraseIf(
       [](auto& inlinedScript) { return !inlinedScript->active(); });
-}
-
-#ifdef DEBUG
-bool InliningRoot::hasActiveICScript() const {
-  for (auto& inlinedScript : inlinedScripts_) {
-    if (inlinedScript->active()) {
-      return true;
-    }
-  }
-  return false;
-}
-#endif
-
-void InliningRoot::resetAllActiveFlags() {
-  for (auto& inlinedScript : inlinedScripts_) {
-    inlinedScript->resetActive();
-  }
 }
 
 }  // namespace jit
