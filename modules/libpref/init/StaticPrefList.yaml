@@ -13921,7 +13921,7 @@
 # WebAuthn conditional mediation
 - name: security.webauthn.enable_conditional_mediation
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Dispatch WebAuthn requests to virtual authenticators (mutually exclusive
