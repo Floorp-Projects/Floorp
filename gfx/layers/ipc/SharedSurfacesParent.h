@@ -28,7 +28,7 @@ class DataSourceSurface;
 
 namespace layers {
 
-class SharedSurfacesChild;
+class CompositorManagerParent;
 class SharedSurfacesMemoryReport;
 
 class SharedSurfacesParent final {
@@ -69,7 +69,7 @@ class SharedSurfacesParent final {
   static bool AgeAndExpireOneGeneration();
 
  private:
-  friend class SharedSurfacesChild;
+  friend class CompositorManagerParent;
   friend class gfx::SourceSurfaceSharedDataWrapper;
 
   SharedSurfacesParent();

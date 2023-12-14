@@ -135,7 +135,7 @@ class SharedSurfacesChild {
 
   class SharedUserData final : public Runnable {
    public:
-    explicit SharedUserData(const wr::ExternalImageId& aId);
+    SharedUserData();
     virtual ~SharedUserData();
 
     SharedUserData(const SharedUserData& aOther) = delete;
@@ -150,16 +150,16 @@ class SharedSurfacesChild {
 
     const wr::ExternalImageId& Id() const { return mId; }
 
-    void SetId(const wr::ExternalImageId& aId) {
-      mId = aId;
+    void ClearShared() {
       mKeys.Clear();
       mShared = false;
     }
 
     bool IsShared() const { return mShared; }
 
-    void MarkShared() {
+    void MarkShared(const wr::ExternalImageId& aId) {
       MOZ_ASSERT(!mShared);
+      mId = aId;
       mShared = true;
     }
 

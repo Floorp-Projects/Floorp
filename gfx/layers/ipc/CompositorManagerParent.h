@@ -18,6 +18,11 @@
 #include "nsTArray.h"  // for AutoTArray
 
 namespace mozilla {
+
+namespace gfx {
+class SourceSurfaceSharedData;
+}
+
 namespace layers {
 
 class CompositorBridgeParent;
@@ -43,6 +48,9 @@ class CompositorManagerParent final : public PCompositorManagerParent {
                                           uint64_t aInnerWindowId);
 
   static void WaitForSharedSurface(const wr::ExternalImageId& aId);
+
+  static void AddSharedSurface(const wr::ExternalImageId& aId,
+                               gfx::SourceSurfaceSharedData* aSurface);
 
   mozilla::ipc::IPCResult RecvAddSharedSurface(const wr::ExternalImageId& aId,
                                                SurfaceDescriptorShared&& aDesc);
