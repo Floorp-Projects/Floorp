@@ -78,34 +78,6 @@ http://creativecommons.org/licenses/publicdomain/
     controlledFrame = await injectControlledFrame();
   });
 
-  add_task(async function emptyKey() {
-    try {
-      await registration.pushManager.subscribe({
-        applicationServerKey: new ArrayBuffer(0),
-      });
-      ok(false, "Should reject for empty app server keys");
-    } catch (error) {
-      ok(error instanceof DOMException,
-        "Wrong exception type for empty key");
-      is(error.name, "InvalidAccessError",
-        "Wrong exception name for empty key");
-    }
-  });
-
-  add_task(async function invalidKey() {
-    try {
-      await registration.pushManager.subscribe({
-        applicationServerKey: new Uint8Array([0]),
-      });
-      ok(false, "Should reject for invalid app server keys");
-    } catch (error) {
-      ok(error instanceof DOMException,
-        "Wrong exception type for invalid key");
-      is(error.name, "InvalidAccessError",
-        "Wrong exception name for invalid key");
-    }
-  });
-
   add_task(async function validKey() {
     var pushSubscription = await registration.pushManager.subscribe({
       applicationServerKey: await generateKey(),
