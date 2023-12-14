@@ -12470,7 +12470,7 @@
 
 - name: network.http.http2.websockets
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: network.http.http2.enable-hpack-dump
