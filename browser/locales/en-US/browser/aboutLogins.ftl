@@ -24,9 +24,10 @@ menu =
 # This menuitem is only visible on Windows and macOS
 about-logins-menu-menuitem-import-from-another-browser = Import from Another Browser…
 about-logins-menu-menuitem-import-from-a-file = Import from a File…
-about-logins-menu-menuitem-export-logins = Export Logins…
-# Item that appears when the user clicks the ⋯  menu
+
+about-logins-menu-menuitem-export-logins2 = Export Passwords…
 about-logins-menu-menuitem-remove-all-logins2 = Remove All Passwords…
+
 menu-menuitem-preferences =
   { PLATFORM() ->
       [windows] Options
@@ -227,9 +228,10 @@ about-logins-confirm-remove-all-sync-dialog-message3 =
 
 ##
 
-about-logins-confirm-export-dialog-title = Export logins and passwords
-about-logins-confirm-export-dialog-message = Your passwords will be saved as readable text (e.g., BadP@ssw0rd) so anyone who can open the exported file can view them.
-about-logins-confirm-export-dialog-confirm-button = Export…
+about-logins-confirm-export-dialog-title2 = A note about exporting passwords
+about-logins-confirm-export-dialog-message2 = When you export, your passwords are saved to a file with readable text.
+    When you’re done using the file, we recommend deleting it so others who use this device can’t see your passwords.
+about-logins-confirm-export-dialog-confirm-button2 = Continue with export
 
 about-logins-alert-import-title = Import Complete
 about-logins-alert-import-message = View detailed Import Summary
@@ -270,10 +272,10 @@ about-logins-error-message-default = An error occurred while trying to save this
 ## Login Export Dialog
 
 # Title of the file picker dialog
-about-logins-export-file-picker-title = Export Logins File
+about-logins-export-file-picker-title2 = Export Passwords from { -brand-short-name }
 # The default file name shown in the file picker when exporting saved logins.
 # This must end in .csv
-about-logins-export-file-picker-default-filename = logins.csv
+about-logins-export-file-picker-default-filename2 = passwords.csv
 about-logins-export-file-picker-export-button = Export
 # A description for the .csv file format that may be shown as the file type
 # filter by the operating system.
