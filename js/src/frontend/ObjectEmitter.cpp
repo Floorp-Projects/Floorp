@@ -18,8 +18,6 @@
 using namespace js;
 using namespace js::frontend;
 
-using mozilla::Maybe;
-
 PropertyEmitter::PropertyEmitter(BytecodeEmitter* bce) : bce_(bce) {}
 
 bool PropertyEmitter::prepareForProtoValue(uint32_t keyPos) {
@@ -809,6 +807,37 @@ bool ClassEmitter::emitMemberInitializersEnd() {
 #endif
   return true;
 }
+
+#ifdef ENABLE_DECORATORS
+bool ClassEmitter::prepareForExtraInitializers(
+    TaggedParserAtomIndex initializers) {
+  // TODO: Add support for static and class extra initializers, see bug 1868220
+  // and bug 1868221.
+  MOZ_ASSERT(
+      initializers ==
+      TaggedParserAtomIndex::WellKnown::dot_instanceExtraInitializers_());
+
+  NameOpEmitter noe(bce_, initializers, NameOpEmitter::Kind::Initialize);
+  if (!noe.prepareForRhs()) {
+    return false;
+  }
+
+  // Because the initializers are created while executing decorators, we don't
+  // know beforehand how many there will be.
+  if (!bce_->emitUint32Operand(JSOp::NewArray, 0)) {
+    //              [stack] ARRAY
+    return false;
+  }
+
+  if (!noe.emitAssignment()) {
+    //              [stack] ARRAY
+    return false;
+  }
+
+  return bce_->emit1(JSOp::Pop);
+  //                [stack]
+}
+#endif
 
 bool ClassEmitter::emitBinding() {
   MOZ_ASSERT(propertyState_ == PropertyState::Start ||
