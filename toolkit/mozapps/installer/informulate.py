@@ -31,13 +31,7 @@ def main():
 
     important_substitutions = [
         "target_alias",
-        "target_cpu",
-        "target_os",
-        "target_vendor",
         "host_alias",
-        "host_cpu",
-        "host_os",
-        "host_vendor",
         "MOZ_UPDATE_CHANNEL",
         "MOZ_APP_VENDOR",
         "MOZ_APP_NAME",
