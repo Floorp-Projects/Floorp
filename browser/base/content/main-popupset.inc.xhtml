@@ -386,6 +386,8 @@
   </menupopup>
 
   <menupopup id="contentAreaContextMenu"
+# read by macOS cocoa code to enable the "services" menu here:
+             showservicesmenu="true"
              onpopupshowing="if (event.target != this)
                                return true;
                              gContextMenu = new nsContextMenu(this, event.shiftKey);

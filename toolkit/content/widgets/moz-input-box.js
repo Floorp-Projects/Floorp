@@ -24,7 +24,7 @@
       delete this.normal;
       this.normal = MozXULElement.parseXULToFragment(
         `
-      <menupopup class="textbox-contextmenu">
+      <menupopup class="textbox-contextmenu" showservicesmenu="true">
         ${this.editMenuItems}
       </menupopup>
     `
@@ -36,7 +36,7 @@
       delete this.spellcheck;
       this.spellcheck = MozXULElement.parseXULToFragment(
         `
-      <menupopup class="textbox-contextmenu">
+      <menupopup class="textbox-contextmenu" showservicesmenu="true">
         <menuitem data-l10n-id="text-action-spell-no-suggestions" anonid="spell-no-suggestions" disabled="true"></menuitem>
         <menuitem data-l10n-id="text-action-spell-add-to-dictionary" anonid="spell-add-to-dictionary" oncommand="this.parentNode.parentNode.spellCheckerUI.addToDictionary();"></menuitem>
         <menuitem data-l10n-id="text-action-spell-undo-add-to-dictionary" anonid="spell-undo-add-to-dictionary" oncommand="this.parentNode.parentNode.spellCheckerUI.undoAddToDictionary();"></menuitem>
