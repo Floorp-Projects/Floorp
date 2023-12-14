@@ -2241,6 +2241,14 @@ Exemple :\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp
     <string name="review_quality_check_highlights_title">Elements essencials dels avises recents</string>
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
     <string name="review_quality_check_explanation_title">Coma determinam la qualitat d’un avís</string>
+    <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[Assignam als avises una <b>notacion alfabetica</b> de A a F.]]></string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB">Avises fisables. Pensam que los avises venon probablament de vertadièrs clients que daissèron d’avises sincèrs e objectius.</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Pensam que los avises son fisables.</string>
+    <!-- Description explaining grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_C">Pensam que los avises mesclan d’avises fisables e non fisables.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Pensam qu’aquestas avises son pas fisables.</string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
