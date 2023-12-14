@@ -11786,12 +11786,25 @@ bool BytecodeEmitter::emitClass(
   if (constructor->is<LexicalScopeNode>()) {
     LexicalScopeNode* constructorScope = &constructor->as<LexicalScopeNode>();
 
-    // The constructor scope should only contain the |.initializers| binding.
     MOZ_ASSERT(!constructorScope->isEmptyScope());
+#ifdef ENABLE_DECORATORS
+    // With decorators enabled we expect to see |.initializers|,
+    // and |.instanceExtraInitializers| in this scope.
+    MOZ_ASSERT(constructorScope->scopeBindings()->length == 2);
+    MOZ_ASSERT(GetScopeDataTrailingNames(constructorScope->scopeBindings())[0]
+                   .name() ==
+               TaggedParserAtomIndex::WellKnown::dot_initializers_());
+    MOZ_ASSERT(
+        GetScopeDataTrailingNames(constructorScope->scopeBindings())[1]
+            .name() ==
+        TaggedParserAtomIndex::WellKnown::dot_instanceExtraInitializers_());
+#else
+    // The constructor scope should only contain the |.initializers| binding.
     MOZ_ASSERT(constructorScope->scopeBindings()->length == 1);
     MOZ_ASSERT(GetScopeDataTrailingNames(constructorScope->scopeBindings())[0]
                    .name() ==
                TaggedParserAtomIndex::WellKnown::dot_initializers_());
+#endif
 
     auto needsInitializer = [](ParseNode* propdef) {
       return NeedsFieldInitializer(propdef, false) ||

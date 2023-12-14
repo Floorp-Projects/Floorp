@@ -354,6 +354,7 @@ class SyntaxParseHandler {
   ClassNodeResult newClass(Node name, Node heritage, Node methodBlock,
 #ifdef ENABLE_DECORATORS
                            ListNodeType decorators,
+                           FunctionNodeType addInitializerFunction,
 #endif
                            const TokenPos& pos) {
     return NodeGeneric;
