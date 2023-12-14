@@ -316,24 +316,6 @@ interface nsIEditor  : nsISupports
   [can_run_script]
   void endTransaction();
 
-  /**
-   * While setting the flag with this method to false,  DeleteRangeTransaction,
-   * DeleteTextTransaction, InsertNodeTransaction, InsertTextTransaction and
-   * SplitNodeTransaction won't change Selection after modifying the DOM tree.
-   * Note that calling this with false does not guarantee that Selection won't
-   * be changed because other transaction may ignore this flag, editor itself
-   * may change selection, and current selection may become invalid after
-   * changing the DOM tree, etc.
-   * After calling this method with true, the caller should guarantee that
-   * Selection should be positioned where user expects.
-   *
-   * @param should    false if you don't want above transactions to modify
-   *                  Selection automatically after modifying the DOM tree.
-   *                  Note that calling this with false does not guarantee
-   *                  that Selection is never changed.
-   */
-  void setShouldTxnSetSelection(in boolean should);
-
   /* ------------ Inline Spell Checking methods -------------- */
 
   /** Returns the inline spell checker associated with this object. The spell
