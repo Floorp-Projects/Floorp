@@ -42,15 +42,13 @@ enum PropertyCategory {
 impl PropertyCategory {
     fn of(id: &PropertyId) -> Self {
         match *id {
-            PropertyId::Shorthand(..) | PropertyId::ShorthandAlias(..) => {
-                PropertyCategory::Shorthand
-            },
-            PropertyId::Longhand(id) | PropertyId::LonghandAlias(id, ..) => {
-                if id.is_logical() {
+            PropertyId::NonCustom(id) => match id.longhand_or_shorthand() {
+                Ok(id) => if id.is_logical() {
                     PropertyCategory::LogicalLonghand
                 } else {
                     PropertyCategory::PhysicalLonghand
-                }
+                },
+                Err(..) => PropertyCategory::Shorthand,
             },
             PropertyId::Custom(..) => PropertyCategory::Custom,
         }

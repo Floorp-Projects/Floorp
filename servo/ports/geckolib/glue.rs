@@ -630,7 +630,7 @@ pub extern "C" fn Servo_AnimationCompose(
     use style::gecko_bindings::bindings::Gecko_GetProgressFromComputedTiming;
 
     let property = match LonghandId::from_nscsspropertyid(css_property) {
-        Ok(longhand) if longhand.is_animatable() => longhand,
+        Some(longhand) if longhand.is_animatable() => longhand,
         _ => return,
     };
 
@@ -687,8 +687,8 @@ pub extern "C" fn Servo_AnimationCompose(
 macro_rules! get_property_id_from_nscsspropertyid {
     ($property_id: ident, $ret: expr) => {{
         match PropertyId::from_nscsspropertyid($property_id) {
-            Ok(property_id) => property_id,
-            Err(()) => {
+            Some(property_id) => property_id,
+            None => {
                 return $ret;
             },
         }
@@ -1128,8 +1128,8 @@ pub extern "C" fn Servo_AnimationValueMap_GetValue(
     property_id: nsCSSPropertyID,
 ) -> Strong<AnimationValue> {
     let property = match LonghandId::from_nscsspropertyid(property_id) {
-        Ok(longhand) => longhand,
-        Err(()) => return Strong::null(),
+        Some(longhand) => longhand,
+        None => return Strong::null(),
     };
     value_map
         .get(&property)
@@ -1199,7 +1199,7 @@ pub extern "C" fn Servo_ComputedValues_ShouldTransition(
     start: &mut structs::RefPtr<AnimationValue>,
     end: &mut structs::RefPtr<AnimationValue>,
 ) -> ShouldTransitionResult {
-    let Ok(prop) = LonghandId::from_nscsspropertyid(prop) else {
+    let Some(prop) = LonghandId::from_nscsspropertyid(prop) else {
         return Default::default();
     };
     if prop.is_discrete_animatable() && prop != LonghandId::Visibility {
@@ -1240,7 +1240,7 @@ pub extern "C" fn Servo_ComputedValues_TransitionValueMatches(
     prop: nsCSSPropertyID,
     transition_value: &AnimationValue,
 ) -> bool {
-    let Ok(prop) = LonghandId::from_nscsspropertyid(prop) else {
+    let Some(prop) = LonghandId::from_nscsspropertyid(prop) else {
         return false;
     };
     if prop.is_discrete_animatable() && prop != LonghandId::Visibility {
@@ -1258,8 +1258,8 @@ pub extern "C" fn Servo_ComputedValues_ExtractAnimationValue(
     property_id: nsCSSPropertyID,
 ) -> Strong<AnimationValue> {
     let property = match LonghandId::from_nscsspropertyid(property_id) {
-        Ok(longhand) => longhand,
-        Err(()) => return Strong::null(),
+        Some(longhand) => longhand,
+        None => return Strong::null(),
     };
     match AnimationValue::from_computed_values(property, &computed_values) {
         Some(v) => Arc::new(v).into(),
@@ -1296,11 +1296,11 @@ pub unsafe extern "C" fn Servo_Property_GetName(
     out_length: *mut u32,
 ) -> *const u8 {
     let (ptr, len) = match NonCustomPropertyId::from_nscsspropertyid(prop) {
-        Ok(p) => {
+        Some(p) => {
             let name = p.name();
             (name.as_bytes().as_ptr(), name.len())
         },
-        Err(..) => (ptr::null(), 0),
+        None => (ptr::null(), 0),
     };
 
     *out_length = len as u32;
@@ -1350,13 +1350,12 @@ pub unsafe extern "C" fn Servo_Property_IsInherited(
             if let Some(registration) = stylist.get_custom_property_registration(&property_name) {
                 return registration.inherits();
             }
-
             // unregistered custom properties always inherits
             return true;
         },
-        PropertyId::Longhand(id) | PropertyId::LonghandAlias(id, _) => id,
-        PropertyId::Shorthand(id) | PropertyId::ShorthandAlias(id, _) => {
-            id.longhands().next().unwrap()
+        PropertyId::NonCustom(id) => match id.longhand_or_shorthand() {
+            Ok(lh) => lh,
+            Err(sh) => sh.longhands().next().unwrap(),
         },
     };
     longhand_id.inherited()
@@ -1401,23 +1400,19 @@ pub unsafe extern "C" fn Servo_Property_GetCSSValuesForProperty(
 
 #[no_mangle]
 pub extern "C" fn Servo_Property_IsAnimatable(prop: nsCSSPropertyID) -> bool {
-    NonCustomPropertyId::from_nscsspropertyid(prop)
-        .ok()
-        .map_or(false, |p| p.is_animatable())
+    NonCustomPropertyId::from_nscsspropertyid(prop).map_or(false, |p| p.is_animatable())
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_Property_IsTransitionable(prop: nsCSSPropertyID) -> bool {
-    NonCustomPropertyId::from_nscsspropertyid(prop)
-        .ok()
-        .map_or(false, |p| p.is_transitionable())
+    NonCustomPropertyId::from_nscsspropertyid(prop).map_or(false, |p| p.is_transitionable())
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_Property_IsDiscreteAnimatable(property: nsCSSPropertyID) -> bool {
     match LonghandId::from_nscsspropertyid(property) {
-        Ok(longhand) => longhand.is_discrete_animatable(),
-        Err(()) => return false,
+        Some(longhand) => longhand.is_discrete_animatable(),
+        None => return false,
     }
 }
 
@@ -4576,15 +4571,15 @@ pub extern "C" fn Servo_GetProperties_Overriding_Animation(
         .rules()
         .get_properties_overriding_animations(&guards);
     for p in list.iter() {
-        match PropertyId::from_nscsspropertyid(*p) {
-            Ok(property) => {
-                if let PropertyId::Longhand(id) = property {
+        match NonCustomPropertyId::from_nscsspropertyid(*p) {
+            Some(property) => {
+                if let Some(id) = property.as_longhand() {
                     if overridden.contains(id) {
                         unsafe { Gecko_AddPropertyToSet(set, *p) };
                     }
                 }
             },
-            Err(_) => {
+            None => {
                 if *p == nsCSSPropertyID::eCSSPropertyExtra_variable && custom {
                     unsafe { Gecko_AddPropertyToSet(set, *p) };
                 }
@@ -5197,8 +5192,8 @@ pub extern "C" fn Servo_MediaList_SizeOfIncludingThis(
 
 macro_rules! get_longhand_from_id {
     ($id:expr) => {
-        match PropertyId::from_nscsspropertyid($id) {
-            Ok(PropertyId::Longhand(long)) => long,
+        match LonghandId::from_nscsspropertyid($id) {
+            Some(lh) => lh,
             _ => panic!("stylo: unknown presentation property with id"),
         }
     };
@@ -6110,8 +6105,7 @@ impl<'a> PrioritizedPropertyIter<'a> {
             .enumerate()
             .map(|(index, pair)| {
                 let property = PropertyId::from_nscsspropertyid(pair.mProperty)
-                    .unwrap_or(PropertyId::Shorthand(ShorthandId::All));
-
+                    .unwrap_or(PropertyId::NonCustom(ShorthandId::All.into()));
                 PropertyAndIndex { property, index }
             })
             .collect();
@@ -6242,7 +6236,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
 
             if property.mServoDeclarationBlock.mRawPtr.is_null() {
                 let property = LonghandId::from_nscsspropertyid(property.mProperty);
-                if let Ok(prop) = property {
+                if let Some(prop) = property {
                     maybe_append_animation_value(prop, None);
                 }
                 continue;
@@ -7482,7 +7476,7 @@ fn computed_or_resolved_value(
     context: Option<&style::values::resolved::Context>,
     value: &mut nsACString,
 ) {
-    if let Ok(longhand) = LonghandId::from_nscsspropertyid(prop) {
+    if let Some(longhand) = LonghandId::from_nscsspropertyid(prop) {
         return style
             .computed_or_resolved_value(longhand, context, value)
             .unwrap();

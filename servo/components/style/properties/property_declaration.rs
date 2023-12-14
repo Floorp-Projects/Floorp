@@ -45,12 +45,7 @@ impl<'a> PropertyDeclarationId<'a> {
     pub fn is_or_is_longhand_of(&self, other: &PropertyId) -> bool {
         match *self {
             PropertyDeclarationId::Longhand(id) => match *other {
-                PropertyId::Longhand(other_id) | PropertyId::LonghandAlias(other_id, _) => {
-                    id == other_id
-                },
-                PropertyId::Shorthand(shorthand) | PropertyId::ShorthandAlias(shorthand, _) => {
-                    self.is_longhand_of(shorthand)
-                },
+                PropertyId::NonCustom(non_custom_id) => id.is_or_is_longhand_of(non_custom_id),
                 PropertyId::Custom(_) => false,
             },
             PropertyDeclarationId::Custom(name) => {
@@ -63,7 +58,7 @@ impl<'a> PropertyDeclarationId<'a> {
     /// shorthand.
     pub fn is_longhand_of(&self, shorthand: ShorthandId) -> bool {
         match *self {
-            PropertyDeclarationId::Longhand(ref id) => id.shorthands().any(|s| s == shorthand),
+            PropertyDeclarationId::Longhand(ref id) => id.is_longhand_of(shorthand),
             _ => false,
         }
     }
