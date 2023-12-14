@@ -270,6 +270,28 @@ CompositorManagerParent::AllocPCompositorBridgeParent(
   return nullptr;
 }
 
+/* static */ void CompositorManagerParent::AddSharedSurface(
+    const wr::ExternalImageId& aId, gfx::SourceSurfaceSharedData* aSurface) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  StaticMonitorAutoLock lock(sMonitor);
+  if (NS_WARN_IF(!sInstance)) {
+    return;
+  }
+
+  if (NS_WARN_IF(!sInstance->OwnsExternalImageId(aId))) {
+    MOZ_ASSERT_UNREACHABLE("Wrong namespace?");
+    return;
+  }
+
+  SharedSurfacesParent::AddSameProcess(aId, aSurface);
+
+  uint32_t resourceId = static_cast<uint32_t>(wr::AsUint64(aId));
+  MOZ_RELEASE_ASSERT(sInstance->mLastSharedSurfaceResourceId < resourceId);
+  sInstance->mLastSharedSurfaceResourceId = resourceId;
+  sMonitor.NotifyAll();
+}
+
 mozilla::ipc::IPCResult CompositorManagerParent::RecvAddSharedSurface(
     const wr::ExternalImageId& aId, SurfaceDescriptorShared&& aDesc) {
   if (NS_WARN_IF(!OwnsExternalImageId(aId))) {
