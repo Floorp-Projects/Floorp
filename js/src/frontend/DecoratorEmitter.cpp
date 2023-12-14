@@ -947,12 +947,12 @@ bool DecoratorEmitter::emitPropertyKey(ParseNode* key) {
 }
 
 bool DecoratorEmitter::emitDecorationState() {
-  // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1800724.
+  // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1868841
   return true;
 }
 
 bool DecoratorEmitter::emitUpdateDecorationState() {
-  // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1800724.
+  // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1868841.
   return true;
 }
 
