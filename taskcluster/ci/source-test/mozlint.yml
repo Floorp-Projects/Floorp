@@ -304,7 +304,7 @@ test-manifest:
         mach: lint -v -l test-manifest-alpha -l test-manifest-disable -l test-manifest-skip-if -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
-            - '**/*.ini'
+            - '**/*.toml'
             - 'python/mozlint/**'
             - 'tools/lint/**'
             - 'tools/lint/test-disable.yml'
@@ -550,7 +550,6 @@ perfdocs-verify:
         files-changed:
             - 'devtools/perfdocs/**'
             - 'taskcluster/**'
-            - '**/perftest.ini'
             - '**/perftest.toml'
             - 'python/mozperftest/**'
             - 'testing/awsy/**'

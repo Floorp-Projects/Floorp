@@ -279,7 +279,7 @@ def perfdocs_sample():
         raptor_another_suitedir.mkdir(parents=True, exist_ok=True)
 
         with temp_file(
-            "perftest.ini", tempdir=suite_dir, content="[perftest_sample.js]"
+            "perftest.toml", tempdir=suite_dir, content='["perftest_sample.js"]'
         ) as tmpmanifest, temp_file(
             "raptor_example1.ini", tempdir=raptor_suitedir, content=SAMPLE_INI
         ) as tmpexample1manifest, temp_file(

@@ -21,7 +21,7 @@ not on all platforms and was specific to the browsertime framework.
 
 `mozperftest` currently provides the `mach perftest` command, that will scan
 for all tests that are declared in ini files such as
-https://searchfox.org/mozilla-central/source/netwerk/test/perf/perftest.ini and
+https://searchfox.org/mozilla-central/source/netwerk/test/perf/perftest.toml and
 registered under **PERFTESTS_MANIFESTS** in `moz.build` files such as
 https://searchfox.org/mozilla-central/source/netwerk/test/moz.build#17
 
