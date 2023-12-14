@@ -9935,13 +9935,13 @@ bool BytecodeEmitter::emitCreateMemberInitializers(ClassEmitter& ce,
 #endif
 ) {
   // FieldPlacement::Instance, hasHeritage == false
-  //                [stack] HOMEOBJ
+  //                [stack] HOME
   //
   // FieldPlacement::Instance, hasHeritage == true
-  //                [stack] HOMEOBJ HERITAGE
+  //                [stack] HOME HERIT
   //
   // FieldPlacement::Static
-  //                [stack] CTOR HOMEOBJ
+  //                [stack] CTOR HOME
 #ifdef ENABLE_DECORATORS
   MOZ_ASSERT_IF(placement == FieldPlacement::Static, !hasHeritage);
 #endif
@@ -9959,9 +9959,9 @@ bool BytecodeEmitter::emitCreateMemberInitializers(ClassEmitter& ce,
 
   bool isStatic = placement == FieldPlacement::Static;
   if (!ce.prepareForMemberInitializers(numInitializers, isStatic)) {
-    //              [stack] HOMEOBJ HERITAGE? ARRAY
+    //              [stack] HOME HERIT? ARR
     // or:
-    //              [stack] CTOR HOMEOBJ ARRAY
+    //              [stack] CTOR HOME ARR
     return false;
   }
 
@@ -9987,24 +9987,24 @@ bool BytecodeEmitter::emitCreateMemberInitializers(ClassEmitter& ce,
       return false;
     }
     if (!emitTree(initializer)) {
-      //            [stack] HOMEOBJ HERITAGE? ARRAY LAMBDA
+      //            [stack] HOME HERIT? ARR LAMBDA
       // or:
-      //            [stack] CTOR HOMEOBJ ARRAY LAMBDA
+      //            [stack] CTOR HOME ARR LAMBDA
       return false;
     }
     if (initializer->funbox()->needsHomeObject()) {
       MOZ_ASSERT(initializer->funbox()->allowSuperProperty());
       if (!ce.emitMemberInitializerHomeObject(isStatic)) {
-        //          [stack] HOMEOBJ HERITAGE? ARRAY LAMBDA
+        //          [stack] HOME HERIT? ARR LAMBDA
         // or:
-        //          [stack] CTOR HOMEOBJ ARRAY LAMBDA
+        //          [stack] CTOR HOME ARR LAMBDA
         return false;
       }
     }
     if (!ce.emitStoreMemberInitializer()) {
-      //            [stack] HOMEOBJ HERITAGE? ARRAY
+      //            [stack] HOME HERIT? ARR
       // or:
-      //            [stack] CTOR HOMEOBJ ARRAY
+      //            [stack] CTOR HOME ARR
       return false;
     }
   }
@@ -10012,9 +10012,9 @@ bool BytecodeEmitter::emitCreateMemberInitializers(ClassEmitter& ce,
 #ifdef ENABLE_DECORATORS
   // Index to use to append new initializers returned by decorators to the array
   if (!emitNumberOp(numInitializers)) {
-    //            [stack] HOMEOBJ HERITAGE? ARRAY INDEX
+    //            [stack] HOME HERIT? ARR I
     // or:
-    //            [stack] CTOR HOMEOBJ ARRAY INDEX
+    //            [stack] CTOR HOME ARR I
     return false;
   }
 
@@ -10029,11 +10029,29 @@ bool BytecodeEmitter::emitCreateMemberInitializers(ClassEmitter& ce,
     if (field->decorators() && !field->decorators()->empty()) {
       DecoratorEmitter de(this);
       if (!field->hasAccessor()) {
+        if (!emitDupAt((hasHeritage || isStatic) ? 4 : 3)) {
+          //            [stack] ADDINIT HOME HERIT? ARR I ADDINIT
+          // or:
+          //            [stack] ADDINIT CTOR HOME ARR I ADDINIT
+          return false;
+        }
         if (!de.emitApplyDecoratorsToFieldDefinition(
                 &field->name(), field->decorators(), field->isStatic())) {
-          //        [stack] HOMEOBJ HERITAGE? ARRAY INDEX INITS
+          //        [stack] HOME HERIT? ARR I ADDINIT INITS
           // or:
-          //        [stack] CTOR HOMEOBJ ARRAY INDEX INITS
+          //        [stack] CTOR HOME ARR I ADDINIT INITS
+          return false;
+        }
+        if (!emit1(JSOp::Swap)) {
+          //        [stack] HOME HERIT? ARR I INITS ADDINIT
+          // or:
+          //        [stack] CTOR HOME ARR I INITS ADDINIT
+          return false;
+        }
+        if (!emitPopN(1)) {
+          //            [stack] ADDINIT HOME HERIT? ARR I INITS
+          // or:
+          //            [stack] ADDINIT CTOR HOME ARR I INITS
           return false;
         }
       } else {
@@ -10045,15 +10063,16 @@ bool BytecodeEmitter::emitCreateMemberInitializers(ClassEmitter& ce,
             accessorSetterNode->left()->as<NameNode>().atom();
         if (!IsPrivateInstanceAccessor(accessorGetterNode)) {
           if (!emitTree(&accessorGetterNode->method())) {
-            //      [stack] HOMEOBJ HERITAGE? ARRAY INDEX GETTER
+            //      [stack] ADDINIT HOME HERIT? ARR I GET
             // or:
-            //      [stack] CTOR HOMEOBJ ARRAY INDEX GETTER
+            //      [stack] ADDINIT CTOR HOME ARR I GET
             return false;
           }
           if (!emitTree(&accessorSetterNode->method())) {
-            //      [stack] HOMEOBJ HERITAGE? ARRAY INDEX GETTER SETTER
+            //      [stack] ADDINIT HOME HERIT? ARR I GET
+            //      SET
             // or:
-            //      [stack] CTOR HOMEOBJ ARRAY INDEX GETTER SETTER
+            //      [stack] ADDINIT CTOR HOME ARR I GET SET
             return false;
           }
         } else {
@@ -10087,48 +10106,76 @@ bool BytecodeEmitter::emitCreateMemberInitializers(ClassEmitter& ce,
           };
 
           if (!getAccessor(accessorGetterNode, accessorGetterKeyAtom)) {
-            //      [stack] HOMEOBJ HERITAGE? ARRAY INDEX GETTER
+            //      [stack] ADDINIT HOME HERIT? ARR I GET
             // or:
-            //      [stack] CTOR HOMEOBJ ARRAY INDEX GETTER
+            //      [stack] ADDINIT CTOR HOME ARR I GET
             return false;
           };
 
           if (!getAccessor(accessorSetterNode, accessorSetterKeyAtom)) {
-            //      [stack] HOMEOBJ HERITAGE? ARRAY INDEX GETTER SETTER
+            //      [stack] ADDINIT HOME HERIT? ARR I GET SET
             // or:
-            //      [stack] CTOR HOMEOBJ ARRAY INDEX GETTER SETTER
+            //      [stack] ADDINIT CTOR HOME ARR I GET SET
             return false;
           };
         }
 
-        if (!de.emitApplyDecoratorsToAccessorDefinition(
-                &field->name(), field->decorators(), field->isStatic())) {
-          //        [stack] HOMEOBJ HERITAGE? ARRAY INDEX GETTER SETTER INITS
+        if (!emitDupAt((hasHeritage || isStatic) ? 6 : 5)) {
+          //      [stack] ADDINIT HOME HERIT? ARR I GET SET ADDINIT
           // or:
-          //        [stack] CTOR HOMEOBJ ARRAY INDEX GETTER SETTER INITS
+          //      [stack] ADDINIT CTOR HOME ARR I GET SET ADDINIT
           return false;
         }
 
         if (!emitUnpickN(2)) {
-          //        [stack] HOMEOBJ HERITAGE? ARRAY INDEX INITS GETTER SETTER
+          //      [stack] ADDINIT HOME HERIT? ARR I ADDINIT GET SET
           // or:
-          //        [stack] CTOR HOMEOBJ ARRAY INDEX INITS GETTER SETTER
+          //      [stack] ADDINIT CTOR HOME ARR I ADDINIT GET SET
+          return false;
+        }
+
+        if (!de.emitApplyDecoratorsToAccessorDefinition(
+                &field->name(), field->decorators(), field->isStatic())) {
+          //        [stack] ADDINIT HOME HERIT? ARR I ADDINIT GET SET INITS
+          // or:
+          //        [stack] ADDINIT CTOR HOME ARR I ADDINIT GET SET INITS
+          return false;
+        }
+
+        if (!emitPickN(3)) {
+          //      [stack] HOME HERIT? ARR I GET SET INITS ADDINIT
+          // or:
+          //      [stack] CTOR HOME ARR I GET SET INITS ADDINIT
+          return false;
+        }
+
+        if (!emitPopN(1)) {
+          //      [stack] ADDINIT HOME HERIT? ARR I GET SET INITS
+          // or:
+          //      [stack] ADDINIT CTOR HOME ARR I GET SET INITS
+          return false;
+        }
+
+        if (!emitUnpickN(2)) {
+          //        [stack] ADDINIT HOME HERIT? ARR I INITS GET SET
+          // or:
+          //        [stack] ADDINIT CTOR HOME ARR I INITS GET SET
           return false;
         }
 
         if (!IsPrivateInstanceAccessor(accessorGetterNode)) {
           if (!isStatic) {
-            if (!emitPickN(hasHeritage ? 6 : 5)) {
-              //    [stack] HERITAGE? ARRAY INDEX INITS GETTER SETTER HOMEOBJ
+            if (!emitDupAt(hasHeritage ? 6 : 5)) {
+              //    [stack] ADDINIT HOME HERIT? ARR I INITS GET SET HOME
               return false;
             }
           } else {
-            if (!emitPickN(6)) {
-              //    [stack] HOMEOBJ ARRAY INDEX INITS GETTER SETTER CTOR
+            if (!emitDupAt(6)) {
+              //    [stack] ADDINIT CTOR HOME ARR I INITS GET SET CTOR
               return false;
             }
-            if (!emitPickN(6)) {
-              //    [stack] ARRAY INDEX INITS GETTER SETTER CTOR HOMEOBJ
+            if (!emitDupAt(6)) {
+              //    [stack] ADDINIT CTOR HOME ARR I INITS GET SET CTOR HOME
               return false;
             }
           }
@@ -10141,40 +10188,40 @@ bool BytecodeEmitter::emitCreateMemberInitializers(ClassEmitter& ce,
                 !accessorSetterNode->name().isKind(ParseNodeKind::PrivateName));
 
             if (!ce.prepareForPropValue(propdef->pn_pos.begin, kind)) {
-              //    [stack] HERITAGE? ARRAY INDEX INITS GETTER SETTER HOMEOBJ
+              //    [stack] ADDINIT HOME HERIT? ARR I INITS GET SET HOME
               // or:
-              //    [stack] ARRAY INDEX INITS GETTER SETTER CTOR HOMEOBJ CTOR
+              //    [stack] ADDINIT CTOR HOME ARR I INITS GET SET CTOR HOME CTOR
               return false;
             }
             if (!emitPickN(isStatic ? 3 : 1)) {
-              //    [stack] HERITAGE? ARRAY INDEX INITS GETTER HOMEOBJ SETTER
+              //    [stack] ADDINIT HOME HERIT? ARR I INITS GET HOME SET
               // or:
-              //    [stack] ARRAY INDEX INITS GETTER CTOR HOMEOBJ CTOR SETTER
+              //    [stack] ADDINIT CTOR HOME ARR I INITS GET CTOR HOME CTOR SET
               return false;
             }
             if (!ce.emitInit(AccessorType::Setter, accessorSetterKeyAtom)) {
-              //    [stack] HERITAGE? ARRAY INDEX INITS GETTER HOMEOBJ
+              //    [stack] ADDINIT HOME HERIT? ARR I INITS GET HOME
               // or:
-              //    [stack] ARRAY INDEX INITS GETTER CTOR HOMEOBJ
+              //    [stack] ADDINIT CTOR HOME ARR I INITS GET CTOR HOME
               return false;
             }
 
             if (!ce.prepareForPropValue(propdef->pn_pos.begin, kind)) {
-              //    [stack] HERITAGE? ARRAY INDEX INITS GETTER HOMEOBJ
+              //    [stack] ADDINIT HOME HERIT? ARR I INITS GET HOME
               // or:
-              //    [stack] ARRAY INDEX INITS GETTER CTOR HOMEOBJ CTOR
+              //    [stack] ADDINIT CTOR HOME ARR I INITS GET CTOR HOME CTOR
               return false;
             }
             if (!emitPickN(isStatic ? 3 : 1)) {
-              //    [stack] HERITAGE? ARRAY INDEX INITS HOMEOBJ GETTER
+              //    [stack] ADDINIT HOME HERIT? ARR I INITS HOME GET
               // or:
-              //    [stack] ARRAY INDEX INITS CTOR HOMEOBJ CTOR GETTER
+              //    [stack] ADDINIT CTOR HOME ARR I INITS CTOR HOME CTOR GET
               return false;
             }
             if (!ce.emitInit(AccessorType::Getter, accessorGetterKeyAtom)) {
-              //    [stack] HERITAGE? ARRAY INDEX INITS HOMEOBJ
+              //    [stack] ADDINIT HOME HERIT? ARR I INITS HOME
               // or:
-              //    [stack] ARRAY INDEX INITS CTOR HOMEOBJ
+              //    [stack] ADDINIT CTOR HOME ARR I INITS CTOR HOME
               return false;
             }
           } else {
@@ -10185,56 +10232,52 @@ bool BytecodeEmitter::emitCreateMemberInitializers(ClassEmitter& ce,
               return false;
             }
             if (!ce.prepareForPrivateStaticMethod(propdef->pn_pos.begin)) {
-              //    [stack] ARRAY INDEX INITS GETTER SETTER CTOR HOMEOBJ CTOR
+              //    [stack] ADDINIT CTOR HOME ARR I INITS GET SET CTOR HOME CTOR
               return false;
             }
             if (!emitGetPrivateName(
                     &accessorSetterNode->name().as<NameNode>())) {
-              //    [stack] ARRAY INDEX INITS GETTER SETTER CTOR HOMEOBJ CTOR
+              //    [stack] ADDINIT CTOR HOME ARR I INITS GET SET CTOR HOME CTOR
               //    KEY
               return false;
             }
             if (!emitPickN(4)) {
-              //    [stack] ARRAY INDEX INITS GETTER CTOR HOMEOBJ CTOR KEY
-              //    SETTER
+              //    [stack] ADDINIT CTOR HOME ARR I INITS GET CTOR HOME CTOR KEY
+              //    SET
               return false;
             }
             if (!ce.emitPrivateStaticMethod(AccessorType::Setter)) {
-              //    [stack] ARRAY INDEX INITS GETTER CTOR HOMEOBJ
+              //    [stack] ADDINIT CTOR HOME ARR I INITS GET CTOR HOME
               return false;
             }
 
             if (!ce.prepareForPrivateStaticMethod(propdef->pn_pos.begin)) {
-              //    [stack] ARRAY INDEX INITS GETTER CTOR HOMEOBJ CTOR
+              //    [stack] ADDINIT CTOR HOME ARR I INITS GET CTOR HOME CTOR
               return false;
             }
             if (!emitGetPrivateName(
                     &accessorGetterNode->name().as<NameNode>())) {
-              //    [stack] ARRAY INDEX INITS GETTER CTOR HOMEOBJ CTOR KEY
+              //    [stack] ADDINIT CTOR HOME ARR I INITS GET CTOR HOME CTOR KEY
               return false;
             }
             if (!emitPickN(4)) {
-              //    [stack] ARRAY INDEX INITS CTOR HOMEOBJ CTOR KEY GETTER
+              //    [stack] ADDINIT CTOR HOME ARR I INITS CTOR HOME CTOR KEY GET
               return false;
             }
             if (!ce.emitPrivateStaticMethod(AccessorType::Getter)) {
-              //    [stack] ARRAY INDEX INITS CTOR HOMEOBJ
+              //    [stack] ADDINIT CTOR HOME ARR I INITS CTOR HOME
               return false;
             }
           }
 
           if (!isStatic) {
-            if (!emitUnpickN(hasHeritage ? 4 : 3)) {
-              //    [stack] HOMEOBJ HERITAGE? ARRAY INDEX INITS
+            if (!emitPopN(1)) {
+              //    [stack] ADDINIT HOME HERIT? ARR I INITS
               return false;
             }
           } else {
-            if (!emitUnpickN(4)) {
-              //    [stack] HOMEOBJ ARRAY INDEX INITS CTOR
-              return false;
-            }
-            if (!emitUnpickN(4)) {
-              //    [stack] CTOR HOMEOBJ ARRAY INDEX INITS
+            if (!emitPopN(2)) {
+              //    [stack] ADDINIT CTOR HOME ARR I INITS
               return false;
             }
           }
@@ -10242,56 +10285,56 @@ bool BytecodeEmitter::emitCreateMemberInitializers(ClassEmitter& ce,
           MOZ_ASSERT(IsPrivateInstanceAccessor(accessorSetterNode));
 
           if (!emitLexicalInitialization(accessorSetterKeyAtom)) {
-            //      [stack] HOMEOBJ HERITAGE? ARRAY INDEX INITS GETTER SETTER
+            //      [stack] ADDINIT HOME HERIT? ARR I INITS GET SET
             // or:
-            //      [stack] CTOR HOMEOBJ ARRAY INDEX INITS GETTER SETTER
+            //      [stack] ADDINIT CTOR HOME ARR I INITS GET SET
             return false;
           }
 
           if (!emitPopN(1)) {
-            //      [stack] HOMEOBJ HERITAGE? ARRAY INDEX INITS GETTER
+            //      [stack] ADDINIT HOME HERIT? ARR I INITS GET
             // or:
-            //      [stack] CTOR HOMEOBJ ARRAY INDEX INITS GETTER
+            //      [stack] ADDINIT CTOR HOME ARR I INITS GET
             return false;
           }
 
           if (!emitLexicalInitialization(accessorGetterKeyAtom)) {
-            //      [stack] HOMEOBJ HERITAGE? ARRAY INDEX INITS GETTER
+            //      [stack] ADDINIT HOME HERIT? ARR I INITS GET
             // or:
-            //      [stack] CTOR HOMEOBJ ARRAY INDEX INITS GETTER
+            //      [stack] ADDINIT CTOR HOME ARR I INITS GET
             return false;
           }
 
           if (!emitPopN(1)) {
-            //      [stack] HOMEOBJ HERITAGE? ARRAY INDEX INITS
+            //      [stack] ADDINIT HOME HERIT? ARR I INITS
             // or:
-            //      [stack] CTOR HOMEOBJ ARRAY INDEX INITS
+            //      [stack] ADDINIT CTOR HOME ARR I INITS
             return false;
           }
         }
       }
       if (!emit1(JSOp::InitElemInc)) {
-        //          [stack] HOMEOBJ HERITAGE? ARRAY INDEX
+        //          [stack] ADDINIT HOME HERIT? ARR I
         // or:
-        //          [stack] CTOR HOMEOBJ ARRAY INDEX
+        //          [stack] ADDINIT CTOR HOME ARR I
         return false;
       }
     }
   }
 
-  // Pop INDEX
+  // Pop I
   if (!emitPopN(1)) {
-    //              [stack] HOMEOBJ HERITAGE? ARRAY
+    //              [stack] ADDINIT HOME HERIT? ARR
     // or:
-    //              [stack] CTOR HOMEOBJ ARRAY
+    //              [stack] ADDINIT CTOR HOME ARR
     return false;
   }
 #endif
 
   if (!ce.emitMemberInitializersEnd()) {
-    //              [stack] HOMEOBJ HERITAGE?
+    //              [stack] ADDINIT HOME HERIT?
     // or:
-    //              [stack] CTOR HOMEOBJ
+    //              [stack] ADDINIT CTOR HOME
     return false;
   }
 
@@ -11789,7 +11832,7 @@ bool BytecodeEmitter::emitClass(
   if (isDerived) {
     if (!ce.emitDerivedClass(innerName, nameForAnonymousClass,
                              hasNameOnStack)) {
-      //            [stack] HERITAGE HOMEOBJ
+      //            [stack] HOMEOBJ HERITAGE
       return false;
     }
   } else {
@@ -11806,6 +11849,9 @@ bool BytecodeEmitter::emitClass(
   // created within its own scope.
   Maybe<LexicalScopeEmitter> lse;
   FunctionNode* ctor;
+#ifdef ENABLE_DECORATORS
+  bool extraInitializersPresent = false;
+#endif
   if (constructor->is<LexicalScopeNode>()) {
     LexicalScopeNode* constructorScope = &constructor->as<LexicalScopeNode>();
 
@@ -11855,6 +11901,22 @@ bool BytecodeEmitter::emitClass(
                   dot_instanceExtraInitializers_())) {
         return false;
       }
+
+      DecoratorEmitter de(this);
+      if (!de.emitCreateAddInitializerFunction(
+              classNode->addInitializerFunction(),
+              TaggedParserAtomIndex::WellKnown::
+                  dot_instanceExtraInitializers_())) {
+        //            [stack] HOMEOBJ HERITAGE? ADDINIT
+        return false;
+      }
+
+      if (!emitUnpickN(isDerived ? 2 : 1)) {
+        //            [stack] ADDINIT HOMEOBJ HERITAGE?
+        return false;
+      }
+
+      extraInitializersPresent = true;
 #endif
 
       // Any class with field initializers will have a constructor
@@ -11902,6 +11964,21 @@ bool BytecodeEmitter::emitClass(
     return false;
   }
 
+#ifdef ENABLE_DECORATORS
+  if (!extraInitializersPresent) {
+    // TODO: See Bug 1868220 for support for static extra initializers. For now
+    // we'll just emit undefined here if we haven't emitted the addInitializer
+    // to ensure we have something on the stack.
+    if (!emit1(JSOp::Undefined)) {
+      //              [stack] CTOR HOMEOBJ ADDINIT
+      return false;
+    }
+    if (!emitUnpickN(2)) {
+      //              [stack] ADDINIT CTOR HOMEOBJ
+    }
+  }
+#endif
+
   if (!emitCreateMemberInitializers(ce, classMembers, FieldPlacement::Static
 #ifdef ENABLE_DECORATORS
                                     ,
@@ -11919,6 +11996,17 @@ bool BytecodeEmitter::emitClass(
     //              [stack] CTOR HOMEOBJ
     return false;
   }
+
+#ifdef ENABLE_DECORATORS
+  if (!emitPickN(2)) {
+    //              [stack] CTOR HOMEOBJ ADDINIT
+    return false;
+  }
+  if (!emitPopN(1)) {
+    //              [stack] CTOR HOMEOBJ
+    return false;
+  }
+#endif
 
   if (!ce.emitBinding()) {
     //              [stack] CTOR
