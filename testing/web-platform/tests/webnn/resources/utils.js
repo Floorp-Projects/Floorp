@@ -318,6 +318,7 @@ const PrecisionMetrics = {
   tan: {ATOL: {float32: 1/1024, float16: 1/512}},
   // End Element-wise unary operations
   elu: {ULP: {float32: 18, float16: 18}},
+  expand: {ULP: {float32: 0, float16: 0}},
   gemm: {ULP: {float32: getGemmPrecisionTolerance, float16: getGemmPrecisionTolerance}},
   hardSigmoid: {ULP: {float32: 2, float16: 2}},
   hardSwish: {ULP: {float32: 4, float16: 4}},
@@ -661,10 +662,11 @@ const buildPad = (operationName, builder, resources) => {
 };
 
 const buildReshape = (operationName, builder, resources) => {
-  // MLOperand reshape(MLOperand input, sequence<unsigned long?> newShape);
+  // MLOperand reshape(MLOperand input, sequence<unsigned long> newShape);
+  // MLOperand expand(MLOperand input, sequence<unsigned long> newShape);
   const namedOutputOperand = {};
   const inputOperand = createSingleInputOperand(builder, resources);
-  // invoke builder.reshape()
+  // invoke builder.reshape() or builder.expand()
   namedOutputOperand[resources.expected.name] = builder[operationName](inputOperand, resources.newShape);
   return namedOutputOperand;
 };
