@@ -30,7 +30,6 @@ DIRS += [
     "about",
     "aboutlogins",
     "aboutwelcome",
-    "asrouter",
     "attribution",
     "contentanalysis",
     "contextualidentity",

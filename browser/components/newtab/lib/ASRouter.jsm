@@ -1116,7 +1116,6 @@ class _ASRouter {
       userPrefs: lazy.ASRouterPreferences.getAllUserPreferences(),
       targetingParameters,
       errors: this.errors,
-      devtoolsEnabled: lazy.ASRouterPreferences.devtoolsEnabled,
     }));
   }
 

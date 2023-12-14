@@ -1,6 +1,6 @@
 /* stylelint-disable max-nesting-depth */
 
-.discoverystream-admin-toggle {
+.asrouter-toggle {
   position: fixed;
   top: 50px;
   inset-inline-end: 15px;
@@ -27,7 +27,7 @@
   }
 }
 
-.discoverystream-admin {
+.asrouter-admin {
   $border-color: var(--newtab-border-color);
   $monospace: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono',
     'Source Code Pro', monospace;

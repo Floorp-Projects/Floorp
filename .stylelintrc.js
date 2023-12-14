@@ -260,7 +260,6 @@ module.exports = {
     {
       files: [
         "browser/components/aboutwelcome/**",
-        "browser/components/asrouter/**",
         "browser/components/newtab/**",
       ],
       customSyntax: "postcss-scss",

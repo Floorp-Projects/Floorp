@@ -2,7 +2,7 @@
 
 ## How to enable ASRouter devtools
 - In `about:config`, set `browser.newtabpage.activity-stream.asrouter.devtoolsEnabled` to `true`
-- Visit `about:asrouter` to see the devtools.
+- Visit `about:newtab#asrouter` to see the devtools.
 
 ## Overview of ASRouter devtools
 
