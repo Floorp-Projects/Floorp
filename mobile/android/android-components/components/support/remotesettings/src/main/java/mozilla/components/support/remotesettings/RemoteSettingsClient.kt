@@ -5,18 +5,29 @@
 package mozilla.components.support.remotesettings
 
 import android.util.AtomicFile
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
+import mozilla.appservices.remotesettings.Attachment
 import mozilla.appservices.remotesettings.RemoteSettings
 import mozilla.appservices.remotesettings.RemoteSettingsConfig
 import mozilla.appservices.remotesettings.RemoteSettingsException
+import mozilla.appservices.remotesettings.RemoteSettingsRecord
 import mozilla.appservices.remotesettings.RemoteSettingsResponse
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.util.writeString
 import org.json.JSONObject
 import java.io.File
 import java.io.FileNotFoundException
-import java.io.FileReader
 import java.io.IOException
 import java.net.URL
 
@@ -29,11 +40,12 @@ import java.net.URL
  * If not specified, the name of the bucket "main" [or the const if updated] will be used.
  * @property collectionName The name of the collection for the settings server.
  */
+
 class RemoteSettingsClient(
     private val storageRootDirectory: File,
     private val serverUrl: String = "https://firefox.settings.services.mozilla.com",
     private val bucketName: String = "main",
-    private val collectionName: String = "",
+    private val collectionName: String,
 ) {
 
     private val config = RemoteSettingsConfig(
@@ -43,7 +55,9 @@ class RemoteSettingsClient(
     )
     private val serverHostName = URL(serverUrl).host
     private val path = "${storageRootDirectory.path}/$serverHostName/$bucketName/$collectionName"
-    private val file = File(path)
+
+    @VisibleForTesting
+    internal var file = File(path)
 
     /**
      * Fetches a response that includes Remote Settings records and the last time the collection was modified.
@@ -66,54 +80,35 @@ class RemoteSettingsClient(
      */
     suspend fun write(response: RemoteSettingsResponse): RemoteSettingsResult = withContext(Dispatchers.IO) {
         try {
-            val jsonObject = JSONObject()
-            jsonObject.put("response", response)
-            AtomicFile(file).writeString { jsonObject.toString() }
+            val jsonString = Json.encodeToString(
+                SerializableRemoteSettingsResponse.serializer(),
+                response.toSerializable(),
+            )
+            AtomicFile(file).writeString { jsonString }
             RemoteSettingsResult.Success(response)
         } catch (e: IOException) {
+            RemoteSettingsResult.DiskFailure(e)
+        } catch (e: SerializationException) {
             RemoteSettingsResult.DiskFailure(e)
         }
     }
 
     /**
-     * Updates the local storage with [response] data if [response.lastModified] is more recent than [lastModified]
-     *
-     * @param response is collections data from remote server or local storage.
-     * @param lastModified tells when the last change was made to the response.
-     */
-    suspend fun writeIfModifiedSince(
-        response: RemoteSettingsResponse,
-        lastModified: ULong,
-    ): RemoteSettingsResult =
-        withContext(Dispatchers.IO) {
-            try {
-                if (response.lastModified > lastModified) {
-                    write(response)
-                } else {
-                    RemoteSettingsResult.Success(response)
-                }
-            } catch (e: IOException) {
-                RemoteSettingsResult.DiskFailure(e)
-            }
-        }
-
-    /**
      * Reads all response for a collection found in the local storage.
      */
     suspend fun read(): RemoteSettingsResult = withContext(Dispatchers.IO) {
-        if (!file.exists()) {
-            RemoteSettingsResult.DiskFailure(FileNotFoundException("File not found"))
-        } else {
-            try {
-                val fileReader = FileReader(file)
-                val jsonObject = JSONObject(fileReader.readText())
-                val response = jsonObject.get("response") as RemoteSettingsResponse
-
-                fileReader.close()
-                RemoteSettingsResult.Success(response)
-            } catch (e: IOException) {
-                RemoteSettingsResult.DiskFailure(e)
+        try {
+            if (!file.exists()) {
+                RemoteSettingsResult.DiskFailure(FileNotFoundException("File not found"))
+            } else {
+                val jsonString = file.readText()
+                val response = Json.decodeFromString<SerializableRemoteSettingsResponse>(jsonString)
+                RemoteSettingsResult.Success(response.toRemoteSettingsResponse())
             }
+        } catch (e: IOException) {
+            RemoteSettingsResult.DiskFailure(e)
+        } catch (e: SerializationException) {
+            RemoteSettingsResult.DiskFailure(e)
         }
     }
 }
@@ -143,19 +138,6 @@ suspend fun RemoteSettingsClient.fetchAndWrite(): RemoteSettingsResult {
 }
 
 /**
- * Fetches files from remote servers.
- * If file retrieved successfully and last modified changed, updates the local storage.
- */
-suspend fun RemoteSettingsClient.fetchAndWriteIfResponseUpdated(lastModified: ULong): RemoteSettingsResult {
-    val fetchResult = fetch()
-    return if (fetchResult is RemoteSettingsResult.Success) {
-        writeIfModifiedSince(fetchResult.response, lastModified)
-    } else {
-        fetchResult
-    }
-}
-
-/**
  * Base class for different result states of remote settings operations.
  */
 sealed class RemoteSettingsResult {
@@ -175,4 +157,105 @@ sealed class RemoteSettingsResult {
      * (e.g., network not available, server error).
      */
     data class NetworkFailure(val error: Exception) : RemoteSettingsResult()
+}
+
+/**
+ * Data class representing serializable version of RemoteSettingsResponse.
+ */
+@Serializable
+private data class SerializableRemoteSettingsResponse(
+    val records: List<SerializableRemoteSettingsRecord>,
+    val lastModified: ULong,
+)
+
+/**
+ * Data class representing serializable version of RemoteSettingsRecord.
+ */
+@Serializable
+private data class SerializableRemoteSettingsRecord(
+    val id: String,
+    val lastModified: ULong,
+    val deleted: Boolean,
+    val attachment: SerializableAttachment?,
+    @Serializable(with = JSONObjectSerializer::class)
+    val fields: JSONObject,
+)
+
+/**
+ * Data class representing serializable version of (RemoteSettings) Attachment.
+ */
+@Serializable
+private data class SerializableAttachment(
+    val filename: String,
+    val mimetype: String,
+    val location: String,
+    val hash: String,
+    val size: ULong,
+)
+
+private object JSONObjectSerializer : KSerializer<JSONObject> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("JSONObject", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: JSONObject) {
+        encoder.encodeString(value.toString())
+    }
+
+    override fun deserialize(decoder: Decoder): JSONObject {
+        val jsonString = decoder.decodeString()
+        return JSONObject(jsonString)
+    }
+}
+
+private fun RemoteSettingsRecord.toSerializable(): SerializableRemoteSettingsRecord {
+    return SerializableRemoteSettingsRecord(
+        id = this.id,
+        lastModified = this.lastModified,
+        deleted = this.deleted,
+        attachment = this.attachment?.toSerializable(),
+        fields = this.fields,
+    )
+}
+
+private fun RemoteSettingsResponse.toSerializable(): SerializableRemoteSettingsResponse {
+    return SerializableRemoteSettingsResponse(
+        records = this.records.map { it.toSerializable() },
+        lastModified = this.lastModified,
+    )
+}
+
+private fun Attachment.toSerializable(): SerializableAttachment {
+    return SerializableAttachment(
+        filename = this.filename,
+        mimetype = this.mimetype,
+        location = this.location,
+        hash = this.hash,
+        size = this.size,
+    )
+}
+
+private fun SerializableRemoteSettingsResponse.toRemoteSettingsResponse(): RemoteSettingsResponse {
+    return RemoteSettingsResponse(
+        records = this.records.map { it.toRemoteSettingsRecord() },
+        lastModified = this.lastModified,
+    )
+}
+
+private fun SerializableRemoteSettingsRecord.toRemoteSettingsRecord(): RemoteSettingsRecord {
+    return RemoteSettingsRecord(
+        id = this.id,
+        lastModified = this.lastModified,
+        deleted = this.deleted,
+        attachment = this.attachment?.toAttachment(),
+        fields = this.fields,
+    )
+}
+
+private fun SerializableAttachment.toAttachment(): Attachment {
+    return Attachment(
+        filename = this.filename,
+        mimetype = this.mimetype,
+        location = this.location,
+        hash = this.hash,
+        size = this.size,
+    )
 }
