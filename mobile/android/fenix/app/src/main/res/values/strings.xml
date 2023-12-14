@@ -2191,7 +2191,7 @@
     <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Checking review quality</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Checking review quality</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
+    <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
     <string name="review_quality_check_analysis_in_progress_warning_title_2">Checking review quality (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_body">This could take about 60 seconds.</string>
