@@ -2496,6 +2496,29 @@ BytecodeEmitter::createImmutableScriptData() {
       bytecodeSection().tryNoteList().span());
 }
 
+#ifdef ENABLE_DECORATORS
+bool BytecodeEmitter::emitCheckIsCallable() {
+  // This emits code to check if the value at the top of the stack is
+  // callable. The value is left on the stack.
+  //            [stack] VAL
+  if (!emitAtomOp(JSOp::GetIntrinsic,
+                  TaggedParserAtomIndex::WellKnown::IsCallable())) {
+    //            [stack] VAL ISCALLABLE
+    return false;
+  }
+  if (!emit1(JSOp::Undefined)) {
+    //            [stack] VAL ISCALLABLE UNDEFINED
+    return false;
+  }
+  if (!emitDupAt(2)) {
+    //            [stack] VAL ISCALLABLE UNDEFINED VAL
+    return false;
+  }
+  return emitCall(JSOp::Call, 1);
+  //              [stack] VAL ISCALLABLE_RESULT
+}
+#endif
+
 bool BytecodeEmitter::getNslots(uint32_t* nslots) {
   uint64_t nslots64 =
       maxFixedSlots + static_cast<uint64_t>(bytecodeSection().maxStackDepth());

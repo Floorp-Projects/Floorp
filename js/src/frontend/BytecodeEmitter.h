@@ -1069,6 +1069,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   [[nodiscard]] js::UniquePtr<ImmutableScriptData> createImmutableScriptData();
 
+#ifdef ENABLE_DECORATORS
+  [[nodiscard]] bool emitCheckIsCallable();
+#endif
+
  private:
   [[nodiscard]] SelfHostedIter getSelfHostedIterFor(ParseNode* parseNode);
 
