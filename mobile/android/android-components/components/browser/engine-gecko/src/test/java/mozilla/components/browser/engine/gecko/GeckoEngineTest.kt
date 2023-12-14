@@ -317,6 +317,10 @@ class GeckoEngineTest {
             contentBlockingSettings.antiTrackingCategories,
         )
 
+        assertFalse(engine.settings.emailTrackerBlockingPrivateBrowsing)
+        engine.settings.emailTrackerBlockingPrivateBrowsing = true
+        assertTrue(engine.settings.emailTrackerBlockingPrivateBrowsing)
+
         val safeStrictBrowsingCategories = SafeBrowsingPolicy.RECOMMENDED.id
         assertEquals(safeStrictBrowsingCategories, contentBlockingSettings.safeBrowsingCategories)
 
@@ -339,6 +343,8 @@ class GeckoEngineTest {
         assertEquals(contentBlockingSettings.queryParameterStrippingPrivateBrowsingEnabled, engine.settings.queryParameterStrippingPrivateBrowsing)
         assertEquals(contentBlockingSettings.queryParameterStrippingAllowList[0], engine.settings.queryParameterStrippingAllowList)
         assertEquals(contentBlockingSettings.queryParameterStrippingStripList[0], engine.settings.queryParameterStrippingStripList)
+
+        assertEquals(contentBlockingSettings.emailTrackerBlockingPrivateBrowsingEnabled, engine.settings.emailTrackerBlockingPrivateBrowsing)
 
         try {
             engine.settings.domStorageEnabled
@@ -665,6 +671,26 @@ class GeckoEngineTest {
         engine.settings.queryParameterStrippingPrivateBrowsing = true
 
         verify(mockRuntime.settings.contentBlocking, never()).setQueryParameterStrippingPrivateBrowsingEnabled(true)
+    }
+
+    @Test
+    fun `emailTrackerBlockingPrivateBrowsing is only invoked with the value is changed`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        val settings = spy(ContentBlocking.Settings.Builder().build())
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(settings)
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        engine.settings.emailTrackerBlockingPrivateBrowsing = true
+
+        verify(mockRuntime.settings.contentBlocking).setEmailTrackerBlockingPrivateBrowsing(true)
+
+        reset(settings)
+
+        engine.settings.emailTrackerBlockingPrivateBrowsing = true
+
+        verify(mockRuntime.settings.contentBlocking, never()).setEmailTrackerBlockingPrivateBrowsing(true)
     }
 
     @Test

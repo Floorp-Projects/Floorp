@@ -86,6 +86,7 @@ class SettingsTest {
             { settings.clearColor = Color.BLUE },
             { settings.enterpriseRootsEnabled },
             { settings.enterpriseRootsEnabled = false },
+            { settings.emailTrackerBlockingPrivateBrowsing },
         )
     }
 
@@ -130,6 +131,7 @@ class SettingsTest {
         assertFalse(settings.enterpriseRootsEnabled)
         assertFalse(settings.queryParameterStripping)
         assertFalse(settings.queryParameterStrippingPrivateBrowsing)
+        assertFalse(settings.emailTrackerBlockingPrivateBrowsing)
         assertEquals("", settings.queryParameterStrippingAllowList)
         assertEquals("", settings.queryParameterStrippingStripList)
         assertEquals(EngineSession.CookieBannerHandlingMode.DISABLED, settings.cookieBannerHandlingMode)
@@ -178,6 +180,7 @@ class SettingsTest {
             cookieBannerHandlingDetectOnlyMode = true,
             cookieBannerHandlingGlobalRules = true,
             cookieBannerHandlingGlobalRulesSubFrames = true,
+            emailTrackerBlockingPrivateBrowsing = true,
         )
 
         assertFalse(defaultSettings.domStorageEnabled)
@@ -219,5 +222,6 @@ class SettingsTest {
         assertTrue(defaultSettings.cookieBannerHandlingDetectOnlyMode)
         assertTrue(defaultSettings.cookieBannerHandlingGlobalRules)
         assertTrue(defaultSettings.cookieBannerHandlingGlobalRulesSubFrames)
+        assertTrue(defaultSettings.emailTrackerBlockingPrivateBrowsing)
     }
 }

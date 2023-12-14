@@ -1040,6 +1040,16 @@ class GeckoEngine(
                 field = value
             }
 
+        override var emailTrackerBlockingPrivateBrowsing: Boolean = false
+            set(value) {
+                with(runtime.settings.contentBlocking) {
+                    if (this.emailTrackerBlockingPrivateBrowsingEnabled != value) {
+                        this.setEmailTrackerBlockingPrivateBrowsing(value)
+                    }
+                }
+                field = value
+            }
+
         override var cookieBannerHandlingDetectOnlyMode: Boolean = false
             set(value) {
                 with(runtime.settings.contentBlocking) {
@@ -1226,6 +1236,7 @@ class GeckoEngine(
             this.cookieBannerHandlingGlobalRules = it.cookieBannerHandlingGlobalRules
             this.cookieBannerHandlingGlobalRulesSubFrames = it.cookieBannerHandlingGlobalRulesSubFrames
             this.globalPrivacyControlEnabled = it.globalPrivacyControlEnabled
+            this.emailTrackerBlockingPrivateBrowsing = it.emailTrackerBlockingPrivateBrowsing
         }
     }
 

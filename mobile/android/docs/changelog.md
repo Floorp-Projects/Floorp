@@ -12,6 +12,7 @@ permalink: /changelog/
 
 * **concept-engine**
   * Add `reportBackInStock` API to `EngineSession` to allow reporting a shopping product is back in stock. [Bug 1858947](https://bugzilla.mozilla.org/show_bug.cgi?id=1858947)
+  * Add `emailTrackerBlockingPrivateBrowsing` API to `Settings` to toggle Email Tracker Blocking in Private Browsing Mode [Bug 1866927](https://bugzilla.mozilla.org/show_bug.cgi?id=1866927)
 
 * **feature-media**
   * Added `FOREGROUND_SERVICE_MEDIA_PLAYBACK` permission to the `AndroidManifest.xml`.
@@ -23,6 +24,7 @@ permalink: /changelog/
   * Enable nested scrolling on `GeckoEngineView` as required by `NestedGeckoView`. [Bug 1847305](https://bugzilla.mozilla.org/show_bug.cgi?id=1847305)
   * `NestedGeckoView` now disallows touch interception until we receive a response from `GeckoView#onTouchEventForDetailResult`. [Bug 1847305](https://bugzilla.mozilla.org/show_bug.cgi?id=1847305)
   * Add `globalPrivacyControlEnabled` setting to allow enabling Global Privacy Control in normal browsing. This is always enabled in private browsing. [Bug 1865357](https://bugzilla.mozilla.org/show_bug.cgi?id=1865357)
+  * Adds support to toggle Email Tracker Blocking in Private Mode with new `emailTrackerBlockingPrivateBrowsing` API [Bug 1866927](https://bugzilla.mozilla.org/show_bug.cgi?id=1866927)
 
 * **samples-browser**
   * Use `VerticalSwipeRefreshLayout` from AndroidComponents instead of AndroidX `SwipeRefreshLayout` to represent better Fenix behavior  
