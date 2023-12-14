@@ -38,6 +38,7 @@
   :is(p, textarea) {
     margin-block: 0;
     line-height: 1.5;
+    overflow-wrap: anywhere;
   }
 
   menulist {
@@ -119,8 +120,8 @@
 }
 
 .address-save-update-row-container {
-  display: flex;
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   gap: 8px;
 
   > image {
