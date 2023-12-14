@@ -13278,7 +13278,8 @@ static gc::AllocSite* MaybeCreateAllocSite(jsbytecode* pc,
     return outerScript->zone()->unknownAllocSite(JS::TraceKind::Object);
   }
 
-  return frame->icScript()->createAllocSite(outerScript);
+  uint32_t pcOffset = frame->script()->pcToOffset(pc);
+  return frame->icScript()->getOrCreateAllocSite(outerScript, pcOffset);
 }
 
 AttachDecision NewArrayIRGenerator::tryAttachArrayObject() {

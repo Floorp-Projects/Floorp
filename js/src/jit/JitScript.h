@@ -192,7 +192,7 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
   void setActive() { active_ = true; }
   void resetActive() { active_ = false; }
 
-  gc::AllocSite* createAllocSite(JSScript* outerScript);
+  gc::AllocSite* getOrCreateAllocSite(JSScript* outerScript, uint32_t pcOffset);
 
   void prepareForDestruction(Zone* zone);
 

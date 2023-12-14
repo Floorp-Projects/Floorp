@@ -72,6 +72,13 @@ class AllocSite {
   // happened since the last nursery collection.
   AllocSite* nextNurseryAllocated = nullptr;
 
+  // Bytecode offset of this allocation site. Only valid if hasScript().
+  // Note that the offset does not need to correspond with the script stored in
+  // this AllocSite, because if we're doing trial-inlining, the script will be
+  // the outer script and the pc offset can be in an inlined script.
+  static constexpr uint32_t InvalidPCOffset = UINT32_MAX;
+  uint32_t pcOffset_ = InvalidPCOffset;
+
   // Number of nursery allocations at this site since last nursery collection.
   uint32_t nurseryAllocCount = 0;
 
@@ -108,10 +115,12 @@ class AllocSite {
   }
 
   // Create a site for an opcode in the given script.
-  AllocSite(JS::Zone* zone, JSScript* script, JS::TraceKind kind)
+  AllocSite(JS::Zone* zone, JSScript* script, uint32_t pcOffset,
+            JS::TraceKind kind)
       : AllocSite(zone, kind) {
     MOZ_ASSERT(script != WasmScript);
     setScript(script);
+    pcOffset_ = pcOffset;
   }
 
   void initUnknownSite(JS::Zone* zone, JS::TraceKind kind) {
@@ -147,6 +156,12 @@ class AllocSite {
   JSScript* script() const {
     MOZ_ASSERT(hasScript());
     return reinterpret_cast<JSScript*>(rawScript());
+  }
+
+  uint32_t pcOffset() const {
+    MOZ_ASSERT(hasScript());
+    MOZ_ASSERT(pcOffset_ != InvalidPCOffset);
+    return pcOffset_;
   }
 
   // Whether this site is not an unknown or optimized site.

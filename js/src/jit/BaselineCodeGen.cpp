@@ -559,7 +559,7 @@ bool BaselineCodeGen<Handler>::emitOutOfLinePostBarrierSlot() {
 // refer to the catch-all unknown allocation site. This will be the case for
 // stubs created when running in the interpreter. This happens on transition to
 // baseline.
-static bool CreateAllocSitesForCacheIRStub(JSScript* script,
+static bool CreateAllocSitesForCacheIRStub(JSScript* script, uint32_t pcOffset,
                                            ICCacheIRStub* stub) {
   const CacheIRStubInfo* stubInfo = stub->stubInfo();
   uint8_t* stubData = stub->stubDataStart();
@@ -578,7 +578,8 @@ static bool CreateAllocSitesForCacheIRStub(JSScript* script,
       gc::AllocSite* site =
           stubInfo->getPtrStubField<ICCacheIRStub, gc::AllocSite>(stub, offset);
       if (site->kind() == gc::AllocSite::Kind::Unknown) {
-        gc::AllocSite* newSite = icScript->createAllocSite(script);
+        gc::AllocSite* newSite =
+            icScript->getOrCreateAllocSite(script, pcOffset);
         if (!newSite) {
           return false;
         }
@@ -595,12 +596,14 @@ static bool CreateAllocSitesForCacheIRStub(JSScript* script,
   return true;
 }
 
-static void CreateAllocSitesForICChain(JSScript* script, uint32_t entryIndex) {
+static void CreateAllocSitesForICChain(JSScript* script, uint32_t pcOffset,
+                                       uint32_t entryIndex) {
   JitScript* jitScript = script->jitScript();
   ICStub* stub = jitScript->icEntry(entryIndex).firstStub();
 
   while (!stub->isFallback()) {
-    if (!CreateAllocSitesForCacheIRStub(script, stub->toCacheIRStub())) {
+    if (!CreateAllocSitesForCacheIRStub(script, pcOffset,
+                                        stub->toCacheIRStub())) {
       // This is an optimization and safe to skip if we hit OOM or per-zone
       // limit.
       return;
@@ -634,7 +637,7 @@ bool BaselineCompilerCodeGen::emitNextIC() {
   MOZ_ASSERT(BytecodeOpHasIC(JSOp(*handler.pc())));
 
   if (BytecodeOpCanHaveAllocSite(JSOp(*handler.pc()))) {
-    CreateAllocSitesForICChain(script, entryIndex);
+    CreateAllocSitesForICChain(script, pcOffset, entryIndex);
   }
 
   // Load stub pointer into ICStubReg.
