@@ -7,7 +7,7 @@
  * https://w3c.github.io/screen-wake-lock/
  */
 
-[SecureContext, Exposed=(Window)]
+[SecureContext, Exposed=(Window), Pref="dom.screenwakelock.enabled"]
 interface WakeLockSentinel : EventTarget {
   readonly attribute boolean released;
   readonly attribute WakeLockType type;

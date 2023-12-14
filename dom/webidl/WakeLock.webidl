@@ -7,7 +7,7 @@
  * https://w3c.github.io/screen-wake-lock/
  */
 
-[SecureContext, Exposed=(Window)]
+[SecureContext, Exposed=(Window), Pref="dom.screenwakelock.enabled"]
 interface WakeLock {
   [Throws]
   Promise<WakeLockSentinel> request(optional WakeLockType type = "screen");
