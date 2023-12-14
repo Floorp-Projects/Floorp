@@ -12,7 +12,7 @@ if not CONFIG["MOZ_SUITE"]:
         "browser/manual_app_update_only/browser.toml",
     ]
     if CONFIG["MOZ_BITS_DOWNLOAD"]:
-        BROWSER_CHROME_MANIFESTS += ["browser/browser.bits.ini"]
+        BROWSER_CHROME_MANIFESTS += ["browser/browser.bits.toml"]
 
 XPCSHELL_TESTS_MANIFESTS += [
     "unit_aus_update/xpcshell.toml",
