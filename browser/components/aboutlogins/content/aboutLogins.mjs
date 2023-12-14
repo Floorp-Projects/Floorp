@@ -203,9 +203,9 @@ window.addEventListener("AboutLoginsExportPasswordsDialog", async () => {
   });
   let dialog = document.querySelector("confirmation-dialog");
   let options = {
-    title: "about-logins-confirm-export-dialog-title",
-    message: "about-logins-confirm-export-dialog-message",
-    confirmButtonLabel: "about-logins-confirm-export-dialog-confirm-button",
+    title: "about-logins-confirm-export-dialog-title2",
+    message: "about-logins-confirm-export-dialog-message2",
+    confirmButtonLabel: "about-logins-confirm-export-dialog-confirm-button2",
   };
   try {
     await dialog.show(options);

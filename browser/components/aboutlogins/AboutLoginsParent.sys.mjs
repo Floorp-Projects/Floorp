@@ -429,10 +429,10 @@ export class AboutLoginsParent extends JSWindowActorParent {
     let [title, defaultFilename, okButtonLabel, csvFilterTitle] =
       await lazy.AboutLoginsL10n.formatValues([
         {
-          id: "about-logins-export-file-picker-title",
+          id: "about-logins-export-file-picker-title2",
         },
         {
-          id: "about-logins-export-file-picker-default-filename",
+          id: "about-logins-export-file-picker-default-filename2",
         },
         {
           id: "about-logins-export-file-picker-export-button",
