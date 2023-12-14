@@ -25,7 +25,7 @@ TESTING_JS_MODULES += [
     "unit/test_http3_prio_helpers.js",
 ]
 
-PERFTESTS_MANIFESTS += ["perf/perftest.ini", "unit/perftest.ini"]
+PERFTESTS_MANIFESTS += ["perf/perftest.toml", "unit/perftest.toml"]
 
 MARIONETTE_UNIT_MANIFESTS += [
     "marionette/manifest.ini",

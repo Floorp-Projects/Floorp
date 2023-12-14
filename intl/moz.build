@@ -36,7 +36,7 @@ EXPORTS += [
 ]
 
 
-PERFTESTS_MANIFESTS += ["benchmarks/perftest.ini"]
+PERFTESTS_MANIFESTS += ["benchmarks/perftest.toml"]
 XPCSHELL_TESTS_MANIFESTS += ["benchmarks/xpcshell.toml"]
 
 with Files("**"):

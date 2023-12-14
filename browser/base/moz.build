@@ -71,7 +71,7 @@ DIRS += [
     "content/test/performance/",
 ]
 
-PERFTESTS_MANIFESTS += ["content/test/perftest.ini"]
+PERFTESTS_MANIFESTS += ["content/test/perftest.toml"]
 
 DEFINES["MOZ_APP_VERSION"] = CONFIG["MOZ_APP_VERSION"]
 DEFINES["MOZ_APP_VERSION_DISPLAY"] = CONFIG["MOZ_APP_VERSION_DISPLAY"]

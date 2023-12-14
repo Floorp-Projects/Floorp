@@ -15,5 +15,5 @@ SPHINX_TREES["/testing"] = "docs"
 DIRS += ["mozbase"]
 
 PERFTESTS_MANIFESTS += [
-    "performance/perftest.ini",
+    "performance/perftest.toml",
 ]

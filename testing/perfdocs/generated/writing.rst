@@ -31,9 +31,9 @@ This is the list of fields:
 
 Tests are registered using tests manifests and the **PERFTESTS_MANIFESTS**
 variable in `moz.build` files - it's good practice to name this file
-`perftest.ini`.
+`perftest.toml`.
 
-Example of such a file: https://searchfox.org/mozilla-central/source/testing/performance/perftest.ini
+Example of such a file: https://searchfox.org/mozilla-central/source/testing/performance/perftest.toml
 
 
 xpcshell
@@ -71,7 +71,7 @@ Note that the ``perfMetadata`` variable can exist in any ``<script>...</script>`
           perfherder_metrics: [
             { name: "Registration", unit: "ms" },
           ],
-          manifest: "perftest.ini",
+          manifest: "perftest.toml",
           manifest_flavor: "plain",
           extra_args: [
             "headless",
