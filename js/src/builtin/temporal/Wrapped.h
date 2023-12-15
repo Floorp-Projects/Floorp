@@ -122,9 +122,7 @@ class MOZ_STACK_CLASS Wrapped final {
     return ptr_ ? &ptr_->unwrapAs<U>() : nullptr;
   }
 
-  void trace(JSTracer* trc) {
-    TraceNullableRoot(trc, &ptr_, "Wrapped::ptr_");
-  }
+  void trace(JSTracer* trc) { TraceNullableRoot(trc, &ptr_, "Wrapped::ptr_"); }
 };
 
 void ReportDeadWrapperOrAccessDenied(JSContext* cx, JSObject* obj);
