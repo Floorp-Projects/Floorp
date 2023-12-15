@@ -33,6 +33,8 @@ PATH_MAPPINGS = {
 def get_crashreports(directory, name=None):
     rc = 0
     upload_path = os.environ.get("UPLOAD_PATH")
+    if not upload_path:
+        upload_path = os.environ.get("UPLOAD_DIR")
     if upload_path:
         # For automation, log the minidumps with stackwalk and get them moved to
         # the artifacts directory.
