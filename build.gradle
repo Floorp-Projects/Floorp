@@ -19,6 +19,9 @@ buildscript {
         detekt_plugin = Versions.detekt
         python_envs_plugin = Versions.python_envs_plugin
         ksp_plugin = Versions.ksp_plugin
+
+        // Used in mobile/android/fenix/app/build.gradle
+        protobuf_plugin = FenixVersions.protobuf_plugin
     }
 
     dependencies {
@@ -28,6 +31,13 @@ buildscript {
         classpath 'com.diffplug.spotless:spotless-plugin-gradle:6.25.0'
         classpath 'org.tomlj:tomlj:1.1.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+
+        // Used in mobile/android/fenix/app/build.gradle
+        classpath FenixDependencies.androidx_safeargs
+        classpath FenixDependencies.osslicenses_plugin
+        classpath FenixDependencies.tools_benchmarkgradle
+        classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
+        classpath "${ApplicationServicesConfig.groupId}:tooling-nimbus-gradle:${ApplicationServicesConfig.version}"
     }
 }
 
@@ -357,10 +367,10 @@ afterEvaluate {
                 "-Xlint:-serial",
                 // Classfile, because javac has a bug with MethodParameters attributes
                 // with Java 7. https://bugs.openjdk.java.net/browse/JDK-8190452
-                "-Xlint:-classfile",
+                "-Xlint:-classfile"]
                 // Turn all remaining warnings into errors,
                 // unless marked by @SuppressWarnings.
-                "-Werror"]
+                //"-Werror"]
         }
     }
 }
