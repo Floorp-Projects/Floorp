@@ -1477,16 +1477,10 @@ static bool BuiltinGetPossibleInstantsFor(
 
 static bool BuiltinGetPossibleInstantsFor(
     JSContext* cx, Handle<TimeZoneObjectMaybeBuiltin*> timeZone,
-    Handle<Wrapped<PlainDateTimeObject*>> dateTime,
-    MutableHandle<InstantVector> list) {
-  auto* unwrapped = dateTime.unwrap(cx);
-  if (!unwrapped) {
-    return false;
-  }
-
+    const PlainDateTime& dateTime, MutableHandle<InstantVector> list) {
   // Temporal.TimeZone.prototype.getInstantFor, step 4.
   EpochInstantList possibleInstants;
-  if (!BuiltinGetPossibleInstantsFor(cx, timeZone, ToPlainDateTime(unwrapped),
+  if (!BuiltinGetPossibleInstantsFor(cx, timeZone, dateTime,
                                      possibleInstants)) {
     return false;
   }
@@ -1505,52 +1499,17 @@ static bool BuiltinGetPossibleInstantsFor(
   return true;
 }
 
-static bool TimeZone_getPossibleInstantsFor(JSContext* cx, unsigned argc,
-                                            Value* vp);
-
 /**
  * GetPossibleInstantsFor ( timeZone, dateTime [ , getPossibleInstantsFor ] )
  */
-bool js::temporal::GetPossibleInstantsFor(
-    JSContext* cx, Handle<TimeZoneValue> timeZone,
-    Handle<Wrapped<PlainDateTimeObject*>> dateTime,
+static bool GetPossibleInstantsForSlow(
+    JSContext* cx, Handle<Value> getPossibleInstantsFor,
+    Handle<JSObject*> timeZone, Handle<Wrapped<PlainDateTimeObject*>> dateTime,
     MutableHandle<InstantVector> list) {
-  // Step 1.
-  if (timeZone.isString()) {
-    return BuiltinGetPossibleInstantsFor(cx, timeZone.toString(), dateTime,
-                                         list);
-  }
-
-  // Step 2.
-  Rooted<JSObject*> timeZoneObj(cx, timeZone.toObject());
-  Rooted<Value> getPossibleInstantsFor(cx);
-  if (!GetMethodForCall(cx, timeZoneObj, cx->names().getPossibleInstantsFor,
-                        &getPossibleInstantsFor)) {
-    return false;
-  }
-
-  // Fast-path for the default implementation.
-  if (timeZoneObj->is<TimeZoneObject>() &&
-      IsNativeFunction(getPossibleInstantsFor,
-                       TimeZone_getPossibleInstantsFor)) {
-    ForOfPIC::Chain* stubChain = ForOfPIC::getOrCreate(cx);
-    if (!stubChain) {
-      return false;
-    }
-
-    bool arrayIterationSane;
-    if (!stubChain->tryOptimizeArray(cx, &arrayIterationSane)) {
-      return false;
-    }
-
-    if (arrayIterationSane) {
-      return BuiltinGetPossibleInstantsFor(cx, timeZoneObj.as<TimeZoneObject>(),
-                                           dateTime, list);
-    }
-  }
+  // Steps 1-2. (Not applicable)
 
   // Step 3.
-  Rooted<Value> thisv(cx, ObjectValue(*timeZoneObj));
+  Rooted<Value> thisv(cx, ObjectValue(*timeZone));
   Rooted<Value> arg(cx, ObjectValue(*dateTime));
   Rooted<Value> rval(cx);
   if (!Call(cx, getPossibleInstantsFor, thisv, arg, &rval)) {
@@ -1597,16 +1556,116 @@ bool js::temporal::GetPossibleInstantsFor(
   return true;
 }
 
+static bool TimeZone_getPossibleInstantsFor(JSContext* cx, unsigned argc,
+                                            Value* vp);
+
+static bool IsBuiltinGetPossibleInstantsFor(
+    JSContext* cx, Handle<JSObject*> timeZone,
+    Handle<Value> getPossibleInstantsFor, bool* result) {
+  if (!timeZone->is<TimeZoneObject>() ||
+      !IsNativeFunction(getPossibleInstantsFor,
+                        TimeZone_getPossibleInstantsFor)) {
+    *result = false;
+    return true;
+  }
+
+  // "Object" time zones need to ensure array iteration is still sane.
+  auto* stubChain = ForOfPIC::getOrCreate(cx);
+  if (!stubChain) {
+    return false;
+  }
+  return stubChain->tryOptimizeArray(cx, result);
+}
+
+/**
+ * GetPossibleInstantsFor ( timeZone, dateTime [ , getPossibleInstantsFor ] )
+ */
+static bool GetPossibleInstantsFor(
+    JSContext* cx, Handle<TimeZoneValue> timeZone,
+    Handle<Wrapped<PlainDateTimeObject*>> dateTimeObj,
+    const PlainDateTime& dateTime, MutableHandle<InstantVector> list) {
+  // Step 1.
+  if (timeZone.isString()) {
+    return BuiltinGetPossibleInstantsFor(cx, timeZone.toString(), dateTime,
+                                         list);
+  }
+
+  // Step 2.
+  Rooted<JSObject*> timeZoneObj(cx, timeZone.toObject());
+  Rooted<Value> getPossibleInstantsFor(cx);
+  if (!GetMethodForCall(cx, timeZoneObj, cx->names().getPossibleInstantsFor,
+                        &getPossibleInstantsFor)) {
+    return false;
+  }
+
+  // Fast-path for the default implementation.
+  bool isBuiltin;
+  if (!IsBuiltinGetPossibleInstantsFor(cx, timeZoneObj, getPossibleInstantsFor,
+                                       &isBuiltin)) {
+    return false;
+  }
+  if (isBuiltin) {
+    return BuiltinGetPossibleInstantsFor(cx, timeZoneObj.as<TimeZoneObject>(),
+                                         dateTime, list);
+  }
+
+  return GetPossibleInstantsForSlow(cx, getPossibleInstantsFor, timeZoneObj,
+                                    dateTimeObj, list);
+}
+
+/**
+ * GetPossibleInstantsFor ( timeZone, dateTime [ , getPossibleInstantsFor ] )
+ */
+bool js::temporal::GetPossibleInstantsFor(
+    JSContext* cx, Handle<TimeZoneValue> timeZone,
+    Handle<PlainDateTimeWithCalendar> dateTime,
+    MutableHandle<InstantVector> list) {
+  // Step 1.
+  if (timeZone.isString()) {
+    return BuiltinGetPossibleInstantsFor(cx, timeZone.toString(),
+                                         ToPlainDateTime(dateTime), list);
+  }
+
+  // Step 2.
+  Rooted<JSObject*> timeZoneObj(cx, timeZone.toObject());
+  Rooted<Value> getPossibleInstantsFor(cx);
+  if (!GetMethodForCall(cx, timeZoneObj, cx->names().getPossibleInstantsFor,
+                        &getPossibleInstantsFor)) {
+    return false;
+  }
+
+  // Fast-path for the default implementation.
+  bool isBuiltin;
+  if (!IsBuiltinGetPossibleInstantsFor(cx, timeZoneObj, getPossibleInstantsFor,
+                                       &isBuiltin)) {
+    return false;
+  }
+  if (isBuiltin) {
+    return BuiltinGetPossibleInstantsFor(cx, timeZoneObj.as<TimeZoneObject>(),
+                                         ToPlainDateTime(dateTime), list);
+  }
+
+  Rooted<PlainDateTimeObject*> dateTimeObj(
+      cx, CreateTemporalDateTime(cx, ToPlainDateTime(dateTime),
+                                 dateTime.calendar()));
+  if (!dateTimeObj) {
+    return false;
+  }
+  return GetPossibleInstantsForSlow(cx, getPossibleInstantsFor, timeZoneObj,
+                                    dateTimeObj, list);
+}
+
 /**
  * AddDateTime ( year, month, day, hour, minute, second, millisecond,
  * microsecond, nanosecond, calendar, years, months, weeks, days, hours,
  * minutes, seconds, milliseconds, microseconds, nanoseconds, options )
  */
-static bool AddDateTime(JSContext* cx, const PlainDateTime& dateTime,
-                        int64_t nanoseconds, Handle<CalendarValue> calendar,
-                        PlainDateTime* result) {
+static bool AddDateTime(JSContext* cx,
+                        Handle<PlainDateTimeWithCalendar> dateTimeWithCalendar,
+                        int64_t nanoseconds, PlainDateTime* result) {
   MOZ_ASSERT(std::abs(nanoseconds) <= 2 * ToNanoseconds(TemporalUnit::Day));
 
+  const auto& dateTime = ToPlainDateTime(dateTimeWithCalendar);
   auto& [date, time] = dateTime;
 
   // Step 1.
@@ -1624,7 +1683,8 @@ static bool AddDateTime(JSContext* cx, const PlainDateTime& dateTime,
 
   // Step 5.
   PlainDate addedDate;
-  if (!CalendarDateAdd(cx, calendar, datePart, dateDuration, &addedDate)) {
+  if (!CalendarDateAdd(cx, dateTimeWithCalendar.calendar(), datePart,
+                       dateDuration, &addedDate)) {
     return false;
   }
 
@@ -1639,10 +1699,9 @@ static bool AddDateTime(JSContext* cx, const PlainDateTime& dateTime,
  */
 bool js::temporal::DisambiguatePossibleInstants(
     JSContext* cx, Handle<InstantVector> possibleInstants,
-    Handle<TimeZoneValue> timeZone,
-    Handle<Wrapped<PlainDateTimeObject*>> dateTimeObj,
+    Handle<TimeZoneValue> timeZone, Handle<PlainDateTimeWithCalendar> dateTime,
     TemporalDisambiguation disambiguation,
-    JS::MutableHandle<Wrapped<InstantObject*>> result) {
+    MutableHandle<Wrapped<InstantObject*>> result) {
   // Step 1. (Not applicable)
 
   // Steps 2-3.
@@ -1687,19 +1746,8 @@ bool js::temporal::DisambiguatePossibleInstants(
   constexpr auto oneDay =
       InstantSpan::fromNanoseconds(ToNanoseconds(TemporalUnit::Day));
 
-  auto* unwrappedDateTime = dateTimeObj.unwrap(cx);
-  if (!unwrappedDateTime) {
-    return false;
-  }
-
-  auto dateTime = ToPlainDateTime(unwrappedDateTime);
-  Rooted<CalendarValue> calendar(cx, unwrappedDateTime->calendar());
-  if (!calendar.wrap(cx)) {
-    return false;
-  }
-
   // Step 7.
-  auto epochNanoseconds = GetUTCEpochNanoseconds(dateTime);
+  auto epochNanoseconds = GetUTCEpochNanoseconds(ToPlainDateTime(dateTime));
 
   // Steps 8 and 10.
   auto dayBefore = epochNanoseconds - oneDay;
@@ -1742,14 +1790,17 @@ bool js::temporal::DisambiguatePossibleInstants(
   if (disambiguation == TemporalDisambiguation::Earlier) {
     // Step 17.a.
     PlainDateTime earlier;
-    if (!AddDateTime(cx, dateTime, -nanoseconds, calendar, &earlier)) {
+    if (!AddDateTime(cx, dateTime, -nanoseconds, &earlier)) {
       return false;
     }
 
+    // FIXME: spec bug - |earlier| created with "iso8601" calendar, but |later|
+    // created with calendar from |dateTime|. Which one is correct?
+
     // Step 17.b.
-    Rooted<PlainDateTimeObject*> earlierDateTime(
-        cx, CreateTemporalDateTime(cx, earlier, calendar));
-    if (!earlierDateTime) {
+    Rooted<PlainDateTimeWithCalendar> earlierDateTime(cx);
+    if (!CreateTemporalDateTime(cx, earlier, dateTime.calendar(),
+                                &earlierDateTime)) {
       return false;
     }
 
@@ -1778,14 +1829,13 @@ bool js::temporal::DisambiguatePossibleInstants(
 
   // Step 19.
   PlainDateTime later;
-  if (!AddDateTime(cx, dateTime, nanoseconds, calendar, &later)) {
+  if (!AddDateTime(cx, dateTime, nanoseconds, &later)) {
     return false;
   }
 
   // Step 20.
-  Rooted<PlainDateTimeObject*> laterDateTime(
-      cx, CreateTemporalDateTime(cx, later, calendar));
-  if (!laterDateTime) {
+  Rooted<PlainDateTimeWithCalendar> laterDateTime(cx);
+  if (!CreateTemporalDateTime(cx, later, dateTime.calendar(), &laterDateTime)) {
     return false;
   }
 
@@ -1815,6 +1865,60 @@ static bool GetInstantFor(JSContext* cx, Handle<TimeZoneValue> timeZone,
                           Handle<Wrapped<PlainDateTimeObject*>> dateTime,
                           TemporalDisambiguation disambiguation,
                           MutableHandle<Wrapped<InstantObject*>> result) {
+  auto* unwrappedDateTime = dateTime.unwrap(cx);
+  if (!unwrappedDateTime) {
+    return false;
+  }
+
+  auto plainDateTime = ToPlainDateTime(unwrappedDateTime);
+  Rooted<CalendarValue> calendar(cx, unwrappedDateTime->calendar());
+  if (!calendar.wrap(cx)) {
+    return false;
+  }
+
+  // Step 1.
+  Rooted<InstantVector> possibleInstants(cx, InstantVector(cx));
+  if (!GetPossibleInstantsFor(cx, timeZone, dateTime, plainDateTime,
+                              &possibleInstants)) {
+    return false;
+  }
+
+  // Step 2.
+  Rooted<PlainDateTimeWithCalendar> dateTimeWithCalendar(
+      cx, PlainDateTimeWithCalendar{plainDateTime, calendar});
+  return DisambiguatePossibleInstants(cx, possibleInstants, timeZone,
+                                      dateTimeWithCalendar, disambiguation,
+                                      result);
+}
+
+/**
+ * GetInstantFor ( timeZone, dateTime, disambiguation )
+ */
+bool js::temporal::GetInstantFor(JSContext* cx, Handle<TimeZoneValue> timeZone,
+                                 Handle<PlainDateTimeObject*> dateTime,
+                                 TemporalDisambiguation disambiguation,
+                                 Instant* result) {
+  Rooted<Wrapped<InstantObject*>> instant(cx);
+  if (!::GetInstantFor(cx, timeZone, dateTime, disambiguation, &instant)) {
+    return false;
+  }
+
+  auto* unwrappedInstant = instant.unwrap(cx);
+  if (!unwrappedInstant) {
+    return false;
+  }
+
+  *result = ToInstant(unwrappedInstant);
+  return true;
+}
+
+/**
+ * GetInstantFor ( timeZone, dateTime, disambiguation )
+ */
+bool js::temporal::GetInstantFor(JSContext* cx, Handle<TimeZoneValue> timeZone,
+                                 Handle<PlainDateTimeWithCalendar> dateTime,
+                                 TemporalDisambiguation disambiguation,
+                                 Instant* result) {
   // Step 1.
   Rooted<InstantVector> possibleInstants(cx, InstantVector(cx));
   if (!GetPossibleInstantsFor(cx, timeZone, dateTime, &possibleInstants)) {
@@ -1822,19 +1926,9 @@ static bool GetInstantFor(JSContext* cx, Handle<TimeZoneValue> timeZone,
   }
 
   // Step 2.
-  return DisambiguatePossibleInstants(cx, possibleInstants, timeZone, dateTime,
-                                      disambiguation, result);
-}
-
-/**
- * GetInstantFor ( timeZone, dateTime, disambiguation )
- */
-bool js::temporal::GetInstantFor(JSContext* cx, Handle<TimeZoneValue> timeZone,
-                                 Handle<Wrapped<PlainDateTimeObject*>> dateTime,
-                                 TemporalDisambiguation disambiguation,
-                                 Instant* result) {
   Rooted<Wrapped<InstantObject*>> instant(cx);
-  if (!::GetInstantFor(cx, timeZone, dateTime, disambiguation, &instant)) {
+  if (!DisambiguatePossibleInstants(cx, possibleInstants, timeZone, dateTime,
+                                    disambiguation, &instant)) {
     return false;
   }
 
