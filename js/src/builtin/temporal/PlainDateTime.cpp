@@ -964,9 +964,9 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
     return false;
   }
 
-  // Steps 4-6.
+  // Steps 4-5.
   DifferenceSettings settings;
-  Duration diff;
+  Rooted<PlainObject*> resolvedOptions(cx);
   if (args.hasDefined(1)) {
     Rooted<JSObject*> options(
         cx, RequireObjectArg(cx, "options", ToName(operation), args[1]));
@@ -975,8 +975,7 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
     }
 
     // Step 4.
-    Rooted<PlainObject*> resolvedOptions(cx,
-                                         SnapshotOwnProperties(cx, options));
+    resolvedOptions = SnapshotOwnProperties(cx, options);
     if (!resolvedOptions) {
       return false;
     }
@@ -987,13 +986,6 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
             TemporalUnit::Nanosecond, TemporalUnit::Day, &settings)) {
       return false;
     }
-
-    // Step 6.
-    if (!::DifferenceISODateTime(cx, ToPlainDateTime(dateTime), other, calendar,
-                                 settings.largestUnit, resolvedOptions,
-                                 &diff)) {
-      return false;
-    }
   } else {
     // Steps 4-5.
     settings = {
@@ -1002,15 +994,27 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
         TemporalRoundingMode::Trunc,
         Increment{1},
     };
+  }
 
-    // Step 6.
-    if (!::DifferenceISODateTime(cx, ToPlainDateTime(dateTime), other, calendar,
-                                 settings.largestUnit, nullptr, &diff)) {
+  // Step 6.
+  if (ToPlainDateTime(dateTime) == other) {
+    auto* obj = CreateTemporalDuration(cx, {});
+    if (!obj) {
       return false;
     }
+
+    args.rval().setObject(*obj);
+    return true;
   }
 
   // Step 7.
+  Duration diff;
+  if (!::DifferenceISODateTime(cx, ToPlainDateTime(dateTime), other, calendar,
+                               settings.largestUnit, resolvedOptions, &diff)) {
+    return false;
+  }
+
+  // Step 8.
   if (settings.smallestUnit == TemporalUnit::Nanosecond &&
       settings.roundingIncrement == Increment{1}) {
     if (operation == TemporalDifference::Since) {
@@ -1026,14 +1030,14 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
     return true;
   }
 
-  // Step 8.
+  // Step 9.
   Rooted<PlainDateObject*> relativeTo(
       cx, CreateTemporalDate(cx, ToPlainDate(dateTime), calendar));
   if (!relativeTo) {
     return false;
   }
 
-  // Steps 9-10.
+  // Steps 10-11.
   Duration roundResult;
   if (!temporal::RoundDuration(cx, diff, settings.roundingIncrement,
                                settings.smallestUnit, settings.roundingMode,
@@ -1041,13 +1045,13 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
     return false;
   }
 
-  // Step 11.
+  // Step 12.
   TimeDuration result;
   if (!BalanceTimeDuration(cx, roundResult, settings.largestUnit, &result)) {
     return false;
   }
 
-  // Step 12.
+  // Step 13.
   Duration duration = {
       roundResult.years,  roundResult.months,  roundResult.weeks,
       result.days,        result.hours,        result.minutes,
