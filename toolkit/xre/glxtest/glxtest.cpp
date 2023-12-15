@@ -196,7 +196,7 @@ static void get_pci_status() {
     !defined(XP_SOLARIS)
   if (access("/sys/bus/pci/", F_OK) != 0 &&
       access("/sys/bus/pci_express/", F_OK) != 0) {
-    record_warning("cannot access /sys/bus/pci");
+    log("GLX_TEST: get_pci_status failed: cannot access /sys/bus/pci\n");
     return;
   }
 
