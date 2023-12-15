@@ -10090,7 +10090,11 @@
 # Allow using ffmpeg encoder
 -   name: media.ffmpeg.encoder.enabled
     type: RelaxedAtomicBool
-    value: @IS_NOT_NIGHTLY_BUILD@
+#if defined(MOZ_WIDGET_GTK)
+    value: @IS_NIGHTLY_BUILD@
+#else
+    value: false
+#endif
     mirror: always
 
 #if defined(MOZ_FFMPEG) || defined(MOZ_FFVPX)
