@@ -20,7 +20,7 @@ class PlainDateObject;
 class PlainMonthDayObject;
 class PlainYearMonthObject;
 class TimeZoneValue;
-class ZonedDateTimeObject;
+class ZonedDateTime;
 
 struct PlainDateTime;
 struct PlainTime;
@@ -75,10 +75,9 @@ JSString* TemporalYearMonthToString(JSContext* cx,
  * showTimeZone, showOffset [ , increment, unit, roundingMode ] )
  */
 JSString* TemporalZonedDateTimeToString(
-    JSContext* cx, JS::Handle<ZonedDateTimeObject*> zonedDateTime,
-    Precision precision, CalendarOption showCalendar,
-    TimeZoneNameOption showTimeZone, ShowOffsetOption showOffset,
-    Increment increment = Increment{1},
+    JSContext* cx, JS::Handle<ZonedDateTime> zonedDateTime, Precision precision,
+    CalendarOption showCalendar, TimeZoneNameOption showTimeZone,
+    ShowOffsetOption showOffset, Increment increment = Increment{1},
     TemporalUnit unit = TemporalUnit::Nanosecond,
     TemporalRoundingMode roundingMode = TemporalRoundingMode::Trunc);
 

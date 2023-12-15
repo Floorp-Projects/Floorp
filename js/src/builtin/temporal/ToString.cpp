@@ -403,32 +403,35 @@ JSString* js::temporal::TemporalInstantToString(JSContext* cx,
 
   // Steps 1-2. (Not applicable in our implementation.)
 
-  // Steps 3-5.
+  // Steps 3-6.
   int64_t offsetNanoseconds = 0;
   if (timeZone) {
+    // Steps 3-4. (Not applicable)
+
+    // Steps 5-6.
     if (!GetOffsetNanosecondsFor(cx, timeZone, instant, &offsetNanoseconds)) {
       return nullptr;
     }
     MOZ_ASSERT(std::abs(offsetNanoseconds) < ToNanoseconds(TemporalUnit::Day));
   }
 
-  // Step 6.
+  // Step 7.
   auto dateTime = GetPlainDateTimeFor(ToInstant(instant), offsetNanoseconds);
 
-  // Step 7. (Inlined TemporalDateTimeToString)
+  // Step 8. (Inlined TemporalDateTimeToString)
   FormatDateTimeString(result, dateTime, precision);
 
-  // Steps 8-9.
+  // Steps 9-10.
   Rooted<JSString*> timeZoneString(cx);
   if (!timeZone) {
-    // Step 8.a.
+    // Step 9.a.
     result.append('Z');
   } else {
-    // Step 9.a.
+    // Step 10.a.
     FormatDateTimeUTCOffsetRounded(result, offsetNanoseconds);
   }
 
-  // Step 10.
+  // Step 11.
   return result.finishString();
 }
 
@@ -621,10 +624,10 @@ JSString* js::temporal::TemporalYearMonthToString(
  * showTimeZone, showOffset [ , increment, unit, roundingMode ] )
  */
 JSString* js::temporal::TemporalZonedDateTimeToString(
-    JSContext* cx, Handle<ZonedDateTimeObject*> zonedDateTime,
-    Precision precision, CalendarOption showCalendar,
-    TimeZoneNameOption showTimeZone, ShowOffsetOption showOffset,
-    Increment increment, TemporalUnit unit, TemporalRoundingMode roundingMode) {
+    JSContext* cx, Handle<ZonedDateTime> zonedDateTime, Precision precision,
+    CalendarOption showCalendar, TimeZoneNameOption showTimeZone,
+    ShowOffsetOption showOffset, Increment increment, TemporalUnit unit,
+    TemporalRoundingMode roundingMode) {
   TemporalStringBuilder result(cx, TemporalStringFormat::ZonedDateTime);
   if (!result.reserve()) {
     return nullptr;
@@ -634,43 +637,43 @@ JSString* js::temporal::TemporalZonedDateTimeToString(
 
   // Step 4.
   Instant ns;
-  if (!RoundTemporalInstant(cx, ToInstant(zonedDateTime), increment, unit,
+  if (!RoundTemporalInstant(cx, zonedDateTime.instant(), increment, unit,
                             roundingMode, &ns)) {
     return nullptr;
   }
 
   // Step 5.
-  Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
+  auto timeZone = zonedDateTime.timeZone();
 
-  // Steps 6-7.
+  // Steps 6-8.
   int64_t offsetNanoseconds;
   if (!GetOffsetNanosecondsFor(cx, timeZone, ns, &offsetNanoseconds)) {
     return nullptr;
   }
   MOZ_ASSERT(std::abs(offsetNanoseconds) < ToNanoseconds(TemporalUnit::Day));
 
-  // Step 8.
+  // Step 9.
   auto temporalDateTime = GetPlainDateTimeFor(ns, offsetNanoseconds);
 
-  // Step 9. (Inlined TemporalDateTimeToString)
+  // Step 10. (Inlined TemporalDateTimeToString)
   FormatDateTimeString(result, temporalDateTime, precision);
 
-  // Steps 10-11.
+  // Steps 11-12.
   if (showOffset != ShowOffsetOption::Never) {
     FormatDateTimeUTCOffsetRounded(result, offsetNanoseconds);
   }
 
-  // Steps 12-13.
+  // Steps 13-14.
   if (!MaybeFormatTimeZoneAnnotation(cx, result, timeZone, showTimeZone)) {
     return nullptr;
   }
 
-  // Step 14.
-  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
-  if (!MaybeFormatCalendarAnnotation(cx, result, calendar, showCalendar)) {
+  // Step 15.
+  if (!MaybeFormatCalendarAnnotation(cx, result, zonedDateTime.calendar(),
+                                     showCalendar)) {
     return nullptr;
   }
 
-  // Step 15.
+  // Step 16.
   return result.finishString();
 }

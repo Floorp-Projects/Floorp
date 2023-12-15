@@ -336,6 +336,13 @@ bool GetMethodForCall(JSContext* cx, JS::Handle<JSObject*> object,
                       JS::MutableHandle<JS::Value> result);
 
 /**
+ * GetMethod ( V, P )
+ */
+bool GetMethodForCall(JSContext* cx, JS::Handle<JSObject*> object,
+                      JS::Handle<PropertyName*> name,
+                      JS::MutableHandle<JSObject*> result);
+
+/**
  * SnapshotOwnProperties ( source, proto [ , excludedKeys [ , excludedValues ] ]
  * )
  */
