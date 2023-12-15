@@ -35,9 +35,14 @@ static secuPWData pwdata = { PW_NONE, 0 };
 static void
 Usage(char *progName)
 {
+    HASH_HashType hashAlg;
+
     fprintf(stderr,
-            "Usage:  %s -k keyname [-d keydir] [-i input] [-o output]\n",
+            "Usage:  %s -k keyname [-d keydir] [-i input] [-o output] [-e]\n",
             progName);
+    fprintf(stderr,
+            "        %*s [-p password|-f password file] [-a hash] [-u certusage]\n",
+            (int)strlen(progName), "");
     fprintf(stderr, "%-20s Nickname of key to use for signature\n",
             "-k keyname");
     fprintf(stderr, "%-20s Key database directory (default is ~/.netscape)\n",
@@ -48,8 +53,30 @@ Usage(char *progName)
             "-o output");
     fprintf(stderr, "%-20s Encapsulate content in signature message\n",
             "-e");
-    fprintf(stderr, "%-20s Password to the key databse\n", "-p");
-    fprintf(stderr, "%-20s password file\n", "-f");
+    fprintf(stderr, "%-20s Password to the key databse\n", "-p password");
+    fprintf(stderr, "%-20s File to read password from\n", "-f password file");
+    fprintf(stderr, "%-20s Use case-insensitive hash algorithm (default: SHA-1)\n",
+            "-a hash");
+    fprintf(stderr, "%-25s  ", "");
+    for (hashAlg = HASH_AlgNULL + 1; hashAlg != HASH_AlgTOTAL; ++hashAlg)
+        fprintf(stderr, "%s%s", hashAlg == HASH_AlgNULL + 1 ? "" : ", ",
+                SECOID_FindOIDByTag(HASH_GetHashOidTagByHashType(hashAlg))->desc);
+    fputc('\n', stderr);
+    fprintf(stderr, "%-20s Sign for usage (default: certUsageEmailSigner)\n",
+            "-u certusage");
+    fprintf(stderr, "%-25s  0 - certUsageSSLClient\n", "");
+    fprintf(stderr, "%-25s  1 - certUsageSSLServer\n", "");
+    fprintf(stderr, "%-25s  2 - certUsageSSLServerWithStepUp\n", "");
+    fprintf(stderr, "%-25s  3 - certUsageSSLCA\n", "");
+    fprintf(stderr, "%-25s  4 - certUsageEmailSigner\n", "");
+    fprintf(stderr, "%-25s  5 - certUsageEmailRecipient\n", "");
+    fprintf(stderr, "%-25s  6 - certUsageObjectSigner\n", "");
+    fprintf(stderr, "%-25s  7 - certUsageUserCertImport\n", "");
+    fprintf(stderr, "%-25s  8 - certUsageVerifyCA\n", "");
+    fprintf(stderr, "%-25s  9 - certUsageProtectedObjectSigner\n", "");
+    fprintf(stderr, "%-25s 10 - certUsageStatusResponder\n", "");
+    fprintf(stderr, "%-25s 11 - certUsageAnyCA\n", "");
+    fprintf(stderr, "%-25s 12 - certUsageIPsec\n", "");
     exit(-1);
 }
 
@@ -63,13 +90,13 @@ SignOut(void *arg, const char *buf, unsigned long len)
 }
 
 static int
-CreateDigest(SECItem *data, char *digestdata, unsigned int *len, unsigned int maxlen)
+CreateDigest(SECItem *data, char *digestdata, unsigned int *len,
+             unsigned int maxlen, HASH_HashType hashAlg)
 {
     const SECHashObject *hashObj;
     void *hashcx;
 
-    /* XXX probably want to extend interface to allow other hash algorithms */
-    hashObj = HASH_GetHashObject(HASH_AlgSHA1);
+    hashObj = HASH_GetHashObject(hashAlg);
 
     hashcx = (*hashObj->create)();
     if (hashcx == NULL)
@@ -84,9 +111,10 @@ CreateDigest(SECItem *data, char *digestdata, unsigned int *len, unsigned int ma
 
 static int
 SignFile(FILE *outFile, PRFileDesc *inFile, CERTCertificate *cert,
-         PRBool encapsulated)
+         PRBool encapsulated, HASH_HashType hashAlg, SECOidTag hashAlgOid,
+         SECCertUsage usage)
 {
-    char digestdata[32];
+    char digestdata[HASH_LENGTH_MAX];
     unsigned int len;
     SECItem digest, data2sign;
     SEC_PKCS7ContentInfo *cinfo;
@@ -105,19 +133,23 @@ SignFile(FILE *outFile, PRFileDesc *inFile, CERTCertificate *cert,
         /* SEC_PKCS7CreateSignedData should have a flag to not include */
         /* the content for non-encapsulated content at encode time, but */
         /* should always compute the hash itself */
-        if (CreateDigest(&data2sign, digestdata, &len, 32) < 0)
+        if (CreateDigest(&data2sign, digestdata, &len,
+                         sizeof(digestdata), hashAlg) < 0) {
+            SECITEM_FreeItem(&data2sign, PR_FALSE);
             return -1;
+        }
         digest.data = (unsigned char *)digestdata;
         digest.len = len;
     }
 
-    /* XXX Need a better way to handle that usage stuff! */
-    cinfo = SEC_PKCS7CreateSignedData(cert, certUsageEmailSigner, NULL,
-                                      SEC_OID_SHA1,
+    cinfo = SEC_PKCS7CreateSignedData(cert, usage, NULL,
+                                      hashAlgOid,
                                       encapsulated ? NULL : &digest,
                                       NULL, NULL);
-    if (cinfo == NULL)
+    if (cinfo == NULL) {
+        SECITEM_FreeItem(&data2sign, PR_FALSE);
         return -1;
+    }
 
     if (encapsulated) {
         SEC_PKCS7SetContent(cinfo, (char *)data2sign.data, data2sign.len);
@@ -126,6 +158,7 @@ SignFile(FILE *outFile, PRFileDesc *inFile, CERTCertificate *cert,
     rv = SEC_PKCS7IncludeCertChain(cinfo, NULL);
     if (rv != SECSuccess) {
         SEC_PKCS7DestroyContentInfo(cinfo);
+        SECITEM_FreeItem(&data2sign, PR_FALSE);
         return -1;
     }
 
@@ -151,6 +184,9 @@ main(int argc, char **argv)
     CERTCertDBHandle *certHandle;
     CERTCertificate *cert = NULL;
     PRBool encapsulated = PR_FALSE;
+    HASH_HashType hashAlg = HASH_AlgSHA1;
+    SECOidTag hashAlgOid = SEC_OID_SHA1;
+    SECCertUsage usage = certUsageEmailSigner;
     PLOptState *optstate;
     PLOptStatus status;
     SECStatus rv;
@@ -165,7 +201,7 @@ main(int argc, char **argv)
     /*
      * Parse command line arguments
      */
-    optstate = PL_CreateOptState(argc, argv, "ed:k:i:o:p:f:");
+    optstate = PL_CreateOptState(argc, argv, "ed:k:i:o:p:f:a:u:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         switch (optstate->option) {
             case '?':
@@ -211,6 +247,24 @@ main(int argc, char **argv)
                 pwdata.source = PW_FROMFILE;
                 pwdata.data = PORT_Strdup(optstate->value);
                 break;
+
+            case 'a':
+                for (hashAlg = HASH_AlgNULL + 1; hashAlg != HASH_AlgTOTAL;
+                     ++hashAlg) {
+                    hashAlgOid = HASH_GetHashOidTagByHashType(hashAlg);
+                    if (!PORT_Strcasecmp(optstate->value,
+                                         SECOID_FindOIDByTag(hashAlgOid)->desc))
+                        break;
+                }
+                if (hashAlg == HASH_AlgTOTAL)
+                    Usage(progName);
+                break;
+
+            case 'u':
+                usage = atoi(optstate->value);
+                if (usage < certUsageSSLClient || usage > certUsageIPsec)
+                    Usage(progName);
+                break;
         }
     }
     PL_DestroyOptState(optstate);
@@ -241,7 +295,7 @@ main(int argc, char **argv)
     }
 
     /* find cert */
-    cert = CERT_FindCertByNickname(certHandle, keyName);
+    cert = SECU_FindCertByNicknameOrFilename(certHandle, keyName, PR_FALSE, NULL);
     if (cert == NULL) {
         SECU_PrintError(progName,
                         "the corresponding cert for key \"%s\" does not exist",
@@ -250,7 +304,8 @@ main(int argc, char **argv)
         goto loser;
     }
 
-    if (SignFile(outFile, inFile, cert, encapsulated)) {
+    if (SignFile(outFile, inFile, cert, encapsulated,
+                 hashAlg, hashAlgOid, usage)) {
         SECU_PrintError(progName, "problem signing data");
         rv = SECFailure;
         goto loser;

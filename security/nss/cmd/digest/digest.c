@@ -4,6 +4,7 @@
 
 #include "secutil.h"
 #include "pk11func.h"
+#include "sechash.h"
 #include "secoid.h"
 
 #if defined(XP_WIN) || (defined(__sun) && !defined(SVR4))
@@ -17,64 +18,13 @@ extern int fprintf(FILE *, char *, ...);
 #include "plgetopt.h"
 
 static SECOidData *
-HashTypeToOID(HASH_HashType hashtype)
-{
-    SECOidTag hashtag;
-
-    if (hashtype <= HASH_AlgNULL || hashtype >= HASH_AlgTOTAL)
-        return NULL;
-
-    switch (hashtype) {
-        case HASH_AlgMD2:
-            hashtag = SEC_OID_MD2;
-            break;
-        case HASH_AlgMD5:
-            hashtag = SEC_OID_MD5;
-            break;
-        case HASH_AlgSHA1:
-            hashtag = SEC_OID_SHA1;
-            break;
-        case HASH_AlgSHA256:
-            hashtag = SEC_OID_SHA256;
-            break;
-        case HASH_AlgSHA384:
-            hashtag = SEC_OID_SHA384;
-            break;
-        case HASH_AlgSHA512:
-            hashtag = SEC_OID_SHA512;
-            break;
-        case HASH_AlgSHA224:
-            hashtag = SEC_OID_SHA224;
-            break;
-        case HASH_AlgSHA3_224:
-            hashtag = SEC_OID_SHA3_224;
-            break;
-        case HASH_AlgSHA3_256:
-            hashtag = SEC_OID_SHA3_256;
-            break;
-        case HASH_AlgSHA3_384:
-            hashtag = SEC_OID_SHA3_384;
-            break;
-        case HASH_AlgSHA3_512:
-            hashtag = SEC_OID_SHA3_512;
-            break;
-        default:
-            fprintf(stderr, "A new hash type has been added to HASH_HashType.\n");
-            fprintf(stderr, "This program needs to be updated!\n");
-            return NULL;
-    }
-
-    return SECOID_FindOIDByTag(hashtag);
-}
-
-static SECOidData *
 HashNameToOID(const char *hashName)
 {
     HASH_HashType htype;
     SECOidData *hashOID;
 
     for (htype = HASH_AlgNULL + 1; htype < HASH_AlgTOTAL; htype++) {
-        hashOID = HashTypeToOID(htype);
+        hashOID = SECOID_FindOIDByTag(HASH_GetHashOidTagByHashType(htype));
         if (PORT_Strcasecmp(hashName, hashOID->desc) == 0)
             break;
     }
@@ -97,7 +47,8 @@ Usage(char *progName)
             "-t type");
     fprintf(stderr, "%-20s ", "");
     for (htype = HASH_AlgNULL + 1; htype < HASH_AlgTOTAL; htype++) {
-        fprintf(stderr, "%s", HashTypeToOID(htype)->desc);
+        fputs(SECOID_FindOIDByTag(HASH_GetHashOidTagByHashType(htype))->desc,
+              stderr);
         if (htype == (HASH_AlgTOTAL - 2))
             fprintf(stderr, " or ");
         else if (htype != (HASH_AlgTOTAL - 1))

@@ -28,27 +28,6 @@ extern int fread(char *, size_t, size_t, FILE *);
 extern int fprintf(FILE *, char *, ...);
 #endif
 
-static HASH_HashType
-AlgorithmToHashType(SECAlgorithmID *digestAlgorithms)
-{
-
-    SECOidTag tag;
-
-    tag = SECOID_GetAlgorithmTag(digestAlgorithms);
-
-    switch (tag) {
-        case SEC_OID_MD2:
-            return HASH_AlgMD2;
-        case SEC_OID_MD5:
-            return HASH_AlgMD5;
-        case SEC_OID_SHA1:
-            return HASH_AlgSHA1;
-        default:
-            fprintf(stderr, "should never get here\n");
-            return HASH_AlgNULL;
-    }
-}
-
 static int
 DigestFile(unsigned char *digest, unsigned int *len, unsigned int maxLen,
            FILE *inFile, HASH_HashType hashType)
@@ -152,7 +131,8 @@ HashDecodeAndVerify(FILE *out, FILE *content, PRFileDesc *signature,
     signedData = cinfo->content.signedData;
 
     /* assume that there is only one digest algorithm for now */
-    digestType = AlgorithmToHashType(signedData->digestAlgorithms[0]);
+    digestType = HASH_GetHashTypeByOidTag(
+        SECOID_GetAlgorithmTag(signedData->digestAlgorithms[0]));
     if (digestType == HASH_AlgNULL) {
         fprintf(out, "Invalid hash algorithmID\n");
         return -1;
@@ -239,8 +219,8 @@ main(int argc, char **argv)
             case 'u': {
                 int usageType;
 
-                usageType = atoi(strdup(optstate->value));
-                if (usageType < certUsageSSLClient || usageType > certUsageAnyCA)
+                usageType = atoi(optstate->value);
+                if (usageType < certUsageSSLClient || usageType > certUsageIPsec)
                     return -1;
                 certUsage = (SECCertUsage)usageType;
                 break;
