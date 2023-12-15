@@ -144,7 +144,7 @@ bool AddDaysToZonedDateTime(JSContext* cx, const Instant& instant,
  */
 bool AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
                       JS::MutableHandle<TimeZoneRecord> timeZone,
-                      JS::Handle<CalendarValue> calendar,
+                      JS::Handle<CalendarRecord> calendar,
                       const Duration& duration, Instant* result);
 
 /**
@@ -154,7 +154,7 @@ bool AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
  */
 bool AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
                       JS::MutableHandle<TimeZoneRecord> timeZone,
-                      JS::Handle<CalendarValue> calendar,
+                      JS::Handle<CalendarRecord> calendar,
                       const Duration& duration, const PlainDateTime& dateTime,
                       Instant* result);
 
@@ -165,7 +165,7 @@ bool AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
 bool DifferenceZonedDateTime(JSContext* cx, const Instant& ns1,
                              const Instant& ns2,
                              JS::MutableHandle<TimeZoneRecord> timeZone,
-                             JS::Handle<CalendarValue> calendar,
+                             JS::Handle<CalendarRecord> calendar,
                              TemporalUnit largestUnit,
                              const PlainDateTime& precalculatedPlainDateTime,
                              Duration* result);

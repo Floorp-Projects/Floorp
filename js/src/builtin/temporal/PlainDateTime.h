@@ -150,38 +150,38 @@ bool ToTemporalDateTime(JSContext* cx, JS::Handle<JS::Value> item,
                         PlainDateTime* result);
 
 /**
- * InterpretTemporalDateTimeFields ( calendar, fields, options )
+ * InterpretTemporalDateTimeFields ( calendarRec, fields, options )
  */
 bool InterpretTemporalDateTimeFields(JSContext* cx,
-                                     JS::Handle<CalendarValue> calendar,
+                                     JS::Handle<CalendarRecord> calendar,
                                      JS::Handle<PlainObject*> fields,
                                      JS::Handle<PlainObject*> options,
                                      PlainDateTime* result);
 
 /**
- * InterpretTemporalDateTimeFields ( calendar, fields, options )
+ * InterpretTemporalDateTimeFields ( calendarRec, fields, options )
  */
 bool InterpretTemporalDateTimeFields(JSContext* cx,
-                                     JS::Handle<CalendarValue> calendar,
+                                     JS::Handle<CalendarRecord> calendar,
                                      JS::Handle<PlainObject*> fields,
                                      PlainDateTime* result);
 
 /**
  * DifferenceISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2,
- * d2, h2, min2, s2, ms2, mus2, ns2, calendar, largestUnit, options )
+ * d2, h2, min2, s2, ms2, mus2, ns2, calendarRec, largestUnit, options )
  */
 bool DifferenceISODateTime(JSContext* cx, const PlainDateTime& one,
                            const PlainDateTime& two,
-                           JS::Handle<CalendarValue> calendar,
+                           JS::Handle<CalendarRecord> calendar,
                            TemporalUnit largestUnit, Duration* result);
 
 /**
  * DifferenceISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2,
- * d2, h2, min2, s2, ms2, mus2, ns2, calendar, largestUnit, options )
+ * d2, h2, min2, s2, ms2, mus2, ns2, calendarRec, largestUnit, options )
  */
 bool DifferenceISODateTime(JSContext* cx, const PlainDateTime& one,
                            const PlainDateTime& two,
-                           JS::Handle<CalendarValue> calendar,
+                           JS::Handle<CalendarRecord> calendar,
                            TemporalUnit largestUnit,
                            JS::Handle<PlainObject*> options, Duration* result);
 
@@ -198,9 +198,17 @@ class PlainDateTimeWithCalendar {
     MOZ_ASSERT(ISODateTimeWithinLimits(dateTime));
   }
 
-  const auto& dateTime() const { return dateTime_; }
+  explicit PlainDateTimeWithCalendar(const PlainDateTimeObject* dateTime)
+      : PlainDateTimeWithCalendar(ToPlainDateTime(dateTime),
+                                  dateTime->calendar()) {}
 
+  const auto& dateTime() const { return dateTime_; }
+  const auto& date() const { return dateTime_.date; }
+  const auto& time() const { return dateTime_.time; }
   const auto& calendar() const { return calendar_; }
+
+  // Allow implicit conversion to a calendar-less PlainDateTime.
+  operator const PlainDateTime&() const { return dateTime(); }
 
   void trace(JSTracer* trc) { calendar_.trace(trc); }
 
@@ -235,11 +243,16 @@ class WrappedPtrOperations<temporal::PlainDateTimeWithCalendar, Wrapper> {
 
  public:
   const auto& dateTime() const { return container().dateTime(); }
+  const auto& date() const { return container().date(); }
+  const auto& time() const { return container().time(); }
 
-  JS::Handle<temporal::CalendarValue> calendar() const {
+  auto calendar() const {
     return JS::Handle<temporal::CalendarValue>::fromMarkedLocation(
         container().calendarDoNotUse());
   }
+
+  // Allow implicit conversion to a calendar-less PlainDateTime.
+  operator const temporal::PlainDateTime&() const { return dateTime(); }
 };
 
 }  // namespace js

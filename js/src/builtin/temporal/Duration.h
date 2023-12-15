@@ -74,6 +74,7 @@ inline Duration ToDuration(const DurationObject* duration) {
 }
 
 class Increment;
+class CalendarRecord;
 class PlainDateObject;
 class TimeZoneRecord;
 class ZonedDateTime;
@@ -148,6 +149,7 @@ bool AdjustRoundedDurationDays(JSContext* cx, const Duration& duration,
                                Increment increment, TemporalUnit unit,
                                TemporalRoundingMode roundingMode,
                                JS::Handle<ZonedDateTime> relativeTo,
+                               JS::Handle<CalendarRecord> calendar,
                                JS::MutableHandle<TimeZoneRecord> timeZone,
                                const PlainDateTime& precalculatedPlainDateTime,
                                Duration* result);
@@ -171,7 +173,7 @@ bool RoundDuration(JSContext* cx, const Duration& duration, Increment increment,
 bool RoundDuration(JSContext* cx, const Duration& duration, Increment increment,
                    TemporalUnit unit, TemporalRoundingMode roundingMode,
                    JS::Handle<Wrapped<PlainDateObject*>> plainRelativeTo,
-                   Duration* result);
+                   JS::Handle<CalendarRecord> calendar, Duration* result);
 
 /**
  * RoundDuration ( years, months, weeks, days, hours, minutes, seconds,
@@ -181,6 +183,7 @@ bool RoundDuration(JSContext* cx, const Duration& duration, Increment increment,
  */
 bool RoundDuration(JSContext* cx, const Duration& duration, Increment increment,
                    TemporalUnit unit, TemporalRoundingMode roundingMode,
+                   JS::Handle<CalendarRecord> calendar,
                    JS::Handle<ZonedDateTime> zonedRelativeTo,
                    JS::MutableHandle<TimeZoneRecord> timeZone,
                    const PlainDateTime& precalculatedPlainDateTime,
