@@ -16,6 +16,8 @@
 #include "js/Value.h"
 #include "vm/NativeObject.h"
 
+class JS_PUBLIC_API JSTracer;
+
 namespace js {
 struct ClassSpec;
 class PlainObject;
@@ -183,6 +185,63 @@ bool DifferenceISODateTime(JSContext* cx, const PlainDateTime& one,
                            TemporalUnit largestUnit,
                            JS::Handle<PlainObject*> options, Duration* result);
 
+class PlainDateTimeWithCalendar {
+  PlainDateTime dateTime_;
+  CalendarValue calendar_;
+
+ public:
+  PlainDateTimeWithCalendar() = default;
+
+  PlainDateTimeWithCalendar(const PlainDateTime& dateTime,
+                            const CalendarValue& calendar)
+      : dateTime_(dateTime), calendar_(calendar) {
+    MOZ_ASSERT(ISODateTimeWithinLimits(dateTime));
+  }
+
+  const auto& dateTime() const { return dateTime_; }
+
+  const auto& calendar() const { return calendar_; }
+
+  void trace(JSTracer* trc) { calendar_.trace(trc); }
+
+  const auto* calendarDoNotUse() const { return &calendar_; }
+};
+
+/**
+ * Extract the date-time fields from the PlainDateTimeWithCalendar object.
+ */
+inline const auto& ToPlainDateTime(const PlainDateTimeWithCalendar& dateTime) {
+  return dateTime.dateTime();
+}
+
+/**
+ * CreateTemporalDateTime ( isoYear, isoMonth, isoDay, hour, minute, second,
+ * millisecond, microsecond, nanosecond, calendar [ , newTarget ] )
+ */
+bool CreateTemporalDateTime(
+    JSContext* cx, const PlainDateTime& dateTime,
+    JS::Handle<CalendarValue> calendar,
+    JS::MutableHandle<PlainDateTimeWithCalendar> result);
+
 } /* namespace js::temporal */
+
+namespace js {
+
+template <typename Wrapper>
+class WrappedPtrOperations<temporal::PlainDateTimeWithCalendar, Wrapper> {
+  const auto& container() const {
+    return static_cast<const Wrapper*>(this)->get();
+  }
+
+ public:
+  const auto& dateTime() const { return container().dateTime(); }
+
+  JS::Handle<temporal::CalendarValue> calendar() const {
+    return JS::Handle<temporal::CalendarValue>::fromMarkedLocation(
+        container().calendarDoNotUse());
+  }
+};
+
+}  // namespace js
 
 #endif /* builtin_temporal_PlainDateTime_h */

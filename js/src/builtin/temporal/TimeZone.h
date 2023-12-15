@@ -227,6 +227,7 @@ struct PlainDateTime;
 class CalendarValue;
 class InstantObject;
 class PlainDateTimeObject;
+class PlainDateTimeWithCalendar;
 enum class TemporalDisambiguation;
 
 /**
@@ -333,7 +334,14 @@ bool GetPlainDateTimeFor(JSContext* cx, JS::Handle<TimeZoneValue> timeZone,
  * GetInstantFor ( timeZone, dateTime, disambiguation )
  */
 bool GetInstantFor(JSContext* cx, JS::Handle<TimeZoneValue> timeZone,
-                   JS::Handle<Wrapped<PlainDateTimeObject*>> dateTime,
+                   JS::Handle<PlainDateTimeObject*> dateTime,
+                   TemporalDisambiguation disambiguation, Instant* result);
+
+/**
+ * GetInstantFor ( timeZone, dateTime, disambiguation )
+ */
+bool GetInstantFor(JSContext* cx, JS::Handle<TimeZoneValue> timeZone,
+                   JS::Handle<PlainDateTimeWithCalendar> dateTime,
                    TemporalDisambiguation disambiguation, Instant* result);
 
 /**
@@ -373,7 +381,7 @@ using InstantVector = JS::StackGCVector<Wrapped<InstantObject*>>;
  * GetPossibleInstantsFor ( timeZone, dateTime )
  */
 bool GetPossibleInstantsFor(JSContext* cx, JS::Handle<TimeZoneValue> timeZone,
-                            JS::Handle<Wrapped<PlainDateTimeObject*>> dateTime,
+                            JS::Handle<PlainDateTimeWithCalendar> dateTime,
                             JS::MutableHandle<InstantVector> list);
 
 /**
@@ -383,7 +391,7 @@ bool GetPossibleInstantsFor(JSContext* cx, JS::Handle<TimeZoneValue> timeZone,
 bool DisambiguatePossibleInstants(
     JSContext* cx, JS::Handle<InstantVector> possibleInstants,
     JS::Handle<TimeZoneValue> timeZone,
-    JS::Handle<Wrapped<PlainDateTimeObject*>> dateTimeObj,
+    JS::Handle<PlainDateTimeWithCalendar> dateTime,
     TemporalDisambiguation disambiguation,
     JS::MutableHandle<Wrapped<InstantObject*>> result);
 

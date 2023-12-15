@@ -2338,26 +2338,18 @@ static bool PlainDate_toZonedDateTime(JSContext* cx, const CallArgs& args) {
     temporalTime.setUndefined();
   }
 
-  // Steps 5-6.
-  Rooted<PlainDateTimeObject*> temporalDateTime(cx);
-  if (temporalTime.isUndefined()) {
-    // Step 5.a.
-    temporalDateTime = CreateTemporalDateTime(cx, {date, {}}, calendar);
-    if (!temporalDateTime) {
-      return false;
-    }
-  } else {
-    // Step 6.a.
-    PlainTime time;
+  // Step 6.a.
+  PlainTime time = {};
+  if (!temporalTime.isUndefined()) {
     if (!ToTemporalTime(cx, temporalTime, &time)) {
       return false;
     }
+  }
 
-    // Step 6.b.
-    temporalDateTime = CreateTemporalDateTime(cx, {date, time}, calendar);
-    if (!temporalDateTime) {
-      return false;
-    }
+  // Steps 5.a and 6.b
+  Rooted<PlainDateTimeWithCalendar> temporalDateTime(cx);
+  if (!CreateTemporalDateTime(cx, {date, time}, calendar, &temporalDateTime)) {
+    return false;
   }
 
   // Step 7.

@@ -405,6 +405,30 @@ PlainDateTimeObject* js::temporal::CreateTemporalDateTime(
 }
 
 /**
+ * CreateTemporalDateTime ( isoYear, isoMonth, isoDay, hour, minute, second,
+ * millisecond, microsecond, nanosecond, calendar [ , newTarget ] )
+ */
+bool js::temporal::CreateTemporalDateTime(
+    JSContext* cx, const PlainDateTime& dateTime,
+    Handle<CalendarValue> calendar,
+    MutableHandle<PlainDateTimeWithCalendar> result) {
+  // Steps 1-2.
+  if (!ThrowIfInvalidISODateTime(cx, dateTime)) {
+    return false;
+  }
+
+  // Step 3.
+  if (!ISODateTimeWithinLimits(dateTime)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_PLAIN_DATE_TIME_INVALID);
+    return false;
+  }
+
+  result.set(PlainDateTimeWithCalendar{dateTime, calendar});
+  return true;
+}
+
+/**
  * InterpretTemporalDateTimeFields ( calendar, fields, options )
  */
 bool js::temporal::InterpretTemporalDateTimeFields(

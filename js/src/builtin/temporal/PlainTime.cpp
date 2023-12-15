@@ -2359,9 +2359,8 @@ static bool PlainTime_toZonedDateTime(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 10.
-  Rooted<PlainDateTimeObject*> temporalDateTime(
-      cx, CreateTemporalDateTime(cx, {date, time}, calendar));
-  if (!temporalDateTime) {
+  Rooted<PlainDateTimeWithCalendar> temporalDateTime(cx);
+  if (!CreateTemporalDateTime(cx, {date, time}, calendar, &temporalDateTime)) {
     return false;
   }
 

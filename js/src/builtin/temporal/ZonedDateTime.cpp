@@ -106,9 +106,8 @@ bool js::temporal::InterpretISODateTimeOffset(
 
   // Step 2.
   Rooted<CalendarValue> calendar(cx, CalendarValue(cx->names().iso8601));
-  Rooted<PlainDateTimeObject*> temporalDateTime(
-      cx, CreateTemporalDateTime(cx, dateTime, calendar));
-  if (!temporalDateTime) {
+  Rooted<PlainDateTimeWithCalendar> temporalDateTime(cx);
+  if (!CreateTemporalDateTime(cx, dateTime, calendar, &temporalDateTime)) {
     return false;
   }
 
@@ -603,12 +602,10 @@ static bool AddDaysToZonedDateTime(JSContext* cx, const Instant& instant,
     return false;
   }
 
-  // TODO: Avoid allocation here?
-
   // Step 5.
-  Rooted<PlainDateTimeObject*> dateTimeResult(
-      cx, CreateTemporalDateTime(cx, {addedDate, dateTime.time}, calendar));
-  if (!dateTimeResult) {
+  Rooted<PlainDateTimeWithCalendar> dateTimeResult(cx);
+  if (!CreateTemporalDateTime(cx, {addedDate, dateTime.time}, calendar,
+                              &dateTimeResult)) {
     return false;
   }
 
@@ -720,9 +717,9 @@ static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
   }
 
   // Step 9.
-  Rooted<PlainDateTimeObject*> intermediateDateTime(
-      cx, CreateTemporalDateTime(cx, {addedDate, time}, calendar));
-  if (!intermediateDateTime) {
+  Rooted<PlainDateTimeWithCalendar> intermediateDateTime(cx);
+  if (!CreateTemporalDateTime(cx, {addedDate, time}, calendar,
+                              &intermediateDateTime)) {
     return false;
   }
 
@@ -2249,9 +2246,8 @@ static bool ZonedDateTime_hoursInDay(JSContext* cx, const CallArgs& args) {
   const auto& date = temporalDateTime.date;
 
   // Step 9.
-  Rooted<PlainDateTimeObject*> today(
-      cx, CreateTemporalDateTime(cx, {date, {}}, isoCalendar));
-  if (!today) {
+  Rooted<PlainDateTimeWithCalendar> today(cx);
+  if (!CreateTemporalDateTime(cx, {date, {}}, isoCalendar, &today)) {
     return false;
   }
 
@@ -2259,9 +2255,9 @@ static bool ZonedDateTime_hoursInDay(JSContext* cx, const CallArgs& args) {
   auto tomorrowFields = BalanceISODate(date.year, date.month, date.day + 1);
 
   // Step 11.
-  Rooted<PlainDateTimeObject*> tomorrow(
-      cx, CreateTemporalDateTime(cx, {tomorrowFields, {}}, isoCalendar));
-  if (!tomorrow) {
+  Rooted<PlainDateTimeWithCalendar> tomorrow(cx);
+  if (!CreateTemporalDateTime(cx, {tomorrowFields, {}}, isoCalendar,
+                              &tomorrow)) {
     return false;
   }
 
@@ -2757,9 +2753,9 @@ static bool ZonedDateTime_withPlainTime(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 9.
-  Rooted<PlainDateTimeObject*> resultPlainDateTime(
-      cx, CreateTemporalDateTime(cx, {plainDateTime.date, time}, calendar));
-  if (!resultPlainDateTime) {
+  Rooted<PlainDateTimeWithCalendar> resultPlainDateTime(cx);
+  if (!CreateTemporalDateTime(cx, {plainDateTime.date, time}, calendar,
+                              &resultPlainDateTime)) {
     return false;
   }
 
@@ -2821,9 +2817,9 @@ static bool ZonedDateTime_withPlainDate(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 8.
-  Rooted<PlainDateTimeObject*> resultPlainDateTime(
-      cx, CreateTemporalDateTime(cx, {date, plainDateTime.time}, calendar));
-  if (!resultPlainDateTime) {
+  Rooted<PlainDateTimeWithCalendar> resultPlainDateTime(cx);
+  if (!CreateTemporalDateTime(cx, {date, plainDateTime.time}, calendar,
+                              &resultPlainDateTime)) {
     return false;
   }
 
@@ -3101,9 +3097,9 @@ static bool ZonedDateTime_round(JSContext* cx, const CallArgs& args) {
 
   // Step 19.
   Rooted<CalendarValue> isoCalendar(cx, CalendarValue(cx->names().iso8601));
-  Rooted<PlainDateTimeObject*> dtStart(
-      cx, CreateTemporalDateTime(cx, {temporalDateTime.date}, isoCalendar));
-  if (!dtStart) {
+  Rooted<PlainDateTimeWithCalendar> dtStart(cx);
+  if (!CreateTemporalDateTime(cx, {temporalDateTime.date, {}}, isoCalendar,
+                              &dtStart)) {
     return false;
   }
 
@@ -3389,9 +3385,9 @@ static bool ZonedDateTime_startOfDay(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 7.
-  Rooted<PlainDateTimeObject*> startDateTime(
-      cx, CreateTemporalDateTime(cx, {temporalDateTime.date, {}}, calendar));
-  if (!startDateTime) {
+  Rooted<PlainDateTimeWithCalendar> startDateTime(cx);
+  if (!CreateTemporalDateTime(cx, {temporalDateTime.date, {}}, calendar,
+                              &startDateTime)) {
     return false;
   }
 
