@@ -88,6 +88,29 @@
 #  endif
 #endif
 
+#if defined(__GNUC__) || \
+    (defined(__clang__) && __has_attribute(no_profile_instrument_function))
+#  define MOZ_NOPROFILE __attribute__((no_profile_instrument_function))
+#else
+#  define MOZ_NOPROFILE
+#endif
+
+#if defined(__GNUC__) || \
+    (defined(__clang__) && __has_attribute(no_instrument_function))
+#  define MOZ_NOINSTRUMENT __attribute__((no_instrument_function))
+#else
+#  define MOZ_NOINSTRUMENT
+#endif
+
+/*
+ * MOZ_NAKED tells the compiler that the function only contains assembly and
+ * that it should not try to inject code that may mess with the assembly in it.
+ *
+ * See https://github.com/llvm/llvm-project/issues/74573 for the interaction
+ * between naked and no_profile_instrument_function.
+ */
+#define MOZ_NAKED __attribute__((naked)) MOZ_NOPROFILE MOZ_NOINSTRUMENT
+
 /**
  * Per clang's documentation:
  *
