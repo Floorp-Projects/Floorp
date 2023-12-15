@@ -5,7 +5,6 @@
 package org.mozilla.fenix.customtabs
 
 import android.app.assist.AssistContent
-import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -36,18 +35,6 @@ open class ExternalAppBrowserActivity : HomeActivity() {
             // end up with multiple browsers (causing "display already acquired" crashes).
             finishAndRemoveTask()
         }
-    }
-
-    override fun navigateToBrowserOnColdStart() {
-        // No-op for external app
-    }
-
-    override fun navigateToHome() {
-        // No-op for external app
-    }
-
-    override fun handleNewIntent(intent: Intent) {
-        // No-op for external app
     }
 
     override fun onDestroy() {

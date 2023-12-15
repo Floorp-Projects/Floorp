@@ -33,6 +33,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
@@ -318,7 +319,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             // Unless the activity is recreated, navigate to home first (without rendering it)
             // to add it to the back stack.
             if (savedInstanceState == null) {
-                navigateToHome()
+                navigateToHome(navHost.navController)
             }
 
             if (!shouldStartOnHome() && shouldNavigateToBrowserOnColdStart(savedInstanceState)) {
@@ -676,7 +677,12 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         startupPathProvider.onIntentReceived(intent)
     }
 
-    open fun handleNewIntent(intent: Intent) {
+    @VisibleForTesting
+    internal fun handleNewIntent(intent: Intent) {
+        if (this is ExternalAppBrowserActivity) {
+            return
+        }
+
         // Diagnostic breadcrumb for "Display already aquired" crash:
         // https://github.com/mozilla-mobile/android-components/issues/7960
         breadcrumb(
@@ -1091,7 +1097,12 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         settings().openNextTabInDesktopMode = false
     }
 
-    open fun navigateToBrowserOnColdStart() {
+    @VisibleForTesting
+    internal fun navigateToBrowserOnColdStart() {
+        if (this is ExternalAppBrowserActivity) {
+            return
+        }
+
         // Normal tabs + cold start -> Should go back to browser if we had any tabs open when we left last
         // except for PBM + Cold Start there won't be any tabs since they're evicted so we never will navigate
         if (settings().shouldReturnToBrowser && !components.appStore.state.mode.isPrivate) {
@@ -1100,8 +1111,13 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         }
     }
 
-    open fun navigateToHome() {
-        navHost.navController.navigate(NavGraphDirections.actionStartupHome())
+    @VisibleForTesting
+    internal fun navigateToHome(navController: NavController) {
+        if (this is ExternalAppBrowserActivity) {
+            return
+        }
+
+        navController.navigate(NavGraphDirections.actionStartupHome())
     }
 
     override fun attachBaseContext(base: Context) {
