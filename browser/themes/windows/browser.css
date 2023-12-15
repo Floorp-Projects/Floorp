@@ -55,13 +55,6 @@
   }
 }
 
-@media not (prefers-contrast) {
-  /* Use a different color in inactive windows. */
-  #toolbar-menubar:not(:-moz-lwtheme):-moz-window-inactive {
-    color: ThreeDShadow;
-  }
-}
-
 /* When temporarily showing the menu bar, make it at least as tall as the
  * tab bar such that the window controls don't appear to move up. */
 :root[tabsintitlebar] #toolbar-menubar[autohide="true"] {
