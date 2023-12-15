@@ -386,7 +386,10 @@ class CrashInfo(object):
 
             # Fallback to the symbols server for unknown symbols on automation
             # (mostly for system libraries).
-            if "MOZ_AUTOMATION" in os.environ:
+            if (
+                "MOZ_AUTOMATION" in os.environ
+                or "MOZ_STACKWALK_SYMBOLS_SERVER" in os.environ
+            ):
                 command.append("--symbols-url=https://symbols.mozilla.org/")
 
             with tempfile.TemporaryDirectory() as json_dir:

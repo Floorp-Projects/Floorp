@@ -31,6 +31,11 @@ job-defaults:
         max-run-time: 900
         env:
             MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
+            UPLOAD_DIR: artifacts
+            MOZ_STACKWALK_SYMBOLS_SERVER: '1'
+    fetches:
+        toolchain:
+            - linux64-minidump-stackwalk
 
 jobs:
     amd64-nightly/opt:
