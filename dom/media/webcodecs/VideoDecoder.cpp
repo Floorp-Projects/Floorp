@@ -19,6 +19,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Try.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/EncodedVideoChunk.h"
@@ -232,7 +233,8 @@ static bool CanDecode(const Config& aConfig) {
   if (!IsSupportedCodec(param.mParsedCodec)) {
     return false;
   }
-  if (IsOnMacOS() && IsH264CodecString(param.mParsedCodec)) {
+  if (IsOnMacOS() && IsH264CodecString(param.mParsedCodec) &&
+      !StaticPrefs::dom_media_webcodecs_force_osx_h264_enabled()) {
     // This will be fixed in Bug 1846796.
     return false;
   }
