@@ -631,11 +631,9 @@ static bool PlainMonthDay_equals(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 4-7.
-  bool equals = false;
-  if (date == other) {
-    if (!CalendarEquals(cx, calendar, otherCalendar, &equals)) {
-      return false;
-    }
+  bool equals = date == other;
+  if (equals && !CalendarEquals(cx, calendar, otherCalendar, &equals)) {
+    return false;
   }
 
   args.rval().setBoolean(equals);

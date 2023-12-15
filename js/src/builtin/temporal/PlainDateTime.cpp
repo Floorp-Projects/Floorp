@@ -1930,14 +1930,14 @@ static bool PlainDateTime_withPlainDate(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, temporalDateTime->calendar());
 
   // Step 3.
-  PlainDate date;
-  Rooted<CalendarValue> dateCalendar(cx);
-  if (!ToTemporalDate(cx, args.get(0), &date, &dateCalendar)) {
+  Rooted<PlainDateWithCalendar> plainDate(cx);
+  if (!ToTemporalDate(cx, args.get(0), &plainDate)) {
     return false;
   }
+  auto date = plainDate.date();
 
   // Step 4.
-  if (!ConsolidateCalendars(cx, calendar, dateCalendar, &calendar)) {
+  if (!ConsolidateCalendars(cx, calendar, plainDate.calendar(), &calendar)) {
     return false;
   }
 
@@ -2194,11 +2194,9 @@ static bool PlainDateTime_equals(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 4-13.
-  bool equals = false;
-  if (CompareISODateTime(dateTime, other) == 0) {
-    if (!CalendarEquals(cx, calendar, otherCalendar, &equals)) {
-      return false;
-    }
+  bool equals = dateTime == other;
+  if (equals && !CalendarEquals(cx, calendar, otherCalendar, &equals)) {
+    return false;
   }
 
   args.rval().setBoolean(equals);
