@@ -269,6 +269,10 @@ FFmpegVideoEncoder<LIBAV_VER>::ProcessEncode(RefPtr<const MediaData> aSample) {
 RefPtr<MediaDataEncoder::ReconfigurationPromise>
 FFmpegVideoEncoder<LIBAV_VER>::ProcessReconfigure(
     const RefPtr<const EncoderConfigurationChangeList>& aConfigurationChanges) {
+  MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
+
+  FFMPEGV_LOG("ProcessReconfigure");
+
   bool ok = false;
   for (const auto& confChange : aConfigurationChanges->mChanges) {
     ok |= confChange.match(
