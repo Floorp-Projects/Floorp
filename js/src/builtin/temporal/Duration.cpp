@@ -650,7 +650,7 @@ static bool MoveRelativeDate(
   auto relativeToDate = ToPlainDate(unwrappedRelativeTo);
 
   // Step 1.
-  auto newDate = CalendarDateAdd(cx, calendar, relativeTo, duration, dateAdd);
+  auto newDate = AddDate(cx, calendar, relativeTo, duration, dateAdd);
   if (!newDate) {
     return false;
   }
@@ -683,7 +683,7 @@ static bool MoveRelativeDate(
   auto relativeToDate = ToPlainDate(unwrappedRelativeTo);
 
   // Step 1.
-  auto newDate = CalendarDateAdd(cx, calendar, relativeTo, duration, dateAdd);
+  auto newDate = AddDate(cx, calendar, relativeTo, duration, dateAdd);
   if (!newDate) {
     return false;
   }
@@ -2810,48 +2810,57 @@ static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
   // Step 5.d.
   auto dateDuration2 = two.date();
 
-  // Steps 5.e-f.
+  // Step 5.e.
+  bool calendarUnitsPresent = true;
+
+  // Step 5.f.
+  if (dateDuration1.years == 0 && dateDuration1.months == 0 &&
+      dateDuration1.weeks == 0 && dateDuration2.years == 0 &&
+      dateDuration2.months == 0 && dateDuration2.weeks == 0) {
+    calendarUnitsPresent = false;
+  }
+
+  // Steps 5.g-h.
   Rooted<Value> dateAdd(cx);
-  if (calendar.isObject()) {
+  if (calendarUnitsPresent && calendar.isObject()) {
     Rooted<JSObject*> calendarObj(cx, calendar.toObject());
     if (!GetMethodForCall(cx, calendarObj, cx->names().dateAdd, &dateAdd)) {
       return false;
     }
   }
 
-  // Step 5.g.
+  // Step 5.i.
   Rooted<Wrapped<PlainDateObject*>> intermediate(
-      cx,
-      CalendarDateAdd(cx, calendar, plainRelativeTo, dateDuration1, dateAdd));
+      cx, AddDate(cx, calendar, plainRelativeTo, dateDuration1, dateAdd));
   if (!intermediate) {
     return false;
   }
 
-  // Step 5.h.
+  // Step 5.j.
   Rooted<Wrapped<PlainDateObject*>> end(
-      cx, CalendarDateAdd(cx, calendar, intermediate, dateDuration2, dateAdd));
+      cx, AddDate(cx, calendar, intermediate, dateDuration2, dateAdd));
   if (!end) {
     return false;
   }
 
-  // Step 5.i.
+  // Step 5.k.
   auto dateLargestUnit = std::min(TemporalUnit::Day, largestUnit);
 
-  // Steps 5.j-l.
+  // Steps 5.k-m.
   Duration dateDifference;
   if (!CalendarDateUntil(cx, calendar, plainRelativeTo, end, dateLargestUnit,
                          &dateDifference)) {
     return false;
   }
 
-  // Step 5.m.
+  // Step 5.o.
   TimeDuration result;
   if (!BalanceTimeDuration(cx, dateDifference.days, one.time(), two.time(),
                            largestUnit, &result)) {
     return false;
   }
 
-  // Steps 5.n.
+  // Steps 5.p.
   *duration = {
       dateDifference.years, dateDifference.months, dateDifference.weeks,
       result.days,          result.hours,          result.minutes,
@@ -4784,7 +4793,7 @@ static bool RoundDurationYear(JSContext* cx, const Duration& duration,
 
   // Step 7.e.
   auto yearsLater =
-      CalendarDateAdd(cx, calendar, dateRelativeTo, yearsDuration, dateAdd);
+      AddDate(cx, calendar, dateRelativeTo, yearsDuration, dateAdd);
   if (!yearsLater) {
     return false;
   }
@@ -4798,8 +4807,8 @@ static bool RoundDurationYear(JSContext* cx, const Duration& duration,
 
   // Step 7.g.
   PlainDate yearsMonthsWeeksLater;
-  if (!CalendarDateAdd(cx, calendar, dateRelativeTo, yearsMonthsWeeks, dateAdd,
-                       &yearsMonthsWeeksLater)) {
+  if (!AddDate(cx, calendar, dateRelativeTo, yearsMonthsWeeks, dateAdd,
+               &yearsMonthsWeeksLater)) {
     return false;
   }
 
@@ -5169,7 +5178,7 @@ static bool RoundDurationMonth(
 
   // Step 8.e.
   auto yearsMonthsLater =
-      CalendarDateAdd(cx, calendar, dateRelativeTo, yearsMonths, dateAdd);
+      AddDate(cx, calendar, dateRelativeTo, yearsMonths, dateAdd);
   if (!yearsMonthsLater) {
     return false;
   }
@@ -5183,8 +5192,8 @@ static bool RoundDurationMonth(
 
   // Step 8.g.
   PlainDate yearsMonthsWeeksLater;
-  if (!CalendarDateAdd(cx, calendar, dateRelativeTo, yearsMonthsWeeks, dateAdd,
-                       &yearsMonthsWeeksLater)) {
+  if (!AddDate(cx, calendar, dateRelativeTo, yearsMonthsWeeks, dateAdd,
+               &yearsMonthsWeeksLater)) {
     return false;
   }
 

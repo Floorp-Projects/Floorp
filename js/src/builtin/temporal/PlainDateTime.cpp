@@ -742,8 +742,7 @@ static bool AddDateTime(JSContext* cx, const PlainDateTime& dateTime,
 
   // Step 5.
   PlainDate addedDate;
-  if (!CalendarDateAdd(cx, calendar, datePart, dateDuration, options,
-                       &addedDate)) {
+  if (!AddDate(cx, calendar, datePart, dateDuration, options, &addedDate)) {
     return false;
   }
 
