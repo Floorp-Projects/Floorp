@@ -1662,8 +1662,6 @@ static bool BalancePossiblyInfiniteTimeDurationRelative(
           mozilla::SomeRef<const PlainDateTime>(startDateTime);
     }
 
-    // FIXME: spec issue - AddDaysToZonedDateTime can be called without overflow
-
     // Steps 4.b-c.
     Rooted<CalendarValue> isoCalendar(cx, CalendarValue(cx->names().iso8601));
     if (!AddDaysToZonedDateTime(cx, startInstant, *precalculatedPlainDateTime,
@@ -1684,15 +1682,16 @@ static bool BalancePossiblyInfiniteTimeDurationRelative(
   auto nanoseconds = endNs - epochInstant;
   MOZ_ASSERT(IsValidInstantSpan(nanoseconds));
 
-  // FIXME: spec issue - compare against `nanoseconds ≠ 0` in step 7 condition,
-  // because NanosecondsToDays doesn't allow precalculatedPlainDateTime to be
-  // `undefined`.
+  // Step 7.
+  if (nanoseconds == InstantSpan{}) {
+    *result = {};
+    return true;
+  }
 
-  // Steps 7-8.
+  // Steps 8-9.
   double days = 0;
-  if (TemporalUnit::Year <= largestUnit && largestUnit <= TemporalUnit::Day &&
-      nanoseconds != InstantSpan{}) {
-    // Step 7.a.
+  if (TemporalUnit::Year <= largestUnit && largestUnit <= TemporalUnit::Day) {
+    // Step 8.a.
     if (!precalculatedPlainDateTime) {
       if (!GetPlainDateTimeFor(cx, timeZone, startInstant, &startDateTime)) {
         return false;
@@ -1701,7 +1700,7 @@ static bool BalancePossiblyInfiniteTimeDurationRelative(
           mozilla::SomeRef<const PlainDateTime>(startDateTime);
     }
 
-    // Step 7.b.
+    // Step 8.b.
     Rooted<temporal::NanosecondsAndDays> nanosAndDays(cx);
     if (!NanosecondsToDays(cx, nanoseconds, relativeTo,
                            *precalculatedPlainDateTime, &nanosAndDays)) {
@@ -1711,31 +1710,31 @@ static bool BalancePossiblyInfiniteTimeDurationRelative(
     // NB: |days| is passed to CreateTimeDurationRecord, which performs
     // |ℝ(𝔽(days))|, so it's safe to convert from BigInt to double here.
 
-    // Step 7.c.
+    // Step 8.c.
     days = nanosAndDays.daysNumber();
     MOZ_ASSERT(IsInteger(days));
 
     // FIXME: spec issue - `result.[[Nanoseconds]]` not created in all branches
     // https://github.com/tc39/proposal-temporal/issues/2616
 
-    // Step 7.d.
+    // Step 8.d.
     nanoseconds = nanosAndDays.nanoseconds();
     MOZ_ASSERT_IF(days > 0, nanoseconds >= InstantSpan{});
     MOZ_ASSERT_IF(days < 0, nanoseconds <= InstantSpan{});
 
-    // Step 7.e.
+    // Step 8.e.
     largestUnit = TemporalUnit::Hour;
   }
 
-  // Step 9. (Not applicable in our implementation.)
+  // Step 10. (Not applicable in our implementation.)
 
-  // Steps 10-11.
+  // Steps 11-12.
   TimeDuration balanceResult;
   if (auto nanos = nanoseconds.toNanoseconds(); nanos.isValid()) {
-    // Step 10.
+    // Step 11.
     balanceResult = ::BalanceTimeDuration(nanos.value(), largestUnit);
 
-    // Step 11.
+    // Step 12.
     MOZ_ASSERT(IsValidDuration(balanceResult.toDuration()));
   } else {
     Rooted<BigInt*> ns(cx, ToEpochNanoseconds(cx, nanoseconds));
@@ -1743,20 +1742,20 @@ static bool BalancePossiblyInfiniteTimeDurationRelative(
       return false;
     }
 
-    // Step 10.
+    // Step 11.
     if (!::BalancePossiblyInfiniteTimeDurationSlow(cx, ns, largestUnit,
                                                    &balanceResult)) {
       return false;
     }
 
-    // Step 11.
+    // Step 12.
     if (!IsValidDuration(balanceResult.toDuration())) {
       *result = balanceResult;
       return true;
     }
   }
 
-  // Step 12.
+  // Step 13.
   *result = {
       days,
       balanceResult.hours,
@@ -1967,7 +1966,7 @@ static bool UnbalanceDateDurationRelativeHasEffect(const Duration& duration,
                                                    TemporalUnit largestUnit) {
   MOZ_ASSERT(largestUnit != TemporalUnit::Auto);
 
-  // Steps 1-3, 11.a, 12.a, and 14.
+  // Steps 1-3, 11.a, 12.a, and 13.
   return (largestUnit > TemporalUnit::Year && duration.years != 0) ||
          (largestUnit > TemporalUnit::Month && duration.months != 0) ||
          (largestUnit > TemporalUnit::Week && duration.weeks != 0);
@@ -1990,9 +1989,9 @@ static bool UnbalanceDateDurationRelative(
   // FIXME: spec issue - any |days| value is actually okay and doesn't require
   // a calendar to be present.
 
-  // Steps 1-3, 11.a, 12.a, and 14.
+  // Steps 1-3, 11.a, 12.a, and 13.
   if (!UnbalanceDateDurationRelativeHasEffect(duration, largestUnit)) {
-    // Steps 3.a, 11.a, 12.a, and 14.
+    // Steps 3.a, 11.a, 12.a, and 13.
     *result = CreateDateDurationRecord(years, months, weeks, days);
     return true;
   }
@@ -2181,20 +2180,14 @@ static bool UnbalanceDateDurationRelative(
                                     result);
   }
 
-  // FIXME: spec bug - incorrect assertion
-  // https://github.com/tc39/proposal-temporal/issues/2695
-
-  // Step 13.
-  // MOZ_ASSERT(largestUnit == TemporalUnit::Day);
-
-  // Step 14. (Handled above)
+  // Step 13. (Handled above)
   MOZ_ASSERT(years != 0 || months != 0 || weeks != 0);
 
   // FIXME: why don't we unconditionally throw an error for missing calendars?
 
-  // Step 15. (Not applicable in our implementation.)
+  // Step 14. (Not applicable in our implementation.)
 
-  // Steps 16-17.
+  // Steps 15-16.
   Rooted<Value> dateAdd(cx);
   if (calendar.isObject()) {
     Rooted<JSObject*> calendarObj(cx, calendar.toObject());
@@ -2206,67 +2199,67 @@ static bool UnbalanceDateDurationRelative(
   // Sum up all days to add to avoid imprecise floating-point arithmetic.
   int32_t daysToAdd = 0;
 
-  // Step 18.
+  // Step 17.
   //
   // Clamp to int64 because too large values will trigger timeouts anyway.
   int64_t intYears = ClampToInt64(years);
   while (intYears != 0) {
-    // Steps 18.a-b.
+    // Steps 17.a-b.
     int32_t oneYearDays;
     if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneYear, dateAdd,
                           &dateRelativeTo, &oneYearDays)) {
       return false;
     }
 
-    // Step 18.c.
+    // Step 17.c.
     daysToAdd += oneYearDays;
     MOZ_ASSERT(std::abs(daysToAdd) <= 200'000'000);
 
-    // Step 18.d.
+    // Step 17.d.
     intYears -= sign;
   }
 
-  // Step 19.
+  // Step 18.
   //
   // Clamp to int64 because too large values will trigger timeouts anyway.
   int64_t intMonths = ClampToInt64(months);
   while (intMonths != 0) {
-    // Steps 19.a-b.
+    // Steps 18.a-b.
     int32_t oneMonthDays;
     if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneMonth, dateAdd,
                           &dateRelativeTo, &oneMonthDays)) {
       return false;
     }
 
-    // Step 19.c.
+    // Step 18.c.
     daysToAdd += oneMonthDays;
     MOZ_ASSERT(std::abs(daysToAdd) <= 200'000'000);
 
-    // Step 19.d.
+    // Step 18.d.
     intMonths -= sign;
   }
 
-  // Step 20.
+  // Step 19.
   //
   // Clamp to int64 because too large values will trigger timeouts anyway.
   int64_t intWeeks = ClampToInt64(weeks);
   while (intWeeks != 0) {
-    // Steps 20.a-b.
+    // Steps 19.a-b.
     int32_t oneWeekDays;
     if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneWeek, dateAdd,
                           &dateRelativeTo, &oneWeekDays)) {
       return false;
     }
 
-    // Step 20.c.
+    // Step 19.c.
     daysToAdd += oneWeekDays;
     MOZ_ASSERT(std::abs(daysToAdd) <= 200'000'000);
 
-    // Step 20.d.
+    // Step 19.d.
     intWeeks -= sign;
   }
 
-  // Step 21.
+  // Step 20.
   //
   // The addition |days + daysToAdd| can be imprecise, but this is safe to
   // ignore, because all values are passed to CreateDateDurationRecord, which
@@ -2290,16 +2283,16 @@ static bool UnbalanceDateDurationRelative(JSContext* cx,
   double weeks = duration.weeks;
   double days = duration.days;
 
-  // Steps 1-3, 11.a, 12.a, and 14.
+  // Steps 1-3, 11.a, 12.a, and 13.
   if (!UnbalanceDateDurationRelativeHasEffect(duration, largestUnit)) {
-    // Steps 3.a, 11.a, 12.a, and 14.
+    // Steps 3.a, 11.a, 12.a, and 13.
     *result = CreateDateDurationRecord(years, months, weeks, days);
     return true;
   }
 
   // Steps 4-10. (Not applicable in our implementation.)
 
-  // Steps 11.b, 12.b, and 15.
+  // Steps 11.b, 12.b, and 14.
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                             JSMSG_TEMPORAL_DURATION_UNCOMPARABLE, "calendar");
   return false;
@@ -2996,19 +2989,6 @@ static bool AddDuration(
  */
 static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
                         Handle<ZonedDateTime> zonedRelativeTo,
-                        const PlainDateTime& precalculatedPlainDateTime,
-                        Duration* result) {
-  return AddDuration(cx, one, two, zonedRelativeTo,
-                     mozilla::SomeRef(precalculatedPlainDateTime), result);
-}
-
-/**
- * AddDuration ( y1, mon1, w1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2, w2,
- * d2, h2, min2, s2, ms2, mus2, ns2, plainRelativeTo, zonedRelativeTo [ ,
- * precalculatedPlainDateTime ] )
- */
-static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
-                        Handle<ZonedDateTime> zonedRelativeTo,
                         Duration* result) {
   return AddDuration(cx, one, two, zonedRelativeTo, mozilla::Nothing(), result);
 }
@@ -3128,44 +3108,44 @@ static bool AdjustRoundedDurationDaysSlow(
     JSContext* cx, const Duration& duration, Increment increment,
     TemporalUnit unit, TemporalRoundingMode roundingMode,
     Handle<ZonedDateTime> zonedRelativeTo,
-    const PlainDateTime& precalculatedPlainDateTime, InstantSpan dayLength,
-    Duration* result) {
+    mozilla::Maybe<const PlainDateTime&> precalculatedPlainDateTime,
+    InstantSpan dayLength, Duration* result) {
   MOZ_ASSERT(IsValidDuration(duration));
   MOZ_ASSERT(IsValidInstantSpan(dayLength));
 
-  // Step 2.
+  // Step 3.
   Rooted<BigInt*> timeRemainderNs(
       cx, TotalDurationNanosecondsSlow(cx, duration.time()));
   if (!timeRemainderNs) {
     return false;
   }
 
-  // Steps 3-5.
+  // Steps 4-6.
   int32_t direction = timeRemainderNs->sign();
 
-  // Steps 6-9. (Computed in caller)
+  // Steps 7-10. (Computed in caller)
 
-  // Step 10.
+  // Step 11.
   Rooted<BigInt*> dayLengthNs(cx, ToEpochNanoseconds(cx, dayLength));
   if (!dayLengthNs) {
     return false;
   }
   MOZ_ASSERT(IsValidInstantSpan(dayLengthNs));
 
-  // Step 11.
+  // Step 12.
   Rooted<BigInt*> oneDayLess(cx, BigInt::sub(cx, timeRemainderNs, dayLengthNs));
   if (!oneDayLess) {
     return false;
   }
 
-  // Step 12.
+  // Step 13.
   if ((direction > 0 && oneDayLess->sign() < 0) ||
       (direction < 0 && oneDayLess->sign() > 0)) {
     *result = duration;
     return true;
   }
 
-  // Step 13.
+  // Step 14.
   Duration adjustedDateDuration;
   if (!AddDuration(cx,
                    {
@@ -3179,21 +3159,21 @@ static bool AdjustRoundedDurationDaysSlow(
     return false;
   }
 
-  // Step 14.
+  // Step 15.
   Duration roundedTimeDuration;
   if (!RoundDuration(cx, oneDayLess, unit, increment, roundingMode,
                      &roundedTimeDuration)) {
     return false;
   }
 
-  // Step 15.
+  // Step 16.
   TimeDuration adjustedTimeDuration;
   if (!BalanceTimeDuration(cx, roundedTimeDuration, TemporalUnit::Hour,
                            &adjustedTimeDuration)) {
     return false;
   }
 
-  // Step 16.
+  // Step 17.
   *result = {
       adjustedDateDuration.years,        adjustedDateDuration.months,
       adjustedDateDuration.weeks,        adjustedDateDuration.days,
@@ -3210,11 +3190,12 @@ static bool AdjustRoundedDurationDaysSlow(
  * seconds, milliseconds, microseconds, nanoseconds, increment, unit,
  * roundingMode, zonedRelativeTo, precalculatedPlainDateTime )
  */
-bool js::temporal::AdjustRoundedDurationDays(
+static bool AdjustRoundedDurationDays(
     JSContext* cx, const Duration& duration, Increment increment,
     TemporalUnit unit, TemporalRoundingMode roundingMode,
     Handle<ZonedDateTime> zonedRelativeTo,
-    const PlainDateTime& precalculatedPlainDateTime, Duration* result) {
+    mozilla::Maybe<const PlainDateTime&> precalculatedPlainDateTime,
+    Duration* result) {
   MOZ_ASSERT(IsValidDuration(duration));
 
   // Step 1.
@@ -3227,30 +3208,33 @@ bool js::temporal::AdjustRoundedDurationDays(
   // The increment is limited for all smaller temporal units.
   MOZ_ASSERT(increment < MaximumTemporalDurationRoundingIncrement(unit));
 
-  // Steps 3-5.
+  // Step 2.
+  MOZ_ASSERT(precalculatedPlainDateTime);
+
+  // Steps 4-6.
   //
-  // Step 2 is moved below, so compute |direction| through DurationSign.
+  // Step 3 is moved below, so compute |direction| through DurationSign.
   int32_t direction = DurationSign(duration.time());
 
   auto nanoseconds = zonedRelativeTo.instant();
   auto timeZone = zonedRelativeTo.timeZone();
   auto calendar = zonedRelativeTo.calendar();
 
-  // Steps 6-7.
+  // Steps 7-8.
   Instant dayStart;
   if (!AddZonedDateTime(cx, nanoseconds, timeZone, calendar, duration.date(),
-                        precalculatedPlainDateTime, &dayStart)) {
+                        *precalculatedPlainDateTime, &dayStart)) {
     return false;
   }
   MOZ_ASSERT(IsValidEpochInstant(dayStart));
 
-  // Step 8.
+  // Step 9.
   PlainDateTime dayStartDateTime;
   if (!GetPlainDateTimeFor(cx, timeZone, dayStart, &dayStartDateTime)) {
     return false;
   }
 
-  // Step 9.
+  // Step 10.
   Instant dayEnd;
   if (!AddDaysToZonedDateTime(cx, dayStart, dayStartDateTime, timeZone,
                               calendar, direction, &dayEnd)) {
@@ -3258,11 +3242,11 @@ bool js::temporal::AdjustRoundedDurationDays(
   }
   MOZ_ASSERT(IsValidEpochInstant(dayEnd));
 
-  // Step 10.
+  // Step 11.
   auto dayLength = dayEnd - dayStart;
   MOZ_ASSERT(IsValidInstantSpan(dayLength));
 
-  // Step 2. (Reordered)
+  // Step 3. (Reordered)
   auto timeRemainderNs = TotalDurationNanoseconds(duration.time());
   if (!timeRemainderNs) {
     return AdjustRoundedDurationDaysSlow(
@@ -3270,7 +3254,7 @@ bool js::temporal::AdjustRoundedDurationDays(
         precalculatedPlainDateTime, dayLength, result);
   }
 
-  // Step 11.
+  // Step 12.
   auto checkedOneDayLess = *timeRemainderNs - dayLength.toNanoseconds();
   if (!checkedOneDayLess.isValid()) {
     return AdjustRoundedDurationDaysSlow(
@@ -3279,13 +3263,13 @@ bool js::temporal::AdjustRoundedDurationDays(
   }
   auto oneDayLess = checkedOneDayLess.value();
 
-  // Step 12.
+  // Step 13.
   if ((direction > 0 && oneDayLess < 0) || (direction < 0 && oneDayLess > 0)) {
     *result = duration;
     return true;
   }
 
-  // Step 13.
+  // Step 14.
   Duration adjustedDateDuration;
   if (!AddDuration(cx,
                    {
@@ -3299,17 +3283,14 @@ bool js::temporal::AdjustRoundedDurationDays(
     return false;
   }
 
-  // FIXME: spec issue - don't pass years,months,weeks,days to RoundDuration.
-  // https://github.com/tc39/proposal-temporal/issues/2617
-
-  // Step 14.
+  // Step 15.
   Duration roundedTimeDuration;
   if (!RoundDuration(cx, oneDayLess, unit, increment, roundingMode,
                      &roundedTimeDuration)) {
     return false;
   }
 
-  // Step 15.
+  // Step 16.
   TimeDuration adjustedTimeDuration;
   if (!BalanceTimeDuration(cx, roundedTimeDuration, TemporalUnit::Hour,
                            &adjustedTimeDuration)) {
@@ -3350,7 +3331,7 @@ bool js::temporal::AdjustRoundedDurationDays(
   //
   // clang-format on
 
-  // Step 16.
+  // Step 17.
   *result = {
       adjustedDateDuration.years,        adjustedDateDuration.months,
       adjustedDateDuration.weeks,        adjustedDateDuration.days,
@@ -3359,6 +3340,21 @@ bool js::temporal::AdjustRoundedDurationDays(
       adjustedTimeDuration.microseconds, adjustedTimeDuration.nanoseconds,
   };
   return ThrowIfInvalidDuration(cx, *result);
+}
+
+/**
+ * AdjustRoundedDurationDays ( years, months, weeks, days, hours, minutes,
+ * seconds, milliseconds, microseconds, nanoseconds, increment, unit,
+ * roundingMode, zonedRelativeTo, precalculatedPlainDateTime )
+ */
+bool js::temporal::AdjustRoundedDurationDays(
+    JSContext* cx, const Duration& duration, Increment increment,
+    TemporalUnit unit, TemporalRoundingMode roundingMode,
+    Handle<ZonedDateTime> zonedRelativeTo,
+    const PlainDateTime& precalculatedPlainDateTime, Duration* result) {
+  return ::AdjustRoundedDurationDays(
+      cx, duration, increment, unit, roundingMode, zonedRelativeTo,
+      mozilla::SomeRef(precalculatedPlainDateTime), result);
 }
 
 static bool BigIntToStringBuilder(JSContext* cx, Handle<BigInt*> num,
@@ -4932,8 +4928,6 @@ static bool RoundDurationYear(JSContext* cx, const Duration& duration,
                   TemporalOverflow::Constrain, &isoResult)) {
     return false;
   }
-
-  // FIXME: spec bug - CreateTemporalDate is fallible
 
   // Step 8.l.
   Rooted<PlainDateObject*> wholeDaysLater(
@@ -7210,13 +7204,10 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
   // Step 31.
   mozilla::Maybe<const PlainDateTime&> precalculatedPlainDateTime{};
 
-  // FIXME: spec issue - why is |roundingGranularityIsNoop| tested here?
-
   // Step 32.
   bool plainDateTimeOrRelativeToWillBeUsed =
       !roundingGranularityIsNoop || largestUnit <= TemporalUnit::Day ||
-      smallestUnit <= TemporalUnit::Day || calendarUnitsPresent ||
-      duration.days != 0;
+      calendarUnitsPresent || duration.days != 0;
 
   // Step 33.
   PlainDateTime relativeToDateTime;
@@ -7278,19 +7269,14 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
   // Steps 37-38.
   TimeDuration balanceResult;
   if (zonedRelativeTo) {
-    // FIXME: spec bug - |precalculatedPlainDateTime| can be undefined.
-    // https://github.com/tc39/proposal-temporal/issues/2705
-
     // Step 37.a.
-    if (!roundingGranularityIsNoop) {
-      Duration adjustResult;
-      if (!AdjustRoundedDurationDays(
-              cx, roundResult, roundingIncrement, smallestUnit, roundingMode,
-              zonedRelativeTo, *precalculatedPlainDateTime, &adjustResult)) {
-        return false;
-      }
-      roundResult = adjustResult;
+    Duration adjustResult;
+    if (!AdjustRoundedDurationDays(cx, roundResult, roundingIncrement,
+                                   smallestUnit, roundingMode, zonedRelativeTo,
+                                   precalculatedPlainDateTime, &adjustResult)) {
+      return false;
     }
+    roundResult = adjustResult;
 
     // Step 37.b.
     if (!BalanceTimeDurationRelative(
