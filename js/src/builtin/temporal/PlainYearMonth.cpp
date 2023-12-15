@@ -395,16 +395,6 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
     return true;
   }
 
-  // Step 8.
-  if (resolvedOptions) {
-    Rooted<Value> largestUnitValue(
-        cx, StringValue(TemporalUnitToString(cx, settings.largestUnit)));
-    if (!DefineDataProperty(cx, resolvedOptions, cx->names().largestUnit,
-                            largestUnitValue)) {
-      return false;
-    }
-  }
-
   // Step 9.
   JS::RootedVector<PropertyKey> fieldNames(cx);
   if (!CalendarFields(cx, calendar,
@@ -413,54 +403,64 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
     return false;
   }
 
-  // Step 10.
+  // Step 9.
   Rooted<PlainObject*> thisFields(
       cx, PrepareTemporalFields(cx, yearMonth, fieldNames));
   if (!thisFields) {
     return false;
   }
 
-  // Step 11.
+  // Step 10.
   Value one = Int32Value(1);
   auto handleOne = Handle<Value>::fromMarkedLocation(&one);
   if (!DefineDataProperty(cx, thisFields, cx->names().day, handleOne)) {
     return false;
   }
 
-  // Step 12.
+  // Step 11.
   Rooted<Wrapped<PlainDateObject*>> thisDate(
       cx, CalendarDateFromFields(cx, calendar, thisFields));
   if (!thisDate) {
     return false;
   }
 
-  // Step 13.
+  // Step 12.
   Rooted<PlainObject*> otherFields(
       cx, PrepareTemporalFields(cx, other, fieldNames));
   if (!otherFields) {
     return false;
   }
 
-  // Step 14.
+  // Step 13.
   if (!DefineDataProperty(cx, otherFields, cx->names().day, handleOne)) {
     return false;
   }
 
-  // Step 15.
+  // Step 14.
   Rooted<Wrapped<PlainDateObject*>> otherDate(
       cx, CalendarDateFromFields(cx, calendar, otherFields));
   if (!otherDate) {
     return false;
   }
 
-  // Step 16.
+  // Steps 15-16.
   Duration result;
   if (resolvedOptions) {
+    // Step 15.
+    Rooted<Value> largestUnitValue(
+        cx, StringValue(TemporalUnitToString(cx, settings.largestUnit)));
+    if (!DefineDataProperty(cx, resolvedOptions, cx->names().largestUnit,
+                            largestUnitValue)) {
+      return false;
+    }
+
+    // Step 16.
     if (!CalendarDateUntil(cx, calendar, thisDate, otherDate, resolvedOptions,
                            &result)) {
       return false;
     }
   } else {
+    // Steps 15-16.
     if (!CalendarDateUntil(cx, calendar, thisDate, otherDate,
                            settings.largestUnit, &result)) {
       return false;

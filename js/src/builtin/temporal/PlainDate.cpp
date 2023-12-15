@@ -1515,7 +1515,7 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
     return false;
   }
 
-  // Steps 4-6.
+  // Steps 4-5.
   DifferenceSettings settings;
   Rooted<PlainObject*> resolvedOptions(cx);
   if (args.hasDefined(1)) {
@@ -1537,19 +1537,8 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
                                TemporalUnit::Day, &settings)) {
       return false;
     }
-
-    // FIXME: spec issue - move CreateDataPropertyOrThrow after fast path for
-    // consistency with DifferenceTemporalPlainYearMonth.
-
-    // Step 6.
-    Rooted<Value> largestUnitValue(
-        cx, StringValue(TemporalUnitToString(cx, settings.largestUnit)));
-    if (!DefineDataProperty(cx, resolvedOptions, cx->names().largestUnit,
-                            largestUnitValue)) {
-      return false;
-    }
   } else {
-    // Steps 4-6.
+    // Steps 4-5.
     settings = {
         TemporalUnit::Day,
         TemporalUnit::Day,
@@ -1558,7 +1547,7 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
     };
   }
 
-  // Step 7.
+  // Step 6.
   if (ToPlainDate(temporalDate) == otherDate) {
     auto* obj = CreateTemporalDuration(cx, {});
     if (!obj) {
@@ -1569,9 +1558,18 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
     return true;
   }
 
-  // Step 8.
+  // Steps 7-8.
   Duration duration;
   if (resolvedOptions) {
+    // Step 7.
+    Rooted<Value> largestUnitValue(
+        cx, StringValue(TemporalUnitToString(cx, settings.largestUnit)));
+    if (!DefineDataProperty(cx, resolvedOptions, cx->names().largestUnit,
+                            largestUnitValue)) {
+      return false;
+    }
+
+    // Step 8.
     Duration result;
     if (!DifferenceDate(cx, calendar, temporalDate, other, resolvedOptions,
                         &result)) {
@@ -1579,6 +1577,7 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
     }
     duration = result.date();
   } else {
+    // Steps 7-8.
     Duration result;
     if (!DifferenceDate(cx, calendar, temporalDate, other, settings.largestUnit,
                         &result)) {
