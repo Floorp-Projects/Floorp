@@ -7221,9 +7221,6 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
     }
   }
 
-  // FIXME: spec bug - negative durations shouldn't unconditionally take the
-  // fast path, i.e. comparisons need to happen against the absolute values.
-
   // Step 25.
   bool hoursToDaysConversionMayOccur = false;
 
@@ -7233,7 +7230,7 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 27.
-  else if (duration.hours >= 24) {
+  else if (std::abs(duration.hours) >= 24) {
     hoursToDaysConversionMayOccur = true;
   }
 
@@ -7248,9 +7245,10 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
   // Step 30.
   if (roundingGranularityIsNoop && largestUnit == existingLargestUnit &&
       !calendarUnitsPresent && !hoursToDaysConversionMayOccur &&
-      duration.minutes < 60 && duration.seconds < 60 &&
-      duration.milliseconds < 1000 && duration.microseconds < 1000 &&
-      duration.nanoseconds < 1000) {
+      std::abs(duration.minutes) < 60 && std::abs(duration.seconds) < 60 &&
+      std::abs(duration.milliseconds) < 1000 &&
+      std::abs(duration.microseconds) < 1000 &&
+      std::abs(duration.nanoseconds) < 1000) {
     // Steps 30.a-b.
     auto* obj = CreateTemporalDuration(cx, duration);
     if (!obj) {
