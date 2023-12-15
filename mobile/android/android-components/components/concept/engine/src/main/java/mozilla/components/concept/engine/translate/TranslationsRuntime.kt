@@ -4,6 +4,8 @@
 
 package mozilla.components.concept.engine.translate
 
+import mozilla.components.concept.engine.EngineSession
+
 private var unsupportedError = "Translations support is not available in this engine."
 
 /**
@@ -170,6 +172,44 @@ interface TranslationsRuntime {
      */
     fun getLanguageSettings(
         onSuccess: (Map<String, LanguageSetting>) -> Unit,
+        onError: (Throwable) -> Unit,
+    ): Unit = onError(UnsupportedOperationException(unsupportedError))
+
+    /**
+     * Retrieves the list of sites that a user has specified to never translate.
+     *
+     * @param onSuccess Callback invoked if the operation completed successfully with a
+     * display-ready list of URI/URLs.
+     * @param onError Callback invoked if an issue occurred.
+     */
+    fun getNeverTranslateSiteList(
+        onSuccess: (List<String>) -> Unit,
+        onError: (Throwable) -> Unit,
+    ): Unit = onError(UnsupportedOperationException(unsupportedError))
+
+    /**
+     * Sets if a given site should be never translated or not. This function is for use when making
+     * global translation settings adjustments to never translate a specified site.
+     *
+     * Note, ideally only use results from {@link [getNeverTranslateSiteList]} to set the
+     * siteURL on this function to ensure correct scope.
+     *
+     * For setting the never translate preference on the currently displayed site, the best practice
+     * is to use {@link [EngineSession.setNeverTranslateSiteSetting]}.
+     *
+     * @param origin The website's URI/URL to set the never translate preference on. Recommend
+     * only using results from {@link getNeverTranslateSiteList} as this parameter to ensure proper
+     * scope. To set the current site, use instead
+     * {@link [EngineSession.setNeverTranslateSiteSetting]}.
+     * @param setting True if the site should never be translated. False if the site should be
+     * translated.
+     * @param onSuccess Callback invoked if the operation completed successfully.
+     * @param onError Callback invoked if an issue occurred.
+     */
+    fun setNeverTranslateSpecifiedSite(
+        origin: String,
+        setting: Boolean,
+        onSuccess: () -> Unit,
         onError: (Throwable) -> Unit,
     ): Unit = onError(UnsupportedOperationException(unsupportedError))
 }

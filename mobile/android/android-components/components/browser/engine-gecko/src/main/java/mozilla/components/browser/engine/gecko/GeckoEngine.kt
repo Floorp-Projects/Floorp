@@ -943,6 +943,54 @@ class GeckoEngine(
     }
 
     /**
+     * See [Engine.getNeverTranslateSiteList].
+     */
+    override fun getNeverTranslateSiteList(
+        onSuccess: (List<String>) -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        TranslationsController.RuntimeTranslation.getNeverTranslateSiteList().then(
+            {
+                if (it != null) {
+                    try {
+                        onSuccess(it)
+                    } catch (e: IllegalArgumentException) {
+                        onError(e)
+                    }
+                } else {
+                    onError(translationsUnexpectedNull())
+                }
+                GeckoResult<Void>()
+            },
+            { throwable ->
+                onError(throwable)
+                GeckoResult<Void>()
+            },
+        )
+    }
+
+    /**
+     * See [Engine.setNeverTranslateSpecifiedSite].
+     */
+    override fun setNeverTranslateSpecifiedSite(
+        origin: String,
+        setting: Boolean,
+        onSuccess: () -> Unit,
+        onError: (Throwable) -> Unit,
+    ) {
+        TranslationsController.RuntimeTranslation.setNeverTranslateSpecifiedSite(setting, origin).then(
+            {
+                onSuccess()
+                GeckoResult<Void>()
+            },
+            { throwable ->
+                onError(throwable)
+                GeckoResult<Void>()
+            },
+        )
+    }
+
+    /**
      * See [Engine.profiler].
      */
     override val profiler: Profiler? = Profiler(runtime)

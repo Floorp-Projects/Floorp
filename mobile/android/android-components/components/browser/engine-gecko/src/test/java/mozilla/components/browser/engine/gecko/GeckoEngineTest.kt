@@ -84,12 +84,14 @@ import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.LanguageM
 import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.checkPairDownloadSize
 import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.getLanguageSetting
 import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.getLanguageSettings
+import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.getNeverTranslateSiteList
 import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.isTranslationsEngineSupported
 import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.listModelDownloadStates
 import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.listSupportedLanguages
 import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.manageLanguageModel
 import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.preferredLanguages
 import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.setLanguageSettings
+import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.setNeverTranslateSpecifiedSite
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_BLOCKLISTED
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_CORRUPT_FILE
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_FILE_ACCESS
@@ -3312,6 +3314,126 @@ class GeckoEngineTest {
             shadowOf(getMainLooper()).idle()
 
             assert(!onSuccessCalled) { "Should not successfully list language settings." }
+            assert(onErrorCalled) { "An error should have occurred." }
+        }
+    }
+
+    @Test
+    fun `WHEN getNeverTranslateSiteList is called successfully THEN onSuccess is called`() {
+        val runtime: GeckoRuntime = mock()
+        val engine = GeckoEngine(testContext, runtime = runtime)
+
+        var onSuccessCalled = false
+        var onErrorCalled = false
+
+        val geckoResult = GeckoResult<List<String>>()
+        val geckoResultValue = listOf("www.mozilla.org")
+
+        Mockito.mockStatic(TranslationsController.RuntimeTranslation::class.java, Mockito.CALLS_REAL_METHODS).use {
+                mocked ->
+            mocked.`when`<GeckoResult<List<String>>> { getNeverTranslateSiteList() }
+                .thenReturn(geckoResult)
+
+            engine.getNeverTranslateSiteList(
+                onSuccess = {
+                    onSuccessCalled = true
+                    assertTrue(it[0] == "www.mozilla.org")
+                },
+                onError = { onErrorCalled = true },
+            )
+
+            geckoResult.complete(geckoResultValue)
+            shadowOf(getMainLooper()).idle()
+
+            assert(onSuccessCalled) { "Should successfully list of never translate websites." }
+            assert(!onErrorCalled) { "An error should not have occurred." }
+        }
+    }
+
+    @Test
+    fun `WHEN getNeverTranslateSiteList is unsuccessful THEN onError is called`() {
+        val runtime: GeckoRuntime = mock()
+        val engine = GeckoEngine(testContext, runtime = runtime)
+
+        var onSuccessCalled = false
+        var onErrorCalled = false
+
+        val geckoResult = GeckoResult<List<String>>()
+
+        Mockito.mockStatic(TranslationsController.RuntimeTranslation::class.java, Mockito.CALLS_REAL_METHODS).use {
+                mocked ->
+            mocked.`when`<GeckoResult<List<String>>> { getNeverTranslateSiteList() }
+                .thenReturn(geckoResult)
+
+            engine.getNeverTranslateSiteList(
+                onSuccess = { onSuccessCalled = true },
+                onError = { onErrorCalled = true },
+            )
+
+            geckoResult.completeExceptionally(Exception())
+            shadowOf(getMainLooper()).idle()
+
+            assert(!onSuccessCalled) { "Should not successfully list never translate sites." }
+            assert(onErrorCalled) { "An error should have occurred." }
+        }
+    }
+
+    @Test
+    fun `WHEN setNeverTranslateSpecifiedSite is called successfully THEN onSuccess is called`() {
+        val runtime: GeckoRuntime = mock()
+        val engine = GeckoEngine(testContext, runtime = runtime)
+
+        var onSuccessCalled = false
+        var onErrorCalled = false
+
+        val geckoResult = GeckoResult<Void>()
+
+        Mockito.mockStatic(TranslationsController.RuntimeTranslation::class.java, Mockito.CALLS_REAL_METHODS).use {
+                mocked ->
+            mocked.`when`<GeckoResult<Void>> { setNeverTranslateSpecifiedSite(any(), any()) }
+                .thenReturn(geckoResult)
+
+            engine.setNeverTranslateSpecifiedSite(
+                "www.mozilla.org",
+                true,
+                onSuccess = { onSuccessCalled = true },
+                onError = { onErrorCalled = true },
+            )
+
+            geckoResult.complete(null)
+            shadowOf(getMainLooper()).idle()
+
+            assert(onSuccessCalled) { "Should successfully complete when setting the never translate site." }
+            assert(!onErrorCalled) { "An error should not have occurred." }
+        }
+    }
+
+    @Test
+    fun `WHEN setNeverTranslateSpecifiedSite is unsuccessful THEN onError is called`() {
+        val runtime: GeckoRuntime = mock()
+        val engine = GeckoEngine(testContext, runtime = runtime)
+
+        var onSuccessCalled = false
+        var onErrorCalled = false
+
+        val geckoResult = GeckoResult<List<String>>()
+
+        Mockito.mockStatic(TranslationsController.RuntimeTranslation::class.java, Mockito.CALLS_REAL_METHODS).use {
+                mocked ->
+            mocked.`when`<GeckoResult<List<String>>> { setNeverTranslateSpecifiedSite(any(), any()) }
+                .thenReturn(geckoResult)
+
+            engine.setNeverTranslateSpecifiedSite(
+                "www.mozilla.org",
+                true,
+                onSuccess = { onSuccessCalled = true },
+                onError = { onErrorCalled = true },
+            )
+
+            geckoResult.completeExceptionally(Exception())
+            shadowOf(getMainLooper()).idle()
+
+            assert(!onSuccessCalled) { "Should not successfully complete when setting the never translate site." }
             assert(onErrorCalled) { "An error should have occurred." }
         }
     }

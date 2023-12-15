@@ -1009,6 +1009,9 @@ abstract class EngineSession(
 
     /**
      * Requests the [EngineSession] to set the current site's never translate preference.
+     *
+     * @param setting True if the site should never be translated. False if the site should be
+     * translated.
      */
     abstract fun setNeverTranslateSiteSetting(
         setting: Boolean,
