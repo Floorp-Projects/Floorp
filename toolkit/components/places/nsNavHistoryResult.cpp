@@ -3469,7 +3469,8 @@ nsresult nsNavHistoryFolderResultNode::OnItemMoved(
     const nsACString& aGUID, const nsACString& aOldParentGUID,
     const nsACString& aNewParentGUID, uint16_t aSource, const nsACString& aURI,
     const nsACString& aTitle, const nsAString& aTags, int64_t aFrecency,
-    bool aHidden, uint32_t aVisitCount, PRTime aLastVisitDate) {
+    bool aHidden, uint32_t aVisitCount, PRTime aLastVisitDate,
+    PRTime aDateAdded) {
   MOZ_ASSERT(aOldParentGUID.Equals(mTargetFolderGuid) ||
                  aNewParentGUID.Equals(mTargetFolderGuid),
              "Got a bookmark message that doesn't belong to us");
@@ -3532,12 +3533,10 @@ nsresult nsNavHistoryFolderResultNode::OnItemMoved(
                   aGUID, aOldParentGUID, aSource);
   }
   if (aNewParentGUID.Equals(mTargetFolderGuid)) {
-    OnItemAdded(
-        aItemId, mTargetFolderItemId, aNewIndex, aItemType, itemURI,
-        RoundedPRNow(),  // This is a dummy dateAdded, not the real value.
-        aGUID, aNewParentGUID, aSource, aTitle, aTags, aFrecency, aHidden,
-        aVisitCount, aLastVisitDate, mTargetFolderItemId, mTargetFolderGuid,
-        aTitle);
+    OnItemAdded(aItemId, mTargetFolderItemId, aNewIndex, aItemType, itemURI,
+                aDateAdded, aGUID, aNewParentGUID, aSource, aTitle, aTags,
+                aFrecency, aHidden, aVisitCount, aLastVisitDate,
+                mTargetFolderItemId, mTargetFolderGuid, aTitle);
   }
 
   return NS_OK;
@@ -4324,7 +4323,8 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
                         item->mFrecency, item->mHidden, item->mVisitCount,
                         item->mLastVisitDate.IsNull()
                             ? 0
-                            : item->mLastVisitDate.Value() * 1000));
+                            : item->mLastVisitDate.Value() * 1000,
+                        item->mDateAdded * 1000));
         if (!item->mParentGuid.Equals(item->mOldParentGuid)) {
           ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(
               item->mParentGuid,
@@ -4335,7 +4335,8 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
                           item->mFrecency, item->mHidden, item->mVisitCount,
                           item->mLastVisitDate.IsNull()
                               ? 0
-                              : item->mLastVisitDate.Value() * 1000));
+                              : item->mLastVisitDate.Value() * 1000,
+                          item->mDateAdded * 1000));
         }
         ENUMERATE_ALL_BOOKMARKS_OBSERVERS(
             OnItemMoved(item->mId, item->mOldIndex, item->mIndex,

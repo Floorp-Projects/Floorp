@@ -963,6 +963,7 @@ export var Bookmarks = Object.freeze({
                 frecency: details.frecency,
                 hidden: details.hidden,
                 visitCount: details.visitCount,
+                dateAdded: updatedItem.dateAdded ?? Date.now(),
                 lastVisitDate: details.lastVisitDate,
               })
             );
@@ -1208,6 +1209,7 @@ export var Bookmarks = Object.freeze({
               frecency: details.frecency,
               hidden: details.hidden,
               visitCount: details.visitCount,
+              dateAdded: updatedItem.dateAdded,
               lastVisitDate: details.lastVisitDate,
             })
           );
@@ -1806,6 +1808,7 @@ export var Bookmarks = Object.freeze({
             frecency: details.frecency,
             hidden: details.hidden,
             visitCount: details.visitCount,
+            dateAdded: child.dateAdded,
             lastVisitDate: details.lastVisitDate,
           })
         );

@@ -3,6 +3,8 @@
 
 "use strict";
 
+const BOOKMARK_DATE_ADDED = new Date();
+
 function ensurePosition(info, parentGuid, index) {
   print(`Checking ${info.guid}`);
   checkBookmarkObject(info);
@@ -25,6 +27,7 @@ function insertChildren(folder, items) {
       children.push({
         title: `${i}`,
         url: "http://example.com",
+        dateAdded: BOOKMARK_DATE_ADDED,
       });
     } else {
       throw new Error(`Type ${items[i].type} is not supported.`);
@@ -271,6 +274,7 @@ async function testMoveToFolder(details) {
         frecency: 1,
         hidden: false,
         visitCount: 0,
+        dateAdded: BOOKMARK_DATE_ADDED.getTime(),
         lastVisitDate: null,
       });
     }

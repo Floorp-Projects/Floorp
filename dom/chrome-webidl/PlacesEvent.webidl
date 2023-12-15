@@ -330,6 +330,7 @@ dictionary PlacesBookmarkMovedInit {
   required long long frecency;
   required boolean hidden;
   required unsigned long visitCount;
+  required unsigned long long dateAdded;
   required unsigned long long? lastVisitDate;
 };
 
@@ -379,6 +380,11 @@ interface PlacesBookmarkMoved : PlacesBookmark {
    * Number of visits (including this one) for this URL.
    */
   readonly attribute unsigned long visitCount;
+
+  /**
+   * Date of the this bookmark added, in milliseconds since epoch.
+   */
+  readonly attribute unsigned long long dateAdded;
 
   /**
    * Date of the last visit, in milliseconds since epoch.
