@@ -616,7 +616,8 @@ bool js::temporal::ToTemporalDuration(JSContext* cx, Handle<Value> item,
 /**
  * DaysUntil ( earlier, later )
  */
-static int32_t DaysUntil(const PlainDate& earlier, const PlainDate& later) {
+int32_t js::temporal::DaysUntil(const PlainDate& earlier,
+                                const PlainDate& later) {
   MOZ_ASSERT(ISODateTimeWithinLimits(earlier));
   MOZ_ASSERT(ISODateTimeWithinLimits(later));
 
@@ -2848,8 +2849,8 @@ static bool AddDuration(JSContext* cx, const Duration& one, const Duration& two,
 
   // Steps 5.k-m.
   Duration dateDifference;
-  if (!CalendarDateUntil(cx, calendar, plainRelativeTo, end, dateLargestUnit,
-                         &dateDifference)) {
+  if (!DifferenceDate(cx, calendar, plainRelativeTo, end, dateLargestUnit,
+                      &dateDifference)) {
     return false;
   }
 
@@ -4869,8 +4870,8 @@ static bool RoundDurationYear(JSContext* cx, const Duration& duration,
 
   // Steps 7.m-o.
   Duration timePassed;
-  if (!CalendarDateUntil(cx, calendar, newRelativeTo, wholeDaysLater,
-                         TemporalUnit::Year, &timePassed)) {
+  if (!DifferenceDate(cx, calendar, newRelativeTo, wholeDaysLater,
+                      TemporalUnit::Year, &timePassed)) {
     return false;
   }
 

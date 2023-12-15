@@ -1149,6 +1149,108 @@ bool js::temporal::AddDate(JSContext* cx, Handle<CalendarValue> calendar,
 }
 
 /**
+ * DifferenceDate ( calendar, one, two, options )
+ */
+bool js::temporal::DifferenceDate(JSContext* cx, Handle<CalendarValue> calendar,
+                                  Handle<Wrapped<PlainDateObject*>> one,
+                                  Handle<Wrapped<PlainDateObject*>> two,
+                                  Handle<PlainObject*> options,
+                                  Duration* result) {
+  auto* unwrappedOne = one.unwrap(cx);
+  if (!unwrappedOne) {
+    return false;
+  }
+  auto oneDate = ToPlainDate(unwrappedOne);
+
+  auto* unwrappedTwo = two.unwrap(cx);
+  if (!unwrappedTwo) {
+    return false;
+  }
+  auto twoDate = ToPlainDate(unwrappedTwo);
+
+  // Steps 1-2. (Not applicable in our implementation.)
+
+  // Step 3.
+  MOZ_ASSERT(options->staticPrototype() == nullptr);
+
+  // Step 4.
+  MOZ_ASSERT(options->containsPure(cx->names().largestUnit));
+
+  // Step 5.
+  if (oneDate == twoDate) {
+    *result = {};
+    return true;
+  }
+
+  // Step 6.
+  Rooted<JS::Value> largestUnit(cx);
+  if (!GetProperty(cx, options, options, cx->names().largestUnit,
+                   &largestUnit)) {
+    return false;
+  }
+
+  if (largestUnit.isString()) {
+    bool isDay;
+    if (!EqualStrings(cx, largestUnit.toString(), cx->names().day, &isDay)) {
+      return false;
+    }
+
+    if (isDay) {
+      // Step 6.a.
+      int32_t days = DaysUntil(oneDate, twoDate);
+
+      // Step 6.b.
+      *result = {0, 0, 0, double(days)};
+      return true;
+    }
+  }
+
+  // Step 7.
+  return CalendarDateUntil(cx, calendar, one, two, options, result);
+}
+
+/**
+ * DifferenceDate ( calendar, one, two, options )
+ */
+bool js::temporal::DifferenceDate(JSContext* cx, Handle<CalendarValue> calendar,
+                                  Handle<Wrapped<PlainDateObject*>> one,
+                                  Handle<Wrapped<PlainDateObject*>> two,
+                                  TemporalUnit largestUnit, Duration* result) {
+  auto* unwrappedOne = one.unwrap(cx);
+  if (!unwrappedOne) {
+    return false;
+  }
+  auto oneDate = ToPlainDate(unwrappedOne);
+
+  auto* unwrappedTwo = two.unwrap(cx);
+  if (!unwrappedTwo) {
+    return false;
+  }
+  auto twoDate = ToPlainDate(unwrappedTwo);
+
+  // Steps 1-4. (Not applicable in our implementation.)
+
+  // Step 5.
+  if (oneDate == twoDate) {
+    *result = {};
+    return true;
+  }
+
+  // Step 6.
+  if (largestUnit == TemporalUnit::Day) {
+    // Step 6.a.
+    int32_t days = DaysUntil(oneDate, twoDate);
+
+    // Step 6.b.
+    *result = {0, 0, 0, double(days)};
+    return true;
+  }
+
+  // Step 7.
+  return CalendarDateUntil(cx, calendar, one, two, largestUnit, result);
+}
+
+/**
  * CompareISODate ( y1, m1, d1, y2, m2, d2 )
  */
 int32_t js::temporal::CompareISODate(const PlainDate& one,
@@ -1478,15 +1580,15 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
   Duration duration;
   if (resolvedOptions) {
     Duration result;
-    if (!CalendarDateUntil(cx, calendar, temporalDate, other, resolvedOptions,
-                           &result)) {
+    if (!DifferenceDate(cx, calendar, temporalDate, other, resolvedOptions,
+                        &result)) {
       return false;
     }
     duration = result.date();
   } else {
     Duration result;
-    if (!CalendarDateUntil(cx, calendar, temporalDate, other,
-                           settings.largestUnit, &result)) {
+    if (!DifferenceDate(cx, calendar, temporalDate, other, settings.largestUnit,
+                        &result)) {
       return false;
     }
     duration = result.date();
