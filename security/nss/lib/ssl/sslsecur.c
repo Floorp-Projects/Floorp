@@ -488,7 +488,12 @@ ssl_SendSavedWriteData(sslSocket *ss)
         if (rv < 0) {
             return rv;
         }
-        ss->pendingBuf.len -= rv;
+        if (rv > ss->pendingBuf.len) {
+            PORT_Assert(0); /* This shouldn't happen */
+            ss->pendingBuf.len = 0;
+        } else {
+            ss->pendingBuf.len -= rv;
+        }
         if (ss->pendingBuf.len > 0 && rv > 0) {
             /* UGH !! This shifts the whole buffer down by copying it */
             PORT_Memmove(ss->pendingBuf.buf, ss->pendingBuf.buf + rv,

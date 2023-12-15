@@ -346,15 +346,15 @@ async function scheduleMac(name, base, args = "") {
       DOMSUF: "localdomain",
       HOST: "localhost",
     },
-    provisioner: "localprovisioner",
-    workerType: "nss-macos-10-12",
+    provisioner: "releng-hardware",
+    workerType: "nss-1-b-osx-1015",
     platform: "mac"
   });
 
   // Build base definition.
   let build_base_without_command_symbol = merge(mac_base, {
-    provisioner: "localprovisioner",
-    workerType: "nss-macos-10-12",
+    provisioner: "releng-hardware",
+    workerType: "nss-1-b-osx-1015",
     platform: "mac",
     maxRunTime: 7200,
     artifacts: [{
