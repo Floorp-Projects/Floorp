@@ -10,6 +10,10 @@
     background-color: transparent;
   }
 
+  #mainDeck {
+    background-color: -moz-dialog;
+  }
+
   #topBar {
     appearance: auto;
     -moz-default-appearance: toolbar;
