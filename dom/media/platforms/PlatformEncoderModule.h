@@ -234,7 +234,8 @@ class EncoderConfig final {
         mFramerate(aConfig.mFramerate),
         mKeyframeInterval(aConfig.mKeyframeInterval),
         mBitrate(aConfig.mBitrate),
-        mBitrateMode(aConfig.mBitrateMode) {}
+        mBitrateMode(aConfig.mBitrateMode),
+        mCodecSpecific(aConfig.mCodecSpecific) {}
 
   template <typename... Ts>
   EncoderConfig(const CodecType aCodecType, gfx::IntSize aSize,
