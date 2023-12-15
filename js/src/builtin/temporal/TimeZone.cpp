@@ -623,16 +623,6 @@ BuiltinTimeZoneObject* js::temporal::CreateTemporalTimeZone(
 }
 
 /**
- * CreateTemporalTimeZone ( identifier [ , newTarget ] )
- *
- * When CreateTemporalTimeZone is called with `identifier="UTC"`.
- */
-BuiltinTimeZoneObject* js::temporal::CreateTemporalTimeZoneUTC(JSContext* cx) {
-  Handle<JSString*> identifier = cx->names().UTC.toHandle();
-  return ::CreateBuiltinTimeZone(cx, identifier);
-}
-
-/**
  * ToTemporalTimeZoneSlotValue ( temporalTimeZoneLike )
  */
 bool js::temporal::ToTemporalTimeZone(JSContext* cx,

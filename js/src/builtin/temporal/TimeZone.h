@@ -258,11 +258,6 @@ BuiltinTimeZoneObject* CreateTemporalTimeZone(JSContext* cx,
                                               JS::Handle<JSString*> identifier);
 
 /**
- * CreateTemporalTimeZone ( identifier [ , newTarget ] )
- */
-BuiltinTimeZoneObject* CreateTemporalTimeZoneUTC(JSContext* cx);
-
-/**
  * ToTemporalTimeZoneSlotValue ( temporalTimeZoneLike )
  */
 bool ToTemporalTimeZone(JSContext* cx,
