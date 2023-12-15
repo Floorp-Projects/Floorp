@@ -2,6 +2,15 @@ diff --git a/src/wasi-libc/Makefile b/src/wasi-libc/Makefile
 index f350ecb..9a5c940 100644
 --- a/src/wasi-libc/Makefile
 +++ b/src/wasi-libc/Makefile
+@@ -308,7 +308,7 @@ ASMFLAGS += --target=$(TARGET_TRIPLE)
+ # TODO: Add -fno-signaling-nans when the compiler supports it.
+ CFLAGS += -fno-trapping-math
+ # Add all warnings, but disable a few which occur in third-party code.
+-CFLAGS += -Wall -Wextra -Werror \
++CFLAGS += -Wall -Wextra \
+   -Wno-null-pointer-arithmetic \
+   -Wno-unused-parameter \
+   -Wno-sign-compare \
 @@ -671,6 +671,9 @@ check-symbols: startup_files libc
  	@#
  	@# TODO: Filter out __NO_MATH_ERRNO_ and a few __*WIDTH__ that are new to clang 14.
