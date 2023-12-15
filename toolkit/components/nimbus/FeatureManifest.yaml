@@ -592,6 +592,10 @@ pocketNewtab:
       type: string
       fallbackPref: browser.newtabpage.activity-stream.discoverystream.spoc-topsites-positions
       description: CSV string of spoc position indexes on newtab topsites section
+    contileTopsitesPositions:
+      type: string
+      fallbackPref: browser.newtabpage.activity-stream.discoverystream.contile-topsites-positions
+      description: CSV string of contile position indexes on newtab topsites section
     spocAdTypes:
       type: string
       fallbackPref: browser.newtabpage.activity-stream.discoverystream.spocAdTypes

@@ -129,6 +129,7 @@ const DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH = "browser.topsites.experiment.";
 // Nimbus variable for the Contile integration. It falls back to the pref:
 // `browser.topsites.contile.enabled`.
 const NIMBUS_VARIABLE_CONTILE_ENABLED = "topSitesContileEnabled";
+const NIMBUS_VARIABLE_CONTILE_POSITIONS = "contileTopsitesPositions";
 const CONTILE_ENDPOINT_PREF = "browser.topsites.contile.endpoint";
 const CONTILE_UPDATE_INTERVAL = 15 * 60 * 1000; // 15 minutes
 // The maximum number of sponsored top sites to fetch from Contile.
@@ -491,10 +492,33 @@ class TopSitesFeed {
     const contileEnabled = lazy.NimbusFeatures.newtab.getVariable(
       NIMBUS_VARIABLE_CONTILE_ENABLED
     );
+
+    // Keep the number of positions in the array in sync with CONTILE_MAX_NUM_SPONSORED.
+    // sponsored_position is a 1-based index, and contilePositions is a 0-based index,
+    // so we need to add 1 to each of these.
+    // Also currently this does not work with SOV.
+    let contilePositions = lazy.NimbusFeatures.pocketNewtab
+      .getVariable(NIMBUS_VARIABLE_CONTILE_POSITIONS)
+      ?.split(",")
+      .map(item => parseInt(item, 10) + 1)
+      .filter(item => !Number.isNaN(item));
+    if (!contilePositions || contilePositions.length === 0) {
+      contilePositions = [1, 2];
+    }
+
     let hasContileTiles = false;
     if (contileEnabled) {
-      let sponsoredPosition = 1;
-      for (let site of this._contile.sites) {
+      let contilePositionIndex = 0;
+      // We need to loop through potential spocs and set their positions.
+      // If we run out of spocs or positions, we stop.
+      // First, we need to know which array is shortest. This is our exit condition.
+      const minLength = Math.min(
+        contilePositions.length,
+        this._contile.sites.length
+      );
+      // Loop until we run out of spocs or positions.
+      for (let i = 0; i < minLength; i++) {
+        let site = this._contile.sites[i];
         let hostname = shortURL(site);
         let link = {
           isDefault: true,
@@ -503,7 +527,7 @@ class TopSitesFeed {
           sendAttributionRequest: false,
           label: site.name,
           show_sponsored_label: hostname !== "yandex",
-          sponsored_position: sponsoredPosition++,
+          sponsored_position: contilePositions[contilePositionIndex++],
           sponsored_click_url: site.click_url,
           sponsored_impression_url: site.impression_url,
           sponsored_tile_id: site.id,
@@ -517,7 +541,7 @@ class TopSitesFeed {
         }
         DEFAULT_TOP_SITES.push(link);
       }
-      hasContileTiles = sponsoredPosition > 1;
+      hasContileTiles = contilePositionIndex > 0;
     }
 
     // Read defaults from remote settings.
