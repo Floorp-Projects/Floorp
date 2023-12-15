@@ -29,6 +29,9 @@ with Files("talos/tests/dromaeo/**"):
 with Files("talos/tests/kraken/**"):
     BUG_COMPONENT = ("Core", "JavaScript Engine")
 
+with Files("talos/tests/offscreencanvas/**"):
+    BUG_COMPONENT = ("Core", "Graphics: Canvas2D")
+
 with Files("talos/tests/scroll/**"):
     BUG_COMPONENT = ("Core", "Graphics")
 

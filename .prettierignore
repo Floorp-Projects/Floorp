@@ -1187,6 +1187,8 @@ testing/mozbase/mozprofile/tests/files/prefs_with_comments.js
 testing/mozharness/configs/test/test_malformed.json
 testing/talos/talos/startup_test/sessionrestore/profile/sessionstore.js
 testing/talos/talos/startup_test/sessionrestore/profile-manywindows/sessionstore.js
+testing/talos/talos/tests/offscreencanvas/benchmarks/video/demuxer_mp4.js
+testing/talos/talos/tests/offscreencanvas/benchmarks/video/mp4box.all.min.js
 # Python json.
 testing/talos/talos/unittests/test_talosconfig_browser_config.json
 testing/talos/talos/unittests/test_talosconfig_test_config.json

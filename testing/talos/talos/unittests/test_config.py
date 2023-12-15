@@ -273,6 +273,18 @@ class Test_get_config(object):
         cls.argv_canvas2dvideo = (
             "--activeTests canvas2dvideo -e /some/random/path".split()
         )
+        cls.argv_offscreencanvas_webcodecs_main_webgl_h264 = "--activeTests offscreencanvas_webcodecs_main_webgl_h264 -e /some/random/path".split()
+        cls.argv_offscreencanvas_webcodecs_main_webgl_vp9 = "--activeTests offscreencanvas_webcodecs_main_webgl_vp9 -e /some/random/path".split()
+        cls.argv_offscreencanvas_webcodecs_main_webgl_av1 = "--activeTests offscreencanvas_webcodecs_main_webgl_av1 -e /some/random/path".split()
+        cls.argv_offscreencanvas_webcodecs_worker_webgl_h264 = "--activeTests offscreencanvas_webcodecs_worker_webgl_h264 -e /some/random/path".split()
+        cls.argv_offscreencanvas_webcodecs_worker_webgl_vp9 = "--activeTests offscreencanvas_webcodecs_worker_webgl_vp9 -e /some/random/path".split()
+        cls.argv_offscreencanvas_webcodecs_worker_webgl_av1 = "--activeTests offscreencanvas_webcodecs_worker_webgl_av1 -e /some/random/path".split()
+        cls.argv_offscreencanvas_webcodecs_main_2d_h264 = "--activeTests offscreencanvas_webcodecs_main_2d_h264 -e /some/random/path".split()
+        cls.argv_offscreencanvas_webcodecs_main_2d_vp9 = "--activeTests offscreencanvas_webcodecs_main_2d_vp9 -e /some/random/path".split()
+        cls.argv_offscreencanvas_webcodecs_main_2d_av1 = "--activeTests offscreencanvas_webcodecs_main_2d_av1 -e /some/random/path".split()
+        cls.argv_offscreencanvas_webcodecs_worker_2d_h264 = "--activeTests offscreencanvas_webcodecs_worker_2d_h264 -e /some/random/path".split()
+        cls.argv_offscreencanvas_webcodecs_worker_2d_vp9 = "--activeTests offscreencanvas_webcodecs_worker_2d_vp9 -e /some/random/path".split()
+        cls.argv_offscreencanvas_webcodecs_worker_2d_av1 = "--activeTests offscreencanvas_webcodecs_worker_2d_av1 -e /some/random/path".split()
         cls.argv_tp5n = "--activeTests tp5n -e /some/random/path".split()
         cls.argv_tp5o = "--activeTests tp5o -e /some/random/path".split()
         cls.argv_tp5o_webext = "--activeTests tp5o_webext -e /some/random/path".split()
@@ -626,6 +638,282 @@ class Test_get_config(object):
         assert (
             test_config["tpmanifest"]
             != "${talos}/tests/canvas2d/canvas2dvideo.manifest"
+        )
+        assert test_config["tpcycles"] == 1
+        assert test_config["tppagecycles"] == 5
+        assert test_config["tploadnocache"] is True
+        assert test_config["tpmozafterpaint"] is False
+        assert test_config["tpchrome"] is False
+        assert test_config["gecko_profile_interval"] == 2
+        assert test_config["gecko_profile_entries"] == 2000000
+        assert "win_counters" not in test_config
+        assert "w7_counters" not in test_config
+        assert "linux_counters" not in test_config
+        assert "mac_counters" not in test_config
+        assert test_config["filters"] is not None
+        assert test_config["unit"] == "ms"
+
+    def test_offscreencanvas_webcodecs_main_webgl_h264_has_expected_attributes(self):
+        config = get_config(self.argv_offscreencanvas_webcodecs_main_webgl_h264)
+        test_config = config["tests"][0]
+
+        assert test_config["name"] == "offscreencanvas_webcodecs_main_webgl_h264"
+        assert (
+            test_config["tpmanifest"]
+            != "${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_main_webgl_h264.manifest"
+        )
+        assert test_config["tpcycles"] == 1
+        assert test_config["tppagecycles"] == 5
+        assert test_config["tploadnocache"] is True
+        assert test_config["tpmozafterpaint"] is False
+        assert test_config["tpchrome"] is False
+        assert test_config["gecko_profile_interval"] == 2
+        assert test_config["gecko_profile_entries"] == 2000000
+        assert "win_counters" not in test_config
+        assert "w7_counters" not in test_config
+        assert "linux_counters" not in test_config
+        assert "mac_counters" not in test_config
+        assert test_config["filters"] is not None
+        assert test_config["unit"] == "ms"
+
+    def test_offscreencanvas_webcodecs_main_webgl_vp9_has_expected_attributes(self):
+        config = get_config(self.argv_offscreencanvas_webcodecs_main_webgl_vp9)
+        test_config = config["tests"][0]
+
+        assert test_config["name"] == "offscreencanvas_webcodecs_main_webgl_vp9"
+        assert (
+            test_config["tpmanifest"]
+            != "${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_main_webgl_vp9.manifest"
+        )
+        assert test_config["tpcycles"] == 1
+        assert test_config["tppagecycles"] == 5
+        assert test_config["tploadnocache"] is True
+        assert test_config["tpmozafterpaint"] is False
+        assert test_config["tpchrome"] is False
+        assert test_config["gecko_profile_interval"] == 2
+        assert test_config["gecko_profile_entries"] == 2000000
+        assert "win_counters" not in test_config
+        assert "w7_counters" not in test_config
+        assert "linux_counters" not in test_config
+        assert "mac_counters" not in test_config
+        assert test_config["filters"] is not None
+        assert test_config["unit"] == "ms"
+
+    def test_offscreencanvas_webcodecs_main_webgl_av1_has_expected_attributes(self):
+        config = get_config(self.argv_offscreencanvas_webcodecs_main_webgl_av1)
+        test_config = config["tests"][0]
+
+        assert test_config["name"] == "offscreencanvas_webcodecs_main_webgl_av1"
+        assert (
+            test_config["tpmanifest"]
+            != "${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_main_webgl_av1.manifest"
+        )
+        assert test_config["tpcycles"] == 1
+        assert test_config["tppagecycles"] == 5
+        assert test_config["tploadnocache"] is True
+        assert test_config["tpmozafterpaint"] is False
+        assert test_config["tpchrome"] is False
+        assert test_config["gecko_profile_interval"] == 2
+        assert test_config["gecko_profile_entries"] == 2000000
+        assert "win_counters" not in test_config
+        assert "w7_counters" not in test_config
+        assert "linux_counters" not in test_config
+        assert "mac_counters" not in test_config
+        assert test_config["filters"] is not None
+        assert test_config["unit"] == "ms"
+
+    def test_offscreencanvas_webcodecs_worker_webgl_h264_has_expected_attributes(self):
+        config = get_config(self.argv_offscreencanvas_webcodecs_worker_webgl_h264)
+        test_config = config["tests"][0]
+
+        assert test_config["name"] == "offscreencanvas_webcodecs_worker_webgl_h264"
+        assert (
+            test_config["tpmanifest"]
+            != "${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_worker_webgl_h264.manifest"
+        )
+        assert test_config["tpcycles"] == 1
+        assert test_config["tppagecycles"] == 5
+        assert test_config["tploadnocache"] is True
+        assert test_config["tpmozafterpaint"] is False
+        assert test_config["tpchrome"] is False
+        assert test_config["gecko_profile_interval"] == 2
+        assert test_config["gecko_profile_entries"] == 2000000
+        assert "win_counters" not in test_config
+        assert "w7_counters" not in test_config
+        assert "linux_counters" not in test_config
+        assert "mac_counters" not in test_config
+        assert test_config["filters"] is not None
+        assert test_config["unit"] == "ms"
+
+    def test_offscreencanvas_webcodecs_worker_webgl_vp9_has_expected_attributes(self):
+        config = get_config(self.argv_offscreencanvas_webcodecs_worker_webgl_vp9)
+        test_config = config["tests"][0]
+
+        assert test_config["name"] == "offscreencanvas_webcodecs_worker_webgl_vp9"
+        assert (
+            test_config["tpmanifest"]
+            != "${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_worker_webgl_vp9.manifest"
+        )
+        assert test_config["tpcycles"] == 1
+        assert test_config["tppagecycles"] == 5
+        assert test_config["tploadnocache"] is True
+        assert test_config["tpmozafterpaint"] is False
+        assert test_config["tpchrome"] is False
+        assert test_config["gecko_profile_interval"] == 2
+        assert test_config["gecko_profile_entries"] == 2000000
+        assert "win_counters" not in test_config
+        assert "w7_counters" not in test_config
+        assert "linux_counters" not in test_config
+        assert "mac_counters" not in test_config
+        assert test_config["filters"] is not None
+        assert test_config["unit"] == "ms"
+
+    def test_offscreencanvas_webcodecs_worker_webgl_av1_has_expected_attributes(self):
+        config = get_config(self.argv_offscreencanvas_webcodecs_worker_webgl_av1)
+        test_config = config["tests"][0]
+
+        assert test_config["name"] == "offscreencanvas_webcodecs_worker_webgl_av1"
+        assert (
+            test_config["tpmanifest"]
+            != "${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_worker_webgl_av1.manifest"
+        )
+        assert test_config["tpcycles"] == 1
+        assert test_config["tppagecycles"] == 5
+        assert test_config["tploadnocache"] is True
+        assert test_config["tpmozafterpaint"] is False
+        assert test_config["tpchrome"] is False
+        assert test_config["gecko_profile_interval"] == 2
+        assert test_config["gecko_profile_entries"] == 2000000
+        assert "win_counters" not in test_config
+        assert "w7_counters" not in test_config
+        assert "linux_counters" not in test_config
+        assert "mac_counters" not in test_config
+        assert test_config["filters"] is not None
+        assert test_config["unit"] == "ms"
+
+    def test_offscreencanvas_webcodecs_main_2d_h264_has_expected_attributes(self):
+        config = get_config(self.argv_offscreencanvas_webcodecs_main_2d_h264)
+        test_config = config["tests"][0]
+
+        assert test_config["name"] == "offscreencanvas_webcodecs_main_2d_h264"
+        assert (
+            test_config["tpmanifest"]
+            != "${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_main_2d_h264.manifest"
+        )
+        assert test_config["tpcycles"] == 1
+        assert test_config["tppagecycles"] == 5
+        assert test_config["tploadnocache"] is True
+        assert test_config["tpmozafterpaint"] is False
+        assert test_config["tpchrome"] is False
+        assert test_config["gecko_profile_interval"] == 2
+        assert test_config["gecko_profile_entries"] == 2000000
+        assert "win_counters" not in test_config
+        assert "w7_counters" not in test_config
+        assert "linux_counters" not in test_config
+        assert "mac_counters" not in test_config
+        assert test_config["filters"] is not None
+        assert test_config["unit"] == "ms"
+
+    def test_offscreencanvas_webcodecs_main_2d_vp9_has_expected_attributes(self):
+        config = get_config(self.argv_offscreencanvas_webcodecs_main_2d_vp9)
+        test_config = config["tests"][0]
+
+        assert test_config["name"] == "offscreencanvas_webcodecs_main_2d_vp9"
+        assert (
+            test_config["tpmanifest"]
+            != "${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_main_2d_vp9.manifest"
+        )
+        assert test_config["tpcycles"] == 1
+        assert test_config["tppagecycles"] == 5
+        assert test_config["tploadnocache"] is True
+        assert test_config["tpmozafterpaint"] is False
+        assert test_config["tpchrome"] is False
+        assert test_config["gecko_profile_interval"] == 2
+        assert test_config["gecko_profile_entries"] == 2000000
+        assert "win_counters" not in test_config
+        assert "w7_counters" not in test_config
+        assert "linux_counters" not in test_config
+        assert "mac_counters" not in test_config
+        assert test_config["filters"] is not None
+        assert test_config["unit"] == "ms"
+
+    def test_offscreencanvas_webcodecs_main_2d_av1_has_expected_attributes(self):
+        config = get_config(self.argv_offscreencanvas_webcodecs_main_2d_av1)
+        test_config = config["tests"][0]
+
+        assert test_config["name"] == "offscreencanvas_webcodecs_main_2d_av1"
+        assert (
+            test_config["tpmanifest"]
+            != "${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_main_2d_av1.manifest"
+        )
+        assert test_config["tpcycles"] == 1
+        assert test_config["tppagecycles"] == 5
+        assert test_config["tploadnocache"] is True
+        assert test_config["tpmozafterpaint"] is False
+        assert test_config["tpchrome"] is False
+        assert test_config["gecko_profile_interval"] == 2
+        assert test_config["gecko_profile_entries"] == 2000000
+        assert "win_counters" not in test_config
+        assert "w7_counters" not in test_config
+        assert "linux_counters" not in test_config
+        assert "mac_counters" not in test_config
+        assert test_config["filters"] is not None
+        assert test_config["unit"] == "ms"
+
+    def test_offscreencanvas_webcodecs_worker_2d_h264_has_expected_attributes(self):
+        config = get_config(self.argv_offscreencanvas_webcodecs_worker_2d_h264)
+        test_config = config["tests"][0]
+
+        assert test_config["name"] == "offscreencanvas_webcodecs_worker_2d_h264"
+        assert (
+            test_config["tpmanifest"]
+            != "${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_worker_2d_h264.manifest"
+        )
+        assert test_config["tpcycles"] == 1
+        assert test_config["tppagecycles"] == 5
+        assert test_config["tploadnocache"] is True
+        assert test_config["tpmozafterpaint"] is False
+        assert test_config["tpchrome"] is False
+        assert test_config["gecko_profile_interval"] == 2
+        assert test_config["gecko_profile_entries"] == 2000000
+        assert "win_counters" not in test_config
+        assert "w7_counters" not in test_config
+        assert "linux_counters" not in test_config
+        assert "mac_counters" not in test_config
+        assert test_config["filters"] is not None
+        assert test_config["unit"] == "ms"
+
+    def test_offscreencanvas_webcodecs_worker_2d_vp9_has_expected_attributes(self):
+        config = get_config(self.argv_offscreencanvas_webcodecs_worker_2d_vp9)
+        test_config = config["tests"][0]
+
+        assert test_config["name"] == "offscreencanvas_webcodecs_worker_2d_vp9"
+        assert (
+            test_config["tpmanifest"]
+            != "${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_worker_2d_vp9.manifest"
+        )
+        assert test_config["tpcycles"] == 1
+        assert test_config["tppagecycles"] == 5
+        assert test_config["tploadnocache"] is True
+        assert test_config["tpmozafterpaint"] is False
+        assert test_config["tpchrome"] is False
+        assert test_config["gecko_profile_interval"] == 2
+        assert test_config["gecko_profile_entries"] == 2000000
+        assert "win_counters" not in test_config
+        assert "w7_counters" not in test_config
+        assert "linux_counters" not in test_config
+        assert "mac_counters" not in test_config
+        assert test_config["filters"] is not None
+        assert test_config["unit"] == "ms"
+
+    def test_offscreencanvas_webcodecs_worker_2d_av1_has_expected_attributes(self):
+        config = get_config(self.argv_offscreencanvas_webcodecs_worker_2d_av1)
+        test_config = config["tests"][0]
+
+        assert test_config["name"] == "offscreencanvas_webcodecs_worker_2d_av1"
+        assert (
+            test_config["tpmanifest"]
+            != "${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_worker_2d_av1.manifest"
         )
         assert test_config["tpcycles"] == 1
         assert test_config["tppagecycles"] == 5

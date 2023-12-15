@@ -1,0 +1,22 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+<html>
+<head>
+<script src="mp4box.all.min.js" type="text/javascript"></script>
+<script src="demuxer_mp4.js" type="text/javascript"></script>
+<script src="shared.js" type="text/javascript"></script>
+<script src="helper_main.js" type="text/javascript"></script>
+<script language="javascript" type="text/javascript">
+
+function init() {
+  const videoUri = "../../../video/clips/testsrc.1080p.60fps.vp9.short.mp4";
+  runTest("offscreencanvas_webcodecs_main_2d_vp9", "2d", videoUri);
+}
+
+</script>
+
+</head>
+<body id="body" onload="init();">
+</body>
+</html>
