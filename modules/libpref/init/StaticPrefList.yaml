@@ -3042,6 +3042,11 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
+- name: dom.media.webcodecs.force-osx-h264-enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Number of seconds of very quiet or silent audio before considering the audio
 # inaudible.
 - name: dom.media.silence_duration_for_audibility
