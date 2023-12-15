@@ -165,6 +165,8 @@ testing/mozbase/mozproxy/mozproxy/backends/mitm/scripts/catapult/
 testing/talos/talos/tests/devtools/addon/content/pages/
 testing/talos/talos/tests/dromaeo/
 testing/talos/talos/tests/kraken/
+testing/talos/talos/tests/offscreencanvas/benchmarks/video/demuxer_mp4.js
+testing/talos/talos/tests/offscreencanvas/benchmarks/video/mp4box.all.min.js
 testing/talos/talos/tests/v8_7/
 testing/web-platform/tests/resources/webidl2/
 testing/web-platform/tests/tools/third_party/

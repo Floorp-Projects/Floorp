@@ -4034,6 +4034,3558 @@ For the sample commands found below, note that the capitalization used is import
 
 
 
+.. dropdown:: offscreencanvas_webcodecs_main_2d_av1
+   :class-container: anchor-id-offscreencanvas_webcodecs_main_2d_av1
+
+   * contact: :aosmond and gfx
+   * source: `offscreencanvas_webcodecs_main_2d_av1 <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/offscreencanvas/benchmarks/video>`__
+   * type: `Page load`_
+   * data: 5 cycles of the entire benchmark, each subtest will have 5 data points (see below)
+   * summarization: OffscreenCanvas 2D video texture update with WebCodecs and 1080p AV1 video on the main thread. Measures mean frame time across 100 frames.
+      * subtest: `ignore first`_ data point, then take the `median`_ of the remaining 4; `source:
+        test.py <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/test.py#l843>`__
+      * suite: `geometric mean`_ of the 4 subtest results.
+   * **Lower is better**
+   * **Example Data**
+
+   .. code-block::
+
+      0;Mean frame time across 100 frames: ;54.6916;49.0534;51.21645;51.239650000000005;52.44295
+
+   * description:
+      | This test extracts frames from a AV1 video file using WebCodecs and ask Canvas2D to draw video
+        frames as Canvas2D textures for 100 frames on the main thread. It collects the mean frame time
+        across 100 frames to measure how much time it will spend for a video texture upload to be a
+        Canvas2D texture (ctx.drawImage). We run it for 5 times and ignore the first found. Lower
+        results are better.
+   * gecko_profile_extra_threads: CanvasRenderer,CanvasWorker,MediaSupervisor
+   * gecko_profile_interval: 2
+   * linux_counters: None
+   * mac_counters: None
+   * preferences: {'dom.media.webcodecs.enabled': True, 'dom.media.webcodecs.force-osx-h264-enabled': True}
+   * timeout: 600
+   * tpchrome: False
+   * tpcycles: 1
+   * tploadnocache: True
+   * tpmanifest: ${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_main_2d_av1.manifest
+   * tpmozafterpaint: False
+   * tppagecycles: 5
+   * unit: ms
+   * w7_counters: None
+   * win_counters: None
+   * Command
+
+   .. code-block::
+
+      ./mach talos-test -a offscreencanvas_webcodecs_main_2d_av1
+
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+
+.. dropdown:: offscreencanvas_webcodecs_main_2d_h264
+   :class-container: anchor-id-offscreencanvas_webcodecs_main_2d_h264
+
+   * contact: :aosmond and gfx
+   * source: `offscreencanvas_webcodecs_main_2d_h264 <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/offscreencanvas/benchmarks/video>`__
+   * type: `Page load`_
+   * data: 5 cycles of the entire benchmark, each subtest will have 5 data points (see below)
+   * summarization: OffscreenCanvas 2D video texture update with WebCodecs and 1080p H264 video on the main thread. Measures mean frame time across 100 frames.
+      * subtest: `ignore first`_ data point, then take the `median`_ of the remaining 4; `source:
+        test.py <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/test.py#l795>`__
+      * suite: `geometric mean`_ of the 4 subtest results.
+   * **Lower is better**
+   * **Example Data**
+
+   .. code-block::
+
+      0;Mean frame time across 100 frames: ;54.6916;49.0534;51.21645;51.239650000000005;52.44295
+
+   * description:
+      | This test extracts frames from a H264 video file using WebCodecs and ask Canvas2D to draw video
+        frames as Canvas2D textures for 100 frames on the main thread. It collects the mean frame time
+        across 100 frames to measure how much time it will spend for a video texture upload to be a
+        Canvas2D texture (ctx.drawImage). We run it for 5 times and ignore the first found. Lower
+        results are better.
+   * gecko_profile_extra_threads: CanvasRenderer,CanvasWorker,MediaSupervisor
+   * gecko_profile_interval: 2
+   * linux_counters: None
+   * mac_counters: None
+   * preferences: {'dom.media.webcodecs.enabled': True, 'dom.media.webcodecs.force-osx-h264-enabled': True}
+   * timeout: 600
+   * tpchrome: False
+   * tpcycles: 1
+   * tploadnocache: True
+   * tpmanifest: ${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_main_2d_h264.manifest
+   * tpmozafterpaint: False
+   * tppagecycles: 5
+   * unit: ms
+   * w7_counters: None
+   * win_counters: None
+   * Command
+
+   .. code-block::
+
+      ./mach talos-test -a offscreencanvas_webcodecs_main_2d_h264
+
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+
+.. dropdown:: offscreencanvas_webcodecs_main_2d_vp9
+   :class-container: anchor-id-offscreencanvas_webcodecs_main_2d_vp9
+
+   * contact: :aosmond and gfx
+   * source: `offscreencanvas_webcodecs_main_2d_vp9 <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/offscreencanvas/benchmarks/video>`__
+   * type: `Page load`_
+   * data: 5 cycles of the entire benchmark, each subtest will have 5 data points (see below)
+   * summarization: OffscreenCanvas 2D video texture update with WebCodecs and 1080p VP9 video on the main thread. Measures mean frame time across 100 frames.
+      * subtest: `ignore first`_ data point, then take the `median`_ of the remaining 4; `source:
+        test.py <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/test.py#l819>`__
+      * suite: `geometric mean`_ of the 4 subtest results.
+   * **Lower is better**
+   * **Example Data**
+
+   .. code-block::
+
+      0;Mean frame time across 100 frames: ;54.6916;49.0534;51.21645;51.239650000000005;52.44295
+
+   * description:
+      | This test extracts frames from a VP9 video file using WebCodecs and ask Canvas2D to draw video
+        frames as Canvas2D textures for 100 frames on the main thread. It collects the mean frame time
+        across 100 frames to measure how much time it will spend for a video texture upload to be a
+        Canvas2D texture (ctx.drawImage). We run it for 5 times and ignore the first found. Lower
+        results are better.
+   * gecko_profile_extra_threads: CanvasRenderer,CanvasWorker,MediaSupervisor
+   * gecko_profile_interval: 2
+   * linux_counters: None
+   * mac_counters: None
+   * preferences: {'dom.media.webcodecs.enabled': True, 'dom.media.webcodecs.force-osx-h264-enabled': True}
+   * timeout: 600
+   * tpchrome: False
+   * tpcycles: 1
+   * tploadnocache: True
+   * tpmanifest: ${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_main_2d_vp9.manifest
+   * tpmozafterpaint: False
+   * tppagecycles: 5
+   * unit: ms
+   * w7_counters: None
+   * win_counters: None
+   * Command
+
+   .. code-block::
+
+      ./mach talos-test -a offscreencanvas_webcodecs_main_2d_vp9
+
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+
+.. dropdown:: offscreencanvas_webcodecs_main_webgl_av1
+   :class-container: anchor-id-offscreencanvas_webcodecs_main_webgl_av1
+
+   * contact: :aosmond and gfx
+   * source: `offscreencanvas_webcodecs_main_webgl_av1 <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/offscreencanvas/benchmarks/video>`__
+   * type: `Page load`_
+   * data: 5 cycles of the entire benchmark, each subtest will have 5 data points (see below)
+   * summarization: OffscreenCanvas WebGL video texture update with WebCodecs and 1080p AV1 video on the main thread. Measures mean frame time across 100 frames.
+      * subtest: `ignore first`_ data point, then take the `median`_ of the remaining 4; `source:
+        test.py <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/test.py#l795>`__
+      * suite: `geometric mean`_ of the 4 subtest results.
+   * **Lower is better**
+   * **Example Data**
+
+   .. code-block::
+
+      0;Mean frame time across 100 frames: ;54.6916;49.0534;51.21645;51.239650000000005;52.44295
+
+   * description:
+      | This test extracts frames from a AV1 video file using WebCodecs and ask WebGL to draw video
+        frames as WebGL textures for 100 frames on the main thread. It collects the mean frame time
+        across 100 frames to measure how much time it will spend for a video texture upload to be a
+        WebGL texture (gl.texImage2D). We run it for 5 times and ignore the first found. Lower
+        results are better.
+   * gecko_profile_extra_threads: CanvasRenderer,MediaSupervisor
+   * gecko_profile_interval: 2
+   * linux_counters: None
+   * mac_counters: None
+   * preferences: {'dom.media.webcodecs.enabled': True, 'dom.media.webcodecs.force-osx-h264-enabled': True}
+   * timeout: 600
+   * tpchrome: False
+   * tpcycles: 1
+   * tploadnocache: True
+   * tpmanifest: ${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_main_webgl_av1.manifest
+   * tpmozafterpaint: False
+   * tppagecycles: 5
+   * unit: ms
+   * w7_counters: None
+   * win_counters: None
+   * Command
+
+   .. code-block::
+
+      ./mach talos-test -a offscreencanvas_webcodecs_main_webgl_av1
+
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+
+.. dropdown:: offscreencanvas_webcodecs_main_webgl_h264
+   :class-container: anchor-id-offscreencanvas_webcodecs_main_webgl_h264
+
+   * contact: :aosmond and gfx
+   * source: `offscreencanvas_webcodecs_main_webgl_h264 <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/offscreencanvas/benchmarks/video>`__
+   * type: `Page load`_
+   * data: 5 cycles of the entire benchmark, each subtest will have 5 data points (see below)
+   * summarization: OffscreenCanvas WebGL video texture update with WebCodecs and 1080p H264 video on the main thread. Measures mean frame time across 100 frames.
+      * subtest: `ignore first`_ data point, then take the `median`_ of the remaining 4; `source:
+        test.py <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/test.py#l795>`__
+      * suite: `geometric mean`_ of the 4 subtest results.
+   * **Lower is better**
+   * **Example Data**
+
+   .. code-block::
+
+      0;Mean frame time across 100 frames: ;54.6916;49.0534;51.21645;51.239650000000005;52.44295
+
+   * description:
+      | This test extracts frames from a H264 video file using WebCodecs and ask WebGL to draw video
+        frames as WebGL textures for 100 frames on the main thread. It collects the mean frame time
+        across 100 frames to measure how much time it will spend for a video texture upload to be a
+        WebGL texture (gl.texImage2D). We run it for 5 times and ignore the first found. Lower
+        results are better.
+   * gecko_profile_extra_threads: CanvasRenderer,MediaSupervisor
+   * gecko_profile_interval: 2
+   * linux_counters: None
+   * mac_counters: None
+   * preferences: {'dom.media.webcodecs.enabled': True, 'dom.media.webcodecs.force-osx-h264-enabled': True}
+   * timeout: 600
+   * tpchrome: False
+   * tpcycles: 1
+   * tploadnocache: True
+   * tpmanifest: ${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_main_webgl_h264.manifest
+   * tpmozafterpaint: False
+   * tppagecycles: 5
+   * unit: ms
+   * w7_counters: None
+   * win_counters: None
+   * Command
+
+   .. code-block::
+
+      ./mach talos-test -a offscreencanvas_webcodecs_main_webgl_h264
+
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+
+.. dropdown:: offscreencanvas_webcodecs_main_webgl_vp9
+   :class-container: anchor-id-offscreencanvas_webcodecs_main_webgl_vp9
+
+   * contact: :aosmond and gfx
+   * source: `offscreencanvas_webcodecs_main_webgl_vp9 <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/offscreencanvas/benchmarks/video>`__
+   * type: `Page load`_
+   * data: 5 cycles of the entire benchmark, each subtest will have 5 data points (see below)
+   * summarization: OffscreenCanvas WebGL video texture update with WebCodecs and 1080p VP9 video on the main thread. Measures mean frame time across 100 frames.
+      * subtest: `ignore first`_ data point, then take the `median`_ of the remaining 4; `source:
+        test.py <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/test.py#l795>`__
+      * suite: `geometric mean`_ of the 4 subtest results.
+   * **Lower is better**
+   * **Example Data**
+
+   .. code-block::
+
+      0;Mean frame time across 100 frames: ;54.6916;49.0534;51.21645;51.239650000000005;52.44295
+
+   * description:
+      | This test extracts frames from a VP9 video file using WebCodecs and ask WebGL to draw video
+        frames as WebGL textures for 100 frames on the main thread. It collects the mean frame time
+        across 100 frames to measure how much time it will spend for a video texture upload to be a
+        WebGL texture (gl.texImage2D). We run it for 5 times and ignore the first found. Lower
+        results are better.
+   * gecko_profile_extra_threads: CanvasRenderer,MediaSupervisor
+   * gecko_profile_interval: 2
+   * linux_counters: None
+   * mac_counters: None
+   * preferences: {'dom.media.webcodecs.enabled': True, 'dom.media.webcodecs.force-osx-h264-enabled': True}
+   * timeout: 600
+   * tpchrome: False
+   * tpcycles: 1
+   * tploadnocache: True
+   * tpmanifest: ${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_main_webgl_vp9.manifest
+   * tpmozafterpaint: False
+   * tppagecycles: 5
+   * unit: ms
+   * w7_counters: None
+   * win_counters: None
+   * Command
+
+   .. code-block::
+
+      ./mach talos-test -a offscreencanvas_webcodecs_main_webgl_vp9
+
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+
+.. dropdown:: offscreencanvas_webcodecs_worker_2d_av1
+   :class-container: anchor-id-offscreencanvas_webcodecs_worker_2d_av1
+
+   * contact: :aosmond and gfx
+   * source: `offscreencanvas_webcodecs_worker_2d_av1 <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/offscreencanvas/benchmarks/video>`__
+   * type: `Page load`_
+   * data: 5 cycles of the entire benchmark, each subtest will have 5 data points (see below)
+   * summarization: OffscreenCanvas 2D video texture update with WebCodecs and 1080p AV1 video on a DOM worker thread. Measures mean frame time across 100 frames.
+      * subtest: `ignore first`_ data point, then take the `median`_ of the remaining 4; `source:
+        test.py <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/test.py#l795>`__
+      * suite: `geometric mean`_ of the 4 subtest results.
+   * **Lower is better**
+   * **Example Data**
+
+   .. code-block::
+
+      0;Mean frame time across 100 frames: ;54.6916;49.0534;51.21645;51.239650000000005;52.44295
+
+   * description:
+      | This test extracts frames from a AV1 video file using WebCodecs and ask Canvas2D to draw video
+        frames as Canvas2D textures for 100 frames on a DOM worker thread. It collects the mean frame time
+        across 100 frames to measure how much time it will spend for a video texture upload to be a
+        Canvas2D texture (ctx.drawImage). We run it for 5 times and ignore the first found. Lower
+        results are better.
+   * gecko_profile_extra_threads: DOM Worker,CanvasRenderer,CanvasWorker,MediaSupervisor
+   * gecko_profile_interval: 2
+   * linux_counters: None
+   * mac_counters: None
+   * preferences: {'dom.media.webcodecs.enabled': True, 'dom.media.webcodecs.force-osx-h264-enabled': True}
+   * timeout: 600
+   * tpchrome: False
+   * tpcycles: 1
+   * tploadnocache: True
+   * tpmanifest: ${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_worker_2d_av1.manifest
+   * tpmozafterpaint: False
+   * tppagecycles: 5
+   * unit: ms
+   * w7_counters: None
+   * win_counters: None
+   * Command
+
+   .. code-block::
+
+      ./mach talos-test -a offscreencanvas_webcodecs_worker_2d_av1
+
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+
+.. dropdown:: offscreencanvas_webcodecs_worker_2d_h264
+   :class-container: anchor-id-offscreencanvas_webcodecs_worker_2d_h264
+
+   * contact: :aosmond and gfx
+   * source: `offscreencanvas_webcodecs_worker_2d_h264 <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/offscreencanvas/benchmarks/video>`__
+   * type: `Page load`_
+   * data: 5 cycles of the entire benchmark, each subtest will have 5 data points (see below)
+   * summarization: OffscreenCanvas 2D video texture update with WebCodecs and 1080p H264 video on a DOM worker thread. Measures mean frame time across 100 frames.
+      * subtest: `ignore first`_ data point, then take the `median`_ of the remaining 4; `source:
+        test.py <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/test.py#l795>`__
+      * suite: `geometric mean`_ of the 4 subtest results.
+   * **Lower is better**
+   * **Example Data**
+
+   .. code-block::
+
+      0;Mean frame time across 100 frames: ;54.6916;49.0534;51.21645;51.239650000000005;52.44295
+
+   * description:
+      | This test extracts frames from a H264 video file using WebCodecs and ask Canvas2D to draw video
+        frames as Canvas2D textures for 100 frames on a DOM worker thread. It collects the mean frame time
+        across 100 frames to measure how much time it will spend for a video texture upload to be a
+        Canvas2D texture (ctx.drawImage). We run it for 5 times and ignore the first found. Lower
+        results are better.
+   * gecko_profile_extra_threads: DOM Worker,CanvasRenderer,CanvasWorker,MediaSupervisor
+   * gecko_profile_interval: 2
+   * linux_counters: None
+   * mac_counters: None
+   * preferences: {'dom.media.webcodecs.enabled': True, 'dom.media.webcodecs.force-osx-h264-enabled': True}
+   * timeout: 600
+   * tpchrome: False
+   * tpcycles: 1
+   * tploadnocache: True
+   * tpmanifest: ${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_worker_2d_h264.manifest
+   * tpmozafterpaint: False
+   * tppagecycles: 5
+   * unit: ms
+   * w7_counters: None
+   * win_counters: None
+   * Command
+
+   .. code-block::
+
+      ./mach talos-test -a offscreencanvas_webcodecs_worker_2d_h264
+
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+
+.. dropdown:: offscreencanvas_webcodecs_worker_2d_vp9
+   :class-container: anchor-id-offscreencanvas_webcodecs_worker_2d_vp9
+
+   * contact: :aosmond and gfx
+   * source: `offscreencanvas_webcodecs_worker_2d_vp9 <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/offscreencanvas/benchmarks/video>`__
+   * type: `Page load`_
+   * data: 5 cycles of the entire benchmark, each subtest will have 5 data points (see below)
+   * summarization: OffscreenCanvas 2D video texture update with WebCodecs and 1080p VP9 video on a DOM worker thread. Measures mean frame time across 100 frames.
+      * subtest: `ignore first`_ data point, then take the `median`_ of the remaining 4; `source:
+        test.py <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/test.py#l795>`__
+      * suite: `geometric mean`_ of the 4 subtest results.
+   * **Lower is better**
+   * **Example Data**
+
+   .. code-block::
+
+      0;Mean frame time across 100 frames: ;54.6916;49.0534;51.21645;51.239650000000005;52.44295
+
+   * description:
+      | This test extracts frames from a VP9 video file using WebCodecs and ask Canvas2D to draw video
+        frames as Canvas2D textures for 100 frames on a DOM worker thread. It collects the mean frame time
+        across 100 frames to measure how much time it will spend for a video texture upload to be a
+        Canvas2D texture (ctx.drawImage). We run it for 5 times and ignore the first found. Lower
+        results are better.
+   * gecko_profile_extra_threads: DOM Worker,CanvasRenderer,CanvasWorker,MediaSupervisor
+   * gecko_profile_interval: 2
+   * linux_counters: None
+   * mac_counters: None
+   * preferences: {'dom.media.webcodecs.enabled': True, 'dom.media.webcodecs.force-osx-h264-enabled': True}
+   * timeout: 600
+   * tpchrome: False
+   * tpcycles: 1
+   * tploadnocache: True
+   * tpmanifest: ${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_worker_2d_vp9.manifest
+   * tpmozafterpaint: False
+   * tppagecycles: 5
+   * unit: ms
+   * w7_counters: None
+   * win_counters: None
+   * Command
+
+   .. code-block::
+
+      ./mach talos-test -a offscreencanvas_webcodecs_worker_2d_vp9
+
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+
+.. dropdown:: offscreencanvas_webcodecs_worker_webgl_av1
+   :class-container: anchor-id-offscreencanvas_webcodecs_worker_webgl_av1
+
+   * contact: :aosmond and gfx
+   * source: `offscreencanvas_webcodecs_worker_webgl_av1 <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/offscreencanvas/benchmarks/video>`__
+   * type: `Page load`_
+   * data: 5 cycles of the entire benchmark, each subtest will have 5 data points (see below)
+   * summarization: OffscreenCanvas WebGL video texture update with WebCodecs and 1080p AV1 video on a DOM worker thread. Measures mean frame time across 100 frames.
+      * subtest: `ignore first`_ data point, then take the `median`_ of the remaining 4; `source:
+        test.py <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/test.py#l795>`__
+      * suite: `geometric mean`_ of the 4 subtest results.
+   * **Lower is better**
+   * **Example Data**
+
+   .. code-block::
+
+      0;Mean frame time across 100 frames: ;54.6916;49.0534;51.21645;51.239650000000005;52.44295
+
+   * description:
+      | This test extracts frames from a AV1 video file using WebCodecs and ask WebGL to draw video
+        frames as WebGL textures for 100 frames on a DOM worker. It collects the mean frame time
+        across 100 frames to measure how much time it will spend for a video texture upload to be a
+        WebGL texture (gl.texImage2D). We run it for 5 times and ignore the first found. Lower
+        results are better.
+   * gecko_profile_extra_threads: DOM Worker,CanvasRenderer,MediaSupervisor
+   * gecko_profile_interval: 2
+   * linux_counters: None
+   * mac_counters: None
+   * preferences: {'dom.media.webcodecs.enabled': True, 'dom.media.webcodecs.force-osx-h264-enabled': True}
+   * timeout: 600
+   * tpchrome: False
+   * tpcycles: 1
+   * tploadnocache: True
+   * tpmanifest: ${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_worker_webgl_av1.manifest
+   * tpmozafterpaint: False
+   * tppagecycles: 5
+   * unit: ms
+   * w7_counters: None
+   * win_counters: None
+   * Command
+
+   .. code-block::
+
+      ./mach talos-test -a offscreencanvas_webcodecs_worker_webgl_av1
+
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+
+.. dropdown:: offscreencanvas_webcodecs_worker_webgl_h264
+   :class-container: anchor-id-offscreencanvas_webcodecs_worker_webgl_h264
+
+   * contact: :aosmond and gfx
+   * source: `offscreencanvas_webcodecs_worker_webgl_h264 <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/offscreencanvas/benchmarks/video>`__
+   * type: `Page load`_
+   * data: 5 cycles of the entire benchmark, each subtest will have 5 data points (see below)
+   * summarization: OffscreenCanvas WebGL video texture update with WebCodecs and 1080p H264 video on a DOM worker thread. Measures mean frame time across 100 frames.
+      * subtest: `ignore first`_ data point, then take the `median`_ of the remaining 4; `source:
+        test.py <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/test.py#l795>`__
+      * suite: `geometric mean`_ of the 4 subtest results.
+   * **Lower is better**
+   * **Example Data**
+
+   .. code-block::
+
+      0;Mean frame time across 100 frames: ;54.6916;49.0534;51.21645;51.239650000000005;52.44295
+
+   * description:
+      | This test extracts frames from a H264 video file using WebCodecs and ask WebGL to draw video
+        frames as WebGL textures for 100 frames on a DOM worker. It collects the mean frame time
+        across 100 frames to measure how much time it will spend for a video texture upload to be a
+        WebGL texture (gl.texImage2D). We run it for 5 times and ignore the first found. Lower
+        results are better.
+   * gecko_profile_extra_threads: DOM Worker,CanvasRenderer,MediaSupervisor
+   * gecko_profile_interval: 2
+   * linux_counters: None
+   * mac_counters: None
+   * preferences: {'dom.media.webcodecs.enabled': True, 'dom.media.webcodecs.force-osx-h264-enabled': True}
+   * timeout: 600
+   * tpchrome: False
+   * tpcycles: 1
+   * tploadnocache: True
+   * tpmanifest: ${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_worker_webgl_h264.manifest
+   * tpmozafterpaint: False
+   * tppagecycles: 5
+   * unit: ms
+   * w7_counters: None
+   * win_counters: None
+   * Command
+
+   .. code-block::
+
+      ./mach talos-test -a offscreencanvas_webcodecs_worker_webgl_h264
+
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+
+.. dropdown:: offscreencanvas_webcodecs_worker_webgl_vp9
+   :class-container: anchor-id-offscreencanvas_webcodecs_worker_webgl_vp9
+
+   * contact: :aosmond and gfx
+   * source: `offscreencanvas_webcodecs_worker_webgl_vp9 <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/tests/offscreencanvas/benchmarks/video>`__
+   * type: `Page load`_
+   * data: 5 cycles of the entire benchmark, each subtest will have 5 data points (see below)
+   * summarization: OffscreenCanvas WebGL video texture update with WebCodecs and 1080p VP9 video on a DOM worker thread. Measures mean frame time across 100 frames.
+      * subtest: `ignore first`_ data point, then take the `median`_ of the remaining 4; `source:
+        test.py <https://dxr.mozilla.org/mozilla-central/source/testing/talos/talos/test.py#l795>`__
+      * suite: `geometric mean`_ of the 4 subtest results.
+   * **Lower is better**
+   * **Example Data**
+
+   .. code-block::
+
+      0;Mean frame time across 100 frames: ;54.6916;49.0534;51.21645;51.239650000000005;52.44295
+
+   * description:
+      | This test extracts frames from a VP9 video file using WebCodecs and ask WebGL to draw video
+        frames as WebGL textures for 100 frames on a DOM worker. It collects the mean frame time
+        across 100 frames to measure how much time it will spend for a video texture upload to be a
+        WebGL texture (gl.texImage2D). We run it for 5 times and ignore the first found. Lower
+        results are better.
+   * gecko_profile_extra_threads: DOM Worker,CanvasRenderer,MediaSupervisor
+   * gecko_profile_interval: 2
+   * linux_counters: None
+   * mac_counters: None
+   * preferences: {'dom.media.webcodecs.enabled': True, 'dom.media.webcodecs.force-osx-h264-enabled': True}
+   * timeout: 600
+   * tpchrome: False
+   * tpcycles: 1
+   * tploadnocache: True
+   * tpmanifest: ${talos}/tests/offscreencanvas/offscreencanvas_webcodecs_worker_webgl_vp9.manifest
+   * tpmozafterpaint: False
+   * tppagecycles: 5
+   * unit: ms
+   * w7_counters: None
+   * win_counters: None
+   * Command
+
+   .. code-block::
+
+      ./mach talos-test -a offscreencanvas_webcodecs_worker_webgl_vp9
+
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-profiling-gli**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+
 .. dropdown:: pdfpaint
    :class-container: anchor-id-pdfpaint
 

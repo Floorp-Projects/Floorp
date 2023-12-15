@@ -724,6 +724,7 @@ talos-webgl-profiling:
         extra-options:
             - --suite=webgl
             - --gecko-profile
+            - --setpref=dom.media.webcodecs.enabled=true
 
 talos-xperf:
     description: Talos xperf
