@@ -271,6 +271,10 @@ nsCString FeatureState::GetStatusAndFailureIdString() const {
       status.AppendPrintf("%s:%s", FeatureStatusToString(value),
                           GetFailureId().get());
       break;
+    case FeatureStatus::Failed:
+      status.AppendPrintf("%s:%s", FeatureStatusToString(value),
+                          GetFailureMessage());
+      break;
     default:
       status.Append(FeatureStatusToString(value));
       break;
