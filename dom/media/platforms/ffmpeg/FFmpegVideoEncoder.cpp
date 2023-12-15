@@ -229,15 +229,13 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<LIBAV_VER>::Drain() {
 RefPtr<ShutdownPromise> FFmpegVideoEncoder<LIBAV_VER>::Shutdown() {
   FFMPEGV_LOG("Shutdown");
 
+  // Don't shut mTaskQueue down since it's owned by others.
 #if LIBAVCODEC_VERSION_MAJOR < 58
   FFMPEGV_LOG("FFmpegVideoEncoder needs ffmpeg 58 at least.");
-  return mTaskQueue->BeginShutdown();
+  return ShutdownPromise::CreateAndResolve(true, __func__);
 #else
-  RefPtr<FFmpegVideoEncoder<LIBAV_VER> > self = this;
-  return InvokeAsync(mTaskQueue, __func__, [self]() {
-    self->ProcessShutdown();
-    return self->mTaskQueue->BeginShutdown();
-  });
+  return InvokeAsync(mTaskQueue, this, __func__,
+                     &FFmpegVideoEncoder::ProcessShutdown);
 #endif
 }
 
@@ -341,12 +339,14 @@ FFmpegVideoEncoder<LIBAV_VER>::ProcessDrain() {
 #endif
 }
 
-void FFmpegVideoEncoder<LIBAV_VER>::ProcessShutdown() {
+RefPtr<ShutdownPromise> FFmpegVideoEncoder<LIBAV_VER>::ProcessShutdown() {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
 
   FFMPEGV_LOG("ProcessShutdown");
 
   ShutdownInternal();
+
+  return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
 MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
