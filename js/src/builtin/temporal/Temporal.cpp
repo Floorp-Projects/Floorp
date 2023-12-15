@@ -1737,7 +1737,7 @@ PlainObject* js::temporal::SnapshotOwnPropertiesIgnoreUndefined(
  * fallbackSmallestUnit, smallestLargestDefaultUnit )
  */
 bool js::temporal::GetDifferenceSettings(
-    JSContext* cx, TemporalDifference operation, Handle<JSObject*> options,
+    JSContext* cx, TemporalDifference operation, Handle<PlainObject*> options,
     TemporalUnitGroup unitGroup, TemporalUnit smallestAllowedUnit,
     TemporalUnit fallbackSmallestUnit, TemporalUnit smallestLargestDefaultUnit,
     DifferenceSettings* result) {

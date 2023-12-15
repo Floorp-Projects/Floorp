@@ -376,7 +376,7 @@ PlainDateObject* js::temporal::CreateTemporalDate(
  * ToTemporalDate ( item [ , options ] )
  */
 static Wrapped<PlainDateObject*> ToTemporalDate(
-    JSContext* cx, Handle<JSObject*> item, Handle<JSObject*> maybeOptions) {
+    JSContext* cx, Handle<JSObject*> item, Handle<PlainObject*> maybeOptions) {
   // Step 1-2. (Not applicable in our implementation.)
 
   // Step 3.a.

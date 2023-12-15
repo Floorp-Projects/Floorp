@@ -1398,14 +1398,14 @@ static bool PlainYearMonth_toPlainDate(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 11.
-  mergedFields =
-      PrepareTemporalFields(cx, mergedFields, concatenatedFieldNames);
-  if (!mergedFields) {
+  Rooted<PlainObject*> mergedFromConcatenatedFields(
+      cx, PrepareTemporalFields(cx, mergedFields, concatenatedFieldNames));
+  if (!mergedFromConcatenatedFields) {
     return false;
   }
 
   // Step 12.
-  Rooted<JSObject*> options(cx, NewPlainObjectWithProto(cx, nullptr));
+  Rooted<PlainObject*> options(cx, NewPlainObjectWithProto(cx, nullptr));
   if (!options) {
     return false;
   }
@@ -1417,7 +1417,8 @@ static bool PlainYearMonth_toPlainDate(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 14.
-  auto obj = CalendarDateFromFields(cx, calendar, mergedFields, options);
+  auto obj = CalendarDateFromFields(cx, calendar, mergedFromConcatenatedFields,
+                                    options);
   if (!obj) {
     return false;
   }
