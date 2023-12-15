@@ -4832,26 +4832,28 @@ static bool RoundDurationYear(JSContext* cx, const Duration& duration,
   // FIXME: spec issue - truncation doesn't match the spec polyfill.
   // https://github.com/tc39/proposal-temporal/issues/2540
 
-  // FIXME: spec issue - `truncate(days)` should be `truncate(fractionalDays)`,
-  // because `days` has been set to zero in step 4.d.
-
   double truncatedDays;
   if (!TruncateDays(cx, nanosAndDays, days, monthsWeeksInDays,
                     &truncatedDays)) {
     return false;
   }
 
+  // TODO: This assertion may not hold with user-defined calendar and time zone
+  // objects, in which case |truncatedDays| could be Infinity.
+  MOZ_ASSERT(IsInteger(truncatedDays));
+
   // Step 7.k.
-  Rooted<DurationObject*> wholeDaysDuration(
-      cx, CreateTemporalDuration(cx, {0, 0, 0, truncatedDays}));
-  if (!wholeDaysDuration) {
+  PlainDate isoResult;
+  if (!AddISODate(cx, yearsLaterDate, {0, 0, 0, truncatedDays},
+                  TemporalOverflow::Constrain, &isoResult)) {
     return false;
   }
 
+  // FIXME: spec bug - CreateTemporalDate is fallible
+
   // Step 7.l.
-  Rooted<Wrapped<PlainDateObject*>> wholeDaysLater(
-      cx,
-      CalendarDateAdd(cx, calendar, newRelativeTo, wholeDaysDuration, dateAdd));
+  Rooted<PlainDateObject*> wholeDaysLater(
+      cx, CreateTemporalDate(cx, isoResult, calendar));
   if (!wholeDaysLater) {
     return false;
   }

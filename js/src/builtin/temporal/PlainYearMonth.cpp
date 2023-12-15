@@ -596,20 +596,31 @@ static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
       return false;
     }
 
+    auto* unwrappedNextMonth = nextMonth.unwrap(cx);
+    if (!unwrappedNextMonth) {
+      return false;
+    }
+    auto nextMonthDate = ToPlainDate(unwrappedNextMonth);
+
     // Step 12.c.
-    Duration minusDayDuration = {0, 0, 0, -1};
+    PlainDate endOfMonthISO;
+    if (!AddISODate(cx, nextMonthDate, {0, 0, 0, -1},
+                    TemporalOverflow::Constrain, &endOfMonthISO)) {
+      return false;
+    }
+
+    // FIXME: spec bug - CreateTemporalDate is fallible
 
     // Step 12.d.
-    Rooted<Wrapped<PlainDateObject*>> endOfMonth(
-        cx,
-        CalendarDateAdd(cx, calendar, nextMonth, minusDayDuration, dateAdd));
+    Rooted<PlainDateObject*> endOfMonth(
+        cx, CreateTemporalDate(cx, endOfMonthISO, calendar));
     if (!endOfMonth) {
       return false;
     }
 
     // Step 12.e.
     Rooted<Value> day(cx);
-    if (!CalendarDayWrapped(cx, calendar, endOfMonth, &day)) {
+    if (!CalendarDay(cx, calendar, endOfMonth, &day)) {
       return false;
     }
 
