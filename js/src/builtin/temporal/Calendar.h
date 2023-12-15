@@ -259,15 +259,6 @@ Wrapped<PlainDateObject*> CalendarDateAdd(
 /**
  * CalendarDateAdd ( calendar, date, duration [ , options [ , dateAdd ] ] )
  */
-Wrapped<PlainDateObject*> CalendarDateAdd(
-    JSContext* cx, JS::Handle<CalendarValue> calendar,
-    JS::Handle<Wrapped<PlainDateObject*>> date,
-    JS::Handle<Wrapped<DurationObject*>> duration,
-    JS::Handle<JSObject*> options);
-
-/**
- * CalendarDateAdd ( calendar, date, duration [ , options [ , dateAdd ] ] )
- */
 bool CalendarDateAdd(JSContext* cx, JS::Handle<CalendarValue> calendar,
                      const PlainDate& date, const Duration& duration,
                      PlainDate* result);
@@ -302,7 +293,7 @@ bool CalendarDateUntil(JSContext* cx, JS::Handle<CalendarValue> calendar,
 bool CalendarDateUntil(JSContext* cx, JS::Handle<CalendarValue> calendar,
                        JS::Handle<Wrapped<PlainDateObject*>> one,
                        JS::Handle<Wrapped<PlainDateObject*>> two,
-                       JS::Handle<JSObject*> options, Duration* result);
+                       JS::Handle<PlainObject*> options, Duration* result);
 
 /**
  * CalendarDateUntil ( calendar, one, two, options [ , dateUntil ] )
@@ -653,42 +644,56 @@ bool CalendarInLeapYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
  */
 Wrapped<PlainDateObject*> CalendarDateFromFields(
     JSContext* cx, JS::Handle<CalendarValue> calendar,
-    JS::Handle<JSObject*> fields);
+    JS::Handle<PlainObject*> fields);
 
 /**
  * CalendarDateFromFields ( calendar, fields [ , options ] )
  */
 Wrapped<PlainDateObject*> CalendarDateFromFields(
     JSContext* cx, JS::Handle<CalendarValue> calendar,
-    JS::Handle<JSObject*> fields, JS::Handle<JSObject*> options);
+    JS::Handle<PlainObject*> fields, JS::Handle<PlainObject*> options);
 
 /**
  * CalendarYearMonthFromFields ( calendar, fields [ , options ] )
  */
 Wrapped<PlainYearMonthObject*> CalendarYearMonthFromFields(
     JSContext* cx, JS::Handle<CalendarValue> calendar,
-    JS::Handle<JSObject*> fields);
+    JS::Handle<PlainObject*> fields);
 
 /**
  * CalendarYearMonthFromFields ( calendar, fields [ , options ] )
  */
 Wrapped<PlainYearMonthObject*> CalendarYearMonthFromFields(
     JSContext* cx, JS::Handle<CalendarValue> calendar,
-    JS::Handle<JSObject*> fields, JS::Handle<JSObject*> options);
+    JS::Handle<PlainYearMonthObject*> fields);
+
+/**
+ * CalendarYearMonthFromFields ( calendar, fields [ , options ] )
+ */
+Wrapped<PlainYearMonthObject*> CalendarYearMonthFromFields(
+    JSContext* cx, JS::Handle<CalendarValue> calendar,
+    JS::Handle<PlainObject*> fields, JS::Handle<PlainObject*> options);
 
 /**
  * CalendarMonthDayFromFields ( calendar, fields [ , options ] )
  */
 Wrapped<PlainMonthDayObject*> CalendarMonthDayFromFields(
     JSContext* cx, JS::Handle<CalendarValue> calendar,
-    JS::Handle<JSObject*> fields);
+    JS::Handle<PlainObject*> fields);
 
 /**
  * CalendarMonthDayFromFields ( calendar, fields [ , options ] )
  */
 Wrapped<PlainMonthDayObject*> CalendarMonthDayFromFields(
     JSContext* cx, JS::Handle<CalendarValue> calendar,
-    JS::Handle<JSObject*> fields, JS::Handle<JSObject*> options);
+    JS::Handle<PlainMonthDayObject*> fields);
+
+/**
+ * CalendarMonthDayFromFields ( calendar, fields [ , options ] )
+ */
+Wrapped<PlainMonthDayObject*> CalendarMonthDayFromFields(
+    JSContext* cx, JS::Handle<CalendarValue> calendar,
+    JS::Handle<PlainObject*> fields, JS::Handle<PlainObject*> options);
 
 /**
  * CalendarEquals ( one, two )
