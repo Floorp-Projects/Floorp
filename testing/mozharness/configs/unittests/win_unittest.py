@@ -126,7 +126,7 @@ config = {
                 "--symbols-path=%(symbols_path)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--utility-path=tests/bin",
-                "--manifest=tests/xpcshell/tests/xpcshell.ini",
+                "--manifest=tests/xpcshell/tests/xpcshell.toml",
             ],
             "run_filename": "runxpcshelltests.py",
             "testsdir": "xpcshell",

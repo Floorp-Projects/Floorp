@@ -43,25 +43,25 @@ class SingleTestMixin(object):
     def _find_misc_tests(self, dirs, changed_files, gpu=False):
         manifests = [
             (
-                os.path.join(dirs["abs_mochitest_dir"], "tests", "mochitest.ini"),
+                os.path.join(dirs["abs_mochitest_dir"], "tests", "mochitest.toml"),
                 "mochitest-plain",
             ),
             (
-                os.path.join(dirs["abs_mochitest_dir"], "chrome", "chrome.ini"),
+                os.path.join(dirs["abs_mochitest_dir"], "chrome", "chrome.toml"),
                 "mochitest-chrome",
             ),
             (
                 os.path.join(
-                    dirs["abs_mochitest_dir"], "browser", "browser-chrome.ini"
+                    dirs["abs_mochitest_dir"], "browser", "browser-chrome.toml"
                 ),
                 "mochitest-browser-chrome",
             ),
             (
-                os.path.join(dirs["abs_mochitest_dir"], "a11y", "a11y.ini"),
+                os.path.join(dirs["abs_mochitest_dir"], "a11y", "a11y.toml"),
                 "mochitest-a11y",
             ),
             (
-                os.path.join(dirs["abs_xpcshell_dir"], "tests", "xpcshell.ini"),
+                os.path.join(dirs["abs_xpcshell_dir"], "tests", "xpcshell.toml"),
                 "xpcshell",
             ),
         ]

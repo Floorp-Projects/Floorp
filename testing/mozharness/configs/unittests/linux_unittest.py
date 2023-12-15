@@ -231,7 +231,7 @@ config = {
             "options": [
                 "--xpcshell=%(abs_app_dir)s/" + XPCSHELL_NAME,
                 "--http3server=%(abs_app_dir)s/" + HTTP3SERVER_NAME,
-                "--manifest=tests/xpcshell/tests/xpcshell.ini",
+                "--manifest=tests/xpcshell/tests/xpcshell.toml",
             ],
             "tests": [],
         },
@@ -239,7 +239,7 @@ config = {
             "options": [
                 "--xpcshell=%(abs_app_dir)s/" + XPCSHELL_NAME,
                 "--http3server=%(abs_app_dir)s/" + HTTP3SERVER_NAME,
-                "--manifest=tests/xpcshell/tests/xpcshell.ini",
+                "--manifest=tests/xpcshell/tests/xpcshell.toml",
                 "--sequential",
             ],
             "tests": [],

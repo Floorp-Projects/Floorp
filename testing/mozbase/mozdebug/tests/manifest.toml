@@ -1,0 +1,4 @@
+[DEFAULT]
+subsuite = "mozbase"
+
+["test.py"]

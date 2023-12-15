@@ -1,0 +1,10 @@
+[DEFAULT]
+support-files = [
+  "support-file.txt",
+  "!/child/test_sub.js",
+  "!/child/another-file.sjs",
+  "!/child/data/**",
+  "!/does/not/exist.sjs",
+]
+
+["test_foo.js"]

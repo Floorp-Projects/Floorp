@@ -1,0 +1,6 @@
+[DEFAULT]
+subsuite = "mozbase"
+
+["test_apk.py"]
+
+["test_binary.py"]

@@ -1,4 +1,4 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-XPCSHELL_TESTS_MANIFESTS += ["xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["xpcshell.toml"]

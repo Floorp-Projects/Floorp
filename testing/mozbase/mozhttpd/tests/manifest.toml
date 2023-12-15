@@ -1,0 +1,16 @@
+[DEFAULT]
+subsuite = "mozbase"
+
+["api.py"]
+skip-if = true
+
+["baseurl.py"]
+
+["basic.py"]
+
+["filelisting.py"]
+skip-if = true
+
+["paths.py"]
+
+["requestlog.py"]

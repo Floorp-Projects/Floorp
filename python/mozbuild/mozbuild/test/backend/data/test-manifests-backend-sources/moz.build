@@ -2,5 +2,5 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 
 MOCHITEST_MANIFESTS += [
-    "mochitest.ini",
+    "mochitest.toml",
 ]

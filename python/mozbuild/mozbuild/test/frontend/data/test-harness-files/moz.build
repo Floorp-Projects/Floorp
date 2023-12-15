@@ -4,4 +4,4 @@
 TEST_HARNESS_FILES.mochitest += ["runtests.py"]
 TEST_HARNESS_FILES.mochitest += ["utils.py"]
 TEST_HARNESS_FILES.testing.mochitest += ["mochitest.py"]
-TEST_HARNESS_FILES.testing.mochitest += ["mochitest.ini"]
+TEST_HARNESS_FILES.testing.mochitest += ["mochitest.toml"]

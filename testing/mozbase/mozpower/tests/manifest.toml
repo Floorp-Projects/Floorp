@@ -1,0 +1,10 @@
+[DEFAULT]
+subsuite = "mozbase"
+
+["test_intelpowergadget.py"]
+
+["test_macintelpower.py"]
+
+["test_mozpower.py"]
+
+["test_powerbase.py"]
