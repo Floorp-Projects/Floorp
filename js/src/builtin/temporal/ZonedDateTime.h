@@ -142,7 +142,7 @@ bool AddDaysToZonedDateTime(JSContext* cx, const Instant& instant,
  * weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds
  * [ , precalculatedPlainDateTime [ , options ] ] )
  */
-bool AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
+bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
                       JS::MutableHandle<TimeZoneRecord> timeZone,
                       JS::Handle<CalendarRecord> calendar,
                       const Duration& duration, Instant* result);
@@ -152,7 +152,7 @@ bool AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
  * weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds
  * [ , precalculatedPlainDateTime [ , options ] ] )
  */
-bool AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
+bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
                       JS::MutableHandle<TimeZoneRecord> timeZone,
                       JS::Handle<CalendarRecord> calendar,
                       const Duration& duration, const PlainDateTime& dateTime,
