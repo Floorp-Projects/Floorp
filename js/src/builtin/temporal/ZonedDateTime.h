@@ -70,6 +70,7 @@ inline Instant ToInstant(const ZonedDateTimeObject* zonedDateTime) {
 
 enum class TemporalDisambiguation;
 enum class TemporalOffset;
+enum class TemporalOverflow;
 enum class TemporalUnit;
 
 /**
@@ -79,6 +80,26 @@ enum class TemporalUnit;
 ZonedDateTimeObject* CreateTemporalZonedDateTime(
     JSContext* cx, const Instant& instant, JS::Handle<TimeZoneValue> timeZone,
     JS::Handle<CalendarValue> calendar);
+
+/**
+ * AddDaysToZonedDateTime ( instant, dateTime, timeZone, calendar, days [ ,
+ * overflow ] )
+ */
+bool AddDaysToZonedDateTime(JSContext* cx, const Instant& instant,
+                            const PlainDateTime& dateTime,
+                            JS::Handle<TimeZoneValue> timeZone,
+                            JS::Handle<CalendarValue> calendar, double days,
+                            TemporalOverflow overflow, Instant* result);
+
+/**
+ * AddDaysToZonedDateTime ( instant, dateTime, timeZone, calendar, days [ ,
+ * overflow ] )
+ */
+bool AddDaysToZonedDateTime(JSContext* cx, const Instant& instant,
+                            const PlainDateTime& dateTime,
+                            JS::Handle<TimeZoneValue> timeZone,
+                            JS::Handle<CalendarValue> calendar, double days,
+                            Instant* result);
 
 /**
  * AddZonedDateTime ( epochNanoseconds, timeZone, calendar, years, months,
