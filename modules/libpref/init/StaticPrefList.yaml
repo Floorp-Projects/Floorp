@@ -7924,11 +7924,7 @@
 - name: layers.gpu-process.max_restarts
   type: RelaxedAtomicInt32
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_ANDROID)
-  #if defined(NIGHTLY_BUILD)
   value: 6
-  #else
-  value: 3
-  #endif
 #else
   value: 1
 #endif
