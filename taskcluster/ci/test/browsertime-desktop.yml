@@ -660,6 +660,7 @@ browsertime-tp6-live-sheriffed:
             - --chimera
             - --live-sites
             - --extra-profiler-run
+            - --browsertime-arg=maxLoadTime=240000
     run-on-projects:
         by-test-platform:
             (linux|windows10-64|macos)(?!.*shippable).*: []
