@@ -16,7 +16,11 @@ dap:
     labels:
       - success
       - failure
+      - http_error
+      - http_502
       - abort
+      - abort_timed
+      - abort_shutdown
     description: >
       The result of trying to upload a report to the DAP server.
     bugs:
@@ -35,6 +39,8 @@ dap:
       - success
       - failure
       - abort
+      - hpke_leader_fail
+      - hpke_helper_fail
     description: >
       The result of trying to generate a DAP report.
     bugs:
