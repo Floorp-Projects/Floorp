@@ -32,6 +32,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
  */
 
 /**
+ * @typedef {object} AuthCredentials
+ * @property {'password'} type
+ * @property {string} username
+ * @property {string} password
+ */
+
+/**
  * @typedef {object} BaseParameters
  * @property {string=} context
  * @property {Array<string>?} intercepts
@@ -64,6 +71,18 @@ const BytesValueType = {
  * @property {BytesValueType} type
  * @property {string} value
  */
+
+/**
+ * Enum of possible continueWithAuth actions.
+ *
+ * @readonly
+ * @enum {ContinueWithAuthAction}
+ */
+const ContinueWithAuthAction = {
+  Cancel: "cancel",
+  Default: "default",
+  ProvideCredentials: "provideCredentials",
+};
 
 /**
  * @typedef {object} Cookie
@@ -347,6 +366,101 @@ class NetworkModule extends Module {
   }
 
   /**
+   * Continues a response that is blocked by a network intercept at the
+   * authRequired phase.
+   *
+   * @param {object=} options
+   * @param {string} options.request
+   *     The id of the blocked request that should be continued.
+   * @param {string} options.action
+   *     The continueWithAuth action, one of ContinueWithAuthAction.
+   * @param {AuthCredentials=} options.credentials
+   *     The credentials to use for the ContinueWithAuthAction.ProvideCredentials
+   *     action.
+   *
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   * @throws {NoSuchRequestError}
+   *     Raised if the request id does not match any request in the blocked
+   *     requests map.
+   */
+  async continueWithAuth(options = {}) {
+    this.assertExperimentalCommandsEnabled("network.continueWithAuth");
+    const { action, credentials, request: requestId } = options;
+
+    lazy.assert.string(
+      requestId,
+      `Expected "request" to be a string, got ${requestId}`
+    );
+
+    if (!Object.values(ContinueWithAuthAction).includes(action)) {
+      throw new lazy.error.InvalidArgumentError(
+        `Expected "action" to be one of ${Object.values(
+          ContinueWithAuthAction
+        )} got ${action}`
+      );
+    }
+
+    if (action == ContinueWithAuthAction.ProvideCredentials) {
+      lazy.assert.object(
+        credentials,
+        `Expected "credentials" to be an object, got ${credentials}`
+      );
+
+      if (credentials.type !== "password") {
+        throw new lazy.error.InvalidArgumentError(
+          `Expected credentials "type" to be "password" got ${credentials.type}`
+        );
+      }
+
+      lazy.assert.string(
+        credentials.username,
+        `Expected credentials "username" to be a string, got ${credentials.username}`
+      );
+      lazy.assert.string(
+        credentials.password,
+        `Expected credentials "password" to be a string, got ${credentials.password}`
+      );
+    }
+
+    if (!this.#blockedRequests.has(requestId)) {
+      throw new lazy.error.NoSuchRequestError(
+        `Blocked request with id ${requestId} not found`
+      );
+    }
+
+    const { authCallbacks, phase, resolveBlockedEvent } =
+      this.#blockedRequests.get(requestId);
+
+    if (phase !== InterceptPhase.AuthRequired) {
+      throw new lazy.error.InvalidArgumentError(
+        `Expected blocked request to be in "authRequired" phase, got ${phase}`
+      );
+    }
+
+    switch (action) {
+      case ContinueWithAuthAction.Cancel: {
+        authCallbacks.cancelAuthPrompt();
+        break;
+      }
+      case ContinueWithAuthAction.Default: {
+        authCallbacks.forwardAuthPrompt();
+        break;
+      }
+      case ContinueWithAuthAction.ProvideCredentials: {
+        await authCallbacks.provideAuthCredentials(
+          credentials.username,
+          credentials.password
+        );
+
+        break;
+      }
+    }
+
+    resolveBlockedEvent();
+  }
+
+  /**
    * Removes an existing network intercept.
    *
    * @param {object=} options
@@ -492,6 +606,7 @@ class NetworkModule extends Module {
       redirectCount,
       requestChannel,
       requestData,
+      responseChannel,
       responseData,
       timestamp,
     } = data;
@@ -553,17 +668,23 @@ class NetworkModule extends Module {
       if (authRequiredEvent.isBlocked) {
         isBlocked = true;
 
+        const { promise: blockedEventPromise, resolve: resolveBlockedEvent } =
+          Promise.withResolvers();
+
         // requestChannel.suspend() is not needed here because the request is
         // already blocked on the authentication prompt notification until
         // one of the authCallbacks is called.
         this.#blockedRequests.set(authRequiredEvent.request.request, {
+          authCallbacks,
           request: requestChannel,
+          response: responseChannel,
+          resolveBlockedEvent,
           phase: InterceptPhase.AuthRequired,
         });
 
-        // TODO: Once we implement network.continueWithAuth, we should create a
-        // promise here which will wait until the request is resumed and removes
-        // the request from the blockedRequests. See Bug 1826196.
+        blockedEventPromise.finally(() => {
+          this.#blockedRequests.delete(authRequiredEvent.request.request);
+        });
       }
     } finally {
       if (!isBlocked) {
