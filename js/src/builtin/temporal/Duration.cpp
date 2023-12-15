@@ -3043,29 +3043,29 @@ static bool AdjustRoundedDurationDaysSlow(
   // Steps 3-5.
   int32_t direction = timeRemainderNs->sign();
 
-  // Steps 6-7. (Computed in caller)
+  // Steps 6-9. (Computed in caller)
 
-  // Step 8.
+  // Step 10.
   Rooted<BigInt*> dayLengthNs(cx, ToEpochNanoseconds(cx, dayLength));
   if (!dayLengthNs) {
     return false;
   }
   MOZ_ASSERT(IsValidInstantSpan(dayLengthNs));
 
-  // Step 9.
+  // Step 11.
   Rooted<BigInt*> oneDayLess(cx, BigInt::sub(cx, timeRemainderNs, dayLengthNs));
   if (!oneDayLess) {
     return false;
   }
 
-  // Step 10.
+  // Step 12.
   if ((direction > 0 && oneDayLess->sign() < 0) ||
       (direction < 0 && oneDayLess->sign() > 0)) {
     *result = duration;
     return true;
   }
 
-  // Step 11.
+  // Step 13.
   Duration adjustedDateDuration;
   if (!AddDuration(cx,
                    {
@@ -3079,21 +3079,21 @@ static bool AdjustRoundedDurationDaysSlow(
     return false;
   }
 
-  // Step 12.
+  // Step 14.
   Duration roundedTimeDuration;
   if (!RoundDuration(cx, oneDayLess, unit, increment, roundingMode,
                      &roundedTimeDuration)) {
     return false;
   }
 
-  // Step 13.
+  // Step 15.
   TimeDuration adjustedTimeDuration;
   if (!BalanceTimeDuration(cx, roundedTimeDuration, TemporalUnit::Hour,
                            &adjustedTimeDuration)) {
     return false;
   }
 
-  // Step 14.
+  // Step 16.
   *result = {
       adjustedDateDuration.years,        adjustedDateDuration.months,
       adjustedDateDuration.weeks,        adjustedDateDuration.days,
@@ -3146,7 +3146,7 @@ bool js::temporal::AdjustRoundedDurationDays(
     return false;
   }
 
-  // Step 6.
+  // Steps 6-7.
   Instant dayStart;
   if (!AddZonedDateTime(cx, nanoseconds, timeZone, calendar, duration.date(),
                         &dayStart)) {
@@ -3154,15 +3154,21 @@ bool js::temporal::AdjustRoundedDurationDays(
   }
   MOZ_ASSERT(IsValidEpochInstant(dayStart));
 
-  // Step 7.
+  // Step 8.
+  PlainDateTime dayStartDateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, dayStart, &dayStartDateTime)) {
+    return false;
+  }
+
+  // Step 9.
   Instant dayEnd;
-  if (!AddZonedDateTime(cx, dayStart, timeZone, calendar,
-                        {0, 0, 0, double(direction)}, &dayEnd)) {
+  if (!AddDaysToZonedDateTime(cx, dayStart, dayStartDateTime, timeZone,
+                              calendar, direction, &dayEnd)) {
     return false;
   }
   MOZ_ASSERT(IsValidEpochInstant(dayEnd));
 
-  // Step 8.
+  // Step 10.
   auto dayLength = dayEnd - dayStart;
   MOZ_ASSERT(IsValidInstantSpan(dayLength));
 
@@ -3174,7 +3180,7 @@ bool js::temporal::AdjustRoundedDurationDays(
                                          dayLength, result);
   }
 
-  // Step 9.
+  // Step 11.
   auto checkedOneDayLess = *timeRemainderNs - dayLength.toNanoseconds();
   if (!checkedOneDayLess.isValid()) {
     return AdjustRoundedDurationDaysSlow(cx, duration, increment, unit,
@@ -3183,13 +3189,13 @@ bool js::temporal::AdjustRoundedDurationDays(
   }
   auto oneDayLess = checkedOneDayLess.value();
 
-  // Step 10.
+  // Step 12.
   if ((direction > 0 && oneDayLess < 0) || (direction < 0 && oneDayLess > 0)) {
     *result = duration;
     return true;
   }
 
-  // Step 11.
+  // Step 13.
   Duration adjustedDateDuration;
   if (!AddDuration(cx,
                    {
@@ -3204,15 +3210,16 @@ bool js::temporal::AdjustRoundedDurationDays(
   }
 
   // FIXME: spec issue - don't pass years,months,weeks,days to RoundDuration.
+  // https://github.com/tc39/proposal-temporal/issues/2617
 
-  // Step 12.
+  // Step 14.
   Duration roundedTimeDuration;
   if (!RoundDuration(cx, oneDayLess, unit, increment, roundingMode,
                      &roundedTimeDuration)) {
     return false;
   }
 
-  // Step 13.
+  // Step 15.
   TimeDuration adjustedTimeDuration;
   if (!BalanceTimeDuration(cx, roundedTimeDuration, TemporalUnit::Hour,
                            &adjustedTimeDuration)) {
@@ -3253,7 +3260,7 @@ bool js::temporal::AdjustRoundedDurationDays(
   //
   // clang-format on
 
-  // Step 14.
+  // Step 16.
   *result = {
       adjustedDateDuration.years,        adjustedDateDuration.months,
       adjustedDateDuration.weeks,        adjustedDateDuration.days,
