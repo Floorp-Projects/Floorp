@@ -957,7 +957,10 @@ bool js::temporal::NanosecondsToDays(
   MOZ_ASSERT(std::abs(balanceResult.days) <= epochDays);
 
   // Step 25.
-  double days = balanceResult.days;
+  //
+  // Overflows can be safely ignored, because they take too long to happen for
+  // int64.
+  int64_t days = int64_t(balanceResult.days);
 
   // Step 26.
   PlainDateTimeAndInstant relativeResult;
@@ -969,14 +972,10 @@ bool js::temporal::NanosecondsToDays(
   MOZ_ASSERT(IsValidISODateTime(relativeResult.dateTime));
   MOZ_ASSERT(IsValidEpochInstant(relativeResult.instant));
 
-  // Sum up all days to subtract to avoid imprecise floating-point arithmetic.
-  // Overflows can be safely ignored, because they take too long to happen.
-  int64_t daysToSubtract = 0;
-
   // Step 27.
   if (sign > 0) {
     // Step 27.a.
-    while (days > double(daysToSubtract) && relativeResult.instant > endNs) {
+    while (days > 0 && relativeResult.instant > endNs) {
       // This loop can iterate indefinitely when given a specially crafted
       // time zone object, so we need to check for interrupts.
       if (!CheckForInterrupt(cx)) {
@@ -984,33 +983,26 @@ bool js::temporal::NanosecondsToDays(
       }
 
       // Step 27.a.i.
-      daysToSubtract += 1;
+      days -= 1;
 
       // Step 27.a.ii.
-      double durationDays = days - double(daysToSubtract);
-      if (!::AddDaysToZonedDateTime(
-              cx, startNs, startDateTime, timeZone, calendar, durationDays,
-              TemporalOverflow::Constrain, &relativeResult)) {
+      if (!::AddDaysToZonedDateTime(cx, startNs, startDateTime, timeZone,
+                                    calendar, days, TemporalOverflow::Constrain,
+                                    &relativeResult)) {
         return false;
       }
       MOZ_ASSERT(IsValidISODateTime(relativeResult.dateTime));
       MOZ_ASSERT(IsValidEpochInstant(relativeResult.instant));
     }
 
-    MOZ_ASSERT_IF(days > double(daysToSubtract),
-                  relativeResult.instant <= endNs);
+    MOZ_ASSERT_IF(days > 0, relativeResult.instant <= endNs);
   }
 
-  MOZ_ASSERT_IF(days == double(daysToSubtract),
-                relativeResult.instant == startNs);
+  MOZ_ASSERT_IF(days == 0, relativeResult.instant == startNs);
 
   // Step 28.
   auto ns = endNs - relativeResult.instant;
   MOZ_ASSERT(IsValidInstantSpan(ns));
-
-  // Sum up all days to add to avoid imprecise floating-point arithmetic.
-  // Overflows can be safely ignored, because they take too long to happen.
-  int64_t daysToAdd = -daysToSubtract;
 
   // Steps 29-31.
   InstantSpan dayLengthNs{};
@@ -1081,7 +1073,7 @@ bool js::temporal::NanosecondsToDays(
       relativeResult = oneDayFarther;
 
       // Step 31.c.iii.
-      daysToAdd += sign;
+      days += sign;
     } else {
       // Step 31.d.
       break;
@@ -1089,50 +1081,19 @@ bool js::temporal::NanosecondsToDays(
   }
 
   // Step 32.
-  if (sign > 0) {
-    bool totalDaysIsNegative;
-    if (int64_t daysInt; mozilla::NumberEqualsInt64(days, &daysInt)) {
-      // |daysInt + daysToAdd < 0| could overflow when |daysInt| is near the
-      // int64 boundaries, so handle each case separately.
-      totalDaysIsNegative = daysInt < 0
-                                ? (daysToAdd < 0 || daysInt + daysToAdd < 0)
-                                : (daysToAdd < 0 && daysInt + daysToAdd < 0);
-    } else {
-      // When |days| exceeds the int64 range any |daysToAdd| value can't
-      // meaningfully affect the result, so only test for negative |days|.
-      totalDaysIsNegative = days < 0;
-    }
-
-    if (totalDaysIsNegative) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_TEMPORAL_ZONED_DATE_TIME_INCORRECT_SIGN,
-                                "days");
-      return false;
-    }
+  if (days < 0 && sign > 0) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_ZONED_DATE_TIME_INCORRECT_SIGN,
+                              "days");
+    return false;
   }
 
   // Step 33.
-  if (sign < 0) {
-    // |daysToAdd| can't be positive for |sign = -1|.
-    MOZ_ASSERT(daysToAdd <= 0);
-
-    bool totalDaysIsPositive;
-    if (int64_t daysInt; mozilla::NumberEqualsInt64(days, &daysInt)) {
-      // |daysInt + daysToAdd > 0| could overflow when |daysInt| is near the
-      // int64 boundaries, so handle each case separately.
-      totalDaysIsPositive = daysInt > 0 && daysInt + daysToAdd > 0;
-    } else {
-      // When |days| exceeds the int64 range any |daysToAdd| value can't
-      // meaningfully affect the result, so only test for positive |days|.
-      totalDaysIsPositive = days > 0;
-    }
-
-    if (totalDaysIsPositive) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_TEMPORAL_ZONED_DATE_TIME_INCORRECT_SIGN,
-                                "days");
-      return false;
-    }
+  if (days > 0 && sign < 0) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_ZONED_DATE_TIME_INCORRECT_SIGN,
+                              "days");
+    return false;
   }
 
   MOZ_ASSERT(IsValidInstantSpan(dayLengthNs));
@@ -1163,34 +1124,7 @@ bool js::temporal::NanosecondsToDays(
   MOZ_ASSERT(ns.abs() < dayLengthNs.abs());
 
   // Step 37.
-  int64_t daysInt;
-  if (mozilla::NumberEqualsInt64(days, &daysInt)) {
-    auto daysChecked = mozilla::CheckedInt64(daysInt) + daysToAdd;
-    if (daysChecked.isValid()) {
-      result.set(
-          NanosecondsAndDays::from(daysChecked.value(), ns, dayLengthNs.abs()));
-      return true;
-    }
-  }
-
-  // Total number of days is too large for int64_t, store it as BigInt.
-
-  Rooted<BigInt*> daysBigInt(cx, BigInt::createFromDouble(cx, days));
-  if (!daysBigInt) {
-    return false;
-  }
-
-  Rooted<BigInt*> daysToAddBigInt(cx, BigInt::createFromInt64(cx, daysToAdd));
-  if (!daysToAddBigInt) {
-    return false;
-  }
-
-  daysBigInt = BigInt::add(cx, daysBigInt, daysToAddBigInt);
-  if (!daysBigInt) {
-    return false;
-  }
-
-  result.set(NanosecondsAndDays::from(daysBigInt, ns, dayLengthNs.abs()));
+  result.set(NanosecondsAndDays::from(days, ns, dayLengthNs.abs()));
   return true;
 }
 
