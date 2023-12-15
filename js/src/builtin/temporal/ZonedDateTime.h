@@ -118,53 +118,53 @@ ZonedDateTimeObject* CreateTemporalZonedDateTime(
     JS::Handle<CalendarValue> calendar);
 
 /**
- * AddDaysToZonedDateTime ( instant, dateTime, timeZone, calendar, days [ ,
+ * AddDaysToZonedDateTime ( instant, dateTime, timeZoneRec, calendar, days [ ,
  * overflow ] )
  */
 bool AddDaysToZonedDateTime(JSContext* cx, const Instant& instant,
                             const PlainDateTime& dateTime,
-                            JS::Handle<TimeZoneValue> timeZone,
+                            JS::MutableHandle<TimeZoneRecord> timeZone,
                             JS::Handle<CalendarValue> calendar, double days,
                             TemporalOverflow overflow, Instant* result);
 
 /**
- * AddDaysToZonedDateTime ( instant, dateTime, timeZone, calendar, days [ ,
+ * AddDaysToZonedDateTime ( instant, dateTime, timeZoneRec, calendar, days [ ,
  * overflow ] )
  */
 bool AddDaysToZonedDateTime(JSContext* cx, const Instant& instant,
                             const PlainDateTime& dateTime,
-                            JS::Handle<TimeZoneValue> timeZone,
+                            JS::MutableHandle<TimeZoneRecord> timeZone,
                             JS::Handle<CalendarValue> calendar, double days,
                             Instant* result);
 
 /**
- * AddZonedDateTime ( epochNanoseconds, timeZone, calendar, years, months,
+ * AddZonedDateTime ( epochNanoseconds, timeZoneRec, calendarRec, years, months,
  * weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds
  * [ , precalculatedPlainDateTime [ , options ] ] )
  */
 bool AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
-                      JS::Handle<TimeZoneValue> timeZone,
+                      JS::MutableHandle<TimeZoneRecord> timeZone,
                       JS::Handle<CalendarValue> calendar,
                       const Duration& duration, Instant* result);
 
 /**
- * AddZonedDateTime ( epochNanoseconds, timeZone, calendar, years, months,
+ * AddZonedDateTime ( epochNanoseconds, timeZoneRec, calendarRec, years, months,
  * weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds
  * [ , precalculatedPlainDateTime [ , options ] ] )
  */
 bool AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
-                      JS::Handle<TimeZoneValue> timeZone,
+                      JS::MutableHandle<TimeZoneRecord> timeZone,
                       JS::Handle<CalendarValue> calendar,
                       const Duration& duration, const PlainDateTime& dateTime,
                       Instant* result);
 
 /**
- * DifferenceZonedDateTime ( ns1, ns2, timeZone, calendar, largestUnit, options,
- * precalculatedPlainDateTime )
+ * DifferenceZonedDateTime ( ns1, ns2, timeZoneRec, calendarRec, largestUnit,
+ * options, precalculatedPlainDateTime )
  */
 bool DifferenceZonedDateTime(JSContext* cx, const Instant& ns1,
                              const Instant& ns2,
-                             JS::Handle<TimeZoneValue> timeZone,
+                             JS::MutableHandle<TimeZoneRecord> timeZone,
                              JS::Handle<CalendarValue> calendar,
                              TemporalUnit largestUnit,
                              const PlainDateTime& precalculatedPlainDateTime,
@@ -193,19 +193,21 @@ struct NanosecondsAndDays final {
 };
 
 /**
- * NanosecondsToDays ( nanoseconds, zonedRelativeTo [ ,
+ * NanosecondsToDays ( nanoseconds, zonedRelativeTo, timeZoneRec [ ,
  * precalculatedPlainDateTime ] )
  */
 bool NanosecondsToDays(JSContext* cx, const InstantSpan& nanoseconds,
                        JS::Handle<ZonedDateTime> zonedRelativeTo,
+                       JS::MutableHandle<TimeZoneRecord> timeZone,
                        JS::MutableHandle<NanosecondsAndDays> result);
 
 /**
- * NanosecondsToDays ( nanoseconds, zonedRelativeTo [ ,
+ * NanosecondsToDays ( nanoseconds, zonedRelativeTo, timeZoneRec [ ,
  * precalculatedPlainDateTime ] )
  */
 bool NanosecondsToDays(JSContext* cx, const InstantSpan& nanoseconds,
                        JS::Handle<ZonedDateTime> zonedRelativeTo,
+                       JS::MutableHandle<TimeZoneRecord> timeZone,
                        const PlainDateTime& precalculatedPlainDateTime,
                        JS::MutableHandle<NanosecondsAndDays> result);
 
@@ -216,12 +218,12 @@ enum class MatchBehaviour { MatchExactly, MatchMinutes };
 /**
  * InterpretISODateTimeOffset ( year, month, day, hour, minute, second,
  * millisecond, microsecond, nanosecond, offsetBehaviour, offsetNanoseconds,
- * timeZone, disambiguation, offsetOption, matchBehaviour )
+ * timeZoneRec, disambiguation, offsetOption, matchBehaviour )
  */
 bool InterpretISODateTimeOffset(JSContext* cx, const PlainDateTime& dateTime,
                                 OffsetBehaviour offsetBehaviour,
                                 int64_t offsetNanoseconds,
-                                JS::Handle<TimeZoneValue> timeZone,
+                                JS::MutableHandle<TimeZoneRecord> timeZone,
                                 TemporalDisambiguation disambiguation,
                                 TemporalOffset offsetOption,
                                 MatchBehaviour matchBehaviour, Instant* result);

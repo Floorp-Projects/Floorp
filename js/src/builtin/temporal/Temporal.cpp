@@ -1570,6 +1570,39 @@ bool js::temporal::GetMethodForCall(JSContext* cx, Handle<JSObject*> object,
 }
 
 /**
+ * GetMethod ( V, P )
+ */
+bool js::temporal::GetMethodForCall(JSContext* cx, Handle<JSObject*> object,
+                                    Handle<PropertyName*> name,
+                                    MutableHandle<JSObject*> result) {
+  // We don't directly invoke |Call|, because |Call| tries to find the function
+  // on the stack (JSDVG_SEARCH_STACK). This leads to confusing error messages
+  // like:
+  //
+  // js> print(new Temporal.ZonedDateTime(0n, {}, {}))
+  // typein:1:6 TypeError: print is not a function
+
+  // Step 1.
+  Rooted<Value> value(cx);
+  if (!GetProperty(cx, object, object, name, &value)) {
+    return false;
+  }
+
+  // Steps 2-3.
+  if (!IsCallable(value)) {
+    if (auto chars = StringToNewUTF8CharsZ(cx, *name)) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_PROPERTY_NOT_CALLABLE, chars.get());
+    }
+    return false;
+  }
+
+  // Step 4.
+  result.set(&value.toObject());
+  return true;
+}
+
+/**
  * CopyDataProperties ( target, source, excludedKeys [ , excludedValues ] )
  *
  * Implementation when |excludedKeys| and |excludedValues| are both empty lists.

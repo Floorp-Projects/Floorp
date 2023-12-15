@@ -612,13 +612,13 @@ static bool ToTemporalTime(JSContext* cx, Handle<Value> item,
         return false;
       }
 
-      // Steps 3.b.i-ii.
+      // Steps 3.b.i-iii.
       PlainDateTime dateTime;
       if (!GetPlainDateTimeFor(cx, timeZone, epochInstant, &dateTime)) {
         return false;
       }
 
-      // Step 3.b.iii.
+      // Step 3.b.iv.
       *result = dateTime.time;
       return true;
     }
@@ -2360,14 +2360,14 @@ static bool PlainTime_toZonedDateTime(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 11.
+  // Steps 11-12.
   Instant instant;
   if (!GetInstantFor(cx, timeZone, temporalDateTime,
                      TemporalDisambiguation::Compatible, &instant)) {
     return false;
   }
 
-  // Step 12.
+  // Step 13.
   auto* result = CreateTemporalZonedDateTime(cx, instant, timeZone, calendar);
   if (!result) {
     return false;

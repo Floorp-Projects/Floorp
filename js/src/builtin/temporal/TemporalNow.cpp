@@ -221,7 +221,7 @@ static bool SystemDateTime(JSContext* cx, Handle<TimeZoneValue> timeZone,
     return false;
   }
 
-  // SystemDateTime, step 5.
+  // SystemDateTime, steps 5-6.
   return GetPlainDateTimeFor(cx, timeZone, instant, dateTime);
 }
 

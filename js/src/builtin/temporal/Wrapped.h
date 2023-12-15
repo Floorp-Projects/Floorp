@@ -123,9 +123,7 @@ class MOZ_STACK_CLASS Wrapped final {
   }
 
   void trace(JSTracer* trc) {
-    if (ptr_) {
-      TraceRoot(trc, &ptr_, "Wrapped::ptr_");
-    }
+    TraceNullableRoot(trc, &ptr_, "Wrapped::ptr_");
   }
 };
 

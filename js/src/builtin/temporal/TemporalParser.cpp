@@ -3460,7 +3460,5 @@ bool js::temporal::ParseTemporalRelativeToString(
 }
 
 void js::temporal::ParsedTimeZone::trace(JSTracer* trc) {
-  if (name) {
-    TraceRoot(trc, &name, "ParsedTimeZone::name");
-  }
+  TraceNullableRoot(trc, &name, "ParsedTimeZone::name");
 }
