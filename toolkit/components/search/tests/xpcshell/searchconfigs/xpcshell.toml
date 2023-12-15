@@ -48,6 +48,12 @@ support-files = [
   "../../../schema/search-config-v2-ui-schema.json",
 ]
 
+["test_searchicons_validates.js"]
+support-files = [
+  "../../../schema/search-config-icons-schema.json",
+  "../../../schema/search-config-icons-ui-schema.json",
+]
+
 ["test_selector_db_out_of_date.js"]
 
 ["test_wikipedia.js"]

@@ -1,0 +1,28 @@
+{
+  "title": "Search Engine Icons Schema",
+  "description": "This schema contains the structure of data for search engine icons which built from search-config-v2. The associated remote settings collection is search-config-icons.",
+  "type": "object",
+  "required": ["engineIdentifiers", "imageSize"],
+  "properties": {
+    "engineIdentifiers": {
+      "title": "Engine Identifiers",
+      "description": "An array of search engine identifiers that the attached icon is for. If an individual entry is suffixed with a star, matching is applied on a \"starts with\" basis.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9-_]*\\*?$"
+      }
+    },
+    "imageSize": {
+      "title": "Image Size",
+      "description": "The image size in pixels. May be used to choose the most appropriate image for the display.",
+      "type": "number"
+    },
+    "filter_expression": {
+      "type": "string",
+      "title": "Filter Expression",
+      "description": "A JEXL to filter records",
+      "pattern": "^[a-zA-Z0-9-_=!\"{} .]*$"
+    }
+  }
+}
