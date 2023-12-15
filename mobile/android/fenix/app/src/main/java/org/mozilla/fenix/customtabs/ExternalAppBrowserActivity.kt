@@ -10,18 +10,12 @@ import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.annotation.VisibleForTesting
-import androidx.navigation.NavDirections
 import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.state.SessionState
-import mozilla.components.concept.engine.manifest.WebAppManifestParser
-import mozilla.components.feature.pwa.ext.getWebAppManifest
 import mozilla.components.support.utils.SafeIntent
-import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getIntentSessionId
-import java.security.InvalidParameterException
 
 const val EXTRA_IS_SANDBOX_CUSTOM_TAB = "org.mozilla.fenix.customtabs.EXTRA_IS_SANDBOX_CUSTOM_TAB"
 
@@ -54,31 +48,6 @@ open class ExternalAppBrowserActivity : HomeActivity() {
 
     override fun handleNewIntent(intent: Intent) {
         // No-op for external app
-    }
-
-    override fun getNavDirections(
-        from: BrowserDirection,
-        customTabSessionId: String?,
-    ): NavDirections? {
-        if (customTabSessionId == null) {
-            finishAndRemoveTask()
-            return null
-        }
-
-        val manifest = intent
-            .getWebAppManifest()
-            ?.let { WebAppManifestParser().serialize(it).toString() }
-        return when (from) {
-            BrowserDirection.FromGlobal ->
-                NavGraphDirections.actionGlobalExternalAppBrowser(
-                    activeSessionId = customTabSessionId,
-                    webAppManifest = manifest,
-                    isSandboxCustomTab = intent.getBooleanExtra(EXTRA_IS_SANDBOX_CUSTOM_TAB, false),
-                )
-            else -> throw InvalidParameterException(
-                "Tried to navigate to ExternalAppBrowserFragment from $from",
-            )
-        }
     }
 
     override fun onDestroy() {

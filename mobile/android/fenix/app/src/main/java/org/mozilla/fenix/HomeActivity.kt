@@ -33,7 +33,6 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavDirections
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
@@ -86,9 +85,6 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.SplashScreen
 import org.mozilla.fenix.GleanMetrics.StartOnHome
-import org.mozilla.fenix.addons.AddonDetailsFragmentDirections
-import org.mozilla.fenix.addons.AddonPermissionsDetailsFragmentDirections
-import org.mozilla.fenix.addons.AddonsManagementFragmentDirections
 import org.mozilla.fenix.addons.ExtensionsProcessDisabledController
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.appstate.AppAction
@@ -100,7 +96,6 @@ import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.databinding.ActivityHomeBinding
 import org.mozilla.fenix.debugsettings.data.DefaultDebugSettingsRepository
 import org.mozilla.fenix.debugsettings.ui.FenixOverlay
-import org.mozilla.fenix.exceptions.trackingprotection.TrackingProtectionExceptionsFragmentDirections
 import org.mozilla.fenix.experiments.ResearchSurfaceDialogFragment
 import org.mozilla.fenix.ext.alreadyOnDestination
 import org.mozilla.fenix.ext.breadcrumb
@@ -108,12 +103,12 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getBreadcrumbMessage
 import org.mozilla.fenix.ext.getIntentSessionId
 import org.mozilla.fenix.ext.getIntentSource
+import org.mozilla.fenix.ext.getNavDirections
 import org.mozilla.fenix.ext.hasTopDestination
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.setNavigationIcon
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.extension.WebExtensionPromptFeature
-import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.intent.AssistIntentProcessor
 import org.mozilla.fenix.home.intent.CrashReporterIntentProcessor
 import org.mozilla.fenix.home.intent.HomeDeepLinkIntentProcessor
@@ -123,11 +118,7 @@ import org.mozilla.fenix.home.intent.OpenSpecificTabIntentProcessor
 import org.mozilla.fenix.home.intent.ReEngagementIntentProcessor
 import org.mozilla.fenix.home.intent.SpeechProcessingIntentProcessor
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
-import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
 import org.mozilla.fenix.library.bookmarks.DesktopFolders
-import org.mozilla.fenix.library.history.HistoryFragmentDirections
-import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentDirections
-import org.mozilla.fenix.library.recentlyclosed.RecentlyClosedFragmentDirections
 import org.mozilla.fenix.messaging.FenixMessageSurfaceId
 import org.mozilla.fenix.messaging.FenixNimbusMessagingController
 import org.mozilla.fenix.messaging.MessageNotificationWorker
@@ -142,27 +133,11 @@ import org.mozilla.fenix.perf.ProfilerMarkers
 import org.mozilla.fenix.perf.StartupPathProvider
 import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.perf.StartupTypeTelemetry
-import org.mozilla.fenix.search.SearchDialogFragmentDirections
 import org.mozilla.fenix.session.PrivateNotificationService
-import org.mozilla.fenix.settings.HttpsOnlyFragmentDirections
-import org.mozilla.fenix.settings.SettingsFragmentDirections
-import org.mozilla.fenix.settings.TrackingProtectionFragmentDirections
-import org.mozilla.fenix.settings.about.AboutFragmentDirections
-import org.mozilla.fenix.settings.logins.fragment.LoginDetailFragmentDirections
-import org.mozilla.fenix.settings.logins.fragment.SavedLoginsAuthFragmentDirections
-import org.mozilla.fenix.settings.search.SaveSearchEngineFragmentDirections
-import org.mozilla.fenix.settings.search.SearchEngineFragmentDirections
-import org.mozilla.fenix.settings.studies.StudiesFragmentDirections
-import org.mozilla.fenix.settings.wallpaper.WallpaperSettingsFragmentDirections
-import org.mozilla.fenix.share.AddNewDeviceFragmentDirections
-import org.mozilla.fenix.shopping.ReviewQualityCheckFragmentDirections
 import org.mozilla.fenix.shortcut.NewTabShortcutIntentProcessor.Companion.ACTION_OPEN_PRIVATE_TAB
 import org.mozilla.fenix.tabhistory.TabHistoryDialogFragment
 import org.mozilla.fenix.tabstray.TabsTrayFragment
-import org.mozilla.fenix.tabstray.TabsTrayFragmentDirections
 import org.mozilla.fenix.theme.DefaultThemeManager
-import org.mozilla.fenix.trackingprotection.TrackingProtectionPanelDialogFragmentDirections
-import org.mozilla.fenix.translations.TranslationsDialogFragmentDirections
 import org.mozilla.fenix.utils.Settings
 import java.lang.ref.WeakReference
 import java.util.Locale
@@ -1018,69 +993,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         if (directions != null) {
             navHost.navController.nav(fragmentId, directions)
         }
-    }
-
-    protected open fun getNavDirections(
-        from: BrowserDirection,
-        customTabSessionId: String?,
-    ): NavDirections? = when (from) {
-        BrowserDirection.FromGlobal ->
-            NavGraphDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromHome ->
-            HomeFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromWallpaper ->
-            WallpaperSettingsFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromSearchDialog ->
-            SearchDialogFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromSettings ->
-            SettingsFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromBookmarks ->
-            BookmarkFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromHistory ->
-            HistoryFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromHistoryMetadataGroup ->
-            HistoryMetadataGroupFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromTrackingProtectionExceptions ->
-            TrackingProtectionExceptionsFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromHttpsOnlyMode ->
-            HttpsOnlyFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromAbout ->
-            AboutFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromTrackingProtection ->
-            TrackingProtectionFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromTrackingProtectionDialog ->
-            TrackingProtectionPanelDialogFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromSavedLoginsFragment ->
-            SavedLoginsAuthFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromAddNewDeviceFragment ->
-            AddNewDeviceFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromSearchEngineFragment ->
-            SearchEngineFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromSaveSearchEngineFragment ->
-            SaveSearchEngineFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromAddonDetailsFragment ->
-            AddonDetailsFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromAddonPermissionsDetailsFragment ->
-            AddonPermissionsDetailsFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromLoginDetailFragment ->
-            LoginDetailFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromTabsTray ->
-            TabsTrayFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromRecentlyClosed ->
-            RecentlyClosedFragmentDirections.actionGlobalBrowser(customTabSessionId)
-        BrowserDirection.FromStudiesFragment -> StudiesFragmentDirections.actionGlobalBrowser(
-            customTabSessionId,
-        )
-        BrowserDirection.FromReviewQualityCheck -> ReviewQualityCheckFragmentDirections.actionGlobalBrowser(
-            customTabSessionId,
-        )
-        BrowserDirection.FromAddonsManagementFragment -> AddonsManagementFragmentDirections.actionGlobalBrowser(
-            customTabSessionId,
-        )
-
-        BrowserDirection.FromTranslationsDialogFragment -> TranslationsDialogFragmentDirections.actionGlobalBrowser(
-            customTabSessionId,
-        )
     }
 
     /**

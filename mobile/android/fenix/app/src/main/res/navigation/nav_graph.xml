@@ -284,6 +284,7 @@
         tools:layout="@layout/fragment_browser">
         <argument
             android:name="activeSessionId"
+            android:defaultValue="@null"
             app:argType="string"
             app:nullable="true" />
         <action
