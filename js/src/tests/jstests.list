@@ -1050,6 +1050,84 @@ shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/take/ta
 
 
 ##############################################
+# Temporal                                   #
+##############################################
+
+skip script test262/built-ins/Temporal/PlainMonthDay/prototype/toPlainDate/default-overflow-behaviour.js
+skip script test262/built-ins/Temporal/ZonedDateTime/from/argument-propertybag-ambiguous-wall-clock-time.js
+skip script test262/built-ins/Temporal/ZonedDateTime/from/order-of-operations.js
+skip script test262/built-ins/Temporal/ZonedDateTime/compare/argument-propertybag-ambiguous-wall-clock-time.js
+skip script test262/built-ins/Temporal/ZonedDateTime/compare/order-of-operations.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/equals/argument-propertybag-ambiguous-wall-clock-time.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/equals/order-of-operations.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/since/argument-propertybag-ambiguous-wall-clock-time.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/since/order-of-operations.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/since/calendar-dateadd-called-with-options-undefined.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/since/calendar-dateuntil-called-with-singular-largestunit.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/since/round-cross-unit-boundary.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/since/rounding-zero-year-month-week-length.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/until/argument-propertybag-ambiguous-wall-clock-time.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/until/order-of-operations.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/until/calendar-dateadd-called-with-options-undefined.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/until/calendar-dateuntil-called-with-singular-largestunit.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/until/round-cross-unit-boundary.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/until/rounding-zero-year-month-week-length.js
+skip script test262/built-ins/Temporal/PlainDate/prototype/add/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainDate/prototype/since/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainDate/prototype/since/round-cross-unit-boundary.js
+skip script test262/built-ins/Temporal/PlainDate/prototype/since/rounding-zero-year-month-week-length.js
+skip script test262/built-ins/Temporal/PlainDate/prototype/subtract/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainDate/prototype/until/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainDate/prototype/until/round-cross-unit-boundary.js
+skip script test262/built-ins/Temporal/PlainDate/prototype/until/rounding-zero-year-month-week-length.js
+skip script test262/built-ins/Temporal/PlainDate/prototype/toZonedDateTime/order-of-operations.js
+skip script test262/built-ins/Temporal/Duration/compare/order-of-operations.js
+skip script test262/built-ins/Temporal/Duration/prototype/round/roundingmode-halfEven.js
+skip script test262/built-ins/Temporal/Duration/prototype/round/roundingmode-halfTrunc.js
+skip script test262/built-ins/Temporal/Duration/prototype/round/order-of-operations.js
+skip script test262/built-ins/Temporal/Duration/prototype/round/calendar-dateadd-called-with-options-undefined.js
+skip script test262/built-ins/Temporal/Duration/prototype/round/roundingmode-expand.js
+skip script test262/built-ins/Temporal/Duration/prototype/round/roundingmode-halfFloor.js
+skip script test262/built-ins/Temporal/Duration/prototype/round/roundingmode-halfCeil.js
+skip script test262/built-ins/Temporal/Duration/prototype/round/calendar-dateuntil-called-with-singular-largestunit.js
+skip script test262/built-ins/Temporal/Duration/prototype/round/zero-year-month-week-length.js
+skip script test262/built-ins/Temporal/Duration/prototype/round/roundingmode-floor.js
+skip script test262/built-ins/Temporal/Duration/prototype/round/roundingmode-trunc.js
+skip script test262/built-ins/Temporal/Duration/prototype/round/calendar-possibly-required.js
+skip script test262/built-ins/Temporal/Duration/prototype/round/roundingmode-halfExpand.js
+skip script test262/built-ins/Temporal/Duration/prototype/round/roundingmode-ceil.js
+skip script test262/built-ins/Temporal/Duration/prototype/round/february-leap-year.js
+skip script test262/built-ins/Temporal/Duration/prototype/add/order-of-operations.js
+skip script test262/built-ins/Temporal/Duration/prototype/subtract/order-of-operations.js
+skip script test262/built-ins/Temporal/Duration/prototype/toString/round-cross-unit-boundary.js
+skip script test262/built-ins/Temporal/Duration/prototype/total/order-of-operations.js
+skip script test262/built-ins/Temporal/Duration/prototype/total/calendar-dateadd-called-with-options-undefined.js
+skip script test262/built-ins/Temporal/Duration/prototype/total/dateuntil-field.js
+skip script test262/built-ins/Temporal/Duration/prototype/total/calendar-dateuntil-called-with-singular-largestunit.js
+skip script test262/built-ins/Temporal/Duration/prototype/total/zero-year-month-week-length.js
+skip script test262/built-ins/Temporal/PlainTime/prototype/toZonedDateTime/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainDateTime/prototype/add/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainDateTime/prototype/since/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainDateTime/prototype/since/round-cross-unit-boundary.js
+skip script test262/built-ins/Temporal/PlainDateTime/prototype/since/rounding-zero-year-month-week-length.js
+skip script test262/built-ins/Temporal/PlainDateTime/prototype/subtract/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainDateTime/prototype/until/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainDateTime/prototype/until/round-cross-unit-boundary.js
+skip script test262/built-ins/Temporal/PlainDateTime/prototype/until/rounding-zero-year-month-week-length.js
+skip script test262/built-ins/Temporal/PlainDateTime/prototype/toZonedDateTime/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainDateTime/prototype/toZonedDateTime/plain-custom-timezone.js
+skip script test262/built-ins/Temporal/PlainYearMonth/prototype/toPlainDate/default-overflow-behaviour.js
+skip script test262/built-ins/Temporal/PlainYearMonth/prototype/add/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainYearMonth/prototype/since/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainYearMonth/prototype/since/rounding-zero-year-month-length.js
+skip script test262/built-ins/Temporal/PlainYearMonth/prototype/since/round-cross-unit-boundary.js
+skip script test262/built-ins/Temporal/PlainYearMonth/prototype/until/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainYearMonth/prototype/until/rounding-zero-year-month-length.js
+skip script test262/built-ins/Temporal/PlainYearMonth/prototype/until/round-cross-unit-boundary.js
+skip script test262/staging/Temporal/Duration/old/round.js
+
+
+##############################################
 # Temporal Intl tests                        #
 ##############################################
 
