@@ -189,20 +189,16 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
   }
 
   // Step 3.
-  constexpr int32_t referenceISOYear = 1972;
-
-  // Step 4.
   if (item.isObject()) {
     Rooted<JSObject*> itemObj(cx, &item.toObject());
 
-    // Step 4.a.
+    // Step 3.a.
     if (itemObj->canUnwrapAs<PlainMonthDayObject>()) {
       return itemObj;
     }
 
-    // Steps 4.b-c.
+    // Steps 3.b-c.
     Rooted<CalendarValue> calendar(cx);
-    bool calendarAbsent = false;
     if (!::ToTemporalCalendarForMonthDay<PlainDateObject, PlainDateTimeObject,
                                          PlainYearMonthObject,
                                          ZonedDateTimeObject>(cx, itemObj,
@@ -210,23 +206,20 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
       return nullptr;
     }
     if (!calendar) {
-      // Step 4.c.i.
+      // Step 3.c.i.
       Rooted<Value> calendarLike(cx);
       if (!GetProperty(cx, itemObj, itemObj, cx->names().calendar,
                        &calendarLike)) {
         return nullptr;
       }
 
-      // Steps 4.c.ii-iii.
-      calendarAbsent = calendarLike.isUndefined();
-
-      // Step 4.c.iv.
+      // Step 3.c.ii.
       if (!ToTemporalCalendarWithISODefault(cx, calendarLike, &calendar)) {
         return nullptr;
       }
     }
 
-    // Step 4.d.
+    // Step 3.d.
     JS::RootedVector<PropertyKey> fieldNames(cx);
     if (!CalendarFields(cx, calendar,
                         {CalendarField::Day, CalendarField::Month,
@@ -235,41 +228,14 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
       return nullptr;
     }
 
-    // Step 4.e.
+    // Step 3.e.
     Rooted<PlainObject*> fields(cx,
                                 PrepareTemporalFields(cx, itemObj, fieldNames));
     if (!fields) {
       return nullptr;
     }
 
-    // Step 4.f.
-    Rooted<Value> month(cx);
-    if (!GetProperty(cx, fields, fields, cx->names().month, &month)) {
-      return nullptr;
-    }
-
-    // Step 4.g.
-    Rooted<Value> monthCode(cx);
-    if (!GetProperty(cx, fields, fields, cx->names().monthCode, &monthCode)) {
-      return nullptr;
-    }
-
-    // Step 4.h.
-    Rooted<Value> year(cx);
-    if (!GetProperty(cx, fields, fields, cx->names().year, &year)) {
-      return nullptr;
-    }
-
-    // Step 4.i.
-    if (calendarAbsent && !month.isUndefined() && monthCode.isUndefined() &&
-        year.isUndefined()) {
-      year.setInt32(referenceISOYear);
-      if (!DefineDataProperty(cx, fields, cx->names().year, year)) {
-        return nullptr;
-      }
-    }
-
-    // Step 4.j.
+    // Step 3.f.
     if (maybeResolvedOptions) {
       return js::temporal::CalendarMonthDayFromFields(cx, calendar, fields,
                                                       maybeResolvedOptions);
@@ -277,7 +243,7 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
     return js::temporal::CalendarMonthDayFromFields(cx, calendar, fields);
   }
 
-  // Step 5.
+  // Step 4.
   if (!item.isString()) {
     ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK, item,
                      nullptr, "not a string");
@@ -285,7 +251,7 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
   }
   Rooted<JSString*> string(cx, item.toString());
 
-  // Step 6.
+  // Step 5.
   PlainDate result;
   bool hasYear;
   Rooted<JSString*> calendarString(cx);
@@ -294,7 +260,7 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
     return nullptr;
   }
 
-  // Steps 7-10.
+  // Steps 6-9.
   Rooted<CalendarValue> calendar(cx, CalendarValue(cx->names().iso8601));
   if (calendarString) {
     if (!ToBuiltinCalendar(cx, calendarString, &calendar)) {
@@ -302,7 +268,7 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
     }
   }
 
-  // Step 11.
+  // Step 10.
   if (maybeResolvedOptions) {
     TemporalOverflow ignored;
     if (!ToTemporalOverflow(cx, maybeResolvedOptions, &ignored)) {
@@ -310,21 +276,28 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
     }
   }
 
-  // Step 12.
+  // Step 11.
   if (!hasYear) {
-    // Step 12.a.
+    // Step 11.a.
+    MOZ_ASSERT(calendar.isString() &&
+               EqualStrings(calendar.toString(), cx->names().iso8601));
+
+    // Step 11.b.
+    constexpr int32_t referenceISOYear = 1972;
+
+    // Step 11.a.
     return CreateTemporalMonthDay(
         cx, {referenceISOYear, result.month, result.day}, calendar);
   }
 
-  // Step 13.
+  // Step 12.
   Rooted<PlainMonthDayObject*> obj(
       cx, CreateTemporalMonthDay(cx, result, calendar));
   if (!obj) {
     return nullptr;
   }
 
-  // Steps 14-15.
+  // Steps 13-14.
   return CalendarMonthDayFromFields(cx, calendar, obj);
 }
 
