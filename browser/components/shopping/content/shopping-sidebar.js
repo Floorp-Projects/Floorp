@@ -61,8 +61,17 @@
       this.#initialized = true;
     }
 
-    resizeObserverFn() {
-      Services.prefs.setIntPref(SHOPPING_SIDEBAR_WIDTH_PREF, this.scrollWidth);
+    resizeObserverFn(entries) {
+      for (let entry of entries) {
+        if (entry.contentBoxSize[0].inlineSize < 1) {
+          return;
+        }
+
+        Services.prefs.setIntPref(
+          SHOPPING_SIDEBAR_WIDTH_PREF,
+          entry.contentBoxSize[0].inlineSize
+        );
+      }
     }
   }
 
