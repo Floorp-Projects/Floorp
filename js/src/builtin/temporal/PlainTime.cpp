@@ -2270,11 +2270,12 @@ static bool PlainTime_toPlainDateTime(JSContext* cx, const CallArgs& args) {
   auto time = ToPlainTime(temporalTime);
 
   // Step 3.
-  PlainDate date;
-  Rooted<CalendarValue> calendar(cx);
-  if (!ToTemporalDate(cx, args.get(0), &date, &calendar)) {
+  Rooted<PlainDateWithCalendar> plainDate(cx);
+  if (!ToTemporalDate(cx, args.get(0), &plainDate)) {
     return false;
   }
+  auto date = plainDate.date();
+  auto calendar = plainDate.calendar();
 
   // Step 4.
   auto* result = CreateTemporalDateTime(cx, {date, time}, calendar);
@@ -2326,11 +2327,12 @@ static bool PlainTime_toZonedDateTime(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 6.
-  PlainDate date;
-  Rooted<CalendarValue> calendar(cx);
-  if (!ToTemporalDate(cx, temporalDateLike, &date, &calendar)) {
+  Rooted<PlainDateWithCalendar> plainDate(cx);
+  if (!ToTemporalDate(cx, temporalDateLike, &plainDate)) {
     return false;
   }
+  auto date = plainDate.date();
+  auto calendar = plainDate.calendar();
 
   // Step 7.
   Rooted<Value> temporalTimeZoneLike(cx);

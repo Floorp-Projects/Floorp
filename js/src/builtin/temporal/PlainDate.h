@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 #include "builtin/temporal/Calendar.h"
+#include "builtin/temporal/PlainDateTime.h"
 #include "builtin/temporal/TemporalTypes.h"
 #include "builtin/temporal/Wrapped.h"
 #include "js/TypeDecls.h"
@@ -51,6 +52,26 @@ class PlainDateObject : public NativeObject {
 
  private:
   static const ClassSpec classSpec_;
+};
+
+class PlainDateWithCalendar {
+  PlainDate date_;
+  CalendarValue calendar_;
+
+ public:
+  PlainDateWithCalendar() = default;
+
+  PlainDateWithCalendar(const PlainDate& date, const CalendarValue& calendar)
+      : date_(date), calendar_(calendar) {
+    MOZ_ASSERT(ISODateTimeWithinLimits(date));
+  }
+
+  const auto& date() const { return date_; }
+  const auto& calendar() const { return calendar_; }
+
+  void trace(JSTracer* trc) { calendar_.trace(trc); }
+
+  const auto* calendarDoNotUse() const { return &calendar_; }
 };
 
 /**
@@ -98,14 +119,20 @@ bool ToTemporalDate(JSContext* cx, JS::Handle<JS::Value> item,
  * ToTemporalDate ( item [ , options ] )
  */
 bool ToTemporalDate(JSContext* cx, JS::Handle<JS::Value> item,
-                    PlainDate* result,
-                    JS::MutableHandle<CalendarValue> calendar);
+                    JS::MutableHandle<PlainDateWithCalendar> result);
 
 /**
  * CreateTemporalDate ( isoYear, isoMonth, isoDay, calendar [ , newTarget ] )
  */
 PlainDateObject* CreateTemporalDate(JSContext* cx, const PlainDate& date,
                                     JS::Handle<CalendarValue> calendar);
+
+/**
+ * CreateTemporalDate ( isoYear, isoMonth, isoDay, calendar [ , newTarget ] )
+ */
+bool CreateTemporalDate(JSContext* cx, const PlainDate& date,
+                        JS::Handle<CalendarValue> calendar,
+                        JS::MutableHandle<PlainDateWithCalendar> result);
 
 /**
  * RegulateISODate ( year, month, day, overflow )
@@ -243,5 +270,24 @@ bool IsBuiltinAccess(JSContext* cx, JS::Handle<PlainDateObject*> date,
                      std::initializer_list<CalendarField> fieldNames);
 
 } /* namespace js::temporal */
+
+namespace js {
+
+template <typename Wrapper>
+class WrappedPtrOperations<temporal::PlainDateWithCalendar, Wrapper> {
+  const auto& container() const {
+    return static_cast<const Wrapper*>(this)->get();
+  }
+
+ public:
+  const auto& date() const { return container().date(); }
+
+  JS::Handle<temporal::CalendarValue> calendar() const {
+    return JS::Handle<temporal::CalendarValue>::fromMarkedLocation(
+        container().calendarDoNotUse());
+  }
+};
+
+}  // namespace js
 
 #endif /* builtin_temporal_PlainDate_h */

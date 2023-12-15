@@ -625,15 +625,14 @@ static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
     // FIXME: spec bug - CreateTemporalDate is fallible
 
     // Step 12.d.
-    Rooted<PlainDateObject*> endOfMonth(
-        cx, CreateTemporalDate(cx, endOfMonthISO, calendar));
-    if (!endOfMonth) {
+    Rooted<PlainDateWithCalendar> endOfMonth(cx);
+    if (!CreateTemporalDate(cx, endOfMonthISO, calendar, &endOfMonth)) {
       return false;
     }
 
     // Step 12.e.
     Rooted<Value> day(cx);
-    if (!CalendarDay(cx, calendar, endOfMonth, &day)) {
+    if (!CalendarDay(cx, calendar, endOfMonth.date(), &day)) {
       return false;
     }
 
@@ -1206,11 +1205,9 @@ static bool PlainYearMonth_equals(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 4-7.
-  bool equals = false;
-  if (date == other) {
-    if (!CalendarEquals(cx, calendar, otherCalendar, &equals)) {
-      return false;
-    }
+  bool equals = date == other;
+  if (equals && !CalendarEquals(cx, calendar, otherCalendar, &equals)) {
+    return false;
   }
 
   args.rval().setBoolean(equals);

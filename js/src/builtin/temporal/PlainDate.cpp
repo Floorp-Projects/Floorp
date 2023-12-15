@@ -373,6 +373,29 @@ PlainDateObject* js::temporal::CreateTemporalDate(
 }
 
 /**
+ * CreateTemporalDate ( isoYear, isoMonth, isoDay, calendar [ , newTarget ] )
+ */
+bool js::temporal::CreateTemporalDate(
+    JSContext* cx, const PlainDate& date, Handle<CalendarValue> calendar,
+    MutableHandle<PlainDateWithCalendar> result) {
+  // Step 1.
+  if (!ThrowIfInvalidISODate(cx, date)) {
+    return false;
+  }
+
+  // Step 2.
+  if (!ISODateTimeWithinLimits(date)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_PLAIN_DATE_INVALID);
+    return false;
+  }
+
+  // Steps 3-9.
+  result.set(PlainDateWithCalendar{date, calendar});
+  return true;
+}
+
+/**
  * ToTemporalDate ( item [ , options ] )
  */
 static Wrapped<PlainDateObject*> ToTemporalDate(
@@ -546,16 +569,20 @@ bool js::temporal::ToTemporalDate(JSContext* cx, Handle<Value> item,
  * ToTemporalDate ( item [ , options ] )
  */
 bool js::temporal::ToTemporalDate(JSContext* cx, Handle<Value> item,
-                                  PlainDate* result,
-                                  MutableHandle<CalendarValue> calendar) {
+                                  MutableHandle<PlainDateWithCalendar> result) {
   auto* obj = ::ToTemporalDate(cx, item, nullptr).unwrapOrNull();
   if (!obj) {
     return false;
   }
 
-  *result = ToPlainDate(obj);
-  calendar.set(obj->calendar());
-  return calendar.wrap(cx);
+  auto date = ToPlainDate(obj);
+  Rooted<CalendarValue> calendar(cx, obj->calendar());
+  if (!calendar.wrap(cx)) {
+    return false;
+  }
+
+  result.set(PlainDateWithCalendar{date, calendar});
+  return true;
 }
 
 /**
@@ -2529,19 +2556,15 @@ static bool PlainDate_equals(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, temporalDate->calendar());
 
   // Step 3.
-  PlainDate other;
-  Rooted<CalendarValue> otherCalendar(cx);
-  if (!ToTemporalDate(cx, args.get(0), &other, &otherCalendar)) {
+  Rooted<PlainDateWithCalendar> other(cx);
+  if (!ToTemporalDate(cx, args.get(0), &other)) {
     return false;
   }
 
   // Steps 4-7.
-  bool equals = false;
-  if (date.year == other.year && date.month == other.month &&
-      date.day == other.day) {
-    if (!CalendarEquals(cx, calendar, otherCalendar, &equals)) {
-      return false;
-    }
+  bool equals = date == other.date();
+  if (equals && !CalendarEquals(cx, calendar, other.calendar(), &equals)) {
+    return false;
   }
 
   args.rval().setBoolean(equals);
