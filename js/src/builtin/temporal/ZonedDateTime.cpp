@@ -1319,7 +1319,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     return false;
   }
 
-  // Steps 4-6.
+  // Steps 4-5.
   Rooted<PlainObject*> resolvedOptions(cx);
   DifferenceSettings settings;
   if (args.hasDefined(1)) {
@@ -1341,14 +1341,6 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
             TemporalUnit::Nanosecond, TemporalUnit::Hour, &settings)) {
       return false;
     }
-
-    // Step 6.
-    Rooted<Value> largestUnitValue(
-        cx, StringValue(TemporalUnitToString(cx, settings.largestUnit)));
-    if (!DefineDataProperty(cx, resolvedOptions, cx->names().largestUnit,
-                            largestUnitValue)) {
-      return false;
-    }
   } else {
     // Steps 4-5.
     settings = {
@@ -1357,15 +1349,13 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
         TemporalRoundingMode::Trunc,
         Increment{1},
     };
-
-    // Step 6. (Not applicable in our implementation.)
   }
 
-  // Step 7.
+  // Step 6.
   if (settings.largestUnit > TemporalUnit::Day) {
     MOZ_ASSERT(settings.smallestUnit >= settings.largestUnit);
 
-    // Step 7.a.
+    // Step 6.a.
     Duration difference;
     if (!DifferenceInstant(cx, epochInstant, otherInstant,
                            settings.roundingIncrement, settings.smallestUnit,
@@ -1374,7 +1364,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
       return false;
     }
 
-    // Step 7.b.
+    // Step 6.b.
     if (operation == TemporalDifference::Since) {
       difference = difference.negate();
     }
@@ -1391,12 +1381,12 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
   // FIXME: spec issue - move this step next to the calendar validation?
   // https://github.com/tc39/proposal-temporal/issues/2533
 
-  // Step 8.
+  // Step 7.
   if (!TimeZoneEqualsOrThrow(cx, timeZone, otherTimeZone)) {
     return false;
   }
 
-  // Step 9.
+  // Step 8.
   if (epochInstant == otherInstant) {
     auto* obj = CreateTemporalDuration(cx, {});
     if (!obj) {
@@ -1407,11 +1397,21 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     return true;
   }
 
-  // Steps 10-12.
+  // Steps 9-11.
   PlainDateTime precalculatedPlainDateTime;
   if (!GetPlainDateTimeFor(cx, timeZone, epochInstant,
                            &precalculatedPlainDateTime)) {
     return false;
+  }
+
+  // Step 12.
+  if (resolvedOptions) {
+    Rooted<Value> largestUnitValue(
+        cx, StringValue(TemporalUnitToString(cx, settings.largestUnit)));
+    if (!DefineDataProperty(cx, resolvedOptions, cx->names().largestUnit,
+                            largestUnitValue)) {
+      return false;
+    }
   }
 
   // Step 13.
