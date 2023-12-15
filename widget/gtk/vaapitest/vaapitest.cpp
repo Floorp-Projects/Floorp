@@ -105,7 +105,7 @@ static void vaapitest(const char* aRenderDevicePath) {
 
   libDrm = dlopen("libva-drm.so.2", RTLD_LAZY);
   if (!libDrm) {
-    record_error("VA-API test failed: libva-drm.so.2 is missing.");
+    log("vaapitest failed: libva-drm.so.2 is missing\n");
     return;
   }
 
@@ -118,7 +118,7 @@ static void vaapitest(const char* aRenderDevicePath) {
 
   display = sVaGetDisplayDRM(renderDeviceFD);
   if (!display) {
-    record_error("VA-API test failed: sVaGetDisplayDRM failed.");
+    record_error("VA-API test failed: vaGetDisplayDRM failed.");
     return;
   }
 
@@ -126,7 +126,6 @@ static void vaapitest(const char* aRenderDevicePath) {
   VAStatus status = vaInitialize(display, &major, &minor);
   if (status != VA_STATUS_SUCCESS) {
     log("vaInitialize failed %d\n", status);
-    record_error("VA-API test failed: failed to initialise VAAPI connection.");
     return;
   } else {
     log("vaInitialize finished\n");
