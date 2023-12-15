@@ -175,6 +175,11 @@ bool RoundDuration(JSContext* cx, const Duration& duration, Increment increment,
                    JS::Handle<ZonedDateTimeObject*> zonedRelativeTo,
                    Duration* result);
 
+/**
+ * DaysUntil ( earlier, later )
+ */
+int32_t DaysUntil(const PlainDate& earlier, const PlainDate& later);
+
 } /* namespace js::temporal */
 
 #endif /* builtin_temporal_Duration_h */
