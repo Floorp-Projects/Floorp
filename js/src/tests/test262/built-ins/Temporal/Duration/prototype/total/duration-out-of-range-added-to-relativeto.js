@@ -17,8 +17,12 @@ info: |
 const instance = new Temporal.Duration(0, 0, 0, /* days = */ 500_000_000);
 const relativeTo = new Temporal.PlainDate(2000, 1, 1);
 assert.throws(RangeError, () => instance.total({relativeTo, unit: "years"}));
+assert.throws(RangeError, () => instance.total({relativeTo, unit: "months"}));
+assert.throws(RangeError, () => instance.total({relativeTo, unit: "weeks"}));
 
 const negInstance = new Temporal.Duration(0, 0, 0, /* days = */ -500_000_000);
 assert.throws(RangeError, () => negInstance.total({relativeTo, unit: "years"}));
+assert.throws(RangeError, () => negInstance.total({relativeTo, unit: "months"}));
+assert.throws(RangeError, () => negInstance.total({relativeTo, unit: "weeks"}));
 
 reportCompare(0, 0);

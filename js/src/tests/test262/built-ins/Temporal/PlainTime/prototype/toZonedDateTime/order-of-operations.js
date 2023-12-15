@@ -54,6 +54,7 @@ const expected = [
   "has item.timeZone.getOffsetNanosecondsFor",
   "has item.timeZone.getPossibleInstantsFor",
   "has item.timeZone.id",
+  "get item.timeZone.getOffsetNanosecondsFor",
   "get item.timeZone.getPossibleInstantsFor",
   "call item.timeZone.getPossibleInstantsFor",
 ];
@@ -108,7 +109,6 @@ instance.toZonedDateTime(TemporalHelpers.propertyBagObserver(actual, {
   timeZone,
 }, "item"));
 assert.compareArray(actual, expected.concat([
-  "get item.timeZone.getOffsetNanosecondsFor",
   "call item.timeZone.getOffsetNanosecondsFor",
   "call item.timeZone.getOffsetNanosecondsFor",
   "call item.timeZone.getPossibleInstantsFor",

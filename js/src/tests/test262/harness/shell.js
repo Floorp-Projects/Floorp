@@ -2544,25 +2544,6 @@ var TemporalHelpers = {
   },
 
   /*
-   * A custom calendar that returns @returnValue from its dateUntil() method,
-   * recording the call in @calls.
-   */
-  calendarDateUntilObservable(calls, returnValue) {
-    class CalendarDateUntilObservable extends Temporal.Calendar {
-      constructor() {
-        super("iso8601");
-      }
-
-      dateUntil() {
-        calls.push("call dateUntil");
-        return returnValue;
-      }
-    }
-
-    return new CalendarDateUntilObservable();
-  },
-
-  /*
    * A custom calendar that returns an iterable instead of an array from its
    * fields() method, otherwise identical to the ISO calendar.
    */
