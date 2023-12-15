@@ -22,11 +22,11 @@ The following information is supported by this system:
 
 Descriptions of each of these can be found in :ref:`the Telemetry Environment documentation <environment>`.
 
---------------------------
-Firefox Windows Installers
---------------------------
+---------------------------------------
+Firefox Windows Installers & macOS DMGs
+---------------------------------------
 
-Installs done with either the stub or full NSIS installer are capable of being attributed. When these installers are created, they are given initial attribution data of *dlsource=mozillaci*. Users who download their installer via www.mozilla.org will typically have this attribution data overwritten (unless they have Do-not-track (DNT) enabled), with *dlsource=mozillaci*, a *dltoken*, and whatever UTM parameters Bedrock deems appropriate.
+Installs done through Windows stub or full NSIS installers or macOS DMGs are capable of being attributed. When these packages are created, they are given initial attribution data of *dlsource=mozillaci*. Users who download their package via www.mozilla.org will typically have this attribution data overwritten (unless they have Do-not-track (DNT) enabled), with *dlsource=mozorg*, a *dltoken*, and whatever UTM parameters Bedrock deems appropriate.
 
 An additional complication here is that the attribution system is used (or abused, depending on your view) to support the Return to AMO workflow -- forcing the *campaign* and *content* UTM parameters to specific values.
 
@@ -105,6 +105,18 @@ The below diagram illustrates the flow of the cases above:
             %% Common links for everything
             CDN <---->|"Fetches installer"| CDNOrigin
         end
+
+~~~~~~~
+Windows
+~~~~~~~
+
+Windows attribution is implementing by injecting data into the signature block of NSIS installers at download time. This technique is described in the "Cheating Authenticode" section of `this Microsoft blog post <https://learn.microsoft.com/en-ca/archive/blogs/ieinternals/caveats-for-authenticode-code-signing#cheating-authenticode>`_.
+
+~~~~~
+macOS
+~~~~~
+
+macOS attribution is implemented by adding a ``com.apple.application-instance`` extended attribute to the ``.app`` bundle at download time. This special extended attribute is explicitly *not* part of the digital signature of the ``.app`` bundle as per `this Apple technical note <https://developer.apple.com/library/archive/technotes/tn2206/_index.html#//apple_ref/doc/uid/DTS40007919-CH1-TNTAG401>`_.
 
 
 ---------------
