@@ -1984,6 +1984,12 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       return NS_OK;
     }
 
+    if (adapterDriverVersionString.Length() == 0) {
+      aFailureId = "FEATURE_FAILURE_EMPTY_DRIVER_VERSION";
+      *aStatus = FEATURE_BLOCKED_DRIVER_VERSION;
+      return NS_OK;
+    }
+
     uint64_t driverVersion;
     if (!ParseDriverVersion(adapterDriverVersionString, &driverVersion)) {
       aFailureId = "FEATURE_FAILURE_PARSE_DRIVER";
