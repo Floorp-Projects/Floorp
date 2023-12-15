@@ -103,15 +103,6 @@ async function checkSearchConfigValidates(schema, searchConfig) {
   }
 }
 
-async function checkUISchemaValid(configSchema, uiSchema) {
-  for (let key of Object.keys(configSchema.properties)) {
-    Assert.ok(
-      uiSchema["ui:order"].includes(key),
-      `Should have ${key} listed at the top-level of the ui schema`
-    );
-  }
-}
-
 add_task(async function test_search_config_validates_to_schema_v1() {
   let selector = new SearchEngineSelectorOld(() => {});
   let searchConfig = await selector.getEngineConfiguration();

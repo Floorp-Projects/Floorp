@@ -598,3 +598,12 @@ class SearchConfigTest {
     }
   }
 }
+
+async function checkUISchemaValid(configSchema, uiSchema) {
+  for (let key of Object.keys(configSchema.properties)) {
+    Assert.ok(
+      uiSchema["ui:order"].includes(key),
+      `Should have ${key} listed at the top-level of the ui schema`
+    );
+  }
+}
