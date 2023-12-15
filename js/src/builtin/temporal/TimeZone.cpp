@@ -862,13 +862,13 @@ bool js::temporal::TimeZoneMethodsRecordLookup(
   switch (methodName) {
     // Steps 2 and 4.
     case TimeZoneMethod::GetOffsetNanosecondsFor:
-      return GetMethodForCall(cx, object, cx->names().getOffsetNanosecondsFor,
-                              timeZone.getOffsetNanosecondsFor());
+      return GetMethod(cx, object, cx->names().getOffsetNanosecondsFor,
+                       timeZone.getOffsetNanosecondsFor());
 
       // Steps 3 and 4.
     case TimeZoneMethod::GetPossibleInstantsFor:
-      return GetMethodForCall(cx, object, cx->names().getPossibleInstantsFor,
-                              timeZone.getPossibleInstantsFor());
+      return GetMethod(cx, object, cx->names().getPossibleInstantsFor,
+                       timeZone.getPossibleInstantsFor());
   }
 
   MOZ_CRASH("invalid time zone method");
