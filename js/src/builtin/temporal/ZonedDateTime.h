@@ -123,14 +123,16 @@ bool AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
                       Instant* result);
 
 /**
- * DifferenceZonedDateTime ( ns1, ns2, timeZone, calendar, largestUnit, options
- * )
+ * DifferenceZonedDateTime ( ns1, ns2, timeZone, calendar, largestUnit, options,
+ * precalculatedPlainDateTime )
  */
 bool DifferenceZonedDateTime(JSContext* cx, const Instant& ns1,
                              const Instant& ns2,
                              JS::Handle<TimeZoneValue> timeZone,
                              JS::Handle<CalendarValue> calendar,
-                             TemporalUnit largestUnit, Duration* result);
+                             TemporalUnit largestUnit,
+                             const PlainDateTime& precalculatedPlainDateTime,
+                             Duration* result);
 
 struct NanosecondsAndDays final {
   JS::BigInt* days = nullptr;
@@ -155,11 +157,22 @@ struct NanosecondsAndDays final {
 };
 
 /**
- * NanosecondsToDays ( nanoseconds, zonedRelativeTo )
+ * NanosecondsToDays ( nanoseconds, zonedRelativeTo [ ,
+ * precalculatedPlainDateTime ] )
  */
 bool NanosecondsToDays(
     JSContext* cx, const InstantSpan& nanoseconds,
     JS::Handle<Wrapped<ZonedDateTimeObject*>> zonedRelativeTo,
+    JS::MutableHandle<NanosecondsAndDays> result);
+
+/**
+ * NanosecondsToDays ( nanoseconds, zonedRelativeTo [ ,
+ * precalculatedPlainDateTime ] )
+ */
+bool NanosecondsToDays(
+    JSContext* cx, const InstantSpan& nanoseconds,
+    JS::Handle<Wrapped<ZonedDateTimeObject*>> zonedRelativeTo,
+    const PlainDateTime& precalculatedPlainDateTime,
     JS::MutableHandle<NanosecondsAndDays> result);
 
 enum class OffsetBehaviour { Option, Exact, Wall };

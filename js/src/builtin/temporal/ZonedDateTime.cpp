@@ -830,11 +830,13 @@ void js::temporal::NanosecondsAndDays::trace(JSTracer* trc) {
 }
 
 /**
- * NanosecondsToDays ( nanoseconds, zonedRelativeTo )
+ * NanosecondsToDays ( nanoseconds, zonedRelativeTo [ ,
+ * precalculatedPlainDateTime ] )
  */
-bool js::temporal::NanosecondsToDays(
+static bool NanosecondsToDays(
     JSContext* cx, const InstantSpan& nanoseconds,
     Handle<Wrapped<ZonedDateTimeObject*>> zonedRelativeTo,
+    mozilla::Maybe<const PlainDateTime&> precalculatedPlainDateTime,
     MutableHandle<NanosecondsAndDays> result) {
   MOZ_ASSERT(IsValidInstantSpan(nanoseconds));
 
@@ -883,8 +885,12 @@ bool js::temporal::NanosecondsToDays(
 
   // Steps 4 and 8.
   PlainDateTime startDateTime;
-  if (!GetPlainDateTimeFor(cx, timeZone, startNs, &startDateTime)) {
-    return false;
+  if (!precalculatedPlainDateTime) {
+    if (!GetPlainDateTimeFor(cx, timeZone, startNs, &startDateTime)) {
+      return false;
+    }
+  } else {
+    startDateTime = *precalculatedPlainDateTime;
   }
 
   // Steps 7 and 9.
@@ -1146,40 +1152,68 @@ bool js::temporal::NanosecondsToDays(
 }
 
 /**
- * DifferenceZonedDateTime ( ns1, ns2, timeZone, calendar, largestUnit, options
- * )
+ * NanosecondsToDays ( nanoseconds, zonedRelativeTo [ ,
+ * precalculatedPlainDateTime ] )
  */
-static bool DifferenceZonedDateTime(JSContext* cx, const Instant& ns1,
-                                    const Instant& ns2,
-                                    Handle<TimeZoneValue> timeZone,
-                                    Handle<CalendarValue> calendar,
-                                    TemporalUnit largestUnit,
-                                    Handle<PlainObject*> maybeOptions,
-                                    Duration* result) {
+bool js::temporal::NanosecondsToDays(
+    JSContext* cx, const InstantSpan& nanoseconds,
+    Handle<Wrapped<ZonedDateTimeObject*>> zonedRelativeTo,
+    MutableHandle<NanosecondsAndDays> result) {
+  return ::NanosecondsToDays(cx, nanoseconds, zonedRelativeTo,
+                             mozilla::Nothing(), result);
+}
+
+/**
+ * NanosecondsToDays ( nanoseconds, zonedRelativeTo [ ,
+ * precalculatedPlainDateTime ] )
+ */
+bool js::temporal::NanosecondsToDays(
+    JSContext* cx, const InstantSpan& nanoseconds,
+    Handle<Wrapped<ZonedDateTimeObject*>> zonedRelativeTo,
+    const PlainDateTime& precalculatedPlainDateTime,
+    MutableHandle<NanosecondsAndDays> result) {
+  return ::NanosecondsToDays(cx, nanoseconds, zonedRelativeTo,
+                             mozilla::SomeRef(precalculatedPlainDateTime),
+                             result);
+}
+
+/**
+ * DifferenceZonedDateTime ( ns1, ns2, timeZone, calendar, largestUnit, options,
+ * precalculatedPlainDateTime )
+ */
+static bool DifferenceZonedDateTime(
+    JSContext* cx, const Instant& ns1, const Instant& ns2,
+    Handle<TimeZoneValue> timeZone, Handle<CalendarValue> calendar,
+    TemporalUnit largestUnit, Handle<PlainObject*> maybeOptions,
+    mozilla::Maybe<const PlainDateTime&> precalculatedPlainDateTime,
+    Duration* result) {
   MOZ_ASSERT(IsValidEpochInstant(ns1));
   MOZ_ASSERT(IsValidEpochInstant(ns2));
 
-  // Steps 1-2. (Not applicable in our implementation.)
-
-  // Steps 3.
+  // Steps 1.
   if (ns1 == ns2) {
     *result = {};
     return true;
   }
 
-  // Steps 4-5.
+  // Steps 2-3.
   PlainDateTime startDateTime;
-  if (!GetPlainDateTimeFor(cx, timeZone, ns1, &startDateTime)) {
-    return false;
+  if (!precalculatedPlainDateTime) {
+    // Steps 2.a-b.
+    if (!GetPlainDateTimeFor(cx, timeZone, ns1, &startDateTime)) {
+      return false;
+    }
+  } else {
+    startDateTime = *precalculatedPlainDateTime;
   }
 
-  // Steps 6-7.
+  // Steps 4-5.
   PlainDateTime endDateTime;
   if (!GetPlainDateTimeFor(cx, timeZone, ns2, &endDateTime)) {
     return false;
   }
 
-  // Step 8.
+  // Step 6.
   Duration dateDifference;
   if (maybeOptions) {
     if (!DifferenceISODateTime(cx, startDateTime, endDateTime, calendar,
@@ -1193,7 +1227,7 @@ static bool DifferenceZonedDateTime(JSContext* cx, const Instant& ns1,
     }
   }
 
-  // Step 9.
+  // Step 7.
   Instant intermediateNs;
   if (!AddZonedDateTime(cx, ns1, timeZone, calendar,
                         {
@@ -1206,31 +1240,31 @@ static bool DifferenceZonedDateTime(JSContext* cx, const Instant& ns1,
   }
   MOZ_ASSERT(IsValidEpochInstant(intermediateNs));
 
-  // Step 10.
+  // Step 8.
   auto timeRemainder = ns2 - intermediateNs;
   MOZ_ASSERT(IsValidInstantSpan(timeRemainder));
 
-  // Step 11.
+  // Step 9.
   Rooted<ZonedDateTimeObject*> intermediate(
       cx, CreateTemporalZonedDateTime(cx, intermediateNs, timeZone, calendar));
   if (!intermediate) {
     return false;
   }
 
-  // Step 12.
+  // Step 10.
   Rooted<NanosecondsAndDays> nanosAndDays(cx);
   if (!NanosecondsToDays(cx, timeRemainder, intermediate, &nanosAndDays)) {
     return false;
   }
 
-  // Step 13.
+  // Step 11.
   TimeDuration timeDifference;
   if (!BalanceTimeDuration(cx, nanosAndDays.nanoseconds(), TemporalUnit::Hour,
                            &timeDifference)) {
     return false;
   }
 
-  // Step 14.
+  // Step 12.
   *result = {
       dateDifference.years,        dateDifference.months,
       dateDifference.weeks,        nanosAndDays.daysNumber(),
@@ -1243,17 +1277,17 @@ static bool DifferenceZonedDateTime(JSContext* cx, const Instant& ns1,
 }
 
 /**
- * DifferenceZonedDateTime ( ns1, ns2, timeZone, calendar, largestUnit, options
- * )
+ * DifferenceZonedDateTime ( ns1, ns2, timeZone, calendar, largestUnit, options,
+ * precalculatedPlainDateTime )
  */
-bool js::temporal::DifferenceZonedDateTime(JSContext* cx, const Instant& ns1,
-                                           const Instant& ns2,
-                                           Handle<TimeZoneValue> timeZone,
-                                           Handle<CalendarValue> calendar,
-                                           TemporalUnit largestUnit,
-                                           Duration* result) {
-  return ::DifferenceZonedDateTime(cx, ns1, ns2, timeZone, calendar,
-                                   largestUnit, nullptr, result);
+bool js::temporal::DifferenceZonedDateTime(
+    JSContext* cx, const Instant& ns1, const Instant& ns2,
+    Handle<TimeZoneValue> timeZone, Handle<CalendarValue> calendar,
+    TemporalUnit largestUnit, const PlainDateTime& precalculatedPlainDateTime,
+    Duration* result) {
+  return ::DifferenceZonedDateTime(
+      cx, ns1, ns2, timeZone, calendar, largestUnit, nullptr,
+      mozilla::SomeRef(precalculatedPlainDateTime), result);
 }
 
 /**
@@ -1456,24 +1490,34 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
   }
 
   // Step 10.
-  Duration difference;
-  if (resolvedOptions) {
-    if (!::DifferenceZonedDateTime(cx, epochInstant, otherInstant, timeZone,
-                                   calendar, settings.largestUnit,
-                                   resolvedOptions, &difference)) {
-      return false;
-    }
-  } else {
-    if (!::DifferenceZonedDateTime(cx, epochInstant, otherInstant, timeZone,
-                                   calendar, settings.largestUnit, nullptr,
-                                   &difference)) {
-      return false;
-    }
-  }
+  bool roundingGranularityIsNoop =
+      settings.smallestUnit == TemporalUnit::Nanosecond &&
+      settings.roundingIncrement == Increment{1};
+
+  // FIXME: spec issue - precalculatedPlainDateTime can be created
+  // unconditionally, because DifferenceZonedDateTime will create it anyway.
 
   // Step 11.
-  if (settings.smallestUnit == TemporalUnit::Nanosecond &&
-      settings.roundingIncrement == Increment{1}) {
+
+  // Steps 12 and 14.a-c.
+  PlainDateTime precalculatedPlainDateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, epochInstant,
+                           &precalculatedPlainDateTime)) {
+    return false;
+  }
+
+  // Step 15.
+  Duration difference;
+  if (!::DifferenceZonedDateTime(
+          cx, epochInstant, otherInstant, timeZone, calendar,
+          settings.largestUnit, resolvedOptions,
+          mozilla::SomeRef<const PlainDateTime>(precalculatedPlainDateTime),
+          &difference)) {
+    return false;
+  }
+
+  // Step 16.
+  if (roundingGranularityIsNoop) {
     if (operation == TemporalDifference::Since) {
       difference = difference.negate();
     }
@@ -1487,24 +1531,25 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     return true;
   }
 
-  // Steps 12-15.
+  // Steps 17-18.
   Duration roundResult;
   if (!RoundDuration(cx, difference, settings.roundingIncrement,
                      settings.smallestUnit, settings.roundingMode,
                      Handle<ZonedDateTimeObject*>(zonedDateTime),
-                     &roundResult)) {
+                     precalculatedPlainDateTime, &roundResult)) {
     return false;
   }
 
-  // Step 16.
+  // Step 19.
   Duration result;
   if (!AdjustRoundedDurationDays(cx, roundResult, settings.roundingIncrement,
                                  settings.smallestUnit, settings.roundingMode,
-                                 zonedDateTime, &result)) {
+                                 zonedDateTime, precalculatedPlainDateTime,
+                                 &result)) {
     return false;
   }
 
-  // Step 17.
+  // Step 20.
   if (operation == TemporalDifference::Since) {
     result = result.negate();
   }
