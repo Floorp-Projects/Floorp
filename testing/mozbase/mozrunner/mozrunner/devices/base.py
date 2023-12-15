@@ -114,11 +114,14 @@ class Device(object):
                 config.set(section, "IsRelative", 0)
                 config.set(section, "Path", self.app_ctx.remote_profile)
 
-        new_profiles_ini = tempfile.NamedTemporaryFile()
-        config.write(open(new_profiles_ini.name, "w"))
-
-        self.backup_file(self.app_ctx.remote_profiles_ini)
-        self.device.push(new_profiles_ini.name, self.app_ctx.remote_profiles_ini)
+        # delete=False to allow opening the same file from ADB on Windows.
+        # The file will still be deleted at the end of the `with` block.
+        # See the "Opening the temporary file again" paragraph in:
+        # https://docs.python.org/3/library/tempfile.html#tempfile.NamedTemporaryFile
+        with tempfile.NamedTemporaryFile(delete=False) as new_profiles_ini:
+            config.write(new_profiles_ini)
+            self.backup_file(self.app_ctx.remote_profiles_ini)
+            self.device.push(new_profiles_ini.name, self.app_ctx.remote_profiles_ini)
 
         # Ideally all applications would read the profile the same way, but in practice
         # this isn't true. Perform application specific profile-related setup if necessary.
