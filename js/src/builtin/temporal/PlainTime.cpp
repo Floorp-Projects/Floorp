@@ -2249,13 +2249,7 @@ static bool PlainTime_equals(JSContext* cx, const CallArgs& args) {
   }
 
   // Steps 4-10.
-  bool equals = temporalTime.hour == other.hour &&
-                temporalTime.minute == other.minute &&
-                temporalTime.second == other.second &&
-                temporalTime.millisecond == other.millisecond &&
-                temporalTime.microsecond == other.microsecond &&
-                temporalTime.nanosecond == other.nanosecond;
-  args.rval().setBoolean(equals);
+  args.rval().setBoolean(temporalTime == other);
   return true;
 }
 
