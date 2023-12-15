@@ -75,10 +75,11 @@ const expected = [
   "has other.timeZone.id",
   // InterpretTemporalDateTimeFields
   "call other.calendar.dateFromFields",
-  // InterpretISODateTimeOffset
-  "get other.timeZone.getPossibleInstantsFor",
-  "call other.timeZone.getPossibleInstantsFor",
+  // lookup in ToTemporalZonedDateTime
   "get other.timeZone.getOffsetNanosecondsFor",
+  "get other.timeZone.getPossibleInstantsFor",
+  // InterpretISODateTimeOffset
+  "call other.timeZone.getPossibleInstantsFor",
   "call other.timeZone.getOffsetNanosecondsFor",
   // TimeZoneEquals
   "get this.timeZone.id",

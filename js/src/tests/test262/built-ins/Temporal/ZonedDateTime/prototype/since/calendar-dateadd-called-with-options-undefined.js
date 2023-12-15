@@ -30,10 +30,11 @@ assert.sameValue(calendar.dateAddCallCount, 1, "basic difference with largestUni
 //   RoundDuration ->
 //     MoveRelativeZonedDateTime -> AddZonedDateTime -> calendar.dateAdd()
 //     MoveRelativeDate -> calendar.dateAdd()
+//   BalanceDurationRelative -> MoveRelativeDate -> calendar.dateAdd()
 
 calendar.dateAddCallCount = 0;
 
 later1.since(earlier, { smallestUnit: "weeks" });
-assert.sameValue(calendar.dateAddCallCount, 3, "rounding difference with calendar smallestUnit");
+assert.sameValue(calendar.dateAddCallCount, 4, "rounding difference with calendar smallestUnit");
 
 reportCompare(0, 0);

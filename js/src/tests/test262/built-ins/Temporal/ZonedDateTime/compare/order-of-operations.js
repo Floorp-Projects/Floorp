@@ -76,9 +76,9 @@ const expected = [
   // InterpretTemporalDateTimeFields
   "call one.calendar.dateFromFields",
   // InterpretISODateTimeOffset
+  "get one.timeZone.getOffsetNanosecondsFor",
   "get one.timeZone.getPossibleInstantsFor",
   "call one.timeZone.getPossibleInstantsFor",
-  "get one.timeZone.getOffsetNanosecondsFor",
   "call one.timeZone.getOffsetNanosecondsFor",
   // Same set of operations, for the other argument:
   "get two.calendar",
@@ -147,9 +147,9 @@ const expected = [
   // InterpretTemporalDateTimeFields
   "call two.calendar.dateFromFields",
   // InterpretISODateTimeOffset
+  "get two.timeZone.getOffsetNanosecondsFor",
   "get two.timeZone.getPossibleInstantsFor",
   "call two.timeZone.getPossibleInstantsFor",
-  "get two.timeZone.getOffsetNanosecondsFor",
   "call two.timeZone.getOffsetNanosecondsFor",
 ];
 const actual = [];

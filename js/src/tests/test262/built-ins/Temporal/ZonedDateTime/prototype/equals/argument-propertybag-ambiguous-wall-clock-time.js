@@ -49,7 +49,7 @@ const expected = [
   "has calendar.year",
   "has calendar.yearMonthFromFields",
   "has calendar.yearOfWeek",
-  // lookup
+  // lookup in ToTemporalZonedDateTime
   "get calendar.dateFromFields",
   "get calendar.fields",
   // CalendarFields
@@ -60,7 +60,8 @@ const expected = [
   "has timeZone.id",
   // InterpretTemporalDateTimeFields
   "call calendar.dateFromFields",
-  // lookup
+  // lookup in ToTemporalZonedDateTime
+  "get timeZone.getOffsetNanosecondsFor",
   "get timeZone.getPossibleInstantsFor",
   // InterpretISODateTimeOffset
   "call timeZone.getPossibleInstantsFor",
@@ -68,7 +69,6 @@ const expected = [
 
 const expectedSpringForward = expected.concat([
   // DisambiguatePossibleInstants
-  "get timeZone.getOffsetNanosecondsFor",
   "call timeZone.getOffsetNanosecondsFor",
   "call timeZone.getOffsetNanosecondsFor",
   "call timeZone.getPossibleInstantsFor",

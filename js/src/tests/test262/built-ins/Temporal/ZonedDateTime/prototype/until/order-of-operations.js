@@ -74,9 +74,9 @@ const expected = [
   "has other.timeZone.getPossibleInstantsFor",
   "has other.timeZone.id",
   "call other.calendar.dateFromFields",
+  "get other.timeZone.getOffsetNanosecondsFor",
   "get other.timeZone.getPossibleInstantsFor",
   "call other.timeZone.getPossibleInstantsFor",
-  "get other.timeZone.getOffsetNanosecondsFor",
   "call other.timeZone.getOffsetNanosecondsFor",
   // CalendarEquals
   "get this.calendar.id",
@@ -265,9 +265,9 @@ assert.compareArray(actual, [
   "has other.timeZone.getPossibleInstantsFor",
   "has other.timeZone.id",
   "call other.calendar.dateFromFields",
+  "get other.timeZone.getOffsetNanosecondsFor",
   "get other.timeZone.getPossibleInstantsFor",
   "call other.timeZone.getPossibleInstantsFor",
-  "get other.timeZone.getOffsetNanosecondsFor",
   "call other.timeZone.getOffsetNanosecondsFor",
   // NOTE: extra because of wall-clock time ambiguity:
   "call other.timeZone.getOffsetNanosecondsFor",
@@ -359,29 +359,44 @@ actual.splice(0); // clear
 
 // code path through RoundDuration that rounds to the nearest year:
 const expectedOpsForYearRounding = expected.concat(expectedOpsForCalendarDifference, expectedOpsForCalendarRounding, [
-  "call this.calendar.dateAdd",    // 7.e
-  "call this.calendar.dateAdd",    // 7.g
-  "call this.calendar.dateUntil",  // 7.o
-  "call this.calendar.dateAdd",    // 7.y MoveRelativeDate
-]);  // (7.s not called because other units can't add up to >1 year at this point)
+  // RoundDuration
+  "call this.calendar.dateAdd",    // 12.d
+  "call this.calendar.dateAdd",    // 12.f
+  "call this.calendar.dateUntil",  // 12.n
+  "call this.calendar.dateAdd",    // 12.x MoveRelativeDate
+  // (12.r not called because other units can't add up to >1 year at this point)
+  // BalanceDateDurationRelative
+  "call this.calendar.dateAdd",    // 9.c
+  "call this.calendar.dateUntil"   // 9.d
+]);
 instance.until(otherDateTimePropertyBag, createOptionsObserver({ smallestUnit: "years" }));
 assert.compareArray(actual, expectedOpsForYearRounding, "order of operations with smallestUnit = years");
 actual.splice(0); // clear
 
 // code path through RoundDuration that rounds to the nearest month:
 const expectedOpsForMonthRounding = expected.concat(expectedOpsForCalendarDifference, expectedOpsForCalendarRounding, [
-  "call this.calendar.dateAdd",    // 10.c
-  "call this.calendar.dateAdd",    // 10.e
-  "call this.calendar.dateAdd",    // 10.k MoveRelativeDate
-]);  // (10.n.iii MoveRelativeDate not called because weeks == 0)
+  // RoundDuration
+  "call this.calendar.dateAdd",    // 13.c
+  "call this.calendar.dateAdd",    // 13.e
+  "call this.calendar.dateUntil",  // 13.m
+  "call this.calendar.dateAdd",    // 13.w MoveRelativeDate
+  // BalanceDateDurationRelative
+  "call this.calendar.dateAdd",    // 10.d
+  "call this.calendar.dateUntil",  // 10.e
+]);
 instance.until(otherDateTimePropertyBag, createOptionsObserver({ smallestUnit: "months" }));
 assert.compareArray(actual, expectedOpsForMonthRounding, "order of operations with smallestUnit = months");
 actual.splice(0); // clear
 
 // code path through RoundDuration that rounds to the nearest week:
 const expectedOpsForWeekRounding = expected.concat(expectedOpsForCalendarDifference, expectedOpsForCalendarRounding, [
-  "call this.calendar.dateAdd",  // 11.d MoveRelativeDate
-]);  // (11.g.iii MoveRelativeDate not called because days already balanced)
+  // RoundDuration
+  "call this.calendar.dateUntil",  // 14.f
+  "call this.calendar.dateAdd",    // 14.p MoveRelativeDate
+  // BalanceDateDurationRelative
+  "call this.calendar.dateAdd",    // 16
+  "call this.calendar.dateUntil",  // 17
+]);
 instance.until(otherDateTimePropertyBag, createOptionsObserver({ smallestUnit: "weeks" }));
 assert.compareArray(actual, expectedOpsForWeekRounding, "order of operations with smallestUnit = weeks");
 actual.splice(0);  // clear

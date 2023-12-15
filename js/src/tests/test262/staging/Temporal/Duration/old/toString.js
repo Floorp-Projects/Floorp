@@ -25,11 +25,4 @@ var d = Temporal.Duration.from({
 });
 assert.sameValue(`${ d }`, "PT9016206453995.731991S");
 
-// rounding can affect units up to seconds
-var d4 = Temporal.Duration.from("P1Y1M1W1DT23H59M59.999999999S");
-assert.sameValue(d4.toString({
-  fractionalSecondDigits: 8,
-  roundingMode: "halfExpand"
-}), "P1Y1M1W1DT23H59M60.00000000S");
-
 reportCompare(0, 0);

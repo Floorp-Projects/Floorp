@@ -92,10 +92,11 @@ const expected = [
   "get options.overflow.toString",
   "call options.overflow.toString",
   "call item.calendar.dateFromFields",
-  // InterpretISODateTimeOffset
-  "get item.timeZone.getPossibleInstantsFor",
-  "call item.timeZone.getPossibleInstantsFor",
+  // lookup in ToTemporalZonedDateTime
   "get item.timeZone.getOffsetNanosecondsFor",
+  "get item.timeZone.getPossibleInstantsFor",
+  // InterpretISODateTimeOffset
+  "call item.timeZone.getPossibleInstantsFor",
   "call item.timeZone.getOffsetNanosecondsFor",
 ];
 const actual = [];
