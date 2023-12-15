@@ -60,10 +60,10 @@ let searchConfigSchema;
 
 add_setup(async function () {
   searchConfigSchemaV1 = await IOUtils.readJSON(
-    PathUtils.join(do_get_cwd().path, "search-engine-config-schema.json")
+    PathUtils.join(do_get_cwd().path, "search-config-schema.json")
   );
   searchConfigSchema = await IOUtils.readJSON(
-    PathUtils.join(do_get_cwd().path, "search-engine-config-v2-schema.json")
+    PathUtils.join(do_get_cwd().path, "search-config-v2-schema.json")
   );
 });
 
@@ -121,7 +121,7 @@ add_task(async function test_search_config_validates_to_schema_v1() {
 
 add_task(async function test_ui_schema_valid_v1() {
   let uiSchema = await IOUtils.readJSON(
-    PathUtils.join(do_get_cwd().path, "search-engine-config-ui-schema.json")
+    PathUtils.join(do_get_cwd().path, "search-config-ui-schema.json")
   );
 
   await checkUISchemaValid(searchConfigSchemaV1, uiSchema);
@@ -139,7 +139,7 @@ add_task(async function test_search_config_validates_to_schema() {
 
 add_task(async function test_ui_schema_valid() {
   let uiSchema = await IOUtils.readJSON(
-    PathUtils.join(do_get_cwd().path, "search-engine-config-v2-ui-schema.json")
+    PathUtils.join(do_get_cwd().path, "search-config-v2-ui-schema.json")
   );
 
   await checkUISchemaValid(searchConfigSchema, uiSchema);
