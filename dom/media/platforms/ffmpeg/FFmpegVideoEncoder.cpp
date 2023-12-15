@@ -173,18 +173,15 @@ FFmpegVideoEncoder<LIBAV_VER>::FFmpegVideoEncoder(
       mFrame(nullptr) {
   MOZ_ASSERT(mLib);
   MOZ_ASSERT(mTaskQueue);
+#if LIBAVCODEC_VERSION_MAJOR < 58
+  MOZ_CRASH("FFmpegVideoEncoder needs ffmpeg 58 at least.");
+#endif
 };
 
 RefPtr<MediaDataEncoder::InitPromise> FFmpegVideoEncoder<LIBAV_VER>::Init() {
   FFMPEGV_LOG("Init");
-
-#if LIBAVCODEC_VERSION_MAJOR < 58
-  FFMPEGV_LOG("FFmpegVideoEncoder needs ffmpeg 58 at least.");
-  return InitPromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
-#else
   return InvokeAsync(mTaskQueue, this, __func__,
                      &FFmpegVideoEncoder::ProcessInit);
-#endif
 }
 
 RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<LIBAV_VER>::Encode(
@@ -192,17 +189,11 @@ RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<LIBAV_VER>::Encode(
   MOZ_ASSERT(aSample != nullptr);
 
   FFMPEGV_LOG("Encode");
-
-#if LIBAVCODEC_VERSION_MAJOR < 58
-  FFMPEGV_LOG("FFmpegVideoEncoder needs ffmpeg 58 at least.");
-  return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
-#else
   return InvokeAsync(mTaskQueue, __func__,
                      [self = RefPtr<FFmpegVideoEncoder<LIBAV_VER> >(this),
                       sample = RefPtr<const MediaData>(aSample)]() {
                        return self->ProcessEncode(std::move(sample));
                      });
-#endif
 }
 
 RefPtr<MediaDataEncoder::ReconfigurationPromise>
@@ -216,27 +207,14 @@ FFmpegVideoEncoder<LIBAV_VER>::Reconfigure(
 
 RefPtr<MediaDataEncoder::EncodePromise> FFmpegVideoEncoder<LIBAV_VER>::Drain() {
   FFMPEGV_LOG("Drain");
-
-#if LIBAVCODEC_VERSION_MAJOR < 58
-  FFMPEGV_LOG("FFmpegVideoEncoder needs ffmpeg 58 at least.");
-  return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
-#else
   return InvokeAsync(mTaskQueue, this, __func__,
                      &FFmpegVideoEncoder::ProcessDrain);
-#endif
 }
 
 RefPtr<ShutdownPromise> FFmpegVideoEncoder<LIBAV_VER>::Shutdown() {
   FFMPEGV_LOG("Shutdown");
-
-  // Don't shut mTaskQueue down since it's owned by others.
-#if LIBAVCODEC_VERSION_MAJOR < 58
-  FFMPEGV_LOG("FFmpegVideoEncoder needs ffmpeg 58 at least.");
-  return ShutdownPromise::CreateAndResolve(true, __func__);
-#else
   return InvokeAsync(mTaskQueue, this, __func__,
                      &FFmpegVideoEncoder::ProcessShutdown);
-#endif
 }
 
 RefPtr<GenericPromise> FFmpegVideoEncoder<LIBAV_VER>::SetBitrate(
@@ -278,7 +256,7 @@ FFmpegVideoEncoder<LIBAV_VER>::ProcessEncode(RefPtr<const MediaData> aSample) {
 
 #if LIBAVCODEC_VERSION_MAJOR < 58
   // TODO(Bug 1868253): implement encode with avcodec_encode_video2().
-  FFMPEGV_LOG("FFmpegVideoEncoder needs ffmpeg 58 at least.");
+  MOZ_CRASH("FFmpegVideoEncoder needs ffmpeg 58 at least.");
   return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 #else
   RefPtr<const VideoData> sample(aSample->As<const VideoData>());
@@ -332,7 +310,7 @@ FFmpegVideoEncoder<LIBAV_VER>::ProcessDrain() {
   FFMPEGV_LOG("ProcessDrain");
 
 #if LIBAVCODEC_VERSION_MAJOR < 58
-  FFMPEGV_LOG("FFmpegVideoEncoder needs ffmpeg 58 at least.");
+  MOZ_CRASH("FFmpegVideoEncoder needs ffmpeg 58 at least.");
   return EncodePromise::CreateAndReject(NS_ERROR_NOT_IMPLEMENTED, __func__);
 #else
   return DrainWithModernAPIs();
@@ -346,6 +324,7 @@ RefPtr<ShutdownPromise> FFmpegVideoEncoder<LIBAV_VER>::ProcessShutdown() {
 
   ShutdownInternal();
 
+  // Don't shut mTaskQueue down since it's owned by others.
   return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
