@@ -92,8 +92,10 @@ fn parse_udl_files(
 
 fn parse_udl_file(config: &Config) -> Result<ComponentInterface> {
     let udl_file = Utf8PathBuf::from(&config.udl_file);
-    let udl = std::fs::read_to_string(udl_file).context("Error reading UDL file")?;
-    ComponentInterface::from_webidl(&udl, &config.crate_name).context("Failed to parse UDL")
+    let udl = std::fs::read_to_string(udl_file)
+        .context(format!("Error reading UDL file '{}'", config.udl_file))?;
+    ComponentInterface::from_webidl(&udl, &config.crate_name)
+        .context(format!("Failed to parse UDL '{}'", config.udl_file))
 }
 
 pub struct FunctionIds<'a> {
