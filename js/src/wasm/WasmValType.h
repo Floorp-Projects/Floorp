@@ -89,19 +89,17 @@ union PackedTypeCode {
     MOZ_ASSERT_IF(tc != AbstractTypeRefCode, typeDef == nullptr);
     MOZ_ASSERT_IF(tc == AbstractTypeRefCode, typeDef != nullptr);
 #if defined(JS_64BIT) && defined(DEBUG)
-    // Double check that `typeDef` points inside the "canonical" 48-bit
-    // address space by checking that the lower 48 bits sign extend back to
-    // the original.  This is necessary since we will only store the lowest 48
-    // bits of it, as noted above.  There's no equivalent check on 32 bit
+    // Double check that `typeDef` only has 48 significant bits, with the top
+    // 16 being zero.  This is necessary since we will only store the lowest
+    // 48 bits of it, as noted above.  There's no equivalent check on 32 bit
     // targets since we can store the whole pointer.
-    int64_t w = int64_t(typeDef);
-    w <<= (64 - TypeDefBits);
-    w >>= (64 - TypeDefBits);
-    MOZ_ASSERT(w == int64_t(typeDef));
+    static_assert(sizeof(int64_t) == sizeof(uintptr_t));
+    uint64_t w = (uint64_t)(uintptr_t)typeDef;
+    MOZ_ASSERT((w >> TypeDefBits) == 0);
 #endif
     PackedTypeCode ptc = {};
     ptc.typeCode_ = PackedRepr(tc);
-    ptc.typeDef_ = (uintptr_t)typeDef;
+    ptc.typeDef_ = (uint64_t)(uintptr_t)typeDef;
     ptc.nullable_ = isNullable;
     return ptc;
   }
@@ -149,17 +147,10 @@ union PackedTypeCode {
 
   const TypeDef* typeDef() const {
     MOZ_ASSERT(isValid());
-#if defined(JS_64BIT)
-    // Reconstitute the pointer by sign-extending the lowest TypeDefBits bits.
-    static_assert(sizeof(int64_t) == sizeof(uintptr_t));
-    int64_t w = int64_t(typeDef_);
-    w <<= (64 - TypeDefBits);
-    w >>= (64 - TypeDefBits);
-    return (const TypeDef*)(uintptr_t)w;
-#else
-    // The pointer is stored exactly in the lowest 32 bits of `typeDef_`.
+    // On a 64-bit target, this reconstitutes the pointer by zero-extending
+    // the lowest TypeDefBits bits of `typeDef_`.  On a 32-bit target, the
+    // pointer is stored exactly in the lowest 32 bits of `typeDef_`.
     return (const TypeDef*)(uintptr_t)typeDef_;
-#endif
   }
 
   bool isNullable() const {
