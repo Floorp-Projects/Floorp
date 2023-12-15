@@ -702,13 +702,15 @@ static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
     return AddInstant(cx, epochNanoseconds, duration, result);
   }
 
-  // Steps 4-5.
+  // Step 4. (Not applicable in our implementation)
+
+  // Steps 5-6.
   PlainDateTime temporalDateTime;
   if (dateTime) {
-    // Step 4.a.
+    // Step 5.a.
     temporalDateTime = *dateTime;
   } else {
-    // Steps 5.a-b.
+    // Step 6.a.
     if (!GetPlainDateTimeFor(cx, timeZone, epochNanoseconds,
                              &temporalDateTime)) {
       return false;
@@ -716,9 +718,9 @@ static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
   }
   auto& [date, time] = temporalDateTime;
 
-  // Step 6.
+  // Step 7.
   if (duration.years == 0 && duration.months == 0 && duration.weeks == 0) {
-    // Step 6.a.
+    // Step 7.a.
     auto overflow = TemporalOverflow::Constrain;
     if (maybeOptions) {
       if (!ToTemporalOverflow(cx, maybeOptions, &overflow)) {
@@ -726,9 +728,7 @@ static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
       }
     }
 
-    // FIXME: spec bug - |instant| not always created
-
-    // Step 6.b.
+    // Step 7.b.
     Instant intermediate;
     if (!AddDaysToZonedDateTime(cx, epochNanoseconds, temporalDateTime,
                                 timeZone, calendar, duration.days, overflow,
@@ -736,17 +736,17 @@ static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
       return false;
     }
 
-    // Step 6.c.
+    // Step 7.c.
     return AddInstant(cx, intermediate, duration.time(), result);
   }
 
-  // Step 7.
+  // Step 8.
   const auto& datePart = date;
 
-  // Step 8.
+  // Step 9.
   auto dateDuration = duration.date();
 
-  // Step 9.
+  // Step 10.
   PlainDate addedDate;
   if (maybeOptions) {
     if (!CalendarDateAdd(cx, calendar, datePart, dateDuration, maybeOptions,
@@ -759,14 +759,14 @@ static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
     }
   }
 
-  // Step 10.
+  // Step 11.
   Rooted<PlainDateTimeWithCalendar> intermediateDateTime(cx);
   if (!CreateTemporalDateTime(cx, {addedDate, time}, calendar,
                               &intermediateDateTime)) {
     return false;
   }
 
-  // Step 11.
+  // Step 12.
   Instant intermediateInstant;
   if (!GetInstantFor(cx, timeZone, intermediateDateTime,
                      TemporalDisambiguation::Compatible,
@@ -774,7 +774,7 @@ static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
     return false;
   }
 
-  // Step 12.
+  // Step 13.
   return AddInstant(cx, intermediateInstant, duration.time(), result);
 }
 
@@ -842,9 +842,6 @@ static bool NanosecondsToDays(
     MutableHandle<NanosecondsAndDays> result) {
   MOZ_ASSERT(IsValidInstantSpan(nanoseconds));
 
-  // Numbers of days between nsMinInstant and nsMaxInstant.
-  static constexpr int32_t epochDays = 200'000'000;
-
   // Step 1.
   if (nanoseconds == InstantSpan{}) {
     result.set(NanosecondsAndDays::from(
@@ -890,93 +887,25 @@ static bool NanosecondsToDays(
     return false;
   }
 
-  // FIXME: spec issue - this approach seems unnecessarily complicated. Maybe
-  // change to:
+  // Steps 10-11. (Not applicable in our implementation.)
+
+  // Step 12.
   //
-  // auto days = DaysUntil(start.date, end.date);
-  // if (days > 0) {
-  //   if (CompareTemporalTime(start.time, end.time) > 0) {
-  //     days--;
-  //   }
-  // } else if (days < 0) {
-  //   if (CompareTemporalTime(start.time, end.time) < 0) {
-  //     days++;
-  //   }
-  // }
+  // Overflows in step 21 can be safely ignored, because they take too long to
+  // happen for int64.
+  int64_t days = DaysUntil(startDateTime.date, endDateTime.date);
 
-  // Step 10.
-  auto timeDifference = DifferenceTime(startDateTime.time, endDateTime.time);
-  MOZ_ASSERT(timeDifference.days == 0);
+  // Step 13.
+  int32_t timeSign = CompareTemporalTime(startDateTime.time, endDateTime.time);
 
-  // Step 11.
-  int32_t timeSign = DurationSign(timeDifference.toDuration());
-
-  // Steps 12-17. (Not applicable in our implementation.)
-
-  // Step 18.
-  int32_t dateSign = CompareISODate(endDateTime.date, startDateTime.date);
-
-  // Step 19.
-  auto adjustedDate = startDateTime.date;
-
-  // Step 20.
-  if (timeSign == -dateSign) {
-    // Step 20.a.
-    adjustedDate =
-        BalanceISODate(startDateTime.date.year, startDateTime.date.month,
-                       startDateTime.date.day - timeSign);
-
-    // Step 20.b.
-    Duration timeToBalance = {
-        0,
-        0,
-        0,
-        double(-timeSign),
-        timeDifference.hours,
-        timeDifference.minutes,
-        timeDifference.seconds,
-        timeDifference.milliseconds,
-        timeDifference.microseconds,
-        timeDifference.nanoseconds,
-    };
-    if (!BalanceTimeDuration(cx, timeToBalance, TemporalUnit::Day,
-                             &timeDifference)) {
-      return false;
-    }
+  // Steps 14-15.
+  if (days > 0 && timeSign > 0) {
+    days -= 1;
+  } else if (days < 0 && timeSign < 0) {
+    days += 1;
   }
 
-  // Steps 21-22. (Not applicable in our implementation.)
-
-  // Step 23.
-  int32_t daysUntil = DaysUntil(adjustedDate, endDateTime.date);
-
-  // Step 24.
-  Duration daysToBalance = {
-      0,
-      0,
-      0,
-      double(daysUntil),
-      timeDifference.hours,
-      timeDifference.minutes,
-      timeDifference.seconds,
-      timeDifference.milliseconds,
-      timeDifference.microseconds,
-      timeDifference.nanoseconds,
-  };
-  TimeDuration balanceResult;
-  if (!BalanceTimeDuration(cx, daysToBalance, TemporalUnit::Day,
-                           &balanceResult)) {
-    return false;
-  }
-  MOZ_ASSERT(std::abs(balanceResult.days) <= epochDays);
-
-  // Step 25.
-  //
-  // Overflows can be safely ignored, because they take too long to happen for
-  // int64.
-  int64_t days = int64_t(balanceResult.days);
-
-  // Step 26.
+  // Step 16.
   PlainDateTimeAndInstant relativeResult;
   if (!::AddDaysToZonedDateTime(cx, startNs, startDateTime, timeZone, calendar,
                                 days, TemporalOverflow::Constrain,
@@ -986,9 +915,9 @@ static bool NanosecondsToDays(
   MOZ_ASSERT(IsValidISODateTime(relativeResult.dateTime));
   MOZ_ASSERT(IsValidEpochInstant(relativeResult.instant));
 
-  // Step 27.
+  // Step 17.
   if (sign > 0) {
-    // Step 27.a.
+    // Step 17.a.
     while (days > 0 && relativeResult.instant > endNs) {
       // This loop can iterate indefinitely when given a specially crafted
       // time zone object, so we need to check for interrupts.
@@ -996,10 +925,10 @@ static bool NanosecondsToDays(
         return false;
       }
 
-      // Step 27.a.i.
+      // Step 17.a.i.
       days -= 1;
 
-      // Step 27.a.ii.
+      // Step 17.a.ii.
       if (!::AddDaysToZonedDateTime(cx, startNs, startDateTime, timeZone,
                                     calendar, days, TemporalOverflow::Constrain,
                                     &relativeResult)) {
@@ -1014,11 +943,11 @@ static bool NanosecondsToDays(
 
   MOZ_ASSERT_IF(days == 0, relativeResult.instant == startNs);
 
-  // Step 28.
+  // Step 18.
   auto ns = endNs - relativeResult.instant;
   MOZ_ASSERT(IsValidInstantSpan(ns));
 
-  // Steps 29-31.
+  // Steps 19-21.
   InstantSpan dayLengthNs{};
   while (true) {
     // This loop can iterate indefinitely when given a specially crafted time
@@ -1027,7 +956,7 @@ static bool NanosecondsToDays(
       return false;
     }
 
-    // Step 31.a.
+    // Step 21.a.
     PlainDateTimeAndInstant oneDayFarther;
     if (!::AddDaysToZonedDateTime(
             cx, relativeResult.instant, relativeResult.dateTime, timeZone,
@@ -1037,7 +966,7 @@ static bool NanosecondsToDays(
     MOZ_ASSERT(IsValidISODateTime(oneDayFarther.dateTime));
     MOZ_ASSERT(IsValidEpochInstant(oneDayFarther.instant));
 
-    // Step 31.b.
+    // Step 21.b.
     dayLengthNs = oneDayFarther.instant - relativeResult.instant;
     MOZ_ASSERT(IsValidInstantSpan(dayLengthNs));
 
@@ -1074,27 +1003,27 @@ static bool NanosecondsToDays(
     //
     // clang-format on
 
-    // Step 31.c.
+    // Step 21.c.
     auto diff = ns - dayLengthNs;
     MOZ_ASSERT(IsValidInstantSpan(diff));
     MOZ_ASSERT(diff == (endNs - oneDayFarther.instant));
 
     if (diff == InstantSpan{} || ((diff < InstantSpan{}) == (sign < 0))) {
-      // Step 31.c.i.
+      // Step 21.c.i.
       ns = diff;
 
-      // Step 31.c.ii.
+      // Step 21.c.ii.
       relativeResult = oneDayFarther;
 
-      // Step 31.c.iii.
+      // Step 21.c.iii.
       days += sign;
     } else {
-      // Step 31.d.
+      // Step 21.d.
       break;
     }
   }
 
-  // Step 32.
+  // Step 22.
   if (days < 0 && sign > 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_ZONED_DATE_TIME_INCORRECT_SIGN,
@@ -1102,7 +1031,7 @@ static bool NanosecondsToDays(
     return false;
   }
 
-  // Step 33.
+  // Step 23.
   if (days > 0 && sign < 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_ZONED_DATE_TIME_INCORRECT_SIGN,
@@ -1113,7 +1042,7 @@ static bool NanosecondsToDays(
   MOZ_ASSERT(IsValidInstantSpan(dayLengthNs));
   MOZ_ASSERT(IsValidInstantSpan(ns));
 
-  // FIXME: spec issue - rewrite steps 34-35 as:
+  // FIXME: spec issue - rewrite steps 24-25 as:
   //
   // If sign = -1, then
   //   If nanoseconds > 0, throw a RangeError.
@@ -1122,7 +1051,7 @@ static bool NanosecondsToDays(
   //
   // https://github.com/tc39/proposal-temporal/issues/2530
 
-  // Steps 34-35.
+  // Steps 24-25.
   if (sign < 0) {
     if (ns > InstantSpan{}) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -1134,10 +1063,10 @@ static bool NanosecondsToDays(
     MOZ_ASSERT(ns >= InstantSpan{});
   }
 
-  // Step 36.
+  // Step 26.
   MOZ_ASSERT(ns.abs() < dayLengthNs.abs());
 
-  // Step 37.
+  // Step 27.
   result.set(NanosecondsAndDays::from(days, ns, dayLengthNs.abs()));
   return true;
 }
@@ -1478,24 +1407,14 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     return true;
   }
 
-  // Step 10.
-  bool roundingGranularityIsNoop =
-      settings.smallestUnit == TemporalUnit::Nanosecond &&
-      settings.roundingIncrement == Increment{1};
-
-  // FIXME: spec issue - precalculatedPlainDateTime can be created
-  // unconditionally, because DifferenceZonedDateTime will create it anyway.
-
-  // Step 11.
-
-  // Steps 12 and 14.a-c.
+  // Steps 10-12.
   PlainDateTime precalculatedPlainDateTime;
   if (!GetPlainDateTimeFor(cx, timeZone, epochInstant,
                            &precalculatedPlainDateTime)) {
     return false;
   }
 
-  // Step 15.
+  // Step 13.
   Duration difference;
   if (!::DifferenceZonedDateTime(
           cx, epochInstant, otherInstant, timeZone, calendar,
@@ -1505,7 +1424,12 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     return false;
   }
 
-  // Step 16.
+  // Step 14.
+  bool roundingGranularityIsNoop =
+      settings.smallestUnit == TemporalUnit::Nanosecond &&
+      settings.roundingIncrement == Increment{1};
+
+  // Step 15.
   if (roundingGranularityIsNoop) {
     if (operation == TemporalDifference::Since) {
       difference = difference.negate();
@@ -1520,7 +1444,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     return true;
   }
 
-  // Steps 17-18.
+  // Steps 16-17.
   Duration roundResult;
   if (!RoundDuration(cx, difference, settings.roundingIncrement,
                      settings.smallestUnit, settings.roundingMode,
@@ -1528,7 +1452,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     return false;
   }
 
-  // Step 19.
+  // Step 18.
   Duration result;
   if (!AdjustRoundedDurationDays(cx, roundResult, settings.roundingIncrement,
                                  settings.smallestUnit, settings.roundingMode,
@@ -1537,7 +1461,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     return false;
   }
 
-  // Step 20.
+  // Step 19.
   if (operation == TemporalDifference::Since) {
     result = result.negate();
   }

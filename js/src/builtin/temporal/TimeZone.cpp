@@ -1812,13 +1812,11 @@ bool js::temporal::DisambiguatePossibleInstants(
       return false;
     }
 
-    // FIXME: spec bug - |earlier| created with "iso8601" calendar, but |later|
-    // created with calendar from |dateTime|. Which one is correct?
-
     // Step 19.c.
+    Rooted<CalendarValue> calendar(cx, CalendarValue(cx->names().iso8601));
     Rooted<PlainDateTimeWithCalendar> earlierDateTime(
-        cx, PlainDateTimeWithCalendar{{earlierDate, earlierTime.time},
-                                      dateTime.calendar()});
+        cx,
+        PlainDateTimeWithCalendar{{earlierDate, earlierTime.time}, calendar});
 
     // Step 19.d.
     Rooted<InstantVector> earlierInstants(cx, InstantVector(cx));
@@ -1856,9 +1854,9 @@ bool js::temporal::DisambiguatePossibleInstants(
   }
 
   // Step 23.
+  Rooted<CalendarValue> calendar(cx, CalendarValue(cx->names().iso8601));
   Rooted<PlainDateTimeWithCalendar> laterDateTime(
-      cx, PlainDateTimeWithCalendar{{laterDate, laterTime.time},
-                                    dateTime.calendar()});
+      cx, PlainDateTimeWithCalendar{{laterDate, laterTime.time}, calendar});
 
   // Step 24.
   Rooted<InstantVector> laterInstants(cx, InstantVector(cx));

@@ -622,8 +622,6 @@ static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
       return false;
     }
 
-    // FIXME: spec bug - CreateTemporalDate is fallible
-
     // Step 12.d.
     Rooted<PlainDateWithCalendar> endOfMonth(cx);
     if (!CreateTemporalDate(cx, endOfMonthISO, calendar, &endOfMonth)) {
