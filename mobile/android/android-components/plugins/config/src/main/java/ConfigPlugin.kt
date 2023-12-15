@@ -34,23 +34,30 @@ object Config {
         // ergonomically validate (sometimes IDEs default to a release variant and mysteriously fail due to the
         // validation, sometimes devs just need a release build and specifying project properties is annoying in IDEs),
         // so instead we'll allow the `versionName` to silently default to an empty string.
-        return if (project.hasProperty("versionName")) project.property("versionName") as String else null
+        return if (project.hasProperty("versionName")) project.property("versionName").toString() else null
     }
 
     @JvmStatic
-    fun nightlyVersionName(): String {
+    fun nightlyVersionName(project: Project): String {
         // Nightly versions will use the version from "version.txt".
-        return readVersionFromFile()
+        return readVersionFromFile(project)
     }
 
     @JvmStatic
-    fun readVersionFromFile(): String {
-        return File("../version.txt").useLines { it.firstOrNull() ?: "" }
+    fun readVersionFromFile(project: Project): String {
+        var versionPath = "../version.txt"
+
+        if (project.findProject(":geckoview") != null) {
+            versionPath = "./mobile/android/version.txt"
+        }
+
+        return File(versionPath).useLines { it.firstOrNull() ?: "" }
+
     }
 
     @JvmStatic
-    fun majorVersion(): String {
-        return readVersionFromFile().split(".")[0]
+    fun majorVersion(project: Project): String {
+        return readVersionFromFile(project).split(".")[0]
     }
 
     /**

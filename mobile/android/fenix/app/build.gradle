@@ -6,12 +6,20 @@ plugins {
     id "com.google.protobuf" version "$protobuf_plugin"
 }
 
+if (findProject(":geckoview") != null) {
+    buildDir "${topobjdir}/gradle/build/mobile/android/fenix"
+}
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-parcelize'
 apply plugin: 'jacoco'
 apply plugin: 'androidx.navigation.safeargs.kotlin'
 apply plugin: 'com.google.android.gms.oss-licenses-plugin'
+
+if (findProject(":geckoview") != null) {
+    apply from: "${topsrcdir}/mobile/android/gradle/product_flavors.gradle"
+}
 
 import groovy.json.JsonOutput
 import org.gradle.internal.logging.text.StyledTextOutput.Style
@@ -188,6 +196,11 @@ android {
         animationsDisabled = true
     }
 
+    if (findProject(":geckoview") != null) {
+        project.configureProductFlavors.delegate = it
+        project.configureProductFlavors()
+    }
+
     flavorDimensions.add("product")
 
     productFlavors {
@@ -297,7 +310,7 @@ android.applicationVariants.configureEach { variant ->
         // same version code. Therefore we need to have different version codes for our ARM and x86
         // builds.
 
-        def versionName = variant.buildType.name == 'nightly' ? Config.nightlyVersionName() : Config.releaseVersionName(project)
+        def versionName = variant.buildType.name == 'nightly' ? Config.nightlyVersionName(project) : Config.releaseVersionName(project)
         println("versionName override: $versionName")
 
         variant.outputs.each { output ->
@@ -906,4 +919,4 @@ def getSupportedLocales() {
 }
 
 // Enable expiration by major version.
-ext.gleanExpireByVersion = Config.majorVersion()
+ext.gleanExpireByVersion = Config.majorVersion(project)
