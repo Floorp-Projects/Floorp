@@ -362,6 +362,8 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitInternal() {
   }
   FFMPEGV_LOG("find codec: %s", codec->name);
 
+  ForceEnablingFFmpegDebugLogs();
+
   ffmpeg::FFmpegPixelFormat fmt =
       ffmpeg::ToSupportedFFmpegPixelFormat(mConfig.mSourcePixelFormat);
   if (fmt == ffmpeg::FFMPEG_PIX_FMT_NONE) {
@@ -890,6 +892,15 @@ RefPtr<MediaRawData> FFmpegVideoEncoder<LIBAV_VER>::ToMediaRawData(
   data->mTimecode =
       media::TimeUnit(aPacket->dts, static_cast<int64_t>(mConfig.mFramerate));
   return data;
+}
+
+void FFmpegVideoEncoder<LIBAV_VER>::ForceEnablingFFmpegDebugLogs() {
+#if DEBUG
+  if (!getenv("MOZ_AV_LOG_LEVEL") &&
+      MOZ_LOG_TEST(sFFmpegVideoLog, LogLevel::Debug)) {
+    mLib->av_log_set_level(AV_LOG_DEBUG);
+  }
+#endif  // DEBUG
 }
 
 }  // namespace mozilla
