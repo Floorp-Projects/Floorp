@@ -439,6 +439,12 @@ struct PlainDate final {
 
   // [1, 31]
   int32_t day = 0;
+
+  bool operator==(const PlainDate& other) const {
+    return year == other.year && month == other.month && day == other.day;
+  }
+
+  bool operator!=(const PlainDate& other) const { return !(*this == other); }
 };
 
 /**
@@ -463,6 +469,14 @@ struct PlainTime final {
 
   // [0, 999]
   int32_t nanosecond = 0;
+
+  bool operator==(const PlainTime& other) const {
+    return hour == other.hour && minute == other.minute &&
+           second == other.second && millisecond == other.millisecond &&
+           microsecond == other.microsecond && nanosecond == other.nanosecond;
+  }
+
+  bool operator!=(const PlainTime& other) const { return !(*this == other); }
 };
 
 /**
@@ -471,6 +485,14 @@ struct PlainTime final {
 struct PlainDateTime final {
   PlainDate date;
   PlainTime time;
+
+  bool operator==(const PlainDateTime& other) const {
+    return date == other.date && time == other.time;
+  }
+
+  bool operator!=(const PlainDateTime& other) const {
+    return !(*this == other);
+  }
 };
 
 /**

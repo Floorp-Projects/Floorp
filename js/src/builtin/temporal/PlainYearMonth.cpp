@@ -334,9 +334,11 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
   if (!otherYearMonth) {
     return false;
   }
+  auto* unwrappedOtherYearMonth = &otherYearMonth.unwrap();
+  auto otherYearMonthDate = ToPlainDate(unwrappedOtherYearMonth);
 
   Rooted<Wrapped<PlainYearMonthObject*>> other(cx, otherYearMonth);
-  Rooted<CalendarValue> otherCalendar(cx, otherYearMonth.unwrap().calendar());
+  Rooted<CalendarValue> otherCalendar(cx, unwrappedOtherYearMonth->calendar());
   if (!otherCalendar.wrap(cx)) {
     return false;
   }
@@ -349,9 +351,9 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
     return false;
   }
 
-  // Steps 5-7.
-  Rooted<PlainObject*> resolvedOptions(cx);
+  // Steps 5-6.
   DifferenceSettings settings;
+  Rooted<PlainObject*> resolvedOptions(cx);
   if (args.hasDefined(1)) {
     Rooted<JSObject*> options(
         cx, RequireObjectArg(cx, "options", ToName(operation), args[1]));
@@ -372,14 +374,6 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
                                &settings)) {
       return false;
     }
-
-    // Step 7.
-    Rooted<Value> largestUnitValue(
-        cx, StringValue(TemporalUnitToString(cx, settings.largestUnit)));
-    if (!DefineDataProperty(cx, resolvedOptions, cx->names().largestUnit,
-                            largestUnitValue)) {
-      return false;
-    }
   } else {
     // Steps 5-6.
     settings = {
@@ -388,11 +382,30 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
         TemporalRoundingMode::Trunc,
         Increment{1},
     };
+  }
 
-    // Step 7. (Not applicable in our implementation.)
+  // Step 7.
+  if (ToPlainDate(yearMonth) == otherYearMonthDate) {
+    auto* obj = CreateTemporalDuration(cx, {});
+    if (!obj) {
+      return false;
+    }
+
+    args.rval().setObject(*obj);
+    return true;
   }
 
   // Step 8.
+  if (resolvedOptions) {
+    Rooted<Value> largestUnitValue(
+        cx, StringValue(TemporalUnitToString(cx, settings.largestUnit)));
+    if (!DefineDataProperty(cx, resolvedOptions, cx->names().largestUnit,
+                            largestUnitValue)) {
+      return false;
+    }
+  }
+
+  // Step 9.
   JS::RootedVector<PropertyKey> fieldNames(cx);
   if (!CalendarFields(cx, calendar,
                       {CalendarField::MonthCode, CalendarField::Year},
@@ -400,47 +413,47 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
     return false;
   }
 
-  // Step 9.
+  // Step 10.
   Rooted<PlainObject*> thisFields(
       cx, PrepareTemporalFields(cx, yearMonth, fieldNames));
   if (!thisFields) {
     return false;
   }
 
-  // Step 10.
+  // Step 11.
   Value one = Int32Value(1);
   auto handleOne = Handle<Value>::fromMarkedLocation(&one);
   if (!DefineDataProperty(cx, thisFields, cx->names().day, handleOne)) {
     return false;
   }
 
-  // Step 11.
+  // Step 12.
   Rooted<Wrapped<PlainDateObject*>> thisDate(
       cx, CalendarDateFromFields(cx, calendar, thisFields));
   if (!thisDate) {
     return false;
   }
 
-  // Step 12.
+  // Step 13.
   Rooted<PlainObject*> otherFields(
       cx, PrepareTemporalFields(cx, other, fieldNames));
   if (!otherFields) {
     return false;
   }
 
-  // Step 13.
+  // Step 14.
   if (!DefineDataProperty(cx, otherFields, cx->names().day, handleOne)) {
     return false;
   }
 
-  // Step 14.
+  // Step 15.
   Rooted<Wrapped<PlainDateObject*>> otherDate(
       cx, CalendarDateFromFields(cx, calendar, otherFields));
   if (!otherDate) {
     return false;
   }
 
-  // Step 15.
+  // Step 16.
   Duration result;
   if (resolvedOptions) {
     if (!CalendarDateUntil(cx, calendar, thisDate, otherDate, resolvedOptions,
@@ -457,10 +470,10 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
   // We only care about years and months here, all other fields are set to zero.
   Duration duration = {result.years, result.months};
 
-  // Step 16.
+  // Step 17.
   if (settings.smallestUnit != TemporalUnit::Month ||
       settings.roundingIncrement != Increment{1}) {
-    // Steps 16.a-b.
+    // Steps 17.a-b.
     Duration rounded;
     if (!RoundDuration(cx, duration, settings.roundingIncrement,
                        settings.smallestUnit, settings.roundingMode, thisDate,
@@ -471,7 +484,7 @@ static bool DifferenceTemporalPlainYearMonth(JSContext* cx,
     duration = {rounded.years, rounded.months};
   }
 
-  // Step 17.
+  // Step 18.
   if (operation == TemporalDifference::Since) {
     duration = duration.negate();
   }

@@ -1406,9 +1406,11 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
   if (!wrappedOther) {
     return false;
   }
-  Rooted<Wrapped<PlainDateObject*>> other(cx, wrappedOther);
+  auto* unwrappedOther = &wrappedOther.unwrap();
+  auto otherDate = ToPlainDate(unwrappedOther);
 
-  Rooted<CalendarValue> otherCalendar(cx, wrappedOther.unwrap().calendar());
+  Rooted<Wrapped<PlainDateObject*>> other(cx, wrappedOther);
+  Rooted<CalendarValue> otherCalendar(cx, unwrappedOther->calendar());
   if (!otherCalendar.wrap(cx)) {
     return false;
   }
@@ -1418,9 +1420,9 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
     return false;
   }
 
-  // Steps 4-7.
+  // Steps 4-6.
   DifferenceSettings settings;
-  Duration duration;
+  Rooted<PlainObject*> resolvedOptions(cx);
   if (args.hasDefined(1)) {
     Rooted<JSObject*> options(
         cx, RequireObjectArg(cx, "options", ToName(operation), args[1]));
@@ -1429,8 +1431,7 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
     }
 
     // Step 4.
-    Rooted<PlainObject*> resolvedOptions(cx,
-                                         SnapshotOwnProperties(cx, options));
+    resolvedOptions = SnapshotOwnProperties(cx, options);
     if (!resolvedOptions) {
       return false;
     }
@@ -1442,6 +1443,9 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
       return false;
     }
 
+    // FIXME: spec issue - move CreateDataPropertyOrThrow after fast path for
+    // consistency with DifferenceTemporalPlainYearMonth.
+
     // Step 6.
     Rooted<Value> largestUnitValue(
         cx, StringValue(TemporalUnitToString(cx, settings.largestUnit)));
@@ -1449,14 +1453,6 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
                             largestUnitValue)) {
       return false;
     }
-
-    // Step 7.
-    Duration result;
-    if (!CalendarDateUntil(cx, calendar, temporalDate, other, resolvedOptions,
-                           &result)) {
-      return false;
-    }
-    duration = result.date();
   } else {
     // Steps 4-6.
     settings = {
@@ -1465,8 +1461,29 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
         TemporalRoundingMode::Trunc,
         Increment{1},
     };
+  }
 
-    // Step 7.
+  // Step 7.
+  if (ToPlainDate(temporalDate) == otherDate) {
+    auto* obj = CreateTemporalDuration(cx, {});
+    if (!obj) {
+      return false;
+    }
+
+    args.rval().setObject(*obj);
+    return true;
+  }
+
+  // Step 8.
+  Duration duration;
+  if (resolvedOptions) {
+    Duration result;
+    if (!CalendarDateUntil(cx, calendar, temporalDate, other, resolvedOptions,
+                           &result)) {
+      return false;
+    }
+    duration = result.date();
+  } else {
     Duration result;
     if (!CalendarDateUntil(cx, calendar, temporalDate, other,
                            settings.largestUnit, &result)) {
@@ -1475,10 +1492,10 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
     duration = result.date();
   }
 
-  // Step 8.
+  // Step 9.
   if (settings.smallestUnit != TemporalUnit::Day ||
       settings.roundingIncrement != Increment{1}) {
-    // Steps 8.a-b.
+    // Steps 9.a-b.
     if (!temporal::RoundDuration(cx, duration.date(),
                                  settings.roundingIncrement,
                                  settings.smallestUnit, settings.roundingMode,
@@ -1487,7 +1504,7 @@ static bool DifferenceTemporalPlainDate(JSContext* cx,
     }
   }
 
-  // Step 9.
+  // Step 10.
   if (operation == TemporalDifference::Since) {
     duration = duration.negate();
   }
