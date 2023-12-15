@@ -55,6 +55,8 @@ prefs = [
 
 ["browser_shopping_settings.js"]
 
+["browser_shopping_sidebar.js"]
+
 ["browser_shopping_survey.js"]
 
 ["browser_shopping_urlbar.js"]

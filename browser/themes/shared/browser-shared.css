@@ -1166,4 +1166,5 @@ shopping-sidebar {
   min-width: 16.92em;
   max-width: 32.31em;
   width: 320px;
+  box-sizing: content-box;
 }
