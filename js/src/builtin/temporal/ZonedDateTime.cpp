@@ -835,7 +835,7 @@ void js::temporal::NanosecondsAndDays::trace(JSTracer* trc) {
  */
 static bool NanosecondsToDays(
     JSContext* cx, const InstantSpan& nanoseconds,
-    Handle<Wrapped<ZonedDateTimeObject*>> zonedRelativeTo,
+    Handle<ZonedDateTime> zonedRelativeTo,
     mozilla::Maybe<const PlainDateTime&> precalculatedPlainDateTime,
     MutableHandle<NanosecondsAndDays> result) {
   MOZ_ASSERT(IsValidInstantSpan(nanoseconds));
@@ -855,20 +855,9 @@ static bool NanosecondsToDays(
   int32_t sign = nanoseconds < InstantSpan{} ? -1 : 1;
 
   // Step 3.
-  auto* unwrappedZonedRelativeTo = zonedRelativeTo.unwrap(cx);
-  if (!unwrappedZonedRelativeTo) {
-    return false;
-  }
-  auto startNs = ToInstant(unwrappedZonedRelativeTo);
-  Rooted<TimeZoneValue> timeZone(cx, unwrappedZonedRelativeTo->timeZone());
-  Rooted<CalendarValue> calendar(cx, unwrappedZonedRelativeTo->calendar());
-
-  if (!timeZone.wrap(cx)) {
-    return false;
-  }
-  if (!calendar.wrap(cx)) {
-    return false;
-  }
+  auto startNs = zonedRelativeTo.instant();
+  auto timeZone = zonedRelativeTo.timeZone();
+  auto calendar = zonedRelativeTo.calendar();
 
   // Step 5.
   //
@@ -1155,10 +1144,10 @@ static bool NanosecondsToDays(
  * NanosecondsToDays ( nanoseconds, zonedRelativeTo [ ,
  * precalculatedPlainDateTime ] )
  */
-bool js::temporal::NanosecondsToDays(
-    JSContext* cx, const InstantSpan& nanoseconds,
-    Handle<Wrapped<ZonedDateTimeObject*>> zonedRelativeTo,
-    MutableHandle<NanosecondsAndDays> result) {
+bool js::temporal::NanosecondsToDays(JSContext* cx,
+                                     const InstantSpan& nanoseconds,
+                                     Handle<ZonedDateTime> zonedRelativeTo,
+                                     MutableHandle<NanosecondsAndDays> result) {
   return ::NanosecondsToDays(cx, nanoseconds, zonedRelativeTo,
                              mozilla::Nothing(), result);
 }
@@ -1169,7 +1158,7 @@ bool js::temporal::NanosecondsToDays(
  */
 bool js::temporal::NanosecondsToDays(
     JSContext* cx, const InstantSpan& nanoseconds,
-    Handle<Wrapped<ZonedDateTimeObject*>> zonedRelativeTo,
+    Handle<ZonedDateTime> zonedRelativeTo,
     const PlainDateTime& precalculatedPlainDateTime,
     MutableHandle<NanosecondsAndDays> result) {
   return ::NanosecondsToDays(cx, nanoseconds, zonedRelativeTo,
@@ -1245,11 +1234,8 @@ static bool DifferenceZonedDateTime(
   MOZ_ASSERT(IsValidInstantSpan(timeRemainder));
 
   // Step 9.
-  Rooted<ZonedDateTimeObject*> intermediate(
-      cx, CreateTemporalZonedDateTime(cx, intermediateNs, timeZone, calendar));
-  if (!intermediate) {
-    return false;
-  }
+  Rooted<ZonedDateTime> intermediate(
+      cx, ZonedDateTime{intermediateNs, timeZone, calendar});
 
   // Step 10.
   Rooted<NanosecondsAndDays> nanosAndDays(cx);
@@ -1379,11 +1365,12 @@ static bool RoundISODateTime(JSContext* cx, const PlainDateTime& dateTime,
 static bool DifferenceTemporalZonedDateTime(JSContext* cx,
                                             TemporalDifference operation,
                                             const CallArgs& args) {
-  Rooted<ZonedDateTimeObject*> zonedDateTime(
-      cx, &args.thisv().toObject().as<ZonedDateTimeObject>());
-  auto epochInstant = ToInstant(zonedDateTime);
-  Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
-  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
+  Rooted<ZonedDateTime> zonedDateTime(
+      cx, ZonedDateTime{&args.thisv().toObject().as<ZonedDateTimeObject>()});
+
+  auto epochInstant = zonedDateTime.instant();
+  auto timeZone = zonedDateTime.timeZone();
+  auto calendar = zonedDateTime.calendar();
 
   // Step 1. (Not applicable in our implementation.)
 
@@ -1535,8 +1522,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
   Duration roundResult;
   if (!RoundDuration(cx, difference, settings.roundingIncrement,
                      settings.smallestUnit, settings.roundingMode,
-                     Handle<ZonedDateTimeObject*>(zonedDateTime),
-                     precalculatedPlainDateTime, &roundResult)) {
+                     zonedDateTime, precalculatedPlainDateTime, &roundResult)) {
     return false;
   }
 
