@@ -362,17 +362,33 @@ JSString* GetOffsetStringFor(JSContext* cx, JS::Handle<TimeZoneValue> timeZone,
                              JS::Handle<Wrapped<InstantObject*>> instant);
 
 /**
- * GetOffsetNanosecondsFor ( timeZone, instant )
+ * GetOffsetNanosecondsFor ( timeZone, instant [ , getOffsetNanosecondsFor ] )
  */
 bool GetOffsetNanosecondsFor(JSContext* cx, JS::Handle<TimeZoneValue> timeZone,
                              JS::Handle<Wrapped<InstantObject*>> instant,
                              int64_t* offsetNanoseconds);
 
 /**
- * GetOffsetNanosecondsFor ( timeZone, instant )
+ * GetOffsetNanosecondsFor ( timeZone, instant [ , getOffsetNanosecondsFor ] )
+ */
+bool GetOffsetNanosecondsFor(JSContext* cx, JS::Handle<TimeZoneValue> timeZone,
+                             JS::Handle<Wrapped<InstantObject*>> instant,
+                             JS::Handle<JS::Value> getOffsetNanosecondsFor,
+                             int64_t* offsetNanoseconds);
+
+/**
+ * GetOffsetNanosecondsFor ( timeZone, instant [ , getOffsetNanosecondsFor ] )
  */
 bool GetOffsetNanosecondsFor(JSContext* cx, JS::Handle<TimeZoneValue> timeZone,
                              const Instant& instant,
+                             int64_t* offsetNanoseconds);
+
+/**
+ * GetOffsetNanosecondsFor ( timeZone, instant [ , getOffsetNanosecondsFor ] )
+ */
+bool GetOffsetNanosecondsFor(JSContext* cx, JS::Handle<TimeZoneValue> timeZone,
+                             const Instant& instant,
+                             JS::Handle<JS::Value> getOffsetNanosecondsFor,
                              int64_t* offsetNanoseconds);
 
 using InstantVector = JS::StackGCVector<Wrapped<InstantObject*>>;

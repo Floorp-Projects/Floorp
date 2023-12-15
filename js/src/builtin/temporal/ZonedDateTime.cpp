@@ -153,38 +153,37 @@ bool js::temporal::InterpretISODateTimeOffset(
   }
 
   // Step 8.
-  Rooted<Wrapped<InstantObject*>> candidate(cx);
-  for (size_t i = 0; i < possibleInstants.length(); i++) {
-    candidate = possibleInstants[i];
-
+  if (!possibleInstants.empty()) {
     // Step 8.a.
-    int64_t candidateNanoseconds;
-    if (!GetOffsetNanosecondsFor(cx, timeZone, candidate,
-                                 &candidateNanoseconds)) {
-      return false;
-    }
-    MOZ_ASSERT(std::abs(candidateNanoseconds) <
-               ToNanoseconds(TemporalUnit::Day));
+    Rooted<Value> getOffsetNanosecondsFor(cx);
 
     // Step 8.b.
-    if (candidateNanoseconds == offsetNanoseconds) {
-      auto* unwrapped = candidate.unwrap(cx);
-      if (!unwrapped) {
+    if (timeZone.isObject()) {
+      Rooted<JSObject*> timeZoneObj(cx, timeZone.toObject());
+      if (!GetMethodForCall(cx, timeZoneObj,
+                            cx->names().getOffsetNanosecondsFor,
+                            &getOffsetNanosecondsFor)) {
         return false;
       }
-
-      *result = ToInstant(unwrapped);
-      return true;
     }
 
     // Step 8.c.
-    if (matchBehaviour == MatchBehaviour::MatchMinutes) {
+    Rooted<Wrapped<InstantObject*>> candidate(cx);
+    for (size_t i = 0; i < possibleInstants.length(); i++) {
+      candidate = possibleInstants[i];
+
       // Step 8.c.i.
-      int64_t roundedCandidateNanoseconds =
-          RoundNanosecondsToMinutesIncrement(candidateNanoseconds);
+      int64_t candidateNanoseconds;
+      if (!GetOffsetNanosecondsFor(cx, timeZone, candidate,
+                                   getOffsetNanosecondsFor,
+                                   &candidateNanoseconds)) {
+        return false;
+      }
+      MOZ_ASSERT(std::abs(candidateNanoseconds) <
+                 ToNanoseconds(TemporalUnit::Day));
 
       // Step 8.c.ii.
-      if (roundedCandidateNanoseconds == offsetNanoseconds) {
+      if (candidateNanoseconds == offsetNanoseconds) {
         auto* unwrapped = candidate.unwrap(cx);
         if (!unwrapped) {
           return false;
@@ -192,6 +191,24 @@ bool js::temporal::InterpretISODateTimeOffset(
 
         *result = ToInstant(unwrapped);
         return true;
+      }
+
+      // Step 8.c.iii.
+      if (matchBehaviour == MatchBehaviour::MatchMinutes) {
+        // Step 8.c.iii.1.
+        int64_t roundedCandidateNanoseconds =
+            RoundNanosecondsToMinutesIncrement(candidateNanoseconds);
+
+        // Step 8.c.iii.2.
+        if (roundedCandidateNanoseconds == offsetNanoseconds) {
+          auto* unwrapped = candidate.unwrap(cx);
+          if (!unwrapped) {
+            return false;
+          }
+
+          *result = ToInstant(unwrapped);
+          return true;
+        }
       }
     }
   }
