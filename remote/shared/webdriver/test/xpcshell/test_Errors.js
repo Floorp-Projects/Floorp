@@ -27,6 +27,7 @@ const errors = [
   error.NoSuchHandleError,
   error.NoSuchInterceptError,
   error.NoSuchNodeError,
+  error.NoSuchRequestError,
   error.NoSuchScriptError,
   error.NoSuchShadowRootError,
   error.NoSuchWindowError,
@@ -426,6 +427,14 @@ add_task(function test_NoSuchNodeError() {
   equal("NoSuchNodeError", err.name);
   equal("foo", err.message);
   equal("no such node", err.status);
+  ok(err instanceof error.WebDriverError);
+});
+
+add_task(function test_NoSuchRequestError() {
+  let err = new error.NoSuchRequestError("foo");
+  equal("NoSuchRequestError", err.name);
+  equal("foo", err.message);
+  equal("no such request", err.status);
   ok(err instanceof error.WebDriverError);
 });
 

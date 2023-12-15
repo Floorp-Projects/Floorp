@@ -30,6 +30,7 @@ const ERRORS = new Set([
   "NoSuchHistoryEntryError",
   "NoSuchInterceptError",
   "NoSuchNodeError",
+  "NoSuchRequestError",
   "NoSuchScriptError",
   "NoSuchShadowRootError",
   "NoSuchWindowError",
@@ -633,6 +634,21 @@ class NoSuchNodeError extends WebDriverError {
 }
 
 /**
+ * Tried to continue an unknown request.
+ *
+ * @param {string=} message
+ *     Optional string describing error situation.
+ * @param {object=} data
+ *     Additional error data helpful in diagnosing the error.
+ */
+class NoSuchRequestError extends WebDriverError {
+  constructor(message, data = {}) {
+    super(message, data);
+    this.status = "no such request";
+  }
+}
+
+/**
  * A command to switch to a window could not be satisfied because
  * the window could not be found.
  *
@@ -822,6 +838,7 @@ const STATUSES = new Map([
   ["no such history entry", NoSuchHistoryEntryError],
   ["no such intercept", NoSuchInterceptError],
   ["no such node", NoSuchNodeError],
+  ["no such request", NoSuchRequestError],
   ["no such script", NoSuchScriptError],
   ["no such shadow root", NoSuchShadowRootError],
   ["no such window", NoSuchWindowError],
