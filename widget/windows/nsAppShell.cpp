@@ -487,7 +487,7 @@ MOZ_NEVER_INLINE static AtomTableInformation DiagnoseUserAtomTable() {
 }  // namespace
 
 #if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED) && defined(_M_X64)
-MOZ_NEVER_INLINE __attribute__((naked)) void EnableTrapFlag() {
+MOZ_NEVER_INLINE MOZ_NAKED void EnableTrapFlag() {
   asm volatile(
       "pushfq;"
       "orw $0x100,(%rsp);"
@@ -495,9 +495,7 @@ MOZ_NEVER_INLINE __attribute__((naked)) void EnableTrapFlag() {
       "retq;");
 }
 
-MOZ_NEVER_INLINE __attribute__((naked)) void DisableTrapFlag() {
-  asm volatile("retq;");
-}
+MOZ_NEVER_INLINE MOZ_NAKED void DisableTrapFlag() { asm volatile("retq;"); }
 
 #  define SSD_MAX_USER32_STEPS 0x1800
 #  define SSD_MAX_ERROR_STATES 0x200
