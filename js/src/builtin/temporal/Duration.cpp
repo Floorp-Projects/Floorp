@@ -1634,7 +1634,6 @@ bool js::temporal::BalanceTimeDuration(JSContext* cx, const Duration& duration,
 static bool BalancePossiblyInfiniteTimeDurationRelative(
     JSContext* cx, const Duration& duration, TemporalUnit largestUnit,
     Handle<Wrapped<ZonedDateTimeObject*>> relativeTo, TimeDuration* result) {
-  // Step 1.
   auto* unwrappedRelativeTo = relativeTo.unwrap(cx);
   if (!unwrappedRelativeTo) {
     return false;
@@ -1650,33 +1649,45 @@ static bool BalancePossiblyInfiniteTimeDurationRelative(
     return false;
   }
 
+  // Step 1.
+  auto intermediateNs = epochInstant;
+
+  // Step 2.
+  if (duration.days != 0) {
+    // Step 2.a.
+    const auto& startInstant = epochInstant;
+
+    // Step 2.b.
+    PlainDateTime startDateTime;
+    if (!GetPlainDateTimeFor(cx, timeZone, startInstant, &startDateTime)) {
+      return false;
+    }
+
+    // FIXME: spec issue - AddDaysToZonedDateTime can be called without overflow
+
+    // Steps 2.c-d.
+    Rooted<CalendarValue> isoCalendar(cx, CalendarValue(cx->names().iso8601));
+    if (!AddDaysToZonedDateTime(cx, startInstant, startDateTime, timeZone,
+                                isoCalendar, duration.days, &intermediateNs)) {
+      return false;
+    }
+  }
+
+  // Step 3.
   Instant endNs;
-  if (!AddZonedDateTime(cx, epochInstant, timeZone, calendar,
-                        {
-                            0,
-                            0,
-                            0,
-                            duration.days,
-                            duration.hours,
-                            duration.minutes,
-                            duration.seconds,
-                            duration.milliseconds,
-                            duration.microseconds,
-                            duration.nanoseconds,
-                        },
-                        &endNs)) {
+  if (!AddInstant(cx, intermediateNs, duration.time(), &endNs)) {
     return false;
   }
   MOZ_ASSERT(IsValidEpochInstant(endNs));
 
-  // Step 2.
+  // Step 4.
   auto nanoseconds = endNs - epochInstant;
   MOZ_ASSERT(IsValidInstantSpan(nanoseconds));
 
-  // Steps 3-4.
+  // Steps 5-6.
   double days = 0;
   if (TemporalUnit::Year <= largestUnit && largestUnit <= TemporalUnit::Day) {
-    // Step 3.a.
+    // Step 5.a.
     Rooted<temporal::NanosecondsAndDays> nanosAndDays(cx);
     if (!NanosecondsToDays(cx, nanoseconds, relativeTo, &nanosAndDays)) {
       return false;
@@ -1685,30 +1696,30 @@ static bool BalancePossiblyInfiniteTimeDurationRelative(
     // NB: |days| is passed to CreateTimeDurationRecord, which performs
     // |ℝ(𝔽(days))|, so it's safe to convert from BigInt to double here.
 
-    // Step 3.b.
+    // Step 5.b.
     days = nanosAndDays.daysNumber();
     MOZ_ASSERT(IsInteger(days));
 
     // FIXME: spec issue - `result.[[Nanoseconds]]` not created in all branches
 
-    // Step 3.c.
+    // Step 5.c.
     nanoseconds = nanosAndDays.nanoseconds();
     MOZ_ASSERT_IF(days > 0, nanoseconds >= InstantSpan{});
     MOZ_ASSERT_IF(days < 0, nanoseconds <= InstantSpan{});
 
-    // Step 3.d.
+    // Step 5.d.
     largestUnit = TemporalUnit::Hour;
   }
 
-  // Step 5. (Not applicable in our implementation.)
+  // Step 7. (Not applicable in our implementation.)
 
-  // Steps 6-7.
+  // Steps 8-9.
   TimeDuration balanceResult;
   if (auto nanos = nanoseconds.toNanoseconds(); nanos.isValid()) {
-    // Step 6.
+    // Step 8.
     balanceResult = ::BalanceTimeDuration(nanos.value(), largestUnit);
 
-    // Step 7.
+    // Step 9.
     MOZ_ASSERT(IsValidDuration(balanceResult.toDuration()));
   } else {
     Rooted<BigInt*> ns(cx, ToEpochNanoseconds(cx, nanoseconds));
@@ -1716,20 +1727,20 @@ static bool BalancePossiblyInfiniteTimeDurationRelative(
       return false;
     }
 
-    // Step 5.
+    // Step 8.
     if (!::BalancePossiblyInfiniteTimeDurationSlow(cx, ns, largestUnit,
                                                    &balanceResult)) {
       return false;
     }
 
-    // Step 7.
+    // Step 9.
     if (!IsValidDuration(balanceResult.toDuration())) {
       *result = balanceResult;
       return true;
     }
   }
 
-  // Step 8.
+  // Step 10.
   *result = {
       days,
       balanceResult.hours,

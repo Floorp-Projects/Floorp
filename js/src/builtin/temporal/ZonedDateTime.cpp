@@ -698,12 +698,36 @@ static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
   auto& [date, time] = temporalDateTime;
 
   // Step 6.
-  const auto& datePart = date;
+  if (duration.years == 0 && duration.months == 0 && duration.weeks == 0) {
+    // Step 6.a.
+    auto overflow = TemporalOverflow::Constrain;
+    if (maybeOptions) {
+      if (!ToTemporalOverflow(cx, maybeOptions, &overflow)) {
+        return false;
+      }
+    }
+
+    // FIXME: spec bug - |instant| not always created
+
+    // Step 6.b.
+    Instant intermediate;
+    if (!AddDaysToZonedDateTime(cx, epochNanoseconds, temporalDateTime,
+                                timeZone, calendar, duration.days, overflow,
+                                &intermediate)) {
+      return false;
+    }
+
+    // Step 6.c.
+    return AddInstant(cx, intermediate, duration.time(), result);
+  }
 
   // Step 7.
-  auto dateDuration = duration.date();
+  const auto& datePart = date;
 
   // Step 8.
+  auto dateDuration = duration.date();
+
+  // Step 9.
   PlainDate addedDate;
   if (maybeOptions) {
     if (!CalendarDateAdd(cx, calendar, datePart, dateDuration, maybeOptions,
@@ -716,14 +740,14 @@ static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
     }
   }
 
-  // Step 9.
+  // Step 10.
   Rooted<PlainDateTimeWithCalendar> intermediateDateTime(cx);
   if (!CreateTemporalDateTime(cx, {addedDate, time}, calendar,
                               &intermediateDateTime)) {
     return false;
   }
 
-  // Step 10.
+  // Step 11.
   Instant intermediateInstant;
   if (!GetInstantFor(cx, timeZone, intermediateDateTime,
                      TemporalDisambiguation::Compatible,
@@ -731,7 +755,7 @@ static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
     return false;
   }
 
-  // Step 11.
+  // Step 12.
   return AddInstant(cx, intermediateInstant, duration.time(), result);
 }
 
