@@ -941,6 +941,213 @@ static PlainDate AddISODate(const PlainDate& date,
   return ::ConstrainISODate({year, month, date.day});
 }
 
+static bool HasYearsMonthsOrWeeks(const Duration& duration) {
+  return duration.years != 0 || duration.months != 0 || duration.weeks != 0;
+}
+
+static bool AddDate(JSContext* cx, const PlainDate& date,
+                    const Duration& duration, Handle<JSObject*> maybeOptions,
+                    PlainDate* result) {
+  MOZ_ASSERT(!HasYearsMonthsOrWeeks(duration));
+
+  // Steps 1-2. (Not applicable)
+
+  // Step 3.
+  auto overflow = TemporalOverflow::Constrain;
+  if (maybeOptions) {
+    if (!ToTemporalOverflow(cx, maybeOptions, &overflow)) {
+      return false;
+    }
+  }
+
+  // Step 4.
+  TimeDuration daysDuration;
+  if (!BalanceTimeDuration(cx, duration, TemporalUnit::Day, &daysDuration)) {
+    return false;
+  }
+
+  // Step 5.
+  return AddISODate(cx, date, {0, 0, 0, daysDuration.days}, overflow, result);
+}
+
+static bool AddDate(JSContext* cx, Handle<Wrapped<PlainDateObject*>> date,
+                    const Duration& duration, Handle<JSObject*> maybeOptions,
+                    PlainDate* result) {
+  auto* unwrappedDate = date.unwrap(cx);
+  if (!unwrappedDate) {
+    return false;
+  }
+  return ::AddDate(cx, ToPlainDate(unwrappedDate), duration, maybeOptions,
+                   result);
+}
+
+/**
+ * AddDate ( calendar, plainDate, duration [ , options [ , dateAdd ] ] )
+ */
+Wrapped<PlainDateObject*> js::temporal::AddDate(
+    JSContext* cx, Handle<CalendarValue> calendar,
+    Handle<Wrapped<PlainDateObject*>> date, const Duration& duration,
+    Handle<JSObject*> options) {
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  if (HasYearsMonthsOrWeeks(duration)) {
+    return CalendarDateAdd(cx, calendar, date, duration, options);
+  }
+
+  // Steps 3-5.
+  PlainDate resultDate;
+  if (!::AddDate(cx, date, duration, options, &resultDate)) {
+    return nullptr;
+  }
+
+  // Step 6.
+  return CreateTemporalDate(cx, resultDate, calendar);
+}
+
+/**
+ * AddDate ( calendar, plainDate, duration [ , options [ , dateAdd ] ] )
+ */
+Wrapped<PlainDateObject*> js::temporal::AddDate(
+    JSContext* cx, Handle<CalendarValue> calendar,
+    Handle<Wrapped<PlainDateObject*>> date, const Duration& duration,
+    Handle<Value> dateAdd) {
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  if (HasYearsMonthsOrWeeks(duration)) {
+    return CalendarDateAdd(cx, calendar, date, duration, dateAdd);
+  }
+
+  // Steps 3-5.
+  PlainDate resultDate;
+  if (!::AddDate(cx, date, duration, nullptr, &resultDate)) {
+    return nullptr;
+  }
+
+  // Step 6.
+  return CreateTemporalDate(cx, resultDate, calendar);
+}
+
+/**
+ * AddDate ( calendar, plainDate, duration [ , options [ , dateAdd ] ] )
+ */
+Wrapped<PlainDateObject*> js::temporal::AddDate(
+    JSContext* cx, Handle<CalendarValue> calendar,
+    Handle<Wrapped<PlainDateObject*>> date, const Duration& duration,
+    Handle<JSObject*> options, Handle<Value> dateAdd) {
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  if (HasYearsMonthsOrWeeks(duration)) {
+    return CalendarDateAdd(cx, calendar, date, duration, options, dateAdd);
+  }
+
+  // Steps 3-5.
+  PlainDate resultDate;
+  if (!::AddDate(cx, date, duration, options, &resultDate)) {
+    return nullptr;
+  }
+
+  // Step 6.
+  return CreateTemporalDate(cx, resultDate, calendar);
+}
+
+/**
+ * AddDate ( calendar, plainDate, duration [ , options [ , dateAdd ] ] )
+ */
+Wrapped<PlainDateObject*> js::temporal::AddDate(
+    JSContext* cx, Handle<CalendarValue> calendar,
+    Handle<Wrapped<PlainDateObject*>> date,
+    Handle<Wrapped<DurationObject*>> durationObj, Handle<Value> dateAdd) {
+  auto* unwrappedDuration = durationObj.unwrap(cx);
+  if (!unwrappedDuration) {
+    return nullptr;
+  }
+  auto duration = ToDuration(unwrappedDuration);
+
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  if (HasYearsMonthsOrWeeks(duration)) {
+    return CalendarDateAdd(cx, calendar, date, duration, dateAdd);
+  }
+
+  // Steps 3-5.
+  PlainDate resultDate;
+  if (!::AddDate(cx, date, duration, nullptr, &resultDate)) {
+    return nullptr;
+  }
+
+  // Step 6.
+  return CreateTemporalDate(cx, resultDate, calendar);
+}
+
+/**
+ * AddDate ( calendar, plainDate, duration [ , options [ , dateAdd ] ] )
+ */
+Wrapped<PlainDateObject*> js::temporal::AddDate(
+    JSContext* cx, Handle<CalendarValue> calendar,
+    Handle<Wrapped<PlainDateObject*>> date,
+    Handle<Wrapped<DurationObject*>> durationObj, Handle<JSObject*> options) {
+  auto* unwrappedDuration = durationObj.unwrap(cx);
+  if (!unwrappedDuration) {
+    return nullptr;
+  }
+  auto duration = ToDuration(unwrappedDuration);
+
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  if (HasYearsMonthsOrWeeks(duration)) {
+    return CalendarDateAdd(cx, calendar, date, duration, options);
+  }
+
+  // Steps 3-5.
+  PlainDate resultDate;
+  if (!::AddDate(cx, date, duration, options, &resultDate)) {
+    return nullptr;
+  }
+
+  // Step 6.
+  return CreateTemporalDate(cx, resultDate, calendar);
+}
+
+/**
+ * AddDate ( calendar, plainDate, duration [ , options [ , dateAdd ] ] )
+ */
+bool js::temporal::AddDate(JSContext* cx, Handle<CalendarValue> calendar,
+                           const PlainDate& date, const Duration& duration,
+                           Handle<JSObject*> options, PlainDate* result) {
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  if (HasYearsMonthsOrWeeks(duration)) {
+    return CalendarDateAdd(cx, calendar, date, duration, options, result);
+  }
+
+  // Steps 3-6.
+  return ::AddDate(cx, date, duration, options, result);
+}
+
+/**
+ * AddDate ( calendar, plainDate, duration [ , options [ , dateAdd ] ] )
+ */
+bool js::temporal::AddDate(JSContext* cx, Handle<CalendarValue> calendar,
+                           Handle<Wrapped<PlainDateObject*>> date,
+                           const Duration& duration, Handle<Value> dateAdd,
+                           PlainDate* result) {
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  if (HasYearsMonthsOrWeeks(duration)) {
+    return CalendarDateAdd(cx, calendar, date, duration, dateAdd, result);
+  }
+
+  // Steps 3-6.
+  return ::AddDate(cx, date, duration, nullptr, result);
+}
+
 /**
  * CompareISODate ( y1, m1, d1, y2, m2, d2 )
  */
@@ -2004,7 +2211,7 @@ static bool PlainDate_add(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 5.
-  auto result = CalendarDateAdd(cx, calendar, temporalDate, duration, options);
+  auto result = AddDate(cx, calendar, temporalDate, duration, options);
   if (!result) {
     return false;
   }
@@ -2051,8 +2258,7 @@ static bool PlainDate_subtract(JSContext* cx, const CallArgs& args) {
   auto negatedDuration = duration.negate();
 
   // Step 6.
-  auto result =
-      CalendarDateAdd(cx, calendar, temporalDate, negatedDuration, options);
+  auto result = AddDate(cx, calendar, temporalDate, negatedDuration, options);
   if (!result) {
     return false;
   }
