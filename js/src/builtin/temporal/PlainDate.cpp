@@ -531,40 +531,6 @@ static Wrapped<PlainDateObject*> ToTemporalDate(JSContext* cx,
 /**
  * ToTemporalDate ( item [ , options ] )
  */
-PlainDateObject* js::temporal::ToTemporalDate(
-    JSContext* cx, Handle<Wrapped<ZonedDateTimeObject*>> item) {
-  // Step 3.b.
-  auto* zonedDateTime = item.unwrap(cx);
-  if (!zonedDateTime) {
-    return nullptr;
-  }
-
-  auto epochInstant = ToInstant(zonedDateTime);
-  Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
-  Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
-
-  if (!timeZone.wrap(cx)) {
-    return nullptr;
-  }
-  if (!calendar.wrap(cx)) {
-    return nullptr;
-  }
-
-  // Step 3.b.i. (Not applicable)
-
-  // Steps 3.b.ii-iii.
-  PlainDateTime dateTime;
-  if (!GetPlainDateTimeFor(cx, timeZone, epochInstant, &dateTime)) {
-    return nullptr;
-  }
-
-  // Step 3.b.iv.
-  return CreateTemporalDate(cx, dateTime.date, calendar);
-}
-
-/**
- * ToTemporalDate ( item [ , options ] )
- */
 bool js::temporal::ToTemporalDate(JSContext* cx, Handle<Value> item,
                                   PlainDate* result) {
   auto obj = ::ToTemporalDate(cx, item, nullptr);
