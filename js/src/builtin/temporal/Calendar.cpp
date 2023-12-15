@@ -1433,19 +1433,6 @@ bool js::temporal::CalendarDay(JSContext* cx, Handle<CalendarValue> calendar,
 /**
  * CalendarDay ( calendar, dateLike )
  */
-bool js::temporal::CalendarDayWrapped(
-    JSContext* cx, Handle<CalendarValue> calendar,
-    Handle<Wrapped<PlainDateObject*>> dateLike, MutableHandle<Value> result) {
-  auto* unwrapped = dateLike.unwrap(cx);
-  if (!unwrapped) {
-    return false;
-  }
-  return CalendarDay(cx, calendar, dateLike, ToPlainDate(unwrapped), result);
-}
-
-/**
- * CalendarDay ( calendar, dateLike )
- */
 bool js::temporal::CalendarDay(JSContext* cx, Handle<CalendarValue> calendar,
                                const PlainDateTime& dateTime,
                                MutableHandle<Value> result) {

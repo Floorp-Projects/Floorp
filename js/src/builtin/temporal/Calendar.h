@@ -432,13 +432,6 @@ bool CalendarDay(JSContext* cx, JS::Handle<CalendarValue> calendar,
                  JS::MutableHandle<JS::Value> result);
 
 /**
- * CalendarDay ( calendar, dateLike )
- */
-bool CalendarDayWrapped(JSContext* cx, JS::Handle<CalendarValue> calendar,
-                        JS::Handle<Wrapped<PlainDateObject*>> dateLike,
-                        JS::MutableHandle<JS::Value> result);
-
-/**
  * CalendarDayOfWeek ( calendar, dateLike )
  */
 bool CalendarDayOfWeek(JSContext* cx, JS::Handle<CalendarValue> calendar,
