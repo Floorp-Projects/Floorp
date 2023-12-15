@@ -99,6 +99,13 @@ function isChannelFromSystemPrincipal(channel) {
  * @returns {number}
  */
 function getChannelBrowsingContextID(channel) {
+  // `frameBrowsingContextID` is non-0 if the channel is loading an iframe.
+  // If available, use it instead of `browsingContextID` which is exceptionally
+  // set to the parent's BrowsingContext id for such channels.
+  if (channel.loadInfo.frameBrowsingContextID) {
+    return channel.loadInfo.frameBrowsingContextID;
+  }
+
   if (channel.loadInfo.browsingContextID) {
     return channel.loadInfo.browsingContextID;
   }
