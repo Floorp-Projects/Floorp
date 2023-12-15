@@ -2872,43 +2872,66 @@ static bool AddDuration(
   //
   // clang-format on
 
-  // Steps 10-12.
-  PlainDateTime startDateTime;
-  if (!precalculatedPlainDateTime) {
-    if (!GetPlainDateTimeFor(cx, timeZone, zonedRelativeTo.instant(),
-                             &startDateTime)) {
+  // Step 10.
+  bool startDateTimeNeeded = largestUnit <= TemporalUnit::Day;
+
+  // Steps 11-14 and 16.
+  if (startDateTimeNeeded) {
+    // Steps 11-12.
+    PlainDateTime startDateTime;
+    if (!precalculatedPlainDateTime) {
+      if (!GetPlainDateTimeFor(cx, timeZone, zonedRelativeTo.instant(),
+                               &startDateTime)) {
+        return false;
+      }
+    } else {
+      startDateTime = *precalculatedPlainDateTime;
+    }
+
+    // Step 13.
+    Instant intermediateNs;
+    if (!AddZonedDateTime(cx, zonedRelativeTo.instant(), timeZone, calendar,
+                          one, startDateTime, &intermediateNs)) {
       return false;
     }
-  } else {
-    startDateTime = *precalculatedPlainDateTime;
+    MOZ_ASSERT(IsValidEpochInstant(intermediateNs));
+
+    // Step 14.
+    Instant endNs;
+    if (!AddZonedDateTime(cx, intermediateNs, timeZone, calendar, two,
+                          &endNs)) {
+      return false;
+    }
+    MOZ_ASSERT(IsValidEpochInstant(endNs));
+
+    // Step 15. (Not applicable)
+
+    // Step 16.
+    return DifferenceZonedDateTime(cx, zonedRelativeTo.instant(), endNs,
+                                   timeZone, calendar, largestUnit,
+                                   startDateTime, result);
   }
 
-  // Step 13.
+  // Steps 11-12. (Not applicable)
+
+  // Step 13. (Inlined AddZonedDateTime, step 6.)
   Instant intermediateNs;
-  if (!AddZonedDateTime(cx, zonedRelativeTo.instant(), timeZone, calendar, one,
-                        startDateTime, &intermediateNs)) {
+  if (!AddInstant(cx, zonedRelativeTo.instant(), one, &intermediateNs)) {
     return false;
   }
   MOZ_ASSERT(IsValidEpochInstant(intermediateNs));
 
-  // Step 14.
+  // Step 14. (Inlined AddZonedDateTime, step 6.)
   Instant endNs;
-  if (!AddZonedDateTime(cx, intermediateNs, timeZone, calendar, two, &endNs)) {
+  if (!AddInstant(cx, intermediateNs, two, &endNs)) {
     return false;
   }
   MOZ_ASSERT(IsValidEpochInstant(endNs));
 
-  // Step 15.
-  if (largestUnit > TemporalUnit::Day) {
-    // Steps 15.a-b.
-    return DifferenceInstant(cx, zonedRelativeTo.instant(), endNs, Increment{1},
-                             TemporalUnit::Nanosecond, largestUnit,
-                             TemporalRoundingMode::HalfExpand, result);
-  }
-
-  // Step 16.
-  return DifferenceZonedDateTime(cx, zonedRelativeTo.instant(), endNs, timeZone,
-                                 calendar, largestUnit, startDateTime, result);
+  // Steps 15.a-b.
+  return DifferenceInstant(cx, zonedRelativeTo.instant(), endNs, Increment{1},
+                           TemporalUnit::Nanosecond, largestUnit,
+                           TemporalRoundingMode::HalfExpand, result);
 }
 
 /**
