@@ -527,6 +527,31 @@ async function createAndRemoveDefaultFolder() {
   await PlacesUtils.bookmarks.remove(tempFolder);
 }
 
+async function showLibraryColumn(library, columnName) {
+  const viewMenu = library.document.getElementById("viewMenu");
+  const viewMenuPopup = library.document.getElementById("viewMenuPopup");
+  const onViewMenuPopup = new Promise(resolve => {
+    viewMenuPopup.addEventListener("popupshown", () => resolve(), {
+      once: true,
+    });
+  });
+  EventUtils.synthesizeMouseAtCenter(viewMenu, {}, library);
+  await onViewMenuPopup;
+
+  const viewColumns = library.document.getElementById("viewColumns");
+  const viewColumnsPopup = viewColumns.querySelector("menupopup");
+  const onViewColumnsPopup = new Promise(resolve => {
+    viewColumnsPopup.addEventListener("popupshown", () => resolve(), {
+      once: true,
+    });
+  });
+  EventUtils.synthesizeMouseAtCenter(viewColumns, {}, library);
+  await onViewColumnsPopup;
+
+  const columnMenu = library.document.getElementById(`menucol_${columnName}`);
+  EventUtils.synthesizeMouseAtCenter(columnMenu, {}, library);
+}
+
 registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("browser.bookmarks.defaultLocation");
   await PlacesTransactions.clearTransactionsHistory(true, true);

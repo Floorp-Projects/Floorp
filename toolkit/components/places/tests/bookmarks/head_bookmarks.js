@@ -85,6 +85,7 @@ function expectPlacesObserverNotifications(
             frecency: event.frecency,
             hidden: event.hidden,
             visitCount: event.visitCount,
+            dateAdded: event.dateAdded,
             lastVisitDate: event.lastVisitDate,
           });
           break;

@@ -366,6 +366,7 @@ BookmarkObserver.prototype = {
             frecency: event.frecency,
             hidden: event.hidden,
             visitCount: event.visitCount,
+            dateAdded: event.dateAdded,
             lastVisitDate: event.lastVisitDate,
           };
           this.notifications.push({ name: "bookmark-moved", params });

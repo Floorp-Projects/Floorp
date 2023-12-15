@@ -34,6 +34,7 @@ class PlacesBookmarkMoved final : public PlacesBookmark {
     event->mFrecency = aInitDict.mFrecency;
     event->mHidden = aInitDict.mHidden;
     event->mVisitCount = aInitDict.mVisitCount;
+    event->mDateAdded = aInitDict.mDateAdded;
     if (!aInitDict.mLastVisitDate.IsNull()) {
       event->mLastVisitDate.SetValue(aInitDict.mLastVisitDate.Value());
     } else {
@@ -61,6 +62,7 @@ class PlacesBookmarkMoved final : public PlacesBookmark {
   uint64_t Frecency() { return mFrecency; }
   bool Hidden() { return mHidden; }
   uint32_t VisitCount() { return mVisitCount; }
+  uint64_t DateAdded() { return mDateAdded; }
   Nullable<uint64_t> GetLastVisitDate() { return mLastVisitDate; }
 
   int32_t mIndex;
@@ -71,6 +73,7 @@ class PlacesBookmarkMoved final : public PlacesBookmark {
   int64_t mFrecency;
   bool mHidden;
   uint32_t mVisitCount;
+  uint64_t mDateAdded;
   Nullable<uint64_t> mLastVisitDate;
 
  private:

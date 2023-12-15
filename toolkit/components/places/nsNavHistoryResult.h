@@ -793,7 +793,8 @@ class nsNavHistoryFolderResultNode final
                        const nsACString& aNewParentGUID, uint16_t aSource,
                        const nsACString& aURI, const nsACString& aTitle,
                        const nsAString& aTags, int64_t aFrecency, bool aHidden,
-                       uint32_t aVisitCount, PRTime aLastVisitDate);
+                       uint32_t aVisitCount, PRTime aLastVisitDate,
+                       PRTime aDateAdded);
   nsresult OnItemVisited(nsIURI* aURI, int64_t aVisitId, PRTime aTime,
                          int64_t aFrecency);
 

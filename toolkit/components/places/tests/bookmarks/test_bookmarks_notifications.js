@@ -298,10 +298,12 @@ add_task(async function update_move_same_folder() {
     type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
   });
+  const dateAdded = new Date();
   let bm = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: new URL("http://move.example.com/"),
+    dateAdded,
   });
   let bmItemId = await PlacesTestUtils.promiseItemId(bm.guid);
   let bmOldIndex = bm.index;
@@ -332,6 +334,7 @@ add_task(async function update_move_same_folder() {
       frecency: 1,
       hidden: false,
       visitCount: 0,
+      dateAdded: dateAdded.getTime(),
       lastVisitDate: null,
     },
   ]);
@@ -363,16 +366,19 @@ add_task(async function update_move_same_folder() {
       frecency: 1,
       hidden: false,
       visitCount: 0,
+      dateAdded: dateAdded.getTime(),
       lastVisitDate: null,
     },
   ]);
 });
 
 add_task(async function update_move_different_folder() {
+  const dateAdded = new Date();
   let bm = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: new URL("http://move.example.com/"),
+    dateAdded,
   });
   let folder = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -406,16 +412,19 @@ add_task(async function update_move_different_folder() {
       frecency: 1,
       hidden: false,
       visitCount: 0,
+      dateAdded: dateAdded.getTime(),
       lastVisitDate: null,
     },
   ]);
 });
 
 add_task(async function update_move_tag_folder() {
+  const dateAdded = new Date();
   let bm = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: new URL("http://move.example.com/"),
+    dateAdded,
   });
   let folder = await PlacesUtils.bookmarks.insert({
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -450,6 +459,7 @@ add_task(async function update_move_tag_folder() {
       frecency: 1,
       hidden: false,
       visitCount: 0,
+      dateAdded: dateAdded.getTime(),
       lastVisitDate: null,
     },
   ]);
@@ -1023,29 +1033,35 @@ add_task(async function eraseEverything_reparented_notification() {
 });
 
 add_task(async function reorder_notification() {
+  const dateAdded = new Date();
   let bookmarks = [
     {
       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
       url: "http://example1.com/",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      dateAdded,
     },
     {
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      dateAdded,
     },
     {
       type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      dateAdded,
     },
     {
       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
       url: "http://example2.com/",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      dateAdded,
     },
     {
       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
       url: "http://example3.com/",
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      dateAdded,
     },
   ];
   let sorted = [];
@@ -1088,6 +1104,7 @@ add_task(async function reorder_notification() {
       frecency: child.url ? 1 : 0,
       hidden: false,
       visitCount: 0,
+      dateAdded: dateAdded.getTime(),
       lastVisitDate: null,
     });
   }

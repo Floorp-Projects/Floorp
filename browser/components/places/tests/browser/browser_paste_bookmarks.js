@@ -20,16 +20,25 @@ add_setup(async function () {
 
   PlacesOrganizer = organizer.PlacesOrganizer;
   ContentTree = organizer.ContentTree;
+
+  // Show date added column.
+  await showLibraryColumn(organizer, "placesContentDateAdded");
 });
 
 add_task(async function paste() {
   info("Selecting BookmarksToolbar in the left pane");
   PlacesOrganizer.selectLeftPaneBuiltIn("BookmarksToolbar");
 
+  let dateAdded = new Date();
+  dateAdded.setHours(10);
+  dateAdded.setMinutes(10);
+  dateAdded.setSeconds(0);
+
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     url: TEST_URL,
     title: "0",
+    dateAdded,
   });
 
   ContentTree.view.selectItems([bookmark.guid]);
@@ -56,6 +65,18 @@ add_task(async function paste() {
   );
   Assert.equal(tree.children[0].title, "0", "Should have the correct title");
   Assert.equal(tree.children[0].uri, TEST_URL, "Should have the correct URL");
+  Assert.equal(
+    tree.children[0].dateAdded,
+    PlacesUtils.toPRTime(dateAdded),
+    "Should have the correct date"
+  );
+
+  Assert.ok(
+    ContentTree.view.view
+      .getCellText(0, ContentTree.view.columns.placesContentDateAdded)
+      .startsWith(`${dateAdded.getHours()}:${dateAdded.getMinutes()}`),
+    "Should reflect the data added"
+  );
 
   await PlacesUtils.bookmarks.remove(tree.children[0].guid);
 });
