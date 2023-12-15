@@ -710,7 +710,7 @@ class TestEmitterBasic(unittest.TestCase):
 
         expected = {
             "mochitest": ["runtests.py", "utils.py"],
-            "testing/mochitest": ["mochitest.py", "mochitest.ini"],
+            "testing/mochitest": ["mochitest.py", "mochitest.toml"],
         }
 
         for path, strings in objs[0].files.walk():
@@ -842,7 +842,7 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertEqual(len(o.installs), 3)
         expected = [
             mozpath.normpath(mozpath.join(o.install_prefix, "../.well-known/foo.txt")),
-            mozpath.join(o.install_prefix, "absolute-support.ini"),
+            mozpath.join(o.install_prefix, "absolute-support.toml"),
             mozpath.join(o.install_prefix, "test_file.js"),
         ]
         paths = sorted([v[0] for v in o.installs.values()])
@@ -879,18 +879,18 @@ class TestEmitterBasic(unittest.TestCase):
             self.read_topsrcdir(reader)
 
     def test_test_manifest_install_includes(self):
-        """Ensure that any [include:foo.ini] are copied to the objdir."""
+        """Ensure that any [include:foo.toml] are copied to the objdir."""
         reader = self.reader("test-manifest-install-includes")
 
         objs = self.read_topsrcdir(reader)
         self.assertEqual(len(objs), 1)
         o = objs[0]
         self.assertEqual(len(o.installs), 3)
-        self.assertEqual(o.manifest_relpath, "mochitest.ini")
-        self.assertEqual(o.manifest_obj_relpath, "mochitest.ini")
+        self.assertEqual(o.manifest_relpath, "mochitest.toml")
+        self.assertEqual(o.manifest_obj_relpath, "mochitest.toml")
         expected = [
-            mozpath.normpath(mozpath.join(o.install_prefix, "common.ini")),
-            mozpath.normpath(mozpath.join(o.install_prefix, "mochitest.ini")),
+            mozpath.normpath(mozpath.join(o.install_prefix, "common.toml")),
+            mozpath.normpath(mozpath.join(o.install_prefix, "mochitest.toml")),
             mozpath.normpath(mozpath.join(o.install_prefix, "test_foo.html")),
         ]
         paths = sorted([v[0] for v in o.installs.values()])
@@ -935,20 +935,20 @@ class TestEmitterBasic(unittest.TestCase):
                     "support2": False,
                 },
             },
-            "mochitest.ini": {
+            "mochitest.toml": {
                 "flavor": "mochitest",
-                "installs": {"mochitest.ini": False, "test_mochitest.js": True},
+                "installs": {"mochitest.toml": False, "test_mochitest.js": True},
                 "external": {"external1", "external2"},
             },
             "chrome.toml": {
                 "flavor": "chrome",
                 "installs": {"chrome.toml": False, "test_chrome.js": True},
             },
-            "xpcshell.ini": {
+            "xpcshell.toml": {
                 "flavor": "xpcshell",
                 "dupe": True,
                 "installs": {
-                    "xpcshell.ini": False,
+                    "xpcshell.toml": False,
                     "test_xpcshell.js": True,
                     "head1": False,
                     "head2": False,
@@ -956,7 +956,7 @@ class TestEmitterBasic(unittest.TestCase):
             },
             "reftest.list": {"flavor": "reftest", "installs": {}},
             "crashtest.list": {"flavor": "crashtest", "installs": {}},
-            "python.ini": {"flavor": "python", "installs": {"python.ini": False}},
+            "python.toml": {"flavor": "python", "installs": {"python.toml": False}},
         }
 
         for o in objs:

@@ -1,0 +1,10 @@
+[DEFAULT]
+subsuite = "mozbase"
+
+["test_chown.py"]
+
+["test_escape_command_line.py"]
+
+["test_is_app_installed.py"]
+
+["test_socket_connection.py"]

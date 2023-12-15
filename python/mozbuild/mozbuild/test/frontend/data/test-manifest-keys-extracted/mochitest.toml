@@ -1,0 +1,11 @@
+[DEFAULT]
+support-files = [
+    "external1",
+    "external2",
+]
+generated-files = [
+    "external1",
+    "external2",
+]
+
+["test_mochitest.js"]

@@ -1,0 +1,8 @@
+[DEFAULT]
+support-files = [
+  "bar.js",
+  "foo.js",
+  "bar.js",
+]
+
+["test_baz.js"]

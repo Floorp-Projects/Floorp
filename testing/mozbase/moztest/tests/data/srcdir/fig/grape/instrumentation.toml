@@ -1,0 +1,4 @@
+[DEFAULT]
+
+["src/TestInstrumentationA.java"]
+subsuite = "background"

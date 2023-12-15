@@ -1,0 +1,4 @@
+[DEFAULT]
+support-files = ["support-file.txt"]
+
+["test_bar.js"]

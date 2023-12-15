@@ -1,0 +1,23 @@
+[DEFAULT]
+subsuite = "mozbase"
+
+["test_detached.py"]
+skip-if = ["os == 'win'"]  # Bug 1493796
+
+["test_kill.py"]
+
+["test_misc.py"]
+
+["test_output.py"]
+
+["test_params.py"]
+
+["test_pid.py"]
+
+["test_poll.py"]
+
+["test_process_reader.py"]
+
+["test_run_and_wait.py"]
+
+["test_wait.py"]

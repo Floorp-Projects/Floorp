@@ -1,0 +1,16 @@
+[DEFAULT]
+subsuite = "mozbase"
+
+["test_command_line.py"]
+run-if = ["python == 3"] # The mozproxy command line interface is designed to run on Python 3.
+
+["test_mitm_addons.py"]
+run-if = ["python == 3"] # The mitm addons are designed to run on Python 3.
+
+["test_proxy.py"]
+
+["test_recording.py"]
+
+["test_recordings.py"]
+
+["test_utils.py"]

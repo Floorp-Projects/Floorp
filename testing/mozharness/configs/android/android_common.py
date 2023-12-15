@@ -276,7 +276,7 @@ config = {
                 "--apk=%(installer_path)s",
                 "--no-logfiles",
                 "--symbols-path=%(symbols_path)s",
-                "--manifest=tests/xpcshell.ini",
+                "--manifest=tests/xpcshell.toml",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--log-tbpl-level=%(log_tbpl_level)s",
                 "--threads=4",

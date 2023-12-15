@@ -1027,7 +1027,7 @@ class RecursiveMakeBackend(MakeBackend):
         # Make the master test manifest files.
         for flavor, t in self._test_manifests.items():
             install_prefix, manifests = t
-            manifest_stem = mozpath.join(install_prefix, "%s.ini" % flavor)
+            manifest_stem = mozpath.join(install_prefix, "%s.toml" % flavor)
             self._write_master_test_manifest(
                 mozpath.join(self.environment.topobjdir, "_tests", manifest_stem),
                 manifests,
@@ -1757,7 +1757,7 @@ class RecursiveMakeBackend(MakeBackend):
             )
 
             for manifest in sorted(manifests):
-                master.write("[include:%s]\n" % manifest)
+                master.write('["include:%s"]\n' % manifest)
 
     class Substitution(object):
         """BaseConfigSubstitution-like class for use with _create_makefile."""

@@ -58,10 +58,10 @@ class TestTestManifestBackend(BackendTester):
 
         self.assertEqual(
             set(mozpath.relpath(k, env.topsrcdir) for k in o.keys()),
-            set(["dir1/xpcshell.ini", "xpcshell.ini", "mochitest.ini"]),
+            set(["dir1/xpcshell.toml", "xpcshell.toml", "mochitest.toml"]),
         )
 
-        manifest_path = mozpath.join(env.topsrcdir, "xpcshell.ini")
+        manifest_path = mozpath.join(env.topsrcdir, "xpcshell.toml")
         self.assertIn("here", o[manifest_path])
         self.assertIn("support-files", o[manifest_path])
 
@@ -81,8 +81,8 @@ class TestTestManifestBackend(BackendTester):
             sources,
             set(
                 [
-                    mozpath.join(env.topsrcdir, "mochitest.ini"),
-                    mozpath.join(env.topsrcdir, "mochitest-common.ini"),
+                    mozpath.join(env.topsrcdir, "mochitest.toml"),
+                    mozpath.join(env.topsrcdir, "mochitest-common.toml"),
                     mozpath.join(env.topsrcdir, "moz.build"),
                     status_path,
                 ]

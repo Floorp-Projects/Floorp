@@ -1,0 +1,16 @@
+[DEFAULT]
+subsuite = "mozbase"
+
+["test_capture.py"]
+
+["test_errorsummary.py"]
+
+["test_formatters.py"]
+
+["test_logger.py"]
+
+["test_logtypes.py"]
+
+["test_structured.py"]
+
+["test_terminal_colors.py"]

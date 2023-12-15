@@ -2,6 +2,6 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 
 MOCHITEST_MANIFESTS += [
-    "mochitest1.ini",
-    "mochitest2.ini",
+    "mochitest1.toml",
+    "mochitest2.toml",
 ]
