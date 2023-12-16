@@ -170,7 +170,10 @@
         "partnerCode": "firefox-b-d"
       },
       "variants": [
-        { "environment": { "allRegionsAndLocales": true } },
+        {
+          "environment": { "allRegionsAndLocales": true },
+          "telemetrySuffix": "b-d"
+        },
         {
           "environment": { "channels": ["esr"] },
           "partnerCode": "firefox-b-e",
@@ -2436,7 +2439,14 @@
         },
         "partnerCode": "5338192028"
       },
-      "variants": [{ "environment": { "locales": ["br", "fr", "wo"] } }]
+      "variants": [
+        {
+          "environment": {
+            "locales": ["br", "fr", "wo"],
+            "excludedRegions": ["be", "ca", "ch"]
+          }
+        }
+      ]
     },
     {
       "recordType": "engine",
@@ -2588,7 +2598,12 @@
         "partnerCode": "5338192028"
       },
       "variants": [
-        { "environment": { "locales": ["cy", "en-GB", "gd"] } },
+        {
+          "environment": {
+            "locales": ["cy", "en-GB", "gd"],
+            "excludedRegions": ["au", "ie"]
+          }
+        },
         { "environment": { "locales": ["sco"], "regions": ["gb"] } },
         { "environment": { "locales": ["en-US"], "regions": ["gb"] } }
       ]
@@ -2778,7 +2793,12 @@
         "partnerCode": "5338192028"
       },
       "variants": [
-        { "environment": { "locales": ["fy-NL", "nl"] } },
+        {
+          "environment": {
+            "locales": ["fy-NL", "nl"],
+            "excludedRegions": ["be"]
+          }
+        },
         { "environment": { "locales": ["en-US"], "regions": ["nl"] } }
       ]
     },
@@ -3041,7 +3061,7 @@
     },
     {
       "recordType": "engine",
-      "identifier": "amazon",
+      "identifier": "amazon-au",
       "base": {
         "name": "Amazon.com.au",
         "classification": "unknown",
@@ -3092,7 +3112,7 @@
     },
     {
       "recordType": "engine",
-      "identifier": "amazon-spain",
+      "identifier": "amazon-es",
       "base": {
         "name": "Amazon.es",
         "classification": "unknown",
@@ -3108,7 +3128,7 @@
     },
     {
       "recordType": "engine",
-      "identifier": "amazon-sweden",
+      "identifier": "amazon-se",
       "base": {
         "name": "Amazon.se",
         "classification": "unknown",
@@ -3176,7 +3196,7 @@
     },
     {
       "recordType": "engine",
-      "identifier": "gmx",
+      "identifier": "gmx-de",
       "base": {
         "name": "GMX Suche",
         "classification": "unknown",
