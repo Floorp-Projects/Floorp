@@ -6,7 +6,7 @@
 
 testEngine_setup();
 
-add_task(async function setup() {
+add_setup(async () => {
   Services.prefs.setBoolPref("browser.urlbar.suggest.searches", false);
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://mozilla.org/link/"),

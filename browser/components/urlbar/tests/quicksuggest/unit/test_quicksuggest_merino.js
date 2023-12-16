@@ -96,7 +96,7 @@ ChromeUtils.defineLazyGetter(
   () => UrlbarProviderQuickSuggest._test_merino
 );
 
-add_task(async function init() {
+add_setup(async () => {
   await MerinoTestUtils.server.start();
 
   // Set up the remote settings client with the test data.

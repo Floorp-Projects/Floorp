@@ -16,7 +16,7 @@ ChromeUtils.defineESModuleGetters(this, {
 // behavior doesn't depend on the chunk size.
 const TEST_CHUNK_SIZE = 100;
 
-add_task(async function init() {
+add_setup(async () => {
   // Sanity check the actual `chunkSize` value.
   Assert.equal(
     typeof SuggestionsMap.chunkSize,

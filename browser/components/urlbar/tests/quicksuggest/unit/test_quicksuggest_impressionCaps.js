@@ -101,7 +101,7 @@ let gSandbox;
 let gDateNowStub;
 let gStartupDateMsStub;
 
-add_task(async function init() {
+add_setup(async () => {
   // Disable search suggestions so we don't hit the network.
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
 

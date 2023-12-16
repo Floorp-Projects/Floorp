@@ -39,7 +39,7 @@ const DEFAULT_PREFS = {
 // added, set this to an object like the one in test_quicksuggest_migrate_v1.js.
 const TEST_OVERRIDES = undefined;
 
-add_task(async function init() {
+add_setup(async () => {
   await UrlbarTestUtils.initNimbusFeature();
 });
 

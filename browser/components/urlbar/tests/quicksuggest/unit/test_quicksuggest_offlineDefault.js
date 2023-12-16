@@ -45,7 +45,7 @@ const PREFS = [
   },
 ];
 
-add_task(async function init() {
+add_setup(async () => {
   await UrlbarTestUtils.initNimbusFeature();
 });
 

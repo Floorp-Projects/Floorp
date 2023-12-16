@@ -12,7 +12,7 @@ ChromeUtils.defineESModuleGetters(this, {
 
 const { WEATHER_RS_DATA, WEATHER_SUGGESTION } = MerinoTestUtils;
 
-add_task(async function init() {
+add_setup(async () => {
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
     remoteSettingsRecords: [
       {

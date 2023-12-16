@@ -16,7 +16,7 @@ const HISTOGRAM_RESPONSE = "FX_URLBAR_MERINO_RESPONSE_WEATHER";
 
 const { WEATHER_RS_DATA, WEATHER_SUGGESTION } = MerinoTestUtils;
 
-add_task(async function init() {
+add_setup(async () => {
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
     remoteSettingsRecords: [
       {

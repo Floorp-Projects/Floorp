@@ -24,7 +24,7 @@ let expectedMatch = (key, inputLength) => ({
 
 testEngine_setup();
 
-add_task(async function init() {
+add_setup(async () => {
   UrlbarPrefs.set("quickactions.enabled", true);
   UrlbarPrefs.set("suggest.quickactions", true);
 
