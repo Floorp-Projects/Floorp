@@ -10,7 +10,7 @@
 
 let testEngine;
 
-add_task(async function init() {
+add_setup(async () => {
   // Disable search suggestions for a less verbose test.
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
   // Disable tab-to-search onboarding results. Those are covered in

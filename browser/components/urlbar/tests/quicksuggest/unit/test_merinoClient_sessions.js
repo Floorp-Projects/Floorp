@@ -14,7 +14,7 @@ const { SEARCH_PARAMS } = MerinoClient;
 
 let gClient;
 
-add_task(async function init() {
+add_setup(async () => {
   gClient = new MerinoClient();
   await MerinoTestUtils.server.start();
 });

@@ -33,7 +33,7 @@ const REMOTE_SETTINGS_DATA = [
   },
 ];
 
-add_setup(async function init() {
+add_setup(async () => {
   // Disable search suggestions so we don't hit the network.
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
 

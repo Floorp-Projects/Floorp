@@ -388,7 +388,7 @@ async function removeOpenPages(aUri, aCount = 1, aUserContextId = 0) {
  * suggestions.
  */
 function testEngine_setup() {
-  add_task(async function setup() {
+  add_setup(async () => {
     await cleanupPlaces();
     let engine = await addTestSuggestionsEngine();
     let oldDefaultEngine = await Services.search.getDefault();

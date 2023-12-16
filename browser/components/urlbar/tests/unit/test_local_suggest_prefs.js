@@ -11,7 +11,7 @@
 
 testEngine_setup();
 
-add_task(async function setup() {
+add_setup(async () => {
   Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
   Services.prefs.setBoolPref("browser.urlbar.suggest.engines", false);
   Services.prefs.setBoolPref("browser.urlbar.suggest.quickactions", false);

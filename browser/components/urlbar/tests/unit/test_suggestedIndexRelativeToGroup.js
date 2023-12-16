@@ -38,7 +38,7 @@ const RESULT_GROUPS = {
 };
 
 let sandbox;
-add_task(function setuo() {
+add_setup(async () => {
   sandbox = lazy.sinon.createSandbox();
   registerCleanupFunction(() => {
     sandbox.restore();
