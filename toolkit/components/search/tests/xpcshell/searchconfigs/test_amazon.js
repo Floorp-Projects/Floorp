@@ -289,44 +289,47 @@ add_task(async function test_searchConfig_amazon() {
   await test.run();
 });
 
-add_task(async function test_searchConfig_amazon_pre89() {
-  const version = "88.0";
-  if (SearchUtils.newSearchConfigEnabled) {
-    updateAppInfo({
-      name: "XPCShell",
-      ID: "xpcshell@tests.mozilla.org",
-      version,
-      platformVersion: version,
-    });
-  } else {
-    AddonTestUtils.createAppInfo(
-      "xpcshell@tests.mozilla.org",
-      "XPCShell",
-      version,
-      version
+add_task(
+  { skip_if: () => SearchUtils.newSearchConfigEnabled },
+  async function test_searchConfig_amazon_pre89() {
+    const version = "88.0";
+    if (SearchUtils.newSearchConfigEnabled) {
+      updateAppInfo({
+        name: "XPCShell",
+        ID: "xpcshell@tests.mozilla.org",
+        version,
+        platformVersion: version,
+      });
+    } else {
+      AddonTestUtils.createAppInfo(
+        "xpcshell@tests.mozilla.org",
+        "XPCShell",
+        version,
+        version
+      );
+    }
+    // For pre-89, Amazon has a slightly different config.
+    let details = test._config.details.find(
+      d => d.telemetryId == "amazondotcom-us"
     );
+    details.telemetryId = "amazondotcom";
+
+    // nl not present due to urls that don't work.
+    let availableIn = test._config.available.included;
+    availableIn[0].regions = availableIn[0].regions.filter(
+      r => r != "be" && r != "nl"
+    );
+    availableIn.push({
+      regions: ["be"],
+      locales: ["fr"],
+    });
+    // Due to the way the exclusions work, no Amazon present in nl/be in the
+    // dot com locales for pre-89.
+    test._config.available.excluded[0].regions.push("be", "nl");
+    test._config.details = test._config.details.filter(
+      d => d.telemetryId != "amazon-nl"
+    );
+
+    await test.run();
   }
-  // For pre-89, Amazon has a slightly different config.
-  let details = test._config.details.find(
-    d => d.telemetryId == "amazondotcom-us"
-  );
-  details.telemetryId = "amazondotcom";
-
-  // nl not present due to urls that don't work.
-  let availableIn = test._config.available.included;
-  availableIn[0].regions = availableIn[0].regions.filter(
-    r => r != "be" && r != "nl"
-  );
-  availableIn.push({
-    regions: ["be"],
-    locales: ["fr"],
-  });
-  // Due to the way the exclusions work, no Amazon present in nl/be in the
-  // dot com locales for pre-89.
-  test._config.available.excluded[0].regions.push("be", "nl");
-  test._config.details = test._config.details.filter(
-    d => d.telemetryId != "amazon-nl"
-  );
-
-  await test.run();
-});
+);
