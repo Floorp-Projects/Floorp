@@ -193,6 +193,10 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">يامان غەرەزلىك تور بېكەت مەسىلىسى</string>
 
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+       <p>%1$s دىكى تور بېكەت ھۇجۇم تور بېكىتى دەپ خەۋەر قىلىنغان ۋە بىخەتەرلىك مايىللىقىڭىزغا ئاساسەن چەكلەنگەن. </p>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">كېرەكسىز بېكەت مەسىلىسى</string>
 

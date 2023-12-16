@@ -491,6 +491,8 @@
     <string name="preferences_sign_in_description_2">ٹیباں، نشانیاں، پاس ورڈ تے ٻیا ٻہوں کجھ ہم وقت کرݨ کیتے سائن ان تھیوو۔</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">فائرفوکس کھاتہ</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">Mozilla کھاتہ</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">ہم وقت کرݨ کوں ولدا شروع کرݨ کیتے ولدا کنکٹ کرو</string>
     <!-- Preference for language -->
@@ -2112,4 +2114,4 @@
     <string name="a11y_action_label_read_article">مضمون پڑھو</string>
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">ٻیا سکھݨ کیتے لنک کھولو</string>
-</resources>
+    </resources>
