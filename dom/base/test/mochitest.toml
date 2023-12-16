@@ -1,6 +1,9 @@
 [DEFAULT]
 tags = "condprof"
-prefs = ["formhelper.autozoom.force-disable.test-only=true"]
+prefs = [
+  "formhelper.autozoom.force-disable.test-only=true",
+  "plugins.rewrite_youtube_embeds=true",
+]
 support-files = [
   "audio.ogg",
   "iframe_bug962251.html",
