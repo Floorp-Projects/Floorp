@@ -2481,8 +2481,9 @@ impl TileCacheInstance {
                 }
             }
             CompositorSurfaceKind::Underlay => {
-                // Underlay strategy relies on the slice being opaque if a mask is needed
-                if prim_clip_chain.needs_mask && self.backdrop.kind.is_none() {
+                // Underlay strategy relies on the slice being opaque if a mask is needed,
+                // and only one underlay can rely on a mask.
+                if prim_clip_chain.needs_mask && (self.backdrop.kind.is_none() || !self.underlays.is_empty()) {
                     return SurfacePromotionResult::Failed;
                 }
             }
@@ -3720,7 +3721,7 @@ impl TileCacheInstance {
         }
 
         // Assign z-order for each underlay
-        for underlay in &mut self.underlays {
+        for underlay in self.underlays.iter_mut().rev() {
             underlay.z_id = state.composite_state.z_generator.next();
         }
 
