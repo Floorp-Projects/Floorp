@@ -1782,5 +1782,6 @@ skip-if = [
 skip-if = [
   "http3",
   "http2",
+  "os == 'linux' && debug" #Bug 1870499 and other bugs with crashes after this test start
 ]
 # Please keep alphabetical order.
