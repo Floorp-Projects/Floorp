@@ -7,6 +7,8 @@ support-files = [
 
 ["browser_keyboard_navigation.js"]
 
+["browser_tab_key_order.js"]
+
 ["browser_parent_menuitems.js"]
 
 ["browser_reason_dropdown.js"]
