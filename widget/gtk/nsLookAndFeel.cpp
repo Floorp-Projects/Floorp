@@ -1357,7 +1357,7 @@ void nsLookAndFeel::MaybeApplyAdwaitaOverrides() {
     light.mSidebar = light.mHeaderBar =
         light.mTitlebar = {NS_RGB(0xeb, 0xeb, 0xeb), NS_RGB(0x2f, 0x2f, 0x2f)};
     light.mHeaderBarInactive = light.mTitlebarInactive = {
-        NS_RGB(0xf2, 0xf2, 0xf2), NS_RGB(0x98, 0x98, 0x98)};
+        NS_RGB(0xf2, 0xf2, 0xf2), NS_RGB(0x2f, 0x2f, 0x2f)};
     light.mThreeDShadow = NS_RGB(0xe0, 0xe0, 0xe0);
     light.mSidebarBorder = NS_RGBA(0, 0, 0, 18);
   }
@@ -1370,7 +1370,7 @@ void nsLookAndFeel::MaybeApplyAdwaitaOverrides() {
     dark.mSidebar = dark.mHeaderBar =
         dark.mTitlebar = {NS_RGB(0x30, 0x30, 0x30), NS_RGB(0xff, 0xff, 0xff)};
     dark.mHeaderBarInactive = dark.mTitlebarInactive = {
-        NS_RGB(0x24, 0x24, 0x24), NS_RGB(0x92, 0x92, 0x92)};
+        NS_RGB(0x24, 0x24, 0x24), NS_RGB(0xff, 0xff, 0xff)};
     // headerbar_shade_color
     dark.mThreeDShadow = NS_RGB(0x1f, 0x1f, 0x1f);
     dark.mSidebarBorder = NS_RGBA(0, 0, 0, 92);

@@ -54,9 +54,6 @@
     --toolbox-non-lwt-textcolor: light-dark(rgb(21, 20, 26), rgb(251, 251, 254));
     --toolbox-non-lwt-bgcolor-inactive: var(--toolbox-non-lwt-bgcolor);
     --toolbox-non-lwt-textcolor-inactive: var(--toolbox-non-lwt-textcolor);
-    &:where([tabsintitlebar]) {
-      --toolbox-non-lwt-textcolor-inactive: light-dark(rgba(21, 20, 26, .6), rgba(251, 251, 254, .6));
-    }
 
     --toolbar-color: light-dark(rgb(21, 20, 26), rgb(251, 251, 254));
     --toolbar-non-lwt-bgcolor: light-dark(#f9f9fb, rgb(43, 42, 51));
