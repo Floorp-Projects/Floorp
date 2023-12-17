@@ -110,7 +110,7 @@
     <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
     <string name="mozac_feature_prompts_manage_credit_cards">ניהול כרטיסי אשראי</string>
     <!-- Text for the title of a save credit card dialog. -->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_title">לשמור את הכרטיס הזה בצורה מאובטחת?</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_title">לשמור את הכרטיס הזה באופן מאובטח?</string>
     <!-- Text for the title of an update credit card dialog. -->
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">לעדכן את תאריך התפוגה של הכרטיס?</string>
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
@@ -131,8 +131,6 @@
     <string name="mozac_feature_prompts_account_picture">תמונת חשבון</string>
     <!-- Title of the Identity Credential provider dialog chooser. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">בחירת ספק התחברות</string>
-    <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account" moz:removedIn="119" tools:ignore="UnusedResources">בחירת חשבון</string>
     <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
     <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">כניסה עם חשבון %1$s</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
