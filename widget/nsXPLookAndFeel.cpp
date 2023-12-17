@@ -735,6 +735,7 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
       break;
     case ColorID::Windowtext:  // --in-content-page-color
     case ColorID::MozDialogtext:
+    case ColorID::MozSidebartext:
     case ColorID::Fieldtext:
     case ColorID::Buttontext:  // --in-content-button-text-color (via
                                // --in-content-page-color)
@@ -753,6 +754,7 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
       break;
     case ColorID::Buttonshadow:
     case ColorID::Threedshadow:
+    case ColorID::MozSidebarborder:
     case ColorID::Threedlightshadow:
     case ColorID::Buttonborder:  // --in-content-box-border-color computed
                                  // with kWindowText above
@@ -767,6 +769,7 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
                                  // --in-content-item-selected
       color = NS_RGB(0, 221, 255);
       break;
+    case ColorID::MozSidebar:
     case ColorID::Field:
     case ColorID::Buttonface:  // --in-content-button-background
     case ColorID::MozColheader:
