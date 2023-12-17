@@ -4059,6 +4059,13 @@ var SessionStoreInternal = {
       winData.sizemodeBeforeMinimized = winData.sizemode;
     }
 
+    let windowUuid = aWindow.gWorkspaces._windowId;
+    if (windowUuid) {
+      winData.windowUuid = windowUuid;
+    } else {
+      delete winData.windowUuid;
+    }
+
     var hidden = WINDOW_HIDEABLE_FEATURES.filter(function (aItem) {
       return aWindow[aItem] && !aWindow[aItem].visible;
     });
@@ -5104,7 +5111,8 @@ var SessionStoreInternal = {
         "screenY" in aWinData ? +aWinData.screenY : NaN,
         aWinData.sizemode || "",
         aWinData.sizemodeBeforeMinimized || "",
-        aWinData.sidebar || ""
+        aWinData.sidebar || "",
+        aWinData.windowUuid || ""
       );
     }, 0);
   },
@@ -5134,7 +5142,8 @@ var SessionStoreInternal = {
     aTop,
     aSizeMode,
     aSizeModeBeforeMinimized,
-    aSidebar
+    aSidebar,
+    aWindowId
   ) {
     var win = aWindow;
     var _this = this;
@@ -5284,6 +5293,20 @@ var SessionStoreInternal = {
       ) {
         aWindow.SidebarUI.showInitially(aSidebar);
       }
+
+      let { WorkspacesWindowUuidService } = ChromeUtils.importESModule(
+        "resource:///modules/WorkspacesService.sys.mjs"
+      );
+
+      // workspaces Window Id
+      if (aWindowId) {
+        console.log("SessionStore: restoring window with id " + aWindowId);
+        aWindow.gWorkspaces._windowId = aWindowId;
+      } else {
+        aWindow.gWorkspaces._windowId = WorkspacesWindowUuidService.getGeneratedUuid();
+      }
+      aWindow.gWorkspaces.init();
+
       // since resizing/moving a window brings it to the foreground,
       // we might want to re-focus the last focused window
       if (this.windowToFocus) {
