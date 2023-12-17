@@ -61,16 +61,6 @@
   height: calc(var(--tab-min-height) - var(--tabs-navbar-shadow-size));
 }
 
-.browser-toolbar {
-  appearance: none;
-}
-
-.browser-toolbar:not(.titlebar-color) {
-  background-color: var(--toolbar-bgcolor);
-  background-clip: padding-box;
-  color: var(--toolbar-color);
-}
-
 #print-preview-toolbar:not(:-moz-lwtheme) {
   appearance: auto;
   -moz-default-appearance: toolbox;

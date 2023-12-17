@@ -61,15 +61,6 @@
   border-top: 1px solid rgba(0,0,0,0.65);
 }
 
-.browser-toolbar {
-  appearance: none;
-
-  &:not(.titlebar-color) {
-    background: var(--toolbar-bgcolor);
-    color: var(--toolbar-color);
-  }
-}
-
 /* ----- BOOKMARK TOOLBAR ----- */
 
 #nav-bar-customization-target > #wrapper-personal-bookmarks > #personal-bookmarks {
