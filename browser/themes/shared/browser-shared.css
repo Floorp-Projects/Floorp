@@ -159,9 +159,6 @@
 
     &:-moz-window-inactive {
       background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
-      :root[tabsintitlebar] & {
-        color: color-mix(in srgb, currentColor 60%, transparent);
-      }
     }
   }
 
@@ -184,6 +181,10 @@
     color: var(--toolbar-color);
     border-style: none;
   }
+}
+
+:root[tabsintitlebar] #titlebar:-moz-window-inactive {
+  opacity: .6;
 }
 
 /* Add space to beginning of toolbar and make that space click the first <toolbarbutton> */
