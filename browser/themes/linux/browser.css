@@ -94,17 +94,6 @@
   }
 }
 
-.browser-toolbar {
-  padding: 0;
-
-  &:not(.titlebar-color) {
-    background-color: var(--toolbar-bgcolor);
-    color: var(--toolbar-color);
-    appearance: none;
-    border-style: none;
-  }
-}
-
 /* Bookmark menus */
 .bookmark-item {
   &:is(menu, menuitem) {
