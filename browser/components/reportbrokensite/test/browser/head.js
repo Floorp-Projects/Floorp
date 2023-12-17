@@ -734,3 +734,33 @@ function HelpMenu(win = window) {
 function ProtectionsPanel(win = window) {
   return new ProtectionsPanelHelper(win);
 }
+
+function pressKeyAndAwait(event, key, config = {}) {
+  const win = config.window || window;
+  if (!event.then) {
+    event = BrowserTestUtils.waitForEvent(win, event, config.timeout || 200);
+  }
+  EventUtils.synthesizeKey(key, config, win);
+  return event;
+}
+
+async function pressKeyAndGetFocus(key, config = {}) {
+  return (await pressKeyAndAwait("focus", key, config)).target;
+}
+
+async function tabTo(match, win = window) {
+  const config = { window: win };
+  const { activeElement } = win.document;
+  if (activeElement?.matches(match)) {
+    return activeElement;
+  }
+  let initial = await pressKeyAndGetFocus("VK_TAB", config);
+  let target = initial;
+  do {
+    if (target.matches(match)) {
+      return target;
+    }
+    target = await pressKeyAndGetFocus("VK_TAB", config);
+  } while (target && target !== initial);
+  return undefined;
+}
