@@ -100,7 +100,7 @@ add_task(async function testVPNCardVisibility() {
       ["browser.contentblocking.report.vpn_regions", "us,ca,nz,sg,my,gb"],
       [
         "browser.vpn_promo.disallowed_regions",
-        "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr,ua",
+        "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr",
       ],
     ],
   });
@@ -158,7 +158,7 @@ add_task(async function testVPNPromoBanner() {
       ["browser.contentblocking.report.vpn_regions", "us,ca,nz,sg,my,gb"],
       [
         "browser.vpn_promo.disallowed_regions",
-        "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr,ua",
+        "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr",
       ],
       ["browser.contentblocking.report.hide_vpn_banner", false],
     ],
@@ -248,7 +248,7 @@ add_task(async function testVPNDoesNotShowChina() {
       ["browser.contentblocking.report.vpn_regions", "us,ca,nz,sg,my,gb,cn"],
       [
         "browser.vpn_promo.disallowed_regions",
-        "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr,ua",
+        "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr",
       ],
       ["browser.contentblocking.report.hide_vpn_banner", false],
     ],
