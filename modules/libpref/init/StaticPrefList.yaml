@@ -4723,11 +4723,6 @@
   value: true
   mirror: always
 
-- name: dom.webidl.crosscontext_hasinstance.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # WebShare API - exposes navigator.share()
 - name: dom.webshare.enabled
   type: bool
