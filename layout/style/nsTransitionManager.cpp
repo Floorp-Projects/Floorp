@@ -72,6 +72,7 @@ static void ExpandTransitionProperty(nsCSSPropertyID aProperty,
 
   if (aProperty == eCSSPropertyExtra_variable) {
     AnimatedPropertyID property(aCustomName);
+    aHandler(property);
     return;
   }
 
@@ -142,14 +143,12 @@ bool nsTransitionManager::DoUpdateTransitions(
     AnimatedPropertyIDSet allTransitionProperties;
     if (checkProperties) {
       for (uint32_t i = aStyle.mTransitionPropertyCount; i-- != 0;) {
-        ExpandTransitionProperty(
-            aStyle.GetTransitionProperty(i),
-            aStyle.GetTransitionUnknownProperty(i),
-            [&](const AnimatedPropertyID& aProperty) {
-              AnimatedPropertyID property = aProperty;
-              property.mID = nsCSSProps::Physicalize(aProperty.mID, aNewStyle);
-              allTransitionProperties.AddProperty(aProperty);
-            });
+        ExpandTransitionProperty(aStyle.GetTransitionProperty(i),
+                                 aStyle.GetTransitionUnknownProperty(i),
+                                 [&](const AnimatedPropertyID& aProperty) {
+                                   allTransitionProperties.AddProperty(
+                                       aProperty.ToPhysical(aNewStyle));
+                                 });
       }
     }
 
@@ -267,10 +266,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
       !aElementTransitions || &aElementTransitions->mElement == aElement,
       "Element mismatch");
 
-  AnimatedPropertyID property = aProperty;
-  if (!property.IsCustom()) {
-    property.mID = nsCSSProps::Physicalize(property.mID, aNewStyle);
-  }
+  AnimatedPropertyID property = aProperty.ToPhysical(aNewStyle);
 
   // A later item in transition-property already specified a transition for
   // this property, so we ignore this one.
@@ -317,7 +313,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
   AnimationValue startValue, endValue;
   const StyleShouldTransitionResult result =
       Servo_ComputedValues_ShouldTransition(
-          &aOldStyle, &aNewStyle, &aProperty,
+          &aOldStyle, &aNewStyle, &property,
           oldTransition ? oldTransition->ToValue().mServo.get() : nullptr,
           &startValue.mServo, &endValue.mServo);
 
