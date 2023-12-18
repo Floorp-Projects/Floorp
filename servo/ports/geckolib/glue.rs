@@ -632,7 +632,7 @@ pub extern "C" fn Servo_AnimationCompose(
     use style::gecko_bindings::bindings::Gecko_GetProgressFromComputedTiming;
 
     let property = match OwnedPropertyDeclarationId::from_gecko_animated_property_id(css_property) {
-        Some(property) if property.is_animatable() => property,
+        Some(property) if property.as_borrowed().is_animatable() => property,
         _ => return,
     };
 
@@ -700,8 +700,8 @@ macro_rules! get_property_id_from_nscsspropertyid {
 macro_rules! get_property_id_from_animatedpropertyid {
     ($property_id: ident, $ret: expr) => {{
         match PropertyId::from_gecko_animated_property_id($property_id) {
-            Ok(property_id) => property_id,
-            Err(()) => {
+            Some(property_id) => property_id,
+            None => {
                 return $ret;
             },
         }
@@ -722,7 +722,6 @@ pub extern "C" fn Servo_AnimationValue_Serialize(
             &get_property_id_from_animatedpropertyid!(property, ()),
             buffer,
             None,
-            None, /* No extra custom properties */
             &data.stylist,
         );
     debug_assert!(rv.is_ok());
@@ -1420,14 +1419,12 @@ pub unsafe extern "C" fn Servo_Property_GetCSSValuesForProperty(
 
 #[no_mangle]
 pub extern "C" fn Servo_Property_IsAnimatable(prop: &structs::AnimatedPropertyID) -> bool {
-    OwnedPropertyDeclarationId::from_gecko_animated_property_id(prop)
-        .map_or(false, |p| p.is_animatable())
+    PropertyId::from_gecko_animated_property_id(prop).map_or(false, |p| p.is_animatable())
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_Property_IsTransitionable(prop: &structs::AnimatedPropertyID) -> bool {
-    OwnedPropertyDeclarationId::from_gecko_animated_property_id(prop)
-        .map_or(false, |p| p.is_transitionable())
+    PropertyId::from_gecko_animated_property_id(prop).map_or(false, |p| p.is_transitionable())
 }
 
 #[no_mangle]
@@ -4723,20 +4720,17 @@ pub extern "C" fn Servo_DeclarationBlock_SerializeOneValue(
     property_id: &structs::AnimatedPropertyID,
     buffer: &mut nsACString,
     computed_values: Option<&ComputedValues>,
-    custom_properties: Option<&LockedDeclarationBlock>,
     data: &PerDocumentStyleData,
 ) {
     let property_id = get_property_id_from_animatedpropertyid!(property_id, ());
 
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
-    let custom_properties = custom_properties.map(|block| block.read_with(&guard));
     let data = data.borrow();
     let rv = decls.read_with(&guard).single_value_to_css(
         &property_id,
         buffer,
         computed_values,
-        custom_properties,
         &data.stylist,
     );
     debug_assert!(rv.is_ok());
@@ -6130,7 +6124,7 @@ impl<'a> PrioritizedPropertyIter<'a> {
             .enumerate()
             .map(|(index, pair)| {
                 let property = PropertyId::from_gecko_animated_property_id(&pair.mProperty)
-                    .unwrap_or(PropertyId::Shorthand(ShorthandId::All));
+                    .unwrap_or(PropertyId::NonCustom(ShorthandId::All.into()));
                 PropertyAndIndex { property, index }
             })
             .collect();
@@ -6141,6 +6135,10 @@ impl<'a> PrioritizedPropertyIter<'a> {
             sorted_property_indices,
             curr: 0,
         }
+    }
+
+    fn reset(&mut self) {
+        self.curr = 0;
     }
 }
 
@@ -6165,6 +6163,9 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
     raw_data: &PerDocumentStyleData,
     computed_keyframes: &mut nsTArray<structs::ComputedKeyframeValues>,
 ) {
+    use style::properties::PropertyDeclaration;
+    use style::custom_properties::CustomPropertiesBuilder;
+    use style::applicable_declarations::CascadePriority;
     let data = raw_data.borrow();
     let element = GeckoElement(element);
     let pseudo = PseudoElement::from_pseudo_type(pseudo_type, None);
@@ -6201,9 +6202,42 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
         let ref mut animation_values = computed_keyframes[index];
 
         let mut seen = PropertyDeclarationIdSet::default();
+        let mut iter = PrioritizedPropertyIter::new(&keyframe.mPropertyValues);
+
+        // FIXME: This is pretty much a hack. Instead, the AnimatedValue should be better
+        // integrated in the cascade. This would allow us to fix revert() too.
+        context.builder.custom_properties = {
+            let mut builder = CustomPropertiesBuilder::new_with_properties(
+                &data.stylist,
+                style.custom_properties().clone(),
+                &context,
+            );
+            let priority = CascadePriority::same_tree_author_normal_at_root_layer();
+            for property in &mut iter {
+                let is_custom = match PropertyId::from_gecko_animated_property_id(&property.mProperty) {
+                    Some(PropertyId::Custom(..)) => true,
+                    _ => false,
+                };
+                if !is_custom {
+                    break; // Custom props are guaranteed to sort earlier.
+                }
+                if property.mServoDeclarationBlock.mRawPtr.is_null() {
+                    continue;
+                }
+                let declarations = unsafe { &*property.mServoDeclarationBlock.mRawPtr };
+                let guard = declarations.read_with(&guard);
+                for decl in guard.normal_declaration_iter() {
+                    if let PropertyDeclaration::Custom(ref declaration) = *decl {
+                        builder.cascade(declaration, priority);
+                    }
+                }
+            }
+            iter.reset();
+            builder.build()
+        };
 
         let mut property_index = 0;
-        for property in PrioritizedPropertyIter::new(&keyframe.mPropertyValues) {
+        for property in iter {
             if simulate_compute_values_failure(property) {
                 continue;
             }
@@ -6247,7 +6281,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
                 };
 
             if property.mServoDeclarationBlock.mRawPtr.is_null() {
-                if let Some(ref prop) =
+                if let Some(prop) =
                     OwnedPropertyDeclarationId::from_gecko_animated_property_id(&property.mProperty)
                 {
                     maybe_append_animation_value(prop.as_borrowed(), None);
@@ -6257,7 +6291,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
 
             let declarations = unsafe { &*property.mServoDeclarationBlock.mRawPtr };
             let guard = declarations.read_with(&guard);
-            let iter = guard.to_animation_value_iter(&mut context, &default_values, None);
+            let iter = guard.to_animation_value_iter(&mut context, &default_values);
 
             for value in iter {
                 maybe_append_animation_value(value.id(), Some(value.clone()));
@@ -6303,7 +6337,6 @@ pub extern "C" fn Servo_GetAnimationValues(
     let iter = guard.to_animation_value_iter(
         &mut context,
         &default_values,
-        None, // SMIL has no extra custom properties.
     );
     animation_values.extend(iter.map(|v| structs::RefPtr::from_arc(Arc::new(v))));
 }
@@ -6358,7 +6391,6 @@ pub extern "C" fn Servo_AnimationValue_Compute(
             let animation = AnimationValue::from_declaration(
                 decl,
                 &mut context,
-                None, // No extra custom properties for devtools.
                 default_values,
             );
             animation.map_or(Strong::null(), |value| Arc::new(value).into())
@@ -6408,12 +6440,12 @@ enum Offset {
 fn fill_in_missing_keyframe_values(
     all_properties: &PropertyDeclarationIdSet,
     timing_function: &ComputedTimingFunction,
-    longhands_at_offset: &PropertyDeclarationIdSet,
+    properties_at_offset: &PropertyDeclarationIdSet,
     offset: Offset,
     keyframes: &mut nsTArray<structs::Keyframe>,
 ) {
     // Return early if all animated properties are already set.
-    if longhands_at_offset.contains_all(all_properties) {
+    if properties_at_offset.contains_all(all_properties) {
         return;
     }
 
@@ -6434,7 +6466,7 @@ fn fill_in_missing_keyframe_values(
 
     // Append properties that have not been set at this offset.
     for property in all_properties.iter() {
-        if !longhands_at_offset.contains(property) {
+        if !properties_at_offset.contains(property) {
             unsafe {
                 Gecko_AppendPropertyValuePair(
                     &mut *(*keyframe).mPropertyValues,
@@ -6550,10 +6582,9 @@ pub unsafe extern "C" fn Servo_StyleSet_GetKeyframesForName(
                 for declaration in guard.normal_declaration_iter().rev() {
                     let id = declaration.id().to_physical(writing_mode);
 
-                    // Skip non-animatable properties, including
-                    // the 'display' property because although it
-                    // is animatable from SMIL, it should not be
-                    // animatable from CSS Animations.
+                    // Skip non-animatable properties, including the 'display' property because
+                    // although it is animatable from SMIL, it should not be animatable from CSS
+                    // Animations.
                     if !id.is_animatable() ||
                         id == PropertyDeclarationId::Longhand(LonghandId::Display)
                     {

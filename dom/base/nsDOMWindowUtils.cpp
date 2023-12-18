@@ -3207,12 +3207,9 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(Element* aElement,
       nsCSSProps::IsShorthand(propertyID)) {
     return NS_ERROR_INVALID_ARG;
   }
-  AnimatedPropertyID* property;
-  if (propertyID == eCSSPropertyExtra_variable) {
-    property = new AnimatedPropertyID(NS_Atomize(aProperty));
-  } else {
-    property = new AnimatedPropertyID(propertyID);
-  }
+  AnimatedPropertyID property = propertyID == eCSSPropertyExtra_variable
+                                    ? AnimatedPropertyID(NS_Atomize(aProperty))
+                                    : AnimatedPropertyID(propertyID);
 
   switch (aFlushType) {
     case FLUSH_NONE:
@@ -3244,7 +3241,7 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(Element* aElement,
   }
 
   RefPtr<StyleAnimationValue> value =
-      Servo_ComputedValues_ExtractAnimationValue(computedStyle, property)
+      Servo_ComputedValues_ExtractAnimationValue(computedStyle, &property)
           .Consume();
   if (!value) {
     return NS_ERROR_FAILURE;
@@ -3253,7 +3250,7 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(Element* aElement,
     return NS_ERROR_FAILURE;
   }
   nsAutoCString result;
-  Servo_AnimationValue_Serialize(value, property,
+  Servo_AnimationValue_Serialize(value, &property,
                                  presShell->StyleSet()->RawData(), &result);
   CopyUTF8toUTF16(result, aResult);
   return NS_OK;
