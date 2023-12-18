@@ -2220,8 +2220,6 @@
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">Annonse frå %s</string>
     <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
-    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources" moz:RemovedIn="119">Vurderingskontrollør driven av %s.</string>
-    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
     <string name="review_quality_check_powered_by_2">Vurderingskontrollør driven av %s</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s av Mozilla</string>
@@ -2345,4 +2343,6 @@
     <string name="a11y_action_label_read_article">les artikkelen</string>
     <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
     <string name="a11y_action_label_pocket_learn_more">opne lenke for å lese meir</string>
+    <!-- Content description for headings announced by accessibility service. The first parameter is the text of the heading. Talkback will announce the first parameter and then speak the word "Heading" indicating to the user that this text is a heading for a section. -->
+    <string name="a11y_heading">%s, overskrift</string>
 </resources>
