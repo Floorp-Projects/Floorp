@@ -508,6 +508,7 @@ void RtpVideoSender::SetActiveModulesLocked(
     const bool was_active = rtp_module.Sending();
     const bool should_be_active = active_modules[i];
 
+    // Sends a kRtcpByeCode when going from true to false.
     rtp_module.SetSendingStatus(active_modules[i]);
 
     if (was_active && !should_be_active) {
