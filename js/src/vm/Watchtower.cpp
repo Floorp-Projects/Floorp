@@ -215,6 +215,9 @@ static void MaybePopArrayIteratorFuse(JSContext* cx, NativeObject* obj,
   if (obj != originalArrayPrototype) {
     return;
   }
+
+  obj->realm()->realmFuses.arrayPrototypeIteratorFuse.popFuse(
+      cx, obj->realm()->realmFuses);
 }
 
 static void MaybePopArrayIteratorPrototypeNextFuse(JSContext* cx,
@@ -233,6 +236,9 @@ static void MaybePopArrayIteratorPrototypeNextFuse(JSContext* cx,
   if (id != nextId) {
     return;
   }
+
+  obj->realm()->realmFuses.arrayPrototypeIteratorNextFuse.popFuse(
+      cx, obj->realm()->realmFuses);
 }
 
 static void MaybePopFuses(JSContext* cx, NativeObject* obj, jsid id) {
