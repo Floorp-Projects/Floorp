@@ -736,13 +736,6 @@ class GlobalObject : public NativeObject {
                                            Handle<GlobalObject*> global);
 
  public:
-  NativeObject* maybeGetIteratorPrototype() {
-    if (JSObject* obj = maybeBuiltinProto(ProtoKind::IteratorProto)) {
-      return &obj->as<NativeObject>();
-    }
-    return nullptr;
-  }
-
   static JSObject* getOrCreateIteratorPrototype(JSContext* cx,
                                                 Handle<GlobalObject*> global) {
     if (JSObject* proto = global->maybeBuiltinProto(ProtoKind::IteratorProto)) {
@@ -753,13 +746,6 @@ class GlobalObject : public NativeObject {
 
   static NativeObject* getOrCreateArrayIteratorPrototype(
       JSContext* cx, Handle<GlobalObject*> global);
-
-  NativeObject* maybeGetArrayIteratorPrototype() {
-    if (JSObject* obj = maybeBuiltinProto(ProtoKind::ArrayIteratorProto)) {
-      return &obj->as<NativeObject>();
-    }
-    return nullptr;
-  }
 
   static JSObject* getOrCreateStringIteratorPrototype(
       JSContext* cx, Handle<GlobalObject*> global);
@@ -1008,7 +994,7 @@ class GlobalObject : public NativeObject {
   // Implemented in vm/Iteration.cpp.
   static bool initIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
   template <ProtoKind Kind, const JSClass* ProtoClass,
-            const JSFunctionSpec* Methods, const bool hasFuseProperty = false>
+            const JSFunctionSpec* Methods>
   static bool initObjectIteratorProto(JSContext* cx,
                                       Handle<GlobalObject*> global,
                                       Handle<JSAtom*> tag);

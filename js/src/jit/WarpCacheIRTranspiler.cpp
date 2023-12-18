@@ -166,9 +166,6 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   NativeIteratorListHead* nativeIteratorListHeadStubField(uint32_t offset) {
     return reinterpret_cast<NativeIteratorListHead*>(readStubWord(offset));
   }
-  size_t* fuseStubField(uint32_t offset) {
-    return reinterpret_cast<size_t*>(readStubWord(offset));
-  }
   gc::Heap allocSiteInitialHeapField(uint32_t offset) {
     uintptr_t word = readStubWord(offset);
     MOZ_ASSERT(word == uintptr_t(gc::Heap::Default) ||
@@ -440,13 +437,6 @@ bool WarpCacheIRTranspiler::emitGuardShape(ObjOperandId objId,
   add(ins);
 
   setOperand(objId, ins);
-  return true;
-}
-
-bool WarpCacheIRTranspiler::emitGuardFuse(RealmFuses::FuseIndex fuseIndex) {
-  auto* ins = MGuardFuse::New(alloc(), fuseIndex);
-  add(ins);
-
   return true;
 }
 

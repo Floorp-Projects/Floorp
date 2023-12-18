@@ -80,12 +80,7 @@ enum class ObjectFlag : uint16_t {
   //
   // See
   // https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots
-  NeedsProxyGetSetResultValidation = 1 << 13,
-
-  // There exists a property on this object which has fuse semantics associated
-  // with it, and thus we must trap on changes to said property.
-  HasFuseProperty = 1 << 14,
-
+  NeedsProxyGetSetResultValidation = 1 << 13
 };
 
 using ObjectFlags = EnumFlags<ObjectFlag>;

@@ -109,7 +109,6 @@ arg_writer_info = {
     "StaticStringImm": ("const char*", "writeStaticStringImm"),
     "AllocKindImm": ("gc::AllocKind", "writeAllocKindImm"),
     "CompletionKindImm": ("CompletionKind", "writeCompletionKindImm"),
-    "RealmFuseIndexImm": ("RealmFuses::FuseIndex", "writeRealmFuseIndexImm"),
 }
 
 
@@ -211,7 +210,6 @@ arg_reader_info = {
     "StaticStringImm": ("const char*", "", "reinterpret_cast<char*>(reader.pointer())"),
     "AllocKindImm": ("gc::AllocKind", "", "reader.allocKind()"),
     "CompletionKindImm": ("CompletionKind", "", "reader.completionKind()"),
-    "RealmFuseIndexImm": ("RealmFuses::FuseIndex", "", "reader.realmFuseIndex()"),
 }
 
 
@@ -299,7 +297,6 @@ arg_spewer_method = {
     "StaticStringImm": "spewStaticStringImm",
     "AllocKindImm": "spewAllocKindImm",
     "CompletionKindImm": "spewCompletionKindImm",
-    "RealmFuseIndexImm": "spewRealmFuseIndexImm",
 }
 
 
@@ -438,7 +435,6 @@ arg_length = {
     "StaticStringImm": "sizeof(uintptr_t)",
     "AllocKindImm": 1,
     "CompletionKindImm": 1,
-    "RealmFuseIndexImm": 1,
 }
 
 

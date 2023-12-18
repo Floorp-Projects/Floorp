@@ -95,7 +95,6 @@
 #include "vm/StringType.h"
 #include "vm/Time.h"
 #include "vm/ToSource.h"
-#include "vm/Watchtower.h"
 #include "vm/WrapperObject.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmProcess.h"
@@ -2127,11 +2126,9 @@ JS_PUBLIC_API void JS_SetAllNonReservedSlotsToUndefined(JS::HandleObject obj) {
     return;
   }
 
-  NativeObject& nobj = obj->as<NativeObject>();
-  MOZ_RELEASE_ASSERT(!Watchtower::watchesPropertyModification(&nobj));
   const JSClass* clasp = obj->getClass();
   unsigned numReserved = JSCLASS_RESERVED_SLOTS(clasp);
-  unsigned numSlots = nobj.slotSpan();
+  unsigned numSlots = obj->as<NativeObject>().slotSpan();
   for (unsigned i = numReserved; i < numSlots; i++) {
     obj->as<NativeObject>().setSlot(i, UndefinedValue());
   }
@@ -2141,10 +2138,8 @@ JS_PUBLIC_API void JS_SetReservedSlot(JSObject* obj, uint32_t index,
                                       const Value& value) {
   // Note: we don't use setReservedSlot so that this also works on swappable DOM
   // objects. See NativeObject::getReservedSlotRef comment.
-  NativeObject& nobj = obj->as<NativeObject>();
   MOZ_ASSERT(index < JSCLASS_RESERVED_SLOTS(obj->getClass()));
-  MOZ_ASSERT(!Watchtower::watchesPropertyModification(&nobj));
-  nobj.setSlot(index, value);
+  obj->as<NativeObject>().setSlot(index, value);
 }
 
 JS_PUBLIC_API void JS_InitReservedSlot(JSObject* obj, uint32_t index, void* ptr,

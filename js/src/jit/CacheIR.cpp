@@ -4167,10 +4167,6 @@ static bool CanAttachNativeSetSlot(JSOp op, JSObject* obj, PropertyKey id,
     return false;
   }
 
-  if (Watchtower::watchesPropertyModification(&obj->as<NativeObject>())) {
-    return false;
-  }
-
   *prop = LookupShapeForSetSlot(op, &obj->as<NativeObject>(), id);
   return prop->isSome();
 }
@@ -13560,28 +13556,20 @@ AttachDecision OptimizeGetIteratorIRGenerator::tryAttachArray() {
   writer.guardShape(objId, obj->shape());
   writer.guardArrayIsPacked(objId);
 
-  if (!cx_->options().enableDestructuringFuse()) {
-    // Guard on Array.prototype[@@iterator].
-    ObjOperandId arrProtoId = writer.loadObject(arrProto);
-    ObjOperandId iterId = writer.loadObject(iterFun);
-    writer.guardShape(arrProtoId, arrProto->shape());
-    writer.guardDynamicSlotIsSpecificObject(arrProtoId, iterId,
-                                            arrProtoIterSlot);
+  // Guard on Array.prototype[@@iterator].
+  ObjOperandId arrProtoId = writer.loadObject(arrProto);
+  ObjOperandId iterId = writer.loadObject(iterFun);
+  writer.guardShape(arrProtoId, arrProto->shape());
+  writer.guardDynamicSlotIsSpecificObject(arrProtoId, iterId, arrProtoIterSlot);
 
-    // Guard on %ArrayIteratorPrototype%.next.
-    ObjOperandId iterProtoId = writer.loadObject(arrayIteratorProto);
-    ObjOperandId nextId = writer.loadObject(nextFun);
-    writer.guardShape(iterProtoId, arrayIteratorProto->shape());
-    writer.guardDynamicSlotIsSpecificObject(iterProtoId, nextId, slot);
+  // Guard on %ArrayIteratorPrototype%.next.
+  ObjOperandId iterProtoId = writer.loadObject(arrayIteratorProto);
+  ObjOperandId nextId = writer.loadObject(nextFun);
+  writer.guardShape(iterProtoId, arrayIteratorProto->shape());
+  writer.guardDynamicSlotIsSpecificObject(iterProtoId, nextId, slot);
 
-    // Guard on the prototype chain to ensure no "return" method is present.
-    ShapeGuardProtoChain(writer, arrayIteratorProto, iterProtoId);
-  } else {
-    // Guard on Array.prototype[@@iterator] and %ArrayIteratorPrototype%.next.
-    // This fuse also ensures the prototype chain for Array Iterator is
-    // maintained and that no return method is added.
-    writer.guardFuse(RealmFuses::FuseIndex::OptimizeGetIteratorFuse);
-  }
+  // Guard on the prototype chain to ensure no "return" method is present.
+  ShapeGuardProtoChain(writer, arrayIteratorProto, iterProtoId);
 
   writer.loadBooleanResult(true);
   writer.returnFromIC();
