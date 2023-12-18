@@ -354,7 +354,7 @@ nsXULAlerts::ShowAlertWithIconURI(nsIAlertNotification* aAlert,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIDOMWindowProxy> newWindow;
-  nsAutoCString features("chrome,dialog=yes,titlebar=no,close=no");
+  nsAutoCString features("chrome,dialog=yes,titlebar=no,popup=yes");
   if (inPrivateBrowsing) {
     features.AppendLiteral(",private");
   }

@@ -1963,6 +1963,10 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForSystem(
     chromeFlags |= nsIWebBrowserChrome::CHROME_FISSION_WINDOW;
   }
 
+  if (aFeatures.GetBoolWithDefault("popup", false, &presenceFlag)) {
+    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_POPUP;
+  }
+
   /* OK.
      Normal browser windows, in spite of a stated pattern of turning off
      all chrome not mentioned explicitly, will want the new OS chrome (window
@@ -1971,11 +1975,13 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForSystem(
      to mean "OS' choice." */
 
   // default titlebar and closebox to "on," if not mentioned at all
-  if (!aFeatures.Exists("titlebar")) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_TITLEBAR;
-  }
-  if (!aFeatures.Exists("close")) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_CLOSE;
+  if (!(chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_POPUP)) {
+    if (!aFeatures.Exists("titlebar")) {
+      chromeFlags |= nsIWebBrowserChrome::CHROME_TITLEBAR;
+    }
+    if (!aFeatures.Exists("close")) {
+      chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_CLOSE;
+    }
   }
 
   if (aDialog && !aFeatures.IsEmpty() && !presenceFlag) {
