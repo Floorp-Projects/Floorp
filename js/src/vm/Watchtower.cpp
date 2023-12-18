@@ -16,6 +16,7 @@
 
 #include "vm/Compartment-inl.h"
 #include "vm/JSObject-inl.h"
+#include "vm/NativeObject-inl.h"
 #include "vm/Realm-inl.h"
 #include "vm/Shape-inl.h"
 
@@ -200,6 +201,47 @@ bool Watchtower::watchProtoChangeSlow(JSContext* cx, HandleObject obj) {
   return true;
 }
 
+static void MaybePopArrayIteratorFuse(JSContext* cx, NativeObject* obj,
+                                      jsid id) {
+  if (!id.isWellKnownSymbol(JS::SymbolCode::iterator)) {
+    return;
+  }
+
+  JSObject* originalArrayPrototype = obj->global().maybeGetArrayPrototype();
+  if (!originalArrayPrototype) {
+    return;
+  }
+
+  if (obj != originalArrayPrototype) {
+    return;
+  }
+}
+
+static void MaybePopArrayIteratorPrototypeNextFuse(JSContext* cx,
+                                                   NativeObject* obj, jsid id) {
+  JSObject* originalArrayIteratorPrototoype =
+      obj->global().maybeGetArrayIteratorPrototype();
+  if (!originalArrayIteratorPrototoype) {
+    return;
+  }
+
+  if (obj != originalArrayIteratorPrototoype) {
+    return;
+  }
+
+  PropertyKey nextId = NameToId(cx->names().next);
+  if (id != nextId) {
+    return;
+  }
+}
+
+static void MaybePopFuses(JSContext* cx, NativeObject* obj, jsid id) {
+  // Handle a write to Array.prototype[@@iterator]
+  MaybePopArrayIteratorFuse(cx, obj, id);
+  // Handle a write to Array.prototype[@@iterator].next
+  MaybePopArrayIteratorPrototypeNextFuse(cx, obj, id);
+}
+
 // static
 bool Watchtower::watchPropertyRemoveSlow(JSContext* cx,
                                          Handle<NativeObject*> obj,
@@ -212,6 +254,10 @@ bool Watchtower::watchPropertyRemoveSlow(JSContext* cx,
 
   if (obj->isGenerationCountedGlobal()) {
     obj->as<GlobalObject>().bumpGenerationCount();
+  }
+
+  if (MOZ_UNLIKELY(obj->hasFuseProperty())) {
+    MaybePopFuses(cx, obj, id);
   }
 
   if (MOZ_UNLIKELY(obj->useWatchtowerTestingLog())) {
@@ -249,6 +295,12 @@ bool Watchtower::watchPropertyChangeSlow(JSContext* cx,
     }
   }
 
+  // Property fuses should also be popped on property changes, as value can
+  // change via this path.
+  if (MOZ_UNLIKELY(obj->hasFuseProperty())) {
+    MaybePopFuses(cx, obj, id);
+  }
+
   if (MOZ_UNLIKELY(obj->useWatchtowerTestingLog())) {
     RootedValue val(cx, IdToValue(id));
     if (!AddToWatchtowerLog(cx, "change-prop", obj, val)) {
@@ -265,6 +317,10 @@ bool Watchtower::watchPropertyModificationSlow(
     JSContext* cx, typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
     typename MaybeRooted<PropertyKey, allowGC>::HandleType id) {
   MOZ_ASSERT(watchesPropertyModification(obj));
+
+  if (MOZ_UNLIKELY(obj->hasFuseProperty())) {
+    MaybePopFuses(cx, obj, id);
+  }
 
   // If we cannot GC, we can't manipulate the log, but we need to be able to
   // call this in places we cannot GC.
