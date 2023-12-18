@@ -340,6 +340,14 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
 
   nsresult OnObjectStartRequest(nsIRequest* request) {
     LOG(("ParentProcessDocumentOpenInfo OnObjectStartRequest [this=%p]", this));
+
+    // If this load will be treated as a document load, check if it should be
+    // handled by an external protocol handler (e.g. for a download).
+    if (nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+        channel && channel->IsDocument()) {
+      return OnDocumentStartRequest(request);
+    }
+
     // Just redirect to the nsObjectLoadingContent in the content process.
     m_targetStreamListener = mListener;
     return m_targetStreamListener->OnStartRequest(request);
