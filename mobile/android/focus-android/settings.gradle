@@ -6,14 +6,12 @@ pluginManagement {
     includeBuild("../android-components/plugins/publicsuffixlist")
     includeBuild("../android-components/plugins/dependencies")
     includeBuild("../android-components/plugins/config")
-    includeBuild("../android-components/plugins/github")
     includeBuild("./plugins/focusdependencies")
 }
 
 plugins {
     id "mozac.ConfigPlugin"
     id 'mozac.DependenciesPlugin'
-    id 'mozac.GitHubPlugin'
     id 'FocusDependenciesPlugin'
 }
 

@@ -1,12 +1,10 @@
 pluginManagement {
     includeBuild("${rootProject.projectDir.absolutePath}/mobile/android/android-components/plugins/dependencies")
     includeBuild("${rootProject.projectDir.absolutePath}/mobile/android/android-components/plugins/publicsuffixlist")
-    includeBuild("${rootProject.projectDir.absolutePath}/mobile/android/android-components/plugins/github")
 }
 
 plugins {
     id 'mozac.DependenciesPlugin'
-    id 'mozac.GitHubPlugin'
 }
 
 // You might think topsrcdir is '.', but that's not true when the Gradle build

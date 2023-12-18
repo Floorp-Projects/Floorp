@@ -61,7 +61,6 @@ def _get_build_gradle_paths(gradle_project):
 
     file_list = [
         "mobile/android/android-components/plugins/dependencies/build.gradle",
-        "mobile/android/android-components/plugins/github/build.gradle",
         "mobile/android/android-components/plugins/publicsuffixlist/build.gradle",
         f"{project_dir}/build.gradle",
         f"{project_dir}/{project_subdir}/build.gradle",

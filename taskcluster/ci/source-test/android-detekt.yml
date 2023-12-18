@@ -6,7 +6,7 @@ job-defaults:
     description: 'Run detekt over all modules'
     run:
         using: gradlew
-        gradlew: ['detekt', 'githubLintDetektDetails']
+        gradlew: ['detekt']
         use-caches: false
     worker:
         artifacts:
@@ -74,7 +74,7 @@ detekt-fenix:
     run:
         pre-gradlew:
             - ["cd", "mobile/android/fenix"]
-        gradlew: [detekt, githubLintDetektDetails, 'mozilla-detekt-rules:test']
+        gradlew: [detekt, 'mozilla-detekt-rules:test']
     treeherder:
         symbol: detekt(fenix)
     worker:

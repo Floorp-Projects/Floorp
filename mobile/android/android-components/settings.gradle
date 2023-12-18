@@ -4,13 +4,11 @@
 
 pluginManagement {
     includeBuild("plugins/dependencies")
-    includeBuild("plugins/github")
     includeBuild("plugins/publicsuffixlist")
 }
 
 plugins {
     id 'mozac.DependenciesPlugin'
-    id 'mozac.GitHubPlugin'
 }
 
 ext.topsrcdir = rootProject.projectDir.absolutePath.minus("mobile/android/android-components")
