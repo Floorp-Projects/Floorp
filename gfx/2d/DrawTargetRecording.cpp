@@ -393,6 +393,17 @@ void DrawTargetRecording::Stroke(const Path* aPath, const Pattern& aPattern,
       RecordedStroke(this, pathRecording, aPattern, aStrokeOptions, aOptions));
 }
 
+void DrawTargetRecording::DrawShadow(const Path* aPath, const Pattern& aPattern,
+                                     const ShadowOptions& aShadow,
+                                     const DrawOptions& aOptions,
+                                     const StrokeOptions* aStrokeOptions) {
+  RefPtr<PathRecording> pathRecording = EnsurePathStored(aPath);
+  EnsurePatternDependenciesStored(aPattern);
+
+  mRecorder->RecordEvent(RecordedDrawShadow(this, pathRecording, aPattern,
+                                            aShadow, aOptions, aStrokeOptions));
+}
+
 already_AddRefed<SourceSurface> DrawTargetRecording::Snapshot() {
   RefPtr<SourceSurface> retSurf =
       new SourceSurfaceRecording(mRect.Size(), mFormat, mRecorder);
