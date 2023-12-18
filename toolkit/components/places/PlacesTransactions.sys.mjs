@@ -158,12 +158,14 @@ const TRANSACTIONS_QUEUE_TIMEOUT_MS = 240000; // 4 Mins.
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
+// Use a single queue bookmarks transaction manager. This pref exists as an
+// emergency switch-off, it will go away in the future.
 const prefs = {};
 XPCOMUtils.defineLazyPreferenceGetter(
   prefs,
   "USE_SINGLE_QUEUE",
-  "places.experimental.useSingleQueueTransactionManager",
-  false
+  "places.bookmarks.useSingleQueueTransactionManager",
+  true
 );
 
 import { PlacesUtils } from "resource://gre/modules/PlacesUtils.sys.mjs";
