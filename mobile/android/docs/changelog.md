@@ -4,11 +4,17 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 122.0 (In Development)
-* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v121..main)
+# 123.0 (In Development)
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v122..main)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
+
+# 122.0
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v121..releases_v122)
+* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v122/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
+* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/releases_v122/android-components/plugins/dependencies/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/releases_v122/android-components/.config.yml)
 
 * **concept-engine**
   * Add `reportBackInStock` API to `EngineSession` to allow reporting a shopping product is back in stock. [Bug 1858947](https://bugzilla.mozilla.org/show_bug.cgi?id=1858947)

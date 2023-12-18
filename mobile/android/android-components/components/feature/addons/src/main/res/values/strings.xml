@@ -78,7 +78,7 @@
     <!-- The author of an add-on. -->
     <string name="mozac_feature_addons_author">Author</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors" moz:removedIn="120" tools:ignore="UnusedResources">Authors</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="123" tools:ignore="UnusedResources">Authors</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">Last updated</string>
     <!-- The developer website (Homepage) of the add-on. -->
