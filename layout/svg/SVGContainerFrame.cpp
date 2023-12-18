@@ -223,7 +223,7 @@ void SVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
     }
   }
 
-  for (nsIFrame* kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
+  for (auto* kid : mFrames) {
     gfxMatrix m = matrix;
     // PaintFrameWithEffects() expects the transform that is passed to it to
     // include the transform to the passed frame's user space, so add it:
@@ -330,7 +330,7 @@ void SVGDisplayContainerFrame::ReflowSVG() {
 
   OverflowAreas overflowRects;
 
-  for (nsIFrame* kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
+  for (auto* kid : mFrames) {
     ISVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
     if (SVGFrame) {
       MOZ_ASSERT(!kid->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
