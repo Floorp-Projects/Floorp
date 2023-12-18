@@ -9926,6 +9926,16 @@ bool nsGridContainerFrame::GridItemShouldStretch(const nsIFrame* aChild,
                                                  LogicalAxis aAxis) const {
   MOZ_ASSERT(aChild->IsGridItem());
 
+  if (aChild->IsGridContainerFrame()) {
+    // The subgrid is always stretched in its subgridded dimensions.
+    // https://drafts.csswg.org/css-grid/#subgrid-box-alignment
+    const auto* gridContainer =
+        static_cast<const nsGridContainerFrame*>(aChild);
+    if (gridContainer->IsSubgrid(aAxis)) {
+      return true;
+    }
+  }
+
   const auto wm = aChild->GetWritingMode();
   if (aChild->StyleMargin()->HasAuto(aAxis, wm)) {
     // Per https://drafts.csswg.org/css-grid/#auto-margins, any 'auto' margin in
